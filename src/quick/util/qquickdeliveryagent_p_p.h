@@ -72,9 +72,6 @@ class QQuickWindow;
 struct QQuickPointingDeviceExtra {
     // used in QQuickPointerHandlerPrivate::deviceDeliveryTargets
     QVector<QObject *> deliveryTargets;
-    // memory of which agent was delivering when each QEventPoint was grabbed
-    // TODO maybe add QEventPointPrivate::qqExtra, or sth in QPointingDevicePrivate::EventPointData
-    QFlatMap<int, QQuickDeliveryAgent*> grabbedEventPointDeliveryAgents;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickDeliveryAgentPrivate : public QObjectPrivate
@@ -123,6 +120,9 @@ public:
     bool frameSynchronousHoverEnabled = true;
 
     bool isSubsceneAgent = false;
+    static bool subsceneAgentsExist;
+    // QQuickDeliveryAgent::event() sets this to the one that's currently (trying to) handle the event
+    static QQuickDeliveryAgent *currentEventDeliveryAgent;
 
     Qt::FocusReason lastFocusReason = Qt::OtherFocusReason;
     int pointerEventRecursionGuard = 0;

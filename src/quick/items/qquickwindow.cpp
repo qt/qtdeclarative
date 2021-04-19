@@ -90,6 +90,7 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcMouse)
 Q_DECLARE_LOGGING_CATEGORY(lcTouch)
+Q_DECLARE_LOGGING_CATEGORY(lcPtr)
 Q_LOGGING_CATEGORY(lcDirty, "qt.quick.dirty")
 Q_LOGGING_CATEGORY(lcTransient, "qt.quick.window.transient")
 
@@ -1354,19 +1355,15 @@ bool QQuickWindow::event(QEvent *e)
             for (pt : pe->points()) would only iterate once, so we might as well skip that logic.
         */
         auto pe = static_cast<QPointerEvent *>(e);
-        if (pe->pointCount() > 1) {
-            bool ret = false;
-            Q_ASSERT(QQuickDeliveryAgentPrivate::isTouchEvent(pe));
-            // Split up the multi-point event according to the relevant QQuickDeliveryAgent that should deliver to each existing grabber
-            // but send ungrabbed points to d->deliveryAgent()
-            QFlatMap<QQuickDeliveryAgent*, QList<QEventPoint>> deliveryAgentsNeedingPoints;
-            QEventPoint::States eventStates;
-            for (const auto &pt : pe->points()) {
-                eventStates |= pt.state();
-                auto *ptda = QQuickDeliveryAgent::grabberAgent(pe, pt);
-                if (!ptda)
-                    ptda = da;
-                if (ptda) {
+        if (pe->pointCount()) {
+            if (QQuickDeliveryAgentPrivate::subsceneAgentsExist) {
+                bool ret = false;
+                // Split up the multi-point event according to the relevant QQuickDeliveryAgent that should deliver to each existing grabber
+                // but send ungrabbed points to d->deliveryAgent()
+                QFlatMap<QQuickDeliveryAgent*, QList<QEventPoint>> deliveryAgentsNeedingPoints;
+                QEventPoint::States eventStates;
+
+                auto insert = [&](QQuickDeliveryAgent *ptda, const QEventPoint &pt) {
                     if (pt.state() == QEventPoint::Pressed)
                         pe->clearPassiveGrabbers(pt);
                     auto danpit = deliveryAgentsNeedingPoints.find(ptda);
@@ -1375,47 +1372,98 @@ bool QQuickWindow::event(QEvent *e)
                     } else {
                         danpit.value().append(pt);
                     }
+                };
+
+                for (const auto &pt : pe->points()) {
+                    eventStates |= pt.state();
+                    auto epd = QPointingDevicePrivate::get(const_cast<QPointingDevice*>(pe->pointingDevice()))->queryPointById(pt.id());
+                    Q_ASSERT(epd);
+                    bool foundAgent = false;
+                    if (!epd->exclusiveGrabber.isNull() && !epd->exclusiveGrabberContext.isNull()) {
+                        if (auto ptda = qobject_cast<QQuickDeliveryAgent *>(epd->exclusiveGrabberContext.data())) {
+                            insert(ptda, pt);
+                            qCDebug(lcPtr) << pe->type() << "point" << pt.id() << pt.state()
+                                           << "@" << pt.scenePosition() << "will be re-delivered via known grabbing agent" << ptda << "to" << epd->exclusiveGrabber.data();
+                            foundAgent = true;
+                        }
+                    }
+                    for (auto pgda : epd->passiveGrabbersContext) {
+                        if (auto ptda = qobject_cast<QQuickDeliveryAgent *>(pgda.data())) {
+                            insert(ptda, pt);
+                            qCDebug(lcPtr) << pe->type() << "point" << pt.id() << pt.state()
+                                           << "@" << pt.scenePosition() << "will be re-delivered via known passive-grabbing agent" << ptda;
+                            foundAgent = true;
+                        }
+                    }
+                    // fallback: if we didn't find remembered/known grabber agent(s), expect the root DA to handle it
+                    if (!foundAgent)
+                        insert(da, pt);
                 }
-            }
-            // Make new touch events for each subscene, the same way QQuickItemPrivate::localizedTouchEvent() does it
-            for (auto daAndPoints : deliveryAgentsNeedingPoints) {
-                // if all points have the same state, set the event type accordingly
-                QEvent::Type eventType = pe->type();
-                switch (eventStates) {
-                case QEventPoint::State::Pressed:
-                    eventType = QEvent::TouchBegin;
-                    break;
-                case QEventPoint::State::Released:
-                    eventType = QEvent::TouchEnd;
-                    break;
-                default:
-                    eventType = QEvent::TouchUpdate;
-                    break;
+                for (auto daAndPoints : deliveryAgentsNeedingPoints) {
+                    if (pe->pointCount() > 1) {
+                        Q_ASSERT(QQuickDeliveryAgentPrivate::isTouchEvent(pe));
+                        // if all points have the same state, set the event type accordingly
+                        QEvent::Type eventType = pe->type();
+                        switch (eventStates) {
+                        case QEventPoint::State::Pressed:
+                            eventType = QEvent::TouchBegin;
+                            break;
+                        case QEventPoint::State::Released:
+                            eventType = QEvent::TouchEnd;
+                            break;
+                        default:
+                            eventType = QEvent::TouchUpdate;
+                            break;
+                        }
+                        // Make a new touch event for the subscene, the same way QQuickItemPrivate::localizedTouchEvent() does it
+                        QMutableTouchEvent te(eventType, pe->pointingDevice(), pe->modifiers(), daAndPoints.second);
+                        te.setTimestamp(pe->timestamp());
+                        te.accept();
+                        qCDebug(lcTouch) << daAndPoints.first << "shall now receive" << &te;
+                        ret = daAndPoints.first->event(&te) || ret;
+                    } else {
+                        qCDebug(lcPtr) << daAndPoints.first << "shall now receive" << pe;
+                        ret = daAndPoints.first->event(pe) || ret;
+                    }
+                    if (pe->isAccepted())
+                        break;
                 }
-                QMutableTouchEvent te(eventType, pe->pointingDevice(), pe->modifiers(), daAndPoints.second);
-                te.setTimestamp(pe->timestamp());
-                te.accept();
-                qCDebug(lcTouch) << "subscene touch:" << daAndPoints.first << "shall now receive" << &te;
-                ret = daAndPoints.first->event(&te) || ret;
-            }
-            if (ret)
-                return true;
-        } else if (pe->pointCount()) {
-            // single-point event
-            const auto &pt = pe->points().first();
-            if (pt.state() == QEventPoint::Pressed)
-                pe->clearPassiveGrabbers(pt);
-            // it would be nice to just use "else" here, but
-            // isBeginEvent() is not quite the same check as pt.state() != Pressed
-            if (!pe->isBeginEvent()) {
-                if (auto *ptda = QQuickDeliveryAgent::grabberAgent(pe, pe->points().first()))
-                    da = ptda;
+
+                if (ret)
+                    return true;
+            } else  {
+                for (const auto &pt : pe->points()) {
+                    if (pt.state() == QEventPoint::Pressed)
+                        pe->clearPassiveGrabbers(pt);
+                }
             }
         }
-        // else if it has no points, it's probably a TouchCancel, and DeliveryAgent needs to handle it.
+
+        // If it has no points, it's probably a TouchCancel, and DeliveryAgent needs to handle it.
+        // If we didn't handle it in the block above, handle it now.
         // TODO should we deliver to all DAs at once then, since we don't know which one should get it?
         // or fix QTBUG-90851 so that the event always has points?
-        if (da && da->event(e))
+        bool ret = (da && da->event(e));
+
+        // failsafe: never allow any kind of grab to persist after release
+        if (pe->isEndEvent()) {
+            if (pe->isSinglePointEvent()) {
+                if (static_cast<QSinglePointEvent *>(pe)->buttons() == Qt::NoButton) {
+                    auto &firstPt = pe->point(0);
+                    pe->setExclusiveGrabber(firstPt, nullptr);
+                    pe->clearPassiveGrabbers(firstPt);
+                }
+            } else {
+                for (auto &point : pe->points()) {
+                    if (point.state() == QEventPoint::State::Released) {
+                        pe->setExclusiveGrabber(point, nullptr);
+                        pe->clearPassiveGrabbers(point);
+                    }
+                }
+            }
+        }
+
+        if (ret)
             return true;
     } else if (e->isInputEvent()) {
         if (da && da->event(e))
