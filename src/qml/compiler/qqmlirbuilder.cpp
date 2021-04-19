@@ -448,7 +448,9 @@ bool IRBuilder::generateFromQml(const QString &code, const QString &url, Documen
 
                 errors << m;
             }
-            return false;
+
+            if (!errors.isEmpty() || !parseResult)
+                return false;
         }
         program = parser.ast();
         Q_ASSERT(program);
