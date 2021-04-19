@@ -755,6 +755,21 @@ QObject *QQmlPrivate::AOTCompiledContext::loadQmlContextPropertyIdLookup(uint in
     return o ? o->object() : nullptr;
 }
 
+bool QQmlPrivate::AOTCompiledContext::loadQmlContextPropertyLookup(
+        uint index, void *target, QMetaType type) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    QV4::Scope scope(engine->handle());
+    QV4::ScopedValue result(scope, l->qmlContextPropertyGetter(l, scope.engine, nullptr));
+    if (type == QMetaType::fromType<QVariant>()) {
+        // Special case QVariant in order to retain JS objects.
+        // We don't want to convert JS arrays into QVariantList, for example.
+        *static_cast<QVariant *>(target) = scope.engine->toVariant(result, QMetaType {});
+        return true;
+    }
+    return scope.engine->metaTypeFromJS(result, type, target);
+}
+
 bool QQmlPrivate::AOTCompiledContext::getObjectLookup(
         uint index, QObject *object, void *target, QMetaType type) const
 {
