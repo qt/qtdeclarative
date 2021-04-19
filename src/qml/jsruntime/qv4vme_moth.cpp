@@ -467,8 +467,9 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
     }
 
     const QMetaType returnType = function->aotFunction->returnType;
+    const QMetaType frameReturn = frame->returnType();
     Q_ALLOCA_DECLARE(void, transformedResult);
-    if (frame->returnValue() && returnType != frame->returnType()) {
+    if (frame->returnValue() && returnType != frameReturn) {
         Q_ASSERT(returnType.sizeOf() > 0);
         Q_ALLOCA_ASSIGN(void, transformedResult, returnType.sizeOf());
     }
@@ -487,11 +488,21 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
                 transformedArguments ? transformedArguments : frame->argv());
 
     if (transformedResult) {
-        // Convert needs a pre-constructed target.
-        frame->returnType().construct(frame->returnValue());
-        QMetaType::convert(returnType, transformedResult,
-                           frame->returnType(), frame->returnValue());
-        returnType.destruct(transformedResult);
+        // Shortcut the common case of the AOT function returning a more generic QObject pointer
+        // that we need to QObject-cast. No need to construct or destruct anything in that case.
+        if ((frameReturn.flags() & QMetaType::PointerToQObject)
+                && (returnType.flags() & QMetaType::PointerToQObject)) {
+            QObject *resultObj = *static_cast<QObject **>(transformedResult);
+            *static_cast<QObject **>(frame->returnValue())
+                    = (resultObj && resultObj->metaObject()->inherits(frameReturn.metaObject()))
+                            ? resultObj
+                            : nullptr;
+        } else {
+            // Convert needs a pre-constructed target.
+            frameReturn.construct(frame->returnValue());
+            QMetaType::convert(returnType, transformedResult, frameReturn, frame->returnValue());
+            returnType.destruct(transformedResult);
+        }
     }
 
     if (transformedArguments) {
