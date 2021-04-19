@@ -1540,12 +1540,14 @@ static int MatchScore(const QV4::Value &actual, QMetaType conversionMetaType)
             }
         }
 
+#if QT_CONFIG(qml_sequence_object)
         if (auto sequenceMetaType = SequencePrototype::metaTypeForSequence(obj); sequenceMetaType != -1) {
             if (sequenceMetaType == conversionType)
                 return 1;
             else
                 return 10;
         }
+#endif
 
         if (obj->as<QV4::QQmlValueTypeWrapper>()) {
             const QVariant v = obj->engine()->toVariant(actual, QMetaType {});
