@@ -55,6 +55,7 @@
 
 #include <private/qintrusivelist_p.h>
 #include <private/qqmlguard_p.h>
+#include <private/qtquickglobal_p.h>
 
 #include <QtCore/qmimedata.h>
 #include <QtCore/qstringlist.h>
@@ -154,7 +155,7 @@ private:
 
 class QQmlV4Function;
 class QQuickDragAttached;
-class Q_AUTOTEST_EXPORT QQuickDrag : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickDrag : public QObject
 {
     Q_OBJECT
 
@@ -244,7 +245,7 @@ private:
 };
 
 class QQuickDragAttachedPrivate;
-class QQuickDragAttached : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickDragAttached : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickDragAttached)
