@@ -96,9 +96,12 @@ for no differences.
 class AstDumper: public AST::BaseVisitor
 {
 public:
-    AstDumper(const std::function <void (QStringView)> &dumper, AstDumperOptions options=AstDumperOption::None,
-              int indent=1, int baseIndent=0, function_ref<QStringView(SourceLocation)>loc2str = nullptr):
-    dumper(dumper), options(options), indent(indent), baseIndent(baseIndent), loc2str(loc2str) {}
+    AstDumper(const std::function<void(QStringView)> &dumper,
+              AstDumperOptions options = AstDumperOption::None, int indent = 1, int baseIndent = 0,
+              function_ref<QStringView(SourceLocation)> loc2str = &noStr)
+        : dumper(dumper), options(options), indent(indent), baseIndent(baseIndent), loc2str(loc2str)
+    {
+    }
 
 private:
     void start(QStringView str) {
@@ -130,7 +133,7 @@ private:
 
     QString loc(const SourceLocation &s, bool trim = false) {
         QString tokenStr;
-        if (loc2str && s.length > 0)
+        if (s.length > 0)
             tokenStr = loc2str(s).toString()
                 .replace(QLatin1String("\\"), QLatin1String("\\\\"))
                 .replace(QLatin1String("\""),QLatin1String("\\\""));
@@ -141,6 +144,12 @@ private:
         else {
             return QLatin1String("\"off:%1 len:%2 l:%3 c:%4 %5\"").arg(QString::number(s.offset), QString::number(s.length), QString::number(s.startLine), QString::number(s.startColumn), tokenStr);
         }
+    }
+
+    QString semicolonToken(const SourceLocation &s) {
+        if (options & AstDumperOption::SloppyCompare)
+            return QString();
+        return QLatin1String(" semicolonToken=") + loc(s);
     }
 
     QString boolStr(bool v) { return (v ? quotedString(u"true"): quotedString(u"false")); }
@@ -156,15 +165,15 @@ public:
     void endVisit(AST::UiHeaderItemList *) override { stop(u"UiHeaderItemList"); }
 
     bool visit(UiPragma *el) override {
-        start(QLatin1String("UiPragma name=%1 pragmaToken=%2 semicolonToken=%3")
-              .arg(quotedString(el->name), loc(el->pragmaToken), loc(el->semicolonToken)));
+        start(QLatin1String("UiPragma name=%1 pragmaToken=%2%3")
+              .arg(quotedString(el->name), loc(el->pragmaToken), semicolonToken(el->semicolonToken)));
         return true;
     }
     void endVisit(AST::UiPragma *) override { stop(u"UiPragma"); }
 
     bool visit(UiImport *el) override {
-        start(QLatin1String("UiImport fileName=%1 importId=%2 importToken=%3 fileNameToken=%4 asToken=%5 importIdToken=%6 semicolonToken=%7")
-              .arg(quotedString(el->fileName), quotedString(el->importId), loc(el->importToken), loc(el->fileNameToken), loc(el->asToken), loc(el->importIdToken), loc(el->semicolonToken)));
+        start(QLatin1String("UiImport fileName=%1 importId=%2 importToken=%3 fileNameToken=%4 asToken=%5 importIdToken=%6%7")
+              .arg(quotedString(el->fileName), quotedString(el->importId), loc(el->importToken), loc(el->fileNameToken), loc(el->asToken), loc(el->importIdToken), semicolonToken(el->semicolonToken)));
         return true;
     }
     void endVisit(AST::UiImport *el) override {
@@ -177,12 +186,12 @@ public:
                            (el->type == UiPublicMember::Property) ? QLatin1String("Property") : QLatin1String("Unexpected(%1)").arg(QString::number(el->type)));
         start(QLatin1String("UiPublicMember type=%1 typeModifier=%2 name=%3 isDefaultMember=%4 isReadonlyMember=%5 isRequired=%6 "
                             "defaultToken=%7 readonlyToken=%8 propertyToken=%9 requiredToken=%10 typeModifierToken=%11 typeToken=%12 "
-                            "identifierToken=%13 colonToken=%14 semicolonToken=%15")
+                            "identifierToken=%13 colonToken=%14%15")
               .arg(quotedString(typeStr), quotedString(el->typeModifier), quotedString(el->name),
                    boolStr(el->isDefaultMember), boolStr(el->isReadonlyMember), boolStr(el->isRequired),
                    loc(el->defaultToken), loc(el->readonlyToken), loc(el->propertyToken),
                    loc(el->requiredToken), loc(el->typeModifierToken), loc(el->typeToken),
-                   loc(el->identifierToken), loc(el->colonToken), loc(el->semicolonToken)
+                   loc(el->identifierToken), loc(el->colonToken), semicolonToken(el->semicolonToken)
                   ));
         if (!noAnnotations()) // put annotations inside the node they refer to
             Node::accept(el->annotations, this);
@@ -311,8 +320,8 @@ public:
     void endVisit(AST::UiInlineComponent *) override { stop(u"UiInlineComponent"); }
 
     bool visit(UiRequired *el) override {
-        start(QLatin1String("UiRequired name=%1 requiredToken=%2 semicolonToken=%3")
-              .arg(quotedString(el->name), loc(el->requiredToken), loc(el->semicolonToken)));
+        start(QLatin1String("UiRequired name=%1 requiredToken=%2%3")
+              .arg(quotedString(el->name), loc(el->requiredToken), semicolonToken(el->semicolonToken)));
         return true;
     }
     void endVisit(UiRequired *) override { stop(u"UiRequired"); }
@@ -679,8 +688,8 @@ public:
     void endVisit(AST::VariableDeclarationList *) override { stop(u"VariableDeclarationList"); }
 
     bool visit(AST::EmptyStatement *el) override {
-        start(QLatin1String("EmptyStatement semicolonToken=%1")
-              .arg(loc(el->semicolonToken)));
+        start(QLatin1String("EmptyStatement%1")
+              .arg(semicolonToken(el->semicolonToken)));
         return true;
     }
     void endVisit(AST::EmptyStatement *) override { stop(u"EmptyStatement"); }
@@ -689,8 +698,8 @@ public:
         if (options & AstDumperOption::SloppyCompare)
             start(u"ExpressionStatement");
         else
-            start(QLatin1String("ExpressionStatement semicolonToken=%1")
-                  .arg(loc(el->semicolonToken)));
+            start(QLatin1String("ExpressionStatement%1")
+                  .arg(semicolonToken(el->semicolonToken)));
         return true;
     }
     void endVisit(AST::ExpressionStatement *) override { stop(u"ExpressionStatement"); }
@@ -703,8 +712,8 @@ public:
     void endVisit(AST::IfStatement *) override { stop(u"IfStatement"); }
 
     bool visit(AST::DoWhileStatement *el) override {
-        start(QLatin1String("DoWhileStatement doToken=%1 whileToken=%2 lparenToken=%3 rparenToken=%4 semicolonToken=%5")
-              .arg(loc(el->doToken), loc(el->whileToken), loc(el->lparenToken), loc(el->rparenToken), loc(el->semicolonToken)));
+        start(QLatin1String("DoWhileStatement doToken=%1 whileToken=%2 lparenToken=%3 rparenToken=%4%5")
+              .arg(loc(el->doToken), loc(el->whileToken), loc(el->lparenToken), loc(el->rparenToken), semicolonToken(el->semicolonToken)));
         return true;
     }
     void endVisit(AST::DoWhileStatement *) override { stop(u"DoWhileStatement"); }
@@ -717,8 +726,12 @@ public:
     void endVisit(AST::WhileStatement *) override { stop(u"WhileStatement"); }
 
     bool visit(AST::ForStatement *el) override {
-        start(QLatin1String("ForStatement forToken=%1 lparenToken=%2 firstSemicolonToken=%3 secondSemicolonToken=%4 rparenToken=%5")
-              .arg(loc(el->forToken), loc(el->lparenToken), loc(el->firstSemicolonToken), loc(el->secondSemicolonToken), loc(el->rparenToken)));
+        if (options & AstDumperOption::SloppyCompare)
+            start(QLatin1String("ForStatement forToken=%1 lparenToken=%2 rparenToken=%5")
+                  .arg(loc(el->forToken), loc(el->lparenToken), loc(el->rparenToken)));
+        else
+            start(QLatin1String("ForStatement forToken=%1 lparenToken=%2 firstSemicolonToken=%3 secondSemicolonToken=%4 rparenToken=%5")
+                  .arg(loc(el->forToken), loc(el->lparenToken), loc(el->firstSemicolonToken), loc(el->secondSemicolonToken), loc(el->rparenToken)));
         return true;
     }
     void endVisit(AST::ForStatement *) override { stop(u"ForStatement"); }
@@ -731,22 +744,22 @@ public:
     void endVisit(AST::ForEachStatement *) override { stop(u"ForEachStatement"); }
 
     bool visit(AST::ContinueStatement *el) override {
-        start(QLatin1String("ContinueStatement label=%1 continueToken=%2 identifierToken=%3 semicolonToken=%4")
-              .arg(quotedString(el->label), loc(el->continueToken), loc(el->identifierToken), loc(el->semicolonToken)));
+        start(QLatin1String("ContinueStatement label=%1 continueToken=%2 identifierToken=%3%4")
+              .arg(quotedString(el->label), loc(el->continueToken), loc(el->identifierToken), semicolonToken(el->semicolonToken)));
         return true;
     }
     void endVisit(AST::ContinueStatement *) override { stop(u"ContinueStatement"); }
 
     bool visit(AST::BreakStatement *el) override {
-        start(QLatin1String("BreakStatement label=%1 breakToken=%2 identifierToken=%3 semicolonToken=%4")
-              .arg(quotedString(el->label), loc(el->breakToken), loc(el->identifierToken), loc(el->semicolonToken)));
+        start(QLatin1String("BreakStatement label=%1 breakToken=%2 identifierToken=%3%4")
+              .arg(quotedString(el->label), loc(el->breakToken), loc(el->identifierToken), semicolonToken(el->semicolonToken)));
         return true;
     }
     void endVisit(AST::BreakStatement *) override { stop(u"BreakStatement"); }
 
     bool visit(AST::ReturnStatement *el) override {
-        start(QLatin1String("ReturnStatement returnToken=%1 semicolonToken=%2")
-              .arg(loc(el->returnToken), loc(el->semicolonToken)));
+        start(QLatin1String("ReturnStatement returnToken=%1%2")
+              .arg(loc(el->returnToken), semicolonToken(el->semicolonToken)));
         return true;
     }
     void endVisit(AST::ReturnStatement *) override { stop(u"ReturnStatement"); }
@@ -807,8 +820,8 @@ public:
     void endVisit(AST::LabelledStatement *) override { stop(u"LabelledStatement"); }
 
     bool visit(AST::ThrowStatement *el) override {
-        start(QLatin1String("ThrowStatement throwToken=%1 semicolonToken=%2")
-              .arg(loc(el->throwToken), loc(el->semicolonToken)));
+        start(QLatin1String("ThrowStatement throwToken=%1%2")
+              .arg(loc(el->throwToken), semicolonToken(el->semicolonToken)));
         return true;
     }
     void endVisit(AST::ThrowStatement *) override { stop(u"ThrowStatement"); }
@@ -972,8 +985,8 @@ public:
     void endVisit(AST::ESModule *) override { stop(u"ESModule"); }
 
     bool visit(AST::DebuggerStatement *el) override {
-        start(QLatin1String("DebuggerStatement debuggerToken=%1 semicolonToken=%2")
-              .arg(loc(el->debuggerToken), loc(el->semicolonToken)));
+        start(QLatin1String("DebuggerStatement debuggerToken=%1%2")
+              .arg(loc(el->debuggerToken), semicolonToken(el->semicolonToken)));
         return true;
     }
     void endVisit(AST::DebuggerStatement *) override { stop(u"DebuggerStatement"); }
