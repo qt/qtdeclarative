@@ -726,10 +726,8 @@ bool QQmlPrivate::AOTCompiledContext::captureQmlContextPropertyLookup(uint index
 
     if (QQmlEngine *engine = qmlContext->engine()) {
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-        if (!ep->propertyCapture)
-            return true;
-        ep->propertyCapture->captureProperty(qmlScopeObject, property->coreIndex(),
-                                             property->notifyIndex());
+        if (QQmlPropertyCapture *capture = ep->propertyCapture)
+            capture->captureProperty(qmlScopeObject, l->qobjectLookup.propertyCache, property);
     }
 
     return true;
@@ -746,8 +744,8 @@ QObject *QQmlPrivate::AOTCompiledContext::loadQmlContextPropertyIdLookup(uint in
         QQmlEnginePrivate *qmlEngine = QQmlEnginePrivate::get(qmlContext->engine());
         const int objectId = l->qmlContextIdObjectLookup.objectId;
 
-        if (qmlEngine->propertyCapture)
-            qmlEngine->propertyCapture->captureProperty(qmlContext->idValueBindings(objectId));
+        if (QQmlPropertyCapture *capture = qmlEngine->propertyCapture)
+            capture->captureProperty(qmlContext->idValueBindings(objectId));
         return qmlContext->idValue(objectId);
     }
 
@@ -765,19 +763,18 @@ bool QQmlPrivate::AOTCompiledContext::getObjectLookup(
     if (!object)
         return false;
 
+    const QQmlPropertyCache *propertyCache = l->qobjectLookup.propertyCache;
     if (l->getter == QV4::QObjectWrapper::lookupGetter
             && !QQmlData::wasDeleted(object)
-            && QQmlData::get(object)->propertyCache == l->qobjectLookup.propertyCache) {
-        QQmlPropertyData *property = l->qobjectLookup.propertyData;
+            && QQmlData::get(object)->propertyCache == propertyCache) {
+        const QQmlPropertyData *property = l->qobjectLookup.propertyData;
         if (property->propType() == type) {
             // We can directly read the property into the target, without conversion.
             if (!property->isConstant()) {
                 if (QQmlEngine *engine = qmlContext->engine()) {
                     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-                    if (ep->propertyCapture) {
-                        ep->propertyCapture->captureProperty(object, property->coreIndex(),
-                                                             property->notifyIndex());
-                    }
+                    if (QQmlPropertyCapture *capture = ep->propertyCapture)
+                        capture->captureProperty(object, propertyCache, property);
                 }
             }
             property->readProperty(object, target);
@@ -832,17 +829,15 @@ bool QQmlPrivate::AOTCompiledContext::captureLookup(uint index, QObject *object)
         return false;
     }
 
-    const auto *property = l->qobjectLookup.propertyData;
+    const QQmlPropertyData *property = l->qobjectLookup.propertyData;
     Q_ASSERT(property);
     if (property->isConstant())
         return true;
 
     if (QQmlEngine *engine = qmlContext->engine()) {
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-        if (!ep->propertyCapture)
-            return true;
-        ep->propertyCapture->captureProperty(object, property->coreIndex(),
-                                             property->notifyIndex());
+        if (QQmlPropertyCapture *capture = ep->propertyCapture)
+            capture->captureProperty(object, l->qobjectLookup.propertyCache, property);
         return true;
     }
 

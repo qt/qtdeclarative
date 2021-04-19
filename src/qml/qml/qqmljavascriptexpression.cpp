@@ -358,24 +358,54 @@ void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, bool doNotif
                 metaObjectForBindable = m;
         }
         if (metaObjectForBindable) {
-            // if the property is a QPropery, and we're binding to a QProperty
-            // the automatic capturing process already takes care of everything
-            if (typeid(QQmlPropertyBindingJS) == typeid(*expression))
-                return;
-            for (auto trigger = expression->qpropertyChangeTriggers; trigger;
-                 trigger = trigger->next) {
-                if (trigger->target == o && trigger->propertyIndex == c)
-                    return; // already installed
-            }
-            auto trigger = expression->allocatePropertyChangeTrigger(o, c);
-            QUntypedBindable bindable;
-            void *argv[] = { &bindable };
-            metaObjectForBindable->metacall(o, QMetaObject::BindableProperty, c, argv);
-            bindable.observe(trigger);
+            captureBindableProperty(o, metaObjectForBindable, c);
             return;
         }
     }
 
+    captureNonBindableProperty(o, n, c, doNotify);
+}
+
+void QQmlPropertyCapture::captureProperty(
+        QObject *o, const QQmlPropertyCache *propertyCache, const QQmlPropertyData *propertyData,
+        bool doNotify)
+{
+    if (watcher->wasDeleted())
+        return;
+
+    Q_ASSERT(expression);
+
+    if (propertyData->isBindable()) {
+        if (const QMetaObject *metaObjectForBindable = propertyCache->metaObject()) {
+            captureBindableProperty(o, metaObjectForBindable, propertyData->coreIndex());
+            return;
+        }
+    }
+
+    captureNonBindableProperty(o, propertyData->notifyIndex(), propertyData->coreIndex(), doNotify);
+}
+
+void QQmlPropertyCapture::captureBindableProperty(
+        QObject *o, const QMetaObject *metaObjectForBindable, int c)
+{
+    // if the property is a QPropery, and we're binding to a QProperty
+    // the automatic capturing process already takes care of everything
+    if (typeid(QQmlPropertyBindingJS) == typeid(*expression))
+        return;
+    for (auto trigger = expression->qpropertyChangeTriggers; trigger;
+         trigger = trigger->next) {
+        if (trigger->target == o && trigger->propertyIndex == c)
+            return; // already installed
+    }
+    auto trigger = expression->allocatePropertyChangeTrigger(o, c);
+    QUntypedBindable bindable;
+    void *argv[] = { &bindable };
+    metaObjectForBindable->metacall(o, QMetaObject::BindableProperty, c, argv);
+    bindable.observe(trigger);
+}
+
+void QQmlPropertyCapture::captureNonBindableProperty(QObject *o, int n, int c, bool doNotify)
+{
     if (n == -1) {
         if (!errorString) {
             errorString = new QStringList;

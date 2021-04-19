@@ -237,6 +237,7 @@ public:
 
     void captureProperty(QQmlNotifier *);
     void captureProperty(QObject *, int, int, bool doNotify = true);
+    void captureProperty(QObject *, const QQmlPropertyCache *, const QQmlPropertyData *, bool doNotify = true);
     void captureTranslation() { translationCaptured = true; }
 
     QQmlEngine *engine;
@@ -245,6 +246,10 @@ public:
     QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> guards;
     QStringList *errorString;
     bool translationCaptured = false;
+
+private:
+    void captureBindableProperty(QObject *o, const QMetaObject *metaObjectForBindable, int c);
+    void captureNonBindableProperty(QObject *o, int n, int c, bool doNotify);
 };
 
 QQmlJavaScriptExpression::DeleteWatcher::DeleteWatcher(QQmlJavaScriptExpression *e)
