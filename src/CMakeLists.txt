@@ -25,7 +25,6 @@ endif()
 
 if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
     add_subdirectory(quick)
-    add_subdirectory(quickshapes)
     add_subdirectory(quicklayouts)
 
     find_package(Qt6 ${PROJECT_VERSION} CONFIG COMPONENTS Test) # special case
@@ -35,6 +34,10 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
 
     if(QT_FEATURE_quick_particles)
         add_subdirectory(particles)
+    endif()
+
+    if(QT_FEATURE_quick_path)
+        add_subdirectory(quickshapes)
     endif()
 
     if(TARGET Qt::Widgets)
