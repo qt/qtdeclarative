@@ -70,6 +70,9 @@ Q_LOGGING_CATEGORY(lcFocus, "qt.quick.focus")
 
 extern Q_GUI_EXPORT bool qt_sendShortcutOverrideEvent(QObject *o, ulong timestamp, int k, Qt::KeyboardModifiers mods, const QString &text = QString(), bool autorep = false, ushort count = 1);
 
+bool QQuickDeliveryAgentPrivate::subsceneAgentsExist(false);
+QQuickDeliveryAgent *QQuickDeliveryAgentPrivate::currentEventDeliveryAgent(nullptr);
+
 void QQuickDeliveryAgentPrivate::touchToMouseEvent(QEvent::Type type, const QEventPoint &p, const QTouchEvent *touchEvent, QMutableSinglePointEvent *mouseEvent)
 {
     Q_ASSERT(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents));
@@ -267,6 +270,7 @@ bool QQuickDeliveryAgentPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEve
 */
 void QQuickDeliveryAgentPrivate::removeGrabber(QQuickItem *grabber, bool mouse, bool touch, bool cancel)
 {
+    Q_Q(QQuickDeliveryAgent);
     if (eventsInDelivery.isEmpty()) {
         // do it the expensive way
         for (auto dev : knownPointingDevices) {
@@ -278,7 +282,7 @@ void QQuickDeliveryAgentPrivate::removeGrabber(QQuickItem *grabber, bool mouse, 
     auto eventInDelivery = eventsInDelivery.top();
     if (Q_LIKELY(mouse) && eventInDelivery) {
         auto epd = mousePointData();
-        if (epd && epd->exclusiveGrabber == grabber) {
+        if (epd && epd->exclusiveGrabber == grabber && epd->exclusiveGrabberContext.data() == q) {
             QQuickItem *oldGrabber = qobject_cast<QQuickItem *>(epd->exclusiveGrabber);
             qCDebug(lcMouseTarget) << "removeGrabber" << oldGrabber << "-> null";
             eventInDelivery->setExclusiveGrabber(epd->eventPoint, nullptr);
@@ -639,21 +643,6 @@ QQuickDeliveryAgent::Transform::~Transform()
 {
 }
 
-/*! \internal
-    Returns the QQuickDeliveryAgent instance that we remember was delivering the
-    given \a pt at the time that it was grabbed. Failing that, choose a suitable agent.
-*/
-QQuickDeliveryAgent *QQuickDeliveryAgent::grabberAgent(QPointerEvent *pe, const QEventPoint &pt)
-{
-    auto devExtra = QQuickDeliveryAgentPrivate::deviceExtra(pe->device());
-    QQuickDeliveryAgent *ret = devExtra->grabbedEventPointDeliveryAgents.value(pt.id());
-    if (ret) {
-        qCDebug(lcPtr) << pe->type() << "point" << pt.id() << pt.state()
-                       << "@" << pt.scenePosition() << "will be re-delivered via known agent" << ret;
-    }
-    return ret;
-}
-
 QQuickItem *QQuickDeliveryAgent::rootItem() const
 {
     Q_D(const QQuickDeliveryAgent);
@@ -678,6 +667,8 @@ void QQuickDeliveryAgent::setSceneTransform(QQuickDeliveryAgent::Transform *tran
 bool QQuickDeliveryAgent::event(QEvent *ev)
 {
     Q_D(QQuickDeliveryAgent);
+    d->currentEventDeliveryAgent = this;
+    auto cleanup = qScopeGuard([d] { d->currentEventDeliveryAgent = nullptr; });
 
     switch (ev->type()) {
     case QEvent::MouseButtonPress:
@@ -843,23 +834,12 @@ QQuickDeliveryAgentPrivate::QQuickDeliveryAgentPrivate(QQuickItem *root) :
 #if QT_CONFIG(quick_draganddrop)
     dragGrabber = new QQuickDragGrabber;
 #endif
+    if (isSubsceneAgent)
+        subsceneAgentsExist = true;
 }
 
 QQuickDeliveryAgentPrivate::~QQuickDeliveryAgentPrivate()
 {
-    Q_Q(QQuickDeliveryAgent);
-    for (auto dev : knownPointingDevices) {
-        auto devPriv = QPointingDevicePrivate::get(dev);
-        if (devPriv->qqExtra) {
-            auto &flatmap = static_cast<QQuickPointingDeviceExtra *>(devPriv->qqExtra)->grabbedEventPointDeliveryAgents;
-            for (auto it = flatmap.begin(); it != flatmap.end(); ) {
-                if (it.value() == q)
-                    it = flatmap.erase(it);
-                else
-                    ++it;
-            }
-        }
-    }
 #if QT_CONFIG(quick_draganddrop)
     delete dragGrabber;
     dragGrabber = nullptr;
@@ -1094,6 +1074,7 @@ void QQuickDeliveryAgentPrivate::deliverDelayedTouchEvent()
 */
 void QQuickDeliveryAgentPrivate::handleWindowDeactivate(QQuickWindow *win)
 {
+    Q_Q(QQuickDeliveryAgent);
     qCDebug(lcFocus) << "deactivated" << win->title();
     const auto inputDevices = QInputDevice::devices();
     for (auto device : inputDevices) {
@@ -1105,7 +1086,7 @@ void QQuickDeliveryAgentPrivate::handleWindowDeactivate(QQuickWindow *win)
                     if (QQuickItem *item = qmlobject_cast<QQuickItem *>(epd.exclusiveGrabber.data()))
                         relevant = (item->window() == win);
                     else if (QQuickPointerHandler *handler = qmlobject_cast<QQuickPointerHandler *>(epd.exclusiveGrabber.data()))
-                        relevant = (handler->parentItem()->window() == win);
+                        relevant = (handler->parentItem()->window() == win && epd.exclusiveGrabberContext.data() == q);
                     if (relevant)
                         devPriv->setExclusiveGrabber(nullptr, epd.eventPoint, nullptr);
                 }
@@ -1421,19 +1402,21 @@ void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice
     const bool grabGained = (transition == QPointingDevice::GrabTransition::GrabExclusive ||
                              transition == QPointingDevice::GrabTransition::GrabPassive);
 
-    QQuickDeliveryAgent *subsceneAgent = nullptr;
+    QQuickDeliveryAgent *deliveryAgent = nullptr;
 
     // note: event can be null, if the signal was emitted from QPointingDevicePrivate::removeGrabber(grabber)
     if (auto *handler = qmlobject_cast<QQuickPointerHandler *>(grabber)) {
-        handler->onGrabChanged(handler, transition, const_cast<QPointerEvent *>(event),
-                               const_cast<QEventPoint &>(point));
-        if (isSubsceneAgent) {
-            auto itemPriv = QQuickItemPrivate::get(handler->parentItem());
+        auto itemPriv = QQuickItemPrivate::get(handler->parentItem());
+        deliveryAgent = itemPriv->deliveryAgent();
+        if (deliveryAgent == q) {
+            handler->onGrabChanged(handler, transition, const_cast<QPointerEvent *>(event),
+                                   const_cast<QEventPoint &>(point));
+        }
+        if (grabGained) {
             // An item that is NOT a subscene root needs to track whether it got a grab via a subscene delivery agent,
             // whereas the subscene root item already knows it has its own DA.
-            if (grabGained && (!itemPriv->extra.isAllocated() || !itemPriv->extra->subsceneDeliveryAgent))
+            if (isSubsceneAgent && (!itemPriv->extra.isAllocated() || !itemPriv->extra->subsceneDeliveryAgent))
                 itemPriv->maybeHasSubsceneDeliveryAgent = true;
-            subsceneAgent = itemPriv->deliveryAgent();
         }
     } else {
         switch (transition) {
@@ -1471,32 +1454,39 @@ void QQuickDeliveryAgentPrivate::onGrabChanged(QObject *grabber, QPointingDevice
             break;
         }
         auto grabberItem = static_cast<QQuickItem *>(grabber); // cannot be a handler: we checked above
-        if (isSubsceneAgent && grabberItem) {
+        if (grabberItem) {
             auto itemPriv = QQuickItemPrivate::get(grabberItem);
+            deliveryAgent = itemPriv->deliveryAgent();
             // An item that is NOT a subscene root needs to track whether it got a grab via a subscene delivery agent,
             // whereas the subscene root item already knows it has its own DA.
-            if (grabGained && (!itemPriv->extra.isAllocated() || !itemPriv->extra->subsceneDeliveryAgent))
+            if (isSubsceneAgent && grabGained && (!itemPriv->extra.isAllocated() || !itemPriv->extra->subsceneDeliveryAgent))
                 itemPriv->maybeHasSubsceneDeliveryAgent = true;
-            subsceneAgent = itemPriv->deliveryAgent();
         }
     }
 
-    if (subsceneAgent == q && event && event->device()) {
-        auto devExtra = QQuickDeliveryAgentPrivate::deviceExtra(event->device());
-        QFlatMap<int, QQuickDeliveryAgent*> &agentMap = devExtra->grabbedEventPointDeliveryAgents;
-        // workaround for QFlatMap error: somehow having a local copy of id makes insert() happy (move semantics?) otherwise we get
-        // no matching function for call to ‘QList<int>::insert(QFlatMap<int, QQuickDeliveryAgent*>::iterator&, std::remove_reference<int&>::type)’
-        const int id = point.id();
-        if (grabGained) {
-            // If any grab is gained while a subscene agent is delivering an event,
-            // the same agent should keep delivering all subsequent events containing that QEventPoint.
-            qCDebug(lcPtr) << "remembering that" << q << "handles point" << id << "after" << transition;
-            agentMap.insert(id, q);
-        } else if (!event->exclusiveGrabber(point) && event->passiveGrabbers(point).isEmpty()) {
-            // If all grabs are lost, we can forget the fact that a particular agent was handling a particular point.
-            // If the event point ID appears again in a later event, it will be delivered via the main window's delivery agent by default.
-            qCDebug(lcPtr) << "dissociating" << q << "from point" << id << "after" << transition;
-            agentMap.remove(id);
+    if (currentEventDeliveryAgent == q && event && event->device()) {
+        auto epd = QPointingDevicePrivate::get(const_cast<QPointingDevice*>(event->pointingDevice()))->queryPointById(point.id());
+        Q_ASSERT(epd);
+        switch (transition) {
+        case QPointingDevice::GrabPassive: {
+            QPointingDevicePrivate::setPassiveGrabberContext(epd, grabber, q);
+            qCDebug(lcPtr) << "remembering that" << q << "handles point" << point.id() << "after" << transition;
+        } break;
+        case QPointingDevice::GrabExclusive:
+            epd->exclusiveGrabberContext = q;
+            qCDebug(lcPtr) << "remembering that" << q << "handles point" << point.id() << "after" << transition;
+            break;
+        case QPointingDevice::CancelGrabExclusive:
+        case QPointingDevice::UngrabExclusive:
+            // taken care of in QPointingDevicePrivate::setExclusiveGrabber(,,nullptr), removeExclusiveGrabber()
+            break;
+        case QPointingDevice::UngrabPassive:
+        case QPointingDevice::CancelGrabPassive:
+            // taken care of in QPointingDevicePrivate::removePassiveGrabber(), clearPassiveGrabbers()
+            break;
+        case QPointingDevice::OverrideGrabPassive:
+            // not in use at this time
+            break;
         }
     }
 }
@@ -1557,27 +1547,9 @@ void QQuickDeliveryAgentPrivate::deliverPointerEvent(QPointerEvent *event)
     if (event->isEndEvent())
         deliverPressOrReleaseEvent(event, true);
 
-    // failsafe: never allow any kind of grab or point-agent association to persist after release
-    if (event->isEndEvent()) {
-        auto &agentMap = QQuickDeliveryAgentPrivate::deviceExtra(event->device())->grabbedEventPointDeliveryAgents;
-        if (isTouchEvent(event)) {
-            for (int i = 0; i < event->pointCount(); ++i) {
-                auto &point = event->point(i);
-                if (point.state() == QEventPoint::State::Released) {
-                    event->setExclusiveGrabber(point, nullptr);
-                    event->clearPassiveGrabbers(point);
-                    agentMap.remove(point.id());
-                }
-            }
-            // never allow touch->mouse synthesis to persist either
-            cancelTouchMouseSynthesis();
-        } else if (static_cast<QSinglePointEvent *>(event)->buttons() == Qt::NoButton) {
-            auto &firstPt = event->point(0);
-            event->setExclusiveGrabber(firstPt, nullptr);
-            event->clearPassiveGrabbers(firstPt);
-            agentMap.remove(firstPt.id());
-        }
-    }
+    // failsafe: never allow touch->mouse synthesis to persist after release
+    if (event->isEndEvent() && isTouchEvent(event))
+        cancelTouchMouseSynthesis();
 
     eventsInDelivery.pop();
     if (sceneTransform) {
@@ -1668,6 +1640,7 @@ QVector<QQuickItem *> QQuickDeliveryAgentPrivate::mergePointerTargets(const QVec
 */
 void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
 {
+    Q_Q(const QQuickDeliveryAgent);
     bool done = false;
     const auto grabbers = exclusiveGrabbers(event);
     hasFiltered.clear();
@@ -1693,8 +1666,20 @@ void QQuickDeliveryAgentPrivate::deliverUpdatedPoints(QPointerEvent *event)
     }
 
     // Deliver to each eventpoint's passive grabbers (but don't visit any handler more than once)
-    for (auto &point : event->points())
-        deliverToPassiveGrabbers(event->passiveGrabbers(point), event);
+    for (auto &point : event->points()) {
+        auto epd = QPointingDevicePrivate::get(event->pointingDevice())->queryPointById(point.id());
+        if (Q_UNLIKELY(!epd)) {
+            qWarning() << "point is not in activePoints" << point;
+            continue;
+        }
+        QList<QPointer<QObject>> relevantPassiveGrabbers;
+        for (int i = 0; i < epd->passiveGrabbersContext.count(); ++i) {
+            if (epd->passiveGrabbersContext.at(i).data() == q)
+                relevantPassiveGrabbers << epd->passiveGrabbers.at(i);
+        }
+        if (!relevantPassiveGrabbers.isEmpty())
+            deliverToPassiveGrabbers(relevantPassiveGrabbers, event);
+    }
 
     if (done)
         return;
