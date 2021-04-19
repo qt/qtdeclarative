@@ -75,8 +75,7 @@ private:
     QStringView m_afterText;
 };
 
-enum QQmlJSLoggerCategory
-{
+enum QQmlJSLoggerCategory {
     Log_Required,
     Log_Alias,
     Log_Import,
@@ -89,7 +88,8 @@ enum QQmlJSLoggerCategory
     Log_Property,
     Log_UnqualifiedAccess,
     Log_UnusedImport,
-    QQmlJSLoggerCategory_Last = Log_UnusedImport
+    Log_MultilineString,
+    QQmlJSLoggerCategory_Last = Log_MultilineString
 };
 
 class QQmlJSLogger

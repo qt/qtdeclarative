@@ -670,3 +670,18 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiPublicMember *uipb)
 
     return true;
 }
+
+bool FindWarningVisitor::visit(QQmlJS::AST::StringLiteral *sl)
+{
+    const QString s = m_code.mid(sl->literalToken.begin(), sl->literalToken.length);
+
+    if (s.contains(QLatin1Char('\r')) || s.contains(QLatin1Char('\n')) || s.contains(QChar(0x2028u))
+        || s.contains(QChar(0x2029u))) {
+        m_logger.log(QStringLiteral("String contains unescaped line terminator which is "
+                                    "deprecated. Use a template "
+                                    "literal instead."),
+                     Log_MultilineString, sl->literalToken);
+    }
+
+    return true;
+}

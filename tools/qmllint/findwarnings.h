@@ -122,6 +122,8 @@ private:
 
     bool visit(QQmlJS::AST::BinaryExpression *) override;
     void endVisit(QQmlJS::AST::BinaryExpression *) override;
+
+    bool visit(QQmlJS::AST::StringLiteral *) override;
 };
 
 #endif // FINDUNQUALIFIED_H

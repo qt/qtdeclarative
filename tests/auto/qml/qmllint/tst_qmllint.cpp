@@ -587,6 +587,11 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Method \"deprecatedInherited(c, d)\" is deprecated (Reason: This deprecation should be visible!)")
             << QString()
             << false;
+    QTest::newRow("multilineString")
+            << QStringLiteral("multilineString.qml")
+            << QStringLiteral("String contains unescaped line terminator which is deprecated. Use "
+                              "a template literal instead.")
+            << QString() << true;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -699,6 +704,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("objectBindingOnVarProperty") << QStringLiteral("objectBoundToVar.qml");
     QTest::newRow("Unversioned change signal without arguments") << QStringLiteral("unversionChangedSignalSansArguments.qml");
     QTest::newRow("deprecatedFunctionOverride") << QStringLiteral("deprecatedFunctionOverride.qml");
+    QTest::newRow("multilineStringEscaped") << QStringLiteral("multilineStringEscaped.qml");
 }
 
 void TestQmllint::cleanQmlCode()

@@ -30,18 +30,51 @@
 
 const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
     static QMap<QString, QQmlJSLogger::Option> optionsMap = {
-            {QStringLiteral("required"), QQmlJSLogger::Option(Log_Required, QStringLiteral("Warn about required properties"), QtWarningMsg) },
-            {QStringLiteral("alias"), QQmlJSLogger::Option(Log_Alias, QStringLiteral("Warn about alias errors"), QtWarningMsg) },
-            {QStringLiteral("import"), QQmlJSLogger::Option(Log_Import, QStringLiteral("Warn about failing imports and deprecated qmltypes"), QtWarningMsg) },
-            {QStringLiteral("with"), QQmlJSLogger::Option(Log_WithStatement, QStringLiteral("Warn about with statements as they can cause false positives when checking for unqualified access"), QtWarningMsg) },
-            {QStringLiteral("inheritance-cycle"), QQmlJSLogger::Option(Log_InheritanceCycle, QStringLiteral("Warn about inheritance cycles"), QtWarningMsg) },
-            {QStringLiteral("deprecated"), QQmlJSLogger::Option(Log_Deprecation, QStringLiteral("Warn about deprecated properties and types"), QtWarningMsg) },
-            {QStringLiteral("signal"), QQmlJSLogger::Option(Log_Signal, QStringLiteral("Warn about bad signal handler parameters"), QtWarningMsg) },
-            {QStringLiteral("type"), QQmlJSLogger::Option(Log_Type, QStringLiteral("Warn about unresolvable types and type mismatches"), QtWarningMsg) },
-            {QStringLiteral("property"), QQmlJSLogger::Option(Log_Property, QStringLiteral("Warn about unknown properties"), QtWarningMsg) },
-            {QStringLiteral("unqualified"), QQmlJSLogger::Option(Log_UnqualifiedAccess, QStringLiteral("Warn about unqualified identifiers and how to fix them"), QtWarningMsg) },
-            {QStringLiteral("unused-imports"), QQmlJSLogger::Option(Log_UnusedImport, QStringLiteral("Warn about unused imports"), QtInfoMsg) }
-        };
+        { QStringLiteral("required"),
+          QQmlJSLogger::Option(Log_Required, QStringLiteral("Warn about required properties"),
+                               QtWarningMsg) },
+        { QStringLiteral("alias"),
+          QQmlJSLogger::Option(Log_Alias, QStringLiteral("Warn about alias errors"),
+                               QtWarningMsg) },
+        { QStringLiteral("import"),
+          QQmlJSLogger::Option(Log_Import,
+                               QStringLiteral("Warn about failing imports and deprecated qmltypes"),
+                               QtWarningMsg) },
+        { QStringLiteral("with"),
+          QQmlJSLogger::Option(Log_WithStatement,
+                               QStringLiteral("Warn about with statements as they can cause false "
+                                              "positives when checking for unqualified access"),
+                               QtWarningMsg) },
+        { QStringLiteral("inheritance-cycle"),
+          QQmlJSLogger::Option(Log_InheritanceCycle,
+                               QStringLiteral("Warn about inheritance cycles"), QtWarningMsg) },
+        { QStringLiteral("deprecated"),
+          QQmlJSLogger::Option(Log_Deprecation,
+                               QStringLiteral("Warn about deprecated properties and types"),
+                               QtWarningMsg) },
+        { QStringLiteral("signal"),
+          QQmlJSLogger::Option(Log_Signal,
+                               QStringLiteral("Warn about bad signal handler parameters"),
+                               QtWarningMsg) },
+        { QStringLiteral("type"),
+          QQmlJSLogger::Option(Log_Type,
+                               QStringLiteral("Warn about unresolvable types and type mismatches"),
+                               QtWarningMsg) },
+        { QStringLiteral("property"),
+          QQmlJSLogger::Option(Log_Property, QStringLiteral("Warn about unknown properties"),
+                               QtWarningMsg) },
+        { QStringLiteral("unqualified"),
+          QQmlJSLogger::Option(
+                  Log_UnqualifiedAccess,
+                  QStringLiteral("Warn about unqualified identifiers and how to fix them"),
+                  QtWarningMsg) },
+        { QStringLiteral("unused-imports"),
+          QQmlJSLogger::Option(Log_UnusedImport, QStringLiteral("Warn about unused imports"),
+                               QtInfoMsg) },
+        { QStringLiteral("multiline-strings"),
+          QQmlJSLogger::Option(Log_MultilineString, QStringLiteral("Warn about multiline strings"),
+                               QtInfoMsg) }
+    };
 
     return optionsMap;
 }
@@ -118,8 +151,16 @@ void QQmlJSLogger::printContext(const QQmlJS::SourceLocation &location)
     IssueLocationWithContext issueLocationWithContext { m_code, location };
     if (const QStringView beforeText = issueLocationWithContext.beforeText(); !beforeText.isEmpty())
         m_output.write(beforeText);
+
+    bool locationMultiline = issueLocationWithContext.issueText().contains(QLatin1Char('\n'));
+
     m_output.write(issueLocationWithContext.issueText().toString(), QtCriticalMsg);
     m_output.write(issueLocationWithContext.afterText() + QLatin1Char('\n'));
+
+    // Do not draw location indicator for multiline locations
+    if (locationMultiline)
+        return;
+
     int tabCount = issueLocationWithContext.beforeText().count(QLatin1Char('\t'));
     m_output.write(QString::fromLatin1(" ").repeated(
                        issueLocationWithContext.beforeText().length() - tabCount)
