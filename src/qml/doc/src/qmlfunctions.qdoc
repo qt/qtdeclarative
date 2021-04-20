@@ -264,9 +264,40 @@
   Declares that the enclosing type uses \a EXTENDED_NAMESPACE as an extension to
   provide further enumerations in QML. This takes effect if the type
   is exposed to QML using a \l QML_ELEMENT or \l QML_NAMED_ELEMENT() macro.
+  The enumerations need to be exposed to the metaobject system for this to work.
+
+  For example, give the following C++ code
+  \code
+  namespace MyNamespace {
+      Q_NAMESPACE
+      enum MyEnum { MyEnumerator = 10 };
+      Q_ENUM_NS(MyEnum)
+  }
+
+  class QmlType : public QObject
+  {
+      Q_OBJECT
+      QML_ELEMENT
+      QML_EXTENDED_NAMESPACE(MyNamespace)
+  }
+  \endcode
+
+  we can access the enum in QML:
+  \qml
+  QmlType {
+      property int i: QmlType.MyEnumerator // i will be 10
+  }
+  \endqml
+
+  \note EXTENDED_NAMESPACE can also be a QObject or QGadget; in that case - and in contrast to
+  QML_EXTENDED, which also exposes methods and properties - only its enumerations
+  are exposed.
+
+  \note \a EXTENDED_NAMESPACE must have a metaobject; i.e. it must either be a namespace which
+  contains the Q_NAMESPACE macro or a QObject/QGadget.
 
   \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_EXTENDED(),
-      {Registering Extension Objects}
+      {Registering Extension Objects}, Q_ENUM, Q_ENUM_NS
 */
 
 /*!
