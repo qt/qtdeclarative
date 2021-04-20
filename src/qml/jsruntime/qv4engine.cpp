@@ -94,6 +94,7 @@
 #include "qv4atomics_p.h"
 #include "qv4urlobject_p.h"
 #include "qv4jscall_p.h"
+#include "qv4variantobject_p.h"
 
 #if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
@@ -1083,6 +1084,14 @@ Heap::UrlObject *ExecutionEngine::newUrlObject()
     return memoryManager->allocate<UrlObject>();
 }
 
+Heap::UrlObject *ExecutionEngine::newUrlObject(const QUrl &url)
+{
+    Scope scope(this);
+    Scoped<UrlObject> urlObject(scope, newUrlObject());
+    urlObject->setUrl(url);
+    return urlObject->d();
+}
+
 Heap::UrlSearchParamsObject *ExecutionEngine::newUrlSearchParamsObject()
 {
     return memoryManager->allocate<UrlSearchParamsObject>();
@@ -1628,6 +1637,8 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
 #endif
     if (const QV4::DateObject *d = value.as<DateObject>())
         return d->toQDateTime();
+    if (const QV4::UrlObject *d = value.as<UrlObject>())
+        return d->toQUrl();
     if (const ArrayBuffer *d = value.as<ArrayBuffer>())
         return d->asByteArray();
     // NOTE: since we convert QTime to JS Date, round trip will change the variant type (to QDateTime)!
@@ -1949,6 +1960,9 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(QMetaType type, const void *dat
         // unwrap it: this is tested in QJSEngine, and makes the most sense for
         // end-user code too.
         return fromVariant(*reinterpret_cast<const QVariant*>(data));
+    } else if (type == QMetaType::fromType<QUrl>()) {
+        // Create a proper URL object here, rather than a variant.
+        return newUrlObject(*reinterpret_cast<const QUrl *>(data))->asReturnedValue();
     }
 
     return fromData(type, data);
@@ -2296,7 +2310,15 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         } else if (const QV4::UrlObject *d = value.as<UrlObject>()) {
             *reinterpret_cast<QUrl *>(data) = d->toQUrl();
             return true;
-        } break;
+        } else if (const QV4::VariantObject *d = value.as<VariantObject>()) {
+            const QVariant *variant = &d->d()->data();
+            if (variant->metaType() == QMetaType::fromType<QUrl>()) {
+                *reinterpret_cast<QUrl *>(data)
+                        = *reinterpret_cast<const QUrl *>(variant->constData());
+                return true;
+            }
+        }
+        break;
 #if QT_CONFIG(regularexpression)
     case QMetaType::QRegularExpression:
         if (const QV4::RegExpObject *r = value.as<QV4::RegExpObject>()) {

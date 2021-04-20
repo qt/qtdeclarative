@@ -126,6 +126,7 @@ public:
     bool isRegExp() const;
     bool isArray() const;
     bool isError() const;
+    bool isUrl() const;
 
     QString toString() const;
     double toNumber() const;

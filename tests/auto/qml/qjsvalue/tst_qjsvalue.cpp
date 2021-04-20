@@ -396,7 +396,8 @@ void tst_QJSValue::toString()
     QVERIFY(!variant.isVariant());
     QCOMPARE(variant.toString(), QString::fromLatin1("QPoint(10, 20)"));
     variant = eng.toScriptValue(QUrl());
-    QVERIFY(variant.isVariant());
+    QVERIFY(!variant.isVariant());
+    QVERIFY(variant.isUrl());
     QVERIFY(variant.toString().isEmpty());
 
     {

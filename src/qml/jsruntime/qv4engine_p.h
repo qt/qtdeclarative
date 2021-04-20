@@ -601,6 +601,7 @@ public:
 #endif
 
     Heap::UrlObject *newUrlObject();
+    Heap::UrlObject *newUrlObject(const QUrl &url);
     Heap::UrlSearchParamsObject *newUrlSearchParamsObject();
 
     Heap::Object *newErrorObject(const Value &value);

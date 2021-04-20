@@ -5328,6 +5328,20 @@ void tst_QJSEngine::urlObject()
         engine.catchError();
     }
 
+    QVariant urlVariant(url);
+    QV4::Scope scope(engine.handle());
+    QV4::ScopedValue urlValue(scope, scope.engine->fromVariant(urlVariant));
+    QVERIFY(urlValue->isObject());
+
+    QUrl result1;
+    QVERIFY(scope.engine->metaTypeFromJS(urlValue, QMetaType::fromType<QUrl>(), &result1));
+    QCOMPARE(result1, url);
+
+    QV4::ScopedValue urlVariantValue(scope, scope.engine->newVariantObject(urlVariant));
+    QVERIFY(urlVariantValue->isObject());
+    QUrl result2;
+    QVERIFY(scope.engine->metaTypeFromJS(urlVariantValue, QMetaType::fromType<QUrl>(), &result2));
+    QCOMPARE(result2, url);
 }
 
 QTEST_MAIN(tst_QJSEngine)

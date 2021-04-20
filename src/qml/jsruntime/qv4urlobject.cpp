@@ -149,11 +149,16 @@ bool UrlObject::setHost(QString hostname)
 
 bool UrlObject::setHref(QString href)
 {
-    QUrl url(href);
-
+    const QUrl url(href);
     if (!url.isValid() || url.isRelative())
         return false;
 
+    setUrl(url);
+    return true;
+}
+
+void UrlObject::setUrl(const QUrl &url)
+{
     d()->hash.set(engine(), engine()->newString(url.fragment()));
     d()->hostname.set(engine(), engine()->newString(url.host()));
     d()->href.set(engine(), engine()->newString(url.toString()));
@@ -168,8 +173,6 @@ bool UrlObject::setHref(QString href)
 
     updateOrigin();
     updateHost();
-
-    return true;
 }
 
 bool UrlObject::setPassword(QString password)

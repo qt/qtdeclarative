@@ -111,41 +111,47 @@ struct UrlObject : Object
     Q_MANAGED_TYPE(UrlObject)
     V4_PROTOTYPE(urlPrototype)
 
-    QString hash() const { return QLatin1String("#") + d()->hash->toQString(); }
+    QString hash() const { return QLatin1String("#") + toQString(d()->hash); }
     bool setHash(QString hash);
 
-    QString host() const { return d()->host->toQString(); }
+    QString host() const { return toQString(d()->host); }
     bool setHost(QString host);
 
-    QString hostname() const { return d()->hostname->toQString(); }
+    QString hostname() const { return toQString(d()->hostname); }
     bool setHostname(QString hostname);
 
-    QString href() const { return d()->href->toQString(); }
+    QString href() const { return toQString(d()->href); }
     bool setHref(QString href);
 
-    QString origin() const { return d()->origin->toQString(); }
+    QString origin() const { return toQString(d()->origin); }
 
-    QString password() const { return d()->password->toQString(); }
+    QString password() const { return toQString(d()->password); }
     bool setPassword(QString password);
 
-    QString pathname() const { return d()->pathname->toQString(); }
+    QString pathname() const { return toQString(d()->pathname); }
     bool setPathname(QString pathname);
 
-    QString port() const { return d()->port->toQString(); }
+    QString port() const { return toQString(d()->port); }
     bool setPort(QString port);
 
-    QString protocol() const { return d()->protocol->toQString(); }
+    QString protocol() const { return toQString(d()->protocol); }
     bool setProtocol(QString protocol);
 
-    QString search() const { return QLatin1String("?") + d()->search->toQString(); }
+    QString search() const { return QLatin1String("?") + toQString(d()->search); }
     bool setSearch(QString search);
 
-    QString username() const { return d()->username->toQString(); }
+    QString username() const { return toQString(d()->username); }
     bool setUsername(QString username);
 
     QUrl toQUrl() const;
+    void setUrl(const QUrl &url);
 
 private:
+    static QString toQString(const Heap::String *string)
+    {
+        return string ? string->toQString() : QString();
+    }
+
     void updateOrigin();
     void updateHost();
 };

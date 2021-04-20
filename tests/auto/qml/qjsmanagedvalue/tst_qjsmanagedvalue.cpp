@@ -1731,6 +1731,7 @@ void tst_QJSManagedValue::stringAndUrl()
     const QUrl url(string);
 
     const QJSManagedValue urlValue(engine.toManagedValue(url));
+    QVERIFY(urlValue.isUrl());
     QCOMPARE(urlValue.toString(), string);
     QCOMPARE(engine.fromManagedValue<QUrl>(urlValue), url);
 

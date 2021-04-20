@@ -56,6 +56,7 @@
 #include <private/qv4mm_p.h>
 #include <private/qv4jscall_p.h>
 #include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4urlobject_p.h>
 
 /*!
   \since 5.0
@@ -368,6 +369,15 @@ bool QJSValue::isUndefined() const
 bool QJSValue::isError() const
 {
     return QJSValuePrivate::asManagedType<ErrorObject>(this);
+}
+
+/*!
+  Returns true if this QJSValue is an object of the URL class;
+  otherwise returns false.
+*/
+bool QJSValue::isUrl() const
+{
+    return QJSValuePrivate::asManagedType<UrlObject>(this);
 }
 
 /*!
