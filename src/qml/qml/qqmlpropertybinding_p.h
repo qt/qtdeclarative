@@ -132,8 +132,6 @@ public:
     }
 
 private:
-    QQmlPropertyBinding(QMetaType metaType, QObject *target, QQmlPropertyIndex targetIndex, bool hasBoundFunction);
-
     bool evaluate(QMetaType metaType, void *dataPtr);
 
     Q_NEVER_INLINE void handleUndefinedAssignment(QQmlEnginePrivate *ep, void *dataPtr);
@@ -153,6 +151,7 @@ private:
         bool hasBoundFunction;
         bool isUndefined = false;
     };
+    QQmlPropertyBinding(QMetaType metaType, QObject *target, QQmlPropertyIndex targetIndex, TargetData::BoundFunction hasBoundFunction);
 
     QObject *target();
     QQmlPropertyIndex targetIndex();

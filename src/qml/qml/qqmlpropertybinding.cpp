@@ -101,7 +101,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
     }
 
     auto buffer = new std::byte[sizeof(QQmlPropertyBinding)+sizeof(QQmlPropertyBindingJS)+jsExpressionOffsetLength()]; // QQmlPropertyBinding uses delete[]
-    auto binding = new(buffer) QQmlPropertyBinding(QMetaType(pd->propType()), target, targetIndex, false);
+    auto binding = new(buffer) QQmlPropertyBinding(QMetaType(pd->propType()), target, targetIndex, TargetData::WithoutBoundFunction);
     auto js = new(buffer + sizeof(QQmlPropertyBinding) + jsExpressionOffsetLength()) QQmlPropertyBindingJS();
     Q_ASSERT(binding->jsExpression() == js);
     Q_ASSERT(js->asBinding() == binding);
@@ -116,7 +116,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
 QUntypedPropertyBinding QQmlPropertyBinding::createFromCodeString(const QQmlPropertyData *pd, const QString& str, QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt, const QString &url, quint16 lineNumber, QObject *target, QQmlPropertyIndex targetIndex)
 {
     auto buffer = new std::byte[sizeof(QQmlPropertyBinding)+sizeof(QQmlPropertyBindingJS)+jsExpressionOffsetLength()]; // QQmlPropertyBinding uses delete[]
-    auto binding = new(buffer) QQmlPropertyBinding(QMetaType(pd->propType()), target, targetIndex, true);
+    auto binding = new(buffer) QQmlPropertyBinding(QMetaType(pd->propType()), target, targetIndex, TargetData::WithoutBoundFunction);
     auto js = new(buffer + sizeof(QQmlPropertyBinding) + jsExpressionOffsetLength()) QQmlPropertyBindingJS();
     Q_ASSERT(binding->jsExpression() == js);
     Q_ASSERT(js->asBinding() == binding);
@@ -130,7 +130,7 @@ QUntypedPropertyBinding QQmlPropertyBinding::createFromCodeString(const QQmlProp
 QUntypedPropertyBinding QQmlPropertyBinding::createFromBoundFunction(const QQmlPropertyData *pd, QV4::BoundFunction *function, QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt, QV4::ExecutionContext *scope, QObject *target, QQmlPropertyIndex targetIndex)
 {
     auto buffer = new std::byte[sizeof(QQmlPropertyBinding)+sizeof(QQmlPropertyBindingJSForBoundFunction)+jsExpressionOffsetLength()]; // QQmlPropertyBinding uses delete[]
-    auto binding = new(buffer) QQmlPropertyBinding(QMetaType(pd->propType()), target, targetIndex, true);
+    auto binding = new(buffer) QQmlPropertyBinding(QMetaType(pd->propType()), target, targetIndex, TargetData::HasBoundFunction);
     auto js = new(buffer + sizeof(QQmlPropertyBinding) + jsExpressionOffsetLength()) QQmlPropertyBindingJSForBoundFunction();
     Q_ASSERT(binding->jsExpression() == js);
     Q_ASSERT(js->asBinding() == binding);
@@ -175,7 +175,7 @@ const QQmlPropertyBinding *QQmlPropertyBindingJS::asBinding() const
     return std::launder(reinterpret_cast<QQmlPropertyBinding const *>(reinterpret_cast<std::byte const*>(this) - sizeof(QQmlPropertyBinding) - jsExpressionOffsetLength()));
 }
 
-QQmlPropertyBinding::QQmlPropertyBinding(QMetaType mt, QObject *target, QQmlPropertyIndex targetIndex, bool hasBoundFunction)
+QQmlPropertyBinding::QQmlPropertyBinding(QMetaType mt, QObject *target, QQmlPropertyIndex targetIndex, TargetData::BoundFunction hasBoundFunction)
     : QPropertyBindingPrivate(mt,
                               &QtPrivate::bindingFunctionVTable<QQmlPropertyBinding>,
                               QPropertyBindingSourceLocation(), true)
@@ -478,7 +478,7 @@ QV4::ReturnedValue QQmlPropertyBindingJSForBoundFunction::evaluate(bool *isUndef
     const QV4::Value *argv = nullptr;
     const QV4::Value *thisObject = nullptr;
     QV4::BoundFunction *b = nullptr;
-    if ((b = static_cast<QV4::BoundFunction *>(m_boundFunction.valueRef()))) {
+    if ((b = m_boundFunction.as<QV4::BoundFunction>())) {
         QV4::Heap::MemberData *args = b->boundArgs();
         if (args) {
             argc = args->values.size;
