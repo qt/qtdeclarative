@@ -373,6 +373,20 @@ bool QQmlJSScope::isPropertyLocallyRequired(const QString &name) const
     return m_requiredPropertyNames.contains(name);
 }
 
+bool QQmlJSScope::isFullyResolved() const
+{
+    bool baseResolved = true;
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        if (!scope->isResolved()) {
+            baseResolved = false;
+            return true;
+        }
+        return false;
+    });
+
+    return baseResolved;
+}
+
 QQmlJSScope::Export::Export(QString package, QString type, const QTypeRevision &version) :
     m_package(std::move(package)),
     m_type(std::move(type)),
@@ -392,6 +406,29 @@ QQmlJSScope QDeferredFactory<QQmlJSScope>::create() const
     m_importer->m_warnings.append(typeReader.errors());
     result->setInternalName(QFileInfo(m_filePath).baseName());
     return std::move(*result);
+}
+
+bool QQmlJSScope::canAssign(const QQmlJSScope::ConstPtr &derived) const
+{
+    if (!derived)
+        return false;
+
+    bool isBaseComponent = false;
+    for (auto scope = this; scope; scope = scope->baseType().get()) {
+        if (internalName() == u"QQmlComponent"_qs) {
+            isBaseComponent = true;
+            break;
+        }
+    }
+
+    for (auto scope = derived; !scope.isNull(); scope = scope->baseType()) {
+        if (isSameType(scope))
+            return true;
+        if (isBaseComponent && scope->internalName() == u"QObject"_qs)
+            return true;
+    }
+
+    return internalName() == u"QVariant"_qs || internalName() == u"QJSValue"_qs;
 }
 
 QT_END_NAMESPACE

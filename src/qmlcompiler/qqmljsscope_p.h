@@ -222,6 +222,9 @@ public:
     bool isPropertyRequired(const QString &name) const;
     bool isPropertyLocallyRequired(const QString &name) const;
 
+    bool isResolved() const { return m_baseTypeName.isEmpty() || !m_baseType.isNull(); }
+    bool isFullyResolved() const;
+
     QString defaultPropertyName() const { return m_defaultPropertyName; }
     void setDefaultPropertyName(const QString &name) { m_defaultPropertyName = name; }
 
@@ -291,6 +294,31 @@ public:
         }
         return {};
     }
+
+    /*!
+      \internal
+      Checks whether \a otherScope is the same type as this.
+
+      In addition to checking whether the scopes are identical, we also cover duplicate scopes with
+      the same internal name.
+    */
+    bool isSameType(const QQmlJSScope::ConstPtr &otherScope) const
+    {
+        return this == otherScope.get()
+                || (!this->internalName().isEmpty()
+                    && this->internalName() == otherScope->internalName());
+    }
+
+    /*!
+      \internal
+      Checks whether \a derived type can be assigned to this type. Returns \c
+      true if the type hierarchy of \a derived contains a type equal to this.
+
+      \note Assigning \a derived to "QVariant" or "QJSValue" is always possible and
+      the function returns \c true in this case. In addition any "QObject" based \a derived type
+      can be assigned to a this type if that type is derived from "QQmlComponent".
+    */
+    bool canAssign(const QQmlJSScope::ConstPtr &derived) const;
 
 private:
     QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());

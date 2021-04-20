@@ -157,8 +157,10 @@ void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope
             return;
     }
     if (defaultPropertyName.isEmpty()) {
-        m_logger.log(QStringLiteral("Cannot assign to non-existent default property"),
-                     Log_Property, scope->sourceLocation() );
+        if (scope->parentScope()->isFullyResolved()) {
+            m_logger.log(QStringLiteral("Cannot assign to non-existent default property"),
+                         Log_Property, scope->sourceLocation());
+        }
         return;
     }
 
@@ -176,19 +178,15 @@ void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope
     }
     m_scopeHasDefaultPropertyAssignment[scopeOfDefaultProperty] = true;
 
-    auto propType = defaultProp.type().data();
-    if (!propType) // should be an error somewhere else
+    auto propType = defaultProp.type();
+    if (propType.isNull() || !propType->isFullyResolved()
+        || !scope->isFullyResolved()) // should be an error somewhere else
         return;
 
     // Assigning any element to a QQmlComponent property implicitly wraps it into a Component
-    if (defaultProp.typeName() == QStringLiteral("QQmlComponent"))
+    // Check whether the property can be assigned the scope
+    if (propType->canAssign(scope))
         return;
-
-    // scope's type hierarchy has to have property type
-    for (const QQmlJSScope *type = scope.data(); type; type = type->baseType().data()) {
-        if (type == propType)
-            return;
-    }
 
     m_logger.log(QStringLiteral("Cannot assign to default property of incompatible type"),
                  Log_Property, scope->sourceLocation());
@@ -274,6 +272,9 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         }
         return true;
     }
+
+    if (!qmlScope->isFullyResolved())
+        return true;
 
     const QString signal = signalName(name);
     if (signal.isEmpty()) {

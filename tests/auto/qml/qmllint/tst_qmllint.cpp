@@ -518,11 +518,6 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Cannot assign to default property of incompatible type")
             << QStringLiteral("Cannot assign to non-existent default property")
             << false;
-    QTest::newRow("DefaultPropertyWithWrongType(var)")
-            << QStringLiteral("defaultPropertyWithWrongType2.qml")
-            << QStringLiteral("Cannot assign to default property of incompatible type")
-            << QStringLiteral("Cannot assign to non-existent default property")
-            << false;
     QTest::newRow("InvalidImport")
             << QStringLiteral("invalidImport.qml")
             << QStringLiteral("Failed to import FooBar. Are your include paths set up properly?")
@@ -592,6 +587,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("String contains unescaped line terminator which is deprecated. Use "
                               "a template literal instead.")
             << QString() << true;
+    QTest::newRow("unresolvedType")
+            << QStringLiteral("unresolvedType.qml")
+            << QStringLiteral("UnresolvedType was not found. Did you add all import paths?")
+            << QStringLiteral("incompatible type") << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -690,6 +689,9 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("defaultPropertyList") << QStringLiteral("defaultPropertyList.qml");
     QTest::newRow("defaultPropertyComponent") << QStringLiteral("defaultPropertyComponent.qml");
     QTest::newRow("defaultPropertyComponent2") << QStringLiteral("defaultPropertyComponent.2.qml");
+    QTest::newRow("defaultPropertyListModel") << QStringLiteral("defaultPropertyListModel.qml");
+    QTest::newRow("defaultPropertyVar") << QStringLiteral("defaultPropertyVar.qml");
+    QTest::newRow("propertyDelegate") << QStringLiteral("propertyDelegate.qml");
     QTest::newRow("duplicateQmldirImport") << QStringLiteral("qmldirImport/duplicate.qml");
     QTest::newRow("Used imports") << QStringLiteral("used.qml");
     QTest::newRow("Unused imports (multi)") << QStringLiteral("unused_multi.qml");

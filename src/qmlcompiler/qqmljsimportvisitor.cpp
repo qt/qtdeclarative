@@ -65,25 +65,6 @@ inline QString getScopeName(const QQmlJSScope::ConstPtr &scope, QQmlJSScope::Sco
     return scope->baseTypeName();
 }
 
-/*!
-  \internal
-  Checks whether \a derived type can be assigned to \a base type. Returns \c
-  true if the type hierarchy of \a derived contains a type equal to \a base.
-
-  \note Assigning \a derived to "QVariant" or "QJSValue" is always possible and
-  the function returns \c true in this case.
-*/
-static bool canAssign(const QQmlJSScope *derived, const QQmlJSScope *base)
-{
-    if (!base)
-        return false;
-    for (; derived; derived = derived->baseType().get()) {
-        if (derived == base)
-            return true;
-    }
-    return base->internalName() == u"QVariant"_qs || base->internalName() == u"QJSValue"_qs;
-}
-
 QQmlJSImportVisitor::QQmlJSImportVisitor(
         QQmlJSImporter *importer, const QString &implicitImportDirectory,
         const QStringList &qmltypesFiles, const QString &fileName, const QString &code, bool silent)
@@ -856,14 +837,28 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
     // on ending the visit to UiObjectBinding, set the property type to the
     // just-visited one if the property exists and this type is valid
     QQmlJSMetaProperty property = m_currentScope->property(group->name.toString());
-    if (property.isValid() && canAssign(childScope.get(), property.type().get())) {
+    if (property.isValid() && !property.type().isNull() && property.type()->canAssign(childScope)) {
         property.setType(childScope);
         property.setTypeName(getScopeName(childScope, QQmlJSScope::QMLScope));
         m_currentScope->addOwnProperty(property);
+    } else if (!m_currentScope->isFullyResolved()) {
+        // If the current scope is not fully resolved we cannot tell whether the property exists or
+        // not (we already warn elsewhere)
     } else if (!property.isValid()) {
         m_logger.log(QStringLiteral("Property \"%1\" is invalid or does not exist")
                              .arg(group->name.toString()),
                      Log_Property, group->firstSourceLocation());
+    } else if (property.type().isNull() || !property.type()->isFullyResolved()) {
+        // Property type is not fully resolved we cannot tell any more than this
+        m_logger.log(
+                QStringLiteral(
+                        "Property \"%1\" has incomplete type \"%2\". You may be missing an import.")
+                        .arg(group->name.toString())
+                        .arg(property.typeName()),
+                Log_Property, group->firstSourceLocation());
+    } else if (!childScope->isFullyResolved()) {
+        // If the childScope type is not fully resolved we cannot tell whether the type is
+        // incompatible (we already warn elsewhere)
     } else {
         // the type is incompatible
         m_logger.log(
