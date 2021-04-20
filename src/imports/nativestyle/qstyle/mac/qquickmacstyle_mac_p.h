@@ -50,11 +50,13 @@
 
 #include "qquickcommonstyle.h"
 
+#define QQC2_NAMESPACE QQC2
+
 QT_BEGIN_NAMESPACE
 
 class QPalette;
 
-namespace QQC2 {
+namespace QQC2_NAMESPACE {
 
 class QStyleOptionButton;
 class QMacStylePrivate;
@@ -95,7 +97,7 @@ private:
     Q_DECLARE_PRIVATE(QMacStyle)
 };
 
-} // namespace QQC2
+} // QQC2_NAMESPACE
 
 QT_END_NAMESPACE
 

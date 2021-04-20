@@ -67,6 +67,24 @@
 
 QT_USE_NAMESPACE
 
+// OBS! Changing QT_MANGLE_NAMESPACE and QT_NAMESPACE_ALIAS_OBJC_CLASS to take
+// both QT_NAMESPACE and QQC2_NAMESPACE into account (and not only QT_NAMESPACE, which
+// would otherwise be the case). This will make it possible to link in both widgets and
+// controls in the same application when building statically.
+#undef QT_MANGLE_NAMESPACE
+#undef QT_NAMESPACE_ALIAS_OBJC_CLASS
+
+#define QQC2_MANGLE1(a, b) a##_##b
+#define QQC2_MANGLE2(a, b) QQC2_MANGLE1(a, b)
+
+#if defined(QT_NAMESPACE)
+    #define QT_MANGLE_NAMESPACE(name) QQC2_MANGLE2(QQC2_MANGLE1(name, QQC2_NAMESPACE), QT_NAMESPACE)
+    #define QT_NAMESPACE_ALIAS_OBJC_CLASS(name) @compatibility_alias name QT_MANGLE_NAMESPACE(name)
+#else
+    #define QT_MANGLE_NAMESPACE(name) QQC2_MANGLE2(name, QQC2_NAMESPACE)
+    #define QT_NAMESPACE_ALIAS_OBJC_CLASS(name) @compatibility_alias name QT_MANGLE_NAMESPACE(name)
+#endif
+
 @interface QT_MANGLE_NAMESPACE(QIndeterminateProgressIndicator) : NSProgressIndicator
 
 @property (readonly, nonatomic) NSInteger animators;
@@ -171,7 +189,7 @@ QT_NAMESPACE_ALIAS_OBJC_CLASS(QDarkNSBox);
 
 QT_BEGIN_NAMESPACE
 
-namespace QQC2 {
+namespace QQC2_NAMESPACE {
 
 // The following constants are used for adjusting the size
 // of push buttons so that they are drawn inside their bounds.
@@ -6046,6 +6064,6 @@ QIcon QMacStyle::standardIcon(StandardPixmap standardIcon, const QStyleOption *o
     }
 }
 
-} // namespace QQC2
+} // QQC2_NAMESPACE
 
 QT_END_NAMESPACE
