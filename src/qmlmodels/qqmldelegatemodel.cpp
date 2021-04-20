@@ -1101,7 +1101,7 @@ void QQmlDelegateModelPrivate::reuseItem(QQmlDelegateModelItem *item, int newMod
 
 void QQmlDelegateModelPrivate::drainReusableItemsPool(int maxPoolTime)
 {
-    m_reusableItemsPool.drain(maxPoolTime, [=](QQmlDelegateModelItem *cacheItem){ destroyCacheItem(cacheItem); });
+    m_reusableItemsPool.drain(maxPoolTime, [this](QQmlDelegateModelItem *cacheItem){ destroyCacheItem(cacheItem); });
 }
 
 void QQmlDelegateModel::drainReusableItemsPool(int maxPoolTime)
