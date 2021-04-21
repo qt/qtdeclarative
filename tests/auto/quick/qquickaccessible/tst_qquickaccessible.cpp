@@ -120,10 +120,14 @@ void tst_QQuickAccessible::cleanup()
         qWarning().noquote() << list.count()
                              << "accessibility event(s) were not handled in testfunction '"
                              << QTest::currentTestFunction() << "':";
-        for (int i = 0; i < list.count(); ++i)
-            qWarning().noquote() << " " << (i + 1) << ": Object: " << list.at(i)->object()
+        for (int i = 0; i < list.count(); ++i) {
+            auto object = list.at(i)->object();
+            QString objectInfo = object ? QDebug::toString(object)
+                                        : u"[deleted object]"_qs;
+            qWarning().noquote() << " " << (i + 1) << objectInfo
                        << "Event: '" << qAccessibleEventString(list.at(i)->type())
                        << "' Child: " << list.at(i)->child();
+        }
     }
     QTestAccessibility::clearEvents();
 }
