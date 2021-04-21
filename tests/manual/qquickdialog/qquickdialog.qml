@@ -56,7 +56,7 @@ ApplicationWindow {
     id: window
     width: 1200
     height: 800
-    title: "Buttons"
+    title: "qquickdialog"
     visible: true
 
     property alias visualizeDialogButtonBoxContentItem: visualizeDialogButtonBoxContentItemMenuItem.checked

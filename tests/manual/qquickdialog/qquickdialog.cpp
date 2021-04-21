@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
-    engine.load(QUrl("qrc:/dialogs.qml"));
+    engine.load(QUrl("qrc:/qquickdialog.qml"));
 
     return app.exec();
 }

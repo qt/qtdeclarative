@@ -4,6 +4,7 @@ SUBDIRS += \
     gifs \
     fonts \
     headerview \
+    qquickdialog \
     screenshots \
     styles \
     testbench

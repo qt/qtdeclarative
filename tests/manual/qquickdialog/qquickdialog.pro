@@ -1,11 +1,11 @@
 TEMPLATE = app
-TARGET = dialogs
+TARGET = qquickdialog
 QT += qml quickcontrols2
 
-SOURCES += dialogs.cpp
+SOURCES += qquickdialog.cpp
 RESOURCES += \
     qtquickcontrols2.conf \
-    dialogs.qml \
+    qquickdialog.qml \
     Marker.qml \
     CustomDialog.qml \
     DialogLabel.qml
