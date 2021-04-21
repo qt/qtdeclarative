@@ -8,6 +8,8 @@ qt_internal_add_qml_module(qtquickcontrols2implplugin
     URI "QtQuick.Controls.impl"
     VERSION "${PROJECT_VERSION}"
     CLASSNAME QtQuickControls2ImplPlugin
+    DEPENDENCIES
+        QtQuick/auto
     SKIP_TYPE_REGISTRATION
     SOURCES
         qtquickcontrols2implplugin.cpp
