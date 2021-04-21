@@ -335,10 +335,6 @@ void QQmlPropertyBinding::handleUndefinedAssignment(QQmlEnginePrivate *ep, void 
         metaType.destruct(dataPtr);
         metaType.construct(dataPtr, currentValue.constData());
     };
-    if (isUndefined()) {
-        // if we are already detached, there is no reason to call reset again (?)
-        return;
-    }
     if (prop.isResettable()) {
         // Normally a reset would remove any existing binding; but now we need to keep the binding alive
         // to handle the case where this binding becomes defined again

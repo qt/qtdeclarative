@@ -104,6 +104,7 @@ class MyQmlObject : public QObject
     Q_PROPERTY(QObject *objectProperty READ objectProperty WRITE setObjectProperty NOTIFY objectChanged)
     Q_PROPERTY(QQmlListProperty<QObject> objectListProperty READ objectListProperty CONSTANT)
     Q_PROPERTY(int resettableProperty READ resettableProperty WRITE setResettableProperty RESET resetProperty)
+    Q_PROPERTY(int resettableProperty2 READ resettableProperty2 WRITE setResettableProperty2 RESET resetProperty2 BINDABLE bindableResetProperty2)
     Q_PROPERTY(QRegularExpression regularExpression READ regularExpression WRITE setRegularExpression)
     Q_PROPERTY(int nonscriptable READ nonscriptable WRITE setNonscriptable SCRIPTABLE false)
     Q_PROPERTY(int intProperty READ intProperty WRITE setIntProperty NOTIFY intChanged)
@@ -169,7 +170,12 @@ public:
 
     int resettableProperty() const { return m_resetProperty; }
     void setResettableProperty(int v) { m_resetProperty = v; }
-    void resetProperty() { m_resetProperty = 13; }
+    void resetProperty() { m_resetProperty = 13; ++m_resetCount; }
+
+    int resettableProperty2() const { return m_resetProperty2; }
+    void setResettableProperty2(int i) { m_resetProperty2 = i; }
+    void resetProperty2(){ m_resetProperty2 = 13; ++ m_resetCount; }
+    QBindable<int> bindableResetProperty2() { return &m_resetProperty2; }
 
     QRegularExpression regularExpression() { return m_regularExpression; }
     void setRegularExpression(const QRegularExpression &regularExpression)
@@ -264,6 +270,7 @@ public slots:
     void v8function(QQmlV4Function*);
     void registeredFlagMethod(Qt::MouseButtons v) { m_buttons = v; }
     QString slotWithReturnValue(const QString &arg) { return arg; }
+    int resetCount() { return m_resetCount; }
 
 private:
     friend class tst_qqmlecmascript;
@@ -275,7 +282,9 @@ private:
     QUrl m_url;
     QList<QObject *> m_objectQList;
     int m_value;
+    Q_OBJECT_BINDABLE_PROPERTY(MyQmlObject, int, m_resetProperty2)
     int m_resetProperty;
+    int m_resetCount = 0;
     QRegularExpression m_regularExpression;
     QVariant m_variant;
     QJSValue m_qjsvalue;

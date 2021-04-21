@@ -145,6 +145,8 @@ private slots:
     void compositePropertyType();
     void jsObject();
     void undefinedResetsProperty();
+    void undefinedResetsEveryTime_data();
+    void undefinedResetsEveryTime();
     void listToVariant();
     void listAssignment();
     void multiEngineObject();
@@ -2512,6 +2514,40 @@ void tst_qqmlecmascript::undefinedResetsProperty()
 
     delete object;
     }
+}
+
+void tst_qqmlecmascript::undefinedResetsEveryTime_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QByteArray>("property");
+
+    QTest::newRow("old property") << QString::fromUtf8("undefinedResetsProperty.3.qml") << QByteArray("resettableProperty");
+    QTest::newRow("new property") << QString::fromUtf8("undefinedResetsProperty.4.qml") << QByteArray("resettableProperty2");
+}
+
+void tst_qqmlecmascript::undefinedResetsEveryTime()
+{
+    QFETCH(QString, file);
+    QFETCH(QByteArray, property);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl(file));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(object != nullptr);
+    auto qmlObject = qobject_cast<MyQmlObject *>(object.get());
+    QVERIFY(qmlObject);
+
+    QCOMPARE(qmlObject->resetCount(), 0);
+    QCOMPARE(object->property(property).toInt(), 19);
+
+    bool ok = QMetaObject::invokeMethod(object.get(), "incrementCount");
+    QVERIFY(ok);
+    QCOMPARE(qmlObject->resetCount(), 1);
+    ok = QMetaObject::invokeMethod(object.get(), "incrementCount");
+    QVERIFY(ok);
+    QCOMPARE(qmlObject->resetCount(), 2);
+
+    QCOMPARE(object->property(property).toInt(), 13);
 }
 
 // Aliases to variant properties should work
