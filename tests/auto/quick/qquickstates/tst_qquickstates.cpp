@@ -1482,7 +1482,7 @@ void tst_qquickstates::editProperties()
     QQuickRectangle *childRect = rect->findChild<QQuickRectangle*>("rect2");
     QVERIFY(childRect != nullptr);
     QCOMPARE(childRect->width(), qreal(402));
-    QVERIFY(QQmlPropertyPrivate::binding(QQmlProperty(childRect, "width")));
+    QVERIFY(QQmlAnyBinding::ofProperty(QQmlProperty(childRect, "width")));
     QCOMPARE(childRect->height(), qreal(200));
 
     rectPrivate->setState("blue");
@@ -1524,7 +1524,7 @@ void tst_qquickstates::editProperties()
     QCOMPARE(propertyChangesBlue->value("width").toInt(), 50);
     QCOMPARE(propertyChangesBlue->actions().length(), 2);
 
-    QVERIFY(QQmlPropertyPrivate::binding(QQmlProperty(childRect, "width")));
+    QVERIFY(QQmlAnyBinding::ofProperty(QQmlProperty(childRect, "width")));
     rectPrivate->setState("blue");
     QCOMPARE(childRect->width(), qreal(50));
     QCOMPARE(childRect->height(), qreal(40));
@@ -1533,14 +1533,14 @@ void tst_qquickstates::editProperties()
     QCOMPARE(propertyChangesBlue->value("width").toInt(), 60);
     QCOMPARE(propertyChangesBlue->actions().length(), 2);
     QCOMPARE(childRect->width(), qreal(60));
-    QVERIFY(!QQmlPropertyPrivate::binding(QQmlProperty(childRect, "width")));
+    QVERIFY(!QQmlAnyBinding::ofProperty(QQmlProperty(childRect, "width")));
 
     propertyChangesBlue->changeExpression("width", "myRectangle.width / 2");
     QVERIFY(!propertyChangesBlue->containsValue("width"));
     QVERIFY(propertyChangesBlue->containsExpression("width"));
     QCOMPARE(propertyChangesBlue->value("width").toInt(), 0);
     QCOMPARE(propertyChangesBlue->actions().length(), 2);
-    QVERIFY(QQmlPropertyPrivate::binding(QQmlProperty(childRect, "width")));
+    QVERIFY(QQmlAnyBinding::ofProperty(QQmlProperty(childRect, "width")));
     QCOMPARE(childRect->width(), qreal(200));
 
     propertyChangesBlue->changeValue("width", 50);
@@ -1548,25 +1548,25 @@ void tst_qquickstates::editProperties()
 
     rectPrivate->setState("");
     QCOMPARE(childRect->width(), qreal(402));
-    QVERIFY(QQmlPropertyPrivate::binding(QQmlProperty(childRect, "width")));
+    QVERIFY(QQmlAnyBinding::ofProperty(QQmlProperty(childRect, "width")));
 
     QCOMPARE(propertyChangesGreen->actions().length(), 2);
     rectPrivate->setState("green");
     QCOMPARE(childRect->width(), qreal(200));
     QCOMPARE(childRect->height(), qreal(100));
-    QVERIFY(QQmlPropertyPrivate::binding(QQmlProperty(childRect, "width")));
+    QVERIFY(QQmlAnyBinding::ofProperty(QQmlProperty(childRect, "width")));
     QVERIFY(greenState->bindingInRevertList(childRect, "width"));
     QCOMPARE(propertyChangesGreen->actions().length(), 2);
 
 
     propertyChangesGreen->removeProperty("height");
-    QVERIFY(!QQmlPropertyPrivate::binding(QQmlProperty(childRect, "height")));
+    QVERIFY(!QQmlAnyBinding::ofProperty(QQmlProperty(childRect, "height")));
     QCOMPARE(childRect->height(), qreal(200));
 
     QVERIFY(greenState->bindingInRevertList(childRect, "width"));
     QVERIFY(greenState->containsPropertyInRevertList(childRect, "width"));
     propertyChangesGreen->removeProperty("width");
-    QVERIFY(QQmlPropertyPrivate::binding(QQmlProperty(childRect, "width")));
+    QVERIFY(QQmlAnyBinding::ofProperty(QQmlProperty(childRect, "width")));
     QCOMPARE(childRect->width(), qreal(402));
     QVERIFY(!greenState->bindingInRevertList(childRect, "width"));
     QVERIFY(!greenState->containsPropertyInRevertList(childRect, "width"));
@@ -1660,9 +1660,20 @@ void tst_qquickstates::QTBUG_38492()
     QCOMPARE(item->property("text").toString(), QString("Test"));
 }
 
+static int getRefCount(const QQmlAnyBinding &binding)
+{
+    if (binding.isAbstractPropertyBinding()) {
+        return binding.asAbstractBinding()->ref;
+    } else {
+        // this temporarily adds a refcount because we construc a new untypedpropertybinding
+        // thus -1
+        return QPropertyBindingPrivate::get(binding.asUntypedPropertyBinding())->ref - 1;
+    }
+}
+
 void tst_qquickstates::revertListMemoryLeak()
 {
-    QQmlAbstractBinding::Ptr bindingPtr;
+    QQmlAnyBinding bindingPtr;
     {
         QQmlEngine engine;
 
@@ -1674,12 +1685,12 @@ void tst_qquickstates::revertListMemoryLeak()
 
         item->setState("testState");
 
-        QQmlAbstractBinding *binding = state->bindingInRevertList(item.get(), "height").asAbstractBinding();
+        auto binding = state->bindingInRevertList(item.get(), "height");
         QVERIFY(binding);
         bindingPtr = binding;
-        QVERIFY(bindingPtr->ref > 1);
+        QVERIFY(getRefCount(bindingPtr) > 1);
     }
-    QVERIFY(bindingPtr->ref == 1);
+    QVERIFY(getRefCount(bindingPtr) == 1);
 }
 
 void tst_qquickstates::duplicateStateName()
