@@ -127,7 +127,7 @@ Column {
             }
             SecondColumnLayout {
                 ComboBox {
-                    backendValue: backendValues.orientation
+                    backendValue: backendValues.snapMode
                     model: [ "NoSnap", "SnapOnRelease", "SnapAlways" ]
                     scope: "RangeSlider"
                     Layout.fillWidth: true
