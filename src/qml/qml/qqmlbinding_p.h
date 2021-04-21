@@ -137,6 +137,9 @@ protected:
 
     bool slowWrite(const QQmlPropertyData &core, const QQmlPropertyData &valueTypeData,
                    const QV4::Value &result, bool isUndefined, QQmlPropertyData::WriteFlags flags);
+    bool slowWrite(const QQmlPropertyData &core, const QQmlPropertyData &valueTypeData,
+                   const void *result, QMetaType resultType, bool isUndefined,
+                   QQmlPropertyData::WriteFlags flags);
 
     QV4::ReturnedValue evaluate(bool *isUndefined);
     bool evaluate(void *result, QMetaType type)
@@ -154,6 +157,7 @@ private:
 
     QQmlSourceLocation *m_sourceLocation = nullptr; // used for Qt.binding() created functions
     QV4::PersistentValue m_boundFunction; // used for Qt.binding() that are created from a bound function object
+    void handleWriteError(const void *result, QMetaType resultType, QMetaType metaType);
 };
 
 bool QQmlBinding::updatingFlag() const

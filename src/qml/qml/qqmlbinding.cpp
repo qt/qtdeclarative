@@ -303,10 +303,8 @@ protected:
         getPropertyData(&pd, &vpd);
         Q_ASSERT(pd);
 
-        if (Q_UNLIKELY(isUndefined || vpd.isValid())) {
-            return slowWrite(*pd, vpd, engine()->handle()->metaTypeToJS(type, result),
-                             isUndefined, flags);
-        }
+        if (isUndefined || vpd.isValid())
+            return slowWrite(*pd, vpd, result, type, isUndefined, flags);
 
         if ((StaticPropType == QMetaType::UnknownType && pd->propType() == type)
                 || StaticPropType == type.id()) {
@@ -444,6 +442,56 @@ QQmlBinding *QQmlBinding::createTranslationBinding(
     return b;
 }
 
+bool QQmlBinding::slowWrite(
+        const QQmlPropertyData &core, const QQmlPropertyData &valueTypeData, const void *result,
+        QMetaType resultType, bool isUndefined, QQmlPropertyData::WriteFlags flags)
+{
+    // The logic in this method is obscure. It follows what the other slowWrite does, minus the type
+    // conversions and the checking for binding functions. If you're writing a C++ type, and
+    // you're passing a binding function wrapped into QJSValue, you probably want it to be assigned.
+
+    if (hasError())
+        return false;
+
+    QQmlEngine *qmlEngine = engine();
+    const QMetaType metaType = valueTypeData.isValid() ? valueTypeData.propType() : core.propType();
+    QQmlJavaScriptExpression::DeleteWatcher watcher(this);
+
+    if (core.isVarProperty()) {
+        QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(m_target.data());
+        Q_ASSERT(vmemo);
+        vmemo->setVMEProperty(core.coreIndex(),
+                              qmlEngine->handle()->metaTypeToJS(resultType, result));
+    } else if (isUndefined && core.isResettable()) {
+        void *args[] = { nullptr };
+        QMetaObject::metacall(m_target.data(), QMetaObject::ResetProperty, core.coreIndex(), args);
+    } else if (isUndefined && metaType == QMetaType::fromType<QVariant>()) {
+        QQmlPropertyPrivate::writeValueProperty(
+                    m_target.data(), core, valueTypeData, QVariant(), context(), flags);
+    } else if (metaType == QMetaType::fromType<QJSValue>()) {
+        QQmlPropertyPrivate::writeValueProperty(
+                    m_target.data(), core, valueTypeData,
+                    QVariant(resultType, result), context(), flags);
+    } else if (isUndefined) {
+        const char *name = metaType.name();
+        const QString typeName = name
+                ? QString::fromUtf8(name)
+                : QStringLiteral("[unknown property type]");
+        delayedError()->setErrorDescription(
+                    QStringLiteral("Unable to assign [undefined] to ") + typeName);
+        return false;
+    } else if (!QQmlPropertyPrivate::writeValueProperty(
+                   m_target.data(), core, valueTypeData, QVariant(resultType, result),
+                   context(), flags)) {
+        if (watcher.wasDeleted())
+            return true;
+        handleWriteError(result, resultType, metaType);
+        return false;
+    }
+
+    return true;
+}
+
 Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
                                            const QQmlPropertyData &valueTypeData,
                                            const QV4::Value &result,
@@ -516,41 +564,46 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
 
         if (watcher.wasDeleted())
             return true;
-
-        const char *valueType = nullptr;
-        const char *propertyType = nullptr;
-
-        const int userType = value.userType();
-        if (userType == QMetaType::QObjectStar) {
-            if (QObject *o = *(QObject *const *)value.constData()) {
-                valueType = o->metaObject()->className();
-
-                QQmlMetaObject propertyMetaObject = QQmlPropertyPrivate::rawMetaObjectForType(QQmlEnginePrivate::get(qmlEngine), type);
-                if (!propertyMetaObject.isNull())
-                    propertyType = propertyMetaObject.className();
-            }
-        } else if (userType != QMetaType::UnknownType) {
-            if (userType == QMetaType::Nullptr || userType == QMetaType::VoidStar)
-                valueType = "null";
-            else
-                valueType = QMetaType(userType).name();
-        }
-
-        if (!valueType)
-            valueType = "undefined";
-        if (!propertyType)
-            propertyType = QMetaType(type).name();
-        if (!propertyType)
-            propertyType = "[unknown property type]";
-
-        delayedError()->setErrorDescription(QLatin1String("Unable to assign ") +
-                                                        QLatin1String(valueType) +
-                                                        QLatin1String(" to ") +
-                                                        QLatin1String(propertyType));
+        handleWriteError(value.constData(), value.metaType(), metaType);
         return false;
     }
 
     return true;
+}
+
+void QQmlBinding::handleWriteError(const void *result, QMetaType resultType, QMetaType metaType)
+{
+    const char *valueType = nullptr;
+    const char *propertyType = nullptr;
+
+    if (resultType.flags() & QMetaType::PointerToQObject) {
+        if (QObject *o = *(QObject *const *)result) {
+            valueType = o->metaObject()->className();
+            QQmlMetaObject propertyMetaObject = QQmlPropertyPrivate::rawMetaObjectForType(
+                        QQmlEnginePrivate::get(engine()), metaType.id());
+            if (!propertyMetaObject.isNull())
+                propertyType = propertyMetaObject.className();
+        }
+    } else if (resultType.isValid()) {
+        if (resultType == QMetaType::fromType<std::nullptr_t>()
+                || resultType == QMetaType::fromType<void *>()) {
+            valueType = "null";
+        } else {
+            valueType = resultType.name();
+        }
+    }
+
+    if (!valueType)
+        valueType = "undefined";
+    if (!propertyType)
+        propertyType = metaType.name();
+    if (!propertyType)
+        propertyType = "[unknown property type]";
+
+    delayedError()->setErrorDescription(QStringLiteral("Unable to assign ")
+                                        + QString::fromUtf8(valueType)
+                                        + QStringLiteral(" to ")
+                                        + QString::fromUtf8(propertyType));
 }
 
 QVariant QQmlBinding::evaluate()
@@ -809,13 +862,6 @@ protected:
 
 private:
     using QQmlBinding::slowWrite;
-    bool slowWrite(const QQmlPropertyData &core, const QQmlPropertyData &valueTypeData,
-                   void *result, QMetaType type, bool isUndefined,
-                   QQmlPropertyData::WriteFlags flags)
-    {
-        return slowWrite(core, valueTypeData, engine()->handle()->metaTypeToJS(type, result),
-                         isUndefined, flags);
-    }
 
     template<typename SlowWrite>
     bool compareAndSet(const QQmlMetaObject &resultMo, QObject *resultObject, QQmlPropertyData *pd,
