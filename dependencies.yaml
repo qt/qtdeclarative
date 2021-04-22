@@ -1,7 +1,7 @@
 dependencies:
   ../qtbase:
-    ref: 5f34b848d0f28fb048bd947882ab0a7bd647e3df
+    ref: 32d12a58d07700fd7ef0e9ee0e1c16ec16312e97
     required: true
   ../qtsvg:
-    ref: b4475c287c156364a444a36ff00dc6c5387ebca7
+    ref: 857cc62a82b6e003d30a2280ad77c71ffbd06307
     required: false
