@@ -5620,7 +5620,7 @@ void tst_qqmllanguage::overrideSingleton()
 
     QTest::ignoreMessage(
                 QtWarningMsg,
-                "singleton.qml:3: TypeError: Cannot read property 'objectName' of undefined");
+                "singleton.qml:3:12: TypeError: Cannot read property 'objectName' of undefined");
     check("", "UncreatableSingleton");
 
     qmlRegisterSingletonInstance("Test", 1, 0, "UncreatableSingleton",
