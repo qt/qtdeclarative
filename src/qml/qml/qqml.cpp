@@ -50,6 +50,7 @@
 #include <private/qqmltypenotavailable_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmltypewrapper_p.h>
+#include <private/qqmlvaluetypewrapper_p.h>
 #include <private/qv4lookup_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 
@@ -843,6 +844,35 @@ bool QQmlPrivate::AOTCompiledContext::getObjectLookup(
         return true;
     }
     return scope.engine->metaTypeFromJS(result, type, target);
+}
+
+bool QQmlPrivate::AOTCompiledContext::getValueLookup(
+        uint index, void *value, QMetaType valueType, void *target, QMetaType type) const
+{
+    Q_ASSERT(value);
+
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    if (l->getter != QV4::QQmlValueTypeWrapper::lookupGetter)
+        return false;
+
+    const QMetaObject *metaObject
+            = reinterpret_cast<const QMetaObject *>(l->qgadgetLookup.metaObject - 1);
+    Q_ASSERT(metaObject);
+
+    // We cannot assert on anything here. You may even override the metaObject of Q_GADGET
+    // types with the foreign/extended mechanism. See for example QQuickFontValueType.
+    Q_UNUSED(valueType);
+
+    void *args[] = { target, nullptr };
+    if (type == QMetaType::fromType<QVariant>())
+        args[0] = transformVariant(target, QMetaType(l->qgadgetLookup.metaType));
+    else if (type != QMetaType(l->qgadgetLookup.metaType))
+        return false;
+
+    metaObject->d.static_metacall(
+                reinterpret_cast<QObject*>(value), QMetaObject::ReadProperty,
+                l->qgadgetLookup.coreIndex, args);
+    return true;
 }
 
 QJSValue QQmlPrivate::AOTCompiledContext::callQmlContextPropertyLookup(

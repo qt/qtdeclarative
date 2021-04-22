@@ -633,6 +633,9 @@ namespace QQmlPrivate
 
         // Look up a property of which we know it belongs to a QObject, and write to target.
         bool getObjectLookup(uint index, QObject *object, void *target, QMetaType type) const;
+        // Look up a property that belongs to value of type valueType, and write to target.
+        bool getValueLookup(uint index, void *value, QMetaType valueType,
+                            void *target, QMetaType type) const;
     };
 
     struct AOTCompiledFunction {
