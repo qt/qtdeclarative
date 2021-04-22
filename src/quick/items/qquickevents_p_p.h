@@ -208,6 +208,7 @@ private:
     Qt::MouseEventFlags _flags;
 };
 
+#if QT_CONFIG(wheelevent)
 class QQuickWheelEvent : public QObject
 {
     Q_OBJECT
@@ -265,6 +266,7 @@ private:
     bool _inverted = false;
     bool _accepted = false;
 };
+#endif
 
 class Q_QUICK_PRIVATE_EXPORT QQuickCloseEvent : public QObject
 {
@@ -287,7 +289,9 @@ QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickKeyEvent)
 QML_DECLARE_TYPE(QQuickMouseEvent)
+#if QT_CONFIG(wheelevent)
 QML_DECLARE_TYPE(QQuickWheelEvent)
+#endif
 QML_DECLARE_TYPE(QQuickCloseEvent)
 QML_DECLARE_TYPE(QPointingDevice)
 QML_DECLARE_TYPE(QPointingDeviceUniqueId)

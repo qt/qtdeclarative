@@ -779,6 +779,7 @@ bool QQuickDeliveryAgent::event(QEvent *ev)
                 QCoreApplication::sendEvent(target, ev);
         }
         break;
+#if QT_CONFIG(wheelevent)
     case QEvent::Wheel: {
         auto event = static_cast<QWheelEvent *>(ev);
         qCDebug(lcMouse) << event;
@@ -794,6 +795,7 @@ bool QQuickDeliveryAgent::event(QEvent *ev)
         d->lastWheelEventAccepted = event->isAccepted();
         break;
     }
+#endif
     default:
         return false;
     }

@@ -122,11 +122,13 @@ bool QQuickMouseAreaPrivate::isClickConnected()
     IS_SIGNAL_CONNECTED(q, QQuickMouseArea, clicked, (QQuickMouseEvent *));
 }
 
+#if QT_CONFIG(wheelevent)
 bool QQuickMouseAreaPrivate::isWheelConnected()
 {
     Q_Q(QQuickMouseArea);
     IS_SIGNAL_CONNECTED(q, QQuickMouseArea, wheel, (QQuickWheelEvent *));
 }
+#endif
 
 void QQuickMouseAreaPrivate::propagate(QQuickMouseEvent* event, PropagateType t)
 {

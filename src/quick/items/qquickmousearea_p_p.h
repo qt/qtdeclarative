@@ -83,7 +83,9 @@ public:
     bool isPressAndHoldConnected();
     bool isDoubleClickConnected();
     bool isClickConnected();
+#if QT_CONFIG(wheelevent)
     bool isWheelConnected();
+#endif
 
     bool enabled : 1;
     bool scrollGestureEnabled : 1;
@@ -113,7 +115,9 @@ public:
     QCursor *cursor;
 #endif
     QQuickMouseEvent quickMouseEvent;
+#if QT_CONFIG(wheelevent)
     QQuickWheelEvent quickWheelEvent;
+#endif
     Qt::MouseEventFlags lastFlags;
 };
 

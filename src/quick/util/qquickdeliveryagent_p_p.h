@@ -115,7 +115,9 @@ public:
     QScopedPointer<QMutableTouchEvent> delayedTouch;
     QList<const QPointingDevice *> knownPointingDevices;
 
+#if QT_CONFIG(wheelevent)
     uint lastWheelEventAccepted = 0;
+#endif
     bool allowChildEventFiltering = true;
     bool allowDoubleClick = true;
     bool frameSynchronousHoverEnabled = true;

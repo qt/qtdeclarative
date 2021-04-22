@@ -154,7 +154,9 @@ Q_SIGNALS:
     void released(QQuickMouseEvent *mouse);
     void clicked(QQuickMouseEvent *mouse);
     void doubleClicked(QQuickMouseEvent *mouse);
+#if QT_CONFIG(wheelevent)
     void wheel(QQuickWheelEvent *wheel);
+#endif
     void entered();
     void exited();
     void canceled();
