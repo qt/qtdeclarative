@@ -57,7 +57,7 @@
 #include <QObject>
 #include <QVariant>
 
-#include <private/qqmlbinding_p.h>
+#include <private/qqmlanybinding_p.h>
 
 QT_BEGIN_NAMESPACE
 class QQmlContext;
@@ -90,14 +90,14 @@ private:
     QVariant getResetValue(const QQuickDesignerSupport::PropertyName &propertyName) const;
     void doResetProperty(QQmlContext *context, const QQuickDesignerSupport::PropertyName &propertyName);
     bool hasValidResetBinding(const QQuickDesignerSupport::PropertyName &propertyName) const;
-    QQmlAbstractBinding *getResetBinding(const QQuickDesignerSupport::PropertyName &propertyName) const;
+    QQmlAnyBinding getResetBinding(const QQuickDesignerSupport::PropertyName &propertyName) const;
     bool hasBindingForProperty(QQmlContext *context, const QQuickDesignerSupport::PropertyName &propertyName, bool *hasChanged) const;
     void setPropertyBinding(QQmlContext *context, const QQuickDesignerSupport::PropertyName &propertyName, const QString &expression);
     void keepBindingFromGettingDeleted(QQmlContext *context, const QQuickDesignerSupport::PropertyName &propertyName);
 
     QObject *m_object;
     QHash<QQuickDesignerSupport::PropertyName, QVariant> m_resetValueHash;
-    QHash<QQuickDesignerSupport::PropertyName, QQmlAbstractBinding::Ptr> m_resetBindingHash;
+    QHash<QQuickDesignerSupport::PropertyName, QQmlAnyBinding> m_resetBindingHash;
     mutable QHash<QQuickDesignerSupport::PropertyName, bool> m_hasBindingHash;
 };
 

@@ -46,7 +46,7 @@
 #include <QQmlContext>
 #include <QQmlEngine>
 
-#include <private/qqmlbinding_p.h>
+#include <private/qqmlanybinding_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -163,7 +163,7 @@ void QQuickDesignerCustomObjectData::populateResetHashes()
 
         QQmlProperty property(object(), QString::fromUtf8(propertyName), QQmlEngine::contextForObject(object()));
 
-        QQmlAbstractBinding::Ptr binding = QQmlAbstractBinding::Ptr(QQmlPropertyPrivate::binding(property));
+        auto binding = QQmlAnyBinding::ofProperty(property);
 
         if (binding) {
             m_resetBindingHash.insert(propertyName, binding);
@@ -190,25 +190,18 @@ void QQuickDesignerCustomObjectData::doResetProperty(QQmlContext *context, const
     if (!property.isValid())
         return;
 
-    QQmlAbstractBinding *binding = QQmlPropertyPrivate::binding(property);
-    if (binding && !(hasValidResetBinding(propertyName) && getResetBinding(propertyName) == binding)) {
-        binding->setEnabled(false, {});
-    }
+    // remove existing binding
+    QQmlAnyBinding::takeFrom(property);
 
 
     if (hasValidResetBinding(propertyName)) {
-        QQmlAbstractBinding *binding = getResetBinding(propertyName);
+        QQmlAnyBinding binding = getResetBinding(propertyName);
+        binding.installOn(property);
 
-#if defined(QT_NO_DYNAMIC_CAST)
-        QQmlBinding *qmlBinding = static_cast<QQmlBinding*>(binding);
-#else
-        QQmlBinding *qmlBinding = dynamic_cast<QQmlBinding*>(binding);
-#endif
-        if (qmlBinding)
-            qmlBinding->setTarget(property);
-        QQmlPropertyPrivate::setBinding(binding, QQmlPropertyPrivate::None, QQmlPropertyData::DontRemoveBinding);
-        if (qmlBinding)
-            qmlBinding->update();
+        if (binding.isAbstractPropertyBinding()) {
+            // for new style properties, we will evaluate during setBinding anyway
+            static_cast<QQmlBinding *>(binding.asAbstractBinding())->update();
+        }
 
     } else if (property.isResettable()) {
         property.reset();
@@ -231,12 +224,12 @@ void QQuickDesignerCustomObjectData::doResetProperty(QQmlContext *context, const
 
 bool QQuickDesignerCustomObjectData::hasValidResetBinding(const QQuickDesignerSupport::PropertyName &propertyName) const
 {
-    return m_resetBindingHash.contains(propertyName) &&  m_resetBindingHash.value(propertyName).data();
+    return m_resetBindingHash.contains(propertyName) &&  m_resetBindingHash.value(propertyName);
 }
 
-QQmlAbstractBinding *QQuickDesignerCustomObjectData::getResetBinding(const QQuickDesignerSupport::PropertyName &propertyName) const
+QQmlAnyBinding QQuickDesignerCustomObjectData::getResetBinding(const QQuickDesignerSupport::PropertyName &propertyName) const
 {
-    return m_resetBindingHash.value(propertyName).data();
+    return m_resetBindingHash.value(propertyName);
 }
 
 bool QQuickDesignerCustomObjectData::hasBindingForProperty(QQmlContext *context,
@@ -248,7 +241,7 @@ bool QQuickDesignerCustomObjectData::hasBindingForProperty(QQmlContext *context,
 
     QQmlProperty property(object(), QString::fromUtf8(propertyName), context);
 
-    bool hasBinding = QQmlPropertyPrivate::binding(property);
+    bool hasBinding = QQmlAnyBinding::ofProperty(property);
 
     if (hasChanged) {
         *hasChanged = hasBinding != m_hasBindingHash.value(propertyName, false);
@@ -256,7 +249,7 @@ bool QQuickDesignerCustomObjectData::hasBindingForProperty(QQmlContext *context,
             m_hasBindingHash.insert(propertyName, hasBinding);
     }
 
-    return QQmlPropertyPrivate::binding(property);
+    return hasBinding;
 }
 
 void QQuickDesignerCustomObjectData::setPropertyBinding(QQmlContext *context,
@@ -269,15 +262,18 @@ void QQuickDesignerCustomObjectData::setPropertyBinding(QQmlContext *context,
         return;
 
     if (property.isProperty()) {
-        QQmlBinding *binding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core,
-                                                   expression, object(), QQmlContextData::get(context));
-        binding->setTarget(property);
-        binding->setNotifyOnValueChanged(true);
+        QString url = u"@designer"_qs;
+        int lineNumber = 0;
+        QQmlAnyBinding binding = QQmlAnyBinding::createFromCodeString(property,
+                                                                      expression, object(), QQmlContextData::get(context), url, lineNumber);
 
-        QQmlPropertyPrivate::setBinding(binding, QQmlPropertyPrivate::None, QQmlPropertyData::DontRemoveBinding);
-        //Refcounting is taking take care of deletion
-        binding->update();
-        if (binding->hasError()) {
+        binding.installOn(property);
+        if (binding.isAbstractPropertyBinding()) {
+            // for new style properties, we will evaluate during setBinding anyway
+            static_cast<QQmlBinding *>(binding.asAbstractBinding())->update();
+        }
+
+        if (binding.hasError()) {
             if (property.property().userType() == QMetaType::QString)
                 property.write(QVariant(QLatin1Char('#') + expression + QLatin1Char('#')));
         }

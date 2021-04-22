@@ -237,6 +237,23 @@ public:
     }
 
     /*!
+        \internal
+        Returns true if the binding is in an error state (e.g. binding loop), false otherwise.
+
+        \note For ValueTypeProxyBindings, this methods will always return false
+    */
+    bool hasError() {
+        if (isAbstractPropertyBinding()) {
+            auto abstractBinding = asAbstractBinding();
+            if (abstractBinding->isValueTypeProxy())
+                return false;
+            return static_cast<QQmlBinding *>(abstractBinding)->hasError();
+        } else {
+            return asUntypedPropertyBinding().error().hasError();
+        }
+    }
+
+    /*!
         Stores a null binding. For purpose of classification, the null bindings is
         treated as a QQmlAbstractPropertyBindings.
      */
