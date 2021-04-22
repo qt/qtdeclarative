@@ -52,6 +52,12 @@
     set of images which can easily be changed by providing a directory
     with images using a predefined naming convention.
 
+    \section2 macOS Style
+
+    \image qtquickcontrols2-macos-thumbnail.png
+    The \l {macOS Style} is a native-looking style for macOS.
+    \note this style is only available for applications running on macOS.
+
     \section2 Material Style
 
     \image qtquickcontrols2-material-thumbnail.png
@@ -66,6 +72,12 @@
     The \l {Universal Style} offers an appealing design based on the
     \l {https://dev.windows.com/design}{Microsoft Universal Design Guidelines},
     but requires more system resources than the Basic style.
+
+    \section2 Windows Style
+
+    \image qtquickcontrols2-windows-thumbnail.png
+    The \l {Windows Style} is a native-looking style for Windows.
+    \note this style is only available for applications running on Windows.
 
     \section1 Using Styles in Qt Quick Controls
 
