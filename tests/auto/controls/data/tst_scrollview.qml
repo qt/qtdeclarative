@@ -502,4 +502,28 @@ TestCase {
         compare(control.contentWidth, flickable.contentWidth)
         compare(control.contentHeight, flickable.contentHeight)
     }
+
+    Component {
+        id: zeroSizedContentItemComponent
+        ScrollView {
+            width: 100
+            height: 100
+            contentItem: Item {}
+        }
+    }
+
+    function test_zeroSizedContentItem() {
+        ignoreWarning(/ScrollView only supports Flickable types as its contentItem/)
+        let control = createTemporaryObject(zeroSizedContentItemComponent, testCase)
+        verify(control)
+
+        let verticalScrollBar = control.ScrollBar.vertical
+        verify(verticalScrollBar)
+        // Scrolling a ScrollView with a zero-sized contentItem shouldn't crash.
+        mouseDrag(verticalScrollBar, verticalScrollBar.width / 2, verticalScrollBar.height / 2, 0, 50)
+
+        let horizontalScrollBar = control.ScrollBar.horizontal
+        verify(verticalScrollBar)
+        mouseDrag(horizontalScrollBar, horizontalScrollBar.width / 2, horizontalScrollBar.height / 2, 50, 0)
+    }
 }
