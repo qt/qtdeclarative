@@ -613,29 +613,71 @@ namespace QQmlPrivate
         QJSValue jsMetaType(int index) const;
         void setInstructionPointer(int offset) const;
 
-        QJSValue loadQmlContextPropertyLookup(uint index) const;
-        QJSValue callQmlContextPropertyLookup(uint index, const QJSValueList &args) const;
-        QJSValue getLookup(uint index, const QJSValue &object) const;
-        void setLookup(uint index, const QJSValue &object, const QJSValue &value) const;
-        QJSValue callPropertyLookup(uint index, const QJSValue &object,
-                                    const QJSValueList &args) const;
-        QJSValue callGlobalLookup(uint index, const QJSValueList &args) const;
-        QJSValue loadGlobalLookup(uint index) const;
-
         // Run QQmlPropertyCapture::captureProperty() without retrieving the value.
         bool captureLookup(uint index, QObject *object) const;
         bool captureQmlContextPropertyLookup(uint index) const;
+        QMetaType lookupResultMetaType(uint index) const;
 
-        // Look up a context property of which we know it's a QObject
-        QObject *loadQmlContextPropertyIdLookup(uint index) const;
-        // Look up a context property of given type and store it in the target pointer
-        bool loadQmlContextPropertyLookup(uint index, void *target, QMetaType type) const;
+        // All of these lookup functions should be used as follows:
+        //
+        // while (!fooBarLookup(...)) {
+        //     setInstructionPointer(...);
+        //     initFooBarLookup(...);
+        //     if (engine->hasException()) {
+        //         ...
+        //         break;
+        //     }
+        // }
+        //
+        // The bool-returning *Lookup functions exclusively run the happy path and return false if
+        // that fails in any way. The failure may either be in the lookup structs not being
+        // initialized or an exception being thrown.
+        // The init*Lookup functions initialize the lookup structs and amend any exceptions
+        // previously thrown with line numbers. They might also throw their own exceptions. If an
+        // exception is present after the initialization there is no way to carry out the lookup and
+        // the exception should be propagated. If not, the original lookup can be tried again.
 
-        // Look up a property of which we know it belongs to a QObject, and write to target.
-        bool getObjectLookup(uint index, QObject *object, void *target, QMetaType type) const;
-        // Look up a property that belongs to value of type valueType, and write to target.
-        bool getValueLookup(uint index, void *value, QMetaType valueType,
-                            void *target, QMetaType type) const;
+        bool callQmlContextPropertyLookup(
+                uint index, void **args, const QMetaType *types, int argc) const;
+        void initCallQmlContextPropertyLookup(uint index) const;
+
+        bool loadContextIdLookup(uint index, void *target) const;
+        void initLoadContextIdLookup(uint index) const;
+
+        bool callObjectPropertyLookup(uint index, QObject *object,
+                                      void **args, const QMetaType *types, int argc) const;
+        void initCallObjectPropertyLookup(uint index) const;
+
+        bool callGlobalLookup(uint index, void **args, const QMetaType *types, int argc) const;
+        void initCallGlobalLookup(uint index) const;
+
+        bool loadGlobalLookup(uint index, void *target, QMetaType type) const;
+        void initLoadGlobalLookup(uint index) const;
+
+        bool loadScopeObjectPropertyLookup(uint index, void *target) const;
+        void initLoadScopeObjectPropertyLookup(uint index) const;
+
+        bool loadTypeLookup(uint index, void *target) const;
+        void initLoadTypeLookup(uint index) const;
+
+        bool loadAttachedLookup(uint index, QObject *object, void *target) const;
+        void initLoadAttachedLookup(uint index, QObject *object) const;
+
+        bool getObjectLookup(uint index, QObject *object, void *target) const;
+        void initGetObjectLookup(uint index, QObject *object) const;
+
+        bool getValueLookup(uint index, void *value, void *target) const;
+        void initGetValueLookup(uint index, const QMetaObject *metaObject) const;
+
+        bool getEnumLookup(uint index, int *target) const;
+        void initGetEnumLookup(uint index, const QMetaObject *metaObject,
+                               const char *enumerator, const char *enumValue) const;
+
+        bool setObjectLookup(uint index, QObject *object, void *value) const;
+        void initSetObjectLookup(uint index, QObject *object) const;
+
+        bool setValueLookup(uint index, void *target, void *value) const;
+        void initSetValueLookup(uint index, const QMetaObject *metaObject) const;
     };
 
     struct AOTCompiledFunction {

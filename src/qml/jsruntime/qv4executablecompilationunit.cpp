@@ -319,6 +319,7 @@ void ExecutableCompilationUnit::unlink()
         for (uint i = 0; i < data->lookupTableSize; ++i) {
             QV4::Lookup &l = runtimeLookups[i];
             if (l.getter == QV4::QObjectWrapper::lookupGetter
+                    || l.setter == QV4::QObjectWrapper::lookupSetter
                     || l.getter == QQmlTypeWrapper::lookupSingletonProperty) {
                 if (QQmlPropertyCache *pc = l.qobjectLookup.propertyCache)
                     pc->release();

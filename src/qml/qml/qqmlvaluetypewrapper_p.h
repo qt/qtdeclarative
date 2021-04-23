@@ -143,6 +143,8 @@ public:
     static ReturnedValue virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup);
     static bool virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value);
     static ReturnedValue lookupGetter(Lookup *lookup, ExecutionEngine *engine, const Value &object);
+    static bool lookupSetter(QV4::Lookup *l, QV4::ExecutionEngine *engine,
+                             QV4::Value &object, const QV4::Value &value);
 
     static void initProto(ExecutionEngine *v4);
 };

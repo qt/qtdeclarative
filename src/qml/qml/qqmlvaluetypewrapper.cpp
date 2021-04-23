@@ -563,6 +563,12 @@ ReturnedValue QQmlValueTypeWrapper::lookupGetter(Lookup *lookup, ExecutionEngine
     return getGadgetProperty(engine, valueTypeWrapper, QMetaType(lookup->qgadgetLookup.metaType), lookup->qgadgetLookup.coreIndex, lookup->qgadgetLookup.isFunction, lookup->qgadgetLookup.isEnum);
 }
 
+bool QQmlValueTypeWrapper::lookupSetter(
+        Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
+{
+    return QV4::Lookup::setterFallback(l, engine, object, value);
+}
+
 bool QQmlValueTypeWrapper::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup,
                                                       const Value &value)
 {

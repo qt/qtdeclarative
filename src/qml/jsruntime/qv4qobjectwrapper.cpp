@@ -964,6 +964,17 @@ ReturnedValue QObjectWrapper::lookupGetter(Lookup *lookup, ExecutionEngine *engi
     return lookupGetterImpl(lookup, engine, object, /*useOriginalProperty*/ false, revertLookup);
 }
 
+ReturnedValue QObjectWrapper::lookupAttached(
+            Lookup *l, ExecutionEngine *engine, const Value &object)
+{
+    return QV4::Lookup::getterGeneric(l, engine, object);
+}
+
+bool QObjectWrapper::lookupSetter(Lookup *l, ExecutionEngine *engine, Value &object, const Value &v)
+{
+    return QV4::Lookup::setterFallback(l, engine, object, v);
+}
+
 bool QObjectWrapper::virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup,
                                                 const Value &value)
 {

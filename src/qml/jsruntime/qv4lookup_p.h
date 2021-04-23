@@ -144,8 +144,8 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             QV4::ReturnedValue singletonValue;
         } qmlContextSingletonLookup;
         struct {
-            quintptr unused1;
-            quintptr unused2;
+            Heap::Base *objectContextWrapper;
+            Heap::Base *ownContextWrapper;
             int objectId;
         } qmlContextIdObjectLookup;
         struct {
