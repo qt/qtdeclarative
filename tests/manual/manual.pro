@@ -1,13 +1,17 @@
 TEMPLATE = subdirs
 SUBDIRS += \
     buttons \
-    gifs \
+    dialogs \
     fonts \
+    gifs \
     headerview \
     qquickdialog \
     screenshots \
     styles \
-    testbench
+    styles-cover-flow \
+    systemtrayicon \
+    testbench \
+    viewinqwidget
 
 qtConfig(systemtrayicon): SUBDIRS += systemtrayicon
 
