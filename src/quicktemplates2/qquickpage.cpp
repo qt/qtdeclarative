@@ -57,11 +57,19 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols2-page-wireframe.png
 
+    Items declared as children of a Page are:
+    \list
+    \li automatically parented to the Page's contentItem. Items created
+        dynamically need to be explicitly parented to the contentItem.
+    \li not automatically positioned or resized.
+    \endlist
+
     The following example snippet illustrates how to use a page-specific
     toolbar header and an application-wide tabbar footer.
 
     \qml
-    import QtQuick.Controls 2.12
+    import QtQuick.Controls
+    import QtQuick.Layouts
 
     ApplicationWindow {
         visible: true
@@ -71,6 +79,11 @@ QT_BEGIN_NAMESPACE
 
             initialItem: Page {
                 header: ToolBar {
+                    // ...
+                }
+
+                ColumnLayout {
+                    anchors.fill: parent
                     // ...
                 }
             }
