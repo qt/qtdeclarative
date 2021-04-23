@@ -673,6 +673,8 @@ CanvasTestCase {
     function test_implicitlySizedParent() {
         var implicitlySizedItem = implicitlySizedComponent.createObject(container);
         verify(implicitlySizedItem);
+        tryVerify(() => implicitlySizedItem.canvas)
+        tryVerify(() => implicitlySizedItem.canvas.context)
 
         var xCenter = implicitlySizedItem.width / 2;
         var yCenter = implicitlySizedItem.height / 2;
