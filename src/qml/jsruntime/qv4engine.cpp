@@ -879,6 +879,10 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 ExecutionEngine::~ExecutionEngine()
 {
     modules.clear();
+    for (auto val : nativeModules) {
+        PersistentValueStorage::free(val);
+    }
+    nativeModules.clear();
     qDeleteAll(m_extensionData);
     delete m_multiplyWrappedQObjects;
     m_multiplyWrappedQObjects = nullptr;
@@ -2070,6 +2074,19 @@ QQmlRefPointer<ExecutableCompilationUnit> ExecutionEngine::loadModule(const QUrl
     }
 
     return newModule;
+}
+
+void ExecutionEngine::registerModule(const QString &_name, const QJSValue &module)
+{
+    const QUrl url(_name);
+    QMutexLocker moduleGuard(&moduleMutex);
+    const auto existingModule = nativeModules.find(url);
+    if (existingModule != nativeModules.end())
+        return;
+
+    QV4::Value* val = this->memoryManager->m_persistentValues->allocate();
+    *val = QJSValuePrivate::asReturnedValue(&module);
+    nativeModules.insert(url, val);
 }
 
 bool ExecutionEngine::diskCacheEnabled() const

@@ -150,6 +150,46 @@ Q_DECLARE_METATYPE(QList<int>)
   }
   \endcode
 
+  Modules don't have to be files. They can be values registered with
+  QJSEngine::registerModule():
+
+  \code
+  import version from "version";
+
+  export function getVersion()
+  {
+      return version;
+  }
+  \endcode
+
+  \code
+  QJSValue version(610);
+  myEngine.registerModule("version", version);
+  QJSValue module = myEngine.importModule("./myprint.mjs");
+  QJSValue getVersion = module.property("getVersion");
+  QJSValue result = getVersion.call();
+  \endcode
+
+  Named exports are supported, but because they are treated as members of an
+  object, the default export must be an ECMAScript object. Most of the newXYZ
+  functions in QJSValue will return an object.
+
+  \code
+  QJSValue name("Qt6");
+  QJSValue obj = myEngine.newObject();
+  obj.setProperty("name", name);
+  myEngine.registerModule("info", obj);
+  \endcode
+
+  \code
+  import { name } from "info";
+
+  export function getName()
+  {
+      return name;
+  }
+  \endcode
+
   \section1 Engine Configuration
 
   The globalObject() function returns the \b {Global Object}
@@ -555,6 +595,8 @@ QJSValue QJSEngine::evaluate(const QString& program, const QString& fileName, in
     \note If an exception is thrown during the loading of the module, the return value
     will be the exception (typically an \c{Error} object; see QJSValue::isError()).
 
+    \sa registerModule()
+
     \since 5.12
  */
 QJSValue QJSEngine::importModule(const QString &fileName)
@@ -574,6 +616,37 @@ QJSValue QJSEngine::importModule(const QString &fileName)
 
     return QJSValuePrivate::fromReturnedValue(
             m_v4Engine->newErrorObject(QStringLiteral("Interrupted"))->asReturnedValue());
+}
+
+/*!
+    Register a QJSValue to serve as a module. After this function is called,
+    all modules that import \a moduleName will import the value of \a value
+    instead of loading \a moduleName from the filesystem.
+
+    Any valid QJSValue can be registered, but named exports (i.e.
+    \c {import { name } from "info"} are treated as members of an object, so
+    the default export must be created with one of the newXYZ methods of
+    QJSEngine.
+
+    Because this allows modules that do not exist on the filesystem to be imported,
+    scripting applications can use this to provide built-in modules, similar to
+    Node.js
+
+    \note The QJSValue \a value is not called or read until it is used by another module.
+    This means that there is no code to evaluate, so no errors will be seen until
+    another module throws an exception while trying to load this module.
+
+    \warning Attempting to access a named export from a QJSValue that is not an
+    object will trigger a \l{Script Exception}{exception}.
+
+    \sa importModule()
+ */
+bool QJSEngine::registerModule(const QString &moduleName, const QJSValue &value)
+{
+    m_v4Engine->registerModule(moduleName, value);
+    if (m_v4Engine->hasException)
+        return false;
+    return true;
 }
 
 /*!

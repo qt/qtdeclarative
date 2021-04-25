@@ -50,6 +50,9 @@ set(qmake_immediate_resource_files
     "importerror1.mjs"
     "modulewithlexicals.mjs"
     "testmodule.mjs"
+    "testregister.mjs"
+    "testregister2.mjs"
+    "testregister3.mjs"
 )
 
 qt_internal_add_resource(tst_qjsengine "qmake_immediate"

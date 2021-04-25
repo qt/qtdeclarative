@@ -71,6 +71,7 @@ public:
     QJSValue evaluate(const QString &program, const QString &fileName = QString(), int lineNumber = 1, QStringList *exceptionStackTrace = nullptr);
 
     QJSValue importModule(const QString &fileName);
+    bool registerModule(const QString &moduleName, const QJSValue &value);
 
     QJSValue newObject();
     QJSValue newSymbol(const QString &name);

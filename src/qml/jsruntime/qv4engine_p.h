@@ -760,9 +760,17 @@ public:
 
     mutable QMutex moduleMutex;
     QHash<QUrl, QQmlRefPointer<ExecutableCompilationUnit>> modules;
+
+    // QV4::PersistentValue would be preferred, but using QHash will create copies,
+    // and QV4::PersistentValue doesn't like creating copies.
+    // Instead, we allocate a raw pointer using the same manual memory management
+    // technique in QV4::PersistentValue.
+    QHash<QUrl, QV4::Value*> nativeModules;
+
     void injectModule(const QQmlRefPointer<ExecutableCompilationUnit> &moduleUnit);
     QQmlRefPointer<ExecutableCompilationUnit> moduleForUrl(const QUrl &_url, const ExecutableCompilationUnit *referrer = nullptr) const;
     QQmlRefPointer<ExecutableCompilationUnit> loadModule(const QUrl &_url, const ExecutableCompilationUnit *referrer = nullptr);
+    void registerModule(const QString &name, const QJSValue &module);
 
     bool diskCacheEnabled() const;
 

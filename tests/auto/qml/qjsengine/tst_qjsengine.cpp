@@ -251,6 +251,10 @@ private slots:
     void importModuleWithLexicallyScopedVars();
     void importExportErrors();
 
+    void registerModule();
+    void registerModuleQObject();
+    void registerModuleNamedError();
+
     void equality();
     void aggressiveGc();
     void noAccumulatorInTemplateLiteral();
@@ -4921,6 +4925,76 @@ void tst_QJSEngine::importExportErrors()
         QVERIFY(result.isError());
         QCOMPARE(result.property("lineNumber").toInt(), 2);
     }
+}
+
+void tst_QJSEngine::registerModule()
+{
+    QJSEngine engine;
+    QJSValue magic(63);
+    QJSValue name("Qt6");
+    QJSValue version("6.1.3");
+    QJSValue obj = engine.newObject();
+    bool ret = false;
+
+    obj.setProperty("name", name);
+    obj.setProperty("version", version);
+
+    ret = engine.registerModule("magic", magic);
+    QVERIFY2(ret, "Error registering magic");
+    ret = engine.registerModule("qt_info", obj);
+    QVERIFY2(ret, "Error registering qt_info");
+    QJSValue result = engine.importModule(QStringLiteral(":/testregister.mjs"));
+    QVERIFY(!result.isError());
+
+    QJSValue nameVal = result.property("getName").call();
+    QJSValue magicVal = result.property("getMagic").call();
+    QCOMPARE(nameVal.toString(), QLatin1String("Qt6"));
+    QCOMPARE(magicVal.toInt(), 63);
+
+    // Verify that "name" doesn't change in JS even if the object is changed.
+    QJSValue replacement("Bad");
+    obj.setProperty("name", replacement);
+    QJSValue newNameVal = result.property("getName").call();
+    QCOMPARE(nameVal.toString(), "Qt6");
+}
+
+class TestRegisterObject : public QObject
+{
+    Q_OBJECT
+public:
+    TestRegisterObject() {}
+
+    Q_INVOKABLE int add(int a, int b) {
+        return a + b;
+    }
+};
+
+void tst_QJSEngine::registerModuleQObject()
+{
+    QJSEngine engine;
+    TestRegisterObject obj;
+    QJSValue wrapper = engine.newQObject(&obj);
+    auto args = QJSValueList() << 1 << 2;
+
+    bool ret = engine.registerModule("math", wrapper);
+    QVERIFY(ret);
+
+    QJSValue result = engine.importModule(QStringLiteral(":/testregister2.mjs"));
+    QVERIFY(!result.isError());
+
+    QJSValue value = result.property("addAndDouble").call(args);
+    QCOMPARE(value.toInt(), 6);
+}
+
+void tst_QJSEngine::registerModuleNamedError() {
+    QJSEngine engine;
+    QJSValue notanobject(666);
+
+    bool ret = engine.registerModule("notanobject", notanobject);
+    QVERIFY(ret);
+
+    QJSValue result = engine.importModule(QStringLiteral(":/testregister3.mjs"));
+    QCOMPARE(result.toString(), QString("ReferenceError: Unable to resolve import reference subval because notanobject is not an object"));
 }
 
 void tst_QJSEngine::equality()
