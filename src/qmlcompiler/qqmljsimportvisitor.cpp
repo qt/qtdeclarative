@@ -838,9 +838,10 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
     // just-visited one if the property exists and this type is valid
     QQmlJSMetaProperty property = m_currentScope->property(group->name.toString());
     if (property.isValid() && !property.type().isNull() && property.type()->canAssign(childScope)) {
-        property.setType(childScope);
-        property.setTypeName(getScopeName(childScope, QQmlJSScope::QMLScope));
-        m_currentScope->addOwnProperty(property);
+        QQmlJSMetaPropertyBinding binding(property);
+        binding.setType(childScope);
+        binding.setTypeName(getScopeName(childScope, QQmlJSScope::QMLScope));
+        m_currentScope->addOwnPropertyBinding(binding);
     } else if (!m_currentScope->isFullyResolved()) {
         // If the current scope is not fully resolved we cannot tell whether the property exists or
         // not (we already warn elsewhere)

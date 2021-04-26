@@ -115,8 +115,11 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
 
         const auto property = scope->property(access.m_name);
         if (!property.propertyName().isEmpty()) {
-            const QString typeName = access.m_parentType.isEmpty() ? property.typeName()
-                                                                   : access.m_parentType;
+            const auto binding = scope->propertyBinding(access.m_name);
+            const QString typeName = access.m_parentType.isEmpty()
+                    ? (binding.isValid() ? binding.typeName() : property.typeName())
+                    : access.m_parentType;
+
             if (property.isList()) {
                 detectedRestrictiveKind = QLatin1String("list");
                 detectedRestrictiveName = access.m_name;
@@ -132,7 +135,11 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
             }
 
             if (access.m_parentType.isEmpty()) {
-                scope = property.type();
+                if (binding.isValid())
+                    scope = binding.type();
+                else
+                    scope = property.type();
+
                 if (scope.isNull()) {
                     // Properties should always have a type. Otherwise something
                     // was missing from the import already.
@@ -342,7 +349,10 @@ void CheckIdentifiers::operator()(
                 if (memberAccessChain.isEmpty() || unknownBuiltins.contains(property.typeName()))
                     continue;
 
-                if (!property.type()) {
+                const auto binding = qmlScope->propertyBinding(memberAccessBase.m_name);
+                if (binding.isValid()) {
+                    checkMemberAccess(memberAccessChain, binding.type(), &property);
+                } else if (!property.type()) {
                     m_logger->log(QString::fromLatin1(
                                       "Type of property \"%2\" not found")
                                   .arg(memberAccessBase.m_name), Log_Type, memberAccessBase.m_location);

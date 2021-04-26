@@ -305,15 +305,10 @@ public:
 
     friend bool operator==(const QQmlJSMetaProperty &a, const QQmlJSMetaProperty &b)
     {
-        return a.m_propertyName == b.m_propertyName
-                && a.m_typeName == b.m_typeName
-                && a.m_bindable == b.m_bindable
-                && a.m_type == b.m_type
-                && a.m_isList == b.m_isList
-                && a.m_isWritable == b.m_isWritable
-                && a.m_isPointer == b.m_isPointer
-                && a.m_isAlias == b.m_isAlias
-                && a.m_revision == b.m_revision;
+        return a.m_propertyName == b.m_propertyName && a.m_typeName == b.m_typeName
+                && a.m_bindable == b.m_bindable && a.m_type == b.m_type && a.m_isList == b.m_isList
+                && a.m_isWritable == b.m_isWritable && a.m_isPointer == b.m_isPointer
+                && a.m_isAlias == b.m_isAlias && a.m_revision == b.m_revision;
     }
 
     friend bool operator!=(const QQmlJSMetaProperty &a, const QQmlJSMetaProperty &b)
@@ -324,9 +319,49 @@ public:
     friend size_t qHash(const QQmlJSMetaProperty &prop, size_t seed = 0)
     {
         return qHashMulti(seed, prop.m_propertyName, prop.m_typeName, prop.m_bindable,
-                          prop.m_type.toStrongRef().data(),
-                          prop.m_isList, prop.m_isWritable, prop.m_isPointer, prop.m_isAlias,
-                          prop.m_revision);
+                          prop.m_type.toStrongRef().data(), prop.m_isList, prop.m_isWritable,
+                          prop.m_isPointer, prop.m_isAlias, prop.m_revision);
+    }
+};
+
+class QQmlJSMetaPropertyBinding
+{
+    QString m_propertyName;
+    QString m_typeName;
+    QWeakPointer<const QQmlJSScope> m_type;
+
+public:
+    QQmlJSMetaPropertyBinding() = default;
+    QQmlJSMetaPropertyBinding(const QQmlJSMetaProperty &prop) : m_propertyName(prop.propertyName())
+    {
+    }
+
+    void setPropertyName(const QString &propertyName) { m_propertyName = propertyName; }
+    QString propertyName() const { return m_propertyName; }
+
+    void setTypeName(const QString &typeName) { m_typeName = typeName; }
+    QString typeName() const { return m_typeName; }
+
+    QSharedPointer<const QQmlJSScope> type() const { return m_type; }
+    void setType(const QSharedPointer<const QQmlJSScope> &type) { m_type = type; }
+
+    bool isValid() const { return !m_propertyName.isEmpty(); }
+
+    friend bool operator==(const QQmlJSMetaPropertyBinding &a, const QQmlJSMetaPropertyBinding &b)
+    {
+        return a.m_propertyName == b.m_propertyName && a.m_typeName == b.m_typeName
+                && a.m_type == b.m_type;
+    }
+
+    friend bool operator!=(const QQmlJSMetaPropertyBinding &a, const QQmlJSMetaPropertyBinding &b)
+    {
+        return !(a == b);
+    }
+
+    friend size_t qHash(const QQmlJSMetaPropertyBinding &binding, size_t seed = 0)
+    {
+        return qHashMulti(seed, binding.m_propertyName, binding.m_typeName,
+                          binding.m_type.toStrongRef().data());
     }
 };
 

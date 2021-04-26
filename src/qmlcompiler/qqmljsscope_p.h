@@ -222,6 +222,26 @@ public:
     bool isPropertyRequired(const QString &name) const;
     bool isPropertyLocallyRequired(const QString &name) const;
 
+    void addOwnPropertyBinding(const QQmlJSMetaPropertyBinding &binding)
+    {
+        m_propertyBindings.insert(binding.propertyName(), binding);
+    }
+    QHash<QString, QQmlJSMetaPropertyBinding> ownPropertyBindings() const
+    {
+        return m_propertyBindings;
+    }
+    QQmlJSMetaPropertyBinding ownPropertyBinding(const QString &name) const
+    {
+        return m_propertyBindings.value(name);
+    }
+    bool hasOwnPropertyBinding(const QString &name) const
+    {
+        return m_propertyBindings.contains(name);
+    }
+
+    bool hasPropertyBinding(const QString &name) const;
+    QQmlJSMetaPropertyBinding propertyBinding(const QString &name) const;
+
     bool isResolved() const { return m_baseTypeName.isEmpty() || !m_baseType.isNull(); }
     bool isFullyResolved() const;
 
@@ -327,6 +347,7 @@ private:
 
     QMultiHash<QString, QQmlJSMetaMethod> m_methods;
     QHash<QString, QQmlJSMetaProperty> m_properties;
+    QHash<QString, QQmlJSMetaPropertyBinding> m_propertyBindings;
     QHash<QString, QQmlJSMetaEnum> m_enumerations;
 
     QVector<QQmlJSAnnotation> m_annotations;

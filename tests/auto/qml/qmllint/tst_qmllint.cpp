@@ -707,6 +707,8 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("Unversioned change signal without arguments") << QStringLiteral("unversionChangedSignalSansArguments.qml");
     QTest::newRow("deprecatedFunctionOverride") << QStringLiteral("deprecatedFunctionOverride.qml");
     QTest::newRow("multilineStringEscaped") << QStringLiteral("multilineStringEscaped.qml");
+    QTest::newRow("propertyOverride") << QStringLiteral("propertyOverride.qml");
+    QTest::newRow("propertyBindingValue") << QStringLiteral("propertyBindingValue.qml");
 }
 
 void TestQmllint::cleanQmlCode()
