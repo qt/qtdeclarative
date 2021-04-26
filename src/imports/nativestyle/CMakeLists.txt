@@ -88,7 +88,7 @@ if(MACOS)
         "util/FocusFrame.qml"
     )
 
-    qt_internal_add_resource(qtquickcontrols2nativestyleplugin "qmake_immediate"
+    qt_internal_add_resource(qtquickcontrols2nativestyleplugin "qqc2_mac_native_resources" # special case
         PREFIX
             "/"
         FILES
