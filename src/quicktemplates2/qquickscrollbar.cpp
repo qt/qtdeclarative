@@ -830,7 +830,6 @@ void QQuickScrollBar::hoverChange()
     Q_D(QQuickScrollBar);
     d->updateActive();
 }
-#endif
 
 void QQuickScrollBar::hoverEnterEvent(QHoverEvent *event)
 {
@@ -853,6 +852,7 @@ void QQuickScrollBar::hoverLeaveEvent(QHoverEvent *event)
 
     d->updateHover(QPoint(), false);    //position is not needed when we force it to unhover
 }
+#endif
 
 void QQuickScrollBar::classBegin()
 {
