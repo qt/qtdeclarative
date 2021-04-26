@@ -5031,6 +5031,7 @@ int QCommonStyle::styleHint(StyleHint sh, const QStyleOption *opt, QStyleHintRet
     return ret;
 }
 
+#if QT_CONFIG(imageformat_xpm)
 static QPixmap cachedPixmapFromXPM(const char * const *xpm)
 {
     QPixmap result;
@@ -5043,6 +5044,7 @@ static QPixmap cachedPixmapFromXPM(const char * const *xpm)
 }
 
 static inline QPixmap titleBarMenuCachedPixmapFromXPM() { return cachedPixmapFromXPM(qt_menu_xpm); }
+#endif
 
 static inline QString clearText16IconPath()
 {
