@@ -287,6 +287,11 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         }
 
         if (!qmlScope->hasProperty(name.toString())) {
+            // These warnings do not apply for custom parsers and need to be handled on a case by
+            // case basis
+            if (qmlScope->baseType()->hasCustomParser())
+                return true;
+
             // TODO: Can this be in a better suited category?
             m_logger.log(
                         QStringLiteral("Binding assigned to \"%1\", but no property \"%1\" "

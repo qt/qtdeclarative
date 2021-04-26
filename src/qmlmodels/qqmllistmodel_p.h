@@ -85,6 +85,7 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQmlListModel : public QAbstractListModel
     Q_PROPERTY(QObject *agent READ agent CONSTANT REVISION(2, 14))
     QML_NAMED_ELEMENT(ListModel)
     QML_ADDED_IN_VERSION(2, 0)
+    QML_CUSTOMPARSER
 
 public:
     QQmlListModel(QObject *parent=nullptr);

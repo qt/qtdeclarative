@@ -112,7 +112,8 @@ public:
         Creatable = 0x1,
         Composite = 0x2,
         Singleton = 0x4,
-        Script    = 0x8,
+        Script = 0x8,
+        CustomParser = 0x10,
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
@@ -264,10 +265,15 @@ public:
     bool isCreatable() const { return m_flags & Creatable; }
     bool isComposite() const { return m_flags & Composite; }
     bool isScript() const { return m_flags & Script; }
+    bool hasCustomParser() const { return m_flags & CustomParser; }
     void setIsSingleton(bool v) { m_flags = v ? (m_flags | Singleton) : (m_flags & ~Singleton); }
     void setIsCreatable(bool v) { m_flags = v ? (m_flags | Creatable) : (m_flags & ~Creatable); }
     void setIsComposite(bool v) { m_flags = v ? (m_flags | Composite) : (m_flags & ~Composite); }
     void setIsScript(bool v) { m_flags = v ? (m_flags | Script) : (m_flags & ~Script); }
+    void setHasCustomParser(bool v)
+    {
+        m_flags = v ? (m_flags | CustomParser) : (m_flags & ~CustomParser);
+    }
 
     void setAccessSemantics(AccessSemantics semantics) { m_semantics = semantics; }
     AccessSemantics accessSemantics() const { return m_semantics; }

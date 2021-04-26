@@ -103,6 +103,9 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
     if (collector.isSingleton)
         m_qml.writeScriptBinding(QLatin1String("isSingleton"), QLatin1String("true"));
 
+    if (collector.hasCustomParser)
+        m_qml.writeScriptBinding(QLatin1String("hasCustomParser"), QLatin1String("true"));
+
     m_qml.writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), metaObjects);
 
     if (!collector.attachedType.isEmpty())

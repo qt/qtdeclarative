@@ -137,4 +137,6 @@
 #define QML_UNAVAILABLE \
     QML_FOREIGN(QQmlTypeNotAvailable)
 
+#define QML_CUSTOMPARSER Q_CLASSINFO("QML.HasCustomParser", "true")
+
 #endif // QQMLREGISTRATION_H

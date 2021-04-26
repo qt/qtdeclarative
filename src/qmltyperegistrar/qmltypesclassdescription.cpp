@@ -177,6 +177,9 @@ void QmlTypesClassDescription::collect(
             foreignTypeName = value;
         } else if (name == QLatin1String("QML.Root")) {
             isRootClass = true;
+        } else if (name == QLatin1String("QML.HasCustomParser")) {
+            if (value == QLatin1String("true"))
+                hasCustomParser = true;
         }
     }
 

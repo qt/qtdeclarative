@@ -709,6 +709,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("multilineStringEscaped") << QStringLiteral("multilineStringEscaped.qml");
     QTest::newRow("propertyOverride") << QStringLiteral("propertyOverride.qml");
     QTest::newRow("propertyBindingValue") << QStringLiteral("propertyBindingValue.qml");
+    QTest::newRow("customParser") << QStringLiteral("customParser.qml");
 }
 
 void TestQmllint::cleanQmlCode()

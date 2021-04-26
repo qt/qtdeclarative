@@ -234,6 +234,8 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                 scope->setIsCreatable(readBoolBinding(script));
             } else if (name == QLatin1String("isComposite")) {
                 scope->setIsComposite(readBoolBinding(script));
+            } else if (name == QLatin1String("hasCustomParser")) {
+                scope->setHasCustomParser(readBoolBinding(script));
             } else if (name == QLatin1String("accessSemantics")) {
                 const QString semantics = readStringBinding(script);
                 if (semantics == QLatin1String("reference")) {
@@ -253,8 +255,10 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
             } else {
                 addWarning(script->firstSourceLocation(),
                            tr("Expected only name, prototype, defaultProperty, attachedType, "
-                              "valueType, exports, interfaces, isSingleton, isCreatable, isComposite and "
-                              "exportMetaObjectRevisions script bindings, not \"%1\".").arg(name));
+                              "valueType, exports, interfaces, isSingleton, isCreatable, "
+                              "isComposite, hasCustomParser and "
+                              "exportMetaObjectRevisions script bindings, not \"%1\".")
+                                   .arg(name));
             }
         } else {
             addWarning(member->firstSourceLocation(),

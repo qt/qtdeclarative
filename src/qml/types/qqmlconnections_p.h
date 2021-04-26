@@ -73,6 +73,7 @@ class Q_AUTOTEST_EXPORT QQmlConnections : public QObject, public QQmlParserStatu
     Q_PROPERTY(bool ignoreUnknownSignals READ ignoreUnknownSignals WRITE setIgnoreUnknownSignals)
     QML_NAMED_ELEMENT(Connections)
     QML_ADDED_IN_VERSION(2, 0)
+    QML_CUSTOMPARSER
 
 public:
     QQmlConnections(QObject *parent=nullptr);
