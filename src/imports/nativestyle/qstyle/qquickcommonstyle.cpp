@@ -5080,10 +5080,7 @@ static QIcon clearTextIcon(bool rtl)
 QPixmap QCommonStyle::standardPixmap(StandardPixmap sp, const QStyleOption *option) const
 {
     const bool rtl = (option && option->direction == Qt::RightToLeft) || (!option && QGuiApplication::isRightToLeft());
-#ifdef QT_NO_IMAGEFORMAT_PNG
-    Q_UNUSED(widget);
-    Q_UNUSED(sp);
-#else
+#if QT_CONFIG(imageformat_png)
     QPixmap pixmap;
 
     if (QGuiApplication::desktopSettingsAware() && !QIcon::themeName().isEmpty()) {
@@ -5257,7 +5254,7 @@ QPixmap QCommonStyle::standardPixmap(StandardPixmap sp, const QStyleOption *opti
 
     if (!pixmap.isNull())
         return pixmap;
-#endif //QT_NO_IMAGEFORMAT_PNG
+#endif // QT_CONFIG(imageformat_png)
     switch (sp) {
 #ifndef QT_NO_IMAGEFORMAT_XPM
     case SP_ToolBarHorizontalExtensionButton:
@@ -5418,7 +5415,7 @@ QPixmap QCommonStyle::standardPixmap(StandardPixmap sp, const QStyleOption *opti
     }
 #endif //QT_NO_IMAGEFORMAT_XPM
 
-#if !QT_CONFIG(imageformat_png) && !QT_CONFIG(imageformat_xpm) && !QT_CONFIG(imageformat_png)
+#if !QT_CONFIG(imageformat_png) && !QT_CONFIG(imageformat_xpm)
     Q_UNUSED(rtl);
 #endif
 
