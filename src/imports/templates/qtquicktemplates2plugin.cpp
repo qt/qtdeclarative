@@ -36,6 +36,7 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/private/qqmlglobal_p.h>
+#include <QtQuickTemplates2/private/qtquicktemplates2global_p.h>
 
 #if QT_CONFIG(shortcut)
 #include <QtQuickTemplates2/private/qquickshortcutcontext_p_p.h>

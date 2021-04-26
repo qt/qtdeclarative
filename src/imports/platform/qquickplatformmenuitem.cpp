@@ -40,7 +40,9 @@
 #include "qquickplatformiconloader_p.h"
 
 #include <QtGui/qicon.h>
+#if QT_CONFIG(shortcut)
 #include <QtGui/qkeysequence.h>
+#endif
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuickTemplates2/private/qquickshortcutcontext_p_p.h>
