@@ -33,6 +33,7 @@
 #include <QtQuick/private/qquickpointhandler_p.h>
 #include <qpa/qwindowsysteminterface.h>
 
+#include <private/qhighdpiscaling_p.h>
 #include <private/qquickwindow_p.h>
 
 #include <QtQml/qqmlengine.h>
@@ -152,6 +153,7 @@ void tst_PointHandler::tabletStylus()
     QSignalSpy translationSpy(handler, SIGNAL(translationChanged()));
 
     QPoint point(100,100);
+    QPoint pointLocalDPI = QHighDpi::fromNativeLocalPosition(point, window);
     const qint64 stylusId = 1234567890;
 
     QWindowSystemInterface::handleTabletEvent(window, point, window->mapToGlobal(point),
@@ -159,8 +161,8 @@ void tst_PointHandler::tabletStylus()
     QTRY_COMPARE(handler->active(), true);
     QCOMPARE(activeSpy.count(), 1);
     QCOMPARE(pointSpy.count(), 1);
-    QCOMPARE(handler->point().position().toPoint(), point);
-    QCOMPARE(handler->point().scenePosition().toPoint(), point);
+    QCOMPARE(handler->point().position().toPoint(), pointLocalDPI);
+    QCOMPARE(handler->point().scenePosition().toPoint(), pointLocalDPI);
     QCOMPARE(handler->point().pressedButtons(), Qt::LeftButton);
     QCOMPARE(handler->point().pressure(), 0.5);
     QCOMPARE(handler->point().rotation(), 12.3);
@@ -168,23 +170,25 @@ void tst_PointHandler::tabletStylus()
     QCOMPARE(handler->translation(), QVector2D());
     QCOMPARE(translationSpy.count(), 1);
 
-    point += QPoint(10, 10);
+    QPoint delta(10, 10);
+    QPoint deltaLocalDPI = QHighDpi::fromNativeLocalPosition(delta, window);
+    point += delta;
     QWindowSystemInterface::handleTabletEvent(window, point, window->mapToGlobal(point),
         int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen), Qt::LeftButton, 0.45, 23, 33, 0.57, 15.6, 3, stylusId, Qt::NoModifier);
     QTRY_COMPARE(pointSpy.count(), 2);
     QCOMPARE(handler->active(), true);
     QCOMPARE(activeSpy.count(), 1);
-    QCOMPARE(handler->point().position().toPoint(), point);
-    QCOMPARE(handler->point().scenePosition().toPoint(), point);
-    QCOMPARE(handler->point().pressPosition().toPoint(), QPoint(100, 100));
-    QCOMPARE(handler->point().scenePressPosition().toPoint(), QPoint(100, 100));
+    QCOMPARE(handler->point().position().toPoint(), pointLocalDPI + deltaLocalDPI);
+    QCOMPARE(handler->point().scenePosition().toPoint(), pointLocalDPI + deltaLocalDPI);
+    QCOMPARE(handler->point().pressPosition().toPoint(), pointLocalDPI);
+    QCOMPARE(handler->point().scenePressPosition().toPoint(), pointLocalDPI);
     QCOMPARE(handler->point().pressedButtons(), Qt::LeftButton);
     QCOMPARE(handler->point().pressure(), 0.45);
     QCOMPARE(handler->point().rotation(), 15.6);
     QCOMPARE(handler->point().uniqueId().numericId(), stylusId);
     QVERIFY(handler->point().velocity().x() > 0);
     QVERIFY(handler->point().velocity().y() > 0);
-    QCOMPARE(handler->translation(), QVector2D(10, 10));
+    QCOMPARE(handler->translation(), QVector2D(deltaLocalDPI));
     QCOMPARE(translationSpy.count(), 2);
 
     QWindowSystemInterface::handleTabletEvent(window, point, window->mapToGlobal(point),
