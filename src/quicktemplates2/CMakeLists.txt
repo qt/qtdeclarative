@@ -5,7 +5,6 @@
 #####################################################################
 
 qt_internal_add_module(QuickTemplates2
-    GENERATE_METATYPES
     SOURCES
         accessible/qaccessiblequickpage.cpp accessible/qaccessiblequickpage_p.h
         qquickabstractbutton.cpp qquickabstractbutton_p.h

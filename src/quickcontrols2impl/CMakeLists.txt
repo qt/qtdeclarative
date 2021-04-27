@@ -5,7 +5,6 @@
 #####################################################################
 
 qt_internal_add_module(QuickControls2Impl
-    GENERATE_METATYPES
     SOURCES
         qquickanimatednode.cpp qquickanimatednode_p.h
         qquickattachedobject.cpp qquickattachedobject_p.h

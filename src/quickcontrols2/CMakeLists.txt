@@ -5,7 +5,6 @@
 #####################################################################
 
 qt_internal_add_module(QuickControls2
-    GENERATE_METATYPES
     SOURCES
         qquickdummyregistration_p.h
         qquickstyle.cpp qquickstyle.h qquickstyle_p.h
