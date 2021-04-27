@@ -516,8 +516,8 @@ int main(int argc, char *argv[])
     char **argv2 = new char *[argc + 2];
     for (int i = 0; i < argc; ++i)
         argv2[i] = argv[i];
-    argv2[argc] = strdup(qPrintable(QString("-qmljsdebugger=native,services:%1")
-                                            .arg(QQmlDebugTranslationServiceImpl::s_key)));
+    argv2[argc] = qstrdup(qPrintable(QString("-qmljsdebugger=native,services:%1")
+                                             .arg(QQmlDebugTranslationServiceImpl::s_key)));
     ++argc;
     argv2[argc] = nullptr;
 

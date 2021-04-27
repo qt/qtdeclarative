@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
     char **argv2 = new char *[argc + 2];
     for (int i = 0; i < argc; ++i)
         argv2[i] = argv[i];
-    argv2[argc] = strdup("-qmljsdebugger=native,services:NativeQmlDebugger");
+    argv2[argc] = qstrdup("-qmljsdebugger=native,services:NativeQmlDebugger");
     ++argc;
     argv2[argc] = nullptr;
     Application app(argc, argv2);
