@@ -142,7 +142,7 @@ namespace QQuickVisualTestUtil
             component.loadUrl(testCase->testFileUrl(testFilePath));
             QObject *rootObject = component.createWithInitialProperties(initialProperties);
             cleanup.reset(rootObject);
-            if (!rootObject) {
+            if (component.isError() || !rootObject) {
                 errorMessage = QString::fromUtf8("Failed to create window: %1").arg(component.errorString()).toUtf8();
                 return;
             }
