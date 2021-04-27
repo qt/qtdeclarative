@@ -828,7 +828,7 @@ void tst_qqmlcomponent::testSetInitialProperties()
             comp.createWithInitialProperties(QVariantMap { {"notThePropertiesYoureLookingFor", 42} })
         };
         QVERIFY(obj);
-        QVERIFY(comp.errorString().contains("Could not set property notThePropertiesYoureLookingFor"));
+        QVERIFY(comp.errorString().contains("Setting initial properties failed: Item does not have a property called notThePropertiesYoureLookingFor"));
     }
 }
 
