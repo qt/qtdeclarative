@@ -45,12 +45,7 @@
 #include <QMatrix4x4>
 #include <QFont>
 #include "../../shared/util.h"
-
-// Copied from tst_qdatetime.cpp
-#ifdef Q_OS_WIN
-# include <qt_windows.h>
-# include <time.h>
-#endif
+#include <private/qglobal_p.h>
 
 class tst_qqmlqt : public QQmlDataTest
 {
@@ -1369,7 +1364,7 @@ public:
             oldZone = qgetenv("TZ");
         }
         qputenv("TZ", newZone);
-        tzset();
+        qTzSet();
     }
 
     ~TimeZoneSwitch()
@@ -1381,7 +1376,7 @@ public:
             qputenv("TZ", oldZone);
         else
             qunsetenv("TZ");
-        tzset();
+        qTzSet();
     }
 
 private:
