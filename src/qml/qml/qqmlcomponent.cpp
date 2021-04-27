@@ -837,6 +837,14 @@ QObject *QQmlComponent::create(QQmlContext *context)
     properties with \a initialProperties. \a context specifies the context
     where the object instance is to be created.
 
+    \omit
+    TODO: also mention errorString() when QTBUG-93239 is fixed
+    \endomit
+
+    If any of the \c initialProperties cannot be set, \l isError() will return
+    \c true, and the \l errors() function can be used to
+    get detailed information about the error(s).
+
     \sa QQmlComponent::create
     \since 5.14
 */
