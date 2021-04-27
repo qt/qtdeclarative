@@ -199,6 +199,18 @@ public:
     void setupCustomLineGeometry(QTextLine &line, qreal &height, int fullLayoutTextLength, int lineOffset = 0);
     bool isLinkActivatedConnected();
     bool isLinkHoveredConnected();
+    QStringList links() const;
+
+    struct LinkDesc {
+        QString m_anchor;
+        QString m_anchorTarget;
+        int m_startIndex;
+        int m_endIndex;
+        QRect rect;
+    };
+
+    QVector<LinkDesc> getLinks() const;
+
     static QString anchorAt(const QTextLayout *layout, const QPointF &mousePos);
     QString anchorAt(const QPointF &pos) const;
 

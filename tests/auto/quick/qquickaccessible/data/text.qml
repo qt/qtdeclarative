@@ -57,4 +57,14 @@ Item {
         Accessible.description: "description"
     }
 
+    Text {
+        x: 100
+        y: 200
+        width: 100
+        height: 40
+        text : "<p>Rich text with links:</p><a href=\"https://qt.io\">Website</a> or <a href=\"https://qt.io/blog\">blog</a>"
+        Accessible.name: Accessible.stripHtml(text)
+        Accessible.description: "Rich text with two hyperlinks"
+    }
+
 }

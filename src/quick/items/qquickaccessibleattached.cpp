@@ -499,6 +499,17 @@ void QQuickAccessibleAttached::availableActions(QStringList *actions) const
         actions->append(QAccessibleActionInterface::nextPageAction());
 }
 
+QString QQuickAccessibleAttached::stripHtml(const QString &html)
+{
+#ifndef QT_NO_TEXTHTMLPARSER
+    QTextDocument doc;
+    doc.setHtml(html);
+    return doc.toPlainText();
+#else
+    return html;
+#endif
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qquickaccessibleattached_p.cpp"

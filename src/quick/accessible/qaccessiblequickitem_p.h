@@ -137,7 +137,11 @@ protected:
     void *interface_cast(QAccessible::InterfaceType t) override;
 
 private:
+    // for Text nodes:
     QTextDocument *m_doc;
+    typedef QHash<int, QAccessible::Id> ChildCache;
+    mutable ChildCache m_childToId;
+
 };
 
 QRect itemScreenRect(QQuickItem *item);

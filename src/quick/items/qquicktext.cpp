@@ -2873,6 +2873,38 @@ bool QQuickTextPrivate::isLinkHoveredConnected()
     IS_SIGNAL_CONNECTED(q, QQuickText, linkHovered, (const QString &));
 }
 
+static void getLinks_helper(const QTextLayout *layout, QVector<QQuickTextPrivate::LinkDesc> *links)
+{
+    for (const QTextLayout::FormatRange &formatRange : layout->formats()) {
+        if (formatRange.format.isAnchor()) {
+            const int start = formatRange.start;
+            const int len = formatRange.length;
+            QTextLine line = layout->lineForTextPosition(start);
+            QRectF r;
+            r.setTop(line.y());
+            r.setLeft(line.cursorToX(start, QTextLine::Leading));
+            r.setHeight(line.height());
+            r.setRight(line.cursorToX(start + len, QTextLine::Trailing));
+            // ### anchorNames() is empty?! Not sure why this doesn't work
+            // QString anchorName = formatRange.format.anchorNames().value(0); //### pick the first?
+            // Therefore, we resort to QString::mid()
+            QString anchorName = layout->text().mid(start, len);
+            const QString anchorHref = formatRange.format.anchorHref();
+            if (anchorName.isEmpty())
+                anchorName = anchorHref;
+            links->append( { anchorName, anchorHref, start, start + len, r.toRect()} );
+        }
+    }
+}
+
+QVector<QQuickTextPrivate::LinkDesc> QQuickTextPrivate::getLinks() const
+{
+    QVector<QQuickTextPrivate::LinkDesc> links;
+    getLinks_helper(&layout, &links);
+    return links;
+}
+
+
 /*!
     \qmlsignal QtQuick::Text::linkHovered(string link)
     \since 5.2

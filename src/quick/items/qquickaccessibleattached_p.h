@@ -189,6 +189,8 @@ public:
     bool doAction(const QString &actionName);
     void availableActions(QStringList *actions) const;
 
+    Q_INVOKABLE static QString stripHtml(const QString &html);
+
 public Q_SLOTS:
     void valueChanged() {
         QAccessibleValueChangeEvent ev(parent(), parent()->property("value"));
