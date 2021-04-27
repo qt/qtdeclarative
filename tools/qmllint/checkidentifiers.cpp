@@ -117,7 +117,7 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
         if (!property.propertyName().isEmpty()) {
             const auto binding = scope->propertyBinding(access.m_name);
             const QString typeName = access.m_parentType.isEmpty()
-                    ? (binding.isValid() ? binding.typeName() : property.typeName())
+                    ? (binding.hasValue() ? binding.valueTypeName() : property.typeName())
                     : access.m_parentType;
 
             if (property.isList()) {
@@ -135,8 +135,8 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
             }
 
             if (access.m_parentType.isEmpty()) {
-                if (binding.isValid())
-                    scope = binding.type();
+                if (binding.hasValue())
+                    scope = binding.value();
                 else
                     scope = property.type();
 
@@ -350,8 +350,8 @@ void CheckIdentifiers::operator()(
                     continue;
 
                 const auto binding = qmlScope->propertyBinding(memberAccessBase.m_name);
-                if (binding.isValid()) {
-                    checkMemberAccess(memberAccessChain, binding.type(), &property);
+                if (binding.hasValue()) {
+                    checkMemberAccess(memberAccessChain, binding.value(), &property);
                 } else if (!property.type()) {
                     m_logger->log(QString::fromLatin1(
                                       "Type of property \"%2\" not found")

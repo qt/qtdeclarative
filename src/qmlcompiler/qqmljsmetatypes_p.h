@@ -327,10 +327,15 @@ public:
 class QQmlJSMetaPropertyBinding
 {
     QString m_propertyName;
-    QString m_typeName;
-    QWeakPointer<const QQmlJSScope> m_type;
+    QString m_valueTypeName;
+    QString m_interceptorTypeName;
+    QString m_valueSourceTypeName;
+    QWeakPointer<const QQmlJSScope> m_value;
+    QWeakPointer<const QQmlJSScope> m_interceptor;
+    QWeakPointer<const QQmlJSScope> m_valueSource;
 
 public:
+
     QQmlJSMetaPropertyBinding() = default;
     QQmlJSMetaPropertyBinding(const QQmlJSMetaProperty &prop) : m_propertyName(prop.propertyName())
     {
@@ -339,18 +344,48 @@ public:
     void setPropertyName(const QString &propertyName) { m_propertyName = propertyName; }
     QString propertyName() const { return m_propertyName; }
 
-    void setTypeName(const QString &typeName) { m_typeName = typeName; }
-    QString typeName() const { return m_typeName; }
+    void setValueTypeName(const QString &valueTypeName) { m_valueTypeName = valueTypeName; }
+    QString valueTypeName() const { return m_valueTypeName; }
 
-    QSharedPointer<const QQmlJSScope> type() const { return m_type; }
-    void setType(const QSharedPointer<const QQmlJSScope> &type) { m_type = type; }
+    void setInterceptorTypeName(const QString &interceptorTypeName)
+    {
+        m_interceptorTypeName = interceptorTypeName;
+    }
+    QString interceptorTypeName() const { return m_interceptorTypeName; }
+
+    void setValueSourceTypeName(const QString &valueSourceTypeName)
+    {
+        m_valueSourceTypeName = valueSourceTypeName;
+    }
+    QString valueSourceTypeName() const { return m_valueSourceTypeName; }
+
+    QSharedPointer<const QQmlJSScope> value() const { return m_value; }
+    void setValue(const QSharedPointer<const QQmlJSScope> &value) { m_value = value; }
+
+    QSharedPointer<const QQmlJSScope> interceptor() const { return m_interceptor; }
+    void setInterceptor(const QSharedPointer<const QQmlJSScope> &interceptor)
+    {
+        m_interceptor = interceptor;
+    }
+
+    QSharedPointer<const QQmlJSScope> valueSource() const { return m_valueSource; }
+    void setValueSource(const QSharedPointer<const QQmlJSScope> &valueSource)
+    {
+        m_valueSource = valueSource;
+    }
+
+    bool hasValue() const { return !m_value.isNull(); }
+    bool hasInterceptor() const { return !m_interceptor.isNull(); }
+    bool hasValueSource() const { return !m_valueSource.isNull(); }
 
     bool isValid() const { return !m_propertyName.isEmpty(); }
 
     friend bool operator==(const QQmlJSMetaPropertyBinding &a, const QQmlJSMetaPropertyBinding &b)
     {
-        return a.m_propertyName == b.m_propertyName && a.m_typeName == b.m_typeName
-                && a.m_type == b.m_type;
+        return a.m_propertyName == b.m_propertyName && a.m_valueTypeName == b.m_valueTypeName
+                && a.m_interceptorTypeName == b.m_interceptorTypeName
+                && a.m_valueSourceTypeName == b.m_valueSourceTypeName && a.m_value == b.m_value
+                && a.m_interceptor == b.m_interceptor;
     }
 
     friend bool operator!=(const QQmlJSMetaPropertyBinding &a, const QQmlJSMetaPropertyBinding &b)
@@ -360,8 +395,11 @@ public:
 
     friend size_t qHash(const QQmlJSMetaPropertyBinding &binding, size_t seed = 0)
     {
-        return qHashMulti(seed, binding.m_propertyName, binding.m_typeName,
-                          binding.m_type.toStrongRef().data());
+        return qHashMulti(seed, binding.m_propertyName, binding.m_valueTypeName,
+                          binding.m_interceptorTypeName, binding.m_valueSourceTypeName,
+                          binding.m_value.toStrongRef().data(),
+                          binding.m_interceptor.toStrongRef().data(),
+                          binding.m_valueSource.toStrongRef().data());
     }
 };
 

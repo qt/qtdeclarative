@@ -205,6 +205,9 @@ public:
     void setInterfaceNames(const QStringList& interfaces) { m_interfaceNames = interfaces; }
     QStringList interfaceNames() const { return m_interfaceNames; }
 
+    bool hasInterface(const QString &name) const;
+    bool hasOwnInterface(const QString &name) const { return m_interfaceNames.contains(name); }
+
     // If isComposite(), this is the QML/JS name of the prototype. Otherwise it's the
     // relevant base class (in the hierarchy starting from QObject) of a C++ type.
     void setBaseTypeName(const QString &baseTypeName) { m_baseTypeName = baseTypeName; }

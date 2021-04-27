@@ -591,6 +591,20 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("unresolvedType.qml")
             << QStringLiteral("UnresolvedType was not found. Did you add all import paths?")
             << QStringLiteral("incompatible type") << false;
+    QTest::newRow("invalidInterceptor")
+            << QStringLiteral("invalidInterceptor.qml")
+            << QStringLiteral("On-binding for property \"angle\" has wrong type \"Item\"")
+            << QString() << false;
+    QTest::newRow("2Interceptors")
+            << QStringLiteral("2interceptors.qml")
+            << QStringLiteral("Duplicate interceptor on property \"x\"") << QString() << false;
+    QTest::newRow("2ValueSources")
+            << QStringLiteral("2valueSources.qml")
+            << QStringLiteral("Duplicate value source on property \"x\"") << QString() << false;
+    QTest::newRow("ValueSource+Value")
+            << QStringLiteral("valueSource_Value.qml")
+            << QStringLiteral("Cannot combine value source and binding on property \"obj\"")
+            << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -711,6 +725,11 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("propertyBindingValue") << QStringLiteral("propertyBindingValue.qml");
     QTest::newRow("customParser") << QStringLiteral("customParser.qml");
     QTest::newRow("2Behavior") << QStringLiteral("2behavior.qml");
+    QTest::newRow("interceptor") << QStringLiteral("interceptor.qml");
+    QTest::newRow("valueSource") << QStringLiteral("valueSource.qml");
+    QTest::newRow("interceptor+valueSource") << QStringLiteral("interceptor_valueSource.qml");
+    QTest::newRow("groupedProperty (valueSource+interceptor)")
+            << QStringLiteral("groupedProperty_valueSource_interceptor.qml");
 }
 
 void TestQmllint::cleanQmlCode()

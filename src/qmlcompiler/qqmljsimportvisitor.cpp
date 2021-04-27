@@ -836,25 +836,79 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 
     // on ending the visit to UiObjectBinding, set the property type to the
     // just-visited one if the property exists and this type is valid
-    QQmlJSMetaProperty property = m_currentScope->property(group->name.toString());
-    if (property.isValid() && !property.type().isNull() && property.type()->canAssign(childScope)) {
-        QQmlJSMetaPropertyBinding binding(property);
-        binding.setType(childScope);
-        binding.setTypeName(getScopeName(childScope, QQmlJSScope::QMLScope));
-        m_currentScope->addOwnPropertyBinding(binding);
+
+    const QString propertyName = group->name.toString();
+
+    QQmlJSMetaProperty property = m_currentScope->property(propertyName);
+    if (property.isValid() && !property.type().isNull()
+        && (uiob->hasOnToken || property.type()->canAssign(childScope))) {
+
+        QQmlJSMetaPropertyBinding binding = m_currentScope->hasOwnPropertyBinding(propertyName)
+                ? m_currentScope->ownPropertyBinding(propertyName)
+                : QQmlJSMetaPropertyBinding(property);
+
+        const QString typeName = getScopeName(childScope, QQmlJSScope::QMLScope);
+
+        if (uiob->hasOnToken) {
+            if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueInterceptor"))) {
+                if (binding.hasInterceptor()) {
+                    m_logger.log(QStringLiteral("Duplicate interceptor on property \"%1\"")
+                                         .arg(propertyName),
+                                 Log_Property, uiob->firstSourceLocation());
+                } else {
+                    binding.setInterceptor(childScope);
+                    binding.setInterceptorTypeName(typeName);
+
+                    m_currentScope->addOwnPropertyBinding(binding);
+                }
+            } else if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueSource"))) {
+                if (binding.hasValueSource()) {
+                    m_logger.log(QStringLiteral("Duplicate value source on property \"%1\"")
+                                         .arg(propertyName),
+                                 Log_Property, uiob->firstSourceLocation());
+                } else if (binding.hasValue()) {
+                    m_logger.log(
+                            QStringLiteral(
+                                    "Cannot combine value source and binding on property \"%1\"")
+                                    .arg(propertyName),
+                            Log_Property, uiob->firstSourceLocation());
+                } else {
+                    binding.setValueSource(childScope);
+                    binding.setValueSourceTypeName(typeName);
+                    m_currentScope->addOwnPropertyBinding(binding);
+                }
+            } else {
+                m_logger.log(QStringLiteral("On-binding for property \"%1\" has wrong type \"%2\"")
+                                     .arg(propertyName)
+                                     .arg(typeName),
+                             Log_Property, uiob->firstSourceLocation());
+            }
+        } else {
+            // TODO: Warn here if binding.hasValue() is true
+            if (binding.hasValueSource()) {
+                m_logger.log(
+                        QStringLiteral("Cannot combine value source and binding on property \"%1\"")
+                                .arg(propertyName),
+                        Log_Property, uiob->firstSourceLocation());
+            } else {
+                binding.setValue(childScope);
+                binding.setValueTypeName(typeName);
+                m_currentScope->addOwnPropertyBinding(binding);
+            }
+        }
     } else if (!m_currentScope->isFullyResolved()) {
         // If the current scope is not fully resolved we cannot tell whether the property exists or
         // not (we already warn elsewhere)
     } else if (!property.isValid()) {
-        m_logger.log(QStringLiteral("Property \"%1\" is invalid or does not exist")
-                             .arg(group->name.toString()),
-                     Log_Property, group->firstSourceLocation());
+        m_logger.log(
+                QStringLiteral("Property \"%1\" is invalid or does not exist").arg(propertyName),
+                Log_Property, group->firstSourceLocation());
     } else if (property.type().isNull() || !property.type()->isFullyResolved()) {
         // Property type is not fully resolved we cannot tell any more than this
         m_logger.log(
                 QStringLiteral(
                         "Property \"%1\" has incomplete type \"%2\". You may be missing an import.")
-                        .arg(group->name.toString())
+                        .arg(propertyName)
                         .arg(property.typeName()),
                 Log_Property, group->firstSourceLocation());
     } else if (!childScope->isFullyResolved()) {
@@ -865,7 +919,7 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
         m_logger.log(
                 QStringLiteral(
                         "Property \"%1\" of type \"%2\" is assigned an incompatible type \"%3\"")
-                        .arg(group->name.toString())
+                        .arg(propertyName)
                         .arg(property.typeName())
                         .arg(getScopeName(childScope, QQmlJSScope::QMLScope)),
                 Log_Property, group->firstSourceLocation());

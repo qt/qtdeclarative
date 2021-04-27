@@ -393,6 +393,12 @@ QQmlJSMetaPropertyBinding QQmlJSScope::propertyBinding(const QString &name) cons
     return binding;
 }
 
+bool QQmlJSScope::hasInterface(const QString &name) const
+{
+    return searchBaseAndExtensionTypes(
+            this, [&](const QQmlJSScope *scope) { return scope->m_interfaceNames.contains(name); });
+}
+
 bool QQmlJSScope::isFullyResolved() const
 {
     bool baseResolved = true;
