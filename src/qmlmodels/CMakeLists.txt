@@ -5,7 +5,6 @@
 #####################################################################
 
 qt_internal_add_module(QmlModels
-    GENERATE_METATYPES
     SOURCES
         qqmlchangeset.cpp qqmlchangeset_p.h
         qqmlmodelsmodule_p.h

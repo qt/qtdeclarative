@@ -1,5 +1,4 @@
  qt_internal_add_module(QuickLayouts
-    GENERATE_METATYPES
     SOURCES
         qquickgridlayoutengine.cpp qquickgridlayoutengine_p.h
         qquicklayout.cpp qquicklayout_p.h

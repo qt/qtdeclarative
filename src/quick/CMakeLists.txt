@@ -5,7 +5,6 @@
 #####################################################################
 
 qt_internal_add_module(Quick
-    GENERATE_METATYPES
     PLUGIN_TYPES scenegraph
     SOURCES
         handlers/qquickdragaxis.cpp handlers/qquickdragaxis_p.h

@@ -1,5 +1,4 @@
 qt_internal_add_module(LabsSettings
-    GENERATE_METATYPES
     SOURCES
          qqmlsettings.cpp qqmlsettings_p.h
          qqmlsettingsglobal_p.h

@@ -6,7 +6,6 @@
 
 qt_internal_add_module(QuickParticles
     INTERNAL_MODULE
-    GENERATE_METATYPES
     SOURCES
         qquickage.cpp qquickage_p.h
         qquickangledirection.cpp qquickangledirection_p.h

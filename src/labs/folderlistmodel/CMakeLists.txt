@@ -1,5 +1,4 @@
 qt_internal_add_module(LabsFolderListModel
-  GENERATE_METATYPES
   SOURCES
         fileinfothread.cpp fileinfothread_p.h
         fileproperty_p.h

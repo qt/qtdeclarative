@@ -1,5 +1,4 @@
 qt_internal_add_module(LabsWavefrontMesh
-  GENERATE_METATYPES
   SOURCES
       qwavefrontmesh.cpp qwavefrontmesh_p.h
       qqmlwavefrontmeshglobal_p.h

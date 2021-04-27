@@ -1,5 +1,4 @@
 qt_internal_add_module(QmlXmlListModel
-    GENERATE_METATYPES
     SOURCES
         qqmlxmllistmodel_p.h qqmlxmllistmodel.cpp
         qtqmlxmllistmodelglobal_p.h

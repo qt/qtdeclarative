@@ -5,7 +5,6 @@
 #####################################################################
 
 qt_internal_add_module(Qml
-    GENERATE_METATYPES
     PLUGIN_TYPES qmltooling
     SOURCES
         ../3rdparty/masm/assembler/ARM64Assembler.h

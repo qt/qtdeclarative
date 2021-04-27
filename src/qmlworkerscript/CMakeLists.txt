@@ -5,7 +5,6 @@
 #####################################################################
 
 qt_internal_add_module(QmlWorkerScript
-    GENERATE_METATYPES
     SOURCES
         qquickworkerscript.cpp qquickworkerscript_p.h
         qtqmlworkerscriptglobal.h qtqmlworkerscriptglobal_p.h

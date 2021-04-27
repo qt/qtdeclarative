@@ -1,5 +1,4 @@
  qt_internal_add_module(QmlCore
-    GENERATE_METATYPES
     SOURCES
         qqmlstandardpaths_p.h
         qqmlstandardpaths.cpp

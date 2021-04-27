@@ -6,7 +6,6 @@
 
 qt_internal_add_module(QuickShapes
     INTERNAL_MODULE
-    GENERATE_METATYPES
     SOURCES
         qquickshape.cpp qquickshape_p.h
         qquickshape_p_p.h

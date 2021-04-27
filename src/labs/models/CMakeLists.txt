@@ -1,5 +1,4 @@
 qt_internal_add_module(LabsQmlModels
-  GENERATE_METATYPES
   SOURCES
        qqmlmodelsglobal_p.h
   DEFINES

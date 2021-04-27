@@ -1,5 +1,4 @@
 qt_internal_add_module(QmlLocalStorage
-    GENERATE_METATYPES
     SOURCES
         qqmllocalstorage.cpp qqmllocalstorage_p.h
         qqmllocalstorageglobal_p.h

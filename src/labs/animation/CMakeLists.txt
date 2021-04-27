@@ -1,5 +1,4 @@
 qt_internal_add_module(LabsAnimation
-  GENERATE_METATYPES
   SOURCES
       qquickboundaryrule.cpp qquickboundaryrule_p.h
       qqmlanimationglobal_p.h

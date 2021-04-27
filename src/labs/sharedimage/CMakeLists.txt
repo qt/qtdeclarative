@@ -1,5 +1,4 @@
 qt_internal_add_module(LabsSharedImage
-  GENERATE_METATYPES
   SOURCES
         qsharedimageloader.cpp qsharedimageloader_p.h
         qsharedimageprovider.cpp qsharedimageprovider_p.h
