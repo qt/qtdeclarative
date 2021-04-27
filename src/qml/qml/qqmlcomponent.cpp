@@ -375,10 +375,15 @@ bool QQmlComponentPrivate::setInitialProperty(QObject *component, const QString&
 {
     QQmlProperty prop = QQmlComponentPrivate::removePropertyFromRequired(component, name, requiredProperties());
     QQmlPropertyPrivate *privProp = QQmlPropertyPrivate::get(prop);
-    if (!prop.isValid() || !privProp->writeValueProperty(value, {})) {
+    const bool isValid = prop.isValid();
+    if (!isValid || !privProp->writeValueProperty(value, {})) {
         QQmlError error{};
         error.setUrl(url);
-        error.setDescription(QLatin1String("Could not set property %1").arg(name));
+        if (isValid)
+            error.setDescription(QLatin1String("Could not set initial property %1").arg(name));
+        else
+            error.setDescription(QLatin1String("Setting initial properties failed: %2 does not have a property called %1").arg(name,
+                                                                                            QQmlMetaType::prettyTypeName(component)));
         state.errors.push_back(error);
         return false;
     } else
