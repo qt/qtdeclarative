@@ -50,7 +50,7 @@ namespace QtQuickPrivate {
 
 typedef QHash<uint, QQmlComponentPrivate::DeferredState *> DeferredStates;
 
-static inline uint qHash(QObject *object, const QString &propertyName)
+static inline size_t qHash(QObject *object, const QString &propertyName)
 {
     return ::qHash(object) + ::qHash(propertyName);
 }
