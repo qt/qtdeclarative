@@ -292,7 +292,7 @@ void tst_qquicktextedit::simulateKeys(QWindow *window, const QKeySequence &seque
 QList<Key> &operator <<(QList<Key> &keys, const QKeySequence &sequence)
 {
     for (int i = 0; i < sequence.count(); ++i)
-        keys << Key(sequence[i], QChar());
+        keys << Key(sequence[i].toCombined(), QChar());
     return keys;
 }
 
