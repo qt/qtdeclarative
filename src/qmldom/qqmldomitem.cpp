@@ -238,10 +238,10 @@ bool domTypeCanBeInline(DomType k)
 QCborValue locationToData(SourceLocation loc, QStringView strValue)
 {
     QCborMap res({
-        {"offset", loc.offset},
-        {"length", loc.length},
-        {"startLine", loc.startLine},
-        {"startColumn", loc.startColumn}
+        {QStringLiteral(u"offset"), loc.offset},
+        {QStringLiteral(u"length"), loc.length},
+        {QStringLiteral(u"startLine"), loc.startLine},
+        {QStringLiteral(u"startColumn"), loc.startColumn}
     });
     if (!strValue.isEmpty())
         res.insert(QStringLiteral(u"strValue"), QCborValue(strValue));

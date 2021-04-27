@@ -523,7 +523,8 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlP
                 targetObject->metaObject()->metacall(targetObject, QMetaObject::BindableProperty, targetIndex.coreIndex(), &argv);
                 bool ok = bindable.setBinding(binding);
                 if (!ok) {
-                    auto error = QStringLiteral("Failed to set binding on %1::%2.").arg(object->metaObject()->className(), property->name(object));
+                    auto error = QStringLiteral("Failed to set binding on %1::%2.").
+                                                arg(QString::fromUtf8(object->metaObject()->className()), property->name(object));
                     scope.engine->throwError(error);
                 }
             } else {
