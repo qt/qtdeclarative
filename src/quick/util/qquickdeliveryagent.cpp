@@ -796,6 +796,13 @@ bool QQuickDeliveryAgent::event(QEvent *ev)
         break;
     }
 #endif
+#if QT_CONFIG(tabletevent)
+    case QEvent::TabletPress:
+    case QEvent::TabletMove:
+    case QEvent::TabletRelease:
+        d->deliverPointerEvent(static_cast<QPointerEvent *>(ev));
+        break;
+#endif
     default:
         return false;
     }
