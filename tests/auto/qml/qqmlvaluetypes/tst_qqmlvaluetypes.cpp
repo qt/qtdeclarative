@@ -1712,7 +1712,7 @@ void tst_qqmlvaluetypes::sequences()
         QJSValue value = engine.toScriptValue(container);
         QCOMPARE(value.property("length").toInt(), int(container.size()));
         for (size_t i = 0; i < container.size(); ++i)
-            QCOMPARE(value.property(i).property("baseProperty").toInt(), container.at(i).baseProperty());
+            QCOMPARE(value.property(quint32(i)).property("baseProperty").toInt(), container.at(i).baseProperty());
     }
     {
         QVector<QChar> qcharVector{QChar(1), QChar(4), QChar(42), QChar(8), QChar(15)};

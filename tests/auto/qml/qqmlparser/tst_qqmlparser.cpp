@@ -229,7 +229,7 @@ public:
         QCOMPARE(cEnd.startLine, uint(startLine));
         int lastNewline = found.lastIndexOf(QLatin1Char('\n'));
         if (lastNewline < 0)
-            lastNewline = - combined.startColumn;
+            lastNewline = -int(combined.startColumn);
         QCOMPARE(cEnd.startColumn, found.length() - lastNewline);
     }
 private:
