@@ -168,15 +168,17 @@ void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope
     Q_ASSERT(scope->parentScope());
     QQmlJSMetaProperty defaultProp = scopeOfDefaultProperty->property(defaultPropertyName);
 
+    const QQmlJSScope *parentScope = scope->parentScope().get();
+
     // abuse QHash feature to construct default value through
     // operator[]. default bool is false, which is what's needed
-    if (m_scopeHasDefaultPropertyAssignment[scopeOfDefaultProperty] && !defaultProp.isList()) {
+    if (m_scopeHasDefaultPropertyAssignment[parentScope] && !defaultProp.isList()) {
         // already has some object assigned to a default property and
         // this default property is not a list property
         m_logger.log(QStringLiteral("Cannot assign multiple objects to a default non-list property"),
                      Log_Property, scope->sourceLocation());
     }
-    m_scopeHasDefaultPropertyAssignment[scopeOfDefaultProperty] = true;
+    m_scopeHasDefaultPropertyAssignment[parentScope] = true;
 
     auto propType = defaultProp.type();
     if (propType.isNull() || !propType->isFullyResolved()
