@@ -1688,7 +1688,8 @@ void tst_qquickflickable::clickAndDragWhenTransformed()
     QTRY_COMPARE(flickable->property("itemPressed").toBool(), true);
     QTest::mouseRelease(view.data(), Qt::LeftButton, Qt::NoModifier, QPoint(200, 200));
 
-    const int threshold = qApp->styleHints()->startDragDistance();
+    // drag threshold is scaled according to the scene scaling
+    const int threshold = qApp->styleHints()->startDragDistance() * flickable->parentItem()->scale();
 
     // drag outside bounds
     moveAndPress(view.data(), QPoint(160, 160));
@@ -1701,10 +1702,18 @@ void tst_qquickflickable::clickAndDragWhenTransformed()
 
     // drag inside bounds
     moveAndPress(view.data(), QPoint(200, 140));
+    QCOMPARE(flickable->keepMouseGrab(), false);
     QTest::qWait(10);
+    // Flickable should get interested in dragging when the drag is beyond the
+    // threshold distance along the hypoteneuse of the 45° rotation
+    const int deltaPastRotatedThreshold = threshold * 1.414 + 1;
+    QTest::mouseMove(view.data(), QPoint(200 + deltaPastRotatedThreshold, 140));
+    qCDebug(lcTests) << "transformed flickable dragging yet?" << flickable->isDragging() <<
+            "after dragging by" << deltaPastRotatedThreshold << "past scaled threshold" << threshold;
+    QCOMPARE(flickable->isDragging(), false);   // Flickable never grabs on the first drag past the threshold
+    QCOMPARE(flickable->keepMouseGrab(), true); // but it plans to do it next time!
     QTest::mouseMove(view.data(), QPoint(200 + threshold * 2, 140));
-    QTest::mouseMove(view.data(), QPoint(200 + threshold * 3, 140));
-    QCOMPARE(flickable->isDragging(), true);
+    QCOMPARE(flickable->isDragging(), true);    // it grabs only during the second drag past the threshold
     QCOMPARE(flickable->property("itemPressed").toBool(), false);
     moveAndRelease(view.data(), QPoint(220, 140));
 }
