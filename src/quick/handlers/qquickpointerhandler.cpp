@@ -302,7 +302,8 @@ void QQuickPointerHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointin
 */
 void QQuickPointerHandler::setPassiveGrab(QPointerEvent *event, const QEventPoint &point, bool grab)
 {
-    qCDebug(lcPointerHandlerGrab) << point << grab;
+    qCDebug(lcPointerHandlerGrab) << this << point << grab << "via"
+                                  << QQuickDeliveryAgentPrivate::currentOrItemDeliveryAgent(parentItem());
     if (grab) {
         event->addPassiveGrabber(point, this);
     } else {

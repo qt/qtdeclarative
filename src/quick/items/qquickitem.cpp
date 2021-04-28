@@ -8181,6 +8181,12 @@ QPointF QQuickItem::mapFromScene(const QPointF &point) const
     treated only as a hint. So, the resulting window position may differ from
     what is expected.
 
+    \note If this item is in a subscene, e.g. mapped onto a 3D
+    \l [QtQuick3D QML] {Model}{Model} object, the UV mapping is incorporated
+    into this transformation, so that it really goes from screen coordinates to
+    this item's coordinates, as long as \a point is actually within this item's bounds.
+    The other mapping functions do not yet work that way.
+
     \since 5.7
 
     \sa {Concepts - Visual Coordinates in Qt Quick}
@@ -8188,7 +8194,12 @@ QPointF QQuickItem::mapFromScene(const QPointF &point) const
 QPointF QQuickItem::mapFromGlobal(const QPointF &point) const
 {
     Q_D(const QQuickItem);
-    return mapFromScene(d->globalToWindowTransform().map(point));
+    QPointF scenePoint = d->globalToWindowTransform().map(point);
+    if (auto da = QQuickDeliveryAgentPrivate::currentOrItemDeliveryAgent(this)) {
+        if (auto sceneTransform = da->sceneTransform())
+            scenePoint = sceneTransform->map(scenePoint);
+    }
+    return mapFromScene(scenePoint);
 }
 
 /*!

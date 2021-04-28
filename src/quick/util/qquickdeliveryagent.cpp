@@ -626,6 +626,21 @@ void QQuickDeliveryAgentPrivate::updateFocusItemTransform()
 }
 
 /*! \internal
+    If called during event delivery, returns the agent that is delivering the
+    event, without checking whether \a item is reachable from there.
+    Otherwise returns QQuickItemPrivate::deliveryAgent() (the delivery agent for
+    the narrowest subscene containing \a item), or \c null if \a item is \c null.
+*/
+QQuickDeliveryAgent *QQuickDeliveryAgentPrivate::currentOrItemDeliveryAgent(const QQuickItem *item)
+{
+    if (currentEventDeliveryAgent)
+        return currentEventDeliveryAgent;
+    if (item)
+        return QQuickItemPrivate::get(const_cast<QQuickItem *>(item))->deliveryAgent();
+    return nullptr;
+}
+
+/*! \internal
     QQuickDeliveryAgent delivers events to a tree of Qt Quick Items, beginning
     with the given root item, which is usually QQuickWindow::rootItem() but
     may alternatively be embedded into a Qt Quick 3D scene or something else.
@@ -650,8 +665,20 @@ QQuickItem *QQuickDeliveryAgent::rootItem() const
 }
 
 /*! \internal
+    Returns the object that was set in setSceneTransform(): a functor that
+    transforms from scene coordinates in the parent scene to scene coordinates
+    within this DA's subscene, or \c null if none was set.
+*/
+QQuickDeliveryAgent::Transform *QQuickDeliveryAgent::sceneTransform() const
+{
+    Q_D(const QQuickDeliveryAgent);
+    return d->sceneTransform;
+}
+
+/*! \internal
     QQuickDeliveryAgent takes ownership of the given \a transform, which
-    encapsulates the ability to transform viewport coordinates to rootItem coordinates.
+    encapsulates the ability to transform parent scene coordinates to rootItem
+    (subscene) coordinates.
 */
 void QQuickDeliveryAgent::setSceneTransform(QQuickDeliveryAgent::Transform *transform)
 {
