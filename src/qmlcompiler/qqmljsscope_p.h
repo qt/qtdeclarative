@@ -269,13 +269,13 @@ public:
     bool isComposite() const { return m_flags & Composite; }
     bool isScript() const { return m_flags & Script; }
     bool hasCustomParser() const { return m_flags & CustomParser; }
-    void setIsSingleton(bool v) { m_flags = v ? (m_flags | Singleton) : (m_flags & ~Singleton); }
-    void setIsCreatable(bool v) { m_flags = v ? (m_flags | Creatable) : (m_flags & ~Creatable); }
-    void setIsComposite(bool v) { m_flags = v ? (m_flags | Composite) : (m_flags & ~Composite); }
-    void setIsScript(bool v) { m_flags = v ? (m_flags | Script) : (m_flags & ~Script); }
+    void setIsSingleton(bool v) { m_flags.setFlag(Singleton, v); }
+    void setIsCreatable(bool v) { m_flags.setFlag(Creatable, v); }
+    void setIsComposite(bool v) { m_flags.setFlag(Composite, v); }
+    void setIsScript(bool v) { m_flags.setFlag(Script, v); }
     void setHasCustomParser(bool v)
     {
-        m_flags = v ? (m_flags | CustomParser) : (m_flags & ~CustomParser);
+        m_flags.setFlag(CustomParser, v);;
     }
 
     void setAccessSemantics(AccessSemantics semantics) { m_semantics = semantics; }
