@@ -272,12 +272,12 @@ void CheckIdentifiers::operator()(
                 if (memberAccessBase.m_location.end() < jsId->location.begin()) {
                     // TODO: Is there a more fitting category?
                     m_logger->log(
-                                QStringLiteral(
-                                    "Variable \"%1\" is used here before its declaration. "
-                                    "The declaration is at %4:%5.\n")
-                                .arg(memberAccessBase.m_name)
-                                .arg(jsId->location.startLine)
-                                .arg(jsId->location.startColumn), Log_Type, memberAccessBase.m_location);
+                            QStringLiteral("Variable \"%1\" is used here before its declaration. "
+                                           "The declaration is at %4:%5.")
+                                    .arg(memberAccessBase.m_name)
+                                    .arg(jsId->location.startLine)
+                                    .arg(jsId->location.startColumn),
+                            Log_Type, memberAccessBase.m_location);
                 }
                 continue;
             }

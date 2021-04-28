@@ -72,9 +72,10 @@ void FindWarningVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
                 inheritenceCycle.append(seen->baseTypeName());
             }
 
-            m_logger.log(QStringLiteral("%1 is part of an inheritance cycle: %2\n")
-                         .arg(scope->internalName())
-                         .arg(inheritenceCycle), Log_InheritanceCycle);
+            m_logger.log(QStringLiteral("%1 is part of an inheritance cycle: %2")
+                                 .arg(scope->internalName())
+                                 .arg(inheritenceCycle),
+                         Log_InheritanceCycle);
 
             m_unknownImports.insert(scope->internalName());
             break;
@@ -87,9 +88,9 @@ void FindWarningVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
         } else if (auto newScope = scope->baseType()) {
             scope = newScope;
         } else {
-            m_logger.log(scope->baseTypeName() + QStringLiteral(
-                                        " was not found. Did you add all import paths?\n"),
-                                Log_Import);
+            m_logger.log(scope->baseTypeName()
+                                 + QStringLiteral(" was not found. Did you add all import paths?"),
+                         Log_Import);
             m_unknownImports.insert(scope->baseTypeName());
             break;
         }
@@ -227,12 +228,10 @@ bool FindWarningVisitor::visit(QQmlJS::AST::Block *block)
 
 bool FindWarningVisitor::visit(QQmlJS::AST::WithStatement *withStatement)
 {
-    m_logger.log(QStringLiteral(
-                     "with statements are strongly discouraged in QML "
+    m_logger.log(QStringLiteral("with statements are strongly discouraged in QML "
                                 "and might cause false positives when analysing unqualified "
-                                "identifiers\n"),
-                 Log_WithStatement,
-                 withStatement->firstSourceLocation());
+                                "identifiers"),
+                 Log_WithStatement, withStatement->firstSourceLocation());
 
     return QQmlJSImportVisitor::visit(withStatement);
 }
@@ -295,24 +294,20 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
                 return true;
 
             // TODO: Can this be in a better suited category?
-            m_logger.log(
-                        QStringLiteral("Binding assigned to \"%1\", but no property \"%1\" "
-                                               "exists in the current element.\n").arg(name),
-                        Log_Type,
-                        uisb->firstSourceLocation()
-                        );
+            m_logger.log(QStringLiteral("Binding assigned to \"%1\", but no property \"%1\" "
+                                        "exists in the current element.")
+                                 .arg(name),
+                         Log_Type, uisb->firstSourceLocation());
             return true;
         }
 
         const auto property = qmlScope->property(name.toString());
         if (!property.type()) {
-            m_logger.log(
-                        QStringLiteral("No type found for property \"%1\". This may be due "
-                                               "to a missing import statement or incomplete "
-                                               "qmltypes files.\n").arg(name),
-                        Log_Type,
-                        uisb->firstSourceLocation()
-                        );
+            m_logger.log(QStringLiteral("No type found for property \"%1\". This may be due "
+                                        "to a missing import statement or incomplete "
+                                        "qmltypes files.")
+                                 .arg(name),
+                         Log_Type, uisb->firstSourceLocation());
         }
 
         const auto &annotations = property.annotations();
@@ -338,11 +333,8 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
 
     if (!qmlScope->hasMethod(signal)) {
         m_logger.log(
-                    QStringLiteral("no matching signal found for handler \"%1\"\n")
-                    .arg(name.toString()),
-                    Log_UnqualifiedAccess,
-                    uisb->firstSourceLocation()
-                    );
+                QStringLiteral("no matching signal found for handler \"%1\"").arg(name.toString()),
+                Log_UnqualifiedAccess, uisb->firstSourceLocation());
         return true;
     }
 
@@ -383,14 +375,13 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
                 if (j == i || j < 0)
                     continue;
 
-                m_logger.log(
-                            QStringLiteral("Parameter %1 to signal handler for \"%2\""
-                                                   " is called \"%3\". The signal has a parameter"
-                                                   " of the same name in position %4.\n")
-                            .arg(i + 1).arg(name, handlerParameter).arg(j + 1),
-                            Log_Signal,
-                            uisb->firstSourceLocation()
-                            );
+                m_logger.log(QStringLiteral("Parameter %1 to signal handler for \"%2\""
+                                            " is called \"%3\". The signal has a parameter"
+                                            " of the same name in position %4.")
+                                     .arg(i + 1)
+                                     .arg(name, handlerParameter)
+                                     .arg(j + 1),
+                             Log_Signal, uisb->firstSourceLocation());
             }
 
             return true;
@@ -484,11 +475,11 @@ bool FindWarningVisitor::check()
     }
 
     for (const auto &import : unusedImports) {
-        m_logger.log(
-                    QString::fromLatin1("Unused import at %1:%2:%3\n")
-                    .arg(m_filePath)
-                    .arg(import.startLine).arg(import.startColumn),
-                    Log_UnusedImport, import);
+        m_logger.log(QString::fromLatin1("Unused import at %1:%2:%3")
+                             .arg(m_filePath)
+                             .arg(import.startLine)
+                             .arg(import.startColumn),
+                     Log_UnusedImport, import);
     }
 
     CheckIdentifiers check(&m_logger, m_code, m_rootScopeImports, m_filePath);
@@ -671,7 +662,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiPublicMember *uipb)
         if (m_importTypeLocationMap.contains(name)) {
             m_usedTypes.insert(name);
         } else {
-            m_logger.log(name + QStringLiteral(" was not found. Did you add all import paths?\n"),
+            m_logger.log(name + QStringLiteral(" was not found. Did you add all import paths?"),
                          Log_Import);
         }
     }
