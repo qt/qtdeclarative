@@ -905,6 +905,9 @@ namespace QQmlPrivate
             qmlTypeIds
         };
 
+        // Initialize the extension so that we can find it by name or ID.
+        qMetaTypeId<E>();
+
         qmlregister(TypeAndRevisionsRegistration, &type);
     }
 

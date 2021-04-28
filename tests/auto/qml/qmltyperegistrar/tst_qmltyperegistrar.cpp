@@ -152,6 +152,7 @@ void tst_qmltyperegistrar::metaTypesRegistered()
     verifyMetaType("Ooo*", "Ooo");
     verifyMetaType("Bbb*", "Bbb");
     verifyMetaType("Ccc*", "Ccc");
+    verifyMetaType("SelfExtensionHack", "SelfExtensionHack");
 }
 
 void tst_qmltyperegistrar::multiExtensions()

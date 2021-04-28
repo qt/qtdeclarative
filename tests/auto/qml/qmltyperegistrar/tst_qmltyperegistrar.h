@@ -34,6 +34,7 @@
 #include <QtQml/qqml.h>
 #include <QtCore/qproperty.h>
 #include <QtCore/qtimeline.h>
+#include <QtCore/qrect.h>
 
 class Interface {};
 class Interface2 {};
@@ -270,6 +271,15 @@ class HiddenAccessors : public QObject
     Q_PRIVATE_PROPERTY(HiddenAccessors::d_func(), QString hiddenRead READ hiddenRead CONSTANT)
     QML_ELEMENT
     Q_DECLARE_PRIVATE(HiddenAccessors)
+};
+
+struct SelfExtensionHack
+{
+    QRectF rect;
+    Q_GADGET
+    QML_EXTENDED(SelfExtensionHack)
+    QML_FOREIGN(QRectF)
+    QML_VALUE_TYPE(recterei)
 };
 
 class tst_qmltyperegistrar : public QObject
