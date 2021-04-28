@@ -246,15 +246,18 @@ public:
     bool hasPropertyBinding(const QString &name) const;
     QQmlJSMetaPropertyBinding propertyBinding(const QString &name) const;
 
-    bool isResolved() const { return m_baseTypeName.isEmpty() || !m_baseType.isNull(); }
+    bool isResolved() const;
     bool isFullyResolved() const;
 
     QString defaultPropertyName() const { return m_defaultPropertyName; }
     void setDefaultPropertyName(const QString &name) { m_defaultPropertyName = name; }
 
-    QString attachedTypeName() const { return m_attachedTypeName; }
-    void setAttachedTypeName(const QString &name) { m_attachedTypeName = name; }
-    QQmlJSScope::ConstPtr attachedType() const { return m_attachedType; }
+    QString ownAttachedTypeName() const { return m_attachedTypeName; }
+    void setOwnAttachedTypeName(const QString &name) { m_attachedTypeName = name; }
+    QQmlJSScope::ConstPtr ownAttachedType() const { return m_attachedType; }
+
+    QString attachedTypeName() const;
+    QQmlJSScope::ConstPtr attachedType() const;
 
     QString extensionTypeName() const { return m_extensionTypeName; }
     void setExtensionTypeName(const QString &name) { m_extensionTypeName =  name; }

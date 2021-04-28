@@ -399,6 +399,42 @@ bool QQmlJSScope::hasInterface(const QString &name) const
             this, [&](const QQmlJSScope *scope) { return scope->m_interfaceNames.contains(name); });
 }
 
+QString QQmlJSScope::attachedTypeName() const
+{
+    QString name;
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        if (scope->ownAttachedType().isNull())
+            return false;
+        name = scope->ownAttachedTypeName();
+        return true;
+    });
+
+    return name;
+}
+
+QQmlJSScope::ConstPtr QQmlJSScope::attachedType() const
+{
+    QQmlJSScope::ConstPtr ptr;
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        if (scope->ownAttachedType().isNull())
+            return false;
+        ptr = scope->ownAttachedType();
+        return true;
+    });
+
+    return ptr;
+}
+
+bool QQmlJSScope::isResolved() const
+{
+    if (m_scopeType == ScopeType::AttachedPropertyScope
+        || m_scopeType == ScopeType::GroupedPropertyScope) {
+        return m_internalName.isEmpty() || !m_baseType.isNull();
+    }
+
+    return m_baseTypeName.isEmpty() || !m_baseType.isNull();
+}
+
 bool QQmlJSScope::isFullyResolved() const
 {
     bool baseResolved = true;

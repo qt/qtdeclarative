@@ -225,7 +225,7 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
             } else if (name == QLatin1String("exportMetaObjectRevisions")) {
                 readMetaObjectRevisions(script, scope);
             } else if (name == QLatin1String("attachedType")) {
-                scope->setAttachedTypeName(readStringBinding(script));
+                scope->setOwnAttachedTypeName(readStringBinding(script));
             } else if (name == QLatin1String("valueType")) {
                 scope->setValueTypeName(readStringBinding(script));
             } else if (name == QLatin1String("isSingleton")) {

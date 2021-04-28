@@ -615,6 +615,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral(
                        "Property \"EditableText\" not found on type \"QQuickAccessibleAttached\"")
             << QString() << false;
+    QTest::newRow("unresolvedAttachedType")
+            << QStringLiteral("unresolvedAttachedType.qml")
+            << QStringLiteral("unknown attached property scope UnresolvedAttachedType.")
+            << QStringLiteral("Property \"property\" is invalid or does not exist") << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -741,6 +745,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("groupedProperty (valueSource+interceptor)")
             << QStringLiteral("groupedProperty_valueSource_interceptor.qml");
     QTest::newRow("QtQuick.Window 2.1") << QStringLiteral("qtquickWindow21.qml");
+    QTest::newRow("attachedTypeIndirect") << QStringLiteral("attachedTypeIndirect.qml");
 }
 
 void TestQmllint::cleanQmlCode()
