@@ -208,10 +208,9 @@ void QQmlJSImporter::importDependencies(
     }
 }
 
-void QQmlJSImporter::processImport(
-        const QQmlJSImporter::Import &import,
-        QQmlJSImporter::AvailableTypes *types,
-        const QString &prefix)
+void QQmlJSImporter::processImport(const QQmlJSImporter::Import &import,
+                                   QQmlJSImporter::AvailableTypes *types, const QString &prefix,
+                                   QTypeRevision version)
 {
     const QString anonPrefix = QStringLiteral("$anonymous$");
 
@@ -232,8 +231,36 @@ void QQmlJSImporter::processImport(
                         prefixedName(prefix, prefixedName(anonPrefix, val->internalName())), val);
         }
 
-        for (const auto &valExport : exports)
-            types->qmlNames.insert(prefixedName(prefix, valExport.type()), val);
+        for (const auto &valExport : exports) {
+            const QString &name = prefixedName(prefix, valExport.type());
+            // Resolve conflicting qmlNames within an import
+            if (types->qmlNames.contains(name)) {
+                const auto &existing = types->qmlNames[name];
+
+                if (existing == val)
+                    continue;
+
+                if (valExport.version() > version)
+                    continue;
+
+                const auto existingExports = existing->exports();
+
+                auto betterExport =
+                        std::find_if(existingExports.constBegin(), existingExports.constEnd(),
+                                     [&](const QQmlJSScope::Export &exportEntry) {
+                                         return exportEntry.type() == name
+                                                 && exportEntry.version()
+                                                 <= version // Ensure that the entry isn't newer
+                                                            // than the module version
+                                                 && valExport.version() < exportEntry.version();
+                                     });
+
+                if (betterExport != existingExports.constEnd())
+                    continue;
+            }
+
+            types->qmlNames.insert(name, val);
+        }
     }
 
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
@@ -329,7 +356,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
         const auto import = m_seenQmldirFiles.constFind(*it);
         Q_ASSERT(import != m_seenQmldirFiles.constEnd());
         importDependencies(*import, types, prefix, version);
-        processImport(*import, types, prefix);
+        processImport(*import, types, prefix, version);
         return true;
     }
 
@@ -341,7 +368,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
         if (it != m_seenQmldirFiles.constEnd()) {
             m_seenImports.insert(importId, qmldirPath);
             importDependencies(*it, types, prefix, version);
-            processImport(*it, types, prefix);
+            processImport(*it, types, prefix, version);
             return true;
         }
 
@@ -351,7 +378,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
             m_seenQmldirFiles.insert(qmldirPath, import);
             m_seenImports.insert(importId, qmldirPath);
             importDependencies(import, types, prefix, version);
-            processImport(import, types, prefix);
+            processImport(import, types, prefix, version);
             return true;
         }
     }

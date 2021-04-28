@@ -605,6 +605,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("valueSource_Value.qml")
             << QStringLiteral("Cannot combine value source and binding on property \"obj\"")
             << QString() << false;
+    QTest::newRow("QtQuick.Window 2.0")
+            << QStringLiteral("qtquickWindow20.qml")
+            << QStringLiteral("Property \"window\" not found on type \"QQuickWindow\"") << QString()
+            << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -730,6 +734,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("interceptor+valueSource") << QStringLiteral("interceptor_valueSource.qml");
     QTest::newRow("groupedProperty (valueSource+interceptor)")
             << QStringLiteral("groupedProperty_valueSource_interceptor.qml");
+    QTest::newRow("QtQuick.Window 2.1") << QStringLiteral("qtquickWindow21.qml");
 }
 
 void TestQmllint::cleanQmlCode()

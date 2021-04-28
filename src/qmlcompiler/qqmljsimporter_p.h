@@ -105,7 +105,7 @@ private:
                       const QString &prefix = QString(),
                       QTypeRevision version = QTypeRevision());
     void processImport(const Import &import, AvailableTypes *types,
-                       const QString &prefix = QString());
+                       const QString &prefix = QString(), QTypeRevision version = QTypeRevision());
     void importDependencies(const QQmlJSImporter::Import &import,
                             AvailableTypes *types,
                             const QString &prefix = QString(),
