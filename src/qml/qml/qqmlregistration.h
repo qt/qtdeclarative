@@ -42,6 +42,9 @@
 
 #include <QtCore/qglobal.h>
 
+// satisfy configure, which warns about public headers not using those
+QT_BEGIN_NAMESPACE
+
 #define QML_PRIVATE_NAMESPACE \
     QT_PREPEND_NAMESPACE(QQmlPrivate)
 
@@ -138,5 +141,7 @@
     QML_FOREIGN(QQmlTypeNotAvailable)
 
 #define QML_CUSTOMPARSER Q_CLASSINFO("QML.HasCustomParser", "true")
+
+QT_END_NAMESPACE
 
 #endif // QQMLREGISTRATION_H
