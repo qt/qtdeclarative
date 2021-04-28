@@ -81,6 +81,7 @@ public:
 
     QQuickItem *rootItem() const;
 
+    Transform *sceneTransform() const;
     void setSceneTransform(Transform *transform);
     bool event(QEvent *ev) override;
 

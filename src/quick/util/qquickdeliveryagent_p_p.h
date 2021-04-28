@@ -121,6 +121,7 @@ public:
     static bool subsceneAgentsExist;
     // QQuickDeliveryAgent::event() sets this to the one that's currently (trying to) handle the event
     static QQuickDeliveryAgent *currentEventDeliveryAgent;
+    static QQuickDeliveryAgent *currentOrItemDeliveryAgent(const QQuickItem *item);
 
     Qt::FocusReason lastFocusReason = Qt::OtherFocusReason;
     int pointerEventRecursionGuard = 0;
