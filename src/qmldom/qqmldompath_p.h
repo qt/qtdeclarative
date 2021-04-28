@@ -126,6 +126,7 @@ public:
 
 class Empty: public Base {
 public:
+    Empty() = default;
     Kind kind() const override { return Kind::Empty; }
     QString name() const override { return QString(); }
     bool checkName(QStringView s) const override { return s.isEmpty(); }
@@ -134,6 +135,7 @@ public:
 
 class Field: public Base {
 public:
+    Field() = default;
     Field(QStringView n): fieldName(n) {}
     Kind kind() const override { return Kind::Field; }
     QString name() const override { return fieldName.toString(); }
@@ -147,6 +149,7 @@ public:
 
 class Index: public Base {
 public:
+    Index() = default;
     Index(index_type i): indexValue(i) {}
     Kind kind() const override { return Kind::Index; }
     QString name() const override { return QString::number(indexValue); }
@@ -155,14 +158,15 @@ public:
     bool hasSquareBrackets() const override { return true; }
     const Index * asIndex() const override { return this; }
 
-    index_type indexValue;
+    index_type indexValue = -1;
 };
 
 class Key: public Base {
 public:
-    Key(QStringView n): keyValue(n) {}
+    Key() = default;
+    Key(QString n) : keyValue(n) { }
     Kind kind() const override { return Kind::Key; }
-    QString name() const override { return keyValue.toString(); }
+    QString name() const override { return keyValue; }
     bool checkName(QStringView s) const override { return s == keyValue; }
     QStringView stringView() const override { return keyValue; }
     void dump(Sink sink) const override {
@@ -173,12 +177,12 @@ public:
     bool hasSquareBrackets() const override { return true; }
     const Key * asKey() const override { return this; }
 
-    QStringView keyValue;
+    QString keyValue;
 };
 
 class Root: public Base {
 public:
-    Root(): contextKind(PathRoot::Other), contextName() {}
+    Root() = default;
     Root(PathRoot r): contextKind(r), contextName() {}
     Root(QStringView n) {
         QMetaEnum metaEnum = QMetaEnum::fromType<PathRoot>();
@@ -221,13 +225,13 @@ public:
     }
     const Root *asRoot() const override { return this; }
 
-    PathRoot contextKind;
+    PathRoot contextKind = PathRoot::Other;
     QStringView contextName;
 };
 
 class Current: public Base {
 public:
-    Current(): contextName() {}
+    Current() = default;
     Current(PathCurrent c): contextKind(c) {}
     Current(QStringView n) {
         QMetaEnum metaEnum = QMetaEnum::fromType<PathCurrent>();
@@ -275,12 +279,13 @@ public:
     QStringView stringView() const override { return contextName; }
     const Current *asCurrent() const override { return this; }
 
-    PathCurrent contextKind;
+    PathCurrent contextKind = PathCurrent::Other;
     QStringView contextName;
 };
 
 class Any: public Base {
 public:
+    Any() = default;
     Kind kind() const override { return Kind::Any; }
     QString name() const override { return QLatin1String("*"); }
     bool checkName(QStringView s) const override { return s == u"*"; }
@@ -290,6 +295,7 @@ public:
 
 class QMLDOM_EXPORT Filter: public Base {
 public:
+    Filter() = default;
     Filter(std::function<bool(DomItem)> f, QStringView filterDescription = u"<native code filter>");
     Kind kind() const override { return Kind::Filter; }
     QString name() const override;
@@ -323,9 +329,6 @@ public:
     const Current *asCurrent() const { return base()->asCurrent(); }
     const Any *asAny() const { return base()->asAny(); }
     static int cmp(const PathComponent &p1, const PathComponent &p2);
-private:
-    friend class QQmlJS::Dom::Path;
-    friend class QQmlJS::Dom::PathEls::TestPaths;
 
     PathComponent(const Empty &o): data(o) {}
     PathComponent(const Field &o): data(o) {}
@@ -335,6 +338,10 @@ private:
     PathComponent(const Current &o): data(o) {}
     PathComponent(const Any &o): data(o) {}
     PathComponent(const Filter &o): data(o) {}
+
+private:
+    friend class QQmlJS::Dom::Path;
+    friend class QQmlJS::Dom::PathEls::TestPaths;
 
     Base *base() {
         return reinterpret_cast<Base*>(&data);
@@ -635,10 +642,14 @@ public:
     static ErrorGroups myErrors(); // use static consts and central registration instead?
 
     Path() = default;
+    explicit Path(const PathEls::PathComponent &c) : m_endOffset(0), m_length(0)
+    {
+        *this = appendComponent(c);
+    }
 
     int length() const { return m_length; }
     Path operator[](int i) const;
-    operator bool() const;
+    explicit operator bool() const;
 
     PathIterator begin() const;
     PathIterator end() const;
@@ -660,6 +671,7 @@ public:
     Path dropTail(int n = 1) const;
     Path mid(int offset, int length) const;
     Path mid(int offset) const;
+    Path appendComponent(const PathEls::PathComponent &c);
 
     // # Path construction
     static Path fromString(QString s, ErrorHandler errorHandler=nullptr);
@@ -705,18 +717,44 @@ public:
     using iterator_category = std::forward_iterator_tag;
 
     static int cmp(const Path &p1, const Path &p2);
+    Component component(int i) const;
+
 private:
     explicit Path(quint16 endOffset, quint16 length, std::shared_ptr<PathEls::PathData> data);
     friend class QQmlJS::Dom::PathEls::TestPaths;
     friend size_t qHash(const Path &, size_t);
 
-    Component component(int i) const;
     Path noEndOffset() const;
 
     quint16 m_endOffset = 0;
     quint16 m_length = 0;
     std::shared_ptr<PathEls::PathData> m_data = {};
 };
+
+inline bool operator==(const Path &lhs, const Path &rhs)
+{
+    return lhs.length() == rhs.length() && Path::cmp(lhs, rhs) == 0;
+}
+inline bool operator!=(const Path &lhs, const Path &rhs)
+{
+    return lhs.length() != rhs.length() || Path::cmp(lhs, rhs) != 0;
+}
+inline bool operator<(const Path &lhs, const Path &rhs)
+{
+    return Path::cmp(lhs, rhs) < 0;
+}
+inline bool operator>(const Path &lhs, const Path &rhs)
+{
+    return Path::cmp(lhs, rhs) > 0;
+}
+inline bool operator<=(const Path &lhs, const Path &rhs)
+{
+    return Path::cmp(lhs, rhs) <= 0;
+}
+inline bool operator>=(const Path &lhs, const Path &rhs)
+{
+    return Path::cmp(lhs, rhs) >= 0;
+}
 
 class PathIterator {
 public:
@@ -727,13 +765,6 @@ public:
     bool operator ==(const PathIterator &o) { return currentEl == o.currentEl; }
     bool operator !=(const PathIterator &o) { return currentEl != o.currentEl; }
 };
-
-inline bool operator==(const Path& lhs, const Path& rhs){ return lhs.length() == rhs.length() && Path::cmp(lhs,rhs) == 0; }
-inline bool operator!=(const Path& lhs, const Path& rhs){ return lhs.length() != rhs.length() || Path::cmp(lhs,rhs) != 0; }
-inline bool operator< (const Path& lhs, const Path& rhs){ return Path::cmp(lhs,rhs) <  0; }
-inline bool operator> (const Path& lhs, const Path& rhs){ return Path::cmp(lhs,rhs) >  0; }
-inline bool operator<=(const Path& lhs, const Path& rhs){ return Path::cmp(lhs,rhs) <= 0; }
-inline bool operator>=(const Path& lhs, const Path& rhs){ return Path::cmp(lhs,rhs) >= 0; }
 
 class Source {
 public:

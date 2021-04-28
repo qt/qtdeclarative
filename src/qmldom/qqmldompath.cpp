@@ -162,7 +162,13 @@ int PathComponent::cmp(const PathComponent &p1, const PathComponent &p2)
         return p1.data.key.keyValue.compare(p2.data.key.keyValue);
     case Kind::Root:
     {
-        int c = int(p1.data.root.contextKind) - int(p2.data.root.contextKind);
+        PathRoot k1 = p1.data.root.contextKind;
+        PathRoot k2 = p2.data.root.contextKind;
+        if (k1 == PathRoot::Env || k1 == PathRoot::Universe)
+            k1 = PathRoot::Top;
+        if (k2 == PathRoot::Env || k2 == PathRoot::Universe)
+            k2 = PathRoot::Top;
+        int c = int(k1) - int(k2);
         if (c != 0)
             return c;
         return p1.data.root.contextName.compare(p2.data.root.contextName);
@@ -398,12 +404,10 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
                 i0 = i-1;
                 while (i < s.length() && (s.at(i).isLetterOrNumber() || s.at(i) == underscore || s.at(i) == tilda))
                     ++i;
-                components.append(Component(PathEls::Key(s.mid(i0, i-i0))));
+                components.append(Component(PathEls::Key(s.mid(i0, i - i0).toString())));
             } else if (c == quote) {
                 i0 = i;
                 QString strVal;
-                QStringView key;
-                bool needsConversion = false;
                 bool properEnd = false;
                 while (i < s.length()) {
                     c = s.at(i);
@@ -411,7 +415,6 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
                         properEnd = true;
                         break;
                     } else if (c == backslash) {
-                        needsConversion = true;
                         strVal.append(s.mid(i0, i - i0).toString());
                         c = s.at(++i);
                         i0 = i + 1;
@@ -427,20 +430,14 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
                     ++i;
                 }
                 if (properEnd) {
-                    if (needsConversion) {
-                        strVal.append(s.mid(i0, i - i0).toString());
-                        strVals.append(strVal);
-                        key=strVal;
-                    } else {
-                        key = s.mid(i0, i - i0);
-                    }
+                    strVal.append(s.mid(i0, i - i0).toString());
                     ++i;
                 } else {
                     myErrors().error(tr("Unclosed quoted string at char %1.")
                                      .arg(QString::number(i - 1))).handle(errorHandler);
                     return Path();
                 }
-                components.append(PathEls::Key(key));
+                components.append(PathEls::Key(strVal));
             } else if (c == QChar::fromLatin1('*')) {
                 components.append(Component(PathEls::Any()));
             } else if (c == QChar::fromLatin1('?')) {
@@ -596,14 +593,17 @@ Path Path::Field(QString s)
 
 Path Path::Key(QStringView s)
 {
-    return Path(0,1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Key(s))))));
+    return Path(
+            0, 1,
+            std::shared_ptr<PathEls::PathData>(new PathEls::PathData(
+                    QStringList(), QVector<Component>(1, Component(PathEls::Key(s.toString()))))));
 }
 
 Path Path::Key(QString s)
 {
-    return Path(0,1,std::shared_ptr<PathEls::PathData>(
-                    new PathEls::PathData(QStringList(s), QVector<Component>(1,Component(PathEls::Key(s))))));
+    return Path(0, 1,
+                std::shared_ptr<PathEls::PathData>(new PathEls::PathData(
+                        QStringList(), QVector<Component>(1, Component(PathEls::Key(s))))));
 }
 
 Path Path::Current(PathCurrent s)
@@ -654,17 +654,15 @@ Path Path::field(QStringView name) const
 
 Path Path::key(QString name) const
 {
-    auto res = key(QStringView(name));
-    res.m_data->strData.append(name);
-    return res;
-}
-
-Path Path::key(QStringView name) const
-{
     if (m_endOffset != 0)
         return noEndOffset().key(name);
     return Path(0,m_length+1,std::shared_ptr<PathEls::PathData>(
                     new PathEls::PathData(QStringList(), QVector<Component>(1,Component(PathEls::Key(name))), m_data)));
+}
+
+Path Path::key(QStringView name) const
+{
+    return key(name.toString());
 }
 
 Path Path::index(index_type i) const
@@ -869,6 +867,66 @@ Path Path::noEndOffset() const
                         new PathEls::PathData(lastData->strData, lastData->components.mid(0, lastData->components.length() - endOffset), lastData->parent)));
     }
     return Path(0, m_length, lastData);
+}
+
+Path Path::appendComponent(const PathEls::PathComponent &c)
+{
+    if (m_endOffset != 0) {
+        Path newP = noEndOffset();
+        return newP.appendComponent(c);
+    }
+    if (m_data && m_data.use_count() != 1) {
+        // create a new path (otherwise paths linking to this will change)
+        Path newP(c);
+        newP.m_data->parent = m_data;
+        newP.m_length = static_cast<quint16>(m_length + 1);
+        return newP;
+    }
+    std::shared_ptr<PathEls::PathData> my_data =
+            (m_data ? m_data
+                    : std::make_shared<PathEls::PathData>(QStringList(),
+                                                          QVector<PathEls::PathComponent>()));
+    switch (c.kind()) {
+    case PathEls::Kind::Any:
+    case PathEls::Kind::Empty:
+    case PathEls::Kind::Index:
+        // no string
+    case PathEls::Kind::Field:
+        // string assumed to stay valid (Fields::...)
+        my_data->components.append(c);
+        break;
+    case PathEls::Kind::Current:
+        if (c.asCurrent()->contextKind == PathCurrent::Other) {
+            my_data->strData.append(c.asCurrent()->contextName.toString());
+            my_data->components.append(PathEls::Current(my_data->strData.last()));
+        } else {
+            my_data->components.append(c);
+        }
+        break;
+    case PathEls::Kind::Filter:
+        if (!c.base()->asFilter()->filterDescription.isEmpty()) {
+            my_data->strData.append(c.base()->asFilter()->filterDescription.toString());
+            my_data->components.append(
+                    PathEls::Filter(c.base()->asFilter()->filterFunction, my_data->strData.last()));
+        } else {
+            my_data->components.append(c);
+        }
+        break;
+    case PathEls::Kind::Key:
+        my_data->components.append(c);
+        break;
+    case PathEls::Kind::Root:
+        if (c.asRoot()->contextKind == PathRoot::Other) {
+            my_data->strData.append(c.asRoot()->contextName.toString());
+            my_data->components.append(PathEls::Root(my_data->strData.last()));
+        } else {
+            my_data->components.append(c);
+        }
+        break;
+    }
+    if (m_data)
+        m_endOffset = 1;
+    return Path { 0, static_cast<quint16>(m_length + 1), my_data };
 }
 
 ErrorGroups Path::myErrors()
