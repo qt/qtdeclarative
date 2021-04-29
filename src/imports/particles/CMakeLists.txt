@@ -10,6 +10,8 @@ qt_internal_add_qml_module(particlesplugin
     CLASS_NAME QtQuick2ParticlesPlugin
     SKIP_TYPE_REGISTRATION
     PLUGIN_OPTIONAL
+    DEPENDENCIES
+        QtQuick
     SOURCES
         plugin.cpp
     PUBLIC_LIBRARIES
