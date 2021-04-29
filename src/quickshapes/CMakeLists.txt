@@ -1,8 +1,8 @@
 #####################################################################
-## QuickShapes Module:
+## QuickShapesPrivate Module:
 #####################################################################
 
-qt_internal_add_qml_module(QuickShapes
+qt_internal_add_qml_module(QuickShapesPrivate
     URI "QtQuick.Shapes"
     VERSION "${PROJECT_VERSION}"
     PLUGIN_TARGET qmlshapesplugin
@@ -42,7 +42,7 @@ set(qtquickshapes_resource_files
     "shaders_ng/radialgradient.vert.qsb"
 )
 
-qt_internal_add_resource(QuickShapes "qtquickshapes"
+qt_internal_add_resource(QuickShapesPrivate "qtquickshapes"
     PREFIX
         "/qt-project.org/shapes"
     FILES

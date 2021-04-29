@@ -1,10 +1,10 @@
 # Generated from qmldebug.pro.
 
 #####################################################################
-## QmlDebug Module:
+## QmlDebugPrivate Module:
 #####################################################################
 
-qt_internal_add_module(QmlDebug
+qt_internal_add_module(QmlDebugPrivate
     STATIC
     INTERNAL_MODULE
     SOURCES

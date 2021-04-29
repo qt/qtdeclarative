@@ -1,10 +1,10 @@
 # Generated from packetprotocol.pro.
 
 #####################################################################
-## PacketProtocol Module:
+## PacketProtocolPrivate Module:
 #####################################################################
 
-qt_internal_add_module(PacketProtocol
+qt_internal_add_module(PacketProtocolPrivate
     STATIC
     INTERNAL_MODULE
     SOURCES

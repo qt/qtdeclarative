@@ -1,10 +1,10 @@
 # Generated from qmldom.pro.
 
 #####################################################################
-## QmlDom Module:
+## QmlDomPrivate Module:
 #####################################################################
 
-qt_internal_add_module(QmlDom
+qt_internal_add_module(QmlDomPrivate
     STATIC
     INTERNAL_MODULE
     # NO_SYNC_QT # special case remove, it's actually needed for tests
