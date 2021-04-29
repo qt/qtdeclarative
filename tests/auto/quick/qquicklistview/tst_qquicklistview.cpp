@@ -74,6 +74,8 @@ public:
     tst_QQuickListView();
 
 private slots:
+    // WARNING: please add new tests to tst_qquicklistview2; this file is too slow to work with.
+
     void init();
     void cleanupTestCase();
     // Test QAbstractItemModel model types
@@ -299,6 +301,8 @@ private slots:
 
     void requiredObjectListModel();
     void clickHeaderAndFooterWhenClip();
+
+    // WARNING: please add new tests to tst_qquicklistview2; this file is too slow to work with.
 
 private:
     template <class T> void items(const QUrl &source);
@@ -10101,6 +10105,8 @@ void tst_QQuickListView::clickHeaderAndFooterWhenClip() // QTBUG-85302
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, footer->mapToItem(root, QPoint(footer->width() / 2, footer->height() / 2)).toPoint());
     QVERIFY(root->property("footerPressed").toBool());
 }
+
+// WARNING: please add new tests to tst_qquicklistview2; this file is too slow to work with.
 
 QTEST_MAIN(tst_QQuickListView)
 
