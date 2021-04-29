@@ -1,10 +1,10 @@
 # Generated from qmlcompiler.pro.
 
 #####################################################################
-## QmlCompiler Module:
+## QmlCompilerPrivate Module:
 #####################################################################
 
-qt_internal_add_module(QmlCompiler
+qt_internal_add_module(QmlCompilerPrivate
     STATIC
     INTERNAL_MODULE
     SOURCES
