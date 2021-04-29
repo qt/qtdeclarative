@@ -98,6 +98,33 @@ namespace QQuickVisualTestUtil
     }
 
     bool compareImages(const QImage &ia, const QImage &ib, QString *errorMessage);
+
+    struct SignalMultiSpy : public QObject
+    {
+        Q_OBJECT
+    public:
+        QList<QObject *> senders;
+        QList<QByteArray> signalNames;
+
+        template <typename Func1>
+        QMetaObject::Connection connectToSignal(const typename QtPrivate::FunctionPointer<Func1>::Object *obj, Func1 signal,
+                                                              Qt::ConnectionType type = Qt::AutoConnection)
+        {
+            return connect(obj, signal, this, &SignalMultiSpy::receive, type);
+        }
+
+        void clear() {
+            senders.clear();
+            signalNames.clear();
+        }
+
+    public slots:
+        void receive() {
+            QMetaMethod m = sender()->metaObject()->method(senderSignalIndex());
+            senders << sender();
+            signalNames << m.name();
+        }
+    };
 }
 
 #endif // QQUICKVISUALTESTUTIL_H
