@@ -48,6 +48,7 @@
 #include <QtCore/qmetatype.h>
 
 #include <initializer_list>
+#include <limits>
 #include <type_traits>
 
 //
