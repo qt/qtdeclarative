@@ -609,6 +609,12 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("qtquickWindow20.qml")
             << QStringLiteral("Property \"window\" not found on type \"QQuickWindow\"") << QString()
             << false;
+    // This should not cause any warnings but right now the important thing is that it doesn't hang.
+    QTest::newRow("Accessible")
+            << QStringLiteral("accessible.qml")
+            << QStringLiteral(
+                       "Property \"EditableText\" not found on type \"QQuickAccessibleAttached\"")
+            << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()

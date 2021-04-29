@@ -31,6 +31,7 @@
 #include <QtQmlCompiler/private/qcoloroutput_p.h>
 
 #include <QtCore/qqueue.h>
+#include <QtCore/private/qduplicatetracker_p.h>
 #include <QtCore/qsharedpointer.h>
 #include <stack>
 
@@ -46,11 +47,16 @@ static bool walkRelatedScopes(QQmlJSScope::ConstPtr rootType, const Visitor &vis
     if (rootType.isNull())
         return false;
     std::stack<QQmlJSScope::ConstPtr> stack;
+    QDuplicateTracker<QQmlJSScope::ConstPtr> seenTypes;
     stack.push(rootType);
 
     while (!stack.empty()) {
         const auto type = stack.top();
         stack.pop();
+
+        // If we've seen this type before (can be caused by self attaching types), ignore it
+        if (seenTypes.hasSeen(type))
+            continue;
 
         if (visit(type))
             return true;
