@@ -43,6 +43,7 @@
 
 #include <QtCore/qstringlist.h>
 #include <QtCore/qdebug.h>
+#include <QtCore/qurl.h>
 
 // ### Remove me
 #include <private/qqmlengine_p.h>
@@ -78,6 +79,8 @@ void QQmlListAccessor::setList(const QVariant &v)
         m_type = Invalid;
     } else if (variantsType == QMetaType::fromType<QStringList>()) {
         m_type = StringList;
+    } else if (variantsType == QMetaType::fromType<QList<QUrl>>()) {
+        m_type = UrlList;
     } else if (variantsType == QMetaType::fromType<QVariantList>()) {
         m_type = VariantList;
     } else if (variantsType == QMetaType::fromType<QList<QObject *>>()) {
@@ -117,6 +120,9 @@ qsizetype QQmlListAccessor::count() const
     case StringList:
         Q_ASSERT(d.metaType() == QMetaType::fromType<QStringList>());
         return reinterpret_cast<const QStringList *>(d.constData())->count();
+    case UrlList:
+        Q_ASSERT(d.metaType() == QMetaType::fromType<QList<QUrl>>());
+        return reinterpret_cast<const QList<QUrl> *>(d.constData())->count();
     case VariantList:
         Q_ASSERT(d.metaType() == QMetaType::fromType<QVariantList>());
         return reinterpret_cast<const QVariantList *>(d.constData())->count();
@@ -144,6 +150,9 @@ QVariant QQmlListAccessor::at(qsizetype idx) const
     case StringList:
         Q_ASSERT(d.metaType() == QMetaType::fromType<QStringList>());
         return QVariant::fromValue(reinterpret_cast<const QStringList *>(d.constData())->at(idx));
+    case UrlList:
+        Q_ASSERT(d.metaType() == QMetaType::fromType<QList<QUrl>>());
+        return QVariant::fromValue(reinterpret_cast<const QList<QUrl> *>(d.constData())->at(idx));
     case VariantList:
         Q_ASSERT(d.metaType() == QMetaType::fromType<QVariantList>());
         return reinterpret_cast<const QVariantList *>(d.constData())->at(idx);

@@ -74,6 +74,8 @@ public:
     tst_QQuickListView();
 
 private slots:
+    // WARNING: please add new tests to tst_qquicklistview2; this file is too slow to work with.
+
     void init();
     void cleanupTestCase();
     // Test QAbstractItemModel model types
@@ -300,6 +302,8 @@ private slots:
     void requiredObjectListModel();
     void clickHeaderAndFooterWhenClip();
     void animatedDelegate();
+
+    // WARNING: please add new tests to tst_qquicklistview2; this file is too slow to work with.
 
 private:
     template <class T> void items(const QUrl &source);
@@ -10116,6 +10120,8 @@ void tst_QQuickListView::animatedDelegate()
         QTest::qWait(10);
     }
 }
+
+// WARNING: please add new tests to tst_qquicklistview2; this file is too slow to work with.
 
 QTEST_MAIN(tst_QQuickListView)
 

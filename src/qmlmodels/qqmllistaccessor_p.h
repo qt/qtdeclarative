@@ -70,7 +70,7 @@ public:
     qsizetype count() const;
     QVariant at(qsizetype) const;
 
-    enum Type { Invalid, StringList, VariantList, ObjectList, ListProperty, Instance, Integer };
+    enum Type { Invalid, StringList, UrlList, VariantList, ObjectList, ListProperty, Instance, Integer };
     Type type() const { return m_type; }
 
 private:
