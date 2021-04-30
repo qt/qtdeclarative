@@ -76,7 +76,7 @@ Rectangle {
 
             if (line.y + line.height >= height) {
                 line.y -= height - main.margin
-                line.x = width / 2 + main.activeFocusmargin
+                line.x = width / 2 + main.margin
             }
 
             if (line.isLast) {
@@ -89,8 +89,8 @@ Rectangle {
         Rectangle {
             id: lastLineMarker
             color: "#44cccccc"
-            width: theEndText.width + margin
-            height: theEndText.height + margin
+            width: theEndText.width + main.margin
+            height: theEndText.height + main.margin
 
             Text {
                 id: theEndText
