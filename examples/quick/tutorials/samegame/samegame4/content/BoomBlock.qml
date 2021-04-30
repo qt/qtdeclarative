@@ -61,7 +61,7 @@ Item {
     property bool spawned: false
 
     Behavior on x {
-        enabled: spawned;
+        enabled: block.spawned;
         SpringAnimation{ spring: 2; damping: 0.2 }
     }
     Behavior on y {
@@ -75,9 +75,9 @@ Item {
 
         anchors.fill: parent
         source: {
-            if (type == 0)
+            if (block.type == 0)
                 return "../../shared/pics/redStone.png";
-            else if (type == 1)
+            else if (block.type == 1)
                 return "../../shared/pics/blueStone.png";
             else
                 return "../../shared/pics/greenStone.png";
@@ -97,9 +97,9 @@ Item {
         ImageParticle {
             // ![0]
             source: {
-                if (type == 0)
+                if (block.type == 0)
                     return "../../shared/pics/redStar.png";
-                else if (type == 1)
+                else if (block.type == 1)
                     return "../../shared/pics/blueStar.png";
                 else
                     return "../../shared/pics/greenStar.png";
@@ -123,13 +123,13 @@ Item {
     states: [
         State {
             name: "AliveState"
-            when: spawned == true && dying == false
+            when: block.spawned == true && block.dying == false
             PropertyChanges { target: img; opacity: 1 }
         },
 
         State {
             name: "DeathState"
-            when: dying == true
+            when: block.dying == true
             StateChangeScript { script: particles.burst(50); }
             PropertyChanges { target: img; opacity: 0 }
             StateChangeScript { script: block.destroy(1000); }
