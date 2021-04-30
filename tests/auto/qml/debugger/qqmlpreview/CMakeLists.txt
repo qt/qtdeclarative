@@ -11,7 +11,6 @@ list(APPEND test_data "data/window2.qml")
 list(APPEND test_data "data/window1.qml")
 list(APPEND test_data "data/broken.qml")
 list(APPEND test_data "data/zoom.qml")
-list(APPEND test_data "data/i18n/qml_fr_FR.qm")
 
 qt_internal_add_test(tst_qqmlpreview
     SOURCES
