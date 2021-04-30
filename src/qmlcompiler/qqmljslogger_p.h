@@ -133,7 +133,7 @@ public:
         }
 
         bool setLevel(const QString &level) {
-            if (level == QStringLiteral("silent")) {
+            if (level == QStringLiteral("disable")) {
                 m_disabled = true;
             } else if (level == QStringLiteral("info")) {
                 m_level = QtInfoMsg;
