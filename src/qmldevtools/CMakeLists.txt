@@ -73,8 +73,7 @@ else()
             $<BUILD_INTERFACE:${qml_module_include_dir}/${PROJECT_VERSION}/${qml_module}>
         )
 endif()
-target_include_directories(QmlDevTools PRIVATE ${_qml_dev_tools_private_includes})
-target_include_directories(QmlDevToolsPrivate INTERFACE ${_qml_dev_tools_private_includes})
+target_include_directories(QmlDevTools PUBLIC ${_qml_dev_tools_private_includes})
 if(QT_FEATURE_framework)
     set(_qml_fw_headers_dir lib/${qml_module}.framework/Headers)
     set(_qml_dev_tools_public_includes
@@ -89,8 +88,7 @@ else()
             $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}/${qml_module}/${PROJECT_VERSION}/${qml_module}>
         )
 endif()
-target_include_directories(QmlDevTools PRIVATE ${_qml_dev_tools_public_includes})
-target_include_directories(QmlDevToolsPrivate INTERFACE ${_qml_dev_tools_public_includes})
+target_include_directories(QmlDevTools PUBLIC ${_qml_dev_tools_public_includes})
 
 # We build the qlalr sources into qmldevtools, so there's no link-time
 # dependency to QtQml. However we also include files in QmlDevTools such
