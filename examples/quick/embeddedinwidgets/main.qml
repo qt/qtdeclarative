@@ -103,7 +103,7 @@ Rectangle {
         property variant source: column;
         property size sourceSize: Qt.size(0.5 / column.width, 0.5 / column.height);
 
-        fragmentShader: "
+        fragmentShader: `
             varying highp vec2 qt_TexCoord0;
             uniform lowp sampler2D source;
             uniform lowp vec2 sourceSize;
@@ -117,6 +117,6 @@ Rectangle {
                                         + texture2D(source, tc + sourceSize * vec2(-1, 1))
                                        );
                 gl_FragColor = col * qt_Opacity * (1.0 - qt_TexCoord0.y) * 0.2;
-            }"
+            }`
     }
 }
