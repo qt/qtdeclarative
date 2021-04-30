@@ -159,6 +159,7 @@ Rectangle {
     Component {
         id: petDelegate
         Item {
+            id: petDelegateItem
             width: 160
             height: column.height
 
@@ -169,9 +170,9 @@ Rectangle {
 
             Column {
                 id: column
-                Text { text: 'Name: ' + parent.name }
-                Text { text: 'Type: ' + parent.type }
-                Text { text: 'Age: ' + parent.age }
+                Text { text: 'Name: ' + petDelegateItem.name }
+                Text { text: 'Type: ' + petDelegateItem.type }
+                Text { text: 'Age: ' + petDelegateItem.age }
             }
 
             MouseArea {

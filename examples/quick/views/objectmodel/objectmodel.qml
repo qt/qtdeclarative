@@ -84,7 +84,7 @@ Rectangle {
             color: "#F4F0FF"
             Text { text: "Page 3"; font.bold: true; anchors.centerIn: parent }
 
-            Component.onDestruction: if (root.activeFocusprintDestruction) print("destroyed 3")
+            Component.onDestruction: if (root.printDestruction) print("destroyed 3")
         }
     }
 
