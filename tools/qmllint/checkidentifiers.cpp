@@ -430,6 +430,8 @@ void CheckIdentifiers::operator()(
                                 QLatin1String("You first have to give the root element an id\n"),
                                 QtInfoMsg, QStringLiteral("Note"));
                 }
+
+                colorOut.write(QLatin1String("\n\n\n"));
             } else if (jsId.has_value()
                        && jsId->kind == QQmlJSScope::JavaScriptIdentifier::Injected) {
                 const QQmlJSScope::JavaScriptIdentifier id = jsId.value();
@@ -454,9 +456,8 @@ void CheckIdentifiers::operator()(
                         colorOut.write(QLatin1String(", "), QtInfoMsg);
                 }
                 colorOut.write(QLatin1String(handler.isMultiline ? ")" : ") => "), QtInfoMsg);
-                colorOut.write(QLatin1String(" {..."));
+                colorOut.write(QLatin1String(" {...\n\n\n"));
             }
-            colorOut.write(QLatin1String("\n\n\n"));
         }
         const auto childScopes = currentScope->childScopes();
         for (auto const &childScope : childScopes)
