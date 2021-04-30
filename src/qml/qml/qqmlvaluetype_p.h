@@ -266,7 +266,7 @@ public:
 #if QT_CONFIG(easingcurve)
 namespace QQmlEasingEnums
 {
-Q_NAMESPACE
+Q_NAMESPACE_EXPORT(Q_QML_PRIVATE_EXPORT)
 QML_NAMED_ELEMENT(Easing)
 QML_ADDED_IN_VERSION(2, 0)
 

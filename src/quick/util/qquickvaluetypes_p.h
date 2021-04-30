@@ -350,7 +350,7 @@ public:
 
 namespace QQuickFontEnums
 {
-Q_NAMESPACE
+Q_NAMESPACE_EXPORT(Q_QUICK_PRIVATE_EXPORT)
 
 QML_NAMED_ELEMENT(Font)
 QML_ADDED_IN_VERSION(2, 0)
@@ -464,7 +464,7 @@ public:
 
 namespace QQuickColorSpaceEnums
 {
-Q_NAMESPACE
+Q_NAMESPACE_EXPORT(Q_QUICK_PRIVATE_EXPORT)
 QML_NAMED_ELEMENT(ColorSpace)
 QML_ADDED_IN_VERSION(2, 15)
 Q_CLASSINFO("RegisterEnumClassesUnscoped", "false")
