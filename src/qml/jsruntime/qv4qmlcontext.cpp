@@ -566,6 +566,12 @@ ReturnedValue QQmlContextWrapper::lookupIdObject(Lookup *l, ExecutionEngine *eng
     return QV4::QObjectWrapper::wrap(engine, context->idValue(objectId));
 }
 
+ReturnedValue QQmlContextWrapper::lookupIdObjectInParentContext(
+        Lookup *l, ExecutionEngine *engine, Value *base)
+{
+    return QQmlContextWrapper::resolveQmlContextPropertyLookupGetter(l, engine, base);
+}
+
 ReturnedValue QQmlContextWrapper::lookupScopeObjectProperty(Lookup *l, ExecutionEngine *engine, Value *base)
 {
     Scope scope(engine);

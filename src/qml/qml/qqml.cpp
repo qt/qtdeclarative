@@ -877,30 +877,32 @@ void AOTCompiledContext::initCallQmlContextPropertyLookup(uint index) const
 bool AOTCompiledContext::loadContextIdLookup(uint index, void *target) const
 {
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
-    if (l->qmlContextPropertyGetter != QV4::QQmlContextWrapper::lookupIdObject)
-        return false;
-
+    int objectId = -1;
+    QQmlContextData *context = nullptr;
     Q_ASSERT(qmlContext);
 
-    QQmlContextData *contextData;
-    if (auto *wrapper = l->qmlContextIdObjectLookup.ownContextWrapper) {
+    if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupIdObject) {
+        objectId = l->qmlContextIdObjectLookup.objectId;
+        context = qmlContext;
+    } else if (l->qmlContextPropertyGetter
+               == QV4::QQmlContextWrapper::lookupIdObjectInParentContext) {
         QV4::Scope scope(engine->handle());
-        QV4::Scoped<QV4::QQmlContextWrapper> ownContext(scope, wrapper);
-        if (ownContext->d()->context != qmlContext)
-            return false; // context has changed. Look up again.
-        QV4::Scoped<QV4::QQmlContextWrapper> objectContext(
-                    scope, l->qmlContextIdObjectLookup.objectContextWrapper);
-        contextData = objectContext->d()->context;
+        QV4::ScopedString name(scope, compilationUnit->runtimeStrings[l->nameIndex]);
+        for (context = qmlContext; context; context = context->parent().data()) {
+            objectId = context->propertyIndex(name);
+            if (objectId != -1 && objectId < context->numIdValues())
+                break;
+        }
     } else {
-        contextData = qmlContext;
+        return false;
     }
 
-    const int objectId = l->qmlContextIdObjectLookup.objectId;
+    Q_ASSERT(objectId >= 0);
+    Q_ASSERT(context != nullptr);
     QQmlEnginePrivate *engine = QQmlEnginePrivate::get(qmlEngine());
-
     if (QQmlPropertyCapture *capture = engine->propertyCapture)
-        capture->captureProperty(contextData->idValueBindings(objectId));
-    *static_cast<QObject **>(target) = contextData->idValue(objectId);
+        capture->captureProperty(context->idValueBindings(objectId));
+    *static_cast<QObject **>(target) = context->idValue(objectId);
     return true;
 }
 
@@ -916,16 +918,13 @@ void AOTCompiledContext::initLoadContextIdLookup(uint index) const
         if (propertyIdx == -1 || propertyIdx >= context->numIdValues())
             continue;
 
-        l->qmlContextIdObjectLookup.objectId = propertyIdx;
-        l->qmlContextPropertyGetter = QV4::QQmlContextWrapper::lookupIdObject;
-        if (context.data() != ownContext.data()) {
-            l->qmlContextIdObjectLookup.objectContextWrapper
-                    = scope.engine->memoryManager->allocate<QV4::QQmlContextWrapper>(
-                        context, nullptr);
-            l->qmlContextIdObjectLookup.ownContextWrapper
-                    = scope.engine->memoryManager->allocate<QV4::QQmlContextWrapper>(
-                        ownContext, nullptr);
+        if (context.data() == ownContext.data()) {
+            l->qmlContextIdObjectLookup.objectId = propertyIdx;
+            l->qmlContextPropertyGetter = QV4::QQmlContextWrapper::lookupIdObject;
+        } else {
+            l->qmlContextPropertyGetter = QV4::QQmlContextWrapper::lookupIdObjectInParentContext;
         }
+
         return;
     }
 
