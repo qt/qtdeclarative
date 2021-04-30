@@ -404,6 +404,33 @@ QQmlIncubator::Status QQmlTableInstanceModel::incubationStatus(int index) {
     return QQmlIncubator::Ready;
 }
 
+bool QQmlTableInstanceModel::setRequiredProperty(int index, const QString &name, const QVariant &value)
+{
+    // This function can be called from the view upon
+    // receiving the initItem signal. It can be used to
+    // give all required delegate properties used by the
+    // view an initial value.
+    const auto modelItem = m_modelItems.value(index, nullptr);
+    if (!modelItem)
+        return false;
+    if (!modelItem->object)
+        return false;
+    if (!modelItem->incubationTask)
+        return false;
+
+    bool wasInRequired = false;
+    const auto task = QQmlIncubatorPrivate::get(modelItem->incubationTask);
+    RequiredProperties &props = task->requiredProperties();
+    if (props.empty())
+        return false;
+
+    QQmlProperty componentProp = QQmlComponentPrivate::removePropertyFromRequired(
+                modelItem->object, name, props, &wasInRequired);
+    if (wasInRequired)
+        componentProp.write(value);
+    return wasInRequired;
+}
+
 void QQmlTableInstanceModel::deleteIncubationTaskLater(QQmlIncubator *incubationTask)
 {
     // We often need to post-delete incubation tasks, since we cannot
@@ -484,10 +511,11 @@ const QAbstractItemModel *QQmlTableInstanceModel::abstractItemModel() const
 void QQmlTableInstanceModelIncubationTask::setInitialState(QObject *object)
 {
     initializeRequiredProperties(modelItemToIncubate, object);
-    if (QQmlIncubatorPrivate::get(this)->requiredProperties().empty()) {
-        modelItemToIncubate->object = object;
-        emit tableInstanceModel->initItem(modelItemToIncubate->index, object);
-    } else {
+    modelItemToIncubate->object = object;
+    emit tableInstanceModel->initItem(modelItemToIncubate->index, object);
+
+    if (!QQmlIncubatorPrivate::get(this)->requiredProperties().empty()) {
+        modelItemToIncubate->object = nullptr;
         object->deleteLater();
     }
 }

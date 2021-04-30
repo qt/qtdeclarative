@@ -99,6 +99,8 @@ public:
     virtual int indexOf(QObject *object, QObject *objectContext) const = 0;
     virtual const QAbstractItemModel *abstractItemModel() const { return nullptr; }
 
+    virtual bool setRequiredProperty(int index, const QString &name, const QVariant &value);
+
 Q_SIGNALS:
     void countChanged();
     void modelUpdated(const QQmlChangeSet &changeSet, bool reset);
