@@ -861,8 +861,12 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
     const QString propertyName = group->name.toString();
 
     QQmlJSMetaProperty property = m_currentScope->property(propertyName);
-    if (property.isValid() && !property.type().isNull()
-        && (uiob->hasOnToken || property.type()->canAssign(childScope))) {
+
+    if (m_currentScope->isInCustomParserParent()) {
+        // These warnings do not apply for custom parsers and their children and need to be handled
+        // on a case by case basis
+    } else if (property.isValid() && !property.type().isNull()
+               && (uiob->hasOnToken || property.type()->canAssign(childScope))) {
 
         QQmlJSMetaPropertyBinding binding = m_currentScope->hasOwnPropertyBinding(propertyName)
                 ? m_currentScope->ownPropertyBinding(propertyName)

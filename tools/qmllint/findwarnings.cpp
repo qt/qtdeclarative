@@ -99,6 +99,11 @@ void FindWarningVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
 
 void FindWarningVisitor::checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope)
 {
+    // These warnings do not apply for custom parsers and their children and need to be handled on a
+    // case by case basis
+    if (scope->isInCustomParserParent())
+        return;
+
     auto children = scope->childScopes();
     while (!children.isEmpty()) {
         auto childScope = children.takeFirst();
@@ -140,6 +145,11 @@ void FindWarningVisitor::flushPendingSignalParameters()
 void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope)
 {
     if (scope == m_exportedRootScope || scope->isArrayScope()) // inapplicable
+        return;
+
+    // These warnings do not apply for custom parsers and their children and need to be handled on a
+    // case by case basis
+    if (scope->isInCustomParserParent())
         return;
 
     const QQmlJSScope *scopeOfDefaultProperty = nullptr;
@@ -288,9 +298,10 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiScriptBinding *uisb)
         }
 
         if (!qmlScope->hasProperty(name.toString())) {
-            // These warnings do not apply for custom parsers and need to be handled on a case by
-            // case basis
-            if (qmlScope->baseType()->hasCustomParser())
+            // These warnings do not apply for custom parsers and their children and need to be
+            // handled on a case by case basis
+
+            if (qmlScope->isInCustomParserParent())
                 return true;
 
             // TODO: Can this be in a better suited category?

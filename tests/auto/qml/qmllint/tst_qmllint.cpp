@@ -738,6 +738,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("propertyOverride") << QStringLiteral("propertyOverride.qml");
     QTest::newRow("propertyBindingValue") << QStringLiteral("propertyBindingValue.qml");
     QTest::newRow("customParser") << QStringLiteral("customParser.qml");
+    QTest::newRow("customParser.recursive") << QStringLiteral("customParser.recursive.qml");
     QTest::newRow("2Behavior") << QStringLiteral("2behavior.qml");
     QTest::newRow("interceptor") << QStringLiteral("interceptor.qml");
     QTest::newRow("valueSource") << QStringLiteral("valueSource.qml");

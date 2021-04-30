@@ -493,4 +493,14 @@ bool QQmlJSScope::canAssign(const QQmlJSScope::ConstPtr &derived) const
     return internalName() == u"QVariant"_qs || internalName() == u"QJSValue"_qs;
 }
 
+bool QQmlJSScope::isInCustomParserParent() const
+{
+    for (const auto *scope = this; scope; scope = scope->parentScope().get()) {
+        if (!scope->baseType().isNull() && scope->baseType()->hasCustomParser())
+            return true;
+    }
+
+    return false;
+}
+
 QT_END_NAMESPACE

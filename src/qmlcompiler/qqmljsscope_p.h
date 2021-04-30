@@ -355,6 +355,12 @@ public:
     */
     bool canAssign(const QQmlJSScope::ConstPtr &derived) const;
 
+    /*!
+      \internal
+      Checks whether this type or its parents have a custom parser.
+    */
+    bool isInCustomParserParent() const;
+
 private:
     QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
 
