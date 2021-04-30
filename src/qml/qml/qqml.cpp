@@ -848,6 +848,19 @@ QMetaType AOTCompiledContext::lookupResultMetaType(uint index) const
     return QMetaType();
 }
 
+void AOTCompiledContext::storeNameSloppy(uint nameIndex, void *value) const
+{
+    // We don't really use any part of the lookup machinery here.
+    // The QV4::Lookup is created on the stack to conveniently get the property cache, and through
+    // the property cache we store a value into the property.
+
+    QV4::Lookup l;
+    l.nameIndex = nameIndex;
+    initObjectLookup(this, &l, qmlScopeObject);
+    storeObjectProperty(&l, qmlScopeObject, value);
+    l.qobjectLookup.propertyCache->release();
+}
+
 bool AOTCompiledContext::callQmlContextPropertyLookup(
         uint index, void **args, const QMetaType *types, int argc) const
 {
