@@ -748,6 +748,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("QtQuick.Window 2.1") << QStringLiteral("qtquickWindow21.qml");
     QTest::newRow("attachedTypeIndirect") << QStringLiteral("attachedTypeIndirect.qml");
     QTest::newRow("objectArray") << QStringLiteral("objectArray.qml");
+    QTest::newRow("aliasToList") << QStringLiteral("aliasToList.qml");
 }
 
 void TestQmllint::cleanQmlCode()

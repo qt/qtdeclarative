@@ -137,6 +137,7 @@ void QQmlJSImportVisitor::resolveAliases()
 
             QStringList components = property.typeName().split(u'.');
             QQmlJSScope::ConstPtr type;
+            QQmlJSMetaProperty targetProperty;
 
             // The first component has to be an ID. Find the object it refers to.
             const auto it = m_scopesById.find(components.takeFirst());
@@ -153,6 +154,7 @@ void QQmlJSImportVisitor::resolveAliases()
                     if (!target.type() && target.isAlias())
                         doRequeue = true;
                     type = target.type();
+                    targetProperty = target;
                 }
             }
 
@@ -163,6 +165,11 @@ void QQmlJSImportVisitor::resolveAliases()
                                         .arg(property.propertyName()), Log_Alias, object->sourceLocation());
             } else {
                 property.setType(type);
+                // Copy additional property information from target
+                property.setIsList(targetProperty.isList());
+                property.setIsWritable(targetProperty.isWritable());
+                property.setIsPointer(targetProperty.isPointer());
+
                 if (const QString internalName = type->internalName(); !internalName.isEmpty())
                     property.setTypeName(internalName);
             }
