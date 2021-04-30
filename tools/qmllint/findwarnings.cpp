@@ -139,7 +139,7 @@ void FindWarningVisitor::flushPendingSignalParameters()
 
 void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope)
 {
-    if (scope == m_exportedRootScope) // inapplicable
+    if (scope == m_exportedRootScope || scope->isArrayScope()) // inapplicable
         return;
 
     const QQmlJSScope *scopeOfDefaultProperty = nullptr;

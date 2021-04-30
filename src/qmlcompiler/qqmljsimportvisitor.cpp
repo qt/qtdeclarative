@@ -553,6 +553,27 @@ void QQmlJSImportVisitor::endVisit(UiScriptBinding *scriptBinding)
     }
 }
 
+bool QQmlJSImportVisitor::visit(UiArrayBinding *arrayBinding)
+{
+    QString name;
+    for (auto id = arrayBinding->qualifiedId; id; id = id->next)
+        name += id->name.toString() + QLatin1Char('.');
+
+    name.chop(1);
+
+    enterEnvironment(QQmlJSScope::QMLScope, name, arrayBinding->firstSourceLocation());
+    m_currentScope->setIsArrayScope(true);
+
+    return true;
+}
+
+void QQmlJSImportVisitor::endVisit(UiArrayBinding *)
+{
+    leaveEnvironment();
+
+    // TODO: Actually generate a binding from the scope
+}
+
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
 {
     QQmlJSMetaEnum qmlEnum(uied->name.toString());

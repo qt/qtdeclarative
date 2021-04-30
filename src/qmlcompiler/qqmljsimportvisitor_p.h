@@ -79,6 +79,8 @@ protected:
     bool visit(QQmlJS::AST::UiRequired *required) override;
     bool visit(QQmlJS::AST::UiScriptBinding *) override;
     void endVisit(QQmlJS::AST::UiScriptBinding *) override;
+    bool visit(QQmlJS::AST::UiArrayBinding *) override;
+    void endVisit(QQmlJS::AST::UiArrayBinding *) override;
     bool visit(QQmlJS::AST::UiEnumDeclaration *uied) override;
     bool visit(QQmlJS::AST::FunctionExpression *fexpr) override;
     void endVisit(QQmlJS::AST::FunctionExpression *) override;

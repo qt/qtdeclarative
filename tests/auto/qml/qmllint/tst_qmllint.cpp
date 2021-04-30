@@ -746,6 +746,7 @@ void TestQmllint::cleanQmlCode_data()
             << QStringLiteral("groupedProperty_valueSource_interceptor.qml");
     QTest::newRow("QtQuick.Window 2.1") << QStringLiteral("qtquickWindow21.qml");
     QTest::newRow("attachedTypeIndirect") << QStringLiteral("attachedTypeIndirect.qml");
+    QTest::newRow("objectArray") << QStringLiteral("objectArray.qml");
 }
 
 void TestQmllint::cleanQmlCode()
