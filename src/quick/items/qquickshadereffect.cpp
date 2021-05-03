@@ -110,7 +110,10 @@ QT_BEGIN_NAMESPACE
 
     \note It is only the vertex input location that matters in practice. The
     names are freely changeable, while the location must always be \c 0 for
-    vertex position, \c 1 for texture coordinates.
+    vertex position, \c 1 for texture coordinates. However, be aware that this
+    applies to vertex inputs only, and is not necessarily true for output
+    variables from the vertex shader that are then used as inputs in the
+    fragment shader (typically, the interpolated texture coordinates).
 
     The following uniforms are predefined:
 
@@ -266,6 +269,18 @@ QT_BEGIN_NAMESPACE
     mandatory even when the application-provided shader does not use the matrix
     or the opacity, because at run time there is one single uniform buffer that
     is exposed to both the vertex and fragment shader.
+
+    \warning Unlike with vertex inputs, passing data between the vertex and
+    fragment shader may, depending on the underlying graphics API, require the
+    same names to be used, a matching location is not always sufficient. Most
+    prominently, when specifying a fragment shader while relying on the default,
+    built-in vertex shader, the texture coordinates are passed on as \c
+    qt_TexCoord0 at location \c 0, and therefore it is strongly advised that the
+    fragment shader declares the input with the same name
+    (qt_TexCoord0). Failing to do so may lead to issues on some platforms, for
+    example when running with a non-core profile OpenGL context where the
+    underlying GLSL shader source code has no location qualifiers and matching
+    is based on the variable names during to shader linking process.
 
     \section1 ShaderEffect and Item Layers
 
@@ -436,7 +451,11 @@ QT_BEGIN_NAMESPACE
 
     \li The vertex shader outputs and fragment shader inputs are up to the
     shader code to define. The fragment shader must have a \c vec4 output at
-    location 0 (typically called \c fragColor).
+    location 0 (typically called \c fragColor). For maximum portability, vertex
+    outputs and fragment inputs should use both the same location number and the
+    same name. When specifying only a fragment shader, the texture coordinates
+    are passed in from the built-in vertex shader as \c{vec2 qt_TexCoord0} at
+    location \c 0, as shown in the example snippets above.
 
     \li Uniform variables outside a uniform block are not legal. Rather,
     uniform data must be declared in a uniform block with binding point \c 0.
