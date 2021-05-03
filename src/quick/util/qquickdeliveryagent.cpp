@@ -2052,6 +2052,7 @@ void QQuickDeliveryAgentPrivate::deliverMatchingPointsToItem(QQuickItem *item, b
 #if QT_CONFIG(quick_draganddrop)
 void QQuickDeliveryAgentPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QEvent *event)
 {
+    QObject *formerTarget = grabber->target();
     grabber->resetTarget();
     QQuickDragGrabber::iterator grabItem = grabber->begin();
     if (grabItem != grabber->end()) {
@@ -2095,7 +2096,8 @@ void QQuickDeliveryAgentPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QE
                     moveEvent->buttons(),
                     moveEvent->modifiers());
             QQuickDropEventEx::copyActions(&enterEvent, *moveEvent);
-            event->setAccepted(deliverDragEvent(grabber, rootItem, &enterEvent, &currentGrabItems));
+            event->setAccepted(deliverDragEvent(grabber, rootItem, &enterEvent, &currentGrabItems,
+                                                formerTarget));
 
             for (grabItem = grabber->begin(); grabItem != grabber->end(); ++grabItem) {
                 int i = currentGrabItems.indexOf(**grabItem);
@@ -2136,7 +2138,9 @@ void QQuickDeliveryAgentPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QE
     }
 }
 
-bool QQuickDeliveryAgentPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQuickItem *item, QDragMoveEvent *event, QVarLengthArray<QQuickItem*, 64> *currentGrabItems)
+bool QQuickDeliveryAgentPrivate::deliverDragEvent(
+        QQuickDragGrabber *grabber, QQuickItem *item, QDragMoveEvent *event,
+        QVarLengthArray<QQuickItem *, 64> *currentGrabItems, QObject *formerTarget)
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     if (!item->isVisible() || !item->isEnabled() || QQuickItemPrivate::get(item)->culled)
@@ -2161,7 +2165,7 @@ bool QQuickDeliveryAgentPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQ
     for (int ii = children.count() - 1; ii >= 0; --ii) {
         if (children.at(ii)->z() < 0)
             continue;
-        if (deliverDragEvent(grabber, children.at(ii), &enterEvent, currentGrabItems))
+        if (deliverDragEvent(grabber, children.at(ii), &enterEvent, currentGrabItems, formerTarget))
             return true;
     }
 
@@ -2175,13 +2179,20 @@ bool QQuickDeliveryAgentPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQ
         }
 
         if (event->type() == QEvent::DragMove || itemPrivate->flags & QQuickItem::ItemAcceptsDrops) {
-            QDragMoveEvent translatedEvent(
-                    p.toPoint(),
-                    event->possibleActions(),
-                    event->mimeData(),
-                    event->buttons(),
-                    event->modifiers(),
-                    event->type());
+            if (event->type() == QEvent::DragEnter && formerTarget) {
+                QQuickItem *formerTargetItem = qobject_cast<QQuickItem *>(formerTarget);
+                if (formerTargetItem && currentGrabItems) {
+                    QDragLeaveEvent leaveEvent;
+                    QCoreApplication::sendEvent(formerTarget, &leaveEvent);
+
+                    // Remove the item from the currentGrabItems so a leave event won't be generated
+                    // later on
+                    currentGrabItems->removeAll(formerTarget);
+                }
+            }
+
+            QDragMoveEvent translatedEvent(p.toPoint(), event->possibleActions(), event->mimeData(),
+                                           event->buttons(), event->modifiers(), event->type());
             QQuickDropEventEx::copyActions(&translatedEvent, *event);
             translatedEvent.setAccepted(event->isAccepted());
             QCoreApplication::sendEvent(item, &translatedEvent);
@@ -2203,7 +2214,7 @@ bool QQuickDeliveryAgentPrivate::deliverDragEvent(QQuickDragGrabber *grabber, QQ
     for (int ii = children.count() - 1; ii >= 0; --ii) {
         if (children.at(ii)->z() >= 0)
             continue;
-        if (deliverDragEvent(grabber, children.at(ii), &enterEvent, currentGrabItems))
+        if (deliverDragEvent(grabber, children.at(ii), &enterEvent, currentGrabItems, formerTarget))
             return true;
     }
 
