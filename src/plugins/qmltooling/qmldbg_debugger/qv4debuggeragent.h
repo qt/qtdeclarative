@@ -50,7 +50,7 @@ class QV4DebuggerAgent : public QObject
 {
     Q_OBJECT
 public:
-    QV4DebuggerAgent(QV4DebugServiceImpl *m_debugService);
+    QV4DebuggerAgent(QV4DebugServiceImpl *debugService) : m_debugService(debugService) {}
 
     QV4Debugger *pausedDebugger() const;
     bool isRunning() const;
@@ -94,8 +94,8 @@ private:
 
     QHash<int, BreakPoint> m_breakPoints;
     int m_lastBreakPointId = 0;
-    bool m_breakOnThrow;
-    QV4DebugServiceImpl *m_debugService;
+    bool m_breakOnThrow = false;
+    QV4DebugServiceImpl *m_debugService = nullptr;
 };
 
 QT_END_NAMESPACE

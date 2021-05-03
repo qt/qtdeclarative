@@ -46,10 +46,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QV4DebuggerAgent::QV4DebuggerAgent(QV4DebugServiceImpl *debugService)
-    : m_breakOnThrow(false), m_debugService(debugService)
-{}
-
 QV4Debugger *QV4DebuggerAgent::pausedDebugger() const
 {
     for (QV4Debugger *debugger : m_debuggers) {
@@ -159,9 +155,10 @@ void QV4DebuggerAgent::resumeAll() const
 
 int QV4DebuggerAgent::addBreakPoint(const QString &fileName, int lineNumber, bool enabled, const QString &condition)
 {
-    if (enabled)
+    if (enabled) {
         for (QV4Debugger *debugger : qAsConst(m_debuggers))
             debugger->addBreakPoint(fileName, lineNumber, condition);
+    }
 
     const int id = ++m_lastBreakPointId;
     m_breakPoints.insert(id, BreakPoint(fileName, lineNumber, enabled, condition));
