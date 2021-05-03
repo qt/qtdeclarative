@@ -3581,7 +3581,7 @@ public:
     { kind = K; }
 
     SourceLocation firstSourceLocation() const override
-    { return qualifiedId->identifierToken; }
+    { Q_ASSERT(qualifiedId); return qualifiedId->identifierToken; }
 
     SourceLocation lastSourceLocation() const override
     { return rbracketToken; }
