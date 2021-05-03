@@ -73,7 +73,12 @@ public:
 
     Q_INVOKABLE void evaluate(const QString &script, const QString &fileName, int lineNumber = 1)
     {
-        QJSEngine::evaluate(script, fileName, lineNumber);
+        QStringList stack;
+        QJSValue result = QJSEngine::evaluate(script, fileName, lineNumber, &stack);
+        if (!stack.isEmpty()) {
+            qDebug() << result.toString();
+            qDebug() << stack;
+        }
         emit evaluateFinished();
     }
 
