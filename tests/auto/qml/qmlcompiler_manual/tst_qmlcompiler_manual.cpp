@@ -110,7 +110,34 @@ static void typeEraseArguments(std::array<void *, Size> &a, std::array<QMetaType
           /* types */ QMetaType::fromType<std::decay_t<IOArgs>>()... };
 }
 
-class HelloWorld : public QObject
+// utility class that sets up QQmlContext for passed QObject. can be used as a
+// base class to ensure that qmlEngine(object) is valid during initializer list
+// evaluation
+struct ContextRegistrator
+{
+    ContextRegistrator(QQmlEngine *engine, QObject *This)
+    {
+        Q_ASSERT(engine && This);
+        // if This object has a parent, it's not considered to be a root object,
+        // so it must instead have a dedicated context, but what to do when we
+        // reparent the root item to e.g. QQuickWindow::contentItem()?
+        Q_ASSERT(!This->parent() || engine->contextForObject(This->parent())
+                 || engine->rootContext());
+        QQmlContext *context = engine->rootContext();
+        if (This->parent()) {
+            QQmlContext *parentContext = engine->contextForObject(This->parent());
+            if (parentContext)
+                context = new QQmlContext(parentContext, This);
+        }
+        Q_ASSERT(context);
+        // NB: not only sets the context, but also seeds engine into This, so
+        // that qmlEngine(This) works
+        engine->setContextForObject(This, context);
+        Q_ASSERT(qmlEngine(This));
+    }
+};
+
+class HelloWorld : public QObject, public ContextRegistrator
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(HelloWorld);
@@ -121,9 +148,10 @@ public:
     // test workaround: the url is resolved by the test base class, so use
     // member variable to store the resolved url used as argument in engine
     // evaluation of runtime functions
-    QUrl url;
+    static QUrl url;
 
-    HelloWorld(QObject *parent = nullptr) : QObject(parent)
+    HelloWorld(QQmlEngine *e, QObject *parent = nullptr)
+        : QObject(parent), ContextRegistrator(e, this)
     {
         hello = QStringLiteral("Hello, World");
         QPropertyBinding<QString> HelloWorldCpp_greeting_binding(
@@ -148,14 +176,13 @@ public:
     Q_OBJECT_BINDABLE_PROPERTY(HelloWorld, QString, hello);
     Q_OBJECT_BINDABLE_PROPERTY(HelloWorld, QString, greeting);
 };
+QUrl HelloWorld::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::cppBinding()
 {
-    QSKIP("TODO");
-    HelloWorld created;
     QQmlEngine e;
-    e.setContextForObject(&created, e.rootContext());
-    created.url = testFileUrl("HelloWorld.qml"); // workaround
+    HelloWorld::url = testFileUrl("HelloWorld.qml");
+    HelloWorld created(&e);
 
     QCOMPARE(created.property("hello").toString(), QStringLiteral("Hello, World"));
     QCOMPARE(created.getGreeting(), QStringLiteral("Hello, World!"));
@@ -168,7 +195,7 @@ void tst_qmlcompiler_manual::cppBinding()
     QCOMPARE(created.getGreeting(), QStringLiteral("Hello, Qml!"));
 }
 
-class ANON_signalHandlers : public QObject
+class ANON_signalHandlers : public QObject, public ContextRegistrator
 {
     Q_OBJECT
     QML_ANONYMOUS
@@ -181,9 +208,10 @@ public:
     // test workaround: the url is resolved by the test base class, so use
     // member variable to store the resolved url used as argument in engine
     // evaluation of runtime functions
-    QUrl url;
+    static QUrl url;
 
-    ANON_signalHandlers(QObject *parent = nullptr) : QObject(parent)
+    ANON_signalHandlers(QQmlEngine *e, QObject *parent = nullptr)
+        : QObject(parent), ContextRegistrator(e, this)
     {
         signal1P = 0;
         signal2P1 = QStringLiteral("");
@@ -267,13 +295,13 @@ public:
         e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
     }
 };
+QUrl ANON_signalHandlers::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::signalHandlers_impl(const QUrl &url)
 {
-    ANON_signalHandlers created;
-    created.url = url; // workaround
     QQmlEngine e;
-    e.setContextForObject(&created, e.rootContext());
+    ANON_signalHandlers::url = url;
+    ANON_signalHandlers created(&e);
 
     // signal emission works from C++
     emit created.signal1();
@@ -321,7 +349,7 @@ void tst_qmlcompiler_manual::signalHandlers_qmlcachegen()
     signalHandlers_impl(QUrl("qrc:/data/signalHandlers.qml"));
 }
 
-class ANON_javaScriptFunctions : public QObject
+class ANON_javaScriptFunctions : public QObject, public ContextRegistrator
 {
     Q_OBJECT
     QML_ANONYMOUS
@@ -333,9 +361,10 @@ public:
     // test workaround: the url is resolved by the test base class, so use
     // member variable to store the resolved url used as argument in engine
     // evaluation of runtime functions
-    QUrl url;
+    static QUrl url;
 
-    ANON_javaScriptFunctions(QObject *parent = nullptr) : QObject(parent)
+    ANON_javaScriptFunctions(QQmlEngine *e, QObject *parent = nullptr)
+        : QObject(parent), ContextRegistrator(e, this)
     {
         func1P = 0;
         func2P = QStringLiteral("");
@@ -381,13 +410,13 @@ public:
         return qjsvalue_cast<bool>(e->executeRuntimeFunction(url, index, this));
     }
 };
+QUrl ANON_javaScriptFunctions::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::jsFunctions()
 {
-    ANON_javaScriptFunctions created;
-    created.url = testFileUrl("javaScriptFunctions.qml"); // workaround
     QQmlEngine e;
-    e.setContextForObject(&created, e.rootContext());
+    ANON_javaScriptFunctions::url = testFileUrl("javaScriptFunctions.qml");
+    ANON_javaScriptFunctions created(&e);
 
     created.func1();
     created.func2(QStringLiteral("abc"));
@@ -400,7 +429,7 @@ void tst_qmlcompiler_manual::jsFunctions()
     QCOMPARE(created.func3(), true);
 }
 
-class ANON_changingBindings : public QObject
+class ANON_changingBindings : public QObject, public ContextRegistrator
 {
     Q_OBJECT
     QML_ANONYMOUS
@@ -411,7 +440,7 @@ public:
     // test workaround: the url is resolved by the test base class, so use
     // member variable to store the resolved url used as argument in engine
     // evaluation of runtime functions
-    QUrl url;
+    static QUrl url;
     // test util to monitor binding execution
     int initialBindingCallCount = 0;
     // test util: allows to set C++ binding multiple times
@@ -429,7 +458,8 @@ public:
         bindableP2().setBinding(ANON_changingBindings_p2_binding);
     }
 
-    ANON_changingBindings(QObject *parent = nullptr) : QObject(parent)
+    ANON_changingBindings(QQmlEngine *e, QObject *parent = nullptr)
+        : QObject(parent), ContextRegistrator(e, this)
     {
         p1 = 1;
         resetToInitialBinding();
@@ -461,19 +491,18 @@ public:
         e->executeRuntimeFunction(url, index, this);
     }
 };
+QUrl ANON_changingBindings::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::changingBindings()
 {
-    QSKIP("TODO");
-    ANON_changingBindings created;
-    created.url = testFileUrl("changingBindings.qml"); // workaround
     QQmlEngine e;
-    e.setContextForObject(&created, e.rootContext());
+    ANON_changingBindings::url = testFileUrl("changingBindings.qml");
+    ANON_changingBindings created(&e);
 
     // test initial binding
-    QCOMPARE(created.initialBindingCallCount, 0);
+    QCOMPARE(created.initialBindingCallCount, 1); // eager evaluation
     QCOMPARE(created.property("p2").toInt(), 2); // p1 + 1
-    QCOMPARE(created.initialBindingCallCount, 1); // lazy evaluation
+    QCOMPARE(created.initialBindingCallCount, 1);
 
     // test JS constant value
     created.resetToConstant();
@@ -489,7 +518,7 @@ void tst_qmlcompiler_manual::changingBindings()
     // test setting initial (C++) binding
     created.setProperty("p1", 11);
     created.resetToInitialBinding();
-    QCOMPARE(created.initialBindingCallCount, 1);
+    QCOMPARE(created.initialBindingCallCount, 2); // eager evaluation
     QCOMPARE(created.property("p2").toInt(), 12); // p1 + 1 (again)
     QCOMPARE(created.initialBindingCallCount, 2);
 
@@ -510,7 +539,7 @@ void tst_qmlcompiler_manual::changingBindings()
     QCOMPARE(created.initialBindingCallCount, 2);
 }
 
-class ANON_propertyAlias : public QObject
+class ANON_propertyAlias : public QObject, public ContextRegistrator
 {
     Q_OBJECT
     QML_ANONYMOUS
@@ -523,7 +552,7 @@ public:
     // test workaround: the url is resolved by the test base class, so use
     // member variable to store the resolved url used as argument in engine
     // evaluation of runtime functions
-    QUrl url;
+    static QUrl url;
     // test util: allows to set C++ binding multiple times
     void resetToInitialBinding()
     {
@@ -537,7 +566,8 @@ public:
         bindableOrigin().setBinding(ANON_propertyAlias_origin_binding);
     }
 
-    ANON_propertyAlias(QObject *parent = nullptr) : QObject(parent)
+    ANON_propertyAlias(QQmlEngine *e, QObject *parent = nullptr)
+        : QObject(parent), ContextRegistrator(e, this)
     {
         dummy = 12;
         resetToInitialBinding();
@@ -597,14 +627,13 @@ public:
 signals:
     void dummyChanged();
 };
+QUrl ANON_propertyAlias::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::propertyAlias()
 {
-    QSKIP("TODO");
-    ANON_propertyAlias created;
-    created.url = testFileUrl("propertyAlias.qml"); // workaround
     QQmlEngine e;
-    e.setContextForObject(&created, e.rootContext());
+    ANON_propertyAlias::url = testFileUrl("propertyAlias.qml");
+    ANON_propertyAlias created(&e);
 
     // test initial binding
     QCOMPARE(created.property("origin").toInt(), 6); // dummy / 2
@@ -661,7 +690,7 @@ void tst_qmlcompiler_manual::propertyAlias()
     QCOMPARE(created.getAliasToOrigin(), -24);
 }
 
-class ANON_propertyChangeHandler : public QObject
+class ANON_propertyChangeHandler : public QObject, public ContextRegistrator
 {
     Q_OBJECT
     QML_ANONYMOUS
@@ -673,9 +702,10 @@ public:
     // test workaround: the url is resolved by the test base class, so use
     // member variable to store the resolved url used as argument in engine
     // evaluation of runtime functions
-    QUrl url;
+    static QUrl url;
 
-    ANON_propertyChangeHandler(QObject *parent = nullptr) : QObject(parent)
+    ANON_propertyChangeHandler(QQmlEngine *e, QObject *parent = nullptr)
+        : QObject(parent), ContextRegistrator(e, this)
     {
         dummy = 42;
         QPropertyBinding<int> ANON_propertyChangeHandler_p_binding(
@@ -726,14 +756,13 @@ public:
     std::unique_ptr<QPropertyChangeHandler<ANON_propertyChangeHandler_p_changeHandler>>
             pChangeHandler;
 };
+QUrl ANON_propertyChangeHandler::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::propertyChangeHandler()
 {
-    QSKIP("TODO");
-    ANON_propertyChangeHandler created;
-    created.url = testFileUrl("propertyChangeHandler.qml"); // workaround
     QQmlEngine e;
-    e.setContextForObject(&created, e.rootContext());
+    ANON_propertyChangeHandler::url = testFileUrl("propertyChangeHandler.qml");
+    ANON_propertyChangeHandler created(&e);
 
     // test that fetching "dirty" property value doesn't trigger property change
     // handler
@@ -758,7 +787,7 @@ void tst_qmlcompiler_manual::propertyChangeHandler()
     QCOMPARE(created.property("watcher").toInt(), 96);
 }
 
-class ANON_propertyReturningFunction : public QObject
+class ANON_propertyReturningFunction : public QObject, public ContextRegistrator
 {
     Q_OBJECT
     QML_ANONYMOUS
@@ -769,9 +798,10 @@ public:
     // test workaround: the url is resolved by the test base class, so use
     // member variable to store the resolved url used as argument in engine
     // evaluation of runtime functions
-    QUrl url;
+    static QUrl url;
 
-    ANON_propertyReturningFunction(QObject *parent = nullptr) : QObject(parent)
+    ANON_propertyReturningFunction(QQmlEngine *e, QObject *parent = nullptr)
+        : QObject(parent), ContextRegistrator(e, this)
     {
         QPropertyBinding<QVariant> ANON_propertyReturningFunction_f_binding(
                 [&]() {
@@ -794,14 +824,13 @@ public:
     QProperty<int> counter;
     QProperty<QVariant> f;
 };
+QUrl ANON_propertyReturningFunction::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::propertyReturningFunction()
 {
-    QSKIP("TODO");
-    ANON_propertyReturningFunction created;
-    created.url = testFileUrl("propertyReturningFunction.qml"); // workaround
     QQmlEngine e;
-    e.setContextForObject(&created, e.rootContext());
+    ANON_propertyReturningFunction::url = testFileUrl("propertyReturningFunction.qml");
+    ANON_propertyReturningFunction created(&e);
 
     QCOMPARE(created.getCounter(), 0);
     QVariant function = created.getF();
