@@ -41,6 +41,8 @@
 #include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
 
+#include <cmath>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -116,25 +118,37 @@ public:
     void cancelHandle();
     void executeHandle(bool complete = false);
 
+    void updateAllValuesAreInteger();
+
     qreal from = 0;
     qreal to = 1;
     qreal value = 0;
     qreal position = 0;
     qreal angle = startAngle;
     qreal stepSize = 0;
-    bool pressed = false;
     QPointF pressPoint;
     qreal positionBeforePress = 0;
     QQuickDial::SnapMode snapMode = QQuickDial::NoSnap;
     QQuickDial::InputMode inputMode = QQuickDial::Circular;
+    QQuickDeferredPointer<QQuickItem> handle;
     bool wrap = false;
     bool live = true;
-    QQuickDeferredPointer<QQuickItem> handle;
+    bool pressed = false;
+    bool allValuesAreInteger = false;
 };
 
 qreal QQuickDialPrivate::valueAt(qreal position) const
 {
-    return from + (to - from) * position;
+    qreal value = from + (to - from) * position;
+
+    /* play nice with users expecting that integer from, to and stepSize leads to
+       integer values - given that we are using floating point internally (and in
+       the API of value), this does not hold, but it is easy enough to handle
+    */
+    if (allValuesAreInteger)
+        value = qRound(value);
+
+    return value;
 }
 
 qreal QQuickDialPrivate::snapPosition(qreal position) const
@@ -308,6 +322,17 @@ void QQuickDialPrivate::executeHandle(bool complete)
         quickCompleteDeferred(q, handleName(), handle);
 }
 
+template<typename ...Real>
+static bool areRepresentableAsInteger(Real... numbers) {
+    auto check = [](qreal number) -> bool { return std::nearbyint(number) == number; };
+    return (... && check(numbers));
+}
+
+void QQuickDialPrivate::updateAllValuesAreInteger()
+{
+    allValuesAreInteger = areRepresentableAsInteger(to, from, stepSize) && stepSize != 0.0;
+}
+
 QQuickDial::QQuickDial(QQuickItem *parent)
     : QQuickControl(*(new QQuickDialPrivate), parent)
 {
@@ -342,6 +367,7 @@ void QQuickDial::setFrom(qreal from)
 
     d->from = from;
     emit fromChanged();
+    d->updateAllValuesAreInteger();
     if (isComponentComplete()) {
         setValue(d->value);
         d->updatePosition();
@@ -369,6 +395,7 @@ void QQuickDial::setTo(qreal to)
         return;
 
     d->to = to;
+    d->updateAllValuesAreInteger();
     emit toChanged();
     if (isComponentComplete()) {
         setValue(d->value);
@@ -468,6 +495,7 @@ void QQuickDial::setStepSize(qreal step)
         return;
 
     d->stepSize = step;
+    d->updateAllValuesAreInteger();
     emit stepSizeChanged();
 }
 

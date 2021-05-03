@@ -691,4 +691,19 @@ TestCase {
         compare(control.pressed, false);
         compare(control.position, data.expectedPosition);
     }
+
+    function test_integerStepping() {
+        var dial = createTemporaryObject(dialComponent, testCase)
+        verify(dial)
+
+        dial.from = 1
+        dial.to = 8
+        dial.stepSize = 1
+
+        for (let i = 1; i < 8; ++i) {
+            // compare as strings to avoid a fuzzy compare; we want an exact match
+            compare(""+dial.value, ""+1)
+            keyClick(Qt.Key_Right)
+        }
+    }
 }
