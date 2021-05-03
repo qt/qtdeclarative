@@ -84,7 +84,6 @@ private:
 
     QJsonArray collectProperties(const QV4::Object *object);
     QJsonObject collectAsJson(const QString &name, const QV4::ScopedValue &value);
-    void collectArgumentsInContext();
 
     QV4::ExecutionEngine *m_engine;
     QV4::PersistentValue m_values;
