@@ -66,7 +66,7 @@ Column {
 
         Repeater {
             id: screenInfo
-            model: Qt.application.screens
+            model: (Qt.application as Application).screens
             Label {
                 required property string name
                 required property int virtualX
@@ -80,7 +80,7 @@ Column {
     }
 
     Component.onCompleted: {
-        var screens = Qt.application.screens;
+        var screens = (Qt.application as Application).screens;
         for (var i = 0; i < screens.length; ++i)
             console.log("screen " + screens[i].name + " has geometry " +
                         screens[i].virtualX + ", " + screens[i].virtualY + " " +

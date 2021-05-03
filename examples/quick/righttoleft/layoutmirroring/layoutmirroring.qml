@@ -52,7 +52,7 @@ import QtQuick 2.0
 
 Rectangle {
     id: root
-    property bool mirror: Qt.application.layoutDirection == Qt.RightToLeft
+    property bool mirror: (Qt.application as Application).layoutDirection == Qt.RightToLeft
     LayoutMirroring.enabled: mirror
     LayoutMirroring.childrenInherit: true
     width: 320
