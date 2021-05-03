@@ -131,6 +131,8 @@ public:
         return reinterpret_cast<QQmlPropertyBinding *>(address)->evaluate(metaType, dataPtr);
     }
 
+    bool hasDependencies();
+
 private:
     bool evaluate(QMetaType metaType, void *dataPtr);
 

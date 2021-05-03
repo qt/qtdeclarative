@@ -143,6 +143,19 @@ QUntypedPropertyBinding QQmlPropertyBinding::createFromBoundFunction(const QQmlP
     return QUntypedPropertyBinding(static_cast<QPropertyBindingPrivate *>(QPropertyBindingPrivatePtr(binding).data()));
 }
 
+/*!
+    \internal
+    Returns true if this binding has dependencies.
+    Dependencies can be either QProperty dependencies or dependencies of
+    the JS expression (aka activeGuards). Translations end up as a QProperty
+    dependency, so they do not need any special handling
+    Note that a QQmlPropertyBinding never stores qpropertyChangeTriggers.
+ */
+bool QQmlPropertyBinding::hasDependencies()
+{
+    return (dependencyObserverCount > 0) || !jsExpression()->activeGuards.isEmpty();
+}
+
 void QQmlPropertyBindingJS::expressionChanged()
 {
     if (!asBinding()->propertyDataPtr)

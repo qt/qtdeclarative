@@ -1396,6 +1396,19 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
     QQmlObjectCreatorRecursionWatcher watcher(this);
     QScopedValueRollback<QQmlObjectCreator*> ocRestore(QQmlEnginePrivate::get(engine)->activeObjectCreator, this);
 
+    /* We install all pending bindings (both plain QML and QProperty), and remove the ones which do not
+       actually have dependencies.
+       It is necessary to install the binding so that it runs at least once, which causes it to capture any
+       dependencies.
+       We then check for the following conditions:
+       - Is the binding in an error state?
+       - Does the binding has any dependencies (from properties)?
+       - Does it depend on anything in the context, which has not been resolved yet (and thus couldn't be
+         captured)?
+       If the answer to all of those questions is "no", it is safe to remove the binding, as there is no
+       way for it to change its value afterwards from that point on.
+    */
+
     while (!sharedState->allCreatedBindings.isEmpty()) {
         QQmlAbstractBinding::Ptr b = sharedState->allCreatedBindings.pop();
         Q_ASSERT(b);
@@ -1410,7 +1423,7 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
         if (!b->isValueTypeProxy()) {
             QQmlBinding *binding = static_cast<QQmlBinding*>(b.data());
             if (!binding->hasError() && !binding->hasDependencies()
-                    && binding->hasContext() && !binding->hasUnresolvedNames()) {
+                    && !binding->hasUnresolvedNames()) {
                 b->removeFromObject();
             }
         }
@@ -1427,6 +1440,14 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
         target->metaObject()->metacall(target, QMetaObject::BindableProperty, index, argv);
         bindable.setBinding(qmlBinding);
         sharedState->allQPropertyBindings.pop_front();
+        if (auto priv = QPropertyBindingPrivate::get(qmlBinding); priv->hasCustomVTable()) {
+            auto qmlBindingPriv = static_cast<QQmlPropertyBinding *>(priv);
+            auto jsExpression = qmlBindingPriv->jsExpression();
+            const bool canRemove = !qmlBinding.error().hasError() && !qmlBindingPriv->hasDependencies()
+                    && !jsExpression->hasUnresolvedNames();
+            if (canRemove)
+                bindable.takeBinding();
+        }
         if (watcher.hasRecursed() || interrupt.shouldInterrupt())
             return false;
     }

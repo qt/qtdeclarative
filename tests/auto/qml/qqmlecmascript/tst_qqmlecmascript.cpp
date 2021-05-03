@@ -9074,6 +9074,14 @@ void tst_qqmlecmascript::removeBindingsWithNoDependencies()
         QVERIFY(!proxy->subBindings());
     }
 
+    {
+        QQmlComponent component(&engine, testFileUrl("removeQPropertyBindingsWithNoDependencies.qml"));
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        auto classWithQProperty = qobject_cast<ClassWithQProperty *>(root.get());
+        QVERIFY(!classWithQProperty->bindableValue().hasBinding());
+        QCOMPARE(classWithQProperty->value.value(), 42);
+    }
 }
 
 void tst_qqmlecmascript::preserveBindingWithUnresolvedNames()
