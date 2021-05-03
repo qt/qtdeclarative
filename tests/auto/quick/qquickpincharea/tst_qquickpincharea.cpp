@@ -52,6 +52,8 @@ private slots:
     void cancel();
     void transformedPinchArea_data();
     void transformedPinchArea();
+    void dragTransformedPinchArea_data();
+    void dragTransformedPinchArea();
 
 private:
     QQuickView *createView();
@@ -584,6 +586,70 @@ void tst_QQuickPinchArea::transformedPinchArea()
         QQuickTouchUtils::flush(view);
         QCOMPARE(pinchArea->property("pinching").toBool(), false);
     }
+}
+
+void tst_QQuickPinchArea::dragTransformedPinchArea_data()
+{
+    QTest::addColumn<int>("rotation");
+    QTest::addColumn<QPoint>("p1");
+    QTest::addColumn<QPoint>("p2");
+    QTest::addColumn<QPoint>("delta");
+
+    QTest::newRow("unrotated")
+            << 0 << QPoint(100, 100) << QPoint(200, 100) << QPoint(40, 40);
+    QTest::newRow("20 deg")
+            << 20 << QPoint(100, 100) << QPoint(200, 100) << QPoint(40, 40);
+    QTest::newRow("90 deg")
+            << 90 << QPoint(100, 100) << QPoint(200, 100) << QPoint(0, 40);
+    QTest::newRow("180 deg")
+            << 180 << QPoint(100, 100) << QPoint(200, 100) << QPoint(40, 0);
+    QTest::newRow("225 deg")
+            << 210 << QPoint(200, 200) << QPoint(300, 200) << QPoint(80, 80);
+}
+
+void tst_QQuickPinchArea::dragTransformedPinchArea() // QTBUG-63673
+{
+    QFETCH(int, rotation);
+    QFETCH(QPoint, p1);
+    QFETCH(QPoint, p2);
+    QFETCH(QPoint, delta);
+    const int threshold = qApp->styleHints()->startDragDistance();
+
+    QQuickView *view = createView();
+    QScopedPointer<QQuickView> scope(view);
+    view->setSource(testFileUrl("draggablePinchArea.qml"));
+    view->show();
+    QVERIFY(QTest::qWaitForWindowExposed(view));
+    QVERIFY(view->rootObject());
+    QQuickPinchArea *pinchArea = view->rootObject()->findChild<QQuickPinchArea*>();
+    QVERIFY(pinchArea);
+    QQuickItem *pinchAreaTarget = pinchArea->parentItem();
+    QVERIFY(pinchAreaTarget);
+    QQuickItem *pinchAreaContainer = pinchAreaTarget->parentItem();
+    QVERIFY(pinchAreaContainer);
+    pinchAreaContainer->setRotation(rotation);
+
+    QTest::QTouchEventSequence pinchSequence = QTest::touchEvent(view, device);
+    // start pinch
+    pinchSequence.press(1, pinchArea->mapToScene(p1).toPoint(), view)
+                 .press(2, pinchArea->mapToScene(p2).toPoint(), view).commit();
+    QQuickTouchUtils::flush(view);
+    pinchSequence.move(1, pinchArea->mapToScene(p1 + QPoint(threshold, threshold)).toPoint(), view)
+                 .move(2, pinchArea->mapToScene(p2 + QPoint(threshold, threshold)).toPoint(), view).commit();
+    QQuickTouchUtils::flush(view);
+    pinchSequence.move(1, pinchArea->mapToScene(p1 + delta).toPoint(), view)
+                 .move(2, pinchArea->mapToScene(p2 + delta).toPoint(), view).commit();
+    QQuickTouchUtils::flush(view);
+    QCOMPARE(pinchArea->pinch()->active(), true);
+    auto error = delta - QPoint(threshold, threshold) -
+                pinchAreaTarget->position().toPoint(); // expect 0, 0
+    QVERIFY(qAbs(error.x()) <= 1);
+    QVERIFY(qAbs(error.y()) <= 1);
+
+    // release pinch
+    pinchSequence.release(1, p1, view).release(2, p2, view).commit();
+    QQuickTouchUtils::flush(view);
+    QCOMPARE(pinchArea->pinch()->active(), false);
 }
 
 QQuickView *tst_QQuickPinchArea::createView()
