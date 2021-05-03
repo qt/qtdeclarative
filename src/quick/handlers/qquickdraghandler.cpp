@@ -182,7 +182,13 @@ void QQuickDragHandler::onActiveChanged()
 bool QQuickDragHandler::wantsPointerEvent(QPointerEvent *event)
 {
     if (!QQuickMultiPointHandler::wantsPointerEvent(event))
-        return false;
+        /* Do handle other events than we would normally care about
+           while we are still doing a drag; otherwise we would suddenly
+           become inactive when a wheel event arrives during dragging.
+           This extra condition needs to be kept in sync with
+           handlePointerEventImpl */
+        if (!active())
+            return false;
 
 #if QT_CONFIG(gestures)
     if (event->type() == QEvent::NativeGesture)
@@ -194,6 +200,9 @@ bool QQuickDragHandler::wantsPointerEvent(QPointerEvent *event)
 
 void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
 {
+    if (active() && !QQuickMultiPointHandler::wantsPointerEvent(event))
+        return; // see QQuickDragHandler::wantsPointerEvent; we don't want to handle those events
+
     QQuickMultiPointHandler::handlePointerEventImpl(event);
     event->setAccepted(true);
 

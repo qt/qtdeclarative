@@ -69,8 +69,10 @@ private slots:
     void touchPassiveGrabbers_data();
     void touchPassiveGrabbers();
     void touchPinchAndMouseMove();
+    void unsuitableEventDuringDrag();
 
 private:
+    void sendWheelEvent(QQuickView &window, QPoint pos, QPoint angleDelta, QPoint pixelDelta, Qt::KeyboardModifiers modifiers, Qt::ScrollPhase phase, bool inverted);
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
     QSet<QQuickPointerHandler *> passiveGrabbers(QQuickWindow *window, int pointId = 0);
     QPointingDevice *touchDevice;
@@ -819,6 +821,77 @@ void tst_DragHandler::touchPinchAndMouseMove()
         QTest::mouseMove(window, p1);
         QCOMPARE(rectMovedSpy.count(), 0);
     }
+}
+
+void tst_DragHandler::unsuitableEventDuringDrag()
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "dragAndWheel.qml");
+    QQuickView *window = windowPtr.data();
+    auto root = window->rootObject();
+    QQmlProperty changeCount(root, "changeCount");
+    QQmlProperty wheelHandlerEnabled(root, "wheelHandlerEnabled");
+    bool ok = false;
+    QCOMPARE(changeCount.read().toInt(&ok), 0);
+    QVERIFY(ok);
+    QCOMPARE(wheelHandlerEnabled.read().toBool(), true);
+
+    QPoint p1(100, 100);
+    QPoint p2(150, 150);
+
+    QTest::QTouchEventSequence touch = QTest::touchEvent(window, touchDevice);
+    // When we start dragging...
+    touch.press(3,p1).commit();
+    touch.move(3, p2).commit();
+    QQuickTouchUtils::flush(window);
+    // the DragHandler becomes active
+    ok = false;
+    QCOMPARE(changeCount.read().toInt(&ok), 1);
+    QVERIFY(ok);
+    QCOMPARE(wheelHandlerEnabled.read().toBool(), false);
+
+    // When a scroll event arrives while we are dragging
+    sendWheelEvent(*window, p2, QPoint(160, 120), QPoint(-360, 120), Qt::NoModifier, Qt::ScrollBegin, false);
+    // nothing changes because the DragHandler is still active, and the wheel handler stays disabled
+    ok = false;
+    QCOMPARE(changeCount.read().toInt(&ok), 1);
+    QVERIFY(ok);
+    QCOMPARE(wheelHandlerEnabled.read().toBool(), false);
+
+    // When we stop dragging...
+    touch.release(3, p2).commit();
+    QQuickTouchUtils::flush(window);
+
+    // the wheel handler becomes active again
+    ok = false;
+    QCOMPARE(changeCount.read().toInt(&ok), 2);
+    QVERIFY(ok);
+    QCOMPARE(wheelHandlerEnabled.read().toBool(), true);
+
+    // During the whole sequence the wheel handler never got a wheel event
+    // as it was disabled:
+    QQmlProperty gotWheel(root, "gotWheel");
+    QVERIFY(!gotWheel.read().toBool());
+
+    // If the WheelHandler is unconditionally enabled...
+    wheelHandlerEnabled.write(true);
+    // it receives scroll events during drags.
+    touch.press(4,p2).commit();
+    touch.move(4, p1).commit();
+    QQuickTouchUtils::flush(window);
+    sendWheelEvent(*window, p2, QPoint(160, 120), QPoint(-360, 120), Qt::NoModifier, Qt::ScrollBegin, false);
+    touch.release(4, p2).commit();
+    QQuickTouchUtils::flush(window);
+    QVERIFY(gotWheel.read().toBool());
+}
+
+void tst_DragHandler::sendWheelEvent(QQuickView &window, QPoint pos, QPoint angleDelta, QPoint pixelDelta, Qt::KeyboardModifiers modifiers, Qt::ScrollPhase phase, bool inverted)
+{
+    QWheelEvent wheelEvent(pos, window.mapToGlobal(pos), pixelDelta, angleDelta,
+                           Qt::NoButton, modifiers, phase, inverted);
+    QGuiApplication::sendEvent(&window, &wheelEvent);
+    qApp->processEvents();
+    QQuickTouchUtils::flush(&window);
 }
 
 QTEST_MAIN(tst_DragHandler)
