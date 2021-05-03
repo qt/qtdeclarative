@@ -1687,12 +1687,12 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
                 yDelta = qMin(yDelta, int(contentY() + minYExtent()));
             else if (yDelta < 0)
                 yDelta = qMax(yDelta, int(contentY() + maxYExtent()));
-            else if (xDelta > 0)
+            if (xDelta > 0)
                 xDelta = qMin(xDelta, int(contentX() + minXExtent()));
             else if (xDelta < 0)
                 xDelta = qMax(xDelta, int(contentX() + maxXExtent()));
 
-            if (xDelta != 0 || yDelta != 0) {
+            if ((xflick() && xDelta != 0) || (yflick() && yDelta != 0)) {
                 // if QStyleHints::wheelScrollLines() != 3, scale it accordingly
                 // (Flickable has no idea how many "lines" are being scrolled: depends on font size etc.)
                 static const float defaultWheelScrollLines = QPlatformTheme::defaultThemeHint(QPlatformTheme::WheelScrollLines).toFloat();
