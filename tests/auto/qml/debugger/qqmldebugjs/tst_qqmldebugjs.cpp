@@ -66,6 +66,7 @@ const char *BREAKPOINTRELOCATION_QMLFILE = "breakpointRelocation.qml";
 const char *ENCODEQMLSCOPE_QMLFILE = "encodeQmlScope.qml";
 const char *BREAKONANCHOR_QMLFILE = "breakOnAnchor.qml";
 const char *BREAKPOINTIDS_QMLFILE = "breakPointIds.qml";
+const char *LETCONSTLOCALS_QMLFILE = "letConstLocals.qml";
 
 #undef QVERIFY
 #define QVERIFY(statement) \
@@ -158,6 +159,7 @@ private slots:
     void breakOnAnchor();
 
     void breakPointIds();
+    void letConstLocals();
 
 private:
     ConnectResult init(bool qmlscene, const QString &qmlFile = QString(TEST_QMLFILE),
@@ -1048,6 +1050,61 @@ void tst_QQmlDebugJS::breakPointIds()
     QCOMPARE(m_process->exitStatus(), QProcess::NormalExit);
 
     QCOMPARE(breaks, 6);
+}
+
+void tst_QQmlDebugJS::letConstLocals()
+{
+    QString file(LETCONSTLOCALS_QMLFILE);
+    QCOMPARE(init(true, file), ConnectSuccess);
+
+    QObject::connect(m_client.data(), &QV4DebugClient::stopped, this, [&]() {
+        m_client->frame();
+    });
+
+    int numScopes = 0;
+    QString expectedMembers = QStringLiteral("abcde");
+    QObject::connect(m_client.data(), &QV4DebugClient::result, this, [&]() {
+        const auto value = m_client->response();
+        if (value.command == QStringLiteral("frame")) {
+            const auto scopes = value.body.toObject().value(QStringLiteral("scopes")).toArray();
+            for (const auto &scope : scopes) {
+                const auto scopeObject = scope.toObject();
+                const int type = scopeObject.value("type").toInt();
+                if (type == 1 || type == 4) {
+                    m_client->scope(scopeObject.value("index").toInt());
+                    ++numScopes;
+                }
+            }
+            QVERIFY(numScopes > 0);
+        } else if (value.command == QStringLiteral("scope")) {
+            const auto props = value.body.toObject().value(QStringLiteral("object")).toObject()
+                    .value(QStringLiteral("properties")).toArray();
+            for (const auto &prop : props) {
+                const auto propObj = prop.toObject();
+                QString name = propObj.value(QStringLiteral("name")).toString();
+                QVERIFY(name.length() == 1);
+                auto i = expectedMembers.indexOf(name.at(0));
+                QVERIFY(i != -1);
+                expectedMembers.remove(i, 1);
+                QCOMPARE(propObj.value(QStringLiteral("type")).toString(),
+                         QStringLiteral("number"));
+                QCOMPARE(propObj.value(QStringLiteral("value")).toInt(),
+                         int(name.at(0).toLatin1()));
+            }
+            if (--numScopes == 0) {
+                QVERIFY(expectedMembers.isEmpty());
+                m_client->continueDebugging(QV4DebugClient::Continue);
+            }
+        }
+    });
+
+    setBreakPoint(file, 10, true);
+
+    QTRY_COMPARE(m_process->state(), QProcess::Running);
+    m_client->connect();
+
+    QTRY_COMPARE(m_process->state(), QProcess::NotRunning);
+    QCOMPARE(m_process->exitStatus(), QProcess::NormalExit);
 }
 
 QList<QQmlDebugClient *> tst_QQmlDebugJS::createClients()
