@@ -93,6 +93,7 @@ private:
     };
 
     QHash<int, BreakPoint> m_breakPoints;
+    int m_lastBreakPointId = 0;
     bool m_breakOnThrow;
     QV4DebugServiceImpl *m_debugService;
 };

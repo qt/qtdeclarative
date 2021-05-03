@@ -163,7 +163,7 @@ int QV4DebuggerAgent::addBreakPoint(const QString &fileName, int lineNumber, boo
         for (QV4Debugger *debugger : qAsConst(m_debuggers))
             debugger->addBreakPoint(fileName, lineNumber, condition);
 
-    int id = m_breakPoints.size();
+    const int id = ++m_lastBreakPointId;
     m_breakPoints.insert(id, BreakPoint(fileName, lineNumber, enabled, condition));
     return id;
 }
