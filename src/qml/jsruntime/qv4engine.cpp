@@ -2098,28 +2098,27 @@ bool ExecutionEngine::diskCacheEnabled() const
     return (!disableDiskCache() && !debugger()) || forceDiskCache();
 }
 
-ReturnedValue ExecutionEngine::callInContext(Function *function, QObject *self,
-                                             QQmlRefPointer<QQmlContextData> ctxtdata, int argc, void **args,
-                                             QMetaType *types)
+void ExecutionEngine::callInContext(Function *function, QObject *self,
+                                    QQmlRefPointer<QQmlContextData> ctxtdata, int argc, void **args,
+                                    QMetaType *types)
 {
     QV4::Scope scope(this);
     ExecutionContext *ctx = currentStackFrame ? currentContext() : scriptContext();
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(ctx, ctxtdata, self));
     QV4::ScopedValue selfValue(scope, QV4::QObjectWrapper::wrap(this, self));
-
-    if (!args)
-        return function->call(selfValue, nullptr, 0, qmlContext);
+    if (!args) {
+        Q_ASSERT(argc == 0);
+        void *dummyArgs[] = { nullptr };
+        QMetaType dummyTypes[] = { QMetaType::fromType<void>() };
+        function->call(selfValue, dummyArgs, dummyTypes, argc, qmlContext);
+        return;
+    }
 
     if (!types) // both args and types must be present
-        return Encode::undefined();
+        return;
 
-    // use JSCallData to pass arguments into the function call
-    QV4::JSCallArguments jsCall(scope, argc);
-    QV4::populateJSCallArguments(this, jsCall, argc, args, types);
-
-    QV4::CallData *callData = jsCall.callData(scope);
-    return function->call(selfValue, callData->argValues<QV4::Value>(), callData->argc(),
-                          qmlContext);
+    // implicitly sets the return value, which is args[0]
+    function->call(selfValue, args, types, argc, qmlContext);
 }
 
 void ExecutionEngine::initQmlGlobalObject()

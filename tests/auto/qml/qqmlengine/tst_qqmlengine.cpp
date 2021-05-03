@@ -1250,27 +1250,31 @@ void tst_qqmlengine::executeRuntimeFunction()
     QScopedPointer<QObject> dummy(component.create());
 
     // getConstantValue():
-    const int constant = qjsvalue_cast<int>(priv->executeRuntimeFunction(url, 0, dummy.get()));
+    int constant = 0;
+    void *a0[] = { const_cast<void *>(reinterpret_cast<const void *>(std::addressof(constant))) };
+    QMetaType t0[] = { QMetaType::fromType<int>() };
+    priv->executeRuntimeFunction(url, /* index = */ 0, dummy.get(), /* argc = */ 0, a0, t0);
     QCOMPARE(constant, 42);
 
     // squareValue():
+    int squared = 0;
     int x = 5;
-    void *a0[] = { nullptr, const_cast<void *>(reinterpret_cast<const void *>(std::addressof(x))) };
-    QMetaType t0[] = { QMetaType::fromType<int>() };
-    const int squared =
-            qjsvalue_cast<int>(priv->executeRuntimeFunction(url, 1, dummy.get(), 1, a0, t0));
+    void *a1[] = { const_cast<void *>(reinterpret_cast<const void *>(std::addressof(squared))),
+                   const_cast<void *>(reinterpret_cast<const void *>(std::addressof(x))) };
+    QMetaType t1[] = { QMetaType::fromType<int>(), QMetaType::fromType<int>() };
+    priv->executeRuntimeFunction(url, /* index = */ 1, dummy.get(), /* argc = */ 1, a1, t1);
     QCOMPARE(squared, x * x);
 
     // concatenate():
+    QString concatenated;
     QString str1 = QStringLiteral("Hello"); // uses "raw data" storage
     QString str2 = QLatin1String(", Qml"); // uses own QString storage
-    void *a1[] = { nullptr,
+    void *a2[] = { const_cast<void *>(reinterpret_cast<const void *>(std::addressof(concatenated))),
                    const_cast<void *>(reinterpret_cast<const void *>(std::addressof(str1))),
                    const_cast<void *>(reinterpret_cast<const void *>(std::addressof(str2))) };
-    QMetaType t1[] = { QMetaType::fromType<QString>(),
-                 QMetaType::fromType<QString>() };
-    QString concatenated =
-            qjsvalue_cast<QString>(priv->executeRuntimeFunction(url, 2, dummy.get(), 2, a1, t1));
+    QMetaType t2[] = { QMetaType::fromType<QString>(), QMetaType::fromType<QString>(),
+                       QMetaType::fromType<QString>() };
+    priv->executeRuntimeFunction(url, /* index = */ 2, dummy.get(), /* argc = */ 2, a2, t2);
     QCOMPARE(concatenated, str1 + str2);
 }
 

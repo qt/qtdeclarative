@@ -2258,28 +2258,31 @@ bool QQmlEnginePrivate::isScriptLoaded(const QUrl &url) const
     return typeLoader.isScriptLoaded(url);
 }
 
-QJSValue QQmlEnginePrivate::executeRuntimeFunction(const QUrl &url, qsizetype functionIndex,
-                                                   QObject *thisObject, int argc, void **args, QMetaType *types)
+void QQmlEnginePrivate::executeRuntimeFunction(const QUrl &url, qsizetype functionIndex,
+                                               QObject *thisObject, int argc, void **args,
+                                               QMetaType *types)
 {
     Q_Q(QQmlEngine);
-    if (const auto unit = typeLoader.getType(url)->compilationUnit()) {
-        Q_ASSERT(functionIndex >= 0);
-        Q_ASSERT(thisObject);
+    const auto unit = typeLoader.getType(url)->compilationUnit();
+    if (!unit)
+        return;
 
-        if (!unit->engine)
-            unit->linkToEngine(q->handle());
+    Q_ASSERT(functionIndex >= 0);
+    Q_ASSERT(thisObject);
 
-        if (unit->runtimeFunctions.length() <= functionIndex)
-            return QJSValue();
+    if (!unit->engine)
+        unit->linkToEngine(q->handle());
 
-        QQmlContext *ctx = q->contextForObject(thisObject);
-        if (!ctx)
-            ctx = q->rootContext();
-        return QJSValuePrivate::fromReturnedValue(
-                q->handle()->callInContext(unit->runtimeFunctions[functionIndex], thisObject,
-                                           QQmlContextData::get(ctx), argc, args, types));
-    }
-    return QJSValue();
+    if (unit->runtimeFunctions.length() <= functionIndex)
+        return;
+
+    QQmlContext *ctx = q->contextForObject(thisObject);
+    if (!ctx)
+        ctx = q->rootContext();
+
+    // implicitly sets the return value, if it is present
+    q->handle()->callInContext(unit->runtimeFunctions[functionIndex], thisObject,
+                               QQmlContextData::get(ctx), argc, args, types);
 }
 
 #if defined(Q_OS_WIN)
