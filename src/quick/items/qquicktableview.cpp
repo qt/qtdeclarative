@@ -447,7 +447,7 @@
 */
 
 /*!
-    \qmlmethod Item QtQuick::TableView::isColumnLoaded(int column)
+    \qmlmethod bool QtQuick::TableView::isColumnLoaded(int column)
     \since 6.2
 
     Returns \c true if the given \a column is loaded.
@@ -462,7 +462,7 @@
 */
 
 /*!
-    \qmlmethod Item QtQuick::TableView::isRowLoaded(int row)
+    \qmlmethod bool QtQuick::TableView::isRowLoaded(int row)
     \since 6.2
 
     Returns \c true if the given \a row is loaded.
