@@ -3715,7 +3715,9 @@ QSGRendererInterface::GraphicsApi QQuickWindow::graphicsApi()
     \note The call to the function must happen before constructing the first
     QQuickWindow in the application. It cannot be changed afterwards.
 
-    If \a backend is invalid or an error occurs, the request is ignored.
+    See \l{Switch Between Adaptations in Your Application} for more information
+    about the list of backends. If \a backend is invalid or an error occurs, the
+    request is ignored.
 
     \note Calling this function is equivalent to setting the
     \c QT_QUICK_BACKEND or \c QMLSCENE_DEVICE environment variables. However, this
