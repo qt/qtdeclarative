@@ -199,7 +199,9 @@ public:
 
 #if QT_CONFIG(quick_draganddrop)
     void deliverDragEvent(QQuickDragGrabber *, QEvent *);
-    bool deliverDragEvent(QQuickDragGrabber *, QQuickItem *, QDragMoveEvent *, QVarLengthArray<QQuickItem*, 64> *currentGrabItems = nullptr);
+    bool deliverDragEvent(QQuickDragGrabber *, QQuickItem *, QDragMoveEvent *,
+                          QVarLengthArray<QQuickItem *, 64> *currentGrabItems = nullptr,
+                          QObject *formerTarget = nullptr);
 #endif
 
     static bool dragOverThreshold(qreal d, Qt::Axis axis, QMouseEvent *event, int startDragThreshold = -1);
