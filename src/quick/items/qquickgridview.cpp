@@ -1649,6 +1649,7 @@ void QQuickGridView::setCellWidth(qreal cellWidth)
         d->updateViewport();
         emit cellWidthChanged();
         d->forceLayoutPolish();
+        QQuickFlickable::setContentX(d->contentXForPosition(d->position()));
     }
 }
 
@@ -1666,6 +1667,7 @@ void QQuickGridView::setCellHeight(qreal cellHeight)
         d->updateViewport();
         emit cellHeightChanged();
         d->forceLayoutPolish();
+        QQuickFlickable::setContentY(d->contentYForPosition(d->position()));
     }
 }
 /*!
