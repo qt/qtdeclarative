@@ -232,6 +232,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                 return QV4::Encode::null();
             } else if (r.type.isValid()) {
                 if (lookup) {
+                    bool isValueSingleton = false;
                     if (r.type.isSingleton()) {
                         QQmlEnginePrivate *e = QQmlEnginePrivate::get(v4->qmlEngine());
                         if (r.type.isQObjectSingleton() || r.type.isCompositeSingleton()) {
@@ -251,9 +252,11 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                                 lookup->qmlContextSingletonLookup.singletonObject = val->heapObject();
                             } else {
                                 lookup->qmlContextSingletonLookup.singletonValue = QJSValuePrivate::asReturnedValue(&singleton);
+                                isValueSingleton = true;
                             }
                         }
-                        lookup->qmlContextPropertyGetter = QQmlContextWrapper::lookupSingleton;
+                        lookup->qmlContextPropertyGetter = isValueSingleton ? QQmlContextWrapper::lookupValueSingleton
+                                                                            : QQmlContextWrapper::lookupSingleton;
                         return lookup->qmlContextPropertyGetter(lookup, v4, base);
                     }
                 }
@@ -539,9 +542,15 @@ ReturnedValue QQmlContextWrapper::lookupSingleton(Lookup *l, ExecutionEngine *en
     Q_UNUSED(engine);
     Q_UNUSED(base);
 
-    if (l->qmlContextSingletonLookup.singletonObject != nullptr)
-        return l->qmlContextSingletonLookup.singletonObject->asReturnedValue();
+    return l->qmlContextSingletonLookup.singletonObject->asReturnedValue();
+}
 
+ReturnedValue QQmlContextWrapper::lookupValueSingleton(Lookup *l, ExecutionEngine *engine, Value *base)
+{
+    Q_UNUSED(engine);
+    Q_UNUSED(base);
+
+    Q_ASSERT(l->qmlContextSingletonLookup.singletonObject == nullptr);
     return l->qmlContextSingletonLookup.singletonValue;
 }
 
