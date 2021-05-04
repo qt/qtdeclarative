@@ -631,7 +631,10 @@ void tst_QQuickPinchArea::dragTransformedPinchArea() // QTBUG-63673
                  .move(2, pinchArea->mapToScene(p2 + delta).toPoint(), view).commit();
     QQuickTouchUtils::flush(view);
     QCOMPARE(pinchArea->pinch()->active(), true);
-    QCOMPARE(pinchAreaTarget->position().toPoint(), delta - QPoint(threshold, threshold));
+    auto error = delta - QPoint(threshold, threshold) -
+                pinchAreaTarget->position().toPoint(); // expect 0, 0
+    QVERIFY(qAbs(error.x()) <= 1);
+    QVERIFY(qAbs(error.y()) <= 1);
 
     // release pinch
     pinchSequence.release(1, p1, view).release(2, p2, view).commit();
