@@ -2227,8 +2227,11 @@ int QMacStyle::pixelMetric(PixelMetric metric, const QStyleOption *opt) const
         ret = 10;
         break;
     case PM_SliderFocusFrameRadius:
-        if (const QStyleOptionSlider *sliderOpt = qstyleoption_cast<const QStyleOptionSlider *>(opt))
-            ret = sliderOpt->tickPosition == QStyleOptionSlider::NoTicks ? 10 : 3;
+        // QTBUG-93423: We currently need to skip drawing a focus ring around the handle, since
+        // the handle drawn by the UIKit is not centered inside the rect we get from calling
+        // [cell knobRectFlipped:slider.isFlipped]. So we choose to draw the focus as
+        // a rect instead until we have a better solution available.
+        ret = 0;
         break;
     case PM_DialFocusFrameRadius:
     case PM_SpinBoxFocusFrameRadius:
