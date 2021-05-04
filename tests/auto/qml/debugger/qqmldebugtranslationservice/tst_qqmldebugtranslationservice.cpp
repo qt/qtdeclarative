@@ -65,7 +65,7 @@ public:
     }
 
 private slots:
-    void initTestCase()
+    void initTestCase() override
     {
         QQmlDebugTest::initTestCase();
 
