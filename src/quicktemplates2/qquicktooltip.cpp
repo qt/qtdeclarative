@@ -38,6 +38,7 @@
 #include "qquickpopup_p_p.h"
 #include "qquickpopupitem_p_p.h"
 #include "qquickcontrol_p_p.h"
+#include "qquicktooltippopupitem_p_p.h"
 
 #include <QtCore/qbasictimer.h>
 #include <QtQml/qqmlinfo.h>
@@ -124,6 +125,8 @@ class QQuickToolTipPrivate : public QQuickPopupPrivate
     Q_DECLARE_PUBLIC(QQuickToolTip)
 
 public:
+    void init() override;
+
     void startDelay();
     void stopDelay();
 
@@ -140,6 +143,19 @@ public:
     QBasicTimer delayTimer;
     QBasicTimer timeoutTimer;
 };
+
+void QQuickToolTipPrivate::init()
+{
+    Q_Q(QQuickToolTip);
+    popupItem = new QQuickToolTipPopupItem(q);
+    popupItem->setVisible(false);
+    q->setParentItem(qobject_cast<QQuickItem *>(parent));
+    connectToPopupItem();
+
+    allowVerticalFlip = true;
+    allowHorizontalFlip = true;
+    popupItem->setHoverEnabled(false); // QTBUG-63644
+}
 
 void QQuickToolTipPrivate::startDelay()
 {
@@ -175,9 +191,7 @@ QQuickToolTip::QQuickToolTip(QQuickItem *parent)
     : QQuickPopup(*(new QQuickToolTipPrivate), parent)
 {
     Q_D(QQuickToolTip);
-    d->allowVerticalFlip = true;
-    d->allowHorizontalFlip = true;
-    d->popupItem->setHoverEnabled(false); // QTBUG-63644
+    d->init();
 }
 
 /*!

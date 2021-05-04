@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPANE_P_P_H
-#define QQUICKPANE_P_P_H
+#ifndef QQUICKTOOLTIPPOPUPITEM_P_P_H
+#define QQUICKTOOLTIPPOPUPITEM_P_P_H
 
 //
 //  W A R N I N G
@@ -48,43 +48,40 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
+#include <QtQuickTemplates2/private/qquickpopupitem_p.h>
+#include <QtQuickTemplates2/private/qquickpopupitem_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPane;
+class QQuickPopup;
+class QQuickToolTipPopupItemPrivate;
 
-class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPanePrivate : public QQuickControlPrivate
+class QQuickToolTipPopupItem : public QQuickPopupItem
 {
-    Q_DECLARE_PUBLIC(QQuickPane)
+    Q_OBJECT
 
 public:
-    void init();
+    explicit QQuickToolTipPopupItem(QQuickPopup *popup);
 
-    virtual QQmlListProperty<QObject> contentData();
-    virtual QQmlListProperty<QQuickItem> contentChildren();
-    virtual QList<QQuickItem *> contentChildItems() const;
+protected:
+    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
 
-    QQuickItem *getContentItem() override;
+private:
+    Q_DISABLE_COPY(QQuickToolTipPopupItem)
+    Q_DECLARE_PRIVATE(QQuickToolTipPopupItem)
+};
+
+class QQuickToolTipPopupItemPrivate : public QQuickPopupItemPrivate
+{
+    Q_DECLARE_PUBLIC(QQuickToolTipPopupItem)
+
+public:
+    QQuickToolTipPopupItemPrivate(QQuickPopup *popup);
 
     qreal getContentWidth() const override;
-    qreal getContentHeight() const override;
-
-    void itemImplicitWidthChanged(QQuickItem *item) override;
-    void itemImplicitHeightChanged(QQuickItem *item) override;
-
-    void contentChildrenChange();
-
-    virtual void updateContentWidth();
-    void updateContentHeight();
-
-    bool hasContentWidth = false;
-    bool hasContentHeight = false;
-    qreal contentWidth = 0;
-    qreal contentHeight = 0;
-    QQuickItem *firstChild = nullptr;
+    void updateContentWidth() override;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKPANE_P_P_H
+#endif // QQUICKTOOLTIPPOPUPITEM_P_P_H
