@@ -2211,19 +2211,28 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
 
     d()->ensureMethodsCache();
 
+    Scope scope(v4);
     QQmlObjectOrGadget object(d()->object());
+    QV4::Scoped<QQmlValueTypeReference> valueTypeReference(scope);
     if (!d()->object()) {
         if (!d()->valueTypeWrapper)
             return Encode::undefined();
 
+        valueTypeReference = d()->valueTypeWrapper.get();
         object = QQmlObjectOrGadget(d()->metaObject(), d()->valueTypeWrapper->gadgetPtr());
     }
 
-    Scope scope(v4);
     JSCallData cData(thisObject, argv, argc);
     CallData *callData = cData.callData(scope);
 
     auto method = d()->methods[0];
+
+    // If we call the method, we have to write back any value type references afterwards.
+    // The method might change the value.
+    auto guard = qScopeGuard([&valueTypeReference]() {
+        if (valueTypeReference)
+            valueTypeReference->d()->writeBack();
+    });
 
     if (method.isV4Function()) {
         QV4::ScopedValue rv(scope, QV4::Value::undefinedValue());

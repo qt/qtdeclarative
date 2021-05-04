@@ -64,36 +64,6 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(lcBindingRemoval)
 
 DEFINE_OBJECT_VTABLE(QV4::QQmlValueTypeWrapper);
-
-namespace QV4 {
-namespace Heap {
-
-struct QQmlValueTypeReference : QQmlValueTypeWrapper
-{
-    void init() {
-        QQmlValueTypeWrapper::init();
-        object.init();
-    }
-    void destroy() {
-        object.destroy();
-        QQmlValueTypeWrapper::destroy();
-    }
-    QV4QPointer<QObject> object;
-    int property;
-};
-
-}
-
-struct QQmlValueTypeReference : public QQmlValueTypeWrapper
-{
-    V4_OBJECT2(QQmlValueTypeReference, QQmlValueTypeWrapper)
-    V4_NEEDS_DESTROY
-
-    bool readReferenceValue() const;
-};
-
-}
-
 DEFINE_OBJECT_VTABLE(QV4::QQmlValueTypeReference);
 
 using namespace QV4;
@@ -693,23 +663,8 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
     void *gadget = r->d()->gadgetPtr();
     property.writeOnGadget(gadget, v);
 
-
-    if (reference) {
-        if (writeBackPropertyType == QMetaType::fromType<QVariant>()) {
-            QVariant variantReferenceValue = r->d()->toVariant();
-
-            int flags = 0;
-            int status = -1;
-            void *a[] = { &variantReferenceValue, nullptr, &status, &flags };
-            QMetaObject::metacall(reference->d()->object, QMetaObject::WriteProperty, reference->d()->property, a);
-
-        } else {
-            int flags = 0;
-            int status = -1;
-            void *a[] = { r->d()->gadgetPtr(), nullptr, &status, &flags };
-            QMetaObject::metacall(reference->d()->object, QMetaObject::WriteProperty, reference->d()->property, a);
-        }
-    }
+    if (reference)
+        reference->d()->writeBack();
 
     return true;
 }

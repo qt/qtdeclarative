@@ -111,6 +111,38 @@ private:
     const QMetaObject *m_metaObject;
 };
 
+struct QQmlValueTypeReference : QQmlValueTypeWrapper
+{
+    void init() {
+        QQmlValueTypeWrapper::init();
+        object.init();
+    }
+    void destroy() {
+        object.destroy();
+        QQmlValueTypeWrapper::destroy();
+    }
+
+    void writeBack() {
+        const QMetaProperty writebackProperty = object->metaObject()->property(property);
+        if (!writebackProperty.isWritable())
+            return;
+
+        int flags = 0;
+        int status = -1;
+        if (writebackProperty.metaType() == QMetaType::fromType<QVariant>()) {
+            QVariant variantReferenceValue = toVariant();
+            void *a[] = { &variantReferenceValue, nullptr, &status, &flags };
+            QMetaObject::metacall(object, QMetaObject::WriteProperty, property, a);
+        } else {
+            void *a[] = { gadgetPtr(), nullptr, &status, &flags };
+            QMetaObject::metacall(object, QMetaObject::WriteProperty, property, a);
+        }
+    }
+
+    QV4QPointer<QObject> object;
+    int property;
+};
+
 }
 
 struct Q_QML_EXPORT QQmlValueTypeWrapper : Object
@@ -147,6 +179,14 @@ public:
                              QV4::Value &object, const QV4::Value &value);
 
     static void initProto(ExecutionEngine *v4);
+};
+
+struct QQmlValueTypeReference : public QQmlValueTypeWrapper
+{
+    V4_OBJECT2(QQmlValueTypeReference, QQmlValueTypeWrapper)
+    V4_NEEDS_DESTROY
+
+    bool readReferenceValue() const;
 };
 
 }

@@ -100,6 +100,7 @@ private slots:
     void scarceTypes();
     void nonValueTypes();
     void char16Type();
+    void writeBackOnFunctionCall();
 
 private:
     QQmlEngine engine;
@@ -1860,6 +1861,65 @@ void tst_qqmlvaluetypes::char16Type()
     QCOMPARE(v.typeId(), QMetaType::Char16);
     QV4::ScopedValue scoped(scope, engine.fromVariant(v));
     QCOMPARE(scoped->toQString(), "a");
+}
+
+struct Foo {
+    Q_GADGET
+    QML_ANONYMOUS
+public:
+    int val = 1;
+    Q_INVOKABLE int value() { return val; }
+    Q_INVOKABLE void setValue(int v) { val = v; }
+};
+
+Q_DECLARE_METATYPE(Foo);
+
+class S : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(Foo foo READ foo WRITE setFoo NOTIFY fooChanged);
+    QML_ELEMENT
+public:
+    Foo f;
+    Foo foo() { return f; }
+    void setFoo(Foo f)
+    {
+        this->f = f;
+        emit fooChanged();
+    }
+    Q_INVOKABLE Foo get() { return f; }
+signals:
+    void fooChanged();
+};
+
+void tst_qqmlvaluetypes::writeBackOnFunctionCall()
+{
+    qmlRegisterTypesAndRevisions<Foo>("WriteBack", 1);
+    qmlRegisterTypesAndRevisions<S>("WriteBack", 1);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQml 2.15\n"
+                      "import WriteBack 1.0\n"
+                      "QtObject {\n"
+                      "    property S s: S {}\n"
+                      "    property int a: -1\n"
+                      "    property int b: -1\n"
+                      "    Component.onCompleted: {\n"
+                      "        var f = s.foo\n"
+                      "        f.setValue(3)\n"
+                      "        s.foo = f\n"
+                      "        a = f.value()\n"
+                      "        f = s.get()\n"
+                      "        f.setValue(3)\n"
+                      "        b = f.value()\n"
+                      "    }\n"
+                      "}\n", QUrl());
+    QVERIFY2(component.isReady(), component.errorString().toUtf8());
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("a").toInt(), 3);
+    QCOMPARE(o->property("b").toInt(), 3);
 }
 
 #undef CHECK_TYPE_IS_NOT_VALUETYPE
