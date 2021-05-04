@@ -215,6 +215,7 @@ private slots:
     void positionViewAtBeginningAfterResizingCells();
     void QTBUG_48870_fastModelUpdates();
     void QTBUG_86255();
+    void resizeDynamicCellWidthRtL();
 
     void keyNavigationEnabled();
     void releaseItems();
@@ -6837,6 +6838,25 @@ void tst_QQuickGridView::QTBUG_86255()
     QVERIFY(view != nullptr);
     QTRY_COMPARE(view->isFlicking(), true);
     QTRY_COMPARE(view->isFlicking(), false);
+}
+
+void tst_QQuickGridView::resizeDynamicCellWidthRtL()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QTRY_VERIFY(window);
+    window->setSource(testFileUrl("qtbug92998.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickGridView *gridview = findItem<QQuickGridView>(window->rootObject(), "gridview");
+    QTRY_VERIFY(gridview != nullptr);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
+    gridview->setWidth(460);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
+    QTRY_COMPARE(gridview->contentX(), 0.f);
+    gridview->setWidth(360);
+    QVERIFY(QQuickTest::qWaitForItemPolished(gridview));
+    QTRY_COMPARE(gridview->contentX(), 0.f);
 }
 
 void tst_QQuickGridView::releaseItems()
