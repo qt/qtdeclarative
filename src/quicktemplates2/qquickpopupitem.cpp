@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Templates 2 module of the Qt Toolkit.
@@ -57,6 +57,30 @@ QQuickPopupItemPrivate::QQuickPopupItemPrivate(QQuickPopup *popup)
     : popup(popup)
 {
     isTabFence = true;
+}
+
+void QQuickPopupItemPrivate::init()
+{
+    Q_Q(QQuickPopupItem);
+    q->setParent(popup);
+    q->setFlag(QQuickItem::ItemIsFocusScope);
+    q->setAcceptedMouseButtons(Qt::AllButtons);
+#if QT_CONFIG(quicktemplates2_multitouch)
+    q->setAcceptTouchEvents(true);
+#endif
+#if QT_CONFIG(cursor)
+    q->setCursor(Qt::ArrowCursor);
+#endif
+
+    q->connect(popup, &QQuickPopup::paletteChanged, q, &QQuickItem::paletteChanged);
+    q->connect(popup, &QQuickPopup::paletteCreated, q, &QQuickItem::paletteCreated);
+
+#if QT_CONFIG(quicktemplates2_hover)
+    // TODO: switch to QStyleHints::useHoverEffects in Qt 5.8
+    q->setHoverEnabled(true);
+    // setAcceptHoverEvents(QGuiApplication::styleHints()->useHoverEffects());
+    // connect(QGuiApplication::styleHints(), &QStyleHints::useHoverEffectsChanged, this, &QQuickItem::setAcceptHoverEvents);
+#endif
 }
 
 void QQuickPopupItemPrivate::implicitWidthChanged()
@@ -127,25 +151,15 @@ void QQuickPopupItemPrivate::executeBackground(bool complete)
 QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup)
     : QQuickPage(*(new QQuickPopupItemPrivate(popup)), nullptr)
 {
-    setParent(popup);
-    setFlag(ItemIsFocusScope);
-    setAcceptedMouseButtons(Qt::AllButtons);
-#if QT_CONFIG(quicktemplates2_multitouch)
-    setAcceptTouchEvents(true);
-#endif
-#if QT_CONFIG(cursor)
-    setCursor(Qt::ArrowCursor);
-#endif
+    Q_D(QQuickPopupItem);
+    d->init();
+}
 
-    connect(popup, &QQuickPopup::paletteChanged, this, &QQuickItem::paletteChanged);
-    connect(popup, &QQuickPopup::paletteCreated, this, &QQuickItem::paletteCreated);
-
-#if QT_CONFIG(quicktemplates2_hover)
-    // TODO: switch to QStyleHints::useHoverEffects in Qt 5.8
-    setHoverEnabled(true);
-    // setAcceptHoverEvents(QGuiApplication::styleHints()->useHoverEffects());
-    // connect(QGuiApplication::styleHints(), &QStyleHints::useHoverEffectsChanged, this, &QQuickItem::setAcceptHoverEvents);
-#endif
+QQuickPopupItem::QQuickPopupItem(QQuickPopupItemPrivate &dd) :
+    QQuickPage(dd, nullptr)
+{
+    Q_D(QQuickPopupItem);
+    d->init();
 }
 
 void QQuickPopupItem::grabShortcut()

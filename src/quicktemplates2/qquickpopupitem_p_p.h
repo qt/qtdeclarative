@@ -48,68 +48,11 @@
 // We mean it.
 //
 
-#include <QtQuickTemplates2/private/qquickpage_p.h>
-#include <QtQuickTemplates2/private/qquickpage_p_p.h>
+#include <QtQuickTemplates2/private/qquickpopupitem_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickPopup;
-class QQuickPopupItemPrivate;
-
-class QQuickPopupItem : public QQuickPage
-{
-    Q_OBJECT
-
-public:
-    explicit QQuickPopupItem(QQuickPopup *popup);
-
-    void grabShortcut();
-    void ungrabShortcut();
-
-protected:
-    void updatePolish() override;
-
-    bool event(QEvent *event) override;
-    bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
-    void focusInEvent(QFocusEvent *event) override;
-    void focusOutEvent(QFocusEvent *event) override;
-    void keyPressEvent(QKeyEvent *event) override;
-    void keyReleaseEvent(QKeyEvent *event) override;
-    void mousePressEvent(QMouseEvent *event) override;
-    void mouseMoveEvent(QMouseEvent *event) override;
-    void mouseReleaseEvent(QMouseEvent *event) override;
-    void mouseDoubleClickEvent(QMouseEvent *event) override;
-    void mouseUngrabEvent() override;
-#if QT_CONFIG(quicktemplates2_multitouch)
-    void touchEvent(QTouchEvent *event) override;
-    void touchUngrabEvent() override;
-#endif
-#if QT_CONFIG(wheelevent)
-    void wheelEvent(QWheelEvent *event) override;
-#endif
-
-    void contentItemChange(QQuickItem *newItem, QQuickItem *oldItem) override;
-    void contentSizeChange(const QSizeF &newSize, const QSizeF &oldSize) override;
-    void fontChange(const QFont &newFont, const QFont &oldFont) override;
-    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
-    void localeChange(const QLocale &newLocale, const QLocale &oldLocale) override;
-    void mirrorChange() override;
-    void itemChange(ItemChange change, const ItemChangeData &data) override;
-    void paddingChange(const QMarginsF &newPadding, const QMarginsF &oldPadding) override;
-    void enabledChange() override;
-
-    QFont defaultFont() const override;
-
-#if QT_CONFIG(accessibility)
-    QAccessible::Role accessibleRole() const override;
-    void accessibilityActiveChanged(bool active) override;
-#endif
-
-private:
-    Q_DISABLE_COPY(QQuickPopupItem)
-    Q_DECLARE_PRIVATE(QQuickPopupItem)
-    friend class QQuickPopup;
-};
 
 class QQuickPopupItemPrivate : public QQuickPagePrivate
 {
@@ -117,6 +60,8 @@ class QQuickPopupItemPrivate : public QQuickPagePrivate
 
 public:
     QQuickPopupItemPrivate(QQuickPopup *popup);
+
+    void init();
 
     void implicitWidthChanged() override;
     void implicitHeightChanged() override;

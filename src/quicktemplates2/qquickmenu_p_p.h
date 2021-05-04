@@ -73,7 +73,7 @@ public:
         return menu->d_func();
     }
 
-    void init();
+    void init() override;
 
     QQuickItem *itemAt(int index) const;
     void insertItem(int index, QQuickItem *item);

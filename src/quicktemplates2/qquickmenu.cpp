@@ -225,6 +225,7 @@ QQuickMenuPrivate::QQuickMenuPrivate()
 void QQuickMenuPrivate::init()
 {
     Q_Q(QQuickMenu);
+    QQuickPopupPrivate::init();
     contentModel = new QQmlObjectModel(q);
 }
 

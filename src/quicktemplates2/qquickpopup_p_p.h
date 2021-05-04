@@ -101,7 +101,9 @@ public:
     QQmlListProperty<QObject> contentData();
     QQmlListProperty<QQuickItem> contentChildren();
 
-    void init();
+    virtual void init();
+    void createPopupItem();
+    void connectToPopupItem();
     void closeOrReject();
     bool tryClose(const QPointF &pos, QQuickPopup::ClosePolicy flags);
 

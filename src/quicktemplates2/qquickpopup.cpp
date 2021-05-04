@@ -275,9 +275,21 @@ QQuickPopupPrivate::QQuickPopupPrivate()
 void QQuickPopupPrivate::init()
 {
     Q_Q(QQuickPopup);
-    popupItem = new QQuickPopupItem(q);
+    createPopupItem();
     popupItem->setVisible(false);
     q->setParentItem(qobject_cast<QQuickItem *>(parent));
+    connectToPopupItem();
+}
+
+void QQuickPopupPrivate::createPopupItem()
+{
+    Q_Q(QQuickPopup);
+    popupItem = new QQuickPopupItem(q);
+}
+
+void QQuickPopupPrivate::connectToPopupItem()
+{
+    Q_Q(QQuickPopup);
     QObject::connect(popupItem, &QQuickControl::paddingChanged, q, &QQuickPopup::paddingChanged);
     QObject::connect(popupItem, &QQuickControl::backgroundChanged, q, &QQuickPopup::backgroundChanged);
     QObject::connect(popupItem, &QQuickControl::contentItemChanged, q, &QQuickPopup::contentItemChanged);
@@ -853,8 +865,7 @@ QQuickPopup::QQuickPopup(QObject *parent)
 QQuickPopup::QQuickPopup(QQuickPopupPrivate &dd, QObject *parent)
     : QObject(dd, parent)
 {
-    Q_D(QQuickPopup);
-    d->init();
+    dd.init();
 }
 
 QQuickPopup::~QQuickPopup()
