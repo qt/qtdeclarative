@@ -63,8 +63,7 @@ depends += \
     ../../quickwidgets \
     ../../qmllocalstorage \
     ../../quicklayouts \
-    ../../labs/animation \
-    ../../labs/folderlistmodel
+    ../../labs
 
 exampledirs +=  ../../../examples/quick \
                 snippets
