@@ -111,7 +111,7 @@ QDebug operator<<(QDebug debug, const QQuickStyleMargins &padding);
 struct StyleItemGeometry
 {
     /*
-    A QQuickItem is responsible for drawing a control, or a part of it.
+    A QQuickStyleItem is responsible for drawing a control, or a part of it.
 
     'minimumSize' should be the minimum possible size that the item can
     have _without_ taking content size into consideration (and still render
@@ -121,7 +121,7 @@ struct StyleItemGeometry
     (which is set from QML, and will typically be the same as the size of the control).
     The default way to calculate minimumSize is to call style()->sizeFromContents()
     with an empty content size. This is not always well supported by the legacy QStyle
-    implementations, which means that you might e.g get an empty size in return).
+    implementation, which means that you might e.g get an empty size in return.
     For those cases, the correct solution is to go into the specific platform style
     and change it so that it returns a valid size also for this special case.
 
@@ -146,7 +146,7 @@ struct StyleItemGeometry
     QSize minimumSize;
     QSize implicitSize;
     QRect contentRect;
-    QRect layoutRect;   //If invalid, there are no layout margins!
+    QRect layoutRect; // If invalid, there are no layout margins!
     QMargins ninePatchMargins;
     qreal focusFrameRadius;
 };
