@@ -272,7 +272,11 @@ QQuickSlider::QQuickSlider(QQuickItem *parent)
     : QQuickControl(*(new QQuickSliderPrivate), parent)
 {
     setActiveFocusOnTab(true);
+#ifdef Q_OS_MACOS
+    setFocusPolicy(Qt::TabFocus);
+#else
     setFocusPolicy(Qt::StrongFocus);
+#endif
     setAcceptedMouseButtons(Qt::LeftButton);
 #if QT_CONFIG(quicktemplates2_multitouch)
     setAcceptTouchEvents(true);
