@@ -648,7 +648,12 @@ TestCase {
         compare(control.visualPosition, 0.5)
     }
 
-    function test_snapMode_data(immediate) {
+    function calcMousePos(control, t) {
+        t = Math.min(Math.max(t, 0.0), 1.0);
+        return control.leftPadding + control.handle.width * 0.5 + t * (control.availableWidth - control.handle.width)
+    }
+
+    function snapModeData(immediate) {
         return [
             { tag: "NoSnap", snapMode: Slider.NoSnap, from: 0, to: 2, values: [0, 0, 0.25], positions: [0, 0.1, 0.1] },
             { tag: "SnapAlways (0..2)", snapMode: Slider.SnapAlways, from: 0, to: 2, values: [0.0, 0.0, 0.2], positions: [0.0, 0.1, 0.1] },
@@ -658,57 +663,66 @@ TestCase {
             { tag: "SnapOnRelease (0..2)", snapMode: Slider.SnapOnRelease, from: 0, to: 2, values: [0.0, 0.0, 0.2], positions: [0.0, 0.1, 0.1] },
             { tag: "SnapOnRelease (1..3)", snapMode: Slider.SnapOnRelease, from: 1, to: 3, values: [1.0, 1.0, 1.2], positions: [0.0, 0.1, 0.1] },
             { tag: "SnapOnRelease (-1..1)", snapMode: Slider.SnapOnRelease, from: -1, to: 1, values: [0.0, 0.0, -0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] },
-            { tag: "SnapOnRelease (1..-1)", snapMode: Slider.SnapOnRelease, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] }
+            { tag: "SnapOnRelease (1..-1)", snapMode: Slider.SnapOnRelease, from: 1, to: -1, values: [0.0, 0.0,  0.8], positions: [immediate ? 0.0 : 0.5, 0.1, 0.1] },
+            // Live
+            { tag: "SnapAlwaysLive", snapMode: Slider.SnapAlways, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 1, 1] },
+            { tag: "SnapAlwaysLive", snapMode: Slider.SnapAlways, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0, 0] },
+            { tag: "NoSnapLive", snapMode: Slider.NoSnap, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 0.6, 0.6] },
+            { tag: "NoSnapLive", snapMode: Slider.NoSnap, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0.4, 0.4] },
+            { tag: "SnapOnReleaseLive", snapMode: Slider.SnapOnRelease, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.6, values: [0, 1, 1], positions: [0, 0.6, 1] },
+            { tag: "SnapOnReleaseLive", snapMode: Slider.SnapOnRelease, from: 0, to: 1, value: 0, stepSize: 1, live: true, sliderPos: 0.4, values: [0, 0, 0], positions: [0, 0.4, 0] },
         ]
     }
 
-    function test_snapMode_mouse_data() {
-        return test_snapMode_data(true)
-    }
+    function testSnapMode(data, useMouse) {
+        let live = data.live !== undefined ? data.live : false
+        let stepSize = data.stepSize !== undefined ? data.stepSize : 0.2
+        let sliderPos = data.sliderPos !== undefined ? data.sliderPos : 0.1
+        let fuzz = 0.05
 
-    function test_snapMode_mouse(data) {
-        var control = createTemporaryObject(slider, testCase, {live: false, snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
+        var control = createTemporaryObject(slider, testCase, {live: live, snapMode: data.snapMode, from: data.from, to: data.to, stepSize: stepSize})
         verify(control)
+        var touch = useMouse ? null : touchEvent(control)
 
-        var fuzz = 0.05
+        if (useMouse)
+            mousePress(control, calcMousePos(control, 0.0))
+        else
+            touch.press(0, control, calcMousePos(control, 0.0)).commit()
 
-        mousePress(control, control.leftPadding)
-        compare(control.value, data.values[0])
-        compare(control.position, data.positions[0])
+        fuzzyCompare(control.value, data.values[0], fuzz)
+        fuzzyCompare(control.position, data.positions[0], fuzz)
 
-        mouseMove(control, control.leftPadding + 0.15 * (control.availableWidth + control.handle.width / 2))
+        if (useMouse)
+            mouseMove(control, calcMousePos(control, sliderPos))
+        else
+            touch.move(0, control, calcMousePos(control, sliderPos)).commit()
 
         fuzzyCompare(control.value, data.values[1], fuzz)
         fuzzyCompare(control.position, data.positions[1], fuzz)
 
-        mouseRelease(control, control.leftPadding + 0.15 * (control.availableWidth + control.handle.width / 2))
+        if (useMouse)
+            mouseRelease(control, calcMousePos(control, sliderPos))
+        else
+            touch.release(0, control, calcMousePos(control, sliderPos)).commit()
+
         fuzzyCompare(control.value, data.values[2], fuzz)
         fuzzyCompare(control.position, data.positions[2], fuzz)
     }
 
     function test_snapMode_touch_data() {
-        return test_snapMode_data(false)
+        return snapModeData(false)
     }
 
     function test_snapMode_touch(data) {
-        var control = createTemporaryObject(slider, testCase, {live: false, snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2})
-        verify(control)
+        return testSnapMode(data, false)
+    }
 
-        var fuzz = 0.05
+    function test_snapMode_mouse_data() {
+        return snapModeData(true)
+    }
 
-        var touch = touchEvent(control)
-        touch.press(0, control, control.leftPadding).commit()
-        compare(control.value, data.values[0])
-        compare(control.position, data.positions[0])
-
-        touch.move(0, control, control.leftPadding + 0.15 * (control.availableWidth + control.handle.width / 2)).commit()
-
-        fuzzyCompare(control.value, data.values[1], fuzz)
-        fuzzyCompare(control.position, data.positions[1], fuzz)
-
-        touch.release(0, control, control.leftPadding + 0.15 * (control.availableWidth + control.handle.width / 2)).commit()
-        fuzzyCompare(control.value, data.values[2], fuzz)
-        fuzzyCompare(control.position, data.positions[2], fuzz)
+    function test_snapMode_mouse(data) {
+        return testSnapMode(data, true)
     }
 
     function test_wheel_data() {

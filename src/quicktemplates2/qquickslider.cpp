@@ -197,7 +197,7 @@ void QQuickSliderPrivate::handleMove(const QPointF &point)
         pos = snapPosition(pos);
     if (live)
         q->setValue(q->valueAt(pos));
-    else
+    if (!live || snapMode == QQuickSlider::NoSnap || snapMode == QQuickSlider::SnapOnRelease)
         setPosition(pos);
     if (!qFuzzyCompare(pos, oldPos))
         emit q->moved();
