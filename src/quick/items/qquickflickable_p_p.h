@@ -241,6 +241,7 @@ public:
     int pressDelay;
     int fixupDuration;
     qreal flickBoost;
+    qreal initialWheelFlickDistance;
 
     enum FixupMode { Normal, Immediate, ExtentChanged };
     FixupMode fixupMode;

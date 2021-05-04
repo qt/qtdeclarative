@@ -870,6 +870,7 @@ void tst_qquickflickable::wheel()
     QVERIFY(flick != nullptr);
     QQuickFlickablePrivate *fp = QQuickFlickablePrivate::get(flick);
     QSignalSpy moveEndSpy(flick, SIGNAL(movementEnded()));
+    quint64 timestamp = 10;
 
     // test a vertical flick
     {
@@ -877,6 +878,7 @@ void tst_qquickflickable::wheel()
         QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(), QPoint(0,-120),
                           Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
         event.setAccepted(false);
+        event.setTimestamp(timestamp);
         QGuiApplication::sendEvent(window.data(), &event);
     }
 
@@ -887,6 +889,7 @@ void tst_qquickflickable::wheel()
     QCOMPARE(fp->velocityTimeline.isActive(), false);
     QCOMPARE(fp->timeline.isActive(), false);
     QTest::qWait(50); // make sure that onContentYChanged won't sneak in again
+    timestamp += 50;
     QCOMPARE(flick->property("movementsAfterEnd").value<int>(), 0); // QTBUG-55886
 
     // get ready to test horizontal flick
@@ -900,8 +903,8 @@ void tst_qquickflickable::wheel()
         QPoint pos(200, 200);
         QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(), QPoint(-120,0),
                           Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false);
-
         event.setAccepted(false);
+        event.setTimestamp(timestamp);
         QGuiApplication::sendEvent(window.data(), &event);
     }
 
@@ -926,11 +929,13 @@ void tst_qquickflickable::trackpad()
     QVERIFY(flick != nullptr);
     QSignalSpy moveEndSpy(flick, SIGNAL(movementEnded()));
     QPoint pos(200, 200);
+    quint64 timestamp = 10;
 
     {
         QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(0,-100), QPoint(0,-120),
                           Qt::NoButton, Qt::NoModifier, Qt::ScrollBegin, false);
         event.setAccepted(false);
+        event.setTimestamp(timestamp++);
         QGuiApplication::sendEvent(window.data(), &event);
     }
 
@@ -944,6 +949,7 @@ void tst_qquickflickable::trackpad()
         QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(-100,0), QPoint(-120,0),
                           Qt::NoButton, Qt::NoModifier, Qt::ScrollUpdate, false);
         event.setAccepted(false);
+        event.setTimestamp(timestamp++);
         QGuiApplication::sendEvent(window.data(), &event);
     }
 
@@ -954,6 +960,7 @@ void tst_qquickflickable::trackpad()
         QWheelEvent event(pos, window->mapToGlobal(pos), QPoint(0,0), QPoint(0,0),
                           Qt::NoButton, Qt::NoModifier, Qt::ScrollEnd, false);
         event.setAccepted(false);
+        event.setTimestamp(timestamp++);
         QGuiApplication::sendEvent(window.data(), &event);
     }
 
