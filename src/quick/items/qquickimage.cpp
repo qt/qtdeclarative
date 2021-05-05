@@ -129,6 +129,15 @@ QQuickImagePrivate::QQuickImagePrivate()
     \li \c ASTC (since Qt 5.13)
     \endlist
 
+    \note The intended vertical orientation of an image in a texture file is not generally well
+    defined. Different texture compression tools have different defaults and options of when to
+    perform vertical flipping of the input image. If an image from a texture file appears upside
+    down, flipping may need to be toggled in the asset conditioning process. Alternatively, the
+    Image element itself can be flipped by setting the transform property, for example like this:
+    \badcode
+    transform: [ Translate { y: -myImage.height }, Scale { yScale: -1 } ]
+    \endcode
+
     \note Semi-transparent original images require alpha pre-multiplication
     prior to texture compression in order to be correctly displayed in Qt
     Quick. This can be done with the following ImageMagick command
