@@ -7959,8 +7959,9 @@ void tst_qqmlecmascript::utcDate()
     QVERIFY2(object, qPrintable(component.errorString()));
 
     QVariant q;
-    QVariant val = QString::fromLatin1("2014-07-16T23:30:31");
-    QMetaObject::invokeMethod(object.get(), "check_utc", Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, val));
+    QDateTime val(QDate(2014, 7, 16), QTime(23, 30, 31), Qt::UTC);
+    QMetaObject::invokeMethod(object.get(), "check_utc",
+                              Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, val));
     QVERIFY(q.toBool());
 }
 
