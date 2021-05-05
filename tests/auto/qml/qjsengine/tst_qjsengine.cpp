@@ -692,8 +692,8 @@ void tst_QJSEngine::newVariant_valueOfEnum()
 {
     QJSEngine eng;
     {
-        QJSValue object = eng.toScriptValue(QVariant::fromValue(Qt::ControlModifier));
-        QJSValue value = object.property("valueOf").callWithInstance(object);
+        QJSManagedValue object = eng.toManagedValue(QVariant::fromValue(Qt::ControlModifier));
+        QJSValue value = object.property("valueOf").callWithInstance(object.toJSValue());
         QVERIFY(value.isNumber());
         QCOMPARE(value.toInt(), static_cast<qint32>(Qt::ControlModifier));
     }

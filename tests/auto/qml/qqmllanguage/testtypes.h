@@ -1714,6 +1714,17 @@ signals:
     void signal(QJSValue value);
 };
 
+class EnumList : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    enum Enum { Alpha, Beta, Gamma };
+    Q_ENUM(Enum)
+
+    Q_INVOKABLE QList<EnumList::Enum> list() const { return { Alpha, Beta, Gamma }; }
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

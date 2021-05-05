@@ -1885,6 +1885,10 @@ QV4::ReturnedValue ExecutionEngine::fromData(
     //    + QObjectList
     //    + QList<int>
 
+    // Enumeration types can just be treated as integers for now
+    if (metaType.flags() & QMetaType::IsEnumeration)
+        return QV4::Encode(*reinterpret_cast<const int *>(ptr));
+
     return QV4::Encode(newVariantObject(variant ? *variant : QVariant(metaType, ptr)));
 }
 

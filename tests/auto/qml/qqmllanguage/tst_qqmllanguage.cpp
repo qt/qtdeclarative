@@ -358,6 +358,8 @@ private slots:
 
     void hangOnWarning();
 
+    void listEnumConversion();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -6295,6 +6297,33 @@ void tst_qqmllanguage::hangOnWarning()
     QQmlComponent component(&engine, testFileUrl("hangOnWarning.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(object != nullptr);
+}
+
+void tst_qqmllanguage::listEnumConversion()
+{
+    QQmlEngine e;
+    QQmlComponent c(&engine);
+    c.setData(R"(
+import QtQml 2.0
+import StaticTest 1.0
+QtObject {
+    property EnumList enumList: EnumList {}
+    property var list: enumList.list()
+    property bool resultAlpha: EnumList.Alpha === list[0]
+    property bool resultBeta: EnumList.Beta === list[1]
+    property bool resultGamma: EnumList.Gamma === list[2]
+    property var resultEnumType: EnumList.Alpha
+    property var resultEnumListType: list[0]
+})",
+              QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->property("resultAlpha").toBool(), true);
+    QCOMPARE(o->property("resultBeta").toBool(), true);
+    QCOMPARE(o->property("resultGamma").toBool(), true);
+    QCOMPARE(o->property("resultEnumType").metaType(), QMetaType(QMetaType::Int));
+    QCOMPARE(o->property("resultEnumListType").metaType(), QMetaType(QMetaType::Int));
 }
 
 QTEST_MAIN(tst_qqmllanguage)
