@@ -402,7 +402,9 @@ void tst_SceneGraph::render_data()
           << "render_StackingOrder.qml"
           << "render_ImageFiltering.qml"
           << "render_bug37422.qml"
-          << "render_OpacityThroughBatchRoot.qml";
+          << "render_OpacityThroughBatchRoot.qml"
+          << "render_AlphaOverlapRebuild.qml";
+
     if (!m_brokenMipmapSupport)
         files << "render_Mipmap.qml";
 

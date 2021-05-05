@@ -1878,7 +1878,7 @@ bool Renderer::checkOverlap(int first, int last, const Rect &bounds)
 {
     for (int i=first; i<=last; ++i) {
         Element *e = m_alphaRenderList.at(i);
-        if (!e || e->batch)
+        if (!e)
             continue;
         Q_ASSERT(e->boundsComputed);
         if (e->bounds.intersects(bounds))
@@ -1949,8 +1949,10 @@ void Renderer::prepareAlphaBatches()
                 continue;
             if (ej->root != ei->root || ej->isRenderNode)
                 break;
-            if (ej->batch)
+            if (ej->batch) {
+                overlapBounds |= ej->bounds;
                 continue;
+            }
 
             QSGGeometryNode *gnj = ej->node;
             if (gnj->geometry()->vertexCount() == 0)
