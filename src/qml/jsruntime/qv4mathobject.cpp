@@ -148,6 +148,11 @@ ReturnedValue MathObject::method_acosh(const FunctionObject *, const Value *, co
 #ifdef Q_OS_ANDROID // incomplete std :-(
     RETURN_RESULT(Encode(std::log(v +std::sqrt(v + 1) * std::sqrt(v - 1))));
 #else
+#ifdef Q_CC_MINGW
+    // Mingw has a broken std::acosh(). It returns NaN when passed Infinity.
+    if (std::isinf(v))
+        RETURN_RESULT(Encode(v));
+#endif
     RETURN_RESULT(Encode(std::acosh(v)));
 #endif
 }
