@@ -64,6 +64,7 @@ inline size_t systemPageSize()
 
 #endif
 
+inline namespace hidden {
 size_t pageSize()
 {
     if (!s_pageSize)
@@ -77,6 +78,7 @@ size_t pageMask()
     if (!s_pageMask)
         s_pageMask = ~(pageSize() - 1);
     return s_pageMask;
+}
 }
 
 } // namespace WTF
