@@ -98,7 +98,7 @@ public:
         }
 
         BinaryTreeNode(const QGlyphRun &g, SelectionState selState, const QRectF &brect,
-                       const Decorations &decs, const QColor &c, const QColor &bc,
+                       const Decorations &decs, const QColor &c, const QColor &bc, const QColor &dc,
                        const QPointF &pos, qreal a);
 
         QGlyphRun glyphRun;
@@ -108,6 +108,7 @@ public:
         Decorations decorations;
         QColor color;
         QColor backgroundColor;
+        QColor decorationColor;
         QPointF position;
         QImage image;
         qreal ascent;
@@ -121,7 +122,7 @@ public:
         { insert(binaryTree, BinaryTreeNode(rect, image, selectionState, ascent)); }
 
         static void insert(QVarLengthArray<BinaryTreeNode, 16> *binaryTree, const QGlyphRun &glyphRun, SelectionState selectionState,
-                           Decorations decorations, const QColor &textColor, const QColor &backgroundColor, const QPointF &position);
+                           Decorations decorations, const QColor &textColor, const QColor &backgroundColor, const QColor &underlineColor, const QPointF &position);
         static void insert(QVarLengthArray<BinaryTreeNode, 16> *binaryTree, const BinaryTreeNode &binaryTreeNode);
         static void inOrder(const QVarLengthArray<BinaryTreeNode, 16> &binaryTree, QVarLengthArray<int> *sortedIndexes, int currentIndex = 0);
     };
@@ -186,7 +187,7 @@ public:
     void addSelectedGlyphs(const QGlyphRun &glyphRun);
     void addUnselectedGlyphs(const QGlyphRun &glyphRun);
     void addGlyphsInRange(int rangeStart, int rangeEnd,
-                          const QColor &color, const QColor &backgroundColor,
+                          const QColor &color, const QColor &backgroundColor, const QColor &underlineColor,
                           int selectionStart, int selectionEnd);
     void addGlyphsForRanges(const QVarLengthArray<QTextLayout::FormatRange> &ranges,
                             int start, int end,
@@ -251,6 +252,7 @@ private:
     QColor m_selectionColor;
     QColor m_textColor;
     QColor m_backgroundColor;
+    QColor m_decorationColor;
     QColor m_selectedTextColor;
     QColor m_anchorColor;
     QPointF m_position;
