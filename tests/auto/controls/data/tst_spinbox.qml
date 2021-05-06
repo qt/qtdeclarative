@@ -244,17 +244,17 @@ TestCase {
 
     function test_keys_data() {
         return [
-            { tag: "1", from: 1, to: 10, value: 1, stepSize: 1, upSteps: [2,3,4], downSteps: [3,2,1,1] },
-            { tag: "2", from: 1, to: 10, value: 10, stepSize: 2, upSteps: [10,10], downSteps: [8,6,4] },
-            { tag: "25", from: 0, to: 100, value: 50, stepSize: 25, upSteps: [75,100,100], downSteps: [75,50,25,0,0] },
-            { tag: "wrap1", wrap: true, from: 1, to: 10, value: 1, stepSize: 1, upSteps: [2,3], downSteps: [2,1,10,9] },
-            { tag: "wrap2", wrap: true, from: 1, to: 10, value: 10, stepSize: 2, upSteps: [1,3,5], downSteps: [3,1,10,8,6] },
-            { tag: "wrap25", wrap: true, from: 0, to: 100, value: 50, stepSize: 25, upSteps: [75,100,0,25], downSteps: [0,100,75] }
+            { tag: "1", properties: { from: 1, to: 10, value: 1, stepSize: 1 }, upSteps: [2,3,4], downSteps: [3,2,1,1] },
+            { tag: "2", properties: { from: 1, to: 10, value: 10, stepSize: 2 }, upSteps: [10,10], downSteps: [8,6,4] },
+            { tag: "25", properties: { from: 0, to: 100, value: 50, stepSize: 25 }, upSteps: [75,100,100], downSteps: [75,50,25,0,0] },
+            { tag: "wrap1", properties: { wrap: true, from: 1, to: 10, value: 1, stepSize: 1 }, upSteps: [2,3], downSteps: [2,1,10,9] },
+            { tag: "wrap2", properties: { wrap: true, from: 1, to: 10, value: 10, stepSize: 2 }, upSteps: [1,3,5], downSteps: [3,1,10,8,6] },
+            { tag: "wrap25", properties: { wrap: true, from: 0, to: 100, value: 50, stepSize: 25 }, upSteps: [75,100,0,25], downSteps: [0,100,75] }
         ]
     }
 
     function test_keys(data) {
-        var control = createTemporaryObject(spinBox, testCase, {wrap: data.wrap, from: data.from, to: data.to, value: data.value, stepSize: data.stepSize})
+        var control = createTemporaryObject(spinBox, testCase, data.properties)
         verify(control)
 
         var upPressedCount = 0
@@ -396,12 +396,12 @@ TestCase {
 
     function test_wheel_data() {
         return [
-            { tag: "1", from: 1, to: 10, value: 1, stepSize: 1, upSteps: [2,3,4], downSteps: [3,2,1,1] },
-            { tag: "2", from: 1, to: 10, value: 10, stepSize: 2, upSteps: [10,10], downSteps: [8,6,4] },
-            { tag: "25", from: 0, to: 100, value: 50, stepSize: 25, upSteps: [75,100,100], downSteps: [75,50,25,0,0] },
-            { tag: "wrap1", wrap: true, from: 1, to: 10, value: 1, stepSize: 1, upSteps: [2,3], downSteps: [2,1,10,9] },
-            { tag: "wrap2", wrap: true, from: 1, to: 10, value: 10, stepSize: 2, upSteps: [1,3,5], downSteps: [3,1,10,8,6] },
-            { tag: "wrap25", wrap: true, from: 0, to: 100, value: 50, stepSize: 25, upSteps: [75,100,0,25], downSteps: [0,100,75] }
+            { tag: "1", properties: { from: 1, to: 10, value: 1, stepSize: 1 }, upSteps: [2,3,4], downSteps: [3,2,1,1] },
+            { tag: "2", properties: { from: 1, to: 10, value: 10, stepSize: 2 }, upSteps: [10,10], downSteps: [8,6,4] },
+            { tag: "25", properties: { from: 0, to: 100, value: 50, stepSize: 25 }, upSteps: [75,100,100], downSteps: [75,50,25,0,0] },
+            { tag: "wrap1", properties: { wrap: true, from: 1, to: 10, value: 1, stepSize: 1 }, upSteps: [2,3], downSteps: [2,1,10,9] },
+            { tag: "wrap2", properties: { wrap: true, from: 1, to: 10, value: 10, stepSize: 2 }, upSteps: [1,3,5], downSteps: [3,1,10,8,6] },
+            { tag: "wrap25", properties: { wrap: true, from: 0, to: 100, value: 50, stepSize: 25 }, upSteps: [75,100,0,25], downSteps: [0,100,75] }
         ]
     }
 
@@ -409,7 +409,8 @@ TestCase {
         var ma = createTemporaryObject(mouseArea, testCase, {width: 100, height: 100})
         verify(ma)
 
-        var control = spinBox.createObject(ma, {wrap: data.wrap, from: data.from, to: data.to, value: data.value, stepSize: data.stepSize, wheelEnabled: true})
+        data.properties.wheelEnabled = true
+        var control = spinBox.createObject(ma, data.properties)
         verify(control)
 
         var valueModifiedCount = 0

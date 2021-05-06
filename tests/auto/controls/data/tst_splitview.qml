@@ -1838,8 +1838,7 @@ TestCase {
         var flickable = createTemporaryObject(flickableComponent, testCase)
         verify(flickable)
 
-        var control = threeSizedItemsComponent.createObject(flickable.contentItem,
-            { "orientation": data.orientation })
+        var control = threeSizedItemsComponent.createObject(flickable.contentItem)
         verify(control)
 
         control.anchors.fill = undefined
