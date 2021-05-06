@@ -1868,7 +1868,7 @@ struct Foo {
     QML_ANONYMOUS
 public:
     int val = 1;
-    Q_INVOKABLE int value() { return val; }
+    Q_INVOKABLE int value() const { return val; }
     Q_INVOKABLE void setValue(int v) { val = v; }
 };
 
@@ -1880,10 +1880,12 @@ class S : public QObject
     Q_PROPERTY(Foo foo READ foo WRITE setFoo NOTIFY fooChanged);
     QML_ELEMENT
 public:
+    int writeCount = 0;
     Foo f;
     Foo foo() { return f; }
     void setFoo(Foo f)
     {
+        ++writeCount;
         this->f = f;
         emit fooChanged();
     }
@@ -1920,6 +1922,10 @@ void tst_qqmlvaluetypes::writeBackOnFunctionCall()
     QVERIFY(!o.isNull());
     QCOMPARE(o->property("a").toInt(), 3);
     QCOMPARE(o->property("b").toInt(), 3);
+    S *s = qvariant_cast<S *>(o->property("s"));
+    QVERIFY(s);
+    // f.value() should not write back.
+    QCOMPARE(s->writeCount, 2);
 }
 
 #undef CHECK_TYPE_IS_NOT_VALUETYPE

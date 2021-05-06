@@ -1679,17 +1679,17 @@ Resolve the overloaded method to call.  The algorithm works conceptually like th
         For example, if we are called with 3 parameters and there are 2 overloads that
         take 2 parameters and one that takes 3, eliminate the 2 parameter overloads.
     3.  Find the best remaining overload based on its match score.
-        If two or more overloads have the same match score, call the last one.  The match
+        If two or more overloads have the same match score, return the last one. The match
         score is constructed by adding the matchScore() result for each of the parameters.
 */
-static QV4::ReturnedValue CallOverloaded(const QQmlObjectOrGadget &object, const QQmlPropertyData *methods, int methodCount,
-                                         QV4::ExecutionEngine *engine, QV4::CallData *callArgs,
-                                         QMetaObject::Call callType = QMetaObject::InvokeMetaMethod)
+static const QQmlPropertyData *ResolveOverloaded(
+            const QQmlObjectOrGadget &object, const QQmlPropertyData *methods, int methodCount,
+            QV4::ExecutionEngine *engine, QV4::CallData *callArgs)
 {
     const int argumentCount = callArgs->argc();
     const int definedArgumentCount = numDefinedArguments(callArgs);
 
-    QQmlPropertyData best;
+    const QQmlPropertyData *best = nullptr;
     int bestParameterScore = INT_MAX;
     int bestMatchScore = INT_MAX;
 
@@ -1697,15 +1697,15 @@ static QV4::ReturnedValue CallOverloaded(const QQmlObjectOrGadget &object, const
     QV4::ScopedValue v(scope);
 
     for (int i = 0; i < methodCount; ++i) {
-        const QQmlPropertyData &attempt = methods[i];
+        const QQmlPropertyData *attempt = methods + i;
         QQmlMetaObject::ArgTypeStorage storage;
         int methodArgumentCount = 0;
-        if (attempt.hasArguments()) {
-            if (attempt.isConstructor()) {
-                if (!object.constructorParameterTypes(attempt.coreIndex(), &storage, nullptr))
+        if (attempt->hasArguments()) {
+            if (attempt->isConstructor()) {
+                if (!object.constructorParameterTypes(attempt->coreIndex(), &storage, nullptr))
                     continue;
             } else {
-                if (!object.methodParameterTypes(attempt.coreIndex(), &storage, nullptr))
+                if (!object.methodParameterTypes(attempt->coreIndex(), &storage, nullptr))
                     continue;
             }
             methodArgumentCount = storage.size();
@@ -1735,8 +1735,8 @@ static QV4::ReturnedValue CallOverloaded(const QQmlObjectOrGadget &object, const
 
     };
 
-    if (best.isValid()) {
-        return CallPrecise(object, best, engine, callArgs, callType);
+    if (best && best->isValid()) {
+        return best;
     } else {
         QString error = QLatin1String("Unable to determine callable overload.  Candidates are:");
         for (int i = 0; i < methodCount; ++i) {
@@ -1749,7 +1749,8 @@ static QV4::ReturnedValue CallOverloaded(const QQmlObjectOrGadget &object, const
             }
         }
 
-        return engine->throwError(error);
+        engine->throwError(error);
+        return nullptr;
     }
 }
 
@@ -2213,43 +2214,55 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
 
     Scope scope(v4);
     QQmlObjectOrGadget object(d()->object());
-    QV4::Scoped<QQmlValueTypeReference> valueTypeReference(scope);
+
     if (!d()->object()) {
         if (!d()->valueTypeWrapper)
             return Encode::undefined();
 
-        valueTypeReference = d()->valueTypeWrapper.get();
         object = QQmlObjectOrGadget(d()->metaObject(), d()->valueTypeWrapper->gadgetPtr());
     }
 
     JSCallData cData(thisObject, argv, argc);
     CallData *callData = cData.callData(scope);
 
-    auto method = d()->methods[0];
+    const QQmlPropertyData *method = d()->methods;
 
     // If we call the method, we have to write back any value type references afterwards.
     // The method might change the value.
-    auto guard = qScopeGuard([&valueTypeReference]() {
-        if (valueTypeReference)
-            valueTypeReference->d()->writeBack();
-    });
+    const auto doCall = [&](const auto &call) {
+        if (!method->isConstant()) {
+            QV4::Scoped<QQmlValueTypeReference> valueTypeReference(
+                        scope, d()->valueTypeWrapper.get());
+            if (valueTypeReference) {
+                QV4::ScopedValue rv(scope, call());
+                valueTypeReference->d()->writeBack();
+                return rv->asReturnedValue();
+            }
+        }
 
-    if (method.isV4Function()) {
-        QV4::ScopedValue rv(scope, QV4::Value::undefinedValue());
-        QQmlV4Function func(callData, rv, v4);
-        QQmlV4Function *funcptr = &func;
+        return call();
+    };
 
-        void *args[] = { nullptr, &funcptr };
-        object.metacall(QMetaObject::InvokeMetaMethod, method.coreIndex(), args);
+    if (method->isV4Function()) {
+        return doCall([&]() {
+            QV4::ScopedValue rv(scope, QV4::Value::undefinedValue());
+            QQmlV4Function func(callData, rv, v4);
+            QQmlV4Function *funcptr = &func;
 
-        return rv->asReturnedValue();
+            void *args[] = { nullptr, &funcptr };
+            object.metacall(QMetaObject::InvokeMetaMethod, method->coreIndex(), args);
+
+            return rv->asReturnedValue();
+        });
     }
 
-    if (d()->methodCount == 1) {
-        return CallPrecise(object, method, v4, callData);
-    } else {
-        return CallOverloaded(object, d()->methods, d()->methodCount, v4, callData);
+    if (d()->methodCount != 1) {
+        method = ResolveOverloaded(object, d()->methods, d()->methodCount, v4, callData);
+        if (method == nullptr)
+            return Encode::undefined();
     }
+
+    return doCall([&]() { return CallPrecise(object, *method, v4, callData); });
 }
 
 DEFINE_OBJECT_VTABLE(QObjectMethod);
@@ -2338,8 +2351,9 @@ ReturnedValue QMetaObjectWrapper::constructInternal(const Value *argv, int argc)
 
     if (d()->constructorCount == 1) {
         object = CallPrecise(objectOrGadget, d()->constructors[0], v4, callData, QMetaObject::CreateInstance);
-    } else {
-        object = CallOverloaded(objectOrGadget, d()->constructors, d()->constructorCount, v4, callData, QMetaObject::CreateInstance);
+    } else if (const QQmlPropertyData *ctor = ResolveOverloaded(
+                    objectOrGadget, d()->constructors, d()->constructorCount, v4, callData)) {
+        object = CallPrecise(objectOrGadget, *ctor, v4, callData, QMetaObject::CreateInstance);
     }
     Scoped<QMetaObjectWrapper> metaObject(scope, this);
     object->defineDefaultProperty(v4->id_constructor(), metaObject);
