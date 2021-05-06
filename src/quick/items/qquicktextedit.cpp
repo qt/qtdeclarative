@@ -2359,6 +2359,14 @@ void QQuickTextEdit::q_textChanged()
     d->determineHorizontalAlignment();
     d->updateDefaultTextOption();
     updateSize();
+
+    markDirtyNodesForRange(0, d->document->characterCount(), 0);
+    polish();
+    if (isComponentComplete()) {
+        d->updateType = QQuickTextEditPrivate::UpdatePaintNode;
+        update();
+    }
+
     emit textChanged();
 }
 
