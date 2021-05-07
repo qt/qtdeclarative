@@ -32,6 +32,12 @@ qt_internal_add_module(QuickWidgets
         Qt::WidgetsPrivate
 )
 
+qt_internal_extend_target(QuickWidgets CONDITION QT_FEATURE_accessibility
+    SOURCES
+        qaccessiblequickwidget.cpp qaccessiblequickwidget.h
+        qaccessiblequickwidgetfactory.cpp qaccessiblequickwidgetfactory_p.h
+)
+
 ## Scopes:
 #####################################################################
 

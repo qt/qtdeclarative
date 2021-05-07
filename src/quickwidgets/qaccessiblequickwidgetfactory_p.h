@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -37,8 +37,10 @@
 **
 ****************************************************************************/
 
-#ifndef QAccessibleQuickView_H
-#define QAccessibleQuickView_H
+#include <QtGui/qaccessible.h>
+
+#ifndef QACCESSIBLEQUICKWIDGETFACTORY_H
+#define QACCESSIBLEQUICKWIDGETFACTORY_H
 
 //
 //  W A R N I N G
@@ -51,38 +53,14 @@
 // We mean it.
 //
 
-#include <QtGui/qaccessibleobject.h>
-#include <QtQuick/qquickwindow.h>
-
 QT_BEGIN_NAMESPACE
 
 #if QT_CONFIG(accessibility)
 
-class Q_QUICK_EXPORT QAccessibleQuickWindow : public QAccessibleObject
-{
-public:
-    QAccessibleQuickWindow(QQuickWindow *object);
+QAccessibleInterface *qAccessibleQuickWidgetFactory(const QString &classname, QObject *object);
 
-    QAccessibleInterface *parent() const override;
-    QAccessibleInterface *child(int index) const override;
-    QAccessibleInterface *focusChild() const override;
-
-    QAccessible::Role role() const override;
-    QAccessible::State state() const override;
-    QRect rect() const override;
-
-    int childCount() const override;
-    int indexOfChild(const QAccessibleInterface *iface) const override;
-    QString text(QAccessible::Text text) const override;
-    QAccessibleInterface *childAt(int x, int y) const override;
-
-private:
-    QQuickWindow *window() const override { return static_cast<QQuickWindow*>(object()); }
-    QList<QQuickItem *> rootItems() const;
-};
-
-#endif // accessibility
+#endif
 
 QT_END_NAMESPACE
 
-#endif // QAccessibleQuickView_H
+#endif

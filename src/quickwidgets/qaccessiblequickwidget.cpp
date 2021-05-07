@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -37,52 +37,74 @@
 **
 ****************************************************************************/
 
-#ifndef QAccessibleQuickView_H
-#define QAccessibleQuickView_H
+#include "qaccessiblequickwidget.h"
 
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtGui/qaccessibleobject.h>
-#include <QtQuick/qquickwindow.h>
+#include "qquickwidget_p.h"
 
 QT_BEGIN_NAMESPACE
 
 #if QT_CONFIG(accessibility)
 
-class Q_QUICK_EXPORT QAccessibleQuickWindow : public QAccessibleObject
+QAccessibleQuickWidget::QAccessibleQuickWidget(QQuickWidget* widget)
+: QAccessibleWidget(widget)
+, m_accessibleWindow(QQuickWidgetPrivate::get(widget)->offscreenWindow)
 {
-public:
-    QAccessibleQuickWindow(QQuickWindow *object);
+    // NOTE: m_accessibleWindow is a QAccessibleQuickWindow, and not a
+    // QAccessibleQuickWidgetOffscreenWindow (defined below). This means
+    // it will return the Quick item child interfaces, which is what's needed here
+    // (unlike QAccessibleQuickWidgetOffscreenWindow, which will report 0 children).
+}
 
-    QAccessibleInterface *parent() const override;
-    QAccessibleInterface *child(int index) const override;
-    QAccessibleInterface *focusChild() const override;
+QAccessibleInterface *QAccessibleQuickWidget::child(int index) const
+{
+    return m_accessibleWindow.child(index);
+}
 
-    QAccessible::Role role() const override;
-    QAccessible::State state() const override;
-    QRect rect() const override;
+int QAccessibleQuickWidget::childCount() const
+{
+    return m_accessibleWindow.childCount();
+}
 
-    int childCount() const override;
-    int indexOfChild(const QAccessibleInterface *iface) const override;
-    QString text(QAccessible::Text text) const override;
-    QAccessibleInterface *childAt(int x, int y) const override;
+int QAccessibleQuickWidget::indexOfChild(const QAccessibleInterface *iface) const
+{
+    return m_accessibleWindow.indexOfChild(iface);
+}
 
-private:
-    QQuickWindow *window() const override { return static_cast<QQuickWindow*>(object()); }
-    QList<QQuickItem *> rootItems() const;
-};
+QAccessibleInterface *QAccessibleQuickWidget::childAt(int x, int y) const
+{
+    return m_accessibleWindow.childAt(x, y);
+}
+
+QAccessibleQuickWidgetOffscreenWindow::QAccessibleQuickWidgetOffscreenWindow(QQuickWindow *window)
+:QAccessibleQuickWindow(window)
+{
+
+}
+
+QAccessibleInterface *QAccessibleQuickWidgetOffscreenWindow::child(int index) const
+{
+    Q_UNUSED(index);
+    return nullptr;
+}
+
+int QAccessibleQuickWidgetOffscreenWindow::childCount() const
+{
+    return 0;
+}
+
+int QAccessibleQuickWidgetOffscreenWindow::indexOfChild(const QAccessibleInterface *iface) const
+{
+    Q_UNUSED(iface);
+    return -1;
+}
+
+QAccessibleInterface *QAccessibleQuickWidgetOffscreenWindow::QAccessibleQuickWidgetOffscreenWindow::childAt(int x, int y) const
+{
+    Q_UNUSED(x);
+    Q_UNUSED(y);
+    return nullptr;
+}
 
 #endif // accessibility
 
 QT_END_NAMESPACE
-
-#endif // QAccessibleQuickView_H

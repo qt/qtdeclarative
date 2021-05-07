@@ -46,6 +46,7 @@
 #include "QtQuick/private/qquicktextinput_p.h"
 #include "QtQuick/private/qquickaccessibleattached_p.h"
 #include "QtQuick/qquicktextdocument.h"
+#include "QtQuick/qquickrendercontrol.h"
 QT_BEGIN_NAMESPACE
 
 #if QT_CONFIG(accessibility)
@@ -57,7 +58,19 @@ QAccessibleQuickItem::QAccessibleQuickItem(QQuickItem *item)
 
 QWindow *QAccessibleQuickItem::window() const
 {
-    return item()->window();
+    QQuickWindow *window = item()->window();
+
+    // For QQuickWidget the above window will be the offscreen QQuickWindow,
+    // which is not a part of the accessibility tree. Detect this case and
+    // return the window for the QQuickWidget instead.
+    if (window && !window->handle()) {
+        if (QQuickRenderControl *renderControl = QQuickWindowPrivate::get(window)->renderControl) {
+            if (QWindow *renderWindow = renderControl->renderWindow(nullptr))
+                return renderWindow;
+        }
+    }
+
+    return window;
 }
 
 int QAccessibleQuickItem::childCount() const
@@ -113,19 +126,15 @@ QAccessibleInterface *QAccessibleQuickItem::childAt(int x, int y) const
 QAccessibleInterface *QAccessibleQuickItem::parent() const
 {
     QQuickItem *parent = item()->parentItem();
-    QQuickWindow *window = item()->window();
-    QQuickItem *ci = window ? window->contentItem() : nullptr;
+    QQuickWindow *itemWindow = item()->window();
+    QQuickItem *ci = itemWindow ? itemWindow->contentItem() : nullptr;
     while (parent && !QQuickItemPrivate::get(parent)->isAccessible && parent != ci)
         parent = parent->parentItem();
 
     if (parent) {
         if (parent == ci) {
-            // Jump out to the scene widget if the parent is the root item.
-            // There are two root items, QQuickWindow::rootItem and
-            // QQuickView::declarativeRoot. The former is the true root item,
-            // but is not a part of the accessibility tree. Check if we hit
-            // it here and return an interface for the scene instead.
-            return QAccessible::queryAccessibleInterface(window);
+            // Jump out to the window if the parent is the root item
+            return QAccessible::queryAccessibleInterface(window());
         } else {
             while (parent && !parent->d_func()->isAccessible)
                 parent = parent->parentItem();
@@ -188,7 +197,7 @@ QAccessible::State QAccessibleQuickItem::state() const
     QRect viewRect_ = viewRect();
     QRect itemRect = rect();
 
-    if (viewRect_.isNull() || itemRect.isNull() || !item()->window() || !item()->window()->isVisible() ||!item()->isVisible() || qFuzzyIsNull(item()->opacity()))
+    if (viewRect_.isNull() || itemRect.isNull() || !window() || !window()->isVisible() ||!item()->isVisible() || qFuzzyIsNull(item()->opacity()))
         state.invisible = true;
     if (!viewRect_.intersects(itemRect))
         state.offscreen = true;

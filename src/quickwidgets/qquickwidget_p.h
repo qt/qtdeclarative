@@ -150,6 +150,14 @@ public:
     bool forceFullUpdate;
 };
 
+class QQuickWidgetOffscreenWindow: public QQuickWindow
+{
+    Q_OBJECT
+
+public:
+    QQuickWidgetOffscreenWindow(QQuickWindowPrivate &dd, QQuickRenderControl *control);
+};
+
 QT_END_NAMESPACE
 
 #endif // QQuickWidget_P_H

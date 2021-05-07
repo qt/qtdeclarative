@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -37,52 +37,24 @@
 **
 ****************************************************************************/
 
-#ifndef QAccessibleQuickView_H
-#define QAccessibleQuickView_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtGui/qaccessibleobject.h>
-#include <QtQuick/qquickwindow.h>
+#include "qaccessiblequickwidgetfactory_p.h"
+#include "qaccessiblequickwidget.h"
 
 QT_BEGIN_NAMESPACE
 
 #if QT_CONFIG(accessibility)
 
-class Q_QUICK_EXPORT QAccessibleQuickWindow : public QAccessibleObject
+QAccessibleInterface *qAccessibleQuickWidgetFactory(const QString &classname, QObject *object)
 {
-public:
-    QAccessibleQuickWindow(QQuickWindow *object);
-
-    QAccessibleInterface *parent() const override;
-    QAccessibleInterface *child(int index) const override;
-    QAccessibleInterface *focusChild() const override;
-
-    QAccessible::Role role() const override;
-    QAccessible::State state() const override;
-    QRect rect() const override;
-
-    int childCount() const override;
-    int indexOfChild(const QAccessibleInterface *iface) const override;
-    QString text(QAccessible::Text text) const override;
-    QAccessibleInterface *childAt(int x, int y) const override;
-
-private:
-    QQuickWindow *window() const override { return static_cast<QQuickWindow*>(object()); }
-    QList<QQuickItem *> rootItems() const;
-};
+    if (classname == QLatin1String("QQuickWidget")) {
+        return new QAccessibleQuickWidget(qobject_cast<QQuickWidget *>(object));
+    } else if (classname == QLatin1String("QQuickWidgetOffscreenWindow")) {
+        return new QAccessibleQuickWidgetOffscreenWindow(qobject_cast<QQuickWindow *>(object));
+    }
+    return 0;
+}
 
 #endif // accessibility
 
 QT_END_NAMESPACE
 
-#endif // QAccessibleQuickView_H
