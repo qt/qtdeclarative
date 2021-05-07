@@ -72,7 +72,7 @@ public:
         TooManyAttributesError,
         InvalidPlaneDefinitionError
     };
-    Q_ENUMS(Error)
+    Q_ENUM(Error)
 
     QWavefrontMesh(QObject *parent = nullptr);
     ~QWavefrontMesh() override;
