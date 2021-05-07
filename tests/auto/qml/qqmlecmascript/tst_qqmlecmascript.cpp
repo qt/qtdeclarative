@@ -7948,6 +7948,11 @@ void tst_qqmlecmascript::dateParse()
 
     QMetaObject::invokeMethod(object.get(), "test_rfc2822_date", Q_RETURN_ARG(QVariant, q));
     QCOMPARE(q.toLongLong(), 1379512851000LL);
+
+    QDateTime val(QDate(2014, 7, 16), QTime(23, 30, 31), Qt::LocalTime);
+    QMetaObject::invokeMethod(object.get(), "check_date",
+                              Q_RETURN_ARG(QVariant, q), Q_ARG(QVariant, val));
+    QVERIFY(q.toBool());
 }
 
 void tst_qqmlecmascript::utcDate()
