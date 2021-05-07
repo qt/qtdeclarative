@@ -85,7 +85,6 @@ bool Engine::create()
         return false;
     }
 
-    ID3D11DeviceContext *ctx = nullptr;
     uint flags = 0;
 #ifdef ENABLE_DEBUG_LAYER
     flags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -93,16 +92,9 @@ bool Engine::create()
     // use the default hardware adapter
     HRESULT hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, flags,
                                    nullptr, 0, D3D11_SDK_VERSION,
-                                   &m_device, &m_featureLevel, &ctx);
+                                   &m_device, &m_featureLevel, &m_context);
     if (FAILED(hr)) {
         qWarning("Failed to create D3D11 device and context: %s", qPrintable(comErrorMessage(hr)));
-        return false;
-    }
-
-    if (SUCCEEDED(ctx->QueryInterface(IID_ID3D11DeviceContext1, reinterpret_cast<void **>(&m_context)))) {
-        ctx->Release();
-    } else {
-        qWarning("ID3D11DeviceContext1 not supported");
         return false;
     }
 
