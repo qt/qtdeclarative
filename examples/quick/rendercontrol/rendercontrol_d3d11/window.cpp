@@ -316,7 +316,7 @@ void Window::render()
     updateQuick();
 
     // now onto our own drawing, targeting the window
-    ID3D11DeviceContext1 *ctx = m_engine->context();
+    ID3D11DeviceContext *ctx = m_engine->context();
     const QSize viewSize = m_swapchain.pixelSize;
 
     const float clearColor[] = { 0.4f, 0.7f, 0.0f, 1.0f };

@@ -37,6 +37,7 @@ target_link_libraries(rendercontrol_d3d11 PUBLIC
     d3d11
     dxgi
     dxguid
+    uuid
 )
 
 

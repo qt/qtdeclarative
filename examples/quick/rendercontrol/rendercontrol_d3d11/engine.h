@@ -81,14 +81,14 @@ public:
     Swapchain createSwapchain(QWindow *window);
     void resizeSwapchain(Swapchain *sc, QWindow *window);
     ID3D11Device *device() { return m_device; }
-    ID3D11DeviceContext1 *context() { return m_context; }
+    ID3D11DeviceContext *context() { return m_context; }
 
 private:
     void createSwapchainBuffers(Swapchain *sc);
 
     IDXGIFactory1 *m_dxgiFactory = nullptr;
     ID3D11Device *m_device = nullptr;
-    ID3D11DeviceContext1 *m_context = nullptr;
+    ID3D11DeviceContext *m_context = nullptr;
     D3D_FEATURE_LEVEL m_featureLevel;
 };
 
