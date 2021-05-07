@@ -16,7 +16,25 @@ set(QT_NO_INTERNAL_COMPATIBILITY_FUNCTIONS TRUE)
 # special case end
 
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core) # special case
-find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS Gui Network Widgets OpenGL OpenGLWidgets Sql Concurrent Test ShaderTools) # special case
+find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS Gui Network Widgets OpenGL OpenGLWidgets Sql Concurrent Test)
+
+# Set up QT_HOST_PATH as an extra root path to look for the ShaderToolsTools package
+# when cross-compiling.
+if(NOT "${QT_HOST_PATH}" STREQUAL "")
+     set(_qt_backup_qtdeclarative_CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH})
+     set(_qt_backup_qtdeclarative_CMAKE_FIND_ROOT_PATH ${CMAKE_FIND_ROOT_PATH})
+     list(PREPEND CMAKE_PREFIX_PATH "${QT_HOST_PATH_CMAKE_DIR}")
+     list(PREPEND CMAKE_FIND_ROOT_PATH "${QT_HOST_PATH}")
+endif()
+
+# This can't use the find_package(Qt6 COMPONENTS) signature, because Qt6Config uses NO_DEFAULT and
+# won't look at the prepend extra find root paths.
+find_package(Qt6ShaderToolsTools ${PROJECT_VERSION} QUIET CONFIG)
+
+if(NOT "${QT_HOST_PATH}" STREQUAL "")
+     set(CMAKE_PREFIX_PATH ${_qt_backup_qtdeclarative_CMAKE_PREFIX_PATH})
+     set(CMAKE_FIND_ROOT_PATH ${_qt_backup_qtdeclarative_CMAKE_FIND_ROOT_PATH})
+endif()
 
 # special case begin
 # export QT6_ADD_QML_MODULE to this project
