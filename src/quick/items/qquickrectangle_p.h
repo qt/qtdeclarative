@@ -127,8 +127,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickGradient : public QObject
     Q_CLASSINFO("DefaultProperty", "stops")
     QML_NAMED_ELEMENT(Gradient)
     QML_ADDED_IN_VERSION(2, 0)
+    QML_EXTENDED_NAMESPACE(QGradient)
 
-    Q_ENUMS(QGradient::Preset)
 public:
     QQuickGradient(QObject *parent=nullptr);
     ~QQuickGradient() override;
