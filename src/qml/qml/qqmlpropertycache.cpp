@@ -132,6 +132,7 @@ void QQmlPropertyData::load(const QMetaMethod &m)
         m_flags.setIsConstructor(true);
         setPropType(QMetaType::fromType<QObject *>());
     }
+    m_flags.setIsConstant(m.isConst());
 
     const int paramCount = m.parameterCount();
     if (paramCount) {
@@ -471,7 +472,6 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
             data->setFlags(methodFlags);
 
         data->load(m);
-        data->m_flags.setIsDirect(!dynamicMetaObject);
 
         Q_ASSERT((allowedRevisionCache.count() - 1) < Q_INT16_MAX);
         data->setMetaObjectOffset(allowedRevisionCache.count() - 1);
