@@ -196,6 +196,36 @@ TestCase {
         compare(horizontal.width, oldWidth)
     }
 
+    function test_attachTwice() {
+        let container = createTemporaryObject(flickable, testCase)
+        verify(container)
+        waitForRendering(container)
+
+        container.ScrollBar.vertical = scrollBar.createObject(container, { objectName: "oldVerticalScrollBar" })
+        verify(container.ScrollBar.vertical)
+        let oldVerticalScrollBar = findChild(container, "oldVerticalScrollBar")
+        verify(oldVerticalScrollBar)
+        verify(oldVerticalScrollBar.visible)
+
+        container.ScrollBar.horizontal = scrollBar.createObject(container, { objectName: "oldHorizontalScrollBar" })
+        verify(container.ScrollBar.horizontal)
+        let oldHorizontalScrollBar = findChild(container, "oldHorizontalScrollBar")
+        verify(oldHorizontalScrollBar)
+        verify(oldHorizontalScrollBar.visible)
+
+        container.ScrollBar.vertical = scrollBar.createObject(container, { objectName: "newVerticalScrollBar" })
+        let newVerticalScrollBar = findChild(container, "newVerticalScrollBar")
+        verify(newVerticalScrollBar)
+        verify(newVerticalScrollBar.visible)
+        verify(!oldVerticalScrollBar.visible)
+
+        container.ScrollBar.horizontal = scrollBar.createObject(container, { objectName: "newHorizontalScrollBar" })
+        let newHorizontalScrollBar = findChild(container, "newHorizontalScrollBar")
+        verify(newHorizontalScrollBar)
+        verify(newHorizontalScrollBar.visible)
+        verify(!oldHorizontalScrollBar.visible)
+    }
+
     function test_mouse_data() {
         return [
             { tag: "horizontal", properties: { visible: true, orientation: Qt.Horizontal, width: testCase.width } },

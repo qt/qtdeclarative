@@ -71,6 +71,11 @@ TestCase {
     }
 
     Component {
+        id: scrollBarComponent
+        ScrollBar {}
+    }
+
+    Component {
         id: scrollableLabel
         ScrollView {
             Label {
@@ -525,5 +530,35 @@ TestCase {
         let horizontalScrollBar = control.ScrollBar.horizontal
         verify(verticalScrollBar)
         mouseDrag(horizontalScrollBar, horizontalScrollBar.width / 2, horizontalScrollBar.height / 2, 50, 0)
+    }
+
+    function test_customScrollBars() {
+        let control = createTemporaryObject(scrollView, testCase)
+        verify(control)
+        control.ScrollBar.vertical.objectName = "oldVerticalScrollBar"
+        control.ScrollBar.horizontal.objectName = "oldHorizontalScrollBar"
+
+        let oldVerticalScrollBar = control.ScrollBar.vertical
+        verify(oldVerticalScrollBar)
+        compare(oldVerticalScrollBar.objectName, "oldVerticalScrollBar")
+
+        let oldHorizontalScrollBar = control.ScrollBar.horizontal
+        verify(oldHorizontalScrollBar)
+        compare(oldHorizontalScrollBar.objectName, "oldHorizontalScrollBar")
+
+        // Create the new scroll bars imperatively so that we can easily access the old ones.
+        control.ScrollBar.vertical = scrollBarComponent.createObject(control, { objectName: "newVerticalScrollBar" })
+        verify(control.ScrollBar.vertical)
+        let newVerticalScrollBar = findChild(control, "newVerticalScrollBar")
+        verify(newVerticalScrollBar)
+        verify(newVerticalScrollBar.visible)
+        verify(!oldVerticalScrollBar.visible)
+
+        control.ScrollBar.horizontal = scrollBarComponent.createObject(control, { objectName: "newHorizontalScrollBar" })
+        verify(control.ScrollBar.horizontal)
+        let newHorizontalScrollBar = findChild(control, "newHorizontalScrollBar")
+        verify(newHorizontalScrollBar)
+        verify(newHorizontalScrollBar.visible)
+        verify(!oldHorizontalScrollBar.visible)
     }
 }
