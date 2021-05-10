@@ -70,7 +70,6 @@ QT_BEGIN_NAMESPACE
     {\
         return QList<QJsonObject>();\
     }
-#define Q_QML_IMPORT_DEBUG_PLUGIN(className)
 
 #else // QT_CONFIG(qml_debug)
 
