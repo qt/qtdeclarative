@@ -69,6 +69,21 @@ exposed to QML but the type itself should not be instantiable.
 For a quick guide to choosing the correct approach to expose C++ types to QML,
 see \l {Choosing the Correct Integration Method Between C++ and QML}.
 
+\section2 Preconditions
+
+All the macros mentioned below are available from the \c qqml.h
+header. You need to add the following code to the files using them in order to
+make the macros available:
+
+\code
+#include <QtQml/qqml.h>
+\endcode
+
+Furthermore, your class declarations have to live in headers reachable via your
+project's include path. The declarations are used to generate registration code
+at compile time, and the registration code needs to include the headers that
+contain the declarations.
+
 \section2 Registering an Instantiable Object Type
 
 \b{Any QObject-derived C++ class can be registered as the definition of a
