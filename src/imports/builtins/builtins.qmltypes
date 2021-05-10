@@ -146,4 +146,9 @@ Module {
         valueType: "QVariant"
         accessSemantics: "sequence"
     }
+
+    Component {
+       name: "QVariantMap"
+       accessSemantics: "value"
+    }
 }
