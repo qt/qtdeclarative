@@ -730,16 +730,6 @@
 */
 
 /*!
-  \fn int qmlRegisterType()
-  \relates QQmlEngine
-  \overload
-  \deprecated
-
-  Do not use this function. For anonymous type registrations, use \l qmlRegisterAnonymousType(),
-  and make sure to provide a URI and a major version.
-*/
-
-/*!
     \fn int qmlRegisterInterface(const char *typeName)
     \relates QQmlEngine
 
