@@ -376,7 +376,8 @@ void tst_SceneGraph::render_data()
           << "render_ImageFiltering.qml"
           << "render_bug37422.qml"
           << "render_OpacityThroughBatchRoot.qml"
-          << "render_Mipmap.qml";
+          << "render_Mipmap.qml"
+          << "render_AlphaOverlapRebuild.qml";
 
     QRegularExpression sampleCount("#samples: *(\\d+)");
     //                          X:int   Y:int   R:float       G:float       B:float       Error:float
