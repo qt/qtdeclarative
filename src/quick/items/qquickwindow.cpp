@@ -1430,8 +1430,6 @@ bool QQuickWindow::event(QEvent *e)
                         qCDebug(lcPtr) << daAndPoints.first << "shall now receive" << pe;
                         ret = daAndPoints.first->event(pe) || ret;
                     }
-                    if (pe->isAccepted())
-                        break;
                 }
 
                 if (ret)
