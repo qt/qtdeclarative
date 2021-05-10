@@ -751,6 +751,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("attachedTypeIndirect") << QStringLiteral("attachedTypeIndirect.qml");
     QTest::newRow("objectArray") << QStringLiteral("objectArray.qml");
     QTest::newRow("aliasToList") << QStringLiteral("aliasToList.qml");
+    QTest::newRow("QVariant") << QStringLiteral("qvariant.qml");
 }
 
 void TestQmllint::cleanQmlCode()

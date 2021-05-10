@@ -119,6 +119,9 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
             return;
         }
 
+        if (unknownBuiltins.contains(scope->internalName()))
+            return;
+
         const auto property = scope->property(access.m_name);
         if (!property.propertyName().isEmpty()) {
             const auto binding = scope->propertyBinding(access.m_name);
