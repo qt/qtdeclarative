@@ -40,6 +40,7 @@
 #ifndef QSGTEXTURE_PLATFORM_H
 #define QSGTEXTURE_PLATFORM_H
 
+#include <QtCore/qnativeinterface.h>
 #include <QtQuick/qquickwindow.h>
 
 #if QT_CONFIG(opengl)
