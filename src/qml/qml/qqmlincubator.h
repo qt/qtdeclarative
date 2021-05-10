@@ -50,7 +50,6 @@ QT_BEGIN_NAMESPACE
 class QQmlEngine;
 class QQmlPropertyData;
 class QVariant;
-using QVariantMap = QMap<QString, QVariant>;
 
 class QQmlIncubatorPrivate;
 class Q_QML_EXPORT QQmlIncubator
