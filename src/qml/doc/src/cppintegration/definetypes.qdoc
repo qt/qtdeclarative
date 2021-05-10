@@ -72,12 +72,12 @@ see \l {Choosing the Correct Integration Method Between C++ and QML}.
 
 \section2 Preconditions
 
-All the macros mentioned below are available from the \c qqml.h
+All the macros mentioned below are available from the \c qqmlregistration.h
 header. You need to add the following code to the files using them in order to
 make the macros available:
 
 \code
-#include <QtQml/qqml.h>
+#include <QtQml/qqmlregistration.h>
 \endcode
 
 Furthermore, your class declarations have to live in headers reachable via your
