@@ -65,41 +65,6 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
                                                     QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
                                                     QV4::ExecutionContext *scope, QObject *target, QQmlPropertyIndex targetIndex)
 {
-    if (auto aotFunction = function->aotFunction; aotFunction && aotFunction->returnType == pd->propType()) {
-        return QUntypedPropertyBinding(aotFunction->returnType,
-            [
-                function,
-                unit = QQmlRefPointer<QV4::ExecutableCompilationUnit>(function->executableCompilationUnit()),
-                scopeObject = QPointer<QObject>(obj),
-                context = ctxt,
-                executionContext = QV4::PersistentValue(scope->engine(), *scope)
-            ](const QMetaType &, void *dataPtr) -> bool {
-                QV4::ExecutionContext *scope = static_cast<QV4::ExecutionContext *>(
-                            executionContext.valueRef());
-                QV4::ExecutionEngine *engine = scope->engine();
-
-                QQmlPrivate::AOTCompiledContext aotContext;
-                aotContext.qmlContext = context.data();
-                aotContext.qmlScopeObject = scopeObject.data();
-                aotContext.engine = engine->jsEngine();
-                aotContext.compilationUnit = unit.data();
-
-                QV4::CppStackFrame frame;
-                frame.init(function, 0);
-                frame.setupJSFrame(engine->jsStackTop, QV4::Encode::undefined(),
-                                   scope->d(), QV4::Encode::undefined());
-                frame.push(engine);
-                engine->jsStackTop += frame.requiredJSStackFrameSize();
-                function->aotFunction->functionPtr(&aotContext, dataPtr, nullptr);
-                frame.pop(engine);
-
-                // ### Fixme: The aotFunction should do the check whether old and new value are the same and
-                // return false in that case
-                return true;
-            },
-            QPropertyBindingSourceLocation());
-    }
-
     auto buffer = new std::byte[sizeof(QQmlPropertyBinding)+sizeof(QQmlPropertyBindingJS)+jsExpressionOffsetLength()]; // QQmlPropertyBinding uses delete[]
     auto binding = new(buffer) QQmlPropertyBinding(QMetaType(pd->propType()), target, targetIndex, TargetData::WithoutBoundFunction);
     auto js = new(buffer + sizeof(QQmlPropertyBinding) + jsExpressionOffsetLength()) QQmlPropertyBindingJS();
