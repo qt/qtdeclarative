@@ -1370,7 +1370,12 @@ bool QQuickWindow::event(QEvent *e)
                     if (danpit == deliveryAgentsNeedingPoints.end()) {
                         deliveryAgentsNeedingPoints.insert(ptda, QList<QEventPoint>() << pt);
                     } else {
-                        danpit.value().append(pt);
+                        auto &ptList = danpit.value();
+                        auto ptid = pt.id();
+                        auto alreadyThere = std::find_if(ptList.constBegin(), ptList.constEnd(),
+                            [ptid] (const QEventPoint &pep) { return pep.id() == ptid; });
+                        if (alreadyThere == ptList.constEnd())
+                            danpit.value().append(pt);
                     }
                 };
 
