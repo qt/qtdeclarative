@@ -1986,8 +1986,6 @@ bool JSCodeGen::compileComponent(int contextObject)
         Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);
         contextObject = componentBinding->value.objectIndex;
     }
-    for (auto it = obj->inlineComponentsBegin(); it != obj->inlineComponentsEnd(); ++it)
-        compileComponent(it->objectIndex);
 
     return compileJavaScriptCodeInObjectsRecursively(contextObject, contextObject);
 }
@@ -1997,6 +1995,9 @@ bool JSCodeGen::compileJavaScriptCodeInObjectsRecursively(int objectIndex, int s
     QmlIR::Object *object = document->objects.at(objectIndex);
     if (object->flags & QV4::CompiledData::Object::IsComponent && !object->isInlineComponent)
         return true;
+
+    for (auto it = object->inlineComponentsBegin(); it != object->inlineComponentsEnd(); ++it)
+        compileComponent(it->objectIndex);
 
     if (object->functionsAndExpressions->count > 0) {
         QList<QmlIR::CompiledFunctionOrExpression> functionsToCompile;

@@ -359,6 +359,7 @@ private slots:
     void hangOnWarning();
 
     void listEnumConversion();
+    void deepInlineComponentScriptBinding();
 
 private:
     QQmlEngine engine;
@@ -6324,6 +6325,17 @@ QtObject {
     QCOMPARE(o->property("resultGamma").toBool(), true);
     QCOMPARE(o->property("resultEnumType").metaType(), QMetaType(QMetaType::Int));
     QCOMPARE(o->property("resultEnumListType").metaType(), QMetaType(QMetaType::Int));
+}
+
+void tst_qqmllanguage::deepInlineComponentScriptBinding()
+{
+    QQmlEngine e;
+    QQmlComponent c(&engine);
+    c.loadUrl(testFileUrl("deepInlineComponentScriptBinding.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
 }
 
 QTEST_MAIN(tst_qqmllanguage)
