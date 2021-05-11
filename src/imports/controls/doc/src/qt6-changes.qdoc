@@ -241,6 +241,11 @@
     \li All other platforms: \l {Basic Style}
     \endlist
 
+    Therefore, applications that didn't specify a style in Qt 5 and have customized
+    controls should \l {Using Styles in Qt Quick Controls}{explicitly specify}
+    the Basic style in Qt 6 to ensure that those controls look and behave as
+    they did with Qt 5.
+
     \section1 Palette
 
     The palette API was moved to QQuickItem. The various APIs that use palettes
