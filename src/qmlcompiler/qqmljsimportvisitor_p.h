@@ -75,6 +75,8 @@ protected:
     void endVisit(QQmlJS::AST::UiProgram *) override;
     bool visit(QQmlJS::AST::UiObjectDefinition *) override;
     void endVisit(QQmlJS::AST::UiObjectDefinition *) override;
+    bool visit(QQmlJS::AST::UiInlineComponent *) override;
+    void endVisit(QQmlJS::AST::UiInlineComponent *) override;
     bool visit(QQmlJS::AST::UiPublicMember *) override;
     bool visit(QQmlJS::AST::UiRequired *required) override;
     bool visit(QQmlJS::AST::UiScriptBinding *) override;
@@ -123,6 +125,7 @@ protected:
     void throwRecursionDepthError() override;
 
     QString m_implicitImportDirectory;
+    QStringView m_inlineComponentName;
     QStringList m_qmltypesFiles;
     QQmlJSScope::Ptr m_currentScope;
     QQmlJSScope::Ptr m_exportedRootScope;

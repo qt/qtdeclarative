@@ -114,7 +114,8 @@ public:
         Singleton = 0x4,
         Script = 0x8,
         CustomParser = 0x10,
-        Array = 0x20
+        Array = 0x20,
+        InlineComponent = 0x40
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
@@ -274,6 +275,7 @@ public:
     bool isScript() const { return m_flags & Script; }
     bool hasCustomParser() const { return m_flags & CustomParser; }
     bool isArrayScope() const { return m_flags & Array; }
+    bool isInlineComponent() const { return m_flags & InlineComponent; }
     void setIsSingleton(bool v) { m_flags.setFlag(Singleton, v); }
     void setIsCreatable(bool v) { m_flags.setFlag(Creatable, v); }
     void setIsComposite(bool v) { m_flags.setFlag(Composite, v); }
@@ -283,6 +285,7 @@ public:
         m_flags.setFlag(CustomParser, v);;
     }
     void setIsArrayScope(bool v) { m_flags.setFlag(Array, v); }
+    void setIsInlineComponent(bool v) { m_flags.setFlag(InlineComponent, v); }
 
     void setAccessSemantics(AccessSemantics semantics) { m_semantics = semantics; }
     AccessSemantics accessSemantics() const { return m_semantics; }

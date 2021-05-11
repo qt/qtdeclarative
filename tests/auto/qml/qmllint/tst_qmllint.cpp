@@ -615,6 +615,9 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("unresolvedAttachedType.qml")
             << QStringLiteral("unknown attached property scope UnresolvedAttachedType.")
             << QStringLiteral("Property \"property\" is invalid or does not exist") << false;
+    QTest::newRow("nestedInlineComponents")
+            << QStringLiteral("nestedInlineComponents.qml")
+            << QStringLiteral("Nested inline components are not supported") << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -748,6 +751,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("QVariant") << QStringLiteral("qvariant.qml");
     QTest::newRow("Accessible") << QStringLiteral("accessible.qml");
     QTest::newRow("qjsroot") << QStringLiteral("qjsroot.qml");
+    QTest::newRow("InlineComponent") << QStringLiteral("inlineComponent.qml");
 }
 
 void TestQmllint::cleanQmlCode()

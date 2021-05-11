@@ -100,7 +100,8 @@ enum QQmlJSLoggerCategory {
     Log_UnqualifiedAccess,
     Log_UnusedImport,
     Log_MultilineString,
-    QQmlJSLoggerCategory_Last = Log_MultilineString
+    Log_Syntax,
+    QQmlJSLoggerCategory_Last = Log_Syntax
 };
 
 class QQmlJSLogger

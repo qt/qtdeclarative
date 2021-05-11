@@ -342,6 +342,11 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 
     m_currentScope->setAnnotations(parseAnnotations(definition->annotations));
 
+    if (!m_inlineComponentName.isNull()) {
+        m_currentScope->setIsInlineComponent(true);
+        m_rootScopeImports.insert(m_inlineComponentName.toString(), m_currentScope);
+    }
+
     QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
     return true;
 }
@@ -349,7 +354,25 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 void QQmlJSImportVisitor::endVisit(UiObjectDefinition *)
 {
     QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
+
     leaveEnvironment();
+}
+
+bool QQmlJSImportVisitor::visit(UiInlineComponent *component)
+{
+    if (!m_inlineComponentName.isNull()) {
+        m_logger.log(u"Nested inline components are not supported"_qs, Log_Syntax,
+                     component->firstSourceLocation());
+        return true;
+    }
+
+    m_inlineComponentName = component->name;
+    return true;
+}
+
+void QQmlJSImportVisitor::endVisit(UiInlineComponent *)
+{
+    m_inlineComponentName = QStringView();
 }
 
 bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)

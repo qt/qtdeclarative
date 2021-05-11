@@ -144,7 +144,8 @@ void FindWarningVisitor::flushPendingSignalParameters()
 
 void FindWarningVisitor::checkDefaultProperty(const QQmlJSScope::ConstPtr &scope)
 {
-    if (scope == m_exportedRootScope || scope->isArrayScope()) // inapplicable
+    if (scope == m_exportedRootScope || scope->isArrayScope()
+        || scope->isInlineComponent()) // inapplicable
         return;
 
     // These warnings do not apply for custom parsers and their children and need to be handled on a
@@ -670,8 +671,9 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiPublicMember *uipb)
     if (uipb->type == QQmlJS::AST::UiPublicMember::Property && uipb->memberType != nullptr
         && !uipb->memberType->name.isEmpty() && uipb->memberType->name != QLatin1String("alias")) {
         const auto name = uipb->memberType->name.toString();
-        if (m_importTypeLocationMap.contains(name)) {
-            m_usedTypes.insert(name);
+        if (m_rootScopeImports.contains(name) && !m_rootScopeImports[name].isNull()) {
+            if (m_importTypeLocationMap.contains(name))
+                m_usedTypes.insert(name);
         } else {
             m_logger.log(name + QStringLiteral(" was not found. Did you add all import paths?"),
                          Log_Import);

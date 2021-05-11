@@ -87,8 +87,9 @@ QQmlJSLogger::QQmlJSLogger(const QString &fileName, const QString &code, bool si
         m_categoryDisabled[it.value().m_category] = it.value().m_disabled;
     }
 
-    // This has to be set up manually since we don't expose it as an option
+    // These have to be set up manually since we don't expose it as an option
     m_categoryLevels[Log_RecursionDepthError] = QtCriticalMsg;
+    m_categoryLevels[Log_Syntax] = QtCriticalMsg;
 
     // setup color output
     m_output.insertMapping(QtCriticalMsg, QColorOutput::RedForeground);
