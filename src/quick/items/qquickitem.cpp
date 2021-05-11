@@ -3247,9 +3247,7 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
     if (QQuickItem *item = qmlobject_cast<QQuickItem *>(o)) {
         item->setParentItem(that);
     } else {
-        if (o->inherits("QGraphicsItem"))
-            qWarning("Cannot add a QtQuick 1.0 item (%s) into a QtQuick 2.0 scene!", o->metaObject()->className());
-        else if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o)) {
+        if (QQuickPointerHandler *pointerHandler = qmlobject_cast<QQuickPointerHandler *>(o)) {
             if (pointerHandler->parent() != that) {
                 qCDebug(lcHandlerParent) << "reparenting handler" << pointerHandler << ":" << pointerHandler->parent() << "->" << that;
                 pointerHandler->setParent(that);
