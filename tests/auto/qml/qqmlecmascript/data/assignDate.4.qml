@@ -13,8 +13,8 @@ MyTypeObject {
         var dateTimeVar2 = new Date("2009-05-12T23:59:59Z")
 
         boolProperty = (dateProperty.getTime() == dateVar.getTime()) &&
-                       (dateProperty.getFullYear() == 2009) &&
-                       (dateProperty.getMonth() == 5-1) &&
+                       (dateProperty.getUTCFullYear() == 2009) &&
+                       (dateProperty.getUTCMonth() == 5-1) &&
                        (dateProperty.getUTCDate() == 12) &&
                        (dateProperty.getUTCHours() == 0) &&
                        (dateProperty.getUTCMinutes() == 0) &&

@@ -14,20 +14,17 @@ MyTypeObject {
         var compare = new Date(2009, 5-1, 12, 0, 0, 1)
         var compareOffset = compare.getTimezoneOffset()
 
-        // The date is already in local time, so we can use the partial values directly
-        var dtAdjusted = dt
-
-        boolProperty = (dt.getTime() == compare.getTime()) &&
-                       (offset == compareOffset) &&
-                       (timespec == 'LocalTime') &&
-                       (dtAdjusted.getFullYear() == 2009) &&
-                       (dtAdjusted.getMonth() == 5-1) &&
-                       (dtAdjusted.getDate() == 12) &&
-                       (dtAdjusted.getHours() == 0) &&
-                       (dtAdjusted.getMinutes() == 0) &&
-                       (dtAdjusted.getSeconds() == 1) &&
-                       (date.getFullYear() == 2009) &&
-                       (date.getMonth() == 5-1) &&
-                       (date.getDate() == 12)
+        boolProperty = (dt.getTime() == compare.getTime() &&
+                        offset == compareOffset &&
+                        timespec == 'LocalTime' &&
+                        dt.getFullYear() == 2009 &&
+                        dt.getMonth() == 5-1 &&
+                        dt.getDate() == 12 &&
+                        dt.getHours() == 0 &&
+                        dt.getMinutes() == 0 &&
+                        dt.getSeconds() == 1 &&
+                        date.getUTCFullYear() == 2009 &&
+                        date.getUTCMonth() == 5-1 &&
+                        date.getUTCDate() == 12);
     }
 }

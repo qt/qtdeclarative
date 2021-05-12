@@ -26,8 +26,8 @@ MyTypeObject {
                        (dtAdjusted.getHours() == 23) &&
                        (dtAdjusted.getMinutes() == 59) &&
                        (dtAdjusted.getSeconds() == 59) &&
-                       (date.getFullYear() == 2009) &&
-                       (date.getMonth() == 5-1) &&
-                       (date.getDate() == 12)
+                       (date.getUTCFullYear() == 2009) &&
+                       (date.getUTCMonth() == 5-1) &&
+                       (date.getUTCDate() == 12);
     }
 }

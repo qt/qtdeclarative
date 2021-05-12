@@ -605,32 +605,24 @@ void tst_qqmlecmascript::exportDate_data()
     const QDate date(2009, 5, 12);
     const QTime early(0, 0, 1);
     const QTime late(23, 59, 59);
-    const int offset(((11 * 60) + 30) * 60);
+    const int offset = (11 * 60 + 30) * 60;
 
-    QTest::newRow("Localtime early") << testFileUrl("exportDate.qml") << QDateTime(date, early, Qt::LocalTime);
-    QTest::newRow("Localtime late") << testFileUrl("exportDate.2.qml") << QDateTime(date, late, Qt::LocalTime);
-    QTest::newRow("UTC early") << testFileUrl("exportDate.3.qml") << QDateTime(date, early, Qt::UTC);
-    QTest::newRow("UTC late") << testFileUrl("exportDate.4.qml") << QDateTime(date, late, Qt::UTC);
-    {
-        QDateTime dt(date, early, Qt::OffsetFromUTC);
-        dt.setOffsetFromUtc(offset);
-        QTest::newRow("+11:30 early") << testFileUrl("exportDate.5.qml") << dt;
-    }
-    {
-        QDateTime dt(date, late, Qt::OffsetFromUTC);
-        dt.setOffsetFromUtc(offset);
-        QTest::newRow("+11:30 late") << testFileUrl("exportDate.6.qml") << dt;
-    }
-    {
-        QDateTime dt(date, early, Qt::OffsetFromUTC);
-        dt.setOffsetFromUtc(-offset);
-        QTest::newRow("-11:30 early") << testFileUrl("exportDate.7.qml") << dt;
-    }
-    {
-        QDateTime dt(date, late, Qt::OffsetFromUTC);
-        dt.setOffsetFromUtc(-offset);
-        QTest::newRow("-11:30 late") << testFileUrl("exportDate.8.qml") << dt;
-    }
+    QTest::newRow("Local time early")
+        << testFileUrl("exportDate.qml") << QDateTime(date, early, Qt::LocalTime);
+    QTest::newRow("Local time late")
+        << testFileUrl("exportDate.2.qml") << QDateTime(date, late, Qt::LocalTime);
+    QTest::newRow("UTC early")
+        << testFileUrl("exportDate.3.qml") << QDateTime(date, early, Qt::UTC);
+    QTest::newRow("UTC late")
+        << testFileUrl("exportDate.4.qml") << QDateTime(date, late, Qt::UTC);
+    QTest::newRow("+11:30 early")
+        << testFileUrl("exportDate.5.qml") << QDateTime(date, early, Qt::OffsetFromUTC, offset);
+    QTest::newRow("+11:30 late")
+        << testFileUrl("exportDate.6.qml") << QDateTime(date, late, Qt::OffsetFromUTC, offset);
+    QTest::newRow("-11:30 early")
+        << testFileUrl("exportDate.7.qml") << QDateTime(date, early, Qt::OffsetFromUTC, -offset);
+    QTest::newRow("-11:30 late")
+        << testFileUrl("exportDate.8.qml") << QDateTime(date, late, Qt::OffsetFromUTC, -offset);
 }
 
 void tst_qqmlecmascript::exportDate()
@@ -7984,7 +7976,7 @@ void tst_qqmlecmascript::negativeYear()
     // Only check for the year. We hope that every language writes the year in arabic numerals and
     // in relation to a specific dude's date of birth. We also hope that no language adds a "-2001"
     // junk string somewhere in the middle.
-    QVERIFY(q.toString().indexOf(QStringLiteral("-2001")) != -1);
+    QVERIFY2(q.toString().indexOf(QStringLiteral("-2001")) != -1, qPrintable(q.toString()));
 
     QMetaObject::invokeMethod(object.get(), "check_negative_toisostring", Q_RETURN_ARG(QVariant, q));
     QCOMPARE(q.toString().left(16), QStringLiteral("result: -002000-"));

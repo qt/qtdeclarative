@@ -3,9 +3,9 @@ import QtQuick 2.0
 
 MyTypeObject {
     Component.onCompleted: {
-        dateProperty = new Date(2019, 12, 0) // Dec 31
-        boolProperty = (dateProperty.getFullYear() == 2019
-                        && dateProperty.getMonth() == 11
-                        && dateProperty.getDate() == 31)
+        dateProperty = new Date(2019, 12, 0); // Dec 31
+        boolProperty = (dateProperty.getUTCFullYear() == 2019
+                        && dateProperty.getUTCMonth() == 11
+                        && dateProperty.getUTCDate() == 31);
     }
 }

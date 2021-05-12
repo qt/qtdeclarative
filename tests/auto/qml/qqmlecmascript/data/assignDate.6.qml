@@ -13,22 +13,22 @@ MyTypeObject {
         var dateTimeVar2 = new Date("2009-05-12T23:59:59+02:00")
 
         boolProperty = (dateProperty.getTime() == dateVar.getTime()) &&
-                       (dateProperty.getFullYear() == 2009) &&
-                       (dateProperty.getMonth() == 5-1) &&
+                       (dateProperty.getUTCFullYear() == 2009) &&
+                       (dateProperty.getUTCMonth() == 5-1) &&
                        (dateProperty.getUTCDate() == 12) &&
                        (dateProperty.getUTCHours() == 0) &&
                        (dateProperty.getUTCMinutes() == 0) &&
                        (dateProperty.getUTCSeconds() == 0) &&
                        (dateTimeProperty.getTime() == dateTimeVar.getTime()) &&
-                       (dateTimeProperty.getFullYear() == 2009) &&
-                       (dateTimeProperty.getMonth() == 5-1) &&
+                       (dateTimeProperty.getUTCFullYear() == 2009) &&
+                       (dateTimeProperty.getUTCMonth() == 5-1) &&
                        (dateTimeProperty.getUTCDate() == 11) &&
                        (dateTimeProperty.getUTCHours() == 22) &&
                        (dateTimeProperty.getUTCMinutes() == 0) &&
                        (dateTimeProperty.getUTCSeconds() == 1) &&
                        (dateTimeProperty2.getTime() == dateTimeVar2.getTime()) &&
-                       (dateTimeProperty2.getFullYear() == 2009) &&
-                       (dateTimeProperty2.getMonth() == 5-1) &&
+                       (dateTimeProperty2.getUTCFullYear() == 2009) &&
+                       (dateTimeProperty2.getUTCMonth() == 5-1) &&
                        (dateTimeProperty2.getUTCDate() == 12) &&
                        (dateTimeProperty2.getUTCHours() == 21) &&
                        (dateTimeProperty2.getUTCMinutes() == 59) &&

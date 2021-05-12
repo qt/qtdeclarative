@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -1639,8 +1639,16 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
     if (const QV4::QQmlLocaleData *ld = value.as<QV4::QQmlLocaleData>())
         return *ld->d()->locale;
 #endif
-    if (const QV4::DateObject *d = value.as<DateObject>())
-        return d->toQDateTime();
+    if (const QV4::DateObject *d = value.as<DateObject>()) {
+        auto dt = d->toQDateTime();
+        // See ExecutionEngine::metaTypeFromJS()'s handling of QMetaType::Date:
+        if (typeHint == QMetaType::QDate) {
+            const auto utc = dt.toUTC();
+            if (utc.date() != dt.date() && utc.addSecs(-1).date() == dt.date())
+                dt = utc;
+        }
+        return dt;
+    }
     if (const QV4::UrlObject *d = value.as<UrlObject>())
         return d->toQUrl();
     if (const ArrayBuffer *d = value.as<ArrayBuffer>())
@@ -2320,7 +2328,20 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         } break;
     case QMetaType::QDate:
         if (const QV4::DateObject *d = value.as<DateObject>()) {
-            *reinterpret_cast<QDate *>(data) = d->toQDateTime().date();
+            // If the Date object was parse()d from a string with no time part
+            // or zone specifier it's really the UTC start of the relevant day,
+            // but it's here represented as a local time, which may fall in the
+            // preceding day. See QTBUG-92466 for the gory details.
+            QDateTime dt = d->toQDateTime();
+            const QDateTime utc = dt.toUTC();
+            if (utc.date() != dt.date() && utc.addMSecs(-1).date() == dt.date())
+                dt = utc;
+            // This may, of course, be The Wrong Thing if the date was
+            // constructed as a full local date-time that happens to coincide
+            // with the start of a UTC day; however, that would be an odd value
+            // to give to something that, apparently, someone thinks belongs in
+            // a QDate.
+            *reinterpret_cast<QDate *>(data) = dt.date();
             return true;
         } break;
     case QMetaType::QUrl:

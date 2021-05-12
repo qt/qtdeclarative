@@ -1,6 +1,6 @@
 ﻿/****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -266,6 +266,51 @@ Similarly, if a C++ type uses a QDateTime for a property type or method
 parameter, the value can be created as a JavaScript \c Date object in QML, and
 is automatically converted to a QDateTime value when it is passed to C++.
 
+\note Watch out for the difference in month numbering: JavaScript numbers
+January as 0 through 11 for December, off by one from Qt's numbering
+of January as 1 through 12 for December.
+
+\note When using a string in JavaScript as the value of a \c Date object,
+note that a string with no time fields (so a simple date) is
+interpreted as the UTC start of the relevant day, in contrast
+to \c{new Date(y, m, d)} which uses the local time start of the day.
+Most other ways of constructing a \c Date object in JavaScript produce
+a local time, unless methods with UTC in their names are used. If your
+program is run in a zone behind UTC (nominally west of The Prime
+Meridian), use of a date-only string will lead to a \c Date object
+whose \c getDate() is one less than the day-number in your string; it
+will typically have a large value for \c getHours(). The UTC variants
+of these methods, \c getUTCDate() and \c getUTCHours(), will give the
+results you expect for such a \c Date objects. See also the next
+section.
+
+\section2 QDate and JavaScript Date
+
+The QML engine converts automatically between \l QDate and the
+JavaScript \c Date type by representing the date by the UTC start of
+its day.  A date is mapped back to QDate via QDateTime, selecting
+its \l {QDateTime::}{date()} method, using the local time form of the
+date unless the UTC form of it coincides with the start of the next
+day, in which case the UTC form is used.
+
+This slighly eccentric arrangement is a work-around for the fact that
+JavaScript's construction of a \c Date object from a date-only string
+uses the UTC start of the day, but \c{new Date(y, m, d)} uses the
+local time start of the indicated date, as discussed in a note at the
+end of the previous section.
+
+As a result, where a QDate property or parameter is exposed to QML,
+care should be taken in reading its value: the \c
+Date.getUTCFullYear(), \c Date.getUTCMonth() and \c Date.getUTCDate()
+methods are more likely to deliver the results users expect than the
+corresponding methods without UTC in their names.
+
+It is thus commonly more robust to use a \l QDateTime property. This
+makes it possible to take control, on the QDateTime side, of whether
+the date (and time) is specified in terms of UTC or local time; as
+long as the JavaScript code is written to work with the same standard,
+it should be possible to avoid trouble.
+
 //! Target adds an anchor, so renaming the section won't break incoming links.
 \target QTime to JavaScript Date
 \section2 QTime and JavaScript Date
@@ -275,9 +320,9 @@ JavaScript \c Date objects. As QTime values do not contain a date component,
 one is created for the conversion only. Thus, you should not rely on the date
 component of the resulting Date object.
 
-Under the hood, conversion from a JavaScript \c Date object to QTime is done by
-converting to a QDateTime object and calling its \l {QDateTime::}{time()}
-method.
+Under the hood, conversion from a JavaScript \c Date object to QTime
+is done by converting to a QDateTime object (using local time) and
+calling its \l {QDateTime::}{time()} method.
 
 \section2 Sequence Type to JavaScript Array
 

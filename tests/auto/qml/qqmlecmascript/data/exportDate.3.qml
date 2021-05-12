@@ -12,28 +12,18 @@ MyTypeObject {
 
         // The test date is 2009-5-12 00:00:01 (UTC)
         var compare = new Date(Date.UTC(2009, 5-1, 12, 0, 0, 1))
-        var compareOffset = 0
 
-        // Adjust for timezone to extract correct partial values
-        var dtAdjusted = new Date(dt.getUTCFullYear(),
-                                  dt.getUTCMonth(),
-                                  dt.getUTCDate(),
-                                  dt.getUTCHours(),
-                                  dt.getUTCMinutes(),
-                                  dt.getUTCSeconds(),
-                                  dt.getUTCMilliseconds())
-
-        boolProperty = (dt.getTime() == compare.getTime()) &&
-                       (offset == compareOffset) &&
-                       (timespec == 'UTC') &&
-                       (dtAdjusted.getFullYear() == 2009) &&
-                       (dtAdjusted.getMonth() == 5-1) &&
-                       (dtAdjusted.getDate() == 12) &&
-                       (dtAdjusted.getHours() == 0) &&
-                       (dtAdjusted.getMinutes() == 0) &&
-                       (dtAdjusted.getSeconds() == 1) &&
-                       (date.getFullYear() == 2009) &&
-                       (date.getMonth() == 5-1) &&
-                       (date.getDate() == 12)
+        boolProperty = (dt.getTime() == compare.getTime() &&
+                        offset == 0 &&
+                        timespec == 'UTC' &&
+                        dt.getUTCFullYear() == 2009 &&
+                        dt.getUTCMonth() == 5-1 &&
+                        dt.getUTCDate() == 12 &&
+                        dt.getUTCHours() == 0 &&
+                        dt.getUTCMinutes() == 0 &&
+                        dt.getUTCSeconds() == 1 &&
+                        date.getUTCFullYear() == 2009 &&
+                        date.getUTCMonth() == 5-1 &&
+                        date.getUTCDate() == 12);
     }
 }
