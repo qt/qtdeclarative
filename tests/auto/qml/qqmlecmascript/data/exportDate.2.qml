@@ -5,29 +5,26 @@ MyTypeObject {
     boolProperty: false
 
     Component.onCompleted: {
-        var dt = datetimeExporter.getDateTime()
-        var offset = datetimeExporter.getDateTimeOffset()
-        var date = datetimeExporter.getDate()
-        var timespec = datetimeExporter.getTimeSpec()
+        var dt = datetimeExporter.getDateTime();
+        var offset = datetimeExporter.getDateTimeOffset();
+        var date = datetimeExporter.getDate();
+        var timespec = datetimeExporter.getTimeSpec();
 
-        // The test date is 2009-5-12 23:59:59 (local time)
-        var compare = new Date(2009, 5-1, 12, 23, 59, 59)
-        var compareOffset = compare.getTimezoneOffset()
+        // The test date is 2009-05-12 23:59:59 (local time)
+        var compare = new Date(2009, 5-1, 12, 23, 59, 59);
+        var compareOffset = compare.getTimezoneOffset();
 
-        // The date is already in local time, so we can use the partial values directly
-        var dtAdjusted = dt
-
-        boolProperty = (dt.getTime() == compare.getTime()) &&
-                       (offset == compareOffset) &&
-                       (timespec == 'LocalTime') &&
-                       (dtAdjusted.getFullYear() == 2009) &&
-                       (dtAdjusted.getMonth() == 5-1) &&
-                       (dtAdjusted.getDate() == 12) &&
-                       (dtAdjusted.getHours() == 23) &&
-                       (dtAdjusted.getMinutes() == 59) &&
-                       (dtAdjusted.getSeconds() == 59) &&
-                       (date.getUTCFullYear() == 2009) &&
-                       (date.getUTCMonth() == 5-1) &&
-                       (date.getUTCDate() == 12);
+        boolProperty = (dt.getTime() == compare.getTime() &&
+                        offset == compareOffset &&
+                        timespec == 'LocalTime' &&
+                        dt.getFullYear() == 2009 &&
+                        dt.getMonth() == 5-1 &&
+                        dt.getDate() == 12 &&
+                        dt.getHours() == 23 &&
+                        dt.getMinutes() == 59 &&
+                        dt.getSeconds() == 59 &&
+                        date.getUTCFullYear() == 2009 &&
+                        date.getUTCMonth() == 5-1 &&
+                        date.getUTCDate() == 12);
     }
 }

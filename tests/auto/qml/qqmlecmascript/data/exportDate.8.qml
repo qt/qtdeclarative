@@ -5,13 +5,13 @@ MyTypeObject {
     boolProperty: false
 
     Component.onCompleted: {
-        var dt = datetimeExporter.getDateTime()
-        var offset = datetimeExporter.getDateTimeOffset()
-        var date = datetimeExporter.getDate()
-        var timespec = datetimeExporter.getTimeSpec()
+        var dt = datetimeExporter.getDateTime();
+        var offset = datetimeExporter.getDateTimeOffset();
+        var date = datetimeExporter.getDate();
+        var timespec = datetimeExporter.getTimeSpec();
 
-        // The test date is 2009-5-12 23:59:59 (UTC-11:30)
-        var compare = new Date('2009-05-12T23:59:59-11:30')
+        // The test date is 2009-05-12 23:59:59 (UTC-11:30)
+        var compare = new Date('2009-05-12T23:59:59-11:30');
         // That's 2009-05-13 11:29:59 UTC
 
         boolProperty = (dt.getTime() == compare.getTime() &&
