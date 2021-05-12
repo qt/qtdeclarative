@@ -112,8 +112,7 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         m_qml.writeScriptBinding(QLatin1String("attachedType"), enquote(collector.attachedType));
 }
 
-void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key, bool isReadonly,
-                                bool parsePointer)
+void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key, bool parsePointer)
 {
     auto it = property.find(key);
     if (it == property.end())
@@ -161,8 +160,6 @@ void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key,
     const QLatin1String trueString("true");
     if (isList)
         m_qml.writeScriptBinding(QLatin1String("isList"), trueString);
-    if (isReadonly)
-        m_qml.writeScriptBinding(QLatin1String("isReadonly"), trueString);
     if (isPointer)
         m_qml.writeScriptBinding(QLatin1String("isPointer"), trueString);
 }
@@ -178,8 +175,7 @@ void QmlTypesCreator::writeProperties(const QJsonArray &properties)
         if (it != obj.end())
             m_qml.writeScriptBinding(QLatin1String("revision"), QString::number(it.value().toInt()));
 
-        writeType(obj, QLatin1String("type"), !obj.contains(QLatin1String("write"))
-                  && !obj.contains(QLatin1String("member")), true);
+        writeType(obj, QLatin1String("type"), true);
 
         if (!obj.contains(QStringLiteral("privateClass"))) {
             const auto bindable = obj.constFind(QLatin1String("bindable"));
@@ -192,6 +188,9 @@ void QmlTypesCreator::writeProperties(const QJsonArray &properties)
             if (write != obj.constEnd())
                  m_qml.writeScriptBinding(QLatin1String("write"), enquote(write->toString()));
         }
+
+        if (!obj.contains(QLatin1String("write")) && !obj.contains(QLatin1String("member")))
+            m_qml.writeScriptBinding(QLatin1String("isReadonly"), QLatin1String("true"));
 
         const auto required = obj.constFind(QLatin1String("required"));
         if (required != obj.constEnd() && required->toBool())
@@ -216,7 +215,7 @@ void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &typ
         m_qml.writeScriptBinding(QLatin1String("name"), enquote(name));
         if (revision != obj.end())
             m_qml.writeScriptBinding(QLatin1String("revision"), QString::number(revision.value().toInt()));
-        writeType(obj, QLatin1String("returnType"), false, false);
+        writeType(obj, QLatin1String("returnType"), false);
         const auto isConstructor = obj.find(QLatin1String("isConstructor"));
         if (isConstructor != obj.constEnd() && isConstructor->toBool())
             m_qml.writeScriptBinding(QLatin1String("isConstructor"), QLatin1String("true"));
@@ -226,7 +225,7 @@ void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &typ
             const QString name = obj[QLatin1String("name")].toString();
             if (!name.isEmpty())
                 m_qml.writeScriptBinding(QLatin1String("name"), enquote(name));
-            writeType(obj, QLatin1String("type"), false, true);
+            writeType(obj, QLatin1String("type"), true);
             m_qml.writeEndObject();
         }
         m_qml.writeEndObject();
