@@ -747,6 +747,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("aliasToList") << QStringLiteral("aliasToList.qml");
     QTest::newRow("QVariant") << QStringLiteral("qvariant.qml");
     QTest::newRow("Accessible") << QStringLiteral("accessible.qml");
+    QTest::newRow("qjsroot") << QStringLiteral("qjsroot.qml");
 }
 
 void TestQmllint::cleanQmlCode()

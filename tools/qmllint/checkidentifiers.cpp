@@ -87,9 +87,6 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
     if (prop != nullptr && prop->isList()) {
         detectedRestrictiveKind = QLatin1String("list");
         expectedNext.append(QLatin1String("length"));
-    } else if (outerScope->internalName() == QLatin1String("QString")) {
-        detectedRestrictiveKind = QLatin1String("QString");
-        expectedNext.append(QLatin1String("length"));
     }
 
     QQmlJSScope::ConstPtr scope = outerScope;
@@ -131,13 +128,6 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
 
             if (property.isList()) {
                 detectedRestrictiveKind = QLatin1String("list");
-                detectedRestrictiveName = access.m_name;
-                expectedNext.append(QLatin1String("length"));
-                continue;
-            }
-
-            if (typeName == QLatin1String("QString")) {
-                detectedRestrictiveKind = typeName;
                 detectedRestrictiveName = access.m_name;
                 expectedNext.append(QLatin1String("length"));
                 continue;

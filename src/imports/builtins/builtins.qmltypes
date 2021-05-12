@@ -88,6 +88,7 @@ Module {
 
     Component {
         name: "number"
+        extension: "Number"
         accessSemantics: "value"
     }
 
@@ -115,6 +116,7 @@ Module {
 
     Component {
         name: "QString"
+        extension: "String"
         exports: ["QML/string 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"
@@ -129,6 +131,7 @@ Module {
 
     Component {
         name: "QDateTime"
+        extension: "Date"
         exports: ["QML/date 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"
@@ -150,5 +153,11 @@ Module {
     Component {
        name: "QVariantMap"
        accessSemantics: "value"
+    }
+
+    Component {
+      name: "QRegularExpression"
+      extension: "RegExp"
+      accessSemantics: "value"
     }
 }
