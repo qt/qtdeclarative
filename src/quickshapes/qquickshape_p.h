@@ -84,8 +84,8 @@ class Q_QUICKSHAPES_PRIVATE_EXPORT QQuickShapeGradient : public QQuickGradient
 public:
     enum SpreadMode {
         PadSpread,
-        RepeatSpread,
-        ReflectSpread
+        ReflectSpread,
+        RepeatSpread
     };
     Q_ENUM(SpreadMode)
 
