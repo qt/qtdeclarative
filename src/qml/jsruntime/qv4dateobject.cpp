@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -742,10 +742,10 @@ static double getLocalTZA()
 
 DEFINE_OBJECT_VTABLE(DateObject);
 
-void Heap::DateObject::init(const QDateTime &date)
+void Heap::DateObject::init(const QDateTime &when)
 {
     Object::init();
-    this->date = date.isValid() ? TimeClip(date.toMSecsSinceEpoch()) : qt_qnan();
+    date = when.isValid() ? TimeClip(when.toMSecsSinceEpoch()) : qt_qnan();
 }
 
 void Heap::DateObject::init(QTime time)
