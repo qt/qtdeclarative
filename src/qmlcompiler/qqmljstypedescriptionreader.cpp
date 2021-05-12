@@ -352,6 +352,8 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
             isRequired = readBoolBinding(script);
         } else if (id == QLatin1String("isList")) {
             property.setIsList(readBoolBinding(script));
+        } else if (id == QLatin1String("isFinal")) {
+            property.setIsFinal(readBoolBinding(script));
         } else if (id == QLatin1String("revision")) {
             property.setRevision(readIntBinding(script));
         } else if (id == QLatin1String("bindable")) {
@@ -363,7 +365,7 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
         } else {
             addWarning(script->firstSourceLocation(),
                        tr("Expected only type, name, revision, isPointer, isReadonly, isRequired, "
-                          "bindable, read, write, and isList script bindings."));
+                          "isFinal, bindable, read, write, and isList script bindings."));
         }
     }
 

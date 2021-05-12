@@ -46,7 +46,6 @@ Q_DECLARE_INTERFACE(Interface2, "io.qt.bugreports.Interface2");
 Q_DECLARE_INTERFACE(Interface3, "io.qt.bugreports.Interface3");
 QT_END_NAMESPACE
 
-
 class ImplementsInterfaces : public QObject, public Interface
 {
     Q_OBJECT
@@ -248,6 +247,15 @@ private:
     int m_foo;
 };
 
+class FinalProperty : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_PROPERTY(int fff MEMBER fff FINAL)
+public:
+    int fff = 0;
+};
+
 class MultiExtension : public MultiExtensionParent
 {
     Q_OBJECT
@@ -306,6 +314,7 @@ private slots:
     void localDefault();
     void requiredProperty();
     void hiddenAccessor();
+    void finalProperty();
 
 private:
     QByteArray qmltypesData;

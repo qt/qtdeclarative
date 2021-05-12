@@ -79,8 +79,8 @@ void tst_qmltyperegistrar::superAndForeignTypes()
     QVERIFY(qmltypesData.contains("values: [\"Pixel\", \"Centimeter\", \"Inch\", \"Point\"]"));
     QVERIFY(qmltypesData.contains("name: \"SizeGadget\""));
     QVERIFY(qmltypesData.contains("prototype: \"SizeEnums\""));
-    QVERIFY(qmltypesData.contains("Property { name: \"height\"; type: \"int\"; read: \"height\"; write: \"setHeight\" }"));
-    QVERIFY(qmltypesData.contains("Property { name: \"width\"; type: \"int\"; read: \"width\"; write: \"setWidth\" }"));
+    QVERIFY(qmltypesData.contains("Property { name: \"height\"; type: \"int\"; read: \"height\"; write: \"setHeight\"; isFinal: true }"));
+    QVERIFY(qmltypesData.contains("Property { name: \"width\"; type: \"int\"; read: \"width\"; write: \"setWidth\"; isFinal: true }"));
     QVERIFY(qmltypesData.contains("Method { name: \"sizeToString\"; type: \"QString\" }"));
     QCOMPARE(qmltypesData.count("extension: \"SizeValueType\""), 1);
 }
@@ -210,6 +210,12 @@ void tst_qmltyperegistrar::hiddenAccessor()
     // No read accessor
     QVERIFY(qmltypesData.contains(
                 "Property { name: \"hiddenRead\"; type: \"QString\"; isReadonly: true }"));
+}
+
+void tst_qmltyperegistrar::finalProperty()
+{
+    QCOMPARE(qmltypesData.count("name: \"FinalProperty\""), 1);
+    QCOMPARE(qmltypesData.count("Property { name: \"fff\"; type: \"int\"; isFinal: true }"), 1);
 }
 
 QTEST_MAIN(tst_qmltyperegistrar)

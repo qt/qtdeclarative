@@ -260,6 +260,7 @@ class QQmlJSMetaProperty
     bool m_isWritable = false;
     bool m_isPointer = false;
     bool m_isAlias = false;
+    bool m_isFinal = false;
     int m_revision = 0;
 
 public:
@@ -283,7 +284,7 @@ public:
     void setType(const QSharedPointer<const QQmlJSScope> &type) { m_type = type; }
     QSharedPointer<const QQmlJSScope> type() const { return m_type.toStrongRef(); }
 
-    void setAnnotations(const QList<QQmlJSAnnotation> &annotation) { m_annotations = std::move(annotation); }
+    void setAnnotations(const QList<QQmlJSAnnotation> &annotation) { m_annotations = annotation; }
     const QList<QQmlJSAnnotation> &annotations() const { return m_annotations; }
 
     void setIsList(bool isList) { m_isList = isList; }
@@ -298,6 +299,9 @@ public:
     void setIsAlias(bool isAlias) { m_isAlias = isAlias; }
     bool isAlias() const { return m_isAlias; }
 
+    void setIsFinal(bool isFinal) { m_isFinal = isFinal; }
+    bool isFinal() const { return m_isFinal; }
+
     void setRevision(int revision) { m_revision = revision; }
     int revision() const { return m_revision; }
 
@@ -308,7 +312,8 @@ public:
         return a.m_propertyName == b.m_propertyName && a.m_typeName == b.m_typeName
                 && a.m_bindable == b.m_bindable && a.m_type == b.m_type && a.m_isList == b.m_isList
                 && a.m_isWritable == b.m_isWritable && a.m_isPointer == b.m_isPointer
-                && a.m_isAlias == b.m_isAlias && a.m_revision == b.m_revision;
+                && a.m_isAlias == b.m_isAlias && a.m_revision == b.m_revision
+                && a.m_isFinal == b.m_isFinal;
     }
 
     friend bool operator!=(const QQmlJSMetaProperty &a, const QQmlJSMetaProperty &b)
@@ -320,7 +325,7 @@ public:
     {
         return qHashMulti(seed, prop.m_propertyName, prop.m_typeName, prop.m_bindable,
                           prop.m_type.toStrongRef().data(), prop.m_isList, prop.m_isWritable,
-                          prop.m_isPointer, prop.m_isAlias, prop.m_revision);
+                          prop.m_isPointer, prop.m_isAlias, prop.m_revision, prop.m_isFinal);
     }
 };
 
