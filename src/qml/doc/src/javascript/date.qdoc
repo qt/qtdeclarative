@@ -38,6 +38,12 @@
     Locale.ShortFormat, Locale.NarrowFormat enumeration values,
     or a string specifying the format.
 
+    The form of the supported format strings is as described in the
+    documentation of \l QDate::toString(), \l QTime::toString() and \l
+    QDateTime::toString().
+
+    If the date is invalid, an empty string is returned.
+
     \section1 Format Enumeration Values
 
     Use the enumeration values when you want a format that matches the locale
@@ -63,86 +69,6 @@
     \row \li fromLocaleString, toLocaleString \li Locale.LongFormat \li \c{dddd, MMMM d, yyyy h:mm:ss AP t}
     \row \li fromLocaleString, toLocaleString \li Locale.ShortFormat \li \c{M/d/yy h:mm AP}
     \endtable
-
-    \section1 Format Strings
-
-    You can also directly specify a format string.
-
-    These expressions may be used for format dates:
-    \table
-    \header \li Expression \li Output
-    \row \li d \li the day as number without a leading zero (1 to 31)
-    \row \li dd \li the day as number with a leading zero (01 to 31)
-    \row \li ddd
-         \li the abbreviated localized day name (e.g. 'Mon' to 'Sun').
-    \row \li dddd
-         \li the long localized day name (e.g. 'Monday' to 'Sunday').
-    \row \li M \li the month as number without a leading zero (1 to 12)
-    \row \li MM \li the month as number with a leading zero (01 to 12)
-    \row \li MMM
-         \li the abbreviated localized month name (e.g. 'Jan' to 'Dec').
-    \row \li MMMM
-         \li the long localized month name (e.g. 'January' to 'December').
-    \row \li yy \li the year as two digit number (00 to 99)
-    \row \li yyyy \li the year as four digit number. If the year is negative,
-            a minus sign is prepended in addition.
-    \endtable
-
-    All other input characters will be ignored. Any sequence of characters that
-    are enclosed in singlequotes will be treated as text and not be used as an
-    expression. Two consecutive singlequotes ("''") are replaced by a singlequote
-    in the output.
-
-    Example format strings (assuming that the Date is the 20 July
-    1969):
-
-    \table
-    \header \li Format            \li Result
-    \row    \li dd.MM.yyyy        \li 20.07.1969
-    \row    \li ddd MMMM d yy     \li Sun July 20 69
-    \row    \li 'The day is' dddd \li The day is Sunday
-    \endtable
-
-    These expressions may be used for formatting time:
-
-    \table
-    \header \li Expression \li Output
-    \row \li h
-         \li the hour without a leading zero (0 to 23 or 1 to 12 if AM/PM display)
-    \row \li hh
-         \li the hour with a leading zero (00 to 23 or 01 to 12 if AM/PM display)
-    \row \li H
-         \li the hour without a leading zero (0 to 23, even with AM/PM display)
-    \row \li HH
-         \li the hour with a leading zero (00 to 23, even with AM/PM display)
-    \row \li m \li the minute without a leading zero (0 to 59)
-    \row \li mm \li the minute with a leading zero (00 to 59)
-    \row \li s \li the second without a leading zero (0 to 59)
-    \row \li ss \li the second with a leading zero (00 to 59)
-    \row \li z \li the milliseconds without leading zeroes (0 to 999)
-    \row \li zzz \li the milliseconds with leading zeroes (000 to 999)
-    \row \li AP or A
-         \li use AM/PM display. \e AP will be replaced by either "AM" or "PM".
-    \row \li ap or a
-         \li use am/pm display. \e ap will be replaced by either "am" or "pm".
-    \row \li t \li the timezone (for example "CEST")
-    \endtable
-
-    All other input characters will be ignored. Any sequence of characters that
-    are enclosed in singlequotes will be treated as text and not be used as an
-    expression. Two consecutive singlequotes ("''") are replaced by a singlequote
-    in the output.
-
-    Example format strings (assuming that the QTime is 14:13:09.042)
-
-    \table
-    \header \li Format \li Result
-    \row \li hh:mm:ss.zzz \li 14:13:09.042
-    \row \li h:m:s ap     \li 2:13:9 pm
-    \row \li H:m:s a      \li 14:13:9 pm
-    \endtable
-
-    If the date is invalid, an empty string will be returned.
 
     \section1 Further Notes
 
