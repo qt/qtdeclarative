@@ -27,6 +27,7 @@
 ****************************************************************************/
 
 #include "findwarnings.h"
+#include "../shared/qqmltoolingsettings.h"
 
 #include <QtQmlCompiler/private/qqmljsresourcefilemapper_p.h>
 
@@ -125,6 +126,7 @@ int main(int argv, char *argc[])
     QCoreApplication::setApplicationVersion("1.0");
 #if QT_CONFIG(commandlineparser)
     QCommandLineParser parser;
+    QQmlToolingSettings settings(QLatin1String("qmllint"));
     parser.setApplicationDescription(QLatin1String(R"(QML syntax verifier and analyzer
 
 All warnings can be set to three levels:
@@ -139,9 +141,26 @@ All warnings can be set to three levels:
                                     QLatin1String("Don't output syntax errors"));
     parser.addOption(silentOption);
 
+    QCommandLineOption writeDefaultsOption(
+            QStringList() << "write-defaults",
+            QLatin1String("Writes defaults settings to .qmllint.ini and exits (Warning: This "
+                          "will overwrite any existing settings and comments!)"));
+    parser.addOption(writeDefaultsOption);
+
+    QCommandLineOption ignoreSettings(QStringList() << "ignore-settings",
+                                      QLatin1String("Ignores all settings files and only takes "
+                                                    "command line options into consideration"));
+    parser.addOption(ignoreSettings);
+
     for (auto it = options.cbegin(); it != options.cend(); ++it) {
-        QCommandLineOption option(it.key(), it.value().m_description + QStringLiteral(" (default: %1)").arg(it.value().levelToString()) , QStringLiteral("level"));
+        QCommandLineOption option(
+                it.key(),
+                it.value().m_description
+                        + QStringLiteral(" (default: %1)").arg(it.value().levelToString()),
+                QStringLiteral("level"), it.value().levelToString());
         parser.addOption(option);
+        settings.addOption(QStringLiteral("Warnings/") + it.value().m_settingsName,
+                           it.value().levelToString());
     }
 
     // TODO: Remove after Qt 6.2
@@ -162,6 +181,8 @@ All warnings can be set to three levels:
                 QStringLiteral("Look for related files in the given resource file"),
                 QStringLiteral("resource"));
     parser.addOption(resourceOption);
+    const QString &resourceSetting = QLatin1String("ResourcePath");
+    settings.addOption(resourceSetting);
 
     QCommandLineOption qmlImportPathsOption(
             QStringList() << "I"
@@ -169,39 +190,56 @@ All warnings can be set to three levels:
             QLatin1String("Look for QML modules in specified directory"),
             QLatin1String("directory"));
     parser.addOption(qmlImportPathsOption);
+    const QString qmlImportPathsSetting = QLatin1String("AdditionalQmlImportPaths");
+    settings.addOption(qmlImportPathsSetting);
 
     QCommandLineOption qmlImportNoDefault(
                 QStringList() << "bare",
                 QLatin1String("Do not include default import directories or the current directory. "
                               "This may be used to run qmllint on a project using a different Qt version."));
     parser.addOption(qmlImportNoDefault);
+    settings.addOption(QLatin1String("DisableDefaultImports"), false);
 
     QCommandLineOption qmltypesFilesOption(
             QStringList() << "i"
                           << "qmltypes",
-            QLatin1String("Include the specified qmltypes files. By default, all qmltypes files "
+            QLatin1String("Import the specified qmltypes files. By default, all qmltypes files "
                           "found in the current directory are used. When this option is set, you "
                           "have to explicitly add files from the current directory if you want "
                           "them to be used."),
             QLatin1String("qmltypes"));
     parser.addOption(qmltypesFilesOption);
+    const QString qmltypesFilesSetting = QLatin1String("OverwriteImportTypes");
+    settings.addOption(qmltypesFilesSetting);
 
     parser.addPositionalArgument(QLatin1String("files"),
                                  QLatin1String("list of qml or js files to verify"));
 
     parser.process(app);
 
-    for (auto it = options.begin(); it != options.end(); ++it) {
-        if (parser.isSet(it.key())) {
-            const QString value = parser.value(it.key());
-            auto &option = it.value();
+    if (parser.isSet(writeDefaultsOption)) {
+        return settings.writeDefaults() ? 0 : 1;
+    }
 
-            if (!option.setLevel(value)) {
-                qWarning() << "Invalid logging level" << value << "provided for" << it.key() << "(allowed are: disable, info, warning)";
-                parser.showHelp(-1);
+    auto updateLogLevels = [&]() {
+        for (auto it = options.begin(); it != options.end(); ++it) {
+            const QString &key = it.key();
+            const QString &settingsName = QStringLiteral("Warnings/") + it.value().m_settingsName;
+            if (parser.isSet(key) || settings.isSet(settingsName)) {
+                const QString value = parser.isSet(key) ? parser.value(key)
+                                                        : settings.value(settingsName).toString();
+                auto &option = it.value();
+
+                if (!option.setLevel(value)) {
+                    qWarning() << "Invalid logging level" << value << "provided for" << it.key()
+                               << "(allowed are: disable, info, warning)";
+                    parser.showHelp(-1);
+                }
             }
         }
-    }
+    };
+
+    updateLogLevels();
 
     const auto positionalArguments = parser.positionalArguments();
     if (positionalArguments.isEmpty()) {
@@ -242,9 +280,14 @@ All warnings can be set to three levels:
     if (parser.isSet(qmlImportPathsOption))
         qmlImportPaths << parser.values(qmlImportPathsOption);
 
+    qmlImportPaths << settings.value(qmlImportPathsSetting).toStringList();
+
     QStringList qmltypesFiles;
     if (parser.isSet(qmltypesFilesOption)) {
         qmltypesFiles = parser.values(qmltypesFilesOption);
+    } else if (settings.isSet(qmltypesFilesSetting)
+               && !settings.value(qmltypesFilesSetting).toStringList().isEmpty()) {
+        qmltypesFiles = parser.values(qmltypesFilesSetting);
     } else {
         // If none are given explicitly, use the qmltypes files from the current directory.
         QDirIterator it(".", {"*.qmltypes"}, QDir::Files);
@@ -254,7 +297,11 @@ All warnings can be set to three levels:
         }
     }
 
-    const QString resourceFile = parser.value(resourceOption);
+    QString resourceFile;
+    if (parser.isSet(resourceOption))
+        resourceFile = parser.value(resourceOption);
+    else if (settings.isSet(resourceSetting))
+        resourceFile = settings.value(resourceSetting).toString();
 
 #else
     bool silent = false;
@@ -268,13 +315,16 @@ All warnings can be set to three levels:
     QQmlJSImporter importer(qmlImportPaths, nullptr);
 
 #if QT_CONFIG(commandlineparser)
-    for (const QString &filename : positionalArguments)
+    for (const QString &filename : positionalArguments) {
+        if (!parser.isSet(ignoreSettings)) {
+            settings.search(filename);
+            updateLogLevels();
+        }
 #else
     const auto arguments = app.arguments();
-    for (const QString &filename : arguments)
+    for (const QString &filename : arguments) {
 #endif
-        success &= lint_file(filename, silent, qmlImportPaths, qmltypesFiles, resourceFile, options,
-                             importer);
-
+        success &= lint_file(filename, silent, qmlImportPaths, qmltypesFiles, resourceFile, options, importer);
+    }
     return success ? 0 : -1;
 }

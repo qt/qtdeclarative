@@ -12,6 +12,8 @@ qt_internal_add_tool(${target_name}
         checkidentifiers.cpp checkidentifiers.h
         findwarnings.cpp findwarnings.h
         main.cpp
+        ../shared/qqmltoolingsettings.h
+        ../shared/qqmltoolingsettings.cpp
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlCompilerPrivate

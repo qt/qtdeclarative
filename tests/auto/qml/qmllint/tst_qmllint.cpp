@@ -66,12 +66,13 @@ private Q_SLOTS:
 
     void requiredProperty();
 
+    void settingsFile();
+
 private:
-    QString runQmllint(const QString &fileToLint,
-                       std::function<void(QProcess &)> handleResult,
-                       const QStringList &extraArgs = QStringList());
+    QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
+                       const QStringList &extraArgs = QStringList(), bool ignoreSettings = true);
     QString runQmllint(const QString &fileToLint, bool shouldSucceed,
-                       const QStringList &extraArgs = QStringList());
+                       const QStringList &extraArgs = QStringList(), bool ignoreSettings = true);
 
     QString m_qmllintPath;
     QString m_qmljsrootgenPath;
@@ -764,7 +765,7 @@ void TestQmllint::cleanQmlCode()
 
 QString TestQmllint::runQmllint(const QString &fileToLint,
                                 std::function<void(QProcess &)> handleResult,
-                                const QStringList &extraArgs)
+                                const QStringList &extraArgs, bool ignoreSettings)
 {
     auto qmlImportDir = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
     QStringList args;
@@ -772,6 +773,10 @@ QString TestQmllint::runQmllint(const QString &fileToLint,
     args << (QFileInfo(fileToLint).isAbsolute() ? fileToLint : testFile(fileToLint))
          << QStringLiteral("-I") << qmlImportDir
          << QStringLiteral("-I") << dataDirectory();
+
+    if (ignoreSettings)
+        QStringLiteral("--ignore-settings");
+
     args << extraArgs;
     args << QStringLiteral("--silent");
     QString errors;
@@ -798,17 +803,21 @@ QString TestQmllint::runQmllint(const QString &fileToLint,
     return errors;
 }
 
-QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed, const QStringList &extraArgs)
+QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
+                                const QStringList &extraArgs, bool ignoreSettings)
 {
-    return runQmllint(fileToLint, [&](QProcess &process) {
-        QVERIFY(process.waitForFinished());
-        QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    return runQmllint(
+            fileToLint,
+            [&](QProcess &process) {
+                QVERIFY(process.waitForFinished());
+                QCOMPARE(process.exitStatus(), QProcess::NormalExit);
 
-        if (shouldSucceed)
-            QCOMPARE(process.exitCode(), 0);
-        else
-            QVERIFY(process.exitCode() != 0);
-    }, extraArgs);
+                if (shouldSucceed)
+                    QCOMPARE(process.exitCode(), 0);
+                else
+                    QVERIFY(process.exitCode() != 0);
+            },
+            extraArgs, ignoreSettings);
 }
 
 void TestQmllint::requiredProperty()
@@ -819,6 +828,14 @@ void TestQmllint::requiredProperty()
     QVERIFY(errors.contains(QStringLiteral("Property \"foo\" was marked as required but does not exist.")));
 }
 
+void TestQmllint::settingsFile()
+{
+    QVERIFY(runQmllint("settings/unqualifiedSilent/unqualified.qml", true, QStringList(), false)
+                    .isEmpty());
+    QVERIFY(runQmllint("settings/unusedImportWarning/unused.qml", false, QStringList(), false)
+                    .contains(QStringLiteral("Warning: %1:2:1: Unused import at %1:2:1")
+                                      .arg(testFile("settings/unusedImportWarning/unused.qml"))));
+}
 
 QTEST_MAIN(TestQmllint)
 #include "tst_qmllint.moc"

@@ -111,8 +111,17 @@ public:
     struct Option
     {
         Option() = default;
-        Option(QQmlJSLoggerCategory category, const QString& description, QtMsgType level, bool disabled = false) : m_category(category), m_description(description), m_level(level), m_disabled(disabled) {}
+        Option(QQmlJSLoggerCategory category, QString settingsName, const QString &description,
+               QtMsgType level, bool disabled = false)
+            : m_category(category),
+              m_settingsName(settingsName),
+              m_description(description),
+              m_level(level),
+              m_disabled(disabled)
+        {
+        }
         QQmlJSLoggerCategory m_category;
+        QString m_settingsName;
         QString m_description;
         QtMsgType m_level;
         bool m_disabled;
