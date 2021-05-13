@@ -105,6 +105,7 @@ void QQmlListAccessor::setList(const QVariant &v, QQmlEngine *engine)
             m_type = Invalid;
         } else {
             m_type = Integer;
+            d = i;
         }
     } else if ((!enginePrivate && QQmlMetaType::isQObject(d.userType())) ||
                (enginePrivate && enginePrivate->isQObject(d.userType()))) {
