@@ -108,6 +108,7 @@ void QQmlListAccessor::setList(const QVariant &v)
             m_type = Invalid;
         } else {
             m_type = Integer;
+            d = i;
         }
     } else {
         m_type = Instance;
