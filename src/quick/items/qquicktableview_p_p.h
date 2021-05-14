@@ -63,6 +63,7 @@
 
 #include <QtQuick/private/qquickflickable_p_p.h>
 #include <QtQuick/private/qquickitemviewfxitem_p_p.h>
+#include <QtQuick/private/qquickselectable_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -92,7 +93,7 @@ private:
     Q_DECLARE_PRIVATE(QQuickTableSectionSizeProvider)
 };
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickTableViewPrivate : public QQuickFlickablePrivate, public QQuickSelectable
 {
     Q_DECLARE_PUBLIC(QQuickTableView)
 
@@ -326,6 +327,11 @@ public:
     Qt::Alignment positionViewAtRowAlignment = Qt::AlignTop;
     Qt::Alignment positionViewAtColumnAlignment = Qt::AlignLeft;
 
+    QPoint selectionStartCell;
+    QPoint selectionEndCell;
+    QRectF selectionStartCellRect;
+    QRectF selectionEndCellRect;
+
     QMargins edgesBeforeRebuild;
 
     const static QPoint kLeft;
@@ -343,6 +349,7 @@ public:
     int modelIndexAtCell(const QPoint &cell) const;
     QPoint cellAtModelIndex(int modelIndex) const;
     int modelIndexToCellIndex(const QModelIndex &modelIndex) const;
+    inline bool cellIsValid(const QPoint &cell) const { return cell.x() != -1 && cell.y() != -1; }
 
     qreal sizeHintForColumn(int column) const;
     qreal sizeHintForRow(int row) const;
@@ -476,6 +483,20 @@ public:
 
     inline QString tableLayoutToString() const;
     void dumpTable() const;
+
+    // QQuickSelectable
+    QQuickItem *selectionPointerHandlerTarget() const override;
+    void setSelectionStartPos(const QPointF &pos) override;
+    void setSelectionEndPos(const QPointF &pos) override;
+    void clearSelection() override;
+    void normalizeSelection() override;
+    QRectF selectionRectangle() const override;
+    QSizeF scrollTowardsSelectionPoint(const QPointF &pos, const QSizeF &step) override;
+
+    QPoint clampedCellAtPos(const QPointF &pos) const;
+    void updateSelection(const QRect &oldSelection, const QRect &newSelection);
+    QRect selection() const;
+    // ----------------
 };
 
 class FxTableItem : public QQuickItemViewFxItem

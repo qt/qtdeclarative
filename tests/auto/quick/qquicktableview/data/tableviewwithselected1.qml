@@ -62,8 +62,8 @@ Item {
         id: tableViewDelegate
         Rectangle {
             objectName: "tableViewDelegate"
-            implicitWidth: 100
-            implicitHeight: 100
+            implicitWidth: 20
+            implicitHeight: 20
             required property bool selected
             color: selected ? "lightgray" : "green"
         }

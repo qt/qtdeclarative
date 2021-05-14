@@ -202,6 +202,10 @@ private slots:
     void checkSelectionModelWithRequiredSelectedProperty();
     void checkSelectionModelWithUnrequiredSelectedProperty();
     void removeAndAddSelectionModel();
+    void testSelectableStartPosEndPos_data();
+    void testSelectableStartPosEndPos();
+    void testSelectableStartPosEndPosOutsideView();
+    void testSelectableScrollTowardsPos();
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
@@ -3564,6 +3568,199 @@ void tst_QQuickTableView::removeAndAddSelectionModel()
     tableView->setSelectionModel(&selectionModel);
     selected = fxItem->item->property("selected").toBool();
     QCOMPARE(selected, true);
+}
+
+void tst_QQuickTableView::testSelectableStartPosEndPos_data()
+{
+    QTest::addColumn<QPoint>("endCellDist");
+
+    QTest::newRow("single cell") << QPoint(0, 0);
+
+    QTest::newRow("left to right") << QPoint(1, 0);
+    QTest::newRow("left to right") << QPoint(2, 0);
+    QTest::newRow("right to left") << QPoint(-1, 0);
+    QTest::newRow("right to left") << QPoint(-2, 0);
+
+    QTest::newRow("top to bottom") << QPoint(0, 1);
+    QTest::newRow("top to bottom") << QPoint(0, 2);
+    QTest::newRow("bottom to top") << QPoint(0, -1);
+    QTest::newRow("bottom to top") << QPoint(0, -2);
+
+    QTest::newRow("diagonal top left to bottom right") << QPoint(1, 1);
+    QTest::newRow("diagonal top left to bottom right") << QPoint(2, 2);
+    QTest::newRow("diagonal bottom left to top right") << QPoint(-1, -1);
+    QTest::newRow("diagonal bottom left to top right") << QPoint(-2, -2);
+    QTest::newRow("diagonal top right to bottom left") << QPoint(-1, 1);
+    QTest::newRow("diagonal top right to bottom left") << QPoint(-2, 2);
+    QTest::newRow("diagonal bottom right to top left") << QPoint(1, -1);
+    QTest::newRow("diagonal bottom right to top left") << QPoint(2, -2);
+}
+
+void tst_QQuickTableView::testSelectableStartPosEndPos()
+{
+    // Check that the TableView implement QQuickSelectableInterface setSelectionStartPos, setSelectionEndPos
+    // and clearSelection correctly. Do this by calling setSelectionStartPos/setSelectionEndPos on top of
+    // different cells, and see that we end up with the expected selections.
+    QFETCH(QPoint, endCellDist);
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(10, 10);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(selectionModel.hasSelection(), false);
+
+    const QPoint startCell(5, 5);
+    const QPoint endCell = startCell + endCellDist;
+    const QPoint endCellWrapped = startCell - endCellDist;
+
+    const QQuickItem *startItem = tableView->itemAtCell(startCell);
+    const QQuickItem *endItem = tableView->itemAtCell(endCell);
+    const QQuickItem *endItemWrapped = tableView->itemAtCell(endCellWrapped);
+    QVERIFY(startItem);
+    QVERIFY(endItem);
+    QVERIFY(endItemWrapped);
+
+    const QPointF startPos(startItem->x(), startItem->y());
+    const QPointF endPos(endItem->x(), endItem->y());
+    const QPointF endPosWrapped(endItemWrapped->x(), endItemWrapped->y());
+
+    tableViewPrivate->setSelectionStartPos(startPos);
+    tableViewPrivate->setSelectionEndPos(endPos);
+
+    QCOMPARE(selectionModel.hasSelection(), true);
+
+    const int x1 = qMin(startCell.x(), endCell.x());
+    const int x2 = qMax(startCell.x(), endCell.x());
+    const int y1 = qMin(startCell.y(), endCell.y());
+    const int y2 = qMax(startCell.y(), endCell.y());
+
+    for (int x = x1; x < x2; ++x) {
+        for (int y = y1; y < y2; ++y) {
+            const auto index = model.index(y, x);
+            QVERIFY(selectionModel.isSelected(index));
+        }
+    }
+
+    const int expectedCount = (x2 - x1 + 1) * (y2 - y1 + 1);
+    const int actualCount = selectionModel.selectedIndexes().count();
+    QCOMPARE(actualCount, expectedCount);
+
+    // Wrap the selection
+    tableViewPrivate->setSelectionEndPos(endPosWrapped);
+
+    for (int x = x2; x < x1; ++x) {
+        for (int y = y2; y < y1; ++y) {
+            const auto index = model.index(y, x);
+            QVERIFY(selectionModel.isSelected(index));
+        }
+    }
+
+    const int actualCountAfterWrap = selectionModel.selectedIndexes().count();
+    QCOMPARE(actualCountAfterWrap, expectedCount);
+
+    tableViewPrivate->clearSelection();
+    QCOMPARE(selectionModel.hasSelection(), false);
+}
+
+void tst_QQuickTableView::testSelectableStartPosEndPosOutsideView()
+{
+    // Call setSelectionStartPos and setSelectionEndPos with positions outside the view.
+    // This should first of all not crash, but instead just clamp the selection to the
+    // cells that are visible inside the view.
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(10, 10);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+
+    WAIT_UNTIL_POLISHED;
+
+    const QPoint centerCell(5, 5);
+    const QQuickItem *centerItem = tableView->itemAtCell(centerCell);
+    QVERIFY(centerItem);
+
+    const QPointF centerPos(centerItem->x(), centerItem->y());
+    const QPointF outsideLeft(-100, centerPos.y());
+    const QPointF outsideRight(tableView->width() + 100, centerPos.y());
+    const QPointF outsideTop(centerPos.x(), -100);
+    const QPointF outsideBottom(centerPos.x(), tableView->height() + 100);
+
+    tableViewPrivate->setSelectionStartPos(centerPos);
+
+    tableViewPrivate->setSelectionEndPos(outsideLeft);
+    for (int x = 0; x <= centerCell.x(); ++x) {
+        const auto index = model.index(centerCell.y(), x);
+        QVERIFY(selectionModel.isSelected(index));
+    }
+
+    tableViewPrivate->setSelectionEndPos(outsideRight);
+    for (int x = centerCell.x(); x < model.columnCount(); ++x) {
+        const auto index = model.index(centerCell.y(), x);
+        QVERIFY(selectionModel.isSelected(index));
+    }
+
+    tableViewPrivate->setSelectionEndPos(outsideTop);
+    for (int y = 0; y <= centerCell.y(); ++y) {
+        const auto index = model.index(y, centerCell.x());
+        QVERIFY(selectionModel.isSelected(index));
+    }
+
+    tableViewPrivate->setSelectionEndPos(outsideBottom);
+    for (int y = centerCell.y(); y < model.rowCount(); ++y) {
+        const auto index = model.index(y, centerCell.x());
+        QVERIFY(selectionModel.isSelected(index));
+    }
+}
+
+void tst_QQuickTableView::testSelectableScrollTowardsPos()
+{
+    // Check that TableView will implement the scrollTowardsSelectionPoint function
+    // correctly, and move the content item towards the given position
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(200, 200);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->contentX(), 0);
+    QCOMPARE(tableView->contentY(), 0);
+
+    const QSizeF step(1, 1);
+    const QPointF topLeft(-100, -100);
+    const QPointF topRight(tableView->width() + 100, -100);
+    const QPointF bottomLeft(-100, tableView->height() + 100);
+    const QPointF bottomRight(tableView->width() + 100, tableView->height() + 100);
+
+    tableViewPrivate->scrollTowardsSelectionPoint(topRight, step);
+    QCOMPARE(tableView->contentX(), step.width());
+    QCOMPARE(tableView->contentY(), 0);
+
+    tableViewPrivate->scrollTowardsSelectionPoint(bottomRight, step);
+    QCOMPARE(tableView->contentX(), step.width() * 2);
+    QCOMPARE(tableView->contentY(), step.height());
+
+    tableViewPrivate->scrollTowardsSelectionPoint(bottomLeft, step);
+    QCOMPARE(tableView->contentX(), step.width());
+    QCOMPARE(tableView->contentY(), step.height() * 2);
+
+    tableViewPrivate->scrollTowardsSelectionPoint(topLeft, step);
+    QCOMPARE(tableView->contentX(), 0);
+    QCOMPARE(tableView->contentY(), step.height());
+
+    tableViewPrivate->scrollTowardsSelectionPoint(topLeft, step);
+    QCOMPARE(tableView->contentX(), 0);
+    QCOMPARE(tableView->contentY(), 0);
 }
 
 QTEST_MAIN(tst_QQuickTableView)

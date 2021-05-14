@@ -778,6 +778,255 @@ void QQuickTableViewPrivate::dumpTable() const
         qWarning() << "Window capture saved to:" << path;
 }
 
+QQuickItem *QQuickTableViewPrivate::selectionPointerHandlerTarget() const
+{
+    return const_cast<QQuickTableView *>(q_func())->contentItem();
+}
+
+void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
+{
+    if (loadedItems.isEmpty())
+        return;
+    if (!selectionModel)
+        return;
+    const QAbstractItemModel *qaim = selectionModel->model();
+    if (!qaim)
+        return;
+
+    const QRect prevSelection = selection();
+    selectionStartCell = clampedCellAtPos(pos);
+
+    if (!cellIsValid(selectionStartCell))
+        return;
+
+    // Update selection rectangle
+    selectionStartCellRect = loadedTableItem(selectionStartCell)->geometry();
+
+    if (!cellIsValid(selectionEndCell))
+        return;
+
+    // Update selection model
+    updateSelection(prevSelection, selection());
+}
+
+void QQuickTableViewPrivate::setSelectionEndPos(const QPointF &pos)
+{
+    if (loadedItems.isEmpty())
+        return;
+    if (!selectionModel)
+        return;
+    const QAbstractItemModel *qaim = selectionModel->model();
+    if (!qaim)
+        return;
+
+    const QRect prevSelection = selection();
+    selectionEndCell = clampedCellAtPos(pos);
+
+    if (!cellIsValid(selectionEndCell))
+        return;
+
+    // Update selection rectangle
+    selectionEndCellRect = loadedTableItem(selectionEndCell)->geometry();
+
+    if (!cellIsValid(selectionStartCell))
+        return;
+
+    // Update selection model
+    updateSelection(prevSelection, selection());
+}
+
+QPoint QQuickTableViewPrivate::clampedCellAtPos(const QPointF &pos) const
+{
+    Q_Q(const QQuickTableView);
+
+    // Note: pos should be relative to selectionPointerHandlerTarget()
+    const QPointF posInView = q->mapFromItem(selectionPointerHandlerTarget(), pos);
+    QPoint cell = q->cellAtPos(posInView, true);
+    if (cellIsValid(cell))
+        return cell;
+
+    // Clamp the cell to the loaded table and the viewport, whichever is the smallest
+    QPointF clampedPos(
+                qBound(loadedTableOuterRect.x(), pos.x(), loadedTableOuterRect.right() - 1),
+                qBound(loadedTableOuterRect.y(), pos.y(), loadedTableOuterRect.bottom() - 1));
+    QPointF clampedPosInView = q->mapFromItem(selectionPointerHandlerTarget(), clampedPos);
+    clampedPosInView.rx() = qBound(0., clampedPosInView.x(), viewportRect.width());
+    clampedPosInView.ry() = qBound(0., clampedPosInView.y(), viewportRect.height());
+
+    return q->cellAtPos(clampedPosInView, true);
+}
+
+void QQuickTableViewPrivate::updateSelection(const QRect &oldSelection, const QRect &newSelection)
+{
+    const QAbstractItemModel *qaim = selectionModel->model();
+    const QRect oldRect = oldSelection.normalized();
+    const QRect newRect = newSelection.normalized();
+
+    // Select cells inside the new selection rect
+    {
+        const QModelIndex startIndex = qaim->index(newRect.y(), newRect.x());
+        const QModelIndex endIndex = qaim->index(newRect.y() + newRect.height(), newRect.x() + newRect.width());
+        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Select);
+    }
+
+    // Unselect cells in the new minus old rects
+    if (oldRect.x() < newRect.x()) {
+        const QModelIndex startIndex = qaim->index(oldRect.y(), oldRect.x());
+        const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), newRect.x() - 1);
+        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
+    } else if (oldRect.x() + oldRect.width() > newRect.x() + newRect.width()) {
+        const QModelIndex startIndex = qaim->index(oldRect.y(), newRect.x() + newRect.width() + 1);
+        const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), oldRect.x() + oldRect.width());
+        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
+    }
+
+    if (oldRect.y() < newRect.y()) {
+        const QModelIndex startIndex = qaim->index(oldRect.y(), oldRect.x());
+        const QModelIndex endIndex = qaim->index(newRect.y() - 1, oldRect.x() + oldRect.width());
+        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
+    } else if (oldRect.y() + oldRect.height() > newRect.y() + newRect.height()) {
+        const QModelIndex startIndex = qaim->index(newRect.y() + newRect.height() + 1, oldRect.x());
+        const QModelIndex endIndex = qaim->index(oldRect.y() + oldRect.height(), oldRect.x() + oldRect.width());
+        selectionModel->select(QItemSelection(startIndex, endIndex), QItemSelectionModel::Deselect);
+    }
+}
+
+void QQuickTableViewPrivate::clearSelection()
+{
+    selectionStartCell = QPoint(-1, -1);
+    selectionEndCell = QPoint(-1, -1);
+    selectionStartCellRect = QRectF();
+    selectionEndCellRect = QRectF();
+
+    if (selectionModel)
+        selectionModel->clearSelection();
+}
+
+void QQuickTableViewPrivate::normalizeSelection()
+{
+    // Normalize the selection if necessary, so that the start cell is to the left
+    // and above the end cell. This is typically done after a selection drag has
+    // finished so that the start and end positions up in sync with the handles.
+    // This will not cause any changes to the selection itself.
+    const bool flippedX = selectionEndCell.x() < selectionStartCell.x();
+    const bool flippedY = selectionEndCell.y() < selectionStartCell.y();
+
+    if (flippedX) {
+        std::swap(selectionStartCell.rx(), selectionEndCell.rx());
+        QPointF startPos = selectionStartCellRect.topLeft();
+        QPointF endPos = selectionEndCellRect.topLeft();
+        selectionStartCellRect.moveLeft(endPos.x());
+        selectionEndCellRect.moveLeft(startPos.x());
+    }
+
+    if (flippedY) {
+        std::swap(selectionStartCell.ry(), selectionEndCell.ry());
+        QPointF startPos = selectionStartCellRect.topLeft();
+        QPointF endPos = selectionEndCellRect.topLeft();
+        selectionStartCellRect.moveTop(endPos.y());
+        selectionEndCellRect.moveTop(startPos.y());
+    }
+}
+
+QRectF QQuickTableViewPrivate::selectionRectangle() const
+{
+    // Normalize the rectangle before we return it. But in order to do
+    // that correctly, QRectF::normalize() will not be enough, we need to
+    // take cell size into account as well.
+    QRectF rect;
+
+    if (selectionStartCell.x() < selectionEndCell.x()) {
+        rect.setX(selectionStartCellRect.x());
+        rect.setWidth(selectionEndCellRect.x() + selectionEndCellRect.width() - selectionStartCellRect.x());
+    } else {
+        rect.setX(selectionEndCellRect.x());
+        rect.setWidth(selectionStartCellRect.x() + selectionStartCellRect.width() - selectionEndCellRect.x());
+    }
+
+    if (selectionStartCell.y() < selectionEndCell.y()) {
+        rect.setY(selectionStartCellRect.y());
+        rect.setHeight(selectionEndCellRect.y() + selectionEndCellRect.height() - selectionStartCellRect.y());
+    } else {
+        rect.setY(selectionEndCellRect.y());
+        rect.setHeight(selectionStartCellRect.y() + selectionStartCellRect.height() - selectionEndCellRect.y());
+    }
+
+    return rect;
+}
+
+QRect QQuickTableViewPrivate::selection() const
+{
+    const qreal w = selectionEndCell.x() - selectionStartCell.x();
+    const qreal h = selectionEndCell.y() - selectionStartCell.y();
+    return QRect(selectionStartCell.x(), selectionStartCell.y(), w, h);
+}
+
+QSizeF QQuickTableViewPrivate::scrollTowardsSelectionPoint(const QPointF &pos, const QSizeF &step)
+{
+    Q_Q(QQuickTableView);
+
+    if (loadedItems.isEmpty())
+        return QSizeF();
+
+    // Scroll the content item towards pos.
+    // Return the distance in pixels from the edge of the viewport to pos.
+    // The caller will typically use this information to throttle the scrolling speed.
+    // If pos is already inside the viewport, or the viewport is scrolled all the way
+    // to the end, we return 0.
+    QSizeF dist(0, 0);
+
+    const bool outsideLeft = pos.x() < viewportRect.x();
+    const bool outsideRight = pos.x() >= viewportRect.right() - 1;
+    const bool outsideTop = pos.y() < viewportRect.y();
+    const bool outsideBottom = pos.y() >= viewportRect.bottom() - 1;
+
+    if (outsideLeft) {
+        const bool firstColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::LeftEdge) == kEdgeIndexAtEnd;
+        const qreal remainingDist = viewportRect.left() - loadedTableOuterRect.left();
+        if (remainingDist > 0 || !firstColumnLoaded) {
+            qreal stepX = step.width();
+            if (firstColumnLoaded)
+                stepX = qMin(stepX, remainingDist);
+            q->setContentX(q->contentX() - stepX);
+            dist.setWidth(pos.x() - viewportRect.left() - 1);
+        }
+    } else if (outsideRight) {
+        const bool lastColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::RightEdge) == kEdgeIndexAtEnd;
+        const qreal remainingDist = loadedTableOuterRect.right() - viewportRect.right();
+        if (remainingDist > 0 || !lastColumnLoaded) {
+            qreal stepX = step.width();
+            if (lastColumnLoaded)
+                stepX = qMin(stepX, remainingDist);
+            q->setContentX(q->contentX() + stepX);
+            dist.setWidth(pos.x() - viewportRect.right() - 1);
+        }
+    }
+
+    if (outsideTop) {
+        const bool firstRowLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::TopEdge) == kEdgeIndexAtEnd;
+        const qreal remainingDist = viewportRect.top() - loadedTableOuterRect.top();
+        if (remainingDist > 0 || !firstRowLoaded) {
+            qreal stepY = step.height();
+            if (firstRowLoaded)
+                stepY = qMin(stepY, remainingDist);
+            q->setContentY(q->contentY() - stepY);
+            dist.setHeight(pos.y() - viewportRect.top() - 1);
+        }
+    } else if (outsideBottom) {
+        const bool lastRowLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::BottomEdge) == kEdgeIndexAtEnd;
+        const qreal remainingDist = loadedTableOuterRect.bottom() - viewportRect.bottom();
+        if (remainingDist > 0 || !lastRowLoaded) {
+            qreal stepY = step.height();
+            if (lastRowLoaded)
+                stepY = qMin(stepY, remainingDist);
+            q->setContentY(q->contentY() + stepY);
+            dist.setHeight(pos.y() - viewportRect.bottom() - 1);
+        }
+    }
+
+    return dist;
+}
+
 QQuickTableViewAttached *QQuickTableViewPrivate::getAttachedObject(const QObject *object) const
 {
     QObject *attachedObject = qmlAttachedPropertiesObject<QQuickTableView>(object);
