@@ -339,8 +339,8 @@ bool QQuickPointerHandler::approveGrabTransition(QPointerEvent *event, const QEv
 {
     Q_D(const QQuickPointerHandler);
     bool allowed = false;
+    QObject* existingGrabber = event->exclusiveGrabber(point);
     if (proposedGrabber == this) {
-        QObject* existingGrabber = event->exclusiveGrabber(point);
         allowed = (existingGrabber == nullptr) || ((d->grabPermissions & CanTakeOverFromAnything) == CanTakeOverFromAnything);
         if (existingGrabber) {
             if (QQuickPointerHandler *existingPhGrabber = qobject_cast<QQuickPointerHandler *>(event->exclusiveGrabber(point))) {
@@ -395,7 +395,8 @@ bool QQuickPointerHandler::approveGrabTransition(QPointerEvent *event, const QEv
     }
     qCDebug(lcPointerHandlerGrab) << "point" << Qt::hex << point.id() << "permission" <<
             QMetaEnum::fromType<GrabPermissions>().valueToKeys(grabPermissions()) <<
-            ':' << this << (allowed ? "approved to" : "denied to") << proposedGrabber;
+            ':' << this << (allowed ? "approved from" : "denied from") <<
+            existingGrabber << "to" << proposedGrabber;
     return allowed;
 }
 
