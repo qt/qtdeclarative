@@ -50,9 +50,9 @@
 #include <QtCore/qlibraryinfo.h>
 #endif
 
-static bool lint_file(const QString &filename, const bool silent,
-                      const QStringList &qmlImportPaths, const QStringList &qmltypesFiles,
-                      const QString &resourceFile, const QMap<QString, QQmlJSLogger::Option> &options)
+static bool lint_file(const QString &filename, const bool silent, const QStringList &qmlImportPaths,
+                      const QStringList &qmltypesFiles, const QString &resourceFile,
+                      const QMap<QString, QQmlJSLogger::Option> &options, QQmlJSImporter &importer)
 {
     QFile file(filename);
     if (!file.open(QFile::ReadOnly)) {
@@ -88,7 +88,11 @@ static bool lint_file(const QString &filename, const bool silent,
 
     if (success && !isJavaScript) {
         const auto check = [&](QQmlJSResourceFileMapper *mapper) {
-            QQmlJSImporter importer(qmlImportPaths, mapper);
+            if (importer.importPaths() != qmlImportPaths)
+                importer.setImportPaths(qmlImportPaths);
+
+            importer.setResourceFileMapper(mapper);
+
             FindWarningVisitor v { &importer, qmltypesFiles, code, filename, silent };
 
             for (auto it = options.cbegin(); it != options.cend(); ++it) {
@@ -113,6 +117,7 @@ static bool lint_file(const QString &filename, const bool silent,
 
 int main(int argv, char *argc[])
 {
+    qSetGlobalQHashSeed(0);
     QMap<QString, QQmlJSLogger::Option> options = QQmlJSLogger::options();
 
     QCoreApplication app(argv, argc);
@@ -260,13 +265,16 @@ All warnings can be set to three levels:
     QStringList qmltypesFiles {};
 #endif
     bool success = true;
+    QQmlJSImporter importer(qmlImportPaths, nullptr);
+
 #if QT_CONFIG(commandlineparser)
     for (const QString &filename : positionalArguments)
 #else
     const auto arguments = app.arguments();
     for (const QString &filename : arguments)
 #endif
-        success &= lint_file(filename, silent, qmlImportPaths, qmltypesFiles, resourceFile, options);
+        success &= lint_file(filename, silent, qmlImportPaths, qmltypesFiles, resourceFile, options,
+                             importer);
 
     return success ? 0 : -1;
 }

@@ -263,10 +263,34 @@ void QQmlJSImporter::processImport(const QQmlJSImporter::Import &import,
         }
     }
 
+    /* We need to create a temporary AvailableTypes instance here to make builtins available as
+       QQmlJSScope::resolveTypes relies on them being available. They cannot be part of the regular
+       types as they would keep overwriting existing types when loaded from cache.
+       This is only a problem with builtin types as only builtin types can be overridden by any
+       sibling import. Consider the following qmldir:
+
+       module Things
+       import QtQml 2.0
+       import QtQuick.LocalStorage auto
+
+       The module "Things" sees QtQml's definition of Qt, not the builtins', even though
+       QtQuick.LocalStorage does not depend on QtQml and is imported afterwards. Conversely:
+
+       module Stuff
+       import ModuleOverridingQObject
+       import QtQuick
+
+       The module "Stuff" sees QtQml's definition of QObject (via QtQuick), even if
+       ModuleOverridingQObject has overridden it.
+    */
+
+    QQmlJSImporter::AvailableTypes tempTypes(builtinImportHelper().cppNames);
+    tempTypes.cppNames.insert(types->cppNames);
+
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         const auto &val = it.value();
         if (val->baseType().isNull()) // Otherwise we have already done it in localFile2ScopeTree()
-            QQmlJSScope::resolveTypes(val, types->cppNames);
+            QQmlJSScope::resolveTypes(val, tempTypes.cppNames);
     }
 }
 
@@ -351,6 +375,35 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::builtinInternalNames()
 bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
                                                 const QString &prefix, QTypeRevision version)
 {
+    const bool isDependency = prefix == QStringLiteral("$dependency$");
+
+    // QtQuick/Controls and QtQuick.Controls are the same module
+    const QString moduleCacheName = QString(module).replace(u'/', u'.');
+
+    const auto cacheKey = QPair<QString, QTypeRevision> {
+        (isDependency ? QString() : prefix) + u'|' + moduleCacheName, version
+    };
+
+    auto getTypesFromCache = [&]() -> bool {
+        if (!m_cachedImportTypes.contains(cacheKey))
+            return false;
+
+        const auto &cacheEntry = m_cachedImportTypes[cacheKey];
+
+        types->cppNames.insert(cacheEntry->cppNames);
+
+        // No need to import qml names for dependencies
+        if (!isDependency)
+            types->qmlNames.insert(cacheEntry->qmlNames);
+
+        return true;
+    };
+
+    if (getTypesFromCache())
+        return true;
+
+    auto cacheTypes = QSharedPointer<QQmlJSImporter::AvailableTypes>(new QQmlJSImporter::AvailableTypes({}));
+    m_cachedImportTypes[cacheKey] = cacheTypes;
 
     const QPair<QString, QTypeRevision> importId { module, version };
     const auto it = m_seenImports.constFind(importId);
@@ -361,9 +414,13 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
 
         const auto import = m_seenQmldirFiles.constFind(*it);
         Q_ASSERT(import != m_seenQmldirFiles.constEnd());
-        importDependencies(*import, types, prefix, version);
-        processImport(*import, types, prefix, version);
-        return true;
+
+        importDependencies(*import, cacheTypes.get(), prefix, version);
+        processImport(*import, cacheTypes.get(), prefix, version);
+
+        const bool typesFromCache = getTypesFromCache();
+        Q_ASSERT(typesFromCache);
+        return typesFromCache;
     }
 
     const auto modulePaths = qQmlResolveImportPaths(module, m_importPaths, version);
@@ -373,9 +430,12 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
 
         if (it != m_seenQmldirFiles.constEnd()) {
             m_seenImports.insert(importId, qmldirPath);
-            importDependencies(*it, types, prefix, version);
-            processImport(*it, types, prefix, version);
-            return true;
+            importDependencies(*it, cacheTypes.get(), prefix, version);
+            processImport(*it, cacheTypes.get(), prefix, version);
+
+            const bool typesFromCache = getTypesFromCache();
+            Q_ASSERT(typesFromCache);
+            return typesFromCache;
         }
 
         const QFileInfo file(qmldirPath);
@@ -383,9 +443,12 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
             const auto import = readQmldir(file.canonicalPath());
             m_seenQmldirFiles.insert(qmldirPath, import);
             m_seenImports.insert(importId, qmldirPath);
-            importDependencies(import, types, prefix, version);
-            processImport(import, types, prefix, version);
-            return true;
+            importDependencies(import, cacheTypes.get(), prefix, version);
+            processImport(import, cacheTypes.get(), prefix, version);
+
+            const bool typesFromCache = getTypesFromCache();
+            Q_ASSERT(typesFromCache);
+            return typesFromCache;
         }
     }
 
@@ -447,6 +510,17 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importDirectory(
     }
 
     return qmlNames;
+}
+
+void QQmlJSImporter::setImportPaths(const QStringList &importPaths)
+{
+    m_importPaths = importPaths;
+
+    // We have to get rid off all cache elements directly referencing modules, since changing
+    // importPaths might change which module is found first
+    m_seenImports.clear();
+    m_cachedImportTypes.clear();
+    // Luckily this doesn't apply to m_seenQmldirFiles
 }
 
 QT_END_NAMESPACE

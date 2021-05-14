@@ -57,6 +57,7 @@ public:
     {}
 
     QQmlJSResourceFileMapper *resourceFileMapper() { return m_mapper; }
+    void setResourceFileMapper(QQmlJSResourceFileMapper *mapper) { m_mapper = mapper; }
 
     ImportedTypes importBuiltins();
     void importQmltypes(const QStringList &qmltypesFiles);
@@ -76,6 +77,9 @@ public:
         m_warnings.clear();
         return result;
     }
+
+    QStringList importPaths() const { return m_importPaths; }
+    void setImportPaths(const QStringList &importPaths);
 
 private:
     friend class QDeferredFactory<QQmlJSScope>;
@@ -118,6 +122,7 @@ private:
     QStringList m_importPaths;
 
     QHash<QPair<QString, QTypeRevision>, QString> m_seenImports;
+    QHash<QPair<QString, QTypeRevision>, QSharedPointer<AvailableTypes>> m_cachedImportTypes;
     QHash<QString, Import> m_seenQmldirFiles;
 
     QHash<QString, QQmlJSScope::Ptr> m_importedFiles;
