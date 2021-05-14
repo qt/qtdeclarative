@@ -1,6 +1,7 @@
 [snapOneRow]
 macos # QTBUG-86729
 msvc-2019
+windows-10 gcc developer-build
 [snapToRow]
 msvc-2019
 windows-10 gcc developer-build
