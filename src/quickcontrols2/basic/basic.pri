@@ -46,6 +46,7 @@ QML_FILES += \
     $$PWD/ScrollBar.qml \
     $$PWD/ScrollIndicator.qml \
     $$PWD/ScrollView.qml \
+    $$PWD/SelectionRectangle.qml \
     $$PWD/Slider.qml \
     $$PWD/SpinBox.qml \
     $$PWD/SplitView.qml \

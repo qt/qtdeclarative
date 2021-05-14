@@ -71,6 +71,8 @@ HEADERS += \
     $$PWD/qquickscrollbar_p_p.h \
     $$PWD/qquickscrollindicator_p.h \
     $$PWD/qquickscrollview_p.h \
+    $$PWD/qquickselectionrectangle_p.h \
+    $$PWD/qquickselectionrectangle_p_p.h \
     $$PWD/qquickshortcutcontext_p_p.h \
     $$PWD/qquickslider_p.h \
     $$PWD/qquickspinbox_p.h \

@@ -88,6 +88,8 @@ qt_internal_add_qml_module(QuickTemplates2
         qquickscrollbar_p_p.h
         qquickscrollindicator.cpp qquickscrollindicator_p.h
         qquickscrollview.cpp qquickscrollview_p.h
+        qquickselectionrectangle.cpp qquickselectionrectangle_p.h
+        qquickselectionrectangle_p_p.h
         qquickshortcutcontext.cpp
         qquickshortcutcontext_p_p.h
         qquickslider.cpp qquickslider_p.h

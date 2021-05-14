@@ -42,6 +42,7 @@ set(qml_files
     "ScrollBar.qml"
     "ScrollIndicator.qml"
     "ScrollView.qml"
+    "SelectionRectangle.qml"
     "Slider.qml"
     "SpinBox.qml"
     "SplitView.qml"
@@ -177,6 +178,9 @@ set_source_files_properties(ScrollIndicator.qml PROPERTIES
 )
 set_source_files_properties(ScrollView.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.2;6.0"
+)
+set_source_files_properties(SelectionRectangle.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "6.2"
 )
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.0;6.0"
