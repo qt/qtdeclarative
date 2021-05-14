@@ -578,6 +578,10 @@ void QQuickAbstractButton::setPressed(bool isPressed)
 
     This property holds whether the button is checked.
 
+    Since Qt 6.2, setting this property no longer affects the
+    \l {AbstractButton::}{checkable} property. Explicitly set the
+    \c checkable property if needed.
+
     \sa checkable
 */
 bool QQuickAbstractButton::isChecked() const
@@ -591,9 +595,6 @@ void QQuickAbstractButton::setChecked(bool checked)
     Q_D(QQuickAbstractButton);
     if (d->checked == checked)
         return;
-
-    if (checked && !d->checkable)
-        setCheckable(true);
 
     d->checked = checked;
     if (d->action)
@@ -611,8 +612,6 @@ void QQuickAbstractButton::setChecked(bool checked)
     A checkable button toggles between checked (on) and unchecked (off) when
     the user clicks on it or presses the space bar while the button has active
     focus.
-
-    Setting \l checked to \c true forces this property to \c true.
 
     The default value is \c false.
 

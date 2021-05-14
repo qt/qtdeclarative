@@ -910,4 +910,11 @@ TestCase {
         compare(clickedSpy.count, 1)
         compare(doubleClickedSpy.count, 1)
     }
+
+    function test_checkedShouldNotSetCheckable() {
+         let control = createTemporaryObject(button, testCase, { checked: true })
+         verify(control)
+
+         verify(!control.checkable)
+     }
 }
