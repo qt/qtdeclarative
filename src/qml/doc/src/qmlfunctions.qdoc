@@ -187,7 +187,131 @@
   \c{T *create(QQmlEngine *, QJSEngine *)} when the type is first accessed.
   If both do exist and are accessible, the default constructor is preferred.
   If there is no default constructor and no factory function the singleton is
-  initially inaccessible.
+  inaccessible.
+
+  In order to declare a default-constructible class as singleton, all you have
+  to do is add \l QML_SINGLETON:
+
+  \code
+  class MySingleton : public QObject
+  {
+      Q_OBJECT
+      QML_ELEMENT
+      QML_SINGLETON
+      // Q_PROPERTY( ... )
+  public:
+      // members, Q_INVOKABLE functions, etc.
+  };
+  \endcode
+
+  If the singleton class is not default-constructible, but you can modify it,
+  you can add a factory function to it, in order to make it accessible:
+
+  \code
+  class MySingleton : public QObject
+  {
+      Q_OBJECT
+      QML_ELEMENT
+      QML_SINGLETON
+      // Q_PROPERTY( ... )
+
+  public:
+      static MySingleton *create(QQmlEngine *qmlEngine, QJSEngine *jsEngine)
+      {
+          MySingleton *result = nullptr;
+          // Create the object using some custom constructor or factory.
+          // The QML engine will assume ownership and delete it, eventually.
+          return result;
+      }
+
+      // members, Q_INVOKABLE functions, etc
+  };
+  \endcode
+
+  If you cannot modify the class and it does not have a default constructor or a
+  suitable factory function, you can provide a \l QML_FOREIGN wrapper to define
+  the factory function:
+
+  \code
+  struct SingletonForeign
+  {
+      Q_GADGET
+      QML_FOREIGN(MySingleton)
+      QML_SINGLETON
+      QML_NAMED_ELEMENT(MySingleton)
+  public:
+
+      static MySingleton *create(QQmlEngine *, QJSEngine *engine)
+      {
+          MySingleton *result = nullptr;
+          // Create the instance using some custom constructor or factory.
+          // The QML engine will assume ownership and delete it, eventually.
+          return result;
+      }
+  };
+  \endcode
+
+  Finally, if you want to provide one specific singleton object, the creation of
+  which you cannot control, you can return that from a factory function. This is
+  a replacement for the \l qmlRegisterSingletonInstance function.
+  If you were calling
+
+  \code
+  qmlRegisterSingletonInstance("MyModule", 1, 0, "MySingleton", myObject);
+  \endcode
+
+  with myObject being of type \c{MySingleton *}, you can do the following
+  instead:
+
+  \code
+  struct SingletonForeign
+  {
+      Q_GADGET
+      QML_FOREIGN(MySingleton)
+      QML_SINGLETON
+      QML_NAMED_ELEMENT(MySingleton)
+  public:
+
+      // Initialize this using myObject where you would previously
+      // call qmlRegisterSingletonInstance().
+      static MySingleton *s_singletonInstance = nullptr;
+
+      static MySingleton *create(QQmlEngine *, QJSEngine *engine)
+      {
+          // The instance has to exist before it is used. We cannot replace it.
+          Q_ASSERT(s_singletonInstance);
+
+          // The engine has to have the same thread affinity as the singleton.
+          Q_ASSERT(engine->thread() == s_singletonInstance->thread());
+
+          // There can only be one engine accessing the singleton.
+          if (s_engine)
+              Q_ASSERT(engine == s_engine);
+          else
+              s_engine = engine;
+
+          // Explicitly specify C++ ownership so that the engine doesn't delete
+          // the instance.
+          QJSEngine::setObjectOwnership(s_singletonInstance,
+                                        QJSEngine::CppOwnership);
+          return s_singletonInstance;
+      }
+
+  private:
+      static QJSEngine *s_engine = nullptr;
+  };
+  \endcode
+
+  This way, the pre-existing class \c MySingleton is declared to be a QML
+  singleton, called \c MySingleton. You can specify an instance for it any time
+  before it is used by setting the \c s_singletonInstance member. None of this
+  requires modification of \c MySingleton itself.
+
+  \note This pattern doesn't work if either the singleton is accessed by
+  multiple QML engines, or if the QML engine accessing it has a different thread
+  affinity than the singleton object itself. As shown above, you can check the
+  parameters to the \c create() method for identity and thread affinity of the
+  engine in order to assert on that.
 
   \sa QML_ELEMENT, QML_NAMED_ELEMENT(), qmlRegisterSingletonInstance().
 */
