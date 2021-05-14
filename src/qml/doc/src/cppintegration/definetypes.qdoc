@@ -237,6 +237,20 @@ register a new singleton type, and how to use an existing singleton type.
 
 \note Enum values for registered types in QML should start with a capital.
 
+\section2 Final properties
+
+Properties declared final using the \c FINAL modifier to \l Q_PROPERTY cannot
+be overridden. This means that any properties or functions of the same name,
+declared either in QML or in C++ on derived types, are ignored by the QML
+engine. You should declare properties \c FINAL when possible, in order to avoid
+accidental overrides. An override of a property is visible not only in
+derived classes, but also to QML code executing the context of the base class.
+Such QML code, typically expects the original property, though. This is a
+frequent source of mistakes.
+
+Properties declared \c FINAL can also not be overridden by functions in QML, or
+by \l Q_INVOKABLE methods in C++.
+
 \section2 Type Revisions and Versions
 
 Many of the type registration functions require versions to be specified

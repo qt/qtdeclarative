@@ -465,6 +465,11 @@ void QHashedString::computeHash() const
     m_hash = stringHash(constData(), length());
 }
 
+namespace QtPrivate {
+inline QString asString(const QHashedCStringRef &ref) { return ref.toUtf16(); }
+inline QString asString(const QHashedStringRef &ref) { return ref.toString(); }
+}
+
 QT_END_NAMESPACE
 
 #endif // QHASHEDSTRING_P_H

@@ -263,6 +263,28 @@ private:
     }
 
 private:
+    enum OverrideResult { NoOverride, InvalidOverride, ValidOverride };
+
+    template<typename String>
+    OverrideResult handleOverride(const String &name, QQmlPropertyData *data, QQmlPropertyData *old)
+    {
+        if (!old)
+            return NoOverride;
+
+        if (data->markAsOverrideOf(old))
+            return ValidOverride;
+
+        qWarning("Final member %s is overridden in class %s. The override won't be used.",
+                 qPrintable(name), className());
+        return InvalidOverride;
+    }
+
+    template<typename String>
+    OverrideResult handleOverride(const String &name, QQmlPropertyData *data)
+    {
+        return handleOverride(name, data, findNamedProperty(name));
+    }
+
     int propertyIndexCacheStart; // placed here to avoid gap between QQmlRefCount and _parent
     QQmlPropertyCache *_parent;
 

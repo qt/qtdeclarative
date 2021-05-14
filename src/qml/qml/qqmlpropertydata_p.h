@@ -281,6 +281,7 @@ public:
     {
         Q_ASSERT(idx >= std::numeric_limits<qint16>::min());
         Q_ASSERT(idx <= std::numeric_limits<qint16>::max());
+        Q_ASSERT(idx != m_coreIndex);
         m_overrideIndex = qint16(idx);
     }
 
@@ -344,7 +345,7 @@ public:
     QString name(QObject *) const;
     QString name(const QMetaObject *) const;
 
-    void markAsOverrideOf(QQmlPropertyData *predecessor);
+    bool markAsOverrideOf(QQmlPropertyData *predecessor);
 
     inline void readProperty(QObject *target, void *property) const
     {

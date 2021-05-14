@@ -58,6 +58,7 @@ private slots:
     void metaObjectsForRootElements();
     void derivedGadgetMethod();
     void restrictRegistrationVersion();
+    void rejectOverriddenFinal();
 
 private:
     QQmlEngine engine;
@@ -131,6 +132,7 @@ class BaseObject : public QObject
     Q_PROPERTY(int propertyA READ propertyA NOTIFY propertyAChanged)
     Q_PROPERTY(QString propertyB READ propertyB NOTIFY propertyBChanged)
     Q_PROPERTY(int highVersion READ highVersion WRITE setHighVersion NOTIFY highVersionChanged REVISION(4, 0))
+    Q_PROPERTY(int finalProp READ finalProp CONSTANT FINAL)
 
 public:
     BaseObject(QObject *parent = nullptr) : QObject(parent) {}
@@ -138,6 +140,7 @@ public:
     int propertyA() const { return 0; }
     QString propertyB() const { return QString(); }
     int highVersion() const { return m_highVersion; }
+    int finalProp() const { return 8; }
 
 public Q_SLOTS:
     void slotA() {}
@@ -167,12 +170,14 @@ class DerivedObject : public BaseObject
     Q_PROPERTY(int propertyC READ propertyC NOTIFY propertyCChanged)
     Q_PROPERTY(QString propertyD READ propertyD NOTIFY propertyDChanged)
     Q_PROPERTY(int propertyE READ propertyE NOTIFY propertyEChanged REVISION 1)
+    Q_PROPERTY(int finalProp READ finalProp CONSTANT) // bad!
 public:
     DerivedObject(QObject *parent = nullptr) : BaseObject(parent) {}
 
     int propertyC() const { return 0; }
     QString propertyD() const { return QString(); }
     int propertyE() const { return 0; }
+    int finalProp() const { return 9; }
 
 public Q_SLOTS:
     void slotB() {}
@@ -674,6 +679,45 @@ void tst_qqmlpropertycache::restrictRegistrationVersion()
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("highVersion.qml"));
     QVERIFY(c.isError());
+}
+
+void tst_qqmlpropertycache::rejectOverriddenFinal()
+{
+    qmlRegisterTypesAndRevisions<BaseObject>("Test.PropertyCache", 3);
+    QQmlEngine engine;
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+                             "Final member finalProp is overridden in class BaseObject_QML_.* "
+                             "The override won't be used."));
+
+    QQmlComponent c(&engine, testFileUrl("finalProp.qml"));
+    QVERIFY2(!c.isError(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+                             "finalProp.qml:15: TypeError: Property 'finalProp' of object "
+                             "BaseObject_QML_.* is not a function"));
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
+                             "finalProp.qml:11: TypeError: Property 'finalProp' of object "
+                             "BaseObject_QML_.* is not a function"));
+
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->property("a").toInt(), 8);
+
+    DerivedObject *derived = new DerivedObject(o.data());
+    QTest::ignoreMessage(QtWarningMsg,
+                         "Final member finalProp is overridden in class DerivedObject. "
+                         "The override won't be used.");
+    o->setProperty("obj", QVariant::fromValue(derived));
+    QCOMPARE(derived->finalProp(), 9);
+
+    // rejects override of final property
+    QCOMPARE(o->property("a").toInt(), 8);
+
+    // Cannot override final property with method, either
+    QCOMPARE(o->property("b").toInt(), 8);
+
+    // Cannot call the method overridding a final property
+    QCOMPARE(o->property("c").toInt(), 0);
 }
 
 QTEST_MAIN(tst_qqmlpropertycache)
