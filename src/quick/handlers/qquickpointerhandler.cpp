@@ -378,18 +378,21 @@ bool QQuickPointerHandler::approveGrabTransition(QPointerEvent *event, const QEv
                          (existingItemGrabber->keepTouchGrab() && QQuickDeliveryAgentPrivate::isTouchEvent(event)))) {
                     allowed = false;
                     // If the handler wants to steal the exclusive grab from an Item, the Item can usually veto
-                    // by having its keepMouseGrab flag set.  But an exception is if that Item is a parent that
-                    // normally filters events (such as a Flickable): it needs to be possible for e.g. a
-                    // DragHandler to operate on an Item inside a Flickable.  Flickable is aggressive about
-                    // grabbing on press (for fear of missing updates), but DragHandler uses a passive grab
-                    // at first and then expects to be able to steal the grab later on.  It cannot respect
-                    // Flickable's wishes in that case, because then it would never have a chance.
-                    if (existingItemGrabber->keepMouseGrab() &&
-                            existingItemGrabber->filtersChildMouseEvents() && existingItemGrabber->isAncestorOf(parentItem())) {
+                    // by having its keepMouseGrab or keepTouchGrab flag set. But if the handler wants to
+                    // steal from an ancestor Item (e.g. a Flickable), allow it: it needs to be able to function
+                    // despite the ancestor's keep-grab flags. Flickable is aggressive about grabbing on press
+                    // (for fear of missing updates), but handlers inside it use passive grabs first and expect
+                    // to steal later.  Note: we check isAncestorOf rather than filtersChildMouseEvents() because
+                    // the ancestor may temporarily disable filtering (e.g. TableView disables it during resize drag setup)
+                    // while still holding an exclusive grab that would otherwise block the handler.
+                    if (existingItemGrabber->isAncestorOf(parentItem())) {
                         Q_ASSERT(da);
-                        if (isTouchMouse && point.id() == da->touchMouseId) {
-                            qCDebug(lcPointerHandlerGrab) << this << "steals touchpoint" << point.id()
-                                << "despite parent touch-mouse grabber with keepMouseGrab=true" << existingItemGrabber;
+                        if ((existingItemGrabber->keepMouseGrab() &&
+                             (QQuickDeliveryAgentPrivate::isMouseEvent(event) || (isTouchMouse && point.id() == da->touchMouseId))) ||
+                            (existingItemGrabber->keepTouchGrab() && QQuickDeliveryAgentPrivate::isTouchEvent(event))) {
+                            qCDebug(lcPointerHandlerGrab) << this << "steals from ancestor"
+                                << existingItemGrabber << "despite keep-grab flags"
+                                << existingItemGrabber->keepMouseGrab() << existingItemGrabber->keepTouchGrab();
                             allowed = true;
                         }
                     }

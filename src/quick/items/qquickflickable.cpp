@@ -242,7 +242,7 @@ QQuickFlickablePrivate::QQuickFlickablePrivate()
     , hData(this, &QQuickFlickablePrivate::setViewportX)
     , vData(this, &QQuickFlickablePrivate::setViewportY)
     , hMoved(false), vMoved(false)
-    , stealMouse(false), pressed(false)
+    , stealGrab(false), pressed(false)
     , scrollingPhase(false), interactive(true), calcVelocity(false)
     , pixelAligned(false)
     , syncDrag(false)
@@ -1127,7 +1127,9 @@ void QQuickFlickablePrivate::handlePressEvent(QPointerEvent *event)
     if (interactive && timeline.isActive()
         && ((qAbs(hData.smoothVelocity.value()) > RetainGrabVelocity && !hData.fixingUp && !hData.inOvershoot)
             || (qAbs(vData.smoothVelocity.value()) > RetainGrabVelocity && !vData.fixingUp && !vData.inOvershoot))) {
-        stealMouse = true; // If we've been flicked then steal the click.
+        // If flicked and still moving, prepare to handle the gesture: the user is probably
+        // trying to speed up or slow down, not click some child item.
+        stealGrab = true;
         int flickTime = timeline.time();
         if (flickTime > 600) {
             // too long between flicks - cancel boost
@@ -1141,12 +1143,15 @@ void QQuickFlickablePrivate::handlePressEvent(QPointerEvent *event)
                 flickBoost = qMax(1.0, flickBoost - 0.5);
         }
     } else {
-        stealMouse = false;
+        stealGrab = false;
         hData.continuousFlickVelocity = 0;
         vData.continuousFlickVelocity = 0;
         flickBoost = 1.0;
     }
-    q->setKeepMouseGrab(stealMouse);
+    if (event->isSinglePointEvent())
+        q->setKeepMouseGrab(stealGrab);
+    else
+        q->setKeepTouchGrab(stealGrab);
 
     maybeBeginDrag(computeCurrentTime(event), event->points().first().position(),
                    event->isSinglePointEvent() ? static_cast<QSinglePointEvent *>(event)->buttons()
@@ -1211,10 +1216,20 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
 
     bool stealY = false;
     bool stealX = false;
-    if (eventType == QEvent::MouseMove) {
-        stealX = stealY = stealMouse;
-    } else if (eventType == QEvent::Wheel) {
+    bool isTouchEvent = false;
+    switch (eventType) {
+    case QEvent::MouseMove:
+        stealX = stealY = stealGrab;
+        break;
+    case QEvent::Wheel:
         stealX = stealY = scrollingPhase;
+        break;
+    case QEvent::TouchUpdate:
+        stealX = stealY = stealGrab;
+        isTouchEvent = true;
+        break;
+    default:
+        break;
     }
 
     bool prevHMoved = hMoved;
@@ -1286,7 +1301,7 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
                     }
                 }
             }
-            if (!rejectY && stealMouse && dy != vData.previousDragDelta) {
+            if (!rejectY && stealGrab && dy != vData.previousDragDelta) {
                 clearTimeline();
                 vData.move.setValue(newY);
                 vMoved = true;
@@ -1359,7 +1374,7 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
                     }
                 }
             }
-            if (!rejectX && stealMouse && dx != hData.previousDragDelta) {
+            if (!rejectX && stealGrab && dx != hData.previousDragDelta) {
                 clearTimeline();
                 hData.move.setValue(newX);
                 hMoved = true;
@@ -1376,10 +1391,14 @@ void QQuickFlickablePrivate::drag(qint64 currentTimestamp, QEvent::Type eventTyp
         hData.previousDragDelta = dx;
     }
 
-    stealMouse = stealX || stealY;
-    if (stealMouse) {
-        if ((stealX && keepX) || (stealY && keepY))
-            q->setKeepMouseGrab(true);
+    stealGrab = stealX || stealY;
+    if (stealGrab) {
+        if ((stealX && keepX) || (stealY && keepY)) {
+            if (isTouchEvent)
+                q->setKeepTouchGrab(true);
+            else
+                q->setKeepMouseGrab(true);
+        }
         clearDelayedPress();
     }
 
@@ -1446,8 +1465,9 @@ void QQuickFlickablePrivate::handleMoveEvent(QPointerEvent *event)
 void QQuickFlickablePrivate::handleReleaseEvent(QPointerEvent *event)
 {
     Q_Q(QQuickFlickable);
-    stealMouse = false;
+    stealGrab = false;
     q->setKeepMouseGrab(false);
+    q->setKeepTouchGrab(false);
     pressed = false;
 
     // if we drag then pause before release we should not cause a flick.
@@ -1592,7 +1612,7 @@ void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
             }
 
             // And the event has been consumed
-            d->stealMouse = false;
+            d->stealGrab = false;
             d->pressed = false;
             return;
         }
@@ -1650,7 +1670,7 @@ void QQuickFlickable::touchEvent(QTouchEvent *event)
                 }
 
                 // And the event has been consumed
-                d->stealMouse = false;
+                d->stealGrab = false;
                 d->pressed = false;
                 return;
             }
@@ -1709,7 +1729,7 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         d->draggingEnding();
         returnToBounds();
         d->lastPosTime = -1;
-        d->stealMouse = false;
+        d->stealGrab = false;
         if (!d->velocityTimeline.isActive() && !d->timeline.isActive())
             movementEnding(true, true);
         return;
@@ -2955,8 +2975,9 @@ void QQuickFlickablePrivate::cancelInteraction()
         clearDelayedPress();
         pressed = false;
         draggingEnding();
-        stealMouse = false;
+        stealGrab = false;
         q->setKeepMouseGrab(false);
+        q->setKeepTouchGrab(false);
         fixupX();
         fixupY();
         if (!isViewMoving())
@@ -2994,32 +3015,24 @@ bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *ev
     Q_ASSERT_X(receiver != this, "", "Flickable received a filter event for itself");
     // If a touch event contains a new press point, don't steal right away: watch the movements for a while
     if (isTouch && static_cast<QTouchEvent *>(event)->touchPointStates().testFlag(QEventPoint::State::Pressed))
-        d->stealMouse = false;
-    // If multiple touchpoints are within bounds, don't grab: it's probably meant for multi-touch interaction in some child
-    if (event->pointCount() > 1) {
-        qCDebug(lcFilter) << objectName() << "ignoring multi-touch" << event << "for" << receiver;
-        d->stealMouse = false;
-        return false;
-    } else {
-        qCDebug(lcFilter) << objectName() << "filtering" << event << "for" << receiver;
-    }
-
+        d->stealGrab = false;
     const auto &firstPoint = event->points().first();
 
     if (event->pointCount() == 1 && event->exclusiveGrabber(firstPoint) == this) {
-        // We have an exclusive grab (since we're e.g dragging), but at the same time, we have
+        // We have an exclusive grab (since we're e.g. dragging), but at the same time, we have
         // a child with a passive grab (which is why this filter is being called). And because
         // of that, we end up getting the same pointer events twice; First in our own event
         // handlers (because of the grab), then once more in here, since we filter the child.
-        // To avoid processing the event twice (e.g avoid calling handleReleaseEvent once more
-        // from below), we mark the event as filtered, and simply return.
-        event->setAccepted(true);
-        return true;
+        // To avoid processing the event twice (e.g. avoid calling handleReleaseEvent once more
+        // from below), return early. But return false (not true) so that passive-grab handlers
+        // (TapHandler, DragHandler) inside this Flickable can still receive the event to update
+        // their state (e.g. setPressed(false) when drag threshold is exceeded).
+        return false;
     }
 
     QPointF localPos = mapFromScene(firstPoint.scenePosition());
     bool receiverDisabled = receiver && !receiver->isEnabled();
-    bool stealThisEvent = d->stealMouse;
+    bool stealThisEvent = d->stealGrab;
     bool receiverKeepsGrab = receiver && (receiver->keepMouseGrab() || receiver->keepTouchGrab());
     bool receiverRelinquishGrab = false;
 
@@ -3050,12 +3063,12 @@ bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *ev
             d->handlePressEvent(localizedEvent.data());
             d->captureDelayedPress(receiver, event);
             // never grab the pointing device on press during filtering: do it later, during a move
-            d->stealMouse = false;
+            d->stealGrab = false;
             stealThisEvent = false;
             break;
         case QEventPoint::State::Released:
             d->handleReleaseEvent(localizedEvent.data());
-            stealThisEvent = d->stealMouse;
+            stealThisEvent = d->stealGrab;
             break;
         case QEventPoint::State::Stationary:
         case QEventPoint::State::Unknown:
@@ -3095,7 +3108,7 @@ bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *ev
         // mouse released, or another item has claimed the grab
         d->lastPosTime = -1;
         d->clearDelayedPress();
-        d->stealMouse = false;
+        d->stealGrab = false;
         d->pressed = false;
     }
     return false;
@@ -3430,13 +3443,13 @@ void QQuickFlickable::movementEnding(bool hMovementEnding, bool vMovementEnding)
     // emit moving signals
     bool wasMoving = isMoving();
     if (hMovementEnding && d->hData.moving
-            && (!d->pressed && !d->stealMouse)) {
+            && (!d->pressed && !d->stealGrab)) {
         d->hData.moving = false;
         d->hMoved = false;
         emit movingHorizontallyChanged();
     }
     if (vMovementEnding && d->vData.moving
-            && (!d->pressed && !d->stealMouse)) {
+            && (!d->pressed && !d->stealGrab)) {
         d->vData.moving = false;
         d->vMoved = false;
         emit movingVerticallyChanged();

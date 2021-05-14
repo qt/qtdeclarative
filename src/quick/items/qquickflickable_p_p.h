@@ -187,7 +187,7 @@ public:
     QQuickTimeLine timeline;
     bool hMoved : 1;
     bool vMoved : 1;
-    bool stealMouse : 1;
+    bool stealGrab : 1;
     bool pressed : 1;
     bool scrollingPhase : 1;
     bool interactive : 1;
