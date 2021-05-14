@@ -617,7 +617,7 @@ namespace QQmlPrivate
         bool captureLookup(uint index, QObject *object) const;
         bool captureQmlContextPropertyLookup(uint index) const;
         QMetaType lookupResultMetaType(uint index) const;
-        void storeNameSloppy(uint nameIndex, void *value) const;
+        void storeNameSloppy(uint nameIndex, void *value, QMetaType type) const;
 
         // All of these lookup functions should be used as follows:
         //
@@ -656,7 +656,7 @@ namespace QQmlPrivate
         void initLoadGlobalLookup(uint index) const;
 
         bool loadScopeObjectPropertyLookup(uint index, void *target) const;
-        void initLoadScopeObjectPropertyLookup(uint index) const;
+        void initLoadScopeObjectPropertyLookup(uint index, QMetaType type) const;
 
         bool loadTypeLookup(uint index, void *target) const;
         void initLoadTypeLookup(uint index) const;
@@ -665,20 +665,20 @@ namespace QQmlPrivate
         void initLoadAttachedLookup(uint index, QObject *object) const;
 
         bool getObjectLookup(uint index, QObject *object, void *target) const;
-        void initGetObjectLookup(uint index, QObject *object) const;
+        void initGetObjectLookup(uint index, QObject *object, QMetaType type) const;
 
         bool getValueLookup(uint index, void *value, void *target) const;
-        void initGetValueLookup(uint index, const QMetaObject *metaObject) const;
+        void initGetValueLookup(uint index, const QMetaObject *metaObject, QMetaType type) const;
 
         bool getEnumLookup(uint index, int *target) const;
         void initGetEnumLookup(uint index, const QMetaObject *metaObject,
                                const char *enumerator, const char *enumValue) const;
 
         bool setObjectLookup(uint index, QObject *object, void *value) const;
-        void initSetObjectLookup(uint index, QObject *object) const;
+        void initSetObjectLookup(uint index, QObject *object, QMetaType type) const;
 
         bool setValueLookup(uint index, void *target, void *value) const;
-        void initSetValueLookup(uint index, const QMetaObject *metaObject) const;
+        void initSetValueLookup(uint index, const QMetaObject *metaObject, QMetaType type) const;
     };
 
     struct AOTCompiledFunction {
