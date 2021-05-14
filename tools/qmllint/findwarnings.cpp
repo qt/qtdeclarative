@@ -603,9 +603,16 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *uiod)
         return;
     }
 
-    auto property = childScope->property(QStringLiteral("parent"));
-    if (!property.propertyName().isEmpty()) {
+    QString parentPropertyName;
+    for (QQmlJSScope::ConstPtr scope = childScope; scope; scope = scope->baseType()) {
+        parentPropertyName = scope->parentPropertyName();
+        if (parentPropertyName.isEmpty())
+            continue;
+
+        auto property = scope->property(parentPropertyName);
         property.setType(QQmlJSScope::ConstPtr(m_currentScope));
+
+        // TODO: This is bad. We shouldn't add a new property but rather amend the existing one.
         childScope->addOwnProperty(property);
     }
 }

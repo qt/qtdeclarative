@@ -701,7 +701,7 @@ assignment fails does the engine call the \l
 the type to also be used in contexts other than just as a value source.
 
 
-\section2 Specifying Default Properties for QML Object Types
+\section2 Specifying Default and Parent Properties for QML Object Types
 
 Any QObject-derived type that is registered as an instantiable QML object type
 can optionally specify a \e {default property} for the type. A default
@@ -758,6 +758,37 @@ objects added to this \c data property are also added to the list of
 to be declared for an item without explicitly assigning them to the
 \l{Item::}{children} property.)
 
+Additionally, you can declare a "ParentProperty" Q_CLASSINFO() to inform the QML
+engine which property should denote the parent object in the QML hierarchy. For
+example, the Message type might be declared as follows:
+
+\code
+class Message : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QObject* board READ board BINDABLE boardBindable)
+    Q_PROPERTY(QString author READ author BINDABLE authorBindable)
+    Q_CLASSINFO("ParentProperty", "board")
+    QML_ELEMENT
+
+public:
+    Message(QObject *parent = nullptr) : QObject(parent) { m_board = parent; }
+
+    QObject *board() const { return m_board.value(); }
+    QBindable<QObject *> boardBindable() { return QBindable<QObject *>(&m_board); }
+
+    QString author() const { return m_author.value(); }
+    QBindable<QString> authorBindable() { return QBindable<QString>(&m_author); }
+
+private:
+    QProperty<QObject *> m_board;
+    QProperty<QString> m_author;
+};
+\endcode
+
+Defining the parent property affords \l qmllint and other tools better insight
+into the intention of your code and avoids false positive warnings on some
+property accesses.
 
 \section2 Defining Visual Items with the Qt Quick Module
 

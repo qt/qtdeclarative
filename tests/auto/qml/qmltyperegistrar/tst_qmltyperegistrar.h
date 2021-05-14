@@ -290,6 +290,21 @@ struct SelfExtensionHack
     QML_VALUE_TYPE(recterei)
 };
 
+class ParentProperty : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QObject *ppp READ ppp BINDABLE pppBindable)
+    QML_ELEMENT
+    Q_CLASSINFO("ParentProperty", "ppp")
+public:
+
+    QObject *ppp() const { return m_parent.value(); }
+    QBindable<QObject *> pppBindable() { return QBindable<QObject *>(&m_parent); }
+
+private:
+    QProperty<QObject *> m_parent;
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -315,6 +330,7 @@ private slots:
     void requiredProperty();
     void hiddenAccessor();
     void finalProperty();
+    void parentProperty();
 
 private:
     QByteArray qmltypesData;

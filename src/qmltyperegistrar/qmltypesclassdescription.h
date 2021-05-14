@@ -42,6 +42,7 @@ struct QmlTypesClassDescription
     QString className;
     QString elementName;
     QString defaultProp;
+    QString parentProp;
     QString superClass;
     QString attachedType;
     QString extensionType;

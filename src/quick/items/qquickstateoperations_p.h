@@ -74,6 +74,7 @@ class Q_AUTOTEST_EXPORT QQuickParentChange : public QQuickStateOperation, public
     Q_PROPERTY(QQmlScriptString height READ height WRITE setHeight)
     Q_PROPERTY(QQmlScriptString scale READ scale WRITE setScale)
     Q_PROPERTY(QQmlScriptString rotation READ rotation WRITE setRotation)
+    Q_CLASSINFO("ParentProperty", "parent")
     QML_NAMED_ELEMENT(ParentChange)
     QML_ADDED_IN_VERSION(2, 0)
 public:

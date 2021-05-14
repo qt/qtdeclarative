@@ -218,4 +218,9 @@ void tst_qmltyperegistrar::finalProperty()
     QCOMPARE(qmltypesData.count("Property { name: \"fff\"; type: \"int\"; isFinal: true }"), 1);
 }
 
+void tst_qmltyperegistrar::parentProperty()
+{
+    QCOMPARE(qmltypesData.count("parentProperty: \"ppp\""), 1);
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

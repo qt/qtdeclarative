@@ -55,6 +55,9 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
     if (!collector.defaultProp.isEmpty())
         m_qml.writeScriptBinding(QLatin1String("defaultProperty"), enquote(collector.defaultProp));
 
+    if (!collector.parentProp.isEmpty())
+        m_qml.writeScriptBinding(QLatin1String("parentProperty"), enquote(collector.parentProp));
+
     if (!collector.superClass.isEmpty())
         m_qml.writeScriptBinding(QLatin1String("prototype"), enquote(collector.superClass));
 

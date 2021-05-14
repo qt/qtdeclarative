@@ -114,6 +114,8 @@ void QmlTypesClassDescription::collectLocalAnonymous(
         const QJsonObject obj = classInfo.toObject();
         if (obj[QStringLiteral("name")].toString() == QStringLiteral("DefaultProperty"))
             defaultProp = obj[QStringLiteral("value")].toString();
+        if (obj[QStringLiteral("name")].toString() == QStringLiteral("ParentProperty"))
+            parentProp = obj[QStringLiteral("value")].toString();
     }
 
     collectInterfaces(classDef);
@@ -138,6 +140,9 @@ void QmlTypesClassDescription::collect(
         if (name == QLatin1String("DefaultProperty")) {
             if (mode != RelatedType && defaultProp.isEmpty())
                 defaultProp = value;
+        } else if (name == QLatin1String("ParentProperty")) {
+            if (mode != RelatedType && parentProp.isEmpty())
+                parentProp = value;
         } else if (name == QLatin1String("QML.AddedInVersion")) {
             const QTypeRevision revision = QTypeRevision::fromEncodedVersion(value.toInt());
             if (mode == TopLevel) {
@@ -198,6 +203,8 @@ void QmlTypesClassDescription::collect(
                 const QString foreignValue = obj[QLatin1String("value")].toString();
                 if (defaultProp.isEmpty() && foreignName == QLatin1String("DefaultProperty")) {
                     defaultProp = foreignValue;
+                } else if (parentProp.isEmpty() && foreignName == QLatin1String("ParentProperty")) {
+                    parentProp = foreignValue;
                 } else if (foreignName == QLatin1String("QML.Attached")) {
                     attachedType = foreignValue;
                     collectRelated(foreignValue, types, foreign, defaultRevision);

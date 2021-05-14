@@ -254,6 +254,9 @@ public:
     QString defaultPropertyName() const { return m_defaultPropertyName; }
     void setDefaultPropertyName(const QString &name) { m_defaultPropertyName = name; }
 
+    QString parentPropertyName() const { return m_parentPropertyName; }
+    void setParentPropertyName(const QString &name) { m_parentPropertyName = name; }
+
     QString ownAttachedTypeName() const { return m_attachedTypeName; }
     void setOwnAttachedTypeName(const QString &name) { m_attachedTypeName = name; }
     QQmlJSScope::ConstPtr ownAttachedType() const { return m_attachedType; }
@@ -347,6 +350,15 @@ public:
                     && this->internalName() == otherScope->internalName());
     }
 
+    bool inherits(const QQmlJSScope::ConstPtr &base) const
+    {
+        for (const QQmlJSScope *scope = this; scope; scope = scope->baseType().get()) {
+            if (scope->isSameType(base))
+                return true;
+        }
+        return false;
+    }
+
     /*!
       \internal
       Checks whether \a derived type can be assigned to this type. Returns \c
@@ -388,6 +400,7 @@ private:
     QStringList m_interfaceNames;
 
     QString m_defaultPropertyName;
+    QString m_parentPropertyName;
     QString m_attachedTypeName;
     QStringList m_requiredPropertyNames;
     QQmlJSScope::WeakConstPtr m_attachedType;

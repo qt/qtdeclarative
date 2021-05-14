@@ -76,6 +76,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject, public QQmlP
     Q_PROPERTY(Qt::CursorShape cursorShape READ cursorShape WRITE setCursorShape RESET resetCursorShape NOTIFY cursorShapeChanged REVISION(2, 15))
 #endif
 
+    Q_CLASSINFO("ParentProperty", "parent")
     QML_NAMED_ELEMENT(PointerHandler)
     QML_UNCREATABLE("PointerHandler is an abstract base class.")
     QML_ADDED_IN_VERSION(2, 12)

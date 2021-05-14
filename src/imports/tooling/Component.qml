@@ -57,4 +57,5 @@ QtObject {
     property bool hasCustomParser: false
     property string accessSemantics: "reference"
     property string defaultProperty
+    property string parentProperty
 }
