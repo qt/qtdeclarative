@@ -24,12 +24,9 @@ qt_internal_add_test(tst_qquickfolderlistmodel
     TESTDATA ${test_data}
 )
 
-# special case begin
-set_source_files_properties(data/txtdir/hello.txt PROPERTIES QT_RESOURCE_ALIAS "txtdir/hello.txt")
-# special case end
 # Resources:
 set(introspect_resource_files
-    "txtdir/hello.txt"
+    "data/txtdir/hello.txt"
 )
 
 qt_internal_add_resource(tst_qquickfolderlistmodel "introspect"

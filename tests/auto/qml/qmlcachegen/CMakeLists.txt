@@ -56,11 +56,8 @@ qt_internal_add_resource(tst_qmlcachegen "trickypaths"
     FILES
         ${trickypaths_resource_files}
 )
-set_source_files_properties("data/Retain.qml"
-    PROPERTIES QT_RESOURCE_ALIAS "Retain.qml"
-)
 set(retain_resource_files
-    "Retain.qml"
+    "data/Retain.qml"
 )
 
 qt_internal_add_resource(tst_qmlcachegen "retain"
@@ -76,14 +73,12 @@ set_source_files_properties("data/SkipQmlCacheGen.qml"
     QT_SKIP_QUICKCOMPILER 1
 )
 set(skip_resource_files
-    "SkipQmlCacheGen.qml"
+    "data/SkipQmlCacheGen.qml"
 )
 
 qt_internal_add_resource(tst_qmlcachegen "skip"
     PREFIX
         "/not/"
-    BASE
-        "data"
     FILES
         ${skip_resource_files}
 )

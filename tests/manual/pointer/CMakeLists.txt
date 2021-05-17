@@ -81,51 +81,18 @@ qt_internal_add_resource(pointer "qml"
     FILES
         ${qml_resource_files}
 )
-set_source_files_properties("../../../examples/quick/shared/Button.qml"
-    PROPERTIES QT_RESOURCE_ALIAS "Button.qml"
-)
-set_source_files_properties("../../../examples/quick/shared/CheckBox.qml"
-    PROPERTIES QT_RESOURCE_ALIAS "CheckBox.qml"
-)
-set_source_files_properties("../../../examples/quick/shared/Label.qml"
-    PROPERTIES QT_RESOURCE_ALIAS "Label.qml"
-)
-set_source_files_properties("../../../examples/quick/shared/LauncherList.qml"
-    PROPERTIES QT_RESOURCE_ALIAS "LauncherList.qml"
-)
-set_source_files_properties("../../../examples/quick/shared/SimpleLauncherDelegate.qml"
-    PROPERTIES QT_RESOURCE_ALIAS "SimpleLauncherDelegate.qml"
-)
-set_source_files_properties("../../../examples/quick/shared/Slider.qml"
-    PROPERTIES QT_RESOURCE_ALIAS "Slider.qml"
-)
-set_source_files_properties("../../../examples/quick/shared/TextField.qml"
-    PROPERTIES QT_RESOURCE_ALIAS "TextField.qml"
-)
-set_source_files_properties("../../../examples/quick/shared/images/back.png"
-    PROPERTIES QT_RESOURCE_ALIAS "images/back.png"
-)
-set_source_files_properties("../../../examples/quick/shared/images/checkmark.png"
-    PROPERTIES QT_RESOURCE_ALIAS "images/checkmark.png"
-)
-set_source_files_properties("../../../examples/quick/shared/images/next.png"
-    PROPERTIES QT_RESOURCE_ALIAS "images/next.png"
-)
-set_source_files_properties("../../../examples/quick/shared/images/slider_handle.png"
-    PROPERTIES QT_RESOURCE_ALIAS "images/slider_handle.png"
-)
 set(quick_shared_resource_files
-    "Button.qml"
-    "CheckBox.qml"
-    "Label.qml"
-    "LauncherList.qml"
-    "SimpleLauncherDelegate.qml"
-    "Slider.qml"
-    "TextField.qml"
-    "images/back.png"
-    "images/checkmark.png"
-    "images/next.png"
-    "images/slider_handle.png"
+    "../../../examples/quick/shared/Button.qml"
+    "../../../examples/quick/shared/CheckBox.qml"
+    "../../../examples/quick/shared/Label.qml"
+    "../../../examples/quick/shared/LauncherList.qml"
+    "../../../examples/quick/shared/SimpleLauncherDelegate.qml"
+    "../../../examples/quick/shared/Slider.qml"
+    "../../../examples/quick/shared/TextField.qml"
+    "../../../examples/quick/shared/images/back.png"
+    "../../../examples/quick/shared/images/checkmark.png"
+    "../../../examples/quick/shared/images/next.png"
+    "../../../examples/quick/shared/images/slider_handle.png"
 )
 
 qt_internal_add_resource(pointer "quick_shared"
