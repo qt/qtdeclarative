@@ -303,10 +303,10 @@ bool QQmlJavaScriptExpression::evaluate(void **a, const QMetaType *types, int ar
 
     Q_ASSERT(m_qmlScope.valueRef());
     Q_ASSERT(function());
-    function()->call(self, a, types, argc,
-                     static_cast<QV4::ExecutionContext *>(m_qmlScope.valueRef()));
+    const bool isUndefined = !function()->call(
+                self, a, types, argc, static_cast<QV4::ExecutionContext *>(m_qmlScope.valueRef()));
 
-    return !capture.catchException(scope);
+    return !capture.catchException(scope) && !isUndefined;
 }
 
 void QQmlPropertyCapture::captureProperty(QQmlNotifier *n)

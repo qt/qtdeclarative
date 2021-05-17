@@ -206,7 +206,7 @@ ReturnedValue convertAndCall(
 }
 
 template<typename Callable>
-void convertAndCall(ExecutionEngine *engine, const Value *thisObject,
+bool convertAndCall(ExecutionEngine *engine, const Value *thisObject,
                     void **a, const QMetaType *types, int argc, Callable call)
 {
     Scope scope(engine);
@@ -215,13 +215,10 @@ void convertAndCall(ExecutionEngine *engine, const Value *thisObject,
     for (int ii = 0; ii < argc; ++ii)
         jsCallData.args[ii] = engine->metaTypeToJS(types[ii + 1], a[ii + 1]);
 
-    void *result = a[0];
-    if (!result) {
-        call(thisObject, jsCallData.args, argc);
-        return;
-    }
-
     ScopedValue jsResult(scope, call(thisObject, jsCallData.args, argc));
+    void *result = a[0];
+    if (!result)
+        return !jsResult->isUndefined();
 
     const QMetaType resultType = types[0];
     if (scope.hasException()) {
@@ -237,6 +234,7 @@ void convertAndCall(ExecutionEngine *engine, const Value *thisObject,
             scope.engine->metaTypeFromJS(jsResult, resultType, result);
         }
     }
+    return !jsResult->isUndefined();
 }
 
 }
