@@ -55,7 +55,6 @@
 #include "qquickparticlesystem_p.h"
 #include "qquickparticleextruder_p.h"
 #include "qtquickparticlesglobal_p.h"
-#include "qquickparticleflatset_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -197,7 +196,7 @@ protected:
     static const qreal simulationCutoff;
 
     QPointF m_offset;
-    QtQuickParticlesPrivate::QFlatSet<QPair<int, int>> m_onceOffed;
+    QSet<QPair<int, int>> m_onceOffed;
 private:
     QSet<int> m_groupIds;
     bool m_updateIntSet;
