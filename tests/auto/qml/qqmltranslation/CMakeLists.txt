@@ -27,8 +27,8 @@ qt_internal_add_test(tst_qqmltranslation
 
 # Resources:
 set(translation_resource_files
-    "qml_fr.qm"
-    "translation.qml"
+    "data/qml_fr.qm"
+    "data/translation.qml"
 )
 
 # special case begin
@@ -36,12 +36,6 @@ set_source_files_properties(
     data/translation.qml
     PROPERTIES
     QT_SKIP_QUICKCOMPILER 1
-    QT_RESOURCE_ALIAS translation.qml
-)
-set_source_files_properties(
-    data/qml_fr.qm
-    PROPERTIES
-    QT_RESOURCE_ALIAS qml_fr.qm
 )
 # special case end
 
