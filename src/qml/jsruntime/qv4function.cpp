@@ -57,15 +57,15 @@ QT_BEGIN_NAMESPACE
 
 using namespace QV4;
 
-void Function::call(const Value *thisObject, void **a, const QMetaType *types, int argc,
+bool Function::call(const Value *thisObject, void **a, const QMetaType *types, int argc,
                     const ExecutionContext *context)
 {
     if (!aotFunction) {
-        QV4::convertAndCall(context->engine(), thisObject, a, types, argc,
-                            [this, context](const Value *thisObject, const Value *argv, int argc) {
+        return QV4::convertAndCall(
+                    context->engine(), thisObject, a, types, argc,
+                    [this, context](const Value *thisObject, const Value *argv, int argc) {
             return call(thisObject, argv, argc, context);
         });
-        return;
     }
 
     ExecutionEngine *engine = context->engine();
@@ -77,6 +77,7 @@ void Function::call(const Value *thisObject, void **a, const QMetaType *types, i
     engine->jsStackTop += frame.requiredJSStackFrameSize();
     Moth::VME::exec(&frame, engine);
     frame.pop(engine);
+    return true;
 }
 
 ReturnedValue Function::call(const Value *thisObject, const Value *argv, int argc, const ExecutionContext *context) {
