@@ -940,7 +940,7 @@ bool AOTCompiledContext::callQmlContextPropertyLookup(
         return false;
     }
 
-    function->call(thisObject, args, types, argc);
+    function->call(nullptr, args, types, argc);
     return !scope.engine->hasException;
 }
 
@@ -1022,7 +1022,7 @@ bool AOTCompiledContext::callObjectPropertyLookup(
         return false;
     }
 
-    function->call(thisObject, args, types, argc);
+    function->call(object, args, types, argc);
     return !scope.engine->hasException;
 }
 
@@ -1046,8 +1046,7 @@ bool AOTCompiledContext::callGlobalLookup(
         return false;
     }
 
-    QV4::ScopedValue thisObject(scope, QV4::Encode::undefined());
-    function->call(thisObject, args, types, argc);
+    function->call(nullptr, args, types, argc);
     return true;
 }
 

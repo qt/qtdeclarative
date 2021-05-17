@@ -343,7 +343,7 @@ static struct InstrCount {
     }
 #endif
 
-static inline QV4::Value &stackValue(QV4::Value *stack, size_t slot, const CppStackFrame *frame)
+static inline QV4::Value &stackValue(QV4::Value *stack, size_t slot, const JSTypesStackFrame *frame)
 {
     Q_ASSERT(slot < CallData::HeaderSize() / sizeof(QV4::StaticValue)
                     + frame->jsFrame->argc()

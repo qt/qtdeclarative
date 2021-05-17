@@ -2112,12 +2112,11 @@ void ExecutionEngine::callInContext(Function *function, QObject *self,
     QV4::Scope scope(this);
     ExecutionContext *ctx = currentStackFrame ? currentContext() : scriptContext();
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(ctx, ctxtdata, self));
-    QV4::ScopedValue selfValue(scope, QV4::QObjectWrapper::wrap(this, self));
     if (!args) {
         Q_ASSERT(argc == 0);
         void *dummyArgs[] = { nullptr };
         QMetaType dummyTypes[] = { QMetaType::fromType<void>() };
-        function->call(selfValue, dummyArgs, dummyTypes, argc, qmlContext);
+        function->call(self, dummyArgs, dummyTypes, argc, qmlContext);
         return;
     }
 
@@ -2125,7 +2124,7 @@ void ExecutionEngine::callInContext(Function *function, QObject *self,
         return;
 
     // implicitly sets the return value, which is args[0]
-    function->call(selfValue, args, types, argc, qmlContext);
+    function->call(self, args, types, argc, qmlContext);
 }
 
 void ExecutionEngine::initQmlGlobalObject()

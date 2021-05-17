@@ -100,9 +100,10 @@ public:
         return compilationUnit->runtimeStrings[i];
     }
 
-    bool call(const Value *thisObject, void **a, const QMetaType *types, int argc,
-              const ExecutionContext *context);
-    ReturnedValue call(const Value *thisObject, const Value *argv, int argc, const ExecutionContext *context);
+    bool call(QObject *thisObject, void **a, const QMetaType *types, int argc,
+              ExecutionContext *context);
+    ReturnedValue call(const Value *thisObject, const Value *argv, int argc,
+                       ExecutionContext *context);
 
     const char *codeData;
 

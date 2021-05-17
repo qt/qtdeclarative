@@ -36,7 +36,9 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #include "qv4stackframe_p.h"
+#include <private/qv4qobjectwrapper_p.h>
 #include <QtCore/qstring.h>
 
 using namespace  QV4;
@@ -68,7 +70,12 @@ int CppStackFrame::lineNumber() const
     return line->line;
 }
 
-ReturnedValue CppStackFrame::thisObject() const {
-    return jsFrame->thisObject.asReturnedValue();
-}
+ReturnedValue QV4::CppStackFrame::thisObject() const
+{
+    if (isJSTypesFrame())
+        return static_cast<const JSTypesStackFrame *>(this)->thisObject();
 
+    Q_ASSERT(isMetaTypesFrame());
+    const auto metaTypesFrame = static_cast<const MetaTypesStackFrame *>(this);
+    return QObjectWrapper::wrap(metaTypesFrame->context()->engine(), metaTypesFrame->thisObject());
+}

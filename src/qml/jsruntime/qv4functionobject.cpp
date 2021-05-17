@@ -161,7 +161,7 @@ void FunctionObject::createDefaultPrototypeProperty(uint protoConstructorSlot)
     defineDefaultProperty(s.engine->id_prototype(), proto, Attr_NotEnumerable|Attr_NotConfigurable);
 }
 
-void FunctionObject::call(const Value *thisObject, void **a, const QMetaType *types, int argc)
+void FunctionObject::call(QObject *thisObject, void **a, const QMetaType *types, int argc)
 {
     if (const auto callWithMetaTypes = d()->jsCallWithMetaTypes) {
         callWithMetaTypes(this, thisObject, a, types, argc);
@@ -185,7 +185,7 @@ ReturnedValue FunctionObject::virtualCall(const FunctionObject *, const Value *,
 }
 
 void FunctionObject::virtualCallWithMetaTypes(
-        const FunctionObject *, const Value *, void **, const QMetaType *, int)
+        const FunctionObject *, QObject *, void **, const QMetaType *, int)
 {
 }
 
@@ -532,7 +532,7 @@ ReturnedValue ScriptFunction::virtualCallAsConstructor(const FunctionObject *fo,
 
 DEFINE_OBJECT_VTABLE(ArrowFunction);
 
-void ArrowFunction::virtualCallWithMetaTypes(const FunctionObject *fo, const Value *thisObject,
+void ArrowFunction::virtualCallWithMetaTypes(const FunctionObject *fo, QObject *thisObject,
                                              void **a, const QMetaType *types, int argc)
 {
     if (!fo->function()->aotFunction) {
@@ -543,16 +543,13 @@ void ArrowFunction::virtualCallWithMetaTypes(const FunctionObject *fo, const Val
         return;
     }
 
-    ExecutionEngine *engine = fo->engine();
+    QV4::Scope scope(fo->engine());
+    QV4::Scoped<ExecutionContext> context(scope, fo->scope());
     MetaTypesStackFrame frame;
-    frame.init(fo->function(), a, types, argc);
-    frame.setupJSFrame(engine->jsStackTop, *fo, fo->scope(),
-                       thisObject ? *thisObject : Value::undefinedValue());
-
-    frame.push(engine);
-    engine->jsStackTop += frame.requiredJSStackFrameSize();
-    Moth::VME::exec(&frame, engine);
-    frame.pop(engine);
+    frame.init(fo->function(), thisObject, context, a, types, argc);
+    frame.push(scope.engine);
+    Moth::VME::exec(&frame, scope.engine);
+    frame.pop(scope.engine);
 }
 
 ReturnedValue ArrowFunction::virtualCall(const FunctionObject *fo, const Value *thisObject, const Value *argv, int argc)
@@ -560,7 +557,7 @@ ReturnedValue ArrowFunction::virtualCall(const FunctionObject *fo, const Value *
     if (const auto *aotFunction = fo->function()->aotFunction) {
         return QV4::convertAndCall(
                     fo->engine(), aotFunction, thisObject, argv, argc,
-                    [fo](const Value *thisObject, void **a, const QMetaType *types, int argc) {
+                    [fo](QObject *thisObject, void **a, const QMetaType *types, int argc) {
             ArrowFunction::virtualCallWithMetaTypes(fo, thisObject, a, types, argc);
         });
     }

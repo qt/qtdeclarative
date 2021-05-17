@@ -64,17 +64,17 @@ namespace QV4 {
 struct CppStackFrame;
 struct Q_QML_PRIVATE_EXPORT CppStackFrameBase
 {
-    enum class Kind : quint8 { Bare, JS, Meta };
+    enum class Kind : quint8 { JS, Meta };
 
-    Value *savedStackTop;
     CppStackFrame *parent;
     Function *v4Function;
-    CallData *jsFrame;
     int originalArgumentsCount;
     int instructionPointer;
 
     union {
         struct {
+            Value *savedStackTop;
+            CallData *jsFrame;
             const Value *originalArguments;
             const char *yield;
             const char *unwindHandler;
@@ -86,6 +86,8 @@ struct Q_QML_PRIVATE_EXPORT CppStackFrameBase
             bool isTailCalling;
         };
         struct {
+            ExecutionContext *context;
+            QObject *thisObject;
             const QMetaType *metaTypes;
             void **returnAndArgs;
         };
@@ -100,88 +102,67 @@ struct Q_QML_PRIVATE_EXPORT CppStackFrame : protected CppStackFrameBase
     // non-standard layout. So we have this other struct with "using" in between.
     using CppStackFrameBase::instructionPointer;
     using CppStackFrameBase::v4Function;
-    using CppStackFrameBase::jsFrame;
 
-    void init(Function *v4Function, int argc, Kind kind = Kind::Bare) {
+    void init(Function *v4Function, int argc, Kind kind) {
         this->v4Function = v4Function;
         originalArgumentsCount = argc;
         instructionPointer = 0;
         this->kind = kind;
     }
 
-    bool isBareStackFrame() const { return kind == Kind::Bare; }
     bool isJSTypesFrame() const { return kind == Kind::JS; }
     bool isMetaTypesFrame() const { return kind == Kind::Meta; }
-
-    static uint requiredJSStackFrameSize(uint nRegisters) {
-        return CallData::HeaderSize() + nRegisters;
-    }
-    static uint requiredJSStackFrameSize(Function *v4Function) {
-        return CallData::HeaderSize() + v4Function->compiledFunction->nRegisters;
-    }
-    uint requiredJSStackFrameSize() const {
-        return requiredJSStackFrameSize(v4Function);
-    }
-
-    void setupJSFrame(Value *stackSpace, const Value &function, const Heap::ExecutionContext *scope,
-                      const Value &thisObject, const Value &newTarget = Value::undefinedValue())
-    {
-        jsFrame = reinterpret_cast<CallData *>(stackSpace);
-        jsFrame->function = function;
-        jsFrame->context = scope->asReturnedValue();
-        jsFrame->accumulator = Encode::undefined();
-        jsFrame->thisObject = thisObject;
-        jsFrame->newTarget = newTarget;
-    }
 
     QString source() const;
     QString function() const;
     int lineNumber() const;
-    ReturnedValue thisObject() const;
-
-    ExecutionContext *context() const
-    {
-        return static_cast<ExecutionContext *>(&jsFrame->context);
-    }
-
-    void setContext(ExecutionContext *context)
-    {
-        jsFrame->context = context;
-    }
-
-    Heap::CallContext *callContext() const
-    {
-        Heap::ExecutionContext *ctx = static_cast<ExecutionContext &>(jsFrame->context).d();\
-        while (ctx->type != Heap::ExecutionContext::Type_CallContext)
-            ctx = ctx->outer;
-        return static_cast<Heap::CallContext *>(ctx);
-    }
 
     CppStackFrame *parentFrame() const { return parent; }
     void setParentFrame(CppStackFrame *parentFrame) { parent = parentFrame; }
 
     int argc() const { return originalArgumentsCount; }
-    Value *framePointer() const { return savedStackTop; }
 
-    void push(EngineBase *engine) {
+    inline ExecutionContext *context() const;
+
+    Heap::CallContext *callContext() const { return callContext(context()->d()); }
+    ReturnedValue thisObject() const;
+
+protected:
+    CppStackFrame() = default;
+
+    void push(EngineBase *engine)
+    {
+        Q_ASSERT(kind == Kind::JS || kind == Kind::Meta);
         parent = engine->currentStackFrame;
         engine->currentStackFrame = this;
-        savedStackTop = engine->jsStackTop;
     }
 
-    void pop(EngineBase *engine) {
+    void pop(EngineBase *engine)
+    {
         engine->currentStackFrame = parent;
-        engine->jsStackTop = savedStackTop;
+    }
+
+    Heap::CallContext *callContext(Heap::ExecutionContext *ctx) const
+    {
+        while (ctx->type != Heap::ExecutionContext::Type_CallContext)
+            ctx = ctx->outer;
+        return static_cast<Heap::CallContext *>(ctx);
     }
 };
 
 struct Q_QML_PRIVATE_EXPORT MetaTypesStackFrame : public CppStackFrame
 {
-    void init(Function *v4Function, void **a, const QMetaType *types, int argc)
+    using CppStackFrame::push;
+    using CppStackFrame::pop;
+
+    void init(Function *v4Function, QObject *thisObject, ExecutionContext *context,
+              void **returnAndArgs, const QMetaType *metaTypes, int argc)
     {
         CppStackFrame::init(v4Function, argc, Kind::Meta);
-        metaTypes = types;
-        returnAndArgs = a;
+        CppStackFrameBase::thisObject = thisObject;
+        CppStackFrameBase::context = context;
+        CppStackFrameBase::metaTypes = metaTypes;
+        CppStackFrameBase::returnAndArgs = returnAndArgs;
     }
 
     QMetaType returnType() const { return metaTypes[0]; }
@@ -189,10 +170,22 @@ struct Q_QML_PRIVATE_EXPORT MetaTypesStackFrame : public CppStackFrame
 
     const QMetaType *argTypes() const { return metaTypes + 1; }
     void **argv() const { return returnAndArgs + 1; }
+
+    QObject *thisObject() const { return CppStackFrameBase::thisObject; }
+
+    ExecutionContext *context() const { return CppStackFrameBase::context; }
+    void setContext(ExecutionContext *context) { CppStackFrameBase::context = context; }
+
+    Heap::CallContext *callContext() const
+    {
+        return CppStackFrame::callContext(CppStackFrameBase::context->d());
+    }
 };
 
 struct Q_QML_PRIVATE_EXPORT JSTypesStackFrame : public CppStackFrame
 {
+    using CppStackFrame::jsFrame;
+
     // The JIT needs to poke directly into those using offsetof
     using CppStackFrame::unwindHandler;
     using CppStackFrame::unwindLabel;
@@ -215,6 +208,16 @@ struct Q_QML_PRIVATE_EXPORT JSTypesStackFrame : public CppStackFrame
 
     const Value *argv() const { return originalArguments; }
 
+    static uint requiredJSStackFrameSize(uint nRegisters) {
+        return CallData::HeaderSize() + nRegisters;
+    }
+    static uint requiredJSStackFrameSize(Function *v4Function) {
+        return CallData::HeaderSize() + v4Function->compiledFunction->nRegisters;
+    }
+    uint requiredJSStackFrameSize() const {
+        return requiredJSStackFrameSize(v4Function);
+    }
+
     void setupJSFrame(Value *stackSpace, const Value &function, const Heap::ExecutionContext *scope,
                       const Value &thisObject, const Value &newTarget = Value::undefinedValue()) {
         setupJSFrame(stackSpace, function, scope, thisObject, newTarget,
@@ -226,7 +229,12 @@ struct Q_QML_PRIVATE_EXPORT JSTypesStackFrame : public CppStackFrame
             Value *stackSpace, const Value &function, const Heap::ExecutionContext *scope,
             const Value &thisObject, const Value &newTarget, uint nFormals, uint nRegisters)
     {
-        CppStackFrame::setupJSFrame(stackSpace, function, scope, thisObject, newTarget);
+        jsFrame = reinterpret_cast<CallData *>(stackSpace);
+        jsFrame->function = function;
+        jsFrame->context = scope->asReturnedValue();
+        jsFrame->accumulator = Encode::undefined();
+        jsFrame->thisObject = thisObject;
+        jsFrame->newTarget = newTarget;
 
         uint argc = uint(originalArgumentsCount);
         if (argc > nFormals)
@@ -251,6 +259,21 @@ struct Q_QML_PRIVATE_EXPORT JSTypesStackFrame : public CppStackFrame
         }
     }
 
+    ExecutionContext *context() const
+    {
+        return static_cast<ExecutionContext *>(&jsFrame->context);
+    }
+
+    void setContext(ExecutionContext *context)
+    {
+        jsFrame->context = context;
+    }
+
+    Heap::CallContext *callContext() const
+    {
+        return CppStackFrame::callContext(static_cast<ExecutionContext &>(jsFrame->context).d());
+    }
+
     bool isTailCalling() const { return CppStackFrame::isTailCalling; }
     void setTailCalling(bool tailCalling) { CppStackFrame::isTailCalling = tailCalling; }
 
@@ -264,7 +287,33 @@ struct Q_QML_PRIVATE_EXPORT JSTypesStackFrame : public CppStackFrame
     void setYieldIsIterator(bool isIter) { CppStackFrame::yieldIsIterator = isIter; }
 
     bool callerCanHandleTailCall() const { return CppStackFrame::callerCanHandleTailCall; }
+
+    ReturnedValue thisObject() const
+    {
+        return jsFrame->thisObject.asReturnedValue();
+    }
+
+    Value *framePointer() const { return savedStackTop; }
+
+    void push(EngineBase *engine) {
+        CppStackFrame::push(engine);
+        savedStackTop = engine->jsStackTop;
+    }
+
+    void pop(EngineBase *engine) {
+        CppStackFrame::pop(engine);
+        engine->jsStackTop = savedStackTop;
+    }
 };
+
+inline ExecutionContext *CppStackFrame::context() const
+{
+    if (isJSTypesFrame())
+        return static_cast<const JSTypesStackFrame *>(this)->context();
+
+    Q_ASSERT(isMetaTypesFrame());
+    return static_cast<const MetaTypesStackFrame *>(this)->context();
+}
 
 Q_STATIC_ASSERT(sizeof(CppStackFrame) == sizeof(JSTypesStackFrame));
 Q_STATIC_ASSERT(sizeof(CppStackFrame) == sizeof(MetaTypesStackFrame));

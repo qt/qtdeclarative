@@ -54,6 +54,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QObject;
 namespace QV4 {
 
 struct Lookup;
@@ -84,7 +85,7 @@ struct VTable
     typedef ReturnedValue (*InstanceOf)(const Object *typeObject, const Value &var);
 
     typedef ReturnedValue (*Call)(const FunctionObject *, const Value *thisObject, const Value *argv, int argc);
-    typedef void (*CallWithMetaTypes)(const FunctionObject *, const Value *, void **, const QMetaType *, int);
+    typedef void (*CallWithMetaTypes)(const FunctionObject *, QObject *, void **, const QMetaType *, int);
     typedef ReturnedValue (*CallAsConstructor)(const FunctionObject *, const Value *argv, int argc, const Value *newTarget);
 
     typedef ReturnedValue (*ResolveLookupGetter)(const Object *, ExecutionEngine *, Lookup *);

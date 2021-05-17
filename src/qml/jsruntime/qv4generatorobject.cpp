@@ -104,7 +104,8 @@ ReturnedValue GeneratorFunction::virtualCall(const FunctionObject *f, const Valu
     // We need to set up a separate JSFrame for the generator, as it's being re-entered
     Heap::GeneratorObject *gp = g->d();
     gp->values.set(engine, engine->newArrayObject(argc));
-    gp->jsFrame.set(engine, engine->newArrayObject(CppStackFrame::requiredJSStackFrameSize(function)));
+    gp->jsFrame.set(engine, engine->newArrayObject(
+                        JSTypesStackFrame::requiredJSStackFrameSize(function)));
 
     // copy original arguments
     for (int i = 0; i < argc; i++)

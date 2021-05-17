@@ -71,8 +71,13 @@ Heap::CallContext *ExecutionContext::newBlockContext(CppStackFrame *frame, int b
 
     Heap::ExecutionContext *outer = static_cast<Heap::ExecutionContext *>(frame->context()->m());
     c->outer.set(v4, outer);
-    c->function.set(v4, static_cast<Heap::FunctionObject *>(
-                                Value::fromStaticValue(frame->jsFrame->function).m()));
+    if (frame->isJSTypesFrame()) {
+        c->function.set(v4, static_cast<Heap::FunctionObject *>(
+                            Value::fromStaticValue(
+                                static_cast<JSTypesStackFrame *>(frame)->jsFrame->function).m()));
+    } else {
+        c->function.set(v4, nullptr);
+    }
 
     c->locals.size = nLocals;
     c->locals.alloc = nLocals;

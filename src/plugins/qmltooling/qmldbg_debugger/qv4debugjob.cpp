@@ -72,7 +72,7 @@ void JavaScriptJob::run()
     for (int i = 0; frame && i < frameNr; ++i)
         frame = frame->parentFrame();
     if (frameNr > 0 && frame)
-        ctx = static_cast<QV4::ExecutionContext *>(&frame->jsFrame->context);
+        ctx = frame->context();
 
     if (context >= 0) {
         QObject *forId = QQmlDebugService::objectForId(context);
@@ -218,7 +218,8 @@ void ValueLookupJob::run()
                                 QQmlContextData::get(engine->qmlEngine()->rootContext()),
                                 scopeObject.data());
     }
-    QV4::ScopedStackFrame frame(scope, qmlContext);
+    QV4::Scoped<QV4::ExecutionContext> scopedContext(scope, qmlContext);
+    QV4::ScopedStackFrame frame(scope, scopedContext);
     for (const QJsonValue handle : handles) {
         QV4DataCollector::Ref ref = handle.toInt();
         if (!collector->isValidRef(ref)) {

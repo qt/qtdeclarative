@@ -205,8 +205,8 @@ struct Q_QML_EXPORT FunctionObject: Object {
         return d()->jsCall(this, thisObject, argv, argc);
     }
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
-    void call(const Value *thisObject, void **a, const QMetaType *types, int argc);
-    static void virtualCallWithMetaTypes(const FunctionObject *f, const Value *thisObject,
+    void call(QObject *thisObject, void **a, const QMetaType *types, int argc);
+    static void virtualCallWithMetaTypes(const FunctionObject *f, QObject *thisObject,
                                          void **a, const QMetaType *types, int argc);
 
     static Heap::FunctionObject *createScriptFunction(ExecutionContext *scope, Function *function);
@@ -283,7 +283,7 @@ struct ArrowFunction : FunctionObject {
     V4_INTERNALCLASS(ArrowFunction)
     enum { NInlineProperties = 3 };
 
-    static void virtualCallWithMetaTypes(const FunctionObject *f, const Value *thisObject,
+    static void virtualCallWithMetaTypes(const FunctionObject *f, QObject *thisObject,
                                          void **a, const QMetaType *types, int argc);
     static ReturnedValue virtualCall(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc);
 };

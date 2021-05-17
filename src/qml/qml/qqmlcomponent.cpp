@@ -1392,7 +1392,7 @@ void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV
         return;
 
     // js modules (mjs) have no qmlContext
-    QV4::ScopedStackFrame frame(scope, qmlContext ? qmlContext->d() : engine->scriptContext()->d());
+    QV4::ScopedStackFrame frame(scope, qmlContext ? qmlContext : engine->scriptContext());
 
     while (1) {
         name = it.nextPropertyNameAsString(val);
