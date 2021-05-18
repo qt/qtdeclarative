@@ -786,7 +786,11 @@ static bool initObjectLookup(
         return false;
 
     const QMetaType propType = property->propType();
-    if ((type.flags() & QMetaType::IsQmlList) && (propType.flags() & QMetaType::IsQmlList)) {
+    if (!type.isValid()) {
+        // If type is invalid, then the calling code depends on the lookup
+        // to be set up in order to query the type, via lookupResultMetaType.
+        // We cannot verify the type in this case.
+    } else if ((type.flags() & QMetaType::IsQmlList) && (propType.flags() & QMetaType::IsQmlList)) {
         // We want to check the value types here, but we cannot easily do it.
         // Internally those are all QObject* lists, though.
     } else if (type.flags() & QMetaType::PointerToQObject) {
@@ -809,7 +813,7 @@ static bool initObjectLookup(
 
         if (!foundMetaObject)
             return false;
-    } else if (property->propType() != type) {
+    } else if (propType != type) {
         return false;
     }
 
