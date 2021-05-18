@@ -782,8 +782,33 @@ static bool initObjectLookup(
                     name.getPointer(), object, aotContext->qmlContext);
     }
 
-    if (!property || property->propType() != type)
+    if (!property)
         return false;
+
+    const QMetaType propType = property->propType();
+    if (type.flags() & QMetaType::PointerToQObject) {
+        // We accept any base class as type, too
+
+        const QMetaObject *typeMetaObject = type.metaObject();
+        const QMetaObject *foundMetaObject = propType.metaObject();
+        if (!foundMetaObject) {
+            if (QQmlEngine *engine = aotContext->qmlEngine()) {
+                foundMetaObject = QQmlEnginePrivate::get(engine)->metaObjectForType(
+                            propType.id()).metaObject();
+            }
+        }
+
+        while (foundMetaObject) {
+            if (foundMetaObject == typeMetaObject)
+                break;
+            foundMetaObject = foundMetaObject->superClass();
+        }
+
+        if (!foundMetaObject)
+            return false;
+    } else if (property->propType() != type) {
+        return false;
+    }
 
     Q_ASSERT(ddata->propertyCache);
 
