@@ -5642,7 +5642,7 @@ QIcon QCommonStyle::standardIcon(StandardPixmap standardIcon, const QStyleOption
                 if (!linkIcon.isNull()) {
                     QIcon baseIcon = QCommonStyle::standardIcon(SP_FileIcon, option);
                     const QList<QSize> sizes = baseIcon.availableSizes(QIcon::Normal, QIcon::Off);
-                    const qreal devicePixelRatio = dpr(option->window);
+                    const qreal devicePixelRatio = option ? dpr(option->window) : 1.;
                     for (int i = 0 ; i < sizes.size() ; ++i) {
                         int size = sizes[i].width();
                         QPixmap basePixmap = baseIcon.pixmap(QSize(size, size), devicePixelRatio);
@@ -5660,7 +5660,7 @@ QIcon QCommonStyle::standardIcon(StandardPixmap standardIcon, const QStyleOption
                 if (!linkIcon.isNull()) {
                     QIcon baseIcon = QCommonStyle::standardIcon(SP_DirIcon, option);
                     const QList<QSize> sizes = baseIcon.availableSizes(QIcon::Normal, QIcon::Off);
-                    const qreal devicePixelRatio = dpr(option->window);
+                    const qreal devicePixelRatio = option ? dpr(option->window) : 1.;
                     for (int i = 0 ; i < sizes.size() ; ++i) {
                         int size = sizes[i].width();
                         QPixmap basePixmap = baseIcon.pixmap(QSize(size, size), devicePixelRatio);
