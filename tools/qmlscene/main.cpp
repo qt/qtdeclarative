@@ -359,7 +359,7 @@ static void usage()
          "                            ........ (remove AA_ShareOpenGLContexts)");
     puts("  --desktop......................... Force use of desktop GL (AA_UseDesktopOpenGL)");
     puts("  --gles............................ Force use of GLES (AA_UseOpenGLES)");
-    puts("  --software........................ Force use of software rendering (AA_UseOpenGLES)");
+    puts("  --software........................ Force use of software rendering (AA_UseSoftwareOpenGL)");
     puts("  --verbose......................... Print version and graphical diagnostics for the run-time");
 #ifdef QT_WIDGETS_LIB
     puts("  --apptype [gui|widgets] .......... Select which application class to use. Default is widgets.");
