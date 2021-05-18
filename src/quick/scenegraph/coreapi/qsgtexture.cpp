@@ -806,13 +806,6 @@ GLuint QSGTexturePlatformOpenGL::nativeTexture() const
         return GLuint(tex->nativeTexture().object);
     return 0;
 }
-
-template<> Q_QUICK_EXPORT
-QNativeInterface::QSGOpenGLTexture *QSGTexture::nativeInterface<QNativeInterface::QSGOpenGLTexture>() const
-{
-    Q_D(const QSGTexture);
-    return &const_cast<QSGTexturePrivate*>(d)->m_openglTextureAccessor;
-}
 #endif // opengl
 
 #if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
@@ -873,13 +866,6 @@ void *QSGTexturePlatformD3D11::nativeTexture() const
         return reinterpret_cast<void *>(quintptr(tex->nativeTexture().object));
     return 0;
 }
-
-template<> Q_QUICK_EXPORT
-QNativeInterface::QSGD3D11Texture *QSGTexture::nativeInterface<QNativeInterface::QSGD3D11Texture>() const
-{
-    Q_D(const QSGTexture);
-    return &const_cast<QSGTexturePrivate*>(d)->m_d3d11TextureAccessor;
-}
 #endif // win
 
 #if defined(__OBJC__) || defined(Q_CLANG_QDOC)
@@ -927,14 +913,7 @@ namespace QNativeInterface {
  */
 
 } // QNativeInterface
-
-template<> Q_QUICK_EXPORT
-QNativeInterface::QSGMetalTexture *QSGTexture::nativeInterface<QNativeInterface::QSGMetalTexture>() const
-{
-    Q_D(const QSGTexture);
-    return &const_cast<QSGTexturePrivate*>(d)->m_metalTextureAccessor;
-}
-#endif // win
+#endif // OBJC
 
 #if QT_CONFIG(vulkan) || defined(Q_CLANG_QDOC)
 namespace QNativeInterface {
@@ -1009,14 +988,32 @@ VkImageLayout QSGTexturePlatformVulkan::nativeImageLayout() const
         return VkImageLayout(tex->nativeTexture().layout);
     return VK_IMAGE_LAYOUT_UNDEFINED;
 }
-
-template<> Q_QUICK_EXPORT
-QNativeInterface::QSGVulkanTexture *QSGTexture::nativeInterface<QNativeInterface::QSGVulkanTexture>() const
-{
-    Q_D(const QSGTexture);
-    return &const_cast<QSGTexturePrivate*>(d)->m_vulkanTextureAccessor;
-}
 #endif // vulkan
+
+template <>
+Q_NATIVE_INTERFACE_EXPORT void *QNativeInterface::Private::resolveInterface(const QSGTexture *that, const std::type_info &type, int revision)
+{
+    using namespace QNativeInterface;
+    Q_UNUSED(that); Q_UNUSED(type); Q_UNUSED(revision);
+
+    auto *texturePrivate = QSGTexturePrivate::get(const_cast<QSGTexture*>(that));
+    Q_UNUSED(texturePrivate);
+
+#if QT_CONFIG(vulkan)
+    QT_NATIVE_INTERFACE_RETURN_IF(QSGVulkanTexture, &texturePrivate->m_vulkanTextureAccessor);
+#endif
+#if defined(__OBJC__)
+    QT_NATIVE_INTERFACE_RETURN_IF(QSGMetalTexture, &texturePrivate->m_metalTextureAccessor);
+#endif
+#if defined(Q_OS_WIN)
+    QT_NATIVE_INTERFACE_RETURN_IF(QSGD3D11Texture, &texturePrivate->m_d3d11TextureAccessor);
+#endif
+#if QT_CONFIG(opengl)
+    QT_NATIVE_INTERFACE_RETURN_IF(QSGOpenGLTexture, &texturePrivate->m_openglTextureAccessor);
+#endif
+
+    return nullptr;
+}
 
 QT_END_NAMESPACE
 
