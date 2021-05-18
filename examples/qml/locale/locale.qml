@@ -56,7 +56,21 @@ Rectangle {
     height: 480
     color: "lightgray"
 
-    property string locale: view.currentItem.locale
+    component LocaleDelegate: Text {
+        required property var modelData
+        required property int index
+
+        property string locale: modelData
+        height: 30
+        width: view.width
+        text: `${Qt.locale(modelData).name} (${Qt.locale(modelData).nativeCountryName}/${Qt.locale(modelData).nativeLanguageName})`
+        MouseArea {
+            anchors.fill: parent
+            onClicked: view.currentIndex = parent.index
+        }
+    }
+
+    property string locale: (view.currentItem as LocaleDelegate).locale
 
     Text {
         id: title
@@ -89,16 +103,8 @@ Rectangle {
                 "nb_NO",
                 "sv_SE"
             ]
-            delegate: Text {
-                property string locale: modelData
-                height: 30
-                width: view.width
-                text: Qt.locale(modelData).name + " ("+ Qt.locale(modelData).nativeCountryName + "/" + Qt.locale(modelData).nativeLanguageName + ")"
-                MouseArea {
-                    anchors.fill: parent
-                    onClicked: view.currentIndex = index
-                }
-            }
+
+            delegate: LocaleDelegate {}
             highlight: Rectangle {
                 height: 30
                 color: "#60300030"
