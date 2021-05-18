@@ -786,7 +786,10 @@ static bool initObjectLookup(
         return false;
 
     const QMetaType propType = property->propType();
-    if (type.flags() & QMetaType::PointerToQObject) {
+    if ((type.flags() & QMetaType::IsQmlList) && (propType.flags() & QMetaType::IsQmlList)) {
+        // We want to check the value types here, but we cannot easily do it.
+        // Internally those are all QObject* lists, though.
+    } else if (type.flags() & QMetaType::PointerToQObject) {
         // We accept any base class as type, too
 
         const QMetaObject *typeMetaObject = type.metaObject();
