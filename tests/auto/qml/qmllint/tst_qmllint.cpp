@@ -752,6 +752,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("Accessible") << QStringLiteral("accessible.qml");
     QTest::newRow("qjsroot") << QStringLiteral("qjsroot.qml");
     QTest::newRow("InlineComponent") << QStringLiteral("inlineComponent.qml");
+    QTest::newRow("InlineComponentWithComponents") << QStringLiteral("inlineComponentWithComponents.qml");
 }
 
 void TestQmllint::cleanQmlCode()

@@ -126,6 +126,7 @@ protected:
 
     QString m_implicitImportDirectory;
     QStringView m_inlineComponentName;
+    bool m_nextIsInlineComponent = false;
     QStringList m_qmltypesFiles;
     QQmlJSScope::Ptr m_currentScope;
     QQmlJSScope::Ptr m_exportedRootScope;

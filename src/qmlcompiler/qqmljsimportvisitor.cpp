@@ -342,9 +342,10 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 
     m_currentScope->setAnnotations(parseAnnotations(definition->annotations));
 
-    if (!m_inlineComponentName.isNull()) {
+    if (m_nextIsInlineComponent) {
         m_currentScope->setIsInlineComponent(true);
         m_rootScopeImports.insert(m_inlineComponentName.toString(), m_currentScope);
+        m_nextIsInlineComponent = false;
     }
 
     QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
@@ -366,6 +367,7 @@ bool QQmlJSImportVisitor::visit(UiInlineComponent *component)
         return true;
     }
 
+    m_nextIsInlineComponent = true;
     m_inlineComponentName = component->name;
     return true;
 }
@@ -373,6 +375,7 @@ bool QQmlJSImportVisitor::visit(UiInlineComponent *component)
 void QQmlJSImportVisitor::endVisit(UiInlineComponent *)
 {
     m_inlineComponentName = QStringView();
+    Q_ASSERT(!m_nextIsInlineComponent);
 }
 
 bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
