@@ -13,6 +13,9 @@ project(QtQuickControls2
 # special case begin
 # Make sure we only use latest private CMake API, aka no compatibility wrappers.
 set(QT_NO_INTERNAL_COMPATIBILITY_FUNCTIONS TRUE)
+
+# Make sure we use the fixed BASE argument of qt_add_resource.
+set(QT_USE_FIXED_QT_ADD_RESOURCE_BASE TRUE)
 # special case end
 
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Qml) # special case

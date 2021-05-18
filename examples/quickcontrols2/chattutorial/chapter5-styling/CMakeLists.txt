@@ -55,55 +55,19 @@ qt6_add_resources(chapter5-styling "qml"
     FILES
         ${qml_resource_files}
 )
-set_source_files_properties("../shared/Albert_Einstein.png"
-    PROPERTIES QT_RESOURCE_ALIAS "Albert_Einstein.png"
-)
-set_source_files_properties("../shared/Albert_Einstein@2x.png"
-    PROPERTIES QT_RESOURCE_ALIAS "Albert_Einstein@2x.png"
-)
-set_source_files_properties("../shared/Albert_Einstein@3x.png"
-    PROPERTIES QT_RESOURCE_ALIAS "Albert_Einstein@3x.png"
-)
-set_source_files_properties("../shared/Albert_Einstein@4x.png"
-    PROPERTIES QT_RESOURCE_ALIAS "Albert_Einstein@4x.png"
-)
-set_source_files_properties("../shared/Ernest_Hemingway.png"
-    PROPERTIES QT_RESOURCE_ALIAS "Ernest_Hemingway.png"
-)
-set_source_files_properties("../shared/Ernest_Hemingway@2x.png"
-    PROPERTIES QT_RESOURCE_ALIAS "Ernest_Hemingway@2x.png"
-)
-set_source_files_properties("../shared/Ernest_Hemingway@3x.png"
-    PROPERTIES QT_RESOURCE_ALIAS "Ernest_Hemingway@3x.png"
-)
-set_source_files_properties("../shared/Ernest_Hemingway@4x.png"
-    PROPERTIES QT_RESOURCE_ALIAS "Ernest_Hemingway@4x.png"
-)
-set_source_files_properties("../shared/Hans_Gude.png"
-    PROPERTIES QT_RESOURCE_ALIAS "Hans_Gude.png"
-)
-set_source_files_properties("../shared/Hans_Gude@2x.png"
-    PROPERTIES QT_RESOURCE_ALIAS "Hans_Gude@2x.png"
-)
-set_source_files_properties("../shared/Hans_Gude@3x.png"
-    PROPERTIES QT_RESOURCE_ALIAS "Hans_Gude@3x.png"
-)
-set_source_files_properties("../shared/Hans_Gude@4x.png"
-    PROPERTIES QT_RESOURCE_ALIAS "Hans_Gude@4x.png"
-)
 set(shared_resource_files
-    "Albert_Einstein.png"
-    "Albert_Einstein@2x.png"
-    "Albert_Einstein@3x.png"
-    "Albert_Einstein@4x.png"
-    "Ernest_Hemingway.png"
-    "Ernest_Hemingway@2x.png"
-    "Ernest_Hemingway@3x.png"
-    "Ernest_Hemingway@4x.png"
-    "Hans_Gude.png"
-    "Hans_Gude@2x.png"
-    "Hans_Gude@3x.png"
-    "Hans_Gude@4x.png"
+    "../shared/Albert_Einstein.png"
+    "../shared/Albert_Einstein@2x.png"
+    "../shared/Albert_Einstein@3x.png"
+    "../shared/Albert_Einstein@4x.png"
+    "../shared/Ernest_Hemingway.png"
+    "../shared/Ernest_Hemingway@2x.png"
+    "../shared/Ernest_Hemingway@3x.png"
+    "../shared/Ernest_Hemingway@4x.png"
+    "../shared/Hans_Gude.png"
+    "../shared/Hans_Gude@2x.png"
+    "../shared/Hans_Gude@3x.png"
+    "../shared/Hans_Gude@4x.png"
 )
 
 qt6_add_resources(chapter5-styling "shared"

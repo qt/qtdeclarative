@@ -35,8 +35,8 @@ qt_internal_add_test(tst_styleimports
 
 # Resources:
 set(qmake_resourcestyle_resource_files
-    "ResourceStyle/Button.qml" # special case: QTBUG-86726
-    "ResourceStyle/qmldir" # special case
+    "resources/ResourceStyle/Button.qml"
+    "resources/ResourceStyle/qmldir"
 )
 
 qt_internal_add_resource(tst_styleimports "qmake_resourcestyle"
