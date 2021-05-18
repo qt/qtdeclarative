@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.14)
-project(evaluate LANGUAGES CXX)
+project(create LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
@@ -10,23 +10,23 @@ set(CMAKE_AUTOUIC ON)
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Quick)
 
-qt_add_executable(evaluate
+qt_add_executable(create
     main.cpp
 )
-qt_import_plugins(evaluate
+qt_import_plugins(create
     INCLUDE Qt::QMinimalIntegrationPlugin
 )
 
-target_link_libraries(evaluate PUBLIC
+target_link_libraries(create PUBLIC
     Qt::Core
     Qt::Quick
 )
 if(DEFINED ENV{LIB_FUZZING_ENGINE})
-    target_link_libraries(evaluate PRIVATE
+    target_link_libraries(create PRIVATE
         $ENV{LIB_FUZZING_ENGINE}
     )
 else()
-    target_link_libraries(evaluate PRIVATE
+    target_link_libraries(create PRIVATE
         -fsanitize=fuzzer
     )
 endif()
