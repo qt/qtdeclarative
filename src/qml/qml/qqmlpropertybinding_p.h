@@ -75,7 +75,8 @@ class Q_QML_PRIVATE_EXPORT QQmlPropertyBindingJS : public QQmlJavaScriptExpressi
     {
         return const_cast<QQmlPropertyBinding *>(static_cast<const QQmlPropertyBindingJS *>(this)->asBinding());
     }
-    QQmlPropertyBinding const *asBinding() const;;
+
+    inline QQmlPropertyBinding const *asBinding() const;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlPropertyBindingJSForBoundFunction : public QQmlPropertyBindingJS
@@ -89,13 +90,28 @@ class Q_QML_PRIVATE_EXPORT QQmlPropertyBinding : public QPropertyBindingPrivate
 
 {
     friend class QQmlPropertyBindingJS;
+
+    static constexpr std::size_t jsExpressionOffsetLength() {
+        struct composite { QQmlPropertyBinding b; QQmlPropertyBindingJS js; };
+        QT_WARNING_PUSH QT_WARNING_DISABLE_INVALID_OFFSETOF
+        return sizeof (QQmlPropertyBinding) - offsetof(composite, js);
+        QT_WARNING_POP
+    }
+
 public:
 
     QQmlPropertyBindingJS *jsExpression()
     {
         return const_cast<QQmlPropertyBindingJS *>(static_cast<const QQmlPropertyBinding *>(this)->jsExpression());
     }
-    QQmlPropertyBindingJS const *jsExpression() const;
+
+    QQmlPropertyBindingJS const *jsExpression() const
+    {
+        return std::launder(reinterpret_cast<QQmlPropertyBindingJS const *>(
+                                reinterpret_cast<std::byte const*>(this)
+                                + sizeof(QQmlPropertyBinding)
+                                + jsExpressionOffsetLength()));
+    }
 
     static QUntypedPropertyBinding create(const QQmlPropertyData *pd, QV4::Function *function,
                                           QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
@@ -131,7 +147,10 @@ public:
         return reinterpret_cast<QQmlPropertyBinding *>(address)->evaluate(metaType, dataPtr);
     }
 
-    bool hasDependencies();
+    bool hasDependencies()
+    {
+        return (dependencyObserverCount > 0) || !jsExpression()->activeGuards.isEmpty();
+    }
 
 private:
     bool evaluate(QMetaType metaType, void *dataPtr);
@@ -155,11 +174,30 @@ private:
     };
     QQmlPropertyBinding(QMetaType metaType, QObject *target, QQmlPropertyIndex targetIndex, TargetData::BoundFunction hasBoundFunction);
 
-    QObject *target();
-    QQmlPropertyIndex targetIndex();
-    bool hasBoundFunction();
-    bool isUndefined() const;
-    void setIsUndefined(bool isUndefined);
+    QObject *target()
+    {
+        return std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->target;
+    }
+
+    QQmlPropertyIndex targetIndex()
+    {
+        return std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->targetIndex;
+    }
+
+    bool hasBoundFunction()
+    {
+        return std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->hasBoundFunction;
+    }
+
+    bool isUndefined() const
+    {
+        return std::launder(reinterpret_cast<TargetData const *>(&declarativeExtraData))->isUndefined;
+    }
+
+    void setIsUndefined(bool isUndefined)
+    {
+        std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->isUndefined = isUndefined;
+    }
 
     static void bindingErrorCallback(QPropertyBindingPrivate *);
 };
@@ -190,6 +228,14 @@ public:
                                           const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
                                           const QV4::CompiledData::Binding *binding);
 };
+
+inline const QQmlPropertyBinding *QQmlPropertyBindingJS::asBinding() const
+{
+    return std::launder(reinterpret_cast<QQmlPropertyBinding const *>(
+                            reinterpret_cast<std::byte const*>(this)
+                            - sizeof(QQmlPropertyBinding)
+                            - QQmlPropertyBinding::jsExpressionOffsetLength()));
+}
 
 QT_END_NAMESPACE
 

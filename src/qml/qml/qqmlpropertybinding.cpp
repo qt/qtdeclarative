@@ -47,20 +47,6 @@ QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcQQPropertyBinding, "qt.qml.propertybinding");
 
-namespace {
-constexpr std::size_t jsExpressionOffsetLength() {
-    struct composite { QQmlPropertyBinding b; QQmlPropertyBindingJS js; };
-    QT_WARNING_PUSH QT_WARNING_DISABLE_INVALID_OFFSETOF
-    return sizeof (QQmlPropertyBinding) - offsetof(composite, js);
-    QT_WARNING_POP
-}
-}
-
-const QQmlPropertyBindingJS *QQmlPropertyBinding::jsExpression() const
-{
-    return std::launder(reinterpret_cast<QQmlPropertyBindingJS const *>(reinterpret_cast<std::byte const*>(this) + sizeof(QQmlPropertyBinding) + jsExpressionOffsetLength()));
-}
-
 QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, QV4::Function *function,
                                                     QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
                                                     QV4::ExecutionContext *scope, QObject *target, QQmlPropertyIndex targetIndex)
@@ -109,17 +95,16 @@ QUntypedPropertyBinding QQmlPropertyBinding::createFromBoundFunction(const QQmlP
 }
 
 /*!
+    \fn bool QQmlPropertyBindingJS::hasDependencies()
     \internal
+
     Returns true if this binding has dependencies.
     Dependencies can be either QProperty dependencies or dependencies of
     the JS expression (aka activeGuards). Translations end up as a QProperty
     dependency, so they do not need any special handling
     Note that a QQmlPropertyBinding never stores qpropertyChangeTriggers.
  */
-bool QQmlPropertyBinding::hasDependencies()
-{
-    return (dependencyObserverCount > 0) || !jsExpression()->activeGuards.isEmpty();
-}
+
 
 void QQmlPropertyBindingJS::expressionChanged()
 {
@@ -146,11 +131,6 @@ void QQmlPropertyBindingJS::expressionChanged()
     asBinding()->evaluateRecursive();
     asBinding()->notifyRecursive();
     m_error.setTag(currentTag);
-}
-
-const QQmlPropertyBinding *QQmlPropertyBindingJS::asBinding() const
-{
-    return std::launder(reinterpret_cast<QQmlPropertyBinding const *>(reinterpret_cast<std::byte const*>(this) - sizeof(QQmlPropertyBinding) - jsExpressionOffsetLength()));
 }
 
 QQmlPropertyBinding::QQmlPropertyBinding(QMetaType mt, QObject *target, QQmlPropertyIndex targetIndex, TargetData::BoundFunction hasBoundFunction)
@@ -376,31 +356,6 @@ QString QQmlPropertyBinding::createBindingLoopErrorDescription(QJSEnginePrivate 
     Q_ASSERT(!targetIndex().hasValueTypeIndex());
     QQmlProperty prop = QQmlPropertyPrivate::restore(target(), *propertyData, &valueTypeData, nullptr);
     return QStringLiteral(R"(QML %1: Binding loop detected for property "%2")").arg(QQmlMetaType::prettyTypeName(target()) , prop.name());
-}
-
-QObject *QQmlPropertyBinding::target()
-{
-    return std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->target;
-}
-
-QQmlPropertyIndex QQmlPropertyBinding::targetIndex()
-{
-    return std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->targetIndex;
-}
-
-bool QQmlPropertyBinding::hasBoundFunction()
-{
-    return std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->hasBoundFunction;
-}
-
-bool QQmlPropertyBinding::isUndefined() const
-{
-    return std::launder(reinterpret_cast<TargetData const *>(&declarativeExtraData))->isUndefined;
-}
-
-void QQmlPropertyBinding::setIsUndefined(bool isUndefined)
-{
-    std::launder(reinterpret_cast<TargetData *>(&declarativeExtraData))->isUndefined = isUndefined;
 }
 
 void QQmlPropertyBinding::bindingErrorCallback(QPropertyBindingPrivate *that)
