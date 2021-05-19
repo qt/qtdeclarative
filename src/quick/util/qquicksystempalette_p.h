@@ -79,6 +79,7 @@ class Q_AUTOTEST_EXPORT QQuickSystemPalette : public QObject
     Q_PROPERTY(QColor shadow READ shadow NOTIFY paletteChanged)
     Q_PROPERTY(QColor highlight READ highlight NOTIFY paletteChanged)
     Q_PROPERTY(QColor highlightedText READ highlightedText NOTIFY paletteChanged)
+    Q_PROPERTY(QColor placeholderText READ placeholderText NOTIFY paletteChanged REVISION(6, 2))
     QML_NAMED_ELEMENT(SystemPalette)
     QML_ADDED_IN_VERSION(2, 0)
 
@@ -107,6 +108,8 @@ public:
 
     QColor highlight() const;
     QColor highlightedText() const;
+
+    QColor placeholderText() const;
 
     QQuickSystemPalette::ColorGroup colorGroup() const;
     void setColorGroup(QQuickSystemPalette::ColorGroup);

@@ -259,6 +259,18 @@ QColor QQuickSystemPalette::highlightedText() const
 }
 
 /*!
+    \qmlproperty color QtQuick::SystemPalette::placeholderText
+    The placeholder text color of the current color group.
+
+    \since 6.2
+    \sa QPalette::ColorRole
+*/
+QColor QQuickSystemPalette::placeholderText() const
+{
+    Q_D(const QQuickSystemPalette);
+    return QGuiApplication::palette().color(d->group, QPalette::PlaceholderText);
+}
+/*!
     \qmlproperty enumeration QtQuick::SystemPalette::colorGroup
 
     The color group of the palette. This can be one of:

@@ -86,6 +86,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickColorGroup : public QObject
     Q_PROPERTY(QColor toolTipText     READ toolTipText     WRITE setToolTipText     RESET resetToolTipText     NOTIFY toolTipTextChanged     FINAL)
     Q_PROPERTY(QColor window          READ window          WRITE setWindow          RESET resetWindow          NOTIFY windowChanged          FINAL)
     Q_PROPERTY(QColor windowText      READ windowText      WRITE setWindowText      RESET resetWindowText      NOTIFY windowTextChanged      FINAL)
+    Q_PROPERTY(QColor placeholderText READ placeholderText WRITE setPlaceholderText
+               RESET resetPlaceholderText NOTIFY placeholderTextChanged REVISION(6, 2) FINAL)
 
     QML_NAMED_ELEMENT(ColorGroup)
     QML_ADDED_IN_VERSION(6, 0)
@@ -174,6 +176,10 @@ public:
     void setWindowText(const QColor &color);
     void resetWindowText();
 
+    QColor placeholderText() const;
+    void setPlaceholderText(const QColor &color);
+    void resetPlaceholderText();
+
     QPalette::ColorGroup groupTag() const;
     void setGroupTag(QPalette::ColorGroup tag);
 
@@ -202,6 +208,7 @@ Q_SIGNALS:
     void toolTipTextChanged();
     void windowChanged();
     void windowTextChanged();
+    Q_REVISION(6, 2) void placeholderTextChanged();
 
     void changed();
 

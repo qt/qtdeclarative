@@ -203,6 +203,13 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty color QtQuick::ColorGroup::placeholderText
+    \since 6.2
+
+    Used as the place holder color for editable single line fields.
+*/
+
+/*!
     \qmlsignal QtQuick::ColorGroup::changed
 
     Additional signal indicates that the current state of this color group
@@ -509,6 +516,21 @@ void QQuickColorGroup::setWindowText(const QColor &color)
 void QQuickColorGroup::resetWindowText()
 {
     resetColor(QPalette::WindowText, &QQuickColorGroup::windowTextChanged);
+}
+
+QColor QQuickColorGroup::placeholderText() const
+{
+    return color(QPalette::PlaceholderText);
+}
+
+void QQuickColorGroup::setPlaceholderText(const QColor &color)
+{
+    setColor(QPalette::PlaceholderText, color, &QQuickColorGroup::placeholderTextChanged);
+}
+
+void QQuickColorGroup::resetPlaceholderText()
+{
+    resetColor(QPalette::PlaceholderText, &QQuickColorGroup::placeholderTextChanged);
 }
 
 QPalette::ColorGroup QQuickColorGroup::groupTag() const
