@@ -75,8 +75,8 @@ class Q_AUTOTEST_EXPORT QQuickApplication : public QQmlApplication
     Q_PROPERTY(QQmlListProperty<QQuickScreenInfo> screens READ screens NOTIFY screensChanged)
 
     QML_NAMED_ELEMENT(Application)
+    QML_SINGLETON
     QML_ADDED_IN_VERSION(2, 0)
-    QML_UNCREATABLE("Application is an abstract class.")
 
 public:
     explicit QQuickApplication(QObject *parent = nullptr);
