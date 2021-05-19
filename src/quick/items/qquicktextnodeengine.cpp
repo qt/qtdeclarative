@@ -266,10 +266,9 @@ void QQuickTextNodeEngine::processCurrentLine()
                 Q_ASSERT(sortedIndex < m_currentLineTree.size());
 
                 node = m_currentLineTree.data() + sortedIndex;
+                if (i == 0)
+                    currentSelectionState = node->selectionState;
             }
-
-            if (i == 0)
-                currentSelectionState = node->selectionState;
 
             // Update decorations
             if (currentDecorations != Decoration::NoDecoration) {
