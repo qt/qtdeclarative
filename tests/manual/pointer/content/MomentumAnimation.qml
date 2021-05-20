@@ -44,7 +44,7 @@ ParallelAnimation {
         id: xAnim
         target: root.target
         property: "x"
-        to: target.x + velocity.x / duration * 100000
+        to: target.x + velocity.x / duration * 100
         duration: root.duration
         easing.type: Easing.OutQuad
     }
@@ -52,7 +52,7 @@ ParallelAnimation {
         id: yAnim
         target: root.target
         property: "y"
-        to: target.y + velocity.y / duration * 100000
+        to: target.y + velocity.y / duration * 100
         duration: root.duration
         easing.type: Easing.OutQuad
     }

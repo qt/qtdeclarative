@@ -103,7 +103,7 @@ Rectangle {
 
             Rectangle {
                 visible: width > 0
-                width: dragHandler.centroid.velocity.length() * 100
+                width: dragHandler.centroid.velocity.length() / 10
                 height: 2
                 x: ball.width / 2
                 y: ball.height / 2
