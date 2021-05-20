@@ -89,13 +89,13 @@ struct RequiredPropertyInfo
 
 class RequiredProperties : public QHash<QQmlPropertyData*, RequiredPropertyInfo> {};
 
-struct QQmlObjectCreatorSharedState : public QSharedData
+struct QQmlObjectCreatorSharedState : QQmlRefCount
 {
     QQmlRefPointer<QQmlContextData> rootContext;
     QQmlRefPointer<QQmlContextData> creationContext;
     QFiniteStack<QQmlAbstractBinding::Ptr> allCreatedBindings;
     QFiniteStack<QQmlParserStatus*> allParserStatusCallbacks;
-    QFiniteStack<QPointer<QObject> > allCreatedObjects;
+    QFiniteStack<QQmlGuard<QObject> > allCreatedObjects;
     QV4::Value *allJavaScriptObjects; // pointer to vector on JS stack to reference JS wrappers during creation phase.
     QQmlComponentAttached *componentAttached;
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
@@ -141,7 +141,7 @@ public:
     {
         return parentContext.contextData();
     }
-    QFiniteStack<QPointer<QObject> > &allCreatedObjects() { return sharedState->allCreatedObjects; }
+    QFiniteStack<QQmlGuard<QObject> > &allCreatedObjects() { return sharedState->allCreatedObjects; }
 
     RequiredProperties &requiredProperties() {return sharedState->requiredProperties;}
     bool componentHadRequiredProperties() const {return sharedState->hadRequiredProperties;}
@@ -195,7 +195,7 @@ private:
     QQmlGuardedContextData parentContext;
     QQmlRefPointer<QQmlContextData> context;
     const QQmlPropertyCacheVector *propertyCaches;
-    QExplicitlySharedDataPointer<QQmlObjectCreatorSharedState> sharedState;
+    QQmlRefPointer<QQmlObjectCreatorSharedState> sharedState;
     bool topLevelCreator;
     QQmlIncubatorPrivate *incubator;
 
@@ -225,7 +225,7 @@ struct QQmlObjectCreatorRecursionWatcher
     bool hasRecursed() const { return watcher.hasRecursed(); }
 
 private:
-    QExplicitlySharedDataPointer<QQmlObjectCreatorSharedState> sharedState;
+    QQmlRefPointer<QQmlObjectCreatorSharedState> sharedState;
     QRecursionWatcher<QQmlObjectCreatorSharedState, &QQmlObjectCreatorSharedState::recursionNode> watcher;
 };
 

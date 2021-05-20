@@ -80,7 +80,7 @@ QQmlObjectCreator::QQmlObjectCreator(
     : phase(Startup)
     , compilationUnit(compilationUnit)
     , propertyCaches(&compilationUnit->propertyCaches)
-    , sharedState(new QQmlObjectCreatorSharedState)
+    , sharedState(new QQmlObjectCreatorSharedState, QQmlRefPointer<QQmlObjectCreatorSharedState>::Adopt)
     , topLevelCreator(true)
     , incubator(incubator)
 {
