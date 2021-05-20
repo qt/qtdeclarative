@@ -211,6 +211,7 @@ void tst_QQuickPinchHandler::scale()
 
     QQuickPinchHandler *pinchHandler = window->rootObject()->findChild<QQuickPinchHandler*>("pinchHandler");
     QVERIFY(pinchHandler != nullptr);
+    QSignalSpy grabChangedSpy(pinchHandler, SIGNAL(grabChanged(QPointingDevice::GrabTransition, QEventPoint)));
 
     QQuickItem *root = qobject_cast<QQuickItem*>(window->rootObject());
     QVERIFY(root != nullptr);
@@ -232,6 +233,7 @@ void tst_QQuickPinchHandler::scale()
         // it is outside its bounds.
         pinchSequence.stationary(0).press(1, p1, window).commit();
         QQuickTouchUtils::flush(window);
+        QTRY_COMPARE(grabChangedSpy.count(), 1); // passive grab
 
         QPoint pd(10, 10);
         // move one point until PinchHandler activates
@@ -241,6 +243,8 @@ void tst_QQuickPinchHandler::scale()
             QQuickTouchUtils::flush(window);
         }
         QCOMPARE(pinchHandler->active(), true);
+        // first point got a passive grab; both points got exclusive grabs
+        QCOMPARE(grabChangedSpy.count(), 3);
         QLineF line(p0, p1);
         const qreal startLength = line.length();
 
