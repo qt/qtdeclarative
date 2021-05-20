@@ -865,10 +865,22 @@ bool ExecutableCompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorSt
     });
 }
 
+/*!
+    \internal
+    This function creates a temporary key vector and sorts it to guarantuee a stable
+    hash. This is used to calculate a check-sum on dependent meta-objects.
+ */
 bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash, QQmlEngine *engine) const
 {
+    std::vector<int> keys (count());
+    int i = 0;
     for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
-        if (!it.value()->addToHash(hash, engine))
+        keys[i] = it.key();
+        ++i;
+    }
+    std::sort(keys.begin(), keys.end());
+    for (int key: keys) {
+        if (!this->operator[](key)->addToHash(hash, engine))
             return false;
     }
 

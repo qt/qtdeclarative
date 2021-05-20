@@ -92,9 +92,7 @@ typedef QVector<QQmlPropertyData*> BindingPropertyData;
 class CompilationUnitMapper;
 class ResolvedTypeReference;
 // map from name index
-// While this could be a hash, a map is chosen here to provide a stable
-// order, which is used to calculating a check-sum on dependent meta-objects.
-struct ResolvedTypeReferenceMap: public QMap<int, ResolvedTypeReference*>
+struct ResolvedTypeReferenceMap: public QHash<int, ResolvedTypeReference*>
 {
     bool addToHash(QCryptographicHash *hash, QQmlEngine *engine) const;
 };
