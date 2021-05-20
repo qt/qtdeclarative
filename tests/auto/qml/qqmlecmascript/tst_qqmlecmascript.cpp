@@ -413,6 +413,8 @@ private slots:
     void optionalChainEval();
     void optionalChainDelete();
     void optionalChainNull();
+
+    void asCast();
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     static void verifyContextLifetime(const QQmlRefPointer<QQmlContextData> &ctxt);
@@ -9774,6 +9776,32 @@ void tst_qqmlecmascript::optionalChainNull()
     QVERIFY(EVALUATE_VALUE("this.object?.x?.y?.z", QV4::Primitive::undefinedValue()));
     QVERIFY(EVALUATE_VALUE("this.object?.x?.y?.[slow.thing('z')]", QV4::Primitive::undefinedValue()));
     QVERIFY(EVALUATE_VALUE("this.slow.counter", QV4::Primitive::fromInt32(1)));
+}
+
+void tst_qqmlecmascript::asCast()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("asCast.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
+
+    QQmlContext *context = qmlContext(root.data());
+    const QObject *object = context->objectForName("object");
+    const QObject *item = context->objectForName("item");
+    const QObject *rectangle = context->objectForName("rectangle");
+
+    QCOMPARE(qvariant_cast<QObject *>(root->property("objectAsObject")), object);
+    QCOMPARE(qvariant_cast<QObject *>(root->property("objectAsItem")), nullptr);
+    QCOMPARE(qvariant_cast<QObject *>(root->property("objectAsRectangle")), nullptr);
+
+    QCOMPARE(qvariant_cast<QObject *>(root->property("itemAsObject")), item);
+    QCOMPARE(qvariant_cast<QObject *>(root->property("itemAsItem")), item);
+    QCOMPARE(qvariant_cast<QObject *>(root->property("itemAsRectangle")), nullptr);
+
+    QCOMPARE(qvariant_cast<QObject *>(root->property("rectangleAsObject")), rectangle);
+    QCOMPARE(qvariant_cast<QObject *>(root->property("rectangleAsItem")), rectangle);
+    QCOMPARE(qvariant_cast<QObject *>(root->property("rectangleAsRectangle")), rectangle);
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

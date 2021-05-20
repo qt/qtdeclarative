@@ -1536,6 +1536,7 @@ bool Codegen::visit(BinaryExpression *ast)
         // intentional fall-through!
     case QSOperator::In:
     case QSOperator::InstanceOf:
+    case QSOperator::As:
     case QSOperator::Equal:
     case QSOperator::NotEqual:
     case QSOperator::Ge:
@@ -1568,9 +1569,6 @@ bool Codegen::visit(BinaryExpression *ast)
 
         break;
     }
-    case QSOperator::As:
-        setExprResult(left);
-        break;
     } // switch
 
     return false;
@@ -1732,6 +1730,14 @@ Codegen::Reference Codegen::binopHelper(QSOperator::Op oper, Reference &left, Re
         right.loadInAccumulator();
         binop.lhs = left.stackSlot();
         bytecodeGenerator->addInstruction(binop);
+        break;
+    }
+    case QSOperator::As: {
+        Instruction::As as;
+        left = left.storeOnStack();
+        right.loadInAccumulator();
+        as.lhs = left.stackSlot();
+        bytecodeGenerator->addInstruction(as);
         break;
     }
     case QSOperator::In: {

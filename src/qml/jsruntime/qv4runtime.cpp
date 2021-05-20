@@ -60,6 +60,7 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmljavascriptexpression_p.h>
 #include <private/qqmljsast_p.h>
+#include <private/qqmlvaluetypewrapper_p.h>
 #include "qv4qobjectwrapper_p.h"
 #include "qv4symbol_p.h"
 #include "qv4generatorobject_p.h"
@@ -391,6 +392,19 @@ QV4::ReturnedValue Runtime::Instanceof::call(ExecutionEngine *engine, const Valu
 
     ScopedValue result(scope, fHasInstance->call(&rval, &lval, 1));
     return scope.hasException() ? Encode::undefined() : Encode(result->toBoolean());
+}
+
+QV4::ReturnedValue Runtime::As::call(ExecutionEngine *engine, const Value &lval, const Value &rval)
+{
+    Scope scope(engine);
+    ScopedValue result(scope, Runtime::Instanceof::call(engine, lval, rval));
+
+    if (scope.hasException())
+        engine->catchException();
+    else if (result->toBoolean())
+        return lval.asReturnedValue();
+
+    return Encode::null();
 }
 
 QV4::ReturnedValue Runtime::In::call(ExecutionEngine *engine, const Value &left, const Value &right)

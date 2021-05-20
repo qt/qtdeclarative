@@ -662,28 +662,20 @@ void tst_qqmlparser::typeAssertion_data()
     QTest::addColumn<QString>("expression");
     QTest::addRow("as A")
             << QString::fromLatin1("A { onStuff: (b as A).happen() }");
-    QTest::addRow("as double paren")
-            << QString::fromLatin1("A { onStuff: console.log((12 as double)); }");
-    QTest::addRow("as double noparen")
-            << QString::fromLatin1("A { onStuff: console.log(12 as double); }");
-    QTest::addRow("property as double")
-            << QString::fromLatin1("A { prop: (12 as double); }");
-    QTest::addRow("property noparen as double")
-            << QString::fromLatin1("A { prop: 12 as double; }");
 
-    // rabbits cannot be discerned from types on a syntactical level.
-    // We could detect this on a semantical level, once we implement type assertions there.
+    // Rabbits cannot be discerned from types on a syntactical level.
+    // (rabbits would instead cause an error, as they are lower case)
 
-    QTest::addRow("as rabbit")
-            << QString::fromLatin1("A { onStuff: (b as rabbit).happen() }");
-    QTest::addRow("as rabbit paren")
-            << QString::fromLatin1("A { onStuff: console.log((12 as rabbit)); }");
-    QTest::addRow("as rabbit noparen")
-            << QString::fromLatin1("A { onStuff: console.log(12 as rabbit); }");
-    QTest::addRow("property as rabbit")
-            << QString::fromLatin1("A { prop: (12 as rabbit); }");
-    QTest::addRow("property noparen as rabbit")
-            << QString::fromLatin1("A { prop: 12 as rabbit; }");
+    QTest::addRow("as Rabbit")
+            << QString::fromLatin1("A { onStuff: (b as Rabbit).happen() }");
+    QTest::addRow("as Rabbit paren")
+            << QString::fromLatin1("A { onStuff: console.log((12 as Rabbit)); }");
+    QTest::addRow("as Rabbit noparen")
+            << QString::fromLatin1("A { onStuff: console.log(12 as Rabbit); }");
+    QTest::addRow("property as Rabbit")
+            << QString::fromLatin1("A { prop: (12 as Rabbit); }");
+    QTest::addRow("property noparen as Rabbit")
+            << QString::fromLatin1("A { prop: 12 as Rabbit; }");
 }
 
 void tst_qqmlparser::typeAssertion()

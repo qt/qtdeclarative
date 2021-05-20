@@ -1373,6 +1373,12 @@ QV4::ReturnedValue VME::interpret(JSTypesStackFrame *frame, ExecutionEngine *eng
         }
     MOTH_END_INSTR(Sub)
 
+    MOTH_BEGIN_INSTR(As)
+        const Value left = STACK_VALUE(lhs);
+        STORE_ACC();
+        acc = Runtime::As::call(engine, left, accumulator);
+    MOTH_END_INSTR(As)
+
     MOTH_BEGIN_INSTR(Exp)
         const Value left = STACK_VALUE(lhs);
         double base = left.toNumber();

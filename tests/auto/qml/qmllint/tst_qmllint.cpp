@@ -368,7 +368,7 @@ void TestQmllint::dirtyQmlCode_data()
             << false;
     QTest::newRow("badTypeAssertion")
             << QStringLiteral("badTypeAssertion.qml")
-            << QString("Warning: %1:5:39: Property \"rrr\" not found on type \"Item\"")
+            << QString("Warning: %1:5:39: Property \"rrr\" not found on type \"QQuickItem\"")
             << QString()
             << false;
     QTest::newRow("incompleteQmltypes")

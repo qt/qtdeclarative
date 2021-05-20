@@ -180,6 +180,7 @@ public:
     void generate_CmpStrictNotEqual(int lhs) override;
     void generate_CmpIn(int lhs) override;
     void generate_CmpInstanceOf(int lhs) override;
+    void generate_As(int lhs) override;
     void generate_UNot() override;
     void generate_UPlus() override;
     void generate_UMinus() override;

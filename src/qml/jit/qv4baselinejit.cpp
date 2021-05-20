@@ -864,6 +864,16 @@ void BaselineJIT::generate_CmpInstanceOf(int lhs)
     BASELINEJIT_GENERATE_RUNTIME_CALL(Instanceof, CallResultDestination::InAccumulator);
 }
 
+void BaselineJIT::generate_As(int lhs)
+{
+    STORE_ACC();
+    as->prepareCallWithArgCount(3);
+    as->passAccumulatorAsArg(2);
+    as->passJSSlotAsArg(lhs, 1);
+    as->passEngineAsArg(0);
+    BASELINEJIT_GENERATE_RUNTIME_CALL(As, CallResultDestination::InAccumulator);
+}
+
 void BaselineJIT::generate_UNot() { as->unot(); }
 void BaselineJIT::generate_UPlus() { as->toNumber(); }
 void BaselineJIT::generate_UMinus() { as->uminus(); }

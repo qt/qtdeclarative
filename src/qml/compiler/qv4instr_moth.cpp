@@ -657,6 +657,10 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
             d << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(Sub)
 
+        MOTH_BEGIN_INSTR(As)
+            d << dumpRegister(lhs, nFormals) << ", acc";
+        MOTH_END_INSTR(Sub)
+
         MOTH_BEGIN_INSTR(CmpIn)
             d << dumpRegister(lhs, nFormals) << ", acc";
         MOTH_END_INSTR(CmpIn)

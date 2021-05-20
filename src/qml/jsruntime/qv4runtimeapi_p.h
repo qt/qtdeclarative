@@ -358,6 +358,10 @@ struct Q_QML_PRIVATE_EXPORT Runtime {
     {
         static ReturnedValue call(ExecutionEngine *, const Value &, const Value &);
     };
+    struct Q_QML_PRIVATE_EXPORT As : Method<Throws::No>
+    {
+        static ReturnedValue call(ExecutionEngine *, const Value &, const Value &);
+    };
     struct Q_QML_PRIVATE_EXPORT In : Method<Throws::Yes>
     {
         static ReturnedValue call(ExecutionEngine *, const Value &, const Value &);

@@ -192,6 +192,7 @@ QT_BEGIN_NAMESPACE
 #define INSTR_Div(op) INSTRUCTION(op, Div, 1, lhs)
 #define INSTR_Mod(op) INSTRUCTION(op, Mod, 1, lhs)
 #define INSTR_Sub(op) INSTRUCTION(op, Sub, 1, lhs)
+#define INSTR_As(op) INSTRUCTION(op, As, 1, lhs)
 #define INSTR_LoadQmlImportedScripts(op) INSTRUCTION(op, LoadQmlImportedScripts, 1, result)
 #define INSTR_InitializeBlockDeadTemporalZone(op) INSTRUCTION(op, InitializeBlockDeadTemporalZone, 2, firstReg, count)
 #define INSTR_ThrowOnNullOrUndefined(op) INSTRUCTION(op, ThrowOnNullOrUndefined, 0)
@@ -284,6 +285,7 @@ QT_BEGIN_NAMESPACE
     F(Div) \
     F(Mod) \
     F(Sub) \
+    F(As) \
     F(CallValue) \
     F(CallWithReceiver) \
     F(CallProperty) \

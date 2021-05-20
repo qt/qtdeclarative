@@ -666,10 +666,12 @@ bool FindWarningVisitor::visit(QQmlJS::AST::BinaryExpression *)
 
 void FindWarningVisitor::endVisit(QQmlJS::AST::BinaryExpression *binExp)
 {
-    if (binExp->op == QSOperator::As && m_fieldMemberBase == binExp->left)
+    if (binExp->op == QSOperator::As
+            && (m_fieldMemberBase == binExp->left || m_fieldMemberBase == binExp->right)) {
         m_fieldMemberBase = binExp;
-    else
+    } else {
         m_fieldMemberBase = nullptr;
+    }
 }
 
 bool FindWarningVisitor::visit(QQmlJS::AST::UiPublicMember *uipb)
