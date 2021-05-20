@@ -1,14 +1,23 @@
-uniform lowp sampler2D source;
-varying highp vec2 qt_TexCoord0;
-uniform highp vec2 textureSize;
-uniform lowp vec4 color;
-uniform lowp float qt_Opacity;
+#version 440
+
+layout(location = 0) in vec2 qt_TexCoord0;
+layout(location = 0) out vec4 fragColor;
+
+layout(binding = 1) uniform sampler2D source;
+
+layout(std140, binding = 0) uniform buf {
+    mat4 qt_Matrix;
+    float qt_Opacity;
+    vec2 textureSize;
+    vec4 color;
+} ubuf;
+
 void main() {
-    highp vec2 dx = vec2(0.5 / textureSize.x, 0.);
-    highp vec2 dy = vec2(0., 0.5 / textureSize.y);
-    gl_FragColor = color * 0.25
-                 * (texture2D(source, qt_TexCoord0 + dx + dy).a
-                 + texture2D(source, qt_TexCoord0 + dx - dy).a
-                 + texture2D(source, qt_TexCoord0 - dx + dy).a
-                 + texture2D(source, qt_TexCoord0 - dx - dy).a);
+    vec2 dx = vec2(0.5 / ubuf.textureSize.x, 0.);
+    vec2 dy = vec2(0., 0.5 / ubuf.textureSize.y);
+    fragColor = ubuf.color * 0.25
+                * (texture(source, qt_TexCoord0 + dx + dy).a
+                + texture(source, qt_TexCoord0 + dx - dy).a
+                + texture(source, qt_TexCoord0 - dx + dy).a
+                + texture(source, qt_TexCoord0 - dx - dy).a);
 }

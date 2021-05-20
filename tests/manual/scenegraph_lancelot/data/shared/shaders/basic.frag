@@ -1,5 +1,8 @@
-varying highp vec2 qt_TexCoord0;
-uniform lowp float qt_Opacity;
+#version 440
+
+layout(location = 0) in vec2 qt_TexCoord0;
+layout(location = 0) out vec4 fragColor;
+
 void main() {
-    gl_FragColor = vec4(qt_TexCoord0.x, qt_TexCoord0.y, 1, 1);
+    fragColor = vec4(qt_TexCoord0.x, qt_TexCoord0.y, 1, 1);
 }

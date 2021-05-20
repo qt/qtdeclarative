@@ -72,7 +72,7 @@ Rectangle {
                     cullMode: model.bar
                     property variant frontSource: front
                     property variant backSource: back
-                    fragmentShader: "qrc:shaders/culling.frag"
+                    fragmentShader: "qrc:shaders/culling.frag.qsb"
                     transform: Rotation {
                         origin.x: 200
                         origin.y: 180 - 120 * index

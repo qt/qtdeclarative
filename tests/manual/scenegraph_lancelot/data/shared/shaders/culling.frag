@@ -1,9 +1,13 @@
-varying highp vec2 qt_TexCoord0;
-uniform sampler2D frontSource;
-uniform sampler2D backSource;
-uniform lowp float qt_Opacity;
+#version 440
+
+layout(location = 0) in vec2 qt_TexCoord0;
+layout(location = 0) out vec4 fragColor;
+
+layout(binding = 1) uniform sampler2D frontSource;
+layout(binding = 2) uniform sampler2D backSource;
+
 void main() {
-    gl_FragColor = gl_FrontFacing
-                 ? texture2D(frontSource, qt_TexCoord0)
-                 : texture2D(backSource, qt_TexCoord0);
+    fragColor = gl_FrontFacing
+                 ? texture(frontSource, qt_TexCoord0)
+                 : texture(backSource, qt_TexCoord0);
 }

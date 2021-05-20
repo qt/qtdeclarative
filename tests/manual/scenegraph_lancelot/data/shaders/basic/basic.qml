@@ -6,6 +6,6 @@ Item {
 
     ShaderEffect {
         anchors.fill: parent;
-        fragmentShader: "qrc:shaders/basic.frag"
+        fragmentShader: "qrc:shaders/basic.frag.qsb"
     }
 }

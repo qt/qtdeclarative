@@ -1,14 +1,23 @@
-uniform lowp sampler2D source;
-uniform highp vec2 offset;
-uniform highp vec2 delta;
-varying highp vec2 qt_TexCoord0;
-uniform lowp float qt_Opacity;
+#version 440
+
+layout(location = 0) in vec2 qt_TexCoord0;
+layout(location = 0) out vec4 fragColor;
+
+layout(binding = 1) uniform sampler2D source;
+
+layout(std140, binding = 0) uniform buf {
+    mat4 qt_Matrix;
+    float qt_Opacity;
+    vec2 offset;
+    vec2 delta;
+} ubuf;
+
 void main() {
-    highp vec2 delta2 = vec2(delta.x, -delta.y);
-    lowp float shadow = 0.25 * (texture2D(source, qt_TexCoord0 - offset + delta).a
-                      + texture2D(source, qt_TexCoord0 - offset - delta).a
-                      + texture2D(source, qt_TexCoord0 - offset + delta2).a
-                      + texture2D(source, qt_TexCoord0 - offset - delta2).a);
-    lowp vec4 color = texture2D(source, qt_TexCoord0);
-    gl_FragColor = mix(vec4(vec3(0.), 0.5 * shadow), color, color.a);
+    vec2 delta2 = vec2(ubuf.delta.x, -ubuf.delta.y);
+    float shadow = 0.25 * (texture(source, qt_TexCoord0 - ubuf.offset + ubuf.delta).a
+                         + texture(source, qt_TexCoord0 - ubuf.offset - ubuf.delta).a
+                         + texture(source, qt_TexCoord0 - ubuf.offset + delta2).a
+                         + texture(source, qt_TexCoord0 - ubuf.offset - delta2).a);
+    vec4 color = texture(source, qt_TexCoord0);
+    fragColor = mix(vec4(vec3(0.), 0.5 * shadow), color, color.a);
 }

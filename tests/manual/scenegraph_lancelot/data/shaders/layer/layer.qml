@@ -18,6 +18,6 @@ Item {
     layer.enabled: true
     layer.samplerName: "source"
     layer.effect: ShaderEffect {
-        fragmentShader: "qrc:shaders/desaturate.frag"
+        fragmentShader: "qrc:shaders/desaturate.frag.qsb"
     }
 }

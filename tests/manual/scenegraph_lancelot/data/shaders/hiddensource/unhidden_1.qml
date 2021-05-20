@@ -43,6 +43,6 @@ Item {
         property variant offset: Qt.size(4 / width, 4 / height)
         property variant delta: Qt.size(0.5 / width, 0.5 / height)
 
-        fragmentShader: "qrc:shaders/shadow.frag"
+        fragmentShader: "qrc:shaders/shadow.frag.qsb"
     }
 }

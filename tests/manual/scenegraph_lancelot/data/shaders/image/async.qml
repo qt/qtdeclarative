@@ -14,7 +14,7 @@ Item {
     ShaderEffect {
         anchors.fill: image
         property variant source: image
-        fragmentShader: "qrc:shaders/gradient2.frag"
+        fragmentShader: "qrc:shaders/gradient2.frag.qsb"
         visible: image.status == Image.Ready
     }
 }

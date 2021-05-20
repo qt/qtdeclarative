@@ -17,7 +17,7 @@ Item {
         y: 10
         width: 300
         height: 200
-        fragmentShader: "qrc:shaders/basic_alpha.frag"
+        fragmentShader: "qrc:shaders/basic_alpha.frag.qsb"
         blending: true
     }
 
@@ -26,7 +26,7 @@ Item {
         y: 250
         width: 300
         height: 200
-        fragmentShader: "qrc:shaders/basic_alpha.frag"
+        fragmentShader: "qrc:shaders/basic_alpha.frag.qsb"
         blending: false
     }
 

@@ -1,6 +1,10 @@
-uniform lowp sampler2D source;
-varying highp vec2 qt_TexCoord0;
-uniform lowp float qt_Opacity;
+#version 440
+
+layout(location = 0) in vec2 qt_TexCoord0;
+layout(location = 0) out vec4 fragColor;
+
+layout(binding = 1) uniform sampler2D source;
+
 void main() {
-    gl_FragColor = vec4(0, qt_TexCoord0.y, 1, 1) * texture2D(source, qt_TexCoord0).a;
+    fragColor = vec4(0, qt_TexCoord0.y, 1, 1) * texture(source, qt_TexCoord0).a;
 }

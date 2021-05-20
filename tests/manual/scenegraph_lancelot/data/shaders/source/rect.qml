@@ -31,7 +31,7 @@ Item {
                 sourceItem: text
                 sourceRect: Qt.rect(x0 - text.x, y0 - text.y, w, h)
             }
-            fragmentShader: "qrc:shaders/gradient.frag"
+            fragmentShader: "qrc:shaders/gradient.frag.qsb"
         }
     }
 }
