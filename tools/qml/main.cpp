@@ -271,6 +271,7 @@ void LoadWatcher::contain(QObject *o, const QUrl &containPath)
     QObject *o2 = c.create();
     if (!o2)
         return;
+    o2->setParent(this);
     checkForWindow(o2);
     bool success = false;
     int idx;
