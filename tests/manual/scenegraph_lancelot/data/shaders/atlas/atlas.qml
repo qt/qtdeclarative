@@ -22,7 +22,7 @@ Item {
                     width: img.width
                     height: img.height
                     property variant source: img
-                    fragmentShader: "qrc:shaders/gradientgrid.frag"
+                    fragmentShader: "qrc:shaders/gradientgrid.frag.qsb"
                     supportsAtlasTextures: false
                 }
 
@@ -31,7 +31,7 @@ Item {
                     width: img.width
                     height: img.height
                     property variant source: img
-                    fragmentShader: "qrc:shaders/gradientgrid.frag"
+                    fragmentShader: "qrc:shaders/gradientgrid.frag.qsb"
                     supportsAtlasTextures: true
                 }
 
@@ -41,8 +41,8 @@ Item {
                     width: img.width
                     height: img.height
                     property variant source: img
-                    fragmentShader: "qrc:shaders/gradientgrid.frag"
-                    vertexShader: "qrc:shaders/subrect.vert"
+                    fragmentShader: "qrc:shaders/gradientgrid.frag.qsb"
+                    vertexShader: "qrc:shaders/subrect.vert.qsb"
                     supportsAtlasTextures: false
                 }
             }

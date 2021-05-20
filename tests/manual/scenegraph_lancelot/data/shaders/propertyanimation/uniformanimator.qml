@@ -10,7 +10,7 @@ Item {
         width: 300
         height: 200
         property real colorProperty: 0.0
-        fragmentShader: "qrc:shaders/property.frag"
+        fragmentShader: "qrc:shaders/property.frag.qsb"
 
         UniformAnimator on colorProperty {
             duration: 20

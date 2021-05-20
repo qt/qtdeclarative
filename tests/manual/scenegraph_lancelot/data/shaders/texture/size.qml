@@ -18,7 +18,7 @@ Item {
         property variant textureSize: source.textureSize
         property color color: "black"
 
-        fragmentShader: "qrc:shaders/edge.frag"
+        fragmentShader: "qrc:shaders/edge.frag.qsb"
     }
 
     Text {

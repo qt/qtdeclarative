@@ -40,7 +40,7 @@ Rectangle {
             }
             smooth: true
         }
-        vertexShader: "qrc:shaders/wave.vert"
+        vertexShader: "qrc:shaders/wave.vert.qsb"
         mesh: GridMesh {
             property int r: 1
             resolution: Qt.size(r, r)

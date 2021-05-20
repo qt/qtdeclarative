@@ -21,7 +21,7 @@ Item {
         width: 200
         height: 200
         property real colorProperty: 0.0
-        fragmentShader: "qrc:shaders/property.frag"
+        fragmentShader: "qrc:shaders/property.frag.qsb"
         UniformAnimator {
             id: animator
             target: shader

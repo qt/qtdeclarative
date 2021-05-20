@@ -48,6 +48,6 @@ Item {
         property variant yellow: repeat
         property variant black: clamp
 
-        fragmentShader: "qrc:shaders/cmyk.frag"
+        fragmentShader: "qrc:shaders/cmyk.frag.qsb"
     }
 }

@@ -27,6 +27,6 @@ Item {
 
         property variant source: source
 
-        fragmentShader: "qrc:shaders/gradient.frag"
+        fragmentShader: "qrc:shaders/gradient.frag.qsb"
     }
 }

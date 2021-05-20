@@ -44,6 +44,6 @@ Item {
         property variant colorSource: colorSource
         property variant maskSource: maskSource;
 
-        fragmentShader: "qrc:shaders/stencil.frag"
+        fragmentShader: "qrc:shaders/stencil.frag.qsb"
     }
 }

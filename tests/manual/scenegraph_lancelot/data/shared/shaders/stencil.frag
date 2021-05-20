@@ -1,7 +1,11 @@
-uniform lowp sampler2D maskSource;
-uniform lowp sampler2D colorSource;
-varying highp vec2 qt_TexCoord0;
-uniform lowp float qt_Opacity;
+#version 440
+
+layout(location = 0) in vec2 qt_TexCoord0;
+layout(location = 0) out vec4 fragColor;
+
+layout(binding = 1) uniform sampler2D maskSource;
+layout(binding = 2) uniform sampler2D colorSource;
+
 void main() {
-    gl_FragColor = texture2D(maskSource, qt_TexCoord0).a * texture2D(colorSource, qt_TexCoord0.yx);
+    fragColor = texture(maskSource, qt_TexCoord0).a * texture(colorSource, qt_TexCoord0.yx);
 }
