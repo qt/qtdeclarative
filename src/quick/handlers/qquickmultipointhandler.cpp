@@ -146,7 +146,7 @@ void QQuickMultiPointHandler::onActiveChanged()
     }
 }
 
-void QQuickMultiPointHandler::onGrabChanged(QQuickPointerHandler *, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *)
+void QQuickMultiPointHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point)
 {
     Q_D(QQuickMultiPointHandler);
     // If another handler or item takes over this set of points, assume it has
@@ -155,6 +155,20 @@ void QQuickMultiPointHandler::onGrabChanged(QQuickPointerHandler *, QQuickEventP
     // (e.g. between DragHandler and PinchHandler).
     if (transition == QQuickEventPoint::UngrabExclusive || transition == QQuickEventPoint::CancelGrabExclusive)
         d->currentPoints.clear();
+    if (grabber != this)
+        return;
+    switch (transition) {
+    case QQuickEventPoint::GrabExclusive:
+    case QQuickEventPoint::GrabPassive:
+    case QQuickEventPoint::UngrabPassive:
+    case QQuickEventPoint::UngrabExclusive:
+    case QQuickEventPoint::CancelGrabPassive:
+    case QQuickEventPoint::CancelGrabExclusive:
+        QQuickPointerHandler::onGrabChanged(grabber, transition, point);
+        break;
+    case QQuickEventPoint::OverrideGrabPassive:
+        return; // don't emit
+    }
 }
 
 QVector<QQuickEventPoint *> QQuickMultiPointHandler::eligiblePoints(QQuickPointerEvent *event)
