@@ -94,21 +94,11 @@ QVulkanInstance *QSGRhiSupport::defaultVulkanInstance()
         qCDebug(QSG_LOG_INFO) << "Requesting Vulkan API" << s_vulkanInstance->apiVersion()
                               << "Instance-level version was reported as" << supportedVersion;
 
-        if (inst->isDebugLayerRequested()) {
-#ifndef Q_OS_ANDROID
-            s_vulkanInstance->setLayers(QByteArrayList() << "VK_LAYER_LUNARG_standard_validation");
-#else
-            s_vulkanInstance->setLayers(QByteArrayList()
-                                        << "VK_LAYER_GOOGLE_threading"
-                                        << "VK_LAYER_LUNARG_parameter_validation"
-                                        << "VK_LAYER_LUNARG_object_tracker"
-                                        << "VK_LAYER_LUNARG_core_validation"
-                                        << "VK_LAYER_LUNARG_image"
-                                        << "VK_LAYER_LUNARG_swapchain"
-                                        << "VK_LAYER_GOOGLE_unique_objects");
-#endif
-        }
+        if (inst->isDebugLayerRequested())
+            s_vulkanInstance->setLayers({ "VK_LAYER_KHRONOS_validation" });
+
         s_vulkanInstance->setExtensions(QRhiVulkanInitParams::preferredInstanceExtensions());
+
         if (!s_vulkanInstance->create()) {
             qWarning("Failed to create Vulkan instance");
             delete s_vulkanInstance;
