@@ -193,6 +193,15 @@ TestCase {
             }
         }
     }
+    Component {
+        id: scrollableTextAreaWithSibling
+        ScrollView {
+            Item {
+            }
+            TextArea {
+            }
+        }
+    }
 
     function test_scrollBars() {
         var control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200})
@@ -506,6 +515,12 @@ TestCase {
 
         compare(control.contentWidth, flickable.contentWidth)
         compare(control.contentHeight, flickable.contentHeight)
+    }
+
+    function test_textAreaWithSibling() {
+        // Checks that it does not crash when the ScrollView is deleted
+        var control = createTemporaryObject(scrollableTextAreaWithSibling, testCase)
+        verify(control)
     }
 
     Component {

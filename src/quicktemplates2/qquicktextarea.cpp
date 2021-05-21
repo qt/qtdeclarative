@@ -318,6 +318,7 @@ void QQuickTextAreaPrivate::attachFlickable(QQuickFlickable *item)
     QObject::connect(flickable, &QQuickFlickable::contentYChanged, q, &QQuickItem::update);
 
     QQuickItemPrivate::get(flickable)->updateOrAddGeometryChangeListener(this, QQuickGeometryChange::Size);
+    QQuickItemPrivate::get(flickable)->addItemChangeListener(this, QQuickItemPrivate::Destroyed);
     QObjectPrivate::connect(flickable, &QQuickFlickable::contentWidthChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
     QObjectPrivate::connect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
 
@@ -338,6 +339,7 @@ void QQuickTextAreaPrivate::detachFlickable()
     QObject::disconnect(flickable, &QQuickFlickable::contentYChanged, q, &QQuickItem::update);
 
     QQuickItemPrivate::get(flickable)->updateOrRemoveGeometryChangeListener(this, QQuickGeometryChange::Nothing);
+    QQuickItemPrivate::get(flickable)->removeItemChangeListener(this, QQuickItemPrivate::Destroyed);
     QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentWidthChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
     QObjectPrivate::disconnect(flickable, &QQuickFlickable::contentHeightChanged, this, &QQuickTextAreaPrivate::resizeFlickableControl);
 
@@ -522,6 +524,8 @@ void QQuickTextAreaPrivate::itemDestroyed(QQuickItem *item)
         background = nullptr;
         emit q->implicitBackgroundWidthChanged();
         emit q->implicitBackgroundHeightChanged();
+    } else if (item == flickable) {
+        detachFlickable();
     }
 }
 
