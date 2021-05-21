@@ -40,11 +40,22 @@
 #include <QtTest/qtest.h>
 #include <QtTest/QSignalSpy>
 
+#include <QtQml/qqmlcomponent.h>
+#include <QtQml/qqmlengine.h>
+
 #include <QtQuick/private/qquickpalette_p.h>
 #include <QtQuick/private/qquickabstractpaletteprovider_p.h>
 #include <QtQuick/private/qquickpalettecolorprovider_p.h>
 
-class tst_QQuickPalette : public QObject
+#include "../../shared/util.h"
+
+// Use this to get a more descriptive failure message (QTBUG-87039).
+#define COMPARE_PALETTES(actualPalette, expectedPalette) \
+    QVERIFY2(actualPalette == expectedPalette, \
+        qPrintable(QString::fromLatin1("\n   Actual:    %1\n   Expected:  %2") \
+            .arg(QDebug::toString(actualPalette)).arg(QDebug::toString(expectedPalette))));
+
+class tst_QQuickPalette : public QQmlDataTest
 {
     Q_OBJECT
 
@@ -73,6 +84,9 @@ private Q_SLOTS:
 
     void createFromQtPalette();
     void convertToQtPalette();
+
+    void qml_data();
+    void qml();
 };
 
 using GroupGetter = QQuickColorGroup* (QQuickPalette::* )() const;
@@ -297,6 +311,58 @@ void tst_QQuickPalette::convertToQtPalette()
     QVERIFY(pp);
 
     QCOMPARE(palette.toQPalette(), somePalette.resolve(pp->defaultPalette()));
+}
+
+// QTBUG-93691
+void tst_QQuickPalette::qml_data()
+{
+    QTest::addColumn<QString>("testFile");
+    QTest::addColumn<QPalette>("expectedPalette");
+
+    const QPalette defaultPalette;
+    QTest::newRow("Item") << "palette-item-default.qml" << defaultPalette;
+    QTest::newRow("Window") << "palette-window-default.qml" << defaultPalette;
+
+    QPalette customPalette;
+    customPalette.setColor(QPalette::AlternateBase, QColor("aqua"));
+    customPalette.setColor(QPalette::Base, QColor("azure"));
+    customPalette.setColor(QPalette::BrightText, QColor("beige"));
+    customPalette.setColor(QPalette::Button, QColor("bisque"));
+    customPalette.setColor(QPalette::ButtonText, QColor("chocolate"));
+    customPalette.setColor(QPalette::Dark, QColor("coral"));
+    customPalette.setColor(QPalette::Highlight, QColor("crimson"));
+    customPalette.setColor(QPalette::HighlightedText, QColor("fuchsia"));
+    customPalette.setColor(QPalette::Light, QColor("gold"));
+    customPalette.setColor(QPalette::Link, QColor("indigo"));
+    customPalette.setColor(QPalette::LinkVisited, QColor("ivory"));
+    customPalette.setColor(QPalette::Mid, QColor("khaki"));
+    customPalette.setColor(QPalette::Midlight, QColor("lavender"));
+    customPalette.setColor(QPalette::Shadow, QColor("linen"));
+    customPalette.setColor(QPalette::Text, QColor("moccasin"));
+    customPalette.setColor(QPalette::ToolTipBase, QColor("navy"));
+    customPalette.setColor(QPalette::ToolTipText, QColor("orchid"));
+    customPalette.setColor(QPalette::Window, QColor("plum"));
+    customPalette.setColor(QPalette::WindowText, QColor("salmon"));
+
+    QTest::newRow("Item:custom") << "palette-item-custom.qml" << customPalette;
+    QTest::newRow("Window:custom") << "palette-window-custom.qml" << customPalette;
+}
+
+void tst_QQuickPalette::qml()
+{
+    QFETCH(QString, testFile);
+    QFETCH(QPalette, expectedPalette);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl(testFile));
+
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+
+    const QVariant var = object->property("palette");
+    QVERIFY(var.isValid());
+    COMPARE_PALETTES(var.value<QQuickPalette*>()->toQPalette(), expectedPalette);
 }
 
 QTEST_MAIN(tst_QQuickPalette)
