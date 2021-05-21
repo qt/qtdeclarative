@@ -2175,7 +2175,7 @@ void QQuickText::resetMaximumLineCount()
     <img src="" align="top,middle,bottom" width="" height=""> - inline images
     <ol type="">, <ul type=""> and <li> - ordered and unordered lists
     <pre></pre> - preformatted
-    &gt; &lt; &amp;
+    &gt; &lt; &amp; &quot; &nbsp;
     \endcode
 
     \c Text.StyledText parser is strict, requiring tags to be correctly nested.
