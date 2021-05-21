@@ -573,6 +573,7 @@ class Grouped : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int prop READ prop WRITE setProp NOTIFY propChanged REVISION 1)
+    Q_PROPERTY(int prop2 READ prop WRITE setProp NOTIFY prop2Changed REVISION 2)
 public:
     int prop() const { return m_prop; }
     void setProp(int prop)
@@ -580,11 +581,13 @@ public:
         if (prop != m_prop) {
             m_prop = prop;
             emit propChanged(prop);
+            emit prop2Changed(prop);
         }
     }
 
 signals:
     Q_REVISION(1) void propChanged(int prop);
+    Q_REVISION(2) void prop2Changed(int prop);
 
 private:
     int m_prop = 0;
@@ -602,13 +605,24 @@ private:
     QScopedPointer<Grouped> m_grouped;
 };
 
+class MyRevisioned : public MyItem
+{
+    Q_OBJECT
+    Q_PROPERTY(int revisioned READ revisioned CONSTANT REVISION 1)
+public:
+    int revisioned() const { return 12; }
+};
+
 void tst_qqmlmetatype::revisionedGroupedProperties()
 {
     qmlClearTypeRegistrations();
     qmlRegisterType<MyItem>("GroupedTest", 1, 0, "MyItem");
     qmlRegisterType<MyItem, 1>("GroupedTest", 1, 1, "MyItem");
+    qmlRegisterType<MyRevisioned>("GroupedTest", 1, 0, "MyRevisioned");
+    qmlRegisterType<MyRevisioned, 1>("GroupedTest", 1, 1, "MyRevisioned");
     qmlRegisterUncreatableType<Grouped>("GroupedTest", 1, 0, "Grouped", "Grouped");
     qmlRegisterUncreatableType<Grouped, 1>("GroupedTest", 1, 1, "Grouped", "Grouped");
+    qmlRegisterUncreatableType<Grouped, 2>("GroupedTest", 1, 2, "Grouped", "Grouped");
 
     {
         QQmlEngine engine;
@@ -622,6 +636,15 @@ void tst_qqmlmetatype::revisionedGroupedProperties()
         QQmlEngine engine;
         QQmlComponent invalid(&engine, testFileUrl("revisionedGroupedPropertiesInvalid.qml"));
         QVERIFY(invalid.isError());
+    }
+
+    {
+        QQmlEngine engine;
+        QQmlComponent unversioned(
+                    &engine, testFileUrl("revisionedGroupedPropertiesUnversioned.qml"));
+        QVERIFY2(unversioned.isReady(), qPrintable(unversioned.errorString()));
+        QScopedPointer<QObject> obj(unversioned.create());
+        QVERIFY(!obj.isNull());
     }
 }
 
