@@ -173,7 +173,7 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, QTypeRe
             : (version.hasMinorVersion()
                ? QTypeRevision::fromVersion(type.version().majorVersion(),
                                             version.minorVersion())
-               : type.version());
+               : QTypeRevision::fromMajorVersion(type.version().majorVersion()));
 
     while (metaObject) {
         QQmlType t = QQmlMetaType::qmlType(metaObject, type.module(), combinedVersion);
