@@ -69,6 +69,31 @@ QVulkanInstance *QSGRhiSupport::defaultVulkanInstance()
 
     if (!s_vulkanInstance) {
         s_vulkanInstance = new QVulkanInstance;
+
+        // With a Vulkan implementation >= 1.1 we can check what
+        // vkEnumerateInstanceVersion() says and request 1.2 or 1.1 based on the
+        // result. To prevent future surprises, be conservative and ignore any > 1.2
+        // versions for now. For 1.0 implementations nothing will be requested, the
+        // default 0 in VkApplicationInfo means 1.0.
+        //
+        // Vulkan 1.0 is actually sufficient for 99% of Qt Quick (3D)'s
+        // functionality. In addition, Vulkan implementations tend to enable 1.1 and 1.2
+        // functionality regardless of the VkInstance API request. However, the
+        // validation layer seems to take this fairly seriously, so we should be
+        // prepared for using 1.1 and 1.2 features in a fully correct manner. This also
+        // helps custom Vulkan code in applications, which is not under out control; it
+        // is ideal if Vulkan 1.1 and 1.2 are usable without requiring such applications
+        // to create their own QVulkanInstance just to be able to make an appropriate
+        // setApiVersion() call on it.
+
+        const QVersionNumber supportedVersion = s_vulkanInstance->supportedApiVersion();
+        if (supportedVersion >= QVersionNumber(1, 2))
+            s_vulkanInstance->setApiVersion(QVersionNumber(1, 2));
+        else if (supportedVersion >= QVersionNumber(1, 1))
+            s_vulkanInstance->setApiVersion(QVersionNumber(1, 2));
+        qCDebug(QSG_LOG_INFO) << "Requesting Vulkan API" << s_vulkanInstance->apiVersion()
+                              << "Instance-level version was reported as" << supportedVersion;
+
         if (inst->isDebugLayerRequested()) {
 #ifndef Q_OS_ANDROID
             s_vulkanInstance->setLayers(QByteArrayList() << "VK_LAYER_LUNARG_standard_validation");
