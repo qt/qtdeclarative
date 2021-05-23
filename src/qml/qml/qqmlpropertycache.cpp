@@ -137,7 +137,7 @@ void QQmlPropertyData::load(const QMetaMethod &m)
     const int paramCount = m.parameterCount();
     if (paramCount) {
         m_flags.setHasArguments(true);
-        if ((paramCount == 1) && (m.parameterTypes().constFirst() == "QQmlV4Function*"))
+        if ((paramCount == 1) && (m.parameterMetaType(0) == QMetaType::fromType<QQmlV4Function *>()))
             m_flags.setIsV4Function(true);
     }
 
