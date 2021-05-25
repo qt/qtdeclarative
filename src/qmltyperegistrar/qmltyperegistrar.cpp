@@ -38,6 +38,7 @@
 #include <QFile>
 #include <QScopedPointer>
 #include <QSaveFile>
+#include <QFileInfo>
 
 #include <cstdlib>
 
@@ -73,6 +74,40 @@ static bool argumentsFromCommandLineAndFile(QStringList &allArguments, const QSt
         }
     }
     return true;
+}
+
+static int runExtract(const QString & baseName, const MetaTypesJsonProcessor &processor) {
+    if (processor.types().isEmpty()) {
+        fprintf(stderr, "Error: No types to register found in library\n");
+        return EXIT_FAILURE;
+    }
+    QFile headerFile(baseName + u".h");
+    bool ok = headerFile.open(QFile::WriteOnly);
+    if (!ok) {
+        fprintf(stderr, "Error: Cannot open %s for writing\n", qPrintable(headerFile.fileName()));
+        return EXIT_FAILURE;
+    }
+    auto prefix = QString::fromLatin1(
+            "#ifndef %1_H\n"
+            "#define %1_H\n"
+            "#include <QtQml/qqml.h>\n"
+            "#include <QtQml/qqmlmoduleregistration.h>\n").arg(baseName.toUpper());
+    const QStringList includes = processor.includes();
+    for (const QString &include: includes)
+        prefix += u"\n#include <%1>"_qs.arg(include);
+    headerFile.write((prefix + processor.extractRegisteredTypes()).toUtf8() + "\n#endif");
+
+    QFile sourceFile(baseName + u".cpp");
+    ok = sourceFile.open(QFile::WriteOnly);
+    if (!ok) {
+        fprintf(stderr, "Error: Cannot open %s for writing\n", qPrintable(sourceFile.fileName()));
+        return EXIT_FAILURE;
+    }
+    // the string split is necessaury because cmake's automoc scanner would otherwise pick up the include
+    QString code = u"#include \"%1.h\"\n#include "_qs.arg(baseName);
+    code += uR"("moc_%1.cpp")"_qs.arg(baseName);
+    sourceFile.write(code.toUtf8());
+    return EXIT_SUCCESS;
 }
 
 int main(int argc, char **argv)
@@ -144,6 +179,10 @@ int main(int argc, char **argv)
                            "want to follow Qt's versioning scheme."));
     parser.addOption(followForeignVersioningOption);
 
+    QCommandLineOption extract(u"extract"_qs);
+    extract.setDescription(u"Extract QML types from a module and use QML_FOREIGN to register them"_qs);
+    parser.addOption(extract);
+
     parser.addPositionalArgument(QStringLiteral("[MOC generated json file]"),
                                  QStringLiteral("MOC generated json output."));
 
@@ -153,10 +192,35 @@ int main(int argc, char **argv)
 
     parser.process(arguments);
 
+    const QString module = parser.value(importNameOption);
+
+    MetaTypesJsonProcessor processor(parser.isSet(privateIncludesOption));
+    if (!processor.processTypes(parser.positionalArguments()))
+        return EXIT_FAILURE;
+
+    processor.postProcessTypes();
+
+    if (parser.isSet(foreignTypesOption))
+        processor.processForeignTypes(parser.value(foreignTypesOption).split(QLatin1Char(',')));
+
+    processor.postProcessForeignTypes();
+
+
+    if (parser.isSet(extract)) {
+        if (!parser.isSet(outputOption)) {
+            fprintf(stderr, "Error: The output file name must be provided\n");
+            return EXIT_FAILURE;
+        }
+        QString baseName = parser.value(outputOption);
+        return runExtract(baseName, processor);
+    }
+
     FILE *output = stdout;
     QScopedPointer<FILE, ScopedPointerFileCloser> outputFile;
 
+
     if (parser.isSet(outputOption)) {
+        // extract does its own file handling
         QString outputName = parser.value(outputOption);
 #if defined(_MSC_VER)
         if (_wfopen_s(&output, reinterpret_cast<const wchar_t *>(outputName.utf16()), L"w") != 0) {
@@ -179,19 +243,6 @@ int main(int argc, char **argv)
     fprintf(output,
             "#include <QtQml/qqml.h>\n"
             "#include <QtQml/qqmlmoduleregistration.h>\n");
-
-    const QString module = parser.value(importNameOption);
-
-    MetaTypesJsonProcessor processor(parser.isSet(privateIncludesOption));
-    if (!processor.processTypes(parser.positionalArguments()))
-        return EXIT_FAILURE;
-
-    processor.postProcessTypes();
-
-    if (parser.isSet(foreignTypesOption))
-        processor.processForeignTypes(parser.value(foreignTypesOption).split(QLatin1Char(',')));
-
-    processor.postProcessForeignTypes();
 
     const QStringList includes = processor.includes();
     for (const QString &include : includes)

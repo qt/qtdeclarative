@@ -51,6 +51,8 @@ public:
     QStringList referencedTypes() const { return m_referencedTypes; }
     QStringList includes() const { return m_includes; }
 
+    QString extractRegisteredTypes() const;
+
 private:
     enum RegistrationMode {
         NoRegistration,

@@ -133,6 +133,60 @@ void MetaTypesJsonProcessor::postProcessForeignTypes()
     sortTypes(m_types);
 }
 
+QString MetaTypesJsonProcessor::extractRegisteredTypes() const
+{
+    QString registrationHelper;
+    for (const auto &obj: m_types) {
+        const QString className = obj[u"className"].toString();
+        const QString foreignClassName = className+ u"Foreign";
+        const auto classInfos = obj[u"classInfos"].toArray();
+        QString qmlElement;
+        QString qmlUncreatable;
+        QString qmlAttached;
+        bool isSingleton = false;
+        bool isExplicitlyUncreatable = false;
+        for (QJsonValue entry: classInfos) {
+            const auto name = entry[u"name"].toString();
+            const auto value = entry[u"value"].toString();
+            if (name == u"QML.Element") {
+                if (value == u"auto") {
+                    qmlElement = u"QML_NAMED_ELEMENT("_qs + className + u")"_qs;
+                } else if (value == u"anonymous") {
+                    qmlElement = u"QML_ANONYMOUS"_qs;
+                } else {
+                    qmlElement = u"QML_NAMED_ELEMENT(" + value + u")";
+                }
+            } else if (name == u"QML.Creatable" && value == u"false") {
+                isExplicitlyUncreatable = true;
+            } else if (name == u"QML.UncreatableReason") {
+                qmlUncreatable = u"QML_UNCREATABLE(\"" + value + u"\")";
+            } else if (name == u"QML.Attached") {
+                qmlAttached = u"QML_ATTACHED("_qs + value + u")";
+            } else if (name == u"QML.Singleton") {
+                isSingleton = true;
+            }
+        }
+        if (qmlElement.isEmpty())
+            continue; // no relevant entries found
+        const QString spaces = u"    "_qs;
+        registrationHelper += u"\nstruct "_qs + foreignClassName + u"{\n    Q_GADGET\n"_qs;
+        registrationHelper += spaces + u"QML_FOREIGN(" + className + u")\n"_qs;
+        registrationHelper += spaces + qmlElement + u"\n"_qs;
+        if (isSingleton)
+            registrationHelper += spaces + u"QML_SINGLETON\n"_qs;
+        if (isExplicitlyUncreatable) {
+            if (qmlUncreatable.isEmpty())
+                registrationHelper += spaces + uR"(QML_UNCREATABLE(""))" + u"n";
+            else
+                registrationHelper += spaces + qmlUncreatable + u"\n";
+        }
+        if (!qmlAttached.isEmpty())
+            registrationHelper += spaces + qmlAttached + u"\n";
+        registrationHelper += u"};\n";
+    }
+    return registrationHelper;
+}
+
 MetaTypesJsonProcessor::RegistrationMode MetaTypesJsonProcessor::qmlTypeRegistrationMode(
         const QJsonObject &classDef)
 {
