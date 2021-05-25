@@ -2095,7 +2095,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 /*!
     \class QQuickItem::ItemChangeData
     \inmodule QtQuick
-    \brief Adds supplimentary information to the QQuickItem::itemChange()
+    \brief Adds supplementary information to the QQuickItem::itemChange()
     function.
 
     The meaning of each member of this class is defined by the change type.
@@ -2125,25 +2125,31 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 
 /*!
     \variable QQuickItem::ItemChangeData::realValue
-    Contains supplimentary information to the QQuickItem::itemChange() function.
+    The numeric value that has changed: \l {QQuickItem::opacity()}{opacity},
+    \l {QQuickItem::rotation()}{rotation} or
+    \l {QScreen::devicePixelRatio}{device pixel ratio}.
     \sa QQuickItem::ItemChange
  */
 
 /*!
     \variable QQuickItem::ItemChangeData::boolValue
-    Contains supplimentary information to the QQuickItem::itemChange() function.
+    The boolean value that has changed: \l {QQuickItem::visible()}{visible},
+    \l {QQuickItem::enabled()}{enabled}, \l {QQuickItem::activeFocus()}{activeFocus}
+    or \l {QQuickItem::antialiasing()}{antialiasing}.
     \sa QQuickItem::ItemChange
  */
 
 /*!
     \variable QQuickItem::ItemChangeData::item
-    Contains supplimentary information to the QQuickItem::itemChange() function.
+    The item that has been added or removed as a \l{QQuickItem::childItems()}{child},
+    or the new \l{QQuickItem::parentItem()}{parent}.
     \sa QQuickItem::ItemChange
  */
 
 /*!
     \variable QQuickItem::ItemChangeData::window
-    Contains supplimentary information to the QQuickItem::itemChange() function.
+    The \l{QQuickWindow}{window} in which the item has been shown, or \c nullptr
+    if the item has been removed from a window.
     \sa QQuickItem::ItemChange
  */
 
