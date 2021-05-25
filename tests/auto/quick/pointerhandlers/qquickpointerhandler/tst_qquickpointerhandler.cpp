@@ -485,6 +485,12 @@ void tst_PointerHandlers::mouseEventDelivery()
     EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
     QVERIFY(eventItem1);
 
+    EventHandler *handler = window->rootObject()->findChild<EventHandler*>("eventHandler");
+    QVERIFY(handler);
+    QCOMPARE(handler->parentItem(), eventItem1);
+    QCOMPARE(handler->target(), eventItem1);
+    QVERIFY(QQuickItemPrivate::get(eventItem1)->extra->resourcesList.contains(handler));
+
     // Do not accept anything
     QPoint p1 = QPoint(20, 20);
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
@@ -631,6 +637,7 @@ void tst_PointerHandlers::dynamicCreation()
 
     QCOMPARE(handler->parentItem(), eventItem1);
     QCOMPARE(handler->target(), eventItem1);
+    QVERIFY(QQuickItemPrivate::get(eventItem1)->extra->resourcesList.contains(handler));
 
     QPoint p1(20, 20);
     QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);

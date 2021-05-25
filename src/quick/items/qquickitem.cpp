@@ -3272,9 +3272,8 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
                 }
             }
             o->setParent(that);
+            resources_append(prop, o);
         }
-
-        resources_append(prop, o);
     }
 }
 
@@ -8658,6 +8657,13 @@ void QQuickItemPrivate::addPointerHandler(QQuickPointerHandler *h)
     auto &handlers = extra.value().pointerHandlers;
     if (!handlers.contains(h))
         handlers.prepend(h);
+    auto &res = extra.value().resourcesList;
+    if (!res.contains(h)) {
+        res.append(h);
+        QObject::connect(h, &QObject::destroyed, q, [this](QObject *o) {
+            _q_resourceObjectDeleted(o);
+        });
+    }
 }
 
 #if QT_CONFIG(quick_shadereffect)
