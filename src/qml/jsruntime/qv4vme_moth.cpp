@@ -446,7 +446,7 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
 
     const qsizetype numFunctionArguments = function->aotFunction->argumentTypes.size();
 
-    Q_ALLOCA_DECLARE(void, *transformedArguments);
+    Q_ALLOCA_DECLARE(void *, transformedArguments);
     for (qsizetype i = 0; i < numFunctionArguments; ++i) {
         const QMetaType argumentType = function->aotFunction->argumentTypes[i];
         if (frame->argc() > i && argumentType == frame->argTypes()[i])
