@@ -836,7 +836,7 @@ void QQuickWindowPrivate::dirtyItem(QQuickItem *)
 }
 
 /*!
-    \obsolete Use QPointerEvent::exclusiveGrabber()
+    \deprecated Use QPointerEvent::exclusiveGrabber().
     Returns the item which currently has the mouse grab.
 */
 QQuickItem *QQuickWindow::mouseGrabberItem() const

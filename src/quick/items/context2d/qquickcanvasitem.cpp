@@ -417,7 +417,7 @@ void QQuickCanvasItem::setCanvasSize(const QSizeF & size)
 
     By default the tileSize is the same as the canvasSize.
 
-    \obsolete This feature is incomplete. For details, see QTBUG-33129.
+    \deprecated This feature is incomplete. For details, see QTBUG-33129.
 
     \sa canvasSize, canvasWindow
 */
@@ -452,7 +452,7 @@ void QQuickCanvasItem::setTileSize(const QSize & size)
      can display different visible areas by changing the canvas windowSize
      and/or position.
 
-    \obsolete This feature is incomplete. For details, see QTBUG-33129
+    \deprecated This feature is incomplete. For details, see QTBUG-33129.
 
     \sa canvasSize, tileSize
 */

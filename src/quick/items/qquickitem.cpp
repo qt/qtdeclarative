@@ -7899,7 +7899,7 @@ QQuickPointerHandler *QQuickItemPrivate::effectiveCursorHandler() const
 #endif
 
 /*!
-    \obsolete Use QPointerEvent::setExclusiveGrabber()
+    \deprecated Use QPointerEvent::setExclusiveGrabber().
 
     Grabs the mouse input.
 
@@ -7929,7 +7929,7 @@ void QQuickItem::grabMouse()
 }
 
 /*!
-    \obsolete Use QPointerEvent::setExclusiveGrabber()
+    \deprecated Use QPointerEvent::setExclusiveGrabber().
 
     Releases the mouse grab following a call to grabMouse().
 
@@ -7991,7 +7991,7 @@ void QQuickItem::setKeepMouseGrab(bool keep)
 }
 
 /*!
-    \obsolete Use QPointerEvent::setExclusiveGrabber().
+    \deprecated Use QPointerEvent::setExclusiveGrabber().
     Grabs the touch points specified by \a ids.
 
     These touch points will be owned by the item until
@@ -8014,7 +8014,7 @@ void QQuickItem::grabTouchPoints(const QList<int> &ids)
 }
 
 /*!
-    \obsolete Use QEventPoint::setExclusiveGrabber() instead.
+    \deprecated Use QEventPoint::setExclusiveGrabber() instead.
     Ungrabs the touch points owned by this item.
 */
 void QQuickItem::ungrabTouchPoints()

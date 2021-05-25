@@ -356,7 +356,7 @@ void QQuickPaintedItem::setTextureSize(const QSize &size)
 }
 
 /*!
-    \obsolete
+    \deprecated
 
     This function is provided for compatibility, use size in combination
     with textureSize to decide the size of what you are drawing.
@@ -381,7 +381,7 @@ QRectF QQuickPaintedItem::contentsBoundingRect() const
 /*!
     \property QQuickPaintedItem::contentsSize
     \brief Obsolete method for setting the contents size.
-    \obsolete
+    \deprecated
 
     This function is provided for compatibility, use size in combination
     with textureSize to decide the size of what you are drawing.
@@ -408,7 +408,7 @@ void QQuickPaintedItem::setContentsSize(const QSize &size)
 }
 
 /*!
-    \obsolete
+    \deprecated
     This convenience function is equivalent to calling setContentsSize(QSize()).
 */
 void QQuickPaintedItem::resetContentsSize()
@@ -419,7 +419,7 @@ void QQuickPaintedItem::resetContentsSize()
 /*!
     \property QQuickPaintedItem::contentsScale
     \brief Obsolete method for scaling the contents.
-    \obsolete
+    \deprecated
 
     This function is provided for compatibility, use size() in combination
     with textureSize() to decide the size of what you are drawing.
