@@ -146,15 +146,6 @@ QQmlPropertyBinding::QQmlPropertyBinding(QMetaType mt, QObject *target, QQmlProp
     errorCallBack = bindingErrorCallback;
 }
 
-template<typename T>
-bool compareAndAssign(void *dataPtr, const void *result)
-{
-    if (*static_cast<const T *>(result) == *static_cast<const T *>(dataPtr))
-        return false;
-    *static_cast<T *>(dataPtr) = *static_cast<const T *>(result);
-    return true;
-}
-
 bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
 {
     const auto ctxt = jsExpression()->context();
@@ -168,16 +159,17 @@ bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
     ep->referenceScarceResources();
 
-    const auto handleErrorAndUndefined = [&](bool evaluatedToUndefined) {
-        ep->dereferenceScarceResources();
-        if (jsExpression()->hasError()) {
-            QPropertyBindingError error(QPropertyBindingError::UnknownError,
-                                        jsExpression()->delayedError()->error().description());
-            QPropertyBindingPrivate::currentlyEvaluatingBinding()->setError(std::move(error));
-            bindingErrorCallback(this);
-            return false;
-        }
+    bool evaluatedToUndefined = false;
 
+    QV4::Scope scope(engine->handle());
+    QV4::ScopedValue result(scope, hasBoundFunction()
+                            ? static_cast<QQmlPropertyBindingJSForBoundFunction *>(jsExpression())->evaluate(&evaluatedToUndefined)
+                            : jsExpression()->evaluate(&evaluatedToUndefined));
+
+    ep->dereferenceScarceResources();
+
+    bool hadError = jsExpression()->hasError();
+    if (!hadError) {
         if (evaluatedToUndefined) {
             handleUndefinedAssignment(ep, dataPtr);
             // if property has been changed due to reset, reset is responsible for
@@ -186,57 +178,12 @@ bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
         } else if (isUndefined()) {
             setIsUndefined(false);
         }
-
-        return true;
-    };
-
-    if (!hasBoundFunction()) {
-        Q_ASSERT(metaType.sizeOf() > 0);
-
-        // No need to construct here. evaluate() expects uninitialized memory.
-        Q_ALLOCA_VAR(void, result, metaType.sizeOf());
-
-        const bool evaluatedToUndefined = !jsExpression()->evaluate(&result, &metaType, 0);
-        if (!handleErrorAndUndefined(evaluatedToUndefined))
-            return false;
-
-        if (metaType.flags() & QMetaType::PointerToQObject)
-            return compareAndAssign<QObject *>(dataPtr, result);
-
-        switch (metaType.id()) {
-        case QMetaType::Bool:
-            return compareAndAssign<bool>(dataPtr, result);
-        case QMetaType::Int:
-            return compareAndAssign<int>(dataPtr, result);
-        case QMetaType::Double:
-            return compareAndAssign<double>(dataPtr, result);
-        case QMetaType::Float:
-            return compareAndAssign<float>(dataPtr, result);
-        case QMetaType::QString: {
-            const bool hasChanged = compareAndAssign<QString>(dataPtr, result);
-            static_cast<QString *>(result)->~QString();
-            return hasChanged;
-        }
-        default:
-            break;
-        }
-
-        const bool hasChanged = !metaType.equals(result, dataPtr);
-        if (hasChanged) {
-            metaType.destruct(dataPtr);
-            metaType.construct(dataPtr, result);
-        }
-        metaType.destruct(result);
-        return hasChanged;
-    }
-
-    bool evaluatedToUndefined = false;
-    QV4::Scope scope(engine->handle());
-    QV4::ScopedValue result(scope, static_cast<QQmlPropertyBindingJSForBoundFunction *>(
-                                jsExpression())->evaluate(&evaluatedToUndefined));
-
-    if (!handleErrorAndUndefined(evaluatedToUndefined))
+    } else {
+        QPropertyBindingError error(QPropertyBindingError::UnknownError, jsExpression()->delayedError()->error().description());
+        QPropertyBindingPrivate::currentlyEvaluatingBinding()->setError(std::move(error));
+        bindingErrorCallback(this);
         return false;
+    }
 
     int propertyType = metaType.id();
 
