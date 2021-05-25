@@ -128,6 +128,9 @@ static void removeObjectFromList(const QQmlProperty &property, QObject *objectTo
 
 void tst_qquickdesignersupport::customData()
 {
+#ifdef Q_CC_MINGW
+    QSKIP("QQuickDesignerSupportProperties::registerCustomData segfaults on mingw. QTBUG-90869");
+#endif
     QScopedPointer<QQuickView> view(new QQuickView);
     view->engine()->setOutputWarningsToStandardError(false);
     view->setSource(testFileUrl("test.qml"));
@@ -184,6 +187,9 @@ void tst_qquickdesignersupport::customData()
 
 void tst_qquickdesignersupport::customDataBindings()
 {
+#ifdef Q_CC_MINGW
+    QSKIP("QQuickDesignerSupportProperties::registerCustomData segfaults on mingw. QTBUG-90869");
+#endif
     QScopedPointer<QQuickView> view(new QQuickView);
     view->engine()->setOutputWarningsToStandardError(false);
     view->setSource(testFileUrl("test.qml"));
@@ -663,6 +669,9 @@ void tst_qquickdesignersupport::testComponentOnCompleteSignal()
 
 void tst_qquickdesignersupport::testSimpleBindings()
 {
+#ifdef Q_CC_MINGW
+    QSKIP("QQuickDesignerSupportProperties::registerCustomData segfaults on mingw. QTBUG-90869");
+#endif
     QScopedPointer<QQuickView> view(new QQuickView);
     view->engine()->setOutputWarningsToStandardError(false);
     view->setSource(testFileUrl("bindingTest.qml"));
@@ -704,6 +713,9 @@ void tst_qquickdesignersupport::testSimpleBindings()
 
 void tst_qquickdesignersupport::testDotProperties()
 {
+#ifdef Q_CC_MINGW
+    QSKIP("QQuickDesignerSupportProperties::registerCustomData segfaults on mingw. QTBUG-90869");
+#endif
     QScopedPointer<QQuickView> view(new QQuickView);
     view->engine()->setOutputWarningsToStandardError(false);
     view->setSource(testFileUrl("bindingTest.qml"));
@@ -733,6 +745,9 @@ void tst_qquickdesignersupport::testDotProperties()
 
 void  tst_qquickdesignersupport::testItemReparenting()
 {
+#ifdef Q_CC_MINGW
+    QSKIP("QQuickDesignerSupportProperties::registerCustomData segfaults on mingw. QTBUG-90869");
+#endif
 
     QScopedPointer<QQuickView> view(new QQuickView);
     view->engine()->setOutputWarningsToStandardError(false);
