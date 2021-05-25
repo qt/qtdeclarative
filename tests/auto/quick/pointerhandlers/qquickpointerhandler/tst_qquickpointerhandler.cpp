@@ -185,6 +185,9 @@ public:
 class EventHandler : public QQuickPointerHandler
 {
 public:
+    EventHandler(QQuickItem *parent = nullptr) :
+        QQuickPointerHandler(parent) {}
+
     void handlePointerEventImpl(QPointerEvent *event) override
     {
         QQuickPointerHandler::handlePointerEventImpl(event);
@@ -247,6 +250,7 @@ private slots:
     void dynamicCreation();
     void handlerInWindow();
     void dynamicCreationInWindow();
+    void cppConstruction();
 
 protected:
     bool eventFilter(QObject *, QEvent *event) override
@@ -693,6 +697,39 @@ void tst_PointerHandlers::dynamicCreationInWindow()
     QTRY_COMPARE(handler->pressEventCount, 1);
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
     QTRY_COMPARE(handler->releaseEventCount, 1);
+}
+
+void tst_PointerHandlers::cppConstruction()
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "itemOnly.qml");
+    QQuickView * window = windowPtr.data();
+
+    EventItem *eventItem1 = window->rootObject()->findChild<EventItem*>("eventItem1");
+    QVERIFY(eventItem1);
+    QQuickItemPrivate *eventItemPriv = QQuickItemPrivate::get(eventItem1);
+    // tell the handler to grab on press
+    eventItem1->grabPointer = true;
+
+    EventHandler handler(eventItem1);
+    QCOMPARE(handler.parentItem(), eventItem1);
+    QCOMPARE(handler.target(), eventItem1);
+    QCOMPARE(eventItemPriv->extra->pointerHandlers.first(), &handler);
+    QVERIFY(eventItemPriv->extra->resourcesList.contains(&handler));
+
+    // the handler and then eventItem1 sees each event
+    QPoint p1 = QPoint(20, 20);
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, p1);
+    QCOMPARE(handler.pressEventCount, 1);
+    qCDebug(lcPointerTests) << "events after mouse press" << eventItem1->eventList;
+    QCOMPARE(eventItem1->eventList.size(), 3);
+    QTest::mouseRelease(window, Qt::LeftButton);
+    QCOMPARE(handler.releaseEventCount, 1);
+    qCDebug(lcPointerTests) << "events after mouse release" << eventItem1->eventList;
+    QCOMPARE(eventItem1->eventList.size(), 7);
+
+    // wait to avoid getting a double click event
+    QTest::qWait(qApp->styleHints()->mouseDoubleClickInterval() + 10);
 }
 
 QTEST_MAIN(tst_PointerHandlers)

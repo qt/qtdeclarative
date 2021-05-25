@@ -65,6 +65,13 @@ Q_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
 QQuickPointerHandler::QQuickPointerHandler(QQuickItem *parent)
   : QObject(*(new QQuickPointerHandlerPrivate), parent)
 {
+    // When a handler is created in QML, the given parent is null, and we
+    // depend on QQuickItemPrivate::data_append() later when it's added to an
+    // item's DefaultProperty data property. But when a handler is created in
+    // C++ with a parent item, data_append() won't be called, and the caller
+    // shouldn't have to worry about it either.
+    if (parent)
+        QQuickItemPrivate::get(parent)->addPointerHandler(this);
 }
 
 QQuickPointerHandler::QQuickPointerHandler(QQuickPointerHandlerPrivate &dd, QQuickItem *parent)
