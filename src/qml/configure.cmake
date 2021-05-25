@@ -13,23 +13,6 @@ qt_find_package(LTTngUST PROVIDED_TARGETS LTTng::UST MODULE_NAME qml QMAKE_LIB l
 
 #### Tests
 
-# cxx14_make_unique
-qt_config_compile_test(cxx14_make_unique
-    LABEL "C++14 make_unique()"
-    CODE
-"
-#include <memory>
-
-int main(int argc, char **argv)
-{
-    (void)argc; (void)argv;
-    /* BEGIN TEST: */
-std::unique_ptr<int> ptr = std::make_unique<int>();
-    /* END TEST: */
-    return 0;
-}
-")
-
 # pointer_32bit
 qt_config_compile_test(pointer_32bit
     LABEL "32bit pointers"
@@ -116,10 +99,6 @@ int main(int argc, char **argv)
 
 #### Features
 
-qt_feature("cxx14_make_unique" PRIVATE
-    LABEL "C++14 make_unique"
-    CONDITION QT_FEATURE_cxx14 OR TEST_cxx14_make_unique
-)
 qt_feature("qml-network" PUBLIC
     SECTION "QML"
     LABEL "QML network support"

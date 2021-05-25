@@ -83,14 +83,3 @@ private:
 }
 
 #endif
-
-#if __cplusplus < 201402L && !QT_CONFIG(cxx14_make_unique)\
-&& !defined(__cpp_lib_make_unique)
-
-namespace std {
-    template<typename T, class ...Args>
-    unique_ptr<T> make_unique(Args &&...args)
-      { return unique_ptr<T>(new T(std::forward<Args>(args)...)); }
-}
-
-#endif
