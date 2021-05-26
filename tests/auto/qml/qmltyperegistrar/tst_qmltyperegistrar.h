@@ -314,6 +314,7 @@ private slots:
     void qmltypesHasForeign();
     void qmltypesHasHppClassAndNoext();
     void qmltypesHasReadAndWrite();
+    void qmltypesHasNotify();
     void qmltypesHasFileNames();
     void qmltypesHasFlags();
     void superAndForeignTypes();

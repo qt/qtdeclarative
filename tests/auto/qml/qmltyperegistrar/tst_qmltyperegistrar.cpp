@@ -60,6 +60,11 @@ void tst_qmltyperegistrar::qmltypesHasReadAndWrite()
     QVERIFY(qmltypesData.contains(R"(write: "setEieiei")"));
 }
 
+void tst_qmltyperegistrar::qmltypesHasNotify()
+{
+    QVERIFY(qmltypesData.contains(R"(notify: "eieieiChanged")"));
+}
+
 void tst_qmltyperegistrar::qmltypesHasFileNames()
 {
     QVERIFY(qmltypesData.contains("file: \"hppheader.hpp\""));

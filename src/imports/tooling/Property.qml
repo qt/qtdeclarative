@@ -50,4 +50,5 @@ Member {
     property string bindable
     property string read
     property string write
+    property string notify
 }
