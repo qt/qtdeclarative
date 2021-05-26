@@ -254,6 +254,7 @@ class QQmlJSMetaProperty
     QString m_read;
     QString m_write;
     QString m_bindable;
+    QString m_notify;
     QWeakPointer<const QQmlJSScope> m_type;
     QVector<QQmlJSAnnotation> m_annotations;
     bool m_isList = false;
@@ -280,6 +281,9 @@ public:
 
     void setBindable(const QString &bindable) { m_bindable = bindable; }
     QString bindable() const { return m_bindable; }
+
+    void setNotify(const QString &notify) { m_notify = notify; }
+    QString notify() const { return m_notify; }
 
     void setType(const QSharedPointer<const QQmlJSScope> &type) { m_type = type; }
     QSharedPointer<const QQmlJSScope> type() const { return m_type.toStrongRef(); }
