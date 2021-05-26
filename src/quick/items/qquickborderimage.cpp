@@ -593,7 +593,7 @@ QSGNode *QQuickBorderImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeDat
     node->setInnerSourceRect(innerSourceRect);
     node->setInnerTargetRect(innerTargetRect);
     node->setSubSourceRect(subSourceRect);
-    node->setMirror(d->mirror);
+    node->setMirror(d->mirrorHorizontally, d->mirrorVertically);
 
     node->setMipmapFiltering(QSGTexture::None);
     node->setFiltering(d->smooth ? QSGTexture::Linear : QSGTexture::Nearest);

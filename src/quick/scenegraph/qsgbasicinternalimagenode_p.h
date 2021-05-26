@@ -66,7 +66,7 @@ public:
     void setSubSourceRect(const QRectF &rect) override;
     void setTexture(QSGTexture *texture) override;
     void setAntialiasing(bool antialiasing) override;
-    void setMirror(bool mirror) override;
+    void setMirror(bool mirrorHorizontally, bool mirrorVertically) override;
     void update() override;
     void preprocess() override;
 
@@ -76,7 +76,8 @@ public:
                                        const QRectF &innerSourceRect,
                                        const QRectF &subSourceRect,
                                        QSGGeometry *geometry,
-                                       bool mirror = false,
+                                       bool mirrorHorizontally = false,
+                                       bool mirrorVertically = false,
                                        bool antialiasing = false);
 
 protected:
@@ -94,7 +95,8 @@ protected:
     QRectF m_subSourceRect;
 
     uint m_antialiasing : 1;
-    uint m_mirror : 1;
+    uint m_mirrorHorizontally : 1;
+    uint m_mirrorVertically : 1;
     uint m_dirtyGeometry : 1;
 
     QSGGeometry m_geometry;

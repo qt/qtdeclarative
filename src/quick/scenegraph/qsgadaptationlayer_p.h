@@ -163,7 +163,7 @@ public:
     virtual void setSubSourceRect(const QRectF &rect) = 0;
     virtual void setTexture(QSGTexture *texture) = 0;
     virtual void setAntialiasing(bool antialiasing) { Q_UNUSED(antialiasing); }
-    virtual void setMirror(bool mirror) = 0;
+    virtual void setMirror(bool horizontally, bool vertically) = 0;
     virtual void setMipmapFiltering(QSGTexture::Filtering filtering) = 0;
     virtual void setFiltering(QSGTexture::Filtering filtering) = 0;
     virtual void setHorizontalWrapMode(QSGTexture::WrapMode wrapMode) = 0;

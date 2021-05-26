@@ -217,10 +217,10 @@ QImage QQuickImageBase::image() const
 void QQuickImageBase::setMirror(bool mirror)
 {
     Q_D(QQuickImageBase);
-    if (mirror == d->mirror)
+    if (mirror == d->mirrorHorizontally)
         return;
 
-    d->mirror = mirror;
+    d->mirrorHorizontally = mirror;
 
     if (isComponentComplete())
         update();
@@ -231,7 +231,27 @@ void QQuickImageBase::setMirror(bool mirror)
 bool QQuickImageBase::mirror() const
 {
     Q_D(const QQuickImageBase);
-    return d->mirror;
+    return d->mirrorHorizontally;
+}
+
+void QQuickImageBase::setMirrorVertically(bool mirror)
+{
+    Q_D(QQuickImageBase);
+    if (mirror == d->mirrorVertically)
+        return;
+
+    d->mirrorVertically = mirror;
+
+    if (isComponentComplete())
+        update();
+
+    emit mirrorVerticallyChanged();
+}
+
+bool QQuickImageBase::mirrorVertically() const
+{
+    Q_D(const QQuickImageBase);
+    return d->mirrorVertically;
 }
 
 void QQuickImageBase::setCurrentFrame(int frame)

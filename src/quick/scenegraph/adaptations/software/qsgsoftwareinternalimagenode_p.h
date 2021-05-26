@@ -113,7 +113,7 @@ public:
     void setInnerSourceRect(const QRectF &rect) override;
     void setSubSourceRect(const QRectF &rect) override;
     void setTexture(QSGTexture *texture) override;
-    void setMirror(bool mirror) override;
+    void setMirror(bool mirrorHorizontally, bool mirrorVertically) override;
     void setMipmapFiltering(QSGTexture::Filtering filtering) override;
     void setFiltering(QSGTexture::Filtering filtering) override;
     void setHorizontalWrapMode(QSGTexture::WrapMode wrapMode) override;
@@ -137,7 +137,8 @@ private:
     QPointer<QSGTexture> m_texture;
     QPixmap m_cachedMirroredPixmap;
 
-    bool m_mirror;
+    bool m_mirrorHorizontally;
+    bool m_mirrorVertically;
     bool m_textureIsLayer;
     bool m_smooth;
     bool m_tileHorizontal;

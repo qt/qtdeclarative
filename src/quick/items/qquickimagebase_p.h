@@ -69,6 +69,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImageBase : public QQuickImplicitSizeItem
     Q_PROPERTY(bool cache READ cache WRITE setCache NOTIFY cacheChanged)
     Q_PROPERTY(QSize sourceSize READ sourceSize WRITE setSourceSize RESET resetSourceSize NOTIFY sourceSizeChanged)
     Q_PROPERTY(bool mirror READ mirror WRITE setMirror NOTIFY mirrorChanged)
+    Q_PROPERTY(bool mirrorVertically READ mirrorVertically WRITE setMirrorVertically NOTIFY mirrorVerticallyChanged REVISION(6, 2))
     Q_PROPERTY(int currentFrame READ currentFrame WRITE setCurrentFrame NOTIFY currentFrameChanged REVISION(2, 14))
     Q_PROPERTY(int frameCount READ frameCount NOTIFY frameCountChanged REVISION(2, 14))
     Q_PROPERTY(QColorSpace colorSpace READ colorSpace WRITE setColorSpace NOTIFY colorSpaceChanged REVISION(2, 15))
@@ -116,6 +117,9 @@ public:
     virtual void setMirror(bool mirror);
     bool mirror() const;
 
+    virtual void setMirrorVertically(bool mirror);
+    bool mirrorVertically() const;
+
     virtual void setCurrentFrame(int frame);
     virtual int currentFrame() const;
 
@@ -145,6 +149,7 @@ Q_SIGNALS:
     Q_REVISION(2, 14) void frameCountChanged();
     Q_REVISION(2, 15) void sourceClipRectChanged();
     Q_REVISION(2, 15) void colorSpaceChanged();
+    Q_REVISION(6, 2) void mirrorVerticallyChanged();
 
 protected:
     void loadEmptyUrl();

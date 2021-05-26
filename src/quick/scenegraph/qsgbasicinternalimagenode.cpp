@@ -69,7 +69,8 @@ QSGBasicInternalImageNode::QSGBasicInternalImageNode()
     : m_innerSourceRect(0, 0, 1, 1)
     , m_subSourceRect(0, 0, 1, 1)
     , m_antialiasing(false)
-    , m_mirror(false)
+    , m_mirrorHorizontally(false)
+    , m_mirrorVertically(false)
     , m_dirtyGeometry(false)
     , m_geometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4)
     , m_dynamicTexture(nullptr)
@@ -142,11 +143,12 @@ void QSGBasicInternalImageNode::setAntialiasing(bool antialiasing)
     m_dirtyGeometry = true;
 }
 
-void QSGBasicInternalImageNode::setMirror(bool mirror)
+void QSGBasicInternalImageNode::setMirror(bool mirrorHorizontally, bool mirrorVertically)
 {
-    if (mirror == m_mirror)
+    if (mirrorHorizontally == m_mirrorHorizontally && mirrorVertically == m_mirrorVertically)
         return;
-    m_mirror = mirror;
+    m_mirrorHorizontally = mirrorHorizontally;
+    m_mirrorVertically = mirrorVertically;
     m_dirtyGeometry = true;
 }
 
@@ -221,7 +223,8 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
                                                const QRectF &innerSourceRect,
                                                const QRectF &subSourceRect,
                                                QSGGeometry *geometry,
-                                               bool mirror,
+                                               bool mirrorHorizontally,
+                                               bool mirrorVertically,
                                                bool antialiasing)
 {
     int floorLeft = qFloor(subSourceRect.left());
@@ -282,7 +285,7 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
         xs += 2;
     }
     Q_ASSERT(xs == xData.data() + xData.size());
-    if (mirror) {
+    if (mirrorHorizontally) {
         float leftPlusRight = targetRect.left() + targetRect.right();
         int count = xData.size();
         xs = xData.data();
@@ -323,6 +326,15 @@ QSGGeometry *QSGBasicInternalImageNode::updateGeometry(const QRectF &targetRect,
         ys += 2;
     }
     Q_ASSERT(ys == yData.data() + yData.size());
+    if (mirrorVertically) {
+        float topPlusBottom = targetRect.top() + targetRect.bottom();
+        int count = yData.size();
+        ys = yData.data();
+        for (int i = 0; i < (count >> 1); ++i)
+            qSwap(ys[i], ys[count - 1 - i]);
+        for (int i = 0; i < count; ++i)
+            ys[i].y = topPlusBottom - ys[i].y;
+    }
 
     QSGGeometry::Type indexType = QSGGeometry::UnsignedShortType;
     // We can handled up to 0xffff indices, but keep the limit lower here to
@@ -530,10 +542,15 @@ void QSGBasicInternalImageNode::updateGeometry()
                 sr = QRectF(m_subSourceRect.left() - floorLeft, m_subSourceRect.top() - floorTop,
                             m_subSourceRect.width(), m_subSourceRect.height());
             }
-            if (m_mirror) {
+            if (m_mirrorHorizontally) {
                 qreal oldLeft = sr.left();
                 sr.setLeft(sr.right());
                 sr.setRight(oldLeft);
+            }
+            if (m_mirrorVertically) {
+                qreal oldTop = sr.top();
+                sr.setTop(sr.bottom());
+                sr.setBottom(oldTop);
             }
 
             if (m_antialiasing) {
@@ -580,7 +597,7 @@ void QSGBasicInternalImageNode::updateGeometry()
             QSGGeometry *g = geometry();
             g = updateGeometry(m_targetRect, m_innerTargetRect,
                                sourceRect, innerSourceRect, m_subSourceRect,
-                               g, m_mirror, m_antialiasing);
+                               g, m_mirrorHorizontally, m_mirrorVertically, m_antialiasing);
             if (g != geometry()) {
                 setGeometry(g);
                 setFlag(OwnsGeometry, true);

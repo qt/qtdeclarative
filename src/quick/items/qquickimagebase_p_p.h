@@ -72,7 +72,8 @@ public:
         frameCount(0),
         async(false),
         cache(true),
-        mirror(false),
+        mirrorHorizontally(false),
+        mirrorVertically(false),
         oldAutoTransform(false)
     {
     }
@@ -93,7 +94,8 @@ public:
     int frameCount;
     bool async : 1;
     bool cache : 1;
-    bool mirror: 1;
+    bool mirrorHorizontally: 1;
+    bool mirrorVertically : 1;
     bool oldAutoTransform : 1;
 };
 

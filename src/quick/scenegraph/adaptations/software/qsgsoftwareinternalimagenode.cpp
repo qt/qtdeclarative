@@ -312,7 +312,8 @@ QSGSoftwareInternalImageNode::QSGSoftwareInternalImageNode()
     : m_innerSourceRect(0, 0, 1, 1)
     , m_subSourceRect(0, 0, 1, 1)
     , m_texture(nullptr)
-    , m_mirror(false)
+    , m_mirrorHorizontally(false)
+    , m_mirrorVertically(false)
     , m_textureIsLayer(false)
     , m_smooth(true)
     , m_tileHorizontal(false)
@@ -364,13 +365,14 @@ void QSGSoftwareInternalImageNode::setTexture(QSGTexture *texture)
     markDirty(DirtyMaterial);
 }
 
-void QSGSoftwareInternalImageNode::setMirror(bool mirror)
+void QSGSoftwareInternalImageNode::setMirror(bool mirrorHorizontally, bool mirrorVertically)
 {
-    if (m_mirror != mirror) {
-        m_mirror = mirror;
-        m_cachedMirroredPixmapIsDirty = true;
-        markDirty(DirtyMaterial);
-    }
+    if (mirrorHorizontally == m_mirrorHorizontally && mirrorVertically == m_mirrorVertically)
+        return;
+    m_mirrorHorizontally = mirrorHorizontally;
+    m_mirrorVertically = mirrorVertically;
+    m_cachedMirroredPixmapIsDirty = true;
+    markDirty(DirtyMaterial);
 }
 
 void QSGSoftwareInternalImageNode::setMipmapFiltering(QSGTexture::Filtering /*filtering*/)
@@ -410,11 +412,11 @@ void QSGSoftwareInternalImageNode::setVerticalWrapMode(QSGTexture::WrapMode wrap
 void QSGSoftwareInternalImageNode::update()
 {
     if (m_cachedMirroredPixmapIsDirty) {
-        if (m_mirror || m_textureIsLayer) {
+        if (m_mirrorHorizontally || m_mirrorVertically || m_textureIsLayer) {
             QTransform transform(
-                        (m_mirror ? -1 : 1), 0,
-                        0                  , (m_textureIsLayer ? -1 :1),
-                        0                  , 0
+                        (m_mirrorHorizontally ? -1 : 1), 0,
+                        0                              , (m_textureIsLayer ? -1 : 1) * (m_mirrorVertically ? -1 : 1),
+                        0                              , 0
             );
             m_cachedMirroredPixmap = pixmap().transformed(transform);
         } else {
@@ -457,7 +459,7 @@ void QSGSoftwareInternalImageNode::paint(QPainter *painter)
     // Disable antialiased clipping. It causes transformed tiles to have gaps.
     painter->setRenderHint(QPainter::Antialiasing, false);
 
-    const QPixmap &pm = m_mirror || m_textureIsLayer ? m_cachedMirroredPixmap : pixmap();
+    const QPixmap &pm = m_mirrorHorizontally || m_mirrorVertically || m_textureIsLayer ? m_cachedMirroredPixmap : pixmap();
 
     if (m_innerTargetRect != m_targetRect) {
         // border image
