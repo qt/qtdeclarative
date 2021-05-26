@@ -13,9 +13,6 @@ find_package(Qt6 COMPONENTS Quick)
 qt_add_executable(create
     main.cpp
 )
-qt_import_plugins(create
-    INCLUDE Qt::QMinimalIntegrationPlugin
-)
 
 target_link_libraries(create PUBLIC
     Qt::Core
@@ -30,3 +27,7 @@ else()
         -fsanitize=fuzzer
     )
 endif()
+
+qt_import_plugins(create
+    INCLUDE Qt::QMinimalIntegrationPlugin
+)
