@@ -298,14 +298,11 @@ void *QSGDefaultContext::getResource(QQuickWindow *window, Resource resource) co
                 QQuickWindowPrivate::get(window)->context);
     QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
 
-    switch (resource) {
 #if QT_CONFIG(vulkan)
-    case VulkanInstanceResource:
+    if (resource == VulkanInstanceResource)
         return window->vulkanInstance();
 #endif
-    default:
-        return const_cast<void *>(rhiSupport->rifResource(resource, rc, window));
-    }
+    return const_cast<void *>(rhiSupport->rifResource(resource, rc, window));
 }
 
 QSGRendererInterface::ShaderType QSGDefaultContext::shaderType() const
