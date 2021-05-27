@@ -89,7 +89,7 @@ Item {
         width: targetItem ? targetItem.width - leftOffset - rightOffset + (frameSize * 2) : 0
         height: targetItem ? targetItem.height - topOffset - bottomOffset + (frameSize * 2) : 0
         radius: frameRadius
-        visible: targetItem
+        visible: targetItem && targetItem.visible
         color: "transparent"
 
         border.color: systemFrameColor
