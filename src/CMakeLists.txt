@@ -40,6 +40,13 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
     if(TARGET Qt::Widgets)
         add_subdirectory(quickwidgets)
     endif()
+else()
+    qt_configure_add_summary_section(NAME "Qt Quick")
+    qt_configure_add_summary_entry(TYPE "message" ARGS "Qt Quick support" MESSAGE "no")
+    qt_configure_add_report_entry(
+        TYPE NOTE
+        MESSAGE "Qt Quick modules not built due to not finding the qtshadertools 'qsb' tool."
+    )
 endif()
 
 add_subdirectory(labs)
