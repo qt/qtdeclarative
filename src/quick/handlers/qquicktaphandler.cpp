@@ -155,9 +155,19 @@ void QQuickTapHandler::handleEventPoint(QPointerEvent *event, QEventPoint &point
         setPressed(true, false, event, point);
         break;
     case QEventPoint::Released: {
+        // If the point has an exclusive grabber Item, then if it got the grab by filtering (like Flickable does),
+        // it's OK for DragHandler to react in spite of that.  But in other cases, if an exclusive grab
+        // still exists at the time of release, TapHandler should not react, because it would be redundant:
+        // some other item is already reacting, i.e. acting as if it has been clicked or tapped.
+        // So in that case we cancel the pressed state and do not emit tapped().
+        bool nonFilteringExclusiveGrabber = false;
+        if (auto g = qmlobject_cast<QQuickItem *>(event->exclusiveGrabber(point))) {
+            if (!g->filtersChildMouseEvents())
+                nonFilteringExclusiveGrabber = true;
+        }
         if (QQuickDeliveryAgentPrivate::isTouchEvent(event) ||
                 (static_cast<const QSinglePointEvent *>(event)->buttons() & acceptedButtons()) == Qt::NoButton)
-            setPressed(false, false, event, point);
+            setPressed(false, nonFilteringExclusiveGrabber, event, point);
         break;
     }
     default:

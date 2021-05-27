@@ -34,6 +34,7 @@
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickWindow>
+#include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
@@ -42,6 +43,10 @@
 #include "../shared/viewtestutil.h"
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
+
+// On one hand, uncommenting this will make troubleshooting easier (avoid the 60FPS hover events).
+// On the other hand, if anything actually breaks when hover events are enabled, that's also a bug.
+//#define DISABLE_HOVER_IN_IRRELEVANT_TESTS
 
 struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
 {
@@ -70,6 +75,7 @@ public:
         setPosition(bounds.topLeft());
         setOpacity(0.5);
         deliveryAgent->setObjectName("subscene");
+        vxh->offset = position();
     }
 
     QQuickDeliveryAgent *deliveryAgent = nullptr;
@@ -123,6 +129,7 @@ public:
 
 private slots:
     void passiveGrabberOrder();
+    void tapHandlerDoesntOverrideSubsceneGrabber();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -179,6 +186,39 @@ void tst_qquickdeliveryagent::passiveGrabberOrder()
     // passive grabbers are visited in order, and emit tapped() at that time
     QCOMPARE(spy.senders.first(), subsceneTap);
     QCOMPARE(spy.senders.last(), rootTap);
+}
+
+void tst_qquickdeliveryagent::tapHandlerDoesntOverrideSubsceneGrabber() // QTBUG-94012
+{
+    QQuickView window;
+#ifdef DISABLE_HOVER_IN_IRRELEVANT_TESTS
+    QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->frameSynchronousHoverEnabled = false;
+#endif
+    QVERIFY(QQuickTest::initView(window, testFileUrl("flickableTextEdit.qml")));
+    QQuickItem *textEdit = window.rootObject()->findChild<QQuickItem*>("textEdit");
+    QVERIFY(textEdit);
+    QQuickFlickable *flickable = window.rootObject()->findChild<QQuickFlickable*>();
+    QVERIFY(flickable);
+
+    // put the Flickable into a SubsceneRootItem
+    SubsceneRootItem subscene(flickable, flickable->boundingRect().translated(flickable->width() + 20, 10), window.rootObject());
+    QPoint clickPos = subscene.boundingRect().translated(subscene.width(), 10).center().toPoint();
+
+    // add a TapHandler to it
+    QQuickTapHandler tapHandler(&subscene);
+    QSignalSpy clickSpy(&tapHandler, &QQuickTapHandler::tapped);
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    int cursorPos = textEdit->property("cursorPosition").toInt();
+
+    // Click on the middle of the subscene to the right (texture cloned from the left).
+    // TapHandler takes a passive grab on press; TextEdit takes the exclusive grab;
+    // and TapHandler does not emit tapped, because of the non-filtering exclusive grabber.
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, clickPos);
+    qCDebug(lcTests) << "clicking subscene TextEdit set cursorPos to" << cursorPos;
+    QVERIFY(textEdit->property("cursorPosition").toInt() > cursorPos);
+    QCOMPARE(clickSpy.count(), 0); // doesn't tap
 }
 
 QTEST_MAIN(tst_qquickdeliveryagent)
