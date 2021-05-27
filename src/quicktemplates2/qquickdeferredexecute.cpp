@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 
 namespace QtQuickPrivate {
 
-typedef QHash<uint, QQmlComponentPrivate::DeferredState *> DeferredStates;
+typedef QHash<size_t, QQmlComponentPrivate::DeferredState *> DeferredStates;
 
 static inline size_t qHash(QObject *object, const QString &propertyName)
 {
