@@ -1885,8 +1885,9 @@ QRect QWindowsStyle::subElementRect(SubElement sr, const QStyleOption *opt) cons
 void QWindowsStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex *opt,
                                        QPainter *p) const
 {
+#if 0
     switch (cc) {
-#if 0 && QT_CONFIG(slider)
+#if QT_CONFIG(slider)
     case CC_Slider:
         if (const QStyleOptionSlider *slider = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
             int thickness  = proxy()->pixelMetric(PM_SliderControlThickness, slider);
@@ -2104,7 +2105,7 @@ void QWindowsStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComp
         }
         break;
 #endif // QT_CONFIG(slider)
-#if 0 && QT_CONFIG(scrollbar)
+#if QT_CONFIG(scrollbar)
     case CC_ScrollBar:
         if (const QStyleOptionSlider *scrollbar = qstyleoption_cast<const QStyleOptionSlider *>(opt)) {
             QStyleOptionSlider newScrollbar = *scrollbar;
@@ -2114,7 +2115,7 @@ void QWindowsStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComp
         }
         break;
 #endif // QT_CONFIG(scrollbar)
-#if 0 && QT_CONFIG(combobox)
+#if QT_CONFIG(combobox)
     case CC_ComboBox:
         if (const QStyleOptionComboBox *cmb = qstyleoption_cast<const QStyleOptionComboBox *>(opt)) {
             QBrush editBrush = cmb->palette.brush(QPalette::Button);
@@ -2188,7 +2189,7 @@ void QWindowsStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComp
         }
         break;
 #endif // QT_CONFIG(combobox)
-#if 0 && QT_CONFIG(spinbox)
+#if QT_CONFIG(spinbox)
     case CC_SpinBox:
         if (const QStyleOptionSpinBox *sb = qstyleoption_cast<const QStyleOptionSpinBox *>(opt)) {
             QStyleOptionSpinBox copy = *sb;
@@ -2278,10 +2279,12 @@ void QWindowsStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComp
         }
         break;
 #endif // QT_CONFIG(spinbox)
-
     default:
         QCommonStyle::drawComplexControl(cc, opt, p);
     }
+#else // 0
+    QCommonStyle::drawComplexControl(cc, opt, p);
+#endif
 }
 
 /*! \reimp */
