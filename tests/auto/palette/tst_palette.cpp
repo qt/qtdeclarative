@@ -130,6 +130,7 @@ void tst_palette::palette_data()
     customPalette.setColor(QPalette::ToolTipText, QColor("orchid"));
     customPalette.setColor(QPalette::Window, QColor("plum"));
     customPalette.setColor(QPalette::WindowText, QColor("salmon"));
+    customPalette.setColor(QPalette::PlaceholderText, QColor("magenta"));
 
     QTest::newRow("Control:custom") << "palette-control-custom.qml" << customPalette;
     QTest::newRow("AppWindow:custom") << "palette-appwindow-custom.qml" << customPalette;

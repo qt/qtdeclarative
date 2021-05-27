@@ -52,7 +52,7 @@ T.TextArea {
     leftPadding: padding + 4
 
     color: control.palette.text
-    placeholderTextColor: Color.transparent(control.color, 0.5)
+    placeholderTextColor: control.palette.placeholderText
     selectionColor: control.palette.highlight
     selectedTextColor: control.palette.highlightedText
 
