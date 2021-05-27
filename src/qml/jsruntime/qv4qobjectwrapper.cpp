@@ -143,7 +143,7 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
         QV4::ReturnedValue ret = QV4::QObjectWrapper::wrap(v4, rv);
         if (property.propType().flags().testFlag(QMetaType::IsConst)) {
             QV4::ScopedValue v(scope, ret);
-            if (auto obj = v->as<Object>()) {
+            if (auto obj = v->as<QV4::Object>()) {
                 obj->setInternalClass(obj->internalClass()->cryopreserved());
                 return obj->asReturnedValue();
             }
