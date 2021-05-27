@@ -243,6 +243,7 @@ QStringList QAccessibleQuickItem::actionNames() const
 {
     QStringList actions;
     switch (role()) {
+    case QAccessible::Link:
     case QAccessible::PushButton:
         actions << QAccessibleActionInterface::pressAction();
         break;
