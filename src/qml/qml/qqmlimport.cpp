@@ -208,15 +208,17 @@ static bool unloadPlugin(const std::pair<const QString, QmlPlugin> &plugin)
     if (!loader)
         return false;
 
+#if QT_CONFIG(library)
     if (auto extensionPlugin = qobject_cast<QQmlExtensionPlugin *>(loader->instance()))
         extensionPlugin->unregisterTypes();
 
-#if QT_CONFIG(library) && !defined(Q_OS_MACOS)
+# ifndef Q_OS_MACOS
     if (!loader->unload()) {
         qWarning("Unloading %s failed: %s", qPrintable(plugin.first),
                  qPrintable(loader->errorString()));
         return false;
     }
+# endif
 #endif
 
     return true;
