@@ -64,7 +64,7 @@ T.TextArea {
     selectionColor: control.palette.highlight
     selectedTextColor: control.palette.highlightedText
     verticalAlignment: Qt.AlignVCenter
-    placeholderTextColor: Color.transparent(control.color, 0.5)
+    placeholderTextColor: control.palette.placeholderText
 
     PlaceholderText {
         id: placeholder

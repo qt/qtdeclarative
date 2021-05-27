@@ -83,6 +83,8 @@ void QQuickBasicTheme::initialize(QQuickTheme *theme)
     systemPalette.setColor(QPalette::WindowText, QColor::fromRgba(0xFF26282A));
     systemPalette.setColor(QPalette::Disabled, QPalette::WindowText, QColor::fromRgba(0xFFBDBEBF));
 
+    systemPalette.setColor(QPalette::PlaceholderText, QColor::fromRgba(0x88353637));
+
     theme->setPalette(QQuickTheme::System, systemPalette);
 }
 

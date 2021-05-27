@@ -71,4 +71,5 @@ ApplicationWindow {
     palette.toolTipText: "orchid"
     palette.window: "plum"
     palette.windowText: "salmon"
+    palette.placeholderText: "magenta"
 }
