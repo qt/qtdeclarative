@@ -214,7 +214,7 @@ QQuickParticleDataHeap::QQuickParticleDataHeap()
 
 void QQuickParticleDataHeap::grow() //###Consider automatic growth vs resize() calls from GroupData
 {
-    m_data.resize(1 << ++m_size);
+    m_data.resize(qsizetype(1) << ++m_size);
 }
 
 void QQuickParticleDataHeap::insert(QQuickParticleData* data)
