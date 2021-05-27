@@ -421,9 +421,9 @@ bool FindWarningVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
     return true;
 }
 
-FindWarningVisitor::FindWarningVisitor(
-        QQmlJSImporter *importer, QStringList qmltypesFiles, QString code, QString fileName,
-        bool silent)
+FindWarningVisitor::FindWarningVisitor(QQmlJSImporter *importer, QStringList qmltypesFiles,
+                                       QString code, QList<QQmlJS::SourceLocation> comments,
+                                       QString fileName, bool silent)
     : QQmlJSImportVisitor(importer,
                           implicitImportDirectory(fileName, importer->resourceFileMapper()),
                           qmltypesFiles, fileName, code, silent),
@@ -457,6 +457,83 @@ FindWarningVisitor::FindWarningVisitor(
     }
     for (const auto& jsGlobVar: jsGlobVars)
         m_currentScope->insertJSIdentifier(jsGlobVar, globalJavaScript);
+
+    parseComments(comments);
+}
+
+void FindWarningVisitor::parseComments(const QList<QQmlJS::SourceLocation> &comments)
+{
+    QHash<int, QSet<QQmlJSLoggerCategory>> disablesPerLine;
+    QHash<int, QSet<QQmlJSLoggerCategory>> enablesPerLine;
+    QHash<int, QSet<QQmlJSLoggerCategory>> oneLineDisablesPerLine;
+
+    const QStringList lines = m_code.split(u'\n');
+
+    for (const auto &loc : comments) {
+        const QString comment = m_code.mid(loc.offset, loc.length);
+        if (!comment.startsWith(u" qmllint ") && !comment.startsWith(u"qmllint "))
+            continue;
+
+        QStringList words = comment.split(u' ');
+        if (words.constFirst().isEmpty())
+            words.removeFirst();
+
+        const QString command = words.at(1);
+
+        QSet<QQmlJSLoggerCategory> categories;
+        for (qsizetype i = 2; i < words.size(); i++) {
+            const QString category = words.at(i);
+            const auto option = m_logger.options().constFind(category);
+            if (option != m_logger.options().constEnd())
+                categories << option->m_category;
+            else
+                m_logger.log(u"qmllint directive on unknown category \"%1\""_qs.arg(category),
+                             Log_Syntax, loc);
+        }
+
+        if (categories.isEmpty()) {
+            for (const auto &option : m_logger.options())
+                categories << option.m_category;
+        }
+
+        if (command == u"disable"_qs) {
+            const QString line = lines[loc.startLine - 1];
+            const QString preComment = line.left(line.indexOf(comment) - 2);
+
+            bool lineHasContent = false;
+            for (qsizetype i = 0; i < preComment.size(); i++) {
+                if (!preComment[i].isSpace()) {
+                    lineHasContent = true;
+                    break;
+                }
+            }
+
+            if (lineHasContent)
+                oneLineDisablesPerLine[loc.startLine] |= categories;
+            else
+                disablesPerLine[loc.startLine] |= categories;
+        } else if (command == u"enable"_qs) {
+            enablesPerLine[loc.startLine + 1] |= categories;
+        } else {
+            m_logger.log(u"Invalid qmllint directive \"%1\" provided"_qs.arg(command), Log_Syntax,
+                         loc);
+        }
+    }
+
+    if (disablesPerLine.isEmpty() && oneLineDisablesPerLine.isEmpty())
+        return;
+
+    QSet<QQmlJSLoggerCategory> currentlyDisabled;
+    for (qsizetype i = 1; i <= lines.length(); i++) {
+        currentlyDisabled.unite(disablesPerLine[i]).subtract(enablesPerLine[i]);
+
+        currentlyDisabled.unite(oneLineDisablesPerLine[i]);
+
+        if (!currentlyDisabled.isEmpty())
+            m_logger.ignoreWarnings(i, currentlyDisabled);
+
+        currentlyDisabled.subtract(oneLineDisablesPerLine[i]);
+    }
 }
 
 bool FindWarningVisitor::check()

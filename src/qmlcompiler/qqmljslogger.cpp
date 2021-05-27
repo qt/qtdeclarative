@@ -103,6 +103,9 @@ void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category, co
     if (isCategoryDisabled(category))
         return;
 
+    if (srcLocation.isValid() && m_ignoredWarnings[srcLocation.startLine].contains(category))
+        return;
+
     const QtMsgType msgType = m_categoryLevels[category];
 
     QString prefix;

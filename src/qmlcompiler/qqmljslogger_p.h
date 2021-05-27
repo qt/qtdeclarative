@@ -48,6 +48,7 @@
 #include <QtCore/qmap.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
+#include <QtCore/qset.h>
 
 /*!
     \internal
@@ -181,6 +182,11 @@ public:
 
     void processMessages(const QList<QQmlJS::DiagnosticMessage> &messages, QQmlJSLoggerCategory category);
 
+    void ignoreWarnings(uint32_t line, const QSet<QQmlJSLoggerCategory> &categories)
+    {
+        m_ignoredWarnings[line] = categories;
+    }
+
     QColorOutput &colorOutput() { return m_output; }
 
 private:
@@ -197,6 +203,7 @@ private:
     QList<QQmlJS::DiagnosticMessage> m_infos;
     QList<QQmlJS::DiagnosticMessage> m_warnings;
     QList<QQmlJS::DiagnosticMessage> m_errors;
+    QHash<uint32_t, QSet<QQmlJSLoggerCategory>> m_ignoredWarnings;
 };
 
 #endif // QLOGGER_H

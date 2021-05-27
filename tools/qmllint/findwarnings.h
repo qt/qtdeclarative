@@ -57,9 +57,9 @@ class FindWarningVisitor : public QQmlJSImportVisitor
 {
     Q_DISABLE_COPY_MOVE(FindWarningVisitor)
 public:
-    explicit FindWarningVisitor(
-            QQmlJSImporter *importer, QStringList qmltypesFiles, QString code, QString fileName,
-            bool silent);
+    explicit FindWarningVisitor(QQmlJSImporter *importer, QStringList qmltypesFiles, QString code,
+                                QList<QQmlJS::SourceLocation> comments, QString fileName,
+                                bool silent);
     ~FindWarningVisitor() override = default;
     bool check();
 
@@ -87,6 +87,8 @@ private:
     // records of whether a default property has object assigned to it. for
     // correctness, the scope that defines the default property acts as a key
     QHash<const QQmlJSScope *, bool> m_scopeHasDefaultPropertyAssignment;
+
+    void parseComments(const QList<QQmlJS::SourceLocation> &comments);
 
     void checkInheritanceCycle(QQmlJSScope::ConstPtr scope);
     void checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope);

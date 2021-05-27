@@ -168,7 +168,8 @@ static bool lint_file(const QString &filename, const bool silent, QJsonArray *js
 
             importer.setResourceFileMapper(mapper);
 
-            FindWarningVisitor v { &importer, qmltypesFiles, code, filename, silent || json };
+            FindWarningVisitor v { &importer,         qmltypesFiles, code,
+                                   engine.comments(), filename,      silent || json };
 
             for (auto it = options.cbegin(); it != options.cend(); ++it) {
                 v.logger().setCategoryDisabled(it.value().m_category, it.value().m_disabled);

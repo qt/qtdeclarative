@@ -754,6 +754,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("qjsroot") << QStringLiteral("qjsroot.qml");
     QTest::newRow("InlineComponent") << QStringLiteral("inlineComponent.qml");
     QTest::newRow("InlineComponentWithComponents") << QStringLiteral("inlineComponentWithComponents.qml");
+    QTest::newRow("ignoreWarnings") << QStringLiteral("ignoreWarnings.qml");
 }
 
 void TestQmllint::cleanQmlCode()
