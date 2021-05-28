@@ -45,6 +45,7 @@
 #include <qmath.h>
 #include "qquickstyledtext_p.h"
 #include <QQmlContext>
+#include <QtGui/private/qtexthtmlparser_p.h>
 
 Q_LOGGING_CATEGORY(lcStyledText, "qt.quick.styledtext")
 
@@ -558,18 +559,9 @@ void QQuickStyledTextPrivate::parseEntity(const QChar *&ch, const QString &textI
     while (!ch->isNull()) {
         if (*ch == QLatin1Char(';')) {
             auto entity = QStringView(textIn).mid(entityStart, entityLength);
-            if (entity == QLatin1String("gt"))
-                textOut += QChar(62);
-            else if (entity == QLatin1String("lt"))
-                textOut += QChar(60);
-            else if (entity == QLatin1String("amp"))
-                textOut += QChar(38);
-            else if (entity == QLatin1String("apos"))
-                textOut += QChar(39);
-            else if (entity == QLatin1String("quot"))
-                textOut += QChar(34);
-            else if (entity == QLatin1String("nbsp"))
-                textOut += QChar(QChar::Nbsp);
+            const QString parsedEntity = QTextHtmlParser::parseEntity(entity);
+            if (!parsedEntity.isNull())
+                textOut += parsedEntity;
             else
                 qCWarning(lcStyledText) << "StyledText doesn't support entity" << entity;
             return;
