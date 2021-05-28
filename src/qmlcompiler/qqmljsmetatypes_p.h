@@ -263,6 +263,7 @@ class QQmlJSMetaProperty
     bool m_isAlias = false;
     bool m_isFinal = false;
     int m_revision = 0;
+    int m_index = -1; // relative property index within owning QQmlJSScope
 
 public:
     QQmlJSMetaProperty() = default;
@@ -308,6 +309,9 @@ public:
 
     void setRevision(int revision) { m_revision = revision; }
     int revision() const { return m_revision; }
+
+    void setIndex(int index) { m_index = index; }
+    int index() const { return m_index; }
 
     bool isValid() const { return !m_propertyName.isEmpty(); }
 

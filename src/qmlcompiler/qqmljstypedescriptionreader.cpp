@@ -366,10 +366,13 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
             property.setWrite(readStringBinding(script));
         } else if (id == QLatin1String("notify")) {
             property.setNotify(readStringBinding(script));
+        } else if (id == QLatin1String("index")) {
+            property.setIndex(readIntBinding(script));
         } else {
             addWarning(script->firstSourceLocation(),
                        tr("Expected only type, name, revision, isPointer, isReadonly, isRequired, "
-                          "isFinal, bindable, read, write, notify and isList script bindings."));
+                          "isFinal, bindable, read, write, notify, index and isList script "
+                          "bindings."));
         }
     }
 

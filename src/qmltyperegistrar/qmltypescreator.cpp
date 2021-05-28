@@ -193,6 +193,10 @@ void QmlTypesCreator::writeProperties(const QJsonArray &properties)
             const auto notify = obj.constFind(QLatin1String("notify"));
             if (notify != obj.constEnd())
                 m_qml.writeScriptBinding(QLatin1String("notify"), enquote(notify->toString()));
+            const auto index = obj.constFind(QLatin1String("index"));
+            if (index != obj.constEnd())
+                m_qml.writeScriptBinding(QLatin1String("index"),
+                                         QString::number(index.value().toInt()));
         }
 
         if (!obj.contains(QLatin1String("write")) && !obj.contains(QLatin1String("member")))

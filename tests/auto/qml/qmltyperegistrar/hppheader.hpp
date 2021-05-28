@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -37,12 +37,11 @@ class HppClass : public QObject
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(int eieiei READ eieiei WRITE setEieiei NOTIFY eieieiChanged)
+    Q_PROPERTY(int eieiei2 READ eieiei2)
 
 public:
-    int eieiei() const
-    {
-        return m_eieiei;
-    }
+    int eieiei() const { return m_eieiei; }
+    int eieiei2() const { return m_eieiei2; }
 
 public slots:
     void setEieiei(int eieiei)
@@ -59,6 +58,7 @@ signals:
 
 private:
     int m_eieiei;
+    int m_eieiei2;
 };
 
 #endif // HPPHEADER_HPP

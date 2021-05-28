@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -32,6 +32,8 @@
 #include <QtCore/qfile.h>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
+
+#include "hppheader.hpp"
 
 void tst_qmltyperegistrar::initTestCase()
 {
@@ -65,6 +67,25 @@ void tst_qmltyperegistrar::qmltypesHasNotify()
     QVERIFY(qmltypesData.contains(R"(notify: "eieieiChanged")"));
 }
 
+void tst_qmltyperegistrar::qmltypesHasPropertyIndex()
+{
+    qsizetype start = qmltypesData.indexOf("notify: \"eieieiChanged\"");
+    qsizetype end = qmltypesData.indexOf("}", start);
+    // [start, end) - range in which index information of eieiei should exist
+    QVERIFY(qmltypesData.indexOf("index: 0", start) < end); // belongs to eieiei
+
+    start = qmltypesData.indexOf("read: \"eieiei2\"");
+    end = qmltypesData.indexOf("}", start);
+    QVERIFY(qmltypesData.indexOf("index: 1", start) < end); // belongs to eieiei2
+
+    HppClass eieieiClass;
+    const QMetaObject *mo = eieieiClass.metaObject();
+    QVERIFY(mo);
+    // NB: add 0 and 1 as relative indices "parsed" from qmltypesData
+    QCOMPARE(mo->indexOfProperty("eieiei"), mo->propertyOffset() + 0);
+    QCOMPARE(mo->indexOfProperty("eieiei2"), mo->propertyOffset() + 1);
+}
+
 void tst_qmltyperegistrar::qmltypesHasFileNames()
 {
     QVERIFY(qmltypesData.contains("file: \"hppheader.hpp\""));
@@ -84,8 +105,8 @@ void tst_qmltyperegistrar::superAndForeignTypes()
     QVERIFY(qmltypesData.contains("values: [\"Pixel\", \"Centimeter\", \"Inch\", \"Point\"]"));
     QVERIFY(qmltypesData.contains("name: \"SizeGadget\""));
     QVERIFY(qmltypesData.contains("prototype: \"SizeEnums\""));
-    QVERIFY(qmltypesData.contains("Property { name: \"height\"; type: \"int\"; read: \"height\"; write: \"setHeight\"; isFinal: true }"));
-    QVERIFY(qmltypesData.contains("Property { name: \"width\"; type: \"int\"; read: \"width\"; write: \"setWidth\"; isFinal: true }"));
+    QVERIFY(qmltypesData.contains("Property { name: \"height\"; type: \"int\"; read: \"height\"; write: \"setHeight\"; index: 0; isFinal: true }"));
+    QVERIFY(qmltypesData.contains("Property { name: \"width\"; type: \"int\"; read: \"width\"; write: \"setWidth\"; index: 0; isFinal: true }"));
     QVERIFY(qmltypesData.contains("Method { name: \"sizeToString\"; type: \"QString\" }"));
     QCOMPARE(qmltypesData.count("extension: \"SizeValueType\""), 1);
 }
@@ -98,7 +119,7 @@ void tst_qmltyperegistrar::accessSemantics()
 
 void tst_qmltyperegistrar::isBindable()
 {
-    QVERIFY(qmltypesData.contains(R"(Property { name: "someProperty"; type: "int"; bindable: "bindableSomeProperty" })"));
+    QVERIFY(qmltypesData.contains(R"(Property { name: "someProperty"; type: "int"; bindable: "bindableSomeProperty"; index: 0 })"));
 }
 
 void tst_qmltyperegistrar::restrictToImportVersion()
@@ -220,7 +241,9 @@ void tst_qmltyperegistrar::hiddenAccessor()
 void tst_qmltyperegistrar::finalProperty()
 {
     QCOMPARE(qmltypesData.count("name: \"FinalProperty\""), 1);
-    QCOMPARE(qmltypesData.count("Property { name: \"fff\"; type: \"int\"; isFinal: true }"), 1);
+    QCOMPARE(qmltypesData.count(
+                     "Property { name: \"fff\"; type: \"int\"; index: 0; isFinal: true }"),
+             1);
 }
 
 void tst_qmltyperegistrar::parentProperty()
