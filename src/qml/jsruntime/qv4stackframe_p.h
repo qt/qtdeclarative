@@ -233,7 +233,9 @@ struct Q_QML_PRIVATE_EXPORT JSTypesStackFrame : public CppStackFrame
             argc = nFormals;
         jsFrame->setArgc(argc);
 
-        memcpy(jsFrame->args, originalArguments, argc * sizeof(Value));
+        // memcpy requires non-null ptr, even if  argc * sizeof(Value) == 0
+        if (originalArguments)
+            memcpy(jsFrame->args, originalArguments, argc * sizeof(Value));
         Q_STATIC_ASSERT(Encode::undefined() == 0);
         memset(jsFrame->args + argc, 0, (nRegisters - argc) * sizeof(Value));
 
