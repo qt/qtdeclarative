@@ -91,4 +91,6 @@ if(QT_FEATURE_private_tests)
         add_subdirectory(qquickframebufferobject)
         add_subdirectory(rendernode)
     endif()
+
+    add_subdirectory(softwarerenderer)
 endif()

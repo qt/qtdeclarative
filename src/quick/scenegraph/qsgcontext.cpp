@@ -39,6 +39,7 @@
 
 #include <QtQuick/private/qsgcontext_p.h>
 #include <QtQuick/private/qsgtexture_p.h>
+#include <QtQuick/private/qsgrenderer_p.h>
 #include <QtQuick/private/qquickpixmapcache_p.h>
 #include <QtQuick/private/qsgadaptationlayer_p.h>
 
@@ -370,12 +371,12 @@ void QSGRenderContext::prepareSync(qreal devicePixelRatio,
     Q_UNUSED(config);
 }
 
-void QSGRenderContext::beginNextFrame(QSGRenderer *renderer,
+void QSGRenderContext::beginNextFrame(QSGRenderer *renderer, const QSGRenderTarget &renderTarget,
                                       RenderPassCallback mainPassRecordingStart,
                                       RenderPassCallback mainPassRecordingEnd,
                                       void *callbackUserData)
 {
-    Q_UNUSED(renderer);
+    renderer->setRenderTarget(renderTarget);
     Q_UNUSED(mainPassRecordingStart);
     Q_UNUSED(mainPassRecordingEnd);
     Q_UNUSED(callbackUserData);
@@ -386,15 +387,13 @@ void QSGRenderContext::endNextFrame(QSGRenderer *renderer)
     Q_UNUSED(renderer);
 }
 
-void QSGRenderContext::beginNextRhiFrame(QSGRenderer *renderer,
-                                         QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp, QRhiCommandBuffer *cb,
+void QSGRenderContext::beginNextRhiFrame(QSGRenderer *renderer, const QSGRenderTarget &renderTarget,
+                                         QRhiCommandBuffer *cb,
                                          RenderPassCallback mainPassRecordingStart,
                                          RenderPassCallback mainPassRecordingEnd,
                                          void *callbackUserData)
 {
-    Q_UNUSED(renderer);
-    Q_UNUSED(rt);
-    Q_UNUSED(rp);
+    renderer->setRenderTarget(renderTarget);
     Q_UNUSED(cb);
     Q_UNUSED(mainPassRecordingStart);
     Q_UNUSED(mainPassRecordingEnd);

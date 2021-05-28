@@ -73,7 +73,8 @@ public:
         Null,
         NativeTexture,
         NativeRenderbuffer,
-        RhiRenderTarget
+        RhiRenderTarget,
+        PaintDevice
     };
 
     QAtomicInt ref;
@@ -89,6 +90,7 @@ public:
         NativeTexture nativeTexture;
         quint64 nativeRenderbufferObject;
         QRhiRenderTarget *rhiRt;
+        QPaintDevice *paintDevice;
     } u;
 };
 

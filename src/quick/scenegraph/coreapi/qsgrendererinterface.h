@@ -80,7 +80,8 @@ public:
         DeviceContextResource,
         CommandEncoderResource,
         VulkanInstanceResource,
-        RenderPassResource
+        RenderPassResource,
+        RedirectPaintDevice
     };
 
     enum ShaderType {

@@ -403,6 +403,29 @@ QQuickRenderTarget QQuickRenderTarget::fromRhiRenderTarget(QRhiRenderTarget *ren
 }
 
 /*!
+    \return a new QQuickRenderTarget referencing a paint device object
+    specified by \a device.
+
+    \note The QQuickRenderTarget does not take ownship of \a device, it
+    merely contains references the QPaintDevice object pointer. It is the
+    caller's responsibility to ensure that the resource exists as long as
+    necessary.
+
+    \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
+ */
+QQuickRenderTarget QQuickRenderTarget::fromPaintDevice(QPaintDevice *device)
+{
+    QQuickRenderTarget rt;
+    QQuickRenderTargetPrivate *d = QQuickRenderTargetPrivate::get(&rt);
+
+    d->type = QQuickRenderTargetPrivate::Type::PaintDevice;
+    d->pixelSize = QSize(device->width(), device->height());
+    d->u.paintDevice = device;
+
+    return rt;
+}
+
+/*!
     \fn bool QQuickRenderTarget::operator==(const QQuickRenderTarget &a, const QQuickRenderTarget &b) noexcept
     \return true if \a a and \a b refer to the same set of native objects and
     have matching associated data (size, sample count).
@@ -441,6 +464,10 @@ bool QQuickRenderTarget::isEqual(const QQuickRenderTarget &other) const noexcept
         break;
     case QQuickRenderTargetPrivate::Type::RhiRenderTarget:
         if (d->u.rhiRt != other.d->u.rhiRt)
+            return false;
+        break;
+    case QQuickRenderTargetPrivate::Type::PaintDevice:
+        if (d->u.paintDevice != other.d->u.paintDevice)
             return false;
         break;
     default:
@@ -486,6 +513,7 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
     switch (type) {
     case Type::Null:
         dst->renderTarget = nullptr;
+        dst->paintDevice = nullptr;
         dst->owns = false;
         return true;
 
@@ -520,6 +548,10 @@ bool QQuickRenderTargetPrivate::resolve(QRhi *rhi, QQuickWindowRenderTarget *dst
     case Type::RhiRenderTarget:
         dst->renderTarget = u.rhiRt;
         dst->rpDesc = u.rhiRt->renderPassDescriptor(); // just for QQuickWindowRenderTarget::reset()
+        dst->owns = false;
+        return true;
+    case Type::PaintDevice:
+        dst->paintDevice = u.paintDevice;
         dst->owns = false;
         return true;
 

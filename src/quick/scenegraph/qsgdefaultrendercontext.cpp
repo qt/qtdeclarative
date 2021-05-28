@@ -181,11 +181,12 @@ void QSGDefaultRenderContext::prepareSync(qreal devicePixelRatio,
 
 static QBasicMutex qsg_framerender_mutex;
 
-void QSGDefaultRenderContext::beginNextFrame(QSGRenderer *renderer,
+void QSGDefaultRenderContext::beginNextFrame(QSGRenderer *renderer, const QSGRenderTarget &renderTarget,
                                              RenderPassCallback mainPassRecordingStart,
                                              RenderPassCallback mainPassRecordingEnd,
                                              void *callbackUserData)
 {
+    renderer->setRenderTarget(renderTarget);
     renderer->setRenderPassRecordingCallbacks(mainPassRecordingStart, mainPassRecordingEnd, callbackUserData);
 }
 
@@ -205,19 +206,18 @@ void QSGDefaultRenderContext::endNextFrame(QSGRenderer *renderer)
     Q_UNUSED(renderer);
 }
 
-void QSGDefaultRenderContext::beginNextRhiFrame(QSGRenderer *renderer, QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp,
+void QSGDefaultRenderContext::beginNextRhiFrame(QSGRenderer *renderer, const QSGRenderTarget &renderTarget,
                                                 QRhiCommandBuffer *cb,
                                                 RenderPassCallback mainPassRecordingStart,
                                                 RenderPassCallback mainPassRecordingEnd,
                                                 void *callbackUserData)
 {
-    renderer->setRenderTarget(rt);
-    renderer->setRenderPassDescriptor(rp);
+    renderer->setRenderTarget(renderTarget);
     renderer->setCommandBuffer(cb);
     renderer->setRenderPassRecordingCallbacks(mainPassRecordingStart, mainPassRecordingEnd, callbackUserData);
 
     m_currentFrameCommandBuffer = cb; // usually the same as what was passed to prepareSync() but cannot count on that having been called
-    m_currentFrameRenderPass = rp;
+    m_currentFrameRenderPass = renderTarget.rpDesc;
 }
 
 void QSGDefaultRenderContext::renderNextRhiFrame(QSGRenderer *renderer)

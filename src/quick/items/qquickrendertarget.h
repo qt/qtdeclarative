@@ -55,6 +55,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickRenderTargetPrivate;
 class QRhiRenderTarget;
+class QPaintDevice;
 
 class Q_QUICK_EXPORT QQuickRenderTarget
 {
@@ -87,6 +88,8 @@ public:
 #endif
 
     static QQuickRenderTarget fromRhiRenderTarget(QRhiRenderTarget *renderTarget);
+
+    static QQuickRenderTarget fromPaintDevice(QPaintDevice *device);
 
 private:
     void detach();

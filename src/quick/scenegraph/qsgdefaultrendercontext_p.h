@@ -95,15 +95,15 @@ public:
                      QRhiCommandBuffer *cb,
                      const QQuickGraphicsConfiguration &config) override;
 
-    void beginNextFrame(QSGRenderer *renderer,
+    void beginNextFrame(QSGRenderer *renderer, const QSGRenderTarget &renderTarget,
                         RenderPassCallback mainPassRecordingStart,
                         RenderPassCallback mainPassRecordingEnd,
                         void *callbackUserData) override;
     void renderNextFrame(QSGRenderer *renderer) override;
     void endNextFrame(QSGRenderer *renderer) override;
 
-    void beginNextRhiFrame(QSGRenderer *renderer,
-                           QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp, QRhiCommandBuffer *cb,
+    void beginNextRhiFrame(QSGRenderer *renderer, const QSGRenderTarget &renderTarget,
+                           QRhiCommandBuffer *cb,
                            RenderPassCallback mainPassRecordingStart,
                            RenderPassCallback mainPassRecordingEnd,
                            void *callbackUserData) override;

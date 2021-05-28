@@ -218,8 +218,15 @@ QSGRendererInterface::ShaderSourceTypes QSGSoftwareContext::shaderSourceType() c
 
 void *QSGSoftwareContext::getResource(QQuickWindow *window, Resource resource) const
 {
-    if (resource == PainterResource && window && window->isSceneGraphInitialized())
-        return static_cast<QSGSoftwareRenderContext *>(QQuickWindowPrivate::get(window)->context)->m_activePainter;
+    if (!window)
+        return nullptr;
+
+    auto cd = QQuickWindowPrivate::get(window);
+
+    if (resource == PainterResource)
+        return window->isSceneGraphInitialized() ? static_cast<QSGSoftwareRenderContext *>(cd->context)->m_activePainter : nullptr;
+    else if (resource == RedirectPaintDevice)
+        return cd->redirect.rt.paintDevice;
 
     return nullptr;
 }

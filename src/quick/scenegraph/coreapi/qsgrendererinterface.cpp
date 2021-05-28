@@ -159,6 +159,11 @@ QT_BEGIN_NAMESPACE
     by the scenegraph, describing the color and depth/stecil attachments and
     how they are used. For example, a \c{VkRenderPass *}. This value was
     introduced in Qt 5.14.
+
+    \value RedirectPaintDevice The resource is a pointer to QPaintDevice instance
+    that is associated with the window and its QQuickRenderControl. The value is
+    null when the window is not associated with a QQuickRenderControl. This value
+    was introduced in Qt 6.4.
  */
 
 /*!

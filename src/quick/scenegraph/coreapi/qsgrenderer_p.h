@@ -68,6 +68,16 @@ class QRhiResourceUpdateBatch;
 Q_QUICK_PRIVATE_EXPORT bool qsg_test_and_clear_fatal_render_error();
 Q_QUICK_PRIVATE_EXPORT void qsg_set_fatal_renderer_error();
 
+class Q_QUICK_PRIVATE_EXPORT QSGRenderTarget
+{
+public:
+    QSGRenderTarget(QRhiRenderTarget *rt = nullptr);
+
+    QRhiRenderTarget *rt = nullptr;
+    QRhiRenderPassDescriptor *rpDesc = nullptr;
+    QPaintDevice *paintDevice = nullptr;
+};
+
 class Q_QUICK_PRIVATE_EXPORT QSGRenderer : public QSGAbstractRenderer
 {
 public:
@@ -105,14 +115,16 @@ public:
     QRhiResourceUpdateBatch *currentResourceUpdateBatch() const { return m_current_resource_update_batch; }
     QRhi *currentRhi() const { return m_rhi; }
 
-    void setRenderTarget(QRhiRenderTarget *rt) { m_rt = rt; }
-    QRhiRenderTarget *renderTarget() const { return m_rt; }
+    // It is the caller's responsibility to ensure that the native resource exists as long as necessary.
+    void setRenderTarget(const QSGRenderTarget &rt) { m_rt = rt; }
+    const QSGRenderTarget &renderTarget() const { return m_rt; }
+    QRhiRenderTarget *rhiRenderTarget() const { return m_rt.rt; }
 
     void setCommandBuffer(QRhiCommandBuffer *cb) { m_cb = cb; }
     QRhiCommandBuffer *commandBuffer() const { return m_cb; }
 
-    void setRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc) { m_rp_desc = rpDesc; }
-    QRhiRenderPassDescriptor *renderPassDescriptor() const { return m_rp_desc; }
+    void setRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc) { m_rt.rpDesc = rpDesc; }
+    QRhiRenderPassDescriptor *renderPassDescriptor() const { return m_rt.rpDesc; }
 
     void setExternalRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc) {
         // no differentiation needed anymore
@@ -151,9 +163,8 @@ protected:
     QByteArray *m_current_uniform_data;
     QRhiResourceUpdateBatch *m_current_resource_update_batch;
     QRhi *m_rhi;
-    QRhiRenderTarget *m_rt;
     QRhiCommandBuffer *m_cb;
-    QRhiRenderPassDescriptor *m_rp_desc;
+    QSGRenderTarget m_rt;
     struct {
         QSGRenderContext::RenderPassCallback start = nullptr;
         QSGRenderContext::RenderPassCallback end = nullptr;

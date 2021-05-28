@@ -2246,7 +2246,7 @@ QRhiGraphicsPipeline *Renderer::buildStencilPipeline(const Batch *batch, bool fi
     QRhiGraphicsPipeline::TargetBlend blend;
     blend.colorWrite = {};
     ps->setTargetBlends({ blend });
-    ps->setSampleCount(renderTarget()->sampleCount());
+    ps->setSampleCount(rhiRenderTarget()->sampleCount());
     ps->setStencilTest(true);
     QRhiGraphicsPipeline::StencilOpState stencilOp;
     if (firstStencilClipInBatch) {
@@ -3515,7 +3515,7 @@ void Renderer::render()
 {
     // Gracefully handle the lack of a render target - some autotests may rely
     // on this in odd cases.
-    if (!renderTarget())
+    if (!rhiRenderTarget())
         return;
 
     prepareRenderPass(&m_mainRenderPassContext);
@@ -3723,7 +3723,7 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
     m_gstate.usesScissor = false;
     m_gstate.stencilTest = false;
 
-    m_gstate.sampleCount = renderTarget()->sampleCount();
+    m_gstate.sampleCount = rhiRenderTarget()->sampleCount();
 
     ctx->opaqueRenderBatches.clear();
     if (Q_LIKELY(renderOpaque)) {
@@ -3788,7 +3788,7 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
 
 void Renderer::beginRenderPass(RenderPassContext *)
 {
-    commandBuffer()->beginPass(renderTarget(), m_pstate.clearColor, m_pstate.dsClear, nullptr,
+    commandBuffer()->beginPass(rhiRenderTarget(), m_pstate.clearColor, m_pstate.dsClear, nullptr,
                                // we cannot tell if the application will have
                                // native rendering thrown in to this pass
                                // (QQuickWindow::beginExternalCommands()), so

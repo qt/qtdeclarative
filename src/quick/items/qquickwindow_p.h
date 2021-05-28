@@ -115,6 +115,7 @@ public:
     QRhiTexture *texture = nullptr;
     QRhiRenderBuffer *renderBuffer = nullptr;
     QRhiRenderBuffer *depthStencil = nullptr;
+    QPaintDevice *paintDevice = nullptr;
     bool owns = false;
 };
 

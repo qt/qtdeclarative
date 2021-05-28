@@ -495,12 +495,16 @@ void forceUpdate(QQuickItem *item)
 
 void QQuickWindowRenderTarget::reset(QRhi *rhi)
 {
-    if (rhi && owns) {
-        delete renderTarget;
-        delete rpDesc;
-        delete texture;
-        delete renderBuffer;
-        delete depthStencil;
+    if (owns) {
+        if (rhi) {
+            delete renderTarget;
+            delete rpDesc;
+            delete texture;
+            delete renderBuffer;
+            delete depthStencil;
+        }
+
+        delete paintDevice;
     }
 
     renderTarget = nullptr;
@@ -508,6 +512,7 @@ void QQuickWindowRenderTarget::reset(QRhi *rhi)
     texture = nullptr;
     renderBuffer = nullptr;
     depthStencil = nullptr;
+    paintDevice = nullptr;
     owns = false;
 }
 
@@ -526,7 +531,7 @@ void QQuickWindowPrivate::ensureCustomRenderTarget()
 {
     // resolve() can be expensive when importing an existing native texture, so
     // it is important to only do it when the QQuickRenderTarget* was really changed
-    if (!redirect.renderTargetDirty || !rhi)
+    if (!redirect.renderTargetDirty)
         return;
 
     redirect.renderTargetDirty = false;
@@ -624,8 +629,9 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
     if (!renderer)
         return;
 
+    ensureCustomRenderTarget();
+
     if (rhi) {
-        ensureCustomRenderTarget();
         QRhiRenderTarget *rt;
         QRhiRenderPassDescriptor *rp;
         QRhiCommandBuffer *cb;
@@ -650,12 +656,22 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             rp = rpDescForSwapchain;
             cb = swapchain->currentFrameCommandBuffer();
         }
-        context->beginNextRhiFrame(renderer, rt, rp, cb,
+
+        QSGRenderTarget sgRenderTarget;
+        sgRenderTarget.rt = rt;
+        sgRenderTarget.rpDesc = rp;
+
+        context->beginNextRhiFrame(renderer, sgRenderTarget, cb,
                                    emitBeforeRenderPassRecording,
                                    emitAfterRenderPassRecording,
                                    q);
     } else {
-        context->beginNextFrame(renderer,
+        QSGRenderTarget sgRenderTarget;
+        sgRenderTarget.rt = redirect.rt.renderTarget;
+        sgRenderTarget.rpDesc = redirect.rt.rpDesc;
+        sgRenderTarget.paintDevice = redirect.rt.paintDevice;
+
+        context->beginNextFrame(renderer, sgRenderTarget,
                                 emitBeforeRenderPassRecording,
                                 emitAfterRenderPassRecording,
                                 q);
@@ -674,6 +690,8 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
     QSize pixelSize;
     if (redirect.rt.renderTarget)
         pixelSize = redirect.rt.renderTarget->pixelSize();
+    else if (redirect.rt.paintDevice)
+        pixelSize = QSize(redirect.rt.paintDevice->width(), redirect.rt.paintDevice->height());
     else if (surfaceSize.isEmpty())
         pixelSize = size * devicePixelRatio;
     else

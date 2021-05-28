@@ -90,6 +90,7 @@ class QSGImageNode;
 class QSGNinePatchNode;
 class QSGSpriteNode;
 class QSGRenderContext;
+class QSGRenderTarget;
 class QRhi;
 class QRhiRenderTarget;
 class QRhiRenderPassDescriptor;
@@ -180,15 +181,15 @@ public:
                              QRhiCommandBuffer *cb,
                              const QQuickGraphicsConfiguration &config);
 
-    virtual void beginNextFrame(QSGRenderer *renderer,
+    virtual void beginNextFrame(QSGRenderer *renderer, const QSGRenderTarget &renderTarget,
                                 RenderPassCallback mainPassRecordingStart,
                                 RenderPassCallback mainPassRecordingEnd,
                                 void *callbackUserData);
     virtual void renderNextFrame(QSGRenderer *renderer) = 0;
     virtual void endNextFrame(QSGRenderer *renderer);
 
-    virtual void beginNextRhiFrame(QSGRenderer *renderer,
-                                   QRhiRenderTarget *rt, QRhiRenderPassDescriptor *rp, QRhiCommandBuffer *cb,
+    virtual void beginNextRhiFrame(QSGRenderer *renderer, const QSGRenderTarget &renderTarget,
+                                   QRhiCommandBuffer *cb,
                                    RenderPassCallback mainPassRecordingStart,
                                    RenderPassCallback mainPassRecordingEnd,
                                    void *callbackUserData);
