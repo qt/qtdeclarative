@@ -48,7 +48,7 @@
 
     \list
         \li \l {Qt Core}
-        \li \l {Qt QML Types}
+        \li \l {Qt QML QML Types}{Base QML Types}
     \endlist
 
     \noautolist

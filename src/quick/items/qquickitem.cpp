@@ -2139,15 +2139,15 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
 /*!
     \variable QQuickItem::ItemChangeData::realValue
     The numeric value that has changed: \l {QQuickItem::opacity()}{opacity},
-    \l {QQuickItem::rotation()}{rotation} or
+    \l {QQuickItem::rotation()}{rotation}, or
     \l {QScreen::devicePixelRatio}{device pixel ratio}.
     \sa QQuickItem::ItemChange
  */
 
 /*!
     \variable QQuickItem::ItemChangeData::boolValue
-    The boolean value that has changed: \l {QQuickItem::visible()}{visible},
-    \l {QQuickItem::enabled()}{enabled}, \l {QQuickItem::activeFocus()}{activeFocus}
+    The boolean value that has changed: \l {QQuickItem::isVisible()}{visible},
+    \l {QQuickItem::isEnabled()}{enabled}, \l {QQuickItem::hasActiveFocus()}{activeFocus},
     or \l {QQuickItem::antialiasing()}{antialiasing}.
     \sa QQuickItem::ItemChange
  */

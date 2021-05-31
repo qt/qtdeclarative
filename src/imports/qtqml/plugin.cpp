@@ -42,22 +42,6 @@
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmlmodule QtQml 2.\QtMinorVersion
-    \title Qt QML Base Types
-    \ingroup qmlmodules
-    \brief Provides basic QML types
-    \since 5.0
-
-    This QML module contains basic QML types.
-
-    To use the types in this module, import the module with the following line:
-
-    \qml
-    import QtQml
-    \endqml
-*/
-
 //![class decl]
 class QtQmlPlugin : public QQmlEngineExtensionPlugin
 {

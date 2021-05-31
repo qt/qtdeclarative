@@ -48,7 +48,7 @@
 
 /*!
     \qmltype Layout
-    \instantiates QQuickLayoutAttached
+    //! \instantiates QQuickLayoutAttached
     \inqmlmodule QtQuick.Layouts
     \ingroup layouts
     \brief Provides attached properties for items pushed onto a \l GridLayout,

@@ -619,7 +619,7 @@ QJSValue QJSEngine::importModule(const QString &fileName)
 }
 
 /*!
-    Register a QJSValue to serve as a module. After this function is called,
+    Registers a QJSValue to serve as a module. After this function is called,
     all modules that import \a moduleName will import the value of \a value
     instead of loading \a moduleName from the filesystem.
 
@@ -630,14 +630,16 @@ QJSValue QJSEngine::importModule(const QString &fileName)
 
     Because this allows modules that do not exist on the filesystem to be imported,
     scripting applications can use this to provide built-in modules, similar to
-    Node.js
+    Node.js.
+
+    Returns \c true on success, \c false otherwise.
 
     \note The QJSValue \a value is not called or read until it is used by another module.
     This means that there is no code to evaluate, so no errors will be seen until
     another module throws an exception while trying to load this module.
 
     \warning Attempting to access a named export from a QJSValue that is not an
-    object will trigger a \l{Script Exception}{exception}.
+    object will trigger a \l{Script Exceptions}{exception}.
 
     \sa importModule()
  */
@@ -671,7 +673,7 @@ QJSValue QJSEngine::newObject()
 
   The prototype of the created object will be the Symbol prototype object.
 
-  \sa newString()
+  \sa newObject()
 */
 QJSValue QJSEngine::newSymbol(const QString &name)
 {
