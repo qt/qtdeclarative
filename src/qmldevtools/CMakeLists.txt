@@ -1,10 +1,10 @@
 # Generated from qmldevtools.pro.
 
 #####################################################################
-## QmlDevTools Module:
+## QmlDevToolsPrivate Module:
 #####################################################################
 
-qt_internal_add_module(QmlDevTools
+qt_internal_add_module(QmlDevToolsPrivate
     STATIC
     INTERNAL_MODULE
     NO_SYNC_QT
@@ -51,10 +51,10 @@ qt_internal_add_module(QmlDevTools
 # special case begin
 # Need to generate the parser files as in Qml module.
 set(_qt_qlalr_flags "--no-debug" "--qt")
-qt_process_qlalr(QmlDevTools "${CMAKE_CURRENT_SOURCE_DIR}/../qml/parser/qqmljs.g" "${_qt_qlalr_flags}")
+qt_process_qlalr(QmlDevToolsPrivate "${CMAKE_CURRENT_SOURCE_DIR}/../qml/parser/qqmljs.g" "${_qt_qlalr_flags}")
 
 # Need to propagate some of the include directories from Qml via QmlDevToolsPrivate
-# for other tools, and also for the main QmlDevTools module,
+# for other tools, and also for the main QmlDevToolsPrivate module,
 # until we fix the script to handle internal_module to create only one single Private module.
 qt_internal_module_info(qml_module "Qml")
 if(QT_FEATURE_framework)
@@ -73,7 +73,7 @@ else()
             $<BUILD_INTERFACE:${qml_module_include_dir}/${PROJECT_VERSION}/${qml_module}>
         )
 endif()
-target_include_directories(QmlDevTools PUBLIC ${_qml_dev_tools_private_includes})
+target_include_directories(QmlDevToolsPrivate PUBLIC ${_qml_dev_tools_private_includes})
 if(QT_FEATURE_framework)
     set(_qml_fw_headers_dir lib/${qml_module}.framework/Headers)
     set(_qml_dev_tools_public_includes
@@ -88,16 +88,16 @@ else()
             $<INSTALL_INTERFACE:${INSTALL_INCLUDEDIR}/${qml_module}/${PROJECT_VERSION}/${qml_module}>
         )
 endif()
-target_include_directories(QmlDevTools PUBLIC ${_qml_dev_tools_public_includes})
+target_include_directories(QmlDevToolsPrivate PUBLIC ${_qml_dev_tools_public_includes})
 
 # We build the qlalr sources into qmldevtools, so there's no link-time
-# dependency to QtQml. However we also include files in QmlDevTools such
+# dependency to QtQml. However we also include files in QmlDevToolsPrivate such
 # as qqmlirbuilder.cpp that include <private/qqmljsgrammar_p.h> that
 # originate from QtQml. That particular header was created at cmake time
 # via syncqt, but it's just a forwarding header that in turn includes
 # the generated file. That generated file is created when building
 # QtQml, so we must depend on it:
-add_dependencies(QmlDevTools Qml)
+add_dependencies(QmlDevToolsPrivate Qml)
 # special case end
 
 #### Keys ignored in scope 1:.:.:qmldevtools.pro:<TRUE>:
@@ -129,7 +129,7 @@ add_dependencies(QmlDevTools Qml)
 # QML_COMPILE_HASH = "$$commit"
 # commit = "$$system(git rev-parse HEAD)"
 
-qt_internal_extend_target(QmlDevTools CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STREQUAL 5
+qt_internal_extend_target(QmlDevToolsPrivate CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STREQUAL 5
     COMPILE_OPTIONS
         -fno-strict-aliasing
 )
