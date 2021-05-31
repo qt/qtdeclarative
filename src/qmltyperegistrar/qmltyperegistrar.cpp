@@ -197,7 +197,7 @@ int main(int argc, char **argv)
 
     const QString functionName = QStringLiteral("qml_register_types_") + moduleAsSymbol;
 
-    fprintf(output, "void %s()\n{", qPrintable(functionName));
+    fprintf(output, "Q_DECL_EXPORT void %s()\n{", qPrintable(functionName));
     const auto majorVersion = parser.value(majorVersionOption);
     const auto pastMajorVersions = parser.values(pastMajorVersionOption);
     const auto minorVersion = parser.value(minorVersionOption);
