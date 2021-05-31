@@ -1,10 +1,25 @@
-# Generated from quickcontrols2.pro.
-
 #####################################################################
 ## QuickControls2 Module:
 #####################################################################
 
-qt_internal_add_module(QuickControls2
+qt_internal_add_qml_module(QuickControls2
+    URI "QtQuick.Controls"
+    VERSION "${PROJECT_VERSION}"
+    DESIGNER_SUPPORTED
+    CLASS_NAME QtQuickControls2Plugin
+    PLUGIN_TARGET qtquickcontrols2plugin
+    IMPORTS
+        QtQuick.Controls.impl/auto
+    OPTIONAL_IMPORTS
+        QtQuick.Controls.Basic/auto
+        QtQuick.Controls.Fusion/auto
+        QtQuick.Controls.Material/auto
+        QtQuick.Controls.Imagine/auto
+        QtQuick.Controls.Universal/auto
+        QtQuick.Controls.Windows/auto
+        QtQuick.Controls.macOS/auto
+    NO_PLUGIN_OPTIONAL
+    NO_GENERATE_PLUGIN_SOURCE
     SOURCES
         qquickdummyregistration_p.h
         qquickstyle.cpp qquickstyle.h qquickstyle_p.h
@@ -25,19 +40,33 @@ qt_internal_add_module(QuickControls2
         Qt::Quick
 )
 
-#### Keys ignored in scope 1:.:.:quickcontrols2.pro:<TRUE>:
-# MODULE = "quickcontrols2"
-# QMLTYPES_FILENAME = "plugins.qmltypes"
-# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick/Controls"
-# QML_IMPORT_NAME = "QtQuick.Controls"
-# QML_IMPORT_VERSION = "$$QT_VERSION"
-
-set_target_properties(QuickControls2 PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQuick.Controls
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick/Controls"
+qt_internal_extend_target(qtquickcontrols2plugin
+    SOURCES
+        qtquickcontrols2plugin.cpp
+    LIBRARIES
+        Qt::QuickControls2ImplPrivate
+        Qt::QuickControls2Private
+        Qt::QuickTemplates2Private
 )
 
-qt6_qml_type_registration(QuickControls2)
+if(QT_FEATURE_quick_designer)
+    add_subdirectory(designer)
+endif()
+
+add_subdirectory(basic)
+add_subdirectory(fusion)
+add_subdirectory(imagine)
+add_subdirectory(material)
+add_subdirectory(universal)
+
+if(MACOS)
+    add_subdirectory(macos)
+endif()
+
+if(WIN32)
+    add_subdirectory(windows)
+endif()
+
+qt_internal_add_docs(QuickControls2
+    doc/qtquickcontrols.qdocconf
+)

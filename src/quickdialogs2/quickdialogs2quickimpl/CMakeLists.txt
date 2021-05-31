@@ -2,7 +2,36 @@
 ## QuickDialogs2QuickImpl Module:
 #####################################################################
 
-qt_internal_add_module(QuickDialogs2QuickImpl
+set(qml_files
+    "qml/FileDialog.qml"
+    "qml/FileDialogDelegate.qml"
+    "qml/FileDialogDelegateLabel.qml"
+    "qml/FolderBreadcrumbBar.qml"
+    "qml/FontDialog.qml"
+    "qml/FontDialogContent.qml"
+    "qml/+Fusion/FileDialog.qml"
+    "qml/+Fusion/FileDialogDelegate.qml"
+    "qml/+Fusion/FolderBreadcrumbBar.qml"
+    "qml/+Fusion/FontDialog.qml"
+    "qml/+Imagine/FileDialog.qml"
+    "qml/+Imagine/FileDialogDelegate.qml"
+    "qml/+Imagine/FolderBreadcrumbBar.qml"
+    "qml/+Imagine/FontDialog.qml"
+    "qml/+Material/FileDialog.qml"
+    "qml/+Material/FileDialogDelegate.qml"
+    "qml/+Material/FolderBreadcrumbBar.qml"
+    "qml/+Material/FontDialog.qml"
+    "qml/+Universal/FileDialog.qml"
+    "qml/+Universal/FileDialogDelegate.qml"
+    "qml/+Universal/FolderBreadcrumbBar.qml"
+    "qml/+Universal/FontDialog.qml"
+)
+
+qt_internal_add_qml_module(QuickDialogs2QuickImpl
+    URI "QtQuick.Dialogs.quickimpl"
+    VERSION "${PROJECT_VERSION}"
+    CLASS_NAME QtQuickDialogs2QuickImplPlugin
+    PLUGIN_TARGET qtquickdialogs2quickimplplugin
     SOURCES
         qquickdialogimplfactory.cpp
         qquickdialogimplfactory_p.h
@@ -23,6 +52,8 @@ qt_internal_add_module(QuickDialogs2QuickImpl
         qquickfontdialogimpl_p.h
         qquickfontdialogimpl_p_p.h
         qquickfontdialogimpl.cpp
+    QML_FILES
+        ${qml_files}
     DEFINES
         QT_BUILD_QUICKDIALOGS2QUICKIMPL_LIB
         QT_NO_CAST_FROM_ASCII
@@ -100,28 +131,6 @@ set(qtquickdialogs2quickimpl_resource_files
     "images/up-icon-thick-square@2x.png"
     "images/up-icon-thick-square@3x.png"
     "images/up-icon-thick-square@4x.png"
-    "qml/FileDialog.qml"
-    "qml/FileDialogDelegate.qml"
-    "qml/FileDialogDelegateLabel.qml"
-    "qml/FolderBreadcrumbBar.qml"
-    "qml/FontDialog.qml"
-    "qml/FontDialogContent.qml"
-    "qml/+Fusion/FileDialog.qml"
-    "qml/+Fusion/FileDialogDelegate.qml"
-    "qml/+Fusion/FolderBreadcrumbBar.qml"
-    "qml/+Fusion/FontDialog.qml"
-    "qml/+Imagine/FileDialog.qml"
-    "qml/+Imagine/FileDialogDelegate.qml"
-    "qml/+Imagine/FolderBreadcrumbBar.qml"
-    "qml/+Imagine/FontDialog.qml"
-    "qml/+Material/FileDialog.qml"
-    "qml/+Material/FileDialogDelegate.qml"
-    "qml/+Material/FolderBreadcrumbBar.qml"
-    "qml/+Material/FontDialog.qml"
-    "qml/+Universal/FileDialog.qml"
-    "qml/+Universal/FileDialogDelegate.qml"
-    "qml/+Universal/FolderBreadcrumbBar.qml"
-    "qml/+Universal/FontDialog.qml"
 )
 
 qt_internal_add_resource(QuickDialogs2QuickImpl "QuickDialogs2QuickImpl"
@@ -130,16 +139,3 @@ qt_internal_add_resource(QuickDialogs2QuickImpl "QuickDialogs2QuickImpl"
     FILES
         ${qtquickdialogs2quickimpl_resource_files}
 )
-
-## Scopes:
-#####################################################################
-
-set_target_properties(QuickDialogs2QuickImpl PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQuick.Dialogs.quickimpl
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick/Dialogs/quickimpl"
-)
-
-qt6_qml_type_registration(QuickDialogs2QuickImpl)

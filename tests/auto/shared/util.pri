@@ -11,4 +11,4 @@ android|ios {
 } else {
     DEFINES += QT_QMLTEST_DATADIR=\\\"$${_PRO_FILE_PWD_}/data\\\"
 }
-DEFINES += QQC2_IMPORT_PATH=\\\"$$QQC2_SOURCE_TREE/src/imports\\\"
+DEFINES += QQC2_IMPORT_PATH=\\\"$$QQC2_SOURCE_TREE/src\\\"

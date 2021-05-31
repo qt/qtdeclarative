@@ -1,3 +1,0 @@
-module QtQuick.Dialogs
-plugin qtquickdialogsplugin
-classname QtQuickDialogsPlugin

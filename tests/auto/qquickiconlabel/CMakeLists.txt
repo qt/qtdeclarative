@@ -17,7 +17,7 @@ qt_internal_add_test(tst_qquickiconlabel
         ../shared/visualtestutil.cpp ../shared/visualtestutil.h
         tst_qquickiconlabel.cpp
     DEFINES
-        QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../src/imports\\\"
+        QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../src\\\"
     LIBRARIES
         Qt::QuickControls2ImplPrivate
         Qt::QuickPrivate

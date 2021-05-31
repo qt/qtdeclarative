@@ -1,10 +1,16 @@
-# Generated from quicktemplates2.pro.
-
 #####################################################################
 ## QuickTemplates2 Module:
 #####################################################################
 
-qt_internal_add_module(QuickTemplates2
+qt_internal_add_qml_module(QuickTemplates2
+    URI "QtQuick.Templates"
+    VERSION "${PROJECT_VERSION}"
+    CLASSNAME QtQuickTemplates2Plugin
+    DEPENDENCIES
+        QtQuick/auto
+    PLUGIN_TARGET qtquicktemplates2plugin
+    NO_PLUGIN_OPTIONAL
+    NO_GENERATE_PLUGIN_SOURCE
     SOURCES
         accessible/qaccessiblequickpage.cpp accessible/qaccessiblequickpage_p.h
         qquickabstractbutton.cpp qquickabstractbutton_p.h
@@ -131,16 +137,6 @@ qt_internal_add_module(QuickTemplates2
         Qt::Quick
 )
 
-#### Keys ignored in scope 1:.:.:quicktemplates2.pro:<TRUE>:
-# MODULE = "quicktemplates2"
-# QMLTYPES_FILENAME = "plugins.qmltypes"
-# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick/Templates"
-# QML_IMPORT_NAME = "QtQuick.Templates"
-# QML_IMPORT_VERSION = "$$QT_VERSION"
-
-## Scopes:
-#####################################################################
-
 qt_internal_extend_target(QuickTemplates2 CONDITION TARGET Qt::QmlModels
     LIBRARIES
         Qt::QmlModelsPrivate
@@ -156,12 +152,9 @@ qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quick_listview AN
         qquicktumbler_p_p.h
 )
 
-set_target_properties(QuickTemplates2 PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQuick.Templates
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick/Templates"
+qt_internal_extend_Target(qtquicktemplates2plugin
+    SOURCES
+        qtquicktemplates2plugin.cpp
+    LIBRARIES
+        Qt::QuickTemplates2Private
 )
-
-qt6_qml_type_registration(QuickTemplates2)

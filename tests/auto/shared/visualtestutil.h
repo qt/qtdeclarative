@@ -154,6 +154,7 @@ namespace QQuickVisualTestUtil
             QQmlComponent component(&engine);
 
             component.loadUrl(testCase->testFileUrl(testFilePath));
+            QVERIFY2(component.isReady(), qPrintable(component.errorString()));
             QObject *rootObject = component.createWithInitialProperties(initialProperties);
             cleanup.reset(rootObject);
             if (component.isError() || !rootObject) {

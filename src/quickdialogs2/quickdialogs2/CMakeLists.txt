@@ -2,7 +2,11 @@
 ## QuickDialogs2 Module:
 #####################################################################
 
-qt_internal_add_module(QuickDialogs2
+qt_internal_add_qml_module(QuickDialogs2
+    URI "QtQuick.Dialogs"
+    VERSION "${PROJECT_VERSION}"
+    CLASS_NAME QtQuickDialogsPlugin
+    PLUGIN_TARGET qtquickdialogsplugin
     SOURCES
         qquickabstractdialog.cpp
         qquickabstractdialog_p.h
@@ -31,15 +35,6 @@ qt_internal_add_module(QuickDialogs2
         Qt::Quick
 )
 
-## Scopes:
-#####################################################################
-
-set_target_properties(QuickDialogs2 PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${CMAKE_PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQuick.Dialogs
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick/Dialogs"
+qt_internal_add_docs(QuickDialogs2
+    doc/qtquickdialogs.qdocconf
 )
-
-qt6_qml_type_registration(QuickDialogs2)

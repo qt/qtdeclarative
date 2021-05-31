@@ -171,10 +171,10 @@ void tst_Sanity::initTestCase()
 
     // Then, collect the files from each installed style directory.
     const QVector<QPair<QString, QString>> styleRelativePaths = {
-        { "controls/basic", "QtQuick/Controls/Basic" },
-        { "controls/fusion", "QtQuick/Controls/Fusion" },
-        { "controls/material", "QtQuick/Controls/Material" },
-        { "controls/universal", "QtQuick/Controls/Universal" },
+        { "quickcontrols2/basic", "QtQuick/Controls/Basic" },
+        { "quickcontrols2/fusion", "QtQuick/Controls/Fusion" },
+        { "quickcontrols2/material", "QtQuick/Controls/Material" },
+        { "quickcontrols2/universal", "QtQuick/Controls/Universal" },
     };
     for (const auto &stylePathPair : styleRelativePaths) {
         forEachControl(&engine, stylePathPair.first, stylePathPair.second, QStringList(),

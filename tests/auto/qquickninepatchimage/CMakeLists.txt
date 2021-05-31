@@ -21,7 +21,7 @@ qt_internal_add_test(tst_qquickninepatchimage
         ../shared/visualtestutil.cpp ../shared/visualtestutil.h
         tst_qquickninepatchimage.cpp
     DEFINES
-        QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../src/imports\\\"
+        QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../src\\\"
     LIBRARIES
         Qt::GuiPrivate
         Qt::QuickControls2Private

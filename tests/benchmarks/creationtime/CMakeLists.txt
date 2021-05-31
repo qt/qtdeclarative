@@ -11,7 +11,7 @@ qt_internal_add_test(tst_creationtime
         ../../auto/shared/visualtestutil.cpp ../../auto/shared/visualtestutil.h
         tst_creationtime.cpp
     DEFINES
-        QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../src/imports\\\"
+        QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../src\\\"
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
