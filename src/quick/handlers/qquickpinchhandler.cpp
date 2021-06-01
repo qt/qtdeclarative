@@ -248,11 +248,11 @@ void QQuickPinchHandler::onActiveChanged()
 
 void QQuickPinchHandler::handlePointerEventImpl(QPointerEvent *event)
 {
+    QQuickMultiPointHandler::handlePointerEventImpl(event);
     if (Q_UNLIKELY(lcPinchHandler().isDebugEnabled())) {
         for (const QQuickHandlerPoint &p : currentPoints())
             qCDebug(lcPinchHandler) << Qt::hex << p.id() << p.sceneGrabPosition() << "->" << p.scenePosition();
     }
-    QQuickMultiPointHandler::handlePointerEventImpl(event);
 
     qreal dist = 0;
 #if QT_CONFIG(gestures)

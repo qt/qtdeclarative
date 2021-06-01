@@ -40,6 +40,12 @@
 
 Q_LOGGING_CATEGORY(lcPointerTests, "qt.quick.pointer.tests")
 
+class PinchHandler : public QQuickPinchHandler {
+public:
+    const QQuickHandlerPoint &firstPoint() { return currentPoints().first(); }
+    const QQuickHandlerPoint &lastPoint() { return currentPoints().last(); }
+};
+
 class tst_QQuickPinchHandler: public QQmlDataTest
 {
     Q_OBJECT
@@ -209,7 +215,7 @@ void tst_QQuickPinchHandler::scale()
     QVERIFY(window->rootObject() != nullptr);
     qApp->processEvents();
 
-    QQuickPinchHandler *pinchHandler = window->rootObject()->findChild<QQuickPinchHandler*>("pinchHandler");
+    auto *pinchHandler = static_cast<PinchHandler *>(window->rootObject()->findChild<QQuickPinchHandler*>("pinchHandler"));
     QVERIFY(pinchHandler != nullptr);
     QSignalSpy grabChangedSpy(pinchHandler, SIGNAL(grabChanged(QPointingDevice::GrabTransition, QEventPoint)));
 
@@ -243,6 +249,11 @@ void tst_QQuickPinchHandler::scale()
             QQuickTouchUtils::flush(window);
         }
         QCOMPARE(pinchHandler->active(), true);
+        // grabs occur when the handler becomes active; at that time, QQuickHandlerPoint.sceneGrabPosition should be correct
+        QVERIFY(pinchHandler->firstPoint().sceneGrabPosition() != QPointF());
+        QVERIFY(pinchHandler->lastPoint().sceneGrabPosition() != QPointF());
+        QCOMPARE(pinchHandler->firstPoint().sceneGrabPosition(), pinchHandler->firstPoint().scenePosition());
+        QCOMPARE(pinchHandler->lastPoint().sceneGrabPosition(), pinchHandler->lastPoint().scenePosition());
         // first point got a passive grab; both points got exclusive grabs
         QCOMPARE(grabChangedSpy.count(), 3);
         QLineF line(p0, p1);

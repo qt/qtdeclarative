@@ -158,6 +158,13 @@ void QQuickMultiPointHandler::onGrabChanged(QQuickPointerHandler *grabber, QPoin
         return;
     switch (transition) {
     case QPointingDevice::GrabExclusive:
+        for (auto &pt : d->currentPoints)
+            if (pt.id() == point.id()) {
+                pt.m_sceneGrabPosition = point.scenePosition();
+                break;
+            }
+        QQuickPointerHandler::onGrabChanged(grabber, transition, event, point);
+        break;
     case QPointingDevice::GrabPassive:
     case QPointingDevice::UngrabPassive:
     case QPointingDevice::UngrabExclusive:
