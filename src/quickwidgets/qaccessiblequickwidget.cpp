@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qaccessiblequickwidget.h"
+#include "qaccessiblequickwidget_p.h"
 
 #include "qquickwidget_p.h"
 

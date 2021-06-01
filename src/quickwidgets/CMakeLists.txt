@@ -34,7 +34,7 @@ qt_internal_add_module(QuickWidgets
 
 qt_internal_extend_target(QuickWidgets CONDITION QT_FEATURE_accessibility
     SOURCES
-        qaccessiblequickwidget.cpp qaccessiblequickwidget.h
+        qaccessiblequickwidget.cpp qaccessiblequickwidget_p.h
         qaccessiblequickwidgetfactory.cpp qaccessiblequickwidgetfactory_p.h
 )
 

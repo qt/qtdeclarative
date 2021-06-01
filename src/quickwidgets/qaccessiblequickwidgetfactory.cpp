@@ -38,7 +38,7 @@
 ****************************************************************************/
 
 #include "qaccessiblequickwidgetfactory_p.h"
-#include "qaccessiblequickwidget.h"
+#include "qaccessiblequickwidget_p.h"
 
 QT_BEGIN_NAMESPACE
 
