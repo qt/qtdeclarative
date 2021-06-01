@@ -101,7 +101,6 @@ protected:
 private:
     void ungrab();
     void enforceAxisConstraints(QPointF *localPos);
-    bool targetContainsCentroid();
     QPointF targetCentroidPosition();
 
 private:

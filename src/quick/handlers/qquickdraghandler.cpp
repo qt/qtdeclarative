@@ -96,12 +96,6 @@ QQuickDragHandler::QQuickDragHandler(QQuickItem *parent)
 {
 }
 
-bool QQuickDragHandler::targetContainsCentroid()
-{
-    Q_ASSERT(parentItem() && target());
-    return target()->contains(targetCentroidPosition());
-}
-
 QPointF QQuickDragHandler::targetCentroidPosition()
 {
     QPointF pos = centroid().position();
