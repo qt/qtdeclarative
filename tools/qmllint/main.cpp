@@ -42,6 +42,10 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qdiriterator.h>
+#include <QtCore/qjsonobject.h>
+#include <QtCore/qjsonarray.h>
+#include <QtCore/qjsondocument.h>
+#include <QtCore/qscopeguard.h>
 
 #if QT_CONFIG(commandlineparser)
 #include <QtCore/qcommandlineparser.h>
@@ -51,14 +55,78 @@
 #include <QtCore/qlibraryinfo.h>
 #endif
 
-static bool lint_file(const QString &filename, const bool silent, const QStringList &qmlImportPaths,
-                      const QStringList &qmltypesFiles, const QString &resourceFile,
+#include <cstdio>
+
+constexpr int JSON_LOGGING_FORMAT_REVISION = 1;
+
+static bool lint_file(const QString &filename, const bool silent, QJsonArray *json,
+                      const QStringList &qmlImportPaths, const QStringList &qmltypesFiles,
+                      const QString &resourceFile,
                       const QMap<QString, QQmlJSLogger::Option> &options, QQmlJSImporter &importer)
 {
+    QJsonArray warnings;
+    QJsonObject result;
+
+    bool success = true;
+
+    QScopeGuard jsonOutput([&] {
+        if (!json)
+            return;
+
+        result[u"filename"_qs] = QFileInfo(filename).absoluteFilePath();
+        result[u"warnings"] = warnings;
+        result[u"success"] = success;
+
+        json->append(result);
+    });
+
+    auto addJsonWarning = [&](const QQmlJS::DiagnosticMessage &message) {
+        QJsonObject jsonMessage;
+
+        QString type;
+        switch (message.type) {
+        case QtDebugMsg:
+            type = "debug";
+            break;
+        case QtWarningMsg:
+            type = "warning";
+            break;
+        case QtCriticalMsg:
+            type = "critical";
+            break;
+        case QtFatalMsg:
+            type = "fatal";
+            break;
+        case QtInfoMsg:
+            type = "info";
+            break;
+        default:
+            type = "unknown";
+            break;
+        }
+
+        jsonMessage[u"type"_qs] = type;
+
+        if (message.loc.isValid()) {
+            jsonMessage[u"line"_qs] = static_cast<int>(message.loc.startLine);
+            jsonMessage[u"column"_qs] = static_cast<int>(message.loc.startColumn);
+            jsonMessage[u"charOffset"_qs] = static_cast<int>(message.loc.offset);
+            jsonMessage[u"length"_qs] = static_cast<int>(message.loc.length);
+        }
+
+        jsonMessage[u"message"_qs] = message.message;
+
+        warnings << jsonMessage;
+    };
+
     QFile file(filename);
     if (!file.open(QFile::ReadOnly)) {
-        if (!silent)
+        if (json) {
+            result[u"openFailed"] = true;
+            success = false;
+        } else if (!silent) {
             qWarning() << "Failed to open file" << filename << file.error();
+        }
         return false;
     }
 
@@ -76,14 +144,20 @@ static bool lint_file(const QString &filename, const bool silent, const QStringL
     lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/ !isJavaScript);
     QQmlJS::Parser parser(&engine);
 
-    bool success = isJavaScript ? (isESModule ? parser.parseModule() : parser.parseProgram())
-                                : parser.parse();
+    success = isJavaScript ? (isESModule ? parser.parseModule() : parser.parseProgram())
+                           : parser.parse();
 
     if (!success && !silent) {
         const auto diagnosticMessages = parser.diagnosticMessages();
         for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
-            qWarning().noquote() << QString::fromLatin1("%1:%2 : %3")
-                                    .arg(filename).arg(m.loc.startLine).arg(m.message);
+            if (json) {
+                addJsonWarning(m);
+            } else {
+                qWarning().noquote() << QString::fromLatin1("%1:%2 : %3")
+                                                .arg(filename)
+                                                .arg(m.loc.startLine)
+                                                .arg(m.message);
+            }
         }
     }
 
@@ -94,7 +168,7 @@ static bool lint_file(const QString &filename, const bool silent, const QStringL
 
             importer.setResourceFileMapper(mapper);
 
-            FindWarningVisitor v { &importer, qmltypesFiles, code, filename, silent };
+            FindWarningVisitor v { &importer, qmltypesFiles, code, filename, silent || json };
 
             for (auto it = options.cbegin(); it != options.cend(); ++it) {
                 v.logger().setCategoryDisabled(it.value().m_category, it.value().m_disabled);
@@ -103,6 +177,15 @@ static bool lint_file(const QString &filename, const bool silent, const QStringL
 
             parser.rootNode()->accept(&v);
             success = v.check();
+
+            if (json) {
+                for (const auto &error : v.logger().errors())
+                    addJsonWarning(error);
+                for (const auto &warning : v.logger().warnings())
+                    addJsonWarning(warning);
+                for (const auto &info : v.logger().infos())
+                    addJsonWarning(info);
+            }
         };
 
         if (resourceFile.isEmpty()) {
@@ -140,6 +223,10 @@ All warnings can be set to three levels:
     QCommandLineOption silentOption(QStringList() << "s" << "silent",
                                     QLatin1String("Don't output syntax errors"));
     parser.addOption(silentOption);
+
+    QCommandLineOption jsonOption(QStringList() << "json",
+                                  QLatin1String("Output linting errors as JSON"));
+    parser.addOption(jsonOption);
 
     QCommandLineOption writeDefaultsOption(
             QStringList() << "write-defaults",
@@ -247,6 +334,7 @@ All warnings can be set to three levels:
     }
 
     bool silent = parser.isSet(silentOption);
+    bool useJson = parser.isSet(jsonOption);
 
     // TODO: Remove after Qt 6.2
     bool NoWarnUnqualified = parser.isSet(disableCheckUnqualified);
@@ -305,6 +393,7 @@ All warnings can be set to three levels:
 
 #else
     bool silent = false;
+    bool useJson = false;
     bool warnUnqualified = true;
     bool warnWithStatement = true;
     bool warnInheritanceCycle = true;
@@ -313,6 +402,8 @@ All warnings can be set to three levels:
 #endif
     bool success = true;
     QQmlJSImporter importer(qmlImportPaths, nullptr);
+
+    QJsonArray jsonFiles;
 
 #if QT_CONFIG(commandlineparser)
     for (const QString &filename : positionalArguments) {
@@ -324,7 +415,19 @@ All warnings can be set to three levels:
     const auto arguments = app.arguments();
     for (const QString &filename : arguments) {
 #endif
-        success &= lint_file(filename, silent, qmlImportPaths, qmltypesFiles, resourceFile, options, importer);
+        success &= lint_file(filename, silent, useJson ? &jsonFiles : nullptr, qmlImportPaths,
+                             qmltypesFiles, resourceFile, options, importer);
     }
+
+    if (useJson) {
+        QJsonObject result;
+
+        result[u"revision"_qs] = JSON_LOGGING_FORMAT_REVISION;
+        result[u"files"_qs] = jsonFiles;
+
+        QTextStream(stdout) << QString::fromUtf8(
+                QJsonDocument(result).toJson(QJsonDocument::Compact));
+    }
+
     return success ? 0 : -1;
 }
