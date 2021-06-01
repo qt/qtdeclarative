@@ -30,11 +30,15 @@
 #include <QDebug>
 
 #include <QtCore/qscopedpointer.h>
+#include <QtQml/qqml.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQuick/qquickitem.h>
+#include <QtCore/qproperty.h>
 
 #include <private/qqmlengine_p.h>
 #include <private/qqmltypedata_p.h>
+#include <private/qqmlvmemetaobject_p.h>
 
 #include "../../shared/util.h"
 
@@ -54,6 +58,9 @@ private slots:
     void propertyAlias();
     void propertyChangeHandler();
     void propertyReturningFunction();
+    void locallyImported();
+    void localImport();
+    void neighbors();
 
 private:
     void signalHandlers_impl(const QUrl &url);
@@ -95,6 +102,15 @@ static constexpr int PROPERTY_CHANGE_HANDLER_P_BINDING = 0;
 static constexpr int PROPERTY_CHANGE_HANDLER_ON_P_CHANGED = 1;
 
 static constexpr int PROPERTY_RETURNING_FUNCTION_F_BINDING = 0;
+
+static constexpr int LOCALLY_IMPORTED_GET_MAGIC_VALUE = 0;
+static constexpr int LOCALLY_IMPORTED_ON_COMPLETED = 1;
+
+static constexpr int LOCAL_IMPORT_COUNT_BINDING = 0;
+static constexpr int LOCAL_IMPORT_LOCAL_GET_MAGIC_VALUE = 1;
+
+static constexpr int NEIGHBOUR_IDS_CHILD1_P2_BINDING = 0;
+static constexpr int NEIGHBOUR_IDS_CHILD2_P_BINDING = 1;
 };
 
 // test utility function for type erasure. the "real" code would be
@@ -127,21 +143,60 @@ struct ContextRegistrator
     ContextRegistrator(QQmlEngine *engine, QObject *This)
     {
         Q_ASSERT(engine && This);
-        // if This object has a parent, it's not considered to be a root object,
-        // so it must instead have a dedicated context, but what to do when we
-        // reparent the root item to e.g. QQuickWindow::contentItem()?
+        if (QQmlContext *context = engine->contextForObject(This)) // already set
+            return;
+
+        // use simple form of the logic done in create() and set(). this code
+        // shouldn't actually be used in real generated classes. it just exists
+        // here for convenience
         Q_ASSERT(!This->parent() || engine->contextForObject(This->parent())
                  || engine->rootContext());
-        QQmlContext *context = engine->rootContext();
-        if (This->parent()) {
-            QQmlContext *parentContext = engine->contextForObject(This->parent());
-            if (parentContext)
-                context = new QQmlContext(parentContext, This);
-        }
+        QQmlContext *parentContext = engine->contextForObject(This->parent());
+        QQmlContext *context =
+                parentContext ? parentContext : new QQmlContext(engine->rootContext(), This);
         Q_ASSERT(context);
         // NB: not only sets the context, but also seeds engine into This, so
         // that qmlEngine(This) works
         engine->setContextForObject(This, context);
+        Q_ASSERT(qmlEngine(This));
+    }
+
+    static QQmlRefPointer<QQmlContextData>
+    create(QQmlEngine *engine, const QUrl &url,
+           const QQmlRefPointer<QQmlContextData> &parentContext, int index)
+    {
+        Q_ASSERT(index >= 0);
+        QQmlRefPointer<QQmlContextData> context;
+        if (index == 0) {
+            // create context the same way it is done in QQmlObjectCreator::create()
+            context = QQmlContextData::createRefCounted(parentContext);
+            context->setInternal(true);
+            auto unit = QQmlEnginePrivate::get(engine)->compilationUnitFromUrl(url);
+            context->setImports(unit->typeNameCache);
+            context->initFromTypeCompilationUnit(unit, index);
+        } else {
+            // non-root objects adopt parent context and use that one instead of
+            // creating own
+            context = parentContext;
+            // assume context is initialized in the root object
+        }
+        return context;
+    }
+
+    static void set(QObject *This, const QQmlRefPointer<QQmlContextData> &context,
+                    QQmlContextData::QmlObjectKind kind)
+    {
+        Q_ASSERT(This);
+        QQmlData *ddata = QQmlData::get(This, /*create*/ true);
+
+        // NB: copied from QQmlObjectCreator::createInstance()
+        //
+        // the if-statement logic is: if (static_cast<quint32>(index) == 0 ||
+        // ddata->rootObjectInCreation || isInlineComponent) then
+        // QQmlContextData::DocumentRoot
+        context->installContext(ddata, kind);
+        if (kind == QQmlContextData::DocumentRoot)
+            context->setContextObject(This);
         Q_ASSERT(qmlEngine(This));
     }
 };
@@ -890,6 +945,565 @@ void tst_qmlcompiler_manual::propertyReturningFunction()
 
     created.property("f");
     QCOMPARE(created.getCounter(), 0);
+}
+
+class LocallyImported : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    Q_PROPERTY(int count READ getCount WRITE setCount BINDABLE bindableCount)
+
+protected:
+    LocallyImported(QObject *parent = nullptr) : QObject(parent) { }
+
+public:
+    // test workaround: the url is resolved by the test base class, so use
+    // member variable to store the resolved url used as argument in engine
+    // evaluation of runtime functions
+    static QUrl url;
+
+    LocallyImported(QQmlEngine *e, QObject *parent = nullptr) : LocallyImported(parent)
+    {
+        init(e, QQmlContextData::get(e->rootContext()));
+    }
+
+    QQmlRefPointer<QQmlContextData> init(QQmlEngine *e,
+                                         const QQmlRefPointer<QQmlContextData> &parentContext)
+    {
+        // NB: this object is the root object of LocallyImported.qml
+        constexpr int subComponentIndex = 0;
+        auto context = parentContext;
+        context = ContextRegistrator::create(e, url, context, subComponentIndex);
+        ContextRegistrator::set(this, context, QQmlContextData::DocumentRoot);
+        context->setIdValue(0, this);
+        count = 0;
+        finalize(e); // call here because it's document root
+        return context;
+    }
+
+    Q_INVOKABLE QVariant getMagicValue()
+    {
+        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+        const auto index = FunctionIndices::LOCALLY_IMPORTED_GET_MAGIC_VALUE;
+        constexpr int argc = 0;
+        QVariant ret {};
+        std::array<void *, argc + 1> a {};
+        std::array<QMetaType, argc + 1> t {};
+        typeEraseArguments(a, t, ret);
+        e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+        return ret;
+    }
+
+    void completedSlot() {
+        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+        const auto index = FunctionIndices::LOCALLY_IMPORTED_ON_COMPLETED;
+        constexpr int argc = 0;
+        std::array<void *, argc + 1> a {};
+        std::array<QMetaType, argc + 1> t {};
+        typeEraseArguments(a, t, nullptr);
+        e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+    }
+
+    void finalize(QQmlEngine *e)
+    {
+        Q_UNUSED(e);
+        // 1. finalize children - no children here, so do nothing
+
+        // 2. finalize self
+        completedSlot();
+    }
+
+    int getCount() { return count.value(); }
+    void setCount(int count_) { count.setValue(count_); }
+    QBindable<int> bindableCount() { return QBindable<int>(&count); }
+    QProperty<int> count;
+};
+QUrl LocallyImported::url = QUrl(); // workaround
+
+class ANON_localImport : public LocallyImported
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    Q_PROPERTY(int p1 READ getP1 WRITE setP1)
+
+protected:
+    ANON_localImport(QObject *parent = nullptr) : LocallyImported(parent) { }
+
+public:
+    // test workaround: the url is resolved by the test base class, so use
+    // member variable to store the resolved url used as argument in engine
+    // evaluation of runtime functions
+    static QUrl url;
+
+    ANON_localImport(QQmlEngine *e, QObject *parent = nullptr) : ANON_localImport(parent)
+    {
+        // NB: always use e->rootContext() as parent context in the public ctor
+        init(e, QQmlContextData::get(e->rootContext()));
+    }
+
+    QQmlRefPointer<QQmlContextData> init(QQmlEngine *e,
+                                         const QQmlRefPointer<QQmlContextData> &parentContext)
+    {
+        // init function is a multi-step procedure:
+        //
+        // 0. [optional] call base class' init() method (when base class is also
+        //    generated from QML), passing parentContext and getting back
+        //    another context
+        // 1. create child QQmlContextData from the context
+        // 2. * EITHER: patch the context to be the parent context - when this
+        //      type is not root and it has generated C++ base class
+        //    * OR: set the context for this object
+        // 3. [optional] set id by QmlIR::Object::id
+        // 4. do the simple initialization bits (e.g. set property values, etc.)
+        //    - might actually slip to finalize()?
+        // 5. [document root only] call finalize() which finalizes all types in
+        //    this document - after context and instances are set up correctly
+
+        constexpr int componentIndex = 0; // root index
+        auto context = parentContext;
+        // 0.
+        context = LocallyImported::init(e, context);
+        // 1.
+        context = ContextRegistrator::create(e, url, context, componentIndex);
+        // 2.
+        // if not root and parent is also generated C++ object, patch context
+        // context = parentContext;
+        // else:
+        ContextRegistrator::set(this, context, QQmlContextData::DocumentRoot);
+        // 3.
+        context->setIdValue(0, this);
+        // 4.
+        p1 = 41;
+        // 5.
+        finalize(e); // call here because it's document root
+        return context;
+    }
+
+    void finalize(QQmlEngine *e)
+    {
+        Q_UNUSED(e);
+        // 1. finalize children - no children here, so do nothing
+
+        // 2. finalize self
+        QPropertyBinding<int> ANON_localImport_count_binding(
+                [&]() {
+                    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+                    const auto index = FunctionIndices::LOCAL_IMPORT_COUNT_BINDING;
+                    constexpr int argc = 0;
+                    int ret {};
+                    std::array<void *, argc + 1> a {};
+                    std::array<QMetaType, argc + 1> t {};
+                    typeEraseArguments(a, t, ret);
+                    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+                    return ret;
+                },
+                QT_PROPERTY_DEFAULT_BINDING_LOCATION);
+        bindableCount().setBinding(ANON_localImport_count_binding);
+    }
+
+    int getP1() { return p1.value(); }
+    void setP1(int p1_) { p1.setValue(p1_); }
+    QProperty<int> p1;
+
+    Q_INVOKABLE QVariant localGetMagicValue()
+    {
+        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+        const auto index = FunctionIndices::LOCAL_IMPORT_LOCAL_GET_MAGIC_VALUE;
+        constexpr int argc = 0;
+        QVariant ret {};
+        std::array<void *, argc + 1> a {};
+        std::array<QMetaType, argc + 1> t {};
+        typeEraseArguments(a, t, ret);
+        e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+        return ret;
+    }
+};
+QUrl ANON_localImport::url = QUrl(); // workaround
+
+void tst_qmlcompiler_manual::locallyImported()
+{
+    QQmlEngine e;
+    LocallyImported::url = testFileUrl("LocallyImported.qml");
+
+    LocallyImported created(&e);
+    QCOMPARE(created.getCount(), 1);
+
+    QQmlContext *ctx = e.contextForObject(&created);
+    QVERIFY(ctx);
+    QCOMPARE(qvariant_cast<QObject *>(ctx->contextProperty("foo")), &created);
+}
+
+void tst_qmlcompiler_manual::localImport()
+{
+    // NB: compare object creation compiler against QQmlComponent
+    {
+        QQmlEngine e;
+        QQmlComponent comp(&e);
+        comp.loadUrl(testFileUrl("localImport.qml"));
+        QScopedPointer<QObject> root(comp.create());
+        QVERIFY2(root, qPrintable(comp.errorString()));
+
+        QQmlContext *ctx = e.contextForObject(root.get());
+        QVERIFY(ctx);
+        QVERIFY(ctx->parentContext());
+        QCOMPARE(ctx->contextProperty("foo"), QVariant());
+        QCOMPARE(qvariant_cast<QObject *>(ctx->contextProperty("bar")), root.get());
+        QCOMPARE(ctx->objectForName("foo"), nullptr);
+        QCOMPARE(ctx->objectForName("bar"), root.get());
+        QCOMPARE(QQmlContextData::get(ctx)->parent(), QQmlContextData::get(e.rootContext()));
+
+        int count = root->property("count").toInt();
+        QVariant magicValue {};
+        QMetaObject::invokeMethod(root.get(), "getMagicValue", Q_RETURN_ARG(QVariant, magicValue));
+        QCOMPARE(magicValue.toInt(), (count * 3 + 1));
+
+        count = root->property("count").toInt();
+        magicValue = QVariant();
+        QMetaObject::invokeMethod(root.get(), "localGetMagicValue",
+                                  Q_RETURN_ARG(QVariant, magicValue));
+        QCOMPARE(magicValue.toInt(), (count * 3 + 1));
+    }
+
+    // In this case, the context hierarchy is the following:
+    // * LocallyImported: rootContext -> locallyImportedContext
+    // * ANON_localImport: ... -> locallyImportedContext -> localImportContext
+    //
+    // this resembles the object hierarchy where LocallyImported is a base class
+    // of ANON_localImport. having an explicit parent context (from
+    // LocallyImported) guarantees that e.g. parent id / base class methods are
+    // found during JavaScript (property) lookups
+    {
+        QQmlEngine e;
+        LocallyImported::url = testFileUrl("LocallyImported.qml");
+        ANON_localImport::url = testFileUrl("localImport.qml");
+
+        ANON_localImport created(&e);
+        QCOMPARE(created.getP1(), 41);
+        QCOMPARE(created.getCount(), 42);
+
+        QQmlContext *ctx = e.contextForObject(&created);
+        QVERIFY(ctx);
+        QVERIFY(ctx->parentContext());
+        QEXPECT_FAIL("",
+                     "Inconsistent with QQmlComponent: 'foo' could actually be found in generated "
+                     "C++ base class context",
+                     Continue);
+        QCOMPARE(ctx->contextProperty("foo"), QVariant());
+        QCOMPARE(qvariant_cast<QObject *>(ctx->contextProperty("bar")), &created);
+        // NB: even though ctx->contextProperty("foo") finds the object,
+        // objectForName("foo") still returns nullptr as "foo" exists in the
+        // ctx->parent()
+        QCOMPARE(ctx->objectForName("foo"), nullptr);
+        QCOMPARE(ctx->objectForName("bar"), &created);
+        QEXPECT_FAIL("",
+                     "Inconsistent with QQmlComponent: LocallyImported is a _visible_ parent of "
+                     "ANON_localImport, same stays true for context",
+                     Continue);
+        QCOMPARE(QQmlContextData::get(ctx)->parent(), QQmlContextData::get(e.rootContext()));
+        QCOMPARE(QQmlContextData::get(ctx)->parent()->parent(),
+                 QQmlContextData::get(e.rootContext()));
+
+        int count = created.getCount();
+        QCOMPARE(created.getMagicValue().toInt(), (count * 3 + 1));
+        count = created.getCount();
+        QCOMPARE(created.localGetMagicValue().toInt(), (count * 3 + 1));
+    }
+}
+
+class ANON_neighbors_QtObject : public QObject
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    Q_PROPERTY(int p READ getP WRITE setP BINDABLE bindableP)
+    Q_PROPERTY(int p2 READ getP2 WRITE setP2 BINDABLE bindableP2)
+
+protected:
+    ANON_neighbors_QtObject(QObject *parent = nullptr) : QObject(parent) { }
+
+public:
+    // test workaround: the url is resolved by the test base class, so use
+    // member variable to store the resolved url used as argument in engine
+    // evaluation of runtime functions
+    static QUrl url;
+
+    ANON_neighbors_QtObject(QQmlEngine *e, QObject *parent = nullptr)
+        : ANON_neighbors_QtObject(parent)
+    {
+        // NB: non-root of the document
+        init(e, QQmlContextData::get(e->contextForObject(parent)));
+    }
+
+    QQmlRefPointer<QQmlContextData> init(QQmlEngine *e,
+                                         const QQmlRefPointer<QQmlContextData> &parentContext)
+    {
+        constexpr int componentIndex = 1;
+        auto context = ContextRegistrator::create(e, url, parentContext, componentIndex);
+        ContextRegistrator::set(this, context, QQmlContextData::OrdinaryObject);
+        context->setIdValue(componentIndex, this);
+
+        p = 41;
+        return context;
+    }
+
+    void finalize(QQmlEngine *e) // called by the document root
+    {
+        Q_UNUSED(e);
+        // 1. finalize children - empty as we don't have children here
+
+        // 2. finalize self - call all "dynamic" code - e.g. script bindings,
+        //    Component.onCompleted and so on - everything that may reference
+        //    some random part of the document and thus needs to be delayed
+        //    until all objects in the document are initialized
+        QPropertyBinding<int> ANON_neighbors_QtObject_p2_binding(
+                [&]() {
+                    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+                    const auto index = FunctionIndices::NEIGHBOUR_IDS_CHILD1_P2_BINDING;
+                    constexpr int argc = 0;
+                    int ret {};
+                    std::array<void *, argc + 1> a {};
+                    std::array<QMetaType, argc + 1> t {};
+                    typeEraseArguments(a, t, ret);
+                    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+                    return ret;
+                },
+                QT_PROPERTY_DEFAULT_BINDING_LOCATION);
+        bindableP2().setBinding(ANON_neighbors_QtObject_p2_binding);
+    }
+
+    int getP() { return p.value(); }
+    void setP(int p_) { p.setValue(p_); }
+    QBindable<int> bindableP() { return QBindable<int>(&p); }
+    QProperty<int> p;
+
+    int getP2() { return p2.value(); }
+    void setP2(int p2_) { p2.setValue(p2_); }
+    QBindable<int> bindableP2() { return QBindable<int>(&p2); }
+    QProperty<int> p2;
+};
+QUrl ANON_neighbors_QtObject::url = QUrl(); // workaround
+
+class ANON_neighbors_LocallyImported : public LocallyImported
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    Q_PROPERTY(int p READ getP WRITE setP BINDABLE bindableP)
+
+protected:
+    ANON_neighbors_LocallyImported(QObject *parent = nullptr) : LocallyImported(parent) { }
+
+public:
+    // test workaround: the url is resolved by the test base class, so use
+    // member variable to store the resolved url used as argument in engine
+    // evaluation of runtime functions
+    static QUrl url2;
+
+    ANON_neighbors_LocallyImported(QQmlEngine *e, QObject *parent = nullptr)
+        : ANON_neighbors_LocallyImported(parent)
+    {
+        // NB: non-root of the document
+        init(e, QQmlContextData::get(e->contextForObject(parent)));
+    }
+
+    QQmlRefPointer<QQmlContextData> init(QQmlEngine *e,
+                                         const QQmlRefPointer<QQmlContextData> &parentContext)
+    {
+        constexpr int componentIndex = 2;
+        auto context = LocallyImported::init(e, parentContext);
+        context = ContextRegistrator::create(e, url2, context, componentIndex);
+        // if not root and parent is also generated C++ object, patch context
+        context = parentContext;
+        // else: ContextRegistrator::set(this, context, QQmlContextData::OrdinaryObject);
+        context->setIdValue(componentIndex, this);
+        return context;
+    }
+
+    void finalize(QQmlEngine *e) // called by the document root
+    {
+        Q_UNUSED(e);
+        // 1. finalize children - empty as we don't have children here
+
+        // 2. finalize self - call all "dynamic" code - e.g. script bindings,
+        //    Component.onCompleted and so on - everything that may reference
+        //    some random part of the document and thus needs to be delayed
+        //    until all objects in the document are initialized
+        QPropertyBinding<int> ANON_neighbors_LocallyImported_p_binding(
+                [&]() {
+                    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+                    const auto index = FunctionIndices::NEIGHBOUR_IDS_CHILD2_P_BINDING;
+                    constexpr int argc = 0;
+                    int ret {};
+                    std::array<void *, argc + 1> a {};
+                    std::array<QMetaType, argc + 1> t {};
+                    typeEraseArguments(a, t, ret);
+                    e->executeRuntimeFunction(url2, index, this, argc, a.data(), t.data());
+                    return ret;
+                },
+                QT_PROPERTY_DEFAULT_BINDING_LOCATION);
+        bindableP().setBinding(ANON_neighbors_LocallyImported_p_binding);
+    }
+
+    int getP() { return p.value(); }
+    void setP(int p_) { p.setValue(p_); }
+    QBindable<int> bindableP() { return QBindable<int>(&p); }
+    QProperty<int> p;
+};
+QUrl ANON_neighbors_LocallyImported::url2 = QUrl(); // workaround
+
+// NB: only root subclasses the helper - as it initiates the finalization
+class ANON_neighbors : public QQuickItem
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+
+protected:
+    ANON_neighbors(QObject *parent = nullptr) : QQuickItem() { setParent(parent); }
+
+public:
+    // test workaround: the url is resolved by the test base class, so use
+    // member variable to store the resolved url used as argument in engine
+    // evaluation of runtime functions
+    static QUrl url;
+
+    ANON_neighbors(QQmlEngine *e, QObject *parent = nullptr) : ANON_neighbors(parent)
+    {
+        // NB: use e->rootContext() as this object is document root
+        init(e, QQmlContextData::get(e->rootContext()));
+    }
+
+    QQmlRefPointer<QQmlContextData> init(QQmlEngine *e,
+                                         const QQmlRefPointer<QQmlContextData> &parentContext)
+    {
+        constexpr int componentIndex = 0; // root index
+        auto context = ContextRegistrator::create(e, url, parentContext, componentIndex);
+        ContextRegistrator::set(this, context, QQmlContextData::DocumentRoot);
+        context->setIdValue(componentIndex, this);
+
+        finalize(e); // call here because it's document root
+        return context;
+    }
+
+    void finalize(QQmlEngine *e)
+    {
+        Q_UNUSED(e);
+        // 0. set up object bindings and record all new objects for further
+        //    finalization
+        QList<QObject *> objectsToFinalize;
+        objectsToFinalize.reserve(2); // we know it's 2 at compile time
+        QQmlListReference listrefData(this, "data");
+        {
+            auto o = new ANON_neighbors_QtObject(e, this);
+            listrefData.append(o);
+            objectsToFinalize.append(o);
+        }
+        {
+            auto o = new ANON_neighbors_LocallyImported(e, this);
+            listrefData.append(o);
+            objectsToFinalize.append(o);
+        }
+
+        // 1. finalize children
+        // use static_cast instead of polymorphism as we know the types at
+        // compile-time
+        static_cast<ANON_neighbors_QtObject *>(objectsToFinalize.at(0))->finalize(e);
+        static_cast<ANON_neighbors_LocallyImported *>(objectsToFinalize.at(1))->finalize(e);
+
+        // 2. finalize self - empty as we don't have any bindings here
+    }
+};
+QUrl ANON_neighbors::url = QUrl(); // workaround
+
+void tst_qmlcompiler_manual::neighbors()
+{
+    {
+        QQmlEngine e;
+        QQmlComponent comp(&e);
+        comp.loadUrl(testFileUrl("neighbors.qml"));
+        QScopedPointer<QObject> root(comp.create());
+        QVERIFY2(root, qPrintable(comp.errorString()));
+
+        auto rootCtx = QQmlContextData::get(e.contextForObject(root.get()));
+        QQmlListReference children(root.get(), "data");
+        QCOMPARE(children.size(), 2);
+        auto child1Ctx = QQmlContextData::get(e.contextForObject(children.at(0)));
+        auto child2Ctx = QQmlContextData::get(e.contextForObject(children.at(1)));
+
+        QCOMPARE(rootCtx->parent(), QQmlContextData::get(e.rootContext()));
+        QCOMPARE(child1Ctx, rootCtx);
+        QCOMPARE(child2Ctx, rootCtx);
+        QCOMPARE(child2Ctx->parent(), QQmlContextData::get(e.rootContext()));
+
+        QQmlContext *rootQmlCtx = rootCtx->asQQmlContext();
+        QCOMPARE(rootQmlCtx->objectForName("root"), root.get());
+        QCOMPARE(rootQmlCtx->objectForName("child1"), children.at(0));
+        QCOMPARE(rootQmlCtx->objectForName("child2"), children.at(1));
+    }
+
+    // this case is different from tst_qmlcompiler_manual::localImport() as
+    // LocallyImported is not a parent of a document root. Thus, the context
+    // hierarchy:
+    // * ANON_neighbors: rootContext -> neighborsContext
+    // * ANON_neighbors_QtObject: rootContext -> neighborsContext
+    // * LocallyImported: ... -> neighborsContext -> locallyImportedContext
+    // * ANON_neighbors_LocallyImported: ... -> locallyImportedContext
+    //
+    // this should resemble the context hierarchy that QQmlObjectCreator
+    // assembles, but here the outer context of ANON_neighbors_LocallyImported
+    // remains to be the one from LocallyImported base class, which guarantees
+    // that we can lookup stuff that originates from LocallyImported.
+    {
+        QQmlEngine e;
+        LocallyImported::url = testFileUrl("LocallyImported.qml");
+        ANON_neighbors::url = testFileUrl("neighbors.qml");
+        ANON_neighbors_QtObject::url = testFileUrl("neighbors.qml");
+        ANON_neighbors_LocallyImported::url2 = testFileUrl("neighbors.qml");
+
+        ANON_neighbors created(&e);
+        QQmlListReference children(&created, "data");
+        QCOMPARE(children.size(), 2);
+        ANON_neighbors_QtObject *child1 = qobject_cast<ANON_neighbors_QtObject *>(children.at(0));
+        ANON_neighbors_LocallyImported *child2 =
+                qobject_cast<ANON_neighbors_LocallyImported *>(children.at(1));
+        QVERIFY(child1 && child2);
+
+        auto rootCtx = QQmlContextData::get(e.contextForObject(&created));
+        auto child1Ctx = QQmlContextData::get(e.contextForObject(child1));
+        auto child2Ctx = QQmlContextData::get(e.contextForObject(child2));
+
+        QCOMPARE(rootCtx->parent(), QQmlContextData::get(e.rootContext()));
+        QCOMPARE(child1Ctx, rootCtx);
+        QEXPECT_FAIL("",
+                     "Inconsistent with QQmlComponent: non-root object with generated C++ base has "
+                     "the context of that base",
+                     Continue);
+        QCOMPARE(child2Ctx, rootCtx);
+        QEXPECT_FAIL("",
+                     "Inconsistent with QQmlComponent: non-root object with generated C++ base has "
+                     "the context of that base",
+                     Continue);
+        QCOMPARE(child2Ctx->parent(), QQmlContextData::get(e.rootContext()));
+        // the rootCtx is actually a parent in this case
+        QCOMPARE(child2Ctx->parent(), rootCtx);
+
+        QQmlContext *rootQmlCtx = rootCtx->asQQmlContext();
+        QCOMPARE(rootQmlCtx->objectForName("root"), &created);
+        QCOMPARE(rootQmlCtx->objectForName("child1"), child1);
+        QCOMPARE(rootQmlCtx->objectForName("child2"), child2);
+
+        QCOMPARE(child1->getP(), 41);
+        QCOMPARE(child1->getP2(), child2->getCount() * 2);
+        QCOMPARE(child2->getP(), child1->getP() + 1);
+
+        child1->setP(44);
+        QCOMPARE(child2->getP(), 45);
+
+        child2->setCount(4);
+        QCOMPARE(child1->getP2(), 8);
+
+        int count = child2->getCount();
+        QVariant magicValue {};
+        QMetaObject::invokeMethod(child2, "getMagicValue", Q_RETURN_ARG(QVariant, magicValue));
+        QCOMPARE(magicValue.toInt(), (count * 3 + 1));
+    }
 }
 
 QTEST_MAIN(tst_qmlcompiler_manual)

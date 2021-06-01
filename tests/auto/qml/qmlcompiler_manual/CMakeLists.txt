@@ -13,6 +13,7 @@ qt_internal_add_test(tst_qmlcompiler_manual
     LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
+        Qt::Quick
     TESTDATA ${test_data}
 )
 
