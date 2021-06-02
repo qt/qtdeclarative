@@ -217,9 +217,9 @@ bool QQmlValueTypeWrapper::toGadget(void *data) const
     if (const QQmlValueTypeReference *ref = as<const QQmlValueTypeReference>())
         if (!ref->readReferenceValue())
             return false;
-    const int typeId = d()->valueType()->metaType.id();
-    QMetaType(typeId).destruct(data);
-    QMetaType(typeId).construct(data, d()->gadgetPtr());
+    const QMetaType type = d()->valueType()->metaType;
+    type.destruct(data);
+    type.construct(data, d()->gadgetPtr());
     return true;
 }
 
