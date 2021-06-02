@@ -5,6 +5,7 @@ qt_exclude_tool_directories_from_default_target(
     qmlplugindump
 )
 
+add_subdirectory(registrationmacros)
 add_subdirectory(parserstress)
 add_subdirectory(qjsprimitivevalue)
 add_subdirectory(qjsvalueiterator)

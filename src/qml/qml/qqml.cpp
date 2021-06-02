@@ -471,8 +471,10 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                     QTypeRevision::fromMinorVersion(0));
         const QTypeRevision removed = revisionClassInfo(
                     type.classInfoMetaObject, "QML.RemovedInVersion");
+        const QList<QTypeRevision> furtherRevisions = revisionClassInfos(type.classInfoMetaObject,
+                                                                        "QML.ExtraVersion");
 
-        auto revisions = prepareRevisions(type.metaObject, added);
+        auto revisions = prepareRevisions(type.metaObject, added) + furtherRevisions;
         if (type.attachedPropertiesMetaObject)
             revisions += availableRevisions(type.attachedPropertiesMetaObject);
         uniqueRevisions(&revisions, type.version, added);
@@ -524,8 +526,10 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                     QTypeRevision::fromMinorVersion(0));
         const QTypeRevision removed = revisionClassInfo(
                     type.classInfoMetaObject, "QML.RemovedInVersion");
+        const QList<QTypeRevision> furtherRevisions = revisionClassInfos(type.classInfoMetaObject,
+                                                                        "QML.ExtraVersion");
 
-        auto revisions = prepareRevisions(type.instanceMetaObject, added);
+        auto revisions = prepareRevisions(type.instanceMetaObject, added) + furtherRevisions;
         uniqueRevisions(&revisions, type.version, added);
 
         for (QTypeRevision revision : qAsConst(revisions)) {
@@ -569,8 +573,9 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                     QTypeRevision::fromMinorVersion(0));
         const QTypeRevision removed = revisionClassInfo(
                     type.classInfoMetaObject, "QML.RemovedInVersion");
-
-        QVector<QTypeRevision> revisions = { added };
+        QList<QTypeRevision> revisions = revisionClassInfos(type.classInfoMetaObject,
+                                                            "QML.ExtraVersion");
+        revisions.append(added);
         uniqueRevisions(&revisions, type.version, added);
 
         for (QTypeRevision revision : qAsConst(revisions)) {

@@ -724,13 +724,16 @@ namespace QQmlPrivate
         bool alreadyCalled = false;
     };
 
-    static int indexOfOwnClassInfo(const QMetaObject *metaObject, const char *key)
+    static int indexOfOwnClassInfo(const QMetaObject *metaObject, const char *key, int startOffset = -1)
     {
         if (!metaObject || !key)
             return -1;
 
         const int offset = metaObject->classInfoOffset();
-        for (int i = metaObject->classInfoCount() + offset - 1; i >= offset; --i)
+        const int start = (startOffset == -1)
+                ? (metaObject->classInfoCount() + offset - 1)
+                : startOffset;
+        for (int i = start; i >= offset; --i)
             if (qstrcmp(key, metaObject->classInfo(i).name()) == 0) {
                 return i;
         }
@@ -749,6 +752,17 @@ namespace QQmlPrivate
         return (index == -1) ? defaultValue
                              : QTypeRevision::fromEncodedVersion(
                                    QByteArray(metaObject->classInfo(index).value()).toInt());
+    }
+
+    inline QList<QTypeRevision> revisionClassInfos(const QMetaObject *metaObject, const char *key)
+    {
+        QList<QTypeRevision> revisions;
+        for (int index = indexOfOwnClassInfo(metaObject, key); index != -1;
+             index = indexOfOwnClassInfo(metaObject, key, index - 1)) {
+            revisions.push_back(QTypeRevision::fromEncodedVersion(
+                          QByteArray(metaObject->classInfo(index).value()).toInt()));
+        }
+        return revisions;
     }
 
     inline bool boolClassInfo(const QMetaObject *metaObject, const char *key,

@@ -356,6 +356,17 @@
 */
 
 /*!
+  \internal
+  \macro QML_EXTRA_VERSION(MAJOR, MINOR)
+  \relates QQmlEngine
+
+  Declare that the type should also be available in version \c MAJOR.MINOR.
+  This can be helpful if a type should be available in multiple major versions.
+
+  \sa QML_ELEMENT, QML_ADDED_IN_MINOR_VERSION
+*/
+
+/*!
   \macro QML_ATTACHED(ATTACHED_TYPE)
   \relates QQmlEngine
 
