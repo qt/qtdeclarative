@@ -29,9 +29,6 @@
 #include <private/qqmljslexer_p.h>
 #include <private/qqmljsparser_p.h>
 #include <private/qqmljsast_p.h>
-#include <private/qv4codegen_p.h>
-#include <private/qv4staticvalue_p.h>
-#include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmldirparser_p.h>
 #include <private/qqmljsresourcefilemapper_p.h>
