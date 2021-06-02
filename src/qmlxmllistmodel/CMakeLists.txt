@@ -1,4 +1,10 @@
-qt_internal_add_module(QmlXmlListModel
+qt_internal_add_qml_module(QmlXmlListModel
+    URI "QtQml.XmlListModel"
+    VERSION "${PROJECT_VERSION}"
+    PLUGIN_TARGET qmlxmllistmodelplugin
+    CLASS_NAME QtQmlXmlListModelPlugin
+    DEPENDENCIES
+        QtQml
     SOURCES
         qqmlxmllistmodel_p.h qqmlxmllistmodel.cpp
         qtqmlxmllistmodelglobal_p.h
@@ -16,13 +22,3 @@ qt_internal_add_module(QmlXmlListModel
 qt_internal_add_docs(QmlXmlListModel
     doc/qtqmlxmllistmodel.qdocconf
 )
-
-set_target_properties(QmlXmlListModel PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQml.XmlListModel
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQml/XmlListModel"
-)
-
-qt6_qml_type_registration(QmlXmlListModel)

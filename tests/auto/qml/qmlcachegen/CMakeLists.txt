@@ -23,13 +23,20 @@ qt_internal_add_test(tst_qmlcachegen
     TESTDATA ${test_data}
 )
 
+qt6_add_qml_module(tst_qmlcachegen
+    URI cachegentest
+    VERSION 1.0
+    NO_CREATE_PLUGIN_TARGET
+    NO_GENERATE_PLUGIN_SOURCE
+)
+
 # Resources:
 set(qmake_workerscripts_test_resource_files
     "data/worker.js"
     "data/worker.qml"
 )
 
-qt_internal_add_resource(tst_qmlcachegen "qmake_workerscripts_test"
+qt6_target_qml_sources(tst_qmlcachegen
     PREFIX
         "/workerscripts"
     FILES
@@ -50,33 +57,36 @@ set(trickypaths_resource_files
     "data/versionStyleSuffix-1.2-more.qml"
 )
 
-qt_internal_add_resource(tst_qmlcachegen "trickypaths"
+qt6_target_qml_sources(tst_qmlcachegen
     PREFIX
         "/directory with spaces"
     FILES
         ${trickypaths_resource_files}
 )
+
+set_source_files_properties("data/Retain.qml"
+    PROPERTIES QT_RESOURCE_ALIAS "Retain.qml"
+)
+
 set(retain_resource_files
     "data/Retain.qml"
 )
 
-qt_internal_add_resource(tst_qmlcachegen "retain"
+qt6_target_qml_sources(tst_qmlcachegen
     PREFIX
         "/"
-    BASE
-        "data"
     FILES
         ${retain_resource_files}
 )
 set_source_files_properties("data/SkipQmlCacheGen.qml"
     PROPERTIES QT_RESOURCE_ALIAS "Skip.qml"
-    QT_SKIP_QUICKCOMPILER 1
+    QT_QML_SKIP_CACHEGEN 1
 )
 set(skip_resource_files
     "data/SkipQmlCacheGen.qml"
 )
 
-qt_internal_add_resource(tst_qmlcachegen "skip"
+qt6_target_qml_sources(tst_qmlcachegen
     PREFIX
         "/not/"
     FILES
@@ -96,7 +106,7 @@ set(qmake_immediate_resource_files
     "data/versionchecks.qml"
 )
 
-qt_internal_add_resource(tst_qmlcachegen "qmake_immediate"
+qt6_target_qml_sources(tst_qmlcachegen
     PREFIX
         "/"
     FILES
@@ -116,13 +126,26 @@ if(UNIX)
         "data/umlaut.qml"
     )
 
-    qt_internal_add_resource(tst_qmlcachegen "trickypaths_umlaut"
+    qt6_target_qml_sources(tst_qmlcachegen
         PREFIX
             "/"
         FILES
             ${trickypaths_umlaut_resource_files}
     )
 endif()
+
+# Add those files to the resource system so that they get copied to the data
+# directory in the build directory, which is preferred by qFindTestData
+# over the one in the source directory where they are always placed.
+set(qml_additional_resources
+    "data/posthocrequired.qml"
+    "data/inlineComponentWithId.qml"
+)
+
+qt6_target_qml_sources(tst_qmlcachegen
+    PREFIX "/"
+    FILES ${qml_additional_resources}
+)
 
 qt_internal_extend_target(tst_qmlcachegen CONDITION ANDROID OR IOS
     DEFINES

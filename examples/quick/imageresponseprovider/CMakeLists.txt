@@ -24,7 +24,10 @@ qt6_add_qml_module(qmlimageresponseproviderplugin
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ImageResponseProviderCore"
     VERSION 1.0
     URI "ImageResponseProviderCore"
-    INSTALL_LOCATION ${INSTALL_EXAMPLEDIR}
+    PLUGIN_TARGET qmlimageresponseproviderplugin
+    NO_PLUGIN_OPTIONAL
+    NO_GENERATE_PLUGIN_SOURCE
+    CLASS_NAME ImageProviderExtensionPlugin
 )
 
 target_sources(qmlimageresponseproviderplugin PRIVATE

@@ -1,23 +1,25 @@
-qt_internal_add_module(LabsSharedImage
-  SOURCES
+qt_internal_add_qml_module(LabsSharedImage
+    URI "Qt.labs.sharedimage"
+    VERSION "${PROJECT_VERSION}"
+    PLUGIN_TARGET sharedimageplugin
+    NO_PLUGIN_OPTIONAL
+    NO_GENERATE_PLUGIN_SOURCE
+    CLASS_NAME QtQuickSharedImagePlugin
+    SOURCES
         qsharedimageloader.cpp qsharedimageloader_p.h
         qsharedimageprovider.cpp qsharedimageprovider_p.h
         qtlabssharedimageglobal_p.h
-  DEFINES
+    DEFINES
         QT_BUILD_LABSSHAREDIMAGE_LIB
-  PUBLIC_LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QuickPrivate
 )
 
-
-set_target_properties(LabsSharedImage PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI Qt.labs.sharedimage
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/Qt/labs/sharedimage"
+# We need to do additional initialization, so we have to provide our own
+# plugin class rather than using the generated one
+qt_internal_extend_target(sharedimageplugin
+    SOURCES   qsharedimageplugin.cpp
+    LIBRARIES Qt::LabsSharedImagePrivate
 )
-
-qt6_qml_type_registration(LabsSharedImage)

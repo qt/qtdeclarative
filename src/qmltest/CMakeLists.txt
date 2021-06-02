@@ -1,10 +1,21 @@
-# Generated from qmltest.pro.
-
 #####################################################################
 ## QuickTest Module:
 #####################################################################
 
-qt_internal_add_module(QuickTest
+set_source_files_properties(TestCase.qml SignalSpy.qml PROPERTIES
+    QT_QML_SOURCE_VERSION "1.0"
+)
+set_source_files_properties(testlogger.js PROPERTIES
+    QT_QML_SKIP_QMLDIR_ENTRY TRUE
+)
+
+qt_internal_add_qml_module(QuickTest
+    URI "QtTest"
+    VERSION "${PROJECT_VERSION}"
+    PLUGIN_TARGET qmltestplugin
+    CLASS_NAME QTestQmlModule
+    DEPENDENCIES
+        QtQuick.Window/2.0
     CONFIG_MODULE_NAME qmltest
     QMAKE_MODULE_CONFIG $${QT.testlib.CONFIG}
     SOURCES
@@ -14,10 +25,14 @@ qt_internal_add_module(QuickTest
         quicktestglobal.h quicktestglobal_p.h
         quicktestresult.cpp quicktestresult_p.h
         quicktestutil.cpp quicktestutil_p.h
+    QML_FILES
+        TestCase.qml
+        SignalSpy.qml
+        testlogger.js
     DEFINES
         QT_NO_FOREACH
         QT_NO_URL_CAST_FROM_STRING
-        QT_BUILD_QMLTEST_LIB # special case
+        QT_BUILD_QMLTEST_LIB
     LIBRARIES
         Qt::CorePrivate
         Qt::Gui
@@ -32,16 +47,6 @@ qt_internal_add_module(QuickTest
         Qt::TestPrivate
 )
 
-#### Keys ignored in scope 1:.:.:qmltest.pro:<TRUE>:
-# MODULE_CONFIG = "$${QT.testlib.CONFIG}"
-# QMLTYPES_FILENAME = "plugins.qmltypes"
-# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtTest"
-# QML_IMPORT_NAME = "QtTest"
-# QML_IMPORT_VERSION = "$$QT_VERSION"
-
-## Scopes:
-#####################################################################
-
 qt_internal_extend_target(QuickTest CONDITION QT_FEATURE_qml_debug
     DEFINES
         QT_QML_DEBUG_NO_WARNING
@@ -49,14 +54,3 @@ qt_internal_extend_target(QuickTest CONDITION QT_FEATURE_qml_debug
 qt_internal_add_docs(QuickTest
     doc/qtqmltest.qdocconf
 )
-
-
-set_target_properties(QuickTest PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI QtTest
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtTest"
-)
-
-qt6_qml_type_registration(QuickTest)

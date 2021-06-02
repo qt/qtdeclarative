@@ -1,10 +1,31 @@
-# Generated from qml.pro.
+include(Qt6QmlBuildInternals.cmake)
 
 #####################################################################
 ## Qml Module:
 #####################################################################
 
-qt_internal_add_module(Qml
+# Need to evaluate Qml features early. We can't wait until
+# qt_internal_add_qml_module() is executed because we need feature evaluation
+# to determine some of the arguments to that command.
+qt_feature_evaluate_features("${CMAKE_CURRENT_SOURCE_DIR}/configure.cmake")
+
+set(module_dynamic_qml_imports
+    QtQml.Models/auto
+)
+
+if (QT_FEATURE_qml_worker_script)
+    list(APPEND module_dynamic_qml_imports
+        QtQml.WorkerScript/auto
+    )
+endif()
+
+qt_internal_add_qml_module(Qml
+    URI "QtQml"
+    VERSION "${PROJECT_VERSION}"
+    DESIGNER_SUPPORTED
+    PLUGIN_TARGET qmlplugin
+    CLASS_NAME QtQmlPlugin
+    IMPORTS ${module_dynamic_qml_imports}
     PLUGIN_TYPES qmltooling
     SOURCES
         ../3rdparty/masm/assembler/ARM64Assembler.h
@@ -356,7 +377,9 @@ qt_internal_add_module(Qml
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
     EXTRA_CMAKE_FILES
-        "${CMAKE_CURRENT_SOURCE_DIR}/Qt6qmldirTemplate.cmake.in"
+        "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}qmldirTemplate.cmake.in"
+        "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}QmlImportScannerTemplate.cpp.in"
+        "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}QmlPluginTemplate.cpp.in"
 )
 
 # special case begin remove the block, handled manually
@@ -372,15 +395,6 @@ set(_qt_qlalr_flags "--no-debug" "--qt")
 qt_process_qlalr(Qml "${CMAKE_CURRENT_SOURCE_DIR}/parser/qqmljs.g" "${_qt_qlalr_flags}")
 qt_declarative_generate_reg_exp_jit_tables(Qml)
 # special case end
-
-#### Keys ignored in scope 1:.:.:qml.pro:<TRUE>:
-# QMLTYPES_FILENAME = "plugins.qmltypes"
-# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQml"
-# QML_IMPORT_NAME = "QtQml"
-# QML_IMPORT_VERSION = "$$QT_VERSION"
-
-## Scopes:
-#####################################################################
 
 qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_network
     SOURCES
@@ -652,33 +666,3 @@ qt_internal_create_tracepoints(Qml qtqml.tracepoints)
 qt_internal_add_docs(Qml
     doc/qtqml.qdocconf
 )
-
-
-set_target_properties(Qml PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQml
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQml"
-)
-
-qt6_qml_type_registration(Qml)
-
-include(Qt6QmlBuildInternals.cmake) # special case
-
-# special case begin
-# Install Qml import scanner template cpp file.
-set(target "Qml")
-set(path_suffix "${INSTALL_CMAKE_NAMESPACE}${target}")
-qt_path_join(config_install_dir ${QT_CONFIG_INSTALL_DIR} ${path_suffix})
-qt_copy_or_install(FILES
-    "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}${target}ImportScannerTemplate.cpp.in"
-    DESTINATION "${config_install_dir}"
-)
-
-# Install pure QML Plugin template cpp file.
-qt_copy_or_install(FILES
-    "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}${target}PluginTemplate.cpp.in"
-    DESTINATION "${config_install_dir}"
-)
-# special case end

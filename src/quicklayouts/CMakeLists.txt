@@ -1,4 +1,11 @@
- qt_internal_add_module(QuickLayouts
+qt_internal_add_qml_module(QuickLayouts
+    URI "QtQuick.Layouts"
+    VERSION "${PROJECT_VERSION}"
+    DESIGNER_SUPPORTED
+    PLUGIN_TARGET qquicklayoutsplugin
+    CLASS_NAME QtQuickLayoutsPlugin
+    DEPENDENCIES
+        QtQuick
     SOURCES
         qquickgridlayoutengine.cpp qquickgridlayoutengine_p.h
         qquicklayout.cpp qquicklayout_p.h
@@ -14,14 +21,3 @@
         Qt::QuickPrivate
         Qt::Qml
 )
-
-
-set_target_properties(QuickLayouts PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQuick.Layouts
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick/Layouts"
-)
-
-qt6_qml_type_registration(QuickLayouts)

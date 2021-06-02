@@ -1,4 +1,8 @@
-qt_internal_add_module(LabsSettings
+qt_internal_add_qml_module(LabsSettings
+    URI "Qt.labs.settings"
+    VERSION "${PROJECT_VERSION}"
+    PLUGIN_TARGET qmlsettingsplugin
+    CLASS_NAME QmlSettingsPlugin
     SOURCES
          qqmlsettings.cpp qqmlsettings_p.h
          qqmlsettingsglobal_p.h
@@ -8,13 +12,3 @@ qt_internal_add_module(LabsSettings
          Qt::Core
          Qt::Qml
 )
-
-set_target_properties(LabsSettings PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI Qt.labs.settings
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/Qt/labs/settings"
-)
-
-qt6_qml_type_registration(LabsSettings)

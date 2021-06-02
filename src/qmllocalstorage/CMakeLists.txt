@@ -1,4 +1,8 @@
-qt_internal_add_module(QmlLocalStorage
+qt_internal_add_qml_module(QmlLocalStorage
+    URI "QtQuick.LocalStorage"
+    VERSION "${PROJECT_VERSION}"
+    PLUGIN_TARGET qmllocalstorageplugin
+    CLASS_NAME QQmlLocalStoragePlugin
     SOURCES
         qqmllocalstorage.cpp qqmllocalstorage_p.h
         qqmllocalstorageglobal_p.h
@@ -9,14 +13,3 @@ qt_internal_add_module(QmlLocalStorage
         Qt::QmlPrivate
         Qt::Sql
 )
-
-set_target_properties(QmlLocalStorage PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQuick.LocalStorage
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick/LocalStorage"
-)
-
-
-qt6_qml_type_registration(QmlLocalStorage)

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the plugins of the Qt Toolkit.
@@ -37,43 +37,32 @@
 **
 ****************************************************************************/
 
-#include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
+#include <QtLabsSharedImage/private/qtlabssharedimageglobal_p.h>
+#include <QtLabsSharedImage/private/qsharedimageprovider_p.h>
 
-#include <QtLabsAnimation/private/qqmlanimationglobal_p.h>
+#include <qqmlextensionplugin.h>
+#include <qqmlengine.h>
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \qmlmodule Qt.labs.animation 1.0
-    \title Qt Quick experimental animation types
-    \ingroup qmlmodules
-    \brief Provides QML experimental types for animation
-    \since 5.14
-
-    This QML module contains experimental QML types related to animation.
-
-    To use the types in this module, import the module with the following line:
-
-    \code
-    import Qt.labs.animation
-    \endcode
-*/
-
-//![class decl]
-class QtLabsAnimationPlugin : public QQmlEngineExtensionPlugin
+class QtQuickSharedImagePlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 public:
-    QtLabsAnimationPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
+    QtQuickSharedImagePlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
     {
-        volatile auto registration = &qml_register_types_Qt_labs_animation;
+        volatile auto registration = &qml_register_types_Qt_labs_sharedimage;
         Q_UNUSED(registration);
     }
+
+    void initializeEngine(QQmlEngine *engine, const char *uri) override
+    {
+        Q_UNUSED(uri);
+        engine->addImageProvider("shared", new SharedImageProvider);
+    }
 };
-//![class decl]
 
 QT_END_NAMESPACE
 
-#include "plugin.moc"
+#include "qsharedimageplugin.moc"

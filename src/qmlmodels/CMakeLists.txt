@@ -1,10 +1,13 @@
-# Generated from qmlmodels.pro.
-
 #####################################################################
 ## QmlModels Module:
 #####################################################################
 
-qt_internal_add_module(QmlModels
+qt_internal_add_qml_module(QmlModels
+    URI "QtQml.Models"
+    VERSION "${PROJECT_VERSION}"
+    DESIGNER_SUPPORTED
+    PLUGIN_TARGET modelsplugin
+    CLASS_NAME QtQmlModelsPlugin
     SOURCES
         qqmlchangeset.cpp qqmlchangeset_p.h
         qqmlmodelsmodule_p.h
@@ -23,15 +26,6 @@ qt_internal_add_module(QmlModels
         Qt::CorePrivate
         Qt::QmlPrivate
 )
-
-#### Keys ignored in scope 1:.:.:qmlmodels.pro:<TRUE>:
-# QMLTYPES_FILENAME = "plugins.qmltypes"
-# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQml/Models"
-# QML_IMPORT_NAME = "QtQml.Models"
-# QML_IMPORT_VERSION = "$$QT_VERSION"
-
-## Scopes:
-#####################################################################
 
 qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_object_model
     SOURCES
@@ -65,14 +59,3 @@ qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_delegate_model
 qt_internal_add_docs(QmlModels
     doc/qtqmlmodels.qdocconf
 )
-
-
-set_target_properties(QmlModels PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQml.Models
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQml/Models"
-)
-
-qt6_qml_type_registration(QmlModels)

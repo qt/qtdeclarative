@@ -697,8 +697,9 @@ void tst_qmlcachegen::parameterAdjustment()
 
 void tst_qmlcachegen::inlineComponent()
 {
-    bool ok = generateCache(testFile("inlineComponentWithId.qml"));
-    QVERIFY(ok);
+    QByteArray errors;
+    bool ok = generateCache(testFile("inlineComponentWithId.qml"), &errors);
+    QVERIFY2(ok, errors);
     QQmlEngine engine;
     CleanlyLoadingComponent component(&engine, testFileUrl("inlineComponentWithId.qml"));
     QTest::ignoreMessage(QtMsgType::QtInfoMsg, "42");

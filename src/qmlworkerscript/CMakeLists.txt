@@ -1,10 +1,13 @@
-# Generated from qmlworkerscript.pro.
-
 #####################################################################
 ## QmlWorkerScript Module:
 #####################################################################
 
-qt_internal_add_module(QmlWorkerScript
+qt_internal_add_qml_module(QmlWorkerScript
+    URI "QtQml.WorkerScript"
+    VERSION "${PROJECT_VERSION}"
+    DESIGNER_SUPPORTED
+    PLUGIN_TARGET workerscriptplugin
+    CLASS_NAME QtQmlWorkerScriptPlugin
     SOURCES
         qquickworkerscript.cpp qquickworkerscript_p.h
         qtqmlworkerscriptglobal.h qtqmlworkerscriptglobal_p.h
@@ -46,15 +49,6 @@ qt_internal_add_module(QmlWorkerScript
         Qt::CorePrivate
         Qt::QmlPrivate
 )
-
-#### Keys ignored in scope 1:.:.:qmlworkerscript.pro:<TRUE>:
-# QMLTYPES_FILENAME = "plugins.qmltypes"
-# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQml/WorkerScript"
-# QML_IMPORT_NAME = "QtQml.WorkerScript"
-# QML_IMPORT_VERSION = "$$QT_VERSION"
-
-## Scopes:
-#####################################################################
 
 qt_internal_extend_target(QmlWorkerScript CONDITION WIN32
     DEFINES
@@ -101,14 +95,3 @@ qt_internal_extend_target(QmlWorkerScript CONDITION GCC AND QT_COMPILER_VERSION_
 qt_internal_add_docs(QmlWorkerScript
     doc/qtqmlworkerscript.qdocconf
 )
-
-
-set_target_properties(QmlWorkerScript PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQml.WorkerScript
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQml/WorkerScript"
-)
-
-qt6_qml_type_registration(QmlWorkerScript)

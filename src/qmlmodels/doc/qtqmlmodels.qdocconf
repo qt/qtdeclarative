@@ -27,9 +27,7 @@ depends += qtcore qtqml qtquick qtdoc qtqmlworkerscript qtquickcontrols
 
 {headerdirs,sourcedirs} += \
     .. \
-    ../../labs/models \
-    ../../imports/models \
-    ../../imports/labsmodels
+    ../../labs/models
 
 exampledirs += .. \
                snippets

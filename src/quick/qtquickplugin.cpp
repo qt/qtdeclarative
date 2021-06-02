@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the QtQuick module of the Qt Toolkit.
+** This file is part of the plugins of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -38,24 +38,24 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlextensionplugin.h>
-#include <QtQml/qqml.h>
+#include <private/qtquickglobal_p.h>
 
-#include <QtLabsWavefrontMesh/private/qqmlwavefrontmeshglobal_p.h>
 QT_BEGIN_NAMESPACE
 
-class QmlWavefrontMeshPlugin : public QQmlEngineExtensionPlugin
+class QtQuick2Plugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
+    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
 public:
-    QmlWavefrontMeshPlugin(QObject *parent = nullptr)
-        : QQmlEngineExtensionPlugin(parent)
+    QtQuick2Plugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
     {
-        volatile auto registration = &qml_register_types_Qt_labs_wavefrontmesh;
+        volatile auto registration = &qml_register_types_QtQuick;
+        volatile auto initialization = &QQuick_initializeModule;
         Q_UNUSED(registration);
+        Q_UNUSED(initialization);
     }
 };
 
 QT_END_NAMESPACE
 
-#include "plugin.moc"
+#include "qtquickplugin.moc"

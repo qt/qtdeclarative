@@ -24,7 +24,10 @@ qt6_add_qml_module(qmlimageproviderplugin
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/ImageProviderCore"
     VERSION 1.0
     URI "ImageProviderCore"
-    INSTALL_LOCATION ${INSTALL_EXAMPLEDIR}
+    PLUGIN_TARGET qmlimageproviderplugin
+    NO_PLUGIN_OPTIONAL
+    NO_GENERATE_PLUGIN_SOURCE
+    CLASS_NAME ImageProviderExtensionPlugin
 )
 
 target_sources(qmlimageproviderplugin PRIVATE

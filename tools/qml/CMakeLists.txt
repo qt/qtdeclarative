@@ -48,15 +48,12 @@ qt_internal_add_resource(${target_name} "qml"
         ${qml_resource_files}
 )
 
-
-#### Keys ignored in scope 1:.:.:qml.pro:<TRUE>:
-# ICON = "resources/qml-64.png"
-# QMAKE_TARGET_DESCRIPTION = "QML" "Runtime"
-# QML_IMPORT_NAME = "QmlRuntime.Config"
-# QML_IMPORT_VERSION = "1.0"
-
-## Scopes:
-#####################################################################
+# Turn the tool into its own self-contained qml module
+qt6_add_qml_module(${target_name}
+    URI QmlRuntime.Config
+    VERSION 1.0
+    NO_CREATE_PLUGIN_TARGET
+)
 
 qt_internal_extend_target(${target_name} CONDITION TARGET Qt::Gui
     PUBLIC_LIBRARIES
@@ -80,10 +77,3 @@ qt_internal_extend_target(${target_name} CONDITION QT_FEATURE_qml_debug
     DEFINES
         QT_QML_DEBUG_NO_WARNING
 )
-
-set_target_properties(${target_name} PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI QmlRuntime.Config
-)
-
-qt6_qml_type_registration(${target_name})

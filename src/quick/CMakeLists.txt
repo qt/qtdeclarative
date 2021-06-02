@@ -1,10 +1,16 @@
-# Generated from quick.pro.
-
 #####################################################################
 ## Quick Module:
 #####################################################################
 
-qt_internal_add_module(Quick
+qt_internal_add_qml_module(Quick
+    URI "QtQuick"
+    VERSION "${PROJECT_VERSION}"
+    DESIGNER_SUPPORTED
+    PLUGIN_TARGET qtquick2plugin
+    NO_GENERATE_PLUGIN_SOURCE
+    CLASS_NAME QtQuick2Plugin
+    IMPORTS
+        QtQml/auto
     PLUGIN_TYPES scenegraph
     SOURCES
         handlers/qquickdragaxis.cpp handlers/qquickdragaxis_p.h
@@ -218,6 +224,13 @@ qt_internal_add_module(Quick
         Qt::QmlPrivate
 )
 
+# We need to do additional initialization, so we have to provide our own
+# plugin class rather than using the generated one
+qt_internal_extend_target(qtquick2plugin
+    SOURCES   qtquickplugin.cpp
+    LIBRARIES Qt::QuickPrivate
+)
+
 qt_internal_add_shaders(Quick "scenegraph_shaders"
     SILENT
     BATCHABLE
@@ -287,17 +300,6 @@ if(ANDROID)
     )
 endif()
 
-#### Keys ignored in scope 1:.:.:quick.pro:<TRUE>:
-# QMLTYPES_FILENAME = "plugins.qmltypes"
-# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick"
-# QML_IMPORT_NAME = "QtQuick"
-# QML_IMPORT_VERSION = "$$QT_VERSION"
-# qmldir.files = "$$PWD/../imports/window/qmldir"
-# qmldir.path = "$$[QT_INSTALL_QML]/QtQuick/Window"
-
-## Scopes:
-#####################################################################
-
 qt_internal_extend_target(Quick CONDITION QT_FEATURE_qml_network
     LIBRARIES
         Qt::Network
@@ -364,12 +366,6 @@ qt_internal_extend_target(Quick CONDITION QT_FEATURE_accessibility
         Qt::GuiPrivate
         Qt::QmlPrivate
 )
-
-#### Keys ignored in scope 10:.:.:quick.pro:prefix_build:
-# INSTALLS = "qmldir"
-
-#### Keys ignored in scope 11:.:.:quick.pro:else:
-# COPIES = "qmldir"
 
 qt_internal_extend_target(Quick CONDITION QT_FEATURE_qml_debug
     SOURCES
@@ -511,14 +507,4 @@ qt_internal_add_docs(Quick
     doc/qtquick.qdocconf
 )
 
-
-set_target_properties(Quick PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQuick
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick"
-)
-
-qt6_qml_type_registration(Quick)
-
+add_subdirectory(window)

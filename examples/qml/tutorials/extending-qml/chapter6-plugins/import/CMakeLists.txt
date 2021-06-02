@@ -24,11 +24,10 @@ qt6_add_qml_module(chartsplugin
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../Charts"
     VERSION 1.0
     URI "Charts"
-    INSTALL_LOCATION ${INSTALL_EXAMPLEDIR}
+    PLUGIN_TARGET chartsplugin
 )
 
 target_sources(chartsplugin PRIVATE
-    chartsplugin.h
     piechart.cpp piechart.h
     pieslice.cpp pieslice.h
 )
@@ -48,10 +47,3 @@ install(TARGETS chartsplugin
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(chartsplugin PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI Charts
-)
-
-qt6_qml_type_registration(chartsplugin)

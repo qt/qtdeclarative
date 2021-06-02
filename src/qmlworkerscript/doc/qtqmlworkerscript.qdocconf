@@ -27,8 +27,7 @@ depends += qtcore qtqml qtquick qtdoc
 
 headerdirs  += ..
 
-sourcedirs  += .. \
-               ../../imports/workerscript
+sourcedirs  += ..
 
 exampledirs += snippets
 

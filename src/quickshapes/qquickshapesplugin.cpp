@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the plugins of the Qt Toolkit.
+** This file is part of the QtQuick module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial License Usage
@@ -39,25 +39,25 @@
 
 #include <QtQml/qqmlextensionplugin.h>
 #include <QtQml/qqml.h>
-
-#include <private/qtquickparticlesglobal_p.h>
+#include <QtQuickShapes/private/qquickshape_p.h>
 
 QT_BEGIN_NAMESPACE
 
-//![class decl]
-class QtQuick2ParticlesPlugin : public QQmlEngineExtensionPlugin
+class QmlShapesPlugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
+
 public:
-    QtQuick2ParticlesPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
+    QmlShapesPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent)
     {
-        volatile auto registration = &qml_register_types_QtQuick_Particles;
+        volatile auto registration = &qml_register_types_QtQuick_Shapes;
+        volatile auto initialize = &QQuickShapes_initializeModule;
         Q_UNUSED(registration);
+        Q_UNUSED(initialize);
     }
 };
-//![class decl]
 
 QT_END_NAMESPACE
 
-#include "plugin.moc"
+#include "qquickshapesplugin.moc"

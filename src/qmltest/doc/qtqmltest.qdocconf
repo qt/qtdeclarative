@@ -33,8 +33,7 @@ depends += qtcore qtgui qttestlib qtqml qtquick qtdoc qmake qtcmake
 
 headerdirs  += ..
 
-sourcedirs  += .. \
-               ../../imports/testlib
+sourcedirs  += ..
 
 exampledirs += snippets
 

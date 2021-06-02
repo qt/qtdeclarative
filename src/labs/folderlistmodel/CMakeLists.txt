@@ -1,23 +1,16 @@
-qt_internal_add_module(LabsFolderListModel
-  SOURCES
+qt_internal_add_qml_module(LabsFolderListModel
+    URI "Qt.labs.folderlistmodel"
+    VERSION "${PROJECT_VERSION}"
+    PLUGIN_TARGET qmlfolderlistmodelplugin
+    CLASS_NAME QmlFolderListModelPlugin
+    SOURCES
         fileinfothread.cpp fileinfothread_p.h
         fileproperty_p.h
         qquickfolderlistmodel.cpp qquickfolderlistmodel_p.h
         qquickfolderlistmodelglobal_p.h
-  DEFINES
+    DEFINES
         QT_BUILD_LABSFOLDERMODEL_LIB
-  PUBLIC_LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
 )
-
-set_target_properties(LabsFolderListModel PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI Qt.labs.folderlistmodel
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/Qt/labs/folderlistmodel"
-)
-
-
-qt6_qml_type_registration(LabsFolderListModel)

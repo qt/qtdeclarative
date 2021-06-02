@@ -1,10 +1,14 @@
-# Generated from particles.pro.
-
 #####################################################################
 ## QuickParticles Module:
 #####################################################################
 
-qt_internal_add_module(QuickParticles
+qt_internal_add_qml_module(QuickParticles
+    URI "QtQuick.Particles"
+    VERSION "${PROJECT_VERSION}"
+    PLUGIN_TARGET particlesplugin
+    CLASS_NAME QtQuick2ParticlesPlugin
+    DEPENDENCIES
+        QtQuick
     INTERNAL_MODULE
     SOURCES
         qquickage.cpp qquickage_p.h
@@ -82,17 +86,6 @@ qt_internal_add_resource(QuickParticles "particles1"
         ${particles1_resource_files}
 )
 
-
-#### Keys ignored in scope 1:.:.:particles.pro:<TRUE>:
-# MODULE = "quickparticles"
-# QMLTYPES_FILENAME = "plugins.qmltypes"
-# QMLTYPES_INSTALL_DIR = "$$[QT_INSTALL_QML]/QtQuick/Particles"
-# QML_IMPORT_NAME = "QtQuick.Particles"
-# QML_IMPORT_VERSION = "$$QT_VERSION"
-
-## Scopes:
-#####################################################################
-
 qt_internal_extend_target(QuickParticles CONDITION MSVC
     DEFINES
         _CRT_SECURE_NO_WARNINGS
@@ -109,13 +102,3 @@ qt_internal_extend_target(QuickParticles CONDITION EXISTS "qqml_enable_gcov"
         -fprofile-arcs
         -ftest-coverage
 )
-
-set_target_properties(QuickParticles PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI QtQuick.Particles
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/QtQuick/Particles"
-)
-
-qt6_qml_type_registration(QuickParticles)

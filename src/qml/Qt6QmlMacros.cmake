@@ -2,58 +2,99 @@
 # Q6QmlMacros
 #
 
-set(__qt_qml_macros_module_base_dir "${CMAKE_CURRENT_LIST_DIR}")
+set(__qt_qml_macros_module_base_dir "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "")
 
+# Create a Qml Module.
 #
-# Create a Qml Module. Arguments:
+# target: The name of the target to use for the qml module. If it does not
+#   already exist, it will be created. This is referred to as the "backing
+#   target" when a separate plugin is also generated (see PLUGIN_TARGET below).
+#   (REQUIRED)
 #
 # URI: Declares the module identifier of the module. The module identifier is
-# the (dotted URI notation) identifier for the module, which must match the
-# module's install path. (REQUIRED)
+#   the (dotted URI notation) identifier for the module, which must match the
+#   module's install path. (REQUIRED)
 #
 # VERSION: The module's version. (REQUIRED)
+#
+# PAST_MAJOR_VERSIONS: List of past major versions this QML module was available
+#   in. Ensures that the module can be imported when using these major versions.
+#   (OPTIONAL)
 #
 # TARGET_PATH: Overwrite the generated target path. By default the target path
 #   is generated from the URI by replacing the '.' with a '/'. However, under
 #   certain circumstance this may not be enough. Use this argument to provide
 #   a replacement. (OPTIONAL)
 #
-# RESOURCE_PREFIX: Resource Prefix to be used when generating a static library.
-#   When building a static library, the qmldir file is embedded into the library
-#   using rcc. It is is also used by the Qt Quick Compiler to embed compiled
-#   Qml files into a shared or static library. If none is supplied we will
-#   generate the following prefix: /org.qt-project/imports/${target_path}.
-#   (OPTIONAL)
+# RESOURCE_PREFIX: Resource Prefix to be used when adding resources to the
+#   target. This may include the qmldir file, compiled/cached *.qml files, etc.
+#   If not specified, a default prefix of "/" is used. (OPTIONAL)
 #
-# OUTPUT_DIRECTORY: If the module is not to be build under
-#   ${CMAKE_CURRENT_BINARY_DIR}. This ensures the qmldir file is copied to the
-#   right location.  (OPTIONAL)
+# OUTPUT_DIRECTORY: Overrides the directory where the qmldir, *.qmltypes and
+#   plugin library will be created. Defaults to ${CMAKE_CURRENT_BINARY_DIR} if
+#   not specified. (OPTIONAL)
 #
-# INSTALL_DIRECTORY: Intended installation directory for this module. (OPTIONAL)
-#
-# SOURCES: List of C++ sources. (OPTIONAL)
-#
-# DEPENDENCIES: List of QML Module dependencies and their versions. The module
-#   and its version must be separated via a slash(/). E.g. QtQuick/2.0
-#
-# PAST_MAJOR_VERSIONS: List of past major versions this QML module was available
-#   in. Ensures that the module can be imported when using these major versions.
-#
-# QML_FILES: List of Qml files. See qt6_target_qml_files for more information
-#   on how to specify additional properties on qml files. (OPTIONAL)
+# STATIC, SHARED: Explicitly specify the type of library to create. At most one
+#   of these two options can be specified. If neither is given, then the type of
+#   library follows CMake's usual rules of creating a static library unless the
+#   BUILD_SHARED_LIBS variable is set to true. (OPTIONAL)
 #
 # CLASS_NAME: Provides the class name of the C++ plugin used by the module. This
 #   information is required for all the QML modules that depend on a C++ plugin
 #   for additional functionality. Qt Quick applications built with static
 #   linking cannot resolve the module imports without this information.
-#   (REQUIRED for static QML modules backed by C++ sources aka non-pure QML modules)
+#   If no CLASS_NAME is given, it defaults to the URI with non-alphanumeric
+#   characters converted to underscores, and "Plugin" appended. If an existing
+#   target is passed in as the PLUGIN_TARGET and it has a QT_PLUGIN_CLASS_NAME
+#   target property set, that will be used as the default CLASS_NAME instead.
+#   (OPTIONAL)
+#
+# PLUGIN_TARGET: The recommended arrangement is to have separate backing and
+#   plugin libraries. By default, the plugin library will be created as a second
+#   CMake target with the same name as ${target}, but with "plugin" appended.
+#   This name can be overridden with PLUGIN_TARGET. To use a single target
+#   instead of separate backing and plugin targets, set PLUGIN_TARGET to the
+#   same as ${target}. (OPTIONAL)
+#
+# NO_CREATE_PLUGIN_TARGET: When given, the plugin target will not be
+#   automatically created. Use this if the qml module will always be used by
+#   linking directly to the backing target and no plugin is needed at runtime.
+#   An executable that is set up as its own qml module is one example where this
+#   option is appropriate. Note also that an existing target can be specified in
+#   PLUGIN_TARGET, in which case it will be modified by this function rather
+#   than created by it. (OPTIONAL)
+#
+# NO_GENERATE_PLUGIN_SOURCE: A .cpp file will be created for the plugin class
+#   by default and automatically added to the plugin target. Use this option to
+#   indicate that no such .cpp file should be generated. The caller is then
+#   responsible for providing their own plugin class if a separate plugin will
+#   be created. Note that this option is independent of NO_CREATE_PLUGIN_TARGET.
+#   (OPTIONAL)
+#
+# NO_PLUGIN_OPTIONAL: The plugin is marked as optional in the qmldir file by
+#   default. If the plugin contains code other than just the shim plugin loader
+#   class, specify this option to indicate that the plugin must always be loaded
+#   as part of the qml module. (OPTIONAL)
+#
+# OUTPUT_TARGETS: In static builds, additional CMake targets can be created
+#   which consumers of the module will need to link to and potentially install.
+#   Supply the name of an output variable, which will be set to a list of these
+#   targets. If installing the main target, you will also need to install these
+#   output targets for static builds. (OPTIONAL)
 #
 # DESIGNER_SUPPORTED: Specify this argument if the plugin is supported by Qt
 #   Quick Designer. By default, the plugin will not be supported. (OPTIONAL)
 #
 # TYPEINFO: Path to a file which declares a type description file for the module
 #   that can be read by QML tools such as Qt Creator to access information about
-#   the types defined by the module's plugins. (OPTIONAL)
+#   the types defined by the module's plugins. You will typically need to also
+#   specify NO_GENERATE_QMLTYPES if using this option. When TYPEINFO is not
+#   specified, it will default to "${target}.qmltypes". (OPTIONAL)
+#
+# NO_GENERATE_QMLTYPES: Do not automatically generate the *.qmltypes file.
+#   See also the TYPEINFO option. (OPTIONAL)
+#
+# NO_GENERATE_QMLDIR: Do not automatically generate the qmldir file. (OPTIONAL)
 #
 # IMPORTS: List of other Qml Modules that this module imports. A version can be
 #   specified by appending it after a slash(/), e.g QtQuick/2.0. The minor
@@ -64,78 +105,128 @@ set(__qt_qml_macros_module_base_dir "${CMAKE_CURRENT_LIST_DIR}")
 # OPTIONAL_IMPORTS: List of other Qml Modules that this module may import at
 #   run-time. Those are not automatically imported by the QML engine when
 #   importing the current module, but rather serve as hints to tools like
-#   qmllint. Versions can be specified in the same as for IMPORT. (OPTIONAL)
+#   qmllint. Versions can be specified in the same way as for IMPORTS.
+#   (OPTIONAL)
 #
-# RESOURCE_EXPORT: In static builds, when Qml files are processed via the Qt
-#   Quick Compiler generate a separate static library that will be linked in
-#   as an Interface. Supply an output variable to perform any custom actions
-#   on these extra generated targets.
+# DEPENDENCIES: List of QML Module dependencies and their versions. The module
+#   and its version must be separated via a slash(/). E.g. QtQuick/2.0
+#   (OPTIONAL)
 #
-# SKIP_TYPE_REGISTRATION: When present will cause the generated qmldir file
-#   to not list any qml types. These are expected to be registered by the
-#   c++ plugin code instead.
+# IMPORT_PATH: State that QML modules this one depends on may be found in the
+#   given import paths. (OPTIONAL)
 #
-# PLUGIN_OPTIONAL: The plugin is marked as optional in the qmldir file. If the
-#   type registration functions are already available by other means, typically
-#   by linking a library proxied by the plugin, it won't be loaded.
+# SOURCES: List of C++ sources. (OPTIONAL)
 #
-# PURE_MODULE: The plugin does not take any C++ source files. A dummy class plugin cpp file will
-#              be generated to ensure the module is found by the Qml engine.
+# QML_FILES: List of Qml files. See qt6_target_qml_sources() for more
+#   information on how to specify additional properties on qml files. (OPTIONAL)
 #
-# IMPORT_PATH: State that QML modules this one depends on may be found in the given import paths.
+# NO_LINT: By default, this function will create a separate ${target}_qmllint
+#   target if any .qml files are added to ${target} (see qt6_add_qml_sources()).
+#   Provide the NO_LINT option to disable this behavior. (OPTIONAL)
 #
-# This function is currently in Technical Preview.
-# It's signature and behavior might change.
+# NO_CACHEGEN: By default, this function will compile each .qml file added to
+#   the target and store that compiled version in the target's resources.
+#   Provide the NO_CACHEGEN option to disable this behavior.
+#   See qt6_add_qml_sources() for further details. (OPTIONAL)
+#
 function(qt6_add_qml_module target)
-    set(args_optional
-        GENERATE_QMLTYPES
-        INSTALL_QMLTYPES
+    set(args_option
+        STATIC
+        SHARED
         DESIGNER_SUPPORTED
+        NO_PLUGIN_OPTIONAL
+        NO_CREATE_PLUGIN_TARGET
+        NO_GENERATE_PLUGIN_SOURCE
+        NO_GENERATE_QMLTYPES
+        NO_GENERATE_QMLDIR
+        NO_LINT
+        NO_CACHEGEN
+        # TODO: Remove once all usages have also been removed
         SKIP_TYPE_REGISTRATION
-        PLUGIN_OPTIONAL
-        PURE_MODULE
     )
 
-    if (QT_BUILDING_QT)
-        list(APPEND args_optional DO_NOT_CREATE_TARGET)
-    endif()
-
     set(args_single
+        PLUGIN_TARGET
+        OUTPUT_TARGETS
         RESOURCE_PREFIX
         URI
         TARGET_PATH
         VERSION
         OUTPUT_DIRECTORY
-        INSTALL_DIRECTORY
         CLASS_NAME
-        CLASSNAME  # For backward compatibility, remove once all repos no longer use it
+        CLASSNAME  # TODO: For backward compatibility, remove once all repos no longer use it
         TYPEINFO
+        # TODO: We don't handle installation, warn if callers used these with the old
+        #       API and eventually remove them once we have updated all other repos
         RESOURCE_EXPORT
+        INSTALL_DIRECTORY
+        INSTALL_LOCATION
+        __QT_INTERNAL_QT_LIBINFIX  # Used only by _qt_internal_target_generate_qmldir()
     )
 
     set(args_multi
-       SOURCES
-       QML_FILES
-       IMPORTS
-       IMPORT_PATH
-       OPTIONAL_IMPORTS
-       DEPENDENCIES
-       PAST_MAJOR_VERSIONS
+        SOURCES
+        QML_FILES
+        IMPORTS
+        IMPORT_PATH
+        OPTIONAL_IMPORTS
+        DEPENDENCIES
+        PAST_MAJOR_VERSIONS
     )
 
-    cmake_parse_arguments(arg
-       "${args_optional}"
+    cmake_parse_arguments(PARSE_ARGV 1 arg
+       "${args_option}"
        "${args_single}"
        "${args_multi}"
-       ${ARGN}
     )
+    if(arg_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unknown/unexpected arguments: ${arg_UNPARSED_ARGUMENTS}")
+    endif()
 
+    # Warn about options we no longer need/use (these were used by the internal
+    # targets and examples, but the logic has been shifted to
+    # qt_internal_add_qml_module() or left as a responsibility of the caller).
+    if(DEFINED arg_RESOURCE_EXPORT)
+        message(AUTHOR_WARNING
+            "RESOURCE_EXPORT will be ignored. This function does not handle "
+            "installation, which is what RESOURCE_EXPORT was previously used "
+            "for. Please update your project to install the target directly."
+        )
+    endif()
+
+    if(DEFINED arg_INSTALL_DIRECTORY)
+        message(AUTHOR_WARNING
+            "INSTALL_DIRECTORY will be ignored. This function does not handle "
+            "installation, please update your project to install the target "
+            "directly."
+        )
+    endif()
+
+    if(DEFINED arg_INSTALL_LOCATION)
+        message(AUTHOR_WARNING
+            "INSTALL_LOCATION will be ignored. This function does not handle "
+            "installation, please update your project to install the target "
+            "directly."
+        )
+    endif()
+
+    if(arg_SKIP_TYPE_REGISTRATION)
+        message(AUTHOR_WARNING
+            "SKIP_TYPE_REGISTRATION is no longer used and will be ignored."
+        )
+    endif()
+
+    # Mandatory arguments
     if (NOT arg_URI)
-        message(FATAL_ERROR "qt6_add_qml_module called without a module URI. Please specify one using the URI argument.")
+        message(FATAL_ERROR
+            "Called without a module URI. Please specify one using the URI argument."
+        )
     endif()
 
     if (NOT arg_VERSION)
-        message(FATAL_ERROR "qt6_add_qml_module called without a module version. Please specify one using the VERSION argument.")
+        message(FATAL_ERROR
+            "Called without a module version. Please specify one using the VERSION argument."
+        )
     endif()
 
     if ("${arg_VERSION}" MATCHES "^([0-9]+\\.[0-9]+)\\.[0-9]+$")
@@ -143,10 +234,45 @@ function(qt6_add_qml_module target)
     endif()
 
     if (NOT "${arg_VERSION}" MATCHES "^[0-9]+\\.[0-9]+$")
-        message(FATAL_ERROR "qt6_add_qml_module called with an invalid version argument: '${arg_VERSION}'. Expected version style: VersionMajor.VersionMinor.")
+        message(FATAL_ERROR
+            "Called with an invalid version argument: '${arg_VERSION}'. "
+            "Expected version in the form: VersionMajor.VersionMinor."
+        )
     endif()
 
-    # Support for old keyword, remove once all repos no longer use CLASSNAME
+    # Provide defaults for options that have one
+    if (NOT arg_TARGET_PATH)
+        string(REPLACE "." "/" arg_TARGET_PATH ${arg_URI})
+    endif()
+
+    if(NOT arg_NO_CREATE_PLUGIN_TARGET AND NOT DEFINED arg_PLUGIN_TARGET)
+        set(arg_PLUGIN_TARGET ${target}plugin)
+    endif()
+    if(NOT DEFINED arg_PLUGIN_TARGET)
+        set(arg_PLUGIN_TARGET "")  # Simplifies things a bit further below
+    endif()
+
+    set(no_gen_source)
+    if(arg_NO_GENERATE_PLUGIN_SOURCE)
+        set(no_gen_source NO_GENERATE_SOURCE)
+    endif()
+
+    set(lib_type "")
+    if(arg_STATIC)
+        set(lib_type STATIC)
+    elseif(arg_SHARED)
+        set(lib_type SHARED)
+    endif()
+
+    if(arg_OUTPUT_DIRECTORY)
+        get_filename_component(arg_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
+            ABSOLUTE BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}"
+        )
+    else()
+        set(arg_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    endif()
+
+    # TODO: Support for old keyword, remove once all repos no longer use CLASSNAME
     if(arg_CLASSNAME)
         if(arg_CLASS_NAME AND NOT arg_CLASSNAME STREQUAL arg_CLASS_NAME)
             message(FATAL_ERROR
@@ -158,68 +284,675 @@ function(qt6_add_qml_module target)
         unset(arg_CLASSNAME)
     endif()
 
-    if (arg_DO_NOT_CREATE_TARGET AND NOT TARGET "${target}")
-        message(FATAL_ERROR "qt6_add_qml_module called with DO_NOT_CREATE_TARGET, but the given target '${target}' is not a cmake target")
+    if(NOT arg_CLASS_NAME AND TARGET "${arg_PLUGIN_TARGET}")
+        get_target_property(class_name ${arg_PLUGIN_TARGET} QT_PLUGIN_CLASS_NAME)
+        if(class_name)
+            set(arg_CLASS_NAME)
+        endif()
+    endif()
+    if(NOT arg_CLASS_NAME)
+        string(REGEX REPLACE "[^A-Za-z0-9]" "_" escaped_uri "${arg_URI}")
+        set(arg_CLASS_NAME "${escaped_uri}Plugin")
     endif()
 
-    if (arg_DO_NOT_CREATE_TARGET)
-        get_target_property(target_type ${target} TYPE)
-        if (target_type STREQUAL "STATIC_LIBRARY")
-            set(is_static TRUE)
-        elseif(target_type STREQUAL "MODULE_LIBRARY")
-            set(is_static FALSE)
-        else()
-            message(FATAL_ERROR "qt6_add_qml_module called with DO_NOT_CREATE_TARGET, but target '${target}' is neither a static or a module library.")
-        endif()
-    else()
-        # TODO: Creating a library here means we're missing creation of supporting .prl files,
-        # as well as install(TARGET foo EXPORT bar) mapping,  as opposed to when it's done
-        # by qt_internal_add_plugin inside the qt_internal_add_qml_module call.
-        if(NOT BUILD_SHARED_LIBS)
-            add_library(${target} STATIC)
-            set(is_static TRUE)
-
-            # No need to compile Q_IMPORT_PLUGIN-containing files for non-executables.
-            _qt_internal_disable_static_default_plugins("${resource_target}")
-        else()
-            add_library(${target} MODULE)
-            set(is_static FALSE)
-            if(APPLE)
-                # CMake defaults to using .so extensions for loadable modules, aka plugins,
-                # but Qt plugins are actually suffixed with .dylib.
-                set_property(TARGET "${target}" PROPERTY SUFFIX ".dylib")
-            endif()
-            if(WIN32)
-                # CMake sets for Windows-GNU platforms the suffix "lib"
-                set_property(TARGET "${target}" PROPERTY PREFIX "")
-            endif()
-        endif()
-        _qt_internal_apply_strict_cpp("${target}")
-    endif()
-
-    if (NOT arg_TARGET_PATH)
-        string(REPLACE "." "/" arg_TARGET_PATH ${arg_URI})
-    endif()
-
-    # If C++ sources were directly specified (not via qt_internal_add_qml_module), we assume the
-    # user will provide a plugin.cpp file. Don't generate a dummy plugin.cpp file in this case.
-    #
-    # If no sources were specified, it doesn't necessarily mean this is a pure QML module.
-    # Only if the caller explicitly says it is a pure QML module should we generate a
-    # dummy plugin.cpp file (the caller might be handling sources in another way).
-    if (arg_PURE_MODULE)
-        if (arg_SOURCES)
-            message(FATAL_ERROR "SOURCES cannot be specified with PURE_MODULE")
-        endif()
-        if(arg_CLASS_NAME)
+    if(TARGET ${target})
+        if(arg_STATIC OR arg_SHARED)
             message(FATAL_ERROR
-                "CLASS_NAME cannot be specified with PURE_MODULE. "
-                "The class name will be auto-generated."
+                "Cannot use STATIC or SHARED keyword when passed an existing target (${target})"
             )
         endif()
-        # Note that this populates arg_CLASS_NAME, since it creates a dummy
-        # class name to match the dummy plugin
-        _qt_internal_create_dummy_qml_plugin("${target}" "${arg_URI}" arg_CLASS_NAME)
+        if(arg_PLUGIN_TARGET STREQUAL target)
+            # Insert the plugin's URI into its meta data to enable usage
+            # of static plugins in QtDeclarative (like in mkspecs/features/qml_plugin.prf).
+            set_property(TARGET ${target} APPEND PROPERTY
+                AUTOMOC_MOC_OPTIONS "-Muri=${arg_URI}"
+            )
+        endif()
+    else()
+        if(arg_STATIC AND arg_SHARED)
+            message(FATAL_ERROR
+                "Both STATIC and SHARED specified, at most one can be given"
+            )
+        endif()
+
+        if(arg_PLUGIN_TARGET STREQUAL target)
+            if(arg_NO_CREATE_PLUGIN_TARGET AND NOT TARGET ${target})
+                message(FATAL_ERROR
+                    "NO_CREATE_PLUGIN_TARGET was given, but PLUGIN_TARGET is "
+                    "the same as the backing target (which is allowed) and the "
+                    "target does not exist. Either ensure the target is already "
+                    "created or do not specify NO_CREATE_PLUGIN_TARGET."
+                )
+            endif()
+            qt6_add_qml_plugin(${target}
+                ${lib_type}
+                ${no_gen_source}
+                OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
+                URI ${arg_URI}
+                CLASS_NAME ${arg_CLASS_NAME}
+            )
+        else()
+            add_library(${target} ${lib_type})
+            if(ANDROID)
+                # TODO: Check if we need to do this for a backing library
+                qt6_android_apply_arch_suffix(${target})
+            endif()
+        endif()
+    endif()
+
+    if(NOT target STREQUAL Qml)
+        target_link_libraries(${target} PRIVATE ${QT_CMAKE_EXPORT_NAMESPACE}::Qml)
+    endif()
+
+    if(NOT arg_TYPEINFO)
+        set(arg_TYPEINFO ${target}.qmltypes)
+    endif()
+
+    # Make the prefix conform to the following:
+    #   - Starts with a "/"
+    #   - Does not end with a "/" unless the prefix is exactly "/"
+    if(NOT arg_RESOURCE_PREFIX)
+        set(arg_RESOURCE_PREFIX "/")
+    endif()
+    if(NOT arg_RESOURCE_PREFIX MATCHES "^/")
+        string(PREPEND arg_RESOURCE_PREFIX "/")
+    endif()
+    if(arg_RESOURCE_PREFIX MATCHES [[(.*)/$]])
+        set(arg_RESOURCE_PREFIX "${CMAKE_MATCH_1}")
+    endif()
+
+    foreach(import_set IN ITEMS IMPORTS OPTIONAL_IMPORTS)
+        foreach(import IN LISTS arg_${import_set})
+            string(FIND ${import} "/" slash_position REVERSE)
+            if (slash_position EQUAL -1)
+                set_property(TARGET ${target} APPEND PROPERTY
+                    QT_QML_MODULE_${import_set} "${import}"
+                )
+            else()
+                string(SUBSTRING ${import} 0 ${slash_position} import_module)
+                math(EXPR slash_position "${slash_position} + 1")
+                string(SUBSTRING ${import} ${slash_position} -1 import_version)
+                if (import_version MATCHES "^([0-9]+(\\.[0-9]+)?|auto)$")
+                    set_property(TARGET ${target} APPEND PROPERTY
+                        QT_QML_MODULE_${import_set} "${import_module} ${import_version}"
+                    )
+                else()
+                    message(FATAL_ERROR
+                        "Invalid module ${import} version number. "
+                        "Expected 'VersionMajor', 'VersionMajor.VersionMinor' or 'auto'."
+                    )
+                endif()
+            endif()
+        endforeach()
+    endforeach()
+
+    foreach(dependency IN LISTS arg_DEPENDENCIES)
+        string(FIND ${dependency} "/" slash_position REVERSE)
+        if (slash_position EQUAL -1)
+            set_property(TARGET ${target} APPEND PROPERTY
+                QT_QML_MODULE_DEPENDENCIES "${dependency}"
+            )
+        else()
+            string(SUBSTRING ${dependency} 0 ${slash_position} dep_module)
+            math(EXPR slash_position "${slash_position} + 1")
+            string(SUBSTRING ${dependency} ${slash_position} -1 dep_version)
+            if (dep_version MATCHES "^([0-9]+(\\.[0-9]+)?|auto)$")
+                set_property(TARGET ${target} APPEND PROPERTY
+                    QT_QML_MODULE_DEPENDENCIES "${dep_module} ${dep_version}"
+                )
+            else()
+                message(FATAL_ERROR
+                    "Invalid module dependency version number. "
+                    "Expected 'VersionMajor', 'VersionMajor.VersionMinor' or 'auto'."
+                )
+            endif()
+        endif()
+    endforeach()
+
+    set_target_properties(${target} PROPERTIES
+        QT_QML_MODULE_NO_LINT "${arg_NO_LINT}"
+        QT_QML_MODULE_NO_CACHEGEN "${arg_NO_CACHEGEN}"
+        QT_QML_MODULE_NO_GENERATE_QMLDIR "${arg_NO_GENERATE_QMLDIR}"
+        QT_QML_MODULE_NO_PLUGIN_OPTIONAL "${arg_NO_PLUGIN_OPTIONAL}"
+        QT_QML_MODULE_URI "${arg_URI}"
+        QT_QML_MODULE_VERSION "${arg_VERSION}"
+        QT_QML_MODULE_CLASS_NAME "${arg_CLASS_NAME}"
+        QT_QML_MODULE_LIBINFIX "${arg___QT_INTERNAL_QT_LIBINFIX}"
+        QT_QML_MODULE_PLUGIN_TARGET "${arg_PLUGIN_TARGET}"
+        QT_QML_MODULE_DESIGNER_SUPPORTED "${arg_DESIGNER_SUPPORTED}"
+        QT_QML_MODULE_OUTPUT_DIR "${arg_OUTPUT_DIRECTORY}"
+        QT_RESOURCE_PREFIX "${arg_RESOURCE_PREFIX}/${arg_TARGET_PATH}"
+        QT_QML_PAST_MAJOR_VERSIONS "${arg_PAST_MAJOR_VERSIONS}"
+        QT_QMLTYPES_FILENAME "${arg_TYPEINFO}"
+
+        # TODO: Check how this is used by qt6_android_generate_deployment_settings()
+        QT_QML_IMPORT_PATH "${arg_IMPORT_PATH}"
+    )
+    set(ensure_set_properties
+        QT_QML_MODULE_PLUGIN_TYPES_FILE
+        QT_QML_MODULE_RESOURCE_PATHS
+        QT_QMLCACHEGEN_DIRECT_CALLS
+        QT_QMLCACHEGEN_QMLJS_RUNTIME
+    )
+    foreach(prop IN LISTS ensure_set_properties)
+        get_target_property(val ${target} ${prop})
+        if("${val}" MATCHES "-NOTFOUND$")
+            set_target_properties(${target} PROPERTIES ${prop} "")
+        endif()
+    endforeach()
+
+    if(NOT arg_NO_GENERATE_QMLTYPES)
+        qt6_qml_type_registration(${target} OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY})
+    endif()
+
+    set(output_targets)
+
+    if(NOT arg_NO_GENERATE_QMLDIR)
+        _qt_internal_target_generate_qmldir(${target} ${arg_OUTPUT_DIRECTORY} ${arg_TARGET_PATH})
+
+        get_target_property(target_type ${target} TYPE)
+        if(target_type STREQUAL "STATIC_LIBRARY")
+            # Embed qmldir in static builds. The following comments relate mostly to Qt5->6 transition.
+            # The requirement to keep the same resource name might no longer apply, but it doesn't
+            # currently appear to cause any hinderance to keep it.
+            # The qmldir resource name needs to match the one generated by qmake's qml_module.prf, to
+            # ensure that all Q_INIT_RESOURCE(resource_name) calls in Qt code don't lead to undefined
+            # symbol errors when linking an application project.
+            # The Q_INIT_RESOURCE() calls are not strictly necessary anymore because the CMake Qt
+            # build passes around the compiled resources as object files.
+            # These object files have global initiliazers that don't get discared when linked into
+            # an application (as opposed to when the resource libraries were embedded into the static
+            # libraries when Qt was built with qmake).
+            # The reason to match the naming is to ensure that applications link successfully regardless
+            # if Qt was built with CMake or qmake, while the build system transition phase is still
+            # happening.
+            string(REPLACE "/" "_" qmldir_resource_name "qmake_${arg_TARGET_PATH}")
+            set_source_files_properties(${arg_OUTPUT_DIRECTORY}/qmldir
+                PROPERTIES QT_RESOURCE_ALIAS "qmldir"
+            )
+            set(resource_targets)
+            qt6_add_resources(${target} ${qmldir_resource_name}
+                FILES ${arg_OUTPUT_DIRECTORY}/qmldir
+                OUTPUT_TARGETS resource_targets
+            )
+            list(APPEND output_targets ${resource_targets})
+        endif()
+    endif()
+
+    if(arg_PLUGIN_TARGET AND NOT arg_NO_CREATE_PLUGIN_TARGET)
+        # This also handles the case where ${arg_PLUGIN_TARGET} already exists,
+        # including where it is the same as ${target}. If ${arg_PLUGIN_TARGET}
+        # already exists, it will update the necessary things that are specific
+        # to qml plugins.
+        qt6_add_qml_plugin(${arg_PLUGIN_TARGET}
+            ${lib_type}
+            ${no_gen_source}
+            OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
+            BACKING_TARGET ${target}
+            CLASS_NAME ${arg_CLASS_NAME}
+        )
+    endif()
+
+    if(TARGET "${arg_PLUGIN_TARGET}" AND NOT arg_PLUGIN_TARGET STREQUAL target)
+        target_link_libraries(${arg_PLUGIN_TARGET} PRIVATE ${target})
+    endif()
+
+    target_sources(${target} PRIVATE ${arg_SOURCES})
+
+    set(cache_target)
+    qt6_target_qml_sources(${target}
+        __QT_INTERNAL_FORCE_DEFER_QMLDIR
+        FILES ${arg_QML_FILES}
+        OUTPUT_TARGETS cache_target
+    )
+    list(APPEND output_targets ${cache_target})
+
+    if(NOT arg_NO_GENERATE_QMLDIR)
+        if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0")
+            # Defer the write to allow more qml files to be added later by calls to
+            # qt6_target_qml_sources(). We wrap the deferred call with EVAL CODE
+            # so that ${target} is evaluated now rather than the end of the scope.
+            cmake_language(EVAL CODE
+                "cmake_language(DEFER CALL _qt_internal_write_deferred_qmldir_file ${target})"
+            )
+        else()
+            # Can't defer the write, have to do it now
+            _qt_internal_write_deferred_qmldir_file(${target})
+        endif()
+    endif()
+
+    if(arg_OUTPUT_TARGETS)
+        set(${arg_OUTPUT_TARGETS} ${output_targets} PARENT_SCOPE)
+    endif()
+
+endfunction()
+
+if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
+    function(qt_add_qml_module)
+        qt6_add_qml_module(${ARGV})
+    endfunction()
+endif()
+
+macro(_qt_internal_genex_getproperty var target property)
+    set(${var} "$<TARGET_PROPERTY:${target},${property}>")
+    set(have_${var} "$<BOOL:${${var}}>")
+endmacro()
+
+macro(_qt_internal_genex_getjoinedproperty var target property item_prefix glue)
+    _qt_internal_genex_getproperty(${var} ${target} ${property})
+    set(${var} "$<${have_${var}}:${item_prefix}$<JOIN:${${var}},${glue}${item_prefix}>>")
+endmacro()
+
+macro(_qt_internal_genex_getoption var target property)
+    set(${var} "$<BOOL:$<TARGET_PROPERTY:${target},${property}>>")
+endmacro()
+
+function(_qt_internal_target_enable_qmllint target)
+    set(lint_target ${target}_qmllint)
+    if(TARGET ${lint_target})
+        return()
+    endif()
+
+    _qt_internal_genex_getproperty(qmllint_files ${target} QT_QML_LINT_FILES)
+    _qt_internal_genex_getjoinedproperty(import_args ${target}
+        QT_QML_IMPORT_PATH "-I$<SEMICOLON>" "$<SEMICOLON>"
+    )
+
+    set(cmd
+        ${QT_TOOL_COMMAND_WRAPPER_PATH}
+        ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint
+        ${import_args}
+        ${qmllint_files}
+    )
+
+    add_custom_target(${lint_target}
+        COMMAND "$<${have_qmllint_files}:${cmd}>"
+        COMMAND_EXPAND_LISTS
+        DEPENDS ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint ${qmllint_files}
+        WORKING_DIRECTORY "$<TARGET_PROPERTY:${target},SOURCE_DIR>"
+    )
+endfunction()
+
+# This is a  modified version of __qt_propagate_generated_resource from qtbase.
+#
+# The main reason we can't use it is because it unconditionally links the object library to the
+# target (in the static Qt case). We need to link conditionally based on 'link_condition' genex.
+#
+# The reason for propagating the qmlcache target as a 'fake resource' from the build system
+# perspective is to ensure proper handling of the object files in generated qmake .prl files.
+#
+# TODO: The qtbase function should be refactored into separate parts, so that we can reuse the
+# common functionality in this function.
+function(_qt_internal_propagate_qmlcache_object_lib
+         target
+         generated_source_code
+         link_condition
+         output_generated_target)
+    set(resource_target "${target}_qmlcache")
+    add_library("${resource_target}" OBJECT "${generated_source_code}")
+
+    # Needed to trigger the handling of the object library for .prl generation.
+    set_property(TARGET ${resource_target} APPEND PROPERTY _qt_resource_name ${resource_target})
+
+    # Save the path to the generated source file, relative to the the current build dir.
+    # The path will be used in static library prl file generation to ensure qmake links
+    # against the installed resource object files.
+    # Example saved path:
+    #    .rcc/qrc_qprintdialog.cpp
+    file(RELATIVE_PATH generated_cpp_file_relative_path
+        "${CMAKE_CURRENT_BINARY_DIR}"
+        "${generated_source_code}")
+    set_property(TARGET ${resource_target} APPEND PROPERTY
+        _qt_resource_generated_cpp_relative_path "${generated_cpp_file_relative_path}")
+
+    # FIXME: _is_qt_resource_target finalizer mode processing has been removed in this
+    # implementation, because qtbase's finalizer currently can't handle conditional linking
+    # of object libraries. It would try to link to the object library unconditionally, ignoring
+    # ${link_condition}. See the implementation of __qt_internal_collect_dependency_resource_objects
+    # for the reason why that happens.
+
+    # Do not litter the static libraries
+    set(not_static_condition
+        "$<NOT:$<STREQUAL:$<TARGET_PROPERTY:TYPE>,STATIC_LIBRARY>>"
+    )
+    set(resource_objects "$<TARGET_OBJECTS:$<TARGET_NAME:${resource_target}>>")
+
+    # It's necessary to link the object library target, since we want to pass
+    # the object library dependencies to the 'target'. Interface linking doesn't
+    # add the objects of the resource library to the end-point linker line
+    # but propagates all the dependencies of the resource_target added before
+    # or AFTER the line below.
+    target_link_libraries(${target} INTERFACE
+        "$<$<AND:${not_static_condition},${link_condition}>:${resource_target}>"
+    )
+
+    # Qml specific additions.
+    target_link_libraries(${resource_target} PRIVATE
+        ${QT_CMAKE_EXPORT_NAMESPACE}::QmlPrivate
+        ${QT_CMAKE_EXPORT_NAMESPACE}::Core
+    )
+
+    # FIXME: Try to adapt finalizer approach to be usable here.
+    #
+    # We need the qmlcache_loader.cpp.o file to appear before ${target} on the link line.
+    # Otherwise GNU ld will discard the compiled-QML files that were embedded into the static
+    # ${target} library, which are referenced by the loader file.
+    #
+    # We can't use target_link_libraries(${target} INTERFACE $<TARGET_OBJECTS:qmlcache_loder.cpp.o>)
+    # because that will place the object file after ${target} on the link line with all CMake
+    # versions lower than 3.21.0.
+    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/6166
+    #
+    # We can't use the qtbase finalizer approach at the moment, because its implementation doesn't
+    # take into account the ${condition_link} genex.
+    # There might also be complications using finalizer mode during the Qt build itself, because we
+    # currently only use it in public user projects (those that call qt_finalize_target).
+    #
+    # We are forced to use target_sources to place the object file before ${target}.
+    # This means linking will fail for user projects that will try to propagate the usage
+    # of ${target} via their own static library A, if library A doesn't link publicly to ${target}.
+    # This is not the majority of user projects.
+    # Hopefully we can lift this limitation once we can use the finalizer approach here.
+    #
+    # Until then, this is needed to get the Qt build working.
+    target_sources(${target} INTERFACE
+        "$<$<AND:${not_static_condition},${link_condition}>:${resource_objects}>"
+    )
+
+    set(${output_generated_target} "${resource_target}" PARENT_SCOPE)
+endfunction()
+
+function(_qt_internal_target_enable_qmlcachegen target output_targets_var)
+
+    set(output_targets)
+    set_target_properties(${target} PROPERTIES _qt_cachegen_set_up TRUE)
+
+    get_target_property(target_binary_dir ${target} BINARY_DIR)
+    set(qmlcache_dir ${target_binary_dir}/.rcc/qmlcache/${target})
+    set(qmlcache_resource_name qmlcache_${target})
+    set(qmlcache_loader_cpp ${qmlcache_dir}/qmlcache_loader.cpp)
+    set(qmlcache_loader_list ${qmlcache_dir}/qml_loader_file_list.rsp)
+    set(qmlcache_resource_paths "$<TARGET_PROPERTY:${target},QT_QML_MODULE_RESOURCE_PATHS>")
+    set(qmlcache_have_resource_paths "$<BOOL:${qmlcache_resource_paths}>")
+
+    set(cmd
+        ${QT_TOOL_COMMAND_WRAPPER_PATH}
+        $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen>
+        --resource-name "${qmlcache_resource_name}"
+        -o "${qmlcache_loader_cpp}"
+        "@${qmlcache_loader_list}"
+    )
+
+    file(GENERATE
+        OUTPUT ${qmlcache_loader_list}
+        CONTENT "$<JOIN:${qmlcache_resource_paths},\n>\n"
+        CONDITION "${qmlcache_have_resource_paths}"
+    )
+
+    add_custom_command(
+        OUTPUT ${qmlcache_loader_cpp}
+        COMMAND "$<${qmlcache_have_resource_paths}:${cmd}>"
+        COMMAND_EXPAND_LISTS
+        DEPENDS
+        ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen
+        ${qmlcache_loader_list}
+    )
+
+    # TODO: Probably need to reject ${target} being an object library as unsupported
+    get_target_property(target_type ${target} TYPE)
+    if(target_type STREQUAL "STATIC_LIBRARY")
+        _qt_internal_propagate_qmlcache_object_lib(
+            ${target}
+            "${qmlcache_loader_cpp}"
+            "${qmlcache_have_resource_paths}"
+            output_target)
+
+        list(APPEND output_targets ${output_target})
+    else()
+        target_sources(${target} PRIVATE
+            "$<${qmlcache_have_resource_paths}:${qmlcache_loader_cpp}>"
+        )
+        target_link_libraries(${target} PRIVATE
+            ${QT_CMAKE_EXPORT_NAMESPACE}::QmlPrivate
+            ${QT_CMAKE_EXPORT_NAMESPACE}::Core
+        )
+    endif()
+
+    set(${output_targets_var} ${output_targets} PARENT_SCOPE)
+endfunction()
+
+# We cannot defer writing out the qmldir file to generation time because the
+# qmlimportscanner runs at configure time as part of target finalizers.
+# Therefore, the best we can do is defer writing the qmldir file if we are
+# using a recent enough CMake version, otherwise we write it out progressively
+# on each call that adds qml sources. The immediate progressive writes will
+# trigger some unnecessary rebuilds after reconfiguring due to the qmldir
+# file's timestamp being updated even though its contents might not change,
+# but that's the cost of not having deferred write capability.
+function(_qt_internal_target_generate_qmldir target out_dir target_path)
+
+    macro(_qt_internal_qmldir_item prefix property)
+        get_target_property(_value ${target} ${property})
+        if(_value)
+            string(APPEND content "${prefix} ${_value}\n")
+        endif()
+    endmacro()
+
+    macro(_qt_internal_qmldir_item_list prefix property)
+        get_target_property(_values ${target} ${property})
+        if(_values)
+            foreach(_value IN LISTS _values)
+                string(APPEND content "${prefix} ${_value}\n")
+            endforeach()
+        endif()
+    endmacro()
+
+    get_target_property(uri ${target} QT_QML_MODULE_URI)
+    if(NOT uri)
+        message(FATAL_ERROR "Target ${target} has no URI set, cannot create qmldir")
+    endif()
+    set(content "module ${uri}\n")
+
+    get_target_property(plugin_target ${target} QT_QML_MODULE_PLUGIN_TARGET)
+    if(plugin_target)
+        get_target_property(no_plugin_optional ${target} QT_QML_MODULE_NO_PLUGIN_OPTIONAL)
+        if(NOT no_plugin_optional MATCHES "NOTFOUND" AND NOT no_plugin_optional)
+            string(APPEND content "optional ")
+        endif()
+
+        get_target_property(qt_libinfix ${target} QT_QML_MODULE_LIBINFIX)
+        string(APPEND content "plugin ${plugin_target}${qt_libinfix}\n")
+    endif()
+
+    get_target_property(designer_supported ${target} QT_QML_MODULE_DESIGNER_SUPPORTED)
+    if(designer_supported)
+        string(APPEND content "designersupported\n")
+    endif()
+
+    _qt_internal_qmldir_item(classname QT_QML_MODULE_CLASS_NAME)
+    _qt_internal_qmldir_item(typeinfo QT_QMLTYPES_FILENAME)
+
+    _qt_internal_qmldir_item_list(import QT_QML_MODULE_IMPORTS)
+    _qt_internal_qmldir_item_list("optional import" QT_QML_MODULE_OPTIONAL_IMPORTS)
+    _qt_internal_qmldir_item_list(depends QT_QML_MODULE_DEPENDENCIES)
+
+    get_target_property(prefix ${target} QT_RESOURCE_PREFIX)
+    if(prefix)
+        # Ensure we use a path that ends with a "/", but handle the special case
+        # of "/" without anything after it
+        if(NOT prefix STREQUAL "/" AND NOT prefix MATCHES "/$")
+            string(APPEND prefix "/")
+        endif()
+        string(APPEND content "prefer :${prefix}\n")
+    endif()
+
+    # TODO: What about multi-config generators? Would we need per-config qmldir
+    #       files (because we will have per-config plugin targets)?
+
+    # Record the contents but defer the actual write. We will write the file
+    # later, either at the end of qt6_add_qml_module() or the end of the
+    # directory scope (depending on the CMake version being used).
+    set_property(TARGET ${target} PROPERTY _qt_internal_qmldir_content "${content}")
+
+    # NOTE: qt6_target_qml_sources() may append further content later.
+endfunction()
+
+# TODO: Need to consider the case where an executable's finalizer might execute
+#       before our deferred call. That can occur in the following situations:
+#
+#         - The executable target is created in the same scope as the qml module
+#           and the executable target is created first.
+#         - The qml module is created in a parent scope of the executable.
+#
+#       Note that the qml module can safely be created in another scope as long
+#       as that scope has been finalized by the time the executable target's
+#       finalizer is called. A child scope satisfies this, as does any other
+#       scope that has already finished being processed earlier in the CMake run.
+function(_qt_internal_write_deferred_qmldir_file target)
+    get_target_property(__qt_qmldir_content ${target} _qt_internal_qmldir_content)
+    get_target_property(out_dir ${target} QT_QML_MODULE_OUTPUT_DIR)
+    set(qmldir_file "${out_dir}/qmldir")
+    configure_file(${__qt_qml_macros_module_base_dir}/Qt6qmldirTemplate.cmake.in ${qmldir_file} @ONLY)
+endfunction()
+
+
+# Create a Qml plugin. Projects should not normally need to call this function
+# directly. Rather, it would normally be called by qt6_add_qml_module() to
+# create or update the plugin associated with its backing target.
+#
+# target: The name of the target to use for the qml plugin. If it does not
+#   already exist, it will be created. (REQUIRED)
+#
+# STATIC, SHARED: Explicitly specify the type of plugin library to create.
+#   At most one of these two options can be specified. (OPTIONAL)
+#
+# BACKING_TARGET: The backing target that the plugin is associated with. This
+#   can be the same as ${target}, in which case there is only the one merged
+#   target. If this option is not provided, then URI must be given. (OPTIONAL)
+#
+# URI: Declares the module identifier of the qml module this plugin is
+#   associated with. The module identifier is the (dotted URI notation)
+#   identifier for the qml module. If URI is not given, then a BACKING_TARGET
+#   must be provided (the backing target should have its URI recorded on it by
+#   qt6_add_qml_module()). (OPTIONAL)
+#
+# TARGET_PATH: Overwrite the generated target path. By default the target path
+#   is generated from the URI by replacing the '.' with a '/'. However, under
+#   certain circumstances this may not be enough. Use this argument to provide
+#   a replacement. It is only used if targeting Android. (OPTIONAL)
+#
+# CLASS_NAME: By default, the class name will be taken from the backing target,
+#   if provided, or falling back to the URI with "Plugin" appended. Any
+#   non-alphanumeric characters in the URI will be replaced with underscores.
+#   (OPTIONAL)
+#
+# OUTPUT_DIRECTORY: Overrides the directory where the plugin library will be
+#   created. Defaults to ${CMAKE_CURRENT_BINARY_DIR} if not specified.
+#   (OPTIONAL)
+#
+# NO_GENERATE_SOURCE: A .cpp file will be created for the plugin class
+#   by default and automatically added to the plugin target. Use this option to
+#   indicate that no such .cpp file should be generated. The caller is then
+#   responsible for providing their own plugin class. (OPTIONAL)
+#
+function(qt6_add_qml_plugin target)
+    set(args_option
+        STATIC
+        SHARED
+        NO_GENERATE_SOURCE
+    )
+
+    set(args_single
+        OUTPUT_DIRECTORY
+        URI
+        BACKING_TARGET
+        CLASS_NAME
+        # The following is only needed on Android, and even then, only if the
+        # default conversion from the URI is not applicable
+        TARGET_PATH
+    )
+
+    set(args_multi "")
+
+    cmake_parse_arguments(PARSE_ARGV 1 arg
+       "${args_option}"
+       "${args_single}"
+       "${args_multi}"
+    )
+
+    if(NOT arg_URI)
+        if(NOT arg_BACKING_TARGET)
+            message(FATAL_ERROR "No URI or BACKING_TARGET provided")
+        endif()
+        if(arg_BACKING_TARGET STREQUAL target AND NOT TARGET ${target})
+            message(FATAL_ERROR
+                "Plugin ${target} is its own backing target, URI must be provided"
+            )
+        endif()
+        get_target_property(arg_URI ${arg_BACKING_TARGET} QT_QML_MODULE_URI)
+    endif()
+
+    string(REGEX REPLACE "[^A-Za-z0-9]" "_" escaped_uri "${arg_URI}")
+
+    if(TARGET ${target})
+        foreach(arg IN ITEMS STATIC SHARED)
+            if(arg_${arg})
+                message(FATAL_ERROR
+                    "Cannot specify ${arg} keyword, target ${target} already exists"
+                )
+            endif()
+        endforeach()
+        get_target_property(class_name ${target} QT_PLUGIN_CLASS_NAME)
+        if(class_name)
+            if(arg_CLASS_NAME AND NOT arg_CLASS_NAME STREQUAL class_name)
+                message(FATAL_ERROR
+                    "CLASS_NAME was specified, but an existing target with a "
+                    "different class name was also given"
+                )
+            endif()
+            set(arg_CLASS_NAME ${class_name})
+        elseif(NOT arg_CLASS_NAME)
+            set(arg_CLASS_NAME "${escaped_uri}Plugin")
+        endif()
+    else()
+        if(arg_STATIC AND arg_SHARED)
+            message(FATAL_ERROR
+                "Cannot specify both STATIC and SHARED for target ${target}"
+            )
+        endif()
+        set(lib_type "")
+        if(arg_STATIC)
+            set(lib_type STATIC)
+        elseif(arg_SHARED)
+            set(lib_type SHARED)
+        endif()
+
+        if(NOT arg_CLASS_NAME)
+            set(arg_CLASS_NAME "${escaped_uri}Plugin")
+        endif()
+
+        qt6_add_plugin(${target} ${lib_type}
+            TYPE qml_plugin
+            CLASS_NAME ${arg_CLASS_NAME}
+        )
+    endif()
+
+    get_target_property(moc_opts ${target} AUTOMOC_MOC_OPTIONS)
+    set(already_set FALSE)
+    if(moc_opts)
+        foreach(opt IN LISTS moc_opts)
+            if("${opt}" MATCHES "^-Muri=")
+                set(already_set TRUE)
+                break()
+            endif()
+        endforeach()
+    endif()
+    if(NOT already_set)
+        # Insert the plugin's URI into its meta data to enable usage
+        # of static plugins in QtDeclarative (like in mkspecs/features/qml_plugin.prf).
+        set_property(TARGET ${target} APPEND PROPERTY
+            AUTOMOC_MOC_OPTIONS "-Muri=${arg_URI}"
+        )
     endif()
 
     if (ANDROID)
@@ -233,345 +966,131 @@ function(qt6_add_qml_module target)
         #   TARGET_PATH: QtQuick/Controls.2/Material
         #   file name:
         #     libqml_QtQuick_Controls.2_Material_qtquickcontrols2materialstyleplugin_arm64-v8a.so
-        string(REPLACE "/" "_" android_plugin_name_infix_name "${arg_TARGET_PATH}")
+        if(NOT arg_TARGET_PATH AND TARGET "${arg_BACKING_TARGET}")
+            get_target_property(arg_TARGET_PATH ${target} ${arg_BACKING_TARGET})
+        endif()
+        if(arg_TARGET_PATH)
+            string(REPLACE "/" "_" android_plugin_name_infix_name "${arg_TARGET_PATH}")
+        else()
+            string(REPLACE "." "_" android_plugin_name_infix_name "${arg_URI}")
+        endif()
 
         set(final_android_qml_plugin_name "qml_${android_plugin_name_infix_name}_${target}")
         set_target_properties(${target}
             PROPERTIES
             LIBRARY_OUTPUT_NAME "${final_android_qml_plugin_name}"
         )
+        qt6_android_apply_arch_suffix(${target})
     endif()
 
-    if (NOT arg_RESOURCE_PREFIX)
-        set(arg_RESOURCE_PREFIX "/org.qt-project/imports")
-    endif()
-
-    set(should_install TRUE)
-    if (NOT arg_INSTALL_DIRECTORY)
-        set(should_install FALSE)
-    endif()
-
-    set_target_properties(${target}
-        PROPERTIES
-            QT_QML_MODULE_TARGET_PATH "${arg_TARGET_PATH}"
-            QT_QML_MODULE_URI "${arg_URI}"
-            QT_RESOURCE_PREFIX "${arg_RESOURCE_PREFIX}/${arg_TARGET_PATH}"
-            QT_QML_MODULE_VERSION "${arg_VERSION}"
-            QT_QML_MODULE_INSTALL_DIR "${arg_INSTALL_DIRECTORY}"
-            QT_QML_MODULE_RESOURCE_EXPORT "${arg_RESOURCE_EXPORT}"
-    )
-    if (arg_OUTPUT_DIRECTORY)
-        set_target_properties(${target}
-            PROPERTIES
-                LIBRARY_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
-                ARCHIVE_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
-                QT_QML_MODULE_OUTPUT_DIR "${arg_OUTPUT_DIRECTORY}"
+    if(arg_OUTPUT_DIRECTORY)
+        set_target_properties(${target} PROPERTIES
+            RUNTIME_OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
+            LIBRARY_OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
+            ARCHIVE_OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
         )
     endif()
 
-    if (NOT DO_NOT_CREATE_TARGET AND should_install)
-        install(TARGETS ${target}
-            DESTINATION "${arg_INSTALL_DIRECTORY}"
-        )
-    endif()
+    if(NOT arg_NO_GENERATE_SOURCE)
+        set(generated_cpp_file_name_base "${target}_${arg_CLASS_NAME}")
+        set(register_types_function_name "qml_register_types_${escaped_uri}")
 
-    if (arg_OUTPUT_DIRECTORY)
-        set(target_output_dir ${arg_OUTPUT_DIRECTORY})
-    else()
-        if(is_static)
-            get_target_property(target_output_dir ${target} ARCHIVE_OUTPUT_DIRECTORY)
-        else()
-            get_target_property(target_output_dir ${target} LIBRARY_OUTPUT_DIRECTORY)
-        endif()
-    endif()
-
-    if (arg_SKIP_TYPE_REGISTRATION)
-        set_target_properties(${target} PROPERTIES QT_QML_MODULE_SKIP_TYPE_REGISTRATION TRUE)
-    endif()
-
-    if (arg_SOURCES)
-        target_sources(${target} PRIVATE ${arg_SOURCES})
-    endif()
-
-    if (arg_IMPORT_PATH)
-        set_target_properties(${target} PROPERTIES QT_QML_IMPORT_PATH "${arg_IMPORT_PATH}")
-    endif()
-
-    # Insert the plugins URI into its meta data to enable usage
-    # of static plugins in QtDeclarative (like in mkspecs/features/qml_plugin.prf).
-    set_property(TARGET "${target}" APPEND PROPERTY AUTOMOC_MOC_OPTIONS "-Muri=${arg_URI}")
-
-    # Tracker so we can generate unique resource names for multiple
-    # target_qml_files() calls.
-    set_target_properties(${target} PROPERTIES QT6_QML_MODULE_ADD_QML_FILES_COUNT 1)
-
-    # Generate qmldir file
-    set(qmldir_file "${CMAKE_CURRENT_BINARY_DIR}/qmldir")
-    set_target_properties(${target} PROPERTIES QT_QML_MODULE_QMLDIR_FILE ${qmldir_file})
-    set(qmldir_file_contents "module ${arg_URI}\n")
-
-    if (arg_PLUGIN_OPTIONAL)
-       string(APPEND qmldir_file_contents "optional plugin ${target}${QT_LIBINFIX}\n")
-    else()
-        string(APPEND qmldir_file_contents "plugin ${target}${QT_LIBINFIX}\n")
-    endif()
-
-    if (arg_CLASS_NAME)
-        string(APPEND qmldir_file_contents "classname ${arg_CLASS_NAME}\n")
-    endif()
-    if (arg_DESIGNER_SUPPORTED)
-        string(APPEND qmldir_file_contents "designersupported\n")
-    endif()
-    if (arg_TYPEINFO)
-        string(APPEND qmldir_file_contents "typeinfo ${arg_TYPEINFO}\n")
-    else()
-        # This always need to be written out since at the moment we have cases
-        # where qmltyperegistrar is not run with the plugin but on a module
-        # e.g: src/qml generates the qmltypes for src/imports/qtqml.
-        # When this has been fixed/standardized we should move this to
-        # qt6_qml_type_registration() so that it is written out when the
-        # plugins.qmltypes is actually generated.
-        string(APPEND qmldir_file_contents "typeinfo plugins.qmltypes\n")
-    endif()
-
-    macro(_add_imports imports import_string)
-        foreach(import IN LISTS ${imports})
-            string(FIND ${import} "/" slash_position REVERSE)
-            if (slash_position EQUAL -1)
-                string(APPEND qmldir_file_contents "${import_string} ${import}\n")
-            else()
-                string(SUBSTRING ${import} 0 ${slash_position} import_module)
-                math(EXPR slash_position "${slash_position} + 1")
-                string(SUBSTRING ${import} ${slash_position} -1 import_version)
-                if (import_version MATCHES "[0-9]+\\.[0-9]+" OR import_version MATCHES "[0-9]+")
-                    string(APPEND qmldir_file_contents "${import_string} ${import_module} ${import_version}\n")
-                elseif (import_version MATCHES "auto")
-                    string(APPEND qmldir_file_contents "${import_string} ${import_module} auto\n")
-                else()
-                    message(FATAL_ERROR "Invalid module ${import_string} version number. Expected 'VersionMajor', 'VersionMajor.VersionMinor' or 'auto'.")
-                endif()
-            endif()
-        endforeach()
-    endmacro()
-
-    _add_imports(arg_IMPORTS "import")
-    _add_imports(arg_OPTIONAL_IMPORTS "optional import")
-
-    foreach(dependency IN LISTS arg_DEPENDENCIES)
-        string(FIND ${dependency} "/" slash_position REVERSE)
-        if (slash_position EQUAL -1)
-            string(APPEND qmldir_file_contents "depends ${dependency}\n")
-        else()
-            string(SUBSTRING ${dependency} 0 ${slash_position} dep_module)
-            math(EXPR slash_position "${slash_position} + 1")
-            string(SUBSTRING ${dependency} ${slash_position} -1 dep_version)
-            if (dep_version MATCHES "[0-9]+\\.[0-9]+" OR dep_version MATCHES "[0-9]+")
-                string(APPEND qmldir_file_contents "depends ${dep_module} ${dep_version}\n")
-            elseif (dep_version MATCHES "auto")
-                string(APPEND qmldir_file_contents "depends ${dep_module} auto\n")
-            else()
-                message(FATAL_ERROR "Invalid module dependency version number. Expected 'VersionMajor', 'VersionMajor.VersionMinor' or 'auto'.")
-            endif()
-        endif()
-    endforeach()
-
-    string(APPEND qmldir_file_contents "prefer :${arg_RESOURCE_PREFIX}/${arg_TARGET_PATH}/\n")
-
-    _qt_internal_qmldir_defer_file(WRITE "${qmldir_file}" "${qmldir_file_contents}")
-
-    # Process qml files
-    if (arg_QML_FILES)
-        qt6_target_qml_files(${target} FILES ${arg_QML_FILES})
-    endif()
-
-    # Embed qmldir in static builds
-    if (is_static)
-        # The qmldir resource name needs to match the one generated by qmake's qml_module.prf, to
-        # ensure that all Q_INIT_RESOURCE(resource_name) calls in Qt code don't lead to undefined
-        # symbol errors when linking an application project.
-        # The Q_INIT_RESOURCE() calls are not strictly necessary anymore because the CMake Qt
-        # build passes around the compiled resources as object files.
-        # These object files have global initiliazers that don't get discared when linked into
-        # an application (as opposed to when the resource libraries were embedded into the static
-        # libraries when Qt was built with qmake).
-        # The reason to match the naming is to ensure that applications link successfully regardless
-        # if Qt was built with CMake or qmake, while the build system transition phase is still
-        # happening.
-        string(REPLACE "/" "_" qmldir_resource_name ${arg_TARGET_PATH})
-        string(PREPEND qmldir_resource_name "qmake_")
-
-        set_source_files_properties("${qmldir_file}"
-            PROPERTIES QT_RESOURCE_ALIAS "qmldir"
-        )
-
-        qt6_add_resources(${target} ${qmldir_resource_name}
-            FILES "${qmldir_file}"
-            OUTPUT_TARGETS resource_targets
-        )
-
-        if (resource_targets AND arg_RESOURCE_EXPORT)
-            install(TARGETS ${resource_targets}
-                EXPORT "${arg_RESOURCE_EXPORT}"
-                DESTINATION "${arg_INSTALL_DIRECTORY}"
-            )
-
-            # When building a static Qt, we need to record information about the compiled resource
-            # object files to embed them into .prl files.
-            if(COMMAND qt_internal_record_rcc_object_files)
-                qt_internal_record_rcc_object_files(
-                    "${target}" "${resource_targets}" INSTALL_DIRECTORY "${arg_INSTALL_DIRECTORY}")
-            endif()
-        endif()
-    endif()
-
-    # Copy QMLDIR file to build directory. We want to do this even for static
-    # builds so that tools and IDEs can read it.
-    add_custom_command(TARGET ${target} POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            ${qmldir_file}
-            ${target_output_dir}/qmldir
-        BYPRODUCTS
-            ${target_output_dir}/qmldir
-    )
-
-    # Install QMLDIR file
-    if (should_install)
-        install(FILES ${qmldir_file}
-            DESTINATION "${arg_INSTALL_DIRECTORY}"
-        )
-    endif()
-
-    # Install and Copy plugin.qmltypes if exists
-    set(target_plugin_qmltypes "${CMAKE_CURRENT_SOURCE_DIR}/plugins.qmltypes")
-
-    # For an in-source build, ensure that the file is not the one that was generated by
-    # qt6_qml_type_registration.
-    get_target_property(target_binary_dir ${target} BINARY_DIR)
-    set(generated_marker_file "${target_binary_dir}/.generated/plugins.qmltypes")
-
-    if (EXISTS "${target_plugin_qmltypes}" AND NOT EXISTS "${generated_marker_file}")
-        set_target_properties(${target}
-            PROPERTIES QT_QML_MODULE_PLUGIN_TYPES_FILE "${target_plugin_qmltypes}"
-        )
-
-        _qt_internal_qmldir_defer_file(APPEND "${qmldir_file}" "typeinfo plugins.qmltypes\n")
-
-        if (should_install)
-            install(FILES "${target_plugin_qmltypes}"
-                    DESTINATION "${arg_INSTALL_DIRECTORY}"
-            )
+        # These are all substituted in the template file used further below
+        set(qt_qml_plugin_class_name "${arg_CLASS_NAME}")
+        set(qt_qml_plugin_moc_include_name "${generated_cpp_file_name_base}.moc")
+        set(qt_qml_plugin_intro "extern void ${register_types_function_name}();")
+        set(qt_qml_plugin_outro "")
+        if(QT_BUILDING_QT)
+            string(APPEND qt_qml_plugin_intro "\n\nQT_BEGIN_NAMESPACE")
+            string(APPEND qt_qml_plugin_outro "QT_END_NAMESPACE")
         endif()
 
-        add_custom_command(TARGET ${target} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                ${target_plugin_qmltypes}
-                ${target_output_dir}/plugins.qmltypes
-            BYPRODUCTS
-                ${target_output_dir}/plugins.qmltypes
+        # Indenting here is deliberately different so as to make the generated
+        # file have sensible indenting
+        set(qt_qml_plugin_constructor_content
+        "volatile auto registration = &${register_types_function_name};
+        Q_UNUSED(registration);"
         )
-    endif()
 
-    # Copy/Install type info file
-    if (EXISTS ${arg_TYPEINFO})
-        if (should_install)
-            install(FILES "${arg_TYPEINFO}"
-                    DESTINATION "${arg_INSTALL_DIRECTORY}"
-            )
-        endif()
-
-        get_filename_component(filename ${arg_TYPEINFO} NAME)
-        add_custom_command(TARGET ${target} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                ${arg_TYPEINFO}
-                ${target_output_dir}/${filename}
-            BYPRODUCTS
-                ${target_output_dir}/${filename}
+        set(generated_cpp_file
+            "${CMAKE_CURRENT_BINARY_DIR}/${generated_cpp_file_name_base}.cpp"
         )
+        configure_file(
+            "${__qt_qml_macros_module_base_dir}/Qt6QmlPluginTemplate.cpp.in"
+            "${generated_cpp_file}"
+            @ONLY
+        )
+        target_sources(${target} PRIVATE "${generated_cpp_file}")
+
+        # The generated cpp file expects to include its moc-ed output file.
+        set_target_properties(${target} PROPERTIES AUTOMOC TRUE)
     endif()
 
-    if (arg_INSTALL_QMLTYPES)
-        set_target_properties(${target} PROPERTIES QT_QML_MODULE_INSTALL_QMLTYPES TRUE)
-        if (arg_INSTALL_DIRECTORY)
-            get_target_property(qml_module_install_dir ${target} QT_QML_MODULE_INSTALL_DIR)
-            if (NOT qml_module_install_dir)
-                set_target_properties(${target}
-                    PROPERTIES QT_QML_MODULE_INSTALL_DIR "${arg_INSTALL_DIRECTORY}"
-                )
-            endif()
-        endif()
+    target_link_libraries(${target} PRIVATE ${QT_CMAKE_EXPORT_NAMESPACE}::Qml)
+    if(NOT "${arg_BACKING_TARGET}" STREQUAL target)
+        target_link_libraries(${target} PRIVATE ${arg_BACKING_TARGET})
     endif()
 
-    if (arg_PAST_MAJOR_VERSIONS)
-        set_target_properties(${target} PROPERTIES QT_QML_PAST_MAJOR_VERSIONS "${arg_PAST_MAJOR_VERSIONS}")
-    endif()
-
-    # Generate meta types data
-    if (arg_GENERATE_QMLTYPES)
-        qt6_qml_type_registration(${target})
-    endif()
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
-    function(qt_add_qml_module)
-        qt6_add_qml_module(${ARGV})
+    function(qt_add_qml_plugin)
+        qt6_add_qml_plugin(${ARGV})
     endfunction()
 endif()
 
-# Creates a dummy Qml plugin class for pure Qml modules.
-# Needed for both shared and static Qt builds, so that the Qml engine knows to load the plugin.
-function(_qt_internal_create_dummy_qml_plugin target uri out_class_name)
-    # Use the escaped URI name as the basis for the class name.
-    string(REGEX REPLACE "[^A-Za-z0-9]" "_" escaped_uri "${uri}")
-
-    set(qt_qml_plugin_class_name "${escaped_uri}Plugin")
-    set(generated_cpp_file_name_base "Qt6_PureQmlModule_${target}_${qt_qml_plugin_class_name}")
-    set(qt_qml_plugin_moc_include_name "${generated_cpp_file_name_base}.moc")
-
-    set(register_types_function_name "qml_register_types_${escaped_uri}")
-    set(qt_qml_plugin_intro "extern void ${register_types_function_name}();")
-
-    if(QT_BUILDING_QT)
-        string(APPEND qt_qml_plugin_intro "\n\nQT_BEGIN_NAMESPACE")
-        set(qt_qml_plugin_outro "QT_END_NAMESPACE")
-    endif()
-
-    set(qt_qml_plugin_constructor_content
-        "volatile auto registration = &${register_types_function_name};
-        Q_UNUSED(registration);
-")
-
-    set(template_path "${__qt_qml_macros_module_base_dir}/Qt6QmlPluginTemplate.cpp.in")
-    set(generated_cpp_file_name "${generated_cpp_file_name_base}.cpp")
-    set(generated_cpp_file_path "${CMAKE_CURRENT_BINARY_DIR}/${generated_cpp_file_name}")
-
-    configure_file("${template_path}" "${generated_cpp_file_path}" @ONLY)
-
-    target_sources("${target}" PRIVATE "${generated_cpp_file_path}")
-    target_link_libraries("${target}" PRIVATE ${QT_CMAKE_EXPORT_NAMESPACE}::Qml)
-
-    set(${out_class_name} "${qt_qml_plugin_class_name}" PARENT_SCOPE)
-
-    # Enable AUTOMOC explicitly, because the generated cpp file expects to include its moc-ed
-    # output file.
-    set_property(TARGET "${target}" PROPERTY AUTOMOC ON)
-endfunction()
-
+# Add Qml files (.qml,.js,.mjs) to a Qml module.
 #
-# Add Qml files (.qml,.js,.mjs) to a Qml module. This will also append the
-# qml files to the qmldir file of the module. Two source file properties can
-# be used to control the generated qmldir entry.
+# target: The backing target of the qml module. (REQUIRED)
+#
+# FILES: The qml files to add to the backing target. Supported file extensions
+#   are .qml, .js and .mjs. No other file types should be listed. (REQUIRED)
+#
+# PREFIX: The resource path under which to add the compiled qml files. If not
+#   specified, the QT_RESOURCE_PREFIX property of the target is used (that
+#   property is normally set by qt6_add_qml_module()). If the default is empty,
+#   this option must be provided. (OPTIONAL)
+#
+# OUTPUT_TARGETS: In static builds, additional CMake targets can be created
+#   which consumers of the module will need to link to and potentially install.
+#   Supply the name of an output variable, which will be set to a list of these
+#   targets. If installing the main target, you will also need to install these
+#   output targets for static builds. (OPTIONAL)
+#
+# NO_LINT: Do not add the specified files to the ${target}_qmllint target.
+#   If this option is not given, the default will be taken from the target.
+#
+# NO_CACHEGEN: Do not compile the qml files. Add the raw qml files to the
+#   target resources instead. If this option is not given, the default will be
+#   taken from the target.
+#
+# NO_QMLDIR_TYPES: Do not append type information from the qml files to the
+#   qmldir file associated with the qml module. If this option is not given,
+#   the default will be taken from the target.
+#
+# In addition to the above NO_... options, individual files can be explicitly
+# skipped by setting the relevant source property. These are:
+#
+#   - QT_QML_SKIP_QMLLINT
+#   - QT_QML_SKIP_QMLDIR_ENTRY
+#   - QT_QML_SKIP_CACHEGEN
+#
+# Disabling the qmldir entry for a qml file would normally only be used for a
+# file that does not expose a public type (e.g. a private JS file).
+# If appending of type information has not been disabled for a particular qml
+# file, the following additional source properties can be specified to
+# customize the file's type details:
 #
 # QT_QML_SOURCE_VERSION: Version(s) for this qml file. If not present the module
 #   version will be used.
-# QT_QML_SOURCE_TYPENAME: Override the file's type name. If not present the
+#
+# QT_QML_SOURCE_TYPENAME: Override the file's type name. If not present, the
 #   type name will be deduced using the file's basename.
-# QT_QML_SINGLETON_TYPE: Set to true if this qml file contains a singleton
-#   type.
+#
+# QT_QML_SINGLETON_TYPE: Set to true if this qml file contains a singleton type.
+#
 # QT_QML_INTERNAL_TYPE: When set to true, the type specified by
 #   QT_QML_SOURCE_TYPENAME will not be available to users of this module.
-# QT_QML_SKIP_QMLDIR_ENTRY: When set to true, no qmldir entry will be created for
-#   the source file. Useful if a file needs to be installed (like a private JS
-#   file) but does not expose a public type.
 #
 #   e.g.:
 #       set_source_files_properties(my_qml_file.qml
@@ -579,136 +1098,354 @@ endfunction()
 #               QT_QML_SOURCE_VERSION "2.0;6.0"
 #               QT_QML_SOURCE_TYPENAME MyQmlFile
 #
-#       qt6_target_qml_files(my_qml_module
+#       qt6_target_qml_sources(my_qml_module
 #           FILES
 #               my_qml_file.qml
 #       )
 #
-# Will produce the following entry in the qmldir file
+# The above will produce the following entry in the qmldir file:
 #
 #   MyQmlFile 2.0 my_qml_file.qml
 #
-#
-# This function is currently in Technical Preview.
-# It's signature and behavior might change.
-function(qt6_target_qml_files target)
+function(qt6_target_qml_sources target)
 
-    cmake_parse_arguments(arg "" "" "FILES" ${ARGN})
-    get_target_property(resource_count ${target} QT6_QML_MODULE_ADD_QML_FILES_COUNT)
-    get_target_property(qmldir_file ${target} QT_QML_MODULE_QMLDIR_FILE)
-    if (NOT qmldir_file)
-        message(FATAL_ERROR "qt6_target_qml_file: ${target} is not a Qml module")
+    set(args_option
+        NO_LINT
+        NO_CACHEGEN
+        NO_QMLDIR_TYPES
+        __QT_INTERNAL_FORCE_DEFER_QMLDIR  # Used only by qt6_add_qml_module()
+    )
+
+    set(args_single
+        PREFIX
+        OUTPUT_TARGETS
+    )
+
+    set(args_multi
+        FILES
+    )
+
+    cmake_parse_arguments(PARSE_ARGV 1 arg
+        "${args_option}" "${args_single}" "${args_multi}"
+    )
+    if(arg_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unknown/unexpected arguments: ${arg_UNPARSED_ARGUMENTS}")
     endif()
 
     if (NOT arg_FILES)
+        if(arg_OUTPUT_TARGETS)
+            set(${arg_OUTPUT_TARGETS} "" PARENT_SCOPE)
+        endif()
         return()
     endif()
-    math(EXPR new_count "${resource_count} + 1")
-    set_target_properties(${target} PROPERTIES QT6_QML_MODULE_ADD_QML_FILES_COUNT ${new_count})
 
-    qt6_add_resources(${target} "${target}_qml_files_${new_count}"
+    if(arg___QT_INTERNAL_FORCE_DEFER_QMLDIR OR ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0")
+        set(can_defer_qmldir TRUE)
+    else()
+        set(can_defer_qmldir FALSE)
+    endif()
+
+    get_target_property(no_lint                ${target} QT_QML_MODULE_NO_LINT)
+    get_target_property(no_cachegen            ${target} QT_QML_MODULE_NO_CACHEGEN)
+    get_target_property(no_qmldir              ${target} QT_QML_MODULE_NO_GENERATE_QMLDIR)
+    get_target_property(resource_prefix        ${target} QT_RESOURCE_PREFIX)
+    get_target_property(qml_module_version     ${target} QT_QML_MODULE_VERSION)
+    get_target_property(output_dir             ${target} QT_QML_MODULE_OUTPUT_DIR)
+
+    if(NOT output_dir)
+        # Probably not a qml module. We still want to support tooling for this
+        # scenario, it's just that we will be relying solely on the implicit
+        # imports to find things.
+        set(output_dir ${CMAKE_CURRENT_BINARY_DIR})
+        set(no_qmldir TRUE)
+    endif()
+
+    if(NOT arg_PREFIX)
+        if(resource_prefix)
+            set(arg_PREFIX ${resource_prefix})
+        else()
+            message(FATAL_ERROR
+                "PREFIX option not given and target ${target} was not given a RESOURCE_PREFIX"
+            )
+        endif()
+    endif()
+    if(NOT arg_PREFIX MATCHES [[/$]])
+        string(APPEND arg_PREFIX "/")
+    endif()
+
+    # Linting and cachegen can still occur for a target that isn't a qml module,
+    # but for such targets, there is no qmldir file to update.
+    if(arg_NO_LINT)
+        set(no_lint TRUE)
+    endif()
+    if(arg_NO_CACHEGEN)
+        set(no_cachegen TRUE)
+    endif()
+    if(no_qmldir MATCHES "NOTFOUND" OR arg_NO_QMLDIR_TYPES)
+        set(no_qmldir TRUE)
+    endif()
+
+    if(NOT no_cachegen)
+        _qt_internal_genex_getproperty(types_file    ${target} QT_QML_MODULE_PLUGIN_TYPES_FILE)
+        _qt_internal_genex_getproperty(direct_calls  ${target} QT_QMLCACHEGEN_DIRECT_CALLS)
+        _qt_internal_genex_getproperty(qmljs_runtime ${target} QT_QMLCACHEGEN_QMLJS_RUNTIME)
+        _qt_internal_genex_getjoinedproperty(import_paths ${target}
+            QT_QML_IMPORT_PATH "-I$<SEMICOLON>" "$<SEMICOLON>"
+        )
+        set(cachegen_args
+            "$<${have_import_paths}:${import_paths}>"
+            "$<${have_types_file}:-i$<SEMICOLON>${types_file}>"
+            "$<${have_direct_calls}:--direct-calls$<SEMICOLON>${direct_calls}>"
+            "$<${have_qmljs_runtime}:--qmljs-runtime$<SEMICOLON>${qmljs_runtime}>"
+        )
+    endif()
+
+    set(non_qml_files)
+    set(output_targets)
+
+    foreach(qml_file_src IN LISTS arg_FILES)
+        # This is to facilitate updating code that used the earlier tech preview
+        # API function qt6_target_qml_files()
+        if(NOT qml_file_src MATCHES "\\.(js|mjs|qml)$")
+            list(APPEND non_qml_files ${qml_file_src})
+            continue()
+        endif()
+
+        # We need to copy the file to the build directory now so that when
+        # qmlimportscanner is run in qt6_import_qml_plugins() as part of
+        # target finalizers, the qml files will be there. We need to do this
+        # in a way that CMake doesn't create a dependency on the source or it
+        # will re-run CMake every time the qml file is modified. We also don't
+        # want to update the file's timestamp if its contents won't change.
+        # We still enforce the dependency on the qml source file by adding a
+        # build-time rule. This avoids having to re-run CMake just to re-copy
+        # the file.
+        get_filename_component(file_absolute ${qml_file_src} ABSOLUTE)
+        file(RELATIVE_PATH file_relative ${CMAKE_CURRENT_SOURCE_DIR} ${file_absolute})
+
+        get_property(alias SOURCE ${qml_file_src} PROPERTY QT_RESOURCE_ALIAS)
+        if(alias)
+            set(file_resource_path ${alias})
+        else()
+            set(file_resource_path ${file_relative})
+        endif()
+
+        set(qml_file_out ${output_dir}/${file_resource_path})
+
+        # Don't generate or copy the file in an in-source build if the source
+        # and destination paths are the same, it will cause a ninja dependency
+        # cycle at build time.
+        if(NOT qml_file_out STREQUAL file_absolute)
+            get_filename_component(file_out_dir ${qml_file_out} DIRECTORY)
+            file(MAKE_DIRECTORY ${file_out_dir})
+
+            set(need_write TRUE)
+            file(READ ${qml_file_src} new_contents)
+            if(EXISTS ${qml_file_out})
+                file(READ ${qml_file_out} old_contents)
+                if("${new_contents}" STREQUAL "${old_contents}")
+                    set(need_write FALSE)
+                endif()
+            endif()
+            if(need_write)
+                file(WRITE ${qml_file_out} "${new_contents}")
+            endif()
+
+            add_custom_command(OUTPUT ${qml_file_out}
+                COMMAND ${CMAKE_COMMAND} -E copy ${qml_file_src} ${qml_file_out}
+                DEPENDS ${qml_file_src}
+                WORKING_DIRECTORY $<TARGET_PROPERTY:${target},SOURCE_DIR>
+            )
+        endif()
+
+        # For the tooling steps below, run the tools on the copied qml file in
+        # the build directory, not the source directory. This is required
+        # because the tools may need to reference imported modules from
+        # subdirectories, which would require those subdirectories to have
+        # their generated qmldir files present. They also need to use the right
+        # resource paths and the source locations might be structured quite
+        # differently.
+
+        # Fed to qmlimportscanner in qt6_import_qml_plugins. Also may be used in
+        # generator expressions to install all qml files for the target.
+        set_property(TARGET ${target} APPEND PROPERTY QT_QML_MODULE_FILES ${qml_file_out})
+
+        # Add file to those processed by qmllint
+        get_source_file_property(skip_qmllint ${qml_file_src} QT_QML_SKIP_QMLLINT)
+        if(NOT no_lint AND NOT skip_qmllint)
+            # The set of qml files to run qmllint on may be a subset of the
+            # full set of files, so record these in a separate property.
+            _qt_internal_target_enable_qmllint(${target})
+            set_property(TARGET ${target} APPEND PROPERTY QT_QML_LINT_FILES ${qml_file_out})
+        endif()
+
+        # Add qml file's type to qmldir
+        get_source_file_property(skip_qmldir ${qml_file_src} QT_QML_SKIP_QMLDIR_ENTRY)
+        if(NOT no_qmldir AND NOT skip_qmldir)
+            get_source_file_property(qml_file_typename ${qml_file_src} QT_QML_SOURCE_TYPENAME)
+            if (NOT qml_file_typename)
+                get_filename_component(qml_file_typename ${qml_file_src} NAME_WLE)
+            endif()
+
+            # Do not add qmldir entries for lowercase names. Those are not components.
+            if (qml_file_typename MATCHES "^[A-Z]")
+                if(NOT can_defer_qmldir)
+                    message(FATAL_ERROR
+                        "You are using CMake ${CMAKE_VERSION}, but CMake 3.19 or later "
+                        "is required to add qml files with this function. Either pass "
+                        "the qml files to qt6_add_qml_module() instead or update to "
+                        "CMake 3.19 or later."
+                    )
+                endif()
+
+                # TODO: rename to QT_QML_SOURCE_VERSIONS
+                get_source_file_property(qml_file_versions  ${qml_file_src} QT_QML_SOURCE_VERSION)
+                get_source_file_property(qml_file_singleton ${qml_file_src} QT_QML_SINGLETON_TYPE)
+                get_source_file_property(qml_file_internal  ${qml_file_src} QT_QML_INTERNAL_TYPE)
+
+                if (NOT qml_file_versions)
+                    set(qml_file_versions ${qml_module_version})
+                endif()
+
+                set(qmldir_file_contents "")
+                foreach(qml_file_version IN LISTS qml_file_versions)
+                    if (qml_file_singleton)
+                        string(APPEND qmldir_file_contents "singleton ")
+                    endif()
+                    string(APPEND qmldir_file_contents "${qml_file_typename} ${qml_file_version} ${file_resource_path}\n")
+                endforeach()
+
+                if (qml_file_internal)
+                    string(APPEND qmldir_file_contents "internal ${qml_file_typename} ${file_resource_path}\n")
+                endif()
+
+                set_property(TARGET ${target} APPEND_STRING PROPERTY
+                    _qt_internal_qmldir_content "${qmldir_file_contents}"
+                )
+            endif()
+        endif()
+
+        # Run cachegen on the qml file, or if disabled, store the raw qml file in the resources
+        get_source_file_property(skip_cachegen ${qml_file_src} QT_QML_SKIP_CACHEGEN)
+        if(NOT no_cachegen AND NOT skip_cachegen)
+            # We delay this to here to ensure that we only ever enable cachegen
+            # after we know there will be at least one file to compile.
+            get_target_property(is_cachegen_set_up ${target} _qt_cachegen_set_up)
+            if(NOT is_cachegen_set_up)
+                _qt_internal_target_enable_qmlcachegen(${target} resource_target)
+                list(APPEND output_targets ${resource_target})
+            endif()
+
+            # We ensured earlier that arg_PREFIX always ends with "/"
+            file(TO_CMAKE_PATH "${arg_PREFIX}${file_resource_path}" file_resource_path)
+
+            set_property(TARGET ${target} APPEND PROPERTY
+                QT_QML_MODULE_RESOURCE_PATHS ${file_resource_path}
+            )
+
+            string(REGEX REPLACE "\\.(js|mjs|qml)$" "_\\1" compiled_file ${file_relative})
+            string(REGEX REPLACE "[$#?]+" "_" compiled_file ${compiled_file})
+            set(compiled_file "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/${target}/${compiled_file}.cpp")
+            get_filename_component(out_dir ${compiled_file} DIRECTORY)
+
+            add_custom_command(
+                OUTPUT ${compiled_file}
+                COMMAND ${CMAKE_COMMAND} -E make_directory ${out_dir}
+                COMMAND
+                    ${QT_TOOL_COMMAND_WRAPPER_PATH}
+                    $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen>
+                    --resource-path "${file_resource_path}"
+                    ${cachegen_args}
+                    -o "${compiled_file}"
+                    "${file_absolute}"
+                COMMAND_EXPAND_LISTS
+                DEPENDS
+                    ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen
+                    "${file_absolute}"
+                    "$<$<BOOL:${qmltypes}>:${qmltypes}>"
+            )
+
+            target_sources(${target} PRIVATE
+                ${compiled_file}
+                ${qml_file_src} # Make the original qml file show up under this target in the IDE
+            )
+            set_source_files_properties(${compiled_file} PROPERTIES
+                SKIP_AUTOGEN ON
+            )
+        endif()
+    endforeach()
+
+    if(non_qml_files)
+        list(JOIN non_qml_files "\n  " file_list)
+        if(COMMAND qt_add_resources)
+            set(cmd "qt_add_resources()")
+        else()
+            set(cmd "qt6_add_resources()")
+        endif()
+        message(WARNING
+            "Only .qml, .js or .mjs files should be added with this function. "
+            "The following files should be added with ${cmd} instead:"
+            "\n  ${file_list}"
+        )
+    endif()
+
+    # Batch all the non-compiled qml sources into a single resource for this
+    # call. Subsequent calls for the same target will be in their own separate
+    # resource file.
+    get_target_property(counter ${target} QT_QML_MODULE_RAW_QML_SETS)
+    if(NOT counter)
+        set(counter 0)
+    endif()
+    set(resource_name ${target}_raw_qml_${counter})
+    set(resource_targets)
+    qt6_add_resources(${target} ${resource_name}
+        PREFIX ${arg_PREFIX}
         FILES ${arg_FILES}
         OUTPUT_TARGETS resource_targets
     )
-    get_target_property(skip_type_registration ${target} QT_QML_MODULE_SKIP_TYPE_REGISTRATION)
-    get_target_property(target_resource_export ${target} QT_QML_MODULE_RESOURCE_EXPORT)
-    get_target_property(qml_module_install_dir ${target} QT_QML_MODULE_INSTALL_DIR)
-    get_target_property(qml_module_output_dir  ${target} QT_QML_MODULE_OUTPUT_DIR)
+    math(EXPR counter "${counter} + 1")
+    set_target_properties(${target} PROPERTIES QT_QML_MODULE_RAW_QML_SETS ${counter})
+    list(APPEND output_targets ${resource_targets})
 
-    if(NOT qml_module_install_dir)
-        message(AUTHOR_WARNING
-            "No QT_QML_MODULE_INSTALL_DIR property value provided for the '${target}' target. "
-            "Installation of qml_files will most likely be broken.")
+    if(arg_OUTPUT_TARGETS AND output_targets)
+        set(${arg_OUTPUT_TARGETS} ${output_targets} PARENT_SCOPE)
     endif()
 
-    if (resource_targets)
-        install(TARGETS ${resource_targets}
-            EXPORT "${target_resource_export}"
-            DESTINATION "${qml_module_install_dir}"
-        )
-
-        # When building a static Qt, we need to record information about the compiled resource
-        # object files to embed them into .prl files.
-        if(COMMAND qt_internal_record_rcc_object_files)
-            qt_internal_record_rcc_object_files(
-                "${target}" "${resource_targets}" INSTALL_DIRECTORY "${qml_module_install_dir}")
-        endif()
-    endif()
-
-    qt6_target_enable_qmllint(${target})
-
-    set(file_contents "")
-    foreach(qml_file IN LISTS arg_FILES)
-        get_filename_component(qml_file_dir "${qml_file}" DIRECTORY)
-        if (NOT "${qml_file_dir}" STREQUAL "")
-            set(qml_file_dir "/${qml_file_dir}")
-        endif()
-        if (qml_module_output_dir)
-            file(COPY "${qml_file}" DESTINATION "${qml_module_output_dir}${qml_file_dir}")
-        endif()
-        if (qml_module_install_dir)
-            install(FILES "${qml_file}" DESTINATION "${qml_module_install_dir}${qml_file_dir}")
-        endif()
-
-        if (skip_type_registration AND qml_file MATCHES "\\.qml$")
-            continue()
-        endif()
-
-        get_source_file_property(qml_file_skip_qmldir ${qml_file} QT_QML_SKIP_QMLDIR_ENTRY)
-        if (qml_file_skip_qmldir)
-            continue()
-        endif()
-
-        # TODO: rename to QT_QML_SOURCE_VERSIONS
-        get_source_file_property(qml_file_versions ${qml_file} QT_QML_SOURCE_VERSION)
-        get_source_file_property(qml_file_typename ${qml_file} QT_QML_SOURCE_TYPENAME)
-        get_source_file_property(qml_file_singleton ${qml_file} QT_QML_SINGLETON_TYPE)
-        get_source_file_property(qml_file_internal ${qml_file} QT_QML_INTERNAL_TYPE)
-        get_target_property(qml_module_version ${target} QT_QML_MODULE_VERSION)
-
-        if (NOT qml_file_versions)
-            set(qml_file_versions ${qml_module_version})
-        endif()
-
-        if (NOT qml_file_typename)
-            get_filename_component(qml_file_typename ${qml_file} NAME_WLE)
-        endif()
-
-        # Do not add qmldir entries for lowercase names. Those are not components.
-        if (NOT qml_file_typename MATCHES "^[A-Z]")
-            continue()
-        endif()
-
-        foreach(qml_file_version IN LISTS qml_file_versions)
-            if (qml_file_singleton)
-                string(APPEND file_contents "singleton ")
-            endif()
-            string(APPEND file_contents "${qml_file_typename} ${qml_file_version} ${qml_file}\n")
-        endforeach()
-
-        if (qml_file_internal)
-            string(APPEND file_contents "internal ${qml_file_typename} ${qml_file}\n")
-        endif()
-
-    endforeach()
-    _qt_internal_qmldir_defer_file(APPEND "${qmldir_file}" "${file_contents}")
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
-    function(qt_target_qml_files)
-        qt6_target_qml_files(${ARGV})
+    function(qt_target_qml_sources)
+        qt6_target_qml_sources(${ARGV})
     endfunction()
 endif()
 
-# QT_QMLTYPES_FILENAME: If the target has the target property QT_QMLTPYES_FILENAME set, it will be
-# used for the name of the generated file. Otherwise, the file will be named plugins.qmltypes if the
-# target is a plugin, or ${target}.qmltypes in all other cases
-# This function is currently in Technical Preview.
-# It's signature and behavior might change.
-# MANUAL_MOC_JSON_FILES specifies a list of json files, generated by manual moc call,
-# to extract metatypes.
+# NOTE: This function does not normally need to be called directly by projects.
+#       It is called automatically by qt6_add_qml_module() unless
+#       NO_GENERATE_QMLTYPES is also given to that function.
+#
+# target: Expected to be the backing target for a qml module. Certain target
+#   properties normally set by qt6_add_qml_module() will be retrieved from this
+#   target. (REQUIRED)
+#
+# OUTPUT_DIRECTORY: Specifies the directory in which to write the generated
+#   ${target}.qmltypes file. If not given, it defaults to the binary directory
+#   of the target. (OPTIONAL)
+#
+# MANUAL_MOC_JSON_FILES: Specifies a list of json files, generated by a manual
+#   moc call, to extract metatypes. (OPTIONAL)
+#
 function(qt6_qml_type_registration target)
-    cmake_parse_arguments(arg "" "" "MANUAL_MOC_JSON_FILES" ${ARGN})
+    set(args_option "")
+    set(args_single OUTPUT_DIRECTORY)
+    set(args_multi  MANUAL_MOC_JSON_FILES)
+
+    cmake_parse_arguments(PARSE_ARGV 1 arg
+        "${args_option}" "${args_single}" "${args_multi}"
+    )
+    if(arg_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unknown/unexpected arguments: ${arg_UNPARSED_ARGUMENTS}")
+    endif()
+
     get_target_property(import_name ${target} QT_QML_MODULE_URI)
     if (NOT import_name)
         message(FATAL_ERROR "Target ${target} is not a QML module")
@@ -730,6 +1467,7 @@ function(qt6_qml_type_registration target)
     get_target_property(qml_install_dir ${target} QT_QML_MODULE_INSTALL_DIR)
     set(meta_types_json_args "")
 
+    # TODO: This is internal Qt logic, it should be moved out of here.
     if(QT_BUILDING_QT AND QT_WILL_INSTALL AND qml_install_dir AND
             qml_install_dir MATCHES "^${INSTALL_EXAMPLESDIR}")
         set(meta_types_json_args "INSTALL_DIR" "${qml_install_dir}/lib/metatypes")
@@ -748,21 +1486,20 @@ function(qt6_qml_type_registration target)
         message(FATAL_ERROR "Target ${target} does not have a meta types file")
     endif()
 
-    # Extract major and minor version
-    if (NOT import_version MATCHES "[0-9]+\\.[0-9]+")
-        message(FATAL_ERROR "Invalid module version number. Expected VersionMajor.VersionMinor.")
+    if(NOT arg_OUTPUT_DIRECTORY)
+        set(arg_OUTPUT_DIRECTORY ${target_binary_dir})
     endif()
-    #string(FIND "${import_version}" "." dot_location)
-    #string(SUBSTRING ${import_version} 0 ${dot_location} major_version)
-    #math(EXPR dot_location "${dot_location}+1")
-    #string(SUBSTRING ${import_version} ${dot_location} -1 minor_version)
-    string(REPLACE "." ";" import_version_split "${import_version}")
-    list(LENGTH import_version_split import_version_split_length)
-    if(import_version_split_length GREATER 0)
-        list(GET import_version_split 0 major_version)
-    endif()
-    if(import_version_split_length GREATER 1)
-        list(GET import_version_split 1 minor_version)
+
+    # Extract major and minor version (could also have patch part, but we don't
+    # need that here)
+    if (import_version MATCHES "^([0-9]+)\\.([0-9]+)")
+        set(major_version ${CMAKE_MATCH_1})
+        set(minor_version ${CMAKE_MATCH_2})
+    else()
+        message(FATAL_ERROR
+            "Invalid module version number '${import_version}'. "
+            "Expected VersionMajor.VersionMinor."
+        )
     endif()
 
     # check if plugins.qmltypes is already defined
@@ -772,7 +1509,7 @@ function(qt6_qml_type_registration target)
     endif()
 
     set(cmd_args)
-    set(plugin_types_file "${target_binary_dir}/${qmltypes_output_name}")
+    set(plugin_types_file "${arg_OUTPUT_DIRECTORY}/${qmltypes_output_name}")
     set(generated_marker_file "${target_binary_dir}/.generated/${qmltypes_output_name}")
     get_filename_component(generated_marker_dir "${generated_marker_file}" DIRECTORY)
     set_target_properties(${target} PROPERTIES
@@ -795,7 +1532,6 @@ function(qt6_qml_type_registration target)
             )
         endforeach()
     endif()
-
 
     # Run a script to recursively evaluate all the metatypes.json files in order
     # to collect all foreign types.
@@ -827,7 +1563,8 @@ function(qt6_qml_type_registration target)
     cmake_policy(PUSH)
 
     set(registration_cpp_file_dep_args)
-    if (CMAKE_GENERATOR MATCHES "Ninja")  # TODO: Makefiles supported too since CMake 3.20
+    if (CMAKE_GENERATOR MATCHES "Ninja" OR
+        (CMAKE_VERSION VERSION_GREATER_EQUAL 3.20 AND CMAKE_GENERATOR MATCHES "Makefiles"))
         if(POLICY CMP0116)
             # Without explicitly setting this policy to NEW, we get a warning
             # even though we ensure there's actually no problem here.
@@ -845,12 +1582,6 @@ function(qt6_qml_type_registration target)
         )
     endif()
 
-    set(extra_env_command)
-    if (WIN32)
-        # TODO: FIXME: The env path is wrong when not building Qt, but a standalone example.
-        file(TO_NATIVE_PATH "${${PROJECT_NAME}_BINARY_DIR}/bin$<SEMICOLON>${CMAKE_INSTALL_PREFIX}/${INSTALL_BINDIR}$<SEMICOLON>%PATH%" env_path_native)
-        set(extra_env_command COMMAND set \"PATH=${env_path_native}\")
-    endif()
     add_custom_command(
         OUTPUT
             ${type_registration_cpp_file}
@@ -860,8 +1591,8 @@ function(qt6_qml_type_registration target)
             ${target_metatypes_json_file}
             ${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar
             "$<$<BOOL:${genex_list}>:${genex_list}>"
-        ${extra_env_command}
         COMMAND
+            ${QT_TOOL_COMMAND_WRAPPER_PATH}
             $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar>
             ${cmd_args}
             -o ${type_registration_cpp_file}
@@ -878,6 +1609,15 @@ function(qt6_qml_type_registration target)
 
     target_sources(${target} PRIVATE ${type_registration_cpp_file})
 
+    # FIXME: The generated .cpp file has usually lost the path information for
+    #        the headers it #include's. Since these generated .cpp files are in
+    #        the build directory away from those headers, the header search path
+    #        has to be augmented to ensure they can be found. We don't know what
+    #        paths are needed, but add the source directory to at least handle
+    #        the common case of headers in the same directory as the target.
+    #        See QTBUG-93443.
+    target_include_directories(${target} PRIVATE ${target_source_dir})
+
     # Circumvent "too many sections" error when doing a 32 bit debug build on Windows with
     # MinGW.
     set(additional_source_files_properties "")
@@ -891,50 +1631,8 @@ function(qt6_qml_type_registration target)
         ${additional_source_files_properties}
     )
 
-    # Usually for Qt Qml-like modules and qml plugins, the installation destination of the .qmltypes
-    # file is somewhere under the ${qt_prefix}/qml (Qt qml import path).
-    #
-    # For user-written qml plugins, the file should be installed next to the
-    # binary / library, and not the Qt qml import path.
-    #
-    # Unfortunately CMake doesn't provide a way to query where a binary will be installed, so the
-    # only way to know where to install is to request the installation path via a property.
-    #
-    # Thus only install the qmltypes file if an explicit path via the QT_QML_MODULE_INSTALL_DIR
-    # property has been provided. Otherwise if installation is requested, and no path is provided,
-    # warn the user, and don't install the file.
-    get_target_property(install_qmltypes ${target} QT_QML_MODULE_INSTALL_QMLTYPES)
-    if (install_qmltypes)
-        if(qml_install_dir)
-            if(NOT DEFINED QT_WILL_INSTALL OR QT_WILL_INSTALL)
-                install(FILES ${plugin_types_file} DESTINATION "${qml_install_dir}")
-            else()
-                # Need to make the path absolute during a Qt non-prefix build, otherwise files are
-                # written to the source dir because the paths are relative to the source dir.
-                if(NOT IS_ABSOLUTE "${qml_install_dir}")
-                    set(qml_install_dir "${CMAKE_INSTALL_PREFIX}/${qml_install_dir}")
-                endif()
-
-                add_custom_command(TARGET ${target} POST_BUILD
-                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                        "${plugin_types_file}"
-                        "${qml_install_dir}/${qmltypes_output_name}"
-                    BYPRODUCTS
-                        "${qml_install_dir}/${qmltypes_output_name}"
-                    COMMENT "Copying ${plugin_types_file} to ${qml_install_dir}"
-                )
-            endif()
-        else()
-            message(AUTHOR_WARNING
-                "No QT_QML_MODULE_INSTALL_DIR property value provided for the '${target}' target. "
-                "Please either provide a value, or don't set the "
-                "QT_QML_MODULE_INSTALL_QMLTYPES property. "
-                "Skipping installation of '${qmltypes_output_name}'.")
-        endif()
-    endif()
-
     target_include_directories(${target} PRIVATE
-        $<TARGET_PROPERTY:Qt::QmlPrivate,INTERFACE_INCLUDE_DIRECTORIES>
+        $<TARGET_PROPERTY:${QT_CMAKE_EXPORT_NAMESPACE}::QmlPrivate,INTERFACE_INCLUDE_DIRECTORIES>
     )
 endfunction()
 
@@ -944,189 +1642,6 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     endfunction()
 endif()
 
-
-# Enable the _qt_internal_quick_compiler_process_resources function in qt6_add_resource()
-set(QT6_ADD_RESOURCE_DECLARATIVE_EXTENSIONS TRUE)
-
-# Inspect all files passed to a call to qt_add_resource. If there are any
-# files present, invoke the quick compiler and return the remaining resource
-# files that have not been processed in OUTPUT_REMAINING_RESOURCES as well as the new
-# name for the resource in OUTPUT_RESOURCE_NAME.
-function(_qt_internal_quick_compiler_process_resources target resource_name)
-
-    cmake_parse_arguments(arg
-        "" "PREFIX;OUTPUT_REMAINING_RESOURCES;OUTPUT_RESOURCE_NAME;OUTPUT_GENERATED_TARGET" "FILES" ${ARGN}
-    )
-
-    set(qml_files)
-    set(resource_files)
-    # scan for qml files
-    foreach(file IN LISTS arg_FILES)
-        # check whether this resource should not be processed by the qt quick
-        # compiler
-        get_source_file_property(skip_compiler_check ${file} QT_SKIP_QUICKCOMPILER)
-        if (skip_compiler_check)
-            list(APPEND resource_files ${file})
-            continue()
-        endif()
-
-        if (${file} MATCHES "\.js$"
-                OR ${file} MATCHES "\.mjs$"
-                OR ${file} MATCHES "\.qml$")
-            list(APPEND qml_files ${file})
-        endif()
-        list(APPEND resource_files ${file})
-    endforeach()
-
-    # Create a list of QML files for use with qmllint
-    if(qml_files)
-        get_target_property(qml_files_list ${target} QML_FILES)
-        if(NOT qml_files_list)
-            set(qml_files_list)
-        endif()
-
-        list(APPEND qml_files_list ${qml_files})
-        set_target_properties(${target} PROPERTIES QML_FILES "${qml_files_list}")
-    endif()
-
-    if (NOT TARGET ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen AND qml_files)
-        message(WARNING "QT6_PROCESS_RESOURCE: Qml files were detected but the qmlcachgen target is not defined. Consider adding QmlTools to your find_package command.")
-    endif()
-
-    if (TARGET ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen AND qml_files)
-        # Enable qt quick compiler support
-        if (resource_files)
-            set(chained_resource_name "${resource_name}_qmlcache")
-            set(qml_resource_file "${CMAKE_CURRENT_BINARY_DIR}/.rcc/${chained_resource_name}.qrc")
-        else()
-            set(qml_resource_file "${CMAKE_CURRENT_BINARY_DIR}/.rcc/${resource_name}.qrc")
-        endif()
-
-        get_target_property(import_path ${target} QT_QML_IMPORT_PATH)
-        if (import_path)
-            foreach(dir IN LISTS import_path)
-                list(APPEND qmlcachegen_extra_args "-I" "${dir}")
-            endforeach()
-            list(APPEND qmlcachegen_extra_args "-I" "${QT_INSTALL_DIR}/${INSTALL_QMLDIR}")
-        endif()
-
-        get_target_property(qmltypes ${target} QT_QML_MODULE_PLUGIN_TYPES_FILE)
-        if (qmltypes)
-            list(APPEND qmlcachegen_extra_args "-i" ${qmltypes})
-        endif()
-
-        get_target_property(direct_calls ${target} QT_QMLCACHEGEN_DIRECT_CALLS)
-        if (direct_calls)
-            list(APPEND qmlcachegen_extra_args "--direct-calls")
-        endif()
-
-        get_target_property(qmljs_runtime ${target} QT_QMLCACHEGEN_QMLJS_RUNTIME)
-        if (qmljs_runtime)
-            list(APPEND qmlcachegen_extra_args "--qmljs-runtime")
-        endif()
-
-        foreach(file IN LISTS qml_files)
-            get_filename_component(file_absolute ${file} ABSOLUTE)
-            string(FIND "${file_absolute}" "${CMAKE_SOURCE_DIR}" start_index_of_source_dir)
-            if (start_index_of_source_dir EQUAL 0)
-                file(RELATIVE_PATH file_relative ${CMAKE_CURRENT_SOURCE_DIR} ${file_absolute})
-            else()
-                file(RELATIVE_PATH file_relative ${CMAKE_CURRENT_BINARY_DIR} ${file_absolute})
-            endif()
-            __qt_get_relative_resource_path_for_file(file_resource_path ${file})
-            if (arg_PREFIX STREQUAL "/")
-                # TO_CMAKE_PATH does not clean up cases such as //Foo
-                set(file_resource_path "/${file_resource_path}")
-            else()
-                set(file_resource_path "${arg_PREFIX}/${file_resource_path}")
-            endif()
-            file(TO_CMAKE_PATH ${file_resource_path} file_resource_path)
-            list(APPEND file_resource_paths ${file_resource_path})
-            string(REGEX REPLACE "\.js$" "_js" compiled_file ${file_relative})
-            string(REGEX REPLACE "\.mjs$" "_mjs" compiled_file ${compiled_file})
-            string(REGEX REPLACE "\.qml$" "_qml" compiled_file ${compiled_file})
-            string(REGEX REPLACE "[\$#\?]+" "_" compiled_file ${compiled_file})
-            set(compiled_file "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/${resource_name}/${compiled_file}.cpp")
-            get_filename_component(out_dir ${compiled_file} DIRECTORY)
-            if(NOT EXISTS ${out_dir})
-                file(MAKE_DIRECTORY ${out_dir})
-            endif()
-            add_custom_command(
-                OUTPUT ${compiled_file}
-                ${QT_TOOL_PATH_SETUP_COMMAND}
-                COMMAND
-                    ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen
-                    --resource-path "${file_resource_path}"
-                    --resource "${qml_resource_file}"
-                    ${qmlcachegen_extra_args}
-                    -o "${compiled_file}"
-                    "${file_absolute}"
-                DEPENDS
-                    $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen>
-                    "${file_absolute}"
-                    "$<$<BOOL:${qmltypes}>:${qmltypes}>"
-                    "${qml_resource_file}"
-            )
-            target_sources(${target} PRIVATE ${compiled_file})
-            set_source_files_properties(${compiled_file} PROPERTIES
-                SKIP_AUTOGEN ON
-            )
-        endforeach()
-
-        set(qmlcache_loader_list "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/${resource_name}/qml_loader_file_list.rsp")
-        file(GENERATE
-            OUTPUT ${qmlcache_loader_list}
-            CONTENT "$<JOIN:${file_resource_paths},\n>"
-        )
-
-        set(qmlcache_loader_file "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/${resource_name}/qmlcache_loader.cpp")
-        set(resource_name_arg "${resource_name}.qrc")
-        if (chained_resource_name)
-            set(resource_name_arg "${resource_name_arg}=${chained_resource_name}")
-        endif()
-
-        add_custom_command(
-            OUTPUT ${qmlcache_loader_file}
-            ${QT_TOOL_PATH_SETUP_COMMAND}
-            COMMAND
-                ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen
-                --resource-name "${resource_name_arg}"
-                -o "${qmlcache_loader_file}"
-                "@${qmlcache_loader_list}"
-            DEPENDS
-                $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen>
-                "${qmlcache_loader_list}"
-        )
-
-        __qt_propagate_generated_resource(${target}
-            ${resource_name}
-            ${qmlcache_loader_file}
-            output_target)
-
-        set(${arg_OUTPUT_GENERATED_TARGET} "${output_target}" PARENT_SCOPE)
-
-        if (resource_files)
-            set(resource_name ${chained_resource_name})
-        endif()
-
-        # The generated qmlcache_loader source file uses private headers of Qml, so make sure
-        # if the object library was created, it depends on the Qml target. If there's no target,
-        # that means the target is a shared library and the sources are directly added to the target
-        # via target_sources, so add dependency in that case as well.
-        set(chosen_target "target") # shared library case
-        if(output_target)
-            set(chosen_target "output_target") # static library case.
-        endif()
-        target_link_libraries(${${chosen_target}} PRIVATE ${QT_CMAKE_EXPORT_NAMESPACE}::Qml)
-    else()
-        set(resource_files ${arg_FILES})
-    endif()
-
-    set(${arg_OUTPUT_REMAINING_RESOURCES} ${resource_files} PARENT_SCOPE)
-    set(${arg_OUTPUT_RESOURCE_NAME} ${resource_name} PARENT_SCOPE)
-endfunction()
-
-include(CMakeParseArguments)
 
 # This function is called as a finalizer in qt6_finalize_executable() for any
 # target that links against the Qml library for a statically built Qt.
@@ -1150,6 +1665,9 @@ function(qt6_import_qml_plugins target)
     cmake_parse_arguments(arg "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
     if(NOT arg_PATH_TO_SCAN)
         set(arg_PATH_TO_SCAN "${CMAKE_CURRENT_SOURCE_DIR}")
+    endif()
+    if(arg_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unknown/unexpected arguments: ${arg_UNPARSED_ARGUMENTS}")
     endif()
 
     # Find location of qmlimportscanner.
@@ -1175,8 +1693,8 @@ but this file does not exist.  Possible reasons include:
     endif()
 
     # Find location of qml dir.
-    # TODO: qt.prf implies that there might be more than one qml import path to pass to
-    # qmlimportscanner.
+    # TODO: qt.prf implies that there might be more than one qml import path to
+    #       pass to qmlimportscanner.
     set(qml_path "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_QML}")
 
     # Small macro to avoid duplicating code in two different loops.
@@ -1185,31 +1703,62 @@ but this file does not exist.  Possible reasons include:
         #       the qmlimportscanner, not CMake code.
         set(entry_name "qml_import_scanner_import_${idx}")
         cmake_parse_arguments("entry"
-                              ""
-                              "CLASSNAME;NAME;PATH;PLUGIN;RELATIVEPATH;TYPE;VERSION;" ""
-                              ${${entry_name}})
+            ""
+            "CLASSNAME;NAME;PATH;PLUGIN;RELATIVEPATH;TYPE;VERSION;" ""
+            ${${entry_name}}
+        )
     endmacro()
 
     # Run qmlimportscanner and include the generated cmake file.
     set(qml_imports_file_path
-        "${CMAKE_CURRENT_BINARY_DIR}/Qt6_QmlPlugins_Imports_${target}.cmake")
+        "${CMAKE_CURRENT_BINARY_DIR}/.qt_plugins/Qt6_QmlPlugins_Imports_${target}.cmake"
+    )
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/.qt_plugins)
+
+    set(cmd_args
+        "${arg_PATH_TO_SCAN}"
+        -cmake-output
+        -importPath "${qml_path}"
+    )
+    get_target_property(qml_import_path ${target} QT_QML_IMPORT_PATH)
+    if (qml_import_path)
+        list(APPEND cmd_args ${qml_import_path})
+    endif()
+
+    get_target_property(qml_files ${target} QT_QML_MODULE_FILES)
+    if (qml_files)
+        list(APPEND cmd_args "-qmlFiles" ${qml_files})
+    endif()
 
     get_target_property(qrc_files ${target} _qt_generated_qrc_files)
     if (qrc_files)
-        list(APPEND qrcFilesArguments "-qrcFiles")
-        list(APPEND qrcFilesArguments ${qrc_files})
+        list(APPEND cmd_args "-qrcFiles" ${qrc_files})
     endif()
 
-    message(STATUS "Running qmlimportscanner to find used QML plugins. ")
-    execute_process(COMMAND
-                    "${tool_path}" "${arg_PATH_TO_SCAN}" -importPath "${qml_path}"
-                    ${qrcFilesArguments}
-                    -cmake-output
-                    OUTPUT_FILE "${qml_imports_file_path}")
+    # Use a response file to avoid command line length issues if we have a lot
+    # of arguments on the command line
+    string(LENGTH "${cmd_args}" length)
+    if(length GREATER 240)
+        set(rsp_file ${CMAKE_CURRENT_BINARY_DIR}/.qt_plugins/Qt6_QmlPlugins_Imports_${target}.rsp)
+        list(JOIN cmd_args "\n" rsp_file_content)
+        file(WRITE ${rsp_file} "${rsp_file_content}")
+        set(cmd_args "@${rsp_file}")
+    endif()
+
+    get_target_property(target_source_dir ${target} SOURCE_DIR)
+
+    message(VERBOSE "Running qmlimportscanner to find QML plugins needed by ${target}.")
+    execute_process(COMMAND ${QT_TOOL_COMMAND_WRAPPER_PATH} ${tool_path} ${cmd_args}
+        OUTPUT_FILE "${qml_imports_file_path}"
+        WORKING_DIRECTORY ${target_source_dir}
+    )
 
     include("${qml_imports_file_path}" OPTIONAL RESULT_VARIABLE qml_imports_file_path_found)
     if(NOT qml_imports_file_path_found)
-        message(FATAL_ERROR "Could not find ${qml_imports_file_path} which was supposed to be generated by qmlimportscanner.")
+        message(FATAL_ERROR
+            "Could not find ${qml_imports_file_path} which was supposed to be "
+            "generated by qmlimportscanner after processing target ${target}."
+        )
     endif()
 
     # Parse the generated cmake file.
@@ -1226,11 +1775,34 @@ but this file does not exist.  Possible reasons include:
                     continue()
                 endif()
                 list(APPEND added_plugins "${entry_PLUGIN}")
-
-                # Link against the Qml plugin. The assumption is that all Qml plugins are already
-                # find_package()'d by the Qml package, so we can safely link against the target.
-                target_link_libraries("${target}" PRIVATE
-                                      "${QT_CMAKE_EXPORT_NAMESPACE}::${entry_PLUGIN}")
+                # Link against the Qml plugin. For plugins provided by Qt, we
+                # assume those plugins are already defined (typically brought in
+                # via find_package(Qt6...) ). For other plugins, they can be
+                # from the project itself or some other external place.
+                if(TARGET "${QT_CMAKE_EXPORT_NAMESPACE}::${entry_PLUGIN}")
+                    set(plugin_dep "${QT_CMAKE_EXPORT_NAMESPACE}::${entry_PLUGIN}")
+                elseif(TARGET ${entry_PLUGIN})
+                    set(plugin_dep ${entry_PLUGIN})
+                else()
+                    # We've been told where the plugin should be, but only have
+                    # its basename. Let CMake work out the prefix and suffix.
+                    find_library(${entry_PLUGIN}_LIBRARY ${entry_PLUGIN}
+                        PATHS ${entry_PATH}
+                        NO_DEFAULT_PATH
+                    )
+                    if(${entry_PLUGIN}_LIBRARY)
+                        set(plugin_dep ${${entry_PLUGIN}_LIBRARY})
+                    else()
+                        message(FATAL_ERROR
+                            "${entry_PLUGIN} is a dependency of ${target}, but "
+                            "there is no target by that name and no library with "
+                            "that name could be found at the expected location ("
+                            ${entry_PATH} "). Consider making an imported target "
+                            "for it so that its location is known."
+                        )
+                    endif()
+                endif()
+                target_link_libraries("${target}" PRIVATE ${plugin_dep})
             endif()
         endforeach()
 
@@ -1244,22 +1816,31 @@ but this file does not exist.  Possible reasons include:
                     list(FIND added_imports "${entry_PLUGIN}" _index)
                     if(_index EQUAL -1)
                         string(APPEND qt_qml_import_cpp_file_content
-                               "Q_IMPORT_PLUGIN(${entry_CLASSNAME})\n")
+                            "Q_IMPORT_PLUGIN(${entry_CLASSNAME})\n"
+                        )
                         list(APPEND added_imports "${entry_PLUGIN}")
                     endif()
                 else()
+                    # If the qmldir file was generated by us, there should have
+                    # been a CLASS_NAME automatically computed if one wasn't
+                    # provided. Therefore, it is likely that this is a manually
+                    # prepared qmldir and it is missing a classname entry.
                     message(FATAL_ERROR
-                            "Plugin ${entry_PLUGIN} is missing a classname entry, please add one to the qmldir file.")
+                        "Plugin ${entry_PLUGIN} is missing a classname entry, "
+                        "please add one to the qmldir file."
+                    )
                 endif()
             endif()
         endforeach()
 
         # Write to the generated file, and include it as a source for the given target.
         set(generated_import_cpp_path
-            "${CMAKE_CURRENT_BINARY_DIR}/Qt6_QmlPlugins_Imports_${target}.cpp")
+            "${CMAKE_CURRENT_BINARY_DIR}/.qt_plugins/Qt6_QmlPlugins_Imports_${target}.cpp"
+        )
         configure_file("${Qt6Qml_DIR}/Qt6QmlImportScannerTemplate.cpp.in"
-                       "${generated_import_cpp_path}"
-                       @ONLY)
+            "${generated_import_cpp_path}"
+            @ONLY
+        )
         target_sources(${target} PRIVATE "${generated_import_cpp_path}")
     endif()
 endfunction()
@@ -1273,63 +1854,3 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
         endif()
     endfunction()
 endif()
-
-# Wrapper around configure_file. Passes content collected in $directory-scoped property.
-function(_qt_internal_configure_qmldir directory)
-    get_property(__qt_qmldir_content DIRECTORY "${directory}" PROPERTY _qt_internal_qmldir_content)
-    configure_file(${ARGN} @ONLY)
-endfunction()
-
-# Collects content for target $filepath and use deferred call of 'configure_file' to avoid
-# rebuilding of targets that depend on provided qmldir.
-# Note: For cmake versions < 3.19.0 plain 'file' function call will be used.
-function(_qt_internal_qmldir_defer_file command filepath content)
-    if(${CMAKE_VERSION} VERSION_LESS "3.19.0")
-        file(${ARGV})
-    else()
-        if("${command}" STREQUAL "WRITE")
-            if("${__qt_qml_macros_module_base_dir}" STREQUAL "")
-                message(FATAL_ERROR "Unable to configure qml module.
-    \"find_package(Qt\${QT_VERSION_MAJOR} CONFIG COMPONENTS Qml)\" \
-is missing.")
-            endif()
-            # Wrap with EVAL CODE to evaluate and expand arguments
-            cmake_language(EVAL CODE
-                           "cmake_language(DEFER DIRECTORY \"${CMAKE_CURRENT_SOURCE_DIR}\" CALL
-                            \"_qt_internal_configure_qmldir\"
-                            \"${CMAKE_CURRENT_SOURCE_DIR}\"
-                            \"${__qt_qml_macros_module_base_dir}/Qt6qmldirTemplate.cmake.in\"
-                            \"${filepath}\")")
-            set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-                         PROPERTY _qt_internal_qmldir_content "${content}")
-        elseif("${command}" STREQUAL "APPEND")
-            set_property(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-                         APPEND_STRING
-                         PROPERTY _qt_internal_qmldir_content "${content}")
-        else()
-            message(FATAL_ERROR "Unknown command ${command}. \
-                                 _qt_internal_qmldir_defer_file only accepts \
-                                 WRITE and APPEND commands.")
-        endif()
-    endif()
-endfunction()
-
-# Adds a target called TARGET_qmllint that runs on all qml files compiled ahead-of-time.
-function(qt6_target_enable_qmllint target)
-    get_target_property(target_source ${target} SOURCE_DIR)
-    get_target_property(import_path ${target} QT_QML_IMPORT_PATH)
-    get_target_property(files ${target} QML_FILES)
-
-    set(import_args "")
-    if(import_path)
-        foreach(dir IN LISTS import_path)
-            list(APPEND import_args "-I" "${dir}")
-        endforeach()
-        list(APPEND import_args "-I" "${QT_INSTALL_DIR}/${INSTALL_QMLDIR}")
-    endif()
-
-    add_custom_target(${target}_qmllint
-        ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint ${files} ${import_args}
-        WORKING_DIRECTORY ${target_source}
-    )
-endfunction()

@@ -1,22 +1,15 @@
-qt_internal_add_module(LabsWavefrontMesh
-  SOURCES
-      qwavefrontmesh.cpp qwavefrontmesh_p.h
-      qqmlwavefrontmeshglobal_p.h
-  DEFINES
+qt_internal_add_qml_module(LabsWavefrontMesh
+    URI "Qt.labs.wavefrontmesh"
+    VERSION "${PROJECT_VERSION}"
+    PLUGIN_TARGET qmlwavefrontmeshplugin
+    CLASS_NAME QmlWavefrontMeshPlugin
+    SOURCES
+        qwavefrontmesh.cpp qwavefrontmesh_p.h
+        qqmlwavefrontmeshglobal_p.h
+    DEFINES
         QT_BUILD_LABSWAVEFRONTMESH_LIB
-  PUBLIC_LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::QuickPrivate
 )
-
-
-set_target_properties(LabsWavefrontMesh PROPERTIES
-    QT_QML_MODULE_INSTALL_QMLTYPES TRUE
-    QT_QML_MODULE_VERSION ${PROJECT_VERSION}
-    QT_QML_MODULE_URI Qt.labs.wavefrontmesh
-    QT_QMLTYPES_FILENAME plugins.qmltypes
-    QT_QML_MODULE_INSTALL_DIR "${INSTALL_QMLDIR}/Qt/labs/wavefrontmesh"
-)
-
-qt6_qml_type_registration(LabsWavefrontMesh)
