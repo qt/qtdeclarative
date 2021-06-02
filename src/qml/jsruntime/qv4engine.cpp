@@ -2451,9 +2451,13 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
     }
 
     {
-        const QQmlValueTypeWrapper *vtw = value.as<QQmlValueTypeWrapper>();
-        if (vtw && vtw->type() == metaType)
-            return vtw->toGadget(data);
+        if (const QQmlValueTypeWrapper *vtw = value.as<QQmlValueTypeWrapper>()) {
+            const QMetaType valueType = vtw->type();
+            if (valueType == metaType)
+                return vtw->toGadget(data);
+            if (QMetaType::canConvert(valueType, metaType))
+                return QMetaType::convert(valueType, vtw->d()->gadgetPtr(), metaType, data);
+        }
     }
 
 #if 0

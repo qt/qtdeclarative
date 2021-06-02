@@ -101,6 +101,7 @@ private slots:
     void nonValueTypes();
     void char16Type();
     void writeBackOnFunctionCall();
+    void valueTypeConversions();
 
 private:
     QQmlEngine engine;
@@ -1926,6 +1927,53 @@ void tst_qqmlvaluetypes::writeBackOnFunctionCall()
     QVERIFY(s);
     // f.value() should not write back.
     QCOMPARE(s->writeCount, 2);
+}
+
+struct TypeB;
+struct TypeA
+{
+    Q_GADGET
+
+public:
+    TypeA() = default;
+    TypeA(const TypeB &other);
+    TypeA &operator=(const TypeB &other);
+
+    int a = 4;
+};
+
+struct TypeB
+{
+    Q_GADGET
+
+public:
+    TypeB() = default;
+    TypeB(const TypeA &other) : b(other.a) {}
+    TypeB &operator=(const TypeA &other) { b = other.a; return *this; }
+
+    int b = 5;
+};
+
+TypeA::TypeA(const TypeB &other) : a(other.b) {}
+TypeA &TypeA::operator=(const TypeB &other) { a = other.b; return *this; }
+
+void tst_qqmlvaluetypes::valueTypeConversions()
+{
+    QMetaType::registerConverter<TypeA, TypeB>();
+    QMetaType::registerConverter<TypeB, TypeA>();
+
+    TypeA a;
+    TypeB b;
+
+    QJSEngine engine;
+    QJSValue jsA = engine.toScriptValue(a);
+    QJSValue jsB = engine.toScriptValue(b);
+
+    TypeA resultA = engine.fromScriptValue<TypeA>(jsB);
+    TypeB resultB = engine.fromScriptValue<TypeB>(jsA);
+
+    QCOMPARE(resultA.a, b.b);
+    QCOMPARE(resultB.b, a.a);
 }
 
 #undef CHECK_TYPE_IS_NOT_VALUETYPE
