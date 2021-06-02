@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
+import QtQuick
 
 Item {
     width: 640
@@ -39,7 +39,13 @@ Item {
         y: (parent.height - height) / 2
         width: image.width
         height: image.height
-        transform: Rotation { id: tilt; origin.x: width / 2; origin.y: height / 2; axis { x: 1; y: 0; z: 0 } }
+        transform: Rotation {
+            id: tilt
+            origin.x: width / 2
+            origin.y: height / 2
+            axis { x: 1; y: 0; z: 0 }
+            angle: tiltHandler.persistentTranslation.y / -2
+        }
 
         WheelHandler {
             id: wheelHandler
@@ -82,7 +88,6 @@ Item {
         maximumPointCount: 2
         xAxis.enabled: false
         target: null
-        onTranslationChanged: tilt.angle = translation.y / -2
     }
 
     PinchHandler {

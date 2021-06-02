@@ -58,9 +58,9 @@ Item {
             if (!active) {
                 if (xbr.returnToBounds())
                     return;
-                if (translation.x > 0)
+                if (activeTranslation.x > 0)
                     open()
-                if (translation.x < 0)
+                if (activeTranslation.x < 0)
                     close()
             }
     }

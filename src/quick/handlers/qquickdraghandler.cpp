@@ -165,6 +165,7 @@ void QQuickDragHandler::onActiveChanged()
             // mouse grab too, whenever dragging occurs in an enabled direction
             parent->setKeepMouseGrab(true);
         }
+        m_startTranslation = m_persistentTranslation;
     } else {
         m_pressTargetPos = QPointF();
         m_pressedInsideTarget = false;
@@ -210,7 +211,7 @@ void QQuickDragHandler::handlePointerEventImpl(QPointerEvent *event)
             accumulatedDragDelta.setX(0);
         if (!m_yAxis.enabled())
             accumulatedDragDelta.setY(0);
-        setTranslation(accumulatedDragDelta);
+        setActiveTranslation(accumulatedDragDelta);
     } else {
         // Check that all points have been dragged past the drag threshold,
         // to the extent that the constraints allow,
@@ -316,11 +317,24 @@ void QQuickDragHandler::enforceAxisConstraints(QPointF *localPos)
         localPos->setY(qBound(m_yAxis.minimum(), localPos->y(), m_yAxis.maximum()));
 }
 
-void QQuickDragHandler::setTranslation(const QVector2D &trans)
+void QQuickDragHandler::setPersistentTranslation(const QVector2D &trans)
 {
-    if (trans == m_translation) // fuzzy compare?
+    if (trans == m_persistentTranslation)
         return;
-    m_translation = trans;
+
+    m_persistentTranslation = trans;
+    emit translationChanged();
+}
+
+void QQuickDragHandler::setActiveTranslation(const QVector2D &trans)
+{
+    if (trans == m_activeTranslation)
+        return;
+
+    m_activeTranslation = trans;
+    m_persistentTranslation = m_startTranslation + trans;
+    qCDebug(lcDragHandler) << "translation: start" << m_startTranslation
+                           << "active" << m_activeTranslation << "accumulated" << m_persistentTranslation;
     emit translationChanged();
 }
 
@@ -357,8 +371,27 @@ void QQuickDragHandler::setTranslation(const QVector2D &trans)
 /*!
     \readonly
     \qmlproperty QVector2D QtQuick::DragHandler::translation
+    \deprecated Use activeTranslation
+*/
 
-    The translation since the gesture began.
+/*!
+    \qmlproperty QVector2D QtQuick::DragHandler::persistentTranslation
+
+    The translation to be applied to the \l target if it is not \c null.
+    Otherwise, bindings can be used to do arbitrary things with this value.
+    While the drag gesture is being performed, \l activeTranslation is
+    continuously added to it; after the gesture ends, it stays the same.
+*/
+
+/*!
+    \readonly
+    \qmlproperty QVector2D QtQuick::DragHandler::activeTranslation
+
+    The translation while the drag gesture is being performed.
+    It is \c {0, 0} when the gesture begins, and increases as the event
+    point(s) are dragged downward and to the right. After the gesture ends, it
+    stays the same; and when the next drag gesture begins, it is reset to
+    \c {0, 0} again.
 */
 
 QT_END_NAMESPACE

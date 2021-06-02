@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick
 
 Item {
     width: 640
@@ -70,9 +70,8 @@ Item {
                 startDrag = map.center
         }
 
-        onTranslationChanged: {
-            if (!target)
-                map.setCenter(startDrag.x + translation.x, startDrag.y + translation.y)
+        onActiveTranslationChanged: {
+            map.setCenter(startDrag.x + activeTranslation.x, startDrag.y + activeTranslation.y)
         }
     }
 }

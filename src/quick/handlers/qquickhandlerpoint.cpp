@@ -100,17 +100,14 @@ void QQuickHandlerPoint::reset()
 
 void QQuickHandlerPoint::reset(const QPointerEvent *event, const QEventPoint &point)
 {
+    const bool isTouch = QQuickDeliveryAgentPrivate::isTouchEvent(event);
     m_id = point.id();
     m_device = event->pointingDevice();
-    switch (point.state()) {
-    case QEventPoint::Pressed:
+    const auto state = (isTouch ? static_cast<const QTouchEvent *>(event)->touchPointStates() : point.state());
+    if (state.testFlag(QEventPoint::Pressed)) {
         m_pressPosition = point.position();
         m_scenePressPosition = point.scenePosition();
-        break;
-    default:
-        break;
     }
-    const bool isTouch = QQuickDeliveryAgentPrivate::isTouchEvent(event);
     if (!isTouch)
         m_pressedButtons = static_cast<const QSinglePointEvent *>(event)->buttons();
     m_pressedModifiers = event->modifiers();
