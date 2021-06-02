@@ -117,6 +117,10 @@ public:
                                           QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
                                           QV4::ExecutionContext *scope, QObject *target,
                                           QQmlPropertyIndex targetIndex);
+    static QUntypedPropertyBinding create(QMetaType propertyType, QV4::Function *function,
+                                          QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
+                                          QV4::ExecutionContext *scope, QObject *target,
+                                          QQmlPropertyIndex targetIndex);
     static QUntypedPropertyBinding createFromCodeString(const QQmlPropertyData *property,
                                                         const QString &str, QObject *obj,
                                                         const QQmlRefPointer<QQmlContextData> &ctxt,

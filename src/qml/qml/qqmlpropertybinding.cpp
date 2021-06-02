@@ -51,8 +51,19 @@ QUntypedPropertyBinding QQmlPropertyBinding::create(const QQmlPropertyData *pd, 
                                                     QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,
                                                     QV4::ExecutionContext *scope, QObject *target, QQmlPropertyIndex targetIndex)
 {
+    Q_ASSERT(pd);
+    return create(pd->propType(), function, obj, ctxt, scope, target, targetIndex);
+}
+
+QUntypedPropertyBinding QQmlPropertyBinding::create(QMetaType propertyType, QV4::Function *function,
+                                                    QObject *obj,
+                                                    const QQmlRefPointer<QQmlContextData> &ctxt,
+                                                    QV4::ExecutionContext *scope, QObject *target,
+                                                    QQmlPropertyIndex targetIndex)
+{
     auto buffer = new std::byte[sizeof(QQmlPropertyBinding)+sizeof(QQmlPropertyBindingJS)+jsExpressionOffsetLength()]; // QQmlPropertyBinding uses delete[]
-    auto binding = new(buffer) QQmlPropertyBinding(QMetaType(pd->propType()), target, targetIndex, TargetData::WithoutBoundFunction);
+    auto binding = new (buffer) QQmlPropertyBinding(propertyType, target, targetIndex,
+                                                    TargetData::WithoutBoundFunction);
     auto js = new(buffer + sizeof(QQmlPropertyBinding) + jsExpressionOffsetLength()) QQmlPropertyBindingJS();
     Q_ASSERT(binding->jsExpression() == js);
     Q_ASSERT(js->asBinding() == binding);

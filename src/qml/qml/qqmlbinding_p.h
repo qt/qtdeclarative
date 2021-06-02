@@ -86,6 +86,10 @@ public:
             const QQmlPropertyData *property, QV4::Function *function, QObject *obj,
             const QQmlRefPointer<QQmlContextData> &ctxt, QV4::ExecutionContext *scope);
 
+    static QQmlBinding *create(QMetaType propertyType, QV4::Function *function, QObject *obj,
+                               const QQmlRefPointer<QQmlContextData> &ctxt,
+                               QV4::ExecutionContext *scope);
+
     static QQmlBinding *createTranslationBinding(
             const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
             const QV4::CompiledData::Binding *binding, QObject *obj,
@@ -154,6 +158,7 @@ private:
     inline void setEnabledFlag(bool);
 
     static QQmlBinding *newBinding(QQmlEnginePrivate *engine, const QQmlPropertyData *property);
+    static QQmlBinding *newBinding(QQmlEnginePrivate *engine, QMetaType propertyType);
 
     QQmlSourceLocation *m_sourceLocation = nullptr; // used for Qt.binding() created functions
     QV4::PersistentValue m_boundFunction; // used for Qt.binding() that are created from a bound function object

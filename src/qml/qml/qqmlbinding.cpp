@@ -140,7 +140,14 @@ QQmlBinding *QQmlBinding::create(
         const QQmlPropertyData *property, QV4::Function *function, QObject *obj,
         const QQmlRefPointer<QQmlContextData> &ctxt, QV4::ExecutionContext *scope)
 {
-    QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
+    return create(property ? property->propType() : QMetaType(), function, obj, ctxt, scope);
+}
+
+QQmlBinding *QQmlBinding::create(QMetaType propertyType, QV4::Function *function, QObject *obj,
+                                 const QQmlRefPointer<QQmlContextData> &ctxt,
+                                 QV4::ExecutionContext *scope)
+{
+    QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), propertyType);
 
     b->setNotifyOnValueChanged(true);
     b->QQmlJavaScriptExpression::setContext(ctxt);
@@ -881,10 +888,15 @@ private:
 
 QQmlBinding *QQmlBinding::newBinding(QQmlEnginePrivate *engine, const QQmlPropertyData *property)
 {
-    if (property && property->isQObject())
-        return new QObjectPointerBinding(engine, property->propType().id());
+    return newBinding(engine, property ? property->propType() : QMetaType());
+}
 
-    const int type = property ? property->propType().id() : QMetaType::UnknownType;
+QQmlBinding *QQmlBinding::newBinding(QQmlEnginePrivate *engine, QMetaType propertyType)
+{
+    if (propertyType.flags() & QMetaType::PointerToQObject)
+        return new QObjectPointerBinding(engine, propertyType.id());
+
+    const int type = propertyType.id();
 
     if (type == qMetaTypeId<QQmlBinding *>()) {
         return new QQmlBindingBinding;
