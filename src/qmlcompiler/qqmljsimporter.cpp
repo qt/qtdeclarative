@@ -309,15 +309,21 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
         return m_builtins;
 
     Import result;
+
+    QStringList qmltypesFiles = { QStringLiteral("builtins.qmltypes"),
+                                  QStringLiteral("jsroot.qmltypes") };
+
     for (auto const &dir : m_importPaths) {
-        QDirIterator it { dir,
-                          QStringList() << QStringLiteral("builtins.qmltypes")
-                                        << QStringLiteral("jsroot.qmltypes"),
-                          QDir::NoFilter, QDirIterator::Subdirectories };
-        while (it.hasNext())
+        QDirIterator it { dir, qmltypesFiles, QDir::NoFilter, QDirIterator::Subdirectories };
+        while (it.hasNext() && !qmltypesFiles.isEmpty()) {
             readQmltypes(it.next(), &result.objects, &result.dependencies);
+            qmltypesFiles.removeOne(it.fileName());
+        }
 
         importDependencies(result, &m_builtins);
+
+        if (qmltypesFiles.isEmpty())
+            break;
     }
 
     // Process them together since there they have interdependencies that wouldn't get resolved
