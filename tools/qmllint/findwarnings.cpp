@@ -689,6 +689,15 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *uiod)
         auto property = scope->property(parentPropertyName);
         property.setType(QQmlJSScope::ConstPtr(m_currentScope));
 
+        if (childScope->hasOwnProperty(parentPropertyName)) {
+            Q_ASSERT(childScope->ownProperty(parentPropertyName).index() >= 0);
+        } else {
+            // it's a new property, so must adjust the index. the index is
+            // "outdated" as it's a relative index of scope, not childScope (or
+            // it might even be -1 in theory but this is likely an error)
+            property.setIndex(childScope->ownProperties().size());
+        }
+
         // TODO: This is bad. We shouldn't add a new property but rather amend the existing one.
         childScope->addOwnProperty(property);
     }

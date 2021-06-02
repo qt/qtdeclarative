@@ -173,6 +173,7 @@ void QQmlJSImportVisitor::resolveAliases()
                 if (const QString internalName = type->internalName(); !internalName.isEmpty())
                     property.setTypeName(internalName);
             }
+            Q_ASSERT(property.index() >= 0); // this property is already in object
 
             object->addOwnProperty(property);
         }
@@ -433,6 +434,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         prop.setAnnotations(parseAnnotations(publicMember->annotations));
         if (publicMember->isDefaultMember)
             m_currentScope->setDefaultPropertyName(prop.propertyName());
+        prop.setIndex(m_currentScope->ownProperties().size());
         m_currentScope->insertPropertyIdentifier(prop);
         if (publicMember->isRequired)
             m_currentScope->setPropertyLocallyRequired(prop.propertyName(), true);
