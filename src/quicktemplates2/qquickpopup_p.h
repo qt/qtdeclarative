@@ -101,7 +101,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopup : public QObject, public QQml
     Q_PROPERTY(QQuickItem *parent READ parentItem WRITE setParentItem RESET resetParentItem NOTIFY parentChanged FINAL)
     Q_PROPERTY(QQuickItem *background READ background WRITE setBackground NOTIFY backgroundChanged FINAL)
     Q_PROPERTY(QQuickItem *contentItem READ contentItem WRITE setContentItem NOTIFY contentItemChanged FINAL)
-    Q_PRIVATE_PROPERTY(QQuickPopup::d_func(), QQmlListProperty<QObject> contentData READ contentData FINAL)
+    Q_PRIVATE_PROPERTY(QQuickPopup::d_func(), QQmlListProperty<QObject> contentData READ contentData)
     Q_PRIVATE_PROPERTY(QQuickPopup::d_func(), QQmlListProperty<QQuickItem> contentChildren READ contentChildren NOTIFY contentChildrenChanged FINAL)
     Q_PROPERTY(bool clip READ clip WRITE setClip NOTIFY clipChanged FINAL)
     Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged FINAL)
