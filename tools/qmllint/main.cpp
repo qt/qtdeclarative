@@ -207,7 +207,7 @@ int main(int argv, char *argc[])
 
     QCoreApplication app(argv, argc);
     QCoreApplication::setApplicationName("qmllint");
-    QCoreApplication::setApplicationVersion("1.0");
+    QCoreApplication::setApplicationVersion(QT_VERSION_STR);
 #if QT_CONFIG(commandlineparser)
     QCommandLineParser parser;
     QQmlToolingSettings settings(QLatin1String("qmllint"));
