@@ -61,7 +61,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickDragHandler : public QQuickMultiPointHandler
     Q_OBJECT
     Q_PROPERTY(QQuickDragAxis * xAxis READ xAxis CONSTANT)
     Q_PROPERTY(QQuickDragAxis * yAxis READ yAxis CONSTANT)
+#if QT_DEPRECATED_SINCE(6, 2)
     Q_PROPERTY(QVector2D translation READ translation NOTIFY translationChanged)
+#endif
     Q_PROPERTY(QVector2D activeTranslation READ activeTranslation NOTIFY translationChanged REVISION(6, 2))
     Q_PROPERTY(QVector2D persistentTranslation READ persistentTranslation WRITE setPersistentTranslation NOTIFY translationChanged REVISION(6, 2))
     Q_PROPERTY(SnapMode snapMode READ snapMode WRITE setSnapMode NOTIFY snapModeChanged REVISION(2, 14))
@@ -84,7 +86,9 @@ public:
     QQuickDragAxis *xAxis() { return &m_xAxis; }
     QQuickDragAxis *yAxis() { return &m_yAxis; }
 
+#if QT_DEPRECATED_SINCE(6, 2)
     QVector2D translation() const { return m_activeTranslation; }
+#endif
     QVector2D activeTranslation() const { return m_activeTranslation; }
     void setActiveTranslation(const QVector2D &trans);
     QVector2D persistentTranslation() const { return m_persistentTranslation; }
