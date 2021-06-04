@@ -667,6 +667,12 @@ void QQmlBinding::setTarget(const QQmlProperty &prop)
 
 bool QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const QQmlPropertyData *valueType)
 {
+    return setTarget(object, core.coreIndex(), core.isAlias(),
+                     valueType ? valueType->coreIndex() : -1);
+}
+
+bool QQmlBinding::setTarget(QObject *object, int coreIndex, bool coreIsAlias, int valueTypeIndex)
+{
     m_target = object;
 
     if (!object) {
@@ -674,9 +680,7 @@ bool QQmlBinding::setTarget(QObject *object, const QQmlPropertyData &core, const
         return false;
     }
 
-    int coreIndex = core.coreIndex();
-    int valueTypeIndex = valueType ? valueType->coreIndex() : -1;
-    for (bool isAlias = core.isAlias(); isAlias; ) {
+    for (bool isAlias = coreIsAlias; isAlias;) {
         QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
 
         int aValueTypeIndex;
