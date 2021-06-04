@@ -74,17 +74,29 @@ function(qt_internal_add_qml_module target)
 
     # Args used by qt_internal_add_qml_module directly, which should not be passed to any other
     # functions.
+    #
+    # NO_CREATE_BACKING_TARGET option skips the creation of the backing target. It is useful in
+    # the case where the backing target already exists, a plugin target should still be created
+    # and the qml specific install rules should still apply to the backing target.
+    #
     # INSTALL_SOURCE_QMLTYPES takes a path to an existing plugins.qmltypes file that should be
     # installed.
+    #
     # INSTALL_SOURCE_QMLDIR takes a path to an existing qmldir file that should be installed.
+    set(internal_option_args
+        NO_CREATE_BACKING_TARGET
+    )
+
     set(internal_single_args
         INSTALL_SOURCE_QMLTYPES
-        INSTALL_SOURCE_QMLDIR)
+        INSTALL_SOURCE_QMLDIR
+    )
 
     set(option_args
         ${module_option_args}
         ${qml_module_option_args}
         ${ignore_option_args}
+        ${internal_option_args}
     )
     set(single_args
         ${module_single_args}
@@ -130,24 +142,27 @@ function(qt_internal_add_qml_module target)
 
     set(plugin_args "")
     if(NOT arg_PLUGIN_TARGET STREQUAL target)
-        # Create the backing target now to handle module-related things
-        qt_remove_args(module_args
-            ARGS_TO_REMOVE
-                ${ignore_option_args}
-                ${qml_module_option_args}
-                ${qml_module_single_args}
-                ${qml_module_multi_args}
-                ${internal_single_args}
-                OUTPUT_DIRECTORY
-                INSTALL_DIRECTORY
-            ALL_ARGS
-                ${option_args}
-                ${single_args}
-                ${multi_args}
-            ARGS
-                ${ARGN}
-        )
-        qt_internal_add_module(${target} ${module_args})
+        if(NOT arg_NO_CREATE_BACKING_TARGET)
+            # Create the backing target now to handle module-related things
+            qt_remove_args(module_args
+                ARGS_TO_REMOVE
+                    ${ignore_option_args}
+                    ${qml_module_option_args}
+                    ${qml_module_single_args}
+                    ${qml_module_multi_args}
+                    ${internal_option_args}
+                    ${internal_single_args}
+                    OUTPUT_DIRECTORY
+                    INSTALL_DIRECTORY
+                ALL_ARGS
+                    ${option_args}
+                    ${single_args}
+                    ${multi_args}
+                ARGS
+                    ${ARGN}
+            )
+            qt_internal_add_module(${target} ${module_args})
+        endif()
     else()
         # Since we are not creating a separate backing target, we have to pass
         # through the default args to the plugin target creation instead
