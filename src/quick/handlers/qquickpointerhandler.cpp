@@ -353,10 +353,13 @@ bool QQuickPointerHandler::approveGrabTransition(QPointerEvent *event, const QEv
             } else if ((d->grabPermissions & CanTakeOverFromItems)) {
                 allowed = true;
                 QQuickItem * existingItemGrabber = qobject_cast<QQuickItem *>(event->exclusiveGrabber(point));
-                auto da = QQuickItemPrivate::get(parentItem())->deliveryAgentPrivate();
+                auto da = parentItem() ? QQuickItemPrivate::get(parentItem())->deliveryAgentPrivate()
+                                       : QQuickDeliveryAgentPrivate::currentEventDeliveryAgent ? static_cast<QQuickDeliveryAgentPrivate *>(
+                                            QQuickDeliveryAgentPrivate::get(QQuickDeliveryAgentPrivate::currentEventDeliveryAgent)) : nullptr;
+                const bool isTouchMouse = (da && da->isDeliveringTouchAsMouse());
                 if (existingItemGrabber &&
                         ((existingItemGrabber->keepMouseGrab() &&
-                          (QQuickWindowPrivate::isMouseEvent(event) || da->isDeliveringTouchAsMouse())) ||
+                          (QQuickWindowPrivate::isMouseEvent(event) || isTouchMouse)) ||
                          (existingItemGrabber->keepTouchGrab() && QQuickWindowPrivate::isTouchEvent(event)))) {
                     allowed = false;
                     // If the handler wants to steal the exclusive grab from an Item, the Item can usually veto
@@ -369,7 +372,7 @@ bool QQuickPointerHandler::approveGrabTransition(QPointerEvent *event, const QEv
                     if (existingItemGrabber->keepMouseGrab() &&
                             existingItemGrabber->filtersChildMouseEvents() && existingItemGrabber->isAncestorOf(parentItem())) {
                         Q_ASSERT(da);
-                        if (da->isDeliveringTouchAsMouse() && point.id() == da->touchMouseId) {
+                        if (isTouchMouse && point.id() == da->touchMouseId) {
                             qCDebug(lcPointerHandlerGrab) << this << "steals touchpoint" << point.id()
                                 << "despite parent touch-mouse grabber with keepMouseGrab=true" << existingItemGrabber;
                             allowed = true;
