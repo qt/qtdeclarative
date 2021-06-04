@@ -34,7 +34,6 @@
 #include <QtQuick/qsggeometry.h>
 #include <QtQuick/qsgflatcolormaterial.h>
 #include <QtGui/qscreen.h>
-#include <qopenglcontext.h>
 
 #include "../../shared/util.h"
 
@@ -78,7 +77,7 @@ class DrawingModeItem : public QQuickItem
 {
     Q_OBJECT
 public:
-    static GLenum drawingMode;
+    static QSGGeometry::DrawingMode drawingMode;
 
     DrawingModeItem() : first(QSGGeometry::defaultAttributes_Point2D(), 5),
         second(QSGGeometry::defaultAttributes_Point2D(), 5)
@@ -127,7 +126,7 @@ protected:
     }
 };
 
-GLenum DrawingModeItem::drawingMode;
+QSGGeometry::DrawingMode DrawingModeItem::drawingMode;
 
 bool tst_drawingmodes::hasPixelAround(const QImage &fb, int centerX, int centerY) {
     for (int x = centerX - 2; x <= centerX + 2; ++x) {
@@ -148,7 +147,7 @@ tst_drawingmodes::tst_drawingmodes() : black(qRgb(0, 0, 0)), red(qRgb(0xff, 0, 0
 
 void tst_drawingmodes::points()
 {
-    DrawingModeItem::drawingMode = GL_POINTS;
+    DrawingModeItem::drawingMode = QSGGeometry::DrawPoints;
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
 
@@ -156,9 +155,8 @@ void tst_drawingmodes::points()
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
-#ifdef Q_OS_WIN
-    if (QOpenGLContext::openGLModuleType() == QOpenGLContext::LibGLES)
-        QSKIP("ANGLE cannot draw GL_POINTS.");
+#if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
+    QSKIP("Skipping points test due to unexpected failures in M1 CI VM");
 #endif
 
     QImage fb = runTest("DrawingModes.qml");
@@ -191,7 +189,7 @@ void tst_drawingmodes::points()
 
 void tst_drawingmodes::lines()
 {
-    DrawingModeItem::drawingMode = GL_LINES;
+    DrawingModeItem::drawingMode = QSGGeometry::DrawLines;
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
 
@@ -222,7 +220,7 @@ void tst_drawingmodes::lines()
 
 void tst_drawingmodes::lineStrip()
 {
-    DrawingModeItem::drawingMode = GL_LINE_STRIP;
+    DrawingModeItem::drawingMode = QSGGeometry::DrawLineStrip;
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
 
@@ -255,7 +253,7 @@ void tst_drawingmodes::lineStrip()
 
 void tst_drawingmodes::lineLoop()
 {
-    DrawingModeItem::drawingMode = GL_LINE_LOOP;
+    DrawingModeItem::drawingMode = QSGGeometry::DrawLineLoop;
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
 
@@ -291,7 +289,7 @@ void tst_drawingmodes::lineLoop()
 
 void tst_drawingmodes::triangles()
 {
-    DrawingModeItem::drawingMode = GL_TRIANGLES;
+    DrawingModeItem::drawingMode = QSGGeometry::DrawTriangles;
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
 
@@ -320,7 +318,7 @@ void tst_drawingmodes::triangles()
 
 void tst_drawingmodes::triangleStrip()
 {
-    DrawingModeItem::drawingMode = GL_TRIANGLE_STRIP;
+    DrawingModeItem::drawingMode = QSGGeometry::DrawTriangleStrip;
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
 
@@ -348,7 +346,7 @@ void tst_drawingmodes::triangleStrip()
 
 void tst_drawingmodes::triangleFan()
 {
-    DrawingModeItem::drawingMode = GL_TRIANGLE_FAN;
+    DrawingModeItem::drawingMode = QSGGeometry::DrawTriangleFan;
     if (QGuiApplication::primaryScreen()->depth() < 24)
         QSKIP("This test does not work at display depths < 24");
 

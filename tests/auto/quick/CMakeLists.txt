@@ -1,7 +1,10 @@
 # Generated from quick.pro.
 
 add_subdirectory(geometry)
+add_subdirectory(nodes)
+add_subdirectory(drawingmodes)
 add_subdirectory(qquickpixmapcache)
+
 if(QT_FEATURE_private_tests)
     add_subdirectory(nokeywords)
     add_subdirectory(propertyrequirements)
@@ -71,4 +74,13 @@ if(QT_FEATURE_private_tests)
     add_subdirectory(sharedimage)
     add_subdirectory(qquickcolorgroup)
     add_subdirectory(qquickpalette)
+    add_subdirectory(qquickrendercontrol)
+    add_subdirectory(qquickshadereffect)
+    add_subdirectory(qquickanimatedsprite)
+    add_subdirectory(qquickspritesequence)
+
+    if(QT_FEATURE_opengl)
+        add_subdirectory(qquickframebufferobject)
+        add_subdirectory(rendernode)
+    endif()
 endif()

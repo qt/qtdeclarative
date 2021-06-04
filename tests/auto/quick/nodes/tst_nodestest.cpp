@@ -83,7 +83,7 @@ public:
     NodesTest();
 
 private Q_SLOTS:
-    void initTestCase() override;
+    void initTestCase();
     void cleanupTestCase();
 
     // Root nodes

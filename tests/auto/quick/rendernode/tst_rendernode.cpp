@@ -299,7 +299,8 @@ class StateRecordingRenderNodeItem : public QQuickItem
     Q_OBJECT
 public:
     StateRecordingRenderNodeItem() { setFlag(ItemHasContents, true); }
-    QSGNode *updatePaintNode(QSGNode *r, UpdatePaintNodeData *) {
+    QSGNode *updatePaintNode(QSGNode *r, UpdatePaintNodeData *) override
+    {
         if (r)
             return r;
         StateRecordingRenderNode *rn = new StateRecordingRenderNode();
