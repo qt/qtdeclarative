@@ -369,7 +369,8 @@ void QQuickWidgetPrivate::render(bool needsSync)
             renderControl->polishItems();
             renderControl->sync();
         }
-
+        if (!offscreenWindow)
+            return;
         QQuickWindowPrivate *cd = QQuickWindowPrivate::get(offscreenWindow);
         auto softwareRenderer = static_cast<QSGSoftwareRenderer*>(cd->renderer);
         if (softwareRenderer && !softwareImage.isNull()) {
