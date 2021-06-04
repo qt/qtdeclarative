@@ -35,16 +35,50 @@
 #include <QtCore/qfileinfo.h>
 
 #include <algorithm>
+#include <type_traits>
 
 QT_BEGIN_NAMESPACE
 
-template<typename Action>
-static bool searchBaseAndExtensionTypes(const QQmlJSScope *type, const Action &check)
+/*! \internal
+
+    Utility method that returns proper value according to the type To. This
+    version returns From.
+*/
+template<typename To, typename From, typename std::enable_if_t<!std::is_pointer_v<To>, int> = 0>
+static auto getQQmlJSScopeFromSmartPtr(const From &p) -> From
 {
-    for (const QQmlJSScope *scope = type; scope; scope = scope->baseType().data()) {
+    static_assert(!std::is_pointer_v<From>, "From has to be a smart pointer holding QQmlJSScope");
+    return p;
+}
+
+/*! \internal
+
+    Utility method that returns proper value according to the type To. This
+    version returns From::get(), which is a raw pointer. The returned type is
+    not necessary equal to To (e.g. To might be `QQmlJSScope *` while returned
+    is `const QQmlJSScope *`).
+*/
+template<typename To, typename From, typename std::enable_if_t<std::is_pointer_v<To>, int> = 0>
+static auto getQQmlJSScopeFromSmartPtr(const From &p) -> decltype(p.get())
+{
+    static_assert(!std::is_pointer_v<From>, "From has to be a smart pointer holding QQmlJSScope");
+    return p.get();
+}
+
+template<typename QQmlJSScopePtr, typename Action>
+static bool searchBaseAndExtensionTypes(QQmlJSScopePtr type, const Action &check)
+{
+    // NB: among other things, getQQmlJSScopeFromSmartPtr() also resolves const
+    // vs non-const pointer issue, so use it's return value as the type
+    using T = decltype(
+            getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(std::declval<QQmlJSScope::ConstPtr>()));
+
+    for (T scope = type; scope;
+         scope = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->baseType())) {
         // Extensions override their base types
-        for (const QQmlJSScope *extension = scope->extensionType().data(); extension;
-             extension = extension->baseType().data()) {
+        for (T extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->extensionType());
+             extension;
+             extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(extension->baseType())) {
             if (check(extension))
                 return true;
         }
@@ -341,6 +375,20 @@ QQmlJSMetaProperty QQmlJSScope::property(const QString &name) const
         return true;
     });
     return prop;
+}
+
+QQmlJSScope::ConstPtr QQmlJSScope::ownerOfProperty(const QQmlJSScope::ConstPtr &self,
+                                                   const QString &name)
+{
+    QQmlJSScope::ConstPtr owner;
+    searchBaseAndExtensionTypes(self, [&](const QQmlJSScope::ConstPtr &scope) {
+        if (scope->hasOwnProperty(name)) {
+            owner = scope;
+            return true;
+        }
+        return false;
+    });
+    return owner;
 }
 
 void QQmlJSScope::setPropertyLocallyRequired(const QString &name, bool isRequired)

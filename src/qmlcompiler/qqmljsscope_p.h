@@ -248,6 +248,9 @@ public:
     bool hasPropertyBinding(const QString &name) const;
     QQmlJSMetaPropertyBinding propertyBinding(const QString &name) const;
 
+    static QQmlJSScope::ConstPtr ownerOfProperty(const QQmlJSScope::ConstPtr &self,
+                                                 const QString &name);
+
     bool isResolved() const;
     bool isFullyResolved() const;
 
