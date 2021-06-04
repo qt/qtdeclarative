@@ -363,9 +363,10 @@ bool QQuickPointerHandler::approveGrabTransition(QPointerEvent *event, const QEv
                 auto da = parentItem() ? QQuickItemPrivate::get(parentItem())->deliveryAgentPrivate()
                                        : QQuickDeliveryAgentPrivate::currentEventDeliveryAgent ? static_cast<QQuickDeliveryAgentPrivate *>(
                                             QQuickDeliveryAgentPrivate::get(QQuickDeliveryAgentPrivate::currentEventDeliveryAgent)) : nullptr;
+                const bool isTouchMouse = (da && da->isDeliveringTouchAsMouse());
                 if (existingItemGrabber &&
                         ((existingItemGrabber->keepMouseGrab() &&
-                          (QQuickDeliveryAgentPrivate::isMouseEvent(event) || da->isDeliveringTouchAsMouse())) ||
+                          (QQuickDeliveryAgentPrivate::isMouseEvent(event) || isTouchMouse)) ||
                          (existingItemGrabber->keepTouchGrab() && QQuickDeliveryAgentPrivate::isTouchEvent(event)))) {
                     allowed = false;
                     // If the handler wants to steal the exclusive grab from an Item, the Item can usually veto
@@ -378,7 +379,7 @@ bool QQuickPointerHandler::approveGrabTransition(QPointerEvent *event, const QEv
                     if (existingItemGrabber->keepMouseGrab() &&
                             existingItemGrabber->filtersChildMouseEvents() && existingItemGrabber->isAncestorOf(parentItem())) {
                         Q_ASSERT(da);
-                        if (da->isDeliveringTouchAsMouse() && point.id() == da->touchMouseId) {
+                        if (isTouchMouse && point.id() == da->touchMouseId) {
                             qCDebug(lcPointerHandlerGrab) << this << "steals touchpoint" << point.id()
                                 << "despite parent touch-mouse grabber with keepMouseGrab=true" << existingItemGrabber;
                             allowed = true;
