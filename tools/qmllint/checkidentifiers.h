@@ -32,13 +32,9 @@
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include <QtQmlCompiler/private/qqmljsimporter_p.h>
+#include <QtQmlCompiler/private/qqmljsmetatypes_p.h>
 
 class QColorOutput;
-
-struct SignalHandler {
-    QQmlJSMetaMethod signal;
-    bool isMultiline;
-};
 
 struct FieldMember
 {
@@ -57,10 +53,10 @@ public:
         m_logger(logger), m_code(code), m_types(types), m_fileName(fileName)
     {}
 
-    void operator ()(const QHash<QString, QQmlJSScope::ConstPtr> &qmlIDs,
-                     const QHash<QQmlJS::SourceLocation, SignalHandler> &signalHandlers,
-                     const MemberAccessChains &memberAccessChains,
-                     const QQmlJSScope::ConstPtr &root, const QString &rootId) const;
+    void operator()(const QHash<QString, QQmlJSScope::ConstPtr> &qmlIDs,
+                    const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers,
+                    const MemberAccessChains &memberAccessChains, const QQmlJSScope::ConstPtr &root,
+                    const QString &rootId) const;
 
 private:
     void checkMemberAccess(const QVector<FieldMember> &members,

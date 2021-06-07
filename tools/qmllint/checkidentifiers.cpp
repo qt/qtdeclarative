@@ -250,9 +250,9 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
 
 void CheckIdentifiers::operator()(
         const QHash<QString, QQmlJSScope::ConstPtr> &qmlIDs,
-        const QHash<QQmlJS::SourceLocation, SignalHandler> &signalHandlers,
-        const MemberAccessChains &memberAccessChains,
-        const QQmlJSScope::ConstPtr &root, const QString &rootId) const
+        const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers,
+        const MemberAccessChains &memberAccessChains, const QQmlJSScope::ConstPtr &root,
+        const QString &rootId) const
 {
     // revisit all scopes
     QQueue<QQmlJSScope::ConstPtr> workQueue;
@@ -442,7 +442,7 @@ void CheckIdentifiers::operator()(
                 const auto handler = signalHandlers[id.location];
 
                 colorOut.write(QLatin1String(handler.isMultiline ? "function(" : "("), QtInfoMsg);
-                const auto parameters = handler.signal.parameterNames();
+                const auto parameters = handler.signalParameters;
                 for (int numParams = parameters.size(); numParams > 0; --numParams) {
                     colorOut.write(parameters.at(parameters.size() - numParams), QtInfoMsg);
                     if (numParams > 1)

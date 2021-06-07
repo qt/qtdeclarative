@@ -416,6 +416,12 @@ public:
     }
 };
 
+struct QQmlJSMetaSignalHandler
+{
+    QStringList signalParameters;
+    bool isMultiline;
+};
+
 QT_END_NAMESPACE
 
 #endif // QQMLJSMETATYPES_P_H

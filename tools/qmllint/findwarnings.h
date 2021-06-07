@@ -64,68 +64,26 @@ public:
     bool check();
 
 private:
-    QHash<QQmlJS::SourceLocation, SignalHandler> m_signalHandlers;
-    QQmlJS::SourceLocation m_pendingSingalHandler;
-
     MemberAccessChains m_memberAccessChains;
 
     QQmlJS::AST::ExpressionNode *m_fieldMemberBase = nullptr;
-    QString m_code;
-    QString m_rootId;
-    QString m_filePath;
-    QSet<QString> m_unknownImports;
-
-    struct OutstandingConnection
-    {
-        QString targetName;
-        QQmlJSScope::Ptr scope;
-        QQmlJS::AST::UiObjectDefinition *uiod;
-    };
-
-    QVarLengthArray<OutstandingConnection, 3> m_outstandingConnections; // Connections whose target we have not encountered
-
-    // records of whether a default property has object assigned to it. for
-    // correctness, the scope that defines the default property acts as a key
-    QHash<const QQmlJSScope *, bool> m_scopeHasDefaultPropertyAssignment;
 
     void parseComments(const QList<QQmlJS::SourceLocation> &comments);
-
-    void checkInheritanceCycle(QQmlJSScope::ConstPtr scope);
-    void checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope);
-    void flushPendingSignalParameters();
-    void checkDefaultProperty(const QQmlJSScope::ConstPtr &scope);
-
-    void throwRecursionDepthError() override;
 
     // work around compiler error in clang11
     using QQmlJSImportVisitor::visit;
     using QQmlJSImportVisitor::endVisit;
 
-    // start block/scope handling
-    bool visit(QQmlJS::AST::ExpressionStatement *ast) override;
-    void endVisit(QQmlJS::AST::ExpressionStatement *ast) override;
-    bool visit(QQmlJS::AST::Block *ast) override;
-    bool visit(QQmlJS::AST::WithStatement *withStatement) override;
-
-    /* --- end block handling --- */
-
-    bool visit(QQmlJS::AST::UiObjectBinding *uiob) override;
     bool visit(QQmlJS::AST::UiObjectDefinition *uiod) override;
-    void endVisit(QQmlJS::AST::UiObjectDefinition *) override;
-    bool visit(QQmlJS::AST::UiScriptBinding *uisb) override;
-    bool visit(QQmlJS::AST::UiPublicMember *uipb) override;
+    void endVisit(QQmlJS::AST::UiObjectDefinition *uiod) override;
 
     // expression handling
     bool visit(QQmlJS::AST::IdentifierExpression *idexp) override;
 
     bool visit(QQmlJS::AST::PatternElement *) override;
-    bool visit(QQmlJS::AST::FieldMemberExpression *idprop) override;
     void endVisit(QQmlJS::AST::FieldMemberExpression *) override;
 
-    bool visit(QQmlJS::AST::BinaryExpression *) override;
     void endVisit(QQmlJS::AST::BinaryExpression *) override;
-
-    bool visit(QQmlJS::AST::StringLiteral *) override;
 };
 
 #endif // FINDUNQUALIFIED_H
