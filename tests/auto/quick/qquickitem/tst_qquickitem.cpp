@@ -2049,7 +2049,8 @@ void tst_qquickitem::contains_data()
     QTest::newRow("(50, 0) = false") << 50 << 0 << false;
     QTest::newRow("(0, 50) = false") << 0 << 50 << false;
     QTest::newRow("(50, 50) = true") << 50 << 50 << true;
-    QTest::newRow("(100, 100) = true") << 100 << 100 << true;
+    QTest::newRow("(99, 99) = true") << 99 << 99 << true;
+    QTest::newRow("(100, 100) = false") << 100 << 100 << false;
     QTest::newRow("(150, 150) = false") << 150 << 150 << false;
 }
 
