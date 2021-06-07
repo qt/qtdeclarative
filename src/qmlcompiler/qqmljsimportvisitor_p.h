@@ -71,6 +71,12 @@ public:
             const QString &localFile, QQmlJSResourceFileMapper *mapper);
 
 protected:
+    // Linter warnings, we might want to move this at some point
+    bool visit(QQmlJS::AST::StringLiteral *) override;
+
+    bool visit(QQmlJS::AST::ExpressionStatement *ast) override;
+    void endVisit(QQmlJS::AST::ExpressionStatement *ast) override;
+
     bool visit(QQmlJS::AST::UiProgram *) override;
     void endVisit(QQmlJS::AST::UiProgram *) override;
     bool visit(QQmlJS::AST::UiObjectDefinition *) override;
@@ -125,6 +131,9 @@ protected:
     void throwRecursionDepthError() override;
 
     QString m_implicitImportDirectory;
+    QString m_code;
+    QString m_filePath;
+    QString m_rootId;
     QStringView m_inlineComponentName;
     bool m_nextIsInlineComponent = false;
     QStringList m_qmltypesFiles;
@@ -152,11 +161,40 @@ protected:
     void leaveEnvironment();
 
     QVector<QQmlJSAnnotation> parseAnnotations(QQmlJS::AST::UiAnnotationList *list);
+    void addDefaultProperties();
+    void processDefaultProperties();
+    void checkPropertyBindings();
+    void checkSignals();
+    void flushPendingSignalParameters();
+
+    void checkInheritanceCycle(QQmlJSScope::ConstPtr scope);
+    void checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope);
 
     QQmlJSLogger m_logger;
 
     // Used to temporarily store annotations for functions and generators wrapped in UiSourceElements
     QVector<QQmlJSAnnotation> m_pendingMethodAnnotations;
+
+    QHash<QQmlJSScope::Ptr, QVector<QQmlJSScope::Ptr>> m_pendingDefaultProperties;
+    QVector<QQmlJSScope::Ptr> m_objectBindingScopes;
+    QVector<QQmlJSScope::Ptr> m_objectDefinitionScopes;
+
+    QHash<QQmlJSScope::Ptr, QVector<QString>> m_propertyBindings;
+    QHash<QQmlJSScope::Ptr, QVector<QPair<QString, QStringList>>> m_signals;
+
+    QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
+    QQmlJS::SourceLocation m_pendingSignalHandler;
+
+    struct OutstandingConnection
+    {
+        QString targetName;
+        QQmlJSScope::Ptr scope;
+        QQmlJS::AST::UiObjectDefinition *uiod;
+    };
+
+    QVarLengthArray<OutstandingConnection, 3>
+            m_outstandingConnections; // Connections whose target we have not encountered
+
 private:
     void importBaseModules();
     void resolveAliases();
