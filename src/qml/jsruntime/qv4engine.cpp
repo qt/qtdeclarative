@@ -1825,7 +1825,7 @@ QV4::ReturnedValue ExecutionEngine::fromData(
                 break;
         }
 
-        if (const QMetaObject *vtmo = QQmlMetaType::metaObjectForMetaType(metaType))
+        if (const QMetaObject *vtmo = QQmlMetaType::metaObjectForValueType(metaType))
             return QV4::QQmlValueTypeWrapper::create(this, ptr, vtmo, metaType);
     } else {
         QV4::Scope scope(this);
@@ -1885,7 +1885,7 @@ QV4::ReturnedValue ExecutionEngine::fromData(
             return sequentialIterableToJS(this, lst);
         }
 
-        if (const QMetaObject *vtmo = QQmlMetaType::metaObjectForMetaType(metaType))
+        if (const QMetaObject *vtmo = QQmlMetaType::metaObjectForValueType(metaType))
             return QV4::QQmlValueTypeWrapper::create(this, ptr, vtmo, metaType);
     }
 

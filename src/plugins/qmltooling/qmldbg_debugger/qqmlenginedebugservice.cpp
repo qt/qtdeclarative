@@ -259,7 +259,7 @@ QVariant QQmlEngineDebugServiceImpl::valueContents(QVariant value) const
         return value.toJsonDocument().toVariant();
     default:
         if (QQmlMetaType::isValueType(metaType)) {
-            const QMetaObject *mo = QQmlMetaType::metaObjectForMetaType(metaType);
+            const QMetaObject *mo = QQmlMetaType::metaObjectForValueType(metaType);
             if (mo) {
                 int toStringIndex = mo->indexOfMethod("toString()");
                 if (toStringIndex != -1) {

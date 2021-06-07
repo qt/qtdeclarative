@@ -1578,7 +1578,7 @@ bool QQmlMetaType::isValueType(QMetaType type)
     return valueType(type) != nullptr;
 }
 
-const QMetaObject *QQmlMetaType::metaObjectForMetaType(QMetaType metaType)
+const QMetaObject *QQmlMetaType::metaObjectForValueType(QMetaType metaType)
 {
     const int t = metaType.id();
     switch (t) {
@@ -1643,7 +1643,7 @@ QQmlValueType *QQmlMetaType::valueType(QMetaType type)
     if (it != data->metaTypeToValueType.constEnd())
         return *it;
 
-    if (const QMetaObject *mo = metaObjectForMetaType(type))
+    if (const QMetaObject *mo = metaObjectForValueType(type))
         return *data->metaTypeToValueType.insert(idx, new QQmlValueType(idx, mo));
     return *data->metaTypeToValueType.insert(idx, nullptr);
 }

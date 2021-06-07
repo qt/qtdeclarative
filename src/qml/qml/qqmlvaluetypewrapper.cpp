@@ -120,7 +120,7 @@ bool QQmlValueTypeReference::readReferenceValue() const
             // We need to modify this reference to the updated value type, if
             // possible, or return false if it is not a value type.
             if (QQmlMetaType::isValueType(variantReferenceType)) {
-                const QMetaObject *mo = QQmlMetaType::metaObjectForMetaType(variantReferenceType);
+                const QMetaObject *mo = QQmlMetaType::metaObjectForValueType(variantReferenceType);
                 if (d()->gadgetPtr()) {
                     d()->valueType()->metaType.destruct(d()->gadgetPtr());
                     ::operator delete(d()->gadgetPtr());

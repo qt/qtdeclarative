@@ -733,7 +733,7 @@ void QQmlBinding::getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyD
     Q_ASSERT(*propertyData);
 
     if (Q_UNLIKELY(m_targetIndex.hasValueTypeIndex() && valueTypeData)) {
-        const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForMetaType((*propertyData)->propType());
+        const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForValueType((*propertyData)->propType());
         Q_ASSERT(valueTypeMetaObject);
         QMetaProperty vtProp = valueTypeMetaObject->property(m_targetIndex.valueTypeIndex());
         valueTypeData->setFlags(QQmlPropertyData::flagsForProperty(vtProp));

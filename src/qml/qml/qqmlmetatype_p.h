@@ -255,7 +255,7 @@ public:
 
     static bool isValueType(QMetaType type);
     static QQmlValueType *valueType(QMetaType metaType);
-    static const QMetaObject *metaObjectForMetaType(QMetaType type);
+    static const QMetaObject *metaObjectForValueType(QMetaType type);
 };
 
 Q_DECLARE_TYPEINFO(QQmlMetaType, Q_RELOCATABLE_TYPE);

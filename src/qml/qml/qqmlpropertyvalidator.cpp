@@ -231,7 +231,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         if (binding->type >= QV4::CompiledData::Binding::Type_Object && (pd || binding->isAttachedProperty())) {
             const bool populatingValueTypeGroupProperty
                     = pd
-                      && QQmlMetaType::metaObjectForMetaType(pd->propType())
+                      && QQmlMetaType::metaObjectForValueType(pd->propType())
                       && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment);
             const QVector<QQmlError> subObjectValidatorErrors
                     = validateObject(binding->value.objectIndex, binding,
@@ -299,7 +299,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
                     return recordError(bindingError);
             } else if (binding->isGroupProperty()) {
                 if (QQmlMetaType::isValueType(pd->propType())) {
-                    if (QQmlMetaType::metaObjectForMetaType(pd->propType())) {
+                    if (QQmlMetaType::metaObjectForValueType(pd->propType())) {
                         if (!pd->isWritable()) {
                             return recordError(binding->location, tr("Invalid property assignment: \"%1\" is a read-only property").arg(name));
                         }

@@ -941,7 +941,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
             bindable = targetProperty->isBindable();
 
             if (valueTypeIndex != -1) {
-                const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForMetaType(*type);
+                const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForValueType(*type);
                 if (valueTypeMetaObject->property(valueTypeIndex).isEnumType())
                     *type = QMetaType::fromType<int>();
                 else

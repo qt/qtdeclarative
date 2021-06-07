@@ -189,13 +189,13 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
         property.readProperty(object, &v);
 
         if (QQmlMetaType::isValueType(v.metaType())) {
-            if (const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForMetaType(v.metaType()))
+            if (const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForValueType(v.metaType()))
                 return QV4::QQmlValueTypeWrapper::create(v4, object, property.coreIndex(), valueTypeMetaObject, v.metaType()); // VariantReference value-type.
         }
 
         return scope.engine->fromVariant(v);
     } else if (QQmlMetaType::isValueType(propMetaType)) {
-        if (const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForMetaType(propMetaType))
+        if (const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForValueType(propMetaType))
             return QV4::QQmlValueTypeWrapper::create(v4, object, property.coreIndex(), valueTypeMetaObject, propMetaType);
     } else {
 #if QT_CONFIG(qml_sequence_object)
