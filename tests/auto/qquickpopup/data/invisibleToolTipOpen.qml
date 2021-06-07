@@ -9,13 +9,11 @@ Window {
     property alias loader: loader
     MouseArea {
         id: mouseArea
-        property bool isToolTipVisible: false
         width: 200
         height: 200
         hoverEnabled: true
         ToolTip.text: "static tooltip"
         ToolTip.visible: containsMouse
-        ToolTip.onVisibleChanged: isToolTipVisible = ToolTip.visible
     }
     Loader {
         id: loader

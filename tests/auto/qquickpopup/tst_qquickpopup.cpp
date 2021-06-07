@@ -54,6 +54,7 @@
 #include <QtQuickTemplates2/private/qquickslider_p.h>
 #include <QtQuickTemplates2/private/qquickstackview_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
+#include <QtQuickTemplates2/private/qquicktooltip_p.h>
 
 using namespace QQuickVisualTestUtil;
 
@@ -132,7 +133,7 @@ void tst_QQuickPopup::visible()
     QQuickItem *popupItem = popup->popupItem();
 
     popup->open();
-    QVERIFY(popup->isVisible());
+    QTRY_VERIFY(popup->isOpened());
 
     QQuickOverlay *overlay = QQuickOverlay::overlay(window);
     QVERIFY(overlay);
@@ -143,7 +144,7 @@ void tst_QQuickPopup::visible()
     QVERIFY(!overlay->childItems().contains(popupItem));
 
     popup->setVisible(true);
-    QVERIFY(popup->isVisible());
+    QTRY_VERIFY(popup->isOpened());
     QVERIFY(overlay->childItems().contains(popupItem));
 
     popup->setVisible(false);
@@ -305,7 +306,7 @@ void tst_QQuickPopup::overlay()
     popup->open();
     QVERIFY(popup->isVisible());
     QVERIFY(overlay->isVisible());
-
+    QTRY_VERIFY(popup->isOpened());
 
     QTest::touchEvent(window, device.data()).press(0, QPoint(1, 1));
     QCOMPARE(overlayPressedSignal.count(), ++overlayPressCount);
@@ -327,6 +328,7 @@ void tst_QQuickPopup::overlay()
     QVERIFY(popup->isVisible());
     QVERIFY(overlay->isVisible());
     QVERIFY(!button->isPressed());
+    QTRY_VERIFY(popup->isOpened());
 
     QTest::touchEvent(window, device.data()).press(0, button->mapToScene(QPointF(1, 1)).toPoint());
     QVERIFY(popup->isVisible());
@@ -387,8 +389,8 @@ void tst_QQuickPopup::zOrder()
     // on top and must be closed first, even if the other popup was opened last
     popup2->open();
     popup->open();
-    QVERIFY(popup2->isVisible());
-    QVERIFY(popup->isVisible());
+    QTRY_VERIFY(popup2->isOpened());
+    QTRY_VERIFY(popup->isOpened());
 
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
     QTRY_VERIFY(!popup2->isVisible());
@@ -897,9 +899,11 @@ void tst_QQuickPopup::nested()
 
     modalPopup->open();
     QCOMPARE(modalPopup->isVisible(), true);
+    QTRY_COMPARE(modalPopup->isOpened(), true);
 
     modelessPopup->open();
     QCOMPARE(modelessPopup->isVisible(), true);
+    QTRY_COMPARE(modelessPopup->isOpened(), true);
 
     // click outside the modeless popup on the top, but inside the modal popup below
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(150, 150));
@@ -986,12 +990,12 @@ void tst_QQuickPopup::cursorShape()
     const QPoint textFieldPos(popup->x() - 10, textField->height() / 2);
     QVERIFY(textField->contains(textField->mapFromScene(textFieldPos)));
     QTest::mouseMove(window, textFieldPos);
-    QCOMPARE(window->cursor().shape(), textField->cursor().shape());
+    QTRY_COMPARE(window->cursor().shape(), textField->cursor().shape());
 
     // Move the mouse over the popup where it overlaps with the text field.
     const QPoint textFieldOverlapPos(popup->x() + 10, textField->height() / 2);
     QTest::mouseMove(window, textFieldOverlapPos);
-    QCOMPARE(window->cursor().shape(), popup->popupItem()->cursor().shape());
+    QTRY_COMPARE(window->cursor().shape(), popup->popupItem()->cursor().shape());
 
     popup->close();
     QTRY_VERIFY(!popup->isVisible());
@@ -1045,7 +1049,7 @@ void tst_QQuickPopup::closeOnEscapeWithNestedPopups()
 
     QQuickPopup *optionsMenu = window->findChild<QQuickPopup*>("optionsMenu");
     QVERIFY(optionsMenu);
-    QTRY_VERIFY(optionsMenu->isVisible());
+    QTRY_VERIFY(optionsMenu->isOpened());
 
     QQuickItem *settingsMenuItem = window->findChild<QQuickItem*>("settingsMenuItem");
     QVERIFY(settingsMenuItem);
@@ -1057,7 +1061,7 @@ void tst_QQuickPopup::closeOnEscapeWithNestedPopups()
 
     QQuickPopup *settingsDialog = window->contentItem()->findChild<QQuickPopup*>("settingsDialog");
     QVERIFY(settingsDialog);
-    QTRY_VERIFY(settingsDialog->isVisible());
+    QTRY_VERIFY(settingsDialog->isOpened());
 
     QQuickComboBox *comboBox = window->contentItem()->findChild<QQuickComboBox*>("comboBox");
     QVERIFY(comboBox);
@@ -1066,7 +1070,7 @@ void tst_QQuickPopup::closeOnEscapeWithNestedPopups()
     const QPoint comboBoxCenter = comboBox->mapToScene(
         QPointF(comboBox->width() / 2, comboBox->height() / 2)).toPoint();
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, comboBoxCenter);
-    QTRY_VERIFY(comboBox->popup()->isVisible());
+    QTRY_VERIFY(comboBox->popup()->isOpened());
 
     // Close the combo box popup with the escape key. The settings dialog should still be visible.
     QTest::keyClick(window, Qt::Key_Escape);
@@ -1149,7 +1153,7 @@ void tst_QQuickPopup::orientation()
     QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
     QVERIFY(popup);
     popup->open();
-
+    QTRY_VERIFY(popup->isOpened());
     QCOMPARE(popup->popupItem()->position(), position);
 }
 
@@ -1337,8 +1341,9 @@ void tst_QQuickPopup::tabFence()
 
     QQuickPopup *popup = window->property("dialog").value<QQuickPopup*>();
     QVERIFY(popup);
-    popup->open();
     popup->setModal(true);
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
 
     QQuickButton *outsideButton1 = window->property("outsideButton1").value<QQuickButton*>();
     QVERIFY(outsideButton1);
@@ -1393,6 +1398,11 @@ void tst_QQuickPopup::invisibleToolTipOpen()
 
     QQuickItem *mouseArea = qvariant_cast<QQuickItem *>(window->property("mouseArea"));
     QVERIFY(mouseArea);
+    auto toolTipAttached = qobject_cast<QQuickToolTipAttached*>(
+        qmlAttachedPropertiesObject<QQuickToolTip>(mouseArea, false));
+    QVERIFY(toolTipAttached);
+    QQuickPopup *toolTip = toolTipAttached->toolTip();
+    QVERIFY(toolTip);
     QObject *loader = qvariant_cast<QObject *>(window->property("loader"));
     QVERIFY(loader);
 
@@ -1400,7 +1410,7 @@ void tst_QQuickPopup::invisibleToolTipOpen()
     // As an added bonus, this is also slightly more realistic. :D
     QTest::mouseMove(window, QPoint(mouseArea->width() / 2 - 1, mouseArea->height() / 2 - 1));
     QTest::mouseMove(window, QPoint(mouseArea->width() / 2, mouseArea->height() / 2));
-    QTRY_VERIFY(mouseArea->property("isToolTipVisible").toBool());
+    QTRY_VERIFY(toolTip->isOpened());
 
     QSignalSpy componentLoadedSpy(loader, SIGNAL(loaded()));
     QVERIFY(componentLoadedSpy.isValid());
@@ -1408,7 +1418,7 @@ void tst_QQuickPopup::invisibleToolTipOpen()
     loader->setProperty("active", true);
     QTRY_COMPARE(componentLoadedSpy.count(), 1);
 
-    QTRY_VERIFY(mouseArea->property("isToolTipVisible").toBool());
+    QTRY_VERIFY(toolTip->isVisible());
 }
 
 void tst_QQuickPopup::centerInOverlayWithinStackViewItem()
@@ -1436,17 +1446,20 @@ void tst_QQuickPopup::destroyDuringExitTransition()
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
-    QPointer<QQuickPopup> dialog2 = window->property("dialog2").value<QQuickPopup*>();
-    QVERIFY(dialog2);
-    QTRY_COMPARE(dialog2->isVisible(), true);
+    {
+        QPointer<QQuickPopup> dialog2 = window->property("dialog2").value<QQuickPopup*>();
+        QVERIFY(dialog2);
+        QTRY_COMPARE(dialog2->isOpened(), true);
 
-    // Close the second dialog, destroying it before its exit transition can finish.
-    QTest::keyClick(window, Qt::Key_Escape);
-    QTRY_VERIFY(!dialog2);
+        // Close the second dialog, destroying it before its exit transition can finish.
+        QTest::keyClick(window, Qt::Key_Escape);
+        QTRY_VERIFY(!dialog2);
+    }
 
     // Events should go through to the dialog underneath.
     QQuickPopup *dialog1 = window->property("dialog1").value<QQuickPopup*>();
     QVERIFY(dialog1);
+    QTRY_COMPARE(dialog1->isOpened(), true);
     QQuickButton *button = dialog1->property("button").value<QQuickButton*>();
     QVERIFY(button);
     const auto buttonClickPos = button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint();
