@@ -1059,10 +1059,9 @@ QMetaType QQmlMetaType::listType(QMetaType metaType)
     const auto iface = metaType.iface();
     if (iface->metaObjectFn == &dynamicQmlListMarker)
         return QMetaType(static_cast<const QQmlListMetaTypeInterface *>(iface)->valueType);
-    auto id = metaType.id();
     QQmlMetaTypeDataPtr data;
-    QQmlTypePrivate *type = data->idToType.value(id);
-    if (type && type->listId.id() == id)
+    QQmlTypePrivate *type = data->idToType.value(metaType.id());
+    if (type && type->listId == metaType)
         return type->typeId;
     else
         return QMetaType {};
@@ -1132,26 +1131,17 @@ QMetaMethod QQmlMetaType::defaultMethod(QObject *obj)
 /*!
     See qmlRegisterInterface() for information about when this will return true.
 */
-bool QQmlMetaType::isInterface(int userType)
+bool QQmlMetaType::isInterface(QMetaType type)
 {
     const QQmlMetaTypeDataPtr data;
-    return data->interfaces.contains(userType);
+    return data->interfaces.contains(type.id());
 }
 
-const char *QQmlMetaType::interfaceIId(int userType)
+const char *QQmlMetaType::interfaceIId(QMetaType metaType)
 {
-
-    QQmlTypePrivate *typePrivate = nullptr;
-    {
-        QQmlMetaTypeDataPtr data;
-        typePrivate = data->idToType.value(userType);
-    }
-
-    QQmlType type(typePrivate);
-    if (type.isInterface() && type.typeId().id() == userType)
-        return type.interfaceIId();
-    else
-        return nullptr;
+    const QQmlMetaTypeDataPtr data;
+    const QQmlType type(data->idToType.value(metaType.id()));
+    return (type.isInterface() && type.typeId() == metaType) ? type.interfaceIId() : nullptr;
 }
 
 bool QQmlMetaType::isList(QMetaType type)
@@ -1200,8 +1190,8 @@ QQmlType QQmlMetaType::qmlType(const QHashedStringRef &name, const QHashedString
 }
 
 /*!
-    Returns the type (if any) that corresponds to the \a metaObject.  Returns null if no
-    type is registered.
+    Returns the type (if any) that corresponds to the \a metaObject. Returns an invalid type if no
+    such type is registered.
 */
 QQmlType QQmlMetaType::qmlType(const QMetaObject *metaObject)
 {
@@ -1231,24 +1221,27 @@ QQmlType QQmlMetaType::qmlType(const QMetaObject *metaObject, const QHashedStrin
 }
 
 /*!
-    Returns the type (if any) that corresponds to \a typeId.  Depending on \a category, the
-    \a typeId is interpreted either as QVariant::Type or as QML type id returned by one of the
-    qml type registration functions.  Returns null if no type is registered.
+    Returns the type (if any) that corresponds to \a qmlTypeId.
+    Returns an invalid QQmlType if no such type is registered.
 */
-QQmlType QQmlMetaType::qmlType(int typeId, TypeIdCategory category)
+QQmlType QQmlMetaType::qmlTypeById(int qmlTypeId)
 {
     const QQmlMetaTypeDataPtr data;
-
-    if (category == TypeIdCategory::MetaType) {
-        QQmlTypePrivate *type = data->idToType.value(typeId);
-        if (type && type->typeId.id() == typeId)
-            return QQmlType(type);
-    } else if (category == TypeIdCategory::QmlType) {
-        QQmlType type = data->types.value(typeId);
-        if (type.isValid())
-            return type;
-    }
+    QQmlType type = data->types.value(qmlTypeId);
+    if (type.isValid())
+        return type;
     return QQmlType();
+}
+
+/*!
+    Returns the type (if any) that corresponds to \a metaType.
+    Returns an invalid QQmlType if no such type is registered.
+*/
+QQmlType QQmlMetaType::qmlType(QMetaType metaType)
+{
+    const QQmlMetaTypeDataPtr data;
+    QQmlTypePrivate *type = data->idToType.value(metaType.id());
+    return (type && type->typeId == metaType) ? QQmlType(type) : QQmlType();
 }
 
 /*!
@@ -1491,7 +1484,7 @@ QString QQmlMetaType::prettyTypeName(const QObject *object)
         marker = typeName.indexOf(QLatin1String("_QML_"));
         if (marker != -1) {
             typeName = QStringView{typeName}.left(marker) + QLatin1Char('*');
-            type = QQmlMetaType::qmlType(QMetaType::fromName(typeName.toLatin1()).id());
+            type = QQmlMetaType::qmlType(QMetaType::fromName(typeName.toUtf8()));
             if (type.isValid()) {
                 QString qmlTypeName = type.qmlTypeName();
                 const int lastSlash = qmlTypeName.lastIndexOf(QLatin1Char('/'));
@@ -1580,8 +1573,7 @@ bool QQmlMetaType::isValueType(QMetaType type)
 
 const QMetaObject *QQmlMetaType::metaObjectForValueType(QMetaType metaType)
 {
-    const int t = metaType.id();
-    switch (t) {
+    switch (metaType.id()) {
     case QMetaType::QPoint:
         return &QQmlPointValueType::staticMetaObject;
     case QMetaType::QPointF:
@@ -1616,7 +1608,7 @@ const QMetaObject *QQmlMetaType::metaObjectForValueType(QMetaType metaType)
     // call QObject pointers value types. Explicitly registered types also override
     // the implicit use of gadgets.
     if (!(metaType.flags() & QMetaType::PointerToQObject)) {
-        const QQmlType qmlType = QQmlMetaType::qmlType(t, QQmlMetaType::TypeIdCategory::MetaType);
+        const QQmlType qmlType = QQmlMetaType::qmlType(metaType);
 
         // Prefer the extension meta object.
         // Extensions allow registration of non-gadget value types.
@@ -1636,16 +1628,15 @@ const QMetaObject *QQmlMetaType::metaObjectForValueType(QMetaType metaType)
 
 QQmlValueType *QQmlMetaType::valueType(QMetaType type)
 {
-    const int idx = type.id();
     QQmlMetaTypeDataPtr data;
 
-    const auto it = data->metaTypeToValueType.constFind(idx);
+    const auto it = data->metaTypeToValueType.constFind(type.id());
     if (it != data->metaTypeToValueType.constEnd())
         return *it;
 
     if (const QMetaObject *mo = metaObjectForValueType(type))
-        return *data->metaTypeToValueType.insert(idx, new QQmlValueType(idx, mo));
-    return *data->metaTypeToValueType.insert(idx, nullptr);
+        return *data->metaTypeToValueType.insert(type.id(), new QQmlValueType(type, mo));
+    return *data->metaTypeToValueType.insert(type.id(), nullptr);
 }
 
 QT_END_NAMESPACE

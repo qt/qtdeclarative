@@ -448,12 +448,12 @@ void QQmlPropertyBinding::bindingErrorCallback(QPropertyBindingPrivate *that)
 
 QUntypedPropertyBinding QQmlTranslationPropertyBinding::create(const QQmlPropertyData *pd, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
 {
-    auto translationBinding = [compilationUnit, binding](const QMetaType &metaType, void *dataPtr) -> bool {
+    auto translationBinding = [compilationUnit, binding](QMetaType metaType, void *dataPtr) -> bool {
         // Create a dependency to the uiLanguage
         QJSEnginePrivate::get(compilationUnit->engine)->uiLanguage.value();
 
         QVariant resultVariant(compilationUnit->bindingValueAsString(binding));
-        if (metaType.id() != QMetaType::QString)
+        if (metaType != QMetaType::fromType<QString>())
             resultVariant.convert(metaType);
 
         const bool hasChanged = !metaType.equals(resultVariant.constData(), dataPtr);

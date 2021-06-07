@@ -806,7 +806,7 @@ static bool initObjectLookup(
         if (!foundMetaObject) {
             if (QQmlEngine *engine = aotContext->qmlEngine()) {
                 foundMetaObject = QQmlEnginePrivate::get(engine)->metaObjectForType(
-                            propType.id()).metaObject();
+                            propType).metaObject();
             }
         }
 

@@ -1513,15 +1513,14 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
 {
     Q_ASSERT (!value.isEmpty());
     QV4::Scope scope(e);
-    int typeHint = metaType.id();
 
     if (const QV4::VariantObject *v = value.as<QV4::VariantObject>())
         return v->d()->data();
 
-    if (typeHint == QMetaType::Bool)
+    if (metaType == QMetaType::fromType<bool>())
         return QVariant(value.toBoolean());
 
-    if (typeHint == QMetaType::QJsonValue)
+    if (metaType == QMetaType::fromType<QJsonValue>())
         return QVariant::fromValue(QV4::JsonObject::toJsonValue(value));
 
     if (metaType == QMetaType::fromType<QJSValue>())
@@ -1529,7 +1528,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
 
     if (value.as<QV4::Object>()) {
         QV4::ScopedObject object(scope, value);
-        if (typeHint == QMetaType::QJsonObject
+        if (metaType == QMetaType::fromType<QJsonObject>()
                    && !value.as<ArrayObject>() && !value.as<FunctionObject>()) {
             return QVariant::fromValue(QV4::JsonObject::toJsonObject(object));
         } else if (QV4::QObjectWrapper *wrapper = object->as<QV4::QObjectWrapper>()) {
@@ -1551,7 +1550,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
 
     if (value.as<ArrayObject>()) {
         QV4::ScopedArrayObject a(scope, value);
-        if (typeHint == qMetaTypeId<QList<QObject *> >()) {
+        if (metaType == QMetaType::fromType<QList<QObject *>>()) {
             QList<QObject *> list;
             uint length = a->getLength();
             QV4::Scoped<QV4::QObjectWrapper> qobjectWrapper(scope);
@@ -1565,14 +1564,14 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
             }
 
             return QVariant::fromValue<QList<QObject*> >(list);
-        } else if (typeHint == QMetaType::QJsonArray) {
+        } else if (metaType == QMetaType::fromType<QJsonArray>()) {
             return QVariant::fromValue(QV4::JsonObject::toJsonArray(a));
         }
 
         QVariant retn;
 #if QT_CONFIG(qml_sequence_object)
         bool succeeded = false;
-        retn = QV4::SequencePrototype::toVariant(value, typeHint, &succeeded);
+        retn = QV4::SequencePrototype::toVariant(value, metaType, &succeeded);
         if (succeeded)
             return retn;
 #endif
@@ -1631,7 +1630,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
     if (String *s = value.stringValue()) {
         const QString &str = s->toQString();
         // QChars are stored as a strings
-        if (typeHint == QMetaType::QChar && str.size() == 1)
+        if (metaType == QMetaType::fromType<QChar>() && str.size() == 1)
             return str.at(0);
         return str;
     }
@@ -1642,7 +1641,7 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
     if (const QV4::DateObject *d = value.as<DateObject>()) {
         auto dt = d->toQDateTime();
         // See ExecutionEngine::metaTypeFromJS()'s handling of QMetaType::Date:
-        if (typeHint == QMetaType::QDate) {
+        if (metaType == QMetaType::fromType<QDate>()) {
             const auto utc = dt.toUTC();
             if (utc.date() != dt.date() && utc.addSecs(-1).date() == dt.date())
                 dt = utc;
@@ -1738,7 +1737,7 @@ static QVariant objectToVariant(QV4::ExecutionEngine *e, const QV4::Object *o, V
   exactly the same as \a metaType and \a ptr.
  */
 QV4::ReturnedValue ExecutionEngine::fromData(
-        const QMetaType &metaType, const void *ptr, const QVariant *variant)
+        QMetaType metaType, const void *ptr, const QVariant *variant)
 {
     const int type = metaType.id();
     if (type < QMetaType::User) {

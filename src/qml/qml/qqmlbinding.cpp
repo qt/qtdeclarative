@@ -586,7 +586,7 @@ void QQmlBinding::handleWriteError(const void *result, QMetaType resultType, QMe
         if (QObject *o = *(QObject *const *)result) {
             valueType = o->metaObject()->className();
             QQmlMetaObject propertyMetaObject = QQmlPropertyPrivate::rawMetaObjectForType(
-                        QQmlEnginePrivate::get(engine()), metaType.id());
+                        QQmlEnginePrivate::get(engine()), metaType);
             if (!propertyMetaObject.isNull())
                 propertyType = propertyMetaObject.className();
         }
@@ -781,7 +781,7 @@ class QObjectPointerBinding: public QQmlNonbindingBinding
     QQmlMetaObject targetMetaObject;
 
 public:
-    QObjectPointerBinding(QQmlEnginePrivate *engine, int propertyType)
+    QObjectPointerBinding(QQmlEnginePrivate *engine, QMetaType propertyType)
         : targetMetaObject(QQmlPropertyPrivate::rawMetaObjectForType(engine, propertyType))
     {}
 
@@ -815,7 +815,7 @@ protected:
             QQmlEngine *qmlEngine = engine();
             Q_ASSERT(qmlEngine);
             resultMo = QQmlPropertyPrivate::rawMetaObjectForType(
-                        QQmlEnginePrivate::get(qmlEngine), value.userType());
+                        QQmlEnginePrivate::get(qmlEngine), value.metaType());
             if (resultMo.isNull())
                 return slowWrite(*pd, vtpd, result, type, isUndefined, flags);
             resultObject = *static_cast<QObject *const *>(value.constData());
@@ -857,7 +857,7 @@ protected:
             QQmlEngine *qmlEngine = engine();
             Q_ASSERT(qmlEngine);
             resultMo = QQmlPropertyPrivate::rawMetaObjectForType(
-                        QQmlEnginePrivate::get(qmlEngine), value.userType());
+                        QQmlEnginePrivate::get(qmlEngine), value.metaType());
             if (resultMo.isNull())
                 return slowWrite(*pd, vtpd, result, isUndefined, flags);
             resultObject = *static_cast<QObject *const *>(value.constData());
@@ -898,15 +898,12 @@ QQmlBinding *QQmlBinding::newBinding(QQmlEnginePrivate *engine, const QQmlProper
 QQmlBinding *QQmlBinding::newBinding(QQmlEnginePrivate *engine, QMetaType propertyType)
 {
     if (propertyType.flags() & QMetaType::PointerToQObject)
-        return new QObjectPointerBinding(engine, propertyType.id());
+        return new QObjectPointerBinding(engine, propertyType);
 
-    const int type = propertyType.id();
-
-    if (type == qMetaTypeId<QQmlBinding *>()) {
+    if (propertyType == QMetaType::fromType<QQmlBinding *>())
         return new QQmlBindingBinding;
-    }
 
-    switch (type) {
+    switch (propertyType.id()) {
     case QMetaType::Bool:
         return new GenericBinding<QMetaType::Bool>;
     case QMetaType::Int:

@@ -412,9 +412,9 @@ ReturnedValue QQmlTypeWrapper::virtualInstanceOf(const Object *typeObject, const
 
         QQmlRefPointer<QQmlTypeData> td = qenginepriv->typeLoader.getType(typeWrapper->d()->type().sourceUrl());
         ExecutableCompilationUnit *cu = td->compilationUnit();
-        myQmlType = qenginepriv->metaObjectForType(cu->typeIds.id.id());
+        myQmlType = qenginepriv->metaObjectForType(cu->typeIds.id);
     } else {
-        myQmlType = qenginepriv->metaObjectForType(myTypeId.id());
+        myQmlType = qenginepriv->metaObjectForType(myTypeId);
     }
 
     const QMetaObject *theirType = wrapperObject->metaObject();

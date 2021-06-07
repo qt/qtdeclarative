@@ -47,8 +47,8 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlValueType::QQmlValueType(int typeId, const QMetaObject *gadgetMetaObject)
-    : metaType(typeId)
+QQmlValueType::QQmlValueType(QMetaType type, const QMetaObject *gadgetMetaObject)
+    : metaType(type)
 {
     QMetaObjectBuilder builder(gadgetMetaObject);
     dynamicMetaObject = builder.toMetaObject();

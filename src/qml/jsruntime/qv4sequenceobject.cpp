@@ -605,7 +605,9 @@ ReturnedValue SequencePrototype::method_sort(const FunctionObject *b, const Valu
     return o.asReturnedValue();
 }
 
-ReturnedValue SequencePrototype::newSequence(QV4::ExecutionEngine *engine, int sequenceType, QObject *object, int propertyIndex, bool readOnly, bool *succeeded)
+ReturnedValue SequencePrototype::newSequence(
+        QV4::ExecutionEngine *engine, QMetaType sequenceType, QObject *object,
+        int propertyIndex,  bool readOnly, bool *succeeded)
 {
     QV4::Scope scope(engine);
     // This function is called when the property is a QObject Q_PROPERTY of
@@ -613,9 +615,7 @@ ReturnedValue SequencePrototype::newSequence(QV4::ExecutionEngine *engine, int s
     // (as well as object ptr + property index for updated-read and write-back)
     // and so access/mutate avoids variant conversion.
 
-
-    const QQmlType qmlType = QQmlMetaType::qmlType(
-                sequenceType, QQmlMetaType::TypeIdCategory::MetaType);
+    const QQmlType qmlType = QQmlMetaType::qmlType(sequenceType);
     if (qmlType.isSequentialContainer()) {
         *succeeded = true;
         QV4::ScopedObject obj(scope, engine->memoryManager->allocate<QV4Sequence>(
@@ -633,8 +633,7 @@ ReturnedValue SequencePrototype::fromVariant(
     return fromData(engine, v.metaType(), v.constData(), succeeded);
 }
 
-ReturnedValue SequencePrototype::fromData(
-        ExecutionEngine *engine, const QMetaType &type, const void *data, bool *succeeded)
+ReturnedValue SequencePrototype::fromData(ExecutionEngine *engine, QMetaType type, const void *data, bool *succeeded)
 {
     QV4::Scope scope(engine);
     // This function is called when assigning a sequence value to a normal JS var
@@ -642,8 +641,7 @@ ReturnedValue SequencePrototype::fromData(
     // Access and mutation is extremely fast since it will not need to modify any
     // QObject property.
 
-    const QQmlType qmlType = QQmlMetaType::qmlType(
-                type.id(), QQmlMetaType::TypeIdCategory::MetaType);
+    const QQmlType qmlType = QQmlMetaType::qmlType(type);
     if (qmlType.isSequentialContainer()) {
         *succeeded = true;
         QV4::ScopedObject obj(scope, engine->memoryManager->allocate<QV4Sequence>(qmlType, data));
@@ -660,7 +658,7 @@ QVariant SequencePrototype::toVariant(Object *object)
     return object->as<QV4Sequence>()->toVariant();
 }
 
-QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, bool *succeeded)
+QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHint, bool *succeeded)
 {
     *succeeded = true;
 
@@ -671,7 +669,7 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, int typeHint, boo
     QV4::Scope scope(array.as<Object>()->engine());
     QV4::ScopedArrayObject a(scope, array);
 
-    const QQmlType type = QQmlMetaType::qmlType(typeHint, QQmlMetaType::TypeIdCategory::MetaType);
+    const QQmlType type = QQmlMetaType::qmlType(typeHint);
     if (type.isSequentialContainer()) {
         const QMetaSequence *meta = type.priv()->extraData.ld;
         const QMetaType containerMetaType(type.priv()->typeId);

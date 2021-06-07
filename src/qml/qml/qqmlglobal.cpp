@@ -48,21 +48,20 @@
 
 QT_BEGIN_NAMESPACE
 
-bool QQmlValueTypeProvider::initValueType(int type, QVariant& dst)
+bool QQmlValueTypeProvider::initValueType(QMetaType metaType, QVariant &dst)
 {
-    const QMetaType metaType(type);
     if (!metaType.isValid())
         return false;
-    dst = QVariant(QMetaType(type));
+    dst = QVariant(metaType);
     return true;
 }
 
-bool QQmlValueTypeProvider::createValueType(int type, const QJSValue &s, QVariant &data)
+bool QQmlValueTypeProvider::createValueType(QMetaType metaType, const QJSValue &s, QVariant &data)
 {
-    const QQmlType qmlType = QQmlMetaType::qmlType(type, QQmlMetaType::TypeIdCategory::MetaType);
+    const QQmlType qmlType = QQmlMetaType::qmlType(metaType);
     if (auto valueTypeFunction = qmlType.createValueTypeFunction()) {
         QVariant result = valueTypeFunction(s);
-        if (result.userType() == type) {
+        if (result.metaType() == metaType) {
             data = std::move(result);
             return true;
         }
@@ -71,32 +70,34 @@ bool QQmlValueTypeProvider::createValueType(int type, const QJSValue &s, QVarian
     return false;
 }
 
-bool QQmlValueTypeProvider::equalValueType(int type, const void *lhs, const QVariant& rhs)
+bool QQmlValueTypeProvider::equalValueType(QMetaType metaType, const void *lhs, const QVariant &rhs)
 {
     Q_ASSERT(lhs);
-    return QMetaType(type).equals(lhs, rhs.constData());
+    return metaType.equals(lhs, rhs.constData());
 }
 
-bool QQmlValueTypeProvider::readValueType(const QVariant& src, void *dst, int type)
+bool QQmlValueTypeProvider::readValueType(QMetaType metaType, const QVariant  &src, void *dst)
 {
     Q_ASSERT(dst);
-    const QMetaType dstType(type);
-    if (!dstType.isValid() || (src.metaType() == dstType && dstType.equals(src.constData(), dst)))
+    if (!metaType.isValid()
+            || (src.metaType() == metaType && metaType.equals(src.constData(), dst))) {
         return false;
+    }
 
-    dstType.destruct(dst);
-    dstType.construct(dst, src.metaType() == dstType ? src.constData() : nullptr);
+    metaType.destruct(dst);
+    metaType.construct(dst, src.metaType() == metaType ? src.constData() : nullptr);
     return true;
 }
 
-bool QQmlValueTypeProvider::writeValueType(int type, const void *src, QVariant& dst)
+bool QQmlValueTypeProvider::writeValueType(QMetaType metaType, const void *src, QVariant &dst)
 {
     Q_ASSERT(src);
-    const QMetaType srcType(type);
-    if (!srcType.isValid() || (dst.metaType() == srcType && srcType.equals(src, dst.constData())))
+    if (!metaType.isValid()
+            || (dst.metaType() == metaType && metaType.equals(src, dst.constData()))) {
         return false;
+    }
 
-    dst = QVariant(srcType, src);
+    dst = QVariant(metaType, src);
     return true;
 }
 

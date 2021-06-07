@@ -349,11 +349,11 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     QQmlPropertyData::WriteFlags propertyWriteFlags = QQmlPropertyData::BypassInterceptor | QQmlPropertyData::RemoveBindingOnAliasWrite;
     QV4::Scope scope(v4);
 
-    int propertyType = property->propType().id();
+    QMetaType propertyType = property->propType();
 
     if (property->isEnum()) {
         if (binding->flags & QV4::CompiledData::Binding::IsResolvedEnum) {
-            propertyType = QMetaType::Int;
+            propertyType = QMetaType::fromType<int>();
         } else {
             // ### This should be resolved earlier at compile time and the binding value should be changed accordingly.
             QVariant value = compilationUnit->bindingValueAsString(binding);
@@ -386,7 +386,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
         }
     }
 
-    switch (propertyType) {
+    switch (propertyType.id()) {
     case QMetaType::QVariant: {
         if (binding->type == QV4::CompiledData::Binding::Type_Number) {
             double n = compilationUnit->bindingValueAsNumber(binding);
@@ -488,7 +488,7 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     case QMetaType::QColor: {
         QVariant data;
         if (QQml_valueTypeProvider()->createValueType(
-                    QMetaType::QColor, compilationUnit->bindingValueAsString(binding), data)) {
+                    propertyType, compilationUnit->bindingValueAsString(binding), data)) {
             property->writeProperty(_qobject, data.data(), propertyWriteFlags);
         }
     }
@@ -579,37 +579,37 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     }
     default: {
         // generate single literal value assignment to a list property if required
-        if (propertyType == qMetaTypeId<QList<qreal> >()) {
+        if (propertyType == QMetaType::fromType<QList<qreal>>()) {
             assertType(QV4::CompiledData::Binding::Type_Number);
             QList<qreal> value;
             value.append(compilationUnit->bindingValueAsNumber(binding));
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
-        } else if (propertyType == qMetaTypeId<QList<int> >()) {
+        } else if (propertyType == QMetaType::fromType<QList<int>>()) {
             assertType(QV4::CompiledData::Binding::Type_Number);
             double n = compilationUnit->bindingValueAsNumber(binding);
             QList<int> value;
             value.append(int(n));
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
-        } else if (propertyType == qMetaTypeId<QList<bool> >()) {
+        } else if (propertyType == QMetaType::fromType<QList<bool>>()) {
             assertType(QV4::CompiledData::Binding::Type_Boolean);
             QList<bool> value;
             value.append(binding->valueAsBoolean());
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
-        } else if (propertyType == qMetaTypeId<QList<QUrl> >()) {
+        } else if (propertyType == QMetaType::fromType<QList<QUrl>>()) {
             assertType(QV4::CompiledData::Binding::Type_String);
             QList<QUrl> value { QUrl(compilationUnit->bindingValueAsString(binding)) };
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
-        } else if (propertyType == qMetaTypeId<QList<QString> >()) {
+        } else if (propertyType == QMetaType::fromType<QList<QString>>()) {
             assertOrNull(binding->evaluatesToString());
             QList<QString> value;
             value.append(compilationUnit->bindingValueAsString(binding));
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
-        } else if (propertyType == qMetaTypeId<QJSValue>()) {
+        } else if (propertyType == QMetaType::fromType<QJSValue>()) {
             QJSValue value;
             if (binding->type == QV4::CompiledData::Binding::Type_Boolean) {
                 value = QJSValue(binding->valueAsBoolean());
@@ -1063,7 +1063,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         int propertyWriteStatus = -1;
         void *argv[] = { nullptr, nullptr, &propertyWriteStatus, &propertyWriteFlags };
 
-        if (const char *iid = QQmlMetaType::interfaceIId(bindingProperty->propType().id())) {
+        if (const char *iid = QQmlMetaType::interfaceIId(bindingProperty->propType())) {
             void *ptr = createdSubObject->qt_metacast(iid);
             if (ptr) {
                 argv[0] = &ptr;
@@ -1100,7 +1100,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
 
             QMetaType listItemType = QQmlMetaType::listType(bindingProperty->propType());
             if (listItemType.isValid()) {
-                const char *iid = QQmlMetaType::interfaceIId(listItemType.id());
+                const char *iid = QQmlMetaType::interfaceIId(listItemType);
                 if (iid)
                     itemToAdd = createdSubObject->qt_metacast(iid);
             }

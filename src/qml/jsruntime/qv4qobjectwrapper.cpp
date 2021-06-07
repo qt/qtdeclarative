@@ -134,8 +134,6 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
 {
     Q_ASSERT(!property.isFunction());
     QV4::Scope scope(v4);
-    const QMetaType propMetaType = property.propType();
-    const int propType = propMetaType.id();
 
     if (property.isQObject()) {
         QObject *rv = nullptr;
@@ -149,42 +147,54 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
             }
         }
         return ret;
+    }
 
-    } else if (property.isQList()) {
+    if (property.isQList())
         return QmlListWrapper::create(v4, object, property.coreIndex(), property.propType());
-    } else if (propType == QMetaType::QReal) {
-        qreal v = 0;
-        property.readProperty(object, &v);
-        return QV4::Encode(v);
-    } else if (propType == QMetaType::Int || property.isEnum()) {
+
+    const QMetaType propMetaType = property.propType();
+    switch (property.isEnum() ? QMetaType::Int : propMetaType.id()) {
+    case QMetaType::Int: {
         int v = 0;
         property.readProperty(object, &v);
         return QV4::Encode(v);
-    } else if (propType == QMetaType::Bool) {
+    }
+    case QMetaType::Bool: {
         bool v = false;
         property.readProperty(object, &v);
         return QV4::Encode(v);
-    } else if (propType == QMetaType::QString) {
+    }
+    case QMetaType::QString: {
         QString v;
         property.readProperty(object, &v);
         return v4->newString(v)->asReturnedValue();
-    } else if (propType == QMetaType::UInt) {
+    }
+    case QMetaType::UInt: {
         uint v = 0;
         property.readProperty(object, &v);
         return QV4::Encode(v);
-    } else if (propType == QMetaType::Float) {
+    }
+    case QMetaType::Float: {
         float v = 0;
         property.readProperty(object, &v);
         return QV4::Encode(v);
-    } else if (propType == QMetaType::Double) {
+    }
+    case QMetaType::Double: {
         double v = 0;
         property.readProperty(object, &v);
         return QV4::Encode(v);
-    } else if (propType == qMetaTypeId<QJSValue>()) {
+    }
+    default:
+        break;
+    }
+
+    if (propMetaType == QMetaType::fromType<QJSValue>()) {
         QJSValue v;
         property.readProperty(object, &v);
         return QJSValuePrivate::convertToReturnedValue(v4, v);
-    } else if (property.isQVariant()) {
+    }
+
+    if (property.isQVariant()) {
         QVariant v;
         property.readProperty(object, &v);
 
@@ -194,20 +204,24 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
         }
 
         return scope.engine->fromVariant(v);
-    } else if (QQmlMetaType::isValueType(propMetaType)) {
+    }
+
+    if (QQmlMetaType::isValueType(propMetaType)) {
         if (const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForValueType(propMetaType))
             return QV4::QQmlValueTypeWrapper::create(v4, object, property.coreIndex(), valueTypeMetaObject, propMetaType);
     } else {
 #if QT_CONFIG(qml_sequence_object)
         // see if it's a sequence type
         bool succeeded = false;
-        QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(v4, propType, object, property.coreIndex(), !property.isWritable(), &succeeded));
+        QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(
+                                  v4, propMetaType, object, property.coreIndex(),
+                                  !property.isWritable(), &succeeded));
         if (succeeded)
             return retn->asReturnedValue();
 #endif
     }
 
-    if (propType == QMetaType::UnknownType) {
+    if (!propMetaType.isValid()) {
         QMetaProperty p = object->metaObject()->property(property.coreIndex());
         qWarning("QMetaProperty::read: Unable to handle unregistered datatype '%s' for property "
                  "'%s::%s'", p.typeName(), object->metaObject()->className(), p.name());
@@ -2004,14 +2018,13 @@ bool CallArgument::fromValue(QMetaType metaType, QV4::ExecutionEngine *engine, c
         QQmlEnginePrivate *ep = engine->qmlEngine() ? QQmlEnginePrivate::get(engine->qmlEngine()) : nullptr;
         QVariant v = scope.engine->toVariant(value, metaType);
 
-        const QMetaType callMetaType(callType);
-        if (v.metaType() == callMetaType) {
+        if (v.metaType() == metaType) {
             *qvariantPtr = v;
-        } else if (v.canConvert(callMetaType)) {
+        } else if (v.canConvert(metaType)) {
             *qvariantPtr = v;
-            qvariantPtr->convert(callMetaType);
+            qvariantPtr->convert(metaType);
         } else {
-            QQmlMetaObject mo = ep ? ep->rawMetaObjectForType(callType) : QQmlMetaObject();
+            QQmlMetaObject mo = ep ? ep->rawMetaObjectForType(metaType) : QQmlMetaObject();
             if (!mo.isNull()) {
                 QObject *obj = QQmlMetaType::toQObject(v);
 

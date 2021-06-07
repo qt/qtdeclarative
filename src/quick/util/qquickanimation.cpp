@@ -1978,7 +1978,7 @@ void QQuickPropertyAnimationPrivate::convertVariant(QVariant &variant, QMetaType
     case QMetaType::QVector3D:
         {
         bool ok = false;
-        variant = QQmlStringConverters::variantFromString(variant.toString(), type.id(), &ok);
+        variant = QQmlStringConverters::variantFromString(variant.toString(), type, &ok);
         }
         break;
     default:

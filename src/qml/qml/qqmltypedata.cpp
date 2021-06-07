@@ -936,11 +936,11 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                 if (qmlType.isValid()) {
                     // this is required for inline components in singletons
                     auto type = qmlType.lookupInlineComponentById(qmlType.inlineComponentId()).typeId();
-                    auto typeID = type.isValid() ? type.id() : -1;
-                    auto exUnit = engine->obtainExecutableCompilationUnit(typeID);
+                    auto exUnit = engine->obtainExecutableCompilationUnit(
+                                type.isValid() ? type.id() : -1);
                     if (exUnit) {
                         ref->setCompilationUnit(exUnit);
-                        ref->setTypePropertyCache(engine->propertyCacheForType(typeID));
+                        ref->setTypePropertyCache(engine->propertyCacheForType(type));
                     }
                 }
             } else {

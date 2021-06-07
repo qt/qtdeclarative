@@ -250,7 +250,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
             if (pd && valueTypeIndex != -1 && !QQmlMetaType::valueType(pd->propType())) {
                 // deep alias
                 QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(metaObject->compilationUnit->engine->qmlEngine());
-                auto const *newPropertyCache = enginePriv->propertyCacheForType(pd->propType().id());
+                auto const *newPropertyCache = enginePriv->propertyCacheForType(pd->propType());
                 void *argv[1] = { &target };
                 QMetaObject::metacall(target, QMetaObject::ReadProperty, coreIndex, argv);
                 Q_ASSERT(newPropertyCache);
@@ -708,7 +708,8 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         ? nullptr
                         : QQmlEnginePrivate::get(ctxt->engine());
 
-                const int fallbackMetaType = QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(t).id();
+                const QMetaType fallbackMetaType
+                        = QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(t);
 
                 if (c == QMetaObject::ReadProperty) {
                     switch (t) {
@@ -750,12 +751,13 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     case QV4::CompiledData::BuiltinType::Vector4D:
                     case QV4::CompiledData::BuiltinType::Matrix4x4:
                     case QV4::CompiledData::BuiltinType::Quaternion:
-                        Q_ASSERT(fallbackMetaType != QMetaType::UnknownType);
+                        Q_ASSERT(fallbackMetaType.isValid());
                         if (QV4::MemberData *md = propertyAndMethodStorageAsMemberData()) {
                             QVariant propertyAsVariant;
                             if (const QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>())
                                 propertyAsVariant = v->d()->data();
-                            QQml_valueTypeProvider()->readValueType(propertyAsVariant, a[0], fallbackMetaType);
+                            QQml_valueTypeProvider()->readValueType(
+                                        fallbackMetaType, propertyAsVariant, a[0]);
                         }
                         break;
                     case QV4::CompiledData::BuiltinType::Var:
@@ -855,7 +857,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     case QV4::CompiledData::BuiltinType::Vector4D:
                     case QV4::CompiledData::BuiltinType::Matrix4x4:
                     case QV4::CompiledData::BuiltinType::Quaternion:
-                        Q_ASSERT(fallbackMetaType != QMetaType::UnknownType);
+                        Q_ASSERT(fallbackMetaType.isValid());
                         if (QV4::MemberData *md = propertyAndMethodStorageAsMemberData()) {
                             const QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>();
                             if (!v) {

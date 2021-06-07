@@ -1343,7 +1343,7 @@ template<>
 QJSValue QQmlEngine::singletonInstance<QJSValue>(int qmlTypeId)
 {
     Q_D(QQmlEngine);
-    QQmlType type = QQmlMetaType::qmlType(qmlTypeId, QQmlMetaType::TypeIdCategory::QmlType);
+    QQmlType type = QQmlMetaType::qmlTypeById(qmlTypeId);
 
     if (!type.isValid() || !type.isSingleton())
         return QJSValue();
@@ -2062,13 +2062,12 @@ static QQmlPropertyCache *propertyCacheForPotentialInlineComponentType(int t, co
  *
  * Look up by type's baseMetaObject.
  */
-QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(int t) const
+QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(QMetaType metaType) const
 {
-    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(metaType.id()))
         return QQmlMetaObject(composite);
 
-    QQmlType type = QQmlMetaType::qmlType(t);
-    return QQmlMetaObject(type.baseMetaObject());
+    return QQmlMetaObject(QQmlMetaType::qmlType(metaType).baseMetaObject());
 }
 
 /*!
@@ -2076,13 +2075,12 @@ QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(int t) const
  *
  * Look up by type's metaObject.
  */
-QQmlMetaObject QQmlEnginePrivate::metaObjectForType(int t) const
+QQmlMetaObject QQmlEnginePrivate::metaObjectForType(QMetaType metaType) const
 {
-    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(metaType.id()))
         return QQmlMetaObject(composite);
 
-    QQmlType type = QQmlMetaType::qmlType(t);
-    return QQmlMetaObject(type.metaObject());
+    return QQmlMetaObject(QQmlMetaType::qmlType(metaType).metaObject());
 }
 
 /*!
@@ -2090,12 +2088,12 @@ QQmlMetaObject QQmlEnginePrivate::metaObjectForType(int t) const
  *
  * Look up by type's metaObject and version.
  */
-QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(int t)
+QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(QMetaType metaType)
 {
-    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(metaType.id()))
         return composite;
 
-    QQmlType type = QQmlMetaType::qmlType(t);
+    const QQmlType type = QQmlMetaType::qmlType(metaType);
     return type.isValid() ? cache(type.metaObject(), type.version()) : nullptr;
 }
 
@@ -2106,12 +2104,12 @@ QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(int t)
  * TODO: Is this correct? Passing a plain QTypeRevision() rather than QTypeRevision::zero() or
  *       the actual type's version seems strange. The behavior has been in place for a while.
  */
-QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
+QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(QMetaType metaType)
 {
-    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(metaType.id()))
         return composite;
 
-    QQmlType type = QQmlMetaType::qmlType(t);
+    const QQmlType type = QQmlMetaType::qmlType(metaType);
     return type.isValid() ? cache(type.baseMetaObject(), QTypeRevision()) : nullptr;
 }
 
@@ -2121,12 +2119,13 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t)
  * Look up by QQmlType and version. We only fall back to lookup by metaobject if the type
  * has no revisiononed attributes here. Unspecified versions are interpreted as "any".
  */
-QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(int t, QTypeRevision version)
+QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(
+        QMetaType metaType, QTypeRevision version)
 {
-    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(t))
+    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(metaType.id()))
         return composite;
 
-    QQmlType type = QQmlMetaType::qmlType(t);
+    const QQmlType type = QQmlMetaType::qmlType(metaType);
     if (!type.isValid())
         return nullptr;
 

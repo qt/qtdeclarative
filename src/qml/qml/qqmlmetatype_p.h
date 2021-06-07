@@ -164,16 +164,13 @@ public:
     static QList<QQmlType> qmlSingletonTypes();
     static QList<QQmlType> qmlAllTypes();
 
-    enum class TypeIdCategory {
-        MetaType,
-        QmlType
-    };
-
     static QQmlType qmlType(const QString &qualifiedName, QTypeRevision version);
     static QQmlType qmlType(const QHashedStringRef &name, const QHashedStringRef &module, QTypeRevision version);
     static QQmlType qmlType(const QMetaObject *);
     static QQmlType qmlType(const QMetaObject *metaObject, const QHashedStringRef &module, QTypeRevision version);
-    static QQmlType qmlType(int typeId, TypeIdCategory category = TypeIdCategory::MetaType);
+    static QQmlType qmlTypeById(int qmlTypeId);
+
+    static QQmlType qmlType(QMetaType metaType);
     static QQmlType qmlType(const QUrl &unNormalizedUrl, bool includeNonFileImports = false);
 
     static QQmlPropertyCache *propertyCache(const QMetaObject *metaObject,
@@ -192,8 +189,8 @@ public:
     static QMetaType listType(QMetaType type);
     static QQmlAttachedPropertiesFunc attachedPropertiesFunc(QQmlEnginePrivate *,
                                                              const QMetaObject *);
-    static bool isInterface(int);
-    static const char *interfaceIId(int);
+    static bool isInterface(QMetaType type);
+    static const char *interfaceIId(QMetaType type);
     static bool isList(QMetaType type);
 
     static QTypeRevision latestModuleVersion(const QString &uri);

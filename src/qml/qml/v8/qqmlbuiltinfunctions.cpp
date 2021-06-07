@@ -294,8 +294,10 @@ QVariant QtObject::font(const QJSValue &fontSpecifier) const
 
     {
         QVariant v;
-        if (QQml_valueTypeProvider()->createValueType(QMetaType::QFont, fontSpecifier, v))
+        if (QQml_valueTypeProvider()->createValueType(
+                    QMetaType(QMetaType::QFont), fontSpecifier, v)) {
             return v;
+        }
     }
 
     v4Engine()->throwError(QStringLiteral("Qt.font(): Invalid argument: "
@@ -323,7 +325,7 @@ void addParameters(QJSEngine *e, QJSValue &result, int i, T parameter, Others...
 }
 
 template<typename ...T>
-static QVariant createValueType(QJSEngine *e, QMetaType::Type type, T... parameters)
+static QVariant createValueType(QJSEngine *e, QMetaType type, T... parameters)
 {
     if (!e)
         return QVariant();
@@ -341,7 +343,7 @@ static QVariant createValueType(QJSEngine *e, QMetaType::Type type, T... paramet
 */
 QVariant QtObject::vector2d(double x, double y) const
 {
-    return createValueType(jsEngine(), QMetaType::QVector2D, x, y);
+    return createValueType(jsEngine(), QMetaType(QMetaType::QVector2D), x, y);
 }
 
 /*!
@@ -351,7 +353,7 @@ QVariant QtObject::vector2d(double x, double y) const
 */
 QVariant QtObject::vector3d(double x, double y, double z) const
 {
-    return createValueType(jsEngine(), QMetaType::QVector3D, x, y, z);
+    return createValueType(jsEngine(), QMetaType(QMetaType::QVector3D), x, y, z);
 }
 
 /*!
@@ -361,7 +363,7 @@ QVariant QtObject::vector3d(double x, double y, double z) const
 */
 QVariant QtObject::vector4d(double x, double y, double z, double w) const
 {
-    return createValueType(jsEngine(), QMetaType::QVector4D, x, y, z, w);
+    return createValueType(jsEngine(), QMetaType(QMetaType::QVector4D), x, y, z, w);
 }
 
 /*!
@@ -371,7 +373,7 @@ QVariant QtObject::vector4d(double x, double y, double z, double w) const
 */
 QVariant QtObject::quaternion(double scalar, double x, double y, double z) const
 {
-    return createValueType(jsEngine(), QMetaType::QQuaternion, scalar, x, y, z);
+    return createValueType(jsEngine(), QMetaType(QMetaType::QQuaternion), scalar, x, y, z);
 }
 
 /*!
@@ -398,7 +400,8 @@ QVariant QtObject::quaternion(double scalar, double x, double y, double z) const
 QVariant QtObject::matrix4x4() const
 {
     QVariant variant;
-    QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, QJSValue(), variant);
+    QQml_valueTypeProvider()->createValueType(
+                QMetaType(QMetaType::QMatrix4x4), QJSValue(), variant);
     return variant;
 }
 
@@ -406,7 +409,7 @@ QVariant QtObject::matrix4x4(const QJSValue &value) const
 {
     if (value.isObject()) {
         QVariant v;
-        if (QQml_valueTypeProvider()->createValueType(QMetaType::QMatrix4x4, value, v))
+        if (QQml_valueTypeProvider()->createValueType(QMetaType(QMetaType::QMatrix4x4), value, v))
             return v;
     }
 
@@ -420,7 +423,7 @@ QVariant QtObject::matrix4x4(double m11, double m12, double m13, double m14,
                              double m31, double m32, double m33, double m34,
                              double m41, double m42, double m43, double m44) const
 {
-    return createValueType(jsEngine(), QMetaType::QMatrix4x4,
+    return createValueType(jsEngine(), QMetaType(QMetaType::QMatrix4x4),
                            m11, m12, m13, m14, m21, m22, m23, m24,
                            m31, m32, m33, m34, m41, m42, m43, m44);
 }

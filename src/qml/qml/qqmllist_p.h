@@ -85,7 +85,7 @@ public:
     const QMetaObject *elementType()
     {
         if (m_elementTypeOrEngine.isT2()) {
-            const int listType = QQmlMetaType::listType(propertyType).id();
+            const QMetaType listType = QQmlMetaType::listType(propertyType);
             const QQmlEngine *engine = m_elementTypeOrEngine.asT2();
             const QQmlEnginePrivate *p = engine ? QQmlEnginePrivate::get(engine) : nullptr;
             m_elementTypeOrEngine = p ? p->rawMetaObjectForType(listType).metaObject()

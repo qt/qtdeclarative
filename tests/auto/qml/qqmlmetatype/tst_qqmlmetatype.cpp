@@ -160,14 +160,14 @@ void tst_qqmlmetatype::initTestCase()
 
 void tst_qqmlmetatype::qmlParserStatusCast()
 {
-    QVERIFY(!QQmlMetaType::qmlType(QMetaType::Int).isValid());
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).isValid());
-    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).parserStatusCast(), -1);
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ValueSourceTestType *>()).isValid());
-    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<ValueSourceTestType *>()).parserStatusCast(), -1);
+    QVERIFY(!QQmlMetaType::qmlType(QMetaType::fromType<int>()).isValid());
+    QVERIFY(QQmlMetaType::qmlType(QMetaType::fromType<TestType *>()).isValid());
+    QCOMPARE(QQmlMetaType::qmlType(QMetaType::fromType<TestType *>()).parserStatusCast(), -1);
+    QVERIFY(QQmlMetaType::qmlType(QMetaType::fromType<ValueSourceTestType *>()).isValid());
+    QCOMPARE(QQmlMetaType::qmlType(QMetaType::fromType<ValueSourceTestType *>()).parserStatusCast(), -1);
 
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()).isValid());
-    int cast = QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()).parserStatusCast();
+    QVERIFY(QQmlMetaType::qmlType(QMetaType::fromType<ParserStatusTestType *>()).isValid());
+    int cast = QQmlMetaType::qmlType(QMetaType::fromType<ParserStatusTestType *>()).parserStatusCast();
     QVERIFY(cast != -1);
     QVERIFY(cast != 0);
 
@@ -180,14 +180,14 @@ void tst_qqmlmetatype::qmlParserStatusCast()
 
 void tst_qqmlmetatype::qmlPropertyValueSourceCast()
 {
-    QVERIFY(!QQmlMetaType::qmlType(QMetaType::Int).isValid());
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).isValid());
-    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).propertyValueSourceCast(), -1);
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()).isValid());
-    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()).propertyValueSourceCast(), -1);
+    QVERIFY(!QQmlMetaType::qmlType(QMetaType::fromType<int>()).isValid());
+    QVERIFY(QQmlMetaType::qmlType(QMetaType::fromType<TestType *>()).isValid());
+    QCOMPARE(QQmlMetaType::qmlType(QMetaType::fromType<TestType *>()).propertyValueSourceCast(), -1);
+    QVERIFY(QQmlMetaType::qmlType(QMetaType::fromType<ParserStatusTestType *>()).isValid());
+    QCOMPARE(QQmlMetaType::qmlType(QMetaType::fromType<ParserStatusTestType *>()).propertyValueSourceCast(), -1);
 
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ValueSourceTestType *>()).isValid());
-    int cast = QQmlMetaType::qmlType(qMetaTypeId<ValueSourceTestType *>()).propertyValueSourceCast();
+    QVERIFY(QQmlMetaType::qmlType(QMetaType::fromType<ValueSourceTestType *>()).isValid());
+    int cast = QQmlMetaType::qmlType(QMetaType::fromType<ValueSourceTestType *>()).propertyValueSourceCast();
     QVERIFY(cast != -1);
     QVERIFY(cast != 0);
 
@@ -200,14 +200,14 @@ void tst_qqmlmetatype::qmlPropertyValueSourceCast()
 
 void tst_qqmlmetatype::qmlPropertyValueInterceptorCast()
 {
-    QVERIFY(!QQmlMetaType::qmlType(QMetaType::Int).isValid());
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).isValid());
-    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<TestType *>()).propertyValueInterceptorCast(), -1);
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()).isValid());
-    QCOMPARE(QQmlMetaType::qmlType(qMetaTypeId<ParserStatusTestType *>()).propertyValueInterceptorCast(), -1);
+    QVERIFY(!QQmlMetaType::qmlType(QMetaType::fromType<int>()).isValid());
+    QVERIFY(QQmlMetaType::qmlType(QMetaType::fromType<TestType *>()).isValid());
+    QCOMPARE(QQmlMetaType::qmlType(QMetaType::fromType<TestType *>()).propertyValueInterceptorCast(), -1);
+    QVERIFY(QQmlMetaType::qmlType(QMetaType::fromType<ParserStatusTestType *>()).isValid());
+    QCOMPARE(QQmlMetaType::qmlType(QMetaType::fromType<ParserStatusTestType *>()).propertyValueInterceptorCast(), -1);
 
-    QVERIFY(QQmlMetaType::qmlType(qMetaTypeId<ValueInterceptorTestType *>()).isValid());
-    int cast = QQmlMetaType::qmlType(qMetaTypeId<ValueInterceptorTestType *>()).propertyValueInterceptorCast();
+    QVERIFY(QQmlMetaType::qmlType(QMetaType::fromType<ValueInterceptorTestType *>()).isValid());
+    int cast = QQmlMetaType::qmlType(QMetaType::fromType<ValueInterceptorTestType *>()).propertyValueInterceptorCast();
     QVERIFY(cast != -1);
     QVERIFY(cast != 0);
 

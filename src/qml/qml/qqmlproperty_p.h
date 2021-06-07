@@ -102,7 +102,7 @@ public:
     QVariant readValueProperty();
     bool writeValueProperty(const QVariant &, QQmlPropertyData::WriteFlags);
 
-    static QQmlMetaObject rawMetaObjectForType(QQmlEnginePrivate *, int);
+    static QQmlMetaObject rawMetaObjectForType(QQmlEnginePrivate *, QMetaType metaType);
     static bool writeEnumProperty(const QMetaProperty &prop, int idx, QObject *object,
                                   const QVariant &value, int flags);
     static bool writeValueProperty(QObject *,

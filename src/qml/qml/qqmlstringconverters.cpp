@@ -48,9 +48,9 @@
 
 QT_BEGIN_NAMESPACE
 
-QVariant QQmlStringConverters::variantFromString(const QString &s, int preferredType, bool *ok)
+QVariant QQmlStringConverters::variantFromString(const QString &s, QMetaType preferredType, bool *ok)
 {
-    switch (preferredType) {
+    switch (preferredType.id()) {
     case QMetaType::Int:
         return QVariant(int(qRound(s.toDouble(ok))));
     case QMetaType::UInt:

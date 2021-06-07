@@ -235,11 +235,11 @@ public:
     using QJSEnginePrivate::cache;
 
     // These methods may be called from the loader thread
-    QQmlMetaObject rawMetaObjectForType(int) const;
-    QQmlMetaObject metaObjectForType(int) const;
-    QQmlPropertyCache *propertyCacheForType(int);
-    QQmlPropertyCache *rawPropertyCacheForType(int);
-    QQmlPropertyCache *rawPropertyCacheForType(int, QTypeRevision version);
+    QQmlMetaObject rawMetaObjectForType(QMetaType metaType) const;
+    QQmlMetaObject metaObjectForType(QMetaType metaType) const;
+    QQmlPropertyCache *propertyCacheForType(QMetaType metaType);
+    QQmlPropertyCache *rawPropertyCacheForType(QMetaType metaType);
+    QQmlPropertyCache *rawPropertyCacheForType(QMetaType metaType, QTypeRevision version);
     void registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
     void unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
     QV4::ExecutableCompilationUnit *obtainExecutableCompilationUnit(int typeId);

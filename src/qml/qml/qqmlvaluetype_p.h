@@ -71,7 +71,7 @@ class Q_QML_PRIVATE_EXPORT QQmlValueType : public QAbstractDynamicMetaObject
 {
 public:
     QQmlValueType() : metaType(QMetaType::UnknownType) {}
-    QQmlValueType(int userType, const QMetaObject *metaObject);
+    QQmlValueType(QMetaType type, const QMetaObject *metaObject);
     ~QQmlValueType();
 
     void *create() const { return metaType.create(); }

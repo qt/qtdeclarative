@@ -919,7 +919,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         if (!QQmlMetaType::isValueType(targetProperty->propType()) && valueTypeIndex != -1) {
             // deep alias property
             *type = targetProperty->propType();
-            targetCache = enginePriv->propertyCacheForType(type->id());
+            targetCache = enginePriv->propertyCacheForType(*type);
             Q_ASSERT(targetCache);
             targetProperty = targetCache->property(valueTypeIndex);
 

@@ -435,7 +435,7 @@ ReturnedValue Serialize::deserialize(const char *&data, ExecutionEngine *engine)
             array->arrayPut(ii, value);
         }
         array->setArrayLengthUnchecked(seqLength);
-        QVariant seqVariant = QV4::SequencePrototype::toVariant(array, sequenceType, &succeeded);
+        QVariant seqVariant = QV4::SequencePrototype::toVariant(array, QMetaType(sequenceType), &succeeded);
         return QV4::SequencePrototype::fromVariant(engine, seqVariant, &succeeded);
     }
 #endif
