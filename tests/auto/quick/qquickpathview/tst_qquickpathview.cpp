@@ -1640,7 +1640,7 @@ void tst_QQuickPathView::flickNClick() // QTBUG-77173
         flickStartedSpy.clear();
         flickEndedSpy.clear();
         // Dragging the child mouse area should animate the PathView (MA has no drag target)
-        flick(window.data(), QPoint(200,200), QPoint(400,200), duration);
+        flick(window.data(), QPoint(199,199), QPoint(399,199), duration);
         QVERIFY(pathview->isMoving());
         QCOMPARE(movingChangedSpy.count(), 1);
         QCOMPARE(draggingSpy.count(), 2);

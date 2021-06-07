@@ -8094,7 +8094,7 @@ bool QQuickItem::contains(const QPointF &point) const
     } else {
         qreal x = point.x();
         qreal y = point.y();
-        return x >= 0 && y >= 0 && x <= d->width && y <= d->height;
+        return x >= 0 && y >= 0 && x < d->width && y < d->height;
     }
 }
 

@@ -77,6 +77,8 @@ MultiPointTouchArea {
             id: subWindowTouchArea
             anchors.fill: parent
         }
+
+        Component.onCompleted: show()
     }
 
     TestCase {
