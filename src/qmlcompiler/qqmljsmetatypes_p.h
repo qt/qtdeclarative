@@ -317,8 +317,9 @@ public:
 
     friend bool operator==(const QQmlJSMetaProperty &a, const QQmlJSMetaProperty &b)
     {
-        return a.m_propertyName == b.m_propertyName && a.m_typeName == b.m_typeName
-                && a.m_bindable == b.m_bindable && a.m_type == b.m_type && a.m_isList == b.m_isList
+        return a.m_index == b.m_index && a.m_propertyName == b.m_propertyName
+                && a.m_typeName == b.m_typeName && a.m_bindable == b.m_bindable
+                && a.m_type == b.m_type && a.m_isList == b.m_isList
                 && a.m_isWritable == b.m_isWritable && a.m_isPointer == b.m_isPointer
                 && a.m_isAlias == b.m_isAlias && a.m_revision == b.m_revision
                 && a.m_isFinal == b.m_isFinal;
@@ -333,7 +334,8 @@ public:
     {
         return qHashMulti(seed, prop.m_propertyName, prop.m_typeName, prop.m_bindable,
                           prop.m_type.toStrongRef().data(), prop.m_isList, prop.m_isWritable,
-                          prop.m_isPointer, prop.m_isAlias, prop.m_revision, prop.m_isFinal);
+                          prop.m_isPointer, prop.m_isAlias, prop.m_revision, prop.m_isFinal,
+                          prop.m_index);
     }
 };
 
