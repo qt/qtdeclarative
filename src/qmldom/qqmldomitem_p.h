@@ -1342,6 +1342,7 @@ private:
     QDateTime m_lastDataUpdateAt;
     QDateTime m_frozenAt;
     QMultiMap<Path, ErrorMessage> m_errors;
+    QMap<ErrorMessage, quint32> m_errorsCounts;
 };
 
 template<typename T>
