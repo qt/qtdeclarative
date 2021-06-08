@@ -1195,8 +1195,8 @@ function(qt6_target_qml_sources target)
         set(cachegen_args
             "$<${have_import_paths}:${import_paths}>"
             "$<${have_types_file}:-i$<SEMICOLON>${types_file}>"
-            "$<${have_direct_calls}:--direct-calls$<SEMICOLON>${direct_calls}>"
-            "$<${have_qmljs_runtime}:--qmljs-runtime$<SEMICOLON>${qmljs_runtime}>"
+            "$<${have_direct_calls}:--direct-calls>"
+            "$<${have_qmljs_runtime}:--qmljs-runtime>"
         )
     endif()
 
@@ -1362,7 +1362,7 @@ function(qt6_target_qml_sources target)
                 DEPENDS
                     ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen
                     "${file_absolute}"
-                    "$<$<BOOL:${qmltypes}>:${qmltypes}>"
+                    "$<$<BOOL:${types_file}>:${types_file}>"
             )
 
             target_sources(${target} PRIVATE
