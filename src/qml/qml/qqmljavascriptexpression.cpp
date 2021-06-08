@@ -178,8 +178,14 @@ void QQmlJavaScriptExpression::refresh()
 
 QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(bool *isUndefined)
 {
-    QV4::ExecutionEngine *v4 = m_context->engine()->handle();
-    QV4::Scope scope(v4);
+    QQmlEngine *qmlengine = engine();
+    if (!qmlengine) {
+        if (isUndefined)
+            *isUndefined = true;
+        return QV4::Encode::undefined();
+    }
+
+    QV4::Scope scope(qmlengine->handle());
     QV4::JSCallArguments jsCall(scope);
 
     return evaluate(jsCall.callData(scope), isUndefined);
@@ -256,10 +262,9 @@ static inline QV4::ReturnedValue thisObject(QObject *scopeObject, QV4::Execution
 
 QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, bool *isUndefined)
 {
-    Q_ASSERT(m_context && m_context->engine());
-
+    QQmlEngine *qmlEngine = engine();
     QV4::Function *v4Function = function();
-    if (!v4Function) {
+    if (!v4Function || !qmlEngine) {
         if (isUndefined)
             *isUndefined = true;
         return QV4::Encode::undefined();
@@ -267,7 +272,6 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
 
     // All code that follows must check with watcher before it accesses data members
     // incase we have been deleted.
-    QQmlEngine *qmlEngine = m_context->engine();
     QQmlJavaScriptExpressionCapture capture(this, qmlEngine);
 
     QV4::Scope scope(qmlEngine->handle());
@@ -291,11 +295,15 @@ QV4::ReturnedValue QQmlJavaScriptExpression::evaluate(QV4::CallData *callData, b
 
 bool QQmlJavaScriptExpression::evaluate(void **a, const QMetaType *types, int argc)
 {
-    Q_ASSERT(m_context && m_context->engine());
-
     // All code that follows must check with watcher before it accesses data members
     // incase we have been deleted.
-    QQmlEngine *qmlEngine = m_context->engine();
+    QQmlEngine *qmlEngine = engine();
+
+    // If there is no engine, we have no way to evaluate anything.
+    // This can happen on destruction.
+    if (!qmlEngine)
+        return false;
+
     QQmlJavaScriptExpressionCapture capture(this, qmlEngine);
 
     QV4::Scope scope(qmlEngine->handle());

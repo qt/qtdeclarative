@@ -175,12 +175,16 @@ QString QQmlBoundSignalExpression::expression() const
 // Changes made here may need to be made there and vice versa.
 void QQmlBoundSignalExpression::evaluate(void **a)
 {
-    Q_ASSERT (engine());
-
     if (!expressionFunctionValid())
         return;
 
     QQmlEngine *qmlengine = engine();
+
+    // If there is no engine, we have no way to evaluate anything.
+    // This can happen on destruction.
+    if (!qmlengine)
+        return;
+
     QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlengine);
     QV4::ExecutionEngine *v4 = qmlengine->handle();
     QV4::Scope scope(v4);

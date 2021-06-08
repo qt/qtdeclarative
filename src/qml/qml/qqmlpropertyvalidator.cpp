@@ -241,9 +241,11 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         }
 
         // Signal handlers were resolved and checked earlier in the signal handler conversion pass.
-        if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
-            || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject)
+        if (binding->flags & (QV4::CompiledData::Binding::IsSignalHandlerExpression
+                              | QV4::CompiledData::Binding::IsSignalHandlerObject
+                              | QV4::CompiledData::Binding::IsPropertyObserver)) {
             continue;
+        }
 
         if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
             if (instantiatingBinding && (instantiatingBinding->isAttachedProperty() || instantiatingBinding->isGroupProperty())) {

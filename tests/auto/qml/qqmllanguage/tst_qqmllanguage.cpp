@@ -361,6 +361,8 @@ private slots:
     void listEnumConversion();
     void deepInlineComponentScriptBinding();
 
+    void propertyObserverOnReadonly();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -6336,6 +6338,19 @@ void tst_qqmllanguage::deepInlineComponentScriptBinding()
 
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
+}
+
+void tst_qqmllanguage::propertyObserverOnReadonly()
+{
+    QQmlEngine e;
+    QQmlComponent c(&engine, testFileUrl("SelectionRange.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QCOMPARE(o->property("zoomer").toDouble(), o->property("height").toDouble());
+    o->setProperty("height", QVariant::fromValue<double>(54.2));
+    QCOMPARE(o->property("zoomer").toDouble(), 54.2);
+    QCOMPARE(o->property("height").toDouble(), 54.2);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
