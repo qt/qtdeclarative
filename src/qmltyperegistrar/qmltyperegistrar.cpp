@@ -215,6 +215,7 @@ int main(int argc, char **argv)
     auto moduleVersion = QTypeRevision::fromVersion(majorVersion.toInt(), minorVersion.toInt());
 
     const QVector<QJsonObject> types = processor.types();
+    const QVector<QJsonObject> foreignTypes = processor.foreignTypes();
     for (const QJsonObject &classDef : types) {
         const QString className = classDef[QLatin1String("qualifiedClassName")].toString();
 
@@ -233,15 +234,45 @@ int main(int argc, char **argv)
         // without including the C++ headers. That's the reason for the QMetaType(foo).id() calls.
 
         if (classDef.value(QLatin1String("namespace")).toBool()) {
-            fprintf(output, "\n    {");
-            fprintf(output, "\n        static const auto metaType "
-                            "= QQmlPrivate::metaTypeForNamespace("
-                            "[](const QtPrivate::QMetaTypeInterface *) { "
-                            "return &%s::staticMetaObject; "
-                            "}, \"%s\");",
-                    qPrintable(targetName), qPrintable(targetName));
-            fprintf(output, "\n        QMetaType(&metaType).id();");
-            fprintf(output, "\n    }");
+            // We need to figure out if the _target_ is a namespace. If not, it already has a
+            // QMetaType and we don't need to generate one.
+
+            QString targetTypeName = targetName;
+            const auto targetIsNamespace = [&]() {
+                if (className == targetName)
+                    return true;
+
+                const QJsonObject *target = QmlTypesClassDescription::findType(types, targetName);
+                if (!target)
+                    target = QmlTypesClassDescription::findType(foreignTypes, targetName);
+
+                if (!target)
+                    return false;
+
+                if (target->value(QStringLiteral("namespace")).toBool())
+                    return true;
+
+                if (target->value(QStringLiteral("object")).toBool())
+                    targetTypeName += QStringLiteral(" *");
+
+                return false;
+            };
+
+            if (targetIsNamespace()) {
+                fprintf(output, "\n    {");
+                fprintf(output, "\n        static const auto metaType "
+                                "= QQmlPrivate::metaTypeForNamespace("
+                                "[](const QtPrivate::QMetaTypeInterface *) { "
+                                "return &%s::staticMetaObject; "
+                                "}, \"%s\");",
+                        qPrintable(targetName), qPrintable(targetTypeName));
+                fprintf(output, "\n        QMetaType(&metaType).id();");
+                fprintf(output, "\n    }");
+            } else {
+                fprintf(output, "\n    QMetaType::fromType<%s>().id();",
+                        qPrintable(targetTypeName));
+            }
+
             if (seenQmlElement) {
                 fprintf(output, "\n    qmlRegisterNamespaceAndRevisions(&%s::staticMetaObject, "
                                 "\"%s\", %s, nullptr, &%s::staticMetaObject);",

@@ -251,4 +251,41 @@ void tst_qmltyperegistrar::parentProperty()
     QCOMPARE(qmltypesData.count("parentProperty: \"ppp\""), 1);
 }
 
+void tst_qmltyperegistrar::namespacesAndValueTypes()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData("import QmlTypeRegistrarTest\nLocal {}", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer o(c.create());
+    QVERIFY(!o.isNull());
+
+    auto check = [&](QMetaType m1, QMetaType m2) {
+        QVERIFY(m1.isValid());
+        QVERIFY(m2.isValid());
+
+        // Does not actually help if we have two types with equal IDs. It only compares the IDs.
+        QVERIFY(m1 == m2);
+        QCOMPARE(m1.id(), m2.id());
+
+        // If we had a bogus namespace value type, it wouldn't be able to create the type.
+        void *v1 = m1.create();
+        QVERIFY(v1 != nullptr);
+        m1.destroy(v1);
+
+        void *v2 = m2.create();
+        QVERIFY(v2 != nullptr);
+        m2.destroy(v2);
+
+        QMetaType m3(m1.id());
+        QVERIFY(m3.isValid());
+        void *v3 = m3.create();
+        QVERIFY(v3 != nullptr);
+        m3.destroy(v3);
+    };
+
+    check(QMetaType::fromName("ValueTypeWithEnum1"), QMetaType::fromType<ValueTypeWithEnum1>());
+    check(QMetaType::fromName("ValueTypeWithEnum2"), QMetaType::fromType<ValueTypeWithEnum2>());
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

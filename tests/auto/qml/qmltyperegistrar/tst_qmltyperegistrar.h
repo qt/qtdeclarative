@@ -305,6 +305,83 @@ private:
     QProperty<QObject *> m_parent;
 };
 
+
+class ValueTypeWithEnum1
+{
+    Q_GADGET
+    Q_PROPERTY(ValueTypeWithEnum1::Quality quality READ quality WRITE setQuality)
+public:
+    enum Quality
+    {
+        VeryLowQuality,
+        LowQuality,
+        NormalQuality,
+        HighQuality,
+        VeryHighQuality
+    };
+    Q_ENUM(Quality)
+
+    Quality quality() const { return m_quality; }
+    void setQuality(Quality quality) { m_quality = quality; }
+
+private:
+    Quality m_quality = HighQuality;
+};
+
+// value type alphabetically first
+struct AValueTypeWithEnumForeign1
+{
+    Q_GADGET
+    QML_FOREIGN(ValueTypeWithEnum1)
+    QML_NAMED_ELEMENT(valueTypeWithEnum1)
+};
+
+// namespace alphabetically second
+namespace BValueTypeWithEnumForeignNamespace1
+{
+    Q_NAMESPACE
+    QML_FOREIGN_NAMESPACE(ValueTypeWithEnum1)
+    QML_NAMED_ELEMENT(ValueTypeWithEnum1)
+};
+
+class ValueTypeWithEnum2
+{
+    Q_GADGET
+    Q_PROPERTY(ValueTypeWithEnum2::Quality quality READ quality WRITE setQuality)
+public:
+    enum Quality
+    {
+        VeryLowQuality,
+        LowQuality,
+        NormalQuality,
+        HighQuality,
+        VeryHighQuality
+    };
+    Q_ENUM(Quality)
+
+    Quality quality() const { return m_quality; }
+    void setQuality(Quality quality) { m_quality = quality; }
+
+private:
+    Quality m_quality = HighQuality;
+};
+
+// namespace alphabetically first
+namespace AValueTypeWithEnumForeignNamespace2
+{
+    Q_NAMESPACE
+    QML_FOREIGN_NAMESPACE(ValueTypeWithEnum2)
+    QML_NAMED_ELEMENT(ValueTypeWithEnum2)
+};
+
+// value type alphabetically second
+struct BValueTypeWithEnumForeign2
+{
+    Q_GADGET
+    QML_FOREIGN(ValueTypeWithEnum2)
+    QML_NAMED_ELEMENT(valueTypeWithEnum2)
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -333,6 +410,7 @@ private slots:
     void hiddenAccessor();
     void finalProperty();
     void parentProperty();
+    void namespacesAndValueTypes();
 
 private:
     QByteArray qmltypesData;
