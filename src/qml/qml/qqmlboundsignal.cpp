@@ -217,29 +217,6 @@ void QQmlBoundSignalExpression::evaluate(void **a)
     ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
 }
 
-void QQmlBoundSignalExpression::evaluate(const QList<QVariant> &args)
-{
-    Q_ASSERT (engine());
-
-    if (!expressionFunctionValid())
-        return;
-
-    QQmlEngine *qmlengine = engine();
-    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlengine);
-    QV4::Scope scope(qmlengine->handle());
-
-    ep->referenceScarceResources(); // "hold" scarce resources in memory during evaluation.
-
-    QV4::JSCallArguments jsCall(scope, args.count());
-    for (int ii = 0; ii < args.count(); ++ii) {
-        jsCall.args[ii] = scope.engine->fromVariant(args[ii]);
-    }
-
-    QQmlJavaScriptExpression::evaluate(jsCall.callData(scope), nullptr);
-
-    ep->dereferenceScarceResources(); // "release" scarce resources if top-level expression evaluation is complete.
-}
-
 ////////////////////////////////////////////////////////////////////////
 
 
@@ -361,7 +338,7 @@ void QQmlBoundSignal_callback(QQmlNotifierEndpoint *e, void **a)
 QQmlPropertyObserver::QQmlPropertyObserver(QQmlBoundSignalExpression *expr)
     : QPropertyObserver([](QPropertyObserver *self, QUntypedPropertyData *) {
                            auto This = static_cast<QQmlPropertyObserver*>(self);
-                           This->expression->evaluate(QList<QVariant>());
+                           This->expression->evaluate(nullptr);
                        })
 {
     expression.adopt(expr);

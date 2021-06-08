@@ -79,7 +79,6 @@ public:
 
     // evaluation of a bound signal expression doesn't return any value
     void evaluate(void **a);
-    void evaluate(const QList<QVariant> &args);
 
     QString expression() const;
     const QObject *target() const { return m_target; }
