@@ -1927,14 +1927,23 @@ MutableDomItem DomItem::makeCopy(DomItem::CopyOption option)
         return MutableDomItem(newItem.path(pathFromOwner()));
     }
     DomItem env = environment();
-    std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>();
-    Q_ASSERT(envPtr);
-    std::shared_ptr<DomEnvironment> newEnvPtr(
-            new DomEnvironment(envPtr, envPtr->loadPaths(), envPtr->options()));
-    DomBase *eBase = envPtr.get();
-    if (std::holds_alternative<DomEnvironment *>(m_element) && eBase
-        && std::get<DomEnvironment *>(m_element) == eBase)
-        return MutableDomItem(DomItem(newEnvPtr));
+    std::shared_ptr<DomEnvironment> newEnvPtr;
+    if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>()) {
+        newEnvPtr = std::shared_ptr<DomEnvironment>(
+                new DomEnvironment(envPtr, envPtr->loadPaths(), envPtr->options()));
+        DomBase *eBase = envPtr.get();
+        if (std::holds_alternative<DomEnvironment *>(m_element) && eBase
+            && std::get<DomEnvironment *>(m_element) == eBase)
+            return MutableDomItem(DomItem(newEnvPtr));
+    } else if (std::shared_ptr<DomUniverse> univPtr = top().ownerAs<DomUniverse>()) {
+        newEnvPtr = std::shared_ptr<DomEnvironment>(new DomEnvironment(
+                QStringList(),
+                DomEnvironment::Option::SingleThreaded | DomEnvironment::Option::NoDependencies,
+                univPtr));
+    } else {
+        Q_ASSERT(false);
+        return {};
+    }
     DomItem newItem = std::visit(
             [this, newEnvPtr, &o](auto &&el) {
                 auto copyPtr = el->makeCopy(o);
@@ -2727,26 +2736,28 @@ DomItem Reference::get(DomItem &self, ErrorHandler h, QList<Path> *visitedRefs) 
         Path cachedPath;
         if (shouldCache()) {
             env = self.environment();
-            selfPath = self.canonicalPath();
-            RefCacheEntry cached = RefCacheEntry::forPath(self, selfPath);
-            switch (cached.cached) {
-            case RefCacheEntry::Cached::None:
-                break;
-            case RefCacheEntry::Cached::First:
-            case RefCacheEntry::Cached::All:
-                if (!cached.canonicalPaths.isEmpty())
-                    cachedPath = cached.canonicalPaths.first();
-                else
-                    return res;
-                break;
-            }
-            if (cachedPath) {
-                res = env.path(cachedPath);
-                if (!res)
-                    qCWarning(refLog) << "referenceCache outdated, reference at " << selfPath
-                                      << " leads to invalid path " << cachedPath;
-                else
-                    return res;
+            if (env) {
+                selfPath = self.canonicalPath();
+                RefCacheEntry cached = RefCacheEntry::forPath(self, selfPath);
+                switch (cached.cached) {
+                case RefCacheEntry::Cached::None:
+                    break;
+                case RefCacheEntry::Cached::First:
+                case RefCacheEntry::Cached::All:
+                    if (!cached.canonicalPaths.isEmpty())
+                        cachedPath = cached.canonicalPaths.first();
+                    else
+                        return res;
+                    break;
+                }
+                if (cachedPath) {
+                    res = env.path(cachedPath);
+                    if (!res)
+                        qCWarning(refLog) << "referenceCache outdated, reference at " << selfPath
+                                          << " leads to invalid path " << cachedPath;
+                    else
+                        return res;
+                }
             }
         }
         QList<Path> visitedRefsLocal;

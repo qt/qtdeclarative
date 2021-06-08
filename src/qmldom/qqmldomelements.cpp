@@ -1207,9 +1207,10 @@ void EnumDecl::writeOut(DomItem &self, OutWriter &ow) const
 
 QList<Path> ImportScope::allSources(DomItem &self) const
 {
-    DomItem env = self.environment();
+    DomItem top = self.top();
+    DomItem env = top.environment();
     Path selfPath = self.canonicalPath().field(Fields::allSources);
-    RefCacheEntry cached = RefCacheEntry::forPath(env, selfPath);
+    RefCacheEntry cached = (env ? RefCacheEntry::forPath(env, selfPath) : RefCacheEntry());
     if (cached.cached == RefCacheEntry::Cached::All)
         return cached.canonicalPaths;
     QList<Path> res;
@@ -1221,7 +1222,7 @@ QList<Path> ImportScope::allSources(DomItem &self) const
             continue;
         knownPaths.insert(pNow);
         res.append(pNow);
-        DomItem sourceBase = env.path(pNow);
+        DomItem sourceBase = top.path(pNow);
         for (DomItem autoExp : sourceBase.field(Fields::autoExports).values()) {
             if (const ModuleAutoExport *autoExpPtr = autoExp.as<ModuleAutoExport>()) {
                 Path newSource;
@@ -1251,7 +1252,8 @@ QList<Path> ImportScope::allSources(DomItem &self) const
             }
         }
     }
-    RefCacheEntry::addForPath(env, selfPath, RefCacheEntry { RefCacheEntry::Cached::All, res });
+    if (env)
+        RefCacheEntry::addForPath(env, selfPath, RefCacheEntry { RefCacheEntry::Cached::All, res });
     return res;
 }
 
