@@ -41,6 +41,8 @@
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include <QtQmlDom/private/qqmldomastdumper_p.h>
 #include <QtQmlDom/private/qqmldommock_p.h>
+#include <QtQmlDom/private/qqmldomcompare_p.h>
+#include <QtQmlDom/private/qqmldomfieldfilter_p.h>
 
 #include <QtTest/QtTest>
 #include <QCborValue>
@@ -531,6 +533,17 @@ private slots:
         if (!diff.isEmpty())
             qDebug().nospace().noquote() << diff;
         QCOMPARE(dump1, dump2);
+        QStringList diffs = domCompareStrList(f, copy, FieldFilter::compareFilter());
+        if (!diffs.isEmpty())
+            qDebug() << "testDeepCopy.diffs:" << diffs;
+        QVERIFY(diffs.isEmpty());
+        DomItem univFile = env.universe().path(f.canonicalPath());
+        MutableDomItem univFileCopy = univFile.makeCopy();
+        QStringList univFileDiffs =
+                domCompareStrList(univFile, univFileCopy, FieldFilter::compareFilter());
+        if (!univFileDiffs.isEmpty())
+            qDebug() << "testDeepCopy.univFileDiffs:" << univFileDiffs;
+        QVERIFY(univFileDiffs.isEmpty());
     }
 
 private:
