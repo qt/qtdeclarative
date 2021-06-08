@@ -1681,6 +1681,8 @@ QVariant QQuickComboBox::valueAt(int index) const
 
     For an example of how to use this method, see \l {ComboBox Model Roles}.
 
+    \include qquickcombobox.qdocinc functions-after-component-completion
+
     \sa find(), currentValue, currentIndex, valueRole
 */
 int QQuickComboBox::indexOfValue(const QVariant &value) const
@@ -1794,6 +1796,10 @@ void QQuickComboBox::setImplicitContentWidthPolicy(QQuickComboBox::ImplicitConte
     Returns the text for the specified \a index, or an empty string
     if the index is out of bounds.
 
+    \include qquickcombobox.qdocinc functions-after-component-completion
+    For example:
+    \snippet qtquickcontrols2-combobox-textat.qml textat
+
     \sa textRole
 */
 QString QQuickComboBox::textAt(int index) const
@@ -1822,6 +1828,10 @@ QString QQuickComboBox::textAt(int index) const
     \value Qt.MatchEndsWidth         The search term matches the end of the item.
     \value Qt.MatchContains          The search term is contained in the item.
     \value Qt.MatchCaseSensitive     The search is case sensitive.
+
+    \include qquickcombobox.qdocinc functions-after-component-completion
+    For example:
+    \snippet qtquickcontrols2-combobox-find.qml find
 
     \sa textRole
 */
