@@ -160,6 +160,46 @@ public:
     void dump(Sink s) const;
     QString toString() const;
     QCborMap toCbor() const;
+    friend int compare(const ErrorMessage &msg1, const ErrorMessage &msg2)
+    {
+        int c;
+        c = msg1.location.offset - msg2.location.offset;
+        if (c != 0)
+            return c;
+        c = msg1.location.startLine - msg2.location.startLine;
+        if (c != 0)
+            return c;
+        c = msg1.errorId.compare(msg2.errorId);
+        if (c != 0)
+            return c;
+        if (!msg1.errorId.isEmpty())
+            return 0;
+        c = msg1.message.compare(msg2.message);
+        if (c != 0)
+            return c;
+        c = msg1.file.compare(msg2.file);
+        if (c != 0)
+            return c;
+        c = Path::cmp(msg1.path, msg2.path);
+        if (c != 0)
+            return c;
+        c = int(msg1.level) - int(msg2.level);
+        if (c != 0)
+            return c;
+        c = int(msg1.errorGroups.groups.size() - msg2.errorGroups.groups.size());
+        if (c != 0)
+            return c;
+        for (qsizetype i = 0; i < msg1.errorGroups.groups.size(); ++i) {
+            c = msg1.errorGroups.groups[i].groupId().compare(msg2.errorGroups.groups[i].groupId());
+            if (c != 0)
+                return c;
+        }
+        c = msg1.location.length - msg2.location.length;
+        if (c != 0)
+            return c;
+        c = msg1.location.startColumn - msg2.location.startColumn;
+        return c;
+    }
 
     QLatin1String errorId;
     QString message;
@@ -171,13 +211,26 @@ public:
 };
 
 inline bool operator !=(const ErrorMessage &e1, const ErrorMessage &e2) {
-    return e1.errorId != e2.errorId || e1.message != e2.message || e1.errorGroups != e2.errorGroups
-            || e1.level != e2.level || e1.path != e2.path || e1.file != e2.file
-            || e1.location.startLine != e2.location.startLine || e1.location.offset != e2.location.offset
-            || e1.location.startColumn != e2.location.startColumn || e1.location.length != e2.location.length;
+    return compare(e1, e2) != 0;
 }
 inline bool operator ==(const ErrorMessage &e1, const ErrorMessage &e2) {
-    return !(e1 != e2);
+    return compare(e1, e2) == 0;
+}
+inline bool operator<(const ErrorMessage &e1, const ErrorMessage &e2)
+{
+    return compare(e1, e2) < 0;
+}
+inline bool operator<=(const ErrorMessage &e1, const ErrorMessage &e2)
+{
+    return compare(e1, e2) <= 0;
+}
+inline bool operator>(const ErrorMessage &e1, const ErrorMessage &e2)
+{
+    return compare(e1, e2) > 0;
+}
+inline bool operator>=(const ErrorMessage &e1, const ErrorMessage &e2)
+{
+    return compare(e1, e2) >= 0;
 }
 
 QMLDOM_EXPORT void silentError(const ErrorMessage &);

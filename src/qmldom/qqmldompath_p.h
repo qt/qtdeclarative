@@ -124,7 +124,8 @@ public:
     virtual const Filter *asFilter() const { return nullptr; }
 };
 
-class Empty: public Base {
+class Empty final : public Base
+{
 public:
     Empty() = default;
     Kind kind() const override { return Kind::Empty; }
@@ -133,7 +134,8 @@ public:
     const Empty * asEmpty() const override { return this; }
 };
 
-class Field: public Base {
+class Field final : public Base
+{
 public:
     Field() = default;
     Field(QStringView n): fieldName(n) {}
@@ -147,7 +149,8 @@ public:
     QStringView fieldName;
 };
 
-class Index: public Base {
+class Index final : public Base
+{
 public:
     Index() = default;
     Index(index_type i): indexValue(i) {}
@@ -161,7 +164,8 @@ public:
     index_type indexValue = -1;
 };
 
-class Key: public Base {
+class Key final : public Base
+{
 public:
     Key() = default;
     Key(QString n) : keyValue(n) { }
@@ -180,7 +184,8 @@ public:
     QString keyValue;
 };
 
-class Root: public Base {
+class Root final : public Base
+{
 public:
     Root() = default;
     Root(PathRoot r): contextKind(r), contextName() {}
@@ -229,7 +234,8 @@ public:
     QStringView contextName;
 };
 
-class Current: public Base {
+class Current final : public Base
+{
 public:
     Current() = default;
     Current(PathCurrent c): contextKind(c) {}
@@ -283,7 +289,8 @@ public:
     QStringView contextName;
 };
 
-class Any: public Base {
+class Any final : public Base
+{
 public:
     Any() = default;
     Kind kind() const override { return Kind::Any; }
@@ -293,7 +300,8 @@ public:
     const Any *asAny() const override { return this; }
 };
 
-class QMLDOM_EXPORT Filter: public Base {
+class QMLDOM_EXPORT Filter final : public Base
+{
 public:
     Filter() = default;
     Filter(std::function<bool(DomItem)> f, QStringView filterDescription = u"<native code filter>");
@@ -718,10 +726,12 @@ public:
     using iterator_category = std::forward_iterator_tag;
 
     static int cmp(const Path &p1, const Path &p2);
-    Component component(int i) const;
+
 private:
+    const Component &component(int i) const;
     explicit Path(quint16 endOffset, quint16 length, std::shared_ptr<PathEls::PathData> data);
     friend class QQmlJS::Dom::PathEls::TestPaths;
+    friend class FieldFilter;
     friend size_t qHash(const Path &, size_t);
 
     Path noEndOffset() const;

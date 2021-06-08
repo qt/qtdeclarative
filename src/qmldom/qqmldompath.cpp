@@ -205,24 +205,25 @@ int PathComponent::cmp(const PathComponent &p1, const PathComponent &p2)
 
 } // namespace PathEls
 
-PathEls::PathComponent Path::component(int i) const
+const PathEls::PathComponent &Path::component(int i) const
 {
+    static Component emptyComponent;
     if (i < 0)
         i += m_length;
     if (i >= m_length || i < 0) {
         Q_ASSERT(false && "index out of bounds");
-        return Component();
+        return emptyComponent;
     }
     i = i - m_length - m_endOffset;
     auto data = m_data.get();
     while (data) {
         i += data->components.length();
         if (i >= 0)
-            return data->components.at(i);
+            return qAsConst(data)->components[i];
         data = data->parent.get();
     }
     Q_ASSERT(false && "Invalid data reached while resolving a seemengly valid index in Path (inconsisten Path object)");
-    return Component();
+    return emptyComponent;
 }
 
 Path Path::operator[](int i) const
@@ -247,7 +248,7 @@ PathIterator Path::end() const
 
 PathRoot Path::headRoot() const
 {
-    auto comp = component(0);
+    auto &comp = component(0);
     if (PathEls::Root const * r = comp.base()->asRoot())
         return r->contextKind;
     return PathRoot::Other;
@@ -285,7 +286,7 @@ index_type Path::headIndex(index_type defaultValue) const
 
 function<bool (DomItem)> Path::headFilter() const
 {
-    auto comp = component(0);
+    auto &comp = component(0);
     if (PathEls::Filter const * f = comp.base()->asFilter()) {
         return f->filterFunction;
     }
@@ -939,7 +940,7 @@ void Path::dump(Sink sink) const
 {
     bool first = true;
     for (int i = 0; i < m_length; ++i) {
-        auto c = component(i);
+        auto &c = component(i);
         if (!c.hasSquareBrackets()) {
             if (!first || (c.kind() != Kind::Root && c.kind() != Kind::Current))
                 sink(u".");

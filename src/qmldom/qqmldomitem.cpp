@@ -2974,12 +2974,10 @@ void OwningItem::addError(DomItem &, ErrorMessage msg)
 void OwningItem::addErrorLocal(ErrorMessage msg)
 {
     QMutexLocker l(mutex());
-    auto it = m_errors.constFind(msg.path);
-    while (it != m_errors.constEnd() && it->path == msg.path) {
-        if (*it++ == msg)
-            return;
-    }
-    m_errors.insert(msg.path, msg);
+    quint32 &c = m_errorsCounts[msg];
+    c += 1;
+    if (c == 1)
+        m_errors.insert(msg.path, msg);
 }
 
 void OwningItem::clearErrors(ErrorGroups groups)
