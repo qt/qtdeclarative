@@ -73,6 +73,7 @@ QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
         extraData.cd->propertyValueSourceCast = -1;
         extraData.cd->propertyValueInterceptorCast = -1;
         extraData.cd->registerEnumClassesUnscoped = true;
+        extraData.cd->registerEnumsFromRelatedTypes = true;
         break;
     case QQmlType::SingletonType:
     case QQmlType::CompositeSingletonType:
@@ -304,11 +305,12 @@ void QQmlTypePrivate::initEnums(QQmlEnginePrivate *engine) const
 void QQmlTypePrivate::insertEnums(const QMetaObject *metaObject) const
 {
     // Add any enum values defined by 'related' classes
-    if (metaObject->d.relatedMetaObjects) {
-        const auto *related = metaObject->d.relatedMetaObjects;
-        if (related) {
-            while (*related)
-                insertEnums(*related++);
+    if (regType != QQmlType::CppType || extraData.cd->registerEnumsFromRelatedTypes) {
+        if (const auto *related = metaObject->d.relatedMetaObjects) {
+            while (const QMetaObject *relatedMetaObject = *related) {
+                insertEnums(relatedMetaObject);
+                ++related;
+            }
         }
     }
 

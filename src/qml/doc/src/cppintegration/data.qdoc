@@ -542,6 +542,62 @@ class Message : public QObject
     };
 \endcode
 
+Enums from related types are usually registered in the scope of the relating
+type. For example any enum from a different type used in a \l{Q_PROPERTY}
+declaration causes all enums from that type to be made available in QML. This
+is usually more of a liability than a feature. In order to prevent it from
+happening, annotate your class with a special \l{Q_CLASSINFO} macro.
+Use the name \c RegisterEnumsFromRelatedTypes with the value \c false to prevent
+enums from related types from being registered in this type.
+
+You should explicitly register the enclosing types of any enums you want to use
+in QML, using \l{QML_ELEMENT} or \l{QML_NAMED_ELEMENT}, rather than rely on
+their enums to be injected into other types.
+
+\code
+class OtherType : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    enum SomeEnum { A, B, C };
+    Q_ENUM(SomeEnum)
+
+    enum AnotherEnum { D, E, F };
+    Q_ENUM(AnotherEnum)
+};
+
+class Message : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+    // This would usually cause all enums from OtherType to be registered
+    // as members of Message ...
+    Q_PROPERTY(OtherType::SomeEnum someEnum READ someEnum CONSTANT)
+
+    // ... but this way it doesn't.
+    Q_CLASSINFO("RegisterEnumsFromRelatedTypes", "false")
+
+public:
+    OtherType::SomeEnum someEnum() const { return OtherType::B; }
+};
+\endcode
+
+The important difference is the scope for the enums in QML. If an enum from a
+related class is automatically registered, the scope is the type it is
+imported into. In the above case, without the extra \l{Q_CLASSINFO}, you would
+use \c {Message.A}, for example. If C++ type holding the enums is explicitly
+registered, and the registration of enums from related types is suppressed, the
+QML type for the C++ type holding the enums is the scope for all of its enums.
+You would use \c {OtherType.A} instead of \c {Message.A} in QML.
+
+Mind that you can use \l QML_FOREIGN to register a type you cannot modify. You
+can also use \l QML_FOREIGN_NAMESPACE to register the enumerators of a C++ type
+into a QML namespace of any upper-case name, even if the same C++ type is
+also registered as a QML value type.
+
 \section2 Enumeration Types as Signal and Method Parameters
 
 C++ signals and methods with enumeration-type parameters can be used from QML

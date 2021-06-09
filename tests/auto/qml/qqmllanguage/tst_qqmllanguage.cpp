@@ -363,6 +363,7 @@ private slots:
 
     void propertyObserverOnReadonly();
     void valueTypeWithEnum();
+    void enumsFromRelatedTypes();
 
     void propertyAndAliasMustHaveDistinctNames_data();
     void propertyAndAliasMustHaveDistinctNames();
@@ -6406,6 +6407,38 @@ void tst_qqmllanguage::propertyAndAliasMustHaveDistinctNames()
     QVERIFY(!c.isReady());
     auto actualError = c.errorString();
     QVERIFY2(actualError.contains(error), qPrintable(actualError));
+}
+
+void tst_qqmllanguage::enumsFromRelatedTypes()
+{
+    QQmlEngine e;
+    {
+        QQmlComponent c(&engine);
+        c.setData("import Test\n"
+                  "ObjectTypeHoldingValueType1 {\n"
+                  "    vv.quality: ObjectTypeHoldingValueType1.NormalQuality\n"
+                  "}", QUrl("Test1.qml"));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        ObjectTypeHoldingValueType1 *holder = qobject_cast<ObjectTypeHoldingValueType1 *>(o.data());
+        QCOMPARE(holder->q(), ValueTypeWithEnum1::NormalQuality);
+    }
+
+    {
+        QQmlComponent c(&engine);
+        c.setData("import Test\n"
+                  "ObjectTypeHoldingValueType2 {\n"
+                  "    vv.quality: ObjectTypeHoldingValueType2.LowQuality\n"
+                  "}", QUrl("Test2.qml"));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+        QTest::ignoreMessage(
+                    QtWarningMsg,
+                    "Test2.qml:3:5: Unable to assign [undefined] to ValueTypeWithEnum2::Quality");
+        QScopedPointer<QObject> o(c.create());
+        ObjectTypeHoldingValueType2 *holder = qobject_cast<ObjectTypeHoldingValueType2 *>(o.data());
+        QCOMPARE(holder->q(), ValueTypeWithEnum2::HighQuality);
+    }
 }
 
 QTEST_MAIN(tst_qqmllanguage)

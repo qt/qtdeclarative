@@ -188,15 +188,24 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->extraData.cd->extFunc = type.extensionObjectCreate;
     d->extraData.cd->customParser = reinterpret_cast<QQmlCustomParser *>(type.customParser);
     d->extraData.cd->registerEnumClassesUnscoped = true;
+    d->extraData.cd->registerEnumsFromRelatedTypes = true;
 
     if (type.extensionMetaObject)
         d->extraData.cd->extMetaObject = type.extensionMetaObject;
 
     // Check if the user wants only scoped enum classes
     if (d->baseMetaObject) {
-        auto indexOfClassInfo = d->baseMetaObject->indexOfClassInfo("RegisterEnumClassesUnscoped");
-        if (indexOfClassInfo != -1 && QString::fromUtf8(d->baseMetaObject->classInfo(indexOfClassInfo).value()) == QLatin1String("false"))
+        auto indexOfUnscoped = d->baseMetaObject->indexOfClassInfo("RegisterEnumClassesUnscoped");
+        if (indexOfUnscoped != -1
+                && qstrcmp(d->baseMetaObject->classInfo(indexOfUnscoped).value(), "false") == 0) {
             d->extraData.cd->registerEnumClassesUnscoped = false;
+        }
+
+        auto indexOfRelated = d->baseMetaObject->indexOfClassInfo("RegisterEnumsFromRelatedTypes");
+        if (indexOfRelated != -1
+                && qstrcmp(d->baseMetaObject->classInfo(indexOfRelated).value(), "false") == 0) {
+            d->extraData.cd->registerEnumsFromRelatedTypes = false;
+        }
     }
 
     return d;

@@ -126,6 +126,7 @@ public:
         int propertyValueSourceCast;
         int propertyValueInterceptorCast;
         bool registerEnumClassesUnscoped;
+        bool registerEnumsFromRelatedTypes;
     };
 
     struct QQmlSingletonTypeData

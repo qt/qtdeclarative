@@ -1752,6 +1752,7 @@ class ObjectTypeHoldingValueType1 : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(ValueTypeWithEnum1 vv READ vv WRITE setVv NOTIFY vvChanged)
+    Q_PROPERTY(ValueTypeWithEnum1::Quality q READ q CONSTANT)
 
 public:
     ValueTypeWithEnum1 vv() const
@@ -1767,6 +1768,8 @@ public:
         m_vv = vv;
         emit vvChanged(m_vv);
     }
+
+    ValueTypeWithEnum1::Quality q() const { return m_vv.quality(); }
 
 signals:
     void vvChanged(ValueTypeWithEnum1 vv);
@@ -1822,6 +1825,8 @@ class ObjectTypeHoldingValueType2 : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(ValueTypeWithEnum2 vv READ vv WRITE setVv NOTIFY vvChanged)
+    Q_PROPERTY(ValueTypeWithEnum2::Quality q READ q CONSTANT)
+    Q_CLASSINFO("RegisterEnumsFromRelatedTypes", "false")
 
 public:
     ValueTypeWithEnum2 vv() const
@@ -1837,6 +1842,8 @@ public:
         m_vv = vv;
         emit vvChanged(m_vv);
     }
+
+    ValueTypeWithEnum2::Quality q() const { return m_vv.quality(); }
 
 signals:
     void vvChanged(ValueTypeWithEnum2 vv);
