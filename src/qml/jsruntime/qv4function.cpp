@@ -168,7 +168,7 @@ void Function::updateInternalClass(ExecutionEngine *engine, const QList<QByteArr
         if (duplicate == -1) {
             parameterNames.append(QString::fromUtf8(param));
         } else {
-            const QString &dup = parameterNames[duplicate];
+            const QString dup = parameterNames[duplicate];
             parameterNames.append(dup);
             parameterNames[duplicate] =
                     QString(QChar(0xfffe)) + QString::number(duplicate) + dup;
