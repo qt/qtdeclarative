@@ -362,6 +362,7 @@ private slots:
     void deepInlineComponentScriptBinding();
 
     void propertyObserverOnReadonly();
+    void valueTypeWithEnum();
 
 private:
     QQmlEngine engine;
@@ -6351,6 +6352,37 @@ void tst_qqmllanguage::propertyObserverOnReadonly()
     o->setProperty("height", QVariant::fromValue<double>(54.2));
     QCOMPARE(o->property("zoomer").toDouble(), 54.2);
     QCOMPARE(o->property("height").toDouble(), 54.2);
+}
+
+void tst_qqmllanguage::valueTypeWithEnum()
+{
+    {
+        QQmlEngine e;
+        QQmlComponent c(&engine);
+        c.setData("import Test\n"
+                  "ObjectTypeHoldingValueType1 {\n"
+                  "    vv.quality: ValueTypeWithEnum1.NormalQuality\n"
+                  "}", QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        ObjectTypeHoldingValueType1 *holder = qobject_cast<ObjectTypeHoldingValueType1 *>(o.data());
+
+        QCOMPARE(holder->vv().quality(), ValueTypeWithEnum1::NormalQuality);
+    }
+
+    {
+        QQmlEngine e;
+        QQmlComponent c(&engine);
+        c.setData("import Test\n"
+                  "ObjectTypeHoldingValueType2 {\n"
+                  "    vv.quality: ValueTypeWithEnum2.LowQuality\n"
+                  "}", QUrl());
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        ObjectTypeHoldingValueType2 *holder = qobject_cast<ObjectTypeHoldingValueType2 *>(o.data());
+
+        QCOMPARE(holder->vv().quality(), ValueTypeWithEnum2::LowQuality);
+    }
 }
 
 QTEST_MAIN(tst_qqmllanguage)

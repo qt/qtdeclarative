@@ -122,6 +122,49 @@ void registerTypes()
     qmlRegisterTypesAndRevisions<Extended, Foreign, ForeignExtended>("Test", 1);
     qmlRegisterTypesAndRevisions<BareSingleton>("Test", 1);
     qmlRegisterTypesAndRevisions<UncreatableSingleton>("Test", 1);
+
+    // Metatype/namespace variation one: Register namespace first
+
+    // The holder type
+    qmlRegisterTypesAndRevisions<ObjectTypeHoldingValueTypeForeign1>("Test", 1);
+
+    {
+        // A metatype for the namespace to hold the enums
+        static const auto metaType = QQmlPrivate::metaTypeForNamespace(
+                    [](const QtPrivate::QMetaTypeInterface *) {
+            return &ValueTypeWithEnum1::staticMetaObject;
+        }, "ValueTypeWithEnum1");
+        QMetaType(&metaType).id();
+    }
+
+    // The namespace to hold the enums
+    qmlRegisterNamespaceAndRevisions(&ValueTypeWithEnum1::staticMetaObject, "Test", 1, nullptr,
+                                     &ValueTypeWithEnumForeignNamespace1::staticMetaObject);
+
+    // The value type
+    qmlRegisterTypesAndRevisions<ValueTypeWithEnumForeign1>("Test", 1);
+
+
+    // Metatype/namespace variation two: Register namespace last
+
+    // The holder type
+    qmlRegisterTypesAndRevisions<ObjectTypeHoldingValueTypeForeign2>("Test", 1);
+
+    // The value type
+    qmlRegisterTypesAndRevisions<ValueTypeWithEnumForeign2>("Test", 1);
+
+    {
+        // A metatype for the namespace to hold the enums
+        static const auto metaType = QQmlPrivate::metaTypeForNamespace(
+                    [](const QtPrivate::QMetaTypeInterface *) {
+            return &ValueTypeWithEnum2::staticMetaObject;
+        }, "ValueTypeWithEnum2");
+        QMetaType(&metaType).id();
+    }
+
+    // The namespace to hold the enums
+    qmlRegisterNamespaceAndRevisions(&ValueTypeWithEnum2::staticMetaObject, "Test", 1, nullptr,
+                                     &ValueTypeWithEnumForeignNamespace2::staticMetaObject);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)

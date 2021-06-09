@@ -1725,6 +1725,147 @@ public:
     Q_INVOKABLE QList<EnumList::Enum> list() const { return { Alpha, Beta, Gamma }; }
 };
 
+
+class ValueTypeWithEnum1
+{
+    Q_GADGET
+    Q_PROPERTY(ValueTypeWithEnum1::Quality quality READ quality WRITE setQuality)
+public:
+    enum Quality
+    {
+        VeryLowQuality,
+        LowQuality,
+        NormalQuality,
+        HighQuality,
+        VeryHighQuality
+    };
+    Q_ENUM(Quality)
+
+    Quality quality() const { return m_quality; }
+    void setQuality(Quality quality) { m_quality = quality; }
+
+private:
+    Quality m_quality = HighQuality;
+};
+
+class ObjectTypeHoldingValueType1 : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(ValueTypeWithEnum1 vv READ vv WRITE setVv NOTIFY vvChanged)
+
+public:
+    ValueTypeWithEnum1 vv() const
+    {
+        return m_vv;
+    }
+
+    void setVv(ValueTypeWithEnum1 vv)
+    {
+        if (m_vv.quality() == vv.quality())
+            return;
+
+        m_vv = vv;
+        emit vvChanged(m_vv);
+    }
+
+signals:
+    void vvChanged(ValueTypeWithEnum1 vv);
+
+private:
+    ValueTypeWithEnum1 m_vv;
+};
+
+struct ValueTypeWithEnumForeign1
+{
+    Q_GADGET
+    QML_FOREIGN(ValueTypeWithEnum1)
+    QML_NAMED_ELEMENT(valueTypeWithEnum1)
+};
+
+namespace ValueTypeWithEnumForeignNamespace1
+{
+    Q_NAMESPACE
+    QML_FOREIGN_NAMESPACE(ValueTypeWithEnum1)
+    QML_NAMED_ELEMENT(ValueTypeWithEnum1)
+};
+
+struct ObjectTypeHoldingValueTypeForeign1
+{
+    Q_GADGET
+    QML_FOREIGN(ObjectTypeHoldingValueType1)
+    QML_NAMED_ELEMENT(ObjectTypeHoldingValueType1)
+};
+
+class ValueTypeWithEnum2
+{
+    Q_GADGET
+    Q_PROPERTY(ValueTypeWithEnum2::Quality quality READ quality WRITE setQuality)
+public:
+    enum Quality
+    {
+        VeryLowQuality,
+        LowQuality,
+        NormalQuality,
+        HighQuality,
+        VeryHighQuality
+    };
+    Q_ENUM(Quality)
+
+    Quality quality() const { return m_quality; }
+    void setQuality(Quality quality) { m_quality = quality; }
+
+private:
+    Quality m_quality = HighQuality;
+};
+
+class ObjectTypeHoldingValueType2 : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(ValueTypeWithEnum2 vv READ vv WRITE setVv NOTIFY vvChanged)
+
+public:
+    ValueTypeWithEnum2 vv() const
+    {
+        return m_vv;
+    }
+
+    void setVv(ValueTypeWithEnum2 vv)
+    {
+        if (m_vv.quality() == vv.quality())
+            return;
+
+        m_vv = vv;
+        emit vvChanged(m_vv);
+    }
+
+signals:
+    void vvChanged(ValueTypeWithEnum2 vv);
+
+private:
+    ValueTypeWithEnum2 m_vv;
+};
+
+struct ValueTypeWithEnumForeign2
+{
+    Q_GADGET
+    QML_FOREIGN(ValueTypeWithEnum2)
+    QML_NAMED_ELEMENT(valueTypeWithEnum2)
+};
+
+namespace ValueTypeWithEnumForeignNamespace2
+{
+    Q_NAMESPACE
+    QML_FOREIGN_NAMESPACE(ValueTypeWithEnum2)
+    QML_NAMED_ELEMENT(ValueTypeWithEnum2)
+};
+
+struct ObjectTypeHoldingValueTypeForeign2
+{
+    Q_GADGET
+    QML_FOREIGN(ObjectTypeHoldingValueType2)
+    QML_NAMED_ELEMENT(ObjectTypeHoldingValueType2)
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

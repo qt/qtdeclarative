@@ -1610,13 +1610,21 @@ const QMetaObject *QQmlMetaType::metaObjectForValueType(QMetaType metaType)
     if (!(metaType.flags() & QMetaType::PointerToQObject)) {
         const QQmlType qmlType = QQmlMetaType::qmlType(metaType);
 
-        // Prefer the extension meta object.
+        // Prefer the extension meta object, if any.
         // Extensions allow registration of non-gadget value types.
-        if (const QMetaObject *extensionMetaObject = qmlType.extensionMetaObject())
-            return extensionMetaObject;
+        if (const QMetaObject *extensionMetaObject = qmlType.extensionMetaObject()) {
+            // This may be a namespace even if the original metaType isn't.
+            // You can do such things with QML_FOREIGN declarations.
+            if (extensionMetaObject->metaType().flags() & QMetaType::IsGadget)
+                return extensionMetaObject;
+        }
 
-        if (const QMetaObject *qmlTypeMetaObject = qmlType.metaObject())
-            return qmlTypeMetaObject;
+        if (const QMetaObject *qmlTypeMetaObject = qmlType.metaObject()) {
+            // This may be a namespace even if the original metaType isn't.
+            // You can do such things with QML_FOREIGN declarations.
+            if (qmlTypeMetaObject->metaType().flags() & QMetaType::IsGadget)
+                return qmlTypeMetaObject;
+        }
     }
 
     // If it _is_ a gadget, we can just use it.
