@@ -675,10 +675,15 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var)
     set(qmlcache_resource_paths "$<TARGET_PROPERTY:${target},QT_QML_MODULE_RESOURCE_PATHS>")
     set(qmlcache_have_resource_paths "$<BOOL:${qmlcache_resource_paths}>")
 
+    _qt_internal_genex_getjoinedproperty(qrc_resource_args ${target}
+        _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
+    )
+
     set(cmd
         ${QT_TOOL_COMMAND_WRAPPER_PATH}
         $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen>
         --resource-name "${qmlcache_resource_name}"
+        ${qrc_resource_args}
         -o "${qmlcache_loader_cpp}"
         "@${qmlcache_loader_list}"
     )
@@ -694,8 +699,9 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var)
         COMMAND "$<${qmlcache_have_resource_paths}:${cmd}>"
         COMMAND_EXPAND_LISTS
         DEPENDS
-        ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen
-        ${qmlcache_loader_list}
+            ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen
+            ${qmlcache_loader_list}
+            $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
     )
 
     # TODO: Probably need to reject ${target} being an object library as unsupported
@@ -1192,11 +1198,15 @@ function(qt6_target_qml_sources target)
         _qt_internal_genex_getjoinedproperty(import_paths ${target}
             QT_QML_IMPORT_PATH "-I$<SEMICOLON>" "$<SEMICOLON>"
         )
+        _qt_internal_genex_getjoinedproperty(qrc_resource_args ${target}
+            _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
+        )
         set(cachegen_args
             "$<${have_import_paths}:${import_paths}>"
             "$<${have_types_file}:-i$<SEMICOLON>${types_file}>"
             "$<${have_direct_calls}:--direct-calls>"
             "$<${have_qmljs_runtime}:--qmljs-runtime>"
+            ${qrc_resource_args}
         )
     endif()
 
@@ -1362,6 +1372,7 @@ function(qt6_target_qml_sources target)
                 DEPENDS
                     ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen
                     "${file_absolute}"
+                    $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
                     "$<$<BOOL:${types_file}>:${types_file}>"
             )
 
