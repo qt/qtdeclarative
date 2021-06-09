@@ -409,10 +409,12 @@ void tst_qmldiskcache::registerImportForImplicitComponent()
         QCOMPARE(quint32(qmlUnit->nImports), quint32(2));
         QCOMPARE(testUnit->stringAtInternal(qmlUnit->importAt(0)->uriIndex), QStringLiteral("QtQuick"));
 
-        QQmlType componentType = QQmlMetaType::qmlType(&QQmlComponent::staticMetaObject);
+        QQmlType componentType = QQmlMetaType::qmlType(
+                    &QQmlComponent::staticMetaObject, QStringLiteral("QML"),
+                    QTypeRevision::fromVersion(1, 0));
 
         QCOMPARE(testUnit->stringAtInternal(qmlUnit->importAt(1)->uriIndex), QString(componentType.module()));
-        QCOMPARE(testUnit->stringAtInternal(qmlUnit->importAt(1)->qualifierIndex), QStringLiteral("QmlInternals"));
+        QCOMPARE(testUnit->stringAtInternal(qmlUnit->importAt(1)->qualifierIndex), QStringLiteral("QML"));
 
         QCOMPARE(quint32(qmlUnit->nObjects), quint32(3));
 
@@ -421,7 +423,7 @@ void tst_qmldiskcache::registerImportForImplicitComponent()
         QCOMPARE(quint32(obj->bindingTable()->type), quint32(QV4::CompiledData::Binding::Type_Object));
 
         const QV4::CompiledData::Object *implicitComponent = qmlUnit->objectAt(obj->bindingTable()->value.objectIndex);
-        QCOMPARE(testUnit->stringAtInternal(implicitComponent->inheritedTypeNameIndex), QStringLiteral("QmlInternals.") + componentType.elementName());
+        QCOMPARE(testUnit->stringAtInternal(implicitComponent->inheritedTypeNameIndex), QStringLiteral("QML.") + componentType.elementName());
     }
 }
 

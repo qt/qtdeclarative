@@ -819,10 +819,12 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         if (!mo)
             continue;
 
-        // emulate "import Qml 2.0 as QmlInternals" and then wrap the component in "QmlInternals.Component {}"
-        QQmlType componentType = QQmlMetaType::qmlType(&QQmlComponent::staticMetaObject);
+        // emulate "import QML 1.0" and then wrap the component in "QML.Component {}"
+        QQmlType componentType = QQmlMetaType::qmlType(
+                    &QQmlComponent::staticMetaObject, QStringLiteral("QML"),
+                    QTypeRevision::fromVersion(1, 0));
         Q_ASSERT(componentType.isValid());
-        const QString qualifier = QStringLiteral("QmlInternals");
+        const QString qualifier = QStringLiteral("QML");
 
         compiler->addImport(componentType.module(), qualifier, componentType.version());
 
