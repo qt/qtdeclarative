@@ -80,16 +80,16 @@ Window {
         delegate: Rectangle {
             implicitWidth: 100
             implicitHeight: 30
-            color: selected ? "green" : "lightgray"
+            color: selected ? "blue" : "lightgray"
 
             required property bool selected
 
             Text { text: display }
         }
+    }
 
-        SelectionRectangle {
-            target: tableView
-        }
+    SelectionRectangle {
+        target: tableView
     }
 //![0]
 }
