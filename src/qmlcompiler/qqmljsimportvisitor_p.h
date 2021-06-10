@@ -164,6 +164,9 @@ protected:
     void addDefaultProperties();
     void processDefaultProperties();
     void checkPropertyBindings();
+    void checkRequiredProperties();
+    void processPropertyTypes();
+    void processPropertyBindingObjects();
     void checkSignals();
     void flushPendingSignalParameters();
 
@@ -175,7 +178,33 @@ protected:
     // Used to temporarily store annotations for functions and generators wrapped in UiSourceElements
     QVector<QQmlJSAnnotation> m_pendingMethodAnnotations;
 
+    struct PendingPropertyType
+    {
+        QQmlJSScope::Ptr scope;
+        QString name;
+        QQmlJS::SourceLocation location;
+    };
+
+    struct PendingPropertyObjectBinding
+    {
+        QQmlJSScope::Ptr scope;
+        QQmlJSScope::ConstPtr childScope;
+        QString name;
+        QQmlJS::SourceLocation location;
+        bool onToken;
+    };
+
+    struct RequiredProperty
+    {
+        QQmlJSScope::Ptr scope;
+        QString name;
+        QQmlJS::SourceLocation location;
+    };
+
     QHash<QQmlJSScope::Ptr, QVector<QQmlJSScope::Ptr>> m_pendingDefaultProperties;
+    QVector<PendingPropertyType> m_pendingPropertyTypes;
+    QVector<PendingPropertyObjectBinding> m_pendingPropertyObjectBindings;
+    QVector<RequiredProperty> m_requiredProperties;
     QVector<QQmlJSScope::Ptr> m_objectBindingScopes;
     QVector<QQmlJSScope::Ptr> m_objectDefinitionScopes;
 
