@@ -27,12 +27,6 @@ function(qt_internal_add_qml_module target)
         module_multi_args
     )
 
-    # We don't want to pass CLASS_NAME to qt_internal_add_plugin(), we will
-    # pass it to qt6_add_qml_module() to handle instead. qt_internal_add_plugin()
-    # would just ignore it anyway because we set TYPE to qml_plugin, but we have
-    # to remove it to prevent duplicates in argument parsing.
-    list(REMOVE_ITEM module_single_args CLASS_NAME)
-
     set(qml_module_option_args
         DESIGNER_SUPPORTED
         NO_PLUGIN_OPTIONAL
@@ -194,6 +188,14 @@ function(qt_internal_add_qml_module target)
     endif()
 
     if(NOT arg_NO_CREATE_PLUGIN_TARGET)
+        # If the qt_internal_add_qml_module call didn't specify a CLASS_NAME, we need to pre-compute
+        # it here and pass it along to qt_internal_add_plugin -> qt_add_plugin so that
+        # qt_add_qml_plugin does not complain about differing class names (the default pre-computed
+        # class name of a regular plugin and qml plugin are different).
+        if(NOT arg_CLASS_NAME)
+            _qt_internal_compute_qml_plugin_class_name_from_uri("${arg_URI}" arg_CLASS_NAME)
+        endif()
+
         # Create plugin target now so we can set internal things
         list(APPEND plugin_args
             TYPE qml_plugin
