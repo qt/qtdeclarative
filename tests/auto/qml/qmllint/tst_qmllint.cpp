@@ -158,7 +158,8 @@ void TestQmllint::testUnknownCausesFail()
                 QStringLiteral("Warning: %1: Unknown was not found. Did you add all import paths?").arg(testFile("unknownElement.qml"))));
     unknownNotFound = runQmllint("TypeWithUnknownPropertyType.qml", false);
     QVERIFY(unknownNotFound.contains(
-            QStringLiteral("Warning: %1: Something was not found. Did you add all import paths?")
+            QStringLiteral(
+                    "Warning: %1:4:5: Something was not found. Did you add all import paths?")
                     .arg(testFile("TypeWithUnknownPropertyType.qml"))));
 }
 
@@ -754,7 +755,9 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("qjsroot") << QStringLiteral("qjsroot.qml");
     QTest::newRow("InlineComponent") << QStringLiteral("inlineComponent.qml");
     QTest::newRow("InlineComponentWithComponents") << QStringLiteral("inlineComponentWithComponents.qml");
+    QTest::newRow("InlineComponentsChained") << QStringLiteral("inlineComponentsChained.qml");
     QTest::newRow("ignoreWarnings") << QStringLiteral("ignoreWarnings.qml");
+    QTest::newRow("BindingBeforeDeclaration") << QStringLiteral("bindingBeforeDeclaration.qml");
 }
 
 void TestQmllint::cleanQmlCode()

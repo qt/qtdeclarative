@@ -297,8 +297,11 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
 {
     resolveAliases();
     processDefaultProperties();
+    processPropertyTypes();
     checkPropertyBindings();
     checkSignals();
+    processPropertyBindingObjects();
+    checkRequiredProperties();
 
     for (const auto &scope : m_objectBindingScopes)
         checkInheritanceCycle(scope);
@@ -458,6 +461,131 @@ void QQmlJSImportVisitor::processDefaultProperties()
 
         m_logger.log(QStringLiteral("Cannot assign to default property of incompatible type"),
                      Log_Property, scope->sourceLocation());
+    }
+}
+
+void QQmlJSImportVisitor::processPropertyTypes()
+{
+    for (const PendingPropertyType &type : m_pendingPropertyTypes) {
+        Q_ASSERT(type.scope->hasOwnProperty(type.name));
+
+        auto property = type.scope->ownProperty(type.name);
+
+        if (const auto propertyType = m_rootScopeImports.value(property.typeName())) {
+            property.setType(propertyType);
+            type.scope->addOwnProperty(property);
+        } else {
+            m_logger.log(property.typeName()
+                                 + QStringLiteral(" was not found. Did you add all import paths?"),
+                         Log_Import, type.location);
+        }
+    }
+}
+
+void QQmlJSImportVisitor::processPropertyBindingObjects()
+{
+    for (const PendingPropertyObjectBinding &objectBinding : m_pendingPropertyObjectBindings) {
+        const QString propertyName = objectBinding.name;
+        QQmlJSScope::ConstPtr childScope = objectBinding.childScope;
+
+        QQmlJSMetaProperty property = objectBinding.scope->property(propertyName);
+
+        if (property.isValid() && !property.type().isNull()
+            && (objectBinding.onToken || property.type()->canAssign(objectBinding.childScope))) {
+
+            QQmlJSMetaPropertyBinding binding =
+                    objectBinding.scope->hasOwnPropertyBinding(propertyName)
+                    ? objectBinding.scope->ownPropertyBinding(propertyName)
+                    : QQmlJSMetaPropertyBinding(property);
+
+            const QString typeName = getScopeName(childScope, QQmlJSScope::QMLScope);
+
+            if (objectBinding.onToken) {
+                if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueInterceptor"))) {
+                    if (binding.hasInterceptor()) {
+                        m_logger.log(QStringLiteral("Duplicate interceptor on property \"%1\"")
+                                             .arg(propertyName),
+                                     Log_Property, objectBinding.location);
+                    } else {
+                        binding.setInterceptor(childScope);
+                        binding.setInterceptorTypeName(typeName);
+
+                        objectBinding.scope->addOwnPropertyBinding(binding);
+                    }
+                } else if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueSource"))) {
+                    if (binding.hasValueSource()) {
+                        m_logger.log(QStringLiteral("Duplicate value source on property \"%1\"")
+                                             .arg(propertyName),
+                                     Log_Property, objectBinding.location);
+                    } else if (binding.hasValue()) {
+                        m_logger.log(QStringLiteral("Cannot combine value source and binding on "
+                                                    "property \"%1\"")
+                                             .arg(propertyName),
+                                     Log_Property, objectBinding.location);
+                    } else {
+                        binding.setValueSource(childScope);
+                        binding.setValueSourceTypeName(typeName);
+                        objectBinding.scope->addOwnPropertyBinding(binding);
+                    }
+                } else {
+                    m_logger.log(
+                            QStringLiteral("On-binding for property \"%1\" has wrong type \"%2\"")
+                                    .arg(propertyName)
+                                    .arg(typeName),
+                            Log_Property, objectBinding.location);
+                }
+            } else {
+                // TODO: Warn here if binding.hasValue() is true
+                if (binding.hasValueSource()) {
+                    m_logger.log(
+                            QStringLiteral(
+                                    "Cannot combine value source and binding on property \"%1\"")
+                                    .arg(propertyName),
+                            Log_Property, objectBinding.location);
+                } else {
+                    binding.setValue(childScope);
+                    binding.setValueTypeName(typeName);
+                    objectBinding.scope->addOwnPropertyBinding(binding);
+                }
+            }
+        } else if (!objectBinding.scope->isFullyResolved()) {
+            // If the current scope is not fully resolved we cannot tell whether the property exists
+            // or not (we already warn elsewhere)
+        } else if (!property.isValid()) {
+            m_logger.log(QStringLiteral("Property \"%1\" is invalid or does not exist")
+                                 .arg(propertyName),
+                         Log_Property, objectBinding.location);
+        } else if (property.type().isNull() || !property.type()->isFullyResolved()) {
+            // Property type is not fully resolved we cannot tell any more than this
+            m_logger.log(QStringLiteral("Property \"%1\" has incomplete type \"%2\". You may be "
+                                        "missing an import.")
+                                 .arg(propertyName)
+                                 .arg(property.typeName()),
+                         Log_Property, objectBinding.location);
+        } else if (!childScope->isFullyResolved()) {
+            // If the childScope type is not fully resolved we cannot tell whether the type is
+            // incompatible (we already warn elsewhere)
+        } else {
+            // the type is incompatible
+            m_logger.log(QStringLiteral("Property \"%1\" of type \"%2\" is assigned an "
+                                        "incompatible type \"%3\"")
+                                 .arg(propertyName)
+                                 .arg(property.typeName())
+                                 .arg(getScopeName(childScope, QQmlJSScope::QMLScope)),
+                         Log_Property, objectBinding.location);
+        }
+    }
+}
+
+void QQmlJSImportVisitor::checkRequiredProperties()
+{
+    for (const auto &required : m_requiredProperties) {
+        if (!required.scope->hasProperty(required.name)) {
+            m_logger.log(
+                    QStringLiteral("Property \"%1\" was marked as required but does not exist.")
+                            .arg(required.name),
+                    Log_Required, required.location);
+        }
     }
 }
 
@@ -806,9 +934,6 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             if (m_rootScopeImports.contains(name) && !m_rootScopeImports[name].isNull()) {
                 if (m_importTypeLocationMap.contains(name))
                     m_usedTypes.insert(name);
-            } else {
-                m_logger.log(name + QStringLiteral(" was not found. Did you add all import paths?"),
-                             Log_Import);
             }
         }
         QQmlJSMetaProperty prop;
@@ -821,6 +946,10 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             const QString internalName = type->internalName();
             prop.setTypeName(internalName.isEmpty() ? typeName : internalName);
         } else {
+            if (!isAlias)
+                m_pendingPropertyTypes
+                        << PendingPropertyType { m_currentScope, prop.propertyName(),
+                                                 publicMember->firstSourceLocation() };
             prop.setTypeName(typeName);
         }
         prop.setAnnotations(parseAnnotations(publicMember->annotations));
@@ -841,13 +970,8 @@ bool QQmlJSImportVisitor::visit(UiRequired *required)
 {
     const QString name = required->name.toString();
 
-    // The required property must be defined in some scope
-    if (!m_currentScope->hasProperty(name)) {
-        m_logger.log(QStringLiteral("Property \"%1\" was marked as required but does not exist.").arg(name),
-                     Log_Required,
-                     required->firstSourceLocation());
-        return true;
-    }
+    m_requiredProperties << RequiredProperty { m_currentScope, name,
+                                               required->firstSourceLocation() };
 
     m_currentScope->setPropertyLocallyRequired(name, true);
     return true;
@@ -1354,94 +1478,13 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 
     const QString propertyName = group->name.toString();
 
-    QQmlJSMetaProperty property = m_currentScope->property(propertyName);
-
     if (m_currentScope->isInCustomParserParent()) {
         // These warnings do not apply for custom parsers and their children and need to be handled
         // on a case by case basis
-    } else if (property.isValid() && !property.type().isNull()
-               && (uiob->hasOnToken || property.type()->canAssign(childScope))) {
-
-        QQmlJSMetaPropertyBinding binding = m_currentScope->hasOwnPropertyBinding(propertyName)
-                ? m_currentScope->ownPropertyBinding(propertyName)
-                : QQmlJSMetaPropertyBinding(property);
-
-        const QString typeName = getScopeName(childScope, QQmlJSScope::QMLScope);
-
-        if (uiob->hasOnToken) {
-            if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueInterceptor"))) {
-                if (binding.hasInterceptor()) {
-                    m_logger.log(QStringLiteral("Duplicate interceptor on property \"%1\"")
-                                         .arg(propertyName),
-                                 Log_Property, uiob->firstSourceLocation());
-                } else {
-                    binding.setInterceptor(childScope);
-                    binding.setInterceptorTypeName(typeName);
-
-                    m_currentScope->addOwnPropertyBinding(binding);
-                }
-            } else if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueSource"))) {
-                if (binding.hasValueSource()) {
-                    m_logger.log(QStringLiteral("Duplicate value source on property \"%1\"")
-                                         .arg(propertyName),
-                                 Log_Property, uiob->firstSourceLocation());
-                } else if (binding.hasValue()) {
-                    m_logger.log(
-                            QStringLiteral(
-                                    "Cannot combine value source and binding on property \"%1\"")
-                                    .arg(propertyName),
-                            Log_Property, uiob->firstSourceLocation());
-                } else {
-                    binding.setValueSource(childScope);
-                    binding.setValueSourceTypeName(typeName);
-                    m_currentScope->addOwnPropertyBinding(binding);
-                }
-            } else {
-                m_logger.log(QStringLiteral("On-binding for property \"%1\" has wrong type \"%2\"")
-                                     .arg(propertyName)
-                                     .arg(typeName),
-                             Log_Property, uiob->firstSourceLocation());
-            }
-        } else {
-            // TODO: Warn here if binding.hasValue() is true
-            if (binding.hasValueSource()) {
-                m_logger.log(
-                        QStringLiteral("Cannot combine value source and binding on property \"%1\"")
-                                .arg(propertyName),
-                        Log_Property, uiob->firstSourceLocation());
-            } else {
-                binding.setValue(childScope);
-                binding.setValueTypeName(typeName);
-                m_currentScope->addOwnPropertyBinding(binding);
-            }
-        }
-    } else if (!m_currentScope->isFullyResolved()) {
-        // If the current scope is not fully resolved we cannot tell whether the property exists or
-        // not (we already warn elsewhere)
-    } else if (!property.isValid()) {
-        m_logger.log(
-                QStringLiteral("Property \"%1\" is invalid or does not exist").arg(propertyName),
-                Log_Property, group->firstSourceLocation());
-    } else if (property.type().isNull() || !property.type()->isFullyResolved()) {
-        // Property type is not fully resolved we cannot tell any more than this
-        m_logger.log(
-                QStringLiteral(
-                        "Property \"%1\" has incomplete type \"%2\". You may be missing an import.")
-                        .arg(propertyName)
-                        .arg(property.typeName()),
-                Log_Property, group->firstSourceLocation());
-    } else if (!childScope->isFullyResolved()) {
-        // If the childScope type is not fully resolved we cannot tell whether the type is
-        // incompatible (we already warn elsewhere)
     } else {
-        // the type is incompatible
-        m_logger.log(
-                QStringLiteral(
-                        "Property \"%1\" of type \"%2\" is assigned an incompatible type \"%3\"")
-                        .arg(propertyName)
-                        .arg(property.typeName())
-                        .arg(getScopeName(childScope, QQmlJSScope::QMLScope)),
-                Log_Property, group->firstSourceLocation());
+        m_pendingPropertyObjectBindings
+                << PendingPropertyObjectBinding { m_currentScope, childScope, propertyName,
+                                                  uiob->firstSourceLocation(), uiob->hasOnToken };
     }
 
     while (m_currentScope->scopeType() == QQmlJSScope::GroupedPropertyScope
