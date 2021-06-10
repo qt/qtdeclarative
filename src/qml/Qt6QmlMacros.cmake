@@ -77,7 +77,7 @@ set(__qt_qml_macros_module_base_dir "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "
 #   as part of the qml module. (OPTIONAL)
 #
 # OUTPUT_TARGETS: In static builds, additional CMake targets can be created
-#   which consumers of the module will need to link to and potentially install.
+#   which consumers of the module will need to potentially install.
 #   Supply the name of an output variable, which will be set to a list of these
 #   targets. If installing the main target, you will also need to install these
 #   output targets for static builds. (OPTIONAL)
@@ -509,6 +509,16 @@ function(qt6_add_qml_module target)
         OUTPUT_TARGETS cache_target
     )
     list(APPEND output_targets ${cache_target})
+
+    # Build an init object library for static plugins.
+    if(TARGET "${arg_PLUGIN_TARGET}")
+        get_target_property(lib_type ${arg_PLUGIN_TARGET} TYPE)
+        if(lib_type STREQUAL "STATIC_LIBRARY")
+            __qt_internal_add_static_plugin_init_object_library(
+                "${arg_PLUGIN_TARGET}" plugin_init_target)
+            list(APPEND output_targets ${plugin_init_target})
+        endif()
+    endif()
 
     if(NOT arg_NO_GENERATE_QMLDIR)
         if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0")
@@ -1021,7 +1031,7 @@ endif()
 #   this option must be provided. (OPTIONAL)
 #
 # OUTPUT_TARGETS: In static builds, additional CMake targets can be created
-#   which consumers of the module will need to link to and potentially install.
+#   which consumers of the module will need to potentially install.
 #   Supply the name of an output variable, which will be set to a list of these
 #   targets. If installing the main target, you will also need to install these
 #   output targets for static builds. (OPTIONAL)
@@ -1715,7 +1725,10 @@ but this file does not exist.  Possible reasons include:
     get_target_property(target_source_dir ${target} SOURCE_DIR)
 
     message(VERBOSE "Running qmlimportscanner to find QML plugins needed by ${target}.")
-    execute_process(COMMAND ${QT_TOOL_COMMAND_WRAPPER_PATH} ${tool_path} ${cmd_args}
+    set(import_scanner_args ${QT_TOOL_COMMAND_WRAPPER_PATH} ${tool_path} ${cmd_args})
+    list(JOIN import_scanner_args " " import_scanner_args_string)
+    message(DEBUG "qmlimportscanner command: ${import_scanner_args_string}")
+    execute_process(COMMAND ${import_scanner_args}
         OUTPUT_FILE "${qml_imports_file_path}"
         WORKING_DIRECTORY ${target_source_dir}
     )
@@ -1732,6 +1745,9 @@ but this file does not exist.  Possible reasons include:
     # It is possible for the scanner to find no usage of QML, in which case the import count is 0.
     if(qml_import_scanner_imports_count)
         set(added_plugins "")
+        set(plugins_to_link "")
+        set(plugin_inits_to_link "")
+
         foreach(idx RANGE "${qml_import_scanner_imports_count}")
             _qt6_QmlImportScanner_parse_entry()
             if(entry_PATH AND entry_PLUGIN)
@@ -1742,73 +1758,66 @@ but this file does not exist.  Possible reasons include:
                     continue()
                 endif()
                 list(APPEND added_plugins "${entry_PLUGIN}")
-                # Link against the Qml plugin. For plugins provided by Qt, we
-                # assume those plugins are already defined (typically brought in
-                # via find_package(Qt6...) ). For other plugins, they can be
-                # from the project itself or some other external place.
+
+                # Link against the Qml plugin.
+                # For plugins provided by Qt, we assume those plugin targets are already defined
+                # (typically brought in via find_package(Qt6...) ).
+                # For other plugins, the targets can come from the project itself.
+                #
+                # Handles Qt provided Qml plugins
                 if(TARGET "${QT_CMAKE_EXPORT_NAMESPACE}::${entry_PLUGIN}")
-                    set(plugin_dep "${QT_CMAKE_EXPORT_NAMESPACE}::${entry_PLUGIN}")
-                elseif(TARGET ${entry_PLUGIN})
-                    set(plugin_dep ${entry_PLUGIN})
-                else()
-                    # We've been told where the plugin should be, but only have
-                    # its basename. Let CMake work out the prefix and suffix.
-                    find_library(${entry_PLUGIN}_LIBRARY ${entry_PLUGIN}
-                        PATHS ${entry_PATH}
-                        NO_DEFAULT_PATH
-                    )
-                    if(${entry_PLUGIN}_LIBRARY)
-                        set(plugin_dep ${${entry_PLUGIN}_LIBRARY})
-                    else()
-                        message(FATAL_ERROR
-                            "${entry_PLUGIN} is a dependency of ${target}, but "
-                            "there is no target by that name and no library with "
-                            "that name could be found at the expected location ("
-                            ${entry_PATH} "). Consider making an imported target "
-                            "for it so that its location is known."
-                        )
-                    endif()
-                endif()
-                target_link_libraries("${target}" PRIVATE ${plugin_dep})
-            endif()
-        endforeach()
+                    set(plugin_target "${QT_CMAKE_EXPORT_NAMESPACE}::${entry_PLUGIN}")
+                    list(APPEND plugins_to_link "${plugin_target}")
 
-        # Generate content for plugin initialization cpp file.
-        set(added_imports "")
-        set(qt_qml_import_cpp_file_content "")
-        foreach(idx RANGE "${qml_import_scanner_imports_count}")
-            _qt6_QmlImportScanner_parse_entry()
-            if(entry_PLUGIN)
-                if(entry_CLASSNAME)
-                    list(FIND added_imports "${entry_PLUGIN}" _index)
-                    if(_index EQUAL -1)
-                        string(APPEND qt_qml_import_cpp_file_content
-                            "Q_IMPORT_PLUGIN(${entry_CLASSNAME})\n"
-                        )
-                        list(APPEND added_imports "${entry_PLUGIN}")
-                    endif()
+                    __qt_internal_get_static_plugin_init_target_name("${entry_PLUGIN}"
+                        plugin_init_target)
+                    set(plugin_init_target_prefixed
+                        "${QT_CMAKE_EXPORT_NAMESPACE}::${plugin_init_target}")
+                    list(APPEND plugin_inits_to_link "${plugin_init_target_prefixed}")
+
+                # Handles user project provided Qml plugins
+                elseif(TARGET ${entry_PLUGIN} AND TARGET ${entry_PLUGIN}_init)
+                    set(plugin_target "${entry_PLUGIN}")
+                    list(APPEND plugins_to_link "${plugin_target}")
+
+                    __qt_internal_get_static_plugin_init_target_name("${entry_PLUGIN}"
+                        plugin_init_target)
+                    list(APPEND plugin_inits_to_link "${plugin_init_target}")
+
+                # TODO: QTBUG-94605 Figure out if this is a reasonable scenario to support
                 else()
-                    # If the qmldir file was generated by us, there should have
-                    # been a CLASS_NAME automatically computed if one wasn't
-                    # provided. Therefore, it is likely that this is a manually
-                    # prepared qmldir and it is missing a classname entry.
-                    message(FATAL_ERROR
-                        "Plugin ${entry_PLUGIN} is missing a classname entry, "
-                        "please add one to the qmldir file."
+                    message(WARNING
+                        "The qml plugin '${entry_PLUGIN}' is a dependency of '${target}', "
+                        "but there is no target by that name in the current scope. The plugin will "
+                        "not be linked."
                     )
                 endif()
             endif()
         endforeach()
 
-        # Write to the generated file, and include it as a source for the given target.
-        set(generated_import_cpp_path
-            "${CMAKE_CURRENT_BINARY_DIR}/.qt_plugins/Qt6_QmlPlugins_Imports_${target}.cpp"
-        )
-        configure_file("${Qt6Qml_DIR}/Qt6QmlImportScannerTemplate.cpp.in"
-            "${generated_import_cpp_path}"
-            @ONLY
-        )
-        target_sources(${target} PRIVATE "${generated_import_cpp_path}")
+        if(plugins_to_link)
+            # __qt_internal_propagate_object_library propagates object libraries by setting
+            # INTERFACE linkage on ${target}. If ${target} is an executable, that would mean none
+            # of the plugin init libraries would be linked to the executable itself. If ${target} is
+            # a user shared library, it would be similar to the case above, the plugin init
+            # libraries should be linked into the shared library, rather than to the consumer of the
+            # shared library.
+            # To achieve proper linkage in these cases, link the plugins and initializers directly.
+            # For static libraries and INTERFACE libraries,
+            # using __qt_internal_propagate_object_library is intended.
+            get_target_property(target_type ${target} TYPE)
+            if(target_type STREQUAL "EXECUTABLE" OR target_type STREQUAL "SHARED_LIBRARY")
+                # This links both the initializer object and the usage requirements of the object
+                # library, so Qt::Core.
+                target_link_libraries("${target}" PRIVATE ${plugin_inits_to_link})
+                target_link_libraries("${target}" PRIVATE ${plugins_to_link})
+            else()
+                foreach(plugin_init IN LISTS plugin_inits_to_link)
+                    __qt_internal_propagate_object_library("${target}" "${plugin_init}")
+                endforeach()
+                target_link_libraries("${target}" INTERFACE ${plugins_to_link})
+            endif()
+        endif()
     endif()
 endfunction()
 
