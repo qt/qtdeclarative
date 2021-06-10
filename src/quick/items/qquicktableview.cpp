@@ -190,7 +190,7 @@
 
     \section1 Selecting items
 
-    You can add selection support to TableView by assigning a QSelectionModel to
+    You can add selection support to TableView by assigning an ItemSelectionModel to
     the \l selectionModel property. It will then use this model to control which
     delegate items should be shown as selected. For a delegate item to be shown as
     selected, it needs to contain the following property:
@@ -207,6 +207,9 @@
     depending on the \c selected property:
 
     \snippet qml/tableview/selectionmodel.qml 0
+
+    \note \l{Qt Quick Controls} offers a SelectionRectangle that can be used
+    to let the user select cells.
 */
 
 /*!
@@ -425,14 +428,14 @@
 */
 
 /*!
-    \qmlproperty QSelectionModel QtQuick::TableView::selectionModel
+    \qmlproperty ItemSelectionModel QtQuick::TableView::selectionModel
 
     This property can be set to control which delegate items should be shown as
     selected. If the delegate has a \c {required property bool selected}
     defined, TableView will keep it in sync with the selection state of the
     corresponding model item in the selection model.
 
-    \sa {Selecting items}
+    \sa {Selecting items}, SelectionRectangle
 */
 
 /*!

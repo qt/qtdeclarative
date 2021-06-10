@@ -62,17 +62,10 @@ Window {
     visible: true
     visibility: Window.AutomaticVisibility
 
-    Button {
-        id: button
-        text: "Toggle"
-        onClicked: tableView.selectionModel.select(tableView.model.index(0, 0), ItemSelectionModel.Toggle)
-    }
-
 //![0]
     TableView {
         id: tableView
         anchors.fill: parent
-        anchors.topMargin: button.height
         clip: true
 
         model: TableModel {
@@ -87,8 +80,10 @@ Window {
         delegate: Rectangle {
             implicitWidth: 100
             implicitHeight: 30
+            color: selected ? "blue" : "lightgray"
+
             required property bool selected
-            color: selected ? "green" : "lightgray"
+
             Text { text: display }
         }
     }
