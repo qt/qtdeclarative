@@ -737,28 +737,40 @@ static bool inherits(const QQmlPropertyCache *descendent, const QQmlPropertyCach
     return false;
 }
 
-static bool loadObjectProperty(QV4::Lookup *l, QObject *object, void *target,
+enum class ObjectPropertyResult { OK, NeedsInit, Deleted };
+
+static ObjectPropertyResult loadObjectProperty(QV4::Lookup *l, QObject *object, void *target,
                                QQmlContextData *qmlContext)
 {
+    const QQmlData *qmlData = QQmlData::get(object);
+    if (!qmlData)
+        return ObjectPropertyResult::NeedsInit;
+    if (qmlData->isQueuedForDeletion)
+        return ObjectPropertyResult::Deleted;
     Q_ASSERT(!QQmlData::wasDeleted(object));
     const QQmlPropertyCache *propertyCache = l->qobjectLookup.propertyCache;
-    if (!inherits(QQmlData::get(object)->propertyCache, propertyCache))
-        return false;
+    if (!inherits(qmlData->propertyCache, propertyCache))
+        return ObjectPropertyResult::NeedsInit;
     const QQmlPropertyData *property = l->qobjectLookup.propertyData;
     captureObjectProperty(object, propertyCache, property, qmlContext);
     property->readProperty(object, target);
-    return true;
+    return ObjectPropertyResult::OK;
 }
 
-static bool storeObjectProperty(QV4::Lookup *l, QObject *object, void *value)
+static ObjectPropertyResult storeObjectProperty(QV4::Lookup *l, QObject *object, void *value)
 {
+    const QQmlData *qmlData = QQmlData::get(object);
+    if (!qmlData)
+        return ObjectPropertyResult::NeedsInit;
+    if (qmlData->isQueuedForDeletion)
+        return ObjectPropertyResult::Deleted;
     Q_ASSERT(!QQmlData::wasDeleted(object));
-    if (!inherits(QQmlData::get(object)->propertyCache, l->qobjectLookup.propertyCache))
-        return false;
+    if (!inherits(qmlData->propertyCache, l->qobjectLookup.propertyCache))
+        return ObjectPropertyResult::NeedsInit;
     const QQmlPropertyData *property = l->qobjectLookup.propertyData;
     QQmlPropertyPrivate::removeBinding(object, QQmlPropertyIndex(property->coreIndex()));
     property->writeProperty(object, value, {});
-    return true;
+    return ObjectPropertyResult::OK;
 }
 
 static bool initObjectLookup(
@@ -777,6 +789,8 @@ static bool initObjectLookup(
 
     QQmlData *ddata = QQmlData::get(object, true);
     Q_ASSERT(ddata);
+    if (ddata->isQueuedForDeletion)
+        return false;
 
     QQmlPropertyData *property;
     if (!ddata->propertyCache) {
@@ -862,6 +876,9 @@ static void amendException(QV4::ExecutionEngine *engine)
 
 bool AOTCompiledContext::captureLookup(uint index, QObject *object) const
 {
+    if (!object)
+        return false;
+
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
     if (l->getter != QV4::QQmlTypeWrapper::lookupSingletonProperty
             && l->getter != QV4::QObjectWrapper::lookupGetter) {
@@ -917,8 +934,17 @@ void AOTCompiledContext::storeNameSloppy(uint nameIndex, void *value, QMetaType 
     l.clear();
     l.nameIndex = nameIndex;
     if (initObjectLookup(this, &l, qmlScopeObject, type)) {
-        if (!storeObjectProperty(&l, qmlScopeObject, value))
+        switch (storeObjectProperty(&l, qmlScopeObject, value)) {
+        case ObjectPropertyResult::NeedsInit:
             engine->handle()->throwTypeError();
+            break;
+        case ObjectPropertyResult::Deleted:
+            engine->handle()->throwTypeError(
+                        QStringLiteral("Value is null and could not be converted to an object"));
+            break;
+        case ObjectPropertyResult::OK:
+            break;
+        }
         l.qobjectLookup.propertyCache->release();
     } else {
         engine->handle()->throwTypeError();
@@ -1081,7 +1107,19 @@ bool AOTCompiledContext::loadScopeObjectPropertyLookup(uint index, void *target)
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
     if (l->qmlContextPropertyGetter != QV4::QQmlContextWrapper::lookupScopeObjectProperty)
         return false;
-    return loadObjectProperty(l, qmlScopeObject, target, qmlContext);
+
+    switch (loadObjectProperty(l, qmlScopeObject, target, qmlContext)) {
+    case ObjectPropertyResult::NeedsInit:
+        return false;
+    case ObjectPropertyResult::Deleted:
+        Q_UNREACHABLE(); // The scope object should really stay alive
+        return false;
+    case ObjectPropertyResult::OK:
+        return true;
+    }
+
+    Q_UNREACHABLE();
+    return false;
 }
 
 void AOTCompiledContext::initLoadScopeObjectPropertyLookup(uint index, QMetaType type) const
@@ -1173,18 +1211,32 @@ void AOTCompiledContext::initLoadAttachedLookup(uint index, QObject *object) con
 
 bool AOTCompiledContext::getObjectLookup(uint index, QObject *object, void *target) const
 {
+
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
-    if (!object) {
+    const auto doThrow = [&]() {
         engine->handle()->throwTypeError(
                     QStringLiteral("Cannot read property '%1' of null")
                     .arg(compilationUnit->runtimeStrings[l->nameIndex]->toQString()));
         return false;
-    }
+    };
+
+    if (!object)
+        return doThrow();
 
     if (l->getter != QV4::QObjectWrapper::lookupGetter)
         return false;
 
-    return loadObjectProperty(l, object, target, qmlContext);
+    switch (loadObjectProperty(l, object, target, qmlContext)) {
+    case ObjectPropertyResult::Deleted:
+        return doThrow();
+    case ObjectPropertyResult::NeedsInit:
+        return false;
+    case ObjectPropertyResult::OK:
+        return true;
+    }
+
+    Q_UNREACHABLE();
+    return false;
 }
 
 void AOTCompiledContext::initGetObjectLookup(uint index, QObject *object, QMetaType type) const
@@ -1255,17 +1307,30 @@ void AOTCompiledContext::initGetEnumLookup(
 
 bool AOTCompiledContext::setObjectLookup(uint index, QObject *object, void *value) const
 {
-    if (!object) {
+    const auto doThrow = [&]() {
         engine->handle()->throwTypeError(
                     QStringLiteral("Value is null and could not be converted to an object"));
         return false;
-    }
+    };
+
+    if (!object)
+        return doThrow();
 
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
     if (l->setter != QV4::QObjectWrapper::lookupSetter)
         return false;
 
-    return storeObjectProperty(l, object, value);
+    switch (storeObjectProperty(l, object, value)) {
+    case ObjectPropertyResult::Deleted:
+        return doThrow();
+    case ObjectPropertyResult::NeedsInit:
+        return false;
+    case ObjectPropertyResult::OK:
+        return true;
+    }
+
+    Q_UNREACHABLE();
+    return false;
 }
 
 void AOTCompiledContext::initSetObjectLookup(uint index, QObject *object, QMetaType type) const
