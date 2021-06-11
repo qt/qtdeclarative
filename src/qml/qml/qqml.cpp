@@ -1112,7 +1112,9 @@ bool AOTCompiledContext::loadScopeObjectPropertyLookup(uint index, void *target)
     case ObjectPropertyResult::NeedsInit:
         return false;
     case ObjectPropertyResult::Deleted:
-        Q_UNREACHABLE(); // The scope object should really stay alive
+        engine->handle()->throwTypeError(
+                    QStringLiteral("Cannot read property '%1' of null")
+                    .arg(compilationUnit->runtimeStrings[l->nameIndex]->toQString()));
         return false;
     case ObjectPropertyResult::OK:
         return true;
@@ -1124,12 +1126,15 @@ bool AOTCompiledContext::loadScopeObjectPropertyLookup(uint index, void *target)
 
 void AOTCompiledContext::initLoadScopeObjectPropertyLookup(uint index, QMetaType type) const
 {
-    Q_ASSERT(!engine->hasError());
+    QV4::ExecutionEngine *v4 = engine->handle();
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
-    if (initObjectLookup(this, l, qmlScopeObject, type))
+
+    if (v4->hasException)
+        amendException(v4);
+    else if (initObjectLookup(this, l, qmlScopeObject, type))
         l->qmlContextPropertyGetter = QV4::QQmlContextWrapper::lookupScopeObjectProperty;
     else
-        engine->handle()->throwTypeError();
+        v4->throwTypeError();
 }
 
 bool AOTCompiledContext::loadTypeLookup(uint index, void *target) const
