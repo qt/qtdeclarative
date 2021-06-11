@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -300,7 +300,7 @@ void tst_examples::sgsnippets()
     QQuickItem *root = qobject_cast<QQuickItem *>(object.data());
     if (!root && !window) {
         component.completeCreate();
-        QVERIFY(false);
+        QFAIL("No root and no window");
     }
     if (!window)
         window = new QQuickWindow;

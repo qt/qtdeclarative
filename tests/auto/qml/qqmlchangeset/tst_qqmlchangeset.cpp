@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -218,19 +218,19 @@ Q_DECLARE_METATYPE(tst_qqmlchangeset::SignalListList)
         qDebug() << input; \
         qDebug() << output; \
         qDebug() << changes; \
-        QVERIFY(false); \
+        QFAIL("Failed to apply input changes"); \
     } else if (!applyChanges(outputList, output)) { \
         qDebug() << input; \
         qDebug() << output; \
         qDebug() << changes; \
-        QVERIFY(false); \
+        QFAIL("Failed to apply output changes"); \
     } else if (outputList != inputList /* || changes != output*/) { \
         qDebug() << input; \
         qDebug() << output; \
         qDebug() << changes; \
         qDebug() << inputList; \
         qDebug() << outputList; \
-        QVERIFY(false); \
+        QFAIL("Outputs don't match inputs"); \
     } else if (changes != output) { \
         qDebug() << output; \
         qDebug() << changes; \
