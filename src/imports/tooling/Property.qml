@@ -40,7 +40,7 @@
 import QML
 
 Member {
-    required property string type
+    property string type
     property bool isPointer: false
     property bool isReadonly: false
     property bool isRequired: false

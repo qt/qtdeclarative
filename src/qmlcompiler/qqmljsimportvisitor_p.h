@@ -164,7 +164,7 @@ protected:
     QVector<QQmlJSAnnotation> parseAnnotations(QQmlJS::AST::UiAnnotationList *list);
     void addDefaultProperties();
     void processDefaultProperties();
-    void checkPropertyBindings();
+    void processPropertyBindings();
     void checkRequiredProperties();
     void processPropertyTypes();
     void processPropertyBindingObjects();

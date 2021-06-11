@@ -300,7 +300,7 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
     resolveAliases();
     processDefaultProperties();
     processPropertyTypes();
-    checkPropertyBindings();
+    processPropertyBindings();
     checkSignals();
     processPropertyBindingObjects();
     checkRequiredProperties();
@@ -589,9 +589,58 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                     Log_Required, required.location);
         }
     }
+
+    for (const auto &defScope : m_objectDefinitionScopes) {
+        if (defScope->parentScope() == m_globalScope || defScope->isInlineComponent())
+            continue;
+
+        QVector<QQmlJSScope::ConstPtr> scopesToSearch;
+        for (QQmlJSScope::ConstPtr scope = defScope; scope; scope = scope->baseType()) {
+            scopesToSearch << scope;
+            const auto ownProperties = scope->ownProperties();
+            for (auto propertyIt = ownProperties.constBegin();
+                 propertyIt != ownProperties.constEnd(); ++propertyIt) {
+                const QString propName = propertyIt.key();
+
+                QQmlJSScope::ConstPtr prevRequiredScope;
+                for (QQmlJSScope::ConstPtr requiredScope : scopesToSearch) {
+                    if (requiredScope->isPropertyLocallyRequired(propName)) {
+                        bool found =
+                                std::find_if(scopesToSearch.constBegin(), scopesToSearch.constEnd(),
+                                             [&](QQmlJSScope::ConstPtr scope) {
+                                                 return scope->hasPropertyBinding(propName);
+                                             })
+                                != scopesToSearch.constEnd();
+
+                        if (!found) {
+                            const QString propertyScopeName = scopesToSearch.length() > 1
+                                    ? getScopeName(scopesToSearch.at(scopesToSearch.length() - 2),
+                                                   QQmlJSScope::QMLScope)
+                                    : u"here"_qs;
+                            const QString requiredScopeName = prevRequiredScope
+                                    ? getScopeName(prevRequiredScope, QQmlJSScope::QMLScope)
+                                    : u"here"_qs;
+
+                            QString message =
+                                    QStringLiteral(
+                                            "Component is missing required property %1 from %2")
+                                            .arg(propName)
+                                            .arg(propertyScopeName);
+                            if (requiredScope != scope)
+                                message += QStringLiteral(" (marked as required by %3)")
+                                                   .arg(requiredScopeName);
+
+                            m_logger.log(message, Log_Required, defScope->sourceLocation());
+                        }
+                    }
+                    prevRequiredScope = requiredScope;
+                }
+            }
+        }
+    }
 }
 
-void QQmlJSImportVisitor::checkPropertyBindings()
+void QQmlJSImportVisitor::processPropertyBindings()
 {
     for (auto it = m_propertyBindings.constBegin(); it != m_propertyBindings.constEnd(); ++it) {
         QQmlJSScope::Ptr propertyScope = it.key();
@@ -639,6 +688,12 @@ void QQmlJSImportVisitor::checkPropertyBindings()
 
                 m_logger.log(message, Log_Deprecation, propertyScope->sourceLocation());
             }
+
+            QQmlJSMetaPropertyBinding binding(property);
+
+            // TODO: Actually store the value
+
+            scope->addOwnPropertyBinding(binding);
         }
     }
 }
