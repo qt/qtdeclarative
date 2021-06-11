@@ -1512,6 +1512,10 @@ bool QQuickWindow::event(QEvent *e)
     case QEvent::WindowDeactivate:
         if (auto da = d->deliveryAgentPrivate())
             da->handleWindowDeactivate(this);
+        Q_FALLTHROUGH();
+    case QEvent::WindowActivate:
+        if (d->contentItem)
+            QCoreApplication::sendEvent(d->contentItem, e);
         break;
     default:
         break;
