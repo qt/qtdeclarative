@@ -828,8 +828,31 @@ void TestQmllint::requiredProperty()
 {
     QVERIFY(runQmllint("requiredProperty.qml", true).isEmpty());
 
-    const QString errors = runQmllint("requiredMissingProperty.qml", false);
-    QVERIFY(errors.contains(QStringLiteral("Property \"foo\" was marked as required but does not exist.")));
+    {
+        const QString errors = runQmllint("requiredMissingProperty.qml", false);
+        QVERIFY(errors.contains(
+                QStringLiteral("Property \"foo\" was marked as required but does not exist.")));
+    }
+
+    QVERIFY(runQmllint("requiredPropertyBindings.qml", true).isEmpty());
+
+    {
+        const QString errors = runQmllint("requiredPropertyBindingsNow.qml", false);
+        QVERIFY(errors.contains(QStringLiteral(
+                "Component is missing required property required_now_string from Base")));
+        QVERIFY(errors.contains(QStringLiteral(
+                "Component is missing required property required_defined_here_string from here")));
+    }
+
+    {
+        const QString errors = runQmllint("requiredPropertyBindingsLater.qml", false);
+        QVERIFY(errors.contains(
+                QStringLiteral("Component is missing required property required_later_string from "
+                               "Base (marked as required by Derived)")));
+        QVERIFY(errors.contains(
+                QStringLiteral("Component is missing required property required_even_later_string "
+                               "from Base (marked as required by here)")));
+    }
 }
 
 void TestQmllint::settingsFile()

@@ -40,7 +40,7 @@
 import QML
 
 QtObject {
-    required property string name
-    required property string type
+    property string name
+    property string type
     property bool isPointer: false
 }
