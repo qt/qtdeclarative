@@ -47,6 +47,7 @@
 #include "qquickdeferredpointer_p_p.h"
 
 #include <QtCore/private/qobject_p.h>
+#include <QtCore/qscopedvaluerollback.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtQuick/private/qquickwindowmodule_p_p.h>
@@ -180,6 +181,7 @@ public:
     QFont font;
     QLocale locale;
     QQuickItem *activeFocusControl = nullptr;
+    bool insideRelayout = false;
 };
 
 static void layoutItem(QQuickItem *item, qreal y, qreal width)
@@ -198,9 +200,10 @@ static void layoutItem(QQuickItem *item, qreal y, qreal width)
 void QQuickApplicationWindowPrivate::relayout()
 {
     Q_Q(QQuickApplicationWindow);
-    if (!complete)
+    if (!complete || insideRelayout)
         return;
 
+    QScopedValueRollback<bool> guard(insideRelayout, true);
     QQuickItem *content = q->contentItem();
     qreal hh = header && header->isVisible() ? header->height() : 0;
     qreal fh = footer && footer->isVisible() ? footer->height() : 0;
