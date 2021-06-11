@@ -34,6 +34,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtGui/private/qinputmethod_p.h>
 #include <QtQuick/private/qquickloader_p.h>
+#include <QtQuick/private/qquickpalette_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
@@ -133,6 +134,7 @@ private slots:
     void isAncestorOf();
 
     void grab();
+    void colorGroup();
 
 private:
     QQmlEngine engine;
@@ -3714,6 +3716,48 @@ void tst_QQuickItem::isAncestorOf()
     QVERIFY(!sub2.isAncestorOf(&child2));
     QVERIFY(!sub1.isAncestorOf(&sub1));
     QVERIFY(!sub2.isAncestorOf(&sub2));
+}
+
+/*
+    Verify that a nested item's palette responds to changes of the enabled state
+    and of the window's activation state by switching the current color group.
+*/
+void tst_QQuickItem::colorGroup()
+{
+    QQuickView view;
+
+    view.setSource(testFileUrl("colorgroup.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    QQuickItem *root = qobject_cast<QQuickItem *>(view.rootObject());
+    QQuickItem *background = root->findChild<QQuickItem *>("background");
+    QVERIFY(background);
+    QQuickItem *foreground = root->findChild<QQuickItem *>("foreground");
+    QVERIFY(foreground);
+
+    QQuickPalette *palette = foreground->property("palette").value<QQuickPalette*>();
+    QVERIFY(palette);
+    view.show();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+
+    QCOMPARE(palette->currentColorGroup(), QPalette::Active);
+    QCOMPARE(foreground->property("color").value<QColor>(), palette->active()->base());
+
+    background->setEnabled(false);
+    QCOMPARE(palette->currentColorGroup(), QPalette::Disabled);
+    QCOMPARE(foreground->property("color").value<QColor>(), palette->disabled()->base());
+
+    QWindow activationThief;
+    activationThief.show();
+    activationThief.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&activationThief));
+    QCOMPARE(palette->currentColorGroup(), QPalette::Disabled);
+    QCOMPARE(foreground->property("color").value<QColor>(), palette->disabled()->base());
+
+    background->setEnabled(true);
+    QCOMPARE(palette->currentColorGroup(), QPalette::Inactive);
+    QCOMPARE(foreground->property("color").value<QColor>(), palette->inactive()->base());
 }
 
 QTEST_MAIN(tst_QQuickItem)

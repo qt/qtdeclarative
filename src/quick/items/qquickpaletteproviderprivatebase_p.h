@@ -49,7 +49,7 @@
 
 #include <QtQuick/private/qquickpalette_p.h>
 #include <QtQuick/private/qquickabstractpaletteprovider_p.h>
-
+#include <QtGui/qwindow.h>
 #include <QtQml/private/qlazilyallocated_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -150,6 +150,9 @@ public:
      */
     virtual void updateChildrenPalettes(const QPalette &parentPalette);
 
+protected:
+    void setCurrentColorGroup();
+
 private:
     using PalettePtr = std::unique_ptr<QQuickPalette>;
     using Self = QQuickPaletteProviderPrivateBase<I, Impl>;
@@ -160,7 +163,6 @@ private:
 
     QQuickPalette *windowPalette() const;
 
-    void setCurrentColorGroup();
 
     void connectItem();
 
@@ -336,7 +338,10 @@ void QQuickPaletteProviderPrivateBase<I, Impl>::setCurrentColorGroup()
     if constexpr (!isRootWindow<I>()) {
         if (paletteData()) {
             const bool enabled = itemWithPalette()->isEnabled();
-            paletteData()->setCurrentGroup(enabled ? QPalette::Active : QPalette::Disabled);
+            const auto window = itemWithPalette()->window();
+            const bool active = window ? window->isActive() : true;
+            paletteData()->setCurrentGroup(enabled ? (active ? QPalette::Active : QPalette::Inactive)
+                                                   : QPalette::Disabled);
         }
     }
 }
