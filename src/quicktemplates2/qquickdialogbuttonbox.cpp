@@ -421,6 +421,7 @@ QQuickAbstractButton *QQuickDialogButtonBoxPrivate::createStandardButton(QPlatfo
         attached->setButtonRole(QPlatformDialogHelper::buttonRole(standardButton));
         button->setText(buttonText(standardButton));
         delegate->completeCreate();
+        button->setParent(q);
         return button;
     }
 
