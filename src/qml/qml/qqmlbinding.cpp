@@ -259,15 +259,24 @@ protected:
         const QV4::Function *v4Function = function();
         if (v4Function && v4Function->aotFunction && !hasBoundFunction()) {
             const auto returnType = v4Function->aotFunction->returnType;
-            const auto size = returnType.sizeOf();
-            if (Q_LIKELY(size > 0)) {
-                Q_ALLOCA_VAR(void, result, size);
+            if (returnType == QMetaType::fromType<QVariant>()) {
+                // It expects uninitialized memory
+                Q_ALLOCA_VAR(QVariant, result, sizeof(QVariant));
                 const bool isUndefined = !evaluate(result, returnType);
                 if (canWrite())
-                    error = !write(result, returnType, isUndefined, flags);
-                returnType.destruct(result);
-            } else if (canWrite()) {
-                error = !write(QV4::Encode::undefined(), true, flags);
+                    error = !write(result->data(), result->metaType(), isUndefined, flags);
+                result->~QVariant();
+            } else {
+                const auto size = returnType.sizeOf();
+                if (Q_LIKELY(size > 0)) {
+                    Q_ALLOCA_VAR(void, result, size);
+                    const bool isUndefined = !evaluate(result, returnType);
+                    if (canWrite())
+                        error = !write(result, returnType, isUndefined, flags);
+                    returnType.destruct(result);
+                } else if (canWrite()) {
+                    error = !write(QV4::Encode::undefined(), true, flags);
+                }
             }
         } else {
             bool isUndefined = false;
