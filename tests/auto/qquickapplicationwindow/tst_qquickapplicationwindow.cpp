@@ -79,6 +79,7 @@ private slots:
     void focusAfterPopupClosed();
     void clearFocusOnDestruction();
     void layout();
+    void layoutLayout();
     void componentComplete();
     void opacity();
 };
@@ -867,6 +868,42 @@ void tst_QQuickApplicationWindow::layout()
     QCOMPARE(content->y(), 0.0);
     QCOMPARE(content->width(), qreal(window->width()));
     QCOMPARE(content->height(), qreal(window->height()));
+}
+
+void tst_QQuickApplicationWindow::layoutLayout()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("layoutLayout.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY2(!object.isNull(), qPrintable(component.errorString()));
+
+    QQuickApplicationWindow* window = qobject_cast<QQuickApplicationWindow*>(object.data());
+    QVERIFY(window);
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickItem *content = window->contentItem();
+    QVERIFY(content);
+    QQuickItem *header = window->header();
+    QVERIFY(header);
+    QQuickItem *footer = window->footer();
+    QVERIFY(footer);
+
+    QQuickItem *headerChild = header->findChild<QQuickItem*>();
+    QVERIFY(headerChild);
+    QCOMPARE(header->x(), 0.0);
+    QCOMPARE(header->y(), -header->height());
+    QCOMPARE(header->width(), qreal(window->width()));
+    QCOMPARE(headerChild->width(), qreal(window->width()));
+    QVERIFY(header->height() > 0);
+
+    QQuickItem *footerChild = header->findChild<QQuickItem*>();
+    QVERIFY(footerChild);
+    QCOMPARE(footer->x(), 0.0);
+    QCOMPARE(footer->y(), content->height());
+    QCOMPARE(footer->width(), qreal(window->width()));
+    QCOMPARE(footerChild->width(), qreal(window->width()));
+    QVERIFY(footer->height() > 0.0);
 }
 
 class FriendlyApplicationWindow : public QQuickApplicationWindow
