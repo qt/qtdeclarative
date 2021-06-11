@@ -238,6 +238,7 @@ public:
     void updateCurrentText();
     void updateCurrentValue();
     void updateCurrentTextAndValue();
+    void updateAcceptableInput();
 
     bool isValidIndex(int index) const;
 
@@ -302,6 +303,7 @@ public:
     QQmlComponent *delegate = nullptr;
     QQuickDeferredPointer<QQuickItem> indicator;
     QQuickDeferredPointer<QQuickPopup> popup;
+    bool m_acceptableInput = true;
 
     struct ExtraData {
         bool editable = false;
@@ -497,6 +499,26 @@ void QQuickComboBoxPrivate::updateCurrentTextAndValue()
 {
     updateCurrentText();
     updateCurrentValue();
+}
+
+void QQuickComboBoxPrivate::updateAcceptableInput()
+{
+    Q_Q(QQuickComboBox);
+
+    if (!contentItem)
+        return;
+
+    const QQuickTextInput *textInputContentItem = qobject_cast<QQuickTextInput *>(contentItem);
+
+    if (!textInputContentItem)
+        return;
+
+    const bool newValue = textInputContentItem->hasAcceptableInput();
+
+    if (m_acceptableInput != newValue) {
+        m_acceptableInput = newValue;
+        emit q->acceptableInputChanged();
+    }
 }
 
 bool QQuickComboBoxPrivate::isValidIndex(int index) const
@@ -1577,7 +1599,7 @@ bool QQuickComboBox::isInputMethodComposing() const
 bool QQuickComboBox::hasAcceptableInput() const
 {
     Q_D(const QQuickComboBox);
-    return d->contentItem && d->contentItem->property("acceptableInput").toBool();
+    return d->m_acceptableInput;
 }
 
 /*!
@@ -2110,7 +2132,7 @@ void QQuickComboBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
             QObjectPrivate::disconnect(oldInput, &QQuickTextInput::accepted, d, &QQuickComboBoxPrivate::acceptInput);
             QObjectPrivate::disconnect(oldInput, &QQuickTextInput::textChanged, d, &QQuickComboBoxPrivate::updateEditText);
             disconnect(oldInput, &QQuickTextInput::inputMethodComposingChanged, this, &QQuickComboBox::inputMethodComposingChanged);
-            disconnect(oldInput, &QQuickTextInput::acceptableInputChanged, this, &QQuickComboBox::acceptableInputChanged);
+            QObjectPrivate::disconnect(oldInput, &QQuickTextInput::acceptableInputChanged, d, &QQuickComboBoxPrivate::updateAcceptableInput);
         }
     }
     if (newItem && isEditable()) {
@@ -2119,12 +2141,14 @@ void QQuickComboBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
             QObjectPrivate::connect(newInput, &QQuickTextInput::accepted, d, &QQuickComboBoxPrivate::acceptInput);
             QObjectPrivate::connect(newInput, &QQuickTextInput::textChanged, d, &QQuickComboBoxPrivate::updateEditText);
             connect(newInput, &QQuickTextInput::inputMethodComposingChanged, this, &QQuickComboBox::inputMethodComposingChanged);
-            connect(newInput, &QQuickTextInput::acceptableInputChanged, this, &QQuickComboBox::acceptableInputChanged);
+            QObjectPrivate::connect(newInput, &QQuickTextInput::acceptableInputChanged, d, &QQuickComboBoxPrivate::updateAcceptableInput);
         }
 #if QT_CONFIG(cursor)
         newItem->setCursor(Qt::IBeamCursor);
 #endif
     }
+
+    d->updateAcceptableInput();
 }
 
 void QQuickComboBox::localeChange(const QLocale &newLocale, const QLocale &oldLocale)

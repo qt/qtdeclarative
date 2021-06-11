@@ -157,6 +157,7 @@ TestCase {
         verify(control.delegate)
         verify(control.indicator)
         verify(control.popup)
+        verify(control.acceptableInput)
         compare(control.inputMethodHints, Qt.ImhNoPredictiveText)
     }
 
@@ -2239,5 +2240,44 @@ TestCase {
         control.contentItem.forceActiveFocus()
         verify(control.activeFocus)
         verify(control.contentItem.focus)
+    }
+
+    Component {
+        id: intValidatorComponent
+        IntValidator {
+            bottom: 0
+            top: 255
+        }
+    }
+
+    function test_acceptableInput_QTBUG_94307() {
+        let items = [
+            { text: "A" },
+            { text: "2" },
+            { text: "3" }
+        ]
+        let control = createTemporaryObject(comboBox, testCase, {model: items, editable: true})
+        verify(control)
+
+        verify(control.acceptableInput)
+        compare(control.displayText, "A")
+
+        let acceptableInputSpy = signalSpy.createObject(control, {target: control, signalName: "acceptableInputChanged"})
+        verify(acceptableInputSpy.valid)
+
+        let intValidator = intValidatorComponent.createObject(testCase)
+        verify(intValidator)
+
+        control.validator = intValidator
+
+        compare(acceptableInputSpy.count, 1)
+        compare(control.displayText, "A")
+        compare(control.acceptableInput, false)
+
+        control.currentIndex = 1
+
+        compare(acceptableInputSpy.count, 2)
+        compare(control.displayText, "2")
+        compare(control.acceptableInput, true)
     }
 }
