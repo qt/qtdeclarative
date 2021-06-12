@@ -3758,6 +3758,16 @@ void tst_QQuickItem::colorGroup()
     background->setEnabled(true);
     QCOMPARE(palette->currentColorGroup(), QPalette::Inactive);
     QCOMPARE(foreground->property("color").value<QColor>(), palette->inactive()->base());
+
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+    QCOMPARE(palette->currentColorGroup(), QPalette::Active);
+    QCOMPARE(foreground->property("color").value<QColor>(), palette->active()->base());
+
+    activationThief.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&activationThief));
+    QCOMPARE(palette->currentColorGroup(), QPalette::Inactive);
+    QCOMPARE(foreground->property("color").value<QColor>(), palette->inactive()->base());
 }
 
 QTEST_MAIN(tst_QQuickItem)
