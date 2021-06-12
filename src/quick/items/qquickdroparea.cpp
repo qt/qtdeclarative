@@ -262,6 +262,16 @@ void QQuickDropArea::dragEnterEvent(QDragEnterEvent *event)
     if (!d->effectiveEnable || d->containsDrag || !mimeData || !d->hasMatchingKey(d->getKeys(mimeData)))
         return;
 
+    const QQuickDragMimeData *dragMime = qobject_cast<const QQuickDragMimeData *>(mimeData);
+    auto dragSource = dragMime ? dragMime->source() : event->source();
+
+    // if the source of the drag is an ancestor of the drop area, then dragging
+    // also drags the drop area; see QTBUG-64128
+    if (QQuickItem *dragSourceItem = qobject_cast<QQuickItem *>(dragSource)) {
+        if (dragSourceItem->isAncestorOf(this))
+            return;
+    }
+
     d->dragPosition = event->position().toPoint();
 
     event->accept();
@@ -272,10 +282,7 @@ void QQuickDropArea::dragEnterEvent(QDragEnterEvent *event)
         return;
 
     d->containsDrag = true;
-    if (QQuickDragMimeData *dragMime = qobject_cast<QQuickDragMimeData *>(const_cast<QMimeData *>(mimeData)))
-        d->source = dragMime->source();
-    else
-        d->source = event->source();
+    d->source = dragSource;
     d->dragPosition = event->position().toPoint();
     if (d->drag) {
         emit d->drag->positionChanged();
