@@ -62,7 +62,7 @@ QT_REQUIRE_CONFIG(quick_draganddrop);
 QT_BEGIN_NAMESPACE
 
 class QQuickDropAreaPrivate;
-class QQuickDropEvent : public QObject
+class QQuickDragEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qreal x READ x)
@@ -82,10 +82,11 @@ class QQuickDropEvent : public QObject
     Q_PROPERTY(QString text READ text)
     Q_PROPERTY(QList<QUrl> urls READ urls)
     Q_PROPERTY(QStringList formats READ formats)
-    QML_ANONYMOUS
+    QML_NAMED_ELEMENT(DragEvent)
+    QML_UNCREATABLE("DragEvent is only meant to be created by DropArea")
     QML_ADDED_IN_VERSION(2, 0)
 public:
-    QQuickDropEvent(QQuickDropAreaPrivate *d, QDropEvent *event) : d(d), event(event) {}
+    QQuickDragEvent(QQuickDropAreaPrivate *d, QDropEvent *event) : d(d), event(event) {}
 
     qreal x() const { return event->position().x(); }
     qreal y() const { return event->position().y(); }
@@ -177,10 +178,10 @@ Q_SIGNALS:
     void keysChanged();
     void sourceChanged();
 
-    void entered(QQuickDropEvent *drag);
+    void entered(QQuickDragEvent *drag);
     void exited();
-    void positionChanged(QQuickDropEvent *drag);
-    void dropped(QQuickDropEvent *drop);
+    void positionChanged(QQuickDragEvent *drag);
+    void dropped(QQuickDragEvent *drop);
 
 protected:
     void dragMoveEvent(QDragMoveEvent *event) override;
@@ -195,7 +196,6 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickDropEvent)
 QML_DECLARE_TYPE(QQuickDropArea)
 
 #endif // QQUICKDROPAREA_P_H
