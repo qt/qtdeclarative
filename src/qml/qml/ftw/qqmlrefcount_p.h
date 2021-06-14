@@ -103,6 +103,8 @@ public:
     inline T* take() { T *res = o; o = nullptr; return res; }
 
     friend bool operator==(const QQmlRefPointer &a, const QQmlRefPointer &b) { return a.o == b.o; }
+    friend bool operator!=(const QQmlRefPointer &a, const QQmlRefPointer &b) { return !(a == b); }
+
 private:
     T *o;
 };
