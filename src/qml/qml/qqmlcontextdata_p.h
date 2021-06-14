@@ -138,6 +138,12 @@ public:
     QQmlData *ownedObjects() const { return m_ownedObjects; }
     void setOwnedObjects(QQmlData *ownedObjects) { m_ownedObjects = ownedObjects; }
 
+    enum QmlObjectKind {
+        OrdinaryObject,
+        DocumentRoot,
+    };
+    void installContext(QQmlData *ddata, QmlObjectKind kind);
+
     QUrl resolvedUrl(const QUrl &) const;
 
     // My containing QQmlContext.  If isInternal is true this owns publicContext.

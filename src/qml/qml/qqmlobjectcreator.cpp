@@ -1281,25 +1281,11 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
     ddata->setImplicitDestructible();
     // inline components are root objects, but their index is != 0, so we need
     // an additional check
-    const bool isInlineComponent = obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot;
-    if (static_cast<quint32>(index) == /*root object*/0 || ddata->rootObjectInCreation || isInlineComponent) {
-        if (ddata->context) {
-            Q_ASSERT(ddata->context != context.data());
-            Q_ASSERT(ddata->outerContext);
-            Q_ASSERT(ddata->outerContext != context.data());
-            QQmlRefPointer<QQmlContextData> c = ddata->context;
-            while (QQmlRefPointer<QQmlContextData> linked = c->linkedContext())
-                c = linked;
-            c->setLinkedContext(context);
-        } else {
-            ddata->context = context.data();
-        }
-        ddata->ownContext = ddata->context;
-    } else if (!ddata->context) {
-        ddata->context = context.data();
-    }
-
-    context->addOwnedObject(ddata);
+    const bool documentRoot = static_cast<quint32>(index) == /*root object*/ 0
+            || ddata->rootObjectInCreation
+            || (obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot);
+    context->installContext(
+            ddata, documentRoot ? QQmlContextData::DocumentRoot : QQmlContextData::OrdinaryObject);
 
     if (parserStatus) {
         parserStatus->classBegin();

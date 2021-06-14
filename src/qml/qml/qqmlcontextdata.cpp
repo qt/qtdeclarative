@@ -46,6 +46,29 @@
 
 QT_BEGIN_NAMESPACE
 
+void QQmlContextData::installContext(QQmlData *ddata, QQmlContextData::QmlObjectKind kind)
+{
+    Q_ASSERT(ddata);
+    if (kind == QQmlContextData::DocumentRoot) {
+        if (ddata->context) {
+            Q_ASSERT(ddata->context != this);
+            Q_ASSERT(ddata->outerContext);
+            Q_ASSERT(ddata->outerContext != this);
+            QQmlRefPointer<QQmlContextData> c = ddata->context;
+            while (QQmlRefPointer<QQmlContextData> linked = c->linkedContext())
+                c = linked;
+            c->setLinkedContext(this);
+        } else {
+            ddata->context = this;
+        }
+        ddata->ownContext = ddata->context;
+    } else if (!ddata->context) {
+        ddata->context = this;
+    }
+
+    addOwnedObject(ddata);
+}
+
 QUrl QQmlContextData::resolvedUrl(const QUrl &src) const
 {
     QUrl resolved;
