@@ -57,6 +57,7 @@
 QT_BEGIN_NAMESPACE
 class QQuickRenderControl;
 class QQuickWindow;
+class QQuickItem;
 class QQmlEngine;
 class QQmlComponent;
 QT_END_NAMESPACE
@@ -71,6 +72,8 @@ protected:
     void exposeEvent(QExposeEvent *e) override;
     void mousePressEvent(QMouseEvent *e) override;
     void mouseReleaseEvent(QMouseEvent *e) override;
+    void keyPressEvent(QKeyEvent *e) override;
+    void keyReleaseEvent(QKeyEvent *e) override;
     bool event(QEvent *e) override;
 
 private:
@@ -84,6 +87,7 @@ private:
     QQuickWindow *m_quickWindow;
     QQmlEngine *m_qmlEngine;
     QQmlComponent *m_qmlComponent;
+    QQuickItem *m_rootItem;
     bool m_quickInitialized = false;
     bool m_quickDirty = true;
 

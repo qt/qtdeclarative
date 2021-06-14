@@ -53,9 +53,10 @@ import QtQuick.Particles 2.0
 
 Rectangle {
     id: root
+    property bool keyDown: false
 
     gradient: Gradient {
-        GradientStop { position: 0; color: mouse.pressed ? "lightsteelblue" : "steelblue" }
+        GradientStop { position: 0; color: mouse.pressed ? "lightsteelblue" : (keyDown ? "blue" : "steelblue") }
         GradientStop { position: 1; color: "black" }
     }
 
@@ -205,4 +206,7 @@ Rectangle {
         id: mouse
         anchors.fill: parent
     }
+
+    Keys.onPressed: keyDown = true
+    Keys.onReleased: keyDown = false
 }

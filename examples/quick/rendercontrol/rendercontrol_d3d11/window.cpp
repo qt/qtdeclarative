@@ -130,12 +130,12 @@ Window::Window(Engine *engine)
             qWarning() << error.url() << error.line() << error;
     }
 
-    QQuickItem *rootItem = qobject_cast<QQuickItem *>(rootObject);
-    rootItem->setSize(QSize(QML_WIDTH, QML_HEIGHT));
-    m_quickWindow->contentItem()->setSize(rootItem->size());
-    m_quickWindow->setGeometry(0, 0, rootItem->width(), rootItem->height());
+    m_rootItem = qobject_cast<QQuickItem *>(rootObject);
+    m_rootItem->setSize(QSize(QML_WIDTH, QML_HEIGHT));
+    m_quickWindow->contentItem()->setSize(m_rootItem->size());
+    m_quickWindow->setGeometry(0, 0, m_rootItem->width(), m_rootItem->height());
 
-    rootItem->setParentItem(m_quickWindow->contentItem());
+    m_rootItem->setParentItem(m_quickWindow->contentItem());
 }
 
 Window::~Window()
@@ -183,6 +183,16 @@ void Window::mouseReleaseEvent(QMouseEvent *e)
 {
     QMouseEvent mappedEvent(e->type(), e->position(), e->globalPosition(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(m_quickWindow, &mappedEvent);
+}
+
+void Window::keyPressEvent(QKeyEvent *e)
+{
+    QCoreApplication::sendEvent(m_quickWindow, e);
+}
+
+void Window::keyReleaseEvent(QKeyEvent *e)
+{
+    QCoreApplication::sendEvent(m_quickWindow, e);
 }
 
 bool Window::event(QEvent *e)
@@ -371,6 +381,9 @@ void Window::updateQuick()
         m_quickWindow->setRenderTarget(QQuickRenderTarget::fromD3D11Texture(m_res.texture,
                                                                             QSize(QML_WIDTH, QML_HEIGHT),
                                                                             SAMPLE_COUNT));
+
+        // Ensure key events are received by the root Rectangle.
+        m_rootItem->forceActiveFocus();
 
         m_quickInitialized = true;
     }

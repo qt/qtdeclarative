@@ -253,6 +253,9 @@ void WindowSingleThreaded::run()
     // Update item and rendering related geometries.
     updateSizes();
 
+    // Ensure key events are received by the root Rectangle.
+    m_rootItem->forceActiveFocus();
+
     // Initialize the render control and our OpenGL resources.
     m_context->makeCurrent(m_offscreenSurface);
     m_quickWindow->setGraphicsDevice(QQuickGraphicsDevice::fromOpenGLContext(m_context));
@@ -330,4 +333,14 @@ void WindowSingleThreaded::mouseReleaseEvent(QMouseEvent *e)
 {
     QMouseEvent mappedEvent(e->type(), e->position(), e->globalPosition(), e->button(), e->buttons(), e->modifiers());
     QCoreApplication::sendEvent(m_quickWindow, &mappedEvent);
+}
+
+void WindowSingleThreaded::keyPressEvent(QKeyEvent *e)
+{
+    QCoreApplication::sendEvent(m_quickWindow, e);
+}
+
+void WindowSingleThreaded::keyReleaseEvent(QKeyEvent *e)
+{
+    QCoreApplication::sendEvent(m_quickWindow, e);
 }
