@@ -84,11 +84,15 @@ QT_BEGIN_NAMESPACE
   possible in a hardware accelerated manner, unlike the performance-wise limited
   alternative of using QQuickWindow::grabWindow()
 
-  When using a QQuickRenderControl, the QQuickWindow does not have to be shown
-  or even created at all. This means there will not be an underlying native
-  window for it. Instead, the QQuickWindow instance is associated with the
-  render control, using the overload of the QQuickWindow constructor, and a
-  texture or image object specified via QQuickWindow::setRenderTarget().
+  When using a QQuickRenderControl, the QQuickWindow must not be
+  \l{QWindow::show()}{shown} (it will not be visible on-screen) and there will
+  not be an underlying native window for it. Instead, the QQuickWindow instance
+  is associated with the render control object, using the overload of the
+  QQuickWindow constructor, and a texture or image object specified via
+  QQuickWindow::setRenderTarget(). The QQuickWindow object is still essential,
+  because it represents the Qt Quick scene and provides the bulk of the scene
+  management and event delivery mechanisms. It does not however act as a real
+  on-screen window from the windowing system's perspective.
 
   Management of the graphics devices, contexts, image and texture objects is up
   to the application. The device or context that will be used by Qt Quick must
@@ -129,6 +133,12 @@ QT_BEGIN_NAMESPACE
 
   To send events, for example mouse or keyboard events, to the scene, use
   QCoreApplication::sendEvent() with the QQuickWindow instance as the receiver.
+
+  For key events it may be also necessary to set the focus manually on the
+  desired item. In practice this involves calling
+  \l{QQuickItem::forceActiveFocus()}{forceActiveFocus()} on the desired item,
+  for example the scene's root item, once it is associated with the scene (the
+  QQuickWindow).
 
   \note In general QQuickRenderControl is supported in combination with all Qt
   Quick backends. However, some functionality, in particular grab(), may not be
