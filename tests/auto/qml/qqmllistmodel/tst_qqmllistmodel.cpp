@@ -132,6 +132,7 @@ private slots:
     void nestedListModelIteration();
     void undefinedAppendShouldCauseError();
     void nullPropertyCrash();
+    void objectDestroyed();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1755,6 +1756,36 @@ void tst_qqmllistmodel::nullPropertyCrash()
             QUrl());
     QTest::ignoreMessage(QtMsgType::QtWarningMsg, "<Unknown File>: c is null. Adding an object with a null member does not create a role for it.");
     QScopedPointer<QObject>(component.create());
+}
+
+// QTBUG-91390
+void tst_qqmllistmodel::objectDestroyed()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(
+            R"(import QtQuick
+                   ListModel {
+                       id: model
+                       Component.onCompleted: { model.append({"a": contextObject}); }
+                   })",
+            QUrl());
+
+    QObject *obj = new QObject;
+    bool destroyed = false;
+    connect(obj, &QObject::destroyed, [&]() { destroyed = true; });
+
+    engine.rootContext()->setContextProperty(u"contextObject"_qs, obj);
+    engine.setObjectOwnership(obj, QJSEngine::JavaScriptOwnership);
+
+    QScopedPointer<QObject>(component.create());
+    QVERIFY(!destroyed);
+    engine.collectGarbage();
+    QTest::qSleep(250);
+    QVERIFY(!destroyed);
+    engine.evaluate(u"model.clear();"_qs);
+    engine.collectGarbage();
+    QTRY_VERIFY(destroyed);
 }
 
 QTEST_MAIN(tst_qqmllistmodel)

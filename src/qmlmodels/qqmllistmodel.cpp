@@ -893,22 +893,24 @@ QJSValue *ListElement::getFunctionProperty(const ListLayout::Role &role)
     return f;
 }
 
-QPointer<QObject> *ListElement::getGuardProperty(const ListLayout::Role &role)
+QTaggedPointer<QObject, ListElement::ObjectIndestructible> *
+ListElement::getGuardProperty(const ListLayout::Role &role)
 {
     char *mem = getPropertyMemory(role);
 
     bool existingGuard = false;
-    for (size_t i=0 ; i < sizeof(QPointer<QObject>) ; ++i) {
+    for (size_t i = 0; i < sizeof(QTaggedPointer<QObject, ListElement::ObjectIndestructible>);
+         ++i) {
         if (mem[i] != 0) {
             existingGuard = true;
             break;
         }
     }
 
-    QPointer<QObject> *o = nullptr;
+    QTaggedPointer<QObject, ListElement::ObjectIndestructible> *o = nullptr;
 
     if (existingGuard)
-        o = reinterpret_cast<QPointer<QObject> *>(mem);
+        o = reinterpret_cast<QTaggedPointer<QObject, ListElement::ObjectIndestructible> *>(mem);
 
     return o;
 }
@@ -964,10 +966,12 @@ QVariant ListElement::getProperty(const ListLayout::Role &role, const QQmlListMo
             break;
         case ListLayout::Role::QObject:
             {
-                QPointer<QObject> *guard = reinterpret_cast<QPointer<QObject> *>(mem);
-                QObject *object = guard->data();
-                if (object)
-                    data = QVariant::fromValue(object);
+            QTaggedPointer<QObject, ListElement::ObjectIndestructible> *guard =
+                    reinterpret_cast<QTaggedPointer<QObject, ListElement::ObjectIndestructible> *>(
+                            mem);
+            QObject *object = guard->data();
+            if (object)
+                data = QVariant::fromValue(object);
             }
             break;
         case ListLayout::Role::VariantMap:
@@ -1079,15 +1083,48 @@ int ListElement::setListProperty(const ListLayout::Role &role, ListModel *m)
     return roleIndex;
 }
 
+static void
+restoreQObjectOwnership(QTaggedPointer<QObject, ListElement::ObjectIndestructible> *pointer)
+{
+    QQmlData *data = QQmlData::get(pointer->data(), false);
+    Q_ASSERT(data);
+
+    // Only restore the previous state if the object hasn't become explicitly
+    // owned
+    if (!data->explicitIndestructibleSet) {
+        data->indestructible = (pointer->tag() & ListElement::Indestructible);
+        data->explicitIndestructibleSet = (pointer->tag() & ListElement::ExplicitlySet);
+    }
+}
+
+static void setQObjectOwnership(char *mem, QObject *o)
+{
+    QQmlData *ddata = QQmlData::get(o, false);
+    const int ownership = (!ddata || ddata->indestructible ? ListElement::Indestructible : 0)
+            | (ddata && ddata->explicitIndestructibleSet ? ListElement::ExplicitlySet : 0);
+
+    // If ddata didn't exist above, force its creation now
+    if (!ddata)
+        ddata = QQmlData::get(o, true);
+
+    ddata->indestructible = true;
+    ddata->explicitIndestructibleSet = false;
+
+    new (mem) QTaggedPointer<QObject, ListElement::ObjectIndestructible>(
+            o, static_cast<ListElement::ObjectIndestructible>(ownership));
+}
+
 int ListElement::setQObjectProperty(const ListLayout::Role &role, QObject *o)
 {
     int roleIndex = -1;
 
     if (role.type == ListLayout::Role::QObject) {
         char *mem = getPropertyMemory(role);
-        QPointer<QObject> *g = reinterpret_cast<QPointer<QObject> *>(mem);
+        QTaggedPointer<QObject, ListElement::ObjectIndestructible> *g =
+                reinterpret_cast<QTaggedPointer<QObject, ListElement::ObjectIndestructible> *>(mem);
         bool existingGuard = false;
-        for (size_t i=0 ; i < sizeof(QPointer<QObject>) ; ++i) {
+        for (size_t i = 0; i < sizeof(QTaggedPointer<QObject, ListElement::ObjectIndestructible>);
+             ++i) {
             if (mem[i] != 0) {
                 existingGuard = true;
                 break;
@@ -1096,11 +1133,15 @@ int ListElement::setQObjectProperty(const ListLayout::Role &role, QObject *o)
         bool changed;
         if (existingGuard) {
             changed = g->data() != o;
-            g->~QPointer();
+            if (changed)
+                restoreQObjectOwnership(g);
+            g->~QTaggedPointer();
         } else {
             changed = true;
         }
-        new (mem) QPointer<QObject>(o);
+
+        setQObjectOwnership(mem, o);
+
         if (changed)
             roleIndex = role.index;
     }
@@ -1238,7 +1279,8 @@ void ListElement::setBoolPropertyFast(const ListLayout::Role &role, bool b)
 void ListElement::setQObjectPropertyFast(const ListLayout::Role &role, QObject *o)
 {
     char *mem = getPropertyMemory(role);
-    new (mem) QPointer<QObject>(o);
+
+    setQObjectOwnership(mem, o);
 }
 
 void ListElement::setListPropertyFast(const ListLayout::Role &role, ListModel *m)
@@ -1410,9 +1452,14 @@ void ListElement::destroy(ListLayout *layout)
                     break;
                 case ListLayout::Role::QObject:
                     {
-                        QPointer<QObject> *guard = getGuardProperty(r);
-                        if (guard)
-                            guard->~QPointer();
+                    QTaggedPointer<QObject, ListElement::ObjectIndestructible> *guard =
+                            getGuardProperty(r);
+
+                    if (guard) {
+                        restoreQObjectOwnership(guard);
+
+                        guard->~QTaggedPointer();
+                    }
                     }
                     break;
                 case ListLayout::Role::VariantMap:
