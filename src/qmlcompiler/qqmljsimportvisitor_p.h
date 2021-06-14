@@ -56,6 +56,7 @@ class QQmlJSImportVisitor : public QQmlJS::AST::Visitor
 public:
     QQmlJSImportVisitor(QQmlJSImporter *importer, const QString &implicitImportDirectory,
                         const QStringList &qmltypesFiles = QStringList(), const QString &fileName = QString(), const QString &code = QString(), bool silent = true);
+    ~QQmlJSImportVisitor();
 
     QQmlJSScope::Ptr result() const;
 

@@ -110,6 +110,8 @@ QQmlJSImportVisitor::QQmlJSImportVisitor(QQmlJSImporter *importer,
         m_currentScope->insertJSIdentifier(jsGlobVar, globalJavaScript);
 }
 
+QQmlJSImportVisitor::~QQmlJSImportVisitor() = default;
+
 void QQmlJSImportVisitor::enterEnvironment(QQmlJSScope::ScopeType type, const QString &name,
                                            const QQmlJS::SourceLocation &location)
 {
