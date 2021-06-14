@@ -290,6 +290,8 @@ public:
         BLOCK_SIZE = 64 - sizeof(int) - sizeof(ListElement *) - sizeof(ModelNodeMetaObject *)
     };
 
+    enum ObjectIndestructible { Indestructible = 1, ExplicitlySet = 2 };
+
 private:
 
     void destroy(ListLayout *layout);
@@ -326,7 +328,7 @@ private:
     ListModel *getListProperty(const ListLayout::Role &role);
     StringOrTranslation *getStringProperty(const ListLayout::Role &role);
     QObject *getQObjectProperty(const ListLayout::Role &role);
-    QPointer<QObject> *getGuardProperty(const ListLayout::Role &role);
+    QTaggedPointer<QObject, ObjectIndestructible> *getGuardProperty(const ListLayout::Role &role);
     QVariantMap *getVariantMapProperty(const ListLayout::Role &role);
     QDateTime *getDateTimeProperty(const ListLayout::Role &role);
     QUrl *getUrlProperty(const ListLayout::Role &role);
