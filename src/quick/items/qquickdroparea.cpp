@@ -91,6 +91,7 @@ QQuickDropAreaPrivate::~QQuickDropAreaPrivate()
 /*!
     \qmltype DropArea
     \instantiates QQuickDropArea
+    \inherits Item
     \inqmlmodule QtQuick
     \ingroup qtquick-input
     \brief For specifying drag and drop handling in an area.
