@@ -363,6 +363,9 @@ private slots:
 
     void propertyObserverOnReadonly();
 
+    void propertyAndAliasMustHaveDistinctNames_data();
+    void propertyAndAliasMustHaveDistinctNames();
+
     void variantListConversion();
     void thisInArrowFunction();
 
@@ -6354,6 +6357,26 @@ void tst_qqmllanguage::propertyObserverOnReadonly()
     o->setProperty("height", QVariant::fromValue<double>(54.2));
     QCOMPARE(o->property("zoomer").toDouble(), 54.2);
     QCOMPARE(o->property("height").toDouble(), 54.2);
+}
+
+void tst_qqmllanguage::propertyAndAliasMustHaveDistinctNames_data()
+{
+    QTest::addColumn<QString>("fileName");
+    QTest::addColumn<QString>("error");
+
+    QTest::addRow("sameNamePropertyAlias") << "sameNamePropertyAlias.qml" << "Property duplicates alias name";
+    QTest::addRow("sameNameAliasProperty") << "sameNameAliasProperty.qml" << "Alias has same name as existing property";
+}
+
+void tst_qqmllanguage::propertyAndAliasMustHaveDistinctNames()
+{
+    QFETCH(QString, fileName);
+    QFETCH(QString, error);
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl(fileName));
+    QVERIFY(!c.isReady());
+    auto actualError = c.errorString();
+    QVERIFY2(actualError.contains(error), qPrintable(actualError));
 }
 
 void tst_qqmllanguage::variantListConversion()

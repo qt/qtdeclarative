@@ -258,6 +258,10 @@ QString Object::appendProperty(Property *prop, const QString &propertyName, bool
         if (p->nameIndex == prop->nameIndex)
             return tr("Duplicate property name");
 
+    for (Alias *a = target->aliases->first; a; a = a->next)
+        if (a->nameIndex == prop->nameIndex)
+            return tr("Property duplicates alias name");
+
     if (propertyName.constData()->isUpper())
         return tr("Property names cannot begin with an upper case letter");
 
@@ -278,11 +282,18 @@ QString Object::appendAlias(Alias *alias, const QString &aliasName, bool isDefau
     if (!target)
         target = this;
 
-    auto aliasWithSameName = std::find_if(target->aliases->begin(), target->aliases->end(), [&alias](const Alias &targetAlias){
+    const auto aliasWithSameName = std::find_if(target->aliases->begin(), target->aliases->end(), [&alias](const Alias &targetAlias){
         return targetAlias.nameIndex == alias->nameIndex;
     });
     if (aliasWithSameName != target->aliases->end())
         return tr("Duplicate alias name");
+
+    const auto aliasSameAsProperty = std::find_if(target->properties->begin(), target->properties->end(), [&alias](const Property &targetProp){
+        return targetProp.nameIndex == alias->nameIndex;
+    });
+
+    if (aliasSameAsProperty != target->properties->end())
+        return tr("Alias has same name as existing property");
 
     if (aliasName.constData()->isUpper())
         return tr("Alias names cannot begin with an upper case letter");
