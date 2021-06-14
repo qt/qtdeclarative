@@ -364,6 +364,9 @@ private slots:
     void propertyObserverOnReadonly();
     void valueTypeWithEnum();
 
+    void propertyAndAliasMustHaveDistinctNames_data();
+    void propertyAndAliasMustHaveDistinctNames();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -6383,6 +6386,26 @@ void tst_qqmllanguage::valueTypeWithEnum()
 
         QCOMPARE(holder->vv().quality(), ValueTypeWithEnum2::LowQuality);
     }
+}
+
+void tst_qqmllanguage::propertyAndAliasMustHaveDistinctNames_data()
+{
+    QTest::addColumn<QString>("fileName");
+    QTest::addColumn<QString>("error");
+
+    QTest::addRow("sameNamePropertyAlias") << "sameNamePropertyAlias.qml" << "Property duplicates alias name";
+    QTest::addRow("sameNameAliasProperty") << "sameNameAliasProperty.qml" << "Alias has same name as existing property";
+}
+
+void tst_qqmllanguage::propertyAndAliasMustHaveDistinctNames()
+{
+    QFETCH(QString, fileName);
+    QFETCH(QString, error);
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl(fileName));
+    QVERIFY(!c.isReady());
+    auto actualError = c.errorString();
+    QVERIFY2(actualError.contains(error), qPrintable(actualError));
 }
 
 QTEST_MAIN(tst_qqmllanguage)
