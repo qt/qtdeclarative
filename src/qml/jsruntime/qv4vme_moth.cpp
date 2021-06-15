@@ -432,8 +432,10 @@ static bool compareEqualInt(QV4::Value &accumulator, QV4::Value lhs, int rhs)
 void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
 {
     qt_v4ResolvePendingBreakpointsHook();
-    if (engine->checkStackLimits())
+    if (engine->checkStackLimits()) {
+        frame->setReturnValueUndefined();
         return;
+    }
     ExecutionEngineCallDepthRecorder executionEngineCallDepthRecorder(engine);
 
     Function *function = frame->v4Function;

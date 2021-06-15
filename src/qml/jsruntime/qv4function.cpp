@@ -74,7 +74,7 @@ bool Function::call(QObject *thisObject, void **a, const QMetaType *types, int a
     frame.push(engine);
     Moth::VME::exec(&frame, engine);
     frame.pop(engine);
-    return true;
+    return !frame.isReturnValueUndefined();
 }
 
 ReturnedValue Function::call(
