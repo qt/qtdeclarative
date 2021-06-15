@@ -612,6 +612,7 @@ namespace QQmlPrivate
 
         QJSValue jsMetaType(int index) const;
         void setInstructionPointer(int offset) const;
+        void setReturnValueUndefined() const;
 
         // Run QQmlPropertyCapture::captureProperty() without retrieving the value.
         bool captureLookup(uint index, QObject *object) const;

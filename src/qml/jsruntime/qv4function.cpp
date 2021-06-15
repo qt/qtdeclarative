@@ -77,7 +77,7 @@ bool Function::call(const Value *thisObject, void **a, const QMetaType *types, i
     engine->jsStackTop += frame.requiredJSStackFrameSize();
     Moth::VME::exec(&frame, engine);
     frame.pop(engine);
-    return true;
+    return !frame.isReturnValueUndefined();
 }
 
 ReturnedValue Function::call(const Value *thisObject, const Value *argv, int argc, const ExecutionContext *context) {

@@ -712,6 +712,13 @@ void AOTCompiledContext::setInstructionPointer(int offset) const
         frame->instructionPointer = offset;
 }
 
+void AOTCompiledContext::setReturnValueUndefined() const
+{
+    if (auto *frame = engine->handle()->currentStackFrame) {
+        Q_ASSERT(frame->isMetaTypesFrame());
+        static_cast<QV4::MetaTypesStackFrame *>(frame)->setReturnValueUndefined();
+    }
+}
 
 static void captureObjectProperty(
         QObject *object, const QQmlPropertyCache *propertyCache,

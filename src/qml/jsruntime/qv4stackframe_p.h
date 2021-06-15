@@ -88,6 +88,7 @@ struct Q_QML_PRIVATE_EXPORT CppStackFrameBase
         struct {
             const QMetaType *metaTypes;
             void **returnAndArgs;
+            bool returnValueIsUndefined;
         };
     };
 
@@ -182,10 +183,14 @@ struct Q_QML_PRIVATE_EXPORT MetaTypesStackFrame : public CppStackFrame
         CppStackFrame::init(v4Function, argc, Kind::Meta);
         metaTypes = types;
         returnAndArgs = a;
+        returnValueIsUndefined = false;
     }
 
     QMetaType returnType() const { return metaTypes[0]; }
     void *returnValue() const { return returnAndArgs[0]; }
+
+    bool isReturnValueUndefined() const { return CppStackFrameBase::returnValueIsUndefined; }
+    void setReturnValueUndefined() { CppStackFrameBase::returnValueIsUndefined = true; }
 
     const QMetaType *argTypes() const { return metaTypes + 1; }
     void **argv() const { return returnAndArgs + 1; }
