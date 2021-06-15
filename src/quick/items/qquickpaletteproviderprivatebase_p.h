@@ -336,12 +336,12 @@ template<class I, class Impl>
 void QQuickPaletteProviderPrivateBase<I, Impl>::setCurrentColorGroup()
 {
     if constexpr (!isRootWindow<I>()) {
-        if (paletteData()) {
+        if (providesPalette()) {
             const bool enabled = itemWithPalette()->isEnabled();
             const auto window = itemWithPalette()->window();
             const bool active = window ? window->isActive() : true;
-            paletteData()->setCurrentGroup(enabled ? (active ? QPalette::Active : QPalette::Inactive)
-                                                   : QPalette::Disabled);
+            palette()->setCurrentGroup(enabled ? (active ? QPalette::Active : QPalette::Inactive)
+                                               : QPalette::Disabled);
         }
     }
 }
