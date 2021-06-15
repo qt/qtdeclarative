@@ -24,7 +24,11 @@ endif()
 
 # This can't use the find_package(Qt6 COMPONENTS) signature, because Qt6Config uses NO_DEFAULT and
 # won't look at the prepend extra find root paths.
-find_package(Qt6ShaderToolsTools ${PROJECT_VERSION} QUIET CONFIG)
+find_package(Qt6ShaderToolsTools ${PROJECT_VERSION} QUIET CONFIG
+    PATHS
+            ${_qt_additional_packages_prefix_path}
+            ${_qt_additional_packages_prefix_path_env}
+)
 
 if(NOT "${QT_HOST_PATH}" STREQUAL "")
      set(CMAKE_PREFIX_PATH ${_qt_backup_qtdeclarative_CMAKE_PREFIX_PATH})
