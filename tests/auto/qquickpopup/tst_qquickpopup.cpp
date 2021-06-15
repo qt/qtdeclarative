@@ -1015,7 +1015,8 @@ void tst_QQuickPopup::componentComplete()
     QQmlComponent component(&engine);
     component.setData("import QtQuick.Controls; Popup { }", QUrl());
 
-    FriendlyPopup *qmlPopup = static_cast<FriendlyPopup *>(component.beginCreate(engine.rootContext()));
+    QScopedPointer<QObject> o(component.beginCreate(engine.rootContext()));
+    FriendlyPopup *qmlPopup = static_cast<FriendlyPopup *>(o.data());
     QVERIFY(qmlPopup);
     QVERIFY(!qmlPopup->isComponentComplete());
 
