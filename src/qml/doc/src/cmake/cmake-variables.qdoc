@@ -1,0 +1,55 @@
+/****************************************************************************
+**
+** Copyright (C) 2021 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page cmake-variable-QT_QML_OUTPUT_DIRECTORY.html
+\ingroup cmake-variables
+\ingroup cmake-variables-qtqml
+
+\title QT_QML_OUTPUT_DIRECTORY
+\target cmake-variable-QT_QML_OUTPUT_DIRECTORY
+
+\brief Base output directory below which QML modules will be created by default.
+
+The \l{qt6_add_qml_module}{qt6_add_qml_module()} command accepts an
+\c OUTPUT_DIRECTORY argument which specifies where the QML module's \c qmldir
+file, typeinfo file and plugin library will be created. By default, the current
+binary directory (\c CMAKE_CURRENT_BINARY_DIR) is used if that argument is not
+provided. When a set of QML modules are being defined, it may be convenient to
+have them all generated under a common point in the build directory. If the
+source directory structure doesn't match the URI structure of the QML modules,
+or if you just want your QML modules to be collected under a different
+location, the \c QT_QML_OUTPUT_DIRECTORY can be used. When set, the default
+changes to the concatenation of \c QT_QML_OUTPUT_DIRECTORY and the QML module's
+\e{target path}, which is based on the module URI. \c QT_QML_OUTPUT_DIRECTORY
+will also be added to the import path of the \c qmllint and \c qmlcachegen
+tooling targets, allowing them to find other QML modules under the same base
+location.
+
+*/
+
+
