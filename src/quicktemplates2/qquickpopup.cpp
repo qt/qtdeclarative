@@ -875,16 +875,17 @@ QQuickPopup::~QQuickPopup()
     Q_D(QQuickPopup);
     setParentItem(nullptr);
     d->popupItem->ungrabShortcut();
-    delete d->popupItem;
-    d->popupItem = nullptr;
-    delete d->positioner;
-    d->positioner = nullptr;
 
     // If the popup is destroyed before the exit transition finishes,
     // the necessary cleanup (removing modal dimmers that block mouse events,
     // emitting closed signal, etc.) won't happen. That's why we do it manually here.
     if (d->transitionState == QQuickPopupPrivate::ExitTransition && d->transitionManager.isRunning())
         d->finalizeExitTransition();
+
+    delete d->popupItem;
+    d->popupItem = nullptr;
+    delete d->positioner;
+    d->positioner = nullptr;
 }
 
 /*!
