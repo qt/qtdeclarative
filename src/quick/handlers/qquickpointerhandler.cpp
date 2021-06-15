@@ -722,8 +722,8 @@ void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *event)
     the Item's interior.  Initially \l [QML] {target} {target()} is the same, but it
     can be reassigned.
 
-    \note When a handler is declared in a \l QtQuick3D.Model object, the parent
-    is not an Item, therefore this property is \c null.
+    \note When a handler is declared in a \l [QtQuick3D] {Model}{QtQuick3D.Model}
+          object, the parent is not an Item, therefore this property is \c null.
 
     \sa {target}, QObject::parent()
 */
