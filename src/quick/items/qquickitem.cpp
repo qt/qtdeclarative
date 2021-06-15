@@ -8082,17 +8082,20 @@ bool QQuickItem::contains(const QPointF &point) const
 {
     Q_D(const QQuickItem);
     if (d->mask) {
+        if (d->quickMask)
+            return d->quickMask->contains(point - d->quickMask->position());
+
         bool res = false;
         d->extra->maskContains.invoke(d->mask,
                       Qt::DirectConnection,
                       Q_RETURN_ARG(bool, res),
                       Q_ARG(QPointF, point));
         return res;
-    } else {
-        qreal x = point.x();
-        qreal y = point.y();
-        return x >= 0 && y >= 0 && x < d->width && y < d->height;
     }
+
+    qreal x = point.x();
+    qreal y = point.y();
+    return x >= 0 && y >= 0 && x < d->width && y < d->height;
 }
 
 /*!
@@ -8145,6 +8148,7 @@ void QQuickItem::setContainmentMask(QObject *mask)
     }
     d->mask = mask;
     quickMask = qobject_cast<QQuickItem *>(mask);
+    d->quickMask = quickMask;
     if (quickMask) {
         QQuickItemPrivate *maskPrivate = QQuickItemPrivate::get(quickMask);
         maskPrivate->registerAsContainmentMask(this, true); // telling maskPrivate that "this" is using it as mask
