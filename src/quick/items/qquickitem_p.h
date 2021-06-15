@@ -418,6 +418,7 @@ public:
     QLazilyAllocated<ExtraData, ExtraDataTags> extra;
     // Contains mask
     QPointer<QObject> mask;
+    QPointer<QQuickItem> quickMask;
     // If the mask is an Item, inform it that it's being used as a mask (true) or is no longer being used (false)
     virtual void registerAsContainmentMask(QQuickItem * /* maskedItem */, bool /* set */) { }
 

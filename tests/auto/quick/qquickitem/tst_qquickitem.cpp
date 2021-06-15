@@ -220,6 +220,8 @@ private slots:
 
     void contains_data();
     void contains();
+    void containsContainmentMask_data();
+    void containsContainmentMask();
 
     void childAt();
 
@@ -2079,6 +2081,46 @@ void tst_qquickitem::contains()
     QVERIFY(QMetaObject::invokeMethod(root, "childContainsViaMapFromItem",
         Q_RETURN_ARG(QVariant, result), Q_ARG(QVariant, qreal(x)), Q_ARG(QVariant, qreal(y))));
     QCOMPARE(result.toBool(), contains);
+}
+
+void tst_qquickitem::containsContainmentMask_data()
+{
+    QTest::addColumn<QPointF>("point");
+    QTest::addColumn<bool>("contains");
+
+    QTest::newRow("(-6, -6) = false") << QPointF(-6, -6) << false;
+    QTest::newRow("(-5, -5) = true") << QPointF(-5, -5) << true;
+    QTest::newRow("(-4, -4) = true") << QPointF(-4, -4) << true;
+    QTest::newRow("(-3, -3) = true") << QPointF(-3, -3) << true;
+    QTest::newRow("(-2, -2) = true") << QPointF(-2, -2) << true;
+    QTest::newRow("(-1, -1) = true") << QPointF(-1, -1) << true;
+    QTest::newRow("(0, 0) = true") << QPointF(0, 0) << true;
+    QTest::newRow("(1, 1) = true") << QPointF(1, 1) << true;
+    QTest::newRow("(2, 2) = true") << QPointF(2, 2) << true;
+    QTest::newRow("(3, 3) = true") << QPointF(3, 3) << true;
+    QTest::newRow("(4, 4) = true") << QPointF(4, 4) << true;
+    QTest::newRow("(5, 5) = false") << QPointF(5, 5) << false;
+}
+
+void tst_qquickitem::containsContainmentMask()
+{
+    QFETCH(QPointF, point);
+    QFETCH(bool, contains);
+
+    QQuickView view;
+    view.setSource(testFileUrl("containsContainmentMask.qml"));
+
+    QQuickItem *root = qobject_cast<QQuickItem*>(view.rootObject());
+    QVERIFY(root);
+
+    QQuickItem *firstItem = root->findChild<QQuickItem*>("firstItem");
+    QVERIFY(firstItem);
+
+    QQuickItem *secondItem = root->findChild<QQuickItem*>("secondItem");
+    QVERIFY(secondItem);
+
+    QCOMPARE(firstItem->contains(point), contains);
+    QCOMPARE(secondItem->contains(point), contains);
 }
 
 void tst_qquickitem::childAt()
