@@ -588,14 +588,11 @@ endfunction()
 
 # This is a  modified version of __qt_propagate_generated_resource from qtbase.
 #
-# The main reason we can't use it is because it unconditionally links the object library to the
-# target (in the static Qt case). We need to link conditionally based on 'link_condition' genex.
+# It uses a common __qt_internal_propagate_object_library function to link and propagate the object
+# library to the end-point executable.
 #
 # The reason for propagating the qmlcache target as a 'fake resource' from the build system
 # perspective is to ensure proper handling of the object files in generated qmake .prl files.
-#
-# TODO: The qtbase function should be refactored into separate parts, so that we can reuse the
-# common functionality in this function.
 function(_qt_internal_propagate_qmlcache_object_lib
          target
          generated_source_code
@@ -618,58 +615,14 @@ function(_qt_internal_propagate_qmlcache_object_lib
     set_property(TARGET ${resource_target} APPEND PROPERTY
         _qt_resource_generated_cpp_relative_path "${generated_cpp_file_relative_path}")
 
-    # FIXME: _is_qt_resource_target finalizer mode processing has been removed in this
-    # implementation, because qtbase's finalizer currently can't handle conditional linking
-    # of object libraries. It would try to link to the object library unconditionally, ignoring
-    # ${link_condition}. See the implementation of __qt_internal_collect_dependency_resource_objects
-    # for the reason why that happens.
-
-    # Do not litter the static libraries
-    set(not_static_condition
-        "$<NOT:$<STREQUAL:$<TARGET_PROPERTY:TYPE>,STATIC_LIBRARY>>"
-    )
-    set(resource_objects "$<TARGET_OBJECTS:$<TARGET_NAME:${resource_target}>>")
-
-    # It's necessary to link the object library target, since we want to pass
-    # the object library dependencies to the 'target'. Interface linking doesn't
-    # add the objects of the resource library to the end-point linker line
-    # but propagates all the dependencies of the resource_target added before
-    # or AFTER the line below.
-    target_link_libraries(${target} INTERFACE
-        "$<$<AND:${not_static_condition},${link_condition}>:${resource_target}>"
-    )
-
     # Qml specific additions.
     target_link_libraries(${resource_target} PRIVATE
         ${QT_CMAKE_EXPORT_NAMESPACE}::QmlPrivate
         ${QT_CMAKE_EXPORT_NAMESPACE}::Core
     )
 
-    # FIXME: Try to adapt finalizer approach to be usable here.
-    #
-    # We need the qmlcache_loader.cpp.o file to appear before ${target} on the link line.
-    # Otherwise GNU ld will discard the compiled-QML files that were embedded into the static
-    # ${target} library, which are referenced by the loader file.
-    #
-    # We can't use target_link_libraries(${target} INTERFACE $<TARGET_OBJECTS:qmlcache_loder.cpp.o>)
-    # because that will place the object file after ${target} on the link line with all CMake
-    # versions lower than 3.21.0.
-    # https://gitlab.kitware.com/cmake/cmake/-/merge_requests/6166
-    #
-    # We can't use the qtbase finalizer approach at the moment, because its implementation doesn't
-    # take into account the ${condition_link} genex.
-    # There might also be complications using finalizer mode during the Qt build itself, because we
-    # currently only use it in public user projects (those that call qt_finalize_target).
-    #
-    # We are forced to use target_sources to place the object file before ${target}.
-    # This means linking will fail for user projects that will try to propagate the usage
-    # of ${target} via their own static library A, if library A doesn't link publicly to ${target}.
-    # This is not the majority of user projects.
-    # Hopefully we can lift this limitation once we can use the finalizer approach here.
-    #
-    # Until then, this is needed to get the Qt build working.
-    target_sources(${target} INTERFACE
-        "$<$<AND:${not_static_condition},${link_condition}>:${resource_objects}>"
+    __qt_internal_propagate_object_library(${target} ${resource_target}
+        EXTRA_CONDITIONS "${link_condition}"
     )
 
     set(${output_generated_target} "${resource_target}" PARENT_SCOPE)
