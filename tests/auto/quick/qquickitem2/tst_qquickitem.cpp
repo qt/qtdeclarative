@@ -134,7 +134,9 @@ private slots:
     void isAncestorOf();
 
     void grab();
+
     void colorGroup();
+    void paletteAllocated();
 
 private:
     QQmlEngine engine;
@@ -3768,6 +3770,45 @@ void tst_QQuickItem::colorGroup()
     QVERIFY(QTest::qWaitForWindowActive(&activationThief));
     QCOMPARE(palette->currentColorGroup(), QPalette::Inactive);
     QCOMPARE(foreground->property("color").value<QColor>(), palette->inactive()->base());
+}
+
+/*!
+    Verify that items don't allocate their own QQuickPalette instance
+    unnecessarily.
+*/
+void tst_QQuickItem::paletteAllocated()
+{
+    QQuickView view;
+
+    view.setSource(testFileUrl("paletteAllocate.qml"));
+
+    QQuickItem *root = qobject_cast<QQuickItem *>(view.rootObject());
+    QQuickItem *background = root->findChild<QQuickItem *>("background");
+    QVERIFY(background);
+    QQuickItem *foreground = root->findChild<QQuickItem *>("foreground");
+    QVERIFY(foreground);
+
+    bool backgroundHasPalette = false;
+    bool foregroundHasPalette = false;
+    QObject::connect(background, &QQuickItem::paletteCreated, this, [&]{ backgroundHasPalette = true; });
+    QObject::connect(foreground, &QQuickItem::paletteCreated, this, [&]{ foregroundHasPalette = true; });
+
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
+
+    QVERIFY(!backgroundHasPalette);
+    QVERIFY(!foregroundHasPalette);
+
+    view.close();
+
+    QVERIFY(!backgroundHasPalette);
+    QVERIFY(!foregroundHasPalette);
+
+    auto quickpalette = foreground->property("palette").value<QQuickPalette*>();
+    QVERIFY(!backgroundHasPalette);
+    QVERIFY(quickpalette);
+    QVERIFY(foregroundHasPalette);
 }
 
 QTEST_MAIN(tst_QQuickItem)
