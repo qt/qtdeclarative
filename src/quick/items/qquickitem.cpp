@@ -8507,7 +8507,7 @@ bool QQuickItem::event(QEvent *ev)
         break;
     case QEvent::WindowActivate:
     case QEvent::WindowDeactivate:
-        if (d->palette())
+        if (d->providesPalette())
             d->setCurrentColorGroup();
         for (QQuickItem *item : d->childItems)
             QCoreApplication::sendEvent(item, ev);
