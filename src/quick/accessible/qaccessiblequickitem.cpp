@@ -145,7 +145,7 @@ QWindow *QAccessibleHyperlink::window() const
 }
 
 
-/*! \reimp */
+/* \reimp */
 QRect QAccessibleHyperlink::rect() const
 {
     const QVector<QQuickTextPrivate::LinkDesc> links = QQuickTextPrivate::get(textItem())->getLinks();
@@ -156,37 +156,37 @@ QRect QAccessibleHyperlink::rect() const
     return QRect();
 }
 
-/*! \reimp */
+/* \reimp */
 QAccessibleInterface *QAccessibleHyperlink::childAt(int, int) const
 {
     return nullptr;
 }
 
-/*! \reimp */
+/* \reimp */
 QAccessibleInterface *QAccessibleHyperlink::parent() const
 {
     return QAccessible::queryAccessibleInterface(textItem());
 }
 
-/*! \reimp */
+/* \reimp */
 QAccessibleInterface *QAccessibleHyperlink::child(int) const
 {
     return nullptr;
 }
 
-/*! \reimp */
+/* \reimp */
 int QAccessibleHyperlink::childCount() const
 {
     return 0;
 }
 
-/*! \reimp */
+/* \reimp */
 int QAccessibleHyperlink::indexOfChild(const QAccessibleInterface *) const
 {
     return -1;
 }
 
-/*! \reimp */
+/* \reimp */
 QAccessible::State QAccessibleHyperlink::state() const
 {
     QAccessible::State s;
@@ -197,13 +197,13 @@ QAccessible::State QAccessibleHyperlink::state() const
     return s;
 }
 
-/*! \reimp */
+/* \reimp */
 QAccessible::Role QAccessibleHyperlink::role() const
 {
     return QAccessible::Link;
 }
 
-/*! \reimp */
+/* \reimp */
 QString QAccessibleHyperlink::text(QAccessible::Text t) const
 {
     // AT servers have different behaviors:
@@ -221,13 +221,13 @@ QString QAccessibleHyperlink::text(QAccessible::Text t) const
     return QString();
 }
 
-/*! \reimp */
+/* \reimp */
 void QAccessibleHyperlink::setText(QAccessible::Text, const QString &)
 {
 
 }
 
-/*! \reimp */
+/* \reimp */
 void *QAccessibleHyperlink::interface_cast(QAccessible::InterfaceType t)
 {
     if (t == QAccessible::HyperlinkInterface)
