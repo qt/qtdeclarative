@@ -49,9 +49,13 @@ class QJSNumberCoercion
 {
 public:
     static constexpr int toInteger(double d) {
-        int i = static_cast<int>(d);
+        if (!equals(d, d))
+            return 0;
+
+        const int i = static_cast<int>(d);
         if (equals(i, d))
             return i;
+
         return QJSNumberCoercion(d).toInteger();
     }
 
