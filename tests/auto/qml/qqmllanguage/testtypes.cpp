@@ -122,6 +122,9 @@ void registerTypes()
     qmlRegisterTypesAndRevisions<Extended, Foreign, ForeignExtended>("Test", 1);
     qmlRegisterTypesAndRevisions<BareSingleton>("Test", 1);
     qmlRegisterTypesAndRevisions<UncreatableSingleton>("Test", 1);
+
+    qmlRegisterTypesAndRevisions<Large>("Test", 1);
+    qmlRegisterTypesAndRevisions<Foo>("Test", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)
