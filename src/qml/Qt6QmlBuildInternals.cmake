@@ -65,6 +65,7 @@ function(qt_internal_add_qml_module target)
     set(qml_module_multi_args
         # SOURCES will be handled by qt_internal_add_module()
         QML_FILES
+        RESOURCES
         IMPORTS
         IMPORT_PATH
         OPTIONAL_IMPORTS
@@ -271,9 +272,9 @@ function(qt_internal_add_qml_module target)
         )
     endif()
 
-    if(DEFINED arg_QML_FILES)
-        foreach(qml_file IN LISTS arg_QML_FILES)
-            __qt_get_relative_resource_path_for_file(file_resource_path ${qml_file})
+    if(DEFINED arg_QML_FILES OR DEFINED arg_RESOURCES)
+        foreach(resource_file IN LISTS arg_QML_FILES arg_RESOURCES)
+            __qt_get_relative_resource_path_for_file(file_resource_path ${resource_file})
             get_filename_component(resource_dir  ${file_resource_path} DIRECTORY)
             get_filename_component(resource_name ${file_resource_path} NAME)
             if(resource_dir)
@@ -282,7 +283,7 @@ function(qt_internal_add_qml_module target)
                 set(dest "${arg_INSTALL_DIRECTORY}")
             endif()
             qt_install(
-                FILES ${qml_file}
+                FILES ${resource_file}
                 DESTINATION ${dest}
                 RENAME ${resource_name}
             )
