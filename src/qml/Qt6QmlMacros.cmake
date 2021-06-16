@@ -120,6 +120,8 @@ set(__qt_qml_macros_module_base_dir "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "
 # QML_FILES: List of Qml files. See qt6_target_qml_sources() for more
 #   information on how to specify additional properties on qml files. (OPTIONAL)
 #
+# RESOURCES: Resources used in QML, for example images. (OPTIONAL)
+#
 # NO_LINT: By default, this function will create a separate ${target}_qmllint
 #   target if any .qml files are added to ${target} (see qt6_add_qml_sources()).
 #   Provide the NO_LINT option to disable this behavior. (OPTIONAL)
@@ -167,6 +169,7 @@ function(qt6_add_qml_module target)
     set(args_multi
         SOURCES
         QML_FILES
+        RESOURCES
         IMPORTS
         IMPORT_PATH
         OPTIONAL_IMPORTS
@@ -503,6 +506,7 @@ function(qt6_add_qml_module target)
     qt6_target_qml_sources(${target}
         __QT_INTERNAL_FORCE_DEFER_QMLDIR
         FILES ${arg_QML_FILES}
+        RESOURCES ${arg_RESOURCES}
         OUTPUT_TARGETS cache_target
     )
     list(APPEND output_targets ${cache_target})
@@ -1129,6 +1133,7 @@ function(qt6_target_qml_sources target)
 
     set(args_multi
         FILES
+        RESOURCES
     )
 
     cmake_parse_arguments(PARSE_ARGV 1 arg
@@ -1404,7 +1409,7 @@ function(qt6_target_qml_sources target)
     set(resource_targets)
     qt6_add_resources(${target} ${resource_name}
         PREFIX ${arg_PREFIX}
-        FILES ${arg_FILES}
+        FILES ${arg_FILES} ${arg_RESOURCES}
         OUTPUT_TARGETS resource_targets
     )
     math(EXPR counter "${counter} + 1")
