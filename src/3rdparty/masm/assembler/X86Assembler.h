@@ -62,6 +62,7 @@ namespace X86Registers {
         r14,
         r15,
 #endif
+        none = 0xff,
     } RegisterID;
 
     typedef enum {

@@ -64,6 +64,7 @@ namespace ARMRegisters {
         r13, sp = r13,
         r14, lr = r14,
         r15, pc = r15,
+        none = 0xff,
     } RegisterID;
 
     typedef enum {
