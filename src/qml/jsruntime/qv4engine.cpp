@@ -1596,9 +1596,11 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
                             continue;
                         }
                     }
-                    asVariant = toVariant(e, arrayValue, valueMetaType, false,
-                                          visitedObjects);
-                    if (valueMetaType.id() != QMetaType::QVariant) {
+
+                    asVariant = toVariant(e, arrayValue, valueMetaType, false, visitedObjects);
+                    if (valueMetaType == QMetaType::fromType<QVariant>()) {
+                        retnAsIterable.metaContainer().addValue(retn.data(), &asVariant);
+                    } else {
                         auto originalType = asVariant.metaType();
                         bool couldConvert = asVariant.convert(valueMetaType);
                         if (!couldConvert) {
@@ -1609,8 +1611,8 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
                             // create default constructed value
                             asVariant = QVariant(valueMetaType, nullptr);
                         }
+                        retnAsIterable.metaContainer().addValue(retn.data(), asVariant.constData());
                     }
-                    retnAsIterable.metaContainer().addValue(retn.data(), asVariant.constData());
                 }
                 return retn;
             }

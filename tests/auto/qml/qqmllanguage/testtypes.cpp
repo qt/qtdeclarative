@@ -165,6 +165,9 @@ void registerTypes()
     // The namespace to hold the enums
     qmlRegisterNamespaceAndRevisions(&ValueTypeWithEnum2::staticMetaObject, "Test", 1, nullptr,
                                      &ValueTypeWithEnumForeignNamespace2::staticMetaObject);
+
+    qmlRegisterTypesAndRevisions<Large>("Test", 1);
+    qmlRegisterTypesAndRevisions<Foo>("Test", 1);
 }
 
 QVariant myCustomVariantTypeConverter(const QString &data)
