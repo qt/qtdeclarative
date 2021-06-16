@@ -517,6 +517,7 @@ typedef enum {
     x29 = fp,
     x30 = lr,
     zr = 0x3f,
+    none = 0xff,
 } RegisterID;
 
 typedef enum {

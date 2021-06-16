@@ -73,7 +73,7 @@ class PlatformAssembler_X86_64_SysV : public JSC::MacroAssembler<JSC::MacroAssem
 public:
     static constexpr int NativeStackAlignment = 16;
 
-    static const RegisterID NoRegister = RegisterID(-1);
+    static const RegisterID NoRegister = RegisterID::none;
 
     static const RegisterID ReturnValueRegister   = RegisterID::eax;
     static const RegisterID ReturnValueRegisterValue = ReturnValueRegister;
@@ -160,7 +160,7 @@ typedef PlatformAssembler_X86_64_SysV PlatformAssemblerBase;
 class PlatformAssembler_Win64 : public JSC::MacroAssembler<JSC::MacroAssemblerX86_64>
 {
 public:
-    static const RegisterID NoRegister = RegisterID(-1);
+    static const RegisterID NoRegister = RegisterID::none;
 
     static const RegisterID ReturnValueRegister   = RegisterID::eax;
     static const RegisterID ReturnValueRegisterValue = ReturnValueRegister;
@@ -250,7 +250,7 @@ typedef PlatformAssembler_Win64 PlatformAssemblerBase;
 class PlatformAssembler_X86_All : public JSC::MacroAssembler<JSC::MacroAssemblerX86>
 {
 public:
-    static const RegisterID NoRegister = RegisterID(-1);
+    static const RegisterID NoRegister = RegisterID::none;
 
     static const RegisterID ReturnValueRegisterValue = RegisterID::eax;
     static const RegisterID ReturnValueRegisterTag   = RegisterID::edx;
@@ -340,7 +340,7 @@ typedef PlatformAssembler_X86_All PlatformAssemblerBase;
 class PlatformAssembler_ARM64 : public JSC::MacroAssembler<JSC::MacroAssemblerARM64>
 {
 public:
-    static const RegisterID NoRegister = RegisterID(-1);
+    static const RegisterID NoRegister = RegisterID::none;
 
     static const RegisterID ReturnValueRegister   = JSC::ARM64Registers::x0;
     static const RegisterID ReturnValueRegisterValue = ReturnValueRegister;
@@ -439,7 +439,7 @@ typedef PlatformAssembler_ARM64 PlatformAssemblerBase;
 class PlatformAssembler_ARM32 : public JSC::MacroAssembler<JSC::MacroAssemblerARMv7>
 {
 public:
-    static const RegisterID NoRegister = RegisterID(-1);
+    static const RegisterID NoRegister = RegisterID::none;
 
     static const RegisterID ReturnValueRegisterValue = JSC::ARMRegisters::r0;
     static const RegisterID ReturnValueRegisterTag   = JSC::ARMRegisters::r1;

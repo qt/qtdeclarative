@@ -105,7 +105,8 @@ typedef enum {
     gp = r28,
     sp = r29,
     fp = r30,
-    ra = r31
+    ra = r31,
+    none = 0xff,
 } RegisterID;
 
 typedef enum {
