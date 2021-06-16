@@ -614,6 +614,13 @@ function(_qt_internal_propagate_qmlcache_object_lib
     # Needed to trigger the handling of the object library for .prl generation.
     set_property(TARGET ${resource_target} APPEND PROPERTY _qt_resource_name ${resource_target})
 
+    # Export info that this is a qmlcache target, in case if we ever need to detect such targets,
+    # similar how we need it for plugin initializers.
+    set_property(TARGET ${resource_target} PROPERTY _is_qt_qmlcache_target TRUE)
+    set_property(TARGET ${resource_target} APPEND PROPERTY
+        EXPORT_PROPERTIES _is_qt_qmlcache_target
+    )
+
     # Save the path to the generated source file, relative to the the current build dir.
     # The path will be used in static library prl file generation to ensure qmake links
     # against the installed resource object files.
