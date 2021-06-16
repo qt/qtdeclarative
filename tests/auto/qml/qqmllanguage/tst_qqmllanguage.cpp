@@ -363,6 +363,8 @@ private slots:
 
     void propertyObserverOnReadonly();
 
+    void variantListConversion();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -6351,6 +6353,23 @@ void tst_qqmllanguage::propertyObserverOnReadonly()
     o->setProperty("height", QVariant::fromValue<double>(54.2));
     QCOMPARE(o->property("zoomer").toDouble(), 54.2);
     QCOMPARE(o->property("height").toDouble(), 54.2);
+}
+
+void tst_qqmllanguage::variantListConversion()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("variantListConversion.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    Foo *foo = qobject_cast<Foo *>(o.data());
+    QVERIFY(foo);
+    const QVariantList list = foo->getList();
+    QCOMPARE(list.length(), 2);
+    const Large l0 = qvariant_cast<Large>(list.at(0));
+    QCOMPARE(l0.a, 12ull);
+    const Large l1 = qvariant_cast<Large>(list.at(1));
+    QCOMPARE(l1.a, 13ull);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

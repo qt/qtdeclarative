@@ -1725,6 +1725,54 @@ public:
     Q_INVOKABLE QList<EnumList::Enum> list() const { return { Alpha, Beta, Gamma }; }
 };
 
+struct Large {
+    Q_GADGET
+    QML_VALUE_TYPE(large)
+
+    Q_PROPERTY(uint a MEMBER a)
+    Q_PROPERTY(uint b MEMBER b)
+    Q_PROPERTY(uint c MEMBER c)
+    Q_PROPERTY(uint d MEMBER d)
+    Q_PROPERTY(uint e MEMBER e)
+    Q_PROPERTY(uint f MEMBER f)
+
+public:
+    quint64 a;
+    quint64 b;
+    quint64 c;
+    quint64 d;
+    quint64 e;
+    quint64 f;
+};
+
+inline bool operator==(const Large &a, const Large &b)
+{
+    return a.a == b.a && a.b == b.b && a.c == b.c && a.d == b.d && a.e == b.e && a.f == b.f;
+}
+
+inline bool operator!=(const Large &a, const Large &b) { return !(a == b); }
+
+class Foo: public QObject {
+
+    Q_OBJECT
+    Q_PROPERTY(QVariantList fooProperty READ getList WRITE setList)
+    Q_PROPERTY(Large a MEMBER a BINDABLE aBindable)
+    Q_PROPERTY(Large b MEMBER b BINDABLE bBindable)
+    QML_ELEMENT
+
+public:
+    QVariantList getList() const { return mFooProperty;}
+    void setList(QVariantList list) { mFooProperty = list;}
+
+    QBindable<Large> aBindable() { return QBindable<Large>(&a); }
+    QBindable<Large> bBindable() { return QBindable<Large>(&b); }
+
+private:
+    QProperty<Large> a;
+    QProperty<Large> b;
+    QVariantList mFooProperty;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H
