@@ -257,6 +257,9 @@ QQuickPage::~QQuickPage()
     The title is often displayed at the top of a page to give
     the user context about the page they are viewing.
 
+    Page does not render the title itself, but instead relies
+    on the application to do so. For example:
+
     \code
     ApplicationWindow {
         visible: true
