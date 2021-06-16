@@ -329,14 +329,3 @@ function(qt_internal_add_qml_module target)
         endif()
     endif()
 endfunction()
-
-if(NOT QT_NO_INTERNAL_COMPATIBILITY_FUNCTIONS)
-    # Compatibility functions that should be removed once all their usages are removed.
-    function(add_qml_module)
-        qt_add_qml_module(${ARGV})
-    endfunction()
-
-    function(qt_add_qml_module)
-        qt_internal_add_qml_module(${ARGV})
-    endfunction()
-endif()
