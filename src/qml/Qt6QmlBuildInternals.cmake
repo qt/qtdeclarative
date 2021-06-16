@@ -259,17 +259,54 @@ function(qt_internal_add_qml_module target)
         ${add_qml_module_args}
         OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
         RESOURCE_PREFIX "/qt-project.org/imports"
-        OUTPUT_TARGETS resource_targets
+        OUTPUT_TARGETS output_targets
     )
 
-    if(resource_targets)
-        qt_install(TARGETS ${resource_targets}
-            EXPORT "${INSTALL_CMAKE_NAMESPACE}${target}Targets"
-            DESTINATION "${arg_INSTALL_DIRECTORY}"
-        )
-        qt_internal_record_rcc_object_files(${target} "${resource_targets}"
-            INSTALL_DIRECTORY "${arg_INSTALL_DIRECTORY}"
-        )
+    if(output_targets)
+        set(plugin_export_targets)
+        set(backing_lib_export_targets)
+
+        # Separate which output target should go to which export set.
+        # The plugin initializer library should go to the plugin export set, the rest should go to
+        # the backing lib export set.
+        # In the case when the plugin target is the same as the backing lib target, all of the
+        # output targets will go to the plugin export set.
+
+        foreach(output_target IN LISTS output_targets)
+            get_target_property(is_plugin_init ${output_target} _is_qt_plugin_init_target)
+            if(is_plugin_init)
+                list(APPEND plugin_export_targets ${output_target})
+            else()
+                list(APPEND backing_lib_export_targets ${output_target})
+            endif()
+        endforeach()
+
+        if(backing_lib_export_targets)
+            qt_install(TARGETS ${backing_lib_export_targets}
+                EXPORT "${INSTALL_CMAKE_NAMESPACE}${target}Targets"
+                DESTINATION "${arg_INSTALL_DIRECTORY}"
+            )
+            qt_internal_record_rcc_object_files(${target} "${backing_lib_export_targets}"
+                INSTALL_DIRECTORY "${arg_INSTALL_DIRECTORY}"
+            )
+
+            qt_internal_add_targets_to_additional_targets_export_file(
+                TARGETS ${backing_lib_export_targets}
+                EXPORT_NAME_PREFIX "${INSTALL_CMAKE_NAMESPACE}${target}"
+            )
+        endif()
+
+        if(arg_PLUGIN_TARGET AND plugin_export_targets)
+            qt_install(TARGETS ${plugin_export_targets}
+                EXPORT "${INSTALL_CMAKE_NAMESPACE}${arg_PLUGIN_TARGET}Targets"
+                DESTINATION "${arg_INSTALL_DIRECTORY}"
+            )
+
+            qt_internal_add_targets_to_additional_targets_export_file(
+                TARGETS ${plugin_export_targets}
+                EXPORT_NAME_PREFIX "${INSTALL_CMAKE_NAMESPACE}${arg_PLUGIN_TARGET}"
+            )
+        endif()
     endif()
 
     if(DEFINED arg_QML_FILES OR DEFINED arg_RESOURCES)
