@@ -1231,15 +1231,7 @@ function(qt6_target_qml_sources target)
         # build-time rule. This avoids having to re-run CMake just to re-copy
         # the file.
         get_filename_component(file_absolute ${qml_file_src} ABSOLUTE)
-        file(RELATIVE_PATH file_relative ${CMAKE_CURRENT_SOURCE_DIR} ${file_absolute})
-
-        get_property(alias SOURCE ${qml_file_src} PROPERTY QT_RESOURCE_ALIAS)
-        if(alias)
-            set(file_resource_path ${alias})
-        else()
-            set(file_resource_path ${file_relative})
-        endif()
-
+        __qt_get_relative_resource_path_for_file(file_resource_path ${qml_file_src})
         set(qml_file_out ${output_dir}/${file_resource_path})
 
         # Don't generate or copy the file in an in-source build if the source
@@ -1353,6 +1345,7 @@ function(qt6_target_qml_sources target)
                 QT_QML_MODULE_RESOURCE_PATHS ${file_resource_path}
             )
 
+            file(RELATIVE_PATH file_relative ${CMAKE_CURRENT_SOURCE_DIR} ${file_absolute})
             string(REGEX REPLACE "\\.(js|mjs|qml)$" "_\\1" compiled_file ${file_relative})
             string(REGEX REPLACE "[$#?]+" "_" compiled_file ${compiled_file})
             set(compiled_file "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/${target}/${compiled_file}.cpp")

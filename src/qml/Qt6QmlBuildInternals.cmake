@@ -271,11 +271,23 @@ function(qt_internal_add_qml_module target)
         )
     endif()
 
-    # Empty list will not cause an installation error.
-    qt_install(
-        FILES $<TARGET_PROPERTY:${target},QT_QML_MODULE_FILES>
-        DESTINATION "${arg_INSTALL_DIRECTORY}"
-    )
+    if(DEFINED arg_QML_FILES)
+        foreach(qml_file IN LISTS arg_QML_FILES)
+            __qt_get_relative_resource_path_for_file(file_resource_path ${qml_file})
+            get_filename_component(resource_dir  ${file_resource_path} DIRECTORY)
+            get_filename_component(resource_name ${file_resource_path} NAME)
+            if(resource_dir)
+                set(dest "${arg_INSTALL_DIRECTORY}/${resource_dir}")
+            else()
+                set(dest "${arg_INSTALL_DIRECTORY}")
+            endif()
+            qt_install(
+                FILES ${qml_file}
+                DESTINATION ${dest}
+                RENAME ${resource_name}
+            )
+        endforeach()
+    endif()
 
     if(NOT arg_NO_GENERATE_QMLTYPES)
         qt_install(
