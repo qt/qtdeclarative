@@ -69,6 +69,11 @@ ApplicationWindow {
             buttonText: "bisque"
         }
 
+        inactive {
+            button: "khaki"
+            buttonText: "bisque"
+        }
+
         disabled {
             buttonText: "lavender"
             button: "coral"
