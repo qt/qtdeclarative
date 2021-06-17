@@ -1218,12 +1218,11 @@ QQmlType QQmlMetaType::qmlType(const QMetaObject *metaObject, const QHashedStrin
 {
     const QQmlMetaTypeDataPtr data;
 
-    QQmlMetaTypeData::MetaObjects::const_iterator it = data->metaObjectToType.constFind(metaObject);
-    while (it != data->metaObjectToType.cend() && it.key() == metaObject) {
+    const auto range = data->metaObjectToType.equal_range(metaObject);
+    for (auto it = range.first; it != range.second; ++it) {
         QQmlType t(*it);
         if (module.isEmpty() || t.availableInVersion(module, version))
             return t;
-        ++it;
     }
 
     return QQmlType();
