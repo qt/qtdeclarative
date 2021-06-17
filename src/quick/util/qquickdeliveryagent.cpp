@@ -1430,7 +1430,8 @@ void QQuickDeliveryAgentPrivate::flushFrameSynchronousEvents(QQuickWindow *win)
         qCDebug(lcHoverTrace) << q << "frame-sync hover delivery done";
     }
 #endif
-    if (Q_UNLIKELY(QQuickDeliveryAgentPrivate::currentEventDeliveryAgent != q))
+    if (Q_UNLIKELY(QQuickDeliveryAgentPrivate::currentEventDeliveryAgent &&
+                   QQuickDeliveryAgentPrivate::currentEventDeliveryAgent != q))
         qCWarning(lcPtr, "detected interleaved frame-sync and actual events");
     QQuickDeliveryAgentPrivate::currentEventDeliveryAgent = deliveringAgent;
 }
