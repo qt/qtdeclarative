@@ -1180,7 +1180,7 @@ QJSEngine *qjsEngine(const QObject *object)
   two different engines will not be valid if one of these engines is deleted. This option is similar
   to QScriptEngine::ScriptOwnership.
 
-  Generally an application doesn't need to set an object's ownership explicitly. the JavaScript
+  Generally an application doesn't need to set an object's ownership explicitly. The JavaScript
   memory manager uses a heuristic to set the default ownership. By default, an object that is
   created by the JavaScript memory manager has JavaScriptOwnership. The exception to this are the
   root objects created by calling QQmlComponent::create() or QQmlComponent::beginCreate(), which
@@ -1193,10 +1193,17 @@ QJSEngine *qjsEngine(const QObject *object)
   but not to property getter invocations.
 
   Calling setObjectOwnership() overrides the default ownership.
+
+  \sa {Data Ownership}
 */
 
 /*!
   Sets the \a ownership of \a object.
+
+  An object with \c JavaScriptOwnership is not garbage collected as long
+  as it still has a parent, even if there are no references to it.
+
+  \sa QJSEngine::ObjectOwnership
 */
 void QJSEngine::setObjectOwnership(QObject *object, ObjectOwnership ownership)
 {
@@ -1213,6 +1220,8 @@ void QJSEngine::setObjectOwnership(QObject *object, ObjectOwnership ownership)
 
 /*!
   Returns the ownership of \a object.
+
+  \sa QJSEngine::ObjectOwnership
 */
 QJSEngine::ObjectOwnership QJSEngine::objectOwnership(QObject *object)
 {
