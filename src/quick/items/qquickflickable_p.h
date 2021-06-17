@@ -317,7 +317,6 @@ protected:
 private:
     Q_DISABLE_COPY(QQuickFlickable)
     Q_DECLARE_PRIVATE(QQuickFlickable)
-    friend class QQuickFlickableContentItem;
     friend class QQuickFlickableVisibleArea;
     friend class QQuickFlickableReboundTransition;
 };

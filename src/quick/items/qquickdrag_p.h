@@ -67,7 +67,6 @@ QT_BEGIN_NAMESPACE
 
 class QQuickItem;
 class QQuickDrag;
-class QQuickDragPrivate;
 
 class QQuickDragGrabber
 {

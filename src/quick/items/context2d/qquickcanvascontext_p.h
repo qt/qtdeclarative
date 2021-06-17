@@ -63,7 +63,6 @@ QT_BEGIN_NAMESPACE
 class QQuickCanvasItem;
 class QSGLayer;
 
-class QQuickCanvasContextPrivate;
 class QQuickCanvasContext : public QObject
 {
     Q_OBJECT

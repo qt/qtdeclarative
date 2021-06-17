@@ -109,7 +109,6 @@ Q_SIGNALS:
     void fromChanged(qreal from);
 };
 
-class QQuickScaleAnimatorPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickScaleAnimator : public QQuickAnimator
 {
     Q_OBJECT

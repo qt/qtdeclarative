@@ -65,7 +65,6 @@ class QSGContext;
 class QQuickSprite;
 class QQuickSpriteEngine;
 class QSGGeometryNode;
-class QQuickAnimatedSpriteMaterial;
 class QQuickAnimatedSpritePrivate;
 class QSGSpriteNode;
 class Q_AUTOTEST_EXPORT QQuickAnimatedSprite : public QQuickItem

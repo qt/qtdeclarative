@@ -68,7 +68,6 @@ class QQuickItem;
 class QQuickAbstractAnimation;
 
 class QQuickAnimatorController;
-class QQuickAnimatorProxyJobPrivate;
 
 class QSGOpacityNode;
 

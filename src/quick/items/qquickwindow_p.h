@@ -84,7 +84,6 @@ class QPointingDevice;
 class QQuickRenderControl;
 class QQuickWindowIncubationController;
 class QQuickWindowPrivate;
-class QQuickWindowRenderLoop;
 class QSGRenderLoop;
 class QTouchEvent;
 class QRhi;
