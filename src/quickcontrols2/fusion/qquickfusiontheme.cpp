@@ -47,6 +47,8 @@ void QQuickFusionTheme::initialize(QQuickTheme *theme)
     QPalette systemPalette;
     systemPalette.setColor(QPalette::Active, QPalette::ButtonText,
         isDarkSystemTheme ? QColor::fromRgb(0xe7e7e7) : QColor::fromRgb(0x252525));
+    systemPalette.setColor(QPalette::Inactive, QPalette::ButtonText,
+        isDarkSystemTheme ? QColor::fromRgb(0xe7e7e7) : QColor::fromRgb(0x252525));
     systemPalette.setColor(QPalette::Disabled, QPalette::ButtonText,
         isDarkSystemTheme ? QColor::fromRgb(0x777777) : QColor::fromRgb(0xb6b6b6));
     theme->setPalette(QQuickTheme::System, systemPalette);
