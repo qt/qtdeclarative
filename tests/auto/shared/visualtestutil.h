@@ -204,9 +204,10 @@ namespace QQuickVisualTestUtil
             if (!currentStyle.isEmpty() && style == currentStyle)
                 return false;
 
-            engine.reset(new QQmlEngine);
+            engine.reset();
             currentStyle = style;
             qmlClearTypeRegistrations();
+            engine.reset(new QQmlEngine);
             QQuickStyle::setStyle(style);
 
             QQmlComponent component(engine.data());
