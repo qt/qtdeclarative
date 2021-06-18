@@ -277,17 +277,17 @@ void tst_QQmlXmlListModel::elementErrors()
     QQmlComponent component(&engine, testFileUrl("elementErrors.qml"));
     QTest::ignoreMessage(QtWarningMsg,
                          (testFileUrl("elementErrors.qml").toString()
-                          + ":6:5: QML XmlListModelRole: An xml element must not start with '/'")
+                          + ":6:5: QML XmlListModelRole: An XML element must not start with '/'")
                                  .toUtf8()
                                  .constData());
     QTest::ignoreMessage(QtWarningMsg,
                          (testFileUrl("elementErrors.qml").toString()
-                          + ":7:5: QML XmlListModelRole: An xml element must not end with '/'")
+                          + ":7:5: QML XmlListModelRole: An XML element must not end with '/'")
                                  .toUtf8()
                                  .constData());
     QTest::ignoreMessage(QtWarningMsg,
                          (testFileUrl("elementErrors.qml").toString()
-                          + ":8:5: QML XmlListModelRole: An xml element must not contain \"//\"")
+                          + ":8:5: QML XmlListModelRole: An XML element must not contain \"//\"")
                                  .toUtf8()
                                  .constData());
 

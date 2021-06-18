@@ -322,7 +322,7 @@ Import Import::fromUriString(QString importStr, Version v, QString importId, Err
                 v = Version::fromString(m.captured(2));
             else if (!m.captured(u"version").isEmpty())
                 domParsingErrors()
-                        .warning(tr("Version %1 in import string '%2' overridden by explicit  "
+                        .warning(tr("Version %1 in import string '%2' overridden by explicit "
                                     "version %3")
                                          .arg(m.captured(2), importStr, v.stringValue()))
                         .handle(handler);
@@ -330,14 +330,14 @@ Import Import::fromUriString(QString importStr, Version v, QString importId, Err
                 importId = m.captured(u"importId");
             else if (!m.captured(u"importId").isEmpty())
                 domParsingErrors()
-                        .warning(tr("namespace %1 in import string '%2' overridden by explicit  "
+                        .warning(tr("namespace %1 in import string '%2' overridden by explicit "
                                     "importId %3")
                                          .arg(m.captured(u"importId"), importStr, importId))
                         .handle(handler);
             return Import(m.captured(u"uri").trimmed(), v, importId);
         }
         domParsingErrors()
-                .error(tr("Unexpected uri format in import '%1'").arg(importStr))
+                .error(tr("Unexpected URI format in import '%1'").arg(importStr))
                 .handle(handler);
         return Import();
     }
@@ -356,7 +356,7 @@ Import Import::fromFileString(QString importStr, QString baseDir, QString import
     QString path = p.canonicalFilePath();
     if (path.isEmpty()) {
         domParsingErrors()
-                .warning(tr("Non existing directory or file referred in uri of import '%1'")
+                .warning(tr("Non existing directory or file referred in URI of import '%1'")
                                  .arg(importStr))
                 .handle(handler);
         path = p.filePath();
