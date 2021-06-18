@@ -232,7 +232,7 @@ public:
     {
         m_propertyBindings.insert(binding.propertyName(), binding);
     }
-    QHash<QString, QQmlJSMetaPropertyBinding> ownPropertyBindings() const
+    QMultiHash<QString, QQmlJSMetaPropertyBinding> ownPropertyBindings() const
     {
         return m_propertyBindings;
     }
@@ -247,6 +247,7 @@ public:
 
     bool hasPropertyBinding(const QString &name) const;
     QQmlJSMetaPropertyBinding propertyBinding(const QString &name) const;
+    QList<QQmlJSMetaPropertyBinding> propertyBindings(const QString &name) const;
 
     static QQmlJSScope::ConstPtr ownerOfProperty(const QQmlJSScope::ConstPtr &self,
                                                  const QString &name);
@@ -388,7 +389,7 @@ private:
 
     QMultiHash<QString, QQmlJSMetaMethod> m_methods;
     QHash<QString, QQmlJSMetaProperty> m_properties;
-    QHash<QString, QQmlJSMetaPropertyBinding> m_propertyBindings;
+    QMultiHash<QString, QQmlJSMetaPropertyBinding> m_propertyBindings;
     QHash<QString, QQmlJSMetaEnum> m_enumerations;
 
     QVector<QQmlJSAnnotation> m_annotations;

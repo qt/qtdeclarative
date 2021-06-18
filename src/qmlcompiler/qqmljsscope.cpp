@@ -441,6 +441,18 @@ QQmlJSMetaPropertyBinding QQmlJSScope::propertyBinding(const QString &name) cons
     return binding;
 }
 
+QList<QQmlJSMetaPropertyBinding> QQmlJSScope::propertyBindings(const QString &name) const
+{
+    QList<QQmlJSMetaPropertyBinding> bindings;
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        const auto range = scope->m_propertyBindings.equal_range(name);
+        for (auto it = range.first; it != range.second; ++it)
+            bindings.append(*it);
+        return false;
+    });
+    return bindings;
+}
+
 bool QQmlJSScope::hasInterface(const QString &name) const
 {
     return searchBaseAndExtensionTypes(

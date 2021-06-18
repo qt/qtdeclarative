@@ -529,6 +529,11 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Cannot assign to default property of incompatible type")
             << QStringLiteral("Cannot assign to non-existent default property")
             << false;
+    QTest::newRow("MultiDefaultPropertyWithWrongType")
+            << QStringLiteral("multiDefaultPropertyWithWrongType.qml")
+            << QStringLiteral("Cannot assign to default property of incompatible type")
+            << QStringLiteral("Cannot assign to non-existent default property")
+            << false;
     QTest::newRow("InvalidImport")
             << QStringLiteral("invalidImport.qml")
             << QStringLiteral("Failed to import FooBar. Are your include paths set up properly?")
@@ -727,6 +732,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("defaultPropertyComponent2") << QStringLiteral("defaultPropertyComponent.2.qml");
     QTest::newRow("defaultPropertyListModel") << QStringLiteral("defaultPropertyListModel.qml");
     QTest::newRow("defaultPropertyVar") << QStringLiteral("defaultPropertyVar.qml");
+    QTest::newRow("multiDefaultProperty") << QStringLiteral("multiDefaultPropertyOk.qml");
     QTest::newRow("propertyDelegate") << QStringLiteral("propertyDelegate.qml");
     QTest::newRow("duplicateQmldirImport") << QStringLiteral("qmldirImport/duplicate.qml");
     QTest::newRow("Used imports") << QStringLiteral("used.qml");

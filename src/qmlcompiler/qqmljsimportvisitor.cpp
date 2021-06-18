@@ -435,29 +435,29 @@ void QQmlJSImportVisitor::processDefaultProperties()
                     Log_Property, it.value().constFirst()->sourceLocation());
         }
 
-        // TODO: Currently we only support binding one scope, adjust this once this is no longer
-        // true
-        const QQmlJSScope::ConstPtr scope = it.value().constFirst();
-
         QQmlJSMetaPropertyBinding binding(defaultProp);
-        binding.setValue(scope);
-        binding.setValueTypeName(getScopeName(scope, QQmlJSScope::QMLScope));
-
-        it.key()->addOwnPropertyBinding(binding);
-
         auto propType = defaultProp.type();
-        if (propType.isNull() || !propType->isFullyResolved()
-            || !scope->isFullyResolved()) // should be an error somewhere else
+        if (propType.isNull() || !propType->isFullyResolved())
             return;
 
-        // Assigning any element to a QQmlComponent property implicitly wraps it into a Component
-        // Check whether the property can be assigned the scope
-        if (propType->canAssign(scope))
-            return;
+        const auto scopes = *it;
+        for (const auto &scope : scopes) {
+            binding.setValue(QQmlJSScope::ConstPtr(scope));
+            binding.setValueTypeName(getScopeName(scope, QQmlJSScope::QMLScope));
+            it.key()->addOwnPropertyBinding(binding);
 
-        m_logger.logWarning(
-                QStringLiteral("Cannot assign to default property of incompatible type"),
-                Log_Property, scope->sourceLocation());
+            if (!scope->isFullyResolved()) // should be an error somewhere else
+                continue;
+
+            // Assigning any element to a QQmlComponent property implicitly wraps it into a Component
+            // Check whether the property can be assigned the scope
+            if (propType->canAssign(scope))
+                continue;
+
+            m_logger.logWarning(
+                    QStringLiteral("Cannot assign to default property of incompatible type"),
+                    Log_Property, scope->sourceLocation());
+        }
     }
 }
 
