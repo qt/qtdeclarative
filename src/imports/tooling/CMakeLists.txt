@@ -15,6 +15,7 @@ set_source_files_properties(${qml_files} PROPERTIES
 
 qt_internal_add_qml_module(quicktooling
     URI "QtQuick.tooling"
+    NO_SYNC_QT
     VERSION "${PROJECT_VERSION}"
     NO_PLUGIN_OPTIONAL
     PLUGIN_TARGET quicktooling
