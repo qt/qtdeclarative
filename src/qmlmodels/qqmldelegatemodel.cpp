@@ -968,6 +968,17 @@ void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *mod
             contextData->extraObject = modelItemToIncubate;
         }
 
+        // If we have required properties, we clear the context object
+        // so that the model role names are not polluting the context
+        if (incubating) {
+            Q_ASSERT(incubating->contextData);
+            incubating->contextData->contextObject = nullptr;
+        }
+
+        if (proxyContext) {
+            proxyContext->contextObject = nullptr;
+        }
+
         if (incubatorPriv->requiredProperties().empty())
             return;
         RequiredProperties &requiredProperties = incubatorPriv->requiredProperties();
@@ -1279,6 +1290,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
 
         QQmlContextData *ctxt = new QQmlContextData;
         ctxt->setParent(QQmlContextData::get(creationContext  ? creationContext : m_context.data()));
+        ctxt->contextObject = cacheItem;
         cacheItem->contextData = ctxt;
 
         if (m_adaptorModel.hasProxyObject()) {
@@ -1289,6 +1301,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
                 QObject *proxied = proxy->proxiedObject();
                 cacheItem->incubationTask->proxiedObject = proxied;
                 cacheItem->incubationTask->proxyContext = ctxt;
+                ctxt->contextObject = cacheItem;
                 // We don't own the proxied object. We need to clear it if it goes away.
                 QObject::connect(proxied, &QObject::destroyed,
                                  cacheItem, &QQmlDelegateModelItem::childContextObjectDestroyed);
