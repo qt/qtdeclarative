@@ -75,8 +75,6 @@ function(qt_internal_add_qml_module target)
     #
     # INSTALL_SOURCE_QMLDIR takes a path to an existing qmldir file that should be installed.
     set(internal_option_args
-        # TODO: For backward compatibility, remove once all repos no longer use it
-        NO_CREATE_BACKING_TARGET
     )
 
     set(internal_single_args
