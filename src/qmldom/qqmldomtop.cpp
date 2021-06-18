@@ -1518,7 +1518,7 @@ std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(DomItem &self, Q
                 "Version::Latest)");
     std::shared_ptr<ModuleIndex> res;
     if (changeable == Changeable::Writable && (m_options & Option::Exported))
-        myErrors().error(tr("asked mutable module in Multithreaded env")).handle(errorHandler);
+        myErrors().error(tr("A mutable module was requested in a multithreaded environment")).handle(errorHandler);
     if (options != EnvLookup::BaseOnly) {
         QMutexLocker l(mutex());
         auto it = m_moduleIndexWithUri.find(uri);
@@ -1831,7 +1831,7 @@ void DomEnvironment::addLoadInfo(DomItem &self, std::shared_ptr<LoadInfo> loadIn
     }
     if (oldVal && oldVal->status() != LoadInfo::Status::Done) {
         self.addError(myErrors()
-                              .error(tr("addLoadinfo replaces a non finished load info for %1")
+                              .error(tr("addLoadinfo replaces unfinished load info for %1")
                                              .arg(p.toString()))
                               .handle());
     }

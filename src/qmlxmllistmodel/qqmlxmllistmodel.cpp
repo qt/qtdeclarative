@@ -112,7 +112,7 @@ void QQmlXmlListModelRole::setName(const QString &name)
 /*!
     \qmlproperty string QtQml.XmlListModel::XmlListModelRole::elementName
 
-    The name of the xml element, or a path to the xml element, that will be
+    The name of the XML element, or a path to the XML element, that will be
     used to read the data. The element must actually contain text.
 
     Optionally the \l attributeName property can be specified to extract
@@ -120,8 +120,8 @@ void QQmlXmlListModelRole::setName(const QString &name)
 
 //! [basic-example]
     For example, the following model has a role named "title", which reads the
-    data from the xml element \c {<title>}. It also has another role named
-    "timestamp", which uses the same xml element \c {<title>}, but reads its
+    data from the XML element \c {<title>}. It also has another role named
+    "timestamp", which uses the same XML element \c {<title>}, but reads its
     "created" attribute to extract the actual value.
 
     \qml
@@ -147,7 +147,7 @@ void QQmlXmlListModelRole::setName(const QString &name)
 
 //! [empty-elementName-example]
     When the \l attributeName is specified, the \l elementName can be left
-    empty. In this case the attribute of the top level xml element of the query
+    empty. In this case the attribute of the top level XML element of the query
     will be read.
 
     For example, if you have the following xml document:
@@ -224,13 +224,13 @@ QString QQmlXmlListModelRole::elementName() const
 void QQmlXmlListModelRole::setElementName(const QString &name)
 {
     if (name.startsWith(QLatin1Char('/'))) {
-        qmlWarning(this) << tr("An xml element must not start with '/'");
+        qmlWarning(this) << tr("An XML element must not start with '/'");
         return;
     } else if (name.endsWith(QLatin1Char('/'))) {
-        qmlWarning(this) << tr("An xml element must not end with '/'");
+        qmlWarning(this) << tr("An XML element must not end with '/'");
         return;
     } else if (name.contains(QStringLiteral("//"))) {
-        qmlWarning(this) << tr("An xml element must not contain \"//\"");
+        qmlWarning(this) << tr("An XML element must not contain \"//\"");
         return;
     }
 
@@ -243,14 +243,14 @@ void QQmlXmlListModelRole::setElementName(const QString &name)
 /*!
     \qmlproperty string QtQml.XmlListModel::XmlListModelRole::attributeName
 
-    The attribute of the xml element that will be used to read the data.
-    The xml element is specified by \l elementName property.
+    The attribute of the XML element that will be used to read the data.
+    The XML element is specified by \l elementName property.
 
     \include qqmlxmllistmodel.cpp basic-example
 
     \include qqmlxmllistmodel.cpp empty-elementName-example
 
-    If you do not need to parse any attributes for the specified xml element,
+    If you do not need to parse any attributes for the specified XML element,
     simply leave this property blank.
 
     \sa elementName

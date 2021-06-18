@@ -500,7 +500,7 @@ Path Path::fromString(QStringView s, ErrorHandler errorHandler)
                                            .arg(QString::number(i0))).handle(errorHandler);
                         return Path();
                     } else {
-                        myErrors().info(tr("Index shound use square brackets and not a dot (at char %1).")
+                        myErrors().info(tr("Index should use square brackets and not a dot (at char %1).")
                                            .arg(QString::number(i0))).handle(errorHandler);
                     }
                     state = PathEls::ParserState::End;
