@@ -106,9 +106,6 @@ int main(int argc, char **argv)
     QCommandLineOption directCallsOption(QStringLiteral("direct-calls"), QCoreApplication::translate("main", "This option is ignored."));
     directCallsOption.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(directCallsOption);
-    QCommandLineOption qmlJSRuntimeOption(QStringLiteral("qmljs-runtime"), QCoreApplication::translate("main", "This option is ignored."));
-    qmlJSRuntimeOption.setFlags(QCommandLineOption::HiddenFromHelp);
-    parser.addOption(qmlJSRuntimeOption);
     QCommandLineOption includesOption(QStringLiteral("i"), QCoreApplication::translate("main", "This option is ignored."), QCoreApplication::translate("main", "ignored file"));
     includesOption.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(includesOption);
