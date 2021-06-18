@@ -288,4 +288,22 @@ void tst_qmltyperegistrar::namespacesAndValueTypes()
     check(QMetaType::fromName("ValueTypeWithEnum2"), QMetaType::fromType<ValueTypeWithEnum2>());
 }
 
+void tst_qmltyperegistrar::namespaceExtendedNamespace()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData("import QtQml\n"
+              "import QmlTypeRegistrarTest\n"
+              "QtObject {\n"
+              "    property int b: ForeignNamespace.B\n"
+              "    property int f: ForeignNamespace.F\n"
+              "}", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->property("b").toInt(), int(ExtensionValueType::B));
+    QCOMPARE(o->property("f").toInt(), int(BaseNamespace::F));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

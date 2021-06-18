@@ -345,11 +345,13 @@ merged with the original target class when used from within QML. For example:
 The \c leftMargin property is a new property added to an existing C++ type, \l
 QLineEdit, without modifying its source code.
 
-The QML_EXTENDED(extended) macro is for registering extended types. The
+The QML_EXTENDED(extension) macro is for registering extended types. The
 argument is the name of another class to be used as extension.
 
 You can also use QML_EXTENDED_NAMESPACE(namespace) to register a namespace, and
-especially the enumerations declared within, as an extension to a type.
+especially the enumerations declared within, as an extension to a type. If the
+type you are extending is itself a namespace, you need to use
+QML_NAMESPACE_EXTENDED(namespace) instead.
 
 An extension class is a regular QObject, with a constructor that takes a QObject
 pointer. However, the extension class creation is delayed until the first

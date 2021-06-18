@@ -220,6 +220,7 @@ int main(int argc, char **argv)
         const QString className = classDef[QLatin1String("qualifiedClassName")].toString();
 
         QString targetName = className;
+        QString extendedName;
         bool seenQmlElement = false;
         const QJsonArray classInfos = classDef.value(QLatin1String("classInfos")).toArray();
         for (const QJsonValue v : classInfos) {
@@ -228,6 +229,8 @@ int main(int argc, char **argv)
                 seenQmlElement = true;
             else if (name == QStringLiteral("QML.Foreign"))
                 targetName = v[QLatin1String("value")].toString();
+            else if (name == QStringLiteral("QML.Extended"))
+                extendedName = v[QStringLiteral("value")].toString();
         }
 
         // We want all related metatypes to be registered by name, so that we can look them up
@@ -273,11 +276,17 @@ int main(int argc, char **argv)
                         qPrintable(targetTypeName));
             }
 
+            auto metaObjectPointer = [](const QString &name) -> QString {
+                return u'&' + name + QStringLiteral("::staticMetaObject");
+            };
+
             if (seenQmlElement) {
-                fprintf(output, "\n    qmlRegisterNamespaceAndRevisions(&%s::staticMetaObject, "
-                                "\"%s\", %s, nullptr, &%s::staticMetaObject);",
-                        qPrintable(targetName), qPrintable(module), qPrintable(majorVersion),
-                        qPrintable(className));
+                fprintf(output, "\n    qmlRegisterNamespaceAndRevisions(%s, "
+                                "\"%s\", %s, nullptr, %s, %s);",
+                        qPrintable(metaObjectPointer(targetName)), qPrintable(module),
+                        qPrintable(majorVersion), qPrintable(metaObjectPointer(className)),
+                        extendedName.isEmpty() ? "nullptr"
+                                               : qPrintable(metaObjectPointer(extendedName)));
             }
         } else {
             if (seenQmlElement) {

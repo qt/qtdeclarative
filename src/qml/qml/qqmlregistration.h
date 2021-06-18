@@ -118,6 +118,9 @@ QT_BEGIN_NAMESPACE
     template<typename T, typename... Args> \
     friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
 
+#define QML_NAMESPACE_EXTENDED(EXTENDED_NAMESPACE) \
+    Q_CLASSINFO("QML.Extended", #EXTENDED_NAMESPACE)
+
 #define QML_FOREIGN(FOREIGN_TYPE) \
     Q_CLASSINFO("QML.Foreign", #FOREIGN_TYPE) \
     using QmlForeignType = FOREIGN_TYPE; \

@@ -382,6 +382,34 @@ struct BValueTypeWithEnumForeign2
     QML_NAMED_ELEMENT(valueTypeWithEnum2)
 };
 
+
+namespace BaseNamespace
+{
+Q_NAMESPACE
+enum BBB {
+    D, E, F
+};
+Q_ENUM_NS(BBB)
+}
+
+struct ExtensionValueType
+{
+    Q_GADGET
+public:
+    enum EEE {
+        A, B, C
+    };
+    Q_ENUM(EEE)
+};
+
+namespace ForeignNamespace
+{
+Q_NAMESPACE
+QML_FOREIGN_NAMESPACE(BaseNamespace)
+QML_NAMESPACE_EXTENDED(ExtensionValueType)
+QML_ELEMENT
+}
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -411,6 +439,7 @@ private slots:
     void finalProperty();
     void parentProperty();
     void namespacesAndValueTypes();
+    void namespaceExtendedNamespace();
 
 private:
     QByteArray qmltypesData;

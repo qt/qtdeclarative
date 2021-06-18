@@ -790,8 +790,9 @@ inline void qmlRegisterTypesAndRevisions<>(const char *, int, QList<int> *)
 
 inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject,
                                              const char *uri, int versionMajor,
-                                             QList<int> *qmlTypeIds = nullptr,
-                                             const QMetaObject *classInfoMetaObject = nullptr)
+                                             QList<int> *qmlTypeIds,
+                                             const QMetaObject *classInfoMetaObject,
+                                             const QMetaObject *extensionMetaObject)
 {
     QQmlPrivate::RegisterTypeAndRevisions type = {
         0,
@@ -816,13 +817,22 @@ inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject,
         -1,
 
         nullptr,
-        nullptr,
+        extensionMetaObject,
 
         &qmlCreateCustomParser<void>,
         qmlTypeIds
     };
 
     qmlregister(QQmlPrivate::TypeAndRevisionsRegistration, &type);
+}
+
+inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject,
+                                             const char *uri, int versionMajor,
+                                             QList<int> *qmlTypeIds = nullptr,
+                                             const QMetaObject *classInfoMetaObject = nullptr)
+{
+    qmlRegisterNamespaceAndRevisions(metaObject, uri, versionMajor, qmlTypeIds,
+                                     classInfoMetaObject, nullptr);
 }
 
 int Q_QML_EXPORT qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *qmlName);
