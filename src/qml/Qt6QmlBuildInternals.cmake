@@ -70,15 +70,12 @@ function(qt_internal_add_qml_module target)
     # Args used by qt_internal_add_qml_module directly, which should not be passed to any other
     # functions.
     #
-    # NO_CREATE_BACKING_TARGET option skips the creation of the backing target. It is useful in
-    # the case where the backing target already exists, a plugin target should still be created
-    # and the qml specific install rules should still apply to the backing target.
-    #
     # INSTALL_SOURCE_QMLTYPES takes a path to an existing plugins.qmltypes file that should be
     # installed.
     #
     # INSTALL_SOURCE_QMLDIR takes a path to an existing qmldir file that should be installed.
     set(internal_option_args
+        # TODO: For backward compatibility, remove once all repos no longer use it
         NO_CREATE_BACKING_TARGET
     )
 
@@ -137,7 +134,8 @@ function(qt_internal_add_qml_module target)
 
     set(plugin_args "")
     if(NOT arg_PLUGIN_TARGET STREQUAL target)
-        if(NOT arg_NO_CREATE_BACKING_TARGET)
+        # Allow using an existing backing target.
+        if(NOT TARGET ${target})
             # Create the backing target now to handle module-related things
             qt_remove_args(module_args
                 ARGS_TO_REMOVE
