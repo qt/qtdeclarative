@@ -35,6 +35,16 @@
 **
 ** $QT_END_LICENSE$
 **/
+
+// Suppress GCC 11 warning about maybe-uninitialized copy of
+// another Data. We're not sure if the compiler is actually right,
+// but in this type of warning, it often isn't.
+//#if defined(Q_CC_GNU) && Q_CC_GNU >= 1100
+//QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized")
+#if defined(__GNUC__) && __GNUC__ >= 11
+#  pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
 #include "qqmldomelements_p.h"
 #include "qqmldomcomments_p.h"
 #include "qqmldomastdumper_p.h"
