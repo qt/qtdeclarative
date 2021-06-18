@@ -79,6 +79,32 @@ enum class Reply {
     TextElided,
 };
 
+inline QDataStream &operator<<(QDataStream &ds, Request r)
+{
+    return ds << int(r);
+}
+
+inline QDataStream &operator>>(QDataStream &ds, Request &r)
+{
+    int i;
+    ds >> i;
+    r = Request(i);
+    return ds;
+}
+
+inline QDataStream &operator<<(QDataStream &ds, Reply r)
+{
+    return ds << int(r);
+}
+
+inline QDataStream &operator>>(QDataStream &ds, Reply &r)
+{
+    int i;
+    ds >> i;
+    r = Reply(i);
+    return ds;
+}
+
 inline QByteArray createChangeLanguageRequest(QDataStream &packet, const QUrl &url,
                                               const QString &locale)
 {
@@ -166,16 +192,19 @@ public:
 
     friend QDataStream &operator>>(QDataStream &stream, TranslationIssue &issue)
     {
-        return stream >> issue.codeMarker
-                      >> issue.language
-                      >> issue.type;
+        int t;
+        stream >> issue.codeMarker
+                >> issue.language
+                >> t;
+        issue.type = Type(t);
+        return stream;
     }
 
     friend QDataStream &operator<<(QDataStream &stream, const TranslationIssue &issue)
     {
         return stream << issue.codeMarker
                       << issue.language
-                      << issue.type;
+                      << int(issue.type);
     }
 
     friend bool operator==(const TranslationIssue &first, const TranslationIssue &second)
