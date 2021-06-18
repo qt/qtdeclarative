@@ -1,0 +1,98 @@
+/****************************************************************************
+**
+** Copyright (C) 2021 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qtquick-tool-qmllint.html
+\title qmllint
+\brief A tool for verifying the syntax of QML files and warning about
+anti-patterns.
+
+\e qmllint is a tool shipped with Qt, that verifies the syntatic validity of
+QML files.
+It also warns about some QML anti-patterns. If you want to disable a specific
+warning type, you can find the appropriate flag for doing so by passing
+\c{--help} on the command line.
+
+By default, some issues will result in warnings that will be printed and result
+in a non-zero exit code.
+Minor issues however (such as unused imports) are just informational messages
+by default and will not affect the exit code.
+qmllint is very configurable and allows for disabling warnings or changing how
+they are treated.
+Users may freely turn any issue into a warning, informational message, or
+disable them outright.
+
+qmllint warns about:
+\list
+  \li Unqualified accesses of properties.
+  \li Usage of signal handlers without a matching signal.
+  \li Usage of with statements in QML.
+  \li Unused imports.
+  \li Deprecated components and properties.
+  \li And many other things.
+\endlist
+
+\note In order for qmllint to work properly, it requires type information.
+That information is provided by QML modules in the import paths.
+The current directory, as well as the import paths for Qt's built-in types,
+are used as import paths by default.
+To add more import paths not included in the default,
+add them via the \c{-I} flag.
+
+To get an overview and explanation of all available command line options, run \c{qmllint --help}.
+
+\section2 Settings
+
+In addition to passing command-line options, you can also
+configure qmllint via a settings file.
+The command line \c{--write-defaults} will generate one for you.
+
+Setting files are named \c{.qmllint.ini} and look like this:
+
+\quotefile qmllint/config.ini
+
+Warning levels may be set to \c{info}, \c{warning} or \c{disable} just as with
+command line options.
+
+qmllint will automatically look for a settings file at the location of the qml
+file that is being linted.
+It also looks through all parent directories to find this file and
+automatically applies the settings therein. You can disable this behavior by
+using \c{--ignore-settings}.
+You may always override these defaults by specifying command line parameters
+that take precedence over the warning levels in settings.
+
+\section2 Scripting
+
+qmllint can output JSON via the \c{--json} option which will return valid JSON
+with warning messages, file and line location of warnings, and their severity
+level.
+This can be used to more easily integrate qmllint in your pre-commit hooks or
+CI testing.
+
+\sa \l{Type Description Files}{qmltypes}
+*/
