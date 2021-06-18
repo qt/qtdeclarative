@@ -963,8 +963,19 @@ void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *mod
     if (incubatorPriv->hadRequiredProperties()) {
         QQmlData *d = QQmlData::get(object);
         auto contextData = d ? d->context : nullptr;
-        if (contextData)
+        if (contextData) {
             contextData->setExtraObject(modelItemToIncubate);
+        }
+
+        // If we have required properties, we clear the context object
+        // so that the model role names are not polluting the context
+        if (incubating) {
+            Q_ASSERT(incubating->contextData);
+            incubating->contextData->setContextObject(nullptr);
+        }
+        if (proxyContext) {
+            proxyContext->setContextObject(nullptr);
+        }
 
         if (incubatorPriv->requiredProperties().empty())
             return;
@@ -1277,6 +1288,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
 
         QQmlRefPointer<QQmlContextData> ctxt = QQmlContextData::createRefCounted(
                     QQmlContextData::get(creationContext  ? creationContext : m_context.data()));
+        ctxt->setContextObject(cacheItem);
         cacheItem->contextData = ctxt;
 
         if (m_adaptorModel.hasProxyObject()) {
@@ -1286,6 +1298,7 @@ QObject *QQmlDelegateModelPrivate::object(Compositor::Group group, int index, QQ
                 QObject *proxied = proxy->proxiedObject();
                 cacheItem->incubationTask->proxiedObject = proxied;
                 cacheItem->incubationTask->proxyContext = ctxt;
+                ctxt->setContextObject(cacheItem);
                 // We don't own the proxied object. We need to clear it if it goes away.
                 QObject::connect(proxied, &QObject::destroyed,
                                  cacheItem, &QQmlDelegateModelItem::childContextObjectDestroyed);
