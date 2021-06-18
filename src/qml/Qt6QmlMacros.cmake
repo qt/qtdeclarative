@@ -434,7 +434,7 @@ function(qt6_add_qml_module target)
         QT_QML_MODULE_PLUGIN_TYPES_FILE
         QT_QML_MODULE_RESOURCE_PATHS
         QT_QMLCACHEGEN_DIRECT_CALLS
-        QT_QMLCACHEGEN_QMLJS_RUNTIME
+        QT_QMLCACHEGEN_ARGUMENTS
     )
     foreach(prop IN LISTS ensure_set_properties)
         get_target_property(val ${target} ${prop})
@@ -1208,7 +1208,9 @@ function(qt6_target_qml_sources target)
     if(NOT no_cachegen)
         _qt_internal_genex_getproperty(types_file    ${target} QT_QML_MODULE_PLUGIN_TYPES_FILE)
         _qt_internal_genex_getproperty(direct_calls  ${target} QT_QMLCACHEGEN_DIRECT_CALLS)
-        _qt_internal_genex_getproperty(qmljs_runtime ${target} QT_QMLCACHEGEN_QMLJS_RUNTIME)
+        _qt_internal_genex_getjoinedproperty(arguments ${target}
+            QT_QMLCACHEGEN_ARGUMENTS "$<SEMICOLON>" "$<SEMICOLON>"
+        )
         _qt_internal_genex_getjoinedproperty(import_paths ${target}
             QT_QML_IMPORT_PATH "-I$<SEMICOLON>" "$<SEMICOLON>"
         )
@@ -1219,7 +1221,7 @@ function(qt6_target_qml_sources target)
             "$<${have_import_paths}:${import_paths}>"
             "$<${have_types_file}:-i$<SEMICOLON>${types_file}>"
             "$<${have_direct_calls}:--direct-calls>"
-            "$<${have_qmljs_runtime}:--qmljs-runtime>"
+            "$<${have_arguments}:${arguments}>"
             ${qrc_resource_args}
         )
     endif()
