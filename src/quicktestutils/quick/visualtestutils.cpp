@@ -147,7 +147,7 @@ bool QQuickVisualTestUtils::compareImages(const QImage &ia, const QImage &ib, QS
 QQuickItem *QQuickVisualTestUtils::findViewDelegateItem(QQuickItemView *itemView, int index, FindViewDelegateItemFlags flags)
 {
     if (QQuickTest::qIsPolishScheduled(itemView)) {
-        if (!QQuickTest::qWaitForItemPolished(itemView)) {
+        if (!QQuickTest::qWaitForPolish(itemView)) {
             qWarning() << "failed to polish" << itemView;
             return nullptr;
         }

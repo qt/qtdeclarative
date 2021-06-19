@@ -81,7 +81,7 @@ Q_DECLARE_METATYPE(QMarginsF);
 
 #define WAIT_UNTIL_POLISHED_ARG(item) \
     QVERIFY(QQuickTest::qIsPolishScheduled(item)); \
-    QVERIFY(QQuickTest::qWaitForItemPolished(item))
+    QVERIFY(QQuickTest::qWaitForPolish(item))
 #define WAIT_UNTIL_POLISHED WAIT_UNTIL_POLISHED_ARG(tableView)
 
 class tst_QQuickTableView : public QQmlDataTest

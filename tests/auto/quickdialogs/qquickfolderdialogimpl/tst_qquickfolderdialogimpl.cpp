@@ -496,7 +496,7 @@ void tst_QQuickFolderDialogImpl::goUp()
     auto barListView = qobject_cast<QQuickListView*>(breadcrumbBar->contentItem());
     QVERIFY(barListView);
     if (QQuickTest::qIsPolishScheduled(barListView))
-        QVERIFY(QQuickTest::qWaitForItemPolished(barListView));
+        QVERIFY(QQuickTest::qWaitForPolish(barListView));
     QVERIFY(clickButton(breadcrumbBar->upButton()));
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempDir.path()));
     // The previous directory that we were in should now be selected (matches e.g. Windows and Ubuntu).
@@ -532,7 +532,7 @@ void tst_QQuickFolderDialogImpl::goUpWhileTextEditHasFocus()
     auto barListView = qobject_cast<QQuickListView*>(breadcrumbBar->contentItem());
     QVERIFY(barListView);
     if (QQuickTest::qIsPolishScheduled(barListView))
-        QVERIFY(QQuickTest::qWaitForItemPolished(barListView));
+        QVERIFY(QQuickTest::qWaitForPolish(barListView));
     QVERIFY(clickButton(breadcrumbBar->upButton()));
     // The path should have changed to the parent directory.
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempDir.path()));
@@ -582,7 +582,7 @@ void tst_QQuickFolderDialogImpl::goIntoLargeFolder()
     auto folderDialogListView = dialogHelper.quickDialog->findChild<QQuickListView*>("folderDialogListView");
     QVERIFY(folderDialogListView);
     if (QQuickTest::qIsPolishScheduled(folderDialogListView))
-        QVERIFY(QQuickTest::qWaitForItemPolished(folderDialogListView));
+        QVERIFY(QQuickTest::qWaitForPolish(folderDialogListView));
     // Just to be safe, make sure it's at least twice as big.
     if (folderDialogListView->contentItem()->height() < folderDialogListView->height() * 2) {
         QSKIP(qPrintable(QString::fromLatin1("Expected height of folderDialogListView's contentItem (%1)" \

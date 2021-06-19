@@ -70,7 +70,7 @@ using namespace QQuickVisualTestUtils;
     Q_UNUSED(model)
 
 #define WAIT_UNTIL_POLISHED_ARG(item) \
-    QVERIFY(QQuickTest::qWaitForItemPolished(item))
+    QVERIFY(QQuickTest::qWaitForPolish(item))
 #define WAIT_UNTIL_POLISHED WAIT_UNTIL_POLISHED_ARG(treeView)
 
 // ########################################################

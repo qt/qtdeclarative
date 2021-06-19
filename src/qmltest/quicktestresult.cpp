@@ -807,7 +807,7 @@ bool QuickTestResult::isPolishScheduled(QQuickItem *item) const
 
 bool QuickTestResult::waitForItemPolished(QQuickItem *item, int timeout)
 {
-    return QQuickTest::qWaitForItemPolished(item, timeout);
+    return QQuickTest::qWaitForPolish(item, timeout);
 }
 
 namespace QTest {

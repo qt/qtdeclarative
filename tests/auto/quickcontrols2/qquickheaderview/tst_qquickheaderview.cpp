@@ -320,11 +320,11 @@ void tst_QQuickHeaderView::testOrientation()
 
     hhv->setSyncView(&otherView);
     hhv->setSyncDirection(Qt::Vertical);
-    QVERIFY(QQuickTest::qWaitForItemPolished(hhv));
+    QVERIFY(QQuickTest::qWaitForPolish(hhv));
 
     vhv->setSyncView(&otherView);
     vhv->setSyncDirection(Qt::Horizontal);
-    QVERIFY(QQuickTest::qWaitForItemPolished(vhv));
+    QVERIFY(QQuickTest::qWaitForPolish(vhv));
 
     // Explicitly setting a different synDirection is ignored
     QCOMPARE(hhv->syncDirection(), Qt::Horizontal);

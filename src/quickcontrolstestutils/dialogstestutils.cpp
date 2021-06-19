@@ -45,7 +45,7 @@ bool QQuickDialogTestUtils::verifyFileDialogDelegates(QQuickListView *fileDialog
     const QStringList &expectedFiles, QString &failureMessage)
 {
     if (QQuickTest::qIsPolishScheduled(fileDialogListView)) {
-        if (!QQuickTest::qWaitForItemPolished(fileDialogListView)) {
+        if (!QQuickTest::qWaitForPolish(fileDialogListView)) {
             failureMessage = QLatin1String("Failed to polish fileDialogListView");
             return false;
         }
@@ -89,7 +89,7 @@ bool QQuickDialogTestUtils::verifyBreadcrumbDelegates(QQuickFolderBreadcrumbBar 
     }
 
     if (QQuickTest::qIsPolishScheduled(breadcrumbBarListView)) {
-        if (!QQuickTest::qWaitForItemPolished(breadcrumbBarListView)) {
+        if (!QQuickTest::qWaitForPolish(breadcrumbBarListView)) {
             failureMessage = QLatin1String("Failed to polish breadcrumbBarListView");
             return false;
         }

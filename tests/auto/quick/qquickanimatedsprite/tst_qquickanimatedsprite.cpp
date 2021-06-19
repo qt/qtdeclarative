@@ -321,7 +321,7 @@ void tst_qquickanimatedsprite::test_reparenting()
     // don't crash (QTBUG-51162)
     sprite->polish();
     QVERIFY(QQuickTest::qIsPolishScheduled(sprite));
-    QVERIFY(QQuickTest::qWaitForItemPolished(sprite));
+    QVERIFY(QQuickTest::qWaitForPolish(sprite));
 }
 
 class KillerThread : public QThread

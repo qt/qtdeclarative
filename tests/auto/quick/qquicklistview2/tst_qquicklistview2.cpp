@@ -84,7 +84,7 @@ void tst_QQuickListView2::urlListModel()
     QQuickListView *view = window->rootObject()->property("view").value<QQuickListView*>();
     QVERIFY(view);
     if (QQuickTest::qIsPolishScheduled(view))
-        QVERIFY(QQuickTest::qWaitForItemPolished(view));
+        QVERIFY(QQuickTest::qWaitForPolish(view));
     QCOMPARE(view->count(), model.size());
 }
 
@@ -148,7 +148,7 @@ void tst_QQuickListView2::dragDelegateWithMouseArea()
     else
         listview->setVerticalLayoutDirection(static_cast<QQuickItemView::VerticalLayoutDirection>(layoutDirection));
 
-    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
 
     auto contentPosition = [&](QQuickListView *listview) {
         return (listview->orientation() == QQuickListView::Horizontal ? listview->contentX(): listview->contentY());
@@ -201,16 +201,16 @@ void tst_QQuickListView2::QTBUG_92809()
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != nullptr);
-    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
     listview->setCurrentIndex(1);
-    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
     listview->setCurrentIndex(2);
-    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
     listview->setCurrentIndex(3);
-    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
     QTest::qWait(500);
     listview->setCurrentIndex(10);
-    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
     QTest::qWait(500);
     int currentIndex = listview->currentIndex();
     QTRY_COMPARE(currentIndex, 9);
@@ -226,10 +226,10 @@ void tst_QQuickListView2::footerUpdate()
 
     QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
     QTRY_VERIFY(listview != nullptr);
-    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
     QQuickItem *footer = listview->footerItem();
     QTRY_VERIFY(footer);
-    QVERIFY(QQuickTest::qWaitForItemPolished(footer));
+    QVERIFY(QQuickTest::qWaitForPolish(footer));
     QTRY_COMPARE(footer->y(), 0);
 }
 
@@ -246,7 +246,7 @@ void tst_QQuickListView2::sectionsNoOverlap()
 
     QQuickItem *contentItem = listview->contentItem();
     QTRY_VERIFY(contentItem != nullptr);
-    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
 
     const unsigned int sectionCount = 2, normalDelegateCount = 2;
     const unsigned int expectedSectionHeight = 48;

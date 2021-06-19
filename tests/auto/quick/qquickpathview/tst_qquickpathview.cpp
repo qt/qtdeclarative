@@ -722,13 +722,13 @@ void tst_QQuickPathView::consecutiveModelChanges()
                 pathview->setCurrentIndex(changes[i].index);
                 break;
         case ListChange::Polish:
-                QQuickTest::qWaitForItemPolished(pathview);
+                QQuickTest::qWaitForPolish(pathview);
                 break;
             default:
                 continue;
         }
     }
-    QQuickTest::qWaitForItemPolished(pathview);
+    QQuickTest::qWaitForPolish(pathview);
 
     QCOMPARE(findItems<QQuickItem>(pathview, "wrapper").count(), count);
     QCOMPARE(pathview->count(), count);
@@ -1401,7 +1401,7 @@ void tst_QQuickPathView::package()
     QSKIP("QTBUG-27170 view does not reliably receive polish without a running animation");
 #endif
 
-    QQuickTest::qWaitForItemPolished(pathView);
+    QQuickTest::qWaitForPolish(pathView);
     QQuickItem *item = findItem<QQuickItem>(pathView, "pathItem");
     QVERIFY(item);
     QVERIFY(item->scale() != 1.0);

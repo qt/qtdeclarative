@@ -1066,7 +1066,7 @@ void tst_qquickpositioners::populateTransitions(const QString &positionerObjectN
         QTRY_COMPARE(window->rootObject()->property("populateTransitionsDone").toInt(), 0);
         QTRY_COMPARE(window->rootObject()->property("addTransitionsDone").toInt(), model.count());
     } else {
-        QVERIFY(QQuickTest::qWaitForItemPolished(positioner));
+        QVERIFY(QQuickTest::qWaitForPolish(positioner));
         QTRY_COMPARE(window->rootObject()->property("populateTransitionsDone").toInt(), 0);
         QTRY_COMPARE(window->rootObject()->property("addTransitionsDone").toInt(), 0);
     }
@@ -1133,7 +1133,7 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
     QVERIFY(positioner);
     positioner->findChild<QQuickItem*>("repeater")->setProperty("model", QVariant::fromValue(&model));
-    QVERIFY(QQuickTest::qWaitForItemPolished(positioner));
+    QVERIFY(QQuickTest::qWaitForPolish(positioner));
 
     for (int i = 0; i < initialItemCount; i++)
         model.addItem("Original item" + QString::number(i), "");
@@ -1259,7 +1259,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
     QQuickItem *positioner = window->rootObject()->findChild<QQuickItem*>(positionerObjectName);
     QVERIFY(positioner);
     positioner->findChild<QQuickItem*>("repeater")->setProperty("model", QVariant::fromValue(&model));
-    QVERIFY(QQuickTest::qWaitForItemPolished(positioner));
+    QVERIFY(QQuickTest::qWaitForPolish(positioner));
 
     switch (change.type) {
         case ListChange::Removed:
@@ -1268,7 +1268,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
             break;
         case ListChange::Moved:
             model.moveItems(change.index, change.to, change.count);
-            QVERIFY(QQuickTest::qWaitForItemPolished(positioner));
+            QVERIFY(QQuickTest::qWaitForPolish(positioner));
             break;
         case ListChange::Inserted:
         case ListChange::SetCurrent:
@@ -3823,7 +3823,7 @@ void tst_qquickpositioners::test_mirroring()
             QQuickItem *positionerB = itemB->parentItem();
             positionerA->setWidth(positionerA->width() * 2);
             positionerB->setWidth(positionerB->width() * 2);
-            QVERIFY(QQuickTest::qWaitForItemPolished(positionerA) && QQuickTest::qWaitForItemPolished(positionerB));
+            QVERIFY(QQuickTest::qWaitForPolish(positionerA) && QQuickTest::qWaitForPolish(positionerB));
             QTRY_COMPARE(itemA->x(), itemB->x());
         }
 
