@@ -75,7 +75,6 @@ void tst_basicapp::fileSystemFiles()
     QVERIFY(QFile::exists(basedir + QStringLiteral("/main.qml")));
     QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/Clock.qml")));
 
-    QEXPECT_FAIL(nullptr, "Does not install RESOURCES in qrc", Abort);
     QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/center.png")));
     QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/clock.png")));
     QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/hour.png")));

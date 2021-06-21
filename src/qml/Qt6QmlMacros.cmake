@@ -1177,6 +1177,40 @@ function(qt6_target_qml_sources target)
     set(non_qml_files)
     set(output_targets)
 
+    foreach(file_src IN LISTS arg_FILES arg_RESOURCES)
+        # We need to copy the file to the build directory now so that when
+        # qmlimportscanner is run in qt6_import_qml_plugins() as part of
+        # target finalizers, the files will be there. We need to do this
+        # in a way that CMake doesn't create a dependency on the source or it
+        # will re-run CMake every time the file is modified. We also don't
+        # want to update the file's timestamp if its contents won't change.
+        # We still enforce the dependency on the source file by adding a
+        # build-time rule. This avoids having to re-run CMake just to re-copy
+        # the file.
+        get_filename_component(file_absolute ${file_src} ABSOLUTE)
+        __qt_get_relative_resource_path_for_file(file_resource_path ${file_src})
+
+        set(file_out ${output_dir}/${file_resource_path})
+
+        # Don't generate or copy the file in an in-source build if the source
+        # and destination paths are the same, it will cause a ninja dependency
+        # cycle at build time.
+        if(NOT file_out STREQUAL file_absolute)
+            get_filename_component(file_out_dir ${file_out} DIRECTORY)
+            file(MAKE_DIRECTORY ${file_out_dir})
+
+            execute_process(COMMAND
+                ${CMAKE_COMMAND} -E copy_if_different ${file_absolute} ${file_out}
+            )
+
+            add_custom_command(OUTPUT ${file_out}
+                COMMAND ${CMAKE_COMMAND} -E copy ${file_src} ${file_out}
+                DEPENDS ${file_src}
+                WORKING_DIRECTORY $<TARGET_PROPERTY:${target},SOURCE_DIR>
+            )
+        endif()
+    endforeach()
+
     foreach(qml_file_src IN LISTS arg_FILES)
         # This is to facilitate updating code that used the earlier tech preview
         # API function qt6_target_qml_files()
@@ -1185,44 +1219,9 @@ function(qt6_target_qml_sources target)
             continue()
         endif()
 
-        # We need to copy the file to the build directory now so that when
-        # qmlimportscanner is run in qt6_import_qml_plugins() as part of
-        # target finalizers, the qml files will be there. We need to do this
-        # in a way that CMake doesn't create a dependency on the source or it
-        # will re-run CMake every time the qml file is modified. We also don't
-        # want to update the file's timestamp if its contents won't change.
-        # We still enforce the dependency on the qml source file by adding a
-        # build-time rule. This avoids having to re-run CMake just to re-copy
-        # the file.
         get_filename_component(file_absolute ${qml_file_src} ABSOLUTE)
         __qt_get_relative_resource_path_for_file(file_resource_path ${qml_file_src})
         set(qml_file_out ${output_dir}/${file_resource_path})
-
-        # Don't generate or copy the file in an in-source build if the source
-        # and destination paths are the same, it will cause a ninja dependency
-        # cycle at build time.
-        if(NOT qml_file_out STREQUAL file_absolute)
-            get_filename_component(file_out_dir ${qml_file_out} DIRECTORY)
-            file(MAKE_DIRECTORY ${file_out_dir})
-
-            set(need_write TRUE)
-            file(READ ${qml_file_src} new_contents)
-            if(EXISTS ${qml_file_out})
-                file(READ ${qml_file_out} old_contents)
-                if("${new_contents}" STREQUAL "${old_contents}")
-                    set(need_write FALSE)
-                endif()
-            endif()
-            if(need_write)
-                file(WRITE ${qml_file_out} "${new_contents}")
-            endif()
-
-            add_custom_command(OUTPUT ${qml_file_out}
-                COMMAND ${CMAKE_COMMAND} -E copy ${qml_file_src} ${qml_file_out}
-                DEPENDS ${qml_file_src}
-                WORKING_DIRECTORY $<TARGET_PROPERTY:${target},SOURCE_DIR>
-            )
-        endif()
 
         # For the tooling steps below, run the tools on the copied qml file in
         # the build directory, not the source directory. This is required
