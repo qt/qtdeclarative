@@ -639,7 +639,6 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var)
     set(qmlcache_loader_cpp ${qmlcache_dir}/qmlcache_loader.cpp)
     set(qmlcache_loader_list ${qmlcache_dir}/qml_loader_file_list.rsp)
     set(qmlcache_resource_paths "$<TARGET_PROPERTY:${target},QT_QML_MODULE_RESOURCE_PATHS>")
-    set(qmlcache_have_resource_paths "$<BOOL:${qmlcache_resource_paths}>")
 
     _qt_internal_genex_getjoinedproperty(qrc_resource_args ${target}
         _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
@@ -657,12 +656,11 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var)
     file(GENERATE
         OUTPUT ${qmlcache_loader_list}
         CONTENT "$<JOIN:${qmlcache_resource_paths},\n>\n"
-        CONDITION "${qmlcache_have_resource_paths}"
     )
 
     add_custom_command(
         OUTPUT ${qmlcache_loader_cpp}
-        COMMAND "$<${qmlcache_have_resource_paths}:${cmd}>"
+        COMMAND "${cmd}"
         COMMAND_EXPAND_LISTS
         DEPENDS
             ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen
@@ -673,17 +671,16 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var)
     # TODO: Probably need to reject ${target} being an object library as unsupported
     get_target_property(target_type ${target} TYPE)
     if(target_type STREQUAL "STATIC_LIBRARY")
+        set(extra_conditions "")
         _qt_internal_propagate_qmlcache_object_lib(
             ${target}
             "${qmlcache_loader_cpp}"
-            "${qmlcache_have_resource_paths}"
+            "${extra_conditions}"
             output_target)
 
         list(APPEND output_targets ${output_target})
     else()
-        target_sources(${target} PRIVATE
-            "$<${qmlcache_have_resource_paths}:${qmlcache_loader_cpp}>"
-        )
+        target_sources(${target} PRIVATE "${qmlcache_loader_cpp}")
         target_link_libraries(${target} PRIVATE
             ${QT_CMAKE_EXPORT_NAMESPACE}::QmlPrivate
             ${QT_CMAKE_EXPORT_NAMESPACE}::Core
