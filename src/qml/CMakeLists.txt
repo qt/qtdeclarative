@@ -320,7 +320,7 @@ qt_internal_add_qml_module(Qml
         qml/qqmltypewrapper.cpp qml/qqmltypewrapper_p.h
         qml/qqmlvaluetype.cpp qml/qqmlvaluetype_p.h
         qml/qqmlvaluetypeproxybinding.cpp qml/qqmlvaluetypeproxybinding_p.h
-        qml/qqmlvaluetypewrapper.cpp
+        qml/qqmlvaluetypewrapper.cpp qml/qqmlvaluetypewrapper_p.h
         qml/qqmlvme.cpp qml/qqmlvme_p.h
         qml/qqmlvmemetaobject.cpp qml/qqmlvmemetaobject_p.h
         qml/v8/qqmlbuiltinfunctions.cpp qml/v8/qqmlbuiltinfunctions_p.h
