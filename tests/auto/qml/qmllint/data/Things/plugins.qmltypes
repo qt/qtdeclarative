@@ -64,4 +64,13 @@ Module {
         ]
         Property { name: "alignment"; type: "Qt::Alignment" }
     }
+    Component {
+       name: "CustomParserThing"
+       prototype: "QQuickItem"
+       exports: [
+            "Things/CustomParserThing 1.0"
+       ]
+       Property { name: "foo"; type: "string" }
+       hasCustomParser: true
+    }
 }

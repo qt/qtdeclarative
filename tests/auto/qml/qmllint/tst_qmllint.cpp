@@ -758,6 +758,8 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("InlineComponentsChained") << QStringLiteral("inlineComponentsChained.qml");
     QTest::newRow("ignoreWarnings") << QStringLiteral("ignoreWarnings.qml");
     QTest::newRow("BindingBeforeDeclaration") << QStringLiteral("bindingBeforeDeclaration.qml");
+    QTest::newRow("CustomParserUnqualifiedAccess")
+            << QStringLiteral("customParserUnqualifiedAccess.qml");
 }
 
 void TestQmllint::cleanQmlCode()
