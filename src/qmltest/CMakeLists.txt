@@ -3,7 +3,7 @@
 #####################################################################
 
 set_source_files_properties(TestCase.qml SignalSpy.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "1.0"
+    QT_QML_SOURCE_VERSION "1.0;6.0"
 )
 set_source_files_properties(testlogger.js PROPERTIES
     QT_QML_SKIP_QMLDIR_ENTRY TRUE
@@ -12,10 +12,9 @@ set_source_files_properties(testlogger.js PROPERTIES
 qt_internal_add_qml_module(QuickTest
     URI "QtTest"
     VERSION "${PROJECT_VERSION}"
-    PLUGIN_TARGET qmltestplugin
-    CLASS_NAME QTestQmlModule
+    PAST_MAJOR_VERSIONS 1
     DEPENDENCIES
-        QtQuick.Window/2.0
+        QtQuick.Window
     CONFIG_MODULE_NAME qmltest
     QMAKE_MODULE_CONFIG $${QT.testlib.CONFIG}
     SOURCES
