@@ -277,9 +277,11 @@ TestCase {
         compare(control.pressed, false)
         compare(control.position, 0.5)
 
-        mousePress(control, control.width, control.height, Qt.LeftButton)
+        mousePress(control, control.width - 1, control.height - 1, Qt.LeftButton)
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
+        // We can't click on right and bottom edge, so click to (width-1, height-1), and move mouse to (width,height)
+        mouseMove(control, control.width, control.height, 0)
         compare(control.position, 1.0)
 
         mouseMove(control, control.width * 2, control.height * 2, 0)
@@ -354,7 +356,7 @@ TestCase {
         compare(control.pressed, false)
         compare(control.position, 0.5)
 
-        touch.press(0, control, control.width, control.height).commit()
+        touch.press(0, control, control.width - 1, control.height - 1).commit()
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
         compare(control.position, 0.5)

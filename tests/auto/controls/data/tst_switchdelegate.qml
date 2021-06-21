@@ -384,7 +384,7 @@ TestCase {
         // press-drag-release from and to outside the indicator
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
-        mousePress(control, control.width)
+        mousePress(control, control.width - 1)
         compare(control.position, 0.0)
         compare(control.checked, false)
         compare(control.pressed, true)
@@ -491,7 +491,8 @@ TestCase {
         // press-drag-release from and to outside the indicator
         spy.expectedSequence = [["pressedChanged", { "pressed": true, "checked": false }],
                                 "pressed"]
-        touch.press(0, control, control.width).commit()
+        wait(Qt.styleHints.mouseDoubleClickInterval + 50)
+        touch.press(0, control, control.width - 1).commit()
         compare(control.position, 0.0)
         compare(control.checked, false)
         compare(control.pressed, true)
