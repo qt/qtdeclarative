@@ -210,7 +210,7 @@ TestCase {
         verify(pressedSpy1.valid)
 
         var touch = touchEvent(control1)
-        touch.press(0, control1, 0, 0).commit().move(0, control1, control1.width, control1.height).commit()
+        touch.press(0, control1, 0, 0).commit().move(0, control1, control1.width - 1, control1.height - 1).commit()
 
         compare(pressedSpy1.count, ++pressedCount1)
         compare(control1.pressed, true)

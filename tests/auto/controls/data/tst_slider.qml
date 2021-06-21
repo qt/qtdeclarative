@@ -236,7 +236,7 @@ TestCase {
         var movedSpy = signalSpy.createObject(control, {target: control, signalName: "moved"})
         verify(movedSpy.valid)
 
-        mousePress(control, 0, control.height, Qt.LeftButton)
+        mousePress(control, 0, control.height - 1, Qt.LeftButton)
         compare(pressedSpy.count, ++pressedCount)
         compare(movedSpy.count, movedCount)
         compare(control.pressed, true)
@@ -265,7 +265,7 @@ TestCase {
         compare(control.value, 0.5)
         compare(control.position, 0.5)
 
-        mousePress(control, control.width, 0, Qt.LeftButton)
+        mousePress(control, control.width - 1, 0, Qt.LeftButton)
         compare(pressedSpy.count, ++pressedCount)
         compare(movedSpy.count, ++movedCount)
         compare(control.pressed, true)
@@ -355,7 +355,7 @@ TestCase {
         compare(control.value, 0.5)
         compare(control.position, 0.5)
 
-        touch.press(0, control, control.width, control.height).commit()
+        touch.press(0, control, control.width - 1, control.height - 1).commit()
         compare(pressedSpy.count, ++pressedCount)
         compare(movedSpy.count, movedCount)
         compare(control.pressed, true)

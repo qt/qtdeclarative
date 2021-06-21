@@ -62,7 +62,10 @@ TestCase {
 
     Component {
         id: button
-        AbstractButton {}
+        AbstractButton {
+            width: 100
+            height: 50
+        }
     }
 
     Component {

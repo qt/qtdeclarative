@@ -301,7 +301,7 @@ TestCase {
         verify(secondMovedSpy.valid)
 
         // Press and release the first handle without moving it.
-        mousePress(control, control.leftPadding, control.height - control.bottomPadding, Qt.LeftButton)
+        mousePress(control, control.leftPadding, control.height - control.bottomPadding - 1, Qt.LeftButton)
         compare(firstPressedSpy.count, 1)
         compare(firstMovedSpy.count, 0)
         compare(secondPressedSpy.count, 0)
@@ -313,7 +313,7 @@ TestCase {
         compare(control.second.value, 1.0)
         compare(control.second.position, 1.0)
 
-        mouseRelease(control, control.leftPadding, control.height - control.bottomPadding, Qt.LeftButton)
+        mouseRelease(control, control.leftPadding, control.height - control.bottomPadding - 1, Qt.LeftButton)
         compare(firstPressedSpy.count, 2)
         compare(firstMovedSpy.count, 0)
         compare(secondPressedSpy.count, 0)
@@ -326,7 +326,7 @@ TestCase {
         compare(control.second.position, 1.0)
 
         // Press and release the second handle without moving it.
-        mousePress(control, control.width - control.rightPadding, control.topPadding, Qt.LeftButton)
+        mousePress(control, control.width - control.rightPadding - 1, control.topPadding, Qt.LeftButton)
         compare(firstPressedSpy.count, 2)
         compare(firstMovedSpy.count, 0)
         compare(secondPressedSpy.count, 1)
@@ -338,7 +338,7 @@ TestCase {
         compare(control.second.value, 1.0)
         compare(control.second.position, 1.0)
 
-        mouseRelease(control, control.width - control.rightPadding, control.topPadding, Qt.LeftButton)
+        mouseRelease(control, control.width - control.rightPadding - 1, control.topPadding, Qt.LeftButton)
         compare(firstPressedSpy.count, 2)
         compare(firstMovedSpy.count, 0)
         compare(secondPressedSpy.count, 2)
@@ -351,7 +351,7 @@ TestCase {
         compare(control.second.position, 1.0)
 
         // Press and release on the bottom left corner of the control without moving the handle.
-        mousePress(control, 0, control.height, Qt.LeftButton)
+        mousePress(control, 0, control.height - 1, Qt.LeftButton)
         compare(firstPressedSpy.count, 3)
         compare(firstMovedSpy.count, 0)
         compare(secondPressedSpy.count, 2)
@@ -363,7 +363,7 @@ TestCase {
         compare(control.second.value, 1.0)
         compare(control.second.position, 1.0)
 
-        mouseRelease(control, 0, control.height, Qt.LeftButton)
+        mouseRelease(control, 0, control.height - 1, Qt.LeftButton)
         compare(firstPressedSpy.count, 4)
         compare(firstMovedSpy.count, 0)
         compare(secondPressedSpy.count, 2)
@@ -376,7 +376,7 @@ TestCase {
         compare(control.second.position, 1.0)
 
         // Drag the first handle.
-        mousePress(control, control.leftPadding, control.height - control.bottomPadding, Qt.LeftButton)
+        mousePress(control, control.leftPadding, control.height - control.bottomPadding - 1, Qt.LeftButton)
         compare(firstPressedSpy.count, 5)
         compare(firstMovedSpy.count, 0)
         compare(secondPressedSpy.count, 2)
@@ -493,7 +493,7 @@ TestCase {
         compare(control.second.position, 1.0)
 
         // Press and release on the bottom left corner of the control without moving the handle.
-        touch.press(0, control, 0, control.height).commit()
+        touch.press(0, control, 0, control.height - 1).commit()
         compare(firstPressedSpy.count, 3)
         compare(secondPressedSpy.count, 2)
         compare(control.first.pressed, true)
@@ -503,7 +503,7 @@ TestCase {
         compare(control.second.value, 1.0)
         compare(control.second.position, 1.0)
 
-        touch.release(0, control, 0, control.height).commit()
+        touch.release(0, control, 0, control.height - 1).commit()
         compare(firstPressedSpy.count, 4)
         compare(secondPressedSpy.count, 2)
         compare(control.first.pressed, false)
@@ -565,7 +565,7 @@ TestCase {
         compare(control1.second.position, 1.0)
 
         // press and move the second handle of the first slider
-        touch.stationary(0).press(1, control1, control1.width, control1.height).commit()
+        touch.stationary(0).press(1, control1, control1.width - 1, control1.height - 1).commit()
         touch.stationary(0).move(1, control1, control1.width / 2, control1.height / 2).commit()
         compare(control1.first.pressed, true)
         compare(control1.first.position, 0.5)
@@ -588,7 +588,7 @@ TestCase {
         compare(control2.second.position, 1.0)
 
         // press and move the second handle of the second slider
-        touch.stationary(0).stationary(1).stationary(2).press(3, control2, control2.width, control2.height).commit()
+        touch.stationary(0).stationary(1).stationary(2).press(3, control2, control2.width - 1, control2.height - 1).commit()
         touch.stationary(0).stationary(1).stationary(2).move(3, control2, control2.width / 2, control2.height / 2).commit()
         compare(control1.first.pressed, true)
         compare(control1.first.position, 0.5)
@@ -962,11 +962,11 @@ TestCase {
         compare(control.first.pressed, false)
         compare(control.second.pressed, false)
 
-        mousePress(control, control.width - control.rightPadding, control.height / 2)
+        mousePress(control, control.width - control.rightPadding - 1, control.height / 2)
         compare(control.first.pressed, false)
         compare(control.second.pressed, true)
 
-        mouseRelease(control, control.width - control.rightPadding, control.height / 2)
+        mouseRelease(control, control.width - control.rightPadding - 1, control.height / 2)
         compare(control.first.pressed, false)
         compare(control.second.pressed, false)
     }

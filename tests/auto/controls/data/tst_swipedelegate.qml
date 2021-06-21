@@ -965,25 +965,26 @@ TestCase {
         // Swipe from right to left without exposing the right item,
         // and make sure that the right item never becomes visible
         // (and hence that the left item never loses visibility).
-        mousePress(control, control.swipe.leftItem.width, control.height / 2, Qt.LeftButton);
+        mousePress(control, control.swipe.leftItem.width - 1, control.height / 2, Qt.LeftButton);
         compare(leftVisibleSpy.count, 0);
         compare(rightVisibleSpy.count, 0);
-        var newX = control.swipe.leftItem.width - Math.round(dragDistance * 1.1);
+        var newX = control.swipe.leftItem.width - Math.round(dragDistance * 1.1) -1;
         mouseMove(control, newX, control.height / 2);
         compare(leftVisibleSpy.count, 0);
         compare(rightVisibleSpy.count, 0);
-        compare(control.swipe.position, newX / control.swipe.leftItem.width);
+        compare(control.swipe.position, (newX + 1) / control.swipe.leftItem.width);
 
         mouseMove(control, 0, control.height / 2);
-        compare(control.swipe.position, 0);
+        compare(control.swipe.position, 1 / control.swipe.leftItem.width);
+        // Because we move from (width - 1) to 0, so one pixel remains
 
         // Test swiping over a distance that is greater than the width of the left item.
         mouseMove(control, -1, control.height / 2);
         verify(control.swipe.rightItem);
-        compare(control.swipe.position, -1 / control.swipe.rightItem.width);
+        compare(control.swipe.position, 0);
 
         // Now go back to 1.0.
-        mouseMove(control, control.swipe.leftItem.width, control.height / 2);
+        mouseMove(control, control.swipe.leftItem.width - 1, control.height / 2);
         compare(control.swipe.position, 1.0);
         tryCompare(control.background, "x", control.swipe.leftItem.width, 1000);
         mouseRelease(control, control.swipe.leftItem.width, control.height / 2, Qt.LeftButton);
