@@ -2262,15 +2262,12 @@ void QQmlEnginePrivate::executeRuntimeFunction(const QUrl &url, qsizetype functi
                                                QMetaType *types)
 {
     Q_Q(QQmlEngine);
-    const auto unit = typeLoader.getType(url)->compilationUnit();
+    const auto unit = compilationUnitFromUrl(url);
     if (!unit)
         return;
 
     Q_ASSERT(functionIndex >= 0);
     Q_ASSERT(thisObject);
-
-    if (!unit->engine)
-        unit->linkToEngine(q->handle());
 
     if (unit->runtimeFunctions.length() <= functionIndex)
         return;
@@ -2282,6 +2279,16 @@ void QQmlEnginePrivate::executeRuntimeFunction(const QUrl &url, qsizetype functi
     // implicitly sets the return value, if it is present
     q->handle()->callInContext(unit->runtimeFunctions[functionIndex], thisObject,
                                QQmlContextData::get(ctx), argc, args, types);
+}
+
+QV4::ExecutableCompilationUnit *QQmlEnginePrivate::compilationUnitFromUrl(const QUrl &url)
+{
+    auto unit = typeLoader.getType(url)->compilationUnit();
+    if (!unit)
+        return nullptr;
+    if (!unit->engine)
+        unit->linkToEngine(v4engine());
+    return unit;
 }
 
 #if defined(Q_OS_WIN)

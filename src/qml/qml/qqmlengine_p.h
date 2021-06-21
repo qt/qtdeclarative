@@ -297,6 +297,7 @@ public:
 
     void executeRuntimeFunction(const QUrl &url, qsizetype functionIndex, QObject *thisObject,
                                 int argc = 0, void **args = nullptr, QMetaType *types = nullptr);
+    QV4::ExecutableCompilationUnit *compilationUnitFromUrl(const QUrl &url);
 
 private:
     class SingletonInstances : private QHash<QQmlType, QJSValue>
