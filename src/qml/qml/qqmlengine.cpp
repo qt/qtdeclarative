@@ -2266,19 +2266,15 @@ void QQmlEnginePrivate::executeRuntimeFunction(const QUrl &url, qsizetype functi
     if (!unit)
         return;
 
-    Q_ASSERT(functionIndex >= 0);
+    Q_ASSERT((functionIndex >= 0) && (functionIndex < unit->runtimeFunctions.length()));
     Q_ASSERT(thisObject);
 
-    if (unit->runtimeFunctions.length() <= functionIndex)
-        return;
-
-    QQmlContext *ctx = q->contextForObject(thisObject);
-    if (!ctx)
-        ctx = q->rootContext();
+    QQmlData *ddata = QQmlData::get(thisObject);
+    Q_ASSERT(ddata && ddata->outerContext);
 
     // implicitly sets the return value, if it is present
     q->handle()->callInContext(unit->runtimeFunctions[functionIndex], thisObject,
-                               QQmlContextData::get(ctx), argc, args, types);
+                               ddata->outerContext, argc, args, types);
 }
 
 QV4::ExecutableCompilationUnit *QQmlEnginePrivate::compilationUnitFromUrl(const QUrl &url)

@@ -2112,7 +2112,11 @@ void ExecutionEngine::callInContext(Function *function, QObject *self,
                                     QMetaType *types)
 {
     QV4::Scope scope(this);
-    ExecutionContext *ctx = currentStackFrame ? currentContext() : scriptContext();
+    // NB: always use scriptContext() here as this method ignores whether
+    // there's already a stack frame. the method is called from C++ (through
+    // QQmlEngine::executeRuntimeFunction()) and thus the caller must ensure
+    // correct setup
+    QV4::ExecutionContext *ctx = scriptContext();
     QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(ctx, ctxtdata, self));
     if (!args) {
         Q_ASSERT(argc == 0);
