@@ -384,6 +384,16 @@ void CheckIdentifiers::operator()(
                 continue;
             }
 
+            // If we're in a custom parser component (or one of their children) we cannot be sure
+            // that this is really an unqualified access. We have to err on the side of producing
+            // false negatives for the sake of usability.
+            if (qmlScope->isInCustomParserParent()) {
+                // We can handle Connections properly
+                if (qmlScope->baseType()
+                    && qmlScope->baseType()->internalName() != u"QQmlConnections"_qs)
+                    continue;
+            }
+
             const auto location = memberAccessBase.m_location;
 
             if (baseIsPrefixed) {
