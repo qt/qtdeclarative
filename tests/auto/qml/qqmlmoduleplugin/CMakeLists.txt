@@ -56,6 +56,18 @@ qt_internal_add_resource(tst_qqmlmoduleplugin "qmake_staticPlugin"
         ${qmake_staticPlugin_resource_files}
 )
 
+set_source_files_properties("imports/ModuleFromQrc/badqmldir"
+    PROPERTIES QT_RESOURCE_ALIAS "imports/ModuleFromQrc/qmldir"
+)
+
+qt_internal_add_resource(tst_qqmlmoduleplugin "moduleFromQrc"
+    PREFIX
+        "/foo/"
+    FILES
+        "imports/ModuleFromQrc/badqmldir"
+        "imports/ModuleFromQrc/Foo.qml"
+)
+
 
 #### Keys ignored in scope 2:.:.:tst_qqmlmoduleplugin.pro:<TRUE>:
 # CONFIG = "testcase" "-app_bundle"

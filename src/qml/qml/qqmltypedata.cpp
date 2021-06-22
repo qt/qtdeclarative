@@ -695,12 +695,15 @@ void QQmlTypeData::continueLoadFromIR()
     for (const QV4::CompiledData::Import *import : qAsConst(m_document->imports)) {
         if (!addImport(import, {}, &errors)) {
             Q_ASSERT(errors.size());
-            for (QQmlError &error : errors) {
-                error.setUrl(m_importCache.baseUrl());
-                error.setLine(qmlConvertSourceCoordinate<quint32, int>(import->location.line));
-                error.setColumn(qmlConvertSourceCoordinate<quint32, int>(import->location.column));
-            }
-            setError(errors);
+
+            // We're only interested in the chronoligically last error. The previous
+            // errors might be from unsuccessfully trying to load a module from the
+            // resource file system.
+            QQmlError error = errors.first();
+            error.setUrl(m_importCache.baseUrl());
+            error.setLine(qmlConvertSourceCoordinate<quint32, int>(import->location.line));
+            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(import->location.column));
+            setError(error);
             return;
         }
     }
