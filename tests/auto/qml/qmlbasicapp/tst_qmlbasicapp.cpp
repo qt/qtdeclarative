@@ -38,6 +38,7 @@ private slots:
     void loadComponent();
     void resourceFiles();
     void fileSystemFiles();
+    void qmldirContents();
 };
 
 void tst_basicapp::loadComponent()
@@ -79,6 +80,33 @@ void tst_basicapp::fileSystemFiles()
     QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/clock.png")));
     QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/hour.png")));
     QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/minute.png")));
+}
+
+void tst_basicapp::qmldirContents()
+{
+    {
+        QFile qmldir(QCoreApplication::applicationDirPath() + "/qmldir");
+        QVERIFY(qmldir.open(QIODevice::ReadOnly));
+        const QByteArray contents = qmldir.readAll();
+        QVERIFY(contents.contains("module BasicApp"));
+        QVERIFY(contents.contains("typeinfo"));
+        QVERIFY(contents.contains("prefer :/BasicApp/"));
+        QVERIFY(!contents.contains("classname"));
+        QVERIFY(!contents.contains("plugin"));
+    }
+
+    {
+        QFile qmldir(QCoreApplication::applicationDirPath() + "/TimeExample/qmldir");
+        QVERIFY(qmldir.open(QIODevice::ReadOnly));
+        const QByteArray contents = qmldir.readAll();
+        QVERIFY(contents.contains("module TimeExample"));
+        QVERIFY(contents.contains("optional plugin"));
+        QVERIFY(contents.contains("classname"));
+        QVERIFY(contents.contains("typeinfo"));
+        QVERIFY(contents.contains("depends QtQml"));
+        QVERIFY(contents.contains("prefer :/TimeExample/"));
+        QVERIFY(contents.contains("Clock 1.0 Clock.qml"));
+    }
 }
 
 QTEST_MAIN(tst_basicapp)
