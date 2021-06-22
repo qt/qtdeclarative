@@ -731,6 +731,7 @@ function(_qt_internal_target_generate_qmldir target out_dir target_path)
 
         get_target_property(qt_libinfix ${target} QT_QML_MODULE_LIBINFIX)
         string(APPEND content "plugin ${plugin_target}${qt_libinfix}\n")
+        _qt_internal_qmldir_item(classname QT_QML_MODULE_CLASS_NAME)
     endif()
 
     get_target_property(designer_supported ${target} QT_QML_MODULE_DESIGNER_SUPPORTED)
@@ -738,7 +739,6 @@ function(_qt_internal_target_generate_qmldir target out_dir target_path)
         string(APPEND content "designersupported\n")
     endif()
 
-    _qt_internal_qmldir_item(classname QT_QML_MODULE_CLASS_NAME)
     _qt_internal_qmldir_item(typeinfo QT_QMLTYPES_FILENAME)
 
     _qt_internal_qmldir_item_list(import QT_QML_MODULE_IMPORTS)
