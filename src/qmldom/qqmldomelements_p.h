@@ -1103,7 +1103,7 @@ public:
                 res.append(*e);
             else
                 self.addError(importErrors.warning(
-                        tr("Expected Export looking up '%1', not %1").arg(name, i.toString())));
+                        tr("Expected Export looking up '%1', not %2").arg(name, i.toString())));
         return res;
     }
 
