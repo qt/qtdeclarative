@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
     QCoreApplication::setApplicationName("qmlformat");
-    QCoreApplication::setApplicationVersion("1.0");
+    QCoreApplication::setApplicationVersion(QT_VERSION_STR);
 
     const auto options = buildCommandLineOptions(app);
     if (!options.valid) {
