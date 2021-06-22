@@ -66,6 +66,7 @@ T.CheckBox {
     }
 
     NativeStyle.CheckBox {
+        id: hoverCheckBox
         control: control
         x: indicator.x
         y: indicator.y
@@ -75,7 +76,8 @@ T.CheckBox {
         useNinePatchImage: false
         overrideState: NativeStyle.StyleItem.AlwaysHovered
         opacity: control.hovered ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: parent.transitionDuration } }
+        visible: opacity !== 0
+        Behavior on opacity { NumberAnimation { duration: hoverCheckBox.transitionDuration } }
     }
 
     contentItem: CheckLabel {
