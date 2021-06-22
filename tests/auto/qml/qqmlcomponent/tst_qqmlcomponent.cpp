@@ -519,6 +519,7 @@ void tst_qqmlcomponent::recursion()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("recursion.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QTest::ignoreMessage(QtWarningMsg, QLatin1String("QQmlComponent: Component creation is recursing - aborting").data());
     QScopedPointer<QObject> object(component.create());
@@ -719,12 +720,13 @@ void tst_qqmlcomponent::testRequiredProperties()
     QQmlComponent comp(&eng);
     comp.loadUrl(testFile);
     QScopedObjPointer obj {comp.create()};
-    if (shouldSucceed)
+    if (shouldSucceed) {
+        QVERIFY2(comp.isReady(), qPrintable(comp.errorString()));
         QVERIFY(obj);
-    else {
+    } else {
         QVERIFY(!obj);
         QFETCH(QString, errorMsg);
-        QVERIFY(comp.errorString().contains(errorMsg));
+        QVERIFY2(comp.errorString().contains(errorMsg), qPrintable(comp.errorString()));
     }
 }
 
