@@ -102,7 +102,7 @@ TestCase {
                 id: sharedAction
                 text: "Shared"
                 shortcut: "Ctrl+B"
-                onTriggered: lastSource = source
+                onTriggered: (source) => lastSource = source
             }
             Button {
                 id: button
@@ -176,12 +176,12 @@ TestCase {
 
             Shortcut {
                 id: indirectShortcut
-                sequence: action.shortcut
+                sequences: [ action.shortcut ]
             }
 
             Shortcut {
                 id: directShortcut
-                sequence: StandardKey.Copy
+                sequences: [ StandardKey.Copy ]
             }
 
             property alias indirect: indirectShortcut;
