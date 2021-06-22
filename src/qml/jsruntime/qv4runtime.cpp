@@ -2327,7 +2327,7 @@ Bool Runtime::CompareEqual::call(const Value &left, const Value &right)
         case QV4::Value::QT_Bool:
         case QV4::Value::QT_Int:
             rhs = Value::fromDouble(rhs.int_32());
-            // fall through
+            Q_FALLTHROUGH();
         default: // double
             if (lhs.m()->internalClass->vtable->isStringOrSymbol) {
                 return lhs.m()->internalClass->vtable->isString ? (RuntimeHelpers::toNumber(lhs) == rhs.doubleValue()) : false;

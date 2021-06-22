@@ -1533,7 +1533,7 @@ bool Codegen::visit(BinaryExpression *ast)
             setExprResult(binopHelper(static_cast<QSOperator::Op>(ast->op), right, left));
             break;
         }
-        // intentional fall-through!
+        Q_FALLTHROUGH();
     case QSOperator::In:
     case QSOperator::InstanceOf:
     case QSOperator::As:
@@ -2260,7 +2260,7 @@ bool Codegen::visit(DeleteExpression *ast)
     case Reference::StackSlot:
         if (!expr.stackSlotIsLocalOrArgument)
             break;
-        // fall through
+        Q_FALLTHROUGH();
     case Reference::ScopedLocal:
         // Trying to delete a function argument might throw.
         if (_context->isStrict) {
