@@ -1,0 +1,93 @@
+# See qtbase/src/testlib/qtestblacklist.cpp for format
+
+# QTBUG-70597
+[Tumbler::test_itemsCorrectlyPositioned]
+*
+
+# QTBUG-95679
+# Blacklisted in order to get the native windows style under
+# regression control
+[Button::test_display:TextBesideIcon]
+*
+[Button::test_display:TextBesideIcon, mirrored]
+*
+[Button::test_spacing]
+*
+[ComboBox::test_defaults]
+*
+[ComboBox::test_font]
+*
+[ComboBox::test_implicitContentWidthPolicy_WidestText:Array]
+*
+[ComboBox::test_implicitContentWidthPolicy_WidestText:ListModel]
+*
+[ComboBox::test_implicitContentWidthPolicy_WidestTextWhenCompleted:Array]
+*
+[ComboBox::test_implicitContentWidthPolicy_WidestTextWhenCompleted:ListModel]
+*
+[Popup::test_font]
+*
+[ScrollBar::test_flashing]
+*
+[ScrollBar::test_interactive:true]
+*
+[ScrollBar::test_mouse:horizontal]
+*
+[ScrollBar::test_mouse:vertical]
+*
+[ScrollBar::test_multiTouch]
+*
+[ScrollBar::test_policy]
+*
+[ScrollBar::test_snapMode_mouse:NoSnap]
+*
+[ScrollBar::test_snapMode_mouse:NoSnap2]
+*
+[ScrollBar::test_snapMode_mouse:SnapAlways]
+*
+[ScrollBar::test_snapMode_mouse:SnapAlways2]
+*
+[ScrollBar::test_snapMode_mouse:SnapOnRelease]
+*
+[ScrollBar::test_snapMode_mouse:SnapOnRelease2]
+*
+[ScrollBar::test_snapMode_touch:NoSnap]
+*
+[ScrollBar::test_snapMode_touch:NoSnap2]
+*
+[ScrollBar::test_snapMode_touch:SnapAlways]
+*
+[ScrollBar::test_snapMode_touch:SnapAlways2]
+*
+[ScrollBar::test_snapMode_touch:SnapOnRelease]
+*
+[ScrollBar::test_snapMode_touch:SnapOnRelease2]
+*
+[ScrollBar::test_touch:horizontal]
+*
+[ScrollBar::test_touch:vertical]
+*
+[ScrollView::test_keys]
+*
+[Slider::test_snapMode_touch:NoSnap]
+*
+[Slider::test_snapMode_touch:SnapAlways (0..2)]
+*
+[Slider::test_snapMode_touch:SnapAlways (1..3)]
+*
+[Slider::test_snapMode_touch:SnapAlways (-1..1)]
+*
+[Slider::test_snapMode_touch:SnapAlways (1..-1)]
+*
+[Slider::test_snapMode_touch:SnapOnRelease (0..2)]
+*
+[Slider::test_snapMode_touch:SnapOnRelease (1..3)]
+*
+[Slider::test_snapMode_touch:SnapOnRelease (-1..1)]
+*
+[Slider::test_snapMode_touch:SnapOnRelease (1..-1)]
+*
+[TextArea::test_implicitSize]
+*
+[TextField::test_implicitSize]
+*
