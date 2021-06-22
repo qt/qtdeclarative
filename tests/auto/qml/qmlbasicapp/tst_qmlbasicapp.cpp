@@ -62,23 +62,32 @@ void tst_basicapp::loadComponent()
 void tst_basicapp::resourceFiles()
 {
     QVERIFY(QFile::exists(QStringLiteral(":/BasicApp/main.qml")));
+    QVERIFY(QFile::exists(QStringLiteral(":/BasicApp/qmldir")));
     QVERIFY(QFile::exists(QStringLiteral(":/TimeExample/Clock.qml")));
     QVERIFY(QFile::exists(QStringLiteral(":/TimeExample/center.png")));
     QVERIFY(QFile::exists(QStringLiteral(":/TimeExample/clock.png")));
     QVERIFY(QFile::exists(QStringLiteral(":/TimeExample/hour.png")));
     QVERIFY(QFile::exists(QStringLiteral(":/TimeExample/minute.png")));
+    QVERIFY(QFile::exists(QStringLiteral(":/TimeExample/qmldir")));
+
+    QVERIFY(!QFile::exists(QStringLiteral(":/BasicApp/tst_qmlbasicapp.qmltypes")));
+    QVERIFY(!QFile::exists(QStringLiteral(":/TimeExample/qmlqtimeexample.qmltypes")));
 }
 
 void tst_basicapp::fileSystemFiles()
 {
     const QString basedir = QCoreApplication::applicationDirPath();
     QVERIFY(QFile::exists(basedir + QStringLiteral("/main.qml")));
+    QVERIFY(QFile::exists(basedir + QStringLiteral("/qmldir")));
+    QVERIFY(QFile::exists(basedir + QStringLiteral("/tst_qmlbasicapp.qmltypes")));
     QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/Clock.qml")));
 
     QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/center.png")));
     QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/clock.png")));
     QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/hour.png")));
     QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/minute.png")));
+    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/qmldir")));
+    QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/qmlqtimeexample.qmltypes")));
 }
 
 void tst_basicapp::qmldirContents()
@@ -92,6 +101,10 @@ void tst_basicapp::qmldirContents()
         QVERIFY(contents.contains("prefer :/BasicApp/"));
         QVERIFY(!contents.contains("classname"));
         QVERIFY(!contents.contains("plugin"));
+
+        QFile qmldirInResources(":/BasicApp/qmldir");
+        QVERIFY(qmldirInResources.open(QIODevice::ReadOnly));
+        QCOMPARE(qmldirInResources.readAll(), contents);
     }
 
     {
@@ -105,6 +118,10 @@ void tst_basicapp::qmldirContents()
         QVERIFY(contents.contains("depends QtQml"));
         QVERIFY(contents.contains("prefer :/TimeExample/"));
         QVERIFY(contents.contains("Clock 1.0 Clock.qml"));
+
+        QFile qmldirInResources(":/TimeExample/qmldir");
+        QVERIFY(qmldirInResources.open(QIODevice::ReadOnly));
+        QCOMPARE(qmldirInResources.readAll(), contents);
     }
 }
 

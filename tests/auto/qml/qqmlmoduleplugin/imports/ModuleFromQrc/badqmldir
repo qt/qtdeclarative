@@ -1,0 +1,3 @@
+module ModuleFromQrc
+plugin badbad
+Foo 1.0 Foo.qml
