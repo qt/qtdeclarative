@@ -124,13 +124,15 @@ void QQuickStyleItem::connectToControl() const
 void QQuickStyleItem::markImageDirty()
 {
     m_dirty.setFlag(DirtyFlag::Image);
-    polish();
+    if (isComponentComplete())
+        polish();
 }
 
 void QQuickStyleItem::markGeometryDirty()
 {
     m_dirty.setFlag(DirtyFlag::Geometry);
-    polish();
+    if (isComponentComplete())
+        polish();
 }
 
 QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePaintNodeData *)
