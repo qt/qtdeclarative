@@ -66,6 +66,7 @@ T.Button {
     }
 
     NativeStyle.Button {
+        id: hoverButton
         control: control
         x: background.x
         y: background.y
@@ -74,7 +75,8 @@ T.Button {
         useNinePatchImage: false
         overrideState: NativeStyle.StyleItem.AlwaysHovered
         opacity: control.hovered ? 1 : 0
-        Behavior on opacity { NumberAnimation { duration: parent.transitionDuration } }
+        visible: opacity !== 0
+        Behavior on opacity { NumberAnimation { duration: hoverButton.transitionDuration } }
     }
 
     icon.width: 24
