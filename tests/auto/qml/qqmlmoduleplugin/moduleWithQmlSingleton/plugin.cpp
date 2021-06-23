@@ -42,8 +42,7 @@ public:
     void registerTypes(const char *uri) override
     {
         Q_ASSERT(QLatin1String(uri) == "org.qtproject.ModuleWithQmlSingleton");
-        qmlRegisterSingletonType(baseUrl().resolved(QUrl("ModuleWithQmlSingleton/MySingleton.qml")), uri, 1, 0, "MySingleton");
-        qmlRegisterSingletonType(baseUrl().resolved(QUrl("ModuleWithQmlSingleton/MySingleton2.qml")), uri, 1, 0, "MySingleton2");
+        qmlRegisterModule(uri, 1, 0);
     }
 };
 

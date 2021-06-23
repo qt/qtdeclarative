@@ -1,2 +1,4 @@
 module org.qtproject.ModuleWithQmlSingleton
 plugin moduleWithQmlSingleton
+singleton MySingleton 1.0 MySingleton.qml
+singleton MySingleton2 1.0 MySingleton2.qml

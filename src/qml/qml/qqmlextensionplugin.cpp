@@ -75,7 +75,11 @@ QT_BEGIN_NAMESPACE
     \internal
 */
 QQmlExtensionPlugin::QQmlExtensionPlugin(QObject *parent)
+#if QT_DEPRECATED_SINCE(6, 3)
     : QObject(*(new QQmlExtensionPluginPrivate), parent)
+#else
+    : QObject(parent)
+#endif
 {
 }
 
@@ -102,19 +106,31 @@ QQmlExtensionPlugin::~QQmlExtensionPlugin() = default;
  */
 QQmlEngineExtensionPlugin::~QQmlEngineExtensionPlugin() = default;
 
+#if QT_DEPRECATED_SINCE(6, 3)
 /*!
     \since 5.1
     \internal
+    \deprecated [6.3] This is unnecessary and doesn't work for optional plugins
     \brief Returns the URL of the directory from which the extension is loaded.
 
     This is useful when the plugin also needs to load QML files or other
     assets from the same directory.
+
+    \note You should not need this function. Other files that are part of the
+          module's public interface should be specified accordingly in the build
+          system and qmldir file. The build system makes sure that they end up
+          both in the final module directory, and in the resource file system.
+          You can use the copy from the resource file system in the plugin.
+          Non-QML/JS files private to the plugin can be added to the resource
+          file system manually. However, consider moving all such functionality
+          out of the plugin and making the plugin optional.
 */
 QUrl QQmlExtensionPlugin::baseUrl() const
 {
     Q_D(const QQmlExtensionPlugin);
     return d->baseUrl;
 }
+#endif
 
 /*!
   \since 6.0

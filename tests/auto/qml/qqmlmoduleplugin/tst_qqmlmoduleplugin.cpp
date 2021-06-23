@@ -809,6 +809,7 @@ void tst_qqmlmoduleplugin::multiSingleton()
     qmlRegisterSingletonInstance("Test", 1, 0, "Tracker", &obj);
     engine.addImportPath(m_importsDirectory);
     QQmlComponent component(&engine, testFileUrl("multiSingleton.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QObject *object = component.create();
     QVERIFY(object != nullptr);
     QCOMPARE(obj.objectName(), QLatin1String("first"));

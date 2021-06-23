@@ -61,7 +61,10 @@ public:
     explicit QQmlExtensionPlugin(QObject *parent = nullptr);
     ~QQmlExtensionPlugin() override;
 
+#if QT_DEPRECATED_SINCE(6, 3)
+    QT_DEPRECATED_VERSION_X_6_3("Provide a qmldir file to remove the need for calling baseUrl")
     QUrl baseUrl() const;
+#endif
 
     void registerTypes(const char *uri) override = 0;
     virtual void unregisterTypes();

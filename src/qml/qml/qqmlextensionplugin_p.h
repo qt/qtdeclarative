@@ -56,6 +56,7 @@
 
 QT_BEGIN_NAMESPACE
 
+#if QT_DEPRECATED_SINCE(6, 3)
 class QQmlExtensionPluginPrivate : public QObjectPrivate
 {
     Q_DECLARE_PUBLIC(QQmlExtensionPlugin)
@@ -66,6 +67,7 @@ public:
     QUrl baseUrl;
 
 };
+#endif
 
 QT_END_NAMESPACE
 

@@ -845,11 +845,13 @@ QQmlMetaType::RegistrationResult QQmlMetaType::registerPluginTypes(
                 return RegistrationResult::Failure;
             }
 
+#if QT_DEPRECATED_SINCE(6, 3)
             if (auto *plugin = qobject_cast<QQmlExtensionPlugin *>(instance)) {
                 // basepath should point to the directory of the module, not the plugin file itself:
                 QQmlExtensionPluginPrivate::get(plugin)->baseUrl
                         = QQmlImports::urlFromLocalFileOrQrcOrUrl(basePath);
             }
+#endif
 
             const QByteArray bytes = uri.toUtf8();
             const char *moduleId = bytes.constData();
