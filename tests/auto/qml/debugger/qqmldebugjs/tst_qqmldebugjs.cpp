@@ -1067,7 +1067,7 @@ void tst_QQmlDebugJS::letConstLocals()
         const auto value = m_client->response();
         if (value.command == QStringLiteral("frame")) {
             const auto scopes = value.body.toObject().value(QStringLiteral("scopes")).toArray();
-            for (const auto &scope : scopes) {
+            for (const QJsonValueRef scope : scopes) {
                 const auto scopeObject = scope.toObject();
                 const int type = scopeObject.value("type").toInt();
                 if (type == 1 || type == 4) {
@@ -1079,7 +1079,7 @@ void tst_QQmlDebugJS::letConstLocals()
         } else if (value.command == QStringLiteral("scope")) {
             const auto props = value.body.toObject().value(QStringLiteral("object")).toObject()
                     .value(QStringLiteral("properties")).toArray();
-            for (const auto &prop : props) {
+            for (const QJsonValueRef prop : props) {
                 const auto propObj = prop.toObject();
                 QString name = propObj.value(QStringLiteral("name")).toString();
                 QVERIFY(name.length() == 1);
