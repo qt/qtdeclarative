@@ -252,16 +252,16 @@ All warnings can be set to three levels:
     }
 
     // TODO: Remove after Qt 6.2
-    QCommandLineOption disableCheckUnqualified(QStringList() << "no-unqualified-id",
-                                               QLatin1String("Don't warn about unqualified identifiers (deprecated, please use --unqualified disable instead)"));
+    QCommandLineOption disableCheckUnqualified(QStringList() << "no-unqualified-id");
+    disableCheckUnqualified.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(disableCheckUnqualified);
 
-    QCommandLineOption disableCheckWithStatement(QStringList() << "no-with-statement",
-                                                 QLatin1String("Don't warn about with statements (deprecated, please use --with-statements disable instead)"));
+    QCommandLineOption disableCheckWithStatement(QStringList() << "no-with-statement");
+    disableCheckWithStatement.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(disableCheckWithStatement);
 
-    QCommandLineOption disableCheckInheritanceCycle(QStringList() << "no-inheritance-cycle",
-                                                    QLatin1String("Don't warn about inheritance cycles (deprecated, please use --inheritance-cycle disable instead"));
+    QCommandLineOption disableCheckInheritanceCycle(QStringList() << "no-inheritance-cycle");
+    disableCheckInheritanceCycle.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(disableCheckInheritanceCycle);
 
     QCommandLineOption resourceOption(
@@ -344,17 +344,19 @@ All warnings can be set to three levels:
 
     if (NoWarnUnqualified) {
         options[QStringLiteral("unqualified")].m_disabled = true;
-        qWarning() << "Warning: --no-unqualified-id is deprecated. See --help.";
+        qWarning()
+                << "Warning: --no-unqualified-id is deprecated. Use --unqualified disable instead.";
     }
 
     if (NoWarnWithStatement) {
         options[QStringLiteral("with")].m_disabled = true;
-        qWarning() << "Warning: --no-with-statement is deprecated. See --help.";
+        qWarning() << "Warning: --no-with-statement is deprecated. Use --with disable instead.";
     }
 
     if (NoWarnInheritanceCycle) {
         options[QStringLiteral("inheritance-cycle")].m_disabled = true;
-        qWarning() << "Warning: --no-inheritance-cycle is deprecated. See --help.";
+        qWarning() << "Warning: --no-inheritance-cycle is deprecated. Use --inheritance-cycle "
+                      "disable instead.";
     }
 
     // use host qml import path as a sane default if not explicitly disabled
