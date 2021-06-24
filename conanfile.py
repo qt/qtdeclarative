@@ -76,6 +76,10 @@ def _parse_qt_version_by_key(key: str) -> str:
     return ret.pop() if ret else ""
 
 
+def _get_qt_minor_version() -> str:
+    return _parse_qt_version_by_key('QT_REPO_MODULE_VERSION')[0:3]
+
+
 class QtDeclarative(ConanFile):
     name = "qtdeclarative"
     license = "LGPL-3.0-only, Commercial Qt License Agreement"
@@ -91,7 +95,7 @@ class QtDeclarative(ConanFile):
     exports_sources = "*", "!conan*.*"
     # use commit ID as the RREV (recipe revision) if this is exported from .git repository
     revision_mode = "scm" if Path(Path(__file__).parent.resolve() / ".git").exists() else "hash"
-    python_requires = f"qt-conan-common/{_parse_qt_version_by_key('QT_REPO_MODULE_VERSION')[0:3]}@qt/everywhere"
+    python_requires = f"qt-conan-common/{_get_qt_minor_version()}@qt/everywhere"
 
     options = {item.replace("-", "_"): ["yes", "no", None] for item in _qtdeclarative_features}
     default_options = {item.replace("-", "_"): None for item in _qtdeclarative_features}
