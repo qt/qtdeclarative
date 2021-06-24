@@ -45,7 +45,6 @@ void tst_basicapp::loadComponent()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, QStringLiteral("qrc:/BasicApp/main.qml"));
-    QEXPECT_FAIL(nullptr, "Tries to load plugin from qrc", Abort);
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer o(c.create());
     QVERIFY(!o.isNull());

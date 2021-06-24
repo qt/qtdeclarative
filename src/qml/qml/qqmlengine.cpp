@@ -1996,7 +1996,7 @@ bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList
     QQmlTypeLoaderQmldirContent qmldir;
     QQmlPluginImporter importer(
                 uri, QTypeRevision(), &d->importDatabase, &qmldir, &d->typeLoader, errors);
-    return importer.importDynamicPlugin(filePath, false).isValid();
+    return importer.importDynamicPlugin(filePath, uri, false).isValid();
 }
 #endif
 
