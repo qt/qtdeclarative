@@ -7,10 +7,7 @@ if(TARGET Qt::Quick)
 endif()
 add_subdirectory(core)
 add_subdirectory(qmldevtools)
-# special case begin
-# add_subdirectory(cmake)
-# add_subdirectory(installed_cmake)
-# special case end
+add_subdirectory(cmake)
 add_subdirectory(toolsupport)
 if(NOT UIKIT)
     add_subdirectory(qmltest)
