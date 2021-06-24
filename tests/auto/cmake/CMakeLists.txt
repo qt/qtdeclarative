@@ -1,41 +1,64 @@
-cmake_minimum_required(VERSION 2.8)
+# This is an automatic test for the CMake configuration files.
+# To run it manually,
+# 1) mkdir build   # Create a build directory
+# 2) cd build
+# 3) # Run cmake on this directory
+#    `$qt_prefix/bin/qt-cmake ..` or `cmake -DCMAKE_PREFIX_PATH=/path/to/qt ..`
+# 4) ctest         # Run ctest
 
-project(qmake_cmake_files)
-
+cmake_minimum_required(VERSION 3.14)
+project(qtdeclarative_cmake_tests)
 enable_testing()
 
-find_package(Qt5Core REQUIRED)
+set(required_packages Core)
+set(optional_packages Qml Quick)
 
-include("${_Qt5CTestMacros}")
+# Setup the test when called as a completely standalone project.
+if(TARGET Qt6::Core)
+    # Tests are built as part of the qtsensors build tree.
+    # Setup paths so that the Qt packages are found.
+    qt_internal_set_up_build_dir_package_paths()
+endif()
 
-test_module_includes(
-  Qml QQmlEngine
-  Quick QQuickWindow
-)
+find_package(Qt6 REQUIRED COMPONENTS ${required_packages})
+find_package(Qt6 OPTIONAL_COMPONENTS ${optional_packages})
 
-expect_pass(test_plugins)
+# Setup common test variables which were previously set by ctest_testcase_common.prf.
+set(CMAKE_MODULES_UNDER_TEST "${required_packages}" "${optional_packages}")
 
-add_test(qtquickcompiler ${CMAKE_CTEST_COMMAND}
-    --build-and-test
-    "${CMAKE_CURRENT_SOURCE_DIR}/qtquickcompiler/"
-    "${CMAKE_CURRENT_BINARY_DIR}/qtquickcompiler"
-    --build-config "${CMAKE_BUILD_TYPE}"
-    --build-generator ${CMAKE_GENERATOR}
-    --build-makeprogram ${CMAKE_MAKE_PROGRAM}
-    --build-project qqc_test
-    --build-options "-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}" ${BUILD_OPTIONS_LIST}
-    --test-command qqc_test
+foreach(qt_package ${CMAKE_MODULES_UNDER_TEST})
+    set(package_name "${QT_CMAKE_EXPORT_NAMESPACE}${qt_package}")
+    if(${package_name}_FOUND)
+        set(CMAKE_${qt_package}_MODULE_MAJOR_VERSION "${${package_name}_VERSION_MAJOR}")
+        set(CMAKE_${qt_package}_MODULE_MINOR_VERSION "${${package_name}_VERSION_MINOR}")
+        set(CMAKE_${qt_package}_MODULE_PATCH_VERSION "${${package_name}_VERSION_PATCH}")
+    endif()
+endforeach()
 
-)
+include("${_Qt6CTestMacros}")
 
-add_test(qmlimportscanner ${CMAKE_CTEST_COMMAND}
-    --build-and-test
-    "${CMAKE_CURRENT_SOURCE_DIR}/qmlimportscanner/"
-    "${CMAKE_CURRENT_BINARY_DIR}/qmlimportscanner"
-    --build-config "${CMAKE_BUILD_TYPE}"
-    --build-generator ${CMAKE_GENERATOR}
-    --build-makeprogram ${CMAKE_MAKE_PROGRAM}
-    --build-project qis_test
-    --build-options "-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}" ${BUILD_OPTIONS_LIST}
-    --test-command qis_test
-)
+set(module_includes "")
+
+if(TARGET Qt::Qml)
+    list(APPEND module_includes
+        Qml QQmlEngine
+    )
+endif()
+
+if(TARGET Qt::Quick)
+    list(APPEND module_includes
+        Quick QQuickWindow
+    )
+endif()
+
+_qt_internal_test_module_includes(${module_includes})
+
+# TODO: Plugin targets are not available in shared builds at the moment QTBUG-94066
+if(TARGET Qt::Qml AND NOT QT6_IS_SHARED_LIBS_BUILD)
+    _qt_internal_test_expect_pass(test_plugins)
+endif()
+
+if(TARGET Qt::Quick)
+    # _qt_internal_test_expect_pass(qtquickcompiler) # TODO: Replace with 6.2 qml module API
+    # _qt_internal_test_expect_pass(qmlimportscanner) # TODO: Replace with 6.2 qml module API
+endif()
