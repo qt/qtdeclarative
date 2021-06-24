@@ -56,6 +56,7 @@
 
 #include "qqmlpropertydata_p.h"
 #include "qqmljavascriptexpression_p.h"
+#include <private/qv4alloca_p.h>
 
 #include <memory>
 
@@ -144,11 +145,12 @@ public:
         return static_cast<const QQmlPropertyBinding *>(binding)->isUndefined();
     }
 
+    template<QMetaType::Type type>
     static bool doEvaluate(QMetaType metaType, QUntypedPropertyData *dataPtr, void *f) {
         auto address = static_cast<std::byte*>(f);
         address -= QPropertyBindingPrivate::getSizeEnsuringAlignment(); // f now points to QPropertyBindingPrivate suboject
         // and that has the same address as QQmlPropertyBinding
-        return reinterpret_cast<QQmlPropertyBinding *>(address)->evaluate(metaType, dataPtr);
+        return reinterpret_cast<QQmlPropertyBinding *>(address)->evaluate<type>(metaType, dataPtr);
     }
 
     bool hasDependencies()
@@ -157,6 +159,7 @@ public:
     }
 
 private:
+    template <QMetaType::Type type>
     bool evaluate(QMetaType metaType, void *dataPtr);
 
     Q_NEVER_INLINE void handleUndefinedAssignment(QQmlEnginePrivate *ep, void *dataPtr);
@@ -210,9 +213,9 @@ template <auto I>
 struct Print {};
 
 namespace QtPrivate {
-template<>
-inline constexpr BindingFunctionVTable bindingFunctionVTable<QQmlPropertyBinding> = {
-    &QQmlPropertyBinding::doEvaluate,
+template<QMetaType::Type type>
+inline constexpr BindingFunctionVTable bindingFunctionVTableForQQmlPropertyBinding = {
+    &QQmlPropertyBinding::doEvaluate<type>,
     [](void *qpropertyBinding){
         QQmlPropertyBinding *binding = reinterpret_cast<QQmlPropertyBinding *>(qpropertyBinding);
         binding->jsExpression()->~QQmlPropertyBindingJS();
@@ -223,6 +226,24 @@ inline constexpr BindingFunctionVTable bindingFunctionVTable<QQmlPropertyBinding
     [](void *, void *){},
     0
 };
+}
+
+inline const QtPrivate::BindingFunctionVTable *bindingFunctionVTableForQQmlPropertyBinding(QMetaType type)
+{
+#define FOR_TYPE(TYPE) \
+    case TYPE: return &QtPrivate::bindingFunctionVTableForQQmlPropertyBinding<TYPE>
+    switch (type.id()) {
+        FOR_TYPE(QMetaType::Int);
+        FOR_TYPE(QMetaType::QString);
+        FOR_TYPE(QMetaType::Double);
+        FOR_TYPE(QMetaType::Float);
+        FOR_TYPE(QMetaType::Bool);
+    default:
+        if (type.flags() & QMetaType::PointerToQObject)
+            return &QtPrivate::bindingFunctionVTableForQQmlPropertyBinding<QMetaType::QObjectStar>;
+        return &QtPrivate::bindingFunctionVTableForQQmlPropertyBinding<QMetaType::UnknownType>;
+    }
+#undef FOR_TYPE
 }
 
 class QQmlTranslationPropertyBinding
@@ -242,6 +263,173 @@ inline const QQmlPropertyBinding *QQmlPropertyBindingJS::asBinding() const
 }
 
 static_assert(sizeof(QQmlPropertyBinding) == sizeof(QPropertyBindingPrivate)); // else the whole offset computatation will break
+template<typename T>
+bool compareAndAssign(void *dataPtr, const void *result)
+{
+    if (*static_cast<const T *>(result) == *static_cast<const T *>(dataPtr))
+        return false;
+    *static_cast<T *>(dataPtr) = *static_cast<const T *>(result);
+    return true;
+}
+
+template <QMetaType::Type type>
+bool QQmlPropertyBinding::evaluate(QMetaType metaType, void *dataPtr)
+{
+    const auto ctxt = jsExpression()->context();
+    QQmlEngine *engine = ctxt ? ctxt->engine() : nullptr;
+    if (!engine) {
+        QPropertyBindingError error(QPropertyBindingError::EvaluationError);
+        if (auto currentBinding = QPropertyBindingPrivate::currentlyEvaluatingBinding())
+            currentBinding->setError(std::move(error));
+        return false;
+    }
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+    ep->referenceScarceResources();
+
+    const auto handleErrorAndUndefined = [&](bool evaluatedToUndefined) {
+        ep->dereferenceScarceResources();
+        if (jsExpression()->hasError()) {
+            QPropertyBindingError error(QPropertyBindingError::UnknownError,
+                                        jsExpression()->delayedError()->error().description());
+            QPropertyBindingPrivate::currentlyEvaluatingBinding()->setError(std::move(error));
+            bindingErrorCallback(this);
+            return false;
+        }
+
+        if (evaluatedToUndefined) {
+            handleUndefinedAssignment(ep, dataPtr);
+            // if property has been changed due to reset, reset is responsible for
+            // notifying observers
+            return false;
+        } else if (isUndefined()) {
+            setIsUndefined(false);
+        }
+
+        return true;
+    };
+
+    if (!hasBoundFunction()) {
+        Q_ASSERT(metaType.sizeOf() > 0);
+
+        // No need to construct here. evaluate() expects uninitialized memory.
+        const auto size = [&]() -> qsizetype {
+            switch (type) {
+                case QMetaType::QObjectStar: return sizeof(QObject *);
+                case QMetaType::Bool: return sizeof(bool);
+                case QMetaType::Int: return (sizeof(int));
+                case QMetaType::Double: return (sizeof(double));
+                case QMetaType::Float: return (sizeof(float));
+                case QMetaType::QString: return (sizeof(QString));
+                default: return metaType.sizeOf();
+            }
+        }();
+        Q_ALLOCA_VAR(void, result, size);
+
+        const bool evaluatedToUndefined = !jsExpression()->evaluate(&result, &metaType, 0);
+        if (!handleErrorAndUndefined(evaluatedToUndefined))
+            return false;
+
+        switch (type) {
+        case QMetaType::QObjectStar:
+            return compareAndAssign<QObject *>(dataPtr, result);
+        case QMetaType::Bool:
+            return compareAndAssign<bool>(dataPtr, result);
+        case QMetaType::Int:
+            return compareAndAssign<int>(dataPtr, result);
+        case QMetaType::Double:
+            return compareAndAssign<double>(dataPtr, result);
+        case QMetaType::Float:
+            return compareAndAssign<float>(dataPtr, result);
+        case QMetaType::QString: {
+            const bool hasChanged = compareAndAssign<QString>(dataPtr, result);
+            static_cast<QString *>(result)->~QString();
+            return hasChanged;
+        }
+        default:
+            break;
+        }
+
+        const bool hasChanged = !metaType.equals(result, dataPtr);
+        if (hasChanged) {
+            metaType.destruct(dataPtr);
+            metaType.construct(dataPtr, result);
+        }
+        metaType.destruct(result);
+        return hasChanged;
+    }
+
+    bool evaluatedToUndefined = false;
+    QV4::Scope scope(engine->handle());
+    QV4::ScopedValue result(scope, static_cast<QQmlPropertyBindingJSForBoundFunction *>(
+                                jsExpression())->evaluate(&evaluatedToUndefined));
+
+    if (!handleErrorAndUndefined(evaluatedToUndefined))
+        return false;
+
+    switch (type) {
+    case QMetaType::Bool: {
+        bool b;
+        if (result->isBoolean())
+            b = result->booleanValue();
+        else
+            b = result->toBoolean();
+        if (b == *static_cast<bool *>(dataPtr))
+            return false;
+        *static_cast<bool *>(dataPtr) = b;
+        return true;
+    }
+    case QMetaType::Int: {
+        int i;
+        if (result->isInteger())
+            i = result->integerValue();
+        else if (result->isNumber()) {
+            i = QV4::StaticValue::toInteger(result->doubleValue());
+        } else {
+            break;
+        }
+        if (i == *static_cast<int *>(dataPtr))
+            return false;
+        *static_cast<int *>(dataPtr) = i;
+        return true;
+    }
+    case QMetaType::Double:
+        if (result->isNumber()) {
+            double d = result->asDouble();
+            if (d == *static_cast<double *>(dataPtr))
+                return false;
+            *static_cast<double *>(dataPtr) = d;
+            return true;
+        }
+        break;
+    case QMetaType::Float:
+        if (result->isNumber()) {
+            float d = float(result->asDouble());
+            if (d == *static_cast<float *>(dataPtr))
+                return false;
+            *static_cast<float *>(dataPtr) = d;
+            return true;
+        }
+        break;
+    case QMetaType::QString:
+        if (result->isString()) {
+            QString s = result->toQStringNoThrow();
+            if (s == *static_cast<QString *>(dataPtr))
+                return false;
+            *static_cast<QString *>(dataPtr) = s;
+            return true;
+        }
+        break;
+    default:
+        break;
+    }
+
+    QVariant resultVariant(scope.engine->toVariant(result, metaType));
+    resultVariant.convert(metaType);
+    const bool hasChanged = !metaType.equals(resultVariant.constData(), dataPtr);
+    metaType.destruct(dataPtr);
+    metaType.construct(dataPtr, resultVariant.constData());
+    return hasChanged;
+}
 
 QT_END_NAMESPACE
 
