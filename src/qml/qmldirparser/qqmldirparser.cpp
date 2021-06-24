@@ -361,14 +361,6 @@ void QQmlDirParser::reportError(quint16 line, quint16 column, const QString &des
     _errors.append(error);
 }
 
-bool QQmlDirParser::hasError() const
-{
-    if (! _errors.isEmpty())
-        return true;
-
-    return false;
-}
-
 void QQmlDirParser::setError(const QQmlJS::DiagnosticMessage &e)
 {
     _errors.clear();
@@ -386,61 +378,6 @@ QList<QQmlJS::DiagnosticMessage> QQmlDirParser::errors(const QString &uri) const
         errors << e;
     }
     return errors;
-}
-
-QString QQmlDirParser::typeNamespace() const
-{
-    return _typeNamespace;
-}
-
-void QQmlDirParser::setTypeNamespace(const QString &s)
-{
-    _typeNamespace = s;
-}
-
-QList<QQmlDirParser::Plugin> QQmlDirParser::plugins() const
-{
-    return _plugins;
-}
-
-QMultiHash<QString, QQmlDirParser::Component> QQmlDirParser::components() const
-{
-    return _components;
-}
-
-QList<QQmlDirParser::Import> QQmlDirParser::dependencies() const
-{
-    return _dependencies;
-}
-
-QList<QQmlDirParser::Import> QQmlDirParser::imports() const
-{
-    return _imports;
-}
-
-QList<QQmlDirParser::Script> QQmlDirParser::scripts() const
-{
-    return _scripts;
-}
-
-QStringList QQmlDirParser::typeInfos() const
-{
-    return _typeInfos;
-}
-
-bool QQmlDirParser::designerSupported() const
-{
-    return _designerSupported;
-}
-
-QStringList QQmlDirParser::classNames() const
-{
-    return _classNames;
-}
-
-QString QQmlDirParser::preferredPath() const
-{
-    return _preferredPath;
 }
 
 QDebug &operator<< (QDebug &debug, const QQmlDirParser::Component &component)
