@@ -228,9 +228,6 @@ public:
     QQmlImportDatabase(QQmlEngine *);
     ~QQmlImportDatabase();
 
-    QTypeRevision importDynamicPlugin(
-            const QString &filePath, const QString &uri, const QString &importNamespace,
-            QTypeRevision version, bool isOptional, QList<QQmlError> *errors);
     bool removeDynamicPlugin(const QString &filePath);
     QStringList dynamicPlugins() const;
 
@@ -242,20 +239,13 @@ public:
     void setPluginPathList(const QStringList &paths);
     void addPluginPath(const QString& path);
 
-    QString resolvePlugin(QQmlTypeLoader *typeLoader,
-                          const QString &qmldirPath, const QString &qmldirPluginPath,
-                          const QString &baseName) const;
+    static QTypeRevision lockModule(const QString &uri, const QString &typeNamespace,
+                                    QTypeRevision version, QList<QQmlError> *errors);
+
 private:
     friend class QQmlImportsPrivate;
-    QString resolvePlugin(QQmlTypeLoader *typeLoader,
-                          const QString &qmldirPath, const QString &qmldirPluginPath,
-                          const QString &baseName, const QStringList &suffixes,
-                          const QString &prefix = QString()) const;
-    QTypeRevision importStaticPlugin(
-            QObject *instance, const QString &basePath, const QString &uri,
-            const QString &typeNamespace, QTypeRevision version, QList<QQmlError> *errors);
+    friend class QQmlPluginImporter;
     void clearDirCache();
-    void finalizePlugin(QObject *instance, const QString &path, const QString &uri);
 
     struct QmldirCache {
         QTypeRevision version;

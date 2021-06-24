@@ -286,6 +286,7 @@ qt_internal_add_qml_module(Qml
         qml/qqmlopenmetaobject.cpp qml/qqmlopenmetaobject_p.h
         qml/qqmlparserstatus.cpp qml/qqmlparserstatus.h
         qml/qqmlplatform.cpp qml/qqmlplatform_p.h
+        qml/qqmlpluginimporter.cpp qml/qqmlpluginimporter_p.h
         qml/qqmlprivate.h
         qml/qqmlproperty.cpp qml/qqmlproperty.h qml/qqmlproperty_p.h
         qml/qqmlpropertybinding.cpp qml/qqmlpropertybinding_p.h
