@@ -227,7 +227,7 @@ public:
     QQmlImportDatabase(QQmlEngine *);
     ~QQmlImportDatabase();
 
-    bool removeDynamicPlugin(const QString &filePath);
+    bool removeDynamicPlugin(const QString &pluginId);
     QStringList dynamicPlugins() const;
 
     QStringList importPathList(PathType type = LocalOrRemote) const;
@@ -266,7 +266,7 @@ private:
     QStringList filePluginPath;
     QStringList fileImportPath;
 
-    QSet<QString> qmlDirFilesForWhichPluginsHaveBeenLoaded;
+    QSet<QString> modulesForWhichPluginsHaveBeenLoaded;
     QSet<QString> initializedPlugins;
     QQmlEngine *engine;
 };

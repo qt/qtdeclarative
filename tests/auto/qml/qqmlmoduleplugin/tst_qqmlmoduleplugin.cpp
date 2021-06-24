@@ -222,7 +222,7 @@ void tst_qqmlmoduleplugin::initTestCase()
             } \
             file.close(); \
         } else { \
-            QCOMPARE(expected, actual); \
+            QCOMPARE(actual, expected); \
         } \
     }
 

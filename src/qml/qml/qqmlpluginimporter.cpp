@@ -58,11 +58,11 @@ struct QmlPlugin {
     std::unique_ptr<QPluginLoader> loader;
 };
 
-class PathPluginMap
+class PluginMap
 {
-    Q_DISABLE_COPY_MOVE(PathPluginMap)
+    Q_DISABLE_COPY_MOVE(PluginMap)
 public:
-    PathPluginMap() = default;
+    PluginMap() = default;
 
     // This is a std::unordered_map because QHash cannot handle move-only types.
     using Container = std::unordered_map<QString, QmlPlugin>;
@@ -70,27 +70,27 @@ public:
 private:
     QBasicMutex mutex;
     Container plugins;
-    friend class PathPluginMapPtr;
+    friend class PluginMapPtr;
 };
 
-class PathPluginMapPtr
+class PluginMapPtr
 {
-    Q_DISABLE_COPY_MOVE(PathPluginMapPtr)
+    Q_DISABLE_COPY_MOVE(PluginMapPtr)
 public:
-    PathPluginMapPtr(PathPluginMap *map) : map(map), locker(&map->mutex) {}
+    PluginMapPtr(PluginMap *map) : map(map), locker(&map->mutex) {}
 
-    PathPluginMap::Container &operator*() { return map->plugins; }
-    const PathPluginMap::Container &operator*() const { return map->plugins; }
+    PluginMap::Container &operator*() { return map->plugins; }
+    const PluginMap::Container &operator*() const { return map->plugins; }
 
-    PathPluginMap::Container *operator->() { return &map->plugins; }
-    const PathPluginMap::Container *operator->() const { return &map->plugins; }
+    PluginMap::Container *operator->() { return &map->plugins; }
+    const PluginMap::Container *operator->() const { return &map->plugins; }
 
 private:
-    PathPluginMap *map;
+    PluginMap *map;
     QMutexLocker<QBasicMutex> locker;
 };
 
-Q_GLOBAL_STATIC(PathPluginMap, qmlPluginsByPath); // stores the uri and the PluginLoaders
+Q_GLOBAL_STATIC(PluginMap, qmlPluginsById); // stores the uri and the PluginLoaders
 
 static QTypeRevision validVersion(QTypeRevision version = QTypeRevision())
 {
@@ -161,17 +161,17 @@ static bool unloadPlugin(const std::pair<const QString, QmlPlugin> &plugin)
 
 void qmlClearEnginePlugins()
 {
-    PathPluginMapPtr plugins(qmlPluginsByPath());
+    PluginMapPtr plugins(qmlPluginsById());
     for (const auto &plugin : qAsConst(*plugins))
         unloadPlugin(plugin);
     plugins->clear();
 }
 
-bool QQmlPluginImporter::removePlugin(const QString &filePath)
+bool QQmlPluginImporter::removePlugin(const QString &pluginId)
 {
-    PathPluginMapPtr plugins(qmlPluginsByPath());
+    PluginMapPtr plugins(qmlPluginsById());
 
-    auto it = plugins->find(QFileInfo(filePath).absoluteFilePath());
+    auto it = plugins->find(pluginId);
     if (it == plugins->end())
         return false;
 
@@ -183,7 +183,7 @@ bool QQmlPluginImporter::removePlugin(const QString &filePath)
 
 QStringList QQmlPluginImporter::plugins()
 {
-    PathPluginMapPtr plugins(qmlPluginsByPath());
+    PluginMapPtr plugins(qmlPluginsById());
     QStringList results;
     for (auto it = plugins->cbegin(), end = plugins->cend(); it != end; ++it) {
         if (it->second.loader != nullptr)
@@ -198,32 +198,31 @@ QString QQmlPluginImporter::truncateToDirectory(const QString &qmldirFilePath)
     return slash > 0 ? qmldirFilePath.left(slash) : qmldirFilePath;
 }
 
-void QQmlPluginImporter::finalizePlugin(QObject *instance, const QString &path) {
+void QQmlPluginImporter::finalizePlugin(QObject *instance, const QString &pluginId) {
     // The plugin's per-engine initialization does not need lock protection, as this function is
     // only called from the engine specific loader thread and importDynamicPlugin as well as
     // importStaticPlugin are the only places of access.
 
-    database->initializedPlugins.insert(path);
+    database->initializedPlugins.insert(pluginId);
     if (auto *extensionIface = qobject_cast<QQmlExtensionInterface *>(instance))
         typeLoader->initializeEngine(extensionIface, uri.toUtf8().constData());
     else if (auto *engineIface = qobject_cast<QQmlEngineExtensionInterface *>(instance))
         typeLoader->initializeEngine(engineIface, uri.toUtf8().constData());
 }
 
-QTypeRevision QQmlPluginImporter::importStaticPlugin(QObject *instance) {
+QTypeRevision QQmlPluginImporter::importStaticPlugin(QObject *instance, const QString &pluginId) {
     // Dynamic plugins are differentiated by their filepath. For static plugins we
     // don't have that information so we use their address as key instead.
     QTypeRevision importVersion = version;
-    const QString uniquePluginID = QString::asprintf("%p", instance);
     {
-        PathPluginMapPtr plugins(qmlPluginsByPath());
+        PluginMapPtr plugins(qmlPluginsById());
 
         // Plugin types are global across all engines and should only be
         // registered once. But each engine still needs to be initialized.
-        bool typesRegistered = plugins->find(uniquePluginID) != plugins->end();
+        bool typesRegistered = plugins->find(pluginId) != plugins->end();
 
         if (!typesRegistered) {
-            plugins->insert(std::make_pair(uniquePluginID, QmlPlugin()));
+            plugins->insert(std::make_pair(pluginId, QmlPlugin()));
             if (QQmlMetaType::registerPluginTypes(
                         instance, QFileInfo(qmldirPath).absoluteFilePath(), uri,
                         qmldir->typeNamespace(), importVersion, errors)
@@ -243,43 +242,29 @@ QTypeRevision QQmlPluginImporter::importStaticPlugin(QObject *instance) {
         // other QML loader threads and thus not process the initializeEngine call).
     }
 
-    if (!database->initializedPlugins.contains(uniquePluginID))
-        finalizePlugin(instance, uniquePluginID);
+    if (!database->initializedPlugins.contains(pluginId))
+        finalizePlugin(instance, pluginId);
 
     return validVersion(importVersion);
 }
 
-QTypeRevision QQmlPluginImporter::importDynamicPlugin(const QString &filePath, bool isOptional) {
-    QFileInfo fileInfo(filePath);
-    const QString absoluteFilePath = fileInfo.absoluteFilePath();
-
+QTypeRevision QQmlPluginImporter::importDynamicPlugin(
+        const QString &filePath, const QString &pluginId, bool optional)
+{
     QObject *instance = nullptr;
     QTypeRevision importVersion = version;
 
-    const bool engineInitialized = database->initializedPlugins.contains(absoluteFilePath);
+    const bool engineInitialized = database->initializedPlugins.contains(pluginId);
     {
-        PathPluginMapPtr plugins(qmlPluginsByPath());
-        bool typesRegistered = plugins->find(absoluteFilePath) != plugins->end();
+        PluginMapPtr plugins(qmlPluginsById());
+        bool typesRegistered = plugins->find(pluginId) != plugins->end();
 
         if (!engineInitialized || !typesRegistered) {
-            if (!QQml_isFileCaseCorrect(absoluteFilePath)) {
-                if (errors) {
-                    QQmlError error;
-                    error.setDescription(
-                                QQmlImportDatabase::tr("File name case mismatch for \"%1\"")
-                                .arg(absoluteFilePath));
-                    errors->prepend(error);
-                }
-                return QTypeRevision();
-            }
-
-            QmlPlugin plugin;
-
-            const QString absolutePath = fileInfo.absolutePath();
-            if (!typesRegistered && isOptional) {
+            const QFileInfo fileInfo(filePath);
+            if (!typesRegistered && optional) {
                 switch (QQmlMetaType::registerPluginTypes(
-                            nullptr, absolutePath, uri, qmldir->typeNamespace(), importVersion,
-                            errors)) {
+                            nullptr, fileInfo.absolutePath(), uri, qmldir->typeNamespace(),
+                            importVersion, errors)) {
                 case QQmlMetaType::RegistrationResult::NoRegistrationFunction:
                     // try again with plugin
                     break;
@@ -289,9 +274,9 @@ QTypeRevision QQmlPluginImporter::importDynamicPlugin(const QString &filePath, b
                     if (!importVersion.isValid())
                         return QTypeRevision();
                     // instance and loader intentionally left at nullptr
-                    plugins->insert(std::make_pair(absoluteFilePath, std::move(plugin)));
+                    plugins->insert(std::make_pair(pluginId, QmlPlugin()));
                     // Not calling initializeEngine with null instance
-                    database->initializedPlugins.insert(absoluteFilePath);
+                    database->initializedPlugins.insert(pluginId);
                     return importVersion;
                 case QQmlMetaType::RegistrationResult::Failure:
                     return QTypeRevision();
@@ -300,6 +285,27 @@ QTypeRevision QQmlPluginImporter::importDynamicPlugin(const QString &filePath, b
 
 #if QT_CONFIG(library)
             if (!typesRegistered) {
+
+                // Check original filePath. If that one is empty, not being able
+                // to load the plugin is not an error. We were just checking if
+                // the types are already available. absoluteFilePath can still be
+                // empty if filePath is not.
+                if (filePath.isEmpty())
+                    return QTypeRevision();
+
+                const QString absoluteFilePath = fileInfo.absoluteFilePath();
+                if (!QQml_isFileCaseCorrect(absoluteFilePath)) {
+                    if (errors) {
+                        QQmlError error;
+                        error.setDescription(
+                                    QQmlImportDatabase::tr("File name case mismatch for \"%1\"")
+                                    .arg(absoluteFilePath));
+                        errors->prepend(error);
+                    }
+                    return QTypeRevision();
+                }
+
+                QmlPlugin plugin;
                 plugin.loader = std::make_unique<QPluginLoader>(absoluteFilePath);
                 if (!plugin.loader->load()) {
                     if (errors) {
@@ -311,7 +317,7 @@ QTypeRevision QQmlPluginImporter::importDynamicPlugin(const QString &filePath, b
                 }
 
                 instance = plugin.loader->instance();
-                plugins->insert(std::make_pair(absoluteFilePath, std::move(plugin)));
+                plugins->insert(std::make_pair(pluginId, std::move(plugin)));
 
                 // Continue with shared code path for dynamic and static plugins:
                 if (QQmlMetaType::registerPluginTypes(
@@ -326,7 +332,7 @@ QTypeRevision QQmlPluginImporter::importDynamicPlugin(const QString &filePath, b
                 if (!importVersion.isValid())
                     return QTypeRevision();
             } else {
-                auto it = plugins->find(absoluteFilePath);
+                auto it = plugins->find(pluginId);
                 if (it != plugins->end() && it->second.loader)
                     instance = it->second.loader->instance();
             }
@@ -340,7 +346,7 @@ QTypeRevision QQmlPluginImporter::importDynamicPlugin(const QString &filePath, b
     }
 
     if (!engineInitialized)
-        finalizePlugin(instance, absoluteFilePath);
+        finalizePlugin(instance, pluginId);
 
     return validVersion(importVersion);
 }
@@ -515,7 +521,15 @@ QTypeRevision QQmlPluginImporter::importPlugins() {
     const int qmldirPluginCount = qmldirPlugins.count();
     QTypeRevision importVersion = version;
 
-    if (!database->qmlDirFilesForWhichPluginsHaveBeenLoaded.contains(qmldir->qmldirLocation())) {
+    // If the path contains a version marker or if we have more than one plugin,
+    // we need to use paths. In that case we cannot fall back to other instances
+    // of the same module if a qmldir is rejected. However, as we don't generate
+    // such modules, it shouldn't be a problem.
+    const bool canUseUris = qmldirPluginCount == 1
+            && qmldirPath.endsWith(u'/' + QString(uri).replace(u'.', u'/'));
+    const QString moduleId = canUseUris ? uri : qmldir->qmldirLocation();
+
+    if (!database->modulesForWhichPluginsHaveBeenLoaded.contains(moduleId)) {
         // First search for listed qmldir plugins dynamically. If we cannot resolve them all, we
         // continue searching static plugins that has correct metadata uri. Note that since we
         // only know the uri for a static plugin, and not the filename, we cannot know which
@@ -528,12 +542,16 @@ QTypeRevision QQmlPluginImporter::importPlugins() {
         for (const QQmlDirParser::Plugin &plugin : qmldirPlugins) {
             const QString resolvedFilePath = resolvePlugin(plugin.path, plugin.name);
 
-            if (resolvedFilePath.isEmpty())
+            if (!canUseUris && resolvedFilePath.isEmpty())
                 continue;
 
-            ++dynamicPluginsFound;
-            importVersion = importDynamicPlugin(resolvedFilePath, plugin.optional);
-            if (!importVersion.isValid())
+            importVersion = importDynamicPlugin(
+                        resolvedFilePath,
+                        canUseUris ? uri : QFileInfo(resolvedFilePath).absoluteFilePath(),
+                        plugin.optional);
+            if (importVersion.isValid())
+                ++dynamicPluginsFound;
+            else if (!resolvedFilePath.isEmpty())
                 return QTypeRevision();
         }
 
@@ -554,7 +572,9 @@ QTypeRevision QQmlPluginImporter::importPlugins() {
                         if (versionUri == metaTagUri.toString()) {
                             staticPluginsFound++;
                             QObject *instance = pair.first.instance();
-                            importVersion = importStaticPlugin(instance);
+                            importVersion = importStaticPlugin(
+                                        instance,
+                                        canUseUris ? uri : QString::asprintf("%p", instance));
                             if (!importVersion.isValid()){
                                 if (errors) {
                                     Q_ASSERT(!errors->isEmpty());
@@ -603,7 +623,7 @@ QTypeRevision QQmlPluginImporter::importPlugins() {
             return QTypeRevision();
         }
 
-        database->qmlDirFilesForWhichPluginsHaveBeenLoaded.insert(qmldir->qmldirLocation());
+        database->modulesForWhichPluginsHaveBeenLoaded.insert(moduleId);
     }
     return validVersion(importVersion);
 }

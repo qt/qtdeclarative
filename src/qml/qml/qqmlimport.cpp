@@ -1455,6 +1455,13 @@ QTypeRevision QQmlImportsPrivate::addFileImport(
             return QTypeRevision();
 
         if (qmldir.hasContent()) {
+            if (uri == QStringLiteral(".")) {
+                // If this is an implicit import, prefer the qmldir URI. Unless it doesn't exist.
+                const QString qmldirUri = qmldir.typeNamespace();
+                if (!qmldirUri.isEmpty())
+                    importUri = qmldirUri;
+            }
+
             version = importExtension(importUri, version, database, &qmldir, errors);
             if (!version.isValid())
                 return QTypeRevision();
@@ -1842,9 +1849,9 @@ QTypeRevision QQmlImportDatabase::lockModule(const QString &uri, const QString &
     return version;
 }
 
-bool QQmlImportDatabase::removeDynamicPlugin(const QString &filePath)
+bool QQmlImportDatabase::removeDynamicPlugin(const QString &pluginId)
 {
-    return QQmlPluginImporter::removePlugin(filePath);
+    return QQmlPluginImporter::removePlugin(pluginId);
 }
 
 QStringList QQmlImportDatabase::dynamicPlugins() const

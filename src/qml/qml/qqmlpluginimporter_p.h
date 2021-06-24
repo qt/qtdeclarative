@@ -79,11 +79,12 @@ public:
         , version(version)
     {}
 
-    QTypeRevision importDynamicPlugin(const QString &filePath, bool isOptional);
-    QTypeRevision importStaticPlugin(QObject *instance);
+    QTypeRevision importDynamicPlugin(
+            const QString &filePath, const QString &pluginId, bool optional);
+    QTypeRevision importStaticPlugin(QObject *instance, const QString &pluginId);
     QTypeRevision importPlugins();
 
-    static bool removePlugin(const QString &filePath);
+    static bool removePlugin(const QString &pluginId);
     static QStringList plugins();
 
 private:
