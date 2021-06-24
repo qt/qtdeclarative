@@ -663,7 +663,7 @@ public:
         if (bPtr->name() == u"id")
             qmlFile.addError(myParseErrors()
                                      .error(tr("id attributes should only be a lower case letter "
-                                               "followed by letters numbers or underscore"))
+                                               "followed by letters, numbers or underscore"))
                                      .withPath(bPathFromOwner));
         pushEl(bPathFromOwner, *bPtr, el);
         FileLocations::addRegion(nodeStack.last().fileLocations, u"colon", el->colonToken);
@@ -727,7 +727,7 @@ public:
                     qmlFile.addError(
                             myParseErrors()
                                     .error(tr("id attributes should only be a lower case letter "
-                                              "followed by letters numbers or underscore, not %1")
+                                              "followed by letters, numbers or underscore, not %1")
                                                    .arg(iExp->name))
                                     .withPath(pathFromOwner));
                 }
@@ -738,7 +738,7 @@ public:
                 qmlFile.addError(
                         myParseErrors()
                                 .error(tr("id attributes should only be a lower case letter "
-                                          "followed by letters numbers or underscore, not %1 %2")
+                                          "followed by letters, numbers or underscore, not %1 %2")
                                                .arg(script->code(), script->astRelocatableDump()))
                                 .withPath(pathFromOwner)
                                 .handle());
