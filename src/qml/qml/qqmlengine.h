@@ -117,7 +117,10 @@ public:
 #endif
 
 #if QT_CONFIG(library)
+#if QT_DEPRECATED_SINCE(6, 4)
+    QT_DEPRECATED_VERSION_X_6_4("Import the module from QML instead")
     bool importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors);
+#endif
 #endif
 
 #if QT_CONFIG(qml_network)

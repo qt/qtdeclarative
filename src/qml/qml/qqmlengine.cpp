@@ -1612,13 +1612,20 @@ void QQmlEngine::setPluginPathList(const QStringList &paths)
 }
 
 #if QT_CONFIG(library)
+#if QT_DEPRECATED_SINCE(6, 4)
 /*!
+  \deprecated [6.4] Import the module from QML with an "import" statement instead.
+
   Imports the plugin named \a filePath with the \a uri provided.
   Returns true if the plugin was successfully imported; otherwise returns false.
 
   On failure and if non-null, the \a errors list will have any errors which occurred prepended to it.
 
   The plugin has to be a Qt plugin which implements the QQmlEngineExtensionPlugin interface.
+
+  \note Directly loading plugins like this can confuse the module import logic. In order to make
+        the import logic load plugins from a specific place, you can use \l addPluginPath(). Each
+        plugin should be part of a QML module that you can import using the "import" statement.
 */
 bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors)
 {
@@ -1628,6 +1635,7 @@ bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList
                 uri, QTypeRevision(), &d->importDatabase, &qmldir, &d->typeLoader, errors);
     return importer.importDynamicPlugin(filePath, uri, false).isValid();
 }
+#endif
 #endif
 
 /*!
