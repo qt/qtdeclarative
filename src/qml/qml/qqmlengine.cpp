@@ -62,6 +62,7 @@
 #include <private/qqmlboundsignal_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmltype_p_p.h>
+#include <private/qqmlpluginimporter_p.h>
 #include <QtCore/qstandardpaths.h>
 #include <QtCore/qmetaobject.h>
 #include <QDebug>
@@ -1983,8 +1984,10 @@ void QQmlEngine::setPluginPathList(const QStringList &paths)
 bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList<QQmlError> *errors)
 {
     Q_D(QQmlEngine);
-    return d->importDatabase.importDynamicPlugin(filePath, uri, QString(), QTypeRevision(), false,
-                                                 errors).isValid();
+    QQmlTypeLoaderQmldirContent qmldir;
+    QQmlPluginImporter importer(
+                uri, QTypeRevision(), &d->importDatabase, &qmldir, &d->typeLoader, errors);
+    return importer.importDynamicPlugin(filePath, false).isValid();
 }
 #endif
 
