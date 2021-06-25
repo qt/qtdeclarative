@@ -65,7 +65,7 @@ QString QtQuickControls2WindowsStylePlugin::name() const
     return QStringLiteral("Windows");
 }
 
-void QtQuickControls2WindowsStylePlugin::initializeTheme(QQuickTheme */*theme*/)
+void QtQuickControls2WindowsStylePlugin::initializeTheme(QQuickTheme * /*theme*/)
 {
 }
 

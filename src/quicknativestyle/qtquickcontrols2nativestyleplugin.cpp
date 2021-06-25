@@ -155,7 +155,7 @@ void QtQuickControls2NativeStylePlugin::initializeEngine(QQmlEngine *engine, con
     QQuickNativeStyle::setStyle(style);
 }
 
-void QtQuickControls2NativeStylePlugin::initializeTheme(QQuickTheme */*theme*/)
+void QtQuickControls2NativeStylePlugin::initializeTheme(QQuickTheme * /*theme*/)
 {
 }
 
