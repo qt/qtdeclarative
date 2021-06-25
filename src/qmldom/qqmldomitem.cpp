@@ -710,7 +710,8 @@ bool DomItem::resolve(Path path, DomItem::Visitor visitor, ErrorHandler errorHan
                     if (visitedRefs->contains(refRef)) {
                         myResolveErrors()
                                 .error([visitedRefs, refRef](Sink sink) {
-                                    sink(tr("Circular reference:\n"));
+                                    const QString msg = tr("Circular reference:") + QLatin1Char('\n');
+                                    sink(QStringView{msg});
                                     for (const Path &vPath : *visitedRefs) {
                                         sink(u"  ");
                                         vPath.dump(sink);
