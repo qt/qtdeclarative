@@ -4,8 +4,9 @@
 ## QQmlInspectorServiceFactory Plugin:
 #####################################################################
 
-qt_internal_add_plugin(QQmlInspectorServiceFactory
+qt_internal_add_plugin(QQmlInspectorServiceFactoryPlugin
     OUTPUT_NAME qmldbg_inspector
+    CLASS_NAME QQmlInspectorServiceFactory
     TYPE qmltooling
     SOURCES
         globalinspector.cpp globalinspector.h

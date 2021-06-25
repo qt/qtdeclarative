@@ -4,8 +4,9 @@
 ## QSGOpenVGAdaptation Plugin:
 #####################################################################
 
-qt_internal_add_plugin(QSGOpenVGAdaptation
+qt_internal_add_plugin(QSGOpenVGAdaptationPlugin
     OUTPUT_NAME qsgopenvgbackend
+    CLASS_NAME QSGOpenVGAdaptation
     TYPE scenegraph
     TARGET_PRODUCT "Qt Quick OpenVG Renderer (Qt $$QT_VERSION)"
     TARGET_DESCRIPTION "Quick OpenVG Renderer for Qt."
@@ -46,22 +47,22 @@ qt_internal_add_plugin(QSGOpenVGAdaptation
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(QSGOpenVGAdaptation CONDITION CMAKE_BUILD_TYPE STREQUAL Debug AND debug_and_release
+qt_internal_extend_target(QSGOpenVGAdaptationPlugin CONDITION CMAKE_BUILD_TYPE STREQUAL Debug AND debug_and_release
     INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_BINARY_DIR}/../../../quick/.tracegen/debug
 )
 
-qt_internal_extend_target(QSGOpenVGAdaptation CONDITION debug_and_release AND NOT CMAKE_BUILD_TYPE STREQUAL Debug
+qt_internal_extend_target(QSGOpenVGAdaptationPlugin CONDITION debug_and_release AND NOT CMAKE_BUILD_TYPE STREQUAL Debug
     INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_BINARY_DIR}/../../../quick/.tracegen/release
 )
 
-qt_internal_extend_target(QSGOpenVGAdaptation CONDITION NOT debug_and_release
+qt_internal_extend_target(QSGOpenVGAdaptationPlugin CONDITION NOT debug_and_release
     INCLUDE_DIRECTORIES
         ${CMAKE_CURRENT_BINARY_DIR}/../../../quick/.tracegen
 )
 
-qt_internal_extend_target(QSGOpenVGAdaptation CONDITION QT_FEATURE_quick_sprite
+qt_internal_extend_target(QSGOpenVGAdaptationPlugin CONDITION QT_FEATURE_quick_sprite
     SOURCES
         qsgopenvgspritenode.cpp qsgopenvgspritenode.h
 )
