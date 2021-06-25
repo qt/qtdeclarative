@@ -84,7 +84,7 @@ QtQuickTemplates2Plugin::~QtQuickTemplates2Plugin()
     // initialization and cleanup, as plugins are not unloaded on macOS.
 }
 
-void QtQuickTemplates2Plugin::registerTypes(const char */*uri*/)
+void QtQuickTemplates2Plugin::registerTypes(const char * /*uri*/)
 {
 #if QT_CONFIG(shortcut)
     originalContextMatcher = qt_quick_shortcut_context_matcher();
