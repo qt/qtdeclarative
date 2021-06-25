@@ -4,8 +4,9 @@
 ## QQmlPreviewServiceFactory Plugin:
 #####################################################################
 
-qt_internal_add_plugin(QQmlPreviewServiceFactory
+qt_internal_add_plugin(QQmlPreviewServiceFactoryPlugin
     OUTPUT_NAME qmldbg_preview
+    CLASS_NAME QQmlPreviewServiceFactory
     TYPE qmltooling
     SOURCES
         qqmlpreviewblacklist.cpp qqmlpreviewblacklist.h
@@ -29,7 +30,7 @@ qt_internal_add_plugin(QQmlPreviewServiceFactory
 #### Keys ignored in scope 1:.:.:qmldbg_preview.pro:<TRUE>:
 # OTHER_FILES = "$$PWD/qqmlpreviewservice.json"
 
-qt_internal_extend_target(QQmlPreviewServiceFactory CONDITION QT_FEATURE_translation
+qt_internal_extend_target(QQmlPreviewServiceFactoryPlugin CONDITION QT_FEATURE_translation
     SOURCES
         proxytranslator.cpp proxytranslator.h
         qqmldebugtranslationservice.cpp qqmldebugtranslationservice.h

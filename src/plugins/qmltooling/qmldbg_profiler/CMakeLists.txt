@@ -4,8 +4,9 @@
 ## QQmlProfilerServiceFactory Plugin:
 #####################################################################
 
-qt_internal_add_plugin(QQmlProfilerServiceFactory
+qt_internal_add_plugin(QQmlProfilerServiceFactoryPlugin
     OUTPUT_NAME qmldbg_profiler
+    CLASS_NAME QQmlProfilerServiceFactory
     TYPE qmltooling
     SOURCES
         qqmlenginecontrolservice.cpp qqmlenginecontrolservice.h
