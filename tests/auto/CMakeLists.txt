@@ -1,4 +1,9 @@
-# Generated from auto.pro.
+add_subdirectory(cmake)
+
+# Limit set of tests to run for static Qt builds.
+if(QT_BUILD_MINIMAL_STATIC_TESTS)
+    return()
+endif()
 
 if(TARGET Qt::Quick)
     add_subdirectory(qml)
@@ -8,7 +13,6 @@ endif()
 if(TARGET Qt::QuickTest)
     add_subdirectory(core)
 endif()
-add_subdirectory(cmake)
 add_subdirectory(toolsupport)
 if(NOT UIKIT)
     add_subdirectory(qmltest)
