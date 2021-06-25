@@ -76,6 +76,7 @@ public:
     QVariant value(bool *isUndefined = nullptr);
 
     QV4::ReturnedValue v4value(bool *isUndefined = nullptr);
+    bool mustCaptureBindableProperty() const final {return true;}
 
     static inline QQmlExpressionPrivate *get(QQmlExpression *expr);
     static inline QQmlExpression *get(QQmlExpressionPrivate *expr);

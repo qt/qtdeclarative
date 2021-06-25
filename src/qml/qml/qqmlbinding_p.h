@@ -97,6 +97,8 @@ public:
 
     ~QQmlBinding() override;
 
+    bool mustCaptureBindableProperty() const final {return true;}
+
     void setTarget(const QQmlProperty &);
     bool setTarget(QObject *, const QQmlPropertyData &, const QQmlPropertyData *valueType);
     bool setTarget(QObject *, int coreIndex, bool coreIsAlias, int valueTypeIndex);

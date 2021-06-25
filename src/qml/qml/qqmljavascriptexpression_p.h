@@ -158,6 +158,7 @@ public:
     void clearError();
     void clearActiveGuards();
     QQmlDelayedError *delayedError();
+    virtual bool mustCaptureBindableProperty() const {return true;}
 
     static QV4::ReturnedValue evalFunction(
             const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scope, const QString &code,
