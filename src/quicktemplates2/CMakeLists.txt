@@ -71,7 +71,6 @@ qt_internal_add_qml_module(QuickTemplates2
         qquickpopupanchors.cpp qquickpopupanchors_p.h
         qquickpopupanchors_p_p.h
         qquickpopupitem.cpp
-        qquickpopupitem_p.h
         qquickpopupitem_p_p.h
         qquickpopuppositioner.cpp
         qquickpopuppositioner_p_p.h
