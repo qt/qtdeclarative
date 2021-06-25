@@ -394,7 +394,7 @@ void QQmlPropertyCapture::captureBindableProperty(
 {
     // if the property is a QPropery, and we're binding to a QProperty
     // the automatic capturing process already takes care of everything
-    if (typeid(QQmlPropertyBindingJS) == typeid(*expression))
+    if (!expression->mustCaptureBindableProperty())
         return;
     for (auto trigger = expression->qpropertyChangeTriggers; trigger;
          trigger = trigger->next) {

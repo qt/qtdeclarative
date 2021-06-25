@@ -70,6 +70,8 @@ class QQmlPropertyBinding;
 
 class Q_QML_PRIVATE_EXPORT QQmlPropertyBindingJS : public QQmlJavaScriptExpression
 {
+    bool mustCaptureBindableProperty() const final {return false;}
+
     friend class QQmlPropertyBinding;
     void expressionChanged() override;
     QQmlPropertyBinding *asBinding()
