@@ -1105,6 +1105,11 @@ bool QmltypesComponent::iterateDirectSubpaths(DomItem &self, DirectVisitor visit
     cont = cont && self.dvValueField(visitor, Fields::metaRevisions, m_metaRevisions);
     if (!fileName().isEmpty())
         cont = cont && self.dvValueField(visitor, Fields::fileName, fileName()); // remove?
+    cont = cont && self.dvValueField(visitor, Fields::interfaceNames, m_interfaceNames);
+    cont = cont && self.dvValueField(visitor, Fields::hasCustomParser, m_hasCustomParser);
+    cont = cont && self.dvValueField(visitor, Fields::valueTypeName, m_valueTypeName);
+    cont = cont && self.dvValueField(visitor, Fields::extensionTypeName, m_extensionTypeName);
+    cont = cont && self.dvValueField(visitor, Fields::accessSemantics, int(m_accessSemantics));
     return cont;
 }
 
@@ -1610,6 +1615,7 @@ bool MethodInfo::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     if (methodType == MethodType::Method) {
         cont = cont && self.dvValueField(visitor, Fields::preCode, preCode(self));
         cont = cont && self.dvValueField(visitor, Fields::postCode, postCode(self));
+        cont = cont && self.dvValueField(visitor, Fields::isConstructor, isConstructor);
     }
     if (body)
         cont = cont && self.dvWrapField(visitor, Fields::body, body);

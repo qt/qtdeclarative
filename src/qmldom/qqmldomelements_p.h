@@ -62,6 +62,8 @@
 #include <QtCore/QMutexLocker>
 #include <QtCore/QPair>
 
+#include <private/qqmljsscope_p.h>
+
 #include <functional>
 #include <limits>
 
@@ -187,7 +189,8 @@ class QMLDOM_EXPORT Version
 {
 public:
     constexpr static DomType kindValue = DomType::Version;
-    enum { Undefined = -1, Latest = -2 };
+    constexpr static qint32 Undefined = -1;
+    constexpr static qint32 Latest = -2;
 
     Version(qint32 majorVersion = Undefined, qint32 minorVersion = Undefined);
     static Version fromString(QStringView v);
@@ -607,9 +610,14 @@ public:
     {
         bool cont = AttributeInfo::iterateDirectSubpaths(self, visitor);
         cont = cont && self.dvValueField(visitor, Fields::isPointer, isPointer);
+        cont = cont && self.dvValueField(visitor, Fields::isFinal, isFinal);
         cont = cont && self.dvValueField(visitor, Fields::isAlias, isAlias);
         cont = cont && self.dvValueField(visitor, Fields::isDefaultMember, isDefaultMember);
         cont = cont && self.dvValueField(visitor, Fields::isRequired, isRequired);
+        cont = cont && self.dvValueField(visitor, Fields::read, read);
+        cont = cont && self.dvValueField(visitor, Fields::write, write);
+        cont = cont && self.dvValueField(visitor, Fields::bindable, bindable);
+        cont = cont && self.dvValueField(visitor, Fields::notify, notify);
         cont = cont && self.dvReferenceField(visitor, Fields::type, typePath());
         return cont;
     }
@@ -624,6 +632,11 @@ public:
 
     void writeOut(DomItem &self, OutWriter &lw) const;
 
+    QString read;
+    QString write;
+    QString bindable;
+    QString notify;
+    bool isFinal = false;
     bool isPointer = false;
     bool isAlias = false;
     bool isDefaultMember = false;
@@ -692,6 +705,7 @@ public:
     QList<MethodParameter> parameters;
     MethodType methodType = Method;
     std::shared_ptr<ScriptExpression> body;
+    bool isConstructor = false;
 };
 
 class QMLDOM_EXPORT EnumItem
@@ -993,11 +1007,25 @@ public:
     void setFileName(QString fileName) { m_fileName = fileName; }
     QList<int> metaRevisions() const { return m_metaRevisions; }
     void setMetaRevisions(QList<int> metaRevisions) { m_metaRevisions = metaRevisions; }
-
+    void setInterfaceNames(const QStringList& interfaces) { m_interfaceNames = interfaces; }
+    QStringList interfaceNames() const { return m_interfaceNames; }
+    QString extensionTypeName() const { return m_extensionTypeName; }
+    void setExtensionTypeName(const QString &name) { m_extensionTypeName =  name; }
+    QString valueTypeName() const { return m_valueTypeName; }
+    void setValueTypeName(const QString &name) { m_valueTypeName = name; }
+    bool hasCustomParser() const { return m_hasCustomParser; }
+    void setHasCustomParser(bool v) { m_hasCustomParser = v; }
+    QQmlJSScope::AccessSemantics accessSemantics() const { return m_accessSemantics; }
+    void setAccessSemantics(QQmlJSScope::AccessSemantics v) { m_accessSemantics = v; }
 private:
     QList<Export> m_exports;
     QList<int> m_metaRevisions;
     QString m_fileName; // remove?
+    QStringList m_interfaceNames;
+    bool m_hasCustomParser = false;
+    QString m_valueTypeName;
+    QString m_extensionTypeName;
+    QQmlJSScope::AccessSemantics m_accessSemantics;
 };
 
 class QMLDOM_EXPORT QmlComponent final : public Component

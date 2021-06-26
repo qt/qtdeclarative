@@ -111,6 +111,13 @@ int main(int argc, char *argv[])
             QLatin1String("pathToDump"));
     parser.addOption(pathToDumpOption);
 
+    QCommandLineOption dependenciesOption(
+            QStringList() << "D"
+                          << "dependencies",
+            QLatin1String("Dependencies to load: none, required, reachable"),
+            QLatin1String("dependenciesToLoad"), QLatin1String("required"));
+    parser.addOption(dependenciesOption);
+
     QCommandLineOption reformatDirOption(
             QStringList() << "reformat-dir",
             QLatin1String(
@@ -146,6 +153,24 @@ int main(int argc, char *argv[])
     }
 
     Dependencies dep = Dependencies::None;
+    for (QString depName : parser.values(dependenciesOption)) {
+        QMetaEnum metaEnum = QMetaEnum::fromType<Dependencies>();
+        bool found = false;
+        for (int i = 0; i < metaEnum.keyCount(); ++i) {
+            if (QLatin1String(metaEnum.key(i)).compare(depName, Qt::CaseInsensitive) == 0) {
+                found = true;
+                dep = Dependencies(metaEnum.value(i));
+            }
+        }
+        if (!found) {
+            QStringList values;
+            for (int i = 0; i < metaEnum.keyCount(); ++i)
+                values.append(QString::fromUtf8(metaEnum.key(i)).toLower());
+            qDebug().noquote() << "Invalid dependencies argument, expected one of "
+                               << values.join(QLatin1Char(','));
+            return 1;
+        }
+    }
 
     int nBackups = 2;
     if (parser.isSet(nBackupsOption)) {

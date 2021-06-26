@@ -41,6 +41,7 @@
 #include "qqmldomelements_p.h"
 #include "qqmldomastcreator_p.h"
 #include "qqmldommoduleindex_p.h"
+#include "qqmldomtypesreader_p.h"
 
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
@@ -456,6 +457,8 @@ void DomUniverse::execQueue()
             } else if (t.kind == DomType::QmltypesFile) {
                 shared_ptr<QmltypesFile> qmltypesFile(
                         new QmltypesFile(canonicalPath, code, contentDate));
+                QmltypesReader reader(univ.copy(qmltypesFile));
+                reader.parse();
                 auto change = updateEntry<QmltypesFile>(univ, qmltypesFile, m_qmltypesFileWithPath,
                                                         mutex());
                 oldValue = univ.copy(change.first);
@@ -2267,6 +2270,8 @@ RefCacheEntry RefCacheEntry::forPath(DomItem &el, Path canonicalPath)
         QMutexLocker l(envPtr->mutex());
         cached = envPtr->m_referenceCache.value(canonicalPath, {});
     } else {
+        qCWarning(domLog) << "No Env for reference" << canonicalPath << "from"
+                          << el.internalKindStr() << el.canonicalPath();
         Q_ASSERT(false);
     }
     return cached;
