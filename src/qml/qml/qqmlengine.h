@@ -136,6 +136,7 @@ public:
 
     void addUrlInterceptor(QQmlAbstractUrlInterceptor *urlInterceptor);
     void removeUrlInterceptor(QQmlAbstractUrlInterceptor *urlInterceptor);
+    QList<QQmlAbstractUrlInterceptor *> urlInterceptors() const;
     QUrl interceptUrl(const QUrl &url, QQmlAbstractUrlInterceptor::DataType type) const;
 
     void addImageProvider(const QString &id, QQmlImageProviderBase *);

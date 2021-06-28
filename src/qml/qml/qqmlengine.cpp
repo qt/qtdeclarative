@@ -1081,6 +1081,15 @@ QUrl QQmlEngine::interceptUrl(const QUrl &url, QQmlAbstractUrlInterceptor::DataT
     return result;
 }
 
+/*!
+  Returns the list of currently active URL interceptors.
+ */
+QList<QQmlAbstractUrlInterceptor *> QQmlEngine::urlInterceptors() const
+{
+    Q_D(const QQmlEngine);
+    return d->urlInterceptors;
+}
+
 void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
 {
     if (activeObjectCreator) {

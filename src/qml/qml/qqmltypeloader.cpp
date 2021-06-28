@@ -581,13 +581,10 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
 
         scriptImported(blob, import->location, import->qualifier, QString());
     } else if (import->type == QV4::CompiledData::Import::ImportLibrary) {
-        QString qmldirFilePath;
-        QString qmldirUrl;
-
-        const QQmlImports::LocalQmldirResult qmldirResult = m_importCache.locateLocalQmldir(
-                    importDatabase, import->uri, import->version,
-                    &qmldirFilePath, &qmldirUrl);
-        if (qmldirResult == QQmlImports::QmldirFound) {
+        const QQmlImportDatabase::LocalQmldirResult qmldirResult
+                = importDatabase->locateLocalQmldir(
+                    import->uri, import->version,
+                    [&](const QString &qmldirFilePath, const QString &qmldirUrl) {
             // This is a local library import
             const QTypeRevision actualVersion = m_importCache.addLibraryImport(
                         importDatabase, import->uri, import->qualifier,
@@ -623,13 +620,26 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
                 if (!module)
                     QQmlMetaType::qmlRegisterModuleTypes(import->uri);
             }
-        } else if (
+            return true;
+        });
+
+        switch (qmldirResult) {
+        case QQmlImportDatabase::QmldirFound:
+            return true;
+        case QQmlImportDatabase::QmldirNotFound:
+        case QQmlImportDatabase::QmldirInterceptedToRemote:
+            break;
+        case QQmlImportDatabase::QmldirRejected:
+            return false;
+        }
+
+        if (
                 // Major version of module already registered:
                 // We believe that the registration is complete.
                 QQmlMetaType::typeModule(import->uri, import->version)
 
                 // Otherwise, try to register further module types.
-                || (qmldirResult != QQmlImports::QmldirInterceptedToRemote
+                || (qmldirResult != QQmlImportDatabase::QmldirInterceptedToRemote
                     && QQmlMetaType::qmlRegisterModuleTypes(import->uri))
 
                 // Otherwise, there is no way to register any further types.

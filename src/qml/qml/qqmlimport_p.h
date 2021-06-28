@@ -44,7 +44,9 @@
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qset.h>
 #include <QtCore/qstringlist.h>
+#include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlerror.h>
+#include <QtQml/qqmlfile.h>
 #include <private/qqmldirparser_p.h>
 #include <private/qqmltype_p.h>
 #include <private/qstringhash_p.h>
@@ -174,16 +176,6 @@ public:
             QQmlImportDatabase *importDb, const QString &uri, const QString &prefix,
             const QString &qmldirIdentifier, const QString &qmldirUrl, QList<QQmlError> *errors);
 
-    enum LocalQmldirResult {
-        QmldirFound,
-        QmldirNotFound,
-        QmldirInterceptedToRemote
-    };
-
-    LocalQmldirResult locateLocalQmldir(
-            QQmlImportDatabase *, const QString &uri, QTypeRevision version,
-            QString *qmldirFilePath, QString *url);
-
     void populateCache(QQmlTypeNameCache *cache) const;
 
     struct ScriptReference
@@ -225,6 +217,13 @@ class Q_QML_PRIVATE_EXPORT QQmlImportDatabase
 public:
     enum PathType { Local, Remote, LocalOrRemote };
 
+    enum LocalQmldirResult {
+        QmldirFound,
+        QmldirNotFound,
+        QmldirInterceptedToRemote,
+        QmldirRejected
+    };
+
     QQmlImportDatabase(QQmlEngine *);
     ~QQmlImportDatabase();
 
@@ -239,12 +238,18 @@ public:
     void setPluginPathList(const QStringList &paths);
     void addPluginPath(const QString& path);
 
+    template<typename Callback>
+    LocalQmldirResult locateLocalQmldir(
+            const QString &uri, QTypeRevision version, const Callback &callback);
+
     static QTypeRevision lockModule(const QString &uri, const QString &typeNamespace,
                                     QTypeRevision version, QList<QQmlError> *errors);
 
 private:
     friend class QQmlImportsPrivate;
     friend class QQmlPluginImporter;
+
+    QString absoluteFilePath(const QString &path) const;
     void clearDirCache();
 
     struct QmldirCache {
@@ -265,6 +270,106 @@ private:
     QSet<QString> initializedPlugins;
     QQmlEngine *engine;
 };
+
+template<typename Callback>
+QQmlImportDatabase::LocalQmldirResult QQmlImportDatabase::locateLocalQmldir(
+        const QString &uri, QTypeRevision version, const Callback &callback)
+{
+    // Check cache first
+
+    LocalQmldirResult result = QmldirNotFound;
+    QmldirCache *cacheHead = nullptr;
+    {
+        QmldirCache **cachePtr = qmldirCache.value(uri);
+        if (cachePtr) {
+            cacheHead = *cachePtr;
+            QmldirCache *cache = cacheHead;
+            while (cache) {
+                if (cache->version == version) {
+                    if (cache->qmldirFilePath.isEmpty())
+                        return QmldirNotFound;
+                    if (callback(cache->qmldirFilePath, cache->qmldirPathUrl))
+                        return QmldirFound;
+                    result = QmldirRejected;
+                }
+                cache = cache->next;
+            }
+        }
+    }
+
+    // Do not try to construct the cache if it already had any entries for the URI.
+    // Otherwise we might duplicate cache entries.
+    if (result != QmldirNotFound)
+        return result;
+
+    const bool hasInterceptors = !engine->urlInterceptors().isEmpty();
+
+    // Interceptor might redirect remote files to local ones.
+    QStringList localImportPaths = importPathList(hasInterceptors ? LocalOrRemote : Local);
+
+    // Search local import paths for a matching version
+    const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
+                uri, localImportPaths, version);
+
+    for (QString qmldirPath : qmlDirPaths) {
+        if (hasInterceptors) {
+            const QUrl intercepted = engine->interceptUrl(
+                        QQmlImports::urlFromLocalFileOrQrcOrUrl(qmldirPath),
+                        QQmlAbstractUrlInterceptor::QmldirFile);
+            qmldirPath = QQmlFile::urlToLocalFileOrQrc(intercepted);
+            if (result != QmldirInterceptedToRemote
+                    && qmldirPath.isEmpty()
+                    && !QQmlFile::isLocalFile(intercepted)) {
+                result = QmldirInterceptedToRemote;
+            }
+        }
+
+        QString qmldirAbsoluteFilePath = absoluteFilePath(qmldirPath);
+        if (!qmldirAbsoluteFilePath.isEmpty()) {
+            QString url;
+            const QString absolutePath = qmldirAbsoluteFilePath.left(
+                        qmldirAbsoluteFilePath.lastIndexOf(u'/') + 1);
+            if (absolutePath.at(0) == u':') {
+                url = QStringLiteral("qrc") + absolutePath;
+            } else {
+                url = QUrl::fromLocalFile(absolutePath).toString();
+                // This handles the UNC path case as when the path is retrieved from the QUrl it
+                // will convert the host name from upper case to lower case. So the absoluteFilePath
+                // is changed at this point to make sure it will match later on in that case.
+                if (qmldirAbsoluteFilePath.startsWith(QStringLiteral("//"))) {
+                    qmldirAbsoluteFilePath = QUrl::fromLocalFile(qmldirAbsoluteFilePath)
+                            .toString(QUrl::RemoveScheme);
+                }
+            }
+
+            QmldirCache *cache = new QmldirCache;
+            cache->version = version;
+            cache->qmldirFilePath = qmldirAbsoluteFilePath;
+            cache->qmldirPathUrl = url;
+            cache->next = cacheHead;
+            qmldirCache.insert(uri, cache);
+            cacheHead = cache;
+
+            if (result != QmldirFound) {
+                result = callback(qmldirAbsoluteFilePath, url)
+                        ? QmldirFound
+                        : QmldirRejected;
+            }
+
+            // Do not return here. Rather, construct the complete cache for this URI.
+        }
+    }
+
+    // Nothing found? Add an empty cache entry to signal that for further requests.
+    if (result == QmldirNotFound) {
+        QmldirCache *cache = new QmldirCache;
+        cache->version = version;
+        cache->next = cacheHead;
+        qmldirCache.insert(uri, cache);
+    }
+
+    return result;
+}
 
 void qmlClearEnginePlugins();// For internal use by qmlClearRegisteredProperties
 

@@ -242,10 +242,6 @@ public:
 
     QQmlTypeLoader *typeLoader;
 
-    static QQmlImports::LocalQmldirResult locateLocalQmldir(
-            const QString &uri, QTypeRevision version, QQmlImportDatabase *database,
-            QString *outQmldirFilePath, QString *outUrl);
-
     static QTypeRevision matchingQmldirVersion(
             const QQmlTypeLoaderQmldirContent &qmldir, const QString &uri,
             QTypeRevision version, QList<QQmlError> *errors);
@@ -1155,92 +1151,22 @@ QString QQmlImportsPrivate::resolvedUri(const QString &dir_arg, QQmlImportDataba
     return stableRelativePath;
 }
 
-/*
-Locates the qmldir file for \a uri version \a vmaj.vmin.  Returns true if found,
-and fills in outQmldirFilePath and outQmldirUrl appropriately.  Otherwise returns
-false.
+/*!
+  \internal
+
+  \fn template<typename Callback>
+      QQmlImportDatabase::LocalQmldirResult QQmlImportDatabase::locateLocalQmldir(
+            const QString &uri, QTypeRevision version, const Callback &callback)
+
+  Locates the qmldir files for \a uri version \a version. For each one, calls
+  the \a callback. If the \a callback returns \c true, returns QmldirFound.
+
+  If at least one callback invocation returned \c false and there are no qmldir
+  files left to check, returns QmldirRejected.
+
+  Otherwise, if interception redirects a previously local qmldir URL to a remote
+  one, returns QmldirInterceptedToRemote. Otherwise, returns QmldirNotFound.
 */
-QQmlImports::LocalQmldirResult QQmlImportsPrivate::locateLocalQmldir(
-        const QString &uri, QTypeRevision version, QQmlImportDatabase *database,
-        QString *outQmldirFilePath, QString *outQmldirPathUrl)
-{
-    // Check cache first
-
-    QQmlImportDatabase::QmldirCache *cacheHead = nullptr;
-    {
-        QQmlImportDatabase::QmldirCache **cachePtr = database->qmldirCache.value(uri);
-        if (cachePtr) {
-            cacheHead = *cachePtr;
-            QQmlImportDatabase::QmldirCache *cache = cacheHead;
-            while (cache) {
-                if (cache->version == version) {
-                    *outQmldirFilePath = cache->qmldirFilePath;
-                    *outQmldirPathUrl = cache->qmldirPathUrl;
-                    return cache->qmldirFilePath.isEmpty() ? QQmlImports::QmldirNotFound
-                                                           : QQmlImports::QmldirFound;
-                }
-                cache = cache->next;
-            }
-        }
-    }
-
-    QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(database->engine);
-    QQmlTypeLoader &typeLoader = enginePrivate->typeLoader;
-    const bool hasInterceptors = !enginePrivate->urlInterceptors.isEmpty();
-
-    // Interceptor might redirect remote files to local ones.
-    QStringList localImportPaths = database->importPathList(
-                hasInterceptors ? QQmlImportDatabase::LocalOrRemote : QQmlImportDatabase::Local);
-
-    // Search local import paths for a matching version
-    const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
-                uri, localImportPaths, version);
-    bool pathTurnedRemote = false;
-    for (QString qmldirPath : qmlDirPaths) {
-        if (hasInterceptors) {
-            const QUrl intercepted = database->engine->interceptUrl(
-                        QQmlImports::urlFromLocalFileOrQrcOrUrl(qmldirPath),
-                        QQmlAbstractUrlInterceptor::QmldirFile);
-            qmldirPath = QQmlFile::urlToLocalFileOrQrc(intercepted);
-            if (!pathTurnedRemote && qmldirPath.isEmpty() && !QQmlFile::isLocalFile(intercepted))
-                pathTurnedRemote = true;
-        }
-
-        QString absoluteFilePath = typeLoader.absoluteFilePath(qmldirPath);
-        if (!absoluteFilePath.isEmpty()) {
-            QString url;
-            const QStringView absolutePath = QStringView{absoluteFilePath}.left(absoluteFilePath.lastIndexOf(Slash) + 1);
-            if (absolutePath.at(0) == Colon) {
-                url = QLatin1String("qrc") + absolutePath;
-            } else {
-                url = QUrl::fromLocalFile(absolutePath.toString()).toString();
-                // This handles the UNC path case as when the path is retrieved from the QUrl it
-                // will convert the host name from upper case to lower case. So the absoluteFilePath
-                // is changed at this point to make sure it will match later on in that case.
-                if (absoluteFilePath.startsWith(QLatin1String("//")))
-                    absoluteFilePath = QUrl::fromLocalFile(absoluteFilePath).toString(QUrl::RemoveScheme);
-            }
-            QQmlImportDatabase::QmldirCache *cache = new QQmlImportDatabase::QmldirCache;
-            cache->version = version;
-            cache->qmldirFilePath = absoluteFilePath;
-            cache->qmldirPathUrl = url;
-            cache->next = cacheHead;
-            database->qmldirCache.insert(uri, cache);
-
-            *outQmldirFilePath = absoluteFilePath;
-            *outQmldirPathUrl = url;
-
-            return QQmlImports::QmldirFound;
-        }
-    }
-
-    QQmlImportDatabase::QmldirCache *cache = new QQmlImportDatabase::QmldirCache;
-    cache->version = version;
-    cache->next = cacheHead;
-    database->qmldirCache.insert(uri, cache);
-
-    return pathTurnedRemote ? QQmlImports::QmldirInterceptedToRemote : QQmlImports::QmldirNotFound;
-}
 
 QTypeRevision QQmlImportsPrivate::matchingQmldirVersion(
         const QQmlTypeLoaderQmldirContent &qmldir, const QString &uri, QTypeRevision version,
@@ -1686,13 +1612,6 @@ QTypeRevision QQmlImports::updateQmldirContent(
     return d->updateQmldirContent(uri, prefix, qmldirIdentifier, qmldirUrl, importDb, errors);
 }
 
-QQmlImports::LocalQmldirResult QQmlImports::locateLocalQmldir(
-        QQmlImportDatabase *importDb, const QString &uri, QTypeRevision version,
-        QString *qmldirFilePath, QString *url)
-{
-    return d->locateLocalQmldir(uri, version, importDb, qmldirFilePath, url);
-}
-
 bool QQmlImports::isLocal(const QString &url)
 {
     return !QQmlFile::urlToLocalFileOrQrc(url).isEmpty();
@@ -1819,6 +1738,11 @@ void QQmlImportDatabase::addPluginPath(const QString& path)
     } else {
         filePluginPath.prepend(path);
     }
+}
+
+QString QQmlImportDatabase::absoluteFilePath(const QString &path) const
+{
+    return QQmlEnginePrivate::get(engine)->typeLoader.absoluteFilePath(path);
 }
 
 /*!
