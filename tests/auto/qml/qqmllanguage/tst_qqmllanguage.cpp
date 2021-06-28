@@ -3427,11 +3427,11 @@ void tst_qqmllanguage::importJs()
 
     {
         DETERMINE_ERRORS(errorFile,expected,actual);
-        QCOMPARE(expected.size(), actual.size());
+        QCOMPARE(actual.size(), expected.size());
         for (int i = 0; i < expected.size(); ++i)
         {
             const int compareLen = qMin(expected.at(i).length(), actual.at(i).length());
-            QCOMPARE(expected.at(i).left(compareLen), actual.at(i).left(compareLen));
+            QCOMPARE(actual.at(i).left(compareLen), expected.at(i).left(compareLen));
         }
     }
 
