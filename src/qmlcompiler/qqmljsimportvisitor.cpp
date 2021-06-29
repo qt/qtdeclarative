@@ -398,42 +398,34 @@ void QQmlJSImportVisitor::processDefaultProperties()
 {
     for (auto it = m_pendingDefaultProperties.constBegin();
          it != m_pendingDefaultProperties.constEnd(); ++it) {
+        const QQmlJSScope::ConstPtr parentScope = it.key();
+
         // We can't expect custom parser default properties to be sensible, discard them for now.
-        if (it.key()->isInCustomParserParent())
+        if (parentScope->isInCustomParserParent())
             continue;
 
-        const QQmlJSScope *scopeOfDefaultProperty = nullptr;
-        QString defaultPropertyName;
-        // NB: start looking for default property in parent scope (because this
-        // scope is not suitable), but progress through baseType()
-
-        bool isComponent = false;
-        for (const auto *s = it.key().get(); s; s = s->baseType().get()) {
-            defaultPropertyName = s->ownDefaultPropertyName();
-            if (!defaultPropertyName.isEmpty()) {
-                scopeOfDefaultProperty = s;
-                break;
-            }
-
-            if (s->internalName() == QStringLiteral("QQmlComponent")) {
-                isComponent = true;
-                break;
-            }
-        }
-
-        // If the parent scope is based on Component it can have any child element
-        // TODO: We should also store these somewhere
-        if (isComponent)
-            continue;
+        const QString defaultPropertyName = parentScope->defaultPropertyName();
 
         if (defaultPropertyName.isEmpty()) {
-            m_logger.log(QStringLiteral("Cannot assign to non-existent default property"),
-                         Log_Property, it.value().constFirst()->sourceLocation());
+            // If the parent scope is based on Component it can have any child element
+            // TODO: We should also store these somewhere
+            bool isComponent = false;
+            for (QQmlJSScope::ConstPtr s = parentScope; s; s = s->baseType()) {
+                if (s->internalName() == QStringLiteral("QQmlComponent")) {
+                    isComponent = true;
+                    break;
+                }
+            }
+
+            if (!isComponent) {
+                m_logger.log(QStringLiteral("Cannot assign to non-existent default property"),
+                             Log_Property, it.value().constFirst()->sourceLocation());
+            }
+
             continue;
         }
 
-        Q_ASSERT(scopeOfDefaultProperty);
-        QQmlJSMetaProperty defaultProp = scopeOfDefaultProperty->property(defaultPropertyName);
+        const QQmlJSMetaProperty defaultProp = parentScope->property(defaultPropertyName);
 
         if (it.value().length() > 1 && !defaultProp.isList()) {
             m_logger.log(

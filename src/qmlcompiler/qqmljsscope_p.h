@@ -256,9 +256,11 @@ public:
 
     QString ownDefaultPropertyName() const { return m_defaultPropertyName; }
     void setOwnDefaultPropertyName(const QString &name) { m_defaultPropertyName = name; }
+    QString defaultPropertyName() const;
 
     QString ownParentPropertyName() const { return m_parentPropertyName; }
     void setOwnParentPropertyName(const QString &name) { m_parentPropertyName = name; }
+    QString parentPropertyName() const;
 
     QString ownAttachedTypeName() const { return m_attachedTypeName; }
     void setOwnAttachedTypeName(const QString &name) { m_attachedTypeName = name; }

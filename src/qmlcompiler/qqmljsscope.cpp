@@ -483,6 +483,26 @@ bool QQmlJSScope::isResolved() const
     return m_baseTypeName.isEmpty() || !m_baseType.isNull();
 }
 
+QString QQmlJSScope::defaultPropertyName() const
+{
+    QString name;
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        name = scope->ownDefaultPropertyName();
+        return !name.isEmpty();
+    });
+    return name;
+}
+
+QString QQmlJSScope::parentPropertyName() const
+{
+    QString name;
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        name = scope->ownParentPropertyName();
+        return !name.isEmpty();
+    });
+    return name;
+}
+
 bool QQmlJSScope::isFullyResolved() const
 {
     bool baseResolved = true;
