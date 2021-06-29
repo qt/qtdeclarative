@@ -578,8 +578,8 @@ public:
     qreal implicitWidth;
     qreal implicitHeight;
 
-    bool widthValid() const { return widthValidFlag || width.hasBinding(); }
-    bool heightValid() const { return heightValidFlag || height.hasBinding(); }
+    bool widthValid() const { return widthValidFlag || (width.hasBinding() && !QQmlPropertyBinding::isUndefined(width.binding()) ); }
+    bool heightValid() const { return heightValidFlag || (height.hasBinding() && !QQmlPropertyBinding::isUndefined(height.binding()) ); }
 
     qreal baselineOffset;
 

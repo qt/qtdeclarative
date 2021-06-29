@@ -7023,8 +7023,9 @@ void QQuickItem::setImplicitWidth(qreal w)
     }
 
     qreal oldWidth = d->width.valueBypassingBindings();
-    Q_ASSERT(!d->width.hasBinding());
-    d->width = w;
+    Q_ASSERT(!d->width.hasBinding() || QQmlPropertyBinding::isUndefined(d->width.binding()));
+    // we need to keep the binding if its undefined (therefore we can't use operator=/setValue)
+    d->width.setValueBypassingBindings(w);
 
     d->dirty(QQuickItemPrivate::Size);
 
@@ -7154,8 +7155,9 @@ void QQuickItem::setImplicitHeight(qreal h)
     }
 
     qreal oldHeight = d->height.valueBypassingBindings();
-    Q_ASSERT(!d->height.hasBinding());
-    d->height = h;
+    Q_ASSERT(!d->height.hasBinding() || QQmlPropertyBinding::isUndefined(d->height.binding()));
+    // we need to keep the binding if its undefined (therefore we can't use operator=/setValue)
+    d->height.setValueBypassingBindings(h);
 
     d->dirty(QQuickItemPrivate::Size);
 
