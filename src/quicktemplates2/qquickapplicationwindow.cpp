@@ -191,9 +191,9 @@ static void layoutItem(QQuickItem *item, qreal y, qreal width)
 
     item->setY(y);
     QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-    if (!p->widthValid) {
+    if (!p->widthValid()) {
         item->setWidth(width);
-        p->widthValid = false;
+        p->widthValidFlag = false;
     }
 }
 
@@ -219,13 +219,13 @@ void QQuickApplicationWindowPrivate::relayout()
 
     if (background) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(background);
-        if (!p->widthValid && qFuzzyIsNull(background->x())) {
+        if (!p->widthValid() && qFuzzyIsNull(background->x())) {
             background->setWidth(q->width());
-            p->widthValid = false;
+            p->widthValidFlag = false;
         }
-        if (!p->heightValid && qFuzzyIsNull(background->y())) {
+        if (!p->heightValid() && qFuzzyIsNull(background->y())) {
             background->setHeight(q->height());
-            p->heightValid = false;
+            p->heightValidFlag = false;
         }
     }
 }

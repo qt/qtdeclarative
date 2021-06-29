@@ -165,7 +165,7 @@ void QQuickTabBarPrivate::updateLayout()
         QQuickItem *item = q->itemAt(i);
         if (item) {
             QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-            if (!p->widthValid)
+            if (!p->widthValid())
                 ++resizableCount;
             else
                 reservedWidth += item->width();
@@ -179,13 +179,13 @@ void QQuickTabBarPrivate::updateLayout()
     updatingLayout = true;
     for (QQuickItem *item : qAsConst(allItems)) {
         QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-        if (!p->widthValid) {
+        if (!p->widthValid()) {
             item->setWidth(itemWidth);
-            p->widthValid = false;
+            p->widthValidFlag = false;
         }
-        if (!p->heightValid) {
+        if (!p->heightValid()) {
             item->setHeight(contentHeight);
-            p->heightValid = false;
+            p->heightValidFlag = false;
         } else {
             item->setY((contentHeight - item->height()) / 2);
         }
@@ -202,7 +202,7 @@ qreal QQuickTabBarPrivate::getContentWidth() const
         QQuickItem *item = q->itemAt(i);
         if (item) {
             QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-            if (!p->widthValid)
+            if (!p->widthValid())
                 totalWidth += item->implicitWidth();
             else
                 totalWidth += item->width();

@@ -731,11 +731,11 @@ void QQuickSwipeDelegatePrivate::resizeBackground()
     QQuickItemPrivate *p = QQuickItemPrivate::get(background);
     const bool extraAllocated = extra.isAllocated();
     // Don't check for or set the x here since it will just be overwritten by reposition().
-    if (((!p->widthValid || !extraAllocated || !extra->hasBackgroundWidth))
+    if (((!p->widthValid() || !extraAllocated || !extra->hasBackgroundWidth))
             || (extraAllocated && (extra->hasLeftInset || extra->hasRightInset))) {
         background->setWidth(width - getLeftInset() - getRightInset());
     }
-    if (((!p->heightValid || !extraAllocated || !extra->hasBackgroundHeight) && qFuzzyIsNull(background->y()))
+    if (((!p->heightValid() || !extraAllocated || !extra->hasBackgroundHeight) && qFuzzyIsNull(background->y()))
             || (extraAllocated && (extra->hasTopInset || extra->hasBottomInset))) {
         background->setY(getTopInset());
         background->setHeight(height - getTopInset() - getBottomInset());
