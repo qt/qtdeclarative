@@ -3177,8 +3177,8 @@ QQuickItemPrivate::QQuickItemPrivate()
     : _anchors(nullptr)
     , _stateGroup(nullptr)
     , flags(0)
-    , widthValid(false)
-    , heightValid(false)
+    , widthValidFlag(false)
+    , heightValidFlag(false)
     , componentComplete(true)
     , keepMouse(false)
     , keepTouch(false)
@@ -6887,7 +6887,7 @@ void QQuickItem::setWidth(qreal w)
     if (qt_is_nan(w))
         return;
 
-    d->widthValid = true;
+    d->widthValidFlag = true;
     if (d->width == w)
         return;
 
@@ -6904,7 +6904,7 @@ void QQuickItem::resetWidth()
 {
     Q_D(QQuickItem);
     d->width.takeBinding();
-    d->widthValid = false;
+    d->widthValidFlag = false;
     setImplicitWidth(implicitWidth());
 }
 
@@ -7062,7 +7062,7 @@ bool QQuickItem::widthValid() const
        See QQmlPropertyBinding::isUndefined and handleUndefinedAssignment
     */
 
-    return d->widthValid || d->width.hasBinding();
+    return d->widthValid();
 }
 
 /*!
@@ -7086,7 +7086,7 @@ void QQuickItem::setHeight(qreal h)
     if (qt_is_nan(h))
         return;
 
-    d->heightValid = true;
+    d->heightValidFlag = true;
     if (d->height == h)
         return;
 
@@ -7106,7 +7106,7 @@ void QQuickItem::resetHeight()
     // property, but preserve the existing value (and avoid some overhead
     // compared to calling setHeight(height())
     d->height.takeBinding();
-    d->heightValid = false;
+    d->heightValidFlag = false;
     setImplicitHeight(implicitHeight());
 }
 
@@ -7231,7 +7231,7 @@ void QQuickItem::setImplicitSize(qreal w, qreal h)
 bool QQuickItem::heightValid() const
 {
     Q_D(const QQuickItem);
-    return d->heightValid || d->height.hasBinding();
+    return d->heightValid();
 }
 
 /*!
@@ -7262,8 +7262,8 @@ QSizeF QQuickItem::size() const
 void QQuickItem::setSize(const QSizeF &size)
 {
     Q_D(QQuickItem);
-    d->heightValid = true;
-    d->widthValid = true;
+    d->heightValidFlag = true;
+    d->widthValidFlag = true;
 
     if (d->width == size.width() && d->height == size.height())
         return;
