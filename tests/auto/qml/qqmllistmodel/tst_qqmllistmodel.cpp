@@ -133,6 +133,7 @@ private slots:
     void undefinedAppendShouldCauseError();
     void nullPropertyCrash();
     void objectDestroyed();
+    void destroyObject();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1786,6 +1787,32 @@ void tst_qqmllistmodel::objectDestroyed()
     engine.evaluate(u"model.clear();"_qs);
     engine.collectGarbage();
     QTRY_VERIFY(destroyed);
+}
+
+void tst_qqmllistmodel::destroyObject()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(
+                R"(import QtQuick
+                   ListModel {
+                       id: model
+                       Component.onCompleted: { model.append({"a": contextObject}); }
+                   })",
+                QUrl());
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> element(new QObject);
+    engine.rootContext()->setContextProperty(u"contextObject"_qs, element.data());
+
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QQmlListModel *model = qobject_cast<QQmlListModel *>(o.data());
+    QVERIFY(model);
+    QCOMPARE(model->count(), 1);
+    QCOMPARE(model->get(0).property("a").toQObject(), element.data());
+    element.reset();
+    QCOMPARE(model->get(0).property("a").toQObject(), nullptr);
 }
 
 QTEST_MAIN(tst_qqmllistmodel)

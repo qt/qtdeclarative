@@ -278,19 +278,51 @@ private:
 class ListElement
 {
 public:
+    enum ObjectIndestructible { Indestructible = 1, ExplicitlySet = 2 };
+    enum { BLOCK_SIZE = 64 - sizeof(int) - sizeof(ListElement *) - sizeof(ModelNodeMetaObject *) };
+
+    // This is a basic guarded QObject pointer, with tag. It cannot be copied or moved.
+    class GuardedQObjectPointer
+    {
+        Q_DISABLE_COPY_MOVE(GuardedQObjectPointer)
+
+        using RefCountData = QtSharedPointer::ExternalRefCountData;
+        using Storage = QTaggedPointer<QObject, ObjectIndestructible>;
+
+    public:
+        GuardedQObjectPointer(QObject *o, ObjectIndestructible ownership)
+            : storage(o, ownership)
+            , refCount(o ? RefCountData::getAndRef(o) : nullptr)
+        {}
+
+        ~GuardedQObjectPointer()
+        {
+            if (refCount && !refCount->weakref.deref())
+                delete refCount;
+        }
+
+        QObject *data() const
+        {
+            return (refCount == nullptr || refCount->strongref.loadRelaxed() == 0)
+                    ? nullptr
+                    : storage.data();
+        }
+
+        ObjectIndestructible tag() const
+        {
+            return storage.tag();
+        }
+
+    private:
+        Storage storage;
+        RefCountData *refCount = nullptr;
+    };
 
     ListElement();
     ListElement(int existingUid);
     ~ListElement();
 
     static QVector<int> sync(ListElement *src, ListLayout *srcLayout, ListElement *target, ListLayout *targetLayout);
-
-    enum
-    {
-        BLOCK_SIZE = 64 - sizeof(int) - sizeof(ListElement *) - sizeof(ModelNodeMetaObject *)
-    };
-
-    enum ObjectIndestructible { Indestructible = 1, ExplicitlySet = 2 };
 
 private:
 
@@ -328,7 +360,7 @@ private:
     ListModel *getListProperty(const ListLayout::Role &role);
     StringOrTranslation *getStringProperty(const ListLayout::Role &role);
     QObject *getQObjectProperty(const ListLayout::Role &role);
-    QTaggedPointer<QObject, ObjectIndestructible> *getGuardProperty(const ListLayout::Role &role);
+    GuardedQObjectPointer *getGuardProperty(const ListLayout::Role &role);
     QVariantMap *getVariantMapProperty(const ListLayout::Role &role);
     QDateTime *getDateTimeProperty(const ListLayout::Role &role);
     QUrl *getUrlProperty(const ListLayout::Role &role);

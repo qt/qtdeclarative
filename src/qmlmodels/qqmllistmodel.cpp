@@ -129,7 +129,7 @@ const ListLayout::Role &ListLayout::getRoleOrCreate(QV4::String *key, Role::Data
 
 const ListLayout::Role &ListLayout::createRole(const QString &key, ListLayout::Role::DataType type)
 {
-    const int dataSizes[] = { sizeof(StringOrTranslation), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(QPointer<QObject>), sizeof(QVariantMap), sizeof(QDateTime), sizeof(QUrl), sizeof(QJSValue) };
+    const int dataSizes[] = { sizeof(StringOrTranslation), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(ListElement::GuardedQObjectPointer), sizeof(QVariantMap), sizeof(QDateTime), sizeof(QUrl), sizeof(QJSValue) };
     const int dataAlignments[] = { alignof(StringOrTranslation), alignof(double), alignof(bool), alignof(ListModel *), alignof(QObject *), alignof(QVariantMap), alignof(QDateTime), alignof(QUrl), alignof(QJSValue) };
 
     Role *r = new Role;
@@ -845,7 +845,8 @@ StringOrTranslation *ListElement::getStringProperty(const ListLayout::Role &role
 QObject *ListElement::getQObjectProperty(const ListLayout::Role &role)
 {
     char *mem = getPropertyMemory(role);
-    QPointer<QObject> *o = reinterpret_cast<QPointer<QObject> *>(mem);
+    GuardedQObjectPointer *o
+            = reinterpret_cast<GuardedQObjectPointer *>(mem);
     return o->data();
 }
 
@@ -893,13 +894,13 @@ QJSValue *ListElement::getFunctionProperty(const ListLayout::Role &role)
     return f;
 }
 
-QTaggedPointer<QObject, ListElement::ObjectIndestructible> *
+ListElement::GuardedQObjectPointer *
 ListElement::getGuardProperty(const ListLayout::Role &role)
 {
     char *mem = getPropertyMemory(role);
 
     bool existingGuard = false;
-    for (size_t i = 0; i < sizeof(QTaggedPointer<QObject, ListElement::ObjectIndestructible>);
+    for (size_t i = 0; i < sizeof(GuardedQObjectPointer);
          ++i) {
         if (mem[i] != 0) {
             existingGuard = true;
@@ -907,10 +908,10 @@ ListElement::getGuardProperty(const ListLayout::Role &role)
         }
     }
 
-    QTaggedPointer<QObject, ListElement::ObjectIndestructible> *o = nullptr;
+    GuardedQObjectPointer *o = nullptr;
 
     if (existingGuard)
-        o = reinterpret_cast<QTaggedPointer<QObject, ListElement::ObjectIndestructible> *>(mem);
+        o = reinterpret_cast<GuardedQObjectPointer *>(mem);
 
     return o;
 }
@@ -966,8 +967,8 @@ QVariant ListElement::getProperty(const ListLayout::Role &role, const QQmlListMo
             break;
         case ListLayout::Role::QObject:
             {
-            QTaggedPointer<QObject, ListElement::ObjectIndestructible> *guard =
-                    reinterpret_cast<QTaggedPointer<QObject, ListElement::ObjectIndestructible> *>(
+            GuardedQObjectPointer *guard =
+                    reinterpret_cast<GuardedQObjectPointer *>(
                             mem);
             QObject *object = guard->data();
             if (object)
@@ -1084,16 +1085,18 @@ int ListElement::setListProperty(const ListLayout::Role &role, ListModel *m)
 }
 
 static void
-restoreQObjectOwnership(QTaggedPointer<QObject, ListElement::ObjectIndestructible> *pointer)
+restoreQObjectOwnership(ListElement::GuardedQObjectPointer *pointer)
 {
-    QQmlData *data = QQmlData::get(pointer->data(), false);
-    Q_ASSERT(data);
+    if (QObject *o = pointer->data()) {
+        QQmlData *data = QQmlData::get(o, false);
+        Q_ASSERT(data);
 
-    // Only restore the previous state if the object hasn't become explicitly
-    // owned
-    if (!data->explicitIndestructibleSet) {
-        data->indestructible = (pointer->tag() & ListElement::Indestructible);
-        data->explicitIndestructibleSet = (pointer->tag() & ListElement::ExplicitlySet);
+        // Only restore the previous state if the object hasn't become explicitly
+        // owned
+        if (!data->explicitIndestructibleSet) {
+            data->indestructible = (pointer->tag() & ListElement::Indestructible);
+            data->explicitIndestructibleSet = (pointer->tag() & ListElement::ExplicitlySet);
+        }
     }
 }
 
@@ -1110,7 +1113,7 @@ static void setQObjectOwnership(char *mem, QObject *o)
     ddata->indestructible = true;
     ddata->explicitIndestructibleSet = false;
 
-    new (mem) QTaggedPointer<QObject, ListElement::ObjectIndestructible>(
+    new (mem) ListElement::GuardedQObjectPointer(
             o, static_cast<ListElement::ObjectIndestructible>(ownership));
 }
 
@@ -1120,10 +1123,10 @@ int ListElement::setQObjectProperty(const ListLayout::Role &role, QObject *o)
 
     if (role.type == ListLayout::Role::QObject) {
         char *mem = getPropertyMemory(role);
-        QTaggedPointer<QObject, ListElement::ObjectIndestructible> *g =
-                reinterpret_cast<QTaggedPointer<QObject, ListElement::ObjectIndestructible> *>(mem);
+        GuardedQObjectPointer *g =
+                reinterpret_cast<GuardedQObjectPointer *>(mem);
         bool existingGuard = false;
-        for (size_t i = 0; i < sizeof(QTaggedPointer<QObject, ListElement::ObjectIndestructible>);
+        for (size_t i = 0; i < sizeof(GuardedQObjectPointer);
              ++i) {
             if (mem[i] != 0) {
                 existingGuard = true;
@@ -1135,7 +1138,7 @@ int ListElement::setQObjectProperty(const ListLayout::Role &role, QObject *o)
             changed = g->data() != o;
             if (changed)
                 restoreQObjectOwnership(g);
-            g->~QTaggedPointer();
+            g->~GuardedQObjectPointer();
         } else {
             changed = true;
         }
@@ -1452,13 +1455,13 @@ void ListElement::destroy(ListLayout *layout)
                     break;
                 case ListLayout::Role::QObject:
                     {
-                    QTaggedPointer<QObject, ListElement::ObjectIndestructible> *guard =
+                    GuardedQObjectPointer *guard =
                             getGuardProperty(r);
 
                     if (guard) {
                         restoreQObjectOwnership(guard);
 
-                        guard->~QTaggedPointer();
+                        guard->~GuardedQObjectPointer();
                     }
                     }
                     break;
