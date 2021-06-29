@@ -409,7 +409,7 @@ void QQmlJSImportVisitor::processDefaultProperties()
 
         bool isComponent = false;
         for (const auto *s = it.key().get(); s; s = s->baseType().get()) {
-            defaultPropertyName = s->defaultPropertyName();
+            defaultPropertyName = s->ownDefaultPropertyName();
             if (!defaultPropertyName.isEmpty()) {
                 scopeOfDefaultProperty = s;
                 break;
@@ -1011,7 +1011,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         }
         prop.setAnnotations(parseAnnotations(publicMember->annotations));
         if (publicMember->isDefaultMember)
-            m_currentScope->setDefaultPropertyName(prop.propertyName());
+            m_currentScope->setOwnDefaultPropertyName(prop.propertyName());
         prop.setIndex(m_currentScope->ownProperties().size());
         m_currentScope->insertPropertyIdentifier(prop);
         if (publicMember->isRequired)

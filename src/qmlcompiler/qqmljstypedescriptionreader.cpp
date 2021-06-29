@@ -217,9 +217,9 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
             } else if (name == QLatin1String("prototype")) {
                 scope->setBaseTypeName(readStringBinding(script));
             } else if (name == QLatin1String("defaultProperty")) {
-                scope->setDefaultPropertyName(readStringBinding(script));
+                scope->setOwnDefaultPropertyName(readStringBinding(script));
             } else if (name == QLatin1String("parentProperty")) {
-                scope->setParentPropertyName(readStringBinding(script));
+                scope->setOwnParentPropertyName(readStringBinding(script));
             } else if (name == QLatin1String("exports")) {
                 readExports(script, scope);
             } else if (name == QLatin1String("interfaces")) {

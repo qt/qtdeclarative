@@ -116,7 +116,7 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *uiod)
 
     QString parentPropertyName;
     for (QQmlJSScope::ConstPtr scope = childScope; scope; scope = scope->baseType()) {
-        parentPropertyName = scope->parentPropertyName();
+        parentPropertyName = scope->ownParentPropertyName();
         if (parentPropertyName.isEmpty())
             continue;
 
