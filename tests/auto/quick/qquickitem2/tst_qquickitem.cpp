@@ -138,6 +138,8 @@ private slots:
     void colorGroup();
     void paletteAllocated();
 
+    void undefinedIsInvalidForWidthAndHeight();
+
 private:
     QQmlEngine engine;
     bool qt_tab_all_widgets() {
@@ -3809,6 +3811,21 @@ void tst_QQuickItem::paletteAllocated()
     QVERIFY(!backgroundHasPalette);
     QVERIFY(quickpalette);
     QVERIFY(foregroundHasPalette);
+}
+
+void tst_QQuickItem::undefinedIsInvalidForWidthAndHeight()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("undefinedInvalid.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+    auto item = qobject_cast<QQuickItem *>(root.get());
+    auto priv = QQuickItemPrivate::get(item);
+    QVERIFY(item);
+    QCOMPARE(item->height(), 300);
+    QCOMPARE(item->width(), 200);
+    QVERIFY(!priv->widthValid());
+    QVERIFY(!priv->heightValid());
 }
 
 QTEST_MAIN(tst_QQuickItem)
