@@ -63,6 +63,7 @@ class PluginMap
     Q_DISABLE_COPY_MOVE(PluginMap)
 public:
     PluginMap() = default;
+    ~PluginMap() = default;
 
     // This is a std::unordered_map because QHash cannot handle move-only types.
     using Container = std::unordered_map<QString, QmlPlugin>;
@@ -78,6 +79,7 @@ class PluginMapPtr
     Q_DISABLE_COPY_MOVE(PluginMapPtr)
 public:
     PluginMapPtr(PluginMap *map) : map(map), locker(&map->mutex) {}
+    ~PluginMapPtr() = default;
 
     PluginMap::Container &operator*() { return map->plugins; }
     const PluginMap::Container &operator*() const { return map->plugins; }
@@ -462,7 +464,7 @@ QString QQmlPluginImporter::resolvePlugin(const QString &qmldirPluginPath, const
 #endif
         resolvedPath += prefix + baseName;
         for (const QString &suffix : suffixes) {
-            const QString absolutePath = typeLoader->absoluteFilePath(resolvedPath + suffix);
+            QString absolutePath = typeLoader->absoluteFilePath(resolvedPath + suffix);
             if (!absolutePath.isEmpty())
                 return absolutePath;
         }

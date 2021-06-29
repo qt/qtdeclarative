@@ -79,6 +79,8 @@ public:
         , version(version)
     {}
 
+    ~QQmlPluginImporter() = default;
+
     QTypeRevision importDynamicPlugin(
             const QString &filePath, const QString &pluginId, bool optional);
     QTypeRevision importStaticPlugin(QObject *instance, const QString &pluginId);
