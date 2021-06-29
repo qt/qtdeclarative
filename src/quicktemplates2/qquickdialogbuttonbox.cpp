@@ -266,7 +266,7 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
         QQuickItem *item = q->itemAt(i);
         if (item) {
             QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-            if (!p->widthValid) {
+            if (!p->widthValid()) {
                 if (!halign)
                     item->setWidth(itemWidth);
                 else
@@ -275,7 +275,7 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
                     item->setHeight(contentHeight);
                 else
                     item->resetHeight();
-                p->widthValid = false;
+                p->widthValidFlag = false;
             }
         }
         buttons += static_cast<QQuickAbstractButton *>(item);

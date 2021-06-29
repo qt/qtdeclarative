@@ -381,12 +381,12 @@ void QQuickControlPrivate::resizeBackground()
     resizingBackground = true;
 
     QQuickItemPrivate *p = QQuickItemPrivate::get(background);
-    if (((!p->widthValid || !extra.isAllocated() || !extra->hasBackgroundWidth) && qFuzzyIsNull(background->x()))
+    if (((!p->widthValid() || !extra.isAllocated() || !extra->hasBackgroundWidth) && qFuzzyIsNull(background->x()))
             || (extra.isAllocated() && (extra->hasLeftInset || extra->hasRightInset))) {
         background->setX(getLeftInset());
         background->setWidth(width - getLeftInset() - getRightInset());
     }
-    if (((!p->heightValid || !extra.isAllocated() || !extra->hasBackgroundHeight) && qFuzzyIsNull(background->y()))
+    if (((!p->heightValid() || !extra.isAllocated() || !extra->hasBackgroundHeight) && qFuzzyIsNull(background->y()))
             || (extra.isAllocated() && (extra->hasTopInset || extra->hasBottomInset))) {
         background->setY(getTopInset());
         background->setHeight(height - getTopInset() - getBottomInset());
@@ -833,9 +833,9 @@ void QQuickControlPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometryC
     // Only set hasBackgroundWidth/Height if it was a width/height change,
     // otherwise we're prevented from setting a width/height in the future.
     if (change.widthChange())
-        extra.value().hasBackgroundWidth = p->widthValid;
+        extra.value().hasBackgroundWidth = p->widthValid();
     if (change.heightChange())
-        extra.value().hasBackgroundHeight = p->heightValid;
+        extra.value().hasBackgroundHeight = p->heightValid();
     resizeBackground();
 }
 
@@ -1531,9 +1531,9 @@ void QQuickControl::setBackground(QQuickItem *background)
         if (qFuzzyIsNull(background->z()))
             background->setZ(-1);
         QQuickItemPrivate *p = QQuickItemPrivate::get(background);
-        if (p->widthValid || p->heightValid) {
-            d->extra.value().hasBackgroundWidth = p->widthValid;
-            d->extra.value().hasBackgroundHeight = p->heightValid;
+        if (p->widthValid() || p->heightValid()) {
+            d->extra.value().hasBackgroundWidth = p->widthValid();
+            d->extra.value().hasBackgroundHeight = p->heightValid();
         }
         if (isComponentComplete())
             d->resizeBackground();

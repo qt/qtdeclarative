@@ -337,9 +337,9 @@ void QQuickMenuPrivate::resizeItem(QQuickItem *item)
         return;
 
     QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-    if (!p->widthValid) {
+    if (!p->widthValid()) {
         item->setWidth(contentItem->width());
-        p->widthValid = false;
+        p->widthValidFlag = false;
     }
 }
 

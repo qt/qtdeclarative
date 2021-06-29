@@ -184,22 +184,22 @@ void QQuickTextFieldPrivate::resizeBackground()
     resizingBackground = true;
 
     QQuickItemPrivate *p = QQuickItemPrivate::get(background);
-    if (((!p->widthValid || !extra.isAllocated() || !extra->hasBackgroundWidth) && qFuzzyIsNull(background->x()))
+    if (((!p->widthValid() || !extra.isAllocated() || !extra->hasBackgroundWidth) && qFuzzyIsNull(background->x()))
             || (extra.isAllocated() && (extra->hasLeftInset || extra->hasRightInset))) {
-        const bool wasWidthValid = p->widthValid;
+        const bool wasWidthValid = p->widthValid();
         background->setX(getLeftInset());
         background->setWidth(width - getLeftInset() - getRightInset());
         // If the user hadn't previously set the width, that shouldn't change when we set it for them.
         if (!wasWidthValid)
-            p->widthValid = false;
+            p->widthValidFlag = false;
     }
-    if (((!p->heightValid || !extra.isAllocated() || !extra->hasBackgroundHeight) && qFuzzyIsNull(background->y()))
+    if (((!p->heightValid() || !extra.isAllocated() || !extra->hasBackgroundHeight) && qFuzzyIsNull(background->y()))
             || (extra.isAllocated() && (extra->hasTopInset || extra->hasBottomInset))) {
-        const bool wasHeightValid = p->heightValid;
+        const bool wasHeightValid = p->heightValid();
         background->setY(getTopInset());
         background->setHeight(height - getTopInset() - getBottomInset());
         if (!wasHeightValid)
-            p->heightValid = false;
+            p->heightValidFlag = false;
     }
 
     resizingBackground = false;
@@ -361,10 +361,10 @@ void QQuickTextFieldPrivate::itemGeometryChanged(QQuickItem *item, QQuickGeometr
     // QTBUG-71875: only allocate the extra data if we have to.
     // resizeBackground() relies on the value of extra.isAllocated()
     // as part of its checks to see whether it should resize the background or not.
-    if (p->widthValid || extra.isAllocated())
-        extra.value().hasBackgroundWidth = p->widthValid;
-    if (p->heightValid || extra.isAllocated())
-        extra.value().hasBackgroundHeight = p->heightValid;
+    if (p->widthValid() || extra.isAllocated())
+        extra.value().hasBackgroundWidth = p->widthValid();
+    if (p->heightValid() || extra.isAllocated())
+        extra.value().hasBackgroundHeight = p->heightValid();
     resizeBackground();
 }
 
@@ -476,9 +476,9 @@ void QQuickTextField::setBackground(QQuickItem *background)
         if (qFuzzyIsNull(background->z()))
             background->setZ(-1);
         QQuickItemPrivate *p = QQuickItemPrivate::get(background);
-        if (p->widthValid || p->heightValid) {
-            d->extra.value().hasBackgroundWidth = p->widthValid;
-            d->extra.value().hasBackgroundHeight = p->heightValid;
+        if (p->widthValid() || p->heightValid()) {
+            d->extra.value().hasBackgroundWidth = p->widthValid();
+            d->extra.value().hasBackgroundHeight = p->heightValid();
         }
         if (isComponentComplete())
             d->resizeBackground();

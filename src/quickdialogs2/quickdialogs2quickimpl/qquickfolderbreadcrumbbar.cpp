@@ -448,7 +448,7 @@ qreal QQuickFolderBreadcrumbBarPrivate::getContentWidth() const
         QQuickItem *item = q->itemAt(i);
         if (item) {
             QQuickItemPrivate *p = QQuickItemPrivate::get(item);
-            if (!p->widthValid)
+            if (!p->widthValid())
                 totalWidth += item->implicitWidth();
             else
                 totalWidth += item->width();
