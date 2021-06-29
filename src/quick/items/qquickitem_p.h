@@ -441,8 +441,8 @@ public:
 
     // Bit 0
     quint32 flags:5;
-    bool widthValid:1;
-    bool heightValid:1;
+    bool widthValidFlag:1;
+    bool heightValidFlag:1;
     bool componentComplete:1;
     bool keepMouse:1;
     bool keepTouch:1;
@@ -577,6 +577,9 @@ public:
     Q_OBJECT_COMPAT_PROPERTY(QQuickItemPrivate, qreal, height, &QQuickItemPrivate::setHeight, &QQuickItemPrivate::heightChanged);
     qreal implicitWidth;
     qreal implicitHeight;
+
+    bool widthValid() const { return widthValidFlag || width.hasBinding(); }
+    bool heightValid() const { return heightValidFlag || height.hasBinding(); }
 
     qreal baselineOffset;
 

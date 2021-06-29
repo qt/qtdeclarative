@@ -1053,23 +1053,23 @@ void tst_qquickstates::anchorRewindBug()
     QQuickItem * column = rect->findChild<QQuickItem*>("column");
 
     QVERIFY(column != nullptr);
-    QVERIFY(!QQuickItemPrivate::get(column)->heightValid);
-    QVERIFY(!QQuickItemPrivate::get(column)->widthValid);
+    QVERIFY(!QQuickItemPrivate::get(column)->heightValid());
+    QVERIFY(!QQuickItemPrivate::get(column)->widthValid());
     QCOMPARE(column->height(), 200.0);
     QQuickItemPrivate::get(rect)->setState("reanchored");
 
     // column height and width should stay implicit
     // and column's implicit resizing should still work
-    QVERIFY(!QQuickItemPrivate::get(column)->heightValid);
-    QVERIFY(!QQuickItemPrivate::get(column)->widthValid);
+    QVERIFY(!QQuickItemPrivate::get(column)->heightValid());
+    QVERIFY(!QQuickItemPrivate::get(column)->widthValid());
     QTRY_COMPARE(column->height(), 100.0);
 
     QQuickItemPrivate::get(rect)->setState("");
 
     // column height and width should stay implicit
     // and column's implicit resizing should still work
-    QVERIFY(!QQuickItemPrivate::get(column)->heightValid);
-    QVERIFY(!QQuickItemPrivate::get(column)->widthValid);
+    QVERIFY(!QQuickItemPrivate::get(column)->heightValid());
+    QVERIFY(!QQuickItemPrivate::get(column)->widthValid());
     QTRY_COMPARE(column->height(), 200.0);
 }
 

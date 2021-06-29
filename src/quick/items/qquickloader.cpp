@@ -650,9 +650,9 @@ void QQuickLoaderPrivate::setInitialState(QObject *obj)
         // does, then set the item's size now before bindings are
         // evaluated, otherwise we will end up resizing the item
         // later and triggering any affected bindings/anchors.
-        if (widthValid && !QQuickItemPrivate::get(item)->widthValid)
+        if (widthValid() && !QQuickItemPrivate::get(item)->widthValid())
             item->setWidth(q->width());
-        if (heightValid && !QQuickItemPrivate::get(item)->heightValid)
+        if (heightValid() && !QQuickItemPrivate::get(item)->heightValid())
             item->setHeight(q->height());
         item->setParentItem(q);
     }

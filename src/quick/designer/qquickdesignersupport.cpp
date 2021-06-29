@@ -439,12 +439,12 @@ void QQuickDesignerSupport::setRootItem(QQuickView *view, QQuickItem *item)
 
 bool QQuickDesignerSupport::isValidWidth(QQuickItem *item)
 {
-    return QQuickItemPrivate::get(item)->heightValid;
+    return QQuickItemPrivate::get(item)->heightValid();
 }
 
 bool QQuickDesignerSupport::isValidHeight(QQuickItem *item)
 {
-    return QQuickItemPrivate::get(item)->widthValid;
+    return QQuickItemPrivate::get(item)->widthValid();
 }
 
 void QQuickDesignerSupport::updateDirtyNode(QQuickItem *item)

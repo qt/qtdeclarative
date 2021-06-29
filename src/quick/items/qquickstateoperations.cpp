@@ -1198,9 +1198,9 @@ void QQuickAnchorChanges::saveOriginals()
     d->origBaselineBinding = QQmlPropertyPrivate::binding(d->baselineProp);
 
     QQuickItemPrivate *targetPrivate = QQuickItemPrivate::get(d->target);
-    if (targetPrivate->widthValid)
+    if (targetPrivate->widthValid())
         d->origWidth = d->target->width();
-    if (targetPrivate->heightValid)
+    if (targetPrivate->heightValid())
         d->origHeight = d->target->height();
     d->origX = d->target->x();
     d->origY = d->target->y();
@@ -1332,10 +1332,10 @@ void QQuickAnchorChanges::rewind()
     //restore previous values (but not previous bindings, i.e. anchors)
     d->target->setX(d->rewindX);
     d->target->setY(d->rewindY);
-    if (targetPrivate->widthValid) {
+    if (targetPrivate->widthValid()) {
         d->target->setWidth(d->rewindWidth);
     }
-    if (targetPrivate->heightValid) {
+    if (targetPrivate->heightValid()) {
         d->target->setHeight(d->rewindHeight);
     }
 }
