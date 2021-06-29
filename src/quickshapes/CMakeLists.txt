@@ -23,6 +23,8 @@ qt_internal_add_qml_module(QuickShapesPrivate
         Qt::GuiPrivate
         Qt::Qml
         Qt::QuickPrivate
+    GENERATE_CPP_EXPORTS
+    GENERATE_PRIVATE_CPP_EXPORTS
 )
 
 # We need to do additional initialization, so we have to provide our own

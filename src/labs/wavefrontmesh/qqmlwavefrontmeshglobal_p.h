@@ -53,19 +53,6 @@
 // We mean it.
 //
 
-QT_BEGIN_NAMESPACE
-
-#if !defined(QT_STATIC)
-#  if defined(QT_BUILD_LABSWAVEFRONTMESH_LIB)
-#    define Q_LABSWAVEFRONTMESH_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_LABSWAVEFRONTMESH_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_LABSWAVEFRONTMESH_EXPORT
-#endif
-#define Q_LABSWAVEFRONTMESH_PRIVATE_EXPORT Q_LABSWAVEFRONTMESH_EXPORT
-
-QT_END_NAMESPACE
+#include <QtLabsWavefrontMesh/private/qtlabswavefrontmeshexports_p.h>
 
 #endif // QTLABSWAVEFRONTMESHGLOBAL_P_H

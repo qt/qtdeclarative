@@ -51,18 +51,9 @@
 #include <QtCore/qglobal.h>
 #include <QtQml/private/qqmlglobal_p.h>
 #include <QtQuickTemplates2/private/qtquicktemplates2-config_p.h>
+#include <QtQuickTemplates2/private/qtquicktemplates2exports_p.h>
 
 QT_BEGIN_NAMESPACE
-
-#ifndef QT_STATIC
-#  if defined(QT_BUILD_QUICKTEMPLATES2_LIB)
-#    define Q_QUICKTEMPLATES2_PRIVATE_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_QUICKTEMPLATES2_PRIVATE_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_QUICKTEMPLATES2_PRIVATE_EXPORT
-#endif
 
 Q_QUICKTEMPLATES2_PRIVATE_EXPORT void QQuickTemplates_initializeModule();
 

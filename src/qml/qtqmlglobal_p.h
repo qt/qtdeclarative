@@ -54,8 +54,8 @@
 #include <QtCore/private/qglobal_p.h>
 #include <QtQml/qtqmlglobal.h>
 #include <QtQml/private/qtqml-config_p.h>
+#include <QtQml/private/qtqmlexports_p.h>
 
-#define Q_QML_PRIVATE_EXPORT Q_QML_EXPORT
 #define Q_QML_AUTOTEST_EXPORT Q_AUTOTEST_EXPORT
 
 #endif // QTQMLGLOBAL_P_H

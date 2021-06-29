@@ -54,8 +54,8 @@
 #include <QtQml/private/qtqmlglobal_p.h>
 #include <QtQmlModels/qtqmlmodelsglobal.h>
 #include <QtQmlModels/private/qtqmlmodels-config_p.h>
+#include <QtQmlModels/private/qtqmlmodelsexports_p.h>
 
-#define Q_QMLMODELS_PRIVATE_EXPORT Q_QMLMODELS_EXPORT
 #define Q_QMLMODELS_AUTOTEST_EXPORT Q_AUTOTEST_EXPORT
 
 #endif // QTQMLMODELSGLOBAL_P_H

@@ -41,18 +41,6 @@
 #define QTQMLWORKERSCRIPTGLOBAL_H
 
 #include <QtQml/qtqmlglobal.h>
+#include <QtQmlWorkerScript/qtqmlworkerscriptexports.h>
 
-QT_BEGIN_NAMESPACE
-
-#if !defined(QT_STATIC)
-#  if defined(QT_BUILD_QMLWORKERSCRIPT_LIB)
-#    define Q_QMLWORKERSCRIPT_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_QMLWORKERSCRIPT_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_QMLWORKERSCRIPT_EXPORT
-#endif
-
-QT_END_NAMESPACE
 #endif // QTQMLWORKERSCRIPTGLOBAL_H

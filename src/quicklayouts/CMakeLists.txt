@@ -20,4 +20,6 @@ qt_internal_add_qml_module(QuickLayouts
         Qt::GuiPrivate
         Qt::QuickPrivate
         Qt::Qml
+    GENERATE_CPP_EXPORTS
+    GENERATE_PRIVATE_CPP_EXPORTS
 )

@@ -52,22 +52,6 @@
 //
 
 #include <QtCore/qglobal.h>
-
-QT_BEGIN_NAMESPACE
-
-#if !defined(QT_STATIC)
-#  if defined(QT_BUILD_QMLLOCALSTORAGE_LIB)
-#    define Q_QMLLOCALSTORAGE_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_QMLLOCALSTORAGE_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_QMLLOCALSTORAGE_EXPORT
-#endif
-
-
-#define Q_QMLLOCALSTORAGE_PRIVATE_EXPORT Q_QMLLOCALSTORAGE_EXPORT
-
-QT_END_NAMESPACE
+#include <QtQmlLocalStorage/private/qtqmllocalstorageexports_p.h>
 
 #endif // QQMLLOCALSTORAGEGLOBAL_P_H

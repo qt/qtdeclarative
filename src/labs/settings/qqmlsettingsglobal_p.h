@@ -53,19 +53,6 @@
 // We mean it.
 //
 
-QT_BEGIN_NAMESPACE
-
-#if !defined(QT_STATIC)
-#  if defined(QT_BUILD_LABSSETTINGS_LIB)
-#    define Q_LABSSETTINGS_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_LABSSETTINGS_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_LABSSETTINGS_EXPORT
-#endif
-#define Q_LABSSETTINGS_PRIVATE_EXPORT Q_LABSSETTINGS_EXPORT
-
-QT_END_NAMESPACE
+#include <QtLabsSettings/private/qtlabssettingsexports_p.h>
 
 #endif // QTLABSSETTINGSGLOBAL_P_H

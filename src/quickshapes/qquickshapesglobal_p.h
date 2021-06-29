@@ -52,12 +52,7 @@
 //
 
 #include "qquickshapesglobal.h"
-
-QT_BEGIN_NAMESPACE
-
-#define Q_QUICKSHAPES_PRIVATE_EXPORT Q_QUICKSHAPES_EXPORT
-
-QT_END_NAMESPACE
+#include <QtQuickShapes/private/qtquickshapesexports_p.h>
 
 void Q_QUICKSHAPES_PRIVATE_EXPORT qml_register_types_QtQuick_Shapes();
 

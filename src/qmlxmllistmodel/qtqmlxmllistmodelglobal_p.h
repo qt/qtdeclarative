@@ -52,21 +52,6 @@
 //
 
 #include <QtCore/qglobal.h>
-
-QT_BEGIN_NAMESPACE
-
-#if !defined(QT_STATIC)
-#    if defined(QT_BUILD_QMLXMLLISTMODEL_LIB)
-#        define Q_QMLXMLLISTMODEL_EXPORT Q_DECL_EXPORT
-#    else
-#        define Q_QMLXMLLISTMODEL_EXPORT Q_DECL_IMPORT
-#    endif
-#else
-#    define Q_QMLXMLLISTMODEL_EXPORT
-#endif
-
-#define Q_QMLXMLLISTMODEL_PRIVATE_EXPORT Q_QMLXMLLISTMODEL_EXPORT
-
-QT_END_NAMESPACE
+#include <QtQmlXmlListModel/private/qtqmlxmllistmodelexports_p.h>
 
 #endif // QTQMLXMLLISTMODELGLOBAL_P_H

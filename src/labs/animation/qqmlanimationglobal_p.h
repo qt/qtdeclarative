@@ -53,19 +53,6 @@
 // We mean it.
 //
 
-QT_BEGIN_NAMESPACE
-
-#if !defined(QT_STATIC)
-#  if defined(QT_BUILD_LABSANIMATION_LIB)
-#    define Q_LABSANIMATION_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_LABSANIMATION_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_LABSANIMATION_EXPORT
-#endif
-#define Q_LABSANIMATION_PRIVATE_EXPORT Q_LABSANIMATION_EXPORT
-
-QT_END_NAMESPACE
+#include <QtLabsAnimation/private/qtlabsanimationexports_p.h>
 
 #endif // QTLABSANIMATIONGLOBAL_P_H

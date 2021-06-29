@@ -64,7 +64,7 @@ class QQuickLayoutAttached;
 Q_DECLARE_LOGGING_CATEGORY(lcQuickLayouts)
 
 class QQuickLayoutPrivate;
-class Q_QUICKLAYOUT_PRIVATE_EXPORT QQuickLayout : public QQuickItem, public QQuickItemChangeListener
+class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickLayout : public QQuickItem, public QQuickItemChangeListener
 
 {
     Q_OBJECT
@@ -177,7 +177,7 @@ protected:
 };
 
 
-class Q_QUICKLAYOUT_PRIVATE_EXPORT QQuickLayoutAttached : public QObject
+class Q_QUICKLAYOUTS_PRIVATE_EXPORT QQuickLayoutAttached : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(qreal minimumWidth READ minimumWidth WRITE setMinimumWidth NOTIFY minimumWidthChanged)

@@ -49,19 +49,6 @@
 //
 
 #include <QtCore/qglobal.h>
-
-QT_BEGIN_NAMESPACE
-
-#ifndef QT_STATIC
-#  if defined(QT_BUILD_QUICKDIALOGS2UTILS_LIB)
-#    define Q_QUICKDIALOGS2UTILS_PRIVATE_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_QUICKDIALOGS2UTILS_PRIVATE_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_QUICKDIALOGS2UTILS_PRIVATE_EXPORT
-#endif
-
-QT_END_NAMESPACE
+#include <QtQuickDialogs2Utils/private/qtquickdialogs2utilsexports_p.h>
 
 #endif // QTQUICKDIALOGS2UTILSUTILSGLOBAL_P_H

@@ -52,17 +52,6 @@
 //
 
 #include <QtCore/qglobal.h>
-
-// We only have private exports from this library
-
-#ifndef QT_STATIC
-#  if defined(QT_BUILD_QUICKPARTICLES_LIB)
-#    define Q_QUICKPARTICLES_PRIVATE_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_QUICKPARTICLES_PRIVATE_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_QUICKPARTICLES_PRIVATE_EXPORT
-#endif
+#include <QtQuickParticles/private/qtquickparticlesexports_p.h>
 
 #endif // QTQUICKPARTICLESGLOBAL_P_H

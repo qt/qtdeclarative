@@ -58,8 +58,7 @@
 //
 
 #include "qtquickglobal.h"
-
-#define Q_QUICK_PRIVATE_EXPORT Q_QUICK_EXPORT
+#include <QtQuick/private/qtquickexports_p.h>
 
 void Q_QUICK_PRIVATE_EXPORT qml_register_types_QtQuick();
 

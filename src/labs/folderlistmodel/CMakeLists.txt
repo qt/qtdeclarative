@@ -13,4 +13,6 @@ qt_internal_add_qml_module(LabsFolderListModel
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
+    GENERATE_CPP_EXPORTS
+    GENERATE_PRIVATE_CPP_EXPORTS
 )

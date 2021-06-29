@@ -11,4 +11,6 @@ qt_internal_add_qml_module(LabsAnimation
     PUBLIC_LIBRARIES
         Qt::QmlPrivate
         Qt::QuickPrivate
+    GENERATE_CPP_EXPORTS
+    GENERATE_PRIVATE_CPP_EXPORTS
 )

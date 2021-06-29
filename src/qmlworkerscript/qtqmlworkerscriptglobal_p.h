@@ -53,8 +53,8 @@
 
 #include <QtQml/private/qtqmlglobal_p.h>
 #include <QtQmlWorkerScript/qtqmlworkerscriptglobal.h>
+#include <QtQmlWorkerScript/private/qtqmlworkerscriptexports_p.h>
 
-#define Q_QMLWORKERSCRIPT_PRIVATE_EXPORT Q_QMLWORKERSCRIPT_EXPORT
 #define Q_QMLWORKERSCRIPT_AUTOTEST_EXPORT Q_AUTOTEST_EXPORT
 
 #endif // QTQMLWORKERSCRIPTGLOBAL_P_H

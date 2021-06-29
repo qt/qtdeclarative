@@ -42,18 +42,6 @@
 
 #include <QtQml/qtqmlglobal.h>
 #include <QtQmlModels/qtqmlmodels-config.h>
+#include <QtQmlModels/qtqmlmodelsexports.h>
 
-QT_BEGIN_NAMESPACE
-
-#if !defined(QT_STATIC)
-#  if defined(QT_BUILD_QMLMODELS_LIB)
-#    define Q_QMLMODELS_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_QMLMODELS_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_QMLMODELS_EXPORT
-#endif
-
-QT_END_NAMESPACE
 #endif // QTQMLMODELSGLOBAL_H
