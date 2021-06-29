@@ -23,6 +23,9 @@ qt_internal_add_module(QmlCompilerPrivate
         qqmljstypereader.cpp qqmljstypereader_p.h
         qresourcerelocater.cpp qresourcerelocater_p.h
         qqmljsannotation_p.h qqmljsannotation.cpp
+        qqmljstypepropagator.cpp qqmljstypepropagator_p.h
+        qqmljstyperesolver.cpp qqmljstyperesolver_p.h
+        qqmljsregistercontent.cpp qqmljsregistercontent_p.h
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlDevToolsPrivate
