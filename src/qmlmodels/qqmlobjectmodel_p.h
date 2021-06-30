@@ -78,8 +78,6 @@ public:
         Reusable
     };
 
-    virtual ~QQmlInstanceModel() {}
-
     enum ReleaseFlag { Referenced = 0x01, Destroyed = 0x02, Pooled = 0x04 };
     Q_DECLARE_FLAGS(ReleaseFlags, ReleaseFlag)
 
