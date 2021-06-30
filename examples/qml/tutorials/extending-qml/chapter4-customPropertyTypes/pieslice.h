@@ -61,7 +61,7 @@ class PieSlice : public QQuickPaintedItem
     QML_ELEMENT
 
 public:
-    PieSlice(QQuickItem *parent = 0);
+    PieSlice(QQuickItem *parent = nullptr);
 
     QColor color() const;
     void setColor(const QColor &color);

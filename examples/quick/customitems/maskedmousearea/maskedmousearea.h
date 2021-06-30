@@ -65,7 +65,7 @@ class MaskedMouseArea : public QQuickItem
     QML_ELEMENT
 
 public:
-    MaskedMouseArea(QQuickItem *parent = 0);
+    MaskedMouseArea(QQuickItem *parent = nullptr);
 
     bool contains(const QPointF &point) const;
 

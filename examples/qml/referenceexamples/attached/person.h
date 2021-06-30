@@ -63,7 +63,7 @@ class ShoeDescription : public QObject
     Q_PROPERTY(qreal price READ price WRITE setPrice)
     QML_ANONYMOUS
 public:
-    ShoeDescription(QObject *parent = 0);
+    ShoeDescription(QObject *parent = nullptr);
 
     int size() const;
     void setSize(int);

@@ -78,8 +78,7 @@ class Config : public QObject
     QML_NAMED_ELEMENT(Configuration)
     QML_ADDED_IN_VERSION(1, 0)
 public:
-    Config (QObject* parent=0) : QObject(parent)
-    {}
+    Config (QObject *parent = nullptr) : QObject(parent) {}
 
     QQmlListProperty<PartialScene> sceneCompleters()
     {

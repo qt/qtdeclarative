@@ -64,7 +64,7 @@ class QQuickMaskExtruder : public QQuickParticleExtruder
     QML_NAMED_ELEMENT(MaskShape)
     QML_ADDED_IN_VERSION(2, 0)
 public:
-    explicit QQuickMaskExtruder(QObject *parent = 0);
+    explicit QQuickMaskExtruder(QObject *parent = nullptr);
     QPointF extrude(const QRectF &) override;
     bool contains(const QRectF &bounds, const QPointF &point) override;
 

@@ -65,7 +65,7 @@ class QQuickDirection : public QObject
     QML_UNCREATABLE("Abstract type. Use one of the inheriting types instead.")
 
 public:
-    explicit QQuickDirection(QObject *parent = 0);
+    explicit QQuickDirection(QObject *parent = nullptr);
 
     virtual QPointF sample(const QPointF &from);
 Q_SIGNALS:

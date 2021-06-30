@@ -134,7 +134,7 @@ public:
     };
     Q_ENUM(RenderableType)
 
-    QQuickGraphicsInfo(QQuickItem *item = 0);
+    QQuickGraphicsInfo(QQuickItem *item = nullptr);
 
     static QQuickGraphicsInfo *qmlAttachedProperties(QObject *object);
 

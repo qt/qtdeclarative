@@ -61,7 +61,7 @@ class TextBalloon : public QQuickPaintedItem
     QML_ELEMENT
 
     public:
-        TextBalloon(QQuickItem *parent = 0);
+        TextBalloon(QQuickItem *parent = nullptr);
         void paint(QPainter *painter);
 
         bool isRightAligned() const;

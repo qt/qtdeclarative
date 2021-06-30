@@ -114,7 +114,7 @@ class FbItem : public QQuickFramebufferObject
     QML_ELEMENT
 
 public:
-    explicit FbItem(QQuickItem *parent = 0);
+    explicit FbItem(QQuickItem *parent = nullptr);
 
     QQuickFramebufferObject::Renderer *createRenderer() const override;
 

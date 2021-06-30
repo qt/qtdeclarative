@@ -69,7 +69,7 @@ class BezierCurve : public QQuickItem
 //! [3]
 
 public:
-    BezierCurve(QQuickItem *parent = 0);
+    BezierCurve(QQuickItem *parent = nullptr);
     ~BezierCurve();
 
 //! [2]

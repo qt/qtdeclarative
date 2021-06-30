@@ -67,7 +67,7 @@ class PieChart : public QQuickItem
 public:
 //![1]
 
-    PieChart(QQuickItem *parent = 0);
+    PieChart(QQuickItem *parent = nullptr);
 
     QString name() const;
     void setName(const QString &name);

@@ -69,7 +69,7 @@ class Q_QUICKLAYOUT_PRIVATE_EXPORT QQuickStackLayout : public QQuickLayout
     QML_ATTACHED(QQuickStackLayoutAttached)
 
 public:
-    explicit QQuickStackLayout(QQuickItem *parent = 0);
+    explicit QQuickStackLayout(QQuickItem *parent = nullptr);
     int count() const;
     int currentIndex() const;
     void setCurrentIndex(int index);
@@ -78,7 +78,7 @@ public:
     void itemChange(ItemChange change, const ItemChangeData &value) override;
     QSizeF sizeHint(Qt::SizeHint whichSizeHint) const override;
     void setAlignment(QQuickItem *item, Qt::Alignment align)  override;
-    void invalidate(QQuickItem *childItem = 0)  override;
+    void invalidate(QQuickItem *childItem = nullptr)  override;
     void updateLayoutItems()  override;
     void rearrange(const QSizeF &) override;
 
