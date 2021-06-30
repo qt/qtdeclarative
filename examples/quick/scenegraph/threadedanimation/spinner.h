@@ -67,7 +67,7 @@ public:
     void setSpinning(bool spinning);
 
 protected:
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 
 signals:
     void spinningChanged();

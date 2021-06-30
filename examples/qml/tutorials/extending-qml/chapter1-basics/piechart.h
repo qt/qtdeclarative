@@ -70,7 +70,7 @@ public:
     QColor color() const;
     void setColor(const QColor &color);
 
-    void paint(QPainter *painter);
+    void paint(QPainter *painter) override;
 
 private:
     QString m_name;

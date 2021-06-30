@@ -73,7 +73,7 @@ public:
     int angleSpan() const;
     void setAngleSpan(int span);
 
-    void paint(QPainter *painter);
+    void paint(QPainter *painter) override;
 
 private:
     QColor m_color;

@@ -74,7 +74,7 @@ public:
     QColor color() const;
     void setColor(const QColor &color);
 
-    void paint(QPainter *painter);
+    void paint(QPainter *painter) override;
 
     Q_INVOKABLE void clearChart();
 

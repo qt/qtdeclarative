@@ -67,7 +67,7 @@ class MaskedMouseArea : public QQuickItem
 public:
     MaskedMouseArea(QQuickItem *parent = nullptr);
 
-    bool contains(const QPointF &point) const;
+    bool contains(const QPointF &point) const override;
 
     bool isPressed() const { return m_pressed; }
     bool containsMouse() const { return m_containsMouse; }
@@ -91,11 +91,11 @@ signals:
 protected:
     void setPressed(bool pressed);
     void setContainsMouse(bool containsMouse);
-    void mousePressEvent(QMouseEvent *event);
-    void mouseReleaseEvent(QMouseEvent *event);
-    void hoverEnterEvent(QHoverEvent *event);
-    void hoverLeaveEvent(QHoverEvent *event);
-    void mouseUngrabEvent();
+    void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void hoverEnterEvent(QHoverEvent *event) override;
+    void hoverLeaveEvent(QHoverEvent *event) override;
+    void mouseUngrabEvent() override;
 
 private:
     bool m_pressed;

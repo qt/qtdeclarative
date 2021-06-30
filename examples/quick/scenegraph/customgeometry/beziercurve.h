@@ -73,7 +73,7 @@ public:
     ~BezierCurve();
 
 //! [2]
-    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *);
+    QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
 //! [2]
 
     QPointF p1() const { return m_p1; }
