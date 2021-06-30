@@ -63,7 +63,6 @@ class SquircleRenderer : public QObject, protected QOpenGLFunctions
 {
     Q_OBJECT
 public:
-    SquircleRenderer() : m_t(0), m_program(0) { }
     ~SquircleRenderer();
 
     void setT(qreal t) { m_t = t; }
@@ -76,9 +75,9 @@ public slots:
 
 private:
     QSize m_viewportSize;
-    qreal m_t;
-    QOpenGLShaderProgram *m_program;
-    QQuickWindow *m_window;
+    qreal m_t = 0.0;
+    QOpenGLShaderProgram *m_program = nullptr;
+    QQuickWindow *m_window = nullptr;
 };
 //! [1]
 
