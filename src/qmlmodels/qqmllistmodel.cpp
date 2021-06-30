@@ -941,6 +941,8 @@ QVariant ListElement::getProperty(const ListLayout::Role &role, const QQmlListMo
                 StringOrTranslation *value = reinterpret_cast<StringOrTranslation *>(mem);
                 if (value->isSet())
                     data = value->toString(owner);
+                else
+                    data = QString();
             }
             break;
         case ListLayout::Role::Bool:

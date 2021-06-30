@@ -134,6 +134,7 @@ private slots:
     void nullPropertyCrash();
     void objectDestroyed();
     void destroyObject();
+    void emptyStringNotUndefined();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1813,6 +1814,29 @@ void tst_qqmllistmodel::destroyObject()
     QCOMPARE(model->get(0).property("a").toQObject(), element.data());
     element.reset();
     QCOMPARE(model->get(0).property("a").toQObject(), nullptr);
+}
+
+void tst_qqmllistmodel::emptyStringNotUndefined()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(
+            R"(import QtQuick
+                   ListModel {
+                       id: model
+                       Component.onCompleted: { model.append({"a": ""}); }
+                   })",
+            QUrl());
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+    auto lm = qobject_cast<QQmlListModel *>(root.get());
+    QVERIFY(lm);
+    QJSValue val = lm->get(0);
+    QVERIFY(val.hasProperty("a"));
+    val = val.property("a");
+    QVERIFY(!val.isUndefined());
+    QVERIFY(val.isString());
+    QCOMPARE(val.toString(), QString());
 }
 
 QTEST_MAIN(tst_qqmllistmodel)
