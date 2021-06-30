@@ -77,6 +77,8 @@ int QQuickTapHandler::m_touchMultiTapDistanceSquared(-1);
     button in order to cancel the click.  For this use case, set the
     \l gesturePolicy to \c TapHandler.ReleaseWithinBounds.
 
+    \snippet pointerHandlers/tapHandlerButton.qml 0
+
     For multi-tap gestures (double-tap, triple-tap etc.), the distance moved
     must not exceed QStyleHints::mouseDoubleClickDistance() with mouse and
     QStyleHints::touchDoubleTapDistance() with touch, and the time between
