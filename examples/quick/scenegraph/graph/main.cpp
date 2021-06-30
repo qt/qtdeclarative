@@ -66,5 +66,5 @@ int main(int argc, char *argv[])
     view.setSource(QUrl("qrc:///scenegraph/graph/main.qml"));
     view.show();
 
-    return a.exec();
+    return QGuiApplication::exec();
 }

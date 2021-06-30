@@ -66,6 +66,6 @@ int main(int argc, char **argv)
     view.setSource(QUrl("qrc:///scenegraph/openglunderqml/main.qml"));
     view.show();
 
-    return app.exec();
+    return QGuiApplication::exec();
 }
 //! [1]

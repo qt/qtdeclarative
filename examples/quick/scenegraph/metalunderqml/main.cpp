@@ -63,5 +63,5 @@ int main(int argc, char **argv)
     view.setSource(QUrl("qrc:///scenegraph/metalunderqml/main.qml"));
     view.show();
 
-    return app.exec();
+    return QGuiApplication::exec();
 }

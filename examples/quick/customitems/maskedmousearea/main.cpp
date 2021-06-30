@@ -60,5 +60,5 @@ int main(int argc, char* argv[])
 
     view.setSource(QUrl("qrc:///customitems/maskedmousearea/maskedmousearea.qml"));
     view.show();
-    return app.exec();
+    return QGuiApplication::exec();
 }

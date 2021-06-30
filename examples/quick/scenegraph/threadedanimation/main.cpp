@@ -61,5 +61,5 @@ int main(int argc, char **argv)
     view.setSource(QUrl("qrc:///scenegraph/threadedanimation/main.qml"));
     view.show();
 
-    return app.exec();
+    return QGuiApplication::exec();
 }

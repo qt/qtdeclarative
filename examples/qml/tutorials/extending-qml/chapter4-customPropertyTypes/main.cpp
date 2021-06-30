@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setSource(QUrl("qrc:///app.qml"));
     view.show();
-    return app.exec();
+    return QGuiApplication::exec();
 
 //![2]
 }
