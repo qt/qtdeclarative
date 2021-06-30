@@ -157,7 +157,7 @@ bool qQmlJSGenerateLoader(const QStringList &compiledFiles, const QString &outpu
         for (int i = 0; i < compiledFiles.count(); ++i) {
             const QString qrcFile = compiledFiles.at(i);
             const QString ns = qQmlJSSymbolNamespaceForPath(qrcFile);
-            stream << "        resourcePathToCachedUnit.insert(QStringLiteral(\"" << qrcFile << "\"), &QmlCacheGeneratedCode::" << ns << "::unit);\n";
+            stream << "    resourcePathToCachedUnit.insert(QStringLiteral(\"" << qrcFile << "\"), &QmlCacheGeneratedCode::" << ns << "::unit);\n";
         }
 
         stream << "    QQmlPrivate::RegisterQmlUnitCacheHook registration;\n";
