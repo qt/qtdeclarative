@@ -115,9 +115,13 @@ private:
         QVector<QPointF> positions;
     };
     QSet<quint32> m_allGlyphIndexesLookup;
+    // m_glyphs holds pointers to the GlyphInfo.indexes and positions arrays, so we need to hold on to them
+    QHash<const QSGDistanceFieldGlyphCache::Texture *, GlyphInfo> m_glyphsInOtherTextures;
 
     uint m_dirtyGeometry: 1;
     uint m_dirtyMaterial: 1;
+
+    static qint64 m_totalAllocation; // all SG glyph vertices and indices; only for qCDebug metrics
 };
 
 QT_END_NAMESPACE

@@ -43,6 +43,10 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcSgText, "qt.scenegraph.text")
+
+qint64 QSGDistanceFieldGlyphNode::m_totalAllocation = 0;
+
 QSGDistanceFieldGlyphNode::QSGDistanceFieldGlyphNode(QSGRenderContext *context)
     : m_glyphNodeType(RootGlyphNode)
     , m_context(context)
@@ -135,6 +139,7 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
     const QVector<quint32> glyphIndexes = m_glyphs.glyphIndexes();
     for (int i = 0; i < glyphIndexes.count(); ++i)
         m_allGlyphIndexesLookup.insert(glyphIndexes.at(i));
+    qCDebug(lcSgText, "inserting %lld glyphs, %lld unique", glyphIndexes.count(), m_allGlyphIndexesLookup.count());
 }
 
 void QSGDistanceFieldGlyphNode::setStyle(QQuickText::TextStyle style)
@@ -198,8 +203,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     QSGGeometry *g = geometry();
 
     Q_ASSERT(g->indexType() == QSGGeometry::UnsignedShortType);
-
-    QHash<const QSGDistanceFieldGlyphCache::Texture *, GlyphInfo> glyphsInOtherTextures;
+    m_glyphsInOtherTextures.clear();
 
     const QVector<quint32> indexes = m_glyphs.glyphIndexes();
     const QVector<QPointF> positions = m_glyphs.positions();
@@ -208,9 +212,12 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
     // The template parameters here are assuming that most strings are short, 64
     // characters or less.
     QVarLengthArray<QSGGeometry::TexturedPoint2D, 256> vp;
-    vp.reserve(indexes.size() * 4);
     QVarLengthArray<ushort, 384> ip;
-    ip.reserve(indexes.size() * 6);
+    const qsizetype maxIndexCount = (std::numeric_limits<quint16>::max() - 1) / 4; // 16383 (see below: 0xFFFF is not allowed)
+    const qsizetype maxVertexCount = maxIndexCount * 4; // 65532
+    const auto likelyGlyphCount = qMin(indexes.size(), maxIndexCount);
+    vp.reserve(likelyGlyphCount * 4);
+    ip.reserve(likelyGlyphCount * 6);
 
     qreal maxTexMargin = m_glyph_cache->distanceFieldRadius();
     qreal fontScale = m_glyph_cache->fontScale(fontPixelSize);
@@ -236,15 +243,20 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
 
         // As we use UNSIGNED_SHORT indexing in the geometry, we overload the
         // "glyphsInOtherTextures" concept as overflow for if there are more
-        // than 65535 vertices to render which would otherwise exceed the
+        // than 65532 vertices to render, which would otherwise exceed the
         // maximum index size. (leave 0xFFFF unused in order not to clash with
-        // primitive restart) This will cause sub-nodes to be recursively
-        // created to handle any number of glyphs.
-        if (m_texture != texture || vp.size() >= 65535) {
-            if (texture->texture) {
-                GlyphInfo &glyphInfo = glyphsInOtherTextures[texture];
+        // primitive restart) This will cause sub-nodes to be
+        // created to handle any number of glyphs. But only the RootGlyphNode
+        // needs to do this classification; from the perspective of a SubGlyphNode,
+        // it's already done, and m_glyphs contains only pointers to ranges of
+        // indices and positions that the RootGlyphNode is storing.
+        if (m_texture != texture || vp.size() >= maxVertexCount) {
+            if (m_glyphNodeType == RootGlyphNode && texture->texture) {
+                GlyphInfo &glyphInfo = m_glyphsInOtherTextures[texture];
                 glyphInfo.indexes.append(glyphIndex);
                 glyphInfo.positions.append(position);
+            } else if (vp.size() >= maxVertexCount && m_glyphNodeType == SubGlyphNode) {
+                break; // out of this loop over indices, because we won't add any more vertices
             }
             continue;
         }
@@ -303,26 +315,40 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
         ip.append(o + 0);
     }
 
-    QHash<const QSGDistanceFieldGlyphCache::Texture *, GlyphInfo>::const_iterator ite = glyphsInOtherTextures.constBegin();
-    while (ite != glyphsInOtherTextures.constEnd()) {
-        QGlyphRun subNodeGlyphRun(m_glyphs);
-        subNodeGlyphRun.setGlyphIndexes(ite->indexes);
-        subNodeGlyphRun.setPositions(ite->positions);
+    int subnodeCount = 0;
+    if (m_glyphNodeType == SubGlyphNode) {
+        Q_ASSERT(m_glyphsInOtherTextures.isEmpty());
+    } else {
+        if (!m_glyphsInOtherTextures.isEmpty())
+            qCDebug(lcSgText, "%lld 'other' textures", m_glyphsInOtherTextures.count());
+        QHash<const QSGDistanceFieldGlyphCache::Texture *, GlyphInfo>::const_iterator ite = m_glyphsInOtherTextures.constBegin();
+        while (ite != m_glyphsInOtherTextures.constEnd()) {
+            QGlyphRun subNodeGlyphRun(m_glyphs);
+            for (int i = 0; i < ite->indexes.count(); i += maxIndexCount) {
+                int len = qMin(maxIndexCount, ite->indexes.count() - i);
+                subNodeGlyphRun.setRawData(ite->indexes.constData() + i, ite->positions.constData() + i, len);
+                qCDebug(lcSgText) << "subNodeGlyphRun has" << len << "positions:"
+                                  << *(ite->positions.constData() + i) << "->" << *(ite->positions.constData() + i + len - 1);
 
-        QSGDistanceFieldGlyphNode *subNode = new QSGDistanceFieldGlyphNode(m_context);
-        subNode->setGlyphNodeType(SubGlyphNode);
-        subNode->setColor(m_color);
-        subNode->setStyle(m_style);
-        subNode->setStyleColor(m_styleColor);
-        subNode->setPreferredAntialiasingMode(m_antialiasingMode);
-        subNode->setGlyphs(m_originalPosition, subNodeGlyphRun);
-        subNode->update();
-        subNode->updateGeometry(); // we have to explicitly call this now as preprocess won't be called before it's rendered
-        appendChildNode(subNode);
-
-        ++ite;
+                QSGDistanceFieldGlyphNode *subNode = new QSGDistanceFieldGlyphNode(m_context);
+                subNode->setGlyphNodeType(SubGlyphNode);
+                subNode->setColor(m_color);
+                subNode->setStyle(m_style);
+                subNode->setStyleColor(m_styleColor);
+                subNode->setPreferredAntialiasingMode(m_antialiasingMode);
+                subNode->setGlyphs(m_originalPosition, subNodeGlyphRun);
+                subNode->update();
+                subNode->updateGeometry(); // we have to explicitly call this now as preprocess won't be called before it's rendered
+                appendChildNode(subNode);
+                ++subnodeCount;
+            }
+            ++ite;
+        }
     }
 
+    m_totalAllocation += vp.size() * sizeof(QSGGeometry::TexturedPoint2D) + ip.size() * sizeof(quint16);
+    qCDebug(lcSgText) << "allocating for" << vp.size() << "vtx (reserved" << likelyGlyphCount * 4 << "):" << vp.size() * sizeof(QSGGeometry::TexturedPoint2D)
+            << "bytes;" << ip.size() << "idx:" << ip.size() * sizeof(quint16) << "bytes; total bytes so far" << m_totalAllocation;
     g->allocate(vp.size(), ip.size());
     memcpy(g->vertexDataAsTexturedPoint2D(), vp.constData(), vp.size() * sizeof(QSGGeometry::TexturedPoint2D));
     memcpy(g->indexDataAsUShort(), ip.constData(), ip.size() * sizeof(quint16));
