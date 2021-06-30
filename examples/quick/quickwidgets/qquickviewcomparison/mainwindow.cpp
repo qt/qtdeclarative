@@ -63,10 +63,10 @@ MainWindow::MainWindow(bool transparency, bool noRenderAlpha)
       m_transparent(transparency),
       m_noRenderAlpha(noRenderAlpha)
 {
-    QVBoxLayout *layout = new QVBoxLayout;
+    auto *layout = new QVBoxLayout;
 
     QGroupBox *groupBox = new QGroupBox(tr("Type"));
-    QVBoxLayout *vbox = new QVBoxLayout;
+    auto *vbox = new QVBoxLayout;
     m_radioView = new QRadioButton(tr("QQuickView in a window container (direct)"));
     m_radioWidget = new QRadioButton(tr("QQuickWidget (indirect through framebuffer objects)"));
     vbox->addWidget(m_radioWidget);
@@ -161,7 +161,7 @@ void MainWindow::updateView()
     QUrl source("qrc:qquickviewcomparison/test.qml");
 
     if (m_state == UseWindow) {
-        QQuickView *quickView = new QQuickView;
+        auto *quickView = new QQuickView;
         // m_transparent is not supported here since many systems have problems with semi-transparent child windows
         quickView->setFormat(m_format);
         quickView->setResizeMode(QQuickView::SizeRootObjectToView);
@@ -171,7 +171,7 @@ void MainWindow::updateView()
         m_currentRootObject = quickView->rootObject();
         switchTo(QWidget::createWindowContainer(quickView));
     } else if (m_state == UseWidget) {
-        QQuickWidget *quickWidget = new QQuickWidget;
+        auto *quickWidget = new QQuickWidget;
         if (m_transparent)
             quickWidget->setClearColor(Qt::transparent);
         quickWidget->setFormat(m_format);

@@ -139,7 +139,7 @@ QSGNode *BezierCurve::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
         node->setGeometry(geometry);
         node->setFlag(QSGNode::OwnsGeometry);
 //! [5] //! [6]
-        QSGFlatColorMaterial *material = new QSGFlatColorMaterial;
+        auto *material = new QSGFlatColorMaterial;
         material->setColor(QColor(255, 0, 0));
         node->setMaterial(material);
         node->setFlag(QSGNode::OwnsMaterial);
