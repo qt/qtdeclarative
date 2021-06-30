@@ -93,8 +93,6 @@ signals:
     void currentIndexChanged();
     void countChanged();
 
-public slots:
-
 private:
     static void collectItemSizeHints(QQuickItem *item, QSizeF *sizeHints);
     bool shouldIgnoreItem(QQuickItem *item) const;
