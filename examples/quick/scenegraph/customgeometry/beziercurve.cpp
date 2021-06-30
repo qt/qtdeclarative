@@ -67,9 +67,7 @@ BezierCurve::BezierCurve(QQuickItem *parent)
 //! [1]
 
 //! [2]
-BezierCurve::~BezierCurve()
-{
-}
+BezierCurve::~BezierCurve() = default;
 //! [2]
 
 //! [3]

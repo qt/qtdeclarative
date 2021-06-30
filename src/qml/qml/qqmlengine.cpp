@@ -823,13 +823,8 @@ void QQmlData::flushPendingBindingImpl(QQmlPropertyIndex index)
                             QQmlPropertyData::DontRemoveBinding);
 }
 
-QQmlData::DeferredData::DeferredData()
-{
-}
-
-QQmlData::DeferredData::~DeferredData()
-{
-}
+QQmlData::DeferredData::DeferredData() = default;
+QQmlData::DeferredData::~DeferredData() = default;
 
 bool QQmlEnginePrivate::baseModulesUninitialized = true;
 void QQmlEnginePrivate::init()
