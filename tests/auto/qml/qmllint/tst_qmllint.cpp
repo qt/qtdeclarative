@@ -137,10 +137,17 @@ void TestQmllint::testUnqualified_data()
     QTest::newRow("FromRootDirect") << QStringLiteral("FromRoot.qml") << QStringLiteral("x: root.unqualified") << 9 << 16; // new property
     QTest::newRow("FromRootAccess") << QStringLiteral("FromRoot.qml") << QStringLiteral("property int check: root.x") << 13 << 33;  // builtin property
     // access injected name from signal
-    QTest::newRow("SignalHandler1") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onDoubleClicked:  function(mouse) {...") << 5 << 21;
-    QTest::newRow("SignalHandler2") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onPositionChanged:  function(mouse) {...") << 10 << 21;
-    QTest::newRow("SignalHandlerShort1") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onClicked:  (mouse) =>  {...") << 8 << 29;
-    QTest::newRow("SignalHandlerShort2") << QStringLiteral("SignalHandler.qml") << QStringLiteral("onPressAndHold:  (mouse) =>  {...") << 12 << 34;
+    QTest::newRow("SignalHandler1")
+            << QStringLiteral("SignalHandler.qml")
+            << QStringLiteral("onDoubleClicked:  function(mouse) {") << 5 << 21;
+    QTest::newRow("SignalHandler2")
+            << QStringLiteral("SignalHandler.qml")
+            << QStringLiteral("onPositionChanged:  function(mouse) {") << 10 << 21;
+    QTest::newRow("SignalHandlerShort1") << QStringLiteral("SignalHandler.qml")
+                                         << QStringLiteral("onClicked:  (mouse) => ") << 8 << 29;
+    QTest::newRow("SignalHandlerShort2")
+            << QStringLiteral("SignalHandler.qml") << QStringLiteral("onPressAndHold:  (mouse) => ")
+            << 12 << 34;
     // access catch identifier outside catch block
     QTest::newRow("CatchStatement") << QStringLiteral("CatchStatement.qml") << QStringLiteral("err") << 6 << 21;
 

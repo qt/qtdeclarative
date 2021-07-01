@@ -409,57 +409,63 @@ void CheckIdentifiers::operator()(
             // root(JS) --> (first element)
             const auto firstElement = root->childScopes()[0];
 
-            QColorOutput &colorOut = m_logger->colorOutput();
+            FixSuggestion suggestion { Log_UnqualifiedAccess, {} };
 
             if (!m_logger->isCategoryDisabled(Log_UnqualifiedAccess) &&
                     (firstElement->hasProperty(memberAccessBase.m_name)
                     || firstElement->hasMethod(memberAccessBase.m_name)
                     || firstElement->hasEnumeration(memberAccessBase.m_name))) {
 
-                colorOut.writePrefixedMessage(
-                            memberAccessBase.m_name
-                            + QLatin1String(" is a member of the root element\n")
+                QQmlJS::SourceLocation fixLocation = location;
+                fixLocation.length = 0;
+
+                suggestion.fixes << FixSuggestion::Fix {
+                    memberAccessBase.m_name + QLatin1String(" is a member of the root element\n")
                             + QLatin1String("      You can qualify the access with its id "
                                             "to avoid this warning:\n"),
-                            QtInfoMsg, QStringLiteral("Note"));
-                IssueLocationWithContext issueLocationWithContext {m_code, location};
-                colorOut.write(issueLocationWithContext.beforeText().toString());
-                colorOut.write(rootId + QLatin1Char('.'), QtDebugMsg);
-                colorOut.write(issueLocationWithContext.issueText().toString());
-                colorOut.write(issueLocationWithContext.afterText() + QLatin1String("\n\n"));
+                    QtInfoMsg, fixLocation, rootId + u"."_qs
+                };
+
+                m_logger->suggestFix(suggestion);
 
                 if (rootId == QLatin1String("<id>")) {
-                    colorOut.writePrefixedMessage(
-                                QLatin1String("You first have to give the root element an id\n"),
-                                QtInfoMsg, QStringLiteral("Note"));
+                    suggestion.fixes << FixSuggestion::Fix {
+                        u"You first have to give the root element an id"_qs,
+                        QtInfoMsg,
+                        QQmlJS::SourceLocation(),
+                        {}
+                    };
                 }
-
-                colorOut.write(QLatin1String("\n\n\n"));
             } else if (jsId.has_value()
                        && jsId->kind == QQmlJSScope::JavaScriptIdentifier::Injected) {
                 const QQmlJSScope::JavaScriptIdentifier id = jsId.value();
-                colorOut.writePrefixedMessage(
-                            memberAccessBase.m_name + QString::fromLatin1(
-                                " is accessible in this scope because "
-                                "you are handling a signal at %1:%2:%3\n")
-                            .arg(m_fileName)
-                            .arg(id.location.startLine).arg(id.location.startColumn),
-                            QtInfoMsg, QStringLiteral("Note"));
-                colorOut.write(QLatin1String("Consider using a function instead\n"));
-                IssueLocationWithContext context {m_code, id.location};
-                colorOut.write(context.beforeText() + QLatin1Char(' '));
+
+                QQmlJS::SourceLocation fixLocation = id.location;
+                fixLocation.length = 0;
 
                 const auto handler = signalHandlers[id.location];
 
-                colorOut.write(QLatin1String(handler.isMultiline ? "function(" : "("), QtInfoMsg);
+                QString fixString = handler.isMultiline ? u" function("_qs : u" ("_qs;
                 const auto parameters = handler.signalParameters;
                 for (int numParams = parameters.size(); numParams > 0; --numParams) {
-                    colorOut.write(parameters.at(parameters.size() - numParams), QtInfoMsg);
+                    fixString += parameters.at(parameters.size() - numParams);
                     if (numParams > 1)
-                        colorOut.write(QLatin1String(", "), QtInfoMsg);
+                        fixString += u", "_qs;
                 }
-                colorOut.write(QLatin1String(handler.isMultiline ? ")" : ") => "), QtInfoMsg);
-                colorOut.write(QLatin1String(" {...\n\n\n"));
+
+                fixString += handler.isMultiline ? u") "_qs : u") => "_qs;
+
+                suggestion.fixes << FixSuggestion::Fix {
+                    memberAccessBase.m_name
+                            + QString::fromLatin1(" is accessible in this scope because "
+                                                  "you are handling a signal at %1:%2:%3\n")
+                                      .arg(m_fileName)
+                                      .arg(id.location.startLine)
+                                      .arg(id.location.startColumn),
+                    QtInfoMsg, fixLocation, fixString
+                };
+
+                m_logger->suggestFix(suggestion);
             }
         }
         const auto childScopes = currentScope->childScopes();

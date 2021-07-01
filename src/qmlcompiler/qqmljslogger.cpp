@@ -137,6 +137,13 @@ void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category, co
         printContext(srcLocation);
 }
 
+void QQmlJSLogger::suggestFix(const FixSuggestion &fix)
+{
+    if (isCategoryDisabled(fix.category))
+        return;
+    printFix(fix);
+}
+
 void QQmlJSLogger::processMessages(const QList<QQmlJS::DiagnosticMessage> &messages, QQmlJSLoggerCategory category)
 {
     if (isCategoryDisabled(category) || messages.isEmpty())
@@ -171,4 +178,31 @@ void QQmlJSLogger::printContext(const QQmlJS::SourceLocation &location)
                            + QString::fromLatin1("\t").repeated(tabCount)
                            + QString::fromLatin1("^").repeated(location.length)
                            + QLatin1Char('\n'));
+}
+
+void QQmlJSLogger::printFix(const FixSuggestion &fix)
+{
+    for (const auto &fixItem : fix.fixes) {
+        m_output.writePrefixedMessage(fixItem.message, fixItem.type);
+
+        if (!fixItem.cutLocation.isValid())
+            continue;
+
+        IssueLocationWithContext issueLocationWithContext { m_code, fixItem.cutLocation };
+
+        if (const QStringView beforeText = issueLocationWithContext.beforeText();
+            !beforeText.isEmpty()) {
+            m_output.write(beforeText);
+        }
+
+        m_output.write(fixItem.replacementString, QtDebugMsg);
+        m_output.write(issueLocationWithContext.afterText() + u'\n');
+
+        int tabCount = issueLocationWithContext.beforeText().count(u'\t');
+        m_output.write(u" "_qs.repeated(
+                               issueLocationWithContext.beforeText().length() - tabCount)
+                       + u"\t"_qs.repeated(tabCount)
+                       + u"^"_qs.repeated(fixItem.replacementString.length())
+                       + u'\n');
+    }
 }

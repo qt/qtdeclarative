@@ -105,6 +105,19 @@ enum QQmlJSLoggerCategory {
     QQmlJSLoggerCategory_Last = Log_Syntax
 };
 
+struct FixSuggestion
+{
+    QQmlJSLoggerCategory category;
+    struct Fix
+    {
+        QString message;
+        QtMsgType type;
+        QQmlJS::SourceLocation cutLocation = QQmlJS::SourceLocation();
+        QString replacementString = QString();
+    };
+    QList<Fix> fixes;
+};
+
 class QQmlJSLogger
 {
     Q_DISABLE_COPY_MOVE(QQmlJSLogger)
@@ -180,6 +193,8 @@ public:
     void log(const QString &message, QQmlJSLoggerCategory category,
              const QQmlJS::SourceLocation& = QQmlJS::SourceLocation(), bool showContext = true, bool showFileName = true);
 
+    void suggestFix(const FixSuggestion &fix);
+
     void processMessages(const QList<QQmlJS::DiagnosticMessage> &messages, QQmlJSLoggerCategory category);
 
     void ignoreWarnings(uint32_t line, const QSet<QQmlJSLoggerCategory> &categories)
@@ -187,10 +202,9 @@ public:
         m_ignoredWarnings[line] = categories;
     }
 
-    QColorOutput &colorOutput() { return m_output; }
-
 private:
     void printContext(const QQmlJS::SourceLocation &location);
+    void printFix(const FixSuggestion &fix);
 
     const QString m_fileName;
     const QString m_code;
