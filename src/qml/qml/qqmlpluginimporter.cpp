@@ -468,7 +468,7 @@ QString QQmlPluginImporter::resolvePlugin(const QString &qmldirPluginPath, const
         }
     }
 
-    qCDebug(lcQmlImport) << "resolvePlugin: Could not resolve plugin"
+    qCDebug(lcQmlImport) << "resolvePlugin" << "Could not resolve plugin"
                          << baseName << "in" << qmldirPath;
 
     return QString();
@@ -593,8 +593,8 @@ QTypeRevision QQmlPluginImporter::importPlugins() {
                                 return QTypeRevision();
                             }
 
-                            qCDebug(lcQmlImport).nospace() << "QQmlImports::importExtension: "
-                                                           << "loaded static plugin " << versionUri;
+                            qCDebug(lcQmlImport)
+                                    << "importExtension" << "loaded static plugin " << versionUri;
 
                             break;
                         }
