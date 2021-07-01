@@ -94,11 +94,13 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
         const FieldMember &access = members.at(i);
 
         if (scope.isNull()) {
-            m_logger->log(
-                        QString::fromLatin1("Type \"%1\" of base \"%2\" not found when accessing member \"%3\"")
-                        .arg(detectedRestrictiveKind)
-                        .arg(detectedRestrictiveName)
-                        .arg(access.m_name), Log_Type, access.m_location);
+            m_logger->logWarning(
+                    QString::fromLatin1(
+                            "Type \"%1\" of base \"%2\" not found when accessing member \"%3\"")
+                            .arg(detectedRestrictiveKind)
+                            .arg(detectedRestrictiveName)
+                            .arg(access.m_name),
+                    Log_Type, access.m_location);
             return;
         }
 
@@ -108,11 +110,12 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
                 continue;
             }
 
-            m_logger->log(
-                        QLatin1String("\"%1\" is a %2. You cannot access \"%3\" it from here")
-                        .arg(detectedRestrictiveName)
-                        .arg(detectedRestrictiveKind)
-                        .arg(access.m_name), Log_Type, access.m_location);
+            m_logger->logWarning(
+                    QLatin1String("\"%1\" is a %2. You cannot access \"%3\" it from here")
+                            .arg(detectedRestrictiveName)
+                            .arg(detectedRestrictiveKind)
+                            .arg(access.m_name),
+                    Log_Type, access.m_location);
             return;
         }
 
@@ -239,11 +242,11 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
             }
         }
 
-        m_logger->log(QLatin1String(
-                          "Property \"%1\" not found on type \"%2\"")
-                      .arg(access.m_name)
-                      .arg(scope->internalName().isEmpty()
-                           ? scope->baseTypeName() : scope->internalName()), Log_Type, access.m_location);
+        m_logger->logWarning(QLatin1String("Property \"%1\" not found on type \"%2\"")
+                                     .arg(access.m_name)
+                                     .arg(scope->internalName().isEmpty() ? scope->baseTypeName()
+                                                                          : scope->internalName()),
+                             Log_Type, access.m_location);
         return;
     }
 }
@@ -270,7 +273,7 @@ void CheckIdentifiers::operator()(
             if (jsId.has_value() && jsId->kind != QQmlJSScope::JavaScriptIdentifier::Injected) {
                 if (memberAccessBase.m_location.end() < jsId->location.begin()) {
                     // TODO: Is there a more fitting category?
-                    m_logger->log(
+                    m_logger->logWarning(
                             QStringLiteral("Variable \"%1\" is used here before its declaration. "
                                            "The declaration is at %4:%5.")
                                     .arg(memberAccessBase.m_name)
@@ -325,7 +328,7 @@ void CheckIdentifiers::operator()(
                 if (!deprecation.reason.isEmpty())
                     message.append(QStringLiteral(" (Reason: %1)").arg(deprecation.reason));
 
-                m_logger->log(message, Log_Deprecation, memberAccessBase.m_location);
+                m_logger->logWarning(message, Log_Deprecation, memberAccessBase.m_location);
                 continue;
             }
 
@@ -341,7 +344,7 @@ void CheckIdentifiers::operator()(
                         if (!deprecation.reason.isEmpty())
                             message.append(QStringLiteral(" (Reason: %1)").arg(deprecation.reason));
 
-                        m_logger->log(message, Log_Deprecation, memberAccessBase.m_location);
+                        m_logger->logWarning(message, Log_Deprecation, memberAccessBase.m_location);
                     }
                 }
 
@@ -352,9 +355,9 @@ void CheckIdentifiers::operator()(
                 if (binding.hasValue()) {
                     checkMemberAccess(memberAccessChain, binding.value(), &property);
                 } else if (!property.type()) {
-                    m_logger->log(QString::fromLatin1(
-                                      "Type of property \"%2\" not found")
-                                  .arg(memberAccessBase.m_name), Log_Type, memberAccessBase.m_location);
+                    m_logger->logWarning(QString::fromLatin1("Type of property \"%2\" not found")
+                                                 .arg(memberAccessBase.m_name),
+                                         Log_Type, memberAccessBase.m_location);
                 } else {
                     checkMemberAccess(memberAccessChain, property.type(), &property);
                 }
@@ -397,24 +400,21 @@ void CheckIdentifiers::operator()(
             const auto location = memberAccessBase.m_location;
 
             if (baseIsPrefixed) {
-                m_logger->log(
-                            QLatin1String("Type not found in namespace"),
-                            Log_Type, location);
+                m_logger->logWarning(QLatin1String("Type not found in namespace"), Log_Type,
+                                     location);
             } else {
-                m_logger->log(
-                            QLatin1String("Unqualified access"),
-                            Log_UnqualifiedAccess, location);
+                m_logger->logWarning(QLatin1String("Unqualified access"), Log_UnqualifiedAccess,
+                                     location);
             }
 
             // root(JS) --> (first element)
             const auto firstElement = root->childScopes()[0];
 
-            FixSuggestion suggestion { Log_UnqualifiedAccess, {} };
+            FixSuggestion suggestion { Log_UnqualifiedAccess, QtWarningMsg, {} };
 
-            if (!m_logger->isCategoryDisabled(Log_UnqualifiedAccess) &&
-                    (firstElement->hasProperty(memberAccessBase.m_name)
-                    || firstElement->hasMethod(memberAccessBase.m_name)
-                    || firstElement->hasEnumeration(memberAccessBase.m_name))) {
+            if ((firstElement->hasProperty(memberAccessBase.m_name)
+                 || firstElement->hasMethod(memberAccessBase.m_name)
+                 || firstElement->hasEnumeration(memberAccessBase.m_name))) {
 
                 QQmlJS::SourceLocation fixLocation = location;
                 fixLocation.length = 0;

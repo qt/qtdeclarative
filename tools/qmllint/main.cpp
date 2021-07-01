@@ -172,7 +172,7 @@ static bool lint_file(const QString &filename, const bool silent, QJsonArray *js
                                    engine.comments(), filename,      silent || json };
 
             for (auto it = options.cbegin(); it != options.cend(); ++it) {
-                v.logger().setCategoryDisabled(it.value().m_category, it.value().m_disabled);
+                v.logger().setCategoryError(it.value().m_category, it.value().m_error);
                 v.logger().setCategoryLevel(it.value().m_category, it.value().m_level);
             }
 
@@ -304,7 +304,6 @@ All warnings can be set to three levels:
                 const QString value = parser.isSet(key) ? parser.value(key)
                                                         : settings.value(settingsName).toString();
                 auto &option = it.value();
-
                 if (!option.setLevel(value)) {
                     qWarning() << "Invalid logging level" << value << "provided for" << it.key()
                                << "(allowed are: disable, info, warning)";

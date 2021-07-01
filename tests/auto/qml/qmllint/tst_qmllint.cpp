@@ -869,7 +869,7 @@ void TestQmllint::settingsFile()
     QVERIFY(runQmllint("settings/unqualifiedSilent/unqualified.qml", true, QStringList(), false)
                     .isEmpty());
     QVERIFY(runQmllint("settings/unusedImportWarning/unused.qml", false, QStringList(), false)
-                    .contains(QStringLiteral("Warning: %1:2:1: Unused import at %1:2:1")
+                    .contains(QStringLiteral("Info: %1:2:1: Unused import at %1:2:1")
                                       .arg(testFile("settings/unusedImportWarning/unused.qml"))));
 }
 

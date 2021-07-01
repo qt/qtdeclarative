@@ -183,8 +183,9 @@ void FindWarningVisitor::parseComments(const QList<QQmlJS::SourceLocation> &comm
             if (option != m_logger.options().constEnd())
                 categories << option->m_category;
             else
-                m_logger.log(u"qmllint directive on unknown category \"%1\""_qs.arg(category),
-                             Log_Syntax, loc);
+                m_logger.logWarning(
+                        u"qmllint directive on unknown category \"%1\""_qs.arg(category),
+                        Log_Syntax, loc);
         }
 
         if (categories.isEmpty()) {
@@ -211,8 +212,8 @@ void FindWarningVisitor::parseComments(const QList<QQmlJS::SourceLocation> &comm
         } else if (command == u"enable"_qs) {
             enablesPerLine[loc.startLine + 1] |= categories;
         } else {
-            m_logger.log(u"Invalid qmllint directive \"%1\" provided"_qs.arg(command), Log_Syntax,
-                         loc);
+            m_logger.logWarning(u"Invalid qmllint directive \"%1\" provided"_qs.arg(command),
+                                Log_Syntax, loc);
         }
     }
 

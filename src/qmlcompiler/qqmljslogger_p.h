@@ -108,6 +108,8 @@ enum QQmlJSLoggerCategory {
 struct FixSuggestion
 {
     QQmlJSLoggerCategory category;
+    QtMsgType level;
+
     struct Fix
     {
         QString message;
@@ -126,30 +128,30 @@ public:
     {
         Option() = default;
         Option(QQmlJSLoggerCategory category, QString settingsName, const QString &description,
-               QtMsgType level, bool disabled = false)
+               QtMsgType level, bool error = true)
             : m_category(category),
               m_settingsName(settingsName),
               m_description(description),
               m_level(level),
-              m_disabled(disabled)
+              m_error(error)
         {
         }
         QQmlJSLoggerCategory m_category;
         QString m_settingsName;
         QString m_description;
         QtMsgType m_level;
-        bool m_disabled;
+        bool m_error;
 
         QString levelToString() const {
-            if (m_disabled)
-                return QStringLiteral("silent");
             switch (m_level) {
             case QtInfoMsg:
-                return QStringLiteral("info");
+                return m_error ? QStringLiteral("warning") : QStringLiteral("info");
             case QtWarningMsg:
-                return QStringLiteral("warning");
+                // TODO: This case doesn't cleanly map onto any warning level yet
+                // this has to be handled in the option overhaul
+                return m_error ? QStringLiteral("warning") : QStringLiteral("info");
             case QtCriticalMsg:
-                return QStringLiteral("error");
+                return QStringLiteral("disable");
             default:
                 Q_UNREACHABLE();
                 break;
@@ -158,11 +160,14 @@ public:
 
         bool setLevel(const QString &level) {
             if (level == QStringLiteral("disable")) {
-                m_disabled = true;
+                m_level = QtCriticalMsg;
+                m_error = false;
             } else if (level == QStringLiteral("info")) {
                 m_level = QtInfoMsg;
+                m_error = false;
             } else if (level == QStringLiteral("warning")) {
-                m_level = QtWarningMsg;
+                m_level = QtInfoMsg;
+                m_error = true;
             } else {
                 return false;
             }
@@ -186,16 +191,37 @@ public:
     QtMsgType categoryLevel(QQmlJSLoggerCategory category) const { return m_categoryLevels[category]; }
     void setCategoryLevel(QQmlJSLoggerCategory category, QtMsgType Level) { m_categoryLevels[category] = Level; }
 
-    bool isCategoryDisabled(QQmlJSLoggerCategory category) const { return m_categoryDisabled[category]; }
-    void setCategoryDisabled(QQmlJSLoggerCategory category, bool disabled) { m_categoryDisabled[category] = disabled; }
+    bool isCategoryError(QQmlJSLoggerCategory category) const { return m_categoryError[category]; }
+    void setCategoryError(QQmlJSLoggerCategory category, bool error)
+    {
+        m_categoryError[category] = error;
+    }
 
+    void logInfo(const QString &message, QQmlJSLoggerCategory category,
+                 const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation(),
+                 bool showContext = true, bool showFileName = true)
+    {
+        log(message, category, srcLocation, QtInfoMsg, showContext, showFileName);
+    }
 
-    void log(const QString &message, QQmlJSLoggerCategory category,
-             const QQmlJS::SourceLocation& = QQmlJS::SourceLocation(), bool showContext = true, bool showFileName = true);
+    void logWarning(const QString &message, QQmlJSLoggerCategory category,
+                    const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation(),
+                    bool showContext = true, bool showFileName = true)
+    {
+        log(message, category, srcLocation, QtWarningMsg, showContext, showFileName);
+    }
+
+    void logCritical(const QString &message, QQmlJSLoggerCategory category,
+                     const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation(),
+                     bool showContext = true, bool showFileName = true)
+    {
+        log(message, category, srcLocation, QtCriticalMsg, showContext, showFileName);
+    }
 
     void suggestFix(const FixSuggestion &fix);
 
-    void processMessages(const QList<QQmlJS::DiagnosticMessage> &messages, QQmlJSLoggerCategory category);
+    void processMessages(const QList<QQmlJS::DiagnosticMessage> &messages, QtMsgType level,
+                         QQmlJSLoggerCategory category);
 
     void ignoreWarnings(uint32_t line, const QSet<QQmlJSLoggerCategory> &categories)
     {
@@ -206,13 +232,16 @@ private:
     void printContext(const QQmlJS::SourceLocation &location);
     void printFix(const FixSuggestion &fix);
 
+    void log(const QString &message, QQmlJSLoggerCategory category, const QQmlJS::SourceLocation &,
+             QtMsgType type, bool showContext, bool showFileName);
+
     const QString m_fileName;
     const QString m_code;
 
     QColorOutput m_output;
 
     QtMsgType m_categoryLevels[QQmlJSLoggerCategory_Last + 1] = {};
-    bool m_categoryDisabled[QQmlJSLoggerCategory_Last + 1] = {};
+    bool m_categoryError[QQmlJSLoggerCategory_Last + 1] = {};
 
     QList<QQmlJS::DiagnosticMessage> m_infos;
     QList<QQmlJS::DiagnosticMessage> m_warnings;
