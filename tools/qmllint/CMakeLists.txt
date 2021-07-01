@@ -17,7 +17,6 @@ qt_internal_add_tool(${target_name}
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlCompilerPrivate
-        Qt::QmlDevToolsPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmllint.pro:<TRUE>:

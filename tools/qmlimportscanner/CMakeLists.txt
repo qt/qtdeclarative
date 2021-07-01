@@ -16,7 +16,7 @@ qt_internal_add_tool(${target_name}
         QT_NO_CAST_TO_ASCII
     PUBLIC_LIBRARIES
         Qt::QmlCompilerPrivate
-        Qt::QmlDevToolsPrivate
+        Qt::QmlPrivate
 )
 
 # special case begin

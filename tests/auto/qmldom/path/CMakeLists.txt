@@ -10,6 +10,5 @@ qt_internal_add_test(tst_qmldompath
     DEFINES
         QT_DEPRECATED_WARNINGS
     PUBLIC_LIBRARIES
-        Qt::QmlDevToolsPrivate
         Qt::QmlDomPrivate
 )

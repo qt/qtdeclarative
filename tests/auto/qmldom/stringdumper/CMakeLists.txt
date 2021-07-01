@@ -12,6 +12,5 @@ qt_internal_add_test(tst_qmldomstringdumper
     INCLUDE_DIRECTORIES
         ../../../../src/qmldom
     PUBLIC_LIBRARIES
-        Qt::QmlDevToolsPrivate
         Qt::QmlDomPrivate
 )

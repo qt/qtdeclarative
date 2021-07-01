@@ -16,7 +16,6 @@ qt_internal_add_tool(${target_name}
         QT_NO_CAST_TO_ASCII
     PUBLIC_LIBRARIES
         Qt::QmlCompilerPrivate
-        Qt::QmlDevToolsPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmlcachegen.pro:<TRUE>:

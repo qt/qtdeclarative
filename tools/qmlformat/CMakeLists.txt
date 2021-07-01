@@ -12,7 +12,6 @@ qt_internal_add_tool(${target_name}
         qmlformat.cpp
     PUBLIC_LIBRARIES
         Qt::Core
-        Qt::QmlDevToolsPrivate
         Qt::QmlDomPrivate
 )
 

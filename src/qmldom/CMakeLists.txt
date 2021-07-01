@@ -36,7 +36,7 @@ qt_internal_add_module(QmlDomPrivate
         QMLDOM_LIBRARY
     PUBLIC_LIBRARIES
         Qt::CorePrivate
-        Qt::QmlDevToolsPrivate
+        Qt::QmlPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmldom.pro:<TRUE>:

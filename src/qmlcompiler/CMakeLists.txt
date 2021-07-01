@@ -28,7 +28,7 @@ qt_internal_add_module(QmlCompilerPrivate
         qqmljsregistercontent.cpp qqmljsregistercontent_p.h
     PUBLIC_LIBRARIES
         Qt::CorePrivate
-        Qt::QmlDevToolsPrivate
+        Qt::QmlPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qmlcompiler.pro:<TRUE>:
