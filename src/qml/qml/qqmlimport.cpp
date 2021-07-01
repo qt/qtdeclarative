@@ -259,14 +259,6 @@ public:
                                              const QString &url, QTypeRevision version,
                                              QV4::CompiledData::Import::ImportType type,
                                              QList<QQmlError> *errors, uint flags);
-private:
-    QTypeRevision importExtensionPlugin(
-            const QString &uri, QTypeRevision version, QQmlImportDatabase *database,
-            const QQmlTypeLoaderQmldirContent &qmldir, QList<QQmlError> *errors);
-
-    QTypeRevision importMultiplePlugins(
-            const QString &uri, QTypeRevision version, QQmlImportDatabase *database,
-            const QQmlTypeLoaderQmldirContent &qmldir, QList<QQmlError> *errors);
 };
 
 /*!
