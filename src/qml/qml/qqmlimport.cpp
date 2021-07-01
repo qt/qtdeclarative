@@ -68,7 +68,34 @@
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlImportTrace, QML_IMPORT_TRACE)
-Q_LOGGING_CATEGORY(lcQmlImport, "qt.qml.import", qmlImportTrace() ? QtDebugMsg : QtWarningMsg)
+
+class QmlImportCategoryHolder
+{
+    Q_DISABLE_COPY_MOVE(QmlImportCategoryHolder);
+public:
+
+    QmlImportCategoryHolder() : m_category("qt.qml.import")
+    {
+        // We have to explicitly setEnabled() here because for categories that start with
+        // "qt." it won't accept QtDebugMsg as argument. Debug messages are off by default
+        // for all Qt logging categories.
+        if (qmlImportTrace())
+            m_category.setEnabled(QtDebugMsg, true);
+    }
+
+    ~QmlImportCategoryHolder() = default;
+
+    const QLoggingCategory &category() const { return m_category; }
+
+private:
+    QLoggingCategory m_category;
+};
+
+const QLoggingCategory &lcQmlImport()
+{
+    static const QmlImportCategoryHolder holder;
+    return holder.category();
+}
 
 DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)
 
@@ -557,9 +584,9 @@ bool QQmlImports::resolveType(const QHashedStringRef &type,
     if (type_return) {
         if (d->resolveType(type, version_return, type_return, errors, registrationType,
                            typeRecursionDetected)) {
-            if (qmlImportTrace()) {
-#define RESOLVE_TYPE_DEBUG qDebug().nospace() << "QQmlImports(" << qPrintable(baseUrl().toString()) \
-                                              << ')' << "::resolveType: " << type.toString() << " => "
+            if (lcQmlImport().isDebugEnabled()) {
+#define RESOLVE_TYPE_DEBUG qCDebug(lcQmlImport) \
+                << "resolveType:" << qPrintable(baseUrl().toString()) << type.toString() << " => "
 
                 if (type_return && type_return->isValid()) {
                     if (type_return->isCompositeSingleton())
@@ -1061,9 +1088,8 @@ QTypeRevision QQmlImportsPrivate::importExtension(
 {
     Q_ASSERT(qmldir->hasContent());
 
-    qCDebug(lcQmlImport).nospace()
-            << "QQmlImports(" << qPrintable(base) << ")::importExtension: "
-            << "loaded " << qmldir->qmldirLocation();
+    qCDebug(lcQmlImport)
+            << "importExtension:" << qPrintable(base) << "loaded" << qmldir->qmldirLocation();
 
     if (designerSupportRequired && !qmldir->designerSupported()) {
         if (errors) {
@@ -1523,8 +1549,7 @@ QTypeRevision QQmlImports::addImplicitImport(QQmlImportDatabase *importDb, QList
 {
     Q_ASSERT(errors);
 
-    qCDebug(lcQmlImport).nospace() << "QQmlImports(" << qPrintable(baseUrl().toString())
-                                   << ")::addImplicitImport";
+    qCDebug(lcQmlImport) << "addImplicitImport:" << qPrintable(baseUrl().toString());
 
     uint flags = ImportImplicit | (!isLocal(baseUrl()) ? ImportIncomplete : 0);
     return d->addFileImport(QLatin1String("."), QString(), QTypeRevision(), flags,
@@ -1574,9 +1599,9 @@ QTypeRevision QQmlImports::addFileImport(
     Q_ASSERT(importDb);
     Q_ASSERT(errors);
 
-    qCDebug(lcQmlImport).nospace()
-            << "QQmlImports(" << qPrintable(baseUrl().toString()) << ')' << "::addFileImport: "
-            << uri << ' ' << version << " as " << prefix;
+    qCDebug(lcQmlImport)
+            << "addFileImport:" << qPrintable(baseUrl().toString())
+            << uri << version << "as" << prefix;
 
     return d->addFileImport(uri, prefix, version, flags, importDb, errors);
 }
@@ -1589,9 +1614,9 @@ QTypeRevision QQmlImports::addLibraryImport(
     Q_ASSERT(importDb);
     Q_ASSERT(errors);
 
-    qCDebug(lcQmlImport).nospace()
-            << "QQmlImports(" << qPrintable(baseUrl().toString()) << ')' << "::addLibraryImport: "
-            << uri << ' ' << version << " as " << prefix;
+    qCDebug(lcQmlImport)
+            << "addLibraryImport:" << qPrintable(baseUrl().toString())
+            << uri << version << "as" << prefix;
 
     return d->addLibraryImport(uri, prefix, version, qmldirIdentifier, qmldirUrl, flags,
                                importDb, errors);
@@ -1604,9 +1629,9 @@ QTypeRevision QQmlImports::updateQmldirContent(
     Q_ASSERT(importDb);
     Q_ASSERT(errors);
 
-    qDebug(lcQmlImport).nospace()
-            << "QQmlImports(" << qPrintable(baseUrl().toString()) << ')' << "::updateQmldirContent: "
-            << uri << " to " << qmldirUrl << " as " << prefix;
+    qDebug(lcQmlImport)
+            << "updateQmldirContent:" << qPrintable(baseUrl().toString())
+            << uri << "to" << qmldirUrl << "as" << prefix;
 
     return d->updateQmldirContent(uri, prefix, qmldirIdentifier, qmldirUrl, importDb, errors);
 }
@@ -1718,7 +1743,7 @@ QStringList QQmlImportDatabase::pluginPathList() const
 */
 void QQmlImportDatabase::setPluginPathList(const QStringList &paths)
 {
-    qCDebug(lcQmlImport).nospace() << "QQmlImportDatabase::setPluginPathList: " << paths;
+    qCDebug(lcQmlImport) << "setPluginPathList:" << paths;
     filePluginPath = paths;
 }
 
@@ -1727,7 +1752,7 @@ void QQmlImportDatabase::setPluginPathList(const QStringList &paths)
 */
 void QQmlImportDatabase::addPluginPath(const QString& path)
 {
-    qCDebug(lcQmlImport).nospace() << "QQmlImportDatabase::addPluginPath: " << path;
+    qCDebug(lcQmlImport) << "addPluginPath:" << path;
 
     QUrl url = QUrl(path);
     if (url.isRelative() || url.scheme() == QLatin1String("file")
@@ -1749,8 +1774,7 @@ QString QQmlImportDatabase::absoluteFilePath(const QString &path) const
 */
 void QQmlImportDatabase::addImportPath(const QString& path)
 {
-    if (qmlImportTrace())
-        qDebug().nospace() << "QQmlImportDatabase::addImportPath: " << path;
+    qCDebug(lcQmlImport) << "addImportPath:" << path;
 
     if (path.isEmpty())
         return;
@@ -1805,8 +1829,7 @@ QStringList QQmlImportDatabase::importPathList(PathType type) const
 */
 void QQmlImportDatabase::setImportPathList(const QStringList &paths)
 {
-    if (qmlImportTrace())
-        qDebug().nospace() << "QQmlImportDatabase::setImportPathList: " << paths;
+    qCDebug(lcQmlImport) << "setImportPathList:" << paths;
 
     fileImportPath.clear();
     for (auto it = paths.crbegin(); it != paths.crend(); ++it)
