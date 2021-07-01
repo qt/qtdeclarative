@@ -51,13 +51,15 @@
 // We mean it.
 //
 
+#include <private/qtqmlcompilerglobal_p.h>
+
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qversionnumber.h>
 
 QT_BEGIN_NAMESPACE
 
-QStringList qQmlResolveImportPaths(QStringView uri, const QStringList &basePaths,
+Q_QMLCOMPILER_PRIVATE_EXPORT QStringList qQmlResolveImportPaths(QStringView uri, const QStringList &basePaths,
                                    QTypeRevision version);
 
 QT_END_NAMESPACE
