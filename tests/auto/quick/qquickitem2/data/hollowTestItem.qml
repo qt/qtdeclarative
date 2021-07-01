@@ -31,7 +31,6 @@ Rectangle {
                 anchors.fill: parent
                 objectName: "hollowItem"
                 holeRadius: 50
-                circle: circleShapeTest
             }
         }
     }
