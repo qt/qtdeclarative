@@ -313,7 +313,7 @@ void tst_HoverHandler::movingItemWithHoverHandler()
     paddle->setX(100);
     QTRY_COMPARE(paddleHH->isHovered(), false);
 
-    paddle->setX(p.x());
+    paddle->setX(p.x() - paddle->width() / 2);
     QTRY_COMPARE(paddleHH->isHovered(), true);
 
     paddle->setX(540);
