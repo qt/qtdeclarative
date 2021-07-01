@@ -126,16 +126,11 @@ void QQuickDesignerSupportProperties::getPropertyCache(QObject *object, QQmlEngi
     QQmlEnginePrivate::get(engine)->cache(object->metaObject());
 }
 
-QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::propertyNameListForWritableProperties(QObject *object,
+static QQuickDesignerSupport::PropertyNameList propertyNameListForWritableProperties(QObject *object,
                                                        const QQuickDesignerSupport::PropertyName &baseName,
                                                        QObjectList *inspectedObjects)
 {
     QQuickDesignerSupport::PropertyNameList propertyNameList;
-
-    QObjectList localObjectList;
-
-    if (inspectedObjects == nullptr)
-        inspectedObjects = &localObjectList;
 
     if (!inspectedObjects->contains(object))
         inspectedObjects->append(object);
@@ -167,6 +162,12 @@ QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::propert
     }
 
     return propertyNameList;
+}
+
+QQuickDesignerSupport::PropertyNameList QQuickDesignerSupportProperties::propertyNameListForWritableProperties(QObject *object)
+{
+    QObjectList localObjectList;
+    return ::propertyNameListForWritableProperties(object, {}, &localObjectList);
 }
 
 bool QQuickDesignerSupportProperties::isPropertyBlackListed(const QQuickDesignerSupport::PropertyName &propertyName)
