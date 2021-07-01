@@ -410,20 +410,13 @@ const QPalette *QQuickStylePrivate::readPalette(const QSharedPointer<QSettings> 
 }
 #endif // QT_CONFIG(settings)
 
-static bool qt_is_dark_system_theme()
-{
-    if (const QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme()) {
-        if (const QPalette *systemPalette = theme->palette(QPlatformTheme::SystemPalette)) {
-            const QColor &textColor = systemPalette->color(QPalette::WindowText);
-            return textColor.red() > 128 && textColor.blue() > 128 && textColor.green() > 128;
-        }
-    }
-    return false;
-}
-
 bool QQuickStylePrivate::isDarkSystemTheme()
 {
-    static bool dark = qt_is_dark_system_theme();
+    const static bool dark = [](){
+        if (const QPlatformTheme *theme = QGuiApplicationPrivate::platformTheme())
+            return theme->appearance() == QPlatformTheme::Appearance::Dark;
+        return false;
+    }();
     return dark;
 }
 
