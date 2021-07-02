@@ -51,30 +51,18 @@ const QString &QQmlQmldirData::content() const
     return m_content;
 }
 
-QQmlTypeLoader::Blob::PendingImportPtr QQmlQmldirData::import(QQmlTypeLoader::Blob *blob) const
+QV4::CompiledData::Location QQmlQmldirData::importLocation(QQmlTypeLoader::Blob *blob) const
 {
-    auto it = m_imports.find(blob);
-    if (it == m_imports.end())
-        return nullptr;
-    return *it;
+    auto it = m_imports.constFind(blob);
+    if (it == m_imports.constEnd())
+        return QV4::CompiledData::Location();
+    return it->import->location;
 }
 
-void QQmlQmldirData::setImport(QQmlTypeLoader::Blob *blob, QQmlTypeLoader::Blob::PendingImportPtr import)
+void QQmlQmldirData::setPriority(QQmlTypeLoader::Blob *blob,
+                                 QQmlTypeLoader::Blob::PendingImportPtr import, int priority)
 {
-    m_imports[blob] = std::move(import);
-}
-
-int QQmlQmldirData::priority(QQmlTypeLoader::Blob *blob) const
-{
-    QHash<QQmlTypeLoader::Blob *, int>::const_iterator it = m_priorities.find(blob);
-    if (it == m_priorities.end())
-        return 0;
-    return *it;
-}
-
-void QQmlQmldirData::setPriority(QQmlTypeLoader::Blob *blob, int priority)
-{
-    m_priorities[blob] = priority;
+    m_imports.insert(blob, { import, priority });
 }
 
 void QQmlQmldirData::dataReceived(const SourceCodeData &data)
