@@ -1559,18 +1559,37 @@ public:
     int hoverEnterCount;
     int hoverMoveCount;
     int hoverLeaveCount;
+    QPoint hoverPosition;
+    QPoint hoverScenePosition;
+    QPoint hoverGlobalPosition;
+    QPoint hoverLastGlobalPosition;
 protected:
-    virtual void hoverEnterEvent(QHoverEvent *event) {
+    void hoverEnterEvent(QHoverEvent *event) override {
+        qCDebug(lcTests) << static_cast<QSinglePointEvent *>(event) << event->position() << event->scenePosition() << event->globalPosition();
         event->accept();
         ++hoverEnterCount;
+        hoverPosition = event->position().toPoint();
+        hoverScenePosition = event->scenePosition().toPoint();
+        hoverGlobalPosition = event->globalPosition().toPoint();
+        hoverLastGlobalPosition = event->points().first().globalLastPosition().toPoint();
     }
-    virtual void hoverMoveEvent(QHoverEvent *event) {
+    void hoverMoveEvent(QHoverEvent *event) override {
+        qCDebug(lcTests) << static_cast<QSinglePointEvent *>(event) << event->position() << event->scenePosition() << event->globalPosition();
         event->accept();
         ++hoverMoveCount;
+        hoverPosition = event->position().toPoint();
+        hoverScenePosition = event->scenePosition().toPoint();
+        hoverGlobalPosition = event->globalPosition().toPoint();
+        hoverLastGlobalPosition = event->points().first().globalLastPosition().toPoint();
     }
-    virtual void hoverLeaveEvent(QHoverEvent *event) {
+    void hoverLeaveEvent(QHoverEvent *event) override {
+        qCDebug(lcTests) << static_cast<QSinglePointEvent *>(event) << event->position() << event->scenePosition() << event->globalPosition();
         event->accept();
         ++hoverLeaveCount;
+        hoverPosition = event->position().toPoint();
+        hoverScenePosition = event->scenePosition().toPoint();
+        hoverGlobalPosition = event->globalPosition().toPoint();
+        hoverLastGlobalPosition = event->points().first().globalLastPosition().toPoint();
     }
 };
 
@@ -1620,13 +1639,28 @@ void tst_qquickitem::hoverEvent()
     QTest::mouseMove(window, outside);
     item->resetCounters();
 
-    // Enter, then move twice inside, then leave.
-    QTest::mouseMove(window, inside);
-    QTest::mouseMove(window, anotherInside);
-    QTest::mouseMove(window, inside);
-    QTest::mouseMove(window, outside);
+    auto checkPositions = [=](QPoint pt) {
+        QCOMPARE(item->hoverPosition, pt);
+        QCOMPARE(item->hoverScenePosition, item->mapToScene(pt).toPoint());
+        QCOMPARE(item->hoverGlobalPosition, item->mapToGlobal(pt).toPoint());
+        QVERIFY(!item->hoverLastGlobalPosition.isNull());
+    };
 
+    // Enter, then move twice inside, then leave.
     const bool shouldReceiveHoverEvents = visible && acceptHoverEvents;
+    QTest::mouseMove(window, inside);
+    if (shouldReceiveHoverEvents)
+        checkPositions(inside);
+    QTest::mouseMove(window, anotherInside);
+    if (shouldReceiveHoverEvents)
+        checkPositions(anotherInside);
+    QTest::mouseMove(window, inside);
+    if (shouldReceiveHoverEvents)
+        checkPositions(inside);
+    QTest::mouseMove(window, outside);
+    if (shouldReceiveHoverEvents)
+        checkPositions(outside);
+
     if (shouldReceiveHoverEvents) {
         QCOMPARE(item->hoverEnterCount, 1);
         QCOMPARE(item->hoverMoveCount, 2);

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -186,5 +186,15 @@ Rectangle {
             sourceComponent: buttonsAndStuff
             anchors.fill: parent
         }
+    }
+
+    HoverHandler {
+        id: rootHover
+    }
+
+    Text {
+        anchors.right: parent.right
+        color: "cyan"
+        text: "scene " + rootHover.point.scenePosition.x.toFixed(1) + ", " + rootHover.point.scenePosition.y.toFixed(1)
     }
 }
