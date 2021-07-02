@@ -286,8 +286,11 @@ QQmlImportDatabase::LocalQmldirResult QQmlImportDatabase::locateLocalQmldir(
             QmldirCache *cache = cacheHead;
             while (cache) {
                 if (cache->version == version) {
-                    if (cache->qmldirFilePath.isEmpty())
-                        return QmldirNotFound;
+                    if (cache->qmldirFilePath.isEmpty()) {
+                        return cache->qmldirPathUrl.isEmpty()
+                                ? QmldirNotFound
+                                : QmldirInterceptedToRemote;
+                    }
                     if (callback(cache->qmldirFilePath, cache->qmldirPathUrl))
                         return QmldirFound;
                     result = QmldirRejected;
@@ -361,10 +364,15 @@ QQmlImportDatabase::LocalQmldirResult QQmlImportDatabase::locateLocalQmldir(
     }
 
     // Nothing found? Add an empty cache entry to signal that for further requests.
-    if (result == QmldirNotFound) {
+    if (result == QmldirNotFound || result == QmldirInterceptedToRemote) {
         QmldirCache *cache = new QmldirCache;
         cache->version = version;
         cache->next = cacheHead;
+        if (result == QmldirInterceptedToRemote) {
+            // The actual value doesn't matter as long as it's not empty.
+            // We only use it to discern QmldirInterceptedToRemote from QmldirNotFound above.
+            cache->qmldirPathUrl = QStringLiteral("intercepted");
+        }
         qmldirCache.insert(uri, cache);
     }
 
