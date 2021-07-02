@@ -2127,7 +2127,7 @@ TestCase {
         // Move the mouse over the handle.
         var handles = findHandles(control)
         var targetHandle = handles[0]
-        // Test fails if we don't do two moves for some reason...
+        // Test fails if we don't do two moves for some reason... QTBUG-94968
         mouseMove(targetHandle, targetHandle.width / 2, targetHandle.height / 2)
         mouseMove(targetHandle, targetHandle.width / 2, targetHandle.height / 2)
         verify(targetHandle.SplitHandle.hovered)
@@ -2137,6 +2137,7 @@ TestCase {
         verify(!targetHandle.SplitHandle.hovered)
 
         // Move the mouse back over the handle.
+        mouseMove(targetHandle, targetHandle.width / 2, targetHandle.height / 2)
         mouseMove(targetHandle, targetHandle.width / 2, targetHandle.height / 2)
         verify(targetHandle.SplitHandle.hovered)
 
