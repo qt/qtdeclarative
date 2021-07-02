@@ -600,6 +600,8 @@ TestCase {
     Component {
         id: actionButton
         AbstractButton {
+            width: 100
+            height: 50
             action: Action {
                 text: "Default"
                 icon.name: checked ? "checked" : "unchecked"
@@ -681,6 +683,8 @@ TestCase {
     Component {
         id: checkableButton
         AbstractButton {
+            width: 100
+            height: 50
             checkable: true
             action: Action {}
         }
