@@ -1787,7 +1787,7 @@ void QQuickWindowPrivate::cleanupNodesOnShutdown(QQuickItem *item)
         p->dirty(QQuickItemPrivate::Window);
     }
 
-    // Qt 6: Make invalidateSceneGraph a virtual member of QQuickItem
+    // Qt 7: Make invalidateSceneGraph a virtual member of QQuickItem
     if (p->flags & QQuickItem::ItemHasContents) {
         const QMetaObject *mo = item->metaObject();
         int index = mo->indexOfSlot("invalidateSceneGraph()");
