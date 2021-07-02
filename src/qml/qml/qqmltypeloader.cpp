@@ -503,8 +503,7 @@ bool QQmlTypeLoader::Blob::fetchQmldir(const QUrl &url, PendingImportPtr import,
 {
     QQmlRefPointer<QQmlQmldirData> data = typeLoader()->getQmldir(url);
 
-    data->setImport(this, std::move(import));
-    data->setPriority(this, priority);
+    data->setPriority(this, std::move(import), priority);
 
     if (data->status() == Error) {
         // This qmldir must not exist - which is not an error
@@ -539,7 +538,7 @@ bool QQmlTypeLoader::Blob::updateQmldir(const QQmlRefPointer<QQmlQmldirData> &da
     if (!loadImportDependencies(import, qmldirIdentifier, errors))
         return false;
 
-    import->priority = data->priority(this);
+    import->priority = 0;
 
     // Release this reference at destruction
     m_qmldirs << data;
@@ -735,16 +734,14 @@ void QQmlTypeLoader::Blob::dependencyComplete(QQmlDataBlob *blob)
 {
     if (blob->type() == QQmlDataBlob::QmldirFile) {
         QQmlQmldirData *data = static_cast<QQmlQmldirData *>(blob);
-
-        PendingImportPtr import = data->import(this);
-
         QList<QQmlError> errors;
         if (!qmldirDataAvailable(data, &errors)) {
             Q_ASSERT(errors.size());
             QQmlError error(errors.takeFirst());
             error.setUrl(m_importCache.baseUrl());
-            error.setLine(qmlConvertSourceCoordinate<quint32, int>(import->location.line));
-            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(import->location.column));
+            const QV4::CompiledData::Location importLocation = data->importLocation(this);
+            error.setLine(qmlConvertSourceCoordinate<quint32, int>(importLocation.line));
+            error.setColumn(qmlConvertSourceCoordinate<quint32, int>(importLocation.column));
             errors.prepend(error); // put it back on the list after filling out information.
             setError(errors);
         }
@@ -793,28 +790,9 @@ bool QQmlTypeLoader::Blob::diskCacheEnabled() const
 
 bool QQmlTypeLoader::Blob::qmldirDataAvailable(const QQmlRefPointer<QQmlQmldirData> &data, QList<QQmlError> *errors)
 {
-    PendingImportPtr import = data->import(this);
-    data->setImport(this, nullptr);
-
-    int priority = data->priority(this);
-    data->setPriority(this, 0);
-
-    if (import) {
-        // Do we need to resolve this import?
-        const bool resolve = (import->priority == 0) || (import->priority > priority);
-
-        if (resolve) {
-            // This is the (current) best resolution for this import
-            if (!updateQmldir(data, import, errors)) {
-                return false;
-            }
-
-            import->priority = priority;
-            return true;
-        }
-    }
-
-    return true;
+    return data->processImports(this, [&](PendingImportPtr import) {
+        return updateQmldir(data, import, errors);
+    });
 }
 
 /*!

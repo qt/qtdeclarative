@@ -329,7 +329,8 @@ public:
 
         NetworkReply *reply = new NetworkReply;
         QString filename = QQmlFile::urlToLocalFileOrQrc(url);
-        QTimer::singleShot(10, reply, [this, reply, filename]() {
+        QTimer::singleShot(QRandomGenerator::global()->bounded(20), reply,
+                           [this, reply, filename]() {
             if (filename.isEmpty()) {
                 reply->fail();
             } else {

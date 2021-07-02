@@ -64,21 +64,39 @@ private:
 
 public:
     const QString &content() const;
+    QV4::CompiledData::Location importLocation(Blob *blob) const;
 
-    PendingImportPtr import(QQmlTypeLoader::Blob *) const;
-    void setImport(QQmlTypeLoader::Blob *, PendingImportPtr);
+    template<typename Callback>
+    bool processImports(Blob *blob, const Callback &callback) const
+    {
+        bool result = true;
+        const auto range = m_imports.equal_range(blob);
+        for (auto it = range.first; it != range.second; ++it) {
+            // Do we need to resolve this import?
+            if ((it->import->priority == 0) || (it->import->priority > it->priority)) {
+                // This is the (current) best resolution for this import
+                if (!callback(it->import))
+                    result = false;
+                it->import->priority = it->priority;
+            }
+        }
+        return result;
+    }
 
-    int priority(QQmlTypeLoader::Blob *) const;
-    void setPriority(QQmlTypeLoader::Blob *, int);
+    void setPriority(Blob *, PendingImportPtr, int);
 
 protected:
     void dataReceived(const SourceCodeData &) override;
     void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *) override;
 
 private:
+    struct PrioritizedImport {
+        PendingImportPtr import;
+        int priority = 0;
+    };
+
     QString m_content;
-    QHash<QQmlTypeLoader::Blob *, QQmlTypeLoader::Blob::PendingImportPtr> m_imports;
-    QHash<QQmlTypeLoader::Blob *, int> m_priorities;
+    QMultiHash<Blob *, PrioritizedImport> m_imports;
 };
 
 QT_END_NAMESPACE
