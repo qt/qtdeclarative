@@ -930,12 +930,16 @@ bool QQuickDeliveryAgentPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *i
                                       const QPointF &scenePos, const QPointF &lastScenePos,
                                       Qt::KeyboardModifiers modifiers, ulong timestamp)
 {
-    const QTransform transform = QQuickItemPrivate::get(item)->windowToItemTransform();
-
-    //create copy of event
+    auto itemPrivate = QQuickItemPrivate::get(item);
+    const QTransform transform = itemPrivate->windowToItemTransform();
     QHoverEvent hoverEvent(type, transform.map(scenePos), transform.map(lastScenePos), modifiers);
     hoverEvent.setTimestamp(timestamp);
     hoverEvent.setAccepted(true);
+    const QTransform transformToGlobal = itemPrivate->windowToGlobalTransform();
+    QMutableEventPoint &point = QMutableEventPoint::from(hoverEvent.point(0));
+    point.setScenePosition(scenePos);
+    point.setGlobalPosition(transformToGlobal.map(scenePos));
+    point.setGlobalLastPosition(transformToGlobal.map(lastScenePos));
 
     hasFiltered.clear();
     if (sendFilteredMouseEvent(&hoverEvent, item, item->parentItem()))
