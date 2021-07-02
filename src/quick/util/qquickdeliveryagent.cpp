@@ -1473,10 +1473,10 @@ void QQuickDeliveryAgentPrivate::handleMouseEvent(QMouseEvent *event)
 #if QT_CONFIG(cursor)
         QQuickWindowPrivate::get(rootItem->window())->updateCursor(event->scenePosition());
 #endif
+        const QPointF last = lastMousePosition.isNull() ? event->scenePosition() : lastMousePosition;
+        lastMousePosition = event->scenePosition();
+        qCDebug(lcHoverTrace) << q << "mouse pos" << last << "->" << lastMousePosition;
         if (!event->points().count() || !event->exclusiveGrabber(event->point(0))) {
-            QPointF last = lastMousePosition.isNull() ? event->scenePosition() : lastMousePosition;
-            lastMousePosition = event->scenePosition();
-            qCDebug(lcHoverTrace) << q << "mouse pos" << last << "->" << lastMousePosition << event;
             bool accepted = deliverHoverEvent(event->scenePosition(), last, event->modifiers(), event->timestamp());
             event->setAccepted(accepted);
         }
@@ -1516,7 +1516,7 @@ void QQuickDeliveryAgentPrivate::flushFrameSynchronousEvents(QQuickWindow *win)
     // TODO do this for each known mouse device or come up with a different strategy
     if (frameSynchronousHoverEnabled && !win->mouseGrabberItem() &&
             !lastMousePosition.isNull() && QQuickWindowPrivate::get(win)->dirtyItemList) {
-        qCDebug(lcHoverTrace) << q << "delivering frame-sync hover to root";
+        qCDebug(lcHoverTrace) << q << "delivering frame-sync hover to root @" << lastMousePosition;
         deliverHoverEvent(lastMousePosition, lastMousePosition, QGuiApplication::keyboardModifiers(), 0);
         qCDebug(lcHoverTrace) << q << "frame-sync hover delivery done";
     }
