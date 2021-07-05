@@ -591,6 +591,19 @@ function(_qt_internal_target_enable_qmllint target)
         DEPENDS ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint ${qmllint_files}
         WORKING_DIRECTORY "$<TARGET_PROPERTY:${target},SOURCE_DIR>"
     )
+
+    # Make the global linting target depend on the one we add here.
+    # Note that the caller is free to change the value of QT_QMLLINT_ALL_TARGET
+    # for different QML modules if they wish, which means they can implement
+    # their own grouping of the ${target}_qmllint targets.
+    if("${QT_QMLLINT_ALL_TARGET}" STREQUAL "")
+        set(QT_QMLLINT_ALL_TARGET all_qmllint)
+    endif()
+    if(NOT TARGET ${QT_QMLLINT_ALL_TARGET})
+        add_custom_target(${QT_QMLLINT_ALL_TARGET})
+    endif()
+    add_dependencies(${QT_QMLLINT_ALL_TARGET} ${lint_target})
+
 endfunction()
 
 # This is a  modified version of __qt_propagate_generated_resource from qtbase.
