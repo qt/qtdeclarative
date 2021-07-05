@@ -405,6 +405,11 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
         return true;
     };
 
+    // The QML module only contains builtins and is not registered declaratively, so ignore requests
+    // for importing it
+    if (module == u"QML"_qs)
+        return true;
+
     if (getTypesFromCache())
         return true;
 
