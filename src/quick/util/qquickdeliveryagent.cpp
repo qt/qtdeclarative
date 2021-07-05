@@ -1076,7 +1076,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
 {
     QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
     const QPointF localPos = item->mapFromScene(scenePos);
-    const QPointF globalPos = itemPrivate->window->mapToGlobal(scenePos);
+    const QPointF globalPos = item->mapToGlobal(localPos);
     const bool isHovering = item->contains(localPos);
     const bool wasHovering = hoverItems.contains(item);
 
