@@ -109,7 +109,7 @@ public:
     {
         return std::launder(reinterpret_cast<QQmlPropertyBindingJS const *>(
                                 reinterpret_cast<std::byte const*>(this)
-                                + sizeof(QQmlPropertyBinding)
+                                + QPropertyBindingPrivate::getSizeEnsuringAlignment()
                                 + jsExpressionOffsetLength()));
     }
 
@@ -146,7 +146,7 @@ public:
 
     static bool doEvaluate(QMetaType metaType, QUntypedPropertyData *dataPtr, void *f) {
         auto address = static_cast<std::byte*>(f);
-        address -= sizeof (QPropertyBindingPrivate); // f now points to QPropertyBindingPrivate suboject
+        address -= QPropertyBindingPrivate::getSizeEnsuringAlignment(); // f now points to QPropertyBindingPrivate suboject
         // and that has the same address as QQmlPropertyBinding
         return reinterpret_cast<QQmlPropertyBinding *>(address)->evaluate(metaType, dataPtr);
     }
@@ -237,9 +237,11 @@ inline const QQmlPropertyBinding *QQmlPropertyBindingJS::asBinding() const
 {
     return std::launder(reinterpret_cast<QQmlPropertyBinding const *>(
                             reinterpret_cast<std::byte const*>(this)
-                            - sizeof(QQmlPropertyBinding)
+                            - QPropertyBindingPrivate::getSizeEnsuringAlignment()
                             - QQmlPropertyBinding::jsExpressionOffsetLength()));
 }
+
+static_assert(sizeof(QQmlPropertyBinding) == sizeof(QPropertyBindingPrivate)); // else the whole offset computatation will break
 
 QT_END_NAMESPACE
 
