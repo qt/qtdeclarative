@@ -838,6 +838,14 @@ QJSValue QJSEngine::create(QMetaType type, const void *ptr)
     return QJSValuePrivate::fromReturnedValue(v->asReturnedValue());
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(7,0,0)
+QJSValue QJSEngine::create(int typeId, const void *ptr)
+{
+    QMetaType type(typeId);
+    return create(type, ptr);
+}
+#endif
+
 bool QJSEngine::convertManaged(const QJSManagedValue &value, int type, void *ptr)
 {
     return convertManaged(value, QMetaType(type), ptr);

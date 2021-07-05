@@ -149,6 +149,9 @@ Q_SIGNALS:
 private:
     QJSManagedValue createManaged(QMetaType type, const void *ptr);
     QJSValue create(QMetaType type, const void *ptr);
+#if QT_VERSION < QT_VERSION_CHECK(7,0,0)
+    QJSValue create(int id, const void *ptr); // only there for BC reasons
+#endif
 
     static bool convertManaged(const QJSManagedValue &value, int type, void *ptr);
     static bool convertManaged(const QJSManagedValue &value, QMetaType type, void *ptr);
