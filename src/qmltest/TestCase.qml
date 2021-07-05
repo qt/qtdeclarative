@@ -442,8 +442,8 @@ Item {
         displays the optional \a message.  Similar to \c{QVERIFY(condition)}
         or \c{QVERIFY2(condition, message)} in C++.
     */
-    function verify(cond, msg) {
-        if (arguments.length > 2)
+    function verify(cond, msg, ...args) {
+        if (args.length > 0)
             qtest_fail("More than two arguments given to verify(). Did you mean tryVerify() or tryCompare()?", 1)
 
         if (msg === undefined)
@@ -1028,17 +1028,18 @@ Item {
 
         \sa compare(), SignalSpy::wait()
     */
-    function tryCompare(obj, prop, value, timeout, msg) {
-        if (arguments.length == 1 || (typeof(prop) != "string" && typeof(prop) != "number")) {
+    function tryCompare(obj, prop, ...args) {
+        if (typeof(prop) != "string" && typeof(prop) != "number") {
             qtest_results.fail("A property name as string or index is required for tryCompare",
                         util.callerFile(), util.callerLine())
             throw new Error("QtQuickTest::fail")
         }
-        if (arguments.length == 2) {
+        if (args.length == 0) {
             qtest_results.fail("A value is required for tryCompare",
                         util.callerFile(), util.callerLine())
             throw new Error("QtQuickTest::fail")
         }
+        let [value, timeout, msg] = args
         if (timeout !== undefined && typeof(timeout) != "number") {
             qtest_results.fail("timeout should be a number",
                         util.callerFile(), util.callerLine())
