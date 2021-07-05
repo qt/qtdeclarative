@@ -94,7 +94,9 @@ namespace Moth {
 
 class Q_QMLCOMPILER_PRIVATE_EXPORT ByteCodeHandler
 {
+    Q_DISABLE_COPY_MOVE(ByteCodeHandler)
 public:
+    ByteCodeHandler() = default;
     virtual ~ByteCodeHandler();
 
     void decode(const char *code, uint len);
