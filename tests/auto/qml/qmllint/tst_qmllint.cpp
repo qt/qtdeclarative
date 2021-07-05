@@ -760,6 +760,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("BindingBeforeDeclaration") << QStringLiteral("bindingBeforeDeclaration.qml");
     QTest::newRow("CustomParserUnqualifiedAccess")
             << QStringLiteral("customParserUnqualifiedAccess.qml");
+    QTest::newRow("ImportQMLModule") << QStringLiteral("importQMLModule.qml");
 }
 
 void TestQmllint::cleanQmlCode()
