@@ -11,6 +11,7 @@ qt_internal_add_tool(${target_name}
     SOURCES
         checkidentifiers.cpp checkidentifiers.h
         findwarnings.cpp findwarnings.h
+        codegen.cpp codegen.h
         main.cpp
         ../shared/qqmltoolingsettings.h
         ../shared/qqmltoolingsettings.cpp

@@ -27,9 +27,11 @@
 ****************************************************************************/
 
 #include "findwarnings.h"
+#include "codegen.h"
 #include "../shared/qqmltoolingsettings.h"
 
 #include <QtQmlCompiler/private/qqmljsresourcefilemapper_p.h>
+#include <QtQmlCompiler/private/qqmljscompiler_p.h>
 
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
@@ -178,6 +180,18 @@ static bool lint_file(const QString &filename, const bool silent, QJsonArray *js
 
             parser.rootNode()->accept(&v);
             success = v.check();
+
+            Codegen codegen { &importer, resourceFile, qmltypesFiles, &v.logger(), code };
+
+            QQmlJSSaveFunction saveFunction = [](const QV4::CompiledData::SaveableUnitPointer &,
+                                                 const QQmlJSAotFunctionMap &,
+                                                 QString *) { return true; };
+
+            QQmlJSCompileError error;
+
+            QLoggingCategory::setFilterRules(u"qt.qml.compiler=false"_qs);
+
+            qCompileQmlFile(filename, saveFunction, &codegen, &error);
 
             if (json) {
                 for (const auto &error : v.logger().errors())

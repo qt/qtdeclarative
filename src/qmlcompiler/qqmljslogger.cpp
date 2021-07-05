@@ -73,7 +73,10 @@ const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
                                QStringLiteral("Warn about unused imports"), QtInfoMsg, false) },
         { QStringLiteral("multiline-strings"),
           QQmlJSLogger::Option(Log_MultilineString, QStringLiteral("MultilineStrings"),
-                               QStringLiteral("Warn about multiline strings"), QtInfoMsg, false) }
+                               QStringLiteral("Warn about multiline strings"), QtInfoMsg, false) },
+        { QStringLiteral("compiler"),
+          QQmlJSLogger::Option(Log_Compiler, QStringLiteral("CompilerWarnings"),
+                               QStringLiteral("Warn about compiler issues"), QtCriticalMsg, false) }
     };
 
     return optionsMap;
@@ -189,7 +192,8 @@ void QQmlJSLogger::printContext(const QQmlJS::SourceLocation &location)
 
     bool locationMultiline = issueLocationWithContext.issueText().contains(QLatin1Char('\n'));
 
-    m_output.write(issueLocationWithContext.issueText().toString(), QtCriticalMsg);
+    if (!issueLocationWithContext.issueText().isEmpty())
+        m_output.write(issueLocationWithContext.issueText().toString(), QtCriticalMsg);
     m_output.write(issueLocationWithContext.afterText() + QLatin1Char('\n'));
 
     // Do not draw location indicator for multiline locations
@@ -197,11 +201,11 @@ void QQmlJSLogger::printContext(const QQmlJS::SourceLocation &location)
         return;
 
     int tabCount = issueLocationWithContext.beforeText().count(QLatin1Char('\t'));
-    m_output.write(QString::fromLatin1(" ").repeated(
-                       issueLocationWithContext.beforeText().length() - tabCount)
-                           + QString::fromLatin1("\t").repeated(tabCount)
-                           + QString::fromLatin1("^").repeated(location.length)
-                           + QLatin1Char('\n'));
+    int locationLength = location.length == 0 ? 1 : location.length;
+    m_output.write(QString::fromLatin1(" ").repeated(issueLocationWithContext.beforeText().length()
+                                                     - tabCount)
+                   + QString::fromLatin1("\t").repeated(tabCount)
+                   + QString::fromLatin1("^").repeated(locationLength) + QLatin1Char('\n'));
 }
 
 void QQmlJSLogger::printFix(const FixSuggestion &fix)

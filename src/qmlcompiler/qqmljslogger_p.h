@@ -102,7 +102,8 @@ enum QQmlJSLoggerCategory {
     Log_UnusedImport,
     Log_MultilineString,
     Log_Syntax,
-    QQmlJSLoggerCategory_Last = Log_Syntax
+    Log_Compiler,
+    QQmlJSLoggerCategory_Last = Log_Compiler
 };
 
 struct FixSuggestion
