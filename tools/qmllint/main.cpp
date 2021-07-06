@@ -61,7 +61,7 @@ constexpr int JSON_LOGGING_FORMAT_REVISION = 1;
 
 static bool lint_file(const QString &filename, const bool silent, QJsonArray *json,
                       const QStringList &qmlImportPaths, const QStringList &qmltypesFiles,
-                      const QString &resourceFile,
+                      const QStringList &resourceFiles,
                       const QMap<QString, QQmlJSLogger::Option> &options, QQmlJSImporter &importer)
 {
     QJsonArray warnings;
@@ -189,10 +189,10 @@ static bool lint_file(const QString &filename, const bool silent, QJsonArray *js
             }
         };
 
-        if (resourceFile.isEmpty()) {
+        if (resourceFiles.isEmpty()) {
             check(nullptr);
         } else {
-            QQmlJSResourceFileMapper mapper({ resourceFile });
+            QQmlJSResourceFileMapper mapper(resourceFiles);
             check(&mapper);
         }
     }
@@ -388,11 +388,11 @@ All warnings can be set to three levels:
         }
     }
 
-    QString resourceFile;
+    QStringList resourceFiles;
     if (parser.isSet(resourceOption))
-        resourceFile = parser.value(resourceOption);
+        resourceFiles << parser.values(resourceOption);
     else if (settings.isSet(resourceSetting))
-        resourceFile = settings.value(resourceSetting).toString();
+        resourceFiles << settings.value(resourceSetting).toStringList();
 
 #else
     bool silent = false;
@@ -400,8 +400,9 @@ All warnings can be set to three levels:
     bool warnUnqualified = true;
     bool warnWithStatement = true;
     bool warnInheritanceCycle = true;
-    QStringList qmlImportPahs {};
+    QStringList qmlImportPaths {};
     QStringList qmltypesFiles {};
+    QStringList resourceFiles {};
 #endif
     bool success = true;
     QQmlJSImporter importer(qmlImportPaths, nullptr);
@@ -419,7 +420,7 @@ All warnings can be set to three levels:
     for (const QString &filename : arguments) {
 #endif
         success &= lint_file(filename, silent, useJson ? &jsonFiles : nullptr, qmlImportPaths,
-                             qmltypesFiles, resourceFile, options, importer);
+                             qmltypesFiles, resourceFiles, options, importer);
     }
 
     if (useJson) {
