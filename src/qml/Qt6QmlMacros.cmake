@@ -577,6 +577,9 @@ function(_qt_internal_target_enable_qmllint target)
     _qt_internal_genex_getjoinedproperty(import_args ${target}
         QT_QML_IMPORT_PATH "-I$<SEMICOLON>" "$<SEMICOLON>"
     )
+    _qt_internal_genex_getjoinedproperty(qrc_args ${target}
+        _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
+    )
 
     set(cmd
         ${QT_TOOL_COMMAND_WRAPPER_PATH}
@@ -1276,7 +1279,7 @@ function(qt6_target_qml_sources target)
             # The set of qml files to run qmllint on may be a subset of the
             # full set of files, so record these in a separate property.
             _qt_internal_target_enable_qmllint(${target})
-            set_property(TARGET ${target} APPEND PROPERTY QT_QML_LINT_FILES ${qml_file_out})
+            set_property(TARGET ${target} APPEND PROPERTY QT_QML_LINT_FILES ${qml_file_src})
         endif()
 
         # Add qml file's type to qmldir
