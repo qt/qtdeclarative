@@ -30,6 +30,7 @@
 
 #include <private/qqmljsimporter_p.h>
 #include <private/qqmljsimportvisitor_p.h>
+#include <private/qqmljslogger_p.h>
 #include <private/qv4value_p.h>
 
 #include <QtCore/qqueue.h>
@@ -59,8 +60,9 @@ static bool searchBaseAndExtensionTypes(const QQmlJSScope::ConstPtr type, const 
 
 QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Document *document,
                                        const QString &implicitImportDirectory,
-                                       const QStringList &qmltypesFiles, bool wrapAllTypes)
-    : m_importer(importer), m_document(document), m_wrapAllTypes(wrapAllTypes)
+                                       const QStringList &qmltypesFiles, bool wrapAllTypes,
+                                       QQmlJSLogger *logger)
+    : m_importer(importer), m_document(document), m_wrapAllTypes(wrapAllTypes), m_logger(logger)
 {
     m_knownGlobalTypes = importer->builtinInternalNames();
     m_voidType = m_knownGlobalTypes[QStringLiteral("void")];
@@ -499,8 +501,9 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
             }
         }
 
-        qWarning() << "Object type" << type->internalName()
-                   << "is not derived from QObject or QQmlComponent";
+        m_logger->logWarning(u"Object type %1 is not derived from QObject or QQmlComponent"_qs.arg(
+                                     type->internalName()),
+                             Log_Compiler);
         return {};
     }
 
@@ -584,11 +587,15 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
 
         if (const auto attached = type->attachedType()) {
             if (!genericType(attached)) {
-                qWarning() << "Cannot resolve generic base of attached" << attached->internalName();
+                m_logger->logWarning(u"Cannot resolve generic base of attached %1"_qs.arg(
+                                             attached->internalName()),
+                                     Log_Compiler);
                 return {};
             } else if (type->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
-                qWarning() << "Cannot retrieve attached object for non-reference type"
-                           << type->internalName();
+                m_logger->logWarning(
+                        u"Cannot retrieve attached object for non-reference type %1"_qs.arg(
+                                type->internalName()),
+                        Log_Compiler);
                 return {};
             } else {
                 // We don't know yet whether we need the attached or the plain object. In direct
@@ -699,11 +706,15 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr
     if (QQmlJSScope::ConstPtr attachedBase = typeForName(name)) {
         if (QQmlJSScope::ConstPtr attached = attachedBase->attachedType()) {
             if (!genericType(attached)) {
-                qWarning() << "Cannot resolve generic base of attached" << attached->internalName();
+                m_logger->logWarning(u"Cannot resolve generic base of attached %1"_qs.arg(
+                                             attached->internalName()),
+                                     Log_Compiler);
                 return {};
             } else if (type->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
-                qWarning() << "Cannot retrieve attached object for non-reference type"
-                           << type->internalName();
+                m_logger->logWarning(
+                        u"Cannot retrieve attached object for non-reference type %1"_qs.arg(
+                                type->internalName()),
+                        Log_Compiler);
                 return {};
             } else {
                 return QQmlJSRegisterContent::create(storedType(attached), attached,

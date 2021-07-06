@@ -56,7 +56,7 @@
 class Codegen : public QQmlJSAotCompiler
 {
 public:
-    Codegen(QQmlJSImporter *importer, const QString &resourcePath, const QStringList &qmltypesFiles,
+    Codegen(QQmlJSImporter *importer, const QString &fileName, const QStringList &qmltypesFiles,
             QQmlJSLogger *logger, const QString &m_code);
 
     void setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document) override;
@@ -87,7 +87,7 @@ private:
 
     const QmlIR::Document *m_document = nullptr;
     const QString m_fileName;
-    const QString m_resourcePath;
+    const QStringList m_resourceFiles;
     const QStringList m_qmltypesFiles;
     QQmlJSImporter *m_importer = nullptr;
 

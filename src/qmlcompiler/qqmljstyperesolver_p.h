@@ -44,6 +44,7 @@
 #include <private/qqmljsscope_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmlirbuilder_p.h>
+#include <private/qqmljslogger_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -61,7 +62,7 @@ public:
 
     QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Document *document,
                        const QString &implicitImportDirectory, const QStringList &qmltypesFiles,
-                       bool wrapAllTypes);
+                       bool wrapAllTypes, QQmlJSLogger *logger);
 
     QQmlJSScope::ConstPtr voidType() const { return m_voidType; }
     QQmlJSScope::ConstPtr numberType() const { return m_numberType; }
@@ -167,6 +168,7 @@ private:
     QHash<QString, QQmlJSScope::ConstPtr> m_imports;
 
     bool m_wrapAllTypes = false;
+    QQmlJSLogger *m_logger;
 };
 
 QT_END_NAMESPACE

@@ -29,12 +29,13 @@
 #include "codegen.h"
 
 #include <QtQmlCompiler/private/qqmljstypepropagator_p.h>
+#include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
 
 #include <QFileInfo>
 
-Codegen::Codegen(QQmlJSImporter *importer, const QString &resourcePath,
+Codegen::Codegen(QQmlJSImporter *importer, const QString &fileName,
                  const QStringList &qmltypesFiles, QQmlJSLogger *logger, const QString &code)
-    : m_resourcePath(resourcePath),
+    : m_fileName(fileName),
       m_qmltypesFiles(qmltypesFiles),
       m_importer(importer),
       m_logger(logger),
@@ -50,8 +51,10 @@ void Codegen::setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document)
     m_unitGenerator = &document->jsGenerator;
     m_entireSourceCodeLines = document->code.split(u'\n');
     m_typeResolver = std::make_unique<QQmlJSTypeResolver>(
-            m_importer, document, QFileInfo(m_resourcePath).canonicalPath() + u'/', m_qmltypesFiles,
-            true);
+            m_importer, document,
+            QQmlJSImportVisitor::implicitImportDirectory(m_fileName,
+                                                         m_importer->resourceFileMapper()),
+            m_qmltypesFiles, true, m_logger);
 }
 
 void Codegen::setScope(const QmlIR::Object *object, const QmlIR::Object *scope)

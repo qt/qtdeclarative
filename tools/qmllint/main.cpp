@@ -181,7 +181,7 @@ static bool lint_file(const QString &filename, const bool silent, QJsonArray *js
             parser.rootNode()->accept(&v);
             success = v.check();
 
-            Codegen codegen { &importer, resourceFile, qmltypesFiles, &v.logger(), code };
+            Codegen codegen { &importer, filename, qmltypesFiles, &v.logger(), code };
 
             QQmlJSSaveFunction saveFunction = [](const QV4::CompiledData::SaveableUnitPointer &,
                                                  const QQmlJSAotFunctionMap &,
@@ -192,6 +192,8 @@ static bool lint_file(const QString &filename, const bool silent, QJsonArray *js
             QLoggingCategory::setFilterRules(u"qt.qml.compiler=false"_qs);
 
             qCompileQmlFile(filename, saveFunction, &codegen, &error);
+
+            success &= !v.logger().hasWarnings() && !v.logger().hasErrors();
 
             if (json) {
                 for (const auto &error : v.logger().errors())

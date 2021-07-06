@@ -774,10 +774,6 @@ void TestQmllint::cleanQmlCode()
 {
     QFETCH(QString, filename);
     const QString warnings = runQmllint(filename, true);
-    QEXPECT_FAIL("optionalImport",
-                 "TEMPORARY We currently have some warning messages from the qmlcompiler not "
-                 "obeying our logging rules",
-                 Abort);
     QVERIFY2(warnings.isEmpty(), qPrintable(warnings));
 }
 
@@ -804,13 +800,8 @@ QString TestQmllint::runQmllint(const QString &fileToLint,
         handleResult(process);
         errors = process.readAllStandardError();
 
-        if (isSilent) {
-            QEXPECT_FAIL("optionalImport",
-                         "TEMPORARY We currently have some warning messages from the qmlcompiler "
-                         "not obeying our logging rules",
-                         Abort);
+        if (isSilent)
             QVERIFY(errors.isEmpty());
-        }
 
         if (QTest::currentTestFailed()) {
             qDebug() << "Command:" << process.program() << args.join(u' ');
