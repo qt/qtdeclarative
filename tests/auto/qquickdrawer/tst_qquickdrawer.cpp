@@ -583,7 +583,7 @@ void tst_QQuickDrawer::hover()
     QTest::mouseMove(window, QPoint(2, 2));
     QVERIFY(!backgroundButton->isHovered());
     QVERIFY(drawerButton->isHovered());
-    QVERIFY(drawerItem->isHovered());
+    QVERIFY(!drawerItem->isHovered());
 
     QSignalSpy closedSpy(drawer, SIGNAL(closed()));
     QVERIFY(closedSpy.isValid());
