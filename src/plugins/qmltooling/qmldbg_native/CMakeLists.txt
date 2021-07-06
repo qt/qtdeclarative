@@ -10,7 +10,7 @@ qt_internal_add_plugin(QQmlNativeDebugConnectorFactoryPlugin
     TYPE qmltooling
     SOURCES
         qqmlnativedebugconnector.cpp qqmlnativedebugconnector.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::PacketProtocolPrivate
         Qt::QmlPrivate

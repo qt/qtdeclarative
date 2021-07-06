@@ -11,7 +11,7 @@ qt_internal_add_plugin(QQmlDebugServerFactoryPlugin
     SOURCES
         qqmldebugserver.cpp
         qqmldebugserverfactory.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::PacketProtocolPrivate
         Qt::QmlPrivate
 )

@@ -15,7 +15,7 @@ qt_internal_add_plugin(QQmlInspectorServiceFactoryPlugin
         qqmlinspectorservice.cpp
         qqmlinspectorservicefactory.h
         qquickwindowinspector.cpp qquickwindowinspector.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::CorePrivate
         Qt::Gui

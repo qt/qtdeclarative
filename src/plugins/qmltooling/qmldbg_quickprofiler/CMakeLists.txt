@@ -11,7 +11,7 @@ qt_internal_add_plugin(QQuickProfilerAdapterFactoryPlugin
     SOURCES
         qquickprofileradapter.cpp qquickprofileradapter.h
         qquickprofileradapterfactory.cpp qquickprofileradapterfactory.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::CorePrivate
         Qt::Gui
