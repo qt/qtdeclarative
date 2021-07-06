@@ -434,6 +434,7 @@ function(qt6_add_qml_module target)
         QT_QML_MODULE_PLUGIN_TYPES_FILE
         QT_QML_MODULE_RESOURCE_PATHS
         QT_QMLCACHEGEN_DIRECT_CALLS
+        QT_QMLCACHEGEN_BINARY
         QT_QMLCACHEGEN_ARGUMENTS
     )
     foreach(prop IN LISTS ensure_set_properties)
@@ -664,7 +665,7 @@ function(_qt_internal_propagate_qmlcache_object_lib
     set(${output_generated_target} "${resource_target}" PARENT_SCOPE)
 endfunction()
 
-function(_qt_internal_target_enable_qmlcachegen target output_targets_var)
+function(_qt_internal_target_enable_qmlcachegen target output_targets_var qmlcachegen)
 
     set(output_targets)
     set_target_properties(${target} PROPERTIES _qt_cachegen_set_up TRUE)
@@ -682,7 +683,7 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var)
 
     set(cmd
         ${QT_TOOL_COMMAND_WRAPPER_PATH}
-        $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen>
+        ${qmlcachegen}
         --resource-name "${qmlcache_resource_name}"
         ${qrc_resource_args}
         -o "${qmlcache_loader_cpp}"
@@ -699,7 +700,7 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var)
         COMMAND "${cmd}"
         COMMAND_EXPAND_LISTS
         DEPENDS
-            ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen
+            ${qmlcachegen}
             ${qmlcache_loader_list}
             $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
     )
@@ -1193,6 +1194,7 @@ function(qt6_target_qml_sources target)
 
     if(NOT no_cachegen)
         _qt_internal_genex_getproperty(types_file    ${target} QT_QML_MODULE_PLUGIN_TYPES_FILE)
+        _qt_internal_genex_getproperty(qmlcachegen   ${target} QT_QMLCACHEGEN_BINARY)
         _qt_internal_genex_getproperty(direct_calls  ${target} QT_QMLCACHEGEN_DIRECT_CALLS)
         _qt_internal_genex_getjoinedproperty(arguments ${target}
             QT_QMLCACHEGEN_ARGUMENTS "$<SEMICOLON>" "$<SEMICOLON>"
@@ -1210,6 +1212,26 @@ function(qt6_target_qml_sources target)
             "$<${have_arguments}:${arguments}>"
             ${qrc_resource_args}
         )
+
+        # For direct evaluation in if() below
+        get_target_property(cachegen_prop ${target} QT_QMLCACHEGEN_BINARY)
+        if(cachegen_prop)
+            if(cachegen_prop STREQUAL "qmlcachegen" OR cachegen_prop STREQUAL "qmlcachegenplus")
+                # If it's qmlcachegen(plus) itself, don't go looking for other programs of that name
+                set(qmlcachegen "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::${cachegen_prop}>")
+            else()
+                find_program(${target}_QMLCACHEGEN ${cachegen_prop})
+                if(${target}_QMLCACHEGEN)
+                    set(qmlcachegen "${${target}_QMLCACHEGEN}")
+                else()
+                    message(FATAL_ERROR "Invalid qmlcachegen binary ${cachegen_prop} for ${target}")
+                endif()
+            endif()
+        else()
+            set(have_cachegenplus "$<TARGET_EXISTS:${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegenplus>")
+            set(cachegen_name "$<IF:${have_cachegenplus},qmlcachegenplus,qmlcachegen>")
+            set(qmlcachegen "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::${cachegen_name}>")
+        endif()
     endif()
 
     set(non_qml_files)
@@ -1335,7 +1357,7 @@ function(qt6_target_qml_sources target)
             # after we know there will be at least one file to compile.
             get_target_property(is_cachegen_set_up ${target} _qt_cachegen_set_up)
             if(NOT is_cachegen_set_up)
-                _qt_internal_target_enable_qmlcachegen(${target} resource_target)
+                _qt_internal_target_enable_qmlcachegen(${target} resource_target ${qmlcachegen})
                 list(APPEND output_targets ${resource_target})
             endif()
 
@@ -1357,14 +1379,14 @@ function(qt6_target_qml_sources target)
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${out_dir}
                 COMMAND
                     ${QT_TOOL_COMMAND_WRAPPER_PATH}
-                    $<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen>
+                    ${qmlcachegen}
                     --resource-path "${file_resource_path}"
                     ${cachegen_args}
                     -o "${compiled_file}"
                     "${file_absolute}"
                 COMMAND_EXPAND_LISTS
                 DEPENDS
-                    ${QT_CMAKE_EXPORT_NAMESPACE}::qmlcachegen
+                    ${qmlcachegen}
                     "${file_absolute}"
                     $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
                     "$<$<BOOL:${types_file}>:${types_file}>"
