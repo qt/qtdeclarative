@@ -11,7 +11,7 @@ qt_internal_add_plugin(QTcpServerConnectionFactoryPlugin
     SOURCES
         qtcpserverconnection.cpp
         qtcpserverconnectionfactory.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Network
         Qt::QmlPrivate
 )

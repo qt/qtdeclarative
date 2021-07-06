@@ -17,7 +17,7 @@ qt_internal_add_plugin(QQmlDebuggerServiceFactoryPlugin
         qv4debuggeragent.cpp qv4debuggeragent.h
         qv4debugjob.cpp qv4debugjob.h
         qv4debugservice.cpp qv4debugservice.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::PacketProtocolPrivate
         Qt::QmlPrivate

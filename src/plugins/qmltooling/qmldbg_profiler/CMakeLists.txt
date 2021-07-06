@@ -14,7 +14,7 @@ qt_internal_add_plugin(QQmlProfilerServiceFactoryPlugin
         qqmlprofilerservice.cpp qqmlprofilerservice.h
         qqmlprofilerservicefactory.cpp qqmlprofilerservicefactory.h
         qv4profileradapter.cpp qv4profileradapter.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::CorePrivate
         Qt::PacketProtocolPrivate
         Qt::QmlPrivate

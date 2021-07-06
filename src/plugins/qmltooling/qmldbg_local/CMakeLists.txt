@@ -11,7 +11,7 @@ qt_internal_add_plugin(QLocalClientConnectionFactoryPlugin
     SOURCES
         qlocalclientconnection.cpp
         qlocalclientconnectionfactory.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::QmlPrivate
 )
 

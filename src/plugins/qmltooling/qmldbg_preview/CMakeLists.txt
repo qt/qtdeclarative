@@ -16,7 +16,7 @@ qt_internal_add_plugin(QQmlPreviewServiceFactoryPlugin
         qqmlpreviewposition.cpp qqmlpreviewposition.h
         qqmlpreviewservice.cpp qqmlpreviewservice.h
         qqmlpreviewservicefactory.cpp qqmlpreviewservicefactory.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::CorePrivate
         Qt::Gui
