@@ -34,17 +34,12 @@ qt_internal_add_qml_module(qtlabsplatformplugin
         Qt::QmlPrivate
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
 )
 
 qt_internal_extend_target(qtlabsplatformplugin CONDITION TARGET Qt::Widgets
     SOURCES
         widgets/qwidgetplatform_p.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Widgets
 )
 

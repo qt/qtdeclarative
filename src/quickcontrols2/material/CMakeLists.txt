@@ -235,11 +235,6 @@ qt_internal_add_qml_module(qtquickcontrols2materialstyleplugin
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
 )
 
 qt_internal_add_resource(qtquickcontrols2materialstyleplugin "qtquickcontrols2materialstyleplugin"

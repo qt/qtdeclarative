@@ -227,11 +227,6 @@ qt_internal_add_qml_module(qtquickcontrols2imaginestyleplugin
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
 )
 
 file(GLOB resource_glob_0 RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "images/*.png")
