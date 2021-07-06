@@ -207,6 +207,22 @@ bool QQuickOverlayPrivate::handleMouseEvent(QQuickItem *source, QMouseEvent *eve
     return false;
 }
 
+bool QQuickOverlayPrivate::handleHoverEvent(QQuickItem *source, QHoverEvent *event, QQuickPopup *target)
+{
+    switch (event->type()) {
+    case QEvent::HoverEnter:
+    case QEvent::HoverMove:
+    case QEvent::HoverLeave:
+        if (target)
+            return target->overlayEvent(source, event);
+        return false;
+    default:
+        Q_UNREACHABLE(); // function must only be called on hover events
+        break;
+    }
+    return false;
+}
+
 #if QT_CONFIG(quicktemplates2_multitouch)
 bool QQuickOverlayPrivate::handleTouchEvent(QQuickItem *source, QTouchEvent *event, QQuickPopup *target)
 {
@@ -474,6 +490,10 @@ bool QQuickOverlay::childMouseEventFilter(QQuickItem *item, QEvent *event)
             case QEvent::TouchEnd:
                 return d->handleTouchEvent(item, static_cast<QTouchEvent *>(event), popup);
 #endif
+            case QEvent::HoverEnter:
+            case QEvent::HoverMove:
+            case QEvent::HoverLeave:
+                return d->handleHoverEvent(item, static_cast<QHoverEvent *>(event), popup);
 
             case QEvent::MouseButtonPress:
             case QEvent::MouseMove:
