@@ -74,6 +74,7 @@ public:
     bool handleRelease(QQuickItem *source, QEvent *event, QQuickPopup *target);
 
     bool handleMouseEvent(QQuickItem *source, QMouseEvent *event, QQuickPopup *target = nullptr);
+    bool handleHoverEvent(QQuickItem *source, QHoverEvent *event, QQuickPopup *target = nullptr);
 #if QT_CONFIG(quicktemplates2_multitouch)
     bool handleTouchEvent(QQuickItem *source, QTouchEvent *event, QQuickPopup *target = nullptr);
 #endif

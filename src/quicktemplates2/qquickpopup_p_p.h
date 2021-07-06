@@ -120,6 +120,7 @@ public:
     virtual void handleUngrab();
 
     bool handleMouseEvent(QQuickItem *item, QMouseEvent *event);
+    bool handleHoverEvent(QQuickItem *item, QHoverEvent *event);
 #if QT_CONFIG(quicktemplates2_multitouch)
     bool handleTouchEvent(QQuickItem *item, QTouchEvent *event);
 #endif

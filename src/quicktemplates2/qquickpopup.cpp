@@ -412,6 +412,19 @@ bool QQuickPopupPrivate::handleMouseEvent(QQuickItem *item, QMouseEvent *event)
     }
 }
 
+bool QQuickPopupPrivate::handleHoverEvent(QQuickItem *item, QHoverEvent *event)
+{
+    switch (event->type()) {
+    case QEvent::HoverEnter:
+    case QEvent::HoverMove:
+    case QEvent::HoverLeave:
+        return blockInput(item, event->scenePosition());
+    default:
+        Q_UNREACHABLE();
+        return false;
+    }
+}
+
 #if QT_CONFIG(quicktemplates2_multitouch)
 bool QQuickPopupPrivate::handleTouchEvent(QQuickItem *item, QTouchEvent *event)
 {
@@ -2558,6 +2571,10 @@ bool QQuickPopup::overlayEvent(QQuickItem *item, QEvent *event)
     case QEvent::TouchEnd:
         return d->handleTouchEvent(item, static_cast<QTouchEvent *>(event));
 #endif
+    case QEvent::HoverEnter:
+    case QEvent::HoverMove:
+    case QEvent::HoverLeave:
+        return d->handleHoverEvent(item, static_cast<QHoverEvent *>(event));
 
     case QEvent::MouseButtonPress:
     case QEvent::MouseButtonRelease:
