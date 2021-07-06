@@ -203,7 +203,8 @@ void tst_QQuickMenu::mouse()
     QVERIFY(window->width() > menu->contentItem()->width());
     QVERIFY(window->height() > menu->contentItem()->height());
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
-        QPoint(menu->contentItem()->width() + 1, menu->contentItem()->height() + 1));
+                      QPoint(menu->contentItem()->x() + menu->contentItem()->width() + 1,
+                             menu->contentItem()->y() + menu->contentItem()->height() + 1));
     QTRY_COMPARE(visibleSpy.count(), 3);
     QVERIFY(!menu->isVisible());
     QVERIFY(!overlay->childItems().contains(menu->contentItem()->parentItem()));
