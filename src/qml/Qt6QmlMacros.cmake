@@ -585,10 +585,16 @@ function(_qt_internal_target_enable_qmllint target)
         ${qmllint_files}
     )
 
+    # We need this target to depend on all qml type registrations. This is the
+    # only way we can be sure that all *.qmltypes files for any QML modules we
+    # depend on will have been generated.
     add_custom_target(${lint_target}
         COMMAND "$<${have_qmllint_files}:${cmd}>"
         COMMAND_EXPAND_LISTS
-        DEPENDS ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint ${qmllint_files}
+        DEPENDS
+            ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint
+            ${qmllint_files}
+            $<TARGET_NAME_IF_EXISTS:all_qmltyperegistrations>
         WORKING_DIRECTORY "$<TARGET_PROPERTY:${target},SOURCE_DIR>"
     )
 
@@ -1600,6 +1606,24 @@ function(qt6_qml_type_registration target)
     )
 
     cmake_policy(POP)
+
+    # The ${target}_qmllint targets need to depend on the generation of all
+    # *.qmltypes files in the build. We have no way of reliably working out
+    # which QML modules a given target depends on at configure time, so we
+    # have to be conservative and make ${target}_qmllint targets depend on all
+    # *.qmltypes files. We need to provide a target for those dependencies
+    # here. Note that we can't use ${target} itself for those dependencies
+    # because the user might want to run qmllint without having to build the
+    # QML module.
+    add_custom_target(${target}_qmltyperegistration
+        DEPENDS
+            ${type_registration_cpp_file}
+            ${plugin_types_file}
+    )
+    if(NOT TARGET all_qmltyperegistrations)
+        add_custom_target(all_qmltyperegistrations)
+    endif()
+    add_dependencies(all_qmltyperegistrations ${target}_qmltyperegistration)
 
     target_sources(${target} PRIVATE ${type_registration_cpp_file})
 
