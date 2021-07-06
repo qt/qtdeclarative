@@ -29,10 +29,6 @@ qt_internal_add_qml_module(QuickDialogs2
         Qt::QuickPrivate
         Qt::QuickDialogs2UtilsPrivate
         Qt::QuickDialogs2QuickImplPrivate
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::Gui
-        Qt::Quick
 )
 
 qt_internal_add_docs(QuickDialogs2

@@ -67,10 +67,6 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
         Qt::QuickDialogs2UtilsPrivate
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::Gui
-        Qt::Quick
 )
 
 # Resources:

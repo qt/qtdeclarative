@@ -36,9 +36,4 @@ qt_internal_add_qml_module(qtquickcontrols2fusionstyleimplplugin
         Qt::QuickControls2ImplPrivate
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
-    PUBLIC_LIBRARIES
-        Qt::Core
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
 )
