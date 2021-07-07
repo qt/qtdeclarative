@@ -411,6 +411,8 @@ function(qt6_add_qml_module target)
         endif()
     endforeach()
 
+    set(qt_qml_module_resource_prefix "${arg_RESOURCE_PREFIX}/${arg_TARGET_PATH}")
+
     set_target_properties(${target} PROPERTIES
         QT_QML_MODULE_NO_LINT "${arg_NO_LINT}"
         QT_QML_MODULE_NO_CACHEGEN "${arg_NO_CACHEGEN}"
@@ -423,7 +425,7 @@ function(qt6_add_qml_module target)
         QT_QML_MODULE_PLUGIN_TARGET "${arg_PLUGIN_TARGET}"
         QT_QML_MODULE_DESIGNER_SUPPORTED "${arg_DESIGNER_SUPPORTED}"
         QT_QML_MODULE_OUTPUT_DIR "${arg_OUTPUT_DIRECTORY}"
-        QT_RESOURCE_PREFIX "${arg_RESOURCE_PREFIX}/${arg_TARGET_PATH}"
+        QT_QML_MODULE_RESOURCE_PREFIX "${qt_qml_module_resource_prefix}"
         QT_QML_PAST_MAJOR_VERSIONS "${arg_PAST_MAJOR_VERSIONS}"
         QT_QMLTYPES_FILENAME "${arg_TYPEINFO}"
 
@@ -473,6 +475,7 @@ function(qt6_add_qml_module target)
         set(resource_targets)
         qt6_add_resources(${target} ${qmldir_resource_name}
             FILES ${arg_OUTPUT_DIRECTORY}/qmldir
+            PREFIX "${qt_qml_module_resource_prefix}"
             OUTPUT_TARGETS resource_targets
         )
         list(APPEND output_targets ${resource_targets})
@@ -504,6 +507,7 @@ function(qt6_add_qml_module target)
         FILES ${arg_QML_FILES}
         RESOURCES ${arg_RESOURCES}
         OUTPUT_TARGETS cache_target
+        PREFIX "${qt_qml_module_resource_prefix}"
     )
     list(APPEND output_targets ${cache_target})
 
@@ -781,7 +785,7 @@ function(_qt_internal_target_generate_qmldir target out_dir target_path)
     _qt_internal_qmldir_item_list("optional import" QT_QML_MODULE_OPTIONAL_IMPORTS)
     _qt_internal_qmldir_item_list(depends QT_QML_MODULE_DEPENDENCIES)
 
-    get_target_property(prefix ${target} QT_RESOURCE_PREFIX)
+    get_target_property(prefix ${target} QT_QML_MODULE_RESOURCE_PREFIX)
     if(prefix)
         # Ensure we use a path that ends with a "/", but handle the special case
         # of "/" without anything after it
@@ -1154,7 +1158,7 @@ function(qt6_target_qml_sources target)
     get_target_property(no_lint                ${target} QT_QML_MODULE_NO_LINT)
     get_target_property(no_cachegen            ${target} QT_QML_MODULE_NO_CACHEGEN)
     get_target_property(no_qmldir              ${target} QT_QML_MODULE_NO_GENERATE_QMLDIR)
-    get_target_property(resource_prefix        ${target} QT_RESOURCE_PREFIX)
+    get_target_property(resource_prefix        ${target} QT_QML_MODULE_RESOURCE_PREFIX)
     get_target_property(qml_module_version     ${target} QT_QML_MODULE_VERSION)
     get_target_property(output_dir             ${target} QT_QML_MODULE_OUTPUT_DIR)
 
