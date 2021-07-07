@@ -633,6 +633,7 @@ void tst_QQuickPopup::activeFocusOnClose2()
     QVERIFY(popup2->hasActiveFocus());
 
     // Causes popup1.contentItem.forceActiveFocus() to be called, then closes popup2.
+    QTRY_VERIFY(closePopup2Button->width() > 0);
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
         closePopup2Button->mapToScene(QPointF(closePopup2Button->width() / 2, closePopup2Button->height() / 2)).toPoint());
     QTRY_VERIFY(!popup2->isVisible());
