@@ -760,6 +760,7 @@ void tst_QQuickPopup::hover()
     QVERIFY(openedSpy.isValid());
     popup->open();
     QVERIFY(openedSpy.count() == 1 || openedSpy.wait());
+    QTRY_VERIFY(popup->width() > 10); // somehow this can take a short time with macOS style
 
     // hover the parent button outside the popup
     QTest::mouseMove(window, QPoint(window->width() - 1, window->height() - 1));
