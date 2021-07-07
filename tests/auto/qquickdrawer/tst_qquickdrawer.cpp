@@ -1305,10 +1305,14 @@ void tst_QQuickDrawer::slider()
     const QPoint from(slider->width() - 1, y);
     const QPoint to(1, y);
 
+    QTest::qWait(1);
+
     if (mouse)
         QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, from);
     else
         QTest::touchEvent(window, touchDevice.data()).press(0, from);
+
+    QTest::qWait(1);
 
     int distance = qAbs(from.x() - to.x());
     for (int dx = delta; dx <= distance; dx += delta) {
