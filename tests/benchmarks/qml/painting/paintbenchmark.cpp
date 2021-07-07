@@ -328,7 +328,7 @@ public:
         }
     }
 
-    void paintEvent(QPaintEvent *) {
+    void paintEvent(QPaintEvent *) override {
         static qint64 last = 0;
         static bool firstRun = true;
         if (firstRun) {

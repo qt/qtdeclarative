@@ -220,7 +220,7 @@ public:
     {
     }
 
-    QPixmap requestPixmap(const QString &/*id*/, QSize *size, const QSize &requestedSize)
+    QPixmap requestPixmap(const QString &/*id*/, QSize *size, const QSize &requestedSize) override
     {
         if (requestedSize.isValid())
             qWarning() << "requestPixmap called with requestedSize of" << requestedSize;

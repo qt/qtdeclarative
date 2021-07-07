@@ -143,7 +143,7 @@ struct ContextRegistrator
     ContextRegistrator(QQmlEngine *engine, QObject *This)
     {
         Q_ASSERT(engine && This);
-        if (QQmlContext *context = engine->contextForObject(This)) // already set
+        if (engine->contextForObject(This)) // already set
             return;
 
         // use simple form of the logic done in create() and set(). this code
