@@ -242,7 +242,8 @@ public Q_SLOTS:
 
         if (! --expectedFileCount) {
             printf("qml: Did not load any objects, exiting.\n");
-            std::exit(2); // Different return code from qFatal
+            exit(2);
+            QCoreApplication::exit(2);
         }
     }
 
