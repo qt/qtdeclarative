@@ -65,10 +65,11 @@ Rectangle {
             minimumScale: 0.5
             maximumScale: 3
             minimumPointCount: 3
+            maximumPointCount: 6 // mutants are allowed; using both hands is not normal for a pinch gesture, but we can't tell
         }
 
         Text {
-            text: "Pinch with 3 fingers to scale, rotate and translate"
+            text: "Pinch with 3 or more fingers to scale, rotate and translate"
                   + getTransformationDetails(parent, grandparentPinch)
         }
 
