@@ -65,8 +65,8 @@ struct QQmlJSTypePropagator : public QV4::Moth::ByteCodeHandler
 
     struct InstructionAnnotation
     {
-        VirtualRegisters registers;
-        VirtualRegisters expectedTargetTypesBeforeJump;
+        QQmlJSVirtualRegisters registers;
+        QQmlJSVirtualRegisters expectedTargetTypesBeforeJump;
     };
 
     using TypePropagationResult = QHash<int, InstructionAnnotation>;
@@ -231,7 +231,7 @@ private:
     struct ExpectedRegisterState
     {
         int originatingOffset = 0;
-        VirtualRegisters registers;
+        QQmlJSVirtualRegisters registers;
     };
 
     struct PassState
@@ -239,7 +239,7 @@ private:
         bool skipInstructionsUntilNextJumpTarget = false;
         QSet<int> jumpTargets;
 
-        VirtualRegisters registers;
+        QQmlJSVirtualRegisters registers;
         QQmlJSRegisterContent accumulatorIn;
         QQmlJSRegisterContent accumulatorOut;
 

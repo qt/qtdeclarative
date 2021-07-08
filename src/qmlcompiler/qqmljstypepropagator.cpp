@@ -1310,7 +1310,7 @@ void QQmlJSTypePropagator::setRegister(int index, const QQmlJSScope::ConstPtr &c
 
 QQmlJSRegisterContent QQmlJSTypePropagator::checkedInputRegister(int reg)
 {
-    VirtualRegisters::ConstIterator regIt = m_state.registers.find(reg);
+    QQmlJSVirtualRegisters::ConstIterator regIt = m_state.registers.find(reg);
     if (regIt == m_state.registers.constEnd()) {
         if (m_state.registerDeletionReason.contains(reg))
             setError(m_state.registerDeletionReason[reg]);

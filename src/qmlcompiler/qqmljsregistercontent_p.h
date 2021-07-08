@@ -177,7 +177,7 @@ private:
 };
 
 // map from register index to expected type
-using VirtualRegisters = QHash<int, QQmlJSRegisterContent>;
+using QQmlJSVirtualRegisters = QHash<int, QQmlJSRegisterContent>;
 
 QT_END_NAMESPACE
 
