@@ -17,6 +17,8 @@ comes with a selection of built-in styles:
 - Imagine style - a designer-friendly style based on image assets
 - Material style - a style based on the Google Material Design Guidelines
 - Universal style - a style based on the Microsoft Universal Design Guidelines
+- Windows style - a style that looks native on Windows
+- macOS style - a style that looks native on macOS
 
 More information can be found in the following blog posts:
 
