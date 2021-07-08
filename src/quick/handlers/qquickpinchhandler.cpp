@@ -85,7 +85,14 @@ Q_LOGGING_CATEGORY(lcPinchHandler, "qt.quick.handler.pinch")
 
     \image touchpoints-pinchhandler.png
 
-    \sa PinchArea
+    \note The pinch begins when the number of fingers pressed is between
+    \l {MultiPointHandler::minimumPointCount}{minimumPointCount} and
+    \l {MultiPointHandler::maximumPointCount}{maximumPointCount}, inclusive.
+    Until then, PinchHandler tracks the positions of any pressed fingers,
+    but if it's a disallowed number, it does not scale or rotate
+    its \l target, and the \l active property remains \c false.
+
+    \sa PinchArea, QPointerEvent::pointCount()
 */
 
 QQuickPinchHandler::QQuickPinchHandler(QQuickItem *parent)
@@ -209,19 +216,12 @@ bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
  */
 
 /*!
-    \qmlproperty int QtQuick::PinchHandler::minimumTouchPoints
-
-    The pinch begins when this number of fingers are pressed.
-    Until then, PinchHandler tracks the positions of any pressed fingers,
-    but if it's an insufficient number, it does not scale or rotate
-    its \l target, and the \l active property will remain false.
-*/
-
-/*!
     \qmlproperty bool QtQuick::PinchHandler::active
 
-    This property is true when all the constraints (epecially \l minimumTouchPoints)
-    are satisfied and the \l target, if any, is being manipulated.
+    This property is \c true when all the constraints (epecially
+    \l {MultiPointHandler::minimumPointCount}{minimumPointCount} and
+    \l {MultiPointHandler::maximumPointCount}{maximumPointCount}) are satisfied
+    and the \l target, if any, is being manipulated.
 */
 
 void QQuickPinchHandler::onActiveChanged()
