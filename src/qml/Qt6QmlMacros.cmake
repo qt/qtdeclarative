@@ -1404,14 +1404,9 @@ function(qt6_target_qml_sources target)
 
     if(non_qml_files)
         list(JOIN non_qml_files "\n  " file_list)
-        if(COMMAND qt_add_resources)
-            set(cmd "qt_add_resources()")
-        else()
-            set(cmd "qt6_add_resources()")
-        endif()
         message(WARNING
-            "Only .qml, .js or .mjs files should be added with this function. "
-            "The following files should be added with ${cmd} instead:"
+            "Only .qml, .js or .mjs files should be added with QML_FILES. "
+            "The following files should be added with RESOURCES instead:"
             "\n  ${file_list}"
         )
     endif()
