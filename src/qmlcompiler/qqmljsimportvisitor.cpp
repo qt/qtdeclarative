@@ -922,6 +922,7 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
     }
 
     QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
+    addDefaultProperties();
     return true;
 }
 

@@ -545,6 +545,44 @@ scopeContentVariant(QQmlJSTypeResolver::BaseOrExtension mode, bool isMethod)
     return QQmlJSRegisterContent::Unknown;
 }
 
+static bool isAssignedToDefaultProperty(const QQmlJSScope::ConstPtr &parent,
+                                        const QQmlJSScope::ConstPtr &child)
+{
+    QString defaultPropertyName;
+    QQmlJSMetaProperty defaultProperty;
+    if (!searchBaseAndExtensionTypes(
+                parent, [&](const QQmlJSScope::ConstPtr &scope,
+                            QQmlJSTypeResolver::BaseOrExtension mode) {
+        Q_UNUSED(mode);
+        defaultPropertyName = scope->defaultPropertyName();
+        defaultProperty = scope->property(defaultPropertyName);
+        return !defaultPropertyName.isEmpty();
+    })) {
+        return false;
+    }
+
+    QQmlJSScope::ConstPtr bindingHolder = parent;
+    while (bindingHolder->property(defaultPropertyName) != defaultProperty) {
+        // Only traverse the base type hierarchy here, not the extended types.
+        // Extensions cannot hold bindings.
+        bindingHolder = bindingHolder->baseType();
+
+        // Consequently, the default property may be inaccessibly
+        // hidden in some extension via shadowing.
+        // Nothing can be assigned to it then.
+        if (!bindingHolder)
+            return false;
+    }
+
+    const QList<QQmlJSMetaPropertyBinding> defaultPropBindings
+            = bindingHolder->propertyBindings(defaultPropertyName);
+    for (const QQmlJSMetaPropertyBinding &binding : defaultPropBindings) {
+        if (binding.value() == child)
+            return true;
+    }
+    return false;
+}
+
 QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr &scope,
                                                      const QString &name) const
 {
@@ -556,9 +594,17 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
     if (QQmlJSScope::ConstPtr base = QQmlJSScope::findCurrentQMLScope(scope)) {
         QQmlJSRegisterContent result;
         if (searchBaseAndExtensionTypes(
-                    base, [&](const QQmlJSScope::ConstPtr &scope, BaseOrExtension mode) {
-                        if (scope->hasOwnProperty(name)) {
-                            const auto prop = scope->ownProperty(name);
+                    base, [&](const QQmlJSScope::ConstPtr &found, BaseOrExtension mode) {
+                        if (found->hasOwnProperty(name)) {
+                            QQmlJSMetaProperty prop = found->ownProperty(name);
+                            if (m_semantics == QQmlJSTypeResolver::Static
+                                    && name == base->parentPropertyName()) {
+                                QQmlJSScope::ConstPtr baseParent = base->parentScope();
+                                if (baseParent && baseParent->inherits(prop.type())
+                                        && isAssignedToDefaultProperty(baseParent, base)) {
+                                    prop.setType(baseParent);
+                                }
+                            }
                             result = QQmlJSRegisterContent::create(
                                     prop.isList() ? listPropertyType() : storedType(prop.type()),
                                     prop, scopeContentVariant(mode, false), scope);

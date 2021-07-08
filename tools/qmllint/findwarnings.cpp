@@ -98,9 +98,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
         }
     }
 
-    addDefaultProperties();
     m_objectDefinitionScopes << m_currentScope;
-
     return true;
 }
 
