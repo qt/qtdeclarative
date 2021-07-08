@@ -54,7 +54,7 @@ void Codegen::setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document)
             m_importer, document,
             QQmlJSImportVisitor::implicitImportDirectory(m_fileName,
                                                          m_importer->resourceFileMapper()),
-            m_qmltypesFiles, true, m_logger);
+            m_qmltypesFiles, QQmlJSTypeResolver::Indirect, QQmlJSTypeResolver::Dynamic, m_logger);
 }
 
 void Codegen::setScope(const QmlIR::Object *object, const QmlIR::Object *scope)

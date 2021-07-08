@@ -58,11 +58,15 @@ static bool searchBaseAndExtensionTypes(const QQmlJSScope::ConstPtr type, const 
     return false;
 }
 
-QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Document *document,
-                                       const QString &implicitImportDirectory,
-                                       const QStringList &qmltypesFiles, bool wrapAllTypes,
-                                       QQmlJSLogger *logger)
-    : m_importer(importer), m_document(document), m_wrapAllTypes(wrapAllTypes), m_logger(logger)
+QQmlJSTypeResolver::QQmlJSTypeResolver(
+        QQmlJSImporter *importer, const QmlIR::Document *document,
+        const QString &implicitImportDirectory, const QStringList &qmltypesFiles,
+        TypeStorage storage, Semantics semantics, QQmlJSLogger *logger)
+    : m_importer(importer)
+    , m_document(document)
+    , m_typeStorage(storage)
+    , m_semantics(semantics)
+    , m_logger(logger)
 {
     m_knownGlobalTypes = importer->builtinInternalNames();
     m_voidType = m_knownGlobalTypes[u"void"_qs];
@@ -850,7 +854,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::storedType(const QQmlJSScope::ConstPtr
 {
     if (type.isNull())
         return {};
-    if (m_wrapAllTypes)
+    if (m_typeStorage == Indirect)
         return genericType(type, allowComponent);
     if (type == voidType())
         return jsPrimitiveType();

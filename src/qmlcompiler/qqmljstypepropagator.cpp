@@ -1330,7 +1330,7 @@ bool QQmlJSTypePropagator::canConvertFromTo(const QQmlJSRegisterContent &from,
 void QQmlJSTypePropagator::rejectShadowableMember(const QQmlJSRegisterContent &base,
                                                   const QQmlJSRegisterContent &member)
 {
-    if (m_typeResolver->wrapsAllTypes()
+    if (m_typeResolver->semantics() == QQmlJSTypeResolver::Dynamic
         && member.scopeType()->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
         switch (base.variant()) {
         case QQmlJSRegisterContent::ObjectProperty:

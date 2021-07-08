@@ -52,6 +52,8 @@ class QQmlJSTypeResolver
 {
 public:
     enum BaseOrExtension { Base, Extension };
+    enum Semantics { Static, Dynamic };
+    enum TypeStorage { Direct, Indirect };
 
     struct GlobalProperty
     {
@@ -62,7 +64,7 @@ public:
 
     QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Document *document,
                        const QString &implicitImportDirectory, const QStringList &qmltypesFiles,
-                       bool wrapAllTypes, QQmlJSLogger *logger);
+                       TypeStorage storage, Semantics semantics, QQmlJSLogger *logger);
 
     QQmlJSScope::ConstPtr voidType() const { return m_voidType; }
     QQmlJSScope::ConstPtr numberType() const { return m_numberType; }
@@ -126,7 +128,10 @@ public:
     bool registerContains(const QQmlJSRegisterContent &reg,
                           const QQmlJSScope::ConstPtr &type) const;
     QQmlJSScope::ConstPtr containedType(const QQmlJSRegisterContent &container) const;
-    bool wrapsAllTypes() const { return m_wrapAllTypes; }
+
+    TypeStorage typeStorage() const { return m_typeStorage; }
+    Semantics semantics() const { return m_semantics; }
+
     QQmlJSScope::ConstPtr
     storedType(const QQmlJSScope::ConstPtr &type,
                ComponentIsGeneric allowComponent = ComponentIsGeneric::No) const;
@@ -167,7 +172,8 @@ private:
     QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> m_objectsByLocation;
     QHash<QString, QQmlJSScope::ConstPtr> m_imports;
 
-    bool m_wrapAllTypes = false;
+    TypeStorage m_typeStorage = Direct;
+    Semantics m_semantics = Dynamic;
     QQmlJSLogger *m_logger;
 };
 
