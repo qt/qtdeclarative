@@ -65,18 +65,18 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Do
     : m_importer(importer), m_document(document), m_wrapAllTypes(wrapAllTypes), m_logger(logger)
 {
     m_knownGlobalTypes = importer->builtinInternalNames();
-    m_voidType = m_knownGlobalTypes[QStringLiteral("void")];
-    m_realType = m_knownGlobalTypes[QStringLiteral("double")];
-    m_intType = m_knownGlobalTypes[QStringLiteral("int")];
-    m_boolType = m_knownGlobalTypes[QStringLiteral("bool")];
-    m_stringType = m_knownGlobalTypes[QStringLiteral("QString")];
-    m_urlType = m_knownGlobalTypes[QStringLiteral("QUrl")];
-    m_dateTimeType = m_knownGlobalTypes[QStringLiteral("QDateTime")];
-    m_variantListType = m_knownGlobalTypes[QStringLiteral("QVariantList")];
+    m_voidType = m_knownGlobalTypes[u"void"_qs];
+    m_realType = m_knownGlobalTypes[u"double"_qs];
+    m_intType = m_knownGlobalTypes[u"int"_qs];
+    m_boolType = m_knownGlobalTypes[u"bool"_qs];
+    m_stringType = m_knownGlobalTypes[u"QString"_qs];
+    m_urlType = m_knownGlobalTypes[u"QUrl"_qs];
+    m_dateTimeType = m_knownGlobalTypes[u"QDateTime"_qs];
+    m_variantListType = m_knownGlobalTypes[u"QVariantList"_qs];
     m_numberType = m_intType->baseType();
     Q_ASSERT(m_realType->baseType() == m_numberType);
-    m_varType = m_knownGlobalTypes[QStringLiteral("QVariant")];
-    m_jsValueType = m_knownGlobalTypes[QStringLiteral("QJSValue")];
+    m_varType = m_knownGlobalTypes[u"QVariant"_qs];
+    m_jsValueType = m_knownGlobalTypes[u"QJSValue"_qs];
 
     QQmlJSScope::Ptr jsPrimitiveType = QQmlJSScope::create();
     jsPrimitiveType->setInternalName(u"QJSPrimitiveValue"_qs);
@@ -112,73 +112,73 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Do
     m_imports = visitor.imports();
 
     // This is pre-sorted. Don't mess it up.
-    m_jsGlobalProperties = { QStringLiteral("Array"),
-                             QStringLiteral("ArrayBuffer"),
-                             QStringLiteral("Atomics"),
-                             QStringLiteral("Boolean"),
-                             QStringLiteral("DOMException"),
-                             QStringLiteral("DataView"),
-                             QStringLiteral("Date"),
-                             QStringLiteral("Error"),
-                             QStringLiteral("EvalError"),
-                             QStringLiteral("Float32Array"),
-                             QStringLiteral("Float64Array"),
-                             QStringLiteral("Function"),
-                             QStringLiteral("Infinity"),
-                             QStringLiteral("Int16Array"),
-                             QStringLiteral("Int32Array"),
-                             QStringLiteral("Int8Array"),
-                             QStringLiteral("JSON"),
-                             QStringLiteral("Map"),
-                             QStringLiteral("Math"),
-                             QStringLiteral("NaN"),
-                             QStringLiteral("Number"),
-                             QStringLiteral("Object"),
-                             QStringLiteral("Promise"),
-                             QStringLiteral("Proxy"),
-                             QStringLiteral("QT_TRANSLATE_NOOP"),
-                             QStringLiteral("QT_TRID_NOOP"),
-                             QStringLiteral("QT_TR_NOOP"),
-                             QStringLiteral("Qt"),
-                             QStringLiteral("RangeError"),
-                             QStringLiteral("ReferenceError"),
-                             QStringLiteral("Reflect"),
-                             QStringLiteral("RegExp"),
-                             QStringLiteral("SQLException"),
-                             QStringLiteral("Set"),
-                             QStringLiteral("SharedArrayBuffer"),
-                             QStringLiteral("String"),
-                             QStringLiteral("Symbol"),
-                             QStringLiteral("SyntaxError"),
-                             QStringLiteral("TypeError"),
-                             QStringLiteral("URIError"),
-                             QStringLiteral("URL"),
-                             QStringLiteral("URLSearchParams"),
-                             QStringLiteral("Uint16Array"),
-                             QStringLiteral("Uint32Array"),
-                             QStringLiteral("Uint8Array"),
-                             QStringLiteral("Uint8ClampedArray"),
-                             QStringLiteral("WeakMap"),
-                             QStringLiteral("WeakSet"),
-                             QStringLiteral("XMLHttpRequest"),
-                             QStringLiteral("console"),
-                             QStringLiteral("decodeURI"),
-                             QStringLiteral("decodeURIComponent"),
-                             QStringLiteral("encodeURI"),
-                             QStringLiteral("encodeURIComponent"),
-                             QStringLiteral("escape"),
-                             QStringLiteral("eval"),
-                             QStringLiteral("gc"),
-                             QStringLiteral("isFinite"),
-                             QStringLiteral("isNaN"),
-                             QStringLiteral("parseFloat"),
-                             QStringLiteral("parseInt"),
-                             QStringLiteral("print"),
-                             QStringLiteral("qsTr"),
-                             QStringLiteral("qsTrId"),
-                             QStringLiteral("qsTranslate"),
-                             QStringLiteral("undefined"),
-                             QStringLiteral("unescape") };
+    m_jsGlobalProperties = { u"Array"_qs,
+                             u"ArrayBuffer"_qs,
+                             u"Atomics"_qs,
+                             u"Boolean"_qs,
+                             u"DOMException"_qs,
+                             u"DataView"_qs,
+                             u"Date"_qs,
+                             u"Error"_qs,
+                             u"EvalError"_qs,
+                             u"Float32Array"_qs,
+                             u"Float64Array"_qs,
+                             u"Function"_qs,
+                             u"Infinity"_qs,
+                             u"Int16Array"_qs,
+                             u"Int32Array"_qs,
+                             u"Int8Array"_qs,
+                             u"JSON"_qs,
+                             u"Map"_qs,
+                             u"Math"_qs,
+                             u"NaN"_qs,
+                             u"Number"_qs,
+                             u"Object"_qs,
+                             u"Promise"_qs,
+                             u"Proxy"_qs,
+                             u"QT_TRANSLATE_NOOP"_qs,
+                             u"QT_TRID_NOOP"_qs,
+                             u"QT_TR_NOOP"_qs,
+                             u"Qt"_qs,
+                             u"RangeError"_qs,
+                             u"ReferenceError"_qs,
+                             u"Reflect"_qs,
+                             u"RegExp"_qs,
+                             u"SQLException"_qs,
+                             u"Set"_qs,
+                             u"SharedArrayBuffer"_qs,
+                             u"String"_qs,
+                             u"Symbol"_qs,
+                             u"SyntaxError"_qs,
+                             u"TypeError"_qs,
+                             u"URIError"_qs,
+                             u"URL"_qs,
+                             u"URLSearchParams"_qs,
+                             u"Uint16Array"_qs,
+                             u"Uint32Array"_qs,
+                             u"Uint8Array"_qs,
+                             u"Uint8ClampedArray"_qs,
+                             u"WeakMap"_qs,
+                             u"WeakSet"_qs,
+                             u"XMLHttpRequest"_qs,
+                             u"console"_qs,
+                             u"decodeURI"_qs,
+                             u"decodeURIComponent"_qs,
+                             u"encodeURI"_qs,
+                             u"encodeURIComponent"_qs,
+                             u"escape"_qs,
+                             u"eval"_qs,
+                             u"gc"_qs,
+                             u"isFinite"_qs,
+                             u"isNaN"_qs,
+                             u"parseFloat"_qs,
+                             u"parseInt"_qs,
+                             u"print"_qs,
+                             u"qsTr"_qs,
+                             u"qsTrId"_qs,
+                             u"qsTranslate"_qs,
+                             u"undefined"_qs,
+                             u"unescape"_qs };
 }
 
 QQmlJSScope::ConstPtr
@@ -667,7 +667,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr
                                              QQmlJSRegisterContent::JavaScriptObjectProperty, type);
     }
 
-    if (type == stringType() && name == QStringLiteral("length")) {
+    if (type == stringType() && name == u"length"_qs) {
         QQmlJSMetaProperty prop;
         prop.setPropertyName(name);
         prop.setTypeName(u"int"_qs);
