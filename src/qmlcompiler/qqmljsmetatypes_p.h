@@ -255,12 +255,12 @@ class QQmlJSMetaProperty
     QString m_write;
     QString m_bindable;
     QString m_notify;
+    QString m_aliasExpr;
     QWeakPointer<const QQmlJSScope> m_type;
     QVector<QQmlJSAnnotation> m_annotations;
     bool m_isList = false;
     bool m_isWritable = false;
     bool m_isPointer = false;
-    bool m_isAlias = false;
     bool m_isFinal = false;
     int m_revision = 0;
     int m_index = -1; // relative property index within owning QQmlJSScope
@@ -301,8 +301,9 @@ public:
     void setIsPointer(bool isPointer) { m_isPointer = isPointer; }
     bool isPointer() const { return m_isPointer; }
 
-    void setIsAlias(bool isAlias) { m_isAlias = isAlias; }
-    bool isAlias() const { return m_isAlias; }
+    void setAliasExpression(const QString &aliasString) { m_aliasExpr = aliasString; }
+    QString aliasExpression() const { return m_aliasExpr; }
+    bool isAlias() const { return !m_aliasExpr.isEmpty(); } // exists for convenience
 
     void setIsFinal(bool isFinal) { m_isFinal = isFinal; }
     bool isFinal() const { return m_isFinal; }
@@ -321,7 +322,7 @@ public:
                 && a.m_typeName == b.m_typeName && a.m_bindable == b.m_bindable
                 && a.m_type == b.m_type && a.m_isList == b.m_isList
                 && a.m_isWritable == b.m_isWritable && a.m_isPointer == b.m_isPointer
-                && a.m_isAlias == b.m_isAlias && a.m_revision == b.m_revision
+                && a.m_aliasExpr == b.m_aliasExpr && a.m_revision == b.m_revision
                 && a.m_isFinal == b.m_isFinal;
     }
 
@@ -334,7 +335,7 @@ public:
     {
         return qHashMulti(seed, prop.m_propertyName, prop.m_typeName, prop.m_bindable,
                           prop.m_type.toStrongRef().data(), prop.m_isList, prop.m_isWritable,
-                          prop.m_isPointer, prop.m_isAlias, prop.m_revision, prop.m_isFinal,
+                          prop.m_isPointer, prop.m_aliasExpr, prop.m_revision, prop.m_isFinal,
                           prop.m_index);
     }
 };

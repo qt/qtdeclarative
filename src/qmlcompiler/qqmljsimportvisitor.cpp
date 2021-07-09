@@ -169,7 +169,7 @@ void QQmlJSImportVisitor::resolveAliases()
             if (!property.isAlias() || !property.type().isNull())
                 continue;
 
-            QStringList components = property.typeName().split(u'.');
+            QStringList components = property.aliasExpression().split(u'.');
             QQmlJSScope::ConstPtr type;
             QQmlJSMetaProperty targetProperty;
 
@@ -970,20 +970,21 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         QString typeName = publicMember->memberType
                 ? publicMember->memberType->name.toString()
                 : QString();
-        const bool isAlias = (typeName == QLatin1String("alias"));
+        QString aliasExpr;
+        const bool isAlias = (typeName == u"alias"_qs);
         if (isAlias) {
-            typeName.clear();
+            typeName.clear(); // type name is useless for alias here, so keep it empty
             const auto expression = cast<ExpressionStatement *>(publicMember->statement);
             auto node = expression->expression;
             auto fex = cast<FieldMemberExpression *>(node);
             while (fex) {
                 node = fex->base;
-                typeName.prepend(u'.' + fex->name);
+                aliasExpr.prepend(u'.' + fex->name);
                 fex = cast<FieldMemberExpression *>(node);
             }
 
             if (const auto idExpression = cast<IdentifierExpression *>(node)) {
-                typeName.prepend(idExpression->name.toString());
+                aliasExpr.prepend(idExpression->name.toString());
             } else {
                 m_logger.logWarning(QStringLiteral("Invalid alias expression. Only IDs and field "
                                                    "member expressions can be aliased."),
@@ -1000,16 +1001,15 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         prop.setPropertyName(publicMember->name.toString());
         prop.setIsList(publicMember->typeModifier == QLatin1String("list"));
         prop.setIsWritable(!publicMember->isReadonlyMember);
-        prop.setIsAlias(isAlias);
-        if (const auto type = m_rootScopeImports.value(typeName)) {
+        prop.setAliasExpression(aliasExpr);
+        const auto type = isAlias ? QQmlJSScope::ConstPtr() : m_rootScopeImports.value(typeName);
+        if (type) {
             prop.setType(type);
             const QString internalName = type->internalName();
             prop.setTypeName(internalName.isEmpty() ? typeName : internalName);
-        } else {
-            if (!isAlias)
-                m_pendingPropertyTypes
-                        << PendingPropertyType { m_currentScope, prop.propertyName(),
-                                                 publicMember->firstSourceLocation() };
+        } else if (!isAlias) {
+            m_pendingPropertyTypes << PendingPropertyType { m_currentScope, prop.propertyName(),
+                                                            publicMember->firstSourceLocation() };
             prop.setTypeName(typeName);
         }
         prop.setAnnotations(parseAnnotations(publicMember->annotations));
