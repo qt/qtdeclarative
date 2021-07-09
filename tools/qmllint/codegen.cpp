@@ -121,7 +121,10 @@ Codegen::compileBinding(const QV4::Compiler::Context *context, const QmlIR::Bind
             && m_objectType->hasProperty(signalName.chopped(strlen("Changed")))) {
             isSignal = true;
         } else {
-            const auto methods = m_objectType->methods(signalName);
+            const bool isConnections = !m_objectType->baseType().isNull()
+                    && m_objectType->baseType()->internalName() == u"QQmlConnections";
+            const auto methods = isConnections ? m_objectType->parentScope()->methods(signalName)
+                                               : m_objectType->methods(signalName);
             for (const auto &method : methods) {
                 if (method.methodType() == QQmlJSMetaMethod::Signal) {
                     isSignal = true;
@@ -248,24 +251,13 @@ QQmlJS::DiagnosticMessage Codegen::diagnose(const QString &message, QtMsgType ty
 void Codegen::instructionOffsetToSrcLocation(const QV4::Compiler::Context *context, uint offset,
                                              QQmlJS::SourceLocation *srcLoc) const
 {
-    auto findLine = [](const QV4::CompiledData::CodeOffsetToLine &entry, uint offset) {
-        return entry.codeOffset < offset;
-    };
-    const QV4::CompiledData::CodeOffsetToLine *codeToLine =
-            std::lower_bound(context->lineNumberMapping.constBegin(),
-                             context->lineNumberMapping.constEnd(), offset + 1, findLine)
-            - 1;
+    Q_ASSERT(context->sourceLocationTable);
+    const auto &entries = context->sourceLocationTable->entries;
+    auto item = std::lower_bound(entries.begin(), entries.end(), offset,
+                                 [](auto entry, uint offset) { return entry.offset < offset; });
 
-    QStringList lines = m_code.split(u'\n');
-
-    srcLoc->startLine = codeToLine->line;
-    srcLoc->startColumn = 0;
-    srcLoc->length = 0;
-    srcLoc->length = lines[srcLoc->startLine - 1].size();
-
-    srcLoc->offset = std::accumulate(lines.begin(), lines.begin() + codeToLine->line - 1, 0,
-                                     [](int a, QString s) { return s.length() + a; })
-            + codeToLine->line - 1;
+    Q_ASSERT(item != entries.end());
+    *srcLoc = item->location;
 }
 
 bool Codegen::generateFunction(const QV4::Compiler::Context *context, Function *function) const
@@ -325,6 +317,7 @@ bool Codegen::generateFunction(const QV4::Compiler::Context *context, Function *
     QQmlJSTypePropagator::Error propagationError;
     auto typePropagationResult = propagator.propagateTypes(
             context, arguments, function->returnType, function->qmlScope,
+            m_typeResolver->objectsById(),
             !function->returnType && function->contextType == QV4::Compiler::ContextType::Binding,
             &propagationError);
     if (propagationError.isSet()) {
@@ -333,7 +326,7 @@ bool Codegen::generateFunction(const QV4::Compiler::Context *context, Function *
         instructionOffsetToSrcLocation(context, propagationError.instructionOffset, &msg.loc);
         msg.message = propagationError.message;
         function->error = msg;
-        return false;
+        return propagationError.hasLoggerMessage;
     }
 
     return true;

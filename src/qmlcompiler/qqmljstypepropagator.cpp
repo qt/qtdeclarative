@@ -42,10 +42,13 @@ QQmlJSTypePropagator::~QQmlJSTypePropagator() { }
 QQmlJSTypePropagator::TypePropagationResult QQmlJSTypePropagator::propagateTypes(
         const QV4::Compiler::Context *context, const QQmlJS::AST::BoundNames &arguments,
         const QQmlJSScope::ConstPtr &returnType, const QQmlJSScope::ConstPtr &qmlScope,
-        bool isSignalHandler, Error *error)
+        const QHash<QString, QQmlJSScope::ConstPtr> &addressableScopes, bool isSignalHandler,
+        Error *error)
 {
     m_error = error;
     m_currentScope = qmlScope;
+    m_currentContext = context;
+    m_addressableScopes = addressableScopes;
     m_arguments = arguments;
     m_returnType = m_typeResolver->globalType(returnType);
     m_isSignalHandler = isSignalHandler;
@@ -234,13 +237,127 @@ void QQmlJSTypePropagator::generate_LoadGlobalLookup(int index)
     generate_LoadName(m_jsUnitGenerator->lookupNameIndex(index));
 }
 
+void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name)
+{
+    Q_ASSERT(m_currentContext->sourceLocationTable);
+    const auto &entries = m_currentContext->sourceLocationTable->entries;
+
+    auto item = std::lower_bound(entries.begin(), entries.end(), currentInstructionOffset(),
+                                 [](auto entry, uint offset) { return entry.offset < offset; });
+    Q_ASSERT(item != entries.end());
+    auto location = item->location;
+
+    if (m_currentScope->isInCustomParserParent()) {
+        Q_ASSERT(!m_currentScope->baseType().isNull());
+        // Only ignore custom parser based elements if it's not Connections.
+        if (m_currentScope->baseType()->internalName() != u"QQmlConnections"_qs)
+            return;
+    }
+
+    m_logger->logWarning(QLatin1String("Unqualified access"), Log_UnqualifiedAccess, location);
+
+    auto childScopes = m_currentScope->childScopes();
+    for (qsizetype i = 0; i < m_currentScope->childScopes().length(); i++) {
+        auto &scope = childScopes[i];
+        if (location.offset > scope->sourceLocation().offset) {
+            if (i + 1 < childScopes.length()
+                && childScopes.at(i + 1)->sourceLocation().offset < location.offset)
+                continue;
+            if (scope->childScopes().length() == 0)
+                continue;
+
+            const auto jsId = scope->childScopes().first()->findJSIdentifier(name);
+
+            if (jsId.has_value() && jsId->kind == QQmlJSScope::JavaScriptIdentifier::Injected) {
+
+                FixSuggestion suggestion { Log_UnqualifiedAccess, QtInfoMsg, {} };
+
+                const QQmlJSScope::JavaScriptIdentifier id = jsId.value();
+
+                QQmlJS::SourceLocation fixLocation = id.location;
+                Q_UNUSED(fixLocation)
+                fixLocation.length = 0;
+
+                const auto handler = m_typeResolver->signalHandlers()[id.location];
+
+                QString fixString = handler.isMultiline ? u" function("_qs : u" ("_qs;
+                const auto parameters = handler.signalParameters;
+                for (int numParams = parameters.size(); numParams > 0; --numParams) {
+                    fixString += parameters.at(parameters.size() - numParams);
+                    if (numParams > 1)
+                        fixString += u", "_qs;
+                }
+
+                fixString += handler.isMultiline ? u") "_qs : u") => "_qs;
+
+                suggestion.fixes << FixSuggestion::Fix {
+                    name
+                            + QString::fromLatin1(" is accessible in this scope because "
+                                                  "you are handling a signal at %1:%2\n")
+                                      .arg(id.location.startLine)
+                                      .arg(id.location.startColumn),
+                    QtInfoMsg, fixLocation, fixString
+                };
+
+                m_logger->suggestFix(suggestion);
+            }
+            break;
+        }
+    }
+
+    for (QQmlJSScope::ConstPtr scope = m_currentScope; !scope.isNull();
+         scope = scope->parentScope()) {
+        if (scope->hasProperty(name)) {
+            auto it = std::find_if(m_addressableScopes.constBegin(), m_addressableScopes.constEnd(),
+                                   [&](const QQmlJSScope::ConstPtr ptr) { return ptr == scope; });
+
+            FixSuggestion suggestion { Log_UnqualifiedAccess, QtInfoMsg, {} };
+
+            QQmlJS::SourceLocation fixLocation = location;
+            fixLocation.length = 0;
+
+            QString id = it == m_addressableScopes.constEnd() ? u"<id>"_qs : it.key();
+
+            suggestion.fixes << FixSuggestion::Fix {
+                name + QLatin1String(" is a member of a parent element\n")
+                        + QLatin1String("      You can qualify the access with its id "
+                                        "to avoid this warning:\n"),
+                QtInfoMsg, fixLocation, id + u"."_qs
+            };
+
+            if (it == m_addressableScopes.constEnd()) {
+                suggestion.fixes << FixSuggestion::Fix {
+                    u"You first have to give the element an id"_qs,
+                    QtInfoMsg,
+                    QQmlJS::SourceLocation {},
+                    {}
+                };
+            }
+
+            m_logger->suggestFix(suggestion);
+        }
+    }
+}
+
 void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
 {
     const QString name =
             m_jsUnitGenerator->stringForIndex(m_jsUnitGenerator->lookupNameIndex(index));
-    m_state.accumulatorOut = m_typeResolver->scopedType(m_currentScope, name);
+    m_state.accumulatorOut = m_typeResolver->scopedType(m_currentScope, m_state.savedPrefix + name);
+
+    if (!m_state.accumulatorOut.isValid() && m_typeResolver->isPrefix(name)) {
+        m_state.savedPrefix = name + u"."_qs;
+        m_state.accumulatorOut = m_state.accumulatorIn.isValid()
+                ? m_state.accumulatorIn
+                : m_typeResolver->globalType(m_currentScope);
+        return;
+    }
+
+    m_state.savedPrefix.clear();
+
     if (!m_state.accumulatorOut.isValid()) {
-        setError(u"Cannot access value for name "_qs + name);
+        setError(u"Cannot access value for name "_qs + name, true);
+        handleUnqualifiedAccess(name);
     } else if (m_typeResolver->genericType(m_state.accumulatorOut.storedType()).isNull()) {
         // It should really be valid.
         // We get the generic type from aotContext->loadQmlContextPropertyIdLookup().

@@ -67,6 +67,10 @@ public:
 
     QHash<QString, QQmlJSScope::ConstPtr> imports() const { return m_rootScopeImports; }
     QHash<QString, QQmlJSScope::ConstPtr> addressableScopes() const { return m_scopesById; }
+    QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> signalHandlers() const
+    {
+        return m_signalHandlers;
+    }
 
     static QString implicitImportDirectory(
             const QString &localFile, QQmlJSResourceFileMapper *mapper);

@@ -95,6 +95,8 @@ public:
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
     QQmlJSScope::ConstPtr scopeForId(const QString &id) const;
 
+    bool isPrefix(const QString &name) { return m_imports.contains(name) && !m_imports[name]; }
+
     QQmlJSScope::ConstPtr typeForName(const QString &name) const { return m_imports[name]; }
     QQmlJSScope::ConstPtr typeFromAST(QQmlJS::AST::Type *type) const;
     QQmlJSScope::ConstPtr typeForConst(QV4::ReturnedValue rv) const;
@@ -136,6 +138,12 @@ public:
     storedType(const QQmlJSScope::ConstPtr &type,
                ComponentIsGeneric allowComponent = ComponentIsGeneric::No) const;
 
+    const QHash<QString, QQmlJSScope::ConstPtr> &objectsById() { return m_objectsById; }
+    const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers()
+    {
+        return m_signalHandlers;
+    }
+
 private:
     QQmlJSScope::ConstPtr merge(const QQmlJSScope::ConstPtr &a,
                                 const QQmlJSScope::ConstPtr &b) const;
@@ -171,6 +179,7 @@ private:
     QHash<QString, QQmlJSScope::ConstPtr> m_objectsById;
     QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> m_objectsByLocation;
     QHash<QString, QQmlJSScope::ConstPtr> m_imports;
+    QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
 
     TypeStorage m_typeStorage = Direct;
     Semantics m_semantics = Dynamic;

@@ -128,8 +128,6 @@ void TestQmllint::testUnqualified_data()
     QTest::addColumn<int>("warningLine");
     QTest::addColumn<int>("warningColumn");
 
-    // check for false positive due to and warning about with statement
-    QTest::newRow("WithStatement") << QStringLiteral("WithStatement.qml") << QStringLiteral("with statements are strongly discouraged") << 10 << 25;
     // id from nowhere (as with setContextProperty)
     QTest::newRow("IdFromOuterSpaceDirect") << QStringLiteral("IdFromOuterSpace.qml") << "alien.x" << 4 << 8;
     QTest::newRow("IdFromOuterSpaceAccess") << QStringLiteral("IdFromOuterSpace.qml") << "console.log(alien)" << 7 << 21;
@@ -627,6 +625,9 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("nestedInlineComponents")
             << QStringLiteral("nestedInlineComponents.qml")
             << QStringLiteral("Nested inline components are not supported") << QString() << false;
+    QTest::newRow("WithStatement")
+            << QStringLiteral("WithStatement.qml")
+            << QStringLiteral("with statements are strongly discouraged") << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()

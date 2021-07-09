@@ -402,71 +402,10 @@ void CheckIdentifiers::operator()(
             if (baseIsPrefixed) {
                 m_logger->logWarning(QLatin1String("Type not found in namespace"), Log_Type,
                                      location);
-            } else {
-                m_logger->logWarning(QLatin1String("Unqualified access"), Log_UnqualifiedAccess,
-                                     location);
             }
 
-            // root(JS) --> (first element)
-            const auto firstElement = root->childScopes()[0];
-
-            FixSuggestion suggestion { Log_UnqualifiedAccess, QtWarningMsg, {} };
-
-            if ((firstElement->hasProperty(memberAccessBase.m_name)
-                 || firstElement->hasMethod(memberAccessBase.m_name)
-                 || firstElement->hasEnumeration(memberAccessBase.m_name))) {
-
-                QQmlJS::SourceLocation fixLocation = location;
-                fixLocation.length = 0;
-
-                suggestion.fixes << FixSuggestion::Fix {
-                    memberAccessBase.m_name + QLatin1String(" is a member of the root element\n")
-                            + QLatin1String("      You can qualify the access with its id "
-                                            "to avoid this warning:\n"),
-                    QtInfoMsg, fixLocation, rootId + u"."_qs
-                };
-
-                m_logger->suggestFix(suggestion);
-
-                if (rootId == QLatin1String("<id>")) {
-                    suggestion.fixes << FixSuggestion::Fix {
-                        u"You first have to give the root element an id"_qs,
-                        QtInfoMsg,
-                        QQmlJS::SourceLocation(),
-                        {}
-                    };
-                }
-            } else if (jsId.has_value()
-                       && jsId->kind == QQmlJSScope::JavaScriptIdentifier::Injected) {
-                const QQmlJSScope::JavaScriptIdentifier id = jsId.value();
-
-                QQmlJS::SourceLocation fixLocation = id.location;
-                fixLocation.length = 0;
-
-                const auto handler = signalHandlers[id.location];
-
-                QString fixString = handler.isMultiline ? u" function("_qs : u" ("_qs;
-                const auto parameters = handler.signalParameters;
-                for (int numParams = parameters.size(); numParams > 0; --numParams) {
-                    fixString += parameters.at(parameters.size() - numParams);
-                    if (numParams > 1)
-                        fixString += u", "_qs;
-                }
-
-                fixString += handler.isMultiline ? u") "_qs : u") => "_qs;
-
-                suggestion.fixes << FixSuggestion::Fix {
-                    memberAccessBase.m_name
-                            + QString::fromLatin1(" is accessible in this scope because "
-                                                  "you are handling a signal at %1:%2:%3\n")
-                                      .arg(m_fileName)
-                                      .arg(id.location.startLine)
-                                      .arg(id.location.startColumn),
-                    QtInfoMsg, fixLocation, fixString
-                };
-
-                m_logger->suggestFix(suggestion);
-            }
+            Q_UNUSED(signalHandlers)
+            Q_UNUSED(rootId)
         }
         const auto childScopes = currentScope->childScopes();
         for (auto const &childScope : childScopes)

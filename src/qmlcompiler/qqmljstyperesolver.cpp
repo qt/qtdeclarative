@@ -100,6 +100,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(
     QQueue<QQmlJSScope::Ptr> objects;
     objects.enqueue(visitor.result());
     m_objectsById = visitor.addressableScopes();
+    m_signalHandlers = visitor.signalHandlers();
 
     while (!objects.isEmpty()) {
         const QQmlJSScope::Ptr object = objects.dequeue();

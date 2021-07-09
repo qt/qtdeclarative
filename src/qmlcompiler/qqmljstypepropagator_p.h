@@ -61,6 +61,7 @@ struct QQmlJSTypePropagator : public QV4::Moth::ByteCodeHandler
     {
         QString message;
         int instructionOffset;
+        bool hasLoggerMessage;
         bool isSet() const { return !message.isEmpty(); }
     };
 
@@ -72,11 +73,11 @@ struct QQmlJSTypePropagator : public QV4::Moth::ByteCodeHandler
 
     using TypePropagationResult = QHash<int, InstructionAnnotation>;
 
-    TypePropagationResult propagateTypes(const QV4::Compiler::Context *context,
-                                         const QQmlJS::AST::BoundNames &arguments,
-                                         const QQmlJSScope::ConstPtr &returnType,
-                                         const QQmlJSScope::ConstPtr &qmlScope,
-                                         bool isSignalHandler, Error *error);
+    TypePropagationResult
+    propagateTypes(const QV4::Compiler::Context *context, const QQmlJS::AST::BoundNames &arguments,
+                   const QQmlJSScope::ConstPtr &returnType, const QQmlJSScope::ConstPtr &qmlScope,
+                   const QHash<QString, QQmlJSScope::ConstPtr> &addressableScopes,
+                   bool isSignalHandler, Error *error);
 
     void generate_Ret() override;
     void generate_Debug() override;
@@ -223,9 +224,10 @@ struct QQmlJSTypePropagator : public QV4::Moth::ByteCodeHandler
     };
 
 private:
-    void setError(const QString &message)
+    void setError(const QString &message, bool hasLoggerMessage = false)
     {
         m_error->message = message;
+        m_error->hasLoggerMessage = hasLoggerMessage;
         m_error->instructionOffset = currentInstructionOffset();
     }
 
@@ -243,6 +245,7 @@ private:
         QQmlJSVirtualRegisters registers;
         QQmlJSRegisterContent accumulatorIn;
         QQmlJSRegisterContent accumulatorOut;
+        QString savedPrefix;
 
         QHash<int, InstructionAnnotation> annotations;
 
@@ -256,6 +259,8 @@ private:
 
         bool needsMorePasses = false;
     };
+
+    void handleUnqualifiedAccess(const QString &name);
 
     void propagateBinaryOperation(QSOperator::Op op, int lhs);
     void propagateCall(const QList<QQmlJSMetaMethod> &methods, int argc, int argv);
@@ -283,6 +288,8 @@ private:
     QV4::Compiler::JSUnitGenerator *m_jsUnitGenerator = nullptr;
 
     QQmlJSScope::ConstPtr m_currentScope;
+    const QV4::Compiler::Context *m_currentContext;
+    QHash<QString, QQmlJSScope::ConstPtr> m_addressableScopes;
     QQmlJSLogger *m_logger;
 
     // Not part of the state, as the back jumps are the reason for running multiple passes
