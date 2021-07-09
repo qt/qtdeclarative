@@ -193,15 +193,17 @@ private:
 };
 
 bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFunction,
-                     QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error)
+                     QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error,
+                     bool storeSourceLocation)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
-    return qCompileQmlFile(irDocument, inputFileName, saveFunction, aotCompiler, error);
+    return qCompileQmlFile(irDocument, inputFileName, saveFunction, aotCompiler, error,
+                           storeSourceLocation);
 }
 
 bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                      QQmlJSSaveFunction saveFunction, QQmlJSAotCompiler *aotCompiler,
-                     QQmlJSCompileError *error)
+                     QQmlJSCompileError *error, bool storeSourceLocation)
 {
     QString sourceCode;
     {
@@ -241,7 +243,9 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
             QList<QmlIR::CompiledFunctionOrExpression> functionsToCompile;
             for (QmlIR::CompiledFunctionOrExpression *foe = object->functionsAndExpressions->first; foe; foe = foe->next)
                 functionsToCompile << *foe;
-            const QVector<int> runtimeFunctionIndices = v4CodeGen.generateJSCodeForFunctionsAndBindings(functionsToCompile);
+            const QVector<int> runtimeFunctionIndices =
+                    v4CodeGen.generateJSCodeForFunctionsAndBindings(functionsToCompile,
+                                                                    storeSourceLocation);
             if (v4CodeGen.hasError()) {
                 error->appendDiagnostic(inputFileName, v4CodeGen.error());
                 return false;

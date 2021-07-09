@@ -1905,7 +1905,8 @@ JSCodeGen::JSCodeGen(Document *document, const QSet<QString> &globalNames)
     _fileNameIsUrl = true;
 }
 
-QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<CompiledFunctionOrExpression> &functions)
+QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(
+        const QList<CompiledFunctionOrExpression> &functions, bool storeSourceLocation)
 {
     auto qmlName = [&](const CompiledFunctionOrExpression &c) {
         if (c.nameIndex != 0)
@@ -1970,8 +1971,7 @@ QVector<int> JSCodeGen::generateJSCodeForFunctionsAndBindings(const QList<Compil
         }
 
         int idx = defineFunction(name, function ? function : qmlFunction.parentNode,
-                                 function ? function->formals : nullptr,
-                                 body);
+                                 function ? function->formals : nullptr, body, storeSourceLocation);
         runtimeFunctionIndices[i] = idx;
     }
 

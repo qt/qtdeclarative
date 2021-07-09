@@ -93,10 +93,11 @@ using QQmlJSSaveFunction
                          const QQmlJSAotFunctionMap &, QString *)>;
 
 bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFunction,
-                     QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error);
+                     QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error,
+                     bool storeSourceLocation = false);
 bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                      QQmlJSSaveFunction saveFunction, QQmlJSAotCompiler *aotCompiler,
-                     QQmlJSCompileError *error);
+                     QQmlJSCompileError *error, bool storeSourceLocation = false);
 bool qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl,
                     QQmlJSSaveFunction saveFunction, QQmlJSCompileError *error);
 

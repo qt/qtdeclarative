@@ -3246,9 +3246,8 @@ static bool endsWithReturn(Module *module, Node *node)
     return false;
 }
 
-int Codegen::defineFunction(const QString &name, AST::Node *ast,
-                            AST::FormalParameterList *formals,
-                            AST::StatementList *body)
+int Codegen::defineFunction(const QString &name, AST::Node *ast, AST::FormalParameterList *formals,
+                            AST::StatementList *body, bool storeSourceLocation)
 {
     enterContext(ast);
 
@@ -3280,7 +3279,7 @@ int Codegen::defineFunction(const QString &name, AST::Node *ast,
     // AOT compilation, so mark the surrounding function as only-returning-a-closure.
     _context->returnsClosure = body && body->statement && cast<ExpressionStatement *>(body->statement) && cast<FunctionExpression *>(cast<ExpressionStatement *>(body->statement)->expression);
 
-    BytecodeGenerator bytecode(_context->line, _module->debugMode);
+    BytecodeGenerator bytecode(_context->line, _module->debugMode, storeSourceLocation);
     BytecodeGenerator *savedBytecodeGenerator;
     savedBytecodeGenerator = bytecodeGenerator;
     bytecodeGenerator = &bytecode;

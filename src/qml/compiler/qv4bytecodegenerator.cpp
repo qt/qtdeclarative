@@ -48,6 +48,7 @@ using namespace Moth;
 void BytecodeGenerator::setLocation(const QQmlJS::SourceLocation &loc)
 {
     currentLine = static_cast<int>(loc.startLine);
+    currentSourceLocation = loc;
 }
 
 int BytecodeGenerator::newRegister()
@@ -165,21 +166,27 @@ void BytecodeGenerator::finalize(Compiler::Context *context)
     // collect content and line numbers
     QByteArray code;
     QVector<CompiledData::CodeOffsetToLine> lineNumbers;
+
     currentLine = -1;
     Q_UNUSED(startLine);
-    for (const auto &i : qAsConst(instructions)) {
-        if (i.line != currentLine) {
-            currentLine = i.line;
+    for (qsizetype i = 0; i < instructions.size(); i++) {
+        if (instructions[i].line != currentLine) {
+            currentLine = instructions[i].line;
             CompiledData::CodeOffsetToLine entry;
             entry.codeOffset = code.size();
             entry.line = currentLine;
             lineNumbers.append(entry);
         }
-        code.append(reinterpret_cast<const char *>(i.packed), i.size);
+
+        if (m_sourceLocationTable)
+            m_sourceLocationTable->entries[i].offset = static_cast<quint32>(code.size());
+
+        code.append(reinterpret_cast<const char *>(instructions[i].packed), instructions[i].size);
     }
 
     context->code = code;
     context->lineNumberMapping = lineNumbers;
+    context->sourceLocationTable = std::move(m_sourceLocationTable);
 
     for (const auto &li : _labelInfos) {
         context->labelInfo.push_back(instructions.at(labels.at(li.labelIndex)).position);
@@ -215,6 +222,7 @@ QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized") // broken gcc warns about Instru
             currentLine = -currentLine;
             addInstruction(Instruction::Debug());
             currentLine = -currentLine;
+            currentSourceLocation = QQmlJS::SourceLocation();
         }
 QT_WARNING_POP
     }
@@ -235,6 +243,8 @@ QT_WARNING_POP
     }
 
     instructions.append(instr);
+    if (m_sourceLocationTable)
+        m_sourceLocationTable->entries.append({ 0, currentSourceLocation });
 
     return pos;
 }

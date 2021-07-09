@@ -530,7 +530,7 @@ public:
     // Returns index in _module->functions
     virtual int defineFunction(const QString &name, QQmlJS::AST::Node *ast,
                                QQmlJS::AST::FormalParameterList *formals,
-                               QQmlJS::AST::StatementList *body);
+                               QQmlJS::AST::StatementList *body, bool storeSourceLocation = false);
 
 protected:
     void statement(QQmlJS::AST::Statement *ast);

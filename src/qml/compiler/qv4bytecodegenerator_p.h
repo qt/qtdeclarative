@@ -52,6 +52,10 @@
 //
 #include <private/qv4instr_moth_p.h>
 #include <private/qv4compileddata_p.h>
+#include <private/qv4compilercontext_p.h>
+#include <private/qqmljssourcelocation_p.h>
+
+#include <memory>
 
 QT_BEGIN_NAMESPACE
 
@@ -69,8 +73,12 @@ namespace Moth {
 
 class BytecodeGenerator {
 public:
-    BytecodeGenerator(int line, bool debug)
-        : startLine(line), debugMode(debug) {}
+    BytecodeGenerator(int line, bool debug, bool storeSourceLocation = false)
+        : startLine(line), debugMode(debug)
+    {
+        if (storeSourceLocation)
+            m_sourceLocationTable.reset(new QV4::Compiler::Context::SourceLocationTable {});
+    }
 
     struct Label {
         enum LinkMode {
@@ -325,6 +333,8 @@ public:
 private:
     int startLine = 0;
     int currentLine = 0;
+    QQmlJS::SourceLocation currentSourceLocation;
+    std::unique_ptr<QV4::Compiler::Context::SourceLocationTable> m_sourceLocationTable;
     bool debugMode = false;
 
     int lastInstrType = -1;

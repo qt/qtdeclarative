@@ -57,6 +57,8 @@
 #include <QtCore/QStack>
 #include <QtCore/QHash>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {
@@ -177,6 +179,16 @@ struct Context {
         FunctionDefinition
     };
 
+    struct SourceLocationTable
+    {
+        struct Entry
+        {
+            quint32 offset;
+            QQmlJS::SourceLocation location;
+        };
+        QVector<Entry> entries;
+    };
+
     struct Member {
         MemberType type = UndefinedMember;
         int index = -1;
@@ -206,6 +218,7 @@ struct Context {
     ControlFlow *controlFlow = nullptr;
     QByteArray code;
     QVector<CompiledData::CodeOffsetToLine> lineNumberMapping;
+    std::unique_ptr<SourceLocationTable> sourceLocationTable;
     std::vector<unsigned> labelInfo;
 
     int nRegisters = 0;
