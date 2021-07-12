@@ -52,14 +52,16 @@
 //
 
 #include <private/qtquickglobal_p.h>
-#include "qquickitem.h"
-#include "qevent.h"
 
-#include <QPointer>
-#include <QMap>
-#include <QList>
+#include <QtQuick/qquickitem.h>
+
+#include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
+
+#include <QtCore/qlist.h>
+#include <QtCore/qmap.h>
+#include <QtCore/qpointer.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -52,7 +52,8 @@
 //
 
 #include <private/qtquickglobal_p.h>
-#include "qquickitem.h"
+
+#include <QtQuick/qquickitem.h>
 
 #include <QtGui/qmatrix4x4.h>
 

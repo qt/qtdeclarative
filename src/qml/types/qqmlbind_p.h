@@ -52,8 +52,8 @@
 //
 
 #include <private/qtqmlglobal_p.h>
-#include <qqml.h>
 
+#include <QtQml/qqml.h>
 #include <QtCore/qobject.h>
 
 QT_BEGIN_NAMESPACE

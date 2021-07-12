@@ -52,10 +52,12 @@
 //
 
 #include <private/qtquickglobal_p.h>
-#include <qqml.h>
 
-#include <QtGui/QFontMetricsF>
-#include <QtCore/QObject>
+#include <QtQml/qqml.h>
+
+#include <QtGui/qfontmetrics.h>
+
+#include <QtCore/qobject.h>
 
 QT_BEGIN_NAMESPACE
 

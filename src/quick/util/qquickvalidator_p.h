@@ -52,8 +52,10 @@
 //
 
 #include <private/qtquickglobal_p.h>
-#include <QtGui/qvalidator.h>
+
 #include <QtQml/qqml.h>
+
+#include <QtGui/qvalidator.h>
 
 QT_BEGIN_NAMESPACE
 
