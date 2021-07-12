@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 class QQmlChangeSet;
 
 class QQuickRepeaterPrivate;
-class Q_AUTOTEST_EXPORT QQuickRepeater : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickRepeater : public QQuickItem
 {
     Q_OBJECT
 
