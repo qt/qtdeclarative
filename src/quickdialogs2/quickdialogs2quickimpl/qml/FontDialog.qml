@@ -62,6 +62,8 @@ FontDialogImpl {
     topInset: -1
     bottomInset: -1
 
+    spacing: 12
+
     standardButtons: T.Dialog.Ok | T.Dialog.Cancel
 
     FontDialogImpl.buttonBox: buttonBox

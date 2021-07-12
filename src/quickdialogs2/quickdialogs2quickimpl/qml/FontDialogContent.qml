@@ -58,7 +58,6 @@ GridLayout {
         spacing: 0
 
         Layout.preferredWidth: 50
-        Layout.preferredHeight: 80
 
         Label {
             text: qsTr("Family")
@@ -80,6 +79,7 @@ GridLayout {
             ListView {
                 id: fontFamilyListView
                 objectName: "familyListView"
+                implicitHeight: 200
                 anchors.fill: parent
                 clip: true
 
@@ -108,7 +108,6 @@ GridLayout {
         spacing: 0
 
         Layout.preferredWidth: 30
-        Layout.preferredHeight: 80
 
         Label {
             text: qsTr("Style")
@@ -129,6 +128,7 @@ GridLayout {
             ListView {
                 id: fontStyleListView
                 objectName: "styleListView"
+                implicitHeight: 200
                 anchors.fill: parent
                 clip: true
 
@@ -154,7 +154,6 @@ GridLayout {
         spacing: 0
 
         Layout.preferredWidth: 20
-        Layout.preferredHeight: 80
 
         Label {
             text: qsTr("Size")
@@ -172,12 +171,14 @@ GridLayout {
         Frame {
             Layout.fillWidth: true
             Layout.fillHeight: true
+
             background: Rectangle {
                 color: "white"
             }
             ListView {
                 id: fontSizeListView
                 objectName: "sizeListView"
+                implicitHeight: 200
                 anchors.fill: parent
                 clip: true
 
@@ -203,7 +204,6 @@ GridLayout {
     }
 
     ColumnLayout {
-        Layout.preferredHeight: 50
         Layout.preferredWidth: 80
 
         GroupBox {
@@ -211,7 +211,6 @@ GridLayout {
             title: qsTr("Effects")
 
             Layout.fillWidth: true
-
             Layout.fillHeight: true
 
             label: Label {
@@ -219,8 +218,8 @@ GridLayout {
                 text: parent.title
             }
 
-            ColumnLayout {
-                anchors.centerIn: parent
+            RowLayout {
+                anchors.fill: parent
                 CheckBox {
                     id: fontUnderline
                     objectName: "underlineEffect"
@@ -241,7 +240,6 @@ GridLayout {
         title: qsTr("Sample")
 
         Layout.fillWidth: true
-        Layout.preferredHeight: 50
         Layout.preferredWidth: 80
         Layout.fillHeight: true
         Layout.columnSpan: 2

@@ -104,6 +104,7 @@ FontDialogImpl {
         leftPadding: 24
         rightPadding: 24
         topPadding: 24
+        bottomPadding: 24
     }
 
     contentItem: FontDialogContent {
