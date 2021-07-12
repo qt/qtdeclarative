@@ -64,7 +64,7 @@ class QQuickSprite;
 class QQuickSpriteEngine;
 class QQuickSpriteSequencePrivate;
 class QSGSpriteNode;
-class Q_AUTOTEST_EXPORT QQuickSpriteSequence : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickSpriteSequence : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(bool running READ running WRITE setRunning NOTIFY runningChanged)

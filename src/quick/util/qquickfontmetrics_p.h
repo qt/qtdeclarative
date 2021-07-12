@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
 #include <qqml.h>
 
 #include <QtGui/QFontMetricsF>
@@ -60,7 +61,7 @@ QT_BEGIN_NAMESPACE
 
 class QFont;
 
-class Q_AUTOTEST_EXPORT QQuickFontMetrics : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickFontMetrics : public QObject
 {
     Q_OBJECT
 

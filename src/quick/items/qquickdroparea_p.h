@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
 #include "qquickitem.h"
 
 #include <QtGui/qevent.h>
@@ -149,7 +150,7 @@ private:
 };
 
 class QQuickDropAreaPrivate;
-class Q_AUTOTEST_EXPORT QQuickDropArea : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickDropArea : public QQuickItem
 {
     Q_OBJECT
     Q_PROPERTY(bool containsDrag READ containsDrag NOTIFY containsDragChanged)

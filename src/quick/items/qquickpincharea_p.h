@@ -51,11 +51,13 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
+
 #include "qquickitem.h"
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QQuickPinch : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickPinch : public QObject
 {
     Q_OBJECT
 
@@ -194,7 +196,7 @@ private:
     bool m_active;
 };
 
-class Q_AUTOTEST_EXPORT QQuickPinchEvent : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickPinchEvent : public QObject
 {
     Q_OBJECT
 
@@ -266,7 +268,7 @@ private:
 
 class QQuickMouseEvent;
 class QQuickPinchAreaPrivate;
-class Q_AUTOTEST_EXPORT QQuickPinchArea : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickPinchArea : public QQuickItem
 {
     Q_OBJECT
 

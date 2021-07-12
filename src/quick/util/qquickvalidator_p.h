@@ -51,13 +51,14 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
 #include <QtGui/qvalidator.h>
 #include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
 #if QT_CONFIG(validator)
-class Q_AUTOTEST_EXPORT QQuickIntValidator : public QIntValidator
+class Q_QUICK_PRIVATE_EXPORT QQuickIntValidator : public QIntValidator
 {
     Q_OBJECT
     Q_PROPERTY(QString locale READ localeName WRITE setLocaleName RESET resetLocaleName NOTIFY localeNameChanged)
@@ -74,7 +75,7 @@ Q_SIGNALS:
     void localeNameChanged();
 };
 
-class Q_AUTOTEST_EXPORT QQuickDoubleValidator : public QDoubleValidator
+class Q_QUICK_PRIVATE_EXPORT QQuickDoubleValidator : public QDoubleValidator
 {
     Q_OBJECT
     Q_PROPERTY(QString locale READ localeName WRITE setLocaleName RESET resetLocaleName NOTIFY localeNameChanged)

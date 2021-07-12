@@ -56,7 +56,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickLoaderPrivate;
-class Q_AUTOTEST_EXPORT QQuickLoader : public QQuickImplicitSizeItem
+class Q_QUICK_PRIVATE_EXPORT QQuickLoader : public QQuickImplicitSizeItem
 {
     Q_OBJECT
 

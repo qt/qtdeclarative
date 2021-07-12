@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
 #include "qquickitem.h"
 
 #include <QtGui/qmatrix4x4.h>
@@ -58,7 +59,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickTranslatePrivate;
-class Q_AUTOTEST_EXPORT QQuickTranslate : public QQuickTransform
+class Q_QUICK_PRIVATE_EXPORT QQuickTranslate : public QQuickTransform
 {
     Q_OBJECT
 
@@ -89,7 +90,7 @@ private:
 };
 
 class QQuickScalePrivate;
-class Q_AUTOTEST_EXPORT QQuickScale : public QQuickTransform
+class Q_QUICK_PRIVATE_EXPORT QQuickScale : public QQuickTransform
 {
     Q_OBJECT
 
@@ -129,7 +130,7 @@ private:
 };
 
 class QQuickRotationPrivate;
-class Q_AUTOTEST_EXPORT QQuickRotation : public QQuickTransform
+class Q_QUICK_PRIVATE_EXPORT QQuickRotation : public QQuickTransform
 {
     Q_OBJECT
 
@@ -164,7 +165,7 @@ private:
 };
 
 class QQuickMatrix4x4Private;
-class Q_AUTOTEST_EXPORT QQuickMatrix4x4 : public QQuickTransform
+class Q_QUICK_PRIVATE_EXPORT QQuickMatrix4x4 : public QQuickTransform
 {
     Q_OBJECT
 

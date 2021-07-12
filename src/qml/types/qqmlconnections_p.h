@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 class QQmlBoundSignal;
 class QQmlContext;
 class QQmlConnectionsPrivate;
-class Q_AUTOTEST_EXPORT QQmlConnections : public QObject, public QQmlParserStatus
+class Q_QML_PRIVATE_EXPORT QQmlConnections : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQmlConnections)

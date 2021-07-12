@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 class QQuickScaleGrid;
 class QQuickGridScaledImage;
 class QQuickBorderImagePrivate;
-class Q_AUTOTEST_EXPORT QQuickBorderImage : public QQuickImageBase
+class Q_QUICK_PRIVATE_EXPORT QQuickBorderImage : public QQuickImageBase
 {
     Q_OBJECT
 

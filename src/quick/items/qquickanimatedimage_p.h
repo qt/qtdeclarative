@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 class QMovie;
 class QQuickAnimatedImagePrivate;
 
-class Q_AUTOTEST_EXPORT QQuickAnimatedImage : public QQuickImage
+class Q_QUICK_PRIVATE_EXPORT QQuickAnimatedImage : public QQuickImage
 {
     Q_OBJECT
 
