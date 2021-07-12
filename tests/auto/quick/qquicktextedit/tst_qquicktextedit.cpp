@@ -232,6 +232,8 @@ private slots:
     void inFlickableTouch_data();
     void inFlickableTouch();
 
+    void keyEventPropagation();
+
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
 #if QT_CONFIG(shortcut)
@@ -6000,6 +6002,47 @@ void tst_qquicktextedit::transparentSelectionColor()
     QVERIFY(color.red() > 250);
     QVERIFY(color.blue() < 10);
     QVERIFY(color.green() < 10);
+}
+
+void tst_qquicktextedit::keyEventPropagation()
+{
+    QQuickView view;
+    view.setSource(testFileUrl("keyEventPropagation.qml"));
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QObject *root = view.rootObject();
+    QVERIFY(root);
+
+    QSignalSpy downSpy(root, SIGNAL(keyDown(int)));
+    QSignalSpy upSpy(root, SIGNAL(keyUp(int)));
+
+    QQuickTextEdit *textEdit = root->findChild<QQuickTextEdit *>();
+    QVERIFY(textEdit->hasActiveFocus());
+    simulateKey(&view, Qt::Key_Back);
+    QCOMPARE(downSpy.count(), 1);
+    QCOMPARE(upSpy.count(), 1);
+    auto downKey = downSpy.takeFirst();
+    auto upKey = upSpy.takeFirst();
+    QCOMPARE(downKey.at(0).toInt(), Qt::Key_Back);
+    QCOMPARE(upKey.at(0).toInt(), Qt::Key_Back);
+
+    simulateKey(&view, Qt::Key_Shift);
+    QCOMPARE(downSpy.count(), 1);
+    QCOMPARE(upSpy.count(), 1);
+    downKey = downSpy.takeFirst();
+    upKey = upSpy.takeFirst();
+    QCOMPARE(downKey.at(0).toInt(), Qt::Key_Shift);
+    QCOMPARE(upKey.at(0).toInt(), Qt::Key_Shift);
+
+    simulateKey(&view, Qt::Key_A);
+    QCOMPARE(downSpy.count(), 0);
+    QCOMPARE(upSpy.count(), 0);
+
+    simulateKey(&view, Qt::Key_Right);
+    QCOMPARE(downSpy.count(), 0);
+    QCOMPARE(upSpy.count(), 1);
+    upKey = upSpy.takeFirst();
+    QCOMPARE(upKey.at(0).toInt(), Qt::Key_Right);
 }
 
 QTEST_MAIN(tst_qquicktextedit)
