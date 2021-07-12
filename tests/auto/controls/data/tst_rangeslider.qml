@@ -982,7 +982,7 @@ TestCase {
     }
 
     function test_touchDragThreshold(data) {
-        var control = createTemporaryObject(sliderComponent, testCase, {touchDragThreshold: 10, live: true, orientation: data.orientation, first: {value: 0}, second: {value: 1}})
+        var control = createTemporaryObject(sliderComponent, testCase, {touchDragThreshold: 10, live: true, orientation: data.orientation, "first.value": 0, "second.value": 1})
         verify(control)
         compare(control.touchDragThreshold, 10)
 
