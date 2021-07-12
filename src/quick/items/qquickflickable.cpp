@@ -76,10 +76,6 @@ static const int FlickThreshold = 15;
 // will ensure the Flickable retains the grab on consecutive flicks.
 static const int RetainGrabVelocity = 100;
 
-// ReportedVelocitySmoothing determines how reported velocity is
-// smoothed to avoid erratic output.
-static const int ReportedVelocitySmoothing = 100;
-
 // Currently std::round can't be used on Android when using ndk g++, so
 // use C version instead. We could just define two versions of Round, one
 // for float and one for double, but then only one of them would be used
