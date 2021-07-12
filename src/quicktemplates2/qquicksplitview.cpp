@@ -1206,6 +1206,11 @@ bool QQuickSplitView::isResizing() const
             \li \c implicitHeight
     \endtable
 
+    To change the size of the handle for mouse and touch events without
+    changing its visual size, use a \l {Item::}{containmentMask}:
+
+    \snippet qtquickcontrols2-splitview-handle-containmentmask.qml 1
+
     \sa {Customizing SplitView}
 */
 QQmlComponent *QQuickSplitView::handle()
