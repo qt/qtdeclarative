@@ -821,11 +821,7 @@ void QQuickTextControl::setHtml(const QString &text)
 
 void QQuickTextControlPrivate::keyReleaseEvent(QKeyEvent *e)
 {
-    if (e->key() == Qt::Key_Back) {
-         e->ignore();
-         return;
-    }
-    return;
+    e->ignore();
 }
 
 void QQuickTextControlPrivate::keyPressEvent(QKeyEvent *e)
