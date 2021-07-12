@@ -61,7 +61,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickParentChangePrivate;
-class Q_AUTOTEST_EXPORT QQuickParentChange : public QQuickStateOperation, public QQuickStateActionEvent
+class Q_QUICK_PRIVATE_EXPORT QQuickParentChange : public QQuickStateOperation, public QQuickStateActionEvent
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickParentChange)
@@ -128,7 +128,7 @@ public:
 
 class QQuickAnchorChanges;
 class QQuickAnchorSetPrivate;
-class Q_AUTOTEST_EXPORT QQuickAnchorSet : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickAnchorSet : public QObject
 {
     Q_OBJECT
 
@@ -183,7 +183,7 @@ private:
 };
 
 class QQuickAnchorChangesPrivate;
-class Q_AUTOTEST_EXPORT QQuickAnchorChanges : public QQuickStateOperation, public QQuickStateActionEvent
+class Q_QUICK_PRIVATE_EXPORT QQuickAnchorChanges : public QQuickStateOperation, public QQuickStateActionEvent
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickAnchorChanges)

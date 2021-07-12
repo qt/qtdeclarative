@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <private/qtqmlglobal_p.h>
 #include <qqml.h>
 
 #include <QtCore/qobject.h>
@@ -58,7 +59,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlBindPrivate;
-class Q_AUTOTEST_EXPORT QQmlBind : public QObject, public QQmlPropertyValueSource, public QQmlParserStatus
+class Q_QML_PRIVATE_EXPORT QQmlBind : public QObject, public QQmlPropertyValueSource, public QQmlParserStatus
 {
 public:
     enum RestorationMode {

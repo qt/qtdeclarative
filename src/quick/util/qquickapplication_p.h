@@ -63,7 +63,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_AUTOTEST_EXPORT QQuickApplication : public QQmlApplication
+class Q_QUICK_PRIVATE_EXPORT QQuickApplication : public QQmlApplication
 {
     Q_OBJECT
     Q_PROPERTY(bool active READ active NOTIFY activeChanged) // deprecated, use 'state' instead

@@ -61,7 +61,7 @@ QT_REQUIRE_CONFIG(quick_path);
 QT_BEGIN_NAMESPACE
 
 class QQuickPath;
-class Q_AUTOTEST_EXPORT QQuickPathInterpolator : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickPathInterpolator : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QQuickPath *path READ path WRITE setPath NOTIFY pathChanged)

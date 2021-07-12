@@ -64,7 +64,7 @@ QT_REQUIRE_CONFIG(quick_flipable);
 QT_BEGIN_NAMESPACE
 
 class QQuickFlipablePrivate;
-class Q_AUTOTEST_EXPORT QQuickFlipable : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickFlipable : public QQuickItem
 {
     Q_OBJECT
 

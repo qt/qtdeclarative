@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
 #include "qquickitem.h"
 #include "qevent.h"
 
@@ -63,7 +64,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickMultiPointTouchArea;
-class Q_AUTOTEST_EXPORT QQuickTouchPoint : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickTouchPoint : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int pointId READ pointId NOTIFY pointIdChanged)
@@ -209,7 +210,7 @@ private:
     QList<QObject*> _touchPoints;
 };
 
-class Q_AUTOTEST_EXPORT QQuickMultiPointTouchArea : public QQuickItem
+class Q_QUICK_PRIVATE_EXPORT QQuickMultiPointTouchArea : public QQuickItem
 {
     Q_OBJECT
 

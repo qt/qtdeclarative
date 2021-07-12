@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickPackagePrivate;
 class QQuickPackageAttached;
-class Q_AUTOTEST_EXPORT QQuickPackage : public QObject
+class Q_QMLMODELS_PRIVATE_EXPORT QQuickPackage : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPackage)

@@ -59,7 +59,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickSpringAnimationPrivate;
-class Q_AUTOTEST_EXPORT QQuickSpringAnimation : public QQuickNumberAnimation
+class Q_QUICK_PRIVATE_EXPORT QQuickSpringAnimation : public QQuickNumberAnimation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickSpringAnimation)

@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <private/qtquickglobal_p.h>
 #include <qqml.h>
 
 #include <QtCore/qobject.h>
@@ -59,7 +60,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQuickSystemPalettePrivate;
-class Q_AUTOTEST_EXPORT QQuickSystemPalette : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickSystemPalette : public QObject
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickSystemPalette)
