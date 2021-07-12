@@ -30,8 +30,7 @@ qt6_add_qml_module(tst_qmlcachegen
     NO_GENERATE_PLUGIN_SOURCE
 )
 
-# Resources:
-set(qmake_workerscripts_test_resource_files
+set(qmake_workerscripts_test_qml_files
     "data/worker.js"
     "data/worker.qml"
 )
@@ -39,8 +38,8 @@ set(qmake_workerscripts_test_resource_files
 qt6_target_qml_sources(tst_qmlcachegen
     PREFIX
         "/workerscripts"
-    FILES
-        ${qmake_workerscripts_test_resource_files}
+    QML_FILES
+        ${qmake_workerscripts_test_qml_files}
 )
 set_source_files_properties("data/trickypaths.qml"
     PROPERTIES QT_RESOURCE_ALIAS "file name with spaces.qml"
@@ -51,7 +50,7 @@ set_source_files_properties("data/versionStyleSuffix-1.2-core-yc.qml"
 set_source_files_properties("data/versionStyleSuffix-1.2-more.qml"
     PROPERTIES QT_RESOURCE_ALIAS "versionStyleSuffix-1.2-more.qml"
 )
-set(trickypaths_resource_files
+set(trickypaths_qml_files
     "data/trickypaths.qml"
     "data/versionStyleSuffix-1.2-core-yc.qml"
     "data/versionStyleSuffix-1.2-more.qml"
@@ -60,39 +59,39 @@ set(trickypaths_resource_files
 qt6_target_qml_sources(tst_qmlcachegen
     PREFIX
         "/directory with spaces"
-    FILES
-        ${trickypaths_resource_files}
+    QML_FILES
+        ${trickypaths_qml_files}
 )
 
 set_source_files_properties("data/Retain.qml"
     PROPERTIES QT_RESOURCE_ALIAS "Retain.qml"
 )
 
-set(retain_resource_files
+set(retain_qml_files
     "data/Retain.qml"
 )
 
 qt6_target_qml_sources(tst_qmlcachegen
     PREFIX
         "/"
-    FILES
-        ${retain_resource_files}
+    QML_FILES
+        ${retain_qml_files}
 )
 set_source_files_properties("data/SkipQmlCacheGen.qml"
     PROPERTIES QT_RESOURCE_ALIAS "Skip.qml"
     QT_QML_SKIP_CACHEGEN 1
 )
-set(skip_resource_files
+set(skip_qml_files
     "data/SkipQmlCacheGen.qml"
 )
 
 qt6_target_qml_sources(tst_qmlcachegen
     PREFIX
         "/not/"
-    FILES
-        ${skip_resource_files}
+    QML_FILES
+        ${skip_qml_files}
 )
-set(qmake_immediate_resource_files
+set(qmake_immediate_qml_files
     "data/Enums.qml"
     "data/componentInItem.qml"
     "data/jsimport.qml"
@@ -109,8 +108,8 @@ set(qmake_immediate_resource_files
 qt6_target_qml_sources(tst_qmlcachegen
     PREFIX
         "/"
-    FILES
-        ${qmake_immediate_resource_files}
+    QML_FILES
+        ${qmake_immediate_qml_files}
 )
 
 
@@ -122,29 +121,29 @@ if(UNIX)
     set_source_files_properties("data/umlaut.qml"
         PROPERTIES QT_RESOURCE_ALIAS "Bäh.qml"
     )
-    set(trickypaths_umlaut_resource_files
+    set(trickypaths_umlaut_qml_files
         "data/umlaut.qml"
     )
 
     qt6_target_qml_sources(tst_qmlcachegen
         PREFIX
             "/"
-        FILES
-            ${trickypaths_umlaut_resource_files}
+        QML_FILES
+            ${trickypaths_umlaut_qml_files}
     )
 endif()
 
 # Add those files to the resource system so that they get copied to the data
 # directory in the build directory, which is preferred by qFindTestData
 # over the one in the source directory where they are always placed.
-set(qml_additional_resources
+set(qml_additional_qml_files
     "data/posthocrequired.qml"
     "data/inlineComponentWithId.qml"
 )
 
 qt6_target_qml_sources(tst_qmlcachegen
     PREFIX "/"
-    FILES ${qml_additional_resources}
+    QML_FILES ${qml_additional_qml_files}
 )
 
 qt_internal_extend_target(tst_qmlcachegen CONDITION ANDROID OR IOS
