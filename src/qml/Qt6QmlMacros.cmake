@@ -505,7 +505,7 @@ function(qt6_add_qml_module target)
     set(cache_target)
     qt6_target_qml_sources(${target}
         __QT_INTERNAL_FORCE_DEFER_QMLDIR
-        FILES ${arg_QML_FILES}
+        QML_FILES ${arg_QML_FILES}
         RESOURCES ${arg_RESOURCES}
         OUTPUT_TARGETS cache_target
         PREFIX "${qt_qml_module_resource_prefix}"
@@ -1053,8 +1053,10 @@ endif()
 #
 # target: The backing target of the qml module. (REQUIRED)
 #
-# FILES: The qml files to add to the backing target. Supported file extensions
+# QML_FILES: The qml files to add to the backing target. Supported file extensions
 #   are .qml, .js and .mjs. No other file types should be listed. (REQUIRED)
+#
+# RESOURCES: Resources used in QML, for example images. (OPTIONAL)
 #
 # PREFIX: The resource path under which to add the compiled qml files. If not
 #   specified, the QT_RESOURCE_PREFIX property of the target is used (that
@@ -1109,7 +1111,7 @@ endif()
 #               QT_QML_SOURCE_TYPENAME MyQmlFile
 #
 #       qt6_target_qml_sources(my_qml_module
-#           FILES
+#           QML_FILES
 #               my_qml_file.qml
 #       )
 #
@@ -1132,7 +1134,7 @@ function(qt6_target_qml_sources target)
     )
 
     set(args_multi
-        FILES
+        QML_FILES
         RESOURCES
     )
 
@@ -1143,7 +1145,7 @@ function(qt6_target_qml_sources target)
         message(FATAL_ERROR "Unknown/unexpected arguments: ${arg_UNPARSED_ARGUMENTS}")
     endif()
 
-    if (NOT arg_FILES)
+    if (NOT arg_QML_FILES)
         if(arg_OUTPUT_TARGETS)
             set(${arg_OUTPUT_TARGETS} "" PARENT_SCOPE)
         endif()
@@ -1241,7 +1243,7 @@ function(qt6_target_qml_sources target)
     set(non_qml_files)
     set(output_targets)
 
-    foreach(file_src IN LISTS arg_FILES arg_RESOURCES)
+    foreach(file_src IN LISTS arg_QML_FILES arg_RESOURCES)
         # We need to copy the file to the build directory now so that when
         # qmlimportscanner is run in qt6_import_qml_plugins() as part of
         # target finalizers, the files will be there. We need to do this
@@ -1275,7 +1277,7 @@ function(qt6_target_qml_sources target)
         endif()
     endforeach()
 
-    foreach(qml_file_src IN LISTS arg_FILES)
+    foreach(qml_file_src IN LISTS arg_QML_FILES)
         # This is to facilitate updating code that used the earlier tech preview
         # API function qt6_target_qml_files()
         if(NOT qml_file_src MATCHES "\\.(js|mjs|qml)$")
@@ -1426,7 +1428,7 @@ function(qt6_target_qml_sources target)
     set(resource_targets)
     qt6_add_resources(${target} ${resource_name}
         PREFIX ${arg_PREFIX}
-        FILES ${arg_FILES} ${arg_RESOURCES}
+        FILES ${arg_QML_FILES} ${arg_RESOURCES}
         OUTPUT_TARGETS resource_targets
     )
     math(EXPR counter "${counter} + 1")
