@@ -1059,9 +1059,9 @@ endif()
 # RESOURCES: Resources used in QML, for example images. (OPTIONAL)
 #
 # PREFIX: The resource path under which to add the compiled qml files. If not
-#   specified, the QT_RESOURCE_PREFIX property of the target is used (that
-#   property is normally set by qt6_add_qml_module()). If the default is empty,
-#   this option must be provided. (OPTIONAL)
+#   specified, the QT_QML_MODULE_RESOURCE_PREFIX property of the target is used
+#   as the default, if set (that property is set by qt6_add_qml_module()).
+#   If the default is empty, this option must be provided. (OPTIONAL)
 #
 # OUTPUT_TARGETS: In static builds, additional CMake targets can be created
 #   which consumers of the module will need to potentially install.
@@ -1178,7 +1178,8 @@ function(qt6_target_qml_sources target)
             set(arg_PREFIX ${resource_prefix})
         else()
             message(FATAL_ERROR
-                "PREFIX option not given and target ${target} was not given a RESOURCE_PREFIX"
+                "PREFIX option not given and target ${target} does not have a "
+                "QT_QML_MODULE_RESOURCE_PREFIX property set."
             )
         endif()
     endif()
