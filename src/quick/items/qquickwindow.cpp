@@ -1494,6 +1494,7 @@ bool QQuickWindow::event(QEvent *e)
             return true;
         break;
     case QEvent::LanguageChange:
+    case QEvent::LocaleChange:
         if (d->contentItem)
             QCoreApplication::sendEvent(d->contentItem, e);
         break;

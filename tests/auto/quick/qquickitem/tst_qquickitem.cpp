@@ -73,6 +73,7 @@ public:
     QPoint lastWheelEventPos;
     QPoint lastWheelEventGlobalPos;
     int languageChangeEventCount = 0;
+    int localeChangeEventCount = 0;
 protected:
     void focusInEvent(QFocusEvent *event) override {
         qCDebug(lcTests) << objectName() << event;
@@ -110,8 +111,16 @@ protected:
     bool event(QEvent *e) override
     {
         Q_ASSERT(e->isAccepted()); // every event is constructed with the accept flag initialized to true
-        if (e->type() == QEvent::LanguageChange)
-            languageChangeEventCount++;
+        switch (e->type()) {
+        case QEvent::LanguageChange:
+            ++languageChangeEventCount;
+            break;
+        case QEvent::LocaleChange:
+            ++localeChangeEventCount;
+            break;
+        default:
+            break;
+        }
         return QQuickItem::event(e); // default dispatch
     }
 };
@@ -235,6 +244,7 @@ private slots:
 
     void setParentCalledInOnWindowChanged();
     void receivesLanguageChangeEvent();
+    void receivesLocaleChangeEvent();
     void polishLoopDetection_data();
     void polishLoopDetection();
 
@@ -2328,6 +2338,31 @@ void tst_qquickitem::receivesLanguageChangeEvent()
 
     QTRY_COMPARE(child1->languageChangeEventCount, 1);
     QCOMPARE(child2->languageChangeEventCount, 1);
+}
+
+void tst_qquickitem::receivesLocaleChangeEvent()
+{
+    QQuickWindow window;
+    window.setFramePosition(QPoint(100, 100));
+    window.resize(200, 200);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+
+    QScopedPointer<TestItem> child1(new TestItem);
+    child1->setObjectName(QStringLiteral("child1"));
+    child1->setSize(QSizeF(200, 100));
+    child1->setParentItem(window.contentItem());
+
+    QScopedPointer<TestItem> child2(new TestItem);
+    child2->setObjectName(QStringLiteral("child2"));
+    child2->setSize(QSizeF(50, 50));
+    child2->setParentItem(child1.data());
+
+    QEvent e(QEvent::LocaleChange);
+    QCoreApplication::sendEvent(&window, &e);
+
+    QTRY_COMPARE(child1->localeChangeEventCount, 1);
+    QCOMPARE(child2->localeChangeEventCount, 1);
 }
 
 QTEST_MAIN(tst_qquickitem)

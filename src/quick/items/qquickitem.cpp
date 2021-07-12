@@ -8505,6 +8505,7 @@ bool QQuickItem::event(QEvent *ev)
         break;
 #endif // gestures
     case QEvent::LanguageChange:
+    case QEvent::LocaleChange:
         for (QQuickItem *item : d->childItems)
             QCoreApplication::sendEvent(item, ev);
         break;
