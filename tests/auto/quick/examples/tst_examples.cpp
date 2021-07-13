@@ -231,13 +231,19 @@ void tst_examples::sgexamples_data()
 {
     QTest::addColumn<QString>("file");
 
-    QString examples = QLatin1String(SRCDIR) + "/../../../../examples/";
+    const QDir repoSourceDir(QLatin1String(SRCDIR) + "/../../../..");
+    QVERIFY2(repoSourceDir.exists(), qPrintable(
+        QString::fromLatin1("repoSourceDir %1 doesn't exist").arg(repoSourceDir.path())));
+
+    const QDir examplesDir(repoSourceDir.path() + "/examples");
+    QVERIFY2(examplesDir.exists(), qPrintable(
+        QStringLiteral("examplesDir %1 doesn't exist").arg(examplesDir.path())));
 
     QStringList files;
-    files << findQmlFiles(QDir(examples));
+    files << findQmlFiles(examplesDir);
 
-    foreach (const QString &file, files)
-        QTest::newRow(qPrintable(file)) << file;
+    for (const QString &file : qAsConst(files))
+        QTest::newRow(qPrintable(repoSourceDir.relativeFilePath(file))) << file;
 }
 
 void tst_examples::sgexamples()
@@ -272,17 +278,29 @@ void tst_examples::sgsnippets_data()
 {
     QTest::addColumn<QString>("file");
 
-    QString snippets = QLatin1String(SRCDIR) + "/../../../../src/qml/doc/snippets/qml";
-    QStringList files;
-    files << findQmlFiles(QDir(snippets));
-    foreach (const QString &file, files)
-        QTest::newRow(qPrintable(file)) << file;
+    // Add QML snippets.
+    const QDir repoSourceDir(QLatin1String(SRCDIR) + "/../../../..");
+    QVERIFY2(repoSourceDir.exists(), qPrintable(
+        QStringLiteral("repoSourceDir %1 doesn't exist").arg(repoSourceDir.path())));
 
-    snippets = QLatin1String(SRCDIR) + "/../../../../src/quick/doc/snippets/qml";
+    QDir snippetsDir(repoSourceDir.path() + "/src/qml/doc/snippets/qml");
+    QVERIFY2(snippetsDir.exists(), qPrintable(
+        QStringLiteral("qml snippetsDir %1 doesn't exist").arg(snippetsDir.path())));
+
+    QStringList files;
+    files << findQmlFiles(snippetsDir);
+    for (const QString &file : qAsConst(files))
+        QTest::newRow(qPrintable(repoSourceDir.relativeFilePath(file))) << file;
+
+    // Add Quick snippets.
+    snippetsDir = QDir(repoSourceDir.path() + "/src/quick/doc/snippets/qml");
+    QVERIFY2(snippetsDir.exists(), qPrintable(
+        QStringLiteral("quick snippetsDir %1 doesn't exist").arg(snippetsDir.path())));
+
     files.clear();
-    files << findQmlFiles(QDir(snippets));
-    foreach (const QString &file, files)
-        QTest::newRow(qPrintable(file)) << file;
+    files << findQmlFiles(snippetsDir);
+    for (const QString &file : qAsConst(files))
+        QTest::newRow(qPrintable(repoSourceDir.relativeFilePath(file))) << file;
 }
 
 void tst_examples::sgsnippets()
