@@ -375,7 +375,10 @@ void QQuickContext2DCommandBuffer::replay(QPainter* p, QQuickContext2D::State& s
             }
             state.lineDash = pattern;
             QPen nPen = p->pen();
-            nPen.setDashPattern(pattern);
+            if (count > 0)
+                nPen.setDashPattern(pattern);
+            else
+                nPen.setStyle(Qt::SolidLine);
             p->setPen(nPen);
             break;
         }
