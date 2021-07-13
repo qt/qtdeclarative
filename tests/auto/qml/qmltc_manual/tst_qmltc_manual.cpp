@@ -47,7 +47,7 @@
 #include <array>
 #include <memory>
 
-class tst_qmlcompiler_manual : public QQmlDataTest
+class tst_qmltc_manual : public QQmlDataTest
 {
     Q_OBJECT
 
@@ -68,7 +68,7 @@ private:
     void signalHandlers_impl(const QUrl &url);
 };
 
-void tst_qmlcompiler_manual::cppBinding()
+void tst_qmltc_manual::cppBinding()
 {
     QQmlEngine e;
     HelloWorld::url = testFileUrl("HelloWorld.qml");
@@ -85,7 +85,7 @@ void tst_qmlcompiler_manual::cppBinding()
     QCOMPARE(created.getGreeting(), QStringLiteral("Hello, Qml!"));
 }
 
-void tst_qmlcompiler_manual::signalHandlers_impl(const QUrl &url)
+void tst_qmltc_manual::signalHandlers_impl(const QUrl &url)
 {
     QQmlEngine e;
     ANON_signalHandlers::url = url;
@@ -125,19 +125,19 @@ void tst_qmlcompiler_manual::signalHandlers_impl(const QUrl &url)
     QCOMPARE(created.property("signal2P3").toString(), QStringLiteral("abc0"));
 }
 
-void tst_qmlcompiler_manual::signalHandlers()
+void tst_qmltc_manual::signalHandlers()
 {
     // use QQmlTypeCompiler's compilation unit
     signalHandlers_impl(testFileUrl("signalHandlers.qml"));
 }
 
-void tst_qmlcompiler_manual::signalHandlers_qmlcachegen()
+void tst_qmltc_manual::signalHandlers_qmlcachegen()
 {
     // use qmlcachegen's compilation unit
     signalHandlers_impl(QUrl("qrc:/QmltcManualTests/data/signalHandlers.qml"));
 }
 
-void tst_qmlcompiler_manual::jsFunctions()
+void tst_qmltc_manual::jsFunctions()
 {
     QQmlEngine e;
     ANON_javaScriptFunctions::url = testFileUrl("javaScriptFunctions.qml");
@@ -154,7 +154,7 @@ void tst_qmlcompiler_manual::jsFunctions()
     QCOMPARE(created.func3(), true);
 }
 
-void tst_qmlcompiler_manual::changingBindings()
+void tst_qmltc_manual::changingBindings()
 {
     QQmlEngine e;
     ANON_changingBindings::url = testFileUrl("changingBindings.qml");
@@ -200,7 +200,7 @@ void tst_qmlcompiler_manual::changingBindings()
     QCOMPARE(created.initialBindingCallCount, 2);
 }
 
-void tst_qmlcompiler_manual::propertyAlias()
+void tst_qmltc_manual::propertyAlias()
 {
     QQmlEngine e;
     ANON_propertyAlias::url = testFileUrl("propertyAlias.qml");
@@ -261,7 +261,7 @@ void tst_qmlcompiler_manual::propertyAlias()
     QCOMPARE(created.getAliasToOrigin(), -24);
 }
 
-void tst_qmlcompiler_manual::propertyChangeHandler()
+void tst_qmltc_manual::propertyChangeHandler()
 {
     QQmlEngine e;
     ANON_propertyChangeHandler::url = testFileUrl("propertyChangeHandler.qml");
@@ -290,7 +290,7 @@ void tst_qmlcompiler_manual::propertyChangeHandler()
     QCOMPARE(created.property("watcher").toInt(), 96);
 }
 
-void tst_qmlcompiler_manual::propertyReturningFunction()
+void tst_qmltc_manual::propertyReturningFunction()
 {
     QQmlEngine e;
     ANON_propertyReturningFunction::url = testFileUrl("propertyReturningFunction.qml");
@@ -305,7 +305,7 @@ void tst_qmlcompiler_manual::propertyReturningFunction()
     QCOMPARE(created.getCounter(), 0);
 }
 
-void tst_qmlcompiler_manual::locallyImported()
+void tst_qmltc_manual::locallyImported()
 {
     QQmlEngine e;
     LocallyImported::url = testFileUrl("LocallyImported.qml");
@@ -318,7 +318,7 @@ void tst_qmlcompiler_manual::locallyImported()
     QCOMPARE(qvariant_cast<QObject *>(ctx->contextProperty("foo")), &created);
 }
 
-void tst_qmlcompiler_manual::localImport()
+void tst_qmltc_manual::localImport()
 {
     // NB: compare object creation compiler against QQmlComponent
     {
@@ -395,7 +395,7 @@ void tst_qmlcompiler_manual::localImport()
     }
 }
 
-void tst_qmlcompiler_manual::neighbors()
+void tst_qmltc_manual::neighbors()
 {
     {
         QQmlEngine e;
@@ -421,7 +421,7 @@ void tst_qmlcompiler_manual::neighbors()
         QCOMPARE(rootQmlCtx->objectForName("child2"), children.at(1));
     }
 
-    // this case is different from tst_qmlcompiler_manual::localImport() as
+    // this case is different from tst_qmltc_manual::localImport() as
     // LocallyImported is not a parent of a document root. Thus, the context
     // hierarchy:
     // * ANON_neighbors: rootContext -> neighborsContext
@@ -1204,6 +1204,6 @@ void ANON_neighbors::finalize(QQmlEngine *e)
 
 QUrl ANON_neighbors::url = QUrl(); // workaround
 
-QTEST_MAIN(tst_qmlcompiler_manual)
+QTEST_MAIN(tst_qmltc_manual)
 
-#include "tst_qmlcompiler_manual.moc"
+#include "tst_qmltc_manual.moc"
