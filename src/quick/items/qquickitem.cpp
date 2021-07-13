@@ -8001,10 +8001,26 @@ bool QQuickItem::contains(const QPointF &point) const
     \e{item}'s contains method would then return \c true only if
     \e{anotherItem}'s contains() implementation returns \c true.
 
-    A \l Shape can be used in this way, to make an item react to
-    \l {QPointerEvent}{pointer events} only within a non-rectangular region,
-    as illustrated in the \l {Qt Quick Examples - Shapes}{Shapes example}
-    (see \c tapableTriangle.qml).
+    A \l Shape can be used as a mask, to make an item react to
+    \l {QPointerEvent}{pointer events} only within a non-rectangular region:
+
+    \table
+    \row
+    \li \image containmentMask-shape.gif
+    \li \snippet qml/item/containmentMask-shape.qml 0
+    \endtable
+
+    It is also possible to define the contains method in QML. For example,
+    to create a circular item that only responds to events within its
+    actual bounds:
+
+    \table
+    \row
+    \li \image containmentMask-circle.gif
+    \li \snippet qml/item/containmentMask-circle-js.qml 0
+    \endtable
+
+    \sa {Qt Quick Examples - Shapes}
 */
 /*!
     \property QQuickItem::containmentMask
