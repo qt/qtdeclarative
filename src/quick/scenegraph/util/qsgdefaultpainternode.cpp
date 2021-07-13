@@ -206,13 +206,11 @@ void QSGDefaultPainterNode::updateRenderTarget()
     m_image = QImage(m_textureSize, QImage::Format_ARGB32_Premultiplied);
     m_image.fill(Qt::transparent);
 
-    QSGPainterTexture *texture = new QSGPainterTexture;
-    texture->setOwnsTexture(true);
-    texture->setTextureSize(m_textureSize);
-    if (m_texture)
-        delete m_texture;
-
-    m_texture = texture;
+    if (!m_texture) {
+        m_texture = new QSGPainterTexture;
+        m_texture->setOwnsTexture(true);
+    }
+    m_texture->setTextureSize(m_textureSize);
 }
 
 void QSGDefaultPainterNode::setPreferredRenderTarget(QQuickPaintedItem::RenderTarget target)
