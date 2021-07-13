@@ -26,7 +26,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <unicode/utypes.h>
+#include <unicode/Unicode.h>
 
 namespace JSC { namespace Yarr {
 
