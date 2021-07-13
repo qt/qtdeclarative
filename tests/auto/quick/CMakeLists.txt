@@ -6,6 +6,7 @@ add_subdirectory(drawingmodes)
 add_subdirectory(qquickpixmapcache)
 
 if(QT_FEATURE_private_tests)
+    add_subdirectory(examples)
     add_subdirectory(nokeywords)
     add_subdirectory(propertyrequirements)
     add_subdirectory(qquickanimations)
