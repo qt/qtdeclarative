@@ -29,6 +29,8 @@
 #include <qtest.h>
 #include <QDebug>
 
+#include "testclasses.h"
+
 #include <QtCore/qscopedpointer.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlengine.h>
@@ -135,117 +137,85 @@ static void typeEraseArguments(std::array<void *, Size> &a, std::array<QMetaType
     t = { /* types */ QMetaType::fromType<std::decay_t<IOArgs>>()... };
 }
 
-// utility class that sets up QQmlContext for passed QObject. can be used as a
-// base class to ensure that qmlEngine(object) is valid during initializer list
-// evaluation
-struct ContextRegistrator
+ContextRegistrator::ContextRegistrator(QQmlEngine *engine, QObject *This)
 {
-    ContextRegistrator(QQmlEngine *engine, QObject *This)
-    {
-        Q_ASSERT(engine && This);
-        if (engine->contextForObject(This)) // already set
-            return;
+    Q_ASSERT(engine && This);
+    if (engine->contextForObject(This)) // already set
+        return;
 
-        // use simple form of the logic done in create() and set(). this code
-        // shouldn't actually be used in real generated classes. it just exists
-        // here for convenience
-        Q_ASSERT(!This->parent() || engine->contextForObject(This->parent())
-                 || engine->rootContext());
-        QQmlContext *parentContext = engine->contextForObject(This->parent());
-        QQmlContext *context =
-                parentContext ? parentContext : new QQmlContext(engine->rootContext(), This);
-        Q_ASSERT(context);
-        // NB: not only sets the context, but also seeds engine into This, so
-        // that qmlEngine(This) works
-        engine->setContextForObject(This, context);
-        Q_ASSERT(qmlEngine(This));
-    }
+    // use simple form of the logic done in create() and set(). this code
+    // shouldn't actually be used in real generated classes. it just exists
+    // here for convenience
+    Q_ASSERT(!This->parent() || engine->contextForObject(This->parent()) || engine->rootContext());
+    QQmlContext *parentContext = engine->contextForObject(This->parent());
+    QQmlContext *context =
+            parentContext ? parentContext : new QQmlContext(engine->rootContext(), This);
+    Q_ASSERT(context);
+    // NB: not only sets the context, but also seeds engine into This, so
+    // that qmlEngine(This) works
+    engine->setContextForObject(This, context);
+    Q_ASSERT(qmlEngine(This));
+}
 
-    static QQmlRefPointer<QQmlContextData>
-    create(QQmlEngine *engine, const QUrl &url,
-           const QQmlRefPointer<QQmlContextData> &parentContext, int index)
-    {
-        Q_ASSERT(index >= 0);
-        QQmlRefPointer<QQmlContextData> context;
-        if (index == 0) {
-            // create context the same way it is done in QQmlObjectCreator::create()
-            context = QQmlContextData::createRefCounted(parentContext);
-            context->setInternal(true);
-            auto unit = QQmlEnginePrivate::get(engine)->compilationUnitFromUrl(url);
-            context->setImports(unit->typeNameCache);
-            context->initFromTypeCompilationUnit(unit, index);
-        } else {
-            // non-root objects adopt parent context and use that one instead of
-            // creating own
-            context = parentContext;
-            // assume context is initialized in the root object
-        }
-        return context;
-    }
-
-    static void set(QObject *This, const QQmlRefPointer<QQmlContextData> &context,
-                    QQmlContextData::QmlObjectKind kind)
-    {
-        Q_ASSERT(This);
-        QQmlData *ddata = QQmlData::get(This, /*create*/ true);
-
-        // NB: copied from QQmlObjectCreator::createInstance()
-        //
-        // the if-statement logic is: if (static_cast<quint32>(index) == 0 ||
-        // ddata->rootObjectInCreation || isInlineComponent) then
-        // QQmlContextData::DocumentRoot
-        context->installContext(ddata, kind);
-        if (kind == QQmlContextData::DocumentRoot)
-            context->setContextObject(This);
-        Q_ASSERT(qmlEngine(This));
-    }
-};
-
-class HelloWorld : public QObject, public ContextRegistrator
+QQmlRefPointer<QQmlContextData>
+ContextRegistrator::create(QQmlEngine *engine, const QUrl &url,
+                           const QQmlRefPointer<QQmlContextData> &parentContext, int index)
 {
-    Q_OBJECT
-    QML_NAMED_ELEMENT(HelloWorld);
-    Q_PROPERTY(QString hello READ getHello WRITE setHello BINDABLE bindableHello)
-    Q_PROPERTY(QString greeting READ getGreeting WRITE setGreeting BINDABLE bindableGreeting)
-
-public:
-    // test workaround: the url is resolved by the test base class, so use
-    // member variable to store the resolved url used as argument in engine
-    // evaluation of runtime functions
-    static QUrl url;
-
-    HelloWorld(QQmlEngine *e, QObject *parent = nullptr)
-        : QObject(parent), ContextRegistrator(e, this)
-    {
-        hello = QStringLiteral("Hello, World");
-        QPropertyBinding<QString> HelloWorldCpp_greeting_binding(
-                [&]() {
-                    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-                    const auto index = FunctionIndices::HELLO_WORLD_GREETING_BINDING;
-                    constexpr int argc = 0;
-                    QString ret {};
-                    std::array<void *, argc + 1> a {};
-                    std::array<QMetaType, argc + 1> t {};
-                    typeEraseArguments(a, t, ret);
-                    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-                    return ret;
-                },
-                QT_PROPERTY_DEFAULT_BINDING_LOCATION);
-        bindableGreeting().setBinding(HelloWorldCpp_greeting_binding);
+    Q_ASSERT(index >= 0);
+    QQmlRefPointer<QQmlContextData> context;
+    if (index == 0) {
+        // create context the same way it is done in QQmlObjectCreator::create()
+        context = QQmlContextData::createRefCounted(parentContext);
+        context->setInternal(true);
+        auto unit = QQmlEnginePrivate::get(engine)->compilationUnitFromUrl(url);
+        context->setImports(unit->typeNameCache);
+        context->initFromTypeCompilationUnit(unit, index);
+    } else {
+        // non-root objects adopt parent context and use that one instead of
+        // creating own
+        context = parentContext;
+        // assume context is initialized in the root object
     }
+    return context;
+}
 
-    QString getHello() { return hello.value(); }
-    QString getGreeting() { return greeting.value(); }
+void ContextRegistrator::set(QObject *This, const QQmlRefPointer<QQmlContextData> &context,
+                             QQmlContextData::QmlObjectKind kind)
+{
+    Q_ASSERT(This);
+    QQmlData *ddata = QQmlData::get(This, /*create*/ true);
 
-    void setHello(const QString &hello_) { hello.setValue(hello_); }
-    void setGreeting(const QString &greeting_) { greeting.setValue(greeting_); }
+    // NB: copied from QQmlObjectCreator::createInstance()
+    //
+    // the if-statement logic is: if (static_cast<quint32>(index) == 0 ||
+    // ddata->rootObjectInCreation || isInlineComponent) then
+    // QQmlContextData::DocumentRoot
+    context->installContext(ddata, kind);
+    if (kind == QQmlContextData::DocumentRoot)
+        context->setContextObject(This);
+    Q_ASSERT(qmlEngine(This));
+}
 
-    QBindable<QString> bindableHello() { return QBindable<QString>(&hello); }
-    QBindable<QString> bindableGreeting() { return QBindable<QString>(&greeting); }
+HelloWorld::HelloWorld(QQmlEngine *e, QObject *parent)
+    : QObject(parent), ContextRegistrator(e, this)
+{
+    hello = QStringLiteral("Hello, World");
+    QPropertyBinding<QString> HelloWorldCpp_greeting_binding(
+            [&]() {
+                QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+                const auto index = FunctionIndices::HELLO_WORLD_GREETING_BINDING;
+                constexpr int argc = 0;
+                QString ret {};
+                std::array<void *, argc + 1> a {};
+                std::array<QMetaType, argc + 1> t {};
+                typeEraseArguments(a, t, ret);
+                e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+                return ret;
+            },
+            QT_PROPERTY_DEFAULT_BINDING_LOCATION);
+    bindableGreeting().setBinding(HelloWorldCpp_greeting_binding);
+}
 
-    Q_OBJECT_BINDABLE_PROPERTY(HelloWorld, QString, hello);
-    Q_OBJECT_BINDABLE_PROPERTY(HelloWorld, QString, greeting);
-};
 QUrl HelloWorld::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::cppBinding()
@@ -265,106 +235,63 @@ void tst_qmlcompiler_manual::cppBinding()
     QCOMPARE(created.getGreeting(), QStringLiteral("Hello, Qml!"));
 }
 
-class ANON_signalHandlers : public QObject, public ContextRegistrator
+ANON_signalHandlers::ANON_signalHandlers(QQmlEngine *e, QObject *parent)
+    : QObject(parent), ContextRegistrator(e, this)
 {
-    Q_OBJECT
-    QML_ANONYMOUS
-    Q_PROPERTY(int signal1P READ getSignal1P WRITE setSignal1P BINDABLE bindableSignal1P)
-    Q_PROPERTY(QString signal2P1 READ getSignal2P1 WRITE setSignal2P1 BINDABLE bindableSignal2P1)
-    Q_PROPERTY(int signal2P2 READ getSignal2P2 WRITE setSignal2P2 BINDABLE bindableSignal2P2)
-    Q_PROPERTY(QString signal2P3 READ getSignal2P3 WRITE setSignal2P3 BINDABLE bindableSignal2P3)
+    signal1P = 0;
+    signal2P1 = QStringLiteral("");
+    signal2P2 = 0;
+    signal2P3 = QStringLiteral("");
 
-public:
-    // test workaround: the url is resolved by the test base class, so use
-    // member variable to store the resolved url used as argument in engine
-    // evaluation of runtime functions
-    static QUrl url;
+    QObject::connect(this, &ANON_signalHandlers::signal1, this, &ANON_signalHandlers::onSignal1);
+    QObject::connect(this, &ANON_signalHandlers::signal2, this, &ANON_signalHandlers::onSignal2);
+}
 
-    ANON_signalHandlers(QQmlEngine *e, QObject *parent = nullptr)
-        : QObject(parent), ContextRegistrator(e, this)
-    {
-        signal1P = 0;
-        signal2P1 = QStringLiteral("");
-        signal2P2 = 0;
-        signal2P3 = QStringLiteral("");
+void ANON_signalHandlers::onSignal1()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::SIGNAL_HANDLERS_ON_SIGNAL1;
+    e->executeRuntimeFunction(url, index, this);
+}
 
-        QObject::connect(this, &ANON_signalHandlers::signal1, this,
-                         &ANON_signalHandlers::onSignal1);
-        QObject::connect(this, &ANON_signalHandlers::signal2, this,
-                         &ANON_signalHandlers::onSignal2);
-    }
+void ANON_signalHandlers::onSignal2(QString x, int y)
+{
+    constexpr int argc = 2;
+    std::array<void *, argc + 1> a {};
+    std::array<QMetaType, argc + 1> t {};
+    typeEraseArguments(a, t, nullptr, x, y);
 
-    int getSignal1P() { return signal1P.value(); }
-    QString getSignal2P1() { return signal2P1.value(); }
-    int getSignal2P2() { return signal2P2.value(); }
-    QString getSignal2P3() { return signal2P3.value(); }
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const qsizetype index = FunctionIndices::SIGNAL_HANDLERS_ON_SIGNAL2;
+    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+}
 
-    void setSignal1P(const int &signal1P_) { signal1P.setValue(signal1P_); }
-    void setSignal2P1(const QString &signal2P1_) { signal2P1.setValue(signal2P1_); }
-    void setSignal2P2(const int &signal2P2_) { signal2P2.setValue(signal2P2_); }
-    void setSignal2P3(const QString &signal2P3_) { signal2P3.setValue(signal2P3_); }
+void ANON_signalHandlers::qmlEmitSignal1()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::SIGNAL_HANDLERS_QML_EMIT_SIGNAL1;
+    e->executeRuntimeFunction(url, index, this);
+}
 
-    QBindable<int> bindableSignal1P() { return QBindable<int>(&signal1P); }
-    QBindable<QString> bindableSignal2P1() { return QBindable<QString>(&signal2P1); }
-    QBindable<int> bindableSignal2P2() { return QBindable<int>(&signal2P2); }
-    QBindable<QString> bindableSignal2P3() { return QBindable<QString>(&signal2P3); }
+void ANON_signalHandlers::qmlEmitSignal2()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::SIGNAL_HANDLERS_QML_EMIT_SIGNAL2;
+    e->executeRuntimeFunction(url, index, this);
+}
 
-    Q_OBJECT_BINDABLE_PROPERTY(ANON_signalHandlers, int, signal1P);
-    Q_OBJECT_BINDABLE_PROPERTY(ANON_signalHandlers, QString, signal2P1);
-    Q_OBJECT_BINDABLE_PROPERTY(ANON_signalHandlers, int, signal2P2);
-    Q_OBJECT_BINDABLE_PROPERTY(ANON_signalHandlers, QString, signal2P3);
+void ANON_signalHandlers::qmlEmitSignal2WithArgs(QString x, int y)
+{
+    constexpr int argc = 2;
+    std::array<void *, argc + 1> a {};
+    std::array<QMetaType, argc + 1> t {};
+    typeEraseArguments(a, t, nullptr, x, y);
 
-signals:
-    void signal1();
-    void signal2(QString x, int y);
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::SIGNAL_HANDLERS_QML_EMIT_SIGNAL2_WITH_ARGS;
+    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+}
 
-public slots:
-    void onSignal1()
-    {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::SIGNAL_HANDLERS_ON_SIGNAL1;
-        e->executeRuntimeFunction(url, index, this);
-    }
-
-    void onSignal2(QString x, int y)
-    {
-        constexpr int argc = 2;
-        std::array<void *, argc+1> a {};
-        std::array<QMetaType, argc + 1> t {};
-        typeEraseArguments(a, t, nullptr, x, y);
-
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const qsizetype index = FunctionIndices::SIGNAL_HANDLERS_ON_SIGNAL2;
-        e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-    }
-
-public:
-    void qmlEmitSignal1()
-    {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::SIGNAL_HANDLERS_QML_EMIT_SIGNAL1;
-        e->executeRuntimeFunction(url, index, this);
-    }
-
-    void qmlEmitSignal2()
-    {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::SIGNAL_HANDLERS_QML_EMIT_SIGNAL2;
-        e->executeRuntimeFunction(url, index, this);
-    }
-
-    void qmlEmitSignal2WithArgs(QString x, int y)
-    {
-        constexpr int argc = 2;
-        std::array<void *, argc+1> a {};
-        std::array<QMetaType, argc + 1> t {};
-        typeEraseArguments(a, t, nullptr, x, y);
-
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::SIGNAL_HANDLERS_QML_EMIT_SIGNAL2_WITH_ARGS;
-        e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-    }
-};
 QUrl ANON_signalHandlers::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::signalHandlers_impl(const QUrl &url)
@@ -416,76 +343,49 @@ void tst_qmlcompiler_manual::signalHandlers()
 void tst_qmlcompiler_manual::signalHandlers_qmlcachegen()
 {
     // use qmlcachegen's compilation unit
-    signalHandlers_impl(QUrl("qrc:/data/signalHandlers.qml"));
+    signalHandlers_impl(QUrl("qrc:/QmltcManualTests/data/signalHandlers.qml"));
 }
 
-class ANON_javaScriptFunctions : public QObject, public ContextRegistrator
+ANON_javaScriptFunctions::ANON_javaScriptFunctions(QQmlEngine *e, QObject *parent)
+    : QObject(parent), ContextRegistrator(e, this)
 {
-    Q_OBJECT
-    QML_ANONYMOUS
-    Q_PROPERTY(int func1P READ getFunc1P WRITE setFunc1P)
-    Q_PROPERTY(QString func2P READ getFunc2P WRITE setFunc2P)
-    Q_PROPERTY(bool func3P READ getFunc3P WRITE setFunc3P)
+    func1P = 0;
+    func2P = QStringLiteral("");
+    func3P = false;
+}
 
-public:
-    // test workaround: the url is resolved by the test base class, so use
-    // member variable to store the resolved url used as argument in engine
-    // evaluation of runtime functions
-    static QUrl url;
+void ANON_javaScriptFunctions::func1()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::JS_FUNCTIONS_FUNC1;
+    e->executeRuntimeFunction(url, index, this);
+}
 
-    ANON_javaScriptFunctions(QQmlEngine *e, QObject *parent = nullptr)
-        : QObject(parent), ContextRegistrator(e, this)
-    {
-        func1P = 0;
-        func2P = QStringLiteral("");
-        func3P = false;
-    }
+void ANON_javaScriptFunctions::func2(QString x)
+{
+    constexpr int argc = 1;
+    std::array<void *, argc + 1> a {};
+    std::array<QMetaType, argc + 1> t {};
+    typeEraseArguments(a, t, nullptr, x);
 
-    int getFunc1P() { return func1P.value(); }
-    QString getFunc2P() { return func2P.value(); }
-    bool getFunc3P() { return func3P.value(); }
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::JS_FUNCTIONS_FUNC2;
+    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+}
 
-    void setFunc1P(const int &func1P_) { func1P.setValue(func1P_); }
-    void setFunc2P(const QString &func2P_) { func2P.setValue(func2P_); }
-    void setFunc3P(const bool &func3P_) { func3P.setValue(func3P_); }
+bool ANON_javaScriptFunctions::func3()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::JS_FUNCTIONS_FUNC3;
+    constexpr int argc = 0;
+    bool ret {};
+    std::array<void *, argc + 1> a {};
+    std::array<QMetaType, argc + 1> t {};
+    typeEraseArguments(a, t, ret);
+    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+    return ret;
+}
 
-    // try if just QProperty works
-    QProperty<int> func1P;
-    QProperty<QString> func2P;
-    QProperty<bool> func3P;
-
-    void func1()
-    {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::JS_FUNCTIONS_FUNC1;
-        e->executeRuntimeFunction(url, index, this);
-    }
-
-    void func2(QString x)
-    {
-        constexpr int argc = 1;
-        std::array<void *, argc+1> a {};
-        std::array<QMetaType, argc + 1> t {};
-        typeEraseArguments(a, t, nullptr, x);
-
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::JS_FUNCTIONS_FUNC2;
-        e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-    }
-
-    bool func3()
-    {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::JS_FUNCTIONS_FUNC3;
-        constexpr int argc = 0;
-        bool ret {};
-        std::array<void *, argc + 1> a {};
-        std::array<QMetaType, argc + 1> t {};
-        typeEraseArguments(a, t, ret);
-        e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-        return ret;
-    }
-};
 QUrl ANON_javaScriptFunctions::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::jsFunctions()
@@ -505,74 +405,47 @@ void tst_qmlcompiler_manual::jsFunctions()
     QCOMPARE(created.func3(), true);
 }
 
-class ANON_changingBindings : public QObject, public ContextRegistrator
+void ANON_changingBindings::resetToInitialBinding()
 {
-    Q_OBJECT
-    QML_ANONYMOUS
-    Q_PROPERTY(int p1 READ getP1 WRITE setP1 BINDABLE bindableP1)
-    Q_PROPERTY(int p2 READ getP2 WRITE setP2 BINDABLE bindableP2)
+    QPropertyBinding<int> ANON_changingBindings_p2_binding(
+            [&]() {
+                initialBindingCallCount++;
 
-public:
-    // test workaround: the url is resolved by the test base class, so use
-    // member variable to store the resolved url used as argument in engine
-    // evaluation of runtime functions
-    static QUrl url;
-    // test util to monitor binding execution
-    int initialBindingCallCount = 0;
-    // test util: allows to set C++ binding multiple times
-    void resetToInitialBinding()
-    {
-        QPropertyBinding<int> ANON_changingBindings_p2_binding(
-                [&]() {
-                    initialBindingCallCount++;
+                QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+                const auto index = FunctionIndices::CHANGING_BINDINGS_P2_BINDING;
+                constexpr int argc = 0;
+                int ret {};
+                std::array<void *, argc + 1> a {};
+                std::array<QMetaType, argc + 1> t {};
+                typeEraseArguments(a, t, ret);
+                e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+                return ret;
+            },
+            QT_PROPERTY_DEFAULT_BINDING_LOCATION);
+    bindableP2().setBinding(ANON_changingBindings_p2_binding);
+}
 
-                    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-                    const auto index = FunctionIndices::CHANGING_BINDINGS_P2_BINDING;
-                    constexpr int argc = 0;
-                    int ret {};
-                    std::array<void *, argc + 1> a {};
-                    std::array<QMetaType, argc + 1> t {};
-                    typeEraseArguments(a, t, ret);
-                    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-                    return ret;
-                },
-                QT_PROPERTY_DEFAULT_BINDING_LOCATION);
-        bindableP2().setBinding(ANON_changingBindings_p2_binding);
-    }
+ANON_changingBindings::ANON_changingBindings(QQmlEngine *e, QObject *parent)
+    : QObject(parent), ContextRegistrator(e, this)
+{
+    p1 = 1;
+    resetToInitialBinding();
+}
 
-    ANON_changingBindings(QQmlEngine *e, QObject *parent = nullptr)
-        : QObject(parent), ContextRegistrator(e, this)
-    {
-        p1 = 1;
-        resetToInitialBinding();
-    }
+void ANON_changingBindings::resetToConstant()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::CHANGING_BINDINGS_RESET_TO_CONSTANT;
+    e->executeRuntimeFunction(url, index, this);
+}
 
-    int getP1() { return p1.value(); }
-    int getP2() { return p2.value(); }
+void ANON_changingBindings::resetToNewBinding()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::CHANGING_BINDINGS_RESET_TO_NEW_BINDING;
+    e->executeRuntimeFunction(url, index, this);
+}
 
-    void setP1(int p1_) { p1.setValue(p1_); }
-    void setP2(int p2_) { p2.setValue(p2_); }
-
-    QBindable<int> bindableP1() { return QBindable<int>(&p1); }
-    QBindable<int> bindableP2() { return QBindable<int>(&p2); }
-
-    Q_OBJECT_BINDABLE_PROPERTY(ANON_changingBindings, int, p1);
-    Q_OBJECT_BINDABLE_PROPERTY(ANON_changingBindings, int, p2);
-
-    void resetToConstant()
-    {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::CHANGING_BINDINGS_RESET_TO_CONSTANT;
-        e->executeRuntimeFunction(url, index, this);
-    }
-
-    void resetToNewBinding()
-    {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::CHANGING_BINDINGS_RESET_TO_NEW_BINDING;
-        e->executeRuntimeFunction(url, index, this);
-    }
-};
 QUrl ANON_changingBindings::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::changingBindings()
@@ -621,106 +494,69 @@ void tst_qmlcompiler_manual::changingBindings()
     QCOMPARE(created.initialBindingCallCount, 2);
 }
 
-class ANON_propertyAlias : public QObject, public ContextRegistrator
+void ANON_propertyAlias::resetToInitialBinding()
 {
-    Q_OBJECT
-    QML_ANONYMOUS
-    Q_PROPERTY(int dummy READ getDummy WRITE setDummy NOTIFY dummyChanged)
-    Q_PROPERTY(int origin READ getOrigin WRITE setOrigin BINDABLE bindableOrigin)
-    Q_PROPERTY(int aliasToOrigin READ getAliasToOrigin WRITE setAliasToOrigin BINDABLE
-                       bindableAliasToOrigin)
+    QPropertyBinding<int> ANON_propertyAlias_origin_binding(
+            [&]() {
+                QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+                const auto index = FunctionIndices::PROPERTY_ALIAS_ORIGIN_BINDING;
+                constexpr int argc = 0;
+                int ret {};
+                std::array<void *, argc + 1> a {};
+                std::array<QMetaType, argc + 1> t {};
+                typeEraseArguments(a, t, ret);
+                e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+                return ret;
+            },
+            QT_PROPERTY_DEFAULT_BINDING_LOCATION);
+    bindableOrigin().setBinding(ANON_propertyAlias_origin_binding);
+}
 
-public:
-    // test workaround: the url is resolved by the test base class, so use
-    // member variable to store the resolved url used as argument in engine
-    // evaluation of runtime functions
-    static QUrl url;
-    // test util: allows to set C++ binding multiple times
-    void resetToInitialBinding()
-    {
-        QPropertyBinding<int> ANON_propertyAlias_origin_binding(
-                [&]() {
-                    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-                    const auto index = FunctionIndices::PROPERTY_ALIAS_ORIGIN_BINDING;
-                    constexpr int argc = 0;
-                    int ret {};
-                    std::array<void *, argc + 1> a {};
-                    std::array<QMetaType, argc + 1> t {};
-                    typeEraseArguments(a, t, ret);
-                    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-                    return ret;
-                },
-                QT_PROPERTY_DEFAULT_BINDING_LOCATION);
-        bindableOrigin().setBinding(ANON_propertyAlias_origin_binding);
-    }
+ANON_propertyAlias::ANON_propertyAlias(QQmlEngine *e, QObject *parent)
+    : QObject(parent), ContextRegistrator(e, this)
+{
+    dummy = 12;
+    resetToInitialBinding();
+}
 
-    ANON_propertyAlias(QQmlEngine *e, QObject *parent = nullptr)
-        : QObject(parent), ContextRegistrator(e, this)
-    {
-        dummy = 12;
-        resetToInitialBinding();
-    }
+void ANON_propertyAlias::resetAliasToConstant()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::PROPERTY_ALIAS_RESET_ALIAS_TO_CONSTANT;
+    e->executeRuntimeFunction(url, index, this);
+}
+void ANON_propertyAlias::resetOriginToConstant()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::PROPERTY_ALIAS_RESET_ORIGIN_TO_CONSTANT;
+    e->executeRuntimeFunction(url, index, this);
+}
+void ANON_propertyAlias::resetAliasToNewBinding()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::PROPERTY_ALIAS_RESET_ALIAS_TO_NEW_BINDING;
+    e->executeRuntimeFunction(url, index, this);
+}
+void ANON_propertyAlias::resetOriginToNewBinding()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::PROPERTY_ALIAS_RESET_ORIGIN_TO_NEW_BINDING;
+    e->executeRuntimeFunction(url, index, this);
+}
 
-    int getDummy() { return dummy.value(); }
-    int getOrigin() { return origin.value(); }
-    int getAliasToOrigin() { return getOrigin(); }
+int ANON_propertyAlias::getAliasValue()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::PROPERTY_ALIAS_GET_ALIAS_VALUE;
+    constexpr int argc = 0;
+    int ret {};
+    std::array<void *, argc + 1> a {};
+    std::array<QMetaType, argc + 1> t {};
+    typeEraseArguments(a, t, ret);
+    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+    return ret;
+}
 
-    void setDummy(int dummy_)
-    {
-        dummy.setValue(dummy_);
-        // emit is essential for Qt.binding() to work correctly
-        emit dummyChanged();
-    }
-    void setOrigin(int origin_) { origin.setValue(origin_); }
-    void setAliasToOrigin(int aliasToOrigin_) { setOrigin(aliasToOrigin_); }
-
-    QBindable<int> bindableOrigin() { return QBindable<int>(&origin); }
-    QBindable<int> bindableAliasToOrigin() { return bindableOrigin(); }
-
-    QProperty<int> dummy;
-    QProperty<int> origin;
-
-    void resetAliasToConstant()
-    {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::PROPERTY_ALIAS_RESET_ALIAS_TO_CONSTANT;
-        e->executeRuntimeFunction(url, index, this);
-    }
-    void resetOriginToConstant()
-    {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::PROPERTY_ALIAS_RESET_ORIGIN_TO_CONSTANT;
-        e->executeRuntimeFunction(url, index, this);
-    }
-    void resetAliasToNewBinding()
-    {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::PROPERTY_ALIAS_RESET_ALIAS_TO_NEW_BINDING;
-        e->executeRuntimeFunction(url, index, this);
-    }
-    void resetOriginToNewBinding()
-    {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::PROPERTY_ALIAS_RESET_ORIGIN_TO_NEW_BINDING;
-        e->executeRuntimeFunction(url, index, this);
-    }
-
-    int getAliasValue()
-    {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::PROPERTY_ALIAS_GET_ALIAS_VALUE;
-        constexpr int argc = 0;
-        int ret {};
-        std::array<void *, argc + 1> a {};
-        std::array<QMetaType, argc + 1> t {};
-        typeEraseArguments(a, t, ret);
-        e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-        return ret;
-    }
-
-signals:
-    void dummyChanged();
-};
 QUrl ANON_propertyAlias::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::propertyAlias()
@@ -784,78 +620,46 @@ void tst_qmlcompiler_manual::propertyAlias()
     QCOMPARE(created.getAliasToOrigin(), -24);
 }
 
-class ANON_propertyChangeHandler : public QObject, public ContextRegistrator
+ANON_propertyChangeHandler::ANON_propertyChangeHandler(QQmlEngine *e, QObject *parent)
+    : QObject(parent), ContextRegistrator(e, this)
 {
-    Q_OBJECT
-    QML_ANONYMOUS
-    Q_PROPERTY(int dummy READ getDummy WRITE setDummy)
-    Q_PROPERTY(int p READ getP WRITE setP BINDABLE bindableP)
-    Q_PROPERTY(int watcher READ getWatcher WRITE setWatcher)
+    dummy = 42;
+    QPropertyBinding<int> ANON_propertyChangeHandler_p_binding(
+            [&]() {
+                QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+                const auto index = FunctionIndices::PROPERTY_CHANGE_HANDLER_P_BINDING;
+                constexpr int argc = 0;
+                int ret {};
+                std::array<void *, argc + 1> a {};
+                std::array<QMetaType, argc + 1> t {};
+                typeEraseArguments(a, t, ret);
+                e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+                return ret;
+            },
+            QT_PROPERTY_DEFAULT_BINDING_LOCATION);
+    bindableP().setBinding(ANON_propertyChangeHandler_p_binding);
+    watcher = 0;
 
-public:
-    // test workaround: the url is resolved by the test base class, so use
-    // member variable to store the resolved url used as argument in engine
-    // evaluation of runtime functions
-    static QUrl url;
+    // NB: make sure property change handler appears after setBinding().
+    // this prevents preliminary binding evaluation (which would fail as
+    // this object doesn't yet know about qmlEngine(this))
+    pChangeHandler.reset(new QPropertyChangeHandler<ANON_propertyChangeHandler_p_changeHandler>(
+            bindableP().onValueChanged(ANON_propertyChangeHandler_p_changeHandler(this))));
+}
 
-    ANON_propertyChangeHandler(QQmlEngine *e, QObject *parent = nullptr)
-        : QObject(parent), ContextRegistrator(e, this)
-    {
-        dummy = 42;
-        QPropertyBinding<int> ANON_propertyChangeHandler_p_binding(
-                [&]() {
-                    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-                    const auto index = FunctionIndices::PROPERTY_CHANGE_HANDLER_P_BINDING;
-                    constexpr int argc = 0;
-                    int ret {};
-                    std::array<void *, argc + 1> a {};
-                    std::array<QMetaType, argc + 1> t {};
-                    typeEraseArguments(a, t, ret);
-                    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-                    return ret;
-                },
-                QT_PROPERTY_DEFAULT_BINDING_LOCATION);
-        bindableP().setBinding(ANON_propertyChangeHandler_p_binding);
-        watcher = 0;
+ANON_propertyChangeHandler::ANON_propertyChangeHandler_p_changeHandler::
+        ANON_propertyChangeHandler_p_changeHandler(ANON_propertyChangeHandler *obj)
+    : This(obj)
+{
+}
 
-        // NB: make sure property change handler appears after setBinding().
-        // this prevents preliminary binding evaluation (which would fail as
-        // this object doesn't yet know about qmlEngine(this))
-        pChangeHandler.reset(new QPropertyChangeHandler<ANON_propertyChangeHandler_p_changeHandler>(
-                bindableP().onValueChanged(ANON_propertyChangeHandler_p_changeHandler(this))));
-    }
+void ANON_propertyChangeHandler::ANON_propertyChangeHandler_p_changeHandler::operator()()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(This));
+    const auto index = FunctionIndices::PROPERTY_CHANGE_HANDLER_ON_P_CHANGED;
+    e->executeRuntimeFunction(This->url, index, This);
+}
 
-    int getDummy() { return dummy.value(); }
-    int getP() { return p.value(); }
-    int getWatcher() { return watcher.value(); }
-
-    void setDummy(int dummy_) { dummy.setValue(dummy_); }
-    void setP(int p_) { p.setValue(p_); }
-    void setWatcher(int watcher_) { watcher.setValue(watcher_); }
-
-    QBindable<int> bindableP() { return QBindable<int>(&p); }
-
-    QProperty<int> dummy;
-    QProperty<int> p;
-    QProperty<int> watcher;
-
-    // property change handler:
-    struct ANON_propertyChangeHandler_p_changeHandler
-    {
-        ANON_propertyChangeHandler *This = nullptr;
-        ANON_propertyChangeHandler_p_changeHandler(ANON_propertyChangeHandler *obj) : This(obj) { }
-
-        void operator()()
-        {
-            QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(This));
-            const auto index = FunctionIndices::PROPERTY_CHANGE_HANDLER_ON_P_CHANGED;
-            e->executeRuntimeFunction(This->url, index, This);
-        }
-    };
-    // the handler object has to be alive as long as the object
-    std::unique_ptr<QPropertyChangeHandler<ANON_propertyChangeHandler_p_changeHandler>>
-            pChangeHandler;
-};
 QUrl ANON_propertyChangeHandler::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::propertyChangeHandler()
@@ -887,49 +691,25 @@ void tst_qmlcompiler_manual::propertyChangeHandler()
     QCOMPARE(created.property("watcher").toInt(), 96);
 }
 
-class ANON_propertyReturningFunction : public QObject, public ContextRegistrator
+ANON_propertyReturningFunction::ANON_propertyReturningFunction(QQmlEngine *e, QObject *parent)
+    : QObject(parent), ContextRegistrator(e, this)
 {
-    Q_OBJECT
-    QML_ANONYMOUS
-    Q_PROPERTY(int counter READ getCounter WRITE setCounter)
-    Q_PROPERTY(QVariant f READ getF WRITE setF BINDABLE bindableF)
+    QPropertyBinding<QVariant> ANON_propertyReturningFunction_f_binding(
+            [&]() {
+                QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+                const auto index = FunctionIndices::PROPERTY_RETURNING_FUNCTION_F_BINDING;
+                constexpr int argc = 0;
+                QVariant ret {};
+                std::array<void *, argc + 1> a {};
+                std::array<QMetaType, argc + 1> t {};
+                typeEraseArguments(a, t, ret);
+                e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+                return ret;
+            },
+            QT_PROPERTY_DEFAULT_BINDING_LOCATION);
+    bindableF().setBinding(ANON_propertyReturningFunction_f_binding);
+}
 
-public:
-    // test workaround: the url is resolved by the test base class, so use
-    // member variable to store the resolved url used as argument in engine
-    // evaluation of runtime functions
-    static QUrl url;
-
-    ANON_propertyReturningFunction(QQmlEngine *e, QObject *parent = nullptr)
-        : QObject(parent), ContextRegistrator(e, this)
-    {
-        QPropertyBinding<QVariant> ANON_propertyReturningFunction_f_binding(
-                [&]() {
-                    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-                    const auto index = FunctionIndices::PROPERTY_RETURNING_FUNCTION_F_BINDING;
-                    constexpr int argc = 0;
-                    QVariant ret {};
-                    std::array<void *, argc + 1> a {};
-                    std::array<QMetaType, argc + 1> t {};
-                    typeEraseArguments(a, t, ret);
-                    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-                    return ret;
-                },
-                QT_PROPERTY_DEFAULT_BINDING_LOCATION);
-        bindableF().setBinding(ANON_propertyReturningFunction_f_binding);
-    }
-
-    int getCounter() { return counter.value(); }
-    QVariant getF() { return f.value(); }
-
-    void setCounter(int counter_) { counter.setValue(counter_); }
-    void setF(QVariant f_) { f.setValue(f_); }
-
-    QBindable<QVariant> bindableF() { return QBindable<QVariant>(&f); }
-
-    QProperty<int> counter;
-    QProperty<QVariant> f;
-};
 QUrl ANON_propertyReturningFunction::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::propertyReturningFunction()
@@ -947,177 +727,143 @@ void tst_qmlcompiler_manual::propertyReturningFunction()
     QCOMPARE(created.getCounter(), 0);
 }
 
-class LocallyImported : public QObject
+LocallyImported::LocallyImported(QObject *parent) : QObject(parent) { }
+
+LocallyImported::LocallyImported(QQmlEngine *e, QObject *parent) : LocallyImported(parent)
 {
-    Q_OBJECT
-    QML_ANONYMOUS
-    Q_PROPERTY(int count READ getCount WRITE setCount BINDABLE bindableCount)
+    init(e, QQmlContextData::get(e->rootContext()));
+}
 
-protected:
-    LocallyImported(QObject *parent = nullptr) : QObject(parent) { }
+QQmlRefPointer<QQmlContextData>
+LocallyImported::init(QQmlEngine *e, const QQmlRefPointer<QQmlContextData> &parentContext)
+{
+    // NB: this object is the root object of LocallyImported.qml
+    constexpr int subComponentIndex = 0;
+    auto context = parentContext;
+    context = ContextRegistrator::create(e, url, context, subComponentIndex);
+    ContextRegistrator::set(this, context, QQmlContextData::DocumentRoot);
+    context->setIdValue(0, this);
+    count = 0;
+    finalize(e); // call here because it's document root
+    return context;
+}
 
-public:
-    // test workaround: the url is resolved by the test base class, so use
-    // member variable to store the resolved url used as argument in engine
-    // evaluation of runtime functions
-    static QUrl url;
+Q_INVOKABLE QVariant LocallyImported::getMagicValue()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::LOCALLY_IMPORTED_GET_MAGIC_VALUE;
+    constexpr int argc = 0;
+    QVariant ret {};
+    std::array<void *, argc + 1> a {};
+    std::array<QMetaType, argc + 1> t {};
+    typeEraseArguments(a, t, ret);
+    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+    return ret;
+}
 
-    LocallyImported(QQmlEngine *e, QObject *parent = nullptr) : LocallyImported(parent)
-    {
-        init(e, QQmlContextData::get(e->rootContext()));
-    }
+void LocallyImported::completedSlot()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::LOCALLY_IMPORTED_ON_COMPLETED;
+    constexpr int argc = 0;
+    std::array<void *, argc + 1> a {};
+    std::array<QMetaType, argc + 1> t {};
+    typeEraseArguments(a, t, nullptr);
+    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+}
 
-    QQmlRefPointer<QQmlContextData> init(QQmlEngine *e,
-                                         const QQmlRefPointer<QQmlContextData> &parentContext)
-    {
-        // NB: this object is the root object of LocallyImported.qml
-        constexpr int subComponentIndex = 0;
-        auto context = parentContext;
-        context = ContextRegistrator::create(e, url, context, subComponentIndex);
-        ContextRegistrator::set(this, context, QQmlContextData::DocumentRoot);
-        context->setIdValue(0, this);
-        count = 0;
-        finalize(e); // call here because it's document root
-        return context;
-    }
+void LocallyImported::finalize(QQmlEngine *e)
+{
+    Q_UNUSED(e);
+    // 1. finalize children - no children here, so do nothing
 
-    Q_INVOKABLE QVariant getMagicValue()
-    {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::LOCALLY_IMPORTED_GET_MAGIC_VALUE;
-        constexpr int argc = 0;
-        QVariant ret {};
-        std::array<void *, argc + 1> a {};
-        std::array<QMetaType, argc + 1> t {};
-        typeEraseArguments(a, t, ret);
-        e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-        return ret;
-    }
+    // 2. finalize self
+    completedSlot();
+}
 
-    void completedSlot() {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::LOCALLY_IMPORTED_ON_COMPLETED;
-        constexpr int argc = 0;
-        std::array<void *, argc + 1> a {};
-        std::array<QMetaType, argc + 1> t {};
-        typeEraseArguments(a, t, nullptr);
-        e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-    }
-
-    void finalize(QQmlEngine *e)
-    {
-        Q_UNUSED(e);
-        // 1. finalize children - no children here, so do nothing
-
-        // 2. finalize self
-        completedSlot();
-    }
-
-    int getCount() { return count.value(); }
-    void setCount(int count_) { count.setValue(count_); }
-    QBindable<int> bindableCount() { return QBindable<int>(&count); }
-    QProperty<int> count;
-};
 QUrl LocallyImported::url = QUrl(); // workaround
 
-class ANON_localImport : public LocallyImported
+ANON_localImport::ANON_localImport(QObject *parent) : LocallyImported(parent) { }
+
+ANON_localImport::ANON_localImport(QQmlEngine *e, QObject *parent) : ANON_localImport(parent)
 {
-    Q_OBJECT
-    QML_ANONYMOUS
-    Q_PROPERTY(int p1 READ getP1 WRITE setP1)
+    // NB: always use e->rootContext() as parent context in the public ctor
+    init(e, QQmlContextData::get(e->rootContext()));
+}
 
-protected:
-    ANON_localImport(QObject *parent = nullptr) : LocallyImported(parent) { }
+QQmlRefPointer<QQmlContextData>
+ANON_localImport::init(QQmlEngine *e, const QQmlRefPointer<QQmlContextData> &parentContext)
+{
+    // init function is a multi-step procedure:
+    //
+    // 0. [optional] call base class' init() method (when base class is also
+    //    generated from QML), passing parentContext and getting back
+    //    another context
+    // 1. create child QQmlContextData from the context
+    // 2. * EITHER: patch the context to be the parent context - when this
+    //      type is not root and it has generated C++ base class
+    //    * OR: set the context for this object
+    // 3. [optional] set id by QmlIR::Object::id
+    // 4. do the simple initialization bits (e.g. set property values, etc.)
+    //    - might actually slip to finalize()?
+    // 5. [document root only] call finalize() which finalizes all types in
+    //    this document - after context and instances are set up correctly
 
-public:
-    // test workaround: the url is resolved by the test base class, so use
-    // member variable to store the resolved url used as argument in engine
-    // evaluation of runtime functions
-    static QUrl url;
+    constexpr int componentIndex = 0; // root index
+    auto context = parentContext;
+    // 0.
+    context = LocallyImported::init(e, context);
+    // 1.
+    context = ContextRegistrator::create(e, url, context, componentIndex);
+    // 2.
+    // if not root and parent is also generated C++ object, patch context
+    // context = parentContext;
+    // else:
+    ContextRegistrator::set(this, context, QQmlContextData::DocumentRoot);
+    // 3.
+    context->setIdValue(0, this);
+    // 4.
+    p1 = 41;
+    // 5.
+    finalize(e); // call here because it's document root
+    return context;
+}
 
-    ANON_localImport(QQmlEngine *e, QObject *parent = nullptr) : ANON_localImport(parent)
-    {
-        // NB: always use e->rootContext() as parent context in the public ctor
-        init(e, QQmlContextData::get(e->rootContext()));
-    }
+void ANON_localImport::finalize(QQmlEngine *e)
+{
+    Q_UNUSED(e);
+    // 1. finalize children - no children here, so do nothing
 
-    QQmlRefPointer<QQmlContextData> init(QQmlEngine *e,
-                                         const QQmlRefPointer<QQmlContextData> &parentContext)
-    {
-        // init function is a multi-step procedure:
-        //
-        // 0. [optional] call base class' init() method (when base class is also
-        //    generated from QML), passing parentContext and getting back
-        //    another context
-        // 1. create child QQmlContextData from the context
-        // 2. * EITHER: patch the context to be the parent context - when this
-        //      type is not root and it has generated C++ base class
-        //    * OR: set the context for this object
-        // 3. [optional] set id by QmlIR::Object::id
-        // 4. do the simple initialization bits (e.g. set property values, etc.)
-        //    - might actually slip to finalize()?
-        // 5. [document root only] call finalize() which finalizes all types in
-        //    this document - after context and instances are set up correctly
+    // 2. finalize self
+    QPropertyBinding<int> ANON_localImport_count_binding(
+            [&]() {
+                QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+                const auto index = FunctionIndices::LOCAL_IMPORT_COUNT_BINDING;
+                constexpr int argc = 0;
+                int ret {};
+                std::array<void *, argc + 1> a {};
+                std::array<QMetaType, argc + 1> t {};
+                typeEraseArguments(a, t, ret);
+                e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+                return ret;
+            },
+            QT_PROPERTY_DEFAULT_BINDING_LOCATION);
+    bindableCount().setBinding(ANON_localImport_count_binding);
+}
 
-        constexpr int componentIndex = 0; // root index
-        auto context = parentContext;
-        // 0.
-        context = LocallyImported::init(e, context);
-        // 1.
-        context = ContextRegistrator::create(e, url, context, componentIndex);
-        // 2.
-        // if not root and parent is also generated C++ object, patch context
-        // context = parentContext;
-        // else:
-        ContextRegistrator::set(this, context, QQmlContextData::DocumentRoot);
-        // 3.
-        context->setIdValue(0, this);
-        // 4.
-        p1 = 41;
-        // 5.
-        finalize(e); // call here because it's document root
-        return context;
-    }
+Q_INVOKABLE QVariant ANON_localImport::localGetMagicValue()
+{
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+    const auto index = FunctionIndices::LOCAL_IMPORT_LOCAL_GET_MAGIC_VALUE;
+    constexpr int argc = 0;
+    QVariant ret {};
+    std::array<void *, argc + 1> a {};
+    std::array<QMetaType, argc + 1> t {};
+    typeEraseArguments(a, t, ret);
+    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+    return ret;
+}
 
-    void finalize(QQmlEngine *e)
-    {
-        Q_UNUSED(e);
-        // 1. finalize children - no children here, so do nothing
-
-        // 2. finalize self
-        QPropertyBinding<int> ANON_localImport_count_binding(
-                [&]() {
-                    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-                    const auto index = FunctionIndices::LOCAL_IMPORT_COUNT_BINDING;
-                    constexpr int argc = 0;
-                    int ret {};
-                    std::array<void *, argc + 1> a {};
-                    std::array<QMetaType, argc + 1> t {};
-                    typeEraseArguments(a, t, ret);
-                    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-                    return ret;
-                },
-                QT_PROPERTY_DEFAULT_BINDING_LOCATION);
-        bindableCount().setBinding(ANON_localImport_count_binding);
-    }
-
-    int getP1() { return p1.value(); }
-    void setP1(int p1_) { p1.setValue(p1_); }
-    QProperty<int> p1;
-
-    Q_INVOKABLE QVariant localGetMagicValue()
-    {
-        QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-        const auto index = FunctionIndices::LOCAL_IMPORT_LOCAL_GET_MAGIC_VALUE;
-        constexpr int argc = 0;
-        QVariant ret {};
-        std::array<void *, argc + 1> a {};
-        std::array<QMetaType, argc + 1> t {};
-        typeEraseArguments(a, t, ret);
-        e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-        return ret;
-    }
-};
 QUrl ANON_localImport::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::locallyImported()
@@ -1210,206 +956,158 @@ void tst_qmlcompiler_manual::localImport()
     }
 }
 
-class ANON_neighbors_QtObject : public QObject
+ANON_neighbors_QtObject::ANON_neighbors_QtObject(QObject *parent) : QObject(parent) { }
+
+ANON_neighbors_QtObject::ANON_neighbors_QtObject(QQmlEngine *e, QObject *parent)
+    : ANON_neighbors_QtObject(parent)
 {
-    Q_OBJECT
-    QML_ANONYMOUS
-    Q_PROPERTY(int p READ getP WRITE setP BINDABLE bindableP)
-    Q_PROPERTY(int p2 READ getP2 WRITE setP2 BINDABLE bindableP2)
+    // NB: non-root of the document
+    init(e, QQmlContextData::get(e->contextForObject(parent)));
+}
 
-protected:
-    ANON_neighbors_QtObject(QObject *parent = nullptr) : QObject(parent) { }
+QQmlRefPointer<QQmlContextData>
+ANON_neighbors_QtObject::init(QQmlEngine *e, const QQmlRefPointer<QQmlContextData> &parentContext)
+{
+    constexpr int componentIndex = 1;
+    auto context = ContextRegistrator::create(e, url, parentContext, componentIndex);
+    ContextRegistrator::set(this, context, QQmlContextData::OrdinaryObject);
+    context->setIdValue(componentIndex, this);
 
-public:
-    // test workaround: the url is resolved by the test base class, so use
-    // member variable to store the resolved url used as argument in engine
-    // evaluation of runtime functions
-    static QUrl url;
+    p = 41;
+    return context;
+}
 
-    ANON_neighbors_QtObject(QQmlEngine *e, QObject *parent = nullptr)
-        : ANON_neighbors_QtObject(parent)
-    {
-        // NB: non-root of the document
-        init(e, QQmlContextData::get(e->contextForObject(parent)));
-    }
+void ANON_neighbors_QtObject::finalize(QQmlEngine *e) // called by the document root
+{
+    Q_UNUSED(e);
+    // 1. finalize children - empty as we don't have children here
 
-    QQmlRefPointer<QQmlContextData> init(QQmlEngine *e,
-                                         const QQmlRefPointer<QQmlContextData> &parentContext)
-    {
-        constexpr int componentIndex = 1;
-        auto context = ContextRegistrator::create(e, url, parentContext, componentIndex);
-        ContextRegistrator::set(this, context, QQmlContextData::OrdinaryObject);
-        context->setIdValue(componentIndex, this);
+    // 2. finalize self - call all "dynamic" code - e.g. script bindings,
+    //    Component.onCompleted and so on - everything that may reference
+    //    some random part of the document and thus needs to be delayed
+    //    until all objects in the document are initialized
+    QPropertyBinding<int> ANON_neighbors_QtObject_p2_binding(
+            [&]() {
+                QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+                const auto index = FunctionIndices::NEIGHBOUR_IDS_CHILD1_P2_BINDING;
+                constexpr int argc = 0;
+                int ret {};
+                std::array<void *, argc + 1> a {};
+                std::array<QMetaType, argc + 1> t {};
+                typeEraseArguments(a, t, ret);
+                e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
+                return ret;
+            },
+            QT_PROPERTY_DEFAULT_BINDING_LOCATION);
+    bindableP2().setBinding(ANON_neighbors_QtObject_p2_binding);
+}
 
-        p = 41;
-        return context;
-    }
-
-    void finalize(QQmlEngine *e) // called by the document root
-    {
-        Q_UNUSED(e);
-        // 1. finalize children - empty as we don't have children here
-
-        // 2. finalize self - call all "dynamic" code - e.g. script bindings,
-        //    Component.onCompleted and so on - everything that may reference
-        //    some random part of the document and thus needs to be delayed
-        //    until all objects in the document are initialized
-        QPropertyBinding<int> ANON_neighbors_QtObject_p2_binding(
-                [&]() {
-                    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-                    const auto index = FunctionIndices::NEIGHBOUR_IDS_CHILD1_P2_BINDING;
-                    constexpr int argc = 0;
-                    int ret {};
-                    std::array<void *, argc + 1> a {};
-                    std::array<QMetaType, argc + 1> t {};
-                    typeEraseArguments(a, t, ret);
-                    e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-                    return ret;
-                },
-                QT_PROPERTY_DEFAULT_BINDING_LOCATION);
-        bindableP2().setBinding(ANON_neighbors_QtObject_p2_binding);
-    }
-
-    int getP() { return p.value(); }
-    void setP(int p_) { p.setValue(p_); }
-    QBindable<int> bindableP() { return QBindable<int>(&p); }
-    QProperty<int> p;
-
-    int getP2() { return p2.value(); }
-    void setP2(int p2_) { p2.setValue(p2_); }
-    QBindable<int> bindableP2() { return QBindable<int>(&p2); }
-    QProperty<int> p2;
-};
 QUrl ANON_neighbors_QtObject::url = QUrl(); // workaround
 
-class ANON_neighbors_LocallyImported : public LocallyImported
+ANON_neighbors_LocallyImported::ANON_neighbors_LocallyImported(QObject *parent)
+    : LocallyImported(parent)
 {
-    Q_OBJECT
-    QML_ANONYMOUS
-    Q_PROPERTY(int p READ getP WRITE setP BINDABLE bindableP)
+}
 
-protected:
-    ANON_neighbors_LocallyImported(QObject *parent = nullptr) : LocallyImported(parent) { }
+ANON_neighbors_LocallyImported::ANON_neighbors_LocallyImported(QQmlEngine *e, QObject *parent)
+    : ANON_neighbors_LocallyImported(parent)
+{
+    // NB: non-root of the document
+    init(e, QQmlContextData::get(e->contextForObject(parent)));
+}
 
-public:
-    // test workaround: the url is resolved by the test base class, so use
-    // member variable to store the resolved url used as argument in engine
-    // evaluation of runtime functions
-    static QUrl url2;
+QQmlRefPointer<QQmlContextData>
+ANON_neighbors_LocallyImported::init(QQmlEngine *e,
+                                     const QQmlRefPointer<QQmlContextData> &parentContext)
+{
+    constexpr int componentIndex = 2;
+    auto context = LocallyImported::init(e, parentContext);
+    context = ContextRegistrator::create(e, url2, context, componentIndex);
+    // if not root and parent is also generated C++ object, patch context
+    context = parentContext;
+    // else: ContextRegistrator::set(this, context, QQmlContextData::OrdinaryObject);
+    context->setIdValue(componentIndex, this);
+    return context;
+}
 
-    ANON_neighbors_LocallyImported(QQmlEngine *e, QObject *parent = nullptr)
-        : ANON_neighbors_LocallyImported(parent)
-    {
-        // NB: non-root of the document
-        init(e, QQmlContextData::get(e->contextForObject(parent)));
-    }
+void ANON_neighbors_LocallyImported::finalize(QQmlEngine *e) // called by the document root
+{
+    Q_UNUSED(e);
+    // 1. finalize children - empty as we don't have children here
 
-    QQmlRefPointer<QQmlContextData> init(QQmlEngine *e,
-                                         const QQmlRefPointer<QQmlContextData> &parentContext)
-    {
-        constexpr int componentIndex = 2;
-        auto context = LocallyImported::init(e, parentContext);
-        context = ContextRegistrator::create(e, url2, context, componentIndex);
-        // if not root and parent is also generated C++ object, patch context
-        context = parentContext;
-        // else: ContextRegistrator::set(this, context, QQmlContextData::OrdinaryObject);
-        context->setIdValue(componentIndex, this);
-        return context;
-    }
-
-    void finalize(QQmlEngine *e) // called by the document root
-    {
-        Q_UNUSED(e);
-        // 1. finalize children - empty as we don't have children here
-
-        // 2. finalize self - call all "dynamic" code - e.g. script bindings,
-        //    Component.onCompleted and so on - everything that may reference
-        //    some random part of the document and thus needs to be delayed
-        //    until all objects in the document are initialized
-        QPropertyBinding<int> ANON_neighbors_LocallyImported_p_binding(
-                [&]() {
-                    QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-                    const auto index = FunctionIndices::NEIGHBOUR_IDS_CHILD2_P_BINDING;
-                    constexpr int argc = 0;
-                    int ret {};
-                    std::array<void *, argc + 1> a {};
-                    std::array<QMetaType, argc + 1> t {};
-                    typeEraseArguments(a, t, ret);
-                    e->executeRuntimeFunction(url2, index, this, argc, a.data(), t.data());
-                    return ret;
-                },
-                QT_PROPERTY_DEFAULT_BINDING_LOCATION);
-        bindableP().setBinding(ANON_neighbors_LocallyImported_p_binding);
-    }
-
-    int getP() { return p.value(); }
-    void setP(int p_) { p.setValue(p_); }
-    QBindable<int> bindableP() { return QBindable<int>(&p); }
-    QProperty<int> p;
-};
+    // 2. finalize self - call all "dynamic" code - e.g. script bindings,
+    //    Component.onCompleted and so on - everything that may reference
+    //    some random part of the document and thus needs to be delayed
+    //    until all objects in the document are initialized
+    QPropertyBinding<int> ANON_neighbors_LocallyImported_p_binding(
+            [&]() {
+                QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
+                const auto index = FunctionIndices::NEIGHBOUR_IDS_CHILD2_P_BINDING;
+                constexpr int argc = 0;
+                int ret {};
+                std::array<void *, argc + 1> a {};
+                std::array<QMetaType, argc + 1> t {};
+                typeEraseArguments(a, t, ret);
+                e->executeRuntimeFunction(url2, index, this, argc, a.data(), t.data());
+                return ret;
+            },
+            QT_PROPERTY_DEFAULT_BINDING_LOCATION);
+    bindableP().setBinding(ANON_neighbors_LocallyImported_p_binding);
+}
 QUrl ANON_neighbors_LocallyImported::url2 = QUrl(); // workaround
 
 // NB: only root subclasses the helper - as it initiates the finalization
-class ANON_neighbors : public QQuickItem
+ANON_neighbors::ANON_neighbors(QObject *parent) : QQuickItem()
 {
-    Q_OBJECT
-    QML_ANONYMOUS
+    setParent(parent);
+}
 
-protected:
-    ANON_neighbors(QObject *parent = nullptr) : QQuickItem() { setParent(parent); }
+ANON_neighbors::ANON_neighbors(QQmlEngine *e, QObject *parent) : ANON_neighbors(parent)
+{
+    // NB: use e->rootContext() as this object is document root
+    init(e, QQmlContextData::get(e->rootContext()));
+}
 
-public:
-    // test workaround: the url is resolved by the test base class, so use
-    // member variable to store the resolved url used as argument in engine
-    // evaluation of runtime functions
-    static QUrl url;
+QQmlRefPointer<QQmlContextData>
+ANON_neighbors::init(QQmlEngine *e, const QQmlRefPointer<QQmlContextData> &parentContext)
+{
+    constexpr int componentIndex = 0; // root index
+    auto context = ContextRegistrator::create(e, url, parentContext, componentIndex);
+    ContextRegistrator::set(this, context, QQmlContextData::DocumentRoot);
+    context->setIdValue(componentIndex, this);
 
-    ANON_neighbors(QQmlEngine *e, QObject *parent = nullptr) : ANON_neighbors(parent)
+    finalize(e); // call here because it's document root
+    return context;
+}
+
+void ANON_neighbors::finalize(QQmlEngine *e)
+{
+    Q_UNUSED(e);
+    // 0. set up object bindings and record all new objects for further
+    //    finalization
+    QList<QObject *> objectsToFinalize;
+    objectsToFinalize.reserve(2); // we know it's 2 at compile time
+    QQmlListReference listrefData(this, "data");
     {
-        // NB: use e->rootContext() as this object is document root
-        init(e, QQmlContextData::get(e->rootContext()));
+        auto o = new ANON_neighbors_QtObject(e, this);
+        listrefData.append(o);
+        objectsToFinalize.append(o);
+    }
+    {
+        auto o = new ANON_neighbors_LocallyImported(e, this);
+        listrefData.append(o);
+        objectsToFinalize.append(o);
     }
 
-    QQmlRefPointer<QQmlContextData> init(QQmlEngine *e,
-                                         const QQmlRefPointer<QQmlContextData> &parentContext)
-    {
-        constexpr int componentIndex = 0; // root index
-        auto context = ContextRegistrator::create(e, url, parentContext, componentIndex);
-        ContextRegistrator::set(this, context, QQmlContextData::DocumentRoot);
-        context->setIdValue(componentIndex, this);
+    // 1. finalize children
+    // use static_cast instead of polymorphism as we know the types at
+    // compile-time
+    static_cast<ANON_neighbors_QtObject *>(objectsToFinalize.at(0))->finalize(e);
+    static_cast<ANON_neighbors_LocallyImported *>(objectsToFinalize.at(1))->finalize(e);
 
-        finalize(e); // call here because it's document root
-        return context;
-    }
+    // 2. finalize self - empty as we don't have any bindings here
+}
 
-    void finalize(QQmlEngine *e)
-    {
-        Q_UNUSED(e);
-        // 0. set up object bindings and record all new objects for further
-        //    finalization
-        QList<QObject *> objectsToFinalize;
-        objectsToFinalize.reserve(2); // we know it's 2 at compile time
-        QQmlListReference listrefData(this, "data");
-        {
-            auto o = new ANON_neighbors_QtObject(e, this);
-            listrefData.append(o);
-            objectsToFinalize.append(o);
-        }
-        {
-            auto o = new ANON_neighbors_LocallyImported(e, this);
-            listrefData.append(o);
-            objectsToFinalize.append(o);
-        }
-
-        // 1. finalize children
-        // use static_cast instead of polymorphism as we know the types at
-        // compile-time
-        static_cast<ANON_neighbors_QtObject *>(objectsToFinalize.at(0))->finalize(e);
-        static_cast<ANON_neighbors_LocallyImported *>(objectsToFinalize.at(1))->finalize(e);
-
-        // 2. finalize self - empty as we don't have any bindings here
-    }
-};
 QUrl ANON_neighbors::url = QUrl(); // workaround
 
 void tst_qmlcompiler_manual::neighbors()
