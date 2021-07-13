@@ -453,7 +453,7 @@ function(qt6_add_qml_module target)
     set(output_targets)
 
     if(NOT arg_NO_GENERATE_QMLDIR)
-        _qt_internal_target_generate_qmldir(${target} ${arg_OUTPUT_DIRECTORY} ${arg_TARGET_PATH})
+        _qt_internal_target_generate_qmldir(${target})
 
         # Embed qmldir in qrc. The following comments relate mostly to Qt5->6 transition.
         # The requirement to keep the same resource name might no longer apply, but it doesn't
@@ -739,7 +739,7 @@ endfunction()
 # trigger some unnecessary rebuilds after reconfiguring due to the qmldir
 # file's timestamp being updated even though its contents might not change,
 # but that's the cost of not having deferred write capability.
-function(_qt_internal_target_generate_qmldir target out_dir target_path)
+function(_qt_internal_target_generate_qmldir target)
 
     macro(_qt_internal_qmldir_item prefix property)
         get_target_property(_value ${target} ${property})
