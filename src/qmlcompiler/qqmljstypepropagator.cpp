@@ -32,8 +32,8 @@
 QT_BEGIN_NAMESPACE
 
 QQmlJSTypePropagator::QQmlJSTypePropagator(QV4::Compiler::JSUnitGenerator *unitGenerator,
-                                           QQmlJSTypeResolver *typeResolver)
-    : m_typeResolver(typeResolver), m_jsUnitGenerator(unitGenerator)
+                                           QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger)
+    : m_typeResolver(typeResolver), m_jsUnitGenerator(unitGenerator), m_logger(logger)
 {
 }
 
@@ -78,6 +78,12 @@ QQmlJSTypePropagator::TypePropagationResult QQmlJSTypePropagator::propagateTypes
 #define INSTR_PROLOGUE_NOT_IMPLEMENTED()                                                           \
     setError(u"Instruction \"%1\" not implemented"_qs                                              \
                      .arg(QString::fromUtf8(__func__)));                                           \
+    return;
+
+#define INSTR_PROLOGUE_NOT_IMPLEMENTED_IGNORE()                                                    \
+    m_logger->logWarning(                                                                          \
+            u"Instruction \"%1\" not implemented"_qs.arg(QString::fromUtf8(__func__)),             \
+            Log_Compiler);                                                                         \
     return;
 
 void QQmlJSTypePropagator::generate_Ret()
@@ -589,12 +595,12 @@ void QQmlJSTypePropagator::generate_ConstructWithSpread(int func, int argc, int 
 void QQmlJSTypePropagator::generate_SetUnwindHandler(int offset)
 {
     Q_UNUSED(offset)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_IGNORE();
 }
 
 void QQmlJSTypePropagator::generate_UnwindDispatch()
 {
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_IGNORE();
 }
 
 void QQmlJSTypePropagator::generate_UnwindToLabel(int level, int offset)
@@ -634,7 +640,7 @@ void QQmlJSTypePropagator::generate_PushCatchContext(int index, int name)
 {
     Q_UNUSED(index)
     Q_UNUSED(name)
-    INSTR_PROLOGUE_NOT_IMPLEMENTED();
+    INSTR_PROLOGUE_NOT_IMPLEMENTED_IGNORE();
 }
 
 void QQmlJSTypePropagator::generate_PushWithContext()
@@ -1204,6 +1210,9 @@ QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type instr)
     case QV4::Moth::Instr::Type::CreateCallContext:
     case QV4::Moth::Instr::Type::PopContext:
     case QV4::Moth::Instr::Type::JumpNoException:
+    case QV4::Moth::Instr::Type::SetUnwindHandler:
+    case QV4::Moth::Instr::Type::PushCatchContext:
+    case QV4::Moth::Instr::Type::UnwindDispatch:
         break;
     default:
         if (instructionWritesAccumulatorWithoutReading)
@@ -1235,6 +1244,9 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
     case QV4::Moth::Instr::Type::PopContext:
     case QV4::Moth::Instr::Type::JumpNoException:
     case QV4::Moth::Instr::Type::ThrowException:
+    case QV4::Moth::Instr::Type::SetUnwindHandler:
+    case QV4::Moth::Instr::Type::PushCatchContext:
+    case QV4::Moth::Instr::Type::UnwindDispatch:
         break;
     default:
         // If the instruction is expected to produce output, save it in the register set

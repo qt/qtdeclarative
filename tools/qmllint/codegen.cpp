@@ -302,7 +302,7 @@ bool Codegen::generateFunction(const QV4::Compiler::Context *context, Function *
         }
     }
 
-    QQmlJSTypePropagator propagator(m_unitGenerator, m_typeResolver.get());
+    QQmlJSTypePropagator propagator(m_unitGenerator, m_typeResolver.get(), m_logger);
 
     if (!function->returnType) {
         if (function->ast->typeAnnotation) {

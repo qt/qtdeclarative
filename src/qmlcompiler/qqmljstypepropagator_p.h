@@ -43,6 +43,7 @@
 #include <private/qv4compiler_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsscope_p.h>
+#include <private/qqmljslogger_p.h>
 
 #include "qqmljstyperesolver_p.h"
 #include "qqmljsregistercontent_p.h"
@@ -52,7 +53,7 @@ QT_BEGIN_NAMESPACE
 struct QQmlJSTypePropagator : public QV4::Moth::ByteCodeHandler
 {
     QQmlJSTypePropagator(QV4::Compiler::JSUnitGenerator *unitGenerator,
-                         QQmlJSTypeResolver *typeResolver);
+                         QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger);
     ~QQmlJSTypePropagator();
     auto returnType() const { return m_returnType; }
 
@@ -282,6 +283,7 @@ private:
     QV4::Compiler::JSUnitGenerator *m_jsUnitGenerator = nullptr;
 
     QQmlJSScope::ConstPtr m_currentScope;
+    QQmlJSLogger *m_logger;
 
     // Not part of the state, as the back jumps are the reason for running multiple passes
     QMultiHash<int, ExpectedRegisterState> m_jumpOriginRegisterStateByTargetInstructionOffset;
