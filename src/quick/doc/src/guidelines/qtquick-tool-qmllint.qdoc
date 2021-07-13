@@ -94,5 +94,5 @@ level.
 This can be used to more easily integrate qmllint in your pre-commit hooks or
 CI testing.
 
-\sa \l{Type Description Files}{qmltypes}
+\sa {Type Description Files}
 */
