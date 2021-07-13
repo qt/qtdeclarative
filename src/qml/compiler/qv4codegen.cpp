@@ -1293,7 +1293,9 @@ bool Codegen::visit(ArrayMemberExpression *ast)
         if (arrayIndex == UINT_MAX) {
             auto jumpLabel = ast->isOptional ? m_optionalChainLabels.take(ast) : Moth::BytecodeGenerator::Label();
 
-            setExprResult(Reference::fromMember(base, str->value.toString(), jumpLabel, targetLabel));
+            setExprResult(Reference::fromMember(base, str->value.toString(),
+                                                ast->expression->firstSourceLocation(), jumpLabel,
+                                                targetLabel));
             return false;
         }
 
@@ -2489,9 +2491,10 @@ bool Codegen::visit(FieldMemberExpression *ast)
         return false;
     }
 
-    setExprResult(Reference::fromMember(base, ast->name.toString(),
-                                        ast->isOptional ? m_optionalChainLabels.take(ast) : Moth::BytecodeGenerator::Label(),
-                                        label.has_value() ? label.value() : Moth::BytecodeGenerator::Label()));
+    setExprResult(Reference::fromMember(
+            base, ast->name.toString(), ast->firstSourceLocation(),
+            ast->isOptional ? m_optionalChainLabels.take(ast) : Moth::BytecodeGenerator::Label(),
+            label.has_value() ? label.value() : Moth::BytecodeGenerator::Label()));
 
     return false;
 }
@@ -2625,12 +2628,14 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, co
         r.isReferenceToConst = resolved.isConst;
         r.requiresTDZCheck = resolved.requiresTDZCheck;
         r.name = name; // used to show correct name at run-time when TDZ check fails.
+        r.sourceLocation = accessLocation;
         return r;
     }
 
     Reference r = Reference::fromName(this, name);
     r.global = useFastLookups && (resolved.type == Context::ResolvedName::Global || resolved.type == Context::ResolvedName::QmlGlobal);
     r.qmlGlobal = resolved.type == Context::ResolvedName::QmlGlobal;
+    r.sourceLocation = accessLocation;
     if (!r.global && !r.qmlGlobal && m_globalNames.contains(name))
         r.global = true;
     return r;
@@ -4640,6 +4645,10 @@ QT_WARNING_POP
                 return;
             }
         }
+
+        if (sourceLocation.isValid())
+            codegen->bytecodeGenerator->setLocation(sourceLocation);
+
         if (!disable_lookups && global) {
             if (qmlGlobal) {
                 Instruction::LoadQmlContextPropertyLookup load;
@@ -4659,6 +4668,10 @@ QT_WARNING_POP
     case Member:
         propertyBase.loadInAccumulator();
         tdzCheck(requiresTDZCheck);
+
+        if (sourceLocation.isValid())
+            codegen->bytecodeGenerator->setLocation(sourceLocation);
+
         if (!disable_lookups && codegen->useFastLookups) {
             if (optionalChainJumpLabel->isValid()) { // If we got a valid jump label, this means it's an optional lookup
                 auto jump = codegen->bytecodeGenerator->jumpOptionalLookup(codegen->registerGetterLookup(propertyNameIndex));

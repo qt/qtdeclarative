@@ -279,14 +279,18 @@ public:
             r.name = name;
             return r;
         }
-        static Reference fromMember(const Reference &baseRef, const QString &name,
-                                    Moth::BytecodeGenerator::Label jumpLabel = Moth::BytecodeGenerator::Label(),
-                                    Moth::BytecodeGenerator::Label targetLabel = Moth::BytecodeGenerator::Label()) {
+        static Reference
+        fromMember(const Reference &baseRef, const QString &name,
+                   QQmlJS::SourceLocation sourceLocation = QQmlJS::SourceLocation(),
+                   Moth::BytecodeGenerator::Label jumpLabel = Moth::BytecodeGenerator::Label(),
+                   Moth::BytecodeGenerator::Label targetLabel = Moth::BytecodeGenerator::Label())
+        {
             Q_ASSERT(baseRef.isValid());
             Reference r(baseRef.codegen, Member);
             r.propertyBase = baseRef.asRValue();
             r.propertyNameIndex = r.codegen->registerString(name);
             r.requiresTDZCheck = baseRef.requiresTDZCheck;
+            r.sourceLocation = sourceLocation;
             r.optionalChainJumpLabel.reset(new Moth::BytecodeGenerator::Label(jumpLabel));
             r.optionalChainTargetLabel.reset(new Moth::BytecodeGenerator::Label(targetLabel));
             return r;
@@ -382,6 +386,7 @@ public:
         quint32 isVolatile:1;
         quint32 global:1;
         quint32 qmlGlobal:1;
+        QQmlJS::SourceLocation sourceLocation = QQmlJS::SourceLocation();
         QSharedPointer<Moth::BytecodeGenerator::Label> optionalChainJumpLabel;
         QSharedPointer<Moth::BytecodeGenerator::Label> optionalChainTargetLabel;
 

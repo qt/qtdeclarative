@@ -929,9 +929,10 @@ void tst_qqmlqt::dateTimeFormattingVariants()
     if (variant.typeId() == QMetaType::QColor || variant.typeId() == QMetaType::Int) {
         if (method == "formatTime") {
             // formatTime has special error handling as it parses the strings itself.
-            QTest::ignoreMessage(QtWarningMsg, QRegularExpression(
-                                     "formatting.qml:18: Error: Invalid argument passed to "
-                                     "formatTime"));
+            QTest::ignoreMessage(
+                    QtWarningMsg,
+                    QRegularExpression("formatting.qml:19: Error: Invalid argument passed to "
+                                       "formatTime"));
         } else {
             QTest::ignoreMessage(QtWarningMsg,
                                  QRegularExpression("Could not convert argument 0 at"));
