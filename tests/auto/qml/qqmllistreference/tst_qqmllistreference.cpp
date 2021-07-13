@@ -802,6 +802,7 @@ void tst_qqmllistreference::engineTypes()
 {
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl("engineTypes.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QObject *o = component.create();
     QVERIFY(o);

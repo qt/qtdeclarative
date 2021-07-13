@@ -588,8 +588,8 @@ CompositeMetaTypeIds QQmlMetaType::registerInternalCompositeType(const QByteArra
     QByteArray ptr = className + '*';
     QByteArray lst = "QQmlListProperty<" + className + '>';
 
-    QMetaType ptr_type(new QQmlMetaTypeInterface(ptr, (QObject **)nullptr));
-    QMetaType lst_type(new QQmlListMetaTypeInterface(lst, (QQmlListProperty<QObject> *)nullptr, ptr_type.iface()));
+    QMetaType ptr_type(new QQmlMetaTypeInterface(ptr));
+    QMetaType lst_type(new QQmlListMetaTypeInterface(lst, ptr_type.iface()));
 
     // Retrieve the IDs once, so that the types are added to QMetaType's custom type registry.
     ptr_type.id();

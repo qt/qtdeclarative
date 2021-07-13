@@ -51,10 +51,11 @@
 // We mean it.
 //
 
-#include <private/qtqmlglobal_p.h>
-#include <private/qqmltype_p.h>
-#include <private/qqmlproxymetaobject_p.h>
 #include <private/qqmldirparser_p.h>
+#include <private/qqmlmetaobject_p.h>
+#include <private/qqmlproxymetaobject_p.h>
+#include <private/qqmltype_p.h>
+#include <private/qtqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -62,7 +63,6 @@ class QQmlTypeModule;
 class QRecursiveMutex;
 class QQmlError;
 class QQmlValueType;
-class QQmlMetaObject;
 
 namespace QV4 { class ExecutableCompilationUnit; }
 
@@ -279,30 +279,33 @@ inline const QMetaObject *dynamicQmlListMarker(const QtPrivate::QMetaTypeInterfa
     return nullptr;
 };
 
+inline const QMetaObject *dynamicQmlMetaObject(const QtPrivate::QMetaTypeInterface *iface) {
+    return QQmlMetaType::metaObjectForType(QMetaType(iface)).metaObject();
+};
+
 // metatype interface for composite QML types
 struct QQmlMetaTypeInterface : QtPrivate::QMetaTypeInterface
 {
     const QByteArray name;
-    template <typename T>
-    QQmlMetaTypeInterface(const QByteArray &name, T *)
+    QQmlMetaTypeInterface(const QByteArray &name)
         : QMetaTypeInterface {
             /*.revision=*/ 0,
-            /*.alignment=*/ alignof(T),
-            /*.size=*/ sizeof(T),
-            /*.flags=*/ QtPrivate::QMetaTypeTypeFlags<T>::Flags,
+            /*.alignment=*/ alignof(QObject *),
+            /*.size=*/ sizeof(QObject *),
+            /*.flags=*/ QtPrivate::QMetaTypeTypeFlags<QObject *>::Flags,
             /*.typeId=*/ 0,
-            /*.metaObject=*/ nullptr,//QtPrivate::MetaObjectForType<T>::value(),
+            /*.metaObjectFn=*/ &dynamicQmlMetaObject,
             /*.name=*/ name.constData(),
-            /*.defaultCtr=*/ [](const QMetaTypeInterface *, void *addr) { new (addr) T(); },
-            /*.copyCtr=*/ [](const QMetaTypeInterface *, void *addr, const void *other) {
-                    new (addr) T(*reinterpret_cast<const T *>(other));
-                },
-            /*.moveCtr=*/ [](const QMetaTypeInterface *, void *addr, void *other) {
-                    new (addr) T(std::move(*reinterpret_cast<T *>(other)));
-                },
-            /*.dtor=*/ [](const QMetaTypeInterface *, void *addr) {
-                reinterpret_cast<T *>(addr)->~T();
+            /*.defaultCtr=*/ [](const QMetaTypeInterface *, void *addr) {
+                *static_cast<QObject **>(addr) = nullptr;
             },
+            /*.copyCtr=*/ [](const QMetaTypeInterface *, void *addr, const void *other) {
+                *static_cast<QObject **>(addr) = *static_cast<QObject *const *>(other);
+            },
+            /*.moveCtr=*/ [](const QMetaTypeInterface *, void *addr, void *other) {
+                *static_cast<QObject **>(addr) = *static_cast<QObject **>(other);
+            },
+            /*.dtor=*/ [](const QMetaTypeInterface *, void *) {},
             /*.equals*/ nullptr,
             /*.lessThan*/ nullptr,
             /*.debugStream=*/ nullptr,
@@ -319,25 +322,28 @@ struct QQmlListMetaTypeInterface : QtPrivate::QMetaTypeInterface
     const QByteArray name;
     // if this interface is for list<type>; valueType stores the interface for type
     const QtPrivate::QMetaTypeInterface *valueType;
-    template<typename T>
-    QQmlListMetaTypeInterface(const QByteArray &name, T *, const QtPrivate::QMetaTypeInterface * valueType)
+    QQmlListMetaTypeInterface(const QByteArray &name, const QtPrivate::QMetaTypeInterface *valueType)
         : QMetaTypeInterface {
             /*.revision=*/ 0,
-            /*.alignment=*/ alignof(T),
-            /*.size=*/ sizeof(T),
-            /*.flags=*/ QtPrivate::QMetaTypeTypeFlags<T>::Flags,
+            /*.alignment=*/ alignof(QQmlListProperty<QObject>),
+            /*.size=*/ sizeof(QQmlListProperty<QObject>),
+            /*.flags=*/ QtPrivate::QMetaTypeTypeFlags<QQmlListProperty<QObject>>::Flags,
             /*.typeId=*/ 0,
             /*.metaObjectFn=*/ &dynamicQmlListMarker,
             /*.name=*/ name.constData(),
-            /*.defaultCtr=*/ [](const QMetaTypeInterface *, void *addr) { new (addr) T(); },
+            /*.defaultCtr=*/ [](const QMetaTypeInterface *, void *addr) {
+                new (addr) QQmlListProperty<QObject> ();
+            },
             /*.copyCtr=*/ [](const QMetaTypeInterface *, void *addr, const void *other) {
-                    new (addr) T(*reinterpret_cast<const T *>(other));
-                },
+                new (addr) QQmlListProperty<QObject>(
+                        *static_cast<const QQmlListProperty<QObject> *>(other));
+            },
             /*.moveCtr=*/ [](const QMetaTypeInterface *, void *addr, void *other) {
-                    new (addr) T(std::move(*reinterpret_cast<T *>(other)));
-                },
+                new (addr) QQmlListProperty<QObject>(
+                        std::move(*static_cast<QQmlListProperty<QObject> *>(other)));
+            },
             /*.dtor=*/ [](const QMetaTypeInterface *, void *addr) {
-                reinterpret_cast<T *>(addr)->~T();
+                static_cast<QQmlListProperty<QObject> *>(addr)->~QQmlListProperty<QObject>();
             },
             /*.equals*/ nullptr,
             /*.lessThan*/ nullptr,
