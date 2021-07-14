@@ -109,6 +109,9 @@ void QQuickHoverHandler::componentComplete()
 
 bool QQuickHoverHandler::wantsPointerEvent(QPointerEvent *event)
 {
+    // No state change should occur if a button is being pressed or released.
+    if (event->isSinglePointEvent() && static_cast<QSinglePointEvent *>(event)->button())
+        return false;
     auto &point = event->point(0);
     if (QQuickPointerDeviceHandler::wantsPointerEvent(event) && wantsEventPoint(event, point) && parentContains(point)) {
         // assume this is a mouse or tablet event, so there's only one point
