@@ -181,6 +181,15 @@ void QQmlEngineExtensionPlugin::initializeEngine(QQmlEngine *engine, const char 
   \inmodule QtQml
 */
 
+
+/*!
+    \macro Q_IMPORT_QML_PLUGIN(PluginName)
+    \relates <QQmlExtensionPlugin>
+
+    Ensures that a QML plugin works in static builds.
+    \sa Q_IMPORT_PLUGIN
+*/
+
 QT_END_NAMESPACE
 
 #include "moc_qqmlextensionplugin.cpp"
