@@ -74,7 +74,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickScaleGrid : public QObject
 
 public:
     QQuickScaleGrid(QObject *parent=nullptr);
-    ~QQuickScaleGrid();
 
     bool isNull() const;
 

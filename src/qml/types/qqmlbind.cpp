@@ -179,10 +179,6 @@ QQmlBind::QQmlBind(QObject *parent)
 {
 }
 
-QQmlBind::~QQmlBind()
-{
-}
-
 /*!
     \qmlproperty bool QtQml::Binding::when
 

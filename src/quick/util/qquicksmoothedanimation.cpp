@@ -371,11 +371,6 @@ QQuickSmoothedAnimation::QQuickSmoothedAnimation(QObject *parent)
 {
 }
 
-QQuickSmoothedAnimation::~QQuickSmoothedAnimation()
-{
-
-}
-
 QQuickSmoothedAnimationPrivate::QQuickSmoothedAnimationPrivate()
     : anim(new QSmoothedAnimation)
 {

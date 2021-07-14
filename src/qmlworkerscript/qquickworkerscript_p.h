@@ -87,6 +87,7 @@ class QQmlV4Function;
 class Q_QMLWORKERSCRIPT_PRIVATE_EXPORT QQuickWorkerScript : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(QQuickWorkerScript)
     Q_PROPERTY(QUrl source READ source WRITE setSource NOTIFY sourceChanged)
     Q_PROPERTY(bool ready READ ready NOTIFY readyChanged REVISION(2, 15))
 

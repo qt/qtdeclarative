@@ -62,6 +62,7 @@ class QQuickSpringAnimationPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickSpringAnimation : public QQuickNumberAnimation
 {
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(QQuickSpringAnimation)
     Q_DECLARE_PRIVATE(QQuickSpringAnimation)
     Q_INTERFACES(QQmlPropertyValueSource)
 

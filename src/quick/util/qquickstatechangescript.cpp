@@ -85,10 +85,6 @@ QQuickStateChangeScript::QQuickStateChangeScript(QObject *parent)
 {
 }
 
-QQuickStateChangeScript::~QQuickStateChangeScript()
-{
-}
-
 /*!
     \qmlproperty script QtQuick::StateChangeScript::script
     This property holds the script to run when the state is current.

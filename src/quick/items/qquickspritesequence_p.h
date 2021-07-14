@@ -111,9 +111,7 @@ private:
     void prepareNextFrame(QSGSpriteNode *node);
     QSGSpriteNode* initNode();
 
-
 private:
-    Q_DISABLE_COPY(QQuickSpriteSequence)
     Q_DECLARE_PRIVATE(QQuickSpriteSequence)
 };
 

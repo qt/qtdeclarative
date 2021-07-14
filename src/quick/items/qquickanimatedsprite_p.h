@@ -193,7 +193,6 @@ private:
     QSGSpriteNode* initNode();
 
 private:
-    Q_DISABLE_COPY(QQuickAnimatedSprite)
     Q_DECLARE_PRIVATE(QQuickAnimatedSprite)
 };
 

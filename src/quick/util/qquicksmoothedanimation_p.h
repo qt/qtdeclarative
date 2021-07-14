@@ -76,7 +76,6 @@ public:
     Q_ENUM(ReversingMode)
 
     QQuickSmoothedAnimation(QObject *parent = nullptr);
-    ~QQuickSmoothedAnimation();
 
     ReversingMode reversingMode() const;
     void setReversingMode(ReversingMode);

@@ -81,10 +81,6 @@ QQuickTextMetrics::QQuickTextMetrics(QObject *parent) :
 {
 }
 
-QQuickTextMetrics::~QQuickTextMetrics()
-{
-}
-
 /*!
     \qmlproperty font QtQuick::TextMetrics::font
 

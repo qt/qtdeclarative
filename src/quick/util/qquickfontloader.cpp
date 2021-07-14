@@ -223,10 +223,6 @@ QQuickFontLoader::QQuickFontLoader(QObject *parent)
     connect(this, &QQuickFontLoader::fontChanged, this, &QQuickFontLoader::nameChanged);
 }
 
-QQuickFontLoader::~QQuickFontLoader()
-{
-}
-
 /*!
     \qmlproperty url QtQuick::FontLoader::source
     The URL of the font to load.

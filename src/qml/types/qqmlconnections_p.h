@@ -77,7 +77,6 @@ class Q_QML_PRIVATE_EXPORT QQmlConnections : public QObject, public QQmlParserSt
 
 public:
     QQmlConnections(QObject *parent=nullptr);
-    ~QQmlConnections();
 
     QObject *target() const;
     void setTarget(QObject *);

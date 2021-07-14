@@ -71,7 +71,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTranslate : public QQuickTransform
 
 public:
     QQuickTranslate(QObject *parent = nullptr);
-    ~QQuickTranslate();
 
     qreal x() const;
     void setX(qreal);
@@ -87,7 +86,6 @@ Q_SIGNALS:
 
 private:
     Q_DECLARE_PRIVATE(QQuickTranslate)
-    Q_DISABLE_COPY(QQuickTranslate)
 };
 
 class QQuickScalePrivate;
@@ -103,7 +101,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickScale : public QQuickTransform
     QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickScale(QObject *parent = nullptr);
-    ~QQuickScale();
 
     QVector3D origin() const;
     void setOrigin(const QVector3D &point);
@@ -142,7 +139,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRotation : public QQuickTransform
     QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickRotation(QObject *parent = nullptr);
-    ~QQuickRotation();
 
     QVector3D origin() const;
     void setOrigin(const QVector3D &point);
@@ -175,7 +171,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickMatrix4x4 : public QQuickTransform
     QML_ADDED_IN_VERSION(2, 3)
 public:
     QQuickMatrix4x4(QObject *parent = nullptr);
-    ~QQuickMatrix4x4();
 
     QMatrix4x4 matrix() const;
     void setMatrix(const QMatrix4x4& matrix);

@@ -87,7 +87,6 @@ private:
 
 public:
     QQmlBind(QObject *parent=nullptr);
-    ~QQmlBind();
 
     bool when() const;
     void setWhen(bool);

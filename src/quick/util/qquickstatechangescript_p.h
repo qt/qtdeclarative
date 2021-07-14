@@ -69,7 +69,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickStateChangeScript : public QQuickStateOperati
 
 public:
     QQuickStateChangeScript(QObject *parent=nullptr);
-    ~QQuickStateChangeScript();
 
     ActionList actions() override;
 

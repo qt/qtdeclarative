@@ -137,10 +137,6 @@ QQmlConnections::QQmlConnections(QObject *parent) :
 {
 }
 
-QQmlConnections::~QQmlConnections()
-{
-}
-
 /*!
     \qmlproperty Object QtQml::Connections::target
     This property holds the object that sends the signal.

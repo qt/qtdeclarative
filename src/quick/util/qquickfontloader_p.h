@@ -78,7 +78,6 @@ public:
     Q_ENUM(Status)
 
     QQuickFontLoader(QObject *parent = nullptr);
-    ~QQuickFontLoader();
 
     QUrl source() const;
     void setSource(const QUrl &url);

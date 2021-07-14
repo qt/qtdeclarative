@@ -60,6 +60,7 @@ class QQuickAnimationControllerPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickAnimationController : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(QQuickAnimationController)
     Q_INTERFACES(QQmlParserStatus)
 
     Q_DECLARE_PRIVATE(QQuickAnimationController)

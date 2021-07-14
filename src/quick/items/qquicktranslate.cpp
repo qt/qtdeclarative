@@ -91,10 +91,6 @@ QQuickTranslate::QQuickTranslate(QObject *parent)
 {
 }
 
-
-QQuickTranslate::~QQuickTranslate()
-{
-}
 /*!
     \qmlproperty real QtQuick::Translate::x
 
@@ -186,10 +182,6 @@ public:
 */
 QQuickScale::QQuickScale(QObject *parent)
     : QQuickTransform(*new QQuickScalePrivate, parent)
-{
-}
-
-QQuickScale::~QQuickScale()
 {
 }
 
@@ -347,10 +339,6 @@ QQuickRotation::QQuickRotation(QObject *parent)
 {
 }
 
-QQuickRotation::~QQuickRotation()
-{
-}
-
 /*!
     \qmlpropertygroup QtQuick::Rotation::origin
     \qmlproperty real QtQuick::Rotation::origin.x
@@ -496,10 +484,6 @@ public:
 */
 QQuickMatrix4x4::QQuickMatrix4x4(QObject *parent)
     : QQuickTransform(*new QQuickMatrix4x4Private, parent)
-{
-}
-
-QQuickMatrix4x4::~QQuickMatrix4x4()
 {
 }
 

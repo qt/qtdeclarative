@@ -215,6 +215,7 @@ private:
 class Q_QUICK_PRIVATE_EXPORT QQuickMultiPointTouchArea : public QQuickItem
 {
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(QQuickMultiPointTouchArea)
 
     Q_PROPERTY(QQmlListProperty<QQuickTouchPoint> touchPoints READ touchPoints)
     Q_PROPERTY(int minimumTouchPoints READ minimumTouchPoints WRITE setMinimumTouchPoints NOTIFY minimumTouchPointsChanged)

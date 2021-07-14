@@ -85,7 +85,6 @@ public:
     Q_ENUM(Flow)
 
     QQuickGridView(QQuickItem *parent=nullptr);
-    ~QQuickGridView();
 
     void setHighlightFollowsCurrentItem(bool) override;
     void setHighlightMoveDuration(int) override;

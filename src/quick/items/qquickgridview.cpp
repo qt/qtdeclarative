@@ -1247,10 +1247,6 @@ QQuickGridView::QQuickGridView(QQuickItem *parent)
 {
 }
 
-QQuickGridView::~QQuickGridView()
-{
-}
-
 void QQuickGridView::setHighlightFollowsCurrentItem(bool autoHighlight)
 {
     Q_D(QQuickGridView);

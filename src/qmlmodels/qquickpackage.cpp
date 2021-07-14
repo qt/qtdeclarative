@@ -153,10 +153,6 @@ QQuickPackage::QQuickPackage(QObject *parent)
 {
 }
 
-QQuickPackage::~QQuickPackage()
-{
-}
-
 QQmlListProperty<QObject> QQuickPackage::data()
 {
     Q_D(QQuickPackage);

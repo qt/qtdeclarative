@@ -77,10 +77,6 @@ QQuickFontMetrics::QQuickFontMetrics(QObject *parent) :
 {
 }
 
-QQuickFontMetrics::~QQuickFontMetrics()
-{
-}
-
 /*!
     \qmlproperty font QtQuick::FontMetrics::font
 

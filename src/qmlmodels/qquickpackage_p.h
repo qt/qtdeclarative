@@ -73,7 +73,6 @@ class Q_QMLMODELS_PRIVATE_EXPORT QQuickPackage : public QObject
 
 public:
     QQuickPackage(QObject *parent=nullptr);
-    virtual ~QQuickPackage();
 
     QQmlListProperty<QObject> data();
 

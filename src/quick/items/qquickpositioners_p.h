@@ -244,8 +244,6 @@ public:
 protected:
     void doPositioning(QSizeF *contentSize) override;
     void reportConflictingAnchors() override;
-private:
-    Q_DISABLE_COPY(QQuickColumn)
 };
 
 class QQuickRowPrivate;
@@ -272,7 +270,6 @@ protected:
     void doPositioning(QSizeF *contentSize) override;
     void reportConflictingAnchors() override;
 private:
-    Q_DISABLE_COPY(QQuickRow)
     Q_DECLARE_PRIVATE(QQuickRow)
 };
 
@@ -361,7 +358,6 @@ private:
     Flow m_flow;
     HAlignment m_hItemAlign;
     VAlignment m_vItemAlign;
-    Q_DISABLE_COPY(QQuickGrid)
     Q_DECLARE_PRIVATE(QQuickGrid)
 };
 
@@ -397,7 +393,6 @@ protected:
 protected:
     QQuickFlow(QQuickFlowPrivate &dd, QQuickItem *parent);
 private:
-    Q_DISABLE_COPY(QQuickFlow)
     Q_DECLARE_PRIVATE(QQuickFlow)
 };
 

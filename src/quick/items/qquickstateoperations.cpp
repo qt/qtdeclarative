@@ -179,10 +179,6 @@ QQuickParentChange::QQuickParentChange(QObject *parent)
 {
 }
 
-QQuickParentChange::~QQuickParentChange()
-{
-}
-
 /*!
     \qmlproperty real QtQuick::ParentChange::x
     \qmlproperty real QtQuick::ParentChange::y
@@ -851,10 +847,6 @@ public:
 
 QQuickAnchorChanges::QQuickAnchorChanges(QObject *parent)
  : QQuickStateOperation(*(new QQuickAnchorChangesPrivate), parent)
-{
-}
-
-QQuickAnchorChanges::~QQuickAnchorChanges()
 {
 }
 

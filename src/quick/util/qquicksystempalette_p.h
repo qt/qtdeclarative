@@ -88,7 +88,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickSystemPalette : public QObject
 
 public:
     QQuickSystemPalette(QObject *parent=nullptr);
-    ~QQuickSystemPalette();
 
     enum ColorGroup { Active = QPalette::Active, Inactive = QPalette::Inactive, Disabled = QPalette::Disabled };
     Q_ENUM(ColorGroup)

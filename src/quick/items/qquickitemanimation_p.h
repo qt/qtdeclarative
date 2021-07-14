@@ -71,7 +71,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickParentAnimation : public QQuickAnimationGroup
 
 public:
     QQuickParentAnimation(QObject *parent=nullptr);
-    virtual ~QQuickParentAnimation();
 
     QQuickItem *target() const;
     void setTargetObject(QQuickItem *);
@@ -107,7 +106,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnchorAnimation : public QQuickAbstractAnimat
 
 public:
     QQuickAnchorAnimation(QObject *parent=nullptr);
-    virtual ~QQuickAnchorAnimation();
 
     QQmlListProperty<QQuickItem> targets();
 
@@ -136,6 +134,7 @@ class QQuickPathAnimationPrivate;
 class Q_QUICK_PRIVATE_EXPORT QQuickPathAnimation : public QQuickAbstractAnimation
 {
     Q_OBJECT
+    Q_DISABLE_COPY_MOVE(QQuickPathAnimation)
     Q_DECLARE_PRIVATE(QQuickPathAnimation)
 
     Q_PROPERTY(int duration READ duration WRITE setDuration NOTIFY durationChanged)

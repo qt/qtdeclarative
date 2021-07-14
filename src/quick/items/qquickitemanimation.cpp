@@ -93,10 +93,6 @@ QQuickParentAnimation::QQuickParentAnimation(QObject *parent)
 {
 }
 
-QQuickParentAnimation::~QQuickParentAnimation()
-{
-}
-
 /*!
     \qmlproperty Item QtQuick::ParentAnimation::target
     The item to reparent.
@@ -436,10 +432,6 @@ QAbstractAnimationJob* QQuickParentAnimation::transition(QQuickStateActions &act
 */
 QQuickAnchorAnimation::QQuickAnchorAnimation(QObject *parent)
 : QQuickAbstractAnimation(*(new QQuickAnchorAnimationPrivate), parent)
-{
-}
-
-QQuickAnchorAnimation::~QQuickAnchorAnimation()
 {
 }
 

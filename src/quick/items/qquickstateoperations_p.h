@@ -79,7 +79,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickParentChange : public QQuickStateOperation, p
     QML_ADDED_IN_VERSION(2, 0)
 public:
     QQuickParentChange(QObject *parent=nullptr);
-    ~QQuickParentChange();
 
     QQuickItem *object() const;
     void setObject(QQuickItem *);
@@ -195,7 +194,6 @@ class Q_QUICK_PRIVATE_EXPORT QQuickAnchorChanges : public QQuickStateOperation, 
 
 public:
     QQuickAnchorChanges(QObject *parent=nullptr);
-    ~QQuickAnchorChanges();
 
     ActionList actions() override;
 

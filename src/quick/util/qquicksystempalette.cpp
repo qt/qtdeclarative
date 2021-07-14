@@ -86,10 +86,6 @@ QQuickSystemPalette::QQuickSystemPalette(QObject *parent)
     connect(qApp, SIGNAL(paletteChanged(QPalette)), this, SIGNAL(paletteChanged()));
 }
 
-QQuickSystemPalette::~QQuickSystemPalette()
-{
-}
-
 /*!
     \qmlproperty color QtQuick::SystemPalette::window
     The window (general background) color of the current color group.
