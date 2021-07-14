@@ -44,6 +44,9 @@
 #include <QtCore/QUrl>
 #include <QtQml/qqmlextensioninterface.h>
 
+#define Q_IMPORT_QML_PLUGIN(PLUGIN) \
+    Q_IMPORT_PLUGIN(PLUGIN)
+
 QT_BEGIN_NAMESPACE
 
 class QQmlEngine;
