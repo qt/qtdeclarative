@@ -69,6 +69,8 @@ class QQuickWindow;
 
 #if !QT_CONFIG(qml_debug)
 
+class TranslationBindingInformation;
+
 class QV4DebugService
 {
 public:

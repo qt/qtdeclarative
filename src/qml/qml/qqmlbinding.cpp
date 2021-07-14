@@ -448,7 +448,7 @@ QQmlBinding *QQmlBinding::createTranslationBinding(
     b->setNotifyOnValueChanged(true);
     b->QQmlJavaScriptExpression::setContext(ctxt);
     b->setScopeObject(obj);
-#if QT_CONFIG(translation)
+#if QT_CONFIG(translation) && QT_CONFIG(qml_debug)
     if (QQmlDebugTranslationService *service
                  = QQmlDebugConnector::service<QQmlDebugTranslationService>()) {
         service->foundTranslationBinding({unit, binding, b->scopeObject(), ctxt});
