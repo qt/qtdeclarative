@@ -14,5 +14,8 @@ qt6_add_qml_module(tst_qmlbasicapp
         main.qml
 )
 
+add_subdirectory(BasicExtension)
+target_link_libraries(tst_qmlbasicapp PRIVATE additional_qml_module additional_qml_module_plugin)
+
 add_subdirectory(TimeExample)
 add_dependencies(tst_qmlbasicapp qmlqtimeexample qmlqtimeexampleplugin)
