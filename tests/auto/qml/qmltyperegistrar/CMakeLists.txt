@@ -33,12 +33,16 @@ qt_internal_add_test(tst_qmltyperegistrar
 ## Scopes:
 #####################################################################
 
+# Simulate conditions that qt6_add_qml_module() would normally set up for us
 set_target_properties(tst_qmltyperegistrar PROPERTIES
     QT_QML_MODULE_VERSION 1.0
     QT_QML_PAST_MAJOR_VERSIONS 0
     QT_QML_MODULE_URI QmlTypeRegistrarTest
     QT_QMLTYPES_FILENAME tst_qmltyperegistrar.qmltypes
+    QT_QML_MODULE_OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-qt6_qml_type_registration(tst_qmltyperegistrar MANUAL_MOC_JSON_FILES ${json_list}) # special case
+# qt6_add_qml_module() doesn't allow us to pass through MANUAL_MOC_JSON_FILES
+# yet, so we have to call it directly to test that code path for now.
+qt6_qml_type_registration(tst_qmltyperegistrar MANUAL_MOC_JSON_FILES ${json_list})
 add_subdirectory(foreign)
