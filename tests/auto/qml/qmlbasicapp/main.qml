@@ -49,10 +49,12 @@
 ****************************************************************************/
 
 import TimeExample // import types from the plugin
+import BasicExtension
 
 Clock { // this class is defined in QML (Clock.qml)
     property Time time: Time {} // this class is defined in C++ (plugin.cpp)
 
     hours: time.hour
     minutes: time.minute
+    property Extension extension // from BasicExtension
 }
