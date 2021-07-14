@@ -322,7 +322,10 @@ public:
     }
 
     QQmlPropertyCacheMethodArguments *arguments() const { return m_arguments; }
-    void setArguments(QQmlPropertyCacheMethodArguments *args) { m_arguments = args; }
+    bool setArguments(QQmlPropertyCacheMethodArguments *args)
+    {
+        return m_arguments.testAndSetRelease(nullptr, args);
+    }
 
     int metaObjectOffset() const { return m_metaObjectOffset; }
     void setMetaObjectOffset(int off)
@@ -435,7 +438,7 @@ private:
     quint8 m_typeMinorVersion = 0;
     qint16 m_metaObjectOffset = -1;
 
-    QQmlPropertyCacheMethodArguments *m_arguments = nullptr;
+    QAtomicPointer<QQmlPropertyCacheMethodArguments> m_arguments;
     StaticMetaCallFunction m_staticMetaCallFunction = nullptr;
 };
 

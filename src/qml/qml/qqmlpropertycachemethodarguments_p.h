@@ -64,8 +64,6 @@ public:
 
     //for signal handler rewrites
     QString *signalParameterStringForJS;
-    int parameterError:1;
-    int argumentsValid:1;
 
     QList<QByteArray> *names;
 

@@ -241,7 +241,7 @@ private:
     QByteArray _dynamicClassName;
     QByteArray _dynamicStringData;
     QString _defaultPropertyName;
-    QQmlPropertyCacheMethodArguments *argumentsCache;
+    QAtomicPointer<QQmlPropertyCacheMethodArguments> argumentsCache;
     int _jsFactoryMethodIndex;
     QByteArray _checksum;
 };
