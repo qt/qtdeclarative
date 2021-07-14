@@ -380,9 +380,9 @@ qt_internal_add_qml_module(Qml
     EXTRA_CMAKE_FILES
         "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}qmldirTemplate.cmake.in"
         "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}QmlPluginTemplate.cpp.in"
-        "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}QmlFindCachegenPlusInternal.cmake"
+        "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}QmlFindQmlscInternal.cmake"
     EXTRA_CMAKE_INCLUDES
-        "${INSTALL_CMAKE_NAMESPACE}QmlFindCachegenPlusInternal.cmake"
+        "${INSTALL_CMAKE_NAMESPACE}QmlFindQmlscInternal.cmake"
 )
 
 # special case begin remove the block, handled manually
