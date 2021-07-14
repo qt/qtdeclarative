@@ -109,6 +109,9 @@ FontDialogImpl {
 
     contentItem: FontDialogContent {
         id: content
+        familyEdit.bottomPadding: 8
+        styleEdit.bottomPadding: 8
+        sizeEdit.bottomPadding: 8
     }
 
     footer: RowLayout {
