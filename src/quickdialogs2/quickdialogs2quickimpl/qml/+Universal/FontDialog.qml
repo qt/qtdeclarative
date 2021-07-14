@@ -109,7 +109,7 @@ FontDialogImpl {
 
     contentItem: FontDialogContent {
         id: content
-        rowSpacing: 24
+        rowSpacing: 12
     }
 
     footer: RowLayout {
