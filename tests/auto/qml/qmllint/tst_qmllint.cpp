@@ -329,21 +329,12 @@ void TestQmllint::dirtyQmlCode_data()
             << QString("Warning: %1:5:25: Property \"foo2\" not found on type \"Methods\"")
             << QString()
             << false;
-    QTest::newRow("badAlias1")
-            << QStringLiteral("badAlias.qml")
-            << QString("Warning: %1:3:1: Cannot deduce type of alias \"wrong\"")
-            << QString()
-            << false;
-    QTest::newRow("badAlias2")
-            << QStringLiteral("badAlias.qml")
-            << QString("Warning: %1:4:27: Unqualified access")
-            << QString()
-            << false;
+    QTest::newRow("badAlias") << QStringLiteral("badAlias.qml")
+                              << QString("Warning: %1:3:1: Cannot resolve alias \"wrong\"")
+                              << QString() << false;
     QTest::newRow("badAliasProperty1")
             << QStringLiteral("badAliasProperty.qml")
-            << QString("Warning: %1:3:1: Cannot deduce type of alias \"wrong\"")
-            << QString()
-            << false;
+            << QString("Warning: %1:3:1: Cannot resolve alias \"wrong\"") << QString() << false;
     QTest::newRow("badAliasProperty2")
             << QStringLiteral("badAliasProperty.qml")
             << QString("Warning: %1:5:32: Property \"nowhere\" not found on type \"QtObject\"")

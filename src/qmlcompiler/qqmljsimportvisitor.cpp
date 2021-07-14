@@ -173,9 +173,12 @@ void QQmlJSImportVisitor::resolveAliases()
             QQmlJSScope::ConstPtr type;
             QQmlJSMetaProperty targetProperty;
 
+            bool foundProperty = false;
+
             // The first component has to be an ID. Find the object it refers to.
             const auto it = m_scopesById.find(components.takeFirst());
             if (it != m_scopesById.end()) {
+                foundProperty = true;
                 type = *it;
 
                 // Any further components are nested properties of that object.
@@ -184,7 +187,15 @@ void QQmlJSImportVisitor::resolveAliases()
                 // If the target is itself an alias and has not been resolved, re-queue the object
                 // and try again later.
                 while (type && !components.isEmpty()) {
-                    const auto target = type->property(components.takeFirst());
+                    const QString name = components.takeFirst();
+
+                    if (!type->hasProperty(name)) {
+                        foundProperty = false;
+                        type = {};
+                        break;
+                    }
+
+                    const auto target = type->property(name);
                     if (!target.type() && target.isAlias())
                         doRequeue = true;
                     type = target.type();
@@ -195,9 +206,15 @@ void QQmlJSImportVisitor::resolveAliases()
             if (type.isNull()) {
                 if (doRequeue)
                     continue;
-                m_logger.logWarning(QStringLiteral("Cannot deduce type of alias \"%1\"")
-                                            .arg(property.propertyName()),
-                                    Log_Alias, object->sourceLocation());
+                if (foundProperty) {
+                    m_logger.logWarning(QStringLiteral("Cannot deduce type of alias \"%1\"")
+                                                .arg(property.propertyName()),
+                                        Log_Alias, object->sourceLocation());
+                } else {
+                    m_logger.logWarning(QStringLiteral("Cannot resolve alias \"%1\"")
+                                                .arg(property.propertyName()),
+                                        Log_Alias, object->sourceLocation());
+                }
             } else {
                 property.setType(type);
                 // Copy additional property information from target
