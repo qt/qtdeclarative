@@ -138,17 +138,17 @@ void QQmlPropertyData::lazyLoad(const QMetaProperty &p)
 {
     populate(this, p);
     int type = static_cast<int>(p.userType());
-    if (type == QMetaType::QObjectStar) {
-        setPropType(type);
+
+    if (type >= QMetaType::User || type == 0)
+        return; // Resolve later
+
+    if (type == QMetaType::QObjectStar)
         m_flags.type = Flags::QObjectDerivedType;
-    } else if (type == QMetaType::QVariant) {
-        setPropType(type);
+    else if (type == QMetaType::QVariant)
         m_flags.type = Flags::QVariantType;
-    } else if (type >= QMetaType::User || type == 0) {
-        m_flags.notFullyResolved = true;
-    } else {
-        setPropType(type);
-    }
+
+    // This is OK because lazyLoad is done before exposing the property data.
+    setPropType(type);
 }
 
 void QQmlPropertyData::load(const QMetaProperty &p)
@@ -158,45 +158,49 @@ void QQmlPropertyData::load(const QMetaProperty &p)
     flagsForPropertyType(propType(), m_flags);
 }
 
-void QQmlPropertyData::load(const QMetaMethod &m)
+static void populate(QQmlPropertyData *data, const QMetaMethod &m)
 {
-    setCoreIndex(m.methodIndex());
-    setArguments(nullptr);
+    data->setCoreIndex(m.methodIndex());
+    data->setArguments(nullptr);
 
-    setPropType(m.returnType());
-
-    m_flags.type = Flags::FunctionType;
-    if (m.methodType() == QMetaMethod::Signal) {
-        m_flags.setIsSignal(true);
-    } else if (m.methodType() == QMetaMethod::Constructor) {
-        m_flags.setIsConstructor(true);
-        setPropType(QMetaType::QObjectStar);
-    }
+    QQmlPropertyData::Flags flags = data->flags();
+    flags.type = QQmlPropertyData::Flags::FunctionType;
+    if (m.methodType() == QMetaMethod::Signal)
+        flags.setIsSignal(true);
+    else if (m.methodType() == QMetaMethod::Constructor)
+        flags.setIsConstructor(true);
 
     const int paramCount = m.parameterCount();
     if (paramCount) {
-        m_flags.setHasArguments(true);
+        flags.setHasArguments(true);
         if ((paramCount == 1) && (m.parameterTypes().constFirst() == "QQmlV4Function*"))
-            m_flags.setIsV4Function(true);
+            flags.setIsV4Function(true);
     }
 
     if (m.attributes() & QMetaMethod::Cloned)
-        m_flags.setIsCloned(true);
+        flags.setIsCloned(true);
+
+    data->setFlags(flags);
 
     Q_ASSERT(m.revision() <= Q_INT16_MAX);
-    setRevision(m.revision());
+    data->setRevision(m.revision());
+}
+
+void QQmlPropertyData::load(const QMetaMethod &m)
+{
+    populate(this, m);
+    setPropType(m.methodType() == QMetaMethod::Constructor
+                    ? QMetaType::QObjectStar
+                    : m.returnType());
 }
 
 void QQmlPropertyData::lazyLoad(const QMetaMethod &m)
 {
-    load(m);
-
     const char *returnType = m.typeName();
-    if (!returnType)
-        returnType = "\0";
-    if ((*returnType != 'v') || (qstrcmp(returnType+1, "oid") != 0)) {
-        m_flags.notFullyResolved = true;
-    }
+    if (!returnType || *returnType != 'v' || qstrcmp(returnType + 1, "oid") != 0)
+        populate(this, m);
+    else
+        load(m); // If it's void, resolve it right away
 }
 
 /*!
@@ -650,25 +654,23 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
     }
 }
 
-void QQmlPropertyCache::resolve(QQmlPropertyData *data) const
+int QQmlPropertyCache::findPropType(const QQmlPropertyData *data) const
 {
-    Q_ASSERT(data->notFullyResolved());
-    data->m_flags.notFullyResolved = false;
-
+    int type = QMetaType::UnknownType;
     const QMetaObject *mo = firstCppMetaObject();
     if (data->isFunction()) {
         auto metaMethod = mo->method(data->coreIndex());
         const char *retTy = metaMethod.typeName();
         if (!retTy)
             retTy = "\0";
-        data->setPropType(QMetaType::type(retTy));
+        type = QMetaType::type(retTy);
     } else {
         auto metaProperty = mo->property(data->coreIndex());
-        data->setPropType(QMetaType::type(metaProperty.typeName()));
+        type = QMetaType::type(metaProperty.typeName());
     }
 
     if (!data->isFunction()) {
-        if (data->propType() == QMetaType::UnknownType) {
+        if (type == QMetaType::UnknownType) {
             QQmlPropertyCache *p = _parent;
             while (p && (!mo || _ownMetaObject)) {
                 mo = p->_metaObject;
@@ -684,11 +686,33 @@ void QQmlPropertyCache::resolve(QQmlPropertyData *data) const
 
                 int registerResult = -1;
                 void *argv[] = { &registerResult };
-                mo->static_metacall(QMetaObject::RegisterPropertyMetaType, data->coreIndex() - propOffset, argv);
-                data->setPropType(registerResult == -1 ? QMetaType::UnknownType : registerResult);
+                mo->static_metacall(QMetaObject::RegisterPropertyMetaType,
+                                    data->coreIndex() - propOffset, argv);
+                type = registerResult == -1 ? QMetaType::UnknownType : registerResult;
             }
         }
-        flagsForPropertyType(data->propType(), data->m_flags);
+    }
+
+    return type;
+}
+
+void QQmlPropertyCache::resolve(QQmlPropertyData *data) const
+{
+    const int type = findPropType(data);
+
+    // Setting the flags unsynchronized is somewhat dirty but unlikely to cause trouble
+    // in practice. We have to do this before setting the property type because otherwise
+    // a consumer of the flags might see outdated flags even after the property type has
+    // become valid. The flags should only depend on the property type and the property
+    // type should be the same across different invocations. So, setting this concurrently
+    // should be a noop.
+    if (!data->isFunction())
+        flagsForPropertyType(type, data->m_flags);
+
+    // This is the one place where we can update the property type after exposing the data.
+    if (!data->m_propTypeAndRelativePropIndex.testAndSetOrdered(
+                0, type > 0 ? quint32(type) : quint32(QQmlPropertyData::PropTypeUnknown))) {
+        return; // Someone else is resolving it already
     }
 }
 
