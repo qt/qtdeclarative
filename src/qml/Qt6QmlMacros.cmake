@@ -248,7 +248,16 @@ function(qt6_add_qml_module target)
         string(REPLACE "." "/" arg_TARGET_PATH ${arg_URI})
     endif()
 
-    if(NOT arg_NO_CREATE_PLUGIN_TARGET AND NOT DEFINED arg_PLUGIN_TARGET)
+    set(is_executable FALSE)
+    if(TARGET ${target})
+        get_target_property(backing_target_type ${target} TYPE)
+        get_target_property(is_android_executable "${target}" _qt_is_android_executable)
+        if (backing_target_type STREQUAL "EXECUTABLE" OR is_android_executable)
+            set(is_executable TRUE)
+        endif()
+    endif()
+
+    if(NOT arg_NO_CREATE_PLUGIN_TARGET AND NOT DEFINED arg_PLUGIN_TARGET AND NOT is_executable)
         set(arg_PLUGIN_TARGET ${target}plugin)
     endif()
     if(NOT DEFINED arg_PLUGIN_TARGET)
@@ -482,7 +491,7 @@ function(qt6_add_qml_module target)
         list(APPEND output_targets ${resource_targets})
     endif()
 
-    if(arg_PLUGIN_TARGET AND NOT arg_NO_CREATE_PLUGIN_TARGET)
+    if(arg_PLUGIN_TARGET AND NOT arg_NO_CREATE_PLUGIN_TARGET AND NOT is_executable)
         # This also handles the case where ${arg_PLUGIN_TARGET} already exists,
         # including where it is the same as ${target}. If ${arg_PLUGIN_TARGET}
         # already exists, it will update the necessary things that are specific
