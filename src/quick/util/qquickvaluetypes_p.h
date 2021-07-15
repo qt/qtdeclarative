@@ -259,6 +259,24 @@ public:
     void setX(qreal);
     void setY(qreal);
     void setZ(qreal);
+
+    Q_INVOKABLE qreal dotProduct(const QQuaternion &q) const;
+    Q_INVOKABLE QQuaternion times(const QQuaternion &q) const;
+    Q_INVOKABLE QVector3D times(const QVector3D &vec) const;
+    Q_INVOKABLE QQuaternion times(qreal factor) const;
+    Q_INVOKABLE QQuaternion plus(const QQuaternion &q) const;
+    Q_INVOKABLE QQuaternion minus(const QQuaternion &q) const;
+
+    Q_INVOKABLE QQuaternion normalized() const;
+    Q_INVOKABLE QQuaternion inverted() const;
+    Q_INVOKABLE QQuaternion conjugated() const;
+    Q_INVOKABLE qreal length() const;
+
+    Q_INVOKABLE QVector3D toEulerAngles() const;
+    Q_INVOKABLE QVector4D toVector4d() const;
+
+    Q_INVOKABLE bool fuzzyEquals(const QQuaternion &q, qreal epsilon) const;
+    Q_INVOKABLE bool fuzzyEquals(const QQuaternion &q) const;
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickMatrix4x4ValueType

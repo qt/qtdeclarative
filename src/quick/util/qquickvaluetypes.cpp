@@ -629,6 +629,85 @@ void QQuickQuaternionValueType::setZ(qreal z)
     v.setZ(z);
 }
 
+qreal QQuickQuaternionValueType::dotProduct(const QQuaternion &q) const
+{
+    return QQuaternion::dotProduct(v, q);
+}
+
+QQuaternion QQuickQuaternionValueType::times(const QQuaternion &q) const
+{
+    return v * q;
+}
+
+QVector3D QQuickQuaternionValueType::times(const QVector3D &vec) const
+{
+    return v * vec;
+}
+
+QQuaternion QQuickQuaternionValueType::times(qreal factor) const
+{
+    return v * factor;
+}
+
+QQuaternion QQuickQuaternionValueType::plus(const QQuaternion &q) const
+{
+    return v + q;
+}
+
+QQuaternion QQuickQuaternionValueType::minus(const QQuaternion &q) const
+{
+    return v - q;
+}
+
+QQuaternion QQuickQuaternionValueType::normalized() const
+{
+    return v.normalized();
+}
+
+QQuaternion QQuickQuaternionValueType::inverted() const
+{
+    return v.inverted();
+}
+
+QQuaternion QQuickQuaternionValueType::conjugated() const
+{
+    return v.conjugated();
+}
+
+qreal QQuickQuaternionValueType::length() const
+{
+    return v.length();
+}
+
+QVector3D QQuickQuaternionValueType::toEulerAngles() const
+{
+    return v.toEulerAngles();
+}
+
+QVector4D QQuickQuaternionValueType::toVector4d() const
+{
+    return v.toVector4D();
+}
+
+bool QQuickQuaternionValueType::fuzzyEquals(const QQuaternion &q, qreal epsilon) const
+{
+    qreal absEps = qAbs(epsilon);
+    if (qAbs(v.scalar() - q.scalar()) > absEps)
+        return false;
+    if (qAbs(v.x() - q.x()) > absEps)
+        return false;
+    if (qAbs(v.y() - q.y()) > absEps)
+        return false;
+    if (qAbs(v.z() - q.z()) > absEps)
+        return false;
+    return true;
+}
+
+bool QQuickQuaternionValueType::fuzzyEquals(const QQuaternion &q) const
+{
+    return qFuzzyCompare(v, q);
+}
+
 QVariant QQuickMatrix4x4ValueType::create(const QJSValue &params)
 {
     if (params.isNull() || params.isUndefined())

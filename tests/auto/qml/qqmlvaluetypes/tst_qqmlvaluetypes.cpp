@@ -691,6 +691,14 @@ void tst_qqmlvaluetypes::quaternion()
 
         delete object;
     }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("quaternion_invokables.qml"));
+        QObject *object = component.create();
+        QVERIFY(object != nullptr);
+        QVERIFY(object->property("success").toBool());
+        delete object;
+    }
 }
 
 void tst_qqmlvaluetypes::matrix4x4()
