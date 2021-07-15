@@ -278,27 +278,26 @@ QQmlImportDatabase::LocalQmldirResult QQmlImportDatabase::locateLocalQmldir(
     // Check cache first
 
     LocalQmldirResult result = QmldirNotFound;
-    QmldirCache *cacheHead = nullptr;
-    {
-        QmldirCache **cachePtr = qmldirCache.value(uri);
-        if (cachePtr) {
-            cacheHead = *cachePtr;
-            QmldirCache *cache = cacheHead;
-            while (cache) {
-                if (cache->version == version) {
-                    if (cache->qmldirFilePath.isEmpty()) {
-                        return cache->qmldirPathUrl.isEmpty()
-                                ? QmldirNotFound
-                                : QmldirInterceptedToRemote;
-                    }
-                    if (callback(cache->qmldirFilePath, cache->qmldirPathUrl))
-                        return QmldirFound;
-                    result = QmldirRejected;
+    QmldirCache *cacheTail = nullptr;
+
+    QmldirCache **cachePtr = qmldirCache.value(uri);
+    QmldirCache *cacheHead = cachePtr ? *cachePtr : nullptr;
+    if (cacheHead) {
+        cacheTail = cacheHead;
+        do {
+            if (cacheTail->version == version) {
+                if (cacheTail->qmldirFilePath.isEmpty()) {
+                    return cacheTail->qmldirPathUrl.isEmpty()
+                            ? QmldirNotFound
+                            : QmldirInterceptedToRemote;
                 }
-                cache = cache->next;
+                if (callback(cacheTail->qmldirFilePath, cacheTail->qmldirPathUrl))
+                    return QmldirFound;
+                result = QmldirRejected;
             }
-        }
+        } while (cacheTail->next && (cacheTail = cacheTail->next));
     }
+
 
     // Do not try to construct the cache if it already had any entries for the URI.
     // Otherwise we might duplicate cache entries.
@@ -349,15 +348,15 @@ QQmlImportDatabase::LocalQmldirResult QQmlImportDatabase::locateLocalQmldir(
             cache->version = version;
             cache->qmldirFilePath = qmldirAbsoluteFilePath;
             cache->qmldirPathUrl = url;
-            cache->next = cacheHead;
-            qmldirCache.insert(uri, cache);
-            cacheHead = cache;
+            cache->next = nullptr;
+            if (cacheTail)
+                cacheTail->next = cache;
+            else
+                qmldirCache.insert(uri, cache);
+            cacheTail = cache;
 
-            if (result != QmldirFound) {
-                result = callback(qmldirAbsoluteFilePath, url)
-                        ? QmldirFound
-                        : QmldirRejected;
-            }
+            if (result != QmldirFound)
+                result = callback(qmldirAbsoluteFilePath, url) ? QmldirFound : QmldirRejected;
 
             // Do not return here. Rather, construct the complete cache for this URI.
         }
