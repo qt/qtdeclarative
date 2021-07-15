@@ -63,9 +63,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPen : public QObject
 {
     Q_OBJECT
 
-    Q_PROPERTY(qreal width READ width WRITE setWidth NOTIFY penChanged)
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY penChanged)
-    Q_PROPERTY(bool pixelAligned READ pixelAligned WRITE setPixelAligned NOTIFY penChanged)
+    Q_PROPERTY(qreal width READ width WRITE setWidth NOTIFY widthChanged)
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+    Q_PROPERTY(bool pixelAligned READ pixelAligned WRITE setPixelAligned NOTIFY pixelAlignedChanged)
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 public:
@@ -83,7 +83,9 @@ public:
     bool isValid() const;
 
 Q_SIGNALS:
-    void penChanged();
+    void widthChanged();
+    void colorChanged();
+    void pixelAlignedChanged();
 
 private:
     qreal m_width;

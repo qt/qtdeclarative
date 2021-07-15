@@ -95,7 +95,7 @@ void QQuickPen::setWidth(qreal w)
     m_width = w;
     m_valid = m_color.alpha() && (qRound(m_width) >= 1 || (!m_aligned && m_width > 0));
     static_cast<QQuickItem*>(parent())->update();
-    emit penChanged();
+    emit widthChanged();
 }
 
 QColor QQuickPen::color() const
@@ -108,7 +108,7 @@ void QQuickPen::setColor(const QColor &c)
     m_color = c;
     m_valid = m_color.alpha() && (qRound(m_width) >= 1 || (!m_aligned && m_width > 0));
     static_cast<QQuickItem*>(parent())->update();
-    emit penChanged();
+    emit colorChanged();
 }
 
 bool QQuickPen::pixelAligned() const
@@ -123,7 +123,7 @@ void QQuickPen::setPixelAligned(bool aligned)
     m_aligned = aligned;
     m_valid = m_color.alpha() && (qRound(m_width) >= 1 || (!m_aligned && m_width > 0));
     static_cast<QQuickItem*>(parent())->update();
-    emit penChanged();
+    emit pixelAlignedChanged();
 }
 
 bool QQuickPen::isValid() const
