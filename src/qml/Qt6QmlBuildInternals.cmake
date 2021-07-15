@@ -275,6 +275,10 @@ function(qt_internal_add_qml_module target)
             get_target_property(is_plugin_init ${output_target} _is_qt_plugin_init_target)
             if(is_plugin_init)
                 list(APPEND plugin_export_targets ${output_target})
+
+                # Plugin initializers associated with an internal module need the internal
+                # platform flags.
+                qt_internal_link_internal_platform_for_object_library("${output_target}")
             else()
                 list(APPEND backing_lib_export_targets ${output_target})
             endif()
