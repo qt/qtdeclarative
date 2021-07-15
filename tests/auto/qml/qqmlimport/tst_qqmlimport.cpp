@@ -205,6 +205,22 @@ void tst_QQmlImport::importPathOrder()
     engine.addImportPath(qml2Imports);
     expectedImportPaths.move(expectedImportPaths.indexOf(qml2Imports), 0);
     QCOMPARE(engine.importPathList(), expectedImportPaths);
+
+    // Verify if the type in the module comes first in the import path list
+    // takes the precedence. In the case below, the width of both items
+    // should be the same to that of the type defined in "path2".
+    engine.addImportPath(testFile("importPathOrder/path1"));
+    engine.addImportPath(testFile("importPathOrder/path2"));
+    QQmlComponent component(&engine, testFile("importPathOrder/MyModuleTest.qml"));
+    QScopedPointer<QObject> rootItem(component.create());
+    QVERIFY(component.errorString().isEmpty());
+    QVERIFY(!rootItem.isNull());
+    QQuickItem *item1 = rootItem->findChild<QQuickItem*>("myItem1");
+    QQuickItem *item2 = rootItem->findChild<QQuickItem*>("myItem2");
+    QVERIFY(item1 != nullptr);
+    QVERIFY(item2 != nullptr);
+    QCOMPARE(item1->width(), 200);
+    QCOMPARE(item2->width(), 200);
 }
 
 Q_DECLARE_METATYPE(QQmlImports::ImportVersion)
