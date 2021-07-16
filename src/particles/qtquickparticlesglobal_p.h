@@ -65,6 +65,4 @@
 #  define Q_QUICKPARTICLES_PRIVATE_EXPORT
 #endif
 
-void Q_QUICKPARTICLES_PRIVATE_EXPORT qml_register_types_QtQuick_Particles();
-
 #endif // QTQUICKPARTICLESGLOBAL_P_H

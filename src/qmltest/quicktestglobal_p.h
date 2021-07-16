@@ -55,7 +55,4 @@
 
 #define Q_QUICK_TEST_PRIVATE_EXPORT Q_QUICK_TEST_EXPORT
 
-void Q_QUICK_TEST_PRIVATE_EXPORT qml_register_types_QtTest();
-
-
 #endif // QUICKTESTGLOBAL_P_H

@@ -68,6 +68,4 @@ QT_BEGIN_NAMESPACE
 
 QT_END_NAMESPACE
 
-void Q_LABSANIMATION_PRIVATE_EXPORT qml_register_types_Qt_labs_animation();
-
 #endif // QTLABSANIMATIONGLOBAL_P_H

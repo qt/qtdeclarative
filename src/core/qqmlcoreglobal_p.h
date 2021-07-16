@@ -69,6 +69,4 @@ QT_BEGIN_NAMESPACE
 
 QT_END_NAMESPACE
 
-void Q_QMLCORE_PRIVATE_EXPORT qml_register_types_QtCore();
-
 #endif // QQMLCOREGLOBAL_P_H

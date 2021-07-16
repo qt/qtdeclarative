@@ -68,6 +68,4 @@ QT_BEGIN_NAMESPACE
 
 QT_END_NAMESPACE
 
-void Q_LABSQMLMODELS_PRIVATE_EXPORT qml_register_types_Qt_labs_qmlmodels();
-
 #endif // QTLABSQMLMODELSGLOBAL_P_H
