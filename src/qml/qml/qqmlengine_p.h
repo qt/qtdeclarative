@@ -222,12 +222,6 @@ public:
     void incubate(QQmlIncubator &, const QQmlRefPointer<QQmlContextData> &);
 
     // These methods may be called from any thread
-    inline bool isEngineThread() const;
-    inline static bool isEngineThread(const QQmlEngine *);
-    template<typename T>
-    inline void deleteInEngineThread(T *);
-    template<typename T>
-    inline static void deleteInEngineThread(QQmlEnginePrivate *, T *);
     QString offlineStorageDatabaseDirectory() const;
 
     // These methods may be called from the loader thread
@@ -321,11 +315,6 @@ private:
     QHash<int, QV4::ExecutableCompilationUnit *> m_compositeTypes;
     static bool s_designerMode;
 
-    // These members is protected by the full QQmlEnginePrivate::mutex mutex
-    struct Deletable { Deletable():next(nullptr) {} virtual ~Deletable() {} Deletable *next; };
-    QFieldList<Deletable, &Deletable::next> toDeleteInEngineThread;
-    void doDeleteInEngineThread();
-
     void cleanupScarceResources();
     QQmlPropertyCache *findPropertyCacheInCompositeTypes(int t) const;
 };
@@ -358,67 +347,6 @@ inline void QQmlEnginePrivate::dereferenceScarceResources()
             cleanupScarceResources();
         }
     }
-}
-
-/*!
-Returns true if the calling thread is the QQmlEngine thread.
-*/
-bool QQmlEnginePrivate::isEngineThread() const
-{
-
-    return QThread::currentThread() == q_ptr->thread();
-}
-
-/*!
-Returns true if the calling thread is the QQmlEngine \a engine thread.
-*/
-bool QQmlEnginePrivate::isEngineThread(const QQmlEngine *engine)
-{
-    Q_ASSERT(engine);
-    return QQmlEnginePrivate::get(engine)->isEngineThread();
-}
-
-/*!
-Delete \a value in the engine thread.  If the calling thread is the engine
-thread, \a value will be deleted immediately.
-
-This method should be used for *any* type that has resources that need to
-be freed in the engine thread.  This is generally types that use V8 handles.
-As there is some small overhead in checking the current thread, it is best
-practice to check if any V8 handles actually need to be freed and delete
-the instance directly if not.
-*/
-template<typename T>
-void QQmlEnginePrivate::deleteInEngineThread(T *value)
-{
-    Q_ASSERT(value);
-    if (isEngineThread()) {
-        delete value;
-    } else {
-        struct I : public Deletable {
-            I(T *value) : value(value) {}
-            ~I() override { delete value; }
-            T *value;
-        };
-        I *i = new I(value);
-        mutex.lock();
-        bool wasEmpty = toDeleteInEngineThread.isEmpty();
-        toDeleteInEngineThread.append(i);
-        mutex.unlock();
-        if (wasEmpty)
-            QCoreApplication::postEvent(q_ptr, new QEvent(QEvent::User));
-    }
-}
-
-/*!
-Delete \a value in the \a engine thread.  If the calling thread is the engine
-thread, \a value will be deleted immediately.
-*/
-template<typename T>
-void QQmlEnginePrivate::deleteInEngineThread(QQmlEnginePrivate *engine, T *value)
-{
-    Q_ASSERT(engine);
-    engine->deleteInEngineThread<T>(value);
 }
 
 /*!

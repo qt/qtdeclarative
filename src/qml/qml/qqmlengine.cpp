@@ -606,8 +606,6 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
     if (inProgressCreations)
         qWarning() << QQmlEngine::tr("There are still \"%1\" items in the process of being created at engine destruction.").arg(inProgressCreations);
 
-    doDeleteInEngineThread();
-
     if (incubationController) incubationController->d = nullptr;
     incubationController = nullptr;
 
@@ -1431,25 +1429,11 @@ void QQmlEngine::setContextForObject(QObject *object, QQmlContext *context)
 */
 bool QQmlEngine::event(QEvent *e)
 {
-    Q_D(QQmlEngine);
-    if (e->type() == QEvent::User)
-        d->doDeleteInEngineThread();
-    else if (e->type() == QEvent::LanguageChange) {
+    if (e->type() == QEvent::LanguageChange) {
         retranslate();
     }
 
     return QJSEngine::event(e);
-}
-
-void QQmlEnginePrivate::doDeleteInEngineThread()
-{
-    QFieldList<Deletable, &Deletable::next> list;
-    mutex.lock();
-    list.copyAndClear(toDeleteInEngineThread);
-    mutex.unlock();
-
-    while (Deletable *d = list.takeFirst())
-        delete d;
 }
 
 class QQmlDataExtended {
