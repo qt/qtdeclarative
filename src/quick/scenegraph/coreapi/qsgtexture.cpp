@@ -990,29 +990,27 @@ VkImageLayout QSGTexturePlatformVulkan::nativeImageLayout() const
 }
 #endif // vulkan
 
-template<>
-Q_NATIVE_INTERFACE_EXPORT void *
-QNativeInterface::Private::resolveInterface(const QSGTexture *that, const char *name, int revision)
+void *QSGTexture::resolveInterface(const char *name, int revision) const
 {
     using namespace QNativeInterface;
-    Q_UNUSED(that);
     Q_UNUSED(name);
     Q_UNUSED(revision);
 
-    auto *texturePrivate = QSGTexturePrivate::get(const_cast<QSGTexture*>(that));
-    Q_UNUSED(texturePrivate);
+    Q_D(const QSGTexture);
+    auto *dd = const_cast<QSGTexturePrivate *>(d);
+    Q_UNUSED(dd);
 
 #if QT_CONFIG(vulkan)
-    QT_NATIVE_INTERFACE_RETURN_IF(QSGVulkanTexture, &texturePrivate->m_vulkanTextureAccessor);
+    QT_NATIVE_INTERFACE_RETURN_IF(QSGVulkanTexture, &dd->m_vulkanTextureAccessor);
 #endif
 #if defined(__OBJC__)
-    QT_NATIVE_INTERFACE_RETURN_IF(QSGMetalTexture, &texturePrivate->m_metalTextureAccessor);
+    QT_NATIVE_INTERFACE_RETURN_IF(QSGMetalTexture, &dd->m_metalTextureAccessor);
 #endif
 #if defined(Q_OS_WIN)
-    QT_NATIVE_INTERFACE_RETURN_IF(QSGD3D11Texture, &texturePrivate->m_d3d11TextureAccessor);
+    QT_NATIVE_INTERFACE_RETURN_IF(QSGD3D11Texture, &dd->m_d3d11TextureAccessor);
 #endif
 #if QT_CONFIG(opengl)
-    QT_NATIVE_INTERFACE_RETURN_IF(QSGOpenGLTexture, &texturePrivate->m_openglTextureAccessor);
+    QT_NATIVE_INTERFACE_RETURN_IF(QSGOpenGLTexture, &dd->m_openglTextureAccessor);
 #endif
 
     return nullptr;
