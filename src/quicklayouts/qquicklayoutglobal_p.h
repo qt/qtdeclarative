@@ -70,6 +70,4 @@ QT_BEGIN_NAMESPACE
 
 QT_END_NAMESPACE
 
-void Q_QUICKLAYOUT_PRIVATE_EXPORT qml_register_types_QtQuick_Layouts();
-
 #endif // QQUICKLAYOUTGLOBAL_P_H
