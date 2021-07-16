@@ -684,10 +684,25 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var qmlcac
     set_target_properties(${target} PROPERTIES _qt_cachegen_set_up TRUE)
 
     get_target_property(target_binary_dir ${target} BINARY_DIR)
-    set(qmlcache_dir ${target_binary_dir}/.rcc/qmlcache/${target})
+    set(qmlcache_dir ${target_binary_dir}/.rcc/qmlcache)
     set(qmlcache_resource_name qmlcache_${target})
-    set(qmlcache_loader_cpp ${qmlcache_dir}/qmlcache_loader.cpp)
-    set(qmlcache_loader_list ${qmlcache_dir}/qml_loader_file_list.rsp)
+
+    # INTEGRITY_SYMBOL_UNIQUENESS
+    # The cache loader file name has to be unique, because the Integrity compiler uses the file name
+    # for the generation of the translation unit static constructor symbol name.
+    #    e.g. __sti___19_qmlcache_loader_cpp_11acedbd
+    # For some reason the symbol is created with global visibility.
+    #
+    # When an application links against the Basic and Fusion static qml plugins, the linker
+    # fails with duplicate symbol errors because both of those plugins will contain the same symbol.
+    #
+    # With gcc on regular Linux, the symbol names are also the same, but it's not a problem because
+    # they have local (hidden) visbility.
+    #
+    # Make the file name unique by prepending the target name.
+    set(qmlcache_loader_cpp ${qmlcache_dir}/${target}_qmlcache_loader.cpp)
+
+    set(qmlcache_loader_list ${qmlcache_dir}/${target}_qml_loader_file_list.rsp)
     set(qmlcache_resource_paths "$<TARGET_PROPERTY:${target},QT_QML_MODULE_RESOURCE_PATHS>")
 
     _qt_internal_genex_getjoinedproperty(qrc_resource_args ${target}
@@ -1387,7 +1402,11 @@ function(qt6_target_qml_sources target)
             file(RELATIVE_PATH file_relative ${CMAKE_CURRENT_SOURCE_DIR} ${file_absolute})
             string(REGEX REPLACE "\\.(js|mjs|qml)$" "_\\1" compiled_file ${file_relative})
             string(REGEX REPLACE "[$#?]+" "_" compiled_file ${compiled_file})
-            set(compiled_file "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/${target}/${compiled_file}.cpp")
+
+            # The file name needs to be unique to work around an Integrity compiler issue.
+            # Search for INTEGRITY_SYMBOL_UNIQUENESS in this file for details.
+            set(compiled_file
+                "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/${target}_${compiled_file}.cpp")
             get_filename_component(out_dir ${compiled_file} DIRECTORY)
 
             add_custom_command(
