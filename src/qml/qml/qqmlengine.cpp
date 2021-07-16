@@ -2131,7 +2131,7 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(
 
 QQmlPropertyCache *QQmlEnginePrivate::findPropertyCacheInCompositeTypes(int t) const
 {
-    Locker locker(this);
+    QMutexLocker locker(&this->mutex);
     auto iter = m_compositeTypes.constFind(t);
     return (iter == m_compositeTypes.constEnd())
             ? nullptr
@@ -2142,7 +2142,7 @@ void QQmlEnginePrivate::registerInternalCompositeType(QV4::ExecutableCompilation
 {
     compilationUnit->isRegisteredWithEngine = true;
 
-    Locker locker(this);
+    QMutexLocker locker(&this->mutex);
     // The QQmlCompiledData is not referenced here, but it is removed from this
     // hash in the QQmlCompiledData destructor
     m_compositeTypes.insert(compilationUnit->typeIds.id.id(), compilationUnit);
@@ -2154,7 +2154,7 @@ void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::ExecutableCompilati
 {
     compilationUnit->isRegisteredWithEngine = false;
 
-    Locker locker(this);
+    QMutexLocker locker(&this->mutex);
     m_compositeTypes.remove(compilationUnit->typeIds.id.id());
     for (auto&& icDatum: compilationUnit->inlineComponentData)
         m_compositeTypes.remove(icDatum.typeIds.id.id());
@@ -2162,7 +2162,7 @@ void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::ExecutableCompilati
 
 QV4::ExecutableCompilationUnit *QQmlEnginePrivate::obtainExecutableCompilationUnit(int typeId)
 {
-    Locker locker(this);
+    QMutexLocker locker(&this->mutex);
     return m_compositeTypes.value(typeId, nullptr);
 }
 

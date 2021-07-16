@@ -310,7 +310,7 @@ private:
     SingletonInstances singletonInstances;
     QHash<int, QQmlGadgetPtrWrapper *> cachedValueTypeInstances;
 
-    // These members must be protected by a QQmlEnginePrivate::Locker as they are required by
+    // These members must be protected by the engine's mutex as they are required by
     // the threaded loader.  Only access them through their respective accessor methods.
     QHash<int, QV4::ExecutableCompilationUnit *> m_compositeTypes;
     static bool s_designerMode;
@@ -359,7 +359,7 @@ QQmlPropertyCache *QQmlEnginePrivate::cache(const QQmlType &type, QTypeRevision 
     Q_ASSERT(type.isValid());
     Q_ASSERT(type.containsRevisionedAttributes());
 
-    Locker locker(this);
+    QMutexLocker locker(&this->mutex);
     return QQmlMetaType::propertyCache(type, version);
 }
 
