@@ -10,6 +10,59 @@ Item {
     property variant v2: Qt.vector3d(1,2,3)
     property real factor: 2.23
 
+    function testTransformation() {
+        let m = Qt.matrix4x4();
+
+        m.scale(1, 2, 4);
+        if (m !== Qt.matrix4x4(1, 0, 0, 0,
+                               0, 2, 0, 0,
+                               0, 0, 4, 0,
+                               0, 0, 0, 1))
+            return false;
+        m.scale(Qt.vector3d(-8, -4, -2));
+        if (m !== Qt.matrix4x4(-8, 0, 0, 0,
+                               0,-8, 0, 0,
+                               0, 0, -8, 0,
+                               0, 0, 0, 1))
+            return false;
+        m.scale(-1 / 8);
+        if (m !== Qt.matrix4x4())
+            return false;
+
+        m.rotate(180, Qt.vector3d(1, 0, 0));
+        if (m !== Qt.matrix4x4(1, 0, 0, 0,
+                               0, -1, 0, 0,
+                               0, 0, -1, 0,
+                               0, 0, 0, 1))
+            return false;
+        m.rotate(180, Qt.vector3d(0, 1, 0));
+        if (m !== Qt.matrix4x4(-1, 0, 0, 0,
+                               0, -1, 0, 0,
+                               0, 0, 1, 0,
+                               0, 0, 0, 1))
+            return false;
+        m.rotate(180, Qt.vector3d(0, 0, 1));
+        if (m !== Qt.matrix4x4())
+            return false;
+
+        m.translate(Qt.vector3d(1, 2, 4));
+        if (m !== Qt.matrix4x4(1, 0, 0, 1,
+                               0, 1, 0, 2,
+                               0, 0, 1, 4,
+                               0, 0, 0, 1))
+            return false;
+
+        m = Qt.matrix4x4();
+        m.lookAt(Qt.vector3d(1, 2, 4), Qt.vector3d(1, 2, 0), Qt.vector3d(0, 1, 0));
+        if (m !== Qt.matrix4x4(1, 0, 0, -1,
+                               0, 1, 0, -2,
+                               0, 0, 1, -4,
+                               0, 0, 0, 1))
+            return false;
+
+        return true;
+    }
+
     Component.onCompleted: {
         success = true;
         if (m1.times(m2) != Qt.matrix4x4(26, 26, 26, 26, 52, 52, 52, 52, 78, 78, 78, 78, 104, 104, 104, 104)) success = false;
@@ -27,5 +80,6 @@ Item {
         if (m1.transposed() != Qt.matrix4x4(1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4)) success = false;
         if (m1.fuzzyEquals(m2)) success = false;
         if (!m1.fuzzyEquals(m2, 10)) success = false;
+        if (!testTransformation()) success = false;
     }
 }
