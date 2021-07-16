@@ -45,6 +45,7 @@ qt_add_qml_plugin(
     [URI]
     [CLASS_NAME]
     [NO_GENERATE_PLUGIN_SOURCE]
+    [NAMESPACE namespace]
 )
 
 \endcode
@@ -124,6 +125,9 @@ plugin class satisfies the requirements of the plugin being optional (see
   \li If the class name still cannot be determined, it is set to the module's
       URI with dots replaced by underscores, and \c Plugin appended.
 \endlist
+
+If a namespace is given with the \c NAMESPACE keyword, the plugin
+code will be generated into a C++ namespace of this name.
 
 Some plugins may require the plugin class to be written manually. For example,
 the plugin may need to perform additional initialization or register things

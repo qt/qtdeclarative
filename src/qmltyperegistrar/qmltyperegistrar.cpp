@@ -159,6 +159,12 @@ int main(int argc, char **argv)
     minorVersionOption.setValueName(QStringLiteral("minor version"));
     parser.addOption(minorVersionOption);
 
+    QCommandLineOption namespaceOption(QStringLiteral("namespace"));
+    namespaceOption.setDescription(QStringLiteral("Generate type registration functions "
+                                                  "into a C++ namespace."));
+    namespaceOption.setValueName(QStringLiteral("namespace"));
+    parser.addOption(namespaceOption);
+
     QCommandLineOption pluginTypesOption(QStringLiteral("generate-qmltypes"));
     pluginTypesOption.setDescription(QStringLiteral("Generate qmltypes into specified file."));
     pluginTypesOption.setValueName(QStringLiteral("qmltypes file"));
@@ -262,6 +268,11 @@ int main(int argc, char **argv)
             "#define Q_QMLTYPE_EXPORT\n"
             "#endif\n"
             "\n");
+
+    const QString targetNamespace = parser.value(namespaceOption);
+    if (!targetNamespace.isEmpty())
+        fprintf(output, "namespace %s {\n", qPrintable(targetNamespace));
+
     fprintf(output, "Q_QMLTYPE_EXPORT void %s()\n{", qPrintable(functionName));
     const auto majorVersion = parser.value(majorVersionOption);
     const auto pastMajorVersions = parser.values(pastMajorVersionOption);
@@ -495,6 +506,9 @@ int main(int argc, char **argv)
     fprintf(output, "\n}\n");
     fprintf(output, "\nstatic const QQmlModuleRegistration registration(\"%s\", %s);\n",
             qPrintable(module), qPrintable(functionName));
+
+    if (!targetNamespace.isEmpty())
+        fprintf(output, "} // namespace %s\n", qPrintable(targetNamespace));
 
     if (!parser.isSet(pluginTypesOption))
         return EXIT_SUCCESS;

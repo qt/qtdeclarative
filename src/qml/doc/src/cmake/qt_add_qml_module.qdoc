@@ -58,6 +58,7 @@ qt_add_qml_module(
     [OUTPUT_TARGETS out_targets_var]
     [DESIGNER_SUPPORTED]
     [FOLLOW_FOREIGN_VERSIONING]
+    [NAMESPACE namespace]
     [NO_PLUGIN_OPTIONAL]
     [NO_CREATE_PLUGIN_TARGET]
     [NO_GENERATE_PLUGIN_SOURCE]
@@ -533,6 +534,9 @@ This is mostly useful if you want to keep your module version in sync
 with other modules you're basing types on. In that case you might want your custom
 types to not expose properties from a module's base type version greater than the one being
 imported.
+
+If a namespace is given with the \c NAMESPACE keyword, the plugin and registration
+code will be generated into a C++ namespace of this name.
 
 For static Qt builds, \c{qmlimportscanner} is run at configure time to scan the
 \c{.qml} files of a QML module and identify the QML imports it uses (see
