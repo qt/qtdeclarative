@@ -44,7 +44,14 @@ Item {
         m.rotate(180, Qt.vector3d(0, 0, 1));
         if (m !== Qt.matrix4x4())
             return false;
+        m.rotate(Qt.quaternion(0.5, 0.5, 0.5, -0.5));
+        if (m !== Qt.matrix4x4(0, 1, 0, 0,
+                               0, 0, -1, 0,
+                               -1, 0, 0, 0,
+                               0, 0, 0, 1))
+            return false;
 
+        m = Qt.matrix4x4();
         m.translate(Qt.vector3d(1, 2, 4));
         if (m !== Qt.matrix4x4(1, 0, 0, 1,
                                0, 1, 0, 2,

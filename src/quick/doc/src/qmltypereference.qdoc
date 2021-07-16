@@ -755,6 +755,17 @@ console.log(m.toString());
             \endcode
 
         \row
+        \li rotate(quaternion quaternion)
+        \li Multiples \c this matrix4x4 by another that rotates coordinates according to
+            a specified \c quaternion. The \c quaternion is assumed to have been normalized.
+        \li \code
+var m = Qt.matrix4x4();
+m.rotate(Qt.quaternion(0.5,0.5,0.5,-0.5));
+console.log(m.toString());
+// QMatrix4x4(0, 1, 0, 0, 0, 0, -1, 0, -1, 0, 0, 0, 0, 0, 0, 1)
+            \endcode
+
+        \row
         \li scale(real factor)
         \li Multiplies \c this matrix4x4 by another that scales coordinates by the given \c factor
         \li \code
