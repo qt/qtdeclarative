@@ -416,13 +416,27 @@ void QQmlJSImportVisitor::processDefaultProperties()
 {
     for (auto it = m_pendingDefaultProperties.constBegin();
          it != m_pendingDefaultProperties.constEnd(); ++it) {
-        const QQmlJSScope::ConstPtr parentScope = it.key();
+        QQmlJSScope::ConstPtr parentScope = it.key();
 
         // We can't expect custom parser default properties to be sensible, discard them for now.
         if (parentScope->isInCustomParserParent())
             continue;
 
-        const QString defaultPropertyName = parentScope->defaultPropertyName();
+        /* consider:
+         *
+         *      QtObject { // <- parentScope
+         *          default property var p // (1)
+         *          QtObject {} // (2)
+         *      }
+         *
+         * `p` (1) is a property of a subtype of QtObject, it couldn't be used
+         * in a property binding (2)
+         */
+        // thus, use a base type of parent scope to detect a default property
+        parentScope = parentScope->baseType();
+
+        const QString defaultPropertyName =
+                parentScope ? parentScope->defaultPropertyName() : QString();
 
         if (defaultPropertyName.isEmpty()) {
             // If the parent scope is based on Component it can have any child element

@@ -1,6 +1,6 @@
 import QtQml 2.0
 
-QtObject {
-    default property string child
+TypeWithDefaultStringProperty {
+    // default property has type `string`, so cannot assing an object to it
     QtObject {}
 }

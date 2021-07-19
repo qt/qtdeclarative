@@ -508,8 +508,12 @@ void TestQmllint::dirtyQmlCode_data()
             << false;
     QTest::newRow("MissingDefaultProperty")
             << QStringLiteral("defaultPropertyWithoutKeyword.qml")
-            << QStringLiteral("Cannot assign to non-existent default property") << QString() << false;
-
+            << QStringLiteral("Cannot assign to non-existent default property") << QString()
+            << false;
+    QTest::newRow("MissingDefaultPropertyDefinedInTheSameType")
+            << QStringLiteral("defaultPropertyWithinTheSameType.qml")
+            << QStringLiteral("Cannot assign to non-existent default property") << QString()
+            << false;
     QTest::newRow("DoubleAssignToDefaultProperty")
             << QStringLiteral("defaultPropertyWithDoubleAssignment.qml")
             << QStringLiteral("Cannot assign multiple objects to a default non-list property")
