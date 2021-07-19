@@ -16,7 +16,7 @@ file(GLOB_RECURSE test_data_glob
     ${CMAKE_CURRENT_SOURCE_DIR}/data/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_add_test(tst_gifs
+qt_internal_add_manual_test(tst_gifs
     SOURCES
         capturedevent.cpp capturedevent.h
         eventcapturer.cpp eventcapturer.h
