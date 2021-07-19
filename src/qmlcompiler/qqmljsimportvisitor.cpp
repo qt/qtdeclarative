@@ -402,11 +402,19 @@ void QQmlJSImportVisitor::processDefaultProperties()
 
         const QQmlJSScope *scopeOfDefaultProperty = nullptr;
         QString defaultPropertyName;
-        // NB: start looking for default property in parent scope (because this
-        // scope is not suitable), but progress through baseType()
-
         bool isComponent = false;
-        for (const auto *s = it.key().get(); s; s = s->baseType().get()) {
+        /* consider:
+         *
+         *      QtObject { // <- it.key()
+         *          default property var p // (1)
+         *          QtObject {} // (2)
+         *      }
+         *
+         * `p` (1) is a property of a subtype of QtObject, it couldn't be used
+         * in a property binding (2)
+         */
+        // thus, use a base type of it.key() to detect a default property
+        for (const auto *s = it.key()->baseType().get(); s; s = s->baseType().get()) {
             defaultPropertyName = s->defaultPropertyName();
             if (!defaultPropertyName.isEmpty()) {
                 scopeOfDefaultProperty = s;

@@ -1,7 +1,6 @@
 import Things
 
-QtObject {
-    default property QtObject child
+QtObjectWithDefaultProperty { // for default property
     objectName: "QtQml was imported from Things/qmldir"
 
     ItemDerived {
