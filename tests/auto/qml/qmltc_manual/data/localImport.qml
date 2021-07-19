@@ -1,4 +1,3 @@
-import QtQml
 LocallyImported {
     id: bar
     property int p1: 41
