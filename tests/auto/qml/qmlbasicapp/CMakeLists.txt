@@ -15,3 +15,4 @@ qt6_add_qml_module(tst_qmlbasicapp
 )
 
 add_subdirectory(TimeExample)
+add_dependencies(tst_qmlbasicapp qmlqtimeexample qmlqtimeexampleplugin)
