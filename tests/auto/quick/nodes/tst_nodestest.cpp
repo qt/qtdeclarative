@@ -109,8 +109,6 @@ private Q_SLOTS:
 private:
     void rhiTestData();
 
-    QOffscreenSurface *surface = nullptr;
-    QOpenGLContext *context = nullptr;
     QSGDefaultRenderContext *renderContext = nullptr;
 
     struct {
