@@ -14,6 +14,7 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/qmlextensionplugins/imports/TimeExample")
+set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/examples/qml/qmlextensionplugins/imports)
 
 find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
@@ -23,7 +24,6 @@ set_source_files_properties(imports/TimeExample/Clock.qml PROPERTIES
     QT_RESOURCE_ALIAS Clock.qml
 )
 qt6_add_qml_module(qmlqtimeexample
-    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/imports/TimeExample"
     VERSION 1.0
     URI "TimeExample"
     SOURCES timemodel.cpp timemodel.h
