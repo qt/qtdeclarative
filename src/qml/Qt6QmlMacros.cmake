@@ -281,7 +281,17 @@ function(qt6_add_qml_module target)
             ABSOLUTE BASE_DIR "${CMAKE_CURRENT_BINARY_DIR}"
         )
     else()
-        set(arg_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        if("${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "")
+            set(arg_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        else()
+            if(NOT IS_ABSOLUTE "${QT_QML_OUTPUT_DIRECTORY}")
+                message(FATAL_ERROR
+                    "QT_QML_OUTPUT_DIRECTORY must be an absolute path, but given: "
+                    "${QT_QML_OUTPUT_DIRECTORY}"
+                )
+            endif()
+            set(arg_OUTPUT_DIRECTORY ${QT_QML_OUTPUT_DIRECTORY}/${arg_TARGET_PATH})
+        endif()
     endif()
 
     # TODO: Support for old keyword, remove once all repos no longer use CLASSNAME
@@ -594,6 +604,13 @@ function(_qt_internal_target_enable_qmllint target)
     _qt_internal_genex_getjoinedproperty(qrc_args ${target}
         _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
     )
+
+    # Facilitate self-import so it can find the qmldir file
+    list(APPEND import_args -I "${CMAKE_CURRENT_BINARY_DIR}")
+
+    if(NOT "${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "")
+        list(APPEND import_args -I "${QT_QML_OUTPUT_DIRECTORY}")
+    endif()
 
     set(cmd
         ${QT_TOOL_COMMAND_WRAPPER_PATH}
@@ -929,6 +946,10 @@ function(qt6_add_qml_plugin target)
     _qt_internal_get_escaped_uri("${arg_URI}" escaped_uri)
 
     if(TARGET ${target})
+        get_target_property(target_type ${target} TYPE)
+        if(target_type STREQUAL "EXECUTABLE")
+            message(FATAL_ERROR "Plugins cannot be executables (target: ${target})")
+        endif()
         foreach(arg IN ITEMS STATIC SHARED)
             if(arg_${arg})
                 message(FATAL_ERROR
@@ -1018,6 +1039,8 @@ function(qt6_add_qml_plugin target)
     endif()
 
     if(arg_OUTPUT_DIRECTORY)
+        # Plugin target must be in the output directory. The backing target,
+        # if it is different to the plugin target, can be anywhere.
         set_target_properties(${target} PROPERTIES
             RUNTIME_OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
             LIBRARY_OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
@@ -1789,8 +1812,16 @@ but this file does not exist.  Possible reasons include:
         -importPath "${qml_path}"
     )
     get_target_property(qml_import_path ${target} QT_QML_IMPORT_PATH)
+
     if (qml_import_path)
         list(APPEND cmd_args ${qml_import_path})
+    endif()
+
+    # Facilitate self-import so we can find the qmldir file
+    list(APPEND cmd_args "${CMAKE_CURRENT_BINARY_DIR}")
+
+    if(NOT "${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "" AND EXISTS "${QT_QML_OUTPUT_DIRECTORY}")
+        list(APPEND cmd_args "${QT_QML_OUTPUT_DIRECTORY}")
     endif()
 
     get_target_property(qml_files ${target} QT_QML_MODULE_FILES)

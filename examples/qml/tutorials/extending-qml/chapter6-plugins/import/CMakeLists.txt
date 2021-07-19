@@ -21,7 +21,6 @@ find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
 
 qt6_add_qml_module(chartsplugin
-    OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../Charts"
     VERSION 1.0
     URI "Charts"
     PLUGIN_TARGET chartsplugin

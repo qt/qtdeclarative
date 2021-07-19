@@ -14,6 +14,7 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/tutorials/extending-qml/chapter6-plugins")
+set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
