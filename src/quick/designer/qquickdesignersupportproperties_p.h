@@ -93,7 +93,8 @@ public:
     static QQuickDesignerSupport::PropertyNameList propertyNameListForWritableProperties(QObject *object);
     static QQuickDesignerSupport::PropertyNameList allPropertyNames(QObject *object,
                                              const QQuickDesignerSupport::PropertyName &baseName = QQuickDesignerSupport::PropertyName(),
-                                             QObjectList *inspectedObjects = nullptr);
+                                             QObjectList *inspectedObjects = nullptr,
+                                             int depth = 0);
     static bool hasFullImplementedListInterface(const QQmlListReference &list);
 };
 
