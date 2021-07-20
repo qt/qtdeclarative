@@ -368,6 +368,8 @@ void QQmlJSTypeDescriptionReader::readProperty(UiObjectDefinition *ast, const QQ
             property.setNotify(readStringBinding(script));
         } else if (id == QLatin1String("index")) {
             property.setIndex(readIntBinding(script));
+        } else if (id == QLatin1String("privateClass")) {
+            property.setPrivateClass(readStringBinding(script));
         } else {
             addWarning(script->firstSourceLocation(),
                        tr("Expected only type, name, revision, isPointer, isReadonly, isRequired, "

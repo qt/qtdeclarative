@@ -255,6 +255,7 @@ class QQmlJSMetaProperty
     QString m_write;
     QString m_bindable;
     QString m_notify;
+    QString m_privateClass;
     QString m_aliasExpr;
     QWeakPointer<const QQmlJSScope> m_type;
     QVector<QQmlJSAnnotation> m_annotations;
@@ -285,6 +286,10 @@ public:
 
     void setNotify(const QString &notify) { m_notify = notify; }
     QString notify() const { return m_notify; }
+
+    void setPrivateClass(const QString &privateClass) { m_privateClass = privateClass; }
+    QString privateClass() const { return m_privateClass; }
+    bool isPrivate() const { return !m_privateClass.isEmpty(); } // exists for convenience
 
     void setType(const QSharedPointer<const QQmlJSScope> &type) { m_type = type; }
     QSharedPointer<const QQmlJSScope> type() const { return m_type.toStrongRef(); }

@@ -51,5 +51,6 @@ Member {
     property string read
     property string write
     property string notify
+    property string privateClass
     property int index: -1
 }

@@ -233,9 +233,18 @@ void tst_qmltyperegistrar::requiredProperty()
 
 void tst_qmltyperegistrar::hiddenAccessor()
 {
-    // No read accessor
-    QVERIFY(qmltypesData.contains(
-                "Property { name: \"hiddenRead\"; type: \"QString\"; isReadonly: true }"));
+    const auto start = qmltypesData.indexOf("name: \"hiddenRead\""); // rely on name being 1st field
+    QVERIFY(start != -1);
+    const auto end = qmltypesData.indexOf("}", start); // enclosing '}' of hiddenRead property
+    QVERIFY(end != -1);
+    QVERIFY(start < end);
+
+    const auto hiddenReadData = QByteArrayView(qmltypesData).sliced(start, end - start);
+    // QVERIFY(hiddenReadData.contains("name: \"hiddenRead\"")); // tested above by start != -1
+    QVERIFY(hiddenReadData.contains("type: \"QString\""));
+    QVERIFY(hiddenReadData.contains("read: \"hiddenRead\""));
+    QVERIFY(hiddenReadData.contains("privateClass: \"HiddenAccessorsPrivate\""));
+    QVERIFY(hiddenReadData.contains("isReadonly: true"));
 }
 
 void tst_qmltyperegistrar::finalProperty()
