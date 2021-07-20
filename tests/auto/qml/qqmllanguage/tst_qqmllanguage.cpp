@@ -36,6 +36,7 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qscopeguard.h>
+#include <QtGui/qevent.h>
 #include <QSignalSpy>
 #include <QFont>
 #include <QQmlFileSelector>
@@ -354,6 +355,9 @@ private slots:
     void multiExtension();
     void invalidInlineComponent();
     void warnOnInjectedParameters();
+#if QT_CONFIG(wheelevent)
+    void warnOnInjectedParametersFromCppSignal();
+#endif
 
     void qtbug_85615();
 
@@ -6198,21 +6202,51 @@ void tst_qqmllanguage::invalidInlineComponent()
 
 void tst_qqmllanguage::warnOnInjectedParameters()
 {
-   QQmlEngine e;
-   QQmlComponent c(&engine);
-   QTest::ignoreMessage(QtWarningMsg, "qrc:/foo.qml:4:5 Parameter \"bar\" is not declared."
-                                      " Injection of parameters into signal handlers is deprecated."
-                                      " Use JavaScript functions with formal parameters instead.");
-   c.setData("import QtQml\n"
-             "QtObject {\n"
-             "    signal foo(bar: string)\n"
-             "    onFoo: print(bar)\n"
-             "    Component.onCompleted: foo('baz')\n"
-             "}", QUrl("qrc:/foo.qml"));
-   QVERIFY2(c.isReady(), qPrintable(c.errorString()));
-   QTest::ignoreMessage(QtDebugMsg, "baz");
-   QScopedPointer<QObject> o(c.create());
+    QQmlEngine e;
+    QQmlComponent c(&engine);
+    QTest::ignoreMessage(QtWarningMsg,
+                         "qrc:/foo.qml:4:5 Parameter \"bar\" is not declared."
+                         " Injection of parameters into signal handlers is deprecated."
+                         " Use JavaScript functions with formal parameters instead.");
+    c.setData("import QtQml\n"
+              "QtObject {\n"
+              "    signal foo(bar: string)\n"
+              "    onFoo: print(bar)\n"
+              "    Component.onCompleted: foo('baz')\n"
+              "}",
+              QUrl("qrc:/foo.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QTest::ignoreMessage(QtDebugMsg, "baz");
+    QScopedPointer<QObject> o(c.create());
 }
+
+#if QT_CONFIG(wheelevent)
+void tst_qqmllanguage::warnOnInjectedParametersFromCppSignal()
+{
+    QQmlEngine e;
+    QQmlComponent c(&engine);
+    QTest::ignoreMessage(QtWarningMsg,
+                         "qrc:/qtbug93987.qml:6:21 Parameter \"wheel\" is not declared."
+                         " Injection of parameters into signal handlers is deprecated."
+                         " Use JavaScript functions with formal parameters instead.");
+    c.setData(R"(
+                import QtQuick
+                MouseArea {
+                    width: 640
+                    height: 480
+                    onWheel: print(wheel.angleDelta)
+                })",
+              QUrl("qrc:/qtbug93987.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    constexpr auto wheelDelta = 120; // copied from tst_QAbstractSlider. probably a default unit
+    QPoint p(100, 100);
+    QWheelEvent event(p, p, QPoint(), QPoint(0, wheelDelta * 1), Qt::NoButton, Qt::NoModifier,
+                      Qt::NoScrollPhase, false);
+    QTest::ignoreMessage(QtDebugMsg, "QPoint(0, 120)");
+    QCoreApplication::sendEvent(o.get(), &event);
+}
+#endif
 
 void tst_qqmllanguage::qtbug_86482()
 {
