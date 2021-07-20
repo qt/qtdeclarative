@@ -66,6 +66,7 @@ private slots:
     void testSimpleBindings();
     void testDotProperties();
     void testItemReparenting();
+    void testPropertyNames();
 };
 
 
@@ -784,6 +785,52 @@ void  tst_qquickdesignersupport::testItemReparenting()
     removeObjectFromList(childrenProperty, text, view->engine());
     addToNewProperty(text, item, "children");
     QCOMPARE(text->parentItem(), item);
+}
+
+void tst_qquickdesignersupport::testPropertyNames()
+{
+    if (QTestPrivate::isRunningArmOnX86())
+        QSKIP("Crashes in QEMU. (QTBUG-90869)");
+#ifdef Q_CC_MINGW
+    QSKIP("QQuickDesignerSupportProperties::registerCustomData segfaults on mingw. QTBUG-90869");
+#endif
+
+    QScopedPointer<QQuickView> view(new QQuickView);
+    view->engine()->setOutputWarningsToStandardError(false);
+    view->setSource(testFileUrl("propertyNameTest.qml"));
+
+    QVERIFY(view->errors().isEmpty());
+    QQuickItem *rootItem = view->rootObject();
+    QVERIFY(rootItem);
+
+    QQuickDesignerSupport::PropertyNameList names = QQuickDesignerSupportProperties::allPropertyNames(rootItem);
+    QVERIFY(!names.isEmpty());
+    QVERIFY(names.contains("width"));
+    QVERIFY(names.contains("height"));
+    QVERIFY(names.contains("clip"));
+    QVERIFY(names.contains("childrenRect"));
+    QVERIFY(names.contains("activeFocus"));
+    QVERIFY(names.contains("border.width"));
+    names = QQuickDesignerSupportProperties::propertyNameListForWritableProperties(rootItem);
+    QVERIFY(!names.isEmpty());
+    QVERIFY(names.contains("width"));
+    QVERIFY(names.contains("height"));
+    QVERIFY(names.contains("opacity"));
+    QVERIFY(!names.contains("childrenRect"));
+    QVERIFY(!names.contains("childrenRect"));
+    QVERIFY(!names.contains("activeFocus"));
+    QVERIFY(names.contains("border.width"));
+
+    QQuickItem *recursiveProperty = findItem<QQuickItem>(rootItem, QLatin1String("recursiveProperty"));
+    QVERIFY(recursiveProperty);
+    names = QQuickDesignerSupportProperties::allPropertyNames(recursiveProperty);
+    QVERIFY(!names.isEmpty());
+    QVERIFY(names.contains("testProperty"));
+    QVERIFY(names.contains("myproperty.testProperty"));
+
+    names = QQuickDesignerSupportProperties::propertyNameListForWritableProperties(recursiveProperty);
+    QVERIFY(!names.isEmpty());
+    QVERIFY(!names.contains("testProperty"));
 }
 
 QTEST_MAIN(tst_qquickdesignersupport)
