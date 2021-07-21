@@ -770,9 +770,11 @@ endfunction()
 #   non-alphanumeric characters in the URI will be replaced with underscores.
 #   (OPTIONAL)
 #
-# OUTPUT_DIRECTORY: Overrides the directory where the plugin library will be
-#   created. Defaults to ${CMAKE_CURRENT_BINARY_DIR} if not specified.
-#   (OPTIONAL)
+# OUTPUT_DIRECTORY: Specifies the directory where the plugin library will be
+#   created. When not given, the output directory will be obtained from the
+#   BACKING_TARGET if one has been provided. If an output directory cannot be
+#   obtained from there either, the standard default as provided by CMake
+#   (${CMAKE_CURRENT_BINARY_DIR}) will be used. (OPTIONAL)
 #
 # NO_GENERATE_SOURCE: A .cpp file will be created for the plugin class
 #   by default and automatically added to the plugin target. Use this option to
@@ -928,6 +930,9 @@ function(qt6_add_qml_plugin target)
         qt6_android_apply_arch_suffix(${target})
     endif()
 
+    if(NOT arg_OUTPUT_DIRECTORY AND arg_BACKING_TARGET AND TARGET ${arg_BACKING_TARGET})
+        get_target_property(arg_OUTPUT_DIRECTORY ${arg_BACKING_TARGET} QT_QML_OUTPUT_DIRECTORY)
+    endif()
     if(arg_OUTPUT_DIRECTORY)
         # Plugin target must be in the output directory. The backing target,
         # if it is different to the plugin target, can be anywhere.
