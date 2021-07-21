@@ -757,8 +757,8 @@ endfunction()
 # URI: Declares the module identifier of the qml module this plugin is
 #   associated with. The module identifier is the (dotted URI notation)
 #   identifier for the qml module. If URI is not given, then a BACKING_TARGET
-#   must be provided (the backing target should have its URI recorded on it by
-#   qt6_add_qml_module()). (OPTIONAL)
+#   must be provided and the backing target must have its URI recorded on it
+#   (typically by an earlier call to qt6_add_qml_module()). (OPTIONAL)
 #
 # TARGET_PATH: Overwrite the generated target path. By default the target path
 #   is generated from the URI by replacing the '.' with a '/'. However, under
@@ -804,16 +804,33 @@ function(qt6_add_qml_plugin target)
        "${args_multi}"
     )
 
+    if(arg_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unexpected arguments: ${arg_UNPARSED_ARGUMENTS}")
+    endif()
+
     if(NOT arg_URI)
         if(NOT arg_BACKING_TARGET)
             message(FATAL_ERROR "No URI or BACKING_TARGET provided")
         endif()
-        if(arg_BACKING_TARGET STREQUAL target AND NOT TARGET ${target})
-            message(FATAL_ERROR
-                "Plugin ${target} is its own backing target, URI must be provided"
-            )
+        if(NOT TARGET ${arg_BACKING_TARGET})
+            if(arg_BACKING_TARGET STREQUAL target)
+                message(FATAL_ERROR
+                    "Plugin ${target} is its own backing target, URI must be provided"
+                )
+            else()
+                message(FATAL_ERROR
+                    "No URI provided and unable to obtain it from the BACKING_TARGET "
+                    "(${arg_BACKING_TARGET}) because no such target exists"
+                )
+            endif()
         endif()
         get_target_property(arg_URI ${arg_BACKING_TARGET} QT_QML_MODULE_URI)
+        if(NOT arg_URI)
+            message(FATAL_ERROR
+                "No URI provided and the BACKING_TARGET (${arg_BACKING_TARGET}) "
+                "does not have one set either"
+            )
+        endif()
     endif()
 
     _qt_internal_get_escaped_uri("${arg_URI}" escaped_uri)
