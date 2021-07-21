@@ -49,8 +49,8 @@
 ****************************************************************************/
 
 //! [imports]
-import QtQuick 2.0 as Project
-import QtMultimedia 5.0 as Project
+import QtQuick as Project
+import QtMultimedia as Project
 
 Project.Rectangle {
     width: 100; height: 50
