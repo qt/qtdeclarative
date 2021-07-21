@@ -139,7 +139,7 @@ function(qt6_add_qml_module target)
 
     set(no_gen_source)
     if(arg_NO_GENERATE_PLUGIN_SOURCE)
-        set(no_gen_source NO_GENERATE_SOURCE)
+        set(no_gen_source NO_GENERATE_PLUGIN_SOURCE)
     endif()
 
     set(lib_type "")
@@ -776,7 +776,7 @@ endfunction()
 #   obtained from there either, the standard default as provided by CMake
 #   (${CMAKE_CURRENT_BINARY_DIR}) will be used. (OPTIONAL)
 #
-# NO_GENERATE_SOURCE: A .cpp file will be created for the plugin class
+# NO_GENERATE_PLUGIN_SOURCE: A .cpp file will be created for the plugin class
 #   by default and automatically added to the plugin target. Use this option to
 #   indicate that no such .cpp file should be generated. The caller is then
 #   responsible for providing their own plugin class. (OPTIONAL)
@@ -785,7 +785,7 @@ function(qt6_add_qml_plugin target)
     set(args_option
         STATIC
         SHARED
-        NO_GENERATE_SOURCE
+        NO_GENERATE_PLUGIN_SOURCE
     )
 
     set(args_single
@@ -943,7 +943,7 @@ function(qt6_add_qml_plugin target)
         )
     endif()
 
-    if(NOT arg_NO_GENERATE_SOURCE)
+    if(NOT arg_NO_GENERATE_PLUGIN_SOURCE)
         set(generated_cpp_file_name_base "${target}_${arg_CLASS_NAME}")
         set(register_types_function_name "qml_register_types_${escaped_uri}")
 
