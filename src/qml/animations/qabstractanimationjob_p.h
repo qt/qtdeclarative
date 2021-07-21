@@ -204,6 +204,8 @@ private:
     QQmlAnimationTimer();
 
 public:
+    ~QQmlAnimationTimer(); // must be destructible by QThreadStorage
+
     static QQmlAnimationTimer *instance();
     static QQmlAnimationTimer *instance(bool create);
 
@@ -249,6 +251,7 @@ private:
 
     void registerRunningAnimation(QAbstractAnimationJob *animation);
     void unregisterRunningAnimation(QAbstractAnimationJob *animation);
+    void unsetJobTimer(QAbstractAnimationJob *animation);
 
     int closestPauseAnimationTimeToFinish();
 };
