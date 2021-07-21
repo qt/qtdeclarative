@@ -46,7 +46,6 @@ qt_add_qml_module(
     [PLUGIN_TARGET plugin_target]
     [OUTPUT_DIRECTORY output_dir]
     [RESOURCE_PREFIX resource_prefix]
-    [TARGET_PATH target_path]
     [CLASS_NAME class_name]
     [TYPEINFO typeinfo]
     [IMPORTS ...]
@@ -184,7 +183,8 @@ may still be needed in certain situations by the QML engine.
 The resource path of each file is determined by its path relative to the
 current source directory (\c CMAKE_CURRENT_SOURCE_DIR). This resource path is
 appended to a prefix formed by concatenating the \l{RESOURCE_PREFIX} and
-\l{TARGET_PATH}. Ordinarily, the project should aim to place \c{.qml} files in
+the target path (which is the URI with dots replaced with forward slashes).
+Ordinarily, the project should aim to place \c{.qml} files in
 the same relative location as they would have in the resources. If the \c{.qml}
 file is in a different relative directory to its desired resource path, its
 location in the resources needs to be explicitly specified. This is done by
@@ -205,8 +205,7 @@ qt_add_qml_module(someTarget
 )
 \endcode
 
-In the above example, no \c TARGET_PATH is specified. The default based on
-the \c URI will be used, which will be \c{MyCo/Frames} in this case. After
+In the above example, the target path will be \c{MyCo/Frames}. After
 taking into account the source file properties, the two \c{.qml} files will be
 found at the following resource paths:
 
@@ -261,7 +260,8 @@ notation, such as \c{QtQuick.Layouts}. It must not contain anything other than
 alphanumeric or dot characters. Other QML modules may use this name in
 \l{qtqml-syntax-imports.html}{import statements} to import the module. The
 \c URI will be used in the \c module line of the generated
-\l{Module Definition qmldir Files}{qmldir} file.
+\l{Module Definition qmldir Files}{qmldir} file. The \c URI is also used to
+form the \e{target path} by replacing dots with forward slashes.
 
 A QML module must also define a \c VERSION in the form \c{Major.Minor}, where
 both \c Major and \c Minor must be integers. An additional \c{.Patch}
@@ -287,17 +287,12 @@ qt_add_qml_module(someTarget
 )
 \endcode
 
-\target TARGET_PATH
-\c TARGET_PATH should represent the module-specific part of the resource path
-used to refer to the module QML files. It defaults to the module's \c URI, with
-dots replaced by forward slashes as path separators. It should rarely be
-necessary to override this default.
-
 \target OUTPUT_DIRECTORY
 \c OUTPUT_DIRECTORY specifies where the plugin library, \c qmldir and typeinfo
 files are generated. When this keyword is not given, the default value will be
-the \l TARGET_PATH appended to the value of the \l QT_QML_OUTPUT_DIRECTORY
-variable. If that variable is not defined, then the output directory will be
+the target path (formed from the \c URI) appended to the value of the
+\l QT_QML_OUTPUT_DIRECTORY variable.
+If that variable is not defined, then the output directory will be
 set to \c{${CMAKE_CURRENT_BINARY_DIR}}. When the structure of the source tree
 matches the structure of QML module target paths (which is highly recommended),
 \l QT_QML_OUTPUT_DIRECTORY often isn't needed. The need for specifying the
@@ -368,7 +363,7 @@ added as a \c{depends} entry in the generated
 \target IMPORT_PATH
 \c IMPORT_PATH can be used to add to the search paths where other QML modules
 that this one depends on can be found. The other modules must have their
-\c qmldir file under their own \c TARGET_PATH below one of the search paths.
+\c qmldir file under their own target path below one of the search paths.
 
 \c SOURCES specifies a list of non-QML sources to be added to the backing
 target. It is provided as a convenience and is equivalent to adding the sources

@@ -47,7 +47,6 @@ function(qt_internal_add_qml_module target)
 
     set(qml_module_single_args
         URI
-        TARGET_PATH
         VERSION
         PLUGIN_TARGET
         TYPEINFO
@@ -106,14 +105,12 @@ function(qt_internal_add_qml_module target)
     )
 
     set(QT_QML_OUTPUT_DIRECTORY "${QT_BUILD_DIR}/${INSTALL_QMLDIR}")
-    if(NOT arg_TARGET_PATH)
-        string(REPLACE "." "/" arg_TARGET_PATH ${arg_URI})
-    endif()
+    string(REPLACE "." "/" target_path ${arg_URI})
     if(NOT arg_OUTPUT_DIRECTORY)
-        set(arg_OUTPUT_DIRECTORY "${QT_QML_OUTPUT_DIRECTORY}/${arg_TARGET_PATH}")
+        set(arg_OUTPUT_DIRECTORY "${QT_QML_OUTPUT_DIRECTORY}/${target_path}")
     endif()
     if(NOT arg_INSTALL_DIRECTORY)
-        set(arg_INSTALL_DIRECTORY "${INSTALL_QMLDIR}/${arg_TARGET_PATH}")
+        set(arg_INSTALL_DIRECTORY "${INSTALL_QMLDIR}/${target_path}")
     endif()
     if(NOT arg_PLUGIN_TARGET)
         set(arg_PLUGIN_TARGET ${target}plugin)

@@ -25,7 +25,7 @@ function(qt6_add_qml_module target)
         OUTPUT_TARGETS
         RESOURCE_PREFIX
         URI
-        TARGET_PATH
+        TARGET_PATH   # Internal option only, it may be removed
         VERSION
         OUTPUT_DIRECTORY
         CLASS_NAME
@@ -761,11 +761,6 @@ endfunction()
 #   must be provided and the backing target must have its URI recorded on it
 #   (typically by an earlier call to qt6_add_qml_module()). (OPTIONAL)
 #
-# TARGET_PATH: Overwrite the generated target path. By default the target path
-#   is generated from the URI by replacing the '.' with a '/'. However, under
-#   certain circumstances this may not be enough. Use this argument to provide
-#   a replacement. It is only used if targeting Android. (OPTIONAL)
-#
 # CLASS_NAME: By default, the class name will be taken from the backing target,
 #   if provided, or falling back to the URI with "Plugin" appended. Any
 #   non-alphanumeric characters in the URI will be replaced with underscores.
@@ -795,7 +790,8 @@ function(qt6_add_qml_plugin target)
         BACKING_TARGET
         CLASS_NAME
         # The following is only needed on Android, and even then, only if the
-        # default conversion from the URI is not applicable
+        # default conversion from the URI is not applicable. It is an internal
+        # option, it may be removed.
         TARGET_PATH
     )
 
