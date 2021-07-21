@@ -280,7 +280,7 @@ QAbstractAnimationJob::~QAbstractAnimationJob()
 
         Q_ASSERT(m_state == Stopped);
         if (oldState == Running) {
-            Q_ASSERT(QQmlAnimationTimer::instance() == m_timer);
+            Q_ASSERT(QQmlAnimationTimer::instance(false) == m_timer);
             m_timer->unregisterAnimation(this);
         }
         Q_ASSERT(!m_hasRegisteredTimer);
