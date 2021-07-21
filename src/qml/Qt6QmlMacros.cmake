@@ -311,6 +311,7 @@ function(qt6_add_qml_module target)
         QT_QML_MODULE_NO_GENERATE_QMLDIR "${arg_NO_GENERATE_QMLDIR}"
         QT_QML_MODULE_NO_PLUGIN_OPTIONAL "${arg_NO_PLUGIN_OPTIONAL}"
         QT_QML_MODULE_URI "${arg_URI}"
+        QT_QML_MODULE_TARGET_PATH "${arg_TARGET_PATH}"
         QT_QML_MODULE_VERSION "${arg_VERSION}"
         QT_QML_MODULE_CLASS_NAME "${arg_CLASS_NAME}"
         QT_QML_MODULE_LIBINFIX "${arg___QT_INTERNAL_QT_LIBINFIX}"
@@ -914,7 +915,7 @@ function(qt6_add_qml_plugin target)
         #   file name:
         #     libqml_QtQuick_Controls.2_Material_qtquickcontrols2materialstyleplugin_arm64-v8a.so
         if(NOT arg_TARGET_PATH AND TARGET "${arg_BACKING_TARGET}")
-            get_target_property(arg_TARGET_PATH ${target} ${arg_BACKING_TARGET})
+            get_target_property(arg_TARGET_PATH ${arg_BACKING_TARGET} QT_QML_MODULE_TARGET_PATH)
         endif()
         if(arg_TARGET_PATH)
             string(REPLACE "/" "_" android_plugin_name_infix_name "${arg_TARGET_PATH}")
