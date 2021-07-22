@@ -563,7 +563,7 @@ uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
         ScopedValue v(scope);
         for (uint i = 0; i < n; ++i)
             obj->arraySet(oldSize + i, (v = otherObj->get(i)));
-    } else if (other && other->isSparse()) {
+    } else if (other->isSparse()) {
         Heap::SparseArrayData *os = static_cast<Heap::SparseArrayData *>(other->d());
         if (other->hasAttributes()) {
             ScopedValue v(scope);
@@ -586,7 +586,7 @@ uint ArrayData::append(Object *obj, ArrayObject *otherObj, uint n)
         obj->arrayPut(oldSize, os->values.data() + os->offset, chunk);
         toCopy -= chunk;
         if (toCopy)
-            obj->setArrayLength(oldSize + chunk + toCopy);
+            obj->arrayPut(oldSize + chunk, os->values.data(), toCopy);
     }
 
     return oldSize + n;

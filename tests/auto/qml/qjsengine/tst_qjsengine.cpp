@@ -264,6 +264,7 @@ private slots:
 
     void triggerBackwardJumpWithDestructuring();
     void arrayConcatOnSparseArray();
+    void concatAfterUnshift();
     void sortSparseArray();
     void compileBrokenRegexp();
     void sortNonStringArray();
@@ -5146,6 +5147,23 @@ void tst_QJSEngine::arrayConcatOnSparseArray()
         QCOMPARE(value.property(i).toInt(), i + 1);
     for (int i = 5; i < 1340; ++i)
         QVERIFY(value.property(i).isUndefined());
+}
+
+void tst_QJSEngine::concatAfterUnshift()
+{
+    QJSEngine engine;
+    const auto value = engine.evaluate(uR"(
+            (function() {
+            let test = ['val2']
+            test.unshift('val1')
+            test = test.concat([])
+            return test
+            })()
+    )"_qs);
+    QVERIFY2(!value.isError(), qPrintable(value.toString()));
+    QVERIFY(value.isArray());
+    QCOMPARE(value.property(0).toString(), u"val1"_qs);
+    QCOMPARE(value.property(1).toString(), u"val2"_qs);
 }
 
 void tst_QJSEngine::sortSparseArray()
