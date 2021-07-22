@@ -237,7 +237,7 @@ void QQmlJSTypePropagator::generate_LoadGlobalLookup(int index)
     generate_LoadName(m_jsUnitGenerator->lookupNameIndex(index));
 }
 
-void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name)
+QQmlJS::SourceLocation QQmlJSTypePropagator::getCurrentSourceLocation() const
 {
     Q_ASSERT(m_currentContext->sourceLocationTable);
     const auto &entries = m_currentContext->sourceLocationTable->entries;
@@ -246,6 +246,13 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name)
                                  [](auto entry, uint offset) { return entry.offset < offset; });
     Q_ASSERT(item != entries.end());
     auto location = item->location;
+
+    return location;
+}
+
+void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
+{
+    auto location = getCurrentSourceLocation();
 
     if (m_currentScope->isInCustomParserParent()) {
         Q_ASSERT(!m_currentScope->baseType().isNull());
@@ -339,6 +346,54 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name)
     }
 }
 
+void QQmlJSTypePropagator::checkDeprecated(QQmlJSScope::ConstPtr scope, const QString &name,
+                                           bool isMethod) const
+{
+    Q_ASSERT(!scope.isNull());
+    auto qmlScope = QQmlJSScope::findCurrentQMLScope(scope);
+    if (qmlScope.isNull())
+        return;
+
+    QList<QQmlJSAnnotation> annotations;
+
+    QQmlJSMetaMethod method;
+
+    if (isMethod) {
+        const QVector<QQmlJSMetaMethod> methods = qmlScope->methods(name);
+        if (methods.isEmpty())
+            return;
+        method = methods.constFirst();
+        annotations = method.annotations();
+    } else {
+        QQmlJSMetaProperty property = qmlScope->property(name);
+        if (!property.isValid())
+            return;
+        annotations = property.annotations();
+    }
+
+    auto deprecationAnn = std::find_if(
+            annotations.constBegin(), annotations.constEnd(),
+            [](const QQmlJSAnnotation &annotation) { return annotation.isDeprecation(); });
+
+    if (deprecationAnn == annotations.constEnd())
+        return;
+
+    QQQmlJSDeprecation deprecation = deprecationAnn->deprecation();
+
+    QString descriptor = name;
+    if (isMethod)
+        descriptor += u'(' + method.parameterNames().join(u", "_qs) + u')';
+
+    QString message = QStringLiteral("%1 \"%2\" is deprecated")
+                              .arg(isMethod ? u"Method"_qs : u"Property"_qs)
+                              .arg(descriptor);
+
+    if (!deprecation.reason.isEmpty())
+        message.append(QStringLiteral(" (Reason: %1)").arg(deprecation.reason));
+
+    m_logger->logWarning(message, Log_Deprecation, getCurrentSourceLocation());
+}
+
 void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
 {
     const QString name =
@@ -353,8 +408,9 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
         return;
     }
 
-    m_state.savedPrefix.clear();
+    checkDeprecated(m_currentScope, name, false);
 
+    m_state.savedPrefix.clear();
     if (!m_state.accumulatorOut.isValid()) {
         setError(u"Cannot access value for name "_qs + name, true);
         handleUnqualifiedAccess(name);
@@ -554,6 +610,8 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         return;
     }
 
+    checkDeprecated(containedType, propertyName, true);
+
     propagateCall(member.method(), argc, argv);
 }
 
@@ -670,7 +728,9 @@ void QQmlJSTypePropagator::generate_CallGlobalLookup(int index, int argc, int ar
 
 void QQmlJSTypePropagator::generate_CallQmlContextPropertyLookup(int index, int argc, int argv)
 {
-    propagateScopeLookupCall(m_jsUnitGenerator->lookupName(index), argc, argv);
+    const QString name = m_jsUnitGenerator->lookupName(index);
+    propagateScopeLookupCall(name, argc, argv);
+    checkDeprecated(m_currentScope, name, true);
 }
 
 void QQmlJSTypePropagator::generate_CallWithSpread(int func, int thisObject, int argc, int argv)

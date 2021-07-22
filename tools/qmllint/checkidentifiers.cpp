@@ -306,48 +306,11 @@ void CheckIdentifiers::operator()(
             }
 
             auto qmlScope = QQmlJSScope::findCurrentQMLScope(currentScope);
-            if (qmlScope->hasMethod(memberAccessBase.m_name)) {
-                // a property of a JavaScript function, or a method
-                auto methods = qmlScope->methods(memberAccessBase.m_name);
-                const QQmlJSMetaMethod &method = methods.constFirst();
-                const auto &annotations = method.annotations();
-                auto deprecationAnn = std::find_if(annotations.constBegin(), annotations.constEnd(), [](const QQmlJSAnnotation& annotation) {
-                    return annotation.isDeprecation();
-                });
-
-                // Once we encountered one possible method that is not deprecated,
-                // we can assume that the one beyond that is not what was being referenced
-                if (deprecationAnn == annotations.constEnd())
-                    continue;
-
-                QQQmlJSDeprecation deprecation = deprecationAnn->deprecation();
-
-                QString message = QStringLiteral("Method \"%1(%2)\" is deprecated")
-                        .arg(memberAccessBase.m_name, method.parameterNames().join(QStringLiteral(", ")));
-
-                if (!deprecation.reason.isEmpty())
-                    message.append(QStringLiteral(" (Reason: %1)").arg(deprecation.reason));
-
-                m_logger->logWarning(message, Log_Deprecation, memberAccessBase.m_location);
+            if (qmlScope->hasMethod(memberAccessBase.m_name))
                 continue;
-            }
 
             const auto property = qmlScope->property(memberAccessBase.m_name);
             if (!property.propertyName().isEmpty()) {
-                for (const QQmlJSAnnotation &annotation : property.annotations()) {
-                    if (annotation.isDeprecation()) {
-                        QQQmlJSDeprecation deprecation = annotation.deprecation();
-
-                        QString message = QStringLiteral("Property \"%1\" is deprecated")
-                                .arg(memberAccessBase.m_name);
-
-                        if (!deprecation.reason.isEmpty())
-                            message.append(QStringLiteral(" (Reason: %1)").arg(deprecation.reason));
-
-                        m_logger->logWarning(message, Log_Deprecation, memberAccessBase.m_location);
-                    }
-                }
-
                 if (memberAccessChain.isEmpty() || unknownBuiltins.contains(property.typeName()))
                     continue;
 

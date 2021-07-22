@@ -260,7 +260,9 @@ private:
         bool needsMorePasses = false;
     };
 
-    void handleUnqualifiedAccess(const QString &name);
+    void handleUnqualifiedAccess(const QString &name) const;
+    void checkDeprecated(QQmlJSScope::ConstPtr scope, const QString &name, bool isMethod) const;
+    QQmlJS::SourceLocation getCurrentSourceLocation() const;
 
     void propagateBinaryOperation(QSOperator::Op op, int lhs);
     void propagateCall(const QList<QQmlJSMetaMethod> &methods, int argc, int argv);
