@@ -7588,6 +7588,7 @@ void QQuickItem::setFocus(bool focus, Qt::FocusReason reason)
     if (d->focus == focus)
         return;
 
+    bool notifyListeners = false;
     if (d->window || d->parentItem) {
         // Need to find our nearest focus scope
         QQuickItem *scope = parentItem();
@@ -7619,9 +7620,10 @@ void QQuickItem::setFocus(bool focus, Qt::FocusReason reason)
 
             d->focus = focus;
             changed << this;
+            notifyListeners = true;
             emit focusChanged(focus);
 
-            QQuickDeliveryAgentPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1);
+            QQuickDeliveryAgentPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1, reason);
         }
     } else {
         QVarLengthArray<QQuickItem *, 20> changed;
@@ -7634,10 +7636,13 @@ void QQuickItem::setFocus(bool focus, Qt::FocusReason reason)
 
         d->focus = focus;
         changed << this;
+        notifyListeners = true;
         emit focusChanged(focus);
 
-        QQuickDeliveryAgentPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1);
+        QQuickDeliveryAgentPrivate::notifyFocusChangesRecur(changed.data(), changed.count() - 1, reason);
     }
+    if (notifyListeners)
+        d->notifyChangeListeners(QQuickItemPrivate::Focus, &QQuickItemChangeListener::itemFocusChanged, this, reason);
 }
 
 /*!

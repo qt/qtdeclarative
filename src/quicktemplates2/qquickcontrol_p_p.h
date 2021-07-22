@@ -180,6 +180,7 @@ public:
     void itemImplicitHeightChanged(QQuickItem *item) override;
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &diff) override;
     void itemDestroyed(QQuickItem *item) override;
+    void itemFocusChanged(QQuickItem *item, Qt::FocusReason reason) override;
 
     virtual qreal getContentWidth() const;
     virtual qreal getContentHeight() const;

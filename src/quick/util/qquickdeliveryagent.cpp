@@ -399,7 +399,9 @@ void QQuickDeliveryAgentPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *
     if (item != rootItem && !(options & DontChangeSubFocusItem)) {
         QQuickItem *oldSubFocusItem = scopePrivate->subFocusItem;
         if (oldSubFocusItem) {
-            QQuickItemPrivate::get(oldSubFocusItem)->focus = false;
+            QQuickItemPrivate *priv = QQuickItemPrivate::get(oldSubFocusItem);
+            priv->focus = false;
+            priv->notifyChangeListeners(QQuickItemPrivate::Focus, &QQuickItemChangeListener::itemFocusChanged, oldSubFocusItem, reason);
             changed << oldSubFocusItem;
         }
 
@@ -415,6 +417,7 @@ void QQuickDeliveryAgentPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *
 #endif
                 ) {
             itemPrivate->focus = true;
+            itemPrivate->notifyChangeListeners(QQuickItemPrivate::Focus, &QQuickItemChangeListener::itemFocusChanged, item, reason);
             changed << item;
         }
     }
@@ -454,7 +457,7 @@ void QQuickDeliveryAgentPrivate::setFocusInScope(QQuickItem *scope, QQuickItem *
         emit rootItem->window()->focusObjectChanged(activeFocusItem);
 
     if (!changed.isEmpty())
-        notifyFocusChangesRecur(changed.data(), changed.count() - 1);
+        notifyFocusChangesRecur(changed.data(), changed.count() - 1, reason);
     if (isSubsceneAgent) {
         auto da = QQuickWindowPrivate::get(rootItem->window())->deliveryAgent;
         qCDebug(lcFocus) << "    delegating setFocusInScope to" << da;
@@ -516,14 +519,18 @@ void QQuickDeliveryAgentPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem
     if (item != rootItem && !(options & DontChangeSubFocusItem)) {
         QQuickItem *oldSubFocusItem = scopePrivate->subFocusItem;
         if (oldSubFocusItem && !(options & DontChangeFocusProperty)) {
-            QQuickItemPrivate::get(oldSubFocusItem)->focus = false;
+            QQuickItemPrivate *priv = QQuickItemPrivate::get(oldSubFocusItem);
+            priv->focus = false;
+            priv->notifyChangeListeners(QQuickItemPrivate::Focus, &QQuickItemChangeListener::itemFocusChanged, oldSubFocusItem, reason);
             changed << oldSubFocusItem;
         }
 
         QQuickItemPrivate::get(item)->updateSubFocusItem(scope, false);
 
     } else if (!(options & DontChangeFocusProperty)) {
-        QQuickItemPrivate::get(item)->focus = false;
+        QQuickItemPrivate *priv = QQuickItemPrivate::get(item);
+        priv->focus = false;
+        priv->notifyChangeListeners(QQuickItemPrivate::Focus, &QQuickItemChangeListener::itemFocusChanged, item, reason);
         changed << item;
     }
 
@@ -550,7 +557,7 @@ void QQuickDeliveryAgentPrivate::clearFocusInScope(QQuickItem *scope, QQuickItem
         emit rootItem->window()->focusObjectChanged(activeFocusItem);
 
     if (!changed.isEmpty())
-        notifyFocusChangesRecur(changed.data(), changed.count() - 1);
+        notifyFocusChangesRecur(changed.data(), changed.count() - 1, reason);
 
     if (oldActiveFocusItem == activeFocusItem)
         qCDebug(lcFocus) << "activeFocusItem remains" << activeFocusItem << "in" << q;
@@ -566,24 +573,26 @@ void QQuickDeliveryAgentPrivate::clearFocusObject()
     clearFocusInScope(rootItem, QQuickItemPrivate::get(rootItem)->subFocusItem, Qt::OtherFocusReason);
 }
 
-void QQuickDeliveryAgentPrivate::notifyFocusChangesRecur(QQuickItem **items, int remaining)
+void QQuickDeliveryAgentPrivate::notifyFocusChangesRecur(QQuickItem **items, int remaining, Qt::FocusReason reason)
 {
     QPointer<QQuickItem> item(*items);
 
     if (remaining)
-        notifyFocusChangesRecur(items + 1, remaining - 1);
+        notifyFocusChangesRecur(items + 1, remaining - 1, reason);
 
     if (item) {
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
 
         if (itemPrivate->notifiedFocus != itemPrivate->focus) {
             itemPrivate->notifiedFocus = itemPrivate->focus;
+            itemPrivate->notifyChangeListeners(QQuickItemPrivate::Focus, &QQuickItemChangeListener::itemFocusChanged, item, reason);
             emit item->focusChanged(itemPrivate->focus);
         }
 
         if (item && itemPrivate->notifiedActiveFocus != itemPrivate->activeFocus) {
             itemPrivate->notifiedActiveFocus = itemPrivate->activeFocus;
             itemPrivate->itemChange(QQuickItem::ItemActiveFocusHasChanged, itemPrivate->activeFocus);
+            itemPrivate->notifyChangeListeners(QQuickItemPrivate::Focus, &QQuickItemChangeListener::itemFocusChanged, item, reason);
             emit item->activeFocusChanged(itemPrivate->activeFocus);
         }
     }

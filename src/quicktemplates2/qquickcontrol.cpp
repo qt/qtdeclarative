@@ -426,6 +426,8 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
     QQuickItem *oldContentItem = contentItem;
     if (oldContentItem) {
         disconnect(oldContentItem, &QQuickItem::baselineOffsetChanged, this, &QQuickControlPrivate::updateBaselineOffset);
+        if (oldContentItem)
+            QQuickItemPrivate::get(oldContentItem)->removeItemChangeListener(this, QQuickControlPrivate::Focus);
         removeImplicitSizeListener(oldContentItem);
     }
 
@@ -435,6 +437,10 @@ void QQuickControlPrivate::setContentItem_helper(QQuickItem *item, bool notify)
 
     if (item) {
         connect(contentItem.data(), &QQuickItem::baselineOffsetChanged, this, &QQuickControlPrivate::updateBaselineOffset);
+        // We need to update the control's focusReason when the contentItem receives or loses focus. Since focusPolicy
+        // (or other properties impacting focus handling, like QQuickItem::activeFocusOnTab) might change later, and
+        // since the content item might also change focus programmatically, we always have to listen for those events.
+        QQuickItemPrivate::get(item)->addItemChangeListener(this, QQuickControlPrivate::Focus);
         if (!item->parentItem())
             item->setParentItem(q);
         if (componentComplete)
@@ -855,6 +861,13 @@ void QQuickControlPrivate::itemDestroyed(QQuickItem *item)
     }
 }
 
+void QQuickControlPrivate::itemFocusChanged(QQuickItem *item, Qt::FocusReason reason)
+{
+    Q_Q(QQuickControl);
+    if (item == contentItem || item == q)
+        q->setFocusReason(reason);
+}
+
 QQuickControl::QQuickControl(QQuickItem *parent)
     : QQuickItem(*(new QQuickControlPrivate), parent)
 {
@@ -874,6 +887,8 @@ QQuickControl::~QQuickControl()
     Q_D(QQuickControl);
     d->removeImplicitSizeListener(d->background, QQuickControlPrivate::ImplicitSizeChanges | QQuickItemPrivate::Geometry);
     d->removeImplicitSizeListener(d->contentItem);
+    if (d->contentItem)
+        QQuickItemPrivate::get(d->contentItem)->removeItemChangeListener(d, QQuickItemPrivate::Focus);
 #if QT_CONFIG(accessibility)
     QAccessible::removeActivationObserver(d);
 #endif

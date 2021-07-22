@@ -321,7 +321,6 @@ void tst_focus::reason()
     QVERIFY(spinbox->hasFocus());
     QVERIFY(spinbox->hasActiveFocus());
     QCOMPARE(qApp->focusObject(), spinbox->contentItem());
-    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
     QCOMPARE(editcombo->focusReason(), Qt::TabFocusReason);
     QCOMPARE(spinbox->focusReason(), Qt::TabFocusReason);
     spinbox->setFocusReason(Qt::NoFocusReason);
@@ -330,7 +329,6 @@ void tst_focus::reason()
     QVERIFY(customText->hasFocus());
     QVERIFY(customText->hasActiveFocus());
     QCOMPARE(qApp->focusObject(), customText);
-    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
     QCOMPARE(spinbox->focusReason(), Qt::TabFocusReason);
     QCOMPARE(customText->focusReason(), Qt::TabFocusReason);
     customText->setFocusReason(Qt::NoFocusReason);
@@ -369,12 +367,10 @@ void tst_focus::reason()
 
     QTest::keyClick(&view, Qt::Key_Tab, Qt::ShiftModifier);
     QVERIFY(spinbox->hasFocus());
-    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
     QCOMPARE(spinbox->focusReason(), Qt::BacktabFocusReason);
 
     QTest::keyClick(&view, Qt::Key_Tab, Qt::ShiftModifier);
     QVERIFY(editcombo->hasFocus());
-    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
     QCOMPARE(editcombo->focusReason(), Qt::BacktabFocusReason);
 
     QTest::keyClick(&view, Qt::Key_Tab, Qt::ShiftModifier);
@@ -387,7 +383,6 @@ void tst_focus::reason()
     QVERIFY(editcombo->contentItem()->hasFocus());
     QVERIFY(editcombo->hasActiveFocus());
     QVERIFY(editcombo->contentItem()->hasActiveFocus());
-    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
     QCOMPARE(editcombo->focusReason(), Qt::MouseFocusReason);
     editcombo->setFocusReason(Qt::NoFocusReason);
 
@@ -396,7 +391,6 @@ void tst_focus::reason()
 
     QVERIFY(combobox->hasFocus());
     QVERIFY(combobox->hasActiveFocus());
-    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
     QCOMPARE(editcombo->focusReason(), Qt::MouseFocusReason);
     QCOMPARE(combobox->focusReason(), Qt::MouseFocusReason);
     combobox->setFocusReason(Qt::NoFocusReason);
@@ -405,23 +399,19 @@ void tst_focus::reason()
     QVERIFY(spinbox->hasFocus());
     QVERIFY(spinbox->hasActiveFocus());
     QCOMPARE(combobox->focusReason(), Qt::MouseFocusReason);
-    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
     QCOMPARE(spinbox->focusReason(), Qt::MouseFocusReason);
     spinbox->setFocusReason(Qt::NoFocusReason);
 
     QTest::mouseClick(&view, Qt::LeftButton, {}, itemCenter(customText));
     QTRY_VERIFY2(customText->contentItem()->hasFocus(), qPrintable(qApp->focusObject()->objectName()));
     QVERIFY(customText->contentItem()->hasActiveFocus());
-    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
     QCOMPARE(spinbox->focusReason(), Qt::MouseFocusReason);
-    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
     QCOMPARE(customText->focusReason(), Qt::MouseFocusReason);
     customText->setFocusReason(Qt::NoFocusReason);
 
     QTest::mouseClick(&view, Qt::LeftButton, {}, itemCenter(customItem));
     QVERIFY(customItem->hasFocus());
     QVERIFY(customItem->hasActiveFocus());
-    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
     QCOMPARE(customText->focusReason(), Qt::MouseFocusReason);
     QCOMPARE(customItem->focusReason(), Qt::MouseFocusReason);
     customItem->setFocusReason(Qt::NoFocusReason);
