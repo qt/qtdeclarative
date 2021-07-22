@@ -1013,6 +1013,8 @@ bool Object::setArrayLength(uint newLen)
     } else {
         if (newLen >= 0x100000)
             initSparseArray();
+        else
+            ArrayData::realloc(this, arrayType(), newLen, false);
     }
     setArrayLengthUnchecked(newLen);
     return ok;
