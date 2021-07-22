@@ -41,6 +41,9 @@
 #include <QtQml/qqml.h>
 #include <QtQuickShapes/private/qquickshape_p.h>
 
+Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick_Shapes);
+Q_GHS_KEEP_REFERENCE(QQuickShapes_initializeModule);
+
 QT_BEGIN_NAMESPACE
 
 class QmlShapesPlugin : public QQmlEngineExtensionPlugin

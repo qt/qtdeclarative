@@ -42,6 +42,9 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick);
+Q_GHS_KEEP_REFERENCE(QQuick_initializeModule);
+
 class QtQuick2Plugin : public QQmlEngineExtensionPlugin
 {
     Q_OBJECT

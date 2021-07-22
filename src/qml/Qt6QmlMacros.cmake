@@ -975,7 +975,7 @@ function(qt6_add_qml_plugin target)
         # These are all substituted in the template file used further below
         set(qt_qml_plugin_class_name "${arg_CLASS_NAME}")
         set(qt_qml_plugin_moc_include_name "${generated_cpp_file_name_base}.moc")
-        set(qt_qml_plugin_intro "extern void ${register_types_function_name}();")
+        set(qt_qml_plugin_intro "extern void ${register_types_function_name}();\nQ_GHS_KEEP_REFERENCE(${register_types_function_name});")
         set(qt_qml_plugin_outro "")
         if(QT_BUILDING_QT)
             string(APPEND qt_qml_plugin_intro "\n\nQT_BEGIN_NAMESPACE")
