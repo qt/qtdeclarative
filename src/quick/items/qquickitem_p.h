@@ -331,6 +331,7 @@ public:
         ImplicitWidth = 0x100,
         ImplicitHeight = 0x200,
         Enabled = 0x400,
+        Focus = 0x800,
         AllChanges = 0xFFFFFFFF
     };
 

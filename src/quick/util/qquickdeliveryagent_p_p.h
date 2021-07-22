@@ -95,7 +95,7 @@ public:
 
     void setFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = { });
     void clearFocusInScope(QQuickItem *scope, QQuickItem *item, Qt::FocusReason reason, FocusOptions = { });
-    static void notifyFocusChangesRecur(QQuickItem **item, int remaining);
+    static void notifyFocusChangesRecur(QQuickItem **item, int remaining, Qt::FocusReason reason);
     void clearFocusObject();
     void updateFocusItemTransform();
 
