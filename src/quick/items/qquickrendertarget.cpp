@@ -64,6 +64,7 @@ QQuickRenderTargetPrivate::QQuickRenderTargetPrivate(const QQuickRenderTargetPri
     : ref(1),
       type(other->type),
       pixelSize(other->pixelSize),
+      devicePixelRatio(other->devicePixelRatio),
       sampleCount(other->sampleCount),
       u(other->u)
 {
@@ -120,6 +121,42 @@ QQuickRenderTarget::~QQuickRenderTarget()
 bool QQuickRenderTarget::isNull() const
 {
     return d->type == QQuickRenderTargetPrivate::Type::Null;
+}
+
+/*!
+    \return the device pixel ratio for the render target. This is the ratio
+    between \e{device pixels} and \e{device independent pixels}.
+
+    The default device pixel ratio is 1.0.
+
+    \since 6.3
+
+    \sa setDevicePixelRatio()
+*/
+qreal QQuickRenderTarget::devicePixelRatio() const
+{
+    return d->devicePixelRatio;
+}
+
+/*!
+    Sets the device pixel ratio for this render target to \a ratio. This is
+    the ratio between \e{device pixels} and \e{device independent pixels}.
+
+    Note that the specified device pixel ratio value will be ignored if
+    QQuickRenderControl::renderWindow() is re-implemented to return a valid
+    QWindow.
+
+    \since 6.3
+
+    \sa devicePixelRatio()
+*/
+void QQuickRenderTarget::setDevicePixelRatio(qreal ratio)
+{
+    if (d->devicePixelRatio == ratio)
+        return;
+
+    detach();
+    d->devicePixelRatio = ratio;
 }
 
 /*!
@@ -384,6 +421,7 @@ bool QQuickRenderTarget::isEqual(const QQuickRenderTarget &other) const noexcept
 {
     if (d->type != other.d->type
             || d->pixelSize != other.d->pixelSize
+            || d->devicePixelRatio != other.d->devicePixelRatio
             || d->sampleCount != other.d->sampleCount)
     {
         return false;

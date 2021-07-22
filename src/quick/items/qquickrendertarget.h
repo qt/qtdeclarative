@@ -66,6 +66,9 @@ public:
 
     bool isNull() const;
 
+    qreal devicePixelRatio() const;
+    void setDevicePixelRatio(qreal ratio);
+
 #if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
     static QQuickRenderTarget fromOpenGLTexture(uint textureId, const QSize &pixelSize, int sampleCount = 1);
     static QQuickRenderTarget fromOpenGLRenderBuffer(uint renderbufferId, const QSize &pixelSize, int sampleCount = 1);

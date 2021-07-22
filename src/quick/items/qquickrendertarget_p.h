@@ -79,6 +79,7 @@ public:
     QAtomicInt ref;
     Type type = Type::Null;
     QSize pixelSize;
+    qreal devicePixelRatio = 1.0;
     int sampleCount = 1;
     struct NativeTexture {
         quint64 object;

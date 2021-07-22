@@ -515,6 +515,7 @@ void QQuickWindowPrivate::ensureCustomRenderTarget()
     redirect.renderTargetDirty = false;
 
     redirect.rt.reset(rhi, renderer);
+    redirect.devicePixelRatio = customRenderTarget.devicePixelRatio();
 
     // a default constructed QQuickRenderTarget means no redirection
     if (customRenderTarget.isNull())
@@ -538,7 +539,7 @@ void QQuickWindowPrivate::syncSceneGraph()
     // Calculate the dpr the same way renderSceneGraph() will.
     qreal devicePixelRatio = q->effectiveDevicePixelRatio();
     if (redirect.rt.renderTarget && !QQuickRenderControl::renderWindowFor(q))
-        devicePixelRatio = 1;
+        devicePixelRatio = redirect.devicePixelRatio;
 
     QRhiCommandBuffer *cb = nullptr;
     if (rhi) {
@@ -655,8 +656,10 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size), matrixFlags);
             renderer->setDevicePixelRatio(devicePixelRatio);
         } else {
-            renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), rect.size()), matrixFlags);
-            renderer->setDevicePixelRatio(1);
+            const QSizeF logicalSize =
+                    redirect.rt.renderTarget->pixelSize() / redirect.devicePixelRatio;
+            renderer->setProjectionMatrixToRect(QRectF(QPointF(0, 0), logicalSize), matrixFlags);
+            renderer->setDevicePixelRatio(redirect.devicePixelRatio);
         }
     } else {
         QSize pixelSize;
