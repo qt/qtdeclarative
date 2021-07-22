@@ -180,7 +180,9 @@ void QQmlFileSelector::setExtraSelectors(const QStringList &strings)
 
 #if QT_DEPRECATED_SINCE(6, 0)
 /*!
-  \deprecated
+  \deprecated [6.0] The file selector should not be accessed after it
+  is set. It may be in use. See below for further details.
+
   Gets the QQmlFileSelector currently active on the target \a engine.
 
   This method is deprecated. You should not retrieve the files selector from an
