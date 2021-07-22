@@ -371,7 +371,7 @@ void QQuickDragHandler::setActiveTranslation(const QVector2D &trans)
 /*!
     \readonly
     \qmlproperty QVector2D QtQuick::DragHandler::translation
-    \deprecated Use activeTranslation
+    \deprecated [6.2] Use activeTranslation
 */
 
 /*!
