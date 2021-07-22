@@ -379,138 +379,20 @@ The following functions are also on the Qt object.
     The \c application object provides access to global application state
     properties shared by many QML components.
 
-    Its properties are:
-
-    \table
-    \row
-    \li \c application.active
-    \li
-    Deprecated, use Qt.application.state == Qt.ApplicationActive instead.
-
-    \row
-    \li \c application.state
-    \li
-    This read-only property indicates the current state of the application.
-
-    Possible values are:
-
-    \list
-    \li Qt.ApplicationActive - The application is the top-most and focused application, and the
-                               user is able to interact with the application.
-    \li Qt.ApplicationInactive - The application is visible or partially visible, but not selected
-                                 to be in front, the user cannot interact with the application.
-                                 On desktop platforms, this typically means that the user activated
-                                 another application. On mobile platforms, it is more common to
-                                 enter this state when the OS is interrupting the user with for
-                                 example incoming calls, SMS-messages or dialogs. This is usually a
-                                 transient state during which the application is paused. The user
-                                 may return focus to your application, but most of the time it will
-                                 be the first indication that the application is going to be suspended.
-                                 While in this state, consider pausing or stopping any activity that
-                                 should not continue when the user cannot interact with your
-                                 application, such as a video, a game, animations, or sensors.
-                                 You should also avoid performing CPU-intensive tasks which might
-                                 slow down the application in front.
-    \li Qt.ApplicationSuspended - The application is suspended and not visible to the user. On
-                                  mobile platforms, the application typically enters this state when
-                                  the user returns to the home screen or switches to another
-                                  application. While in this state, the application should ensure
-                                  that the user perceives it as always alive and does not lose his
-                                  progress, saving any persistent data. The application should cease
-                                  all activities and be prepared for code execution to stop. While
-                                  suspended, the application can be killed at any time without
-                                  further warnings (for example when low memory forces the OS to purge
-                                  suspended applications).
-    \li Qt.ApplicationHidden - The application is hidden and runs in the background. This is the
-                               normal state for applications that need to do background processing,
-                               like playing music, while the user interacts with other applications.
-                               The application should free up all graphical resources when entering
-                               this state. A Qt Quick application should not usually handle this state
-                               at the QML level. Instead, you should unload the entire UI and reload
-                               the QML files whenever the application becomes active again.
-    \endlist
-
-    \row
-    \li \c application.layoutDirection
-    \li
-    This read-only property can be used to query the default layout direction of the
-    application. On system start-up, the default layout direction depends on the
-    application's language. The property has a value of \c Qt.RightToLeft in locales
-    where text and graphic elements are read from right to left, and \c Qt.LeftToRight
-    where the reading direction flows from left to right. You can bind to this
-    property to customize your application layouts to support both layout directions.
-
-    Possible values are:
-
-    \list
-    \li Qt.LeftToRight - Text and graphics elements should be positioned
-                        from left to right.
-    \li Qt.RightToLeft - Text and graphics elements should be positioned
-                        from right to left.
-    \endlist
-    \row
-    \li \c application.font
-    \li This read-only property holds the default application font as
-        returned by \l QGuiApplication::font().
-    \row
-    \li \c application.arguments
-    \li This is a string list of the arguments the executable was invoked with.
-    \row
-    \li \c application.name
-    \li This is the application name set on the QCoreApplication instance. This property can be written
-    to in order to set the application name.
-    \row
-    \li \c application.displayName (since Qt 5.9)
-    \li This is the application display name set on the QGuiApplication instance. This property can be written
-    to in order to set the application display name.
-    \row
-    \li \c application.version
-    \li This is the application version set on the QCoreApplication instance. This property can be written
-    to in order to set the application version.
-    \row
-    \li \c application.organization
-    \li This is the organization name set on the QCoreApplication instance. This property can be written
-    to in order to set the organization name.
-    \row
-    \li \c application.domain
-    \li This is the organization domain set on the QCoreApplication instance. This property can be written
-    to in order to set the organization domain.
-
-    \row
-    \li \c application.supportsMultipleWindows
-    \li This read-only property can be used to determine whether or not the
-        platform supports multiple windows. Some embedded platforms do not support
-        multiple windows, for example.
-
-    \row
-    \li \c application.screens
-    \li An array containing the descriptions of all connected screens. The
-    elements of the array are objects with the same properties as the
-    \l{Screen} attached object. In practice the array corresponds to the screen
-    list returned by QGuiApplication::screens(). In addition to examining
-    properties like name, width, height, etc., the array elements can also be
-    assigned to the screen property of Window items, thus serving as an
-    alternative to the C++ side's QWindow::setScreen(). This property has been
-    added in Qt 5.9.
-
-    \endtable
-
-    The object also has one signal, aboutToQuit(), which is the same as \l QCoreApplication::aboutToQuit().
+    It is the same as the \l Application singleton.
 
     The following example uses the \c application object to indicate
     whether the application is currently active:
 
     \snippet qml/application.qml document
 
-    Note that when using QML without a QGuiApplication, the following properties will be undefined:
+    \note When using QML without a QGuiApplication, the following properties will be undefined:
     \list
     \li application.active
     \li application.state
     \li application.layoutDirection
     \li application.font
     \endlist
-
-    \sa Screen, Window, {Window::screen}{Window.screen}
 */
 
 /*!
