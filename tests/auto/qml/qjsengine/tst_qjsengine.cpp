@@ -32,7 +32,6 @@
 #include <private/qqmldata_p.h>
 #include <qjsengine.h>
 #include <qjsvalueiterator.h>
-#include <qgraphicsitem.h>
 #include <qstandarditemmodel.h>
 #include <QtCore/qnumeric.h>
 #include <qqmlengine.h>
@@ -1794,20 +1793,16 @@ void tst_QJSEngine::valueConversion_RegularExpression()
     }
 }
 
-Q_DECLARE_METATYPE(QGradient)
-Q_DECLARE_METATYPE(QGradient*)
-Q_DECLARE_METATYPE(QLinearGradient)
-
-class Klazz : public QWidget,
+class Klazz : public QObject,
               public QStandardItem,
-              public QGraphicsItem
+              public QQmlParserStatus
 {
-    Q_INTERFACES(QGraphicsItem)
+    Q_INTERFACES(QQmlParserStatus)
     Q_OBJECT
 public:
-    Klazz(QWidget *parent = nullptr) : QWidget(parent) { }
-    QRectF boundingRect() const override { return QRectF(); }
-    void paint(QPainter*, const QStyleOptionGraphicsItem*, QWidget*) override { }
+    Klazz(QObject *parent = nullptr) : QObject(parent) { }
+    void classBegin() override {}
+    void componentComplete() override {}
 };
 
 Q_DECLARE_METATYPE(Klazz*)
@@ -1820,11 +1815,11 @@ void tst_QJSEngine::castWithMultipleInheritance()
     QJSValue v = eng.newQObject(&klz);
 
     QCOMPARE(qjsvalue_cast<Klazz*>(v), &klz);
-    QCOMPARE(qjsvalue_cast<QWidget*>(v), (QWidget *)&klz);
+    QCOMPARE(qjsvalue_cast<QQmlParserStatus*>(v), (QQmlParserStatus *)&klz);
     QCOMPARE(qjsvalue_cast<QObject*>(v), (QObject *)&klz);
     QCOMPARE(qjsvalue_cast<QStandardItem*>(v), (QStandardItem *)&klz);
-    QCOMPARE(qjsvalue_cast<QGraphicsItem*>(v), (QGraphicsItem *)&klz);
 }
+
 
 void tst_QJSEngine::collectGarbage()
 {
