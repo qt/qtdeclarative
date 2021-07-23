@@ -735,6 +735,7 @@ public:
 
     void accept0(BaseVisitor *visitor) override;
 
+    bool hasNoSubstitution = false;
     QStringView value;
     QStringView rawValue;
     ExpressionNode *expression;
