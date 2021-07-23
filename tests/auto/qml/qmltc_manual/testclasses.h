@@ -475,4 +475,34 @@ public:
     void finalize(QQmlEngine *e);
 };
 
+class ANON_anchors : public QQuickItem
+{
+    Q_OBJECT
+    QML_ANONYMOUS
+    Q_PROPERTY(int value READ getValue WRITE setValue NOTIFY valueChanged)
+protected:
+    ANON_anchors(QObject *parent = nullptr);
+
+public:
+    // test workaround: the url is resolved by the test base class, so use
+    // member variable to store the resolved url used as argument in engine
+    // evaluation of runtime functions
+    static QUrl url;
+
+    ANON_anchors(QQmlEngine *e, QObject *parent = nullptr);
+    QQmlRefPointer<QQmlContextData> init(QQmlEngine *e,
+                                         const QQmlRefPointer<QQmlContextData> &parentContext);
+    void finalize(QQmlEngine *e);
+
+    QProperty<int> value;
+    int getValue() { return value; }
+    void setValue(int v)
+    {
+        value = v;
+        Q_EMIT valueChanged();
+    }
+Q_SIGNALS:
+    void valueChanged();
+};
+
 #endif // TESTCLASSES_H
