@@ -4,6 +4,55 @@
 
 include_guard(GLOBAL)
 
+macro(qt_internal_get_internal_add_qml_module_keywords
+        option_args single_args multi_args
+        internal_option_args internal_single_args internal_multi_args)
+    set(${option_args}
+        DESIGNER_SUPPORTED
+        NO_PLUGIN_OPTIONAL
+        NO_CREATE_PLUGIN_TARGET
+        NO_GENERATE_PLUGIN_SOURCE
+        NO_GENERATE_QMLTYPES
+        NO_GENERATE_QMLDIR
+        NO_LINT
+        NO_CACHEGEN
+    )
+    set(${single_args}
+        URI
+        VERSION
+        PLUGIN_TARGET
+        TYPEINFO
+        CLASS_NAME
+        CLASSNAME  # TODO: Remove once all other repos have been updated to use
+                   #       CLASS_NAME instead.
+    )
+    set(${multi_args}
+        QML_FILES
+        RESOURCES
+        IMPORTS
+        IMPORT_PATH
+        OPTIONAL_IMPORTS
+        DEPENDENCIES
+        PAST_MAJOR_VERSIONS
+    )
+    # Args used by qt_internal_add_qml_module directly, which should not be passed to any other
+    # functions.
+    #
+    # INSTALL_SOURCE_QMLTYPES takes a path to an existing plugins.qmltypes file that should be
+    # installed.
+    #
+    # INSTALL_SOURCE_QMLDIR takes a path to an existing qmldir file that should be installed.
+    set(${internal_option_args}
+    )
+    set(${internal_single_args}
+        INSTALL_SOURCE_QMLTYPES
+        INSTALL_SOURCE_QMLDIR
+    )
+    set(${internal_multi_args}
+    )
+
+endmacro()
+
 # This function is essentially a wrapper around qt6_add_qml_module().
 # It creates the targets explicitly and sets up internal properties before
 # passing those targets to qt6_add_qml_module() for further updates.
@@ -27,15 +76,13 @@ function(qt_internal_add_qml_module target)
         module_multi_args
     )
 
-    set(qml_module_option_args
-        DESIGNER_SUPPORTED
-        NO_PLUGIN_OPTIONAL
-        NO_CREATE_PLUGIN_TARGET
-        NO_GENERATE_PLUGIN_SOURCE
-        NO_GENERATE_QMLTYPES
-        NO_GENERATE_QMLDIR
-        NO_LINT
-        NO_CACHEGEN
+    qt_internal_get_internal_add_qml_module_keywords(
+        qml_module_option_args
+        qml_module_single_args
+        qml_module_multi_args
+        qml_module_internal_option_args
+        qml_module_internal_single_args
+        qml_module_internal_multi_args
     )
     # TODO: Remove these once all repos have been updated to not use them
     set(ignore_option_args
@@ -45,56 +92,21 @@ function(qt_internal_add_qml_module target)
         INSTALL_QMLTYPES        # Now the default
     )
 
-    set(qml_module_single_args
-        URI
-        VERSION
-        PLUGIN_TARGET
-        TYPEINFO
-        CLASS_NAME
-        CLASSNAME  # TODO: Remove once all other repos have been updated to use
-                   #       CLASS_NAME instead.
-    )
-
-    set(qml_module_multi_args
-        # SOURCES will be handled by qt_internal_add_module()
-        QML_FILES
-        RESOURCES
-        IMPORTS
-        IMPORT_PATH
-        OPTIONAL_IMPORTS
-        DEPENDENCIES
-        PAST_MAJOR_VERSIONS
-    )
-
-    # Args used by qt_internal_add_qml_module directly, which should not be passed to any other
-    # functions.
-    #
-    # INSTALL_SOURCE_QMLTYPES takes a path to an existing plugins.qmltypes file that should be
-    # installed.
-    #
-    # INSTALL_SOURCE_QMLDIR takes a path to an existing qmldir file that should be installed.
-    set(internal_option_args
-    )
-
-    set(internal_single_args
-        INSTALL_SOURCE_QMLTYPES
-        INSTALL_SOURCE_QMLDIR
-    )
-
     set(option_args
         ${module_option_args}
         ${qml_module_option_args}
         ${ignore_option_args}
-        ${internal_option_args}
+        ${qml_module_internal_option_args}
     )
     set(single_args
         ${module_single_args}
         ${qml_module_single_args}
-        ${internal_single_args}
+        ${qml_module_internal_single_args}
     )
     set(multi_args
         ${module_multi_args}
         ${qml_module_multi_args}
+        ${qml_module_internal_multi_args}
     )
 
     qt_parse_all_arguments(arg "qt_internal_add_qml_module"
@@ -139,8 +151,9 @@ function(qt_internal_add_qml_module target)
                     ${qml_module_option_args}
                     ${qml_module_single_args}
                     ${qml_module_multi_args}
-                    ${internal_option_args}
-                    ${internal_single_args}
+                    ${qml_module_internal_option_args}
+                    ${qml_module_internal_single_args}
+                    ${qml_module_internal_multi_args}
                     OUTPUT_DIRECTORY
                     INSTALL_DIRECTORY
                 ALL_ARGS
