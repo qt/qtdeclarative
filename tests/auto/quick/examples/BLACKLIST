@@ -1,7 +1,3 @@
-# QTBUG-95139
-[sgexamples:examples/quick/views/listview/expandingdelegates.qml]
-*
-
 # The following rely on qtquickcontrols2, and can be unblacklisted once QTBUG-95173 is done.
 [sgexamples:examples/quick/canvas/bezierCurve/bezierCurve.qml]
 *

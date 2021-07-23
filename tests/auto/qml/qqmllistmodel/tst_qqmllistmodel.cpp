@@ -135,6 +135,7 @@ private slots:
     void objectDestroyed();
     void destroyObject();
     void emptyStringNotUndefined();
+    void listElementWithTemplateString();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1837,6 +1838,22 @@ void tst_qqmllistmodel::emptyStringNotUndefined()
     QVERIFY(!val.isUndefined());
     QVERIFY(val.isString());
     QCOMPARE(val.toString(), QString());
+}
+
+void tst_qqmllistmodel::listElementWithTemplateString()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(R"(
+    import QtQuick
+    ListModel {
+        ListElement {
+            prop: `test`
+        }
+    })", QUrl());
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(!root.isNull());
 }
 
 QTEST_MAIN(tst_qqmllistmodel)

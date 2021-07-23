@@ -2246,7 +2246,14 @@ InitializerOpt: Initializer;
 InitializerOpt_In: Initializer_In;
 
 TemplateLiteral: T_NO_SUBSTITUTION_TEMPLATE;
-/.  case $rule_number: Q_FALLTHROUGH(); ./
+/.
+    case $rule_number: {
+        AST::TemplateLiteral *node = new (pool) AST::TemplateLiteral(stringRef(1), rawStringRef(1), nullptr);
+        node->literalToken = loc(1);
+        node->hasNoSubstitution = true;
+        sym(1).Node = node;
+    } break;
+./
 
 TemplateSpans: T_TEMPLATE_TAIL;
 /.
