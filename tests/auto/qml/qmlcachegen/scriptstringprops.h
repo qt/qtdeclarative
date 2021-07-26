@@ -1,0 +1,80 @@
+/****************************************************************************
+**
+** Copyright (C) 2021 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the test suite of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:GPL-EXCEPT$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 3 as published by the Free Software
+** Foundation with exceptions as appearing in the file LICENSE.GPL3-EXCEPT
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+#ifndef SCRIPT_STRING_PROPS_H
+#define SCRIPT_STRING_PROPS_H
+
+#include <QObject>
+#include <QQmlScriptString>
+#include <qqml.h>
+
+class ScriptStringProps  :public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+    Q_PROPERTY(QQmlScriptString undef READ undef WRITE setUndef NOTIFY undefChanged)
+    Q_PROPERTY(QQmlScriptString nul READ nul WRITE setNul NOTIFY nulChanged)
+    Q_PROPERTY(QQmlScriptString str READ str WRITE setStr NOTIFY strChanged)
+    Q_PROPERTY(QQmlScriptString num READ num WRITE setNum NOTIFY numChanged)
+    Q_PROPERTY(QQmlScriptString bol READ bol WRITE setBol NOTIFY bolChanged)
+
+public:
+    const QQmlScriptString &undef() const;
+    void setUndef(const QQmlScriptString &newUndef);
+
+    const QQmlScriptString &nul() const;
+    void setNul(const QQmlScriptString &newNul);
+
+    const QQmlScriptString &str() const;
+    void setStr(const QQmlScriptString &newStr);
+
+    const QQmlScriptString &num() const;
+    void setNum(const QQmlScriptString &newNum);
+
+    const QQmlScriptString &bol() const;
+    void setBol(const QQmlScriptString &newBol);
+signals:
+    void undefChanged();
+
+    void nulChanged();
+
+    void strChanged();
+
+    void numChanged();
+
+    void bolChanged();
+
+public:
+    QQmlScriptString m_undef;
+    QQmlScriptString m_nul;
+    QQmlScriptString m_str;
+    QQmlScriptString m_num;
+    QQmlScriptString m_bol;
+};
+
+#endif

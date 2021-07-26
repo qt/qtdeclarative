@@ -14,6 +14,7 @@ qt_internal_add_test(tst_qmlcachegen
     SOURCES
         ../../shared/util.cpp ../../shared/util.h
         tst_qmlcachegen.cpp
+        scriptstringprops.h
     INCLUDE_DIRECTORIES
         ../../shared
     PUBLIC_LIBRARIES
@@ -101,6 +102,7 @@ set(qmake_immediate_qml_files
     "data/script.mjs"
     "data/utils.mjs"
     "data/versionchecks.qml"
+    "data/scriptstring.qml"
 )
 
 qt6_target_qml_sources(tst_qmlcachegen
