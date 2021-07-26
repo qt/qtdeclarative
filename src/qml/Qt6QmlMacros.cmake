@@ -834,6 +834,15 @@ function(qt6_add_qml_plugin target)
 
     _qt_internal_get_escaped_uri("${arg_URI}" escaped_uri)
 
+    if(NOT arg_CLASS_NAME)
+        if(NOT "${arg_BACKING_TARGET}" STREQUAL "")
+            get_target_property(arg_CLASS_NAME ${target} QT_QML_MODULE_CLASS_NAME)
+        endif()
+        if(NOT arg_CLASS_NAME)
+            _qt_internal_compute_qml_plugin_class_name_from_uri("${arg_URI}" arg_CLASS_NAME)
+        endif()
+    endif()
+
     if(TARGET ${target})
         get_target_property(target_type ${target} TYPE)
         if(target_type STREQUAL "EXECUTABLE")
@@ -846,17 +855,13 @@ function(qt6_add_qml_plugin target)
                 )
             endif()
         endforeach()
-        get_target_property(class_name ${target} QT_PLUGIN_CLASS_NAME)
-        if(class_name)
-            if(arg_CLASS_NAME AND NOT arg_CLASS_NAME STREQUAL class_name)
-                message(FATAL_ERROR
-                    "CLASS_NAME was specified, but an existing target with a "
-                    "different class name was also given"
-                )
-            endif()
-            set(arg_CLASS_NAME ${class_name})
-        elseif(NOT arg_CLASS_NAME)
-            _qt_internal_compute_qml_plugin_class_name_from_uri("${arg_URI}" arg_CLASS_NAME)
+
+        get_target_property(existing_class_name ${target} QT_PLUGIN_CLASS_NAME)
+        if(existing_class_name AND NOT existing_class_name STREQUAL arg_CLASS_NAME)
+            message(FATAL_ERROR
+                "An existing target was given, but it has a different class name "
+                "(${existing_class_name}) to that being used here (${arg_CLASS_NAME})"
+            )
         endif()
     else()
         if(arg_STATIC AND arg_SHARED)
@@ -869,10 +874,6 @@ function(qt6_add_qml_plugin target)
             set(lib_type STATIC)
         elseif(arg_SHARED)
             set(lib_type SHARED)
-        endif()
-
-        if(NOT arg_CLASS_NAME)
-            _qt_internal_compute_qml_plugin_class_name_from_uri("${arg_URI}" arg_CLASS_NAME)
         endif()
 
         qt6_add_plugin(${target} ${lib_type}
