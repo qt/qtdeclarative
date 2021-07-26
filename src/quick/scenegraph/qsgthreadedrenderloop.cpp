@@ -547,17 +547,16 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
 
     QQuickWindowPrivate *dd = QQuickWindowPrivate::get(window);
 
-#if QT_CONFIG(quick_shadereffect)
-    QSGRhiShaderEffectNode::cleanupMaterialTypeCache();
-#if QT_CONFIG(opengl)
-    if (current)
-        QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
-#endif
-#endif
-
     // The canvas nodes must be cleaned up regardless if we are in the destructor..
     if (wipeSG) {
         dd->cleanupNodesOnShutdown();
+#if QT_CONFIG(quick_shadereffect)
+        QSGRhiShaderEffectNode::cleanupMaterialTypeCache();
+#if QT_CONFIG(opengl)
+        if (current)
+            QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
+#endif
+#endif
     } else {
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- persistent SG, avoiding cleanup");
         if (current && gl)

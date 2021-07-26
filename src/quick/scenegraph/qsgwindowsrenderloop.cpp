@@ -256,12 +256,13 @@ void QSGWindowsRenderLoop::windowDestroyed(QQuickWindow *window)
     if (Q_UNLIKELY(!current))
         RLDEBUG("cleanup without an OpenGL context");
 
+    d->cleanupNodesOnShutdown();
+
 #if QT_CONFIG(quick_shadereffect) && QT_CONFIG(opengl)
     if (current)
         QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
 #endif
 
-    d->cleanupNodesOnShutdown();
     if (m_windows.size() == 0) {
         d->context->invalidate();
         delete m_gl;

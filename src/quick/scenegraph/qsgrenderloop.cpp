@@ -413,13 +413,6 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
             qCDebug(QSG_LOG_RENDERLOOP, "cleanup without an OpenGL context");
     }
 
-#if QT_CONFIG(quick_shadereffect)
-    QSGRhiShaderEffectNode::cleanupMaterialTypeCache();
-#if QT_CONFIG(opengl)
-    QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
-#endif
-#endif
-
     if (d->swapchain) {
         if (window->handle()) {
             // We get here when exiting via QCoreApplication::quit() instead of
@@ -432,6 +425,14 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
     }
 
     d->cleanupNodesOnShutdown();
+
+#if QT_CONFIG(quick_shadereffect)
+    QSGRhiShaderEffectNode::cleanupMaterialTypeCache();
+#if QT_CONFIG(opengl)
+    QQuickOpenGLShaderEffectMaterial::cleanupMaterialCache();
+#endif
+#endif
+
     if (m_windows.size() == 0) {
         rc->invalidate();
         d->rhi = nullptr;
