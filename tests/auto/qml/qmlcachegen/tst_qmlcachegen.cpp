@@ -38,8 +38,11 @@
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmlscriptdata_p.h>
 #include <qtranslator.h>
+#include <qqmlscriptstring.h>
+#include <QString>
 
 #include "../../shared/util.h"
+#include "scriptstringprops.h"
 
 class tst_qmlcachegen: public QQmlDataTest
 {
@@ -78,6 +81,8 @@ private slots:
     void parameterAdjustment();
     void inlineComponent();
     void posthocRequired();
+
+    void scriptStringCachegenInteraction();
 };
 
 // A wrapper around QQmlComponent to ensure the temporary reference counts
@@ -716,6 +721,111 @@ void tst_qmlcachegen::posthocRequired()
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj.isNull() && component.isError());
     QVERIFY(component.errorString().contains(QStringLiteral("Required property x was not initialized")));
+}
+
+void tst_qmlcachegen::scriptStringCachegenInteraction()
+{
+    bool ok = generateCache(testFile("scriptstring.qml"));
+    QVERIFY(ok);
+    QQmlEngine engine;
+    CleanlyLoadingComponent component(&engine, testFileUrl("scriptstring.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(!root.isNull(), qPrintable(component.errorString()));
+    auto scripty = qobject_cast<ScriptStringProps *>(root.get());
+    QVERIFY(scripty);
+
+    QVERIFY(scripty->m_undef.isUndefinedLiteral());
+    QVERIFY(scripty->m_nul.isNullLiteral());
+    QCOMPARE(scripty->m_str.stringLiteral(), u"hello"_qs);
+    QCOMPARE(scripty->m_num.numberLiteral(&ok), 42);
+    ok = false;
+    scripty->m_bol.booleanLiteral(&ok);
+    QVERIFY(ok);
+}
+
+
+
+const QQmlScriptString &ScriptStringProps::undef() const
+{
+    return m_undef;
+}
+
+
+
+void ScriptStringProps::setUndef(const QQmlScriptString &newUndef)
+{
+    if (m_undef == newUndef)
+        return;
+    m_undef = newUndef;
+    emit undefChanged();
+}
+
+
+
+const QQmlScriptString &ScriptStringProps::nul() const
+{
+    return m_nul;
+}
+
+
+
+void ScriptStringProps::setNul(const QQmlScriptString &newNul)
+{
+    if (m_nul == newNul)
+        return;
+    m_nul = newNul;
+    emit nulChanged();
+}
+
+
+
+const QQmlScriptString &ScriptStringProps::str() const
+{
+    return m_str;
+}
+
+
+
+void ScriptStringProps::setStr(const QQmlScriptString &newStr)
+{
+    if (m_str == newStr)
+        return;
+    m_str = newStr;
+    emit strChanged();
+}
+
+
+
+const QQmlScriptString &ScriptStringProps::num() const
+{
+    return m_num;
+}
+
+
+
+void ScriptStringProps::setNum(const QQmlScriptString &newNum)
+{
+    if (m_num == newNum)
+        return;
+    m_num = newNum;
+    emit numChanged();
+}
+
+
+
+const QQmlScriptString &ScriptStringProps::bol() const
+{
+    return m_bol;
+}
+
+
+
+void ScriptStringProps::setBol(const QQmlScriptString &newBol)
+{
+    if (m_bol == newBol)
+        return;
+    m_bol = newBol;
+    emit bolChanged();
 }
 
 QTEST_GUILESS_MAIN(tst_qmlcachegen)

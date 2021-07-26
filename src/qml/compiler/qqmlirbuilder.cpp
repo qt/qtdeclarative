@@ -1161,7 +1161,15 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
         binding->value.compiledScriptIndex = index;
         // We don't need to store the binding script as string, except for script strings
         // and types with custom parsers. Those will be added later in the compilation phase.
-        binding->stringIndex = emptyStringIndex;
+        // Except that we cannot recover the string when cachegen runs; we need to therefore retain
+        // "undefined". Any other "special" strings (for the various literals) are already handled above
+        QQmlJS::AST::Node *nodeForString = statement;
+        if (exprStmt)
+            nodeForString = exprStmt->expression;
+        if (asStringRef(nodeForString) == u"undefined")
+            binding->stringIndex = registerString(u"undefined"_qs);
+        else
+            binding->stringIndex = emptyStringIndex;
     }
 }
 
