@@ -17,7 +17,7 @@ qt_internal_add_test(tst_qquickstyle
         ../shared/visualtestutil.cpp ../shared/visualtestutil.h
         tst_qquickstyle.cpp
     DEFINES
-        QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../../src\\\"
+        QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/quickcontrols2\\\"
     LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
