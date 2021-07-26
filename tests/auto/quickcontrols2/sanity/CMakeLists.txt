@@ -11,7 +11,7 @@ qt_internal_add_test(tst_sanity
         ../shared/visualtestutil.cpp ../shared/visualtestutil.h
         tst_sanity.cpp
     DEFINES
-        QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../../src\\\"
+        QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/quickcontrols2\\\"
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
