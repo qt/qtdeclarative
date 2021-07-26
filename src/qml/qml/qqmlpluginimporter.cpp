@@ -336,6 +336,12 @@ QTypeRevision QQmlPluginImporter::importDynamicPlugin(
                 if (it != plugins->end() && it->second.loader)
                     instance = it->second.loader->instance();
             }
+#else
+            // Here plugin is not optional and NOT QT_CONFIG(library)
+            // Cannot finalize such plugin and return valid, because no types are registered.
+            // Just return invalid.
+            if (!optional)
+                return QTypeRevision();
 #endif // QT_CONFIG(library)
         }
 
