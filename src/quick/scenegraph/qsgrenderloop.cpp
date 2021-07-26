@@ -357,10 +357,6 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
         rhi->makeThreadLocalNativeContextCurrent();
     }
 
-#if QT_CONFIG(quick_shadereffect)
-    QSGRhiShaderEffectNode::cleanupMaterialTypeCache();
-#endif
-
     if (d->swapchain) {
         if (window->handle()) {
             // We get here when exiting via QCoreApplication::quit() instead of
@@ -373,6 +369,11 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
     }
 
     d->cleanupNodesOnShutdown();
+
+#if QT_CONFIG(quick_shadereffect)
+    QSGRhiShaderEffectNode::cleanupMaterialTypeCache();
+#endif
+
     if (m_windows.size() == 0) {
         rc->invalidate();
         d->rhi = nullptr;
