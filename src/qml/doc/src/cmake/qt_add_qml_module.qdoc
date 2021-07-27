@@ -246,8 +246,10 @@ change the plugin's output name by setting target properties like
 The backing \c target and the plugin target (if different) will be created by
 the command, unless they already exist. Projects should generally let them be
 created by the command so that they are created as the appropriate target type.
-If an existing \c target is passed in and it is an executable target, then no
-plugin target will be created or used.
+If the backing \c target is a static library, the plugin will also be created
+as a static library. If the backing \c target is a shared library, the plugin
+will be created as a module library. If an existing \c target is passed in and
+it is an executable target, then no plugin target will be created or used.
 
 In certain situations, the project may want to delay creating the plugin target
 until after the call. The \c NO_CREATE_PLUGIN_TARGET option can be given in
