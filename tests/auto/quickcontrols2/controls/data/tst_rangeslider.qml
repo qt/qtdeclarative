@@ -622,6 +622,12 @@ TestCase {
         control.first.value = 0
         control.second.value = 0
 
+        // When both handles overlap, only the handle with the higher Z value
+        // should be hovered.
+        mouseMove(control, control.second.handle.x, control.second.handle.y)
+        compare(control.second.hovered, true)
+        compare(control.first.hovered, false)
+
         // Both are at the same position, so it doesn't matter whose coordinates we use.
         mousePress(control, control.first.handle.x, control.first.handle.y, Qt.LeftButton)
         verify(control.second.pressed)
@@ -635,6 +641,9 @@ TestCase {
         compare(control.second.value, 1.0)
         compare(control.second.handle.z, 1)
         compare(control.first.handle.z, 0)
+
+        // The first handle should not be hovered.
+        compare(control.first.hovered, false)
 
         // Move the first handle on top of the second.
         mousePress(control, control.first.handle.x, control.first.handle.y, Qt.LeftButton)

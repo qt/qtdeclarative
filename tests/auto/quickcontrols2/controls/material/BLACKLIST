@@ -3,3 +3,7 @@
 # QTBUG-70597
 [Tumbler::test_itemsCorrectlyPositioned]
 *
+
+# QTBUG-95750
+[RangeSlider::test_overlappingHandles]
+b2qt
