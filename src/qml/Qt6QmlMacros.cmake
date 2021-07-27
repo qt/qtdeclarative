@@ -1119,10 +1119,13 @@ function(qt6_target_qml_sources target)
         return()
     endif()
 
-    if(arg___QT_INTERNAL_FORCE_DEFER_QMLDIR OR ${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0")
-        set(can_defer_qmldir TRUE)
-    else()
-        set(can_defer_qmldir FALSE)
+    if(NOT arg___QT_INTERNAL_FORCE_DEFER_QMLDIR AND ${CMAKE_VERSION} VERSION_LESS "3.19.0")
+        message(FATAL_ERROR
+            "You are using CMake ${CMAKE_VERSION}, but CMake 3.19 or later "
+            "is required to add qml files with this function. Either pass "
+            "the qml files to qt6_add_qml_module() instead or update to "
+            "CMake 3.19 or later."
+        )
     endif()
 
     get_target_property(no_lint                ${target} QT_QML_MODULE_NO_LINT)
@@ -1210,6 +1213,7 @@ function(qt6_target_qml_sources target)
 
     set(non_qml_files)
     set(output_targets)
+    set(copied_files)
 
     foreach(file_src IN LISTS arg_QML_FILES arg_RESOURCES)
         # We need to copy the file to the build directory now so that when
@@ -1242,6 +1246,7 @@ function(qt6_target_qml_sources target)
                 DEPENDS ${file_src}
                 WORKING_DIRECTORY $<TARGET_PROPERTY:${target},SOURCE_DIR>
             )
+            list(APPEND copied_files ${file_out})
         endif()
     endforeach()
 
@@ -1288,15 +1293,6 @@ function(qt6_target_qml_sources target)
 
             # Do not add qmldir entries for lowercase names. Those are not components.
             if (qml_file_typename MATCHES "^[A-Z]")
-                if(NOT can_defer_qmldir)
-                    message(FATAL_ERROR
-                        "You are using CMake ${CMAKE_VERSION}, but CMake 3.19 or later "
-                        "is required to add qml files with this function. Either pass "
-                        "the qml files to qt6_add_qml_module() instead or update to "
-                        "CMake 3.19 or later."
-                    )
-                endif()
-
                 # TODO: rename to QT_QML_SOURCE_VERSIONS
                 get_source_file_property(qml_file_versions  ${qml_file_src} QT_QML_SOURCE_VERSION)
                 get_source_file_property(qml_file_singleton ${qml_file_src} QT_QML_SINGLETON_TYPE)
@@ -1387,6 +1383,31 @@ function(qt6_target_qml_sources target)
             "The following files should be added with RESOURCES instead:"
             "\n  ${file_list}"
         )
+    endif()
+
+    if(copied_files)
+        if(CMAKE_VERSION VERSION_LESS 3.19)
+            # Called from qt6_add_qml_module() and we know there can only be
+            # this one call. With those constraints, we can use a custom target
+            # to implement the necessary dependencies to get files copied to the
+            # build directory when their source files change.
+            add_custom_target(${target}_tooling ALL
+                DEPENDS ${copied_files}
+            )
+            add_dependencies(${target} ${target}_tooling)
+        else()
+            # We could be called multiple times and a custom target can only
+            # have file-level dependencies added at the time the target is
+            # created. Use an interface library instead, since we can add
+            # private sources to those and have the library act as a build
+            # system target from CMake 3.19 onward, and we can add the sources
+            # progressively over multiple calls.
+            if(NOT TARGET ${target}_tooling)
+                add_library(${target}_tooling INTERFACE)
+                target_link_libraries(${target} PRIVATE $<BUILD_INTERFACE:${target}_tooling>)
+            endif()
+            target_sources(${target}_tooling PRIVATE ${copied_files})
+        endif()
     endif()
 
     # Batch all the non-compiled qml sources into a single resource for this
