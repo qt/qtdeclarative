@@ -123,10 +123,45 @@ function(qt6_add_qml_module target)
 
     set(is_executable FALSE)
     if(TARGET ${target})
+        if(arg_STATIC OR arg_SHARED)
+            message(FATAL_ERROR
+                "Cannot use STATIC or SHARED keyword when passed an existing target (${target})"
+                )
+        endif()
+
         get_target_property(backing_target_type ${target} TYPE)
         get_target_property(is_android_executable "${target}" _qt_is_android_executable)
         if (backing_target_type STREQUAL "EXECUTABLE" OR is_android_executable)
             set(is_executable TRUE)
+            set(lib_type "")
+        elseif(backing_target_type STREQUAL "STATIC_LIBRARY")
+            set(lib_type STATIC)
+        elseif(backing_target_type MATCHES "(SHARED|MODULE)_LIBRARY")
+            set(lib_type SHARED)
+        else()
+            message(FATAL_ERROR "Unsupported backing target type: ${backing_target_type}")
+        endif()
+    else()
+        if(arg_STATIC AND arg_SHARED)
+            message(FATAL_ERROR
+                "Both STATIC and SHARED specified, at most one can be given"
+                )
+        endif()
+
+        # Explicit arguments take precedence, otherwise default to using the same
+        # staticality as what Qt was built with. This follows the already
+        # established default behavior for building ordinary Qt plugins.
+        # We don't allow the standard CMake BUILD_SHARED_LIBS variable to control
+        # the default because that can lead to different defaults depending on
+        # whether you build with a separate backing target or not.
+        if(arg_STATIC)
+            set(lib_type STATIC)
+        elseif(arg_SHARED)
+            set(lib_type SHARED)
+        elseif(QT6_IS_SHARED_LIBS_BUILD)
+            set(lib_type SHARED)
+        else()
+            set(lib_type STATIC)
         endif()
     endif()
 
@@ -140,13 +175,6 @@ function(qt6_add_qml_module target)
     set(no_gen_source)
     if(arg_NO_GENERATE_PLUGIN_SOURCE)
         set(no_gen_source NO_GENERATE_PLUGIN_SOURCE)
-    endif()
-
-    set(lib_type "")
-    if(arg_STATIC)
-        set(lib_type STATIC)
-    elseif(arg_SHARED)
-        set(lib_type SHARED)
     endif()
 
     if(arg_OUTPUT_DIRECTORY)
@@ -190,11 +218,6 @@ function(qt6_add_qml_module target)
     endif()
 
     if(TARGET ${target})
-        if(arg_STATIC OR arg_SHARED)
-            message(FATAL_ERROR
-                "Cannot use STATIC or SHARED keyword when passed an existing target (${target})"
-            )
-        endif()
         if(arg_PLUGIN_TARGET STREQUAL target)
             # Insert the plugin's URI into its meta data to enable usage
             # of static plugins in QtDeclarative (like in mkspecs/features/qml_plugin.prf).
@@ -203,23 +226,22 @@ function(qt6_add_qml_module target)
             )
         endif()
     else()
-        if(arg_STATIC AND arg_SHARED)
-            message(FATAL_ERROR
-                "Both STATIC and SHARED specified, at most one can be given"
-            )
-        endif()
-
         if(arg_PLUGIN_TARGET STREQUAL target)
-            if(arg_NO_CREATE_PLUGIN_TARGET AND NOT TARGET ${target})
-                message(FATAL_ERROR
-                    "NO_CREATE_PLUGIN_TARGET was given, but PLUGIN_TARGET is "
-                    "the same as the backing target (which is allowed) and the "
-                    "target does not exist. Either ensure the target is already "
-                    "created or do not specify NO_CREATE_PLUGIN_TARGET."
-                )
+            if(TARGET ${arg_PLUGIN_TARGET})
+                set(plugin_lib_type "")
+            else()
+                if(arg_NO_CREATE_PLUGIN_TARGET)
+                    message(FATAL_ERROR
+                        "NO_CREATE_PLUGIN_TARGET was given, but PLUGIN_TARGET is "
+                        "the same as the backing target (which is allowed) and the "
+                        "target does not exist. Either ensure the target is already "
+                        "created or do not specify NO_CREATE_PLUGIN_TARGET."
+                        )
+                endif()
+                set(plugin_lib_type ${lib_type})
             endif()
             qt6_add_qml_plugin(${target}
-                ${lib_type}
+                ${plugin_lib_type}
                 ${no_gen_source}
                 OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
                 URI ${arg_URI}
@@ -380,8 +402,13 @@ function(qt6_add_qml_module target)
         # including where it is the same as ${target}. If ${arg_PLUGIN_TARGET}
         # already exists, it will update the necessary things that are specific
         # to qml plugins.
+        if(TARGET ${arg_PLUGIN_TARGET})
+            set(plugin_lib_type "")
+        else()
+            set(plugin_lib_type ${lib_type})
+        endif()
         qt6_add_qml_plugin(${arg_PLUGIN_TARGET}
-            ${lib_type}
+            ${plugin_lib_type}
             ${no_gen_source}
             OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
             BACKING_TARGET ${target}
@@ -407,8 +434,8 @@ function(qt6_add_qml_module target)
 
     # Build an init object library for static plugins.
     if(TARGET "${arg_PLUGIN_TARGET}")
-        get_target_property(lib_type ${arg_PLUGIN_TARGET} TYPE)
-        if(lib_type STREQUAL "STATIC_LIBRARY")
+        get_target_property(plugin_lib_type ${arg_PLUGIN_TARGET} TYPE)
+        if(plugin_lib_type STREQUAL "STATIC_LIBRARY")
             __qt_internal_add_static_plugin_init_object_library(
                 "${arg_PLUGIN_TARGET}" plugin_init_target)
             list(APPEND output_targets ${plugin_init_target})
@@ -844,6 +871,8 @@ function(qt6_add_qml_plugin target)
     endif()
 
     if(TARGET ${target})
+        # Plugin target already exists. Perform a few sanity checks, but we
+        # otherwise trust that the target is appropriate for use as a plugin.
         get_target_property(target_type ${target} TYPE)
         if(target_type STREQUAL "EXECUTABLE")
             message(FATAL_ERROR "Plugins cannot be executables (target: ${target})")
@@ -874,6 +903,40 @@ function(qt6_add_qml_plugin target)
             set(lib_type STATIC)
         elseif(arg_SHARED)
             set(lib_type SHARED)
+        endif()
+
+        if(TARGET "${arg_BACKING_TARGET}")
+            # Ensure that the plugin type we create will be compatible with the
+            # type of backing target we were given
+            get_target_property(backing_type ${arg_BACKING_TARGET} TYPE)
+            if(backing_type STREQUAL "STATIC_LIBRARY")
+                if(lib_type STREQUAL "")
+                    set(lib_type STATIC)
+                elseif(lib_type STREQUAL "SHARED")
+                    message(FATAL_ERROR
+                        "Mixing a static backing library with a non-static plugin "
+                        "is not supported"
+                    )
+                endif()
+            elseif(backing_type STREQUAL "SHARED_LIBRARY")
+                if(lib_type STREQUAL "")
+                    set(lib_type SHARED)
+                elseif(lib_type STREQUAL "STATIC")
+                    message(FATAL_ERROR
+                        "Mixing a non-static backing library with a static plugin "
+                        "is not supported"
+                    )
+                endif()
+            elseif(backing_type STREQUAL "EXECUTABLE")
+                message(FATAL_ERROR
+                    "A separate plugin should not be needed when the backing target "
+                    "is an executable. Pre-create the plugin target before calling "
+                    "this command if you really must have a separate plugin."
+                )
+            else()
+                # Object libraries, utility/custom targets
+                message(FATAL_ERROR "Unsupported backing target type: ${backing_type}")
+            endif()
         endif()
 
         qt6_add_plugin(${target} ${lib_type}
