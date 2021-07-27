@@ -594,8 +594,19 @@ void QQuickRangeSliderPrivate::updateHover(const QPointF &pos)
     Q_Q(QQuickRangeSlider);
     QQuickItem *firstHandle = first->handle();
     QQuickItem *secondHandle = second->handle();
-    first->setHovered(firstHandle && firstHandle->isEnabled() && firstHandle->contains(q->mapToItem(firstHandle, pos)));
-    second->setHovered(secondHandle && secondHandle->isEnabled() && secondHandle->contains(q->mapToItem(secondHandle, pos)));
+    bool firstHandleHovered = firstHandle && firstHandle->isEnabled()
+            && firstHandle->contains(q->mapToItem(firstHandle, pos));
+    bool secondHandleHovered = secondHandle && secondHandle->isEnabled()
+            && secondHandle->contains(q->mapToItem(secondHandle, pos));
+
+    if (firstHandleHovered && secondHandleHovered) {
+        // Only hover the handle with the higher Z value.
+        const bool firstHandleHasHigherZ = firstHandle->z() > secondHandle->z();
+        firstHandleHovered = firstHandleHasHigherZ;
+        secondHandleHovered = !firstHandleHasHigherZ;
+    }
+    first->setHovered(firstHandleHovered);
+    second->setHovered(secondHandleHovered);
 }
 
 void QQuickRangeSliderPrivate::itemImplicitWidthChanged(QQuickItem *item)
