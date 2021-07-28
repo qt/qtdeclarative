@@ -768,42 +768,6 @@ function(_qt_internal_write_deferred_qmldir_file target)
 endfunction()
 
 
-# Create a Qml plugin. Projects should not normally need to call this function
-# directly. Rather, it would normally be called by qt6_add_qml_module() to
-# create or update the plugin associated with its backing target.
-#
-# target: The name of the target to use for the qml plugin. If it does not
-#   already exist, it will be created. (REQUIRED)
-#
-# STATIC, SHARED: Explicitly specify the type of plugin library to create.
-#   At most one of these two options can be specified. (OPTIONAL)
-#
-# BACKING_TARGET: The backing target that the plugin is associated with. This
-#   can be the same as ${target}, in which case there is only the one merged
-#   target. If this option is not provided, then URI must be given. (OPTIONAL)
-#
-# URI: Declares the module identifier of the qml module this plugin is
-#   associated with. The module identifier is the (dotted URI notation)
-#   identifier for the qml module. If URI is not given, then a BACKING_TARGET
-#   must be provided and the backing target must have its URI recorded on it
-#   (typically by an earlier call to qt6_add_qml_module()). (OPTIONAL)
-#
-# CLASS_NAME: By default, the class name will be taken from the backing target,
-#   if provided, or falling back to the URI with "Plugin" appended. Any
-#   non-alphanumeric characters in the URI will be replaced with underscores.
-#   (OPTIONAL)
-#
-# OUTPUT_DIRECTORY: Specifies the directory where the plugin library will be
-#   created. When not given, the output directory will be obtained from the
-#   BACKING_TARGET if one has been provided. If an output directory cannot be
-#   obtained from there either, the standard default as provided by CMake
-#   (${CMAKE_CURRENT_BINARY_DIR}) will be used. (OPTIONAL)
-#
-# NO_GENERATE_PLUGIN_SOURCE: A .cpp file will be created for the plugin class
-#   by default and automatically added to the plugin target. Use this option to
-#   indicate that no such .cpp file should be generated. The caller is then
-#   responsible for providing their own plugin class. (OPTIONAL)
-#
 function(qt6_add_qml_plugin target)
     set(args_option
         STATIC
