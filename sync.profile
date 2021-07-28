@@ -20,7 +20,13 @@
     "QtLabsWavefrontMesh" => "$basedir/src/labs/wavefrontmesh",
     "QtLabsQmlModels" => "$basedir/src/labs/models",
     "QtLabsSharedImage" => "$basedir/src/labs/sharedimage",
-    "QtQmlXmlListModel" => "$basedir/src/qmlxmllistmodel"
+    "QtQmlXmlListModel" => "$basedir/src/qmlxmllistmodel",
+    "QtQuickControls2" => "$basedir/src/quickcontrols2",
+    "QtQuickControls2Impl" => "$basedir/src/quickcontrols2impl",
+    "QtQuickDialogs2" => "$basedir/src/quickdialogs2/quickdialogs2",
+    "QtQuickDialogs2Utils" => "$basedir/src/quickdialogs2/quickdialogs2utils",
+    "QtQuickDialogs2QuickImpl" => "$basedir/src/quickdialogs2/quickdialogs2quickimpl",
+    "QtQuickTemplates2" => "$basedir/src/quicktemplates2"
 );
 %inject_headers = (
     "$basedir/src/qml" => [ "^qqmljsgrammar_p.h", "^qqmljsparser_p.h", "^qml_compile_hash_p.h" ],

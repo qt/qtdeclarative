@@ -1,0 +1,49 @@
+Qt 5.15.1 is a bug-fix release. It maintains both forward and backward
+compatibility (source and binary) with Qt 5.15.0.
+
+For more details, refer to the online documentation included in this
+distribution. The documentation is also available online:
+
+  https://doc.qt.io/qt-5.15/index.html
+
+The Qt version 5.15 series is binary compatible with the 5.14.x series.
+Applications compiled for 5.14 will continue to run with 5.15.
+
+Some of the changes listed in this file include issue tracking numbers
+corresponding to tasks in the Qt Bug Tracker:
+
+  https://bugreports.qt.io/
+
+Each of these identifiers can be entered in the bug tracker to obtain more
+information about a particular change.
+
+****************************************************************************
+*                                 Controls                                 *
+****************************************************************************
+
+ - [QTBUG-64151] QQuickSpinBox: fixed "function expressions as statements"
+   warning.
+ - [QTBUG-85804] SwipeDelegate: fixed being able to call close() when
+   pressed. This conflicts with the behavior of SwipeDelegate. The
+   released() or clicked() signals should be used instead.
+ - [QTBUG-85806] SwipeDelegate: fixed closed() being emitted when already
+   closed.
+ - [QTBUG-85884] Fixed Dialog not releasing focus when it was hidden as a
+   result of losing focus.
+ - [QTBUG-84488] Fixed ComboBox popup position jumping when opened with
+   styles that user enter transitions.
+ - [QTBUG-84579] Fixed crash on exit when centering Popup within Overlay in
+   StackView item.
+ - [QTBUG-81976][QTBUG-86131] Fixed various "Cannot read property 'width'
+   of null" errors.
+ - [QTBUG-84381] StackView: fixed heap-use-after-free when pushing after clear.
+ - [QTBUG-83554] ComboBox: fixed currentValue not being updated on model
+   changes.
+
+Platform
+--------
+
+ - MenuItem:
+   * [QTBUG-84102] Fix MenuItem.icon.* properties not being accessible when
+     importing version 1.1.
+

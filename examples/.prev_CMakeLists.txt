@@ -9,5 +9,6 @@ endif()
 if(TARGET Qt::Quick)
     add_subdirectory(quick)
 endif()
+add_subdirectory(quickcontrols2)
 
 qt_examples_build_end()

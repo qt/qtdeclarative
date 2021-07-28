@@ -1,0 +1,76 @@
+/****************************************************************************
+**
+** Copyright (C) 2021 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \page qtquickcontrols2-macOS.html
+    \title macOS Style
+
+    The macOS style is a style that looks native on macOS.
+    \l {detailed-desc-macOS}{More...}
+
+    \styleimport {QtQuick.Controls.macOS} {Qt 6.0}
+
+    \target detailed-desc-macOS
+
+    The macOS style is a style that looks native on macOS. The controls are drawn run-time using
+    native frameworks, and is therefore only available for applications running on macOS.
+
+    \note Be aware that the apperance of this style can change from one minor Qt version to the
+    next, to better blend in with native applications on the platform.
+
+    \table
+        \row
+            \li \image qtquickcontrols2-macos-light.png
+                \caption The macOS style in light theme
+            \li \image qtquickcontrols2-macos-dark.png
+                \caption The macOS style in dark theme
+    \endtable
+
+    To run an application with the macOS style, see
+    \l {Using Styles in Qt Quick Controls}.
+
+    \section2 Current state
+
+    The macOS style is under development, and some controls are not yet supported. Those
+    controls are: \l BusyIndicator, \l DelayButton, \l PageIndicator, \l RangeSlider, \l Switch, \l TabBar and
+    \l Tumbler. Those will fall back to use the \l {Fusion Style}.
+
+    \section2 Customization
+
+    The goal of the macOS style is to for the controls look and feel as similar as possible to the
+    native controls in UIKit. The style will follow the theme and colors configured globally from
+    System Preferences, and does not come with a separate customization API on top of that.
+
+    \note If you want to style a control, you should set both the
+    \l {Control::background}{background} and the \l {Control::contentItem}{contentItem}, rather than
+    just one of them. This is because the macOS style will in some cases draw both the contents and
+    the background into the default background item, which will not look good if the application
+    combines this with a custom contentItem. By setting them both, you are guaranteed that the
+    control will look the same on all platforms, for all styles.
+
+    \b {See also} \l {Styling Qt Quick Controls}
+*/
