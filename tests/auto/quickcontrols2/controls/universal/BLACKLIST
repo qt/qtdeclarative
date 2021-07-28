@@ -1,0 +1,5 @@
+# See qtbase/src/testlib/qtestblacklist.cpp for format
+
+# QTBUG-70597
+[Tumbler::test_itemsCorrectlyPositioned]
+*

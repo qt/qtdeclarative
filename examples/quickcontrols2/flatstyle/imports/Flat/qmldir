@@ -1,0 +1,5 @@
+module Flat
+
+Button 1.0 Button.qml
+CheckBox 1.0 CheckBox.qml
+Switch 1.0 Switch.qml

@@ -8,3 +8,6 @@ dependencies:
   ../qtsvg:
     ref: ceb0cb16621913a9f8e45a3e438b221279a7d907
     required: false
+  ../qtimageformats:
+    ref: 22113e2bd887cf84871eb04a7130a52d9c25730f
+    required: false

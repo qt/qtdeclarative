@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="14"
+   height="18"
+   viewBox="0 0 14 18"
+   version="1.1"
+   id="svg2"
+   inkscape:version="1.1-alpha (b0f32e08fc, 2021-03-07)"
+   sodipodi:docname="file-icon-round.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <path
+     style="fill:none;stroke:#757575;stroke-width:1;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 1.5003822,2.5063148 1.5000273,15.5 A 0.99997269,0.99997269 45.000782 0 0 2.5,16.5 h 9 a 1,1 135 0 0 1,-1 V 6.3440001 A 2.3479106,2.3479106 66.930332 0 0 11.778973,4.6510931 L 9.221027,2.192907 A 2.4805476,2.4805476 21.904486 0 0 7.5000004,1.5009022 l -4.9995913,0.00451 A 1.0009299,1.0009299 134.97494 0 0 1.5003822,2.5063148 Z"
+     id="path917"
+     sodipodi:nodetypes="cccccc"
+     inkscape:path-effect="#path-effect1367"
+     inkscape:original-d="M 1.5004095,1.5063148 1.5,16.5 h 11 V 5.3440001 L 8.5,1.5 Z" />
+  <path
+     id="path921"
+     style="fill:none;stroke:#757575;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+     d="M 12.35,6.5 H 8.5 a 1,1 45 0 1 -1,-1 V 1.55"
+     inkscape:path-effect="#path-effect1365"
+     inkscape:original-d="M 12.35,6.5 H 7.5 V 1.55"
+     sodipodi:nodetypes="ccc" />
+  <metadata
+     id="metadata10">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs8">
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect1367"
+       is_visible="true"
+       lpeversion="1"
+       satellites_param="F,0,0,1,0,1,0,1 @ F,0,0,1,0,1,0,1 @ F,0,0,1,0,1,0,1 @ F,0,0,1,0,1,0,1 @ F,0,0,1,0,1,0,1"
+       unit="px"
+       method="auto"
+       mode="F"
+       radius="1"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect1365"
+       is_visible="true"
+       lpeversion="1"
+       satellites_param="F,0,0,1,0,0,0,1 @ F,0,0,1,0,1,0,1 @ F,0,0,1,0,1,0,1"
+       unit="px"
+       method="auto"
+       mode="F"
+       radius="1"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+  </defs>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1848"
+     inkscape:window-height="1016"
+     id="namedview6"
+     showgrid="true"
+     inkscape:zoom="32.000001"
+     inkscape:cx="7.8906248"
+     inkscape:cy="9.7343747"
+     inkscape:window-x="72"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     inkscape:document-rotation="0"
+     inkscape:pagecheckerboard="0">
+    <inkscape:grid
+       type="xygrid"
+       id="grid856" />
+  </sodipodi:namedview>
+  <g
+     inkscape:groupmode="layer"
+     id="layer1"
+     inkscape:label="file-icon-round"
+     transform="translate(2.046,3.0914383)" />
+  <rect
+     style="fill:none;stroke-width:4;stroke-linejoin:round"
+     id="rect2270"
+     width="14"
+     height="18"
+     x="0"
+     y="0" />
+</svg>
