@@ -339,10 +339,10 @@ function(qt6_add_qml_module target)
         QT_QML_MODULE_LIBINFIX "${arg___QT_INTERNAL_QT_LIBINFIX}"
         QT_QML_MODULE_PLUGIN_TARGET "${arg_PLUGIN_TARGET}"
         QT_QML_MODULE_DESIGNER_SUPPORTED "${arg_DESIGNER_SUPPORTED}"
-        QT_QML_MODULE_OUTPUT_DIR "${arg_OUTPUT_DIRECTORY}"
+        QT_QML_MODULE_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
         QT_QML_MODULE_RESOURCE_PREFIX "${qt_qml_module_resource_prefix}"
-        QT_QML_PAST_MAJOR_VERSIONS "${arg_PAST_MAJOR_VERSIONS}"
-        QT_QMLTYPES_FILENAME "${arg_TYPEINFO}"
+        QT_QML_MODULE_PAST_MAJOR_VERSIONS "${arg_PAST_MAJOR_VERSIONS}"
+        QT_QML_MODULE_TYPEINFO "${arg_TYPEINFO}"
 
         # TODO: Check how this is used by qt6_android_generate_deployment_settings()
         QT_QML_IMPORT_PATH "${arg_IMPORT_PATH}"
@@ -722,7 +722,7 @@ function(_qt_internal_target_generate_qmldir target)
         string(APPEND content "designersupported\n")
     endif()
 
-    _qt_internal_qmldir_item(typeinfo QT_QMLTYPES_FILENAME)
+    _qt_internal_qmldir_item(typeinfo QT_QML_MODULE_TYPEINFO)
 
     _qt_internal_qmldir_item_list(import QT_QML_MODULE_IMPORTS)
     _qt_internal_qmldir_item_list("optional import" QT_QML_MODULE_OPTIONAL_IMPORTS)
@@ -762,7 +762,7 @@ endfunction()
 #       scope that has already finished being processed earlier in the CMake run.
 function(_qt_internal_write_deferred_qmldir_file target)
     get_target_property(__qt_qmldir_content ${target} _qt_internal_qmldir_content)
-    get_target_property(out_dir ${target} QT_QML_MODULE_OUTPUT_DIR)
+    get_target_property(out_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
     set(qmldir_file "${out_dir}/qmldir")
     configure_file(${__qt_qml_macros_module_base_dir}/Qt6qmldirTemplate.cmake.in ${qmldir_file} @ONLY)
 endfunction()
@@ -1133,7 +1133,7 @@ function(qt6_target_qml_sources target)
     get_target_property(no_qmldir              ${target} QT_QML_MODULE_NO_GENERATE_QMLDIR)
     get_target_property(resource_prefix        ${target} QT_QML_MODULE_RESOURCE_PREFIX)
     get_target_property(qml_module_version     ${target} QT_QML_MODULE_VERSION)
-    get_target_property(output_dir             ${target} QT_QML_MODULE_OUTPUT_DIR)
+    get_target_property(output_dir             ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
 
     if(NOT output_dir)
         # Probably not a qml module. We still want to support tooling for this
@@ -1467,7 +1467,7 @@ function(qt6_qml_type_registration target)
     if (NOT import_name)
         message(FATAL_ERROR "Target ${target} is not a QML module")
     endif()
-    get_target_property(qmltypes_output_name ${target} QT_QMLTYPES_FILENAME)
+    get_target_property(qmltypes_output_name ${target} QT_QML_MODULE_TYPEINFO)
     if (NOT qmltypes_output_name)
         get_target_property(compile_definitions_list ${target} COMPILE_DEFINITIONS)
         list(FIND compile_definitions_list QT_PLUGIN is_a_plugin)
@@ -1496,7 +1496,7 @@ function(qt6_qml_type_registration target)
     qt6_extract_metatypes(${target} ${meta_types_json_args})
 
     get_target_property(import_version ${target} QT_QML_MODULE_VERSION)
-    get_target_property(output_dir ${target} QT_QML_MODULE_OUTPUT_DIR)
+    get_target_property(output_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
     get_target_property(target_source_dir ${target} SOURCE_DIR)
     get_target_property(target_binary_dir ${target} BINARY_DIR)
     get_target_property(target_metatypes_file ${target} INTERFACE_QT_META_TYPES_BUILD_FILE)
@@ -1537,7 +1537,7 @@ function(qt6_qml_type_registration target)
     )
 
     # Add past minor versions
-    get_target_property(past_major_versions ${target} QT_QML_PAST_MAJOR_VERSIONS)
+    get_target_property(past_major_versions ${target} QT_QML_MODULE_PAST_MAJOR_VERSIONS)
 
     if (past_major_versions OR past_major_versions STREQUAL "0")
         foreach (past_major_version ${past_major_versions})

@@ -342,7 +342,7 @@ function(qt_internal_add_qml_module target)
 
     if(NOT arg_NO_GENERATE_QMLTYPES)
         qt_install(
-            FILES ${arg_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:${target},QT_QMLTYPES_FILENAME>
+            FILES ${arg_OUTPUT_DIRECTORY}/$<TARGET_PROPERTY:${target},QT_QML_MODULE_TYPEINFO>
             DESTINATION "${arg_INSTALL_DIRECTORY}"
         )
     endif()
