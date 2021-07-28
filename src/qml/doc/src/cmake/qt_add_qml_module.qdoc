@@ -146,15 +146,15 @@ The \l OUTPUT_DIRECTORY argument determines where the \c qmldir and typeinfo
 files will be written to. If the QML module has a plugin, that plugin will also
 be created in the same directory as the \c qmldir file.
 
-In static builds, the backing target's \c{.qml} files will be scanned during
-the CMake configure run to determine the imports used by the module and set up
-linking relationships. When a \c{.qml} file is added to or removed from the
-module, CMake will normally re-run automatically and the relevant files will be
-re-scanned, since a \c{CMakeLists.txt} file will have been modified. During the
-course of development, an existing \c{.qml} file may add or remove an import or
-a type. On its own, this would not cause CMake to re-run automatically, so you
-should explicitly re-run CMake to force the \c qmldir file to be regenerated
-and any linking relationships to be updated.
+If using a statically built Qt, the backing target's \c{.qml} files will be
+scanned during the CMake configure run to determine the imports used by the
+module and set up linking relationships. When a \c{.qml} file is added to or
+removed from the module, CMake will normally re-run automatically and the
+relevant files will be re-scanned, since a \c{CMakeLists.txt} file will have
+been modified. During the course of development, an existing \c{.qml} file may
+add or remove an import or a type. On its own, this would not cause CMake to
+re-run automatically, so you should explicitly re-run CMake to force the
+\c qmldir file to be regenerated and any linking relationships to be updated.
 
 The backing target's C++ sources are scanned at build time to generate a
 typeinfo file and a C++ file to register the associated types. The generated
@@ -227,10 +227,9 @@ execute manually on demand.
 \section1 Arguments
 
 The \c target specifies the name of the backing target for the QML module.
-By default, it will be created as a shared library if CMake's
-\c BUILD_SHARED_LIBS variable is set to true, or as a static library otherwise.
-This choice can be explicitly overridden with the \c STATIC or \c SHARED
-options.
+By default, it is created as a shared library if Qt was built as shared
+libraries, or as a static library otherwise. This choice can be explicitly
+overridden with the \c STATIC or \c SHARED options.
 
 The plugin target associated with the QML module can be specified using the
 \c PLUGIN_TARGET argument. The \c PLUGIN_TARGET can be the same as the backing
@@ -249,7 +248,7 @@ created by the command so that they are created as the appropriate target type.
 If the backing \c target is a static library, the plugin will also be created
 as a static library. If the backing \c target is a shared library, the plugin
 will be created as a module library. If an existing \c target is passed in and
-it is an executable target, then no plugin target will be created or used.
+it is an executable target, there should be no plugin.
 
 In certain situations, the project may want to delay creating the plugin target
 until after the call. The \c NO_CREATE_PLUGIN_TARGET option can be given in
