@@ -27,7 +27,6 @@
 ****************************************************************************/
 
 #include <QQmlEngine>
-#include <QtQml/qqmlextensionplugin.h>
 #include <QQmlComponent>
 #include <QObject>
 #include <qtest.h>
@@ -125,8 +124,6 @@ void tst_basicapp::qmldirContents()
         QCOMPARE(qmldirInResources.readAll(), contents);
     }
 }
-
-Q_IMPORT_QML_PLUGIN(BasicExtension)
 
 QTEST_MAIN(tst_basicapp)
 #include "tst_qmlbasicapp.moc"
