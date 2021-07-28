@@ -34,8 +34,14 @@ add_subdirectory(qmldiskcache)
 add_subdirectory(qqmlmetatype)
 if(TARGET Qt::Quick)
     add_subdirectory(qmltc_manual)
+    # This test always creates static plugins. To avoid linker command line
+    # ordering issues, we need at least CMake 3.21 and we cannot include the
+    # test if qmlimportscanner is being built as part of the main project.
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.21 AND
+        (QT_BUILD_STANDALONE_TESTS OR QT6_IS_SHARED_LIBS_BUILD))
+        add_subdirectory(qmlbasicapp)
+    endif()
 endif()
-add_subdirectory(qmlbasicapp)
 if(TARGET Qt::Widgets)
     add_subdirectory(qjsengine)
     add_subdirectory(qjsvalue)
