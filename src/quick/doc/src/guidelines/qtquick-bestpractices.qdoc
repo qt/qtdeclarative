@@ -188,134 +188,20 @@ The following snippet demonstrates examples of models written in QML:
 Use \l {QAbstractItemModel Subclass}{C++} for dynamic data sets that are large
 or frequently modified.
 
-\section2 Interacting with QML from C++
-
-Although Qt enables you to manipulate QML from C++, it is not recommended to do
-so. To explain why, let's take a look at a simplified example.
-
-\section3 Pulling References from QML
-
-Suppose we were writing the UI for a settings page:
-
-\qml
-    import QtQuick
-    import QtQuick.Controls
-
-    Page {
-        Button {
-            text: qsTr("Restore default settings")
-        }
-    }
-\endqml
-
-We want the button to do something in C++ when it is clicked. We know objects
-in QML can emit change signals just like they can in C++, so we give the button
-an \l [QML]{QtObject::}{objectName} so that we can find it from C++:
-
-\qml
-    Button {
-        objectName: "restoreDefaultsButton"
-        text: qsTr("Restore default settings")
-    }
-\endqml
-
-Then, in C++, we find that object and connect to its change signal:
-
-\code
-    #include <QGuiApplication>
-    #include <QQmlApplicationEngine>
-    #include <QSettings>
-
-    class Backend : public QObject
-    {
-        Q_OBJECT
-
-    public:
-        Backend() {}
-
-    public slots:
-        void restoreDefaults() {
-            settings.setValue("loadLastProject", QVariant(false));
-        }
-
-    private:
-        QSettings settings;
-    };
-
-    int main(int argc, char *argv[])
-    {
-        QGuiApplication app(argc, argv);
-
-        QQmlApplicationEngine engine;
-        engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-        if (engine.rootObjects().isEmpty())
-            return -1;
-
-        Backend backend;
-
-        QObject *rootObject = engine.rootObjects().first();
-        QObject *restoreDefaultsButton = rootObject->findChild<QObject*>("restoreDefaultsButton");
-        QObject::connect(restoreDefaultsButton, SIGNAL(clicked()),
-            &backend, SLOT(restoreDefaults()));
-
-        return app.exec();
-    }
-
-    #include "main.moc"
-\endcode
-
-With this approach, references to objects are "pulled" from QML.
-The problem with this is that the C++ logic layer depends on the QML
-presentation layer. If we were to refactor the QML in such a way that the
-\c objectName changes, or some other change breaks the ability for the C++
-to find the QML object, our workflow becomes much more complicated and tedious.
-
-\section3 Pushing References to QML
+\section2 Exposing Data from C++ to QML
 
 Refactoring QML is a lot easier than refactoring C++, so in order to make
 maintenance pain-free, we should strive to keep C++ types unaware of QML as
 much as possible. This can be achieved by "pushing" references to C++ types
-into QML:
+into QML.
 
-\code
-    int main(int argc, char *argv[])
-    {
-        QGuiApplication app(argc, argv);
-
-        Backend backend;
-
-        QQmlApplicationEngine engine;
-        engine.rootContext()->setContextProperty("backend", &backend);
-        engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
-        if (engine.rootObjects().isEmpty())
-            return -1;
-
-        return app.exec();
-    }
-\endcode
-
-The QML then calls the C++ slot directly:
-
-\qml
-    import QtQuick
-    import QtQuick.Controls
-
-    Page {
-        Button {
-            text: qsTr("Restore default settings")
-            onClicked: backend.restoreDefaults()
-        }
-    }
-\endqml
+This can be done by using \l {Required Property}{required properties} and
+setting them via \l QQmlApplicationEngine::setInitialProperties. It is also
+possible to create one or multiple \l {QML_SINGLETON}{singletons} which will
+return all the data the C++ side wants to provide to QML.
 
 With this approach, the C++ remains unchanged in the event that the QML needs
 to be refactored in the future.
-
-In the example above, we set a context property on the root context to expose
-the C++ object to QML. This means that the property is available to every
-component loaded by the engine. Context properties are useful for objects that
-must be available as soon as the QML is loaded and cannot be instantiated in
-QML.
 
 For a quick guide to choosing the correct approach to expose C++ types to QML,
 see \l {Choosing the Correct Integration Method Between C++ and QML}.
