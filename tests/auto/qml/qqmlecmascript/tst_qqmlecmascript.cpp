@@ -240,6 +240,7 @@ private slots:
     void function();
     void topLevelGeneratorFunction();
     void generatorCrashNewProperty();
+    void generatorCallsGC();
     void qtbug_10696();
     void qtbug_11606();
     void qtbug_11600();
@@ -6503,6 +6504,15 @@ void tst_qqmlecmascript::generatorCrashNewProperty()
     QCOMPARE(o->property("a").toInt(), 42);
     QCOMPARE(o->property("b").toInt(), 12);
     QCOMPARE(o->property("c").toInt(), 42);
+}
+
+void tst_qqmlecmascript::generatorCallsGC()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("generatorCallsGC.qml"));
+
+    QScopedPointer<QObject> o(component.create()); // should not crash
+    QVERIFY2(o != nullptr, qPrintable(component.errorString()));
 }
 
 // Test the "Qt.include" method

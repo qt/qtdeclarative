@@ -87,7 +87,6 @@ struct GeneratorPrototype : FunctionObject {
 
 #define GeneratorObjectMembers(class, Member) \
     Member(class, Pointer, ExecutionContext *, context) \
-    Member(class, Pointer, GeneratorFunction *, function) \
     Member(class, NoMark, GeneratorState, state) \
     Member(class, NoMark, CppStackFrame, cppFrame) \
     Member(class, Pointer, ArrayObject *, values) \
