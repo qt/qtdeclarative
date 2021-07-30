@@ -1088,6 +1088,12 @@ endif()
 #
 function(qt6_target_qml_sources target)
 
+    get_target_property(uri        ${target} QT_QML_MODULE_URI)
+    get_target_property(output_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
+    if(NOT uri OR NOT output_dir)
+        message(FATAL_ERROR "Target ${target} is not a QML module")
+    endif()
+
     set(args_option
         NO_LINT
         NO_CACHEGEN
@@ -1133,7 +1139,6 @@ function(qt6_target_qml_sources target)
     get_target_property(no_qmldir              ${target} QT_QML_MODULE_NO_GENERATE_QMLDIR)
     get_target_property(resource_prefix        ${target} QT_QML_MODULE_RESOURCE_PREFIX)
     get_target_property(qml_module_version     ${target} QT_QML_MODULE_VERSION)
-    get_target_property(output_dir             ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
 
     if(NOT output_dir)
         # Probably not a qml module. We still want to support tooling for this
