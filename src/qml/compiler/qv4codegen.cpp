@@ -2059,6 +2059,9 @@ void Codegen::endVisit(CallExpression *ast)
 
 void Codegen::handleCall(Reference &base, Arguments calldata, int slotForFunction, int slotForThisObject, bool optional)
 {
+    if (base.sourceLocation.isValid())
+        bytecodeGenerator->setLocation(base.sourceLocation);
+
     //### Do we really need all these call instructions? can's we load the callee in a temp?
     if (base.type == Reference::Member) {
         if (!disable_lookups && useFastLookups) {
@@ -2492,7 +2495,7 @@ bool Codegen::visit(FieldMemberExpression *ast)
     }
 
     setExprResult(Reference::fromMember(
-            base, ast->name.toString(), ast->firstSourceLocation(),
+            base, ast->name.toString(), ast->lastSourceLocation(),
             ast->isOptional ? m_optionalChainLabels.take(ast) : Moth::BytecodeGenerator::Label(),
             label.has_value() ? label.value() : Moth::BytecodeGenerator::Label()));
 
