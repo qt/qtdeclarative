@@ -189,7 +189,7 @@ public:
     bool doAction(const QString &actionName);
     void availableActions(QStringList *actions) const;
 
-    Q_INVOKABLE static QString stripHtml(const QString &html);
+    Q_REVISION(6, 2) Q_INVOKABLE static QString stripHtml(const QString &html);
 
 public Q_SLOTS:
     void valueChanged() {

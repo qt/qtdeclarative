@@ -75,7 +75,7 @@ public:
 #endif
 #endif
     Q_INVOKABLE bool saveToFile(const QString &fileName) const;
-    Q_INVOKABLE bool saveToFile(const QUrl &fileName) const;
+    Q_REVISION(6, 2) Q_INVOKABLE bool saveToFile(const QUrl &fileName) const;
 
 protected:
     bool event(QEvent *) override;
