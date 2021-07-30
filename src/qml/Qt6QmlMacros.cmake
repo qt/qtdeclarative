@@ -1404,7 +1404,7 @@ function(qt6_target_qml_sources target)
             # progressively over multiple calls.
             if(NOT TARGET ${target}_tooling)
                 add_library(${target}_tooling INTERFACE)
-                target_link_libraries(${target} PRIVATE $<BUILD_INTERFACE:${target}_tooling>)
+                add_dependencies(${target} ${target}_tooling)
             endif()
             target_sources(${target}_tooling PRIVATE ${copied_files})
         endif()
