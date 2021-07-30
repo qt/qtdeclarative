@@ -333,11 +333,6 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("badAliasProperty1")
             << QStringLiteral("badAliasProperty.qml")
             << QString("Warning: %1:3:1: Cannot resolve alias \"wrong\"") << QString() << false;
-    QTest::newRow("badAliasProperty2")
-            << QStringLiteral("badAliasProperty.qml")
-            << QString("Warning: %1:5:32: Property \"nowhere\" not found on type \"QtObject\"")
-            << QString()
-            << false;
     QTest::newRow("badAliasExpression")
             << QStringLiteral("badAliasExpression.qml")
             << QString("Warning: %1:5:26: Invalid alias expression. Only IDs and field member "

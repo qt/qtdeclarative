@@ -130,6 +130,7 @@ public:
     bool registerContains(const QQmlJSRegisterContent &reg,
                           const QQmlJSScope::ConstPtr &type) const;
     QQmlJSScope::ConstPtr containedType(const QQmlJSRegisterContent &container) const;
+    QString containedTypeName(const QQmlJSRegisterContent &container) const;
 
     TypeStorage typeStorage() const { return m_typeStorage; }
     Semantics semantics() const { return m_semantics; }

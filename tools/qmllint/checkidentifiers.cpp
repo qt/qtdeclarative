@@ -241,12 +241,6 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
                 }
             }
         }
-
-        m_logger->logWarning(QLatin1String("Property \"%1\" not found on type \"%2\"")
-                                     .arg(access.m_name)
-                                     .arg(scope->internalName().isEmpty() ? scope->baseTypeName()
-                                                                          : scope->internalName()),
-                             Log_Type, access.m_location);
         return;
     }
 }

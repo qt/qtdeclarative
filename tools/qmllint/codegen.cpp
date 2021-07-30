@@ -54,7 +54,10 @@ void Codegen::setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document)
             m_importer, document,
             QQmlJSImportVisitor::implicitImportDirectory(m_fileName,
                                                          m_importer->resourceFileMapper()),
-            m_qmltypesFiles, QQmlJSTypeResolver::Indirect, QQmlJSTypeResolver::Dynamic, m_logger);
+            // Type resolving is only static here due the inability to resolve parent properties
+            // dynamically (QTBUG-95530). Currently this has no other side effects. Re-evaluate once
+            // that changes.
+            m_qmltypesFiles, QQmlJSTypeResolver::Indirect, QQmlJSTypeResolver::Static, m_logger);
 }
 
 void Codegen::setScope(const QmlIR::Object *object, const QmlIR::Object *scope)

@@ -468,11 +468,33 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
 
 void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
 {
-    m_state.accumulatorOut = m_typeResolver->memberType(m_state.accumulatorIn, propertyName);
+    m_state.accumulatorOut =
+            m_typeResolver->memberType(m_state.accumulatorIn, m_state.savedPrefix + propertyName);
+
+    if (!m_state.accumulatorOut.isValid() && m_typeResolver->isPrefix(propertyName)) {
+        m_state.savedPrefix = propertyName + u"."_qs;
+        m_state.accumulatorOut = m_state.accumulatorIn.isValid()
+                ? m_state.accumulatorIn
+                : m_typeResolver->globalType(m_currentScope);
+        return;
+    }
+
+    m_state.savedPrefix.clear();
 
     if (!m_state.accumulatorOut.isValid()) {
         setError(u"Cannot load property %1 from %2."_qs
                          .arg(propertyName, m_state.accumulatorIn.descriptiveName()));
+
+        const QString typeName = m_typeResolver->containedTypeName(m_state.accumulatorIn);
+
+        if (typeName == u"QVariant")
+            return;
+        if (m_state.accumulatorIn.isList() && propertyName == u"length")
+            return;
+
+        m_logger->logWarning(
+                u"Property \"%1\" not found on type \"%2\""_qs.arg(propertyName).arg(typeName),
+                Log_Type, getCurrentSourceLocation());
         return;
     }
 
@@ -607,6 +629,12 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
     if (!member.isMethod()) {
         setError(u"Type %1 does not have a property %2 for calling"_qs
                          .arg(callBase.descriptiveName(), propertyName));
+
+        const QString typeName = m_typeResolver->containedTypeName(m_state.accumulatorIn);
+
+        m_logger->logWarning(
+                u"Property \"%1\" not found on type \"%2\""_qs.arg(propertyName).arg(typeName),
+                Log_Type, getCurrentSourceLocation());
         return;
     }
 
@@ -1096,7 +1124,10 @@ void QQmlJSTypePropagator::generate_CmpInstanceOf(int lhs)
 void QQmlJSTypePropagator::generate_As(int lhs)
 {
     const QQmlJSRegisterContent input = checkedInputRegister(lhs);
-    const QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(m_state.accumulatorIn);
+    QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(m_state.accumulatorIn);
+
+    if (m_state.accumulatorIn.variant() == QQmlJSRegisterContent::ScopeAttached)
+        contained = m_state.accumulatorIn.scopeType();
 
     if (m_typeResolver->containedType(input)->accessSemantics()
                 != QQmlJSScope::AccessSemantics::Reference

@@ -353,6 +353,19 @@ QQmlJSTypeResolver::containedType(const QQmlJSRegisterContent &container) const
     return {};
 }
 
+QString QQmlJSTypeResolver::containedTypeName(const QQmlJSRegisterContent &container) const
+{
+    QQmlJSScope::ConstPtr type;
+
+    // Use the type proper instead of the attached type
+    if (container.variant() == QQmlJSRegisterContent::ScopeAttached)
+        type = container.scopeType();
+    else
+        type = containedType(container);
+
+    return type->internalName().isEmpty() ? type->baseTypeName() : type->internalName();
+}
+
 bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
                                           const QQmlJSScope::ConstPtr &to) const
 {
