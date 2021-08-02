@@ -511,6 +511,12 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
             return;
         }
 
+        if (!m_state.accumulatorOut.property().type()) {
+            m_logger->logWarning(
+                    QString::fromLatin1("Type of property \"%2\" not found").arg(propertyName),
+                    Log_Type, getCurrentSourceLocation());
+        }
+
         rejectShadowableMember(m_state.accumulatorIn, m_state.accumulatorOut);
     }
 }

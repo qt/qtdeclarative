@@ -309,15 +309,10 @@ void CheckIdentifiers::operator()(
                     continue;
 
                 const auto binding = qmlScope->propertyBinding(memberAccessBase.m_name);
-                if (binding.hasValue()) {
+                if (binding.hasValue())
                     checkMemberAccess(memberAccessChain, binding.value(), &property);
-                } else if (!property.type()) {
-                    m_logger->logWarning(QString::fromLatin1("Type of property \"%2\" not found")
-                                                 .arg(memberAccessBase.m_name),
-                                         Log_Type, memberAccessBase.m_location);
-                } else {
+                else if (property.type())
                     checkMemberAccess(memberAccessChain, property.type(), &property);
-                }
 
                 continue;
             }
