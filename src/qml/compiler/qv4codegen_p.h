@@ -80,14 +80,28 @@ struct ControlFlow;
 struct ControlFlowCatch;
 struct ControlFlowFinally;
 
+class Q_QMLCOMPILER_PRIVATE_EXPORT CodegenWarningInterface
+{
+public:
+    virtual void reportVarUsedBeforeDeclaration(const QString &name, const QString &fileName,
+                                                QQmlJS::SourceLocation declarationLocation,
+                                                QQmlJS::SourceLocation accessLocation);
+};
+
+static CodegenWarningInterface *defaultCodegenWarningInterface()
+{
+    static CodegenWarningInterface interface;
+    return &interface;
+}
+
 class Q_QMLCOMPILER_PRIVATE_EXPORT Codegen: protected QQmlJS::AST::Visitor
 {
 protected:
     using BytecodeGenerator = QV4::Moth::BytecodeGenerator;
     using Instruction = QV4::Moth::Instruction;
 public:
-    Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict);
-
+    Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict,
+            CodegenWarningInterface *interface = defaultCodegenWarningInterface());
 
     void generateFromProgram(const QString &fileName,
                              const QString &finalUrl,
@@ -802,6 +816,7 @@ protected:
     bool _fileNameIsUrl;
     ErrorType _errorType = NoError;
     QQmlJS::DiagnosticMessage _error;
+    CodegenWarningInterface *_interface;
 
     class TailCallBlocker
     {

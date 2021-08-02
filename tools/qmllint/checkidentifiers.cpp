@@ -209,20 +209,6 @@ void CheckIdentifiers::operator()(
                 continue;
 
             auto memberAccessBase = memberAccessChain.takeFirst();
-            const auto jsId = currentScope->findJSIdentifier(memberAccessBase.m_name);
-            if (jsId.has_value() && jsId->kind != QQmlJSScope::JavaScriptIdentifier::Injected) {
-                if (memberAccessBase.m_location.end() < jsId->location.begin()) {
-                    // TODO: Is there a more fitting category?
-                    m_logger->logWarning(
-                            QStringLiteral("Variable \"%1\" is used here before its declaration. "
-                                           "The declaration is at %4:%5.")
-                                    .arg(memberAccessBase.m_name)
-                                    .arg(jsId->location.startLine)
-                                    .arg(jsId->location.startColumn),
-                            Log_Type, memberAccessBase.m_location);
-                }
-                continue;
-            }
 
             auto it = qmlIDs.find(memberAccessBase.m_name);
             if (it != qmlIDs.end()) {

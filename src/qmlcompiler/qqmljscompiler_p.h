@@ -94,10 +94,14 @@ using QQmlJSSaveFunction
 
 bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFunction,
                      QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error,
-                     bool storeSourceLocation = false);
+                     bool storeSourceLocation = false,
+                     QV4::Compiler::CodegenWarningInterface *interface =
+                             QV4::Compiler::defaultCodegenWarningInterface());
 bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                      QQmlJSSaveFunction saveFunction, QQmlJSAotCompiler *aotCompiler,
-                     QQmlJSCompileError *error, bool storeSourceLocation = false);
+                     QQmlJSCompileError *error, bool storeSourceLocation = false,
+                     QV4::Compiler::CodegenWarningInterface *interface =
+                             QV4::Compiler::defaultCodegenWarningInterface());
 bool qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl,
                     QQmlJSSaveFunction saveFunction, QQmlJSCompileError *error);
 

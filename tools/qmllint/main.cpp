@@ -28,6 +28,7 @@
 
 #include "findwarnings.h"
 #include "codegen.h"
+#include "codegenwarninginterface.h"
 #include "../shared/qqmltoolingsettings.h"
 
 #include <QtQmlCompiler/private/qqmljsresourcefilemapper_p.h>
@@ -190,7 +191,8 @@ static bool lint_file(const QString &filename, const bool silent, QJsonArray *js
 
             QLoggingCategory::setFilterRules(u"qt.qml.compiler=false"_qs);
 
-            qCompileQmlFile(filename, saveFunction, &codegen, &error, true);
+            CodegenWarningInterface interface(&v.logger());
+            qCompileQmlFile(filename, saveFunction, &codegen, &error, true, &interface);
 
             success &= !v.logger().hasWarnings() && !v.logger().hasErrors();
 

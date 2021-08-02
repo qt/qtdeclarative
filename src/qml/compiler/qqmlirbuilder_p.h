@@ -586,7 +586,9 @@ private:
 
 struct Q_QMLCOMPILER_PRIVATE_EXPORT JSCodeGen : public QV4::Compiler::Codegen
 {
-    JSCodeGen(Document *document, const QSet<QString> &globalNames);
+    JSCodeGen(Document *document, const QSet<QString> &globalNames,
+              QV4::Compiler::CodegenWarningInterface *interface =
+                      QV4::Compiler::defaultCodegenWarningInterface());
 
     // Returns mapping from input functions to index in IR::Module::functions / compiledData->runtimeFunctions
     QVector<int>

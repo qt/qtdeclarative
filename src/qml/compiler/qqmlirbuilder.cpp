@@ -1903,8 +1903,10 @@ char *QmlUnitGenerator::writeBindings(char *bindingPtr, const Object *o, Binding
     return bindingPtr;
 }
 
-JSCodeGen::JSCodeGen(Document *document, const QSet<QString> &globalNames)
-    : QV4::Compiler::Codegen(&document->jsGenerator, /*strict mode*/false), document(document)
+JSCodeGen::JSCodeGen(Document *document, const QSet<QString> &globalNames,
+                     QV4::Compiler::CodegenWarningInterface *interface)
+    : QV4::Compiler::Codegen(&document->jsGenerator, /*strict mode*/ false, interface),
+      document(document)
 {
     m_globalNames = globalNames;
     _module = &document->jsModule;

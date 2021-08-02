@@ -75,6 +75,16 @@ using namespace QV4::Compiler;
 using namespace QQmlJS;
 using namespace QQmlJS::AST;
 
+void CodegenWarningInterface::reportVarUsedBeforeDeclaration(
+        const QString &name, const QString &fileName, QQmlJS::SourceLocation declarationLocation,
+        QQmlJS::SourceLocation accessLocation)
+{
+    qCWarning(lcQmlCompiler).nospace().noquote()
+            << fileName << ":" << accessLocation.startLine << ":" << accessLocation.startColumn
+            << " Variable \"" << name << "\" is used before its declaration at "
+            << declarationLocation.startLine << ":" << declarationLocation.startColumn << ".";
+}
+
 static inline void setJumpOutLocation(QV4::Moth::BytecodeGenerator *bytecodeGenerator,
                                       const Statement *body, const SourceLocation &fallback)
 {
@@ -94,14 +104,16 @@ static inline void setJumpOutLocation(QV4::Moth::BytecodeGenerator *bytecodeGene
     }
 }
 
-Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict)
-    : _module(nullptr)
-    , _returnAddress(-1)
-    , _context(nullptr)
-    , _labelledStatement(nullptr)
-    , jsUnitGenerator(jsUnitGenerator)
-    , _strictMode(strict)
-    , _fileNameIsUrl(false)
+Codegen::Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict,
+                 CodegenWarningInterface *interface)
+    : _module(nullptr),
+      _returnAddress(-1),
+      _context(nullptr),
+      _labelledStatement(nullptr),
+      jsUnitGenerator(jsUnitGenerator),
+      _strictMode(strict),
+      _fileNameIsUrl(false),
+      _interface(interface)
 {
     jsUnitGenerator->codeGeneratorName = QStringLiteral("moth");
     pushExpr();
@@ -2598,12 +2610,9 @@ Codegen::Reference Codegen::referenceForName(const QString &name, bool isLhs, co
 
         if (resolved.declarationLocation.isValid() && accessLocation.isValid()
                 && resolved.declarationLocation.begin() > accessLocation.end()) {
-            qCWarning(lcQmlCompiler).nospace().noquote()
-                    << url().toString() << ":" << accessLocation.startLine
-                    << ":" << accessLocation.startColumn << " Variable \"" << name
-                    << "\" is used before its declaration at "
-                    << resolved.declarationLocation.startLine << ":"
-                    << resolved.declarationLocation.startColumn << ".";
+            Q_ASSERT(_interface);
+            _interface->reportVarUsedBeforeDeclaration(
+                    name, url().toLocalFile(), resolved.declarationLocation, accessLocation);
         }
 
         if (resolved.isInjected && accessLocation.isValid()) {
