@@ -9,6 +9,7 @@ macro(qt_internal_get_internal_add_qml_module_keywords
         internal_option_args internal_single_args internal_multi_args)
     set(${option_args}
         DESIGNER_SUPPORTED
+        NO_PLUGIN
         NO_PLUGIN_OPTIONAL
         NO_CREATE_PLUGIN_TARGET
         NO_GENERATE_PLUGIN_SOURCE
@@ -124,7 +125,9 @@ function(qt_internal_add_qml_module target)
     if(NOT arg_INSTALL_DIRECTORY)
         set(arg_INSTALL_DIRECTORY "${INSTALL_QMLDIR}/${target_path}")
     endif()
-    if(NOT arg_PLUGIN_TARGET)
+    if(arg_NO_PLUGIN)
+        unset(arg_PLUGIN_TARGET)
+    elseif(NOT arg_PLUGIN_TARGET)
         set(arg_PLUGIN_TARGET ${target}plugin)
     endif()
 
@@ -141,7 +144,7 @@ function(qt_internal_add_qml_module target)
     endif()
 
     set(plugin_args "")
-    if(NOT arg_PLUGIN_TARGET STREQUAL target)
+    if(arg_NO_PLUGIN OR NOT arg_PLUGIN_TARGET STREQUAL target)
         # Allow using an existing backing target.
         if(NOT TARGET ${target})
             # Create the backing target now to handle module-related things
@@ -194,7 +197,7 @@ function(qt_internal_add_qml_module target)
         )
     endif()
 
-    if(NOT arg_NO_CREATE_PLUGIN_TARGET)
+    if(NOT arg_NO_PLUGIN AND NOT arg_NO_CREATE_PLUGIN_TARGET)
         # If the qt_internal_add_qml_module call didn't specify a CLASS_NAME, we need to pre-compute
         # it here and pass it along to qt_internal_add_plugin -> qt_add_plugin so that
         # qt_add_qml_plugin does not complain about differing class names (the default pre-computed

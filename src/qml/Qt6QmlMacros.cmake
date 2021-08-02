@@ -9,6 +9,7 @@ function(qt6_add_qml_module target)
         STATIC
         SHARED
         DESIGNER_SUPPORTED
+        NO_PLUGIN
         NO_PLUGIN_OPTIONAL
         NO_CREATE_PLUGIN_TARGET
         NO_GENERATE_PLUGIN_SOURCE
@@ -121,7 +122,13 @@ function(qt6_add_qml_module target)
         string(REPLACE "." "/" arg_TARGET_PATH ${arg_URI})
     endif()
 
-    set(is_executable FALSE)
+    if(arg_NO_PLUGIN AND DEFINED arg_PLUGIN_TARGET)
+        message(FATAL_ERROR
+            "NO_PLUGIN was specified, but PLUGIN_TARGET was also given. "
+            "At most one of these can be present."
+            )
+    endif()
+
     if(TARGET ${target})
         if(arg_STATIC OR arg_SHARED)
             message(FATAL_ERROR
@@ -132,7 +139,20 @@ function(qt6_add_qml_module target)
         get_target_property(backing_target_type ${target} TYPE)
         get_target_property(is_android_executable "${target}" _qt_is_android_executable)
         if (backing_target_type STREQUAL "EXECUTABLE" OR is_android_executable)
-            set(is_executable TRUE)
+            if(DEFINED arg_PLUGIN_TARGET)
+                message(FATAL_ERROR
+                    "A QML module with an executable as its backing target "
+                    "cannot have a plugin."
+                )
+            endif()
+            if(arg_NO_CREATE_PLUGIN_TARGET)
+                message(WARNING
+                    "A QML module with an executable as its backing target "
+                    "cannot have a plugin. The NO_CREATE_PLUGIN_TARGET option "
+                    "has no effect and should be removed."
+                )
+            endif()
+            set(arg_NO_PLUGIN TRUE)
             set(lib_type "")
         elseif(backing_target_type STREQUAL "STATIC_LIBRARY")
             set(lib_type STATIC)
@@ -165,11 +185,33 @@ function(qt6_add_qml_module target)
         endif()
     endif()
 
-    if(NOT arg_NO_CREATE_PLUGIN_TARGET AND NOT DEFINED arg_PLUGIN_TARGET AND NOT is_executable)
+    if(arg_NO_PLUGIN)
+        # Simplifies things a bit further below
+        set(arg_PLUGIN_TARGET "")
+    elseif(NOT DEFINED arg_PLUGIN_TARGET)
+        if(arg_NO_CREATE_PLUGIN_TARGET)
+            # We technically could allow this and rely on the project using the
+            # default plugin target name, but not doing so gives us the
+            # flexibility to potentially change that default later if needed.
+            message(FATAL_ERROR
+                "PLUGIN_TARGET must also be provided when NO_CREATE_PLUGIN_TARGET "
+                "is used. If you want to disable creating a plugin altogether, "
+                "use the NO_PLUGIN option instead."
+            )
+        endif()
         set(arg_PLUGIN_TARGET ${target}plugin)
     endif()
-    if(NOT DEFINED arg_PLUGIN_TARGET)
-        set(arg_PLUGIN_TARGET "")  # Simplifies things a bit further below
+    if(arg_NO_CREATE_PLUGIN_TARGET AND arg_PLUGIN_TARGET STREQUAL target AND NOT TARGET ${target})
+        message(FATAL_ERROR
+            "PLUGIN_TARGET is the same as the backing target, which is allowed, "
+            "but NO_CREATE_PLUGIN_TARGET was also given and the target does not "
+            "exist. Either ensure the target is already created or do not "
+            "specify NO_CREATE_PLUGIN_TARGET."
+        )
+    endif()
+    if(arg_PLUGIN_TARGET STREQUAL target)
+        # The plugin can't be optional when it has no backing target
+        set(arg_NO_PLUGIN_OPTIONAL TRUE)
     endif()
 
     set(no_gen_source)
@@ -227,21 +269,8 @@ function(qt6_add_qml_module target)
         endif()
     else()
         if(arg_PLUGIN_TARGET STREQUAL target)
-            if(TARGET ${arg_PLUGIN_TARGET})
-                set(plugin_lib_type "")
-            else()
-                if(arg_NO_CREATE_PLUGIN_TARGET)
-                    message(FATAL_ERROR
-                        "NO_CREATE_PLUGIN_TARGET was given, but PLUGIN_TARGET is "
-                        "the same as the backing target (which is allowed) and the "
-                        "target does not exist. Either ensure the target is already "
-                        "created or do not specify NO_CREATE_PLUGIN_TARGET."
-                        )
-                endif()
-                set(plugin_lib_type ${lib_type})
-            endif()
             qt6_add_qml_plugin(${target}
-                ${plugin_lib_type}
+                ${lib_type}
                 ${no_gen_source}
                 OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
                 URI ${arg_URI}
@@ -331,6 +360,7 @@ function(qt6_add_qml_module target)
         QT_QML_MODULE_NO_LINT "${arg_NO_LINT}"
         QT_QML_MODULE_NO_CACHEGEN "${arg_NO_CACHEGEN}"
         QT_QML_MODULE_NO_GENERATE_QMLDIR "${arg_NO_GENERATE_QMLDIR}"
+        QT_QML_MODULE_NO_PLUGIN "${arg_NO_PLUGIN}"
         QT_QML_MODULE_NO_PLUGIN_OPTIONAL "${arg_NO_PLUGIN_OPTIONAL}"
         QT_QML_MODULE_URI "${arg_URI}"
         QT_QML_MODULE_TARGET_PATH "${arg_TARGET_PATH}"
@@ -397,7 +427,7 @@ function(qt6_add_qml_module target)
         list(APPEND output_targets ${resource_targets})
     endif()
 
-    if(arg_PLUGIN_TARGET AND NOT arg_NO_CREATE_PLUGIN_TARGET AND NOT is_executable)
+    if(NOT arg_NO_PLUGIN AND NOT arg_NO_CREATE_PLUGIN_TARGET)
         # This also handles the case where ${arg_PLUGIN_TARGET} already exists,
         # including where it is the same as ${target}. If ${arg_PLUGIN_TARGET}
         # already exists, it will update the necessary things that are specific

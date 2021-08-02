@@ -27,5 +27,4 @@ endif()
 qt6_add_qml_module(${target_name}
     URI QmlTime
     VERSION 1.0
-    NO_CREATE_PLUGIN_TARGET
 )

@@ -20,7 +20,6 @@ qt_internal_add_test(tst_qmltc_manual
 qt6_add_qml_module(tst_qmltc_manual
     VERSION 1.0
     URI "QmltcManualTests"
-    NO_CREATE_PLUGIN_TARGET
     QML_FILES
         ${test_data}
 )
