@@ -34,6 +34,10 @@ qt_internal_add_qml_module(QuickControls2
         Qt::QmlPrivate
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
+    PUBLIC_LIBRARIES
+        Qt::Core
+        Qt::Gui
+        Qt::Quick
 )
 
 qt_internal_extend_target(qtquickcontrols2plugin
