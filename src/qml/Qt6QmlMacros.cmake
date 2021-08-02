@@ -986,7 +986,7 @@ function(qt6_add_qml_plugin target)
     endif()
 
     if(NOT arg_OUTPUT_DIRECTORY AND arg_BACKING_TARGET AND TARGET ${arg_BACKING_TARGET})
-        get_target_property(arg_OUTPUT_DIRECTORY ${arg_BACKING_TARGET} QT_QML_OUTPUT_DIRECTORY)
+        get_target_property(arg_OUTPUT_DIRECTORY ${arg_BACKING_TARGET} QT_QML_MODULE_OUTPUT_DIRECTORY)
     endif()
     if(arg_OUTPUT_DIRECTORY)
         # Plugin target must be in the output directory. The backing target,
