@@ -326,7 +326,6 @@ public:
     int id;
     int indexOfDefaultPropertyOrAlias;
     bool defaultPropertyIsAlias;
-    bool isInlineComponent = false;
     quint32 flags;
 
     QV4::CompiledData::Location location;

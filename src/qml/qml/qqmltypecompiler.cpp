@@ -654,7 +654,7 @@ void QQmlCustomParserScriptIndexer::annotateBindingsWithScriptStrings()
 {
     scanObjectRecursively(/*root object*/0);
     for (int i = 0; i < qmlObjects.size(); ++i)
-        if (qmlObjects.at(i)->isInlineComponent)
+        if (qmlObjects.at(i)->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
             scanObjectRecursively(i);
 }
 
@@ -874,7 +874,8 @@ bool QQmlComponentAndAliasResolver::resolve(int root)
         QmlIR::Object *obj = qmlObjects->at(i);
         if (root == 0) {
             // normal component root, skip over anything inline component related
-            if (obj->isInlineComponent || obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent) {
+            if (obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot ||
+                    obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent) {
                 continue;
             }
         } else {
@@ -1214,7 +1215,7 @@ QQmlDeferredAndCustomParserBindingScanner::QQmlDeferredAndCustomParserBindingSca
 bool QQmlDeferredAndCustomParserBindingScanner::scanObject()
 {
     for (int i = 0; i < qmlObjects->size(); ++i)
-        if (qmlObjects->at(i)->isInlineComponent)
+        if (qmlObjects->at(i)->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
             scanObject(i);
     return scanObject(/*root object*/0);
 }
@@ -1225,7 +1226,7 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
     if (obj->idNameIndex != 0)
         _seenObjectWithId = true;
 
-    if (obj->flags & QV4::CompiledData::Object::IsComponent && !obj->isInlineComponent) {
+    if (obj->flags & QV4::CompiledData::Object::IsComponent) {
         Q_ASSERT(obj->bindingCount() == 1);
         const QV4::CompiledData::Binding *componentBinding = obj->firstBinding();
         Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);

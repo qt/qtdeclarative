@@ -600,7 +600,6 @@ bool IRBuilder::visit(QQmlJS::AST::UiInlineComponent *ast)
     Object* definedObject = _objects.at(idx);
     definedObject->flags |= QV4::CompiledData::Object::IsInlineComponentRoot;
     definedObject->flags |= QV4::CompiledData::Object::InPartOfInlineComponent;
-    definedObject->isInlineComponent = true;
     auto inlineComponent = New<InlineComponent>();
     inlineComponent->nameIndex = registerString(ast->name.toString());
     inlineComponent->objectIndex = idx;
@@ -2007,7 +2006,7 @@ bool JSCodeGen::generateCodeForComponents(const QVector<quint32> &componentRoots
 bool JSCodeGen::compileComponent(int contextObject)
 {
     const QmlIR::Object *obj = document->objects.at(contextObject);
-    if (obj->flags & QV4::CompiledData::Object::IsComponent && !obj->isInlineComponent) {
+    if (obj->flags & QV4::CompiledData::Object::IsComponent) {
         Q_ASSERT(obj->bindingCount() == 1);
         const QV4::CompiledData::Binding *componentBinding = obj->firstBinding();
         Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);
@@ -2020,7 +2019,7 @@ bool JSCodeGen::compileComponent(int contextObject)
 bool JSCodeGen::compileJavaScriptCodeInObjectsRecursively(int objectIndex, int scopeObjectIndex)
 {
     QmlIR::Object *object = document->objects.at(objectIndex);
-    if (object->flags & QV4::CompiledData::Object::IsComponent && !object->isInlineComponent)
+    if (object->flags & QV4::CompiledData::Object::IsComponent)
         return true;
 
     for (auto it = object->inlineComponentsBegin(); it != object->inlineComponentsEnd(); ++it)
