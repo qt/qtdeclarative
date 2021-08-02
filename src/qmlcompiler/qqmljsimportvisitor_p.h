@@ -60,9 +60,6 @@ public:
 
     QQmlJSScope::Ptr result() const;
 
-    // TODO: Should be superseded by accessing the logger instead
-    QList<QQmlJS::DiagnosticMessage> errors() const { return m_logger.warnings() + m_logger.errors(); }
-
     QQmlJSLogger &logger() { return m_logger; }
 
     QHash<QString, QQmlJSScope::ConstPtr> imports() const { return m_rootScopeImports; }
