@@ -411,6 +411,8 @@ private slots:
     void frozenQObject();
     void constPointer();
 
+    void icUsingJSLib();
+
     void optionalChainEval();
     void optionalChainDelete();
     void optionalChainNull();
@@ -9702,6 +9704,15 @@ void tst_qqmlecmascript::constPointer()
     QVERIFY2(root, qPrintable(component.errorString()));
     QVERIFY(root->property("invokableOk").toBool());
     QVERIFY(root->property("propertyOk").toBool());
+}
+
+void tst_qqmlecmascript::icUsingJSLib()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("icUsingJSLib.qml"));
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY2(root, qPrintable(component.errorString()));
+    QCOMPARE(root->property("num").toInt(), 42);
 }
 
 void tst_qqmlecmascript::optionalChainEval()

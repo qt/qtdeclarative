@@ -168,13 +168,16 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     phase = CreatingObjects;
 
     int objectToCreate;
+    bool isComponentRoot = false; // either a "real" component of or an inline component
 
     if (subComponentIndex == -1) {
         objectToCreate = /*root object*/0;
+        isComponentRoot = true;
     } else {
         Q_ASSERT(subComponentIndex >= 0);
         if (flags & CreationFlags::InlineComponent) {
             objectToCreate = subComponentIndex;
+            isComponentRoot = true;
         } else {
             Q_ASSERT(flags & CreationFlags::NormalObject);
             const QV4::CompiledData::Object *compObj = compilationUnit->objectAt(subComponentIndex);
@@ -199,7 +202,7 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     if (topLevelCreator)
         sharedState->allJavaScriptObjects = scope.alloc(compilationUnit->totalObjectCount());
 
-    if (subComponentIndex == -1 && compilationUnit->dependentScripts.count()) {
+    if (isComponentRoot && compilationUnit->dependentScripts.count()) {
         QV4::ScopedObject scripts(scope, v4->newArrayObject(compilationUnit->dependentScripts.count()));
         context->setImportedScripts(QV4::PersistentValue(v4, scripts.asReturnedValue()));
         QV4::ScopedValue v(scope);
