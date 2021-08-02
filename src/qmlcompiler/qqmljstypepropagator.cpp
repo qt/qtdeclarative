@@ -300,7 +300,8 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
                 suggestion.fixes << FixSuggestion::Fix {
                     name
                             + QString::fromLatin1(" is accessible in this scope because "
-                                                  "you are handling a signal at %1:%2\n")
+                                                  "you are handling a signal at %1:%2. Use a "
+                                                  "function instead.\n")
                                       .arg(id.location.startLine)
                                       .arg(id.location.startColumn),
                     QtInfoMsg, fixLocation, fixString
