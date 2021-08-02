@@ -421,9 +421,7 @@ void TestQmllint::dirtyQmlCode_data()
             << false;
     QTest::newRow("brokenNamespace")
             << QStringLiteral("brokenNamespace.qml")
-            << QString("Warning: %1:4:17: Type not found in namespace")
-            << QString()
-            << false;
+            << QString("Warning: %1:4:19: Type not found in namespace") << QString() << false;
     QTest::newRow("segFault (bad)")
             << QStringLiteral("SegFault.bad.qml")
             << QStringLiteral("Property \"foobar\" not found on type \"QQuickScreenAttached\"")

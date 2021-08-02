@@ -472,12 +472,17 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
     m_state.accumulatorOut =
             m_typeResolver->memberType(m_state.accumulatorIn, m_state.savedPrefix + propertyName);
 
-    if (!m_state.accumulatorOut.isValid() && m_typeResolver->isPrefix(propertyName)) {
-        m_state.savedPrefix = propertyName + u"."_qs;
-        m_state.accumulatorOut = m_state.accumulatorIn.isValid()
-                ? m_state.accumulatorIn
-                : m_typeResolver->globalType(m_currentScope);
-        return;
+    if (!m_state.accumulatorOut.isValid()) {
+        if (m_typeResolver->isPrefix(propertyName)) {
+            m_state.savedPrefix = propertyName + u"."_qs;
+            m_state.accumulatorOut = m_state.accumulatorIn.isValid()
+                    ? m_state.accumulatorIn
+                    : m_typeResolver->globalType(m_currentScope);
+            return;
+        }
+        if (!m_state.savedPrefix.isEmpty())
+            m_logger->logWarning(u"Type not found in namespace"_qs, Log_Type,
+                                 getCurrentSourceLocation());
     }
 
     m_state.savedPrefix.clear();

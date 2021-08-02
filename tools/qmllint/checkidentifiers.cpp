@@ -319,7 +319,6 @@ void CheckIdentifiers::operator()(
 
             const QString baseName = memberAccessBase.m_name;
             auto typeIt = m_types.find(memberAccessBase.m_name);
-            bool baseIsPrefixed = false;
             while (typeIt != m_types.end() && typeIt->isNull()) {
                 // This is a namespaced import. Check with the full name.
                 if (!memberAccessChain.isEmpty()) {
@@ -330,30 +329,12 @@ void CheckIdentifiers::operator()(
                             + memberAccessBase.m_location.length;
                     memberAccessBase.m_location = location;
                     typeIt = m_types.find(memberAccessBase.m_name);
-                    baseIsPrefixed = true;
                 }
             }
 
             if (typeIt != m_types.end() && !typeIt->isNull()) {
                 checkMemberAccess(memberAccessChain, *typeIt);
                 continue;
-            }
-
-            // If we're in a custom parser component (or one of their children) we cannot be sure
-            // that this is really an unqualified access. We have to err on the side of producing
-            // false negatives for the sake of usability.
-            if (qmlScope->isInCustomParserParent()) {
-                // We can handle Connections properly
-                if (qmlScope->baseType()
-                    && qmlScope->baseType()->internalName() != u"QQmlConnections"_qs)
-                    continue;
-            }
-
-            const auto location = memberAccessBase.m_location;
-
-            if (baseIsPrefixed) {
-                m_logger->logWarning(QLatin1String("Type not found in namespace"), Log_Type,
-                                     location);
             }
 
             Q_UNUSED(signalHandlers)
