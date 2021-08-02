@@ -128,11 +128,11 @@ load-time performance.
 \section3 Executable as a QML module
 
 An executable target can act as a backing target for a QML module. In this case,
-there should be no need for a plugin library, since the QML module will always
-be loaded directly as part of the application. The \c{qt_add_qml_module()}
-command will detect when an executable is used as the backing target and will
-automatically disable the creation of a separate plugin. Do not use any of the
-options with \c{PLUGIN} in their name when using this arrangement.
+there will be no plugin library, since the QML module will always be loaded
+directly as part of the application. The \c{qt_add_qml_module()} command will
+detect when an executable is used as the backing target and will automatically
+disable the creation of a separate plugin. Do not use any of the options with
+\c{PLUGIN} in their name when using this arrangement.
 
 
 \target qmldir-autogeneration
@@ -248,13 +248,17 @@ created by the command so that they are created as the appropriate target type.
 If the backing \c target is a static library, the plugin will also be created
 as a static library. If the backing \c target is a shared library, the plugin
 will be created as a module library. If an existing \c target is passed in and
-it is an executable target, there should be no plugin.
+it is an executable target, there will be no plugin. If you intend to always
+link directly to the backing target and do not need a plugin, it can be
+disabled by adding the \c NO_PLUGIN option. Specifying both \c NO_PLUGIN and
+\c PLUGIN_TARGET is an error.
 
 In certain situations, the project may want to delay creating the plugin target
 until after the call. The \c NO_CREATE_PLUGIN_TARGET option can be given in
 that situation. The project is then expected to call
 \l{qt6_add_qml_plugin}{qt_add_qml_plugin()} on the plugin target once it has
-been created.
+been created. When  \c NO_CREATE_PLUGIN_TARGET is given, \c PLUGIN_TARGET must
+also be provided to explicitly name the plugin target.
 
 Every QML module must define a \c URI. It should be specified in dotted URI
 notation, such as \c{QtQuick.Layouts}. It must not contain anything other than
@@ -323,7 +327,9 @@ arrangement. The auto-generated plugin source file satisfies this requirement.
 Where a project provides its own \c{.cpp} implementation for the plugin, that
 would normally mean the \c NO_PLUGIN_OPTIONAL keyword is also needed because
 the plugin will almost certainly contain functionality that the QML module
-requires.
+requires. If the plugin is its own backing target, meaning \c target and
+\c PLUGIN_TARGET are the same, then \c NO_PLUGIN_OPTIONAL is assumed and does
+not need to be explicitly provided.
 
 Type registration is automatically performed for the backing target's C++
 sources that are processed by AUTOMOC. This will generate a typeinfo file in the

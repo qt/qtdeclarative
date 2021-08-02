@@ -52,7 +52,6 @@ qt_internal_add_resource(${target_name} "qml"
 qt6_add_qml_module(${target_name}
     URI QmlRuntime.Config
     VERSION 1.0
-    NO_CREATE_PLUGIN_TARGET
 )
 
 qt_internal_extend_target(${target_name} CONDITION TARGET Qt::Gui
