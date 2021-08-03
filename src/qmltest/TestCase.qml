@@ -1134,7 +1134,7 @@ Item {
         \qmlmethod TestCase::warn(message)
 
         Prints \a message as a warning message.  Similar to
-        \c{QWARN(message)} in C++.
+        \c{qWarning(message)} in C++.
 
         \sa ignoreWarning()
     */

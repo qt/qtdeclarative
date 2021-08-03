@@ -92,8 +92,8 @@ void tst_PropertyRequirements::constantOrNotifyableMain()
     }
     messages.sort();
 
-    const QString message("\nThe following QML Types have properties which are neither CONSTANT nor NOTIFYable:\n");
-    QWARN(qPrintable(message + messages.join("\n")));
+    qWarning() << "\nThe following QML Types have properties which are neither CONSTANT nor NOTIFYable:\n"
+        << qPrintable(messages.join("\n"));
 
     // TODO enable once technical debt is fixes
     // QCOMPARE(failuresByProperty.count(), 0);
@@ -127,7 +127,7 @@ void tst_PropertyRequirements::constantOrNotifyableFull()
     }
     messages.sort();
 
-    QWARN(qPrintable(messages.join("\n")));
+    qWarning() << qPrintable(messages.join("\n"));
 
     // TODO enable once technical debt is fixes
     // QCOMPARE(failuresByProperty.count(), 0);
