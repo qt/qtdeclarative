@@ -591,7 +591,7 @@ function(_qt_internal_propagate_qmlcache_object_lib
          link_condition
          output_generated_target)
     set(resource_target "${target}_qmlcache")
-    add_library("${resource_target}" OBJECT "${generated_source_code}")
+    qt6_add_library("${resource_target}" OBJECT "${generated_source_code}")
 
     # Needed to trigger the handling of the object library for .prl generation.
     set_property(TARGET ${resource_target} APPEND PROPERTY _qt_resource_name ${resource_target})
