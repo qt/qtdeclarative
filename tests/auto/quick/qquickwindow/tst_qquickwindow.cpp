@@ -2123,18 +2123,14 @@ void tst_qquickwindow::requestActivate()
     {
         QMouseEvent me(QEvent::MouseButtonPress, pos, window1->mapToGlobal(pos), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
         QSpontaneKeyEvent::setSpontaneous(&me);
-        if (!qApp->notify(window1.data(), &me)) {
-            QString warning = QString::fromLatin1("Mouse event MousePress not accepted by receiving window");
-            QWARN(warning.toLatin1().data());
-        }
+        if (!qApp->notify(window1.data(), &me))
+            qWarning("Mouse event MousePress not accepted by receiving window");
     }
     {
         QMouseEvent me = QMouseEvent(QEvent::MouseButtonPress, pos, window1->mapToGlobal(pos), Qt::LeftButton, {}, Qt::NoModifier);
         QSpontaneKeyEvent::setSpontaneous(&me);
-        if (!qApp->notify(window1.data(), &me)) {
-            QString warning = QString::fromLatin1("Mouse event MouseRelease not accepted by receiving window");
-            QWARN(warning.toLatin1().data());
-        }
+        if (!qApp->notify(window1.data(), &me))
+            qWarning("Mouse event MouseRelease not accepted by receiving window");
     }
 
     QTRY_COMPARE(QGuiApplication::focusWindow(), windows.at(0));
