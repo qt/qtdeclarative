@@ -44,7 +44,7 @@ NativeStyle.DefaultGroupBox {
                                   ? background.labelPos
                                   : Qt.point(0,0)
         x: labelPos.x + background.x
-        y: labelPos.y + background.y - groupBoxPadding.top
+        y: labelPos.y + background.y - (control.__nativeBackground ? background.groupBoxPadding.top : 0)
         width: children[0].implicitWidth
         height: children[0].implicitHeight
         Text {
