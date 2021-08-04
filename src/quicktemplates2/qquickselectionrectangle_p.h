@@ -99,8 +99,8 @@ public:
 
 Q_SIGNALS:
     void targetChanged();
-    bool activeChanged();
-    bool draggingChanged();
+    void activeChanged();
+    void draggingChanged();
     void topLeftHandleChanged();
     void bottomRightHandleChanged();
     void selectionModeChanged();
