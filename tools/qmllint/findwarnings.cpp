@@ -27,7 +27,6 @@
 ****************************************************************************/
 
 #include "findwarnings.h"
-#include "checkidentifiers.h"
 
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include <QtQmlCompiler/private/qqmljstypedescriptionreader_p.h>
@@ -139,9 +138,6 @@ bool FindWarningVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
         m_usedTypes.insert(name);
     }
 
-    m_memberAccessChains[m_currentScope].append(
-                {{name, QString(), idexp->firstSourceLocation()}});
-    m_fieldMemberBase = idexp;
     return true;
 }
 
@@ -249,9 +245,6 @@ bool FindWarningVisitor::check()
         outstandingConnection.uiod->initializer->accept(this);
     }
 
-    CheckIdentifiers check(&m_logger, m_code, m_rootScopeImports, m_filePath);
-    check(m_scopesById, m_signalHandlers, m_memberAccessChains, m_globalScope, m_rootId);
-
     return !m_logger.hasWarnings() && !m_logger.hasErrors();
 }
 
@@ -276,47 +269,9 @@ bool FindWarningVisitor::visit(QQmlJS::AST::PatternElement *element)
 
 void FindWarningVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMember)
 {
-    using namespace QQmlJS::AST;
-    ExpressionNode *base = fieldMember->base;
-
-    while (auto *nested = cast<NestedExpression *>(base))
-        base = nested->expression;
-
-    if (m_fieldMemberBase == base) {
-        QString type;
-        if (auto *binary = cast<BinaryExpression *>(base)) {
-            if (binary->op == QSOperator::As) {
-                if (auto *right = cast<TypeExpression *>(binary->right))
-                    type = right->m_type->toString();
-            }
-        }
-
-
-        auto &chain = m_memberAccessChains[m_currentScope];
-
-        Q_ASSERT(!chain.last().isEmpty());
-
-        const QString name = fieldMember->name.toString();
-        if (m_importTypeLocationMap.contains(name)) {
-            if (auto it = m_rootScopeImports.find(name); it != m_rootScopeImports.end() && !*(it))
-                m_usedTypes.insert(name);
-        }
-
-        chain.last().append(FieldMember {
-                                name, type, fieldMember->identifierToken
-                            });
-        m_fieldMemberBase = fieldMember;
-    } else {
-        m_fieldMemberBase = nullptr;
-    }
-}
-
-void FindWarningVisitor::endVisit(QQmlJS::AST::BinaryExpression *binExp)
-{
-    if (binExp->op == QSOperator::As
-            && (m_fieldMemberBase == binExp->left || m_fieldMemberBase == binExp->right)) {
-        m_fieldMemberBase = binExp;
-    } else {
-        m_fieldMemberBase = nullptr;
+    const QString name = fieldMember->name.toString();
+    if (m_importTypeLocationMap.contains(name)) {
+        if (auto it = m_rootScopeImports.find(name); it != m_rootScopeImports.end() && !*(it))
+            m_usedTypes.insert(name);
     }
 }

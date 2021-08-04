@@ -39,8 +39,6 @@
 //
 // We mean it.
 
-#include "checkidentifiers.h"
-
 #include <QtQmlCompiler/private/qcoloroutput_p.h>
 #include <QtQmlCompiler/private/qqmljstypedescriptionreader_p.h>
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
@@ -64,10 +62,6 @@ public:
     bool check();
 
 private:
-    MemberAccessChains m_memberAccessChains;
-
-    QQmlJS::AST::ExpressionNode *m_fieldMemberBase = nullptr;
-
     void parseComments(const QList<QQmlJS::SourceLocation> &comments);
 
     // work around compiler error in clang11
@@ -82,8 +76,6 @@ private:
 
     bool visit(QQmlJS::AST::PatternElement *) override;
     void endVisit(QQmlJS::AST::FieldMemberExpression *) override;
-
-    void endVisit(QQmlJS::AST::BinaryExpression *) override;
 };
 
 #endif // FINDUNQUALIFIED_H
