@@ -262,13 +262,13 @@ QQuickItem *QQuickSelectionRectanglePrivate::createHandle(QQmlComponent *delegat
     Q_Q(QQuickSelectionRectangle);
 
     // Incubate the handle
-    const auto handlerTarget = m_selectable->selectionPointerHandlerTarget();
     QObject *obj = delegate->beginCreate(QQmlEngine::contextForObject(q));
     QQuickItem *handleItem = qobject_cast<QQuickItem*>(obj);
+    const auto handlerTarget = m_selectable->selectionPointerHandlerTarget();
+    handleItem->setParentItem(handlerTarget);
     if (auto attached = getAttachedObject(handleItem))
         attached->setControl(q);
     delegate->completeCreate();
-    handleItem->setParentItem(handlerTarget);
     if (handleItem->z() == 0)
         handleItem->setZ(100);
 
