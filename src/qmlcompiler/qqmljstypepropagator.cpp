@@ -395,6 +395,30 @@ void QQmlJSTypePropagator::checkDeprecated(QQmlJSScope::ConstPtr scope, const QS
     m_logger->logWarning(message, Log_Deprecation, getCurrentSourceLocation());
 }
 
+bool QQmlJSTypePropagator::checkRestricted(const QString &propertyName) const
+{
+    QString restrictedKind;
+
+    if (!m_state.accumulatorIn.isValid())
+        return false;
+
+    if (m_state.accumulatorIn.isList() && propertyName != u"length") {
+        restrictedKind = u"a list"_qs;
+    } else if (m_state.accumulatorIn.isEnumeration()
+               && !m_state.accumulatorIn.enumeration().hasKey(propertyName)) {
+        restrictedKind = u"an enum"_qs;
+    } else if (m_state.accumulatorIn.isMethod()) {
+        restrictedKind = u"a method"_qs;
+    }
+
+    if (!restrictedKind.isEmpty())
+        m_logger->logWarning(u"Type is %1. You cannot access \"%2\" from here."_qs.arg(
+                                     restrictedKind, propertyName),
+                             Log_Type, getCurrentSourceLocation());
+
+    return !restrictedKind.isEmpty();
+}
+
 void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
 {
     const QString name =
@@ -412,9 +436,14 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
     checkDeprecated(m_currentScope, name, false);
 
     m_state.savedPrefix.clear();
+
+    bool isRestricted = checkRestricted(name);
+
     if (!m_state.accumulatorOut.isValid()) {
         setError(u"Cannot access value for name "_qs + name, true);
-        handleUnqualifiedAccess(name);
+
+        if (!isRestricted)
+            handleUnqualifiedAccess(name);
     } else if (m_typeResolver->genericType(m_state.accumulatorOut.storedType()).isNull()) {
         // It should really be valid.
         // We get the generic type from aotContext->loadQmlContextPropertyIdLookup().
@@ -487,9 +516,14 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
 
     m_state.savedPrefix.clear();
 
+    bool isRestricted = checkRestricted(propertyName);
+
     if (!m_state.accumulatorOut.isValid()) {
         setError(u"Cannot load property %1 from %2."_qs
                          .arg(propertyName, m_state.accumulatorIn.descriptiveName()));
+
+        if (isRestricted)
+            return;
 
         const QString typeName = m_typeResolver->containedTypeName(m_state.accumulatorIn);
 
@@ -649,11 +683,16 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         return;
     }
 
+    bool isRestricted = checkRestricted(propertyName);
+
     if (!member.isMethod()) {
         setError(u"Type %1 does not have a property %2 for calling"_qs
                          .arg(callBase.descriptiveName(), propertyName));
 
         const QString typeName = m_typeResolver->containedTypeName(m_state.accumulatorIn);
+
+        if (isRestricted)
+            return;
 
         m_logger->logWarning(
                 u"Property \"%1\" not found on type \"%2\""_qs.arg(propertyName).arg(typeName),

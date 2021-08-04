@@ -79,15 +79,7 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
                                          const QQmlJSScope::ConstPtr &outerScope,
                                          const QQmlJSMetaProperty *prop) const
 {
-
-    QStringList expectedNext;
-    QString detectedRestrictiveName;
-    QString detectedRestrictiveKind;
-
-    if (prop != nullptr && prop->isList()) {
-        detectedRestrictiveKind = QLatin1String("list");
-        expectedNext.append(QLatin1String("length"));
-    }
+    Q_UNUSED(prop);
 
     QQmlJSScope::ConstPtr scope = outerScope;
     for (qsizetype i = 0; i < members.size(); i++) {
@@ -95,21 +87,6 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
 
         if (scope.isNull())
             return;
-
-        if (!detectedRestrictiveKind.isEmpty()) {
-            if (expectedNext.contains(access.m_name)) {
-                expectedNext.clear();
-                continue;
-            }
-
-            m_logger->logWarning(
-                    QLatin1String("\"%1\" is a %2. You cannot access \"%3\" it from here")
-                            .arg(detectedRestrictiveName)
-                            .arg(detectedRestrictiveKind)
-                            .arg(access.m_name),
-                    Log_Type, access.m_location);
-            return;
-        }
 
         if (unknownBuiltins.contains(scope->internalName()))
             return;
@@ -121,25 +98,14 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
                     ? (binding.hasValue() ? binding.valueTypeName() : property.typeName())
                     : access.m_parentType;
 
-            if (property.isList()) {
-                detectedRestrictiveKind = QLatin1String("list");
-                detectedRestrictiveName = access.m_name;
-                expectedNext.append(QLatin1String("length"));
+            if (property.isList())
                 continue;
-            }
 
             if (access.m_parentType.isEmpty()) {
                 if (binding.hasValue())
                     scope = binding.value();
                 else
                     scope = property.type();
-
-                if (scope.isNull()) {
-                    // Properties should always have a type. Otherwise something
-                    // was missing from the import already.
-                    detectedRestrictiveKind = typeName;
-                    detectedRestrictiveName = access.m_name;
-                }
                 continue;
             }
 
@@ -148,8 +114,6 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
 
             const auto it = m_types.find(typeName);
             if (it == m_types.end()) {
-                detectedRestrictiveKind = typeName;
-                detectedRestrictiveName = access.m_name;
                 scope = QQmlJSScope::ConstPtr();
             } else {
                 scope = *it;
@@ -163,15 +127,10 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
 
         auto checkEnums = [&](const QQmlJSScope::ConstPtr &scope) {
             if (scope->hasEnumeration(access.m_name)) {
-                detectedRestrictiveKind = QLatin1String("enum");
-                detectedRestrictiveName = access.m_name;
-                expectedNext.append(scope->enumeration(access.m_name).keys());
                 return true;
             }
 
             if (scope->hasEnumerationKey(access.m_name)) {
-                detectedRestrictiveKind = QLatin1String("enum");
-                detectedRestrictiveName = access.m_name;
                 return true;
             }
 
@@ -179,9 +138,6 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
         };
 
         checkEnums(scope);
-
-        if (!detectedRestrictiveName.isEmpty())
-            continue;
 
         QQmlJSScope::ConstPtr rootType;
         if (!access.m_parentType.isEmpty())
@@ -201,8 +157,6 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
                     const auto typeMethods = type->ownMethods();
                     const auto typeMethodIt = typeMethods.find(access.m_name);
                     if (typeMethodIt != typeMethods.end()) {
-                        detectedRestrictiveName = access.m_name;
-                        detectedRestrictiveKind = QLatin1String("method");
                         return true;
                     }
 
