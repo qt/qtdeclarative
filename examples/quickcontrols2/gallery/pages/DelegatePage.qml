@@ -193,7 +193,9 @@ Pane {
 
                 // Can't find a way to do this in the SwipeDelegate component itself,
                 // so do it here instead.
-                ListView.onRemove: SequentialAnimation {
+                SequentialAnimation {
+                    id: removeAnimation
+
                     PropertyAction {
                         target: delegateLoader
                         property: "ListView.delayRemove"
@@ -211,6 +213,7 @@ Pane {
                         value: false
                     }
                 }
+                ListView.onRemove: removeAnimation.start()
             }
         }
     }
