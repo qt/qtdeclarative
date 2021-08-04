@@ -1278,7 +1278,7 @@ function(qt6_target_qml_sources target)
 
             add_custom_command(OUTPUT ${file_out}
                 COMMAND ${CMAKE_COMMAND} -E copy ${file_src} ${file_out}
-                DEPENDS ${file_src}
+                DEPENDS ${file_absolute}
                 WORKING_DIRECTORY $<TARGET_PROPERTY:${target},SOURCE_DIR>
             )
             list(APPEND copied_files ${file_out})
