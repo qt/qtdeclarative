@@ -93,16 +93,8 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
     for (qsizetype i = 0; i < members.size(); i++) {
         const FieldMember &access = members.at(i);
 
-        if (scope.isNull()) {
-            m_logger->logWarning(
-                    QString::fromLatin1(
-                            "Type \"%1\" of base \"%2\" not found when accessing member \"%3\"")
-                            .arg(detectedRestrictiveKind)
-                            .arg(detectedRestrictiveName)
-                            .arg(access.m_name),
-                    Log_Type, access.m_location);
+        if (scope.isNull())
             return;
-        }
 
         if (!detectedRestrictiveKind.isEmpty()) {
             if (expectedNext.contains(access.m_name)) {
