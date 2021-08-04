@@ -539,8 +539,29 @@ function(_qt_internal_target_enable_qmllint target)
         _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
     )
 
-    # Facilitate self-import so it can find the qmldir file
-    list(APPEND import_args -I "${CMAKE_CURRENT_BINARY_DIR}")
+    # Facilitate self-import so it can find the qmldir file. We also try to walk
+    # back up the directory structure to find a base path under which this QML
+    # module is located. Such a base path is likely to be used for other QML
+    # modules that we might need to find, so add it to the import path if we
+    # find a compatible directory structure. It doesn't make sense to do this
+    # for an executable though, since it can never be found as a QML module for
+    # a different QML module/target.
+    get_target_property(target_type ${target} TYPE)
+    if(target_type MATCHES "LIBRARY")
+        get_target_property(output_dir  ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
+        get_target_property(target_path ${target} QT_QML_MODULE_TARGET_PATH)
+        if(output_dir MATCHES "${target_path}$")
+            string(REGEX REPLACE "(.*)/${target_path}" "\\1" base_dir "${output_dir}")
+            list(APPEND import_args -I "${base_dir}")
+        else()
+            message(WARNING
+                "The ${target} target is a QML module with target path ${target_path}. "
+                "It uses an OUTPUT_DIRECTORY of ${output_dir}, which should end in the "
+                "same target path, but doesn't. Tooling such as qmllint may not work "
+                "correctly."
+            )
+        endif()
+    endif()
 
     if(NOT "${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "")
         list(APPEND import_args -I "${QT_QML_OUTPUT_DIRECTORY}")
