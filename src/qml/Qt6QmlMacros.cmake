@@ -547,6 +547,7 @@ function(_qt_internal_target_enable_qmllint target)
         ${QT_TOOL_COMMAND_WRAPPER_PATH}
         ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint
         ${import_args}
+        ${qrc_args}
         ${qmllint_files}
     )
 
