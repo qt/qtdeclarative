@@ -1,0 +1,4 @@
+# See qtbase/src/testlib/qtestblacklist.cpp for format
+# QTBUG-94225
+[listViews]
+b2qt

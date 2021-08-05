@@ -1,0 +1,3 @@
+module org.qtproject.examples.dialogs
+
+singleton Theme 1.0 Theme.qml

@@ -1,0 +1,1 @@
+Qt Quick Dialogs uses a Qt Quick implementation as a fallback on platforms that do not have a native implementation available.

@@ -1,0 +1,6 @@
+//! [functions-after-component-completion]
+
+\note This function can only be used after
+\l {Component::completed()}{Component.completed()} is emitted for the ComboBox.
+
+//! [functions-after-component-completion]

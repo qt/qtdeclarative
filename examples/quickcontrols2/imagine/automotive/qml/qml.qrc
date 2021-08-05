@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/qml">
+        <file>FeatureButton.qml</file>
+        <file>automotive.qml</file>
+        <file>LargeLabel.qml</file>
+    </qresource>
+</RCC>

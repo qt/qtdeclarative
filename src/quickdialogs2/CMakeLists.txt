@@ -1,0 +1,3 @@
+add_subdirectory(quickdialogs2utils)
+add_subdirectory(quickdialogs2quickimpl)
+add_subdirectory(quickdialogs2)
