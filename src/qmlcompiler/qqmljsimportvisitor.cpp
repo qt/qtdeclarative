@@ -1651,4 +1651,23 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
     return true;
 }
 
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::PatternElement *element)
+{
+    // Handles variable declarations such as var x = [1,2,3].
+    if (element->isVariableDeclaration()) {
+        QQmlJS::AST::BoundNames names;
+        element->boundNames(&names);
+        for (const auto &name : names) {
+            m_currentScope->insertJSIdentifier(
+                    name.id,
+                    { (element->scope == QQmlJS::AST::VariableScope::Var)
+                              ? QQmlJSScope::JavaScriptIdentifier::FunctionScoped
+                              : QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
+                      element->firstSourceLocation() });
+        }
+    }
+
+    return true;
+}
+
 QT_END_NAMESPACE

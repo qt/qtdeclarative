@@ -237,22 +237,3 @@ bool FindWarningVisitor::check()
 
     return !m_logger.hasWarnings() && !m_logger.hasErrors();
 }
-
-bool FindWarningVisitor::visit(QQmlJS::AST::PatternElement *element)
-{
-    if (element->isVariableDeclaration()) {
-        QQmlJS::AST::BoundNames names;
-        element->boundNames(&names);
-        for (const auto &name : names) {
-            m_currentScope->insertJSIdentifier(
-                        name.id, {
-                            (element->scope == QQmlJS::AST::VariableScope::Var)
-                                ? QQmlJSScope::JavaScriptIdentifier::FunctionScoped
-                                : QQmlJSScope::JavaScriptIdentifier::LexicalScoped,
-                            element->firstSourceLocation()
-                        });
-        }
-    }
-
-    return true;
-}
