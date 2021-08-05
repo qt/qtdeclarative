@@ -935,7 +935,7 @@ function(qt6_add_qml_plugin target)
         endif()
 
         qt6_add_plugin(${target} ${lib_type}
-            TYPE qml_plugin
+            PLUGIN_TYPE qml_plugin
             CLASS_NAME ${arg_CLASS_NAME}
         )
     endif()

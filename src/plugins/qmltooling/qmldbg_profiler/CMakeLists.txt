@@ -7,7 +7,7 @@
 qt_internal_add_plugin(QQmlProfilerServiceFactoryPlugin
     OUTPUT_NAME qmldbg_profiler
     CLASS_NAME QQmlProfilerServiceFactory
-    TYPE qmltooling
+    PLUGIN_TYPE qmltooling
     SOURCES
         qqmlenginecontrolservice.cpp qqmlenginecontrolservice.h
         qqmlprofileradapter.cpp qqmlprofileradapter.h

@@ -208,7 +208,7 @@ function(qt_internal_add_qml_module target)
 
         # Create plugin target now so we can set internal things
         list(APPEND plugin_args
-            TYPE qml_plugin
+            PLUGIN_TYPE qml_plugin
             DEFAULT_IF FALSE
             OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
             INSTALL_DIRECTORY ${arg_INSTALL_DIRECTORY}

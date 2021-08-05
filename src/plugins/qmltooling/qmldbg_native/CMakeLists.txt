@@ -7,7 +7,7 @@
 qt_internal_add_plugin(QQmlNativeDebugConnectorFactoryPlugin
     OUTPUT_NAME qmldbg_native
     CLASS_NAME QQmlNativeDebugConnectorFactory
-    TYPE qmltooling
+    PLUGIN_TYPE qmltooling
     SOURCES
         qqmlnativedebugconnector.cpp qqmlnativedebugconnector.h
     LIBRARIES

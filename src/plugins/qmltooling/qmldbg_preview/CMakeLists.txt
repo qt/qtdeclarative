@@ -7,7 +7,7 @@
 qt_internal_add_plugin(QQmlPreviewServiceFactoryPlugin
     OUTPUT_NAME qmldbg_preview
     CLASS_NAME QQmlPreviewServiceFactory
-    TYPE qmltooling
+    PLUGIN_TYPE qmltooling
     SOURCES
         qqmlpreviewblacklist.cpp qqmlpreviewblacklist.h
         qqmlpreviewfileengine.cpp qqmlpreviewfileengine.h
