@@ -88,7 +88,7 @@ public:
                                                 QQmlJS::SourceLocation accessLocation);
 };
 
-static CodegenWarningInterface *defaultCodegenWarningInterface()
+static inline CodegenWarningInterface *defaultCodegenWarningInterface()
 {
     static CodegenWarningInterface interface;
     return &interface;
