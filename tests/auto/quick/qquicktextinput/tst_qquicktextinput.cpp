@@ -5893,6 +5893,7 @@ void tst_qquicktextinput::clear()
 
     textInput->clear();
     QVERIFY(textInput->text().isEmpty());
+    QVERIFY2(textInput->preeditText().isEmpty(), "Pre-edit text must be empty after clear");
 
     QCOMPARE(spy.count(), 3);
 
@@ -5901,6 +5902,7 @@ void tst_qquicktextinput::clear()
     QVERIFY(!textInput->canUndo());
     QCOMPARE(spy.count(), 4);
     QCOMPARE(textInput->text(), QString("I am Legend"));
+    QVERIFY2(textInput->preeditText().isEmpty(), "Pre-edit text must be empty after undo");
 }
 
 void tst_qquicktextinput::backspaceSurrogatePairs()

@@ -173,7 +173,7 @@ public:
     }
 
     void init();
-    void resetInputMethod();
+    void cancelInput();
     void startCreatingCursor();
     void ensureVisible(int position, int preeditCursor = 0, int preeditLength = 0);
     void updateHorizontalScroll();
