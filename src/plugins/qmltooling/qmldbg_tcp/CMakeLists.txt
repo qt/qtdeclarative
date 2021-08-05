@@ -7,7 +7,7 @@
 qt_internal_add_plugin(QTcpServerConnectionFactoryPlugin
     OUTPUT_NAME qmldbg_tcp
     CLASS_NAME QTcpServerConnectionFactory
-    TYPE qmltooling
+    PLUGIN_TYPE qmltooling
     SOURCES
         qtcpserverconnection.cpp
         qtcpserverconnectionfactory.h

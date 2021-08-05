@@ -7,7 +7,7 @@
 qt_internal_add_plugin(QDebugMessageServiceFactoryPlugin
     OUTPUT_NAME qmldbg_messages
     CLASS_NAME QDebugMessageServiceFactory
-    TYPE qmltooling
+    PLUGIN_TYPE qmltooling
     SOURCES
         qdebugmessageservice.cpp qdebugmessageservice.h
         qdebugmessageservicefactory.cpp qdebugmessageservicefactory.h

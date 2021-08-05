@@ -7,7 +7,7 @@
 qt_internal_add_plugin(QQuickProfilerAdapterFactoryPlugin
     OUTPUT_NAME qmldbg_quickprofiler
     CLASS_NAME QQuickProfilerAdapterFactory
-    TYPE qmltooling
+    PLUGIN_TYPE qmltooling
     SOURCES
         qquickprofileradapter.cpp qquickprofileradapter.h
         qquickprofileradapterfactory.cpp qquickprofileradapterfactory.h

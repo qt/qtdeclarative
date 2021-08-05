@@ -7,7 +7,7 @@
 qt_internal_add_plugin(QSGOpenVGAdaptationPlugin
     OUTPUT_NAME qsgopenvgbackend
     CLASS_NAME QSGOpenVGAdaptation
-    TYPE scenegraph
+    PLUGIN_TYPE scenegraph
     TARGET_PRODUCT "Qt Quick OpenVG Renderer (Qt $$QT_VERSION)"
     TARGET_DESCRIPTION "Quick OpenVG Renderer for Qt."
     SOURCES

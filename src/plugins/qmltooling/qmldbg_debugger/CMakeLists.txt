@@ -7,7 +7,7 @@
 qt_internal_add_plugin(QQmlDebuggerServiceFactoryPlugin
     OUTPUT_NAME qmldbg_debugger
     CLASS_NAME QQmlDebuggerServiceFactory
-    TYPE qmltooling
+    PLUGIN_TYPE qmltooling
     SOURCES
         qqmldebuggerservicefactory.cpp qqmldebuggerservicefactory.h
         qqmlenginedebugservice.cpp qqmlenginedebugservice.h
