@@ -2104,7 +2104,7 @@ void QQuickTextInput::undo()
 {
     Q_D(QQuickTextInput);
     if (!d->m_readOnly) {
-        d->resetInputMethod();
+        d->cancelInput();
         d->internalUndo();
         d->finishChange(-1, true);
     }
@@ -2120,7 +2120,7 @@ void QQuickTextInput::redo()
 {
     Q_D(QQuickTextInput);
     if (!d->m_readOnly) {
-        d->resetInputMethod();
+        d->cancelInput();
         d->internalRedo();
         d->finishChange();
     }
@@ -2747,11 +2747,13 @@ void QQuickTextInputPrivate::init()
     m_inputControl = new QInputControl(QInputControl::LineEdit, q);
 }
 
-void QQuickTextInputPrivate::resetInputMethod()
+void QQuickTextInputPrivate::cancelInput()
 {
+#if QT_CONFIG(im)
     Q_Q(QQuickTextInput);
     if (!m_readOnly && q->hasActiveFocus() && qGuiApp)
-        QGuiApplication::inputMethod()->reset();
+        cancelPreedit();
+#endif // im
 }
 
 void QQuickTextInput::updateCursorRectangle(bool scroll)
@@ -4697,7 +4699,7 @@ void QQuickTextInput::ensureVisible(int position)
 void QQuickTextInput::clear()
 {
     Q_D(QQuickTextInput);
-    d->resetInputMethod();
+    d->cancelInput();
     d->clear();
 }
 
