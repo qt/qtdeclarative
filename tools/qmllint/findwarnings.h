@@ -72,10 +72,7 @@ private:
     void endVisit(QQmlJS::AST::UiObjectDefinition *uiod) override;
 
     // expression handling
-    bool visit(QQmlJS::AST::IdentifierExpression *idexp) override;
-
     bool visit(QQmlJS::AST::PatternElement *) override;
-    void endVisit(QQmlJS::AST::FieldMemberExpression *) override;
 };
 
 #endif // FINDUNQUALIFIED_H

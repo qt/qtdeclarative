@@ -130,6 +130,9 @@ protected:
     bool visit(QQmlJS::AST::Program *program) override;
     void endVisit(QQmlJS::AST::Program *program) override;
 
+    void endVisit(QQmlJS::AST::FieldMemberExpression *) override;
+    bool visit(QQmlJS::AST::IdentifierExpression *idexp) override;
+
     void throwRecursionDepthError() override;
 
     QString m_implicitImportDirectory;

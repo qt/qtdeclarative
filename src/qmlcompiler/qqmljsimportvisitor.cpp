@@ -1632,4 +1632,23 @@ void QQmlJSImportVisitor::endVisit(Program *)
     QQmlJSScope::resolveTypes(m_exportedRootScope, m_rootScopeImports, &m_usedTypes);
 }
 
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMember)
+{
+    const QString name = fieldMember->name.toString();
+    if (m_importTypeLocationMap.contains(name)) {
+        if (auto it = m_rootScopeImports.find(name); it != m_rootScopeImports.end() && !*(it))
+            m_usedTypes.insert(name);
+    }
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
+{
+    const QString name = idexp->name.toString();
+    if (name.front().isUpper() && m_importTypeLocationMap.contains(name)) {
+        m_usedTypes.insert(name);
+    }
+
+    return true;
+}
+
 QT_END_NAMESPACE

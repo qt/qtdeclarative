@@ -131,16 +131,6 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *uiod)
     childScope->addOwnProperty(property);
 }
 
-bool FindWarningVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
-{
-    const QString name = idexp->name.toString();
-    if (name.front().isUpper() && m_importTypeLocationMap.contains(name)) {
-        m_usedTypes.insert(name);
-    }
-
-    return true;
-}
-
 FindWarningVisitor::FindWarningVisitor(QQmlJSImporter *importer, QStringList qmltypesFiles,
                                        QString code, QList<QQmlJS::SourceLocation> comments,
                                        QString fileName, bool silent)
@@ -265,13 +255,4 @@ bool FindWarningVisitor::visit(QQmlJS::AST::PatternElement *element)
     }
 
     return true;
-}
-
-void FindWarningVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMember)
-{
-    const QString name = fieldMember->name.toString();
-    if (m_importTypeLocationMap.contains(name)) {
-        if (auto it = m_rootScopeImports.find(name); it != m_rootScopeImports.end() && !*(it))
-            m_usedTypes.insert(name);
-    }
 }
