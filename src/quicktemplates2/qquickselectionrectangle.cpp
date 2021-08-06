@@ -181,6 +181,11 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
     });
 
     QObject::connect(m_tapHandler, &QQuickTapHandler::longPressed, [=]() {
+        if (handleUnderPos(m_tapHandler->point().pressPosition()) != nullptr) {
+            // Don't allow press'n'hold to start a new
+            // selection if it started on top of a handle.
+            return;
+        }
         if (!m_alwaysAcceptPressAndHold) {
             if (m_selectionMode == QQuickSelectionRectangle::Auto) {
                 // In Auto mode, we only accept press and hold from touch
@@ -235,6 +240,24 @@ void QQuickSelectionRectanglePrivate::scrollTowardsPos(const QPointF &pos)
     const QSizeF dist = m_selectable->scrollTowardsSelectionPoint(m_scrollToPoint, m_scrollSpeed);
     if (!dist.isNull())
         m_scrollTimer.start(1);
+}
+
+QQuickItem *QQuickSelectionRectanglePrivate::handleUnderPos(const QPointF &pos)
+{
+    const auto handlerTarget = m_selectable->selectionPointerHandlerTarget();
+    if (m_topLeftHandle) {
+        const QPointF localPos = m_topLeftHandle->mapFromItem(handlerTarget, pos);
+        if (m_topLeftHandle->contains(localPos))
+            return m_topLeftHandle;
+    }
+
+    if (m_bottomRightHandle) {
+        const QPointF localPos = m_bottomRightHandle->mapFromItem(handlerTarget, pos);
+        if (m_bottomRightHandle->contains(localPos))
+            return m_bottomRightHandle;
+    }
+
+    return nullptr;
 }
 
 void QQuickSelectionRectanglePrivate::updateDraggingState(bool dragging)
