@@ -59,7 +59,7 @@ if(TARGET Qt::Qml AND NOT QT6_IS_SHARED_LIBS_BUILD)
 endif()
 
 if(TARGET Qt::Quick)
-    # _qt_internal_test_expect_pass(qtquickcompiler) # TODO: Replace with 6.2 qml module API
+    _qt_internal_test_expect_pass(qtquickcompiler BINARY qqc_test)
     # _qt_internal_test_expect_pass(qmlimportscanner) # TODO: Replace with 6.2 qml module API
 endif()
 
