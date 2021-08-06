@@ -50,10 +50,11 @@ T.SelectionRectangle {
         id: handle
         SliderHandle {
             palette: SelectionRectangle.control.palette
-            pressed: tapHandler.pressed
+            pressed: tapHandler.pressed || SelectionRectangle.dragging
             hovered: hoverHandler.hovered
             vertical: false
             visualFocus: false
+            visible: SelectionRectangle.control.active
 
             HoverHandler {
                 id: hoverHandler
