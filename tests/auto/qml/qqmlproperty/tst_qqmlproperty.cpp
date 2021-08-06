@@ -41,7 +41,7 @@
 #include <QtCore/qregularexpression.h>
 #endif
 #include <QtCore/private/qobject_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include "qobject.h"
 #include <QtQml/QQmlPropertyMap>
 
@@ -140,7 +140,7 @@ class tst_qqmlproperty : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlproperty() {}
+    tst_qqmlproperty() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override;

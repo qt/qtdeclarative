@@ -6,12 +6,10 @@
 
 qt_internal_add_test(tst_qpacketprotocol
     SOURCES
-        ../../../shared/util.cpp ../../../shared/util.h
         ../shared/debugutil.cpp ../shared/debugutil_p.h
         ../shared/qqmldebugprocess.cpp ../shared/qqmldebugprocess_p.h
         tst_qpacketprotocol.cpp
     INCLUDE_DIRECTORIES
-        ../../../shared
         ../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
@@ -19,6 +17,7 @@ qt_internal_add_test(tst_qpacketprotocol
         Qt::GuiPrivate
         Qt::Network
         Qt::QmlDebugPrivate
+        Qt::QuickTestUtilsPrivate
 )
 
 ## Scopes:

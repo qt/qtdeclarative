@@ -46,8 +46,8 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlproperty.h>
 
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
@@ -217,6 +217,7 @@ class tst_TouchMouse : public QQmlDataTest
     Q_OBJECT
 public:
     tst_TouchMouse()
+        : QQmlDataTest(QT_QMLTEST_DATADIR)
     {}
 
 private slots:
@@ -429,7 +430,7 @@ void tst_TouchMouse::testEventFilter()
 //    QScopedPointer<QQuickView> window(createView());
 //    window.setSource(testFileUrl("singleitem.qml"));
 //    window.show();
-//    QQuickViewTestUtil::centerOnScreen(&window);
+//    QQuickVisualTestUtils::centerOnScreen(&window);
 //    QVERIFY(QTest::qWaitForWindowActive(&window));
 //    QVERIFY(window->rootObject() != 0);
 

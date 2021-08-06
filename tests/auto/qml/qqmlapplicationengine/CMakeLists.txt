@@ -12,15 +12,13 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qqmlapplicationengine
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_qqmlapplicationengine.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::Network
         Qt::QmlPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

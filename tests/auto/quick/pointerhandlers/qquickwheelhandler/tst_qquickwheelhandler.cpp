@@ -34,8 +34,8 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/qquickview.h>
 #include <QtQml/qqmlcontext.h>
-#include "../../../shared/util.h"
-#include "../../shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 Q_LOGGING_CATEGORY(lcPointerTests, "qt.quick.pointer.tests")
 
@@ -43,7 +43,7 @@ class tst_QQuickWheelHandler: public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_QQuickWheelHandler() { }
+    tst_QQuickWheelHandler() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
 
 private slots:
     void singleHandler_data();

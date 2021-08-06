@@ -35,7 +35,7 @@
 #include <QtQuick/qsgflatcolormaterial.h>
 #include <QtGui/qscreen.h>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_drawingmodes : public QQmlDataTest
 {
@@ -138,7 +138,10 @@ bool tst_drawingmodes::hasPixelAround(const QImage &fb, int centerX, int centerY
     return false;
 }
 
-tst_drawingmodes::tst_drawingmodes() : black(qRgb(0, 0, 0)), red(qRgb(0xff, 0, 0))
+tst_drawingmodes::tst_drawingmodes()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+    , black(qRgb(0, 0, 0))
+    , red(qRgb(0xff, 0, 0))
 {
     qmlRegisterType<DrawingModeItem>("Test", 1, 0, "DrawingModeItem");
     outerWindow.showNormal();

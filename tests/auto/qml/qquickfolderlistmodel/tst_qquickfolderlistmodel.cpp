@@ -33,7 +33,7 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qabstractitemmodel.h>
 #include <QDebug>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #if defined (Q_OS_WIN)
 #include <qt_windows.h>
@@ -48,7 +48,7 @@ class tst_qquickfolderlistmodel : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickfolderlistmodel() {}
+    tst_qquickfolderlistmodel() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 public slots:
     void removed(const QModelIndex &, int start, int end) {

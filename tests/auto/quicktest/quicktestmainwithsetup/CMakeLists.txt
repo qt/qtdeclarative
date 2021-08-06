@@ -13,13 +13,11 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_quicktestmainwithsetup
     QMLTEST
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_quicktestmainwithsetup.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Quick
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

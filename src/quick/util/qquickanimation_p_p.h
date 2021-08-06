@@ -125,7 +125,7 @@ public:
 };
 
 //animates QQuickBulkValueUpdater (assumes start and end values will be reals or compatible)
-class Q_AUTOTEST_EXPORT QQuickBulkValueAnimator : public QAbstractAnimationJob
+class Q_QUICK_AUTOTEST_EXPORT QQuickBulkValueAnimator : public QAbstractAnimationJob
 {
     Q_DISABLE_COPY(QQuickBulkValueAnimator)
 public:

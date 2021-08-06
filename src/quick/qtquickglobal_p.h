@@ -72,6 +72,36 @@ Q_DECLARE_LOGGING_CATEGORY(lcMouse)
 Q_DECLARE_LOGGING_CATEGORY(lcFocus)
 Q_DECLARE_LOGGING_CATEGORY(lcDirty)
 
+/*
+    This is needed for QuickTestUtils. Q_AUTOTEST_EXPORT checks QT_BUILDING_QT
+    (amongst others) to see if it should export symbols. Until QuickTestUtils
+    was introduced, this was enough, as there weren't any intermediate test
+    helper libraries that used a Qt library and were in turn used by tests.
+
+    Taking QQuickItemViewPrivate as an example: previously it was using
+    Q_AUTOTEST_EXPORT. Since QuickTestUtils is a Qt library (albeit a private
+    one), QT_BUILDING_QT was true and so Q_AUTOTEST_EXPORT evaluated to an
+    export. However, QQuickItemViewPrivate was already exported by the Quick
+    library, so we would get errors like this:
+
+    Qt6Quickd.lib(Qt6Quickd.dll) : error LNK2005: "public: static class
+    QQuickItemViewPrivate * __cdecl QQuickItemViewPrivate::get(class QQuickItemView *)"
+    (?get@QQuickItemViewPrivate@@SAPEAV1@PEAVQQuickItemView@@@Z) already defined
+    in Qt6QuickTestUtilsd.lib(viewtestutils.cpp.obj)
+
+    So, to account for the special case of QuickTestUtils, we need to be more
+    specific about which part of Qt we're building; instead of checking if we're
+    building any Qt library at all, check if we're building the Quick library,
+    and only then export.
+*/
+#if defined(QT_BUILD_INTERNAL) && defined(QT_BUILD_QUICK_LIB) && defined(QT_SHARED)
+#    define Q_QUICK_AUTOTEST_EXPORT Q_DECL_EXPORT
+#elif defined(QT_BUILD_INTERNAL) && defined(QT_SHARED)
+#    define Q_QUICK_AUTOTEST_EXPORT Q_DECL_IMPORT
+#else
+#    define Q_QUICK_AUTOTEST_EXPORT
+#endif
+
 QT_END_NAMESPACE
 
 #endif // QTQUICKGLOBAL_P_H

@@ -35,7 +35,7 @@
 #include <private/qquickitem_p.h>
 #include <private/qquickrectangle_p.h>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qquickrectangle : public QQmlDataTest
 {
@@ -57,6 +57,7 @@ private:
 };
 
 tst_qquickrectangle::tst_qquickrectangle()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

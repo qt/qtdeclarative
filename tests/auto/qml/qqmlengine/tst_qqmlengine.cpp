@@ -26,7 +26,6 @@
 **
 ****************************************************************************/
 
-#include "../../shared/util.h"
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QNetworkAccessManager>
@@ -46,12 +45,13 @@
 #include <private/qqmltypedata_p.h>
 #include <private/qqmlcomponentattached_p.h>
 #include <QQmlAbstractUrlInterceptor>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qqmlengine : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlengine() {}
+    tst_qqmlengine() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override;

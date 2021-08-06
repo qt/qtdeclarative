@@ -12,17 +12,14 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qquickitem2
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
-        ../shared/viewtestutil.cpp ../shared/viewtestutil.h
         tst_qquickitem.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
+        Qt::QuickTestUtilsPrivate
     LIBRARIES
         Qt::TestPrivate
     TESTDATA ${test_data}

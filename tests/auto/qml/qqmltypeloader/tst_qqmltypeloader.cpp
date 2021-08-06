@@ -40,12 +40,15 @@
 #include <QtQml/private/qqmltypeloader_p.h>
 #include <QtQml/private/qqmlirbuilder_p.h>
 #include <QtQml/private/qqmlirloader_p.h>
-#include "../../shared/testhttpserver.h"
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_QQMLTypeLoader : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_QQMLTypeLoader();
 
 private slots:
     void testLoadComplete();
@@ -72,6 +75,11 @@ private slots:
 private:
     void checkSingleton(const QString & dataDirectory);
 };
+
+tst_QQMLTypeLoader::tst_QQMLTypeLoader()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_QQMLTypeLoader::testLoadComplete()
 {

@@ -36,7 +36,7 @@
 
 #include <QtQuick/QQuickFramebufferObject>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #ifndef GL_MAX_SAMPLES
 #define GL_MAX_SAMPLES 0x8D57
@@ -143,6 +143,8 @@ class tst_QQuickFramebufferObject: public QQmlDataTest
 {
     Q_OBJECT
 public:
+    tst_QQuickFramebufferObject();
+
 private slots:
     void initTestCase() override;
     void testThatStuffWorks_data();
@@ -150,6 +152,11 @@ private slots:
 
     void testInvalidate();
 };
+
+tst_QQuickFramebufferObject::tst_QQuickFramebufferObject()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_QQuickFramebufferObject::initTestCase()
 {

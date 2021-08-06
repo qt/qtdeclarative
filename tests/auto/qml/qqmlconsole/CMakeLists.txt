@@ -12,14 +12,12 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qqmlconsole
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_qqmlconsole.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::GuiPrivate
         Qt::Qml
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

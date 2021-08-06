@@ -37,13 +37,13 @@
 #include <QtQml/qqmlproperty.h>
 #include <QDebug>
 #include <private/qquickstate_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qqmllistreference : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmllistreference() {}
+    tst_qqmllistreference() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private:
     void modeData();

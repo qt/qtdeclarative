@@ -41,15 +41,17 @@
 #include <QtQml/qqmlapplicationengine.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQuick/qquickwindow.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickControls2Impl/private/qquickiconlabel_p.h>
 
-#include "../shared/util.h"
-
 class tst_StyleImports : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_StyleImports();
 
 private slots:
     void initTestCase() override;
@@ -64,6 +66,11 @@ private slots:
     void fallbackStyleShouldNotOverwriteTheme_data();
     void fallbackStyleShouldNotOverwriteTheme();
 };
+
+tst_StyleImports::tst_StyleImports()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_StyleImports::initTestCase()
 {

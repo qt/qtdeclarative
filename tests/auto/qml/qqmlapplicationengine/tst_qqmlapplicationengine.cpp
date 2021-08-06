@@ -26,7 +26,6 @@
 **
 ****************************************************************************/
 
-#include "../../shared/util.h"
 #include <QQmlApplicationEngine>
 #include <QScopedPointer>
 #include <QSignalSpy>
@@ -35,12 +34,13 @@
 #include <QProcess>
 #endif
 #include <QDebug>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qqmlapplicationengine : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlapplicationengine() {}
+    tst_qqmlapplicationengine() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 
 private slots:

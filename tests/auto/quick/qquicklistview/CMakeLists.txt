@@ -12,10 +12,6 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qquicklistview
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
-        ../shared/geometrytestutil.cpp ../shared/geometrytestutil.h
-        ../shared/viewtestutil.cpp ../shared/viewtestutil.h
-        ../shared/visualtestutil.cpp ../shared/visualtestutil.h
         incrementalmodel.cpp incrementalmodel.h
         proxytestinnermodel.cpp proxytestinnermodel.h
         randomsortmodel.cpp randomsortmodel.h
@@ -23,8 +19,6 @@ qt_internal_add_test(tst_qquicklistview
         tst_qquicklistview.cpp
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
@@ -33,6 +27,7 @@ qt_internal_add_test(tst_qquicklistview
         Qt::QmlPrivate
         Qt::QuickPrivate
         Qt::QuickTest
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

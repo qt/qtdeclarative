@@ -32,8 +32,8 @@
 #include <QtQuick/qquickimageprovider.h>
 #include <QtQml/QQmlComponent>
 #include <QNetworkReply>
-#include "../../shared/util.h"
-#include "testhttpserver.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
 
 #if QT_CONFIG(concurrent)
 #include <qtconcurrentrun.h>
@@ -46,7 +46,7 @@ class tst_qquickpixmapcache : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickpixmapcache() {}
+    tst_qquickpixmapcache() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override;

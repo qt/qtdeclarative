@@ -29,7 +29,7 @@
 #include <QtTest/QtTest>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlengine.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 Q_DECLARE_METATYPE(QMetaMethod::MethodType)
 
@@ -42,6 +42,10 @@ QML_DECLARE_TYPE(MyQmlObject)
 class tst_QQmlMetaObject : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_QQmlMetaObject();
+
 private slots:
     void initTestCase() override;
 
@@ -53,6 +57,11 @@ private slots:
 private:
     MyQmlObject myQmlObject;
 };
+
+tst_QQmlMetaObject::tst_QQmlMetaObject()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_QQmlMetaObject::initTestCase()
 {

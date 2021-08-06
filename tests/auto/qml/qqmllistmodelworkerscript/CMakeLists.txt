@@ -12,10 +12,7 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qqmllistmodelworkerscript
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_qqmllistmodelworkerscript.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
@@ -23,6 +20,7 @@ qt_internal_add_test(tst_qqmllistmodelworkerscript
         Qt::QmlModelsPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

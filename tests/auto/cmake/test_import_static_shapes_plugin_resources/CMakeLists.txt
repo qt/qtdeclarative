@@ -6,18 +6,18 @@ enable_testing()
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-find_package(Qt6 COMPONENTS REQUIRED Quick Test)
+find_package(Qt6 COMPONENTS REQUIRED Quick Test QuickTestUtilsPrivate)
 
 function(create_test_executable target)
     qt_add_executable(${target}
         MANUAL_FINALIZATION
         tst_main.cpp
-        ../../quick/shared/viewtestutil.cpp ../../quick/shared/viewtestutil.h
     )
     target_link_libraries(${target} PRIVATE
         Qt::Qml
         Qt::Quick
         Qt::QuickPrivate
+        Qt::QuickTestUtilsPrivate
         Qt::Test
     )
 

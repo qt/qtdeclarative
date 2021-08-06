@@ -31,12 +31,12 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtGui/QWindow>
 #include <QtCore/QDebug>
 #include <QtQml/qqmlengine.h>
 
-#include "../shared/geometrytestutil.h"
+#include <QtQuickTestUtils/private/geometrytestutils_p.h>
 
 class tst_QQuickView : public QQmlDataTest
 {
@@ -54,6 +54,7 @@ private slots:
 
 
 tst_QQuickView::tst_QQuickView()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

@@ -45,13 +45,13 @@
 #include <private/qsgrenderloop_p.h>
 #include <private/qsgrhisupport_p.h>
 
-#include "../../shared/util.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
 
 class PerPixelRect : public QQuickItem
 {
@@ -102,6 +102,9 @@ class tst_SceneGraph : public QQmlDataTest
 {
     Q_OBJECT
 
+public:
+    tst_SceneGraph();
+
 private slots:
     void initTestCase() override;
 
@@ -125,6 +128,11 @@ template <typename T> class ScopedList : public QList<T> {
 public:
     ~ScopedList() { qDeleteAll(*this); }
 };
+
+tst_SceneGraph::tst_SceneGraph()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_SceneGraph::initTestCase()
 {

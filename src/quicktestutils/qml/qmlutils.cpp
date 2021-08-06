@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,18 +26,23 @@
 **
 ****************************************************************************/
 
-#include "util.h"
+#include "qmlutils_p.h"
 
 #include <QtCore/QDebug>
 #include <QtCore/QMutexLocker>
+#include <QtQml/QQmlComponent>
+#include <QtQml/QQmlEngine>
+
+QT_BEGIN_NAMESPACE
 
 QQmlDataTest *QQmlDataTest::m_instance = 0;
 
-QQmlDataTest::QQmlDataTest() :
+QQmlDataTest::QQmlDataTest(const char *qmlTestDataDir) :
+    m_qmlTestDataDir(qmlTestDataDir),
 #ifdef QT_TESTCASE_BUILDDIR
-    m_dataDirectory(QTest::qFindTestData("data", QT_QMLTEST_DATADIR, 0, QT_TESTCASE_BUILDDIR)),
+    m_dataDirectory(QTest::qFindTestData("data", m_qmlTestDataDir, 0, QT_TESTCASE_BUILDDIR)),
 #else
-    m_dataDirectory(QTest::qFindTestData("data", QT_QMLTEST_DATADIR, 0)),
+    m_dataDirectory(QTest::qFindTestData("data", m_qmlTestDataDir, 0)),
 #endif
 
     m_dataDirectoryUrl(m_dataDirectory.startsWith(QLatin1Char(':'))
@@ -54,7 +59,8 @@ QQmlDataTest::~QQmlDataTest()
 
 void QQmlDataTest::initTestCase()
 {
-    QVERIFY2(!m_dataDirectory.isEmpty(), "'data' directory not found");
+    QVERIFY2(!m_dataDirectory.isEmpty(), qPrintable(QLatin1String(
+        "'data' directory not found in ") + QFileInfo(QString::fromUtf8(m_qmlTestDataDir)).absolutePath()));
     m_directory = QFileInfo(m_dataDirectory).absolutePath();
     if (m_dataDirectoryUrl.scheme() != QLatin1String("qrc"))
         QVERIFY2(QDir::setCurrent(m_directory), qPrintable(QLatin1String("Could not chdir to ") + m_directory));
@@ -70,6 +76,14 @@ QString QQmlDataTest::testFile(const QString &fileName) const
     return result;
 }
 
+bool QQmlDataTest::canImportModule(const QString &importTestQmlSource) const
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData(importTestQmlSource.toLatin1(), QUrl());
+    return !component.isError();
+}
+
 Q_GLOBAL_STATIC(QMutex, qQmlTestMessageHandlerMutex)
 
 QQmlTestMessageHandler *QQmlTestMessageHandler::m_instance = 0;
@@ -78,10 +92,12 @@ void QQmlTestMessageHandler::messageHandler(QtMsgType, const QMessageLogContext 
 {
     QMutexLocker locker(qQmlTestMessageHandlerMutex());
     if (QQmlTestMessageHandler::m_instance) {
-        if (QQmlTestMessageHandler::m_instance->m_includeCategories)
-            QQmlTestMessageHandler::m_instance->m_messages.push_back(QString("%1: %2").arg(context.category, message));
-        else
+        if (QQmlTestMessageHandler::m_instance->m_includeCategories) {
+            QQmlTestMessageHandler::m_instance->m_messages.push_back(
+                QString::fromLatin1("%1: %2").arg(QString::fromUtf8(context.category), message));
+        } else {
             QQmlTestMessageHandler::m_instance->m_messages.push_back(message);
+        }
     }
 }
 
@@ -101,3 +117,5 @@ QQmlTestMessageHandler::~QQmlTestMessageHandler()
     qInstallMessageHandler(m_oldHandler);
     QQmlTestMessageHandler::m_instance = 0;
 }
+
+QT_END_NAMESPACE

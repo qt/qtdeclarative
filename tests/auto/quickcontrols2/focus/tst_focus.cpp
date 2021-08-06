@@ -36,23 +36,30 @@
 
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpointingdevice.h>
+#include <QtGui/qstylehints.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
-#include <QtGui/private/qguiapplication_p.h>
-#include <QtGui/qpointingdevice.h>
-#include <QtGui/qstylehints.h>
-#include "../shared/util.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickControls2/qquickstyle.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
+using namespace QQuickControlsTestUtils;
 
 class tst_focus : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_focus();
 
 private slots:
     void initTestCase() override;
@@ -71,6 +78,11 @@ private slots:
     void scope_data();
     void scope();
 };
+
+tst_focus::tst_focus()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_focus::initTestCase()
 {

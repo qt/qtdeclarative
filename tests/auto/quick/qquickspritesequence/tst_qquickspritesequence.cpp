@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 #include <QtTest/QtTest>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuick/qquickview.h>
 #include <private/qquickspritesequence_p.h>
 
@@ -34,7 +34,7 @@ class tst_qquickspritesequence : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickspritesequence(){}
+    tst_qquickspritesequence() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void test_properties();

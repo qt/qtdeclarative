@@ -35,12 +35,11 @@
 ****************************************************************************/
 
 #include <QtTest/qtest.h>
-#include "../shared/visualtestutil.h"
-
 #include <QtGui/qpalette.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
@@ -49,8 +48,9 @@
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
+#include <QtQuickControls2/qquickstyle.h>
 
-using namespace QQuickVisualTestUtil;
+//using namespace QQuickVisualTestUtils;
 
 // Need a more descriptive failure message: QTBUG-87039
 #define COMPARE_PALETTES(actualPalette, expectedPalette) \
@@ -61,6 +61,9 @@ using namespace QQuickVisualTestUtil;
 class tst_palette : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_palette();
 
 private slots:
     void initTestCase() override;
@@ -81,6 +84,11 @@ private slots:
     void createBindings();
     void updateBindings();
 };
+
+tst_palette::tst_palette()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_palette::initTestCase()
 {

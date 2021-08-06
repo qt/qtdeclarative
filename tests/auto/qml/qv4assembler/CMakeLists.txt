@@ -12,13 +12,11 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qv4assembler
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_qv4assembler.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::QmlPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

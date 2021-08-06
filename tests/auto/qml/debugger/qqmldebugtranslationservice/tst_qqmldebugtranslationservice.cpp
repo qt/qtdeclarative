@@ -61,6 +61,7 @@ class tst_QQmlDebugTranslationService : public QQmlDebugTest
     Q_OBJECT
 public:
     tst_QQmlDebugTranslationService()
+        : QQmlDebugTest(QT_QMLTEST_DATADIR)
     {
     }
 

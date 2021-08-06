@@ -75,7 +75,7 @@ enum PointerMask: quintptr {
     IsString = 0x1
 };
 
-class Q_AUTOTEST_EXPORT QJSValuePrivate
+class QJSValuePrivate
 {
     static const QV4::Value *managedValue(const QV4::Value &v)
     {

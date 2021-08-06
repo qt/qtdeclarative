@@ -6,20 +6,19 @@
 
 qt_internal_add_test(tst_qqmlenginedebugservice
     SOURCES
-        ../../../shared/util.cpp ../../../shared/util.h
         ../shared/debugutil.cpp ../shared/debugutil_p.h
         ../shared/qqmldebugprocess.cpp ../shared/qqmldebugprocess_p.h
         tst_qqmlenginedebugservice.cpp
     DEFINES
         QT_QML_DEBUG_NO_WARNING
     INCLUDE_DIRECTORIES
-        ../../../shared
         ../shared
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::QmlDebugPrivate
         Qt::QmlPrivate
         Qt::Quick
+        Qt::QuickTestUtilsPrivate
 )
 
 ## Scopes:

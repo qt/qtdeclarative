@@ -6,14 +6,12 @@
 
 qt_internal_add_test(tst_signalspy
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         mypropertymap.cpp mypropertymap.h
         tst_signalspy.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Quick
+        Qt::QuickTestUtilsPrivate
 )
 
 ## Scopes:

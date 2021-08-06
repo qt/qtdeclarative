@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,8 +26,19 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLTESTUTILS_H
-#define QQMLTESTUTILS_H
+#ifndef QQMLTESTUTILS_P_H
+#define QQMLTESTUTILS_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 #include <QtCore/QDir>
 #include <QtCore/QUrl>
@@ -35,13 +46,15 @@
 #include <QtCore/QStringList>
 #include <QtTest/QTest>
 
+QT_BEGIN_NAMESPACE
+
 /* Base class for tests with data that are located in a "data" subfolder. */
 
 class QQmlDataTest : public QObject
 {
     Q_OBJECT
 public:
-    QQmlDataTest();
+    QQmlDataTest(const char *qmlTestDataDir);
     virtual ~QQmlDataTest();
 
     QString testFile(const QString &fileName) const;
@@ -63,12 +76,17 @@ public:
 
     static inline QQmlDataTest *instance() { return m_instance; }
 
+    bool canImportModule(const QString &importTestQmlSource) const;
+
 public slots:
     virtual void initTestCase();
 
 private:
     static QQmlDataTest *m_instance;
 
+    // The directory in which to search for the "data" directory.
+    const char *m_qmlTestDataDir = nullptr;
+    // The path to the "data" directory, if found.
     const QString m_dataDirectory;
     const QUrl m_dataDirectoryUrl;
     QString m_directory;
@@ -97,4 +115,6 @@ private:
     bool m_includeCategories;
 };
 
-#endif // QQMLTESTUTILS_H
+QT_END_NAMESPACE
+
+#endif // QQMLTESTUTILS_P_H

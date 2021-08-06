@@ -42,6 +42,8 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
@@ -52,10 +54,9 @@
 #include <QtQuickTemplates2/private/qquicktextarea_p.h>
 #include <QtQuickTemplates2/private/qquicktextfield_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p_p.h>
-#include "../shared/util.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickControls2/qquickstyle.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
 
 class tst_QQuickApplicationWindow : public QQmlDataTest
 {
@@ -85,6 +86,7 @@ private slots:
 };
 
 tst_QQuickApplicationWindow::tst_QQuickApplicationWindow()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     QQuickStyle::setStyle("Basic");
 }

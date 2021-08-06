@@ -30,13 +30,13 @@
 #include <QDebug>
 #include <QQmlEngine>
 #include <QQmlComponent>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qtqmlmodules : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qtqmlmodules() {}
+    tst_qtqmlmodules() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void baseTypes();

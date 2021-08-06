@@ -45,6 +45,9 @@ class tst_QQmlPreview : public QQmlDebugTest
 {
     Q_OBJECT
 
+public:
+    tst_QQmlPreview();
+
 private:
     ConnectResult startQmlProcess(const QString &qmlFile);
     void serveRequest(const QString &path);
@@ -70,6 +73,11 @@ private slots:
     void zoom();
     void fps();
 };
+
+tst_QQmlPreview::tst_QQmlPreview()
+    : QQmlDebugTest(QT_QMLTEST_DATADIR)
+{
+}
 
 QQmlDebugTest::ConnectResult tst_QQmlPreview::startQmlProcess(const QString &qmlFile)
 {

@@ -34,12 +34,12 @@
 #include <QtQuickTest/QtQuickTest>
 #include <private/qquickitem_p.h>
 #include <qqmlexpression.h>
-#include "../shared/viewtestutil.h"
-#include "../shared/visualtestutil.h"
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
-using namespace QQuickViewTestUtil;
-using namespace QQuickVisualTestUtil;
+using namespace QQuickViewTestUtils;
+using namespace QQuickVisualTestUtils;
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
@@ -306,6 +306,7 @@ void tst_qquickpositioners::moveTransitions_flow_data()
 }
 
 tst_qquickpositioners::tst_qquickpositioners()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 
@@ -1023,7 +1024,7 @@ void tst_qquickpositioners::populateTransitions(const QString &positionerObjectN
     QaimModel model_targetItems_transitionFrom;
     QaimModel model_displacedItems_transitionVia;
 
-    QScopedPointer<QQuickView> window(QQuickViewTestUtil::createView());
+    QScopedPointer<QQuickView> window(QQuickViewTestUtils::createView());
 
     window->setInitialProperties({
             {"usePopulateTransition", usePopulateTransition},
@@ -1111,7 +1112,7 @@ void tst_qquickpositioners::addTransitions(const QString &positionerObjectName)
     QaimModel model_targetItems_transitionFrom;
     QaimModel model_displacedItems_transitionVia;
 
-    QScopedPointer<QQuickView> window(QQuickViewTestUtil::createView());
+    QScopedPointer<QQuickView> window(QQuickViewTestUtils::createView());
     window->setInitialProperties({
             {"usePopulateTransition", QVariant(false)},
             {"enableAddTransition", QVariant(true)},
@@ -1235,7 +1236,7 @@ void tst_qquickpositioners::moveTransitions(const QString &positionerObjectName)
     QaimModel model_targetItems_transitionFrom;
     QaimModel model_displacedItems_transitionVia;
 
-    QScopedPointer<QQuickView> window(QQuickViewTestUtil::createView());
+    QScopedPointer<QQuickView> window(QQuickViewTestUtils::createView());
     window->setInitialProperties({
             {"usePopulateTransition", QVariant(false)},
             {"enableAddTransition", QVariant(false)},

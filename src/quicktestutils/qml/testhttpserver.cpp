@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,13 +26,15 @@
 **
 ****************************************************************************/
 
-#include "testhttpserver.h"
+#include "testhttpserver_p.h"
 #include <QTcpSocket>
 #include <QDebug>
 #include <QFile>
 #include <QTimer>
 #include <QTest>
 #include <QQmlFile>
+
+QT_BEGIN_NAMESPACE
 
 /*!
 \internal
@@ -449,3 +451,5 @@ void ThreadedTestHTTPServer::start()
     QThread::start();
     m_condition.wait(&m_mutex);
 }
+
+QT_END_NAMESPACE

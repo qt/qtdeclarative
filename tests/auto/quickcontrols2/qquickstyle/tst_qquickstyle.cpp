@@ -37,6 +37,7 @@
 #include <QtTest/qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickTemplates2/private/qquicklabel_p.h>
@@ -44,11 +45,12 @@
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 
-#include "../shared/util.h"
-
 class tst_QQuickStyle : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_QQuickStyle();
 
 private slots:
     void cleanup();
@@ -62,6 +64,11 @@ private:
     Q_REQUIRED_RESULT bool loadControls();
     void unloadControls();
 };
+
+tst_QQuickStyle::tst_QQuickStyle()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_QQuickStyle::cleanup()
 {

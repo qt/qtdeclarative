@@ -31,7 +31,7 @@
 #include <QtQuick/qquickview.h>
 #include <private/qquickspringanimation_p.h>
 #include <private/qqmlvaluetype_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qquickspringanimation : public QQmlDataTest
 {
@@ -50,6 +50,7 @@ private:
 };
 
 tst_qquickspringanimation::tst_qquickspringanimation()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

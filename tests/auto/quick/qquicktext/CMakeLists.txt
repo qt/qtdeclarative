@@ -12,11 +12,7 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qquicktext
     SOURCES
-        ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
-        ../../shared/util.cpp ../../shared/util.h
         tst_qquicktext.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
@@ -25,6 +21,7 @@ qt_internal_add_test(tst_qquicktext
         Qt::QmlPrivate
         Qt::QuickPrivate
         Qt::QuickTest
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

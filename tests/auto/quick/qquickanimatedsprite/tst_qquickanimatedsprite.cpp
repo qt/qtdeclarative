@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 #include <QtTest/QtTest>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuickTest/QtQuickTest>
 #include <private/qabstractanimation_p.h>
@@ -42,7 +42,7 @@ class tst_qquickanimatedsprite : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickanimatedsprite(){}
+    tst_qquickanimatedsprite() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override;

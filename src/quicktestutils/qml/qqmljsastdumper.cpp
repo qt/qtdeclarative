@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -35,7 +35,7 @@
 **
 ** $QT_END_LICENSE$
 **/
-#include "qqmljsastdumper.h"
+#include "qqmljsastdumper_p.h"
 #include <private/qqmljsast_p.h>
 #include <QtCore/QDebug>
 #include <QtCore/QString>
@@ -248,14 +248,13 @@ bool AstDumper::visit(UiImport *el)
 }
 
 bool AstDumper::visit(UiPublicMember *el) {
-    auto boolToStr = [](bool b) { return b ? "true" : "false"; };
     QString typeStr = ((el->type == UiPublicMember::Signal)   ? QLatin1String("Signal") :
                                                                 (el->type == UiPublicMember::Property) ? QLatin1String("Property") : QStringLiteral("Unexpected(%1)").arg(el->type));
     start(QLatin1String("UiPublicMember type=%1 typeModifier=%2 name=%3 isDefaultMember=%4 isReadonlyMember=%5 isRequired=%6 "
                         "defaultToken=%7 readonlyToken=%8 propertyToken=%9 requiredToken=%10 typeModifierToken=%11 typeToken=%12 "
                         "identifierToken=%13 colonToken=%14 semicolonToken=%15")
           .arg(qs(typeStr), qs(el->typeModifier), qs(el->name),
-               boolToStr(el->isDefaultMember), boolToStr(el->isReadonlyMember), boolToStr(el->isRequired),
+               boolStr(el->isDefaultMember), boolStr(el->isReadonlyMember), boolStr(el->isRequired),
                loc(el->defaultToken), loc(el->readonlyToken), loc(el->propertyToken),
                loc(el->requiredToken), loc(el->typeModifierToken), loc(el->typeToken),
                loc(el->identifierToken), loc(el->colonToken), loc(el->semicolonToken)

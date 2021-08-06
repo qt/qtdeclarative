@@ -6,15 +6,9 @@
 
 qt_internal_add_benchmark(tst_qevents
     SOURCES
-        ../../../auto/quick/shared/geometrytestutil.cpp ../../../auto/quick/shared/geometrytestutil.h
-        ../../../auto/quick/shared/viewtestutil.cpp ../../../auto/quick/shared/viewtestutil.h
-        ../../../auto/quick/shared/visualtestutil.cpp ../../../auto/quick/shared/visualtestutil.h
-        ../../../auto/shared/util.cpp ../../../auto/shared/util.h
         tst_events.cpp
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
-    INCLUDE_DIRECTORIES
-        ../../../auto/shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
@@ -24,6 +18,7 @@ qt_internal_add_benchmark(tst_qevents
         Qt::Quick
         Qt::QuickPrivate
         Qt::Test
+        Qt::QuickTestUtilsPrivate
 )
 
 #### Keys ignored in scope 1:.:.:events.pro:<TRUE>:

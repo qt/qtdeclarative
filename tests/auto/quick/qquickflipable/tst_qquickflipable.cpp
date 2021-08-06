@@ -34,12 +34,13 @@
 #include <QFontMetrics>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <math.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qquickflipable : public QQmlDataTest
 {
     Q_OBJECT
 public:
+    tst_qquickflipable();
 
 private slots:
     void create();
@@ -54,6 +55,11 @@ private slots:
 private:
     QQmlEngine engine;
 };
+
+tst_qquickflipable::tst_qquickflipable()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_qquickflipable::create()
 {

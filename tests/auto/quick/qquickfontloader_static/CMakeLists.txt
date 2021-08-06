@@ -12,12 +12,9 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qquickfontloader_static
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_qquickfontloader_static.cpp
     DEFINES
         QT_DISABLE_DEPRECATED_BEFORE=0
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
@@ -25,6 +22,7 @@ qt_internal_add_test(tst_qquickfontloader_static
         Qt::Network
         Qt::QmlPrivate
         Qt::QuickPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

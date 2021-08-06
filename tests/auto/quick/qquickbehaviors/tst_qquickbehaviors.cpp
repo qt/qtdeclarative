@@ -36,14 +36,14 @@
 #include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquicksmoothedanimation_p.h>
 #include <private/qquickitem_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include "bindable.h"
 
 class tst_qquickbehaviors : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickbehaviors() {}
+    tst_qquickbehaviors() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void init() { qApp->processEvents(); }  //work around animation timer bug (QTBUG-22865)

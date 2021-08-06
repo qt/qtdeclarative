@@ -40,13 +40,13 @@
 #include <QtQuick/private/qquickitemchangelistener_p.h>
 #include <QtGui/qstylehints.h>
 #include <private/qquickitem_p.h>
-#include "../../shared/util.h"
-#include "../shared/visualtestutil.h"
-#include "../shared/viewtestutil.h"
-#include "../../shared/platforminputcontext.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/platforminputcontext_p.h>
 #include <QtTest/private/qpropertytesthelper_p.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
@@ -352,6 +352,7 @@ public:
 QML_DECLARE_TYPE(TabFenceItem2);
 
 tst_QQuickItem::tst_QQuickItem()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

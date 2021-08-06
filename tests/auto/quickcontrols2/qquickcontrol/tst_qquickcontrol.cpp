@@ -36,17 +36,20 @@
 
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
-#include "../shared/util.h"
-#include "../shared/visualtestutil.h"
-#include "../shared/qtest_quickcontrols.h"
 #include <QtGui/qpa/qwindowsysteminterface.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
+#include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
 
 class tst_QQuickControl : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_QQuickControl();
 
 private slots:
     void initTestCase() override;
@@ -56,6 +59,10 @@ private:
     QScopedPointer<QPointingDevice> touchDevice;
 };
 
+tst_QQuickControl::tst_QQuickControl()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_QQuickControl::initTestCase()
 {

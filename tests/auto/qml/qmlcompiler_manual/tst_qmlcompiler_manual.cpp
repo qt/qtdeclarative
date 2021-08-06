@@ -38,7 +38,7 @@
 #include <private/qqmlengine_p.h>
 #include <private/qqmltypedata_p.h>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include <array>
 #include <memory>
@@ -46,6 +46,9 @@
 class tst_qmlcompiler_manual : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_qmlcompiler_manual();
 
 private slots:
     void cppBinding();
@@ -162,6 +165,11 @@ HelloWorld::HelloWorld(QQmlEngine *e, QObject *parent)
 }
 
 QUrl HelloWorld::url = QUrl(); // workaround
+
+tst_qmlcompiler_manual::tst_qmlcompiler_manual()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_qmlcompiler_manual::cppBinding()
 {

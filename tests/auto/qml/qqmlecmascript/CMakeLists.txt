@@ -12,18 +12,15 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qqmlecmascript
     SOURCES
-        ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
-        ../../shared/util.cpp ../../shared/util.h
         testtypes.cpp testtypes.h
         tst_qqmlecmascript.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
         Qt::Network
         Qt::QmlPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

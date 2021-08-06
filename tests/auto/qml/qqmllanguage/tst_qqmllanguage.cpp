@@ -52,9 +52,8 @@
 #include <private/qqmltype_p_p.h>
 
 #include "testtypes.h"
-#include "testhttpserver.h"
-
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
 
 #include <deque>
 
@@ -84,6 +83,9 @@ Evaluation of expressions and bindings is covered in qmlecmascript
 class tst_qqmllanguage : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_qqmllanguage();
 
 private slots:
     void initTestCase() override;
@@ -3734,6 +3736,11 @@ void tst_qqmllanguage::uncreatableTypesAsProperties()
     QQmlComponent component(&engine, testFileUrl("uncreatableTypeAsProperty.qml"));
     QScopedPointer<QObject> object(component.create());
     QVERIFY(!object.isNull());
+}
+
+tst_qqmllanguage::tst_qqmllanguage()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
 }
 
 void tst_qqmllanguage::initTestCase()

@@ -12,14 +12,12 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qqmldirparser
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_qqmldirparser.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::QmlPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

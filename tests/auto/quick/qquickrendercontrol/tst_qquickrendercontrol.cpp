@@ -39,7 +39,7 @@
 #include <QQmlEngine>
 #include <QQmlComponent>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
@@ -79,6 +79,9 @@ class tst_RenderControl : public QQmlDataTest
 {
     Q_OBJECT
 
+public:
+    tst_RenderControl();
+
 private slots:
     void initTestCase() override;
     void cleanupTestCase();
@@ -92,6 +95,11 @@ private:
 #endif
     AnimationDriver *animDriver;
 };
+
+tst_RenderControl::tst_RenderControl()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_RenderControl::initTestCase()
 {

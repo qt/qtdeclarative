@@ -35,13 +35,16 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qjsvalue_p.h>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include <memory>
 
 class tst_qv4mm : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_qv4mm();
 
 private slots:
     void gcStats();
@@ -50,6 +53,11 @@ private slots:
     void clearICParent();
     void createObjectsOnDestruction();
 };
+
+tst_qv4mm::tst_qv4mm()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_qv4mm::gcStats()
 {

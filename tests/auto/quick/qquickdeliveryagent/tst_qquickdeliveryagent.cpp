@@ -38,9 +38,9 @@
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
-#include "../../shared/util.h"
-#include "../shared/visualtestutil.h"
-#include "../shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
@@ -124,6 +124,7 @@ class tst_qquickdeliveryagent : public QQmlDataTest
     Q_OBJECT
 public:
     tst_qquickdeliveryagent()
+        : QQmlDataTest(QT_QMLTEST_DATADIR)
     {
     }
 
@@ -158,7 +159,7 @@ void tst_qquickdeliveryagent::passiveGrabberOrder()
     windowAgent->setObjectName("window");
     QVERIFY(subscene.deliveryAgent);
     QVERIFY(subscene.deliveryAgent != windowAgent);
-    QQuickVisualTestUtil::SignalMultiSpy spy;
+    QQuickVisualTestUtils::SignalMultiSpy spy;
     QVERIFY(spy.connectToSignal(rootTap, &QQuickTapHandler::tapped));
     QVERIFY(spy.connectToSignal(subsceneTap, &QQuickTapHandler::tapped));
 

@@ -39,8 +39,8 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
-#include "../shared/util.h"
 
 #if QT_CONFIG(accessibility)
 #include <QtGui/private/qguiapplication_p.h>
@@ -52,6 +52,9 @@
 class tst_accessibility : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_accessibility();
 
 private slots:
     void a11y_data();
@@ -94,6 +97,11 @@ QQuickItem *findItem(QObject *object)
             item = popup->popupItem();
     }
     return item;
+}
+
+tst_accessibility::tst_accessibility()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
 }
 
 void tst_accessibility::a11y_data()

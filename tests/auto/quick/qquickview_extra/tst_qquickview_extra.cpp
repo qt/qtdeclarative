@@ -30,7 +30,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQml/qqmlengine.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtCore/QDebug>
 #include <QtCore/QTimer>
 
@@ -45,7 +45,7 @@ private slots:
     void qtbug_87228();
 };
 
-tst_QQuickViewExtra::tst_QQuickViewExtra() { }
+tst_QQuickViewExtra::tst_QQuickViewExtra() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
 
 void tst_QQuickViewExtra::qtbug_87228()
 {

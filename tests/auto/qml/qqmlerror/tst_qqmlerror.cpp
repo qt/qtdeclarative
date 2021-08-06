@@ -29,11 +29,15 @@
 #include <qtest.h>
 #include <QQmlError>
 #include <QDebug>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qqmlerror : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_qqmlerror();
+
 private slots:
     void url();
     void description();
@@ -44,6 +48,11 @@ private slots:
     void copy();
     void debug();
 };
+
+tst_qqmlerror::tst_qqmlerror()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_qqmlerror::url()
 {

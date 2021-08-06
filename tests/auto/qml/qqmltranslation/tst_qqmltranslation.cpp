@@ -34,13 +34,13 @@
 #include <QQuickItem>
 #include <private/qqmlengine_p.h>
 #include <private/qqmltypedata_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qqmltranslation : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmltranslation() {}
+    tst_qqmltranslation() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void translation_data();

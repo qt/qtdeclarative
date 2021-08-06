@@ -27,7 +27,7 @@
 ****************************************************************************/
 
 #include "../shared/debugutil_p.h"
-#include "../../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include <private/qqmldebugconnection_p.h>
 #include <private/qqmlenginedebugclient_p.h>
@@ -44,6 +44,9 @@
 class tst_QQmlEngineDebugInspectorIntegration : public QQmlDebugTest
 {
     Q_OBJECT
+
+public:
+    tst_QQmlEngineDebugInspectorIntegration();
 
 private:
     ConnectResult init(bool restrictServices);
@@ -83,6 +86,11 @@ QQmlEngineDebugObjectReference tst_QQmlEngineDebugInspectorIntegration::findRoot
     if (!QQmlDebugTest::waitForSignal(m_engineDebugClient, SIGNAL(result())))
         return QQmlEngineDebugObjectReference();
     return m_engineDebugClient->object();
+}
+
+tst_QQmlEngineDebugInspectorIntegration::tst_QQmlEngineDebugInspectorIntegration()
+    : QQmlDebugTest(QT_QMLTEST_DATADIR)
+{
 }
 
 QQmlDebugTest::ConnectResult tst_QQmlEngineDebugInspectorIntegration::init(bool restrictServices)

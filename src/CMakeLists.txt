@@ -31,6 +31,7 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
     find_package(Qt6 ${PROJECT_VERSION} CONFIG COMPONENTS Test) # special case
     if(QT_FEATURE_testlib AND TARGET Qt::Test) # special case
         add_subdirectory(qmltest)
+        add_subdirectory(quicktestutils)
     endif()
 
     if(QT_FEATURE_quick_particles)
@@ -46,6 +47,10 @@ if(TARGET Qt::Gui AND TARGET Qt::qsb AND QT_FEATURE_qml_animation)
     add_subdirectory(quickcontrols2)
     add_subdirectory(quickdialogs2)
     add_subdirectory(quicknativestyle)
+
+    if(TARGET Qt::QuickControls2)
+        add_subdirectory(quickcontrolstestutils)
+    endif()
 else()
     qt_configure_add_summary_section(NAME "Qt Quick")
     qt_configure_add_summary_entry(TYPE "message" ARGS "Qt Quick support" MESSAGE "no")

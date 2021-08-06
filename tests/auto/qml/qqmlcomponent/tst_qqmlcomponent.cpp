@@ -35,13 +35,13 @@
 #include <QtQuick>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <private/qqmlguardedcontextdata_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include <qcolor.h>
-#include "../../shared/util.h"
-#include "testhttpserver.h"
 
 #include <algorithm>
 
@@ -98,7 +98,7 @@ class tst_qqmlcomponent : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlcomponent() { engine.setIncubationController(&ic); }
+    tst_qqmlcomponent() : QQmlDataTest(QT_QMLTEST_DATADIR) { engine.setIncubationController(&ic); }
 
 private slots:
     void null();

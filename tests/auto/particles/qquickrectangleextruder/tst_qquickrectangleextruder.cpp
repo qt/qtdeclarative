@@ -30,14 +30,13 @@
 #include "../shared/particlestestsshared.h"
 #include <private/qquickparticlesystem_p.h>
 #include <private/qabstractanimation_p.h>
-
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qquickrectangleextruder : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickrectangleextruder() {}
+    tst_qquickrectangleextruder() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override;

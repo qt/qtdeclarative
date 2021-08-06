@@ -31,8 +31,8 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/private/qquickfontloader_p.h>
-#include "../../shared/util.h"
-#include "../../shared/testhttpserver.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickItem>
 
@@ -59,6 +59,7 @@ private:
 };
 
 tst_qquickfontloader::tst_qquickfontloader()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

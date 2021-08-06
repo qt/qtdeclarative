@@ -15,18 +15,17 @@ list(APPEND test_data "data/zoom.qml")
 qt_internal_add_test(tst_qqmlpreview
     SOURCES
         ../../../../../src/plugins/qmltooling/qmldbg_preview/qqmlpreviewblacklist.cpp ../../../../../src/plugins/qmltooling/qmldbg_preview/qqmlpreviewblacklist.h
-        ../../../shared/util.cpp ../../../shared/util.h
         ../shared/debugutil.cpp ../shared/debugutil_p.h
         ../shared/qqmldebugprocess.cpp ../shared/qqmldebugprocess_p.h
         tst_qqmlpreview.cpp
     INCLUDE_DIRECTORIES
         ../../../../../src/plugins/qmltooling/qmldbg_preview
-        ../../../shared
         ../shared
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Qml
         Qt::QmlDebugPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

@@ -37,8 +37,8 @@
 
 #include <qpa/qplatformdrag.h>
 #include <qpa/qwindowsysteminterface.h>
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 template <typename T> static T evaluate(QObject *scope, const QString &expression)
 {
@@ -60,6 +60,10 @@ template <> void evaluate<void>(QObject *scope, const QString &expression)
 class tst_QQuickDropArea: public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_QQuickDropArea();
+
 private slots:
     void containsDrag_internal();
     void containsDrag_external();
@@ -80,6 +84,11 @@ private slots:
 private:
     QQmlEngine engine;
 };
+
+tst_QQuickDropArea::tst_QQuickDropArea()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_QQuickDropArea::containsDrag_internal()
 {

@@ -36,24 +36,32 @@
 
 #include <qtest.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include "../shared/util.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickControls2/private/qquickstyle_p.h>
+#include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickControlsTestUtils;
 
 class tst_qquickuniversalstyleconf : public QQmlDataTest
 {
     Q_OBJECT
 
 public:
+    tst_qquickuniversalstyleconf();
 
 private slots:
     void conf();
 };
 
+tst_qquickuniversalstyleconf::tst_qquickuniversalstyleconf()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
+
 void tst_qquickuniversalstyleconf::conf()
 {
-    QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QQuickControlsApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QFont customFont;

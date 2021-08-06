@@ -29,12 +29,14 @@
 #include <QtTest/QtTest>
 #include <QProcess>
 #include <QString>
-
-#include <util.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class TestQmlimportscanner: public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    TestQmlimportscanner();
 
 private Q_SLOTS:
     void initTestCase() override;
@@ -51,6 +53,11 @@ private:
 
     QString m_qmlimportscannerPath;
 };
+
+TestQmlimportscanner::TestQmlimportscanner()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void TestQmlimportscanner::initTestCase()
 {

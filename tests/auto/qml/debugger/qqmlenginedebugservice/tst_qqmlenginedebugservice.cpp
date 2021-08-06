@@ -27,7 +27,7 @@
 ****************************************************************************/
 
 #include "debugutil_p.h"
-#include "../../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include <private/qqmlbinding_p.h>
 #include <private/qqmlboundsignal_p.h>
@@ -123,7 +123,11 @@ class tst_QQmlEngineDebugService : public QObject
 {
     Q_OBJECT
 public:
-    tst_QQmlEngineDebugService() : m_conn(nullptr), m_dbg(nullptr), m_engine(nullptr), m_rootItem(nullptr) {}
+    tst_QQmlEngineDebugService()
+         : m_conn(nullptr)
+         , m_dbg(nullptr)
+         , m_engine(nullptr)
+         , m_rootItem(nullptr) {}
 
 private:
     QQmlEngineDebugObjectReference findRootObject(int context = 0,

@@ -35,18 +35,18 @@
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickanchors_p_p.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include "../../shared/util.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
 Q_DECLARE_METATYPE(QQuickAnchors::Anchor)
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
 
 class tst_qquickanchors : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickanchors() {}
+    tst_qquickanchors() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void basicAnchors();

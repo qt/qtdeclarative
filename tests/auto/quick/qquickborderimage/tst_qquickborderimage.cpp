@@ -42,9 +42,9 @@
 #include <QtQuick/qquickview.h>
 #include <QtQml/qqmlcontext.h>
 
-#include "../../shared/testhttpserver.h"
-#include "../../shared/util.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
@@ -96,6 +96,7 @@ void tst_qquickborderimage::cleanup()
 }
 
 tst_qquickborderimage::tst_qquickborderimage()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 
@@ -601,7 +602,7 @@ void tst_qquickborderimage::borderImageMesh()
     QImage mesh = window->grabWindow();
 
     QString errorMessage;
-    QVERIFY2(QQuickVisualTestUtil::compareImages(mesh, nonmesh, &errorMessage),
+    QVERIFY2(QQuickVisualTestUtils::compareImages(mesh, nonmesh, &errorMessage),
              qPrintable(errorMessage));
 }
 #endif

@@ -12,16 +12,13 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qqmltypeloader
     SOURCES
-        ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
-        ../../shared/util.cpp ../../shared/util.h
         declarativetesttype.h
         tst_qqmltypeloader.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::Qml
         Qt::QmlPrivate
         Qt::Quick
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

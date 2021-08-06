@@ -34,11 +34,14 @@
 #include <QtQuick/qquickitem.h>
 #include <private/qqmlimport_p.h>
 #include <private/qqmlengine_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_QQmlImport : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_QQmlImport();
 
 private slots:
     void importPathOrder();
@@ -173,6 +176,11 @@ void tst_QQmlImport::uiFormatLoading()
     QVERIFY(test->rootObjects()[size -1]->property("success").toBool());
 
     delete test;
+}
+
+tst_QQmlImport::tst_QQmlImport()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
 }
 
 void tst_QQmlImport::importPathOrder()
@@ -358,7 +366,9 @@ void tst_QQmlImport::removeDynamicPlugin()
     {
         // Load something that adds a dynamic plugin
         QQmlComponent component(&engine);
-        component.setData(QByteArray("import QtTest 1.0; TestResult{}"), QUrl());
+        // Make sure to use something other than QtTest here, since the !plugins.isEmpty()
+        // check will fail if we do.
+        component.setData(QByteArray("import QtQuick.tooling; Property{}"), QUrl());
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     }
     QQmlImportDatabase *imports = &QQmlEnginePrivate::get(&engine)->importDatabase;

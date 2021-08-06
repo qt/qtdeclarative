@@ -45,8 +45,8 @@
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 
-#include "../../shared/util.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
 #define EXPECT(cond) \
     do { \
@@ -84,6 +84,7 @@ private slots:
 };
 
 tst_QQuickAccessible::tst_QQuickAccessible()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 
 }
@@ -299,7 +300,7 @@ void tst_QQuickAccessible::quickAttachedProperties()
         QQuickListView *listview = qobject_cast<QQuickListView *>(object);
         QVERIFY(listview != nullptr);
         QQuickItem *contentItem = listview->contentItem();
-        QQuickText *childItem = QQuickVisualTestUtil::findItem<QQuickText>(contentItem, "acc_text");
+        QQuickText *childItem = QQuickVisualTestUtils::findItem<QQuickText>(contentItem, "acc_text");
         QVERIFY(childItem != nullptr);
 
         QObject *attachedObject = QQuickAccessibleAttached::attachedProperties(childItem);

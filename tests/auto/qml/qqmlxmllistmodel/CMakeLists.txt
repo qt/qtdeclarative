@@ -5,14 +5,12 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qqmlxmllistmodel
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_qqmlxmllistmodel.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     LIBRARIES
         Qt::Core
         Qt::Qml
         Qt::QmlXmlListModelPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

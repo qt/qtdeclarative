@@ -37,8 +37,8 @@
 #include <QtQuick/qquickview.h>
 #include <QtGui/private/qpointingdevice_p.h>
 
-#include "../../../shared/util.h"
-#include "../../shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 Q_LOGGING_CATEGORY(lcPointerTests, "qt.quick.pointer.tests")
 
@@ -47,6 +47,7 @@ class tst_MptaInterop : public QQmlDataTest
     Q_OBJECT
 public:
     tst_MptaInterop()
+        : QQmlDataTest(QT_QMLTEST_DATADIR)
     {}
 
 private slots:
@@ -67,8 +68,8 @@ void tst_MptaInterop::createView(QScopedPointer<QQuickView> &window, const char 
     window.reset(new QQuickView);
     window->setSource(testFileUrl(fileName));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
 
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));

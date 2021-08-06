@@ -1,57 +1,56 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2021 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
-** $QT_BEGIN_LICENSE:LGPL3$
+** $QT_BEGIN_LICENSE:GPL-EXCEPT$
 ** Commercial License Usage
 ** Licensees holding valid commercial Qt licenses may use this file in
 ** accordance with the commercial license agreement provided with the
 ** Software or, alternatively, in accordance with the terms contained in
 ** a written agreement between you and The Qt Company. For licensing terms
-** and conditions see http://www.qt.io/terms-conditions. For further
-** information use the contact form at http://www.qt.io/contact-us.
-**
-** GNU Lesser General Public License Usage
-** Alternatively, this file may be used under the terms of the GNU Lesser
-** General Public License version 3 as published by the Free Software
-** Foundation and appearing in the file LICENSE.LGPLv3 included in the
-** packaging of this file. Please review the following information to
-** ensure the GNU Lesser General Public License version 3 requirements
-** will be met: https://www.gnu.org/licenses/lgpl.html.
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
 **
 ** GNU General Public License Usage
 ** Alternatively, this file may be used under the terms of the GNU
-** General Public License version 2.0 or later as published by the Free
-** Software Foundation and appearing in the file LICENSE.GPL included in
-** the packaging of this file. Please review the following information to
-** ensure the GNU General Public License version 2.0 requirements will be
-** met: http://www.gnu.org/licenses/gpl-2.0.html.
+** General Public License version 3 as published by the Free Software
+** Foundation with exceptions as appearing in the file LICENSE.GPL3-EXCEPT
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-3.0.html.
 **
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
-#ifndef QQUICKVISUALTESTUTIL_H
-#define QQUICKVISUALTESTUTIL_H
+#ifndef QQUICKVISUALTESTUTILS_P_H
+#define QQUICKVISUALTESTUTILS_P_H
 
-#include <functional>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#include <QtCore/QPointer>
-#include <QtQuick/QQuickItem>
-#include <QtQml/QQmlExpression>
+#include <QtQml/qqmlexpression.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include <QtQuick/private/qquickitemview_p.h>
-#include <QtQuickTest/quicktest.h>
-#include <QtQuickControls2/qquickstyle.h>
-#include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
-#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 
-#include "util.h"
+#include <private/qmlutils_p.h>
 
-namespace QQuickVisualTestUtil
+QT_BEGIN_NAMESPACE
+
+class QQuickItemView;
+class QQuickWindow;
+
+namespace QQuickVisualTestUtils
 {
     QQuickItem *findVisibleChild(QQuickItem *parent, const QString &objectName);
 
@@ -59,9 +58,10 @@ namespace QQuickVisualTestUtil
 
     bool delegateVisible(QQuickItem *item);
 
+    void moveMouseAway(QQuickWindow *window);
     void centerOnScreen(QQuickWindow *window);
 
-    void moveMouseAway(QQuickWindow *window);
+    bool delegateVisible(QQuickItem *item);
 
     /*
        Find an item with the specified objectName.  If index is supplied then the
@@ -118,6 +118,35 @@ namespace QQuickVisualTestUtil
         return items;
     }
 
+    bool compareImages(const QImage &ia, const QImage &ib, QString *errorMessage);
+
+    struct SignalMultiSpy : public QObject
+    {
+        Q_OBJECT
+    public:
+        QList<QObject *> senders;
+        QList<QByteArray> signalNames;
+
+        template <typename Func1>
+        QMetaObject::Connection connectToSignal(const typename QtPrivate::FunctionPointer<Func1>::Object *obj, Func1 signal,
+                                                              Qt::ConnectionType type = Qt::AutoConnection)
+        {
+            return connect(obj, signal, this, &SignalMultiSpy::receive, type);
+        }
+
+        void clear() {
+            senders.clear();
+            signalNames.clear();
+        }
+
+    public slots:
+        void receive() {
+            QMetaMethod m = sender()->metaObject()->method(senderSignalIndex());
+            senders << sender();
+            signalNames << m.name();
+        }
+    };
+
     enum class FindViewDelegateItemFlag {
         None = 0x0,
         PositionViewAtIndex = 0x01
@@ -146,36 +175,7 @@ namespace QQuickVisualTestUtil
     public:
         QQuickApplicationHelper(QQmlDataTest *testCase, const QString &testFilePath,
                 const QStringList &qmlImportPaths = {},
-                const QVariantMap &initialProperties = {})
-        {
-            for (const auto &path : qmlImportPaths)
-                engine.addImportPath(path);
-
-            QQmlComponent component(&engine);
-
-            component.loadUrl(testCase->testFileUrl(testFilePath));
-            QVERIFY2(component.isReady(), qPrintable(component.errorString()));
-            QObject *rootObject = component.createWithInitialProperties(initialProperties);
-            cleanup.reset(rootObject);
-            if (component.isError() || !rootObject) {
-                errorMessage = QString::fromUtf8("Failed to create window: %1").arg(component.errorString()).toUtf8();
-                return;
-            }
-
-            window = qobject_cast<QQuickWindow*>(rootObject);
-            appWindow = qobject_cast<QQuickApplicationWindow*>(rootObject);
-            if (!window) {
-                errorMessage = QString::fromUtf8("Root object %1 must be a QQuickWindow subclass").arg(QDebug::toString(window)).toUtf8();
-                return;
-            }
-
-            if (window->isVisible()) {
-                errorMessage = QString::fromUtf8("Expected window not to be visible, but it is").toUtf8();
-                return;
-            }
-
-            ready = true;
-        }
+                const QVariantMap &initialProperties = {});
 
         // Return a C-style string instead of QString because that's what QTest uses for error messages,
         // so it saves code at the calling site.
@@ -186,7 +186,6 @@ namespace QQuickVisualTestUtil
 
         QQmlEngine engine;
         QScopedPointer<QObject> cleanup;
-        QQuickApplicationWindow *appWindow = nullptr;
         QQuickWindow *window = nullptr;
 
         bool ready = false;
@@ -196,36 +195,6 @@ namespace QQuickVisualTestUtil
         QByteArray errorMessage;
     };
 
-    struct QQuickStyleHelper
-    {
-        bool updateStyle(const QString &style)
-        {
-            // If it's not the first time a style has been set and the new style is not different, do nothing.
-            if (!currentStyle.isEmpty() && style == currentStyle)
-                return false;
-
-            engine.reset();
-            currentStyle = style;
-            qmlClearTypeRegistrations();
-            engine.reset(new QQmlEngine);
-            QQuickStyle::setStyle(style);
-
-            QQmlComponent component(engine.data());
-            component.setData(QString("import QtQuick\nimport QtQuick.Controls\n Control { }").toUtf8(), QUrl());
-
-            return true;
-        }
-
-        QString currentStyle;
-        QScopedPointer<QQmlEngine> engine;
-    };
-
-    typedef std::function<void(const QString &/*relativePath*/, const QUrl &/*absoluteUrl*/)> ForEachCallback;
-
-    void forEachControl(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skipList, ForEachCallback callback);
-    void addTestRowForEachControl(QQmlEngine *engine, const QString &sourcePath, const QString &targetPath, const QStringList &skipList = QStringList());
-
-    // Helper to simulate Alt itself and Alt+<key> events.
     class MnemonicKeySimulator
     {
         Q_DISABLE_COPY(MnemonicKeySimulator)
@@ -240,13 +209,11 @@ namespace QQuickVisualTestUtil
         QPointer<QWindow> m_window;
         Qt::KeyboardModifiers m_modifiers;
     };
-
-    [[nodiscard]] bool verifyButtonClickable(QQuickAbstractButton *button);
-    [[nodiscard]] bool clickButton(QQuickAbstractButton *button);
-    [[nodiscard]] bool doubleClickButton(QQuickAbstractButton *button);
 }
 
 #define QQUICK_VERIFY_POLISH(item) \
     QTRY_COMPARE(QQuickItemPrivate::get(item)->polishScheduled, false)
 
-#endif // QQUICKVISUALTESTUTIL_H
+QT_END_NAMESPACE
+
+#endif // QQUICKVISUALTESTUTILS_P_H

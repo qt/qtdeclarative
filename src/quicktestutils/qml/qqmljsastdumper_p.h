@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -35,8 +35,8 @@
 **
 ** $QT_END_LICENSE$
 **/
-#ifndef ASTDUMPER_H
-#define ASTDUMPER_H
+#ifndef ASTDUMPER_P_H
+#define ASTDUMPER_P_H
 
 
 //
@@ -446,4 +446,4 @@ std::ostream &operator<<(std::ostream &stream, AST::Node *n);
 
 QT_END_NAMESPACE
 
-#endif // ASTDUMPER_H
+#endif // ASTDUMPER_P_H

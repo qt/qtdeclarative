@@ -45,16 +45,16 @@
 #include <QStringListModel>
 #include <QFile>
 
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
 #include <math.h>
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
-using namespace QQuickViewTestUtil;
-using namespace QQuickVisualTestUtil;
+using namespace QQuickViewTestUtils;
+using namespace QQuickVisualTestUtils;
 
 Q_DECLARE_METATYPE(QQuickPathView::HighlightRangeMode)
 Q_DECLARE_METATYPE(QQuickPathView::PositionMode)
@@ -186,6 +186,7 @@ private:
 };
 
 tst_QQuickPathView::tst_QQuickPathView()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 
@@ -1515,7 +1516,7 @@ void tst_QQuickPathView::undefinedPath()
 void tst_QQuickPathView::mouseDrag()
 {
     QScopedPointer<QQuickView> window(createView());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
     window->setSource(testFileUrl("dragpath.qml"));
     window->show();
     window->requestActivate();
@@ -1585,7 +1586,7 @@ void tst_QQuickPathView::mouseDrag()
 void tst_QQuickPathView::nestedMouseAreaDrag()
 {
     QScopedPointer<QQuickView> window(createView());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
     window->setSource(testFileUrl("nestedmousearea.qml"));
     window->show();
     window->requestActivate();
@@ -1608,7 +1609,7 @@ void tst_QQuickPathView::nestedMouseAreaDrag()
 void tst_QQuickPathView::flickNClick() // QTBUG-77173
 {
     QScopedPointer<QQuickView> window(createView());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
     window->setSource(testFileUrl("nestedmousearea2.qml"));
     window->show();
     window->requestActivate();
@@ -1903,7 +1904,7 @@ void tst_QQuickPathView::cancelDrag()
 {
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("dragpath.qml"));
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
@@ -1950,7 +1951,7 @@ void tst_QQuickPathView::maximumFlickVelocity()
 {
     QScopedPointer<QQuickView> window(createView());
     window->setSource(testFileUrl("dragpath.qml"));
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
     window->show();
     window->requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
@@ -1996,7 +1997,7 @@ void tst_QQuickPathView::snapToItem()
     QFETCH(bool, enforceRange);
 
     QScopedPointer<QQuickView> window(createView());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
     window->setSource(testFileUrl("panels.qml"));
     window->show();
     window->requestActivate();
@@ -2040,7 +2041,7 @@ void tst_QQuickPathView::snapOneItem()
     QFETCH(bool, enforceRange);
 
     QScopedPointer<QQuickView> window(createView());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
     window->setSource(testFileUrl("panels.qml"));
     window->show();
     window->requestActivate();
@@ -2309,7 +2310,7 @@ void tst_QQuickPathView::changePathDuringRefill()
 void tst_QQuickPathView::nestedinFlickable()
 {
     QScopedPointer<QQuickView> window(createView());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
     window->setSource(testFileUrl("nestedInFlickable.qml"));
     window->show();
     window->requestActivate();
@@ -2417,7 +2418,7 @@ void tst_QQuickPathView::nestedinFlickable()
 void tst_QQuickPathView::ungrabNestedinFlickable()
 {
     QScopedPointer<QQuickView> window(createView());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
     window->setSource(testFileUrl("ungrabNestedinFlickable.qml"));
     window->show();
     window->requestActivate();
@@ -2451,7 +2452,7 @@ void tst_QQuickPathView::ungrabNestedinFlickable()
 void tst_QQuickPathView::flickableDelegate()
 {
     QScopedPointer<QQuickView> window(createView());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
     window->setSource(testFileUrl("flickableDelegate.qml"));
     window->show();
     window->requestActivate();
@@ -2684,7 +2685,7 @@ void tst_QQuickPathView::movementDirection()
     QFETCH(qreal, tooffset);
 
     QScopedPointer<QQuickView> window(createView());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
     window->setSource(testFileUrl("movementDirection.qml"));
     window->show();
     window->requestActivate();

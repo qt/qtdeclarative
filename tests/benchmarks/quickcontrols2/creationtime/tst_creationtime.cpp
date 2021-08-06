@@ -39,9 +39,12 @@
 #include <QtQml>
 #include <QtQuickControls2/qquickstyle.h>
 
-#include "../../../auto/quickcontrols2/shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickControlsTestUtils;
+using namespace QQuickVisualTestUtils;
 
 class tst_CreationTime : public QObject
 {
@@ -111,7 +114,8 @@ void tst_CreationTime::basicStyle()
 void tst_CreationTime::basicStyle_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(styleHelper.engine.data(), "basic", "QtQuick/Controls/Basic", QStringList() << "ApplicationWindow");
+    addTestRowForEachControl(styleHelper.engine.data(), QQC2_IMPORT_PATH, "basic", "QtQuick/Controls/Basic",
+        QStringList() << "ApplicationWindow");
 }
 
 void tst_CreationTime::fusion()
@@ -123,7 +127,9 @@ void tst_CreationTime::fusion()
 void tst_CreationTime::fusion_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(styleHelper.engine.data(), "fusion", "QtQuick/Controls/Fusion", QStringList() << "ApplicationWindow" << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
+    addTestRowForEachControl(styleHelper.engine.data(), QQC2_IMPORT_PATH, "fusion", "QtQuick/Controls/Fusion",
+        QStringList() << "ApplicationWindow" << "ButtonPanel" << "CheckIndicator"
+            << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
 }
 
 void tst_CreationTime::imagine()
@@ -135,7 +141,8 @@ void tst_CreationTime::imagine()
 void tst_CreationTime::imagine_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(styleHelper.engine.data(), "imagine", "QtQuick/Controls/Imagine", QStringList() << "ApplicationWindow");
+    addTestRowForEachControl(styleHelper.engine.data(), QQC2_IMPORT_PATH, "imagine", "QtQuick/Controls/Imagine",
+        QStringList() << "ApplicationWindow");
 }
 
 void tst_CreationTime::material()
@@ -147,7 +154,9 @@ void tst_CreationTime::material()
 void tst_CreationTime::material_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(styleHelper.engine.data(), "material", "QtQuick/Controls/Material", QStringList() << "ApplicationWindow" << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
+    addTestRowForEachControl(styleHelper.engine.data(), QQC2_IMPORT_PATH, "material", "QtQuick/Controls/Material",
+        QStringList() << "ApplicationWindow" << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator"
+            << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
 }
 
 void tst_CreationTime::universal()
@@ -159,7 +168,8 @@ void tst_CreationTime::universal()
 void tst_CreationTime::universal_data()
 {
     QTest::addColumn<QUrl>("url");
-    addTestRowForEachControl(styleHelper.engine.data(), "universal", "QtQuick/Controls/Universal", QStringList() << "ApplicationWindow" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRowForEachControl(styleHelper.engine.data(), QQC2_IMPORT_PATH, "universal", "QtQuick/Controls/Universal",
+        QStringList() << "ApplicationWindow" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 QTEST_MAIN(tst_CreationTime)

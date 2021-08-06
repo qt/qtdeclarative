@@ -12,10 +12,7 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qquickapplication
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_qquickapplication.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
@@ -24,6 +21,7 @@ qt_internal_add_test(tst_qquickapplication
         Qt::QmlPrivate
         Qt::Quick
         Qt::QuickPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

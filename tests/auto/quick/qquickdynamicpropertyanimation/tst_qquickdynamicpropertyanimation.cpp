@@ -36,13 +36,13 @@
 #include <QtCore/QRect>
 #include <QtGui/QColor>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qquickdynamicpropertyanimation : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickdynamicpropertyanimation() {}
+    tst_qquickdynamicpropertyanimation() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private:
     template<class T>

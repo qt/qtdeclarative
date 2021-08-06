@@ -42,14 +42,14 @@
 #include <QQmlComponent>
 #include <QDebug>
 #include <QScopedPointer>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qqmlpromise : public QQmlDataTest
 {
     Q_OBJECT
 
 public:
-    tst_qqmlpromise() {}
+    tst_qqmlpromise() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void promise_all_empty_input();

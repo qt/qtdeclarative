@@ -35,14 +35,14 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/qquickview.h>
 #include <QtQml/qqmlcontext.h>
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 class tst_QQuickPinchArea: public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_QQuickPinchArea() { }
+    tst_QQuickPinchArea() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
 private slots:
     void cleanupTestCase();
     void pinchProperties();

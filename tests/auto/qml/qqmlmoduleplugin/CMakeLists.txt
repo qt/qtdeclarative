@@ -20,17 +20,14 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qqmlmoduleplugin
     SOURCES
-        ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
-        ../../shared/util.cpp ../../shared/util.h
         tst_qqmlmoduleplugin.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::GuiPrivate
         Qt::Network
         Qt::QmlPrivate
         Qt::QuickShapesPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

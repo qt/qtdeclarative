@@ -32,7 +32,7 @@
 #include <qquickitem.h>
 #include <qquickview.h>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include "mypropertymap.h"
 
 class tst_SignalSpy : public QQmlDataTest
@@ -50,6 +50,7 @@ private:
 };
 
 tst_SignalSpy::tst_SignalSpy()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     qmlRegisterType<MyPropertyMap>("MyImport", 1, 0, "MyPropertyMap");
 }

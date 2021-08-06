@@ -12,15 +12,13 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qmlcachegen
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_qmlcachegen.cpp
         scriptstringprops.h
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::QmlPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

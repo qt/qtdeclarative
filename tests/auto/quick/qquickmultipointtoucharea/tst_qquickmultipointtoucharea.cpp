@@ -38,8 +38,8 @@
 #include <QtGui/QScreen>
 #include <QtGui/private/qevent_p.h>
 #include <QtGui/private/qpointingdevice_p.h>
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
@@ -47,7 +47,7 @@ class tst_QQuickMultiPointTouchArea : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_QQuickMultiPointTouchArea() { }
+    tst_QQuickMultiPointTouchArea() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
 
 private slots:
     void cleanupTestCase() {}

@@ -34,14 +34,13 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitemgrabresult.h>
 #include <QtQuick/private/qquicktext_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTemplates2/private/qquickicon_p.h>
 #include <QtQuickControls2Impl/private/qquickiconimage_p.h>
 #include <QtQuickControls2Impl/private/qquickiconlabel_p.h>
 
-#include "../shared/util.h"
-#include "../shared/visualtestutil.h"
-
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
 
 class tst_qquickiconlabel : public QQmlDataTest
 {
@@ -59,6 +58,7 @@ private slots:
 };
 
 tst_qquickiconlabel::tst_qquickiconlabel()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

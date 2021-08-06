@@ -30,9 +30,8 @@
 #include <QtQuick>
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <QDebug>
-#include "../../../auto/shared/util.h"
-#include "../../../auto/quick/shared/viewtestutil.h"
-
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 class TestView : public QQuickView
 {
@@ -44,6 +43,9 @@ public:
 class tst_events : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_events();
 
 private slots:
     void mousePressRelease();
@@ -63,6 +65,11 @@ public slots:
 private:
     TestView window;
 };
+
+tst_events::tst_events()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_events::mousePressRelease()
 {

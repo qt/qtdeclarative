@@ -40,17 +40,17 @@
 #include <private/qquickstategroup_p.h>
 #include <private/qquickpropertychanges_p.h>
 #include <private/qquickrectangle_p.h>
-#include "../../shared/util.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtTest/private/qemulationdetector_p.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
 
 class tst_qquickdesignersupport : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickdesignersupport() {}
+    tst_qquickdesignersupport() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void customData();

@@ -31,13 +31,13 @@
 #include <QQmlComponent>
 #include <QQmlContext>
 #include <QLoggingCategory>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qqmlconsole : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlconsole() {}
+    tst_qqmlconsole() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void logging();

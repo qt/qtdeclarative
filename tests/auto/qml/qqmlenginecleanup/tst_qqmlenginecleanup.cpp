@@ -26,20 +26,20 @@
 **
 ****************************************************************************/
 
-#include "../../shared/util.h"
 #include <QtCore/QObject>
 #include <QtQml/qqml.h>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
 #include <private/qhashedstring_p.h>
 #include <private/qqmlmetatype_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 //Separate test, because if engine cleanup attempts fail they can easily break unrelated tests
 class tst_qqmlenginecleanup : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlenginecleanup() {}
+    tst_qqmlenginecleanup() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void test_qmlClearTypeRegistrations();

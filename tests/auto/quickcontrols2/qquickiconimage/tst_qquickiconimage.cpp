@@ -39,12 +39,12 @@
 #include <QtQuick/qquickimageprovider.h>
 #include <QtQuick/qquickitemgrabresult.h>
 #include <QtQuick/private/qquickimage_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2Impl/private/qquickiconimage_p.h>
 
-#include "../shared/util.h"
-#include "../shared/visualtestutil.h"
-
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
 
 class tst_qquickiconimage : public QQmlDataTest
 {
@@ -92,6 +92,7 @@ static QImage grabItemToImage(QQuickItem *item)
         QSKIP("Test does not support device pixel ratio greater than 2")
 
 tst_qquickiconimage::tst_qquickiconimage() :
+    QQmlDataTest(QT_QMLTEST_DATADIR),
     dpr(qGuiApp->devicePixelRatio()),
     integerDpr(qCeil(dpr))
 {

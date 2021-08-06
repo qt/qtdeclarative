@@ -47,7 +47,7 @@
 #include <QtQuick/private/qquickabstractpaletteprovider_p.h>
 #include <QtQuick/private/qquickpalettecolorprovider_p.h>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 // Use this to get a more descriptive failure message (QTBUG-87039).
 #define COMPARE_PALETTES(actualPalette, expectedPalette) \
@@ -58,6 +58,9 @@
 class tst_QQuickPalette : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_QQuickPalette();
 
 private Q_SLOTS:
     void resolvingColor();
@@ -91,6 +94,11 @@ private Q_SLOTS:
 
 using GroupGetter = QQuickColorGroup* (QQuickPalette::* )() const;
 Q_DECLARE_METATYPE(GroupGetter);
+
+tst_QQuickPalette::tst_QQuickPalette()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_QQuickPalette::resolvingColor()
 {

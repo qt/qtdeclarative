@@ -27,8 +27,8 @@
 ****************************************************************************/
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
-#include "../../shared/util.h"
-#include "../../shared/testhttpserver.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <private/qinputmethod_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlexpression.h>
@@ -51,8 +51,8 @@
 #endif
 
 #include "qplatformdefs.h"
-#include "../../shared/platformquirks.h"
-#include "../../shared/platforminputcontext.h"
+#include <QtQuickTestUtils/private/platformquirks_p.h>
+#include <QtQuickTestUtils/private/platforminputcontext_p.h>
 
 Q_DECLARE_METATYPE(QQuickTextInput::SelectionMode)
 Q_DECLARE_METATYPE(QQuickTextInput::EchoMode)
@@ -302,6 +302,7 @@ void tst_qquicktextinput::cleanup()
 }
 
 tst_qquicktextinput::tst_qquicktextinput()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     standard << "the quick brown fox jumped over the lazy dog"
         << "It's supercalifragisiticexpialidocious!"

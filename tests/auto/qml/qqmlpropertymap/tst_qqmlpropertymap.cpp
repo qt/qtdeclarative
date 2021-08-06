@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 #include <qtest.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlpropertymap.h>
@@ -39,7 +39,7 @@ class tst_QQmlPropertyMap : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_QQmlPropertyMap() {}
+    tst_QQmlPropertyMap() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override;

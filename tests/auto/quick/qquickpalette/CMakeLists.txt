@@ -6,14 +6,13 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qquickpalette
     SOURCES
-        ../../shared/util.h
-        ../../shared/util.cpp
         tst_qquickpalette.cpp
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::QmlPrivate
         Qt::QuickPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

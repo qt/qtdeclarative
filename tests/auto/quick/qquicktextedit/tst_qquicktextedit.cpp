@@ -27,7 +27,7 @@
 ****************************************************************************/
 #include <qtest.h>
 #include <QtTest/QSignalSpy>
-#include "../../shared/testhttpserver.h"
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <math.h>
 #include <QFile>
 #include <QTextDocument>
@@ -50,10 +50,11 @@
 #include <QClipboard>
 #include <QMimeData>
 #include <private/qquicktextcontrol_p.h>
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
-#include "../../shared/platformquirks.h"
-#include "../../shared/platforminputcontext.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickTestUtils/private/platformquirks_p.h>
+#include <QtQuickTestUtils/private/platforminputcontext_p.h>
 #include <private/qinputmethod_p.h>
 #include <QtGui/qstylehints.h>
 #include <qmath.h>
@@ -317,6 +318,7 @@ QList<Key> &operator <<(QList<Key> &keys, Qt::Key key)
 }
 
 tst_qquicktextedit::tst_qquicktextedit()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     qRegisterMetaType<QQuickTextEdit::TextFormat>();
     qRegisterMetaType<QQuickTextEdit::SelectionMode>();
@@ -2583,8 +2585,8 @@ void tst_qquicktextedit::linkHover()
     QQuickView window(testFileUrl("linkInteraction.qml"));
     window.setFlag(Qt::FramelessWindowHint);
     QVERIFY(window.rootObject() != nullptr);
-    QQuickViewTestUtil::centerOnScreen(&window);
-    QQuickViewTestUtil::moveMouseAway(&window);
+    QQuickVisualTestUtils::centerOnScreen(&window);
+    QQuickVisualTestUtils::moveMouseAway(&window);
     window.show();
     window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));
@@ -2625,8 +2627,8 @@ void tst_qquicktextedit::linkInteraction()
 {
     QQuickView window(testFileUrl("linkInteraction.qml"));
     QVERIFY(window.rootObject() != nullptr);
-    QQuickViewTestUtil::centerOnScreen(&window);
-    QQuickViewTestUtil::moveMouseAway(&window);
+    QQuickVisualTestUtils::centerOnScreen(&window);
+    QQuickVisualTestUtils::moveMouseAway(&window);
     window.show();
     window.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&window));

@@ -36,24 +36,24 @@
 
 #include <QtTest>
 #include <QtQml>
-#include "../shared/util.h"
-#include "../shared/visualtestutil.h"
-#include "../shared/qtest_quickcontrols.h"
-
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickmenu_p.h>
 #include <QtQuickTemplates2/private/qquickmenubar_p.h>
 #include <QtQuickTemplates2/private/qquickmenubaritem_p.h>
 #include <QtQuickTemplates2/private/qquickmenuitem_p.h>
+#include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
 
 class tst_qquickmenubar : public QQmlDataTest
 {
     Q_OBJECT
 
 public:
+    tst_qquickmenubar();
 
 private slots:
     void delegate();
@@ -63,6 +63,11 @@ private slots:
     void addRemove();
     void checkHighlightWhenMenuDismissed();
 };
+
+tst_qquickmenubar::tst_qquickmenubar()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_qquickmenubar::delegate()
 {

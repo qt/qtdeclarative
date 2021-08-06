@@ -30,8 +30,8 @@
 #include <QtQml/qqmlcomponent.h>
 #include <private/qqmlconnections_p.h>
 #include <private/qquickitem_p.h>
-#include "../../shared/util.h"
 #include <QtQml/qqmlscriptstring.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qqmlconnections : public QQmlDataTest
 {
@@ -85,6 +85,7 @@ private:
 };
 
 tst_qqmlconnections::tst_qqmlconnections()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

@@ -35,7 +35,7 @@
 #include <QtGui/qscreen.h>
 #include <private/qsgrendernode_p.h>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_rendernode: public QQmlDataTest
 {
@@ -182,6 +182,7 @@ protected:
 };
 
 tst_rendernode::tst_rendernode()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     qmlRegisterType<ClearItem>("Test", 1, 0, "ClearItem");
     qmlRegisterType<MessUpItem>("Test", 1, 0, "MessUpItem");

@@ -31,14 +31,14 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickdraghandler_p.h>
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 class tst_qquickboundaryrule : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickboundaryrule() {}
+    tst_qquickboundaryrule() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void init() { qApp->processEvents(); }  //work around animation timer bug (QTBUG-22865)

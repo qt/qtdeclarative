@@ -12,10 +12,7 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qquickwidget
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_qquickwidget.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
@@ -25,6 +22,7 @@ qt_internal_add_test(tst_qquickwidget
         Qt::QuickWidgets
         Qt::QuickWidgetsPrivate
         Qt::WidgetsPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

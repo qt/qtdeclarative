@@ -30,7 +30,7 @@
 #include "qqmldebugtestservice.h"
 #include "debugutil_p.h"
 #include "qqmldebugprocess_p.h"
-#include "../../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include <private/qqmldebugclient_p.h>
 #include <private/qqmldebugconnection_p.h>
@@ -51,6 +51,9 @@
 class tst_QQmlDebugService : public QQmlDataTest
 {
     Q_OBJECT
+public:
+    tst_QQmlDebugService();
+
 private:
     QQmlDebugConnection *m_conn;
     QQmlDebugTestService *m_service;
@@ -68,6 +71,11 @@ private slots:
     void checkSupportForDataStreamVersion();
     void checkSupportForOldDataStreamVersion();
 };
+
+tst_QQmlDebugService::tst_QQmlDebugService()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_QQmlDebugService::initTestCase()
 {

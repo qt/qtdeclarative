@@ -29,7 +29,7 @@
 #include <QtGui/QGuiApplication>
 #include <QtQuick/QQuickView>
 #include <QtQml/QQmlComponent>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <qtest.h>
 
 QByteArray qmltemplate("import QtQuick 2.0\n"
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
 {
     for (int i = 0; i < 3; i++) {
         QGuiApplication app(argc, argv);
-        QQmlDataTest dataTest;
+        QQmlDataTest dataTest(QT_QMLTEST_DATADIR);
         dataTest.initTestCase();
         QQuickView window;
         QQmlComponent component (window.engine());

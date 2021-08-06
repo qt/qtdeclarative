@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,12 +26,23 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKVIEWTESTUTIL_H
-#define QQUICKVIEWTESTUTIL_H
+#ifndef QQUICKVIEWTESTUTILS_P_H
+#define QQUICKVIEWTESTUTILS_P_H
 
-#include <QtQuick/QQuickItem>
-#include <QtQml/QQmlExpression>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include <QtCore/QAbstractListModel>
+#include <QtQml/QQmlExpression>
+#include <QtQuick/QQuickItem>
 
 QT_FORWARD_DECLARE_CLASS(QQuickView)
 QT_FORWARD_DECLARE_CLASS(QQuickItemViewPrivate)
@@ -39,7 +50,7 @@ QT_FORWARD_DECLARE_CLASS(FxViewItem)
 
 QT_BEGIN_NAMESPACE
 
-namespace QQuickViewTestUtil
+namespace QQuickViewTestUtils
 {
     QQuickView *createView();
 
@@ -194,10 +205,10 @@ namespace QQuickTest {
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QQuickViewTestUtil::QaimModel*)
-Q_DECLARE_METATYPE(QQuickViewTestUtil::ListChange)
-Q_DECLARE_METATYPE(QList<QQuickViewTestUtil::ListChange>)
-Q_DECLARE_METATYPE(QQuickViewTestUtil::ListRange)
+Q_DECLARE_METATYPE(QQuickViewTestUtils::QaimModel*)
+Q_DECLARE_METATYPE(QQuickViewTestUtils::ListChange)
+Q_DECLARE_METATYPE(QList<QQuickViewTestUtils::ListChange>)
+Q_DECLARE_METATYPE(QQuickViewTestUtils::ListRange)
 
 
-#endif // QQUICKVIEWTESTUTIL_H
+#endif // QQUICKVIEWTESTUTILS_P_H
