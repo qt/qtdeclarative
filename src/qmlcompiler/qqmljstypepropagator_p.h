@@ -264,6 +264,7 @@ private:
     void checkDeprecated(QQmlJSScope::ConstPtr scope, const QString &name, bool isMethod) const;
     bool checkRestricted(const QString &propertyName) const;
     QQmlJS::SourceLocation getCurrentSourceLocation() const;
+    QQmlJS::SourceLocation getCurrentBindingSourceLocation() const;
 
     void propagateBinaryOperation(QSOperator::Op op, int lhs);
     void propagateCall(const QList<QQmlJSMetaMethod> &methods, int argc, int argv);

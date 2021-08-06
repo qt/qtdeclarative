@@ -620,6 +620,12 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("WithStatement")
             << QStringLiteral("WithStatement.qml")
             << QStringLiteral("with statements are strongly discouraged") << QString() << false;
+    QTest::newRow("BindingTypeMismatch")
+            << QStringLiteral("bindingTypeMismatch.qml")
+            << QStringLiteral("Cannot assign binding of type QString to int") << QString() << false;
+    QTest::newRow("BindingTypeMismatchFunction")
+            << QStringLiteral("bindingTypeMismatchFunction.qml")
+            << QStringLiteral("Cannot assign binding of type QString to int") << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()

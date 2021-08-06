@@ -104,6 +104,11 @@ void QQmlJSTypePropagator::generate_Ret()
         setError(u"cannot convert from %1 to %2"_qs
                          .arg(m_state.accumulatorIn.descriptiveName(),
                               m_returnType.descriptiveName()));
+
+        m_logger->logWarning(u"Cannot assign binding of type %1 to %2"_qs.arg(
+                                     m_typeResolver->containedTypeName(m_state.accumulatorIn),
+                                     m_typeResolver->containedTypeName(m_returnType)),
+                             Log_Type, getCurrentBindingSourceLocation());
         return;
     }
 
@@ -248,6 +253,15 @@ QQmlJS::SourceLocation QQmlJSTypePropagator::getCurrentSourceLocation() const
     auto location = item->location;
 
     return location;
+}
+
+QQmlJS::SourceLocation QQmlJSTypePropagator::getCurrentBindingSourceLocation() const
+{
+    Q_ASSERT(m_currentContext->sourceLocationTable);
+    const auto &entries = m_currentContext->sourceLocationTable->entries;
+
+    Q_ASSERT(!entries.isEmpty());
+    return combine(entries.constFirst().location, entries.constLast().location);
 }
 
 void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
