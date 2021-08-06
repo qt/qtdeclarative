@@ -74,6 +74,7 @@ public:
     void updateSelectionMode();
     void connectToTarget();
     void scrollTowardsPos(const QPointF &pos);
+    QQuickItem *handleUnderPos(const QPointF &pos);
 
     QQuickItem *createHandle(QQmlComponent *delegate, Qt::Corner corner);
 

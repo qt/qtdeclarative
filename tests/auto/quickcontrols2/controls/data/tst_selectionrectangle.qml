@@ -257,6 +257,39 @@ TestCase {
         verify(!tableView.selectionModel.hasSelection)
     }
 
+    function test_pressAndHold_on_top_of_handle() {
+        let tableView = createTemporaryObject(tableviewComp, testCase)
+        verify(tableView)
+        let selectionRectangle = tableView.selectionRectangle
+        verify(selectionRectangle)
+
+        selectionRectangle.selectionMode = SelectionRectangle.PressAndHold
+
+        let activeSpy = signalSpy.createObject(selectionRectangle, {target: selectionRectangle, signalName: "activeChanged"})
+        let draggingSpy = signalSpy.createObject(selectionRectangle, {target: selectionRectangle, signalName: "draggingChanged"})
+        verify(activeSpy.valid)
+        verify(draggingSpy.valid)
+
+        verify(!tableView.selectionModel.hasSelection)
+        // Do a press and hold
+        mousePress(tableView, 1, 1, Qt.LeftButton)
+        mouseRelease(tableView, 1, 1, Qt.LeftButton, Qt.NoModifier, 2000)
+        verify(tableView.selectionModel.hasSelection)
+        compare(tableView.selectionModel.selectedIndexes.length, 1)
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
+
+        compare(draggingSpy.count, 0)
+        compare(activeSpy.count, 1)
+
+        // Do another press and hold on top the part of the bottom right handle that
+        // also covers cell 1, 1. Without any handles, this would start a new selection
+        // on top of that cell. But when the handles are in front, they should block it.
+        mousePress(tableView, cellWidth + 1, cellHeight + 1, Qt.LeftButton)
+        mouseRelease(tableView, cellWidth + 1, cellHeight + 1, Qt.LeftButton, Qt.NoModifier, 2000)
+        compare(tableView.selectionModel.selectedIndexes.length, 1)
+        verify(tableView.selectionModel.isSelected(tableView.model.index(0, 0)))
+    }
+
     function test_handleDragTopLeft() {
         let tableView = createTemporaryObject(tableviewComp, testCase)
         verify(tableView)
