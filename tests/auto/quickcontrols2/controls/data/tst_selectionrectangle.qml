@@ -285,7 +285,7 @@ TestCase {
         }
     }
 
-    function test_handleDragBottomRight() {
+    function test_handleDragBottomRight_shrink() {
         let tableView = createTemporaryObject(tableviewComp, testCase)
         verify(tableView)
         let selectionRectangle = tableView.selectionRectangle
@@ -308,4 +308,33 @@ TestCase {
         compare(tableView.selectionModel.selectedIndexes.length, 1)
         verify(tableView.selectionModel.isSelected(tableView.model.index(1, 1)))
     }
+
+    function test_handleDragBottomRight_expand() {
+        let tableView = createTemporaryObject(tableviewComp, testCase)
+        verify(tableView)
+        let selectionRectangle = tableView.selectionRectangle
+        verify(selectionRectangle)
+
+        selectionRectangle.selectionMode = SelectionRectangle.Drag
+
+        verify(!tableView.selectionModel.hasSelection)
+        // Select four cells in the middle
+        mouseDrag(tableView, cellWidth + 1, cellHeight + 1, (cellWidth * 2) - 2, (cellHeight * 2) - 2, Qt.LeftButton)
+        compare(tableView.selectionModel.selectedIndexes.length, 4)
+        for (var x = 1; x < 3; ++x) {
+           for (var y = 1; y < 3; ++y) {
+               verify(tableView.selectionModel.isSelected(tableView.model.index(x, y)))
+           }
+        }
+
+        // Drag on the bottom right handle, so that the selection expands to cell 9 cells
+        mouseDrag(tableView, cellWidth * 3, cellHeight * 3, cellWidth * 4, cellHeight * 4, Qt.LeftButton)
+        compare(tableView.selectionModel.selectedIndexes.length, 9)
+        for (x = 1; x < 4; ++x) {
+           for (y = 1; y < 4; ++y) {
+               verify(tableView.selectionModel.isSelected(tableView.model.index(x, y)))
+           }
+        }
+    }
+
 }
