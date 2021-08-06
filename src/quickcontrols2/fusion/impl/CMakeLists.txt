@@ -1,0 +1,39 @@
+#####################################################################
+## qtquickcontrols2fusionstyleimplplugin Plugin:
+#####################################################################
+
+set(qml_files
+    "ButtonPanel.qml"
+    "CheckIndicator.qml"
+    "RadioIndicator.qml"
+    "SliderGroove.qml"
+    "SliderHandle.qml"
+    "SwitchIndicator.qml"
+)
+set_source_files_properties(${qml_files} PROPERTIES
+    QT_QML_SOURCE_VERSION "2.3"
+)
+
+qt_internal_add_qml_module(qtquickcontrols2fusionstyleimplplugin
+    URI "QtQuick.Controls.Fusion.impl"
+    VERSION "${PROJECT_VERSION}"
+    CLASS_NAME QtQuickControls2FusionStyleImplPlugin
+    PLUGIN_TARGET qtquickcontrols2fusionstyleimplplugin
+    NO_PLUGIN_OPTIONAL
+    SOURCES
+        qquickfusionbusyindicator.cpp qquickfusionbusyindicator_p.h
+        qquickfusiondial.cpp qquickfusiondial_p.h
+        qquickfusionknob.cpp qquickfusionknob_p.h
+    QML_FILES
+        ${qml_files}
+    DEFINES
+        QT_NO_CAST_FROM_ASCII
+        QT_NO_CAST_TO_ASCII
+    LIBRARIES
+        Qt::CorePrivate
+        Qt::Gui
+        Qt::QmlPrivate
+        Qt::QuickControls2ImplPrivate
+        Qt::QuickPrivate
+        Qt::QuickTemplates2Private
+)

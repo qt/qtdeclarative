@@ -1,0 +1,40 @@
+Qt 5.14.2 is a bug-fix release. It maintains both forward and backward
+compatibility (source and binary) with Qt 5.14.0 through 5.14.1.
+
+For more details, refer to the online documentation included in this
+distribution. The documentation is also available online:
+
+https://doc.qt.io/qt-5/index.html
+
+The Qt version 5.14 series is binary compatible with the 5.13.x series.
+Applications compiled for 5.13 will continue to run with 5.14.
+
+Some of the changes listed in this file include issue tracking numbers
+corresponding to tasks in the Qt Bug Tracker:
+
+https://bugreports.qt.io/
+
+Each of these identifiers can be entered in the bug tracker to obtain more
+information about a particular change.
+
+****************************************************************************
+*                          Controls                                        *
+****************************************************************************
+
+ - [QTBUG-82032] AbstractButton: fixed clicked() being emitted after
+   doubleClicked().
+ - [QTBUG-81935] ToolTip: fixed timeout not activating if opened during exit
+   transition.
+ - [QTBUG-77202] Control: we now account for when a touch event is
+   synthesized by Qt as a mouse event.
+ - [QTBUG-81796] DialogButtonBox: fixed explicitly set button text not being
+   rendered.
+ - [QTBUG-75682] Fixed issue where Qt Quick Designer was not able to work
+   with the module on WebAssembly/static builds.
+ - [QTBUG-80970] RangeSlider: fixed errors in the documentation's example
+   code.
+ - [QDS-456] placeholderText is now set by default in Qt Design Studio
+   instead of text when dragging a TextField or TextArea onto the form
+   editor.
+ - [QTBUG-81216] Fixed QQuickStyle::setFallbackStyle() not working on
+   Android.
