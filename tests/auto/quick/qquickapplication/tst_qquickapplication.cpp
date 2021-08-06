@@ -36,7 +36,7 @@
 #include <qpa/qwindowsysteminterface.h>
 #include <qpa/qplatformintegration.h>
 #include <private/qguiapplication_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qquickapplication : public QQmlDataTest
 {
@@ -60,6 +60,7 @@ private:
 };
 
 tst_qquickapplication::tst_qquickapplication()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

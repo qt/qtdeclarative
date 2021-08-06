@@ -26,8 +26,6 @@
 **
 ****************************************************************************/
 
-#include "../../shared/util.h"
-
 #include <qtest.h>
 #include <QObject>
 #include <QQmlEngine>
@@ -35,6 +33,7 @@
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmldirparser_p.h>
 #include <QDebug>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include <algorithm>
 
@@ -52,6 +51,7 @@ private slots:
 };
 
 tst_qqmldirparser::tst_qqmldirparser()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

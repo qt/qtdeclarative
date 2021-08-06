@@ -46,8 +46,8 @@
 #include <unistd.h>
 #endif
 
-#include "../../shared/testhttpserver.h"
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 // Note: this test does not use module identifier directives in the qmldir files, because
 // it would result in repeated attempts to insert types into the same namespace.
@@ -58,6 +58,7 @@ class tst_qqmlmoduleplugin : public QQmlDataTest
 {
     Q_OBJECT
 public:
+    tst_qqmlmoduleplugin();
 
 private slots:
     void initTestCase() override;
@@ -174,6 +175,11 @@ void registerStaticPlugin(const char *uri)
 #endif
     qRegisterStaticPluginFunction(plugin);
 };
+
+tst_qqmlmoduleplugin::tst_qqmlmoduleplugin()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_qqmlmoduleplugin::initTestCase()
 {

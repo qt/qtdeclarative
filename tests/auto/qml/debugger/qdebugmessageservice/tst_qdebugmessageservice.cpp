@@ -27,7 +27,7 @@
 ****************************************************************************/
 
 //QQmlDebugTest
-#include "debugutil_p.h"
+#include "../shared/debugutil_p.h"
 
 #include <private/qqmldebugclient_p.h>
 #include <private/qqmldebugconnection_p.h>
@@ -43,6 +43,9 @@ class QQmlDebugMsgClient;
 class tst_QDebugMessageService : public QQmlDebugTest
 {
     Q_OBJECT
+
+public:
+    tst_QDebugMessageService();
 
 private slots:
     void retrieveDebugOutput();
@@ -131,6 +134,11 @@ QList<QQmlDebugClient *> tst_QDebugMessageService::createClients()
 {
     m_client = new QQmlDebugMsgClient(m_connection);
     return QList<QQmlDebugClient *>({m_client});
+}
+
+tst_QDebugMessageService::tst_QDebugMessageService()
+    : QQmlDebugTest(QT_QMLTEST_DATADIR)
+{
 }
 
 void tst_QDebugMessageService::retrieveDebugOutput()

@@ -10,17 +10,15 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qqmlanybinding
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         withbindable.h
         tst_qqmlanybinding.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
         Qt::Network
         Qt::QmlPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

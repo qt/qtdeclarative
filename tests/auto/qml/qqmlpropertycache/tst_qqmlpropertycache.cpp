@@ -34,13 +34,13 @@
 #include <private/qmetaobjectbuilder_p.h>
 #include <private/qqmlcontextdata_p.h>
 #include <QCryptographicHash>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qqmlpropertycache : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlpropertycache() {}
+    tst_qqmlpropertycache() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void properties();

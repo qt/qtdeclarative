@@ -35,11 +35,14 @@
 #include <QtQuickWidgets/qquickwidget.h>
 #endif
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_QQuickShortcut : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_QQuickShortcut();
 
 private slots:
     void standardShortcuts_data();
@@ -81,6 +84,11 @@ static QVariant shortcutMap(const QVariant &sequence, Qt::ShortcutContext contex
 static QVariant shortcutMap(const QVariant &key, bool enabled = true, bool autoRepeat = true)
 {
     return shortcutMap(key, Qt::WindowShortcut, enabled, autoRepeat);
+}
+
+tst_QQuickShortcut::tst_QQuickShortcut()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
 }
 
 void tst_QQuickShortcut::standardShortcuts_data()

@@ -30,14 +30,13 @@
 #include "../shared/particlestestsshared.h"
 #include <private/qquickparticlesystem_p.h>
 #include <private/qabstractanimation_p.h>
-
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qquickfriction : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickfriction() {}
+    tst_qquickfriction() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override;

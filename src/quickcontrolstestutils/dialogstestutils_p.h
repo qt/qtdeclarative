@@ -34,13 +34,24 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKDIALOGTESTUTIL_H
-#define QQUICKDIALOGTESTUTIL_H
+#ifndef DIALOGSTESTUTILS_H
+#define DIALOGSTESTUTILS_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 
-#include "util.h"
-#include "visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
 // We need these for Windows, because FolderListModel returns a lowercase drive letter; e.g.:
 // "file:///c:/blah.txt", whereas other API returns "file:///C:/blah.txt".
@@ -63,7 +74,7 @@
     QCOMPARE(actualPaths, expectedPaths); \
 }
 
-namespace QQuickDialogTestUtil
+namespace QQuickDialogTestUtils
 {
 
 // Saves duplicating a bunch of code in every test.
@@ -134,11 +145,11 @@ public:
         return appHelper.errorMessage.constData();
     }
 
-    QQuickVisualTestUtil::QQuickApplicationHelper appHelper;
+    QQuickVisualTestUtils::QQuickApplicationHelper appHelper;
     DialogType *dialog = nullptr;
     QuickDialogType *quickDialog = nullptr;
 };
 
 }
 
-#endif // QQUICKDIALOGTESTUTIL_H
+#endif // DIALOGSTESTUTILS_H

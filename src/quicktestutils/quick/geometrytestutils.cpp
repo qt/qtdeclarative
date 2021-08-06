@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,24 +26,22 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKGEOMETRYTESTUTIL_H
-#define QQUICKGEOMETRYTESTUTIL_H
+#include "geometrytestutils_p.h"
 
-#include <QObject>
-#include <QVector>
-#include <QSize>
+#include <QQuickItem>
 
-QT_FORWARD_DECLARE_CLASS(QQuickItem)
+QT_BEGIN_NAMESPACE
 
-class QSizeChangeListener : public QObject, public QVector<QSize>
+QSizeChangeListener::QSizeChangeListener(QQuickItem *item) :
+    item(item)
 {
-    Q_OBJECT
-public:
-    explicit QSizeChangeListener(QQuickItem *item);
-private slots:
-    void onSizeChanged();
-private:
-    QQuickItem *item;
-};
+    connect(item, &QQuickItem::widthChanged, this, &QSizeChangeListener::onSizeChanged);
+    connect(item, &QQuickItem::heightChanged, this, &QSizeChangeListener::onSizeChanged);
+}
 
-#endif // QQUICKGEOMETRYTESTUTIL_H
+void QSizeChangeListener::onSizeChanged()
+{
+    append(QSize(item->width(), item->height()));
+}
+
+QT_END_NAMESPACE

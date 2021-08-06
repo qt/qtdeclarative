@@ -37,10 +37,10 @@
 #include <QtQuick/private/qquickanimation_p_p.h>
 #include <QtQuick/private/qquickitem_p.h>
 
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
-using namespace QQuickViewTestUtil;
+using namespace QQuickViewTestUtils;
 
 QT_BEGIN_NAMESPACE
 
@@ -48,12 +48,20 @@ class tst_Animators: public QQmlDataTest
 {
     Q_OBJECT
 
+public:
+    tst_Animators();
+
 private slots:
     void testMultiWinAnimator_data();
     void testMultiWinAnimator();
     void testTransitions();
     void testTransitionsWithImplicitFrom();
 };
+
+tst_Animators::tst_Animators()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_Animators::testMultiWinAnimator_data()
 {

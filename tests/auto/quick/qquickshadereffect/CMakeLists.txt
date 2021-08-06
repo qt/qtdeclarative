@@ -6,16 +6,14 @@
 
 qt_internal_add_test(tst_qquickshadereffect
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_qquickshadereffect.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
+        Qt::QuickTestUtilsPrivate
 )
 
 # Resources:

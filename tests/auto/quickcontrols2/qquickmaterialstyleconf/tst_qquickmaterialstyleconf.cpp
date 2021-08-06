@@ -36,17 +36,19 @@
 
 #include <qtest.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
-#include "../shared/util.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickControlsTestUtils;
 
 class tst_qquickmaterialstyleconf : public QQmlDataTest
 {
     Q_OBJECT
 
 public:
+    tst_qquickmaterialstyleconf();
 
 private slots:
     void conf();
@@ -54,9 +56,14 @@ private slots:
     void variants();
 };
 
+tst_qquickmaterialstyleconf::tst_qquickmaterialstyleconf()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
+
 void tst_qquickmaterialstyleconf::conf()
 {
-    QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QQuickControlsApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QFont customFont;
@@ -101,7 +108,7 @@ void tst_qquickmaterialstyleconf::variants()
     QQuickStylePrivate::reset();
     qputenv("QT_QUICK_CONTROLS_CONF", confPath);
 
-    QQuickApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
+    QQuickControlsApplicationHelper helper(this, QLatin1String("applicationwindow.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;

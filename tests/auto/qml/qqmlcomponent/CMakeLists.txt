@@ -12,11 +12,7 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qqmlcomponent
     SOURCES
-        ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
-        ../../shared/util.cpp ../../shared/util.h
         tst_qqmlcomponent.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
@@ -24,6 +20,7 @@ qt_internal_add_test(tst_qqmlcomponent
         Qt::Network
         Qt::QmlPrivate
         Qt::QuickPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

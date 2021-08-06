@@ -42,14 +42,14 @@
 #include <QProcessEnvironment>
 #endif
 
-#include "testhttpserver.h"
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
 
 class tst_qqmlxmlhttprequest : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlxmlhttprequest() {}
+    tst_qqmlxmlhttprequest() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override;

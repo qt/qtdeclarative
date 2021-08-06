@@ -41,9 +41,9 @@
 #include <QtQuick/private/qquickgridview_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQmlModels/private/qqmllistmodel_p.h>
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtGui/qguiapplication.h>
 #include "qplatformdefs.h"
 
@@ -55,8 +55,8 @@ Q_DECLARE_METATYPE(QQuickItemView::VerticalLayoutDirection)
 Q_DECLARE_METATYPE(QQuickItemView::PositionMode)
 Q_DECLARE_METATYPE(Qt::Key)
 
-using namespace QQuickViewTestUtil;
-using namespace QQuickVisualTestUtil;
+using namespace QQuickViewTestUtils;
+using namespace QQuickVisualTestUtils;
 
 #define SHARE_VIEWS
 
@@ -318,7 +318,9 @@ private:
     QString testForView;
 };
 
-tst_QQuickGridView::tst_QQuickGridView() : m_view(nullptr)
+tst_QQuickGridView::tst_QQuickGridView()
+     : QQmlDataTest(QT_QMLTEST_DATADIR)
+     , m_view(nullptr)
 {
 }
 
@@ -3725,7 +3727,7 @@ void tst_QQuickGridView::resizeGrid()
     ctxt->setContextProperty("testRightToLeft", layoutDirection == Qt::RightToLeft);
     ctxt->setContextProperty("testBottomToTop", verticalLayoutDirection == QQuickGridView::BottomToTop);
     window->setSource(testFileUrl("resizegrid.qml"));
-    QQuickViewTestUtil::centerOnScreen(window, window->size());
+    QQuickViewTestUtils::centerOnScreen(window, window->size());
     window->show();
     qApp->processEvents();
 
@@ -4332,7 +4334,7 @@ void tst_QQuickGridView::snapToRow()
 
     QQuickView *window = getView();
 
-    QQuickViewTestUtil::moveMouseAway(window);
+    QQuickViewTestUtils::moveMouseAway(window);
     window->setSource(testFileUrl("snapToRow.qml"));
     window->show();
     qApp->processEvents();
@@ -4451,7 +4453,7 @@ void tst_QQuickGridView::snapOneRow()
     qreal flickDuration = 180 * flickSlowdown;
 
     QQuickView *window = getView();
-    QQuickViewTestUtil::moveMouseAway(window);
+    QQuickViewTestUtils::moveMouseAway(window);
 
     window->setSource(testFileUrl("snapOneRow.qml"));
     window->show();

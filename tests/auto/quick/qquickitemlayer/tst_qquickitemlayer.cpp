@@ -34,7 +34,7 @@
 #include <qopenglcontext.h>
 #include <qopenglfunctions.h>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformintegration.h>
@@ -97,7 +97,7 @@ bool isOffscreen()
 const char skipOffscreenMsg[] =
         "Skipping due to grabWindow not functional on offscreen/minimal platformsi (QTBUG-63185)";
 
-tst_QQuickItemLayer::tst_QQuickItemLayer() { }
+tst_QQuickItemLayer::tst_QQuickItemLayer() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
 
 void tst_QQuickItemLayer::initTestCase()
 {

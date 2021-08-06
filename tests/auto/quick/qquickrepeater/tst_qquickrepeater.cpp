@@ -39,12 +39,12 @@
 #include <QtQmlModels/private/qqmlobjectmodel_p.h>
 #include <QtGui/qstandarditemmodel.h>
 
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
-using namespace QQuickViewTestUtil;
-using namespace QQuickVisualTestUtil;
+using namespace QQuickViewTestUtils;
+using namespace QQuickVisualTestUtils;
 
 
 class tst_QQuickRepeater : public QQmlDataTest
@@ -109,6 +109,7 @@ private:
 };
 
 tst_QQuickRepeater::tst_QQuickRepeater()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

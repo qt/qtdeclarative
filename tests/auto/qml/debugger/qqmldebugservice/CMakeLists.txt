@@ -12,7 +12,6 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qqmldebugservice
     SOURCES
-        ../../../shared/util.cpp ../../../shared/util.h
         ../shared/debugutil.cpp ../shared/debugutil_p.h
         ../shared/qqmldebugprocess.cpp ../shared/qqmldebugprocess_p.h
         ../shared/qqmldebugtestservice.cpp ../shared/qqmldebugtestservice.h
@@ -20,7 +19,6 @@ qt_internal_add_test(tst_qqmldebugservice
     DEFINES
         QT_QML_DEBUG_NO_WARNING
     INCLUDE_DIRECTORIES
-        ../../../shared
         ../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
@@ -28,6 +26,7 @@ qt_internal_add_test(tst_qqmldebugservice
         Qt::GuiPrivate
         Qt::QmlDebugPrivate
         Qt::QmlPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

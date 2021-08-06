@@ -41,8 +41,8 @@
 #include <QDebug>
 #include <QTimer>
 #include <QQmlEngine>
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QSignalSpy>
 #include <QTranslator>
 #include <QtCore/qregularexpression.h>
@@ -181,6 +181,7 @@ class tst_qquickitem : public QQmlDataTest
 {
     Q_OBJECT
 public:
+    tst_qquickitem();
 
 private slots:
     void initTestCase() override;
@@ -262,6 +263,11 @@ private:
         return QTest::qWaitForWindowActive(w);
     }
 };
+
+tst_qquickitem::tst_qquickitem()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_qquickitem::initTestCase()
 {

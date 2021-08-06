@@ -41,12 +41,13 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
-#include "../shared/visualtestutil.h"
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickControlsTestUtils;
 
 struct ControlInfo
 {
@@ -111,6 +112,9 @@ static const ControlInfo ControlInfos[] = {
 class tst_customization : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_customization();
 
 private slots:
     void initTestCase() override;
@@ -210,6 +214,11 @@ extern "C" Q_DECL_EXPORT void qt_removeQObject(QObject *object)
         if (!parentName.isEmpty())
             qt_destroyedParentQObjects()->append(parentName);
     }
+}
+
+tst_customization::tst_customization()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
 }
 
 void tst_customization::initTestCase()

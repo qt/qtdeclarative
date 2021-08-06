@@ -32,12 +32,12 @@
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuickTest/QtQuickTest>
 
-#include "../shared/viewtestutil.h"
-#include "../shared/visualtestutil.h"
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
-using namespace QQuickViewTestUtil;
-using namespace QQuickVisualTestUtil;
+using namespace QQuickViewTestUtils;
+using namespace QQuickVisualTestUtils;
 
 class tst_QQuickListView2 : public QQmlDataTest
 {
@@ -52,6 +52,7 @@ private slots:
 };
 
 tst_QQuickListView2::tst_QQuickListView2()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

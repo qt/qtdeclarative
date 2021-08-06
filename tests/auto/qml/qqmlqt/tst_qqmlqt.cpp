@@ -44,14 +44,14 @@
 #include <QQuaternion>
 #include <QMatrix4x4>
 #include <QFont>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <private/qglobal_p.h>
 
 class tst_qqmlqt : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlqt() {}
+    tst_qqmlqt() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override;

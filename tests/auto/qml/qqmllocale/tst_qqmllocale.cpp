@@ -37,7 +37,7 @@
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qtimezone.h>
 #include <qcolor.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include <time.h>
 
@@ -45,7 +45,7 @@ class tst_qqmllocale : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmllocale() { }
+    tst_qqmllocale() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
 
 private slots:
     void defaultLocale();

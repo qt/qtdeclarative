@@ -38,9 +38,9 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickloader_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
-#include "../../shared/util.h"
-#include "../shared/visualtestutil.h"
-#include "../shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QSignalSpy>
 #include <private/qquickwindow_p.h>
 #include <private/qguiapplication_p.h>
@@ -402,7 +402,8 @@ class tst_qquickwindow : public QQmlDataTest
     Q_OBJECT
 public:
     tst_qquickwindow()
-      : touchDevice(QTest::createTouchDevice())
+      : QQmlDataTest(QT_QMLTEST_DATADIR)
+      , touchDevice(QTest::createTouchDevice())
       , touchDeviceWithVelocity(QTest::createTouchDevice(QInputDevice::DeviceType::TouchScreen,
             QInputDevice::Capability::Position | QPointingDevice::Capability::Velocity))
     {
@@ -1701,7 +1702,7 @@ void tst_qquickwindow::headless()
     // Verify that the visual output is the same
     QImage newContent = window->grabWindow();
     QString errorMessage;
-    QVERIFY2(QQuickVisualTestUtil::compareImages(newContent, originalContent, &errorMessage),
+    QVERIFY2(QQuickVisualTestUtils::compareImages(newContent, originalContent, &errorMessage),
              qPrintable(errorMessage));
 }
 
@@ -1736,7 +1737,7 @@ void tst_qquickwindow::destroyShowWithoutHide()
 
     QImage newContent = window->grabWindow();
     QString errorMessage;
-    QVERIFY2(QQuickVisualTestUtil::compareImages(newContent, originalContent, &errorMessage),
+    QVERIFY2(QQuickVisualTestUtils::compareImages(newContent, originalContent, &errorMessage),
              qPrintable(errorMessage));
 }
 
@@ -2149,7 +2150,7 @@ void tst_qquickwindow::requestActivate()
     QTRY_COMPARE(QGuiApplication::focusWindow(), window1.data());
     QVERIFY(window1->isActive());
 
-    QQuickItem *item = QQuickVisualTestUtil::findItem<QQuickItem>(window1->contentItem(), "item1");
+    QQuickItem *item = QQuickVisualTestUtils::findItem<QQuickItem>(window1->contentItem(), "item1");
     QVERIFY(item);
 
     //copied from src/qmltest/quicktestevent.cpp

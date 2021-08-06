@@ -31,7 +31,7 @@
 #include <QtQuick/private/qquicksmoothedanimation_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <private/qqmlvaluetype_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qquicksmoothedanimation : public QQmlDataTest
 {
@@ -55,6 +55,7 @@ private:
 };
 
 tst_qquicksmoothedanimation::tst_qquicksmoothedanimation()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

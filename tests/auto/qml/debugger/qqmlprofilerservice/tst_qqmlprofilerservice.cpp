@@ -28,7 +28,7 @@
 
 #include "debugutil_p.h"
 #include "qqmldebugprocess_p.h"
-#include "../../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include <private/qqmlprofilerclient_p.h>
 #include <private/qqmldebugconnection_p.h>
@@ -45,8 +45,8 @@ class QQmlProfilerTestClient : public QQmlProfilerEventReceiver
     Q_OBJECT
 
 public:
-    QQmlProfilerTestClient(QQmlDebugConnection *connection) :
-        client(new QQmlProfilerClient(connection, this))
+    QQmlProfilerTestClient(QQmlDebugConnection *connection)
+         : client(new QQmlProfilerClient(connection, this))
     {
         connect(client.data(), &QQmlProfilerClient::traceStarted,
                 this, &QQmlProfilerTestClient::startTrace);
@@ -180,6 +180,9 @@ class tst_QQmlProfilerService : public QQmlDebugTest
 {
     Q_OBJECT
 
+public:
+    tst_QQmlProfilerService();
+
 private:
     enum MessageListType {
         MessageListQML,
@@ -245,6 +248,11 @@ private:
 
 #define VERIFY(type, position, expected, checks, numbers) \
     QVERIFY(verify(type, position, expected, checks, numbers))
+
+tst_QQmlProfilerService::tst_QQmlProfilerService()
+    : QQmlDebugTest(QT_QMLTEST_DATADIR)
+{
+}
 
 QQmlDebugTest::ConnectResult tst_QQmlProfilerService::connectTo(
         bool block, const QString &file, bool recordFromStart, uint flushInterval,

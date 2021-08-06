@@ -33,7 +33,7 @@
 #include <QQuickView>
 #include <QtQuickTest/quicktest.h>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class CustomItem : public QQuickItem
 {
@@ -62,6 +62,7 @@ private slots:
 };
 
 tst_Polish::tst_Polish()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     qmlRegisterType<CustomItem>("Test", 1, 0, "CustomItem");
 }

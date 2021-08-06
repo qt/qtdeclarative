@@ -36,7 +36,7 @@
 #include <private/qqmlglobal_p.h>
 #include <private/qv4engine_p.h>
 #include <private/qv4variantobject_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include "testtypes.h"
 
 QT_BEGIN_NAMESPACE
@@ -47,7 +47,7 @@ class tst_qqmlvaluetypes : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlvaluetypes() {}
+    tst_qqmlvaluetypes() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override;

@@ -34,7 +34,6 @@
 **
 ****************************************************************************/
 
-#include "../shared/util.h"
 #include <QtTest/qsignalspy.h>
 #include <QtTest/qtest.h>
 
@@ -42,6 +41,7 @@
 #include <QtQml/QQmlEngine>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquicktext_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickheaderview_p.h>
 #include <private/qquickheaderview_p_p.h>
@@ -212,6 +212,9 @@ private:
 class tst_QQuickHeaderView : public QQmlDataTest {
     Q_OBJECT
 
+public:
+    tst_QQuickHeaderView();
+
 private slots:
     void initTestCase() override;
     void cleanupTestCase();
@@ -238,6 +241,11 @@ private:
         return std::unique_ptr<QObject>(new QObject(root));
     }
 };
+
+tst_QQuickHeaderView::tst_QQuickHeaderView()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_QQuickHeaderView::initTestCase()
 {

@@ -28,7 +28,6 @@
 
 #include <qtest.h>
 #include <QtTest/qsignalspy.h>
-
 #include <QtCore/qmath.h>
 #include <QtCore/qsize.h>
 #include <QtGui/private/qhighdpiscaling_p.h>
@@ -37,15 +36,17 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitemgrabresult.h>
 #include <QtQuick/private/qquickimage_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
-#include "../shared/util.h"
-#include "../shared/visualtestutil.h"
-
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
 
 class tst_qquickninepatchimage : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_qquickninepatchimage();
 
 private slots:
     void ninePatch_data();
@@ -64,6 +65,11 @@ static QImage grabItemToImage(QQuickItem *item)
     QSignalSpy spy(result.data(), SIGNAL(ready()));
     spy.wait();
     return result->image();
+}
+
+tst_qquickninepatchimage::tst_qquickninepatchimage()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
 }
 
 void tst_qquickninepatchimage::ninePatch_data()

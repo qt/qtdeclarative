@@ -41,26 +41,33 @@
 #include <QtQml/qqmlapplicationengine.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQuick/qquickwindow.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 
-#include "../shared/util.h"
-#include "../shared/visualtestutil.h"
-
-using namespace QQuickVisualTestUtil;
+using namespace QQuickControlsTestUtils;
 
 class tst_StyleImportsCompileTimeQmlOnly : public QQmlDataTest
 {
     Q_OBJECT
 
+public:
+    tst_StyleImportsCompileTimeQmlOnly();
+
 private slots:
     void importQmlOnlyStyleWithoutControls();
 };
 
+tst_StyleImportsCompileTimeQmlOnly::tst_StyleImportsCompileTimeQmlOnly()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
+
 void tst_StyleImportsCompileTimeQmlOnly::importQmlOnlyStyleWithoutControls()
 {
-    QQuickApplicationHelper helper(this,
+    QQuickControlsApplicationHelper helper(this,
         QLatin1String("importQmlOnlyStyleWithoutControls.qml"), QStringList() << dataDirectory());
     QVERIFY2(helper.ready, helper.failureMessage());
 

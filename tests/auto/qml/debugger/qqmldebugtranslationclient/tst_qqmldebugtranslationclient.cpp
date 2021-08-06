@@ -54,6 +54,10 @@ class tst_QQmlDebugTranslationClient : public QQmlDebugTest
 {
     Q_OBJECT
 public:
+    tst_QQmlDebugTranslationClient()
+        : QQmlDebugTest(QT_QMLTEST_DATADIR)
+    {
+    }
 
 private slots:
     void init()

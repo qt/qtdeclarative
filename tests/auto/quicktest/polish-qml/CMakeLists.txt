@@ -13,14 +13,12 @@ list(APPEND test_data ${test_data_glob})
 qt_internal_add_test(tst_polish-qml
     QMLTEST
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_polish-qml.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::Quick
         Qt::QuickPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

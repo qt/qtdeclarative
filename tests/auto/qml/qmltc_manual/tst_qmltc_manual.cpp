@@ -37,12 +37,11 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/qquickitem.h>
 #include <QtCore/qproperty.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include <private/qqmlengine_p.h>
 #include <private/qqmltypedata_p.h>
 #include <private/qqmlvmemetaobject_p.h>
-
-#include "../../shared/util.h"
 
 #include <array>
 #include <memory>
@@ -50,6 +49,9 @@
 class tst_qmltc_manual : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_qmltc_manual();
 
 private slots:
     void cppBinding();
@@ -67,6 +69,11 @@ private slots:
 private:
     void signalHandlers_impl(const QUrl &url);
 };
+
+tst_qmltc_manual::tst_qmltc_manual()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_qmltc_manual::cppBinding()
 {

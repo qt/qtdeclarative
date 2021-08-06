@@ -25,9 +25,9 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "../../shared/util.h"
-#include "../shared/visualtestutil.h"
-#include "../shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 #include <qtest.h>
 #include <QtCore/qregularexpression.h>
@@ -47,8 +47,8 @@
 #include <math.h>
 #include <QtGui/qstandarditemmodel.h>
 
-using namespace QQuickVisualTestUtil;
-using namespace QQuickViewTestUtil;
+using namespace QQuickVisualTestUtils;
+using namespace QQuickViewTestUtils;
 
 template <typename T, int N> int lengthOf(const T (&)[N]) { return N; }
 
@@ -502,6 +502,7 @@ void tst_qquickvisualdatamodel::cleanupTestCase()
 }
 
 tst_qquickvisualdatamodel::tst_qquickvisualdatamodel()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

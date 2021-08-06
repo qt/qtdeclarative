@@ -34,6 +34,11 @@
 #include <QtCore/qeventloop.h>
 #include <QtCore/qtimer.h>
 
+QQmlDebugTest::QQmlDebugTest(const char *qmlTestDataDir)
+    : QQmlDataTest(qmlTestDataDir)
+{
+}
+
 bool QQmlDebugTest::waitForSignal(QObject *receiver, const char *member, int timeout) {
     QEventLoop loop;
     QTimer timer;

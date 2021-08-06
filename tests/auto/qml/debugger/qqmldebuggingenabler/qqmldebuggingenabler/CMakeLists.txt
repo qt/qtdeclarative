@@ -6,12 +6,10 @@
 
 qt_internal_add_test(tst_qqmldebuggingenabler
     SOURCES
-        ../../../../shared/util.cpp ../../../../shared/util.h
         ../../shared/debugutil.cpp ../../shared/debugutil_p.h
         ../../shared/qqmldebugprocess.cpp ../../shared/qqmldebugprocess_p.h
         tst_qqmldebuggingenabler.cpp
     INCLUDE_DIRECTORIES
-        ../../../../shared
         ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
@@ -19,6 +17,7 @@ qt_internal_add_test(tst_qqmldebuggingenabler
         Qt::GuiPrivate
         Qt::Qml
         Qt::QmlDebugPrivate
+        Qt::QuickTestUtilsPrivate
 )
 
 #### Keys ignored in scope 1:.:.:qqmldebuggingenabler.pro:<TRUE>:

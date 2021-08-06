@@ -46,9 +46,9 @@
 #include <QtQmlModels/private/qqmllistmodel_p.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
 #include <qpa/qwindowsysteminterface.h>
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include "incrementalmodel.h"
 #include "proxytestinnermodel.h"
 #include "randomsortmodel.h"
@@ -62,8 +62,8 @@ Q_DECLARE_METATYPE(QQuickListView::Orientation)
 Q_DECLARE_METATYPE(QQuickFlickable::FlickableDirection)
 Q_DECLARE_METATYPE(Qt::Key)
 
-using namespace QQuickViewTestUtil;
-using namespace QQuickVisualTestUtil;
+using namespace QQuickViewTestUtils;
+using namespace QQuickVisualTestUtils;
 
 #define SHARE_VIEWS
 
@@ -402,7 +402,9 @@ public:
     int mCacheBuffer;
 };
 
-tst_QQuickListView::tst_QQuickListView() : m_view(nullptr)
+tst_QQuickListView::tst_QQuickListView()
+     : QQmlDataTest(QT_QMLTEST_DATADIR)
+     , m_view(nullptr)
 {
 }
 
@@ -2310,7 +2312,7 @@ void tst_QQuickListView::sectionsDragOutsideBounds()
     QFETCH(int, cacheBuffer);
 
     QQuickView *window = getView();
-    QQuickViewTestUtil::moveMouseAway(window);
+    QQuickViewTestUtils::moveMouseAway(window);
 
     QaimModel model;
     for (int i = 0; i < 10; i++)
@@ -5171,7 +5173,7 @@ void tst_QQuickListView::marginsResize()
     QQuickView *window = getView();
 
     window->setSource(testFileUrl("margins2.qml"));
-    QQuickViewTestUtil::moveMouseAway(window);
+    QQuickViewTestUtils::moveMouseAway(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
 
@@ -5307,7 +5309,7 @@ void tst_QQuickListView::snapToItem()
     QFETCH(qreal, startExtent);
 
     QQuickView *window = getView();
-    QQuickViewTestUtil::moveMouseAway(window);
+    QQuickViewTestUtils::moveMouseAway(window);
 
     window->setSource(testFileUrl("snapToItem.qml"));
     window->show();
@@ -5991,7 +5993,7 @@ void tst_QQuickListView::snapOneItemResize_QTBUG_43555()
     QScopedPointer<QQuickView> window(createView());
     window->resize(QSize(100, 320));
     window->setResizeMode(QQuickView::SizeRootObjectToView);
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
 
     window->setSource(testFileUrl("snapOneItemResize.qml"));
     window->show();
@@ -6305,7 +6307,7 @@ void tst_QQuickListView::snapOneItem()
     qreal flickDuration = 180 * flickSlowdown;
 
     QQuickView *window = getView();
-    QQuickViewTestUtil::moveMouseAway(window);
+    QQuickViewTestUtils::moveMouseAway(window);
 
     window->setSource(testFileUrl("snapOneItem.qml"));
     window->show();
@@ -7940,7 +7942,7 @@ void tst_QQuickListView::matchItemLists(const QVariantList &itemLists, const QLi
 void tst_QQuickListView::flickBeyondBounds()
 {
     QScopedPointer<QQuickView> window(createView());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
 
     window->setSource(testFileUrl("flickBeyondBoundsBug.qml"));
     window->show();
@@ -7982,7 +7984,7 @@ void tst_QQuickListView::flickBothDirections()
     QFETCH(QPointF, targetPos);
 
     QQuickView *window = getView();
-    QQuickViewTestUtil::moveMouseAway(window);
+    QQuickViewTestUtils::moveMouseAway(window);
 
     QQmlContext *ctxt = window->rootContext();
     ctxt->setContextProperty("initialOrientation", initValues ? orientation : QQuickListView::Vertical);
@@ -8155,7 +8157,7 @@ void tst_QQuickListView::delayedChanges_QTBUG_30555()
 void tst_QQuickListView::outsideViewportChangeNotAffectingView()
 {
     QScopedPointer<QQuickView> window(createView());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
     window->setSource(testFileUrl("outsideViewportChangeNotAffectingView.qml"));
 
     QQuickListView *listview = window->rootObject()->findChild<QQuickListView*>();
@@ -8189,7 +8191,7 @@ void tst_QQuickListView::outsideViewportChangeNotAffectingView()
 void tst_QQuickListView::testProxyModelChangedAfterMove()
 {
     QScopedPointer<QQuickView> window(createView());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickVisualTestUtils::moveMouseAway(window.data());
     window->setSource(testFileUrl("proxytest.qml"));
 
     QQuickListView *listview = window->rootObject()->findChild<QQuickListView*>();
@@ -9919,7 +9921,7 @@ void tst_QQuickListView::reuse_checkThatItemsAreReused()
 void tst_QQuickListView::dragOverFloatingHeaderOrFooter() // QTBUG-74046
 {
     QQuickView *window = getView();
-    QQuickViewTestUtil::moveMouseAway(window);
+    QQuickViewTestUtils::moveMouseAway(window);
     window->setSource(testFileUrl("qtbug63974.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));

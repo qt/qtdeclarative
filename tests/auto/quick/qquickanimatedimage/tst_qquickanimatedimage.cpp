@@ -36,8 +36,8 @@
 #include <QSignalSpy>
 #include <QtQml/qqmlcontext.h>
 
-#include "../../shared/testhttpserver.h"
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 Q_DECLARE_METATYPE(QQuickImageBase::Status)
 
@@ -62,7 +62,7 @@ class tst_qquickanimatedimage : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickanimatedimage() {}
+    tst_qquickanimatedimage() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void cleanup();

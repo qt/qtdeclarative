@@ -32,7 +32,6 @@
 #include <private/qqmlbinding_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
-#include "../../shared/util.h"
 #include <qqmlcontext.h>
 
 class tst_bindingdependencyapi : public QObject

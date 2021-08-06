@@ -42,26 +42,35 @@
 #include <QtQml/qqmlengine.h>
 #include <QtQml/private/qqmlmetatype_p.h>
 #include <QtQuick/qquickwindow.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/private/qquickstyle_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 
-#include "../shared/util.h"
-#include "../shared/visualtestutil.h"
-
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
+using namespace QQuickControlsTestUtils;
 
 class tst_StyleImportsCompileTimeMaterial : public QQmlDataTest
 {
     Q_OBJECT
 
+public:
+    tst_StyleImportsCompileTimeMaterial();
+
 private slots:
     void importMaterialStyleWithoutControls();
 };
 
+tst_StyleImportsCompileTimeMaterial::tst_StyleImportsCompileTimeMaterial()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
+
 void tst_StyleImportsCompileTimeMaterial::importMaterialStyleWithoutControls()
 {
-    QQuickApplicationHelper helper(this, QLatin1String("importMaterialStyleWithoutControls.qml"));
+    QQuickControlsApplicationHelper helper(this, QLatin1String("importMaterialStyleWithoutControls.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
 
     auto button = helper.window->property("button").value<QQuickButton*>();

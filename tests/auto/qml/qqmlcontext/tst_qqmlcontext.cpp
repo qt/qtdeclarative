@@ -37,13 +37,13 @@
 #include <private/qqmlguardedcontextdata_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include <private/qv4object_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qqmlcontext : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlcontext() {}
+    tst_qqmlcontext() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void baseUrl();

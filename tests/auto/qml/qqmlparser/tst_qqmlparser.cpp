@@ -32,8 +32,8 @@
 #include <private/qqmljsastvisitor_p.h>
 #include <private/qqmljsast_p.h>
 
-#include "../../shared/util.h"
-#include "../../shared/qqmljsastdumper.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/qqmljsastdumper_p.h>
 
 #include <qtest.h>
 #include <QDir>
@@ -240,6 +240,7 @@ private:
 }
 
 tst_qqmlparser::tst_qqmlparser()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

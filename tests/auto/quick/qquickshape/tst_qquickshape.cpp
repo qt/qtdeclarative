@@ -36,12 +36,12 @@
 #include <QtQuickShapes/private/qquickshape_p.h>
 #include <QStandardPaths>
 
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
-using namespace QQuickViewTestUtil;
-using namespace QQuickVisualTestUtil;
+using namespace QQuickViewTestUtils;
+using namespace QQuickVisualTestUtils;
 
 class PolygonProvider : public QObject
 {
@@ -93,6 +93,7 @@ private:
 };
 
 tst_QQuickShape::tst_QQuickShape()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     // Force the software backend to get reliable rendering results regardless of the hw and drivers.
     QQuickWindow::setGraphicsApi(QSGRendererInterface::Software);
@@ -293,7 +294,7 @@ void tst_QQuickShape::render()
 
     QString errorMessage;
     const QImage actualImg = img.convertToFormat(refImg.format());
-    QVERIFY2(QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage),
+    QVERIFY2(QQuickVisualTestUtils::compareImages(actualImg, refImg, &errorMessage),
              qPrintable(errorMessage));
 }
 
@@ -317,7 +318,7 @@ void tst_QQuickShape::renderWithMultipleSp()
 
     QString errorMessage;
     const QImage actualImg = img.convertToFormat(refImg.format());
-    QVERIFY2(QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage),
+    QVERIFY2(QQuickVisualTestUtils::compareImages(actualImg, refImg, &errorMessage),
              qPrintable(errorMessage));
 }
 
@@ -341,7 +342,7 @@ void tst_QQuickShape::radialGrad()
 
     QString errorMessage;
     const QImage actualImg = img.convertToFormat(refImg.format());
-    QVERIFY2(QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage),
+    QVERIFY2(QQuickVisualTestUtils::compareImages(actualImg, refImg, &errorMessage),
              qPrintable(errorMessage));
 }
 
@@ -365,7 +366,7 @@ void tst_QQuickShape::conicalGrad()
 
     QString errorMessage;
     const QImage actualImg = img.convertToFormat(refImg.format());
-    QVERIFY2(QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage),
+    QVERIFY2(QQuickVisualTestUtils::compareImages(actualImg, refImg, &errorMessage),
              qPrintable(errorMessage));
 }
 
@@ -389,7 +390,7 @@ void tst_QQuickShape::renderPolyline()
 
     QString errorMessage;
     const QImage actualImg = img.convertToFormat(refImg.format());
-    const bool res = QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage);
+    const bool res = QQuickVisualTestUtils::compareImages(actualImg, refImg, &errorMessage);
     if (!res) { // For visual inspection purposes.
         QTest::qWait(5000);
         const QString &tempLocation = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
@@ -418,7 +419,7 @@ void tst_QQuickShape::renderMultiline()
 
     QString errorMessage;
     const QImage actualImg = img.convertToFormat(refImg.format());
-    const bool res = QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage);
+    const bool res = QQuickVisualTestUtils::compareImages(actualImg, refImg, &errorMessage);
     if (!res) { // For visual inspection purposes.
         QTest::qWait(5000);
         const QString &tempLocation = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
@@ -484,7 +485,7 @@ void tst_QQuickShape::polylineDataTypes()
 
     QString errorMessage;
     const QImage actualImg = img.convertToFormat(refImg.format());
-    const bool res = QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage);
+    const bool res = QQuickVisualTestUtils::compareImages(actualImg, refImg, &errorMessage);
     if (!res) { // For visual inspection purposes.
         QTest::qWait(5000);
         const QString &tempLocation = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
@@ -635,7 +636,7 @@ void tst_QQuickShape::multilineDataTypes()
 
     QString errorMessage;
     const QImage actualImg = img.convertToFormat(refImg.format());
-    const bool res = QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage);
+    const bool res = QQuickVisualTestUtils::compareImages(actualImg, refImg, &errorMessage);
     if (!res) { // For visual inspection purposes.
         QTest::qWait(5000);
         const QString &tempLocation = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
@@ -683,7 +684,7 @@ void tst_QQuickShape::multilineStronglyTyped()
 
     QString errorMessage;
     const QImage actualImg = img.convertToFormat(refImg.format());
-    const bool res = QQuickVisualTestUtil::compareImages(actualImg, refImg, &errorMessage);
+    const bool res = QQuickVisualTestUtils::compareImages(actualImg, refImg, &errorMessage);
     if (!res) { // For visual inspection purposes.
         QTest::qWait(5000);
         const QString &tempLocation = QStandardPaths::writableLocation(QStandardPaths::TempLocation);

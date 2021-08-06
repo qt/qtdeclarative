@@ -31,13 +31,13 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/private/qquickpath_p.h>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_QuickPath : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_QuickPath() {}
+    tst_QuickPath() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void arc();

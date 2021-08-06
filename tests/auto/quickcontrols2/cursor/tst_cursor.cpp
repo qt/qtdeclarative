@@ -35,9 +35,9 @@
 ****************************************************************************/
 
 #include <QtTest/qtest.h>
-#include "../shared/visualtestutil.h"
 
 #include <QtQuick/qquickview.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtQuickTemplates2/private/qquickpageindicator_p.h>
@@ -50,7 +50,7 @@
 #  include <QtGui/qcursor.h>
 #endif
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickControlsTestUtils;
 
 class tst_cursor : public QQmlDataTest
 {
@@ -69,6 +69,7 @@ private slots:
 };
 
 tst_cursor::tst_cursor()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     QQuickStyle::setStyle("Basic");
 }
@@ -190,7 +191,7 @@ void tst_cursor::scrollBar()
 {
     // Ensure that the mouse cursor has the correct shape when over a scrollbar
     // which is itself over a text area with IBeamCursor.
-    QQuickApplicationHelper helper(this, QStringLiteral("scrollbar.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("scrollbar.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();

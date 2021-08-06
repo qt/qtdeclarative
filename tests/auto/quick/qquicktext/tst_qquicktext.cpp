@@ -44,8 +44,8 @@
 #include <private/qguiapplication_p.h>
 #include <limits.h>
 #include <QtGui/QMouseEvent>
-#include "../../shared/util.h"
-#include "testhttpserver.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
@@ -198,6 +198,7 @@ void tst_qquicktext::cleanup()
 }
 
 tst_qquicktext::tst_qquicktext()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     standard << "the quick brown fox jumped over the lazy dog"
             << "the quick brown fox\n jumped over the lazy dog";

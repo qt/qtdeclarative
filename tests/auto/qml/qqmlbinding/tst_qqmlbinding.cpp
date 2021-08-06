@@ -30,7 +30,7 @@
 #include <QtQml/qqmlcomponent.h>
 #include <private/qqmlbind_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include "WithBindableProperties.h"
 
 class tst_qqmlbinding : public QQmlDataTest
@@ -66,6 +66,7 @@ private:
 };
 
 tst_qqmlbinding::tst_qqmlbinding()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

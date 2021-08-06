@@ -34,12 +34,15 @@
 #include <QtQmlModels/private/qqmlinstantiator_p.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlincubator.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include "stringmodel.h"
 
 class tst_qqmlinstantiator: public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_qqmlinstantiator();
 
 private slots:
     void createNone();
@@ -53,6 +56,11 @@ private slots:
     void asynchronous_data();
     void asynchronous();
 };
+
+tst_qqmlinstantiator::tst_qqmlinstantiator()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_qqmlinstantiator::createNone()
 {

@@ -43,12 +43,12 @@
 
 #include "testmodel.h"
 
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
-using namespace QQuickViewTestUtil;
-using namespace QQuickVisualTestUtil;
+using namespace QQuickViewTestUtils;
+using namespace QQuickVisualTestUtils;
 
 static const char* kDelegateObjectName = "tableViewDelegate";
 static const char *kDelegatesCreatedCountProp = "delegatesCreatedCount";
@@ -209,6 +209,7 @@ private slots:
 };
 
 tst_QQuickTableView::tst_QQuickTableView()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

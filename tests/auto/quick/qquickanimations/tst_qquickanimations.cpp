@@ -46,13 +46,13 @@
 #include <limits.h>
 #include <math.h>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qquickanimations : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickanimations() {}
+    tst_qquickanimations() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override

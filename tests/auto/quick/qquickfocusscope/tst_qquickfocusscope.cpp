@@ -34,16 +34,16 @@
 #include <private/qquicktextedit_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuick/private/qquickfocusscope_p.h>
-#include "../../shared/util.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
 
 class tst_qquickfocusscope : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickfocusscope() {}
+    tst_qquickfocusscope() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void basic();

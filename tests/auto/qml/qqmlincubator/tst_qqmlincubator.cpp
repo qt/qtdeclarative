@@ -38,16 +38,16 @@
 #include <QQmlProperty>
 #include <QQmlComponent>
 #include <QQmlIncubator>
-#include "../../shared/util.h"
 #include <private/qjsvalue_p.h>
 #include <private/qqmlincubator_p.h>
 #include <private/qqmlobjectcreator_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qqmlincubator : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlincubator() {}
+    tst_qqmlincubator() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override;

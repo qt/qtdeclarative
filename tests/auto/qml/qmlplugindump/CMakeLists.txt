@@ -6,15 +6,13 @@
 
 qt_internal_add_test(tst_qmlplugindump
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_qmlplugindump.cpp
     DEFINES
         QT_QMLTEST_DIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::GuiPrivate
         Qt::Qml
+        Qt::QuickTestUtilsPrivate
 )
 
 ## Scopes:

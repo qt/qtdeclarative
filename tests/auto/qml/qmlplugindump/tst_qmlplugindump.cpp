@@ -26,14 +26,13 @@
 **
 ****************************************************************************/
 
-#include "util.h"
-
 #include <qtest.h>
 #include <QLibraryInfo>
 #include <QDir>
 #include <QProcess>
 #include <QDebug>
 #include <cstdlib>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qmlplugindump : public QQmlDataTest
 {
@@ -56,6 +55,7 @@ private:
 };
 
 tst_qmlplugindump::tst_qmlplugindump()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

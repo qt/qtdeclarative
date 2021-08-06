@@ -37,13 +37,13 @@
 #include <private/qqmlpropertyvalueinterceptor_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlanybinding_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qqmlmetatype : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlmetatype() {}
+    tst_qqmlmetatype() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override;

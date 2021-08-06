@@ -25,22 +25,30 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "../../shared/util.h"
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
 #include <QtCore/QScopedPointer>
 #include <QtQml/private/qqmlanybinding_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include "withbindable.h"
 
 class tst_qqmlanybinding : public QQmlDataTest
 {
     Q_OBJECT
 
+public:
+    tst_qqmlanybinding();
+
 private slots:
     void basicActions_data();
     void basicActions();
     void unboundQQmlPropertyBindingDoesNotCrash();
 };
+
+tst_qqmlanybinding::tst_qqmlanybinding()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_qqmlanybinding::basicActions_data()
 {

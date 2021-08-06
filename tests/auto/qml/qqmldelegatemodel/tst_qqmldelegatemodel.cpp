@@ -31,8 +31,7 @@
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
-
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_QQmlDelegateModel : public QQmlDataTest
 {
@@ -101,6 +100,7 @@ private:
 };
 
 tst_QQmlDelegateModel::tst_QQmlDelegateModel()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     qmlRegisterType<AbstractItemModel>("Test", 1, 0, "AbstractItemModel");
 }

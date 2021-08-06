@@ -36,7 +36,7 @@
 #include <QProcess>
 #endif
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class ExportedClass : public QObject
 {
@@ -140,7 +140,7 @@ class tst_qqmlnotifier : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlnotifier() {}
+    tst_qqmlnotifier() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override;

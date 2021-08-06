@@ -41,12 +41,15 @@
 #include <qqmlscriptstring.h>
 #include <QString>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include "scriptstringprops.h"
 
 class tst_qmlcachegen: public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_qmlcachegen();
 
 private slots:
     void initTestCase() override;
@@ -125,6 +128,11 @@ static bool generateCache(const QString &qmlFileName, QByteArray *capturedStderr
     if (proc.exitStatus() != QProcess::NormalExit)
         return false;
     return proc.exitCode() == 0;
+}
+
+tst_qmlcachegen::tst_qmlcachegen()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
 }
 
 void tst_qmlcachegen::initTestCase()

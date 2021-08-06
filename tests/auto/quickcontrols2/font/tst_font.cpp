@@ -35,19 +35,18 @@
 ****************************************************************************/
 
 #include <QtTest/qtest.h>
-#include "../shared/visualtestutil.h"
 
 #include <QtGui/qfont.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p_p.h>
-
-using namespace QQuickVisualTestUtil;
+#include <QtQuickControls2/qquickstyle.h>
 
 class tst_font : public QQmlDataTest
 {
@@ -87,6 +86,7 @@ static QFont testFont()
 }
 
 tst_font::tst_font()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     QQuickStyle::setStyle("Basic");
 }

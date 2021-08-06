@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,31 +26,39 @@
 **
 ****************************************************************************/
 
-#ifndef PLATFORMQUIRKS_H
-#define PLATFORMQUIRKS_H
+#ifndef QQUICKGEOMETRYTESTUTIL_P_H
+#define QQUICKGEOMETRYTESTUTIL_P_H
 
-#include <qglobal.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#ifdef Q_OS_OSX
-#include <Carbon/Carbon.h>
-#endif
+#include <QObject>
+#include <QVector>
+#include <QSize>
 
-struct PlatformQuirks
+QT_BEGIN_NAMESPACE
+
+class QQuickItem;
+
+class QSizeChangeListener : public QObject, public QVector<QSize>
 {
-    static inline bool isClipboardAvailable()
-    {
-#if !QT_CONFIG(clipboard)
-        return false;
-#elif defined(Q_OS_OSX)
-        PasteboardRef pasteboard;
-        OSStatus status = PasteboardCreate(0, &pasteboard);
-        if (status == noErr)
-            CFRelease(pasteboard);
-        return status == noErr;
-#else
-        return true;
-#endif
-    }
+    Q_OBJECT
+public:
+    explicit QSizeChangeListener(QQuickItem *item);
+private slots:
+    void onSizeChanged();
+private:
+    QQuickItem *item;
 };
 
-#endif
+QT_END_NAMESPACE
+
+#endif // QQUICKGEOMETRYTESTUTIL_P_H

@@ -33,15 +33,23 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qsgrendererinterface.h>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_QQuickGraphicsInfo : public QQmlDataTest
 {
     Q_OBJECT
 
+public:
+    tst_QQuickGraphicsInfo();
+
 private slots:
     void testProperties();
 };
+
+tst_QQuickGraphicsInfo::tst_QQuickGraphicsInfo()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_QQuickGraphicsInfo::testProperties()
 {

@@ -34,7 +34,7 @@
 #include <QMatrix4x4>
 #include <QtQuick/QQuickView>
 #include <QtQml/QQmlEngine>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class TestShaderEffect : public QQuickShaderEffect
 {
@@ -102,6 +102,7 @@ private:
 };
 
 tst_qquickshadereffect::tst_qquickshadereffect()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     qmlRegisterType<TestShaderEffect>("ShaderEffectTest", 1, 0, "TestShaderEffect");
 }

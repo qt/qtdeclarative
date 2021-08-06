@@ -34,7 +34,7 @@
 #include <QScopedPointer>
 #include <private/qqmlglobal_p.h>
 #include <private/qquickvaluetypes_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include "testtypes.h"
 
 QT_BEGIN_NAMESPACE
@@ -50,7 +50,7 @@ class tst_qqmlvaluetypeproviders : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlvaluetypeproviders() {}
+    tst_qqmlvaluetypeproviders() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void initTestCase() override;

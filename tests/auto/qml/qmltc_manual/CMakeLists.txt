@@ -6,15 +6,13 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qmltc_manual
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         testclasses.h
         tst_qmltc_manual.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
         Qt::Quick
+        Qt::QuickTestUtilsPrivate
 )
 
 qt6_add_qml_module(tst_qmltc_manual

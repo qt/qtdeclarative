@@ -36,17 +36,25 @@
 #include <QtGui/QTextDocumentWriter>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qquicktextdocument : public QQmlDataTest
 {
     Q_OBJECT
+public:
+    tst_qquicktextdocument();
+
 private slots:
     void textDocumentWriter();
     void textDocumentWithImage();
 };
 
 QString text = QStringLiteral("foo bar");
+
+tst_qquicktextdocument::tst_qquicktextdocument()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_qquicktextdocument::textDocumentWriter()
 {

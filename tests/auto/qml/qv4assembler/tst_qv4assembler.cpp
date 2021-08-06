@@ -26,13 +26,12 @@
 **
 ****************************************************************************/
 
-#include <util.h>
-
 #include <QtTest/QtTest>
 #include <QtCore/qprocess.h>
 #include <QtCore/qtemporaryfile.h>
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlapplicationengine.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include <private/qv4global_p.h>
 
@@ -44,12 +43,20 @@ class tst_QV4Assembler : public QQmlDataTest
 {
     Q_OBJECT
 
+public:
+    tst_QV4Assembler();
+
 private slots:
     void initTestCase() override;
     void perfMapFile();
     void functionTable();
     void jitEnabled();
 };
+
+tst_QV4Assembler::tst_QV4Assembler()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_QV4Assembler::initTestCase()
 {

@@ -39,7 +39,7 @@
 #include <QtCore/qtranslator.h>
 #include <QSignalSpy>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<QVariantHash>)
@@ -74,6 +74,7 @@ class tst_qqmllistmodel : public QQmlDataTest
     Q_OBJECT
 public:
     tst_qqmllistmodel()
+        : QQmlDataTest(QT_QMLTEST_DATADIR)
     {
         qRegisterMetaType<QVector<int> >();
     }

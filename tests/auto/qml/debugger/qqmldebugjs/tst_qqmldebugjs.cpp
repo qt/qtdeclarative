@@ -28,7 +28,7 @@
 
 #include "debugutil_p.h"
 #include "qqmldebugprocess_p.h"
-#include "../../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include <private/qqmlenginedebugclient_p.h>
 #include <private/qv4debugclient_p.h>
@@ -81,6 +81,9 @@ do {\
 class tst_QQmlDebugJS : public QQmlDebugTest
 {
     Q_OBJECT
+
+public:
+    tst_QQmlDebugJS();
 
 private slots:
     void initTestCase() override;
@@ -174,6 +177,11 @@ private:
     void clearBreakPoint(int id);
 };
 
+
+tst_QQmlDebugJS::tst_QQmlDebugJS()
+    : QQmlDebugTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_QQmlDebugJS::initTestCase()
 {

@@ -10,7 +10,6 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qqmldebugtranslationservice
     SOURCES
-        ../../../shared/util.cpp ../../../shared/util.h
         ../shared/debugutil.cpp ../shared/debugutil_p.h
         ../shared/qqmldebugprocess.cpp ../shared/qqmldebugprocess_p.h
         tst_qqmldebugtranslationservice.cpp
@@ -18,7 +17,6 @@ qt_internal_add_test(tst_qqmldebugtranslationservice
         QT_QML_DEBUG
     INCLUDE_DIRECTORIES
         ../../../../../src/plugins/qmltooling/qmldbg_preview
-        ../../../shared
         ../shared
     PUBLIC_LIBRARIES
         Qt::Quick
@@ -29,6 +27,7 @@ qt_internal_add_test(tst_qqmldebugtranslationservice
         Qt::Network
         Qt::Qml
         Qt::QmlDebugPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

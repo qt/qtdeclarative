@@ -35,12 +35,12 @@
 ****************************************************************************/
 
 #include <QtTest/qtest.h>
-#include "../shared/visualtestutil.h"
-
 #include <QtCore/qtranslator.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuick/qquickview.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 #include <QtQuickTemplates2/private/qquickcombobox_p.h>
 #include <QtQuickTemplates2/private/qquickdialog_p.h>
@@ -48,7 +48,7 @@
 #include <QtQuickTemplates2/private/qquicktextfield_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
 
 class tst_translation : public QQmlDataTest
 {
@@ -64,6 +64,7 @@ private slots:
 };
 
 tst_translation::tst_translation()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     QQuickStyle::setStyle("Basic");
 }

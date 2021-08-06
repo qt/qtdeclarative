@@ -27,7 +27,7 @@
 ****************************************************************************/
 #include <QtTest/QtTest>
 #include <QtQml/QtQml>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 Q_DECLARE_METATYPE(QJsonValue::Type)
 
@@ -55,7 +55,7 @@ class tst_qjsonbinding : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qjsonbinding() {}
+    tst_qjsonbinding() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void cppJsConversion_data();

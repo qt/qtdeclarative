@@ -34,15 +34,13 @@
 **
 ****************************************************************************/
 
-#include "../../shared/dialogtestutil.h"
-#include "../../shared/util.h"
-#include "../../shared/visualtestutil.h"
-
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
 #include <QtQml/qqmlfile.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuickTest/quicktest.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
+#include <QtQuickControlsTestUtils/private/dialogstestutils_p.h>
 #include <QtQuickDialogs2/private/qquickfiledialog_p.h>
 #include <QtQuickDialogs2QuickImpl/private/qquickplatformfiledialog_p.h>
 #include <QtQuickDialogs2QuickImpl/private/qquickfiledialogdelegate_p.h>
@@ -55,13 +53,18 @@
 #include <QtQuickTemplates2/private/qquickdialogbuttonbox_p_p.h>
 #include <QtQuickTemplates2/private/qquicklabel_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
+#include <QtQuickControls2/qquickstyle.h>
 
-using namespace QQuickDialogTestUtil;
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
+using namespace QQuickDialogTestUtils;
+using namespace QQuickControlsTestUtils;
 
 class tst_QQuickFileDialogImpl : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_QQuickFileDialogImpl();
 
 private slots:
     void initTestCase() override;
@@ -127,6 +130,11 @@ void tst_QQuickFileDialogImpl::enterText(QWindow *window, const QString &textToE
         const QChar key = textToEnter.at(i);
         QTest::keyClick(window, key.toLatin1());
     }
+}
+
+tst_QQuickFileDialogImpl::tst_QQuickFileDialogImpl()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
 }
 
 void tst_QQuickFileDialogImpl::initTestCase()

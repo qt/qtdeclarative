@@ -33,7 +33,7 @@
 #include <QTimer>
 #include <QQmlContext>
 #include <qqmlinfo.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include "attached.h"
 
@@ -41,7 +41,7 @@ class tst_qqmlinfo : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qqmlinfo() {}
+    tst_qqmlinfo() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void qmlObject();

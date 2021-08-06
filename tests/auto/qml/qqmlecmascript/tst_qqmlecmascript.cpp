@@ -39,8 +39,6 @@
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include "testtypes.h"
-#include "testhttpserver.h"
-#include "../../shared/util.h"
 #include <private/qv4functionobject_p.h>
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4jscall_p.h>
@@ -54,6 +52,8 @@
 #include <private/qqmlabstractbinding_p.h>
 #include <private/qqmlvaluetypeproxybinding_p.h>
 #include <QtCore/private/qproperty_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
 
 #ifdef Q_CC_MSVC
 #define NO_INLINE __declspec(noinline)
@@ -71,6 +71,9 @@ Static QML language issues are covered in qmllanguage
 class tst_qqmlecmascript : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_qqmlecmascript();
 
 private slots:
     void initTestCase() override;
@@ -444,6 +447,11 @@ static void gc(QQmlEngine &engine)
     QCoreApplication::processEvents();
 }
 
+
+tst_qqmlecmascript::tst_qqmlecmascript()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_qqmlecmascript::initTestCase()
 {

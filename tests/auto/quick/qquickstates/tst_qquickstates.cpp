@@ -37,7 +37,7 @@
 #include <QtQuick/private/qquickstategroup_p.h>
 #include <private/qquickitem_p.h>
 #include <private/qqmlproperty_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class MyAttached : public QObject
 {
@@ -143,7 +143,7 @@ class tst_qquickstates : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickstates() {}
+    tst_qquickstates() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private:
     QByteArray fullDataPath(const QString &path) const;

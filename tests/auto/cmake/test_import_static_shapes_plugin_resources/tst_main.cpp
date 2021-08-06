@@ -56,7 +56,7 @@
 #include <QtQuick/QQuickView>
 #include <QtTest/QTest>
 
-#include "../../quick/shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 static bool gotShaderErrorMessage = false;
 QtMessageHandler oldHandler = nullptr;

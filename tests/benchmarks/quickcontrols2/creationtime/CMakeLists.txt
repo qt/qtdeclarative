@@ -6,9 +6,6 @@
 
 qt_internal_add_test(tst_creationtime
     SOURCES
-        ../../../auto/quickcontrols2/shared/qtest_quickcontrols.h
-        ../../../auto/quickcontrols2/shared/util.cpp ../../../auto/quickcontrols2/shared/util.h
-        ../../../auto/quickcontrols2/shared/visualtestutil.cpp ../../../auto/quickcontrols2/shared/visualtestutil.h
         tst_creationtime.cpp
     DEFINES
         QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/quickcontrols2\\\"
@@ -20,9 +17,11 @@ qt_internal_add_test(tst_creationtime
         Qt::QmlPrivate
         Qt::QuickControls2
         Qt::QuickControls2Private
+        Qt::QuickControlsTestUtilsPrivate
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
         Qt::QuickTest
+        Qt::QuickTestUtilsPrivate
         Qt::TestPrivate
 )
 

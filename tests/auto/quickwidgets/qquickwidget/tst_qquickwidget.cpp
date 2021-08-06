@@ -34,7 +34,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickitem_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtGui/QWindow>
 #include <QtGui/QScreen>
 #include <QtGui/QImage>
@@ -152,6 +152,7 @@ private:
 };
 
 tst_qquickwidget::tst_qquickwidget()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi);
 }

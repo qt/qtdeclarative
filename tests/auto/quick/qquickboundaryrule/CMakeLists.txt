@@ -12,15 +12,9 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qquickboundaryrule
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
-        ../shared/geometrytestutil.cpp ../shared/geometrytestutil.h
-        ../shared/viewtestutil.cpp ../shared/viewtestutil.h
-        ../shared/visualtestutil.cpp ../shared/visualtestutil.h
         tst_qquickboundaryrule.cpp
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
@@ -28,6 +22,7 @@ qt_internal_add_test(tst_qquickboundaryrule
         Qt::Qml
         Qt::QmlPrivate
         Qt::QuickPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

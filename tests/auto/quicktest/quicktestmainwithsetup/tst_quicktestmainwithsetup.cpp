@@ -33,8 +33,6 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuickTest/quicktest.h>
 
-#include "../../shared/util.h"
-
 class QmlRegisterTypeCppType : public QObject
 {
     Q_OBJECT

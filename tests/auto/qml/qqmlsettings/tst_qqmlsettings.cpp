@@ -34,11 +34,14 @@
 #include <QtGui/QFont>
 #include <QtQml/QQmlEngine>
 #include <QtQml/QQmlComponent>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_QQmlSettings : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_QQmlSettings();
 
 private slots:
     void initTestCase() override;
@@ -143,6 +146,11 @@ private:
     QColor m_colorProperty;
     QFont m_fontProperty;
 };
+
+tst_QQmlSettings::tst_QQmlSettings()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void tst_QQmlSettings::initTestCase()
 {

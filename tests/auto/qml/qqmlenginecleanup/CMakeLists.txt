@@ -6,13 +6,11 @@
 
 qt_internal_add_test(tst_qqmlenginecleanup
     SOURCES
-        ../../shared/util.cpp ../../shared/util.h
         tst_qqmlenginecleanup.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::Qml
         Qt::QmlPrivate
+        Qt::QuickTestUtilsPrivate
 )
 
 ## Scopes:

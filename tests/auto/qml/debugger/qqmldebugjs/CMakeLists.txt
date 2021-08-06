@@ -12,18 +12,17 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qqmldebugjs
     SOURCES
-        ../../../shared/util.cpp ../../../shared/util.h
         ../shared/debugutil.cpp ../shared/debugutil_p.h
         ../shared/qqmldebugprocess.cpp ../shared/qqmldebugprocess_p.h
         tst_qqmldebugjs.cpp
     INCLUDE_DIRECTORIES
-        ../../../shared
-        ../shared ../shared
+        ../shared
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
         Qt::GuiPrivate
         Qt::QmlDebugPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

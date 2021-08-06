@@ -36,9 +36,7 @@
 
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
-#include "../shared/util.h"
-#include "../shared/visualtestutil.h"
-#include "../shared/qtest_quickcontrols.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 #include <QtGui/qpointingdevice.h>
 #include <QtGui/qstylehints.h>
@@ -46,18 +44,26 @@
 #include <QtGui/qpa/qwindowsysteminterface.h>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 #include <QtQuickTemplates2/private/qquickdrawer_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
 #include <QtQuickTemplates2/private/qquickslider_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
+#include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 
-using namespace QQuickVisualTestUtil;
+//using namespace QQuickVisualTestUtils;
+using namespace QQuickControlsTestUtils;
 
 class tst_QQuickDrawer : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_QQuickDrawer();
 
 private slots:
     void initTestCase() override;
@@ -116,6 +122,11 @@ private:
 };
 
 
+tst_QQuickDrawer::tst_QQuickDrawer()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
+
 void tst_QQuickDrawer::initTestCase()
 {
     QQmlDataTest::initTestCase();
@@ -168,7 +179,7 @@ void tst_QQuickDrawer::visible_data()
 void tst_QQuickDrawer::visible()
 {
     QFETCH(QString, source);
-    QQuickApplicationHelper helper(this, source);
+    QQuickControlsApplicationHelper helper(this, source);
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -209,7 +220,7 @@ void tst_QQuickDrawer::visible()
 
 void tst_QQuickDrawer::state()
 {
-    QQuickApplicationHelper helper(this, "applicationwindow.qml");
+    QQuickControlsApplicationHelper helper(this, "applicationwindow.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -330,7 +341,7 @@ void tst_QQuickDrawer::position()
     QFETCH(QPoint, to);
     QFETCH(qreal, position);
 
-    QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;
@@ -378,7 +389,7 @@ void tst_QQuickDrawer::dragMargin()
     QFETCH(qreal, dragFromLeft);
     QFETCH(qreal, dragFromRight);
 
-    QQuickApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("applicationwindow.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;
@@ -425,7 +436,7 @@ static QRectF geometry(const QQuickItem *item)
 
 void tst_QQuickDrawer::reposition()
 {
-    QQuickApplicationHelper helper(this, QStringLiteral("reposition.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("reposition.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;
@@ -484,7 +495,7 @@ void tst_QQuickDrawer::reposition()
 
 void tst_QQuickDrawer::header()
 {
-    QQuickApplicationHelper helper(this, QStringLiteral("header.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("header.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickApplicationWindow *window = helper.appWindow;
@@ -539,7 +550,7 @@ void tst_QQuickDrawer::hover()
     QFETCH(QString, source);
     QFETCH(bool, modal);
 
-    QQuickApplicationHelper helper(this, source);
+    QQuickControlsApplicationHelper helper(this, source);
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
@@ -623,7 +634,7 @@ void tst_QQuickDrawer::wheel()
     QFETCH(QString, source);
     QFETCH(bool, modal);
 
-    QQuickApplicationHelper helper(this, source);
+    QQuickControlsApplicationHelper helper(this, source);
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
@@ -686,7 +697,7 @@ void tst_QQuickDrawer::wheel()
 
 void tst_QQuickDrawer::multiple()
 {
-    QQuickApplicationHelper helper(this, QStringLiteral("multiple.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("multiple.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
@@ -831,7 +842,7 @@ void tst_QQuickDrawer::touch()
     QFETCH(QPoint, from);
     QFETCH(QPoint, to);
 
-    QQuickApplicationHelper helper(this, source);
+    QQuickControlsApplicationHelper helper(this, source);
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -866,7 +877,7 @@ void tst_QQuickDrawer::touch()
 
 void tst_QQuickDrawer::multiTouch()
 {
-    QQuickApplicationHelper helper(this, QStringLiteral("multiTouch.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("multiTouch.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
@@ -980,7 +991,7 @@ void tst_QQuickDrawer::multiTouch()
 
 void tst_QQuickDrawer::grabber()
 {
-    QQuickApplicationHelper helper(this, QStringLiteral("grabber.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("grabber.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
@@ -1025,7 +1036,7 @@ void tst_QQuickDrawer::interactive_data()
 void tst_QQuickDrawer::interactive()
 {
     QFETCH(QString, source);
-    QQuickApplicationHelper helper(this, source);
+    QQuickControlsApplicationHelper helper(this, source);
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -1088,7 +1099,7 @@ void tst_QQuickDrawer::flickable()
     QFETCH(QPoint, from);
     QFETCH(QPoint, to);
 
-    QQuickApplicationHelper helper(this, QStringLiteral("flickable.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("flickable.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
@@ -1145,7 +1156,7 @@ void tst_QQuickDrawer::dragOverModalShadow()
 {
     QFETCH(bool, mouse);
 
-    QQuickApplicationHelper helper(this, QStringLiteral("dragOverModalShadow.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("dragOverModalShadow.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
@@ -1202,7 +1213,7 @@ void tst_QQuickDrawer::nonModal()
 {
     QFETCH(bool, mouse);
 
-    QQuickApplicationHelper helper(this, QStringLiteral("window.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("window.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
@@ -1286,7 +1297,7 @@ void tst_QQuickDrawer::slider()
     QFETCH(bool, mouse);
     QFETCH(int, delta);
 
-    QQuickApplicationHelper helper(this, QStringLiteral("slider.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("slider.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
@@ -1334,7 +1345,7 @@ void tst_QQuickDrawer::slider()
 
 void tst_QQuickDrawer::topEdgeScreenEdge()
 {
-    QQuickApplicationHelper helper(this, QStringLiteral("topEdgeScreenEdge.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("topEdgeScreenEdge.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();

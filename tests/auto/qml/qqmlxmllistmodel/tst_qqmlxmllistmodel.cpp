@@ -36,7 +36,7 @@
 #include <QNetworkRequest>
 #include <QNetworkAccessManager>
 #include <QtQmlXmlListModel/private/qqmlxmllistmodel_p.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 typedef QList<QVariantList> QQmlXmlModelData;
 
@@ -48,7 +48,7 @@ class tst_QQmlXmlListModel : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_QQmlXmlListModel() { }
+    tst_QQmlXmlListModel() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
 
 private slots:
     void initTestCase() override

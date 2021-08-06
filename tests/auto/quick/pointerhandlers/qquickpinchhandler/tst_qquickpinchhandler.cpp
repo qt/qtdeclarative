@@ -35,8 +35,8 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/qquickview.h>
 #include <QtQml/qqmlcontext.h>
-#include "../../../shared/util.h"
-#include "../../shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 Q_LOGGING_CATEGORY(lcPointerTests, "qt.quick.pointer.tests")
 
@@ -50,7 +50,7 @@ class tst_QQuickPinchHandler: public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_QQuickPinchHandler() { }
+    tst_QQuickPinchHandler() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
 private slots:
     void cleanupTestCase();
     void pinchProperties();
@@ -67,7 +67,6 @@ private slots:
     void transformedpinchHandler();
 
 private:
-    QQuickView *createView();
     QPointingDevice *touchscreen = QTest::createTouchDevice();
     QPointingDevice *touchpad = QTest::createTouchDevice(QInputDevice::DeviceType::TouchPad);
 };
@@ -84,7 +83,7 @@ static bool withinBounds(qreal lower, qreal num, qreal upper)
 
 void tst_QQuickPinchHandler::pinchProperties()
 {
-    QScopedPointer<QQuickView> window(createView());
+    QScopedPointer<QQuickView> window(QQuickViewTestUtils::createView());
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
     QVERIFY(window->rootObject() != nullptr);
@@ -207,7 +206,7 @@ QMutableEventPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickItem *i
 
 void tst_QQuickPinchHandler::scale()
 {
-    QQuickView *window = createView();
+    QQuickView *window = QQuickViewTestUtils::createView();
     QScopedPointer<QQuickView> scope(window);
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
@@ -295,7 +294,7 @@ void tst_QQuickPinchHandler::scale()
 
 void tst_QQuickPinchHandler::scaleThreeFingers()
 {
-    QQuickView *window = createView();
+    QQuickView *window = QQuickViewTestUtils::createView();
     QScopedPointer<QQuickView> scope(window);
     window->setSource(testFileUrl("threeFingers.qml"));
     window->show();
@@ -383,7 +382,7 @@ void tst_QQuickPinchHandler::scaleNativeGesture()
 {
     QFETCH(QString, qmlfile);
 
-    QQuickView *window = createView();
+    QQuickView *window = QQuickViewTestUtils::createView();
     QScopedPointer<QQuickView> scope(window);
     window->setSource(testFileUrl(qmlfile));
     window->show();
@@ -456,7 +455,7 @@ void tst_QQuickPinchHandler::scaleNativeGesture()
 
 void tst_QQuickPinchHandler::pan()
 {
-    QQuickView *window = createView();
+    QQuickView *window = QQuickViewTestUtils::createView();
     QScopedPointer<QQuickView> scope(window);
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
@@ -568,7 +567,7 @@ void tst_QQuickPinchHandler::dragAxesEnabled_data()
 
 void tst_QQuickPinchHandler::dragAxesEnabled()
 {
-    QQuickView *window = createView();
+    QQuickView *window = QQuickViewTestUtils::createView();
     QScopedPointer<QQuickView> scope(window);
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
@@ -635,7 +634,7 @@ void tst_QQuickPinchHandler::dragAxesEnabled()
 void tst_QQuickPinchHandler::retouch()
 {
     const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
-    QQuickView *window = createView();
+    QQuickView *window = QQuickViewTestUtils::createView();
     QScopedPointer<QQuickView> scope(window);
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
@@ -718,7 +717,7 @@ void tst_QQuickPinchHandler::retouch()
 void tst_QQuickPinchHandler::cancel()
 {
     const int dragThreshold = QGuiApplication::styleHints()->startDragDistance();
-    QQuickView *window = createView();
+    QQuickView *window = QQuickViewTestUtils::createView();
     QScopedPointer<QQuickView> scope(window);
     window->setSource(testFileUrl("pinchproperties.qml"));
     window->show();
@@ -811,7 +810,7 @@ void tst_QQuickPinchHandler::transformedpinchHandler()
     QFETCH(QPoint, p1);
     QFETCH(bool, shouldPinch);
 
-    QQuickView *view = createView();
+    QQuickView *view = QQuickViewTestUtils::createView();
     QScopedPointer<QQuickView> scope(view);
     view->setSource(testFileUrl("transformedPinchHandler.qml"));
     view->show();
@@ -848,14 +847,6 @@ void tst_QQuickPinchHandler::transformedpinchHandler()
         QQuickTouchUtils::flush(view);
         QCOMPARE(pinchHandler->active(), false);
     }
-}
-
-QQuickView *tst_QQuickPinchHandler::createView()
-{
-    QQuickView *window = new QQuickView(0);
-    window->setGeometry(0,0,240,320);
-
-    return window;
 }
 
 QTEST_MAIN(tst_QQuickPinchHandler)

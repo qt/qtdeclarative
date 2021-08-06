@@ -30,12 +30,14 @@
 #include <QtTest/QtTest>
 #include <QProcess>
 #include <QString>
-
-#include <util.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class TestQmllint: public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    TestQmllint();
 
 private Q_SLOTS:
     void initTestCase() override;
@@ -78,6 +80,11 @@ private:
     QString m_qmljsrootgenPath;
     QString m_qmltyperegistrarPath;
 };
+
+TestQmllint::TestQmllint()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void TestQmllint::initTestCase()
 {

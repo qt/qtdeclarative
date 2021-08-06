@@ -36,14 +36,14 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquicktableview_p.h>
 
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_QQmlTableModel : public QQmlDataTest
 {
     Q_OBJECT
 
 public:
-    tst_QQmlTableModel() {}
+    tst_QQmlTableModel() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
 
 private slots:
     void appendRemoveRow();

@@ -144,7 +144,7 @@ private:
     mutable quint32 m_hash = 0;
 };
 
-class Q_AUTOTEST_EXPORT QHashedCStringRef
+class QHashedCStringRef
 {
 public:
     inline QHashedCStringRef();
@@ -157,7 +157,7 @@ public:
     inline const char *constData() const;
     inline int length() const;
 
-    QString toUtf16() const;
+    Q_AUTOTEST_EXPORT QString toUtf16() const;
     inline int utf16length() const;
     inline void writeUtf16(QChar *) const;
     inline void writeUtf16(quint16 *) const;

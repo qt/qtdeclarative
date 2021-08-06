@@ -36,9 +36,9 @@
 #include <QtQuick/qquickview.h>
 #include <private/qquickloader_p.h>
 #include <private/qquickwindowmodule_p.h>
-#include "testhttpserver.h"
-#include "../../shared/util.h"
-#include "../shared/geometrytestutil.h"
+#include <QtQuickTestUtils/private/geometrytestutils_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <QQmlApplicationEngine>
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
@@ -138,6 +138,7 @@ private slots:
 Q_DECLARE_METATYPE(QList<QQmlError>)
 
 tst_QQuickLoader::tst_QQuickLoader()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
     qmlRegisterType<SlowComponent>("LoaderTest", 1, 0, "SlowComponent");
     qRegisterMetaType<QList<QQmlError>>();

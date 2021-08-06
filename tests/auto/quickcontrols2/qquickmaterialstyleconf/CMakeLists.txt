@@ -12,9 +12,6 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qquickmaterialstyleconf
     SOURCES
-        ../shared/qtest_quickcontrols.h
-        ../shared/util.cpp ../shared/util.h
-        ../shared/visualtestutil.cpp ../shared/visualtestutil.h
         tst_qquickmaterialstyleconf.cpp
     DEFINES
         QQC2_IMPORT_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/quickcontrols2\\\"
@@ -25,9 +22,11 @@ qt_internal_add_test(tst_qquickmaterialstyleconf
         Qt::QmlPrivate
         Qt::QuickControls2
         Qt::QuickControls2Private
+        Qt::QuickControlsTestUtilsPrivate
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
         Qt::QuickTest
+        Qt::QuickTestUtilsPrivate
         Qt::TestPrivate
     TESTDATA ${test_data}
 )

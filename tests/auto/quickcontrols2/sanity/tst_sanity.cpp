@@ -46,9 +46,11 @@
 #include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljsastvisitor_p.h>
 #include <QtQml/private/qqmlmetatype_p.h>
-#include "../../../auto/quickcontrols2/shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
+using namespace QQuickControlsTestUtils;
 
 Q_GLOBAL_STATIC(QObjectList, qt_qobjects)
 
@@ -178,7 +180,7 @@ void tst_Sanity::initTestCase()
         // TODO: add native styles: QTBUG-87108
     };
     for (const auto &stylePathPair : styleRelativePaths) {
-        forEachControl(&engine, stylePathPair.first, stylePathPair.second, QStringList(),
+        forEachControl(&engine, QQC2_IMPORT_PATH, stylePathPair.first, stylePathPair.second, QStringList(),
                 [&](const QString &relativePath, const QUrl &absoluteUrl) {
              installedQmlFiles.insert(relativePath, absoluteUrl.toLocalFile());
         });

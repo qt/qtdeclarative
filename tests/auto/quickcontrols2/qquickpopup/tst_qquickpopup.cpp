@@ -36,14 +36,13 @@
 
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
-#include "../shared/util.h"
-#include "../shared/visualtestutil.h"
-#include "../shared/qtest_quickcontrols.h"
 
 #include <QtCore/qoperatingsystemversion.h>
 #include <QtGui/qpa/qwindowsysteminterface.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/private/qquickpalette_p.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTemplates2/private/qquickapplicationwindow_p.h>
 #include <QtQuickTemplates2/private/qquickcombobox_p.h>
 #include <QtQuickTemplates2/private/qquickdialog_p.h>
@@ -55,12 +54,18 @@
 #include <QtQuickTemplates2/private/qquickstackview_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p_p.h>
 #include <QtQuickTemplates2/private/qquicktooltip_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
+#include <QtQuickControlsTestUtils/private/qtest_quickcontrols_p.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
+using namespace QQuickControlsTestUtils;
 
 class tst_QQuickPopup : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_QQuickPopup();
 
 private slots:
     void initTestCase() override;
@@ -105,6 +110,11 @@ private slots:
     void releaseAfterExitTransition();
 };
 
+tst_QQuickPopup::tst_QQuickPopup()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
+
 void tst_QQuickPopup::initTestCase()
 {
     QQmlDataTest::initTestCase();
@@ -121,7 +131,7 @@ void tst_QQuickPopup::visible_data()
 void tst_QQuickPopup::visible()
 {
     QFETCH(QString, source);
-    QQuickApplicationHelper helper(this, source);
+    QQuickControlsApplicationHelper helper(this, source);
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -155,7 +165,7 @@ void tst_QQuickPopup::visible()
 
 void tst_QQuickPopup::state()
 {
-    QQuickApplicationHelper helper(this, "applicationwindow.qml");
+    QQuickControlsApplicationHelper helper(this, "applicationwindow.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -218,7 +228,7 @@ void tst_QQuickPopup::overlay()
     QFETCH(bool, dim);
 
     QScopedPointer<QPointingDevice> device(QTest::createTouchDevice());
-    QQuickApplicationHelper helper(this, source);
+    QQuickControlsApplicationHelper helper(this, source);
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -370,7 +380,7 @@ void tst_QQuickPopup::zOrder_data()
 void tst_QQuickPopup::zOrder()
 {
     QFETCH(QString, source);
-    QQuickApplicationHelper helper(this, source);
+    QQuickControlsApplicationHelper helper(this, source);
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -480,7 +490,7 @@ void tst_QQuickPopup::closePolicy()
     QFETCH(QString, source);
     QFETCH(QQuickPopup::ClosePolicy, closePolicy);
 
-    QQuickApplicationHelper helper(this, source);
+    QQuickControlsApplicationHelper helper(this, source);
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -565,7 +575,7 @@ void tst_QQuickPopup::activeFocusOnClose1()
 {
     // Test that a popup that never sets focus: true (e.g. ToolTip) doesn't affect
     // the active focus item when it closes.
-    QQuickApplicationHelper helper(this, QStringLiteral("activeFocusOnClose1.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("activeFocusOnClose1.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
@@ -609,7 +619,7 @@ void tst_QQuickPopup::activeFocusOnClose2()
     // Test that a popup that sets focus: true but relinquishes focus (e.g. by
     // calling forceActiveFocus() on another item) before it closes doesn't
     // affect the active focus item when it closes.
-    QQuickApplicationHelper helper(this, QStringLiteral("activeFocusOnClose2.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("activeFocusOnClose2.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
@@ -647,7 +657,7 @@ void tst_QQuickPopup::activeFocusOnClose3()
 {
     // Test that a closing popup that had focus doesn't steal focus from
     // another popup that the focus was transferred to.
-    QQuickApplicationHelper helper(this, QStringLiteral("activeFocusOnClose3.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("activeFocusOnClose3.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
@@ -679,7 +689,7 @@ void tst_QQuickPopup::activeFocusOnClose3()
 void tst_QQuickPopup::activeFocusOnClosingSeveralPopups()
 {
     // Test that active focus isn't lost when multiple popup closing simultaneously
-    QQuickApplicationHelper helper(this, QStringLiteral("activeFocusOnClosingSeveralPopups.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("activeFocusOnClosingSeveralPopups.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
@@ -741,7 +751,7 @@ void tst_QQuickPopup::hover()
     QFETCH(QString, source);
     QFETCH(bool, modal);
 
-    QQuickApplicationHelper helper(this, source);
+    QQuickControlsApplicationHelper helper(this, source);
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
@@ -817,7 +827,7 @@ void tst_QQuickPopup::wheel()
     QFETCH(QString, source);
     QFETCH(bool, modal);
 
-    QQuickApplicationHelper helper(this, source);
+    QQuickControlsApplicationHelper helper(this, source);
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
@@ -888,7 +898,7 @@ void tst_QQuickPopup::parentDestroyed()
 
 void tst_QQuickPopup::nested()
 {
-    QQuickApplicationHelper helper(this, QStringLiteral("nested.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("nested.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
@@ -918,7 +928,7 @@ void tst_QQuickPopup::nested()
 // QTBUG-56697
 void tst_QQuickPopup::grabber()
 {
-    QQuickApplicationHelper helper(this, QStringLiteral("grabber.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("grabber.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
@@ -971,7 +981,7 @@ void tst_QQuickPopup::cursorShape()
 {
     // Ensure that the mouse cursor has the correct shape when over a popup
     // which is itself over an item with a different shape.
-    QQuickApplicationHelper helper(this, QStringLiteral("cursor.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("cursor.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     centerOnScreen(window);
@@ -1031,7 +1041,7 @@ void tst_QQuickPopup::closeOnEscapeWithNestedPopups()
 {
     // Tests the scenario in the Gallery example, where there are nested popups that should
     // close in the correct order when the Escape key is pressed.
-    QQuickApplicationHelper helper(this, QStringLiteral("closeOnEscapeWithNestedPopups.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("closeOnEscapeWithNestedPopups.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickApplicationWindow *window = helper.appWindow;
     window->show();
@@ -1095,7 +1105,7 @@ void tst_QQuickPopup::closeOnEscapeWithNestedPopups()
 
 void tst_QQuickPopup::closeOnEscapeWithVisiblePopup()
 {
-    QQuickApplicationHelper helper(this, QStringLiteral("closeOnEscapeWithVisiblePopup.qml"));
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("closeOnEscapeWithVisiblePopup.qml"));
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
     window->show();
@@ -1146,7 +1156,7 @@ void tst_QQuickPopup::orientation()
     QFETCH(Qt::ScreenOrientation, orientation);
     QFETCH(QPointF, position);
 
-    QQuickApplicationHelper helper(this, "orientation.qml");
+    QQuickControlsApplicationHelper helper(this, "orientation.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -1186,7 +1196,7 @@ void tst_QQuickPopup::qquickview()
 // QTBUG-73447
 void tst_QQuickPopup::disabledPalette()
 {
-    QQuickApplicationHelper helper(this, "disabledPalette.qml");
+    QQuickControlsApplicationHelper helper(this, "disabledPalette.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -1223,7 +1233,7 @@ void tst_QQuickPopup::disabledPalette()
 
 void tst_QQuickPopup::disabledParentPalette()
 {
-    QQuickApplicationHelper helper(this, "disabledPalette.qml");
+    QQuickControlsApplicationHelper helper(this, "disabledPalette.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -1269,7 +1279,7 @@ void tst_QQuickPopup::disabledParentPalette()
 
 void tst_QQuickPopup::countChanged()
 {
-    QQuickApplicationHelper helper(this, "countChanged.qml");
+    QQuickControlsApplicationHelper helper(this, "countChanged.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -1290,7 +1300,7 @@ void tst_QQuickPopup::toolTipCrashOnClose()
     if (!canImportModule("import QtGraphicalEffects; DropShadow {}"))
         QSKIP("Test requires QtGraphicalEffects");
 
-    QQuickApplicationHelper helper(this, "toolTipCrashOnClose.qml");
+    QQuickControlsApplicationHelper helper(this, "toolTipCrashOnClose.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -1309,7 +1319,7 @@ void tst_QQuickPopup::setOverlayParentToNull()
     if (!canImportModule("import QtGraphicalEffects; DropShadow {}"))
         QSKIP("Test requires QtGraphicalEffects");
 
-    QQuickApplicationHelper helper(this, "toolTipCrashOnClose.qml");
+    QQuickControlsApplicationHelper helper(this, "toolTipCrashOnClose.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -1332,7 +1342,7 @@ void tst_QQuickPopup::tabFence()
     if (QGuiApplication::styleHints()->tabFocusBehavior() != Qt::TabFocusAllControls)
         QSKIP("This platform only allows tab focus for text controls");
 
-    QQuickApplicationHelper helper(this, "tabFence.qml");
+    QQuickControlsApplicationHelper helper(this, "tabFence.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -1387,7 +1397,7 @@ void tst_QQuickPopup::tabFence()
 
 void tst_QQuickPopup::invisibleToolTipOpen()
 {
-    QQuickApplicationHelper helper(this, "invisibleToolTipOpen.qml");
+    QQuickControlsApplicationHelper helper(this, "invisibleToolTipOpen.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -1423,7 +1433,7 @@ void tst_QQuickPopup::invisibleToolTipOpen()
 
 void tst_QQuickPopup::centerInOverlayWithinStackViewItem()
 {
-    QQuickApplicationHelper helper(this, "centerInOverlayWithinStackViewItem.qml");
+    QQuickControlsApplicationHelper helper(this, "centerInOverlayWithinStackViewItem.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;
@@ -1439,7 +1449,7 @@ void tst_QQuickPopup::centerInOverlayWithinStackViewItem()
 
 void tst_QQuickPopup::destroyDuringExitTransition()
 {
-    QQuickApplicationHelper helper(this, "destroyDuringExitTransition.qml");
+    QQuickControlsApplicationHelper helper(this, "destroyDuringExitTransition.qml");
     QVERIFY2(helper.ready, helper.failureMessage());
 
     QQuickWindow *window = helper.window;

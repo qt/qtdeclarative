@@ -34,13 +34,14 @@
 #include <QtSql/qsqldatabase.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qfile.h>
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class tst_qqmlsqldatabase : public QQmlDataTest
 {
     Q_OBJECT
 public:
     tst_qqmlsqldatabase()
+        : QQmlDataTest(QT_QMLTEST_DATADIR)
     {
         qApp->setApplicationName("tst_qqmlsqldatabase");
         qApp->setOrganizationName("QtProject");

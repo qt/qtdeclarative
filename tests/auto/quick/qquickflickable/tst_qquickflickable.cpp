@@ -37,17 +37,17 @@
 #include <private/qquicktransition_p.h>
 #include <private/qqmlvaluetype_p.h>
 #include <math.h>
-#include "../../shared/util.h"
-#include "../shared/geometrytestutil.h"
-#include "../shared/viewtestutil.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/geometrytestutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
 #include <qpa/qwindowsysteminterface.h>
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
-using namespace QQuickViewTestUtil;
-using namespace QQuickVisualTestUtil;
+using namespace QQuickViewTestUtils;
+using namespace QQuickVisualTestUtils;
 
 // an abstract Slider which only handles touch events
 class TouchDragArea : public QQuickItem
@@ -147,6 +147,7 @@ class tst_qquickflickable : public QQmlDataTest
     Q_OBJECT
 public:
     tst_qquickflickable()
+        : QQmlDataTest(QT_QMLTEST_DATADIR)
     {}
 
 private slots:
@@ -365,8 +366,8 @@ void tst_qquickflickable::rebound()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("rebound.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
 
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
@@ -505,8 +506,8 @@ void tst_qquickflickable::pressDelay()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("pressDelay.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject() != nullptr);
@@ -586,8 +587,8 @@ void tst_qquickflickable::nestedPressDelay()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("nestedPressDelay.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject() != nullptr);
@@ -666,8 +667,8 @@ void tst_qquickflickable::filterReplayedPress()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("nestedPressDelay.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject() != nullptr);
@@ -709,8 +710,8 @@ void tst_qquickflickable::nestedClickThenFlick()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("nestedClickThenFlick.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject() != nullptr);
@@ -1062,8 +1063,8 @@ void tst_qquickflickable::movingAndFlicking()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("flickable03.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject() != nullptr);
@@ -1225,8 +1226,8 @@ void tst_qquickflickable::movingAndDragging()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("flickable03.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject() != nullptr);
@@ -1428,8 +1429,8 @@ void tst_qquickflickable::pressWhileFlicking()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("flickable03.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject() != nullptr);
@@ -1509,8 +1510,8 @@ void tst_qquickflickable::flickVelocity()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("flickable03.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject() != nullptr);
@@ -1553,8 +1554,8 @@ void tst_qquickflickable::margins()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("margins.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->setTitle(QTest::currentTestFunction());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
@@ -1617,8 +1618,8 @@ void tst_qquickflickable::cancelOnHide()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("hide.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject());
@@ -1636,8 +1637,8 @@ void tst_qquickflickable::cancelOnMouseGrab()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("cancel.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject() != nullptr);
@@ -1676,8 +1677,8 @@ void tst_qquickflickable::clickAndDragWhenTransformed()
     QScopedPointer<QQuickView> view(new QQuickView);
     view->setSource(testFileUrl("transformedFlickable.qml"));
     QTRY_COMPARE(view->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(view.data());
-    QQuickViewTestUtil::moveMouseAway(view.data());
+    QQuickVisualTestUtils::centerOnScreen(view.data());
+    QQuickVisualTestUtils::moveMouseAway(view.data());
     view->show();
     QVERIFY(QTest::qWaitForWindowActive(view.data()));
     QVERIFY(view->rootObject() != nullptr);
@@ -1730,8 +1731,8 @@ void tst_qquickflickable::flickTwiceUsingTouches()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("longList.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(window->rootObject() != nullptr);
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
@@ -1811,8 +1812,8 @@ void tst_qquickflickable::nestedStopAtBounds()
     QQuickView view;
     view.setSource(testFileUrl("nestedStopAtBounds.qml"));
     QTRY_COMPARE(view.status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(&view);
-    QQuickViewTestUtil::moveMouseAway(&view);
+    QQuickVisualTestUtils::centerOnScreen(&view);
+    QQuickVisualTestUtils::moveMouseAway(&view);
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
@@ -1965,8 +1966,8 @@ void tst_qquickflickable::stopAtBounds()
     QQuickView view;
     view.setSource(testFileUrl("stopAtBounds.qml"));
     QTRY_COMPARE(view.status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(&view);
-    QQuickViewTestUtil::moveMouseAway(&view);
+    QQuickVisualTestUtils::centerOnScreen(&view);
+    QQuickVisualTestUtils::moveMouseAway(&view);
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
@@ -2070,8 +2071,8 @@ void tst_qquickflickable::nestedMouseAreaUsingTouch()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("nestedmousearea.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(window->rootObject() != nullptr);
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
@@ -2116,8 +2117,8 @@ void tst_qquickflickable::nestedSliderUsingTouch()
     QScopedPointer<QQuickView> windowPtr(window);
     windowPtr->setSource(testFileUrl("nestedSlider.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window);
-    QQuickViewTestUtil::moveMouseAway(window);
+    QQuickVisualTestUtils::centerOnScreen(window);
+    QQuickVisualTestUtils::moveMouseAway(window);
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
     QVERIFY(window->rootObject() != nullptr);
@@ -2155,8 +2156,8 @@ void tst_qquickflickable::pressDelayWithLoader()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("pressDelayWithLoader.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
     QVERIFY(window->rootObject() != nullptr);
@@ -2172,8 +2173,8 @@ void tst_qquickflickable::movementFromProgrammaticFlick()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("movementSignals.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
@@ -2225,8 +2226,8 @@ void tst_qquickflickable::ratios_smallContent()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("ratios_smallContent.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->setTitle(QTest::currentTestFunction());
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
@@ -2251,8 +2252,8 @@ void tst_qquickflickable::contentXYNotTruncatedToInt()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("contentXY.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
@@ -2271,8 +2272,8 @@ void tst_qquickflickable::keepGrab()
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("keepGrab.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window.data());
-    QQuickViewTestUtil::moveMouseAway(window.data());
+    QQuickViewTestUtils::centerOnScreen(window.data());
+    QQuickViewTestUtils::moveMouseAway(window.data());
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window.data()));
 
@@ -2566,8 +2567,8 @@ void tst_qquickflickable::synchronousDrag()
     QQuickView *window = scopedWindow.data();
     window->setSource(testFileUrl("longList.qml"));
     QTRY_COMPARE(window->status(), QQuickView::Ready);
-    QQuickViewTestUtil::centerOnScreen(window);
-    QQuickViewTestUtil::moveMouseAway(window);
+    QQuickVisualTestUtils::centerOnScreen(window);
+    QQuickVisualTestUtils::moveMouseAway(window);
     window->show();
     QVERIFY(window->rootObject() != nullptr);
     QVERIFY(QTest::qWaitForWindowActive(window));

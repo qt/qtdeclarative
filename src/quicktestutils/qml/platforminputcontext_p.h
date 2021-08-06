@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,8 +26,24 @@
 **
 ****************************************************************************/
 
+#ifndef PLATFORMINPUTCONTEXT_P_H
+#define PLATFORMINPUTCONTEXT_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
 #include <qpa/qplatforminputcontext.h>
 #include <QtGui/QInputMethod>
+
+QT_BEGIN_NAMESPACE
 
 class PlatformInputContext : public QPlatformInputContext
 {
@@ -101,3 +117,7 @@ public:
     int m_updateCallCount;
     Qt::LayoutDirection m_direction;
 };
+
+QT_END_NAMESPACE
+
+#endif // PLATFORMINPUTCONTEXT_P_H

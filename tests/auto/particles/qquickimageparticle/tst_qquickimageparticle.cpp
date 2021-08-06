@@ -30,8 +30,7 @@
 #include "../shared/particlestestsshared.h"
 #include <private/qquickparticlesystem_p.h>
 #include <private/qabstractanimation_p.h>
-
-#include "../../shared/util.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 const double CONV_FACTOR = 0.017453292519943295;//Degrees to radians
 
@@ -39,7 +38,7 @@ class tst_qquickimageparticle : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickimageparticle() {}
+    tst_qquickimageparticle() : QQmlDataTest(QT_QMLTEST_DATADIR) {}
     ~tst_qquickimageparticle();
 
 private slots:

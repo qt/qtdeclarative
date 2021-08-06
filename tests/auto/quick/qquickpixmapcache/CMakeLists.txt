@@ -12,11 +12,7 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qquickpixmapcache
     SOURCES
-        ../../shared/testhttpserver.cpp ../../shared/testhttpserver.h
-        ../../shared/util.cpp ../../shared/util.h
         tst_qquickpixmapcache.cpp
-    INCLUDE_DIRECTORIES
-        ../../shared
     PUBLIC_LIBRARIES
         Qt::Concurrent
         Qt::CorePrivate
@@ -25,6 +21,7 @@ qt_internal_add_test(tst_qquickpixmapcache
         Qt::Network
         Qt::QmlPrivate
         Qt::QuickPrivate
+        Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
 

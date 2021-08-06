@@ -38,9 +38,11 @@
 #include <QtQuick>
 #include <QtCore/private/qhooks_p.h>
 #include <iostream>
-#include "../../../auto/quickcontrols2/shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
+using namespace QQuickControlsTestUtils;
 
 static int qt_verbose = qEnvironmentVariableIntValue("VERBOSE") != 0;
 
@@ -93,11 +95,15 @@ void tst_ObjectCount::cleanup()
 
 static void initTestRows(QQmlEngine *engine)
 {
-    addTestRowForEachControl(engine, "basic", "QtQuick/Controls/Basic");
-    addTestRowForEachControl(engine, "fusion", "QtQuick/Controls/Fusion", QStringList() << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
-    addTestRowForEachControl(engine, "imagine", "QtQuick/Controls/Imagine");
-    addTestRowForEachControl(engine, "material", "QtQuick/Controls/Material", QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
-    addTestRowForEachControl(engine, "universal", "QtQuick/Controls/Universal", QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
+    addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "basic", "QtQuick/Controls/Basic");
+    addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "fusion", "QtQuick/Controls/Fusion",
+        QStringList() << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
+    addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "imagine", "QtQuick/Controls/Imagine");
+    addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "material", "QtQuick/Controls/Material",
+        QStringList() << "Ripple" << "SliderHandle" << "CheckIndicator" << "RadioIndicator"
+            << "SwitchIndicator" << "BoxShadow" << "ElevationEffect" << "CursorDelegate");
+    addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "universal", "QtQuick/Controls/Universal",
+        QStringList() << "CheckIndicator" << "RadioIndicator" << "SwitchIndicator");
 }
 
 template <typename T>

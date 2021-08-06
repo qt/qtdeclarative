@@ -33,12 +33,14 @@
 #include <QString>
 #include <QTemporaryDir>
 #include <QtTest/private/qemulationdetector_p.h>
-
-#include <util.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 class TestQmlformat: public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    TestQmlformat();
 
 private Q_SLOTS:
     void initTestCase() override;
@@ -63,6 +65,11 @@ private:
     QStringList findFiles(const QDir &);
     bool isInvalidFile(const QFileInfo &fileName) const;
 };
+
+TestQmlformat::TestQmlformat()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
+{
+}
 
 void TestQmlformat::initTestCase()
 {

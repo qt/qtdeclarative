@@ -47,13 +47,13 @@
 #include <QQuickImageProvider>
 #include <QQmlAbstractUrlInterceptor>
 
-#include "../../shared/util.h"
-#include "../../shared/testhttpserver.h"
-#include "../shared/visualtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/testhttpserver_p.h>
+#include <QtQuickTestUtils/private/visualtestutils_p.h>
 
 // #define DEBUG_WRITE_OUTPUT
 
-using namespace QQuickVisualTestUtil;
+using namespace QQuickVisualTestUtils;
 
 Q_DECLARE_METATYPE(QQuickImageBase::Status)
 
@@ -110,6 +110,7 @@ private:
 };
 
 tst_qquickimage::tst_qquickimage()
+    : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
 }
 

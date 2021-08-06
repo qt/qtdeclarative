@@ -36,8 +36,8 @@
 #include <QtQuick/qquickview.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlengine.h>
-#include "../../shared/util.h"
-#include "../shared/viewtestutil.h"
+#include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtGui/qstylehints.h>
 #include <QtGui/QCursor>
 #include <QtGui/QScreen>
@@ -89,6 +89,7 @@ class tst_QQuickMouseArea: public QQmlDataTest
     Q_OBJECT
 public:
     tst_QQuickMouseArea()
+        : QQmlDataTest(QT_QMLTEST_DATADIR)
     {
         qmlRegisterType<CircleMask>("Test", 1, 0, "CircleMask");
         qmlRegisterType<EventSender>("Test", 1, 0, "EventSender");
