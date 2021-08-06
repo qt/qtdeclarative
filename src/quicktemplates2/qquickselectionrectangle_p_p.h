@@ -75,7 +75,7 @@ public:
     void connectToTarget();
     void scrollTowardsPos(const QPointF &pos);
 
-    QQuickItem *createHandle(QQmlComponent *delegate);
+    QQuickItem *createHandle(QQmlComponent *delegate, Qt::Corner corner);
 
     QQuickSelectionRectangleAttached *getAttachedObject(const QObject *object) const;
 
