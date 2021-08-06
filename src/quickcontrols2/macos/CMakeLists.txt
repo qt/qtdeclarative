@@ -8,6 +8,7 @@ set(qml_files
     "GroupBox.qml"
     "CheckBox.qml"
     "RadioButton.qml"
+    "SelectionRectangle.qml"
     "SpinBox.qml"
     "TextField.qml"
     "Frame.qml"

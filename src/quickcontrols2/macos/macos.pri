@@ -4,6 +4,7 @@ QML_FILES += \
     $$PWD/GroupBox.qml \
     $$PWD/CheckBox.qml \
     $$PWD/RadioButton.qml \
+    $$PWD/SelectionRectangle.qml \
     $$PWD/SpinBox.qml \
     $$PWD/TextField.qml \
     $$PWD/Frame.qml \
