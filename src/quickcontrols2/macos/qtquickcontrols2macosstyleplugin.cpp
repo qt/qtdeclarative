@@ -39,6 +39,7 @@
 #include <QtQuickControls2/qquickstyle.h>
 
 extern void qml_register_types_QtQuick_Controls_macOS();
+Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick_Controls_macOS);
 
 QT_BEGIN_NAMESPACE
 

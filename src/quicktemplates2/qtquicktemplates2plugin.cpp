@@ -47,6 +47,10 @@ extern ShortcutContextMatcher qt_quick_shortcut_context_matcher();
 extern void qt_quick_set_shortcut_context_matcher(ShortcutContextMatcher matcher);
 #endif
 
+Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick_Templates);
+Q_GHS_KEEP_REFERENCE(QQuickTemplates_initializeModule);
+
+
 QT_BEGIN_NAMESPACE
 
 class QtQuickTemplates2Plugin : public QQmlExtensionPlugin
