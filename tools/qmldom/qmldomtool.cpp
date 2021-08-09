@@ -41,6 +41,7 @@
 #include <QtQmlDom/private/qqmldomfieldfilter_p.h>
 
 #include <cstdio>
+#include <optional>
 
 #if QT_CONFIG(commandlineparser)
 #    include <QtCore/qcommandlineparser.h>
@@ -152,6 +153,10 @@ int main(int argc, char *argv[])
         }
     }
 
+    std::optional<DomType> fileType;
+    if (parser.isSet(reformatOption))
+        fileType = DomType::QmlFile;
+
     Dependencies dep = Dependencies::None;
     for (QString depName : parser.values(dependenciesOption)) {
         QMetaEnum metaEnum = QMetaEnum::fromType<Dependencies>();
@@ -230,15 +235,22 @@ int main(int argc, char *argv[])
     if (dep != Dependencies::None)
         env.loadBuiltins();
     foreach (QString s, positionalArguments) {
-        env.loadFile(s, QString(), nullptr, LoadOption::DefaultLoad);
+        env.loadFile(s, QString(), nullptr, LoadOption::DefaultLoad, fileType);
     }
     envPtr->loadPendingDependencies(env);
+    bool hadFailures = false;
+    const qsizetype largestFileSizeToCheck = 32000;
     if (parser.isSet(reformatOption)) {
         for (auto s : positionalArguments) {
-            DomItem qmlFile = env.path(Paths::qmldirFilePath(s));
+            DomItem qmlFile = env.path(Paths::qmlFilePath(QFileInfo(s).canonicalFilePath()));
             if (qmlFile) {
                 qDebug() << "reformatting" << s;
                 FileWriter fw;
+                LineWriterOptions lwOptions;
+                WriteOutChecks checks = WriteOutCheck::Default;
+                if (std::shared_ptr<QmlFile> qmlFilePtr = qmlFile.ownerAs<QmlFile>())
+                    if (qmlFilePtr->code().size() > largestFileSizeToCheck)
+                        checks = WriteOutCheck::None;
                 QString target = s;
                 QString rDir = parser.value(reformatDirOption);
                 if (!rDir.isEmpty()) {
@@ -246,16 +258,8 @@ int main(int argc, char *argv[])
                     QDir d(rDir);
                     target = d.filePath(f.fileName());
                 }
-                switch (fw.write(
-                        target,
-                        [&qmlFile, target](QTextStream &ts) {
-                            LineWriter lw([&ts](QStringView s) { ts << s; }, target);
-                            OutWriter ow(lw);
-                            qmlFile.writeOut(ow);
-                            ow.eof();
-                            return true;
-                        },
-                        nBackups)) {
+                MutableDomItem res = qmlFile.writeOut(target, nBackups, lwOptions, &fw, checks);
+                switch (fw.status) {
                 case FileWriter::Status::ShouldWrite:
                 case FileWriter::Status::SkippedDueToFailure:
                     qWarning() << "failure reformatting " << s;
@@ -266,10 +270,10 @@ int main(int argc, char *argv[])
                 case FileWriter::Status::SkippedEqual:
                     qDebug() << "no change";
                 }
+                hadFailures = hadFailures || !bool(res);
             }
         }
-    }
-    if (parser.isSet(dumpOption) || !parser.isSet(reformatOption)) {
+    } else if (parser.isSet(dumpOption) || !parser.isSet(reformatOption)) {
         qDebug() << "will dump\n";
         QTextStream ts(stdout);
         auto sink = [&ts](QStringView v) {

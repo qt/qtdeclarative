@@ -2288,21 +2288,23 @@ DomItem::DomItem(std::shared_ptr<DomUniverse> universePtr):
 }
 
 void DomItem::loadFile(QString canonicalFilePath, QString logicalPath, QString code,
-                       QDateTime codeDate, DomTop::Callback callback, LoadOptions loadOptions)
+                       QDateTime codeDate, DomTop::Callback callback, LoadOptions loadOptions,
+                       std::optional<DomType> fileType)
 {
     DomItem topEl = top();
     if (topEl.internalKind() == DomType::DomEnvironment
         || topEl.internalKind() == DomType::DomUniverse) {
         if (auto univ = topEl.ownerAs<DomUniverse>())
             univ->loadFile(*this, canonicalFilePath, logicalPath, code, codeDate, callback,
-                           loadOptions);
+                           loadOptions, fileType);
         else if (auto env = topEl.ownerAs<DomEnvironment>()) {
             if (env->options() & DomEnvironment::Option::NoDependencies)
                 env->loadFile(topEl, canonicalFilePath, logicalPath, code, codeDate, callback,
-                              DomTop::Callback(), DomTop::Callback(), loadOptions);
+                              DomTop::Callback(), DomTop::Callback(), loadOptions, fileType);
             else
                 env->loadFile(topEl, canonicalFilePath, logicalPath, code, codeDate,
-                              DomTop::Callback(), DomTop::Callback(), callback, loadOptions);
+                              DomTop::Callback(), DomTop::Callback(), callback, loadOptions,
+                              fileType);
         } else
             Q_ASSERT(false && "expected either DomUniverse or DomEnvironment cast to succeed");
     } else {
@@ -2312,7 +2314,7 @@ void DomItem::loadFile(QString canonicalFilePath, QString logicalPath, QString c
 }
 
 void DomItem::loadFile(QString filePath, QString logicalPath, DomTop::Callback callback,
-                       LoadOptions loadOptions)
+                       LoadOptions loadOptions, std::optional<DomType> fileType)
 {
     DomItem topEl = top();
     if (topEl.internalKind() == DomType::DomEnvironment
@@ -2322,10 +2324,10 @@ void DomItem::loadFile(QString filePath, QString logicalPath, DomTop::Callback c
         else if (auto env = topEl.ownerAs<DomEnvironment>()) {
             if (env->options() & DomEnvironment::Option::NoDependencies)
                 env->loadFile(topEl, filePath, logicalPath, callback, DomTop::Callback(),
-                              DomTop::Callback(), loadOptions);
+                              DomTop::Callback(), loadOptions, fileType);
             else
                 env->loadFile(topEl, filePath, logicalPath, DomTop::Callback(), DomTop::Callback(),
-                              callback, loadOptions);
+                              callback, loadOptions, fileType);
         } else
             Q_ASSERT(false && "expected either DomUniverse or DomEnvironment cast to succeed");
     } else {
