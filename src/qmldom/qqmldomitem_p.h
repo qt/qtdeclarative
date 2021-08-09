@@ -1036,11 +1036,11 @@ public:
     DomItem(std::shared_ptr<DomUniverse>);
 
     void loadFile(QString filePath, QString logicalPath,
-                  std::function<void(Path, DomItem &, DomItem &)> callback,
-                  LoadOptions loadOptions);
+                  std::function<void(Path, DomItem &, DomItem &)> callback, LoadOptions loadOptions,
+                  std::optional<DomType> fileType = std::optional<DomType>());
     void loadFile(QString canonicalFilePath, QString logicalPath, QString code, QDateTime codeDate,
-                  std::function<void(Path, DomItem &, DomItem &)> callback,
-                  LoadOptions loadOptions);
+                  std::function<void(Path, DomItem &, DomItem &)> callback, LoadOptions loadOptions,
+                  std::optional<DomType> fileType = std::optional<DomType>());
     void loadModuleDependency(QString uri, Version v,
                               std::function<void(Path, DomItem &, DomItem &)> callback = nullptr,
                               ErrorHandler = nullptr);

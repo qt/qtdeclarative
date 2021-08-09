@@ -61,6 +61,7 @@
 #include <QtCore/QCborMap>
 
 #include <memory>
+#include <optional>
 
 QT_BEGIN_NAMESPACE
 
@@ -253,9 +254,11 @@ public:
     }
 
     void loadFile(DomItem &self, QString filePath, QString logicalPath, Callback callback,
-                  LoadOptions loadOptions);
+                  LoadOptions loadOptions,
+                  std::optional<DomType> fileType = std::optional<DomType>());
     void loadFile(DomItem &self, QString canonicalFilePath, QString logicalPath, QString code,
-                  QDateTime codeDate, Callback callback, LoadOptions loadOptions);
+                  QDateTime codeDate, Callback callback, LoadOptions loadOptions,
+                  std::optional<DomType> fileType = std::optional<DomType>());
     void execQueue();
 
     std::shared_ptr<ExternalItemPair<GlobalScope>> globalScopeWithName(QString name) const
@@ -517,6 +520,7 @@ public:
     QString uri; // either dotted uri or file:, http: https: uri
     Version version;
     QString filePath; // for file deps
+    DomType fileType;
 };
 
 class QMLDOM_EXPORT LoadInfo final : public OwningItem
@@ -683,10 +687,13 @@ public:
 
     void loadFile(DomItem &self, QString filePath, QString logicalPath, Callback loadCallback,
                   Callback directDepsCallback, Callback endCallback, LoadOptions loadOptions,
+                  std::optional<DomType> fileType = std::optional<DomType>(),
                   ErrorHandler h = nullptr);
     void loadFile(DomItem &self, QString canonicalFilePath, QString logicalPath, QString code,
                   QDateTime codeDate, Callback loadCallback, Callback directDepsCallback,
-                  Callback endCallback, LoadOptions loadOptions, ErrorHandler h = nullptr);
+                  Callback endCallback, LoadOptions loadOptions,
+                  std::optional<DomType> fileType = std::optional<DomType>(),
+                  ErrorHandler h = nullptr);
     void loadModuleDependency(DomItem &self, QString uri, Version v,
                               Callback loadCallback = nullptr, Callback endCallback = nullptr,
                               ErrorHandler = nullptr);
