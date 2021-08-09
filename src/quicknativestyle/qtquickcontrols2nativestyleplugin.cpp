@@ -51,6 +51,7 @@
 #endif
 
 extern void qml_register_types_QtQuick_NativeStyle();
+Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick_NativeStyle);
 
 QT_BEGIN_NAMESPACE
 

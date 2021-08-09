@@ -39,6 +39,7 @@
 #include <QtQuickControls2/qquickstyle.h>
 
 extern void qml_register_types_QtQuick_Controls_Windows();
+Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick_Controls_Windows);
 
 QT_BEGIN_NAMESPACE
 

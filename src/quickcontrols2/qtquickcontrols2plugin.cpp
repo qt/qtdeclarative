@@ -43,6 +43,8 @@
 #include <QtQuickControls2/qquickstyle.h>
 #include <QtQuickControls2/qtquickcontrols2global.h>
 
+Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick_Controls);
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcQtQuickControls2Plugin, "qt.quick.controls.qtquickcontrols2plugin")

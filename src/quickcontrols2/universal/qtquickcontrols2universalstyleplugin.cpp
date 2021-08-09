@@ -41,6 +41,7 @@
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 extern void qml_register_types_QtQuick_Controls_Universal();
+Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick_Controls_Universal);
 
 QT_BEGIN_NAMESPACE
 
