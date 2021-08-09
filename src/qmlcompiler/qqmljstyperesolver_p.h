@@ -48,6 +48,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlJSImportVisitor;
 class QQmlJSTypeResolver
 {
 public:
@@ -63,8 +64,9 @@ public:
     };
 
     QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Document *document,
-                       const QString &implicitImportDirectory, const QStringList &qmltypesFiles,
                        TypeStorage storage, Semantics semantics, QQmlJSLogger *logger);
+    // Note: must be called after the construction to read the QML program
+    void init(QQmlJSImportVisitor &visitor);
 
     QQmlJSScope::ConstPtr voidType() const { return m_voidType; }
     QQmlJSScope::ConstPtr numberType() const { return m_numberType; }
@@ -145,7 +147,7 @@ public:
         return m_signalHandlers;
     }
 
-private:
+protected:
     QQmlJSScope::ConstPtr merge(const QQmlJSScope::ConstPtr &a,
                                 const QQmlJSScope::ConstPtr &b) const;
 

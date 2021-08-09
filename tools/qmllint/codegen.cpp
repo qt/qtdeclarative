@@ -52,12 +52,15 @@ void Codegen::setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document)
     m_entireSourceCodeLines = document->code.split(u'\n');
     m_typeResolver = std::make_unique<QQmlJSTypeResolver>(
             m_importer, document,
-            QQmlJSImportVisitor::implicitImportDirectory(m_fileName,
-                                                         m_importer->resourceFileMapper()),
             // Type resolving is only static here due the inability to resolve parent properties
             // dynamically (QTBUG-95530). Currently this has no other side effects. Re-evaluate once
             // that changes.
-            m_qmltypesFiles, QQmlJSTypeResolver::Indirect, QQmlJSTypeResolver::Static, m_logger);
+            QQmlJSTypeResolver::Indirect, QQmlJSTypeResolver::Static, m_logger);
+    QQmlJSImportVisitor visitor(m_importer,
+                                QQmlJSImportVisitor::implicitImportDirectory(
+                                        m_fileName, m_importer->resourceFileMapper()),
+                                m_qmltypesFiles);
+    m_typeResolver->init(visitor);
 }
 
 void Codegen::setScope(const QmlIR::Object *object, const QmlIR::Object *scope)

@@ -58,10 +58,9 @@ static bool searchBaseAndExtensionTypes(const QQmlJSScope::ConstPtr type, const 
     return false;
 }
 
-QQmlJSTypeResolver::QQmlJSTypeResolver(
-        QQmlJSImporter *importer, const QmlIR::Document *document,
-        const QString &implicitImportDirectory, const QStringList &qmltypesFiles,
-        TypeStorage storage, Semantics semantics, QQmlJSLogger *logger)
+QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Document *document,
+                                       TypeStorage storage, Semantics semantics,
+                                       QQmlJSLogger *logger)
     : m_importer(importer)
     , m_document(document)
     , m_typeStorage(storage)
@@ -93,28 +92,6 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(
     listPropertyType->setFileName(u"qqmllist.h"_qs);
     listPropertyType->setAccessSemantics(QQmlJSScope::AccessSemantics::Value);
     m_listPropertyType = listPropertyType;
-
-    QQmlJSImportVisitor visitor(importer, implicitImportDirectory, qmltypesFiles);
-    m_document->program->accept(&visitor);
-
-    QQueue<QQmlJSScope::Ptr> objects;
-    objects.enqueue(visitor.result());
-    m_objectsById = visitor.addressableScopes();
-    m_signalHandlers = visitor.signalHandlers();
-
-    while (!objects.isEmpty()) {
-        const QQmlJSScope::Ptr object = objects.dequeue();
-        const QQmlJS::SourceLocation location = object->sourceLocation();
-        qCDebug(lcTypeResolver()).nospace() << "inserting " << object.data() << " at "
-                                            << location.startLine << ':' << location.startColumn;
-        m_objectsByLocation.insert({ location.startLine, location.startColumn }, object);
-
-        const auto childScopes = object->childScopes();
-        for (const auto &childScope : childScopes)
-            objects.enqueue(childScope);
-    }
-
-    m_imports = visitor.imports();
 
     // This is pre-sorted. Don't mess it up.
     m_jsGlobalProperties = { u"Array"_qs,
@@ -184,6 +161,30 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(
                              u"qsTranslate"_qs,
                              u"undefined"_qs,
                              u"unescape"_qs };
+}
+
+void QQmlJSTypeResolver::init(QQmlJSImportVisitor &visitor)
+{
+    m_document->program->accept(&visitor);
+
+    QQueue<QQmlJSScope::Ptr> objects;
+    objects.enqueue(visitor.result());
+    m_objectsById = visitor.addressableScopes();
+    m_signalHandlers = visitor.signalHandlers();
+
+    while (!objects.isEmpty()) {
+        const QQmlJSScope::Ptr object = objects.dequeue();
+        const QQmlJS::SourceLocation location = object->sourceLocation();
+        qCDebug(lcTypeResolver()).nospace() << "inserting " << object.data() << " at "
+                                            << location.startLine << ':' << location.startColumn;
+        m_objectsByLocation.insert({ location.startLine, location.startColumn }, object);
+
+        const auto childScopes = object->childScopes();
+        for (const auto &childScope : childScopes)
+            objects.enqueue(childScope);
+    }
+
+    m_imports = visitor.imports();
 }
 
 QQmlJSScope::ConstPtr
