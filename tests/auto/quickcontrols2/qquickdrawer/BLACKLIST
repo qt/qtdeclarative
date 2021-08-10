@@ -1,8 +1,8 @@
 # See qtbase/src/testlib/qtestblacklist.cpp for format
 
-# QTBUG-77946
+# QTBUG-77946 QTBUG-88138
 [slider]
-opensuse-leap
+*
 
 [position]
 opensuse-leap
