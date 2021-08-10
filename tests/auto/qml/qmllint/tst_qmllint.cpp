@@ -768,6 +768,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("CustomParserUnqualifiedAccess")
             << QStringLiteral("customParserUnqualifiedAccess.qml");
     QTest::newRow("ImportQMLModule") << QStringLiteral("importQMLModule.qml");
+    QTest::newRow("ImportDirectoryQmldir") << QStringLiteral("Things/LintDirectly.qml");
 }
 
 void TestQmllint::cleanQmlCode()

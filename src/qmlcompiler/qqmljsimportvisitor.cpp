@@ -303,7 +303,11 @@ void QQmlJSImportVisitor::importBaseModules()
     if (!m_qmltypesFiles.isEmpty())
         m_importer->importQmltypes(m_qmltypesFiles);
 
-    m_rootScopeImports.insert(m_importer->importDirectory(m_implicitImportDirectory));
+    // Pulling in the modules and neighboring qml files of the qmltypes we're trying to lint is not
+    // something we need to do.
+    if (!m_filePath.endsWith(u".qmltypes"_qs))
+        m_rootScopeImports.insert(m_importer->importDirectory(m_implicitImportDirectory));
+
     processImportWarnings(QStringLiteral("base modules"));
 }
 
