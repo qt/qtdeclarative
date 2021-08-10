@@ -192,19 +192,20 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
     return result;
 }
 
-void QQmlJSImporter::importDependencies(
-        const QQmlJSImporter::Import &import,
-        QQmlJSImporter::AvailableTypes *types, const QString &prefix, QTypeRevision version)
+void QQmlJSImporter::importDependencies(const QQmlJSImporter::Import &import,
+                                        QQmlJSImporter::AvailableTypes *types,
+                                        const QString &prefix, QTypeRevision version,
+                                        bool isDependency)
 {
     // Import the dependencies with an invalid prefix. The prefix will never be matched by actual
     // QML code but the C++ types will be visible.
-    const QString invalidPrefix = QString::fromLatin1("$dependency$");
     for (auto const &dependency : qAsConst(import.dependencies))
-        importHelper(dependency.module, types, invalidPrefix, dependency.version);
+        importHelper(dependency.module, types, QString(), dependency.version, true);
 
     for (auto const &import : qAsConst(import.imports)) {
-        importHelper(import.module, types, prefix,
-                     (import.flags & QQmlDirParser::Import::Auto) ? version : import.version);
+        importHelper(import.module, types, isDependency ? QString() : prefix,
+                     (import.flags & QQmlDirParser::Import::Auto) ? version : import.version,
+                     isDependency);
     }
 }
 
@@ -379,15 +380,17 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::builtinInternalNames()
 }
 
 bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
-                                                const QString &prefix, QTypeRevision version)
+                                  const QString &prefix, QTypeRevision version, bool isDependency,
+                                  bool isFile)
 {
-    const bool isDependency = prefix == QStringLiteral("$dependency$");
-
     // QtQuick/Controls and QtQuick.Controls are the same module
     const QString moduleCacheName = QString(module).replace(u'/', u'.');
 
+    if (isDependency)
+        Q_ASSERT(prefix.isEmpty());
+
     const auto cacheKey = QPair<QString, QTypeRevision> {
-        (isDependency ? QString() : prefix) + u'|' + moduleCacheName, version
+        (isFile ? u"$file$"_qs : prefix) + u'|' + moduleCacheName, version
     };
 
     auto getTypesFromCache = [&]() -> bool {
@@ -413,7 +416,8 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
     if (getTypesFromCache())
         return true;
 
-    auto cacheTypes = QSharedPointer<QQmlJSImporter::AvailableTypes>(new QQmlJSImporter::AvailableTypes({}));
+    auto cacheTypes =
+            QSharedPointer<QQmlJSImporter::AvailableTypes>(new QQmlJSImporter::AvailableTypes({}));
     m_cachedImportTypes[cacheKey] = cacheTypes;
 
     const QPair<QString, QTypeRevision> importId { module, version };
@@ -426,7 +430,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
         const auto import = m_seenQmldirFiles.constFind(*it);
         Q_ASSERT(import != m_seenQmldirFiles.constEnd());
 
-        importDependencies(*import, cacheTypes.get(), prefix, version);
+        importDependencies(*import, cacheTypes.get(), prefix, version, isDependency);
         processImport(*import, cacheTypes.get(), prefix, version);
 
         const bool typesFromCache = getTypesFromCache();
@@ -434,14 +438,16 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
         return typesFromCache;
     }
 
-    const auto modulePaths = qQmlResolveImportPaths(module, m_importPaths, version);
+    const auto modulePaths = isFile ? QStringList { module }
+                                    : qQmlResolveImportPaths(module, m_importPaths, version);
+
     for (auto const &modulePath : modulePaths) {
         const QString qmldirPath = modulePath + SlashQmldir;
         const auto it = m_seenQmldirFiles.constFind(qmldirPath);
 
         if (it != m_seenQmldirFiles.constEnd()) {
             m_seenImports.insert(importId, qmldirPath);
-            importDependencies(*it, cacheTypes.get(), prefix, version);
+            importDependencies(*it, cacheTypes.get(), prefix, version, isDependency);
             processImport(*it, cacheTypes.get(), prefix, version);
 
             const bool typesFromCache = getTypesFromCache();
@@ -454,7 +460,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
             const auto import = readQmldir(file.canonicalPath());
             m_seenQmldirFiles.insert(qmldirPath, import);
             m_seenImports.insert(importId, qmldirPath);
-            importDependencies(import, cacheTypes.get(), prefix, version);
+            importDependencies(import, cacheTypes.get(), prefix, version, isDependency);
             processImport(import, cacheTypes.get(), prefix, version);
 
             const bool typesFromCache = getTypesFromCache();
@@ -489,7 +495,7 @@ QQmlJSScope::Ptr QQmlJSImporter::importFile(const QString &file)
 QQmlJSImporter::ImportedTypes QQmlJSImporter::importDirectory(
         const QString &directory, const QString &prefix)
 {
-    QHash<QString, QQmlJSScope::ConstPtr> qmlNames;
+    QQmlJSImporter::AvailableTypes types({});
 
     if (directory.startsWith(u':')) {
         if (m_mapper) {
@@ -498,12 +504,15 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importDirectory(
             for (const auto &entry : resources) {
                 const QString name = QFileInfo(entry.resourcePath).baseName();
                 if (name.front().isUpper()) {
-                    qmlNames.insert(prefixedName(prefix, name),
-                                    localFile2ScopeTree(entry.filePath));
+                    types.qmlNames.insert(prefixedName(prefix, name),
+                                          localFile2ScopeTree(entry.filePath));
                 }
             }
         }
-        return qmlNames;
+
+        importHelper(directory, &types, QString(), QTypeRevision(), false, true);
+
+        return types.qmlNames;
     }
 
     QDirIterator it {
@@ -516,11 +525,13 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importDirectory(
         if (!it.fileName().front().isUpper())
             continue; // Non-uppercase names cannot be imported anyway.
 
-        qmlNames.insert(prefixedName(prefix, QFileInfo(it.filePath()).baseName()),
-                        localFile2ScopeTree(it.filePath()));
+        types.qmlNames.insert(prefixedName(prefix, QFileInfo(it.filePath()).baseName()),
+                              localFile2ScopeTree(it.filePath()));
     }
 
-    return qmlNames;
+    importHelper(directory, &types, QString(), QTypeRevision(), false, true);
+
+    return types.qmlNames;
 }
 
 void QQmlJSImporter::setImportPaths(const QStringList &importPaths)

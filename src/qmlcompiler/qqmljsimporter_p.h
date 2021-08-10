@@ -106,14 +106,13 @@ private:
 
     AvailableTypes builtinImportHelper();
     bool importHelper(const QString &module, AvailableTypes *types,
-                      const QString &prefix = QString(),
-                      QTypeRevision version = QTypeRevision());
+                      const QString &prefix = QString(), QTypeRevision version = QTypeRevision(),
+                      bool isDependency = false, bool isFile = false);
     void processImport(const Import &import, AvailableTypes *types,
                        const QString &prefix = QString(), QTypeRevision version = QTypeRevision());
-    void importDependencies(const QQmlJSImporter::Import &import,
-                            AvailableTypes *types,
+    void importDependencies(const QQmlJSImporter::Import &import, AvailableTypes *types,
                             const QString &prefix = QString(),
-                            QTypeRevision version = QTypeRevision());
+                            QTypeRevision version = QTypeRevision(), bool isDependency = false);
     void readQmltypes(const QString &filename, QHash<QString, QQmlJSScope::Ptr> *objects,
                       QList<QQmlDirParser::Import> *dependencies);
     Import readQmldir(const QString &dirname);
