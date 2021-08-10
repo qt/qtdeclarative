@@ -431,7 +431,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
     if (uri && !typeName.isEmpty()) {
         QString nameSpace = QString::fromUtf8(uri);
         QQmlTypeModule *qqtm = data->findTypeModule(nameSpace, version);
-        if (qqtm && qqtm->isLocked()) {
+        if (qqtm && qqtm->lockLevel() != QQmlTypeModule::LockLevel::Open) {
             QString failure(QCoreApplication::translate(
                                 "qmlRegisterType",
                                 "Cannot install %1 '%2' into protected module '%3' version '%4'"));
@@ -645,18 +645,19 @@ void QQmlMetaType::unregisterSequentialContainer(int id)
     unregisterType(id);
 }
 
-bool QQmlMetaType::protectModule(const QString &uri, QTypeRevision version, bool protectAllVersions)
+bool QQmlMetaType::protectModule(const QString &uri, QTypeRevision version,
+                                 bool weakProtectAllVersions)
 {
     QQmlMetaTypeDataPtr data;
     if (version.hasMajorVersion()) {
-    if (QQmlTypeModule *module = data->findTypeModule(uri, version)) {
-        if (!protectAllVersions) {
-            module->lock();
-            return true;
+        if (QQmlTypeModule *module = data->findTypeModule(uri, version)) {
+            if (!weakProtectAllVersions) {
+                module->setLockLevel(QQmlTypeModule::LockLevel::Strong);
+                return true;
+            }
+        } else {
+            return false;
         }
-    } else {
-        return false;
-    }
     }
 
     const auto range = std::equal_range(
@@ -664,7 +665,7 @@ bool QQmlMetaType::protectModule(const QString &uri, QTypeRevision version, bool
                 std::less<ModuleUri>());
 
     for (auto it = range.first; it != range.second; ++it)
-        (*it)->lock();
+        (*it)->setLockLevel(QQmlTypeModule::LockLevel::Weak);
 
     return range.first != range.second;
 }
@@ -981,12 +982,12 @@ QTypeRevision QQmlMetaType::latestModuleVersion(const QString &uri)
 /*
     Returns true if a module \a uri of this version is installed and locked;
 */
-bool QQmlMetaType::isLockedModule(const QString &uri, QTypeRevision version)
+bool QQmlMetaType::isStronglyLockedModule(const QString &uri, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data;
 
     if (QQmlTypeModule* qqtm = data->findTypeModule(uri, version))
-        return qqtm->isLocked();
+        return qqtm->lockLevel() == QQmlTypeModule::LockLevel::Strong;
     return false;
 }
 

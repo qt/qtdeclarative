@@ -147,7 +147,7 @@ public:
 
     static void registerModule(const char *uri, QTypeRevision version);
     static bool protectModule(const QString &uri, QTypeRevision version,
-                              bool protectAllVersions = false);
+                              bool weakProtectAllVersions = false);
 
     static void registerModuleImport(const QString &uri, QTypeRevision version,
                                      const QQmlDirParser::Import &import);
@@ -197,7 +197,7 @@ public:
     static bool isList(QMetaType type);
 
     static QTypeRevision latestModuleVersion(const QString &uri);
-    static bool isLockedModule(const QString &uri, QTypeRevision version);
+    static bool isStronglyLockedModule(const QString &uri, QTypeRevision version);
     static QTypeRevision matchingModuleVersion(const QString &module, QTypeRevision version);
     static QQmlTypeModule *typeModule(const QString &uri, QTypeRevision version);
 

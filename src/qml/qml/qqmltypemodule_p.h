@@ -72,6 +72,12 @@ struct String;
 class QQmlTypeModule
 {
 public:
+    enum class LockLevel {
+        Open = 0,
+        Weak = 1,
+        Strong = 2
+    };
+
     QQmlTypeModule() = default;
     QQmlTypeModule(const QString &uri, quint8 majorVersion)
         : m_module(uri), m_majorVersion(majorVersion)
@@ -80,8 +86,17 @@ public:
     void add(QQmlTypePrivate *);
     void remove(const QQmlTypePrivate *type);
 
-    bool isLocked() const { return m_locked.loadRelaxed() != 0; }
-    void lock() { m_locked.storeRelaxed(1); }
+    LockLevel lockLevel() const { return LockLevel(m_lockLevel.loadRelaxed()); }
+    bool setLockLevel(LockLevel mode)
+    {
+        while (true) {
+            const int currentLock = m_lockLevel.loadAcquire();
+            if (currentLock > int(mode))
+                return false;
+            if (currentLock == int(mode) || m_lockLevel.testAndSetRelease(currentLock, int(mode)))
+                return true;
+        }
+    }
 
     QString module() const
     {
@@ -114,8 +129,8 @@ private:
     // Can only ever increase
     QAtomicInt m_maxMinorVersion = 0;
 
-    // Bool. Can only be set to 1 once.
-    QAtomicInt m_locked = 0;
+    // LockLevel. Can only be increased.
+    QAtomicInt m_lockLevel = int(LockLevel::Open);
 
     using TypeHash = QStringHash<QList<QQmlTypePrivate *>>;
     TypeHash m_typeHash;

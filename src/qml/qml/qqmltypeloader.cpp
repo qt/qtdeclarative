@@ -580,9 +580,14 @@ bool QQmlTypeLoader::Blob::addImport(QQmlTypeLoader::Blob::PendingImportPtr impo
 
         scriptImported(blob, import->location, import->qualifier, QString());
     } else if (import->type == QV4::CompiledData::Import::ImportLibrary) {
+        const QQmlImportDatabase::LocalQmldirSearchLocation searchMode =
+                QQmlMetaType::isStronglyLockedModule(import->uri, import->version)
+                    ? QQmlImportDatabase::QmldirCacheOnly
+                    : QQmlImportDatabase::QmldirFileAndCache;
+
         const QQmlImportDatabase::LocalQmldirResult qmldirResult
                 = importDatabase->locateLocalQmldir(
-                    import->uri, import->version,
+                    import->uri, import->version, searchMode,
                     [&](const QString &qmldirFilePath, const QString &qmldirUrl) {
             // This is a local library import
             const QTypeRevision actualVersion = m_importCache.addLibraryImport(
