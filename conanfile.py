@@ -27,11 +27,9 @@
 #############################################################################
 
 from conans import ConanFile
-import os
 import re
-from functools import lru_cache
 from pathlib import Path
-
+from typing import Dict, Any
 
 _qtdeclarative_features = [
     "qml-animation",
@@ -69,63 +67,37 @@ _qtdeclarative_features = [
 ]
 
 
-@lru_cache(maxsize=8)
 def _parse_qt_version_by_key(key: str) -> str:
-    with open(Path(Path(__file__).parent.resolve() / ".cmake.conf")) as f:
-        ret = [m.group(1) for m in [re.search(r"{0} .*\"(.*)\"".format(key), f.read())] if m]
-    return ret.pop() if ret else ""
+    with open(Path(__file__).parent.resolve() / ".cmake.conf") as f:
+        m = re.search(fr'{key} .*"(.*)"', f.read())
+    return m.group(1) if m else ""
 
 
 def _get_qt_minor_version() -> str:
-    return _parse_qt_version_by_key('QT_REPO_MODULE_VERSION')[0:3]
+    return ".".join(_parse_qt_version_by_key("QT_REPO_MODULE_VERSION").split(".")[:2])
 
 
 class QtDeclarative(ConanFile):
     name = "qtdeclarative"
-    license = "LGPL-3.0-only, Commercial Qt License Agreement"
+    license = "LGPL-3.0, GPL-2.0+, Commercial Qt License Agreement"
     author = "The Qt Company <https://www.qt.io/contact-us>"
-    url = "https://code.qt.io/cgit/qt/qtdeclarative.git/"
+    url = "https://code.qt.io/cgit/qt/qtdeclarative.git"
     description = (
         "The Qt Declarative module provides a declarative framework for building highly dynamic, "
         "custom user interfaces"
     )
-    topics = ("qt", "qt6", "qtdeclarative")
+    topics = "qt", "qt6", "qtdeclarative"
     settings = "os", "compiler", "arch", "build_type"
-    exports = ".cmake.conf"  # for referencing the version number and prerelease tag
+    # for referencing the version number and prerelease tag and dependencies info
+    exports = ".cmake.conf", "dependencies.yaml"
     exports_sources = "*", "!conan*.*"
-    # use commit ID as the RREV (recipe revision) if this is exported from .git repository
-    revision_mode = "scm" if Path(Path(__file__).parent.resolve() / ".git").exists() else "hash"
     python_requires = f"qt-conan-common/{_get_qt_minor_version()}@qt/everywhere"
+    python_requires_extend = "qt-conan-common.QtLeafModule"
 
-    options = {item.replace("-", "_"): ["yes", "no", None] for item in _qtdeclarative_features}
-    default_options = {item.replace("-", "_"): None for item in _qtdeclarative_features}
+    def get_qt_leaf_module_options(self) -> Dict[str, Any]:
+        """Implements abstractmethod from qt-conan-common.QtLeafModule"""
+        return {item.replace("-", "_"): ["yes", "no", None] for item in _qtdeclarative_features}
 
-    def set_version(self):
-        _ver = _parse_qt_version_by_key("QT_REPO_MODULE_VERSION")
-        _prerelease = _parse_qt_version_by_key("QT_REPO_MODULE_PRERELEASE_VERSION_SEGMENT")
-        self.version = _ver + "-" + _prerelease if _prerelease else _ver
-
-    def requirements(self):
-        _version = _parse_qt_version_by_key("QT_REPO_MODULE_VERSION")
-        # will match latest prerelase of final major.minor.patch
-        self.requires(f"qtbase/[<={_version}, include_prerelease=True]@{self.user}/{self.channel}")
-        self.requires(f"qtsvg/[<={_version}, include_prerelease=True]@{self.user}/{self.channel}")
-        self.requires(f"qtshadertools/[<={_version}, include_prerelease=True]@{self.user}/{self.channel}")
-
-    def build(self):
-        self.python_requires["qt-conan-common"].module.build_leaf_qt_module(self)
-
-    def package(self):
-        cmd = ["cmake", "--install", "."]
-        self.run(" ".join(cmd), run_environment=True)
-
-    def package_info(self):
-        self.python_requires["qt-conan-common"].module.package_info(self)
-
-    def package_id(self):
-        self.info.requires.package_revision_mode()
-
-    def deploy(self):
-        self.copy("*")  # copy from current package
-        if not os.environ.get("QT_CONAN_INSTALL_SKIP_DEPS"):
-            self.copy_deps("*")  # copy from dependencies
+    def get_qt_leaf_module_default_options(self) -> Dict[str, Any]:
+        """Implements abstractmethod from qt-conan-common.QtLeafModule"""
+        return {item.replace("-", "_"): None for item in _qtdeclarative_features}
