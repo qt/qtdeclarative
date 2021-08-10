@@ -319,6 +319,12 @@ public:
     static void resolveTypes(const QQmlJSScope::Ptr &self,
                              const QHash<QString, ConstPtr> &contextualTypes,
                              QSet<QString> *usedTypes = nullptr);
+    static void resolveNonEnumTypes(const QQmlJSScope::Ptr &self,
+                                    const QHash<QString, ConstPtr> &contextualTypes,
+                                    QSet<QString> *usedTypes = nullptr);
+    static void resolveEnums(const QQmlJSScope::Ptr &self,
+                             const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes,
+                             QSet<QString> *usedTypes = nullptr);
 
     void setSourceLocation(const QQmlJS::SourceLocation &sourceLocation)
     {
@@ -381,6 +387,16 @@ public:
 
 private:
     QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
+
+    static QQmlJSScope::ConstPtr
+    findType(const QString &name, const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes,
+             QSet<QString> *usedTypes = nullptr);
+    static void resolveType(const QQmlJSScope::Ptr &self,
+                            const QHash<QString, ConstPtr> &contextualTypes,
+                            QSet<QString> *usedTypes);
+    static void updateChildScope(const QQmlJSScope::Ptr &childScope, const QQmlJSScope::Ptr &self,
+                                 const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes,
+                                 QSet<QString> *usedTypes);
 
     QHash<QString, JavaScriptIdentifier> m_jsIdentifiers;
 

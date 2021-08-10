@@ -642,9 +642,6 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("nestedInlineComponents")
             << QStringLiteral("nestedInlineComponents.qml")
             << QStringLiteral("Nested inline components are not supported") << QString() << false;
-    QTest::newRow("QQmlEasingEnums::Type")
-            << QStringLiteral("animationEasing.qml")
-            << QStringLiteral("No type found for property \"type\"") << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -789,6 +786,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("ImportDirectoryQmldir") << QStringLiteral("Things/LintDirectly.qml");
     QTest::newRow("BindingsOnGroupAndAttachedProperties")
             << QStringLiteral("goodBindingsOnGroupAndAttached.qml");
+    QTest::newRow("QQmlEasingEnums::Type") << QStringLiteral("animationEasing.qml");
 }
 
 void TestQmllint::cleanQmlCode()
