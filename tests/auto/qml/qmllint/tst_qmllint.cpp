@@ -804,6 +804,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("BindingsOnGroupAndAttachedProperties")
             << QStringLiteral("goodBindingsOnGroupAndAttached.qml");
     QTest::newRow("QQmlEasingEnums::Type") << QStringLiteral("animationEasing.qml");
+    QTest::newRow("required property in Component") << QStringLiteral("requiredPropertyInComponent.qml");
 }
 
 void TestQmllint::cleanQmlCode()
