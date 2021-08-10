@@ -89,7 +89,7 @@ public:
     virtual ~CodegenWarningInterface() = default;
 };
 
-static inline CodegenWarningInterface *defaultCodegenWarningInterface()
+inline CodegenWarningInterface *defaultCodegenWarningInterface()
 {
     static CodegenWarningInterface interface;
     return &interface;
