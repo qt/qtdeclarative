@@ -489,8 +489,13 @@ void QQmlJSImportVisitor::processDefaultProperties()
 
             // Assigning any element to a QQmlComponent property implicitly wraps it into a Component
             // Check whether the property can be assigned the scope
-            if (propType->canAssign(scope))
+            if (propType->canAssign(scope)) {
+                if (propType->causesImplicitComponentWrapping()) {
+                    // mark the scope as implicitly wrapped, unless it is a Component
+                    scope->setIsWrappedInImplicitComponent(!scope->causesImplicitComponentWrapping());
+                }
                 continue;
+            }
 
             m_logger->logWarning(
                     QStringLiteral("Cannot assign to default property of incompatible type"),
@@ -528,6 +533,10 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
 
         if (property.isValid() && !property.type().isNull()
             && (objectBinding.onToken || property.type()->canAssign(objectBinding.childScope))) {
+
+
+            if (property.type()->causesImplicitComponentWrapping())
+                objectBinding.childScope->setIsWrappedInImplicitComponent(!objectBinding.childScope->causesImplicitComponentWrapping());
 
             QQmlJSMetaPropertyBinding binding =
                     objectBinding.scope->hasOwnPropertyBinding(propertyName)
@@ -629,7 +638,7 @@ void QQmlJSImportVisitor::checkRequiredProperties()
     }
 
     for (const auto &defScope : m_objectDefinitionScopes) {
-        if (defScope->parentScope() == m_globalScope || defScope->isInlineComponent())
+        if (defScope->parentScope() == m_globalScope || defScope->isInlineComponent() || defScope->isComponentRootElement())
             continue;
 
         QVector<QQmlJSScope::ConstPtr> scopesToSearch;
@@ -1611,7 +1620,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 {
     QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
-    const QQmlJSScope::ConstPtr childScope = m_currentScope;
+    // must be mutable, as we might mark it as implicitly wrapped in a component
+    const QQmlJSScope::Ptr childScope = m_currentScope;
     leaveEnvironment();
 
     auto group = uiob->qualifiedId;

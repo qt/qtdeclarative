@@ -820,6 +820,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("QQmlEasingEnums::Type") << QStringLiteral("animationEasing.qml");
     QTest::newRow("ValidLiterals") << QStringLiteral("validLiterals.qml");
     QTest::newRow("GoodModulePrefix") << QStringLiteral("goodModulePrefix.qml");
+    QTest::newRow("required property in Component") << QStringLiteral("requiredPropertyInComponent.qml");
 }
 
 void TestQmllint::cleanQmlCode()

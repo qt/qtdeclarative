@@ -179,6 +179,45 @@ QQmlJSMetaEnum QQmlJSScope::enumeration(const QString &name) const
     return result;
 }
 
+/*!
+    Returns if assigning to a property of this type would cause
+    implicit component wrapping for non-Component types.
+
+    \note This method can also be used to check whether a type needs
+    to be implicitly wrapped: A type for which this function returns true
+    doesn't need to be actually wrapped.
+ */
+bool QQmlJSScope::causesImplicitComponentWrapping() const {
+    if (internalName() == u"QQmlComponent")
+        return true;
+    else if (isComposite()) // composite types are never treated as Component
+        return false;
+    // A class which is derived from component is not treated as a Component
+    // However isUsableComponent considers also QQmlAbstractDelegateComponent
+    // See isUsableComponent in qqmltypecompiler.cpp
+
+    for (auto cppBase = nonCompositeBaseType(baseType()); cppBase; cppBase = cppBase->baseType())
+        if (cppBase->internalName() == u"QQmlAbstractDelegateComponent")
+            return true;
+    return false;
+}
+
+/*!
+    \internal
+    Returns true if the scope is the outermost element of a separate Component
+    Either because it has been implicitly wrapped, e.g. due to an assignment to
+    a Component property, or because it is the first (and only) child of a
+    Component.
+ */
+bool QQmlJSScope::isComponentRootElement() const {
+    if (m_flags.testFlag(WrappedInImplicitComponent))
+        return true;
+    auto base = nonCompositeBaseType(parentScope()); // handles null parentScope()
+    if (!base)
+        return false;
+    return base->internalName() == u"QQmlComponent";
+}
+
 bool QQmlJSScope::isIdInCurrentQmlScopes(const QString &id) const
 {
     if (m_scopeType == QQmlJSScope::QMLScope)
@@ -602,13 +641,7 @@ bool QQmlJSScope::canAssign(const QQmlJSScope::ConstPtr &derived) const
     if (!derived)
         return false;
 
-    bool isBaseComponent = false;
-    for (auto scope = this; scope; scope = scope->baseType().get()) {
-        if (internalName() == u"QQmlComponent"_qs) {
-            isBaseComponent = true;
-            break;
-        }
-    }
+    bool isBaseComponent = causesImplicitComponentWrapping();
 
     for (auto scope = derived; !scope.isNull(); scope = scope->baseType()) {
         if (isSameType(scope))

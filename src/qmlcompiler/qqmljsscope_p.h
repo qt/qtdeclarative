@@ -115,7 +115,8 @@ public:
         Script = 0x8,
         CustomParser = 0x10,
         Array = 0x20,
-        InlineComponent = 0x40
+        InlineComponent = 0x40,
+        WrappedInImplicitComponent = 0x80
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
@@ -200,6 +201,9 @@ public:
     // QML file. isComposite tells us if this is a C++ or a QML name.
     QString internalName() const { return m_internalName; }
     void setInternalName(const QString &internalName) { m_internalName = internalName; }
+
+    bool causesImplicitComponentWrapping() const;
+    bool isComponentRootElement() const;
 
     void addExport(const QString &name, const QString &package, const QTypeRevision &version);
     QList<Export> exports() const { return m_exports; }
@@ -295,6 +299,7 @@ public:
     }
     void setIsArrayScope(bool v) { m_flags.setFlag(Array, v); }
     void setIsInlineComponent(bool v) { m_flags.setFlag(InlineComponent, v); }
+    void setIsWrappedInImplicitComponent(bool v) { m_flags.setFlag(WrappedInImplicitComponent, v); }
 
     void setAccessSemantics(AccessSemantics semantics) { m_semantics = semantics; }
     AccessSemantics accessSemantics() const { return m_semantics; }

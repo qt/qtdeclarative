@@ -198,7 +198,7 @@ protected:
     struct PendingPropertyObjectBinding
     {
         QQmlJSScope::Ptr scope;
-        QQmlJSScope::ConstPtr childScope;
+        QQmlJSScope::Ptr childScope;
         QString name;
         QQmlJS::SourceLocation location;
         bool onToken;
