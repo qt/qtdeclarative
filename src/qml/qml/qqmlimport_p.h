@@ -217,6 +217,11 @@ class Q_QML_PRIVATE_EXPORT QQmlImportDatabase
 public:
     enum PathType { Local, Remote, LocalOrRemote };
 
+    enum LocalQmldirSearchLocation {
+        QmldirFileAndCache,
+        QmldirCacheOnly,
+    };
+
     enum LocalQmldirResult {
         QmldirFound,
         QmldirNotFound,
@@ -240,7 +245,8 @@ public:
 
     template<typename Callback>
     LocalQmldirResult locateLocalQmldir(
-            const QString &uri, QTypeRevision version, const Callback &callback);
+            const QString &uri, QTypeRevision version, LocalQmldirSearchLocation location,
+            const Callback &callback);
 
     static QTypeRevision lockModule(const QString &uri, const QString &typeNamespace,
                                     QTypeRevision version, QList<QQmlError> *errors);
@@ -273,7 +279,8 @@ private:
 
 template<typename Callback>
 QQmlImportDatabase::LocalQmldirResult QQmlImportDatabase::locateLocalQmldir(
-        const QString &uri, QTypeRevision version, const Callback &callback)
+        const QString &uri, QTypeRevision version,
+        QQmlImportDatabase::LocalQmldirSearchLocation location, const Callback &callback)
 {
     // Check cache first
 
@@ -301,7 +308,7 @@ QQmlImportDatabase::LocalQmldirResult QQmlImportDatabase::locateLocalQmldir(
 
     // Do not try to construct the cache if it already had any entries for the URI.
     // Otherwise we might duplicate cache entries.
-    if (result != QmldirNotFound)
+    if (location == QmldirCacheOnly || result != QmldirNotFound)
         return result;
 
     const bool hasInterceptors = !engine->urlInterceptors().isEmpty();
