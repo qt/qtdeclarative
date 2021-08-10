@@ -288,10 +288,18 @@ void QQmlJSImporter::processImport(const QQmlJSImporter::Import &import,
     QQmlJSImporter::AvailableTypes tempTypes(builtinImportHelper().cppNames);
     tempTypes.cppNames.insert(types->cppNames);
 
+    // At present, there are corner cases that couldn't be resolved in a single
+    // pass of resolveTypes() (e.g. QQmlEasingEnums::Type). However, such cases
+    // only happen when enumerations are involved, thus the strategy is to
+    // resolve enumerations (which can potentially create new child scopes)
+    // before resolving the type fully
+    for (auto it = import.objects.begin(); it != import.objects.end(); ++it)
+        QQmlJSScope::resolveEnums(it.value(), tempTypes.cppNames, nullptr);
+
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         const auto &val = it.value();
         if (val->baseType().isNull()) // Otherwise we have already done it in localFile2ScopeTree()
-            QQmlJSScope::resolveTypes(val, tempTypes.cppNames);
+            QQmlJSScope::resolveNonEnumTypes(val, tempTypes.cppNames);
     }
 }
 

@@ -644,9 +644,6 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("BindingTypeMismatchFunction")
             << QStringLiteral("bindingTypeMismatchFunction.qml")
             << QStringLiteral("Cannot assign binding of type QString to int") << QString() << false;
-    QTest::newRow("QQmlEasingEnums::Type")
-            << QStringLiteral("animationEasing.qml")
-            << QStringLiteral("No type found for property \"type\"") << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -792,6 +789,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("ImportDirectoryQmldir") << QStringLiteral("Things/LintDirectly.qml");
     QTest::newRow("BindingsOnGroupAndAttachedProperties")
             << QStringLiteral("goodBindingsOnGroupAndAttached.qml");
+    QTest::newRow("QQmlEasingEnums::Type") << QStringLiteral("animationEasing.qml");
 }
 
 void TestQmllint::cleanQmlCode()
