@@ -412,8 +412,15 @@ function(qt6_add_qml_module target)
         QT_QML_MODULE_TARGET_PATH "${arg_TARGET_PATH}"
         QT_QML_MODULE_VERSION "${arg_VERSION}"
         QT_QML_MODULE_CLASS_NAME "${arg_CLASS_NAME}"
+
         QT_QML_MODULE_PLUGIN_TARGET "${arg_PLUGIN_TARGET}"
         QT_QML_MODULE_INSTALLED_PLUGIN_TARGET "${arg_INSTALLED_PLUGIN_TARGET}"
+
+        # Also Save the PLUGIN_TARGET values in a separate property to circumvent
+        # https://gitlab.kitware.com/cmake/cmake/-/issues/21484 when exporting the properties
+        _qt_qml_module_plugin_target "${arg_PLUGIN_TARGET}"
+        _qt_qml_module_installed_plugin_target "${arg_INSTALLED_PLUGIN_TARGET}"
+
         QT_QML_MODULE_DESIGNER_SUPPORTED "${arg_DESIGNER_SUPPORTED}"
         QT_QML_MODULE_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
         QT_QML_MODULE_RESOURCE_PREFIX "${qt_qml_module_resource_prefix}"
@@ -423,6 +430,14 @@ function(qt6_add_qml_module target)
         # TODO: Check how this is used by qt6_android_generate_deployment_settings()
         QT_QML_IMPORT_PATH "${arg_IMPORT_PATH}"
     )
+
+    # Executables don't have a plugin target, so no need to export the properties.
+    if(NOT backing_target_type STREQUAL "EXECUTABLE" AND NOT is_android_executable)
+        set_property(TARGET ${target} APPEND PROPERTY
+            EXPORT_PROPERTIES _qt_qml_module_plugin_target _qt_qml_module_installed_plugin_target
+        )
+    endif()
+
     set(ensure_set_properties
         QT_QML_MODULE_PLUGIN_TYPES_FILE
         QT_QML_MODULE_RESOURCE_PATHS
@@ -1150,6 +1165,18 @@ function(qt6_add_qml_plugin target)
         target_link_libraries(${target} PRIVATE ${arg_BACKING_TARGET})
     endif()
 
+    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0")
+        # Defer the collection of plugin dependencies until after any extra target_link_libraries
+        # calls that a user project might do.
+        # We wrap the deferred call with EVAL CODE
+        # so that ${target} is evaluated now rather than the end of the scope.
+        cmake_language(EVAL CODE
+            "cmake_language(DEFER CALL _qt_internal_add_static_qml_plugin_dependencies \"${target}\" \"${arg_BACKING_TARGET}\")"
+        )
+    else()
+        # Can't defer, have to do it now.
+        _qt_internal_add_static_qml_plugin_dependencies("${target}" "${arg_BACKING_TARGET}")
+    endif()
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
@@ -2036,6 +2063,98 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
         endif()
     endfunction()
 endif()
+
+function(_qt_internal_add_static_qml_plugin_dependencies plugin_target backing_target)
+    # Protect against multiple calls of qt_add_qml_plugin.
+    get_target_property(plugin_deps_added "${plugin_target}" _qt_extra_static_qml_plugin_deps_added)
+    if(plugin_deps_added)
+        return()
+    endif()
+    set_target_properties("${plugin_target}" PROPERTIES _qt_extra_static_qml_plugin_deps_added TRUE)
+
+    if(NOT backing_target STREQUAL plugin_target AND TARGET "${backing_target}")
+        set(has_backing_lib TRUE)
+    else()
+        set(has_backing_lib FALSE)
+    endif()
+
+    # Target who's direct dependencies will be walked to set up additional dependencies for
+    # a static qml plugin.
+    if(has_backing_lib)
+        set(target_with_candidate_qml_module_deps "${backing_target}")
+    else()
+        set(target_with_candidate_qml_module_deps "${plugin_target}")
+    endif()
+
+    get_target_property(plugin_type ${plugin_target} TYPE)
+    set(skip_prl_marker "$<BOOL:QT_IS_PLUGIN_GENEX>")
+
+    # If ${plugin_target} is a static qml plugin, recursively get its private dependencies (or its
+    # backing lib private deps), identify which of those are qml modules, extract any associated qml
+    # plugin target from those qml modules and make them dependencies of ${plugin_target}.
+    #
+    # E.g. this ensures that if a user project links directly to the static qtquick2plugin plugin
+    # target (note the plugin target, not the backing lib) it will automatically also link to
+    # Quick's transitive plugin dependencies: qmlplugin, modelsplugin and workerscriptplugin, in
+    # addition to the the Qml, QmlModels and QmlWorkerScript backing libraries.
+    #
+    # Note this logic is not specific to qtquick2plugin, it applies to all static qml plugins.
+    #
+    # This eliminates the needed boilerplate to link to the full transitive closure of qml plugins
+    # in user projects that don't want to use qmlimportscanner / qt_import_qml_plugins.
+    set(additional_plugin_deps "")
+
+    if(plugin_type STREQUAL "STATIC_LIBRARY")
+        __qt_internal_collect_all_target_dependencies(
+            "${target_with_candidate_qml_module_deps}" plugin_private_deps)
+
+        foreach(dep IN LISTS plugin_private_deps)
+            if(NOT TARGET "${dep}")
+                continue()
+            endif()
+            get_target_property(dep_type ${dep} TYPE)
+            if(dep_type STREQUAL "STATIC_LIBRARY")
+                set(associated_qml_plugin "")
+
+                # Check if the target has an associated imported qml plugin (like a Qt-provided
+                # one).
+                get_target_property(associated_qml_plugin_candidate ${dep}
+                    _qt_qml_module_installed_plugin_target)
+
+                if(associated_qml_plugin_candidate AND TARGET "${associated_qml_plugin_candidate}")
+                    set(associated_qml_plugin "${associated_qml_plugin_candidate}")
+                endif()
+
+                # Check if the target has an associated qml plugin that's built as part of the
+                # current project (non-installed one, so without a target namespace prefix).
+                get_target_property(associated_qml_plugin_candidate ${dep}
+                    _qt_qml_module_plugin_target)
+
+                if(NOT associated_qml_plugin AND
+                        associated_qml_plugin_candidate
+                        AND TARGET "${associated_qml_plugin_candidate}")
+                    set(associated_qml_plugin "${associated_qml_plugin_candidate}")
+                endif()
+
+                if(associated_qml_plugin)
+                    # Abuse a genex marker, to skip the dependency to be added into prl files.
+                    # TODO: Introduce a more generic marker name in qtbase specifically
+                    # for skipping deps in prl file deps generation.
+                    set(wrapped_associated_qml_plugin
+                        "$<${skip_prl_marker}:$<TARGET_NAME:${associated_qml_plugin}>>")
+
+                    if(NOT wrapped_associated_qml_plugin IN_LIST additional_plugin_deps)
+                        list(APPEND additional_plugin_deps "${wrapped_associated_qml_plugin}")
+                    endif()
+                endif()
+            endif()
+        endforeach()
+    endif()
+
+    if(additional_plugin_deps)
+        target_link_libraries(${plugin_target} PRIVATE ${additional_plugin_deps})
+    endif()
+endfunction()
 
 # The function returns the base output name of a qml plugin that will be used as library output
 # name and in a qmldir file as the 'plugin <plugin_basename>' record.
