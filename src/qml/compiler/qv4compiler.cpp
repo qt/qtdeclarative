@@ -432,9 +432,21 @@ void QV4::Compiler::JSUnitGenerator::writeFunction(char *f, QV4::Compiler::Conte
         function->flags |= CompiledData::Function::IsArrowFunction;
     if (irFunction->isGenerator)
         function->flags |= CompiledData::Function::IsGenerator;
-    function->nestedFunctionIndex =
-            irFunction->returnsClosure ? quint32(module->functions.indexOf(irFunction->nestedContexts.first()))
-                                       : std::numeric_limits<uint32_t>::max();
+    if (irFunction->returnsClosure)
+        function->flags |= CompiledData::Function::IsClosureWrapper;
+
+    if (!irFunction->returnsClosure
+            || irFunction->innerFunctionAccessesThis
+            || irFunction->innerFunctionAccessesNewTarget) {
+        // If the inner function does things with this and new.target we need to do some work in
+        // the outer function. Then we shouldn't directly access the nested function.
+        function->nestedFunctionIndex = std::numeric_limits<uint32_t>::max();
+    } else {
+        // Otherwise we can directly use the nested function.
+        function->nestedFunctionIndex
+                = quint32(module->functions.indexOf(irFunction->nestedContexts.first()));
+    }
+
     function->length = irFunction->formals ? irFunction->formals->length() : 0;
     function->nFormals = irFunction->arguments.size();
     function->formalsOffset = currentOffset;

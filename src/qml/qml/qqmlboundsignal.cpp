@@ -114,12 +114,7 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(const QObject *target, int 
 
     QV4::ExecutionEngine *engine = ctxt->engine()->handle();
 
-    // If the function is marked as having a nested function, then the user wrote:
-    //   onSomeSignal: function() { /*....*/ }
-    // So take that nested function:
-    if (auto closure = function->nestedFunction()) {
-        function = closure;
-    } else {
+    if (!function->isClosureWrapper()) {
         QList<QByteArray> signalParameters = QMetaObjectPrivate::signal(m_target->metaObject(), m_index).parameterNames();
         if (!signalParameters.isEmpty()) {
             QString error;
@@ -136,7 +131,29 @@ QQmlBoundSignalExpression::QQmlBoundSignalExpression(const QObject *target, int 
     QV4::Scoped<QV4::QmlContext> qmlContext(valueScope, scope);
     if (!qmlContext)
         qmlContext = QV4::QmlContext::create(engine->rootContext(), ctxt, scopeObject);
-    setupFunction(qmlContext, function);
+    if (auto closure = function->nestedFunction()) {
+        // If the function is marked as having a nested function, then the user wrote:
+        //   onSomeSignal: function() { /*....*/ }
+        // So take that nested function:
+        setupFunction(qmlContext, closure);
+    } else {
+        setupFunction(qmlContext, function);
+
+        // If it's a closure wrapper but we cannot directly access the nested function
+        // we need to run the outer function to get the nested one.
+        if (function->isClosureWrapper()) {
+            bool isUndefined = false;
+            QV4::ScopedFunctionObject result(
+                        valueScope, QQmlJavaScriptExpression::evaluate(&isUndefined));
+
+            Q_ASSERT(!isUndefined);
+            Q_ASSERT(result->function());
+            Q_ASSERT(result->function()->compilationUnit == function->compilationUnit);
+
+            QV4::Scoped<QV4::ExecutionContext> callContext(valueScope, result->scope());
+            setupFunction(callContext, result->function());
+        }
+    }
 }
 
 void QQmlBoundSignalExpression::init(const QQmlRefPointer<QQmlContextData> &ctxt, QObject *scope)

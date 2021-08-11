@@ -79,7 +79,7 @@ QT_BEGIN_NAMESPACE
 // Also change the comment behind the number to describe the latest change. This has the added
 // benefit that if another patch changes the version too, it will result in a merge conflict, and
 // not get removed silently.
-#define QV4_DATA_STRUCTURE_VERSION 0x33 // added new bytecode instruction for type assertions
+#define QV4_DATA_STRUCTURE_VERSION 0x34 // added a flag to mark functions as closure wrappers
 
 class QIODevice;
 class QQmlTypeNameCache;
@@ -287,7 +287,8 @@ struct Function
     enum Flags : unsigned int {
         IsStrict            = 0x1,
         IsArrowFunction     = 0x2,
-        IsGenerator         = 0x4
+        IsGenerator         = 0x4,
+        IsClosureWrapper    = 0x8,
     };
 
     // Absolute offset into file where the code for this function is located.
