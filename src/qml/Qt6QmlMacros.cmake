@@ -462,13 +462,16 @@ function(qt6_add_qml_module target)
     )
     list(APPEND output_targets ${cache_target})
 
-    # Build an init object library for static plugins.
+    # Build an init object library for static plugins and propagate it along with the plugin
+    # target.
     if(TARGET "${arg_PLUGIN_TARGET}")
         get_target_property(plugin_lib_type ${arg_PLUGIN_TARGET} TYPE)
         if(plugin_lib_type STREQUAL "STATIC_LIBRARY")
             __qt_internal_add_static_plugin_init_object_library(
                 "${arg_PLUGIN_TARGET}" plugin_init_target)
             list(APPEND output_targets ${plugin_init_target})
+
+            __qt_internal_propagate_object_library("${arg_PLUGIN_TARGET}" "${plugin_init_target}")
         endif()
     endif()
 
@@ -1868,20 +1871,10 @@ but this file does not exist.  Possible reasons include:
                     set(plugin_target "${QT_CMAKE_EXPORT_NAMESPACE}::${entry_PLUGIN}")
                     list(APPEND plugins_to_link "${plugin_target}")
 
-                    __qt_internal_get_static_plugin_init_target_name("${entry_PLUGIN}"
-                        plugin_init_target)
-                    set(plugin_init_target_prefixed
-                        "${QT_CMAKE_EXPORT_NAMESPACE}::${plugin_init_target}")
-                    list(APPEND plugin_inits_to_link "${plugin_init_target_prefixed}")
-
                 # Handles user project provided Qml plugins
                 elseif(TARGET ${entry_PLUGIN} AND TARGET ${entry_PLUGIN}_init)
                     set(plugin_target "${entry_PLUGIN}")
                     list(APPEND plugins_to_link "${plugin_target}")
-
-                    __qt_internal_get_static_plugin_init_target_name("${entry_PLUGIN}"
-                        plugin_init_target)
-                    list(APPEND plugin_inits_to_link "${plugin_init_target}")
 
                 # TODO: QTBUG-94605 Figure out if this is a reasonable scenario to support
                 else()
@@ -1895,27 +1888,18 @@ but this file does not exist.  Possible reasons include:
         endforeach()
 
         if(plugins_to_link)
-            # __qt_internal_propagate_object_library propagates object libraries by setting
-            # INTERFACE linkage on ${target}. If ${target} is an executable, that would mean none
-            # of the plugin init libraries would be linked to the executable itself. If ${target} is
-            # a user shared library, it would be similar to the case above, the plugin init
-            # libraries should be linked into the shared library, rather than to the consumer of the
-            # shared library.
-            # To achieve proper linkage in these cases, link the plugins and initializers directly.
-            # For static libraries and INTERFACE libraries,
-            # using __qt_internal_propagate_object_library is intended.
+            # If ${target} is an executable or a shared library, link the plugins directly to
+            # the target.
+            # If ${target} is a static or INTERFACE library, the plugins should be propagated
+            # across those libraries to the end target (executable or shared library).
+            # The plugin initializers will be linked via usage requirements from the plugin target.
             get_target_property(target_type ${target} TYPE)
             if(target_type STREQUAL "EXECUTABLE" OR target_type STREQUAL "SHARED_LIBRARY")
-                # This links both the initializer object and the usage requirements of the object
-                # library, so Qt::Core.
-                target_link_libraries("${target}" PRIVATE ${plugin_inits_to_link})
-                target_link_libraries("${target}" PRIVATE ${plugins_to_link})
+                set(link_type "PRIVATE")
             else()
-                foreach(plugin_init IN LISTS plugin_inits_to_link)
-                    __qt_internal_propagate_object_library("${target}" "${plugin_init}")
-                endforeach()
-                target_link_libraries("${target}" INTERFACE ${plugins_to_link})
+                set(link_type "INTERFACE")
             endif()
+            target_link_libraries("${target}" ${link_type} ${plugins_to_link})
         endif()
     endif()
 endfunction()
