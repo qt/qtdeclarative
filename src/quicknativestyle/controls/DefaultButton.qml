@@ -45,11 +45,10 @@ T.Button {
 
     readonly property bool __nativeBackground: background instanceof NativeStyle.StyleItem
 
-    // Since QQuickControl will subtract the insets from the control size to
-    // figure out the background size, we need to reverse that here, otherwise
-    // the control ends up too big.
-    implicitWidth: implicitBackgroundWidth + leftInset + rightInset
-    implicitHeight: implicitBackgroundHeight + topInset + bottomInset
+    implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
+                            implicitContentWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
+                             implicitContentHeight + topPadding + bottomPadding)
 
     font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
 
