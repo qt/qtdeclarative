@@ -52,7 +52,7 @@ QT_BEGIN_NAMESPACE
     \inqmlmodule QtQuick.Controls
     \since 6.2
     \ingroup utilities
-    \brief Used to select table cells inside a TableView
+    \brief Used to select table cells inside a TableView.
 
     \image qtquickcontrols2-selectionrectangle.png
 
