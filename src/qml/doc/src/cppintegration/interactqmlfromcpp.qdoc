@@ -105,6 +105,88 @@ You can also connect to any signals or call methods defined in the component
 using QMetaObject::invokeMethod() and QObject::connect(). See \l {Invoking QML Methods}
 and \l {Connecting to QML Signals} below for further details.
 
+\section1 Accessing QML Objects via well-defined C++ Interfaces
+
+The best way of interacting with QML from C++ is to define an interface for
+doing so in C++ and accessing it in QML itself. With other methods, refactoring
+your QML code can easily lead to your QML / C++ interaction breaking. It also
+helps to reason about the interaction of QML and C++ code, as having it driven
+via QML can be more easily reasoned about by both users and tooling such as
+qmllint. Accessing QML from C++ will lead to QML code that cannot be understood
+without manually verifying that no outside C++ code is modifying a given QML
+component, and even then the extent of the access might change over time, making
+continued use of this strategy a maintenance burden.
+
+To let QML drive the interaction, first you need to define a C++ interface:
+
+\code
+class CppInterface : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    // ...
+};
+\endcode
+
+Using a QML-driven approach, this interface can be interacted with in two ways:
+
+\section2 Singletons
+
+One option is to register the interface as a singleton by adding the \l
+QML_SINGLETON macro to the interface, exposing it to all components. Following
+that, the interface becomes available via a simple import statement:
+
+\code
+import my.company.module
+
+Item {
+    Component.onCompleted: {
+        CppInterface.foo();
+    }
+}
+\endcode
+
+Use this approach if you need your interface in more places than the root component, as
+simply passing down an object would require explicitly passing it on to other
+components via a property or utilizing the slow and not recommended method of
+using \l {Unqualified access}{unqualified access}.
+
+\section2 Initial properties
+
+Another option is to mark the interface as uncreatable via \l QML_UNCREATABLE
+and supplying it to the root QML Component by using \l
+QQmlComponent::createWithInitialProperties() and a \l {Required
+Properties}{required property} on the QML end.
+
+Your root component may look something like this:
+
+\code
+import QtQuick
+
+Item {
+    required property CppInterface interface
+    Component.onCompleted: {
+        interface.foo();
+    }
+}
+\endcode
+
+Marking the property as required here protects the component against being
+created without the interface property being set.
+
+You can then initialize your component in the same way as outlined in \l
+{Loading QML Objects from C++} except using \c {createWithInitialProperties()}:
+
+\code
+    component.createWithInitialProperties(QVariantMap{{u"interface"_qs, QVariant::fromValue<CppInterface *>(new CppInterface)}});
+\endcode
+
+This method is to be preferred if you know that your interface only needs to be
+available to the root component. It also allows for connecting to signals and
+slots of the interface more easily on the C++ side.
+
+If neither of these methods suit your needs you may want to investigate the usage of
+\l {Using C++ Models with Qt Quick Views}{C++ models} instead.
 
 \section1 Accessing Loaded QML Objects by Object Name
 
