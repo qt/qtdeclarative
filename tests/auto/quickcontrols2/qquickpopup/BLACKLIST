@@ -3,7 +3,7 @@
 [overlay]
 macos # QTBUG-89938
 
-[zPolicy]
+[zOrder]
 macos # QTBUG-89938
 
 [closePolicy]
