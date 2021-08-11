@@ -72,6 +72,7 @@ ApplicationWindow {
         id: settings
 
         property alias useNativeDialogs: useNativeDialogsCheckBox.checked
+        property alias lastTabBarIndex: tabBar.currentIndex
     }
 
     Page {
