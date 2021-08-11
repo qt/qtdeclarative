@@ -201,6 +201,25 @@ protected:
         QQmlJS::SourceLocation location;
     };
 
+    /*!
+        Utility wrapper that adds visibility scope to the data.
+
+        This wrapper becomes useful for binding processing where we need to know
+        both the property (or signal handler) owner and the scope in which the
+        binding is executed (the "visibility" scope).
+
+        As visibility scope (and data) does not typically have sufficient
+        information about a proper source location of that data, the location
+        also has to be provided to simplify the error reporting.
+    */
+    template<typename T>
+    struct WithVisibilityScope
+    {
+        QQmlJSScope::Ptr visibilityScope;
+        QQmlJS::SourceLocation dataLocation;
+        T data;
+    };
+
     QHash<QQmlJSScope::Ptr, QVector<QQmlJSScope::Ptr>> m_pendingDefaultProperties;
     QVector<PendingPropertyType> m_pendingPropertyTypes;
     QVector<PendingPropertyObjectBinding> m_pendingPropertyObjectBindings;
@@ -208,8 +227,8 @@ protected:
     QVector<QQmlJSScope::Ptr> m_objectBindingScopes;
     QVector<QQmlJSScope::Ptr> m_objectDefinitionScopes;
 
-    QHash<QQmlJSScope::Ptr, QVector<QString>> m_propertyBindings;
-    QHash<QQmlJSScope::Ptr, QVector<QPair<QString, QStringList>>> m_signals;
+    QHash<QQmlJSScope::Ptr, QVector<WithVisibilityScope<QString>>> m_propertyBindings;
+    QHash<QQmlJSScope::Ptr, QVector<WithVisibilityScope<QPair<QString, QStringList>>>> m_signals;
 
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
     QQmlJS::SourceLocation m_pendingSignalHandler;

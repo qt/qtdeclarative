@@ -428,6 +428,9 @@ void TestQmllint::dirtyQmlCode_data()
             << QString("Warning: %1:5:21: Property \"stuff\" not found on type \"Empty\"")
             << QString()
             << false;
+    QTest::newRow("badScriptOnAttachedProperty")
+            << QStringLiteral("badScript.attached.qml")
+            << QString("Warning: %1:3:26: Unqualified access") << QString() << false;
     QTest::newRow("brokenNamespace")
             << QStringLiteral("brokenNamespace.qml")
             << QString("Warning: %1:4:17: Type not found in namespace")
@@ -472,6 +475,21 @@ void TestQmllint::dirtyQmlCode_data()
                               "\"doesNotExist\" exists in the current element.")
             << QString()
             << false;
+    QTest::newRow("BadScriptBindingOnGroup")
+            << QStringLiteral("badScriptBinding.group.qml")
+            << QStringLiteral("Warning: %1:3:10: Binding assigned to \"bogusProperty\", but no "
+                              "property \"bogusProperty\" exists in the current element.")
+            << QString() << false;
+    QTest::newRow("BadScriptBindingOnAttachedType")
+            << QStringLiteral("badScriptBinding.attached.qml")
+            << QStringLiteral("Warning: %1:5:12: Binding assigned to \"bogusProperty\", but no "
+                              "property \"bogusProperty\" exists in the current element.")
+            << QString() << false;
+    QTest::newRow("BadScriptBindingOnAttachedSignalHandler")
+            << QStringLiteral("badScriptBinding.attachedSignalHandler.qml")
+            << QStringLiteral(
+                       "Warning: %1:3:10: no matching signal found for handler \"onBogusSignal\"")
+            << QString() << false;
     QTest::newRow("BadPropertyType")
             << QStringLiteral("badPropertyType.qml")
             << QStringLiteral("No type found for property \"bad\". This may be due to a missing "
@@ -624,6 +642,9 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("nestedInlineComponents")
             << QStringLiteral("nestedInlineComponents.qml")
             << QStringLiteral("Nested inline components are not supported") << QString() << false;
+    QTest::newRow("QQmlEasingEnums::Type")
+            << QStringLiteral("animationEasing.qml")
+            << QStringLiteral("No type found for property \"type\"") << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -766,6 +787,8 @@ void TestQmllint::cleanQmlCode_data()
             << QStringLiteral("customParserUnqualifiedAccess.qml");
     QTest::newRow("ImportQMLModule") << QStringLiteral("importQMLModule.qml");
     QTest::newRow("ImportDirectoryQmldir") << QStringLiteral("Things/LintDirectly.qml");
+    QTest::newRow("BindingsOnGroupAndAttachedProperties")
+            << QStringLiteral("goodBindingsOnGroupAndAttached.qml");
 }
 
 void TestQmllint::cleanQmlCode()
