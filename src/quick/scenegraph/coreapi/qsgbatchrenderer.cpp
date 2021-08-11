@@ -2035,7 +2035,7 @@ void Renderer::uploadBatch(Batch *b)
                      g->drawingMode() == QSGGeometry::DrawLines || g->drawingMode() == QSGGeometry::DrawPoints)
             && b->positionAttribute >= 0
             && g->indexType() == QSGGeometry::UnsignedShortType
-            && (flags & (QSGMaterial::CustomCompileStep | QSGMaterial_FullMatrix)) == 0
+            && (flags & (QSGMaterial::NoBatching | QSGMaterial_FullMatrix)) == 0
             && ((flags & QSGMaterial::RequiresFullMatrixExceptTranslate) == 0 || b->isTranslateOnlyToRoot())
             && b->isSafeToBatch();
 

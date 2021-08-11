@@ -55,8 +55,9 @@ public:
         RequiresDeterminant = 0x0002, // Allow precalculated translation and 2D rotation
         RequiresFullMatrixExceptTranslate = 0x0004 | RequiresDeterminant, // Allow precalculated translation
         RequiresFullMatrix  = 0x0008 | RequiresFullMatrixExceptTranslate,
+        NoBatching          = 0x0010,
 
-        CustomCompileStep   = 0x0010
+        CustomCompileStep   = NoBatching // ### Qt 7: remove
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
