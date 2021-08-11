@@ -47,6 +47,8 @@
 QT_BEGIN_NAMESPACE
 
 /*!
+    \internal
+
     \class QQuickColorGroup
     \brief The QQuickColorGroup class represents a set of colors.
     \inmodule QtQuick
