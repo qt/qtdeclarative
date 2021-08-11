@@ -374,6 +374,7 @@ private slots:
     void propertyAndAliasMustHaveDistinctNames();
 
     void variantListConversion();
+    void thisInArrowFunction();
 
 private:
     QQmlEngine engine;
@@ -6508,6 +6509,30 @@ void tst_qqmllanguage::variantListConversion()
     QCOMPARE(l0.a, 12ull);
     const Large l1 = qvariant_cast<Large>(list.at(1));
     QCOMPARE(l1.a, 13ull);
+}
+
+void tst_qqmllanguage::thisInArrowFunction()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("thisInArrow.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(QtDebugMsg, "43");
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(qvariant_cast<QObject *>(o->property("arrowResult")), o.data());
+    QCOMPARE(qvariant_cast<QObject *>(o->property("funcResult")), o.data());
+    QCOMPARE(qvariant_cast<QObject *>(o->property("aResult")), o.data());
+    QCOMPARE(qvariant_cast<QObject *>(o->property("aaResult")), o.data());
+
+    QCOMPARE(qvariant_cast<QObject *>(o->property("fResult")), nullptr);
+    QCOMPARE(o->property("fResult").metaType(), QMetaType::fromType<QJSValue>());
+    QVERIFY(qvariant_cast<QJSValue>(o->property("fResult")).isObject());
+
+    QObject *child = qvariant_cast<QObject *>(o->property("child"));
+    QVERIFY(child != nullptr);
+    QCOMPARE(qvariant_cast<QObject *>(o->property("ffResult")), child);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
