@@ -302,7 +302,7 @@ void tst_QQmlImport::interceptQmldir()
 
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("interceptQmldir.qml"));
-    QVERIFY(component.isReady());
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
 }
@@ -316,7 +316,7 @@ void tst_QQmlImport::singletonVersionResolution()
         // Singleton with higher version is simply ignored when importing lower version of plugin
         QQmlComponent component(&engine);
         component.loadUrl(testFileUrl("QTBUG-77102/main.0.9.qml"));
-        QVERIFY(component.isReady());
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> obj(component.create());
         QVERIFY(!obj.isNull());
     }
@@ -325,7 +325,7 @@ void tst_QQmlImport::singletonVersionResolution()
         QQmlComponent component(&engine);
         QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression {".*ReferenceError: MySettings is not defined$"} );
         component.loadUrl(testFileUrl("QTBUG-77102/main.0.9.fail.qml"));
-        QVERIFY(component.isReady());
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> obj(component.create());
         QVERIFY(!obj.isNull());
     }
@@ -333,7 +333,7 @@ void tst_QQmlImport::singletonVersionResolution()
         // unless a version which is high enough is imported
         QQmlComponent component(&engine);
         component.loadUrl(testFileUrl("QTBUG-77102/main.1.0.qml"));
-        QVERIFY(component.isReady());
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> obj(component.create());
         QVERIFY(!obj.isNull());
         auto item = qobject_cast<QQuickItem*>(obj.get());
@@ -343,7 +343,7 @@ void tst_QQmlImport::singletonVersionResolution()
         // or when there is no number because we are importing from a path
         QQmlComponent component(&engine);
         component.loadUrl(testFileUrl("QTBUG-77102/main.nonumber.qml"));
-        QVERIFY(component.isReady());
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> obj(component.create());
         QVERIFY(!obj.isNull());
         auto item = qobject_cast<QQuickItem*>(obj.get());
@@ -359,7 +359,7 @@ void tst_QQmlImport::removeDynamicPlugin()
         // Load something that adds a dynamic plugin
         QQmlComponent component(&engine);
         component.setData(QByteArray("import QtTest 1.0; TestResult{}"), QUrl());
-        QVERIFY(component.isReady());
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     }
     QQmlImportDatabase *imports = &QQmlEnginePrivate::get(&engine)->importDatabase;
     const QStringList &plugins = imports->dynamicPlugins();
@@ -449,7 +449,7 @@ void tst_QQmlImport::importDependenciesPrecedence()
     engine.addImportPath(dataDirectory());
 
     QQmlComponent component(&engine, testFile("dependencies.qml"));
-    QVERIFY(component.isReady());
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QScopedPointer<QObject> instance(component.create());
     QVERIFY(!instance.isNull());
