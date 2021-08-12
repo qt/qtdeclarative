@@ -6,6 +6,7 @@ QML_FILES += \
     $$PWD/GroupBox.qml \
     $$PWD/ProgressBar.qml \
     $$PWD/RadioButton.qml \
+    $$PWD/SelectionRectangle.qml \
     $$PWD/Slider.qml \
     $$PWD/SpinBox.qml \
     $$PWD/TextArea.qml \

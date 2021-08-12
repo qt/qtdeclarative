@@ -10,6 +10,7 @@ set(qml_files
     "GroupBox.qml"
     "ProgressBar.qml"
     "RadioButton.qml"
+    "SelectionRectangle.qml"
     "Slider.qml"
     "SpinBox.qml"
     "TextArea.qml"
