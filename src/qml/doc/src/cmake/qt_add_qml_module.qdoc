@@ -63,6 +63,7 @@ qt_add_qml_module(
     [NO_GENERATE_QMLDIR]
     [NO_LINT]
     [NO_CACHEGEN]
+    [NO_RESOURCE_TARGET_PATH]
 )
 
 \endcode
@@ -89,6 +90,22 @@ functionality is implemented in the \e backing target, which is given as the
 first command argument. C++ sources, \c{.qml} files, and resources should all
 be added to the backing target. The backing target is a library that should be
 installed in the same location as any other library defined by the project.
+
+The source directory structure under which the backing target is created should
+match the target path of the QML module (the target path is the module's URI
+with dots replaced by forward slashes). If the source directory structure
+doesn't match the target path, \c{qt_add_qml_module()} will issue a warning.
+
+The following example shows a suitable source directory structure for a QML
+module with a URI of \c{MyThings.Panels}. The call to \c{qt_add_qml_module()}
+would be in the \c{CMakeLists.txt} file shown.
+
+\badcode
+src
+ +-- MyThings
+      +-- Panels
+           +-- CMakeLists.txt
+\endcode
 
 A separate \e plugin target is associated with the QML module. It is used at
 runtime to load the module dynamically when the application doesn't already
@@ -133,6 +150,11 @@ directly as part of the application. The \c{qt_add_qml_module()} command will
 detect when an executable is used as the backing target and will automatically
 disable the creation of a separate plugin. Do not use any of the options with
 \c{PLUGIN} in their name when using this arrangement.
+
+When an executable is used as the backing target, the source directory structure
+is not expected to match the QML module's target path.
+See \l{qmlcachegen-auto}{Caching compiled QML sources} for additional target
+path differences for compiled-in resources.
 
 
 \target qmldir-autogeneration
@@ -183,7 +205,7 @@ may still be needed in certain situations by the QML engine.
 The resource path of each file is determined by its path relative to the
 current source directory (\c CMAKE_CURRENT_SOURCE_DIR). This resource path is
 appended to a prefix formed by concatenating the \l{RESOURCE_PREFIX} and
-the target path (which is the URI with dots replaced with forward slashes).
+the target path (but see \l NO_RESOURCE_TARGET_PATH for an exception to this).
 Ordinarily, the project should aim to place \c{.qml} files in
 the same relative location as they would have in the resources. If the \c{.qml}
 file is in a different relative directory to its desired resource path, its
@@ -222,7 +244,8 @@ are added to the module via the \c QML_FILES keyword, or by a later call to
 \l{qt6_target_qml_sources}{qt_target_qml_sources()}. The name of the linting
 target will be the \c target followed by \c{_qmllint}. The linting target is
 not part of the default CMake \c ALL target, it is intended for developers to
-execute manually on demand.
+execute manually on demand. An \c{all_qmllint} target which depends on all the
+individual \c{*_qmllint} targets is also provided as a convenience.
 
 \section1 Arguments
 
@@ -292,13 +315,24 @@ qt_add_qml_module(someTarget
 )
 \endcode
 
+\target NO_RESOURCE_TARGET_PATH
+When various files are added to the compiled-in resources, they are placed
+under a path formed by concatenating the \c RESOURCE_PREFIX and the target path.
+For the special case where the backing target is an executable, it may be
+desirable to place the module's \c{.qml} files and other resources directly
+under the \c RESOURCE_PREFIX instead. This can be achieved by specifying the
+\c NO_RESOURCE_TARGET_PATH option, which may only be used if the backing target
+is an executable.
+
 \target OUTPUT_DIRECTORY
 \c OUTPUT_DIRECTORY specifies where the plugin library, \c qmldir and typeinfo
 files are generated. When this keyword is not given, the default value will be
 the target path (formed from the \c URI) appended to the value of the
 \l QT_QML_OUTPUT_DIRECTORY variable.
-If that variable is not defined, then the output directory will be
-set to \c{${CMAKE_CURRENT_BINARY_DIR}}. When the structure of the source tree
+If that variable is not defined, the default depends on the type of backing
+target. For executables, the value will be the target path appended to
+\c{${CMAKE_CURRENT_BINARY_DIR}}, whereas for other targets it will be just
+\c{${CMAKE_CURRENT_BINARY_DIR}}. When the structure of the source tree
 matches the structure of QML module target paths (which is highly recommended),
 \l QT_QML_OUTPUT_DIRECTORY often isn't needed. The need for specifying the
 \c OUTPUT_DIRECTORY keyword should be rare, but if it is used, it is likely
@@ -391,7 +425,8 @@ be added to the backing target after this command has been called.
 
 \c RESOURCES lists any other files needed by the module, such as images
 referenced from the QML code. These files will be added as compiled-in
-resources under the \l RESOURCE_PREFIX. If needed, their relative location can
+resources (see \l RESOURCE_PREFIX for an explanation of the base point they
+will be located under). If needed, their relative location can
 be controlled by setting the \c QT_RESOURCE_ALIAS source property, just as for
 \c{.qml} files (see \l{qmlcachegen-auto}{Caching compiled QML sources}).
 

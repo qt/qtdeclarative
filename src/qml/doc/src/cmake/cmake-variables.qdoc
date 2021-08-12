@@ -37,18 +37,21 @@
 
 The \l{qt6_add_qml_module}{qt6_add_qml_module()} command accepts an
 \c OUTPUT_DIRECTORY argument which specifies where the QML module's \c qmldir
-file, typeinfo file and plugin library will be created. By default, the current
-binary directory (\c CMAKE_CURRENT_BINARY_DIR) is used if that argument is not
-provided. When a set of QML modules are being defined, it may be convenient to
-have them all generated under a common point in the build directory. If the
-source directory structure doesn't match the URI structure of the QML modules,
-or if you just want your QML modules to be collected under a different
-location, the \c QT_QML_OUTPUT_DIRECTORY can be used. When set, the default
-changes to the concatenation of \c QT_QML_OUTPUT_DIRECTORY and the QML module's
-\e{target path}, which is based on the module URI. \c QT_QML_OUTPUT_DIRECTORY
-will also be added to the import path of the \c qmllint and \c qmlcachegen
-tooling targets, allowing them to find other QML modules under the same base
-location.
+file, typeinfo file and plugin library will be created. When that argument is
+not used, the default value is based on the \c QT_QML_OUTPUT_DIRECTORY variable,
+if it is set. If \c QT_QML_OUTPUT_DIRECTORY is not set, the default value
+depends on the type of backing target (see the
+\l{qt6_add_qml_module#OUTPUT_DIRECTORY}{OUTPUT_DIRECTORY} documentation for
+details).
+
+When \c QT_QML_OUTPUT_DIRECTORY is set, the default output directory will be
+formed by appending the QML module's \e{target path} (which is based on the
+module URI) to \c QT_QML_OUTPUT_DIRECTORY.
+The \c QT_QML_OUTPUT_DIRECTORY will also be added to the import path of the
+\c qmllint and \c qmlcachegen tooling targets, allowing them to find other QML
+modules under the same base location. This allows the project to use a source
+directory structure that doesn't exactly match the URI structure of the QML
+modules, or to merge sets of QML modules under a common base point.
 
 */
 
