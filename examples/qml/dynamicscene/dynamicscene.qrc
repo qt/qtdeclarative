@@ -9,7 +9,6 @@
         <file>content/images/star.png</file>
         <file>content/images/sun.png</file>
         <file>content/images/tree_s.png</file>
-        <file>content/Button.qml</file>
         <file>content/GenericSceneItem.qml</file>
         <file>content/itemCreation.js</file>
         <file>content/PaletteItem.qml</file>

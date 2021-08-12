@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,8 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import QtQuick.Particles 2.0
+import QtQuick
+import QtQuick.Particles
+import QtQuick.Controls
 import "content"
 
 Item {
@@ -82,7 +83,7 @@ Item {
             dialogAnim.start();
         }
 
-        Text {
+        Label {
             id: dialogText
             x: 3; y: 3
             font.pixelSize: 14
@@ -156,7 +157,7 @@ Item {
             anchors.centerIn: parent
             spacing: 8
 
-            Text { text: "Drag an item into the scene." }
+            Label { text: "Drag an item into the scene." }
 
             Rectangle {
                 width: palette.width + 10; height: palette.height + 10
@@ -200,7 +201,7 @@ Item {
                 }
             }
 
-            Text { text: "Active Suns: " + window.activeSuns }
+            Label { text: "Active Suns: " + window.activeSuns }
         }
     }
 
@@ -226,7 +227,7 @@ Item {
             Row {
                 height: createButton.height
                 spacing: 8
-                Text { text: "Custom QML:"; anchors.verticalCenter: parent.verticalCenter }
+                Label { text: "Custom QML:"; anchors.verticalCenter: parent.verticalCenter }
                 Button {
                     id: popupButton
                     text: popupToolbox.poppedUp ? "Hide" : "Show"
@@ -249,7 +250,7 @@ Item {
             Rectangle {
                 width: 360; height: 240
 
-                TextEdit {
+                TextArea {
                     id: qmlText
                     anchors.fill: parent; anchors.margins: 5
                     readOnly: false
