@@ -58,7 +58,7 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QQuickFileNameFilterForeign
+struct QQuickFileNameFilterQuickDialogs2QuickImplForeign
 {
     Q_GADGET
     QML_ANONYMOUS

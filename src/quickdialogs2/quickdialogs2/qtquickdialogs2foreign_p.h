@@ -62,7 +62,7 @@ struct QPlatformDialogHelperForeign
     QML_ADDED_IN_VERSION(6, 2)
 };
 
-struct QQuickFileNameFilterForeign
+struct QQuickFileNameFilterQuickDialogs2Foreign
 {
     Q_GADGET
     QML_ANONYMOUS
