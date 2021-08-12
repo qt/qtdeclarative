@@ -446,6 +446,7 @@ private slots:
 
     void grab_data();
     void grab();
+    void earlyGrab();
     void multipleWindows();
 
     void animationsWhileHidden();
@@ -1562,6 +1563,40 @@ void tst_qquickwindow::grab()
             QCOMPARE((uint) content.convertToFormat(QImage::Format_RGB32).pixel(0, 0), (uint) 0xffff0000);
         }
     }
+}
+
+class Grabber : public QObject
+{
+    Q_OBJECT
+public:
+    Q_INVOKABLE void grab(QObject *obj) {
+        QQuickWindow *window = qobject_cast<QQuickWindow *>(obj);
+        images.append(window->grabWindow());
+    }
+    QVector<QImage> images;
+};
+
+void tst_qquickwindow::earlyGrab()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+
+    qmlRegisterType<Grabber>("Test", 1, 0, "Grabber");
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("earlyGrab.qml"));
+    QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(component.create()));
+    QVERIFY(!window.isNull());
+    window->setTitle(QTest::currentTestFunction());
+
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    Grabber *grabber = qobject_cast<Grabber *>(window->findChild<QObject *>("grabber"));
+    QVERIFY(grabber);
+    QCOMPARE(grabber->images.count(), 1);
+    QVERIFY(!grabber->images[0].isNull());
+    QCOMPARE(grabber->images[0].convertToFormat(QImage::Format_RGBX8888).pixel(10, 20), QColor(Qt::red).rgb());
 }
 
 void tst_qquickwindow::multipleWindows()

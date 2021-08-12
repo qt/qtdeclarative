@@ -2493,7 +2493,7 @@ QImage QQuickWindow::grabWindow()
 {
     Q_D(QQuickWindow);
 
-    if (!isVisible() && !d->renderControl) {
+    if (!d->isRenderable() && !d->renderControl) {
         // backends like software can grab regardless of the window state
         if (d->windowManager && (d->windowManager->flags() & QSGRenderLoop::SupportsGrabWithoutExpose))
             return d->windowManager->grab(this);
