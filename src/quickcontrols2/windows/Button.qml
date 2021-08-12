@@ -36,26 +36,10 @@
 
 import QtQuick
 import QtQuick.Controls.impl
-import QtQuick.Templates as T
 import QtQuick.NativeStyle as NativeStyle
 
-T.Button {
+NativeStyle.DefaultButton {
     id: control
-
-    readonly property bool __nativeBackground: background instanceof NativeStyle.StyleItem
-
-    // Since QQuickControl will subtract the insets from the control size to
-    // figure out the background size, we need to reverse that here, otherwise
-    // the control ends up too big.
-    implicitWidth: implicitBackgroundWidth + leftInset + rightInset
-    implicitHeight: implicitBackgroundHeight + topInset + bottomInset
-
-    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
-
-    leftPadding: __nativeBackground ? background.contentPadding.left : 5
-    rightPadding: __nativeBackground ? background.contentPadding.right : 5
-    topPadding: __nativeBackground ? background.contentPadding.top : 5
-    bottomPadding: __nativeBackground ? background.contentPadding.bottom : 5
 
     background: NativeStyle.Button {
         control: control
@@ -78,11 +62,6 @@ T.Button {
         visible: opacity !== 0
         Behavior on opacity { NumberAnimation { duration: hoverButton.transitionDuration } }
     }
-
-    icon.width: 24
-    icon.height: 24
-    icon.color: control.checked || control.highlighted ? control.palette.brightText :
-                control.flat && !control.down ? (control.visualFocus ? control.palette.highlight : control.palette.windowText) : control.palette.buttonText
 
     contentItem: IconLabel {
         spacing: control.spacing
