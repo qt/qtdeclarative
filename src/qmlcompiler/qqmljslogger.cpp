@@ -194,7 +194,7 @@ void QQmlJSLogger::printContext(const QQmlJS::SourceLocation &location)
 
     if (!issueLocationWithContext.issueText().isEmpty())
         m_output.write(issueLocationWithContext.issueText().toString(), QtCriticalMsg);
-    m_output.write(issueLocationWithContext.afterText() + QLatin1Char('\n'));
+    m_output.write(issueLocationWithContext.afterText().toString() + QLatin1Char('\n'));
 
     // Do not draw location indicator for multiline locations
     if (locationMultiline)
@@ -224,7 +224,7 @@ void QQmlJSLogger::printFix(const FixSuggestion &fix)
         }
 
         m_output.write(fixItem.replacementString, QtDebugMsg);
-        m_output.write(issueLocationWithContext.afterText() + u'\n');
+        m_output.write(issueLocationWithContext.afterText().toString() + u'\n');
 
         int tabCount = issueLocationWithContext.beforeText().count(u'\t');
         m_output.write(u" "_qs.repeated(

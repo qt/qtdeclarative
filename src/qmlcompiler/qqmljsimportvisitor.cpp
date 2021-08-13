@@ -1026,7 +1026,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             auto fex = cast<FieldMemberExpression *>(node);
             while (fex) {
                 node = fex->base;
-                aliasExpr.prepend(u'.' + fex->name);
+                aliasExpr.prepend(u'.' + fex->name.toString());
                 fex = cast<FieldMemberExpression *>(node);
             }
 

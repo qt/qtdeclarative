@@ -42,12 +42,12 @@
 #include "qqmljsscope_p.h"
 #include "qqmljsannotation_p.h"
 #include "qqmljslogger_p.h"
+#include "qqmljsimporter_p.h"
 
 #include <QtCore/qvariant.h>
 
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
-#include <private/qqmljsimporter_p.h>
 
 
 QT_BEGIN_NAMESPACE
