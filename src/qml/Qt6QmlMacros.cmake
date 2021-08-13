@@ -17,6 +17,7 @@ function(qt6_add_qml_module target)
         NO_GENERATE_QMLDIR
         NO_LINT
         NO_CACHEGEN
+        NO_RESOURCE_TARGET_PATH
         # TODO: Remove once all usages have also been removed
         SKIP_TYPE_REGISTRATION
     )
@@ -117,8 +118,11 @@ function(qt6_add_qml_module target)
         )
     endif()
 
-    # Provide defaults for options that have one
+    # Other arguments and checking for invalid combinations
     if (NOT arg_TARGET_PATH)
+        # NOTE: This will always be used for copying things to the build
+        #       directory, but it will not be used for resource paths if
+        #       NO_RESOURCE_TARGET_PATH was given.
         string(REPLACE "." "/" arg_TARGET_PATH ${arg_URI})
     endif()
 
@@ -129,6 +133,7 @@ function(qt6_add_qml_module target)
             )
     endif()
 
+    set(is_executable FALSE)
     if(TARGET ${target})
         if(arg_STATIC OR arg_SHARED)
             message(FATAL_ERROR
@@ -154,6 +159,12 @@ function(qt6_add_qml_module target)
             endif()
             set(arg_NO_PLUGIN TRUE)
             set(lib_type "")
+            set(is_executable TRUE)
+        elseif(arg_NO_RESOURCE_TARGET_PATH)
+            message(FATAL_ERROR
+                "NO_RESOURCE_TARGET_PATH cannot be used for a backing target "
+                "that is not an executable"
+            )
         elseif(backing_target_type STREQUAL "STATIC_LIBRARY")
             set(lib_type STATIC)
         elseif(backing_target_type MATCHES "(SHARED|MODULE)_LIBRARY")
@@ -166,6 +177,13 @@ function(qt6_add_qml_module target)
             message(FATAL_ERROR
                 "Both STATIC and SHARED specified, at most one can be given"
                 )
+        endif()
+
+        if(arg_NO_RESOURCE_TARGET_PATH)
+            message(FATAL_ERROR
+                "NO_RESOURCE_TARGET_PATH can only be provided when an existing "
+                "executable target is passed in as the backing target"
+            )
         endif()
 
         # Explicit arguments take precedence, otherwise default to using the same
@@ -226,6 +244,18 @@ function(qt6_add_qml_module target)
     else()
         if("${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "")
             set(arg_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+            # For libraries, we assume/require that the source directory
+            # structure is consistent with the target path. For executables,
+            # the source directory will usually not reflect the target path
+            # and the project will often expect to be able to use resource
+            # paths that don't include the target path (they need the
+            # NO_RESOURCE_TARGET_PATH option if they do that). Tooling always
+            # needs the target path in the file system though, so the output
+            # directory should always have it. Handle the special case for
+            # executables to ensure this is what we get.
+            if(is_executable)
+                string(APPEND arg_OUTPUT_DIRECTORY "/${arg_TARGET_PATH}")
+            endif()
         else()
             if(NOT IS_ABSOLUTE "${QT_QML_OUTPUT_DIRECTORY}")
                 message(FATAL_ERROR
@@ -233,6 +263,7 @@ function(qt6_add_qml_module target)
                     "${QT_QML_OUTPUT_DIRECTORY}"
                 )
             endif()
+            # This inherently does what we want for libraries and executables
             set(arg_OUTPUT_DIRECTORY ${QT_QML_OUTPUT_DIRECTORY}/${arg_TARGET_PATH})
         endif()
     endif()
@@ -293,19 +324,6 @@ function(qt6_add_qml_module target)
         set(arg_TYPEINFO ${target}.qmltypes)
     endif()
 
-    # Make the prefix conform to the following:
-    #   - Starts with a "/"
-    #   - Does not end with a "/" unless the prefix is exactly "/"
-    if(NOT arg_RESOURCE_PREFIX)
-        set(arg_RESOURCE_PREFIX "/")
-    endif()
-    if(NOT arg_RESOURCE_PREFIX MATCHES "^/")
-        string(PREPEND arg_RESOURCE_PREFIX "/")
-    endif()
-    if(arg_RESOURCE_PREFIX MATCHES [[(.*)/$]])
-        set(arg_RESOURCE_PREFIX "${CMAKE_MATCH_1}")
-    endif()
-
     foreach(import_set IN ITEMS IMPORTS OPTIONAL_IMPORTS)
         foreach(import IN LISTS arg_${import_set})
             string(FIND ${import} "/" slash_position REVERSE)
@@ -354,7 +372,28 @@ function(qt6_add_qml_module target)
         endif()
     endforeach()
 
-    set(qt_qml_module_resource_prefix "${arg_RESOURCE_PREFIX}/${arg_TARGET_PATH}")
+    # Make the prefix conform to the following:
+    #   - Starts with a "/"
+    #   - Does not end with a "/" unless the prefix is exactly "/"
+    if(NOT arg_RESOURCE_PREFIX)
+        set(arg_RESOURCE_PREFIX "/")
+    endif()
+    if(NOT arg_RESOURCE_PREFIX MATCHES "^/")
+        string(PREPEND arg_RESOURCE_PREFIX "/")
+    endif()
+    if(arg_RESOURCE_PREFIX MATCHES [[(.+)/$]])
+        set(arg_RESOURCE_PREFIX "${CMAKE_MATCH_1}")
+    endif()
+
+    if(arg_NO_RESOURCE_TARGET_PATH)
+        set(qt_qml_module_resource_prefix "${arg_RESOURCE_PREFIX}")
+    else()
+        if(arg_RESOURCE_PREFIX STREQUAL "/")   # Checked so we prevent double-slash
+            set(qt_qml_module_resource_prefix "/${arg_TARGET_PATH}")
+        else()
+            set(qt_qml_module_resource_prefix "${arg_RESOURCE_PREFIX}/${arg_TARGET_PATH}")
+        endif()
+    endif()
 
     set_target_properties(${target} PROPERTIES
         QT_QML_MODULE_NO_LINT "${arg_NO_LINT}"
@@ -415,16 +454,38 @@ function(qt6_add_qml_module target)
         # if Qt was built with CMake or qmake, while the build system transition phase is still
         # happening.
         string(REPLACE "/" "_" qmldir_resource_name "qmake_${arg_TARGET_PATH}")
+
+        # The qmldir file ALWAYS has to be under the target path, even in the
+        # resources. If it isn't, an explicit import can't find it. We need a
+        # second copy NOT under the target path if NO_RESOURCE_TARGET_PATH is
+        # given so that the implicit import will work.
+        set(prefixes "${qt_qml_module_resource_prefix}")
+        if(arg_NO_RESOURCE_TARGET_PATH)
+            # The above prefixes item won't include the target path, so add a
+            # second one that does.
+            if(qt_qml_module_resource_prefix STREQUAL "/")
+                list(APPEND prefixes "/${arg_TARGET_PATH}")
+            else()
+                list(APPEND prefixes "${qt_qml_module_resource_prefix}/${arg_TARGET_PATH}")
+            endif()
+        endif()
         set_source_files_properties(${arg_OUTPUT_DIRECTORY}/qmldir
             PROPERTIES QT_RESOURCE_ALIAS "qmldir"
         )
-        set(resource_targets)
-        qt6_add_resources(${target} ${qmldir_resource_name}
-            FILES ${arg_OUTPUT_DIRECTORY}/qmldir
-            PREFIX "${qt_qml_module_resource_prefix}"
-            OUTPUT_TARGETS resource_targets
-        )
-        list(APPEND output_targets ${resource_targets})
+
+        foreach(prefix IN LISTS prefixes)
+            set(resource_targets)
+            qt6_add_resources(${target} ${qmldir_resource_name}
+                FILES ${arg_OUTPUT_DIRECTORY}/qmldir
+                PREFIX "${prefix}"
+                OUTPUT_TARGETS resource_targets
+            )
+            list(APPEND output_targets ${resource_targets})
+            # If we are adding the same file twice, we need a different resource
+            # name for the second one. It has the same QT_RESOURCE_ALIAS but a
+            # different prefix, so we can't put it in the same resource.
+            string(APPEND qmldir_resource_name "_copy")
+        endforeach()
     endif()
 
     if(NOT arg_NO_PLUGIN AND NOT arg_NO_CREATE_PLUGIN_TARGET)
@@ -547,7 +608,13 @@ function(_qt_internal_target_enable_qmllint target)
     # for an executable though, since it can never be found as a QML module for
     # a different QML module/target.
     get_target_property(target_type ${target} TYPE)
-    if(target_type MATCHES "LIBRARY")
+    get_target_property(is_android_executable ${target} _qt_is_android_executable)
+    if(target_type STREQUAL "EXECUTABLE" OR is_android_executable)
+        # The executable's own QML module's qmldir file will usually be under a
+        # subdirectory (matching the module's target path) below the target's
+        # build directory.
+        list(APPEND import_args -I "$<TARGET_PROPERTY:${target},BINARY_DIR>")
+    elseif(target_type MATCHES "LIBRARY")
         get_target_property(output_dir  ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
         get_target_property(target_path ${target} QT_QML_MODULE_TARGET_PATH)
         if(output_dir MATCHES "${target_path}$")

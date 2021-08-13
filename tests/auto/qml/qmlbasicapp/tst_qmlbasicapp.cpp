@@ -77,9 +77,9 @@ void tst_basicapp::resourceFiles()
 void tst_basicapp::fileSystemFiles()
 {
     const QString basedir = QCoreApplication::applicationDirPath();
-    QVERIFY(QFile::exists(basedir + QStringLiteral("/main.qml")));
-    QVERIFY(QFile::exists(basedir + QStringLiteral("/qmldir")));
-    QVERIFY(QFile::exists(basedir + QStringLiteral("/tst_qmlbasicapp.qmltypes")));
+    QVERIFY(QFile::exists(basedir + QStringLiteral("/BasicApp/main.qml")));
+    QVERIFY(QFile::exists(basedir + QStringLiteral("/BasicApp/qmldir")));
+    QVERIFY(QFile::exists(basedir + QStringLiteral("/BasicApp/tst_qmlbasicapp.qmltypes")));
     QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/Clock.qml")));
 
     QVERIFY(QFile::exists(basedir + QStringLiteral("/TimeExample/center.png")));
@@ -93,7 +93,7 @@ void tst_basicapp::fileSystemFiles()
 void tst_basicapp::qmldirContents()
 {
     {
-        QFile qmldir(QCoreApplication::applicationDirPath() + "/qmldir");
+        QFile qmldir(QCoreApplication::applicationDirPath() + "/BasicApp/qmldir");
         QVERIFY(qmldir.open(QIODevice::ReadOnly));
         const QByteArray contents = qmldir.readAll();
         QVERIFY(contents.contains("module BasicApp"));
