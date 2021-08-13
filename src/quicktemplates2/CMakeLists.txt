@@ -12,7 +12,6 @@ qt_internal_add_qml_module(QuickTemplates2
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
     SOURCES
-        accessible/qaccessiblequickpage.cpp accessible/qaccessiblequickpage_p.h
         qquickabstractbutton.cpp qquickabstractbutton_p.h
         qquickabstractbutton_p_p.h
         qquickaction.cpp qquickaction_p.h
@@ -142,6 +141,11 @@ qt_internal_extend_target(QuickTemplates2 CONDITION TARGET Qt::QmlModels
         Qt::QmlModels
     PRIVATE_MODULE_INTERFACE
         Qt::QmlModelsPrivate
+)
+
+qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_accessibility
+    SOURCES
+        accessible/qaccessiblequickpage.cpp accessible/qaccessiblequickpage_p.h
 )
 
 qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quick_tableview

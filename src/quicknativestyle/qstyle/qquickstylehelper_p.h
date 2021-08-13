@@ -39,7 +39,9 @@
 #include <QtGui/qpaintdevice.h>
 #include <QtGui/qpolygon.h>
 #include <QtCore/qstringbuilder.h>
+#if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
+#endif
 
 #ifndef QSTYLEHELPER_P_H
 #define QSTYLEHELPER_P_H
@@ -84,8 +86,10 @@ namespace QStyleHelper
                      int left = 0, int top = 0, int right = 0,
                      int bottom = 0);
 
+#if QT_CONFIG(accessibility)
     bool isInstanceOf(QObject *obj, QAccessible::Role role);
     bool hasAncestor(QObject *obj, QAccessible::Role role);
+#endif
     QColor backgroundColor(const QPalette &pal);
 
     enum WidgetSizePolicy { SizeLarge = 0, SizeSmall = 1, SizeMini = 2, SizeDefault = -1 };

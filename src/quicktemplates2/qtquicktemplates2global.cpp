@@ -36,8 +36,15 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
+#include "qtquicktemplates2global_p.h"
+
+#include <QtGui/qtguiglobal.h>
+
+#if QT_CONFIG(accessibility)
 #include "qquickpage_p.h"
 #include "accessible/qaccessiblequickpage_p.h"
+#endif
 
 QT_BEGIN_NAMESPACE
 
