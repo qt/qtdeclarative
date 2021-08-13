@@ -244,8 +244,9 @@ void tst_QQuickFontDialogImpl::listViews()
 
         const QString expected2 = fontListModel[i],
                       actual2 = dialogHelper.dialog->currentFont().family();
-        QVERIFY2(expected2 == actual2, qPrintable(err.arg(expected2, actual2).append(" font: ").append(fontDelegate->text())));
-        QVERIFY2(currentFontSpy.count() == 1, qPrintable(err.arg(1, currentFontSpy.count())));
+        QVERIFY2(expected2 == actual2, qPrintable(err.arg(expected2, actual2).append(", FONT ").append(fontDelegate->text())));
+        const int currentFontSpyCount = currentFontSpy.count();
+        QVERIFY2(currentFontSpyCount == 1, qPrintable(err.arg(1).arg(currentFontSpyCount).append(", FONT ").append(fontDelegate->text())));
         QVERIFY2((oldStyleModel == fontStyleListView->model()) != (styleModelSpy.count() == 1),
                  qPrintable(QString("LOOP INDEX %1").arg(i)));
         QVERIFY2((oldSizeModel == fontSizeListView->model()) != (sizeModelSpy.count() == 1),
