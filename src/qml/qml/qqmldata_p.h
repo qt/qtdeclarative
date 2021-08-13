@@ -132,7 +132,7 @@ public:
     quint32 isQueuedForDeletion:1;
     /*
      * rootObjectInCreation should be true only when creating top level CPP and QML objects,
-     * v8 GC will check this flag, only deletes the objects when rootObjectInCreation is false.
+     * v4 GC will check this flag, only deletes the objects when rootObjectInCreation is false.
      */
     quint32 rootObjectInCreation:1;
     // set when at least one of the object's properties is intercepted

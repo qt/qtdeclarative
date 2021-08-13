@@ -171,7 +171,7 @@ QString QQmlBoundSignalExpression::expression() const
     return QString();
 }
 
-// Parts of this function mirror code in QQmlExpressionPrivate::value() and v8value().
+// Parts of this function mirror code in QQmlExpressionPrivate::value() and v4Value().
 // Changes made here may need to be made there and vice versa.
 void QQmlBoundSignalExpression::evaluate(void **a)
 {

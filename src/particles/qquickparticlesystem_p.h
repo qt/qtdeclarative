@@ -340,7 +340,7 @@ public:
     static inline constexpr float EPSILON() noexcept { return 0.001f; }
 
 private:
-    QQuickV4ParticleData* v8Datum;
+    QQuickV4ParticleData* v4Datum;
 };
 
 class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleSystem : public QQuickItem

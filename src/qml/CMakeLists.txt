@@ -149,6 +149,7 @@ qt_internal_add_qml_module(Qml
         jsruntime/qv4dataview.cpp jsruntime/qv4dataview_p.h
         jsruntime/qv4dateobject.cpp jsruntime/qv4dateobject_p.h
         jsruntime/qv4debugging_p.h
+        jsruntime/qv4domerrors.cpp jsruntime/qv4domerrors_p.h
         jsruntime/qv4engine.cpp jsruntime/qv4engine_p.h
         jsruntime/qv4enginebase_p.h
         jsruntime/qv4errorobject.cpp jsruntime/qv4errorobject_p.h
@@ -201,6 +202,7 @@ qt_internal_add_qml_module(Qml
         jsruntime/qv4setiterator.cpp jsruntime/qv4setiterator_p.h
         jsruntime/qv4setobject.cpp jsruntime/qv4setobject_p.h
         jsruntime/qv4sparsearray.cpp jsruntime/qv4sparsearray_p.h
+        jsruntime/qv4sqlerrors.cpp jsruntime/qv4sqlerrors_p.h
         jsruntime/qv4stackframe.cpp jsruntime/qv4stackframe_p.h
         jsruntime/qv4string.cpp jsruntime/qv4string_p.h
         jsruntime/qv4stringiterator.cpp jsruntime/qv4stringiterator_p.h
@@ -246,6 +248,7 @@ qt_internal_add_qml_module(Qml
         qml/qqmlapplicationengine.cpp qml/qqmlapplicationengine.h qml/qqmlapplicationengine_p.h
         qml/qqmlbinding.cpp qml/qqmlbinding_p.h
         qml/qqmlboundsignal.cpp qml/qqmlboundsignal_p.h
+        qml/qqmlbuiltinfunctions.cpp qml/qqmlbuiltinfunctions_p.h
         qml/qqmlcomponent.cpp qml/qqmlcomponent.h qml/qqmlcomponent_p.h
         qml/qqmlcomponentattached_p.h
         qml/qqmlcontext.cpp qml/qqmlcontext.h qml/qqmlcontext_p.h
@@ -324,9 +327,6 @@ qt_internal_add_qml_module(Qml
         qml/qqmlvaluetypewrapper.cpp qml/qqmlvaluetypewrapper_p.h
         qml/qqmlvme.cpp qml/qqmlvme_p.h
         qml/qqmlvmemetaobject.cpp qml/qqmlvmemetaobject_p.h
-        qml/v8/qqmlbuiltinfunctions.cpp qml/v8/qqmlbuiltinfunctions_p.h
-        qml/v8/qv4domerrors.cpp qml/v8/qv4domerrors_p.h
-        qml/v8/qv4sqlerrors.cpp qml/v8/qv4sqlerrors_p.h
         qmldirparser/qqmldirparser.cpp qmldirparser/qqmldirparser_p.h
         qmldirparser/qqmlimportresolver.cpp qmldirparser/qqmlimportresolver_p.h
         qtqmlcompilerglobal.h qtqmlcompilerglobal_p.h
