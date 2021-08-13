@@ -114,6 +114,7 @@ qreal dpiScaled(qreal value, const QStyleOption *option)
     return dpiScaled(value, dpi(option));
 }
 
+#if QT_CONFIG(accessibility)
 bool isInstanceOf(QObject *obj, QAccessible::Role role)
 {
     bool match = false;
@@ -134,7 +135,7 @@ bool hasAncestor(QObject *obj, QAccessible::Role role)
     }
     return found;
 }
-
+#endif
 
 int calcBigLineSize(int radius)
 {
