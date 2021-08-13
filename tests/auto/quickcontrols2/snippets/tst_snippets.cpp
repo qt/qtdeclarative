@@ -79,7 +79,7 @@ void tst_Snippets::initTestCase()
 
     QDir screenshotsDir(QDir::current().filePath("screenshots"));
 
-    takeScreenshots = qgetenv("SCREENSHOTS").toInt();
+    takeScreenshots = qEnvironmentVariableIntValue("SCREENSHOTS");
     if (takeScreenshots)
         QVERIFY(screenshotsDir.exists() || QDir::current().mkpath("screenshots"));
 
