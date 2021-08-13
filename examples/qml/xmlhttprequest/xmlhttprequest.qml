@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,17 +48,28 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import "../../quick/shared" as Examples
+import QtQuick
+import QtQuick.Controls
+import "methods.js" as Utils
+
 
 Item {
     height: 480
     width: 320
-    Examples.LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("Get data", "Send get request and show received header and body",  Qt.resolvedUrl("Get.qml"));
-        }
+
+    property alias msg: ttext
+
+    Label { id: ttext; anchors.fill: parent; anchors.margins: 10 }
+
+    Button {
+        id: button
+        anchors.horizontalCenter: parent.horizontalCenter;
+        anchors.bottom: parent.bottom
+        anchors.margins: 10
+        antialiasing: true
+
+        text: qsTr("Request data.xml")
+
+        onClicked: Utils.makeRequest()
     }
 }
