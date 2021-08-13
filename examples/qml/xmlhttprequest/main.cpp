@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,5 +47,27 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "../../quick/shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(qml/xmlhttprequest/xmlhttprequest)
+
+#include <QDir>
+#include <QGuiApplication>
+#include <QQmlFileSelector>
+#include <QQuickView>
+
+int main(int argc, char *argv[])
+{
+    QGuiApplication app(argc, argv);
+    app.setOrganizationName("QtProject");
+    app.setOrganizationDomain("qt-project.org");
+    app.setApplicationName(QFileInfo(app.applicationFilePath()).baseName());
+    QQuickView view;
+
+    qputenv("QML_XHR_ALLOW_FILE_READ", QByteArray("1"));
+
+    view.connect(view.engine(), &QQmlEngine::quit, &app, &QCoreApplication::quit);
+    view.setSource(QUrl("qrc:///xmlhttprequest/xmlhttprequest.qml"));
+    if (view.status() == QQuickView::Error)
+        return -1;
+    view.setResizeMode(QQuickView::SizeRootObjectToView);
+    view.show();
+    return app.exec();
+}
