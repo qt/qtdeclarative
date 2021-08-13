@@ -55,7 +55,7 @@ int qt_sg_envInt(const char *name, int defaultValue)
     if (Q_LIKELY(!qEnvironmentVariableIsSet(name)))
         return defaultValue;
     bool ok = false;
-    int value = qgetenv(name).toInt(&ok);
+    int value = qEnvironmentVariableIntValue(name, &ok);
     return ok ? value : defaultValue;
 }
 

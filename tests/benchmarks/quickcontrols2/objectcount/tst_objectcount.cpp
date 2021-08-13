@@ -42,7 +42,7 @@
 
 using namespace QQuickVisualTestUtil;
 
-static int qt_verbose = qgetenv("VERBOSE").toInt() != 0;
+static int qt_verbose = qEnvironmentVariableIntValue("VERBOSE") != 0;
 
 Q_GLOBAL_STATIC(QObjectList, qt_qobjects)
 

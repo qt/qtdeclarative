@@ -59,13 +59,13 @@
     app.setOrganizationDomain("qt-project.org");\
     app.setApplicationName(QFileInfo(app.applicationFilePath()).baseName());\
     QQuickView view;\
-    if (qgetenv("QT_QUICK_CORE_PROFILE").toInt()) {\
+    if (qEnvironmentVariableIntValue("QT_QUICK_CORE_PROFILE")) {\
         QSurfaceFormat f = view.format();\
         f.setProfile(QSurfaceFormat::CoreProfile);\
         f.setVersion(4, 4);\
         view.setFormat(f);\
     }\
-    if (qgetenv("QT_QUICK_MULTISAMPLE").toInt()) {\
+    if (qEnvironmentVariableIntValue("QT_QUICK_MULTISAMPLE")) {\
         QSurfaceFormat f = view.format();\
         f.setSamples(4);\
         view.setFormat(f);\
