@@ -1310,24 +1310,27 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
         }
 
         bool seenSubObjectWithId = false;
-
-        if (binding->type >= QV4::CompiledData::Binding::Type_Object && (pd || binding->isAttachedProperty())) {
-            qSwap(_seenObjectWithId, seenSubObjectWithId);
-            const bool subObjectValid = scanObject(binding->value.objectIndex);
-            qSwap(_seenObjectWithId, seenSubObjectWithId);
-            if (!subObjectValid)
-                return false;
-            _seenObjectWithId |= seenSubObjectWithId;
+        bool isExternal = false;
+        if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
+            const bool isOwnProperty = pd || binding->isAttachedProperty();
+            isExternal = !isOwnProperty && binding->isGroupProperty();
+            if (isOwnProperty || isExternal) {
+                qSwap(_seenObjectWithId, seenSubObjectWithId);
+                const bool subObjectValid = scanObject(binding->value.objectIndex);
+                qSwap(_seenObjectWithId, seenSubObjectWithId);
+                if (!subObjectValid)
+                    return false;
+                _seenObjectWithId |= seenSubObjectWithId;
+            }
         }
 
+        bool isDeferred = false;
         if (!immediatePropertyNames.isEmpty() && !immediatePropertyNames.contains(name)) {
             if (seenSubObjectWithId) {
                 COMPILE_EXCEPTION(binding, tr("You cannot assign an id to an object assigned "
                                               "to a deferred property."));
             }
-
-            binding->flags |= QV4::CompiledData::Binding::IsDeferredBinding;
-            obj->flags |= QV4::CompiledData::Object::HasDeferredBindings;
+            isDeferred = true;
         } else if (!deferredPropertyNames.isEmpty() && deferredPropertyNames.contains(name)) {
             if (seenSubObjectWithId) {
                 qWarning("Binding on %s is not deferred as requested by the DeferredPropertyNames "
@@ -1337,9 +1340,20 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
                 qWarning("Binding on %s is not deferred as requested by the DeferredPropertyNames "
                          "class info because it constitutes a group property.", qPrintable(name));
             } else {
-                binding->flags |= QV4::CompiledData::Binding::IsDeferredBinding;
-                obj->flags |= QV4::CompiledData::Object::HasDeferredBindings;
+                isDeferred = true;
             }
+        }
+
+        if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
+            if (isExternal && !isDeferred && !customParser) {
+                COMPILE_EXCEPTION(
+                            binding, tr("Cannot assign to non-existent property \"%1\"").arg(name));
+            }
+        }
+
+        if (isDeferred) {
+            binding->flags |= QV4::CompiledData::Binding::IsDeferredBinding;
+            obj->flags |= QV4::CompiledData::Object::HasDeferredBindings;
         }
 
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression

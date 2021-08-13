@@ -1414,8 +1414,8 @@ void QQmlData::deferData(
     const QV4::CompiledData::Binding *binding = compiledObject->bindingTable();
     for (quint32 i = 0; i < compiledObject->nBindings; ++i, ++binding) {
         const QQmlPropertyData *property = propertyData.at(i);
-        if (property && binding->flags & QV4::CompiledData::Binding::IsDeferredBinding)
-            deferData->bindings.insert(property->coreIndex(), binding);
+        if (binding->flags & QV4::CompiledData::Binding::IsDeferredBinding)
+            deferData->bindings.insert(property ? property->coreIndex() : -1, binding);
     }
 
     deferredData.append(deferData);

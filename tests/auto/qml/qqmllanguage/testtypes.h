@@ -1438,6 +1438,12 @@ private:
     QObjectList m_list;
 };
 
+class ImmediateProperties : public QObject
+{
+    Q_OBJECT
+    Q_CLASSINFO("ImmediatePropertyNames", "objectName")
+};
+
 namespace ScopedEnumsWithNameClash
 {
 Q_NAMESPACE

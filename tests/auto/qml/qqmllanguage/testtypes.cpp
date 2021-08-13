@@ -118,6 +118,7 @@ void registerTypes()
 
     qmlRegisterType<LazyDeferredSubObject>("Test", 1, 0, "LazyDeferredSubObject");
     qmlRegisterType<DeferredProperties>("Test", 1, 0, "DeferredProperties");
+    qmlRegisterType<ImmediateProperties>("Test", 1, 0, "ImmediateProperties");
 
     qmlRegisterTypesAndRevisions<Extended, Foreign, ForeignExtended>("Test", 1);
     qmlRegisterTypesAndRevisions<BareSingleton>("Test", 1);

@@ -147,11 +147,15 @@ void QQmlPendingGroupPropertyBindings::resolveMissingPropertyCaches(QQmlEnginePr
         if (propertyCaches->at(groupPropertyObjectIndex))
             continue;
 
-        if (!pendingBinding.resolveInstantiatingProperty())
-            continue;
-
-        auto cache = pendingBinding.instantiatingPropertyCache(enginePrivate);
-        propertyCaches->set(groupPropertyObjectIndex, cache);
+        if (pendingBinding.referencingObjectPropertyCache) {
+            if (!pendingBinding.resolveInstantiatingProperty())
+                continue;
+            auto cache = pendingBinding.instantiatingPropertyCache(enginePrivate);
+            propertyCaches->set(groupPropertyObjectIndex, cache);
+        } else {
+            auto cache = propertyCaches->at(pendingBinding.referencingObjectIndex);
+            propertyCaches->set(groupPropertyObjectIndex, cache);
+        }
     }
 }
 

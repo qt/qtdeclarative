@@ -389,22 +389,41 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
         }
 
         return typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
-    } else if (context.instantiatingBinding && context.instantiatingBinding->isAttachedProperty()) {
-        auto *typeRef = objectContainer->resolvedType(
-                context.instantiatingBinding->propertyNameIndex);
-        Q_ASSERT(typeRef);
-        QQmlType qmltype = typeRef->type();
-        if (!qmltype.isValid()) {
-            imports->resolveType(stringAt(context.instantiatingBinding->propertyNameIndex),
-                                 &qmltype, nullptr, nullptr, nullptr);
-        }
+    } else if (const QV4::CompiledData::Binding *binding = context.instantiatingBinding) {
+        if (binding->isAttachedProperty()) {
+            auto *typeRef = objectContainer->resolvedType(
+                    binding->propertyNameIndex);
+            Q_ASSERT(typeRef);
+            QQmlType qmltype = typeRef->type();
+            if (!qmltype.isValid()) {
+                imports->resolveType(stringAt(binding->propertyNameIndex),
+                                     &qmltype, nullptr, nullptr, nullptr);
+            }
 
-        const QMetaObject *attachedMo = qmltype.attachedPropertiesType(enginePrivate);
-        if (!attachedMo) {
-            *error = qQmlCompileError(context.instantiatingBinding->location, QQmlPropertyCacheCreatorBase::tr("Non-existent attached object"));
-            return nullptr;
+            const QMetaObject *attachedMo = qmltype.attachedPropertiesType(enginePrivate);
+            if (!attachedMo) {
+                *error = qQmlCompileError(binding->location, QQmlPropertyCacheCreatorBase::tr("Non-existent attached object"));
+                return nullptr;
+            }
+            return enginePrivate->cache(attachedMo);
+        } else if (binding->isGroupProperty()) {
+            const auto *obj = objectContainer->objectAt(binding->value.objectIndex);
+            if (!stringAt(obj->inheritedTypeNameIndex).isEmpty())
+                return nullptr;
+
+            for (int i = 0, end = objectContainer->objectCount(); i != end; ++i) {
+                const auto *ext = objectContainer->objectAt(i);
+                if (ext->idNameIndex != binding->propertyNameIndex)
+                    continue;
+
+                if (ext->inheritedTypeNameIndex == 0)
+                    return nullptr;
+
+                QQmlBindingInstantiationContext pendingContext(i, &(*binding), QString(), nullptr);
+                pendingGroupPropertyBindings->append(pendingContext);
+                return nullptr;
+            }
         }
-        return enginePrivate->cache(attachedMo);
     }
     return nullptr;
 }

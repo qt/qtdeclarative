@@ -381,6 +381,7 @@ private slots:
 
     void jittedAsCast();
     void propertyNecromancy();
+    void generalizedGroupedProperty();
 
 private:
     QQmlEngine engine;
@@ -6571,6 +6572,58 @@ void tst_qqmllanguage::propertyNecromancy()
     // It becomes null, not undefined.
     QTRY_VERIFY(o->property("notified").isNull());
     QVERIFY(o->property("notified").isValid());
+}
+
+void tst_qqmllanguage::generalizedGroupedProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("generalizedGroupedProperty.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(o->objectName(), QStringLiteral("foo"));
+
+    ImmediateProperties *child = qvariant_cast<ImmediateProperties *>(o->property("child"));
+    QVERIFY(child);
+    QCOMPARE(child->objectName(), QStringLiteral("barrrrr"));
+    qmlExecuteDeferred(child);
+    QCOMPARE(o->objectName(), QStringLiteral("barrrrr ..."));
+
+    o->metaObject()->invokeMethod(o.data(), "something");
+    QCOMPARE(o->objectName(), QStringLiteral("rabrab ..."));
+
+    ImmediateProperties *meanChild = qvariant_cast<ImmediateProperties *>(o->property("meanChild"));
+    QVERIFY(meanChild);
+    qmlExecuteDeferred(meanChild);
+    QCOMPARE(child->objectName(), QStringLiteral("bar"));
+    QCOMPARE(o->objectName(), QStringLiteral("bar ..."));
+
+    ImmediateProperties *deferred = qvariant_cast<ImmediateProperties *>(o->property("deferred"));
+    QVERIFY(deferred);
+    QCOMPARE(deferred->objectName(), QStringLiteral("holz"));
+    qmlExecuteDeferred(deferred);
+    QCOMPARE(o->objectName(), QStringLiteral("holz ..."));
+
+    ImmediateProperties *meanDeferred
+            = qvariant_cast<ImmediateProperties *>(o->property("meanDeferred"));
+    QVERIFY(meanDeferred);
+    qmlExecuteDeferred(meanDeferred);
+    QCOMPARE(deferred->objectName(), QStringLiteral("stein"));
+    QCOMPARE(o->objectName(), QStringLiteral("stein ..."));
+
+    {
+        QQmlComponent bad(&engine, testFileUrl("badGeneralizedGroupedProperty.qml"));
+        QVERIFY(bad.isError());
+        QVERIFY(bad.errorString().contains(
+                    QStringLiteral("Cannot assign to non-existent property \"root\"")));
+    }
+
+    {
+        QQmlComponent bad(&engine, testFileUrl("badGeneralizedGroupedProperty2.qml"));
+        QVERIFY(bad.isError());
+        QVERIFY(bad.errorString().contains(QStringLiteral("Invalid grouped property access")));
+    }
 }
 
 QTEST_MAIN(tst_qqmllanguage)

@@ -228,7 +228,8 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
             return recordError(binding->location, tr("Invalid attached object assignment"));
         }
 
-        if (binding->type >= QV4::CompiledData::Binding::Type_Object && (pd || binding->isAttachedProperty())) {
+        if (binding->type >= QV4::CompiledData::Binding::Type_Object
+                && (pd || binding->isAttachedProperty() || binding->isGroupProperty())) {
             const bool populatingValueTypeGroupProperty
                     = pd
                       && QQmlMetaType::metaObjectForValueType(pd->propType())
@@ -247,9 +248,15 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
             continue;
         }
 
-        if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
-            if (instantiatingBinding && (instantiatingBinding->isAttachedProperty() || instantiatingBinding->isGroupProperty())) {
-                return recordError(binding->location, tr("Attached properties cannot be used here"));
+        if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty
+                || (!pd && binding->type == QV4::CompiledData::Binding::Type_GroupProperty)) {
+            if (instantiatingBinding && (instantiatingBinding->isAttachedProperty()
+                                         || instantiatingBinding->isGroupProperty())) {
+                return recordError(
+                            binding->location, tr("%1 properties cannot be used here")
+                            .arg(binding->type == QV4::CompiledData::Binding::Type_AttachedProperty
+                                 ? QStringLiteral("Attached")
+                                 : QStringLiteral("Group")));
             }
             continue;
         }

@@ -261,37 +261,7 @@ void QQmlObjectCreator::populateDeferred(QObject *instance, int deferredIndex,
                                          const QQmlPropertyPrivate *qmlProperty,
                                          const QV4::CompiledData::Binding *binding)
 {
-    QQmlData *declarativeData = QQmlData::get(instance);
-    QObject *bindingTarget = instance;
-
-    QQmlRefPointer<QQmlPropertyCache> cache = declarativeData->propertyCache;
-    QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(instance);
-
-    QObject *scopeObject = instance;
-    qSwap(_scopeObject, scopeObject);
-
-    QV4::Scope valueScope(v4);
-    QScopedValueRollback<QV4::Value*> jsObjectGuard(sharedState->allJavaScriptObjects,
-                                                    valueScope.alloc(compilationUnit->totalObjectCount()));
-
-    Q_ASSERT(topLevelCreator);
-    QV4::QmlContext *qmlContext = static_cast<QV4::QmlContext *>(valueScope.alloc());
-
-    qSwap(_qmlContext, qmlContext);
-
-    qSwap(_propertyCache, cache);
-    qSwap(_qobject, instance);
-
-    int objectIndex = deferredIndex;
-    qSwap(_compiledObjectIndex, objectIndex);
-
-    const QV4::CompiledData::Object *obj = compilationUnit->objectAt(_compiledObjectIndex);
-    qSwap(_compiledObject, obj);
-    qSwap(_ddata, declarativeData);
-    qSwap(_bindingTarget, bindingTarget);
-    qSwap(_vmeMetaObject, vmeMetaObject);
-
-    if (binding) {
+    doPopulateDeferred(instance, deferredIndex, [this, qmlProperty, binding]() {
         Q_ASSERT(qmlProperty);
         Q_ASSERT(binding->flags & QV4::CompiledData::Binding::IsDeferredBinding);
 
@@ -310,20 +280,12 @@ void QQmlObjectCreator::populateDeferred(QObject *instance, int deferredIndex,
         setPropertyBinding(&property, binding);
 
         qSwap(_currentList, savedList);
-    } else {
-        setupBindings(/*applyDeferredBindings=*/true);
-    }
+    });
+}
 
-    qSwap(_vmeMetaObject, vmeMetaObject);
-    qSwap(_bindingTarget, bindingTarget);
-    qSwap(_ddata, declarativeData);
-    qSwap(_compiledObject, obj);
-    qSwap(_compiledObjectIndex, objectIndex);
-    qSwap(_qobject, instance);
-    qSwap(_propertyCache, cache);
-
-    qSwap(_qmlContext, qmlContext);
-    qSwap(_scopeObject, scopeObject);
+void QQmlObjectCreator::populateDeferred(QObject *instance, int deferredIndex)
+{
+    doPopulateDeferred(instance, deferredIndex, [this]() { setupBindings(true); });
 }
 
 bool QQmlObjectCreator::populateDeferredProperties(QObject *instance,
@@ -338,8 +300,12 @@ bool QQmlObjectCreator::populateDeferredProperties(QObject *instance,
 void QQmlObjectCreator::populateDeferredBinding(const QQmlProperty &qmlProperty, int deferredIndex,
                                                 const QV4::CompiledData::Binding *binding)
 {
-    populateDeferred(qmlProperty.object(), deferredIndex, QQmlPropertyPrivate::get(qmlProperty),
-                     binding);
+    if (binding) {
+        populateDeferred(qmlProperty.object(), deferredIndex, QQmlPropertyPrivate::get(qmlProperty),
+                         binding);
+    } else {
+        populateDeferred(qmlProperty.object(), deferredIndex);
+    }
 }
 
 void QQmlObjectCreator::finalizePopulateDeferred()
@@ -835,9 +801,6 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
             return false;
     }
 
-    if (!bindingProperty) // ### error
-        return true;
-
     if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
         const QV4::CompiledData::Object *obj = compilationUnit->objectAt(binding->value.objectIndex);
         if (stringAt(obj->inheritedTypeNameIndex).isEmpty()) {
@@ -846,8 +809,19 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
             QQmlGadgetPtrWrapper *valueType = nullptr;
             const QQmlPropertyData *valueTypeProperty = nullptr;
             QObject *bindingTarget = _bindingTarget;
+            int groupObjectIndex = binding->value.objectIndex;
 
-            if (QQmlMetaType::isValueType(bindingProperty->propType())) {
+            if (!bindingProperty) {
+                for (int i = 0, end = compilationUnit->objectCount(); i != end; ++i) {
+                    const QV4::CompiledData::Object *external = compilationUnit->objectAt(i);
+                    if (external->idNameIndex == binding->propertyNameIndex) {
+                        bindingTarget = groupObject = context->idValue(external->id);
+                        break;
+                    }
+                }
+                if (!groupObject)
+                    return true;
+            } else if (QQmlMetaType::isValueType(bindingProperty->propType())) {
                 valueType = QQmlGadgetPtrWrapper::instance(engine, bindingProperty->propType());
                 if (!valueType) {
                     recordError(binding->location, tr("Cannot set properties on %1 as it is null").arg(stringAt(binding->propertyNameIndex)));
@@ -869,9 +843,10 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 bindingTarget = groupObject;
             }
 
-            if (!populateInstance(binding->value.objectIndex, groupObject, bindingTarget,
-                                  valueTypeProperty, binding))
+            if (!populateInstance(groupObjectIndex, groupObject, bindingTarget, valueTypeProperty,
+                                  binding)) {
                 return false;
+            }
 
             if (valueType)
                 valueType->write(_qobject, bindingProperty->coreIndex(), QQmlPropertyData::BypassInterceptor);
@@ -879,6 +854,9 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
             return true;
         }
     }
+
+    if (!bindingProperty) // ### error
+        return true;
 
     const bool allowedToRemoveBinding = !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
             && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment)
@@ -1565,6 +1543,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     qSwap(_propertyCache, cache);
     qSwap(_vmeMetaObject, vmeMetaObject);
 
+    _ddata->compilationUnit = compilationUnit;
     if (_compiledObject->flags & QV4::CompiledData::Object::HasDeferredBindings)
         _ddata->deferData(_compiledObjectIndex, compilationUnit, context);
 
