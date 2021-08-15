@@ -403,42 +403,42 @@ void QQuickItemKeyFilter::componentComplete()
 */
 
 /*!
-    \qmlproperty Item QtQuick::KeyNavigation::left
+    \qmlattachedproperty Item QtQuick::KeyNavigation::left
 
     This property holds the item to assign focus to
     when the left cursor key is pressed.
 */
 
 /*!
-    \qmlproperty Item QtQuick::KeyNavigation::right
+    \qmlattachedproperty Item QtQuick::KeyNavigation::right
 
     This property holds the item to assign focus to
     when the right cursor key is pressed.
 */
 
 /*!
-    \qmlproperty Item QtQuick::KeyNavigation::up
+    \qmlattachedproperty Item QtQuick::KeyNavigation::up
 
     This property holds the item to assign focus to
     when the up cursor key is pressed.
 */
 
 /*!
-    \qmlproperty Item QtQuick::KeyNavigation::down
+    \qmlattachedproperty Item QtQuick::KeyNavigation::down
 
     This property holds the item to assign focus to
     when the down cursor key is pressed.
 */
 
 /*!
-    \qmlproperty Item QtQuick::KeyNavigation::tab
+    \qmlattachedproperty Item QtQuick::KeyNavigation::tab
 
     This property holds the item to assign focus to
     when the Tab key is pressed.
 */
 
 /*!
-    \qmlproperty Item QtQuick::KeyNavigation::backtab
+    \qmlattachedproperty Item QtQuick::KeyNavigation::backtab
 
     This property holds the item to assign focus to
     when the Shift+Tab key combination (Backtab) is pressed.
@@ -590,7 +590,7 @@ void QQuickKeyNavigationAttached::setBacktab(QQuickItem *i)
 }
 
 /*!
-    \qmlproperty enumeration QtQuick::KeyNavigation::priority
+    \qmlattachedproperty enumeration QtQuick::KeyNavigation::priority
 
     This property determines whether the keys are processed before
     or after the attached item's own key handling.
