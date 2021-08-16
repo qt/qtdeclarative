@@ -41,7 +41,7 @@ qt_import_qml_plugins(...)
 
 \endcode
 
-\versionlessNote qt6_import_qml_plugins()
+\versionlessCMakeCommandsNote qt6_import_qml_plugins()
 
 \section1 Description
 

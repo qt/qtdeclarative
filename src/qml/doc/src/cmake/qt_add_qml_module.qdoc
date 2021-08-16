@@ -68,7 +68,7 @@ qt_add_qml_module(
 
 \endcode
 
-\versionlessNote qt6_add_qml_module()
+\versionlessCMakeCommandsNote qt6_add_qml_module()
 
 \section1 Description
 

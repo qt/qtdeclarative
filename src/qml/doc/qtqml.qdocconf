@@ -65,5 +65,3 @@ manifestmeta.thumbnail.names += "QtQml/Chapter 4*" \
 navigation.landingpage = "Qt QML"
 navigation.cppclassespage = "Qt QML C++ Classes"
 navigation.qmltypespage = "Qt QML QML Types"
-
-macro.versionlessNote = "If \\l{Versionless commands}{versionless commands} are disabled, use \\c{\1} instead. It supports the same set of arguments as this command."
