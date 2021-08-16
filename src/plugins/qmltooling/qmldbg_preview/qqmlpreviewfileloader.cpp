@@ -99,7 +99,7 @@ QQmlPreviewFileLoader::~QQmlPreviewFileLoader() {
 
 QQmlPreviewFileLoader::Result QQmlPreviewFileLoader::load(const QString &path)
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_contentMutex);
     m_path = path;
 
     auto fileIterator = m_fileCache.constFind(path);
@@ -122,19 +122,19 @@ QQmlPreviewFileLoader::Result QQmlPreviewFileLoader::load(const QString &path)
     m_entries.clear();
     m_contents.clear();
     emit request(path);
-    m_waitCondition.wait(&m_mutex);
+    m_waitCondition.wait(&m_contentMutex);
     return m_result;
 }
 
 QByteArray QQmlPreviewFileLoader::contents()
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_contentMutex);
     return m_contents;
 }
 
 QStringList QQmlPreviewFileLoader::entries()
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_contentMutex);
     return m_entries;
 }
 
@@ -142,20 +142,20 @@ void QQmlPreviewFileLoader::whitelist(const QUrl &url)
 {
     const QString path = QQmlFile::urlToLocalFileOrQrc(url);
     if (!path.isEmpty()) {
-        QMutexLocker locker(&m_mutex);
+        QMutexLocker locker(&m_contentMutex);
         m_blacklist.whitelist(path);
     }
 }
 
 bool QQmlPreviewFileLoader::isBlacklisted(const QString &path)
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_contentMutex);
     return m_blacklist.isBlacklisted(path);
 }
 
 void QQmlPreviewFileLoader::file(const QString &path, const QByteArray &contents)
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_contentMutex);
     m_blacklist.whitelist(path);
     m_fileCache[path] = contents;
     if (path == m_path) {
@@ -167,7 +167,7 @@ void QQmlPreviewFileLoader::file(const QString &path, const QByteArray &contents
 
 void QQmlPreviewFileLoader::directory(const QString &path, const QStringList &entries)
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_contentMutex);
     m_blacklist.whitelist(path);
     m_directoryCache[path] = entries;
     if (path == m_path) {
@@ -179,7 +179,7 @@ void QQmlPreviewFileLoader::directory(const QString &path, const QStringList &en
 
 void QQmlPreviewFileLoader::error(const QString &path)
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_contentMutex);
     m_blacklist.blacklist(path);
     if (path == m_path) {
         m_result = Fallback;
@@ -189,7 +189,7 @@ void QQmlPreviewFileLoader::error(const QString &path)
 
 void QQmlPreviewFileLoader::clearCache()
 {
-    QMutexLocker locker(&m_mutex);
+    QMutexLocker locker(&m_contentMutex);
     m_fileCache.clear();
     m_directoryCache.clear();
 }

@@ -79,7 +79,9 @@ public:
     QQmlPreviewFileLoader(QQmlPreviewServiceImpl *service);
     ~QQmlPreviewFileLoader();
 
+    QMutex *loadMutex() { return &m_loadMutex; }
     Result load(const QString &file);
+
     QByteArray contents();
     QStringList entries();
 
@@ -90,7 +92,8 @@ signals:
     void request(const QString &file);
 
 private:
-    QMutex m_mutex;
+    QMutex m_loadMutex;
+    QMutex m_contentMutex;
     QWaitCondition m_waitCondition;
 
     QThread m_thread;
