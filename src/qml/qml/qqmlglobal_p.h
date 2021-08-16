@@ -171,7 +171,7 @@ T qmlobject_cast(QObject *object)
     if (object && QQmlMetaObject::canConvert(object, &reinterpret_cast<T>(object)->staticMetaObject))
         return static_cast<T>(object);
     else
-        return 0;
+        return nullptr;
 }
 
 #define IS_SIGNAL_CONNECTED(Sender, SenderType, Name, Arguments) \
