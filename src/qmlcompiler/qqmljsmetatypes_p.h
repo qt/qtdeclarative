@@ -42,6 +42,7 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qsharedpointer.h>
+#include <QtCore/qvariant.h>
 
 #include "qqmljsannotation_p.h"
 
@@ -351,9 +352,11 @@ class QQmlJSMetaPropertyBinding
     QString m_valueTypeName;
     QString m_interceptorTypeName;
     QString m_valueSourceTypeName;
+    QVariant m_literalValue;
     QWeakPointer<const QQmlJSScope> m_value;
     QWeakPointer<const QQmlJSScope> m_interceptor;
     QWeakPointer<const QQmlJSScope> m_valueSource;
+    QQmlJS::SourceLocation m_sourceLocation;
 
 public:
 
@@ -395,6 +398,16 @@ public:
         m_valueSource = valueSource;
     }
 
+    const QVariant &literalValue() const { return m_literalValue; }
+    void setLiteralValue(const QVariant &value) { m_literalValue = value; }
+
+    const QQmlJS::SourceLocation &sourceLocation() const { return m_sourceLocation; }
+    void setSourceLocation(const QQmlJS::SourceLocation &sourceLocation)
+    {
+        m_sourceLocation = sourceLocation;
+    }
+
+    bool isLiteralBinding() const { return !m_literalValue.isNull(); }
     bool hasValue() const { return !m_value.isNull(); }
     bool hasInterceptor() const { return !m_interceptor.isNull(); }
     bool hasValueSource() const { return !m_valueSource.isNull(); }
@@ -405,8 +418,9 @@ public:
     {
         return a.m_propertyName == b.m_propertyName && a.m_valueTypeName == b.m_valueTypeName
                 && a.m_interceptorTypeName == b.m_interceptorTypeName
-                && a.m_valueSourceTypeName == b.m_valueSourceTypeName && a.m_value == b.m_value
-                && a.m_interceptor == b.m_interceptor;
+                && a.m_valueSourceTypeName == b.m_valueSourceTypeName
+                && a.m_literalValue == b.m_literalValue && a.m_value == b.m_value
+                && a.m_interceptor == b.m_interceptor && a.m_sourceLocation == b.m_sourceLocation;
     }
 
     friend bool operator!=(const QQmlJSMetaPropertyBinding &a, const QQmlJSMetaPropertyBinding &b)
@@ -418,9 +432,9 @@ public:
     {
         return qHashMulti(seed, binding.m_propertyName, binding.m_valueTypeName,
                           binding.m_interceptorTypeName, binding.m_valueSourceTypeName,
-                          binding.m_value.toStrongRef().data(),
+                          binding.m_literalValue.toString(), binding.m_value.toStrongRef().data(),
                           binding.m_interceptor.toStrongRef().data(),
-                          binding.m_valueSource.toStrongRef().data());
+                          binding.m_valueSource.toStrongRef().data(), binding.m_sourceLocation);
     }
 };
 

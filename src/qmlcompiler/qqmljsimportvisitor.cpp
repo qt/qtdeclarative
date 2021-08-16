@@ -33,8 +33,12 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qqueue.h>
 #include <QtCore/qscopedvaluerollback.h>
+#include <QtCore/qpoint.h>
+#include <QtCore/qrect.h>
+#include <QtCore/qsize.h>
 
 #include <QtQml/private/qv4codegen_p.h>
+#include <QtQml/private/qqmlstringconverters_p.h>
 
 #include <algorithm>
 
@@ -1053,6 +1057,9 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         m_currentScope->insertPropertyIdentifier(prop);
         if (publicMember->isRequired)
             m_currentScope->setPropertyLocallyRequired(prop.propertyName(), true);
+
+        parseLiteralBinding(publicMember->name.toString(), publicMember->statement);
+
         break;
     }
     }
@@ -1154,6 +1161,60 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ClassExpression *)
     leaveEnvironment();
 }
 
+void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
+                                              const QQmlJS::AST::Statement *statement)
+{
+    const auto *exprStatement = cast<const ExpressionStatement *>(statement);
+
+    if (exprStatement == nullptr)
+        return;
+
+    QQmlJSMetaPropertyBinding binding;
+
+    // TODO: The literal values are not used yet but may be used later to further validate bindings
+    binding.setLiteralValue(
+            u""_qs); // If no literal value can be provided, use empty string as a place holder
+
+    QString literalType;
+
+    switch (exprStatement->expression->kind) {
+    case Node::Kind_TrueLiteral:
+    case Node::Kind_FalseLiteral:
+        literalType = u"bool"_qs;
+        break;
+    case Node::Kind_NullExpression:
+        literalType = u"var"_qs;
+        break;
+    case Node::Kind_NumericLiteral:
+        literalType = u"double"_qs;
+        binding.setLiteralValue(cast<NumericLiteral *>(exprStatement->expression)->value);
+        break;
+    case Node::Kind_StringLiteral:
+        literalType = u"string"_qs;
+        binding.setLiteralValue(cast<StringLiteral *>(exprStatement->expression)->value.toString());
+        break;
+    case Node::Kind_RegExpLiteral:
+        literalType = u"$anonymous$.QRegularExpression"_qs;
+        binding.setLiteralValue(
+                cast<RegExpLiteral *>(exprStatement->expression)->pattern.toString());
+        break;
+    default:
+        return;
+    }
+
+    if (!m_rootScopeImports.contains(literalType))
+        return;
+
+    binding.setValue(m_rootScopeImports[literalType]);
+    binding.setValueTypeName(literalType);
+    binding.setPropertyName(name);
+    binding.setSourceLocation(exprStatement->expression->firstSourceLocation());
+
+    m_currentScope->addOwnPropertyBinding(binding);
+
+    m_literalScopesToCheck << m_currentScope;
+}
+
 bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
 {
     auto scope = m_currentScope;
@@ -1190,6 +1251,7 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
     if (signal.isEmpty()) {
         m_propertyBindings[m_currentScope].append(
                 { scope, group->firstSourceLocation(), name.toString() });
+        parseLiteralBinding(name.toString(), scriptBinding->statement);
     } else {
         const auto statement = scriptBinding->statement;
         QStringList signalParameters;

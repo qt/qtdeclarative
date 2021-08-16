@@ -43,6 +43,8 @@
 #include "qqmljsannotation_p.h"
 #include "qqmljslogger_p.h"
 
+#include <QtCore/qvariant.h>
+
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmljsimporter_p.h>
@@ -69,6 +71,7 @@ public:
     {
         return m_signalHandlers;
     }
+    QSet<QQmlJSScope::ConstPtr> literalScopesToCheck() const { return m_literalScopesToCheck; }
 
     static QString implicitImportDirectory(
             const QString &localFile, QQmlJSResourceFileMapper *mapper);
@@ -180,6 +183,7 @@ protected:
     void checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope);
 
     QQmlJSLogger *m_logger;
+    void parseLiteralBinding(const QString name, const QQmlJS::AST::Statement *statement);
 
     // Used to temporarily store annotations for functions and generators wrapped in UiSourceElements
     QVector<QQmlJSAnnotation> m_pendingMethodAnnotations;
@@ -237,6 +241,7 @@ protected:
     QHash<QQmlJSScope::Ptr, QVector<WithVisibilityScope<QPair<QString, QStringList>>>> m_signals;
 
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
+    QSet<QQmlJSScope::ConstPtr> m_literalScopesToCheck;
     QQmlJS::SourceLocation m_pendingSignalHandler;
 
     struct OutstandingConnection

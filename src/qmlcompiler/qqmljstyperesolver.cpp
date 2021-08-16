@@ -185,6 +185,23 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor &visitor)
     }
 
     m_imports = visitor.imports();
+
+    for (const auto &scope : visitor.literalScopesToCheck()) {
+        for (const auto &binding : scope->ownPropertyBindings()) {
+            if (!binding.isLiteralBinding())
+                continue;
+
+            if (QQmlJSMetaProperty property = scope->property(binding.propertyName());
+                property.isValid()) {
+                if (!canConvertFromTo(binding.value(), property.type())) {
+                    m_logger->logWarning(u"Cannot assign binding of type %1 to %2"_qs
+                                                 .arg(binding.valueTypeName())
+                                                 .arg(property.typeName()),
+                                         Log_Type, binding.sourceLocation());
+                }
+            }
+        }
+    }
 }
 
 QQmlJSScope::ConstPtr
@@ -398,6 +415,18 @@ bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
     // We can always convert between strings and urls.
     if ((from == m_stringType && to == m_urlType) || (from == m_urlType && to == m_stringType))
         return true;
+
+    // All of these types have QString conversions that require a certain format
+    // TODO: Actually verify these strings or deprecate them
+    if (from == m_stringType && !to.isNull()) {
+        const QString toTypeName = to->internalName();
+        if (to == m_dateTimeType || toTypeName == u"QTime"_qs || toTypeName == u"QDate"_qs
+            || toTypeName == u"QPoint"_qs || toTypeName == u"QPointF"_qs
+            || toTypeName == u"QSize"_qs || toTypeName == u"QSizeF"_qs || toTypeName == u"QRect"_qs
+            || toTypeName == u"QRectF"_qs || toTypeName == u"QColor"_qs) {
+            return true;
+        }
+    }
 
     if (from == m_voidType)
         return true;

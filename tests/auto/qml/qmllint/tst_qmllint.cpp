@@ -569,10 +569,7 @@ void TestQmllint::dirtyQmlCode_data()
             << false;
     QTest::newRow("badAttachedPropertyTypeString")
             << QStringLiteral("badAttachedPropertyTypeString.qml")
-            << QString("Property \"count\" of type \"int\" is assigned an incompatible type "
-                       "\"QString\"")
-            << QString()
-            << false;
+            << QString("Cannot assign binding of type string to int") << QString() << false;
     QTest::newRow("badAttachedPropertyTypeQtObject")
             << QStringLiteral("badAttachedPropertyTypeQtObject.qml")
             << QString("Property \"count\" of type \"int\" is assigned an incompatible type "
@@ -644,6 +641,13 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("BindingTypeMismatchFunction")
             << QStringLiteral("bindingTypeMismatchFunction.qml")
             << QStringLiteral("Cannot assign binding of type QString to int") << QString() << false;
+    QTest::newRow("BadLiteralBinding")
+            << QStringLiteral("badLiteralBinding.qml")
+            << QStringLiteral("Cannot assign binding of type string to int") << QString() << false;
+    QTest::newRow("BadLiteralBindingDate")
+            << QStringLiteral("badLiteralBindingDate.qml")
+            << QStringLiteral("Cannot assign binding of type QString to QDateTime") << QString()
+            << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -662,11 +666,13 @@ void TestQmllint::dirtyQmlCode()
         QEXPECT_FAIL("anchors3", "We don't see that QQuickItem cannot be assigned to QQuickAnchorLine", Abort);
         QEXPECT_FAIL("nanchors1", "Invalid grouped properties are not always detected", Abort);
         QEXPECT_FAIL("TypePropertAccess", "We cannot discern between types and instances", Abort);
-        QEXPECT_FAIL("badAttachedPropertyTypeString",
-                     "Script bindings do not perform property type matching", Abort);
         QEXPECT_FAIL("attachedPropertyAccess", "We cannot discern between types and instances",
                      Abort);
         QEXPECT_FAIL("attachedPropertyNested", "We cannot discern between types and instances",
+                     Abort);
+        QEXPECT_FAIL("BadLiteralBindingDate",
+                     "We're currently not able to verify any non-trivial QString conversion that "
+                     "requires QQmlStringConverters",
                      Abort);
 
         if (exitsNormally)
@@ -683,8 +689,10 @@ void TestQmllint::dirtyQmlCode()
         return QStringLiteral("qmllint output '%1' must contain '%2'").arg(output, substring);
     };
 
-    QEXPECT_FAIL("badAttachedPropertyTypeString",
-                 "Script bindings do not perform property type matching", Abort);
+    QEXPECT_FAIL("BadLiteralBindingDate",
+                 "We're currently not able to verify any non-trivial QString conversion that "
+                 "requires QQmlStringConverters",
+                 Abort);
     QVERIFY2(output.contains(warningMessage), qPrintable(toDescription(output, warningMessage)));
     QEXPECT_FAIL("badAttachedPropertyNested", "We cannot discern between types and instances",
                  Abort);
@@ -790,6 +798,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("BindingsOnGroupAndAttachedProperties")
             << QStringLiteral("goodBindingsOnGroupAndAttached.qml");
     QTest::newRow("QQmlEasingEnums::Type") << QStringLiteral("animationEasing.qml");
+    QTest::newRow("ValidLiterals") << QStringLiteral("validLiterals.qml");
 }
 
 void TestQmllint::cleanQmlCode()
