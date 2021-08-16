@@ -623,7 +623,7 @@ Module {
         Property { name: "Math"; type: "Math" }
         Property { name: "JSON"; type: "JSON" }
         Property { name: "Reflect"; type: "Reflect" }
-        Property { name: "undefined" }
+        Property { name: "undefined"; isReadonly: true }
         Property { name: "NaN"; type: "number"; isReadonly: true }
         Property { name: "Infinity"; type: "number"; isReadonly: true }
         Property { name: "Qt"; type: "Qt" }
