@@ -1,6 +1,6 @@
 # Generated from localstorage.pro.
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(localstorage LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

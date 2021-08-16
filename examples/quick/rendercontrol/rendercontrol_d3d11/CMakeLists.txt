@@ -1,6 +1,6 @@
 # Generated from rendercontrol_d3d11.pro.
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(rendercontrol_d3d11 LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

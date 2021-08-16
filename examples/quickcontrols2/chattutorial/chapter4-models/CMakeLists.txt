@@ -1,6 +1,6 @@
 # Generated from chapter4-models.pro.
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(chapter4-models LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

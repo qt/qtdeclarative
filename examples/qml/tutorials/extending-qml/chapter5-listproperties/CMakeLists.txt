@@ -1,6 +1,6 @@
 # Generated from chapter5-listproperties.pro.
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(chapter5-listproperties LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

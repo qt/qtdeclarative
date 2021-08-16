@@ -1,6 +1,6 @@
 # Generated from chapter1-basics.pro.
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(chapter1-basics LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

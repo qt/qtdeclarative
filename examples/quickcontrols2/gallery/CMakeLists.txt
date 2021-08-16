@@ -1,6 +1,6 @@
 # Generated from gallery.pro.
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(gallery_controls2 LANGUAGES CXX) # special case
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
