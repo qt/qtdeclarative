@@ -53,9 +53,15 @@ endif()
 
 _qt_internal_test_module_includes(${module_includes})
 
-# TODO: Plugin targets are not available in shared builds at the moment QTBUG-94066
-if(TARGET Qt::Qml AND NOT QT6_IS_SHARED_LIBS_BUILD)
-    _qt_internal_test_expect_pass(test_plugins)
+if(TARGET Qt::Qml)
+    _qt_internal_test_expect_pass(tooling_imports TESTNAME cmake_tooling_imports BINARY cmake_test)
+    set_tests_properties(cmake_tooling_imports PROPERTIES
+        FAIL_REGULAR_EXPRESSION "(Info|Warning|Error): [a-zA-Z]*\\.qml:[0-9]"
+    )
+    # TODO: Plugin targets are not available in shared builds at the moment QTBUG-94066
+    if(NOT QT6_IS_SHARED_LIBS_BUILD)
+        _qt_internal_test_expect_pass(test_plugins)
+    endif()
 endif()
 
 if(TARGET Qt::Quick)
