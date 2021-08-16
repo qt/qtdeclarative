@@ -7,22 +7,25 @@
     },
     {
         "classname": "QtQuick2Plugin",
+        "linkTarget": "Qt6::qtquick2plugin",
         "name": "QtQuick",
-        "plugin": "qtquick2plugin",
+        "plugin": "qtquickplugin",
         "pluginIsOptional": true,
         "relativePath": "QtQuick",
         "type": "module"
     },
     {
         "classname": "QtQmlPlugin",
+        "linkTarget": "Qt6::qmlplugin",
         "name": "QtQml",
-        "plugin": "qmlplugin",
+        "plugin": "qtqmlplugin",
         "pluginIsOptional": true,
         "relativePath": "QtQml",
         "type": "module"
     },
     {
         "classname": "QtQmlModelsPlugin",
+        "linkTarget": "Qt6::modelsplugin",
         "name": "QtQml.Models",
         "plugin": "modelsplugin",
         "pluginIsOptional": true,
@@ -31,6 +34,7 @@
     },
     {
         "classname": "QtQmlWorkerScriptPlugin",
+        "linkTarget": "Qt6::workerscriptplugin",
         "name": "QtQml.WorkerScript",
         "plugin": "workerscriptplugin",
         "pluginIsOptional": true,

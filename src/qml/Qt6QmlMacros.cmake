@@ -28,6 +28,7 @@ function(qt6_add_qml_module target)
 
     set(args_single
         PLUGIN_TARGET
+        INSTALLED_PLUGIN_TARGET  # Internal option only, it may be removed
         OUTPUT_TARGETS
         RESOURCE_PREFIX
         URI
@@ -42,7 +43,6 @@ function(qt6_add_qml_module target)
         RESOURCE_EXPORT
         INSTALL_DIRECTORY
         INSTALL_LOCATION
-        __QT_INTERNAL_QT_LIBINFIX  # Used only by _qt_internal_target_generate_qmldir()
     )
 
     set(args_multi
@@ -235,6 +235,9 @@ function(qt6_add_qml_module target)
         # The plugin can't be optional when it has no backing target
         set(arg_NO_PLUGIN_OPTIONAL TRUE)
     endif()
+    if(NOT arg_INSTALLED_PLUGIN_TARGET)
+        set(arg_INSTALLED_PLUGIN_TARGET ${arg_PLUGIN_TARGET})
+    endif()
 
     set(no_gen_source)
     if(arg_NO_GENERATE_PLUGIN_SOURCE)
@@ -409,8 +412,8 @@ function(qt6_add_qml_module target)
         QT_QML_MODULE_TARGET_PATH "${arg_TARGET_PATH}"
         QT_QML_MODULE_VERSION "${arg_VERSION}"
         QT_QML_MODULE_CLASS_NAME "${arg_CLASS_NAME}"
-        QT_QML_MODULE_LIBINFIX "${arg___QT_INTERNAL_QT_LIBINFIX}"
         QT_QML_MODULE_PLUGIN_TARGET "${arg_PLUGIN_TARGET}"
+        QT_QML_MODULE_INSTALLED_PLUGIN_TARGET "${arg_INSTALLED_PLUGIN_TARGET}"
         QT_QML_MODULE_DESIGNER_SUPPORTED "${arg_DESIGNER_SUPPORTED}"
         QT_QML_MODULE_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
         QT_QML_MODULE_RESOURCE_PREFIX "${qt_qml_module_resource_prefix}"
@@ -835,6 +838,8 @@ function(_qt_internal_target_generate_qmldir target)
     endif()
     set(content "module ${uri}\n")
 
+    _qt_internal_qmldir_item(linktarget QT_QML_MODULE_INSTALLED_PLUGIN_TARGET)
+
     get_target_property(plugin_target ${target} QT_QML_MODULE_PLUGIN_TARGET)
     if(plugin_target)
         get_target_property(no_plugin_optional ${target} QT_QML_MODULE_NO_PLUGIN_OPTIONAL)
@@ -842,8 +847,16 @@ function(_qt_internal_target_generate_qmldir target)
             string(APPEND content "optional ")
         endif()
 
-        get_target_property(qt_libinfix ${target} QT_QML_MODULE_LIBINFIX)
-        string(APPEND content "plugin ${plugin_target}${qt_libinfix}\n")
+        set(plugin_basename)
+        if(TARGET ${plugin_target})
+            get_target_property(plugin_basename ${plugin_target} OUTPUT_NAME)
+        endif()
+        if(plugin_basename)
+            string(APPEND content "plugin ${plugin_basename}\n")
+        else()
+            string(APPEND content "plugin ${plugin_target}\n")
+        endif()
+
         _qt_internal_qmldir_item(classname QT_QML_MODULE_CLASS_NAME)
     endif()
 
@@ -1877,7 +1890,8 @@ but this file does not exist.  Possible reasons include:
         set(entry_name "qml_import_scanner_import_${idx}")
         cmake_parse_arguments("entry"
             ""
-            "CLASSNAME;NAME;PATH;PLUGIN;RELATIVEPATH;TYPE;VERSION;" ""
+            "CLASSNAME;NAME;PATH;PLUGIN;RELATIVEPATH;TYPE;VERSION;LINKTARGET"
+            ""
             ${${entry_name}}
         )
     endmacro()
@@ -1968,18 +1982,20 @@ but this file does not exist.  Possible reasons include:
                 # (typically brought in via find_package(Qt6...) ).
                 # For other plugins, the targets can come from the project itself.
                 #
-                # Handles Qt provided Qml plugins
-                if(TARGET "${QT_CMAKE_EXPORT_NAMESPACE}::${entry_PLUGIN}")
-                    set(plugin_target "${QT_CMAKE_EXPORT_NAMESPACE}::${entry_PLUGIN}")
-                    list(APPEND plugins_to_link "${plugin_target}")
-
-                # Handles user project provided Qml plugins
-                elseif(TARGET ${entry_PLUGIN} AND TARGET ${entry_PLUGIN}_init)
-                    set(plugin_target "${entry_PLUGIN}")
-                    list(APPEND plugins_to_link "${plugin_target}")
-
-                # TODO: QTBUG-94605 Figure out if this is a reasonable scenario to support
+                if(entry_LINKTARGET)
+                    if(TARGET ${entry_LINKTARGET})
+                        list(APPEND plugins_to_link "${entry_LINKTARGET}")
+                    else()
+                        message(WARNING
+                            "The qml plugin '${entry_PLUGIN}' is a dependency of '${target}', "
+                            "but the link target it defines (${entry_LINKTARGET}) does not exist "
+                            "in the current scope. The plugin will not be linked."
+                        )
+                    endif()
+                elseif(TARGET ${entry_PLUGIN})
+                    list(APPEND plugins_to_link "${entry_PLUGIN}")
                 else()
+                    # TODO: QTBUG-94605 Figure out if this is a reasonable scenario to support
                     message(WARNING
                         "The qml plugin '${entry_PLUGIN}' is a dependency of '${target}', "
                         "but there is no target by that name in the current scope. The plugin will "

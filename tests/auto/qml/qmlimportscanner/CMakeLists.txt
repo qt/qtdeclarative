@@ -35,8 +35,9 @@ qt_internal_extend_target(tst_qmlimportscanner CONDITION NOT ANDROID AND NOT IOS
 )
 
 # special case begin
+string(TOLOWER "${QT_LIBINFIX}" infix_lowercase)
 qt_internal_extend_target(tst_qmlimportscanner CONDITION DEFINED QT_LIBINFIX
     DEFINES
-    LIBINFIX=${QT_LIBINFIX}
+    LIBINFIX=${infix_lowercase}
 )
 # special case end

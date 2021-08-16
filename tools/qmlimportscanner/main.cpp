@@ -69,6 +69,10 @@ inline QString dependenciesLiteral() { return QStringLiteral("dependencies"); }
 inline QString moduleLiteral()       { return QStringLiteral("module"); }
 inline QString javascriptLiteral()   { return QStringLiteral("javascript"); }
 inline QString directoryLiteral()    { return QStringLiteral("directory"); }
+inline QString linkTargetLiteral()
+{
+    return QStringLiteral("linkTarget");
+}
 
 void printUsage(const QString &appNameIn)
 {
@@ -193,6 +197,10 @@ QVariantMap pluginsForModulePath(const QString &modulePath, const QString &versi
         pluginInfo[pluginIsOptionalLiteral()] = true;
     }
 
+    if (!parser.linkTarget().isEmpty()) {
+        pluginInfo[linkTargetLiteral()] = parser.linkTarget();
+    }
+
     pluginInfo[classnamesLiteral()] = parser.classNames().join(QLatin1Char(' '));
 
     QStringList importsAndDependencies;
@@ -310,9 +318,12 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
                 import.insert(relativePathLiteral(), paths.second);
                 plugininfo = pluginsForModulePath(paths.first, version);
             }
+            QString linkTarget = plugininfo.value(linkTargetLiteral()).toString();
             QString plugins = plugininfo.value(pluginsLiteral()).toString();
             bool isOptional = plugininfo.value(pluginIsOptionalLiteral(), QVariant(false)).toBool();
             QString classnames = plugininfo.value(classnamesLiteral()).toString();
+            if (!linkTarget.isEmpty())
+                import.insert(linkTargetLiteral(), linkTarget);
             if (!plugins.isEmpty())
                 import.insert(QStringLiteral("plugin"), plugins);
             if (isOptional)

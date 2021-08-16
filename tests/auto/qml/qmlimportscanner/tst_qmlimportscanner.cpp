@@ -157,9 +157,9 @@ void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QStrin
 #define STR(A) #A
         if (object.contains("plugin")) {
             auto plugin = object["plugin"].toString();
-            const auto pos = plugin.lastIndexOf(XSTR(LIBINFIX));
+            const auto pos = plugin.lastIndexOf(XSTR(LIBINFIX) "plugin");
             if (pos != -1)
-                object["plugin"] = plugin.left(pos);
+                object["plugin"] = plugin.left(pos) + "plugin";
         }
 #endif
 
