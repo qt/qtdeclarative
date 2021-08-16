@@ -70,6 +70,8 @@
 #include <QtCore/qmetacontainer.h>
 #include <QtCore/qdebug.h>
 
+#include <limits>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlPropertyValueInterceptor;
@@ -603,6 +605,8 @@ namespace QQmlPrivate
     };
 
     struct Q_QML_EXPORT AOTCompiledContext {
+        enum: uint { InvalidStringId = std::numeric_limits<uint>::max() };
+
         QQmlContextData *qmlContext;
         QObject *qmlScopeObject;
         QJSEngine *engine;
@@ -659,11 +663,11 @@ namespace QQmlPrivate
         bool loadScopeObjectPropertyLookup(uint index, void *target) const;
         void initLoadScopeObjectPropertyLookup(uint index, QMetaType type) const;
 
-        bool loadTypeLookup(uint index, void *target) const;
-        void initLoadTypeLookup(uint index) const;
+        bool loadSingletonLookup(uint index, void *target) const;
+        void initLoadSingletonLookup(uint index, uint importNamespace) const;
 
         bool loadAttachedLookup(uint index, QObject *object, void *target) const;
-        void initLoadAttachedLookup(uint index, QObject *object) const;
+        void initLoadAttachedLookup(uint index, uint importNamespace, QObject *object) const;
 
         bool getObjectLookup(uint index, QObject *object, void *target) const;
         void initGetObjectLookup(uint index, QObject *object, QMetaType type) const;

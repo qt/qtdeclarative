@@ -648,6 +648,14 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("badLiteralBindingDate.qml")
             << QStringLiteral("Cannot assign binding of type QString to QDateTime") << QString()
             << false;
+    QTest::newRow("BadModulePrefix")
+            << QStringLiteral("badModulePrefix.qml")
+            << QStringLiteral("Cannot load singleton as property of object") << QString() << false;
+    QTest::newRow("BadModulePrefix2")
+            << QStringLiteral("badModulePrefix2.qml")
+            << QStringLiteral("Cannot use non-reference type QRectF as base "
+                              "of namespaced attached type")
+            << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -799,6 +807,7 @@ void TestQmllint::cleanQmlCode_data()
             << QStringLiteral("goodBindingsOnGroupAndAttached.qml");
     QTest::newRow("QQmlEasingEnums::Type") << QStringLiteral("animationEasing.qml");
     QTest::newRow("ValidLiterals") << QStringLiteral("validLiterals.qml");
+    QTest::newRow("GoodModulePrefix") << QStringLiteral("goodModulePrefix.qml");
 }
 
 void TestQmllint::cleanQmlCode()

@@ -64,6 +64,7 @@ public:
         ScopeProperty,
         ScopeMethod,
         ScopeAttached,
+        ScopeModulePrefix,
         ExtensionScopeProperty,
         ExtensionScopeMethod,
 
@@ -71,6 +72,7 @@ public:
         ObjectMethod,
         ObjectEnum,
         ObjectAttached,
+        ObjectModulePrefix,
         ExtensionObjectProperty,
         ExtensionObjectMethod,
         ExtensionObjectEnum,
@@ -97,6 +99,7 @@ public:
     bool isProperty() const { return m_content.index() == Property; }
     bool isEnumeration() const { return m_content.index() == Enum; }
     bool isMethod() const { return m_content.index() == Method; }
+    bool isImportNamespace() const { return m_content.index() == ImportNamespace; }
     bool isList() const;
 
     bool isWritable() const;
@@ -115,6 +118,7 @@ public:
         return std::get<std::pair<QQmlJSMetaEnum, QString>>(m_content).second;
     }
     QList<QQmlJSMetaMethod> method() const { return std::get<QList<QQmlJSMetaMethod>>(m_content); }
+    uint importNamespace() const { return std::get<uint>(m_content); }
 
     ContentVariant variant() const { return m_variant; }
 
@@ -132,6 +136,8 @@ public:
                          seed);
         case Method:
             return qHash(std::get<QList<QQmlJSMetaMethod>>(registerContent.m_content), seed);
+        case ImportNamespace:
+            return qHash(std::get<uint>(registerContent.m_content), seed);
         }
 
         Q_UNREACHABLE();
@@ -156,11 +162,20 @@ public:
                                         ContentVariant variant,
                                         const QQmlJSScope::ConstPtr &scope = {});
 
-private:
-    enum ContentKind { Type, Property, Enum, Method };
+    static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
+                                        uint importNamespaceStringId, ContentVariant variant,
+                                        const QQmlJSScope::ConstPtr &scope = {});
 
-    using Content = std::variant<QQmlJSScope::ConstPtr, QQmlJSMetaProperty,
-                                 std::pair<QQmlJSMetaEnum, QString>, QList<QQmlJSMetaMethod>>;
+private:
+    enum ContentKind { Type, Property, Enum, Method, ImportNamespace };
+
+    using Content = std::variant<
+        QQmlJSScope::ConstPtr,
+        QQmlJSMetaProperty,
+        std::pair<QQmlJSMetaEnum, QString>,
+        QList<QQmlJSMetaMethod>,
+        uint
+    >;
 
     QQmlJSRegisterContent(const QQmlJSScope::ConstPtr &storedType,
                           const QQmlJSScope::ConstPtr &scope, ContentVariant variant)

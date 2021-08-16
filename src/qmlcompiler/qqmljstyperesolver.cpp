@@ -366,6 +366,8 @@ QQmlJSTypeResolver::containedType(const QQmlJSRegisterContent &container) const
         return container.enumeration().type();
     if (container.isMethod())
         return jsValueType();
+    if (container.isImportNamespace())
+        return container.scopeType();
 
     Q_UNREACHABLE();
     return {};
@@ -871,6 +873,32 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
         return QQmlJSRegisterContent::create(jsValueType(), prop,
                                              QQmlJSRegisterContent::JavaScriptObjectProperty,
                                              jsValueType());
+    }
+    if (type.isImportNamespace()) {
+        if (type.scopeType()->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
+            m_logger->logWarning(
+                    u"Cannot use non-reference type %1 as base of namespaced attached type"_qs.arg(
+                            type.scopeType()->internalName()),
+                    Log_Type);
+            return {};
+        }
+
+        if (QQmlJSScope::ConstPtr result = typeForName(name)) {
+            QQmlJSScope::ConstPtr attached = result->attachedType();
+            if (attached && genericType(attached)) {
+                return QQmlJSRegisterContent::create(storedType(attached), attached,
+                                                     QQmlJSRegisterContent::ObjectAttached,
+                                                     result);
+            }
+
+            if (result->isSingleton()) {
+                return QQmlJSRegisterContent::create(
+                            storedType(result), result,
+                            QQmlJSRegisterContent::Singleton, type.scopeType());
+            }
+        }
+
+        return {};
     }
 
     Q_UNREACHABLE();

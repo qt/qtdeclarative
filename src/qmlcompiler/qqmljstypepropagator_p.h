@@ -245,7 +245,6 @@ private:
         QQmlJSVirtualRegisters registers;
         QQmlJSRegisterContent accumulatorIn;
         QQmlJSRegisterContent accumulatorOut;
-        QString savedPrefix;
 
         QHash<int, InstructionAnnotation> annotations;
 

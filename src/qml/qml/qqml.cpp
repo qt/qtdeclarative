@@ -1143,19 +1143,10 @@ void AOTCompiledContext::initLoadScopeObjectPropertyLookup(uint index, QMetaType
         v4->throwTypeError();
 }
 
-bool AOTCompiledContext::loadTypeLookup(uint index, void *target) const
+bool AOTCompiledContext::loadSingletonLookup(uint index, void *target) const
 {
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
     QV4::Scope scope(engine->handle());
-
-    if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupType) {
-        // We resolve it right away. An AOT compiler, in contrast to a naive interpreter
-        // should only request objects it actually needs.
-        QV4::Scoped<QV4::QQmlTypeWrapper> wrapper(scope, l->qmlTypeLookup.qmlTypeWrapper);
-        Q_ASSERT(wrapper);
-        *static_cast<QObject **>(target) = wrapper->object();
-        return true;
-    }
 
     if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupSingleton) {
         QV4::Scoped<QV4::QQmlTypeWrapper> wrapper(
@@ -1170,19 +1161,29 @@ bool AOTCompiledContext::loadTypeLookup(uint index, void *target) const
     return false;
 }
 
-void AOTCompiledContext::initLoadTypeLookup(uint index) const
+void AOTCompiledContext::initLoadSingletonLookup(uint index, uint importNamespace) const
 {
     Q_ASSERT(!engine->hasError());
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
-    l->qmlContextPropertyGetter(l, engine->handle(), nullptr);
-
-    // Singleton instances can be retrieved via either lookupType or lookupSingleton
-    // and both use QQmlTypeWrapper to store them.
-    // TODO: Wat? Looking up the singleton instances on each access is horribly inefficient.
-    //       There is plenty of space in the lookup to store the instances.
-
-    Q_ASSERT(l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupType
-             || l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupSingleton);
+    if (importNamespace != InvalidStringId) {
+        QV4::Scope scope(engine->handle());
+        QV4::ScopedString import(scope, compilationUnit->runtimeStrings[importNamespace]);
+        if (const QQmlImportRef *importRef = qmlContext->imports()->query(import).importNamespace) {
+            QV4::Scoped<QV4::QQmlTypeWrapper> wrapper(
+                        scope, QV4::QQmlTypeWrapper::create(
+                            scope.engine, nullptr, qmlContext->imports(), importRef));
+            wrapper = l->getter(l, engine->handle(), wrapper);
+            if (wrapper) {
+                l->qmlContextPropertyGetter = QV4::QQmlContextWrapper::lookupSingleton;
+                l->qmlContextSingletonLookup.singletonObject = wrapper->heapObject();
+                return;
+            }
+        }
+        scope.engine->throwTypeError();
+    } else {
+        l->qmlContextPropertyGetter(l, engine->handle(), nullptr);
+        Q_ASSERT(l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupSingleton);
+    }
 }
 
 bool AOTCompiledContext::loadAttachedLookup(uint index, QObject *object, void *target) const
@@ -1200,20 +1201,29 @@ bool AOTCompiledContext::loadAttachedLookup(uint index, QObject *object, void *t
     return true;
 }
 
-void AOTCompiledContext::initLoadAttachedLookup(uint index, QObject *object) const
+void AOTCompiledContext::initLoadAttachedLookup(
+        uint index, uint importNamespace, QObject *object) const
 {
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
     QV4::Scope scope(engine->handle());
     QV4::ScopedString name(scope, compilationUnit->runtimeStrings[l->nameIndex]);
-    QQmlTypeNameCache::Result r = qmlContext->imports()->query(name);
 
-    if (!r.isValid() || !r.type.isValid()) {
+    QQmlType type;
+    if (importNamespace != InvalidStringId) {
+        QV4::ScopedString import(scope, compilationUnit->runtimeStrings[importNamespace]);
+        if (const QQmlImportRef *importRef = qmlContext->imports()->query(import).importNamespace)
+            type = qmlContext->imports()->query(name, importRef).type;
+    } else {
+        type = qmlContext->imports()->query(name).type;
+    }
+
+    if (!type.isValid()) {
         scope.engine->throwTypeError();
         return;
     }
 
     QV4::Scoped<QV4::QQmlTypeWrapper> wrapper(
-                scope, QV4::QQmlTypeWrapper::create(scope.engine, object, r.type,
+                scope, QV4::QQmlTypeWrapper::create(scope.engine, object, type,
                                                     QV4::Heap::QQmlTypeWrapper::ExcludeEnums));
 
     l->qmlTypeLookup.qmlTypeWrapper = wrapper->d();

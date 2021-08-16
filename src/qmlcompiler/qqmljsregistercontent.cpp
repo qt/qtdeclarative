@@ -64,6 +64,9 @@ QString QQmlJSRegisterContent::descriptiveName() const
         else
             return result + scope() + e.first.name() + u"::"_qs + e.second;
     }
+    case ImportNamespace: {
+        return u"import namespace %1"_qs.arg(std::get<uint>(m_content));
+    }
     }
     Q_UNREACHABLE();
     return result + u"wat?"_qs;
@@ -137,6 +140,16 @@ QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr 
 {
     QQmlJSRegisterContent result(storedType, scope, variant);
     result.m_content = methods;
+    return result;
+}
+
+QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr &storedType,
+                                                    uint importNamespaceStringId,
+                                                    QQmlJSRegisterContent::ContentVariant variant,
+                                                    const QQmlJSScope::ConstPtr &scope)
+{
+    QQmlJSRegisterContent result(storedType, scope, variant);
+    result.m_content = importNamespaceStringId;
     return result;
 }
 

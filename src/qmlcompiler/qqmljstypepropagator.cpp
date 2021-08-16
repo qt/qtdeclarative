@@ -435,21 +435,28 @@ bool QQmlJSTypePropagator::checkRestricted(const QString &propertyName) const
 
 void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
 {
-    const QString name =
-            m_jsUnitGenerator->stringForIndex(m_jsUnitGenerator->lookupNameIndex(index));
-    m_state.accumulatorOut = m_typeResolver->scopedType(m_currentScope, m_state.savedPrefix + name);
+    const int nameIndex = m_jsUnitGenerator->lookupNameIndex(index);
+    const QString name = m_jsUnitGenerator->stringForIndex(nameIndex);
+
+
+    m_state.accumulatorOut = m_typeResolver->scopedType(
+                m_currentScope,
+                m_state.accumulatorIn.isImportNamespace()
+                    ? m_jsUnitGenerator->stringForIndex(m_state.accumulatorIn.importNamespace())
+                      + u'.' + name
+                    : name);
 
     if (!m_state.accumulatorOut.isValid() && m_typeResolver->isPrefix(name)) {
-        m_state.savedPrefix = name + u"."_qs;
-        m_state.accumulatorOut = m_state.accumulatorIn.isValid()
+        const QQmlJSRegisterContent inType = m_state.accumulatorIn.isValid()
                 ? m_state.accumulatorIn
                 : m_typeResolver->globalType(m_currentScope);
+        m_state.accumulatorOut = QQmlJSRegisterContent::create(
+                    inType.storedType(), nameIndex, QQmlJSRegisterContent::ScopeModulePrefix,
+                    m_typeResolver->containedType(inType));
         return;
     }
 
     checkDeprecated(m_currentScope, name, false);
-
-    m_state.savedPrefix.clear();
 
     bool isRestricted = checkRestricted(name);
 
@@ -513,22 +520,32 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
 void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
 {
     m_state.accumulatorOut =
-            m_typeResolver->memberType(m_state.accumulatorIn, m_state.savedPrefix + propertyName);
+            m_typeResolver->memberType(
+                m_state.accumulatorIn,
+                m_state.accumulatorIn.isImportNamespace()
+                    ? m_jsUnitGenerator->stringForIndex(m_state.accumulatorIn.importNamespace())
+                      + u'.' + propertyName
+                    : propertyName);
 
     if (!m_state.accumulatorOut.isValid()) {
         if (m_typeResolver->isPrefix(propertyName)) {
-            m_state.savedPrefix = propertyName + u"."_qs;
-            m_state.accumulatorOut = m_state.accumulatorIn.isValid()
-                    ? m_state.accumulatorIn
-                    : m_typeResolver->globalType(m_currentScope);
+            Q_ASSERT(m_state.accumulatorIn.isValid());
+            m_state.accumulatorOut = QQmlJSRegisterContent::create(
+                        m_state.accumulatorIn.storedType(),
+                        m_jsUnitGenerator->getStringId(propertyName),
+                        QQmlJSRegisterContent::ObjectModulePrefix,
+                        m_typeResolver->containedType(m_state.accumulatorIn));
             return;
         }
-        if (!m_state.savedPrefix.isEmpty())
+        if (m_state.accumulatorIn.isImportNamespace())
             m_logger->logWarning(u"Type not found in namespace"_qs, Log_Type,
                                  getCurrentSourceLocation());
+    } else if (m_state.accumulatorOut.variant() == QQmlJSRegisterContent::Singleton
+               && m_state.accumulatorIn.variant() == QQmlJSRegisterContent::ObjectModulePrefix) {
+        m_logger->logWarning(u"Cannot load singleton as property of object"_qs, Log_Type,
+                             getCurrentSourceLocation());
+        m_state.accumulatorOut.reset();
     }
-
-    m_state.savedPrefix.clear();
 
     bool isRestricted = checkRestricted(propertyName);
 
