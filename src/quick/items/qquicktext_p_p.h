@@ -89,6 +89,7 @@ public:
     void clearFormats();
 
     void processHoverEvent(QHoverEvent *event);
+    void transformChanged(QQuickItem *transformedItem) override;
 
     QRectF layedOutTextRect;
     QSizeF advance;
@@ -180,6 +181,7 @@ public:
     bool updateSizeRecursionGuard:1;
 
     static const QChar elideChar;
+    static const int largeTextSizeThreshold;
 
     qreal getImplicitWidth() const override;
     qreal getImplicitHeight() const override;

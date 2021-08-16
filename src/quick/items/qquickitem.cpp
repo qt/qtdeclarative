@@ -5241,8 +5241,24 @@ QPointF QQuickItemPrivate::computeTransformOrigin() const
     }
 }
 
-void QQuickItemPrivate::transformChanged()
+/*!
+    \internal
+    QQuickItemPrivate::dirty() calls transformChanged(q) to inform this item and
+    all its children that its transform has changed, with \a transformedItem always
+    being the parent item that caused the change.  Override to react, e.g. to
+    call update() if the item needs to re-generate SG nodes based on visible extents.
+*/
+void QQuickItemPrivate::transformChanged(QQuickItem *transformedItem)
 {
+    Q_Q(QQuickItem);
+    if (q != transformedItem)
+        return;
+
+    // Inform the children in paint order: by the time we visit leaf items,
+    // they can see any consequences in their parents
+    for (auto child : paintOrderChildItems())
+        QQuickItemPrivate::get(child)->transformChanged(transformedItem);
+
 #if QT_CONFIG(quick_shadereffect)
     if (extra.isAllocated() && extra->layer)
         extra->layer->updateMatrix();
@@ -6380,7 +6396,7 @@ void QQuickItemPrivate::dirty(DirtyType type)
 {
     Q_Q(QQuickItem);
     if (type & (TransformOrigin | Transform | BasicTransform | Position | Size))
-        transformChanged();
+        transformChanged(q);
 
     if (!(dirtyAttributes & type) || (window && !prevDirtyItem)) {
         dirtyAttributes |= type;

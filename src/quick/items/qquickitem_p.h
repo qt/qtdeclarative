@@ -617,7 +617,7 @@ public:
     }
 
     QPointF computeTransformOrigin() const;
-    virtual void transformChanged();
+    virtual void transformChanged(QQuickItem *transformedItem);
 
     QPointF adjustedPosForTransform(const QPointF &centroid,
                                     const QPointF &startPos, const QVector2D &activeTranslatation,

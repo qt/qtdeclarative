@@ -70,7 +70,7 @@ class QQuickFlipablePrivate : public QQuickItemPrivate
 public:
     QQuickFlipablePrivate() : current(QQuickFlipable::Front), front(nullptr), back(nullptr), sideDirty(false) {}
 
-    void transformChanged() override;
+    void transformChanged(QQuickItem *transformedItem) override;
     void updateSide();
     void setBackTransform();
 
@@ -219,7 +219,7 @@ QQuickFlipable::Side QQuickFlipable::side() const
     return d->current;
 }
 
-void QQuickFlipablePrivate::transformChanged()
+void QQuickFlipablePrivate::transformChanged(QQuickItem *transformedItem)
 {
     Q_Q(QQuickFlipable);
 
@@ -228,7 +228,7 @@ void QQuickFlipablePrivate::transformChanged()
         q->polish();
     }
 
-    QQuickItemPrivate::transformChanged();
+    QQuickItemPrivate::transformChanged(transformedItem);
 }
 
 void QQuickFlipable::updatePolish()

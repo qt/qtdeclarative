@@ -53,6 +53,7 @@
 #include <qabstracttextdocumentlayout.h>
 #include <qxmlstream.h>
 #include <private/qquickstyledtext_p.h>
+#include <private/qquicktext_p_p.h>
 #include <private/qfont_p.h>
 #include <private/qfontengine_p.h>
 
@@ -73,6 +74,8 @@ namespace {
     };
 
 }
+
+Q_DECLARE_LOGGING_CATEGORY(lcSgText)
 
 /*!
   Creates an empty QQuickTextNode
@@ -261,10 +264,18 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
     QVarLengthArray<QTextLayout::FormatRange> colorChanges;
     engine.mergeFormats(textLayout, &colorChanges);
 
+    // If there's a lot of text, transform the window's bounds into the Text item's space
+    // and then insert only the range of lines that can possibly be visible within that viewport.
+    QRectF viewport;
+    if (textLayout->text().size() > QQuickTextPrivate::largeTextSizeThreshold && m_ownerElement->window()) {
+        viewport = m_ownerElement->mapRectFromScene(m_ownerElement->window()->contentItem()->boundingRect());
+        qCDebug(lcSgText) << "text viewport" << viewport;
+    }
     lineCount = lineCount >= 0
             ? qMin(lineStart + lineCount, textLayout->lineCount())
             : textLayout->lineCount();
 
+    bool inViewport = false;
     for (int i=lineStart; i<lineCount; ++i) {
         QTextLine line = textLayout->lineAt(i);
 
@@ -279,9 +290,17 @@ void QQuickTextNode::addTextLayout(const QPointF &position, QTextLayout *textLay
             end += preeditLength;
         }
 #endif
-
-        engine.setCurrentLine(line);
-        engine.addGlyphsForRanges(colorChanges, start, end, selectionStart, selectionEnd);
+        if (viewport.isNull() || (line.y() + line.height() > viewport.top() && line.y() < viewport.bottom())) {
+            if (!inViewport && !viewport.isNull())
+                qCDebug(lcSgText) << "first line in viewport" << i << "@" << line.y();
+            inViewport = true;
+            engine.setCurrentLine(line);
+            engine.addGlyphsForRanges(colorChanges, start, end, selectionStart, selectionEnd);
+        } else if (inViewport) {
+            Q_ASSERT(!viewport.isNull());
+            qCDebug(lcSgText) << "first omitted line past bottom of viewport" << i << "@" << line.y();
+            break; // went past the bottom of the viewport, so we're done
+        }
     }
 
     engine.addToSceneGraph(this, style, styleColor);

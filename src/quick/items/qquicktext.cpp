@@ -76,6 +76,12 @@ Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
 
 const QChar QQuickTextPrivate::elideChar = QChar(0x2026);
 
+#if !defined(QQUICKTEXT_LARGETEXT_THRESHOLD)
+  #define QQUICKTEXT_LARGETEXT_THRESHOLD 10000
+#endif
+// if QString::size() > largeTextSizeThreshold, we render more often, but only visible lines
+const int QQuickTextPrivate::largeTextSizeThreshold = QQUICKTEXT_LARGETEXT_THRESHOLD;
+
 QQuickTextPrivate::QQuickTextPrivate()
     : fontInfo(font), elideLayout(nullptr), textLine(nullptr), lineWidth(0)
     , color(0xFF000000), linkColor(0xFF0000FF), styleColor(0xFF000000)
@@ -2977,6 +2983,18 @@ void QQuickText::hoverLeaveEvent(QHoverEvent *event)
 {
     Q_D(QQuickText);
     d->processHoverEvent(event);
+}
+
+void QQuickTextPrivate::transformChanged(QQuickItem *transformedItem)
+{
+    QQuickItemPrivate::transformChanged(transformedItem);
+
+    // If there's a lot of text, we may need QQuickText::updatePaintNode() to call
+    // QQuickTextNode::addTextLayout() again to populate a different range of lines
+    if (text.size() > largeTextSizeThreshold) {
+        updateType = UpdatePaintNode;
+        dirty(QQuickItemPrivate::Content);
+    }
 }
 
 /*!

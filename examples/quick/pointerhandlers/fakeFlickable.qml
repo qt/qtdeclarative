@@ -120,15 +120,31 @@ Rectangle {
     }
 
     LeftDrawer {
-        width: 100
+        width: buttonRow.implicitWidth + 20
         anchors.verticalCenter: parent.verticalCenter
-        Slider {
-            id: slider
-            label: "font\nsize"
+        Column {
             anchors.fill: parent
             anchors.margins: 10
-            maximumValue: 36
-            value: 14
+            Slider {
+                id: slider
+                width: parent.width
+                height: parent.height - buttonRow.implicitHeight
+                label: "font\nsize"
+                maximumValue: 36
+                value: 14
+            }
+            Row {
+                id: buttonRow
+                spacing: 4
+                TapHandlerButton {
+                    text: "⭯"
+                    onClicked: ff.rotation -= 45
+                }
+                TapHandlerButton {
+                    text: "⭮"
+                    onClicked: ff.rotation += 45
+                }
+            }
         }
     }
 }
