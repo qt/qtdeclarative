@@ -1,6 +1,6 @@
 # Generated from chapter2-lists.pro.
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(chapter2-lists LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
