@@ -50,7 +50,7 @@ qt_target_qml_sources(
 
 \endcode
 
-\versionlessNote qt6_target_qml_sources()
+\versionlessCMakeCommandsNote qt6_target_qml_sources()
 
 \section1 Description
 
