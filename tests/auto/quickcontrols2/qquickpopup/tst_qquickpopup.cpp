@@ -101,6 +101,7 @@ private slots:
     void invisibleToolTipOpen();
     void centerInOverlayWithinStackViewItem();
     void destroyDuringExitTransition();
+    void releaseAfterExitTransition();
 };
 
 void tst_QQuickPopup::initTestCase()
@@ -1452,6 +1453,33 @@ void tst_QQuickPopup::destroyDuringExitTransition()
     QVERIFY(button->isDown());
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, buttonClickPos);
     QVERIFY(!button->isDown());
+}
+
+void tst_QQuickPopup::releaseAfterExitTransition()
+{
+    QQuickApplicationHelper helper(this, "releaseAfterExitTransition.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+    QQuickPopup *modalPopup = window->property("modalPopup").value<QQuickPopup *>();
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup *>();
+
+    modalPopup->open();
+    QTRY_VERIFY(modalPopup->isOpened());
+
+    QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    // wait until the transition is finished and the overlay hides itself
+    QTRY_VERIFY(!overlay->isVisible());
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QTRY_VERIFY(!popup->isOpened());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)

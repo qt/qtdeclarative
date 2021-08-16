@@ -411,8 +411,11 @@ void QQuickOverlay::itemChange(ItemChange change, const ItemChangeData &data)
     Q_D(QQuickOverlay);
     QQuickItem::itemChange(change, data);
 
-    if (change == ItemChildAddedChange || change == ItemChildRemovedChange)
+    if (change == ItemChildAddedChange || change == ItemChildRemovedChange) {
         setVisible(!d->allDrawers.isEmpty() || !childItems().isEmpty());
+        if (data.item->parent() == d->mouseGrabberPopup)
+            d->setMouseGrabberPopup(nullptr);
+    }
 }
 
 void QQuickOverlay::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
