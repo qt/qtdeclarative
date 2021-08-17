@@ -3303,7 +3303,6 @@ void Renderer::renderUnmergedBatch(PreparedRenderBatch *renderBatch, bool depthP
 {
     const Batch *batch = renderBatch->batch;
     Element *e = batch->first;
-    QSGGeometryNode *gn = e->node;
 
     if (batch->clipState.type & ClipState::StencilClip)
         enqueueStencilDraw(batch);
@@ -3313,8 +3312,7 @@ void Renderer::renderUnmergedBatch(PreparedRenderBatch *renderBatch, bool depthP
     QRhiCommandBuffer *cb = commandBuffer();
 
     while (e) {
-        gn = e->node;
-        QSGGeometry *g = gn->geometry();
+        QSGGeometry *g = e->node->geometry();
         checkLineWidth(g);
         const int effectiveIndexSize = m_uint32IndexForRhi ? sizeof(quint32) : g->sizeOfIndex();
 
