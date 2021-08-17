@@ -149,7 +149,7 @@ struct Q_QML_PRIVATE_EXPORT String : StringOrSymbol {
 private:
     static void append(const String *data, QChar *ch);
 };
-Q_STATIC_ASSERT(std::is_trivial< String >::value);
+Q_STATIC_ASSERT(std::is_trivial_v<String>);
 
 struct ComplexString : String {
     void init(String *l, String *n);
@@ -162,7 +162,7 @@ struct ComplexString : String {
     };
     int len;
 };
-Q_STATIC_ASSERT(std::is_trivial< ComplexString >::value);
+Q_STATIC_ASSERT(std::is_trivial_v<ComplexString>);
 
 inline
 int String::length() const {

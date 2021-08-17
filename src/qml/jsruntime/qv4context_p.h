@@ -92,7 +92,7 @@ DECLARE_HEAP_OBJECT(ExecutionContext, Base) {
     quint8 padding_[4];
 #endif
 };
-Q_STATIC_ASSERT(std::is_trivial< ExecutionContext >::value);
+Q_STATIC_ASSERT(std::is_trivial_v<ExecutionContext>);
 Q_STATIC_ASSERT(sizeof(ExecutionContext) == sizeof(Base) + sizeof(ExecutionContextData) + QT_POINTER_SIZE);
 
 Q_STATIC_ASSERT(std::is_standard_layout<ExecutionContextData>::value);
@@ -125,7 +125,7 @@ DECLARE_HEAP_OBJECT(CallContext, ExecutionContext) {
             locals.values[i] = Value::emptyValue();
     }
 };
-Q_STATIC_ASSERT(std::is_trivial< CallContext >::value);
+Q_STATIC_ASSERT(std::is_trivial_v<CallContext>);
 Q_STATIC_ASSERT(std::is_standard_layout<CallContextData>::value);
 Q_STATIC_ASSERT(offsetof(CallContextData, function) == 0);
 //### The following size check fails on Win8. With the ValueArray at the end of the

@@ -311,7 +311,7 @@ struct Q_QML_PRIVATE_EXPORT Value : public StaticValue
     template<typename T>
     Value &operator=(const Scoped<T> &t);
 };
-Q_STATIC_ASSERT(std::is_trivial<Value>::value);
+Q_STATIC_ASSERT(std::is_trivial_v<Value>);
 Q_STATIC_ASSERT(sizeof(Value) == sizeof(StaticValue));
 
 template<>

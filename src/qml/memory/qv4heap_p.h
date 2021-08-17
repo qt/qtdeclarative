@@ -89,7 +89,7 @@ private:
     Base *ptr;
 };
 typedef Pointer<char *, 0> V4PointerCheck;
-Q_STATIC_ASSERT(std::is_trivial< V4PointerCheck >::value);
+Q_STATIC_ASSERT(std::is_trivial_v<V4PointerCheck>);
 
 struct Q_QML_EXPORT Base {
     void *operator new(size_t) = delete;
@@ -168,7 +168,7 @@ struct Q_QML_EXPORT Base {
     Q_ALWAYS_INLINE void _setDestroyed() {}
 #endif
 };
-Q_STATIC_ASSERT(std::is_trivial< Base >::value);
+Q_STATIC_ASSERT(std::is_trivial_v<Base>);
 // This class needs to consist only of pointer sized members to allow
 // for a size/offset translation when cross-compiling between 32- and
 // 64-bit.
@@ -253,7 +253,7 @@ private:
     QtSharedPointer::ExternalRefCountData *d;
     QObject *qObject;
 };
-Q_STATIC_ASSERT(std::is_trivial< QV4QPointer<QObject> >::value);
+Q_STATIC_ASSERT(std::is_trivial_v<QV4QPointer<QObject>>);
 #endif
 
 }

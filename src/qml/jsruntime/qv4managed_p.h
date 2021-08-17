@@ -95,7 +95,7 @@ inline void qYouForgotTheQ_MANAGED_Macro(T1, T2) {}
         DataClass() = delete; \
         Q_DISABLE_COPY(DataClass) \
         V4_MANAGED_ITSELF(DataClass, superClass) \
-        Q_STATIC_ASSERT(std::is_trivial< QV4::Heap::DataClass >::value);
+        Q_STATIC_ASSERT(std::is_trivial_v<QV4::Heap::DataClass>);
 
 #define Q_MANAGED_TYPE(type) \
     public: \

@@ -129,7 +129,7 @@ DECLARE_HEAP_OBJECT(ArrayData, Base) {
 
     uint mappedIndex(uint index) const;
 };
-Q_STATIC_ASSERT(std::is_trivial< ArrayData >::value);
+Q_STATIC_ASSERT(std::is_trivial_v<ArrayData>);
 
 struct SimpleArrayData : public ArrayData {
     uint mappedIndex(uint index) const { index += offset; if (index >= values.alloc) index -= values.alloc; return index; }
@@ -142,7 +142,7 @@ struct SimpleArrayData : public ArrayData {
         return attrs ? attrs[i] : Attr_Data;
     }
 };
-Q_STATIC_ASSERT(std::is_trivial< SimpleArrayData >::value);
+Q_STATIC_ASSERT(std::is_trivial_v<SimpleArrayData>);
 
 struct SparseArrayData : public ArrayData {
     void destroy() {

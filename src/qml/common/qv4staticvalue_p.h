@@ -453,7 +453,7 @@ struct StaticValue
         return static_cast<uint>(toInt32(d));
     }
 };
-Q_STATIC_ASSERT(std::is_trivial<StaticValue>::value);
+Q_STATIC_ASSERT(std::is_trivial_v<StaticValue>);
 
 struct Encode {
     static constexpr ReturnedValue undefined() {

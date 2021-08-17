@@ -106,7 +106,7 @@ struct RegExp : Base {
     QString flagsAsString() const;
     int captureCount() const { return subPatternCount + 1; }
 };
-Q_STATIC_ASSERT(std::is_trivial< RegExp >::value);
+Q_STATIC_ASSERT(std::is_trivial_v<RegExp>);
 
 }
 
