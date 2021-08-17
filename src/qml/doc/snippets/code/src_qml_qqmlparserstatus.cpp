@@ -48,6 +48,9 @@
 **
 ****************************************************************************/
 
+#include <QtCore/qobject.h>
+#include <QtQml/qqmlparserstatus.h>
+
 //! [0]
 class MyObject : public QObject, public QQmlParserStatus
 {
@@ -57,7 +60,7 @@ class MyObject : public QObject, public QQmlParserStatus
 public:
     MyObject(QObject *parent = 0);
     // ...
-    void classBegin();
-    void componentComplete();
+    void classBegin() override;
+    void componentComplete() override;
 };
 //! [0]
