@@ -308,14 +308,14 @@ void ShaderManager::invalidated()
 
 void ShaderManager::clearCachedRendererData()
 {
-    for (ShaderManager::Shader *sms : stockShaders) {
+    for (ShaderManager::Shader *sms : qAsConst(stockShaders)) {
         QSGMaterialShader *s = sms->programRhi.program;
         if (s) {
             QSGMaterialShaderPrivate *sd = QSGMaterialShaderPrivate::get(s);
             sd->clearCachedRendererData();
         }
     }
-    for (ShaderManager::Shader *sms : rewrittenShaders) {
+    for (ShaderManager::Shader *sms : qAsConst(rewrittenShaders)) {
         QSGMaterialShader *s = sms->programRhi.program;
         if (s) {
             QSGMaterialShaderPrivate *sd = QSGMaterialShaderPrivate::get(s);
