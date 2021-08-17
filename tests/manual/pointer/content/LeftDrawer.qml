@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -25,9 +25,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 2.14
-import Qt.labs.animation 1.0
-import QtGraphicalEffects 1.14
+import QtQuick
+import Qt.labs.animation
 
 Item {
     id: root
@@ -79,13 +78,14 @@ Item {
         easing { type: Easing.OutBounce; overshoot: 5 }
     }
 
-    RectangularGlow {
+    // TODO this was supposed to be RectangularGlow but we lost QtGraphicalEffects in Qt 6
+    Rectangle {
         id: effect
         anchors.fill: parent
-        glowRadius: dragHandler.margin
-        spread: 0.2
-        color: "cyan"
-        cornerRadius: rect.radius + glowRadius
+        border.width: dragHandler.margin
+        border.color: "cyan"
+        opacity: 0.2
+        radius: rect.radius + dragHandler.margin
     }
 
     Rectangle {
