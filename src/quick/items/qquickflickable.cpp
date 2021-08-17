@@ -2629,8 +2629,18 @@ bool QQuickFlickable::filterPointerEvent(QQuickItem *receiver, QPointerEvent *ev
 bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickFlickable);
+
+    auto wantsPointerEvent_helper = [=]() {
+        QPointerEvent *pe = static_cast<QPointerEvent *>(e);
+        QQuickDeliveryAgentPrivate::localizePointerEvent(pe, this);
+        const bool wants = d->wantsPointerEvent(pe);
+        // re-localize event back to \a i before returning
+        QQuickDeliveryAgentPrivate::localizePointerEvent(pe, i);
+        return wants;
+    };
+
     if (!isVisible() || !isEnabled() || !isInteractive() ||
-            (e->isPointerEvent() && !d->wantsPointerEvent(static_cast<QPointerEvent *>(e)))) {
+            (e->isPointerEvent() && !wantsPointerEvent_helper())) {
         d->cancelInteraction();
         return QQuickItem::childMouseEventFilter(i, e);
     }
