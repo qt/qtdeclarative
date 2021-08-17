@@ -72,6 +72,7 @@ class tst_QQuickListView : public QQmlDataTest
     Q_OBJECT
 public:
     tst_QQuickListView();
+    ~tst_QQuickListView() { delete touchDevice; }
 
 private slots:
     // WARNING: please add new tests to tst_qquicklistview2; this file is too slow to work with.
