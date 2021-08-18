@@ -1006,9 +1006,13 @@ public:
         AsynchronousLoad,
         SynchronousLoad
     };
-    enum State { Unsent = 0,
-                 Opened = 1, HeadersReceived = 2,
-                 Loading = 3, Done = 4 };
+    enum State {
+        Unsent = 0,
+        Opened = 1,
+        HeadersReceived = 2,
+        Loading = 3,
+        Done = 4
+    };
 
     QQmlXMLHttpRequest(QNetworkAccessManager *manager, QV4::ExecutionEngine *v4);
     virtual ~QQmlXMLHttpRequest();
@@ -1343,7 +1347,7 @@ void QQmlXMLHttpRequest::readyRead()
     // ### We assume if this is called the headers are now available
     if (m_state < HeadersReceived) {
         m_state = HeadersReceived;
-        fillHeadersList ();
+        fillHeadersList();
         dispatchCallbackSafely();
     }
 
@@ -1714,11 +1718,12 @@ void Heap::QQmlXMLHttpRequestCtor::init(ExecutionEngine *engine)
     Scope scope(engine);
     Scoped<QV4::QQmlXMLHttpRequestCtor> ctor(scope, this);
 
-    ctor->defineReadonlyProperty(QStringLiteral("UNSENT"), Value::fromInt32(0));
-    ctor->defineReadonlyProperty(QStringLiteral("OPENED"), Value::fromInt32(1));
-    ctor->defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Value::fromInt32(2));
-    ctor->defineReadonlyProperty(QStringLiteral("LOADING"), Value::fromInt32(3));
-    ctor->defineReadonlyProperty(QStringLiteral("DONE"), Value::fromInt32(4));
+    ctor->defineReadonlyProperty(QStringLiteral("UNSENT"),           Value::fromInt32(QQmlXMLHttpRequest::Unsent));
+    ctor->defineReadonlyProperty(QStringLiteral("OPENED"),           Value::fromInt32(QQmlXMLHttpRequest::Opened));
+    ctor->defineReadonlyProperty(QStringLiteral("HEADERS_RECEIVED"), Value::fromInt32(QQmlXMLHttpRequest::HeadersReceived));
+    ctor->defineReadonlyProperty(QStringLiteral("LOADING"),          Value::fromInt32(QQmlXMLHttpRequest::Loading));
+    ctor->defineReadonlyProperty(QStringLiteral("DONE"),             Value::fromInt32(QQmlXMLHttpRequest::Done));
+
     if (!ctor->d()->proto)
         ctor->setupProto();
     ScopedString s(scope, engine->id_prototype());
