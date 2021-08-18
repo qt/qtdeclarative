@@ -62,6 +62,7 @@ if(TARGET Qt::Qml)
     if(NOT QT6_IS_SHARED_LIBS_BUILD)
         _qt_internal_test_expect_pass(test_plugins)
     endif()
+    _qt_internal_test_expect_pass(empty_qmldir)
 endif()
 
 if(TARGET Qt::Quick)
