@@ -233,14 +233,6 @@ function(qt_internal_add_qml_module target)
                 )
             endif()
         endif()
-
-        # FIXME: Some repos expect this to be set and use it to install other
-        #        things relative to it. They should just specify the install
-        #        location directly. Once the other repos have been updated to
-        #        not rely on this, remove this property.
-        set_target_properties(${arg_PLUGIN_TARGET} PROPERTIES
-            QT_QML_MODULE_INSTALL_DIR ${arg_INSTALL_DIRECTORY}
-        )
     endif()
 
     # TODO: Check if we need arg_SOURCES in this condition

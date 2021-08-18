@@ -1605,18 +1605,7 @@ function(qt6_qml_type_registration target)
         endif()
     endif()
 
-    # Horrible hack workaround to not install metatypes.json files for examples/ qml plugins into
-    # ${qt_prefix}/lib/meta_types.
-    # Put them into QT_QML_MODULE_INSTALL_DIR/lib/meta_types instead.
-    get_target_property(qml_install_dir ${target} QT_QML_MODULE_INSTALL_DIR)
     set(meta_types_json_args "")
-
-    # TODO: This is internal Qt logic, it should be moved out of here.
-    if(QT_BUILDING_QT AND QT_WILL_INSTALL AND qml_install_dir AND
-            qml_install_dir MATCHES "^${INSTALL_EXAMPLESDIR}")
-        set(meta_types_json_args "INSTALL_DIR" "${qml_install_dir}/lib/metatypes")
-    endif()
-
     if(arg_MANUAL_MOC_JSON_FILES)
         list(APPEND meta_types_json_args "MANUAL_MOC_JSON_FILES" ${arg_MANUAL_MOC_JSON_FILES})
     endif()
