@@ -84,6 +84,7 @@ public:
     QString preferredPath() const { return m_parser.preferredPath(); }
 
     bool designerSupported() const { return m_parser.designerSupported(); }
+    bool hasTypeInfo() const { return !m_parser.typeInfos().isEmpty(); }
 
 private:
     QQmlDirParser m_parser;

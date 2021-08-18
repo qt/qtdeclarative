@@ -1369,8 +1369,12 @@ QTypeRevision QQmlImportsPrivate::addLibraryImport(
             return matchingVersion;
 
         if (inserted->qmlDirComponents.isEmpty() && inserted->qmlDirScripts.isEmpty()) {
-            if (qmldir.plugins().isEmpty() && !qmldir.imports().isEmpty())
-                return validVersion(); // This is a pure redirection
+            if (qmldir.plugins().isEmpty()) {
+                if (!qmldir.imports().isEmpty())
+                    return validVersion(); // This is a pure redirection
+                if (qmldir.hasTypeInfo())
+                    return validVersion(); // A pure C++ module without plugin
+            }
             errors->prepend(moduleNotFoundError(uri, relevantVersion(uri, version)));
             return QTypeRevision();
         } else if (qmldir.hasContent()) {
