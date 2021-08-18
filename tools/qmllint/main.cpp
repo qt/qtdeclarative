@@ -171,18 +171,23 @@ static bool lint_file(const QString &filename, const bool silent, QJsonArray *js
 
             importer.setResourceFileMapper(mapper);
 
-            FindWarningVisitor v { &importer,         qmltypesFiles, code,
-                                   engine.comments(), filename,      silent || json };
+            QQmlJSLogger logger(filename, code, silent || json);
+            FindWarningVisitor v {
+                &importer,
+                &logger,
+                qmltypesFiles,
+                engine.comments(),
+            };
 
             for (auto it = options.cbegin(); it != options.cend(); ++it) {
-                v.logger().setCategoryError(it.value().m_category, it.value().m_error);
-                v.logger().setCategoryLevel(it.value().m_category, it.value().m_level);
+                logger.setCategoryError(it.value().m_category, it.value().m_error);
+                logger.setCategoryLevel(it.value().m_category, it.value().m_level);
             }
 
             parser.rootNode()->accept(&v);
             success = v.check();
 
-            Codegen codegen { &importer, filename, qmltypesFiles, &v.logger(), code };
+            Codegen codegen { &importer, filename, qmltypesFiles, &logger, code };
             QQmlJSSaveFunction saveFunction = [](const QV4::CompiledData::SaveableUnitPointer &,
                                                  const QQmlJSAotFunctionMap &,
                                                  QString *) { return true; };
@@ -191,17 +196,17 @@ static bool lint_file(const QString &filename, const bool silent, QJsonArray *js
 
             QLoggingCategory::setFilterRules(u"qt.qml.compiler=false"_qs);
 
-            CodegenWarningInterface interface(&v.logger());
+            CodegenWarningInterface interface(&logger);
             qCompileQmlFile(filename, saveFunction, &codegen, &error, true, &interface);
 
-            success &= !v.logger().hasWarnings() && !v.logger().hasErrors();
+            success &= !logger.hasWarnings() && !logger.hasErrors();
 
             if (json) {
-                for (const auto &error : v.logger().errors())
+                for (const auto &error : logger.errors())
                     addJsonWarning(error);
-                for (const auto &warning : v.logger().warnings())
+                for (const auto &warning : logger.warnings())
                     addJsonWarning(warning);
-                for (const auto &info : v.logger().infos())
+                for (const auto &info : logger.infos())
                     addJsonWarning(info);
             }
         };

@@ -54,13 +54,14 @@ struct QQmlJSResourceFileMapper;
 class QQmlJSImportVisitor : public QQmlJS::AST::Visitor
 {
 public:
-    QQmlJSImportVisitor(QQmlJSImporter *importer, const QString &implicitImportDirectory,
-                        const QStringList &qmltypesFiles = QStringList(), const QString &fileName = QString(), const QString &code = QString(), bool silent = true);
+    QQmlJSImportVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
+                        const QString &implicitImportDirectory,
+                        const QStringList &qmltypesFiles = QStringList());
     ~QQmlJSImportVisitor();
 
     QQmlJSScope::Ptr result() const;
 
-    QQmlJSLogger &logger() { return m_logger; }
+    QQmlJSLogger &logger() { return *m_logger; }
 
     QHash<QString, QQmlJSScope::ConstPtr> imports() const { return m_rootScopeImports; }
     QHash<QString, QQmlJSScope::ConstPtr> addressableScopes() const { return m_scopesById; }
@@ -138,8 +139,6 @@ protected:
     void throwRecursionDepthError() override;
 
     QString m_implicitImportDirectory;
-    QString m_code;
-    QString m_filePath;
     QString m_rootId;
     QStringView m_inlineComponentName;
     bool m_nextIsInlineComponent = false;
@@ -180,7 +179,7 @@ protected:
     void checkInheritanceCycle(QQmlJSScope::ConstPtr scope);
     void checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope);
 
-    QQmlJSLogger m_logger;
+    QQmlJSLogger *m_logger;
 
     // Used to temporarily store annotations for functions and generators wrapped in UiSourceElements
     QVector<QQmlJSAnnotation> m_pendingMethodAnnotations;

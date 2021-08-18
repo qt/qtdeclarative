@@ -68,19 +68,18 @@ inline QString getScopeName(const QQmlJSScope::ConstPtr &scope, QQmlJSScope::Sco
     return scope->baseTypeName();
 }
 
-QQmlJSImportVisitor::QQmlJSImportVisitor(QQmlJSImporter *importer,
+QQmlJSImportVisitor::QQmlJSImportVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
                                          const QString &implicitImportDirectory,
-                                         const QStringList &qmltypesFiles, const QString &fileName,
-                                         const QString &code, bool silent)
+                                         const QStringList &qmltypesFiles)
     : m_implicitImportDirectory(implicitImportDirectory),
-      m_code(code),
-      m_filePath(fileName),
       m_rootId(u"<id>"_qs),
       m_qmltypesFiles(qmltypesFiles),
       m_currentScope(QQmlJSScope::create(QQmlJSScope::JSFunctionScope)),
       m_importer(importer),
-      m_logger(fileName, code, silent)
+      m_logger(logger)
 {
+    Q_ASSERT(logger); // must be valid
+
     m_globalScope = m_currentScope;
     m_currentScope->setIsComposite(true);
 
@@ -207,13 +206,13 @@ void QQmlJSImportVisitor::resolveAliases()
                 if (doRequeue)
                     continue;
                 if (foundProperty) {
-                    m_logger.logWarning(QStringLiteral("Cannot deduce type of alias \"%1\"")
-                                                .arg(property.propertyName()),
-                                        Log_Alias, object->sourceLocation());
+                    m_logger->logWarning(QStringLiteral("Cannot deduce type of alias \"%1\"")
+                                                 .arg(property.propertyName()),
+                                         Log_Alias, object->sourceLocation());
                 } else {
-                    m_logger.logWarning(QStringLiteral("Cannot resolve alias \"%1\"")
-                                                .arg(property.propertyName()),
-                                        Log_Alias, object->sourceLocation());
+                    m_logger->logWarning(QStringLiteral("Cannot resolve alias \"%1\"")
+                                                 .arg(property.propertyName()),
+                                         Log_Alias, object->sourceLocation());
                 }
             } else {
                 property.setType(type);
@@ -249,9 +248,9 @@ void QQmlJSImportVisitor::resolveAliases()
         for (const auto &property : properties) {
             if (!property.isAlias() || property.type())
                 continue;
-            m_logger.logWarning(QStringLiteral("Alias \"%1\" is part of an alias cycle")
-                                        .arg(property.propertyName()),
-                                Log_Alias, object->sourceLocation());
+            m_logger->logWarning(QStringLiteral("Alias \"%1\" is part of an alias cycle")
+                                         .arg(property.propertyName()),
+                                 Log_Alias, object->sourceLocation());
         }
     }
 }
@@ -285,9 +284,9 @@ void QQmlJSImportVisitor::processImportWarnings(const QString &what, const QQmlJ
     if (warnings.isEmpty())
         return;
 
-    m_logger.logWarning(QStringLiteral("Warnings occurred while importing %1:").arg(what),
-                        Log_Import, srcLocation);
-    m_logger.processMessages(warnings, QtWarningMsg, Log_Import);
+    m_logger->logWarning(QStringLiteral("Warnings occurred while importing %1:").arg(what),
+                         Log_Import, srcLocation);
+    m_logger->processMessages(warnings, QtWarningMsg, Log_Import);
 }
 
 void QQmlJSImportVisitor::importBaseModules()
@@ -305,7 +304,7 @@ void QQmlJSImportVisitor::importBaseModules()
 
     // Pulling in the modules and neighboring qml files of the qmltypes we're trying to lint is not
     // something we need to do.
-    if (!m_filePath.endsWith(u".qmltypes"_qs))
+    if (!m_logger->fileName().endsWith(u".qmltypes"_qs))
         m_rootScopeImports.insert(m_importer->importDirectory(m_implicitImportDirectory));
 
     processImportWarnings(QStringLiteral("base modules"));
@@ -346,11 +345,11 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
     }
 
     for (const auto &import : unusedImports) {
-        m_logger.logInfo(QString::fromLatin1("Unused import at %1:%2:%3")
-                                 .arg(m_filePath)
-                                 .arg(import.startLine)
-                                 .arg(import.startColumn),
-                         Log_UnusedImport, import);
+        m_logger->logInfo(QString::fromLatin1("Unused import at %1:%2:%3")
+                                  .arg(m_logger->fileName())
+                                  .arg(import.startLine)
+                                  .arg(import.startColumn),
+                          Log_UnusedImport, import);
     }
 }
 
@@ -454,7 +453,7 @@ void QQmlJSImportVisitor::processDefaultProperties()
             }
 
             if (!isComponent) {
-                m_logger.logWarning(
+                m_logger->logWarning(
                         QStringLiteral("Cannot assign to non-existent default property"),
                         Log_Property, it.value().constFirst()->sourceLocation());
             }
@@ -465,7 +464,7 @@ void QQmlJSImportVisitor::processDefaultProperties()
         const QQmlJSMetaProperty defaultProp = parentScope->property(defaultPropertyName);
 
         if (it.value().length() > 1 && !defaultProp.isList()) {
-            m_logger.logWarning(
+            m_logger->logWarning(
                     QStringLiteral("Cannot assign multiple objects to a default non-list property"),
                     Log_Property, it.value().constFirst()->sourceLocation());
         }
@@ -489,7 +488,7 @@ void QQmlJSImportVisitor::processDefaultProperties()
             if (propType->canAssign(scope))
                 continue;
 
-            m_logger.logWarning(
+            m_logger->logWarning(
                     QStringLiteral("Cannot assign to default property of incompatible type"),
                     Log_Property, scope->sourceLocation());
         }
@@ -507,7 +506,7 @@ void QQmlJSImportVisitor::processPropertyTypes()
             property.setType(propertyType);
             type.scope->addOwnProperty(property);
         } else {
-            m_logger.logWarning(
+            m_logger->logWarning(
                     property.typeName()
                             + QStringLiteral(" was not found. Did you add all import paths?"),
                     Log_Import, type.location);
@@ -536,7 +535,7 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
             if (objectBinding.onToken) {
                 if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueInterceptor"))) {
                     if (binding.hasInterceptor()) {
-                        m_logger.logWarning(
+                        m_logger->logWarning(
                                 QStringLiteral("Duplicate interceptor on property \"%1\"")
                                         .arg(propertyName),
                                 Log_Property, objectBinding.location);
@@ -548,12 +547,12 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
                     }
                 } else if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueSource"))) {
                     if (binding.hasValueSource()) {
-                        m_logger.logWarning(
+                        m_logger->logWarning(
                                 QStringLiteral("Duplicate value source on property \"%1\"")
                                         .arg(propertyName),
                                 Log_Property, objectBinding.location);
                     } else if (binding.hasValue()) {
-                        m_logger.logWarning(
+                        m_logger->logWarning(
                                 QStringLiteral("Cannot combine value source and binding on "
                                                "property \"%1\"")
                                         .arg(propertyName),
@@ -564,7 +563,7 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
                         objectBinding.scope->addOwnPropertyBinding(binding);
                     }
                 } else {
-                    m_logger.logWarning(
+                    m_logger->logWarning(
                             QStringLiteral("On-binding for property \"%1\" has wrong type \"%2\"")
                                     .arg(propertyName)
                                     .arg(typeName),
@@ -573,7 +572,7 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
             } else {
                 // TODO: Warn here if binding.hasValue() is true
                 if (binding.hasValueSource()) {
-                    m_logger.logWarning(
+                    m_logger->logWarning(
                             QStringLiteral(
                                     "Cannot combine value source and binding on property \"%1\"")
                                     .arg(propertyName),
@@ -588,12 +587,12 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
             // If the current scope is not fully resolved we cannot tell whether the property exists
             // or not (we already warn elsewhere)
         } else if (!property.isValid()) {
-            m_logger.logWarning(QStringLiteral("Property \"%1\" is invalid or does not exist")
-                                        .arg(propertyName),
-                                Log_Property, objectBinding.location);
+            m_logger->logWarning(QStringLiteral("Property \"%1\" is invalid or does not exist")
+                                         .arg(propertyName),
+                                 Log_Property, objectBinding.location);
         } else if (property.type().isNull() || !property.type()->isFullyResolved()) {
             // Property type is not fully resolved we cannot tell any more than this
-            m_logger.logWarning(
+            m_logger->logWarning(
                     QStringLiteral("Property \"%1\" has incomplete type \"%2\". You may be "
                                    "missing an import.")
                             .arg(propertyName)
@@ -604,12 +603,12 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
             // incompatible (we already warn elsewhere)
         } else {
             // the type is incompatible
-            m_logger.logWarning(QStringLiteral("Property \"%1\" of type \"%2\" is assigned an "
-                                               "incompatible type \"%3\"")
-                                        .arg(propertyName)
-                                        .arg(property.typeName())
-                                        .arg(getScopeName(childScope, QQmlJSScope::QMLScope)),
-                                Log_Property, objectBinding.location);
+            m_logger->logWarning(QStringLiteral("Property \"%1\" of type \"%2\" is assigned an "
+                                                "incompatible type \"%3\"")
+                                         .arg(propertyName)
+                                         .arg(property.typeName())
+                                         .arg(getScopeName(childScope, QQmlJSScope::QMLScope)),
+                                 Log_Property, objectBinding.location);
         }
     }
 }
@@ -618,7 +617,7 @@ void QQmlJSImportVisitor::checkRequiredProperties()
 {
     for (const auto &required : m_requiredProperties) {
         if (!required.scope->hasProperty(required.name)) {
-            m_logger.logWarning(
+            m_logger->logWarning(
                     QStringLiteral("Property \"%1\" was marked as required but does not exist.")
                             .arg(required.name),
                     Log_Required, required.location);
@@ -665,7 +664,7 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                                 message += QStringLiteral(" (marked as required by %3)")
                                                    .arg(requiredScopeName);
 
-                            m_logger.logWarning(message, Log_Required, defScope->sourceLocation());
+                            m_logger->logWarning(message, Log_Required, defScope->sourceLocation());
                         }
                     }
                     prevRequiredScope = requiredScope;
@@ -688,7 +687,7 @@ void QQmlJSImportVisitor::processPropertyBindings()
                     continue;
 
                 // TODO: Can this be in a better suited category?
-                m_logger.logWarning(
+                m_logger->logWarning(
                         QStringLiteral("Binding assigned to \"%1\", but no property \"%1\" "
                                        "exists in the current element.")
                                 .arg(name),
@@ -698,7 +697,7 @@ void QQmlJSImportVisitor::processPropertyBindings()
 
             const auto property = scope->property(name);
             if (!property.type()) {
-                m_logger.logWarning(
+                m_logger->logWarning(
                         QStringLiteral("No type found for property \"%1\". This may be due "
                                        "to a missing import statement or incomplete "
                                        "qmltypes files.")
@@ -721,7 +720,7 @@ void QQmlJSImportVisitor::processPropertyBindings()
                 if (!deprecation.reason.isEmpty())
                     message.append(QStringLiteral(" (Reason: %1)").arg(deprecation.reason));
 
-                m_logger.logWarning(message, Log_Deprecation, location);
+                m_logger->logWarning(message, Log_Deprecation, location);
             }
 
             QQmlJSMetaPropertyBinding binding(property);
@@ -759,9 +758,9 @@ void QQmlJSImportVisitor::checkSignals()
             const QString signal = signalName(pair.first);
 
             if (!it.key()->hasMethod(signal)) {
-                m_logger.logWarning(QStringLiteral("no matching signal found for handler \"%1\"")
-                                            .arg(pair.first),
-                                    Log_UnqualifiedAccess, location);
+                m_logger->logWarning(QStringLiteral("no matching signal found for handler \"%1\"")
+                                             .arg(pair.first),
+                                     Log_UnqualifiedAccess, location);
                 continue;
             }
 
@@ -780,10 +779,10 @@ void QQmlJSImportVisitor::checkSignals()
             const QStringList signalParameters = scopeSignal.parameterNames();
 
             if (pair.second.length() > signalParameters.length()) {
-                m_logger.logWarning(QStringLiteral("Signal handler for \"%2\" has more formal"
-                                                   " parameters than the signal it handles.")
-                                            .arg(pair.first),
-                                    Log_Signal, location);
+                m_logger->logWarning(QStringLiteral("Signal handler for \"%2\" has more formal"
+                                                    " parameters than the signal it handles.")
+                                             .arg(pair.first),
+                                     Log_Signal, location);
                 continue;
             }
 
@@ -793,13 +792,13 @@ void QQmlJSImportVisitor::checkSignals()
                 if (j == i || j < 0)
                     continue;
 
-                m_logger.logWarning(QStringLiteral("Parameter %1 to signal handler for \"%2\""
-                                                   " is called \"%3\". The signal has a parameter"
-                                                   " of the same name in position %4.")
-                                            .arg(i + 1)
-                                            .arg(pair.first, handlerParameter)
-                                            .arg(j + 1),
-                                    Log_Signal, location);
+                m_logger->logWarning(QStringLiteral("Parameter %1 to signal handler for \"%2\""
+                                                    " is called \"%3\". The signal has a parameter"
+                                                    " of the same name in position %4.")
+                                             .arg(i + 1)
+                                             .arg(pair.first, handlerParameter)
+                                             .arg(j + 1),
+                                     Log_Signal, location);
             }
         }
     }
@@ -829,7 +828,7 @@ void QQmlJSImportVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
                 if (!deprecation.reason.isEmpty())
                     message.append(QStringLiteral(" (Reason: %1)").arg(deprecation.reason));
 
-                m_logger.logWarning(message, Log_Deprecation, originalScope->sourceLocation());
+                m_logger->logWarning(message, Log_Deprecation, originalScope->sourceLocation());
             }
         }
 
@@ -841,10 +840,10 @@ void QQmlJSImportVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
                 inheritenceCycle.append(seen->baseTypeName());
             }
 
-            m_logger.logWarning(QStringLiteral("%1 is part of an inheritance cycle: %2")
-                                        .arg(scope->internalName())
-                                        .arg(inheritenceCycle),
-                                Log_InheritanceCycle);
+            m_logger->logWarning(QStringLiteral("%1 is part of an inheritance cycle: %2")
+                                         .arg(scope->internalName())
+                                         .arg(inheritenceCycle),
+                                 Log_InheritanceCycle);
             break;
         }
 
@@ -855,7 +854,7 @@ void QQmlJSImportVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
         } else if (auto newScope = scope->baseType()) {
             scope = newScope;
         } else {
-            m_logger.logWarning(
+            m_logger->logWarning(
                     scope->baseTypeName()
                             + QStringLiteral(" was not found. Did you add all import paths?"),
                     Log_Import);
@@ -879,12 +878,12 @@ void QQmlJSImportVisitor::checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr sc
         case QQmlJSScope::GroupedPropertyScope:
         case QQmlJSScope::AttachedPropertyScope:
             if (!childScope->baseType()) {
-                m_logger.logWarning(QStringLiteral("unknown %1 property scope %2.")
-                                            .arg(type == QQmlJSScope::GroupedPropertyScope
-                                                         ? QStringLiteral("grouped")
-                                                         : QStringLiteral("attached"),
-                                                 childScope->internalName()),
-                                    Log_UnqualifiedAccess, childScope->sourceLocation());
+                m_logger->logWarning(QStringLiteral("unknown %1 property scope %2.")
+                                             .arg(type == QQmlJSScope::GroupedPropertyScope
+                                                          ? QStringLiteral("grouped")
+                                                          : QStringLiteral("attached"),
+                                                  childScope->internalName()),
+                                     Log_UnqualifiedAccess, childScope->sourceLocation());
             }
             children.append(childScope->childScopes());
         default:
@@ -923,14 +922,14 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ExpressionStatement *)
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::StringLiteral *sl)
 {
-    const QString s = m_code.mid(sl->literalToken.begin(), sl->literalToken.length);
+    const QString s = m_logger->code().mid(sl->literalToken.begin(), sl->literalToken.length);
 
     if (s.contains(QLatin1Char('\r')) || s.contains(QLatin1Char('\n')) || s.contains(QChar(0x2028u))
         || s.contains(QChar(0x2029u))) {
-        m_logger.logWarning(QStringLiteral("String contains unescaped line terminator which is "
-                                           "deprecated. Use a template "
-                                           "literal instead."),
-                            Log_MultilineString, sl->literalToken);
+        m_logger->logWarning(QStringLiteral("String contains unescaped line terminator which is "
+                                            "deprecated. Use a template "
+                                            "literal instead."),
+                             Log_MultilineString, sl->literalToken);
     }
 
     return true;
@@ -970,8 +969,8 @@ void QQmlJSImportVisitor::endVisit(UiObjectDefinition *)
 bool QQmlJSImportVisitor::visit(UiInlineComponent *component)
 {
     if (!m_inlineComponentName.isNull()) {
-        m_logger.logWarning(u"Nested inline components are not supported"_qs, Log_Syntax,
-                            component->firstSourceLocation());
+        m_logger->logWarning(u"Nested inline components are not supported"_qs, Log_Syntax,
+                             component->firstSourceLocation());
         return true;
     }
 
@@ -1021,9 +1020,9 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             if (const auto idExpression = cast<IdentifierExpression *>(node)) {
                 aliasExpr.prepend(idExpression->name.toString());
             } else {
-                m_logger.logWarning(QStringLiteral("Invalid alias expression. Only IDs and field "
-                                                   "member expressions can be aliased."),
-                                    Log_Alias, expression->firstSourceLocation());
+                m_logger->logWarning(QStringLiteral("Invalid alias expression. Only IDs and field "
+                                                    "member expressions can be aliased."),
+                                     Log_Alias, expression->firstSourceLocation());
             }
         } else {
             const auto name = publicMember->memberType->name.toString();
@@ -1374,8 +1373,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
 
 void QQmlJSImportVisitor::throwRecursionDepthError()
 {
-    m_logger.logCritical(QStringLiteral("Maximum statement or expression depth exceeded"),
-                         Log_RecursionDepthError);
+    m_logger->logCritical(QStringLiteral("Maximum statement or expression depth exceeded"),
+                          Log_RecursionDepthError);
 }
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::ClassDeclaration *ast)
@@ -1464,10 +1463,11 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::WithStatement *ast)
     enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("with"),
                      ast->firstSourceLocation());
 
-    m_logger.logWarning(QStringLiteral("with statements are strongly discouraged in QML "
-                                       "and might cause false positives when analysing unqualified "
-                                       "identifiers"),
-                        Log_WithStatement, ast->firstSourceLocation());
+    m_logger->logWarning(
+            QStringLiteral("with statements are strongly discouraged in QML "
+                           "and might cause false positives when analysing unqualified "
+                           "identifiers"),
+            Log_WithStatement, ast->firstSourceLocation());
 
     return true;
 }

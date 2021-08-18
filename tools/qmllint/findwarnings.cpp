@@ -131,12 +131,13 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *uiod)
     childScope->addOwnProperty(property);
 }
 
-FindWarningVisitor::FindWarningVisitor(QQmlJSImporter *importer, QStringList qmltypesFiles,
-                                       QString code, QList<QQmlJS::SourceLocation> comments,
-                                       QString fileName, bool silent)
-    : QQmlJSImportVisitor(importer,
-                          implicitImportDirectory(fileName, importer->resourceFileMapper()),
-                          qmltypesFiles, fileName, code, silent)
+FindWarningVisitor::FindWarningVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
+                                       QStringList qmltypesFiles,
+                                       QList<QQmlJS::SourceLocation> comments)
+    : QQmlJSImportVisitor(
+            importer, logger,
+            implicitImportDirectory(logger->fileName(), importer->resourceFileMapper()),
+            qmltypesFiles)
 {
     parseComments(comments);
 }
@@ -147,10 +148,11 @@ void FindWarningVisitor::parseComments(const QList<QQmlJS::SourceLocation> &comm
     QHash<int, QSet<QQmlJSLoggerCategory>> enablesPerLine;
     QHash<int, QSet<QQmlJSLoggerCategory>> oneLineDisablesPerLine;
 
-    const QStringList lines = m_code.split(u'\n');
+    const QString code = m_logger->code();
+    const QStringList lines = code.split(u'\n');
 
     for (const auto &loc : comments) {
-        const QString comment = m_code.mid(loc.offset, loc.length);
+        const QString comment = code.mid(loc.offset, loc.length);
         if (!comment.startsWith(u" qmllint ") && !comment.startsWith(u"qmllint "))
             continue;
 
@@ -163,17 +165,17 @@ void FindWarningVisitor::parseComments(const QList<QQmlJS::SourceLocation> &comm
         QSet<QQmlJSLoggerCategory> categories;
         for (qsizetype i = 2; i < words.size(); i++) {
             const QString category = words.at(i);
-            const auto option = m_logger.options().constFind(category);
-            if (option != m_logger.options().constEnd())
+            const auto option = m_logger->options().constFind(category);
+            if (option != m_logger->options().constEnd())
                 categories << option->m_category;
             else
-                m_logger.logWarning(
+                m_logger->logWarning(
                         u"qmllint directive on unknown category \"%1\""_qs.arg(category),
                         Log_Syntax, loc);
         }
 
         if (categories.isEmpty()) {
-            for (const auto &option : m_logger.options())
+            for (const auto &option : m_logger->options())
                 categories << option.m_category;
         }
 
@@ -196,8 +198,8 @@ void FindWarningVisitor::parseComments(const QList<QQmlJS::SourceLocation> &comm
         } else if (command == u"enable"_qs) {
             enablesPerLine[loc.startLine + 1] |= categories;
         } else {
-            m_logger.logWarning(u"Invalid qmllint directive \"%1\" provided"_qs.arg(command),
-                                Log_Syntax, loc);
+            m_logger->logWarning(u"Invalid qmllint directive \"%1\" provided"_qs.arg(command),
+                                 Log_Syntax, loc);
         }
     }
 
@@ -211,7 +213,7 @@ void FindWarningVisitor::parseComments(const QList<QQmlJS::SourceLocation> &comm
         currentlyDisabled.unite(oneLineDisablesPerLine[i]);
 
         if (!currentlyDisabled.isEmpty())
-            m_logger.ignoreWarnings(i, currentlyDisabled);
+            m_logger->ignoreWarnings(i, currentlyDisabled);
 
         currentlyDisabled.subtract(oneLineDisablesPerLine[i]);
     }
@@ -235,5 +237,5 @@ bool FindWarningVisitor::check()
         outstandingConnection.uiod->initializer->accept(this);
     }
 
-    return !m_logger.hasWarnings() && !m_logger.hasErrors();
+    return !m_logger->hasWarnings() && !m_logger->hasErrors();
 }

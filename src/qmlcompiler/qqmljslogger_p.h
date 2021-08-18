@@ -229,6 +229,9 @@ public:
         m_ignoredWarnings[line] = categories;
     }
 
+    QString code() const { return m_code; }
+    QString fileName() const { return m_fileName; }
+
 private:
     void printContext(const QQmlJS::SourceLocation &location);
     void printFix(const FixSuggestion &fix);
