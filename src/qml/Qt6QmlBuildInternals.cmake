@@ -261,6 +261,7 @@ function(qt_internal_add_qml_module target)
     # Update the backing and plugin targets with qml-specific things.
     qt6_add_qml_module(${target}
         ${add_qml_module_args}
+        __QT_INTERNAL_INSTALL_METATYPES_JSON
         OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
         RESOURCE_PREFIX "/qt-project.org/imports"
         OUTPUT_TARGETS output_targets
