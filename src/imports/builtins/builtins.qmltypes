@@ -160,4 +160,9 @@ Module {
       extension: "RegExp"
       accessSemantics: "value"
     }
+
+    Component {
+      name: "QByteArray"
+      accessSemantics: "value"
+    }
 }
