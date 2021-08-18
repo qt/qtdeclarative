@@ -28,6 +28,7 @@
 #pragma once
 
 #include <limits.h>
+#include <limits>
 #include "YarrErrorCode.h"
 
 namespace JSC { namespace Yarr {
