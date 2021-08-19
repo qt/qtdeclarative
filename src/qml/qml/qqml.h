@@ -659,7 +659,7 @@ inline auto qmlRegisterSingletonInstance(const char *uri, int versionMajor, int 
                                          const char *typeName, T *cppObject) -> typename std::enable_if<std::is_base_of<QObject, T>::value, int>::type
 #endif
 {
-    QQmlPrivate::SingletonFunctor registrationFunctor;
+    QQmlPrivate::SingletonInstanceFunctor registrationFunctor;
     registrationFunctor.m_object = cppObject;
     return qmlRegisterSingletonType<T>(uri, versionMajor, versionMinor, typeName, registrationFunctor);
 }

@@ -243,7 +243,6 @@ public:
 
     template <typename T>
     T singletonInstance(const QQmlType &type);
-    void destroySingletonInstance(const QQmlType &type);
 
     void sendQuit();
     void sendExit(int retCode = 0);
@@ -301,6 +300,24 @@ private:
         {
             QJSValuePrivate::manageStringOnV4Heap(engine, value);
             insert(type, *value);
+        }
+
+        void clear() {
+            for (auto it = constBegin(), end = constEnd(); it != end; ++it) {
+                QObject *instance = it.value().toQObject();
+                if (!instance)
+                    continue;
+
+                if (it.key().singletonInstanceInfo()->url.isEmpty()) {
+                    const QQmlData *ddata = QQmlData::get(instance, false);
+                    if (ddata && ddata->indestructible && ddata->explicitIndestructibleSet)
+                        continue;
+                }
+
+                delete instance;
+            }
+
+            QHash<QQmlType, QJSValue>::clear();
         }
 
         using QHash<QQmlType, QJSValue>::value;

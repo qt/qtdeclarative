@@ -721,12 +721,26 @@ namespace QQmlPrivate
 
     int Q_QML_EXPORT qmlregister(RegistrationType, void *);
     void Q_QML_EXPORT qmlunregister(RegistrationType, quintptr);
+
+#if QT_DEPRECATED_SINCE(6, 3)
     struct Q_QML_EXPORT SingletonFunctor
+    {
+        QT_DEPRECATED QObject *operator()(QQmlEngine *, QJSEngine *);
+        QPointer<QObject> m_object;
+        bool alreadyCalled = false;
+    };
+#endif
+
+    struct Q_QML_EXPORT SingletonInstanceFunctor
     {
         QObject *operator()(QQmlEngine *, QJSEngine *);
 
         QPointer<QObject> m_object;
-        bool alreadyCalled = false;
+
+        // Not a QPointer, so that you cannot assign it to a different
+        // engine when the first one is deleted.
+        // That would mess up the QML contexts.
+        QQmlEngine *m_engine = nullptr;
     };
 
     static int indexOfOwnClassInfo(const QMetaObject *metaObject, const char *key, int startOffset = -1)

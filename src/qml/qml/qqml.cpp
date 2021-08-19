@@ -310,30 +310,63 @@ int qmlTypeId(const char *uri, int versionMajor, int versionMinor, const char *q
     return QQmlMetaType::typeId(uri, QTypeRevision::fromVersion(versionMajor, versionMinor), qmlName);
 }
 
+static bool checkSingletonInstance(QQmlEngine *engine, QObject *instance)
+{
+    if (!instance) {
+        QQmlError error;
+        error.setDescription(QStringLiteral("The registered singleton has already been deleted. "
+                                            "Ensure that it outlives the engine."));
+        QQmlEnginePrivate::get(engine)->warning(engine, error);
+        return false;
+    }
+
+    if (engine->thread() != instance->thread()) {
+        QQmlError error;
+        error.setDescription(QStringLiteral("Registered object must live in the same thread "
+                                            "as the engine it was registered with"));
+        QQmlEnginePrivate::get(engine)->warning(engine, error);
+        return false;
+    }
+
+    return true;
+}
+
 // From qqmlprivate.h
+#if QT_DEPRECATED_SINCE(6, 3)
 QObject *QQmlPrivate::SingletonFunctor::operator()(QQmlEngine *qeng, QJSEngine *)
 {
-    if (!m_object) {
+    if (!checkSingletonInstance(qeng, m_object))
+        return nullptr;
+
+    if (alreadyCalled) {
         QQmlError error;
-        error.setDescription(QLatin1String("The registered singleton has already been deleted. Ensure that it outlives the engine."));
+        error.setDescription(QStringLiteral("Singleton registered by registerSingletonInstance "
+                                            "must only be accessed from one engine"));
         QQmlEnginePrivate::get(qeng)->warning(qeng, error);
         return nullptr;
     }
 
-    if (qeng->thread() != m_object->thread()) {
-        QQmlError error;
-        error.setDescription(QLatin1String("Registered object must live in the same thread as the engine it was registered with"));
-        QQmlEnginePrivate::get(qeng)->warning(qeng, error);
+    alreadyCalled = true;
+    QJSEngine::setObjectOwnership(m_object, QQmlEngine::CppOwnership);
+    return m_object;
+};
+#endif
+
+QObject *QQmlPrivate::SingletonInstanceFunctor::operator()(QQmlEngine *qeng, QJSEngine *)
+{
+    if (!checkSingletonInstance(qeng, m_object))
         return nullptr;
-    }
-    if (alreadyCalled) {
+
+    if (!m_engine) {
+        m_engine = qeng;
+        QJSEngine::setObjectOwnership(m_object, QQmlEngine::CppOwnership);
+    } else if (m_engine != qeng) {
         QQmlError error;
         error.setDescription(QLatin1String("Singleton registered by registerSingletonInstance must only be accessed from one engine"));
         QQmlEnginePrivate::get(qeng)->warning(qeng, error);
         return nullptr;
     }
-    alreadyCalled = true;
-    qeng->setObjectOwnership(m_object, QQmlEngine::CppOwnership);
+
     return m_object;
 };
 

@@ -809,9 +809,7 @@ QQmlEngine::~QQmlEngine()
     // we do this here and not in the private dtor since otherwise a crash can
     // occur (if we are the QObject parent of the QObject singleton instance)
     // XXX TODO: performance -- store list of singleton types separately?
-    const QList<QQmlType> singletonTypes = QQmlMetaType::qmlSingletonTypes();
-    for (const QQmlType &currType : singletonTypes)
-        d->destroySingletonInstance(currType);
+    d->singletonInstances.clear();
 
     delete d->rootContext;
     d->rootContext = nullptr;
@@ -863,7 +861,7 @@ QQmlEngine::~QQmlEngine()
   As a general rule of thumb, make sure that no objects created from QML
   components are alive when you clear the component cache.
 
-  \sa trimComponentCache()
+  \sa trimComponentCache(), clearSingletons()
  */
 void QQmlEngine::clearComponentCache()
 {
@@ -889,6 +887,27 @@ void QQmlEngine::trimComponentCache()
 {
     Q_D(QQmlEngine);
     d->typeLoader.trimCache();
+}
+
+/*!
+  Clears all singletons the engine owns.
+
+  This function drops all singleton instances, deleting any QObjects owned by
+  the engine among them. This is useful to make sure that no QML-created objects
+  are left before calling clearComponentCache().
+
+  QML properties holding QObject-based singleton instances become null if the
+  engine owns the singleton or retain their value if the engine doesn't own it.
+  The singletons are not automatically re-created by accessing existing
+  QML-created objects. Only when new components are instantiated, the singletons
+  are re-created.
+
+  \sa clearComponentCache()
+ */
+void QQmlEngine::clearSingletons()
+{
+    Q_D(QQmlEngine);
+    d->singletonInstances.clear();
 }
 
 /*!
@@ -2094,10 +2113,19 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
 
             // if this object can use a property cache, create it now
             QQmlData::ensurePropertyCache(q, o);
+
+            // even though the object is defined in C++, qmlContext(obj) and qmlEngine(obj)
+            // should behave identically to QML singleton types. You can, however, manually
+            // assign a context; and clearSingletons() retains the contexts, in which case
+            // we don't want to see warnings about the object already having a context.
+            QQmlData *data = QQmlData::get(o, true);
+            if (!data->context) {
+                auto contextData = QQmlContextData::get(new QQmlContext(q->rootContext(), q));
+                data->context = contextData.data();
+                contextData->addOwnedObject(data);
+            }
         }
-        // even though the object is defined in C++, qmlContext(obj) and qmlEngine(obj)
-        // should behave identically to QML singleton types.
-        q->setContextForObject(o, new QQmlContext(q->rootContext(), q));
+
         value = q->newQObject(o);
         singletonInstances.convertAndInsert(v4engine(), type, &value);
     } else if (!siinfo->url.isEmpty()) {
@@ -2115,19 +2143,6 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
     }
 
     return value;
-}
-
-void QQmlEnginePrivate::destroySingletonInstance(const QQmlType &type)
-{
-    Q_ASSERT(type.isSingleton() || type.isCompositeSingleton());
-
-    QObject* o = singletonInstances.take(type).toQObject();
-    if (o) {
-        QQmlData *ddata = QQmlData::get(o, false);
-        if (type.singletonInstanceInfo()->url.isEmpty() && ddata && ddata->indestructible && ddata->explicitIndestructibleSet)
-            return;
-        delete o;
-    }
 }
 
 bool QQmlEnginePrivate::isTypeLoaded(const QUrl &url) const

@@ -102,6 +102,7 @@ public:
 
     void clearComponentCache();
     void trimComponentCache();
+    void clearSingletons();
 
     QStringList importPathList() const;
     void setImportPathList(const QStringList &paths);
