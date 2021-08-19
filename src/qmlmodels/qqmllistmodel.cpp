@@ -1112,7 +1112,7 @@ static void setQObjectOwnership(char *mem, QObject *o)
     if (!ddata)
         ddata = QQmlData::get(o, true);
 
-    ddata->indestructible = true;
+    ddata->indestructible = ownership != 0;
     ddata->explicitIndestructibleSet = false;
 
     new (mem) ListElement::GuardedQObjectPointer(

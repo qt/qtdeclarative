@@ -136,6 +136,7 @@ private slots:
     void destroyObject();
     void emptyStringNotUndefined();
     void listElementWithTemplateString();
+    void destroyComponentObject();
 };
 
 bool tst_qqmllistmodel::compareVariantList(const QVariantList &testList, QVariant object)
@@ -1854,6 +1855,31 @@ void tst_qqmllistmodel::listElementWithTemplateString()
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> root(component.create());
     QVERIFY(!root.isNull());
+}
+
+//QTBUG-95895
+void tst_qqmllistmodel::destroyComponentObject()
+{
+    QQmlEngine eng;
+    QQmlComponent component(&eng, testFileUrl("destroyObject.qml"));
+    QVERIFY(!component.isError());
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(!obj.isNull());
+    QQmlListModel *list = qvariant_cast<QQmlListModel *>(obj->property("projects"));
+    QVERIFY(list != nullptr);
+    QCOMPARE(list->count(), 1);
+    QPointer<QObject> created(qvariant_cast<QObject *>(obj->property("object")));
+    QVERIFY(!created.isNull());
+    QCOMPARE(list->get(0).property("obj").toQObject(), created.data());
+    QVariant retVal;
+    QMetaObject::invokeMethod(obj.data(),
+                              "destroy",
+                               Qt::DirectConnection,
+                               Q_RETURN_ARG(QVariant, retVal));
+    QVERIFY(retVal.toBool());
+    QTRY_VERIFY(created.isNull());
+    QTRY_VERIFY(list->get(0).property("obj").isUndefined());
+    QCOMPARE(list->count(), 1);
 }
 
 QTEST_MAIN(tst_qqmllistmodel)
