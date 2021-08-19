@@ -94,6 +94,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcHoverTrace)
 Q_DECLARE_LOGGING_CATEGORY(lcPtr)
 Q_DECLARE_LOGGING_CATEGORY(lcTransient)
 Q_LOGGING_CATEGORY(lcHandlerParent, "qt.quick.handler.parent")
+Q_LOGGING_CATEGORY(lcVP, "qt.quick.viewport")
 
 void debugFocusTree(QQuickItem *item, QQuickItem *scope = nullptr, int depth = 1)
 {
@@ -2060,6 +2061,9 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \value ItemHasContents Indicates the item has visual content and should be
     rendered by the scene graph.
     \value ItemAcceptsDrops Indicates the item accepts drag and drop events.
+    \value ItemIsViewport Indicates that the item defines a viewport for its children.
+    \value ItemObservesViewport Indicates that the item wishes to know the
+    viewport bounds when any ancestor has the ItemIsViewport flag set.
 
     \sa setFlag(), setFlags(), flags()
 */
@@ -3213,6 +3217,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , touchEnabled(false)
     , hasCursorHandler(false)
     , maybeHasSubsceneDeliveryAgent(true)
+    , subtreeTransformChangedEnabled(true)
     , dirtyAttributes(0)
     , nextDirtyItem(nullptr)
     , prevDirtyItem(nullptr)
@@ -3748,6 +3753,12 @@ QList<QQuickItem *> QQuickItem::childItems() const
 
   \note Clipping can affect rendering performance. See \l {Clipping} for more
   information.
+
+  \note For the sake of QML, setting clip to \c true also sets the
+  \l ItemIsViewport flag, which sometimes acts as an optimization: child items
+  that have the \l ItemObservesViewport flag may forego creating scene graph nodes
+  that fall outside the viewport. But the \c ItemIsViewport flag can also be set
+  independently.
 */
 bool QQuickItem::clip() const
 {
@@ -3760,6 +3771,10 @@ void QQuickItem::setClip(bool c)
         return;
 
     setFlag(ItemClipsChildrenToShape, c);
+    if (c)
+        setFlag(ItemIsViewport);
+    else if (!(inherits("QQuickFlickable") || inherits("QQuickRootItem")))
+        setFlag(ItemIsViewport, false);
 
     emit clipChanged(c);
 }
@@ -5275,22 +5290,38 @@ QPointF QQuickItemPrivate::computeTransformOrigin() const
     all its children that its transform has changed, with \a transformedItem always
     being the parent item that caused the change.  Override to react, e.g. to
     call update() if the item needs to re-generate SG nodes based on visible extents.
+    If you override in a subclass, you must also call this (superclass) function
+    and return the value from it.
+
+    This function recursively visits all children as long as
+    subtreeTransformChangedEnabled is true, returns \c true if any of those
+    children still has the ItemObservesViewport flag set, but otherwise
+    turns subtreeTransformChangedEnabled off, if no children are observing.
 */
-void QQuickItemPrivate::transformChanged(QQuickItem *transformedItem)
+bool QQuickItemPrivate::transformChanged(QQuickItem *transformedItem)
 {
     Q_Q(QQuickItem);
-    if (q != transformedItem)
-        return;
 
-    // Inform the children in paint order: by the time we visit leaf items,
-    // they can see any consequences in their parents
-    for (auto child : paintOrderChildItems())
-        QQuickItemPrivate::get(child)->transformChanged(transformedItem);
+    bool childWantsIt = false;
+    if (subtreeTransformChangedEnabled) {
+        // Inform the children in paint order: by the time we visit leaf items,
+        // they can see any consequences in their parents
+        for (auto child : paintOrderChildItems())
+            childWantsIt |= QQuickItemPrivate::get(child)->transformChanged(transformedItem);
+    }
 
 #if QT_CONFIG(quick_shadereffect)
-    if (extra.isAllocated() && extra->layer)
-        extra->layer->updateMatrix();
+    if (q == transformedItem) {
+        if (extra.isAllocated() && extra->layer)
+            extra->layer->updateMatrix();
+    }
 #endif
+    const bool ret = childWantsIt || q->flags().testFlag(QQuickItem::ItemObservesViewport);
+    if (!ret && componentComplete && subtreeTransformChangedEnabled) {
+        qCDebug(lcVP) << "turned off subtree transformChanged notification after checking all children of" << q;
+        subtreeTransformChangedEnabled = false;
+    }
+    return ret;
 }
 
 QPointF QQuickItemPrivate::adjustedPosForTransform(const QPointF &centroidParentPos,
@@ -5570,19 +5601,75 @@ void QQuickItem::updateInputMethod(Qt::InputMethodQueries queries)
 }
 #endif // im
 
-// XXX todo - do we want/need this anymore?
-/*! \internal */
+/*!
+    Returns the extents of the item in its own coordinate system:
+    a rectangle from \c{0, 0} to \l width() and \l height().
+*/
 QRectF QQuickItem::boundingRect() const
 {
     Q_D(const QQuickItem);
     return QRectF(0, 0, d->width, d->height);
 }
 
-/*! \internal */
+/*!
+    Returns the rectangular area within this item that is currently visible in
+    \l viewportItem(), if there is a viewport; otherwise, the extents of this
+    item in its own coordinate system: a rectangle from \c{0, 0} to \l width()
+    and \l height(). This is the region intended to remain visible if \a clip()
+    is \c true. It can also be used in updatePaintNode() to limit the graphics
+    added to the scene graph.
+
+    For example, a large drawing or a large text document might be shown in a
+    Flickable that occupies only part of the application's Window: in that
+    case, Flickable is the viewport item, and a custom content-rendering item
+    may choose to omit scene graph nodes that fall outside the area that is
+    currently visible. If the \l ItemObservesViewport flag is set, this area
+    will change each time the user scrolls the content in the Flickable.
+
+    In case of nested viewport items, clipRect() is the intersection of the
+    \c {boundingRect}s of all ancestors that have the \l ItemIsViewport flag set,
+    mapped to the coordinate system of \em this item.
+
+    \sa boundingRect()
+*/
 QRectF QQuickItem::clipRect() const
 {
     Q_D(const QQuickItem);
-    return QRectF(0, 0, d->width, d->height);
+    QRectF ret(0, 0, d->width, d->height);
+    if (QQuickItem *viewport = viewportItem()) {
+        // if the viewport is already "this", there's nothing to intersect;
+        // and don't call clipRect() again, to avoid infinite recursion
+        if (viewport == this)
+            return ret;
+        const auto mappedViewportRect = mapRectFromItem(viewport, viewport->clipRect());
+        qCDebug(lcVP) << this << "intersecting" << viewport << mappedViewportRect << ret << "->" << mappedViewportRect.intersected(ret);
+        return mappedViewportRect.intersected(ret);
+    }
+    return ret;
+}
+
+/*!
+    If the \l ItemObservesViewport flag is set,
+    returns the nearest parent with the \l ItemIsViewport flag.
+    Returns the window's contentItem if the flag is not set,
+    or if no other viewport item is found.
+
+    Returns \nullptr only if there is no viewport item and this item is not
+    shown in a window.
+
+    \sa clipRect()
+*/
+QQuickItem *QQuickItem::viewportItem() const
+{
+    if (flags().testFlag(ItemObservesViewport)) {
+        QQuickItem *par = parentItem();
+        while (par) {
+            if (par->flags().testFlag(QQuickItem::ItemIsViewport))
+                return par;
+            par = par->parentItem();
+        }
+    }
+    return (window() ? window()->contentItem() : nullptr);
 }
 
 /*!
@@ -6528,6 +6615,8 @@ void QQuickItemPrivate::itemChange(QQuickItem::ItemChange change, const QQuickIt
     switch (change) {
     case QQuickItem::ItemChildAddedChange: {
         q->itemChange(change, data);
+        if (!subtreeTransformChangedEnabled)
+            subtreeTransformChangedEnabled = true;
         if (!changeListeners.isEmpty()) {
             const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
             for (const QQuickItemPrivate::ChangeListener &change : listeners) {
@@ -6803,6 +6892,17 @@ void QQuickItem::setFlag(Flag flag, bool enabled)
         setFlags((Flags)(d->flags | (quint32)flag));
     else
         setFlags((Flags)(d->flags & ~(quint32)flag));
+
+    if (enabled && flag == ItemObservesViewport) {
+        QQuickItem *par = parentItem();
+        while (par) {
+            auto parPriv = QQuickItemPrivate::get(par);
+            if (!parPriv->subtreeTransformChangedEnabled)
+                qCDebug(lcVP) << "turned on transformChanged notification for subtree of" << par;
+            parPriv->subtreeTransformChangedEnabled = true;
+            par = par->parentItem();
+        }
+    }
 }
 
 /*!
@@ -8710,6 +8810,10 @@ QDebug operator<<(QDebug debug,
     QtDebugUtils::formatQRect(debug, rect);
     if (const qreal z = item->z())
         debug << ", z=" << z;
+    if (item->flags().testFlag(QQuickItem::ItemIsViewport))
+        debug << " \U0001f5bc"; // frame with picture
+    if (item->flags().testFlag(QQuickItem::ItemObservesViewport))
+        debug << " \u23ff"; // observer eye
     debug << ')';
     return debug;
 }
@@ -9467,7 +9571,7 @@ void QQuickItemLayer::updateGeometry()
 {
     QQuickItem *l = m_effect ? (QQuickItem *) m_effect : (QQuickItem *) m_effectSource;
     Q_ASSERT(l);
-    QRectF bounds = m_item->clipRect();
+    QRectF bounds = m_item->boundingRect();
     l->setSize(bounds.size());
     l->setPosition(bounds.topLeft() + m_item->position());
 }

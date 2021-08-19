@@ -201,6 +201,9 @@ have a scope focused item), and the other items will have their focus cleared.
 
 QQuickRootItem::QQuickRootItem()
 {
+    // child items with ItemObservesViewport can treat the window's content item
+    // as the ultimate viewport: avoid populating SG nodes that fall outside
+    setFlag(ItemIsViewport);
 }
 
 /*! \reimp */
@@ -1967,7 +1970,7 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
 
         if (item->clip()) {
             Q_ASSERT(itemPriv->clipNode() == nullptr);
-            QQuickDefaultClipNode *clip = new QQuickDefaultClipNode(item->clipRect());
+            QQuickDefaultClipNode *clip = new QQuickDefaultClipNode(item->boundingRect());
             itemPriv->extra.value().clipNode = clip;
             clip->update();
 
@@ -2091,7 +2094,7 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
     }
 
     if ((dirty & QQuickItemPrivate::Size) && itemPriv->clipNode()) {
-        itemPriv->clipNode()->setRect(item->clipRect());
+        itemPriv->clipNode()->setRect(item->boundingRect());
         itemPriv->clipNode()->update();
     }
 

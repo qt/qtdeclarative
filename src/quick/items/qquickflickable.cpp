@@ -289,6 +289,7 @@ void QQuickFlickablePrivate::init()
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setAcceptTouchEvents(true);
     q->setFiltersChildMouseEvents(true);
+    q->setFlag(QQuickItem::ItemIsViewport);
     QQuickItemPrivate *viewportPrivate = QQuickItemPrivate::get(contentItem);
     viewportPrivate->addItemChangeListener(this, QQuickItemPrivate::Geometry);
 }

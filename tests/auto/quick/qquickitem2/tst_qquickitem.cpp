@@ -143,6 +143,9 @@ private slots:
 
     void undefinedIsInvalidForWidthAndHeight();
 
+    void viewport_data();
+    void viewport();
+
 private:
     QQmlEngine engine;
     bool qt_tab_all_widgets() {
@@ -320,6 +323,22 @@ private:
 
 QML_DECLARE_TYPE(HollowTestItem);
 
+class ViewportTestItem : public QQuickItem
+{
+    Q_OBJECT
+    Q_PROPERTY(QRectF viewport READ viewport NOTIFY viewportChanged)
+
+public:
+    ViewportTestItem(QQuickItem *parent = nullptr) : QQuickItem(parent) { }
+
+    QRectF viewport() const { return clipRect(); }
+
+signals:
+    void viewportChanged();
+};
+
+QML_DECLARE_TYPE(ViewportTestItem);
+
 class TabFenceItem : public QQuickItem
 {
     Q_OBJECT
@@ -361,6 +380,7 @@ void tst_QQuickItem::initTestCase()
     QQmlDataTest::initTestCase();
     qmlRegisterType<KeyTestItem>("Test",1,0,"KeyTestItem");
     qmlRegisterType<HollowTestItem>("Test", 1, 0, "HollowTestItem");
+    qmlRegisterType<ViewportTestItem>("Test", 1, 0, "ViewportTestItem");
     qmlRegisterType<TabFenceItem>("Test", 1, 0, "TabFence");
     qmlRegisterType<TabFenceItem2>("Test", 1, 0, "TabFence2");
 }
@@ -3832,6 +3852,151 @@ void tst_QQuickItem::undefinedIsInvalidForWidthAndHeight()
     QCOMPARE(item->width(), 200);
     QVERIFY(!priv->widthValid());
     QVERIFY(!priv->heightValid());
+}
+
+void tst_QQuickItem::viewport_data()
+{
+    QTest::addColumn<bool>("contentObservesViewport");
+
+    QTest::addColumn<bool>("innerClip");
+    QTest::addColumn<bool>("innerViewport");
+    QTest::addColumn<bool>("innerObservesViewport");
+
+    QTest::addColumn<bool>("outerClip");
+    QTest::addColumn<bool>("outerViewport");
+    QTest::addColumn<bool>("outerObservesViewport");
+
+    QTest::addColumn<QPoint>("innerViewportOffset");
+    QTest::addColumn<QPoint>("outerViewportOffset");
+
+    QTest::addColumn<QRect>("expectedViewportTestRect");
+    QTest::addColumn<QRect>("expectedContentClipRect");
+
+    QTest::newRow("default") << false
+        << false << false << false
+        << false << false << false
+        << QPoint() << QPoint() << QRect(0, 0, 290, 290) << QRect(0, 0, 290, 290);
+    QTest::newRow("inner and outer: vp, clipping and observing") << true
+        << true << true << true
+        << true << true << true
+        << QPoint() << QPoint() << QRect(55, 55, 200, 200) << QRect(0, 0, 290, 290);
+    QTest::newRow("inner and outer: vp, clipping and observing; content not observing") << false
+        << true << true << true
+        << true << true << true
+        << QPoint() << QPoint() << QRect(0, 0, 290, 290) << QRect(0, 0, 290, 290);
+    QTest::newRow("inner and outer: vp and observing") << true
+        << false << true << true
+        << false << true << true
+        << QPoint() << QPoint() << QRect(55, 55, 200, 200) << QRect(0, 0, 290, 290);
+    QTest::newRow("inner and outer: vp and observing, inner pos offset") << true
+        << false << true << true
+        << false << true << true
+        << QPoint(120, 120) << QPoint() << QRect(55, 55, 80, 80) << QRect(0, 0, 175, 175);
+    QTest::newRow("inner and outer: vp and observing, inner neg offset") << true
+        << false << true << true
+        << false << true << true
+        << QPoint(-70, -50) << QPoint() << QRect(105, 85, 170, 190) << QRect(65, 45, 225, 245);
+    QTest::newRow("inner and outer: vp and observing, outer pos offset") << true
+        << false << true << true
+        << false << true << true
+         << QPoint() << QPoint(220, 220) << QRect(55, 55, 20, 20) << QRect(0, 0, 75, 75);
+    QTest::newRow("inner and outer: vp and observing, outer neg offset") << true
+        << false << true << true
+        << false << true << true
+        << QPoint() << QPoint(-70, -50) << QRect(65, 55, 190, 200) << QRect(65, 45, 225, 245);
+    QTest::newRow("inner and outer: vp and observing, pos and neg offset") << true
+        << false << true << true
+        << false << true << true
+        << QPoint(150, 150) << QPoint(-170, -150) << QRect(55, 55, 50, 50) << QRect(15, 0, 275, 290);
+    QTest::newRow("inner and outer: vp and observing, neg and pos offset") << true
+        << false << true << true
+        << false << true << true
+        << QPoint(-180, -210) << QPoint(100, 115) << QRect(215, 245, 60, 30) << QRect(75, 90, 215, 200);
+    QTest::newRow("inner and outer: vp not observing") << true
+        << false << true << false
+        << false << true << false
+        << QPoint() << QPoint() << QRect(55, 55, 220, 220) << QRect(0, 0, 290, 290);
+    QTest::newRow("inner and outer: vp not observing, inner pos offset") << true
+        << false << true << false
+        << false << true << false
+        << QPoint(120, 120) << QPoint() << QRect(55, 55, 120, 120) << QRect(0, 0, 175, 175);
+    QTest::newRow("inner and outer: vp not observing, inner neg offset") << true
+        << false << true << false
+        << false << true << false
+        << QPoint(-70, -50) << QPoint() << QRect(65, 55, 210, 220) << QRect(65, 45, 225, 245);
+    QTest::newRow("inner and outer: vp not observing, outer pos offset") << true
+        << false << true << false
+        << false << true << false
+         << QPoint() << QPoint(220, 220) << QRect(55, 55, 20, 20) << QRect(0, 0, 75, 75);
+    QTest::newRow("inner and outer: vp not observing, outer neg offset") << true
+        << false << true << false
+        << false << true << false
+        << QPoint() << QPoint(-70, -50) << QRect(65, 55, 210, 220) << QRect(65, 45, 225, 245);
+    QTest::newRow("inner clipping and observing") << true
+        << true << true << true
+        << false << false << false
+        << QPoint() << QPoint() << QRect(55, 55, 220, 220) << QRect(0, 0, 290, 290);
+    QTest::newRow("inner clipping and observing only outer") << true
+        << true << true << true
+        << false << true << false
+        << QPoint() << QPoint() << QRect(55, 55, 200, 200) << QRect(0, 0, 290, 290);
+}
+
+void tst_QQuickItem::viewport()
+{
+    QFETCH(bool, contentObservesViewport);
+    QFETCH(bool, innerClip);
+    QFETCH(bool, innerViewport);
+    QFETCH(bool, innerObservesViewport);
+    QFETCH(bool, outerClip);
+    QFETCH(bool, outerViewport);
+    QFETCH(bool, outerObservesViewport);
+    QFETCH(QPoint, innerViewportOffset);
+    QFETCH(QPoint, outerViewportOffset);
+    QFETCH(QRect, expectedViewportTestRect);
+    QFETCH(QRect, expectedContentClipRect);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("viewports.qml")));
+
+    QQuickItem *root = qobject_cast<QQuickItem *>(window.rootObject());
+    QQuickItem *outer = root->findChild<QQuickItem *>("outerViewport");
+    QVERIFY(outer);
+    QQuickItem *inner = root->findChild<QQuickItem *>("innerViewport");
+    QVERIFY(inner);
+    QQuickItem *contentItem = root->findChild<QQuickItem *>("innerRect");
+    QVERIFY(contentItem);
+    ViewportTestItem *viewportTestItem = root->findChild<ViewportTestItem *>();
+    QVERIFY(viewportTestItem);
+
+    inner->setPosition(inner->position() + innerViewportOffset);
+    outer->setPosition(outer->position() + outerViewportOffset);
+    outer->setClip(outerClip);
+    QCOMPARE(outer->flags().testFlag(QQuickItem::ItemIsViewport), outerClip);
+    outer->setFlag(QQuickItem::ItemIsViewport, outerViewport);
+    outer->setFlag(QQuickItem::ItemObservesViewport, outerObservesViewport);
+    inner->setClip(innerClip);
+    QCOMPARE(inner->flags().testFlag(QQuickItem::ItemIsViewport), innerClip);
+    inner->setFlag(QQuickItem::ItemIsViewport, innerViewport);
+    inner->setFlag(QQuickItem::ItemObservesViewport, innerObservesViewport);
+    viewportTestItem->setFlag(QQuickItem::ItemObservesViewport, contentObservesViewport);
+    emit viewportTestItem->viewportChanged();
+
+    if (lcTests().isDebugEnabled())
+        QTest::qWait(1000);
+    if (contentObservesViewport) {
+        if (innerViewport)
+            QCOMPARE(viewportTestItem->viewportItem(), inner);
+        else if (outerViewport)
+            QCOMPARE(viewportTestItem->viewportItem(), outer);
+        else
+            QCOMPARE(viewportTestItem->viewportItem(), root->parentItem()); // QQuickRootItem
+    } else {
+        QCOMPARE(viewportTestItem->viewportItem(), root->parentItem()); // QQuickRootItem
+    }
+
+    QCOMPARE(contentItem->clipRect().toRect(), expectedContentClipRect);
+    QCOMPARE(viewportTestItem->clipRect().toRect(), expectedViewportTestRect);
 }
 
 QTEST_MAIN(tst_QQuickItem)

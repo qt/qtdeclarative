@@ -692,6 +692,26 @@ with multiple windows.
   like a TextArea, this is fine. One should, however, use clip on
   smaller items with caution as it prevents batching. This includes
   button label, text field or list delegate and table cells.
+  Clipping a Flickable (or item view) can often be avoided by arranging
+  the UI so that opaque items cover areas around the Flickable, and
+  otherwise relying on the window edges to clip everything else.
+
+  Setting Item::clip to \c true also sets the \l QQuickItem::ItemIsViewport
+  flag; child items with the \l QQuickItem::ItemObservesViewport flag may
+  use the viewport for a rough pre-clipping step: e.g. \l Text omits
+  lines of text that are completely outside the viewport. Omitting scene
+  graph nodes or limiting the \l {QSGGeometry::vertexCount()}{vertices}
+  is an optimization, which can be achieved by setting the
+  \l {QQuickItem::flags()}{flags} in C++ rather than setting
+  \l Item::clip in QML.
+
+  When implementing QQuickItem::updatePaintNode() in a custom item,
+  if it can render a lot of details over a large geometric area,
+  you should think about whether it's efficient to limit the graphics
+  to the viewport; if so, you can set the \l ItemObservesViewport flag
+  and read the currently exposed area from QQuickItem::clipRect().
+  One consequence is that updatePaintNode() will be called more often
+  (typically once per frame whenever content is moving in the viewport).
 
   \section2 Vertex Buffers
 

@@ -35,6 +35,7 @@
 #include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuickTest/QtQuickTest>
 #include <private/qquicktext_p_p.h>
+#include <private/qquicktextnode_p.h>
 #include <private/qquicktextdocument_p.h>
 #include <private/qquickvaluetypes_p.h>
 #include <QFontMetrics>
@@ -55,6 +56,8 @@ Q_DECLARE_METATYPE(QQuickText::TextFormat)
 QT_BEGIN_NAMESPACE
 extern void qt_setQtEnableTestFont(bool value);
 QT_END_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
 class tst_qquicktext : public QQmlDataTest
 {
@@ -119,6 +122,7 @@ private slots:
     void boundingRect_data();
     void boundingRect();
     void clipRect();
+    void largeTextObservesViewport();
     void lineLaidOut();
     void lineLaidOutRelayout();
     void lineLaidOutHAlign();
@@ -2938,6 +2942,65 @@ void tst_qquicktext::clipRect()
     QCOMPARE(text->clipRect().y(), qreal(0));
     QCOMPARE(text->clipRect().width(), text->width() + 2);
     QCOMPARE(text->clipRect().height(), text->height() + 2);
+}
+
+void tst_qquicktext::largeTextObservesViewport()
+{
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("viewport.qml"), true, &errorMessage), errorMessage.constData());
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QQuickText *textItem = window.rootObject()->findChild<QQuickText*>();
+    QVERIFY(textItem);
+    QQuickItem *viewportItem = textItem->parentItem();
+    QQuickTextPrivate *textPriv = QQuickTextPrivate::get(textItem);
+    QQuickTextNode *node = static_cast<QQuickTextNode *>(textPriv->paintNode);
+    QFontMetricsF fm(textItem->font());
+    const qreal expectedTextHeight = window.height() - viewportItem->y();
+    const qreal lineSpacing = qCeil(fm.height());
+    int expectedLastLine = int(expectedTextHeight / lineSpacing);
+
+    QStringList lines;
+    // "line 100" is 8 characters; many lines are longer, some are shorter
+    // so we populate 1250 lines, 11389 characters
+    const int lineCount = QQuickTextPrivate::largeTextSizeThreshold / 8;
+    lines.reserve(lineCount);
+    for (int i = 0; i < lineCount; ++i)
+        lines << QLatin1String("line ") + QString::number(i);
+    textItem->setText(lines.join('\n'));
+    Q_ASSERT(textItem->text().size() > QQuickTextPrivate::largeTextSizeThreshold);
+    qCDebug(lcTests) << "text size" << textItem->text().size() << "lines" << lineCount;
+
+    // by default, the root item acts as the viewport:
+    // QQuickTextNode doesn't populate lines of text beyond the bottom of the window
+    QVERIFY(textItem->flags().testFlag(QQuickItem::ItemObservesViewport));
+    QVERIFY(window.rootObject()->flags().testFlag(QQuickItem::ItemIsViewport));
+    QTRY_COMPARE(node->renderedLineRange().first, 0);
+    auto renderedLineRange = node->renderedLineRange();
+    qCDebug(lcTests) << "lines rendered" << renderedLineRange.second
+                     << "expected last line" << expectedLastLine
+                     << "based on available height" << expectedTextHeight
+                     << "and line height" << lineSpacing;
+    QVERIFY(qAbs(renderedLineRange.second - (expectedLastLine + 1)) < 2);
+
+    // make the rectangle into a viewport item, and move the text upwards to force re-rendering:
+    // QQuickTextNode doesn't populate lines of text beyond the bottom of the viewport rectangle
+    viewportItem->setFlag(QQuickItem::ItemIsViewport);
+    int expectedFirstLine = 10;
+    expectedLastLine = expectedFirstLine + int(viewportItem->height() / lineSpacing);
+    textItem->setY(lineSpacing * -10);
+    QTRY_VERIFY(node->renderedLineRange().second != renderedLineRange.second); // wait for re-rendering
+    renderedLineRange = node->renderedLineRange();
+    // now the render thread will call QQuickTextPrivate::transformChanged()
+    qCDebug(lcTests) << "first line rendered" << renderedLineRange.first
+                     << "expected" << expectedFirstLine
+                     << "first line past viewport" << renderedLineRange.second
+                     << "expected last line" << expectedLastLine
+                     << "based on available height" << viewportItem->height()
+                     << "and line height" << lineSpacing;
+    QCOMPARE(renderedLineRange.first, expectedFirstLine);
+    QVERIFY(qAbs(renderedLineRange.second - (expectedLastLine + 1)) < 2);
 }
 
 void tst_qquicktext::lineLaidOut()

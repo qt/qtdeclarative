@@ -166,7 +166,9 @@ public:
 #endif
         ItemIsFocusScope          = 0x04,
         ItemHasContents           = 0x08,
-        ItemAcceptsDrops          = 0x10
+        ItemAcceptsDrops          = 0x10,
+        ItemIsViewport            = 0x20,
+        ItemObservesViewport      = 0x40,
         // Remember to increment the size of QQuickItemPrivate::flags
     };
     Q_DECLARE_FLAGS(Flags, Flag)
@@ -292,6 +294,7 @@ public:
 
     virtual QRectF boundingRect() const;
     virtual QRectF clipRect() const;
+    QQuickItem *viewportItem() const;
 
     bool hasActiveFocus() const;
     bool hasFocus() const;

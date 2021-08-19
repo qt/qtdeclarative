@@ -111,12 +111,16 @@ public:
     void setRenderTypeQuality(int renderTypeQuality) { m_renderTypeQuality = renderTypeQuality; }
     int renderTypeQuality() const { return m_renderTypeQuality; }
 
+    QPair<int, int> renderedLineRange() const { return { m_firstLineInViewport, m_firstLinePastViewport }; }
+
 private:
     QSGInternalRectangleNode *m_cursorNode;
     QList<QSGTexture *> m_textures;
     QQuickItem *m_ownerElement;
     bool m_useNativeRenderer;
     int m_renderTypeQuality;
+    int m_firstLineInViewport = -1;
+    int m_firstLinePastViewport = -1;
 
     friend class QQuickTextEdit;
     friend class QQuickTextEditPrivate;

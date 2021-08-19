@@ -89,7 +89,7 @@ public:
     void clearFormats();
 
     void processHoverEvent(QHoverEvent *event);
-    void transformChanged(QQuickItem *transformedItem) override;
+    bool transformChanged(QQuickItem *transformedItem) override;
 
     QRectF layedOutTextRect;
     QSizeF advance;

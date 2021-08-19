@@ -441,7 +441,7 @@ public:
     inline QQuickItem::TransformOrigin origin() const;
 
     // Bit 0
-    quint32 flags:5;
+    quint32 flags:7;
     bool widthValidFlag:1;
     bool heightValidFlag:1;
     bool componentComplete:1;
@@ -451,9 +451,9 @@ public:
     bool smooth:1;
     bool antialiasing:1;
     bool focus:1;
+    // Bit 16
     bool activeFocus:1;
     bool notifiedFocus:1;
-    // Bit 16
     bool notifiedActiveFocus:1;
     bool filtersChildMouseEvents:1;
     bool explicitVisible:1;
@@ -468,9 +468,9 @@ public:
     bool inheritMirrorFromItem:1;
     bool isAccessible:1;
     bool culled:1;
+    // Bit 32
     bool hasCursor:1;
     bool subtreeCursorEnabled:1;
-    // Bit 32
     bool subtreeHoverEnabled:1;
     bool activeFocusOnTab:1;
     bool implicitAntialiasing:1;
@@ -486,6 +486,9 @@ public:
     bool hasCursorHandler:1;
     // set true when this item does not expect events via a subscene delivery agent; false otherwise
     bool maybeHasSubsceneDeliveryAgent:1;
+    // set true if this item or any child wants QQuickItemPrivate::transformChanged() to visit all children
+    // (e.g. when parent has ItemIsViewport and child has ItemObservesViewport)
+    bool subtreeTransformChangedEnabled:1;
 
     enum DirtyType {
         TransformOrigin         = 0x00000001,
@@ -617,7 +620,7 @@ public:
     }
 
     QPointF computeTransformOrigin() const;
-    virtual void transformChanged(QQuickItem *transformedItem);
+    virtual bool transformChanged(QQuickItem *transformedItem);
 
     QPointF adjustedPosForTransform(const QPointF &centroid,
                                     const QPointF &startPos, const QVector2D &activeTranslatation,

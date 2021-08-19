@@ -130,6 +130,7 @@ void QQuickTextPrivate::init()
     Q_Q(QQuickText);
     q->setAcceptedMouseButtons(Qt::LeftButton);
     q->setFlag(QQuickItem::ItemHasContents);
+    q->setFlag(QQuickItem::ItemObservesViewport); // default until size is known
 }
 
 QQuickTextPrivate::~QQuickTextPrivate()
@@ -723,6 +724,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
         }
         if (lineCount) {
             lineCount = 0;
+            q->setFlag(QQuickItem::ItemObservesViewport, false);
             emit q->lineCountChanged();
         }
 
@@ -1751,6 +1753,7 @@ void QQuickText::setText(const QString &n)
         qDeleteAll(d->extra->imgTags);
         d->extra->imgTags.clear();
     }
+    setFlag(QQuickItem::ItemObservesViewport, n.size() > QQuickTextPrivate::largeTextSizeThreshold);
     d->updateLayout();
     setAcceptHoverEvents(d->richText || d->styledText);
     emit textChanged(d->text);
@@ -2346,7 +2349,13 @@ void QQuickText::resetBaseUrl()
         setBaseUrl(QUrl());
 }
 
-/*! \internal */
+/*!
+    Returns the extents of the text after layout.
+    If the \l style() is not \c Text.Normal, a margin is added to ensure
+    that the rendering effect will fit within this rectangle.
+
+    \sa contentWidth(), contentHeight(), clilpRect()
+*/
 QRectF QQuickText::boundingRect() const
 {
     Q_D(const QQuickText);
@@ -2362,6 +2371,17 @@ QRectF QQuickText::boundingRect() const
     return rect;
 }
 
+/*!
+    Returns a rectangular area slightly larger than what is currently visible
+    in \l viewportItem(); otherwise, the rectangle \c (0, 0, width, height).
+    The text will be clipped to fit if \l clip is \c true.
+
+    \note If the \l style is not \c Text.Normal, the clip rectangle is adjusted
+    to be slightly larger, to limit clipping of the outline effect at the edges.
+    But it still looks better to set \l clip to \c false in that case.
+
+    \sa contentWidth(), contentHeight(), boundingRect()
+*/
 QRectF QQuickText::clipRect() const
 {
     Q_D(const QQuickText);
@@ -2979,16 +2999,15 @@ void QQuickText::hoverLeaveEvent(QHoverEvent *event)
     d->processHoverEvent(event);
 }
 
-void QQuickTextPrivate::transformChanged(QQuickItem *transformedItem)
+bool QQuickTextPrivate::transformChanged(QQuickItem *transformedItem)
 {
-    QQuickItemPrivate::transformChanged(transformedItem);
-
     // If there's a lot of text, we may need QQuickText::updatePaintNode() to call
     // QQuickTextNode::addTextLayout() again to populate a different range of lines
-    if (text.size() > largeTextSizeThreshold) {
+    if (flags & QQuickItem::ItemObservesViewport) {
         updateType = UpdatePaintNode;
         dirty(QQuickItemPrivate::Content);
     }
+    return QQuickImplicitSizeItemPrivate::transformChanged(transformedItem);
 }
 
 /*!

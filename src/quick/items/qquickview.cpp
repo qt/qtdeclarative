@@ -528,6 +528,7 @@ bool QQuickViewPrivate::setRootObject(QObject *obj)
 
     if (QQuickItem *sgItem = qobject_cast<QQuickItem *>(obj)) {
         root = sgItem;
+        root->setFlag(QQuickItem::ItemIsViewport);
         sgItem->setParentItem(q->QQuickWindow::contentItem());
         QQml_setParent_noEvent(sgItem, q->QQuickWindow::contentItem());
         initialSize = rootObjectSize();
