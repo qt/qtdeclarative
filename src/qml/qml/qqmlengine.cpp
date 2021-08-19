@@ -978,6 +978,16 @@ QQmlEngine::~QQmlEngine()
   Once the component cache has been cleared, components must be loaded before
   any new objects can be created.
 
+  \note Any existing objects created from QML components retain their types,
+  even if you clear the component cache. This includes singleton objects. If you
+  create more objects from the same QML code after clearing the cache, the new
+  objects will be of different types than the old ones. Assigning such a new
+  object to a property of its declared type belonging to an object created
+  before clearing the cache won't work.
+
+  As a general rule of thumb, make sure that no objects created from QML
+  components are alive when you clear the component cache.
+
   \sa trimComponentCache()
  */
 void QQmlEngine::clearComponentCache()
