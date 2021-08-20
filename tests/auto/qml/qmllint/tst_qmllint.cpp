@@ -656,6 +656,14 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Cannot use non-reference type QRectF as base "
                               "of namespaced attached type")
             << QString() << false;
+    QTest::newRow("AssignToReadOnlyProperty")
+            << QStringLiteral("assignToReadOnlyProperty.qml")
+            << QStringLiteral("Cannot assign to read-only property activeFocus") << QString()
+            << false;
+    QTest::newRow("AssignToReadOnlyProperty")
+            << QStringLiteral("assignToReadOnlyProperty2.qml")
+            << QStringLiteral("Cannot assign to read-only property activeFocus") << QString()
+            << false;
 }
 
 void TestQmllint::dirtyQmlCode()

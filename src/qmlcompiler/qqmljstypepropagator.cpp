@@ -487,6 +487,15 @@ void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
         return;
     }
 
+    if (!type.isWritable()) {
+        setError(u"Can't assign to read-only property %1"_qs.arg(name));
+
+        m_logger->logWarning(u"Cannot assign to read-only property %1"_qs.arg(name), Log_Property,
+                             getCurrentSourceLocation());
+
+        return;
+    }
+
     if (!canConvertFromTo(m_state.accumulatorIn, type)) {
         setError(u"cannot convert from %1 to %2"_qs
                          .arg(m_state.accumulatorIn.descriptiveName(), type.descriptiveName()));
@@ -640,6 +649,10 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
 
     if (!property.isWritable()) {
         setError(u"Can't assign to read-only property %1"_qs.arg(propertyName));
+
+        m_logger->logWarning(u"Cannot assign to read-only property %1"_qs.arg(propertyName),
+                             Log_Property, getCurrentSourceLocation());
+
         return;
     }
 
