@@ -154,7 +154,7 @@ public:
     Q_INVOKABLE void requestPaint();
     Q_INVOKABLE void markDirty(const QRectF& dirtyRect = QRectF());
 
-    Q_INVOKABLE bool save(const QString &filename) const;
+    Q_INVOKABLE bool save(const QString &filename, const QSizeF &imageSize = QSizeF()) const;
     Q_INVOKABLE QString toDataURL(const QString& type = QLatin1String("image/png")) const;
     QQmlRefPointer<QQuickCanvasPixmap> loadedPixmap(const QUrl& url);
 

@@ -135,6 +135,10 @@ CanvasTestCase {
        tryVerify(function() { return c.isImageLoaded(imagePath) })
        verify(!c.isImageLoading(imagePath));
        verify(!c.isImageError(imagePath));
+       var sizedImagePath = applicationDirPath + "/c2.png";
+       verify(c.save(sizedImagePath, Qt.size(c.width / 2, c.height / 2)));
+       var img = createTemporaryQmlObject("import QtQuick 2.0; Image { source: \"file://" + sizedImagePath + "\" }", c)
+       tryVerify(function() { return img.width === c.width / 2 && img.height === c.height / 2 })
        c.destroy();
   }
 
