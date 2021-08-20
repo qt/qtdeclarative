@@ -69,7 +69,7 @@ void QQuickStyleItemScrollViewCorner::paintEvent(QPainter *painter) const
 
     styleOption.orientation = Qt::Vertical;
 
-    const qreal scale = window()->devicePixelRatio();
+    const qreal scale = window()->effectiveDevicePixelRatio();
     const int grooveWidth = minimumSize().width();
     const int grooveHeight = minimumSize().height();
     const QSize scrollBarMinSize = style()->sizeFromContents(QStyle::CT_ScrollBar, &styleOption, QSize(0, 0));
