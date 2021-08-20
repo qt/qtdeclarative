@@ -17,3 +17,19 @@ macos ci
 # QTQAINFRA-4127
 [passwordCharacter]
 ci b2qt 32bit
+
+# QTBUG-95940
+[canPaste]
+opensuse-leap
+
+# QTBUG-95940
+[canPasteEmpty]
+opensuse-leap
+
+# QTBUG-95940
+[copyAndPaste]
+opensuse-leap
+
+# QTBUG-95940
+[copyAndPasteKeySequence]
+opensuse-leap
