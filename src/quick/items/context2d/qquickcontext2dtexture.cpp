@@ -165,8 +165,15 @@ void QQuickContext2DTexture::setItem(QQuickCanvasItem* item)
 
 bool QQuickContext2DTexture::setCanvasWindow(const QRect& r)
 {
-    qreal canvasDevicePixelRatio = (m_item && m_item->window()) ?
-        m_item->window()->effectiveDevicePixelRatio() : qApp->devicePixelRatio();
+    bool ok = false;
+    static qreal overriddenDevicePixelRatio =
+        !qEnvironmentVariableIsEmpty("QT_CANVAS_OVERRIDE_DEVICEPIXELRATIO") ?
+        qgetenv("QT_CANVAS_OVERRIDE_DEVICEPIXELRATIO").toFloat(&ok) : 0.0;
+    qreal canvasDevicePixelRatio = overriddenDevicePixelRatio;
+    if (overriddenDevicePixelRatio == 0.0) {
+        canvasDevicePixelRatio = (m_item && m_item->window()) ?
+            m_item->window()->effectiveDevicePixelRatio() : qApp->devicePixelRatio();
+    }
     if (!qFuzzyCompare(m_canvasDevicePixelRatio, canvasDevicePixelRatio)) {
         qCDebug(lcCanvas, "%s device pixel ratio %.1lf -> %.1lf",
                 (m_item->objectName().isEmpty() ? "Canvas" : qPrintable(m_item->objectName())),
