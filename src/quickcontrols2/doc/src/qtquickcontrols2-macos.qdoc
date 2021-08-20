@@ -65,12 +65,22 @@
     native controls in UIKit. The style will follow the theme and colors configured globally from
     System Preferences, and does not come with a separate customization API on top of that.
 
-    \note If you want to style a control, you should set both the
-    \l {Control::background}{background} and the \l {Control::contentItem}{contentItem}, rather than
-    just one of them. This is because the macOS style will in some cases draw both the contents and
-    the background into the default background item, which will not look good if the application
-    combines this with a custom contentItem. By setting them both, you are guaranteed that the
-    control will look the same on all platforms, for all styles.
+    \note The macOS style is not suitable for \l {Customizing Qt Quick Controls}{customizing}.
+    The main reason is that it sometimes draw both the contents and the background
+    onto a single background item, which will not look good together with a custom contentItem.
+    It also tends to use padding and inset values that are different from the other styles.
+    It is instead recommended to always base a customized control on top of a single style
+    that is available on all platforms, e.g \l {Basic Style}, \l {Fusion Style}, \l {Imagine Style},
+    \l {Material Style}, \l {Universal Style}. By doing so, you are guaranteed that it will
+    always look the same, regardless of which style the application is run with. E.g:
+
+    \code
+        import QtQuick.Controls.Basic as Basic
+
+        Basic.SpinBox {
+            background: Rectangle { }
+        }
+    \endcode
 
     \b {See also} \l {Styling Qt Quick Controls}
 */
