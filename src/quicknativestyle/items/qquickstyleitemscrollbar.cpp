@@ -83,7 +83,7 @@ void QQuickStyleItemScrollBar::paintEvent(QPainter *painter) const
                         | QStyle::SC_ScrollBarSubLine
                         | QStyle::SC_ScrollBarGroove;
 
-        const qreal scale = window()->devicePixelRatio();
+        const qreal scale = window()->effectiveDevicePixelRatio();
         const QSize scrollBarMinSize = style()->sizeFromContents(QStyle::CT_ScrollBar, &opt, QSize(0, 0));
         const QSize sz = scrollBarMinSize * scale;
         QImage scrollBarImage(sz, QImage::Format_ARGB32_Premultiplied);

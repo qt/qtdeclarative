@@ -42,6 +42,7 @@
 #include <QtQuick/qsgninepatchnode.h>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/qquickwindow.h>
+#include <QtQuick/qquickrendercontrol.h>
 
 #include <QtQuickTemplates2/private/qquickcontrol_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
@@ -85,7 +86,7 @@ int QQuickStyleItem::dprAlignedSize(const int size) const
     // Return the first value equal to or bigger than size
     // that is a whole number when multiplied with the dpr.
     static int multiplier = [&]() {
-        const qreal dpr = window()->devicePixelRatio();
+        const qreal dpr = window()->effectiveDevicePixelRatio();
         for (int m = 1; m <= 10; ++m) {
             const qreal v = m * dpr;
             if (v == int(v))
@@ -146,7 +147,7 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
     const auto texture = window()->createTextureFromImage(m_paintedImage, QQuickWindow::TextureCanUseAtlas);
 
     QRectF bounds = boundingRect();
-    const qreal dpr = window()->devicePixelRatio();
+    const qreal dpr = window()->effectiveDevicePixelRatio();
     const QSizeF unscaledImageSize = QSizeF(m_paintedImage.size()) / dpr;
 
     // We can scale the image up with a nine patch node, but should
@@ -198,12 +199,18 @@ QStyle::State QQuickStyleItem::controlSize(QQuickItem *item)
     return QStyle::State_None;
 }
 
+static QWindow *effectiveWindow(QQuickWindow *window)
+{
+    QWindow *renderWindow = QQuickRenderControl::renderWindowFor(window);
+    return renderWindow ? renderWindow : window;
+}
+
 void QQuickStyleItem::initStyleOptionBase(QStyleOption &styleOption) const
 {
     Q_ASSERT(m_control);
 
     styleOption.control = const_cast<QQuickItem *>(control<QQuickItem>());
-    styleOption.window = window();
+    styleOption.window = effectiveWindow(window());
     styleOption.palette = QQuickItemPrivate::get(m_control)->palette()->toQPalette();
     styleOption.rect = QRect(QPoint(0, 0), imageSize());
 
@@ -214,7 +221,7 @@ void QQuickStyleItem::initStyleOptionBase(QStyleOption &styleOption) const
     if (const auto quickControl = dynamic_cast<QQuickControl *>(m_control.data()))
         styleOption.direction = quickControl->isMirrored() ? Qt::RightToLeft : Qt::LeftToRight;
 
-    if (window()) {
+    if (styleOption.window) {
         if (styleOption.window->isActive())
             styleOption.state |= QStyle::State_Active;
         if (m_control->isEnabled())
@@ -332,7 +339,7 @@ void QQuickStyleItem::paintControlToImage()
     // that might be slightly larger than imgSize, so that imgSize * dpr lands on a
     // whole number. The result is that neither the image size, nor the scene graph
     // node, ends up with a size that has a fraction.
-    const qreal dpr = window()->devicePixelRatio();
+    const qreal dpr = window()->effectiveDevicePixelRatio();
     const int alignedW = int(dprAlignedSize(imgSize.width()) * dpr);
     const int alignedH = int(dprAlignedSize(imgSize.height()) * dpr);
     const QSize alignedSize = QSize(alignedW, alignedH);

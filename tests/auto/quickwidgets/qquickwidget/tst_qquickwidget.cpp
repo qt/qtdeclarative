@@ -144,6 +144,7 @@ private slots:
     void synthMouseFromTouch();
     void tabKey();
     void resizeOverlay();
+    void controls();
 
 private:
     QPointingDevice *device = QTest::createTouchDevice();
@@ -733,6 +734,36 @@ void tst_qquickwidget::resizeOverlay()
     QCOMPARE(rootItem->height(), 300);
     QCOMPARE(overlay->width(), rootItem->width());
     QCOMPARE(overlay->height(), rootItem->height());
+}
+
+void tst_qquickwidget::controls()
+{
+    // Smoke test for having some basic Quick Controls in a scene in a QQuickWidget.
+    QWidget widget;
+    QVBoxLayout *contentVerticalLayout = new QVBoxLayout(&widget);
+    QQuickWidget *quickWidget = new QQuickWidget(testFileUrl("controls.qml"), &widget);
+    QCOMPARE(quickWidget->status(), QQuickWidget::Ready);
+    quickWidget->setResizeMode(QQuickWidget::SizeRootObjectToView);
+    contentVerticalLayout->addWidget(quickWidget);
+
+    widget.resize(400, 400);
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&widget));
+
+    QQuickItem *rootItem = qobject_cast<QQuickItem *>(quickWidget->rootObject());
+    QVERIFY(rootItem);
+    QCOMPARE(rootItem->size(), quickWidget->size());
+    QSize oldSize = quickWidget->size();
+
+    // Verify that QTBUG-95937 no longer occurs. (on Windows with the default
+    // native windows style this used to assert in debug builds)
+    widget.resize(300, 300);
+    QTRY_VERIFY(quickWidget->width() < oldSize.width());
+    QTRY_COMPARE(rootItem->size(), quickWidget->size());
+
+    widget.hide();
+    widget.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&widget));
 }
 
 QTEST_MAIN(tst_qquickwidget)
