@@ -368,6 +368,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("incompleteQmltypes.qml")
             << QString("Warning: %1:5:26: Type \"QPalette\" of property \"palette\" not found")
             << QString() << false;
+    QTest::newRow("incompleteQmltypes2") << QStringLiteral("incompleteQmltypes2.qml")
+                                         << QString("Warning: %1:5:26: Type \"CustomPalette\" of "
+                                                    "property \"palette2\" not fully resolved")
+                                         << QString() << false;
     QTest::newRow("inheritanceCylce")
             << QStringLiteral("Cycle1.qml")
             << QString("Warning: %1: Cycle2 is part of an inheritance cycle: Cycle2 -> Cycle3 -> Cycle1 -> Cycle2")

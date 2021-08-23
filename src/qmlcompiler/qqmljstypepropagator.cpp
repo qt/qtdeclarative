@@ -574,12 +574,21 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
 
         auto baseType = m_typeResolver->containedType(m_state.accumulatorIn);
         // Warn separately when a property is only not found because of a missing type
-        if (auto property = baseType->property(propertyName);
-            property.isValid() && property.type().isNull()) {
+        if (auto property = baseType->property(propertyName); property.isValid()) {
+
+            QString errorType;
+            if (property.type().isNull())
+                errorType = u"found"_qs;
+            else if (!property.type()->isFullyResolved())
+                errorType = u"fully resolved"_qs;
+
+            Q_ASSERT(!errorType.isEmpty());
+
             m_logger->logWarning(
-                    u"Type \"%1\" of property \"%2\" not found. This is likely due to a missing dependency entry or a type not being exposed declaratively."_qs
-                            .arg(property.typeName(), propertyName),
+                    u"Type \"%1\" of property \"%2\" not %3. This is likely due to a missing dependency entry or a type not being exposed declaratively."_qs
+                            .arg(property.typeName(), propertyName, errorType),
                     Log_Type, getCurrentSourceLocation());
+
             return;
         }
 

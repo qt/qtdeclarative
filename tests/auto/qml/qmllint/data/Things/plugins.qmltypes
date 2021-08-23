@@ -2,6 +2,11 @@ import QtQuick.tooling 1.2
 Module {
     dependencies: []
     Component {
+        name: "CustomPalette"
+        prototype: "QPalette"
+    }
+
+    Component {
         name: "SomethingEntirelyStrange"
         prototype: "QObject"
         exports: ["Things/SomethingEntirelyStrange 1.0"]
@@ -14,6 +19,7 @@ Module {
             }
         }
         Property { name: "palette"; type: "QPalette" }
+        Property { name: "palette2"; type: "CustomPalette" }
     }
     Component {
         name: "Frame"
