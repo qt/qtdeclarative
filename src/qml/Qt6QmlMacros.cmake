@@ -484,19 +484,21 @@ function(qt6_add_qml_module target)
             PROPERTIES QT_RESOURCE_ALIAS "qmldir"
         )
 
-        foreach(prefix IN LISTS prefixes)
-            set(resource_targets)
-            qt6_add_resources(${target} ${qmldir_resource_name}
-                FILES ${arg_OUTPUT_DIRECTORY}/qmldir
-                PREFIX "${prefix}"
-                OUTPUT_TARGETS resource_targets
-            )
-            list(APPEND output_targets ${resource_targets})
-            # If we are adding the same file twice, we need a different resource
-            # name for the second one. It has the same QT_RESOURCE_ALIAS but a
-            # different prefix, so we can't put it in the same resource.
-            string(APPEND qmldir_resource_name "_copy")
-        endforeach()
+        if(NOT ANDROID)
+            foreach(prefix IN LISTS prefixes)
+                set(resource_targets)
+                    qt6_add_resources(${target} ${qmldir_resource_name}
+                        FILES ${arg_OUTPUT_DIRECTORY}/qmldir
+                        PREFIX "${prefix}"
+                        OUTPUT_TARGETS resource_targets
+                    )
+                    list(APPEND output_targets ${resource_targets})
+                # If we are adding the same file twice, we need a different resource
+                # name for the second one. It has the same QT_RESOURCE_ALIAS but a
+                # different prefix, so we can't put it in the same resource.
+                string(APPEND qmldir_resource_name "_copy")
+            endforeach()
+        endif()
     endif()
 
     if(NOT arg_NO_PLUGIN AND NOT arg_NO_CREATE_PLUGIN_TARGET)
