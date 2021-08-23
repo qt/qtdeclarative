@@ -73,7 +73,7 @@ Item {
         interpolate: false
         goalSprite: ""
 //! [still]
-        Sprite{
+        Sprite {
             name: "still"
             source: "content/BearSheet.png"
             frameCount: 1
@@ -83,7 +83,7 @@ Item {
             to: {"still":1, "blink":0.1, "floating":0}
         }
 //! [still]
-        Sprite{
+        Sprite {
             name: "blink"
             source: "content/BearSheet.png"
             frameCount: 3
@@ -94,7 +94,7 @@ Item {
             frameDuration: 100
             to: {"still":1}
         }
-        Sprite{
+        Sprite {
             name: "floating"
             source: "content/BearSheet.png"
             frameCount: 9
@@ -105,7 +105,7 @@ Item {
             frameDuration: 160
             to: {"still":0, "flailing":1}
         }
-        Sprite{
+        Sprite {
             name: "flailing"
             source: "content/BearSheet.png"
             frameCount: 8
@@ -116,7 +116,7 @@ Item {
             frameDuration: 160
             to: {"falling":1}
         }
-        Sprite{
+        Sprite {
             name: "falling"
             source: "content/BearSheet.png"
             frameCount: 5
