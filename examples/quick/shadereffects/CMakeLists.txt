@@ -19,6 +19,7 @@ find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Qml)
+find_package(Qt6 COMPONENTS ShaderTools)
 
 qt_add_executable(shadereffects
     main.cpp
@@ -40,12 +41,6 @@ set(shadereffects_resource_files
     "content/Slider.qml"
     "content/face-smile.png"
     "content/qt-logo.png"
-    "content/shaders/blur.frag.qsb"
-    "content/shaders/colorize.frag.qsb"
-    "content/shaders/genie.vert.qsb"
-    "content/shaders/outline.frag.qsb"
-    "content/shaders/shadow.frag.qsb"
-    "content/shaders/wobble.frag.qsb"
     "shadereffects.qml"
 )
 
@@ -54,6 +49,21 @@ qt6_add_resources(shadereffects "shadereffects"
         "/shadereffects"
     FILES
         ${shadereffects_resource_files}
+)
+
+qt6_add_shaders(shadereffects "shaders"
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    PREFIX
+        "/shadereffects/content/shaders"
+    FILES
+        "content/shaders/genie.vert"
+        "content/shaders/blur.frag"
+        "content/shaders/colorize.frag"
+        "content/shaders/outline.frag"
+        "content/shaders/shadow.frag"
+        "content/shaders/wobble.frag"
 )
 
 install(TARGETS shadereffects
