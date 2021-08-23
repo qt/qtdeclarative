@@ -35,17 +35,11 @@ target_link_libraries(extended PUBLIC
     Qt::Widgets
 )
 
-
-# Resources:
-set(extended_resource_files
-    "example.qml"
-)
-
-qt6_add_resources(extended "extended"
-    PREFIX
-        "/"
-    FILES
-        ${extended_resource_files}
+qt_add_qml_module(extended
+    URI People
+    VERSION 1.0
+    QML_FILES example.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS extended
@@ -53,10 +47,3 @@ install(TARGETS extended
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(extended PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI People
-)
-
-qt6_qml_type_registration(extended)

@@ -36,17 +36,11 @@ target_link_libraries(networkaccessmanagerfactory PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(networkaccessmanagerfactory_resource_files
-    "view.qml"
-)
-
-qt6_add_resources(networkaccessmanagerfactory "networkaccessmanagerfactory"
-    PREFIX
-        "/"
-    FILES
-        ${networkaccessmanagerfactory_resource_files}
+qt_add_qml_module(networkaccessmanagerfactory
+    URI Example
+    VERSION 1.0
+    QML_FILES view.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS networkaccessmanagerfactory

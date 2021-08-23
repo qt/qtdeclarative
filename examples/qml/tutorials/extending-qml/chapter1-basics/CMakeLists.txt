@@ -35,17 +35,11 @@ target_link_libraries(chapter1-basics PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(chapter1-basics_resource_files
-    "app.qml"
-)
-
-qt6_add_resources(chapter1-basics "chapter1-basics"
-    PREFIX
-        "/"
-    FILES
-        ${chapter1-basics_resource_files}
+qt_add_qml_module(chapter1-basics
+    URI Charts
+    VERSION 1.0
+    QML_FILES app.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS chapter1-basics
@@ -53,10 +47,3 @@ install(TARGETS chapter1-basics
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(chapter1-basics PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI Charts
-)
-
-qt6_qml_type_registration(chapter1-basics)

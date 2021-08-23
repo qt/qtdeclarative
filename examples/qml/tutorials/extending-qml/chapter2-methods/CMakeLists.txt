@@ -35,17 +35,11 @@ target_link_libraries(chapter2-methods PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(chapter2-methods_resource_files
-    "app.qml"
-)
-
-qt6_add_resources(chapter2-methods "chapter2-methods"
-    PREFIX
-        "/"
-    FILES
-        ${chapter2-methods_resource_files}
+qt_add_qml_module(chapter2-methods
+    URI Charts
+    VERSION 1.0
+    QML_FILES app.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS chapter2-methods
@@ -53,10 +47,3 @@ install(TARGETS chapter2-methods
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(chapter2-methods PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI Charts
-)
-
-qt6_qml_type_registration(chapter2-methods)

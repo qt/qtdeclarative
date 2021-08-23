@@ -17,10 +17,6 @@ SOURCES += piechart.cpp \
 
 DESTPATH=$$[QT_INSTALL_EXAMPLES]/qml/tutorials/extending-qml/chapter6-plugins/$$QML_IMPORT_NAME
 
-copy_qmltypes.files = $$OUT_PWD/plugins.qmltypes
-copy_qmltypes.path = $$DESTDIR
-COPIES += copy_qmltypes
-
 target.path=$$DESTPATH
 qmldir.files=$$PWD/qmldir
 qmldir.path=$$DESTPATH

@@ -14,7 +14,6 @@ if(NOT DEFINED INSTALL_EXAMPLESDIR)
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/tutorials/extending-qml/chapter6-plugins")
-set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
@@ -31,17 +30,11 @@ target_link_libraries(chapter6-plugins PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(app_resource_files
-    "app.qml"
-)
-
-qt6_add_resources(chapter6-plugins "app"
-    PREFIX
-        "/"
-    FILES
-        ${app_resource_files}
+qt_add_qml_module(chapter6-plugins
+    URI ChartsApp
+    VERSION 1.0
+    QML_FILES app.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS chapter6-plugins
@@ -50,4 +43,4 @@ install(TARGETS chapter6-plugins
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
 
-add_subdirectory(import)
+add_subdirectory(Charts)
