@@ -38,7 +38,6 @@ target_link_libraries(embeddedinwidgets PUBLIC
 
 # Resources:
 set(embeddedinwidgets_resource_files
-    "TextBox.qml"
     "main.qml"
 )
 
