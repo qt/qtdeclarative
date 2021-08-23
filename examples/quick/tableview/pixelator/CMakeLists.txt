@@ -35,18 +35,12 @@ target_link_libraries(qml_pixelator PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(qmake_immediate_resource_files
-    "main.qml"
-    "qt.png"
-)
-
-qt6_add_resources(qml_pixelator "qmake_immediate"
-    PREFIX
-        "/"
-    FILES
-        ${qmake_immediate_resource_files}
+qt_add_qml_module(qml_pixelator
+    URI ImageModel
+    VERSION 1.0
+    QML_FILES main.qml
+    RESOURCES qt.png
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS qml_pixelator
@@ -54,10 +48,3 @@ install(TARGETS qml_pixelator
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(qml_pixelator PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI ImageModel
-)
-
-qt6_qml_type_registration(qml_pixelator)

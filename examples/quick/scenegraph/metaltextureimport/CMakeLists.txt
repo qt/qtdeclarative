@@ -27,6 +27,9 @@ qt_add_executable(metaltextureimport
 set_target_properties(metaltextureimport PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
+
+    # Prevent name clash with build subdirectory on case-insensitive file systems
+    OUTPUT_NAME metaltextureimportapp
 )
 target_link_libraries(metaltextureimport PUBLIC
     "-framework Metal"
@@ -36,36 +39,26 @@ target_link_libraries(metaltextureimport PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(metaltextureimport_resource_files
-    "main.qml"
-    "squircle.frag"
-    "squircle.vert"
-)
-
-qt6_add_resources(metaltextureimport "metaltextureimport"
-    PREFIX
-        "/scenegraph/metaltextureimport"
-    FILES
-        ${metaltextureimport_resource_files}
-)
-
 if(MACOS)
     target_link_libraries(metaltextureimport PUBLIC
         "-framework AppKit"
     )
 endif()
 
+qt_add_qml_module(metaltextureimport
+    URI MetalTextureImport
+    VERSION 1.0
+    QML_FILES
+        main.qml
+    RESOURCES
+        squircle.frag
+        squircle.vert
+    RESOURCE_PREFIX /scenegraph/metaltextureimport
+    NO_RESOURCE_TARGET_PATH
+)
+
 install(TARGETS metaltextureimport
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(metaltextureimport PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI MetalTextureImport
-)
-
-qt6_qml_type_registration(metaltextureimport)

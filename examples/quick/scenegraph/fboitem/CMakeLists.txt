@@ -40,18 +40,13 @@ target_link_libraries(fboitem PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(fboitem_resource_files
-    "main.qml"
-    "shaders/checker.frag.qsb"
-)
-
-qt6_add_resources(fboitem "fboitem"
-    PREFIX
-        "/scenegraph/fboitem"
-    FILES
-        ${fboitem_resource_files}
+qt_add_qml_module(fboitem
+    URI SceneGraphRendering
+    VERSION 1.0
+    QML_FILES main.qml
+    RESOURCES shaders/checker.frag.qsb
+    RESOURCE_PREFIX /scenegraph/fboitem
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS fboitem
@@ -59,10 +54,3 @@ install(TARGETS fboitem
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(fboitem PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI SceneGraphRendering
-)
-
-qt6_qml_type_registration(fboitem)

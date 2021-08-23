@@ -35,18 +35,13 @@ target_link_libraries(threadedanimation PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(threadedanimation_resource_files
-    "main.qml"
-    "spinner.png"
-)
-
-qt6_add_resources(threadedanimation "threadedanimation"
-    PREFIX
-        "/scenegraph/threadedanimation"
-    FILES
-        ${threadedanimation_resource_files}
+qt_add_qml_module(threadedanimation
+    URI Spinner
+    VERSION 1.0
+    QML_FILES main.qml
+    RESOURCES spinner.png
+    RESOURCE_PREFIX /scenegraph/threadedanimation
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS threadedanimation
@@ -54,10 +49,3 @@ install(TARGETS threadedanimation
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(threadedanimation PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI Spinner
-)
-
-qt6_qml_type_registration(threadedanimation)

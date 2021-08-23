@@ -29,6 +29,9 @@ qt_add_executable(graph
 set_target_properties(graph PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
+
+    # Prevent name clash with build subdirectory on case-insensitive file systems
+    OUTPUT_NAME graphapp
 )
 target_link_libraries(graph PUBLIC
     Qt::Core
@@ -36,21 +39,18 @@ target_link_libraries(graph PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(graph_resource_files
-    "main.qml"
-    "shaders/line.frag.qsb"
-    "shaders/line.vert.qsb"
-    "shaders/noisy.frag.qsb"
-    "shaders/noisy.vert.qsb"
-)
-
-qt6_add_resources(graph "graph"
-    PREFIX
-        "/scenegraph/graph"
-    FILES
-        ${graph_resource_files}
+qt_add_qml_module(graph
+    URI Graph
+    VERSION 1.0
+    QML_FILES
+        main.qml
+    RESOURCES
+        shaders/line.frag.qsb
+        shaders/line.vert.qsb
+        shaders/noisy.frag.qsb
+        shaders/noisy.vert.qsb
+    RESOURCE_PREFIX /scenegraph/graph
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS graph
@@ -58,10 +58,3 @@ install(TARGETS graph
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(graph PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI Graph
-)
-
-qt6_qml_type_registration(graph)

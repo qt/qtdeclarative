@@ -35,18 +35,12 @@ target_link_libraries(gameoflife PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(qmake_immediate_resource_files
-    "gosperglidergun.cells"
-    "main.qml"
-)
-
-qt6_add_resources(gameoflife "qmake_immediate"
-    PREFIX
-        "/"
-    FILES
-        ${qmake_immediate_resource_files}
+qt_add_qml_module(gameoflife
+    URI GameOfLifeModel
+    VERSION 1.0
+    QML_FILES main.qml
+    RESOURCES gosperglidergun.cells
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS gameoflife
@@ -54,10 +48,3 @@ install(TARGETS gameoflife
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(gameoflife PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI GameOfLifeModel
-)
-
-qt6_qml_type_registration(gameoflife)

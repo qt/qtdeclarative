@@ -27,6 +27,9 @@ qt_add_executable(openglunderqml
 set_target_properties(openglunderqml PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
+
+    # Prevent name clash with build subdirectory on case-insensitive file systems
+    OUTPUT_NAME openglunderqmlapp
 )
 target_link_libraries(openglunderqml PUBLIC
     Qt::Core
@@ -35,17 +38,12 @@ target_link_libraries(openglunderqml PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(openglunderqml_resource_files
-    "main.qml"
-)
-
-qt6_add_resources(openglunderqml "openglunderqml"
-    PREFIX
-        "/scenegraph/openglunderqml"
-    FILES
-        ${openglunderqml_resource_files}
+qt_add_qml_module(openglunderqml
+    URI OpenGLUnderQML
+    VERSION 1.0
+    QML_FILES main.qml
+    RESOURCE_PREFIX /scenegraph/openglunderqml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS openglunderqml
@@ -53,10 +51,3 @@ install(TARGETS openglunderqml
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(openglunderqml PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI OpenGLUnderQML
-)
-
-qt6_qml_type_registration(openglunderqml)
