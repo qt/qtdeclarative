@@ -313,7 +313,8 @@
   parameters to the \c create() method for identity and thread affinity of the
   engine in order to assert on that.
 
-  \sa QML_ELEMENT, QML_NAMED_ELEMENT(), qmlRegisterSingletonInstance().
+  \sa QML_ELEMENT, QML_NAMED_ELEMENT(),
+      qmlRegisterSingletonInstance(), QQmlEngine::singletonInstance()
 */
 
 /*!
