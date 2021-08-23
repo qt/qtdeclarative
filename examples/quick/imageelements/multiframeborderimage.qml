@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,7 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
+import QtQuick
+import QtQuick.Controls
 
 Rectangle {
     width: 480
@@ -74,7 +75,7 @@ Rectangle {
         }
     }
 
-    Text {
+    Label {
         anchors.centerIn: parent
         horizontalAlignment: Text.AlignHCenter
         text: "frame " + (img.currentFrame + 1) + " of " + img.frameCount +
