@@ -2,7 +2,7 @@ TEMPLATE = app
 
 QT += quick qml
 SOURCES += main.cpp
-RESOURCES += externaldraganddrop.qrc ../shared/shared.qrc
+RESOURCES += externaldraganddrop.qrc
 
 EXAMPLE_FILES = \
     externaldraganddrop.qml \

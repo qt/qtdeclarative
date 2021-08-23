@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,8 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.2
-import QtQuick.Layouts 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
 
 Item {
     id: root
@@ -61,7 +62,7 @@ Item {
         anchors.fill: parent
         anchors.margins: 8
 
-        Text {
+        Label {
             Layout.fillWidth: true
             text: "Drag text into, out of, and between the boxes below."
             wrapMode: Text.WordWrap
@@ -69,19 +70,19 @@ Item {
 
         DragAndDropTextItem {
             Layout.fillWidth: true
-            height: 142
+            Layout.fillHeight: true
             display: "Sample Text"
         }
 
         DragAndDropTextItem {
             Layout.fillWidth: true
-            height: 142
+            Layout.fillHeight: true
             display: "Option/ctrl drag to copy instead of move text."
         }
 
         DragAndDropTextItem {
             Layout.fillWidth: true
-            height: 142
+            Layout.fillHeight: true
             dropEnabled: false
             display: "Drag out into other applications."
         }

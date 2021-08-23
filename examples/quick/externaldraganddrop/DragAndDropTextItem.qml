@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.2
-import "../shared" as Examples
+import QtQuick
+import QtQuick.Controls
 
 Rectangle {
     id: item
@@ -62,8 +62,9 @@ Rectangle {
         to: "#EEE"
         duration: 1000
     }
-    Text {
+    Label {
         anchors.fill: parent
+        anchors.margins: 10
         text: item.display
         wrapMode: Text.WordWrap
     }
@@ -104,9 +105,9 @@ Rectangle {
                 item.display = ""
         }
     }
-    Examples.CheckBox {
+    CheckBox {
         id: acceptDropCB
-        anchors.right: parent.right
+        anchors.bottom: parent.bottom
         checked: true
         text: "accept drop"
     }
