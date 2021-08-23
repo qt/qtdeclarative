@@ -478,6 +478,7 @@ void QQuickStyleItem::componentComplete()
     addDebugInfo();
 #endif
     QQuickItem::componentComplete();
+    updateGeometry();
     connectToControl();
     polish();
 }
