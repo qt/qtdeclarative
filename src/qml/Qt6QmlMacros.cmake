@@ -849,15 +849,8 @@ function(_qt_internal_target_generate_qmldir target)
             string(APPEND content "optional ")
         endif()
 
-        set(plugin_basename)
-        if(TARGET ${plugin_target})
-            get_target_property(plugin_basename ${plugin_target} OUTPUT_NAME)
-        endif()
-        if(plugin_basename)
-            string(APPEND content "plugin ${plugin_basename}\n")
-        else()
-            string(APPEND content "plugin ${plugin_target}\n")
-        endif()
+        _qt_internal_get_qml_plugin_basename(plugin_basename ${plugin_target})
+        string(APPEND content "plugin ${plugin_basename}\n")
 
         _qt_internal_qmldir_item(classname QT_QML_MODULE_CLASS_NAME)
     endif()
@@ -1092,7 +1085,9 @@ function(qt6_add_qml_plugin target)
             string(REPLACE "." "_" android_plugin_name_infix_name "${arg_URI}")
         endif()
 
-        set(final_android_qml_plugin_name "qml_${android_plugin_name_infix_name}_${target}")
+        _qt_internal_get_qml_plugin_basename(plugin_basename ${target})
+        set(final_android_qml_plugin_name
+            "qml_${android_plugin_name_infix_name}_${plugin_basename}")
         set_target_properties(${target}
             PROPERTIES
             LIBRARY_OUTPUT_NAME "${final_android_qml_plugin_name}"
@@ -2033,3 +2028,16 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
         endif()
     endfunction()
 endif()
+
+# The function returns the base output name of a qml plugin that will be used as library output
+# name and in a qmldir file as the 'plugin <plugin_basename>' record.
+function(_qt_internal_get_qml_plugin_basename out_var plugin_target)
+    set(plugin_basename)
+    if(TARGET ${plugin_target})
+        get_target_property(plugin_basename ${plugin_target} OUTPUT_NAME)
+    endif()
+    if(NOT plugin_basename)
+        set(plugin_basename "${plugin_target}")
+    endif()
+    set(${out_var} "${plugin_basename}" PARENT_SCOPE)
+endfunction()
