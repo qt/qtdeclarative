@@ -19,6 +19,7 @@ find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
+find_package(Qt6 COMPONENTS ShaderTools)
 
 qt_add_executable(twotextureproviders
     main.cpp
@@ -40,12 +41,20 @@ qt_add_qml_module(twotextureproviders
     VERSION 1.0
     QML_FILES
         main.qml
-    RESOURCES
-        shaders/checker.frag.qsb
-        shaders/xorblender.frag.qsb
-        shaders/xorblender.vert.qsb
     RESOURCE_PREFIX /scenegraph/twotextureproviders
     NO_RESOURCE_TARGET_PATH
+)
+
+qt6_add_shaders(twotextureproviders "shaders"
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    PREFIX
+        "/scenegraph/twotextureproviders/shaders"
+    FILES
+        "shaders/xorblender.vert"
+        "shaders/xorblender.frag"
+        "shaders/checker.frag"
 )
 
 install(TARGETS twotextureproviders

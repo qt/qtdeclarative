@@ -19,6 +19,7 @@ find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Qml)
 find_package(Qt6 COMPONENTS Quick)
+find_package(Qt6 COMPONENTS ShaderTools)
 
 qt_add_executable(custommaterial_declarative # special case
     customitem.cpp customitem.h
@@ -40,11 +41,19 @@ qt_add_qml_module(custommaterial_declarative
     VERSION 1.0
     QML_FILES
         main.qml
-    RESOURCES
-        shaders/mandelbrot.frag.qsb
-        shaders/mandelbrot.vert.qsb
     RESOURCE_PREFIX /scenegraph/custommaterial
     NO_RESOURCE_TARGET_PATH
+)
+
+qt6_add_shaders(custommaterial_declarative "shaders"
+    BATCHABLE
+    PRECOMPILE
+    OPTIMIZED
+    PREFIX
+        "/scenegraph/custommaterial/shaders"
+    FILES
+        "shaders/mandelbrot.vert"
+        "shaders/mandelbrot.frag"
 )
 
 install(TARGETS custommaterial_declarative # special case
