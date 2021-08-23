@@ -65,6 +65,47 @@ add them via the \c{-I} flag.
 
 To get an overview and explanation of all available command line options, run \c{qmllint --help}.
 
+\section2 Disabling warnings inline
+
+You may at any point disable warnings temporarily in a file using \c{// qmllint
+disable}.
+
+You can do this at the end of a line when a single line produces warnings:
+
+\code
+Item {
+    property string foo
+    Item {
+        property string bar: foo // qmllint disable unqualified
+    }
+}
+\endcode
+
+Alternatively you can disable comments for a block of lines by putting the
+comment in a line only containing \c{// qmllint disable}, ending the block with
+\c{// qmllint enable}:
+
+\code
+Item {
+    property string foo
+    Item {
+        // qmllint disable unqualified
+        property string bar: foo
+        property string bar2: foo
+        // qmllint enable unqualified
+    }
+}
+\endcode
+
+qmllint interprets all single line comments starting with \c {qmllint} as
+directives. Thus you may not start a comment that way unless you wish to enable
+or disable warnings.
+
+\note As done in the examples above it is preferable to explicitly specify the
+warning or a list of warnings you want to disable instead of disabling all
+warnings. This can be done by simply listing warning categories after \c{qmllint disable} (the names are
+the same as the options listed in \c{--help}).
+
 \section2 Settings
 
 In addition to passing command-line options, you can also
