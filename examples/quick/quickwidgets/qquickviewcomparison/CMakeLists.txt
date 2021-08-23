@@ -39,28 +39,15 @@ target_link_libraries(qquickviewcomparison PUBLIC
     Qt::Widgets
 )
 
-
-# Resources:
-set(qquickviewcomparison_resource_files
-    "test.qml"
+qt_add_qml_module(qquickviewcomparison
+    URI fbitem
+    VERSION 1.0
+    QML_FILES test.qml
+    RESOURCE_PREFIX /qquickviewcomparison
+    NO_RESOURCE_TARGET_PATH
 )
-
-qt6_add_resources(qquickviewcomparison "qquickviewcomparison"
-    PREFIX
-        "/qquickviewcomparison"
-    FILES
-        ${qquickviewcomparison_resource_files}
-)
-
 install(TARGETS qquickviewcomparison
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(qquickviewcomparison PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI fbitem
-)
-
-qt6_qml_type_registration(qquickviewcomparison)

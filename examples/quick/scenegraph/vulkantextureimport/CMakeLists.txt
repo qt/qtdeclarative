@@ -27,6 +27,9 @@ qt_add_executable(vulkantextureimport
 set_target_properties(vulkantextureimport PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
+
+    # Prevent name clash with build subdirectory on case-insensitive file systems
+    OUTPUT_NAME vulkantextureimportapp
 )
 target_link_libraries(vulkantextureimport PUBLIC
     Qt::Core
@@ -35,19 +38,16 @@ target_link_libraries(vulkantextureimport PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(vulkantextureimport_resource_files
-    "main.qml"
-    "squircle.frag.spv"
-    "squircle.vert.spv"
-)
-
-qt6_add_resources(vulkantextureimport "vulkantextureimport"
-    PREFIX
-        "/scenegraph/vulkantextureimport"
-    FILES
-        ${vulkantextureimport_resource_files}
+qt_add_qml_module(vulkantextureimport
+    URI VulkanTextureImport
+    VERSION 1.0
+    QML_FILES
+        main.qml
+    RESOURCES
+        squircle.frag.spv
+        squircle.vert.spv
+    RESOURCE_PREFIX /scenegraph/vulkantextureimport
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS vulkantextureimport
@@ -55,10 +55,3 @@ install(TARGETS vulkantextureimport
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(vulkantextureimport PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI VulkanTextureImport
-)
-
-qt6_qml_type_registration(vulkantextureimport)

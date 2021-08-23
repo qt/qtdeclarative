@@ -37,19 +37,16 @@ target_link_libraries(d3d11underqml PUBLIC
     d3dcompiler
 )
 
-
-# Resources:
-set(d3d11underqml_resource_files
-    "main.qml"
-    "squircle.frag"
-    "squircle.vert"
-)
-
-qt6_add_resources(d3d11underqml "d3d11underqml"
-    PREFIX
-        "/scenegraph/d3d11underqml"
-    FILES
-        ${d3d11underqml_resource_files}
+qt_add_qml_module(d3d11underqml
+    URI D3D11UnderQML
+    VERSION 1.0
+    QML_FILES
+        main.qml
+    RESOURCES
+        squircle.frag
+        squircle.vert
+    RESOURCE_PREFIX /scenegraph/d3d11underqml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS d3d11underqml
@@ -57,10 +54,3 @@ install(TARGETS d3d11underqml
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(d3d11underqml PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI D3D11UnderQML
-)
-
-qt6_qml_type_registration(d3d11underqml)

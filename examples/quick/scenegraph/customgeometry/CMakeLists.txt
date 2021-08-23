@@ -33,17 +33,12 @@ target_link_libraries(customgeometry_declarative PUBLIC # special case
     Qt::Quick
 )
 
-
-# Resources:
-set(customgeometry_resource_files
-    "main.qml"
-)
-
-qt6_add_resources(customgeometry_declarative "customgeometry" # special case
-    PREFIX
-        "/scenegraph/customgeometry"
-    FILES
-        ${customgeometry_resource_files}
+qt_add_qml_module(customgeometry_declarative
+    URI CustomGeometry
+    VERSION 1.0
+    QML_FILES main.qml
+    RESOURCE_PREFIX /scenegraph/customgeometry
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS customgeometry_declarative # special case
@@ -51,10 +46,3 @@ install(TARGETS customgeometry_declarative # special case
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(customgeometry_declarative PROPERTIES # special case
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI CustomGeometry
-)
-
-qt6_qml_type_registration(customgeometry_declarative) # special case

@@ -35,20 +35,17 @@ target_link_libraries(maskedmousearea PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(maskedmousearea_resource_files
-    "images/cloud_1.png"
-    "images/cloud_2.png"
-    "images/moon.png"
-    "maskedmousearea.qml"
-)
-
-qt6_add_resources(maskedmousearea "maskedmousearea"
-    PREFIX
-        "/customitems/maskedmousearea"
-    FILES
-        ${maskedmousearea_resource_files}
+qt_add_qml_module(maskedmousearea
+    URI Example
+    VERSION 1.0
+    QML_FILES
+        maskedmousearea.qml
+    RESOURCES
+        images/cloud_1.png
+        images/cloud_2.png
+        images/moon.png
+    RESOURCE_PREFIX /customitems/maskedmousearea
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS maskedmousearea
@@ -56,10 +53,3 @@ install(TARGETS maskedmousearea
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(maskedmousearea PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI Example
-)
-
-qt6_qml_type_registration(maskedmousearea)

@@ -35,20 +35,17 @@ target_link_libraries(twotextureproviders PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(twotextureproviders_resource_files
-    "main.qml"
-    "shaders/checker.frag.qsb"
-    "shaders/xorblender.frag.qsb"
-    "shaders/xorblender.vert.qsb"
-)
-
-qt6_add_resources(twotextureproviders "twotextureproviders"
-    PREFIX
-        "/scenegraph/twotextureproviders"
-    FILES
-        ${twotextureproviders_resource_files}
+qt_add_qml_module(twotextureproviders
+    URI SceneGraphRendering
+    VERSION 1.0
+    QML_FILES
+        main.qml
+    RESOURCES
+        shaders/checker.frag.qsb
+        shaders/xorblender.frag.qsb
+        shaders/xorblender.vert.qsb
+    RESOURCE_PREFIX /scenegraph/twotextureproviders
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS twotextureproviders
@@ -56,10 +53,3 @@ install(TARGETS twotextureproviders
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(twotextureproviders PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI SceneGraphRendering
-)
-
-qt6_qml_type_registration(twotextureproviders)

@@ -27,6 +27,9 @@ qt_add_executable(vulkanunderqml
 set_target_properties(vulkanunderqml PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
+
+    # Prevent name clash with build subdirectory on case-insensitive file systems
+    OUTPUT_NAME vulkanunderqmlapp
 )
 target_link_libraries(vulkanunderqml PUBLIC
     Qt::Core
@@ -35,19 +38,16 @@ target_link_libraries(vulkanunderqml PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(vulkanunderqml_resource_files
-    "main.qml"
-    "squircle.frag.spv"
-    "squircle.vert.spv"
-)
-
-qt6_add_resources(vulkanunderqml "vulkanunderqml"
-    PREFIX
-        "/scenegraph/vulkanunderqml"
-    FILES
-        ${vulkanunderqml_resource_files}
+qt_add_qml_module(vulkanunderqml
+    URI VulkanUnderQML
+    VERSION 1.0
+    QML_FILES
+        main.qml
+    RESOURCES
+        squircle.frag.spv
+        squircle.vert.spv
+    RESOURCE_PREFIX /scenegraph/vulkanunderqml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS vulkanunderqml
@@ -55,10 +55,3 @@ install(TARGETS vulkanunderqml
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(vulkanunderqml PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI VulkanUnderQML
-)
-
-qt6_qml_type_registration(vulkanunderqml)

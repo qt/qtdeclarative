@@ -36,36 +36,26 @@ target_link_libraries(metalunderqml PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(metalunderqml_resource_files
-    "main.qml"
-    "squircle.frag"
-    "squircle.vert"
-)
-
-qt6_add_resources(metalunderqml "metalunderqml"
-    PREFIX
-        "/scenegraph/metalunderqml"
-    FILES
-        ${metalunderqml_resource_files}
-)
-
 if(MACOS)
     target_link_libraries(metalunderqml PUBLIC
         "-framework AppKit"
     )
 endif()
 
+qt_add_qml_module(metalunderqml
+    URI MetalUnderQML
+    VERSION 1.0
+    QML_FILES
+        main.qml
+    RESOURCES
+        squircle.frag
+        squircle.vert
+    RESOURCE_PREFIX /scenegraph/metalunderqml
+    NO_RESOURCE_TARGET_PATH
+    )
+
 install(TARGETS metalunderqml
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(metalunderqml PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI MetalUnderQML
-)
-
-qt6_qml_type_registration(metalunderqml)

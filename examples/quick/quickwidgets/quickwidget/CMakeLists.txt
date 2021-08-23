@@ -37,19 +37,15 @@ target_link_libraries(quickwidget PUBLIC
     Qt::Widgets
 )
 
-
-# Resources:
-set(quickwidget_resource_files
-    "customgl.qml"
-    "rotatingsquare.qml"
-    "rotatingsquaretab.qml"
-)
-
-qt6_add_resources(quickwidget "quickwidget"
-    PREFIX
-        "/quickwidget"
-    FILES
-        ${quickwidget_resource_files}
+qt_add_qml_module(quickwidget
+    URI QuickWidgetExample
+    VERSION 1.0
+    QML_FILES
+        customgl.qml
+        rotatingsquare.qml
+        rotatingsquaretab.qml
+    RESOURCE_PREFIX /quickwidget
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS quickwidget
@@ -57,10 +53,3 @@ install(TARGETS quickwidget
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(quickwidget PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI QuickWidgetExample
-)
-
-qt6_qml_type_registration(quickwidget)
