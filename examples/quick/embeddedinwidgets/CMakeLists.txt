@@ -19,6 +19,7 @@ find_package(Qt6 COMPONENTS Core)
 find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Widgets)
 find_package(Qt6 COMPONENTS Quick)
+find_package(Qt6 COMPONENTS ShaderTools)
 
 qt_add_executable(embeddedinwidgets
     main.cpp
@@ -46,6 +47,15 @@ qt6_add_resources(embeddedinwidgets "embeddedinwidgets"
         "/embeddedinwidgets"
     FILES
         ${embeddedinwidgets_resource_files}
+)
+
+qt6_add_shaders(embeddedinwidgets "shaders"
+    PRECOMPILE
+    OPTIMIZED
+    PREFIX
+        "/embeddedinwidgets"
+    FILES
+        "reflect.frag"
 )
 
 install(TARGETS embeddedinwidgets

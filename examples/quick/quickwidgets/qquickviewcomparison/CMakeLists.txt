@@ -20,6 +20,7 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Widgets)
 find_package(Qt6 COMPONENTS QuickWidgets)
+find_package(Qt6 COMPONENTS ShaderTools)
 
 qt_add_executable(qquickviewcomparison
     fbitem.cpp fbitem.h
@@ -46,6 +47,16 @@ qt_add_qml_module(qquickviewcomparison
     RESOURCE_PREFIX /qquickviewcomparison
     NO_RESOURCE_TARGET_PATH
 )
+
+qt6_add_shaders(qquickviewcomparison "shaders"
+    PRECOMPILE
+    OPTIMIZED
+    PREFIX
+        "/qquickviewcomparison"
+    FILES
+        "wobble.frag"
+)
+
 install(TARGETS qquickviewcomparison
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
