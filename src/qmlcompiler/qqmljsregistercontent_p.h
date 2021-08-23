@@ -39,7 +39,7 @@
 //
 // We mean it.
 
-#include <QtQmlCompiler/private/qqmljsscope_p.h>
+#include "qqmljsscope_p.h"
 #include <QtCore/qhash.h>
 #include <QtCore/qstring.h>
 

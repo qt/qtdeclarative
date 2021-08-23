@@ -43,11 +43,11 @@
 
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsast_p.h>
-#include <private/qqmljsimporter_p.h>
-#include <private/qqmljslogger_p.h>
-#include <private/qqmljsregistercontent_p.h>
-#include <private/qqmljsscope_p.h>
-#include <private/qqmljsscopesbyid_p.h>
+#include "qqmljsimporter_p.h"
+#include "qqmljslogger_p.h"
+#include "qqmljsregistercontent_p.h"
+#include "qqmljsscope_p.h"
+#include "qqmljsscopesbyid_p.h"
 
 QT_BEGIN_NAMESPACE
 

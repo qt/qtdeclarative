@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#include <private/qqmljsmetatypes_p.h>
-#include <private/qqmljstyperesolver_p.h>
+#include "qqmljsmetatypes_p.h"
+#include "qqmljstyperesolver_p.h"
 
 QT_BEGIN_NAMESPACE
 

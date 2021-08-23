@@ -8,30 +8,30 @@ file(GLOB_RECURSE test_data_glob
     domdata/*)
 list(APPEND test_data ${test_data_glob})
 
-qt_internal_add_test(tst_dom_all
+set(QMLDOM_EXTERNAL_BUILD OFF CACHE BOOL "If the build is against an external Qt, and not tested inside a build of this Qt" FORCE)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/qmldom/standalone qmldomlib)
+
+if(MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+elseif (MINGW)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj")
+endif()
+
+qt_internal_add_test(tst_standalone
     SOURCES
-        tst_dom_all.cpp
-        ../stringdumper/tst_qmldomstringdumper.h
-        ../errormessage/tst_qmldomerrormessage.cpp ../errormessage/tst_qmldomerrormessage.h
-        ../path/tst_qmldompath.h
-        ../domitem/tst_qmldomitem.h
-        ../merging/tst_dommerging.h
-        ../reformatter/tst_reformatter.h
-        ../standalone/tst_standalone.h
-    INCLUDE_DIRECTORIES
-        ..
+        tst_standalone.cpp
     DEFINES
-        NO_QTEST_MAIN
         QT_DEPRECATED_WARNINGS
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../domdata\\\"
     PUBLIC_LIBRARIES
         Qt::Core
-        Qt::QmlDomPrivate
-        Qt::Test
+        Qt::QmlPrivate
+    LIBRARIES
+        qmldomlib
     TESTDATA ${test_data}
 )
 
-qt_internal_extend_target(tst_dom_all CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_standalone CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/domdata\\\"
 )

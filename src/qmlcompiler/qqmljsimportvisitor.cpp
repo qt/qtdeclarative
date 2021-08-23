@@ -40,7 +40,7 @@
 #include <QtQml/private/qv4codegen_p.h>
 #include <QtQml/private/qqmlstringconverters_p.h>
 #include <QtQml/private/qqmlirbuilder_p.h>
-#include <private/qqmljsutils_p.h>
+#include "qqmljsutils_p.h"
 
 #include <algorithm>
 
@@ -1202,7 +1202,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::StringLiteral *sl)
         }
 
         const FixSuggestion suggestion = { { { u"Use a template literal instead"_qs,
-                                               sl->literalToken, u"`" + templateString + u"`",
+                                               sl->literalToken, u"`" % templateString % u"`",
                                                QString(), false } } };
         m_logger->log(QStringLiteral("String contains unescaped line terminator which is "
                                      "deprecated."),

@@ -69,7 +69,7 @@ struct QQmlJSUtils
     */
     static QString toLiteral(const QString &s, QStringView ctor = u"QStringLiteral")
     {
-        return ctor + u"(\"" + escapeString(s) + u"\")";
+        return ctor % u"(\"" % escapeString(s) % u"\")";
     }
 
     /*! \internal
@@ -79,7 +79,7 @@ struct QQmlJSUtils
     static QString constRefify(QString type)
     {
         if (!type.endsWith(u'*'))
-            type = u"const " + type + u"&";
+            type = u"const " % type % u"&";
         return type;
     }
 

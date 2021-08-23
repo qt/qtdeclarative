@@ -186,7 +186,9 @@ QQmlJS::Dom::FieldFilter QQmlJS::Dom::FieldFilter::noLocationFilter()
         { QLatin1String("ScriptExpression"), QLatin1String("preCode") },
         { QLatin1String("ScriptExpression"), QLatin1String("postCode") },
         { QLatin1String("AttachedInfo"), QLatin1String("parent") },
-        { QLatin1String("Reference"), QLatin1String("get") }
+        { QLatin1String("Reference"), QLatin1String("get") },
+        { QLatin1String("QmlComponent"), QLatin1String("ids") },
+        { QLatin1String("QmlObject"), QLatin1String("prototypes") }
     };
     return FieldFilter { fieldFilterAdd, fieldFilterRemove };
 }
@@ -199,6 +201,8 @@ FieldFilter FieldFilter::compareFilter()
         { QLatin1String("ScriptExpression"), QLatin1String("localOffset") },
         { QLatin1String("FileLocations"), QLatin1String("regions") },
         { QLatin1String("AttachedInfo"), QLatin1String("parent") },
+        { QLatin1String("QmlComponent"), QLatin1String("ids") },
+        { QLatin1String("QmlObject"), QLatin1String("prototypes") },
         { QLatin1String("Reference"), QLatin1String("get") }
     };
     return FieldFilter { fieldFilterAdd, fieldFilterRemove };
@@ -211,7 +215,9 @@ FieldFilter FieldFilter::compareNoCommentsFilter()
         { QString(), QLatin1String("propertyInfos") },
         { QLatin1String("FileLocations"), QLatin1String("regions") },
         { QLatin1String("Reference"), QLatin1String("get") },
-        { QString(), QLatin1String("code") },
+        { QLatin1String("QmlComponent"), QLatin1String("ids") },
+        { QLatin1String("QmlObject"), QLatin1String("prototypes") },
+        { QLatin1String(), QLatin1String("code") },
         { QLatin1String("ScriptExpression"), QLatin1String("localOffset") },
         { QLatin1String("AttachedInfo"), QLatin1String("parent") },
         { QString(), QLatin1String("fileLocationsTree") },
