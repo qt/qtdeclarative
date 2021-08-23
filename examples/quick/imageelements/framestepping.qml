@@ -77,7 +77,7 @@ Rectangle {
         anchors.bottom: parent.bottom
         anchors.margins: 6
         horizontalAlignment: Text.AlignHCenter
-        text: "frame " + (img.currentFrame + 1) + " of " + img.frameCount +
-              "\nPress PgUp/PgDn to switch frames"
+        text: qsTr("frame " + (img.currentFrame + 1) + " of " + img.frameCount +
+              "\nPress PgUp/PgDn to switch frames")
     }
 }

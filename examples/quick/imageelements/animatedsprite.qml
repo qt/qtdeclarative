@@ -72,7 +72,7 @@ Item {
 //! [sprite]
 
     Label {
-        text: "Left click to resume\nMiddle click to advance backward\nRight click to advance forward"
+        text: qsTr("Left click to resume\nMiddle click to advance backward\nRight click to advance forward")
         visible: sprite.paused
     }
 
