@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,7 +47,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 2.0
+import QtQuick
+import QtQuick.Controls
 
 Item {
     property alias mode: image.fillMode
@@ -60,7 +61,7 @@ Item {
         clip: true      // only makes a difference if mode is PreserveAspectCrop
     }
 
-    Text {
+    Label {
         id: captionItem
         anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom
     }

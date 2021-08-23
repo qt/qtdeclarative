@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,8 +47,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-import QtQuick 2.12
-import "../shared" as Examples
+import QtQuick
+import QtQuick.Controls
 
 Column {
     width: 320
@@ -86,29 +86,43 @@ Column {
         }
     }
 
-    Examples.Slider {
-        id: speedSlider
-        name: "Speed"
-        min: 0
-        max: 5
-        init: 1
-        width: 240
-        x: animation.x
-        Text {
+    Row {
+        spacing: 6
+        anchors.horizontalCenter: parent.horizontalCenter
+
+        Label {
+            text: qsTr("Speed:")
             font.pointSize: 12
-            text: Math.round(animation.speed * 100) + "%"
-            x: animation.width - width
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.margins: 6
+            anchors.verticalCenter: speedSlider.verticalCenter
+        }
+
+        Slider {
+            id: speedSlider
+            from: 0
+            to: 5
+            value: 1
+        }
+
+        Label {
+            font: fontMetrics.font
+            text: qsTr(Math.round(animation.speed * 100) + "%")
+            width: fontMetrics.width
+            anchors.verticalCenter: speedSlider.verticalCenter
+        }
+
+        TextMetrics {
+            id: fontMetrics
+            text: "100%"
+            font.pointSize: 12
         }
     }
 
-    Examples.Button {
-        text: "Reset"
+    Button {
+        text: qsTr("Reset")
         enabled: speedSlider.value !== 1
         anchors.horizontalCenter: parent.horizontalCenter
         onClicked: {
-            speedSlider.setValue(1)
+            speedSlider.value = 1
             animation.playing = true
         }
     }
