@@ -752,7 +752,7 @@ public:
 
 private:
     QString m_name;
-    bool m_isFlag;
+    bool m_isFlag = false;
     QString m_alias;
     QList<EnumItem> m_values;
     QList<QmlObject> m_annotations;

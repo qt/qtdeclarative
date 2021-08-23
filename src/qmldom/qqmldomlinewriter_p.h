@@ -228,12 +228,12 @@ protected:
 
     QList<SinkF> m_innerSinks;
     QString m_fileName;
-    int m_lineNr;
-    int m_columnNr; // columnNr (starts at 0) of committed data
-    int m_lineUtf16Offset; // utf16 offset since last newline (what is typically stores as
-                           // SourceLocation::startColumn
-    int m_currentColumnNr; // current columnNr (starts at 0)
-    int m_utf16Offset; // utf16 offset since start for committed data
+    int m_lineNr = 0;
+    int m_columnNr = 0; // columnNr (starts at 0) of committed data
+    int m_lineUtf16Offset = 0; // utf16 offset since last newline (what is typically stores as
+                               // SourceLocation::startColumn
+    int m_currentColumnNr = 0; // current columnNr (starts at 0)
+    int m_utf16Offset = 0; // utf16 offset since start for committed data
     QString m_currentLine;
     LineWriterOptions m_options;
     PendingSourceLocationId m_lastSourceLocationId;
