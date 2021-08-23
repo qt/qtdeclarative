@@ -38,7 +38,6 @@ target_link_libraries(shadereffects PUBLIC
 
 # Resources:
 set(shadereffects_resource_files
-    "content/Slider.qml"
     "content/face-smile.png"
     "content/qt-logo.png"
     "shadereffects.qml"
