@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the demonstration applications of the Qt Toolkit.
@@ -48,7 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick
+import QtQuick.Controls
 
 Rectangle {
     id: window
@@ -63,31 +64,22 @@ Rectangle {
 
     Column {
         id: column
-        opacity: 0.99 // work around QTBUG-29037
 
         y: 50
         width: 200
         anchors.horizontalCenter: parent.horizontalCenter
+        spacing: 4
 
-        TextBox {
-            id: input1
+
+        TextField {
+            text: "A QML text field..."
             width: parent.width
-            height: 30
             focus: true
-
-            label: "A QML text box.."
-
-            nextInFocus: input2;
         }
 
-        TextBox {
-            id: input2
+        TextField {
+            text: "Another QML text field..."
             width: parent.width
-            height: 30
-
-            label: "Another QML text box.."
-
-            nextInFocus: input1;
         }
 
         layer.enabled: true

@@ -3,7 +3,7 @@ QT += widgets quick
 
 SOURCES += main.cpp
 
-OTHER_FILES += main.qml TextBox.qml
+OTHER_FILES += main.qml
 
 RESOURCES += \
     embeddedinwidgets.qrc
