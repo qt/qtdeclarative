@@ -36,17 +36,11 @@ target_link_libraries(chapter4-customPropertyTypes PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(chapter4-customPropertyTypes_resource_files
-    "app.qml"
-)
-
-qt6_add_resources(chapter4-customPropertyTypes "chapter4-customPropertyTypes"
-    PREFIX
-        "/"
-    FILES
-        ${chapter4-customPropertyTypes_resource_files}
+qt_add_qml_module(chapter4-customPropertyTypes
+    URI Charts
+    VERSION 1.0
+    QML_FILES app.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS chapter4-customPropertyTypes
@@ -54,10 +48,3 @@ install(TARGETS chapter4-customPropertyTypes
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(chapter4-customPropertyTypes PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI Charts
-)
-
-qt6_qml_type_registration(chapter4-customPropertyTypes)

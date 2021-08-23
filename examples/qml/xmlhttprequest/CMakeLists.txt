@@ -34,22 +34,21 @@ target_link_libraries(xmlhttprequest PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(xmlhttprequest_resource_files
-    "Get.qml"
-    "GetForm.ui.qml"
-    "data.xml"
-    "methods.js"
-    "xmlhttprequest.qml"
+set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/qml)
+qt_add_qml_module(xmlhttprequest
+    URI xmlhttprequest
+    VERSION 1.0
+    QML_FILES
+        Get.qml
+        GetForm.ui.qml
+        methods.js
+        xmlhttprequest.qml
+    RESOURCES
+        data.xml
+    RESOURCE_PREFIX /qml
 )
 
-qt6_add_resources(xmlhttprequest "xmlhttprequest"
-    PREFIX
-        "/qml/xmlhttprequest"
-    FILES
-        ${xmlhttprequest_resource_files}
-)
+# These files live outside of the QML module, so add them separately
 set(quick_shared_resource_files
     "../../quick/shared/Button.qml"
     "../../quick/shared/CheckBox.qml"

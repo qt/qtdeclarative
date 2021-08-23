@@ -35,17 +35,11 @@ target_link_libraries(chapter3-bindings PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(chapter3-bindings_resource_files
-    "app.qml"
-)
-
-qt6_add_resources(chapter3-bindings "chapter3-bindings"
-    PREFIX
-        "/"
-    FILES
-        ${chapter3-bindings_resource_files}
+qt_add_qml_module(chapter3-bindings
+    URI Charts
+    VERSION 1.0
+    QML_FILES app.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS chapter3-bindings
@@ -53,10 +47,3 @@ install(TARGETS chapter3-bindings
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(chapter3-bindings PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI Charts
-)
-
-qt6_qml_type_registration(chapter3-bindings)

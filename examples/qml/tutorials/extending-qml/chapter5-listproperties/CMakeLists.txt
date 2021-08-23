@@ -36,17 +36,11 @@ target_link_libraries(chapter5-listproperties PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(chapter5-listproperties_resource_files
-    "app.qml"
-)
-
-qt6_add_resources(chapter5-listproperties "chapter5-listproperties"
-    PREFIX
-        "/"
-    FILES
-        ${chapter5-listproperties_resource_files}
+qt_add_qml_module(chapter5-listproperties
+    URI Charts
+    VERSION 1.0
+    QML_FILES app.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS chapter5-listproperties
@@ -54,10 +48,3 @@ install(TARGETS chapter5-listproperties
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(chapter5-listproperties PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI Charts
-)
-
-qt6_qml_type_registration(chapter5-listproperties)

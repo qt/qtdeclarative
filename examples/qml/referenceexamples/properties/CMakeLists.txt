@@ -32,17 +32,11 @@ target_link_libraries(properties PUBLIC
     Qt::Qml
 )
 
-
-# Resources:
-set(properties_resource_files
-    "example.qml"
-)
-
-qt6_add_resources(properties "properties"
-    PREFIX
-        "/"
-    FILES
-        ${properties_resource_files}
+qt_add_qml_module(properties
+    URI People
+    VERSION 1.0
+    QML_FILES example.qml
+    NO_RESOURCE_TARGET_PATH
 )
 
 install(TARGETS properties
@@ -50,10 +44,3 @@ install(TARGETS properties
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
-
-set_target_properties(properties PROPERTIES
-    QT_QML_MODULE_VERSION 1.0
-    QT_QML_MODULE_URI People
-)
-
-qt6_qml_type_registration(properties)
