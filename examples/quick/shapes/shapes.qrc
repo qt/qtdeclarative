@@ -5,7 +5,6 @@
         <file alias="images/next.png">../shared/images/next.png</file>
         <file alias="images/back.png">../shared/images/back.png</file>
         <file alias="images/slider_handle.png">../shared/images/slider_handle.png</file>
-        <file alias="Slider.qml">../shared/Slider.qml</file>
         <file alias="main.qml">content/main.qml</file>
         <file alias="shapegallery.qml">content/shapegallery.qml</file>
         <file alias="interactive.qml">content/interactive.qml</file>

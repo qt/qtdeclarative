@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.9
-import QtQuick.Shapes 1.0
+import QtQuick
+import QtQuick.Shapes
 
 Rectangle {
     color: "lightGray"

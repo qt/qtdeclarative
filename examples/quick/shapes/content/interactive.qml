@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -48,8 +48,9 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.9
-import QtQuick.Shapes 1.0
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Shapes
 
 Rectangle {
     id: root
@@ -72,88 +73,100 @@ Rectangle {
         x: 20
         y: 10
         spacing: 20
-        Rectangle {
-            border.color: "black"
-            color: root.mode === 0 ? "red" : "transparent"
+
+        Button {
+            id: radioButton1
+            checked: true
+            text: qsTr("Line")
+            onPressed: () => { root.mode = 0 }
+
             width: 100
             height: 40
-            Text {
-                anchors.centerIn: parent
-                text: "Line"
-            }
-            MouseArea {
+
+            background: Rectangle {
+                border.color: "black"
+                color: root.mode === 0 ? "red" : "transparent"
                 anchors.fill: parent
-                onClicked: root.mode = 0
-            }
-        }
-        Rectangle {
-            border.color: "black"
-            color: root.mode === 1 ? "red" : "transparent"
-            width: 100
-            height: 40
-            Text {
-                anchors.centerIn: parent
-                text: "Cubic"
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: root.mode = 1
-            }
-        }
-        Rectangle {
-            border.color: "black"
-            color: root.mode === 2 ? "red" : "transparent"
-            width: 100
-            height: 40
-            Text {
-                anchors.centerIn: parent
-                text: "Quadratic"
-            }
-            MouseArea {
-                anchors.fill: parent
-                onClicked: root.mode = 2
             }
         }
 
-        Slider {
-            id: widthSlider
-            name: "Width"
-            min: 1
-            max: 60
-            init: 4
+        Button {
+            text: qsTr("Cubic")
+            onPressed: () => { root.mode = 1 }
+
+            width: 100
+            height: 40
+
+            background: Rectangle {
+                border.color: "black"
+                color: root.mode === 1 ? "red" : "transparent"
+                anchors.fill: parent
+            }
         }
 
-        Rectangle {
-            border.color: "black"
-            color: root.showResizers ? "yellow" : "transparent"
+        Button {
+            text: qsTr("Quadratic")
+            onPressed: () => { root.mode = 2 }
+
+            width: 100
+            height: 40
+
+            background: Rectangle {
+                border.color: "black"
+                color: root.mode === 2 ? "red" : "transparent"
+                anchors.fill: parent
+            }
+        }
+
+        Row {
+            anchors.verticalCenter: radioButton1.verticalCenter
+            spacing: 12
+
+            Label {
+                text: qsTr("Width:")
+                anchors.verticalCenter: widthSlider.verticalCenter
+            }
+            Slider {
+                id: widthSlider
+                from: 1
+                to: 60
+                value: 4
+
+                anchors.verticalCenter: parent.verticalCenter
+            }
+        }
+
+        Button {
+            text: qsTr("Manip")
+            onPressed: () => {
+                  root.showResizers = !root.showResizers;
+                  for (var i = 0; i < canvas.resizers.length; ++i)
+                      canvas.resizers[i].visible = root.showResizers;
+            }
+
             width: 50
             height: 40
-            Text {
-                anchors.centerIn: parent
-                text: "Manip"
-            }
-            MouseArea {
+
+            background: Rectangle {
+                border.color: "black"
+                color: root.showResizers ? "yellow" : "transparent"
                 anchors.fill: parent
-                onClicked: {
-                    root.showResizers = !root.showResizers;
-                    for (var i = 0; i < canvas.resizers.length; ++i)
-                        canvas.resizers[i].visible = root.showResizers;
-                }
             }
         }
 
-        Rectangle {
-            border.color: "black"
-            color: root.fill ? "yellow" : "transparent"
+        Button {
+            text: qsTr("Fill")
+            onPressed: () => {
+                  root.fill = !root.fill
+            }
+
             width: 50
             height: 40
-            Text {
-                anchors.centerIn: parent
-                text: "Fill"
-            }
-            MouseArea {
+
+            background: Rectangle {
+                border.color: "black"
+                color: root.fill ? "yellow" : "transparent"
                 anchors.fill: parent
-                onClicked: root.fill = !root.fill
             }
         }
     }

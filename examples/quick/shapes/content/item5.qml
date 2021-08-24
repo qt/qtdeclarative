@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.9
-import QtQuick.Shapes 1.0
+import QtQuick
+import QtQuick.Shapes
 
 Rectangle {
     color: "lightGray"
