@@ -140,6 +140,10 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
     for (int i = 0; i < glyphIndexes.count(); ++i)
         m_allGlyphIndexesLookup.insert(glyphIndexes.at(i));
     qCDebug(lcSgText, "inserting %lld glyphs, %lld unique", glyphIndexes.count(), m_allGlyphIndexesLookup.count());
+#ifdef QSG_RUNTIME_DESCRIPTION
+    qsgnode_set_description(this, QString::number(glyphs.glyphIndexes().count()) + QStringLiteral(" DF glyphs: ") +
+                            m_glyphs.rawFont().familyName() + QStringLiteral(" ") + QString::number(m_glyphs.rawFont().pixelSize()));
+#endif
 }
 
 void QSGDistanceFieldGlyphNode::setStyle(QQuickText::TextStyle style)
