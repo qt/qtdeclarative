@@ -50,7 +50,7 @@ qt6_add_shaders(custommaterial_declarative "shaders"
     PRECOMPILE
     OPTIMIZED
     PREFIX
-        "/scenegraph/custommaterial/shaders"
+        "/scenegraph/custommaterial"
     FILES
         "shaders/mandelbrot.vert"
         "shaders/mandelbrot.frag"
