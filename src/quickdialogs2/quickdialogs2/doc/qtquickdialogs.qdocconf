@@ -13,10 +13,6 @@ qhp.QtQuickDialogs.virtualFolder = qtquickdialogs
 qhp.QtQuickDialogs.indexTitle    = Qt Quick Dialogs
 qhp.QtQuickDialogs.indexRoot     =
 
-qhp.QtQuickDialogs.filterAttributes                  = qtquickdialogs $QT_VERSION qtrefdoc
-qhp.QtQuickDialogs.customFilters.Qt.name             = QtQuickDialogs $QT_VERSION
-qhp.QtQuickDialogs.customFilters.Qt.filterAttributes = qtquickdialogs $QT_VERSION
-
 qhp.QtQuickDialogs.subprojects = qmltypes
 qhp.QtQuickDialogs.subprojects.qmltypes.title = QML Types
 qhp.QtQuickDialogs.subprojects.qmltypes.indexTitle = Qt Quick Dialogs QML Types

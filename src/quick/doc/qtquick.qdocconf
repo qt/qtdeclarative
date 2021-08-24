@@ -19,9 +19,6 @@ qhp.QtQuick.virtualFolder       = qtquick
 qhp.QtQuick.indexTitle          = Qt Quick
 qhp.QtQuick.indexRoot           =
 
-qhp.QtQuick.filterAttributes    = qtquick $QT_VERSION qtrefdoc
-qhp.QtQuick.customFilters.Qt.name = QtQuick $QT_VERSION
-qhp.QtQuick.customFilters.Qt.filterAttributes = qtquick $QT_VERSION
 qhp.QtQuick.subprojects         = qmltypes classes examples
 qhp.QtQuick.subprojects.qmltypes.title = QML Types
 qhp.QtQuick.subprojects.qmltypes.indexTitle = Qt Quick QML Types

@@ -13,10 +13,6 @@ qhp.QtQmlTest.virtualFolder       = qtqmltest
 qhp.QtQmlTest.indexTitle          = Qt Quick Test
 qhp.QtQmlTest.indexRoot           =
 
-qhp.QtQmlTest.filterAttributes    = qtqmltest $QT_VERSION qtrefdoc
-qhp.QtQmlTest.customFilters.Qt.name = QtQmlTest $QT_VERSION
-qhp.QtQmlTest.customFilters.Qt.filterAttributes = qtqmltest $QT_VERSION
-
 qhp.QtQmlTest.subprojects         = qmltypes classes
 qhp.QtQmlTest.subprojects.classes.title = C++ API
 qhp.QtQmlTest.subprojects.classes.indexTitle = Qt Quick Test C++ API

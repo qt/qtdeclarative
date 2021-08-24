@@ -15,9 +15,6 @@ qhp.QtQml.virtualFolder       = qtqml
 qhp.QtQml.indexTitle          = Qt QML
 qhp.QtQml.indexRoot           =
 
-qhp.QtQml.filterAttributes    = qtqml $QT_VERSION qtrefdoc
-qhp.QtQml.customFilters.Qt.name = QtQml $QT_VERSION
-qhp.QtQml.customFilters.Qt.filterAttributes = qtqml $QT_VERSION
 qhp.QtQml.subprojects         = qmltypes classes examples
 qhp.QtQml.subprojects.classes.title = C++ Classes
 qhp.QtQml.subprojects.classes.indexTitle = Qt QML C++ Classes

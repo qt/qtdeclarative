@@ -12,10 +12,6 @@ qhp.QtQmlCore.virtualFolder = qtqmlcore
 qhp.QtQmlCore.indexTitle = Qt QML Core
 qhp.QtQmlCore.indexRoot =
 
-qhp.QtQmlCore.filterAttributes = qtqmlcore $QT_VERSION qtrefdoc
-qhp.QtQmlCore.customFilters.Qt.name = QtQmlCore $QT_VERSION
-qhp.QtQmlCore.customFilters.Qt.filterAttributes = qtqmlcore $QT_VERSION
-
 qhp.QtQmlCore.subprojects = qmltypes
 qhp.QtQmlCore.subprojects.qmltypes.title = QML Types
 qhp.QtQmlCore.subprojects.qmltypes.indexTitle = Qt QML Core QML Types

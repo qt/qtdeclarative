@@ -12,10 +12,6 @@ qhp.QtQmlWorkerScript.namespace           = org.qt-project.qtqmlworkerscript.$QT
 qhp.QtQmlWorkerScript.virtualFolder       = qtqmlworkerscript
 qhp.QtQmlWorkerScript.indexRoot           =
 
-qhp.QtQmlWorkerScript.filterAttributes    = qtqmlworkerscript $QT_VERSION qtrefdoc
-qhp.QtQmlWorkerScript.customFilters.Qt.name = QtQmlWorkerScript $QT_VERSION
-qhp.QtQmlWorkerScript.customFilters.Qt.filterAttributes = qtqmlworkerscript $QT_VERSION
-
 qhp.QtQmlWorkerScript.title      = QML Types
 qhp.QtQmlWorkerScript.indexTitle = Qt QML WorkerScript QML Types
 qhp.QtQmlWorkerScript.selectors  = qmlclass

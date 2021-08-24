@@ -13,10 +13,6 @@ qhp.QtLabsPlatform.virtualFolder = qtlabsplatform
 qhp.QtLabsPlatform.indexTitle    = Qt Labs Platform
 qhp.QtLabsPlatform.indexRoot     =
 
-qhp.QtLabsPlatform.filterAttributes                  = qtlabsplatform $QT_VERSION qtrefdoc
-qhp.QtLabsPlatform.customFilters.Qt.name             = QtLabsPlatform $QT_VERSION
-qhp.QtLabsPlatform.customFilters.Qt.filterAttributes = qtlabsplatform $QT_VERSION
-
 qhp.QtLabsPlatform.subprojects = qmltypes
 qhp.QtLabsPlatform.subprojects.qmltypes.title = QML Types
 qhp.QtLabsPlatform.subprojects.qmltypes.indexTitle = Qt Labs Platform QML Types

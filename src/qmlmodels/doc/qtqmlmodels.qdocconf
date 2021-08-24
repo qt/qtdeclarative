@@ -12,10 +12,6 @@ qhp.QtQmlModels.namespace           = org.qt-project.qtqmlmodels.$QT_VERSION_TAG
 qhp.QtQmlModels.virtualFolder       = qtqmlmodels
 qhp.QtQmlModels.indexRoot           =
 
-qhp.QtQmlModels.filterAttributes    = qtqmlmodels $QT_VERSION qtrefdoc
-qhp.QtQmlModels.customFilters.Qt.name = QtQmlModels $QT_VERSION
-qhp.QtQmlModels.customFilters.Qt.filterAttributes = qtqmlmodels $QT_VERSION
-
 qhp.QtQmlModels.title      = QML Types
 qhp.QtQmlModels.indexTitle = Qt QML Models QML Types
 qhp.QtQmlModels.selectors  = qmlclass

@@ -16,10 +16,6 @@ qhp.QtQuickControls.virtualFolder = qtquickcontrols
 qhp.QtQuickControls.indexTitle    = Qt Quick Controls
 qhp.QtQuickControls.indexRoot     =
 
-qhp.QtQuickControls.filterAttributes                  = qtquickcontrols $QT_VERSION qtrefdoc
-qhp.QtQuickControls.customFilters.Qt.name             = QtQuickControls $QT_VERSION
-qhp.QtQuickControls.customFilters.Qt.filterAttributes = qtquickcontrols $QT_VERSION
-
 qhp.QtQuickControls.subprojects = qmltypes classes examples
 qhp.QtQuickControls.subprojects.qmltypes.title = QML Types
 qhp.QtQuickControls.subprojects.qmltypes.indexTitle = Qt Quick Controls QML Types
