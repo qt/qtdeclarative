@@ -1417,10 +1417,6 @@ function(qt6_target_qml_sources target)
         # resource paths and the source locations might be structured quite
         # differently.
 
-        # Fed to qmlimportscanner in qt6_import_qml_plugins. Also may be used in
-        # generator expressions to install all qml files for the target.
-        set_property(TARGET ${target} APPEND PROPERTY QT_QML_MODULE_FILES ${qml_file_out})
-
         # Add file to those processed by qmllint
         get_source_file_property(skip_qmllint ${qml_file_src} QT_QML_SKIP_QMLLINT)
         if(NOT no_lint AND NOT skip_qmllint)
@@ -1908,7 +1904,7 @@ but this file does not exist.  Possible reasons include:
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/.qt_plugins)
 
     set(cmd_args
-        "${arg_PATH_TO_SCAN}"
+        -rootPath "${arg_PATH_TO_SCAN}"
         -cmake-output
         -importPath "${qml_path}"
     )
@@ -1925,11 +1921,10 @@ but this file does not exist.  Possible reasons include:
         list(APPEND cmd_args "${QT_QML_OUTPUT_DIRECTORY}")
     endif()
 
-    get_target_property(qml_files ${target} QT_QML_MODULE_FILES)
-    if (qml_files)
-        list(APPEND cmd_args "-qmlFiles" ${qml_files})
-    endif()
-
+    # All of the module's .qml files will be listed in one of the generated
+    # .qrc files, so there's no need to list the files individually. We provide
+    # the .qrc files instead because they have the additional information for
+    # each file's resource alias.
     get_target_property(qrc_files ${target} _qt_generated_qrc_files)
     if (qrc_files)
         list(APPEND cmd_args "-qrcFiles" ${qrc_files})
