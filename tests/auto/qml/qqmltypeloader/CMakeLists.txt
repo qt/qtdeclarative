@@ -56,5 +56,5 @@ set_target_properties(tst_qqmltypeloader PROPERTIES
     QT_QML_MODULE_URI declarative.import.for.typeloader.test
 )
 
-qt6_qml_type_registration(tst_qqmltypeloader)
+_qt_internal_qml_type_registration(tst_qqmltypeloader)
 add_subdirectory(SlowImport)

@@ -14,4 +14,4 @@ set_target_properties(tst_registrationmacros PROPERTIES
     QT_QML_MODULE_URI test
 )
 
-qt6_qml_type_registration(tst_registrationmacros)
+_qt_internal_qml_type_registration(tst_registrationmacros)

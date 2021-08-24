@@ -67,4 +67,4 @@ set_target_properties(tst_qqmllanguage PROPERTIES
     QT_QML_MODULE_URI StaticTest
 )
 
-qt6_qml_type_registration(tst_qqmllanguage)
+_qt_internal_qml_type_registration(tst_qqmllanguage)
