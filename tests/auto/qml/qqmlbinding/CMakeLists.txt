@@ -31,7 +31,7 @@ set_target_properties(tst_qqmlbinding PROPERTIES
     QT_QML_MODULE_VERSION 1.0
 )
 
-qt6_qml_type_registration(tst_qqmlbinding)
+_qt_internal_qml_type_registration(tst_qqmlbinding)
 
 
 ## Scopes:

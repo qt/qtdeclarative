@@ -47,4 +47,4 @@ set_target_properties(tst_qqmlinfo PROPERTIES
     QT_QML_MODULE_URI org.qtproject.Test
 )
 
-qt6_qml_type_registration(tst_qqmlinfo)
+_qt_internal_qml_type_registration(tst_qqmlinfo)

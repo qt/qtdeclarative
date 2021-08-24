@@ -31,7 +31,7 @@ set_target_properties(tst_qquickbehaviors PROPERTIES
     QT_QML_MODULE_URI test
 )
 
-qt6_qml_type_registration(tst_qquickbehaviors)
+_qt_internal_qml_type_registration(tst_qquickbehaviors)
 
 
 #### Keys ignored in scope 1:.:.:qquickbehaviors.pro:<TRUE>:

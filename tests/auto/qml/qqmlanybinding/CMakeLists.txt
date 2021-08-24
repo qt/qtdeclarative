@@ -29,7 +29,7 @@ set_target_properties(tst_qqmlanybinding PROPERTIES
     QT_QML_MODULE_URI bindable
 )
 
-qt6_qml_type_registration(tst_qqmlanybinding)
+_qt_internal_qml_type_registration(tst_qqmlanybinding)
 
 ## Scopes:
 #####################################################################

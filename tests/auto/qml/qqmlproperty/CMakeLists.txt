@@ -47,4 +47,4 @@ set_target_properties(tst_qqmlproperty PROPERTIES
     QT_QML_MODULE_URI io.qt.bugreports
 )
 
-qt6_qml_type_registration(tst_qqmlproperty)
+_qt_internal_qml_type_registration(tst_qqmlproperty)

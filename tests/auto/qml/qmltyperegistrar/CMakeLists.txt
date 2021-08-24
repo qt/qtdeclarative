@@ -44,5 +44,5 @@ set_target_properties(tst_qmltyperegistrar PROPERTIES
 
 # qt6_add_qml_module() doesn't allow us to pass through MANUAL_MOC_JSON_FILES
 # yet, so we have to call it directly to test that code path for now.
-qt6_qml_type_registration(tst_qmltyperegistrar MANUAL_MOC_JSON_FILES ${json_list})
+_qt_internal_qml_type_registration(tst_qmltyperegistrar MANUAL_MOC_JSON_FILES ${json_list})
 add_subdirectory(foreign)
