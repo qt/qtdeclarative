@@ -237,7 +237,7 @@ qt_internal_add_shaders(Quick "scenegraph_shaders"
     PRECOMPILE
     OPTIMIZED
     PREFIX
-        "/qt-project.org/scenegraph/shaders_ng"
+        "/qt-project.org"
     FILES
         "scenegraph/shaders_ng/24bittextmask.frag"
         "scenegraph/shaders_ng/32bitcolortext.frag"

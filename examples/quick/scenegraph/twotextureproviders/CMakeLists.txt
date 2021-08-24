@@ -50,7 +50,7 @@ qt6_add_shaders(twotextureproviders "shaders"
     PRECOMPILE
     OPTIMIZED
     PREFIX
-        "/scenegraph/twotextureproviders/shaders"
+        "/scenegraph/twotextureproviders"
     FILES
         "shaders/xorblender.vert"
         "shaders/xorblender.frag"

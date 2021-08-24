@@ -14,7 +14,9 @@ qt_internal_add_manual_test(qmlscenegrabber
 qt6_add_shaders(qmlscenegrabber "qmlscenegrabber_shaders"
     BATCHABLE
     PREFIX
-        "shaders"
+        "/"
+    BASE
+        "../data/shared"
     FILES
         "../data/shared/shaders/basic_alpha.frag"
         "../data/shared/shaders/basic.frag"
