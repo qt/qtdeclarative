@@ -468,6 +468,7 @@ void registerTypes()
     qmlRegisterSingletonType<MyInheritedQmlObject>("Test", 1, 0, "MyInheritedQmlObjectSingleton", inheritedQmlObject_provider);
     qmlRegisterSingletonType<TestTypeCppSingleton>("Test", 1, 0, "TestTypeCppSingleton", testTypeCppProvider);
     qmlRegisterType<MyDeferredObject>("Qt.test", 1,0, "MyDeferredObject");
+    qmlRegisterType<DeferredChild>("Qt.test", 1,0, "DeferredChild");
     qmlRegisterType<MyVeryDeferredObject>("Qt.test", 1,0, "MyVeryDeferredObject");
     qmlRegisterType<MyQmlContainer>("Qt.test", 1,0, "MyQmlContainer");
     qmlRegisterExtendedType<MyBaseExtendedObject, BaseExtensionObject>("Qt.test", 1,0, "MyBaseExtendedObject");

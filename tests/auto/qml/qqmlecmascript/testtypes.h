@@ -409,6 +409,32 @@ private:
     QObject *m_object2;
 };
 
+class NonDeferredBased : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int baseValue READ baseValue WRITE setBaseValue NOTIFY baseValueChanged)
+signals:
+    void baseValueChanged();
+public:
+    int baseValue() const { return m_baseValue; }
+
+    void setBaseValue(int i) {
+        if (i == m_baseValue)
+            return;
+        m_baseValue = i;
+        emit baseValueChanged();
+    }
+
+private:
+    int m_baseValue = 0;
+};
+
+class DeferredChild : public NonDeferredBased
+{
+    Q_OBJECT
+    Q_CLASSINFO("DeferredPropertyNames", "baseValue")
+};
+
 class MyVeryDeferredObject : public QObject
 {
     Q_OBJECT
