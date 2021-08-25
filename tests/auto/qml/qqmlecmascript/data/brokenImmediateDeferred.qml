@@ -1,0 +1,2 @@
+import Qt.test
+BrokenImmediateDeferred {}

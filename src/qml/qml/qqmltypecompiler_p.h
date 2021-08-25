@@ -310,6 +310,7 @@ protected:
 
 class QQmlDeferredAndCustomParserBindingScanner : public QQmlCompilePass
 {
+    Q_DECLARE_TR_FUNCTIONS(QQmlDeferredAndCustomParserBindingScanner)
 public:
     QQmlDeferredAndCustomParserBindingScanner(QQmlTypeCompiler *typeCompiler);
 

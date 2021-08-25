@@ -409,6 +409,58 @@ private:
     QObject *m_object2;
 };
 
+class MyImmediateObject : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int value READ value WRITE setValue NOTIFY valueChanged)
+    Q_PROPERTY(QObject *objectProperty READ objectProperty WRITE setObjectProperty)
+    Q_PROPERTY(QObject *objectProperty2 READ objectProperty2 WRITE setObjectProperty2)
+    Q_CLASSINFO("ImmediatePropertyNames", "objectName")
+
+public:
+    int value() const { return m_value; }
+    void setValue(int v) { m_value = v; emit valueChanged(); }
+
+    QObject *objectProperty() const { return m_object; }
+    void setObjectProperty(QObject *obj) { m_object = obj; }
+
+    QObject *objectProperty2() const { return m_object2; }
+    void setObjectProperty2(QObject *obj) { m_object2 = obj; }
+
+signals:
+    void valueChanged();
+
+private:
+    int m_value = 0;
+    QObject *m_object = nullptr;
+    QObject *m_object2 = nullptr;
+};
+
+class BrokenImmediateDeferred : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int value MEMBER m_value)
+    Q_CLASSINFO("ImmediatePropertyNames", "objectName");
+    Q_CLASSINFO("DeferredPropertyNames", "value");
+public:
+    int m_value = 5;
+};
+
+class DerivedFromImmediate : public MyImmediateObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int value2 READ value2 WRITE setValue2 NOTIFY value2Changed)
+public:
+    int value2() const { return m_value2; }
+    void setValue2(int v) { m_value2 = v; emit value2Changed(); }
+
+signals:
+    void value2Changed();
+
+private:
+    int m_value2 = 0;
+};
+
 class NonDeferredBased : public QObject
 {
     Q_OBJECT

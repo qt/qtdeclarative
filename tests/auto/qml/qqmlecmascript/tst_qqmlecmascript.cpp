@@ -102,6 +102,7 @@ private slots:
     void contextPropertiesTriggerReeval();
     void objectPropertiesTriggerReeval();
     void dependenciesWithFunctions();
+    void immediateProperties();
     void deferredProperties();
     void deferredPropertiesParent();
     void deferredPropertiesOverwrite();
@@ -1206,6 +1207,61 @@ void tst_qqmlecmascript::dependenciesWithFunctions()
     QVERIFY(!object->property("success").toBool());
     object->setProperty("value", 42);
     QVERIFY(object->property("success").toBool());
+}
+
+void tst_qqmlecmascript::immediateProperties()
+{
+    QQmlEngine engine;
+    {
+        QQmlComponent component(&engine, testFileUrl("immediateProperties.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> obj(component.create());
+        QVERIFY(obj);
+        MyImmediateObject *object = qobject_cast<MyImmediateObject *>(obj.data());
+        QVERIFY(object != nullptr);
+        QCOMPARE(object->objectName(), QStringLiteral("immediate"));
+        QCOMPARE(object->value(), 0);
+        QVERIFY(!object->objectProperty());
+        QVERIFY(!object->objectProperty2());
+        qmlExecuteDeferred(object);
+        QCOMPARE(object->value(), 10);
+        QVERIFY(object->objectProperty() != nullptr);
+        QVERIFY(object->objectProperty2() != nullptr);
+        MyQmlObject *qmlObject = qobject_cast<MyQmlObject *>(object->objectProperty());
+        QVERIFY(qmlObject != nullptr);
+        QCOMPARE(qmlObject->value(), 10);
+        object->setValue(19);
+        QCOMPARE(qmlObject->value(), 19);
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("immediateDerived.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> o(component.create());
+        DerivedFromImmediate *derived = qobject_cast<DerivedFromImmediate *>(o.data());
+        QVERIFY(derived != nullptr);
+        QCOMPARE(derived->value(), 0);
+        QCOMPARE(derived->value2(), 0);
+        qmlExecuteDeferred(derived);
+        QCOMPARE(derived->value(), 11);
+        QCOMPARE(derived->value2(), 20);
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("brokenImmediateDeferred.qml"));
+        QVERIFY(component.isError());
+        QVERIFY(component.errorString().contains(
+                    QStringLiteral("You cannot define both DeferredPropertyNames and "
+                                   "ImmediatePropertyNames on the same type.")));
+    }
+
+    {
+        QQmlComponent component(&engine, testFileUrl("brokenImmediateId.qml"));
+        QVERIFY(component.isError());
+        QVERIFY(component.errorString().contains(
+                    QStringLiteral("You cannot assign an id to an object assigned "
+                                   "to a deferred property.")));
+    }
 }
 
 void tst_qqmlecmascript::deferredProperties()

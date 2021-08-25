@@ -1214,9 +1214,12 @@ QQmlDeferredAndCustomParserBindingScanner::QQmlDeferredAndCustomParserBindingSca
 
 bool QQmlDeferredAndCustomParserBindingScanner::scanObject()
 {
-    for (int i = 0; i < qmlObjects->size(); ++i)
-        if (qmlObjects->at(i)->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
-            scanObject(i);
+    for (int i = 0; i < qmlObjects->size(); ++i) {
+        if ((qmlObjects->at(i)->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
+                && !scanObject(i)) {
+            return false;
+        }
+    }
     return scanObject(/*root object*/0);
 }
 
@@ -1253,12 +1256,25 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
     QQmlPropertyResolver propertyResolver(propertyCache);
 
     QStringList deferredPropertyNames;
+    QStringList immediatePropertyNames;
     {
         const QMetaObject *mo = propertyCache->firstCppMetaObject();
-        const int namesIndex = mo->indexOfClassInfo("DeferredPropertyNames");
-        if (namesIndex != -1) {
-            QMetaClassInfo classInfo = mo->classInfo(namesIndex);
-            deferredPropertyNames = QString::fromUtf8(classInfo.value()).split(QLatin1Char(','));
+        const int deferredNamesIndex = mo->indexOfClassInfo("DeferredPropertyNames");
+        const int immediateNamesIndex = mo->indexOfClassInfo("ImmediatePropertyNames");
+        if (deferredNamesIndex != -1) {
+            if (immediateNamesIndex != -1) {
+                COMPILE_EXCEPTION(obj, tr("You cannot define both DeferredPropertyNames and "
+                                          "ImmediatePropertyNames on the same type."));
+            }
+            const QMetaClassInfo classInfo = mo->classInfo(deferredNamesIndex);
+            deferredPropertyNames = QString::fromUtf8(classInfo.value()).split(u',');
+        } else if (immediateNamesIndex != -1) {
+            const QMetaClassInfo classInfo = mo->classInfo(immediateNamesIndex);
+            immediatePropertyNames = QString::fromUtf8(classInfo.value()).split(u',');
+
+            // If the property contains an empty string, all properties shall be deferred.
+            if (immediatePropertyNames.isEmpty())
+                immediatePropertyNames.append(QString());
         }
     }
 
@@ -1304,11 +1320,26 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
             _seenObjectWithId |= seenSubObjectWithId;
         }
 
-        if (!seenSubObjectWithId && binding->type != QV4::CompiledData::Binding::Type_GroupProperty
-            && !deferredPropertyNames.isEmpty() && deferredPropertyNames.contains(name)) {
+        if (!immediatePropertyNames.isEmpty() && !immediatePropertyNames.contains(name)) {
+            if (seenSubObjectWithId) {
+                COMPILE_EXCEPTION(binding, tr("You cannot assign an id to an object assigned "
+                                              "to a deferred property."));
+            }
 
             binding->flags |= QV4::CompiledData::Binding::IsDeferredBinding;
             obj->flags |= QV4::CompiledData::Object::HasDeferredBindings;
+        } else if (!deferredPropertyNames.isEmpty() && deferredPropertyNames.contains(name)) {
+            if (seenSubObjectWithId) {
+                qWarning("Binding on %s is not deferred as requested by the DeferredPropertyNames "
+                         "class info because one or more of its sub-objects contain an id.",
+                         qPrintable(name));
+            } else if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
+                qWarning("Binding on %s is not deferred as requested by the DeferredPropertyNames "
+                         "class info because it constitutes a group property.", qPrintable(name));
+            } else {
+                binding->flags |= QV4::CompiledData::Binding::IsDeferredBinding;
+                obj->flags |= QV4::CompiledData::Object::HasDeferredBindings;
+            }
         }
 
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
