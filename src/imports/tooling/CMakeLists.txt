@@ -10,7 +10,7 @@ set(qml_files
 )
 
 set_source_files_properties(${qml_files} PROPERTIES
-    QT_QML_SOURCE_VERSION "1.2;6.0"
+    QT_QML_SOURCE_VERSIONS "1.2;6.0"
 )
 
 qt_internal_add_qml_module(quicktooling
