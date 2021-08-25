@@ -82,10 +82,6 @@ T.GroupBox {
 
     background: NativeStyle.GroupBox {
         control: control
-
-        width: contentItem.width + control.leftPadding + control.rightPadding - groupBoxPadding.left - groupBoxPadding.right
-        height: contentItem.height + control.topPadding + control.bottomPadding - groupBoxPadding.top - groupBoxPadding.bottom
-
         contentWidth: contentItem.implicitWidth
         contentHeight: contentItem.implicitHeight
     }
