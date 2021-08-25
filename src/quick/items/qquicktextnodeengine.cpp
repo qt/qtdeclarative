@@ -58,6 +58,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcSgText)
+
 QQuickTextNodeEngine::BinaryTreeNodeKey::BinaryTreeNodeKey(BinaryTreeNode *node)
     : fontEngine(QRawFontPrivate::get(node->glyphRun.rawFont())->fontEngine)
     , clipNode(node->clipNode)
@@ -980,7 +982,17 @@ void QQuickTextNodeEngine::mergeFormats(QTextLayout *textLayout, QVarLengthArray
 
 }
 
-void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QTextBlock &block, const QPointF &position, const QColor &textColor, const QColor &anchorColor, int selectionStart, int selectionEnd)
+/*!
+    \internal
+    Adds the \a block from the \a textDocument at \a position if its
+    \l {QAbstractTextDocumentLayout::blockBoundingRect()}{bounding rect}
+    intersects the \a viewport, or if \c viewport is not valid
+    (i.e. use a default-constructed QRectF to skip the viewport check).
+
+    \sa QQuickItem::clipRect()
+ */
+void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QTextBlock &block, const QPointF &position,
+                                        const QColor &textColor, const QColor &anchorColor, int selectionStart, int selectionEnd, const QRectF &viewport)
 {
     Q_ASSERT(textDocument);
 #if QT_CONFIG(im)
@@ -995,6 +1007,11 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
 
     const QTextCharFormat charFormat = block.charFormat();
     const QRectF blockBoundingRect = textDocument->documentLayout()->blockBoundingRect(block).translated(position);
+    if (viewport.isValid()) {
+        if (!blockBoundingRect.intersects(viewport))
+            return;
+        qCDebug(lcSgText) << "adding block with length" << block.length() << ':' << blockBoundingRect << "in viewport" << viewport;
+    }
 
     if (charFormat.background().style() != Qt::NoBrush)
         m_backgrounds.append(qMakePair(blockBoundingRect, charFormat.background().color()));

@@ -152,7 +152,8 @@ public:
     {}
 
     bool hasContents() const { return m_hasContents; }
-    void addTextBlock(QTextDocument *, const QTextBlock &, const QPointF &position, const QColor &textColor, const QColor& anchorColor, int selectionStart, int selectionEnd);
+    void addTextBlock(QTextDocument *, const QTextBlock &, const QPointF &position, const QColor &textColor,
+                      const QColor& anchorColor, int selectionStart, int selectionEnd, const QRectF &viewport = QRectF());
     QTextLine currentLine() const { return m_currentLine; }
 
     void setCurrentLine(const QTextLine &currentLine)

@@ -233,7 +233,9 @@ void QQuickTextNode::addTextDocument(const QPointF &position, QTextDocument *tex
                 Q_ASSERT(!engine.currentLine().isValid());
 
                 QTextBlock block = it.currentBlock();
-                engine.addTextBlock(textDocument, block, position, textColor, anchorColor, selectionStart, selectionEnd);
+                engine.addTextBlock(textDocument, block, position, textColor, anchorColor, selectionStart, selectionEnd,
+                                    (textDocument->characterCount() > QQuickTextPrivate::largeTextSizeThreshold ?
+                                         m_ownerElement->clipRect() : QRectF()));
                 ++it;
             }
         }

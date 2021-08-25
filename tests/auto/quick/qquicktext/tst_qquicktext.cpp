@@ -122,6 +122,7 @@ private slots:
     void boundingRect_data();
     void boundingRect();
     void clipRect();
+    void largeTextObservesViewport_data();
     void largeTextObservesViewport();
     void lineLaidOut();
     void lineLaidOutRelayout();
@@ -2944,8 +2945,65 @@ void tst_qquicktext::clipRect()
     QCOMPARE(text->clipRect().height(), text->height() + 2);
 }
 
+void tst_qquicktext::largeTextObservesViewport_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QQuickText::TextFormat>("textFormat");
+    QTest::addColumn<int>("linesAboveViewport");
+    QTest::addColumn<bool>("parentIsViewport");
+
+    QString text;
+    {
+        QStringList lines;
+        // "line 100" is 8 characters; many lines are longer, some are shorter
+        // so we populate 1250 lines, 11389 characters
+        const int lineCount = QQuickTextPrivate::largeTextSizeThreshold / 8;
+        lines.reserve(lineCount);
+        for (int i = 0; i < lineCount; ++i)
+            lines << QLatin1String("line ") + QString::number(i);
+        text = lines.join('\n');
+    }
+    Q_ASSERT(text.size() > QQuickTextPrivate::largeTextSizeThreshold);
+
+    // by default, the root item acts as the viewport:
+    // QQuickTextNode doesn't populate lines of text beyond the bottom of the window
+    QTest::newRow("default plain text") << text << QQuickText::PlainText << 0 << false;
+    // make the rectangle into a viewport item, and move the text upwards:
+    // QQuickTextNode doesn't populate lines of text beyond the bottom of the viewport rectangle
+    QTest::newRow("clipped plain text") << text << QQuickText::PlainText << 10 << true;
+
+    {
+        QStringList lines;
+        // "line 100" is 8 characters; many lines are longer, some are shorter
+        // so we populate 1250 lines, 11389 characters
+        const int lineCount = QQuickTextPrivate::largeTextSizeThreshold / 8;
+        lines.reserve(lineCount);
+        for (int i = 0; i < lineCount; ++i) {
+            if (i > 0 && i % 50 == 0)
+                lines << QLatin1String("<h1>chapter ") + QString::number(i / 50) + QLatin1String("</h1>");
+            lines << QLatin1String("<p>line ") + QString::number(i) + QLatin1String("</p>");
+        }
+        text = lines.join('\n');
+    }
+    Q_ASSERT(text.size() > QQuickTextPrivate::largeTextSizeThreshold);
+
+    // by default, the root item acts as the viewport:
+    // QQuickTextNodeEngine doesn't populate blocks beyond the bottom of the window
+    QTest::newRow("default styled text") << text << QQuickText::StyledText << 0 << false;
+    // make the rectangle into a viewport item, and move the text upwards:
+    // QQuickTextNodeEngine doesn't populate blocks that don't intersect the viewport rectangle
+    QTest::newRow("clipped styled text") << text << QQuickText::StyledText << 10 << true;
+    // get a chapter heading into the viewport
+    QTest::newRow("heading visible") << text << QQuickText::StyledText << 90 << true;
+}
+
 void tst_qquicktext::largeTextObservesViewport()
 {
+    QFETCH(QString, text);
+    QFETCH(QQuickText::TextFormat, textFormat);
+    QFETCH(int, linesAboveViewport);
+    QFETCH(bool, parentIsViewport);
+
     QQuickView window;
     QByteArray errorMessage;
     QVERIFY2(QQuickTest::initView(window, testFileUrl("viewport.qml"), true, &errorMessage), errorMessage.constData());
@@ -2957,50 +3015,33 @@ void tst_qquicktext::largeTextObservesViewport()
     QQuickTextPrivate *textPriv = QQuickTextPrivate::get(textItem);
     QQuickTextNode *node = static_cast<QQuickTextNode *>(textPriv->paintNode);
     QFontMetricsF fm(textItem->font());
-    const qreal expectedTextHeight = window.height() - viewportItem->y();
+    const qreal expectedTextHeight = (parentIsViewport ? viewportItem->height() : window.height() - viewportItem->y());
     const qreal lineSpacing = qCeil(fm.height());
-    int expectedLastLine = int(expectedTextHeight / lineSpacing);
+    // A paragraph break is the same as an extra line break; so since our "lines" are paragraphs in StyledText,
+    // visually, with StyledText we skip down 10 "lines", but the first paragraph you see says "line 5".
+    // It's OK anyway for the test, because QQuickTextNode::addTextLayout() treats the paragraph breaks like lines of text.
+    const int expectedLastLine = linesAboveViewport + int(expectedTextHeight / lineSpacing);
 
-    QStringList lines;
-    // "line 100" is 8 characters; many lines are longer, some are shorter
-    // so we populate 1250 lines, 11389 characters
-    const int lineCount = QQuickTextPrivate::largeTextSizeThreshold / 8;
-    lines.reserve(lineCount);
-    for (int i = 0; i < lineCount; ++i)
-        lines << QLatin1String("line ") + QString::number(i);
-    textItem->setText(lines.join('\n'));
+    viewportItem->setFlag(QQuickItem::ItemIsViewport, parentIsViewport);
+    textItem->setY(lineSpacing * -linesAboveViewport);
+    textItem->setTextFormat(textFormat);
+    textItem->setText(text);
+    qCDebug(lcTests) << "text size" << textItem->text().size() << "lines" << textItem->lineCount() << "font" << textItem->font();
     Q_ASSERT(textItem->text().size() > QQuickTextPrivate::largeTextSizeThreshold);
-    qCDebug(lcTests) << "text size" << textItem->text().size() << "lines" << lineCount;
-
-    // by default, the root item acts as the viewport:
-    // QQuickTextNode doesn't populate lines of text beyond the bottom of the window
-    QVERIFY(textItem->flags().testFlag(QQuickItem::ItemObservesViewport));
-    QVERIFY(window.rootObject()->flags().testFlag(QQuickItem::ItemIsViewport));
-    QTRY_COMPARE(node->renderedLineRange().first, 0);
+    QVERIFY(textItem->flags().testFlag(QQuickItem::ItemObservesViewport)); // large text sets this flag automatically
+    QCOMPARE(textItem->viewportItem(), parentIsViewport ? viewportItem : viewportItem->parentItem());
+    QTRY_VERIFY(node->renderedLineRange().first >= 0); // wait for rendering
     auto renderedLineRange = node->renderedLineRange();
-    qCDebug(lcTests) << "lines rendered" << renderedLineRange.second
-                     << "expected last line" << expectedLastLine
-                     << "based on available height" << expectedTextHeight
-                     << "and line height" << lineSpacing;
-    QVERIFY(qAbs(renderedLineRange.second - (expectedLastLine + 1)) < 2);
-
-    // make the rectangle into a viewport item, and move the text upwards to force re-rendering:
-    // QQuickTextNode doesn't populate lines of text beyond the bottom of the viewport rectangle
-    viewportItem->setFlag(QQuickItem::ItemIsViewport);
-    int expectedFirstLine = 10;
-    expectedLastLine = expectedFirstLine + int(viewportItem->height() / lineSpacing);
-    textItem->setY(lineSpacing * -10);
-    QTRY_VERIFY(node->renderedLineRange().second != renderedLineRange.second); // wait for re-rendering
-    renderedLineRange = node->renderedLineRange();
-    // now the render thread will call QQuickTextPrivate::transformChanged()
     qCDebug(lcTests) << "first line rendered" << renderedLineRange.first
-                     << "expected" << expectedFirstLine
+                     << "expected" << linesAboveViewport
                      << "first line past viewport" << renderedLineRange.second
                      << "expected last line" << expectedLastLine
-                     << "based on available height" << viewportItem->height()
-                     << "and line height" << lineSpacing;
-    QCOMPARE(renderedLineRange.first, expectedFirstLine);
-    QVERIFY(qAbs(renderedLineRange.second - (expectedLastLine + 1)) < 2);
+                     << "based on available height" << expectedTextHeight
+                     << "and line height" << lineSpacing << "rather than spacing" << fm.lineSpacing();
+//    QTest::qWait(2000); // uncomment for visual check
+    QCOMPARE(renderedLineRange.first, linesAboveViewport);
+    // if linesAboveViewport == 90, a chapter heading is visible, and those take more space
+    QVERIFY(qAbs(renderedLineRange.second - (expectedLastLine + 1)) < (linesAboveViewport > 80 ? 4 : 2));
 }
 
 void tst_qquicktext::lineLaidOut()
