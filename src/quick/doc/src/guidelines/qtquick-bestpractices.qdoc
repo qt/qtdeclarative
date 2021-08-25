@@ -195,7 +195,7 @@ maintenance pain-free, we should strive to keep C++ types unaware of QML as
 much as possible. This can be achieved by "pushing" references to C++ types
 into QML.
 
-This can be done by using \l {Required Property}{required properties} and
+This can be done by using \l {Required properties}{required properties} and
 setting them via \l QQmlApplicationEngine::setInitialProperties. It is also
 possible to create one or multiple \l {QML_SINGLETON}{singletons} which will
 return all the data the C++ side wants to provide to QML.

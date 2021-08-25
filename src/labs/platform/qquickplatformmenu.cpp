@@ -545,7 +545,7 @@ void QQuickPlatformMenu::setTitle(const QString &title)
 
     This property holds the menu's font.
 
-    \sa text
+    \sa title
 */
 QFont QQuickPlatformMenu::font() const
 {
