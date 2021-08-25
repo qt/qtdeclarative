@@ -1144,7 +1144,9 @@ function(qt6_add_qml_plugin target)
     endif()
 
     target_link_libraries(${target} PRIVATE ${QT_CMAKE_EXPORT_NAMESPACE}::Qml)
-    if(NOT "${arg_BACKING_TARGET}" STREQUAL target)
+
+    # Link plugin against its backing lib if it has one.
+    if(NOT arg_BACKING_TARGET STREQUAL "" AND NOT arg_BACKING_TARGET STREQUAL target)
         target_link_libraries(${target} PRIVATE ${arg_BACKING_TARGET})
     endif()
 
