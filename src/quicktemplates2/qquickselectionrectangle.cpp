@@ -38,6 +38,8 @@
 #include "qquickselectionrectangle_p_p.h"
 
 #include <QtQml/qqmlinfo.h>
+#include <QtQuick/private/qquickdraghandler_p.h>
+#include <QtQuick/private/qquickhoverhandler_p.h>
 
 #include <QtQuick/private/qquicktableview_p_p.h>
 
@@ -278,6 +280,12 @@ QQuickItem *QQuickSelectionRectanglePrivate::createHandle(QQmlComponent *delegat
     dragHandler->setParent(handleItem);
     QQuickItemPrivate::get(handleItem)->addPointerHandler(dragHandler);
 
+    QQuickHoverHandler *hoverHandler = new QQuickHoverHandler();
+    hoverHandler->setTarget(nullptr);
+    hoverHandler->setParent(handleItem);
+    hoverHandler->setCursorShape(Qt::SizeFDiagCursor);
+    QQuickItemPrivate::get(handleItem)->addPointerHandler(hoverHandler);
+
     QObject::connect(dragHandler, &QQuickDragHandler::activeChanged, [=]() {
         if (dragHandler->active()) {
             const QPointF localPos = dragHandler->centroid().position();
@@ -290,10 +298,12 @@ QQuickItem *QQuickSelectionRectanglePrivate::createHandle(QQmlComponent *delegat
             m_draggedHandle = handleItem;
             updateHandles();
             updateDraggingState(true);
+            QGuiApplication::setOverrideCursor(Qt::SizeFDiagCursor);
         } else {
             m_scrollTimer.stop();
             m_selectable->normalizeSelection();
             updateDraggingState(false);
+            QGuiApplication::restoreOverrideCursor();
         }
     });
 
