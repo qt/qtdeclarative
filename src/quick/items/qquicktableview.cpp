@@ -790,8 +790,12 @@ void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
 {
     if (loadedItems.isEmpty())
         return;
-    if (!selectionModel)
+    if (!selectionModel) {
+        if (warnNoSelectionModel)
+            qmlWarning(q_func()) << "Cannot set selection: no SelectionModel assigned!";
+        warnNoSelectionModel = false;
         return;
+    }
     const QAbstractItemModel *qaim = selectionModel->model();
     if (!qaim)
         return;
@@ -816,8 +820,12 @@ void QQuickTableViewPrivate::setSelectionEndPos(const QPointF &pos)
 {
     if (loadedItems.isEmpty())
         return;
-    if (!selectionModel)
+    if (!selectionModel) {
+        if (warnNoSelectionModel)
+            qmlWarning(q_func()) << "Cannot set selection: no SelectionModel assigned!";
+        warnNoSelectionModel = false;
         return;
+    }
     const QAbstractItemModel *qaim = selectionModel->model();
     if (!qaim)
         return;

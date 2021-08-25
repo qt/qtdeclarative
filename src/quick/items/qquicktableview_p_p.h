@@ -288,6 +288,8 @@ public:
     // Consider making it public.
     bool isTransposed = false;
 
+    bool warnNoSelectionModel = true;
+
     QJSValue rowHeightProvider;
     QJSValue columnWidthProvider;
     QQuickTableSectionSizeProvider rowHeights;
