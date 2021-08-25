@@ -5,7 +5,6 @@ QT += qml quick
 QML_IMPORT_NAME = Charts
 QML_IMPORT_MAJOR_VERSION = 1
 
-DESTDIR = ../$$QML_IMPORT_NAME
 TARGET = $$qtLibraryTarget(chartsplugin)
 
 HEADERS += piechart.h \
@@ -28,5 +27,5 @@ OTHER_FILES += qmldir
 
 # Copy the qmldir file to the same folder as the plugin binary
 cpqmldir.files = qmldir
-cpqmldir.path = $$DESTDIR
+cpqmldir.path = .
 COPIES += cpqmldir
