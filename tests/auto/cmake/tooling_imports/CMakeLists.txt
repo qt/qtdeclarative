@@ -17,7 +17,7 @@ add_subdirectory(First)
 add_subdirectory(Second)
 
 qt_add_executable(cmake_test main.cpp)
-target_link_libraries(cmake_test PRIVATE Qt6::Test)
+target_link_libraries(cmake_test PRIVATE Qt6::Test Qt6::Gui)
 
 qt_add_qml_module(cmake_test
     URI Test
