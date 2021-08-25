@@ -597,12 +597,14 @@ void QQmlMetaType::unregisterInternalCompositeType(const CompositeMetaTypeIds &t
     QMetaType metaType(typeIds.id);
     QMetaType listMetaType(typeIds.listId);
 
+    // This may be called from delayed dtors on shutdown when the data is already gone.
     QQmlMetaTypeDataPtr data;
-
-    if (QQmlValueType *vt = data->metaTypeToValueType.take(metaType.id()))
-        delete vt;
-    if (QQmlValueType *vt = data->metaTypeToValueType.take(listMetaType.id()))
-        delete vt;
+    if (data.isValid()) {
+        if (QQmlValueType *vt = data->metaTypeToValueType.take(metaType.id()))
+            delete vt;
+        if (QQmlValueType *vt = data->metaTypeToValueType.take(listMetaType.id()))
+            delete vt;
+    }
 
     QMetaType::unregisterMetaType(metaType);
     QMetaType::unregisterMetaType(listMetaType);
