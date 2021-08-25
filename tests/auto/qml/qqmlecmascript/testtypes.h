@@ -435,6 +435,32 @@ class DeferredChild : public NonDeferredBased
     Q_CLASSINFO("DeferredPropertyNames", "baseValue")
 };
 
+class ChildDeferringParent : public QObject
+{
+    Q_OBJECT
+    Q_CLASSINFO("DeferredPropertyNames", "childValue")
+};
+
+class DeferredByParentChild : public ChildDeferringParent
+{
+    Q_OBJECT
+    Q_PROPERTY(int childValue READ childValue WRITE setchildValue NOTIFY childValueChanged)
+signals:
+    void childValueChanged();
+public:
+    int childValue() const { return m_childValue; }
+
+    void setchildValue(int i) {
+        if (i == m_childValue)
+            return;
+        m_childValue = i;
+        emit childValueChanged();
+    }
+
+private:
+    int m_childValue = 0;
+};
+
 class MyVeryDeferredObject : public QObject
 {
     Q_OBJECT

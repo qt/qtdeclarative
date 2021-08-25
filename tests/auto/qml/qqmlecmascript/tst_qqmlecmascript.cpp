@@ -101,6 +101,7 @@ private slots:
     void dependenciesWithFunctions();
     void deferredProperties();
     void deferredPropertiesParent();
+    void deferredPropertiesByParent();
     void deferredPropertiesErrors();
     void deferredPropertiesInComponents();
     void deferredPropertiesInDestruction();
@@ -1229,6 +1230,20 @@ void tst_qqmlecmascript::deferredPropertiesParent()
     qmlExecuteDeferred(object);
     QCOMPARE(object->baseValue(), 10);
 }
+
+void tst_qqmlecmascript::deferredPropertiesByParent()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("deferredPropertiesChild.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY2(obj, qPrintable(component.errorString()));
+    DeferredByParentChild *object = qobject_cast<DeferredByParentChild *>(obj.data());
+    QVERIFY(object != nullptr);
+    QCOMPARE(object->childValue(), 0);
+    qmlExecuteDeferred(object);
+    QCOMPARE(object->childValue(), 10);
+}
+
 // Check errors on deferred properties are correctly emitted
 void tst_qqmlecmascript::deferredPropertiesErrors()
 {
