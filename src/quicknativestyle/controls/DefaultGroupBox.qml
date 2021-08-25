@@ -77,11 +77,12 @@ T.GroupBox {
     topPadding: __nativeBackground ? background.contentPadding.top : 0
     bottomPadding: __nativeBackground ? background.contentPadding.bottom : 0
 
+    leftInset: __nativeBackground ? background.groupBoxPadding.left : 0
+    topInset: __nativeBackground ? background.groupBoxPadding.top : 0
+
     background: NativeStyle.GroupBox {
         control: control
 
-        x: groupBoxPadding.left
-        y: groupBoxPadding.top
         width: contentItem.width + control.leftPadding + control.rightPadding - groupBoxPadding.left - groupBoxPadding.right
         height: contentItem.height + control.topPadding + control.bottomPadding - groupBoxPadding.top - groupBoxPadding.bottom
 
