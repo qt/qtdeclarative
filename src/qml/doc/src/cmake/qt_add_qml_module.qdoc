@@ -181,6 +181,14 @@ re-run automatically, so you should explicitly re-run CMake to force the
 The backing target's C++ sources are scanned at build time to generate a
 typeinfo file and a C++ file to register the associated types. The generated
 C++ file is automatically added to the backing target as a source.
+This requires \c AUTOMOC to be enabled on the target. The project is
+responsible for ensuring this, usually by setting the \c CMAKE_AUTOMOC variable
+to \c TRUE before calling \c qt_add_qml_module(), or by passing in an existing
+target with the \c AUTOMOC target property already set to \c TRUE. It isn't an
+error to have \c AUTOMOC disabled on the target, but the project is then
+responsible for handling the consequences. This may include having to manually
+generate the typeinfo file instead of allowing it to be auto-generated with
+missing details, and adding C++ code to register the types.
 
 Projects should prefer to use the auto-generated typeinfo and \c qmldir files
 where possible. They are easier to maintain and they don't suffer from the same
