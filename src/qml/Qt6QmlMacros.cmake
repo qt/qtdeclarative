@@ -1480,8 +1480,26 @@ function(qt6_target_qml_sources target)
 
             # Do not add qmldir entries for lowercase names. Those are not components.
             if (qml_file_typename MATCHES "^[A-Z]")
-                # TODO: rename to QT_QML_SOURCE_VERSIONS
-                get_source_file_property(qml_file_versions  ${qml_file_src} QT_QML_SOURCE_VERSION)
+                # We previously accepted the singular form of this property name
+                # during tech preview. Issue a warning for that, but still
+                # honor it. The plural form will override it if both are set.
+                get_property(have_singular_property SOURCE ${qml_file_src}
+                    PROPERTY QT_QML_SOURCE_VERSION SET
+                )
+                if(have_singular_property)
+                    message(AUTHOR_WARNING
+                        "The QT_QML_SOURCE_VERSION source file property has been replaced "
+                        "by QT_QML_SOURCE_VERSIONS (i.e. plural rather than singular). "
+                        "The singular form will eventually be removed, please update "
+                        "the project to use the plural form instead for the file at:\n"
+                        "  ${qml_file_src}"
+                    )
+                endif()
+                get_source_file_property(qml_file_versions ${qml_file_src} QT_QML_SOURCE_VERSIONS)
+                if(NOT qml_file_versions AND have_singular_property)
+                    get_source_file_property(qml_file_versions ${qml_file_src} QT_QML_SOURCE_VERSION)
+                endif()
+
                 get_source_file_property(qml_file_singleton ${qml_file_src} QT_QML_SINGLETON_TYPE)
                 get_source_file_property(qml_file_internal  ${qml_file_src} QT_QML_INTERNAL_TYPE)
 

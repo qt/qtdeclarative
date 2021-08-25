@@ -56,37 +56,37 @@ set(qml_files
     "VerticalHeaderView.qml"
 )
 set_source_files_properties(DelayButton.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.2;6.0"
+    QT_QML_SOURCE_VERSIONS "2.2;6.0"
 )
 set_source_files_properties(Dialog.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.1;6.0"
+    QT_QML_SOURCE_VERSIONS "2.1;6.0"
 )
 set_source_files_properties(DialogButtonBox.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.1;6.0"
+    QT_QML_SOURCE_VERSIONS "2.1;6.0"
 )
 set_source_files_properties(HorizontalHeaderView.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.15;6.0"
+    QT_QML_SOURCE_VERSIONS "2.15;6.0"
 )
 set_source_files_properties(MenuBar.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.3;6.0"
+    QT_QML_SOURCE_VERSIONS "2.3;6.0"
 )
 set_source_files_properties(MenuBarItem.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.3;6.0"
+    QT_QML_SOURCE_VERSIONS "2.3;6.0"
 )
 set_source_files_properties(MenuSeparator.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.1;6.0"
+    QT_QML_SOURCE_VERSIONS "2.1;6.0"
 )
 set_source_files_properties(RoundButton.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.1;6.0"
+    QT_QML_SOURCE_VERSIONS "2.1;6.0"
 )
 set_source_files_properties(SplitView.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.13;6.0"
+    QT_QML_SOURCE_VERSIONS "2.13;6.0"
 )
 set_source_files_properties(ToolSeparator.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.1;6.0"
+    QT_QML_SOURCE_VERSIONS "2.1;6.0"
 )
 set_source_files_properties(VerticalHeaderView.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.15;6.0"
+    QT_QML_SOURCE_VERSIONS "2.15;6.0"
 )
 
 qt_internal_add_qml_module(qtquickcontrols2universalstyleplugin
