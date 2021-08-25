@@ -43,26 +43,21 @@ import QtQuick.Controls.Fusion.impl
 T.SelectionRectangle {
     id: control
 
-    topLeftHandle: handle
-    bottomRightHandle: handle
+    topLeftHandle: Item {
+        width: 20
+        height: 20
+        visible: SelectionRectangle.control.active
+        // This item is deliberately empty. Selection handles don't feel at home
+        // for this style. But we provide an invisible handle that the user can
+        // drag on.
+    }
 
-    Component {
-        id: handle
-        SliderHandle {
-            palette: SelectionRectangle.control.palette
-            pressed: tapHandler.pressed || SelectionRectangle.dragging
-            hovered: hoverHandler.hovered
-            vertical: false
-            visualFocus: false
-            visible: SelectionRectangle.control.active
-
-            HoverHandler {
-                id: hoverHandler
-            }
-
-            TapHandler  {
-                id: tapHandler
-            }
-        }
+    bottomRightHandle: Item {
+        width: 20
+        height: 20
+        visible: SelectionRectangle.control.active
+        // This item is deliberately empty. Selection handles don't feel at home
+        // for this style. But we provide an invisible handle that the user can
+        // drag on.
     }
 }

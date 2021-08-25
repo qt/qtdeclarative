@@ -44,49 +44,19 @@ T.SelectionRectangle {
     topLeftHandle: Item {
         width: 20
         height: 20
-        visible: control.active
-        property T.SelectionRectangle control: SelectionRectangle.control
-
-        Shape {
-            x: (parent.width / 2) + 2
-            y: (parent.height / 2) + 2
-            width: 10
-            height: 10
-
-            ShapePath {
-                fillColor: control.palette.alternateBase
-                strokeWidth: -1
-                startX: 0
-                startY: 0
-                PathLine { x: 0; y: 6 }
-                PathLine { x: 6; y: 0 }
-                PathLine { x: 0; y: 0 }
-            }
-        }
+        visible: SelectionRectangle.control.active
+        // This item is deliberately empty. Selection handles don't feel at home
+        // for this style. But we provide an invisible handle that the user can
+        // drag on.
     }
 
     bottomRightHandle: Item {
         width: 20
         height: 20
-        visible: control.active
-        property T.SelectionRectangle control: SelectionRectangle.control
-
-        Shape {
-            x: (parent.width / 2) - 8
-            y: (parent.height / 2) - 8
-            width: 10
-            height: 10
-
-            ShapePath {
-                fillColor: control.palette.alternateBase
-                strokeWidth: -1
-                startX: 0
-                startY: 6
-                PathLine { x: 6; y: 6 }
-                PathLine { x: 6; y: 0 }
-                PathLine { x: 0; y: 6 }
-            }
-        }
+        visible: SelectionRectangle.control.active
+        // This item is deliberately empty. Selection handles don't feel at home
+        // for this style. But we provide an invisible handle that the user can
+        // drag on.
     }
 
 }
