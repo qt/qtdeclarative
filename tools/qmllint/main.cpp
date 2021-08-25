@@ -240,6 +240,18 @@ All warnings can be set to three levels:
     info - Displays the warning but does not influence the return code.
     warning - Displays the warning and leads to a non-zero exit code if encountered.
 )"));
+
+    for (auto it = options.cbegin(); it != options.cend(); ++it) {
+        QCommandLineOption option(
+                it.key(),
+                it.value().m_description
+                        + QStringLiteral(" (default: %1)").arg(it.value().levelToString()),
+                QStringLiteral("level"), it.value().levelToString());
+        parser.addOption(option);
+        settings.addOption(QStringLiteral("Warnings/") + it.value().m_settingsName,
+                           it.value().levelToString());
+    }
+
     parser.addHelpOption();
     parser.addVersionOption();
 
@@ -261,17 +273,6 @@ All warnings can be set to three levels:
                                       QLatin1String("Ignores all settings files and only takes "
                                                     "command line options into consideration"));
     parser.addOption(ignoreSettings);
-
-    for (auto it = options.cbegin(); it != options.cend(); ++it) {
-        QCommandLineOption option(
-                it.key(),
-                it.value().m_description
-                        + QStringLiteral(" (default: %1)").arg(it.value().levelToString()),
-                QStringLiteral("level"), it.value().levelToString());
-        parser.addOption(option);
-        settings.addOption(QStringLiteral("Warnings/") + it.value().m_settingsName,
-                           it.value().levelToString());
-    }
 
     QCommandLineOption resourceOption(
                 { QStringLiteral("resource") },
