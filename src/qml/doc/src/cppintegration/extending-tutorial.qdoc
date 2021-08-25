@@ -397,13 +397,11 @@ plugin with the Qt meta object system.
 
 Here is the \c ChartsPlugin definition in \c chartsplugin.h:
 
-\snippet tutorials/extending-qml/chapter6-plugins/import/chartsplugin.h 0
+\snippet tutorials/extending-qml/chapter6-plugins/Charts/chartsplugin.h 0
 
-Then, we write a \c .pro project file that defines the project as a plugin library
-and specifies with DESTDIR that library files should be built into a \c {../Charts}
-directory.
+Then, we write a \c .pro project file that defines the project as a plugin library.
 
-\quotefile tutorials/extending-qml/chapter6-plugins/import/import.pro
+\quotefile tutorials/extending-qml/chapter6-plugins/Charts/Charts.pro
 
 When building this example on Windows or Linux, the \c Charts directory will be
 located at the same level as the application that uses our new import module.
@@ -432,7 +430,7 @@ to the same location as the plugin binary.
 The \c qmldir file declares the module name and the plugin that is made available
 by the module:
 
-\quotefile tutorials/extending-qml/chapter6-plugins/import/qmldir
+\quotefile tutorials/extending-qml/chapter6-plugins/Charts/qmldir
 
 Now we have a QML module that can be imported to any application, provided that the
 QML engine knows where to find it. The example contains an executable that loads
