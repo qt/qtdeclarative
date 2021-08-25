@@ -32,12 +32,21 @@
 \title qt_target_qml_sources
 \target qt6_target_qml_sources
 
-\brief Add qml sources to an existing QML module target.
+\brief Add qml files and resources to an existing QML module target.
 
 \section1 Synopsis
 
 \badcode
-qt_target_qml_sources(...)
+qt_target_qml_sources(
+    target
+    [QML_FILES ...]
+    [RESOURCES ...]
+    [PREFIX resource_path]
+    [OUTPUT_TARGETS out_targets_var]
+    [NO_LINT]
+    [NO_CACHEGEN]
+    [NO_QMLDIR_TYPES]
+)
 
 \endcode
 
@@ -45,9 +54,164 @@ qt_target_qml_sources(...)
 
 \section1 Description
 
-TBD
+\note This command requires CMake 3.19 or later.
+
+\c{qt_target_qml_sources()} provides the ability to add more files to a QML
+module after \l{qt6_add_qml_module}{qt_add_qml_module()} has been called.
+Typically, you pass the set of \c{.qml} files and resources to
+\l{qt6_add_qml_module}{qt_add_qml_module()} directly, but in some cases, it may
+be desirable, or even necessary, to add files after
+\l{qt6_add_qml_module}{qt_add_qml_module()} has been called. For example, you
+may wish to add files conditionally based on an \c{if} statement expression,
+or from subdirectories that will only be added if certain criteria are met.
+You might want to add a set of files with different characteristics to the
+others, such as a different resource prefix, or with linting and bytecode
+compilation disabled. The \c{qt_target_qml_sources()} command enables these
+scenarios.
 
 \section1 Arguments
 
-TBD
+The \c target must be the backing target of a QML module, or if the QML module
+has no separate backing target, it must be the module's plugin target.
+
+\c QML_FILES is a list of \c{.qml}, \c{.js} and \c{.mjs} files to be added to
+the QML module. This option has exactly the same effect as the \c QML_FILES
+option of the \l{qt6_add_qml_module}{qt_add_qml_module()} command, including
+the automatic compilation to bytecode and lint processing.
+
+The \c NO_CACHEGEN and \c NO_LINT options also have the same effect as they do
+for \l{qt6_add_qml_module}{qt_add_qml_module()}. They disable the bytecode
+compilation and lint processing for the files listed with \c QML_FILES. This
+behavior can also be specified just for individual files using
+\l{qml-source-file-properties}{source file properties}.
+
+\c NO_QMLDIR_TYPES prevents the \c QML_FILES from being added as types to the
+generated \l{qmldir-autogeneration}{qmldir} file.
+
+\c RESOURCES has exactly the same effect as the \c RESOURCES option of the
+\l{qt6_add_qml_module}{qt_add_qml_module()} command. It provides a list of
+files to be added to the \c target as ordinary resources. These files are
+typically things like images, shaders, etc. that the QML code refers to in some
+way.
+
+\target PREFIX
+Files added to the module via \c QML_FILES or \c RESOURCES will be placed under
+the same resource prefix and target path as they would if they were added by the
+\l{qt6_add_qml_module}{qt_add_qml_module()} command. This can be overridden by
+providing a different location with the \c PREFIX option. The value following
+the \c PREFIX keyword will be used directly, without appending any target path.
+The final resource path of each file will be the prefix, plus the path of the
+file below the \c CMAKE_CURRENT_SOURCE_DIR. The \l{QT_RESOURCE_ALIAS} source
+file property can also be used to override that relative path.
+
+\badcode
+qt_add_qml_module(backing
+    URI Example
+    VERSION 1.0
+    RESOURCE_PREFIX /my.company.com/imports
+)
+
+qt_target_qml_sources(backing
+    QML_FILES special/First.qml
+    RESOURCES icons/logo.png
+)
+
+qt_target_qml_sources(backing
+    PREFIX /other.company.com/debugging
+    QML_FILES Inspector.qml
+)
+\endcode
+
+In the above example, the \c backing target's resources will end up with the
+following contents:
+
+\list
+\li \c{/my.company.com/imports/Example/special/First.qml}
+\li \c{/my.company.com/imports/Example/icons/logo.png}
+\li \c{/other.company.com/debugging/Inspector.qml}
+\endlist
+
+\c OUTPUT_TARGETS is also analogous to the same option for
+\l{qt6_add_qml_module}{qt_add_qml_module()}. Use it to specify the name of a
+variable in which to store any additional targets created for static builds.
+If the \c target will be installed, these additional targets will also need to
+be installed to satisfy linking requirements.
+
+\target qml-source-file-properties
+\section1 Source File Properties
+
+A number of source file properties can be used to influence how each individual
+\c{.qml} file is treated at various points in the QML module processing. These
+override any higher level options specified in calls to
+\c{qt_target_qml_sources()} or \l{qt6_add_qml_module}{qt_add_qml_module()}.
+All of these properties need to be set before the files are added with either
+of those two commands.
+
+\c QT_QML_SKIP_QMLLINT can be set to \c TRUE on a source file to prevent it
+from being included in the \l{qmllint-auto}{automatic qmllint processing}.
+By default, all \c{.qml} files will be included in the target's lint run, but
+this option can be used to exclude specific files.
+
+\c QT_QML_SKIP_CACHEGEN does a similar thing, preventing a source file from
+being compiled to byte code when this property is set to \c TRUE. Note that the
+file will still be added to the \c target as a resource in uncompiled form
+(see \l{qmlcachegen-auto}{Caching compiled QML sources}).
+
+Set the \c QT_QML_SKIP_QMLDIR_ENTRY source file property to \c TRUE to prevent
+that \c{.qml} file from being added as a type to the QML module's typeinfo file
+(see \l{qmldir-autogeneration}{Auto-generating \c{qmldir} and typeinfo files}).
+This would normally only be used for a file that does not expose a public type,
+such as a private JS file.
+
+By default, when \l{qmldir-autogeneration}{generating the \c qmldir file}, a
+single type entry will be generated for each \c{.qml} file that provides a type.
+It will be given a version number \c{X.0} where \c{X} is the major version of
+the QML module. If the QML module has any \c PAST_MAJOR_VERSIONS set, the same
+pattern will be applied to those too, appending \c{X.0} for each past major
+version \c{X}. For situations where a file needs to provide type entries for
+a different set of versions instead (e.g. it was first added in a minor patch
+version after the \c{.0} release), specify those versions in the source file's
+\c QT_QML_SOURCE_VERSIONS property. One type entry will be created for each
+version.
+
+If the type that a \c{.qml} file provides is a singleton, set its
+\c QT_QML_SINGLETON_TYPE property to \c TRUE. Similarly, the file's
+\c QT_QML_INTERNAL_TYPE source property can be set to \c TRUE to indicate that
+the type it provides is an internal one. The name of the type itself can also
+be overridden using the \c QT_QML_SOURCE_TYPENAME property. All three of these
+will be reflected in the file's type entries in the
+\l{qmldir-autogeneration}{generated \c qmldir file}.
+
+\target QT_RESOURCE_ALIAS
+All files listed with \c QML_FILES or \c RESOURCES will be added to the
+\c{target}'s resources. Their location in the resources consists of a base point
+and a relative path. The base point defaults to the concatenation of the QML
+module's resource prefix and its target path, but these can be overridden with
+the \l PREFIX argument. The relative path will default to the path of the file
+relative to the \c{target}'s \c SOURCE_DIR target property. This relative path
+can be overridden by setting the \c QT_RESOURCE_ALIAS property on the source
+file. This is commonly used to collect files from different directories and
+have them appear in the resources under a common location.
+
+\snippet cmake/qt_target_qml_sources/CMakeLists.txt 0
+
+In the above example, the \c qt_target_qml_sources_example target's resources
+will end up with the following contents:
+
+\list
+\li \c{/my.company.com/imports/Example/File.qml}
+\li \c{/my.company.com/imports/Example/templates/File.qml}
+\li \c{/my.company.com/imports/Example/some_old_thing.qml}
+\li \c{/my.company.com/imports/Example/button-types.png}
+\li \c{/my.company.com/imports/Example/doc/README.txt}
+\endlist
+
+The generated \c qmldir file will contain the following type entries:
+
+\badcode
+File 2.0 File.qml
+OldThing 1.1 some_old_thing.qml
+OldThing 2.0 some_old_thing.qml
+\endcode
+
 */
