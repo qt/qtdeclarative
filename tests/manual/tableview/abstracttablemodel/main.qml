@@ -37,13 +37,14 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import QtQuick.Window 2.3
-import QtQml.Models 2.2
-import TestTableModel 0.1
-import QtQuick.Controls 2.5
+import QtQuick
+import QtQuick.Window
+import QtQml.Models
+import TestTableModel
+import QtQuick.Controls
+import Qt.labs.qmlmodels
 
-Window {
+ApplicationWindow {
     id: window
     width: 640
     height: 480
@@ -52,10 +53,8 @@ Window {
     property int selectedX: -1
     property int selectedY: -1
 
-    Rectangle {
+    Item {
         anchors.fill: parent
-        anchors.margins: 10
-        color: "darkgray"
 
         Column {
             id: menu
@@ -79,6 +78,12 @@ Window {
                 Button {
                     text: "Remove column"
                     onClicked: tableView.model.removeColumns(selectedX, 1)
+                }
+                SpinBox {
+                    id: spaceSpinBox
+                    from: -100
+                    to: 100
+                    value: 0
                 }
             }
 
@@ -111,11 +116,9 @@ Window {
                     }
                 }
                 Button {
-                    text: "inc space"
-                    onClicked: {
-                        tableView.columnSpacing += 1
-                        tableView.rowSpacing += 1
-                    }
+                    id: flickingMode
+                    checkable: true
+                    text: checked ? "Flickable" : "Scrollable"
                 }
             }
             Text {
@@ -148,6 +151,7 @@ Window {
             columnSpacing: 1
             rowSpacing: 1
 
+            syncView: tableView
             syncDirection: Qt.Horizontal
         }
 
@@ -176,6 +180,7 @@ Window {
             columnSpacing: 1
             rowSpacing: 1
 
+            syncView: tableView
             syncDirection: Qt.Vertical
         }
 
@@ -188,12 +193,16 @@ Window {
             anchors.bottom: parent.bottom
             width: 200
             clip: true
+            delegate: tableViewDelegate
+            columnSpacing: spaceSpinBox.value
+            rowSpacing: spaceSpinBox.value
+            interactive: flickingMode.checked
+
             columnWidthProvider: function(c) {
                 if (c > 30)
                     return 100
-                else
-                    return 200;
             }
+
             ScrollBar.horizontal: ScrollBar {}
             ScrollBar.vertical: ScrollBar {}
 
@@ -201,32 +210,37 @@ Window {
                 rowCount: 200
                 columnCount: 60
             }
-            delegate: tableViewDelegate
-            columnSpacing: 1
-            rowSpacing: 1
+
+            selectionModel: ItemSelectionModel {
+                model: tableView.model
+            }
+        }
+
+        SelectionRectangle {
+            target: tableView
         }
 
         Component {
             id: tableViewDelegate
             Rectangle {
                 id: delegate
-                implicitWidth: 100
-                implicitHeight: 50
-                color: display
+                implicitWidth: 50
+                implicitHeight: 30
                 border.width: row === selectedY && column == selectedX ? 2 : 0
                 border.color: "darkgreen"
+                color: selected ? "lightgreen" : "white"
+                required property bool selected
+
+                TapHandler {
+                    onTapped: {
+                        selectedX = column
+                        selectedY = row
+                    }
+                }
 
                 Text {
-                    anchors.fill: parent
+                    anchors.centerIn: parent
                     text: column + ", " + row
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            selectedX = column
-                            selectedY = row
-                        }
-                    }
                 }
             }
         }
