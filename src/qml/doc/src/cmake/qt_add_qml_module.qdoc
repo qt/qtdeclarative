@@ -250,10 +250,9 @@ found at the following resource paths:
 A separate linting target will be automatically created if any \c{.qml} files
 are added to the module via the \c QML_FILES keyword, or by a later call to
 \l{qt6_target_qml_sources}{qt_target_qml_sources()}. The name of the linting
-target will be the \c target followed by \c{_qmllint}. The linting target is
-not part of the default CMake \c ALL target, it is intended for developers to
-execute manually on demand. An \c{all_qmllint} target which depends on all the
-individual \c{*_qmllint} targets is also provided as a convenience.
+target will be the \c target followed by \c{_qmllint}. An \c{all_qmllint}
+target which depends on all the individual \c{*_qmllint} targets is also
+provided as a convenience.
 
 \section1 Arguments
 
