@@ -315,4 +315,10 @@ void tst_qmltyperegistrar::namespaceExtendedNamespace()
     QCOMPARE(o->property("f").toInt(), int(BaseNamespace::F));
 }
 
+void tst_qmltyperegistrar::deferredNames()
+{
+    QVERIFY(qmltypesData.contains("deferredNames: [\"\"]"));
+    QVERIFY(qmltypesData.contains("deferredNames: [\"A\", \"B\", \"C\"]"));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

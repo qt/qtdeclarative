@@ -119,6 +119,14 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
     if (collector.hasCustomParser)
         m_qml.writeScriptBinding(QLatin1String("hasCustomParser"), QLatin1String("true"));
 
+    if (!collector.deferredNames.isEmpty()) {
+        QStringList deferredNames;
+        for (const QString &name : collector.deferredNames)
+            deferredNames << enquote(name);
+
+        m_qml.writeArrayBinding(QLatin1String("deferredNames"), deferredNames);
+    }
+
     m_qml.writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), metaObjects);
 
     if (!collector.attachedType.isEmpty())

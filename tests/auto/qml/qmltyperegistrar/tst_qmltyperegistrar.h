@@ -402,6 +402,20 @@ public:
     Q_ENUM(EEE)
 };
 
+struct DeferredPropertyNamesEmpty : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_CLASSINFO("QML.DeferredPropertyNames", "")
+};
+
+struct DeferredPropertyNames : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_CLASSINFO("QML.DeferredPropertyNames", "A,B,C")
+};
+
 namespace ForeignNamespace
 {
 Q_NAMESPACE
@@ -440,6 +454,7 @@ private slots:
     void parentProperty();
     void namespacesAndValueTypes();
     void namespaceExtendedNamespace();
+    void deferredNames();
 
 private:
     QByteArray qmltypesData;
