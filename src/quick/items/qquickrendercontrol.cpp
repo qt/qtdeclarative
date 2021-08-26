@@ -154,6 +154,7 @@ QQuickRenderControlPrivate::QQuickRenderControlPrivate(QQuickRenderControl *rend
       initialized(false),
       window(nullptr),
       rhi(nullptr),
+      ownRhi(true),
       cb(nullptr),
       offscreenSurface(nullptr),
       sampleCount(1)
@@ -665,18 +666,23 @@ bool QQuickRenderControlPrivate::initRhi()
     if (!offscreenSurface)
         offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
 
-    rhi = rhiSupport->createRhi(window, offscreenSurface);
-    if (!rhi) {
+    QSGRhiSupport::RhiCreateResult result = rhiSupport->createRhi(window, offscreenSurface);
+    if (!result.rhi) {
         qWarning("QQuickRenderControl: Failed to initialize QRhi");
         return false;
     }
+
+    rhi = result.rhi;
+    ownRhi = result.own;
 
     return true;
 }
 
 void QQuickRenderControlPrivate::resetRhi()
 {
-    QSGRhiSupport::instance()->destroyRhi(rhi);
+    if (ownRhi)
+        QSGRhiSupport::instance()->destroyRhi(rhi);
+
     rhi = nullptr;
 
     delete offscreenSurface;

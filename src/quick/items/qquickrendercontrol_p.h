@@ -89,6 +89,7 @@ public:
     static QSGContext *sg;
     QSGRenderContext *rc;
     QRhi *rhi;
+    bool ownRhi;
     QRhiCommandBuffer *cb;
     QOffscreenSurface *offscreenSurface;
     int sampleCount;

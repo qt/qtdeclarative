@@ -72,7 +72,8 @@ public:
         DeviceAndContext,
         DeviceAndCommandQueue,
         PhysicalDevice,
-        DeviceObjects
+        DeviceObjects,
+        Rhi
     };
 
     QAtomicInt ref;
@@ -112,6 +113,7 @@ public:
         DeviceAndCommandQueue deviceAndCommandQueue;
         PhysicalDevice physicalDevice;
         DeviceObjects deviceObjects;
+        QRhi *rhi;
     } u;
 };
 

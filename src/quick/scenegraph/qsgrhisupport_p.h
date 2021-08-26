@@ -129,7 +129,11 @@ public:
                             const QQuickWindow *w);
 
     QOffscreenSurface *maybeCreateOffscreenSurface(QWindow *window);
-    QRhi *createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface);
+    struct RhiCreateResult {
+        QRhi *rhi;
+        bool own;
+    };
+    RhiCreateResult createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface);
     void destroyRhi(QRhi *rhi);
     void prepareWindowForRhi(QQuickWindow *window);
 
@@ -142,6 +146,7 @@ private:
     QSGRhiSupport();
     void applySettings();
     void adjustToPlatformQuirks();
+    void preparePipelineCache(QRhi *rhi);
     struct {
         bool valid = false;
         QSGRendererInterface::GraphicsApi api;

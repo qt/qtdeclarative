@@ -573,14 +573,35 @@ void QSGRhiSupport::prepareWindowForRhi(QQuickWindow *window)
 #endif
 }
 
-// must be called on the render thread
-QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface)
+void QSGRhiSupport::preparePipelineCache(QRhi *rhi)
 {
-#if !QT_CONFIG(opengl) && !QT_CONFIG(vulkan) && !defined(Q_OS_WIN) && !defined(Q_OS_MACOS) && !defined(Q_OS_IOS)
-    Q_UNUSED(window);
-#endif
+    if (m_pipelineCacheLoad.isEmpty())
+        return;
 
+    QFile f(m_pipelineCacheLoad);
+    if (f.open(QIODevice::ReadOnly)) {
+        qCDebug(QSG_LOG_INFO, "Attempting to seed pipeline cache from '%s'",
+                qPrintable(m_pipelineCacheLoad));
+        rhi->setPipelineCacheData(f.readAll());
+    } else {
+        qWarning("Could not open pipeline cache source file '%s'",
+                 qPrintable(m_pipelineCacheLoad));
+    }
+}
+
+// must be called on the render thread
+QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface)
+{
     QRhi *rhi = nullptr;
+    QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
+    const QQuickGraphicsDevicePrivate *customDevD = QQuickGraphicsDevicePrivate::get(&wd->customDeviceObjects);
+    if (customDevD->type == QQuickGraphicsDevicePrivate::Type::Rhi) {
+        rhi = customDevD->u.rhi;
+        if (rhi) {
+            preparePipelineCache(rhi);
+            return { rhi, false };
+        }
+    }
 
     QRhi::Flags flags;
     if (isProfilingRequested())
@@ -597,8 +618,6 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
     }
 #if QT_CONFIG(opengl)
     if (backend == QRhi::OpenGLES2) {
-        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
-        const QQuickGraphicsDevicePrivate *customDevD = QQuickGraphicsDevicePrivate::get(&wd->customDeviceObjects);
         const QSurfaceFormat format = window->requestedFormat();
         QRhiGles2InitParams rhiParams;
         rhiParams.format = format;
@@ -620,8 +639,6 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
 #endif
 #if QT_CONFIG(vulkan)
     if (backend == QRhi::Vulkan) {
-        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
-        const QQuickGraphicsDevicePrivate *customDevD = QQuickGraphicsDevicePrivate::get(&wd->customDeviceObjects);
         QRhiVulkanInitParams rhiParams;
         prepareWindowForRhi(window); // sets a vulkanInstance if not yet present
         rhiParams.inst = window->vulkanInstance();
@@ -654,8 +671,6 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
 #endif
 #ifdef Q_OS_WIN
     if (backend == QRhi::D3D11) {
-        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
-        const QQuickGraphicsDevicePrivate *customDevD = QQuickGraphicsDevicePrivate::get(&wd->customDeviceObjects);
         QRhiD3D11InitParams rhiParams;
         rhiParams.enableDebugLayer = isDebugLayerRequested();
         if (m_killDeviceFrameCount > 0) {
@@ -684,8 +699,6 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
 #endif
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
     if (backend == QRhi::Metal) {
-        QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
-        const QQuickGraphicsDevicePrivate *customDevD = QQuickGraphicsDevicePrivate::get(&wd->customDeviceObjects);
         QRhiMetalInitParams rhiParams;
         if (customDevD->type == QQuickGraphicsDevicePrivate::Type::DeviceAndCommandQueue) {
             QRhiMetalNativeHandles importDev;
@@ -700,24 +713,12 @@ QRhi *QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscree
     }
 #endif
 
-    if (!rhi) {
+    if (rhi)
+        preparePipelineCache(rhi);
+    else
         qWarning("Failed to create RHI (backend %d)", backend);
-        return nullptr;
-    }
 
-    if (!m_pipelineCacheLoad.isEmpty()) {
-        QFile f(m_pipelineCacheLoad);
-        if (f.open(QIODevice::ReadOnly)) {
-            qCDebug(QSG_LOG_INFO, "Attempting to seed pipeline cache from '%s'",
-                    qPrintable(m_pipelineCacheLoad));
-            rhi->setPipelineCacheData(f.readAll());
-        } else {
-            qWarning("Could not open pipeline cache source file '%s'",
-                     qPrintable(m_pipelineCacheLoad));
-        }
-    }
-
-    return rhi;
+    return { rhi, true };
 }
 
 void QSGRhiSupport::destroyRhi(QRhi *rhi)
@@ -789,11 +790,13 @@ QImage QSGRhiSupport::grabOffscreen(QQuickWindow *window)
     Q_ASSERT(!wd->renderControl);
 
     QScopedPointer<QOffscreenSurface> offscreenSurface(maybeCreateOffscreenSurface(window));
-    QScopedPointer<QRhi> rhi(createRhi(window, offscreenSurface.data()));
-    if (!rhi) {
+    RhiCreateResult rhiResult = createRhi(window, offscreenSurface.data());
+    if (!rhiResult.rhi) {
         qWarning("Failed to initialize QRhi for offscreen readback");
         return QImage();
     }
+    QScopedPointer<QRhi> rhiOwner(rhiResult.rhi);
+    QRhi *rhi = rhiResult.own ? rhiOwner.data() : rhiOwner.take();
 
     const QSize pixelSize = window->size() * window->devicePixelRatio();
     QScopedPointer<QRhiTexture> texture(rhi->newTexture(QRhiTexture::RGBA8, pixelSize, 1,
@@ -817,10 +820,10 @@ QImage QSGRhiSupport::grabOffscreen(QQuickWindow *window)
         return QImage();
     }
 
-    wd->rhi = rhi.data();
+    wd->rhi = rhi;
 
     QSGDefaultRenderContext::InitParams params;
-    params.rhi = rhi.data();
+    params.rhi = rhi;
     params.sampleCount = 1;
     params.initialSurfacePixelSize = pixelSize;
     params.maybeSurface = window;
@@ -842,7 +845,7 @@ QImage QSGRhiSupport::grabOffscreen(QQuickWindow *window)
     wd->renderSceneGraph(window->size());
     wd->setCustomCommandBuffer(nullptr);
 
-    QImage image = grabAndBlockInCurrentFrame(rhi.data(), cb, texture.data());
+    QImage image = grabAndBlockInCurrentFrame(rhi, cb, texture.data());
     rhi->endOffscreenFrame();
 
     image.setDevicePixelRatio(window->devicePixelRatio());

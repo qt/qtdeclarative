@@ -109,6 +109,11 @@ bool QQuickGraphicsDevice::isNull() const
     \return a new QQuickGraphicsDevice referencing an existing OpenGL \a context.
 
     This factory function is suitable for OpenGL.
+
+    \note It is up the caller to ensure that \a context is going to be
+    compatible and usable with the QQuickWindow. Platform-specific mismatches in
+    the associated QSurfaceFormat, or threading issues due to attempting to use
+    \a context on multiple threads are up to the caller to avoid.
  */
 #if QT_CONFIG(opengl) || defined(Q_CLANG_QDOC)
 QQuickGraphicsDevice QQuickGraphicsDevice::fromOpenGLContext(QOpenGLContext *context)
@@ -234,6 +239,23 @@ QQuickGraphicsDevice QQuickGraphicsDevice::fromDeviceObjects(VkPhysicalDevice ph
     return dev;
 }
 #endif
+
+/*!
+    \internal
+
+    \note Similarly to fromOpenGLContext(), the caller must be careful to only
+    share a QRhi (and so the underlying graphics context or device) between
+    QQuickWindows that are known to be compatible, not breaking the underlying
+    graphics API's rules when it comes to threading, pixel formats, etc.
+*/
+QQuickGraphicsDevice QQuickGraphicsDevice::fromRhi(QRhi *rhi)
+{
+    QQuickGraphicsDevice dev;
+    QQuickGraphicsDevicePrivate *d = QQuickGraphicsDevicePrivate::get(&dev);
+    d->type = QQuickGraphicsDevicePrivate::Type::Rhi;
+    d->u.rhi = rhi;
+    return dev;
+}
 
 QQuickGraphicsDevicePrivate::QQuickGraphicsDevicePrivate()
     : ref(1)

@@ -190,6 +190,7 @@ public:
 
     QOffscreenSurface *offscreenSurface = nullptr;
     QRhi *rhi = nullptr;
+    bool ownRhi = true;
     QSGContext *sg;
     QSGRenderContext *rc;
 
@@ -377,7 +378,8 @@ void QSGGuiThreadRenderLoop::windowDestroyed(QQuickWindow *window)
     if (m_windows.size() == 0) {
         rc->invalidate();
         d->rhi = nullptr;
-        QSGRhiSupport::instance()->destroyRhi(rhi);
+        if (ownRhi)
+            QSGRhiSupport::instance()->destroyRhi(rhi);
         rhi = nullptr;
         delete offscreenSurface;
         offscreenSurface = nullptr;
@@ -403,7 +405,8 @@ void QSGGuiThreadRenderLoop::handleDeviceLoss()
         it->rhiDeviceLost = true;
     }
 
-    QSGRhiSupport::instance()->destroyRhi(rhi);
+    if (ownRhi)
+        QSGRhiSupport::instance()->destroyRhi(rhi);
     rhi = nullptr;
 }
 
@@ -466,7 +469,9 @@ bool QSGGuiThreadRenderLoop::ensureRhi(QQuickWindow *window, WindowData &data)
         if (!offscreenSurface)
             offscreenSurface = rhiSupport->maybeCreateOffscreenSurface(window);
 
-        rhi = rhiSupport->createRhi(window, offscreenSurface);
+        QSGRhiSupport::RhiCreateResult rhiResult = rhiSupport->createRhi(window, offscreenSurface);
+        rhi = rhiResult.rhi;
+        ownRhi = rhiResult.own;
 
         if (rhi) {
             if (rhiSupport->isProfilingRequested())

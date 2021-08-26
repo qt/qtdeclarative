@@ -275,6 +275,7 @@ public:
     QSGRenderThread(QSGThreadedRenderLoop *w, QSGRenderContext *renderContext)
         : wm(w)
         , rhi(nullptr)
+        , ownRhi(true)
         , offscreenSurface(nullptr)
         , animatorDriver(nullptr)
         , pendingUpdate(0)
@@ -336,6 +337,7 @@ public:
 
     QSGThreadedRenderLoop *wm;
     QRhi *rhi;
+    bool ownRhi;
     QSGDefaultRenderContext *sgrc;
     QOffscreenSurface *offscreenSurface;
 
@@ -555,7 +557,8 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
                          window, dd->swapchain);
             }
         }
-        QSGRhiSupport::instance()->destroyRhi(rhi);
+        if (ownRhi)
+            QSGRhiSupport::instance()->destroyRhi(rhi);
         rhi = nullptr;
         qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- QRhi destroyed");
     } else {
@@ -636,7 +639,8 @@ void QSGRenderThread::handleDeviceLoss()
     sgrc->invalidate();
     wm->releaseSwapchain(window);
     rhiDeviceLost = true;
-    QSGRhiSupport::instance()->destroyRhi(rhi);
+    if (ownRhi)
+        QSGRhiSupport::instance()->destroyRhi(rhi);
     rhi = nullptr;
 }
 
@@ -898,7 +902,9 @@ void QSGRenderThread::ensureRhi()
         if (rhiDoomed) // no repeated attempts if the initial attempt failed
             return;
         QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
-        rhi = rhiSupport->createRhi(window, offscreenSurface);
+        QSGRhiSupport::RhiCreateResult rhiResult = rhiSupport->createRhi(window, offscreenSurface);
+        rhi = rhiResult.rhi;
+        ownRhi = rhiResult.own;
         if (rhi) {
             rhiDeviceLost = false;
             rhiSampleCount = rhiSupport->chooseSampleCountForWindowWithRhi(window, rhi);

@@ -55,6 +55,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickGraphicsDevicePrivate;
 class QOpenGLContext;
+class QRhi;
 
 class Q_QUICK_EXPORT QQuickGraphicsDevice
 {
@@ -83,6 +84,8 @@ public:
     static QQuickGraphicsDevice fromPhysicalDevice(VkPhysicalDevice physicalDevice);
     static QQuickGraphicsDevice fromDeviceObjects(VkPhysicalDevice physicalDevice, VkDevice device, int queueFamilyIndex, int queueIndex = 0);
 #endif
+
+    static QQuickGraphicsDevice fromRhi(QRhi *rhi);
 
 private:
     void detach();
