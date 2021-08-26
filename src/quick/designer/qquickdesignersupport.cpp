@@ -47,16 +47,12 @@
 #include <QtQml/private/qabstractanimationjob_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qquickview_p.h>
-#include <private/qsgrenderloop_p.h>
 #include <QtQuick/private/qquickstategroup_p.h>
 #include <QtGui/QImage>
 #include <private/qqmlvme_p.h>
 #include <private/qqmlcomponentattached_p.h>
 #include <private/qqmldata_p.h>
 #include <private/qsgadaptationlayer_p.h>
-
-#include "qquickdesignerwindowmanager_p.h"
-
 
 QT_BEGIN_NAMESPACE
 
@@ -453,11 +449,6 @@ void QQuickDesignerSupport::updateDirtyNode(QQuickItem *item)
         QQuickWindowPrivate::get(item->window())->updateDirtyNode(item);
 }
 
-void QQuickDesignerSupport::activateDesignerWindowManager()
-{
-    QSGRenderLoop::setInstance(new QQuickDesignerWindowManager);
-}
-
 void QQuickDesignerSupport::activateDesignerMode()
 {
     QQmlEnginePrivate::activateDesignerMode();
@@ -471,11 +462,6 @@ void QQuickDesignerSupport::disableComponentComplete()
 void QQuickDesignerSupport::enableComponentComplete()
 {
     QQmlVME::enableComponentComplete();
-}
-
-void QQuickDesignerSupport::createOpenGLContext(QQuickWindow *window)
-{
-    QQuickDesignerWindowManager::createOpenGLContext(window);
 }
 
 void QQuickDesignerSupport::polishItems(QQuickWindow *window)
