@@ -48,42 +48,14 @@
 **
 ****************************************************************************/
 
-import QtQuick
-import shared
+pragma Singleton
+import QtQml
 
-//! [splash-properties]
-Window {
-    id: splash
-    color: "transparent"
-    title: "Splash Window"
-    modality: Qt.ApplicationModal
-    flags: Qt.SplashScreen
-    property int timeoutInterval: 2000
-    signal timeout
-//! [splash-properties]
-//! [screen-properties]
-    x: (Screen.width - splashImage.width) / 2
-    y: (Screen.height - splashImage.height) / 2
-//! [screen-properties]
-    width: splashImage.width
-    height: splashImage.height
-
-    Image {
-        id: splashImage
-        source: Images.qtLogo
-        MouseArea {
-            anchors.fill: parent
-            onClicked: Qt.quit()
-        }
-    }
-    //! [timer]
-    Timer {
-        interval: splash.timeoutInterval; running: true; repeat: false
-        onTriggered: {
-            splash.visible = false
-            splash.timeout()
-        }
-    }
-    //! [timer]
-    Component.onCompleted: visible = true
+QtObject {
+    readonly property url back:         Qt.resolvedUrl("images/back.png")
+    readonly property url checkmark:    Qt.resolvedUrl("images/checkmark.png")
+    readonly property url next:         Qt.resolvedUrl("images/next.png")
+    readonly property url qtLogo:       Qt.resolvedUrl("images/qt-logo.png")
+    readonly property url sliderHandle: Qt.resolvedUrl("images/slider_handle.png")
+    readonly property url tab:          Qt.resolvedUrl("images/tab.png")
 }
