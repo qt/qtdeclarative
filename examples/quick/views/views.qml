@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import "../shared" as Examples
+import QtQuick
+import shared as Examples
 
 Item {
     height: 480
