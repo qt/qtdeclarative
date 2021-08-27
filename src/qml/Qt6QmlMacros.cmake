@@ -1230,7 +1230,9 @@ endif()
 # customize the file's type details:
 #
 # QT_QML_SOURCE_VERSION: Version(s) for this qml file. If not present the module
-#   version will be used.
+#   major version and minor version 0 will be used. If any PAST_MAJOR_VERSIONS
+#   are given, those will be amended with minor version 0 and also added to the
+#   default.
 #
 # QT_QML_SOURCE_TYPENAME: Override the file's type name. If not present, the
 #   type name will be deduced using the file's basename.
@@ -1243,7 +1245,7 @@ endif()
 #   e.g.:
 #       set_source_files_properties(my_qml_file.qml
 #           PROPERTIES
-#               QT_QML_SOURCE_VERSION "2.0;6.0"
+#               QT_QML_SOURCE_VERSION "2.3;6.0"
 #               QT_QML_SOURCE_TYPENAME MyQmlFile
 #
 #       qt6_target_qml_sources(my_qml_module
@@ -1251,9 +1253,10 @@ endif()
 #               my_qml_file.qml
 #       )
 #
-# The above will produce the following entry in the qmldir file:
+# The above will produce the following entries in the qmldir file:
 #
-#   MyQmlFile 2.0 my_qml_file.qml
+#   MyQmlFile 2.3 my_qml_file.qml
+#   MyQmlFile 6.0 my_qml_file.qml
 #
 function(qt6_target_qml_sources target)
 
@@ -1308,6 +1311,7 @@ function(qt6_target_qml_sources target)
     get_target_property(no_qmldir              ${target} QT_QML_MODULE_NO_GENERATE_QMLDIR)
     get_target_property(resource_prefix        ${target} QT_QML_MODULE_RESOURCE_PREFIX)
     get_target_property(qml_module_version     ${target} QT_QML_MODULE_VERSION)
+    get_target_property(past_major_versions    ${target} QT_QML_MODULE_PAST_MAJOR_VERSIONS)
 
     if(NOT output_dir)
         # Probably not a qml module. We still want to support tooling for this
@@ -1329,6 +1333,19 @@ function(qt6_target_qml_sources target)
     endif()
     if(NOT arg_PREFIX MATCHES [[/$]])
         string(APPEND arg_PREFIX "/")
+    endif()
+
+    if (qml_module_version MATCHES "^([0-9]+)\\.")
+        set(qml_module_files_versions "${CMAKE_MATCH_1}.0")
+    else()
+        message(FATAL_ERROR
+            "No major version found in '${qml_module_version}'."
+        )
+    endif()
+    if (past_major_versions OR past_major_versions STREQUAL "0")
+        foreach (past_major_version ${past_major_versions})
+            list(APPEND qml_module_files_versions "${past_major_version}.0")
+        endforeach()
     endif()
 
     # Linting and cachegen can still occur for a target that isn't a qml module,
@@ -1469,7 +1486,7 @@ function(qt6_target_qml_sources target)
                 get_source_file_property(qml_file_internal  ${qml_file_src} QT_QML_INTERNAL_TYPE)
 
                 if (NOT qml_file_versions)
-                    set(qml_file_versions ${qml_module_version})
+                    set(qml_file_versions ${qml_module_files_versions})
                 endif()
 
                 set(qmldir_file_contents "")

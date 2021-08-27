@@ -62,47 +62,14 @@ set(qml_files
     "Tumbler.qml"
     "VerticalHeaderView.qml"
 )
-set_source_files_properties(AbstractButton.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
 set_source_files_properties(Action.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.3;6.0"
 )
 set_source_files_properties(ActionGroup.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.3;6.0"
 )
-set_source_files_properties(ApplicationWindow.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(BusyIndicator.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(Button.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(ButtonGroup.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(CheckBox.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(CheckDelegate.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(ComboBox.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(Container.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(Control.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
 set_source_files_properties(DelayButton.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.2;6.0"
-)
-set_source_files_properties(Dial.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(Dialog.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.1;6.0"
@@ -110,26 +77,8 @@ set_source_files_properties(Dialog.qml PROPERTIES
 set_source_files_properties(DialogButtonBox.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.1;6.0"
 )
-set_source_files_properties(Drawer.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(Frame.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(GroupBox.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
 set_source_files_properties(HorizontalHeaderView.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.15;6.0"
-)
-set_source_files_properties(ItemDelegate.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(Label.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(Menu.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(MenuBar.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.3;6.0"
@@ -137,44 +86,11 @@ set_source_files_properties(MenuBar.qml PROPERTIES
 set_source_files_properties(MenuBarItem.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.3;6.0"
 )
-set_source_files_properties(MenuItem.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
 set_source_files_properties(MenuSeparator.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.1;6.0"
 )
-set_source_files_properties(Page.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(PageIndicator.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(Pane.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(Popup.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(ProgressBar.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(RadioButton.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(RadioDelegate.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(RangeSlider.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
 set_source_files_properties(RoundButton.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.1;6.0"
-)
-set_source_files_properties(ScrollBar.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(ScrollIndicator.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(ScrollView.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.2;6.0"
@@ -182,56 +98,11 @@ set_source_files_properties(ScrollView.qml PROPERTIES
 set_source_files_properties(SelectionRectangle.qml PROPERTIES
     QT_QML_SOURCE_VERSION "6.2"
 )
-set_source_files_properties(Slider.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(SpinBox.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
 set_source_files_properties(SplitView.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.13;6.0"
 )
-set_source_files_properties(StackView.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(SwipeDelegate.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(Switch.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(SwitchDelegate.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(SwipeView.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(TabBar.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(TabButton.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(TextArea.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(TextField.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(ToolBar.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(ToolButton.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
 set_source_files_properties(ToolSeparator.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.1;6.0"
-)
-set_source_files_properties(ToolTip.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
-set_source_files_properties(Tumbler.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
 )
 set_source_files_properties(VerticalHeaderView.qml PROPERTIES
     QT_QML_SOURCE_VERSION "2.15;6.0"
@@ -240,6 +111,7 @@ set_source_files_properties(VerticalHeaderView.qml PROPERTIES
 qt_internal_add_qml_module(qtquickcontrols2basicstyleplugin
     URI "QtQuick.Controls.Basic"
     VERSION "${PROJECT_VERSION}"
+    PAST_MAJOR_VERSIONS 2
     CLASS_NAME QtQuickControls2BasicStylePlugin
     PLUGIN_TARGET qtquickcontrols2basicstyleplugin
     NO_PLUGIN_OPTIONAL

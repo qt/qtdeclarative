@@ -7,13 +7,11 @@ set(qml_files
     "RadioIndicator.qml"
     "SwitchIndicator.qml"
 )
-set_source_files_properties(${qml_files} PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0"
-)
 
 qt_internal_add_qml_module(qtquickcontrols2universalstyleimplplugin
     URI "QtQuick.Controls.Universal.impl"
     VERSION "${PROJECT_VERSION}"
+    PAST_MAJOR_VERSIONS 2
     CLASS_NAME QtQuickControls2UniversalStyleImplPlugin
     PLUGIN_TARGET qtquickcontrols2universalstyleimplplugin
     NO_PLUGIN_OPTIONAL

@@ -18,9 +18,6 @@ set(qml_files
     "ScrollBar.qml"
     "ScrollView.qml"
 )
-set_source_files_properties(${qml_files} PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
 
 qt_internal_add_qml_module(qtquickcontrols2windowsstyleplugin
     URI "QtQuick.Controls.Windows"

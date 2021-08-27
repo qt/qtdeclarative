@@ -2,9 +2,6 @@
 ## QuickTest Module:
 #####################################################################
 
-set_source_files_properties(TestCase.qml SignalSpy.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "1.0;6.0"
-)
 set_source_files_properties(testlogger.js PROPERTIES
     QT_QML_SKIP_QMLDIR_ENTRY TRUE
 )

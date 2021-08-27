@@ -12,13 +12,11 @@ set(qml_files
     "SliderHandle.qml"
     "SwitchIndicator.qml"
 )
-set_source_files_properties(${qml_files} PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0"
-)
 
 qt_internal_add_qml_module(qtquickcontrols2materialstyleimplplugin
     URI "QtQuick.Controls.Material.impl"
     VERSION "${PROJECT_VERSION}"
+    PAST_MAJOR_VERSIONS 2
     CLASS_NAME QtQuickControls2MaterialStyleImplPlugin
     PLUGIN_TARGET qtquickcontrols2materialstyleimplplugin
     NO_PLUGIN_OPTIONAL
