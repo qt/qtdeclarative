@@ -312,6 +312,7 @@ qt_internal_add_qml_module(Qml
         qml/qqmlpropertyresolver.cpp qml/qqmlpropertyresolver_p.h
         qml/qqmlpropertyvalidator.cpp qml/qqmlpropertyvalidator_p.h
         qml/qqmlpropertyvalueinterceptor.cpp qml/qqmlpropertyvalueinterceptor_p.h
+        qml/qqmlfinalizer.cpp qml/qqmlfinalizer_p.h
         qml/qqmlpropertyvaluesource.cpp qml/qqmlpropertyvaluesource.h
         qml/qqmlproxymetaobject.cpp qml/qqmlproxymetaobject_p.h
         qml/qqmlscriptblob.cpp qml/qqmlscriptblob_p.h

@@ -185,6 +185,7 @@ static QQmlTypePrivate *createQQmlType(QQmlMetaTypeData *data, const QString &el
     d->extraData.cd->parserStatusCast = type.parserStatusCast;
     d->extraData.cd->propertyValueSourceCast = type.valueSourceCast;
     d->extraData.cd->propertyValueInterceptorCast = type.valueInterceptorCast;
+    d->extraData.cd->finalizerCast = (type.structVersion > 0) ? type.finalizerCast : -1;
     d->extraData.cd->extFunc = type.extensionObjectCreate;
     d->extraData.cd->customParser = reinterpret_cast<QQmlCustomParser *>(type.customParser);
     d->extraData.cd->registerEnumClassesUnscoped = true;
@@ -352,7 +353,7 @@ void QQmlMetaType::clearTypeRegistrations()
 
 int QQmlMetaType::registerAutoParentFunction(const QQmlPrivate::RegisterAutoParent &function)
 {
-    if (function.structVersion > 0)
+    if (function.structVersion > 1)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     QQmlMetaTypeDataPtr data;
@@ -370,7 +371,7 @@ void QQmlMetaType::unregisterAutoParentFunction(const QQmlPrivate::AutoParentFun
 
 QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &type)
 {
-    if (type.structVersion > 0)
+    if (type.structVersion > 1)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     QQmlMetaTypeDataPtr data;
@@ -492,7 +493,7 @@ void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data)
 
 QQmlType QQmlMetaType::registerType(const QQmlPrivate::RegisterType &type)
 {
-    if (type.structVersion > 0)
+    if (type.structVersion > 1)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     QQmlMetaTypeDataPtr data;
@@ -511,7 +512,7 @@ QQmlType QQmlMetaType::registerType(const QQmlPrivate::RegisterType &type)
 
 QQmlType QQmlMetaType::registerSingletonType(const QQmlPrivate::RegisterSingletonType &type)
 {
-    if (type.structVersion > 0)
+    if (type.structVersion > 1)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     QQmlMetaTypeDataPtr data;
@@ -531,7 +532,7 @@ QQmlType QQmlMetaType::registerSingletonType(const QQmlPrivate::RegisterSingleto
 
 QQmlType QQmlMetaType::registerCompositeSingletonType(const QQmlPrivate::RegisterCompositeSingletonType &type)
 {
-    if (type.structVersion > 0)
+    if (type.structVersion > 1)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     // Assumes URL is absolute and valid. Checking of user input should happen before the URL enters type.
@@ -557,7 +558,7 @@ QQmlType QQmlMetaType::registerCompositeSingletonType(const QQmlPrivate::Registe
 
 QQmlType QQmlMetaType::registerCompositeType(const QQmlPrivate::RegisterCompositeType &type)
 {
-    if (type.structVersion > 0)
+    if (type.structVersion > 1)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     // Assumes URL is absolute and valid. Checking of user input should happen before the URL enters type.
@@ -615,7 +616,7 @@ void QQmlMetaType::unregisterInternalCompositeType(const CompositeMetaTypeIds &t
 int QQmlMetaType::registerUnitCacheHook(
         const QQmlPrivate::RegisterQmlUnitCacheHook &hookRegistration)
 {
-    if (hookRegistration.structVersion > 0)
+    if (hookRegistration.structVersion > 1)
         qFatal("qmlRegisterType(): Cannot mix incompatible QML versions.");
 
     QQmlMetaTypeDataPtr data;
@@ -626,7 +627,7 @@ int QQmlMetaType::registerUnitCacheHook(
 QQmlType QQmlMetaType::registerSequentialContainer(
         const QQmlPrivate::RegisterSequentialContainer &container)
 {
-    if (container.structVersion > 0)
+    if (container.structVersion > 1)
         qFatal("qmlRegisterSequenceContainer(): Cannot mix incompatible QML versions.");
 
     QQmlMetaTypeDataPtr data;

@@ -145,6 +145,7 @@ public:
     const char *interfaceIId() const;
     int propertyValueSourceCast() const;
     int propertyValueInterceptorCast() const;
+    int finalizerCast() const;
 
     int index() const;
 

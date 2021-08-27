@@ -125,6 +125,7 @@ public:
         const QMetaObject *attachedPropertiesType;
         int propertyValueSourceCast;
         int propertyValueInterceptorCast;
+        int finalizerCast;
         bool registerEnumClassesUnscoped;
         bool registerEnumsFromRelatedTypes;
     };

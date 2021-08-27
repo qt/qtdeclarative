@@ -72,6 +72,7 @@ QQmlTypePrivate::QQmlTypePrivate(QQmlType::RegistrationType type)
         extraData.cd->attachedPropertiesType = nullptr;
         extraData.cd->propertyValueSourceCast = -1;
         extraData.cd->propertyValueInterceptorCast = -1;
+        extraData.cd->finalizerCast = -1;
         extraData.cd->registerEnumClassesUnscoped = true;
         extraData.cd->registerEnumsFromRelatedTypes = true;
         break;
@@ -704,6 +705,13 @@ int QQmlType::propertyValueInterceptorCast() const
     if (!d || d->regType != CppType)
         return -1;
     return d->extraData.cd->propertyValueInterceptorCast;
+}
+
+int QQmlType::finalizerCast() const
+{
+    if (!d || d->regType != CppType)
+        return -1;
+    return d->extraData.cd->finalizerCast;
 }
 
 const char *QQmlType::interfaceIId() const

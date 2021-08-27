@@ -444,6 +444,7 @@ T QQmlEnginePrivate::singletonInstance(const QQmlType &type) {
     return qobject_cast<T>(singletonInstance<QJSValue>(type).toQObject());
 }
 
+
 QT_END_NAMESPACE
 
 #endif // QQMLENGINE_P_H

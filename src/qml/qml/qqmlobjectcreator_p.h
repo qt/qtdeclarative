@@ -58,6 +58,7 @@
 #include <private/qqmlprofiler_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include <private/qqmlguardedcontextdata_p.h>
+#include <private/qqmlfinalizer_p.h>
 
 #include <qpointer.h>
 
@@ -99,6 +100,7 @@ struct QQmlObjectCreatorSharedState : QQmlRefCount
     QV4::Value *allJavaScriptObjects; // pointer to vector on JS stack to reference JS wrappers during creation phase.
     QQmlComponentAttached *componentAttached;
     QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
+    QList<QQmlFinalizerHook *> finalizeHooks;
     QQmlVmeProfiler profiler;
     QRecursionNode recursionNode;
     RequiredProperties requiredProperties;

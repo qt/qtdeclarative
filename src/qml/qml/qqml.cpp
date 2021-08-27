@@ -55,6 +55,7 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qv4identifiertable_p.h>
 #include <private/qv4errorobject_p.h>
+#include <private/qqmlfinalizer_p.h>
 
 #include <QtCore/qmutex.h>
 
@@ -168,14 +169,15 @@ int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
         QQmlAttachedPropertiesFunc(),
         nullptr,
 
-        0,
-        0,
-        0,
+        -1,
+        -1,
+        -1,
 
         nullptr, nullptr,
 
         nullptr,
-        QTypeRevision::zero()
+        QTypeRevision::zero(),
+        -1
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -476,7 +478,7 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         }
 
         RegisterType revisionRegistration = {
-            0,
+            1,
             type.typeId,
             type.listId,
             creatable ? type.objectSize : 0,
@@ -496,7 +498,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
             type.extensionObjectCreate,
             type.extensionMetaObject,
             nullptr,
-            QTypeRevision()
+            QTypeRevision(),
+            type.structVersion > 0 ? type.finalizerCast : -1
         };
 
         const QTypeRevision added = revisionClassInfo(
@@ -700,7 +703,7 @@ void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
     using T = QQmlTypeNotAvailable;
 
     RegisterTypeAndRevisions type = {
-        0,
+        1,
         QMetaType::fromType<T *>(),
         QMetaType::fromType<QQmlListProperty<T>>(),
         0,
@@ -721,7 +724,8 @@ void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
         StaticCastSelector<T, QQmlPropertyValueSource>::cast(),
         StaticCastSelector<T, QQmlPropertyValueInterceptor>::cast(),
 
-        nullptr, extension, qmlCreateCustomParser<T>, qmlTypeIds
+        nullptr, extension, qmlCreateCustomParser<T>, qmlTypeIds,
+        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
     };
 
     qmlregister(TypeAndRevisionsRegistration, &type);

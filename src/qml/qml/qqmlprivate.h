@@ -76,6 +76,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlPropertyValueInterceptor;
 class QQmlContextData;
+class QQmlFinalizerHook;
 
 namespace QQmlPrivate {
 struct CachedQmlUnit;
@@ -477,6 +478,7 @@ namespace QQmlPrivate
         QQmlCustomParser *customParser;
 
         QTypeRevision revision;
+        int finalizerCast;
         // If this is extended ensure "version" is bumped!!!
     };
 
@@ -509,6 +511,7 @@ namespace QQmlPrivate
 
         QQmlCustomParser *(*customParserFactory)();
         QVector<int> *qmlTypeIds;
+        int finalizerCast;
     };
 
     struct RegisterInterface {
@@ -954,7 +957,7 @@ namespace QQmlPrivate
                                      QVector<int> *qmlTypeIds, const QMetaObject *extension)
     {
         RegisterTypeAndRevisions type = {
-            0,
+            1,
             QmlMetaType<T>::self(),
             QmlMetaType<T>::list(),
             int(sizeof(T)),
@@ -978,7 +981,8 @@ namespace QQmlPrivate
             extension ? extension : ExtendedType<E>::staticMetaObject(),
 
             &qmlCreateCustomParser<T>,
-            qmlTypeIds
+            qmlTypeIds,
+            StaticCastSelector<T, QQmlFinalizerHook>::cast(),
         };
 
         // Initialize the extension so that we can find it by name or ID.

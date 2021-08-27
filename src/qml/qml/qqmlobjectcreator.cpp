@@ -1220,6 +1220,11 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                 p->declarativeData = ddata;
             }
 
+            const int finalizerCast = type.finalizerCast();
+            if (finalizerCast != -1) {
+                auto hook = reinterpret_cast<QQmlFinalizerHook *>(reinterpret_cast<char *>(instance) + finalizerCast);
+                sharedState->finalizeHooks.push_back(hook);
+            }
             const int parserStatusCast = type.parserStatusCast();
             if (parserStatusCast != -1)
                 parserStatus = reinterpret_cast<QQmlParserStatus*>(reinterpret_cast<char *>(instance) + parserStatusCast);
@@ -1469,6 +1474,12 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
             return false;
     }
     sharedState->finalizeCallbacks.clear();
+    for (QQmlFinalizerHook *hook: sharedState->finalizeHooks) {
+        hook->componentFinalized();
+        if (watcher.hasRecursed())
+            return false;
+    }
+    sharedState->finalizeHooks.clear();
 
     while (sharedState->componentAttached) {
         QQmlComponentAttached *a = sharedState->componentAttached;

@@ -92,7 +92,7 @@ template<typename T>
 int qmlRegisterAnonymousType(const char *uri, int versionMajor)
 {
     QQmlPrivate::RegisterType type = {
-        0,
+        1,
         QQmlPrivate::QmlMetaType<T>::self(),
         QQmlPrivate::QmlMetaType<T>::list(),
         0,
@@ -113,7 +113,8 @@ int qmlRegisterAnonymousType(const char *uri, int versionMajor)
         nullptr, nullptr,
 
         nullptr,
-        QTypeRevision::zero()
+        QTypeRevision::zero(),
+        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -126,7 +127,7 @@ template<typename T>
 int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
 {
     QQmlPrivate::RegisterType type = {
-        0,
+        1,
         QQmlPrivate::QmlMetaType<T>::self(),
         QQmlPrivate::QmlMetaType<T>::list(),
         0,
@@ -148,7 +149,8 @@ int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMin
         nullptr, nullptr,
 
         nullptr,
-        QTypeRevision::zero()
+        QTypeRevision::zero(),
+        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -158,7 +160,7 @@ template<typename T, int metaObjectRevision>
 int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMinor, const char *qmlName, const QString& reason)
 {
     QQmlPrivate::RegisterType type = {
-        0,
+        1,
         QQmlPrivate::QmlMetaType<T>::self(),
         QQmlPrivate::QmlMetaType<T>::list(),
         0,
@@ -180,7 +182,8 @@ int qmlRegisterUncreatableType(const char *uri, int versionMajor, int versionMin
         nullptr, nullptr,
 
         nullptr,
-        QTypeRevision::fromMinorVersion(metaObjectRevision)
+        QTypeRevision::fromMinorVersion(metaObjectRevision),
+        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -197,7 +200,7 @@ int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int ve
     }
 
     QQmlPrivate::RegisterType type = {
-        0,
+        1,
         QQmlPrivate::QmlMetaType<T>::self(),
         QQmlPrivate::QmlMetaType<T>::list(),
         0,
@@ -219,7 +222,8 @@ int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int ve
         QQmlPrivate::ExtendedType<E>::createParent, QQmlPrivate::ExtendedType<E>::staticMetaObject(),
 
         nullptr,
-        QTypeRevision::zero()
+        QTypeRevision::zero(),
+        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -236,7 +240,7 @@ int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int ve
     }
 
     QQmlPrivate::RegisterType type = {
-        0,
+        1,
         QQmlPrivate::QmlMetaType<T>::self(),
         QQmlPrivate::QmlMetaType<T>::list(),
         0,
@@ -258,7 +262,8 @@ int qmlRegisterExtendedUncreatableType(const char *uri, int versionMajor, int ve
         QQmlPrivate::ExtendedType<E>::createParent, QQmlPrivate::ExtendedType<E>::staticMetaObject(),
 
         nullptr,
-        QTypeRevision::fromMinorVersion(metaObjectRevision)
+        QTypeRevision::fromMinorVersion(metaObjectRevision),
+        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -270,7 +275,7 @@ template<typename T>
 int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 {
     QQmlPrivate::RegisterType type = {
-        0,
+        1,
         QQmlPrivate::QmlMetaType<T>::self(),
         QQmlPrivate::QmlMetaType<T>::list(),
         sizeof(T), QQmlPrivate::Constructors<T>::createInto, nullptr,
@@ -290,7 +295,8 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
         nullptr, nullptr,
 
         nullptr,
-        QTypeRevision::zero()
+        QTypeRevision::zero(),
+        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -300,7 +306,7 @@ template<typename T, int metaObjectRevision>
 int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const char *qmlName)
 {
     QQmlPrivate::RegisterType type = {
-        0,
+        1,
         QQmlPrivate::QmlMetaType<T>::self(),
         QQmlPrivate::QmlMetaType<T>::list(),
         sizeof(T), QQmlPrivate::Constructors<T>::createInto, nullptr,
@@ -320,7 +326,8 @@ int qmlRegisterType(const char *uri, int versionMajor, int versionMinor, const c
         nullptr, nullptr,
 
         nullptr,
-        QTypeRevision::fromMinorVersion(metaObjectRevision)
+        QTypeRevision::fromMinorVersion(metaObjectRevision),
+        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -330,7 +337,7 @@ template<typename T, int metaObjectRevision>
 int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
 {
     QQmlPrivate::RegisterType type = {
-        0,
+        1,
         QQmlPrivate::QmlMetaType<T>::self(),
         QQmlPrivate::QmlMetaType<T>::list(),
         sizeof(T), QQmlPrivate::Constructors<T>::createInto, nullptr,
@@ -350,7 +357,8 @@ int qmlRegisterRevision(const char *uri, int versionMajor, int versionMinor)
         nullptr, nullptr,
 
         nullptr,
-        QTypeRevision::fromMinorVersion(metaObjectRevision)
+        QTypeRevision::fromMinorVersion(metaObjectRevision),
+        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -360,7 +368,7 @@ template<typename T, typename E>
 int qmlRegisterExtendedType(const char *uri, int versionMajor)
 {
     QQmlPrivate::RegisterType type = {
-        0,
+        1,
         QQmlPrivate::QmlMetaType<T>::self(),
         QQmlPrivate::QmlMetaType<T>::list(),
         0,
@@ -382,7 +390,8 @@ int qmlRegisterExtendedType(const char *uri, int versionMajor)
         QQmlPrivate::ExtendedType<E>::createParent, QQmlPrivate::ExtendedType<E>::staticMetaObject(),
 
         nullptr,
-        QTypeRevision::zero()
+        QTypeRevision::zero(),
+        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -400,7 +409,7 @@ int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor,
     }
 
     QQmlPrivate::RegisterType type = {
-        0,
+        1,
         QQmlPrivate::QmlMetaType<T>::self(),
         QQmlPrivate::QmlMetaType<T>::list(),
         sizeof(T), QQmlPrivate::Constructors<T>::createInto, nullptr,
@@ -420,7 +429,8 @@ int qmlRegisterExtendedType(const char *uri, int versionMajor, int versionMinor,
         QQmlPrivate::ExtendedType<E>::createParent, QQmlPrivate::ExtendedType<E>::staticMetaObject(),
 
         nullptr,
-        QTypeRevision::zero()
+        QTypeRevision::zero(),
+        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -449,7 +459,7 @@ int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
                           const char *qmlName, QQmlCustomParser *parser)
 {
     QQmlPrivate::RegisterType type = {
-        0,
+        1,
         QQmlPrivate::QmlMetaType<T>::self(),
         QQmlPrivate::QmlMetaType<T>::list(),
         sizeof(T), QQmlPrivate::Constructors<T>::createInto, nullptr,
@@ -469,7 +479,8 @@ int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
         nullptr, nullptr,
 
         parser,
-        QTypeRevision::zero()
+        QTypeRevision::zero(),
+        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -480,7 +491,7 @@ int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
                           const char *qmlName, QQmlCustomParser *parser)
 {
     QQmlPrivate::RegisterType type = {
-        0,
+        1,
         QQmlPrivate::QmlMetaType<T>::self(),
         QQmlPrivate::QmlMetaType<T>::list(),
         sizeof(T), QQmlPrivate::Constructors<T>::createInto, nullptr,
@@ -500,7 +511,8 @@ int qmlRegisterCustomType(const char *uri, int versionMajor, int versionMinor,
         nullptr, nullptr,
 
         parser,
-        QTypeRevision::fromMinorVersion(metaObjectRevision)
+        QTypeRevision::fromMinorVersion(metaObjectRevision),
+        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -518,7 +530,7 @@ int qmlRegisterCustomExtendedType(const char *uri, int versionMajor, int version
     }
 
     QQmlPrivate::RegisterType type = {
-        0,
+        1,
         QQmlPrivate::QmlMetaType<T>::self(),
         QQmlPrivate::QmlMetaType<T>::list(),
         sizeof(T), QQmlPrivate::Constructors<T>::createInto, nullptr,
@@ -538,7 +550,8 @@ int qmlRegisterCustomExtendedType(const char *uri, int versionMajor, int version
         QQmlPrivate::ExtendedType<E>::createParent, QQmlPrivate::ExtendedType<E>::staticMetaObject(),
 
         parser,
-        QTypeRevision::zero()
+        QTypeRevision::zero(),
+        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
     };
 
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
@@ -795,7 +808,7 @@ inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject,
                                              const QMetaObject *extensionMetaObject)
 {
     QQmlPrivate::RegisterTypeAndRevisions type = {
-        0,
+        1,
         QMetaType(),
         QMetaType(),
         0,
@@ -820,7 +833,8 @@ inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject,
         extensionMetaObject,
 
         &qmlCreateCustomParser<void>,
-        qmlTypeIds
+        qmlTypeIds,
+        -1
     };
 
     qmlregister(QQmlPrivate::TypeAndRevisionsRegistration, &type);
