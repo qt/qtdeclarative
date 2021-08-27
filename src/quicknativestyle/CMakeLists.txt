@@ -17,12 +17,8 @@ set(qml_files
     "controls/DefaultProgressBar.qml"
     "controls/DefaultDial.qml"
 )
-set_source_files_properties(${qml_files} PROPERTIES
-    QT_QML_SOURCE_VERSION "2.0;6.0"
-)
 
 if(MACOS)
-    # TODO: QT_QML_SOURCE_VERSION wasn't set on this file before, should it be?
     list(APPEND qml_files "util/FocusFrame.qml")
 endif()
 

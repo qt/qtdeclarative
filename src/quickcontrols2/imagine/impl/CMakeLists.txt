@@ -5,9 +5,6 @@
 set(qml_files
     "OpacityMask.qml"
 )
-set_source_files_properties(OpacityMask.qml PROPERTIES
-    QT_QML_SOURCE_VERSION "6.0"
-)
 
 qt_internal_add_qml_module(qtquickcontrols2imaginestyleimplplugin
     URI "QtQuick.Controls.Imagine.impl"

@@ -10,13 +10,11 @@ set(qml_files
     "SliderHandle.qml"
     "SwitchIndicator.qml"
 )
-set_source_files_properties(${qml_files} PROPERTIES
-    QT_QML_SOURCE_VERSION "2.3"
-)
 
 qt_internal_add_qml_module(qtquickcontrols2fusionstyleimplplugin
     URI "QtQuick.Controls.Fusion.impl"
     VERSION "${PROJECT_VERSION}"
+    PAST_MAJOR_VERSIONS 2
     CLASS_NAME QtQuickControls2FusionStyleImplPlugin
     PLUGIN_TARGET qtquickcontrols2fusionstyleimplplugin
     NO_PLUGIN_OPTIONAL
