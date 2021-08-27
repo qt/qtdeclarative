@@ -1,6 +1,9 @@
 import QmlProject 1.0
 
 Project {
+    mainFile: "slideshow.qml"
+    importPaths: [ "../../" ]
+
     /* Include .qml, .js, and image files from current directory and subdirectories */
     QmlFiles {
         directory: "."

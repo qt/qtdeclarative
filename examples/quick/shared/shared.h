@@ -59,6 +59,7 @@
     app.setOrganizationDomain("qt-project.org");\
     app.setApplicationName(QFileInfo(app.applicationFilePath()).baseName());\
     QQuickView view;\
+    view.engine()->addImportPath(QStringLiteral(":/"));\
     if (qEnvironmentVariableIntValue("QT_QUICK_CORE_PROFILE")) {\
         QSurfaceFormat f = view.format();\
         f.setProfile(QSurfaceFormat::CoreProfile);\

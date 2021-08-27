@@ -50,7 +50,7 @@
 
 import QtQuick 2.12
 import QtQml.Models 2.12
-import "../../shared" as Shared
+import shared as Shared
 
 Rectangle {
     id: root
