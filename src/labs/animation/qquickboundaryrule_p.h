@@ -62,9 +62,10 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAbstractAnimation;
 class QQuickBoundaryRulePrivate;
-class Q_LABSANIMATION_PRIVATE_EXPORT QQuickBoundaryRule : public QObject, public QQmlPropertyValueInterceptor
+class Q_LABSANIMATION_PRIVATE_EXPORT QQuickBoundaryRule : public QObject, public QQmlPropertyValueInterceptor, public QQmlParserStatus
 {
     Q_OBJECT
+    Q_INTERFACES(QQmlParserStatus)
     Q_DECLARE_PRIVATE(QQuickBoundaryRule)
 
     Q_INTERFACES(QQmlPropertyValueInterceptor)
@@ -125,6 +126,10 @@ public:
     int returnDuration() const;
     void setReturnDuration(int duration);
 
+    // QQmlParserStatus interface
+    void classBegin() override;
+    void componentComplete() override;
+
 Q_SIGNALS:
     void enabledChanged();
     void minimumChanged();
@@ -137,9 +142,6 @@ Q_SIGNALS:
     void overshootFilterChanged();
     void easingChanged();
     void returnDurationChanged();
-
-private Q_SLOTS:
-    void componentFinalized();
 };
 
 QT_END_NAMESPACE

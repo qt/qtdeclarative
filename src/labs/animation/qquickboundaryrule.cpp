@@ -74,7 +74,7 @@ public:
     int returnDuration = 100;
     QQuickBoundaryRule::OvershootFilter overshootFilter = QQuickBoundaryRule::OvershootFilter::None;
     bool enabled = true;
-    bool finalized = false;
+    bool completed = false;
 
     qreal easedOvershoot(qreal overshootingValue);
     void resetOvershoot();
@@ -467,6 +467,17 @@ void QQuickBoundaryRule::setReturnDuration(int duration)
     emit returnDurationChanged();
 }
 
+void QQuickBoundaryRule::classBegin()
+{
+
+}
+
+void QQuickBoundaryRule::componentComplete()
+{
+    Q_D(QQuickBoundaryRule);
+    d->completed = true;
+}
+
 void QQuickBoundaryRule::write(const QVariant &value)
 {
     bool conversionOk = false;
@@ -476,7 +487,7 @@ void QQuickBoundaryRule::write(const QVariant &value)
         return;
     }
     Q_D(QQuickBoundaryRule);
-    bool bypass = !d->enabled || !d->finalized || QQmlEnginePrivate::designerMode();
+    bool bypass = !d->enabled || !d->completed || QQmlEnginePrivate::designerMode();
     if (bypass) {
         QQmlPropertyPrivate::write(d->property, value,
                                    QQmlPropertyData::BypassInterceptor | QQmlPropertyData::DontRemoveBinding);
@@ -492,18 +503,6 @@ void QQuickBoundaryRule::setTarget(const QQmlProperty &property)
 {
     Q_D(QQuickBoundaryRule);
     d->property = property;
-
-    QQmlEnginePrivate *engPriv = QQmlEnginePrivate::get(qmlEngine(this));
-    static int finalizedIdx = -1;
-    if (finalizedIdx < 0)
-        finalizedIdx = metaObject()->indexOfSlot("componentFinalized()");
-    engPriv->registerFinalizeCallback(this, finalizedIdx);
-}
-
-void QQuickBoundaryRule::componentFinalized()
-{
-    Q_D(QQuickBoundaryRule);
-    d->finalized = true;
 }
 
 /*!
