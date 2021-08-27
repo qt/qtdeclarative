@@ -34,20 +34,14 @@ target_link_libraries(quick-accessibility PUBLIC
     Qt::Quick
 )
 
-
-# Resources:
-set(accessibility_resource_files
-    "accessibility.qml"
-    "content/Button.qml"
-    "content/Checkbox.qml"
-    "content/Slider.qml"
-)
-
-qt6_add_resources(quick-accessibility "accessibility"
-    PREFIX
-        "/accessibility"
-    FILES
-        ${accessibility_resource_files}
+qt_add_qml_module(quick-accessibility
+    URI accessibility
+    VERSION 1.0
+    QML_FILES
+        "accessibility.qml"
+        "Button.qml"
+        "Checkbox.qml"
+        "Slider.qml"
 )
 
 install(TARGETS quick-accessibility
