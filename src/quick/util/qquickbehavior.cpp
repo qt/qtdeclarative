@@ -381,6 +381,12 @@ QQmlProperty QQuickBehavior::targetProperty() const
     return d->property;
 }
 
+void QQuickBehavior::componentFinalized()
+{
+    Q_D(QQuickBehavior);
+    d->finalized = true;
+}
+
 void QQuickBehavior::write(const QVariant &value)
 {
     Q_D(QQuickBehavior);
@@ -473,19 +479,7 @@ void QQuickBehavior::setTarget(const QQmlProperty &property)
         }
     }
 
-    QQmlEnginePrivate *engPriv = QQmlEnginePrivate::get(qmlEngine(this));
-    static int finalizedIdx = -1;
-    if (finalizedIdx < 0)
-        finalizedIdx = metaObject()->indexOfSlot("componentFinalized()");
-    engPriv->registerFinalizeCallback(this, finalizedIdx);
-
     Q_EMIT targetPropertyChanged();
-}
-
-void QQuickBehavior::componentFinalized()
-{
-    Q_D(QQuickBehavior);
-    d->finalized = true;
 }
 
 QT_END_NAMESPACE

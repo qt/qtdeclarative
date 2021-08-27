@@ -54,15 +54,18 @@
 #include <private/qtquickglobal_p.h>
 
 #include <private/qqmlpropertyvalueinterceptor_p.h>
+#include <private/qqmlengine_p.h>
 #include <qqml.h>
+#include <private/qqmlfinalizer_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickAbstractAnimation;
 class QQuickBehaviorPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickBehavior : public QObject, public QQmlPropertyValueInterceptor
+class Q_QUICK_PRIVATE_EXPORT QQuickBehavior : public QObject, public QQmlPropertyValueInterceptor, public QQmlFinalizerHook
 {
     Q_OBJECT
+    Q_INTERFACES(QQmlFinalizerHook)
     Q_DECLARE_PRIVATE(QQuickBehavior)
 
     Q_INTERFACES(QQmlPropertyValueInterceptor)
@@ -93,13 +96,12 @@ public:
 
     QQmlProperty targetProperty() const;
 
+    void componentFinalized() override;
+
 Q_SIGNALS:
     void enabledChanged();
     void targetValueChanged();
     void targetPropertyChanged();
-
-private Q_SLOTS:
-    void componentFinalized();
 };
 
 QT_END_NAMESPACE
