@@ -115,7 +115,10 @@ signals:
 class CppSingleton : public QObject {
     Q_OBJECT
 public:
-    CppSingleton() {}
+    static uint instantiations;
+    uint id = 0;
+
+    CppSingleton() : id(++instantiations) {}
 
     static QObject *create(QQmlEngine *qmlEngine, QJSEngine *jsEngine)
     {
@@ -124,6 +127,8 @@ public:
         return new CppSingleton();
     }
 };
+
+uint CppSingleton::instantiations = 0;
 
 class JsSingleton : public QObject {
     Q_OBJECT
@@ -574,6 +579,9 @@ void tst_qqmlengine::clearSingletons()
     QCOMPARE(engine.singletonInstance<ObjectCaller *>(deprecatedCppInstance), &objectCaller2);
     const CppSingleton *oldCppSingleton = engine.singletonInstance<CppSingleton *>(cppFactory);
     QVERIFY(oldCppSingleton != nullptr);
+    const uint oldCppSingletonId = oldCppSingleton->id;
+    QVERIFY(oldCppSingletonId > 0);
+    QCOMPARE(CppSingleton::instantiations, oldCppSingletonId);
     QCOMPARE(engine.singletonInstance<QJSValue>(jsValue).toUInt(), 13u);
     const JsSingleton *oldJsSingleton = engine.singletonInstance<JsSingleton *>(jsObject);
     QVERIFY(oldJsSingleton != nullptr);
@@ -601,6 +609,7 @@ void tst_qqmlengine::clearSingletons()
     QCOMPARE(qvariant_cast<QObject *>(singletonUser->property("e")), oldQmlSingleton);
 
     engine.clearSingletons();
+    QCOMPARE(CppSingleton::instantiations, oldCppSingletonId);
 
     QCOMPARE(engine.singletonInstance<ObjectCaller *>(cppInstance), &objectCaller1);
 
@@ -618,9 +627,11 @@ void tst_qqmlengine::clearSingletons()
                 "available because the callback function returns a null pointer.");
     QCOMPARE(engine.singletonInstance<ObjectCaller *>(deprecatedCppInstance), nullptr);
 
+    QCOMPARE(CppSingleton::instantiations, oldCppSingletonId);
     const CppSingleton *newCppSingleton = engine.singletonInstance<CppSingleton *>(cppFactory);
-    QVERIFY(newCppSingleton != nullptr);
-    QVERIFY(newCppSingleton != oldCppSingleton);
+    QVERIFY(newCppSingleton != nullptr); // The pointer may be the same as the old one
+    QCOMPARE(CppSingleton::instantiations, oldCppSingletonId + 1);
+    QCOMPARE(newCppSingleton->id, CppSingleton::instantiations);
     QCOMPARE(engine.singletonInstance<QJSValue>(jsValue).toUInt(), 13u);
     const JsSingleton *newJsSingleton = engine.singletonInstance<JsSingleton *>(jsObject);
     QVERIFY(newJsSingleton != nullptr);
