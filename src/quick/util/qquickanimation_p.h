@@ -152,8 +152,6 @@ public:
                             QObject *defaultTarget = nullptr);
     QAbstractAnimationJob* qtAnimation();
 
-private Q_SLOTS:
-    void componentFinalized();
 private:
     void setTarget(const QQmlProperty &) override;
     void notifyRunningChanged(bool running);

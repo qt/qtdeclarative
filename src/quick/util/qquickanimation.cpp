@@ -251,14 +251,8 @@ void QQuickAbstractAnimation::setRunning(bool r)
         d->running = r;
         if (r == false)
             d->avoidPropertyValueSourceStart = true;
-        else if (!d->registered) {
-            d->registered = true;
-            QQmlEnginePrivate *engPriv = QQmlEnginePrivate::get(qmlEngine(this));
-            static int finalizedIdx = -1;
-            if (finalizedIdx < 0)
-                finalizedIdx = metaObject()->indexOfSlot("componentFinalized()");
-            engPriv->registerFinalizeCallback(this, finalizedIdx);
-        }
+        else if (!d->needsDeferredSetRunning)
+            d->needsDeferredSetRunning = true;
         return;
     }
 
@@ -371,18 +365,15 @@ void QQuickAbstractAnimation::componentComplete()
 {
     Q_D(QQuickAbstractAnimation);
     d->componentComplete = true;
-}
-
-void QQuickAbstractAnimation::componentFinalized()
-{
-    Q_D(QQuickAbstractAnimation);
-    if (d->running) {
-        d->running = false;
-        setRunning(true);
-    }
-    if (d->paused) {
-        d->paused = false;
-        setPaused(true);
+    if (d->needsDeferredSetRunning) {
+        if (d->running) {
+            d->running = false;
+            setRunning(true);
+        }
+        if (d->paused) {
+            d->paused = false;
+            setPaused(true);
+        }
     }
 }
 

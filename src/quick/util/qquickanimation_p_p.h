@@ -178,7 +178,7 @@ public:
     : running(false), paused(false), alwaysRunToEnd(false),
       /*connectedTimeLine(false), */componentComplete(true),
       avoidPropertyValueSourceStart(false), disableUserControl(false),
-      registered(false), loopCount(1), group(nullptr), animationInstance(nullptr) {}
+      needsDeferredSetRunning(false), loopCount(1), group(nullptr), animationInstance(nullptr) {}
 
     bool running:1;
     bool paused:1;
@@ -187,7 +187,7 @@ public:
     bool componentComplete:1;
     bool avoidPropertyValueSourceStart:1;
     bool disableUserControl:1;
-    bool registered:1;
+    bool needsDeferredSetRunning:1;
 
     int loopCount;
 
