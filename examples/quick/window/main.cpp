@@ -60,6 +60,10 @@ int main(int argc, char* argv[])
 {
     QGuiApplication app(argc, argv);
     QQmlEngine engine;
+
+    // Add the qrc root as QML import path so that the "shared" module can be found.
+    engine.addImportPath(QStringLiteral(":/"));
+
     QQmlComponent component(&engine);
     QQuickWindow::setDefaultAlphaBuffer(true);
     component.loadUrl(QUrl("qrc:///window/window.qml"));
