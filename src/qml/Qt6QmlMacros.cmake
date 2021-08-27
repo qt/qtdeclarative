@@ -791,6 +791,9 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var qmlcac
         _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
     )
 
+    if(CMAKE_GENERATOR STREQUAL "Ninja Multi-Config" AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.20")
+        set(qmlcachegen "$<COMMAND_CONFIG:${qmlcachegen}>")
+    endif()
     set(cmd
         ${QT_TOOL_COMMAND_WRAPPER_PATH}
         ${qmlcachegen}
@@ -1495,19 +1498,24 @@ function(qt6_target_qml_sources target)
                 "${CMAKE_CURRENT_BINARY_DIR}/.rcc/qmlcache/${target}_${compiled_file}.cpp")
             get_filename_component(out_dir ${compiled_file} DIRECTORY)
 
+            if(CMAKE_GENERATOR STREQUAL "Ninja Multi-Config" AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.20")
+                set(qmlcachegen_cmd "$<COMMAND_CONFIG:${qmlcachegen}>")
+            else()
+                set(qmlcachegen_cmd "${qmlcachegen}")
+            endif()
             add_custom_command(
                 OUTPUT ${compiled_file}
                 COMMAND ${CMAKE_COMMAND} -E make_directory ${out_dir}
                 COMMAND
                     ${QT_TOOL_COMMAND_WRAPPER_PATH}
-                    ${qmlcachegen}
+                    ${qmlcachegen_cmd}
                     --resource-path "${file_resource_path}"
                     ${cachegen_args}
                     -o "${compiled_file}"
                     "${file_absolute}"
                 COMMAND_EXPAND_LISTS
                 DEPENDS
-                    ${qmlcachegen}
+                    ${qmlcachegen_cmd}
                     "${file_absolute}"
                     $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
                     "$<$<BOOL:${types_file}>:${types_file}>"
