@@ -1,13 +1,20 @@
 <RCC>
-    <qresource prefix="/">
+    <qresource prefix="/samegame">
         <file>samegame.qml</file>
-        <file>content/BoomBlock.qml</file>
-        <file>content/Button.qml</file>
-        <file>content/Dialog.qml</file>
-        <file>content/samegame.js</file>
+        <file>BoomBlock.qml</file>
+        <file>Button.qml</file>
+        <file>Dialog.qml</file>
+        <file>samegame.js</file>
         <file>highscores/README</file>
         <file>highscores/score_data.xml</file>
         <file>highscores/score_style.xsl</file>
         <file>highscores/scores.php</file>
+        <file>pics/background.jpg</file>
+        <file>pics/blueStar.png</file>
+        <file>pics/blueStone.png</file>
+        <file>pics/greenStar.png</file>
+        <file>pics/greenStone.png</file>
+        <file>pics/redStar.png</file>
+        <file>pics/redStone.png</file>
     </qresource>
 </RCC>

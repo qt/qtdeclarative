@@ -298,9 +298,6 @@ until the next chapter - where your application becomes alive!
 
 Now we're going to do two things to liven up the game: animate the blocks and add a High Score system.
 
-We've also cleaned up the directory structure for our application files. We now have a lot of files, so all the
-JavaScript and QML files outside of \c samegame.qml have been moved into a new sub-directory named "content".
-
 In anticipation of the new block animations, \c Block.qml file is now renamed to \c BoomBlock.qml.
 
 \section3 Animating Block Movement
@@ -311,7 +308,7 @@ In \c BoomBlock.qml, we apply a \l SpringAnimation behavior to the \c x and \c y
 block will follow and animate its movement in a spring-like fashion towards the specified position (whose
 values will be set by \c samegame.js).Here is the code added to \c BoomBlock.qml:
 
-\snippet tutorials/samegame/samegame4/content/BoomBlock.qml 1
+\snippet tutorials/samegame/samegame4/BoomBlock.qml 1
 
 The \c spring and \c damping values can be changed to modify the spring-like effect of the animation.
 
@@ -328,7 +325,7 @@ animate the opacity value so that it gradually fades in and out, instead of abru
 visible and invisible. To do this, we'll apply a \l Behavior on the \c opacity property of the \c Image
 type in \c BoomBlock.qml:
 
-\snippet tutorials/samegame/samegame4/content/BoomBlock.qml 2
+\snippet tutorials/samegame/samegame4/BoomBlock.qml 2
 
 Note the \c{opacity: 0} which means the block is transparent when it is first created. We could set the opacity
 in \c samegame.js when we create and destroy the blocks,
@@ -354,14 +351,14 @@ To fade out, we set \c dying to true instead of setting opacity to 0 when a bloc
 Finally, we'll add a cool-looking particle effect to the blocks when they are destroyed. To do this, we first add a \l ParticleSystem in
 \c BoomBlock.qml, like so:
 
-\snippet tutorials/samegame/samegame4/content/BoomBlock.qml 3
+\snippet tutorials/samegame/samegame4/BoomBlock.qml 3
 
 To fully understand this you should read \l {Using the Qt Quick Particle System}, but it's important to note that \c emitRate is set
 to zero so that particles are not emitted normally.
 Also, we extend the \c dying State, which creates a burst of particles by calling the \c burst() method on the particles type. The code for the states now look
 like this:
 
-\snippet tutorials/samegame/samegame4/content/BoomBlock.qml 4
+\snippet tutorials/samegame/samegame4/BoomBlock.qml 4
 
 Now the game is beautifully animated, with subtle (or not-so-subtle) animations added for all of the
 player's actions. The end result is shown below, with a different set of images to demonstrate basic theming:
@@ -378,20 +375,20 @@ To do this, we will show a dialog when the game is over to request the player's 
 This requires a few changes to \c Dialog.qml. In addition to a \c Text type, it now has a
 \c TextInput child item for receiving keyboard text input:
 
-\snippet tutorials/samegame/samegame4/content/Dialog.qml 0
+\snippet tutorials/samegame/samegame4/Dialog.qml 0
 \dots 4
-\snippet tutorials/samegame/samegame4/content/Dialog.qml 2
+\snippet tutorials/samegame/samegame4/Dialog.qml 2
 \dots 4
-\snippet tutorials/samegame/samegame4/content/Dialog.qml 3
+\snippet tutorials/samegame/samegame4/Dialog.qml 3
 
 We'll also add a \c showWithInput() function. The text input will only be visible if this function
 is called instead of \c show(). When the dialog is closed, it emits a \c closed() signal, and
 other types can retrieve the text entered by the user through an \c inputText property:
 
-\snippet tutorials/samegame/samegame4/content/Dialog.qml 0
-\snippet tutorials/samegame/samegame4/content/Dialog.qml 1
+\snippet tutorials/samegame/samegame4/Dialog.qml 0
+\snippet tutorials/samegame/samegame4/Dialog.qml 1
 \dots 4
-\snippet tutorials/samegame/samegame4/content/Dialog.qml 3
+\snippet tutorials/samegame/samegame4/Dialog.qml 3
 
 Now the dialog can be used in \c samegame.qml:
 
@@ -401,9 +398,9 @@ When the dialog emits the \c closed signal, we call the new \c saveHighScore() f
 
 The \c nameInputDialog is activated in the \c victoryCheck() function in \c samegame.js:
 
-\snippet tutorials/samegame/samegame4/content/samegame.js 3
+\snippet tutorials/samegame/samegame4/samegame.js 3
 \dots 4
-\snippet tutorials/samegame/samegame4/content/samegame.js 4
+\snippet tutorials/samegame/samegame4/samegame.js 4
 
 \section3 Storing High Scores Offline
 
@@ -411,7 +408,7 @@ Now we need to implement the functionality to actually save the High Scores tabl
 
 Here is the \c saveHighScore() function in \c samegame.js:
 
-\snippet tutorials/samegame/samegame4/content/samegame.js 2
+\snippet tutorials/samegame/samegame4/samegame.js 2
 
 First we call \c sendHighScore() (explained in the section below) if it is possible to send the high scores to an online database.
 
@@ -430,7 +427,7 @@ If the player entered their name we can send the data to the web service us
 
 If the player enters a name, we send the data to the service using this code in \c samegame.js:
 
-\snippet tutorials/samegame/samegame4/content/samegame.js 1
+\snippet tutorials/samegame/samegame4/samegame.js 1
 
 The \l XMLHttpRequest in this code is the same as the \c XMLHttpRequest() as you'll find in standard browser JavaScript, and can be used in the same way to dynamically get XML
 or QML from the web service to display the high scores. We don't worry about the response in this case - we just post the high

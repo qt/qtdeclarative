@@ -1,7 +1,9 @@
 <RCC>
-    <qresource prefix="/">
+    <qresource prefix="/samegame">
         <file>Button.qml</file>
         <file>Block.qml</file>
         <file>samegame.qml</file>
+        <file>pics/background.jpg</file>
+        <file>pics/redStone.png</file>
     </qresource>
 </RCC>

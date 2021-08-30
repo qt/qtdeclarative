@@ -1,2 +1,1 @@
-# Generated from tutorials.pro.
-
+add_subdirectory(samegame)

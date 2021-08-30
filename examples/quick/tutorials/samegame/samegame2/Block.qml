@@ -56,6 +56,6 @@ Item {
     Image {
         id: img
         anchors.fill: parent
-        source: "../shared/pics/redStone.png"
+        source: "pics/redStone.png"
     }
 }

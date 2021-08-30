@@ -49,8 +49,7 @@
 ****************************************************************************/
 
 import QtQuick 2.0
-import "content"
-import "content/samegame.js" as SameGame
+import "samegame.js" as SameGame
 
 Rectangle {
     id: screen
@@ -66,7 +65,7 @@ Rectangle {
         Image {
             id: background
             anchors.fill: parent
-            source: "../shared/pics/background.jpg"
+            source: "pics/background.jpg"
             fillMode: Image.PreserveAspectCrop
         }
 
