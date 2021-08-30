@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,8 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import "content"
+import QtQuick
 
 Rectangle {
     id: window
@@ -59,7 +58,7 @@ Rectangle {
 
     Row {
         anchors.centerIn: parent; spacing: 30
-        Card { source: "content/9_club.png"; angle: 180; yAxis: 1 }
-        Card { source: "content/5_heart.png"; angle: 540; xAxis: 1 }
+        Card { source: "9_club.png"; angle: 180; yAxis: 1 }
+        Card { source: "5_heart.png"; angle: 540; xAxis: 1 }
     }
 }
