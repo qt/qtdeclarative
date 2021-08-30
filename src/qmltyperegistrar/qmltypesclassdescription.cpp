@@ -185,7 +185,7 @@ void QmlTypesClassDescription::collect(
         } else if (name == QLatin1String("QML.HasCustomParser")) {
             if (value == QLatin1String("true"))
                 hasCustomParser = true;
-        } else if (name == QLatin1String("QML.DeferredPropertyNames")) {
+        } else if (name == QLatin1String("DeferredPropertyNames")) {
             deferredNames = value.split(u',');
         }
     }

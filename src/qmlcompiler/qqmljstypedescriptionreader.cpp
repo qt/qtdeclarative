@@ -254,12 +254,15 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                 }
             } else if (name == QLatin1String("extension")) {
                 scope->setExtensionTypeName(readStringBinding(script));
+            } else if (name == QLatin1String("deferredNames")) {
+                // TODO: Store this information
             } else {
                 addWarning(script->firstSourceLocation(),
                            tr("Expected only name, prototype, defaultProperty, attachedType, "
                               "valueType, exports, interfaces, isSingleton, isCreatable, "
-                              "isComposite, hasCustomParser and "
-                              "exportMetaObjectRevisions script bindings, not \"%1\".")
+                              "isComposite, hasCustomParser, "
+                              "exportMetaObjectRevisions and deferredNames script bindings, not "
+                              "\"%1\".")
                                    .arg(name));
             }
         } else {

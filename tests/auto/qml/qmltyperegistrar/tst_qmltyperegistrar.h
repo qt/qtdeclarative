@@ -406,14 +406,14 @@ struct DeferredPropertyNamesEmpty : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
-    Q_CLASSINFO("QML.DeferredPropertyNames", "")
+    Q_CLASSINFO("DeferredPropertyNames", "")
 };
 
 struct DeferredPropertyNames : public QObject
 {
     Q_OBJECT
     QML_ELEMENT
-    Q_CLASSINFO("QML.DeferredPropertyNames", "A,B,C")
+    Q_CLASSINFO("DeferredPropertyNames", "A,B,C")
 };
 
 namespace ForeignNamespace
