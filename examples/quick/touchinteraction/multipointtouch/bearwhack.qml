@@ -49,7 +49,6 @@
 ****************************************************************************/
 import QtQuick 2.0
 import QtQuick.Particles 2.0
-import "content"
 
 Item {
     id: root
@@ -60,7 +59,7 @@ Item {
         anchors.fill: parent
         z: 1000
         Image {
-            source: "content/title.png"
+            source: "title.png"
             anchors.centerIn: parent
         }
         MouseArea{

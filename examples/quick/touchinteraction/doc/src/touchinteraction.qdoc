@@ -56,7 +56,7 @@
     is done through a SpriteGoal that follows the TouchPoint. The TouchPoints
     added to the MultiPointTouchArea are a component with the relevant logic
     embedded into it:
-    \snippet touchinteraction/multipointtouch/content/AugmentedTouchPoint.qml 0
+    \snippet touchinteraction/multipointtouch/AugmentedTouchPoint.qml 0
 
     \section1 Flick Resize Example
 
