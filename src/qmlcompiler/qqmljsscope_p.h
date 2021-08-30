@@ -214,6 +214,11 @@ public:
     bool hasInterface(const QString &name) const;
     bool hasOwnInterface(const QString &name) const { return m_interfaceNames.contains(name); }
 
+    void setOwnDeferredNames(const QStringList &names) { m_ownDeferredNames = names; }
+    QStringList ownDeferredNames() const { return m_ownDeferredNames; }
+
+    bool isNameDeferred(const QString &name) const;
+
     // If isComposite(), this is the QML/JS name of the prototype. Otherwise it's the
     // relevant base class (in the hierarchy starting from QObject) of a C++ type.
     void setBaseTypeName(const QString &baseTypeName) { m_baseTypeName = baseTypeName; }
@@ -425,6 +430,7 @@ private:
     ScopeType m_scopeType = QMLScope;
     QList<Export> m_exports;
     QStringList m_interfaceNames;
+    QStringList m_ownDeferredNames;
 
     QString m_defaultPropertyName;
     QString m_parentPropertyName;

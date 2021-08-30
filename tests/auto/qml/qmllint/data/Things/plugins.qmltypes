@@ -32,6 +32,7 @@ Module {
         prototype: "QObject"
         exports: ["Things.Templates/Pane 1.0"]
         exportMetaObjectRevisions: [256]
+        deferredNames: ["contentData"]
         Property { name: "contentWidth"; type: "double" }
         Property { name: "contentHeight"; type: "double" }
         Property { name: "contentData"; type: "QObject"; isList: true; isReadonly: true }

@@ -668,6 +668,11 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("assignToReadOnlyProperty2.qml")
             << QStringLiteral("Cannot assign to read-only property activeFocus") << QString()
             << false;
+    QTest::newRow("DeferredPropertyID")
+            << QStringLiteral("deferredPropertyID.qml")
+            << QStringLiteral("Assigning an id to an object bound to deferred property "
+                              "\"contentData\" will make the property immediate")
+            << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()

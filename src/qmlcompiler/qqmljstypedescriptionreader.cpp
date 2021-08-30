@@ -255,7 +255,7 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
             } else if (name == QLatin1String("extension")) {
                 scope->setExtensionTypeName(readStringBinding(script));
             } else if (name == QLatin1String("deferredNames")) {
-                // TODO: Store this information
+                readDeferredNames(script, scope);
             } else {
                 addWarning(script->firstSourceLocation(),
                            tr("Expected only name, prototype, defaultProperty, attachedType, "
@@ -727,6 +727,30 @@ void QQmlJSTypeDescriptionReader::readMetaObjectRevisions(UiScriptBinding *ast,
                        .arg(exportVersion.majorVersion()).arg(exportVersion.minorVersion()));
         }
     }
+}
+
+void QQmlJSTypeDescriptionReader::readDeferredNames(UiScriptBinding *ast,
+                                                    const QQmlJSScope::Ptr &scope)
+{
+    auto *arrayLit = getArray(ast);
+
+    if (!arrayLit)
+        return;
+
+    QStringList list;
+
+    for (PatternElementList *it = arrayLit->elements; it; it = it->next) {
+        auto *stringLit = cast<StringLiteral *>(it->element->initializer);
+        if (!stringLit) {
+            addError(arrayLit->firstSourceLocation(),
+                     tr("Expected array literal with only string literal members."));
+            return;
+        }
+
+        list << stringLit->value.toString();
+    }
+
+    scope->setOwnDeferredNames(list);
 }
 
 void QQmlJSTypeDescriptionReader::readEnumValues(UiScriptBinding *ast, QQmlJSMetaEnum *metaEnum)

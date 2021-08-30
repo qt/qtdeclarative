@@ -1642,6 +1642,14 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 
     const QString propertyName = group->name.toString();
 
+    if (m_scopesById.values().contains(childScope)
+        && m_currentScope->isNameDeferred(propertyName)) {
+        m_logger->logWarning(
+                u"Assigning an id to an object bound to deferred property \"%1\" will make the property immediate"_qs
+                        .arg(propertyName),
+                Log_Property, uiob->firstSourceLocation());
+    }
+
     if (m_currentScope->isInCustomParserParent()) {
         // These warnings do not apply for custom parsers and their children and need to be handled
         // on a case by case basis

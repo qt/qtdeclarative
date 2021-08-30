@@ -545,6 +545,21 @@ bool QQmlJSScope::hasInterface(const QString &name) const
             this, [&](const QQmlJSScope *scope) { return scope->m_interfaceNames.contains(name); });
 }
 
+bool QQmlJSScope::isNameDeferred(const QString &name) const
+{
+    bool isDeferred = false;
+
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        if (scope->ownDeferredNames().isEmpty())
+            return false;
+
+        isDeferred = scope->ownDeferredNames().contains(name);
+        return true;
+    });
+
+    return isDeferred;
+}
+
 QString QQmlJSScope::attachedTypeName() const
 {
     QString name;
