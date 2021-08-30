@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,4 +48,4 @@
 **
 ****************************************************************************/
 #include "../../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(flipable)
+DECLARATIVE_EXAMPLE_MAIN(flipable/flipable)
