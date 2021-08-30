@@ -1,0 +1,27 @@
+# See qtbase/src/testlib/qtestblacklist.cpp for format
+
+# QTBUG-95678
+# Blacklisted in order to get the native macOS style under
+# regression control
+[ComboBox::test_font]
+*
+[ComboBox::test_implicitContentWidthPolicy_WidestText]
+*
+[ComboBox::test_popup]
+*
+[ComboBox::test_implicitContentWidthPolicy_WidestTextWhenCompleted]
+*
+[Popup::test_font]
+*
+[ScrollBar::test_flashing]
+*
+[ScrollBar::test_policy]
+*
+[ScrollView::test_keys]
+*
+[Slider::test_snapMode_touch]
+*
+[TextArea::test_implicitSize]
+*
+[TextField::test_implicitSize]
+*

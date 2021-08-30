@@ -155,7 +155,11 @@ TestCase {
         compare(control.highlightedIndex, -1)
         compare(control.currentText, "")
         verify(control.delegate)
-        verify(control.indicator)
+        if (Qt.platform.pluginName !== "cocoa" && Qt.platform.pluginName !== "windows") {
+            // Only the non-native styles sets an indicator delegate. The native
+            // styles will instead draw the indicator as a part of the background.
+            verify(control.indicator)
+        }
         verify(control.popup)
         verify(control.acceptableInput)
         compare(control.inputMethodHints, Qt.ImhNoPredictiveText)
