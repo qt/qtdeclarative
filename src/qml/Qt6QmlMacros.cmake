@@ -275,6 +275,24 @@ function(qt6_add_qml_module target)
         endif()
     endif()
 
+    # Sanity check that we are not trying to have two different QML modules use
+    # the same output directory.
+    get_property(dirs GLOBAL PROPERTY _qt_all_qml_output_dirs)
+    if(dirs)
+        list(FIND dirs "${arg_OUTPUT_DIRECTORY}" index)
+        if(NOT index EQUAL -1)
+            get_property(qml_targets GLOBAL PROPERTY _qt_all_qml_targets)
+            list(GET qml_targets ${index} other_target)
+            message(FATAL_ERROR
+                "Output directory for target \"${target}\" is already used by "
+                "another QML module (target \"${other_target}\"). "
+                "Output directory is:\n  ${arg_OUTPUT_DIRECTORY}\n"
+            )
+        endif()
+    endif()
+    set_property(GLOBAL APPEND PROPERTY _qt_all_qml_output_dirs ${arg_OUTPUT_DIRECTORY})
+    set_property(GLOBAL APPEND PROPERTY _qt_all_qml_targets     ${target})
+
     # TODO: Support for old keyword, remove once all repos no longer use CLASSNAME
     if(arg_CLASSNAME)
         if(arg_CLASS_NAME AND NOT arg_CLASSNAME STREQUAL arg_CLASS_NAME)
