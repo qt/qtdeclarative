@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>dynamicview.qml</file>
         <file>PetsModel.qml</file>
+        <file>ListSelector.qml</file>
     </qresource>
 </RCC>
