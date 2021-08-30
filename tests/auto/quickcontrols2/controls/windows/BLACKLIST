@@ -17,14 +17,6 @@
 *
 [ComboBox::test_font]
 *
-[ComboBox::test_implicitContentWidthPolicy_WidestText:Array]
-*
-[ComboBox::test_implicitContentWidthPolicy_WidestText:ListModel]
-*
-[ComboBox::test_implicitContentWidthPolicy_WidestTextWhenCompleted:Array]
-*
-[ComboBox::test_implicitContentWidthPolicy_WidestTextWhenCompleted:ListModel]
-*
 [Popup::test_font]
 *
 [ScrollBar::test_flashing]
@@ -88,6 +80,4 @@
 [Slider::test_snapMode_touch:SnapOnRelease (1..-1)]
 *
 [TextArea::test_implicitSize]
-*
-[TextField::test_implicitSize]
 *

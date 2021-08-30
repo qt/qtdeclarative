@@ -56,7 +56,13 @@ StyleItemGeometry QQuickStyleItemTextField::calculateGeometry()
     StyleItemGeometry geometry;
 
     geometry.minimumSize = style()->sizeFromContents(QStyle::CT_LineEdit, &styleOption, QSize(0, 0));
-    geometry.implicitSize = style()->sizeFromContents(QStyle::CT_LineEdit, &styleOption, contentSize());
+
+    // Inspired by QLineEdit::sizeHint()
+    QFontMetricsF fm(styleFont(const_cast<QQuickItem*>(control<QQuickItem>())));
+    const QSize sz(qCeil(fm.horizontalAdvance(QLatin1Char('x')) * 17),
+                   contentSize().height());
+    geometry.implicitSize = style()->sizeFromContents(QStyle::CT_LineEdit, &styleOption, sz);
+
     styleOption.rect = QRect(QPoint(0, 0), geometry.implicitSize);
     geometry.layoutRect = styleOption.rect;
     geometry.contentRect = style()->subElementRect(QStyle::SE_LineEditContents, &styleOption);

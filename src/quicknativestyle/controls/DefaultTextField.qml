@@ -45,9 +45,9 @@ T.TextField {
 
     readonly property bool __nativeBackground: background instanceof NativeStyle.StyleItem
 
-    implicitWidth: Math.max(Math.max(contentWidth, placeholder.implicitWidth) + leftPadding + rightPadding,
-                            implicitBackgroundWidth + leftInset + rightInset,
-                            90 /* minimum */ )
+    implicitWidth: implicitBackgroundWidth + leftInset + rightInset
+                   || Math.max(contentWidth, placeholder.implicitWidth) + leftPadding + rightPadding
+
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding,
                              placeholder.implicitHeight + topPadding + bottomPadding)
@@ -67,11 +67,10 @@ T.TextField {
 
     PlaceholderText {
         id: placeholder
-        height: control.height
-        topPadding: control.topPadding
-        bottomPadding: control.bottomPadding
-        leftPadding: control.leftPadding
-        rightPadding: control.rightPadding
+        x: control.leftPadding
+        y: control.topPadding
+        width: control.availableWidth
+        height: control.availableHeight
         text: control.placeholderText
         font: control.font
         color: control.placeholderTextColor
