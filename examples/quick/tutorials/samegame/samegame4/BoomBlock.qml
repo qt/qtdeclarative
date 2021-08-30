@@ -76,11 +76,11 @@ Item {
         anchors.fill: parent
         source: {
             if (block.type == 0)
-                return "../../shared/pics/redStone.png";
+                return "pics/redStone.png";
             else if (block.type == 1)
-                return "../../shared/pics/blueStone.png";
+                return "pics/blueStone.png";
             else
-                return "../../shared/pics/greenStone.png";
+                return "pics/greenStone.png";
         }
         opacity: 0
 
@@ -98,11 +98,11 @@ Item {
             // ![0]
             source: {
                 if (block.type == 0)
-                    return "../../shared/pics/redStar.png";
+                    return "pics/redStar.png";
                 else if (block.type == 1)
-                    return "../../shared/pics/blueStar.png";
+                    return "pics/blueStar.png";
                 else
-                    return "../../shared/pics/greenStar.png";
+                    return "pics/greenStar.png";
             }
             rotationVelocityVariation: 360
             // ![0]

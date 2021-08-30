@@ -62,11 +62,11 @@ Item {
         anchors.fill: parent
         source: {
             if (type == 0)
-                return "../shared/pics/redStone.png";
+                return "pics/redStone.png";
             else if (type == 1)
-                return "../shared/pics/blueStone.png";
+                return "pics/blueStone.png";
             else
-                return "../shared/pics/greenStone.png";
+                return "pics/greenStone.png";
         }
     }
 }
