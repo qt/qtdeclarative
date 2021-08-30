@@ -20,82 +20,54 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Qml)
 
-qt_add_executable(touchinteraction
+add_subdirectory("../shared" "shared")
+
+qt_add_executable(touchinteractionexample
     main.cpp
 )
-set_target_properties(touchinteraction PROPERTIES
+set_target_properties(touchinteractionexample PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
-target_link_libraries(touchinteraction PUBLIC
+target_link_libraries(touchinteractionexample PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Qml
     Qt::Quick
+    touchinteraction_shared
 )
 
-
-# Resources:
-set(touchinteraction_resource_files
-    "flickable/basic-flickable.qml"
-    "flickable/content/Panel.qml"
-    "flickable/content/cork.jpg"
-    "flickable/content/note-yellow.png"
-    "flickable/content/tack.png"
-    "flickable/corkboards.qml"
-    "multipointtouch/bearwhack.qml"
-    "multipointtouch/content/AugmentedTouchPoint.qml"
-    "multipointtouch/content/Bear0.png"
-    "multipointtouch/content/Bear1.png"
-    "multipointtouch/content/Bear2.png"
-    "multipointtouch/content/Bear3.png"
-    "multipointtouch/content/BearB.png"
-    "multipointtouch/content/BearWhackParticleSystem.qml"
-    "multipointtouch/content/ParticleFlame.qml"
-    "multipointtouch/content/blur-circle.png"
-    "multipointtouch/content/blur-circle3.png"
-    "multipointtouch/content/heart-blur.png"
-    "multipointtouch/content/title.png"
-    "multipointtouch/multiflame.qml"
-    "pincharea/flickresize.qml"
-    "pincharea/qt-logo.jpg"
-    "touchinteraction.qml"
+qt_add_qml_module(touchinteractionexample
+    URI touchinteraction
+    VERSION 1.0
+    QML_FILES
+        "flickable/Panel.qml"
+        "flickable/basic-flickable.qml"
+        "flickable/corkboards.qml"
+        "multipointtouch/AugmentedTouchPoint.qml"
+        "multipointtouch/BearWhackParticleSystem.qml"
+        "multipointtouch/ParticleFlame.qml"
+        "multipointtouch/bearwhack.qml"
+        "multipointtouch/multiflame.qml"
+        "pincharea/flickresize.qml"
+        "touchinteraction.qml"
+    RESOURCES
+        "flickable/cork.jpg"
+        "flickable/note-yellow.png"
+        "flickable/tack.png"
+        "multipointtouch/Bear0.png"
+        "multipointtouch/Bear1.png"
+        "multipointtouch/Bear2.png"
+        "multipointtouch/Bear3.png"
+        "multipointtouch/BearB.png"
+        "multipointtouch/blur-circle.png"
+        "multipointtouch/blur-circle3.png"
+        "multipointtouch/heart-blur.png"
+        "multipointtouch/title.png"
+        "pincharea/qt-logo.jpg"
 )
 
-qt6_add_resources(touchinteraction "touchinteraction"
-    PREFIX
-        "/touchinteraction"
-    FILES
-        ${touchinteraction_resource_files}
-)
-set(shared_resource_files
-    "../shared/Button.qml"
-    "../shared/CheckBox.qml"
-    "../shared/FlickrRssModel.qml"
-    "../shared/Label.qml"
-    "../shared/LauncherList.qml"
-    "../shared/SimpleLauncherDelegate.qml"
-    "../shared/Slider.qml"
-    "../shared/TabSet.qml"
-    "../shared/TextField.qml"
-    "../shared/images/back.png"
-    "../shared/images/checkmark.png"
-    "../shared/images/next.png"
-    "../shared/images/qt-logo.png"
-    "../shared/images/slider_handle.png"
-    "../shared/images/tab.png"
-)
-
-qt6_add_resources(touchinteraction "shared"
-    PREFIX
-        "/shared"
-    BASE
-        "../shared"
-    FILES
-        ${shared_resource_files}
-)
-
-install(TARGETS touchinteraction
+install(TARGETS touchinteractionexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
