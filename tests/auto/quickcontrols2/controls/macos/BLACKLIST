@@ -3,8 +3,6 @@
 # QTBUG-95678
 # Blacklisted in order to get the native macOS style under
 # regression control
-[ComboBox::test_defaults]
-*
 [ComboBox::test_font]
 *
 [ComboBox::test_implicitContentWidthPolicy_WidestText]
