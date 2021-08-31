@@ -20,41 +20,36 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Qml)
 
-qt_add_executable(dialcontrol
+qt_add_executable(dialcontrolexample
     main.cpp
 )
-set_target_properties(dialcontrol PROPERTIES
+set_target_properties(dialcontrolexample PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
-target_link_libraries(dialcontrol PUBLIC
+target_link_libraries(dialcontrolexample PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Qml
     Qt::Quick
 )
 
-
-# Resources:
-set(dialcontrol_resource_files
-    "content/Dial.qml"
-    "content/QuitButton.qml"
-    "content/background.png"
-    "content/needle.png"
-    "content/needle_shadow.png"
-    "content/overlay.png"
-    "content/quit.png"
-    "dialcontrol.qml"
+qt_add_qml_module(dialcontrolexample
+    URI dialcontrol
+    VERSION 1.0
+    QML_FILES
+        "Dial.qml"
+        "QuitButton.qml"
+        "dialcontrol.qml"
+    RESOURCES
+        "background.png"
+        "needle.png"
+        "needle_shadow.png"
+        "overlay.png"
+        "quit.png"
 )
 
-qt6_add_resources(dialcontrol "dialcontrol"
-    PREFIX
-        "/"
-    FILES
-        ${dialcontrol_resource_files}
-)
-
-install(TARGETS dialcontrol
+install(TARGETS dialcontrolexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
