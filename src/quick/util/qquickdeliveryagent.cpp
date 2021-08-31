@@ -604,7 +604,8 @@ bool QQuickDeliveryAgentPrivate::clearHover(ulong timestamp)
 
     for (auto hoverItem : hoverItems) {
         auto item = hoverItem.first;
-        deliverHoverEventToItem(item, lastPos, lastPos, modifiers, timestamp, clearHover);
+        if (item)
+            deliverHoverEventToItem(item, lastPos, lastPos, modifiers, timestamp, clearHover);
     }
 
     hoverItems.clear();
