@@ -48,4 +48,4 @@
 **
 ****************************************************************************/
 #include "../../quick/shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(dynamicscene)
+DECLARATIVE_EXAMPLE_MAIN(dynamicscene/dynamicscene)
