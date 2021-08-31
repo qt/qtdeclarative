@@ -47,63 +47,22 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-
 import QtQuick
+import QtQuick.Controls
 
 Item {
-    id: selector
-    property int curIdx: 0
-    property int maxIdx: 3
-    property int gridWidth: 240
-    property Flickable flickable
-    width: parent.width
-    height: 64
-    function advance(steps) {
-         var nextIdx = curIdx + steps
-         if (nextIdx < 0 || nextIdx > maxIdx)
-            return;
-         flickable.contentX += gridWidth * steps;
-         curIdx += steps;
-    }
+    property alias mode: image.fillMode
+    property alias caption: captionItem.text
+
     Image {
-        source: "arrow.png"
-        MouseArea{
-            anchors.fill: parent
-            onClicked: selector.advance(-1)
-        }
-        anchors.left: parent.left
-        anchors.leftMargin: 8
-        anchors.verticalCenter: parent.verticalCenter
-        opacity: selector.curIdx == 0 ? 0.2 : 1.0
-        Behavior on opacity {NumberAnimation{}}
+        id: image
+        width: parent.width; height: parent.height - captionItem.height
+        source: "pics/qt-logo.png"
+        clip: true      // only makes a difference if mode is PreserveAspectCrop
     }
-    Image {
-        source: "arrow.png"
-        mirror: true
-        MouseArea{
-            anchors.fill: parent
-            onClicked: selector.advance(1)
-        }
-        opacity: selector.curIdx == selector.maxIdx ? 0.2 : 1.0
-        Behavior on opacity {NumberAnimation{}}
-        anchors.right: parent.right
-        anchors.rightMargin: 8
-        anchors.verticalCenter: parent.verticalCenter
-    }
-    Repeater {
-        model: [ "Scale", "Repeat", "Scale/Repeat", "Round" ]
-        delegate: Text {
-            required property string modelData
-            required property int index
 
-            text: modelData
-            anchors.verticalCenter: parent.verticalCenter
-
-            x: (index - selector.curIdx) * 80 + 140
-            Behavior on x { NumberAnimation{} }
-
-            opacity: selector.curIdx == index ? 1.0 : 0.0
-            Behavior on opacity { NumberAnimation{} }
-        }
+    Label {
+        id: captionItem
+        anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom
     }
 }

@@ -49,7 +49,6 @@
 ****************************************************************************/
 
 import QtQuick
-import "content"
 
 Rectangle {
     id: page
@@ -81,47 +80,47 @@ Rectangle {
 
             MyBorderImage {
                 minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 200
-                source: "content/colors.png"; margin: 30
+                source: "pics/colors.png"; margin: 30
             }
 
             MyBorderImage {
                 minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 200
-                source: "content/colors.png"; margin: 30
+                source: "pics/colors.png"; margin: 30
                 horizontalMode: BorderImage.Repeat; verticalMode: BorderImage.Repeat
             }
 
             MyBorderImage {
                 minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 200
-                source: "content/colors.png"; margin: 30
+                source: "pics/colors.png"; margin: 30
                 horizontalMode: BorderImage.Stretch; verticalMode: BorderImage.Repeat
             }
 
             MyBorderImage {
                 minWidth: 120; maxWidth: 240; minHeight: 120; maxHeight: 200
-                source: "content/colors.png"; margin: 30
+                source: "pics/colors.png"; margin: 30
                 horizontalMode: BorderImage.Round; verticalMode: BorderImage.Round
             }
 
             MyBorderImage {
                 minWidth: 60; maxWidth: 200; minHeight: 40; maxHeight: 200
-                source: "content/bw.png"; margin: 10
+                source: "pics/bw.png"; margin: 10
             }
 
             MyBorderImage {
                 minWidth: 60; maxWidth: 200; minHeight: 40; maxHeight: 200
-                source: "content/bw.png"; margin: 10
+                source: "pics/bw.png"; margin: 10
                 horizontalMode: BorderImage.Repeat; verticalMode: BorderImage.Repeat
             }
 
             MyBorderImage {
                 minWidth: 60; maxWidth: 200; minHeight: 40; maxHeight: 200
-                source: "content/bw.png"; margin: 10
+                source: "pics/bw.png"; margin: 10
                 horizontalMode: BorderImage.Stretch; verticalMode: BorderImage.Repeat
             }
 
             MyBorderImage {
                 minWidth: 60; maxWidth: 200; minHeight: 40; maxHeight: 200
-                source: "content/bw.png"; margin: 10
+                source: "pics/bw.png"; margin: 10
                 horizontalMode: BorderImage.Round; verticalMode: BorderImage.Round
             }
         }

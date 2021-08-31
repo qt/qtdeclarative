@@ -58,7 +58,7 @@ Rectangle {
         id: img
         anchors.centerIn: parent
         cache: true
-        source: "content/multi.ico"
+        source: "pics/multi.ico"
 
         Shortcut {
             sequence: StandardKey.MoveToNextPage

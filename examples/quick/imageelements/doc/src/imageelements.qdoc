@@ -49,7 +49,7 @@
 
     \e Shadows shows how to create a drop shadow effect for a rectangular item
     using a \l BorderImage:
-    \snippet imageelements/content/ShadowRectangle.qml shadow
+    \snippet imageelements/ShadowRectangle.qml shadow
 
     \section1 Sprite Animations with AnimatedSprite
 

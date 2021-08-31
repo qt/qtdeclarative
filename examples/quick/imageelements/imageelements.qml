@@ -49,7 +49,7 @@
 ****************************************************************************/
 
 import QtQuick
-import "../shared" as Shared
+import shared as Shared
 
 Item {
     height: 480

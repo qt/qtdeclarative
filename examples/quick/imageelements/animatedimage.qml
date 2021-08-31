@@ -59,7 +59,7 @@ Column {
 //! [image]
     AnimatedImage {
         id: animation
-        source: "content/Uniflow_steam_engine.gif"
+        source: "pics/Uniflow_steam_engine.gif"
         anchors.horizontalCenter: parent.horizontalCenter
         speed: speedSlider.value
         TapHandler {
