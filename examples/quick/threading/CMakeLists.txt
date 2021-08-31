@@ -20,66 +20,38 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Qml)
 
-qt_add_executable(threading
+add_subdirectory("../shared" "shared")
+
+qt_add_executable(threadingexample
     main.cpp
 )
-set_target_properties(threading PROPERTIES
+set_target_properties(threadingexample PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
-target_link_libraries(threading PUBLIC
+target_link_libraries(threadingexample PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Qml
     Qt::Quick
+    threading_shared
 )
 
-
-# Resources:
-set(threading_resource_files
-    "threadedlistmodel/dataloader.mjs"
-    "threadedlistmodel/timedisplay.qml"
-    "threading.qml"
-    "workerscript/Spinner.qml"
-    "workerscript/workerscript.mjs"
-    "workerscript/workerscript.qml"
+qt_add_qml_module(threadingexample
+    URI threading
+    VERSION 1.0
+    QML_FILES
+        "threadedlistmodel/dataloader.mjs"
+        "threadedlistmodel/timedisplay.qml"
+        "threading.qml"
+        "workerscript/Spinner.qml"
+        "workerscript/workerscript.mjs"
+        "workerscript/workerscript.qml"
 )
 
-qt6_add_resources(threading "threading"
-    PREFIX
-        "/threading"
-    FILES
-        ${threading_resource_files}
-)
-set(shared_resource_files
-    "../shared/Button.qml"
-    "../shared/CheckBox.qml"
-    "../shared/FlickrRssModel.qml"
-    "../shared/Label.qml"
-    "../shared/LauncherList.qml"
-    "../shared/SimpleLauncherDelegate.qml"
-    "../shared/Slider.qml"
-    "../shared/TabSet.qml"
-    "../shared/TextField.qml"
-    "../shared/images/back.png"
-    "../shared/images/checkmark.png"
-    "../shared/images/next.png"
-    "../shared/images/qt-logo.png"
-    "../shared/images/slider_handle.png"
-    "../shared/images/tab.png"
-)
-
-qt6_add_resources(threading "shared"
-    PREFIX
-        "/shared"
-    BASE
-        "../shared"
-    FILES
-        ${shared_resource_files}
-)
-
-install(TARGETS threading
+install(TARGETS threadingexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
+bundle_shared(threadingexample)
