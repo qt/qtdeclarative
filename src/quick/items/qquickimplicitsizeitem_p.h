@@ -62,6 +62,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickImplicitSizeItem : public QQuickItem
     Q_OBJECT
     Q_PROPERTY(qreal implicitWidth READ implicitWidth NOTIFY implicitWidthChanged)
     Q_PROPERTY(qreal implicitHeight READ implicitHeight NOTIFY implicitHeightChanged)
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(6, 2)
 
 protected:
     QQuickImplicitSizeItem(QQuickImplicitSizeItemPrivate &dd, QQuickItem *parent);
