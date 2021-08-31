@@ -51,7 +51,6 @@
 import QtQuick
 import QtQuick.Particles
 import QtQuick.Controls
-import "content"
 
 Item {
     id: window
@@ -120,7 +119,7 @@ Item {
 
         ImageParticle {
             id: stars
-            source: "content/images/star.png"
+            source: "images/star.png"
             groups: ["stars"]
             opacity: .5
         }
@@ -171,31 +170,31 @@ Item {
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "Sun.qml"
-                        source: "content/images/sun.png"
+                        source: "images/sun.png"
                         image: "images/sun.png"
                     }
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "GenericSceneItem.qml"
-                        source: "content/images/moon.png"
+                        source: "images/moon.png"
                         image: "images/moon.png"
                     }
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "PerspectiveItem.qml"
-                        source: "content/images/tree_s.png"
+                        source: "images/tree_s.png"
                         image: "images/tree_s.png"
                     }
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "PerspectiveItem.qml"
-                        source: "content/images/rabbit_brown.png"
+                        source: "images/rabbit_brown.png"
                         image: "images/rabbit_brown.png"
                     }
                     PaletteItem {
                         anchors.verticalCenter: parent.verticalCenter
                         componentFile: "PerspectiveItem.qml"
-                        source: "content/images/rabbit_bw.png"
+                        source: "images/rabbit_bw.png"
                         image: "images/rabbit_bw.png"
                     }
                 }
@@ -258,7 +257,7 @@ Item {
                     selectByMouse: true
                     wrapMode: TextEdit.WordWrap
 
-                    text: "import QtQuick 2.0\nImage {\n    id: smile\n    x: 360 * Math.random()\n    y: 40 * Math.random() \n    source: 'content/images/face-smile.png'\n    NumberAnimation on opacity { \n        to: 0; duration: 1500\n    }\n    Component.onCompleted: smile.destroy(1500);\n}"
+                    text: "import QtQuick 2.0\nImage {\n    id: smile\n    x: 360 * Math.random()\n    y: 40 * Math.random() \n    source: 'images/face-smile.png'\n    NumberAnimation on opacity { \n        to: 0; duration: 1500\n    }\n    Component.onCompleted: smile.destroy(1500);\n}"
                 }
             }
         }
