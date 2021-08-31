@@ -48,4 +48,4 @@
 **
 ****************************************************************************/
 #include "../../../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(dynamicview)
+DECLARATIVE_EXAMPLE_MAIN(dynamicview/dynamicview)

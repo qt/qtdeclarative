@@ -1,0 +1,4 @@
+add_subdirectory(dynamicview1)
+add_subdirectory(dynamicview2)
+add_subdirectory(dynamicview3)
+add_subdirectory(dynamicview4)
