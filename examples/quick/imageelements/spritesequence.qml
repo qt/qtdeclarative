@@ -75,7 +75,7 @@ Item {
 //! [still]
         Sprite {
             name: "still"
-            source: "content/BearSheet.png"
+            source: "pics/BearSheet.png"
             frameCount: 1
             frameWidth: 256
             frameHeight: 256
@@ -85,7 +85,7 @@ Item {
 //! [still]
         Sprite {
             name: "blink"
-            source: "content/BearSheet.png"
+            source: "pics/BearSheet.png"
             frameCount: 3
             frameX: 256
             frameY: 1536
@@ -96,7 +96,7 @@ Item {
         }
         Sprite {
             name: "floating"
-            source: "content/BearSheet.png"
+            source: "pics/BearSheet.png"
             frameCount: 9
             frameX: 0
             frameY: 0
@@ -107,7 +107,7 @@ Item {
         }
         Sprite {
             name: "flailing"
-            source: "content/BearSheet.png"
+            source: "pics/BearSheet.png"
             frameCount: 8
             frameX: 0
             frameY: 768
@@ -118,7 +118,7 @@ Item {
         }
         Sprite {
             name: "falling"
-            source: "content/BearSheet.png"
+            source: "pics/BearSheet.png"
             frameCount: 5
             frameY: 1280
             frameWidth: 256

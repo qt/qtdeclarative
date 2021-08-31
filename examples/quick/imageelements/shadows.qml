@@ -49,7 +49,6 @@
 ****************************************************************************/
 
 import QtQuick
-import "content"
 
 Rectangle {
     id: window

@@ -59,7 +59,7 @@ Rectangle {
         anchors.fill: parent
         anchors.margins: 6
         cache: true
-        source: "content/multi.ico"
+        source: "pics/multi.ico"
         border { left: 19; top: 19; right: 19; bottom: 19 }
         horizontalTileMode: BorderImage.Stretch
 
