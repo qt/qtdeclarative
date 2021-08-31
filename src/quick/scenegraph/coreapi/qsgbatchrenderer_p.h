@@ -653,7 +653,7 @@ struct GraphicsPipelineStateKey
     GraphicsState state;
     const ShaderManagerShader *sms;
     const QRhiRenderPassDescriptor *compatibleRenderPassDescriptor;
-    const QRhiShaderResourceBindings *layoutCompatibleSrb;
+    QVector<quint32> srbLayoutDescription;
 };
 
 bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) noexcept;
@@ -687,10 +687,10 @@ public:
 
     void clearCachedRendererData();
 
-    using ShaderResourceBindingList = QVarLengthArray<QRhiShaderResourceBinding, 8>;
-    QRhiShaderResourceBindings *srb(const ShaderResourceBindingList &bindings);
-
     QHash<GraphicsPipelineStateKey, QRhiGraphicsPipeline *> pipelineCache;
+
+    QMultiHash<QVector<quint32>, QRhiShaderResourceBindings *> srbPool;
+    QVector<quint32> srbLayoutDescSerializeWorkspace;
 
 public Q_SLOTS:
     void invalidated();
@@ -705,8 +705,6 @@ private:
     QHash<ShaderKey, Shader *> stockShaders;
 
     QSGDefaultRenderContext *context;
-
-    QHash<ShaderResourceBindingList, QRhiShaderResourceBindings *> srbCache;
 };
 
 struct RenderPassState
@@ -822,8 +820,7 @@ private:
     bool ensurePipelineState(Element *e, const ShaderManager::Shader *sms, bool depthPostPass = false);
     QRhiTexture *dummyTexture();
     void updateMaterialDynamicData(ShaderManager::Shader *sms, QSGMaterialShader::RenderState &renderState,
-                                   QSGMaterial *material, ShaderManager::ShaderResourceBindingList *bindings,
-                                   const Batch *batch, int ubufOffset, int ubufRegionSize);
+                                   QSGMaterial *material, const Batch *batch, Element *e, int ubufOffset, int ubufRegionSize);
     void updateMaterialStaticData(ShaderManager::Shader *sms, QSGMaterialShader::RenderState &renderState,
                                   QSGMaterial *material, Batch *batch, bool *gstateChanged);
     void checkLineWidth(QSGGeometry *g);
@@ -858,6 +855,7 @@ private:
 
     inline Batch *newBatch();
     void invalidateAndRecycleBatch(Batch *b);
+    void releaseElement(Element *e, bool inDestructor = false);
 
     void setVisualizationMode(const QByteArray &mode) override;
     bool hasVisualizationModeWithContinuousUpdate() const override;
@@ -893,6 +891,7 @@ private:
 
     int m_batchNodeThreshold;
     int m_batchVertexThreshold;
+    int m_srbPoolThreshold;
 
     Visualizer *m_visualizer;
 

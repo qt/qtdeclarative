@@ -299,11 +299,11 @@ void ShaderManager::invalidated()
     qDeleteAll(rewrittenShaders);
     rewrittenShaders.clear();
 
-    qDeleteAll(srbCache);
-    srbCache.clear();
-
     qDeleteAll(pipelineCache);
     pipelineCache.clear();
+
+    qDeleteAll(srbPool);
+    srbPool.clear();
 }
 
 void ShaderManager::clearCachedRendererData()
@@ -322,24 +322,6 @@ void ShaderManager::clearCachedRendererData()
             sd->clearCachedRendererData();
         }
     }
-}
-
-QRhiShaderResourceBindings *ShaderManager::srb(const ShaderResourceBindingList &bindings)
-{
-    auto it = srbCache.constFind(bindings);
-    if (it != srbCache.constEnd())
-        return *it;
-
-    QRhiShaderResourceBindings *srb = context->rhi()->newShaderResourceBindings();
-    srb->setBindings(bindings.cbegin(), bindings.cend());
-    if (srb->create()) {
-        srbCache.insert(bindings, srb);
-    } else {
-        qWarning("Failed to build srb");
-        delete srb;
-        srb = nullptr;
-    }
-    return srb;
 }
 
 void qsg_dumpShadowRoots(BatchRootInfo *i, int indent)
@@ -928,10 +910,11 @@ Renderer::Renderer(QSGDefaultRenderContext *ctx, QSGRendererInterface::RenderMod
 
     m_batchNodeThreshold = qt_sg_envInt("QSG_RENDERER_BATCH_NODE_THRESHOLD", 64);
     m_batchVertexThreshold = qt_sg_envInt("QSG_RENDERER_BATCH_VERTEX_THRESHOLD", 1024);
+    m_srbPoolThreshold = qt_sg_envInt("QSG_RENDERER_SRB_POOL_THRESHOLD", 1024);
 
     if (Q_UNLIKELY(debug_build() || debug_render())) {
-        qDebug("Batch thresholds: nodes: %d vertices: %d",
-               m_batchNodeThreshold, m_batchVertexThreshold);
+        qDebug("Batch thresholds: nodes: %d vertices: %d Srb pool threshold: %d",
+               m_batchNodeThreshold, m_batchVertexThreshold, m_srbPoolThreshold);
     }
 }
 
@@ -980,13 +963,8 @@ Renderer::~Renderer()
         m_nodeAllocator.release(n);
 
     // Remaining elements...
-    for (int i=0; i<m_elementsToDelete.size(); ++i) {
-        Element *e = m_elementsToDelete.at(i);
-        if (e->isRenderNode)
-            delete static_cast<RenderNodeElement *>(e);
-        else
-            m_elementAllocator.release(e);
-    }
+    for (int i=0; i<m_elementsToDelete.size(); ++i)
+        releaseElement(m_elementsToDelete.at(i), true);
 
     destroyGraphicsResources();
 
@@ -2629,10 +2607,24 @@ static inline bool needsBlendConstant(QRhiGraphicsPipeline::BlendFactor f)
 
 bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms, bool depthPostPass)
 {
-    // In unmerged batches the srbs in the elements are all compatible
-    // layout-wise. Note the key's == and qHash implementations: the rp desc and
-    // srb are tested for (layout) compatibility, not pointer equality.
-    const GraphicsPipelineStateKey k { m_gstate, sms, renderPassDescriptor(), e->srb };
+    // Note the key's == and qHash implementations: the renderpass descriptor is
+    // tested for compatibility, not pointer equality.
+    //
+    // We do not store the srb pointer itself because the ownership stays with
+    // the Element and that can go away more often that we would like it
+    // to. (think scrolling a list view, constantly dropping and creating new
+    // nodes) Rather, use an opaque blob of a few uints and store and compare
+    // that. This works because once the pipeline is built, we will always call
+    // setShaderResources with an explicitly specified srb which is fine even if
+    // e->srb we used here to bake the pipeline is already gone by that point.
+    //
+    // A typical QSGMaterial's serialized srb layout is 8 uints. (uniform buffer
+    // + texture, 4 fields each) Regardless, using an implicitly shared
+    // container is essential here. (won't detach so no more allocs and copies
+    // are done, unless the Element decides to rebake the srb with a different
+    // layout - but then the detach is exactly what we need)
+
+    const GraphicsPipelineStateKey k { m_gstate, sms, renderPassDescriptor(), e->srb->serializedLayoutDescription() };
 
     // Note: dynamic state (viewport rect, scissor rect, stencil ref, blend
     // constant) is never a part of GraphicsState/QRhiGraphicsPipeline.
@@ -2826,8 +2818,8 @@ static void materialToRendererGraphicsState(GraphicsState *dst,
 void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
                                          QSGMaterialShader::RenderState &renderState,
                                          QSGMaterial *material,
-                                         ShaderManager::ShaderResourceBindingList *bindings,
                                          const Batch *batch,
+                                         Element *e,
                                          int ubufOffset,
                                          int ubufRegionSize)
 {
@@ -2835,6 +2827,8 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
 
     QSGMaterialShader *shader = sms->programRhi.program;
     QSGMaterialShaderPrivate *pd = QSGMaterialShaderPrivate::get(shader);
+    QVarLengthArray<QRhiShaderResourceBinding, 8> bindings;
+
     if (pd->ubufBinding >= 0) {
         m_current_uniform_data = &pd->masterUniformData;
         const bool changed = shader->updateUniformData(renderState, material, m_currentMaterial);
@@ -2843,11 +2837,11 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
         if (changed || !batch->ubufDataValid)
             m_resourceUpdates->updateDynamicBuffer(batch->ubuf, ubufOffset, ubufRegionSize, pd->masterUniformData.constData());
 
-        bindings->append(QRhiShaderResourceBinding::uniformBuffer(pd->ubufBinding,
-                                                                  pd->ubufStages,
-                                                                  batch->ubuf,
-                                                                  ubufOffset,
-                                                                  ubufRegionSize));
+        bindings.append(QRhiShaderResourceBinding::uniformBuffer(pd->ubufBinding,
+                                                                 pd->ubufStages,
+                                                                 batch->ubuf,
+                                                                 ubufOffset,
+                                                                 ubufRegionSize));
     }
 
     for (int binding = 0; binding < QSGMaterialShaderPrivate::MAX_SHADER_RESOURCE_BINDINGS; ++binding) {
@@ -2901,17 +2895,92 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
             if (!texture)
                 texture = dummyTexture();
             QRhiSampler *sampler = pd->samplerBindingTable[binding];
-            bindings->append(QRhiShaderResourceBinding::sampledTexture(binding,
-                                                                       stages,
-                                                                       texture,
-                                                                       sampler));
+            bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
+                                                                      stages,
+                                                                      texture,
+                                                                      sampler));
         }
     }
 
 #ifndef QT_NO_DEBUG
-    if (bindings->isEmpty())
+    if (bindings.isEmpty())
         qWarning("No shader resources for material %p, this is odd.", material);
 #endif
+
+    enum class SrbAction {
+        Unknown,
+        DoNothing,
+        UpdateResources,
+        Rebake
+    } srbAction = SrbAction::Unknown;
+
+    // First, if the Element has no srb created at all, then try to find an existing,
+    // currently unused srb that is layout-compatible with our binding list.
+    if (!e->srb) {
+        // reuse a QVector as our work area, thus possibly reusing the underlying allocation too
+        QVector<quint32> &layoutDesc(m_shaderManager->srbLayoutDescSerializeWorkspace);
+        layoutDesc.clear();
+        QRhiShaderResourceBinding::serializeLayoutDescription(bindings.cbegin(), bindings.cend(), std::back_inserter(layoutDesc));
+        e->srb = m_shaderManager->srbPool.take(layoutDesc);
+        if (e->srb) {
+            // Here we know layout compatibility is satisfied, but do not spend time on full
+            // comparison. The chance of getting an srb that refers to the same resources
+            // (buffer, textures) is low in practice. So reuse, but write new resources.
+            srbAction = SrbAction::UpdateResources;
+        }
+    }
+
+    // If the Element had an existing srb, investigate:
+    //   - It may be used as-is (when nothing changed in the scene regarding this node compared to the previous frame).
+    //   - Otherwise it may be able to go with a lightweight update (replace resources, binding list layout is the same).
+    //   - If all else fails rebake the full thing, meaning we reuse the memory allocation but will recreate everything underneath.
+    if (srbAction == SrbAction::Unknown && e->srb) {
+        if (std::equal(e->srb->cbeginBindings(), e->srb->cendBindings(), bindings.cbegin(), bindings.cend())) {
+            srbAction = SrbAction::DoNothing;
+        } else if (std::equal(e->srb->cbeginBindings(), e->srb->cendBindings(), bindings.cbegin(), bindings.cend(),
+                              [](const auto &a, const auto &b) { return a.isLayoutCompatible(b); }))
+        {
+            srbAction = SrbAction::UpdateResources;
+        } else {
+            srbAction = SrbAction::Rebake;
+        }
+    }
+
+    // If the Element had no srb associated at all and could not find a layout-compatible
+    // one from the pool, then create a whole new object.
+    if (!e->srb) {
+        e->srb = m_rhi->newShaderResourceBindings();
+        srbAction = SrbAction::Rebake;
+    }
+
+    Q_ASSERT(srbAction != SrbAction::Unknown && e->srb);
+
+    switch (srbAction) {
+    case SrbAction::DoNothing:
+        break;
+    case SrbAction::UpdateResources:
+    {
+        e->srb->setBindings(bindings.cbegin(), bindings.cend());
+        QRhiShaderResourceBindings::UpdateFlags flags;
+        // Due to the way the binding list is built up above, if we have a uniform buffer
+        // at binding point 0 (or none at all) then the sampledTexture bindings are added
+        // with increasing binding points afterwards, so the list is already sorted based
+        // on the binding points, thus we can save some time by telling the QRhi backend
+        // not to sort again.
+        if (pd->ubufBinding <= 0 || bindings.count() <= 1)
+            flags |= QRhiShaderResourceBindings::BindingsAreSorted;
+
+        e->srb->updateResources(flags);
+    }
+        break;
+    case SrbAction::Rebake:
+        e->srb->setBindings(bindings.cbegin(), bindings.cend());
+        if (!e->srb->create())
+            qWarning("Failed to build srb");
+        break;
+    default:
+        Q_ASSERT_X(false, "updateMaterialDynamicData", "No srb action set, this cannot happen");
+    }
 }
 
 void Renderer::updateMaterialStaticData(ShaderManager::Shader *sms,
@@ -3029,8 +3098,7 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
     bool pendingGStatePop = false;
     updateMaterialStaticData(sms, renderState, material, batch, &pendingGStatePop);
 
-    ShaderManager::ShaderResourceBindingList bindings;
-    updateMaterialDynamicData(sms, renderState, material, &bindings, batch, 0, ubufSize);
+    updateMaterialDynamicData(sms, renderState, material, batch, e, 0, ubufSize);
 
 #ifndef QT_NO_DEBUG
     if (qsg_test_and_clear_material_failure()) {
@@ -3044,8 +3112,6 @@ bool Renderer::prepareRenderMergedBatch(Batch *batch, PreparedRenderBatch *rende
         qFatal("Aborting: scene graph is invalid...");
     }
 #endif
-
-    e->srb = m_shaderManager->srb(bindings);
 
     m_gstate.drawMode = QSGGeometry::DrawingMode(g->drawingMode());
     m_gstate.lineWidth = g->lineWidth();
@@ -3232,9 +3298,7 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
         }
 
         QSGMaterialShader::RenderState renderState = state(QSGMaterialShader::RenderState::DirtyStates(int(dirty)));
-        ShaderManager::ShaderResourceBindingList bindings;
-        updateMaterialDynamicData(sms, renderState,
-                                  material, &bindings, batch, ubufOffset, ubufSize);
+        updateMaterialDynamicData(sms, renderState, material, batch, e, ubufOffset, ubufSize);
 
 #ifndef QT_NO_DEBUG
         if (qsg_test_and_clear_material_failure()) {
@@ -3245,8 +3309,6 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
             return false;
         }
 #endif
-
-        e->srb = m_shaderManager->srb(bindings);
 
         ubufOffset += aligned(ubufSize, m_ubufAlignment);
 
@@ -3370,6 +3432,26 @@ void Renderer::setGraphicsPipeline(QRhiCommandBuffer *cb, const Batch *batch, El
     cb->setShaderResources(e->srb);
 }
 
+void Renderer::releaseElement(Element *e, bool inDestructor)
+{
+    if (e->isRenderNode) {
+        delete static_cast<RenderNodeElement *>(e);
+    } else {
+        if (e->srb) {
+            if (!inDestructor) {
+                if (m_shaderManager->srbPool.count() < m_srbPoolThreshold)
+                    m_shaderManager->srbPool.insert(e->srb->serializedLayoutDescription(), e->srb);
+                else
+                    delete e->srb;
+            } else {
+                delete e->srb;
+            }
+            e->srb = nullptr;
+        }
+        m_elementAllocator.release(e);
+    }
+}
+
 void Renderer::deleteRemovedElements()
 {
     if (!m_elementsToDelete.size())
@@ -3386,13 +3468,9 @@ void Renderer::deleteRemovedElements()
             *e = nullptr;
     }
 
-    for (int i=0; i<m_elementsToDelete.size(); ++i) {
-        Element *e = m_elementsToDelete.at(i);
-        if (e->isRenderNode)
-            delete static_cast<RenderNodeElement *>(e);
-        else
-            m_elementAllocator.release(e);
-    }
+    for (int i=0; i<m_elementsToDelete.size(); ++i)
+        releaseElement(m_elementsToDelete.at(i));
+
     m_elementsToDelete.reset();
 }
 
@@ -3959,7 +4037,7 @@ bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKe
     return a.state == b.state
             && a.sms->programRhi.program == b.sms->programRhi.program
             && a.compatibleRenderPassDescriptor->isCompatible(b.compatibleRenderPassDescriptor)
-            && a.layoutCompatibleSrb->isLayoutCompatible(b.layoutCompatibleSrb);
+            && a.srbLayoutDescription == b.srbLayoutDescription;
 }
 
 bool operator!=(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) noexcept
