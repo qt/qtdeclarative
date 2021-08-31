@@ -685,6 +685,6 @@ qt_internal_add_docs(Qml
 )
 
 # include snippet projects for developer builds
-if(QT_FEATURE_private_tests AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.19")
+if(NOT QT_SUPERBUILD AND QT_FEATURE_private_tests AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.19")
     add_subdirectory(doc/snippets/cmake/qt_target_qml_sources)
 endif()
