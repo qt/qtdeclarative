@@ -51,7 +51,6 @@
 //! [imports]
 import QtQuick 2.2
 import QtQuick.Window 2.1
-import "content"
 //! [imports]
 
 //! [0]

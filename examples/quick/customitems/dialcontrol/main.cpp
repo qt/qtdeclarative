@@ -48,4 +48,4 @@
 **
 ****************************************************************************/
 #include "../../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(dialcontrol)
+DECLARATIVE_EXAMPLE_MAIN(dialcontrol/dialcontrol)
