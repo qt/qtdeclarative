@@ -20,80 +20,53 @@ find_package(Qt6 COMPONENTS Gui)
 find_package(Qt6 COMPONENTS Quick)
 find_package(Qt6 COMPONENTS Qml)
 
-qt_add_executable(animation
+add_subdirectory("../shared" "shared")
+
+qt_add_executable(animationexample
     main.cpp
 )
-set_target_properties(animation PROPERTIES
+set_target_properties(animationexample PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
-target_link_libraries(animation PUBLIC
+target_link_libraries(animationexample PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Qml
     Qt::Quick
+    animation_shared
 )
 
-
-# Resources:
-set(shared_resource_files
-    "../shared/Button.qml"
-    "../shared/CheckBox.qml"
-    "../shared/FlickrRssModel.qml"
-    "../shared/Label.qml"
-    "../shared/LauncherList.qml"
-    "../shared/SimpleLauncherDelegate.qml"
-    "../shared/Slider.qml"
-    "../shared/TabSet.qml"
-    "../shared/TextField.qml"
-    "../shared/images/back.png"
-    "../shared/images/checkmark.png"
-    "../shared/images/next.png"
-    "../shared/images/qt-logo.png"
-    "../shared/images/slider_handle.png"
-    "../shared/images/tab.png"
+qt_add_qml_module(animationexample
+    URI animation
+    VERSION 1.0
+    QML_FILES
+        "animation.qml"
+        "basics/animators.qml"
+        "basics/color-animation.qml"
+        "basics/property-animation.qml"
+        "behaviors/FocusRect.qml"
+        "behaviors/SideRect.qml"
+        "behaviors/behavior-example.qml"
+        "behaviors/tvtennis.qml"
+        "behaviors/wigglytext.qml"
+        "easing/easing.qml"
+        "pathanimation/pathanimation.qml"
+        "pathinterpolator/pathinterpolator.qml"
+        "states/states.qml"
+        "states/transitions.qml"
+    RESOURCES
+        "basics/images/face-smile.png"
+        "basics/images/moon.png"
+        "basics/images/shadow.png"
+        "basics/images/star.png"
+        "basics/images/sun.png"
+        "states/qt-logo.png"
 )
 
-qt6_add_resources(animation "shared"
-    PREFIX
-        "/shared"
-    BASE
-        "../shared"
-    FILES
-        ${shared_resource_files}
-)
-set(animation_resource_files
-    "animation.qml"
-    "basics/animators.qml"
-    "basics/color-animation.qml"
-    "basics/images/face-smile.png"
-    "basics/images/moon.png"
-    "basics/images/shadow.png"
-    "basics/images/star.png"
-    "basics/images/sun.png"
-    "basics/property-animation.qml"
-    "behaviors/FocusRect.qml"
-    "behaviors/SideRect.qml"
-    "behaviors/behavior-example.qml"
-    "behaviors/tvtennis.qml"
-    "behaviors/wigglytext.qml"
-    "easing/easing.qml"
-    "pathanimation/pathanimation.qml"
-    "pathinterpolator/pathinterpolator.qml"
-    "states/qt-logo.png"
-    "states/states.qml"
-    "states/transitions.qml"
-)
-
-qt6_add_resources(animation "animation"
-    PREFIX
-        "/animation"
-    FILES
-        ${animation_resource_files}
-)
-
-install(TARGETS animation
+install(TARGETS animationexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
+bundle_shared(animationexample)
