@@ -317,7 +317,7 @@ void MetaTypesJsonProcessor::processTypes(const QJsonObject &types)
 
 void MetaTypesJsonProcessor::processForeignTypes(const QJsonObject &types)
 {
-    const QString include = types[QLatin1String("inputFile")].toString();
+    const QString include = resolvedInclude(types[QLatin1String("inputFile")].toString());
     const QJsonArray classes = types[QLatin1String("classes")].toArray();
     for (const QJsonValue cls : classes) {
         QJsonObject classDef = cls.toObject();

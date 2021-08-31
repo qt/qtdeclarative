@@ -321,4 +321,9 @@ void tst_qmltyperegistrar::deferredNames()
     QVERIFY(qmltypesData.contains("deferredNames: [\"A\", \"B\", \"C\"]"));
 }
 
+void tst_qmltyperegistrar::derivedFromForeignPrivate()
+{
+    QVERIFY(qmltypesData.contains("file: \"private/foreign_p.h\""));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

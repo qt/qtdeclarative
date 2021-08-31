@@ -30,6 +30,7 @@
 #define TST_QMLTYPEREGISTRAR_H
 
 #include "foreign.h"
+#include "foreign_p.h"
 
 #include <QtQml/qqml.h>
 #include <QtCore/qproperty.h>
@@ -424,6 +425,12 @@ QML_NAMESPACE_EXTENDED(ExtensionValueType)
 QML_ELEMENT
 }
 
+class DerivedFromForeignPrivate : public ForeignPrivate
+{
+    Q_OBJECT
+    QML_ELEMENT
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -455,6 +462,7 @@ private slots:
     void namespacesAndValueTypes();
     void namespaceExtendedNamespace();
     void deferredNames();
+    void derivedFromForeignPrivate();
 
 private:
     QByteArray qmltypesData;
