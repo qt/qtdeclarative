@@ -595,9 +595,9 @@ function(qt6_add_qml_module target)
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
-    macro(qt_add_qml_module)
+    function(qt_add_qml_module)
         qt6_add_qml_module(${ARGV})
-    endmacro()
+    endfunction()
 endif()
 
 function(_qt_internal_get_escaped_uri uri out_var)
@@ -1190,9 +1190,9 @@ function(qt6_add_qml_plugin target)
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
-    macro(qt_add_qml_plugin)
+    function(qt_add_qml_plugin)
         qt6_add_qml_plugin(${ARGV})
-    endmacro()
+    endfunction()
 endif()
 
 
@@ -1578,9 +1578,9 @@ function(qt6_target_qml_sources target)
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
-    macro(qt_target_qml_sources)
+    function(qt_target_qml_sources)
         qt6_target_qml_sources(${ARGV})
-    endmacro()
+    endfunction()
 endif()
 
 # target: Expected to be the backing target for a qml module. Certain target
@@ -2023,13 +2023,13 @@ but this file does not exist.  Possible reasons include:
 endfunction()
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
-    macro(qt_import_qml_plugins)
+    function(qt_import_qml_plugins)
         if(QT_DEFAULT_MAJOR_VERSION EQUAL 5)
             qt5_import_qml_plugins(${ARGV})
         elseif(QT_DEFAULT_MAJOR_VERSION EQUAL 6)
             qt6_import_qml_plugins(${ARGV})
         endif()
-    endmacro()
+    endfunction()
 endif()
 
 function(_qt_internal_add_static_qml_plugin_dependencies plugin_target backing_target)
