@@ -50,7 +50,7 @@
 
 #include <QQmlEngineExtensionPlugin>
 
-#include "../textballoon.h"
+#include "textballoon.h"
 
 class TextBalloonPlugin : public QQmlEngineExtensionPlugin
 {
