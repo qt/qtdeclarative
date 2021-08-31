@@ -30,6 +30,7 @@
 #define TST_QMLTYPEREGISTRAR_H
 
 #include "foreign.h"
+#include "foreign_p.h"
 
 #include <QtQml/qqml.h>
 #include <QtCore/qproperty.h>
@@ -382,6 +383,12 @@ struct BValueTypeWithEnumForeign2
     QML_NAMED_ELEMENT(valueTypeWithEnum2)
 };
 
+class DerivedFromForeignPrivate : public ForeignPrivate
+{
+    Q_OBJECT
+    QML_ELEMENT
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -411,6 +418,7 @@ private slots:
     void finalProperty();
     void parentProperty();
     void namespacesAndValueTypes();
+    void derivedFromForeignPrivate();
 
 private:
     QByteArray qmltypesData;

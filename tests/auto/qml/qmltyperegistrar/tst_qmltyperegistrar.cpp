@@ -288,4 +288,9 @@ void tst_qmltyperegistrar::namespacesAndValueTypes()
     check(QMetaType::fromName("ValueTypeWithEnum2"), QMetaType::fromType<ValueTypeWithEnum2>());
 }
 
+void tst_qmltyperegistrar::derivedFromForeignPrivate()
+{
+    QVERIFY(qmltypesData.contains("file: \"private/foreign_p.h\""));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

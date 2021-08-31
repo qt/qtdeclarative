@@ -7,6 +7,16 @@
 qt_manual_moc(moc_files OUTPUT_MOC_JSON_FILES json_list noextheader
               INCLUDE_DIRECTORY_TARGETS Qt::Qml)
 
+# Dummy target to pass --private-includes to qmltyperegistrar for tst_qmltyperegistrar.
+# We want to test that it expects files named foo_p.h appearing in foreign metatypes
+# to be in a private/ subdirectory. In particular, we have a foreign_p.h to exercise this.
+# TODO: There should be more fine grained control over this.
+qt_add_library(tst_qmltyperegistrarPrivate STATIC
+    dummy.cpp dummy_p.h
+)
+
+target_link_libraries(tst_qmltyperegistrarPrivate PRIVATE Qt::Core)
+
 qt_internal_add_test(tst_qmltyperegistrar
     SOURCES
         hppheader.hpp
@@ -20,6 +30,7 @@ qt_internal_add_test(tst_qmltyperegistrar
         # Remove: Lforeign
         Qt::Qml
         foreign
+        tst_qmltyperegistrarPrivate
 )
 
 #### Keys ignored in scope 2:.:.:tst_qmltyperegistrar.pro:<TRUE>:

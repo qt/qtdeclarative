@@ -7,7 +7,7 @@
 qt_internal_add_cmake_library(foreign
     STATIC
     SOURCES
-        foreign.cpp foreign.h
+        foreign.cpp foreign.h foreign_p.h
     PUBLIC_LIBRARIES
         Qt::Core
 )
