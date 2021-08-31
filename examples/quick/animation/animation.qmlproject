@@ -2,6 +2,7 @@ import QmlProject 1.1
 
 Project {
     mainFile: "animation.qml"
+    importPaths: ["../"]
 
     /* Include .qml, .js, and image files from current directory and subdirectories */
     QmlFiles {
