@@ -101,6 +101,7 @@ private slots:
     void dependenciesWithFunctions();
     void deferredProperties();
     void deferredPropertiesParent();
+    void deferredPropertiesOverwrite();
     void deferredPropertiesByParent();
     void deferredPropertiesErrors();
     void deferredPropertiesInComponents();
@@ -1228,6 +1229,17 @@ void tst_qqmlecmascript::deferredPropertiesParent()
     QVERIFY(object != nullptr);
     QCOMPARE(object->baseValue(), 0);
     qmlExecuteDeferred(object);
+    QCOMPARE(object->baseValue(), 10);
+}
+
+void tst_qqmlecmascript::deferredPropertiesOverwrite()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("deferredPropertiesOverwrite.qml"));
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY2(obj, qPrintable(component.errorString()));
+    DeferredChildOverwrite *object = qobject_cast<DeferredChildOverwrite *>(obj.data());
+    QVERIFY(object != nullptr);
     QCOMPARE(object->baseValue(), 10);
 }
 

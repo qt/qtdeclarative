@@ -435,6 +435,12 @@ class DeferredChild : public NonDeferredBased
     Q_CLASSINFO("DeferredPropertyNames", "baseValue")
 };
 
+class DeferredChildOverwrite : public DeferredChild
+{
+    Q_OBJECT
+    Q_CLASSINFO("DeferredPropertyNames", "")
+};
+
 class ChildDeferringParent : public QObject
 {
     Q_OBJECT
