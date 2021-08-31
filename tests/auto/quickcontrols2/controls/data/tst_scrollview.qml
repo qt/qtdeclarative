@@ -467,6 +467,11 @@ TestCase {
     function test_keys() {
         var control = createTemporaryObject(scrollView, testCase, {width: 200, height: 200, contentWidth: 400, contentHeight: 400})
         verify(control)
+        // If the viewport is smaller than the size of the ScrollView
+        // (like windows style does due to its opaque scrollbars),
+        // make the ScrollView taller in order to keep the *viewport* 200x200
+        control.width += (control.width - control.availableWidth)
+        control.height += (control.height - control.availableHeight)
 
         control.forceActiveFocus()
         verify(control.activeFocus)
