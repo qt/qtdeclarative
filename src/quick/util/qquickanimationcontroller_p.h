@@ -52,16 +52,17 @@
 //
 
 #include <qqml.h>
+#include <private/qqmlfinalizer_p.h>
 #include "qquickanimation_p.h"
 
 QT_BEGIN_NAMESPACE
 
 class QQuickAnimationControllerPrivate;
-class Q_QUICK_PRIVATE_EXPORT QQuickAnimationController : public QObject, public QQmlParserStatus
+class Q_QUICK_PRIVATE_EXPORT QQuickAnimationController : public QObject, public QQmlFinalizerHook
 {
     Q_OBJECT
     Q_DISABLE_COPY_MOVE(QQuickAnimationController)
-    Q_INTERFACES(QQmlParserStatus)
+    Q_INTERFACES(QQmlFinalizerHook)
 
     Q_DECLARE_PRIVATE(QQuickAnimationController)
     Q_CLASSINFO("DefaultProperty", "animation")
@@ -81,8 +82,7 @@ public:
     QQuickAbstractAnimation *animation() const;
     void setAnimation(QQuickAbstractAnimation *animation);
 
-    void classBegin() override;
-    void componentComplete() override {}
+    void componentFinalized() override;
 Q_SIGNALS:
     void progressChanged();
     void animationChanged();
@@ -91,7 +91,6 @@ public Q_SLOTS:
     void completeToBeginning();
     void completeToEnd();
 private Q_SLOTS:
-    void componentFinalized();
     void updateProgress();
 };
 

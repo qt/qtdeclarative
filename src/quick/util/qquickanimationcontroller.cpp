@@ -155,13 +155,6 @@ QQuickAbstractAnimation *QQuickAnimationController::animation() const
     return d->animation;
 }
 
-void QQuickAnimationController::classBegin()
-{
-    QQmlEnginePrivate *engPriv = QQmlEnginePrivate::get(qmlEngine(this));
-    engPriv->registerFinalizeCallback(this, this->metaObject()->indexOfSlot("componentFinalized()"));
-}
-
-
 void QQuickAnimationController::setAnimation(QQuickAbstractAnimation *animation)
 {
     Q_D(QQuickAnimationController);
