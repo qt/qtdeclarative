@@ -1,0 +1,14 @@
+It is instead recommended to always base a customized control on top of a single style
+that is available on all platforms, e.g \l {Basic Style}, \l {Fusion Style}, \l {Imagine Style},
+\l {Material Style}, \l {Universal Style}. By doing so, you are guaranteed that it will
+always look the same, regardless of which style the application is run with. For example:
+
+\code
+    import QtQuick.Controls.Basic as Basic
+
+    Basic.SpinBox {
+        background: Rectangle { /* ... */ }
+    }
+\endcode
+
+\b {See also} \l {Styling Qt Quick Controls}
