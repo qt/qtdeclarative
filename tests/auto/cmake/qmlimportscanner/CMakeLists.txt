@@ -1,18 +1,20 @@
-
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.21)
 project(qis_test)
 
-find_package(Qt5Qml 5.0.0 REQUIRED)
-find_package(Qt5Gui 5.0.0 REQUIRED)
-find_package(Qt5Test 5.0.0 REQUIRED)
-find_package(Qt5QmlImportScanner REQUIRED)
-
-set(CMAKE_CXXFLAGS "${CMAKE_CXXFLAGS} ${Qt5Core_EXECUTABLE_COMPILE_FLAGS}")
+find_package(Qt6 REQUIRED COMPONENTS Core Test Qml)
 
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
 
-add_executable(qis_test "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
-                        "${CMAKE_CURRENT_SOURCE_DIR}/qis_test.qrc")
-target_link_libraries(qis_test PRIVATE Qt5::Gui Qt5::Qml Qt5::Test)
-qt5_import_qml_plugins(qis_test)
+# We explicitly don't want to use qt_add_executable() here because we want to
+# manually invoke qt6_import_qml_plugins() ourselves later
+add_executable(qis_test main.cpp)
+target_link_libraries(qis_test PRIVATE Qt6::Test Qt6::Qml Qt6::Core)
+
+qt6_add_qml_module(qis_test
+    URI Test
+    VERSION 1.0
+    NO_RESOURCE_TARGET_PATH
+    QML_FILES main.qml
+)
+
+qt6_import_qml_plugins(qis_test)
