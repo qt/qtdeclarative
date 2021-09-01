@@ -1095,10 +1095,8 @@ restoreQObjectOwnership(ListElement::GuardedQObjectPointer *pointer)
 
         // Only restore the previous state if the object hasn't become explicitly
         // owned
-        if (!data->explicitIndestructibleSet) {
+        if (!data->explicitIndestructibleSet)
             data->indestructible = (pointer->tag() & ListElement::Indestructible);
-            data->explicitIndestructibleSet = (pointer->tag() & ListElement::ExplicitlySet);
-        }
     }
 }
 
@@ -1112,8 +1110,8 @@ static void setQObjectOwnership(char *mem, QObject *o)
     if (!ddata)
         ddata = QQmlData::get(o, true);
 
-    ddata->indestructible = ownership != 0;
-    ddata->explicitIndestructibleSet = false;
+    if (!ddata->explicitIndestructibleSet)
+        ddata->indestructible = ownership != 0;
 
     new (mem) ListElement::GuardedQObjectPointer(
             o, static_cast<ListElement::ObjectIndestructible>(ownership));
