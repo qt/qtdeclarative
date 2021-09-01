@@ -52,6 +52,7 @@ import QtQuick 2.12
 import QtQml.Models 2.12
 import QtQuick.Layouts 1.12
 import Qt.labs.qmlmodels 1.0
+import shared
 
 Rectangle {
     visible: true
@@ -61,9 +62,9 @@ Rectangle {
     ListModel {
         id: listModel
         ListElement { dataType: "rect"; color: "green" }
-        ListElement { dataType: "image"; source: "../shared/images/qt-logo.png" }
+        ListElement { dataType: "image" }
         ListElement { dataType: "rect"; color: "green" }
-        ListElement { dataType: "image"; source: "../shared/images/qt-logo.png" }
+        ListElement { dataType: "image" }
         ListElement { dataType: "rect"; color: "blue" }
         ListElement { dataType: "rect"; color: "blue" }
         ListElement { dataType: "rect"; color: "blue" }
@@ -77,9 +78,9 @@ Rectangle {
         ListElement { dataType: "rect"; color: "blue" }
         ListElement { dataType: "rect"; color: "blue" }
         ListElement { dataType: "rect"; color: "green" }
-        ListElement { dataType: "image"; source: "../shared/images/qt-logo.png" }
+        ListElement { dataType: "image" }
         ListElement { dataType: "rect"; color: "green" }
-        ListElement { dataType: "image"; source: "../shared/images/qt-logo.png" }
+        ListElement { dataType: "image" }
         ListElement { dataType: "rect"; color: "blue" }
         ListElement { dataType: "rect"; color: "lightsteelblue" }
         ListElement { dataType: "rect"; color: "fuchsia" }
@@ -118,7 +119,7 @@ Rectangle {
             delegate: Image {
                 width: parent.width
                 height: 100
-                source: model.source
+                source: Images.qtLogo
                 fillMode: Image.PreserveAspectFit
             }
         }

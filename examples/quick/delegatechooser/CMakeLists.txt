@@ -15,66 +15,30 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/delegatechooser")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Quick)
-find_package(Qt6 COMPONENTS Qml)
+find_package(Qt6 COMPONENTS Core Gui Quick Qml)
 
-qt_add_executable(delegatechooser
-    main.cpp
-)
-set_target_properties(delegatechooser PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-)
-target_link_libraries(delegatechooser PUBLIC
+add_subdirectory("../shared" "shared")
+
+qt_add_executable(delegatechooserexample WIN32 MACOSX_BUNDLE main.cpp)
+
+target_link_libraries(delegatechooserexample PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Qml
     Qt::Quick
+    delegatechooser_shared
 )
 
-
-# Resources:
-set(qml_resource_files
-    "delegatechooser.qml"
+qt_add_qml_module(delegatechooserexample
+    URI delegatechooser
+    VERSION 1.0
+    QML_FILES
+        "delegatechooser.qml"
 )
 
-qt6_add_resources(delegatechooser "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
-)
-set(shared_resource_files
-    "../shared/Button.qml"
-    "../shared/CheckBox.qml"
-    "../shared/FlickrRssModel.qml"
-    "../shared/Label.qml"
-    "../shared/LauncherList.qml"
-    "../shared/SimpleLauncherDelegate.qml"
-    "../shared/Slider.qml"
-    "../shared/TabSet.qml"
-    "../shared/TextField.qml"
-    "../shared/images/back.png"
-    "../shared/images/checkmark.png"
-    "../shared/images/next.png"
-    "../shared/images/qt-logo.png"
-    "../shared/images/slider_handle.png"
-    "../shared/images/tab.png"
-)
-
-qt6_add_resources(delegatechooser "shared"
-    PREFIX
-        "/shared"
-    BASE
-        "../shared"
-    FILES
-        ${shared_resource_files}
-)
-
-install(TARGETS delegatechooser
+install(TARGETS delegatechooserexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
+bundle_shared(delegatechooserexample)

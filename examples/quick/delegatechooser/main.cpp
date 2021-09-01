@@ -48,4 +48,4 @@
 **
 ****************************************************************************/
 #include "../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(delegatechooser)
+DECLARATIVE_EXAMPLE_MAIN(delegatechooser/delegatechooser)
