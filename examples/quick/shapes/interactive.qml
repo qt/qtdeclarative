@@ -50,308 +50,212 @@
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 import QtQuick.Shapes
 
 Rectangle {
     id: root
     width: 1024
     height: 768
+    color: palette.window
 
-    property color col: "lightsteelblue"
-    gradient: Gradient {
-        GradientStop { position: 0.0; color: Qt.tint(root.col, "#20FFFFFF") }
-        GradientStop { position: 0.1; color: Qt.tint(root.col, "#20AAAAAA") }
-        GradientStop { position: 0.9; color: Qt.tint(root.col, "#20666666") }
-        GradientStop { position: 1.0; color: Qt.tint(root.col, "#20000000") }
-    }
-
-    property int mode: 0
-    property bool showResizers: true
-    property bool fill: false
-
-    Row {
+    RowLayout {
+        id: topRow
         x: 20
         y: 10
         spacing: 20
 
-        Button {
-            id: radioButton1
-            checked: true
-            text: qsTr("Line")
-            onPressed: () => { root.mode = 0 }
-
-            width: 100
-            height: 40
-
-            background: Rectangle {
-                border.color: "black"
-                color: root.mode === 0 ? "red" : "transparent"
-                anchors.fill: parent
-            }
+        ButtonGroup {
+            id: toolButtons
+            buttons: drawingTools.children
         }
 
-        Button {
-            text: qsTr("Cubic")
-            onPressed: () => { root.mode = 1 }
+        RowLayout {
+            id: drawingTools
+            ToolButton {
+                text: qsTr("Line")
+                checkable: true
+                checked: true
 
-            width: 100
-            height: 40
-
-            background: Rectangle {
-                border.color: "black"
-                color: root.mode === 1 ? "red" : "transparent"
-                anchors.fill: parent
+                property Component shapeType: Component {
+                    ShapePath {
+                        id: lineShapePath
+                        strokeColor: root.palette.windowText
+                        strokeWidth: widthSlider.value
+                        fillColor: "transparent"
+                        PathLine {
+                            id: pathSegment
+                            x: lineShapePath.startX + 1
+                            y: lineShapePath.startY + 1
+                        }
+                        function finishCreation() {
+                            createStartEndHandles(this, pathSegment);
+                        }
+                    }
+                }
             }
-        }
+            ToolButton {
+                text: qsTr("Quadratic")
+                checkable: true
 
-        Button {
-            text: qsTr("Quadratic")
-            onPressed: () => { root.mode = 2 }
-
-            width: 100
-            height: 40
-
-            background: Rectangle {
-                border.color: "black"
-                color: root.mode === 2 ? "red" : "transparent"
-                anchors.fill: parent
+                property Component shapeType: Component {
+                    ShapePath {
+                        id: quadShapePath
+                        strokeColor: root.palette.windowText
+                        strokeWidth: widthSlider.value
+                        fillColor: fillSwitch.checked ? "green" : "transparent"
+                        PathQuad {
+                            id: pathSegment
+                            x: quadShapePath.startx + 1
+                            y: quadShapePath.startY + 1
+                            controlX: quadShapePath.startX + 50
+                            controlY: quadShapePath.startY + 50
+                        }
+                        function finishCreation() {
+                            createStartEndHandles(this, pathSegment);
+                            pointDragHandle.createObject(canvas, {
+                                idleColor: "blue",
+                                target: pathSegment, xprop: "controlX", yprop: "controlY"
+                            });
+                        }
+                    }
+                }
             }
-        }
+            ToolButton {
+                text: qsTr("Cubic")
+                checkable: true
 
-        Row {
-            anchors.verticalCenter: radioButton1.verticalCenter
-            spacing: 12
-
-            Label {
-                text: qsTr("Width:")
-                anchors.verticalCenter: widthSlider.verticalCenter
-            }
-            Slider {
-                id: widthSlider
-                from: 1
-                to: 60
-                value: 4
-
-                anchors.verticalCenter: parent.verticalCenter
-            }
-        }
-
-        Button {
-            text: qsTr("Manip")
-            onPressed: () => {
-                  root.showResizers = !root.showResizers;
-                  for (var i = 0; i < canvas.resizers.length; ++i)
-                      canvas.resizers[i].visible = root.showResizers;
-            }
-
-            width: 50
-            height: 40
-
-            background: Rectangle {
-                border.color: "black"
-                color: root.showResizers ? "yellow" : "transparent"
-                anchors.fill: parent
-            }
-        }
-
-        Button {
-            text: qsTr("Fill")
-            onPressed: () => {
-                  root.fill = !root.fill
-            }
-
-            width: 50
-            height: 40
-
-            background: Rectangle {
-                border.color: "black"
-                color: root.fill ? "yellow" : "transparent"
-                anchors.fill: parent
-            }
-        }
-    }
-
-    Rectangle {
-        id: canvas
-        width: root.width - 40
-        height: root.height - 120
-        x: 20
-        y: 100
-
-        property variant activePath: null
-
-        property variant resizers: []
-        property variant funcs
-
-        property Component mouseArea: Component {
-            Rectangle {
-                id: rr
-
-                property variant obj
-                property string xprop
-                property string yprop
-
-                width: 20
-                height: 20
-
-                MouseArea {
-                    property bool a: false
-
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onEntered: color = "yellow"
-                    onExited: color = rr.color
-                    onPressed: a = true
-                    onReleased: a = false
-                    onPositionChanged: (mouse)=> {
-                        if (a) {
-                            var pt = mapToItem(rr.parent, mouse.x, mouse.y);
-                            rr.obj[rr.xprop] = pt.x
-                            rr.obj[rr.yprop] = pt.y
-                            rr.x = pt.x - 10
-                            rr.y = pt.y - 10
+                property Component shapeType: Component {
+                    ShapePath {
+                        id: cubicShapePath
+                        strokeColor: root.palette.windowText
+                        strokeWidth: widthSlider.value
+                        fillColor: fillSwitch.checked ? "green" : "transparent"
+                        PathCubic {
+                            id: pathSegment
+                            x: cubicShapePath.startX + 1
+                            y: cubicShapePath.startY + 1
+                            control1X: cubicShapePath.startX + 50;
+                            control1Y: cubicShapePath.startY + 50;
+                            control2X: cubicShapePath.startX + 150;
+                            control2Y: cubicShapePath.startY + 50;
+                        }
+                        function finishCreation() {
+                            createStartEndHandles(this, pathSegment);
+                            pointDragHandle.createObject(canvas, {
+                                idleColor: "blue",
+                                target: pathSegment, xprop: "control1X", yprop: "control1Y"
+                            });
+                            pointDragHandle.createObject(canvas, {
+                                idleColor: "lightBlue",
+                                target: pathSegment, xprop: "control2X", yprop: "control2Y"
+                            });
                         }
                     }
                 }
             }
         }
 
-        function genResizer(obj, x, y, xprop, yprop, color) {
-            var ma = mouseArea.createObject(canvas, {
-                                                color: color,
-                                                xprop: xprop,
-                                                yprop: yprop
-                                            });
-            ma.visible = root.showResizers;
-            ma.obj = obj;
-            ma.x = x - 10;
-            ma.y = y - 10;
-            resizers.push(ma);
-            return ma;
+        Label {
+            text: qsTr("Width")
+        }
+        Slider {
+            id: widthSlider
+            from: 1
+            to: 60
+            value: 4
         }
 
-        property Component linePath: Component {
-            ShapePath {
-                id: lineShapePath
-                strokeColor: "black"
-                strokeWidth: widthSlider.value
-                fillColor: "transparent"
-                PathLine {
-                    x: lineShapePath.startX + 1
-                    y: lineShapePath.startY + 1
+        Switch {
+            id: showHandlesSwitch
+            text: qsTr("Handles")
+        }
+
+        Switch {
+            id: fillSwitch
+            text: qsTr("Fill")
+        }
+    }
+
+    Component {
+        id: pointDragHandle
+
+        Rectangle {
+            id: rect
+            property variant target
+            property string xprop
+            property string yprop
+            property color idleColor: "red"
+
+            width: 20
+            height: width
+            visible: showHandlesSwitch.checked
+            color: hh.hovered  ? "yellow" : idleColor
+            border.color: "grey"
+
+            property real halfWidth: width / 2
+            property bool complete: false
+            Binding { target: rect.target; property: xprop; value: x + halfWidth; when: complete }
+            Binding { target: rect.target; property: yprop; value: y + halfWidth; when: complete }
+
+            DragHandler { }
+
+            HoverHandler { id: hh }
+
+            Component.onCompleted: {
+                x = target[xprop] - halfWidth;
+                y = target[yprop] - halfWidth;
+                complete = true;
+            }
+        }
+    }
+
+    function createStartEndHandles(shapePath, pathSegment) {
+        pointDragHandle.createObject(canvas, {
+            idleColor: "red",
+            target: shapePath, xprop: "startX", yprop: "startY"
+        });
+        pointDragHandle.createObject(canvas, {
+            idleColor: "red",
+            target: pathSegment, xprop: "x", yprop: "y"
+        });
+    }
+
+    Rectangle {
+        id: canvas
+        color: palette.base
+        width: root.width - 40
+        height: root.height - y - 20
+        x: 20
+        anchors.top: topRow.bottom
+        anchors.topMargin: 20
+
+        DragHandler {
+            target: null
+            grabPermissions: DragHandler.TakeOverForbidden
+            property ShapePath activePath: null
+            onActiveChanged: {
+                const tool = toolButtons.checkedButton;
+                if (active) {
+                    activePath = tool.shapeType.createObject(root, {
+                        startX: centroid.position.x, startY: centroid.position.y
+                    });
+                    shape.data.push(activePath);
+                } else {
+                    activePath.finishCreation();
+                    activePath = null;
                 }
             }
-        }
-
-        property Component cubicPath: Component {
-            ShapePath {
-                id: cubicShapePath
-                strokeColor: "black"
-                strokeWidth: widthSlider.value
-                fillColor: root.fill ? 'green' : 'transparent'
-                PathCubic {
-                    x: cubicShapePath.startX + 1
-                    y: cubicShapePath.startY + 1
-                    control1X: cubicShapePath.startX + 50;
-                    control1Y: cubicShapePath.startY + 50;
-                    control2X: cubicShapePath.startX + 150;
-                    control2Y: cubicShapePath.startY + 50;
-                }
-            }
-        }
-
-        property Component quadPath: Component {
-            ShapePath {
-                id: quadShapePath
-                strokeColor: "black"
-                strokeWidth: widthSlider.value
-                fillColor: root.fill ? 'green' : 'transparent'
-                PathQuad {
-                    x: quadShapePath.startx + 1
-                    y: quadShapePath.startY + 1
-                    controlX: quadShapePath.startX + 50
-                    controlY: quadShapePath.startY + 50
-                }
-            }
-        }
-
-        Component.onCompleted: {
-            funcs = [
-                        { "start": function(x, y) {
-                            var p = linePath.createObject(root, { startX: x, startY: y });
-                            shape.data.push(p);
-                            activePath = p;
-                        }, "move": function(x, y) {
-                            if (!activePath)
-                                return;
-                            var pathObj = activePath.pathElements[0];
-                            pathObj.x = x;
-                            pathObj.y = y;
-                        }, "end": function() {
-                            canvas.genResizer(activePath, activePath.startX, activePath.startY, "startX", "startY", "red");
-                            var pathObj = activePath.pathElements[0];
-                            canvas.genResizer(pathObj, pathObj.x, pathObj.y, "x", "y", "red");
-                            activePath = null;
-                        }
-                        },
-                        { "start": function(x, y) {
-                            var p = cubicPath.createObject(root, { startX: x, startY: y });
-                            shape.data.push(p);
-                            activePath = p;
-                        }, "move": function(x, y) {
-                            if (!activePath)
-                                return;
-                            var pathObj = activePath.pathElements[0];
-                            pathObj.x = x;
-                            pathObj.y = y;
-                        }, "end": function() {
-                            canvas.genResizer(activePath, activePath.startX, activePath.startY, "startX", "startY", "red");
-                            var pathObj = activePath.pathElements[0];
-                            canvas.genResizer(pathObj, pathObj.x, pathObj.y, "x", "y", "red");
-                            canvas.genResizer(pathObj, pathObj.control1X, pathObj.control1Y, "control1X", "control1Y", "blue");
-                            canvas.genResizer(pathObj, pathObj.control2X, pathObj.control2Y, "control2X", "control2Y", "lightBlue");
-                            activePath = null;
-                        }
-                        },
-                        { "start": function(x, y) {
-                            var p = quadPath.createObject(root, { startX: x, startY: y });
-                            shape.data.push(p);
-                            activePath = p;
-                        }, "move": function(x, y) {
-                            if (!activePath)
-                                return;
-                            var pathObj = activePath.pathElements[0];
-                            pathObj.x = x;
-                            pathObj.y = y;
-                        }, "end": function() {
-                            canvas.genResizer(activePath, activePath.startX, activePath.startY, "startX", "startY", "red");
-                            var pathObj = activePath.pathElements[0];
-                            canvas.genResizer(pathObj, pathObj.x, pathObj.y, "x", "y", "red");
-                            canvas.genResizer(pathObj, pathObj.controlX, pathObj.controlY, "controlX", "controlY", "blue");
-                            activePath = null;
-                        }
-                        }
-                    ];
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            onPressed: (mouse)=> {
-                canvas.funcs[root.mode].start(mouse.x, mouse.y);
-            }
-            onPositionChanged: (mouse)=> {
-                canvas.funcs[root.mode].move(mouse.x, mouse.y);
-            }
-            onReleased: {
-                canvas.funcs[root.mode].end();
+            onCentroidChanged: if (activePath) {
+                var pathObj = activePath.pathElements[0];
+                pathObj.x = centroid.position.x;
+                pathObj.y = centroid.position.y;
             }
         }
 
         Shape {
             id: shape
             anchors.fill: parent
-
-            data: []
         }
     }
 }
