@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/">
+    <qresource prefix="/localstorage">
         <file>Header.qml</file>
         <file>Database.js</file>
         <file>MyModel.qml</file>
