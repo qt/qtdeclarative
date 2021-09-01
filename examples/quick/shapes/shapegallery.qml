@@ -72,67 +72,67 @@ Rectangle {
         }
         ListElement {
             name: "Stroke or fill only"
-            shapeUrl: "item2.qml"
+            shapeUrl: "strokeOrFill.qml"
         }
         ListElement {
             name: "Dash pattern"
-            shapeUrl: "item4.qml"
+            shapeUrl: "linearGradient.qml"
         }
         ListElement {
             name: "Linear gradient"
-            shapeUrl: "item5.qml"
+            shapeUrl: "radialGradient.qml"
         }
         ListElement {
             name: "Radial gradient"
-            shapeUrl: "item3.qml"
+            shapeUrl: "dashPattern.qml"
         }
         ListElement {
             name: "Fill rules"
-            shapeUrl: "item6.qml"
+            shapeUrl: "fillRules.qml"
         }
         ListElement {
             name: "Join styles"
-            shapeUrl: "item7.qml"
+            shapeUrl: "joinStyles.qml"
         }
         ListElement {
             name: "Cap styles"
-            shapeUrl: "item8.qml"
+            shapeUrl: "capStyles.qml"
         }
         ListElement {
             name: "Quadratic curve"
-            shapeUrl: "item9.qml"
+            shapeUrl: "quadraticCurve.qml"
         }
         ListElement {
             name: "Cubic curve"
-            shapeUrl: "item10.qml"
+            shapeUrl: "cubicCurve.qml"
         }
         ListElement {
             name: "Elliptical arc"
-            shapeUrl: "item11.qml"
+            shapeUrl: "ellipticalArcs.qml"
         }
         ListElement {
             name: "Gradient spread modes"
-            shapeUrl: "item12.qml"
+            shapeUrl: "gradientSpreadModes.qml"
         }
         ListElement {
             name: "Arc direction"
-            shapeUrl: "item13.qml"
+            shapeUrl: "arcDirection.qml"
         }
         ListElement {
             name: "Large/small arc"
-            shapeUrl: "item14.qml"
+            shapeUrl: "largeOrSmallArc.qml"
         }
         ListElement {
             name: "Arc rotation"
-            shapeUrl: "item15.qml"
+            shapeUrl: "arcRotation.qml"
         }
         ListElement {
             name: "Tiger"
-            shapeUrl: "item17.qml"
+            shapeUrl: "tigerLoader.qml"
         }
         ListElement {
             name: "Text"
-            shapeUrl: "item18.qml"
+            shapeUrl: "text.qml"
         }
     }
 
