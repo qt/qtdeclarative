@@ -1463,17 +1463,6 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
         }
     }
 
-    for (int ii = 0; ii < sharedState->finalizeCallbacks.count(); ++ii) {
-        QQmlEnginePrivate::FinalizeCallback callback = sharedState->finalizeCallbacks.at(ii);
-        QObject *obj = callback.first;
-        if (obj) {
-            void *args[] = { nullptr };
-            QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, callback.second, args);
-        }
-        if (watcher.hasRecursed())
-            return false;
-    }
-    sharedState->finalizeCallbacks.clear();
     for (QQmlFinalizerHook *hook: sharedState->finalizeHooks) {
         hook->componentFinalized();
         if (watcher.hasRecursed())

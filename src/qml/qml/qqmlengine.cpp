@@ -996,16 +996,6 @@ QList<QQmlAbstractUrlInterceptor *> QQmlEngine::urlInterceptors() const
     return d->urlInterceptors;
 }
 
-void QQmlEnginePrivate::registerFinalizeCallback(QObject *obj, int index)
-{
-    if (activeObjectCreator) {
-        activeObjectCreator->finalizeCallbacks()->append(qMakePair(QPointer<QObject>(obj), index));
-    } else {
-        void *args[] = { nullptr };
-        QMetaObject::metacall(obj, QMetaObject::InvokeMetaMethod, index, args);
-    }
-}
-
 QSharedPointer<QQmlImageProviderBase> QQmlEnginePrivate::imageProvider(const QString &providerId) const
 {
     const QString providerIdLower = providerId.toLower();

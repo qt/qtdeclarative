@@ -180,9 +180,6 @@ public:
 
     QUrl baseUrl;
 
-    typedef QPair<QPointer<QObject>,int> FinalizeCallback;
-    void registerFinalizeCallback(QObject *obj, int index);
-
     QQmlObjectCreator *activeObjectCreator;
 #if QT_CONFIG(qml_network)
     QNetworkAccessManager *createNetworkAccessManager(QObject *parent) const;

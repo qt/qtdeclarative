@@ -99,7 +99,6 @@ struct QQmlObjectCreatorSharedState : QQmlRefCount
     QFiniteStack<QQmlGuard<QObject> > allCreatedObjects;
     QV4::Value *allJavaScriptObjects; // pointer to vector on JS stack to reference JS wrappers during creation phase.
     QQmlComponentAttached *componentAttached;
-    QList<QQmlEnginePrivate::FinalizeCallback> finalizeCallbacks;
     QList<QQmlFinalizerHook *> finalizeHooks;
     QQmlVmeProfiler profiler;
     QRecursionNode recursionNode;
@@ -134,8 +133,6 @@ public:
 
     QQmlRefPointer<QQmlContextData> rootContext() const { return sharedState->rootContext; }
     QQmlComponentAttached **componentAttachment() { return &sharedState->componentAttached; }
-
-    QList<QQmlEnginePrivate::FinalizeCallback> *finalizeCallbacks() { return &sharedState->finalizeCallbacks; }
 
     QList<QQmlError> errors;
 
