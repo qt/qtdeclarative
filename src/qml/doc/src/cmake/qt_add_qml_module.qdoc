@@ -302,9 +302,25 @@ A QML module must also define a \c VERSION in the form \c{Major.Minor}, where
 both \c Major and \c Minor must be integers. An additional \c{.Patch}
 component may be appended, but will be ignored. A list of earlier major
 versions the module provides types for can also optionally be given after the
-\c PAST_MAJOR_VERSIONS keyword.
+\c PAST_MAJOR_VERSIONS keyword (see below).
 See \l{qtqml-modules-identifiedmodules.html}{Identified Modules} for further
 in-depth discussion of the module URI and version numbering.
+
+A list of additional major versions the module provides may be given using the
+\c PAST_MAJOR_VERSIONS keyword. For each of those versions and each QML file
+without a \c QT_QML_SOURCE_VERSIONS setting an additional entry in the
+\l{Module Definition qmldir Files}{qmldir} file will be generated to specify
+the extra version. Furthermore, the generated module registration code will
+register the past major versions using \l{qmlRegisterModule()} on the C++ side.
+The module registration code is automatically generated for your QML module,
+unless you specify \c{NO_GENERATE_QMLTYPES} (but use of this option is strongly
+discouraged). Usage of \c PAST_MAJOR_VERSIONS adds some overhead when your
+module is imported. You should increment the major version of your module as
+rarely as possible. Once you can rely on all QML files importing this module to
+omit the version in their imports, you can safely omit \c{PAST_MAJOR_VERSIONS}.
+All the QML files will then import the latest version of your module. If you
+have to support versioned imports, consider supporting only a limited number of
+past major versions.
 
 \target RESOURCE_PREFIX
 \c RESOURCE_PREFIX is intended to encapsulate a namespace for the project and
@@ -382,13 +398,20 @@ typeinfo file will be generated, but the project will still be expected to
 generate a typeinfo file and place it in the same directory as the generated
 \c qmldir file.
 
-\c IMPORTS provides a list of other QML modules that this module imports.
-A version can be specified by appending it after a slash, such as
-\c{QtQuick/2.0}. The minor version may be omitted, as in \c{QtQuick/2}.
-Alternatively, \c auto may be given for the version (\c{QtQuick/auto}), which
-would result in the version that the current module is being imported with
-being used. Each module listed here will be added as an \c{import} entry in the
-generated \l{Module Definition qmldir Files}{qmldir} file.
+\c IMPORTS provides a list of other QML modules that this module imports. Each
+module listed here will be added as an \c{import} entry in the generated
+\l{Module Definition qmldir Files}{qmldir} file. If a QML file imports the
+this module, it also imports all the modules listed under \c{IMPORTS}.
+Optionally, a version can be specified by appending it after a slash, such as
+\c{QtQuick/2.0}. Omitting the version will cause the greatest version available
+to be imported. You may only specify the major version, as in \c{QtQuick/2}. In
+that case the greatest minor version available with the given major version will
+be imported. Finally, \c{auto} may be given as version (\c{QtQuick/auto}). If
+\c{auto} is given, the version that the current module is being imported with is
+propagated to the module to be imported. Given an entry \c{QtQuick/auto} in a
+module \c{YourModule}, if a QML file specifies \c{import YourModule 3.14}, this
+results in importing  version \c{3.14} of \c{QtQuick}. For related modules that
+follow a common versioning scheme, you should use \c{auto}.
 
 \c OPTIONAL_IMPORTS provides a list of other QML modules that this module
 \e may import at run-time. These are not automatically imported by the QML
