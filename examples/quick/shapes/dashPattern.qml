@@ -53,6 +53,8 @@ import QtQuick.Shapes
 
 Rectangle {
     color: "lightGray"
+    width: 256
+    height: 256
     Shape {
         width: 200
         height: 150

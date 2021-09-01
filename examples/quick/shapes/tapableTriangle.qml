@@ -52,8 +52,8 @@ import QtQuick
 import QtQuick.Shapes
 
 Rectangle {
-    width: 120
-    height: 120
+    width: 256
+    height: 256
     color: th.pressed ? "steelBlue" : "lightGray"
     containmentMask: ctr
 
