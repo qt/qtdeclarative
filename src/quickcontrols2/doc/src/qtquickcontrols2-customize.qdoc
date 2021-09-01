@@ -513,6 +513,10 @@
     \l {Customizing a Control} section. The code can be used as a starting
     point to implement a custom look and feel.
 
+    \note The \l {macOS Style}{macOS} and \l {Windows Style}{Windows} styles
+    are not suitable for customizing.
+    \include customizing-native-styles.qdocinc
+
     \section2 Customizing ApplicationWindow
 
         ApplicationWindow consists of one visual item:
