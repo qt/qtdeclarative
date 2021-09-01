@@ -53,6 +53,7 @@ import QtQuick.Shapes
 
 Rectangle {
     color: "lightGray"
+    width: 256; height: 256
 
     Shape {
         id: circ1
