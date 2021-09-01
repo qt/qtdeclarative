@@ -63,11 +63,10 @@ T.TextArea {
 
     PlaceholderText {
         id: placeholder
-        height: control.height
-        topPadding: control.topPadding
-        bottomPadding: control.bottomPadding
-        leftPadding: control.leftPadding
-        rightPadding: control.rightPadding
+        x: control.leftPadding
+        y: control.topPadding
+        width: control.availableWidth
+        height: control.availableHeight
         text: control.placeholderText
         font: control.font
         color: control.placeholderTextColor
