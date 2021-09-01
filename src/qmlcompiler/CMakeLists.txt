@@ -1,9 +1,3 @@
-# Generated from qmlcompiler.pro.
-
-#####################################################################
-## QmlCompilerPrivate Module:
-#####################################################################
-
 qt_internal_add_module(QmlCompilerPrivate
     STATIC
     INTERNAL_MODULE
@@ -25,8 +19,9 @@ qt_internal_add_module(QmlCompilerPrivate
         qqmljsannotation_p.h qqmljsannotation.cpp
     PUBLIC_LIBRARIES
         Qt::CorePrivate
-        Qt::QmlDevToolsPrivate
 )
 
-#### Keys ignored in scope 1:.:.:qmlcompiler.pro:<TRUE>:
-# _OPTION = "host_build"
+add_dependencies(QmlCompilerPrivate QmlDevToolsPrivate)
+get_target_property(devtools_includes QmlDevToolsPrivate EXTRA_INCLUDE_DIRECTORIES)
+target_include_directories(QmlCompilerPrivate PUBLIC ${devtools_includes})
+target_compile_definitions(QmlCompilerPrivate PUBLIC QT_QMLDEVTOOLS_LIB)

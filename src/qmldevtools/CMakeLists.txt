@@ -90,6 +90,10 @@ else()
 endif()
 target_include_directories(QmlDevToolsPrivate PUBLIC ${_qml_dev_tools_public_includes})
 
+set_target_properties(QmlDevToolsPrivate
+    PROPERTIES EXTRA_INCLUDE_DIRECTORIES
+        "${_qml_dev_tools_public_includes}${_qml_dev_tools_private_includes}"
+)
 # We build the qlalr sources into qmldevtools, so there's no link-time
 # dependency to QtQml. However we also include files in QmlDevToolsPrivate such
 # as qqmlirbuilder.cpp that include <private/qqmljsgrammar_p.h> that
