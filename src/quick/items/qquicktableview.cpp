@@ -3514,6 +3514,25 @@ QQuickTableView::QQuickTableView(QQuickTableViewPrivate &dd, QQuickItem *parent)
     setFlag(QQuickItem::ItemIsFocusScope);
 }
 
+void QQuickTableView::componentFinalized()
+{
+    // componentComplete() is called on us after all static values have been assigned, but
+    // before bindings to any anchestors has been evaluated. Especially this means that
+    // if our size is bound to the parents size, it will still be empty at that point.
+    // And we cannot build the table without knowing our own size. We could wait until we
+    // got the first updatePolish() callback, but at that time, any asynchronous loaders that we
+    // might be inside have already finished loading, which means that we would load all
+    // the delegate items synchronously instead of asynchronously. We therefore use componentFinalized
+    // which gets called after all the bindings we rely on has been evaluated.
+    // When receiving this call, we load the delegate items (and build the table).
+
+    // Now that all bindings are evaluated, and we know
+    // our final geometery, we can build the table.
+    Q_D(QQuickTableView);
+    qCDebug(lcTableViewDelegateLifecycle);
+    d->updatePolish();
+}
+
 qreal QQuickTableView::minXExtent() const
 {
     return QQuickFlickable::minXExtent() - d_func()->origin.x();
@@ -4059,39 +4078,6 @@ void QQuickTableView::viewportMoved(Qt::Orientations orientation)
             }
         }
     }
-}
-
-void QQuickTableViewPrivate::_q_componentFinalized()
-{
-    // Now that all bindings are evaluated, and we know
-    // our final geometery, we can build the table.
-    qCDebug(lcTableViewDelegateLifecycle);
-    updatePolish();
-}
-
-void QQuickTableViewPrivate::registerCallbackWhenBindingsAreEvaluated()
-{
-    // componentComplete() is called on us after all static values have been assigned, but
-    // before bindings to any anchestors has been evaluated. Especially this means that
-    // if our size is bound to the parents size, it will still be empty at that point.
-    // And we cannot build the table without knowing our own size. We could wait until we
-    // got the first updatePolish() callback, but at that time, any asynchronous loaders that we
-    // might be inside have already finished loading, which means that we would load all
-    // the delegate items synchronously instead of asynchronously. We therefore add a componentFinalized
-    // function that gets called after all the bindings we rely on has been evaluated.
-    // When receiving this call, we load the delegate items (and build the table).
-    Q_Q(QQuickTableView);
-    QQmlEnginePrivate *engPriv = QQmlEnginePrivate::get(qmlEngine(q));
-    static int finalizedIdx = -1;
-    if (finalizedIdx < 0)
-        finalizedIdx = q->metaObject()->indexOfSlot("_q_componentFinalized()");
-    engPriv->registerFinalizeCallback(q, finalizedIdx);
-}
-
-void QQuickTableView::componentComplete()
-{
-    QQuickFlickable::componentComplete();
-    d_func()->registerCallbackWhenBindingsAreEvaluated();
 }
 
 class QObjectPrivate;

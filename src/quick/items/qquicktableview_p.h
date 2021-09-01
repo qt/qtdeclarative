@@ -58,6 +58,7 @@ QT_REQUIRE_CONFIG(quick_tableview);
 #include <QtQuick/private/qtquickglobal_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
 #include <QtQml/private/qqmlnullablevalue_p.h>
+#include <QtQml/private/qqmlfinalizer_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -65,9 +66,10 @@ class QQuickTableViewAttached;
 class QQuickTableViewPrivate;
 class QItemSelectionModel;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable
+class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable, public QQmlFinalizerHook
 {
     Q_OBJECT
+    Q_INTERFACES(QQmlFinalizerHook)
 
     Q_PROPERTY(int rows READ rows NOTIFY rowsChanged)
     Q_PROPERTY(int columns READ columns NOTIFY columnsChanged)
@@ -177,10 +179,11 @@ Q_SIGNALS:
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void viewportMoved(Qt::Orientations orientation) override;
-    void componentComplete() override;
 
 protected:
     QQuickTableView(QQuickTableViewPrivate &dd, QQuickItem *parent);
+    // QQmlFinalizerHook interface
+    void componentFinalized() override;
 
 private:
     Q_DISABLE_COPY(QQuickTableView)
@@ -190,8 +193,6 @@ private:
     qreal maxXExtent() const override;
     qreal minYExtent() const override;
     qreal maxYExtent() const override;
-
-    Q_PRIVATE_SLOT(d_func(), void _q_componentFinalized())
 };
 
 class Q_QUICK_PRIVATE_EXPORT QQuickTableViewAttached : public QObject
