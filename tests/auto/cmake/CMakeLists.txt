@@ -67,12 +67,16 @@ endif()
 
 if(TARGET Qt::Quick)
     _qt_internal_test_expect_pass(qtquickcompiler BINARY qqc_test)
-    # _qt_internal_test_expect_pass(qmlimportscanner) # TODO: Replace with 6.2 qml module API
-endif()
-
-if(TARGET Qt::Quick AND NOT QT6_IS_SHARED_LIBS_BUILD)
-    _qt_internal_test_expect_pass(test_import_static_shapes_plugin_resources
-        BINARY "${CMAKE_CTEST_COMMAND}"
-        BINARY_ARGS "-V"
-    )
+    if(NOT QT6_IS_SHARED_LIBS_BUILD)
+        _qt_internal_test_expect_pass(test_import_static_shapes_plugin_resources
+            BINARY "${CMAKE_CTEST_COMMAND}"
+            BINARY_ARGS "-V"
+        )
+        if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.21")
+            _qt_internal_test_expect_pass(qmlimportscanner
+                TESTNAME cmake_qmlimportscanner
+                BINARY qis_test
+            )
+        endif()
+    endif()
 endif()
