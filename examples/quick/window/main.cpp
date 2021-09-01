@@ -64,6 +64,10 @@ int main(int argc, char* argv[])
     // Add the qrc root as QML import path so that the "shared" module can be found.
     engine.addImportPath(QStringLiteral(":/"));
 
+#ifdef Q_OS_MACOS
+    engine.addImportPath(app.applicationDirPath() + QStringLiteral("/../PlugIns"));
+#endif
+
     QQmlComponent component(&engine);
     QQuickWindow::setDefaultAlphaBuffer(true);
     component.loadUrl(QUrl("qrc:///window/window.qml"));

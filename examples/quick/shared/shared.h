@@ -52,6 +52,14 @@
 #include <QQmlEngine>
 #include <QQmlFileSelector>
 #include <QQuickView> //Not using QQmlApplicationEngine because many examples don't have a Window{}
+
+#ifdef Q_OS_MACOS
+#define ADD_MACOS_BUNDLE_IMPORT_PATH \
+    view.engine()->addImportPath(app.applicationDirPath() + QStringLiteral("/../PlugIns"));
+#else
+#define ADD_MACOS_BUNDLE_IMPORT_PATH
+#endif
+
 #define DECLARATIVE_EXAMPLE_MAIN(NAME) int main(int argc, char* argv[]) \
 {\
     QGuiApplication app(argc,argv);\
@@ -59,6 +67,7 @@
     app.setOrganizationDomain("qt-project.org");\
     app.setApplicationName(QFileInfo(app.applicationFilePath()).baseName());\
     QQuickView view;\
+    ADD_MACOS_BUNDLE_IMPORT_PATH\
     view.engine()->addImportPath(QStringLiteral(":/"));\
     if (qEnvironmentVariableIntValue("QT_QUICK_CORE_PROFILE")) {\
         QSurfaceFormat f = view.format();\
