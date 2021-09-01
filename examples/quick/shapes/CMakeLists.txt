@@ -71,3 +71,4 @@ install(TARGETS shapesexample
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
+bundle_shared(shapesexample)
