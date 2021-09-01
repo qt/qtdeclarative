@@ -334,10 +334,6 @@ function(qt6_add_qml_module target)
             )
         else()
             qt6_add_library(${target} ${lib_type})
-            if(ANDROID)
-                # TODO: Check if we need to do this for a backing library
-                qt6_android_apply_arch_suffix(${target})
-            endif()
         endif()
     endif()
 
