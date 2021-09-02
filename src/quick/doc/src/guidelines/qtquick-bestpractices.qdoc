@@ -87,59 +87,30 @@ of the target OS.
 For example, consider the following project directory structure:
 
 \badcode
-project
+MyModule
 ├── images
 │   ├── image1.png
 │   └── image2.png
-├── project.pro
-└── qml
-    └── main.qml
+├── CMakeLists.txt
+└── main.qml
 \endcode
 
-The following entry in \c project.pro ensures that the resources are built into
-the application binary, making them available when needed:
+You may represent this structure as a \l{qt_add_qml_module}{CMake QML Module} in the following way:
 
-\badcode
-    RESOURCES += \
-        qml/main.qml \
-        images/image1.png \
-        images/image2.png
+\code
+qt_add_qml_module(my_module
+   URI MyModule
+   VERSION 1.0
+   QML_FILES
+       main.qml
+   RESOURCES
+       images/image1.png
+       images/image2.png
+   # ...
+)
 \endcode
 
-A more convenient approach is to use the
-\l {files(pattern[, recursive=false])}{wildcard syntax} to select several files
-at once:
-
-\badcode
-    RESOURCES += \
-        $$files(qml/*.qml) \
-        $$files(images/*.png)
-\endcode
-
-This approach is convenient for applications that depend on a limited number
-of resources. However, whenever a new file is added to \c RESOURCES using this
-approach, it causes \e all of the other files in \c RESOURCES to be recompiled
-as well. This can be inefficient, especially for large sets of files.
-In this case, a better approach is to separate each type of resource into its
-own \l [Qt Core] {Resource Collection Files}{.qrc} file. For example, the snippet
-above could be changed to the following:
-
-\badcode
-    qml.files = $$files(*.qml)
-    qml.prefix = /qml
-    RESOURCES += qml
-
-    images.files = $$files(*.png)
-    images.prefix = /images
-    RESOURCES += images
-\endcode
-
-Now, whenever a QML file is changed, only the QML files have to be recompiled.
-
-Sometimes it can be necessary to have more control over the path for a
-specific file managed by the resource system. For example, if we wanted to give
-\c image2.png an alias, we would need to switch to an explicit \c .qrc file.
-\l {Creating Resource Files} explains how to do this in detail.
+All QML files listed under \c {QML_FILES} will automatically get compiled \l {Ahead-of-Time Compilation}{ahead of time}.
 
 \section2 Related Information
 \list
@@ -174,12 +145,6 @@ sufficient.
 The following snippet demonstrates examples of models written in QML:
 
 \qml
-    model: ListModel {
-        ListElement { name: "Item 1" }
-        ListElement { name: "Item 2" }
-        ListElement { name: "Item 3" }
-    }
-
     model: [ "Item 1", "Item 2", "Item 3" ]
 
     model: 10
