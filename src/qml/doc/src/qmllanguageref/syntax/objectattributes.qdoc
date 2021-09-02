@@ -730,6 +730,8 @@ with a particular property is as follows:
 }
 \endcode
 
+This is commonly referred to as "on" syntax.
+
 It is important to note that the above syntax is in fact an
 \l{qtqml-syntax-basics.html#object-declarations}{object declaration} which
 will instantiate an object which acts on a pre-existing property.
