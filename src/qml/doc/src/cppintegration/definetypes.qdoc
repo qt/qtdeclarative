@@ -619,6 +619,8 @@ Item {
 }
 \endqml
 
+This is commonly referred to as "on" syntax.
+
 Clients can register their own property value source types, but currently not
 property value write interceptors.
 
