@@ -28,8 +28,7 @@ depends = qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtquickcontrols qtwidgets
 # This module has no documented C++ types, clear the module header
 moduleheader =
 
-headerdirs += ../
-sourcedirs += ../
+{headerdirs,sourcedirs} += ..
 
 imagedirs += images
 

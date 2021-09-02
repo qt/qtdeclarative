@@ -30,13 +30,13 @@ qhp.QtQuick.subprojects.qmltypes.sortPages = true
 qhp.QtQuick.subprojects.classes.title = Classes
 qhp.QtQuick.subprojects.classes.title = C++ Classes
 qhp.QtQuick.subprojects.classes.indexTitle = Qt Quick C++ Classes
-qhp.QtQuick.subprojects.classes.selectors = class fake:headerfile
+qhp.QtQuick.subprojects.classes.selectors = class doc:headerfile
 qhp.QtQuick.subprojects.classes.sortPages = true
 qhp.QtQuick.subprojects.examples.title = Examples
 qhp.QtQuick.subprojects.examples.indexTitle = Qt Quick Examples and Tutorials
-qhp.QtQuick.subprojects.examples.selectors = fake:example
+qhp.QtQuick.subprojects.examples.selectors = doc:example
 
-tagfile                 = ../../../doc/qtquick/qtquick.tags
+tagfile = qtquick.tags
 
 depends += \
     qtcore \
@@ -58,34 +58,35 @@ depends += \
     qtcmake
 
 {headerdirs,sourcedirs} += \
-    ..\
+    .. \
     ../../quick \
     ../../quickwidgets \
     ../../qmllocalstorage \
     ../../quicklayouts \
     ../../labs
 
-exampledirs +=  ../../../examples/quick \
-                snippets
+# src/labs/platform has its own documentation project
+excludedirs += ../../labs/platform
 
-imagedirs   += images
+exampledirs += \
+    ../../../examples/quick \
+    ../../qmlmodels/doc/snippets \
+    snippets
 
-#add particles and shapes sources
-headerdirs += ../../particles \
-              ../../quickshapes
-sourcedirs += ../../particles \
-              ../../quickshapes
+imagedirs += images
 
-#add imports directory because of dependencies
-headerdirs += ../../imports
-sourcedirs += ../../imports
+# Add particles and shapes sources
+{headerdirs,sourcedirs} += \
+    ../../particles \
+    ../../quickshapes
 
-#add plugins directory because of dependencies
-headerdirs += ../../plugins
-sourcedirs += ../../plugins
+# Add imports and plugins directories because of dependencies
+{headerdirs,sourcedirs} += \
+    ../../imports \
+    ../../plugins
 
 excludefiles += ../util/qquickpropertychanges_p.h
-examples.fileextensions        += "*.qm"
+examples.fileextensions += "*.qm"
 
 manifestmeta.thumbnail.names += "QtQuick/Threaded ListModel Example" \
                                 "QtQuick/QML Dynamic View Ordering Tutorial*"
@@ -99,6 +100,5 @@ navigation.qmltypespage = "Qt Quick QML Types"
 # \svgcolor {#ffdead}
 macro.svgcolor.HTML = "<div style=\"padding:10px;color:#fff;background:\1;\"></div>"
 
-# youtube video thumbnails that show up in offline and online docs
-HTML.extraimages += images/9BcAYDlpuT8.jpg
-qhp.QtQuick.extraFiles += images/9BcAYDlpuT8.jpg
+# YouTube video thumbnail that show up in offline docs
+{HTML.extraimages,qhp.QtQuick.extraFiles} += images/9BcAYDlpuT8.jpg

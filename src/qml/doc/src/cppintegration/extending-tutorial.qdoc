@@ -413,7 +413,7 @@ plugin binary is copied to \c Contents/PlugIns in the the application bundle;
 this path is set in \c {chapter6-plugins/app.pro}:
 
 \quotefromfile tutorials/extending-qml/chapter6-plugins/app.pro
-\skipto osx
+\skipto macos
 \printuntil }
 
 To account for this, we also need to add this location as a
