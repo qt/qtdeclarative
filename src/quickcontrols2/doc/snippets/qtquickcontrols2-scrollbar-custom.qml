@@ -41,6 +41,13 @@ ScrollBar {
         implicitHeight: 100
         radius: width / 2
         color: control.pressed ? "#81e889" : "#c2f4c6"
+        // Hide the ScrollBar when it's not needed.
+        opacity: control.policy === ScrollBar.AlwaysOn || (control.active && control.size < 1.0) ? 0.75 : 0
+
+        // Animate the changes in opacity (default duration is 250 ms).
+        Behavior on opacity {
+            NumberAnimation {}
+        }
     }
 }
 //! [file]
