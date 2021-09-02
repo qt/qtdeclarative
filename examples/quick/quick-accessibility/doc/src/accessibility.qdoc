@@ -40,7 +40,7 @@
 
     The button identifies itself and its functionality to the
     accessibility system:
-    \snippet quick-accessibility/content/Button.qml button
+    \snippet quick-accessibility/Button.qml button
 
     Similarly, \l Text types inside the example also identify themselves:
     \snippet quick-accessibility/accessibility.qml text
