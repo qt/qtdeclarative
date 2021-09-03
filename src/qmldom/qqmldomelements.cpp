@@ -825,7 +825,7 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
             }
         }
     }
-    if (counter != ow.counter())
+    if (counter != ow.counter() || !idStr().isEmpty())
         spacerId = ow.addNewlinesAutospacerCallback(2);
     for (auto pDefs : propertyDefs.values()) {
         for (auto pDef : pDefs.values()) {
@@ -855,7 +855,32 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
         }
     }
     ow.removeTextAddCallback(spacerId);
-    // check more than the name?
+    QList<DomItem> signalList, methodList;
+    for (auto ms : field(self, Fields::methods).values()) {
+        for (auto m : ms.values()) {
+            const MethodInfo *mPtr = m.as<MethodInfo>();
+            if (mPtr && mPtr->methodType == MethodInfo::MethodType::Signal)
+                signalList.append(m);
+            else
+                methodList.append(m);
+        }
+    }
+    if (counter != ow.counter())
+        spacerId = ow.addNewlinesAutospacerCallback(2);
+    for (auto &sig : signalList) {
+        ow.ensureNewline();
+        sig.writeOut(ow);
+        ow.ensureNewline();
+    }
+    ow.removeTextAddCallback(spacerId);
+    if (counter != ow.counter())
+        spacerId = ow.addNewlinesAutospacerCallback(2);
+    for (auto &method : methodList) {
+        ow.ensureNewline();
+        method.writeOut(ow);
+        ow.ensureNewline();
+    }
+    ow.removeTextAddCallback(spacerId);
     QList<DomItem> normalBindings, signalHandlers, delayedBindings;
     for (auto bName : bindings.sortedKeys()) {
         bool skipFirstNormal = m_propertyDefs.contains(bName);
@@ -878,22 +903,17 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
     }
     if (counter != ow.counter())
         spacerId = ow.addNewlinesAutospacerCallback(2);
-    for (auto b : normalBindings)
+    for (auto &b : normalBindings)
         b.writeOut(ow);
     ow.removeTextAddCallback(spacerId);
     if (counter != ow.counter())
         spacerId = ow.addNewlinesAutospacerCallback(2);
-    for (auto ms : field(self, Fields::methods).values()) {
-        for (auto m : ms.values()) {
-            ow.ensureNewline();
-            m.writeOut(ow);
-            ow.ensureNewline();
-        }
-    }
+    for (auto &b : delayedBindings)
+        b.writeOut(ow);
     ow.removeTextAddCallback(spacerId);
     if (counter != ow.counter())
         spacerId = ow.addNewlinesAutospacerCallback(2);
-    for (auto b : signalHandlers)
+    for (auto &b : signalHandlers)
         b.writeOut(ow);
     ow.removeTextAddCallback(spacerId);
     if (counter != ow.counter())
@@ -914,11 +934,6 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
         }
         ow.removeTextAddCallback(spacerId);
     }
-    if (counter != ow.counter())
-        spacerId = ow.addNewlinesAutospacerCallback(2);
-    for (auto b : delayedBindings)
-        b.writeOut(ow);
-    ow.removeTextAddCallback(spacerId);
     ow.decreaseIndent(1, baseIndent);
     ow.ensureNewline().write(u"}");
 }

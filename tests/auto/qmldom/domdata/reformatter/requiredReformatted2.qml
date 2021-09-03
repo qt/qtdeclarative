@@ -2,6 +2,7 @@ import QtQuick 2.15
 
 Item {
     id: theFoo
+
     required data
     required property Item theItem
 

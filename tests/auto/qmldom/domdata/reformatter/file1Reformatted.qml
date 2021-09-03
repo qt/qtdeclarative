@@ -31,8 +31,6 @@ Window {
                         return 45;
                     }
 
-                    text: root.text
-
                     function f(v = 4) {
                         let c = 0;
                         return {
@@ -42,6 +40,8 @@ Window {
                             }()
                         };
                     }
+
+                    text: root.text
                 }
             }
         }
