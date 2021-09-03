@@ -289,6 +289,7 @@ bool QQuickKeyEvent::matches(QKeySequence::StandardKey matchKey) const
 /*!
     \qmlproperty int QtQuick::MouseEvent::source
     \since 5.7
+    \deprecated [6.2] Use \l {Qt Quick Input Handlers}{input handlers} with \l {PointerDeviceHandler::acceptedDevices}{acceptedDevices} set.
 
     This property holds the source of the mouse event.
 
