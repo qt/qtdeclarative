@@ -2462,25 +2462,6 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
         }
     }
 
-#if 0
-    if (isQtVariant(value)) {
-        const QVariant &var = variantValue(value);
-        // ### Enable once constructInPlace() is in qt master.
-        if (var.userType() == type) {
-            QMetaType::constructInPlace(type, data, var.constData());
-            return true;
-        }
-        if (var.canConvert(type)) {
-            QVariant vv = var;
-            vv.convert(type);
-            Q_ASSERT(vv.userType() == type);
-            QMetaType::constructInPlace(type, data, vv.constData());
-            return true;
-        }
-
-    }
-#endif
-
     // Try to use magic; for compatibility with qjsvalue_cast.
 
     if (convertToNativeQObject(value, metaType, reinterpret_cast<void **>(data)))
@@ -2531,6 +2512,15 @@ bool ExecutionEngine::metaTypeFromJS(const Value &value, QMetaType metaType, voi
     } else if (metaType == QMetaType::fromType<QJSValue>()) {
         QJSValuePrivate::setValue(reinterpret_cast<QJSValue*>(data), value.asReturnedValue());
         return true;
+    } else if (!isPointer) {
+        QVariant val;
+        if (QQml_valueTypeProvider()->createValueType(
+                    metaType.id(), QJSValuePrivate::fromReturnedValue(value.asReturnedValue()), val)) {
+            Q_ASSERT(val.metaType() == metaType);
+            metaType.destruct(data);
+            metaType.construct(data, val.constData());
+            return true;
+        }
     }
 
     return false;
