@@ -231,7 +231,12 @@ void QSGPlainTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdateBatch
         }
     }
 
-    bool needsRebuild = m_texture && m_texture->pixelSize() != m_texture_size;
+    bool needsRebuild = false;
+
+    if (m_texture && m_texture->pixelSize() != m_texture_size) {
+        m_texture->setPixelSize(m_texture_size);
+        needsRebuild = true;
+    }
 
     if (mipmappingChanged) {
         QRhiTexture::Flags f = m_texture->flags();
