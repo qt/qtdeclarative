@@ -767,6 +767,7 @@ void QQuickAbstractButton::setIcon(const QQuickIcon &icon)
 {
     Q_D(QQuickAbstractButton);
     d->icon = icon;
+    d->icon.setOwner(this);
     d->updateEffectiveIcon();
 }
 

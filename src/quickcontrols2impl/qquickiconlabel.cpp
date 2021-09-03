@@ -78,7 +78,7 @@ bool QQuickIconLabelPrivate::createImage()
     beginClass(image);
     image->setObjectName(QStringLiteral("image"));
     image->setName(icon.name());
-    image->setSource(icon.source());
+    image->setSource(icon.resolvedSource());
     image->setSourceSize(QSize(icon.width(), icon.height()));
     image->setColor(icon.color());
     image->setCache(icon.cache());
@@ -112,7 +112,7 @@ void QQuickIconLabelPrivate::syncImage()
         return;
 
     image->setName(icon.name());
-    image->setSource(icon.source());
+    image->setSource(icon.resolvedSource());
     image->setSourceSize(QSize(icon.width(), icon.height()));
     image->setColor(icon.color());
     image->setCache(icon.cache());
@@ -399,6 +399,7 @@ void QQuickIconLabel::setIcon(const QQuickIcon &icon)
         return;
 
     d->icon = icon;
+    d->icon.setOwner(this);
     d->updateOrSyncImage();
 }
 
