@@ -1,5 +1,6 @@
 QtObject {
     id: foo
+
     states: [
         State {
         }

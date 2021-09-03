@@ -42,7 +42,6 @@ Item {
     @Annotate {
     }
     anchors.fill: parent
-
     @AnnotateMore {
         property int x: 5
     }
@@ -57,7 +56,6 @@ Item {
         anchors.fill: parent
         legend.alignment: Qt.AlignBottom
         antialiasing: true
-
         @ExtraAnnotation {
             signal pippo
         }
@@ -90,7 +88,6 @@ Item {
                 value: 6.8
             }
         }
-
         @SignalAnnotation {
             implicit: true
         }
@@ -101,7 +98,6 @@ Item {
         function foo(x) {
             return 42;
         }
-
         @BindingAnn {
             bType: 1
         }
@@ -125,7 +121,6 @@ Item {
             duration: 34
         }
     }
-
     @SuperComplete {
         binding: late
     }

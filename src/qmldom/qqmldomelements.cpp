@@ -67,6 +67,7 @@
 #include <QtCore/QBasicMutex>
 
 #include <optional>
+#include <limits>
 
 QT_BEGIN_NAMESPACE
 
@@ -663,9 +664,14 @@ MutableDomItem QmlObject::addMethod(MutableDomItem &self, MethodInfo functionDef
 
 void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
 {
+    const quint32 posOfNewElements = std::numeric_limits<quint32>::max();
     bool isRootObject = pathFromOwner().length() == 5
             && pathFromOwner()[0] == Path::Field(Fields::components)
             && pathFromOwner()[3] == Path::Field(Fields::objects);
+    QString code;
+    DomItem owner = self.owner();
+    if (std::shared_ptr<QmlFile> qmlFilePtr = self.ownerAs<QmlFile>())
+        code = qmlFilePtr->code();
     ow.writeRegion(u"name", name());
     if (!onTarget.isEmpty())
         ow.space().writeRegion(u"on", u"on").space().writeRegion(u"onTarget", onTarget).space();
@@ -688,10 +694,10 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
     DomItem component;
     if (isRootObject)
         component = self.containingObject();
-    auto startLoc = [](FileLocations::Tree l) {
+    auto startLoc = [&](FileLocations::Tree l) {
         if (l)
             return l->info().fullRegion;
-        return SourceLocation(~quint32(0), 0, 0, 0);
+        return SourceLocation(posOfNewElements, 0, 0, 0);
     };
     if (ow.lineWriter.options().attributesSequence
         == LineWriterOptions::AttributesSequence::Preserve) {
@@ -759,10 +765,22 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
         qsizetype iAttr = 0;
         while (iAttr != attribs.size()) {
             auto &el = attribs[iAttr++];
-            if (iAttr > 1 && el.second.internalKind() != attribs[iAttr - 2].second.internalKind())
-                ow.ensureNewline(2);
-            else
-                ow.ensureNewline();
+            // check for an empty line before the current element, and preserve it
+            int preNewlines = 0;
+            quint32 start = el.first.offset;
+            if (start != posOfNewElements && code.size() >= start) {
+                while (start != 0) {
+                    QChar c = code.at(--start);
+                    if (c == u'\n') {
+                        if (++preNewlines == 2)
+                            break;
+                    } else if (!c.isSpace())
+                        break;
+                }
+            }
+            if (preNewlines == 0)
+                ++preNewlines;
+            ow.ensureNewline(preNewlines);
             if (el.second.internalKind() == DomType::PropertyDefinition && iAttr != attribs.size()
                 && el.first.offset != ~quint32(0)) {
                 DomItem b;
@@ -1464,10 +1482,10 @@ class FirstNodeVisitor : public VisitAll
 {
 public:
     quint32 minStart = 0;
-    quint32 maxEnd = ~quint32(0);
+    quint32 maxEnd = std::numeric_limits<quint32>::max();
     AST::Node *firstNodeInRange = nullptr;
 
-    FirstNodeVisitor(quint32 minStart = 0, quint32 maxEnd = ~quint32(0))
+    FirstNodeVisitor(quint32 minStart = 0, quint32 maxEnd = std::numeric_limits<quint32>::max())
         : minStart(minStart), maxEnd(maxEnd)
     {
     }
