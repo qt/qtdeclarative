@@ -365,10 +365,9 @@ bool QQuickKeyEvent::matches(QKeySequence::StandardKey matchKey) const
     \ingroup qtquick-input-events
     \brief Provides information about a mouse wheel event.
 
-    The position of the mouse can be found via the
-    \l {Item::x} {x} and \l {Item::y} {y} properties.
+    The position of the mouse can be found via the \l x and \l y properties.
 
-    \sa MouseArea
+    \sa WheelHandler, MouseArea
 */
 
 /*!
@@ -381,16 +380,20 @@ bool QQuickKeyEvent::matches(QKeySequence::StandardKey matchKey) const
     \qmlproperty real QtQuick::WheelEvent::y
 
     These properties hold the coordinates of the position supplied by the wheel event.
+
+    \sa QWheelEvent::position()
 */
 
 /*!
     \qmlproperty bool QtQuick::WheelEvent::accepted
 
-    Setting \a accepted to true prevents the wheel event from being
-    propagated to items below this item.
+    Setting \a accepted to \c true prevents the wheel event from being
+    propagated to items below the receiving item or handler.
 
-    Generally, if the item acts on the wheel event then it should be accepted
+    Generally, if the item acts on the wheel event, it should be accepted
     so that items lower in the stacking order do not also respond to the same event.
+
+    \sa QWheelEvent::accepted
 */
 
 /*!
@@ -404,32 +407,39 @@ bool QQuickKeyEvent::matches(QKeySequence::StandardKey matchKey) const
     \li \l {Qt::RightButton} {Qt.RightButton}
     \li \l {Qt::MiddleButton} {Qt.MiddleButton}
     \endlist
+
+    \sa QWheelEvent::buttons()
 */
 
 /*!
     \qmlproperty point QtQuick::WheelEvent::angleDelta
 
-    This property holds the distance that the wheel is rotated in wheel degrees.
-    The x and y cordinate of this property holds the delta in horizontal and
-    vertical orientation.
+    This property holds the relative amount that the wheel was rotated, in
+    eighths of a degree. The \c x and \c y coordinates of this property hold
+    the delta in horizontal and vertical orientations, respectively.
 
     A positive value indicates that the wheel was rotated up/right;
     a negative value indicates that the wheel was rotated down/left.
 
-    Most mouse types work in steps of 15 degrees, in which case the delta value is a
-    multiple of 120; i.e., 120 units * 1/8 = 15 degrees.
+    Most mouse types work in steps of \c 15 degrees, in which case the delta value is a
+    multiple of \c 120; i.e., \c {120 units * 1/8 = 15 degrees}.
+
+    \sa QWheelEvent::angleDelta()
 */
 
 /*!
     \qmlproperty point QtQuick::WheelEvent::pixelDelta
 
     This property holds the delta in screen pixels and is available in platforms that
-    have high-resolution trackpads, such as \macos.
-    The x and y cordinate of this property holds the delta in horizontal and
-    vertical orientation. The value should be used directly to scroll content on screen.
+    have high-resolution \l {QInputDevice::DeviceType::TouchPad}{trackpads}, such as \macos.
+    The \c x and \c y coordinates of this property hold the delta in horizontal
+    and vertical orientations, respectively. The values can be used directly to
+    scroll content on screen.
 
-    For platforms without high-resolution trackpad support, pixelDelta will always be (0,0),
-    and angleDelta should be used instead.
+    For platforms without \l {QInputDevice::Capability::PixelScroll}{high-resolution trackpad}
+    support, pixelDelta will always be \c {(0,0)}, and \l angleDelta should be used instead.
+
+    \sa QWheelEvent::pixelDelta()
 */
 
 /*!
@@ -450,7 +460,7 @@ bool QQuickKeyEvent::matches(QKeySequence::StandardKey matchKey) const
 
     For example, to react to a Control key pressed during the wheel event:
     \qml
-    MouseArea {
+    WheelHandler {
         onWheel: (wheel)=> {
             if (wheel.modifiers & Qt.ControlModifier) {
                 adjustZoom(wheel.angleDelta.y / 120);
@@ -458,6 +468,8 @@ bool QQuickKeyEvent::matches(QKeySequence::StandardKey matchKey) const
         }
     }
     \endqml
+
+    \sa QWheelEvent::modifiers()
 */
 
 /*!
@@ -479,7 +491,9 @@ bool QQuickKeyEvent::matches(QKeySequence::StandardKey matchKey) const
     negate the angleDelta or pixelDelta values.
 
     \note Many platforms provide no such information. On such platforms
-    \l inverted always returns false.
+    \c inverted always returns \c false.
+
+    \sa QWheelEvent::inverted()
 */
 
 QT_END_NAMESPACE
