@@ -84,6 +84,9 @@
     For buttons, the \l {AbstractButton::}{display} property can be used to control
     how the icon and text are displayed within the button.
 
+    The \c icon.cache property controls whether or not the icon image is cached.
+    For more information, see \l {Image::}{cache}.
+
     \section1 Icon Themes
 
     Compliant icon themes must follow the freedesktop icon theme specification,
