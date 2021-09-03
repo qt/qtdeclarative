@@ -35,19 +35,17 @@
 ****************************************************************************/
 
 #include "qquickicon_p.h"
+#include "qtaggedpointer.h"
+
+#include <private/qqmlcontextdata_p.h>
+#include <private/qqmldata_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickIconPrivate : public QSharedData
 {
 public:
-    QString name;
-    QUrl source;
-    int width = 0;
-    int height = 0;
-    QColor color = Qt::transparent;
-    bool cache = true;
-
+    // This is based on QFont's resolve_mask.
     enum ResolveProperties {
         NameResolved = 0x0001,
         SourceResolved = 0x0002,
@@ -57,9 +55,29 @@ public:
         CacheResolved = 0x0020,
         AllPropertiesResolved = 0x1ffff
     };
-
-    // This is based on QFont's resolve_mask.
     int resolveMask = 0;
+
+    QString name;
+    QUrl source;
+    int width = 0;
+    int height = 0;
+    QColor color = Qt::transparent;
+
+    // we want DoCache as the default, and thus as the zero value
+    // so that the tagged pointer can be zero initialized
+    enum CacheStatus : bool { DoCache, SkipCaching };
+    static_assert (DoCache == 0);
+    /* We use a QTaggedPointer here to save space:
+       - Without it, we would need an additional boolean, which due to
+         alignment would increase the class size by sizeof(void *)
+       - The pointer part stores the "owner" of the QQuickIcon, i.e.
+         an object which has an icon property. We need the owner to
+         access its context to resolve relative url's in the way users
+         expect.
+       - The tag bits are used to track whether caching is enabled.
+     */
+    QTaggedPointer<QObject, CacheStatus> ownerAndCache = nullptr;
+
 };
 
 QQuickIcon::QQuickIcon()
@@ -89,7 +107,7 @@ bool QQuickIcon::operator==(const QQuickIcon &other) const
                             && d->width == other.d->width
                             && d->height == other.d->height
                             && d->color == other.d->color
-                            && d->cache == other.d->cache);
+                            && d->ownerAndCache == other.d->ownerAndCache);
 }
 
 bool QQuickIcon::operator!=(const QQuickIcon &other) const
@@ -144,6 +162,17 @@ void QQuickIcon::resetSource()
     d.detach();
     d->source = QString();
     d->resolveMask &= ~QQuickIconPrivate::SourceResolved;
+}
+
+QUrl QQuickIcon::resolvedSource() const
+{
+    if (QObject *owner = d->ownerAndCache.data()) {
+        QQmlData *data = QQmlData::get(owner);
+        if (data && data->outerContext)
+            return data->outerContext->resolvedUrl(d->source);
+    }
+
+    return d->source;
 }
 
 int QQuickIcon::width() const
@@ -214,24 +243,33 @@ void QQuickIcon::resetColor()
 
 bool QQuickIcon::cache() const
 {
-    return d->cache;
+    return d->ownerAndCache.tag() == QQuickIconPrivate::DoCache;
 }
 
 void QQuickIcon::setCache(bool cache)
 {
-    if ((d->resolveMask & QQuickIconPrivate::CacheResolved) && d->cache == cache)
+    const auto cacheState = cache ? QQuickIconPrivate::DoCache : QQuickIconPrivate::SkipCaching;
+    if ((d->resolveMask & QQuickIconPrivate::CacheResolved) && d->ownerAndCache.tag() == cacheState)
         return;
 
     d.detach();
-    d->cache = cache;
+    d->ownerAndCache.setTag(cacheState);
     d->resolveMask |= QQuickIconPrivate::CacheResolved;
 }
 
 void QQuickIcon::resetCache()
 {
     d.detach();
-    d->cache = true;
+    d->ownerAndCache.setTag(QQuickIconPrivate::DoCache);
     d->resolveMask &= ~QQuickIconPrivate::CacheResolved;
+}
+
+void QQuickIcon::setOwner(QObject *owner)
+{
+    if (d->ownerAndCache.data() == owner)
+        return;
+    d.detach();
+    d->ownerAndCache = owner;
 }
 
 QQuickIcon QQuickIcon::resolve(const QQuickIcon &other) const
@@ -255,7 +293,9 @@ QQuickIcon QQuickIcon::resolve(const QQuickIcon &other) const
         resolved.d->color = other.d->color;
 
     if (!(d->resolveMask & QQuickIconPrivate::CacheResolved))
-        resolved.d->cache = other.d->cache;
+        resolved.d->ownerAndCache.setTag(other.d->ownerAndCache.tag());
+
+    // owner does not change when resolving an icon
 
     return resolved;
 }

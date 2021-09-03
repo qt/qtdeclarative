@@ -90,6 +90,7 @@ public:
     QUrl source() const;
     void setSource(const QUrl &source);
     void resetSource();
+    QUrl resolvedSource() const;
 
     int width() const;
     void setWidth(int width);
@@ -106,6 +107,10 @@ public:
     bool cache() const;
     void setCache(bool cache);
     void resetCache();
+
+    // owner is not a property - it is set internally by classes using icon
+    // so that we can resolve relative URL's correctly
+    void setOwner(QObject *owner);
 
     QQuickIcon resolve(const QQuickIcon &other) const;
 

@@ -403,6 +403,7 @@ void QQuickAction::setIcon(const QQuickIcon &icon)
         return;
 
     d->icon = icon;
+    d->icon.setOwner(this);
     emit iconChanged(icon);
 }
 
