@@ -37,12 +37,41 @@
 **/
 
 #include "qqmldomfieldfilter_p.h"
+#include "qqmldompath_p.h"
 #include "QtCore/qglobal.h"
 
 QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 namespace Dom {
+
+/*!
+\internal
+\class QQmljs::Dom::FieldFilter
+
+\brief Class that represent a filter on DomItem, when dumping or comparing
+
+DomItem can be duped or compared, but often one is interested only in a subset
+of them, FieldFilter is a simple way to select a subset of them.
+It uses two basic elements: the type of the object (internalKind) and the
+name of fields.
+
+A basic filter can be represented by <op><typeName>:<fieldName> or <op><fieldName>
+where op is either + or - (if the matching elements should be added or removed)
+Both typeName and fieldName can be the empty string (meaning any value matches).
+
+Basic filters are ordered from the most specific to the least specific as follow:
+type+field > type > field > empty.
+When combining several filters the most specific always wins, so
+-code,+ScriptExpression:code is the same as +ScriptExpression:code,-code and means
+that normally the field code is not outputted but for a ScriptExpression DomItem
+it is.
+
+It is possible to get the string representation of the current filter with
+FieldFilter::describeFieldsFilter(), and change the current filter with
+FieldFilter::addFilter(), but after it one should call FieldFilter::setFiltred()
+to ensure that the internal cache used to speed up comparisons is correct.
+*/
 
 QString FieldFilter::describeFieldsFilter() const
 {
@@ -104,9 +133,11 @@ bool FieldFilter::operator()(DomItem &base, const PathEls::PathComponent &c, Dom
 
 bool FieldFilter::addFilter(QString fFields)
 {
-    for (QString fField : fFields.split(QLatin1Char(','))) {
+    for (const QString &fField : fFields.split(QLatin1Char(','))) {
+        // parses a base filter of the form <op><typeName>:<fieldName> or <op><fieldName>
+        // as described in this class documentation
         QRegularExpression fieldRe(QRegularExpression::anchoredPattern(QStringLiteral(
-                uR"((?<op>[-+])?(?:(?<type>[a-zA-Z0-9_]*):)?(?<field>[a-zA-Z0-9_]+))")));
+                uR"((?<op>[-+])?(?:(?<type>[a-zA-Z0-9_]*):)?(?<field>[a-zA-Z0-9_]*))")));
         QRegularExpressionMatch m = fieldRe.match(fField);
         if (m.hasMatch()) {
             if (m.captured(u"op") == u"+") {
@@ -128,11 +159,18 @@ FieldFilter FieldFilter::defaultFilter()
 {
     QMultiMap<QString, QString> fieldFilterAdd { { QLatin1String("ScriptExpression"),
                                                    QLatin1String("code") } };
-    QMultiMap<QString, QString> fieldFilterRemove { { QString(), QLatin1String("code") },
-                                                    { QString(), QLatin1String("propertyInfos") },
-                                                    { QLatin1String("AttachedInfo"),
-                                                      QLatin1String("parent") } };
-
+    QMultiMap<QString, QString> fieldFilterRemove {
+        { QString(), QString::fromUtf16(Fields::code) },
+        { QString(), QString::fromUtf16(Fields::postCode) },
+        { QString(), QString::fromUtf16(Fields::preCode) },
+        { QString(), QString::fromUtf16(Fields::importScope) },
+        { QString(), QString::fromUtf16(Fields::fileLocationsTree) },
+        { QString(), QString::fromUtf16(Fields::astComments) },
+        { QString(), QString::fromUtf16(Fields::comments) },
+        { QString(), QString::fromUtf16(Fields::exports) },
+        { QString(), QString::fromUtf16(Fields::propertyInfos) },
+        { QLatin1String("AttachedInfo"), QString::fromUtf16(Fields::parent) }
+    };
     return FieldFilter { fieldFilterAdd, fieldFilterRemove };
 }
 
