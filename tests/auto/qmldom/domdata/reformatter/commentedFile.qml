@@ -5,6 +5,10 @@ import QtQuick 2.15
 /* multi
 line */ // comment after multi line
 Item {
+function method(x) // function comment
+{ // just returns the double of x
+  return 2*x // yep twice as much
+} // post method
 // binding comment
 a: {// header
 

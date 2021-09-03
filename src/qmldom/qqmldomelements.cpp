@@ -1659,7 +1659,7 @@ void MethodInfo::writePre(DomItem &self, OutWriter &ow) const
             ow.write(u", ");
         arg.writeOut(ow);
     }
-    ow.writeRegion(u"leftParen", u")");
+    ow.writeRegion(u"rightParen", u")");
     ow.ensureSpace().writeRegion(u"leftBrace", u"{");
 }
 
@@ -1685,8 +1685,8 @@ void MethodInfo::writeOut(DomItem &self, OutWriter &ow) const
             else
                 qCWarning(domLog) << "failed to cast to MethodParameter";
         }
+        ow.writeRegion(u"rightParen", u")");
         ow.decreaseIndent(1, baseIndent);
-        ow.writeRegion(u"leftParen", u")");
         return;
     } break;
     case MethodType::Method: {

@@ -519,6 +519,15 @@ public:
             Path mPathFromOwner = current<QmlObject>().addMethod(m, AddOption::KeepExisting, &mPtr);
             pushEl(mPathFromOwner, *mPtr,
                    fDef); // add at the start and use the normal recursive visit?
+            FileLocations::Tree &fLoc = nodeStack.last().fileLocations;
+            if (fDef->lparenToken.length != 0)
+                FileLocations::addRegion(fLoc, u"leftParen", fDef->lparenToken);
+            if (fDef->rparenToken.length != 0)
+                FileLocations::addRegion(fLoc, u"rightParen", fDef->rparenToken);
+            if (fDef->lbraceToken.length != 0)
+                FileLocations::addRegion(fLoc, u"leftBrace", fDef->lbraceToken);
+            if (fDef->rbraceToken.length != 0)
+                FileLocations::addRegion(fLoc, u"rightBrace", fDef->rbraceToken);
             loadAnnotations(el);
             MethodInfo &mInfo = std::get<MethodInfo>(currentNode().value);
             AST::FormalParameterList *args = fDef->formals;

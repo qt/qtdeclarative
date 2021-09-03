@@ -26,6 +26,11 @@ Item {
         // footer
     }
     // post binding comment
+
+    function method(x) // function comment
+    { // just returns the double of x
+        return 2 * x; // yep twice as much
+    } // post method
 }
 // footer file comment
 /* second comment */ /* third comment */
