@@ -231,10 +231,6 @@ function(qt6_add_qml_module target)
             "specify NO_CREATE_PLUGIN_TARGET."
         )
     endif()
-    if(arg_PLUGIN_TARGET STREQUAL target)
-        # The plugin can't be optional when it has no backing target
-        set(arg_NO_PLUGIN_OPTIONAL TRUE)
-    endif()
     if(NOT arg_INSTALLED_PLUGIN_TARGET)
         set(arg_INSTALLED_PLUGIN_TARGET ${arg_PLUGIN_TARGET})
     endif()

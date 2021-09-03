@@ -368,9 +368,7 @@ arrangement. The auto-generated plugin source file satisfies this requirement.
 Where a project provides its own \c{.cpp} implementation for the plugin, that
 would normally mean the \c NO_PLUGIN_OPTIONAL keyword is also needed because
 the plugin will almost certainly contain functionality that the QML module
-requires. If the plugin is its own backing target, meaning \c target and
-\c PLUGIN_TARGET are the same, then \c NO_PLUGIN_OPTIONAL is assumed and does
-not need to be explicitly provided.
+requires.
 
 Type registration is automatically performed for the backing target's C++
 sources that are processed by AUTOMOC. This will generate a typeinfo file in the
