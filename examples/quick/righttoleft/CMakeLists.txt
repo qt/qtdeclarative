@@ -7,7 +7,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
   set(INSTALL_EXAMPLESDIR "examples")
@@ -15,69 +14,37 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/righttoleft")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Quick)
-find_package(Qt6 COMPONENTS Qml)
+find_package(Qt6 COMPONENTS Core Gui Quick Qml)
 
-qt_add_executable(righttoleft
+add_subdirectory("../shared" "shared")
+
+qt_add_executable(righttoleftexample
+    WIN32
+    MACOSX_BUNDLE
     main.cpp
 )
-set_target_properties(righttoleft PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
+
+qt_add_qml_module(righttoleftexample
+    URI righttoleft
+    VERSION 1.0
+    QML_FILES
+        "layoutdirection/layoutdirection.qml"
+        "layoutmirroring/layoutmirroring.qml"
+        "righttoleft.qml"
+        "textalignment/textalignment.qml"
 )
-target_link_libraries(righttoleft PUBLIC
+
+target_link_libraries(righttoleftexample PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Qml
     Qt::Quick
 )
 
-
-# Resources:
-set(righttoleft_resource_files
-    "layoutdirection/layoutdirection.qml"
-    "layoutmirroring/layoutmirroring.qml"
-    "righttoleft.qml"
-    "textalignment/textalignment.qml"
-)
-
-qt6_add_resources(righttoleft "righttoleft"
-    PREFIX
-        "/righttoleft"
-    FILES
-        ${righttoleft_resource_files}
-)
-set(shared_resource_files
-    "../shared/Button.qml"
-    "../shared/CheckBox.qml"
-    "../shared/FlickrRssModel.qml"
-    "../shared/Label.qml"
-    "../shared/LauncherList.qml"
-    "../shared/SimpleLauncherDelegate.qml"
-    "../shared/Slider.qml"
-    "../shared/TabSet.qml"
-    "../shared/TextField.qml"
-    "../shared/images/back.png"
-    "../shared/images/checkmark.png"
-    "../shared/images/next.png"
-    "../shared/images/qt-logo.png"
-    "../shared/images/slider_handle.png"
-    "../shared/images/tab.png"
-)
-
-qt6_add_resources(righttoleft "shared"
-    PREFIX
-        "/shared"
-    BASE
-        "../shared"
-    FILES
-        ${shared_resource_files}
-)
-
-install(TARGETS righttoleft
+install(TARGETS righttoleftexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
+
+bundle_shared(righttoleftexample)
