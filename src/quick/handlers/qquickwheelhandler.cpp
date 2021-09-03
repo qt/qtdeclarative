@@ -502,7 +502,7 @@ void QQuickWheelHandler::timerEvent(QTimerEvent *event)
 }
 
 /*!
-    \qmlsignal QtQuick::WheelHandler::wheel(PointerScrollEvent event)
+    \qmlsignal QtQuick::WheelHandler::wheel(WheelEvent event)
 
     This signal is emitted every time this handler receives an \a event
     of type \l QWheelEvent: that is, every time the wheel is moved or the
