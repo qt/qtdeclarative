@@ -6,7 +6,6 @@ QtObject {
         id: test
         signal foo
     }
-
     // End comment
 
     // Testing UiArrayBinding

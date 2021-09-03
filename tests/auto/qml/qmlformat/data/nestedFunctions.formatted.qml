@@ -3,6 +3,7 @@ Item {
         function nested() {}
         foo();
     }
+
     function b() {
         function nested() {}
         bar();

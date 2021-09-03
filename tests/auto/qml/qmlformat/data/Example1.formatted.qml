@@ -55,7 +55,6 @@ Item {
 
     // More orphans
     property variant some_array_literal: [30, 20, Math["PI"], [4, 3, 2], "foo", 0.3]
-
     property bool something_computed: function (x) {
         const PI = 3, DAYS_PER_YEAR = 365.25;
         var x = 3 + 2;
@@ -129,6 +128,7 @@ Item {
     }()
 
     default property bool some_default_bool: 500 % 5 !== 0 // some_default_bool
+
     myFavouriteThings: [
         // This is an orphan
 
@@ -147,9 +147,7 @@ Item {
 
     Text {
         text: "Bla"
-
         signal boo(int count, int times, real duration)
-
         required property string batman
     }
 
