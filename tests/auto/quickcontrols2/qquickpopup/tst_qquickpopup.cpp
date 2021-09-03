@@ -990,13 +990,13 @@ void tst_QQuickPopup::cursorShape()
     QVERIFY(textField);
 
     // Move the mouse over the text field.
-    const QPoint textFieldPos(popup->x() - 10, textField->height() / 2);
+    const QPoint textFieldPos(popup->x() - 1, textField->height() / 2);
     QVERIFY(textField->contains(textField->mapFromScene(textFieldPos)));
     QTest::mouseMove(window, textFieldPos);
     QTRY_COMPARE(window->cursor().shape(), textField->cursor().shape());
 
     // Move the mouse over the popup where it overlaps with the text field.
-    const QPoint textFieldOverlapPos(popup->x() + 10, textField->height() / 2);
+    const QPoint textFieldOverlapPos(popup->x() + 1, textField->height() / 2);
     QTest::mouseMove(window, textFieldOverlapPos);
     QTRY_COMPARE(window->cursor().shape(), popup->popupItem()->cursor().shape());
 
