@@ -293,7 +293,7 @@ start and end of item
 
 The map uses an index that is based on 2*the location. Thus for every location l it is possible
 to have two indexes: 2*l (just before) and 2*l+1 (just after).
-This allows to attach comments to indexes representing either just
+This allows to attach comments to indexes representing either just before or after any location
 */
 QMultiMap<quint32, const QList<Comment> *>
 CommentedElement::commentGroups(SourceLocation elLocation) const
