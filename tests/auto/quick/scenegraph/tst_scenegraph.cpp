@@ -44,6 +44,7 @@
 #include <private/qsgcontext_p.h>
 #include <private/qsgrenderloop_p.h>
 #include <private/qsgrhisupport_p.h>
+#include <private/qsgplaintexture_p.h>
 
 #include "../../shared/util.h"
 #include "../shared/visualtestutil.h"
@@ -116,6 +117,7 @@ private slots:
     void createTextureFromImage_data();
     void createTextureFromImage();
     void withAdoptedRhi();
+    void resizeTextureFromImage();
 
 private:
     QQuickView *createView(const QString &file, QWindow *parent = nullptr, int x = -1, int y = -1, int w = -1, int h = -1);
@@ -542,6 +544,10 @@ void tst_SceneGraph::createTextureFromImage()
     QCOMPARE(texture->hasAlphaChannel(), expectedAlpha);
 }
 
+#if QT_CONFIG(vulkan)
+static QVulkanInstance *TestOffscreenScene_vkinst = nullptr;
+#endif
+
 struct TestOffscreenScene
 {
     QQuickRenderControl *renderControl = nullptr;
@@ -549,77 +555,89 @@ struct TestOffscreenScene
     QQmlEngine *engine = nullptr;
     QQmlComponent *component = nullptr;
     QQuickItem *rootItem = nullptr;
+
+    // to be called at the end of each test case once all TestOffscreenScene instances are destroyed
+    static void cleanup()
+    {
+#if QT_CONFIG(vulkan)
+        delete TestOffscreenScene_vkinst;
+        TestOffscreenScene_vkinst = nullptr;
+#endif
+    }
+
+    ~TestOffscreenScene()
+    {
+        delete component;
+        delete engine;
+        delete window;
+        delete renderControl;
+    }
 };
 
-static void destroyOffscreenScene(const TestOffscreenScene &scene)
+static TestOffscreenScene *createOffscreenScene(const QUrl &url, QQuickWindow *compatibleWindow = nullptr)
 {
-    delete scene.component;
-    delete scene.engine;
-    delete scene.window;
-    delete scene.renderControl;
-}
-
-static TestOffscreenScene createOffscreenScene(const QUrl &url, QQuickWindow *compatibleWindow = nullptr)
-{
-    TestOffscreenScene scene;
-    scene.renderControl = new QQuickRenderControl;
-    scene.window = new QQuickWindow(scene.renderControl);
+    std::unique_ptr<TestOffscreenScene> scene(new TestOffscreenScene);
+    scene->renderControl = new QQuickRenderControl;
+    scene->window = new QQuickWindow(scene->renderControl);
 
     if (compatibleWindow) {
-        scene.window->setGraphicsApi(compatibleWindow->rendererInterface()->graphicsApi());
+        scene->window->setGraphicsApi(compatibleWindow->rendererInterface()->graphicsApi());
 
 #if QT_CONFIG(vulkan)
         if (compatibleWindow->rendererInterface()->graphicsApi() == QSGRendererInterface::VulkanRhi)
-            scene.window->setVulkanInstance(compatibleWindow->vulkanInstance());
+            scene->window->setVulkanInstance(compatibleWindow->vulkanInstance());
 #endif
 
         QRhi *rhi = static_cast<QRhi *>(compatibleWindow->rendererInterface()->getResource(compatibleWindow, QSGRendererInterface::RhiResource));
         if (rhi) {
             // make it so that the rendercontrol will not create a new QRhi, but rather use what we specify here
-            scene.window->setGraphicsDevice(QQuickGraphicsDevice::fromRhi(rhi));
+            scene->window->setGraphicsDevice(QQuickGraphicsDevice::fromRhi(rhi));
         } else {
             qWarning("No QRhi from the specified compatibleWindow, this is unexpected");
         }
     } else {
 #if QT_CONFIG(vulkan)
-        if (QQuickWindow::graphicsApi() == QSGRendererInterface::Vulkan) // honor what QSG_RHI_BACKEND says
-            scene.window->setVulkanInstance(QSGRhiSupport::defaultVulkanInstance());
+        if (QQuickWindow::graphicsApi() == QSGRendererInterface::Vulkan) { // honor what QSG_RHI_BACKEND says
+            if (!TestOffscreenScene_vkinst) {
+                TestOffscreenScene_vkinst = new QVulkanInstance;
+                TestOffscreenScene_vkinst->setExtensions(QQuickGraphicsConfiguration::preferredInstanceExtensions());
+                TestOffscreenScene_vkinst->create();
+            }
+            scene->window->setVulkanInstance(TestOffscreenScene_vkinst);
+        }
 #endif
     }
 
-    scene.engine = new QQmlEngine;
-    scene.component = new QQmlComponent(scene.engine, url);
-    if (scene.component->isError()) {
-        for (const QQmlError &error : scene.component->errors())
+    scene->engine = new QQmlEngine;
+    scene->component = new QQmlComponent(scene->engine, url);
+    if (scene->component->isError()) {
+        for (const QQmlError &error : scene->component->errors())
             qWarning() << error.url() << error.line() << error;
-        destroyOffscreenScene(scene);
-        return {};
+        return nullptr;
     }
 
-    QObject *rootObject = scene.component->create();
-    if (scene.component->isError()) {
-        for (const QQmlError &error : scene.component->errors())
+    QObject *rootObject = scene->component->create();
+    if (scene->component->isError()) {
+        for (const QQmlError &error : scene->component->errors())
             qWarning() << error.url() << error.line() << error;
     }
 
-    scene.rootItem = qobject_cast<QQuickItem *>(rootObject);
-    if (!scene.rootItem) {
+    scene->rootItem = qobject_cast<QQuickItem *>(rootObject);
+    if (!scene->rootItem) {
         qWarning("No root QQuickItem");
-        destroyOffscreenScene(scene);
-        return {};
+        return nullptr;
     }
 
-    scene.window->contentItem()->setSize(scene.rootItem->size());
-    scene.window->setGeometry(0, 0, scene.rootItem->width(), scene.rootItem->height());
-    scene.rootItem->setParentItem(scene.window->contentItem());
+    scene->window->contentItem()->setSize(scene->rootItem->size());
+    scene->window->setGeometry(0, 0, scene->rootItem->width(), scene->rootItem->height());
+    scene->rootItem->setParentItem(scene->window->contentItem());
 
-    if (!scene.renderControl->initialize()) {
+    if (!scene->renderControl->initialize()) {
         qWarning("Failed to initialize rendercontrol");
-        destroyOffscreenScene(scene);
-        return {};
+        return nullptr;
     }
 
-    return scene;
+    return scene.release();
 }
 
 void tst_SceneGraph::withAdoptedRhi()
@@ -631,19 +649,19 @@ void tst_SceneGraph::withAdoptedRhi()
     // test. QQuickView would not be suitable because it it uses the threaded
     // render loop, then we end up in threading issues with graphics resources.
 
-    TestOffscreenScene scene1 = createOffscreenScene(testFileUrl(QLatin1String("renderControl_rect.qml")));
-    QVERIFY(scene1.renderControl && scene1.window && scene1.rootItem);
+    TestOffscreenScene *scene1 = createOffscreenScene(testFileUrl(QLatin1String("renderControl_rect.qml")));
+    QVERIFY(scene1->renderControl && scene1->window && scene1->rootItem);
 
     // Now another one, but this time sharing the same QRhi as the first one.
-    TestOffscreenScene scene2 = createOffscreenScene(testFileUrl(QLatin1String("renderControl_rect.qml")), scene1.window);
-    QVERIFY(scene2.renderControl && scene2.window && scene2.rootItem);
+    TestOffscreenScene *scene2 = createOffscreenScene(testFileUrl(QLatin1String("renderControl_rect.qml")), scene1->window);
+    QVERIFY(scene2->renderControl && scene2->window && scene2->rootItem);
 
-    QRhi *rhi = static_cast<QRhi *>(scene1.window->rendererInterface()->getResource(scene1.window, QSGRendererInterface::RhiResource));
-    QCOMPARE(rhi, static_cast<QRhi *>(scene2.window->rendererInterface()->getResource(scene2.window, QSGRendererInterface::RhiResource)));
+    QRhi *rhi = static_cast<QRhi *>(scene1->window->rendererInterface()->getResource(scene1->window, QSGRendererInterface::RhiResource));
+    QCOMPARE(rhi, static_cast<QRhi *>(scene2->window->rendererInterface()->getResource(scene2->window, QSGRendererInterface::RhiResource)));
 
     { // scope to get resources destroyed before the QRhi
-        const QSize size = scene1.rootItem->size().toSize();
-        QCOMPARE(size, scene2.rootItem->size().toSize());
+        const QSize size = scene1->rootItem->size().toSize();
+        QCOMPARE(size, scene2->rootItem->size().toSize());
         QScopedPointer<QRhiRenderBuffer> ds(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, size, 1));
         QVERIFY(ds->create());
 
@@ -657,7 +675,7 @@ void tst_SceneGraph::withAdoptedRhi()
         QScopedPointer<QRhiRenderPassDescriptor> rp1(texRt1->newCompatibleRenderPassDescriptor());
         texRt1->setRenderPassDescriptor(rp1.data());
         QVERIFY(texRt1->create());
-        scene1.window->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(texRt1.data()));
+        scene1->window->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(texRt1.data()));
 
         // for scene2
         QScopedPointer<QRhiTexture> tex2(rhi->newTexture(QRhiTexture::RGBA8, size, 1,
@@ -669,20 +687,20 @@ void tst_SceneGraph::withAdoptedRhi()
         QScopedPointer<QRhiRenderPassDescriptor> rp2(texRt2->newCompatibleRenderPassDescriptor());
         texRt2->setRenderPassDescriptor(rp2.data());
         QVERIFY(texRt2->create());
-        scene2.window->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(texRt2.data()));
+        scene2->window->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(texRt2.data()));
 
         // render a frame, first with scene1, then with scene2, targeting their respective textures
-        scene1.renderControl->polishItems();
-        scene1.renderControl->beginFrame();
-        scene1.renderControl->sync();
-        scene1.renderControl->render();
-        scene1.renderControl->endFrame();
+        scene1->renderControl->polishItems();
+        scene1->renderControl->beginFrame();
+        scene1->renderControl->sync();
+        scene1->renderControl->render();
+        scene1->renderControl->endFrame();
 
-        scene2.renderControl->polishItems();
-        scene2.renderControl->beginFrame();
-        scene2.renderControl->sync();
-        scene2.renderControl->render();
-        scene2.renderControl->endFrame();
+        scene2->renderControl->polishItems();
+        scene2->renderControl->beginFrame();
+        scene2->renderControl->sync();
+        scene2->renderControl->render();
+        scene2->renderControl->endFrame();
 
         // Both tex1 and tex2 belong to the same one QRhi. Read back the
         // contents. In a real world application one could now render with the
@@ -718,10 +736,62 @@ void tst_SceneGraph::withAdoptedRhi()
         }
     }
 
-    destroyOffscreenScene(scene2); // this does not destroy the QRhi
+    delete scene2; // this does not destroy the QRhi
     // call anything on the QRhi just to test if it is still valid
     QVERIFY(!rhi->isDeviceLost());
-    destroyOffscreenScene(scene1); // this does
+    delete scene1; // this does
+
+    TestOffscreenScene::cleanup();
+}
+
+static inline void commitTexture(QRhi *rhi, QSGTexture *texture)
+{
+    QRhiResourceUpdateBatch *rub = rhi->nextResourceUpdateBatch();
+    texture->commitTextureOperations(rhi, rub);
+    QRhiCommandBuffer *cb = nullptr;
+    rhi->beginOffscreenFrame(&cb);
+    cb->resourceUpdate(rub);
+    rhi->endOffscreenFrame();
+}
+
+void tst_SceneGraph::resizeTextureFromImage()
+{
+    if (!isRunningOnRhi())
+        QSKIP("Skipping test due to not running with QRhi");
+
+    // We will need to directly work with QSGTexture and QRhi so have
+    // to be on the same thread as the scene graph. Hence using the
+    // offscreen infrastructure from other tests.
+
+    // note the lifetimes: (vulkan instance) > scenegraph(incl. QRhi) > QSGTexture
+    {
+        QScopedPointer<TestOffscreenScene> scene(createOffscreenScene(testFileUrl(QLatin1String("renderControl_rect.qml"))));
+        QVERIFY(scene->renderControl && scene->window && scene->rootItem);
+
+        {
+            QImage image(256, 128, QImage::Format_RGBA8888);
+            QScopedPointer<QSGTexture> texture(scene->window->createTextureFromImage(image, QQuickWindow::TextureHasAlphaChannel));
+            QRhi *rhi = static_cast<QRhi *>(scene->window->rendererInterface()->getResource(scene->window, QSGRendererInterface::RhiResource));
+            QVERIFY(rhi);
+            commitTexture(rhi, texture.data());
+            // neither is too big nor relies on optional features like NPoT repeat so the size should match always
+            QCOMPARE(texture->textureSize(), image.size());
+            QCOMPARE(texture->rhiTexture()->pixelSize(), image.size());
+
+            QSGPlainTexture *plainTex = qobject_cast<QSGPlainTexture *>(texture.data());
+            QVERIFY(plainTex);
+
+            // QTBUG-96190 - the commitTexture call here used to crash due to not
+            // updating the QRhiTexture size correctly in QSGPlainTexture.
+            image = QImage(512, 256, QImage::Format_RGBA8888);
+            plainTex->setImage(image);
+            commitTexture(rhi, texture.data());
+            QCOMPARE(texture->textureSize(), image.size());
+            QCOMPARE(texture->rhiTexture()->pixelSize(), image.size());
+        }
+    }
+
+    TestOffscreenScene::cleanup();
 }
 
 bool tst_SceneGraph::isRunningOnRhi()
