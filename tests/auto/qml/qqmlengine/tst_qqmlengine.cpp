@@ -92,6 +92,7 @@ private slots:
     void listWrapperAsListReference();
     void attachedObjectAsObject();
     void listPropertyAsQJSValue();
+    void stringToColor();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1520,6 +1521,31 @@ void tst_qqmlengine::listPropertyAsQJSValue()
     ref.append(&c);
     QCOMPARE(prop.count(&prop), 1);
     QCOMPARE(prop.at(&prop, 0), &c);
+}
+
+void tst_qqmlengine::stringToColor()
+{
+    QQmlEngine engine;
+
+    // Make it import QtQuick, so that color becomes available.
+    QQmlComponent c(&engine);
+    c.setData("import QtQuick\nItem {}", QUrl());
+    QVERIFY(c.isReady());
+    QScopedPointer<QObject> o(c.create());
+
+    const QMetaType metaType(QMetaType::QColor);
+    QVariant color(metaType);
+    QVERIFY(engine.handle()->metaTypeFromJS(
+                engine.handle()->newString(QStringLiteral("#abcdef"))->asReturnedValue(),
+                metaType, color.data()));
+    QVERIFY(color.isValid());
+    QCOMPARE(color.metaType(), metaType);
+
+    QVariant variant(QStringLiteral("#abcdef"));
+    QVERIFY(variant.convert(metaType));
+    QCOMPARE(variant.metaType(), metaType);
+
+    QCOMPARE(color, variant);
 }
 
 QTEST_MAIN(tst_qqmlengine)
