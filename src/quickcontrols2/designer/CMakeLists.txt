@@ -2,13 +2,13 @@ file(GLOB_RECURSE __aux_qml_glob_files
     RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
     "images/*.png"
 )
-
+qt_path_join(images_destination ${QT_INSTALL_DIR} "${INSTALL_QMLDIR}/QtQuick/Controls/designer/images")
 qt_copy_or_install(
     FILES
         ${__aux_qml_glob_files}
-    DESTINATION "${INSTALL_QMLDIR}/QtQuick/Controls/designer/images"
+    DESTINATION "${images_destination}"
 )
-
+qt_path_join(destination ${QT_INSTALL_DIR} "${INSTALL_QMLDIR}/QtQuick/Controls/designer")
 qt_copy_or_install(
     FILES
         AbstractButtonSection.qml
@@ -57,5 +57,5 @@ qt_copy_or_install(
         ToolSeparatorSpecifics.qml
         TumblerSpecifics.qml
         qtquickcontrols2.metainfo
-    DESTINATION "${INSTALL_QMLDIR}/QtQuick/Controls/designer"
+    DESTINATION "${destination}"
 )
