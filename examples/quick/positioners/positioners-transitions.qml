@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQml 2.0
-import QtQuick 2.0
+import QtQml
+import QtQuick
 
 Item {
     id: page

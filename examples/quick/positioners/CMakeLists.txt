@@ -7,7 +7,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
   set(INSTALL_EXAMPLESDIR "examples")
@@ -15,68 +14,36 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/positioners")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Quick)
-find_package(Qt6 COMPONENTS Qml)
+find_package(Qt6 COMPONENTS Core Gui Quick Qml)
 
-qt_add_executable(positioners
+add_subdirectory("../shared" "shared")
+
+qt_add_executable(positionersexample
+    WIN32
+    MACOSX_BUNDLE
     main.cpp
 )
-set_target_properties(positioners PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
+
+qt_add_qml_module(positionersexample
+    URI positioners
+    VERSION 1.0
+    QML_FILES
+        "positioners-attachedproperties.qml"
+        "positioners-transitions.qml"
+        "positioners.qml"
 )
-target_link_libraries(positioners PUBLIC
+
+target_link_libraries(positionersexample PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Qml
     Qt::Quick
 )
 
-
-# Resources:
-set(positioners_resource_files
-    "positioners-attachedproperties.qml"
-    "positioners-transitions.qml"
-    "positioners.qml"
-)
-
-qt6_add_resources(positioners "positioners"
-    PREFIX
-        "/positioners"
-    FILES
-        ${positioners_resource_files}
-)
-set(shared_resource_files
-    "../shared/Button.qml"
-    "../shared/CheckBox.qml"
-    "../shared/FlickrRssModel.qml"
-    "../shared/Label.qml"
-    "../shared/LauncherList.qml"
-    "../shared/SimpleLauncherDelegate.qml"
-    "../shared/Slider.qml"
-    "../shared/TabSet.qml"
-    "../shared/TextField.qml"
-    "../shared/images/back.png"
-    "../shared/images/checkmark.png"
-    "../shared/images/next.png"
-    "../shared/images/qt-logo.png"
-    "../shared/images/slider_handle.png"
-    "../shared/images/tab.png"
-)
-
-qt6_add_resources(positioners "shared"
-    PREFIX
-        "/shared"
-    BASE
-        "../shared"
-    FILES
-        ${shared_resource_files}
-)
-
-install(TARGETS positioners
+install(TARGETS positionersexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
+
+bundle_shared(positionersexample)
