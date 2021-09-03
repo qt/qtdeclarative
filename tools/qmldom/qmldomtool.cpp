@@ -224,13 +224,11 @@ int main(int argc, char *argv[])
         dbg << "fieldFilter: " << filter.describeFieldsFilter();
         dbg << "\n";
     }
-    QQmlJS::Dom::DomEnvironment::Options options =
-            QQmlJS::Dom::DomEnvironment::Option::SingleThreaded;
+    DomEnvironment::Options options = DomEnvironment::Option::SingleThreaded;
     if (dep == Dependencies::None)
-        options = options | QQmlJS::Dom::DomEnvironment::Option::NoDependencies;
-    std::shared_ptr<QQmlJS::Dom::DomEnvironment> envPtr(
-            new QQmlJS::Dom::DomEnvironment(qmltypeDirs, options));
-    QQmlJS::Dom::DomItem env(envPtr);
+        options = options | DomEnvironment::Option::NoDependencies;
+    std::shared_ptr<DomEnvironment> envPtr(new DomEnvironment(qmltypeDirs, options));
+    DomItem env(envPtr);
     qDebug() << "will load\n";
     if (dep != Dependencies::None)
         env.loadBuiltins();
