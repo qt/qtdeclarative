@@ -974,8 +974,19 @@ void AOTCompiledContext::storeNameSloppy(uint nameIndex, void *value, QMetaType 
     QV4::Lookup l;
     l.clear();
     l.nameIndex = nameIndex;
-    if (initObjectLookup(this, &l, qmlScopeObject, type)) {
-        switch (storeObjectProperty(&l, qmlScopeObject, value)) {
+    if (initObjectLookup(this, &l, qmlScopeObject, QMetaType())) {
+
+        ObjectPropertyResult storeResult;
+        const QMetaType propType = l.qobjectLookup.propertyData->propType();
+        if (type == propType) {
+            storeResult = storeObjectProperty(&l, qmlScopeObject, value);
+        } else {
+            QVariant var(propType);
+            propType.convert(type, value, propType, var.data());
+            storeResult = storeObjectProperty(&l, qmlScopeObject, var.data());
+        }
+
+        switch (storeResult) {
         case ObjectPropertyResult::NeedsInit:
             engine->handle()->throwTypeError();
             break;
