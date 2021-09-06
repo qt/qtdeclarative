@@ -54,6 +54,7 @@ set(reused_dir_targets
     imageelements_shared
     delegatechooser_shared
     pointerhandlers_shared
+    draganddrop_shared
 )
 foreach(target IN LISTS reused_dir_targets)
     if(TARGET ${target})
