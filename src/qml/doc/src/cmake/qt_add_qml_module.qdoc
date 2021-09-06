@@ -470,8 +470,8 @@ and are referenced by the backing target's linking requirements as part of
 ensuring that resources are set up and loaded correctly.
 
 The \c DESIGNER_SUPPORTED keyword should be given if the QML module supports
-\l{Qt Quick Designer}. When present, the generated \c qmldir file will contain
+Qt Quick Designer. When present, the generated \c qmldir file will contain
 a \c designersupported line. See \l{Module Definition qmldir Files} for how
-this affects the way Quick Designer handles the plugin.
+this affects the way Qt Quick Designer handles the plugin.
 
 */
