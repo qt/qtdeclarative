@@ -1697,7 +1697,7 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
     QQuickBasePositionerPrivate *d = static_cast<QQuickBasePositionerPrivate*>(QQuickBasePositionerPrivate::get(this));
     int c = m_columns;
     int r = m_rows;
-    int numVisible = positionedItems.count();
+    const int numVisible = positionedItems.count();
 
     if (m_columns <= 0 && m_rows <= 0) {
         c = 4;
@@ -1712,6 +1712,10 @@ void QQuickGrid::doPositioning(QSizeF *contentSize)
         contentSize->setHeight(topPadding() + bottomPadding());
         contentSize->setWidth(leftPadding() + rightPadding());
         return; //Nothing else to do
+    }
+
+    if (numVisible > r * c) {
+        qmlWarning(this) << "Grid contains more visible items (" << numVisible << ") than rows*columns (" << r * c << ")";
     }
 
     QList<qreal> maxColWidth;
