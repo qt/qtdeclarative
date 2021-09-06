@@ -37,17 +37,39 @@
 \section1 Synopsis
 
 \badcode
-qt_import_qml_plugins(...)
-
+qt_import_qml_plugins(target)
 \endcode
 
 \versionlessCMakeCommandsNote qt6_import_qml_plugins()
 
 \section1 Description
 
-TBD
+\note This command only has any effect if Qt was built statically. If called
+      using a non-static Qt, it will do nothing and return immediately.
 
-\section1 Arguments
+\c{qt_import_qml_plugins()} runs \c{qmlimportscanner} on the \c target
+immediately as part of the call. It finds the static QML plugins used by the
+\c target and links it to those plugins so that they are part of the executable
+or shared library that \c target represents. The search follows QML module
+imports recursively.
 
-TBD
+Because the call to \c{qmlimportscanner} runs at configure time rather than
+generation or build time, \c{qt_import_qml_plugins()} only knows about the
+information recorded on the \c target (or other targets it links or imports)
+at the time \c{qt_import_qml_plugins()} is called. Any linking or import
+relationships added after this call will not be considered. Therefore, this
+command should be called as late as possible in the \c{target}'s directory
+scope so that all the linking and import relationships are known.
+
+If \c target was created using \l{qt6_add_executable}{qt_add_executable()},
+projects would not normally need to call \c{qt_import_qml_plugins()} directly.
+When Qt is built statically, the command is called automatically as part of
+\l{qt6_add_executable#Finalization}{target finalization} if \c target links to
+the Qml library. By default, this finalization occurs at the end of the same
+directory scope in which the \c target was created. If the \c target was
+created using the standard CMake \c{add_executable()} command instead, the
+project needs to call \c{qt_import_qml_plugins()} itself.
+
+\sa Q_IMPORT_QML_PLUGIN
+
 */

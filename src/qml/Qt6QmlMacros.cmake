@@ -1854,7 +1854,7 @@ function(qt6_import_qml_plugins target)
     set_target_properties(${target} PROPERTIES _QT_QML_PLUGINS_IMPORTED TRUE)
 
     set(options)
-    set(oneValueArgs "PATH_TO_SCAN")
+    set(oneValueArgs "PATH_TO_SCAN")   # Internal option, may be removed
     set(multiValueArgs)
 
     cmake_parse_arguments(arg "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
