@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the manual tests of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -50,29 +50,32 @@
 
 import QtQuick 2.12
 
-PointHandler {
-    id: handler
-    objectName: "mouse point"
-    acceptedDevices: PointerDevice.Mouse
-    acceptedButtons: Qt.AllButtons
-    target: Image {
-        objectName: "mouse sprite"
-        source: "../resources/mouse.png"
-        visible: handler.active
-        x: handler.point.position.x - width / 2
-        y: handler.point.position.y - height / 2
-        parent: handler.parent
-        Image {
-            source: "../resources/mouse_left.png"
-            visible: handler.point.pressedButtons & Qt.LeftButton
-        }
-        Image {
-            source: "../resources/mouse_middle.png"
-            visible: handler.point.pressedButtons & Qt.MiddleButton
-        }
-        Image {
-            source: "../resources/mouse_right.png"
-            visible: handler.point.pressedButtons & Qt.RightButton
-        }
+ParallelAnimation {
+    id: root
+    property Item target: null
+    property int duration: 500
+    property vector2d velocity: Qt.vector2d(0,0)
+
+    function restart(vel) {
+        stop()
+        velocity = vel
+        start()
+    }
+
+    NumberAnimation {
+        id: xAnim
+        target: root.target
+        property: "x"
+        to: target.x + velocity.x / duration * 100
+        duration: root.duration
+        easing.type: Easing.OutQuad
+    }
+    NumberAnimation {
+        id: yAnim
+        target: root.target
+        property: "y"
+        to: target.y + velocity.y / duration * 100
+        duration: root.duration
+        easing.type: Easing.OutQuad
     }
 }

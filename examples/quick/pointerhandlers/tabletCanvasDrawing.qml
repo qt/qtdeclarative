@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the manual tests of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -50,7 +50,7 @@
 
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
-import "content"
+import "components"
 
 Rectangle {
     width: 1024
@@ -165,6 +165,15 @@ Rectangle {
             }
         }
 
+        Text {
+            text: "draw with a drawing-tablet stylus"
+            anchors {
+                bottom: parent.bottom
+                horizontalCenter: parent.horizontalCenter
+                margins: 6
+            }
+        }
+
         PointHandler {
             acceptedPointerTypes: PointerDevice.Pen
             onActiveChanged:
@@ -206,7 +215,7 @@ Rectangle {
             target: Image {
                 parent: rect
                 source: stylusHandler.point.rotation === 0 ?
-                            "resources/cursor-pencil.png" : "resources/cursor-felt-marker.png"
+                            "images/cursor-pencil.png" : "images/cursor-felt-marker.png"
                 visible: stylusHandler.hovered
                 rotation: stylusHandler.point.rotation
                 x: stylusHandler.point.position.x
@@ -220,7 +229,7 @@ Rectangle {
             acceptedPointerTypes: PointerDevice.Pen
             target: Image {
                 parent: rect
-                source: "resources/cursor-airbrush.png"
+                source: "images/cursor-airbrush.png"
                 visible: airbrushHandler.hovered
                 x: airbrushHandler.point.position.x
                 y: airbrushHandler.point.position.y
@@ -232,7 +241,7 @@ Rectangle {
             acceptedPointerTypes: PointerDevice.Eraser
             target: Image {
                 parent: rect
-                source: "resources/cursor-eraser.png"
+                source: "images/cursor-eraser.png"
                 visible: eraserHandler.hovered
                 x: eraserHandler.point.position.x
                 y: eraserHandler.point.position.y - 32
