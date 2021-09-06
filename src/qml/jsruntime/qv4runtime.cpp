@@ -2501,6 +2501,7 @@ QHash<const void *, const char *> Runtime::symbolTable()
             {symbol<UMinus>(), "UMinus" },
 
             {symbol<Instanceof>(), "Instanceof" },
+            {symbol<As>(), "As" },
             {symbol<In>(), "In" },
             {symbol<Add>(), "Add" },
             {symbol<Sub>(), "Sub" },

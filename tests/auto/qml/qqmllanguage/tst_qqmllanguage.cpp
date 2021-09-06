@@ -376,6 +376,8 @@ private slots:
     void variantListConversion();
     void thisInArrowFunction();
 
+    void jittedAsCast();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -6533,6 +6535,17 @@ void tst_qqmllanguage::thisInArrowFunction()
     QObject *child = qvariant_cast<QObject *>(o->property("child"));
     QVERIFY(child != nullptr);
     QCOMPARE(qvariant_cast<QObject *>(o->property("ffResult")), child);
+}
+
+void tst_qqmllanguage::jittedAsCast()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("jittedAsCast.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->property("running").toBool(), true);
+    QTRY_COMPARE(o->property("running").toBool(), false);
+    QCOMPARE(o->property("interval").toInt(), 10);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
