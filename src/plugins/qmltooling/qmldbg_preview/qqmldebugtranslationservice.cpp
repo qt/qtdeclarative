@@ -39,6 +39,7 @@
 
 #include "qqmldebugtranslationservice.h"
 #include "proxytranslator.h"
+#include "qqmlpreviewservice.h"
 
 #include <QtCore/qtranslator.h>
 #include <QtCore/qdebug.h>
@@ -96,8 +97,7 @@ public:
 
     void setState(const QString &stateName)
     {
-        if (currentQuickView) {
-            QQuickItem *rootItem = currentQuickView->rootObject();
+        if (QQuickItem *rootItem = currentRootItem()) {
             QQuickStateGroup *stateGroup = QQuickItemPrivate::get(rootItem)->_states();
             if (stateGroup->findState(stateName)) {
                 connect(stateGroup, &QQuickStateGroup::stateChanged,
@@ -106,17 +106,16 @@ public:
                 stateGroup->setState(stateName);
             }
             else
-                qWarning() << QString("Could not switch the state to %1").arg(stateName);
+                qWarning() << "Could not switch the state" << stateName << "at" << rootItem;
         }
     }
 
     void sendStateChanged()
     {
-        QString stateName;
         if (QQuickStateGroup *stateGroup = qobject_cast<QQuickStateGroup*>(sender()))
-            stateName = stateGroup->state();
+            currentStateName = stateGroup->state();
         QVersionedPacket<QQmlDebugConnector> packet;
-        packet << Reply::StateChanged << stateName;
+        packet << Reply::StateChanged << currentStateName;
         emit q->messageToClient(q->name(), packet.data());
     }
 
@@ -124,17 +123,18 @@ public:
     {
         QVersionedPacket<QQmlDebugConnector> packet;
         packet << Reply::StateList;
-
-        QQuickItem *rootItem = currentQuickView->rootObject();
-        QQuickStateGroup *stateGroup = QQuickItemPrivate::get(rootItem)->_states();
-
-        QList<QQuickState *> states = stateGroup->states();
         QVector<QmlState> qmlStates;
 
-        for (QQuickState *state : states) {
-            QmlState qmlState;
-            qmlState.name = state->name();
-            qmlStates.append(qmlState);
+        if (QQuickItem *rootItem = currentRootItem()) {
+            QQuickStateGroup *stateGroup = QQuickItemPrivate::get(rootItem)->_states();
+
+            QList<QQuickState *> states = stateGroup->states();
+
+            for (QQuickState *state : states) {
+                QmlState qmlState;
+                qmlState.name = state->name();
+                qmlStates.append(qmlState);
+            }
         }
 
         packet << qmlStates;
@@ -155,6 +155,22 @@ public:
                 elideProperty.write(scopeObject, Qt::ElideRight);
             }
         }
+    }
+
+    QString getStyleNameForFont(const QFont& font)
+    {
+        if (font.styleName() != "")
+            return font.styleName();
+        QString styleName;
+        if (font.bold())
+            styleName.append("Bold ");
+        if (font.italic())
+            styleName.append("Italic " );
+        if (font.strikeOut())
+            styleName.append("StrikeThrough ");
+        if (font.underline())
+            styleName.append("Underline ");
+        return styleName.trimmed();
     }
 
     void sendTranslatableTextOccurrences()
@@ -193,13 +209,14 @@ public:
                 qmlElement.fontFamily = font.family();
                 qmlElement.fontPointSize = font.pointSize();
                 qmlElement.fontPixelSize = font.pixelSize();
-                qmlElement.fontStyleName = font.styleName();
+                qmlElement.fontStyleName = getStyleNameForFont(font);
                 qmlElement.horizontalAlignment =
                         scopeObject->property("horizontalAlignment").toInt();
                 qmlElement.verticalAlignment = scopeObject->property("verticalAlignment").toInt();
 
                 QQmlType qmlType = QQmlMetaType::qmlType(metaObject);
                 qmlElement.elementType = qmlType.qmlTypeName() + "/" + qmlType.typeName();
+                qmlElement.stateName = currentStateName;
                 qmlElements.append(qmlElement);
 
             } else {
@@ -271,7 +288,13 @@ public:
     QTimer translatableTextOccurrenceTimer;
     QList<QPointer<QQuickItem>> translatableTextOccurrences;
 
-    QPointer<QQuickView> currentQuickView;
+    QQuickItem *currentRootItem()
+    {
+        if (QQmlPreviewServiceImpl *service = QQmlDebugConnector::service<QQmlPreviewServiceImpl>())
+            return service->currentRootItem();
+        return nullptr;
+    }
+
 private:
     CodeMarker codeMarker(const TranslationBindingInformation &information)
     {
@@ -281,6 +304,7 @@ private:
         c.column = information.compiledBinding->valueLocation.column;
         return c;
     }
+    QString currentStateName;
 };
 
 QQmlDebugTranslationServiceImpl::QQmlDebugTranslationServiceImpl(QObject *parent)
@@ -300,14 +324,17 @@ QQmlDebugTranslationServiceImpl::QQmlDebugTranslationServiceImpl(QObject *parent
             d, &QQmlDebugTranslationServicePrivate::setState,
             Qt::QueuedConnection);
 
-    connect(this, &QQmlDebugTranslationServiceImpl::stateList, d,
-            &QQmlDebugTranslationServicePrivate::sendStateList, Qt::QueuedConnection);
+    connect(this, &QQmlDebugTranslationServiceImpl::stateList,
+            d, &QQmlDebugTranslationServicePrivate::sendStateList,
+            Qt::QueuedConnection);
 
     connect(d->proxyTranslator, &ProxyTranslator::languageChanged,
-            d, &QQmlDebugTranslationServicePrivate::sendLanguageChanged);
+            d, &QQmlDebugTranslationServicePrivate::sendLanguageChanged,
+            Qt::QueuedConnection);
 
     connect(this, &QQmlDebugTranslationServiceImpl::missingTranslations,
-            d, &QQmlDebugTranslationServicePrivate::sendMissingTranslations);
+            d, &QQmlDebugTranslationServicePrivate::sendMissingTranslations,
+            Qt::QueuedConnection);
 
     connect(this, &QQmlDebugTranslationServiceImpl::sendTranslatableTextOccurrences,
             d, &QQmlDebugTranslationServicePrivate::sendTranslatableTextOccurrences,
@@ -371,9 +398,6 @@ void QQmlDebugTranslationServiceImpl::engineAboutToBeAdded(QJSEngine *engine)
 {
     if (QQmlEngine *qmlEngine = qobject_cast<QQmlEngine *>(engine))
         d->proxyTranslator->addEngine(qmlEngine);
-
-    if (engine->parent())
-        d->currentQuickView = qobject_cast<QQuickView*>(engine->parent());
 
     emit attachedToEngine(engine);
 }

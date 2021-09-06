@@ -90,6 +90,8 @@ public:
     void forwardError(const QString &error);
     void forwardFps(const QQmlPreviewHandler::FpsInfo &frames);
 
+    QQuickItem *currentRootItem();
+
 signals:
     void error(const QString &file);
     void file(const QString &file, const QByteArray &contents);

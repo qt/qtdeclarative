@@ -183,4 +183,9 @@ void QQmlPreviewServiceImpl::forwardFps(const QQmlPreviewHandler::FpsInfo &frame
     emit messageToClient(name(), packet.data());
 }
 
+QQuickItem *QQmlPreviewServiceImpl::currentRootItem()
+{
+    return m_handler.currentRootItem();
+}
+
 QT_END_NAMESPACE
