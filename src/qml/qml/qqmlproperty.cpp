@@ -74,6 +74,8 @@ Q_DECLARE_METATYPE(QList<QUrl>)
 
 QT_BEGIN_NAMESPACE
 
+DEFINE_BOOL_CONFIG_OPTION(compatResolveUrlsOnAssigment, QML_COMPAT_RESOLVE_URLS_ON_ASSIGNMENT);
+
 /*!
 \class QQmlProperty
 \since 5.0
@@ -244,6 +246,11 @@ QQmlProperty QQmlPropertyPrivate::create(QObject *target, const QString &propert
         d->engine = nullptr;
     }
     return result;
+}
+
+bool QQmlPropertyPrivate::resolveUrlsOnAssignment()
+{
+    return ::compatResolveUrlsOnAssigment();
 }
 
 QQmlRefPointer<QQmlContextData> QQmlPropertyPrivate::effectiveContext() const
@@ -1134,32 +1141,38 @@ QVariant QQmlPropertyPrivate::readValueProperty()
 }
 
 // helper function to allow assignment / binding to QList<QUrl> properties.
-QVariant QQmlPropertyPrivate::urlSequence(const QVariant &value)
+QList<QUrl> QQmlPropertyPrivate::urlSequence(const QVariant &value)
 {
+    if (value.metaType() == QMetaType::fromType<QList<QUrl>>())
+        return value.value<QList<QUrl> >();
+
     QList<QUrl> urls;
-    if (value.userType() == qMetaTypeId<QUrl>()) {
+    if (value.metaType() == QMetaType::fromType<QUrl>()) {
         urls.append(value.toUrl());
-    } else if (value.userType() == qMetaTypeId<QString>()) {
+    } else if (value.metaType() == QMetaType::fromType<QString>()) {
         urls.append(QUrl(value.toString()));
-    } else if (value.userType() == qMetaTypeId<QByteArray>()) {
+    } else if (value.metaType() == QMetaType::fromType<QByteArray>()) {
         urls.append(QUrl(QString::fromUtf8(value.toByteArray())));
-    } else if (value.userType() == qMetaTypeId<QList<QUrl> >()) {
-        urls = value.value<QList<QUrl> >();
-    } else if (value.userType() == qMetaTypeId<QStringList>()) {
+    } else if (value.metaType() == QMetaType::fromType<QStringList>()) {
         QStringList urlStrings = value.value<QStringList>();
         const int urlStringsSize = urlStrings.size();
         urls.reserve(urlStringsSize);
         for (int i = 0; i < urlStringsSize; ++i)
             urls.append(QUrl(urlStrings.at(i)));
-    } else if (value.userType() == qMetaTypeId<QList<QString> >()) {
-        QList<QString> urlStrings = value.value<QList<QString> >();
-        const int urlStringsSize = urlStrings.size();
-        urls.reserve(urlStringsSize);
-        for (int i = 0; i < urlStringsSize; ++i)
-            urls.append(QUrl(urlStrings.at(i)));
     } // note: QList<QByteArray> is not currently supported.
+    return urls;
+}
 
-    return QVariant::fromValue<QList<QUrl> >(urls);
+// ### Qt7: Get rid of this
+QList<QUrl> QQmlPropertyPrivate::urlSequence(
+            const QVariant &value, const QQmlRefPointer<QQmlContextData> &ctxt)
+{
+    QList<QUrl> urls = urlSequence(value);
+
+    for (auto urlIt = urls.begin(); urlIt != urls.end(); ++urlIt)
+        *urlIt = ctxt->resolvedUrl(*urlIt);
+
+    return urls;
 }
 
 //writeEnumProperty MIRRORS the relelvant bit of QMetaProperty::write AND MUST BE KEPT IN SYNC!
@@ -1354,8 +1367,11 @@ bool QQmlPropertyPrivate::write(
         return property.writeProperty(object, const_cast<QVariant *>(&value), flags);
     } else if (isUrl) {
         QUrl u;
-        if (variantType == QMetaType::QUrl)
+        if (variantType == QMetaType::QUrl) {
             u = value.toUrl();
+            if (compatResolveUrlsOnAssigment() && context && u.isRelative() && !u.isEmpty())
+                u = context->resolvedUrl(u);
+        }
         else if (variantType == QMetaType::QByteArray)
             u = QUrl(QString::fromUtf8(value.toByteArray()));
         else if (variantType == QMetaType::QString)
@@ -1365,7 +1381,9 @@ bool QQmlPropertyPrivate::write(
 
         return property.writeProperty(object, &u, flags);
     } else if (propertyType == qMetaTypeId<QList<QUrl>>()) {
-        QList<QUrl> urlSeq = urlSequence(value).value<QList<QUrl>>();
+        QList<QUrl> urlSeq = compatResolveUrlsOnAssigment()
+                ? urlSequence(value, context)
+                : urlSequence(value);
         return property.writeProperty(object, &urlSeq, flags);
     } else if (property.isQList()) {
         QQmlMetaObject listType;

@@ -456,7 +456,9 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
     case QMetaType::QUrl: {
         assertType(QV4::CompiledData::Binding::Type_String);
         const QString string = compilationUnit->bindingValueAsString(binding);
-        QUrl value(string);
+        QUrl value = (!string.isEmpty() && QQmlPropertyPrivate::resolveUrlsOnAssignment())
+                ? compilationUnit->finalUrl().resolved(QUrl(string))
+                : QUrl(string);
         property->writeProperty(_qobject, &value, propertyWriteFlags);
     }
     break;
@@ -603,7 +605,12 @@ void QQmlObjectCreator::setPropertyValue(const QQmlPropertyData *property, const
             break;
         } else if (propertyType == qMetaTypeId<QList<QUrl> >()) {
             assertType(QV4::CompiledData::Binding::Type_String);
-            QList<QUrl> value { QUrl(compilationUnit->bindingValueAsString(binding)) };
+            const QUrl url(compilationUnit->bindingValueAsString(binding));
+            QList<QUrl> value {
+                QQmlPropertyPrivate::resolveUrlsOnAssignment()
+                        ? compilationUnit->finalUrl().resolved(url)
+                        : url
+            };
             property->writeProperty(_qobject, &value, propertyWriteFlags);
             break;
         } else if (propertyType == qMetaTypeId<QList<QString> >()) {
