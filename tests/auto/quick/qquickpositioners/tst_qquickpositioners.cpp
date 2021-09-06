@@ -2986,7 +2986,9 @@ void tst_qquickpositioners::test_propertychanges()
     QCOMPARE(columnsSpy.count(),1);
     QCOMPARE(rowsSpy.count(),1);
 
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*QML Grid: Grid contains more visible items \\(20\\) than rows\\*columns \\(6\\)"));
     grid->setColumns(2);
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*QML Grid: Grid contains more visible items \\(20\\) than rows\\*columns \\(4\\)"));
     grid->setRows(2);
     QCOMPARE(columnsSpy.count(),2);
     QCOMPARE(rowsSpy.count(),2);
