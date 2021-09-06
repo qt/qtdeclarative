@@ -112,6 +112,11 @@ bool QQmlPreviewHandler::eventFilter(QObject *obj, QEvent *event)
     return QObject::eventFilter(obj, event);
 }
 
+QQuickItem *QQmlPreviewHandler::currentRootItem()
+{
+    return m_currentRootItem;
+}
+
 void QQmlPreviewHandler::addEngine(QQmlEngine *qmlEngine)
 {
     m_engines.append(qmlEngine);
@@ -288,6 +293,8 @@ void QQmlPreviewHandler::showObject(QObject *object)
             item->setParentItem(m_currentWindow->contentItem());
 
         m_currentWindow->resize(item->size().toSize());
+        // used by debug translation service to get the states
+        m_currentRootItem = item;
     } else {
         emit error(QLatin1String("Created object is neither a QWindow nor a QQuickItem."));
     }
