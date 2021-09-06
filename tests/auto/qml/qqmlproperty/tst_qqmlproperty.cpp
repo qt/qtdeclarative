@@ -40,6 +40,9 @@
 #if QT_CONFIG(regularexpression)
 #include <QtCore/qregularexpression.h>
 #endif
+#if QT_CONFIG(process)
+#include <QtCore/qprocess.h>
+#endif
 #include <QtCore/private/qobject_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include "qobject.h"
@@ -199,6 +202,7 @@ private slots:
     void signalExpressionWithoutObject();
 
     void dontRemoveQPropertyBinding();
+    void compatResolveUrls();
 private:
     QQmlEngine engine;
 };
@@ -2298,6 +2302,44 @@ void tst_qqmlproperty::dontRemoveQPropertyBinding()
     QQmlPropertyPrivate::write(objectName, u"goodbye"_qs, QQmlPropertyData::WriteFlags{});
     QCOMPARE(object.objectName(), u"goodbye"_qs);
     QVERIFY(!object.bindableObjectName().hasBinding());
+}
+
+void tst_qqmlproperty::compatResolveUrls()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(R"(
+        import QtQml
+        QtObject {
+            property url a: "relative/url.png"
+        }
+    )", QUrl(QStringLiteral("qrc:/some/resource/path.qml")));
+    QVERIFY(c.isReady());
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    if (qEnvironmentVariableIsSet("QML_COMPAT_RESOLVE_URLS_ON_ASSIGNMENT")) {
+        QCOMPARE(qvariant_cast<QUrl>(o->property("a")),
+                 QUrl(QStringLiteral("qrc:/some/resource/relative/url.png")));
+        return;
+    }
+
+    QCOMPARE(qvariant_cast<QUrl>(o->property("a")), QUrl(QStringLiteral("relative/url.png")));
+
+#if QT_CONFIG(process)
+    QProcess process;
+    process.setProgram(QCoreApplication::applicationFilePath());
+    process.setEnvironment(QProcess::systemEnvironment()
+                           + QStringList(u"QML_COMPAT_RESOLVE_URLS_ON_ASSIGNMENT=1"_qs));
+    process.setArguments({QStringLiteral("compatResolveUrls")});
+    process.start();
+    QVERIFY(process.waitForFinished());
+    QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+    QCOMPARE(process.exitCode(), 0);
+#else
+    QSKIP("Testing the QML_COMPAT_RESOLVE_URLS_ON_ASSIGNMENT "
+          "environment variable requires QProcess.");
+#endif
 }
 
 QTEST_MAIN(tst_qqmlproperty)

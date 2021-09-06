@@ -82,6 +82,9 @@ public:
 
     QString nameCache;
 
+    // ### Qt7: Get rid of this.
+    static bool resolveUrlsOnAssignment();
+
     QQmlPropertyPrivate() {}
 
     QQmlPropertyIndex encodedIndex() const
@@ -161,7 +164,9 @@ public:
                         int type = 0, int *types = nullptr);
     static void flushSignal(const QObject *sender, int signal_index);
 
-    static QVariant urlSequence(const QVariant &value);
+    static QList<QUrl> urlSequence(const QVariant &value);
+    static QList<QUrl> urlSequence(
+            const QVariant &value, const QQmlRefPointer<QQmlContextData> &ctxt);
     static QQmlProperty create(
             QObject *target, const QString &propertyName,
             const QQmlRefPointer<QQmlContextData> &context);

@@ -528,8 +528,12 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
         value = v4engine->toVariant(result, QMetaType::fromType<QList<QObject *> >());
     } else if (result.isNull() && core.isQObject()) {
         value = QVariant::fromValue((QObject *)nullptr);
-    } else if (core.propType().id() == qMetaTypeId<QList<QUrl> >()) {
-        value = QQmlPropertyPrivate::urlSequence(v4engine->toVariant(result, QMetaType::fromType<QList<QUrl>>()));
+    } else if (core.propType() == QMetaType::fromType<QList<QUrl>>()) {
+        const QVariant resultVariant
+                = v4engine->toVariant(result, QMetaType::fromType<QList<QUrl>>());
+        value = QVariant::fromValue(QQmlPropertyPrivate::resolveUrlsOnAssignment()
+                                    ? QQmlPropertyPrivate::urlSequence(resultVariant, context())
+                                    : QQmlPropertyPrivate::urlSequence(resultVariant));
     } else if (!isVarProperty && metaType != QMetaType::fromType<QJSValue>()) {
         value = v4engine->toVariant(result, metaType);
     }
