@@ -59,6 +59,7 @@ class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickIconImagePrivate : public QQuickImag
     Q_DECLARE_PUBLIC(QQuickIconImage)
 
 public:
+    ~QQuickIconImagePrivate() override;
     void updateIcon();
     void updateFillMode();
     qreal calculateDevicePixelRatio() const;
