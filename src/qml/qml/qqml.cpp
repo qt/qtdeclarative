@@ -916,7 +916,8 @@ QMetaType AOTCompiledContext::lookupResultMetaType(uint index) const
     if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupScopeObjectProperty
             || l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupContextObjectProperty
             || l->getter == QV4::QQmlTypeWrapper::lookupSingletonProperty
-            || l->getter == QV4::QObjectWrapper::lookupGetter) {
+            || l->getter == QV4::QObjectWrapper::lookupGetter
+            || l->setter == QV4::QObjectWrapper::lookupSetter) {
         return l->qobjectLookup.propertyData->propType();
     } else if (l->getter == QV4::QQmlValueTypeWrapper::lookupGetter) {
         return QMetaType(l->qgadgetLookup.metaType);
