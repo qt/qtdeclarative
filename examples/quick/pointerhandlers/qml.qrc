@@ -1,0 +1,47 @@
+<RCC>
+    <qresource prefix="/pointerhandlers">
+        <file>flingAnimation.qml</file>
+        <file>fakeFlickable.qml</file>
+        <file>flickablesWithHandlers.qml</file>
+        <file>joystick.qml</file>
+        <file>map.qml</file>
+        <file>mixer.qml</file>
+        <file>multibuttons.qml</file>
+        <file>photosurface.qml</file>
+        <file>pinchHandler.qml</file>
+        <file>pointerDrag.qml</file>
+        <file>pointerhandlers.qml</file>
+        <file>singlePointHandlerProperties.qml</file>
+        <file>sidebar.qml</file>
+        <file>tabletCanvasDrawing.qml</file>
+        <file>tapHandler.qml</file>
+        <file>components/Button.qml</file>
+        <file>components/CheckBox.qml</file>
+        <file>components/FakeFlickable.qml</file>
+        <file>components/FlashAnimation.qml</file>
+        <file>components/LeftDrawer.qml</file>
+        <file>components/MomentumAnimation.qml</file>
+        <file>components/ScrollBar.qml</file>
+        <file>components/Slider.qml</file>
+        <file>components/TouchpointFeedbackSprite.qml</file>
+        <file>images/arrowhead.png</file>
+        <file>images/balloon.png</file>
+        <file>components/images/checkmark.png</file>
+        <file>images/cursor-airbrush.png</file>
+        <file>images/cursor-eraser.png</file>
+        <file>images/cursor-felt-marker.png</file>
+        <file>images/cursor-pencil.png</file>
+        <file>images/fighter.png</file>
+        <file>components/images/fingersprite.png</file>
+        <file>images/grabbing-location.svg</file>
+        <file>images/joystick-outer-case-pov.jpg</file>
+        <file>images/map.svgz</file>
+        <file>images/missile.png</file>
+        <file>components/images/mixer-knob.png</file>
+        <file>components/images/mouse.png</file>
+        <file>components/images/mouse_left.png</file>
+        <file>components/images/mouse_middle.png</file>
+        <file>components/images/mouse_right.png</file>
+        <file>images/redball.png</file>
+    </qresource>
+</RCC>

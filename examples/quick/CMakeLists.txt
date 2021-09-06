@@ -53,6 +53,7 @@ set(reused_dir_targets
     shapes_shared
     imageelements_shared
     delegatechooser_shared
+    pointerhandlers_shared
 )
 foreach(target IN LISTS reused_dir_targets)
     if(TARGET ${target})

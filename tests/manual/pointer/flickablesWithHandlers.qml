@@ -27,7 +27,6 @@
 ****************************************************************************/
 
 import QtQuick
-import "qrc:/quick/shared/" as Examples
 import "content"
 
 Rectangle {
@@ -59,10 +58,10 @@ Rectangle {
                 height: pressDelayCB.implicitHeight + 12
                 x: 6
                 color: "lightgray"
-                Examples.CheckBox {
+                CheckBox {
                     x: 6; y: 6
                     id: pressDelayCB
-                    text: "press delay"
+                    label: "press delay"
                 }
             }
 
