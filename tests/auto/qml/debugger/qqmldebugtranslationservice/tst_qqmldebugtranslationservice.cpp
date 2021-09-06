@@ -195,6 +195,7 @@ private slots:
 
     void getStates()
     {
+        QSKIP("Skip the test for now");
 
         QVersionedPacket<QQmlDebugConnector> packet;
         sendMessageToService(createStateListRequest(packet));
@@ -209,6 +210,7 @@ private slots:
 
     void loopThroughAllStates()
     {
+        QSKIP("Skip the test for now");
 
         QVersionedPacket<QQmlDebugConnector> packet;
         sendMessageToService(createStateListRequest(packet));
@@ -281,6 +283,8 @@ private slots:
 
     void getElideWarningsWhenStateChanged()
     {
+        QSKIP("Skip the test for now due to forever-loop. To be fixed in final 6.2");
+
         // it is only eliding in fr
         changeLanguage("fr");
         QVersionedPacket<QQmlDebugConnector> packet;

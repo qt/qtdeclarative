@@ -74,6 +74,8 @@ public:
     explicit QQmlPreviewHandler(QObject *parent = nullptr);
     ~QQmlPreviewHandler();
 
+    QQuickItem *currentRootItem();
+
     void addEngine(QQmlEngine *engine);
     void removeEngine(QQmlEngine *engine);
 
@@ -116,6 +118,7 @@ private:
 
     QScopedPointer<QQuickItem> m_dummyItem;
     QList<QQmlEngine *> m_engines;
+    QPointer<QQuickItem> m_currentRootItem;
     QVector<QPointer<QObject>> m_createdObjects;
     QScopedPointer<QQmlComponent> m_component;
     QPointer<QQuickWindow> m_currentWindow;

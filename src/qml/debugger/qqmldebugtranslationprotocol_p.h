@@ -210,7 +210,7 @@ public:
                 >> qmlElement.propertyName >> qmlElement.translationId >> qmlElement.translatedText
                 >> qmlElement.fontFamily >> qmlElement.fontPointSize >> qmlElement.fontPixelSize
                 >> qmlElement.fontStyleName >> qmlElement.horizontalAlignment
-                >> qmlElement.verticalAlignment;
+                >> qmlElement.verticalAlignment >> qmlElement.stateName;
     }
 
     friend QDataStream &operator<<(QDataStream &stream, const QmlElement &qmlElement)
@@ -220,7 +220,7 @@ public:
                       << qmlElement.translatedText << qmlElement.fontFamily
                       << qmlElement.fontPointSize << qmlElement.fontPixelSize
                       << qmlElement.fontStyleName << qmlElement.horizontalAlignment
-                      << qmlElement.verticalAlignment;
+                      << qmlElement.verticalAlignment << qmlElement.stateName;
     }
 
     CodeMarker codeMarker;
@@ -232,10 +232,12 @@ public:
     QString elementId;
     QString elementType;
     qreal fontPointSize = 0.0;
+    QString stateName;
     int fontPixelSize = 0;
     int horizontalAlignment = 0;
     int verticalAlignment = 0;
 };
+
 class QmlState
 {
 public:
