@@ -471,7 +471,7 @@ void tst_qquickiconimage::fileSelectors()
         QSKIP("grabToImage() doesn't work on the \"offscreen\" platform plugin (QTBUG-63185)");
 
     QQuickView view;
-    QQmlFileSelector* fileSelector = new QQmlFileSelector(view.engine());
+    QScopedPointer<QQmlFileSelector> fileSelector(new QQmlFileSelector(view.engine()));
     fileSelector->setExtraSelectors(QStringList() << "testselector");
     view.setSource(testFileUrl("fileSelectors.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
