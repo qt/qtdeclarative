@@ -97,9 +97,10 @@ Q_SIGNALS:
     void timeHeldChanged();
     void longPressThresholdChanged();
     void gesturePolicyChanged();
-    void tapped(QEventPoint eventPoint);
-    void singleTapped(QEventPoint eventPoint);
-    void doubleTapped(QEventPoint eventPoint);
+    // the second argument (Qt::MouseButton) was added in 6.2: avoid name clashes with IDs by not naming it for now
+    void tapped(QEventPoint eventPoint, Qt::MouseButton /* button */);
+    void singleTapped(QEventPoint eventPoint, Qt::MouseButton /* button */);
+    void doubleTapped(QEventPoint eventPoint, Qt::MouseButton /* button */);
     void longPressed();
 
 protected:

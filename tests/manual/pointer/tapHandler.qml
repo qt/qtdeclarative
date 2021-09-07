@@ -53,14 +53,15 @@ Item {
                 borderBlink.blinkColor = "red"
                 borderBlink.start()
             }
-            onTapped: { // 'eventPoint' is a signal parameter of type QEventPoint*
-                console.log("tapped button " + eventPoint.event.button + " @ " + eventPoint.scenePosition +
-                            " on device '" + eventPoint.event.device.name + "' " + (tapCount > 1 ? (tapCount + " times") : "for the first time"))
+            onTapped: function(point, button) {
+                console.log("tapped button " + button + " @ " + point.scenePosition +
+                            " on device '" + point.device.name + "' with modifiers " + handler.point.modifiers +
+                            " " + (tapCount > 1 ? (tapCount + " times") : "for the first time"))
                 if (tapCount > 1) {
                     tapCountLabel.text = tapCount
                     flashAnimation.start()
                 } else {
-                    borderBlink.tapFeedback(eventPoint.event.button)
+                    borderBlink.tapFeedback(button)
                 }
             }
             onLongPressed: longPressFeedback.createObject(rect,

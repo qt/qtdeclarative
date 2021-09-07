@@ -310,12 +310,13 @@ void QQuickTapHandler::setPressed(bool press, bool cancel, QPointerEvent *event,
                 else
                     m_tapCount = 1;
                 qCDebug(lcTapHandler) << objectName() << "tapped" << m_tapCount << "times";
-                emit tapped(point);
+                auto button = event->isSinglePointEvent() ? static_cast<QSinglePointEvent *>(event)->button() : Qt::NoButton;
+                emit tapped(point, button);
                 emit tapCountChanged();
                 if (m_tapCount == 1)
-                    emit singleTapped(point);
+                    emit singleTapped(point, button);
                 else if (m_tapCount == 2)
-                    emit doubleTapped(point);
+                    emit doubleTapped(point, button);
                 m_lastTapTimestamp = ts;
                 m_lastTapPos = point.scenePosition();
             } else {
@@ -399,7 +400,7 @@ void QQuickTapHandler::updateTimeHeld()
 */
 
 /*!
-    \qmlsignal QtQuick::TapHandler::tapped(EventPoint eventPoint)
+    \qmlsignal QtQuick::TapHandler::tapped(EventPoint eventPoint, Qt::MouseButton button)
 
     This signal is emitted each time the \c parent Item is tapped.
 
@@ -407,24 +408,28 @@ void QQuickTapHandler::updateTimeHeld()
     period less than \l longPressThreshold, while any movement does not exceed
     the drag threshold, then the \c tapped signal will be emitted at the time
     of release.  The \a eventPoint signal parameter contains information
-    from the release event about the point that was tapped:
+    from the release event about the point that was tapped, and \a button
+    is the \l {Qt::MouseButton}{mouse button} that was clicked, or \c NoButton
+    on a touchscreen.
 
     \snippet pointerHandlers/tapHandlerOnTapped.qml 0
 */
 
 /*!
-    \qmlsignal QtQuick::TapHandler::singleTapped(EventPoint eventPoint)
+    \qmlsignal QtQuick::TapHandler::singleTapped(EventPoint eventPoint, Qt::MouseButton button)
     \since 5.11
 
     This signal is emitted when the \c parent Item is tapped once.
     After an amount of time greater than QStyleHints::mouseDoubleClickInterval,
     it can be tapped again; but if the time until the next tap is less,
     \l tapCount will increase. The \a eventPoint signal parameter contains
-    information from the release event about the point that was tapped.
+    information from the release event about the point that was tapped, and
+    \a button is the \l {Qt::MouseButton}{mouse button} that was clicked, or
+    \c NoButton on a touchscreen.
 */
 
 /*!
-    \qmlsignal QtQuick::TapHandler::doubleTapped(EventPoint eventPoint)
+    \qmlsignal QtQuick::TapHandler::doubleTapped(EventPoint eventPoint, Qt::MouseButton button)
     \since 5.11
 
     This signal is emitted when the \c parent Item is tapped twice within a
@@ -433,7 +438,9 @@ void QQuickTapHandler::updateTimeHeld()
     QStyleHints::touchDoubleTapDistance()). This signal always occurs after
     \l singleTapped, \l tapped, and \l tapCountChanged. The \a eventPoint
     signal parameter contains information from the release event about the
-    point that was tapped.
+    point that was tapped, and \a button is the
+    \l {Qt::MouseButton}{mouse button} that was clicked, or \c NoButton
+    on a touchscreen.
 */
 
 /*!
