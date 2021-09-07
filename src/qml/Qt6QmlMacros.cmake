@@ -145,6 +145,29 @@ function(qt6_add_qml_module target)
                 )
         endif()
 
+        # With CMake 3.17 and earlier, a source file's generated property isn't
+        # visible outside of the directory scope in which it is set. That can
+        # lead to build errors for things like type registration due to CMake
+        # thinking nothing will create a missing file on the first run. With
+        # CMake 3.18 or later, we can force that visibility. Policy CMP0118
+        # added in CMake 3.20 should have made this unnecessary, but we can't
+        # rely on that because the user project controls what it is set to at
+        # the point where it matters, which is the end of the target's
+        # directory scope (hence we can't even test for it here).
+        get_target_property(source_dir ${target} SOURCE_DIR)
+        if(NOT source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR AND
+           CMAKE_VERSION VERSION_LESS "3.18")
+            message(WARNING
+                "qt6_add_qml_module() is being called in a different "
+                "directory scope to the one in which the target \"${target}\" "
+                "was created. CMake 3.18 or later is required to generate a "
+                "project robustly for this scenario, but you are using "
+                "CMake ${CMAKE_VERSION}. Ideally, qt6_add_qml_module() should "
+                "only be called from the same scope as the one the target was "
+                "created in to avoid dependency and visibility problems."
+            )
+        endif()
+
         get_target_property(backing_target_type ${target} TYPE)
         get_target_property(is_android_executable "${target}" _qt_is_android_executable)
         if (backing_target_type STREQUAL "EXECUTABLE" OR is_android_executable)
@@ -818,6 +841,21 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var qmlcac
             $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
     )
 
+    # The current scope sees the file as generated automatically, but the
+    # target scope may not if it is different. Force it where we can.
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
+        set_source_files_properties(
+            ${qmlcache_loader_cpp}
+            TARGET_DIRECTORY ${target}
+            PROPERTIES GENERATED TRUE
+        )
+    endif()
+    get_target_property(target_source_dir ${target} SOURCE_DIR)
+    if(NOT target_source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+        add_custom_target(${target}_qmlcachegen DEPENDS ${qmlcache_loader_cpp})
+        add_dependencies(${target} ${target}_qmlcachegen)
+    endif()
+
     # TODO: Probably need to reject ${target} being an object library as unsupported
     get_target_property(target_type ${target} TYPE)
     if(target_type STREQUAL "STATIC_LIBRARY")
@@ -1386,6 +1424,7 @@ function(qt6_target_qml_sources target)
         endif()
     endforeach()
 
+    set(generated_sources_other_scope)
     foreach(qml_file_src IN LISTS arg_QML_FILES)
         # This is to facilitate updating code that used the earlier tech preview
         # API function qt6_target_qml_files()
@@ -1528,6 +1567,23 @@ function(qt6_target_qml_sources target)
             set_source_files_properties(${compiled_file} PROPERTIES
                 SKIP_AUTOGEN ON
             )
+            # The current scope automatically sees the file as generated, but the
+            # target scope may not if it is different. Force it where we can.
+            # We will also have to add the generated file to a target in this
+            # scope at the end to ensure correct dependencies.
+            get_target_property(target_source_dir ${target} SOURCE_DIR)
+            if(NOT target_source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+                list(APPEND generated_sources_other_scope ${compiled_file})
+                if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
+                    set_source_files_properties(
+                        ${compiled_file}
+                        TARGET_DIRECTORY ${target}
+                        PROPERTIES
+                            SKIP_AUTOGEN TRUE
+                            GENERATED TRUE
+                    )
+                endif()
+            endif()
         endif()
     endforeach()
 
@@ -1540,14 +1596,16 @@ function(qt6_target_qml_sources target)
         )
     endif()
 
-    if(copied_files)
+    if(copied_files OR generated_sources_other_scope)
         if(CMAKE_VERSION VERSION_LESS 3.19)
             # Called from qt6_add_qml_module() and we know there can only be
             # this one call. With those constraints, we can use a custom target
             # to implement the necessary dependencies to get files copied to the
             # build directory when their source files change.
             add_custom_target(${target}_tooling ALL
-                DEPENDS ${copied_files}
+                DEPENDS
+                    ${copied_files}
+                    ${generated_sources_other_scope}
             )
             add_dependencies(${target} ${target}_tooling)
         else()
@@ -1561,7 +1619,10 @@ function(qt6_target_qml_sources target)
                 add_library(${target}_tooling INTERFACE)
                 add_dependencies(${target} ${target}_tooling)
             endif()
-            target_sources(${target}_tooling PRIVATE ${copied_files})
+            target_sources(${target}_tooling PRIVATE
+                ${copied_files}
+                ${generated_sources_other_scope}
+            )
         endif()
     endif()
 
@@ -1823,6 +1884,16 @@ function(_qt_internal_qml_type_registration target)
         SKIP_AUTOGEN ON
         ${additional_source_files_properties}
     )
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
+        set_source_files_properties(
+            ${type_registration_cpp_file}
+            TARGET_DIRECTORY ${target}
+            PROPERTIES
+                SKIP_AUTOGEN TRUE
+                GENERATED TRUE
+                ${additional_source_files_properties}
+        )
+    endif()
 
     target_include_directories(${target} PRIVATE
         $<TARGET_PROPERTY:${QT_CMAKE_EXPORT_NAMESPACE}::QmlPrivate,INTERFACE_INCLUDE_DIRECTORIES>
