@@ -51,6 +51,7 @@ set(reused_dir_targets
     touchinteraction_shared
     window_shared
     shapes_shared
+    imageelements_shared
 )
 foreach(target IN LISTS reused_dir_targets)
     if(TARGET ${target})
