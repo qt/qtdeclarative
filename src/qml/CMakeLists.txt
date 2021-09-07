@@ -688,4 +688,5 @@ qt_internal_add_docs(Qml
 if(QT_FEATURE_private_tests AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.19")
     add_subdirectory(doc/snippets/cmake/qt_target_qml_sources)
     qt_autogen_tools(qt_target_qml_sources_example ENABLE_AUTOGEN_TOOLS moc)
+    qt_autogen_tools(qt_target_qml_sources_exampleplugin ENABLE_AUTOGEN_TOOLS moc)
 endif()
