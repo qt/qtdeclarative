@@ -219,13 +219,25 @@ function(qt_internal_add_qml_module target)
 
         qt_internal_add_plugin(${arg_PLUGIN_TARGET} ${plugin_args})
 
-        # Get the last dot-separated part of the URI. There should only be one
-        # plugin library in the output directory, so we shouldn't need to
-        # include the full URI namespace.
-        string(REGEX REPLACE "^(.*\\.)?([^.]+)$" "\\2" plugin_basename "${arg_URI}")
-        # Add the infix and "plugin", lowercase that and use it as the basename
-        # of the plugin library.
-        string(TOLOWER "${plugin_basename}${QT_LIBINFIX}plugin" plugin_basename)
+        # Use the plugin target name as the main part of the plugin basename.
+        set(plugin_basename "${arg_PLUGIN_TARGET}")
+
+        # If the target name already ends with a "plugin" suffix, remove it and re-add it to the end
+        # of the base name after the infix.
+        if(plugin_basename MATCHES "(.+)plugin$")
+            set(plugin_basename "${CMAKE_MATCH_1}")
+        endif()
+
+        # Add a the infix if Qt was configured with one.
+        if(QT_LIBINFIX)
+            string(APPEND plugin_basename "${QT_LIBINFIX}")
+        endif()
+
+        # Add the "plugin" suffix after the infix.
+        string(APPEND plugin_basename "plugin")
+
+        # Lowercase the whole thing and use it as the basename of the plugin library.
+        string(TOLOWER "${plugin_basename}" plugin_basename)
         set_target_properties(${arg_PLUGIN_TARGET} PROPERTIES
             OUTPUT_NAME "${plugin_basename}"
         )
