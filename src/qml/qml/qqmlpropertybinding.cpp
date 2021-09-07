@@ -165,6 +165,8 @@ void QQmlPropertyBindingJS::expressionChanged()
 {
     if (!asBinding()->propertyDataPtr)
         return;
+    if (QQmlData::wasDeleted(asBinding()->target()))
+        return;
     const auto currentTag = m_error.tag();
     if (currentTag == InEvaluationLoop) {
         QQmlError err;
