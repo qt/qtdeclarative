@@ -1597,6 +1597,10 @@ function(qt6_target_qml_sources target)
         endif()
     endforeach()
 
+    if(ANDROID)
+        _qt_internal_collect_qml_root_paths("${target}" ${arg_QML_FILES})
+    endif()
+
     if(non_qml_files)
         list(JOIN non_qml_files "\n  " file_list)
         message(WARNING
