@@ -19,6 +19,15 @@ if (QT_FEATURE_qml_worker_script)
     )
 endif()
 
+set(extra_cmake_files)
+set(extra_cmake_includes)
+if(ANDROID)
+    list(APPEND extra_cmake_files
+        "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}AndroidQmlMacros.cmake")
+    list(APPEND extra_cmake_includes
+        "${INSTALL_CMAKE_NAMESPACE}AndroidQmlMacros.cmake")
+endif()
+
 qt_internal_add_qml_module(Qml
     URI "QtQml"
     VERSION "${PROJECT_VERSION}"
@@ -381,8 +390,10 @@ qt_internal_add_qml_module(Qml
         "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}qmldirTemplate.cmake.in"
         "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}QmlPluginTemplate.cpp.in"
         "${CMAKE_CURRENT_LIST_DIR}/${INSTALL_CMAKE_NAMESPACE}QmlFindQmlscInternal.cmake"
+        ${extra_cmake_files}
     EXTRA_CMAKE_INCLUDES
         "${INSTALL_CMAKE_NAMESPACE}QmlFindQmlscInternal.cmake"
+        ${extra_cmake_includes}
 )
 
 # Linking to the static qml plugin should also automatically link to the worker script

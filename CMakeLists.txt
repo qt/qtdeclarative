@@ -38,6 +38,9 @@ endif()
 # special case begin
 # export QT6_ADD_QML_MODULE to this project
 include(src/qml/Qt6QmlMacros.cmake)
+if(ANDROID)
+    include("${CMAKE_CURRENT_LIST_DIR}/src/qml/Qt6AndroidQmlMacros.cmake")
+endif()
 # special case end
 
 if(NOT QT_FEATURE_commandlineparser)
