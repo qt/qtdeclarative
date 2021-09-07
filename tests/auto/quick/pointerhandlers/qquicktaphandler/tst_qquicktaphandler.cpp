@@ -739,8 +739,8 @@ void tst_TapHandler::rightLongPressIgnoreWheel()
 
     QQuickTapHandler *tap = window->rootObject()->findChild<QQuickTapHandler*>();
     QVERIFY(tap);
-    QSignalSpy tappedSpy(tap, SIGNAL(tapped(QEventPoint *)));
-    QSignalSpy longPressedSpy(tap, SIGNAL(longPressed()));
+    QSignalSpy tappedSpy(tap, &QQuickTapHandler::tapped);
+    QSignalSpy longPressedSpy(tap, &QQuickTapHandler::longPressed);
     QPoint p1(100, 100);
 
     // Mouse wheel with ScrollBegin phase (because as soon as two fingers are touching

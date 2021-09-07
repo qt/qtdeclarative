@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 //![0]
-import QtQuick 2.12
+import QtQuick
 
 Rectangle {
     width: 100
@@ -56,8 +56,8 @@ Rectangle {
 
     TapHandler {
         acceptedButtons: Qt.LeftButton | Qt.RightButton
-        onTapped: (eventPoint)=> console.log("tapped", eventPoint.event.device.name,
-                                             "button", eventPoint.event.button,
+        onTapped: (eventPoint, button)=> console.log("tapped", eventPoint.device.name,
+                                             "button", button,
                                              "@", eventPoint.scenePosition)
     }
 }
