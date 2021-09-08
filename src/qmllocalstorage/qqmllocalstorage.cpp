@@ -636,7 +636,7 @@ If the callback throws exceptions, the transaction is rolled back.
 Below you will find an example of a database transaction which catches exceptions.
 
 
-\quotefromfile localstorage/localstorage/Database.js
+\quotefromfile localstorage/Database.js
 \skipuntil dbInit()
 \printto dbGetHandle
 
@@ -692,7 +692,7 @@ SQLException.UNKNOWN_ERR.
 
 See below for an example:
 
-\quotefromfile localstorage/localstorage/Database.js
+\quotefromfile localstorage/Database.js
 \skipto dbReadAll()
 \printto dbUpdate(Pdate
 
