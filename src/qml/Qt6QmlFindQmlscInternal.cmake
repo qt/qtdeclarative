@@ -5,4 +5,4 @@ endif()
 set(QT_NO_FIND_QMLSC TRUE)
 
 # FIXME: Make this work with cross-builds
-find_package(Qt6QmlCompilerPlus QUIET)
+find_package(Qt6QmlCompilerPlusPrivate QUIET)
