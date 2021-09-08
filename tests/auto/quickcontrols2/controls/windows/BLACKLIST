@@ -35,8 +35,6 @@
 *
 [ScrollBar::test_touch:vertical]
 *
-[ScrollView::test_keys]
-*
 [Slider::test_snapMode_touch:NoSnap]
 *
 [Slider::test_snapMode_touch:SnapAlways (0..2)]
