@@ -57,4 +57,5 @@ Clock { // this class is defined in QML (Clock.qml)
     hours: time.hour
     minutes: time.minute
     property Extension extension // from BasicExtension
+    property More more: More {}
 }

@@ -11,4 +11,6 @@ qt6_add_qml_module(additional_qml_module
     URI "BasicExtension"
     QML_FILES
         Extension.qml
+        More.ui.qml
+        Less.js
 )
