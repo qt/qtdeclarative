@@ -1459,11 +1459,21 @@ function(qt6_target_qml_sources target)
         if(NOT no_qmldir AND NOT skip_qmldir)
             get_source_file_property(qml_file_typename ${qml_file_src} QT_QML_SOURCE_TYPENAME)
             if (NOT qml_file_typename)
-                get_filename_component(qml_file_typename ${qml_file_src} NAME_WLE)
+                get_filename_component(qml_file_ext ${qml_file_src} EXT)
+                if (NOT qml_file_ext STREQUAL ".js" AND NOT qml_file_ext STREQUAL ".mjs")
+                    get_filename_component(qml_file_typename ${qml_file_src} NAME_WE)
+                endif()
             endif()
 
             # Do not add qmldir entries for lowercase names. Those are not components.
-            if (qml_file_typename MATCHES "^[A-Z]")
+            if (qml_file_typename AND qml_file_typename MATCHES "^[A-Z]")
+                if (qml_file_ext AND NOT qml_file_ext STREQUAL ".qml" AND NOT qml_file_ext STREQUAL ".ui.qml")
+                    message(AUTHOR_WARNING
+                        "${qml_file_src} has a file extension different from .qml and .ui.qml. "
+                        "This leads to unexpected component names."
+                    )
+                endif()
+
                 # We previously accepted the singular form of this property name
                 # during tech preview. Issue a warning for that, but still
                 # honor it. The plural form will override it if both are set.

@@ -57,6 +57,10 @@ void tst_basicapp::loadComponent()
     const int minute = o->property("minutes").toInt();
     QVERIFY(minute >= time.minute() - 1);
     QVERIFY(minute <= time.minute() + 1);
+
+    QObject *more = qvariant_cast<QObject*>(o->property("more"));
+    QVERIFY(more);
+    QCOMPARE(more->objectName(), QStringLiteral("ui.qml"));
 }
 
 void tst_basicapp::resourceFiles()
@@ -122,6 +126,14 @@ void tst_basicapp::qmldirContents()
         QFile qmldirInResources(":/TimeExample/qmldir");
         QVERIFY(qmldirInResources.open(QIODevice::ReadOnly));
         QCOMPARE(qmldirInResources.readAll(), contents);
+    }
+
+    {
+        QFile qmldir(QCoreApplication::applicationDirPath() + "/BasicExtension/qmldir");
+        QVERIFY(qmldir.open(QIODevice::ReadOnly));
+        const QByteArray contents = qmldir.readAll();
+        QVERIFY(contents.contains("More 1.0 More.ui.qml"));
+        QVERIFY(!contents.contains("Less.js"));
     }
 }
 
