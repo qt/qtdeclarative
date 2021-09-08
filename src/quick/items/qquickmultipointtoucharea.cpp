@@ -569,7 +569,7 @@ void QQuickMultiPointTouchArea::grabGesture()
     setKeepTouchGrab(true);
 }
 
-void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
+void QQuickMultiPointTouchArea::updateTouchData(QEvent *event, RemapEventPoints remap)
 {
     bool ended = false;
     bool moved = false;
@@ -578,12 +578,14 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
     clearTouchLists();
     QList<QTouchEvent::TouchPoint> touchPoints;
     QQuickWindowPrivate *windowPriv = QQuickWindowPrivate::get(window());
+    bool touchPointsFromEvent = false;
 
     switch (event->type()) {
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd:
         touchPoints = static_cast<QTouchEvent*>(event)->touchPoints();
+        touchPointsFromEvent = true;
         break;
     case QEvent::MouseButtonPress:
         _mouseQpaTouchPoint = QTouchEvent::TouchPoint(windowPriv->touchMouseId);
@@ -614,6 +616,8 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
         qWarning("updateTouchData: unhandled event type %d", event->type());
         break;
     }
+    if (!touchPointsFromEvent)
+        remap = RemapEventPoints::No;
 
     int numTouchPoints = touchPoints.count();
     //always remove released touches, and make sure we handle all releases before adds.
@@ -624,7 +628,7 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
             QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints.value(id));
             if (!dtp)
                 continue;
-            updateTouchPoint(dtp, &p);
+            updateTouchPoint(dtp, &p, RemapEventPoints::No);
             dtp->setPressed(false);
             _releasedTouchPoints.append(dtp);
             _touchPoints.remove(id);
@@ -639,19 +643,19 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
                 //handled above
             } else if (!_touchPoints.contains(id)) { //could be pressed, moved, or stationary
                 // (we may have just obtained enough points to start tracking them -- in that case moved or stationary count as newly pressed)
-                addTouchPoint(&p);
+                addTouchPoint(&p, remap);
                 started = true;
             } else if ((touchPointState & Qt::TouchPointMoved) || p.d->stationaryWithModifiedProperty) {
                 // React to a stationary point with a property change (velocity, pressure) as if the point moved. (QTBUG-77142)
                 QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints.value(id));
                 Q_ASSERT(dtp);
                 _movedTouchPoints.append(dtp);
-                updateTouchPoint(dtp,&p);
+                updateTouchPoint(dtp, &p, remap);
                 moved = true;
             } else {
                 QQuickTouchPoint* dtp = static_cast<QQuickTouchPoint*>(_touchPoints.value(id));
                 Q_ASSERT(dtp);
-                updateTouchPoint(dtp,&p);
+                updateTouchPoint(dtp, &p, remap);
             }
         }
 
@@ -707,7 +711,7 @@ void QQuickMultiPointTouchArea::clearTouchLists()
     _movedTouchPoints.clear();
 }
 
-void QQuickMultiPointTouchArea::addTouchPoint(const QTouchEvent::TouchPoint *p)
+void QQuickMultiPointTouchArea::addTouchPoint(const QTouchEvent::TouchPoint *p, RemapEventPoints remap)
 {
     QQuickTouchPoint *dtp = nullptr;
     for (QQuickTouchPoint* tp : qAsConst(_touchPrototypes)) {
@@ -721,7 +725,7 @@ void QQuickMultiPointTouchArea::addTouchPoint(const QTouchEvent::TouchPoint *p)
     if (dtp == nullptr)
         dtp = new QQuickTouchPoint(false);
     dtp->setPointId(p->id());
-    updateTouchPoint(dtp,p);
+    updateTouchPoint(dtp, p, remap);
     dtp->setPressed(true);
     _touchPoints.insert(p->id(),dtp);
     _pressedTouchPoints.append(dtp);
@@ -782,12 +786,12 @@ void QQuickMultiPointTouchArea::addTouchPrototype(QQuickTouchPoint *prototype)
     _touchPrototypes.insert(id, prototype);
 }
 
-void QQuickMultiPointTouchArea::updateTouchPoint(QQuickTouchPoint *dtp, const QTouchEvent::TouchPoint *p)
+void QQuickMultiPointTouchArea::updateTouchPoint(QQuickTouchPoint *dtp, const QTouchEvent::TouchPoint *p, RemapEventPoints remap)
 {
     //TODO: if !qmlDefined, could bypass setters.
     //      also, should only emit signals after all values have been set
     dtp->setUniqueId(p->uniqueId());
-    dtp->setPosition(p->pos());
+    dtp->setPosition(remap == RemapEventPoints::ToLocal ? mapFromScene(p->scenePos()) : p->pos());
     dtp->setEllipseDiameters(p->ellipseDiameters());
     dtp->setPressure(p->pressure());
     dtp->setRotation(p->rotation());
@@ -975,12 +979,12 @@ bool QQuickMultiPointTouchArea::childMouseEventFilter(QQuickItem *receiver, QEve
         }
         if (!shouldFilter(event))
             return false;
-        updateTouchData(event);
+        updateTouchData(event, RemapEventPoints::ToLocal);
         return _stealMouse;
     case QEvent::TouchEnd: {
             if (!shouldFilter(event))
                 return false;
-            updateTouchData(event);
+            updateTouchData(event, RemapEventPoints::ToLocal);
             ungrab(true);
         }
         break;

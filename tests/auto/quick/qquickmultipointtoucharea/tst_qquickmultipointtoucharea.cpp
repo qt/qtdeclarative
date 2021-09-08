@@ -78,6 +78,7 @@ private slots:
     void cancel();
     void stationaryTouchWithChangingPressure();
     void nestedPinchAreaMouse();
+    void touchFiltering();
 
 private:
     QQuickView *createAndShowView(const QString &file);
@@ -1456,6 +1457,23 @@ void tst_QQuickMultiPointTouchArea::nestedPinchAreaMouse()
     QCOMPARE(mpta->property("releasedCount").toInt(), 1);
 }
 
+void tst_QQuickMultiPointTouchArea::touchFiltering() // QTBUG-74028
+{
+    QScopedPointer<QQuickView> window(createAndShowView("nestedMouseArea.qml"));
+    QVERIFY(window->rootObject() != nullptr);
+    QQuickMultiPointTouchArea *mpta = window->rootObject()->findChild<QQuickMultiPointTouchArea*>();
+    QVERIFY(mpta);
+    QQuickMouseArea *ma = window->rootObject()->findChild<QQuickMouseArea*>();
+    QVERIFY(ma);
+
+    QSignalSpy mptaSpy(mpta, &QQuickMultiPointTouchArea::pressed);
+    const QPoint pt = window->rootObject()->boundingRect().center().toPoint();
+    QTest::touchEvent(window.data(), device).press(1, pt);
+    QQuickTouchUtils::flush(window.data());
+    QTRY_COMPARE(mpta->parentItem()->property("mptaPoint").toPoint(), pt);
+    QCOMPARE(mpta->parentItem()->property("maPoint").toPoint(), ma->boundingRect().center().toPoint());
+    QCOMPARE(mptaSpy.count(), 1);
+}
 
 QTEST_MAIN(tst_QQuickMultiPointTouchArea)
 
