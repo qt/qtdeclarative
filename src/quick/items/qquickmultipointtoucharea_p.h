@@ -278,7 +278,8 @@ protected:
 
     void updateTouchPoint(QQuickTouchPoint*, const QEventPoint*);
     void updateTouchPoint(QQuickTouchPoint *dtp, const QMouseEvent *e);
-    void updateTouchData(QEvent*);
+    enum class RemapEventPoints { No, ToLocal };
+    void updateTouchData(QEvent*, RemapEventPoints remap = RemapEventPoints::No);
 
     bool sendMouseEvent(QMouseEvent *event);
     bool shouldFilter(QEvent *event);

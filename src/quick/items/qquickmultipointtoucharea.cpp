@@ -570,7 +570,7 @@ void QQuickMultiPointTouchArea::grabGesture(QPointingDevice *dev)
     setKeepTouchGrab(true);
 }
 
-void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
+void QQuickMultiPointTouchArea::updateTouchData(QEvent *event, RemapEventPoints remap)
 {
     bool ended = false;
     bool moved = false;
@@ -578,6 +578,7 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
 
     clearTouchLists();
     QList<QEventPoint> touchPoints;
+    bool touchPointsFromEvent = false;
     QPointingDevice *dev = nullptr;
 
     switch (event->type()) {
@@ -586,6 +587,7 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
     case QEvent::TouchEnd: {
         QTouchEvent* te = static_cast<QTouchEvent*>(event);
         touchPoints = te->points();
+        touchPointsFromEvent = true;
         dev = const_cast<QPointingDevice *>(te->pointingDevice());
         break;
     }
@@ -630,6 +632,8 @@ void QQuickMultiPointTouchArea::updateTouchData(QEvent *event)
     }
     if (numTouchPoints >= _minimumTouchPoints && numTouchPoints <= _maximumTouchPoints) {
         for (QEventPoint &p : touchPoints) {
+            if (touchPointsFromEvent && remap == RemapEventPoints::ToLocal)
+                QMutableEventPoint::from(p).setPosition(mapFromScene(p.scenePosition()));
             QEventPoint::State touchPointState = p.state();
             int id = p.id();
             if (touchPointState & QEventPoint::State::Released) {
@@ -971,12 +975,12 @@ bool QQuickMultiPointTouchArea::childMouseEventFilter(QQuickItem *receiver, QEve
         }
         if (!shouldFilter(event))
             return false;
-        updateTouchData(event);
+        updateTouchData(event, RemapEventPoints::ToLocal);
         return _stealMouse;
     case QEvent::TouchEnd: {
             if (!shouldFilter(event))
                 return false;
-            updateTouchData(event);
+            updateTouchData(event, RemapEventPoints::ToLocal);
             ungrab(true);
         }
         break;
