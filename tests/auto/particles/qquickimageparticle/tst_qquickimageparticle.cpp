@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -27,12 +27,11 @@
 ****************************************************************************/
 
 #include <QtTest/QtTest>
+#include <QtCore/QtMath>
 #include "../shared/particlestestsshared.h"
 #include <private/qquickparticlesystem_p.h>
 #include <private/qabstractanimation_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
-
-const double CONV_FACTOR = 0.017453292519943295;//Degrees to radians
 
 class tst_qquickimageparticle : public QQmlDataTest
 {
@@ -226,8 +225,8 @@ void tst_qquickimageparticle::test_deformed()
         QCOMPARE(d->xy, 0.5f);
         QCOMPARE(d->yy, 0.5f);
         QCOMPARE(d->yx, 0.5f);
-        QCOMPARE(d->rotation, 90.0f * (float)CONV_FACTOR);
-        QCOMPARE(d->rotationVelocity, 90.0f * (float)CONV_FACTOR);
+        QCOMPARE(d->rotation, qDegreesToRadians(90.0f));
+        QCOMPARE(d->rotationVelocity, qDegreesToRadians(90.0f));
         QCOMPARE(d->autoRotate, (uchar)1);
         QCOMPARE(d->animX, 0.0f);
         QCOMPARE(d->animY, 0.0f);

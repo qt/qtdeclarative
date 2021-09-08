@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -38,10 +38,10 @@
 ****************************************************************************/
 
 #include <QtQml/qqmlinfo.h>
+#include <QtCore/QtMath>
 #include "qquickgravity_p.h"
-#include <cmath>
 QT_BEGIN_NAMESPACE
-const qreal CONV = 0.017453292520444443;
+
 /*!
     \qmltype Gravity
     \instantiates QQuickGravityAffector
@@ -122,8 +122,8 @@ bool QQuickGravityAffector::affectParticle(QQuickParticleData *d, qreal dt)
         return false;
     if (m_needRecalc) {
         m_needRecalc = false;
-        m_dx = m_magnitude * std::cos(m_angle * CONV);
-        m_dy = m_magnitude * std::sin(m_angle * CONV);
+        m_dx = m_magnitude * qCos(qDegreesToRadians(m_angle));
+        m_dy = m_magnitude * qSin(qDegreesToRadians(m_angle));
     }
 
     d->setInstantaneousVX(d->curVX(m_system) + m_dx*dt, m_system);

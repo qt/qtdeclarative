@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -52,15 +52,15 @@
 #include <QtQuick/private/qsgplaintexture_p.h>
 #include <private/qqmlglobal_p.h>
 #include <QtQml/qqmlinfo.h>
-#include <cmath>
+#include <QtCore/QtMath>
 #include <QtGui/private/qrhi_p.h>
+
+#include <cmath>
 
 QT_BEGIN_NAMESPACE
 
 // Must match the shader code
 #define UNIFORM_ARRAY_SIZE 64
-
-const qreal CONV = 0.017453292519943295;
 
 class ImageMaterialData
 {
@@ -1825,10 +1825,13 @@ void QQuickImageParticle::initialize(int gIdx, int pIdx)
             if (m_explicitRotation){
                 if (!datum->rotationOwner)
                     datum->rotationOwner = this;
-                rotation =
-                        (m_rotation + (m_rotationVariation - 2*QRandomGenerator::global()->bounded(m_rotationVariation)) ) * CONV;
-                rotationVelocity =
-                        (m_rotationVelocity + (m_rotationVelocityVariation - 2*QRandomGenerator::global()->bounded(m_rotationVelocityVariation)) ) * CONV;
+                rotation = qDegreesToRadians(
+                    m_rotation + (m_rotationVariation
+                                  - 2 * QRandomGenerator::global()->bounded(m_rotationVariation)));
+                rotationVelocity = qDegreesToRadians(
+                    m_rotationVelocity
+                    + (m_rotationVelocityVariation
+                       - 2 * QRandomGenerator::global()->bounded(m_rotationVelocityVariation)));
                 autoRotate = m_autoRotation ? 1 : 0;
                 if (datum->rotationOwner == this) {
                     datum->rotation = rotation;
