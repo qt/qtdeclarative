@@ -682,6 +682,13 @@ TestCase {
 
         var control = createTemporaryObject(slider, testCase, {live: live, snapMode: data.snapMode, from: data.from, to: data.to, stepSize: stepSize})
         verify(control)
+
+        // The test assumes there is no drag threshold for neither mouse or touch.
+        // But by default, touch has a threshold and mouse doesn't.
+        // In order to not get a test fail if we're trying to move the slider handle
+        // on a very narrow slider, we ensure the same width of all sliders
+        control.width = testCase.width
+
         var touch = useMouse ? null : touchEvent(control)
 
         if (useMouse)
