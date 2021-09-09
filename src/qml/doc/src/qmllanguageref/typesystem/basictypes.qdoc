@@ -267,31 +267,11 @@ property is only invoked when the property is reassigned to a different object v
     var urlObject = new URL(url);
     \endqml
 
-    \section1 Using the url Type
-
-    When a relative URL is written to a \c url type property, it is converted
-    into a URL object, so \b {matching the URL value against the input string
-    value will fail}. Instead, convert the string to a URL using Qt.resolvedUrl()
-    for means of comparison, and use \c toString() to get the contents of the URL:
-
-    \qml
-    Image {
-        source: "pics/logo.png"
-
-        Component.onCompleted: {
-            // This prints 'false'. Although "pics/logo.png" was the input string,
-            // it's been converted from a string to a URL, so these two are not the same.
-            console.log(source == "pics/logo.png")
-
-            // This prints 'true' as Qt.resovledUrl() converts the string into a
-            // URL with the correctly resolved path
-            console.log(source == Qt.resolvedUrl("pics/logo.png"))
-
-            // This prints the absolute path, e.g. "file:///path/to/pics/logo.png"
-            console.log(source.toString())
-        }
-    }
-    \endqml
+    \note In Qt 5, URLs were automatically resolved based on the current context
+    when assigning them to any \c url property. This made it impossible to
+    work with relative URLs and it created inconsistent behavior when reading
+    back a URL previously written to a property. Therefore, the behavior was
+    changed in Qt 6.
 
     \note When referring to files stored with the \l{resources.html}{Qt Resource System}
     from within QML, you should use "qrc:///" instead of ":/" as QML requires URL paths.
