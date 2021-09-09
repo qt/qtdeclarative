@@ -424,7 +424,7 @@ protected:
 };
 
 template<typename T>
-class QMLDOM_EXPORT ListPT final : public ListPBase
+class ListPT final : public ListPBase
 {
 public:
     constexpr static DomType kindValue = DomType::ListP;
@@ -567,7 +567,7 @@ protected:
 };
 
 template<typename T>
-class QMLDOM_EXPORT SimpleObjectWrapT final : public SimpleObjectWrapBase
+class SimpleObjectWrapT final : public SimpleObjectWrapBase
 {
 public:
     constexpr static DomType kindValue = DomType::SimpleObjectWrap;
@@ -1174,7 +1174,7 @@ private:
     friend class AstComments;
     friend class AttachedInfo;
     friend class TestDomItem;
-    friend bool operator==(const DomItem &, const DomItem &);
+    friend QMLDOM_EXPORT bool operator==(const DomItem &, const DomItem &);
     DomType m_kind = DomType::Empty;
     std::optional<TopT> m_top;
     std::optional<OwnerT> m_owner;
@@ -1182,7 +1182,8 @@ private:
     ElementT m_element = Empty();
 };
 
-bool operator==(const DomItem &o1, const DomItem &o2);
+QMLDOM_EXPORT bool operator==(const DomItem &o1, const DomItem &o2);
+
 inline bool operator!=(const DomItem &o1, const DomItem &o2)
 {
     return !(o1 == o2);
@@ -1409,9 +1410,9 @@ void SimpleObjectWrapT<T>::writeOut(DomItem &self, OutWriter &lw) const
     writeOutWrap<T>(*asT(), self, lw);
 }
 
-QDebug operator<<(QDebug debug, const DomItem &c);
+QMLDOM_EXPORT QDebug operator<<(QDebug debug, const DomItem &c);
 
-class MutableDomItem {
+class QMLDOM_EXPORT MutableDomItem {
 public:
     using CopyOption = DomItem::CopyOption;
 
@@ -1623,7 +1624,7 @@ private:
     Path m_pathFromOwner;
 };
 
-QDebug operator<<(QDebug debug, const MutableDomItem &c);
+QMLDOM_EXPORT QDebug operator<<(QDebug debug, const MutableDomItem &c);
 
 template<typename K, typename T>
 Path insertUpdatableElementInMultiMap(Path mapPathFromOwner, QMultiMap<K, T> &mmap, K key,

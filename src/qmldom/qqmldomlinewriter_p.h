@@ -104,7 +104,7 @@ public:
     bool useTabs = false;
 };
 
-QMLDOM_EXPORT class LineWriterOptions
+class QMLDOM_EXPORT LineWriterOptions
 {
     Q_GADGET
 public:
@@ -134,7 +134,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(LineWriterOptions::Updates)
 using PendingSourceLocationId = QAtomicInt;
 class LineWriter;
 
-QMLDOM_EXPORT class PendingSourceLocation
+class QMLDOM_EXPORT PendingSourceLocation
 {
     Q_GADGET
 public:
@@ -149,7 +149,7 @@ public:
     bool open = true;
 };
 
-QMLDOM_EXPORT class LineWriter
+class QMLDOM_EXPORT LineWriter
 {
     Q_GADGET
 public:

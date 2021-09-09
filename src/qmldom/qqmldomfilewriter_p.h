@@ -60,7 +60,7 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
-QMLDOM_EXPORT class FileWriter
+class QMLDOM_EXPORT FileWriter
 {
     Q_GADGET
     Q_DECLARE_TR_FUNCTIONS(FileWriter)

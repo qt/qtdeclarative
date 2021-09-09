@@ -1,9 +1,21 @@
 cmake_minimum_required(VERSION 3.15.0)
+
+project(standalone_qmldom LANGUAGES CXX)
+
+find_package(Qt6 COMPONENTS Core Qml)
+
 include(../../../.cmake.conf)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
+
+if(MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+elseif (MINGW)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wa,-mbig-obj")
+endif()
+
 
 add_library(qmldomlib
         SHARED
@@ -46,7 +58,9 @@ add_library(qmldomlib
         ../qqmldomtypesreader.cpp ../qqmldomtypesreader_p.h
 )
 
-target_compile_definitions(qmldomlib PUBLIC QMLDOM_STANDALONE)
+target_compile_definitions(qmldomlib PUBLIC QMLDOM_STANDALONE QMLDOM_DYNAMIC)
+target_compile_definitions(qmldomlib PRIVATE QMLDOM_LIBRARY)
+
 target_include_directories(qmldomlib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../..)
 target_link_libraries(qmldomlib
   PUBLIC

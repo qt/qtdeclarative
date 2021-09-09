@@ -66,7 +66,7 @@ bool domCompare(
 
 enum DomCompareStrList { FirstDiff, AllDiffs };
 
-QStringList domCompareStrList(
+QMLDOM_EXPORT QStringList domCompareStrList(
         DomItem &i1, DomItem &i2,
         function_ref<bool(DomItem &, const PathEls::PathComponent &, DomItem &)> filter = noFilter,
         DomCompareStrList stopAtFirstDiff = DomCompareStrList::FirstDiff);
