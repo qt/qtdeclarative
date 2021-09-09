@@ -811,14 +811,58 @@ bool QtObject::openUrlExternally(const QUrl &url) const
 }
 
 /*!
+  \qmlmethod url Qt::url(url url)
+
+  Returns \a url verbatim. This can be used to force a type coercion to \c url.
+  In contrast to Qt.resolvedUrl() this retains any relative URLs. As strings
+  are implicitly converted to urls, the function can be called with a string
+  as argument, and will then return a url.
+
+  \sa resolvedUrl()
+*/
+QUrl QtObject::url(const QUrl &url) const
+{
+    return url;
+}
+
+/*!
   \qmlmethod url Qt::resolvedUrl(url url)
 
   Returns \a url resolved relative to the URL of the caller.
+
+  If there is no caller or the caller is not associated with a QML context,
+  returns \a url resolved relative to the QML engine's base URL. If the QML
+  engine has no base URL, just returns \a url.
+
+  \sa url()
 */
 QUrl QtObject::resolvedUrl(const QUrl &url) const
 {
     if (QQmlRefPointer<QQmlContextData> ctxt = v4Engine()->callingQmlContext())
         return ctxt->resolvedUrl(url);
+    if (QQmlEngine *engine = qmlEngine())
+        return engine->baseUrl().resolved(url);
+    return url;
+}
+
+/*!
+  \qmlmethod url Qt::resolvedUrl(url url, object context)
+
+  Returns \a url resolved relative to the URL of the QML context of
+  \a context. If \a context is not associated with a QML context,
+  returns \a url resolved relative to the QML engine's base URL. If
+  the QML engine has no base URL, just returns \a url.
+
+  \sa url()
+*/
+QUrl QtObject::resolvedUrl(const QUrl &url, QObject *context) const
+{
+    if (context) {
+        QQmlData *data = QQmlData::get(context);
+        if (data && data->outerContext)
+            return data->outerContext->resolvedUrl(url);
+    }
+
     if (QQmlEngine *engine = qmlEngine())
         return engine->baseUrl().resolved(url);
     return url;

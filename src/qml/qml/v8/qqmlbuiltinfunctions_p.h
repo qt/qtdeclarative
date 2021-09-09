@@ -144,7 +144,9 @@ public:
     Q_INVOKABLE QLocale locale(const QString &name) const;
 #endif
 
+    Q_INVOKABLE QUrl url(const QUrl &url) const;
     Q_INVOKABLE QUrl resolvedUrl(const QUrl &url) const;
+    Q_INVOKABLE QUrl resolvedUrl(const QUrl &url, QObject *context) const;
     Q_INVOKABLE bool openUrlExternally(const QUrl &url) const;
 
     Q_INVOKABLE QVariant font(const QJSValue &fontSpecifier) const;
