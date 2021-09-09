@@ -1745,7 +1745,8 @@ QVector<QQuickItem *> QQuickDeliveryAgentPrivate::pointerTargets(QQuickItem *ite
     for (int ii = children.count() - 1; ii >= 0; --ii) {
         QQuickItem *child = children.at(ii);
         auto childPrivate = QQuickItemPrivate::get(child);
-        if (!child->isVisible() || !child->isEnabled() || childPrivate->culled)
+        if (!child->isVisible() || !child->isEnabled() || childPrivate->culled ||
+                (child != item && childPrivate->extra.isAllocated() && childPrivate->extra->subsceneDeliveryAgent))
             continue;
 
         if (child != item)
