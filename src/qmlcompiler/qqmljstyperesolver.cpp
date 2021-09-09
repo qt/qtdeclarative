@@ -193,6 +193,12 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor &visitor)
 
             if (QQmlJSMetaProperty property = scope->property(binding.propertyName());
                 property.isValid()) {
+                if (!property.isWritable()) {
+                    m_logger->logWarning(u"Cannot assign to read-only property %1"_qs
+                                                 .arg(binding.propertyName()),
+                                         Log_Type, binding.sourceLocation());
+                    continue;
+                }
                 if (!canConvertFromTo(binding.value(), property.type())) {
                     m_logger->logWarning(u"Cannot assign binding of type %1 to %2"_qs
                                                  .arg(binding.valueTypeName())
