@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
 
 class QQuickAttachedObjectPrivate;
 
-class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickAttachedObject : public QObject
+class Q_QUICKCONTROLS2IMPL_PRIVATE_EXPORT QQuickAttachedObject : public QObject
 {
     Q_OBJECT
 

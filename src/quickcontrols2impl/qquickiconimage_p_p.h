@@ -54,7 +54,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickIconImagePrivate : public QQuickImagePrivate
+class Q_QUICKCONTROLS2IMPL_PRIVATE_EXPORT QQuickIconImagePrivate : public QQuickImagePrivate
 {
     Q_DECLARE_PUBLIC(QQuickIconImage)
 

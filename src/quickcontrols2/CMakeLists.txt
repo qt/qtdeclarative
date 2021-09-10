@@ -38,6 +38,7 @@ qt_internal_add_qml_module(QuickControls2
         Qt::Core
         Qt::Gui
         Qt::Quick
+    GENERATE_CPP_EXPORTS
 )
 
 qt_internal_extend_target(qtquickcontrols2plugin

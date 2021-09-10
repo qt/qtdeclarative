@@ -53,7 +53,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QUICKCONTROLS2_PRIVATE_EXPORT QQuickClippedText : public QQuickText
+class Q_QUICKCONTROLS2IMPL_PRIVATE_EXPORT QQuickClippedText : public QQuickText
 {
     Q_OBJECT
     Q_PROPERTY(qreal clipX READ clipX WRITE setClipX FINAL)

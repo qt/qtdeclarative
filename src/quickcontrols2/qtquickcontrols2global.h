@@ -38,20 +38,7 @@
 #define QTQUICKCONTROLS2GLOBAL_H
 
 #include <QtCore/qglobal.h>
-
-QT_BEGIN_NAMESPACE
-
-#ifndef QT_STATIC
-#  if defined(QT_BUILD_QUICKCONTROLS2_LIB)
-#    define Q_QUICKCONTROLS2_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_QUICKCONTROLS2_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_QUICKCONTROLS2_EXPORT
-#endif
-
-QT_END_NAMESPACE
+#include <QtQuickControls2/qtquickcontrols2exports.h>
 
 Q_QUICKCONTROLS2_EXPORT void qml_register_types_QtQuick_Controls();
 

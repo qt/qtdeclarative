@@ -49,17 +49,6 @@
 //
 
 #include <QtCore/qglobal.h>
-
-#ifndef QT_STATIC
-#  if defined(QT_BUILD_QUICKCONTROLS2IMPL_LIB)
-#    define Q_QUICKCONTROLS2IMPL_EXPORT Q_DECL_EXPORT
-#  else
-#    define Q_QUICKCONTROLS2IMPL_EXPORT Q_DECL_IMPORT
-#  endif
-#else
-#  define Q_QUICKCONTROLS2IMPL_EXPORT
-#endif
-
-#define Q_QUICKCONTROLS2_PRIVATE_EXPORT Q_QUICKCONTROLS2IMPL_EXPORT
+#include <QtQuickControls2Impl/private/qtquickcontrols2implexports_p.h>
 
 #endif // QTQUICKCONTROLS2IMPLGLOBAL_H
