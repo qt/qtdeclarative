@@ -1027,7 +1027,7 @@ void QQuickTextInput::setAutoScroll(bool b)
 QValidator* QQuickTextInput::validator() const
 {
 #if !QT_CONFIG(validator)
-    return 0;
+    return nullptr;
 #else
     Q_D(const QQuickTextInput);
     return d->m_validator;
