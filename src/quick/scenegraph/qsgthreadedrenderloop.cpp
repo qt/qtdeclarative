@@ -446,11 +446,11 @@ bool QSGRenderThread::event(QEvent *e)
         if (ce->window) {
             if (rhi) {
                 QQuickWindowPrivate *cd = QQuickWindowPrivate::get(ce->window);
-                cd->rhi->makeThreadLocalNativeContextCurrent();
                 // The assumption is that the swapchain is usable, because on
                 // expose the thread starts up and renders a frame so one cannot
                 // get here without having done at least one on-screen frame.
                 cd->rhi->beginFrame(cd->swapchain);
+                cd->rhi->makeThreadLocalNativeContextCurrent(); // for custom GL rendering before/during/after sync
                 cd->syncSceneGraph();
                 sgrc->endSync();
                 cd->renderSceneGraph(ce->window->size());
@@ -513,17 +513,10 @@ void QSGRenderThread::invalidateGraphics(QQuickWindow *window, bool inDestructor
         return;
     }
 
-
     bool wipeSG = inDestructor || !window->isPersistentSceneGraph();
     bool wipeGraphics = inDestructor || (wipeSG && !window->isPersistentGraphics());
 
-    bool current = true;
-    if (rhi)
-        rhi->makeThreadLocalNativeContextCurrent();
-
-    if (Q_UNLIKELY(!current)) {
-        qCDebug(QSG_LOG_RENDERLOOP, QSG_RT_PAD, "- cleanup without an OpenGL context");
-    }
+    rhi->makeThreadLocalNativeContextCurrent();
 
     QQuickWindowPrivate *dd = QQuickWindowPrivate::get(window);
 
@@ -577,7 +570,7 @@ void QSGRenderThread::sync(bool inExpose)
 
     Q_ASSERT_X(wm->m_lockedForSync, "QSGRenderThread::sync()", "sync triggered on bad terms as gui is not already locked...");
 
-    bool current = true;
+    bool canSync = true;
     if (rhi) {
         if (windowSize.width() > 0 && windowSize.height() > 0) {
             // With the rhi making the (OpenGL) context current serves only one
@@ -589,12 +582,12 @@ void QSGRenderThread::sync(bool inExpose)
         } else {
             // Zero size windows do not initialize a swapchain and
             // rendercontext. So no sync or render can be done then.
-            current = false;
+            canSync = false;
         }
     } else {
-        current = false;
+        canSync = false;
     }
-    if (current) {
+    if (canSync) {
         QQuickWindowPrivate *d = QQuickWindowPrivate::get(window);
         bool hadRenderer = d->renderer != nullptr;
         // If the scene graph was touched since the last sync() make sure it sends the
@@ -777,16 +770,15 @@ void QSGRenderThread::syncAndRender()
         d->animationController->unlock();
     }
 
-    bool current = true;
     // Zero size windows do not initialize a swapchain and
     // rendercontext. So no sync or render can be done then.
-    if (d->renderer && windowSize.width() > 0 && windowSize.height() > 0 && rhi)
-        rhi->makeThreadLocalNativeContextCurrent();
-    else
-        current = false;
+    const bool canRender = d->renderer && cd->swapchain && windowSize.width() > 0 && windowSize.height() > 0;
 
-    if (current) {
-        d->renderSceneGraph(windowSize, rhi ? cd->swapchain->currentPixelSize() : QSize());
+    if (canRender) {
+        if (!syncRequested) // else this was already done in sync()
+            rhi->makeThreadLocalNativeContextCurrent();
+
+        d->renderSceneGraph(windowSize, cd->swapchain->currentPixelSize());
 
         if (profileFrames)
             renderTime = threadTimer.nsecsElapsed();
@@ -824,7 +816,7 @@ void QSGRenderThread::syncAndRender()
 
     // beforeFrameBegin - afterFrameEnd must always come in pairs; if there was
     // no before due to 0 size then there shouldn't be an after either
-   if (current)
+   if (canRender)
         emit window->afterFrameEnd();
 
     // Though it would be more correct to put this block directly after
@@ -920,6 +912,8 @@ void QSGRenderThread::ensureRhi()
         }
     }
     if (!sgrc->rhi() && windowSize.width() > 0 && windowSize.height() > 0) {
+        // We need to guarantee that sceneGraphInitialized is emitted
+        // with a context current, if running with OpenGL.
         rhi->makeThreadLocalNativeContextCurrent();
         QSGDefaultRenderContext::InitParams rcParams;
         rcParams.rhi = rhi;
