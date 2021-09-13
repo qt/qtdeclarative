@@ -118,7 +118,7 @@ void doFilter(const QList<QQmlJSResourceFileMapper::Entry> &qrcPathToFileSystemP
                     ? it->resourcePath
                     : it->filePath;
 
-            if (!candidate.startsWith(terminatedDirectory))
+            if (!filter.path.isEmpty() && !candidate.startsWith(terminatedDirectory))
                 continue;
 
             if (!hasSuffix(candidate, filter.suffixes))

@@ -308,8 +308,27 @@ void QQmlJSImportVisitor::importBaseModules()
 
     // Pulling in the modules and neighboring qml files of the qmltypes we're trying to lint is not
     // something we need to do.
-    if (!m_logger->fileName().endsWith(u".qmltypes"_qs))
+    if (!m_logger->fileName().endsWith(u".qmltypes"_qs)) {
         m_rootScopeImports.insert(m_importer->importDirectory(m_implicitImportDirectory));
+
+        QQmlJSResourceFileMapper *mapper = m_importer->resourceFileMapper();
+
+        // In instances where a qmldir entry exists somewhere in the resource files, import that
+        // directory in order to allow for implicit imports of modules.
+        if (mapper) {
+            const QStringList filePaths = mapper->filePaths(QQmlJSResourceFileMapper::Filter {
+                    QString(), QStringList(),
+                    QQmlJSResourceFileMapper::Directory | QQmlJSResourceFileMapper::Recurse });
+            auto qmldirEntry =
+                    std::find_if(filePaths.constBegin(), filePaths.constEnd(),
+                                 [](const QString &path) { return path.endsWith(u"/qmldir"); });
+
+            if (qmldirEntry != filePaths.constEnd()) {
+                m_rootScopeImports.insert(
+                        m_importer->importDirectory(QFileInfo(*qmldirEntry).absolutePath()));
+            }
+        }
+    }
 
     processImportWarnings(QStringLiteral("base modules"));
 }

@@ -70,6 +70,8 @@ private Q_SLOTS:
 
     void settingsFile();
 
+    void additionalImplicitImport();
+
 private:
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true);
@@ -936,6 +938,14 @@ void TestQmllint::settingsFile()
     QVERIFY(runQmllint("settings/unusedImportWarning/unused.qml", false, QStringList(), false)
                     .contains(QStringLiteral("Info: %1:2:1: Unused import at %1:2:1")
                                       .arg(testFile("settings/unusedImportWarning/unused.qml"))));
+}
+
+void TestQmllint::additionalImplicitImport()
+{
+    QVERIFY(runQmllint("additionalImplicitImport.qml", true,
+                       QStringList() << "--resource" << testFile("implicitImportResource.qrc"),
+                       false)
+                    .isEmpty());
 }
 
 QTEST_MAIN(TestQmllint)
