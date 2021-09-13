@@ -444,11 +444,11 @@ bool QSGRenderThread::event(QEvent *e)
         if (ce->window) {
             if (rhi) {
                 QQuickWindowPrivate *cd = QQuickWindowPrivate::get(ce->window);
-                cd->rhi->makeThreadLocalNativeContextCurrent();
                 // The assumption is that the swapchain is usable, because on
                 // expose the thread starts up and renders a frame so one cannot
                 // get here without having done at least one on-screen frame.
                 cd->rhi->beginFrame(cd->swapchain);
+                cd->rhi->makeThreadLocalNativeContextCurrent(); // for custom GL rendering before/during/after sync
                 cd->syncSceneGraph();
                 sgrc->endSync();
                 cd->renderSceneGraph(ce->window->size());
@@ -914,6 +914,8 @@ void QSGRenderThread::ensureRhi()
         }
     }
     if (!sgrc->rhi() && windowSize.width() > 0 && windowSize.height() > 0) {
+        // We need to guarantee that sceneGraphInitialized is emitted
+        // with a context current, if running with OpenGL.
         rhi->makeThreadLocalNativeContextCurrent();
         QSGDefaultRenderContext::InitParams rcParams;
         rcParams.rhi = rhi;
