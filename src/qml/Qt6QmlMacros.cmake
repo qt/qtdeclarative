@@ -1433,6 +1433,11 @@ function(qt6_target_qml_sources target)
             continue()
         endif()
 
+        # Mark QML files as source files, so that they do not appear in <Other Locations> in Creator
+        # or other IDEs
+        set_source_files_properties(${qml_file_src} HEADER_FILE_ONLY ON)
+        target_sources(${target} PRIVATE ${qml_file_src})
+
         get_filename_component(file_absolute ${qml_file_src} ABSOLUTE)
         __qt_get_relative_resource_path_for_file(file_resource_path ${qml_file_src})
         set(qml_file_out ${output_dir}/${file_resource_path})
