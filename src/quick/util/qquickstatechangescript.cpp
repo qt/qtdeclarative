@@ -149,8 +149,6 @@ QQuickStateActionEvent::EventType QQuickStateChangeScript::type() const
     return Script;
 }
 
-
-#include <moc_qquickstatechangescript_p.cpp>
-
 QT_END_NAMESPACE
 
+#include <moc_qquickstatechangescript_p.cpp>

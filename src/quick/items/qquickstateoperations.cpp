@@ -1373,7 +1373,6 @@ void QQuickAnchorChanges::saveTargetValues()
     d->toHeight = d->target->height();
 }
 
-#include <moc_qquickstateoperations_p.cpp>
-
 QT_END_NAMESPACE
 
+#include <moc_qquickstateoperations_p.cpp>
