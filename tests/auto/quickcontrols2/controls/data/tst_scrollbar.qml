@@ -652,6 +652,9 @@ TestCase {
     function test_snapMode_touch(data) {
         var control = createTemporaryObject(scrollBar, testCase, {snapMode: data.snapMode, orientation: Qt.Horizontal, stepSize: data.stepSize, size: data.size, width: data.width})
         verify(control)
+        // In case the slider is surrounded with decrease/increase buttons
+        // Adjust slider width so that slider area is a whole number (to avoid rounding errors)
+        control.width += control.leftPadding + control.rightPadding
 
         function snappedPosition(pos) {
             var effectiveStep = control.stepSize * (1.0 - control.size)
@@ -664,10 +667,13 @@ TestCase {
 
         var touch = touchEvent(control)
 
-        touch.press(0, control, 0, 0).commit()
+        var minHandlePos = control.leftPadding
+        var maxHandlePos = control.width - control.rightPadding
+        var availableSlideWidth = maxHandlePos - minHandlePos
+        touch.press(0, control, minHandlePos, 0).commit()
         compare(control.position, 0)
 
-        touch.move(0, control, control.width * 0.3, 0).commit()
+        touch.move(0, control, minHandlePos + availableSlideWidth*0.3, 0).commit()
         var expectedMovePos = 0.3
         if (control.snapMode === ScrollBar.SnapAlways) {
             expectedMovePos = snappedPosition(expectedMovePos)
@@ -675,7 +681,7 @@ TestCase {
         }
         compare(control.position, expectedMovePos)
 
-        touch.release(0, control, control.width * 0.75, 0).commit()
+        touch.release(0, control, minHandlePos + availableSlideWidth*0.75, 0).commit()
         var expectedReleasePos = 0.75
         if (control.snapMode !== ScrollBar.NoSnap) {
             expectedReleasePos = snappedPosition(expectedReleasePos)
@@ -684,14 +690,14 @@ TestCase {
         compare(control.position, expectedReleasePos)
 
         control.position = 0
-        touch.press(0, control, 0, 0).commit()
+        touch.press(0, control, minHandlePos, 0).commit()
 
         var steps = 0
         var prevPos = 0
 
-        for (var x = 0; x < control.width; ++x) {
+        for (var x = minHandlePos; x < maxHandlePos; ++x) {
             touch.move(0, control, x, 0).commit()
-            expectedMovePos = boundPosition(x / control.width)
+            expectedMovePos = boundPosition((x - minHandlePos) / availableSlideWidth)
             if (control.snapMode === ScrollBar.SnapAlways)
                 expectedMovePos = snappedPosition(expectedMovePos)
             compare(control.position, expectedMovePos)
@@ -702,7 +708,7 @@ TestCase {
         }
         compare(steps, data.steps)
 
-        touch.release(0, control, control.width - 1).commit()
+        touch.release(0, control, maxHandlePos - 1).commit()
     }
 
     function test_interactive_data() {
