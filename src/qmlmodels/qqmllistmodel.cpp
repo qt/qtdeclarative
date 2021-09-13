@@ -129,8 +129,28 @@ const ListLayout::Role &ListLayout::getRoleOrCreate(QV4::String *key, Role::Data
 
 const ListLayout::Role &ListLayout::createRole(const QString &key, ListLayout::Role::DataType type)
 {
-    const int dataSizes[] = { sizeof(StringOrTranslation), sizeof(double), sizeof(bool), sizeof(ListModel *), sizeof(ListElement::GuardedQObjectPointer), sizeof(QVariantMap), sizeof(QDateTime), sizeof(QUrl), sizeof(QJSValue) };
-    const int dataAlignments[] = { alignof(StringOrTranslation), alignof(double), alignof(bool), alignof(ListModel *), alignof(QObject *), alignof(QVariantMap), alignof(QDateTime), alignof(QUrl), alignof(QJSValue) };
+    const int dataSizes[] = {
+        sizeof(StringOrTranslation),
+        sizeof(double),
+        sizeof(bool),
+        sizeof(ListModel *),
+        sizeof(ListElement::GuardedQObjectPointer),
+        sizeof(QVariantMap),
+        sizeof(QDateTime),
+        sizeof(QUrl),
+        sizeof(QJSValue)
+    };
+    const int dataAlignments[] = {
+        alignof(StringOrTranslation),
+        alignof(double),
+        alignof(bool),
+        alignof(ListModel *),
+        alignof(QObject *),
+        alignof(QVariantMap),
+        alignof(QDateTime),
+        alignof(QUrl),
+        alignof(QJSValue)
+    };
 
     Role *r = new Role;
     r->name = key;
@@ -224,10 +244,10 @@ const ListLayout::Role *ListLayout::getRoleOrCreate(const QString &key, const QV
         case QMetaType::Double:      type = Role::Number;      break;
         case QMetaType::Int:         type = Role::Number;      break;
         case QMetaType::Bool:        type = Role::Bool;        break;
-        case QMetaType::QString:      type = Role::String;      break;
-        case QMetaType::QVariantMap:         type = Role::VariantMap;  break;
-        case QMetaType::QDateTime:    type = Role::DateTime;    break;
-    case QMetaType::QUrl:            type = Role::Url;         break;
+        case QMetaType::QString:     type = Role::String;      break;
+        case QMetaType::QVariantMap: type = Role::VariantMap;  break;
+        case QMetaType::QDateTime:   type = Role::DateTime;    break;
+        case QMetaType::QUrl:        type = Role::Url;         break;
         default:    {
             if (data.userType() == qMetaTypeId<QJSValue>() &&
                 data.value<QJSValue>().isCallable()) {
