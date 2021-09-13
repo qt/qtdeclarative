@@ -723,14 +723,13 @@ void ListModel::set(int elementIndex, QV4::Object *object, ListModel::SetElement
                 if (maybeUrl.metaType() == QMetaType::fromType<QUrl>()) {
                     const QUrl qurl = maybeUrl.toUrl();
                     const ListLayout::Role &r = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::Url);
-                    if (r.type == ListLayout::Role::Url) {
+                    if (r.type == ListLayout::Role::Url)
                         e->setUrlPropertyFast(r, qurl);
-                    }
-                    return;
+                } else {
+                    const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::VariantMap);
+                    if (role.type == ListLayout::Role::VariantMap)
+                        e->setVariantMapFast(role, o);
                 }
-                const ListLayout::Role &role = m_layout->getRoleOrCreate(propertyName, ListLayout::Role::VariantMap);
-                if (role.type == ListLayout::Role::VariantMap)
-                    e->setVariantMapFast(role, o);
             }
         } else if (propertyValue->isNullOrUndefined()) {
             if (reason == SetElement::WasJustInserted) {
