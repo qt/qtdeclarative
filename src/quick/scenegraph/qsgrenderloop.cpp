@@ -480,6 +480,8 @@ bool QSGGuiThreadRenderLoop::ensureRhi(QQuickWindow *window, WindowData &data)
             data.rhiDeviceLost = false;
 
             current = true;
+            // We need to guarantee that sceneGraphInitialized is
+            // emitted with a context current, if running with OpenGL.
             rhi->makeThreadLocalNativeContextCurrent();
 
             // The sample count cannot vary between windows as we use the same
@@ -503,12 +505,6 @@ bool QSGGuiThreadRenderLoop::ensureRhi(QQuickWindow *window, WindowData &data)
         }
     } else {
         current = true;
-        // With the rhi making the (OpenGL) context current serves only one
-        // purpose: to enable external OpenGL rendering connected to one of
-        // the QQuickWindow signals (beforeSynchronizing, beforeRendering,
-        // etc.) to function like it did on the direct OpenGL path. For our
-        // own rendering this call would not be necessary.
-        rhi->makeThreadLocalNativeContextCurrent();
     }
 
     if (rhi && !cd->swapchain) {
@@ -671,6 +667,12 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
         }
     }
 
+    // Enable external OpenGL rendering connected to one of the
+    // QQuickWindow signals (beforeSynchronizing, beforeRendering,
+    // etc.) to function like it did on the direct OpenGL path,
+    // i.e. ensure there is a context current, just in case.
+    rhi->makeThreadLocalNativeContextCurrent();
+
     cd->syncSceneGraph();
     if (lastDirtyWindow)
         rc->endSync();
@@ -781,6 +783,7 @@ QImage QSGGuiThreadRenderLoop::grab(QQuickWindow *window)
     // renderWindow() so one cannot get to grab() without having done at least
     // one on-screen frame.
     cd->rhi->beginFrame(cd->swapchain);
+    rhi->makeThreadLocalNativeContextCurrent(); // for custom GL rendering before/during/after sync
     cd->syncSceneGraph();
     cd->renderSceneGraph(window->size());
     QImage image = QSGRhiSupport::instance()->grabAndBlockInCurrentFrame(rhi, cd->swapchain->currentFrameCommandBuffer());
