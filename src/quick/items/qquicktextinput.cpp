@@ -2578,7 +2578,7 @@ void QQuickTextInput::moveCursorSelection(int pos, SelectionMode mode)
 
     if (mode == SelectCharacters) {
         d->moveCursor(pos, true);
-    } else if (pos != d->m_cursor){
+    } else if (pos != d->m_cursor) {
         const int cursor = d->m_cursor;
         int anchor;
         if (!d->hasSelectedText())
@@ -3299,7 +3299,7 @@ void QQuickTextInputPrivate::setSelection(int start, int length)
         m_selstart = start;
         m_selend = qMin(start + length, m_text.length());
         m_cursor = m_selend;
-    } else if (length < 0){
+    } else if (length < 0) {
         if (start == m_selend && start + length == m_selstart && m_cursor == m_selstart)
             return;
         m_selstart = qMax(start + length, 0);
