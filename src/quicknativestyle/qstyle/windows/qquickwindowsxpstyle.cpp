@@ -2594,25 +2594,20 @@ void QWindowsXPStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCo
                     d->drawBackground(theme);
                 }
                 if (sub & SC_ScrollBarSlider) {
-                    QRect rect = proxy()->subControlRect(CC_ScrollBar, option, SC_ScrollBarSlider);
                     // The style paint the slider handle so that it is surrounded by transparent areas
                     // on each side. These areas have the same size as the Left/Right (or Top/Left) buttons.
                     // This is probaly done in order for the handle to travel all along the geometry
                     // of the slider, while the handle still not occluding the buttons.
                     // We do not want those transparent areas, so we clip them off here.
-                    const QSize handleSize = proxy()->subControlRect(QStyle::CC_ScrollBar, scrollbar, QStyle::SC_ScrollBarAddLine).size();
+                    const int extentForButton = proxy()->pixelMetric(PM_ScrollBarExtent, scrollbar);
+                    QSize extend(extentForButton, 0);
+                    if (scrollbar->orientation == Qt::Vertical)
+                        extend.transpose();
 
-                    if (scrollbar->orientation == Qt::Vertical) {
-                        const int handleHeight = handleSize.height();
-                        rect.setBottom(rect.bottom() + 2 * handleHeight);
-                        p->setClipRect(r.adjusted(0, 0, 0, handleHeight));
-                        p->translate(0, -handleHeight);
-                    } else {
-                        const int handleWidth = handleSize.width();
-                        rect.setRight(rect.right() + 2 * handleWidth);
-                        p->setClipRect(r.adjusted(0, 0, handleWidth, 0));
-                        p->translate(-handleWidth, 0);
-                    }
+                    QRect rect = r;                                     // 'r' is the rect for the scrollbar handle
+                    rect.setSize(rect.size() + 2 * extend);             // 'rect' is the rect for the whole scrollbar
+                    p->setClipRect(r);                                  // clip off button areas
+                    p->translate(-extend.width(), -extend.height());    // translate left button area away
 
                     theme.rect = rect;
                     if (!(flags & State_Enabled))
@@ -3535,14 +3530,17 @@ QSize QWindowsXPStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt
             const int scrollBarSliderMin = proxy()->pixelMetric(QStyle::PM_ScrollBarSliderMin, slider);
             int &szw = slider->orientation == Qt::Horizontal ? sz.rwidth() : sz.rheight();
             int &szh = slider->orientation == Qt::Horizontal ? sz.rheight() : sz.rwidth();
-            if (slider->subControls & (SC_ScrollBarSlider | SC_ScrollBarGroove)) {
+            if (slider->subControls & SC_ScrollBarSlider) {
+                szw = qMax(szw, scrollBarSliderMin);
+                szh = scrollBarHeight;
+            } else if (slider->subControls & SC_ScrollBarGroove) {
                 szw = qMax(szw, scrollBarSliderMin + 2 * scrollBarHeight);
                 szh = scrollBarHeight;
             } else if (slider->subControls & (SC_ScrollBarAddLine| SC_ScrollBarSubLine)) {
                 // Assume that the AddLine and SubLine buttons have the same size, and just query
                 // for the size of AddLine
-                const QSize s = proxy()->subControlRect(CC_ScrollBar, slider, SC_ScrollBarAddLine).size();
-                szw = qMax(szw, s.width());
+                const int sbextent = proxy()->pixelMetric(PM_ScrollBarExtent, slider);
+                szw = qMax(szw, sbextent);
                 szh = scrollBarHeight;
             }
         }
