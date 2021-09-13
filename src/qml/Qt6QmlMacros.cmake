@@ -602,9 +602,13 @@ function(qt6_add_qml_module target)
             # Defer the write to allow more qml files to be added later by calls to
             # qt6_target_qml_sources(). We wrap the deferred call with EVAL CODE
             # so that ${target} is evaluated now rather than the end of the scope.
+            # We also delay target finalization until after our deferred write
+            # because the qmldir file must be written before any finalizer
+            # might call qt_import_qml_plugins().
             cmake_language(EVAL CODE
-                "cmake_language(DEFER CALL _qt_internal_write_deferred_qmldir_file ${target})"
+                "cmake_language(DEFER ID_VAR write_id CALL _qt_internal_write_deferred_qmldir_file ${target})"
             )
+            _qt_internal_delay_finalization_until_after(${write_id})
         else()
             # Can't defer the write, have to do it now
             _qt_internal_write_deferred_qmldir_file(${target})
@@ -957,17 +961,6 @@ function(_qt_internal_target_generate_qmldir target)
     # NOTE: qt6_target_qml_sources() may append further content later.
 endfunction()
 
-# TODO: Need to consider the case where an executable's finalizer might execute
-#       before our deferred call. That can occur in the following situations:
-#
-#         - The executable target is created in the same scope as the qml module
-#           and the executable target is created first.
-#         - The qml module is created in a parent scope of the executable.
-#
-#       Note that the qml module can safely be created in another scope as long
-#       as that scope has been finalized by the time the executable target's
-#       finalizer is called. A child scope satisfies this, as does any other
-#       scope that has already finished being processed earlier in the CMake run.
 function(_qt_internal_write_deferred_qmldir_file target)
     get_target_property(__qt_qmldir_content ${target} _qt_internal_qmldir_content)
     get_target_property(out_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
