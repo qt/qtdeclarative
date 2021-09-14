@@ -594,6 +594,9 @@ TestCase {
     function test_snapMode_mouse(data) {
         var control = createTemporaryObject(scrollBar, testCase, {snapMode: data.snapMode, orientation: Qt.Horizontal, stepSize: data.stepSize, size: data.size, width: data.width})
         verify(control)
+        // In case the slider is surrounded with decrease/increase buttons
+        // Adjust slider width so that slider area is a whole number (to avoid rounding errors)
+        control.width += control.leftPadding + control.rightPadding
 
         function snappedPosition(pos) {
             var effectiveStep = control.stepSize * (1.0 - control.size)
@@ -604,10 +607,13 @@ TestCase {
             return Math.max(0, Math.min(pos, 1.0 - control.size))
         }
 
-        mousePress(control, 0, 0)
+        var minHandlePos = control.leftPadding
+        var maxHandlePos = control.width - control.rightPadding
+        var availableSlideWidth = maxHandlePos - minHandlePos
+        mousePress(control, minHandlePos, 0)
         compare(control.position, 0)
 
-        mouseMove(control, control.width * 0.3, 0)
+        mouseMove(control, minHandlePos + availableSlideWidth * 0.3, 0)
         var expectedMovePos = 0.3
         if (control.snapMode === ScrollBar.SnapAlways) {
             expectedMovePos = snappedPosition(expectedMovePos)
@@ -615,7 +621,7 @@ TestCase {
         }
         compare(control.position, expectedMovePos)
 
-        mouseRelease(control, control.width * 0.75, 0)
+        mouseRelease(control, minHandlePos + availableSlideWidth * 0.75, 0)
         var expectedReleasePos = 0.75
         if (control.snapMode !== ScrollBar.NoSnap) {
             expectedReleasePos = snappedPosition(expectedReleasePos)
@@ -624,14 +630,14 @@ TestCase {
         compare(control.position, expectedReleasePos)
 
         control.position = 0
-        mousePress(control, 0, 0)
+        mousePress(control, minHandlePos, 0)
 
         var steps = 0
         var prevPos = 0
 
-        for (var x = 0; x < control.width; ++x) {
+        for (var x = minHandlePos; x < maxHandlePos; ++x) {
             mouseMove(control, x, 0)
-            expectedMovePos = boundPosition(x / control.width)
+            expectedMovePos = boundPosition((x - minHandlePos) / availableSlideWidth)
             if (control.snapMode === ScrollBar.SnapAlways)
                 expectedMovePos = snappedPosition(expectedMovePos)
             compare(control.position, expectedMovePos)
@@ -642,7 +648,7 @@ TestCase {
         }
         compare(steps, data.steps)
 
-        mouseRelease(control, control.width - 1, 0)
+        mouseRelease(control, maxHandlePos - 1, 0)
     }
 
     function test_snapMode_touch_data() {
