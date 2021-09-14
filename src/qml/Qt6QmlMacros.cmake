@@ -1575,10 +1575,7 @@ function(qt6_target_qml_sources target)
                     "$<$<BOOL:${types_file}>:${types_file}>"
             )
 
-            target_sources(${target} PRIVATE
-                ${compiled_file}
-                ${qml_file_src} # Make the original qml file show up under this target in the IDE
-            )
+            target_sources(${target} PRIVATE ${compiled_file})
             set_source_files_properties(${compiled_file} PROPERTIES
                 SKIP_AUTOGEN ON
             )
