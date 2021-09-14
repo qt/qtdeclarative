@@ -1330,7 +1330,8 @@ public:
     template<typename Char>
     bool saveToDisk(const std::function<bool(const Char *, quint32)> &writer) const
     {
-        auto cleanup = qScopeGuard([this]() { mutableFlags() ^= temporaryFlags; });
+        const quint32_le oldFlags = mutableFlags();
+        auto cleanup = qScopeGuard([this, oldFlags]() { mutableFlags() = oldFlags; });
         mutableFlags() |= temporaryFlags;
         return writer(data<Char>(), size());
     }
