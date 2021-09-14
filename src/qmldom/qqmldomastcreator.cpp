@@ -673,8 +673,9 @@ public:
                 Binding(toString(el->qualifiedId), value, bType), AddOption::KeepExisting, &bPtr);
         if (bPtr->name() == u"id")
             qmlFile.addError(myParseErrors()
-                                     .error(tr("id attributes should only be a lower case letter "
-                                               "followed by letters, numbers or underscore"))
+                                     .warning(tr("id attributes should only be a lower case letter "
+                                                 "followed by letters, numbers or underscore, "
+                                                 "assuming it refers to an id property"))
                                      .withPath(bPathFromOwner));
         pushEl(bPathFromOwner, *bPtr, el);
         FileLocations::addRegion(nodeStack.last().fileLocations, u"colon", el->colonToken);
@@ -737,9 +738,10 @@ public:
                 if (!m.hasMatch()) {
                     qmlFile.addError(
                             myParseErrors()
-                                    .error(tr("id attributes should only be a lower case letter "
-                                              "followed by letters, numbers or underscore, not %1")
-                                                   .arg(iExp->name))
+                                    .warning(
+                                            tr("id attributes should only be a lower case letter "
+                                               "followed by letters, numbers or underscore, not %1")
+                                                    .arg(iExp->name))
                                     .withPath(pathFromOwner));
                 }
             } else {
@@ -748,11 +750,11 @@ public:
                 Q_ASSERT_X(bindingPtr, className, "binding could not be retrived");
                 qmlFile.addError(
                         myParseErrors()
-                                .error(tr("id attributes should only be a lower case letter "
-                                          "followed by letters, numbers or underscore, not %1 %2")
-                                               .arg(script->code(), script->astRelocatableDump()))
-                                .withPath(pathFromOwner)
-                                .handle());
+                                .warning(tr("id attributes should only be a lower case letter "
+                                            "followed by letters, numbers or underscore, not %1 "
+                                            "%2, assuming it refers to a property")
+                                                 .arg(script->code(), script->astRelocatableDump()))
+                                .withPath(pathFromOwner));
             }
         } else {
             pathFromOwner =
