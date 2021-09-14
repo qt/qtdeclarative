@@ -1442,6 +1442,26 @@ void BindingValue::clearValue()
     kind = BindingValueKind::Empty;
 }
 
+ScriptExpression::ScriptExpression(QStringView code, std::shared_ptr<QQmlJS::Engine> engine,
+                                   AST::Node *ast, std::shared_ptr<AstComments> comments,
+                                   ExpressionType expressionType, SourceLocation localOffset,
+                                   int derivedFrom, QStringView preCode, QStringView postCode)
+    : OwningItem(derivedFrom),
+      m_expressionType(expressionType),
+      m_code(code),
+      m_preCode(preCode),
+      m_postCode(postCode),
+      m_engine(engine),
+      m_ast(ast),
+      m_astComments(comments),
+      m_localOffset(localOffset)
+{
+    if (m_expressionType == ExpressionType::BindingExpression)
+        if (AST::ExpressionStatement *exp = AST::cast<AST::ExpressionStatement *>(m_ast))
+            m_ast = exp->expression;
+    Q_ASSERT(m_astComments);
+}
+
 ScriptExpression::ScriptExpression(const ScriptExpression &e) : OwningItem(e)
 {
     QMutexLocker l(mutex());
@@ -1527,6 +1547,7 @@ AST::Node *firstNodeInRange(AST::Node *n, quint32 minStart = 0, quint32 maxEnd =
 void ScriptExpression::setCode(QString code, QString preCode, QString postCode)
 {
     m_codeStr = code;
+    const bool qmlMode = (m_expressionType == ExpressionType::BindingExpression);
     if (!preCode.isEmpty() || !postCode.isEmpty())
         m_codeStr = preCode + code + postCode;
     m_code = QStringView(m_codeStr).mid(preCode.length(), code.length());
@@ -1546,7 +1567,7 @@ void ScriptExpression::setCode(QString code, QString preCode, QString postCode)
         QQmlJS::Lexer lexer(m_engine.get());
         lexer.setCode(m_codeStr, /*lineno = */ 1, /*qmlMode=*/true);
         QQmlJS::Parser parser(m_engine.get());
-        if (!parser.parseScript())
+        if ((qmlMode && !parser.parse()) || (!qmlMode && !parser.parseScript()))
             addErrorLocal(domParsingErrors().error(tr("Parsing of code failed")));
         for (DiagnosticMessage msg : parser.diagnosticMessages()) {
             ErrorMessage err = domParsingErrors().errorMessage(msg);
@@ -1569,6 +1590,9 @@ void ScriptExpression::setCode(QString code, QString preCode, QString postCode)
                     m_ast = sList->statement;
             }
         }
+        if (m_expressionType == ExpressionType::BindingExpression)
+            if (AST::ExpressionStatement *exp = AST::cast<AST::ExpressionStatement *>(m_ast))
+                m_ast = exp->expression;
         AstComments::collectComments(m_engine, m_ast, m_astComments, MutableDomItem(), nullptr);
     }
 }
@@ -1665,7 +1689,18 @@ QString MethodInfo::preCode(DomItem &self) const
     MockObject standinObj(self.pathFromOwner());
     DomItem standin = self.copy(&standinObj);
     ow.itemStart(standin);
-    writePre(self, ow);
+    ow.writeRegion(u"function").space().writeRegion(u"name", name);
+    bool first = true;
+    ow.writeRegion(u"leftParen", u"(");
+    for (const MethodParameter &mp : parameters) {
+        if (first)
+            first = false;
+        else
+            ow.write(u", ");
+        ow.write(mp.name);
+    }
+    ow.writeRegion(u"rightParen", u")");
+    ow.ensureSpace().writeRegion(u"leftBrace", u"{");
     ow.itemEnd(standin);
     ow.eof();
     return res;
@@ -1674,26 +1709,6 @@ QString MethodInfo::preCode(DomItem &self) const
 QString MethodInfo::postCode(DomItem &) const
 {
     return QLatin1String("\n}\n");
-}
-
-void MethodInfo::writePre(DomItem &self, OutWriter &ow) const
-{
-    ow.writeRegion(u"function").space().writeRegion(u"name", name);
-    bool first = true;
-    ow.writeRegion(u"leftParen", u"(");
-    index_type idx = 0;
-    for (const MethodParameter &mp : parameters) {
-        DomItem arg = self.copy(SimpleObjectWrap::fromObjectRef<MethodParameter &>(
-                self.pathFromOwner().field(Fields::parameters).index(idx++),
-                *const_cast<MethodParameter *>(&mp)));
-        if (first)
-            first = false;
-        else
-            ow.write(u", ");
-        arg.writeOut(ow);
-    }
-    ow.writeRegion(u"rightParen", u")");
-    ow.ensureSpace().writeRegion(u"leftBrace", u"{");
 }
 
 void MethodInfo::writeOut(DomItem &self, OutWriter &ow) const
@@ -1723,7 +1738,23 @@ void MethodInfo::writeOut(DomItem &self, OutWriter &ow) const
         return;
     } break;
     case MethodType::Method: {
-        writePre(self, ow);
+        ow.writeRegion(u"function").space().writeRegion(u"name", name);
+        bool first = true;
+        ow.writeRegion(u"leftParen", u"(");
+        for (DomItem arg : self.field(Fields::parameters).values()) {
+            if (first)
+                first = false;
+            else
+                ow.write(u", ");
+            arg.writeOut(ow);
+        }
+        ow.writeRegion(u"rightParen", u")");
+        if (!typeName.isEmpty()) {
+            ow.writeRegion(u"colon", u":");
+            ow.space();
+            ow.writeRegion(u"returnType", typeName);
+        }
+        ow.ensureSpace().writeRegion(u"leftBrace", u"{");
         int baseIndent = ow.increaseIndent();
         if (DomItem b = self.field(Fields::body)) {
             ow.ensureNewline();

@@ -400,19 +400,7 @@ public:
                               ExpressionType expressionType,
                               SourceLocation localOffset = SourceLocation(), int derivedFrom = 0,
                               QStringView preCode = QStringView(),
-                              QStringView postCode = QStringView())
-        : OwningItem(derivedFrom),
-          m_expressionType(expressionType),
-          m_code(code),
-          m_preCode(preCode),
-          m_postCode(postCode),
-          m_engine(engine),
-          m_ast(ast),
-          m_astComments(comments),
-          m_localOffset(localOffset)
-    {
-        Q_ASSERT(m_astComments);
-    }
+                              QStringView postCode = QStringView());
 
     ScriptExpression()
         : ScriptExpression(QStringView(), std::shared_ptr<QQmlJS::Engine>(), nullptr,
@@ -572,7 +560,7 @@ public:
     }
     QString preCode() const
     {
-        return QStringLiteral(u"function %1() {\n").arg(m_name.split(u'.').last());
+        return QStringLiteral(u"QtObject{\n  %1: ").arg(m_name.split(u'.').last());
     }
     QString postCode() const { return QStringLiteral(u"\n}\n"); }
 
