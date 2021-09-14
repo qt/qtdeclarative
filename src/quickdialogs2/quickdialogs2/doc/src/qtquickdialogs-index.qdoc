@@ -32,7 +32,7 @@
     \brief Provides QML types for creating and interacting with system dialogs.
 
     The Qt Quick Dialogs module allows to create and interact with system dialogs
-    from QML.
+    from QML. The module was introduced in Qt 6.2.
 
     \section1 Using the Module
 
