@@ -737,7 +737,7 @@ protected:
                 out(" ");
             accept(ast->expression);
         }
-        if (addSemicolons())
+        if (ast->returnToken.length > 0 && addSemicolons())
             out(";");
         return false;
     }

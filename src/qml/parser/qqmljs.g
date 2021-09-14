@@ -4126,7 +4126,7 @@ ArrowFunction_In: ArrowParameters T_ARROW ConciseBodyLookahead T_FORCE_BLOCK Fun
         AST::FunctionExpression *f = new (pool) AST::FunctionExpression(QStringView(), sym(1).FormalParameterList, sym(6).StatementList);
         f->isArrowFunction = true;
         f->functionToken = sym(1).Node ? sym(1).Node->firstSourceLocation().startZeroLengthLocation() : loc(1).startZeroLengthLocation();
-        f->lbraceToken = loc(6);
+        f->lbraceToken = loc(5);
         f->rbraceToken = loc(7);
         sym(1).Node = f;
     } break;
