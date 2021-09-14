@@ -213,8 +213,8 @@
     engine.installTranslatorFunctions();
     \newcode
     QJSEngine engine;
-    engine.installExtensions(QJSEngine::TranslationExtension
-    \endcode;
+    engine.installExtensions(QJSEngine::TranslationExtension);
+    \endcode
 
     \endlist
 
