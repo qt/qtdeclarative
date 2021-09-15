@@ -3717,6 +3717,9 @@ QList<QQuickItem *> QQuickItem::childItems() const
 
   If clipping is enabled, an item will clip its own painting, as well
   as the painting of its children, to its bounding rectangle.
+
+  \note Clipping can affect rendering performance. See \l {Clipping} for more
+  information.
 */
 /*!
   \property QQuickItem::clip
