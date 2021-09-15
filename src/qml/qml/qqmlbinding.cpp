@@ -772,9 +772,15 @@ QVector<QQmlProperty> QQmlBinding::dependencies() const
         for (int i = 0; i < senderMeta->propertyCount(); i++) {
             QMetaProperty property = senderMeta->property(i);
             if (property.notifySignalIndex() == QMetaObjectPrivate::signal(senderMeta, guard->signalIndex()).methodIndex()) {
-                dependencies.push_back(QQmlProperty(senderObject, QString::fromUtf8(senderObject->metaObject()->property(i).name())));
+                dependencies.push_back(QQmlProperty(senderObject, QString::fromUtf8(property.name())));
             }
         }
+    }
+
+    for (auto trigger = qpropertyChangeTriggers; trigger; trigger = trigger->next) {
+        QMetaProperty prop = trigger->property();
+        if (prop.isValid())
+            dependencies.push_back(QQmlProperty(trigger->target, QString::fromUtf8(prop.name())));
     }
 
     return dependencies;

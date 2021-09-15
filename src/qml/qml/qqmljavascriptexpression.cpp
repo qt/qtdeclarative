@@ -541,6 +541,16 @@ void QPropertyChangeTrigger::trigger(QPropertyObserver *observer, QUntypedProper
     This->m_expression->expressionChanged();
 }
 
+QMetaProperty QPropertyChangeTrigger::property() const
+{
+    if (!target)
+        return {};
+    auto const mo = target->metaObject();
+    if (!mo)
+        return {};
+    return mo->property(propertyIndex);
+}
+
 QPropertyChangeTrigger *QQmlJavaScriptExpression::allocatePropertyChangeTrigger(QObject *target, int propertyIndex)
 {
     auto trigger = QQmlEnginePrivate::get(engine())->qPropertyTriggerPool.New( this );

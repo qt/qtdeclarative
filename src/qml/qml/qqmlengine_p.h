@@ -75,6 +75,7 @@
 #include <QtCore/qmutex.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qthread.h>
+#include <QtCore/QMetaProperty>
 
 #include <private/qobject_p.h>
 
@@ -132,6 +133,8 @@ struct QPropertyChangeTrigger : QPropertyObserver {
     QObject *target = nullptr;
     int propertyIndex = 0;
     static void trigger(QPropertyObserver *, QUntypedPropertyData *);
+
+    QMetaProperty property() const;
 };
 
 struct TriggerList : QPropertyChangeTrigger {

@@ -133,6 +133,7 @@ public:
      * Call this method from the UI thread.
      */
     QVector<QQmlProperty> dependencies() const;
+    // This method is used internally to check whether a binding is constant and can be removed
     virtual bool hasDependencies() const;
 
 protected:
