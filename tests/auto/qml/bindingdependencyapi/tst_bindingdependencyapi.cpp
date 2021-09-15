@@ -48,6 +48,7 @@ private slots:
     void testConditionalDependencies_data();
     void testConditionalDependencies();
     void testBindingLoop();
+    void testQproperty();
 
 private:
     bool findProperties(const QVector<QQmlProperty> &properties, QObject *obj, const QString &propertyName, const QVariant &value);
@@ -352,6 +353,36 @@ void tst_bindingdependencyapi::testBindingLoop()
     QCOMPARE(dependency.property().name(), "labelText");
 
     delete rect;
+}
+
+void tst_bindingdependencyapi::testQproperty()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(QByteArray("import QtQuick 2.0\n"
+                      "Item {\n"
+                          "id: root\n"
+                          "Text {\n"
+                              "id: label\n"
+                              "text: root.x\n"
+                          "}\n"
+                      "}"), QUrl());
+    QScopedPointer<QObject> root(c.create());
+    QVERIFY(!root.isNull());
+    QObject *text = root->findChildren<QQuickText *>().front();
+    QVERIFY(text);
+    auto data = QQmlData::get(text);
+    QVERIFY(data);
+    auto b = data->bindings;
+    QVERIFY(b);
+    auto binding = dynamic_cast<QQmlBinding*>(b);
+    QVERIFY(binding);
+    auto dependencies = binding->dependencies();
+    QCOMPARE(dependencies.size(), 1);
+    auto dependency = dependencies.front();
+    QVERIFY(dependency.isValid());
+    QCOMPARE(quintptr(dependency.object()), quintptr(root.get()));
+    QCOMPARE(dependency.property().name(), "x");
 }
 
 QTEST_MAIN(tst_bindingdependencyapi)
