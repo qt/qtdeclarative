@@ -59,6 +59,8 @@ private Q_SLOTS:
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
     void testExample();
     void testExample_data();
+    void normalizeExample();
+    void normalizeExample_data();
 #endif
 
 private:
@@ -324,6 +326,37 @@ void TestQmlformat::testExample_data()
     for (const QString &file : files)
         QTest::newRow(qPrintable(file)) << file;
 }
+
+void TestQmlformat::normalizeExample_data()
+{
+    if (QTestPrivate::isRunningArmOnX86())
+        QSKIP("Crashes in QEMU. (timeout)");
+    QTest::addColumn<QString>("file");
+
+    QString examples = QLatin1String(SRCDIR) + "/../../../../examples/";
+    QString tests = QLatin1String(SRCDIR) + "/../../../../tests/";
+
+    // normalizeExample is similar to testExample, so we test it only on nExamples + nTests
+    // files to avoid making too many
+    QStringList files;
+    const int nExamples = 10;
+    int i = 0;
+    for (const auto &f : findFiles(QDir(examples))) {
+        files << f;
+        if (++i == nExamples)
+            break;
+    }
+    const int nTests = 10;
+    i = 0;
+    for (const auto &f : findFiles(QDir(tests))) {
+        files << f;
+        if (++i == nTests)
+            break;
+    }
+
+    for (const QString &file : files)
+        QTest::newRow(qPrintable(file)) << file;
+}
 #endif
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
@@ -334,6 +367,19 @@ void TestQmlformat::testExample()
     bool wasSuccessful;
     LineWriterOptions opts;
     opts.attributesSequence = LineWriterOptions::AttributesSequence::Preserve;
+    QString output = formatInMemory(file, &wasSuccessful, opts);
+
+    if (!isInvalid)
+        QVERIFY(wasSuccessful && !output.isEmpty());
+}
+
+void TestQmlformat::normalizeExample()
+{
+    QFETCH(QString, file);
+    const bool isInvalid = isInvalidFile(QFileInfo(file));
+    bool wasSuccessful;
+    LineWriterOptions opts;
+    opts.attributesSequence = LineWriterOptions::AttributesSequence::Normalize;
     QString output = formatInMemory(file, &wasSuccessful, opts);
 
     if (!isInvalid)
