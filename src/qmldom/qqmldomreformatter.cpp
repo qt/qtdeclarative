@@ -980,7 +980,13 @@ protected:
         return true;
     }
     bool visit(TaggedTemplate *) override { return true; }
-    bool visit(Expression *) override { return true; }
+    bool visit(Expression *el) override
+    {
+        accept(el->left);
+        out(", ");
+        accept(el->right);
+        return false;
+    }
     bool visit(ExpressionStatement *el) override
     {
         if (addSemicolons())
