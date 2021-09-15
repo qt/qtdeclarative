@@ -47,9 +47,6 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
     QQmlJSImportVisitor::visit(uiod);
 
     const QString name = m_currentScope->baseTypeName();
-    if (name.isEmpty() || name.front().isLower())
-        return false; // Ignore grouped properties for now
-
     if (name.endsWith(u"Connections"_qs)) {
         QString target;
         auto member = uiod->initializer->members;

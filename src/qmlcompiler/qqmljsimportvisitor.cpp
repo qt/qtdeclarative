@@ -916,17 +916,25 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
             superType.append(u'.');
         superType.append(segment->name.toString());
     }
-    enterEnvironment(QQmlJSScope::QMLScope, superType, definition->firstSourceLocation());
-    if (!m_exportedRootScope)
-        m_exportedRootScope = m_currentScope;
+
+    Q_ASSERT(!superType.isEmpty());
+    if (superType.front().isUpper()) {
+        enterEnvironment(QQmlJSScope::QMLScope, superType, definition->firstSourceLocation());
+        if (!m_exportedRootScope)
+            m_exportedRootScope = m_currentScope;
+
+        if (m_nextIsInlineComponent) {
+            m_currentScope->setIsInlineComponent(true);
+            m_rootScopeImports.insert(m_inlineComponentName.toString(), m_currentScope);
+            m_nextIsInlineComponent = false;
+        }
+    } else {
+        enterEnvironmentNonUnique(QQmlJSScope::GroupedPropertyScope, superType,
+                                  definition->firstSourceLocation());
+        Q_ASSERT(m_exportedRootScope);
+    }
 
     m_currentScope->setAnnotations(parseAnnotations(definition->annotations));
-
-    if (m_nextIsInlineComponent) {
-        m_currentScope->setIsInlineComponent(true);
-        m_rootScopeImports.insert(m_inlineComponentName.toString(), m_currentScope);
-        m_nextIsInlineComponent = false;
-    }
 
     QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
     return true;
@@ -1129,7 +1137,7 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ClassExpression *)
 
 bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
 {
-    auto scope = m_currentScope;
+    m_savedBindingOuterScope = m_currentScope;
     const auto id = scriptBinding->qualifiedId;
     const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
     if (!id->next && id->name == QLatin1String("id")) {
@@ -1145,10 +1153,10 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
         return true;
     }
 
+
     auto group = id;
     for (; group->next; group = group->next) {
         const QString name = group->name.toString();
-
         if (name.isEmpty())
             break;
 
@@ -1162,7 +1170,7 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
 
     if (signal.isEmpty()) {
         m_propertyBindings[m_currentScope].append(
-                { scope, group->firstSourceLocation(), name.toString() });
+                { m_savedBindingOuterScope, group->firstSourceLocation(), name.toString() });
     } else {
         const auto statement = scriptBinding->statement;
         QStringList signalParameters;
@@ -1173,11 +1181,12 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
                     signalParameters << formal->element->bindingIdentifier.toString();
             }
         }
-        m_signals[m_currentScope].append({ scope, group->firstSourceLocation(),
+        m_signals[m_currentScope].append({ m_savedBindingOuterScope, group->firstSourceLocation(),
                                            qMakePair(name.toString(), signalParameters) });
 
         QQmlJSMetaMethod scopeSignal;
-        for (QQmlJSScope::ConstPtr qmlScope = scope; qmlScope; qmlScope = qmlScope->baseType()) {
+        for (QQmlJSScope::ConstPtr qmlScope = m_savedBindingOuterScope;
+             qmlScope; qmlScope = qmlScope->baseType()) {
             const auto methods = qmlScope->ownMethods();
             const auto methodsRange = methods.equal_range(signal);
             for (auto method = methodsRange.first; method != methodsRange.second; ++method) {
@@ -1196,8 +1205,7 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
                                 { scopeSignal.parameterNames(), hasMultilineStatementBody });
     }
 
-    // NB: leave the potential group/attached scope so that binding scope
-    // doesn't see its properties
+    // Leave any group/attached scopes so that the binding scope doesn't see its properties.
     while (m_currentScope->scopeType() == QQmlJSScope::GroupedPropertyScope
            || m_currentScope->scopeType() == QQmlJSScope::AttachedPropertyScope) {
         leaveEnvironment();
@@ -1211,13 +1219,11 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
     return true;
 }
 
-void QQmlJSImportVisitor::endVisit(UiScriptBinding *scriptBinding)
+void QQmlJSImportVisitor::endVisit(UiScriptBinding *)
 {
-    const auto id = scriptBinding->qualifiedId;
-    if (id->next || id->name != QLatin1String("id")) {
-        const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
-        if (!statement || !statement->expression->asFunctionDefinition())
-            leaveEnvironment();
+    if (m_savedBindingOuterScope) {
+        m_currentScope = m_savedBindingOuterScope;
+        m_savedBindingOuterScope = {};
     }
 }
 
