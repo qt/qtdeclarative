@@ -322,6 +322,23 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiProgram *)
 
 void QQmlJSImportVisitor::endVisit(UiProgram *)
 {
+    for (const auto &scope : m_objectBindingScopes) {
+        if (checkInheritanceCycle(scope) == CycleFound)
+            return;
+    }
+
+    for (const auto &scope : m_objectDefinitionScopes) {
+        if (checkInheritanceCycle(scope) == CycleFound)
+            return;
+
+        checkGroupedAndAttachedScopes(scope);
+    }
+
+    for (const auto &scope : m_pendingDefaultProperties.keys()) {
+        if (checkInheritanceCycle(scope) == CycleFound)
+            return;
+    }
+
     resolveAliases();
     processDefaultProperties();
     processPropertyTypes();
@@ -329,14 +346,6 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
     checkSignals();
     processPropertyBindingObjects();
     checkRequiredProperties();
-
-    for (const auto &scope : m_objectBindingScopes)
-        checkInheritanceCycle(scope);
-
-    for (const auto &scope : m_objectDefinitionScopes) {
-        checkGroupedAndAttachedScopes(scope);
-        checkInheritanceCycle(scope);
-    }
 
     auto unusedImports = m_importLocations;
     for (const QString &type : m_usedTypes) {
@@ -826,7 +835,8 @@ void QQmlJSImportVisitor::addDefaultProperties()
     m_pendingDefaultProperties[m_currentScope->parentScope()] << m_currentScope;
 }
 
-void QQmlJSImportVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
+QQmlJSImportVisitor::HasCycle
+QQmlJSImportVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
 {
     QQmlJSScope::ConstPtr originalScope = scope;
     QList<QQmlJSScope::ConstPtr> scopes;
@@ -857,7 +867,7 @@ void QQmlJSImportVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
                                          .arg(scope->internalName())
                                          .arg(inheritenceCycle),
                                  Log_InheritanceCycle);
-            break;
+            return CycleFound;
         }
 
         scopes.append(scope);
@@ -874,6 +884,8 @@ void QQmlJSImportVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
             break;
         }
     }
+
+    return CycleNotFound;
 }
 
 void QQmlJSImportVisitor::checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope)

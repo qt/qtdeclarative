@@ -180,7 +180,9 @@ protected:
     void checkSignals();
     void flushPendingSignalParameters();
 
-    void checkInheritanceCycle(QQmlJSScope::ConstPtr scope);
+    enum HasCycle { CycleFound, CycleNotFound };
+
+    HasCycle checkInheritanceCycle(QQmlJSScope::ConstPtr scope);
     void checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope);
 
     QQmlJSLogger *m_logger;
