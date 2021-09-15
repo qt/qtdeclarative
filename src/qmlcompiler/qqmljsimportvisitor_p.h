@@ -147,6 +147,7 @@ protected:
     bool m_nextIsInlineComponent = false;
     QStringList m_qmltypesFiles;
     QQmlJSScope::Ptr m_currentScope;
+    QQmlJSScope::Ptr m_savedBindingOuterScope;
     QQmlJSScope::Ptr m_exportedRootScope;
     QQmlJSScope::ConstPtr m_globalScope;
     QHash<QString, QQmlJSScope::ConstPtr> m_scopesById;

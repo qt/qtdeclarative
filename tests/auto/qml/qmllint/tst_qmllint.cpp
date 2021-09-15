@@ -406,7 +406,7 @@ void TestQmllint::dirtyQmlCode_data()
             << false;
     QTest::newRow("nanchors1")
             << QStringLiteral("nanchors1.qml")
-            << QString()
+            << QString("unknown grouped property scope nanchors.")
             << QString()
             << false;
     QTest::newRow("nanchors2")
@@ -696,7 +696,6 @@ void TestQmllint::dirtyQmlCode()
         QVERIFY(process.waitForFinished());
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
         QEXPECT_FAIL("anchors3", "We don't see that QQuickItem cannot be assigned to QQuickAnchorLine", Abort);
-        QEXPECT_FAIL("nanchors1", "Invalid grouped properties are not always detected", Abort);
         QEXPECT_FAIL("TypePropertAccess", "We cannot discern between types and instances", Abort);
         QEXPECT_FAIL("attachedPropertyAccess", "We cannot discern between types and instances",
                      Abort);
