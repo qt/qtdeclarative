@@ -60,7 +60,7 @@ Item {
 
     TestCase {
         name: "shadersource-from-other-window"
-        when: childWindow.isRendered
+        when: childWindow.rendered
         function test_endresult() {
             verify(true); // that we got here without problems...
         }
