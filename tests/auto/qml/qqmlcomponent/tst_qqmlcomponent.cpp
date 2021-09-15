@@ -35,6 +35,7 @@
 #include <QtQuick>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickmousearea_p.h>
+#include <QtQuick/private/qquickpalette_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <private/qqmlguardedcontextdata_p.h>
@@ -752,6 +753,18 @@ public:
     TwoRequiredProperties *group() { return &m_group; }
 };
 
+class RequiredGroup : public QObject
+{
+    Q_OBJECT
+    // use QQuickPalette not to create an extra test-only
+    Q_PROPERTY(QQuickPalette *group READ group REQUIRED)
+    QQuickPalette m_group;
+
+public:
+    RequiredGroup(QObject *parent = nullptr) : QObject(parent) { }
+    QQuickPalette *group() { return &m_group; }
+};
+
 void tst_qqmlcomponent::testRequiredProperties_data()
 {
     qmlRegisterType<RequiredDefaultCpp>("qt.test", 1, 0, "RequiredDefaultCpp");
@@ -761,6 +774,7 @@ void tst_qqmlcomponent::testRequiredProperties_data()
             "qt.test", 1, 0, "AttachedRequiredProperty",
             tr("AttachedRequiredProperties is an attached property"));
     qmlRegisterType<GroupedRequiredProperties>("qt.test", 1, 0, "GroupedRequiredProperty");
+    qmlRegisterType<RequiredGroup>("qt.test", 1, 0, "RequiredGroup");
 
     QTest::addColumn<QUrl>("testFile");
     QTest::addColumn<bool>("shouldSucceed");
@@ -774,6 +788,12 @@ void tst_qqmlcomponent::testRequiredProperties_data()
     QTest::addRow("requiredSetViaAlias3") << testFileUrl("requiredSetViaAliasParentFile.qml") << true << "";
     QTest::addRow("requiredSetInBase") << testFileUrl("requiredChildOfGoodBase.qml") << true << "";
     QTest::addRow("requiredNotSetInBase") << testFileUrl("requiredChildOfBadBase.qml") << false << "Required property i was not initialized";
+    QTest::addRow("rerequiredSet") << testFileUrl("rerequiredSet.qml") << true << "";
+    QTest::addRow("rerequiredNotSet") << testFileUrl("RerequiredNotSet.qml") << false
+                                      << "Required property i was not initialized";
+    QTest::addRow("requiredSetLater(rerequired)")
+            << testFileUrl("requiredSetLater.rerequired.qml") << true << "";
+    QTest::addRow("rerequiredSetLater") << testFileUrl("rerequiredSetLater.qml") << true << "";
     QTest::addRow("shadowing") << testFileUrl("shadowing.qml") << false <<  "Required property i was not initialized";
     QTest::addRow("shadowing (C++)") << testFileUrl("shadowingFromCpp.qml") << false
                                      << "Required property name was not initialized";
@@ -818,6 +838,11 @@ void tst_qqmlcomponent::testRequiredProperties_data()
     QTest::addRow("required two set two (attached indirect)")
             << testFileUrl("requiredPropertiesInAttachedIndirect.qml") << false
             << "Attached property has required properties. This is not supported";
+    QTest::addRow("required itself not set (group)")
+            << testFileUrl("requiredGroup.bad.qml") << false
+            << "Required property group was not initialized";
+    QTest::addRow("required itself set (group)")
+            << testFileUrl("requiredGroup.good.qml") << true << "";
     QTest::addRow("required not set (group)")
             << testFileUrl("requiredPropertiesInGroup.bad.qml") << false
             << "Required property index was not initialized";
@@ -839,32 +864,13 @@ void tst_qqmlcomponent::testRequiredProperties()
     QQmlComponent comp(&eng);
     comp.loadUrl(testFile);
     QScopedObjPointer obj {comp.create()};
-    QEXPECT_FAIL("required two set one (C++)", "QTBUG-96200", Abort);
-    QEXPECT_FAIL("required two set two (C++ indirect)",
-                 "Properties are set in the QML base class, but this is not recognized", Abort);
-    QEXPECT_FAIL("required set (inline component, C++)",
-                 "Properties are set in the QML inline component, but this is not recognized",
-                 Abort);
-    QEXPECT_FAIL("required set (inline component, C++ indirect)",
-                 "Properties are set in the QML base class of QML inline component, but this is "
-                 "not recognized",
-                 Abort);
-    QEXPECT_FAIL("required two set one (attached)",
-                 "Required attached properties are not supported",
-                 Abort);
-    QEXPECT_FAIL("required two set two (attached)",
-                 "Required attached properties are not supported",
-                 Abort);
-    QEXPECT_FAIL("required two set two (attached indirect)",
-                 "Required attached properties are not supported",
-                 Abort);
     QEXPECT_FAIL("required not set (group)",
                  "We fail to recognize required sub-properties inside a group property when that "
-                 "group property is unused",
+                 "group property is unused (QTBUG-96544)",
                  Abort);
     QEXPECT_FAIL("required two set one (group)",
                  "We fail to recognized required sub-properties inside a group property, even when "
-                 "that group property is used",
+                 "that group property is used (QTBUG-96544)",
                  Abort);
     if (shouldSucceed) {
         QVERIFY2(comp.isReady(), qPrintable(comp.errorString()));
@@ -872,9 +878,6 @@ void tst_qqmlcomponent::testRequiredProperties()
     } else {
         QVERIFY2(!obj, "The object is valid when it shouldn't be");
         QFETCH(QString, errorMsg);
-        QEXPECT_FAIL("required not set (attached)",
-                    "Required attached properties are not supported",
-                    Abort);
         QVERIFY2(comp.errorString().contains(errorMsg), qPrintable(comp.errorString()));
     }
 }

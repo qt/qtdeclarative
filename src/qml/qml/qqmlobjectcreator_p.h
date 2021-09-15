@@ -155,8 +155,9 @@ private:
 
     QObject *createInstance(int index, QObject *parent = nullptr, bool isContextObject = false);
 
-    bool populateInstance(int index, QObject *instance,
-                          QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty);
+    bool populateInstance(int index, QObject *instance, QObject *bindingTarget,
+                          const QQmlPropertyData *valueTypeProperty,
+                          const QV4::CompiledData::Binding *binding = nullptr);
 
     // If qmlProperty and binding are null, populate all properties, otherwise only the given one.
     void populateDeferred(QObject *instance, int deferredIndex,

@@ -796,7 +796,8 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         }
         QObject *qmlObject = qmlAttachedPropertiesObject(
                 _qobject, attachedType.attachedPropertiesFunction(QQmlEnginePrivate::get(engine)));
-        if (!populateInstance(binding->value.objectIndex, qmlObject, qmlObject, /*value type property*/nullptr))
+        if (!populateInstance(binding->value.objectIndex, qmlObject, qmlObject,
+                              /*value type property*/ nullptr, binding))
             return false;
         return true;
     }
@@ -861,7 +862,8 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 bindingTarget = groupObject;
             }
 
-            if (!populateInstance(binding->value.objectIndex, groupObject, bindingTarget, valueTypeProperty))
+            if (!populateInstance(binding->value.objectIndex, groupObject, bindingTarget,
+                                  valueTypeProperty, binding))
                 return false;
 
             if (valueType)
@@ -1508,7 +1510,9 @@ void QQmlObjectCreator::clear()
     phase = Done;
 }
 
-bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *bindingTarget, const QQmlPropertyData *valueTypeProperty)
+bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *bindingTarget,
+                                         const QQmlPropertyData *valueTypeProperty,
+                                         const QV4::CompiledData::Binding *binding)
 {
     QQmlData *declarativeData = QQmlData::get(instance, /*create*/true);
 
@@ -1547,6 +1551,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     if (_compiledObject->flags & QV4::CompiledData::Object::HasDeferredBindings)
         _ddata->deferData(_compiledObjectIndex, compilationUnit, context);
 
+    const qsizetype oldRequiredPropertiesCount = sharedState->requiredProperties.size();
     QSet<QString> postHocRequired;
     for (auto it = _compiledObject->requiredPropertyExtraDataBegin(); it != _compiledObject->requiredPropertyExtraDataEnd(); ++it)
         postHocRequired.insert(stringAt(it->nameIndex));
@@ -1567,10 +1572,48 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
 
     }
 
-    for (int i = 0; i <= _propertyCache->propertyOffset(); ++i) {
+    const auto getPropertyCacheRange = [&]() -> std::pair<int, int> {
+        // the logic in a nutshell: we work with QML instances here. every
+        // instance has a QQmlType:
+        // * if QQmlType is valid && not an inline component, it's a C++ type
+        // * otherwise, it's a QML-defined type (a.k.a. Composite type), where
+        //   invalid type == "comes from another QML document"
+        //
+        // 1. if the type we inherit from comes from C++, we must check *all*
+        //    properties in the property cache so far - since we can have
+        //    required properties defined in C++
+        // 2. otherwise - the type comes from QML, it's enough to check just
+        //    *own* properties in the property cache, because there's a previous
+        //    type in the hierarchy that has checked the C++ properties (via 1.)
+        // 3. required attached properties are explicitly not supported. to
+        //    achieve that, go through all its properties
+        // 4. required group properties: the group itself is covered by 1.
+        //    required sub-properties are not properly handled (QTBUG-96544), so
+        //    just return the old range here for consistency
+        QV4::ResolvedTypeReference *typeRef = resolvedType(_compiledObject->inheritedTypeNameIndex);
+        if (!typeRef) { // inside a binding on attached/group property
+            Q_ASSERT(binding);
+            if (binding->isAttachedProperty())
+                return { 0, _propertyCache->propertyCount() }; // 3.
+            Q_ASSERT(binding->isGroupProperty());
+            return { 0, _propertyCache->propertyOffset() + 1 }; // 4.
+        }
+        Q_ASSERT(!(_compiledObject->flags & QV4::CompiledData::Object::IsComponent));
+        QQmlType type = typeRef->type();
+        if (type.isValid() && !type.isInlineComponentType()) {
+            return { 0, _propertyCache->propertyCount() }; // 1.
+        }
+        // Q_ASSERT(type.isComposite());
+        return { _propertyCache->propertyOffset(), _propertyCache->propertyCount() }; // 2.
+    };
+    const auto [offset, count] = getPropertyCacheRange();
+    for (int i = offset; i < count; ++i) {
         QQmlPropertyData *propertyData = _propertyCache->maybeUnresolvedProperty(i);
         if (!propertyData)
             continue;
+        // TODO: the property might be a group property (in which case we need
+        // to dive into its sub-properties and check whether there are any
+        // required elements there) - QTBUG-96544
         if (!propertyData->isRequired() && postHocRequired.isEmpty())
             continue;
         QString name = propertyData->name(_qobject);
@@ -1582,8 +1625,43 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
             postHocRequired.erase(postHocIt);
 
         sharedState->hadRequiredProperties = true;
-        sharedState->requiredProperties.insert(propertyData, RequiredPropertyInfo {name,  compilationUnit->finalUrl(), _compiledObject->location, {}});
+        sharedState->requiredProperties.insert(
+                propertyData,
+                RequiredPropertyInfo {
+                        name, compilationUnit->finalUrl(), _compiledObject->location, {} });
     }
+
+    if (binding && binding->isAttachedProperty()
+        && sharedState->requiredProperties.size() != oldRequiredPropertiesCount) {
+        recordError(
+                binding->location,
+                QLatin1String("Attached property has required properties. This is not supported"));
+    }
+
+    // Note: there's a subtle case with the above logic: if we process a random
+    // QML-defined leaf type, it could have a required attribute overwrite on an
+    // *existing* property: `import QtQuick; Text { required text }`. in this
+    // case, we must add the property to a required list
+    if (!postHocRequired.isEmpty()) {
+        // NB: go through [0, offset) range as [offset, count) is already done
+        for (int i = 0; i < offset; ++i) {
+            QQmlPropertyData *propertyData = _propertyCache->maybeUnresolvedProperty(i);
+            if (!propertyData)
+                continue;
+            QString name = propertyData->name(_qobject);
+            auto postHocIt = postHocRequired.find(name);
+            if (postHocRequired.end() == postHocIt)
+                continue;
+            postHocRequired.erase(postHocIt);
+
+            sharedState->hadRequiredProperties = true;
+            sharedState->requiredProperties.insert(
+                    propertyData,
+                    RequiredPropertyInfo {
+                            name, compilationUnit->finalUrl(), _compiledObject->location, {} });
+        }
+    }
+
     if (!postHocRequired.isEmpty() && hadInheritedRequiredProperties)
         recordError({}, QLatin1String("Property %1 was marked as required but does not exist").arg(*postHocRequired.begin()));
 

@@ -350,7 +350,7 @@ const QMetaObject *QQmlPropertyCache::createMetaObject()
 
 QQmlPropertyData *QQmlPropertyCache::maybeUnresolvedProperty(int index) const
 {
-    if (index < 0 || index >= (propertyIndexCacheStart + propertyIndexCache.count()))
+    if (index < 0 || index >= propertyCount())
         return nullptr;
 
     QQmlPropertyData *rv = nullptr;
