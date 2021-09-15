@@ -34,6 +34,12 @@
 #include <QTemporaryDir>
 #include <QtTest/private/qemulationdetector_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQmlDom/private/qqmldomitem_p.h>
+#include <QtQmlDom/private/qqmldomlinewriter_p.h>
+#include <QtQmlDom/private/qqmldomoutwriter_p.h>
+#include <QtQmlDom/private/qqmldomtop_p.h>
+
+using namespace QQmlJS::Dom;
 
 class TestQmlformat: public QQmlDataTest
 {
@@ -59,6 +65,10 @@ private:
     QString readTestFile(const QString &path);
     QString runQmlformat(const QString &fileToFormat, QStringList args, bool shouldSucceed = true,
                          RunOption rOption = RunOption::OnCopy);
+    QString formatInMemory(const QString &fileToFormat, bool *didSucceed = nullptr,
+                           LineWriterOptions options = LineWriterOptions(),
+                           WriteOutChecks extraChecks = WriteOutCheck::ReparseCompare,
+                           WriteOutChecks largeChecks = WriteOutCheck::None);
 
     QString m_qmlformatPath;
     QStringList m_excludedDirs;
@@ -111,6 +121,8 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidRoot.1.qml";
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidQmlEnumValue.1.qml";
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidQmlEnumValue.2.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidQmlEnumValue.3.qml";
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/invalidID.4.qml";
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/questionDotEOF.qml";
     m_invalidFiles << "tests/auto/qml/qquickfolderlistmodel/data/dummy.qml";
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/stringParsing_error.1.qml";
@@ -134,6 +146,20 @@ void TestQmlformat::initTestCase()
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/nullishCoalescing_RHS_Or.qml";
     m_invalidFiles << "tests/auto/qml/qqmllanguage/data/typeAnnotations.2.qml";
     m_invalidFiles << "tests/auto/qml/qqmlparser/data/disallowedtypeannotations/qmlnestedfunction.qml";
+
+    // Files that get changed:
+    // rewrite of import "bla/bla/.." to import "bla"
+    m_invalidFiles << "tests/auto/qml/qqmlcomponent/data/componentUrlCanonicalization.4.qml";
+    // block -> object in internal update
+    m_invalidFiles << "tests/auto/qml/qqmlpromise/data/promise-executor-throw-exception.qml";
+    // removal of unsupported indexing of Object declaration
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/hangOnWarning.qml";
+    // removal of duplicated id
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/component.3.qml";
+    // Optional chains are not permitted on the left-hand-side in assignments
+    m_invalidFiles << "tests/auto/qml/qqmllanguage/data/optionalChaining.LHS.qml";
+    // object literal with = assignements
+    m_invalidFiles << "tests/auto/quickcontrols2/controls/data/tst_scrollbar.qml";
 
     // These files rely on exact formatting
     m_invalidFiles << "tests/auto/qml/qqmlecmascript/data/incrDecrSemicolon1.qml";
@@ -305,10 +331,13 @@ void TestQmlformat::testExample()
 {
     QFETCH(QString, file);
     const bool isInvalid = isInvalidFile(QFileInfo(file));
-    QString output = runQmlformat(file, {}, !isInvalid);
+    bool wasSuccessful;
+    LineWriterOptions opts;
+    opts.attributesSequence = LineWriterOptions::AttributesSequence::Preserve;
+    QString output = formatInMemory(file, &wasSuccessful, opts);
 
     if (!isInvalid)
-        QVERIFY(!output.isEmpty());
+        QVERIFY(wasSuccessful && !output.isEmpty());
 }
 #endif
 
@@ -345,6 +374,44 @@ QString TestQmlformat::runQmlformat(const QString &fileToFormat, QStringList arg
     QString formatted = QString::fromUtf8(temp.readAll());
 
     return formatted;
+}
+
+QString TestQmlformat::formatInMemory(const QString &fileToFormat, bool *didSucceed,
+                                      LineWriterOptions options, WriteOutChecks extraChecks,
+                                      WriteOutChecks largeChecks)
+{
+    DomItem env = DomEnvironment::create(
+            QStringList(), // as we load no dependencies we do not need any paths
+            QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                    | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+    DomItem tFile;
+    env.loadFile(
+            fileToFormat, QString(),
+            [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
+            LoadOption::DefaultLoad);
+    env.loadPendingDependencies();
+    MutableDomItem myFile = tFile.field(Fields::currentItem);
+
+    DomItem writtenOut;
+    QString resultStr;
+    if (myFile.field(Fields::isValid).value().toBool()) {
+        WriteOutChecks checks = extraChecks;
+        const qsizetype largeFileSize = 32000;
+        if (tFile.field(Fields::code).value().toString().size() > largeFileSize)
+            checks = largeChecks;
+
+        QTextStream res(&resultStr);
+        LineWriter lw([&res](QStringView s) { res << s; }, QLatin1String("*testStream*"), options);
+        OutWriter ow(lw);
+        ow.indentNextlines = true;
+        DomItem qmlFile = tFile.field(Fields::currentItem);
+        writtenOut = qmlFile.writeOutForFile(ow, checks);
+        lw.eof();
+        res.flush();
+    }
+    if (didSucceed)
+        *didSucceed = bool(writtenOut);
+    return resultStr;
 }
 
 QTEST_MAIN(TestQmlformat)

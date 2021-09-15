@@ -16,7 +16,8 @@ qt_internal_add_test(tst_qmlformat
     DEFINES
         SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}\\\"
     PUBLIC_LIBRARIES
-        Qt::Gui
+        Qt::Core
+        Qt::QmlDomPrivate
         Qt::TestPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
