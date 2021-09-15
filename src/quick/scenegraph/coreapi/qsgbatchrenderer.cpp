@@ -944,11 +944,6 @@ static void qsg_wipeBatch(Batch *batch, bool separateIndexBuffer)
 Renderer::~Renderer()
 {
     if (m_rhi) {
-        // If setExternalRenderPassDescriptor() was called, we have to
-        // aggressively invalidate to prevent an object, the lifetime of which
-        // we have no control over, staying in the (per-window) caches.
-        invalidatePipelineCacheDependency(m_external_rp_desc);
-
         // Clean up batches and buffers
         const bool separateIndexBuffer = m_context->separateIndexBuffer();
         for (int i = 0; i < m_opaqueBatches.size(); ++i)
@@ -2607,8 +2602,8 @@ static inline bool needsBlendConstant(QRhiGraphicsPipeline::BlendFactor f)
 
 bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms, bool depthPostPass)
 {
-    // Note the key's == and qHash implementations: the renderpass descriptor is
-    // tested for compatibility, not pointer equality.
+    // Note the key's == and qHash implementations: the renderpass descriptor
+    // and srb are tested for compatibility, not pointer equality.
     //
     // We do not store the srb pointer itself because the ownership stays with
     // the Element and that can go away more often that we would like it
@@ -2623,8 +2618,13 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
     // container is essential here. (won't detach so no more allocs and copies
     // are done, unless the Element decides to rebake the srb with a different
     // layout - but then the detach is exactly what we need)
+    //
+    // Same story for the renderpass descriptor: the object can go away but
+    // that's fine because that has no effect on an already built pipeline, and
+    // for comparison we only rely on the serialized blob in order decide if the
+    // render target is compatible with the pipeline.
 
-    const GraphicsPipelineStateKey k { m_gstate, sms, renderPassDescriptor(), e->srb->serializedLayoutDescription() };
+    const GraphicsPipelineStateKey k = GraphicsPipelineStateKey::create(m_gstate, sms, renderPassDescriptor(), e->srb);
 
     // Note: dynamic state (viewport rect, scissor rect, stencil ref, blend
     // constant) is never a part of GraphicsState/QRhiGraphicsPipeline.
@@ -3979,22 +3979,6 @@ bool Renderer::hasVisualizationModeWithContinuousUpdate() const
     return m_visualizer->mode() == Visualizer::VisualizeOverdraw;
 }
 
-void Renderer::invalidatePipelineCacheDependency(QRhiRenderPassDescriptor *rpDesc)
-{
-    if (!rpDesc)
-        return;
-
-    for (auto it = m_shaderManager->pipelineCache.begin(); it != m_shaderManager->pipelineCache.end(); ) {
-        if (it.key().compatibleRenderPassDescriptor == rpDesc) {
-            QRhiGraphicsPipeline *ps = it.value();
-            it = m_shaderManager->pipelineCache.erase(it);
-            ps->deleteLater(); // QRhi takes care of it in endFrame()
-        } else {
-            ++it;
-        }
-    }
-}
-
 bool operator==(const GraphicsState &a, const GraphicsState &b) noexcept
 {
     return a.depthTest == b.depthTest
@@ -4036,7 +4020,7 @@ bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKe
 {
     return a.state == b.state
             && a.sms->programRhi.program == b.sms->programRhi.program
-            && a.compatibleRenderPassDescriptor->isCompatible(b.compatibleRenderPassDescriptor)
+            && a.renderTargetDescription == b.renderTargetDescription
             && a.srbLayoutDescription == b.srbLayoutDescription;
 }
 
@@ -4047,8 +4031,10 @@ bool operator!=(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKe
 
 size_t qHash(const GraphicsPipelineStateKey &k, size_t seed) noexcept
 {
-    // no srb and rp included due to their special comparison semantics and lack of hash keys
-    return qHash(k.state, seed) + qHash(k.sms->programRhi.program, seed);
+    return qHash(k.state, seed)
+        ^ qHash(k.sms->programRhi.program)
+        ^ k.extra.renderTargetDescriptionHash
+        ^ k.extra.srbLayoutDescriptionHash;
 }
 
 Visualizer::Visualizer(Renderer *renderer)

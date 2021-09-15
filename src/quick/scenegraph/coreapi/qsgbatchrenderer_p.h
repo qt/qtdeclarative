@@ -652,8 +652,21 @@ struct GraphicsPipelineStateKey
 {
     GraphicsState state;
     const ShaderManagerShader *sms;
-    const QRhiRenderPassDescriptor *compatibleRenderPassDescriptor;
+    QVector<quint32> renderTargetDescription;
     QVector<quint32> srbLayoutDescription;
+    struct {
+        size_t renderTargetDescriptionHash;
+        size_t srbLayoutDescriptionHash;
+    } extra;
+    static GraphicsPipelineStateKey create(const GraphicsState &state,
+                                           const ShaderManagerShader *sms,
+                                           const QRhiRenderPassDescriptor *rpDesc,
+                                           const QRhiShaderResourceBindings *srb)
+    {
+        const QVector<quint32> rtDesc = rpDesc->serializedFormat();
+        const QVector<quint32> srbDesc = srb->serializedLayoutDescription();
+        return { state, sms, rtDesc, srbDesc, { qHash(rtDesc), qHash(srbDesc) } };
+    }
 };
 
 bool operator==(const GraphicsPipelineStateKey &a, const GraphicsPipelineStateKey &b) noexcept;
@@ -859,8 +872,6 @@ private:
 
     void setVisualizationMode(const QByteArray &mode) override;
     bool hasVisualizationModeWithContinuousUpdate() const override;
-
-    void invalidatePipelineCacheDependency(QRhiRenderPassDescriptor *rpDesc) override;
 
     QSGDefaultRenderContext *m_context;
     QSGRendererInterface::RenderMode m_renderMode;

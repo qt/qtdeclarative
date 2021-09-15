@@ -1197,20 +1197,6 @@ void QSGThreadedRenderLoop::windowDestroyed(QQuickWindow *window)
 void QSGThreadedRenderLoop::releaseSwapchain(QQuickWindow *window)
 {
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
-
-    // Counterintuitive, because this is not needed under normal circumstances
-    // due to the render loop using a dedicated rendercontext per thread, so
-    // per window. Problem is, there are cases like calling destroy(); show();
-    // on the QQuickWindow. (and we get here on SurfaceAboutToBeDestroyed, i.e.
-    // from destroy())
-    //
-    // That means recreating the native window and all the related graphics
-    // infrastructure, but the rendercontext stays around. So still have to
-    // notify the renderer to invalidate the relevant objects in the caches.
-    //
-    if (wd->renderer)
-        wd->renderer->invalidatePipelineCacheDependency(wd->rpDescForSwapchain);
-
     delete wd->rpDescForSwapchain;
     wd->rpDescForSwapchain = nullptr;
     delete wd->swapchain;

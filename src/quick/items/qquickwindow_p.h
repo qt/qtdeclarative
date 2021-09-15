@@ -109,7 +109,7 @@ public Q_SLOTS:
 class QQuickWindowRenderTarget
 {
 public:
-    void reset(QRhi *rhi, QSGRenderer *renderer);
+    void reset(QRhi *rhi);
     QRhiRenderTarget *renderTarget = nullptr;
     QRhiRenderPassDescriptor *rpDesc = nullptr;
     QRhiTexture *texture = nullptr;
