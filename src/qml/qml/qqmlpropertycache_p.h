@@ -326,7 +326,7 @@ inline const QMetaObject *QQmlPropertyCache::firstCppMetaObject() const
 
 inline QQmlPropertyData *QQmlPropertyCache::property(int index) const
 {
-    if (index < 0 || index >= (propertyIndexCacheStart + propertyIndexCache.count()))
+    if (index < 0 || index >= propertyCount())
         return nullptr;
 
     if (index < propertyIndexCacheStart)
