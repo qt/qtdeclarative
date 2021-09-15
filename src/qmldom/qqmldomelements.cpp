@@ -74,6 +74,12 @@ QT_BEGIN_NAMESPACE
 namespace QQmlJS {
 namespace Dom {
 
+static bool uriHasSchema(QStringView importStr)
+{
+    QRegularExpression schemaRe(QStringLiteral(u"\\A[a-zA-Z][-+.a-zA-Z0-9]+:"));
+    return schemaRe.match(importStr).hasMatch();
+}
+
 namespace Paths {
 
 Path moduleIndexPath(QString uri, int majorVersion, ErrorHandler errorHandler)
@@ -83,7 +89,7 @@ Path moduleIndexPath(QString uri, int majorVersion, ErrorHandler errorHandler)
         version = QLatin1String("Latest");
     else if (majorVersion == Version::Undefined)
         version = QString();
-    if (uri.startsWith(u"file://") || uri.startsWith(u"http://") || uri.startsWith(u"https://")) {
+    if (uriHasSchema(uri)) {
         if (majorVersion != Version::Undefined)
             Path::myErrors()
                     .error(Path::tr("The module directory import %1 cannot have a version")
@@ -103,7 +109,7 @@ Path moduleIndexPath(QString uri, int majorVersion, ErrorHandler errorHandler)
 
 Path moduleScopePath(QString uri, Version version, ErrorHandler errorHandler)
 {
-    if (uri.startsWith(u"file://") || uri.startsWith(u"http://") || uri.startsWith(u"https://")) {
+    if (uriHasSchema(uri)) {
         if (version.isValid())
             Path::myErrors()
                     .error(Path::tr("The module directory import %1 cannot have a version")
@@ -323,8 +329,7 @@ QRegularExpression Import::importRe()
 
 Import Import::fromUriString(QString importStr, Version v, QString importId, ErrorHandler handler)
 {
-    if (importStr.startsWith(u"http://") || importStr.startsWith(u"https://")
-        || importStr.startsWith(u"file://")) {
+    if (uriHasSchema(importStr)) {
         return Import(importStr, v, importId);
     } else {
         auto m = importRe().match(importStr);
@@ -358,8 +363,7 @@ Import Import::fromFileString(QString importStr, QString baseDir, QString import
                               ErrorHandler handler)
 {
     Version v;
-    if (importStr.startsWith(u"http://") || importStr.startsWith(u"https://")
-        || importStr.startsWith(u"file://"))
+    if (uriHasSchema(importStr))
         return Import(importStr, v, importId);
     QFileInfo p(importStr);
     if (p.isRelative())
@@ -394,7 +398,7 @@ void Import::writeOut(DomItem &self, OutWriter &ow) const
         return;
     ow.ensureNewline();
     ow.writeRegion(u"import").space();
-    if (uri.startsWith(u"http://") || uri.startsWith(u"https://") || uri.startsWith(u"file://")) {
+    if (uriHasSchema(uri)) {
         if (uri.startsWith(u"file://")) {
             QFileInfo myPath(self.canonicalFilePath());
             QString relPath = myPath.dir().relativeFilePath(uri.mid(7));
