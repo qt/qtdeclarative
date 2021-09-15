@@ -181,6 +181,7 @@ QQmlJS::Dom::FieldFilter QQmlJS::Dom::FieldFilter::noLocationFilter()
         { QString(), QLatin1String("code") },
         { QString(), QLatin1String("propertyInfos") },
         { QString(), QLatin1String("fileLocationsTree") },
+        { QString(), QLatin1String("location") },
         { QLatin1String("ScriptExpression"), QLatin1String("localOffset") },
         { QLatin1String("ScriptExpression"), QLatin1String("preCode") },
         { QLatin1String("ScriptExpression"), QLatin1String("postCode") },
@@ -210,16 +211,17 @@ FieldFilter FieldFilter::compareNoCommentsFilter()
         { QString(), QLatin1String("propertyInfos") },
         { QLatin1String("FileLocations"), QLatin1String("regions") },
         { QLatin1String("Reference"), QLatin1String("get") },
-        { QLatin1String(), QLatin1String("code") },
+        { QString(), QLatin1String("code") },
         { QLatin1String("ScriptExpression"), QLatin1String("localOffset") },
         { QLatin1String("AttachedInfo"), QLatin1String("parent") },
-        { QLatin1String(), QLatin1String("fileLocationsTree") },
-        { QLatin1String(), QLatin1String("preCode") },
-        { QLatin1String(), QLatin1String("postCode") },
-        { QLatin1String(), QLatin1String("comments") },
-        { QLatin1String(), QLatin1String("preCommentLocations") },
-        { QLatin1String(), QLatin1String("postCommentLocations") },
-        { QLatin1String(), QLatin1String("astComments") }
+        { QString(), QLatin1String("fileLocationsTree") },
+        { QString(), QLatin1String("preCode") },
+        { QString(), QLatin1String("postCode") },
+        { QString(), QLatin1String("comments") },
+        { QString(), QLatin1String("preCommentLocations") },
+        { QString(), QLatin1String("postCommentLocations") },
+        { QString(), QLatin1String("astComments") },
+        { QString(), QLatin1String("location") }
     };
     return FieldFilter { fieldFilterAdd, fieldFilterRemove };
 }
