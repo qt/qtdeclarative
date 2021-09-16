@@ -378,6 +378,20 @@ void tst_qmlcachegen::aheadOfTimeCompilation()
 
 static QQmlPrivate::CachedQmlUnit *temporaryModifiedCachedUnit = nullptr;
 
+static const char *versionCheckErrorString(QQmlMetaType::CachedUnitLookupError error)
+{
+    switch (error) {
+    case QQmlMetaType::CachedUnitLookupError::NoError:
+        return "no error";
+    case QQmlMetaType::CachedUnitLookupError::NoUnitFound:
+        return "no unit found";
+    case QQmlMetaType::CachedUnitLookupError::VersionMismatch:
+        return "version mismatch";
+    }
+
+    return "wat?";
+}
+
 void tst_qmlcachegen::versionChecksForAheadOfTimeUnits()
 {
     QVERIFY(QFile::exists(":/data/versionchecks.qml"));
@@ -387,7 +401,7 @@ void tst_qmlcachegen::versionChecksForAheadOfTimeUnits()
     QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
     const QQmlPrivate::CachedQmlUnit *originalUnit = QQmlMetaType::findCachedCompilationUnit(
             QUrl("qrc:/data/versionchecks.qml"), &error);
-    QVERIFY(originalUnit);
+    QVERIFY2(originalUnit, versionCheckErrorString(error));
     QV4::CompiledData::Unit *tweakedUnit = (QV4::CompiledData::Unit *)malloc(originalUnit->qmlData->unitSize);
     memcpy(reinterpret_cast<void *>(tweakedUnit),
            reinterpret_cast<const void *>(originalUnit->qmlData),
