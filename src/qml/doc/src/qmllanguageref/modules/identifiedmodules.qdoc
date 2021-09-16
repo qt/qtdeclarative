@@ -35,8 +35,8 @@ specified by the module in its \c qmldir file.  This enables such modules to
 be imported with a unique identifier that remains the same no matter where the
 module is located on the local file system.
 
-When importing an identified module, an unquoted identifier is used, with a
-mandatory version number:
+When importing an identified module, an unquoted identifier is used, with an
+optional version number:
 
 \snippet qml/imports/installed-module.qml imports
 
