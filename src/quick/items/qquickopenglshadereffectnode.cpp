@@ -120,10 +120,13 @@ void QQuickCustomMaterialShader::updateState(const RenderState &state, QSGMateri
                                                                      : QQuickShaderEffect::Error);
     }
 
+    if (newEffect != oldEffect)
+        m_initialized = false;
+
     int textureProviderIndex = 0;
     if (!m_initialized) {
         for (int shaderType = 0; shaderType < QQuickOpenGLShaderEffectMaterialKey::ShaderTypeCount; ++shaderType) {
-            Q_ASSERT(m_uniformLocs[shaderType].isEmpty());
+            m_uniformLocs[shaderType].clear();
             m_uniformLocs[shaderType].reserve(material->uniforms[shaderType].size());
             for (int i = 0; i < material->uniforms[shaderType].size(); ++i) {
                 const UniformData &d = material->uniforms[shaderType].at(i);
