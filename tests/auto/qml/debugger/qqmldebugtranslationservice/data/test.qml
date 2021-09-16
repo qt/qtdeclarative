@@ -26,32 +26,48 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick
 
-
-Item {
+Rectangle {
     id: root
-    width: 360
-    height: 360
+    width: 200
+    height: 200
     property int widthFactor: 7
 
     Column {
+        anchors.fill: parent
         Text {
             id: text1
-            text: qsTr("hello")
-            width: root.width / widthFactor
+            width: parent.width;
+            text: qsTrId("TRID_1")
         }
         Text {
             id: text2
-            text: qsTr("short")
-            width: root.width / widthFactor
+            width: 100;
+            text: qsTrId("TRID_2")
         }
         Text {
             id: text3
-            text: "long not translated text"
-            width: root.width / widthFactor
+            width: parent.width;
+            text: qsTrId("TRID_3")
+        }
+        Text {
+            id: text4
+            width: parent.width;
+            text: qsTrId("TRID_4")
+        }
+        Text {
+            id: text5
+            width: parent.width;
+            text: qsTrId("TRID_5")
+        }
+        Text {
+            id: text6
+            width: parent.width;
+            text: "way too long not translated text that should elide but not be marked"
         }
     }
+
     // this is necessary to have the test working for different font sizes and dpi settings
     Text {
         id: originHelloTextToGetTheNecessaryWidth
@@ -60,6 +76,7 @@ Item {
         anchors.bottom: root.bottom
         onWidthChanged: root.width = originHelloTextToGetTheNecessaryWidth.width * widthFactor
     }
+
     states: [
         State {
             name: "BiggerFontState"

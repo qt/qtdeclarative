@@ -292,8 +292,11 @@ public:
     {
         if (QQmlPreviewServiceImpl *service = QQmlDebugConnector::service<QQmlPreviewServiceImpl>())
             return service->currentRootItem();
+        if (currentQuickView)
+            return currentQuickView->rootObject();
         return nullptr;
     }
+    QQuickView* currentQuickView;
 
 private:
     CodeMarker codeMarker(const TranslationBindingInformation &information)
@@ -399,6 +402,9 @@ void QQmlDebugTranslationServiceImpl::engineAboutToBeAdded(QJSEngine *engine)
     if (QQmlEngine *qmlEngine = qobject_cast<QQmlEngine *>(engine))
         d->proxyTranslator->addEngine(qmlEngine);
 
+    if (engine->parent())
+        d->currentQuickView = qobject_cast<QQuickView*>(engine->parent());
+
     emit attachedToEngine(engine);
 }
 
@@ -417,11 +423,12 @@ QString QQmlDebugTranslationServiceImpl::foundElidedText(QObject *textObject, co
     auto it = d->objectTranslationBindingMultiMap.find(textObject);
     if (it != d->objectTranslationBindingMultiMap.end()) {
         if (QQuickItem* quickItem = qobject_cast<QQuickItem*>(textObject)) {
-            //const QColor originColor = quickItem->color();
             const TranslationBindingInformation information = d->objectTranslationBindingMultiMap.value(quickItem);
-            if (d->watchTextElides && d->proxyTranslator->hasTranslation(information)) {
+
+            if (d->watchTextElides) {
                 d->sendElidedTextWarning(information);
             }
+
             if (!d->elideConnections.contains(quickItem)) {
                 // add "refresh" elide state connections which remove themself
                 auto clearElideInformation = [=]() {
@@ -459,6 +466,7 @@ void QQmlDebugTranslationServiceImpl::foundTranslationBinding(const TranslationB
     connect(scopeObject, &QObject::destroyed, [this, scopeObject] () {
         this->d->objectTranslationBindingMultiMap.remove(scopeObject);
     });
+
     d->objectTranslationBindingMultiMap.insert(scopeObject, translationBindingInformation);
 }
 

@@ -84,148 +84,44 @@ private slots:
         QVERIFY(currentDebugServiceMessage().isEmpty());
     }
 
-    void changeLanguage(const QString &language = QLocale::system().uiLanguages().first())
-    {
-        // only necessary for visual debugging
-        // QTest::qWait(500);
 
-        QVersionedPacket<QQmlDebugConnector> packet;
-        sendMessageToService(createChangeLanguageRequest(packet, dataDirectoryUrl(), language));
-
-        // check without any eventloop cycle it should be still empty
-        QCOMPARE(currentDebugServiceMessage(), QByteArray());
-
-        QVersionedPacket<QQmlDebugConnector> expectedReply;
-        expectedReply << Reply::LanguageChanged;
-        QCOMPARE(currentReply().at(0), expectedReply.data());
-        // clear buffer explicit, because it is used in other test methods as helper method aswell
-        hooks->qt_qmlDebugClearBuffer();
-        QVERIFY(currentDebugServiceMessage().isEmpty());
-    }
-
-    void streamTranslationIssues()
-    {
-        TranslationIssue issue;
-        issue.type = TranslationIssue::Type::Missing;
-        CodeMarker codeMarker;
-        codeMarker.url = "url";
-        codeMarker.line = 8;
-        codeMarker.column = 9;
-        issue.codeMarker = codeMarker;
-        issue.language = "language";
-        QVersionedPacket<QQmlDebugConnector> writePacket;
-        writePacket << Reply::MissingTranslations
-                    << QVector<TranslationIssue>{issue};
-        Reply replyType;
-        QVector<TranslationIssue> replyTranslationIssues;
-        QVersionedPacket<QQmlDebugConnector> readPacket(writePacket.data());
-        readPacket >> replyType;
-
-        readPacket >> replyTranslationIssues;
-
-        QCOMPARE(replyTranslationIssues.at(0), issue);
-    }
-
-    void missingAllTranslations()
+    void verifyMissingAllTranslationsForMissingLanguage()
     {
         changeLanguage("ru");
+        auto missingTranslations = getMissingTranslations();
 
-        QVersionedPacket<QQmlDebugConnector> packet;
-        sendMessageToService(createMissingTranslationsRequest(packet));
-        const QList<QByteArray> replyMessages = currentReply();
-
-        TranslationIssue firstMissingTranslationLine;
-        firstMissingTranslationLine.type = TranslationIssue::Type::Missing;
-        CodeMarker codeMarker;
-        codeMarker.url = testFileUrl(QMLFILE);
-        codeMarker.line = 41;
-        codeMarker.column = 19;
-        firstMissingTranslationLine.codeMarker = codeMarker;
-        firstMissingTranslationLine.language = "ru ru-RU ru-Cyrl-RU";
-        TranslationIssue secondMissingTranslationLine;
-        secondMissingTranslationLine.type = TranslationIssue::Type::Missing;
-        codeMarker.url = testFileUrl(QMLFILE);
-        codeMarker.line = 46;
-        codeMarker.column = 19;
-        secondMissingTranslationLine.codeMarker = codeMarker;
-        secondMissingTranslationLine.language = "ru ru-RU ru-Cyrl-RU";
-        QVersionedPacket<QQmlDebugConnector> expectedReply;
-        expectedReply << Reply::MissingTranslations
-            << QVector<TranslationIssue>{firstMissingTranslationLine, secondMissingTranslationLine};
-
-        QVERIFY2(replyMessages.at(0) == expectedReply.data(), qPrintable(debugReply(replyMessages)));
+        QCOMPARE(missingTranslations.length(), getTranslatableTextOccurrences().count());
+        QCOMPARE(missingTranslations.at(0).language, "ru ru-RU ru-Cyrl-RU");
     }
 
-    void missingOneTranslation()
+    void verifyCorrectNumberOfMissingTranslations()
     {
         changeLanguage("fr");
 
-        QVersionedPacket<QQmlDebugConnector> packet;
-        sendMessageToService(createMissingTranslationsRequest(packet));
-        const QList<QByteArray> replyMessages = currentReply();
+        auto missingTranslations = getMissingTranslations();
 
-
-        TranslationIssue missingTranslationLine;
-        missingTranslationLine.type = TranslationIssue::Type::Missing;
-        CodeMarker codeMarker;
-        codeMarker.url = testFileUrl(QMLFILE);
-        codeMarker.line = 46;
-        codeMarker.column = 19;
-        missingTranslationLine.codeMarker = codeMarker;
-        missingTranslationLine.language = "fr fr-FR fr-Latn-FR";
-        QVersionedPacket<QQmlDebugConnector> expectedReply;
-        expectedReply << Reply::MissingTranslations
-            << QVector<TranslationIssue>{missingTranslationLine};
-
-        QVERIFY2(replyMessages.at(0) == expectedReply.data(), qPrintable(debugReply(replyMessages)));
+        QCOMPARE(missingTranslations.length(), 3);
+        QCOMPARE(missingTranslations.at(0).language, "fr fr-FR fr-Latn-FR");
     }
 
-    void getTranslatableTextOccurrences()
+    void verifyCorrectNumberOfTranslatableTextOccurrences()
     {
-
-        QVersionedPacket<QQmlDebugConnector> packet;
-        sendMessageToService(createTranslatableTextOccurrencesRequest(packet));
-        QVersionedPacket<QQmlDebugConnector> readPacket(currentReply().at(0));
-
-        Reply replyType;
-        QVector<QmlElement> replyQmlElementList;
-        readPacket >> replyType;
-        readPacket >> replyQmlElementList;
-        QCOMPARE(replyQmlElementList.count(), 2);
+        QCOMPARE(getTranslatableTextOccurrences().length(), 5);
     }
 
-    void getStates()
+    void verifyCorrectNumberOfStates()
     {
-        QSKIP("Skip the test for now");
-
-        QVersionedPacket<QQmlDebugConnector> packet;
-        sendMessageToService(createStateListRequest(packet));
-        QVersionedPacket<QQmlDebugConnector> readPacket(currentReply().at(0));
-
-        Reply replyType;
-        QVector<QmlState> replyStateList;
-        readPacket >> replyType;
-        readPacket >> replyStateList;
-        QCOMPARE(replyStateList.count(), 2);
+        QCOMPARE(getStates().length(), 2);
     }
 
     void loopThroughAllStates()
     {
-        QSKIP("Skip the test for now");
+        QVector<QmlState> stateList = getStates();
 
-        QVersionedPacket<QQmlDebugConnector> packet;
-        sendMessageToService(createStateListRequest(packet));
-        QVersionedPacket<QQmlDebugConnector> readPacket(currentReply().at(0));
+        QCOMPARE(stateList.length(), 2);
 
-        Reply replyType;
-        QVector<QmlState> replyStateList;
-        readPacket >> replyType;
-        readPacket >> replyStateList;
-        QCOMPARE(replyStateList.count(), 2);
-
-        for (int i = 0; i < replyStateList.count(); i++) {
-            auto stateName = replyStateList.at(i).name;
-            hooks->qt_qmlDebugClearBuffer();
+        for (int i = 0; i < stateList.count(); i++) {
+            auto stateName = stateList.at(i).name;
             QVersionedPacket<QQmlDebugConnector> packet;
             sendMessageToService(createChangeStateRequest(packet, stateName));
 
@@ -241,123 +137,114 @@ private slots:
         }
     }
 
-    void getElideWarning()
+    void getElideWarnings()
     {
+        QVersionedPacket<QQmlDebugConnector> packet;
+        sendMessageToService(createWatchTextElidesRequest(packet));
 
         changeLanguage("fr");
 
-        QVersionedPacket<QQmlDebugConnector> packet;
-        sendMessageToService(createWatchTextElidesRequest(packet));
-        const QList<QByteArray> replyMessages = currentReply();
+        // after language changes, we get elide warnings
+        auto replies = currentReply();
+        int elideCount = 0;
 
+        for (auto reply : replies) {
+            QVersionedPacket<QQmlDebugConnector> readPacket(reply);
+            TranslationIssue issue;
+            Reply replyType;
 
-        const QByteArray reply1 = replyMessages.at(0);
-
-        TranslationIssue elidedeTextLine;
-        elidedeTextLine.type = TranslationIssue::Type::Elided;
-        CodeMarker codeMarker;
-        codeMarker.url = testFileUrl(QMLFILE);
-        codeMarker.line = 41;
-        codeMarker.column = 19;
-        elidedeTextLine.codeMarker = codeMarker;
-        elidedeTextLine.language = "fr fr-FR fr-Latn-FR";
-        QVersionedPacket<QQmlDebugConnector> expectedTextElidedReply;
-        expectedTextElidedReply << Reply::TextElided << elidedeTextLine;
-
-        Reply replyType1;
-        TranslationIssue replyTranslationIssue;
-        QVersionedPacket<QQmlDebugConnector> readPacket1(reply1);
-        readPacket1 >> replyType1;
-        readPacket1 >> replyTranslationIssue;
-        QVERIFY2(reply1 == expectedTextElidedReply.data(), qPrintable(debugReply(replyMessages)));
-
-        {
-            gotMessage = false;
-            auto handler = qInstallMessageHandler(messageHandler);
-            auto guard = qScopeGuard([&]() { qInstallMessageHandler(handler); });
-
-            packet.clear();
-            sendMessageToService(createDisableWatchTextElidesRequest(packet));
-            QTRY_VERIFY(gotMessage);
+            readPacket >> replyType;
+            if (replyType == Reply::TextElided) {
+                readPacket >> issue;
+                QCOMPARE(issue.codeMarker.line, 47);
+                QCOMPARE(issue.language, "fr fr-FR fr-Latn-FR");
+                elideCount++;
+            }
         }
     }
 
     void getElideWarningsWhenStateChanged()
     {
-        QSKIP("Skip the test for now due to forever-loop. To be fixed in final 6.2");
-
-        // it is only eliding in fr
-        changeLanguage("fr");
         QVersionedPacket<QQmlDebugConnector> packet;
         sendMessageToService(createWatchTextElidesRequest(packet));
+
+        changeLanguage("fr");
+
         const QString stateName("BiggerFontState");
-
-        packet.clear();
-
         sendMessageToService(createChangeStateRequest(packet, stateName));
 
-        QList<QByteArray> replyMessagesWithElideWarnings;
+        auto replies = currentReply();
 
-        QByteArray stateChangedReply;
-        while (stateChangedReply.isEmpty()) {
-            for (const auto &reply : currentReply()) {
-                QVersionedPacket<QQmlDebugConnector> packet(reply);
-                Reply replyType;
-                packet >> replyType;
-
-                if (replyType == Reply::StateChanged)
-                    stateChangedReply = reply;
-                else
-                    replyMessagesWithElideWarnings.append(replyMessagesWithElideWarnings);
-            }
-            hooks->qt_qmlDebugClearBuffer();
-        }
-
-        TranslationIssue expectedTranslationIssue;
-        expectedTranslationIssue.type = TranslationIssue::Type::Elided;
-        CodeMarker codeMarker;
-        codeMarker.url = testFileUrl(QMLFILE);
-        codeMarker.line = 41;
-        codeMarker.column = 19;
-        expectedTranslationIssue.codeMarker = codeMarker;
-        expectedTranslationIssue.language = "fr fr-FR fr-Latn-FR";
-
-        // text size is calculated many times, so it could be that we get
-        // the same warning many times
-        for (const QByteArray &message : replyMessagesWithElideWarnings) {
+        int elideCount = 0;
+        for (auto reply : replies) {
+            QVersionedPacket<QQmlDebugConnector> readPacket(reply);
+            TranslationIssue issue;
             Reply replyType;
-            TranslationIssue translationIssue;
-            QVersionedPacket<QQmlDebugConnector> readPacket1(message);
-            readPacket1 >> replyType;
-            readPacket1 >> translationIssue;
-            QCOMPARE(replyType, Reply::TextElided);
-            QVERIFY2(expectedTranslationIssue == translationIssue,
-                     qPrintable(debugReply(replyMessagesWithElideWarnings)));
 
-        }
-
-        QVersionedPacket<QQmlDebugConnector> expectedStateChangedReply;
-        expectedStateChangedReply << Reply::StateChanged << stateName;
-
-        Reply replyType2;
-        QString stateNameReply;
-        QVersionedPacket<QQmlDebugConnector> readPacket2(stateChangedReply);
-        readPacket2 >> replyType2 >> stateNameReply;
-        QCOMPARE(stateChangedReply, expectedStateChangedReply.data());
-
-        {
-            gotMessage = false;
-            auto handler = qInstallMessageHandler(messageHandler);
-            auto guard = qScopeGuard([&]() { qInstallMessageHandler(handler); });
-
-            packet.clear();
-            sendMessageToService(createDisableWatchTextElidesRequest(packet));
-
-            QTRY_VERIFY(gotMessage);
+            readPacket >> replyType;
+            if (replyType == Reply::TextElided) {
+                readPacket >> issue;
+                QCOMPARE(issue.codeMarker.line, 47);
+                elideCount++;
+            }
         }
     }
 
 private:
+
+    QVector<QmlElement> getTranslatableTextOccurrences()
+    {
+        QVersionedPacket<QQmlDebugConnector> packet;
+        sendMessageToService(createTranslatableTextOccurrencesRequest(packet));
+        QVersionedPacket<QQmlDebugConnector> readPacket(currentReply().at(0));
+
+        Reply replyType;
+        QVector<QmlElement> qmlElementList;
+        readPacket >> replyType;
+        readPacket >> qmlElementList;
+
+        return qmlElementList;
+    }
+
+    QVector<QmlState> getStates()
+    {
+        QVersionedPacket<QQmlDebugConnector> packet;
+        sendMessageToService(createStateListRequest(packet));
+        auto replies = currentReply();
+        QVersionedPacket<QQmlDebugConnector> readPacket(replies.at(0));
+
+        Reply replyType;
+        QVector<QmlState> stateList;
+        readPacket >> replyType;
+        readPacket >> stateList;
+
+        return stateList;
+    }
+
+    void changeLanguage(const QString &language = QLocale::system().uiLanguages().first())
+    {
+        QVersionedPacket<QQmlDebugConnector> packet;
+        sendMessageToService(createChangeLanguageRequest(packet, dataDirectoryUrl(), language));
+        QVersionedPacket<QQmlDebugConnector> readPacket(currentReply().at(0));
+
+        // Use this for visual debugging
+        // QTest::qWait(500);
+    }
+
+    QVector<TranslationIssue> getMissingTranslations()
+    {
+        QVersionedPacket<QQmlDebugConnector> packet;
+        sendMessageToService(createMissingTranslationsRequest(packet));
+        QVersionedPacket<QQmlDebugConnector> readPacket(currentReply().at(0));
+
+        Reply replyType;
+        QVector<TranslationIssue> missingTranslations;
+        readPacket >> replyType;
+        readPacket >> missingTranslations;
+
+        return missingTranslations;
+    }
+
     QByteArray debugServiceMessage(const QByteArray &data)
     {
         QByteArray message;
@@ -385,8 +272,15 @@ private:
     }
     void sendMessageToService(const QByteArray &message)
     {
+        clearBuffer();
         hooks->qt_qmlDebugSendDataToService(
             qPrintable(QQmlDebugTranslationServiceImpl::s_key), message.toHex());
+    }
+
+    void clearBuffer()
+    {
+        hooks->qt_qmlDebugClearBuffer();
+        QCoreApplication::processEvents();
     }
 
     QByteArray currentDebugServiceMessage()
@@ -471,33 +365,6 @@ private:
         return debugString;
     }
 
-    QString missingRussionTranslationWarningLine42() const
-    {
-        const QString fileUrl(testFileUrl(QMLFILE).toString());
-        return QString("%1:42:19: QQmlDebugTranslationService: In locale ru ru-RU ru-Cyrl-RU translation is missing.").arg(fileUrl);
-    }
-    QString missingFranceTranslationWarningLine47() const
-    {
-        const QString fileUrl(testFileUrl(QMLFILE).toString());
-        return QString("%1:47:19: QQmlDebugTranslationService: In locale fr fr-FR fr-Latn-FR translation is missing.").arg(fileUrl);
-    }
-    QString missingSpainTranslationWarningLine47() const
-    {
-        const QString fileUrl(testFileUrl(QMLFILE).toString());
-        return QString("%1:47:19: QQmlDebugTranslationService: In locale es es-ES es-Latn-ES translation is missing.").arg(fileUrl);
-    }
-    QString missingRussionTranslationWarningLine47() const
-    {
-        const QString fileUrl(testFileUrl(QMLFILE).toString());
-        return QString("%1:47:19: QQmlDebugTranslationService: In locale ru ru-RU ru-Cyrl-RU translation is missing.").arg(fileUrl);
-    }
-
-    QString franceElideWarningMessageLine42() const
-    {
-        return QString(
-            "%1:42:19: QQmlDebugTranslationService: In locale fr fr-FR fr-Latn-FR the translated text is eliding."
-        ).arg(testFileUrl(QMLFILE).toString());
-    }
 
     QQuickView m_view;
     QmlState m_currentState;

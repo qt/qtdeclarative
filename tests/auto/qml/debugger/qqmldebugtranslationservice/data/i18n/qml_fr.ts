@@ -2,15 +2,25 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="fr_FR">
 <context>
-    <name>test</name>
-    <message>
-        <location filename="../test.qml" line="43"/>
-        <source>hello</source>
+    <name></name>
+    <message id="TRID_1">
+        <source>TRID_1</source>
         <translation>bonjour</translation>
     </message>
-    <message>
-        <location filename="../test.qml" line="49"/>
-        <source>short</source>
+    <message id="TRID_2">
+        <source>TRID_2</source>
+        <translation>french misses some</translation>
+    </message>
+    <message id="TRID_3">
+        <source>TRID_3</source>
+        <translation></translation>
+    </message>
+    <message id="TRID_4">
+        <source>TRID_4</source>
+        <translation>TRID_4</translation>
+    </message>
+    <message id="TRID_5">
+        <source>TRID_5</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

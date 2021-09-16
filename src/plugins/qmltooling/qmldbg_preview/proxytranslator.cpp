@@ -125,7 +125,7 @@ QString ProxyTranslator::translate(const char *context, const char *sourceText, 
         result = m_qtTranslator->translate(context, sourceText, disambiguation, n);
     if (result.isNull() && m_qmlTranslator)
         result = m_qmlTranslator->translate(context, sourceText, disambiguation, n);
-    m_translationFound = !result.isNull();
+    m_translationFound = !(result.isNull() || result.isEmpty() || result == sourceText);
     return result;
 }
 
