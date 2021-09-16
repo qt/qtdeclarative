@@ -34,6 +34,7 @@ TestCase {
     id: testCase
     name: "tst_grabImage"
     when: windowShown
+    visible: true
 
     function test_equals() {
         var rect = createTemporaryQmlObject("import QtQuick 2.0; Rectangle { color: 'red'; width: 10; height: 10; }", testCase);
@@ -47,6 +48,8 @@ TestCase {
         // Don't change anything...
         newImage = grabImage(rect);
         try {
+            // Check that we actually grabbed something
+            compare(newImage.pixel(0, 0), "#ff0000")
             compare(newImage.size, oldImage.size);
             verify(newImage.equals(oldImage));
         } catch (ex) {
@@ -86,6 +89,8 @@ TestCase {
 
         try {
             verify(grabbedImage2.equals(grabbedImage))
+            // Check that we actually grabbed, saved, and loaded something
+            compare(grabbedImage2.pixel(0, 0), "#ff0000")
         } catch (ex) {
             grabbedImage2.save("tst_grabImage_test_save2.png")
             throw ex;
