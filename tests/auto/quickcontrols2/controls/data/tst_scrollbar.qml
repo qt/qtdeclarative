@@ -226,6 +226,21 @@ TestCase {
         verify(!oldHorizontalScrollBar.visible)
     }
 
+    function getGrooveRange(scrollbar) {
+        return {
+            start: {    // top left
+               x: scrollbar.orientation === Qt.Horizontal ? scrollbar.leftPadding : 0,
+               y: scrollbar.orientation === Qt.Vertical ? scrollbar.topPadding : 0
+            },
+            end: {      // bottom right, (inclusive, last pixel position of the groove)
+               x: (scrollbar.orientation === Qt.Horizontal ? scrollbar.width - scrollbar.rightPadding : scrollbar.width) - 1,
+               y: (scrollbar.orientation === Qt.Vertical ? scrollbar.height - scrollbar.bottomPadding : scrollbar.height) - 1
+            },
+            width : scrollbar.width - scrollbar.leftPadding - scrollbar.rightPadding,
+            height: scrollbar.height - scrollbar.topPadding - scrollbar.bottomPadding
+        }
+    }
+
     function test_mouse_data() {
         return [
             { tag: "horizontal", properties: { visible: true, orientation: Qt.Horizontal, width: testCase.width } },
@@ -237,18 +252,7 @@ TestCase {
         var control = createTemporaryObject(scrollBarWithDefaultPadding, testCase, data.properties)
         verify(control)
 
-        var grooveRange = {
-            start: {    // top left
-               x: control.orientation === Qt.Horizontal ? control.leftPadding : 0,
-               y: control.orientation === Qt.Vertical ? control.topPadding : 0
-            },
-            end: {      // bottom right, (inclusive, last pixel position of the groove)
-               x: (control.orientation === Qt.Horizontal ? control.width - control.rightPadding : control.width) - 1,
-               y: (control.orientation === Qt.Vertical ? control.height - control.bottomPadding : control.height) - 1
-            },
-            width : control.width - control.leftPadding - control.rightPadding,
-            height: control.height - control.topPadding - control.bottomPadding
-        }
+        var grooveRange = getGrooveRange(control)
 
         var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
@@ -392,6 +396,10 @@ TestCase {
         var control1 = createTemporaryObject(scrollBar, testCase)
         verify(control1)
 
+        control1.height = 200 + (control1.topPadding + control1.bottomPadding)
+
+        var grooveRange = getGrooveRange(control1)
+
         var pressedCount1 = 0
         var movedCount1 = 0
 
@@ -402,7 +410,7 @@ TestCase {
         verify(positionSpy1.valid)
 
         var touch = touchEvent(control1)
-        touch.press(0, control1, 0, 0).commit().move(0, control1, control1.width, control1.height).commit()
+        touch.press(0, control1, grooveRange.start.x, grooveRange.start.y).commit().move(0, control1, grooveRange.end.x+1, grooveRange.end.y+1).commit()
 
         compare(pressedSpy1.count, ++pressedCount1)
         compare(positionSpy1.count, ++movedCount1)
@@ -410,8 +418,8 @@ TestCase {
         compare(control1.position, 1.0)
 
         // second touch point on the same control is ignored
-        touch.stationary(0).press(1, control1, 0, 0).commit()
-        touch.stationary(0).move(1, control1).commit()
+        touch.stationary(0).press(1, control1, grooveRange.start.x, grooveRange.start.y).commit()
+        touch.stationary(0).move(1).commit()
         touch.stationary(0).release(1).commit()
 
         compare(pressedSpy1.count, pressedCount1)
@@ -421,6 +429,7 @@ TestCase {
 
         var control2 = createTemporaryObject(scrollBar, testCase, {y: control1.height})
         verify(control2)
+        control2.height = 200 + (control2.topPadding + control2.bottomPadding)
 
         var pressedCount2 = 0
         var movedCount2 = 0
@@ -432,7 +441,7 @@ TestCase {
         verify(positionSpy2.valid)
 
         // press the second scrollbar
-        touch.stationary(0).press(2, control2, 0, 0).commit()
+        touch.stationary(0).press(2, control2, grooveRange.start.x, grooveRange.start.y).commit()
 
         compare(pressedSpy2.count, ++pressedCount2)
         compare(positionSpy2.count, movedCount2)
