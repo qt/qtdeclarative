@@ -19,8 +19,6 @@
 *
 [Popup::test_font]
 *
-[ScrollBar::test_interactive:true]
-*
 [ScrollBar::test_multiTouch]
 *
 [ScrollBar::test_policy]

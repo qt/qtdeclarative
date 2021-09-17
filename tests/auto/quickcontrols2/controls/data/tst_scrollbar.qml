@@ -740,9 +740,11 @@ TestCase {
         verify(control)
 
         compare(control.interactive, data.interactive)
+        // 200 pixels tall to avoid rounding errors further on
+        control.height = 200 + (control.topPadding + control.bottomPadding)
 
         // press-move-release
-        mousePress(control, 0, 0, Qt.LeftButton)
+        mousePress(control, control.width/2, control.topPadding, Qt.LeftButton)
         compare(control.pressed, data.interactive)
 
         mouseMove(control, control.width / 2, control.height / 2)
