@@ -3,7 +3,7 @@
 ** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the tools applications of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:GPL-EXCEPT$
 ** Commercial License Usage
@@ -26,32 +26,6 @@
 **
 ****************************************************************************/
 
-#include "qmltccompiler.h"
-#include "qmltcoutputir.h"
-#include "qmltccodewriter.h"
-
-QT_BEGIN_NAMESPACE
-
-QmltcCompiler::QmltcCompiler(const QString &url, QmltcTypeResolver *resolver, QQmlJSLogger *logger)
-    : m_url(url), m_typeResolver(resolver), m_logger(logger)
-{
-    Q_UNUSED(m_url);
-    Q_UNUSED(m_typeResolver);
-    Q_UNUSED(m_logger);
-}
-
-void QmltcCompiler::compile(const QmltcCompilerInfo &info)
-{
-    m_info = info;
-
-    QmltcProgram program;
-    program.url = m_url;
-    program.cppPath = m_info.outputCppFile;
-    program.hPath = m_info.outputHFile;
-
-    QmltcOutput out;
-    QmltcOutputWrapper code(out);
-    QmltcCodeWriter::write(code, program);
-}
-
-QT_END_NAMESPACE
+#ifndef NAME_CONFLICT_FLAG
+#define NAME_CONFLICT_FLAG
+#endif // NAME_CONFLICT_FLAG

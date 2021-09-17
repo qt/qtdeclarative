@@ -971,6 +971,159 @@ function(_qt_internal_write_deferred_qmldir_file target)
     configure_file(${__qt_qml_macros_module_base_dir}/Qt6qmldirTemplate.cmake.in ${qmldir_file} @ONLY)
 endfunction()
 
+# Compile Qml files (.qml) to C++ source files with Qml Type Compiler (qmltc).
+#
+#
+function(qt6_target_compile_qml_to_cpp target)
+    set(args_option "")
+    set(args_single "")
+    set(args_multi FILES)
+
+    # TODO: add qmltypes argument
+    # TODO: add qml import path argument
+
+    cmake_parse_arguments(PARSE_ARGV 1 arg
+        "${args_option}" "${args_single}" "${args_multi}"
+    )
+    if(arg_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unknown/unexpected arguments: ${arg_UNPARSED_ARGUMENTS}")
+    endif()
+
+    if (NOT arg_FILES)
+        message(FATAL_ERROR "FILES option not given or contains empty list for target ${target}")
+    endif()
+
+    if(NOT TARGET "${target}")
+        message(FATAL_ERROR "\"${target}\" is not a known target")
+    endif()
+
+    get_target_property(prefix ${target} QT_QML_MODULE_RESOURCE_PREFIX)
+    if (NOT prefix)
+        message(FATAL_ERROR
+                "Target is not a QML module? QT_QML_MODULE_RESOURCE_PREFIX is unspecified")
+    endif()
+    if(NOT prefix MATCHES [[/$]])
+        string(APPEND prefix "/")
+    endif()
+
+    get_target_property(target_source_dir ${target} SOURCE_DIR)
+    set(generated_sources_other_scope)
+
+    set(compiled_files) # compiled files list to be used to generate MOC C++
+    set(non_qml_files) # non .qml files to warn about
+    set(qmltc_executable "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltc>")
+    if(CMAKE_GENERATOR STREQUAL "Ninja Multi-Config" AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.20")
+        set(qmltc_executable "$<COMMAND_CONFIG:${qmltc_executable}>")
+    endif()
+
+    foreach(qml_file_src IN LISTS arg_FILES)
+        if(NOT qml_file_src MATCHES "\\.(qml)$")
+            list(APPEND non_qml_files ${qml_file_src})
+            continue()
+        endif()
+
+        get_filename_component(file_absolute ${qml_file_src} ABSOLUTE)
+        __qt_get_relative_resource_path_for_file(file_resource_path ${qml_file_src})
+
+        # we ensured earlier that prefix always ends with "/"
+        file(TO_CMAKE_PATH "${prefix}${file_resource_path}" file_resource_path)
+
+        file(RELATIVE_PATH file_relative ${CMAKE_CURRENT_SOURCE_DIR} ${file_absolute})
+        string(REGEX REPLACE "\.qml$" "" compiled_file_base ${file_relative})
+        string(REGEX REPLACE "[$#?]+" "_" compiled_file ${compiled_file_base})
+        string(TOLOWER ${compiled_file} file_name)
+
+        # NB: use <path>/<lowercase(file_name)>.<extension> pattern. if
+        # lowercase(file_name) is already taken (e.g. project has main.qml and
+        # main.h/main.cpp), the compilation might fail. in this case, expect
+        # user to specify QT_QMLTC_FILE_BASENAME
+        get_source_file_property(specified_file_name ${qml_file_src} QT_QMLTC_FILE_BASENAME)
+        if (specified_file_name) # if present, overwrite the default behavior
+            set(file_name ${specified_file_name})
+        endif()
+
+        set(compiled_header
+            "${CMAKE_CURRENT_BINARY_DIR}/.qmltc/${target}/${file_name}.h")
+        set(compiled_cpp
+            "${CMAKE_CURRENT_BINARY_DIR}/.qmltc/${target}/${file_name}.cpp")
+        get_filename_component(out_dir ${compiled_header} DIRECTORY)
+
+        add_custom_command(
+            OUTPUT ${compiled_header} ${compiled_cpp}
+            COMMAND ${CMAKE_COMMAND} -E make_directory ${out_dir}
+            COMMAND
+                ${QT_TOOL_COMMAND_WRAPPER_PATH}
+                ${qmltc_executable}
+                --header "${compiled_header}"
+                --impl "${compiled_cpp}"
+                --resource-path "${file_resource_path}"
+                ${file_absolute}
+            COMMAND_EXPAND_LISTS
+            DEPENDS
+                ${qmltc_executable}
+                "${file_absolute}"
+        )
+
+        set_source_files_properties(${compiled_header} ${compiled_cpp}
+            PROPERTIES SKIP_AUTOGEN ON)
+        target_sources(${target} PRIVATE ${compiled_header} ${compiled_cpp})
+        target_include_directories(${target} PUBLIC ${out_dir})
+        # The current scope automatically sees the file as generated, but the
+        # target scope may not if it is different. Force it where we can.
+        # We will also have to add the generated file to a target in this
+        # scope at the end to ensure correct dependencies.
+        if(NOT target_source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+            if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
+                list(APPEND generated_sources_other_scope ${compiled_header} ${compiled_cpp})
+            endif()
+        endif()
+
+        list(APPEND compiled_files ${compiled_header})
+    endforeach()
+
+    # run MOC manually for the generated files
+    qt6_wrap_cpp(compiled_moc_files ${compiled_files} TARGET ${target})
+    set_source_files_properties(${compiled_moc_files} PROPERTIES SKIP_AUTOGEN ON)
+    target_sources(${target} PRIVATE ${compiled_moc_files})
+    if(NOT target_source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+        if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
+            set_source_files_properties(${generated_sources_other_scope} ${compiled_moc_files}
+                TARGET_DIRECTORY ${target}
+                PROPERTIES
+                    SKIP_AUTOGEN TRUE
+                    GENERATED TRUE
+            )
+        endif()
+
+        if(NOT TARGET ${target}_tooling)
+            message(FATAL_ERROR
+                    "${target}_tooling is not found, although it should be in this function.")
+        endif()
+        # adding sources to ${target}_tooling would ensure that these sources
+        # become a dependency of ${target} in this weird case that we have.
+        # add_dependencies() for ${target} and ${target}_tooling must have been
+        # added as part of qt_add_qml_module() command run.
+        target_sources(${target}_tooling PRIVATE
+            ${generated_sources_other_scope} ${compiled_moc_files}
+        )
+    endif()
+
+    if(non_qml_files)
+        list(JOIN non_qml_files "\n  " file_list)
+        message(WARNING
+            "Only .qml files should be added with this function. "
+            "The following files were not processed:"
+            "\n  ${file_list}"
+        )
+    endif()
+
+endfunction()
+
+if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
+    function(qt_target_compile_qml_to_cpp)
+        qt6_target_compile_qml_to_cpp(${ARGV})
+    endfunction()
+endif()
 
 function(qt6_add_qml_plugin target)
     set(args_option

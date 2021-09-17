@@ -44,5 +44,6 @@ public:
 private slots:
     void initTestCase();
 
+    void qmlNameConflictResolution();
     void helloWorld();
 };

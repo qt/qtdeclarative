@@ -29,6 +29,8 @@
 #include "tst_qmltc.h"
 
 // Generated headers:
+#include "ResolvedNameConflict.h"
+#include "helloworld.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -53,6 +55,7 @@ void tst_qmltc::initTestCase()
     // Note: just check whether the QML code is valid. QQmlComponent is good for
     // it. also, we can use qrc to make sure the file is in the resource system.
     QUrl urls[] = {
+        QUrl("qrc:/QmltcTests/data/NameConflict.qml"),
         QUrl("qrc:/QmltcTests/data/HelloWorld.qml"),
     };
 
@@ -62,6 +65,11 @@ void tst_qmltc::initTestCase()
         component.loadUrl(url);
         QVERIFY2(!component.isError(), qPrintable(u"Bad QML file. "_qs + component.errorString()));
     }
+}
+
+void tst_qmltc::qmlNameConflictResolution()
+{
+    // we can include user-renamed files
 }
 
 void tst_qmltc::helloWorld()

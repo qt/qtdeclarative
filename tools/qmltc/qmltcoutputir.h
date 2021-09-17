@@ -26,32 +26,24 @@
 **
 ****************************************************************************/
 
-#include "qmltccompiler.h"
-#include "qmltcoutputir.h"
-#include "qmltccodewriter.h"
+#ifndef QMLTCOUTPUTIR_H
+#define QMLTCOUTPUTIR_H
+
+#include <QtCore/qstring.h>
+#include <QtCore/qlist.h>
+#include <QtCore/qstringlist.h>
+#include <QtCore/qset.h>
 
 QT_BEGIN_NAMESPACE
 
-QmltcCompiler::QmltcCompiler(const QString &url, QmltcTypeResolver *resolver, QQmlJSLogger *logger)
-    : m_url(url), m_typeResolver(resolver), m_logger(logger)
+struct QmltcProgram
 {
-    Q_UNUSED(m_url);
-    Q_UNUSED(m_typeResolver);
-    Q_UNUSED(m_logger);
-}
-
-void QmltcCompiler::compile(const QmltcCompilerInfo &info)
-{
-    m_info = info;
-
-    QmltcProgram program;
-    program.url = m_url;
-    program.cppPath = m_info.outputCppFile;
-    program.hPath = m_info.outputHFile;
-
-    QmltcOutput out;
-    QmltcOutputWrapper code(out);
-    QmltcCodeWriter::write(code, program);
-}
+    QString url;
+    QString cppPath;
+    QString hPath;
+    QSet<QString> includes; // non-default C++ include files
+};
 
 QT_END_NAMESPACE
+
+#endif // QMLTCOUTPUTIR_H

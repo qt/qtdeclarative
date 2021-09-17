@@ -26,32 +26,53 @@
 **
 ****************************************************************************/
 
-#include "qmltccompiler.h"
-#include "qmltcoutputir.h"
-#include "qmltccodewriter.h"
+#ifndef QMLTCOUTPUTPRIMITIVES_H
+#define QMLTCOUTPUTPRIMITIVES_H
+
+#include <QtCore/qstring.h>
+#include <QtCore/qstringbuilder.h>
 
 QT_BEGIN_NAMESPACE
 
-QmltcCompiler::QmltcCompiler(const QString &url, QmltcTypeResolver *resolver, QQmlJSLogger *logger)
-    : m_url(url), m_typeResolver(resolver), m_logger(logger)
+struct QmltcOutput
 {
-    Q_UNUSED(m_url);
-    Q_UNUSED(m_typeResolver);
-    Q_UNUSED(m_logger);
-}
+    QString header;
+    QString cpp;
+};
 
-void QmltcCompiler::compile(const QmltcCompilerInfo &info)
+// TODO: this must adhere to C++ generated code templates (once introduced)
+class QmltcOutputWrapper
 {
-    m_info = info;
+    QmltcOutput &m_code;
 
-    QmltcProgram program;
-    program.url = m_url;
-    program.cppPath = m_info.outputCppFile;
-    program.hPath = m_info.outputHFile;
+    template<typename String>
+    static void rawAppend(QString &out, const String &what, int extraIndent = 0)
+    {
+        constexpr char16_t newLine[] = u"\n";
+        out += QString(extraIndent * 4, u' ') + what + newLine;
+    }
 
-    QmltcOutput out;
-    QmltcOutputWrapper code(out);
-    QmltcCodeWriter::write(code, program);
-}
+public:
+    QmltcOutputWrapper(QmltcOutput &code) : m_code(code) { }
+    const QmltcOutput &code() const { return m_code; }
+
+    // appends string \a what with extra indentation \a extraIndent to current
+    // header string
+    template<typename String>
+    void rawAppendToHeader(const String &what, int extraIndent = 0)
+    {
+        rawAppend(m_code.header, what, extraIndent);
+    }
+
+    // appends string \a what with extra indentation \a extraIndent to current
+    // cpp string
+    template<typename String>
+    void rawAppendToCpp(const String &what, int extraIndent = 0)
+    {
+        rawAppend(m_code.cpp, what, extraIndent);
+    }
+};
 
 QT_END_NAMESPACE
+
+#endif // QMLTCOUTPUTPRIMITIVES_H

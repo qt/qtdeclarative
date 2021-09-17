@@ -5,6 +5,9 @@ qt_internal_add_tool(${target_name}
     SOURCES
         main.cpp
         qmltccommandlineutils.h qmltccommandlineutils.cpp
+        qmltcoutputprimitives.h
+        qmltccodewriter.h qmltccodewriter.cpp
+        qmltcoutputir.h
         qmltctyperesolver.h
         qmltcvisitor.h
         qmltccompiler.h qmltccompiler.cpp

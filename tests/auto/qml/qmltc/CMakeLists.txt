@@ -1,10 +1,17 @@
 set(cpp_sources
     tst_qmltc.h tst_qmltc.cpp
+
+    # test files:
+    nameconflict.h nameconflict.cpp
 )
 
 set(qml_sources
     data/HelloWorld.qml
+    data/NameConflict.qml
 )
+
+set_source_files_properties(data/NameConflict.qml PROPERTIES
+    QT_QMLTC_FILE_BASENAME data/ResolvedNameConflict)
 
 qt_internal_add_test(tst_qmltc_diskcache
     SOURCES
@@ -24,6 +31,10 @@ qt6_add_qml_module(tst_qmltc_diskcache
 target_compile_definitions(tst_qmltc_diskcache PRIVATE
     QMLTC_TESTS_DISABLE_CACHE=0
 )
+qt6_target_compile_qml_to_cpp(tst_qmltc_diskcache
+    FILES
+        ${qml_sources}
+)
 
 qt_internal_add_test(tst_qmltc_nodiskcache
     SOURCES
@@ -42,4 +53,8 @@ qt6_add_qml_module(tst_qmltc_nodiskcache
 )
 target_compile_definitions(tst_qmltc_nodiskcache PRIVATE
     QMLTC_TESTS_DISABLE_CACHE=1
+)
+qt6_target_compile_qml_to_cpp(tst_qmltc_nodiskcache
+    FILES
+        ${qml_sources}
 )
