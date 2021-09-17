@@ -19,8 +19,6 @@
 *
 [Popup::test_font]
 *
-[ScrollBar::test_flashing]
-*
 [ScrollBar::test_interactive:true]
 *
 [ScrollBar::test_mouse:horizontal]
