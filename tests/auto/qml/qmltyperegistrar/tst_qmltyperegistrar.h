@@ -33,6 +33,7 @@
 #include "foreign_p.h"
 
 #include <QtQml/qqml.h>
+#include <QtQml/qqmlcomponent.h>
 #include <QtCore/qproperty.h>
 #include <QtCore/qtimeline.h>
 #include <QtCore/qrect.h>
@@ -431,6 +432,14 @@ class DerivedFromForeignPrivate : public ForeignPrivate
     QML_ELEMENT
 };
 
+class WithMethod : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    Q_INVOKABLE QQmlComponent *createAThing(int) { return nullptr; }
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -463,6 +472,7 @@ private slots:
     void namespaceExtendedNamespace();
     void deferredNames();
     void derivedFromForeignPrivate();
+    void methodReturnType();
 
 private:
     QByteArray qmltypesData;

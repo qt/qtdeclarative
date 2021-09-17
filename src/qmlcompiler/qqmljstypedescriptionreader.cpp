@@ -299,7 +299,7 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bo
                 readParameter(component, &metaMethod);
             } else {
                 addWarning(component->firstSourceLocation(),
-                           tr("Expected only Parameter object definitions."));
+                           tr("Expected only Parameter in object definitions."));
             }
         } else if (script) {
             QString name = toString(script->qualifiedId);
@@ -311,9 +311,16 @@ void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bo
                 metaMethod.setRevision(readIntBinding(script));
             } else if (name == QLatin1String("isConstructor")) {
                 metaMethod.setIsConstructor(true);
+            } else if (name == QLatin1String("isList")) {
+                // TODO: Theoretically this can happen. QQmlJSMetaMethod should store it.
+            } else if (name == QLatin1String("isPointer")) {
+                // TODO: We don't need this information. We can probably drop all isPointer members
+                //       once we make sure that the type information is always complete. The
+                //       description of the type being referenced has access semantics after all.
             } else {
                 addWarning(script->firstSourceLocation(),
-                           tr("Expected only name type, revision and isConstructor script bindings."));
+                           tr("Expected only name, type, revision, isPointer, isList, and "
+                              "isConstructor in script bindings."));
             }
         } else {
             addWarning(member->firstSourceLocation(),

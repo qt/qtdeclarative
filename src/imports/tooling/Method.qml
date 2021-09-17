@@ -44,4 +44,6 @@ Member {
     property string type
     property int revision: 0
     property bool isConstructor: false
+    property bool isList: false
+    property bool isPointer: false
 }
