@@ -21,10 +21,6 @@
 *
 [ScrollBar::test_interactive:true]
 *
-[ScrollBar::test_mouse:horizontal]
-*
-[ScrollBar::test_mouse:vertical]
-*
 [ScrollBar::test_multiTouch]
 *
 [ScrollBar::test_policy]
