@@ -236,10 +236,6 @@ TestCase {
     function test_mouse(data) {
         var control = createTemporaryObject(scrollBarWithDefaultPadding, testCase, data.properties)
         verify(control)
-        // ### we should consider calling updateGeometry() from QQuickStyleItem::componentComplete()
-        // to avoid the wait here...
-        if (control.__decreaseVisual.indicator !== null)
-            waitForItemPolished(control.__decreaseVisual.indicator)
 
         var grooveRange = {
             start: {    // top left
