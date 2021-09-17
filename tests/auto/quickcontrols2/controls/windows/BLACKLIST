@@ -29,7 +29,3 @@
 *
 [ScrollBar::test_policy]
 *
-[ScrollBar::test_touch:horizontal]
-*
-[ScrollBar::test_touch:vertical]
-*

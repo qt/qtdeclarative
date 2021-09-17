@@ -334,9 +334,23 @@ TestCase {
         var pressedSpy = signalSpy.createObject(control, {target: control, signalName: "pressedChanged"})
         verify(pressedSpy.valid)
 
+        control.width += (control.leftPadding + control.rightPadding)
+        control.height += (control.topPadding + control.bottomPadding)
+        var availableSlideWidth = 0
+        var availableSlideHeight = 0
+
+        var p0 = {}
+        if (control.orientation === Qt.Horizontal) {
+            availableSlideWidth = control.width - control.rightPadding - control.leftPadding
+            p0 = { x = control.leftPadding, y = control.height/2 }
+        } else {
+            availableSlideHeight = control.height - control.bottomPadding - control.topPadding
+            p0 = { x = control.width/2, y = control.topPadding}
+        }
+
         var touch = touchEvent(control)
 
-        touch.press(0, control, 0, 0).commit()
+        touch.press(0, control, p0.x, p0.y).commit()
         compare(pressedSpy.count, 1)
         compare(control.pressed, true)
         compare(control.position, 0.0)
@@ -346,17 +360,17 @@ TestCase {
         compare(control.pressed, true)
         compare(control.position, 0.0)
 
-        touch.move(0, control, control.width * 0.5, control.height * 0.5).commit()
+        touch.move(0, control, p0.x + availableSlideWidth * 0.5, p0.y + availableSlideHeight * 0.5).commit()
         compare(pressedSpy.count, 1)
         compare(control.pressed, true)
         verify(control.position, 0.5)
 
-        touch.release(0, control, control.width * 0.5, control.height * 0.5).commit()
+        touch.release(0, control, p0.x + availableSlideWidth * 0.5, p0.y + availableSlideHeight * 0.5).commit()
         compare(pressedSpy.count, 2)
         compare(control.pressed, false)
         compare(control.position, 0.5)
 
-        touch.press(0, control, control.width - 1, control.height - 1).commit()
+        touch.press(0, control, p0.x + availableSlideWidth - 1, p0.y + availableSlideHeight - 1).commit()
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
         compare(control.position, 0.5)
@@ -366,12 +380,12 @@ TestCase {
         compare(control.pressed, true)
         compare(control.position, 1.0)
 
-        touch.move(0, control, control.width * 0.75, control.height * 0.75).commit()
+        touch.move(0, control, p0.x + availableSlideWidth * 0.75, p0.y + availableSlideHeight * 0.75).commit()
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
         compare(control.position, 0.75)
 
-        touch.release(0, control, control.width * 0.25, control.height * 0.25).commit()
+        touch.release(0, control, p0.x + availableSlideWidth * 0.25, p0.y + availableSlideHeight * 0.25).commit()
         compare(pressedSpy.count, 4)
         compare(control.pressed, false)
         compare(control.position, 0.25)
