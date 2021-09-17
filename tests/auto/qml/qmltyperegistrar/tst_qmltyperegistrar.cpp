@@ -293,4 +293,11 @@ void tst_qmltyperegistrar::derivedFromForeignPrivate()
     QVERIFY(qmltypesData.contains("file: \"private/foreign_p.h\""));
 }
 
+void tst_qmltyperegistrar::methodReturnType()
+{
+    QVERIFY(qmltypesData.contains("createAThing"));
+    QVERIFY(!qmltypesData.contains("QQmlComponent*"));
+    QVERIFY(qmltypesData.contains("type: \"QQmlComponent\""));
+}
+
 QTEST_MAIN(tst_qmltyperegistrar)

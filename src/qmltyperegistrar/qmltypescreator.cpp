@@ -115,7 +115,7 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         m_qml.writeScriptBinding(QLatin1String("attachedType"), enquote(collector.attachedType));
 }
 
-void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key, bool parsePointer)
+void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key)
 {
     auto it = property.find(key);
     if (it == property.end())
@@ -153,7 +153,7 @@ void QmlTypesCreator::writeType(const QJsonObject &property, const QString &key,
             type = type.mid(listPropertySize, type.size() - listPropertySize - 1);
         }
 
-        if (parsePointer && type.endsWith(QLatin1Char('*'))) {
+        if (type.endsWith(QLatin1Char('*'))) {
             isPointer = true;
             type = type.left(type.size() - 1);
         }
@@ -178,7 +178,7 @@ void QmlTypesCreator::writeProperties(const QJsonArray &properties)
         if (it != obj.end())
             m_qml.writeScriptBinding(QLatin1String("revision"), QString::number(it.value().toInt()));
 
-        writeType(obj, QLatin1String("type"), true);
+        writeType(obj, QLatin1String("type"));
 
         if (!obj.contains(QStringLiteral("privateClass"))) {
             const auto bindable = obj.constFind(QLatin1String("bindable"));
@@ -227,7 +227,7 @@ void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &typ
         m_qml.writeScriptBinding(QLatin1String("name"), enquote(name));
         if (revision != obj.end())
             m_qml.writeScriptBinding(QLatin1String("revision"), QString::number(revision.value().toInt()));
-        writeType(obj, QLatin1String("returnType"), false);
+        writeType(obj, QLatin1String("returnType"));
         const auto isConstructor = obj.find(QLatin1String("isConstructor"));
         if (isConstructor != obj.constEnd() && isConstructor->toBool())
             m_qml.writeScriptBinding(QLatin1String("isConstructor"), QLatin1String("true"));
@@ -237,7 +237,7 @@ void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &typ
             const QString name = obj[QLatin1String("name")].toString();
             if (!name.isEmpty())
                 m_qml.writeScriptBinding(QLatin1String("name"), enquote(name));
-            writeType(obj, QLatin1String("type"), true);
+            writeType(obj, QLatin1String("type"));
             m_qml.writeEndObject();
         }
         m_qml.writeEndObject();
