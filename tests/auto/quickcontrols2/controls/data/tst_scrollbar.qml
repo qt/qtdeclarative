@@ -242,13 +242,13 @@ TestCase {
             waitForItemPolished(control.__decreaseVisual.indicator)
 
         var grooveRange = {
-            start: {
-               x: control.orientation == Qt.Horizontal ? control.leftPadding : 0,
-               y: control.orientation == Qt.Vertical ? control.topPadding : 0
+            start: {    // top left
+               x: control.orientation === Qt.Horizontal ? control.leftPadding : 0,
+               y: control.orientation === Qt.Vertical ? control.topPadding : 0
             },
-            end: {
-               x: control.orientation == Qt.Horizontal ? control.width - control.rightPadding : 0,
-               y: control.orientation == Qt.Vertical ? control.height - control.bottomPadding: 0
+            end: {      // bottom right, (inclusive, last pixel position of the groove)
+               x: (control.orientation === Qt.Horizontal ? control.width - control.rightPadding : control.width) - 1,
+               y: (control.orientation === Qt.Vertical ? control.height - control.bottomPadding : control.height) - 1
             },
             width : control.width - control.leftPadding - control.rightPadding,
             height: control.height - control.topPadding - control.bottomPadding
@@ -277,11 +277,12 @@ TestCase {
         compare(control.pressed, false)
         compare(control.position, 0.5)
 
-        mousePress(control, control.width - 1, control.height - 1, Qt.LeftButton)
+        mousePress(control, grooveRange.end.x, grooveRange.end.y, Qt.LeftButton)
         compare(pressedSpy.count, 3)
         compare(control.pressed, true)
-        // We can't click on right and bottom edge, so click to (width-1, height-1), and move mouse to (width,height)
-        mouseMove(control, control.width, control.height, 0)
+        // We can't click on right and bottom edge, so click to (grooveRange.end),
+        // and move mouse to (grooveRange.end.x + 1, grooveRange.end.y + 1)
+        mouseMove(control, grooveRange.end.x + 1, grooveRange.end.y + 1, 0)
         compare(control.position, 1.0)
 
         mouseMove(control, control.width * 2, control.height * 2, 0)
