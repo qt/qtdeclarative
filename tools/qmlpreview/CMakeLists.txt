@@ -1,13 +1,11 @@
 # Generated from qmlpreview.pro.
 
 #####################################################################
-## qmlpreview Tool:
+## qmlpreview App:
 #####################################################################
 
-qt_get_tool_target_name(target_name qmlpreview)
-qt_internal_add_tool(${target_name}
+qt_internal_add_app(qmlpreview
     TARGET_DESCRIPTION "QML Preview"
-    TOOLS_TARGET Qml # special case
     SOURCES
         main.cpp
         qmlpreviewapplication.cpp qmlpreviewapplication.h
@@ -16,6 +14,8 @@ qt_internal_add_tool(${target_name}
         Qt::Network
         Qt::QmlDebugPrivate
 )
+
+set_target_properties(qmlpreview PROPERTIES WIN32_EXECUTABLE FALSE)
 
 #### Keys ignored in scope 1:.:.:qmlpreview.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "QML" "Preview"

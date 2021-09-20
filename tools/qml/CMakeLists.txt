@@ -1,13 +1,11 @@
 # Generated from qml.pro.
 
 #####################################################################
-## qml Tool:
+## qml App:
 #####################################################################
 
-qt_get_tool_target_name(target_name qml)
-qt_internal_add_tool(${target_name}
+qt_internal_add_app(qml
     TARGET_DESCRIPTION "QML Runtime"
-    TOOLS_TARGET Qml # special case
     SOURCES
         conf.h
         main.cpp
@@ -16,12 +14,7 @@ qt_internal_add_tool(${target_name}
         Qt::QmlPrivate
 )
 
-# special case begin
-# Don't set properties on a host tool when cross compiling, because it
-# is not being built.
-if(CMAKE_CROSSCOMPILING AND NOT QT_BUILD_TOOLS_WHEN_CROSSCOMPILING)
-    return()
-endif()
+set_target_properties(qml PROPERTIES WIN32_EXECUTABLE FALSE)
 
 set_source_files_properties(
     conf/default.qml
@@ -30,7 +23,6 @@ set_source_files_properties(
     conf/content/resizeWindowToItem.qml
     PROPERTIES QT_SKIP_QUICKCOMPILER 1
 )
-# special case end
 
 # Resources:
 set(qml_resource_files
@@ -41,7 +33,7 @@ set(qml_resource_files
     "resources/qml-64.png"
 )
 
-qt_internal_add_resource(${target_name} "qml"
+qt_internal_add_resource(qml qml
     PREFIX
         "/qt-project.org/QmlRuntime"
     FILES
@@ -49,17 +41,17 @@ qt_internal_add_resource(${target_name} "qml"
 )
 
 # Turn the tool into its own self-contained qml module
-qt6_add_qml_module(${target_name}
+qt6_add_qml_module(qml
     URI QmlRuntime.Config
     VERSION 1.0
 )
 
-qt_internal_extend_target(${target_name} CONDITION TARGET Qt::Gui
+qt_internal_extend_target(qml CONDITION TARGET Qt::Gui
     PUBLIC_LIBRARIES
         Qt::Gui
 )
 
-qt_internal_extend_target(${target_name} CONDITION TARGET Qt::Widgets
+qt_internal_extend_target(qml CONDITION TARGET Qt::Widgets
     PUBLIC_LIBRARIES
         Qt::Widgets
 )
@@ -72,7 +64,7 @@ qt_internal_extend_target(${target_name} CONDITION TARGET Qt::Widgets
 # OTHER_FILES = "resources/Info.plist"
 # QMAKE_INFO_PLIST = "resources/Info.plist"
 
-qt_internal_extend_target(${target_name} CONDITION QT_FEATURE_qml_debug
+qt_internal_extend_target(qml CONDITION QT_FEATURE_qml_debug
     DEFINES
         QT_QML_DEBUG_NO_WARNING
 )

@@ -1,13 +1,11 @@
 # Generated from qmlscene.pro.
 
 #####################################################################
-## qmlscene Tool:
+## qmlscene App:
 #####################################################################
 
-qt_get_tool_target_name(target_name qmlscene)
-qt_internal_add_tool(${target_name}
+qt_internal_add_app(qmlscene
     TARGET_DESCRIPTION "QML Scene Viewer"
-    TOOLS_TARGET Qml # special case
     SOURCES
         main.cpp
     DEFINES
@@ -21,18 +19,20 @@ qt_internal_add_tool(${target_name}
         Qt::QuickPrivate
 )
 
+set_target_properties(qmlscene PROPERTIES WIN32_EXECUTABLE FALSE)
+
 #### Keys ignored in scope 1:.:.:qmlscene.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "QML" "Scene" "Viewer"
 
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(${target_name} CONDITION TARGET Qt::Widgets
+qt_internal_extend_target(qmlscene CONDITION TARGET Qt::Widgets
     PUBLIC_LIBRARIES
         Qt::Widgets
 )
 
-qt_internal_extend_target(${target_name} CONDITION QT_FEATURE_qml_debug
+qt_internal_extend_target(qmlscene CONDITION QT_FEATURE_qml_debug
     DEFINES
         QT_QML_DEBUG_NO_WARNING
 )
