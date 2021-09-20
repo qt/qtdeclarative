@@ -22,6 +22,8 @@ qt_internal_add_app(qmleasing
         uic
 )
 
+set_target_properties(qmleasing PROPERTIES WIN32_EXECUTABLE FALSE)
+
 # Resources:
 set(resources_resource_files
     "Button.qml"
