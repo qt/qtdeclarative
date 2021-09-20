@@ -194,4 +194,37 @@ TestCase {
         verify(container)
         compare(container.indirect.nativeText, container.direct.nativeText);
     }
+
+    Component {
+        id: shortcutCleanup
+        Item {
+            property alias page: page
+            property alias action: action
+            property alias menu: menu
+            Item {
+                id: page
+                Action {
+                    id: action
+                    text: "action"
+                    shortcut: "Insert"
+                }
+                Menu {
+                    id: menu
+                    MenuItem { action: action }
+                }
+            }
+        }
+    }
+
+    function test_shortcutCleanup() {
+        {
+            var container = createTemporaryObject(shortcutCleanup, testCase);
+            verify(container)
+            container.action.shortcut = "Delete"
+            container.menu.open()
+            container.page.destroy()
+            tryVerify(function() { return !container.page })
+        }
+        keyClick(Qt.Key_Delete, Qt.NoModifier)
+    }
 }
