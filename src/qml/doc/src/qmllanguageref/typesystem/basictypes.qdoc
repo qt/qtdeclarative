@@ -278,7 +278,7 @@ property is only invoked when the property is reassigned to a different object v
     Relative URLs resolved from within that file will use the same protocol.
 
     Additionally, URLs may contain encoded characters using the 'percent-encoding' scheme
-    specified by \l {http://tools.ietf.org/html/rfc3986}{RFC 3986}.  These characters
+    specified by \l {https://datatracker.ietf.org/doc/html/rfc3986}{RFC 3986}.  These characters
     will be preserved within properties of type \c url, to allow QML code to
     construct precise URL values.
 
