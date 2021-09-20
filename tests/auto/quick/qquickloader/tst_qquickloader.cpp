@@ -132,6 +132,7 @@ private slots:
     void statusChangeOnlyEmittedOnce();
 
     void setSourceAndCheckStatus();
+    void asyncLoaderRace();
 };
 
 Q_DECLARE_METATYPE(QList<QQmlError>)
@@ -1494,6 +1495,24 @@ void tst_QQuickLoader::setSourceAndCheckStatus()
 
     QMetaObject::invokeMethod(loader, "load", Q_ARG(QVariant, QVariant()));
     QCOMPARE(loader->status(), QQuickLoader::Null);
+}
+
+void tst_QQuickLoader::asyncLoaderRace()
+{
+    QQmlApplicationEngine engine;
+    auto url = testFileUrl("loader-async-race.qml");
+    engine.load(url);
+    auto root = engine.rootObjects().at(0);
+    QVERIFY(root);
+
+    QQuickLoader *loader = root->findChild<QQuickLoader *>();
+    QCOMPARE(loader->active(), false);
+    QCOMPARE(loader->status(), QQuickLoader::Null);
+    QCOMPARE(loader->item(), nullptr);
+
+    QSignalSpy spy(loader, &QQuickLoader::itemChanged);
+    QVERIFY(!spy.wait(100));
+    QCOMPARE(loader->item(), nullptr);
 }
 
 QTEST_MAIN(tst_QQuickLoader)
