@@ -802,18 +802,21 @@ TestCase {
         compare(control.visible, true)
         compare(control.policy, ScrollBar.AsNeeded)
 
-        control.size = 0.5
-        verify(control.state === "active" || control.contentItem.state === "active")
+        if (Qt.platform.pluginName !== "windows") {
+            control.size = 0.5
+            verify(control.state === "active" || control.contentItem.state === "active")
 
-        control.size = 1.0
-        verify(control.state !== "active" && control.contentItem.state !== "active")
-
+            control.size = 1.0
+            verify(control.state !== "active" && control.contentItem.state !== "active")
+        }
         control.policy = ScrollBar.AlwaysOff
         compare(control.visible, false)
 
         control.policy = ScrollBar.AlwaysOn
         compare(control.visible, true)
-        verify(control.state === "active" || control.contentItem.state === "active")
+        if (Qt.platform.pluginName !== "windows") {
+            verify(control.state === "active" || control.contentItem.state === "active")
+        }
     }
 
     function test_overshoot() {
