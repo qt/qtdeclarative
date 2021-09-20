@@ -379,6 +379,7 @@ private slots:
     void thisInArrowFunction();
 
     void jittedAsCast();
+    void propertyNecromancy();
 
 private:
     QQmlEngine engine;
@@ -6553,6 +6554,19 @@ void tst_qqmllanguage::jittedAsCast()
     QCOMPARE(o->property("running").toBool(), true);
     QTRY_COMPARE(o->property("running").toBool(), false);
     QCOMPARE(o->property("interval").toInt(), 10);
+}
+
+void tst_qqmllanguage::propertyNecromancy()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("propertyNecromancy.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(qvariant_cast<QObject *>(o->property("notified")) != nullptr);
+
+    // It becomes null, not undefined.
+    QTRY_VERIFY(o->property("notified").isNull());
+    QVERIFY(o->property("notified").isValid());
 }
 
 QTEST_MAIN(tst_qqmllanguage)

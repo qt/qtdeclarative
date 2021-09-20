@@ -523,11 +523,6 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
         // Mark this object as in the process of deletion to
         // prevent it resolving in bindings
         QQmlData::markAsDeleted(o);
-
-        // Disconnect the notifiers now - during object destruction this would be too late, since
-        // the disconnect call wouldn't be able to call disconnectNotify(), as it isn't possible to
-        // get the metaobject anymore.
-        d->disconnectNotifiers();
     }
 }
 
@@ -683,6 +678,13 @@ void QQmlData::setQueuedForDeletion(QObject *object)
                 ddata->context = nullptr;
             }
             ddata->isQueuedForDeletion = true;
+
+            // Disconnect the notifiers now - during object destruction this would be too late,
+            // since the disconnect call wouldn't be able to call disconnectNotify(), as it isn't
+            // possible to get the metaobject anymore.
+            // Also, there is no point in evaluating bindings in order to set properties on
+            // half-deleted objects.
+            ddata->disconnectNotifiers();
         }
     }
 }

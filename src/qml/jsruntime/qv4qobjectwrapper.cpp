@@ -1285,6 +1285,7 @@ void QObjectWrapper::destroyObject(bool lastCall)
                 }
                 // This object is notionally destroyed now
                 ddata->isQueuedForDeletion = true;
+                ddata->disconnectNotifiers();
                 if (lastCall)
                     delete h->object();
                 else
