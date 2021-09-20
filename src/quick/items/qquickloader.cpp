@@ -736,6 +736,9 @@ void QQuickLoaderPrivate::_q_sourceLoaded()
         return;
     }
 
+    if (!active)
+        return;
+
     QQmlContext *creationContext = component->creationContext();
     if (!creationContext) creationContext = qmlContext(q);
     itemContext = new QQmlContext(creationContext);
