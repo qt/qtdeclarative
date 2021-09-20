@@ -44,7 +44,6 @@ QT_BEGIN_NAMESPACE
 
 QQuickIconImagePrivate::~QQuickIconImagePrivate()
 {
-    qDeleteAll(icon.entries);
     icon.entries.clear();
 }
 
@@ -138,7 +137,7 @@ void QQuickIconImage::setName(const QString &name)
     if (d->icon.iconName == name)
         return;
 
-    qDeleteAll(d->icon.entries);
+    d->icon.entries.clear();
     d->icon = QIconLoader::instance()->loadIcon(name);
     if (isComponentComplete())
         d->updateIcon();
