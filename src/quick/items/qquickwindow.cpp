@@ -884,14 +884,6 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
     The Window object creates a new top-level window for a Qt Quick scene. It automatically sets up the
     window for use with \c {QtQuick} graphical types.
 
-    To use this type, you will need to import the module with the following line:
-    \code
-    import QtQuick
-    \endcode
-
-    Omitting this import will allow you to have a QML environment without
-    access to window system features.
-
     A Window can be declared inside an Item or inside another Window; in that
     case the inner Window will automatically become "transient for" the outer
     Window: that is, most platforms will show it centered upon the outer window
