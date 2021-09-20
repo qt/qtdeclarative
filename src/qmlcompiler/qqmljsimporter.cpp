@@ -450,7 +450,19 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
                                     : qQmlResolveImportPaths(module, m_importPaths, version);
 
     for (auto const &modulePath : modulePaths) {
-        const QString qmldirPath = modulePath + SlashQmldir;
+        QString qmldirPath;
+        if (modulePath.startsWith(u':')) {
+            if (m_mapper) {
+                const QString resourcePath = modulePath.mid(
+                            1, modulePath.endsWith(u'/') ? modulePath.length() - 2 : -1)
+                        + SlashQmldir;
+                const auto entry = m_mapper->entry(
+                            QQmlJSResourceFileMapper::resourceFileFilter(resourcePath));
+                qmldirPath = entry.filePath;
+            }
+        } else {
+            qmldirPath = modulePath + SlashQmldir;
+        }
         const auto it = m_seenQmldirFiles.constFind(qmldirPath);
 
         if (it != m_seenQmldirFiles.constEnd()) {

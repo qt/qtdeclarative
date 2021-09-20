@@ -302,6 +302,8 @@ void TestQmllint::resources()
                {QStringLiteral("--resource"), testFile("resource.qrc")});
     runQmllint(testFile("resource.qml"), false, {});
     runQmllint(testFile("badResource.qml"), true, {});
+    runQmllint(testFile("T/b.qml"), true,
+               {QStringLiteral("--resource"), testFile("T/a.qrc")});
 }
 
 void TestQmllint::dirtyQmlCode_data()
