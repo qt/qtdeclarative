@@ -400,9 +400,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
     if (isDependency)
         Q_ASSERT(prefix.isEmpty());
 
-    const auto cacheKey = QPair<QString, QTypeRevision> {
-        (isFile ? u"$file$"_qs : prefix) + u'|' + moduleCacheName, version
-    };
+    const CacheKey cacheKey = { prefix, moduleCacheName, version, isFile, isDependency  };
 
     auto getTypesFromCache = [&]() -> bool {
         if (!m_cachedImportTypes.contains(cacheKey))

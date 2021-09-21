@@ -692,6 +692,11 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Assigning an id to an object bound to deferred property "
                               "\"contentData\" will make the property immediate")
             << QString() << false;
+    QTest::newRow("cachedDependency")
+            << QStringLiteral("cachedDependency.qml")
+            << QStringLiteral("Unused import at %1:1:1")
+            << QStringLiteral("Cannot assign binding of type QQuickItem to QObject")
+            << true;
 }
 
 void TestQmllint::dirtyQmlCode()
