@@ -1414,6 +1414,8 @@ void QQuickMouseArea::resetPressAndHoldInterval()
     If \c drag.filterChildren is set to true, a drag can override descendant MouseAreas.  This
     enables a parent MouseArea to handle drags, for example, while descendants handle clicks:
 
+    \snippet qml/mousearea/mouseareadragfilter.qml dragfilter
+
     \c drag.threshold determines the threshold in pixels of when the drag operation should
     start. By default this is bound to a platform dependent value. This property was added in
     Qt Quick 2.2.
@@ -1423,9 +1425,6 @@ void QQuickMouseArea::resetPressAndHoldInterval()
     By default, this property is \c true. This property was added in Qt Quick 2.4
 
     See the \l Drag attached property and \l DropArea if you want to make a drop.
-
-    \snippet qml/mousearea/mouseareadragfilter.qml dragfilter
-
 */
 
 #if QT_CONFIG(quick_draganddrop)
