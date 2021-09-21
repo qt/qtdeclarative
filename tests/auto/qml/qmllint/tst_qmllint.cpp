@@ -651,6 +651,11 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("nestedInlineComponents")
             << QStringLiteral("nestedInlineComponents.qml")
             << QStringLiteral("Nested inline components are not supported") << QString() << false;
+    QTest::newRow("cachedDependency")
+            << QStringLiteral("cachedDependency.qml")
+            << QStringLiteral("Unused import at %1:1:1")
+            << QStringLiteral("Cannot assign binding of type QQuickItem to QObject")
+            << true;
 }
 
 void TestQmllint::dirtyQmlCode()
