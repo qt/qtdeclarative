@@ -60,15 +60,15 @@ QT_BEGIN_NAMESPACE
 #if !QT_CONFIG(qml_debug)
 
 #define Q_QML_DEBUG_PLUGIN_LOADER(interfaceName)\
-    interfaceName *load##interfaceName(const QString &key)\
+    static interfaceName *load##interfaceName(const QString &key)\
     {\
         qWarning() << "Qml Debugger: QtQml is not configured for debugging. Ignoring request for"\
                    << "debug plugin" << key;\
         return 0;\
     }\
-    QList<QJsonObject> metaDataFor##interfaceName()\
+    Q_DECL_UNUSED static QList<QPluginParsedMetaData> metaDataFor##interfaceName()\
     {\
-        return QList<QJsonObject>();\
+        return {};\
     }
 
 #else // QT_CONFIG(qml_debug)
@@ -76,11 +76,11 @@ QT_BEGIN_NAMESPACE
 #define Q_QML_DEBUG_PLUGIN_LOADER(interfaceName)\
     Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, interfaceName##Loader,\
         (interfaceName##Factory_iid, QLatin1String("/qmltooling")))\
-    interfaceName *load##interfaceName(const QString &key)\
+    static interfaceName *load##interfaceName(const QString &key)\
     {\
         return qLoadPlugin<interfaceName, interfaceName##Factory>(interfaceName##Loader(), key);\
     }\
-    QList<QJsonObject> metaDataFor##interfaceName()\
+    Q_DECL_UNUSED static QList<QPluginParsedMetaData> metaDataFor##interfaceName()\
     {\
         return interfaceName##Loader()->metaData();\
     }

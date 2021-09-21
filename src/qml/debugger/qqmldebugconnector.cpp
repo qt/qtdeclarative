@@ -41,10 +41,10 @@
 #include "qqmldebugconnector_p.h"
 #include "qqmldebugservicefactory_p.h"
 #include <QtCore/QPluginLoader>
+#include <QtCore/QCborArray>
 #include <QtCore/QCoreApplication>
 #include <QtCore/QDir>
 #include <QtCore/QDebug>
-#include <QtCore/QJsonArray>
 #include <QtCore/QDataStream>
 
 #include <private/qcoreapplication_p.h>
@@ -145,10 +145,10 @@ QQmlDebugConnector *QQmlDebugConnector::instance()
 
         if (params->instance) {
             const auto metaData = metaDataForQQmlDebugService();
-            for (const QJsonObject &object : metaData) {
-                const auto keys = object.value(QLatin1String("MetaData")).toObject()
+            for (const QPluginParsedMetaData &md : metaData) {
+                const auto keys = md.value(QtPluginMetaDataKeys::MetaData).toMap()
                         .value(QLatin1String("Keys")).toArray();
-                for (const QJsonValue key : keys) {
+                for (const QCborValue key : keys) {
                     QString keyString = key.toString();
                     if (params->services.isEmpty() || params->services.contains(keyString))
                         loadQQmlDebugService(keyString);
