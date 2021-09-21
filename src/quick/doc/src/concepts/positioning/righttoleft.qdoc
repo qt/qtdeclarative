@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -175,17 +175,11 @@ You can test that the layout direction works as expected by running your Qt Quic
 the compiled translation file:
 
 \code
-qmlscene myapp.qml -translation myapp.qm
+qml myapp.qml -translation myapp.qm
 \endcode
 
-You can test your application in right-to-left layout direction simply by executing qmlscene with a
-command-line parameter "-reverse":
-
-\code
-qmlscene myapp.qml -reverse
-\endcode
-
-The layout direction can also be set from C++ by calling the static function \l QGuiApplication::setLayoutDirection():
+You can test your application in right-to-left layout direction by calling the
+static function \l QGuiApplication::setLayoutDirection():
 
 \code
 QGuiApplication app(argc, argv);

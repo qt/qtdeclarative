@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -435,11 +435,11 @@ by the module:
 Now we have a QML module that can be imported to any application, provided that the
 QML engine knows where to find it. The example contains an executable that loads
 \c app.qml, which uses the \c {import Charts 1.0} statement. Alternatively, you can
-load the QML file using the \l{Prototyping with qmlscene}{qmlscene tool}, setting the
-import path to the current directory so that it finds the \c qmldir file:
+load the QML file using the \l {Prototyping with the QML Runtime Tool}{qml tool},
+setting the import path to the current directory so that it finds the \c qmldir file:
 
 \code
-    qmlscene -I . app.qml
+    qml -I . app.qml
 \endcode
 
 The module "Charts" will be loaded by the QML engine, and the types provided by that
