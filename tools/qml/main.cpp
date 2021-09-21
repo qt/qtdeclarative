@@ -97,6 +97,7 @@ static int exitTimerId = -1;
 #endif
 static const QString iconResourcePath(QStringLiteral(":/qt-project.org/QmlRuntime/resources/qml-64.png"));
 static const QString confResourcePath(QStringLiteral(":/qt-project.org/QmlRuntime/conf/"));
+static const QString customConfFileName(QStringLiteral("configuration.qml"));
 static bool verboseMode = false;
 static bool quietMode = false;
 static bool glShareContexts = true;
@@ -124,7 +125,11 @@ static void loadConf(const QString &override, bool quiet) // Terminates app on f
             settingsUrl = QUrl::fromLocalFile(fi.absoluteFilePath());
             builtIn = true;
         } else {
-            fi.setFile(override);
+            fi.setFile(QDir(QStandardPaths::locate(QStandardPaths::AppConfigLocation, override, QStandardPaths::LocateDirectory)), customConfFileName);
+            if (fi.exists())
+                settingsUrl = QUrl::fromLocalFile(fi.absoluteFilePath());
+            else
+                fi.setFile(override);
             if (!fi.exists()) {
                 printf("qml: Couldn't find required configuration file: %s\n",
                        qPrintable(QDir::toNativeSeparators(fi.absoluteFilePath())));
@@ -167,10 +172,30 @@ void noFilesGiven()
 
 static void listConfFiles()
 {
-    QDir confResourceDir(confResourcePath);
+    const QDir confResourceDir(confResourcePath);
     printf("%s\n", qPrintable(QCoreApplication::translate("main", "Built-in configurations:")));
     for (const QFileInfo &fi : confResourceDir.entryInfoList(QDir::Files))
         printf("  %s\n", qPrintable(fi.baseName()));
+    printf("%s\n", qPrintable(QCoreApplication::translate("main", "Other configurations:")));
+    bool foundOther = false;
+    const QStringList otherLocations = QStandardPaths::standardLocations(QStandardPaths::AppConfigLocation);
+    for (const auto &confDirPath : otherLocations) {
+        const QDir confDir(confDirPath);
+        for (const QFileInfo &fi : confDir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+            foundOther = true;
+            if (verboseMode)
+                printf("  %s\n", qPrintable(fi.absoluteFilePath()));
+            else
+                printf("  %s\n", qPrintable(fi.baseName()));
+        }
+    }
+    if (!foundOther)
+        printf("  %s\n", qPrintable(QCoreApplication::translate("main", "none")));
+    if (verboseMode) {
+        printf("%s\n", qPrintable(QCoreApplication::translate("main", "Checked in:")));
+        for (const auto &confDirPath : otherLocations)
+            printf("  %s\n", qPrintable(confDirPath));
+    }
     exit(0);
 }
 
@@ -493,6 +518,12 @@ int main(int argc, char *argv[])
         parser.showVersion();
     if (parser.isSet(helpOption))
         parser.showHelp();
+    if (parser.isSet(verboseOption))
+        verboseMode = true;
+    if (parser.isSet(quietOption)) {
+        quietMode = true;
+        verboseMode = false;
+    }
     if (parser.isSet(listConfOption))
         listConfFiles();
     if (applicationType == QmlApplicationTypeUnknown) {
@@ -502,12 +533,6 @@ int main(int argc, char *argv[])
         qWarning() << QCoreApplication::translate("main", "--apptype must be followed by one of the following: core gui\n");
 #endif // QT_WIDGETS_LIB
         parser.showHelp();
-    }
-    if (parser.isSet(verboseOption))
-        verboseMode = true;
-    if (parser.isSet(quietOption)) {
-        quietMode = true;
-        verboseMode = false;
     }
 #if QT_CONFIG(qml_animation)
     if (parser.isSet(slowAnimationsOption))
