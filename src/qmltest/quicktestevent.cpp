@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -225,9 +225,10 @@ namespace QtQuickTest
         QSpontaneKeyEvent::setSpontaneous(&me);
         if (!qApp->notify(window, &me)) {
             static const char *mouseActionNames[] =
-                { "MousePress", "MouseRelease", "MouseClick", "MouseDoubleClick", "MouseMove", "MouseDoubleClickSequence" };
-            QString warning = QString::fromLatin1("Mouse event \"%1\" not accepted by receiving window");
-            QTest::qWarn(warning.arg(QString::fromLatin1(mouseActionNames[static_cast<int>(action)])).toLatin1().data());
+                { "MousePress", "MouseRelease", "MouseClick", "MouseDoubleClick", "MouseMove",
+                  "MouseDoubleClickSequence" };
+            qWarning("Mouse event \"%s\" not accepted by receiving window",
+                     mouseActionNames[static_cast<int>(action)]);
         }
     }
 
@@ -260,7 +261,7 @@ namespace QtQuickTest
 
         QSpontaneKeyEvent::setSpontaneous(&we); // hmmmm
         if (!qApp->notify(window, &we))
-            QTest::qWarn("Wheel event not accepted by receiving window");
+            qWarning("Wheel event not accepted by receiving window");
     }
 #endif
 };
