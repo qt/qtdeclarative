@@ -224,7 +224,10 @@ void QQmlJSImporter::processImport(const QQmlJSImporter::Import &import,
     // add objects
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         const auto &val = it.value();
-        types->cppNames.insert(val->internalName(), val);
+        const QString name = val->isComposite()
+                ? prefixedName(anonPrefix, val->internalName())
+                : val->internalName();
+        types->cppNames.insert(name, val);
 
         const auto exports = val->exports();
         if (exports.isEmpty()) {
