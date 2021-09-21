@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -305,8 +305,8 @@ default locations to be searched by the engine. By default, this list contains:
 
 Additional import paths can be added through QQmlEngine::addImportPath() or the
 \c QML_IMPORT_PATH environment variable. When running the
-\l{Prototyping with qmlscene}{qmlscene} tool, you can also use the \c -I option
-to add an import path.
+\l {Prototyping with the QML Runtime Tool}{qml tool}, you can also use the
+\c -I option to add an import path.
 
 You can specify multiple import paths in the \c QML_IMPORT_PATH environment
 variable by joining them using the path separator. On Windows the path separator

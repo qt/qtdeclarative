@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -909,13 +909,15 @@ QString QtObject::atob(const QString &data) const
 }
 
 /*!
-\qmlmethod Qt::quit()
-This function causes the QQmlEngine::quit() signal to be emitted.
-Within the \l {Prototyping with qmlscene}, this causes the launcher application to exit;
-to quit a C++ application when this method is called, connect the
-QQmlEngine::quit() signal to the QCoreApplication::quit() slot.
+    \qmlmethod Qt::quit()
 
-\sa exit()
+    This function causes the QQmlEngine::quit() signal to be emitted.
+    Within the \l {Prototyping with the QML Runtime Tool}{qml tool},
+    this causes the launcher application to exit; to quit a C++ application
+    when this method is called, connect the QQmlEngine::quit() signal to the
+    QCoreApplication::quit() slot.
+
+    \sa exit()
 */
 void QtObject::quit() const
 {
@@ -927,7 +929,8 @@ void QtObject::quit() const
     \qmlmethod Qt::exit(int retCode)
 
     This function causes the QQmlEngine::exit(int) signal to be emitted.
-    Within the \l {Prototyping with qmlscene}, this causes the launcher application to exit
+    Within the \l {Prototyping with the QML Runtime Tool}{qml tool},
+    this causes the launcher application to exit with
     the specified return code (\a retCode). To exit from the event loop with a specified
     return code when this method is called, a C++ application can connect the
     QQmlEngine::exit(int) signal to the QCoreApplication::exit(int) slot.
