@@ -1009,6 +1009,8 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 
     QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
     addDefaultProperties();
+    if (m_currentScope->scopeType() == QQmlJSScope::QMLScope)
+        m_qmlTypes.append(m_currentScope);
     return true;
 }
 

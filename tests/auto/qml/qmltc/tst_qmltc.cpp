@@ -70,10 +70,16 @@ void tst_qmltc::initTestCase()
 void tst_qmltc::qmlNameConflictResolution()
 {
     // we can include user-renamed files
+    QQmlEngine e;
+    // Note: the C++ class name is derived from the source qml file path, not
+    // the output .h/.cpp, so: NameConflict class name for NameConflict.qml
+    q_qmltc::NameConflict created(&e); // note: declared in ResolvedNameConflict.h
 }
 
 void tst_qmltc::helloWorld()
 {
+    QQmlEngine e;
+    q_qmltc::HelloWorld created(&e);
     QSKIP("Nothing is supported yet.");
 }
 

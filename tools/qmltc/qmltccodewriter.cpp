@@ -31,12 +31,67 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qstringbuilder.h>
 
+#include <utility>
+
 QT_BEGIN_NAMESPACE
 
 static QString urlToMacro(const QString &url)
 {
     QFileInfo fi(url);
     return u"Q_QMLTC_" + fi.baseName().toUpper();
+}
+
+static QString getFunctionCategory(const QmltcMethodBase &method)
+{
+    QString category;
+    switch (method.access) {
+    case QQmlJSMetaMethod::Private:
+        category = u"private"_qs;
+        break;
+    case QQmlJSMetaMethod::Protected:
+        category = u"protected"_qs;
+        break;
+    case QQmlJSMetaMethod::Public:
+        category = u"public"_qs;
+        break;
+    }
+    return category;
+}
+
+static QString getFunctionCategory(const QmltcMethod &method)
+{
+    QString category = getFunctionCategory(static_cast<const QmltcMethodBase &>(method));
+    switch (method.type) {
+    case QQmlJSMetaMethod::Signal:
+        category = u"Q_SIGNALS"_qs;
+        break;
+    case QQmlJSMetaMethod::Slot:
+        category += u" Q_SLOTS"_qs;
+        break;
+    case QQmlJSMetaMethod::Method:
+        break;
+    }
+    return category;
+}
+
+static std::pair<QString, QString> functionSignatures(const QmltcMethodBase &method)
+{
+    const QString name = method.name;
+    const QList<QmltcVariable> &parameterList = method.parameterList;
+
+    QStringList headerParamList;
+    QStringList cppParamList;
+    for (const QmltcVariable &variable : parameterList) {
+        const QString commonPart = variable.cppType + u" " + variable.name;
+        cppParamList << commonPart;
+        headerParamList << commonPart;
+        if (!variable.defaultValue.isEmpty())
+            headerParamList.back() += u" = " + variable.defaultValue;
+    }
+
+    const QString headerSignature = name + u"(" + headerParamList.join(u", "_qs) + u")";
+    const QString cppSignature = name + u"(" + cppParamList.join(u", "_qs) + u")";
+    return { headerSignature, cppSignature };
 }
 
 void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString &sourcePath,
@@ -120,12 +175,177 @@ static void writeToFile(const QString &path, const QByteArray &data)
 void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcProgram &program)
 {
     writeGlobalHeader(code, program.url, program.hPath, program.cppPath, program.includes);
+    // TODO: keep the "NOT IMPLEMENTED" as long as we don't actually compile
+    // useful code
     code.rawAppendToHeader(u"/* QMLTC: NOT IMPLEMENTED */");
     code.rawAppendToCpp(u"/* QMLTC: NOT IMPLEMENTED */");
+
+    // forward declare all the types first
+    for (const QmltcType &type : qAsConst(program.compiledTypes))
+        code.rawAppendToHeader(u"class " + type.cppType + u";");
+    // write all the types and their content
+    for (const QmltcType &type : qAsConst(program.compiledTypes))
+        write(code, type);
     writeGlobalFooter(code, program.url);
 
     writeToFile(program.hPath, code.code().header.toUtf8());
     writeToFile(program.cppPath, code.code().cpp.toUtf8());
+}
+
+void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
+{
+    const auto constructClassString = [&]() {
+        QString str = u"class " + type.cppType;
+        if (!type.baseClasses.isEmpty())
+            str += u" : public " + type.baseClasses.join(u", public "_qs);
+        return str;
+    };
+
+    code.rawAppendToHeader(u""); // blank line
+    code.rawAppendToCpp(u""); // blank line
+
+    code.rawAppendToHeader(constructClassString());
+    code.rawAppendToHeader(u"{");
+    for (const QString &mocLine : qAsConst(type.mocCode))
+        code.rawAppendToHeader(mocLine, 1);
+
+    QmltcOutputWrapper::MemberNameScope typeScope(&code, type.cppType);
+    Q_UNUSED(typeScope);
+    {
+        QmltcOutputWrapper::HeaderIndentationScope headerIndent(&code);
+        Q_UNUSED(headerIndent);
+
+        // special member functions
+        code.rawAppendToHeader(u"protected:", -1);
+        write(code, type.basicCtor);
+        write(code, type.init);
+        write(code, type.finalize);
+        // NB: externalCtor might not be public when the type is QML singleton
+        code.rawAppendToHeader(getFunctionCategory(type.fullCtor) + u":", -1);
+        write(code, type.fullCtor);
+
+        // enums
+        if (!type.enums.isEmpty()) {
+            code.rawAppendToHeader(u""); // blank line
+            code.rawAppendToHeader(u"public:", -1);
+        }
+        for (const auto &enumeration : qAsConst(type.enums))
+            write(code, enumeration);
+
+        // child types
+        if (!type.children.isEmpty())
+            code.rawAppendToHeader(u""); // blank line
+        for (const auto &child : qAsConst(type.children))
+            write(code, child);
+
+        // variables (mostly properties)
+        if (!type.variables.isEmpty()) {
+            code.rawAppendToHeader(u""); // blank line
+            code.rawAppendToHeader(u"protected:", -1); // TODO: or private?
+        }
+        for (const auto &variable : qAsConst(type.variables))
+            write(code, variable);
+
+        // functions (special case due to functions/signals/slots, etc.)
+        QHash<QString, QList<const QmltcMethod *>> functionsByCategory;
+        for (const auto &function : qAsConst(type.functions))
+            functionsByCategory[getFunctionCategory(function)].append(&function);
+
+        if (!functionsByCategory.isEmpty())
+            code.rawAppendToHeader(u""); // blank line
+        for (auto it = functionsByCategory.cbegin(); it != functionsByCategory.cend(); ++it) {
+            code.rawAppendToHeader(it.key() + u":", -1);
+            for (const QmltcMethod *function : qAsConst(it.value()))
+                write(code, *function);
+        }
+    }
+
+    if (type.documentRootType) {
+        code.rawAppendToHeader(u""); // blank line
+        code.rawAppendToHeader(u"private:");
+        code.rawAppendToHeader(u"friend class " + *type.documentRootType + u";", 1);
+    }
+
+    if (type.typeCount) {
+        code.rawAppendToHeader(u""); // blank line
+        code.rawAppendToHeader(u"public:");
+        code.rawAppendToHeader(u"constexpr static uint qmltc_typeCount = "
+                                       + QString::number(*type.typeCount) + u";",
+                               1);
+    }
+
+    code.rawAppendToHeader(u"};");
+}
+
+void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcEnum &enumeration)
+{
+    code.rawAppendToHeader(u"enum " + enumeration.cppType + u" {");
+    for (qsizetype i = 0; i < enumeration.keys.size(); ++i) {
+        QString str;
+        if (enumeration.values.isEmpty()) {
+            str += enumeration.keys.at(i) + u",";
+        } else {
+            str += enumeration.keys.at(i) + u" = " + enumeration.values.at(i) + u",";
+        }
+        code.rawAppendToHeader(str, 1);
+    }
+    code.rawAppendToHeader(u"};");
+}
+
+void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcMethod &method)
+{
+    const auto [hSignature, cppSignature] = functionSignatures(method);
+    // Note: augment return type with preambles in declaration
+    code.rawAppendToHeader(method.returnType + u" " + hSignature + u";");
+
+    // do not generate method implementation if it is a signal
+    const auto methodType = method.type;
+    if (methodType != QQmlJSMetaMethod::Signal) {
+        code.rawAppendToCpp(u""); // blank line
+        code.rawAppendToCpp(method.returnType);
+        code.rawAppendSignatureToCpp(cppSignature);
+        code.rawAppendToCpp(u"{");
+        {
+            QmltcOutputWrapper::CppIndentationScope cppIndent(&code);
+            Q_UNUSED(cppIndent);
+            for (const QString &line : qAsConst(method.body))
+                code.rawAppendToCpp(line);
+        }
+        code.rawAppendToCpp(u"}");
+    }
+}
+
+void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcCtor &ctor)
+{
+    const auto [hSignature, cppSignature] = functionSignatures(ctor);
+    const QString returnTypeWithSpace = ctor.returnType.isEmpty() ? u""_qs : ctor.returnType + u" ";
+
+    code.rawAppendToHeader(returnTypeWithSpace + hSignature + u";");
+
+    code.rawAppendToCpp(u""); // blank line
+    if (!returnTypeWithSpace.isEmpty())
+        code.rawAppendToCpp(returnTypeWithSpace);
+    code.rawAppendSignatureToCpp(cppSignature);
+    if (!ctor.initializerList.isEmpty()) {
+        code.rawAppendToCpp(u":", 1);
+        // double \n to make separate initializer list lines stand out more
+        code.rawAppendToCpp(
+                ctor.initializerList.join(u",\n\n" + u"    "_qs.repeated(code.cppIndent + 1)), 1);
+    }
+    code.rawAppendToCpp(u"{");
+    {
+        QmltcOutputWrapper::CppIndentationScope cppIndent(&code);
+        Q_UNUSED(cppIndent);
+        for (const QString &line : qAsConst(ctor.body))
+            code.rawAppendToCpp(line);
+    }
+    code.rawAppendToCpp(u"}");
+}
+
+void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcVariable &var)
+{
+    const QString optionalPart = var.defaultValue.isEmpty() ? u""_qs : u" = " + var.defaultValue;
+    code.rawAppendToHeader(var.cppType + u" " + var.name + optionalPart + u";");
 }
 
 QT_END_NAMESPACE

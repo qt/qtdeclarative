@@ -72,6 +72,7 @@ public:
         return m_signalHandlers;
     }
     QSet<QQmlJSScope::ConstPtr> literalScopesToCheck() const { return m_literalScopesToCheck; }
+    QList<QQmlJSScope::ConstPtr> qmlScopes() const { return m_qmlTypes; }
 
     static QString implicitImportDirectory(
             const QString &localFile, QQmlJSResourceFileMapper *mapper);
@@ -152,6 +153,7 @@ protected:
     QQmlJSScope::ConstPtr m_globalScope;
     QHash<QString, QQmlJSScope::ConstPtr> m_scopesById;
     QHash<QString, QQmlJSScope::ConstPtr> m_rootScopeImports;
+    QList<QQmlJSScope::ConstPtr> m_qmlTypes;
 
     // Maps all qmlNames to the source location of their import
     QMultiHash<QString, QQmlJS::SourceLocation> m_importTypeLocationMap;

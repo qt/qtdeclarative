@@ -31,6 +31,7 @@
 
 #include <QtCore/qstring.h>
 #include <QtCore/qstringlist.h>
+#include <QtCore/qlist.h>
 
 #include <QtQml/private/qqmlirbuilder_p.h>
 #include <private/qqmljsimportvisitor_p.h>
@@ -43,10 +44,17 @@ class QmltcVisitor : public QQmlJSImportVisitor
 public:
     QmltcVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
                  const QString &implicitImportDirectory,
-                 const QStringList &qmltypesFiles = QStringList())
-        : QQmlJSImportVisitor(importer, logger, implicitImportDirectory, qmltypesFiles)
-    {
-    }
+                 const QStringList &qmltypesFiles = QStringList());
+
+    bool visit(QQmlJS::AST::UiObjectDefinition *) override;
+    void endVisit(QQmlJS::AST::UiObjectDefinition *) override;
+
+    // NB: overwrite result() method to return ConstPtr
+    QQmlJSScope::ConstPtr result() const { return QQmlJSImportVisitor::result(); }
+
+protected:
+    QStringList m_qmlTypeNames; // names of QML types arranged as a stack
+    QHash<QString, int> m_qmlTypeNameCounts;
 };
 
 QT_END_NAMESPACE

@@ -43,6 +43,11 @@ struct QmltcCodeWriter
                                   const QSet<QString> &requiredCppIncludes);
     static void writeGlobalFooter(QmltcOutputWrapper &code, const QString &sourcePath);
     static void write(QmltcOutputWrapper &code, const QmltcProgram &program);
+    static void write(QmltcOutputWrapper &code, const QmltcType &type);
+    static void write(QmltcOutputWrapper &code, const QmltcEnum &enumeration);
+    static void write(QmltcOutputWrapper &code, const QmltcMethod &method);
+    static void write(QmltcOutputWrapper &code, const QmltcCtor &ctor);
+    static void write(QmltcOutputWrapper &code, const QmltcVariable &var);
 };
 
 QT_END_NAMESPACE

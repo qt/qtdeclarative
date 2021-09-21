@@ -28,6 +28,7 @@
 
 #include "qmltccommandlineutils.h"
 #include "qmltccompiler.h"
+#include "qmltcvisitor.h"
 
 #include <QtQml/private/qqmlirbuilder_p.h>
 #include <private/qqmljscompiler_p.h>
@@ -42,6 +43,11 @@
 #endif
 
 #include <cstdio>
+
+void setupLogger(QQmlJSLogger &logger) // prepare logger to work with compiler
+{
+    logger.setCategoryError(Log_Compiler, true);
+}
 
 int main(int argc, char **argv)
 {
@@ -158,6 +164,7 @@ int main(int argc, char **argv)
 
     QQmlJSImporter importer { importPaths, /* resource file mapper */ nullptr };
     QQmlJSLogger logger(url, sourceCode, /* silent */ false);
+    setupLogger(logger);
     QmltcVisitor visitor(&importer, &logger, implicitImportDirectory, qmltypesFiles);
     // Type resolving is only static here due the inability to resolve parent
     // properties dynamically (QTBUG-95530). Indirect type storage is used as
@@ -167,7 +174,7 @@ int main(int argc, char **argv)
                                      QQmlJSTypeResolver::Static, &logger };
     typeResolver.init(visitor);
 
-    QmltcCompiler compiler(url, &typeResolver, &logger);
+    QmltcCompiler compiler(url, &typeResolver, &visitor, &logger);
     compiler.compile(info);
 
     if (logger.hasWarnings() || logger.hasErrors()) {

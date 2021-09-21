@@ -9,7 +9,7 @@ qt_internal_add_tool(${target_name}
         qmltccodewriter.h qmltccodewriter.cpp
         qmltcoutputir.h
         qmltctyperesolver.h
-        qmltcvisitor.h
+        qmltcvisitor.h qmltcvisitor.cpp
         qmltccompiler.h qmltccompiler.cpp
     DEFINES
         QT_NO_CAST_FROM_ASCII

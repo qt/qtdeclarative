@@ -31,6 +31,7 @@
 
 #include "qmltctyperesolver.h"
 #include "qmltcvisitor.h"
+#include "qmltcoutputir.h"
 
 #include <QtCore/qcommandlineparser.h>
 #include <QtCore/qcoreapplication.h>
@@ -50,14 +51,33 @@ struct QmltcCompilerInfo
 class QmltcCompiler
 {
 public:
-    QmltcCompiler(const QString &url, QmltcTypeResolver *resolver, QQmlJSLogger *logger);
+    QmltcCompiler(const QString &url, QmltcTypeResolver *resolver, QmltcVisitor *visitor,
+                  QQmlJSLogger *logger);
     void compile(const QmltcCompilerInfo &info);
 
 private:
     QString m_url; // QML input file url
     QmltcTypeResolver *m_typeResolver = nullptr;
+    QmltcVisitor *m_visitor = nullptr;
     QQmlJSLogger *m_logger = nullptr;
     QmltcCompilerInfo m_info {}; // miscellaneous input/output information
+
+    void compileType(QmltcType &current, const QQmlJSScope::ConstPtr &type);
+
+    bool hasErrors() const { return m_logger->hasErrors(); } // TODO: count warnings as errors?
+    void recordError(const QQmlJS::SourceLocation &location, const QString &message,
+                     QQmlJSLoggerCategory category = Log_Compiler)
+    {
+        // pretty much any compiler error is a critical error (we cannot
+        // generate code - compilation fails)
+        m_logger->logCritical(message, category, location);
+    }
+    void recordError(const QV4::CompiledData::Location &location, const QString &message,
+                     QQmlJSLoggerCategory category = Log_Compiler)
+    {
+        recordError(QQmlJS::SourceLocation { 0, 0, location.line, location.column }, message,
+                    category);
+    }
 };
 
 QT_END_NAMESPACE

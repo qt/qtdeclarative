@@ -29,6 +29,7 @@
 #ifndef QMLTCOUTPUTPRIMITIVES_H
 #define QMLTCOUTPUTPRIMITIVES_H
 
+#include <QtCore/qstack.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qstringbuilder.h>
 
@@ -56,12 +57,45 @@ public:
     QmltcOutputWrapper(QmltcOutput &code) : m_code(code) { }
     const QmltcOutput &code() const { return m_code; }
 
+    QStack<QString> memberScopes; // member name scopes e.g. MyClass::MySubclass::
+    int headerIndent = 0; // header indentation level
+    int cppIndent = 0; // cpp indentation level
+
+    // manages current scope of the generated code, which is necessary for
+    // cpp file generation. Example:
+    // class MyClass { MyClass(); };    - in header
+    // MyClass::MyClass() {}            - in cpp
+    // MemberNameScope makes sure "MyClass::" is recorded
+    struct MemberNameScope
+    {
+        QmltcOutputWrapper *m_code;
+        MemberNameScope(QmltcOutputWrapper *code, const QString &str) : m_code(code)
+        {
+            m_code->memberScopes.push(str);
+        }
+        ~MemberNameScope() { m_code->memberScopes.pop(); }
+    };
+
+    struct HeaderIndentationScope
+    {
+        QmltcOutputWrapper *m_code;
+        HeaderIndentationScope(QmltcOutputWrapper *code) : m_code(code) { ++m_code->headerIndent; }
+        ~HeaderIndentationScope() { --m_code->headerIndent; }
+    };
+
+    struct CppIndentationScope
+    {
+        QmltcOutputWrapper *m_code;
+        CppIndentationScope(QmltcOutputWrapper *code) : m_code(code) { ++m_code->cppIndent; }
+        ~CppIndentationScope() { --m_code->cppIndent; }
+    };
+
     // appends string \a what with extra indentation \a extraIndent to current
     // header string
     template<typename String>
     void rawAppendToHeader(const String &what, int extraIndent = 0)
     {
-        rawAppend(m_code.header, what, extraIndent);
+        rawAppend(m_code.header, what, headerIndent + extraIndent);
     }
 
     // appends string \a what with extra indentation \a extraIndent to current
@@ -69,7 +103,18 @@ public:
     template<typename String>
     void rawAppendToCpp(const String &what, int extraIndent = 0)
     {
-        rawAppend(m_code.cpp, what, extraIndent);
+        rawAppend(m_code.cpp, what, cppIndent + extraIndent);
+    }
+
+    // special case of rawAppendToCpp that makes sure that string "foo()"
+    // becomes "MyClass::foo()"
+    template<typename String>
+    void rawAppendSignatureToCpp(const String &what, int extraIndent = 0)
+    {
+        QString signatureScope;
+        for (const auto &scope : memberScopes)
+            signatureScope += scope + u"::";
+        rawAppendToCpp(signatureScope + what, extraIndent);
     }
 };
 
