@@ -1349,8 +1349,14 @@ function(qt6_target_qml_sources target)
         _qt_internal_genex_getjoinedproperty(qrc_resource_args ${target}
             _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
         )
+        get_target_property(target_type ${target} TYPE)
+        get_target_property(is_android_executable ${target} _qt_is_android_executable)
+        if(target_type STREQUAL "EXECUTABLE" OR is_android_executable)
+            # The application binary directory is part of the default import path.
+            list(APPEND import_paths -I "$<TARGET_PROPERTY:${target},BINARY_DIR>")
+        endif()
         set(cachegen_args
-            "$<${have_import_paths}:${import_paths}>"
+            ${import_paths}
             "$<${have_types_file}:-i$<SEMICOLON>${types_file}>"
             "$<${have_direct_calls}:--direct-calls>"
             "$<${have_arguments}:${arguments}>"
