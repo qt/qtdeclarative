@@ -459,6 +459,9 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
                 const auto entry = m_mapper->entry(
                             QQmlJSResourceFileMapper::resourceFileFilter(resourcePath));
                 qmldirPath = entry.filePath;
+            } else {
+                qWarning() << "Cannot read files from resource directory" << modulePath
+                           << "because no resource file mapper was provided";
             }
         } else {
             qmldirPath = modulePath + SlashQmldir;
@@ -528,6 +531,9 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importDirectory(
                                           localFile2ScopeTree(entry.filePath));
                 }
             }
+        } else {
+            qWarning() << "Cannot read files from resource directory" << directory
+                       << "because no resource file mapper was provided";
         }
 
         importHelper(directory, &types, QString(), QTypeRevision(), false, true);
