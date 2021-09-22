@@ -90,7 +90,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Do
     QQmlJSScope::Ptr listPropertyType = QQmlJSScope::create();
     listPropertyType->setInternalName(u"QQmlListProperty<QObject>"_qs);
     listPropertyType->setFileName(u"qqmllist.h"_qs);
-    listPropertyType->setAccessSemantics(QQmlJSScope::AccessSemantics::Value);
+    listPropertyType->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
     m_listPropertyType = listPropertyType;
 
     // This is pre-sorted. Don't mess it up.
@@ -754,6 +754,17 @@ bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QS
     return false;
 }
 
+QQmlJSRegisterContent QQmlJSTypeResolver::lengthProperty(
+        bool isWritable, const QQmlJSScope::ConstPtr &scope) const
+{
+    QQmlJSMetaProperty prop;
+    prop.setPropertyName(u"length"_qs);
+    prop.setTypeName(u"int"_qs);
+    prop.setType(intType());
+    prop.setIsWritable(isWritable);
+    return QQmlJSRegisterContent::create(intType(), prop, QQmlJSRegisterContent::Builtin, scope);
+}
+
 QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr &type,
                                                      const QString &name) const
 {
@@ -769,13 +780,9 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr
                                              QQmlJSRegisterContent::JavaScriptObjectProperty, type);
     }
 
-    if (type == stringType() && name == u"length"_qs) {
-        QQmlJSMetaProperty prop;
-        prop.setPropertyName(name);
-        prop.setTypeName(u"int"_qs);
-        prop.setType(intType());
-        prop.setIsWritable(false);
-        return QQmlJSRegisterContent::create(intType(), prop, QQmlJSRegisterContent::Builtin, type);
+    if ((type == stringType() || type->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence)
+            && name == u"length"_qs) {
+        return lengthProperty(type != stringType(), type);
     }
 
     const auto check = [&](const QQmlJSScope::ConstPtr &scope, BaseOrExtension mode) {
@@ -859,8 +866,8 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
     }
     if (type.isProperty()) {
         const auto prop = type.property();
-        if (prop.isList())
-            return {};
+        if (prop.isList() && name == u"length"_qs)
+            return lengthProperty(true, listPropertyType());
         return memberType(prop.type(), name);
     }
     if (type.isEnumeration()) {

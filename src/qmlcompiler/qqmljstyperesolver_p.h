@@ -158,6 +158,7 @@ protected:
     bool isNumeric(const QQmlJSScope::ConstPtr &type) const;
     bool checkEnums(const QQmlJSScope::ConstPtr &scope, const QString &name,
                     QQmlJSRegisterContent *result, BaseOrExtension mode) const;
+    QQmlJSRegisterContent lengthProperty(bool isWritable, const QQmlJSScope::ConstPtr &scope) const;
 
     QQmlJSScope::ConstPtr m_voidType;
     QQmlJSScope::ConstPtr m_numberType;

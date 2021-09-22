@@ -71,6 +71,7 @@ private Q_SLOTS:
     void settingsFile();
 
     void additionalImplicitImport();
+    void listIndices();
 
 private:
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
@@ -947,7 +948,12 @@ void TestQmllint::additionalImplicitImport()
     QVERIFY(runQmllint("additionalImplicitImport.qml", true,
                        QStringList() << "--resource" << testFile("implicitImportResource.qrc"),
                        false)
-                    .isEmpty());
+            .isEmpty());
+}
+
+void TestQmllint::listIndices()
+{
+    QVERIFY(runQmllint("listIndices.qml", true, {"--compiler=warning"}, false).isEmpty());
 }
 
 QTEST_MAIN(TestQmllint)
