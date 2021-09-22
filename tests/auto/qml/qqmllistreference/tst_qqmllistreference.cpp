@@ -78,6 +78,7 @@ private slots:
     void variantToList();
     void listProperty();
     void compositeListProperty();
+    void nullItems();
 };
 
 class TestType : public QObject
@@ -892,6 +893,20 @@ void tst_qqmllistreference::compositeListProperty()
     QVERIFY(list2.listElementType() != nullptr);
     QVERIFY(list2.append(i1.data()));
     QVERIFY(list2.replace(0, i2.data()));
+}
+
+void tst_qqmllistreference::nullItems()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("nullItems.qml"));
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QQmlListReference list(object.data(), "items");
+    QCOMPARE(list.count(), 3);
+    QCOMPARE(list.at(0), nullptr);
+    QCOMPARE(list.at(1), nullptr);
+    QVERIFY(list.at(2) != nullptr);
 }
 
 QTEST_MAIN(tst_qqmllistreference)

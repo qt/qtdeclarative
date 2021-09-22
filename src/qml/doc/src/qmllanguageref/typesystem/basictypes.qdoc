@@ -361,14 +361,13 @@ property is only invoked when the property is reassigned to a different object v
     }
     \endqml
 
-    Note that objects cannot be individually added to or removed from
-    the list once created; to modify the contents of a list, it must be
-    reassigned to a new list.
-
-    \note The \c list type is not recommended as a type for custom properties.
-    The \c var type should be used instead for this purpose as
-    lists stored by the \c var type can be manipulated with greater
-    flexibility from within QML.
+    Objects in a list can be replaced with the \c{[]} operator, just like
+    entries of JavaScript arrays. You can also use \c{push()} to append entries,
+    or you can set the \c length property of the list to truncate or extend it.
+    You can not automatically extend the list by assigning to an index currently
+    out of range, though. Furthermore, if you insert \c null values into the
+    list, those are converted to \c nullptr entries in the underlying
+    QQmlListProperty.
 
     This basic type is provided by the QML language.
 

@@ -156,6 +156,11 @@ bool QmlListWrapper::virtualPut(Managed *m, PropertyKey id, const Value &value, 
         if (count < 0 || index >= uint(count))
             return false;
 
+        if (value.isNull()) {
+            prop->replace(prop, index, nullptr);
+            return true;
+        }
+
         QV4::Scope scope(v4);
         QV4::ScopedObject so(scope, value.toObject(scope.engine));
         if (auto *wrapper = so->as<QV4::QObjectWrapper>()) {
@@ -251,15 +256,21 @@ ReturnedValue PropertyListPrototype::method_push(const FunctionObject *b, const 
     QmlListWrapper *w = instance->as<QmlListWrapper>();
     if (!w)
         RETURN_UNDEFINED();
-    if (!w->d()->property().append)
+
+    QQmlListProperty<QObject> *property = &w->d()->property();
+    if (!property->append)
         THROW_GENERIC_ERROR("List doesn't define an Append function");
 
     QV4::ScopedObject so(scope);
     for (int i = 0, ei = argc; i < ei; ++i)
     {
-        so = argv[i].toObject(scope.engine);
-        if (QV4::QObjectWrapper *wrapper = so->as<QV4::QObjectWrapper>())
-            w->d()->property().append(&w->d()->property(), wrapper->object() );
+        if (argv[i].isNull()) {
+            property->append(property, nullptr);
+        } else {
+            so = argv[i].toObject(scope.engine);
+            if (QV4::QObjectWrapper *wrapper = so->as<QV4::QObjectWrapper>())
+                property->append(property, wrapper->object() );
+        }
     }
     return Encode::undefined();
 }
