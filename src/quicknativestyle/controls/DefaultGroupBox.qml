@@ -50,8 +50,6 @@ T.GroupBox {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
-    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
-
     label: Rectangle {
         color: control.palette.window
         property point labelPos : control.__nativeBackground

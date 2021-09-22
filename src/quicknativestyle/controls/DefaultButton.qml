@@ -50,8 +50,6 @@ T.Button {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
-
     leftPadding: __nativeBackground ? background.contentPadding.left : 5
     rightPadding: __nativeBackground ? background.contentPadding.right : 5
     topPadding: __nativeBackground ? background.contentPadding.top : 5

@@ -39,6 +39,7 @@ import QtQuick.NativeStyle as NativeStyle
 
 NativeStyle.DefaultGroupBox {
     id: control
+    font.pixelSize: background.styleFont(control).pixelSize
     label: Item {
         readonly property point labelPos : control.__nativeBackground
                                   ? background.labelPos

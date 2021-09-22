@@ -51,8 +51,6 @@ T.Dial {
                              implicitContentHeight + topPadding + bottomPadding,
                             80 /* minimum */ )
 
-    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
-
     background: NativeStyle.Dial {
         control: control
         useNinePatchImage: false
