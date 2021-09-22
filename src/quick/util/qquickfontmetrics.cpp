@@ -280,8 +280,8 @@ qreal QQuickFontMetrics::lineWidth() const
     string should be drawn.
 
     This method is offered as an imperative alternative to the
-    \l {QQuickTextMetrics::advanceWidth}{advanceWidth} property of
-    \l {QQuickTextMetrics::advanceWidth}{TextMetrics}.
+    \l {QtQuick::TextMetrics::advanceWidth}{advanceWidth} property of
+    TextMetrics.
 
     \sa {QFontMetricsF::horizontalAdvance()}, {QFontMetricsF::height()}
 */
@@ -297,8 +297,8 @@ qreal QQuickFontMetrics::advanceWidth(const QString &text) const
     specified by \a text.
 
     This method is offered as an imperative alternative to the
-    \l {QQuickTextMetrics::boundingRect}{boundingRect} property of
-    \l {QQuickTextMetrics::boundingRect}{TextMetrics}.
+    \l {QtQuick::TextMetrics::boundingRect}{boundingRect} property of
+    TextMetrics.
 
     \sa {QFontMetricsF::boundingRect()}, tightBoundingRect()
 */
@@ -314,8 +314,8 @@ QRectF QQuickFontMetrics::boundingRect(const QString &text) const
     string specified by \a text.
 
     This method is offered as an imperative alternative to the
-    \l {QQuickTextMetrics::tightBoundingRect}{tightBoundingRect} property of
-    \l {QQuickTextMetrics::tightBoundingRect}{TextMetrics}.
+    \l {QtQuick::TextMetrics::tightBoundingRect}{tightBoundingRect} property of
+    TextMetrics.
 
     \sa {QFontMetricsF::tightBoundingRect()}, boundingRect()
 */
@@ -338,8 +338,8 @@ QRectF QQuickFontMetrics::tightBoundingRect(const QString &text) const
     \l {Qt::TextShowMnemonic}.
 
     This method is offered as an imperative alternative to the
-    \l {QQuickTextMetrics::elidedText}{elidedText} property of
-    \l {QQuickTextMetrics::elidedText}{TextMetrics}.
+    \l {QtQuick::TextMetrics::elidedText}{elidedText} property of
+    TextMetrics.
 
     \sa Qt::TextElideMode, QFontMetricsF::elidedText()
 */
