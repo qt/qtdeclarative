@@ -134,7 +134,10 @@ uint CppSingleton::instantiations = 0;
 class JsSingleton : public QObject {
     Q_OBJECT
 public:
-    JsSingleton() {}
+    static uint instantiations;
+    uint id = 0;
+
+    JsSingleton() : id(++instantiations) {}
 
     static QJSValue create(QQmlEngine *qmlEngine, QJSEngine *jsEngine)
     {
@@ -143,6 +146,8 @@ public:
         return value;
     }
 };
+
+uint JsSingleton::instantiations = 0;
 
 void tst_qqmlengine::initTestCase()
 {
@@ -586,6 +591,7 @@ void tst_qqmlengine::clearSingletons()
     QCOMPARE(engine.singletonInstance<QJSValue>(jsValue).toUInt(), 13u);
     const JsSingleton *oldJsSingleton = engine.singletonInstance<JsSingleton *>(jsObject);
     QVERIFY(oldJsSingleton != nullptr);
+    const uint oldJsSingletonId = oldJsSingleton->id;
     const QObject *oldQmlSingleton = engine.singletonInstance<QObject *>(qmlObject);
     QVERIFY(oldQmlSingleton != nullptr);
 
@@ -636,7 +642,7 @@ void tst_qqmlengine::clearSingletons()
     QCOMPARE(engine.singletonInstance<QJSValue>(jsValue).toUInt(), 13u);
     const JsSingleton *newJsSingleton = engine.singletonInstance<JsSingleton *>(jsObject);
     QVERIFY(newJsSingleton != nullptr);
-    QVERIFY(newJsSingleton != oldJsSingleton);
+    QVERIFY(newJsSingleton->id != oldJsSingletonId);
     const QObject *newQmlSingleton = engine.singletonInstance<QObject *>(qmlObject);
     QVERIFY(newQmlSingleton != nullptr);
     QVERIFY(newQmlSingleton != oldQmlSingleton);
