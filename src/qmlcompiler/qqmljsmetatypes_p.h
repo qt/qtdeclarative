@@ -43,6 +43,7 @@
 #include <QtCore/qstringlist.h>
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qvariant.h>
+#include <QtCore/qhash.h>
 
 #include "qqmljsannotation_p.h"
 

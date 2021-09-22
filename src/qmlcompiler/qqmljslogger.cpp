@@ -81,7 +81,11 @@ const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
         { QStringLiteral("controls-sanity"),
           QQmlJSLogger::Option(
                   Log_ControlsSanity, QStringLiteral("ControlsSanity"),
-                  QStringLiteral("Performance checks used for QuickControl's implementation"),
+                  QStringLiteral("Performance checks used for QuickControl's implementation"), QtCriticalMsg, false) },
+        { QStringLiteral("multiple-attached-objects"),
+          QQmlJSLogger::Option(
+                  Log_AttachedPropertyReuse, QStringLiteral("AttachedPropertyReuse"),
+                  QStringLiteral("Warn if attached types from parent components aren't reused"),
                   QtCriticalMsg, false) }
     };
 

@@ -41,6 +41,7 @@ Codegen::Codegen(QQmlJSImporter *importer, const QString &fileName,
       m_logger(logger),
       m_code(code)
 {
+    m_typeInfo = new QQmlJSTypeInfo;
 }
 
 void Codegen::setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document)
@@ -305,7 +306,7 @@ bool Codegen::generateFunction(const QV4::Compiler::Context *context, Function *
         }
     }
 
-    QQmlJSTypePropagator propagator(m_unitGenerator, m_typeResolver.get(), m_logger);
+    QQmlJSTypePropagator propagator(m_unitGenerator, m_typeResolver.get(), m_logger, m_typeInfo);
 
     if (!function->returnType) {
         if (function->ast->typeAnnotation) {

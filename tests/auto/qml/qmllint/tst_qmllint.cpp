@@ -80,6 +80,8 @@ private Q_SLOTS:
     void listIndices();
     void lazyAndDirect();
 
+    void attachedPropertyReuse();
+
 private:
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true);
@@ -989,6 +991,17 @@ void TestQmllint::anchors()
 {
     QVERIFY(runQmllint("anchors.qml", false, { "--controls-sanity=warning" }, false)
                     .contains(u"Using anchors here"_qs));
+}
+
+void TestQmllint::attachedPropertyReuse()
+{
+    QVERIFY(runQmllint("attachedPropNotReused.qml", true,
+                       QStringList() << "--multiple-attached-objects"
+                                     << "warning",
+                       false)
+                    .contains(QStringLiteral(
+                            "Using attached type KeyNavigation already initialized in a parent "
+                            "scope. Reference it by id instead")));
 }
 
 QTEST_MAIN(TestQmllint)

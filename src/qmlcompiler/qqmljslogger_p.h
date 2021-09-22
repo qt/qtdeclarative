@@ -104,7 +104,8 @@ enum QQmlJSLoggerCategory {
     Log_Syntax,
     Log_Compiler,
     Log_ControlsSanity,
-    QQmlJSLoggerCategory_Last = Log_ControlsSanity
+    Log_AttachedPropertyReuse,
+    QQmlJSLoggerCategory_Last = Log_AttachedPropertyReuse
 };
 
 struct FixSuggestion

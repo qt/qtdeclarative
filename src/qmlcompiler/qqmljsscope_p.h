@@ -450,6 +450,11 @@ private:
     QQmlJS::SourceLocation m_sourceLocation;
 };
 
+struct QQmlJSTypeInfo
+{
+    QMultiHash<QQmlJSScope::ConstPtr, QQmlJSScope::ConstPtr> usedAttachedTypes;
+};
+
 QT_END_NAMESPACE
 
 #endif // QQMLJSSCOPE_P_H

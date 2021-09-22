@@ -98,6 +98,7 @@ private:
     QV4::Compiler::JSUnitGenerator *m_unitGenerator = nullptr;
     QStringList m_entireSourceCodeLines;
     QQmlJSLogger *m_logger;
+    QQmlJSTypeInfo *m_typeInfo;
     const QString m_code;
     std::unique_ptr<QQmlJSTypeResolver> m_typeResolver;
 
