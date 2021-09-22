@@ -72,6 +72,8 @@
 
 #define FILE_OPEN_EVENT_WAIT_TIME 3000 // ms
 
+Q_LOGGING_CATEGORY(lcDeprecated, "qt.tools.qml.deprecated")
+
 enum QmlApplicationType {
     QmlApplicationTypeUnknown
     , QmlApplicationTypeCore
@@ -368,6 +370,7 @@ static void getAppFlags(int argc, char **argv)
 #endif // QT_GUI_LIB
 }
 
+#if QT_DEPRECATED_SINCE(6, 3)
 static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
 {
     QDir dir(directory+"/dummydata", "*.qml");
@@ -391,6 +394,7 @@ static void loadDummyDataFiles(QQmlEngine &engine, const QString& directory)
         }
     }
 }
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -428,7 +432,6 @@ int main(int argc, char *argv[])
     QStringList files;
     QString confFile;
     QString translationFile;
-    QString dummyDir;
 
     // Handle main arguments
     QCommandLineParser parser;
@@ -461,9 +464,11 @@ int main(int argc, char *argv[])
     QCommandLineOption translationOption(QStringLiteral("translation"),
         QCoreApplication::translate("main", "Load the given file as the translations file."), QStringLiteral("file"));
     parser.addOption(translationOption);
+#if QT_DEPRECATED_SINCE(6, 3)
     QCommandLineOption dummyDataOption(QStringLiteral("dummy-data"),
-        QCoreApplication::translate("main", "Load QML files from the given directory as context properties."), QStringLiteral("file"));
+        QCoreApplication::translate("main", "Load QML files from the given directory as context properties. (deprecated)"), QStringLiteral("file"));
     parser.addOption(dummyDataOption);
+#endif
 #ifdef QT_GUI_LIB
     // OpenGL options
     QCommandLineOption glDesktopOption(QStringLiteral("desktop"),
@@ -566,8 +571,6 @@ int main(int argc, char *argv[])
         confFile = parser.value(configOption);
     if (parser.isSet(translationOption))
         translationFile = parser.value(translationOption);
-    if (parser.isSet(dummyDataOption))
-        dummyDir = parser.value(dummyDataOption);
     if (parser.isSet(rhiOption)) {
         const QString rhiBackend = parser.value(rhiOption);
         if (rhiBackend == QLatin1String("default"))
@@ -622,9 +625,16 @@ int main(int argc, char *argv[])
     // Load files
     QScopedPointer<LoadWatcher> lw(new LoadWatcher(&e, files.count()));
 
+#if QT_DEPRECATED_SINCE(6, 3)
+    QString dummyDir;
+    if (parser.isSet(dummyDataOption))
+        dummyDir = parser.value(dummyDataOption);
     // Load dummy data before loading QML-files
-    if (!dummyDir.isEmpty() && QFileInfo (dummyDir).isDir())
+    if (!dummyDir.isEmpty() && QFileInfo (dummyDir).isDir()) {
+        qCWarning(lcDeprecated()) << "Warning: the qml --dummy-data option is deprecated and will be removed in a future version of Qt.";
         loadDummyDataFiles(e, dummyDir);
+    }
+#endif
 
     for (const QString &path : qAsConst(files)) {
         QUrl url = QUrl::fromUserInput(path, QDir::currentPath(), QUrl::AssumeLocalFile);
