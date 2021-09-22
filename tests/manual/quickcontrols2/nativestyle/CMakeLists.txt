@@ -4,7 +4,7 @@
 # to be a manual test, or a full-blown project like it is now
 # because it was copied over from an example.
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 project(desktopgallery LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
