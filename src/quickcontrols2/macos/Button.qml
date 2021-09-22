@@ -40,4 +40,6 @@ import QtQuick.NativeStyle as NativeStyle
 NativeStyle.DefaultButton {
     id: control
     readonly property Item __focusFrameTarget: control
+
+    font.pixelSize: background.styleFont(control).pixelSize
 }

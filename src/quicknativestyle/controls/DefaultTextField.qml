@@ -52,8 +52,6 @@ T.TextField {
                              contentHeight + topPadding + bottomPadding,
                              placeholder.implicitHeight + topPadding + bottomPadding)
 
-    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
-
     leftPadding: __nativeBackground ? background.contentPadding.left: 7
     rightPadding: __nativeBackground ? background.contentPadding.right: 7
     topPadding: __nativeBackground ? background.contentPadding.top: 3

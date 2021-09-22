@@ -50,8 +50,6 @@ T.SpinBox {
     implicitHeight: Math.max(implicitBackgroundHeight, up.implicitIndicatorHeight + down.implicitIndicatorHeight
                     + (spacing * 3)) + topInset + bottomInset
 
-    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
-
     spacing: 2
 
     leftPadding: (__nativeBackground ? background.contentPadding.left: 0)

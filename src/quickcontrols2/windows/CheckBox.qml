@@ -51,8 +51,6 @@ T.CheckBox {
                              implicitContentHeight + topPadding + bottomPadding,
                              implicitIndicatorHeight + topPadding + bottomPadding)
 
-    font.pixelSize: nativeIndicator ? indicator.styleFont(control).pixelSize : undefined
-
     spacing: nativeIndicator ? 0 : 6
     padding: nativeIndicator ? 0 : 6
 

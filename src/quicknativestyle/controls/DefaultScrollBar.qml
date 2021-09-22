@@ -49,8 +49,6 @@ T.ScrollBar {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitContentHeight + topPadding + bottomPadding)
 
-    font.pixelSize: __nativeContentItem ? contentItem.styleFont(control).pixelSize : undefined
-
     visible: policy === T.ScrollBar.AlwaysOn || (policy === T.ScrollBar.AsNeeded && size < 1.0)
     minimumSize: !__nativeContentItem ? 10 : orientation === Qt.Vertical ?
         contentItem.minimumSize.height / height : contentItem.minimumSize.width / width

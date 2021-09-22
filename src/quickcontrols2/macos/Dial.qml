@@ -38,4 +38,6 @@ import QtQuick
 import QtQuick.NativeStyle as NativeStyle
 
 NativeStyle.DefaultDial {
+    id: control
+    font.pixelSize: background.styleFont(control).pixelSize
 }

@@ -42,16 +42,12 @@ import QtQuick.NativeStyle as NativeStyle
 T.Slider {
     id: control
 
-    readonly property bool __nativeBackground: background instanceof NativeStyle.StyleItem
-
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitHandleWidth + leftPadding + rightPadding,
                             control.horizontal ? 90 : 0 /* minimum */ )
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitHandleHeight + topPadding + bottomPadding,
                             control.vertical ? 90 : 0 /* minimum */ )
-
-    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
 
     background: NativeStyle.Slider {
         control: control

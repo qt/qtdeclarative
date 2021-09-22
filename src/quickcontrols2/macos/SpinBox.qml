@@ -45,7 +45,7 @@ T.SpinBox {
     property bool nativeIndicators: up.indicator.hasOwnProperty("_qt_default")
                                     && down.indicator.hasOwnProperty("_qt_default")
 
-    font.pixelSize: __nativeBackground ? background.styleFont(control).pixelSize : undefined
+    font.pixelSize: background.styleFont(control).pixelSize
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             90 /* minimum */ )
