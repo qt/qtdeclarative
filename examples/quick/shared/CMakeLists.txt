@@ -1,5 +1,3 @@
-qt_add_library(${PROJECT_NAME}_shared)
-
 set_source_files_properties(CheckBox.qml TabSet.qml TextField.qml
     PROPERTIES
         QT_QML_SOURCE_VERSIONS 2.1

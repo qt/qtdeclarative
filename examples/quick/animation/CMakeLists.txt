@@ -34,8 +34,8 @@ target_link_libraries(animationexample PUBLIC
     Qt::Gui
     Qt::Qml
     Qt::Quick
-    animation_shared
 )
+add_dependencies(animationexample animation_shared)
 
 qt_add_qml_module(animationexample
     URI animation

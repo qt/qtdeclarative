@@ -34,8 +34,8 @@ target_link_libraries(textexample PUBLIC
     Qt::Gui
     Qt::Qml
     Qt::Quick
-    text_shared
 )
+add_dependencies(textexample text_shared)
 
 qt_add_qml_module(textexample
     URI text
