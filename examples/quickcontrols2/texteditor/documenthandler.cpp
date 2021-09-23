@@ -82,7 +82,7 @@ void DocumentHandler::setDocument(QQuickTextDocument *document)
         return;
 
     if (m_document)
-        m_document->textDocument()->disconnect(this);
+        disconnect(m_document->textDocument(), &QTextDocument::modificationChanged, this, &DocumentHandler::modifiedChanged);
     m_document = document;
     if (m_document)
         connect(m_document->textDocument(), &QTextDocument::modificationChanged, this, &DocumentHandler::modifiedChanged);
@@ -132,23 +132,6 @@ void DocumentHandler::setSelectionEnd(int position)
     emit selectionEndChanged();
 }
 
-QString DocumentHandler::fontFamily() const
-{
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return QString();
-    QTextCharFormat format = cursor.charFormat();
-    return format.font().family();
-}
-
-void DocumentHandler::setFontFamily(const QString &family)
-{
-    QTextCharFormat format;
-    format.setFontFamily(family);
-    mergeFormatOnWordOrSelection(format);
-    emit fontFamilyChanged();
-}
-
 QColor DocumentHandler::textColor() const
 {
     QTextCursor cursor = textCursor();
@@ -181,84 +164,6 @@ void DocumentHandler::setAlignment(Qt::Alignment alignment)
     QTextCursor cursor = textCursor();
     cursor.mergeBlockFormat(format);
     emit alignmentChanged();
-}
-
-bool DocumentHandler::bold() const
-{
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return false;
-    return textCursor().charFormat().fontWeight() == QFont::Bold;
-}
-
-void DocumentHandler::setBold(bool bold)
-{
-    QTextCharFormat format;
-    format.setFontWeight(bold ? QFont::Bold : QFont::Normal);
-    mergeFormatOnWordOrSelection(format);
-    emit boldChanged();
-}
-
-bool DocumentHandler::italic() const
-{
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return false;
-    return textCursor().charFormat().fontItalic();
-}
-
-void DocumentHandler::setItalic(bool italic)
-{
-    QTextCharFormat format;
-    format.setFontItalic(italic);
-    mergeFormatOnWordOrSelection(format);
-    emit italicChanged();
-}
-
-bool DocumentHandler::underline() const
-{
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return false;
-    return textCursor().charFormat().fontUnderline();
-}
-
-void DocumentHandler::setUnderline(bool underline)
-{
-    QTextCharFormat format;
-    format.setFontUnderline(underline);
-    mergeFormatOnWordOrSelection(format);
-    emit underlineChanged();
-}
-
-int DocumentHandler::fontSize() const
-{
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return 0;
-    QTextCharFormat format = cursor.charFormat();
-    return format.font().pointSize();
-}
-
-void DocumentHandler::setFontSize(int size)
-{
-    if (size <= 0)
-        return;
-
-    QTextCursor cursor = textCursor();
-    if (cursor.isNull())
-        return;
-
-    if (!cursor.hasSelection())
-        cursor.select(QTextCursor::WordUnderCursor);
-
-    if (cursor.charFormat().property(QTextFormat::FontPointSize).toInt() == size)
-        return;
-
-    QTextCharFormat format;
-    format.setFontPointSize(size);
-    mergeFormatOnWordOrSelection(format);
-    emit fontSizeChanged();
 }
 
 QString DocumentHandler::fileName() const
@@ -348,13 +253,9 @@ void DocumentHandler::saveAs(const QUrl &fileUrl)
 
 void DocumentHandler::reset()
 {
-    emit fontFamilyChanged();
     emit alignmentChanged();
-    emit boldChanged();
-    emit italicChanged();
-    emit underlineChanged();
-    emit fontSizeChanged();
     emit textColorChanged();
+    emit fontChanged();
 }
 
 QTextCursor DocumentHandler::textCursor() const
@@ -398,6 +299,28 @@ void DocumentHandler::setModified(bool m)
 {
     if (m_document)
         m_document->textDocument()->setModified(m);
+}
+
+QFont DocumentHandler::font() const
+{
+    QTextCursor cursor = textCursor();
+    if (cursor.isNull())
+        return m_document->textDocument()->defaultFont();
+    QTextCharFormat format = cursor.charFormat();
+    return format.font();
+}
+
+void DocumentHandler::setFont(const QFont & font){
+
+    QTextCursor cursor = textCursor();
+    if (!cursor.isNull() && cursor.charFormat().font() == font)
+        return;
+
+    QTextCharFormat format;
+    format.setFont(font);
+    mergeFormatOnWordOrSelection(format);
+
+    emit fontChanged();
 }
 
 #include "moc_documenthandler.cpp"

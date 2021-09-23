@@ -71,14 +71,9 @@ class DocumentHandler : public QObject
     Q_PROPERTY(int selectionEnd READ selectionEnd WRITE setSelectionEnd NOTIFY selectionEndChanged)
 
     Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor NOTIFY textColorChanged)
-    Q_PROPERTY(QString fontFamily READ fontFamily WRITE setFontFamily NOTIFY fontFamilyChanged)
     Q_PROPERTY(Qt::Alignment alignment READ alignment WRITE setAlignment NOTIFY alignmentChanged)
 
-    Q_PROPERTY(bool bold READ bold WRITE setBold NOTIFY boldChanged)
-    Q_PROPERTY(bool italic READ italic WRITE setItalic NOTIFY italicChanged)
-    Q_PROPERTY(bool underline READ underline WRITE setUnderline NOTIFY underlineChanged)
-
-    Q_PROPERTY(int fontSize READ fontSize WRITE setFontSize NOTIFY fontSizeChanged)
+    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
 
     Q_PROPERTY(QString fileName READ fileName NOTIFY fileUrlChanged)
     Q_PROPERTY(QString fileType READ fileType NOTIFY fileUrlChanged)
@@ -101,26 +96,14 @@ public:
     int selectionEnd() const;
     void setSelectionEnd(int position);
 
-    QString fontFamily() const;
-    void setFontFamily(const QString &family);
-
     QColor textColor() const;
     void setTextColor(const QColor &color);
 
     Qt::Alignment alignment() const;
     void setAlignment(Qt::Alignment alignment);
 
-    bool bold() const;
-    void setBold(bool bold);
-
-    bool italic() const;
-    void setItalic(bool italic);
-
-    bool underline() const;
-    void setUnderline(bool underline);
-
-    int fontSize() const;
-    void setFontSize(int size);
+    QFont font() const;
+    void setFont(const QFont & font);
 
     QString fileName() const;
     QString fileType() const;
@@ -139,15 +122,9 @@ Q_SIGNALS:
     void selectionStartChanged();
     void selectionEndChanged();
 
-    void fontFamilyChanged();
+    void fontChanged();
     void textColorChanged();
     void alignmentChanged();
-
-    void boldChanged();
-    void italicChanged();
-    void underlineChanged();
-
-    void fontSizeChanged();
 
     void textChanged();
     void fileUrlChanged();
@@ -169,7 +146,6 @@ private:
     int m_selectionStart;
     int m_selectionEnd;
 
-    QFont m_font;
     QUrl m_fileUrl;
 };
 
