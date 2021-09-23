@@ -626,6 +626,7 @@ namespace QQmlPrivate
         bool captureQmlContextPropertyLookup(uint index) const;
         QMetaType lookupResultMetaType(uint index) const;
         void storeNameSloppy(uint nameIndex, void *value, QMetaType type) const;
+        QJSValue javaScriptGlobalProperty(uint nameIndex) const;
 
         // All of these lookup functions should be used as follows:
         //

@@ -1007,6 +1007,14 @@ void AOTCompiledContext::storeNameSloppy(uint nameIndex, void *value, QMetaType 
     }
 }
 
+QJSValue AOTCompiledContext::javaScriptGlobalProperty(uint nameIndex) const
+{
+    QV4::Scope scope(engine->handle());
+    QV4::ScopedString name(scope, compilationUnit->runtimeStrings[nameIndex]);
+    QV4::ScopedObject global(scope, scope.engine->globalObject);
+    return QJSValuePrivate::fromReturnedValue(global->get(name->toPropertyKey()));
+}
+
 bool AOTCompiledContext::callQmlContextPropertyLookup(
         uint index, void **args, const QMetaType *types, int argc) const
 {
