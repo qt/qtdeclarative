@@ -600,7 +600,6 @@ language/statements/class/definition/methods-gen-yield-as-literal-property-name.
 language/statements/class/definition/methods-gen-yield-as-property-name.js fails
 language/statements/class/definition/methods-named-eval-arguments.js fails
 language/statements/class/definition/prototype-property.js fails
-language/statements/class/definition/setters-prop-desc.js fails
 language/statements/class/definition/setters-restricted-ids.js fails
 language/statements/class/definition/this-access-restriction-2.js fails
 language/statements/class/definition/this-access-restriction.js fails
