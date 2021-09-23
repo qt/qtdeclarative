@@ -7,7 +7,6 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
   set(INSTALL_EXAMPLESDIR "examples")
@@ -15,19 +14,14 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols2/texteditor")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Quick)
-find_package(Qt6 COMPONENTS QuickControls2)
+find_package(Qt6 COMPONENTS Core Gui Quick QuickControls2)
+find_package(Qt6 COMPONENTS Widgets)
 
-qt_add_executable(texteditor
-    documenthandler.cpp documenthandler.h
+qt_add_executable(texteditor WIN32 MACOSX_BUNDLE
+    documenthandler.cpp
     texteditor.cpp
 )
-set_target_properties(texteditor PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-)
+
 target_link_libraries(texteditor PUBLIC
     Qt::Core
     Qt::Gui

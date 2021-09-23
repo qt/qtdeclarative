@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -49,9 +49,11 @@
 ****************************************************************************/
 
 import QtQuick
+import QtCore
 import QtQuick.Controls
 import QtQuick.Window
-import Qt.labs.platform
+import QtQuick.Dialogs
+import Qt.labs.platform as Platform
 
 import io.qt.examples.texteditor
 
@@ -70,101 +72,124 @@ ApplicationWindow {
         y = Screen.height / 2 - height / 2
     }
 
-    Shortcut {
-        sequence: StandardKey.Open
-        onActivated: openDialog.open()
-    }
-    Shortcut {
-        sequence: StandardKey.SaveAs
-        onActivated: saveDialog.open()
-    }
-    Shortcut {
-        sequence: StandardKey.Quit
-        onActivated: close()
-    }
-    Shortcut {
-        sequence: StandardKey.Copy
-        onActivated: textArea.copy()
-    }
-    Shortcut {
-        sequence: StandardKey.Cut
-        onActivated: textArea.cut()
-    }
-    Shortcut {
-        sequence: StandardKey.Paste
-        onActivated: textArea.paste()
-    }
-    Shortcut {
-        sequence: StandardKey.Bold
-        onActivated: document.bold = !document.bold
-    }
-    Shortcut {
-        sequence: StandardKey.Italic
-        onActivated: document.italic = !document.italic
-    }
-    Shortcut {
-        sequence: StandardKey.Underline
-        onActivated: document.underline = !document.underline
+    Action {
+        id: openAction
+        shortcut: StandardKey.Open
+        onTriggered: openDialog.open()
     }
 
-    MenuBar {
-        Menu {
+    Action {
+        id: saveAsAction
+        shortcut: StandardKey.SaveAs
+        onTriggered: saveDialog.open()
+    }
+
+    Action {
+        id: quitAction
+        shortcut: StandardKey.Quit
+        onTriggered: close()
+    }
+
+    Action {
+        id: copyAction
+        shortcut: StandardKey.Copy
+        onTriggered: textArea.copy()
+    }
+
+    Action {
+        id: cutAction
+        shortcut: StandardKey.Cut
+        onTriggered: textArea.cut()
+    }
+
+    Action {
+        id: pasteAction
+        shortcut: StandardKey.Paste
+        onTriggered: textArea.paste()
+    }
+
+    Action {
+        id: boldAction
+        shortcut: StandardKey.Bold
+        onTriggered: document.bold = !document.bold
+    }
+
+    Action {
+        id: italicAction
+        shortcut: StandardKey.Italic
+        onTriggered: document.italic = !document.italic
+    }
+
+    Action {
+        id: underlineAction
+        shortcut: StandardKey.Underline
+        onTriggered: document.underline = !document.underline
+    }
+
+    Platform.MenuBar {
+        Platform.Menu {
             title: qsTr("&File")
 
-            MenuItem {
+            Platform.MenuItem {
                 text: qsTr("&Open")
                 onTriggered: openDialog.open()
             }
-            MenuItem {
+            Platform.MenuItem {
                 text: qsTr("&Save As...")
                 onTriggered: saveDialog.open()
             }
-            MenuItem {
+            Platform.MenuItem {
                 text: qsTr("&Quit")
                 onTriggered: close()
             }
         }
 
-        Menu {
+        Platform.Menu {
             title: qsTr("&Edit")
 
-            MenuItem {
+            Platform.MenuItem {
                 text: qsTr("&Copy")
                 enabled: textArea.selectedText
                 onTriggered: textArea.copy()
             }
-            MenuItem {
+            Platform.MenuItem {
                 text: qsTr("Cu&t")
                 enabled: textArea.selectedText
                 onTriggered: textArea.cut()
             }
-            MenuItem {
+            Platform.MenuItem {
                 text: qsTr("&Paste")
                 enabled: textArea.canPaste
                 onTriggered: textArea.paste()
             }
         }
 
-        Menu {
+        Platform.Menu {
             title: qsTr("F&ormat")
 
-            MenuItem {
+            Platform.MenuItem {
                 text: qsTr("&Bold")
                 checkable: true
                 checked: document.bold
                 onTriggered: document.bold = !document.bold
             }
-            MenuItem {
+            Platform.MenuItem {
                 text: qsTr("&Italic")
                 checkable: true
                 checked: document.italic
                 onTriggered: document.italic = !document.italic
             }
-            MenuItem {
+            Platform.MenuItem {
                 text: qsTr("&Underline")
                 checkable: true
                 checked: document.underline
                 onTriggered: document.underline = !document.underline
+            }
+            Platform.MenuItem {
+                text: qsTr("&Strikeout")
+                checkable: true
+                checked: document.strikeout
+                onTriggered: document.strikeout = !document.strikeout
             }
         }
     }
@@ -174,7 +199,7 @@ ApplicationWindow {
         fileMode: FileDialog.OpenFile
         selectedNameFilter.index: 1
         nameFilters: ["Text files (*.txt)", "HTML files (*.html *.htm)", "Markdown files (*.md *.markdown)"]
-        folder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
+        currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
         onAccepted: document.load(file)
     }
 
@@ -184,32 +209,31 @@ ApplicationWindow {
         defaultSuffix: document.fileType
         nameFilters: openDialog.nameFilters
         selectedNameFilter.index: document.fileType === "txt" ? 0 : 1
-        folder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
+        currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
         onAccepted: document.saveAs(file)
     }
 
     FontDialog {
         id: fontDialog
-        onAccepted: {
-            document.fontFamily = font.family;
-            document.fontSize = font.pointSize;
-        }
+
+        onAccepted: document.font = fontDialog.selectedFont
+        onVisibleChanged: if (visible) currentFont = document.font
     }
 
-    ColorDialog {
+    Platform.ColorDialog {
         id: colorDialog
         currentColor: "black"
     }
 
-    MessageDialog {
+    Platform.MessageDialog {
         id: errorDialog
     }
 
-    MessageDialog {
+    Platform.MessageDialog {
         id : quitDialog
         title: qsTr("Quit?")
         text: qsTr("The file has been modified. Quit anyway?")
-        buttons: (MessageDialog.Yes | MessageDialog.No)
+        buttons: (Platform.MessageDialog.Yes | Platform.MessageDialog.No)
         onYesClicked: Qt.quit()
     }
 
@@ -226,7 +250,8 @@ ApplicationWindow {
                     id: openButton
                     text: "\uF115" // icon-folder-open-empty
                     font.family: "fontello"
-                    onClicked: openDialog.open()
+                    action: openAction
+                    focusPolicy: Qt.TabFocus
                 }
                 ToolSeparator {
                     contentItem.visible: fileRow.y === editRow.y
@@ -241,7 +266,7 @@ ApplicationWindow {
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     enabled: textArea.selectedText
-                    onClicked: textArea.copy()
+                    action: copyAction
                 }
                 ToolButton {
                     id: cutButton
@@ -249,7 +274,7 @@ ApplicationWindow {
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     enabled: textArea.selectedText
-                    onClicked: textArea.cut()
+                    action: cutAction
                 }
                 ToolButton {
                     id: pasteButton
@@ -257,7 +282,7 @@ ApplicationWindow {
                     font.family: "fontello"
                     focusPolicy: Qt.TabFocus
                     enabled: textArea.canPaste
-                    onClicked: textArea.paste()
+                    action: pasteAction
                 }
                 ToolSeparator {
                     contentItem.visible: editRow.y === formatRow.y
@@ -273,7 +298,7 @@ ApplicationWindow {
                     focusPolicy: Qt.TabFocus
                     checkable: true
                     checked: document.bold
-                    onClicked: document.bold = !document.bold
+                    action: boldAction
                 }
                 ToolButton {
                     id: italicButton
@@ -282,7 +307,7 @@ ApplicationWindow {
                     focusPolicy: Qt.TabFocus
                     checkable: true
                     checked: document.italic
-                    onClicked: document.italic = !document.italic
+                    action: italicAction
                 }
                 ToolButton {
                     id: underlineButton
@@ -291,7 +316,16 @@ ApplicationWindow {
                     focusPolicy: Qt.TabFocus
                     checkable: true
                     checked: document.underline
-                    onClicked: document.underline = !document.underline
+                    action: underlineAction
+                }
+                ToolButton {
+                    id: strikeoutButton
+                    text: "\uF0CC"
+                    font.family: "fontello"
+                    focusPolicy: Qt.TabFocus
+                    checkable: true
+                    checked: document.strikeout
+                    onClicked: document.strikeout = !document.strikeout
                 }
                 ToolButton {
                     id: fontFamilyToolButton
@@ -300,11 +334,9 @@ ApplicationWindow {
                     font.bold: document.bold
                     font.italic: document.italic
                     font.underline: document.underline
-                    onClicked: {
-                        fontDialog.currentFont.family = document.fontFamily;
-                        fontDialog.currentFont.pointSize = document.fontSize;
-                        fontDialog.open();
-                    }
+                    font.strikeout: document.strikeout
+                    focusPolicy: Qt.TabFocus
+                    onClicked: fontDialog.open()
                 }
                 ToolButton {
                     id: textColorButton
@@ -383,17 +415,25 @@ ApplicationWindow {
         selectionStart: textArea.selectionStart
         selectionEnd: textArea.selectionEnd
         textColor: colorDialog.color
+
+        property alias family: document.font.family
+        property alias bold: document.font.bold
+        property alias italic: document.font.italic
+        property alias underline: document.font.underline
+        property alias strikeout: document.font.strikeout
+        property alias size: document.font.pointSize
+
         Component.onCompleted: {
             if (Qt.application.arguments.length === 2)
                 document.load("file:" + Qt.application.arguments[1]);
             else
                 document.load("qrc:/texteditor.html")
         }
-        onLoaded: {
+        onLoaded: function (text, format) {
             textArea.textFormat = format
             textArea.text = text
         }
-        onError: {
+        onError: function (message) {
             errorDialog.text = message
             errorDialog.visible = true
         }
@@ -426,45 +466,47 @@ ApplicationWindow {
                 onClicked: contextMenu.open()
             }
 
-            onLinkActivated: Qt.openUrlExternally(link)
+            onLinkActivated: function (link) {
+                Qt.openUrlExternally(link)
+            }
         }
 
         ScrollBar.vertical: ScrollBar {}
     }
 
-    Menu {
+    Platform.Menu {
         id: contextMenu
 
-        MenuItem {
+        Platform.MenuItem {
             text: qsTr("Copy")
             enabled: textArea.selectedText
             onTriggered: textArea.copy()
         }
-        MenuItem {
+        Platform.MenuItem {
             text: qsTr("Cut")
             enabled: textArea.selectedText
             onTriggered: textArea.cut()
         }
-        MenuItem {
+        Platform.MenuItem {
             text: qsTr("Paste")
             enabled: textArea.canPaste
             onTriggered: textArea.paste()
         }
 
-        MenuSeparator {}
+        Platform.MenuSeparator {}
 
-        MenuItem {
+        Platform.MenuItem {
             text: qsTr("Font...")
             onTriggered: fontDialog.open()
         }
 
-        MenuItem {
+        Platform.MenuItem {
             text: qsTr("Color...")
             onTriggered: colorDialog.open()
         }
     }
 
-    onClosing: {
+    onClosing: function (close) {
         if (document.modified) {
             quitDialog.open()
             close.accepted = false
