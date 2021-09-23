@@ -70,6 +70,8 @@ private Q_SLOTS:
 
     void settingsFile();
 
+    void lazyAndDirect();
+
 private:
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true);
@@ -897,6 +899,11 @@ void TestQmllint::settingsFile()
     QVERIFY(runQmllint("settings/unusedImportWarning/unused.qml", false, QStringList(), false)
                     .contains(QStringLiteral("Warning: %1:2:1: Unused import at %1:2:1")
                                       .arg(testFile("settings/unusedImportWarning/unused.qml"))));
+}
+
+void TestQmllint::lazyAndDirect()
+{
+    QVERIFY(runQmllint("LazyAndDirect/Lazy.qml", true, {}, false).isEmpty());
 }
 
 QTEST_MAIN(TestQmllint)
