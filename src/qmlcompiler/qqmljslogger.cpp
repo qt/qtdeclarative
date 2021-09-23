@@ -76,7 +76,13 @@ const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
                                QStringLiteral("Warn about multiline strings"), QtInfoMsg, false) },
         { QStringLiteral("compiler"),
           QQmlJSLogger::Option(Log_Compiler, QStringLiteral("CompilerWarnings"),
-                               QStringLiteral("Warn about compiler issues"), QtCriticalMsg, false) }
+                               QStringLiteral("Warn about compiler issues"), QtCriticalMsg,
+                               false) },
+        { QStringLiteral("controls-sanity"),
+          QQmlJSLogger::Option(
+                  Log_ControlsSanity, QStringLiteral("ControlsSanity"),
+                  QStringLiteral("Performance checks used for QuickControl's implementation"),
+                  QtCriticalMsg, false) }
     };
 
     return optionsMap;

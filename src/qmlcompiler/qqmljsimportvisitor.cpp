@@ -1185,6 +1185,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiSourceElement *srcElement)
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::FunctionDeclaration *fdecl)
 {
+    m_logger->logWarning(u"Declared function \"%1\""_qs.arg(fdecl->name), Log_ControlsSanity,
+                         fdecl->firstSourceLocation());
     visitFunctionExpressionHelper(fdecl);
     return true;
 }

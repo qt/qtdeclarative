@@ -59,6 +59,8 @@ private Q_SLOTS:
     void qmltypes_data();
     void qmltypes();
 
+    void functionDeclaration();
+
 #ifdef QT_QMLJSROOTGEN_PRESENT
     void verifyJsRoot();
 #endif
@@ -960,6 +962,12 @@ void TestQmllint::listIndices()
 void TestQmllint::lazyAndDirect()
 {
     QVERIFY(runQmllint("LazyAndDirect/Lazy.qml", true, {"--compiler=warning"}, false).isEmpty());
+}
+
+void TestQmllint::functionDeclaration()
+{
+    QVERIFY(runQmllint("functionDeclarations.qml", false, { "--controls-sanity=warning" }, false)
+                    .contains(u"Declared function \"add\""_qs));
 }
 
 QTEST_MAIN(TestQmllint)
