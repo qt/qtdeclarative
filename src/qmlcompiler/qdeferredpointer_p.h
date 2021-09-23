@@ -101,14 +101,14 @@ public:
     friend size_t qHash(const QDeferredSharedPointer &ptr, size_t seed = 0)
     {
         ptr.lazyLoad();
-        return qHashMulti(seed, ptr.m_factory, ptr.m_data);
+        return qHashMulti(seed, ptr.m_data);
     }
 
     friend bool operator==(const QDeferredSharedPointer &a, const QDeferredSharedPointer &b)
     {
         a.lazyLoad();
         b.lazyLoad();
-        return a.m_factory == b.m_factory && a.m_data == b.m_data;
+        return a.m_data == b.m_data;
     }
 
     friend bool operator!=(const QDeferredSharedPointer &a, const QDeferredSharedPointer &b)
@@ -181,14 +181,14 @@ public:
     friend size_t qHash(const QDeferredWeakPointer &ptr, size_t seed = 0)
     {
         ptr.lazyLoad();
-        return qHashMulti(seed, ptr.m_factory, ptr.m_data);
+        return qHashMulti(seed, ptr.m_data);
     }
 
     friend bool operator==(const QDeferredWeakPointer &a, const QDeferredWeakPointer &b)
     {
         a.lazyLoad();
         b.lazyLoad();
-        return a.m_factory == b.m_factory && a.m_data == b.m_data;
+        return a.m_data == b.m_data;
     }
 
     friend bool operator!=(const QDeferredWeakPointer &a, const QDeferredWeakPointer &b)

@@ -72,6 +72,7 @@ private Q_SLOTS:
 
     void additionalImplicitImport();
     void listIndices();
+    void lazyAndDirect();
 
 private:
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
@@ -954,6 +955,11 @@ void TestQmllint::additionalImplicitImport()
 void TestQmllint::listIndices()
 {
     QVERIFY(runQmllint("listIndices.qml", true, {"--compiler=warning"}, false).isEmpty());
+}
+
+void TestQmllint::lazyAndDirect()
+{
+    QVERIFY(runQmllint("LazyAndDirect/Lazy.qml", true, {"--compiler=warning"}, false).isEmpty());
 }
 
 QTEST_MAIN(TestQmllint)
