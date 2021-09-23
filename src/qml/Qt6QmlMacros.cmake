@@ -1051,10 +1051,19 @@ function(qt6_add_qml_plugin target)
         endforeach()
 
         get_target_property(existing_class_name ${target} QT_PLUGIN_CLASS_NAME)
-        if(existing_class_name AND NOT existing_class_name STREQUAL arg_CLASS_NAME)
+        if(existing_class_name)
+            if(NOT existing_class_name STREQUAL arg_CLASS_NAME)
+                message(FATAL_ERROR
+                    "An existing plugin target was given, but it has a different class name "
+                    "(${existing_class_name}) to that being used here (${arg_CLASS_NAME})"
+                )
+            endif()
+        elseif(arg_CLASS_NAME)
+            set_property(TARGET ${target} PROPERTY QT_PLUGIN_CLASS_NAME "${arg_CLASS_NAME}")
+        else()
             message(FATAL_ERROR
-                "An existing target was given, but it has a different class name "
-                "(${existing_class_name}) to that being used here (${arg_CLASS_NAME})"
+                "An existing '${target}' plugin target was given, but it has no class name set "
+                "and no new class name was provided."
             )
         endif()
     else()
