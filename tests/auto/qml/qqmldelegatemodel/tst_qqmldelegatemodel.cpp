@@ -27,11 +27,14 @@
 ****************************************************************************/
 
 #include <QtTest/qtest.h>
+#include <QtCore/QConcatenateTablesProxyModel>
+#include <QtGui/QStandardItemModel>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQmlModels/private/qqmldelegatemodel_p.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtTest/QSignalSpy>
 
 class tst_QQmlDelegateModel : public QQmlDataTest
 {
@@ -46,6 +49,7 @@ private slots:
     void qtbug_86017();
     void filterOnGroup_removeWhenCompleted();
     void contextAccessedByHandler();
+    void redrawUponColumnChange();
 };
 
 class AbstractItemModel : public QAbstractItemModel
@@ -173,6 +177,30 @@ void tst_QQmlDelegateModel::contextAccessedByHandler()
     QScopedPointer<QObject> root(component.create());
     QVERIFY2(root, qPrintable(component.errorString()));
     QVERIFY(root->property("works").toBool());
+}
+
+void tst_QQmlDelegateModel::redrawUponColumnChange()
+{
+    QStandardItemModel m1;
+    m1.appendRow({
+            new QStandardItem("Banana"),
+            new QStandardItem("Coconut"),
+    });
+
+    QQuickView view(testFileUrl("redrawUponColumnChange.qml"));
+    QCOMPARE(view.status(), QQuickView::Ready);
+    view.show();
+    QQuickItem *root = view.rootObject();
+    root->setProperty("model", QVariant::fromValue<QObject *>(&m1));
+
+    QObject *item = root->property("currentItem").value<QObject *>();
+    QVERIFY(item);
+    QCOMPARE(item->property("text").toString(), "Banana");
+
+    QVERIFY(root);
+    m1.removeColumn(0);
+
+    QCOMPARE(item->property("text").toString(), "Coconut");
 }
 
 QTEST_MAIN(tst_QQmlDelegateModel)
