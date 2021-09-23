@@ -150,17 +150,17 @@ public:
 
     static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
                                         const QQmlJSMetaProperty &property, ContentVariant variant,
-                                        const QQmlJSScope::ConstPtr &scope = {});
+                                        const QQmlJSScope::ConstPtr &scope);
 
     static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
                                         const QQmlJSMetaEnum &enumeration,
                                         const QString &enumMember, ContentVariant variant,
-                                        const QQmlJSScope::ConstPtr &scope = {});
+                                        const QQmlJSScope::ConstPtr &scope);
 
     static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
                                         const QList<QQmlJSMetaMethod> &methods,
                                         ContentVariant variant,
-                                        const QQmlJSScope::ConstPtr &scope = {});
+                                        const QQmlJSScope::ConstPtr &scope);
 
     static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
                                         uint importNamespaceStringId, ContentVariant variant,

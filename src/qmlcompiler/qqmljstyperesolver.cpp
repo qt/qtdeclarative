@@ -93,74 +93,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Do
     listPropertyType->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
     m_listPropertyType = listPropertyType;
 
-    // This is pre-sorted. Don't mess it up.
-    m_jsGlobalProperties = { u"Array"_qs,
-                             u"ArrayBuffer"_qs,
-                             u"Atomics"_qs,
-                             u"Boolean"_qs,
-                             u"DOMException"_qs,
-                             u"DataView"_qs,
-                             u"Date"_qs,
-                             u"Error"_qs,
-                             u"EvalError"_qs,
-                             u"Float32Array"_qs,
-                             u"Float64Array"_qs,
-                             u"Function"_qs,
-                             u"Infinity"_qs,
-                             u"Int16Array"_qs,
-                             u"Int32Array"_qs,
-                             u"Int8Array"_qs,
-                             u"JSON"_qs,
-                             u"Map"_qs,
-                             u"Math"_qs,
-                             u"NaN"_qs,
-                             u"Number"_qs,
-                             u"Object"_qs,
-                             u"Promise"_qs,
-                             u"Proxy"_qs,
-                             u"QT_TRANSLATE_NOOP"_qs,
-                             u"QT_TRID_NOOP"_qs,
-                             u"QT_TR_NOOP"_qs,
-                             u"Qt"_qs,
-                             u"RangeError"_qs,
-                             u"ReferenceError"_qs,
-                             u"Reflect"_qs,
-                             u"RegExp"_qs,
-                             u"SQLException"_qs,
-                             u"Set"_qs,
-                             u"SharedArrayBuffer"_qs,
-                             u"String"_qs,
-                             u"Symbol"_qs,
-                             u"SyntaxError"_qs,
-                             u"TypeError"_qs,
-                             u"URIError"_qs,
-                             u"URL"_qs,
-                             u"URLSearchParams"_qs,
-                             u"Uint16Array"_qs,
-                             u"Uint32Array"_qs,
-                             u"Uint8Array"_qs,
-                             u"Uint8ClampedArray"_qs,
-                             u"WeakMap"_qs,
-                             u"WeakSet"_qs,
-                             u"XMLHttpRequest"_qs,
-                             u"console"_qs,
-                             u"decodeURI"_qs,
-                             u"decodeURIComponent"_qs,
-                             u"encodeURI"_qs,
-                             u"encodeURIComponent"_qs,
-                             u"escape"_qs,
-                             u"eval"_qs,
-                             u"gc"_qs,
-                             u"isFinite"_qs,
-                             u"isNaN"_qs,
-                             u"parseFloat"_qs,
-                             u"parseInt"_qs,
-                             u"print"_qs,
-                             u"qsTr"_qs,
-                             u"qsTrId"_qs,
-                             u"qsTranslate"_qs,
-                             u"undefined"_qs,
-                             u"unescape"_qs };
+    m_jsGlobalObject = importer->jsGlobalObject();
 }
 
 void QQmlJSTypeResolver::init(QQmlJSImportVisitor &visitor)
@@ -719,9 +652,14 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
                                              type, QQmlJSRegisterContent::PlainType);
     }
 
-    if (std::binary_search(m_jsGlobalProperties.begin(), m_jsGlobalProperties.end(), name)) {
-        return QQmlJSRegisterContent::create(jsValueType(), jsValueType(),
-                                             QQmlJSRegisterContent::JavaScriptGlobal);
+    if (m_jsGlobalObject->hasProperty(name)) {
+        return QQmlJSRegisterContent::create(jsValueType(), m_jsGlobalObject->property(name),
+                                             QQmlJSRegisterContent::JavaScriptGlobal,
+                                             m_jsGlobalObject);
+    } else if (m_jsGlobalObject->hasMethod(name)) {
+        return QQmlJSRegisterContent::create(jsValueType(), m_jsGlobalObject->methods(name),
+                                             QQmlJSRegisterContent::JavaScriptGlobal,
+                                             m_jsGlobalObject);
     }
 
     return {};

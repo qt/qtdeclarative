@@ -574,4 +574,9 @@ void QQmlJSImporter::setImportPaths(const QStringList &importPaths)
     // Luckily this doesn't apply to m_seenQmldirFiles
 }
 
+QQmlJSScope::ConstPtr QQmlJSImporter::jsGlobalObject() const
+{
+    return m_builtins.cppNames[u"GlobalObject"_qs];
+}
+
 QT_END_NAMESPACE

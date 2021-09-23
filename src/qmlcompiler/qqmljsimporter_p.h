@@ -81,6 +81,8 @@ public:
     QStringList importPaths() const { return m_importPaths; }
     void setImportPaths(const QStringList &importPaths);
 
+    QQmlJSScope::ConstPtr jsGlobalObject() const;
+
 private:
     friend class QDeferredFactory<QQmlJSScope>;
 
