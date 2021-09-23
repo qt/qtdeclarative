@@ -389,6 +389,12 @@ void QQmlDelegateModelPrivate::connectToAbstractItemModel()
                       q,  QQmlDelegateModel, SLOT(_q_rowsRemoved(QModelIndex,int,int)));
     qmlobject_connect(aim, QAbstractItemModel, SIGNAL(rowsAboutToBeRemoved(QModelIndex,int,int)),
                       q,  QQmlDelegateModel, SLOT(_q_rowsAboutToBeRemoved(QModelIndex,int,int)));
+    qmlobject_connect(aim, QAbstractItemModel, SIGNAL(columnsInserted(QModelIndex,int,int)),
+                      q, QQmlDelegateModel, SLOT(_q_columnsInserted(QModelIndex,int,int)));
+    qmlobject_connect(aim, QAbstractItemModel, SIGNAL(columnsRemoved(QModelIndex,int,int)),
+                      q, QQmlDelegateModel, SLOT(_q_columnsRemoved(QModelIndex,int,int)));
+    qmlobject_connect(aim, QAbstractItemModel, SIGNAL(columnsMoved(QModelIndex,int,int,QModelIndex,int)),
+                      q, QQmlDelegateModel, SLOT(_q_columnsMoved(QModelIndex,int,int,QModelIndex,int)));
     qmlobject_connect(aim, QAbstractItemModel, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),
                       q, QQmlDelegateModel, SLOT(_q_dataChanged(QModelIndex,QModelIndex,QVector<int>)));
     qmlobject_connect(aim, QAbstractItemModel, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
@@ -413,6 +419,12 @@ void QQmlDelegateModelPrivate::disconnectFromAbstractItemModel()
                         q, SLOT(_q_rowsAboutToBeRemoved(QModelIndex,int,int)));
     QObject::disconnect(aim, SIGNAL(rowsRemoved(QModelIndex,int,int)),
                         q, SLOT(_q_rowsRemoved(QModelIndex,int,int)));
+    QObject::disconnect(aim, SIGNAL(columnsInserted(QModelIndex,int,int)), q,
+                        SLOT(_q_columnsInserted(QModelIndex,int,int)));
+    QObject::disconnect(aim, SIGNAL(columnsRemoved(QModelIndex,int,int)), q,
+                        SLOT(_q_columnsRemoved(QModelIndex,int,int)));
+    QObject::disconnect(aim, SIGNAL(columnsMoved(QModelIndex,int,int,QModelIndex,int)), q,
+                        SLOT(_q_columnsMoved(QModelIndex,int,int,QModelIndex,int)));
     QObject::disconnect(aim, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),
                         q, SLOT(_q_dataChanged(QModelIndex,QModelIndex,QVector<int>)));
     QObject::disconnect(aim, SIGNAL(rowsMoved(QModelIndex,int,int,QModelIndex,int)),
@@ -1967,6 +1979,38 @@ void QQmlDelegateModel::_q_rowsMoved(
         _q_itemsRemoved(sourceStart, count);
     } else if (destinationParent == d->m_adaptorModel.rootIndex) {
         _q_itemsInserted(destinationRow, count);
+    }
+}
+
+void QQmlDelegateModel::_q_columnsInserted(const QModelIndex &parent, int begin, int end)
+{
+    Q_D(QQmlDelegateModel);
+    Q_UNUSED(end);
+    if (parent == d->m_adaptorModel.rootIndex && begin == 0) {
+        // mark all items as changed
+        _q_itemsChanged(0, d->m_count, QVector<int>());
+    }
+}
+
+void QQmlDelegateModel::_q_columnsRemoved(const QModelIndex &parent, int begin, int end)
+{
+    Q_D(QQmlDelegateModel);
+    Q_UNUSED(end);
+    if (parent == d->m_adaptorModel.rootIndex && begin == 0) {
+        // mark all items as changed
+        _q_itemsChanged(0, d->m_count, QVector<int>());
+    }
+}
+
+void QQmlDelegateModel::_q_columnsMoved(const QModelIndex &parent, int start, int end,
+                                        const QModelIndex &destination, int column)
+{
+    Q_D(QQmlDelegateModel);
+    Q_UNUSED(end);
+    if ((parent == d->m_adaptorModel.rootIndex && start == 0)
+        || (destination == d->m_adaptorModel.rootIndex && column == 0)) {
+        // mark all items as changed
+        _q_itemsChanged(0, d->m_count, QVector<int>());
     }
 }
 

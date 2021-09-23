@@ -152,6 +152,9 @@ private Q_SLOTS:
     void _q_itemsMoved(int from, int to, int count);
     void _q_modelReset();
     void _q_rowsInserted(const QModelIndex &,int,int);
+    void _q_columnsInserted(const QModelIndex &, int, int);
+    void _q_columnsRemoved(const QModelIndex &, int, int);
+    void _q_columnsMoved(const QModelIndex &, int, int, const QModelIndex &, int);
     void _q_rowsAboutToBeRemoved(const QModelIndex &parent, int begin, int end);
     void _q_rowsRemoved(const QModelIndex &,int,int);
     void _q_rowsMoved(const QModelIndex &, int, int, const QModelIndex &, int);
