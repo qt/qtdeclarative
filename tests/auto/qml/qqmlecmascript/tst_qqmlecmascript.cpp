@@ -421,6 +421,8 @@ private slots:
     void optionalChainNull();
 
     void asCast();
+    void functionNameInFunctionScope();
+
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
     static void verifyContextLifetime(const QQmlRefPointer<QQmlContextData> &ctxt);
@@ -9831,6 +9833,80 @@ void tst_qqmlecmascript::asCast()
     QCOMPARE(qvariant_cast<QObject *>(root->property("rectangleAsObject")), rectangle);
     QCOMPARE(qvariant_cast<QObject *>(root->property("rectangleAsItem")), rectangle);
     QCOMPARE(qvariant_cast<QObject *>(root->property("rectangleAsRectangle")), rectangle);
+}
+
+void tst_qqmlecmascript::functionNameInFunctionScope()
+{
+    QJSEngine engine;
+    QJSValue result = engine.evaluate(R"(
+        var a = {};
+        var foo = function foo() {
+            return foo;
+        }
+        a.foo = foo();
+
+        function bar() {
+            bar = 2;
+        }
+        bar()
+        a.bar = bar;
+
+        var baz = function baz() {
+            baz = 3;
+        }
+        baz()
+        a.baz = baz;
+
+        var foo2 = function() {
+            return foo2;
+        }
+        a.foo2 = foo2();
+
+        var baz2 = function() {
+            baz2 = 3;
+        }
+        baz2()
+        a.baz2 = baz2;
+        a
+
+    )");
+
+    QVERIFY(!result.isError());
+    const QJSManagedValue m(result, &engine);
+
+    QVERIFY(m.property("foo").isCallable());
+    QCOMPARE(m.property("bar").toInt(), 2);
+    QVERIFY(m.property("baz").isCallable());
+    QVERIFY(m.property("foo2").isCallable());
+    QCOMPARE(m.property("baz2").toInt(), 3);
+
+    const QJSValue getterInClass = engine.evaluate(R"(
+        class Tester {
+            constructor () {
+                this.a = 1;
+                this.b = 1;
+            }
+
+            get sum() {
+                const sum = this.a + this.b;
+                return sum;
+            }
+        }
+    )");
+
+    QVERIFY(!getterInClass.isError());
+
+    const QJSValue innerName = engine.evaluate(R"(
+        const a = 2;
+        var b = function a() { return a };
+        ({a: a, b: b, c: b()})
+    )");
+
+    QVERIFY(!innerName.isError());
+    const QJSManagedValue m2(innerName, &engine);
+    QCOMPARE(m2.property("a").toInt(), 2);
+    QVERIFY(m2.property("b").isCallable());
+    QVERIFY(m2.property("c").isCallable());
 }
 
 QTEST_MAIN(tst_qqmlecmascript)

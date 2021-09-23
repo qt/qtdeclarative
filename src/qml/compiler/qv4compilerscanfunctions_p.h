@@ -89,9 +89,19 @@ public:
     void leaveEnvironment();
 
     void enterQmlFunction(QQmlJS::AST::FunctionExpression *ast)
-    { enterFunction(ast, false); }
+    { enterFunction(ast, FunctionNameContext::None); }
 
 protected:
+    // Function declarations add their name to the outer scope, but not the
+    // inner scope. Function expressions add their name to the inner scope,
+    // unless the name is actually picked from the outer scope rather than
+    // given after the function token. QML functions don't add their name
+    // anywhere because the name is already recorded in the QML element.
+    // This enum is used to control the behavior of enterFunction().
+    enum class FunctionNameContext {
+        None, Inner, Outer
+    };
+
     using Visitor::visit;
     using Visitor::endVisit;
 
@@ -118,7 +128,8 @@ protected:
     bool visit(QQmlJS::AST::FieldMemberExpression *) override;
     bool visit(QQmlJS::AST::ArrayPattern *) override;
 
-    bool enterFunction(QQmlJS::AST::FunctionExpression *ast, bool enterName);
+    bool enterFunction(QQmlJS::AST::FunctionExpression *ast,
+                       FunctionNameContext nameContext);
 
     void endVisit(QQmlJS::AST::FunctionExpression *) override;
 
@@ -161,7 +172,7 @@ protected:
 protected:
     bool enterFunction(QQmlJS::AST::Node *ast, const QString &name,
                        QQmlJS::AST::FormalParameterList *formals,
-                       QQmlJS::AST::StatementList *body, bool enterName);
+                       QQmlJS::AST::StatementList *body, FunctionNameContext nameContext);
 
     void calcEscapingVariables();
 // fields:

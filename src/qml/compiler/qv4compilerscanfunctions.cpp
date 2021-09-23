@@ -382,8 +382,11 @@ bool ScanFunctions::visit(ExpressionStatement *ast)
         if (!_allowFuncDecls)
             _cg->throwSyntaxError(expr->functionToken, QStringLiteral("conditional function or closure declaration"));
 
-        if (!enterFunction(expr, /*enterName*/ true))
+        if (!enterFunction(expr, expr->identifierToken.length > 0
+                                ? FunctionNameContext::Inner
+                                : FunctionNameContext::None)) {
             return false;
+        }
         Node::accept(expr->formals, this);
         Node::accept(expr->body, this);
         leaveEnvironment();
@@ -399,7 +402,9 @@ bool ScanFunctions::visit(ExpressionStatement *ast)
 
 bool ScanFunctions::visit(FunctionExpression *ast)
 {
-    return enterFunction(ast, /*enterName*/ false);
+    return enterFunction(ast, ast->identifierToken.length > 0
+                                ? FunctionNameContext::Inner
+                                : FunctionNameContext::None);
 }
 
 bool ScanFunctions::visit(ClassExpression *ast)
@@ -496,12 +501,12 @@ bool ScanFunctions::visit(ArrayPattern *ast)
     return false;
 }
 
-bool ScanFunctions::enterFunction(FunctionExpression *ast, bool enterName)
+bool ScanFunctions::enterFunction(FunctionExpression *ast, FunctionNameContext nameContext)
 {
     Q_ASSERT(_context);
     if (_context->isStrict && (ast->name == QLatin1String("eval") || ast->name == QLatin1String("arguments")))
         _cg->throwSyntaxError(ast->identifierToken, QStringLiteral("Function name may not be eval or arguments in strict mode"));
-    return enterFunction(ast, ast->name.toString(), ast->formals, ast->body, enterName);
+    return enterFunction(ast, ast->name.toString(), ast->formals, ast->body, nameContext);
 }
 
 void ScanFunctions::endVisit(FunctionExpression *)
@@ -536,7 +541,7 @@ void ScanFunctions::endVisit(PatternProperty *)
 
 bool ScanFunctions::visit(FunctionDeclaration *ast)
 {
-    return enterFunction(ast, /*enterName*/ true);
+    return enterFunction(ast, FunctionNameContext::Outer);
 }
 
 void ScanFunctions::endVisit(FunctionDeclaration *)
@@ -674,7 +679,9 @@ void ScanFunctions::endVisit(WithStatement *)
     leaveEnvironment();
 }
 
-bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParameterList *formals, StatementList *body, bool enterName)
+bool ScanFunctions::enterFunction(
+        Node *ast, const QString &name, FormalParameterList *formals, StatementList *body,
+        FunctionNameContext nameContext)
 {
     Context *outerContext = _context;
     enterEnvironment(ast, ContextType::Function, name);
@@ -685,7 +692,7 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
     if (outerContext) {
         outerContext->hasNestedFunctions = true;
         // The identifier of a function expression cannot be referenced from the enclosing environment.
-        if (enterName) {
+        if (nameContext == FunctionNameContext::Outer) {
             if (!outerContext->addLocalVar(name, Context::FunctionDefinition, VariableScope::Var, expr)) {
                 _cg->throwSyntaxError(ast->firstSourceLocation(), QStringLiteral("Identifier %1 has already been declared").arg(name));
                 return false;
@@ -711,8 +718,10 @@ bool ScanFunctions::enterFunction(Node *ast, const QString &name, FormalParamete
     }
 
 
-    if (!enterName && (!name.isEmpty() && (!formals || !formals->containsName(name))))
+    if (nameContext == FunctionNameContext::Inner
+            && (!name.isEmpty() && (!formals || !formals->containsName(name)))) {
         _context->addLocalVar(name, Context::ThisFunctionName, VariableScope::Var);
+    }
     _context->formals = formals;
 
     if (body && !_context->isStrict)

@@ -489,7 +489,7 @@ void tst_qv4debugger::conditionalBreakPoint()
 
     QVERIFY(m_debuggerAgent->m_capturedScope.size() > 1);
     const TestAgent::NamedRefs &frame0 = m_debuggerAgent->m_capturedScope.at(0);
-    QCOMPARE(frame0.size(), 3);
+    QCOMPARE(frame0.size(), 2);
     QVERIFY(frame0.contains("i"));
     QCOMPARE(frame0.value("i").toInt(), 11);
 }
@@ -545,7 +545,7 @@ void tst_qv4debugger::readArguments()
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QVERIFY(m_debuggerAgent->m_capturedScope.size() > 1);
     const TestAgent::NamedRefs &frame0 = m_debuggerAgent->m_capturedScope.at(0);
-    QCOMPARE(frame0.size(), 5);
+    QCOMPARE(frame0.size(), 4);
     QVERIFY(frame0.contains(QStringLiteral("a")));
     QCOMPARE(frame0.type(QStringLiteral("a")), QStringLiteral("number"));
     QCOMPARE(frame0.value(QStringLiteral("a")).toDouble(), 1.0);
@@ -568,7 +568,7 @@ void tst_qv4debugger::readComplicatedArguments()
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QVERIFY(m_debuggerAgent->m_capturedScope.size() > 1);
     const TestAgent::NamedRefs &frame0 = m_debuggerAgent->m_capturedScope.at(0);
-    QCOMPARE(frame0.size(), 2);
+    QCOMPARE(frame0.size(), 1);
     QVERIFY(frame0.contains(QStringLiteral("a")));
     QCOMPARE(frame0.type(QStringLiteral("a")), QStringLiteral("number"));
     QCOMPARE(frame0.value(QStringLiteral("a")).toInt(), 12);
@@ -591,7 +591,7 @@ void tst_qv4debugger::readLocals()
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QVERIFY(m_debuggerAgent->m_capturedScope.size() > 1);
     const TestAgent::NamedRefs &frame0 = m_debuggerAgent->m_capturedScope.at(0);
-    QCOMPARE(frame0.size(), 7); // locals and parameters
+    QCOMPARE(frame0.size(), 6); // locals and parameters
     QVERIFY(frame0.contains("c"));
     QCOMPARE(frame0.type("c"), QStringLiteral("number"));
     QCOMPARE(frame0.value("c").toDouble(), 3.0);
@@ -619,7 +619,7 @@ void tst_qv4debugger::readObject()
     QVERIFY(m_debuggerAgent->m_wasPaused);
     QVERIFY(m_debuggerAgent->m_capturedScope.size() > 1);
     const TestAgent::NamedRefs &frame0 = m_debuggerAgent->m_capturedScope.at(0);
-    QCOMPARE(frame0.size(), 3);
+    QCOMPARE(frame0.size(), 2);
     QVERIFY(frame0.contains("b"));
     QCOMPARE(frame0.type("b"), QStringLiteral("object"));
     QJsonObject b = frame0.rawValue("b");
@@ -680,7 +680,7 @@ void tst_qv4debugger::readContextInAllFrames()
 
     for (int i = 0; i < 12; ++i) {
         const TestAgent::NamedRefs &scope = m_debuggerAgent->m_capturedScope.at(i);
-        QCOMPARE(scope.size(), 3);
+        QCOMPARE(scope.size(), 2);
         QVERIFY(scope.contains("n"));
         QCOMPARE(scope.type("n"), QStringLiteral("number"));
         QCOMPARE(scope.value("n").toDouble(), i + 1.0);
