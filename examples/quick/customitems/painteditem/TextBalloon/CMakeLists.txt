@@ -1,6 +1,5 @@
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/customitems/painteditem/TextBalloon")
 
-qt_add_library(qmltextballoon)
 qt_add_qml_module(qmltextballoon
     VERSION 1.0
     URI "TextBalloon"

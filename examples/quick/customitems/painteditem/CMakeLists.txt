@@ -28,8 +28,8 @@ target_link_libraries(painteditemexample PRIVATE
     Qt::Gui
     Qt::Qml
     Qt::Quick
-    qmltextballoon
 )
+add_dependencies(painteditemexample qmltextballoon)
 
 install(TARGETS painteditemexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
