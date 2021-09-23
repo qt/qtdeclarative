@@ -67,19 +67,19 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Do
     , m_semantics(semantics)
     , m_logger(logger)
 {
-    m_knownGlobalTypes = importer->builtinInternalNames();
-    m_voidType = m_knownGlobalTypes[u"void"_qs];
-    m_realType = m_knownGlobalTypes[u"double"_qs];
-    m_intType = m_knownGlobalTypes[u"int"_qs];
-    m_boolType = m_knownGlobalTypes[u"bool"_qs];
-    m_stringType = m_knownGlobalTypes[u"QString"_qs];
-    m_urlType = m_knownGlobalTypes[u"QUrl"_qs];
-    m_dateTimeType = m_knownGlobalTypes[u"QDateTime"_qs];
-    m_variantListType = m_knownGlobalTypes[u"QVariantList"_qs];
+    const QHash<QString, QQmlJSScope::ConstPtr> builtinTypes = importer->builtinInternalNames();
+    m_voidType = builtinTypes[u"void"_qs];
+    m_realType = builtinTypes[u"double"_qs];
+    m_intType = builtinTypes[u"int"_qs];
+    m_boolType = builtinTypes[u"bool"_qs];
+    m_stringType = builtinTypes[u"QString"_qs];
+    m_urlType = builtinTypes[u"QUrl"_qs];
+    m_dateTimeType = builtinTypes[u"QDateTime"_qs];
+    m_variantListType = builtinTypes[u"QVariantList"_qs];
     m_numberType = m_intType->baseType();
     Q_ASSERT(m_realType->baseType() == m_numberType);
-    m_varType = m_knownGlobalTypes[u"QVariant"_qs];
-    m_jsValueType = m_knownGlobalTypes[u"QJSValue"_qs];
+    m_varType = builtinTypes[u"QVariant"_qs];
+    m_jsValueType = builtinTypes[u"QJSValue"_qs];
 
     QQmlJSScope::Ptr jsPrimitiveType = QQmlJSScope::create();
     jsPrimitiveType->setInternalName(u"QJSPrimitiveValue"_qs);

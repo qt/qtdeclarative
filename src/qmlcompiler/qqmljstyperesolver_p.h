@@ -83,16 +83,6 @@ public:
     QQmlJSScope::ConstPtr listPropertyType() const { return m_listPropertyType; }
     QQmlJSScope::ConstPtr jsGlobalObject() const { return m_jsGlobalObject; }
 
-    QQmlJSScope::ConstPtr knownGlobalType(const QString &name) const
-    {
-        return m_knownGlobalTypes.value(name);
-    }
-
-    void addKnownGlobalType(const QString &name, const QQmlJSScope::ConstPtr &type)
-    {
-        m_knownGlobalTypes[name] = type;
-    }
-
     QQmlJSImporter *importer() const { return m_importer; }
 
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
@@ -175,8 +165,6 @@ protected:
     QQmlJSScope::ConstPtr m_jsPrimitiveType;
     QQmlJSScope::ConstPtr m_listPropertyType;
     QQmlJSScope::ConstPtr m_jsGlobalObject;
-
-    QHash<QString, QQmlJSScope::ConstPtr> m_knownGlobalTypes;
 
     QQmlJSImporter *m_importer = nullptr;
     const QmlIR::Document *m_document = nullptr;
