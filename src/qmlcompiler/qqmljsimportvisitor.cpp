@@ -1312,6 +1312,10 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
                     signalParameters << formal->element->bindingIdentifier.toString();
             }
         }
+
+        m_logger->logWarning(u"Declared signal handler \"%1\""_qs.arg(name), Log_ControlsSanity,
+                             scriptBinding->firstSourceLocation());
+
         m_signals[m_currentScope].append({ m_savedBindingOuterScope, group->firstSourceLocation(),
                                            qMakePair(name.toString(), signalParameters) });
 

@@ -61,6 +61,8 @@ private Q_SLOTS:
 
     void functionDeclaration();
 
+    void signalHandler();
+
 #ifdef QT_QMLJSROOTGEN_PRESENT
     void verifyJsRoot();
 #endif
@@ -968,6 +970,12 @@ void TestQmllint::functionDeclaration()
 {
     QVERIFY(runQmllint("functionDeclarations.qml", false, { "--controls-sanity=warning" }, false)
                     .contains(u"Declared function \"add\""_qs));
+}
+
+void TestQmllint::signalHandler()
+{
+    QVERIFY(runQmllint("signalHandlers.qml", false, { "--controls-sanity=warning" }, false)
+                    .contains(u"Declared signal handler \"onCompleted\""_qs));
 }
 
 QTEST_MAIN(TestQmllint)
