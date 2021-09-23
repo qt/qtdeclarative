@@ -34,8 +34,8 @@ target_link_libraries(threadingexample PUBLIC
     Qt::Gui
     Qt::Qml
     Qt::Quick
-    threading_shared
 )
+add_dependencies(threadingexample threading_shared)
 
 qt_add_qml_module(threadingexample
     URI threading

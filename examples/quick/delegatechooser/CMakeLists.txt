@@ -26,8 +26,8 @@ target_link_libraries(delegatechooserexample PUBLIC
     Qt::Gui
     Qt::Qml
     Qt::Quick
-    delegatechooser_shared
 )
+add_dependencies(delegatechooserexample delegatechooser_shared)
 
 qt_add_qml_module(delegatechooserexample
     URI delegatechooser

@@ -34,8 +34,8 @@ target_link_libraries(viewsexample PRIVATE
     Qt::Gui
     Qt::Qml
     Qt::Quick
-    views_shared
 )
+add_dependencies(viewsexample views_shared)
 
 qt_add_qml_module(viewsexample
     URI views

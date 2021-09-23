@@ -45,8 +45,8 @@ target_link_libraries(windowexample PRIVATE
     Qt::Gui
     Qt::Qml
     Qt::Quick
-    window_shared
 )
+add_dependencies(windowexample window_shared)
 
 install(TARGETS windowexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"

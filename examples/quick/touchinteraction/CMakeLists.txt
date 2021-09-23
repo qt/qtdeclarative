@@ -34,8 +34,8 @@ target_link_libraries(touchinteractionexample PUBLIC
     Qt::Gui
     Qt::Qml
     Qt::Quick
-    touchinteraction_shared
 )
+add_dependencies(touchinteractionexample touchinteraction_shared)
 
 qt_add_qml_module(touchinteractionexample
     URI touchinteraction
