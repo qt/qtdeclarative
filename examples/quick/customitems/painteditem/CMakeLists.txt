@@ -36,3 +36,11 @@ install(TARGETS painteditemexample
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
 )
+
+include(../../shared/QtBundleQmlModuleForMacOS.cmake)
+
+set(app_target "painteditemexample")
+set(qml_plugin_target "qmltextballoon")
+set(qml_module_uri "TextBalloon")
+add_qml_module_to_macos_app_bundle(
+    "${app_target}" "${qml_plugin_target}" "${qml_module_uri}")
