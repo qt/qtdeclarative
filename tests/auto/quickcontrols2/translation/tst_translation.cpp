@@ -34,6 +34,7 @@
 **
 ****************************************************************************/
 
+#include <QtTest/qsignalspy.h>
 #include <QtTest/qtest.h>
 #include <QtCore/qtranslator.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -41,6 +42,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
 #include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 #include <QtQuickTemplates2/private/qquickcombobox_p.h>
 #include <QtQuickTemplates2/private/qquickdialog_p.h>
@@ -48,6 +50,7 @@
 #include <QtQuickTemplates2/private/qquicktextfield_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 
+using namespace QQuickControlsTestUtils;
 using namespace QQuickVisualTestUtils;
 
 class tst_translation : public QQmlDataTest
@@ -61,6 +64,7 @@ private slots:
     void dialogButtonBox();
     void dialogButtonBoxWithCustomButtons();
     void comboBox();
+    void stackView();
 };
 
 tst_translation::tst_translation()
@@ -167,6 +171,26 @@ void tst_translation::comboBox()
     view.engine()->retranslate();
     QTRY_COMPARE(comboBox->displayText(), QString::fromUtf8("こんにちは"));
     QCOMPARE(contentItem->text(), QString::fromUtf8("こんにちは"));
+}
+
+void tst_translation::stackView()
+{
+    QQuickControlsApplicationHelper helper(this, "stackView.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    QVERIFY(window->setProperty("engine", QVariant::fromValue(&helper.engine)));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QSignalSpy calledTranslateSpy(window, SIGNAL(calledTranslate()));
+    QVERIFY(calledTranslateSpy.isValid());
+
+    QQuickAbstractButton *button = window->findChild<QQuickAbstractButton*>("button");
+    QVERIFY(button);
+    // Shouldn't crash when calling retranslate.
+    QVERIFY(clickButton(button));
+    QTRY_COMPARE(calledTranslateSpy.count(), 1);
 }
 
 QTEST_MAIN(tst_translation)
