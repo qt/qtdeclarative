@@ -63,6 +63,8 @@ private Q_SLOTS:
 
     void signalHandler();
 
+    void anchors();
+
 #ifdef QT_QMLJSROOTGEN_PRESENT
     void verifyJsRoot();
 #endif
@@ -976,6 +978,12 @@ void TestQmllint::signalHandler()
 {
     QVERIFY(runQmllint("signalHandlers.qml", false, { "--controls-sanity=warning" }, false)
                     .contains(u"Declared signal handler \"onCompleted\""_qs));
+}
+
+void TestQmllint::anchors()
+{
+    QVERIFY(runQmllint("anchors.qml", false, { "--controls-sanity=warning" }, false)
+                    .contains(u"Using anchors here"_qs));
 }
 
 QTEST_MAIN(TestQmllint)

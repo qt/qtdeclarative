@@ -1296,6 +1296,11 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
     }
 
     auto name = group->name;
+
+    if (id && id->name.toString() == u"anchors")
+        m_logger->logWarning(u"Using anchors here"_qs, Log_ControlsSanity,
+                             scriptBinding->firstSourceLocation());
+
     const QString signal = signalName(name);
 
     if (signal.isEmpty()) {
