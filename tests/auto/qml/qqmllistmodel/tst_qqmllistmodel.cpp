@@ -1713,7 +1713,7 @@ void tst_qqmllistmodel::nestedListModelIteration()
                 }
             })",
             QUrl());
-    QScopedPointer<QObject>(component.create());
+    delete component.create();
 }
 
 // QTBUG-63569
@@ -1741,7 +1741,7 @@ void tst_qqmllistmodel::undefinedAppendShouldCauseError()
             QUrl());
     QTest::ignoreMessage(QtMsgType::QtWarningMsg, "<Unknown File>: faulty is undefined. Adding an object with a undefined member does not create a role for it.");
     QTest::ignoreMessage(QtMsgType::QtWarningMsg, "<Unknown File>: faulty is null. Adding an object with a null member does not create a role for it.");
-    QScopedPointer<QObject>(component.create());
+    delete component.create();
 }
 
 // QTBUG-89173
@@ -1763,7 +1763,7 @@ void tst_qqmllistmodel::nullPropertyCrash()
             })",
             QUrl());
     QTest::ignoreMessage(QtMsgType::QtWarningMsg, "<Unknown File>: c is null. Adding an object with a null member does not create a role for it.");
-    QScopedPointer<QObject>(component.create());
+    delete component.create();
 }
 
 // QTBUG-91390
@@ -1786,7 +1786,7 @@ void tst_qqmllistmodel::objectDestroyed()
     engine.rootContext()->setContextProperty(u"contextObject"_qs, obj);
     engine.setObjectOwnership(obj, QJSEngine::JavaScriptOwnership);
 
-    QScopedPointer<QObject>(component.create());
+    delete component.create();
     QVERIFY(!destroyed);
     engine.collectGarbage();
     QTest::qSleep(250);
