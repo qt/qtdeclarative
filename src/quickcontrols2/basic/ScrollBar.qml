@@ -48,7 +48,7 @@ T.ScrollBar {
 
     padding: 2
     visible: control.policy !== T.ScrollBar.AlwaysOff
-    minimumSize: orientation == Qt.Horizontal ? height / width : width / height
+    minimumSize: orientation === Qt.Horizontal ? height / width : width / height
 
     contentItem: Rectangle {
         implicitWidth: control.interactive ? 6 : 2

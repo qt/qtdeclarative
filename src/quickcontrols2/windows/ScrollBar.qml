@@ -105,8 +105,8 @@ NativeStyle.DefaultScrollBar {
     __increaseVisual.indicator: NativeStyle.ScrollBar {
         control: controlRoot
         subControl: NativeStyle.ScrollBar.AddLine
-        x: orientation == Qt.Horizontal ? controlRoot.width - width : 0
-        y: orientation == Qt.Vertical ? controlRoot.height - height : 0
+        x: orientation === Qt.Horizontal ? controlRoot.width - width : 0
+        y: orientation === Qt.Vertical ? controlRoot.height - height : 0
         overrideState: NativeStyle.ScrollBar.AlwaysHovered
         opacity: controlRoot.__increaseVisual.hovered ? 1 : 0
         visible: contentItem instanceof NativeStyle.StyleItem
