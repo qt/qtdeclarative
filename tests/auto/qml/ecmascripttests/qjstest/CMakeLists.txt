@@ -18,6 +18,7 @@ qt_internal_add_tool(${target_name}
         Qt::Gui
         Qt::QmlPrivate
 )
+qt_internal_return_unless_building_tools()
 
 #### Keys ignored in scope 1:.:.:qjstest.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "Javascript" "test" "runner"

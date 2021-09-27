@@ -19,6 +19,7 @@ qt_internal_add_tool(${target_name}
         Qt::CorePrivate
         Qt::QmlCompilerPrivate
 )
+qt_internal_return_unless_building_tools()
 
 #### Keys ignored in scope 1:.:.:qmllint.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "QML" "Syntax" "Verifier"

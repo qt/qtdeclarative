@@ -18,6 +18,7 @@ qt_internal_add_tool(${target_name}
         Qt::QmlCompilerPrivate
         Qt::QmlPrivate
 )
+qt_internal_return_unless_building_tools()
 
 # special case begin
 # Create a dummy package that will just find Qml package, for backwards compatibility reasons.

@@ -18,6 +18,7 @@ qt_internal_add_app(qmlscene
         Qt::Quick
         Qt::QuickPrivate
 )
+qt_internal_return_unless_building_tools()
 
 set_target_properties(qmlscene PROPERTIES WIN32_EXECUTABLE FALSE)
 
