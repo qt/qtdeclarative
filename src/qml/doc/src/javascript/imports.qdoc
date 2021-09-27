@@ -95,17 +95,18 @@ or modules).
 
 A JavaScript resource may import another in the following fashion:
 \code
-.import "filename.js" as Qualifier
-\endcode
-For example:
-\code
 import * as MathFunctions from "factorial.mjs";
 \endcode
+Or:
+\code
+.import "filename.js" as Qualifier
+\endcode
 
-The latter is standard ECMAScript syntax for importing ECMAScript modules, and
+The former is standard ECMAScript syntax for importing ECMAScript modules, and
 only works from within ECMAScript modules as denoted by the \c mjs file
-extension. The former is an extension to JavaScript provided by the \c QML
-engine and will work also with non-modules.
+extension. The latter is an extension to JavaScript provided by the \c QML
+engine and will work also with non-modules. As an extension superseded by the
+ECMAScript standard, its usage is discouraged.
 
 When a JavaScript file is imported this way, it is imported with a qualifier.
 The functions in that file are then accessible from the importing script via the
