@@ -206,6 +206,8 @@ private slots:
     void synchronousDrag();
     void visibleAreaBinding();
     void parallelTouch();
+    void ignoreNonLeftMouseButtons();
+    void ignoreNonLeftMouseButtons_data();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -2664,6 +2666,54 @@ void tst_qquickflickable::parallelTouch() // QTBUG-30840
     QTest::touchEvent(&view, touchDevice).release(0, p0, &view).release(1, p1, &view);
     QTRY_VERIFY(!flickable1->isMoving());
     QTRY_VERIFY(!flickable2->isMoving());
+}
+
+void tst_qquickflickable::ignoreNonLeftMouseButtons() // QTBUG-96909
+{
+    QFETCH(Qt::MouseButton, otherButton);
+    const int threshold = qApp->styleHints()->startDragDistance();
+    QQuickView view;
+    view.setSource(testFileUrl("dragon.qml"));
+    view.show();
+    view.requestActivate();
+    QQuickFlickable *flickable = static_cast<QQuickFlickable *>(view.rootObject());
+    QSignalSpy dragSpy(flickable, &QQuickFlickable::draggingChanged);
+
+    // Drag with left button
+    QPoint p1(100, 100);
+    moveAndPress(&view, p1);
+    for (int i = 0; i < 8; ++i) {
+        p1 -= QPoint(threshold, threshold);
+        QTest::mouseMove(&view, p1, 50);
+    }
+    QVERIFY(flickable->isDragging());
+    QCOMPARE(dragSpy.count(), 1);
+
+    // Press other button too, then release left button: dragging changes to false
+    QTest::mousePress(&view, otherButton);
+    QTest::mouseRelease(&view, Qt::LeftButton);
+    QTRY_COMPARE(flickable->isDragging(), false);
+    QCOMPARE(dragSpy.count(), 2);
+
+    // Drag further with the other button held: Flickable ignores it
+    for (int i = 0; i < 8; ++i) {
+        p1 -= QPoint(threshold, threshold);
+        QTest::mouseMove(&view, p1, 50);
+    }
+    QCOMPARE(flickable->isDragging(), false);
+    QCOMPARE(dragSpy.count(), 2);
+
+    // Release other button: nothing happens
+    QTest::mouseRelease(&view, otherButton);
+    QCOMPARE(dragSpy.count(), 2);
+}
+
+void tst_qquickflickable::ignoreNonLeftMouseButtons_data()
+{
+    QTest::addColumn<Qt::MouseButton>("otherButton");
+
+    QTest::newRow("right") << Qt::RightButton;
+    QTest::newRow("middle") << Qt::MiddleButton;
 }
 
 QTEST_MAIN(tst_qquickflickable)
