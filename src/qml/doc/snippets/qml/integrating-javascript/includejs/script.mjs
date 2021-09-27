@@ -50,8 +50,9 @@
 //![0]
 // script.mjs
 import { factorial } from "factorial.mjs"
+export { factorial }
 
-function showCalculations(value) {
+export function showCalculations(value) {
     console.log(
         "Call factorial() from script.js:",
         factorial(value));
