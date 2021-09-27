@@ -1330,7 +1330,7 @@ void QQuickFlickablePrivate::handleMoveEvent(QPointerEvent *event)
 {
     Q_Q(QQuickFlickable);
     if (!interactive || lastPosTime == -1 ||
-            (event->isSinglePointEvent() && static_cast<QSinglePointEvent *>(event)->buttons() == Qt::NoButton))
+            (event->isSinglePointEvent() && !static_cast<QSinglePointEvent *>(event)->buttons().testFlag(Qt::LeftButton)))
         return;
 
     qint64 currentTimestamp = computeCurrentTime(event);
