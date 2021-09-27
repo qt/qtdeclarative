@@ -87,7 +87,7 @@ public:
     QPixmap standardPixmap(StandardPixmap standardIcon, const QStyleOption *option) const override;
     QIcon standardIcon(StandardPixmap standardIcon, const QStyleOption *option = nullptr) const override;
 
-    QMargins ninePatchMargins(QStyle::ComplexControl cc, const QStyleOptionComplex *opt, const QSize &imageSize) const;
+    QMargins ninePatchMargins(QStyle::ComplexControl cc, const QStyleOptionComplex *opt, const QSize &imageSize) const override;
 
 private:
     Q_DISABLE_COPY_MOVE(QWindowsXPStyle)
