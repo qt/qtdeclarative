@@ -35,6 +35,11 @@ if(NOT "${QT_HOST_PATH}" STREQUAL "")
      set(CMAKE_FIND_ROOT_PATH ${_qt_backup_qtdeclarative_CMAKE_FIND_ROOT_PATH})
 endif()
 
+# Optionally look for the target ShaderTools package to avoid warnings
+# when configuring the project to build examples in-tree in a prefix Qt build.
+# See QTBUG-96358 for details.
+find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS ShaderTools)
+
 # special case begin
 # export QT6_ADD_QML_MODULE to this project
 include(src/qml/Qt6QmlMacros.cmake)
