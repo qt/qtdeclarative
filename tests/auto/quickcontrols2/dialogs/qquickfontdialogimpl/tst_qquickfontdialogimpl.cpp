@@ -63,6 +63,16 @@ class tst_QQuickFontDialogImpl : public QQmlDataTest
 
 public:
     tst_QQuickFontDialogImpl();
+    static void initMain()
+    {
+        // We need to set this attribute.
+        QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
+        // We don't want to run this test for every style, as each one will have
+        // different ways of implementing the dialogs.
+        // For now we only test one style.
+        // TODO: use Basic
+        QQuickStyle::setStyle("Fusion");
+    }
 
 private slots:
     void writingSystem();
@@ -512,18 +522,6 @@ void tst_QQuickFontDialogImpl::searchFamily()
     CLOSE_DIALOG("Ok");
 }
 
-int main(int argc, char *argv[])
-{
-    // We need to set this attribute, and this (defining main() ourselves and
-    // calling QTEST_MAIN_IMPL) seems to be the nicest way to do it without
-    // duplicating too much code.
-    // We also don't want to run this for every style, as each one will have
-    // different ways of implementing the dialogs.
-    QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
-    // For now we only test one style.
-    // TODO: use Basic
-    QQuickStyle::setStyle("Fusion");
-    QTEST_MAIN_IMPL(tst_QQuickFontDialogImpl)
-}
+QTEST_MAIN(tst_QQuickFontDialogImpl)
 
 #include "tst_qquickfontdialogimpl.moc"
