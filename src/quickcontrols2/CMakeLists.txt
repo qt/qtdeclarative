@@ -5,6 +5,7 @@
 qt_internal_add_qml_module(QuickControls2
     URI "QtQuick.Controls"
     VERSION "${PROJECT_VERSION}"
+    PAST_MAJOR_VERSIONS 2
     DESIGNER_SUPPORTED
     CLASS_NAME QtQuickControls2Plugin
     PLUGIN_TARGET qtquickcontrols2plugin
@@ -21,7 +22,6 @@ qt_internal_add_qml_module(QuickControls2
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
     SOURCES
-        qquickdummyregistration_p.h
         qquickstyle.cpp qquickstyle.h qquickstyle_p.h
         qquickstyleplugin.cpp qquickstyleplugin_p.h
         qtquickcontrols2global.h
