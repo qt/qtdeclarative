@@ -52,6 +52,10 @@
     \brief The StackLayout class provides a stack of items where
     only one item is visible at a time.
 
+    To be able to use this type more efficiently, it is recommended that you
+    understand the general mechanism of the Qt Quick Layouts module. Refer to
+    \l{Qt Quick Layouts Overview} for more information.
+
     The current visible item can be modified by setting the \l currentIndex property.
     The index corresponds to the order of the StackLayout's children.
 
@@ -98,6 +102,7 @@
     \sa GridLayout
     \sa RowLayout
     \sa {QtQuick.Controls::StackView}{StackView}
+    \sa {Qt Quick Layouts Overview}
 */
 
 QT_BEGIN_NAMESPACE
