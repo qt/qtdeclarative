@@ -45,6 +45,10 @@ function(bundle_shared example)
         # a PlugIns subdirectory in a macOS bundle.
         # Copy the qmldir and shared library qml plugin.
 
+        # Ensure the executable depends on the plugin so the plugin is copied
+        # only after it was built.
+        add_dependencies(${example} ${PROJECT_NAME}_shared)
+
         set(shared_dir "$<TARGET_FILE_DIR:${PROJECT_NAME}_shared>")
         set(shared_qmldir_file "${shared_dir}/qmldir")
         set(app_dir "$<TARGET_FILE_DIR:${example}>")
