@@ -112,7 +112,7 @@ bool QQuickPlatformFontDialog::isValid() const
 void QQuickPlatformFontDialog::setCurrentFont(const QFont &font)
 {
     if (m_dialog)
-        m_dialog->setCurrentFont(font);
+        m_dialog->setCurrentFont(font, true);
 }
 
 QFont QQuickPlatformFontDialog::currentFont() const
@@ -153,7 +153,8 @@ bool QQuickPlatformFontDialog::show(Qt::WindowFlags flags, Qt::WindowModality mo
     QSharedPointer<QFontDialogOptions> options = QPlatformFontDialogHelper::options();
     m_dialog->setTitle(options->windowTitle());
     m_dialog->setOptions(options);
-    m_dialog->updateListViews();
+
+    m_dialog->init();
 
     m_dialog->open();
     return true;
