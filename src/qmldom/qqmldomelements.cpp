@@ -831,19 +831,43 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
     }
     if (counter != ow.counter() || !idStr().isEmpty())
         spacerId = ow.addNewlinesAutospacerCallback(2);
-    for (auto pDefs : propertyDefs.values()) {
-        for (auto pDef : pDefs.values()) {
+    QSet<QString> mergedDefBinding;
+    for (const QString &defName : propertyDefs.sortedKeys()) {
+        auto pDefs = propertyDefs.key(defName).values();
+        for (auto pDef : pDefs) {
+            const PropertyDefinition *pDefPtr = pDef.as<PropertyDefinition>();
+            Q_ASSERT(pDefPtr);
             DomItem b;
-            bindings.key(pDef.name()).visitIndexes([&b](DomItem &el) {
-                const Binding *elPtr = el.as<Binding>();
-                if (elPtr && elPtr->bindingType() == BindingType::Normal) {
-                    b = el;
-                    return false;
-                }
-                return true;
-            });
-            if (b)
+            bool uniqueDeclarationWithThisName = pDefs.length() == 1;
+            if (uniqueDeclarationWithThisName && !pDefPtr->isRequired)
+                bindings.key(pDef.name()).visitIndexes([&b, pDefPtr](DomItem &el) {
+                    const Binding *elPtr = el.as<Binding>();
+                    if (elPtr && elPtr->bindingType() == BindingType::Normal) {
+                        switch (elPtr->valueKind()) {
+                        case BindingValueKind::ScriptExpression:
+                            b = el;
+                            break;
+                        case BindingValueKind::Array:
+                            if (!pDefPtr->isDefaultMember
+                                && pDefPtr->isParametricType())
+                                b = el;
+                            break;
+                        case BindingValueKind::Object:
+                            if (!pDefPtr->isDefaultMember
+                                && !pDefPtr->isParametricType())
+                                b = el;
+                            break;
+                        case BindingValueKind::Empty:
+                            break;
+                        }
+                        return false;
+                    }
+                    return true;
+                });
+            if (b) {
+                mergedDefBinding.insert(defName);
                 b.writeOutPre(ow);
+            }
             pDef.writeOut(ow);
             if (b) {
                 ow.write(u": ");
@@ -887,7 +911,7 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
     ow.removeTextAddCallback(spacerId);
     QList<DomItem> normalBindings, signalHandlers, delayedBindings;
     for (auto bName : bindings.sortedKeys()) {
-        bool skipFirstNormal = m_propertyDefs.contains(bName);
+        bool skipFirstNormal = mergedDefBinding.contains(bName);
         for (auto b : bindings.key(bName).values()) {
             const Binding *bPtr = b.as<Binding>();
             if (skipFirstNormal) {
@@ -1648,6 +1672,11 @@ SourceLocation ScriptExpression::globalLocation(DomItem &self) const
         return fLocPtr->regions.value(QString(), fLocPtr->fullRegion);
     }
     return SourceLocation();
+}
+
+bool PropertyDefinition::isParametricType() const
+{
+    return typeName.contains(QChar(u'<'));
 }
 
 void PropertyDefinition::writeOut(DomItem &, OutWriter &lw) const

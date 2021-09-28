@@ -98,6 +98,9 @@ private slots:
         QTest::newRow("file1NoReorder")
                 << QStringLiteral(u"file1.qml") << QStringLiteral(u"file1Reformatted2.qml")
                 << noReorderOptions;
+        QTest::newRow("noMerge")
+                << QStringLiteral(u"noMerge.qml") << QStringLiteral(u"noMergeReformatted.qml")
+                << defaultOptions;
     }
 
     void manualReformatter()

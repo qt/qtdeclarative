@@ -622,6 +622,7 @@ public:
         return res;
     }
 
+    bool isParametricType() const;
     void writeOut(DomItem &self, OutWriter &lw) const;
 
     QString read;
