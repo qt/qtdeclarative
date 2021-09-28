@@ -586,6 +586,9 @@ function(qt6_add_qml_module target)
 
     # Build an init object library for static plugins and propagate it along with the plugin
     # target.
+    # TODO: Figure out if we can move this code block into qt_add_qml_plugin. Need to consider
+    #       various corner cases.
+    #       QTBUG-96937
     if(TARGET "${arg_PLUGIN_TARGET}")
         get_target_property(plugin_lib_type ${arg_PLUGIN_TARGET} TYPE)
         if(plugin_lib_type STREQUAL "STATIC_LIBRARY")
