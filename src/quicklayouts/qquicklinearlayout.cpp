@@ -53,6 +53,10 @@
     \ingroup layouts
     \brief Identical to \l GridLayout, but having only one row.
 
+    To be able to use this type more efficiently, it is recommended that you
+    understand the general mechanism of the Qt Quick Layouts module. Refer to
+    \l{Qt Quick Layouts Overview} for more information.
+
     It is available as a convenience for developers, as it offers a cleaner API.
 
     Items in a RowLayout support these attached properties:
@@ -96,7 +100,9 @@
     Read more about attached properties \l{QML Object Attributes}{here}.
     \sa ColumnLayout
     \sa GridLayout
+    \sa StackLayout
     \sa Row
+    \sa {Qt Quick Layouts Overview}
 */
 
 /*!
@@ -106,6 +112,10 @@
     \inqmlmodule QtQuick.Layouts
     \ingroup layouts
     \brief Identical to \l GridLayout, but having only one column.
+
+    To be able to use this type more efficiently, it is recommended that you
+    understand the general mechanism of the Qt Quick Layouts module. Refer to
+    \l{Qt Quick Layouts Overview} for more information.
 
     It is available as a convenience for developers, as it offers a cleaner API.
 
@@ -148,7 +158,9 @@
 
     \sa RowLayout
     \sa GridLayout
+    \sa StackLayout
     \sa Column
+    \sa {Qt Quick Layouts Overview}
 */
 
 
@@ -160,7 +172,9 @@
     \ingroup layouts
     \brief Provides a way of dynamically arranging items in a grid.
 
-
+    To be able to use this type more efficiently, it is recommended that you
+    understand the general mechanism of the Qt Quick Layouts module. Refer to
+    \l{Qt Quick Layouts Overview} for more information.
 
     If the GridLayout is resized, all items in the layout will be rearranged. It is similar
     to the widget-based QGridLayout. All visible children of the GridLayout element will belong to
@@ -212,7 +226,9 @@
 
     \sa RowLayout
     \sa ColumnLayout
+    \sa StackLayout
     \sa Grid
+    \sa {Qt Quick Layouts Overview}
 */
 
 
