@@ -40,6 +40,8 @@
 #include <QtQuickTemplates2/private/qquickdialogbuttonbox_p_p.h>
 #include <private/qfontdatabase_p.h>
 
+#include <QRegularExpression>
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcAttachedProperty, "qt.quick.dialogs.quickfontdialogimpl.attachedOrWarn")
@@ -106,7 +108,7 @@ QFont QQuickFontDialogImpl::currentFont() const
     return d->currentFont;
 }
 
-void QQuickFontDialogImpl::setCurrentFont(const QFont &font)
+void QQuickFontDialogImpl::setCurrentFont(const QFont &font, bool selectInListViews)
 {
     Q_D(QQuickFontDialogImpl);
 
@@ -116,16 +118,26 @@ void QQuickFontDialogImpl::setCurrentFont(const QFont &font)
     d->currentFont = font;
 
     emit currentFontChanged(font);
+
+    if (!selectInListViews)
+        return;
+
+    QQuickFontDialogImplAttached *attached = d->attachedOrWarn();
+    if (!attached)
+        return;
+
+    attached->selectFontInListViews(font);
 }
 
-void QQuickFontDialogImpl::updateListViews()
+void QQuickFontDialogImpl::init()
 {
     Q_D(QQuickFontDialogImpl);
     QQuickFontDialogImplAttached *attached = d->attachedOrWarn();
     if (!attached)
         return;
 
-    attached->updateFamilies();
+    if (!attached->familyListView()->model().isValid())
+        attached->updateFamilies();
 
     attached->buttonBox()->setVisible(!(options()->options() & QFontDialogOptions::NoButtons));
 }
@@ -167,7 +179,8 @@ QQuickFontDialogImplAttached::QQuickFontDialogImplAttached(QObject *parent)
       m_writingSystem(QFontDatabase::Any),
       m_selectedSize(-1),
       m_smoothlyScalable(false),
-      m_isUpdatingStyles(false)
+      m_ignoreFamilyUpdate(false),
+      m_ignoreStyleUpdate(false)
 {
     if (!qobject_cast<QQuickFontDialogImpl *>(parent)) {
         qmlWarning(this) << "FontDialogImpl attached properties should only be "
@@ -488,18 +501,80 @@ void QQuickFontDialogImplAttached::setSizeEdit(QQuickTextField *sizeEdit)
     emit sizeEditChanged();
 }
 
+static int findFamilyInModel(const QString &selectedFamily, const QStringList &model)
+{
+    enum match_t { MATCH_NONE = 0, MATCH_LAST_RESORT = 1, MATCH_APP = 2, MATCH_FAMILY = 3 };
+    QString foundryName1, familyName1, foundryName2, familyName2;
+    int bestFamilyMatch = -1;
+    match_t bestFamilyType = MATCH_NONE;
+    const QFont f;
+
+    QFontDatabasePrivate::parseFontName(selectedFamily, foundryName1, familyName1);
+
+    int i = 0;
+    for (auto it = model.constBegin(); it != model.constEnd(); ++it, ++i) {
+        QFontDatabasePrivate::parseFontName(*it, foundryName2, familyName2);
+
+        if (familyName1 == familyName2) {
+            bestFamilyType = MATCH_FAMILY;
+            if (foundryName1 == foundryName2)
+                return i;
+            else
+                bestFamilyMatch = i;
+        }
+
+        // fallbacks
+        match_t type = MATCH_NONE;
+        if (bestFamilyType <= MATCH_NONE && familyName2 == QStringLiteral("helvetica"))
+            type = MATCH_LAST_RESORT;
+        if (bestFamilyType <= MATCH_LAST_RESORT && familyName2 == f.families().constFirst())
+            type = MATCH_APP;
+        if (type != MATCH_NONE) {
+            bestFamilyType = type;
+            bestFamilyMatch = i;
+        }
+    }
+
+    return bestFamilyMatch;
+}
+
+static int findStyleInModel(const QString &selectedStyle, const QStringList &model)
+{
+    if (model.isEmpty())
+        return -1;
+
+    if (!selectedStyle.isEmpty()) {
+        const int idx = model.indexOf(QRegularExpression(QRegularExpression::escape(selectedStyle), QRegularExpression::CaseInsensitiveOption));
+        if (idx >= 0)
+            return idx;
+
+        enum class StyleClass {Unknown, Normal, Italic};
+        auto classifyStyleFallback = [](const QString & style) {
+            if (style.toLower() == QLatin1String("italic") || style.toLower() == QLatin1String("oblique"))
+                return StyleClass::Italic;
+            if (style.toLower() == QLatin1String("normal") || style.toLower() == QLatin1String("regular"))
+                return StyleClass::Normal;
+            return StyleClass::Unknown;
+        };
+
+        auto styleClass = classifyStyleFallback(selectedStyle);
+
+        if (styleClass != StyleClass::Unknown)
+            for (int i = 0; i < model.count(); ++i)
+                if (classifyStyleFallback(model.at(i)) == styleClass)
+                    return i;
+    }
+    return 0;
+}
+
 /*!
     \internal
 
     Updates the model for the family list view, and attempt
     to reselect the previously selected font family.
-
-    Calls updateStyles()
  */
 void QQuickFontDialogImplAttached::updateFamilies()
 {
-    enum match_t { MATCH_NONE = 0, MATCH_LAST_RESORT = 1, MATCH_APP = 2, MATCH_FAMILY = 3 };
-
     const QFontDialogOptions::FontDialogOptions scalableMask(
             QFontDialogOptions::ScalableFonts | QFontDialogOptions::NonScalableFonts);
 
@@ -534,49 +609,15 @@ void QQuickFontDialogImplAttached::updateFamilies()
     auto listView = familyListView();
 
     // Index will be set to -1 on empty model, and 0 for non empty models.
-    // Will overwrite selectedFamily and selectedStyle
+    m_ignoreFamilyUpdate = !m_selectedFamily.isEmpty();
     listView->setModel(familyNames);
+    m_ignoreFamilyUpdate = false;
 
-    QString foundryName1, familyName1, foundryName2, familyName2;
-    int bestFamilyMatch = -1;
-    match_t bestFamilyType = MATCH_NONE;
-    const QFont f;
+    // Will overwrite selectedFamily and selectedStyle
+    listView->setCurrentIndex(findFamilyInModel(m_selectedFamily, familyNames));
 
-    QFontDatabasePrivate::parseFontName(m_selectedFamily, foundryName1, familyName1);
-
-    int i = 0;
-    for (auto it = familyNames.constBegin(); it != familyNames.constEnd(); ++it, ++i) {
-        QFontDatabasePrivate::parseFontName(*it, foundryName2, familyName2);
-
-        if (familyName1 == familyName2) {
-            bestFamilyType = MATCH_FAMILY;
-            if (foundryName1 == foundryName2) {
-                bestFamilyMatch = i;
-                break;
-            }
-            if (bestFamilyMatch < MATCH_FAMILY) {
-                bestFamilyMatch = i;
-            }
-        }
-
-        match_t type = MATCH_NONE;
-        if (bestFamilyType <= MATCH_NONE && familyName2 == QStringLiteral("helvetica"))
-            type = MATCH_LAST_RESORT;
-        if (bestFamilyType <= MATCH_LAST_RESORT && familyName2 == f.families().constFirst())
-            type = MATCH_APP;
-        if (type != MATCH_NONE) {
-            bestFamilyType = type;
-            bestFamilyMatch = i;
-        }
-    }
-
-    if (!familyNames.isEmpty() && bestFamilyType != MATCH_NONE) {
-        listView->setCurrentIndex(bestFamilyMatch);
-    } else {
-        listView->setCurrentIndex(-1);
-    }
-
-    updateStyles();
+    if (familyNames.isEmpty())
+        _q_familyChanged();
 }
 
 /*!
@@ -594,48 +635,14 @@ void QQuickFontDialogImplAttached::updateStyles()
 
     auto listView = styleListView();
 
-    m_isUpdatingStyles = true;
-
+    m_ignoreStyleUpdate = !m_selectedStyle.isEmpty();
     listView->setModel(styles);
 
     if (styles.isEmpty()) {
         styleEdit()->clear();
         m_smoothlyScalable = false;
     } else {
-        int newIndex = 0;
-
-        if (!m_selectedStyle.isEmpty()) {
-            bool redo = true, found = false;
-            QString cstyle = m_selectedStyle;
-            do {
-                for (int i = 0; i < styles.count(); ++i) {
-                    if (cstyle.toLower() == styles.at(i).toLower()) {
-                        newIndex = i;
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found && redo) {
-                    redo = false;
-
-                    if (cstyle.contains(QLatin1String("Italic"))) {
-                        cstyle.replace(QLatin1String("Italic"), QLatin1String("Oblique"));
-                        continue;
-                    } else if (cstyle.contains(QLatin1String("Oblique"))) {
-                        cstyle.replace(QLatin1String("Oblique"), QLatin1String("Italic"));
-                        continue;
-                    } else if (cstyle.contains(QLatin1String("Regular"))) {
-                        cstyle.replace(QLatin1String("Regular"), QLatin1String("Normal"));
-                        continue;
-                    } else if (cstyle.contains(QLatin1String("Normal"))) {
-                        cstyle.replace(QLatin1String("Normal"), QLatin1String("Regular"));
-                        continue;
-                    }
-                }
-
-            } while (!found && redo);
-        }
+        int newIndex = findStyleInModel(m_selectedStyle, styles);
 
         listView->setCurrentIndex(newIndex);
 
@@ -645,7 +652,7 @@ void QQuickFontDialogImplAttached::updateStyles()
         m_smoothlyScalable = QFontDatabase::isSmoothlyScalable(m_selectedFamily, m_selectedStyle);
     }
 
-    m_isUpdatingStyles = false;
+    m_ignoreStyleUpdate = false;
 
     updateSizes();
 }
@@ -676,7 +683,9 @@ void QQuickFontDialogImplAttached::updateSizes()
 
         auto listView = sizeListView();
 
+        // only select the first element in the model when this function is first called and the new model isn't empty
         listView->setModel(str_sizes);
+
         if (current != -1)
             listView->setCurrentIndex(current);
 
@@ -693,6 +702,9 @@ void QQuickFontDialogImplAttached::updateSizes()
 
 void QQuickFontDialogImplAttached::_q_updateSample()
 {
+    if (m_selectedFamily.isEmpty())
+        return;
+
     const int pSize = sizeEdit()->text().toInt();
 
     QFont newFont = QFontDatabase::font(m_selectedFamily, m_selectedStyle, pSize);
@@ -700,9 +712,7 @@ void QQuickFontDialogImplAttached::_q_updateSample()
     newFont.setUnderline(underlineCheckBox()->isChecked());
     newFont.setStrikeOut(strikeoutCheckBox()->isChecked());
 
-    if (!m_selectedFamily.isEmpty()) {
-        sampleEdit()->setFont(newFont);
-    }
+    sampleEdit()->setFont(newFont);
 }
 
 void QQuickFontDialogImplAttached::_q_writingSystemChanged(int index)
@@ -742,22 +752,24 @@ void QQuickFontDialogImplAttached::clearSearch()
 
 void QQuickFontDialogImplAttached::_q_familyChanged()
 {
+    if (m_ignoreFamilyUpdate)
+        return;
+
     const int index = familyListView()->currentIndex();
 
     if (index < 0) {
         familyEdit()->clear();
-        return;
+    } else {
+        m_selectedFamily = familyListView()->model().toStringList().at(index);
+        familyEdit()->setText(m_selectedFamily);
     }
-
-    m_selectedFamily = familyListView()->model().toStringList().at(index);
-    familyEdit()->setText(m_selectedFamily);
 
     updateStyles();
 }
 
 void QQuickFontDialogImplAttached::_q_styleChanged()
 {
-    if (m_isUpdatingStyles)
+    if (m_ignoreStyleUpdate)
         return;
 
     const int index = styleListView()->currentIndex();
@@ -769,13 +781,14 @@ void QQuickFontDialogImplAttached::_q_styleChanged()
 
     m_selectedStyle = styleListView()->model().toStringList().at(index);
     styleEdit()->setText(m_selectedStyle);
+    m_smoothlyScalable = QFontDatabase::isSmoothlyScalable(m_selectedFamily, m_selectedStyle);
 
     updateSizes();
 }
 
 void QQuickFontDialogImplAttached::_q_sizeEdited()
 {
-    const int size = sizeEdit()->text().toInt();
+    const int size = qAbs(sizeEdit()->text().toInt());
 
     if (size == m_selectedSize)
         return;
@@ -820,7 +833,6 @@ void QQuickFontDialogImplAttached::_q_sizeChanged()
 
 void QQuickFontDialogImplAttachedPrivate::currentFontChanged(const QFont &font)
 {
-
     auto fontDialogImpl = qobject_cast<QQuickFontDialogImpl *>(parent);
 
     if (!fontDialogImpl) {
@@ -831,6 +843,21 @@ void QQuickFontDialogImplAttachedPrivate::currentFontChanged(const QFont &font)
 
     if (fontDialogImpl->options()->testOption(QFontDialogOptions::NoButtons))
         emit fontDialogImpl->fontSelected(font);
+}
+
+void QQuickFontDialogImplAttached::selectFontInListViews(const QFont &font)
+{
+    {
+        QSignalBlocker blocker(sampleEdit());
+        familyListView()->setCurrentIndex(findFamilyInModel(font.families().constFirst(), familyListView()->model().toStringList()));
+        styleListView()->setCurrentIndex(findStyleInModel(QFontDatabase::styleString(font), styleListView()->model().toStringList()));
+        sizeEdit()->setText(QString::number(font.pointSize()));
+
+        underlineCheckBox()->setChecked(font.underline());
+        strikeoutCheckBox()->setChecked(font.strikeOut());
+    }
+
+    _q_updateSample();
 }
 
 QT_END_NAMESPACE

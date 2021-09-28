@@ -82,9 +82,9 @@ public:
     void setOptions(const QSharedPointer<QFontDialogOptions> &options);
 
     QFont currentFont() const;
-    void setCurrentFont(const QFont &font);
+    void setCurrentFont(const QFont &font, bool selectInListViews = false);
 
-    void updateListViews();
+    void init();
 
 Q_SIGNALS:
     void optionsChanged();
@@ -181,6 +181,7 @@ public:
     void clearSearch();
 
     void updateFamilies();
+    void selectFontInListViews(const QFont &font);
 
 private:
     void updateStyles();
@@ -202,7 +203,8 @@ private:
     QString m_search;
     int m_selectedSize;
     bool m_smoothlyScalable;
-    bool m_isUpdatingStyles;
+    bool m_ignoreFamilyUpdate;
+    bool m_ignoreStyleUpdate;
 
     Q_DISABLE_COPY(QQuickFontDialogImplAttached)
     Q_DECLARE_PRIVATE(QQuickFontDialogImplAttached)
