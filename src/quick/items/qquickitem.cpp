@@ -7019,7 +7019,14 @@ QBindable<qreal> QQuickItem::bindableWidth()
     \qmlproperty real QtQuick::Item::implicitWidth
     \qmlproperty real QtQuick::Item::implicitHeight
 
-    Defines the natural width or height of the Item if no \l width or \l height is specified.
+    Defines the preferred width or height of the Item.
+
+    If \l width or \l height is not specified, an item's effective size will be
+    determined by its \l implicitWidth or \l implicitHeight.
+
+    However, if an item is the child of a \l {Qt Quick Layouts}{layout}, the
+    layout will determine the item's preferred size using its implicit size.
+    In such a scenario, the explicit \l width or \l height will be ignored.
 
     The default implicit size for most items is 0x0, however some items have an inherent
     implicit size which cannot be overridden, for example, \l [QML] Image and \l [QML] Text.
@@ -7053,7 +7060,14 @@ QBindable<qreal> QQuickItem::bindableWidth()
     \property QQuickItem::implicitWidth
     \property QQuickItem::implicitHeight
 
-    Defines the natural width or height of the Item if no \l width or \l height is specified.
+    Defines the preferred width or height of the Item.
+
+    If \l width or \l height is not specified, an item's effective size will be
+    determined by its \l implicitWidth or \l implicitHeight.
+
+    However, if an item is the child of a \l {Qt Quick Layouts}{layout}, the
+    layout will determine the item's preferred size using its implicit size.
+    In such a scenario, the explicit \l width or \l height will be ignored.
 
     The default implicit size for most items is 0x0, however some items have an inherent
     implicit size which cannot be overridden, for example, \l [QML] Image and \l [QML] Text.
