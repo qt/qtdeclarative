@@ -125,7 +125,7 @@ void QQuickFolderBreadcrumbBarPrivate::repopulate()
 
     QBoolBlocker repopulateGuard(repopulating);
 
-    auto failureCleanup = [=](){
+    auto failureCleanup = [this, q](){
         folderPaths.clear();
         while (q->count() > 0)
             q->removeItem(q->itemAt(0));

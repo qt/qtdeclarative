@@ -177,12 +177,12 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
         m_scrollSpeed = QSizeF(qAbs(dist.width() * 0.007), qAbs(dist.height() * 0.007));
     });
 
-    QObject::connect(m_tapHandler, &QQuickTapHandler::tapped, [=](QEventPoint) {
+    QObject::connect(m_tapHandler, &QQuickTapHandler::tapped, [this] {
         m_selectable->clearSelection();
         updateActiveState(false);
     });
 
-    QObject::connect(m_tapHandler, &QQuickTapHandler::longPressed, [=]() {
+    QObject::connect(m_tapHandler, &QQuickTapHandler::longPressed, [this]() {
         if (handleUnderPos(m_tapHandler->point().pressPosition()) != nullptr) {
             // Don't allow press'n'hold to start a new
             // selection if it started on top of a handle.
@@ -206,7 +206,7 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
         updateActiveState(true);
     });
 
-    QObject::connect(m_dragHandler, &QQuickDragHandler::activeChanged, [=]() {
+    QObject::connect(m_dragHandler, &QQuickDragHandler::activeChanged, [this]() {
         const QPointF pos = m_dragHandler->centroid().position();
         if (m_dragHandler->active()) {
             m_selectable->clearSelection();
@@ -223,7 +223,7 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
         }
     });
 
-    QObject::connect(m_dragHandler, &QQuickDragHandler::centroidChanged, [=]() {
+    QObject::connect(m_dragHandler, &QQuickDragHandler::centroidChanged, [this]() {
         if (!m_dragging)
             return;
         const QPointF pos = m_dragHandler->centroid().position();
@@ -309,7 +309,7 @@ QQuickItem *QQuickSelectionRectanglePrivate::createHandle(QQmlComponent *delegat
     hoverHandler->setCursorShape(Qt::SizeFDiagCursor);
     QQuickItemPrivate::get(handleItem)->addPointerHandler(hoverHandler);
 
-    QObject::connect(dragHandler, &QQuickDragHandler::activeChanged, [=]() {
+    QObject::connect(dragHandler, &QQuickDragHandler::activeChanged, [this, corner, handleItem, dragHandler]() {
         if (dragHandler->active()) {
             const QPointF localPos = dragHandler->centroid().position();
             const QPointF pos = handleItem->mapToItem(handleItem->parentItem(), localPos);
@@ -330,7 +330,7 @@ QQuickItem *QQuickSelectionRectanglePrivate::createHandle(QQmlComponent *delegat
         }
     });
 
-    QObject::connect(dragHandler, &QQuickDragHandler::centroidChanged, [=]() {
+    QObject::connect(dragHandler, &QQuickDragHandler::centroidChanged, [this, corner, handleItem, dragHandler]() {
         if (!m_dragging)
             return;
 

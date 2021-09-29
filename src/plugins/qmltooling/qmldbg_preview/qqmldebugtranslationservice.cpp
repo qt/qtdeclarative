@@ -437,7 +437,7 @@ QString QQmlDebugTranslationServiceImpl::foundElidedText(QObject *textObject, co
 
             if (!d->elideConnections.contains(quickItem)) {
                 // add "refresh" elide state connections which remove themself
-                auto clearElideInformation = [=]() {
+                auto clearElideInformation = [this, quickItem]() {
                     //quickItem->setColor(originColor);
                     for (QMetaObject::Connection connection : d->elideConnections.value(quickItem))
                         quickItem->disconnect(connection);

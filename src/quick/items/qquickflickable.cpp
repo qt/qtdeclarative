@@ -2567,7 +2567,7 @@ bool QQuickFlickable::childMouseEventFilter(QQuickItem *i, QEvent *e)
 {
     Q_D(QQuickFlickable);
 
-    auto wantsPointerEvent_helper = [=]() {
+    auto wantsPointerEvent_helper = [this, d, i, e]() {
         QPointerEvent *pe = static_cast<QPointerEvent *>(e);
         QQuickDeliveryAgentPrivate::localizePointerEvent(pe, this);
         const bool wants = d->wantsPointerEvent(pe);
