@@ -70,14 +70,13 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Do
     const QHash<QString, QQmlJSScope::ConstPtr> builtinTypes = importer->builtinInternalNames();
     m_voidType = builtinTypes[u"void"_qs];
     m_realType = builtinTypes[u"double"_qs];
+    m_floatType = builtinTypes[u"float"_qs];
     m_intType = builtinTypes[u"int"_qs];
     m_boolType = builtinTypes[u"bool"_qs];
     m_stringType = builtinTypes[u"QString"_qs];
     m_urlType = builtinTypes[u"QUrl"_qs];
     m_dateTimeType = builtinTypes[u"QDateTime"_qs];
     m_variantListType = builtinTypes[u"QVariantList"_qs];
-    m_numberType = m_intType->baseType();
-    Q_ASSERT(m_realType->baseType() == m_numberType);
     m_varType = builtinTypes[u"QVariant"_qs];
     m_jsValueType = builtinTypes[u"QJSValue"_qs];
 
@@ -94,6 +93,11 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Do
     m_listPropertyType = listPropertyType;
 
     m_jsGlobalObject = importer->jsGlobalObject();
+    auto numberMethods = m_jsGlobalObject->methods(u"Number"_qs);
+    Q_ASSERT(numberMethods.length() == 1);
+    m_numberPrototype = numberMethods[0].returnType()->baseType();
+    Q_ASSERT(m_numberPrototype);
+    Q_ASSERT(m_numberPrototype->internalName() == u"NumberPrototype"_qs);
 }
 
 void QQmlJSTypeResolver::init(QQmlJSImportVisitor &visitor)
@@ -219,7 +223,7 @@ QQmlJSTypeResolver::typeForBinaryOperation(QSOperator::Op oper, const QQmlJSRegi
             return QQmlJSRegisterContent::create(intType(), intType(),
                                                  QQmlJSRegisterContent::Builtin);
         if (isNumeric(result))
-            return QQmlJSRegisterContent::create(realType(), numberType(),
+            return QQmlJSRegisterContent::create(realType(), realType(),
                                                  QQmlJSRegisterContent::Builtin);
 
         return QQmlJSRegisterContent::create(jsPrimitiveType(), jsPrimitiveType(),
@@ -231,9 +235,9 @@ QQmlJSTypeResolver::typeForBinaryOperation(QSOperator::Op oper, const QQmlJSRegi
             return QQmlJSRegisterContent::create(intType(), intType(),
                                                  QQmlJSRegisterContent::Builtin);
         if (isNumeric(result))
-            return QQmlJSRegisterContent::create(realType(), numberType(),
+            return QQmlJSRegisterContent::create(realType(), realType(),
                                                  QQmlJSRegisterContent::Builtin);
-        return QQmlJSRegisterContent::create(jsPrimitiveType(), numberType(),
+        return QQmlJSRegisterContent::create(jsPrimitiveType(), realType(),
                                              QQmlJSRegisterContent::Builtin);
     }
     case QSOperator::Op::Mul:
@@ -243,7 +247,7 @@ QQmlJSTypeResolver::typeForBinaryOperation(QSOperator::Op oper, const QQmlJSRegi
         return QQmlJSRegisterContent::create(
                 isNumeric(merge(containedType(left), containedType(right))) ? realType()
                                                                             : jsPrimitiveType(),
-                numberType(), QQmlJSRegisterContent::Builtin);
+                realType(), QQmlJSRegisterContent::Builtin);
     case QSOperator::Op::As:
         return right;
     default:
@@ -262,9 +266,7 @@ QQmlJSTypeResolver::typeForUnaryOperation(UnaryOperator oper,
     Q_UNUSED(oper);
 
     return QQmlJSRegisterContent::create(isNumeric(operand) ? realType() : jsPrimitiveType(),
-                                         containedType(operand) == realType() ? realType()
-                                                                              : numberType(),
-                                         QQmlJSRegisterContent::Builtin);
+                                         realType(), QQmlJSRegisterContent::Builtin);
 }
 
 bool QQmlJSTypeResolver::isPrimitive(const QQmlJSRegisterContent &type) const
@@ -279,17 +281,16 @@ bool QQmlJSTypeResolver::isNumeric(const QQmlJSRegisterContent &type) const
 
 bool QQmlJSTypeResolver::isPrimitive(const QQmlJSScope::ConstPtr &type) const
 {
-    return type == m_intType || type == m_realType || type == m_boolType || type == m_voidType
-            || type == m_stringType || type == m_jsPrimitiveType || type == m_numberType;
+    return type == m_intType || type == m_realType || type == m_floatType || type == m_boolType
+            || type == m_voidType || type == m_stringType || type == m_jsPrimitiveType;
 }
 
 bool QQmlJSTypeResolver::isNumeric(const QQmlJSScope::ConstPtr &type) const
 {
-    for (auto base = type; base; base = base->baseType()) {
-        if (base == numberType())
-            return true;
-    }
-    return false;
+    return searchBaseAndExtensionTypes(
+                type, [&](const QQmlJSScope::ConstPtr &scope, BaseOrExtension) {
+        return scope == m_numberPrototype;
+    });
 }
 
 QQmlJSScope::ConstPtr
@@ -338,11 +339,7 @@ bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
         return true;
     if (from == m_jsValueType || to == m_jsValueType)
         return true;
-    if (from == m_numberType && to->baseType() == m_numberType)
-        return true;
-    if (from->baseType() == m_numberType && to == m_numberType)
-        return true;
-    if (from->baseType() == m_numberType && to->baseType() == m_numberType)
+    if (isNumeric(from) && isNumeric(to))
         return true;
     if (from == m_intType && to == m_boolType)
         return true;
@@ -350,7 +347,7 @@ bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
         return true;
 
     // Yes, our String has number constructors.
-    if ((from == m_intType || from == m_realType) && to == m_stringType)
+    if (isNumeric(from) && to == m_stringType)
         return true;
 
     // We can always convert between strings and urls.
@@ -403,10 +400,8 @@ static QQmlJSRegisterContent::ContentVariant mergeVariants(QQmlJSRegisterContent
 QQmlJSRegisterContent QQmlJSTypeResolver::merge(const QQmlJSRegisterContent &a,
                                                 const QQmlJSRegisterContent &b) const
 {
-    const auto mergedStoredType = merge(a.storedType(), b.storedType());
-
     return QQmlJSRegisterContent::create(
-            mergedStoredType == numberType() ? realType() : mergedStoredType,
+            merge(a.storedType(), b.storedType()),
             merge(containedType(a), containedType(b)), mergeVariants(a.variant(), b.variant()),
             merge(a.scopeType(), b.scopeType()));
 }
@@ -437,12 +432,15 @@ static QQmlJSScope::ConstPtr commonBaseType(const QQmlJSScope::ConstPtr &a,
         else
             break;
     }
+
     return result;
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
                                                 const QQmlJSScope::ConstPtr &b) const
 {
+    if (a == b)
+        return a;
 
     if (a == jsValueType() || a == varType())
         return a;
@@ -454,7 +452,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
     };
 
     if (isNumeric(a) && isNumeric(b))
-        return commonBaseType(a, b);
+        return realType();
 
     if (canConvert(boolType(), intType()))
         return intType();
@@ -496,7 +494,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
         return {};
     }
 
-    if (type == voidType() || type == numberType())
+    if (type == voidType())
         return jsPrimitiveType();
 
     if (isPrimitive(type) || type == m_jsValueType || type == m_listPropertyType
@@ -504,6 +502,9 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
         || type == m_varType) {
         return type;
     }
+
+    if (isNumeric(type))
+        return m_realType;
 
     if (type->scopeType() == QQmlJSScope::EnumScope)
         return m_intType;

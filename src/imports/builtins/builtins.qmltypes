@@ -87,14 +87,8 @@ Module {
     }
 
     Component {
-        name: "number"
-        extension: "Number"
-        accessSemantics: "value"
-    }
-
-    Component {
         name: "int"
-        prototype: "number"
+        extension: "Number"
         exports: ["QML/int 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"
@@ -102,13 +96,13 @@ Module {
 
     Component {
         name: "float"
-        prototype: "number"
+        extension: "Number"
         accessSemantics: "value"
     }
 
     Component {
         name: "double"
-        prototype: "number"
+        extension: "Number"
         exports: ["QML/real 1.0", "QML/double 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"
@@ -124,6 +118,7 @@ Module {
 
     Component {
         name: "bool"
+        extension: "Boolean"
         exports: ["QML/bool 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"
@@ -139,6 +134,7 @@ Module {
 
     Component {
         name: "QUrl"
+        extension: "Url"
         exports: ["QML/url 1.0"]
         exportMetaObjectRevisions: [256]
         accessSemantics: "value"

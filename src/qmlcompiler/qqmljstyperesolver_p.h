@@ -69,8 +69,8 @@ public:
     void init(QQmlJSImportVisitor &visitor);
 
     QQmlJSScope::ConstPtr voidType() const { return m_voidType; }
-    QQmlJSScope::ConstPtr numberType() const { return m_numberType; }
     QQmlJSScope::ConstPtr realType() const { return m_realType; }
+    QQmlJSScope::ConstPtr floatType() const { return m_floatType; }
     QQmlJSScope::ConstPtr intType() const { return m_intType; }
     QQmlJSScope::ConstPtr boolType() const { return m_boolType; }
     QQmlJSScope::ConstPtr stringType() const { return m_stringType; }
@@ -152,8 +152,9 @@ protected:
     QQmlJSRegisterContent lengthProperty(bool isWritable, const QQmlJSScope::ConstPtr &scope) const;
 
     QQmlJSScope::ConstPtr m_voidType;
-    QQmlJSScope::ConstPtr m_numberType;
+    QQmlJSScope::ConstPtr m_numberPrototype;
     QQmlJSScope::ConstPtr m_realType;
+    QQmlJSScope::ConstPtr m_floatType;
     QQmlJSScope::ConstPtr m_intType;
     QQmlJSScope::ConstPtr m_boolType;
     QQmlJSScope::ConstPtr m_stringType;
