@@ -116,6 +116,31 @@ public:
         return !(a == b);
     }
 
+    template <typename U>
+    friend bool operator==(const QDeferredSharedPointer &a, const QSharedPointer<U> &b)
+    {
+        a.lazyLoad();
+        return a.m_data == b;
+    }
+
+    template <typename U>
+    friend bool operator!=(const QDeferredSharedPointer &a, const QSharedPointer<U> &b)
+    {
+        return !(a == b);
+    }
+
+    template <typename U>
+    friend bool operator==(const QSharedPointer<U> &a, const QDeferredSharedPointer &b)
+    {
+        return b == a;
+    }
+
+    template <typename U>
+    friend bool operator!=(const QSharedPointer<U> &a, const QDeferredSharedPointer &b)
+    {
+        return b != a;
+    }
+
 private:
     friend class QDeferredWeakPointer<T>;
 
