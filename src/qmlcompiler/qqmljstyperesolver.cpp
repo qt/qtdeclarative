@@ -409,31 +409,14 @@ QQmlJSRegisterContent QQmlJSTypeResolver::merge(const QQmlJSRegisterContent &a,
 static QQmlJSScope::ConstPtr commonBaseType(const QQmlJSScope::ConstPtr &a,
                                             const QQmlJSScope::ConstPtr &b)
 {
-    if (!a || !b)
-        return {};
-
-    auto inheritanceChain = [](QQmlJSScope::ConstPtr type) {
-        QVector<QQmlJSScope::ConstPtr> result;
-        do {
-            result.prepend(type);
-            type = type->baseType();
-        } while (type);
-        return result;
-    };
-
-    auto aInheritanceChain = inheritanceChain(a);
-    auto bInheritanceChain = inheritanceChain(b);
-
-    int length = qMin(aInheritanceChain.length(), bInheritanceChain.length());
-    QQmlJSScope::ConstPtr result;
-    for (int i = 0; i < length; ++i) {
-        if (aInheritanceChain.at(i)->internalName() == bInheritanceChain.at(i)->internalName())
-            result = aInheritanceChain.at(i);
-        else
-            break;
+    for (QQmlJSScope::ConstPtr aBase = a; aBase; aBase = aBase->baseType()) {
+        for (QQmlJSScope::ConstPtr bBase = b; bBase; bBase = bBase->baseType()) {
+            if (aBase == bBase)
+                return aBase;
+        }
     }
 
-    return result;
+    return {};
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
