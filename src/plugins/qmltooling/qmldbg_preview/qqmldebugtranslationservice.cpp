@@ -425,7 +425,13 @@ QString QQmlDebugTranslationServiceImpl::foundElidedText(QObject *textObject, co
         if (QQuickItem* quickItem = qobject_cast<QQuickItem*>(textObject)) {
             const TranslationBindingInformation information = d->objectTranslationBindingMultiMap.value(quickItem);
 
-            if (d->watchTextElides) {
+            QQuickItem* parentItem = quickItem->parentItem();
+            QString parentTypeName = parentItem->metaObject()->className();
+
+            // Currently text fields inside a layout give false signals about elides
+            // so we just omit them
+
+            if (d->watchTextElides && !parentTypeName.endsWith("Layout")) {
                 d->sendElidedTextWarning(information);
             }
 
