@@ -56,12 +56,12 @@ void Codegen::setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document)
             // dynamically (QTBUG-95530). Currently this has no other side effects. Re-evaluate once
             // that changes.
             QQmlJSTypeResolver::Indirect, QQmlJSTypeResolver::Static, m_logger);
-    // TODO: using emptyLogger for visitor actually hides potential issues but
+    // TODO: using silentLogger for visitor actually hides potential issues but
     // using m_logger instead fails some tests, so for now let's leave the old
     // behavior for consistency. the proper fix is anyway to remove this visitor
     // and use FindWarningsVisitor instead.
-    QQmlJSLogger emptyLogger(QString(), QString(), /* silent */ true);
-    QQmlJSImportVisitor visitor(m_importer, &emptyLogger,
+    QQmlJSLogger silentLogger(m_fileName, document->code, /* silent */ true);
+    QQmlJSImportVisitor visitor(m_importer, &silentLogger,
                                 QQmlJSImportVisitor::implicitImportDirectory(
                                         m_fileName, m_importer->resourceFileMapper()),
                                 m_qmltypesFiles);
