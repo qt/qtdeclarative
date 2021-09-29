@@ -250,7 +250,7 @@ ColumnLayout {
                 }
                 TextField {
                     id: nameFiltersTextField
-                    text: ["Text files (*.txt)", "HTML files (*.html)"].join(",")
+                    text: ["Text files (*.txt)", "HTML files (*.html), Images (*.jpg *.png *.svg)"].join(",")
 
                     Layout.fillWidth: true
 
