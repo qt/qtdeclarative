@@ -151,18 +151,18 @@ Module {
     }
 
     Component {
-       name: "QVariantMap"
-       accessSemantics: "value"
+        name: "QVariantMap"
+        accessSemantics: "value"
     }
 
     Component {
-      name: "QRegularExpression"
-      extension: "RegExp"
-      accessSemantics: "value"
+        name: "QRegularExpression"
+        extension: "RegExp"
+        accessSemantics: "value"
     }
 
     Component {
-      name: "QByteArray"
-      accessSemantics: "value"
+        name: "QByteArray"
+        accessSemantics: "value"
     }
 }
