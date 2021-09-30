@@ -1438,10 +1438,8 @@ void QQuickShaderEffectImpl::updateShaderVars(Shader shaderType)
     const int varCount = m_shaders[shaderType].shaderInfo.variables.count();
     m_shaders[shaderType].varData.resize(varCount);
 
-    // Reuse signal mappers as much as possible since the mapping is based on
-    // the index and shader type which are both constant.
-    if (m_mappers[shaderType].count() < varCount)
-        m_mappers[shaderType].resize(varCount);
+    // Recreate signal mappers when the shader has changed.
+    clearMappers(shaderType);
 
     auto *engine = qmlEngine(m_item);
     QQmlPropertyCache *propCache = engine ? QQmlData::ensurePropertyCache(engine, m_item) : nullptr;
@@ -1497,13 +1495,11 @@ void QQuickShaderEffectImpl::updateShaderVars(Shader shaderType)
                 if (pd->notifyIndex() == -1) {
                     qWarning("QQuickShaderEffect: property '%s' does not have notification method!", v.name.constData());
                 } else {
-                    auto *&mapper = m_mappers[shaderType][i];
-                    if (!mapper) {
-                        const int mappedId = indexToMappedId(shaderType, i);
-                        mapper = new QtPrivate::EffectSlotMapper([this, mappedId](){
-                            this->propertyChanged(mappedId);
-                        });
-                    }
+                    const int mappedId = indexToMappedId(shaderType, i);
+                    auto mapper = new QtPrivate::EffectSlotMapper([this, mappedId](){
+                        this->propertyChanged(mappedId);
+                    });
+                    m_mappers[shaderType].append(mapper);
                     mapper->setSignalIndex(m_itemMetaObject->property(propIdx).notifySignal().methodIndex());
                     Q_ASSERT(m_item->metaObject() == m_itemMetaObject);
                     bool ok = QObjectPrivate::connectImpl(m_item, pd->notifyIndex(), m_item, nullptr, mapper,
