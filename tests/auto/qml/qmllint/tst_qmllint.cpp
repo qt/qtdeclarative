@@ -82,6 +82,7 @@ private Q_SLOTS:
 
     void attachedPropertyReuse();
 
+    void tooFewParameters();
 private:
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true);
@@ -1003,6 +1004,13 @@ void TestQmllint::attachedPropertyReuse()
                             "Using attached type KeyNavigation already initialized in a parent "
                             "scope. Reference it by id instead")));
 }
+
+void TestQmllint::tooFewParameters()
+{
+    QVERIFY(runQmllint("tooFewParams.qml", false, {"--compiler=warning"}, false).contains(
+            QStringLiteral("No matching override found")));
+}
+
 
 QTEST_MAIN(TestQmllint)
 #include "tst_qmllint.moc"

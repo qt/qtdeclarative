@@ -808,16 +808,15 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
 {
     for (const auto &method : methods) {
         const auto argumentTypes = method.parameterTypes();
+        if (argc != argumentTypes.size()) {
+            errors->append(u"Function expects %1 arguments, but %2 were provided"_qs
+                                   .arg(argumentTypes.size())
+                                   .arg(argc));
+            continue;
+        }
+
         bool matches = true;
         for (int i = 0; i < argc; ++i) {
-            if (i >= argumentTypes.size()) {
-                errors->append(u"Function expects %1 arguments, but %2 were provided"_qs
-                                       .arg(argumentTypes.size())
-                                       .arg(argc));
-                matches = false;
-                break;
-            }
-
             const auto argumentType = argumentTypes[i];
             if (argumentType.isNull()) {
                 errors->append(u"type %1 for argument %2 cannot be resolved"_qs
@@ -852,12 +851,10 @@ void QQmlJSTypePropagator::propagateCall(const QList<QQmlJSMetaMethod> &methods,
 
     if (!match.isValid()) {
         Q_ASSERT(errors.length() == methods.length());
-        if (methods.length() == 1) {
+        if (methods.length() == 1)
             setError(errors.first());
-        } else {
-            setError(u"No matching override found. Candidates:\n"_qs
-                     + errors.join(u'\n'));
-        }
+        else
+            setError(u"No matching override found. Candidates:\n"_qs + errors.join(u'\n'));
         return;
     }
 
@@ -865,8 +862,7 @@ void QQmlJSTypePropagator::propagateCall(const QList<QQmlJSMetaMethod> &methods,
     m_state.accumulatorOut = m_typeResolver->globalType(
             returnType ? QQmlJSScope::ConstPtr(returnType) : m_typeResolver->voidType());
     if (!m_state.accumulatorOut.isValid())
-        setError(
-                u"Cannot store return type of method %1()."_qs.arg(match.methodName()));
+        setError(u"Cannot store return type of method %1()."_qs.arg(match.methodName()));
 }
 
 void QQmlJSTypePropagator::generate_CallPropertyLookup(int lookupIndex, int base, int argc,
