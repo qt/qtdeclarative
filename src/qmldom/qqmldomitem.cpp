@@ -2373,6 +2373,32 @@ void DomItem::loadPendingDependencies()
         myErrors().error(tr("Called loadPendingDependencies without environment")).handle();
 }
 
+/*!
+\brief Creates a new document with the given code
+
+This is mostly useful for testing or loading a single code snippet without any dependency.
+The fileType should normally be QmlFile, but you might want to load a qmltypes file for
+example and interpret it as qmltypes file (not plain Qml), or as JsFile. In those case
+set the file type accordingly.
+*/
+DomItem DomItem::fromCode(QString code, DomType fileType)
+{
+    if (code.isEmpty())
+        return DomItem();
+    DomItem env =
+            DomEnvironment::create(QStringList(),
+                                   QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                                           | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+    DomItem tFile;
+    env.loadFile(
+            QString(), QString(), code, QDateTime::currentDateTime(),
+            [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
+            LoadOption::DefaultLoad, fileType);
+    env.loadPendingDependencies();
+    return tFile;
+}
+
 Empty::Empty()
 {}
 

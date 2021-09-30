@@ -546,6 +546,13 @@ private slots:
         QVERIFY(univFileDiffs.isEmpty());
     }
 
+    void testInMemory()
+    {
+        DomItem res = DomItem::fromCode("MyItem{}");
+        DomItem obj = res.qmlObject(GoTo::MostLikely);
+        QCOMPARE(obj.name(), u"MyItem");
+    }
+
 private:
     std::shared_ptr<DomUniverse> universePtr;
     std::shared_ptr<DomEnvironment> envPtr;

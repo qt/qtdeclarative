@@ -303,9 +303,11 @@ public:
         pushEl(p, *cPtr, program);
         // implicit imports
         // add implicit directory import
-        Import selfDirImport(QLatin1String("file://") + fInfo.canonicalPath());
-        selfDirImport.implicit = true;
-        qmlFilePtr->addImport(selfDirImport);
+        if (!fInfo.canonicalPath().isEmpty()) {
+            Import selfDirImport(QLatin1String("file://") + fInfo.canonicalPath());
+            selfDirImport.implicit = true;
+            qmlFilePtr->addImport(selfDirImport);
+        }
         for (Import i : qmlFile.environment().ownerAs<DomEnvironment>()->implicitImports()) {
             i.implicit = true;
             qmlFilePtr->addImport(i);

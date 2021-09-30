@@ -1035,6 +1035,7 @@ public:
     DomItem(std::shared_ptr<DomEnvironment>);
     DomItem(std::shared_ptr<DomUniverse>);
 
+    static DomItem fromCode(QString code, DomType fileType = DomType::QmlFile);
     void loadFile(QString filePath, QString logicalPath,
                   std::function<void(Path, DomItem &, DomItem &)> callback, LoadOptions loadOptions,
                   std::optional<DomType> fileType = std::optional<DomType>());
