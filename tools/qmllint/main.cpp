@@ -54,9 +54,7 @@
 #include <QtCore/qcommandlineparser.h>
 #endif
 
-#ifndef QT_BOOTSTRAPPED
 #include <QtCore/qlibraryinfo.h>
-#endif
 
 #include <cstdio>
 
@@ -349,11 +347,7 @@ All warnings can be set to three levels:
     // use host qml import path as a sane default if not explicitly disabled
     QStringList qmlImportPaths = parser.isSet(qmlImportNoDefault)
             ? QStringList {}
-#   ifndef QT_BOOTSTRAPPED
             : QStringList { QLibraryInfo::path(QLibraryInfo::QmlImportsPath), QDir::currentPath() };
-#   else
-            : QStringList { QDir::currentPath() };
-#   endif
 
     if (parser.isSet(qmlImportPathsOption))
         qmlImportPaths << parser.values(qmlImportPathsOption);

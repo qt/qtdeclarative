@@ -77,11 +77,7 @@ inline QString linkTargetLiteral()
 void printUsage(const QString &appNameIn)
 {
     const std::wstring appName = appNameIn.toStdWString();
-#ifndef QT_BOOTSTRAPPED
     const QString qmlPath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
-#else
-    const QString qmlPath = QStringLiteral("/home/user/dev/qt-install/qml");
-#endif
     std::wcerr
         << "Usage: " << appName << " -rootPath path/to/app/qml/directory -importPath path/to/qt/qml/directory\n"
            "       " << appName << " -qmlFiles file1 file2 -importPath path/to/qt/qml/directory\n"

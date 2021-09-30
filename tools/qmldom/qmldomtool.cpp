@@ -47,9 +47,7 @@
 #    include <QtCore/qcommandlineparser.h>
 #endif
 
-#ifndef QT_BOOTSTRAPPED
-#    include <QtCore/qlibraryinfo.h>
-#endif
+#include <QtCore/qlibraryinfo.h>
 using namespace QQmlJS::Dom;
 
 namespace tt {
@@ -200,11 +198,7 @@ int main(int argc, char *argv[])
     // use host qml import path as a sane default if nothing else has been provided
     QStringList qmltypeDirs = parser.isSet(qmltypesDirsOption)
             ? parser.values(qmltypesDirsOption)
-#    ifndef QT_BOOTSTRAPPED
             : QStringList { QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) };
-#    else
-            : QStringList {};
-#    endif
 
     if (!parser.isSet(qmltypesFilesOption))
         qmltypeDirs << ".";
