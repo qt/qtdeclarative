@@ -230,7 +230,7 @@ qt_internal_add_qml_module(Qml
         parser/qqmljsast.cpp parser/qqmljsast_p.h
         parser/qqmljsastfwd_p.h
         parser/qqmljsastvisitor.cpp parser/qqmljsastvisitor_p.h
-        parser/qqmljsengine_p.cpp parser/qqmljsengine_p.h
+        parser/qqmljsengine_p.h
         parser/qqmljsglobal_p.h
         parser/qqmljskeywords_p.h
         parser/qqmljslexer.cpp parser/qqmljslexer_p.h
