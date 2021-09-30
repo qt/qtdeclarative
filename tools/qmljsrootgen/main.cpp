@@ -115,6 +115,25 @@ static QString findClassName(const QJSManagedValue &value)
     return QString();
 }
 
+static QJsonValue createPublicNumberMethod(const QString &name, int numArguments)
+{
+    QJsonObject method;
+    method.insert(QStringLiteral("access"), QStringLiteral("public"));
+    method.insert(QStringLiteral("name"), name);
+    method.insert(QStringLiteral("returnType"), QStringLiteral("number"));
+    QJsonArray arguments;
+    // arguments look nicer when 1-based than 0-based.
+    for (int i = 1; i <= numArguments; ++i) {
+        QJsonObject argument;
+        argument.insert(QStringLiteral("name"), QStringLiteral("arg%1").arg(i));
+        argument.insert(QStringLiteral("type"), QStringLiteral("number"));
+        arguments.append(argument);
+    }
+    method.insert(QStringLiteral("arguments"), arguments);
+    return method;
+
+}
+
 static QString buildClass(const QJSManagedValue &value, QJsonArray *classes,
                           State *seen, const QString &name)
 {
@@ -202,6 +221,7 @@ static QString buildClass(const QJSManagedValue &value, QJsonArray *classes,
             methodObject.insert(QStringLiteral("access"), QStringLiteral("public"));
             methodObject.insert(QStringLiteral("name"), info.name);
 
+            const int formalParams = propFunction->getLength();
             if (propFunction->isConstructor()) {
                 methodObject.insert(QStringLiteral("isConstructor"), true);
 
@@ -223,9 +243,16 @@ static QString buildClass(const QJSManagedValue &value, QJsonArray *classes,
                 methodObject.insert(
                             QStringLiteral("returnType"),
                             buildConstructor(prop, classes, seen, ctorName));
-            }
+            } else if (name == QStringLiteral("Math")) {
+                // All methods of Math return numbers when given numbers.
+                // We model this as overloads of the generic methods.
+                methods.append(createPublicNumberMethod(info.name, formalParams));
 
-            const int formalParams = propFunction->getLength();
+                // If there is no formal parameter, it doesn't matter what you pass.
+                // You always get number back.
+                if (formalParams == 0)
+                    continue;
+            }
 
             QJsonArray arguments;
             for (int i = 0; i < formalParams; i++)

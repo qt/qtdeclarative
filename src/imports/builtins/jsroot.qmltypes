@@ -1087,7 +1087,17 @@ Module {
         Property { name: "SQRT2"; type: "number"; isReadonly: true }
         Method {
             name: "abs"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
+        Method {
+            name: "abs"
             Parameter {}
+        }
+        Method {
+            name: "acos"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
         }
         Method {
             name: "acos"
@@ -1095,7 +1105,17 @@ Module {
         }
         Method {
             name: "acosh"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
+        Method {
+            name: "acosh"
             Parameter {}
+        }
+        Method {
+            name: "asin"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
         }
         Method {
             name: "asin"
@@ -1103,7 +1123,17 @@ Module {
         }
         Method {
             name: "asinh"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
+        Method {
+            name: "asinh"
             Parameter {}
+        }
+        Method {
+            name: "atan"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
         }
         Method {
             name: "atan"
@@ -1111,7 +1141,18 @@ Module {
         }
         Method {
             name: "atanh"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
+        Method {
+            name: "atanh"
             Parameter {}
+        }
+        Method {
+            name: "atan2"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+            Parameter { name: "arg2"; type: "number" }
         }
         Method {
             name: "atan2"
@@ -1120,7 +1161,17 @@ Module {
         }
         Method {
             name: "cbrt"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
+        Method {
+            name: "cbrt"
             Parameter {}
+        }
+        Method {
+            name: "ceil"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
         }
         Method {
             name: "ceil"
@@ -1128,7 +1179,17 @@ Module {
         }
         Method {
             name: "clz32"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
+        Method {
+            name: "clz32"
             Parameter {}
+        }
+        Method {
+            name: "cos"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
         }
         Method {
             name: "cos"
@@ -1136,7 +1197,17 @@ Module {
         }
         Method {
             name: "cosh"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
+        Method {
+            name: "cosh"
             Parameter {}
+        }
+        Method {
+            name: "exp"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
         }
         Method {
             name: "exp"
@@ -1144,7 +1215,17 @@ Module {
         }
         Method {
             name: "expm1"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
+        Method {
+            name: "expm1"
             Parameter {}
+        }
+        Method {
+            name: "floor"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
         }
         Method {
             name: "floor"
@@ -1152,7 +1233,18 @@ Module {
         }
         Method {
             name: "fround"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
+        Method {
+            name: "fround"
             Parameter {}
+        }
+        Method {
+            name: "hypot"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+            Parameter { name: "arg2"; type: "number" }
         }
         Method {
             name: "hypot"
@@ -1161,8 +1253,19 @@ Module {
         }
         Method {
             name: "imul"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+            Parameter { name: "arg2"; type: "number" }
+        }
+        Method {
+            name: "imul"
             Parameter {}
             Parameter {}
+        }
+        Method {
+            name: "log"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
         }
         Method {
             name: "log"
@@ -1170,7 +1273,17 @@ Module {
         }
         Method {
             name: "log10"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
+        Method {
+            name: "log10"
             Parameter {}
+        }
+        Method {
+            name: "log1p"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
         }
         Method {
             name: "log1p"
@@ -1178,7 +1291,18 @@ Module {
         }
         Method {
             name: "log2"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
+        Method {
+            name: "log2"
             Parameter {}
+        }
+        Method {
+            name: "max"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+            Parameter { name: "arg2"; type: "number" }
         }
         Method {
             name: "max"
@@ -1187,18 +1311,40 @@ Module {
         }
         Method {
             name: "min"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+            Parameter { name: "arg2"; type: "number" }
+        }
+        Method {
+            name: "min"
             Parameter {}
             Parameter {}
+        }
+        Method {
+            name: "pow"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+            Parameter { name: "arg2"; type: "number" }
         }
         Method {
             name: "pow"
             Parameter {}
             Parameter {}
         }
-        Method { name: "random" }
+        Method { name: "random"; type: "number" }
+        Method {
+            name: "round"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
         Method {
             name: "round"
             Parameter {}
+        }
+        Method {
+            name: "sign"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
         }
         Method {
             name: "sign"
@@ -1206,7 +1352,17 @@ Module {
         }
         Method {
             name: "sin"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
+        Method {
+            name: "sin"
             Parameter {}
+        }
+        Method {
+            name: "sinh"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
         }
         Method {
             name: "sinh"
@@ -1214,7 +1370,17 @@ Module {
         }
         Method {
             name: "sqrt"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
+        Method {
+            name: "sqrt"
             Parameter {}
+        }
+        Method {
+            name: "tan"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
         }
         Method {
             name: "tan"
@@ -1222,7 +1388,17 @@ Module {
         }
         Method {
             name: "tanh"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
+        }
+        Method {
+            name: "tanh"
             Parameter {}
+        }
+        Method {
+            name: "trunc"
+            type: "number"
+            Parameter { name: "arg1"; type: "number" }
         }
         Method {
             name: "trunc"
@@ -1356,6 +1532,7 @@ Module {
         Method { name: "formatTime" }
         Method { name: "formatDateTime" }
         Method { name: "locale" }
+        Method { name: "url" }
         Method { name: "resolvedUrl" }
         Method { name: "openUrlExternally" }
         Method { name: "font" }
