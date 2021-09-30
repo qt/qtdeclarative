@@ -34,14 +34,15 @@
 #include <QFileInfo>
 
 Codegen::Codegen(QQmlJSImporter *importer, const QString &fileName,
-                 const QStringList &qmltypesFiles, QQmlJSLogger *logger, const QString &code)
+                 const QStringList &qmltypesFiles, QQmlJSLogger *logger, QQmlJSTypeInfo *typeInfo,
+                 const QString &code)
     : m_fileName(fileName),
       m_qmltypesFiles(qmltypesFiles),
       m_importer(importer),
       m_logger(logger),
+      m_typeInfo(typeInfo),
       m_code(code)
 {
-    m_typeInfo = new QQmlJSTypeInfo;
 }
 
 void Codegen::setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document)

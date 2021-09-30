@@ -57,7 +57,7 @@ class Codegen : public QQmlJSAotCompiler
 {
 public:
     Codegen(QQmlJSImporter *importer, const QString &fileName, const QStringList &qmltypesFiles,
-            QQmlJSLogger *logger, const QString &m_code);
+            QQmlJSLogger *logger, QQmlJSTypeInfo *typeInfo, const QString &m_code);
 
     void setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document) override;
     void setScope(const QmlIR::Object *object, const QmlIR::Object *scope) override;
