@@ -44,7 +44,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB) || defined(QT_STATIC)
+#if defined(QT_STATIC)
 #  define Q_QMLCOMPILER_EXPORT
 #else
 #  if defined(QT_BUILD_QML_LIB)

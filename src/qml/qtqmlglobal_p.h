@@ -53,16 +53,9 @@
 
 #include <QtCore/private/qglobal_p.h>
 #include <QtQml/qtqmlglobal.h>
-#ifndef QT_QML_BOOTSTRAPPED
-#  include <QtQml/private/qtqml-config_p.h>
-#endif
+#include <QtQml/private/qtqml-config_p.h>
 
 #define Q_QML_PRIVATE_EXPORT Q_QML_EXPORT
-
-#if !defined(QT_QMLDEVTOOLS_LIB) && !defined(QT_BUILD_QMLDEVTOOLS_LIB)
-#  define Q_QML_AUTOTEST_EXPORT Q_AUTOTEST_EXPORT
-#else
-#  define Q_QML_AUTOTEST_EXPORT
-#endif
+#define Q_QML_AUTOTEST_EXPORT Q_AUTOTEST_EXPORT
 
 #endif // QTQMLGLOBAL_P_H

@@ -40,27 +40,16 @@
 #ifndef QTQMLGLOBAL_H
 #define QTQMLGLOBAL_H
 
-#if defined(QT_BUILD_QMLDEVTOOLS_LIB) || defined(QT_QMLDEVTOOLS_LIB)
-#  define QT_QML_BOOTSTRAPPED
-#endif
 
 #include <QtCore/qglobal.h>
-#ifndef QT_QML_BOOTSTRAPPED
-#  include <QtQml/qtqml-config.h>
-#  if QT_CONFIG(qml_network)
-#    include <QtNetwork/qtnetworkglobal.h>
-#  endif
-#else
-#  define QT_FEATURE_qml_debug -1
-#  define QT_FEATURE_qml_sequence_object 1
-#  define QT_FEATURE_qml_jit -1
-#  define QT_FEATURE_qml_worker_script -1
-#  define QT_FEATURE_qml_xml_http_request -1
+#include <QtQml/qtqml-config.h>
+#if QT_CONFIG(qml_network)
+#  include <QtNetwork/qtnetworkglobal.h>
 #endif
 
 QT_BEGIN_NAMESPACE
 
-#if !defined(QT_QML_BOOTSTRAPPED) && !defined(QT_STATIC)
+#if !defined(QT_STATIC)
 #  if defined(QT_BUILD_QML_LIB)
 #    define Q_QML_EXPORT Q_DECL_EXPORT
 #  else
