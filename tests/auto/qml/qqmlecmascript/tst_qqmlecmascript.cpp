@@ -309,6 +309,7 @@ private slots:
     void replaceBinding();
     void bindingBoundFunctions();
     void qpropertyAndQtBinding();
+    void qpropertyBindingReplacement();
     void deleteRootObjectInCreation();
     void onDestruction();
     void onDestructionViaGC();
@@ -7572,6 +7573,15 @@ void tst_qqmlecmascript::qpropertyAndQtBinding()
     ok = root->setProperty("num", 50);
     QVERIFY(ok);
     QCOMPARE(root->complex.value(), 150);
+}
+
+void tst_qqmlecmascript::qpropertyBindingReplacement()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("qpropertyBindingReplacement.qml"));
+    QScopedPointer<QObject> root(c.create());
+    QVERIFY(root);
+    QCOMPARE(root->objectName(), u"overwritten"_qs);
 }
 
 void tst_qqmlecmascript::deleteRootObjectInCreation()
