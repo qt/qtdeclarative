@@ -873,10 +873,20 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         }
     }
 
-    if (_ddata->hasBindingBit(bindingProperty->coreIndex()) && !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
-        && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment)
-        && !_valueTypeProperty)
+    const bool allowedToRemoveBinding = !(binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression)
+            && !(binding->flags & QV4::CompiledData::Binding::IsOnAssignment)
+            && !(binding->flags & QV4::CompiledData::Binding::IsPropertyObserver)
+            && !_valueTypeProperty;
+
+    if (_ddata->hasBindingBit(bindingProperty->coreIndex()) && allowedToRemoveBinding) {
         QQmlPropertyPrivate::removeBinding(_bindingTarget, QQmlPropertyIndex(bindingProperty->coreIndex()));
+    } else if (bindingProperty->isBindable() && allowedToRemoveBinding) {
+        QList<DeferredQPropertyBinding> &pendingBindings = sharedState.data()->allQPropertyBindings;
+        auto it = std::remove_if(pendingBindings.begin(), pendingBindings.end(), [&](const DeferredQPropertyBinding &deferred) {
+            return deferred.properyIndex == bindingProperty->coreIndex() && deferred.target == _bindingTarget;
+        });
+        pendingBindings.erase(it, pendingBindings.end());
+    }
 
     if (binding->type == QV4::CompiledData::Binding::Type_Script || binding->isTranslationBinding()) {
         if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
@@ -920,7 +930,7 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 QQmlPropertyIndex index(bindingProperty->coreIndex(), -1);
                 qmlBinding = QQmlPropertyBinding::create(bindingProperty, runtimeFunction, _scopeObject, context, currentQmlContext(), _bindingTarget, index);
             }
-            sharedState.data()->allQPropertyBindings.emplaceBack(_bindingTarget, bindingProperty->coreIndex(), qmlBinding);
+            sharedState.data()->allQPropertyBindings.push_back(DeferredQPropertyBinding {_bindingTarget, bindingProperty->coreIndex(), qmlBinding });
         } else {
             // When writing bindings to grouped properties implemented as value types,
             // such as point.x: { someExpression; }, then the binding is installed on
