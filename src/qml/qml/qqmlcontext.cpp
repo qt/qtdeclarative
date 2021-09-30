@@ -212,7 +212,7 @@ bool QQmlContext::isValid() const
 }
 
 /*!
-    Return the context's QQmlEngine, or 0 if the context has no QQmlEngine or the
+    Return the context's QQmlEngine, or \nullptr if the context has no QQmlEngine or the
     QQmlEngine was destroyed.
 */
 QQmlEngine *QQmlContext::engine() const
@@ -222,7 +222,7 @@ QQmlEngine *QQmlContext::engine() const
 }
 
 /*!
-    Return the context's parent QQmlContext, or 0 if this context has no
+    Return the context's parent QQmlContext, or \nullptr if this context has no
     parent or if the parent has been destroyed.
 */
 QQmlContext *QQmlContext::parentContext() const
@@ -235,7 +235,7 @@ QQmlContext *QQmlContext::parentContext() const
 }
 
 /*!
-    Return the context object, or 0 if there is no context object.
+    Return the context object, or \nullptr if there is no context object.
 */
 QObject *QQmlContext::contextObject() const
 {

@@ -206,7 +206,7 @@ QQmlExpression::~QQmlExpression()
 }
 
 /*!
-    Returns the QQmlEngine this expression is associated with, or 0 if there
+    Returns the QQmlEngine this expression is associated with, or \nullptr if there
     is no association or the QQmlEngine has been destroyed.
 */
 QQmlEngine *QQmlExpression::engine() const
@@ -216,7 +216,7 @@ QQmlEngine *QQmlExpression::engine() const
 }
 
 /*!
-    Returns the QQmlContext this expression is associated with, or 0 if there
+    Returns the QQmlContext this expression is associated with, or \nullptr if there
     is no association or the QQmlContext has been destroyed.
 */
 QQmlContext *QQmlExpression::context() const
