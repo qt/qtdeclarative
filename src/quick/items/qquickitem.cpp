@@ -905,7 +905,7 @@ bool QQuickKeysAttached::isConnected(const char *signalName) const
 */
 
 /*!
-    \qmlproperty list<Object> QtQuick::Keys::forwardTo
+    \qmlproperty list<Item> QtQuick::Keys::forwardTo
 
     This property provides a way to forward key presses, key releases, and keyboard input
     coming from input methods to other items. This can be useful when you want
