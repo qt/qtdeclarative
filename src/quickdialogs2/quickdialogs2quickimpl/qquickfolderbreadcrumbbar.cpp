@@ -258,11 +258,11 @@ void QQuickFolderBreadcrumbBarPrivate::executeTextField(bool complete)
 
 void QQuickFolderBreadcrumbBarPrivate::toggleTextFieldVisibility()
 {
-    const QUrl url = !fileDialog->selectedFile().isEmpty() ? fileDialog->selectedFile() : fileDialog->currentFolder();
-    textField->setText(QQmlFile::urlToLocalFileOrQrc(url));
-    textField->setVisible(!textField->isVisible());
+    textField->setText(QQmlFile::urlToLocalFileOrQrc(fileDialog->currentFolder()));
 
-    qCDebug(lcTextInput) << "text field visibility changed to" << textField->isVisible();
+    qCDebug(lcTextInput).nospace() << "text field visibility was " << textField->isVisible()
+        << "; setting it to " << !textField->isVisible();
+    textField->setVisible(!textField->isVisible());
 
     if (textField->isVisible()) {
         // The text field is now visible, so give it focus,
@@ -319,7 +319,13 @@ void QQuickFolderBreadcrumbBarPrivate::textFieldAccepted()
         qCDebug(lcTextInput) << "path entered is not valid; not setting file/folder";
     }
 
-    toggleTextFieldVisibility();
+    // If the enter key was pressed and the dialog closed, the text input will lose
+    // active focus, and textFieldActiveFocusChanged() will toggle its visibility.
+    // We should only toggle visibility if the dialog is actually closed, otherwise
+    // we'll end up toggling twice, and the text input will be visible the next time
+    // the dialog is opened.
+    if (fileDialog->isVisible())
+        toggleTextFieldVisibility();
 }
 
 void QQuickFolderBreadcrumbBarPrivate::textFieldVisibleChanged()
@@ -334,6 +340,8 @@ void QQuickFolderBreadcrumbBarPrivate::textFieldVisibleChanged()
 
 void QQuickFolderBreadcrumbBarPrivate::textFieldActiveFocusChanged()
 {
+    qCDebug(lcTextInput) << "text field activeFocus changed to" << textField->hasActiveFocus();
+
     // When the text field loses focus, it should be hidden.
     if (!textField->hasActiveFocus() && textField->isVisible())
         toggleTextFieldVisibility();

@@ -90,6 +90,7 @@ private slots:
     void changeFolderViaDoubleClick();
     void chooseFolderViaTextEdit();
     void chooseFolderViaEnter();
+    void chooseFileAndThenFolderViaTextEdit();
     void cancelDialogWhileTextEditHasFocus();
     void goUp();
     void goUpWhileTextEditHasFocus();
@@ -639,6 +640,76 @@ void tst_QQuickFileDialogImpl::chooseFolderViaEnter()
     // Since we only chose a folder, the dialog should still be open.
     QVERIFY(dialogHelper.dialog->isVisible());
 
+    dialogHelper.dialog->close();
+    QVERIFY(!dialogHelper.dialog->isVisible());
+    QTRY_VERIFY(!dialogHelper.quickDialog->isVisible());
+}
+
+void tst_QQuickFileDialogImpl::chooseFileAndThenFolderViaTextEdit()
+{
+    // Open the dialog.
+    DialogTestHelper<QQuickFileDialog, QQuickFileDialogImpl> dialogHelper(this, "fileDialog.qml");
+    QVERIFY2(dialogHelper.isWindowInitialized(), dialogHelper.failureMessage());
+    QVERIFY(dialogHelper.waitForWindowActive());
+    QVERIFY(dialogHelper.openDialog());
+    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+
+    // Get the text edit visible with Ctrl+L.
+    const auto editPathKeySequence = QKeySequence(Qt::CTRL | Qt::Key_L);
+    QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+    auto breadcrumbBar = dialogHelper.quickDialog->findChild<QQuickFolderBreadcrumbBar*>();
+    QVERIFY(breadcrumbBar);
+    QVERIFY(breadcrumbBar->textField()->isVisible());
+    QCOMPARE(breadcrumbBar->textField()->text(), dialogHelper.dialog->currentFolder().toLocalFile());
+    QCOMPARE(breadcrumbBar->textField()->selectedText(), breadcrumbBar->textField()->text());
+
+    // Enter the path to the file in the text edit.
+    enterText(dialogHelper.window(), tempFile2->fileName());
+    QCOMPARE(breadcrumbBar->textField()->text(), tempFile2->fileName());
+
+    // Hit enter to accept.
+    QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
+    COMPARE_URL(dialogHelper.quickDialog->selectedFile(), QUrl::fromLocalFile(tempFile2->fileName()));
+    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl::fromLocalFile(tempFile2->fileName()));
+    COMPARE_URLS(dialogHelper.dialog->selectedFiles(), { QUrl::fromLocalFile(tempFile2->fileName()) });
+    QVERIFY(!dialogHelper.dialog->isVisible());
+    QTRY_VERIFY(!dialogHelper.quickDialog->isVisible());
+    // Check that the text edit is hidden and breadcrumbs are shown instead.
+    QVERIFY(!breadcrumbBar->textField()->isVisible());
+
+    // Re-open the dialog.
+    QVERIFY(dialogHelper.openDialog());
+    QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
+    // The breadcrumbs should be visible after opening, not the text edit.
+    QVERIFY(!breadcrumbBar->textField()->isVisible());
+
+    // Get the text edit visible with Ctrl+L.
+    QTest::keySequence(dialogHelper.window(), editPathKeySequence);
+    QVERIFY(breadcrumbBar->textField()->isVisible());
+    // The text edit should show the directory that contains the last file that was selected.
+    QCOMPARE(breadcrumbBar->textField()->text(), tempDir.path());
+    QCOMPARE(breadcrumbBar->textField()->selectedText(), breadcrumbBar->textField()->text());
+
+    // Enter the path to the folder in the text edit.
+    enterText(dialogHelper.window(), tempSubDir.path());
+    QCOMPARE(breadcrumbBar->textField()->text(), tempSubDir.path());
+
+    // Hit enter to accept.
+    QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
+    // The first file in the directory should be selected, which is "sub-sub-dir".
+    COMPARE_URL(dialogHelper.dialog->currentFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
+    auto fileDialogListView = dialogHelper.quickDialog->findChild<QQuickListView*>("fileDialogListView");
+    QVERIFY(fileDialogListView);
+    QQuickFileDialogDelegate *subSubDirDelegate = nullptr;
+    QTRY_VERIFY(findViewDelegateItem(fileDialogListView, 0, subSubDirDelegate));
+    QCOMPARE(subSubDirDelegate->isHighlighted(), true);
+    // We just changed directories, so the actual selected file shouldn't change.
+    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl::fromLocalFile(tempFile2->fileName()));
+    COMPARE_URLS(dialogHelper.dialog->selectedFiles(), { QUrl::fromLocalFile(tempFile2->fileName()) });
+    COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempSubDir.path()));
+    QTRY_VERIFY(dialogHelper.dialog->isVisible());
+
+    // Close the dialog.
     dialogHelper.dialog->close();
     QVERIFY(!dialogHelper.dialog->isVisible());
     QTRY_VERIFY(!dialogHelper.quickDialog->isVisible());
