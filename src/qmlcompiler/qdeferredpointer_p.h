@@ -178,12 +178,6 @@ public:
 
     T *data() const { return QWeakPointer<T>(*this).data(); }
 
-    friend size_t qHash(const QDeferredWeakPointer &ptr, size_t seed = 0)
-    {
-        ptr.lazyLoad();
-        return qHashMulti(seed, ptr.m_data);
-    }
-
     friend bool operator==(const QDeferredWeakPointer &a, const QDeferredWeakPointer &b)
     {
         a.lazyLoad();
