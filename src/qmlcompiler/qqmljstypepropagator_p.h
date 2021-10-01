@@ -62,7 +62,6 @@ struct QQmlJSTypePropagator : public QV4::Moth::ByteCodeHandler
     {
         QString message;
         int instructionOffset;
-        bool hasLoggerMessage;
         bool isSet() const { return !message.isEmpty(); }
     };
 
@@ -225,10 +224,9 @@ struct QQmlJSTypePropagator : public QV4::Moth::ByteCodeHandler
     };
 
 private:
-    void setError(const QString &message, bool hasLoggerMessage = false)
+    void setError(const QString &message)
     {
         m_error->message = message;
-        m_error->hasLoggerMessage = hasLoggerMessage;
         m_error->instructionOffset = currentInstructionOffset();
     }
 

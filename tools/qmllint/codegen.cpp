@@ -339,7 +339,7 @@ bool Codegen::generateFunction(const QV4::Compiler::Context *context, Function *
         instructionOffsetToSrcLocation(context, propagationError.instructionOffset, &msg.loc);
         msg.message = propagationError.message;
         function->error = msg;
-        return propagationError.hasLoggerMessage;
+        return false;
     }
 
     return true;

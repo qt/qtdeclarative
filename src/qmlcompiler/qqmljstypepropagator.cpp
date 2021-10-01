@@ -506,7 +506,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
     bool isRestricted = checkRestricted(name);
 
     if (!m_state.accumulatorOut.isValid()) {
-        setError(u"Cannot access value for name "_qs + name, true);
+        setError(u"Cannot access value for name "_qs + name);
 
         if (!isRestricted)
             handleUnqualifiedAccess(name);
