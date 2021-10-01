@@ -21,7 +21,7 @@ Module {
         name: "ArrayBufferPrototype"
         accessSemantics: "reference"
         prototype: "ObjectPrototype"
-        Property { name: "byteLength" }
+        Property { name: "byteLength"; type: "number" }
         Method {
             name: "constructor"
             type: "ArrayBuffer"
@@ -255,9 +255,9 @@ Module {
         name: "DataViewPrototype"
         accessSemantics: "reference"
         prototype: "ObjectPrototype"
-        Property { name: "buffer" }
-        Property { name: "byteLength" }
-        Property { name: "byteOffset" }
+        Property { name: "buffer"; type: "DataViewPrototypeBuffer" }
+        Property { name: "byteLength"; type: "number" }
+        Property { name: "byteOffset"; type: "number" }
         Method {
             name: "constructor"
             type: "DataView"
@@ -360,6 +360,11 @@ Module {
             name: "setUInt32"
             Parameter {}
         }
+    }
+    Component {
+        name: "DataViewPrototypeBuffer"
+        accessSemantics: "reference"
+        prototype: "ArrayBufferPrototype"
     }
     Component { name: "Date"; accessSemantics: "reference"; prototype: "DatePrototype" }
     Component {
@@ -1045,7 +1050,7 @@ Module {
         name: "MapPrototype"
         accessSemantics: "reference"
         prototype: "ObjectPrototype"
-        Property { name: "size" }
+        Property { name: "size"; type: "number" }
         Method { name: "constructor"; type: "Map"; isConstructor: true }
         Method { name: "clear" }
         Method {
@@ -1755,7 +1760,7 @@ Module {
         name: "SetPrototype"
         accessSemantics: "reference"
         prototype: "ObjectPrototype"
-        Property { name: "size" }
+        Property { name: "size"; type: "number" }
         Method { name: "constructor"; type: "Set"; isConstructor: true }
         Method {
             name: "add"
@@ -1787,7 +1792,7 @@ Module {
         name: "SharedArrayBufferPrototype"
         accessSemantics: "reference"
         prototype: "ObjectPrototype"
-        Property { name: "byteLength" }
+        Property { name: "byteLength"; type: "number" }
         Method {
             name: "constructor"
             type: "SharedArrayBuffer"

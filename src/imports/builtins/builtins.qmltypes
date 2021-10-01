@@ -159,6 +159,7 @@ Module {
 
     Component {
         name: "QByteArray"
+        extension: "ArrayBuffer"
         accessSemantics: "value"
     }
 }

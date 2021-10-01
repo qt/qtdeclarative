@@ -151,4 +151,21 @@ Module {
             Parameter { type: "void"; isPointer: true }
         }
     }
+    Component {
+        file: "hasbytearray.h"
+        name: "HasByteArray"
+        exports: ["TestTypes/HasByteArray 1.0"]
+        exportMetaObjectRevisions: [256]
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Property {
+            name: "byteArray"
+            type: "QByteArray"
+            read: "byteArray"
+            write: "setByteArray"
+            notify: "byteArrayChanged"
+            index: 1
+        }
+        Signal { name: "byteArrayChanged" }
+    }
 }

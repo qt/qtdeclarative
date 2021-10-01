@@ -853,6 +853,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("ValidLiterals") << QStringLiteral("validLiterals.qml");
     QTest::newRow("GoodModulePrefix") << QStringLiteral("goodModulePrefix.qml");
     QTest::newRow("required property in Component") << QStringLiteral("requiredPropertyInComponent.qml");
+    QTest::newRow("bytearray") << QStringLiteral("bytearray.qml");
 }
 
 void TestQmllint::cleanQmlCode()
