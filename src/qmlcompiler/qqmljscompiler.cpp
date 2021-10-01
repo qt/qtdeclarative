@@ -296,7 +296,7 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                         break;
                     }
 
-                    Q_ASSERT(functionsToCompile.length() > binding->value.compiledScriptIndex);
+                    Q_ASSERT(quint32(functionsToCompile.length()) > binding->value.compiledScriptIndex);
                     auto *node = functionsToCompile[binding->value.compiledScriptIndex].parentNode;
                     Q_ASSERT(node);
                     Q_ASSERT(module->contextMap.contains(node));
@@ -307,7 +307,7 @@ bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                                            << irDocument.stringAt(binding->propertyNameIndex);
                     result = aotCompiler->compileBinding(context, *binding);
                 } else if (const auto *function = bindingOrFunction.function()) {
-                    Q_ASSERT(functionsToCompile.length() > function->index);
+                    Q_ASSERT(quint32(functionsToCompile.length()) > function->index);
                     auto *node = functionsToCompile[function->index].node;
                     Q_ASSERT(node);
                     Q_ASSERT(module->contextMap.contains(node));

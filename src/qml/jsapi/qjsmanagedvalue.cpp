@@ -909,7 +909,7 @@ QJSValue QJSManagedValue::property(quint32 arrayIndex) const
 
     if (QV4::String *string = d->as<QV4::String>()) {
         const QString qString = string->toQString();
-        if (arrayIndex < qString.size())
+        if (arrayIndex < quint32(qString.size()))
             return qString.sliced(arrayIndex, 1);
         return QJSValue();
     }

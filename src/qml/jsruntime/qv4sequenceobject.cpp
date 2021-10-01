@@ -219,7 +219,7 @@ public:
             }
             loadReference();
         }
-        if (index < size()) {
+        if (index < quint32(size())) {
             if (hasProperty)
                 *hasProperty = true;
             return engine()->fromVariant(at(index));
@@ -251,7 +251,7 @@ public:
             loadReference();
         }
 
-        qsizetype count = size();
+        quint32 count = quint32(size());
         const QMetaType valueMetaType = meta(d())->valueMetaType();
         const QVariant element = engine()->toVariant(value, valueMetaType, false);
 
@@ -284,7 +284,7 @@ public:
                 return QV4::Attr_Invalid;
             loadReference();
         }
-        return (index < size()) ? QV4::Attr_Data : QV4::Attr_Invalid;
+        return (index < quint32(size())) ? QV4::Attr_Data : QV4::Attr_Invalid;
     }
 
     struct OwnPropertyKeyIterator : ObjectOwnPropertyKeyIterator
@@ -300,7 +300,7 @@ public:
                 s->loadReference();
             }
 
-            if (arrayIndex < s->size()) {
+            if (arrayIndex < quint32(s->size())) {
                 uint index = arrayIndex;
                 ++arrayIndex;
                 if (attrs)
@@ -333,7 +333,7 @@ public:
             loadReference();
         }
 
-        if (index >= size())
+        if (index >= quint32(size()))
             return false;
 
         /* according to ECMA262r3 it should be Undefined, */

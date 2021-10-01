@@ -360,7 +360,7 @@ void QQuickPinchArea::touchEvent(QTouchEvent *event)
 void QQuickPinchArea::clearPinch(QTouchEvent *event)
 {
     Q_D(QQuickPinchArea);
-    qCDebug(lcPA, "clear: %lld touchpoints", d->touchPoints.count());
+    qCDebug(lcPA, "clear: %" PRIdQSIZETYPE " touchpoints", d->touchPoints.count());
     d->touchPoints.clear();
     if (d->inPinch) {
         d->inPinch = false;
@@ -395,7 +395,7 @@ void QQuickPinchArea::clearPinch(QTouchEvent *event)
 void QQuickPinchArea::cancelPinch(QTouchEvent *event)
 {
     Q_D(QQuickPinchArea);
-    qCDebug(lcPA, "cancel: %lld touchpoints", d->touchPoints.count());
+    qCDebug(lcPA, "cancel: %" PRIdQSIZETYPE " touchpoints", d->touchPoints.count());
     d->touchPoints.clear();
     if (d->inPinch) {
         d->inPinch = false;
