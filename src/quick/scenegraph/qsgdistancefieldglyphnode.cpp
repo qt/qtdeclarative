@@ -139,7 +139,9 @@ void QSGDistanceFieldGlyphNode::setGlyphs(const QPointF &position, const QGlyphR
     const QVector<quint32> glyphIndexes = m_glyphs.glyphIndexes();
     for (int i = 0; i < glyphIndexes.count(); ++i)
         m_allGlyphIndexesLookup.insert(glyphIndexes.at(i));
-    qCDebug(lcSgText, "inserting %lld glyphs, %lld unique", glyphIndexes.count(), m_allGlyphIndexesLookup.count());
+    qCDebug(lcSgText, "inserting %" PRIdQSIZETYPE " glyphs, %" PRIdQSIZETYPE " unique",
+            glyphIndexes.count(),
+            m_allGlyphIndexesLookup.count());
 #ifdef QSG_RUNTIME_DESCRIPTION
     qsgnode_set_description(this, QString::number(glyphs.glyphIndexes().count()) + QStringLiteral(" DF glyphs: ") +
                             m_glyphs.rawFont().familyName() + QStringLiteral(" ") + QString::number(m_glyphs.rawFont().pixelSize()));
@@ -324,7 +326,7 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
         Q_ASSERT(m_glyphsInOtherTextures.isEmpty());
     } else {
         if (!m_glyphsInOtherTextures.isEmpty())
-            qCDebug(lcSgText, "%lld 'other' textures", m_glyphsInOtherTextures.count());
+            qCDebug(lcSgText, "%" PRIdQSIZETYPE " 'other' textures", m_glyphsInOtherTextures.count());
         QHash<const QSGDistanceFieldGlyphCache::Texture *, GlyphInfo>::const_iterator ite = m_glyphsInOtherTextures.constBegin();
         while (ite != m_glyphsInOtherTextures.constEnd()) {
             QGlyphRun subNodeGlyphRun(m_glyphs);

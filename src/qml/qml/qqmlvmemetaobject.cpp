@@ -1008,7 +1008,7 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                 auto arguments = methodData->hasArguments() ? methodData->arguments() : nullptr;
 
                 if (arguments && arguments->names) {
-                    const auto parameterCount = arguments->names->count();
+                    const quint32 parameterCount = arguments->names->count();
                     Q_ASSERT(parameterCount == function->formalParameterCount());
                     if (void *result = a[0])
                         arguments->types[0].destruct(result);

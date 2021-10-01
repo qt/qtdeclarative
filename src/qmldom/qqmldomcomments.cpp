@@ -555,7 +555,7 @@ void AstComments::collectComments(std::shared_ptr<Engine> engine, AST::Node *n,
         }
         if (iPre == 0)
             preNewline = 1;
-        quint32 iPost = cLoc.end();
+        qsizetype iPost = cLoc.end();
         while (iPost < code.size()) {
             QChar c = code.at(iPost);
             if (!c.isSpace()) {
