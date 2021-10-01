@@ -116,8 +116,9 @@ public:
 
     Q_INVOKABLE QString getDataAsString(const QString &format) const;
     Q_INVOKABLE QByteArray getDataAsArrayBuffer(const QString &format) const;
-    Q_INVOKABLE void acceptProposedAction(QQmlV4Function *);
-    Q_INVOKABLE void accept(QQmlV4Function *);
+    Q_INVOKABLE void acceptProposedAction();
+    Q_INVOKABLE void accept();
+    Q_INVOKABLE void accept(Qt::DropAction action);
 
 private:
     QQuickDropAreaPrivate *d;

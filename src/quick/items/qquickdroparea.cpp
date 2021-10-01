@@ -582,22 +582,20 @@ QByteArray QQuickDragEvent::getDataAsArrayBuffer(const QString &format) const
     return event->mimeData()->data(format);
 }
 
-void QQuickDragEvent::acceptProposedAction(QQmlV4Function *)
+void QQuickDragEvent::acceptProposedAction()
 {
     event->acceptProposedAction();
 }
 
-void QQuickDragEvent::accept(QQmlV4Function *args)
+void QQuickDragEvent::accept()
 {
     Qt::DropAction action = event->dropAction();
+    event->setDropAction(action);
+    event->accept();
+}
 
-    if (args->length() >= 1) {
-        QV4::Scope scope(args->v4engine());
-        QV4::ScopedValue v(scope, (*args)[0]);
-        if (v->isInt32())
-            action = Qt::DropAction(v->integerValue());
-    }
-
+void QQuickDragEvent::accept(Qt::DropAction action)
+{
     // get action from arguments.
     event->setDropAction(action);
     event->accept();
