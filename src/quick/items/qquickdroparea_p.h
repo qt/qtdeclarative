@@ -114,8 +114,8 @@ public:
     QList<QUrl> urls() const;
     QStringList formats() const;
 
-    Q_INVOKABLE void getDataAsString(QQmlV4Function *);
-    Q_INVOKABLE void getDataAsArrayBuffer(QQmlV4Function *);
+    Q_INVOKABLE QString getDataAsString(const QString &format) const;
+    Q_INVOKABLE QByteArray getDataAsArrayBuffer(const QString &format) const;
     Q_INVOKABLE void acceptProposedAction(QQmlV4Function *);
     Q_INVOKABLE void accept(QQmlV4Function *);
 

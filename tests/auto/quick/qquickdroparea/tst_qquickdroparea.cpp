@@ -1199,9 +1199,14 @@ void tst_QQuickDropArea::dropStuff()
     component.setData(
             "import QtQuick 2.3\n"
             "DropArea {\n"
+                "id: root\n"
                 "width: 100; height: 100\n"
                 "property var array\n"
-                "onDropped: { array = drop.getDataAsArrayBuffer('text/x-red'); }\n"
+                "property string text\n"
+                "onDropped: {\n"
+                "    root.array = drop.getDataAsArrayBuffer('text/x-red'); \n"
+                "    root.text = drop.getDataAsString('text/x-red').arg('no-op'); \n"
+                "}\n"
             "}", QUrl());
 
     QScopedPointer<QObject> object(component.create());
@@ -1213,6 +1218,7 @@ void tst_QQuickDropArea::dropStuff()
     data.setData("text/x-red", "red");
 
     QCOMPARE(evaluate<QVariant>(dropArea, "array"), QVariant());
+    QCOMPARE(evaluate<QString>(dropArea, "text"), QString());
 
     QWindowSystemInterface::handleDrag(&window, &data, QPoint(50, 50), Qt::CopyAction,
                                        Qt::MouseButtons(), Qt::KeyboardModifiers());
@@ -1220,6 +1226,7 @@ void tst_QQuickDropArea::dropStuff()
                                        Qt::MouseButtons(), Qt::KeyboardModifiers());
     QCOMPARE(evaluate<int>(dropArea, "array.byteLength"), 3);
     QCOMPARE(evaluate<QByteArray>(dropArea, "array"), QByteArray("red"));
+    QCOMPARE(evaluate<QString>(dropArea, "text"), QString("red"));
 }
 
 void tst_QQuickDropArea::nestedDropAreas_data()

@@ -572,27 +572,14 @@ QStringList QQuickDragEvent::formats() const
     return event->mimeData()->formats();
 }
 
-void QQuickDragEvent::getDataAsString(QQmlV4Function *args)
+QString QQuickDragEvent::getDataAsString(const QString &format) const
 {
-    if (args->length() != 0) {
-        QV4::ExecutionEngine *v4 = args->v4engine();
-        QV4::Scope scope(v4);
-        QV4::ScopedValue v(scope, (*args)[0]);
-        QString format = v->toQString();
-        QString rv = QString::fromUtf8(event->mimeData()->data(format));
-        args->setReturnValue(v4->newString(rv)->asReturnedValue());
-    }
+    return QString::fromUtf8(event->mimeData()->data(format));
 }
 
-void QQuickDragEvent::getDataAsArrayBuffer(QQmlV4Function *args)
+QByteArray QQuickDragEvent::getDataAsArrayBuffer(const QString &format) const
 {
-    if (args->length() != 0) {
-        QV4::ExecutionEngine *v4 = args->v4engine();
-        QV4::Scope scope(v4);
-        QV4::ScopedValue v(scope, (*args)[0]);
-        const QString format = v->toQString();
-        args->setReturnValue(v4->newArrayBuffer(event->mimeData()->data(format))->asReturnedValue());
-    }
+    return event->mimeData()->data(format);
 }
 
 void QQuickDragEvent::acceptProposedAction(QQmlV4Function *)
