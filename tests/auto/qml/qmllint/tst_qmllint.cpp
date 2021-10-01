@@ -83,6 +83,7 @@ private Q_SLOTS:
     void attachedPropertyReuse();
 
     void tooFewParameters();
+    void qQmlV4Function();
 private:
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true);
@@ -1009,6 +1010,13 @@ void TestQmllint::tooFewParameters()
 {
     QVERIFY(runQmllint("tooFewParams.qml", false, {"--compiler=warning"}, false).contains(
             QStringLiteral("No matching override found")));
+}
+
+void TestQmllint::qQmlV4Function()
+{
+    QVERIFY(runQmllint("varargs.qml", false, {"--compiler=warning"}, false).contains(
+            QStringLiteral("Function accepts a variable number of untyped arguments and "
+                           "doesn't disclose its return type.")));
 }
 
 

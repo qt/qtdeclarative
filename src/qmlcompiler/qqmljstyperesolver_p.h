@@ -69,6 +69,7 @@ public:
     void init(QQmlJSImportVisitor &visitor);
 
     QQmlJSScope::ConstPtr voidType() const { return m_voidType; }
+    QQmlJSScope::ConstPtr qQmlV4FunctionType() const { return m_qQmlV4FunctionType; }
     QQmlJSScope::ConstPtr realType() const { return m_realType; }
     QQmlJSScope::ConstPtr floatType() const { return m_floatType; }
     QQmlJSScope::ConstPtr intType() const { return m_intType; }
@@ -152,6 +153,7 @@ protected:
     QQmlJSRegisterContent lengthProperty(bool isWritable, const QQmlJSScope::ConstPtr &scope) const;
 
     QQmlJSScope::ConstPtr m_voidType;
+    QQmlJSScope::ConstPtr m_qQmlV4FunctionType;
     QQmlJSScope::ConstPtr m_numberPrototype;
     QQmlJSScope::ConstPtr m_realType;
     QQmlJSScope::ConstPtr m_floatType;

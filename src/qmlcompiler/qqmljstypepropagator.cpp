@@ -808,6 +808,13 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
 {
     for (const auto &method : methods) {
         const auto argumentTypes = method.parameterTypes();
+        if (argumentTypes.size() == 1
+            && argumentTypes.first() == m_typeResolver->qQmlV4FunctionType()) {
+            errors->append(u"Function accepts a variable number of untyped arguments and doesn't "
+                           "disclose its return type."_qs);
+            continue;
+        }
+
         if (argc != argumentTypes.size()) {
             errors->append(u"Function expects %1 arguments, but %2 were provided"_qs
                                    .arg(argumentTypes.size())
