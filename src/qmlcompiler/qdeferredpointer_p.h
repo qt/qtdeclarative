@@ -176,8 +176,6 @@ public:
     explicit operator bool() const noexcept { return !isNull(); }
     bool operator !() const noexcept { return isNull(); }
 
-    T *data() const { return QWeakPointer<T>(*this).data(); }
-
     friend bool operator==(const QDeferredWeakPointer &a, const QDeferredWeakPointer &b)
     {
         a.lazyLoad();
