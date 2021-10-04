@@ -53,7 +53,8 @@ import QtQuick 2.12
 Item {
     id: slider
     height: 26
-    width: 320
+    // default drag range is 180: divisible by 2, 3, 4, 5, 6, 9, 10, ...
+    width: sliderName.width + 223 + handle.width / 2
 
     property real min: 0
     property real max: 1
@@ -67,16 +68,19 @@ Item {
         id: dragHandler
         target: handle
         xAxis.minimum: Math.round(-handle.width / 2 + 3)
-        xAxis.maximum: Math.round(foo.width - handle.width/2 - 3)
+        xAxis.maximum: Math.round(groove.width - handle.width / 2 - 3)
         property real value: (handle.x - xAxis.minimum) / (xAxis.maximum - xAxis.minimum)
     }
 
     Component.onCompleted: setValue(init)
     function setValue(v) {
-       if (min < max)
-          handle.x = Math.round( v / (max - min) *
+        if (min < max) {
+            handle.x = Math.round( v / (max - min) *
                                 (dragHandler.xAxis.maximum - dragHandler.xAxis.minimum)
                                 + dragHandler.xAxis.minimum);
+//            console.log(name, v, "-> handle.x", handle.x, "from fraction", (v / (max - min)),
+//                "of drag range", (dragHandler.xAxis.maximum - dragHandler.xAxis.minimum), "px", min, ":", max)
+        }
     }
     Rectangle {
         id:sliderName
@@ -92,8 +96,8 @@ Item {
         }
     }
 
-    Rectangle{
-        id: foo
+    Rectangle {
+        id: groove
         width: parent.width - 8 - sliderName.width
         color: "#eee"
         height: 7

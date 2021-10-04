@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the manual tests of the Qt Toolkit.
@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick
 import "qrc:/quick/shared/" as Examples
 
 Rectangle {
@@ -75,6 +75,8 @@ Rectangle {
             }
             onContentXChanged: canvas.requestPaint()
             onContentYChanged: canvas.requestPaint()
+            maximumFlickVelocity: maxVelocitySlider.value
+            flickDeceleration: decelSlider.value
         }
 
         Timer { id: fadeTimer; interval: 1000; onTriggered: { hfade.start(); } }
@@ -204,6 +206,7 @@ Rectangle {
         id: bottomFlow
         anchors.bottom: parent.bottom
         width: parent.width - 12
+        height: 110
         x: 6
         spacing: 12
 
@@ -300,6 +303,33 @@ Rectangle {
                     anchors.centerIn: parent
                     color: "white"
                     text: "v " + flick.verticalVelocity.toFixed(2)
+                }
+                Examples.Slider {
+                    id: maxVelocitySlider
+                    name: "max vel"
+                    anchors.left: parent.left
+                    anchors.top: parent.bottom
+                    max: 10000
+                    init: 2500
+                }
+                Text {
+                    anchors.left: maxVelocitySlider.right
+                    anchors.verticalCenter: maxVelocitySlider.verticalCenter
+                    text: Math.round(flick.maximumFlickVelocity)
+                }
+                Examples.Slider {
+                    id: decelSlider
+                    name: "decel"
+                    anchors.right: maxVelocitySlider.right
+                    anchors.top: maxVelocitySlider.bottom
+                    min: 0
+                    max: 10000
+                    init: 1500
+                }
+                Text {
+                    anchors.left: decelSlider.right
+                    anchors.verticalCenter: decelSlider.verticalCenter
+                    text: Math.round(flick.flickDeceleration)
                 }
             }
         }
