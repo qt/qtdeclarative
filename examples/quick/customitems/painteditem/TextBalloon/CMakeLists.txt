@@ -1,3 +1,7 @@
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    message(FATAL_ERROR "TextBalloon should be built as part of the 'painteditem' project, and not in isolation.")
+endif()
+
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/customitems/painteditem/TextBalloon")
 
 qt_add_qml_module(qmltextballoon
