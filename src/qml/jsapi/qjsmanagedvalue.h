@@ -135,6 +135,7 @@ public:
     void setProperty(const QString &name, const QJSValue &value);
     bool deleteProperty(const QString &name);
 
+    //  ### Qt 7 use qsizetype instead.
     // Array indexing
     bool hasProperty(quint32 arrayIndex) const;
     bool hasOwnProperty(quint32 arrayIndex) const;

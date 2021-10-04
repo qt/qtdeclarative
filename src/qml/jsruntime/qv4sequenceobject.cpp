@@ -202,6 +202,7 @@ public:
         defineAccessorProperty(QStringLiteral("length"), method_get_length, method_set_length);
     }
 
+    //  ### Qt 7 use qsizetype instead.
     QV4::ReturnedValue containerGetIndexed(uint index, bool *hasProperty) const
     {
         /* Qt containers have int (rather than uint) allowable indexes. */
@@ -229,6 +230,7 @@ public:
         return Encode::undefined();
     }
 
+    //  ### Qt 7 use qsizetype instead.
     bool containerPutIndexed(uint index, const QV4::Value &value)
     {
         if (internalClass()->engine->hasException)
