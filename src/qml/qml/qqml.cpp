@@ -1218,29 +1218,39 @@ bool AOTCompiledContext::loadSingletonLookup(uint index, void *target) const
     return false;
 }
 
-void AOTCompiledContext::initLoadSingletonLookup(uint index, uint importNamespace) const
+using QmlContextPropertyGetter
+    = QV4::ReturnedValue (*)(QV4::Lookup *l, QV4::ExecutionEngine *engine, QV4::Value *thisObject);
+
+template<QmlContextPropertyGetter qmlContextPropertyGetter>
+static void initTypeWrapperLookup(
+        const AOTCompiledContext *context, QV4::Lookup *l, uint importNamespace)
 {
-    Q_ASSERT(!engine->hasError());
-    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
-    if (importNamespace != InvalidStringId) {
-        QV4::Scope scope(engine->handle());
-        QV4::ScopedString import(scope, compilationUnit->runtimeStrings[importNamespace]);
-        if (const QQmlImportRef *importRef = qmlContext->imports()->query(import).importNamespace) {
+    Q_ASSERT(!context->engine->hasError());
+    if (importNamespace != AOTCompiledContext::InvalidStringId) {
+        QV4::Scope scope(context->engine->handle());
+        QV4::ScopedString import(scope, context->compilationUnit->runtimeStrings[importNamespace]);
+        if (const QQmlImportRef *importRef
+                = context->qmlContext->imports()->query(import).importNamespace) {
             QV4::Scoped<QV4::QQmlTypeWrapper> wrapper(
                         scope, QV4::QQmlTypeWrapper::create(
-                            scope.engine, nullptr, qmlContext->imports(), importRef));
-            wrapper = l->getter(l, engine->handle(), wrapper);
-            if (wrapper) {
-                l->qmlContextPropertyGetter = QV4::QQmlContextWrapper::lookupSingleton;
+                            scope.engine, nullptr, context->qmlContext->imports(), importRef));
+            wrapper = l->qmlContextPropertyGetter(l, context->engine->handle(), wrapper);
+            l->qmlContextPropertyGetter = qmlContextPropertyGetter;
+            if (qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupSingleton)
                 l->qmlContextSingletonLookup.singletonObject = wrapper->heapObject();
-                return;
-            }
+            return;
         }
         scope.engine->throwTypeError();
     } else {
-        l->qmlContextPropertyGetter(l, engine->handle(), nullptr);
-        Q_ASSERT(l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupSingleton);
+        l->qmlContextPropertyGetter(l, context->engine->handle(), nullptr);
+        Q_ASSERT(l->qmlContextPropertyGetter == qmlContextPropertyGetter);
     }
+}
+
+void AOTCompiledContext::initLoadSingletonLookup(uint index, uint importNamespace) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    initTypeWrapperLookup<QV4::QQmlContextWrapper::lookupSingleton>(this, l, importNamespace);
 }
 
 bool AOTCompiledContext::loadAttachedLookup(uint index, QObject *object, void *target) const
@@ -1285,6 +1295,32 @@ void AOTCompiledContext::initLoadAttachedLookup(
 
     l->qmlTypeLookup.qmlTypeWrapper = wrapper->d();
     l->getter = QV4::QObjectWrapper::lookupAttached;
+}
+
+bool AOTCompiledContext::loadTypeLookup(uint index, void *target) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    if (l->qmlContextPropertyGetter != QV4::QQmlContextWrapper::lookupType)
+        return false;
+
+    const QV4::Heap::QQmlTypeWrapper *typeWrapper = static_cast<const QV4::Heap::QQmlTypeWrapper *>(
+                l->qmlTypeLookup.qmlTypeWrapper);
+    QQmlEnginePrivate *ep = QQmlEnginePrivate::get(qmlEngine());
+
+    QMetaType metaType = typeWrapper->type().typeId();
+    if (!metaType.isValid()) {
+        metaType = ep->typeLoader.getType(typeWrapper->type().sourceUrl())
+                ->compilationUnit()->typeIds.id;
+    }
+
+    *static_cast<const QMetaObject **>(target) = ep->metaObjectForType(metaType).metaObject();
+    return true;
+}
+
+void AOTCompiledContext::initLoadTypeLookup(uint index, uint importNamespace) const
+{
+    QV4::Lookup *l = compilationUnit->runtimeLookups + index;
+    initTypeWrapperLookup<QV4::QQmlContextWrapper::lookupType>(this, l, importNamespace);
 }
 
 bool AOTCompiledContext::getObjectLookup(uint index, QObject *object, void *target) const

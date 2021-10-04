@@ -93,6 +93,12 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Do
     listPropertyType->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
     m_listPropertyType = listPropertyType;
 
+    QQmlJSScope::Ptr metaObjectType = QQmlJSScope::create();
+    metaObjectType->setInternalName(u"const QMetaObject"_qs);
+    metaObjectType->setFileName(u"qmetaobject.h"_qs);
+    metaObjectType->setAccessSemantics(QQmlJSScope::AccessSemantics::Reference);
+    m_metaObjectType = metaObjectType;
+
     m_jsGlobalObject = importer->jsGlobalObject();
     auto numberMethods = m_jsGlobalObject->methods(u"Number"_qs);
     Q_ASSERT(numberMethods.length() == 1);
@@ -319,10 +325,15 @@ QString QQmlJSTypeResolver::containedTypeName(const QQmlJSRegisterContent &conta
     QQmlJSScope::ConstPtr type;
 
     // Use the type proper instead of the attached type
-    if (container.variant() == QQmlJSRegisterContent::ScopeAttached)
+    switch (container.variant()) {
+    case QQmlJSRegisterContent::ScopeAttached:
+    case QQmlJSRegisterContent::MetaType:
         type = container.scopeType();
-    else
+        break;
+    default:
         type = containedType(container);
+        break;
+    }
 
     return type->internalName().isEmpty() ? type->baseTypeName() : type->internalName();
 }
@@ -456,6 +467,9 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
 {
     if (type->isScript())
         return m_jsValueType;
+
+    if (type == m_metaObjectType)
+        return m_metaObjectType;
 
     if (type->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
         for (auto base = type; base; base = base->baseType()) {
@@ -632,9 +646,8 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
         // Otherwise this is a plain type reference without instance.
         // We may still need the plain type reference for enum lookups,
         // so store it in QJSValue for now.
-        return QQmlJSRegisterContent::create((type == voidType()) ? jsPrimitiveType()
-                                                                  : jsValueType(),
-                                             type, QQmlJSRegisterContent::PlainType);
+        return QQmlJSRegisterContent::create(metaObjectType(), metaObjectType(),
+                                             QQmlJSRegisterContent::MetaType, type);
     }
 
     if (m_jsGlobalObject->hasProperty(name)) {

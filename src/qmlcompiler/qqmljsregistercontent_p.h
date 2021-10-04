@@ -54,7 +54,7 @@ public:
         ObjectById,
         Singleton,
         Script,
-        PlainType,
+        MetaType,
 
         JavaScriptGlobal,
         JavaScriptObject,

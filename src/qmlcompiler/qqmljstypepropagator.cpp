@@ -1287,10 +1287,17 @@ void QQmlJSTypePropagator::generate_CmpInstanceOf(int lhs)
 void QQmlJSTypePropagator::generate_As(int lhs)
 {
     const QQmlJSRegisterContent input = checkedInputRegister(lhs);
-    QQmlJSScope::ConstPtr contained = m_typeResolver->containedType(m_state.accumulatorIn);
+    QQmlJSScope::ConstPtr contained;
 
-    if (m_state.accumulatorIn.variant() == QQmlJSRegisterContent::ScopeAttached)
+    switch (m_state.accumulatorIn.variant()) {
+    case QQmlJSRegisterContent::ScopeAttached:
+    case QQmlJSRegisterContent::MetaType:
         contained = m_state.accumulatorIn.scopeType();
+        break;
+    default:
+        contained = m_typeResolver->containedType(m_state.accumulatorIn);
+        break;
+    }
 
     if (m_typeResolver->containedType(input)->accessSemantics()
                 != QQmlJSScope::AccessSemantics::Reference

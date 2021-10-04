@@ -673,6 +673,9 @@ namespace QQmlPrivate
         bool loadAttachedLookup(uint index, QObject *object, void *target) const;
         void initLoadAttachedLookup(uint index, uint importNamespace, QObject *object) const;
 
+        bool loadTypeLookup(uint index, void *target) const;
+        void initLoadTypeLookup(uint index, uint importNamespace) const;
+
         bool getObjectLookup(uint index, QObject *object, void *target) const;
         void initGetObjectLookup(uint index, QObject *object, QMetaType type) const;
 

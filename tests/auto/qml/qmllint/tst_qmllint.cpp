@@ -717,7 +717,6 @@ void TestQmllint::dirtyQmlCode()
         QVERIFY(process.waitForFinished());
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
         QEXPECT_FAIL("anchors3", "We don't see that QQuickItem cannot be assigned to QQuickAnchorLine", Abort);
-        QEXPECT_FAIL("TypePropertAccess", "We cannot discern between types and instances", Abort);
         QEXPECT_FAIL("attachedPropertyAccess", "We cannot discern between types and instances",
                      Abort);
         QEXPECT_FAIL("attachedPropertyNested", "We cannot discern between types and instances",

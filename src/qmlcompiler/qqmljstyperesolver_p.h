@@ -82,6 +82,7 @@ public:
     QQmlJSScope::ConstPtr jsValueType() const { return m_jsValueType; }
     QQmlJSScope::ConstPtr jsPrimitiveType() const { return m_jsPrimitiveType; }
     QQmlJSScope::ConstPtr listPropertyType() const { return m_listPropertyType; }
+    QQmlJSScope::ConstPtr metaObjectType() const { return m_metaObjectType; }
     QQmlJSScope::ConstPtr jsGlobalObject() const { return m_jsGlobalObject; }
 
     QQmlJSImporter *importer() const { return m_importer; }
@@ -167,6 +168,7 @@ protected:
     QQmlJSScope::ConstPtr m_jsValueType;
     QQmlJSScope::ConstPtr m_jsPrimitiveType;
     QQmlJSScope::ConstPtr m_listPropertyType;
+    QQmlJSScope::ConstPtr m_metaObjectType;
     QQmlJSScope::ConstPtr m_jsGlobalObject;
 
     QQmlJSImporter *m_importer = nullptr;
