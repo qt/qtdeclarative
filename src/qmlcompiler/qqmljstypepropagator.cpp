@@ -532,7 +532,7 @@ void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
         return;
     }
 
-    if (!type.isWritable()) {
+    if (!type.isWritable() && !m_currentScope->hasOwnProperty(name)) {
         setError(u"Can't assign to read-only property %1"_qs.arg(name));
 
         m_logger->logWarning(u"Cannot assign to read-only property %1"_qs.arg(name), Log_Property,

@@ -135,9 +135,11 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor &visitor)
             if (!binding.isLiteralBinding())
                 continue;
 
-            if (QQmlJSMetaProperty property = scope->property(binding.propertyName());
-                property.isValid()) {
-                if (!property.isWritable()) {
+            const QQmlJSMetaProperty property = scope->property(binding.propertyName());
+            if (property.isValid()) {
+                // If the property is defined in the same scope where it is set,
+                // we are in fact allowed to set it, even if it's not writable.
+                if (!property.isWritable() && !scope->hasOwnProperty(binding.propertyName())) {
                     m_logger->logWarning(u"Cannot assign to read-only property %1"_qs
                                                  .arg(binding.propertyName()),
                                          Log_Type, binding.sourceLocation());
