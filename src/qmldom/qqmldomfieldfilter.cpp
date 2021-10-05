@@ -266,7 +266,7 @@ void FieldFilter::setFiltred()
         if (fieldToId.contains(s)) {
             m_filtredTypes.insert(fieldToId.value(s));
         } else {
-            qCWarning(domLog) << "Filter on unknonw type " << s << " will be ignored";
+            qCWarning(domLog) << "Filter on unknown type " << s << " will be ignored";
         }
     }
 }

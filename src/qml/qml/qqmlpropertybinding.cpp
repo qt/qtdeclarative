@@ -227,7 +227,7 @@ void QQmlPropertyBinding::handleUndefinedAssignment(QQmlEnginePrivate *ep, void 
         // reattach the binding (without causing a new notification)
         if (Q_UNLIKELY(bindingData->d() & QtPrivate::QPropertyBindingData::BindingBit)) {
             qCWarning(lcQQPropertyBinding) << "Resetting " << prop.name() << "due to the binding becoming undefined  caused a new binding to be installed\n"
-                       << "The old binding binding will be abandonned";
+                       << "The old binding binding will be abandoned";
             deref();
             return;
         }

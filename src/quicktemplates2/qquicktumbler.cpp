@@ -785,7 +785,7 @@ void QQuickTumblerPrivate::setWrapBasedOnCount()
 
 void QQuickTumblerPrivate::setWrap(bool shouldWrap, bool isExplicit)
 {
-    qCDebug(lcTumbler) << "setting wrap to" << shouldWrap << "- exlicit?" << isExplicit;
+    qCDebug(lcTumbler) << "setting wrap to" << shouldWrap << "- explicit?" << isExplicit;
     if (isExplicit)
         explicitWrap = true;
 
