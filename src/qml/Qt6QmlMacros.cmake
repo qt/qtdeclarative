@@ -2154,24 +2154,22 @@ function(_qt_internal_add_static_qml_plugin_dependencies plugin_target backing_t
     endif()
     set_target_properties("${plugin_target}" PROPERTIES _qt_extra_static_qml_plugin_deps_added TRUE)
 
+    # Get the install plugin target name, which we will need for filtering later on.
+    if(TARGET "${backing_target}")
+        get_target_property(installed_plugin_target
+                            "${backing_target}" _qt_qml_module_installed_plugin_target)
+    endif()
+
     if(NOT backing_target STREQUAL plugin_target AND TARGET "${backing_target}")
         set(has_backing_lib TRUE)
     else()
         set(has_backing_lib FALSE)
     endif()
 
-    # Target who's direct dependencies will be walked to set up additional dependencies for
-    # a static qml plugin.
-    if(has_backing_lib)
-        set(target_with_candidate_qml_module_deps "${backing_target}")
-    else()
-        set(target_with_candidate_qml_module_deps "${plugin_target}")
-    endif()
-
     get_target_property(plugin_type ${plugin_target} TYPE)
     set(skip_prl_marker "$<BOOL:QT_IS_PLUGIN_GENEX>")
 
-    # If ${plugin_target} is a static qml plugin, recursively get its private dependencies (or its
+    # If ${plugin_target} is a static qml plugin, recursively get its private dependencies (and its
     # backing lib private deps), identify which of those are qml modules, extract any associated qml
     # plugin target from those qml modules and make them dependencies of ${plugin_target}.
     #
@@ -2187,10 +2185,25 @@ function(_qt_internal_add_static_qml_plugin_dependencies plugin_target backing_t
     set(additional_plugin_deps "")
 
     if(plugin_type STREQUAL "STATIC_LIBRARY")
-        __qt_internal_collect_all_target_dependencies(
-            "${target_with_candidate_qml_module_deps}" plugin_private_deps)
+        set(all_private_deps "")
 
-        foreach(dep IN LISTS plugin_private_deps)
+        # We walk both plugin_target and backing_lib private deps because they can have differing
+        # dependencies and we want to consider all of them.
+        __qt_internal_collect_all_target_dependencies(
+            "${plugin_target}" plugin_private_deps)
+        if(plugin_private_deps)
+            list(APPEND all_private_deps ${plugin_private_deps})
+        endif()
+
+        if(has_backing_lib)
+            __qt_internal_collect_all_target_dependencies(
+                "${backing_target}" backing_lib_private_deps)
+            if(backing_lib_private_deps)
+                list(APPEND all_private_deps ${backing_lib_private_deps})
+            endif()
+        endif()
+
+        foreach(dep IN LISTS all_private_deps)
             if(NOT TARGET "${dep}")
                 continue()
             endif()
@@ -2218,7 +2231,11 @@ function(_qt_internal_add_static_qml_plugin_dependencies plugin_target backing_t
                     set(associated_qml_plugin "${associated_qml_plugin_candidate}")
                 endif()
 
-                if(associated_qml_plugin)
+                # We need to filter out adding the plugin_target as a dependency to itself,
+                # when walking the backing lib of the plugin_target.
+                if(associated_qml_plugin
+                        AND NOT associated_qml_plugin STREQUAL plugin_target
+                        AND NOT associated_qml_plugin STREQUAL installed_plugin_target)
                     # Abuse a genex marker, to skip the dependency to be added into prl files.
                     # TODO: Introduce a more generic marker name in qtbase specifically
                     # for skipping deps in prl file deps generation.
