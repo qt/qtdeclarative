@@ -58,8 +58,7 @@ add_library(qmldomlib
         ../qqmldomtypesreader.cpp ../qqmldomtypesreader_p.h
 )
 
-target_compile_definitions(qmldomlib PUBLIC QMLDOM_STANDALONE QMLDOM_DYNAMIC)
-target_compile_definitions(qmldomlib PRIVATE QMLDOM_LIBRARY)
+target_compile_definitions(qmldomlib PUBLIC QMLDOM_STANDALONE)
 
 target_include_directories(qmldomlib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../..)
 target_link_libraries(qmldomlib
