@@ -127,6 +127,7 @@ FileDialogImpl {
             folder: control.currentFolder
             nameFilters: control.selectedNameFilter.globs
             showDirsFirst: true
+            sortCaseSensitive: false
         }
         delegate: DialogsImpl.FileDialogDelegate {
             objectName: "fileDialogDelegate" + index
