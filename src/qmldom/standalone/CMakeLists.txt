@@ -18,7 +18,7 @@ endif()
 
 
 add_library(qmldomlib
-        SHARED
+        STATIC
         ../../qmlcompiler/qcoloroutput.cpp ../../qmlcompiler/qcoloroutput_p.h
         ../../qmlcompiler/qdeferredpointer_p.h
         ../../qmlcompiler/qqmljsannotation.cpp  ../../qmlcompiler/qqmljsannotation_p.h
