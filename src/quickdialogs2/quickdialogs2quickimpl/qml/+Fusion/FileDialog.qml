@@ -143,7 +143,7 @@ FileDialogImpl {
             model: FolderListModel {
                 folder: control.currentFolder
                 nameFilters: control.selectedNameFilter.globs
-                showDirsFirst: true
+                showDirsFirst: PlatformTheme.themeHint(PlatformTheme.ShowDirectoriesFirst)
             }
             delegate: DialogsImpl.FileDialogDelegate {
                 objectName: "fileDialogDelegate" + index

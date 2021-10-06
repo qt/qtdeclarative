@@ -53,6 +53,12 @@ QQuickPlatformTheme::QQuickPlatformTheme(QObject *parent) :
 
 QVariant QQuickPlatformTheme::themeHint(QPlatformTheme::ThemeHint themeHint) const
 {
+    if (themeHint == QPlatformTheme::ShowDirectoriesFirst) {
+        // Allow tests to force this value, otherwise they get very messy and difficult to understand.
+        const QVariant showDirsFirst = qEnvironmentVariable("QT_QUICK_DIALOGS_SHOW_DIRS_FIRST");
+        if (showDirsFirst.isValid() && showDirsFirst.canConvert<bool>())
+            return showDirsFirst;
+    }
     return QGuiApplicationPrivate::platformTheme()->themeHint(themeHint);
 }
 

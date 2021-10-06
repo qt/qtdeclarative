@@ -151,6 +151,8 @@ void tst_QQuickFileDialogImpl::initTestCase()
 {
     QQmlDataTest::initTestCase();
 
+    qputenv("QT_QUICK_DIALOGS_SHOW_DIRS_FIRST", "1");
+
     QVERIFY(tempDir.isValid());
     // QTEST_QUICKCONTROLS_MAIN constructs the test case object once,
     // and then calls qRun() for each style, and qRun() calls initTestCase().

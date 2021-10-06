@@ -37,6 +37,7 @@
 import Qt.labs.folderlistmodel
 import QtQuick
 import QtQuick.Templates as T
+import QtQuick.Controls.impl
 import QtQuick.Controls.Imagine
 import QtQuick.Controls.Imagine.impl
 import QtQuick.Dialogs.quickimpl
@@ -136,7 +137,7 @@ FileDialogImpl {
         model: FolderListModel {
             folder: control.currentFolder
             nameFilters: control.selectedNameFilter.globs
-            showDirsFirst: true
+            showDirsFirst: PlatformTheme.themeHint(PlatformTheme.ShowDirectoriesFirst)
         }
         delegate: DialogsImpl.FileDialogDelegate {
             objectName: "fileDialogDelegate" + index
