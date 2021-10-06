@@ -1658,7 +1658,7 @@ ModelNodeMetaObject::~ModelNodeMetaObject()
 {
 }
 
-QAbstractDynamicMetaObject *ModelNodeMetaObject::toDynamicMetaObject(QObject *object)
+QMetaObject *ModelNodeMetaObject::toDynamicMetaObject(QObject *object)
 {
     if (!m_initialized) {
         m_initialized = true;

@@ -398,7 +398,7 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
 }
 
 
-QAbstractDynamicMetaObject *QQmlInterceptorMetaObject::toDynamicMetaObject(QObject *o)
+QMetaObject *QQmlInterceptorMetaObject::toDynamicMetaObject(QObject *o)
 {
     if (!hasAssignedMetaObjectData) {
         *static_cast<QMetaObject *>(this) = *cache->createMetaObject();

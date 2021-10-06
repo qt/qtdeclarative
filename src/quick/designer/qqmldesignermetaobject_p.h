@@ -80,9 +80,8 @@ protected:
     QVariant propertyWriteValue(int, const QVariant &);
 
     QObject *myObject() const { return QQmlVMEMetaObject::object; }
-    QAbstractDynamicMetaObject *parent() const { return const_cast<QAbstractDynamicMetaObject *>(dynamicMetaObjectParent()); }
 
-    const QAbstractDynamicMetaObject *dynamicMetaObjectParent() const;
+    QDynamicMetaObjectData *dynamicMetaObjectParent() const;
 
     const QMetaObject *metaObjectParent() const;
 

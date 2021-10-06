@@ -181,10 +181,10 @@ QVariant QQmlDesignerMetaObject::propertyWriteValue(int, const QVariant &value)
     return value;
 }
 
-const QAbstractDynamicMetaObject *QQmlDesignerMetaObject::dynamicMetaObjectParent() const
+QDynamicMetaObjectData *QQmlDesignerMetaObject::dynamicMetaObjectParent() const
 {
     if (QQmlVMEMetaObject::parent.isT1())
-        return QQmlVMEMetaObject::parent.asT1()->toDynamicMetaObject(QQmlVMEMetaObject::object);
+        return QQmlVMEMetaObject::parent.asT1();
     else
         return nullptr;
 }
@@ -222,9 +222,9 @@ int QQmlDesignerMetaObject::openMetaCall(QObject *o, QMetaObject::Call call, int
         }
         return -1;
     } else {
-        QAbstractDynamicMetaObject *directParent = parent();
-        if (directParent)
-            return directParent->metaCall(o, call, id, a);
+        QDynamicMetaObjectData *dynamicParent = dynamicMetaObjectParent();
+        if (dynamicParent)
+            return dynamicParent->metaCall(o, call, id, a);
         else
             return myObject()->qt_metacall(call, id, a);
     }
@@ -264,12 +264,14 @@ int QQmlDesignerMetaObject::metaCall(QObject *o, QMetaObject::Call call, int id,
         oldValue = propertyById.read(myObject());
     }
 
-    QAbstractDynamicMetaObject *directParent = parent();
-    if (directParent && id < directParent->propertyOffset()) {
-        metaCallReturnValue = directParent->metaCall(o, call, id, a);
-    } else {
+    QDynamicMetaObjectData *dynamicParent = dynamicMetaObjectParent();
+    const QMetaObject *staticParent = dynamicParent
+            ? dynamicParent->toDynamicMetaObject(QQmlVMEMetaObject::object)
+            : nullptr;
+    if (staticParent && id < staticParent->propertyOffset())
+        metaCallReturnValue = dynamicParent->metaCall(o, call, id, a);
+    else
         openMetaCall(o, call, id, a);
-    }
 
 
     if (call == QMetaObject::WriteProperty

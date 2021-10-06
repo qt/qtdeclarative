@@ -125,7 +125,7 @@ const QQmlValueType *QQmlGadgetPtrWrapper::valueType() const
     return static_cast<const QQmlValueType *>(d->metaObject);
 }
 
-QAbstractDynamicMetaObject *QQmlValueType::toDynamicMetaObject(QObject *)
+QMetaObject *QQmlValueType::toDynamicMetaObject(QObject *)
 {
     return this;
 }

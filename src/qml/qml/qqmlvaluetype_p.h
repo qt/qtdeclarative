@@ -83,7 +83,7 @@ public:
     int metaTypeId() const { return metaType.id(); }
 
     // ---- dynamic meta object data interface
-    QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *) override;
+    QMetaObject *toDynamicMetaObject(QObject *) override;
     void objectDestroyed(QObject *) override;
     int metaCall(QObject *obj, QMetaObject::Call type, int _id, void **argv) override;
     // ----

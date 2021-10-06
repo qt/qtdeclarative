@@ -99,7 +99,7 @@ public:
 
     static QQmlInterceptorMetaObject *get(QObject *obj);
 
-    QAbstractDynamicMetaObject *toDynamicMetaObject(QObject *o) override;
+    QMetaObject *toDynamicMetaObject(QObject *o) override;
 
     // Used by auto-tests for inspection
     QQmlPropertyCache *propertyCache() const { return cache.data(); }
