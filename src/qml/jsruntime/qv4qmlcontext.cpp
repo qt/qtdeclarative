@@ -206,7 +206,10 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
     //
     // Note: The scope object is only a QADMO for example when somebody registers a QQmlPropertyMap
     // sub-class as QML type and then instantiates it in .qml.
-    if (scopeObject && QQmlPropertyCache::isDynamicMetaObject(scopeObject->metaObject())) {
+    const QMetaObjectPrivate *metaObjectPrivate = scopeObject
+            ? reinterpret_cast<const QMetaObjectPrivate *>(scopeObject->metaObject()->d.data)
+            : nullptr;
+    if (metaObjectPrivate && metaObjectPrivate->flags & DynamicMetaObject) {
         // all bets are off, so don't try to optimize any lookups
         lookup = nullptr;
         if (performGobalLookUp())

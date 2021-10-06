@@ -89,7 +89,7 @@ public:
 };
 
 
-class Q_QML_PRIVATE_EXPORT QQmlInterceptorMetaObject : public QAbstractDynamicMetaObject
+class Q_QML_PRIVATE_EXPORT QQmlInterceptorMetaObject : public QDynamicMetaObjectData
 {
 public:
     QQmlInterceptorMetaObject(QObject *obj, const QQmlRefPointer<QQmlPropertyCache> &cache);
@@ -125,7 +125,7 @@ public:
     QBiPointer<QDynamicMetaObjectData, const QMetaObject> parent;
 
     QQmlPropertyValueInterceptor *interceptors;
-    bool hasAssignedMetaObjectData;
+    const QMetaObject *metaObject;
 };
 
 inline QQmlInterceptorMetaObject *QQmlInterceptorMetaObject::get(QObject *obj)

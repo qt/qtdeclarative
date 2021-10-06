@@ -79,12 +79,13 @@ public:
         m_id = encodedIndex & ((quintptr(1) << (usableBits / 2)) - 1);
 
         // walk up to the correct meta object if necessary
-        auto mo = prop->object->metaObject();
+        auto mo = static_cast<QQmlVMEMetaObject *>(QObjectPrivate::get(prop->object)->metaObject);
         while (inheritanceDepth--)
-            mo = mo->superClass();
-        m_metaObject = static_cast<QQmlVMEMetaObject *>(const_cast<QMetaObject *>(mo));
+            mo = mo->parentVMEMetaObject();
+        m_metaObject = mo;
         Q_ASSERT(m_metaObject);
-        Q_ASSERT( ::strstr(m_metaObject->property(m_metaObject->propOffset() + m_id).typeName(), "QQmlListProperty") );
+        Q_ASSERT(::strstr(m_metaObject->toDynamicMetaObject(prop->object)->property(
+                              m_metaObject->propOffset() + m_id).typeName(), "QQmlListProperty") );
         Q_ASSERT(m_metaObject->object == prop->object);
 
         // readPropertyAsList() with checks transformed into Q_ASSERT
@@ -272,7 +273,7 @@ QQmlInterceptorMetaObject::QQmlInterceptorMetaObject(QObject *obj, const QQmlRef
     : object(obj),
       cache(cache),
       interceptors(nullptr),
-      hasAssignedMetaObjectData(false)
+      metaObject(nullptr)
 {
     QObjectPrivate *op = QObjectPrivate::get(obj);
 
@@ -400,18 +401,13 @@ bool QQmlInterceptorMetaObject::intercept(QMetaObject::Call c, int id, void **a)
 
 QMetaObject *QQmlInterceptorMetaObject::toDynamicMetaObject(QObject *o)
 {
-    if (!hasAssignedMetaObjectData) {
-        *static_cast<QMetaObject *>(this) = *cache->createMetaObject();
+    Q_UNUSED(o);
+    if (!metaObject)
+        metaObject = cache->createMetaObject();
 
-        if (parent.isT1())
-            this->d.superdata = parent.asT1()->toDynamicMetaObject(o);
-        else
-            this->d.superdata = parent.asT2();
-
-        hasAssignedMetaObjectData = true;
-    }
-
-    return this;
+    // ### Qt7: The const_cast is only due to toDynamicMetaObject having the wrong return type.
+    //          It should be const QMetaObject *. Fix this.
+    return const_cast<QMetaObject *>(metaObject);
 }
 
 QQmlVMEMetaObject::QQmlVMEMetaObject(QV4::ExecutionEngine *engine,
@@ -777,10 +773,11 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                             // To do this, we encode the hierarchy depth together with the id of the
                             // property in a single quintptr, with the first half storing the depth
                             // and the second half storing the property id
-                            auto mo = object->metaObject();
+                            auto mo = static_cast<QQmlVMEMetaObject *>(
+                                        QObjectPrivate::get(object)->metaObject);
                             quintptr inheritanceDepth = 0u;
                             while (mo && mo != this) {
-                                mo = mo->superClass();
+                                mo = mo->parentVMEMetaObject();
                                 ++inheritanceDepth;
                             }
                             constexpr quintptr usableBits = sizeof(quintptr)  * CHAR_BIT;
@@ -996,10 +993,10 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     // are not rewritten correctly but this bug is deemed out-of-scope to fix for
                     // performance reasons; see QTBUG-24064) and thus compilation will have failed.
                     QQmlError e;
-                    e.setDescription(QLatin1String("Exception occurred during compilation of "
-                                                         "function: ")
-                                     + QString::fromUtf8(QMetaObject::method(_id)
-                                                         .methodSignature()));
+                    e.setDescription(
+                                QStringLiteral(
+                                    "Exception occurred during compilation of function: ")
+                                + QString::fromUtf8(metaObject->method(_id).methodSignature()));
                     ep->warning(e);
                     return -1; // The dynamic method with that id is not available.
                 }

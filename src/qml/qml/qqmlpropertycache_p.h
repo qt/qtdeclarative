@@ -84,8 +84,14 @@ public:
     };
 
     struct Data {
-        ~Data() { if (mode == SharedMetaObject) ::free(const_cast<QMetaObject *>(mo)); }
-        const QMetaObject *mo = nullptr;
+        ~Data() {
+            if (mode == SharedMetaObject)
+                ::free(sharedMetaObject);
+        }
+        union {
+            QMetaObject *sharedMetaObject = nullptr;
+            const QMetaObject *staticMetaObject;
+        };
         int ref = 1;
         OwnershipMode mode;
     } *d;
@@ -94,11 +100,24 @@ public:
         : d(nullptr)
     {}
 
-    RefCountedMetaObject(const QMetaObject *mo, OwnershipMode mode)
-        : d(new Data) {
-        d->mo = mo;
-        d->mode = mode;
+    static RefCountedMetaObject createShared(QMetaObject *mo)
+    {
+        RefCountedMetaObject result;
+        result.d = new Data();
+        result.d->sharedMetaObject = mo;
+        result.d->mode = SharedMetaObject;
+        return result;
     }
+
+    static RefCountedMetaObject createStatic(const QMetaObject *mo)
+    {
+        RefCountedMetaObject result;
+        result.d = new Data();
+        result.d->staticMetaObject = mo;
+        result.d->mode = StaticMetaObject;
+        return result;
+    }
+
     ~RefCountedMetaObject() {
         if (d && !--d->ref)
             delete d;
@@ -120,8 +139,21 @@ public:
             ++d->ref;
         return *this;
     }
-    operator const QMetaObject *() const { return d ? d->mo : nullptr; }
-    const QMetaObject * operator ->() const { return d ? d->mo : nullptr; }
+
+    const QMetaObject *constMetaObject() const
+    {
+        if (!d)
+            return nullptr;
+        return isShared() ? d->sharedMetaObject : d->staticMetaObject;
+    }
+
+    QMetaObject *sharedMetaObject() const
+    {
+        return isShared() ? d->sharedMetaObject : nullptr;
+    }
+
+    operator const QMetaObject *() const { return constMetaObject(); }
+    const QMetaObject * operator ->() const { return constMetaObject(); }
     bool isShared() const { return d && d->mode == SharedMetaObject; }
 };
 
@@ -205,8 +237,6 @@ public:
     inline int signalCount() const;
     inline int signalOffset() const;
     inline int qmlEnumCount() const;
-
-    static bool isDynamicMetaObject(const QMetaObject *);
 
     void toMetaObjectBuilder(QMetaObjectBuilder &);
 

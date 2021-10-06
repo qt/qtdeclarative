@@ -62,7 +62,7 @@
 QT_BEGIN_NAMESPACE
 
 
-class QQmlProxyMetaObject : public QAbstractDynamicMetaObject
+class QQmlProxyMetaObject : public QDynamicMetaObjectData
 {
 public:
     struct ProxyData {
@@ -78,6 +78,7 @@ public:
 
 protected:
     int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a) override;
+    QMetaObject *toDynamicMetaObject(QObject *) override;
 
 private:
     QObject *getProxy(int index);
@@ -85,7 +86,8 @@ private:
     QList<ProxyData> *metaObjects;
     QObject **proxies;
 
-    QAbstractDynamicMetaObject *parent;
+    QDynamicMetaObjectData *parent;
+    QMetaObject *metaObject;
     QObject *object;
 };
 

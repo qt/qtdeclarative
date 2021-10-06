@@ -228,7 +228,6 @@ void QQmlTypePrivate::init() const
         // XXX - very inefficient
         QMetaObjectBuilder builder;
         QQmlMetaType::clone(builder, extMetaObject, extMetaObject, extMetaObject);
-        builder.setFlags(MetaObjectFlag::DynamicMetaObject);
         QMetaObject *mmo = builder.toMetaObject();
         mmo->d.superdata = mo;
         QQmlProxyMetaObject::ProxyData data = { mmo, extFunc, 0, 0 };

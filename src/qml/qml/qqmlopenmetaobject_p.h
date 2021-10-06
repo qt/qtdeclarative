@@ -78,7 +78,6 @@ public:
 
     int propertyCount() const;
     QByteArray propertyName(int) const;
-    QMetaObject *metaObject() const;
 
 protected:
     virtual void propertyCreated(int, QMetaPropertyBuilder &);
@@ -121,6 +120,7 @@ public:
     QQmlOpenMetaObjectType *type() const;
 
     void emitPropertyNotification(const QByteArray &propertyName);
+    void unparent();
 
 protected:
     int metaCall(QObject *o, QMetaObject::Call _c, int _id, void **_a) override;
@@ -132,7 +132,7 @@ protected:
     virtual void propertyWritten(int);
     virtual void propertyCreated(int, QMetaPropertyBuilder &);
 
-    QAbstractDynamicMetaObject *parent() const;
+    QDynamicMetaObjectData *parent() const;
 
     bool checkedSetValue(int index, const QVariant &value, bool force);
 

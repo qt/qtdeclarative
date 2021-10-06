@@ -104,7 +104,7 @@ public:
         // Lastly, isDirect and isOverridden apply to both functions and non-functions
     private:
         unsigned isConst                       : 1; // Property: has CONST flag/Method: is const
-        unsigned isDirectOrVMEFunction         : 1; // Exists on a C++ QMetaOBject OR Function was added by QML
+        unsigned isVMEFunction                 : 1; // Function was added by QML
         unsigned isWritableORhasArguments      : 1; // Has WRITE function OR Function takes arguments
         unsigned isResettableORisSignal        : 1; // Has RESET function OR Function is a signal
         unsigned isAliasORisVMESignal          : 1; // Is a QML alias to another property OR Signal was added by QML
@@ -159,11 +159,6 @@ public:
             isConstructorORisBindable = b;
         }
 
-        void setIsDirect(bool b) {
-            Q_ASSERT(type != FunctionType);
-            isDirectOrVMEFunction = b;
-        }
-
         void setIsRequired(bool b) {
             Q_ASSERT(type != FunctionType);
             isRequiredORisCloned = b;
@@ -171,7 +166,7 @@ public:
 
         void setIsVMEFunction(bool b) {
             Q_ASSERT(type == FunctionType);
-            isDirectOrVMEFunction = b;
+            isVMEFunction = b;
         }
         void setHasArguments(bool b) {
             Q_ASSERT(type == FunctionType);
@@ -233,7 +228,6 @@ public:
     bool isAlias() const { return !isFunction() && m_flags.isAliasORisVMESignal; }
     bool isFinal() const { return !isFunction() && m_flags.isFinalORisV4Function; }
     bool isOverridden() const { return m_flags.isOverridden; }
-    bool isDirect() const { return !isFunction() && m_flags.isDirectOrVMEFunction; }
     bool isRequired() const { return !isFunction() && m_flags.isRequiredORisCloned; }
     bool hasStaticMetaCallFunction() const { return staticMetaCallFunction() != nullptr; }
     bool isFunction() const { return m_flags.type == Flags::FunctionType; }
@@ -244,7 +238,7 @@ public:
     bool isQJSValue() const { return m_flags.type == Flags::QJSValueType; }
     bool isVarProperty() const { return m_flags.type == Flags::VarPropertyType; }
     bool isQVariant() const { return m_flags.type == Flags::QVariantType; }
-    bool isVMEFunction() const { return isFunction() && m_flags.isDirectOrVMEFunction; }
+    bool isVMEFunction() const { return isFunction() && m_flags.isVMEFunction; }
     bool hasArguments() const { return isFunction() && m_flags.isWritableORhasArguments; }
     bool isSignal() const { return isFunction() && m_flags.isResettableORisSignal; }
     bool isVMESignal() const { return isFunction() && m_flags.isAliasORisVMESignal; }
@@ -353,14 +347,23 @@ public:
         readPropertyWithArgs(target, args);
     }
 
-    inline void readPropertyWithArgs(QObject *target, void *args[]) const
+    // This is the same as QMetaObject::metacall(), but inlined here to avoid a function call.
+    // And we ignore the return value.
+    template<QMetaObject::Call call>
+    void doMetacall(QObject *object, int idx, void **argv) const
+    {
+        if (QDynamicMetaObjectData *dynamicMetaObject = QObjectPrivate::get(object)->metaObject)
+            dynamicMetaObject->metaCall(object, call, idx, argv);
+        else
+            object->qt_metacall(call, idx, argv);
+    }
+
+    void readPropertyWithArgs(QObject *target, void *args[]) const
     {
         if (hasStaticMetaCallFunction())
             staticMetaCallFunction()(target, QMetaObject::ReadProperty, relativePropertyIndex(), args);
-        else if (isDirect())
-            target->qt_metacall(QMetaObject::ReadProperty, coreIndex(), args);
         else
-            QMetaObject::metacall(target, QMetaObject::ReadProperty, coreIndex(), args);
+            doMetacall<QMetaObject::ReadProperty>(target, coreIndex(), args);
     }
 
     bool writeProperty(QObject *target, void *value, WriteFlags flags) const
@@ -369,10 +372,8 @@ public:
         void *argv[] = { value, nullptr, &status, &flags };
         if (flags.testFlag(BypassInterceptor) && hasStaticMetaCallFunction())
             staticMetaCallFunction()(target, QMetaObject::WriteProperty, relativePropertyIndex(), argv);
-        else if (flags.testFlag(BypassInterceptor) && isDirect())
-            target->qt_metacall(QMetaObject::WriteProperty, coreIndex(), argv);
         else
-            QMetaObject::metacall(target, QMetaObject::WriteProperty, coreIndex(), argv);
+            doMetacall<QMetaObject::WriteProperty>(target, coreIndex(), argv);
         return true;
     }
 
@@ -437,7 +438,7 @@ bool QQmlPropertyData::operator==(const QQmlPropertyData &other) const
 QQmlPropertyData::Flags::Flags()
     : otherBits(0)
     , isConst(false)
-    , isDirectOrVMEFunction(false)
+    , isVMEFunction(false)
     , isWritableORhasArguments(false)
     , isResettableORisSignal(false)
     , isAliasORisVMESignal(false)
@@ -454,7 +455,7 @@ QQmlPropertyData::Flags::Flags()
 bool QQmlPropertyData::Flags::operator==(const QQmlPropertyData::Flags &other) const
 {
     return isConst == other.isConst &&
-            isDirectOrVMEFunction == other.isDirectOrVMEFunction &&
+            isVMEFunction == other.isVMEFunction &&
             isWritableORhasArguments == other.isWritableORhasArguments &&
             isResettableORisSignal == other.isResettableORisSignal &&
             isAliasORisVMESignal == other.isAliasORisVMESignal &&

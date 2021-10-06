@@ -45,11 +45,11 @@ QT_BEGIN_NAMESPACE
 QQmlProxyMetaObject::QQmlProxyMetaObject(QObject *obj, QList<ProxyData> *mList)
 : metaObjects(mList), proxies(nullptr), parent(nullptr), object(obj)
 {
-    *static_cast<QMetaObject *>(this) = *metaObjects->constFirst().metaObject;
+    metaObject = metaObjects->constFirst().metaObject;
 
     QObjectPrivate *op = QObjectPrivate::get(obj);
     if (op->metaObject)
-        parent = static_cast<QAbstractDynamicMetaObject*>(op->metaObject);
+        parent = op->metaObject;
 
     op->metaObject = this;
 }
@@ -143,6 +143,11 @@ int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void 
         return parent->metaCall(o, c, id, a);
     else
         return object->qt_metacall(c, id, a);
+}
+
+QMetaObject *QQmlProxyMetaObject::toDynamicMetaObject(QObject *)
+{
+    return metaObject;
 }
 
 QT_END_NAMESPACE

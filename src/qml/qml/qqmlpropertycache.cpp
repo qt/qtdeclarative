@@ -342,7 +342,7 @@ const QMetaObject *QQmlPropertyCache::createMetaObject()
         QMetaObjectBuilder builder;
         toMetaObjectBuilder(builder);
         builder.setSuperClass(_parent->createMetaObject());
-        _metaObject = RefCountedMetaObject(builder.toMetaObject(), RefCountedMetaObject::SharedMetaObject);
+        _metaObject = RefCountedMetaObject::createShared(builder.toMetaObject());
     }
 
     return _metaObject;
@@ -403,10 +403,7 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
                                QQmlPropertyData::Flags methodFlags,
                                QQmlPropertyData::Flags signalFlags)
 {
-    _metaObject = RefCountedMetaObject(metaObject, RefCountedMetaObject::StaticMetaObject);
-
-    bool dynamicMetaObject = isDynamicMetaObject(metaObject);
-
+    _metaObject = RefCountedMetaObject::createStatic(metaObject);
     allowedRevisionCache.append(QTypeRevision::zero());
 
     int methodCount = metaObject->methodCount();
@@ -557,8 +554,6 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
         data->load(p);
         data->setTypeVersion(typeVersion);
 
-        data->m_flags.setIsDirect(!dynamicMetaObject);
-
         Q_ASSERT((allowedRevisionCache.count() - 1) < Q_INT16_MAX);
         data->setMetaObjectOffset(allowedRevisionCache.count() - 1);
 
@@ -586,9 +581,8 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
                 isGadget = false;
         }
 
-        if (isGadget) // always dispatch over a 'normal' meta-call so the QQmlValueType can intercept
-            data->m_flags.setIsDirect(false);
-        else
+        // otherwise always dispatch over a 'normal' meta-call so the QQmlValueType can intercept
+        if (!isGadget)
             data->trySetStaticMetaCallFunction(metaObject->d.static_metacall, ii - propOffset);
     }
 }
@@ -969,21 +963,13 @@ QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QLatin1String
     return qQmlPropertyCacheProperty<const QLatin1String &>(engine, obj, name, context, local);
 }
 
-// these two functions are copied from qmetaobject.cpp
-static inline const QMetaObjectPrivate *priv(const uint* data)
-{ return reinterpret_cast<const QMetaObjectPrivate*>(data); }
-
+// this function is copied from qmetaobject.cpp
 static inline const QByteArray stringData(const QMetaObject *mo, int index)
 {
     uint offset = mo->d.stringdata[2*index];
     uint length = mo->d.stringdata[2*index + 1];
     const char *string = reinterpret_cast<const char *>(mo->d.stringdata) + offset;
     return QByteArray::fromRawData(string, length);
-}
-
-bool QQmlPropertyCache::isDynamicMetaObject(const QMetaObject *mo)
-{
-    return priv(mo->d.data)->flags & DynamicMetaObject;
 }
 
 const char *QQmlPropertyCache::className() const

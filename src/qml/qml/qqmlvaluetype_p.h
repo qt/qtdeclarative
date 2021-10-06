@@ -67,7 +67,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlValueType : public QAbstractDynamicMetaObject
+class Q_QML_PRIVATE_EXPORT QQmlValueType : public QDynamicMetaObjectData
 {
 public:
     QQmlValueType() : metaType(QMetaType::UnknownType) {}
@@ -81,6 +81,7 @@ public:
     void destruct(void *gadgetPtr) const { metaType.destruct(gadgetPtr); }
 
     int metaTypeId() const { return metaType.id(); }
+    const QMetaObject *metaObject() const { return dynamicMetaObject; }
 
     // ---- dynamic meta object data interface
     QMetaObject *toDynamicMetaObject(QObject *) override;
@@ -109,7 +110,7 @@ public:
 
     int metaTypeId() const { return valueType()->metaTypeId(); }
     int metaCall(QMetaObject::Call type, int id, void **argv);
-    QMetaProperty property(int index) { return valueType()->property(index); }
+    QMetaProperty property(int index) { return valueType()->metaObject()->property(index); }
 
 private:
     const QQmlValueType *valueType() const;
