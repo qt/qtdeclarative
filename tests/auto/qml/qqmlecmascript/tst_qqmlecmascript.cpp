@@ -9274,6 +9274,9 @@ void tst_qqmlecmascript::hugeStack()
 
 void tst_qqmlecmascript::gcCrashRegressionTest()
 {
+#if !QT_CONFIG(process)
+    QSKIP("Depends on QProcess");
+#else
     const QString qmljs = QLibraryInfo::path(QLibraryInfo::BinariesPath) + "/qmljs";
     if (!QFile::exists(qmljs)) {
         QSKIP("Tets requires qmljs");
@@ -9317,6 +9320,7 @@ void tst_qqmlecmascript::gcCrashRegressionTest()
     QVERIFY(pid != 0);
     QVERIFY(process.waitForFinished());
     QCOMPARE(process.exitCode(), 0);
+#endif
 }
 
 void tst_qqmlecmascript::bindingOnQProperty()
