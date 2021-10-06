@@ -2267,3 +2267,18 @@ function(_qt_internal_get_qml_plugin_basename out_var plugin_target)
     endif()
     set(${out_var} "${plugin_basename}" PARENT_SCOPE)
 endfunction()
+
+# Used to add extra dependencies between ${target} and ${dep_target} qml plugins in a static
+# Qt build, without creating a dependency in the genereated qmake .prl files.
+# These dependencies make manual linking to static plugins a nicer experience for users that don't
+# want to use qt_import_qml_plugins.
+function(_qt_internal_add_qml_static_plugin_dependency target dep_target)
+    if(NOT BUILD_SHARED_LIBS)
+        # Abuse a genex marker, to skip the dependency to be added into prl files.
+        # TODO: Introduce a more generic marker name in qtbase specifically
+        # for skipping deps in prl file deps generation.
+        set(skip_prl_marker "$<BOOL:QT_IS_PLUGIN_GENEX>")
+        target_link_libraries("${target}" PRIVATE
+            "$<${skip_prl_marker}:$<TARGET_NAME:${dep_target}>>")
+    endif()
+endfunction()

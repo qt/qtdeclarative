@@ -135,3 +135,11 @@ qt_internal_add_resource(qtquickcontrols2fusionstyleplugin "qtquickcontrols2fusi
 )
 
 add_subdirectory(impl)
+
+_qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2fusionstyleplugin quickwindow)
+_qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2fusionstyleplugin
+                                              qtquickcontrols2fusionstyleimplplugin)
+
+# Basic style is the required fallback style.
+_qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2fusionstyleplugin
+                                              qtquickcontrols2basicstyleplugin)

@@ -166,3 +166,6 @@ qt_internal_add_resource(qtquickcontrols2basicstyleplugin "qtquickcontrols2basic
 )
 
 add_subdirectory(impl)
+
+_qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2basicstyleplugin
+                                              qtquickcontrols2basicstyleimplplugin)
