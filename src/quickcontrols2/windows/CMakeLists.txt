@@ -44,3 +44,10 @@ qt_internal_add_qml_module(qtquickcontrols2windowsstyleplugin
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
 )
+
+# Native style is a dependency of the Windows style.
+_qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2windowsstyleplugin
+                                              qtquickcontrols2nativestyleplugin)
+# Fusion style is the required fallback style.
+_qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2windowsstyleplugin
+                                              qtquickcontrols2fusionstyleplugin)
