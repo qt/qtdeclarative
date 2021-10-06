@@ -478,7 +478,7 @@ ReturnedValue RegExpPrototype::method_exec(const FunctionObject *b, const Value 
     if (!r)
         return scope.engine->throwTypeError();
 
-    ScopedValue arg(scope, argc ? argv[0]: Value::undefinedValue());
+    ScopedValue arg(scope, argc ? argv[0] : Value::undefinedValue());
     ScopedString str(scope, arg->toString(scope.engine));
     if (scope.hasException())
         RETURN_UNDEFINED();

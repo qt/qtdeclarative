@@ -87,7 +87,7 @@ ReturnedValue SymbolCtor::virtualCallAsConstructor(const FunctionObject *f, cons
 ReturnedValue SymbolCtor::method_for(const FunctionObject *f, const Value *, const Value *argv, int argc)
 {
     Scope scope(f);
-    ScopedValue k(scope, argc ? argv[0]: Value::undefinedValue());
+    ScopedValue k(scope, argc ? argv[0] : Value::undefinedValue());
     ScopedString key(scope, k->toString(scope.engine));
     if (scope.hasException())
         return Encode::undefined();

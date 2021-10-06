@@ -79,7 +79,7 @@ ReturnedValue DataViewCtor::virtualCallAsConstructor(const FunctionObject *f, co
     if (!newTarget || !buffer)
         return scope.engine->throwTypeError();
 
-    uint offset = ::toIndex(scope.engine, argc > 1 ? argv[1]: Value::undefinedValue());
+    uint offset = ::toIndex(scope.engine, argc > 1 ? argv[1] : Value::undefinedValue());
     if (scope.hasException())
         return Encode::undefined();
     if (buffer->isDetachedBuffer())
