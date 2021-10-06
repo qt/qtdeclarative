@@ -3,13 +3,3 @@
 # QTBUG-70597
 [Tumbler::test_itemsCorrectlyPositioned]
 *
-
-# QTBUG-95679
-# Blacklisted in order to get the native windows style under
-# regression control
-[Button::test_display:TextBesideIcon]
-*
-[Button::test_display:TextBesideIcon, mirrored]
-*
-[Button::test_spacing]
-*
