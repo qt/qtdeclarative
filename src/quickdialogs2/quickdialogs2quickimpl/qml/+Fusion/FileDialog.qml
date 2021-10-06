@@ -144,6 +144,7 @@ FileDialogImpl {
                 folder: control.currentFolder
                 nameFilters: control.selectedNameFilter.globs
                 showDirsFirst: PlatformTheme.themeHint(PlatformTheme.ShowDirectoriesFirst)
+                sortCaseSensitive: false
             }
             delegate: DialogsImpl.FileDialogDelegate {
                 objectName: "fileDialogDelegate" + index
