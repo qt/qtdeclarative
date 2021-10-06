@@ -121,9 +121,8 @@ QObject *QQuickDesignerSupportPropertyChanges::stateObject(QObject *propertyChan
 
 bool QQuickDesignerSupportPropertyChanges::isNormalProperty(const QQuickDesignerSupport::PropertyName &propertyName)
 {
-    QMetaObject metaObject = QQuickPropertyChanges::staticMetaObject;
-
-    return (metaObject.indexOfProperty(propertyName) > 0); // 'restoreEntryValues', 'explicit'
+    const QMetaObject *metaObject = &QQuickPropertyChanges::staticMetaObject;
+    return (metaObject->indexOfProperty(propertyName) > 0); // 'restoreEntryValues', 'explicit'
 }
 
 void QQuickDesignerSupportPropertyChanges::detachFromState(QObject *propertyChanges)
