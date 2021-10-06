@@ -247,8 +247,8 @@ GridLayout {
 
         background: Rectangle {
             y: sample.topPadding - sample.bottomPadding
-            width: parent.width - sample.leftPadding + sample.rightPadding
-            height: parent.height - sample.topPadding + sample.bottomPadding
+            width: sample.width - sample.leftPadding + sample.rightPadding
+            height: sample.height - sample.topPadding + sample.bottomPadding
             radius: 3
         }
 
