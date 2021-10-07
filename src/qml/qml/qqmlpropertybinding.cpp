@@ -125,7 +125,7 @@ void QQmlPropertyBindingJS::expressionChanged()
     if (!asBinding()->propertyDataPtr)
         return;
     const auto currentTag = m_error.tag();
-    if (currentTag & InEvaluationLoop) {
+    if (currentTag == InEvaluationLoop) {
         QQmlError err;
         auto location = QQmlJavaScriptExpression::sourceLocation();
         err.setUrl(QUrl{location.sourceFile});
@@ -141,10 +141,10 @@ void QQmlPropertyBindingJS::expressionChanged()
         qmlWarning(this->scopeObject(), err);
         return;
     }
-    m_error.setTag(currentTag | InEvaluationLoop);
+    m_error.setTag(InEvaluationLoop);
     asBinding()->evaluateRecursive();
     asBinding()->notifyRecursive();
-    m_error.setTag(currentTag);
+    m_error.setTag(NoTag);
 }
 
 QQmlPropertyBinding::QQmlPropertyBinding(QMetaType mt, QObject *target, QQmlPropertyIndex targetIndex, TargetData::BoundFunction hasBoundFunction)
@@ -293,8 +293,8 @@ void QQmlPropertyBinding::bindingErrorCallback(QPropertyBindingPrivate *that)
 QUntypedPropertyBinding QQmlTranslationPropertyBinding::create(const QQmlPropertyData *pd, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
 {
     auto translationBinding = [compilationUnit, binding](const QMetaType &metaType, void *dataPtr) -> bool {
-        // Create a dependency to the uiLanguage
-        QJSEnginePrivate::get(compilationUnit->engine)->uiLanguage.value();
+        // Create a dependency to the translationLanguage
+        QQmlEnginePrivate::get(compilationUnit->engine)->translationLanguage.value();
 
         QVariant resultVariant(compilationUnit->bindingValueAsString(binding));
         if (metaType.id() != QMetaType::QString)

@@ -394,18 +394,23 @@ protected:
     }
 };
 
-class QQmlTranslationBinding : public GenericBinding<QMetaType::QString> {
+class QQmlTranslationBinding : public GenericBinding<QMetaType::QString>, public QPropertyObserver {
 public:
     QQmlTranslationBinding(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)
+        : QPropertyObserver(&QQmlTranslationBinding::onLanguageChange)
     {
         setCompilationUnit(compilationUnit);
         m_binding = binding;
+        setSource(QQmlEnginePrivate::get(compilationUnit->engine)->translationLanguage);
     }
 
     QQmlSourceLocation sourceLocation() const override final
     {
         return QQmlSourceLocation(m_compilationUnit->fileName(), m_binding->valueLocation.line, m_binding->valueLocation.column);
     }
+
+    static void onLanguageChange(QPropertyObserver *observer, QUntypedPropertyData *)
+    { static_cast<QQmlTranslationBinding *>(observer)->update(); }
 
     void doUpdate(const DeleteWatcher &watcher,
                   QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) override final
@@ -788,7 +793,7 @@ QVector<QQmlProperty> QQmlBinding::dependencies() const
 
 bool QQmlBinding::hasDependencies() const
 {
-    return !activeGuards.isEmpty() || translationsCaptured() || qpropertyChangeTriggers;
+    return !activeGuards.isEmpty() || qpropertyChangeTriggers;
 }
 
 class QObjectPointerBinding: public QQmlNonbindingBinding

@@ -399,6 +399,8 @@ public:
     QVariant getProperty(int elementIndex, int roleIndex, const QQmlListModel *owner, QV4::ExecutionEngine *eng);
     ListModel *getListProperty(int elementIndex, const ListLayout::Role &role);
 
+    void updateTranslations();
+
     int roleCount() const
     {
         return m_layout->roleCount();

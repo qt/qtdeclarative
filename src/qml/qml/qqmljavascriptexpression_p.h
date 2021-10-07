@@ -187,22 +187,12 @@ protected:
 
     QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next, GuardTag> activeGuards;
 
-    void setTranslationsCaptured(bool captured) {
-        Tag newTag = captured ? TranslationsCaptured : NoTag;
-        if (m_error.tag() & InEvaluationLoop)
-            newTag = Tag(newTag | InEvaluationLoop);
-        m_error.setTag(newTag);
-    }
-    bool translationsCaptured() const { return m_error.tag() & TranslationsCaptured; }
-
     enum Tag {
         NoTag,
-        TranslationsCaptured,
         InEvaluationLoop
     };
 
-    // m_error:flag1 translationsCapturedDuringEvaluation
-    QTaggedPointer<QQmlDelayedError> m_error;
+    QTaggedPointer<QQmlDelayedError, Tag> m_error;
 
 private:
     friend class QQmlContextData;
@@ -239,14 +229,13 @@ public:
     void captureProperty(QQmlNotifier *);
     void captureProperty(QObject *, int, int, bool doNotify = true);
     void captureProperty(QObject *, const QQmlPropertyCache *, const QQmlPropertyData *, bool doNotify = true);
-    void captureTranslation() { translationCaptured = true; }
+    void captureTranslation();
 
     QQmlEngine *engine;
     QQmlJavaScriptExpression *expression;
     QQmlJavaScriptExpression::DeleteWatcher *watcher;
     QForwardFieldList<QQmlJavaScriptExpressionGuard, &QQmlJavaScriptExpressionGuard::next> guards;
     QStringList *errorString;
-    bool translationCaptured = false;
 
 private:
     void captureBindableProperty(QObject *o, const QMetaObject *metaObjectForBindable, int c);

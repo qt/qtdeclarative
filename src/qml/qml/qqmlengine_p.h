@@ -162,6 +162,7 @@ public:
     QRecyclePool<TriggerList> qPropertyTriggerPool;
 
     QQmlContext *rootContext;
+    Q_OBJECT_BINDABLE_PROPERTY(QQmlEnginePrivate, QString, translationLanguage);
 
 #if !QT_CONFIG(qml_debug)
     static const quintptr profiler = 0;

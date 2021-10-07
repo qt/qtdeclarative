@@ -148,6 +148,7 @@ private:
 
     ListLayout *m_layout;
     ListModel *m_listModel;
+    std::unique_ptr<QPropertyNotifier> translationChangeHandler;
 
     QVector<class DynamicRoleModelNode *> m_modelObjects;
     QVector<QString> m_roles;
@@ -169,6 +170,8 @@ private:
     void emitItemsInserted();
 
     void removeElements(int index, int removeCount);
+
+    void updateTranslations();
 };
 
 // ### FIXME
