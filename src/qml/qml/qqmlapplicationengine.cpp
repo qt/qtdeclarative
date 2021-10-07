@@ -73,7 +73,9 @@ void QQmlApplicationEnginePrivate::init()
                &QCoreApplication::quit, Qt::QueuedConnection);
     q->connect(q, &QQmlApplicationEngine::exit, QCoreApplication::instance(),
                &QCoreApplication::exit, Qt::QueuedConnection);
-    q->connect(q, SIGNAL(uiLanguageChanged()), q_func(), SLOT(_q_loadTranslations()));
+    QObject::connect(q, &QJSEngine::uiLanguageChanged, q, [this](){
+        _q_loadTranslations();
+    });
 #if QT_CONFIG(translation)
     QTranslator* qtTranslator = new QTranslator(q);
     if (qtTranslator->load(QLocale(), QLatin1String("qt"), QLatin1String("_"), QLibraryInfo::path(QLibraryInfo::TranslationsPath), QLatin1String(".qm")))
@@ -89,10 +91,9 @@ void QQmlApplicationEnginePrivate::init()
 void QQmlApplicationEnginePrivate::_q_loadTranslations()
 {
 #if QT_CONFIG(translation)
+    Q_Q(QQmlApplicationEngine);
     if (translationsDirectory.isEmpty())
         return;
-
-    Q_Q(QQmlApplicationEngine);
 
     QScopedPointer<QTranslator> translator(new QTranslator);
     if (!uiLanguage.value().isEmpty()) {

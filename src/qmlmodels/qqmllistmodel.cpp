@@ -587,6 +587,17 @@ ListModel *ListModel::getListProperty(int elementIndex, const ListLayout::Role &
     return e->getListProperty(role);
 }
 
+void ListModel::updateTranslations()
+{
+    for (int index = 0; index != elements.count(); ++index) {
+        ListElement *e = elements[index];
+        if (ModelNodeMetaObject *cache = e->objectCache()) {
+            // TODO: more fine grained tracking?
+            cache->updateValues();
+        }
+    }
+}
+
 void ListModel::set(int elementIndex, QV4::Object *object, QVector<int> *roles)
 {
     ListElement *e = elements[elementIndex];
@@ -2519,6 +2530,17 @@ void QQmlListModel::removeElements(int index, int removeCount)
         destroyer();
 }
 
+void QQmlListModel::updateTranslations()
+{
+    // assumption: it is impossible to have retranslatable strings in a
+    // dynamic list model, as they would already have "decayed" to strings
+    // when they were inserted
+    if (m_dynamicRoles)
+        return;
+    Q_ASSERT(m_listModel);
+    m_listModel->updateTranslations();
+}
+
 /*!
     \qmlmethod ListModel::insert(int index, jsobject dict)
 
@@ -2944,7 +2966,8 @@ bool QQmlListModelParser::applyProperty(
     } else {
         QVariant value;
 
-        if (binding->isTranslationBinding()) {
+        const bool isTranslationBinding = binding->isTranslationBinding();
+        if (isTranslationBinding) {
             value = QVariant::fromValue<const QV4::CompiledData::Binding*>(binding);
         } else if (binding->evaluatesToString()) {
             value = compilationUnit->bindingValueAsString(binding);
@@ -2986,7 +3009,17 @@ bool QQmlListModelParser::applyProperty(
             Q_UNREACHABLE();
         }
 
+        if (!model)
+            return roleSet;
         model->setOrCreateProperty(outterElementIndex, elementName, value);
+        auto listModel = model->m_modelCache;
+        if (isTranslationBinding && listModel) {
+            if (!listModel->translationChangeHandler) {
+                auto ep = QQmlEnginePrivate::get(compilationUnit->engine);
+                model->m_modelCache->translationChangeHandler = std::make_unique<QPropertyNotifier>(
+                            ep->translationLanguage.addNotifier([listModel](){ listModel->updateTranslations(); }));
+            }
+        }
         roleSet = true;
     }
     return roleSet;

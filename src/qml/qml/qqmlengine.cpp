@@ -1264,21 +1264,12 @@ QJSValue QQmlEngine::singletonInstance<QJSValue>(int qmlTypeId)
   QCoreApplication::installTranslator, to ensure that your user-interface
   shows up-to-date translations.
 
-  \note Due to a limitation in the implementation, this function
-  refreshes all the engine's bindings, not only those that use strings
-  marked for translation.
-  This may be optimized in a future release.
-
   \since 5.10
 */
 void QQmlEngine::retranslate()
 {
     Q_D(QQmlEngine);
-    for (QQmlRefPointer<QQmlContextData> context
-                = QQmlContextData::get(d->rootContext)->childContexts();
-         context; context = context->nextChild()) {
-        context->refreshExpressions();
-    }
+    d->translationLanguage.notify();
 }
 
 /*!
