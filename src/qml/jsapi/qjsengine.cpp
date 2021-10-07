@@ -1105,13 +1105,9 @@ QJSValue QJSEngine::catchError()
   after installing translators in your application. By convention, an empty string
   means no translation from the language used in the source code is intended to occur.
 */
-void QJSEngine::setUiLanguage(const QString &language)
-{
+void QJSEngine::setUiLanguage(const QString &language) {
     Q_D(QJSEngine);
-    if (language == d->uiLanguage)
-        return;
-    d->uiLanguage = language;
-    emit uiLanguageChanged();
+    d->uiLanguage = language; // property takes care of signal emission if necessary
 }
 
 QString QJSEngine::uiLanguage() const

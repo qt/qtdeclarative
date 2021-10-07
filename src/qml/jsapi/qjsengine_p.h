@@ -83,8 +83,8 @@ public:
 
     // Shared by QQmlEngine
     mutable QRecursiveMutex mutex;
-
-    QProperty<QString> uiLanguage;
+    void uiLanguageChanged() { Q_Q(QJSEngine); if (q) q->uiLanguageChanged(); }
+    Q_OBJECT_BINDABLE_PROPERTY(QJSEnginePrivate, QString, uiLanguage, &QJSEnginePrivate::uiLanguageChanged);
 
     // These methods may be called from the QML loader thread
     inline QQmlPropertyCache *cache(QObject *obj, QTypeRevision version = QTypeRevision(), bool doRef = false);
