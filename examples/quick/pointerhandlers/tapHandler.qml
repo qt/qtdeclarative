@@ -49,6 +49,7 @@
 ****************************************************************************/
 
 import QtQuick
+import QtQuick.Layouts
 import "components"
 
 Item {
@@ -57,7 +58,7 @@ Item {
 
     Rectangle {
         id: rect
-        anchors.fill: parent; anchors.margins: 40
+        anchors.fill: parent; anchors.margins: 40; anchors.topMargin: 60
         border.width: 3; border.color: "transparent"
         color: handler.pressed ? "lightsteelblue" : "darkgrey"
 
@@ -68,9 +69,10 @@ Item {
                              (rightAllowedCB.checked ? Qt.RightButton : Qt.NoButton)
             gesturePolicy: (policyDragThresholdCB.checked ? TapHandler.DragThreshold :
                             policyWithinBoundsCB.checked ? TapHandler.WithinBounds :
+                            policyDragWithinBoundsCB.checked ? TapHandler.DragWithinBounds :
                             TapHandler.ReleaseWithinBounds)
 
-            onCanceled: {
+            onCanceled: function(point) {
                 console.log("canceled @ " + point.position)
                 borderBlink.blinkColor = "red"
                 borderBlink.start()
@@ -170,11 +172,10 @@ Item {
         }
     }
 
-    Row {
-        spacing: 6
+    GridLayout {
+        columnSpacing: 6; rowSpacing: 6
         Text {
             text: "accepted mouse clicks:"
-            anchors.verticalCenter: leftAllowedCB.verticalCenter
         }
         CheckBox {
             id: leftAllowedCB
@@ -189,9 +190,12 @@ Item {
             id: rightAllowedCB
             text: "right"
         }
+
         Text {
-            text: "      gesture policy:"
-            anchors.verticalCenter: leftAllowedCB.verticalCenter
+            text: "gesture policy:"
+            horizontalAlignment: Text.AlignRight
+            Layout.row: 1
+            Layout.fillWidth: true
         }
         CheckBox {
             id: policyDragThresholdCB
@@ -199,6 +203,7 @@ Item {
             onCheckedChanged: if (checked) {
                 policyWithinBoundsCB.checked = false;
                 policyReleaseWithinBoundsCB.checked = false;
+                policyDragWithinBoundsCB.checked = false;
             }
         }
         CheckBox {
@@ -207,6 +212,7 @@ Item {
             onCheckedChanged: if (checked) {
                 policyDragThresholdCB.checked = false;
                 policyReleaseWithinBoundsCB.checked = false;
+                policyDragWithinBoundsCB.checked = false;
             }
         }
         CheckBox {
@@ -216,6 +222,16 @@ Item {
             onCheckedChanged: if (checked) {
                 policyDragThresholdCB.checked = false;
                 policyWithinBoundsCB.checked = false;
+                policyDragWithinBoundsCB.checked = false;
+            }
+        }
+        CheckBox {
+            id: policyDragWithinBoundsCB
+            text: "drag within bounds"
+            onCheckedChanged: if (checked) {
+                policyDragThresholdCB.checked = false;
+                policyWithinBoundsCB.checked = false;
+                policyReleaseWithinBoundsCB.checked = false;
             }
         }
     }

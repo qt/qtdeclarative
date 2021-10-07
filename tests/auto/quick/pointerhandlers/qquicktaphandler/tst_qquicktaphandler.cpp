@@ -64,6 +64,8 @@ private slots:
     void mouseGesturePolicyWithinBounds();
     void touchGesturePolicyReleaseWithinBounds();
     void mouseGesturePolicyReleaseWithinBounds();
+    void gesturePolicyDragWithinBounds_data();
+    void gesturePolicyDragWithinBounds();
     void touchMultiTap();
     void mouseMultiTap();
     void touchLongPress();
@@ -429,6 +431,68 @@ void tst_TapHandler::mouseGesturePolicyReleaseWithinBounds()
     QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, p1);
     QTRY_VERIFY(!buttonReleaseWithinBounds->property("pressed").toBool());
     QCOMPARE(releaseWithinBoundsTappedSpy.count(), 0);
+}
+
+void tst_TapHandler::gesturePolicyDragWithinBounds_data()
+{
+    QTest::addColumn<QPointingDevice::DeviceType>("deviceType");
+    QTest::addColumn<QPoint>("dragStart");
+    QTest::addColumn<QPoint>("dragDistance");
+    QTest::addColumn<QString>("expectedFeedback");
+
+    QTest::newRow("mouse: click") << QPointingDevice::DeviceType::Mouse << QPoint(200, 200) << QPoint(0, 0) << "middle";
+    QTest::newRow("touch: tap") << QPointingDevice::DeviceType::TouchScreen << QPoint(200, 200) << QPoint(0, 0) << "middle";
+    QTest::newRow("mouse: drag up") << QPointingDevice::DeviceType::Mouse << QPoint(200, 200) << QPoint(0, -20) << "top";
+    QTest::newRow("touch: drag up") << QPointingDevice::DeviceType::TouchScreen << QPoint(200, 200) << QPoint(0, -20) << "top";
+    QTest::newRow("mouse: drag out to cancel") << QPointingDevice::DeviceType::Mouse << QPoint(435, 200) << QPoint(10, 0) << "canceled";
+    QTest::newRow("touch: drag out to cancel") << QPointingDevice::DeviceType::TouchScreen << QPoint(435, 200) << QPoint(10, 0) << "canceled";
+}
+
+void tst_TapHandler::gesturePolicyDragWithinBounds()
+{
+    QFETCH(QPointingDevice::DeviceType, deviceType);
+    QFETCH(QPoint, dragStart);
+    QFETCH(QPoint, dragDistance);
+    QFETCH(QString, expectedFeedback);
+    const bool expectedCanceled = expectedFeedback == "canceled";
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("dragReleaseMenu.qml")));
+    QQuickTapHandler *tapHandler = window.rootObject()->findChild<QQuickTapHandler*>();
+    QVERIFY(tapHandler);
+    QSignalSpy canceledSpy(tapHandler, &QQuickTapHandler::canceled);
+
+    switch (static_cast<QPointingDevice::DeviceType>(deviceType)) {
+    case QPointingDevice::DeviceType::Mouse:
+        QTest::mousePress(&window, Qt::LeftButton, Qt::NoModifier, dragStart);
+        QTRY_VERIFY(tapHandler->isPressed());
+        QTest::mouseMove(&window, dragStart + dragDistance);
+        if (expectedCanceled)
+            QTRY_COMPARE(tapHandler->timeHeld(), -1);
+        else
+            QTRY_VERIFY(tapHandler->timeHeld() > 0.1);
+        QTest::mouseRelease(&window, Qt::LeftButton, Qt::NoModifier, dragStart + dragDistance);
+        break;
+    case QPointingDevice::DeviceType::TouchScreen:
+        QTest::touchEvent(&window, touchDevice).press(0, dragStart, &window);
+        QQuickTouchUtils::flush(&window);
+        QTRY_VERIFY(tapHandler->isPressed());
+        QTest::touchEvent(&window, touchDevice).move(0, dragStart + dragDistance, &window);
+        QQuickTouchUtils::flush(&window);
+        if (expectedCanceled)
+            QTRY_COMPARE(tapHandler->timeHeld(), -1);
+        else
+            QTRY_VERIFY(tapHandler->timeHeld() > 0.1);
+        QTest::touchEvent(&window, touchDevice).release(0, dragStart + dragDistance, &window);
+        QQuickTouchUtils::flush(&window);
+        break;
+    default:
+        break;
+    }
+
+    QCOMPARE(window.rootObject()->property("feedbackText"), expectedFeedback);
+    if (expectedCanceled)
+        QCOMPARE(canceledSpy.count(), 1);
 }
 
 void tst_TapHandler::touchMultiTap()

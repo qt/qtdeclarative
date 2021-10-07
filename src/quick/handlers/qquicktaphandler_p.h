@@ -74,7 +74,8 @@ public:
     enum GesturePolicy {
         DragThreshold,
         WithinBounds,
-        ReleaseWithinBounds
+        ReleaseWithinBounds,
+        DragWithinBounds
     };
     Q_ENUM(GesturePolicy)
 
