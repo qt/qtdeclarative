@@ -110,8 +110,9 @@
   \relates QQmlEngine
 
   Declares the enclosing type to be available, but anonymous in QML. The type
-  cannot be created or used as property type, but when passed from C++, it is
-  recognized.
+  cannot be created or used to declare properties in QML, but when passed from
+  C++, it is recognized. In QML, you can use properties of this type if they
+  are declared in C++.
 
   \sa QML_ELEMENT, QML_NAMED_ELEMENT(), QML_UNCREATABLE(), QML_INTERFACE
 */
