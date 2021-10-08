@@ -50,6 +50,7 @@
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlcomponent_p.h>
 #include <private/qqmltype_p_p.h>
+#include <private/qqmlcomponentattached_p.h>
 
 #include "testtypes.h"
 #include <QtQuickTestUtils/private/qmlutils_p.h>
@@ -6398,11 +6399,14 @@ void tst_qqmllanguage::variantListConversion()
     Foo *foo = qobject_cast<Foo *>(o.data());
     QVERIFY(foo);
     const QVariantList list = foo->getList();
-    QCOMPARE(list.length(), 2);
+    QCOMPARE(list.length(), 3);
     const Large l0 = qvariant_cast<Large>(list.at(0));
     QCOMPARE(l0.a, 12ull);
     const Large l1 = qvariant_cast<Large>(list.at(1));
     QCOMPARE(l1.a, 13ull);
+    const QObject *attached = qvariant_cast<QObject *>(list.at(2));
+    QVERIFY(attached);
+    QCOMPARE(attached->metaObject(), &QQmlComponentAttached::staticMetaObject);
 }
 
 void tst_qqmllanguage::thisInArrowFunction()
