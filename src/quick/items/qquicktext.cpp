@@ -864,7 +864,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             line = layout.createLine();
             if (!line.isValid()) {
                 if (singlelineElide && visibleCount == 1 && previousLine.naturalTextWidth() > previousLine.width()) {
-                    // Elide a single previousLine of  text if its width exceeds the element width.
+                    // Elide a single previousLine of text if its width exceeds the element width.
                     elide = true;
                     widthExceeded = true;
                     if (eos != -1) // There's an abbreviated string available.
