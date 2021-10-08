@@ -3943,7 +3943,11 @@ static qreal expectedBaselineScaled(QQuickText *item)
 {
     QFont font = item->font();
     QTextLayout layout(item->text().replace(QLatin1Char('\n'), QChar::LineSeparator));
-    do {
+
+    qreal low = 0;
+    qreal high = 10000;
+
+    while (low < high) {
         layout.setFont(font);
         qreal width = 0;
         layout.beginLayout();
@@ -3953,12 +3957,23 @@ static qreal expectedBaselineScaled(QQuickText *item)
         }
         layout.endLayout();
 
-        if (width < item->width()) {
-            QFontMetricsF fm(layout.font());
-            return fm.ascent() + item->topPadding();
+        if (width > item->width()) {
+            high = font.pointSizeF();
+            font.setPointSizeF((high + low) / 2);
+        } else {
+            low = font.pointSizeF();
+
+            // When fontSizeMode != FixedSize, the font size will be scaled to a value
+            // The goal is to find a pointSize that uses as much space as possible while
+            // still fitting inside the available space. 0.01 is chosen as the threshold.
+            if ((high - low) < qreal(0.01)) {
+                QFontMetricsF fm(layout.font());
+                return fm.ascent() + item->topPadding();
+            }
+
+            font.setPointSizeF((high + low) / 2);
         }
-        font.setPointSize(font.pointSize() - 1);
-    } while (font.pointSize() > 0);
+    }
     return item->topPadding();
 }
 

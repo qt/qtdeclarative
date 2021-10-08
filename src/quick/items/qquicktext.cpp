@@ -764,11 +764,15 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
     const bool pixelSize = font.pixelSize() != -1;
     QString layoutText = layout.text();
 
-    int largeFont = pixelSize ? font.pixelSize() : font.pointSize();
-    int smallFont = fontSizeMode() != QQuickText::FixedSize
-            ? qMin(pixelSize ? minimumPixelSize() : minimumPointSize(), largeFont)
-            : largeFont;
-    int scaledFontSize = largeFont;
+    const qreal minimumSize = pixelSize
+                            ? static_cast<qreal>(minimumPixelSize())
+                            : minimumPointSize();
+    qreal largeFont = pixelSize ? font.pixelSize() : font.pointSizeF();
+    qreal smallFont = fontSizeMode() != QQuickText::FixedSize
+                    ? qMin<qreal>(minimumSize, largeFont)
+                    : largeFont;
+    qreal scaledFontSize = largeFont;
+    const qreal sizeFittingThreshold(0.01);
 
     bool widthChanged = false;
     widthExceeded = availableWidth() <= 0 && (singlelineElide || canWrap || horizontalFit);
@@ -797,7 +801,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
             if (pixelSize)
                 scaledFont.setPixelSize(scaledFontSize);
             else
-                scaledFont.setPointSize(scaledFontSize);
+                scaledFont.setPointSizeF(scaledFontSize);
             if (layout.font() != scaledFont)
                 layout.setFont(scaledFont);
         }
@@ -1061,40 +1065,45 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
         if (!horizontalFit && !verticalFit)
             break;
 
+        // Can't find a better fit
+        if (qFuzzyCompare(smallFont, largeFont))
+            break;
+
         // Try and find a font size that better fits the dimensions of the element.
         if (horizontalFit) {
             if (unelidedRect.width() > lineWidth || (!verticalFit && wrapped)) {
                 widthExceeded = true;
-                largeFont = scaledFontSize - 1;
-                if (smallFont > largeFont)
-                    break;
+                largeFont = scaledFontSize;
+
                 scaledFontSize = (smallFont + largeFont) / 2;
-                if (pixelSize)
-                    scaledFont.setPixelSize(scaledFontSize);
-                else
-                    scaledFont.setPointSize(scaledFontSize);
+
                 continue;
             } else if (!verticalFit) {
                 smallFont = scaledFontSize;
-                if (smallFont == largeFont)
+
+                // Check to see if the current scaledFontSize is acceptable
+                if ((largeFont - smallFont) < sizeFittingThreshold)
                     break;
-                scaledFontSize = (smallFont + largeFont + 1) / 2;
+
+                scaledFontSize = (smallFont + largeFont) / 2;
             }
         }
 
         if (verticalFit) {
             if (truncateHeight || unelidedRect.height() > maxHeight) {
                 heightExceeded = true;
-                largeFont = scaledFontSize - 1;
-                if (smallFont > largeFont)
-                    break;
+                largeFont = scaledFontSize;
+
                 scaledFontSize = (smallFont + largeFont) / 2;
 
             } else {
                 smallFont = scaledFontSize;
-                if (smallFont == largeFont)
+
+                // Check to see if the current scaledFontSize is acceptable
+                if ((largeFont - smallFont) < sizeFittingThreshold)
                     break;
-                scaledFontSize = (smallFont + largeFont + 1) / 2;
+
+                scaledFontSize = (smallFont + largeFont) / 2;
             }
         }
     }
