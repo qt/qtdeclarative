@@ -111,11 +111,14 @@ QObject* QQmlTypeWrapper::singletonObject() const
 
 QVariant QQmlTypeWrapper::toVariant() const
 {
-    if (!isSingleton())
-        return QVariant::fromValue<QObject *>(d()->object);
-
     QQmlEnginePrivate *e = QQmlEnginePrivate::get(engine()->qmlEngine());
     const QQmlType type = d()->type();
+
+    if (!isSingleton()) {
+        return QVariant::fromValue(qmlAttachedPropertiesObject(
+                d()->object, type.attachedPropertiesFunction(e)));
+    }
+
     if (type.isQJSValueSingleton())
         return QVariant::fromValue<QJSValue>(e->singletonInstance<QJSValue>(type));
 
