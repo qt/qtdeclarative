@@ -54,6 +54,7 @@ qt_add_qml_module(
     [IMPORT_PATH ...]
     [SOURCES ...]
     [QML_FILES ...]
+    [RESOURCES ...]
     [OUTPUT_TARGETS out_targets_var]
     [DESIGNER_SUPPORTED]
     [NO_PLUGIN_OPTIONAL]
