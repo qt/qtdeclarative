@@ -76,10 +76,10 @@ void tst_qv4mm::multiWrappedQObjects()
         QCOMPARE(engine1.memoryManager->m_pendingFreedObjectWrapperValue.size(), 1);
         QCOMPARE(engine2.memoryManager->m_pendingFreedObjectWrapperValue.size(), 0);
 
-        // Moves the additional WeakValue from m_multiplyWrappedQObjects to
-        // m_pendingFreedObjectWrapperValue. It's still alive after all.
+        // The additional WeakValue from m_multiplyWrappedQObjects hasn't been moved
+        // to m_pendingFreedObjectWrapperValue yet. It's still alive after all.
         engine1.memoryManager->runGC();
-        QCOMPARE(engine1.memoryManager->m_pendingFreedObjectWrapperValue.size(), 2);
+        QCOMPARE(engine1.memoryManager->m_pendingFreedObjectWrapperValue.size(), 1);
 
         // engine2 doesn't own the object as engine1 was the first to wrap it above.
         // Therefore, no effect here.
