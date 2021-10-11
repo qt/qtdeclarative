@@ -733,12 +733,20 @@ QQmlDelegateModelGroup *QQmlDelegateModelPrivate::group_at(
     Groups define a sub-set of the items in a delegate model and can be used to filter
     a model.
 
-    For every group defined in a DelegateModel two attached properties are added to each
+    For every group defined in a DelegateModel two attached pseudo-properties are added to each
     delegate item.  The first of the form DelegateModel.in\e{GroupName} holds whether the
     item belongs to the group and the second DelegateModel.\e{groupName}Index holds the
     index of the item in that group.
 
     The following example illustrates using groups to select items in a model.
+
+    \note In contrast to normal attached properties, those cannot be set in a declarative way.
+    The following would result in an error:
+    \badqml
+    delegate: Rectangle {
+        DelegateModel.inSelected: true
+    }
+    \endqml
 
     \snippet delegatemodel/delegatemodelgroup.qml 0
     \keyword dm-groups-property
