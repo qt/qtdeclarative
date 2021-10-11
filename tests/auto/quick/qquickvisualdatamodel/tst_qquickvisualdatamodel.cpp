@@ -424,6 +424,7 @@ private slots:
     void warnings_data();
     void warnings();
     void invalidAttachment();
+    void declarativeAssignViaAttached();
     void asynchronousInsert_data();
     void asynchronousInsert();
     void asynchronousRemove_data();
@@ -3976,7 +3977,19 @@ void tst_qquickvisualdatamodel::invalidAttachment()
 
     property = item->property("invalidVdm");
     QCOMPARE(property.userType(), qMetaTypeId<QQmlDelegateModel *>());
-    QVERIFY(!property.value<QQmlDelegateModel *>());
+    // has been explicitly requested by specifying the attached property
+    QVERIFY(property.value<QQmlDelegateModel *>());
+}
+
+void tst_qquickvisualdatamodel::declarativeAssignViaAttached()
+{
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("attachedDeclarativelySet.qml"));
+
+    QScopedPointer<QObject> root(component.create());
+    QCOMPARE(root->property("count").toInt(), 6); // 1 (from instantiator + 5 from model)
+    root->setProperty("includeAll", true);
+    QCOMPARE(root->property("count").toInt(), 11); // 1 (from instantiator + 10 from model)
 }
 
 void tst_qquickvisualdatamodel::asynchronousInsert_data()

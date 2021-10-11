@@ -218,6 +218,11 @@ class QQmlDelegateModelAttached : public QObject
     Q_PROPERTY(QQmlDelegateModel *model READ model CONSTANT)
     Q_PROPERTY(QStringList groups READ groups WRITE setGroups NOTIFY groupsChanged)
     Q_PROPERTY(bool isUnresolved READ isUnresolved NOTIFY unresolvedChanged)
+    Q_PROPERTY(bool inPersistedItems READ inPersistedItems WRITE setInPersistedItems NOTIFY groupsChanged)
+    Q_PROPERTY(bool inItems READ inItems WRITE setInItems NOTIFY groupsChanged)
+    Q_PROPERTY(int persistedItemsIndex READ persistedItemsIndex NOTIFY groupsChanged)
+    Q_PROPERTY(int itemsIndex READ itemsIndex NOTIFY groupsChanged)
+
 public:
     QQmlDelegateModelAttached(QObject *parent);
     QQmlDelegateModelAttached(QQmlDelegateModelItem *cacheItem, QObject *parent);
@@ -225,6 +230,14 @@ public:
 
     void resetCurrentIndex();
     void setCacheItem(QQmlDelegateModelItem *item);
+
+    void setInPersistedItems(bool inPersisted);
+    bool inPersistedItems() const;
+    int persistedItemsIndex() const;
+
+    void setInItems(bool inItems);
+    bool inItems() const;
+    int itemsIndex() const;
 
     QQmlDelegateModel *model() const;
 
@@ -240,6 +253,9 @@ public:
 Q_SIGNALS:
     void groupsChanged();
     void unresolvedChanged();
+
+private:
+    void setInGroup(QQmlListCompositor::Group group, bool inGroup);
 
 public:
     QQmlDelegateModelItem *m_cacheItem;

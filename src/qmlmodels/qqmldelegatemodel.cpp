@@ -2058,10 +2058,8 @@ void QQmlDelegateModel::_q_layoutChanged(const QList<QPersistentModelIndex> &par
 QQmlDelegateModelAttached *QQmlDelegateModel::qmlAttachedProperties(QObject *obj)
 {
     if (QQmlDelegateModelItem *cacheItem = QQmlDelegateModelItem::dataForObject(obj)) {
-        if (cacheItem->object == obj) { // Don't create attached item for child objects.
-            cacheItem->attached = new QQmlDelegateModelAttached(cacheItem, obj);
-            return cacheItem->attached;
-        }
+        cacheItem->attached = new QQmlDelegateModelAttached(cacheItem, obj);
+        return cacheItem->attached;
     }
     return new QQmlDelegateModelAttached(obj);
 }
@@ -2589,6 +2587,64 @@ void QQmlDelegateModelAttached::resetCurrentIndex()
         for (int i = 1; i < m_cacheItem->metaType->groupCount; ++i)
             m_currentIndex[i] = it.index[i];
     }
+}
+
+void QQmlDelegateModelAttached::setInPersistedItems(bool inPersisted)
+{
+    setInGroup(QQmlListCompositor::Persisted, inPersisted);
+}
+
+bool QQmlDelegateModelAttached::inPersistedItems() const
+{
+    if (!m_cacheItem)
+        return false;
+    const uint groupFlag = (1 << QQmlListCompositor::Persisted);
+    return m_cacheItem->groups & groupFlag;
+}
+
+int QQmlDelegateModelAttached::persistedItemsIndex() const
+{
+    if (!m_cacheItem)
+        return -1;
+    return m_cacheItem->groupIndex(QQmlListCompositor::Persisted);
+}
+
+void QQmlDelegateModelAttached::setInGroup(QQmlListCompositor::Group group, bool inGroup)
+{
+    if (!(m_cacheItem && m_cacheItem->metaType && m_cacheItem->metaType->model))
+        return;
+    QQmlDelegateModelPrivate *model = QQmlDelegateModelPrivate::get(m_cacheItem->metaType->model);
+    const uint groupFlag = (1 << group);
+    if (inGroup == bool(m_cacheItem->groups & groupFlag))
+        return;
+
+    const int cacheIndex = model->m_cache.indexOf(m_cacheItem);
+    Compositor::iterator it = model->m_compositor.find(Compositor::Cache, cacheIndex);
+    if (inGroup)
+        model->addGroups(it, 1, Compositor::Cache, groupFlag);
+    else
+        model->removeGroups(it, 1, Compositor::Cache, groupFlag);
+    // signal emission happens in add-/removeGroups
+}
+
+void QQmlDelegateModelAttached::setInItems(bool inItems)
+{
+    setInGroup(QQmlListCompositor::Default, inItems);
+}
+
+bool QQmlDelegateModelAttached::inItems() const
+{
+    if (!m_cacheItem)
+        return false;
+    const uint groupFlag = (1 << QQmlListCompositor::Default);
+    return m_cacheItem->groups & groupFlag;
+}
+
+int QQmlDelegateModelAttached::itemsIndex() const
+{
+    if (!m_cacheItem)
+        return -1;
+    return m_cacheItem->groupIndex(QQmlListCompositor::Default);
 }
 
 /*!
