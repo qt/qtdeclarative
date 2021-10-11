@@ -174,7 +174,6 @@ Q_SIGNALS:
 private Q_SLOTS:
     void sourceItemDestroyed(QObject *item);
     void invalidateSceneGraph();
-    void sourceItemParentChanged(QQuickItem *parent);
 
 protected:
     void releaseResources() override;
