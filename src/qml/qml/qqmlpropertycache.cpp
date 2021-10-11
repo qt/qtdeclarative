@@ -209,6 +209,7 @@ QQmlPropertyCache *QQmlPropertyCache::copy(int reserve)
     cache->allowedRevisionCache = allowedRevisionCache;
     cache->_metaObject = _metaObject;
     cache->_defaultPropertyName = _defaultPropertyName;
+    cache->_listPropertyAssignBehavior = _listPropertyAssignBehavior;
 
     return cache;
 }
@@ -424,6 +425,8 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
                 _jsFactoryMethodIndex = metaObject->indexOfSlot(factoryMethod);
                 if (_jsFactoryMethodIndex != -1)
                     _jsFactoryMethodIndex -= metaObject->methodOffset();
+            } else if (0 == qstrcmp(name, "QML.ListPropertyAssignBehavior")) {
+                _listPropertyAssignBehavior = mci.value();
             }
         }
     }
@@ -1106,6 +1109,9 @@ void QQmlPropertyCache::toMetaObjectBuilder(QMetaObjectBuilder &builder)
             builder.addClassInfo("DefaultProperty", _defaultPropertyName.toUtf8());
         }
     }
+
+    if (!_listPropertyAssignBehavior.isEmpty())
+        builder.addClassInfo("QML.ListPropertyAssignBehavior", _listPropertyAssignBehavior);
 }
 
 namespace {

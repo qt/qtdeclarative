@@ -190,6 +190,15 @@ public:
     // --- interface for QQmlPropertyCacheCreator
     using CompiledObject = CompiledData::Object;
     using CompiledFunction = CompiledData::Function;
+    enum class ListPropertyAssignBehavior { Append, Replace, ReplaceIfNotDefault };
+    ListPropertyAssignBehavior listPropertyAssignBehavior() const
+    {
+        if (data->flags & CompiledData::Unit::ListPropertyAssignReplace)
+            return ListPropertyAssignBehavior::Replace;
+        if (data->flags & CompiledData::Unit::ListPropertyAssignReplaceIfNotDefault)
+            return ListPropertyAssignBehavior::ReplaceIfNotDefault;
+        return ListPropertyAssignBehavior::Append;
+    }
 
     int objectCount() const { return qmlData->nObjects; }
     const CompiledObject *objectAt(int index) const

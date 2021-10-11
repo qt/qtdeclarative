@@ -88,12 +88,22 @@ public:
 
     // --- interface used by QQmlPropertyCacheCreator
     typedef QmlIR::Object CompiledObject;
+    using ListPropertyAssignBehavior = QmlIR::Pragma::ListPropertyAssignBehaviorValue;
+
     const QmlIR::Object *objectAt(int index) const { return document->objects.at(index); }
     int objectCount() const { return document->objects.count(); }
     QString stringAt(int idx) const;
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsBegin(const QmlIR::Object *object) const { return object->functionsBegin(); }
     QmlIR::PoolList<QmlIR::Function>::Iterator objectFunctionsEnd(const QmlIR::Object *object) const { return object->functionsEnd(); }
     QV4::ResolvedTypeReferenceMap *resolvedTypes = nullptr;
+    ListPropertyAssignBehavior listPropertyAssignBehavior() const
+    {
+        for (const QmlIR::Pragma *pragma: document->pragmas) {
+            if (pragma->type == QmlIR::Pragma::ListPropertyAssignBehavior)
+                return pragma->listPropertyAssignBehavior;
+        }
+        return ListPropertyAssignBehavior::Append;
+    }
     // ---
 
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compile();

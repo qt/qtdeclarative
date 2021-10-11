@@ -242,5 +242,34 @@ refer to the \l MouseArea child, and if it had an \c id of \c root rather than
 the root object defined in \c SquareButton.qml as the two would be declared
 within separate scopes.
 
+\section1 Pragmas
+
+You can prepend global instructions to a QML document using the \c pragma
+keyword. The following pragmas are supported:
+
+\section2 Singleton
+
+\c{pragma Singleton} declares the component defined in the QML document as
+singleton. Singletons are created only once per QML engine. In order to use
+a QML-declared singleton you also have to register it with its module. See
+\l{qt_target_qml_sources} for how to do this with CMake.
+
+\section2 ListPropertyAssignBehavior
+
+With this pragma you can define how assignments to list properties shall be
+handled in components defined in the QML document. By default, assigning to a
+list property appends to the list. You can explicitly request this behavior
+using the value \c{Append}. Alternatively, you can request the contents of list
+properties to always be replaced using \c{Replace}, or replaced if the property
+is not the default property using \c{ReplaceIfNotDefault}. For example:
+
+\qml
+pragma ListPropertyAssignBehavior: ReplaceIfNotDefault
+\endqml
+
+The same declaration can also be given for C++-defined types. See
+\l{QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND},
+\l{QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE}, and
+\l{QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT}
 
 */

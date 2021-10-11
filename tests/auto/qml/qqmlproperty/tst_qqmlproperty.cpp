@@ -1724,6 +1724,55 @@ void tst_qqmlproperty::listOverrideBehavior()
     QVERIFY(alwaysReplaceContainer != nullptr);
     QQmlListReference alwaysReplaceChildrenList(alwaysReplaceContainer, "children");
     QCOMPARE(alwaysReplaceChildrenList.count(), 2);
+
+    {
+        QQmlComponent appendQml(&engine, testFileUrl("listBehaviorAppendPragma.qml"));
+        QVERIFY2(appendQml.isReady(), qPrintable(appendQml.errorString()));
+        QScopedPointer<QObject> o(appendQml.create());
+        QVERIFY(o);
+        QCOMPARE(o->property("length1").toInt(), 2);
+        QCOMPARE(o->property("length2").toInt(), 1);
+        QCOMPARE(o->property("default1").toInt(), 2);
+        QCOMPARE(o->property("default2").toInt(), 1);
+    }
+
+    {
+        QQmlComponent replaceQml(&engine, testFileUrl("listBehaviorReplacePragma.qml"));
+        QVERIFY2(replaceQml.isReady(), qPrintable(replaceQml.errorString()));
+        QScopedPointer<QObject> o(replaceQml.create());
+        QVERIFY(o);
+        QCOMPARE(o->property("length1").toInt(), 1);
+        QCOMPARE(o->property("length2").toInt(), 1);
+        QCOMPARE(o->property("default1").toInt(), 1);
+        QCOMPARE(o->property("default2").toInt(), 1);
+    }
+
+    {
+        QQmlComponent replaceIfNotDefaultQml(
+                    &engine, testFileUrl("listBehaviorReplaceIfNotDefaultPragma.qml"));
+        QVERIFY2(replaceIfNotDefaultQml.isReady(),
+                 qPrintable(replaceIfNotDefaultQml.errorString()));
+        QScopedPointer<QObject> o(replaceIfNotDefaultQml.create());
+        QVERIFY(o);
+        QCOMPARE(o->property("length1").toInt(), 1);
+        QCOMPARE(o->property("length2").toInt(), 1);
+        QCOMPARE(o->property("default1").toInt(), 2);
+        QCOMPARE(o->property("default2").toInt(), 1);
+    }
+
+    {
+        QQmlComponent fail1(&engine, testFileUrl("listBehaviorFail1.qml"));
+        QVERIFY(fail1.isError());
+        QVERIFY(fail1.errorString().contains(
+                 QStringLiteral("Unknown list property assign behavior 'Foo' in pragma")));
+    }
+
+    {
+        QQmlComponent fail2(&engine, testFileUrl("listBehaviorFail2.qml"));
+        QVERIFY(fail2.isError());
+        QVERIFY(fail2.errorString().contains(
+                 QStringLiteral("Multiple list property assign behavior pragmas found")));
+    }
 }
 
 void tst_qqmlproperty::urlHandling_data()

@@ -433,6 +433,18 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
 
     cache->_dynamicClassName = newClassName;
 
+    using ListPropertyAssignBehavior = typename ObjectContainer::ListPropertyAssignBehavior;
+    switch (objectContainer->listPropertyAssignBehavior()) {
+    case ListPropertyAssignBehavior::ReplaceIfNotDefault:
+        cache->_listPropertyAssignBehavior = "ReplaceIfNotDefault";
+        break;
+    case ListPropertyAssignBehavior::Replace:
+        cache->_listPropertyAssignBehavior = "Replace";
+        break;
+    case ListPropertyAssignBehavior::Append:
+        break;
+    }
+
     QQmlPropertyResolver resolver(baseTypeCache);
 
     auto p = obj->propertiesBegin();

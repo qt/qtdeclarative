@@ -815,19 +815,43 @@ bool IRBuilder::visit(QQmlJS::AST::UiPragma *node)
 {
     Pragma *pragma = New<Pragma>();
 
-    // For now the only valid pragma is Singleton, so lets validate the input
-    if (!node->name.isNull())
-    {
+    if (!node->name.isNull()) {
         if (node->name == QStringLiteral("Singleton")) {
-            pragma->type = Pragma::PragmaSingleton;
+            pragma->type = Pragma::Singleton;
         } else if (node->name == QStringLiteral("Strict")) {
-            pragma->type = Pragma::PragmaStrict;
+            pragma->type = Pragma::Strict;
+        } else if (node->name == QStringLiteral("ListPropertyAssignBehavior")) {
+            for (const Pragma *prev : _pragmas) {
+                if (prev->type != Pragma::ListPropertyAssignBehavior)
+                    continue;
+                recordError(node->pragmaToken, QCoreApplication::translate(
+                                "QQmlParser",
+                                "Multiple list property assign behavior pragmas found"));
+                return false;
+            }
+
+            pragma->type = Pragma::ListPropertyAssignBehavior;
+            if (node->value == QStringLiteral("Replace")) {
+                pragma->listPropertyAssignBehavior = Pragma::Replace;
+            } else if (node->value == QStringLiteral("ReplaceIfNotDefault")) {
+                pragma->listPropertyAssignBehavior = Pragma::ReplaceIfNotDefault;
+            } else if (node->value == QStringLiteral("Append")) {
+                pragma->listPropertyAssignBehavior = Pragma::Append;
+            } else {
+                recordError(node->pragmaToken, QCoreApplication::translate(
+                                "QQmlParser",
+                                "Unknown list property assign behavior '%1' in pragma")
+                            .arg(node->value));
+                return false;
+            }
         } else {
-            recordError(node->pragmaToken, QCoreApplication::translate("QQmlParser","Pragma requires a valid qualifier"));
+            recordError(node->pragmaToken, QCoreApplication::translate(
+                            "QQmlParser", "Unknown pragma '%1'").arg(node->name));
             return false;
         }
     } else {
-        recordError(node->pragmaToken, QCoreApplication::translate("QQmlParser","Pragma requires a valid qualifier"));
+        recordError(node->pragmaToken, QCoreApplication::translate(
+                        "QQmlParser", "Empty pragma found"));
         return false;
     }
 
@@ -1634,27 +1658,42 @@ bool IRBuilder::isRedundantNullInitializerForPropertyDeclaration(Property *prope
 
 void QmlUnitGenerator::generate(Document &output, const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
 {
+    using namespace QV4::CompiledData;
+
     output.jsGenerator.stringTable.registerString(output.jsModule.fileName);
     output.jsGenerator.stringTable.registerString(output.jsModule.finalUrl);
 
-    QV4::CompiledData::Unit *jsUnit = nullptr;
+    Unit *jsUnit = nullptr;
 
     // We may already have unit data if we're loading an ahead-of-time generated cache file.
     if (output.javaScriptCompilationUnit.data) {
-        jsUnit = const_cast<QV4::CompiledData::Unit *>(output.javaScriptCompilationUnit.data);
+        jsUnit = const_cast<Unit *>(output.javaScriptCompilationUnit.data);
         output.javaScriptCompilationUnit.dynamicStrings = output.jsGenerator.stringTable.allStrings();
     } else {
-        QV4::CompiledData::Unit *createdUnit;
+        Unit *createdUnit;
         jsUnit = createdUnit = output.jsGenerator.generateUnit();
 
         // enable flag if we encountered pragma Singleton
         for (Pragma *p : qAsConst(output.pragmas)) {
             switch (p->type) {
-            case Pragma::PragmaSingleton:
-                createdUnit->flags |= QV4::CompiledData::Unit::IsSingleton;
+            case Pragma::Singleton:
+                createdUnit->flags |= Unit::IsSingleton;
                 break;
-            case Pragma::PragmaStrict:
-                createdUnit->flags |= QV4::CompiledData::Unit::IsStrict;
+            case Pragma::Strict:
+                createdUnit->flags |= Unit::IsStrict;
+                break;
+            case Pragma::ListPropertyAssignBehavior:
+                switch (p->listPropertyAssignBehavior) {
+                case Pragma::Replace:
+                    createdUnit->flags |= Unit::ListPropertyAssignReplace;
+                    break;
+                case Pragma::ReplaceIfNotDefault:
+                    createdUnit->flags |= Unit::ListPropertyAssignReplaceIfNotDefault;
+                    break;
+                case Pragma::Append:
+                    // this is the default
+                    break;
+                }
                 break;
             }
         }

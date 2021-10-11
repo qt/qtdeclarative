@@ -824,6 +824,16 @@ UiPragma: T_PRAGMA PragmaId Semicolon;
     } break;
 ./
 
+UiPragma: T_PRAGMA PragmaId T_COLON JsIdentifier Semicolon;
+/.
+    case $rule_number: {
+        AST::UiPragma *pragma = new (pool) AST::UiPragma(stringRef(2), stringRef(4));
+        pragma->pragmaToken = loc(1);
+        pragma->semicolonToken = loc(5);
+        sym(1).Node = pragma;
+    } break;
+./
+
 ImportId: MemberExpression;
 
 UiImport: UiImportHead Semicolon;

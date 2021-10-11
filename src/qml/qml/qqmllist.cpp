@@ -476,6 +476,7 @@ QML list properties are type-safe - in this case \c {Fruit} is a QObject type th
 
     \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT
     \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE
+    \sa {Defining Object Types through QML Documents}
 */
 
 /*!
@@ -492,6 +493,7 @@ QML list properties are type-safe - in this case \c {Fruit} is a QObject type th
 
     \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND
     \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE
+    \sa {Defining Object Types through QML Documents}
 */
 
 /*!
@@ -506,6 +508,7 @@ QML list properties are type-safe - in this case \c {Fruit} is a QObject type th
 
     \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_APPEND
     \sa QML_LIST_PROPERTY_ASSIGN_BEHAVIOR_REPLACE_IF_NOT_DEFAULT
+    \sa {Defining Object Types through QML Documents}
 */
 
 /*!

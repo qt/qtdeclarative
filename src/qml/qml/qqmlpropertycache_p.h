@@ -328,6 +328,7 @@ private:
     RefCountedMetaObject _metaObject;
     QByteArray _dynamicClassName;
     QByteArray _dynamicStringData;
+    QByteArray _listPropertyAssignBehavior;
     QString _defaultPropertyName;
     QQmlPropertyCacheMethodArguments *argumentsCache;
     QByteArray _checksum;

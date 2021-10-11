@@ -3135,8 +3135,8 @@ class QML_PARSER_EXPORT UiPragma: public Node
 public:
     QQMLJS_DECLARE_AST_NODE(UiPragma)
 
-    UiPragma(QStringView name)
-        : name(name)
+    UiPragma(QStringView name, QStringView value = {})
+        : name(name), value(value)
     { kind = K; }
 
     void accept0(BaseVisitor *visitor) override;
@@ -3149,6 +3149,7 @@ public:
 
 // attributes
     QStringView name;
+    QStringView value;
     SourceLocation pragmaToken;
     SourceLocation semicolonToken;
 };

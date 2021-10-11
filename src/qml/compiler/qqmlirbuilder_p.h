@@ -408,11 +408,24 @@ private:
 
 struct Q_QMLCOMPILER_PRIVATE_EXPORT Pragma
 {
-    enum PragmaType {
-        PragmaSingleton = 0x1,
-        PragmaStrict    = 0x2
+    enum PragmaType
+    {
+        Singleton,
+        Strict,
+        ListPropertyAssignBehavior,
     };
-    quint32 type;
+
+    enum ListPropertyAssignBehaviorValue
+    {
+        Append,
+        Replace,
+        ReplaceIfNotDefault,
+    };
+
+    PragmaType type;
+
+    // Could become a union with type as differentiator if necessary
+    ListPropertyAssignBehaviorValue listPropertyAssignBehavior;
 
     QV4::CompiledData::Location location;
 };
