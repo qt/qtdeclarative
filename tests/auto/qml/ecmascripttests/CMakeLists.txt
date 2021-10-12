@@ -13,4 +13,6 @@ qt_internal_add_test(tst_ecmascripttests
 )
 
 set_property(TEST tst_ecmascripttests APPEND PROPERTY ENVIRONMENT "QTEST_FUNCTION_TIMEOUT=900000")
+if(NOT ANDROID) # FIXME: QTBUG-92591
 add_subdirectory(qjstest)
+endif()

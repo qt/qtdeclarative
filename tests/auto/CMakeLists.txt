@@ -14,7 +14,7 @@ if(TARGET Qt::QuickTest)
     add_subdirectory(core)
 endif()
 add_subdirectory(toolsupport)
-if(NOT UIKIT)
+if(NOT UIKIT AND NOT ANDROID) # FIXME: QTBUG-92591
     add_subdirectory(qmltest)
 endif()
 if(TARGET Qt::Quick)
