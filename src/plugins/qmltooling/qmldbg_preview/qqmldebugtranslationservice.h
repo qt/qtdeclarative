@@ -68,7 +68,6 @@ public:
     QQmlDebugTranslationServiceImpl(QObject *parent = 0);
     ~QQmlDebugTranslationServiceImpl();
 
-    QString foundElidedText(QObject *textObject, const QString &layoutText, const QString &elideText) override;
     void foundTranslationBinding(const TranslationBindingInformation &translationBindingInformation) override;
 
     void messageReceived(const QByteArray &message) override;
@@ -80,7 +79,8 @@ signals:
     void state(const QString &stateName);
     void stateList();
     void watchTextElides(bool);
-    void missingTranslations();
+    void translationIssues();
+    void elidedTranslations();
     void sendTranslatableTextOccurrences();
 
 private:
