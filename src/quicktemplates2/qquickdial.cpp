@@ -259,7 +259,7 @@ void QQuickDialPrivate::handleMove(const QPointF &point)
     if (snapMode == QQuickDial::SnapAlways)
         pos = snapPosition(pos);
 
-    if (wrap || (!wrap && (isHorizontalOrVertical() || !isLargeChange(point, pos)))) {
+    if (wrap || isHorizontalOrVertical() || !isLargeChange(point, pos)) {
         if (live)
             q->setValue(valueAt(pos));
         else
@@ -279,7 +279,7 @@ void QQuickDialPrivate::handleRelease(const QPointF &point)
         if (snapMode != QQuickDial::NoSnap)
             pos = snapPosition(pos);
 
-        if (wrap || (!wrap && (isHorizontalOrVertical() || !isLargeChange(point, pos))))
+        if (wrap || isHorizontalOrVertical() || !isLargeChange(point, pos))
             q->setValue(valueAt(pos));
         if (!qFuzzyCompare(pos, oldPos))
             emit q->moved();
