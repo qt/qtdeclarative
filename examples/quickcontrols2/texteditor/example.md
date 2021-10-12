@@ -135,6 +135,12 @@ should end with a period or a parenthesis:
 
 The list will automatically be renumbered during rendering.
 
+## Thematic Breaks
+
+A horizontal rule is possible, as in HTML:
+
+- - -
+
 ## Tables
 
 One of the GitHub extensions is support for tables:

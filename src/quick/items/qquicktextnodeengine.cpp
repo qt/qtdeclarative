@@ -1154,6 +1154,17 @@ void QQuickTextNodeEngine::addTextBlock(QTextDocument *textDocument, const QText
     }
 #endif
 
+    // Add block decorations (so far only horizontal rules)
+    if (block.blockFormat().hasProperty(QTextFormat::BlockTrailingHorizontalRulerWidth)) {
+        auto ruleLength = qvariant_cast<QTextLength>(block.blockFormat().property(QTextFormat::BlockTrailingHorizontalRulerWidth));
+        QRectF ruleRect(0, 0, ruleLength.value(blockBoundingRect.width()), 1);
+        ruleRect.moveCenter(blockBoundingRect.center());
+        const QColor ruleColor = block.blockFormat().hasProperty(QTextFormat::BackgroundBrush)
+                               ? qvariant_cast<QBrush>(block.blockFormat().property(QTextFormat::BackgroundBrush)).color()
+                               : m_textColor;
+        m_lines.append(TextDecoration(QQuickTextNodeEngine::Unselected, ruleRect, ruleColor));
+    }
+
     setCurrentLine(QTextLine()); // Reset current line because the text layout changed
     m_hasContents = true;
 }
