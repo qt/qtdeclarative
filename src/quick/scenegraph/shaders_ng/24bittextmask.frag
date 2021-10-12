@@ -6,8 +6,9 @@ layout(location = 0) out vec4 fragColor;
 layout(binding = 1) uniform sampler2D _qt_texture;
 
 layout(std140, binding = 0) uniform buf {
-    mat4 matrix;
-    vec4 color; // only alpha is used, but must be vec4 due to layout compat
+    mat4 modelViewMatrix;
+    mat4 projectionMatrix;
+    vec4 color;
     vec2 textureScale;
     float dpr;
 } ubuf;

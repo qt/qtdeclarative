@@ -428,6 +428,18 @@ QSGTextMaskRhiShader::QSGTextMaskRhiShader(QFontEngine::GlyphFormat glyphFormat)
                       QStringLiteral(":/qt-project.org/scenegraph/shaders_ng/textmask.frag.qsb"));
 }
 
+enum UbufOffset {
+    ModelViewMatrixOffset = 0,
+    ProjectionMatrixOffset = ModelViewMatrixOffset + 64,
+    ColorOffset = ProjectionMatrixOffset + 64,
+    TextureScaleOffset = ColorOffset + 16,
+    DprOffset = TextureScaleOffset + 8,
+
+    // + 1 float padding (vec4 must be aligned to 16)
+    StyleColorOffset = DprOffset + 4 + 4,
+    ShiftOffset = StyleColorOffset + 16
+};
+
 bool QSGTextMaskRhiShader::updateUniformData(RenderState &state,
                                              QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
@@ -443,11 +455,14 @@ bool QSGTextMaskRhiShader::updateUniformData(RenderState &state,
 
     bool changed = false;
     QByteArray *buf = state.uniformData();
-    Q_ASSERT(buf->size() >= 92);
+    Q_ASSERT(buf->size() >= DprOffset + 4);
 
     if (state.isMatrixDirty()) {
-        const QMatrix4x4 m = state.combinedMatrix();
-        memcpy(buf->data(), m.constData(), 64);
+        const QMatrix4x4 mv = state.modelViewMatrix();
+        memcpy(buf->data() + ModelViewMatrixOffset, mv.constData(), 64);
+        const QMatrix4x4 p = state.projectionMatrix();
+        memcpy(buf->data() + ProjectionMatrixOffset, p.constData(), 64);
+
         changed = true;
     }
 
@@ -456,13 +471,13 @@ bool QSGTextMaskRhiShader::updateUniformData(RenderState &state,
     if (updated || !oldMat || oldRtex != newRtex) {
         const QVector2D textureScale = QVector2D(1.0f / mat->rhiGlyphCache()->width(),
                                                  1.0f / mat->rhiGlyphCache()->height());
-        memcpy(buf->data() + 64 + 16, &textureScale, 8);
+        memcpy(buf->data() + TextureScaleOffset, &textureScale, 8);
         changed = true;
     }
 
     if (!oldMat) {
         float dpr = state.devicePixelRatio();
-        memcpy(buf->data() + 64 + 16 + 8, &dpr, 4);
+        memcpy(buf->data() + DprOffset, &dpr, 4);
     }
 
     // move texture uploads/copies onto the renderer's soon-to-be-committed list
@@ -510,11 +525,11 @@ bool QSG8BitTextMaskRhiShader::updateUniformData(RenderState &state,
     QSGTextMaskMaterial *oldMat = static_cast<QSGTextMaskMaterial *>(oldMaterial);
 
     QByteArray *buf = state.uniformData();
-    Q_ASSERT(buf->size() >= 80);
+    Q_ASSERT(buf->size() >= ColorOffset + 16);
 
     if (oldMat == nullptr || mat->color() != oldMat->color() || state.isOpacityDirty()) {
         const QVector4D color = qsg_premultiply(mat->color(), state.opacity());
-        memcpy(buf->data() + 64, &color, 16);
+        memcpy(buf->data() + ColorOffset, &color, 16);
         changed = true;
     }
 
@@ -553,12 +568,12 @@ bool QSG24BitTextMaskRhiShader::updateUniformData(RenderState &state,
     QSGTextMaskMaterial *oldMat = static_cast<QSGTextMaskMaterial *>(oldMaterial);
 
     QByteArray *buf = state.uniformData();
-    Q_ASSERT(buf->size() >= 92);
+    Q_ASSERT(buf->size() >= ColorOffset + 16);
 
     if (oldMat == nullptr || mat->color() != oldMat->color() || state.isOpacityDirty()) {
         // shader takes vec4 but uses alpha only; coloring happens via the blend constant
         const QVector4D color = qsg_premultiply(mat->color(), state.opacity());
-        memcpy(buf->data() + 64, &color, 16);
+        memcpy(buf->data() + ColorOffset, &color, 16);
         changed = true;
     }
 
@@ -608,12 +623,12 @@ bool QSG32BitColorTextRhiShader::updateUniformData(RenderState &state,
     QSGTextMaskMaterial *oldMat = static_cast<QSGTextMaskMaterial *>(oldMaterial);
 
     QByteArray *buf = state.uniformData();
-    Q_ASSERT(buf->size() >= 92);
+    Q_ASSERT(buf->size() >= ColorOffset + 16);
 
     if (oldMat == nullptr || mat->color() != oldMat->color() || state.isOpacityDirty()) {
         // shader takes vec4 but uses alpha only
         const QVector4D color(0, 0, 0, mat->color().w() * state.opacity());
-        memcpy(buf->data() + 64, &color, 16);
+        memcpy(buf->data() + ColorOffset, &color, 16);
         changed = true;
     }
 
@@ -649,20 +664,17 @@ bool QSGStyledTextRhiShader::updateUniformData(RenderState &state,
     QSGStyledTextMaterial *oldMat = static_cast<QSGStyledTextMaterial *>(oldMaterial);
 
     QByteArray *buf = state.uniformData();
-    Q_ASSERT(buf->size() >= 120);
-
-    // matrix..dpr + 1 float padding (vec4 must be aligned to 16)
-    const int startOffset = 64 + 16 + 8 + 4 + 4;
+    Q_ASSERT(buf->size() >= ShiftOffset + 8);
 
     if (oldMat == nullptr || mat->styleColor() != oldMat->styleColor() || state.isOpacityDirty()) {
         const QVector4D styleColor = qsg_premultiply(mat->styleColor(), state.opacity());
-        memcpy(buf->data() + startOffset, &styleColor, 16);
+        memcpy(buf->data() + StyleColorOffset, &styleColor, 16);
         changed = true;
     }
 
     if (oldMat == nullptr || oldMat->styleShift() != mat->styleShift()) {
         const QVector2D v = mat->styleShift();
-        memcpy(buf->data() + startOffset + 16, &v, 8);
+        memcpy(buf->data() + ShiftOffset, &v, 8);
         changed = true;
     }
 
