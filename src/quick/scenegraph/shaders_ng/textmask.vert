@@ -6,7 +6,8 @@ layout(location = 1) in vec2 tCoord;
 layout(location = 0) out vec2 sampleCoord;
 
 layout(std140, binding = 0) uniform buf {
-    mat4 matrix;
+    mat4 modelViewMatrix;
+    mat4 projectionMatrix;
     vec4 color;
     vec2 textureScale;
     float dpr;
@@ -17,6 +18,6 @@ out gl_PerVertex { vec4 gl_Position; };
 void main()
 {
      sampleCoord = tCoord * ubuf.textureScale;
-     vec3 dprSnapPos = floor(vCoord.xyz * ubuf.dpr + 0.5) / ubuf.dpr;
-     gl_Position = ubuf.matrix * vec4(dprSnapPos, vCoord.w);
+     vec4 xformed = ubuf.modelViewMatrix * vCoord;
+     gl_Position = ubuf.projectionMatrix * vec4(floor(xformed.xyz * ubuf.dpr + 0.5) / ubuf.dpr, xformed.w);
 }

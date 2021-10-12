@@ -11,11 +11,12 @@ layout(location = 0) out vec4 fragColor;
 layout(binding = 1) uniform sampler2D _qt_texture;
 
 layout(std140, binding = 0) uniform buf {
-    // must match styledtext
-    mat4 matrix;
+    mat4 modelViewMatrix;
+    mat4 projectionMatrix;
     vec4 color;
     vec2 textureScale;
     float dpr;
+    // the above must stay compatible with textmask/8bittextmask
     vec4 styleColor;
     vec2 shift;
 } ubuf;
