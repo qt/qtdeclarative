@@ -2027,6 +2027,8 @@ QVariant QQuickTextInput::inputMethodQuery(Qt::InputMethodQuery property, const 
         if (argument.isValid())
             return QVariant(QStringView{d->m_text}.left(d->m_cursor).right(argument.toInt()).toString());
         return QVariant(d->m_text.left(d->m_cursor));
+    case Qt::ImReadOnly:
+        return QVariant(d->m_readOnly);
     default:
         return QQuickItem::inputMethodQuery(property);
     }
