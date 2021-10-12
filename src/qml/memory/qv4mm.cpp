@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -122,7 +122,7 @@ struct MemorySegment {
 
     MemorySegment(size_t size)
     {
-        size += Chunk::ChunkSize; // make sure we can get enough 64k aligment memory
+        size += Chunk::ChunkSize; // make sure we can get enough 64k alignment memory
         if (size < SegmentSize)
             size = SegmentSize;
 

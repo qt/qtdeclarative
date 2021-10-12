@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2019 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the demonstration applications of the Qt Toolkit.
@@ -391,7 +391,7 @@ void SquircleRenderer::init(int framesInFlight)
     // example.
 
     // We use one memory allocation for all uniform buffers, but then have to
-    // watch out for the buffer offset aligment requirement, which may be as
+    // watch out for the buffer offset alignment requirement, which may be as
     // large as 256 bytes.
 
     m_allocPerUbuf = aligned(UBUF_SIZE, physDevProps.limits.minUniformBufferOffsetAlignment);
