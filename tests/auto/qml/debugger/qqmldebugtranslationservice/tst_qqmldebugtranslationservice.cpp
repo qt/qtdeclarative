@@ -84,24 +84,23 @@ private slots:
         QVERIFY(currentDebugServiceMessage().isEmpty());
     }
 
-
     void verifyMissingAllTranslationsForMissingLanguage()
     {
         changeLanguage("ru");
-        auto missingTranslations = getMissingTranslations();
+        auto translationIssues = getTranslationIssues();
 
-        QCOMPARE(missingTranslations.length(), getTranslatableTextOccurrences().count());
-        QCOMPARE(missingTranslations.at(0).language, "ru ru-RU ru-Cyrl-RU");
+        QCOMPARE(translationIssues.length(), getTranslatableTextOccurrences().count());
+        QCOMPARE(translationIssues.at(0).language, "ru ru-RU ru-Cyrl-RU");
     }
 
     void verifyCorrectNumberOfMissingTranslations()
     {
         changeLanguage("fr");
 
-        auto missingTranslations = getMissingTranslations();
+        auto translationIssues = getTranslationIssues();
 
-        QCOMPARE(missingTranslations.length(), 3);
-        QCOMPARE(missingTranslations.at(0).language, "fr fr-FR fr-Latn-FR");
+        QCOMPARE(translationIssues.length(), 3);
+        QCOMPARE(translationIssues.at(0).language, "fr fr-FR fr-Latn-FR");
     }
 
     void verifyCorrectNumberOfTranslatableTextOccurrences()
@@ -112,6 +111,43 @@ private slots:
     void verifyCorrectNumberOfStates()
     {
         QCOMPARE(getStates().length(), 2);
+    }
+
+    void getElideWarnings()
+    {
+        QVersionedPacket<QQmlDebugConnector> packet;
+        sendMessageToService(createWatchTextElidesRequest(packet));
+
+        changeLanguage("es");
+        auto translationIssues = getTranslationIssues();
+
+        int elideWarningCount = 0;
+        for (auto issue : translationIssues) {
+            if (issue.type == TranslationIssue::Type::Elided) {
+                elideWarningCount++;
+            }
+        }
+        QCOMPARE(elideWarningCount, 1);
+    }
+
+    void getElideWarningsWhenStateChanged()
+    {
+        QVersionedPacket<QQmlDebugConnector> packet;
+        sendMessageToService(createWatchTextElidesRequest(packet));
+
+        changeLanguage("es");
+
+        sendMessageToService(createChangeStateRequest(packet, "WayBiggerFontState"));
+
+        auto translationIssues = getTranslationIssues();
+
+        int elideWarningCount = 0;
+        for (auto issue : translationIssues) {
+            if (issue.type == TranslationIssue::Type::Elided) {
+                elideWarningCount++;
+            }
+        }
+        QCOMPARE(elideWarningCount, 1);
     }
 
     void loopThroughAllStates()
@@ -134,59 +170,6 @@ private slots:
             readPacket >> replyType >> changedStateName;
             QCOMPARE(replyType, Reply::StateChanged);
             QCOMPARE(stateName, changedStateName);
-        }
-    }
-
-    void getElideWarnings()
-    {
-        QVersionedPacket<QQmlDebugConnector> packet;
-        sendMessageToService(createWatchTextElidesRequest(packet));
-
-        changeLanguage("fr");
-
-        // after language changes, we get elide warnings
-        auto replies = currentReply();
-        int elideCount = 0;
-
-        for (auto reply : replies) {
-            QVersionedPacket<QQmlDebugConnector> readPacket(reply);
-            TranslationIssue issue;
-            Reply replyType;
-
-            readPacket >> replyType;
-            if (replyType == Reply::TextElided) {
-                readPacket >> issue;
-                QCOMPARE(issue.codeMarker.line, 47);
-                QCOMPARE(issue.language, "fr fr-FR fr-Latn-FR");
-                elideCount++;
-            }
-        }
-    }
-
-    void getElideWarningsWhenStateChanged()
-    {
-        QVersionedPacket<QQmlDebugConnector> packet;
-        sendMessageToService(createWatchTextElidesRequest(packet));
-
-        changeLanguage("fr");
-
-        const QString stateName("BiggerFontState");
-        sendMessageToService(createChangeStateRequest(packet, stateName));
-
-        auto replies = currentReply();
-
-        int elideCount = 0;
-        for (auto reply : replies) {
-            QVersionedPacket<QQmlDebugConnector> readPacket(reply);
-            TranslationIssue issue;
-            Reply replyType;
-
-            readPacket >> replyType;
-            if (replyType == Reply::TextElided) {
-                readPacket >> issue;
-                QCOMPARE(issue.codeMarker.line, 47);
-                elideCount++;
-            }
         }
     }
 
@@ -231,18 +214,18 @@ private:
         // QTest::qWait(500);
     }
 
-    QVector<TranslationIssue> getMissingTranslations()
+    QVector<TranslationIssue> getTranslationIssues()
     {
         QVersionedPacket<QQmlDebugConnector> packet;
-        sendMessageToService(createMissingTranslationsRequest(packet));
+        sendMessageToService(createTranslationIssuesRequest(packet));
         QVersionedPacket<QQmlDebugConnector> readPacket(currentReply().at(0));
 
         Reply replyType;
-        QVector<TranslationIssue> missingTranslations;
+        QVector<TranslationIssue> translationIssues;
         readPacket >> replyType;
-        readPacket >> missingTranslations;
+        readPacket >> translationIssues;
 
-        return missingTranslations;
+        return translationIssues;
     }
 
     QByteArray debugServiceMessage(const QByteArray &data)
@@ -323,12 +306,10 @@ private:
                 return "LanguageChanged";
             case Reply::StateChanged:
                 return "StateChanged";
-            case Reply::MissingTranslations:
-                return "MissingTranslations";
+            case Reply::TranslationIssues:
+                return "TranslationIssues";
             case Reply::TranslatableTextOccurrences:
                 return "TranslatableTextOccurrences";
-            case Reply::TextElided:
-                return "TextElided";
             default:
                 Q_ASSERT_X(false, "not implemented", "not implemented");
             }
@@ -341,7 +322,7 @@ private:
             QVersionedPacket<QQmlDebugConnector> readPacket(message);
             readPacket >> replyType;
             debugString.append(replyTypeToString(replyType));
-            if (replyType == Reply::MissingTranslations) {
+            if (replyType == Reply::TranslationIssues) {
                 QVector<TranslationIssue> translationIssues;
                 readPacket >> translationIssues;
                 QStringList translationIssueStrings;
@@ -355,11 +336,6 @@ private:
                 QString translationIssuesString(" found %1 issues: %2");
                 debugString.append(translationIssuesString.arg(QString::number(translationIssues.size()),
                                                                translationIssueStrings.join("; ")));
-            }
-            if (replyType == Reply::TextElided) {
-                TranslationIssue translationIssue;
-                readPacket >> translationIssue;
-                debugString.append(QString(" %1 ").arg(translationIssue.toDebugString()));
             }
         }
         return debugString;

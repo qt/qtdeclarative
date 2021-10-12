@@ -59,7 +59,7 @@ void QQmlDebugTranslationClient::messageReceived(const QByteArray &message)
 
     packet >> type;
     switch (type) {
-    case QQmlDebugTranslation::Reply::MissingTranslations: {
+    case QQmlDebugTranslation::Reply::TranslationIssues: {
         packet >> translationIssues;
         break;
     }

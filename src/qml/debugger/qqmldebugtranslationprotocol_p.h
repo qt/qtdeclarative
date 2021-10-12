@@ -64,19 +64,23 @@ enum class Request {
     ChangeLanguage = 1,
     StateList,
     ChangeState,
-    MissingTranslations,
+    TranslationIssues,
     TranslatableTextOccurrences,
     WatchTextElides,
     DisableWatchTextElides,
+    // following are obsolete, just provided for compilation compatibility
+    MissingTranslations
 };
 
 enum class Reply {
     LanguageChanged = 101,
     StateList,
     StateChanged,
-    MissingTranslations,
+    TranslationIssues,
     TranslatableTextOccurrences,
-    TextElided,
+    // following are obsolete, just provided for compilation compatibility
+    MissingTranslations,
+    TextElided
 };
 
 inline QByteArray createChangeLanguageRequest(QDataStream &packet, const QUrl &url,
@@ -95,6 +99,12 @@ inline QByteArray createChangeStateRequest(QDataStream &packet, const QString &s
 inline QByteArray createMissingTranslationsRequest(QDataStream &packet)
 {
     packet << Request::MissingTranslations;
+    return qobject_cast<QBuffer *>(packet.device())->data();
+}
+
+inline QByteArray createTranslationIssuesRequest(QDataStream &packet)
+{
+    packet << Request::TranslationIssues;
     return qobject_cast<QBuffer *>(packet.device())->data();
 }
 

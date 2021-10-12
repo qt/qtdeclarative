@@ -241,10 +241,10 @@ public:
         emit q->messageToClient(q->name(), packet.data());
     }
 
-    void sendMissingTranslations()
+    void sendTranslationIssues()
     {
         QVersionedPacket<QQmlDebugConnector> packet;
-        packet << Reply::MissingTranslations;
+        packet << Reply::TranslationIssues;
 
         QVector<TranslationIssue> issues;
         for (auto &&information : qAsConst(objectTranslationBindingMultiMap)) {
@@ -255,25 +255,23 @@ public:
                 issue.language = proxyTranslator->currentUILanguages();
                 issues.append(issue);
             }
+
+            QObject *scopeObject = information.scopeObject;
+            QQuickText *quickText = static_cast<QQuickText*>(scopeObject);
+            if (quickText) {
+                if (quickText->truncated()) {
+                    TranslationIssue issue;
+                    issue.type = TranslationIssue::Type::Elided;
+                    issue.codeMarker = codeMarker(information);
+                    issue.language = proxyTranslator->currentUILanguages();
+                    issues.append(issue);
+                }
+            }
         }
         std::sort(issues.begin(), issues.end(), [](const auto &l1, const auto &l2){
             return l1.codeMarker < l2.codeMarker;
         });
         packet << issues;
-        emit q->messageToClient(q->name(), packet.data());
-    }
-
-    void sendElidedTextWarning(const TranslationBindingInformation &information)
-    {
-        QVersionedPacket<QQmlDebugConnector> packet;
-        packet << Reply::TextElided;
-
-        TranslationIssue issue;
-        issue.type = TranslationIssue::Type::Elided;
-        issue.codeMarker = codeMarker(information);
-        issue.language = proxyTranslator->currentUILanguages();
-
-        packet << issue;
         emit q->messageToClient(q->name(), packet.data());
     }
 
@@ -335,8 +333,8 @@ QQmlDebugTranslationServiceImpl::QQmlDebugTranslationServiceImpl(QObject *parent
             d, &QQmlDebugTranslationServicePrivate::sendLanguageChanged,
             Qt::QueuedConnection);
 
-    connect(this, &QQmlDebugTranslationServiceImpl::missingTranslations,
-            d, &QQmlDebugTranslationServicePrivate::sendMissingTranslations,
+    connect(this, &QQmlDebugTranslationServiceImpl::translationIssues,
+            d, &QQmlDebugTranslationServicePrivate::sendTranslationIssues,
             Qt::QueuedConnection);
 
     connect(this, &QQmlDebugTranslationServiceImpl::sendTranslatableTextOccurrences,
@@ -374,8 +372,8 @@ void QQmlDebugTranslationServiceImpl::messageReceived(const QByteArray &message)
             emit stateList();
             break;
         }
-        case QQmlDebugTranslation::Request::MissingTranslations: {
-            emit missingTranslations();
+        case QQmlDebugTranslation::Request::TranslationIssues: {
+            emit translationIssues();
             break;
         }
         case QQmlDebugTranslation::Request::TranslatableTextOccurrences: {
@@ -413,57 +411,6 @@ void QQmlDebugTranslationServiceImpl::engineAboutToBeRemoved(QJSEngine *engine)
     if (QQmlEngine *qmlEngine = qobject_cast<QQmlEngine *>(engine))
         d->proxyTranslator->removeEngine(qmlEngine);
     emit detachedFromEngine(engine);
-}
-
-QString QQmlDebugTranslationServiceImpl::foundElidedText(QObject *textObject, const QString &layoutText, const QString &elideText)
-{
-    Q_UNUSED(layoutText)
-    QString elidedTextResult = elideText;
-    // do the check only for text objects which have translation bindings
-    auto it = d->objectTranslationBindingMultiMap.find(textObject);
-    if (it != d->objectTranslationBindingMultiMap.end()) {
-        if (QQuickItem* quickItem = qobject_cast<QQuickItem*>(textObject)) {
-            const TranslationBindingInformation information = d->objectTranslationBindingMultiMap.value(quickItem);
-
-            QQuickItem* parentItem = quickItem->parentItem();
-            QString parentTypeName = parentItem->metaObject()->className();
-
-            // Currently text fields inside a layout give false signals about elides
-            // so we just omit them
-
-            if (d->watchTextElides && !parentTypeName.endsWith("Layout")) {
-                d->sendElidedTextWarning(information);
-            }
-
-            if (!d->elideConnections.contains(quickItem)) {
-                // add "refresh" elide state connections which remove themself
-                auto clearElideInformation = [=]() {
-                    //quickItem->setColor(originColor);
-                    for (QMetaObject::Connection connection : d->elideConnections.value(quickItem))
-                        quickItem->disconnect(connection);
-                    d->elideConnections.remove(quickItem);
-                };
-
-                auto connectWithChangedWidthThreshold = [=] () {
-                    return connect(quickItem, &QQuickItem::widthChanged, [=]() {
-                        if (quickItem->implicitWidth() <= quickItem->width())
-                            clearElideInformation();
-                    });
-                };
-                auto connectImplicitWidthChangedThreshold = [=] () {
-                    return connect(quickItem, &QQuickItem::implicitWidthChanged, [=]() {
-                        if (quickItem->implicitWidth() <= quickItem->width())
-                            clearElideInformation();
-                    });
-                };
-
-                d->elideConnections.insert(quickItem,
-                                          {connectWithChangedWidthThreshold(),
-                                           connectImplicitWidthChangedThreshold()});
-            }
-        }
-    }
-    return elidedTextResult;
 }
 
 void QQmlDebugTranslationServiceImpl::foundTranslationBinding(const TranslationBindingInformation &translationBindingInformation)

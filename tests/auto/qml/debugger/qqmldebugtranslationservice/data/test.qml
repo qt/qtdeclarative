@@ -30,7 +30,7 @@ import QtQuick
 
 Rectangle {
     id: root
-    width: 200
+    width: 130
     height: 200
     property int widthFactor: 7
 
@@ -68,15 +68,6 @@ Rectangle {
         }
     }
 
-    // this is necessary to have the test working for different font sizes and dpi settings
-    Text {
-        id: originHelloTextToGetTheNecessaryWidth
-        text: "short"
-        opacity: 0
-        anchors.bottom: root.bottom
-        onWidthChanged: root.width = originHelloTextToGetTheNecessaryWidth.width * widthFactor
-    }
-
     states: [
         State {
             name: "BiggerFontState"
@@ -96,10 +87,6 @@ Rectangle {
                 font.pointSize: 20
             }
 
-            PropertyChanges {
-                target: originHelloTextToGetTheNecessaryWidth
-                font.pointSize: 20
-            }
         },
         State {
             name: "WayBiggerFontState"
@@ -116,11 +103,6 @@ Rectangle {
 
             PropertyChanges {
                 target: text3
-                font.pointSize: 30
-            }
-
-            PropertyChanges {
-                target: originHelloTextToGetTheNecessaryWidth
                 font.pointSize: 30
             }
         }
