@@ -75,7 +75,7 @@ private slots:
     {
         QVersionedPacket<QQmlDebugConnector> packet;
         m_debugTranslationClient->sendMessage(
-                QQmlDebugTranslation::createMissingTranslationsRequest(packet));
+                QQmlDebugTranslation::createTranslationIssuesRequest(packet));
 
         QTRY_VERIFY(m_debugTranslationClient->translationIssues.size() > 0);
     }
