@@ -706,7 +706,8 @@ void QQuickTextNodeEngine::addFrameDecorations(QTextDocument *document, QTextFra
         return;
 
     addBorder(boundingRect.adjusted(frameFormat.leftMargin(), frameFormat.topMargin(),
-                                    -frameFormat.rightMargin(), -frameFormat.bottomMargin()),
+                                    -frameFormat.rightMargin() - borderWidth,
+                                    -frameFormat.bottomMargin() - borderWidth),
               borderWidth, borderStyle, borderBrush);
     if (table != nullptr) {
         int rows = table->rows();
