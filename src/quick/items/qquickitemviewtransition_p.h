@@ -157,6 +157,7 @@ public:
 
     bool prepareTransition(QQuickItemViewTransitioner *transitioner, int index, const QRectF &viewBounds);
     void startTransition(QQuickItemViewTransitioner *transitioner, int index);
+    void completeTransition(QQuickTransition *quickTransition);
 
     SelfDeletable m_selfDeletable;
     QPointF nextTransitionTo;

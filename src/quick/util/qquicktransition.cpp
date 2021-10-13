@@ -229,6 +229,12 @@ void QQuickTransitionInstance::stop()
         m_anim->stop();
 }
 
+void QQuickTransitionInstance::complete()
+{
+    if (m_anim)
+        m_anim->complete();
+}
+
 bool QQuickTransitionInstance::isRunning() const
 {
     return m_anim && m_anim->state() == QAbstractAnimationJob::Running;

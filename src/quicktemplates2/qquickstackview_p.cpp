@@ -253,13 +253,16 @@ void QQuickStackViewPrivate::startTransition(const QQuickStackTransition &first,
         second.element->transitionNextReposition(transitioner, second.type, second.target);
 
     if (first.element) {
-        if (immediate || !first.element->item || !first.element->prepareTransition(transitioner, first.viewBounds))
+        // Let the check for immediate happen after prepareTransition() is
+        // called, because we need the prepared transition in both branches.
+        // Same for the second element.
+        if (!first.element->item || !first.element->prepareTransition(transitioner, first.viewBounds) || immediate)
             completeTransition(first.element, first.transition, first.status);
         else
             first.element->startTransition(transitioner, first.status);
     }
     if (second.element) {
-        if (immediate || !second.element->item || !second.element->prepareTransition(transitioner, second.viewBounds))
+        if (!second.element->item || !second.element->prepareTransition(transitioner, second.viewBounds) || immediate)
             completeTransition(second.element, second.transition, second.status);
         else
             second.element->startTransition(transitioner, second.status);
@@ -275,12 +278,19 @@ void QQuickStackViewPrivate::completeTransition(QQuickStackElement *element, QQu
 {
     element->setStatus(status);
     if (transition) {
-        // TODO: add a proper way to complete a transition
-        QQmlListProperty<QQuickAbstractAnimation> animations = transition->animations();
-        int count = animations.count(&animations);
-        for (int i = 0; i < count; ++i) {
-            QQuickAbstractAnimation *anim = animations.at(&animations, i);
-            anim->complete();
+        if (element->prepared) {
+            // Here we force reading all the animations, even if the desired
+            // transition type is StackView.Immediate. After that we force
+            // all the animations to complete immediately, without waiting for
+            // the animation timer.
+            // This allows us to correctly restore all the properties affected
+            // by the push/pop animations.
+            element->completeTransition(transition);
+        } else if (element->item) {
+            // At least try to move the item to its desired place. This,
+            // however, is only a partly correct solution, because a lot more
+            // properties can be affected by the transition
+            element->item->setPosition(element->nextTransitionTo);
         }
     }
     viewItemTransitionFinished(element);

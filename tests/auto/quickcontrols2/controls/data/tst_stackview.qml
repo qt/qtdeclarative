@@ -645,9 +645,9 @@ TestCase {
     function test_transitions_data() {
         return [
             { tag: "undefined", operation: undefined,
-              pushEnterRuns: [0,1,1,1], pushExitRuns: [0,1,1,1], replaceEnterRuns: [0,0,1,1], replaceExitRuns: [0,0,1,1], popEnterRuns: [0,0,0,1], popExitRuns: [0,0,0,1] },
+              pushEnterRuns: [1,2,2,2], pushExitRuns: [0,1,1,1], replaceEnterRuns: [0,0,1,1], replaceExitRuns: [0,0,1,1], popEnterRuns: [0,0,0,1], popExitRuns: [0,0,0,1] },
             { tag: "immediate", operation: StackView.Immediate,
-              pushEnterRuns: [0,0,0,0], pushExitRuns: [0,0,0,0], replaceEnterRuns: [0,0,0,0], replaceExitRuns: [0,0,0,0], popEnterRuns: [0,0,0,0], popExitRuns: [0,0,0,0] },
+              pushEnterRuns: [1,2,2,2], pushExitRuns: [0,1,1,1], replaceEnterRuns: [0,0,1,1], replaceExitRuns: [0,0,1,1], popEnterRuns: [0,0,0,1], popExitRuns: [0,0,0,1] },
             { tag: "push", operation: StackView.PushTransition,
               pushEnterRuns: [1,2,3,4], pushExitRuns: [0,1,2,3], replaceEnterRuns: [0,0,0,0], replaceExitRuns: [0,0,0,0], popEnterRuns: [0,0,0,0], popExitRuns: [0,0,0,0] },
             { tag: "pop", operation: StackView.PopTransition,
@@ -1429,5 +1429,116 @@ TestCase {
 
         control.push(component)
         control.push(component)
+    }
+
+    // QTBUG-96966
+    // Generate a stack view with complex transition animations and make sure
+    // that the item's state is restored correctly when StackView.Immediate
+    // operation is used
+    Component {
+        id: qtbug96966_stackViewComponent
+        StackView {
+            id: qtbug96966_stackView
+            pushEnter: Transition {
+                ParallelAnimation {
+                    NumberAnimation {
+                        property: "x"
+                        from: qtbug96966_stackView.width
+                        to: 0
+                        duration: 100
+                        easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: 100
+                        easing.type: Easing.OutCubic
+                    }
+                }
+            }
+            pushExit: Transition {
+                ParallelAnimation {
+                    NumberAnimation {
+                        property: "x"
+                        from: 0
+                        to: -qtbug96966_stackView.width
+                        duration: 100
+                        easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 1
+                        to: 0
+                        duration: 100
+                        easing.type: Easing.OutCubic
+                    }
+                }
+            }
+
+            popExit: Transition {
+                ParallelAnimation {
+                    NumberAnimation {
+                        property: "x"
+                        from: 0
+                        to: qtbug96966_stackView.width
+                        duration: 100
+                        easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 1
+                        to: 0
+                        duration: 100
+                        easing.type: Easing.OutCubic
+                    }
+                }
+            }
+            popEnter: Transition {
+                ParallelAnimation {
+                    NumberAnimation {
+                        property: "x"
+                        from: -qtbug96966_stackView.width
+                        to: 0
+                        duration: 100
+                        easing.type: Easing.OutCubic
+                    }
+                    NumberAnimation {
+                        property: "opacity"
+                        from: 0
+                        to: 1
+                        duration: 100
+                        easing.type: Easing.OutCubic
+                    }
+                }
+            }
+        }
+    }
+
+    function test_immediateTransitionPropertiesApplied() {
+        let redRect = createTemporaryObject(rectangleComponent, testCase, { color: "red" })
+        verify(redRect)
+        let blueRect = createTemporaryObject(rectangleComponent, testCase, { color: "blue" })
+        verify(blueRect)
+        let control = createTemporaryObject(qtbug96966_stackViewComponent, testCase,
+                                            { "anchors.fill": testCase, initialItem: redRect })
+        verify(control)
+
+        control.push(blueRect)
+        // wait until the animation is finished
+        tryCompare(control, "busy", true)
+        tryCompare(control, "busy", false)
+        // Now the red rectangle should become invisible and move to the left
+        compare(redRect.x, -200) // the window width is 200
+        compare(redRect.opacity, 0)
+
+        control.pop(null, StackView.Immediate)
+        // The red rectangle immediately restores its initial state (both
+        // position and opacity).
+        compare(redRect.x, 0)
+        compare(redRect.opacity, 1)
+        // Blue rectangle is moved to the right and becomes invisible
+        compare(blueRect.x, 200)
+        compare(blueRect.opacity, 0)
     }
 }
