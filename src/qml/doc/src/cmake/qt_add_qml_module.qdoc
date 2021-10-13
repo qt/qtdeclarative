@@ -245,6 +245,19 @@ found at the following resource paths:
 \li \c{/my.company.com/imports/MyCo/Frames/AnotherFrame.qml}
 \endlist
 
+In the rare case that you want to override the automatic selection of the
+qmlcachegen program to be used, you may set the \c QT_QMLCACHEGEN_EXECUTABLE
+target property on the module target. For example:
+
+\badcode
+set_target_properties(someTarget PROPERTIES
+    QT_QMLCACHEGEN_EXECUTABLE qmlcachegen
+)
+\endcode
+
+This explicitly selects qmlcachegen as the program to be used, even if
+better alternatives are available.
+
 \target qmllint-auto
 \section2 Linting QML sources
 

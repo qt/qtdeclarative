@@ -475,7 +475,7 @@ function(qt6_add_qml_module target)
         QT_QML_MODULE_PLUGIN_TYPES_FILE
         QT_QML_MODULE_RESOURCE_PATHS
         QT_QMLCACHEGEN_DIRECT_CALLS
-        QT_QMLCACHEGEN_BINARY
+        QT_QMLCACHEGEN_EXECUTABLE
         QT_QMLCACHEGEN_ARGUMENTS
     )
     foreach(prop IN LISTS ensure_set_properties)
@@ -1350,7 +1350,7 @@ function(qt6_target_qml_sources target)
 
     if(NOT no_cachegen AND arg_QML_FILES)
         _qt_internal_genex_getproperty(types_file    ${target} QT_QML_MODULE_PLUGIN_TYPES_FILE)
-        _qt_internal_genex_getproperty(qmlcachegen   ${target} QT_QMLCACHEGEN_BINARY)
+        _qt_internal_genex_getproperty(qmlcachegen   ${target} QT_QMLCACHEGEN_EXECUTABLE)
         _qt_internal_genex_getproperty(direct_calls  ${target} QT_QMLCACHEGEN_DIRECT_CALLS)
         _qt_internal_genex_getjoinedproperty(arguments ${target}
             QT_QMLCACHEGEN_ARGUMENTS "$<SEMICOLON>" "$<SEMICOLON>"
@@ -1376,7 +1376,7 @@ function(qt6_target_qml_sources target)
         )
 
         # For direct evaluation in if() below
-        get_target_property(cachegen_prop ${target} QT_QMLCACHEGEN_BINARY)
+        get_target_property(cachegen_prop ${target} QT_QMLCACHEGEN_EXECUTABLE)
         if(cachegen_prop)
             if(cachegen_prop STREQUAL "qmlcachegen" OR cachegen_prop STREQUAL "qmlsc")
                 # If it's qmlcachegen or qmlsc, don't go looking for other programs of that name
