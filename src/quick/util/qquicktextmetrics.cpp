@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -40,6 +40,7 @@
 #include "qquicktextmetrics_p.h"
 
 #include <QFont>
+#include <QTextOption>
 
 QT_BEGIN_NAMESPACE
 
@@ -77,7 +78,8 @@ QQuickTextMetrics::QQuickTextMetrics(QObject *parent) :
     QObject(parent),
     m_metrics(m_font),
     m_elide(Qt::ElideNone),
-    m_elideWidth(0)
+    m_elideWidth(0),
+    m_renderType(QQuickText::QtRendering)
 {
 }
 
@@ -182,7 +184,9 @@ void QQuickTextMetrics::setElideWidth(qreal elideWidth)
 */
 qreal QQuickTextMetrics::advanceWidth() const
 {
-    return m_metrics.horizontalAdvance(m_text);
+    QTextOption option;
+    option.setUseDesignMetrics(m_renderType == QQuickText::QtRendering);
+    return m_metrics.horizontalAdvance(m_text, option);
 }
 
 /*!
@@ -195,7 +199,9 @@ qreal QQuickTextMetrics::advanceWidth() const
 */
 QRectF QQuickTextMetrics::boundingRect() const
 {
-    return m_metrics.boundingRect(m_text);
+    QTextOption option;
+    option.setUseDesignMetrics(m_renderType == QQuickText::QtRendering);
+    return m_metrics.boundingRect(m_text, option);
 }
 
 /*!
@@ -242,7 +248,9 @@ qreal QQuickTextMetrics::height() const
 */
 QRectF QQuickTextMetrics::tightBoundingRect() const
 {
-    return m_metrics.tightBoundingRect(m_text);
+    QTextOption option;
+    option.setUseDesignMetrics(m_renderType == QQuickText::QtRendering);
+    return m_metrics.tightBoundingRect(m_text, option);
 }
 
 /*!
@@ -258,6 +266,36 @@ QRectF QQuickTextMetrics::tightBoundingRect() const
 QString QQuickTextMetrics::elidedText() const
 {
     return m_metrics.elidedText(m_text, m_elide, m_elideWidth);
+}
+
+/*!
+    \qmlproperty enumeration QtQuick::TextMetrics::renderType
+
+    Override the default rendering type for this component.
+
+    Supported render types are:
+    \list
+    \li Text.QtRendering
+    \li Text.NativeRendering
+    \endlist
+
+    This should match the intended renderType where you draw the text.
+
+    \since 6.3
+    \sa Text.renderType
+*/
+QQuickText::RenderType QQuickTextMetrics::renderType() const
+{
+    return m_renderType;
+}
+
+void QQuickTextMetrics::setRenderType(QQuickText::RenderType renderType)
+{
+    if (m_renderType == renderType)
+        return;
+
+    m_renderType = renderType;
+    emit renderTypeChanged();
 }
 
 QT_END_NAMESPACE
