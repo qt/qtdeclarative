@@ -21,7 +21,6 @@ qt_internal_add_test(tst_qquickdesignersupport
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
-        Qt::TestPrivate
         Qt::QuickTestUtilsPrivate
     TESTDATA ${test_data}
 )
