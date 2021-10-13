@@ -551,6 +551,14 @@ void QAbstractAnimationJob::stop()
     setState(Stopped);
 }
 
+void QAbstractAnimationJob::complete()
+{
+    // Simulate the full animation cycle
+    setState(Running);
+    setCurrentTime(m_direction == Forward ? duration() : 0);
+    setState(Stopped);
+}
+
 void QAbstractAnimationJob::pause()
 {
     if (m_state == Stopped) {

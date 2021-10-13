@@ -114,6 +114,7 @@ public:
     void pause();
     void resume();
     void stop();
+    void complete();
 
     enum ChangeType {
         Completion = 0x01,

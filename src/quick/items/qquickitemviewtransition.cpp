@@ -500,6 +500,36 @@ void QQuickItemViewTransitionableItem::startTransition(QQuickItemViewTransitione
     clearCurrentScheduledTransition();
 }
 
+void QQuickItemViewTransitionableItem::completeTransition(QQuickTransition *quickTransition)
+{
+    if (nextTransitionType == QQuickItemViewTransitioner::NoTransition)
+        return;
+
+    if (!prepared) {
+        qWarning("QQuickViewItem::prepareTransition() not called!");
+        return;
+    }
+
+    if (!item) {
+        qWarning("No target for transition!");
+        return;
+    }
+
+    if (!transition || transition->m_type != nextTransitionType || transition->m_isTarget != isTransitionTarget) {
+        if (transition)
+            RETURN_IF_DELETED(transition->cancel());
+        delete transition;
+        transition = new QQuickItemViewTransitionJob;
+    }
+
+    QQuickStateOperation::ActionList actions; // not used
+    QList<QQmlProperty> after; // not used
+    auto instance = quickTransition->prepare(actions, after, transition, item);
+    RETURN_IF_DELETED(instance->complete());
+
+    clearCurrentScheduledTransition();
+}
+
 void QQuickItemViewTransitionableItem::setNextTransition(QQuickItemViewTransitioner::TransitionType type, bool isTargetItem)
 {
     // Don't reset nextTransitionToSet - once it is set, it cannot be changed

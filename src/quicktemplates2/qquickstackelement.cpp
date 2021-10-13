@@ -312,6 +312,11 @@ void QQuickStackElement::startTransition(QQuickItemViewTransitioner *transitione
         QQuickItemViewTransitionableItem::startTransition(transitioner, index);
 }
 
+void QQuickStackElement::completeTransition(QQuickTransition *quickTransition)
+{
+    QQuickItemViewTransitionableItem::completeTransition(quickTransition);
+}
+
 void QQuickStackElement::itemDestroyed(QQuickItem *)
 {
     item = nullptr;

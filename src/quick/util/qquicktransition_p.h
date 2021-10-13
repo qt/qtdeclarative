@@ -73,6 +73,7 @@ public:
 
     void start();
     void stop();
+    void complete();
 
     bool isRunning() const;
 
