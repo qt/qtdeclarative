@@ -35,5 +35,10 @@ qt_internal_add_module(QuickTestUtilsPrivate
 )
 
 if(TARGET Qt::Quick)
-    target_link_libraries(QuickTestUtilsPrivate PRIVATE Qt::Quick Qt::QuickPrivate Qt::QuickTest)
+    qt_internal_extend_target(QuickTestUtilsPrivate
+        LIBRARIES
+            Qt::Quick
+            Qt::QuickPrivate
+            Qt::QuickTest
+    )
 endif()
