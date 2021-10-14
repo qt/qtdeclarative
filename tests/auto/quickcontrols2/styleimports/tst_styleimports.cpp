@@ -201,7 +201,7 @@ void tst_StyleImports::platformSelectors()
     QObject *button = window->property("button").value<QObject*>();
     QVERIFY(button);
 
-#if defined(Q_OS_LINUX)
+#if defined(Q_OS_LINUX) && !defined(Q_OS_ANDROID)
     QCOMPARE(button->objectName(), "PlatformStyle/+linux");
 #elif defined(Q_OS_MACOS)
     QCOMPARE(button->objectName(), "PlatformStyle/+macos");
