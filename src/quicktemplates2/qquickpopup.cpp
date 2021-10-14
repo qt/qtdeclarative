@@ -2033,6 +2033,8 @@ void QQuickPopup::setScale(qreal scale)
         has active focus.
 
     The default value is \c {Popup.CloseOnEscape | Popup.CloseOnPressOutside}.
+    This default value may interfere with existing shortcuts in the application
+    that makes use of the \e Escape key.
 
     \note There is a known limitation that the \c Popup.CloseOnReleaseOutside
         and \c Popup.CloseOnReleaseOutsideParent policies only work with

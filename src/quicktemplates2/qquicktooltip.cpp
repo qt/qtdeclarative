@@ -116,7 +116,8 @@ QT_BEGIN_NAMESPACE
 
     \snippet qtquickcontrols2-tooltip-slider.qml 1
 
-    \sa {Customizing ToolTip}, {Popup Controls}
+    \sa {Customizing ToolTip}, {Popup Controls},
+    {QtQuick.Controls::Popup::closePolicy}{closePolicy}
 */
 
 class QQuickToolTipPrivate : public QQuickPopupPrivate
