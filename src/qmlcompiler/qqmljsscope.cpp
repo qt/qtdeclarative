@@ -34,6 +34,8 @@
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qfileinfo.h>
 
+#include <private/qduplicatetracker_p.h>
+
 #include <algorithm>
 #include <type_traits>
 
@@ -73,11 +75,12 @@ static bool searchBaseAndExtensionTypes(QQmlJSScopePtr type, const Action &check
     using T = decltype(
             getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(std::declval<QQmlJSScope::ConstPtr>()));
 
-    for (T scope = type; scope;
+    QDuplicateTracker<T> seen;
+    for (T scope = type; scope && !seen.hasSeen(scope);
          scope = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->baseType())) {
         // Extensions override their base types
         for (T extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(scope->extensionType());
-             extension;
+             extension && !seen.hasSeen(extension);
              extension = getQQmlJSScopeFromSmartPtr<QQmlJSScopePtr>(extension->baseType())) {
             if (check(extension))
                 return true;
@@ -658,7 +661,8 @@ bool QQmlJSScope::canAssign(const QQmlJSScope::ConstPtr &derived) const
 
     bool isBaseComponent = causesImplicitComponentWrapping();
 
-    for (auto scope = derived; !scope.isNull(); scope = scope->baseType()) {
+    QDuplicateTracker<QQmlJSScope::ConstPtr> seen;
+    for (auto scope = derived; !scope.isNull() && !seen.hasSeen(scope); scope = scope->baseType()) {
         if (isSameType(scope))
             return true;
         if (isBaseComponent && scope->internalName() == u"QObject"_qs)

@@ -33,6 +33,8 @@
 #include <private/qqmljslogger_p.h>
 #include <private/qv4value_p.h>
 
+#include <private/qduplicatetracker_p.h>
+
 #include <QtCore/qqueue.h>
 #include <QtCore/qloggingcategory.h>
 
@@ -43,9 +45,13 @@ Q_LOGGING_CATEGORY(lcTypeResolver, "qml.compiler.typeresolver", QtInfoMsg);
 template<typename Action>
 static bool searchBaseAndExtensionTypes(const QQmlJSScope::ConstPtr type, const Action &check)
 {
-    for (QQmlJSScope::ConstPtr scope = type; scope; scope = scope->baseType()) {
+    QDuplicateTracker<QQmlJSScope::ConstPtr> seen;
+    for (QQmlJSScope::ConstPtr scope = type; scope && !seen.hasSeen(scope);
+         scope = scope->baseType()) {
         // Extensions override their base types
-        for (QQmlJSScope::ConstPtr extension = scope->extensionType(); extension;
+        QDuplicateTracker<QQmlJSScope::ConstPtr> seenExtensions;
+        for (QQmlJSScope::ConstPtr extension = scope->extensionType();
+             extension && !seenExtensions.hasSeen(extension);
              extension = extension->baseType()) {
             if (check(extension, QQmlJSTypeResolver::Extension))
                 return true;
