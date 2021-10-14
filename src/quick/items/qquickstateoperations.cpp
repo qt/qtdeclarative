@@ -355,8 +355,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             actions << xa;
         } else {
             QQmlProperty property(d->target, QLatin1String("x"));
-            QQmlBinding *newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core, d->xString.value, d->target, qmlContext(this));
-            newBinding->setTarget(property);
+            auto newBinding = QQmlAnyBinding::createFromScriptString(property, d->xString.value, d->target, qmlContext(this));
             QQuickStateAction xa;
             xa.property = property;
             xa.toBinding = newBinding;
@@ -374,8 +373,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             actions << ya;
         } else {
             QQmlProperty property(d->target, QLatin1String("y"));
-            QQmlBinding *newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core, d->yString.value, d->target, qmlContext(this));
-            newBinding->setTarget(property);
+            auto newBinding = QQmlAnyBinding::createFromScriptString(property, d->yString.value, d->target, qmlContext(this));
             QQuickStateAction ya;
             ya.property = property;
             ya.toBinding = newBinding;
@@ -393,8 +391,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             actions << sa;
         } else {
             QQmlProperty property(d->target, QLatin1String("scale"));
-            QQmlBinding *newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core, d->scaleString.value, d->target, qmlContext(this));
-            newBinding->setTarget(property);
+            auto newBinding = QQmlAnyBinding::createFromScriptString(property, d->scaleString.value, d->target, qmlContext(this));
             QQuickStateAction sa;
             sa.property = property;
             sa.toBinding = newBinding;
@@ -412,8 +409,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             actions << ra;
         } else {
             QQmlProperty property(d->target, QLatin1String("rotation"));
-            QQmlBinding *newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core, d->rotationString.value, d->target, qmlContext(this));
-            newBinding->setTarget(property);
+            auto newBinding = QQmlAnyBinding::createFromScriptString(property, d->rotationString.value, d->target, qmlContext(this));
             QQuickStateAction ra;
             ra.property = property;
             ra.toBinding = newBinding;
@@ -431,8 +427,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             actions << wa;
         } else {
             QQmlProperty property(d->target, QLatin1String("width"));
-            QQmlBinding *newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core, d->widthString.value, d->target, qmlContext(this));
-            newBinding->setTarget(property);
+            auto newBinding = QQmlAnyBinding::createFromScriptString(property, d->widthString, d->target, qmlContext(this));
             QQuickStateAction wa;
             wa.property = property;
             wa.toBinding = newBinding;
@@ -450,8 +445,7 @@ QQuickStateOperation::ActionList QQuickParentChange::actions()
             actions << ha;
         } else {
             QQmlProperty property(d->target, QLatin1String("height"));
-            QQmlBinding *newBinding = QQmlBinding::create(&QQmlPropertyPrivate::get(property)->core, d->heightString.value, d->target, qmlContext(this));
-            newBinding->setTarget(property);
+            auto newBinding = QQmlAnyBinding::createFromScriptString(property, d->heightString, d->target, qmlContext(this));
             QQuickStateAction ha;
             ha.property = property;
             ha.toBinding = newBinding;
@@ -488,11 +482,13 @@ void QQuickParentChangePrivate::reverseRewindHelper(const std::unique_ptr<QQuick
 {
     if (!target || !snapshot)
         return;
-    target->setX(snapshot->x);
-    target->setY(snapshot->y);
+    auto targetPriv = QQuickItemPrivate::get(target);
+    // leave existing bindings alive; new bindings are applied in applyBindings
+    targetPriv->x.setValueBypassingBindings(snapshot->x);
+    targetPriv->y.setValueBypassingBindings(snapshot->y);
+    targetPriv->width.setValueBypassingBindings(snapshot->width);
+    targetPriv->height.setValueBypassingBindings(snapshot->height);
     target->setScale(snapshot->scale);
-    target->setWidth(snapshot->width);
-    target->setHeight(snapshot->height);
     target->setRotation(snapshot->rotation);
     target->setParentItem(snapshot->parent);
     if (snapshot->stackBefore)

@@ -149,6 +149,30 @@ public:
 
     /*!
         \internal
+        Creates a binding for property \a prop from \a script.
+        \a obj is the scope object which shall be used for the function and \a ctxt its QML scope.
+        The binding is not installed on the property (but if a QQmlBinding is created, it has its
+        target set to \a prop).
+     */
+    static QQmlAnyBinding createFromScriptString(const QQmlProperty &prop, const QQmlScriptString &script,
+                                                  QObject *obj,  QQmlContext *ctxt)
+    {
+        QQmlAnyBinding binding;
+        auto propPriv = QQmlPropertyPrivate::get(prop);
+        if (prop.isBindable()) {
+            auto index = QQmlPropertyIndex(propPriv->core.coreIndex(), -1);
+            binding = QQmlPropertyBinding::createFromScriptString(&propPriv->core, script, obj, ctxt, prop.object(), index);
+        } else {
+            auto qmlBinding = QQmlBinding::create(&propPriv->core, script, obj, ctxt);
+            qmlBinding->setTarget(prop);
+            binding = qmlBinding;
+        }
+        return binding;
+    }
+
+
+    /*!
+        \internal
         Removes the binding from \a prop if there is any.
      */
     static void removeBindingFrom(QQmlProperty &prop)
