@@ -35,6 +35,7 @@
 #include <QtCore/qscopedvaluerollback.h>
 
 #include <QtQml/private/qv4codegen_p.h>
+#include <QtCore/private/qduplicatetracker_p.h>
 
 #include <algorithm>
 
@@ -605,7 +606,9 @@ void QQmlJSImportVisitor::checkRequiredProperties()
             continue;
 
         QVector<QQmlJSScope::ConstPtr> scopesToSearch;
-        for (QQmlJSScope::ConstPtr scope = defScope; scope; scope = scope->baseType()) {
+        QDuplicateTracker<QQmlJSScope::ConstPtr> seen;
+        for (QQmlJSScope::ConstPtr scope = defScope; scope && !seen.hasSeen(scope);
+             scope = scope->baseType()) {
             scopesToSearch << scope;
             const auto ownProperties = scope->ownProperties();
             for (auto propertyIt = ownProperties.constBegin();

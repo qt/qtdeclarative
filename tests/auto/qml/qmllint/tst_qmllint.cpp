@@ -656,6 +656,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Unused import at %1:1:1")
             << QStringLiteral("Cannot assign binding of type QQuickItem to QObject")
             << true;
+    QTest::newRow("cycle in import")
+            << QStringLiteral("cycleHead.qml")
+            << QStringLiteral("MenuItem is part of an inheritance cycle: MenuItem -> MenuItem")
+            << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()

@@ -38,6 +38,8 @@
 #include <QtQml/private/qqmljsparser_p.h>
 #include <QtQml/private/qqmlimportresolver_p.h>
 
+#include <QtCore/private/qduplicatetracker_p.h>
+
 #include <QtCore/qfile.h>
 #include <QtCore/qdiriterator.h>
 #include <QtCore/qscopedvaluerollback.h>
@@ -112,7 +114,9 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *uiod)
     }
 
     QString parentPropertyName;
-    for (QQmlJSScope::ConstPtr scope = childScope; scope; scope = scope->baseType()) {
+    QDuplicateTracker<QQmlJSScope::ConstPtr> seen;
+    for (QQmlJSScope::ConstPtr scope = childScope; scope && !seen.hasSeen(scope);
+         scope = scope->baseType()) {
         parentPropertyName = scope->parentPropertyName();
         if (parentPropertyName.isEmpty())
             continue;
