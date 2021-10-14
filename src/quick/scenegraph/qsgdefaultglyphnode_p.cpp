@@ -119,7 +119,8 @@ public:
 protected:
     void initialize() override;
 
-    int m_matrix_id;
+    int m_projectionMatrix_id;
+    int m_modelViewMatrix_id;
     int m_color_id;
     int m_textureScale_id;
     float m_devicePixelRatio;
@@ -135,7 +136,8 @@ char const *const *QSGTextMaskShader::attributeNames() const
 
 QSGTextMaskShader::QSGTextMaskShader(QFontEngine::GlyphFormat glyphFormat)
     : QSGMaterialShader(*new QSGMaterialShaderPrivate)
-    , m_matrix_id(-1)
+    , m_projectionMatrix_id(-1)
+    , m_modelViewMatrix_id(-1)
     , m_color_id(-1)
     , m_textureScale_id(-1)
     , m_glyphFormat(glyphFormat)
@@ -146,7 +148,8 @@ QSGTextMaskShader::QSGTextMaskShader(QFontEngine::GlyphFormat glyphFormat)
 
 void QSGTextMaskShader::initialize()
 {
-    m_matrix_id = program()->uniformLocation("matrix");
+    m_projectionMatrix_id = program()->uniformLocation("projectionMatrix");
+    m_modelViewMatrix_id = program()->uniformLocation("modelViewMatrix");
     m_color_id = program()->uniformLocation("color");
     m_textureScale_id = program()->uniformLocation("textureScale");
     m_devicePixelRatio = (float) qsg_device_pixel_ratio(QOpenGLContext::currentContext());
@@ -184,8 +187,10 @@ void QSGTextMaskShader::updateState(const RenderState &state, QSGMaterial *newEf
         program()->setUniformValue("dpr", m_devicePixelRatio);
     }
 
-    if (state.isMatrixDirty())
-        program()->setUniformValue(m_matrix_id, state.combinedMatrix());
+    if (state.isMatrixDirty()) {
+        program()->setUniformValue(m_projectionMatrix_id, state.projectionMatrix());
+        program()->setUniformValue(m_modelViewMatrix_id, state.modelViewMatrix());
+    }
 }
 
 class QSG8BitTextMaskShader : public QSGTextMaskShader
@@ -387,8 +392,10 @@ void QSGStyledTextShader::updateState(const RenderState &state,
         }
     }
 
-    if (state.isMatrixDirty())
-        program()->setUniformValue(m_matrix_id, state.combinedMatrix());
+    if (state.isMatrixDirty()) {
+        program()->setUniformValue(m_projectionMatrix_id, state.projectionMatrix());
+        program()->setUniformValue(m_modelViewMatrix_id, state.modelViewMatrix());
+    }
 }
 
 class QSGOutlinedTextShader : public QSGStyledTextShader
