@@ -129,6 +129,10 @@ public:
                                                         const QQmlRefPointer<QQmlContextData> &ctxt,
                                                         const QString &url, quint16 lineNumber,
                                                         QObject *target, QQmlPropertyIndex targetIndex);
+    static QUntypedPropertyBinding createFromScriptString(const QQmlPropertyData *property,
+                                                          const QQmlScriptString& script, QObject *obj,
+                                                          QQmlContext *ctxt, QObject *target,
+                                                          QQmlPropertyIndex targetIndex);
 
     static QUntypedPropertyBinding createFromBoundFunction(const QQmlPropertyData *pd, QV4::BoundFunction *function,
                                           QObject *obj, const QQmlRefPointer<QQmlContextData> &ctxt,

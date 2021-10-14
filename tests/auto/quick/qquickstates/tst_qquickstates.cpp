@@ -202,6 +202,7 @@ private slots:
     void parentChangeCorrectReversal();
     void revertNullObjectBinding();
     void bindableProperties();
+    void parentChangeInvolvingBindings();
 };
 
 void tst_qquickstates::initTestCase()
@@ -1777,6 +1778,35 @@ void tst_qquickstates::bindableProperties()
         root->setX(42);
         QCOMPARE(root->prop(), 84);
     }
+}
+
+void tst_qquickstates::parentChangeInvolvingBindings()
+{
+   QQmlEngine engine;
+   QQmlComponent c(&engine, testFileUrl("parentChangeInvolvingBindings.qml"));
+   QScopedPointer<QQuickItem> root { qobject_cast<QQuickItem *>(c.create()) };
+   QVERIFY2(root, qPrintable(c.errorString()));
+   QCOMPARE(root->property("childWidth").toInt(), 400);
+   QCOMPARE(root->property("childRotation").toInt(), 100);
+   root->setState("reparented");
+
+   QCOMPARE(root->property("childWidth").toInt(), 800);
+   QCOMPARE(root->property("childRotation").toInt(), 200);
+
+   root->setProperty("myrotation2", 300);
+   root->setHeight(200);
+   QCOMPARE(root->property("childRotation").toInt(), 300);
+   QCOMPARE(root->property("childWidth").toInt(), 400);
+
+   root->setState("");
+   QCOMPARE(root->property("childRotation").toInt(), 100);
+   // QCOMPARE(root->property("childWidth").toInt(), 200);
+
+
+   root->setProperty("myrotation", 50);
+   root->setHeight(300);
+   QCOMPARE(root->property("childWidth").toInt(), 300);
+   QCOMPARE(root->property("childRotation").toInt(), 50);
 }
 
 QTEST_MAIN(tst_qquickstates)
