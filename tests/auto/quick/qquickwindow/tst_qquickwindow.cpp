@@ -1528,8 +1528,7 @@ void tst_qquickwindow::grab()
     }
 
     QImage content = window.grabWindow();
-    QCOMPARE(content.width(), int(window.width() * window.devicePixelRatio()));
-    QCOMPARE(content.height(), int(window.height() * window.devicePixelRatio()));
+    QCOMPARE(content.size(), window.size() * window.devicePixelRatio());
 
     if (alpha) {
         QCOMPARE((uint) content.convertToFormat(QImage::Format_ARGB32_Premultiplied).pixel(0, 0), (uint) 0x00000000);
@@ -1544,8 +1543,7 @@ void tst_qquickwindow::grab()
         // never was renderable before grabbing.
         window.hide();
         QImage content = window.grabWindow();
-        QCOMPARE(content.width(), int(window.width() * window.devicePixelRatio()));
-        QCOMPARE(content.height(), int(window.height() * window.devicePixelRatio()));
+        QCOMPARE(content.size(), window.size() * window.devicePixelRatio());
         if (alpha) {
             QCOMPARE((uint) content.convertToFormat(QImage::Format_ARGB32_Premultiplied).pixel(0, 0), (uint) 0x00000000);
         } else {
@@ -1556,8 +1554,7 @@ void tst_qquickwindow::grab()
         window.show();
         QVERIFY(QTest::qWaitForWindowExposed(&window));
         content = window.grabWindow();
-        QCOMPARE(content.width(), int(window.width() * window.devicePixelRatio()));
-        QCOMPARE(content.height(), int(window.height() * window.devicePixelRatio()));
+        QCOMPARE(content.size(), window.size() * window.devicePixelRatio());
         if (alpha) {
             QCOMPARE((uint) content.convertToFormat(QImage::Format_ARGB32_Premultiplied).pixel(0, 0), (uint) 0x00000000);
         } else {
