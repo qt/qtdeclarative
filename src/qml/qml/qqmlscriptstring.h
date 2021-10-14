@@ -86,6 +86,7 @@ private:
     friend class QQmlScriptStringPrivate;
     friend class QQmlExpression;
     friend class QQmlBinding;
+    friend class QQmlPropertyBinding;
     friend struct QV4::QObjectWrapper;
 };
 
