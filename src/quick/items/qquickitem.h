@@ -462,7 +462,6 @@ protected:
     virtual void releaseResources();
     virtual void updatePolish();
 
-protected:
     QQuickItem(QQuickItemPrivate &dd, QQuickItem *parent = nullptr);
 
 private:
