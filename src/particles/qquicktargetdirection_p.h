@@ -74,7 +74,7 @@ class QQuickTargetDirection : public QQuickDirection
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
-    explicit QQuickTargetDirection(QObject *parent = 0);
+    explicit QQuickTargetDirection(QObject *parent = nullptr);
     QPointF sample(const QPointF &from) override;
 
     qreal targetX() const

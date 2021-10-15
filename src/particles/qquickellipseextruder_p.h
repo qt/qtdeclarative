@@ -61,7 +61,7 @@ class QQuickEllipseExtruder : public QQuickParticleExtruder
     QML_NAMED_ELEMENT(EllipseShape)
     QML_ADDED_IN_VERSION(2, 0)
 public:
-    explicit QQuickEllipseExtruder(QObject *parent = 0);
+    explicit QQuickEllipseExtruder(QObject *parent = nullptr);
     QPointF extrude(const QRectF &) override;
     bool contains(const QRectF &bounds, const QPointF &point) override;
 

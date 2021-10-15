@@ -73,7 +73,7 @@ class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleAffector : public QQuickItem
     QML_UNCREATABLE("Abstract type. Use one of the inheriting types instead.")
 
 public:
-    explicit QQuickParticleAffector(QQuickItem *parent = 0);
+    explicit QQuickParticleAffector(QQuickItem *parent = nullptr);
     virtual void affectSystem(qreal dt);
     virtual void reset(QQuickParticleData*);//As some store their own data per particle?
     QQuickParticleSystem* system() const

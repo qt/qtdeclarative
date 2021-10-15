@@ -70,7 +70,7 @@ class QQmlEngineDebugServiceImpl : public QQmlEngineDebugService
 {
     Q_OBJECT
 public:
-    QQmlEngineDebugServiceImpl(QObject * = 0);
+    QQmlEngineDebugServiceImpl(QObject * = nullptr);
     ~QQmlEngineDebugServiceImpl();
 
     struct QQmlObjectData {

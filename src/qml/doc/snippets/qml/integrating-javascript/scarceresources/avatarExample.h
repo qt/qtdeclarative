@@ -64,7 +64,7 @@ class AvatarExample : public QObject
     QML_ELEMENT
 
 public:
-    AvatarExample(QObject *parent = 0)
+    AvatarExample(QObject *parent = nullptr)
         : QObject(parent), m_value(100, 100)
     {
         m_value.fill(Qt::blue);

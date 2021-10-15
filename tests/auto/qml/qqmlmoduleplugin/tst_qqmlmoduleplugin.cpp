@@ -370,7 +370,7 @@ void tst_qqmlmoduleplugin::remoteImportWithUnquotedUri()
     VERIFY_ERRORS(0);
 }
 
-static QByteArray msgComponentError(const QQmlComponent &c, const QQmlEngine *engine /* = 0 */)
+static QByteArray msgComponentError(const QQmlComponent &c, const QQmlEngine *engine /* = nullptr */)
 {
     QString result;
     const QList<QQmlError> errors = c.errors();

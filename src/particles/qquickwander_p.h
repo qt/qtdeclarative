@@ -82,7 +82,7 @@ public:
     };
     Q_ENUM(AffectableParameters)
 
-    explicit QQuickWanderAffector(QQuickItem *parent = 0);
+    explicit QQuickWanderAffector(QQuickItem *parent = nullptr);
     ~QQuickWanderAffector();
 //    virtual void reset(int systemIdx);
 

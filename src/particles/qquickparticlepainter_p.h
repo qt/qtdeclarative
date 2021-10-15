@@ -72,7 +72,7 @@ public: // data
     typedef QQuickParticleVarLengthArray<QQuickParticleGroupData::ID, 4> GroupIDs;
 
 public:
-    explicit QQuickParticlePainter(QQuickItem *parent = 0);
+    explicit QQuickParticlePainter(QQuickItem *parent = nullptr);
     //Data Interface to system
     void load(QQuickParticleData*);
     void reload(QQuickParticleData*);

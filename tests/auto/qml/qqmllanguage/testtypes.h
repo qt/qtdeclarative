@@ -1063,7 +1063,7 @@ class MyUncreateableBaseClass : public QObject
     Q_PROPERTY(bool prop2 READ prop2 WRITE setprop2 REVISION 1)
     Q_PROPERTY(bool prop3 READ prop3 WRITE setprop3 REVISION 1)
 public:
-    explicit MyUncreateableBaseClass(bool /* arg */, QObject *parent = 0)
+    explicit MyUncreateableBaseClass(bool /* arg */, QObject *parent = nullptr)
         : QObject(parent), _prop1(false), _prop2(false), _prop3(false)
     {
     }
@@ -1085,7 +1085,7 @@ class MyCreateableDerivedClass : public MyUncreateableBaseClass
     Q_PROPERTY(bool prop2 READ prop2 WRITE setprop2 REVISION 1)
 
 public:
-    MyCreateableDerivedClass(QObject *parent = 0)
+    MyCreateableDerivedClass(QObject *parent = nullptr)
         : MyUncreateableBaseClass(true, parent)
     {
     }
@@ -1098,7 +1098,7 @@ class MyExtendedUncreateableBaseClass : public QObject
     Q_PROPERTY(bool prop2 READ prop2 WRITE setprop2 REVISION 1)
     Q_PROPERTY(bool prop3 READ prop3 WRITE setprop3 REVISION 1)
 public:
-    explicit MyExtendedUncreateableBaseClass(QObject *parent = 0)
+    explicit MyExtendedUncreateableBaseClass(QObject *parent = nullptr)
         : QObject(parent), _prop1(false), _prop2(false), _prop3(false)
     {
     }
@@ -1119,7 +1119,7 @@ class MyExtendedUncreateableBaseClassExtension : public QObject
     Q_OBJECT
     Q_PROPERTY(bool prop4 READ prop4 WRITE setprop4)
 public:
-    explicit MyExtendedUncreateableBaseClassExtension(QObject *parent = 0)
+    explicit MyExtendedUncreateableBaseClassExtension(QObject *parent = nullptr)
         : QObject(parent), _prop4(false)
     {
     }
@@ -1135,7 +1135,7 @@ class MyExtendedCreateableDerivedClass : public MyExtendedUncreateableBaseClass
     Q_PROPERTY(bool prop5 READ prop5 WRITE setprop5)
 
 public:
-    MyExtendedCreateableDerivedClass(QObject *parent = 0)
+    MyExtendedCreateableDerivedClass(QObject *parent = nullptr)
         : MyExtendedUncreateableBaseClass(parent), _prop5(false)
     {
     }
@@ -1366,7 +1366,7 @@ class SimpleObjectExtension : public QObject
     Q_OBJECT
     Q_PROPERTY(int extendedProperty READ extendedProperty WRITE setExtendedProperty NOTIFY extendedPropertyChanged)
 public:
-    SimpleObjectExtension(QObject *parent = 0)
+    SimpleObjectExtension(QObject *parent = nullptr)
         : QObject(parent)
         , m_extendedProperty(1584)
     {}

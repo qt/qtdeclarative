@@ -59,7 +59,7 @@ class SqlConversationModel : public QSqlTableModel
     Q_PROPERTY(QString recipient READ recipient WRITE setRecipient NOTIFY recipientChanged)
 
 public:
-    SqlConversationModel(QObject *parent = 0);
+    SqlConversationModel(QObject *parent = nullptr);
 
     QString recipient() const;
     void setRecipient(const QString &recipient);

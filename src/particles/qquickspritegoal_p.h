@@ -66,7 +66,7 @@ class QQuickSpriteGoalAffector : public QQuickParticleAffector
     QML_NAMED_ELEMENT(SpriteGoal)
     QML_ADDED_IN_VERSION(2, 0)
 public:
-    explicit QQuickSpriteGoalAffector(QQuickItem *parent = 0);
+    explicit QQuickSpriteGoalAffector(QQuickItem *parent = nullptr);
 
     QString goalState() const
     {

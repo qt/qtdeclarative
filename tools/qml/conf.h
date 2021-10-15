@@ -42,7 +42,7 @@ class PartialScene : public QObject
     QML_ELEMENT
     QML_ADDED_IN_VERSION(1, 0)
 public:
-    PartialScene(QObject *parent = 0) : QObject(parent)
+    PartialScene(QObject *parent = nullptr) : QObject(parent)
     {}
 
     const QUrl container() const { return m_container; }

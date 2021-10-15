@@ -71,7 +71,7 @@ class QQuickCustomAffector : public QQuickParticleAffector
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
-    explicit QQuickCustomAffector(QQuickItem *parent = 0);
+    explicit QQuickCustomAffector(QQuickItem *parent = nullptr);
     void affectSystem(qreal dt) override;
 
     QQuickDirection * position() const

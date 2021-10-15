@@ -36,7 +36,7 @@ class QQmlDebugTestService : public QQmlDebugService
 {
     Q_OBJECT
 public:
-    QQmlDebugTestService(const QString &s, float version = 1, QObject *parent = 0);
+    QQmlDebugTestService(const QString &s, float version = 1, QObject *parent = nullptr);
 
 protected:
     void messageReceived(const QByteArray &ba) override;

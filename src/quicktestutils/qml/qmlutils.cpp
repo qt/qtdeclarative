@@ -35,7 +35,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlDataTest *QQmlDataTest::m_instance = 0;
+QQmlDataTest *QQmlDataTest::m_instance = nullptr;
 
 QQmlDataTest::QQmlDataTest(const char *qmlTestDataDir) :
     m_qmlTestDataDir(qmlTestDataDir),
@@ -54,7 +54,7 @@ QQmlDataTest::QQmlDataTest(const char *qmlTestDataDir) :
 
 QQmlDataTest::~QQmlDataTest()
 {
-    m_instance = 0;
+    m_instance = nullptr;
 }
 
 void QQmlDataTest::initTestCase()
@@ -86,7 +86,7 @@ bool QQmlDataTest::canImportModule(const QString &importTestQmlSource) const
 
 Q_GLOBAL_STATIC(QMutex, qQmlTestMessageHandlerMutex)
 
-QQmlTestMessageHandler *QQmlTestMessageHandler::m_instance = 0;
+QQmlTestMessageHandler *QQmlTestMessageHandler::m_instance = nullptr;
 
 void QQmlTestMessageHandler::messageHandler(QtMsgType, const QMessageLogContext &context, const QString &message)
 {
@@ -115,7 +115,7 @@ QQmlTestMessageHandler::~QQmlTestMessageHandler()
     QMutexLocker locker(qQmlTestMessageHandlerMutex());
     Q_ASSERT(QQmlTestMessageHandler::m_instance);
     qInstallMessageHandler(m_oldHandler);
-    QQmlTestMessageHandler::m_instance = 0;
+    QQmlTestMessageHandler::m_instance = nullptr;
 }
 
 QT_END_NAMESPACE

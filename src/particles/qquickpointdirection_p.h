@@ -64,7 +64,7 @@ class QQuickPointDirection : public QQuickDirection
     QML_NAMED_ELEMENT(PointDirection)
     QML_ADDED_IN_VERSION(2, 0)
 public:
-    explicit QQuickPointDirection(QObject *parent = 0);
+    explicit QQuickPointDirection(QObject *parent = nullptr);
     QPointF sample(const QPointF &from) override;
     qreal x() const
     {

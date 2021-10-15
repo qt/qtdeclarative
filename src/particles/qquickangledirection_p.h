@@ -65,7 +65,7 @@ class QQuickAngleDirection : public QQuickDirection
     QML_NAMED_ELEMENT(AngleDirection)
     QML_ADDED_IN_VERSION(2, 0)
 public:
-    explicit QQuickAngleDirection(QObject *parent = 0);
+    explicit QQuickAngleDirection(QObject *parent = nullptr);
     QPointF sample(const QPointF &from) override;
     qreal angle() const
     {

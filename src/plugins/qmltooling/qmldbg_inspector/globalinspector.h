@@ -57,7 +57,7 @@ class GlobalInspector : public QObject
 {
     Q_OBJECT
 public:
-    GlobalInspector(QObject *parent = 0) : QObject(parent), m_eventId(0) {}
+    GlobalInspector(QObject *parent = nullptr) : QObject(parent), m_eventId(0) {}
     ~GlobalInspector();
 
     void setSelectedItems(const QList<QQuickItem *> &items);

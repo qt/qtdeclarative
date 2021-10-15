@@ -44,7 +44,7 @@ class ItemModelsTest : public QObject
     Q_PROPERTY(QItemSelection itemSelection READ itemSelection WRITE setItemSelection NOTIFY changed)
 
 public:
-    ItemModelsTest(QObject *parent = 0)
+    ItemModelsTest(QObject *parent = nullptr)
         : QObject(parent)
         , m_model(0)
     {

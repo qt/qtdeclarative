@@ -67,7 +67,7 @@ class QQuickParticleExtruder : public QObject
     QML_UNCREATABLE("Abstract type. Use one of the inheriting types instead.")
 
 public:
-    explicit QQuickParticleExtruder(QObject *parent = 0);
+    explicit QQuickParticleExtruder(QObject *parent = nullptr);
     virtual QPointF extrude(const QRectF &);
     virtual bool contains(const QRectF &bounds, const QPointF &point);
 };

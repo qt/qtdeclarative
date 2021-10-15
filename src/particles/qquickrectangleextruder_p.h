@@ -63,7 +63,7 @@ class QQuickRectangleExtruder : public QQuickParticleExtruder
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
-    explicit QQuickRectangleExtruder(QObject *parent = 0);
+    explicit QQuickRectangleExtruder(QObject *parent = nullptr);
     QPointF extrude(const QRectF &) override;
     bool contains(const QRectF &bounds, const QPointF &point) override;
     bool fill() const

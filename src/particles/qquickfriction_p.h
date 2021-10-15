@@ -62,7 +62,7 @@ class QQuickFrictionAffector : public QQuickParticleAffector
     QML_NAMED_ELEMENT(Friction)
     QML_ADDED_IN_VERSION(2, 0)
 public:
-    explicit QQuickFrictionAffector(QQuickItem *parent = 0);
+    explicit QQuickFrictionAffector(QQuickItem *parent = nullptr);
 
     qreal factor() const
     {

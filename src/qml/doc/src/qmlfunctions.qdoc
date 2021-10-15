@@ -1022,7 +1022,7 @@
        Q_PROPERTY (int someProperty READ someProperty WRITE setSomeProperty NOTIFY somePropertyChanged)
 
    public:
-       SingletonTypeExample(QObject* parent = 0)
+       SingletonTypeExample(QObject *parent = nullptr)
            : QObject(parent), m_someProperty(0)
        {
        }

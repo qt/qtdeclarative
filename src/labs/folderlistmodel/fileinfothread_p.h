@@ -74,7 +74,7 @@ Q_SIGNALS:
     void statusChanged(QQuickFolderListModel::Status status) const;
 
 public:
-    FileInfoThread(QObject *parent = 0);
+    FileInfoThread(QObject *parent = nullptr);
     ~FileInfoThread();
 
     void clear();

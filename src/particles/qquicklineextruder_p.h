@@ -61,7 +61,7 @@ class QQuickLineExtruder : public QQuickParticleExtruder
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
-    explicit QQuickLineExtruder(QObject *parent = 0);
+    explicit QQuickLineExtruder(QObject *parent = nullptr);
     QPointF extrude(const QRectF &) override;
     bool mirrored() const
     {

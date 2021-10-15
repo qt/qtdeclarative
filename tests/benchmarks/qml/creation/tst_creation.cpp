@@ -81,7 +81,7 @@ Q_OBJECT
 Q_PROPERTY(QQmlListProperty<QObject> resources READ resources)
 Q_CLASSINFO("DefaultProperty", "resources")
 public:
-    TestType(QObject *parent = 0)
+    TestType(QObject *parent = nullptr)
     : QObject(parent) {}
 
     QQmlListProperty<QObject> resources() {

@@ -38,7 +38,7 @@ class SegmentProperties : public QWidget
 {
     Q_OBJECT
 public:
-    explicit SegmentProperties(QWidget *parent = 0);
+    explicit SegmentProperties(QWidget *parent = nullptr);
     void setSplineEditor(SplineEditor *splineEditor)
     {
         m_splineEditor = splineEditor;

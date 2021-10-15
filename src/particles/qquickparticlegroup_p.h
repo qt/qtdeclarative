@@ -68,7 +68,7 @@ class QQuickParticleGroup : public QQuickStochasticState, public QQmlParserStatu
     Q_INTERFACES(QQmlParserStatus)
 
 public:
-    explicit QQuickParticleGroup(QObject* parent = 0);
+    explicit QQuickParticleGroup(QObject *parent = nullptr);
 
     QQmlListProperty<QObject> particleChildren();
 

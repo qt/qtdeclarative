@@ -51,7 +51,7 @@ class EventCapturer : public QObject
     Q_OBJECT
 
 public:
-    EventCapturer(QObject *parent = 0);
+    EventCapturer(QObject *parent = nullptr);
 
     enum MoveEventTrimFlag
     {

@@ -65,7 +65,7 @@ class QQmlDebugTranslationServiceImpl : public QQmlDebugTranslationService
 {
     Q_OBJECT
 public:
-    QQmlDebugTranslationServiceImpl(QObject *parent = 0);
+    QQmlDebugTranslationServiceImpl(QObject *parent = nullptr);
     ~QQmlDebugTranslationServiceImpl();
 
     void foundTranslationBinding(const TranslationBindingInformation &translationBindingInformation) override;

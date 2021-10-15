@@ -38,7 +38,7 @@ QT_BEGIN_NAMESPACE
 
 QQuickItem *QQuickVisualTestUtils::findVisibleChild(QQuickItem *parent, const QString &objectName)
 {
-    QQuickItem *item = 0;
+    QQuickItem *item = nullptr;
     QList<QQuickItem*> items = parent->findChildren<QQuickItem*>(objectName);
     for (int i = 0; i < items.count(); ++i) {
         if (items.at(i)->isVisible() && !QQuickItemPrivate::get(items.at(i))->culled) {

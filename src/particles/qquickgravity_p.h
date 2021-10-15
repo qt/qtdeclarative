@@ -64,7 +64,7 @@ class QQuickGravityAffector : public QQuickParticleAffector
     QML_NAMED_ELEMENT(Gravity)
     QML_ADDED_IN_VERSION(2, 0)
 public:
-    explicit QQuickGravityAffector(QQuickItem *parent = 0);
+    explicit QQuickGravityAffector(QQuickItem *parent = nullptr);
     qreal magnitude() const;
     qreal angle() const;
 

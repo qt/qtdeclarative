@@ -36,7 +36,7 @@ class RandomSortModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    explicit RandomSortModel(QObject* parent = 0);
+    explicit RandomSortModel(QObject *parent = nullptr);
     QHash<int, QByteArray> roleNames() const override;
 
     QVariant data(const QModelIndex& index, int role) const override;

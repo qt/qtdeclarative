@@ -21,7 +21,7 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #pragma once
@@ -169,7 +169,7 @@ struct PatternTerm {
         quantityType = QuantifierFixedCount;
         quantityMinCount = quantityMaxCount = 1;
     }
-    
+
     PatternTerm(Type type, bool invert = false)
         : type(type)
         , m_capture(false)
@@ -199,7 +199,7 @@ struct PatternTerm {
         quantityType = QuantifierFixedCount;
         quantityMinCount = quantityMaxCount = 1;
     }
-    
+
     static PatternTerm ForwardReference()
     {
         return PatternTerm(TypeForwardReference);
@@ -219,7 +219,7 @@ struct PatternTerm {
     {
         return PatternTerm(TypeAssertionWordBoundary, invert);
     }
-    
+
     bool invert()
     {
         return m_invert;
@@ -274,18 +274,18 @@ public:
         ASSERT(m_terms.size());
         return m_terms[m_terms.size() - 1];
     }
-    
+
     void removeLastTerm()
     {
         ASSERT(m_terms.size());
         m_terms.shrink(m_terms.size() - 1);
     }
-    
+
     void setOnceThrough()
     {
         m_onceThrough = true;
     }
-    
+
     bool onceThrough()
     {
         return m_onceThrough;
@@ -305,12 +305,12 @@ public:
 struct PatternDisjunction {
     WTF_MAKE_FAST_ALLOCATED;
 public:
-    PatternDisjunction(PatternAlternative* parent = 0)
+    PatternDisjunction(PatternAlternative *parent = nullptr)
         : m_parent(parent)
         , m_hasFixedSize(false)
     {
     }
-    
+
     PatternAlternative* addNewAlternative()
     {
         m_alternatives.append(std::make_unique<PatternAlternative>(this));

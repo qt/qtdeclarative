@@ -56,7 +56,7 @@
 class SqlContactModel : public QSqlQueryModel
 {
 public:
-    SqlContactModel(QObject *parent = 0);
+    SqlContactModel(QObject *parent = nullptr);
 };
 
 #endif // SQLCONTACTMODEL_H

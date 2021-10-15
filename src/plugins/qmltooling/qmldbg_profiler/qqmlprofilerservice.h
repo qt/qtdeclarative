@@ -93,7 +93,7 @@ public:
                         quint64 features = std::numeric_limits<quint64>::max()) override;
     void stopProfiling(QJSEngine *engine) override;
 
-    QQmlProfilerServiceImpl(QObject *parent = 0);
+    QQmlProfilerServiceImpl(QObject *parent = nullptr);
     ~QQmlProfilerServiceImpl() override;
 
     void dataReady(QQmlAbstractProfilerAdapter *profiler) override;

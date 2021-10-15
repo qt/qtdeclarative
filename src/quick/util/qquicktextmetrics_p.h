@@ -81,7 +81,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextMetrics : public QObject
     QML_ADDED_IN_VERSION(2, 4)
 
 public:
-    explicit QQuickTextMetrics(QObject *parent = 0);
+    explicit QQuickTextMetrics(QObject *parent = nullptr);
 
     QFont font() const;
     void setFont(const QFont &font);

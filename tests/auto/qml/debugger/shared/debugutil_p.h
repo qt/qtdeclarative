@@ -105,7 +105,7 @@ class QQmlInspectorResultRecipient : public QObject
 {
     Q_OBJECT
 public:
-    QQmlInspectorResultRecipient(QObject *parent = 0) :
+    QQmlInspectorResultRecipient(QObject *parent = nullptr) :
         QObject(parent), lastResponseId(-1), lastResult(false) {}
 
     int lastResponseId;

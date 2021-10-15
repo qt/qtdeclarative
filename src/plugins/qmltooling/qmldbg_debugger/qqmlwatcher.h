@@ -69,7 +69,7 @@ class QQmlWatcher : public QObject
 {
     Q_OBJECT
 public:
-    QQmlWatcher(QObject * = 0);
+    QQmlWatcher(QObject * = nullptr);
 
     bool addWatch(int id, quint32 objectId);
     bool addWatch(int id, quint32 objectId, const QByteArray &property);

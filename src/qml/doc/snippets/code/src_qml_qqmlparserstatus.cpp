@@ -58,7 +58,7 @@ class MyObject : public QObject, public QQmlParserStatus
     Q_INTERFACES(QQmlParserStatus)
 
 public:
-    MyObject(QObject *parent = 0);
+    MyObject(QObject *parent = nullptr);
     // ...
     void classBegin() override;
     void componentComplete() override;

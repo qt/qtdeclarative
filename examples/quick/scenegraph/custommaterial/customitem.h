@@ -65,7 +65,7 @@ class CustomItem : public QQuickItem
     QML_ELEMENT
 
 public:
-    explicit CustomItem(QQuickItem *parent = 0);
+    explicit CustomItem(QQuickItem *parent = nullptr);
 
     qreal zoom() const
     {

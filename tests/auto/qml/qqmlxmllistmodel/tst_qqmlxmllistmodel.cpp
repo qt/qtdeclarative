@@ -690,7 +690,7 @@ class SortFilterProxyModel : public QSortFilterProxyModel
     Q_PROPERTY(QObject *source READ source WRITE setSource)
 
 public:
-    SortFilterProxyModel(QObject *parent = 0) : QSortFilterProxyModel(parent) { sort(0); }
+    SortFilterProxyModel(QObject *parent = nullptr) : QSortFilterProxyModel(parent) { sort(0); }
     QObject *source() const { return sourceModel(); }
     void setSource(QObject *source) { setSourceModel(qobject_cast<QAbstractItemModel *>(source)); }
 };

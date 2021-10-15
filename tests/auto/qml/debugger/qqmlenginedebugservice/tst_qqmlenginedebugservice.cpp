@@ -91,7 +91,7 @@ class JsonTest : public QObject
    Q_PROPERTY(QJsonObject data READ data WRITE setData NOTIFY dataChanged)
 
 public:
-   JsonTest(QObject *parent = 0) : QObject(parent)
+   JsonTest(QObject *parent = nullptr) : QObject(parent)
    {
       m_data["foo"] = QJsonValue(12);
       m_data["ttt"] = QJsonArray({4, 5, 4, 3, 2});

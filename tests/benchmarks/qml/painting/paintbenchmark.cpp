@@ -46,7 +46,7 @@ const int spacing = 36;
 QSizeF size(1000, 800);
 const qreal lineWidth = 1000;
 QString strings[lines];
-QOpenGLWidget *testWidget = 0;
+QOpenGLWidget *testWidget = nullptr;
 
 void paint_QTextLayout(QPainter &p, bool useCache)
 {

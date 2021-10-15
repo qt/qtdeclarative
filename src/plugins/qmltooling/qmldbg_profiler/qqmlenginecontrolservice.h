@@ -71,7 +71,7 @@ public:
         StopWaitingEngine
     };
 
-    QQmlEngineControlServiceImpl(QObject *parent = 0);
+    QQmlEngineControlServiceImpl(QObject *parent = nullptr);
 
 protected:
     friend class QQmlProfilerServiceFactory;

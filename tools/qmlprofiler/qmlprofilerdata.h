@@ -47,7 +47,7 @@ public:
         Done
     };
 
-    explicit QmlProfilerData(QObject *parent = 0);
+    explicit QmlProfilerData(QObject *parent = nullptr);
     ~QmlProfilerData();
 
     int numLoadedEventTypes() const override;

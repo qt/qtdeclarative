@@ -134,7 +134,7 @@ class QQuickDropAreaDrag : public QObject
     QML_ANONYMOUS
     QML_ADDED_IN_VERSION(2, 0)
 public:
-    QQuickDropAreaDrag(QQuickDropAreaPrivate *d, QObject *parent = 0);
+    QQuickDropAreaDrag(QQuickDropAreaPrivate *d, QObject *parent = nullptr);
     ~QQuickDropAreaDrag();
 
     qreal x() const;

@@ -186,7 +186,7 @@ class testQObjectApi : public QObject
     Q_PROPERTY (int qobjectTestProperty READ qobjectTestProperty NOTIFY qobjectTestPropertyChanged)
 
 public:
-    testQObjectApi(QObject* parent = 0)
+    testQObjectApi(QObject *parent = nullptr)
         : QObject(parent), m_testProperty(0)
     {
     }
@@ -209,7 +209,7 @@ class ArbitraryVariantProvider : public QObject
     Q_PROPERTY(QVariant arbitraryVariant READ arbitraryVariant WRITE setArbitraryVariant NOTIFY arbitraryVariantChanged)
 
 public:
-    ArbitraryVariantProvider(QObject *parent = 0)
+    ArbitraryVariantProvider(QObject *parent = nullptr)
         : QObject(parent), m_value(QVariant(QString(QLatin1String("random string value")))), m_count(1)
     {
     }
@@ -290,7 +290,7 @@ class ScarceResourceProvider : public QObject
     Q_PROPERTY(QPixmap largeScarceResource READ largeScarceResource WRITE setLargeScarceResource NOTIFY largeScarceResourceChanged)
 
 public:
-    ScarceResourceProvider(QObject *parent = 0)
+    ScarceResourceProvider(QObject *parent = nullptr)
         : QObject(parent), m_small(100, 100), m_large(1000, 1000), m_colour(1)
     {
         m_small.fill(Qt::blue);

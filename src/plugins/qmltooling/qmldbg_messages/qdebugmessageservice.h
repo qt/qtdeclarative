@@ -63,7 +63,7 @@ class QDebugMessageServiceImpl : public QDebugMessageService
 {
     Q_OBJECT
 public:
-    QDebugMessageServiceImpl(QObject *parent = 0);
+    QDebugMessageServiceImpl(QObject *parent = nullptr);
 
     void sendDebugMessage(QtMsgType type, const QMessageLogContext &ctxt, const QString &buf);
     void synchronizeTime(const QElapsedTimer &otherTimer) override;

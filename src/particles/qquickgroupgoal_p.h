@@ -64,7 +64,7 @@ class QQuickGroupGoalAffector : public QQuickParticleAffector
     QML_NAMED_ELEMENT(GroupGoal)
     QML_ADDED_IN_VERSION(2, 0)
 public:
-    explicit QQuickGroupGoalAffector(QQuickItem *parent = 0);
+    explicit QQuickGroupGoalAffector(QQuickItem *parent = nullptr);
 
     QString goalState() const
     {

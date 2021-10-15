@@ -75,7 +75,7 @@ public:
         SizeRole
     };
 
-    AnimalModel(QObject *parent = 0);
+    AnimalModel(QObject *parent = nullptr);
 //![1]
 
     void addAnimal(const Animal &animal);

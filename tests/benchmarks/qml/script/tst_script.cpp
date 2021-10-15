@@ -106,7 +106,7 @@ class TestObject : public QObject
     Q_PROPERTY(int x READ x WRITE setX)
 
 public:
-    TestObject(QObject *parent = 0);
+    TestObject(QObject *parent = nullptr);
 
     int x();
     void setX(int x) { m_x = x; }
@@ -199,7 +199,7 @@ void tst_script::property_getter()
     }
 }
 
-static TestObject *property_getter_qobject_object = 0;
+static TestObject *property_getter_qobject_object = nullptr;
 static QJSValue property_getter_qobject_method(QScriptContext *, QJSEngine *)
 {
     static int idx = -1;

@@ -46,7 +46,7 @@ class SplineEditor : public QWidget
      Q_PROPERTY(QEasingCurve easingCurve READ easingCurve WRITE setEasingCurve NOTIFY easingCurveChanged);
 
 public:
-    explicit SplineEditor(QWidget *parent = 0);
+    explicit SplineEditor(QWidget *parent = nullptr);
     QString generateCode();
     QStringList presetNames() const;
     QWidget *pointListWidget();

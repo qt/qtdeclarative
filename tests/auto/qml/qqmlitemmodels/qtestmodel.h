@@ -38,10 +38,10 @@ class TestModel: public QAbstractItemModel
     Q_OBJECT
 
 public:
-    TestModel(QObject *parent = 0): QAbstractItemModel(parent),
+    TestModel(QObject *parent = nullptr): QAbstractItemModel(parent),
        fetched(false), rows(10), cols(1), levels(INT_MAX), wrongIndex(false) { init(); }
 
-    TestModel(int _rows, int _cols, QObject *parent = 0): QAbstractItemModel(parent),
+    TestModel(int _rows, int _cols, QObject *parent = nullptr): QAbstractItemModel(parent),
        fetched(false), rows(_rows), cols(_cols), levels(INT_MAX), wrongIndex(false) { init(); }
 
     void init() {

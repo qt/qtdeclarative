@@ -87,7 +87,7 @@ class Q_QUICKPARTICLES_PRIVATE_EXPORT QQuickParticleEmitter : public QQuickItem
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
-    explicit QQuickParticleEmitter(QQuickItem *parent = 0);
+    explicit QQuickParticleEmitter(QQuickItem *parent = nullptr);
     virtual ~QQuickParticleEmitter();
     virtual void emitWindow(int timeStamp);
 

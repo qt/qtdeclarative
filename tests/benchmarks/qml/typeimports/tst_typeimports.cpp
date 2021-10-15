@@ -51,7 +51,7 @@ class TestType1 : public QObject
     Q_PROPERTY(QQmlListProperty<QObject> resources READ resources);
     Q_CLASSINFO("DefaultProperty", "resources");
 public:
-    TestType1(QObject *parent = 0) : QObject(parent) {}
+    TestType1(QObject *parent = nullptr) : QObject(parent) {}
 
     QQmlListProperty<QObject> resources() {
         return QQmlListProperty<QObject>(this, 0, resources_append, 0, 0, 0);
@@ -66,7 +66,7 @@ class TestType2 : public TestType1
 {
     Q_OBJECT
 public:
-    TestType2(QObject *parent = 0) : TestType1(parent) {}
+    TestType2(QObject *parent = nullptr) : TestType1(parent) {}
 };
 
 
@@ -74,14 +74,14 @@ class TestType3 : public TestType1
 {
     Q_OBJECT
 public:
-    TestType3(QObject *parent = 0) : TestType1(parent) {}
+    TestType3(QObject *parent = nullptr) : TestType1(parent) {}
 };
 
 class TestType4 : public TestType1
 {
     Q_OBJECT
 public:
-    TestType4(QObject *parent = 0) : TestType1(parent) {}
+    TestType4(QObject *parent = nullptr) : TestType1(parent) {}
 };
 
 

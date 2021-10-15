@@ -72,7 +72,7 @@ public:
         ParticleSize = -2//Anything less than 0 will do
     };
     Q_ENUM(EmitSize)
-    explicit QQuickTrailEmitter(QQuickItem *parent = 0);
+    explicit QQuickTrailEmitter(QQuickItem *parent = nullptr);
     void emitWindow(int timeStamp) override;
     void reset() override;
 

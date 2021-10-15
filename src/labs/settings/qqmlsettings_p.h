@@ -72,7 +72,7 @@ class Q_LABSSETTINGS_PRIVATE_EXPORT QQmlSettings : public QObject, public QQmlPa
     QML_ADDED_IN_VERSION(1, 0)
 
 public:
-    explicit QQmlSettings(QObject *parent = 0);
+    explicit QQmlSettings(QObject *parent = nullptr);
     ~QQmlSettings();
 
     QString category() const;

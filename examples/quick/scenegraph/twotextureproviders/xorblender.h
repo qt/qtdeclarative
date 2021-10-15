@@ -61,7 +61,7 @@ class XorBlender : public QQuickItem
     QML_ELEMENT
 
 public:
-    explicit XorBlender(QQuickItem *parent = 0);
+    explicit XorBlender(QQuickItem *parent = nullptr);
 
     QQuickItem *source1() const { return m_source1; }
     QQuickItem *source2() const { return m_source2; }

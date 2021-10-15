@@ -66,7 +66,7 @@ class QQuickTurbulenceAffector : public QQuickParticleAffector
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
-    explicit QQuickTurbulenceAffector(QQuickItem *parent = 0);
+    explicit QQuickTurbulenceAffector(QQuickItem *parent = nullptr);
     ~QQuickTurbulenceAffector();
     void affectSystem(qreal dt) override;
 

@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 class QQuickProfilerAdapter : public QQmlAbstractProfilerAdapter {
     Q_OBJECT
 public:
-    QQuickProfilerAdapter(QObject *parent = 0);
+    QQuickProfilerAdapter(QObject *parent = nullptr);
     ~QQuickProfilerAdapter();
     qint64 sendMessages(qint64 until, QList<QByteArray> &messages) override;
     void receiveData(const QVector<QQuickProfilerData> &new_data);

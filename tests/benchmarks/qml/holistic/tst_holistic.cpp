@@ -506,7 +506,7 @@ void tst_holistic::cppToJsIndirect()
     QQmlComponent c(&engine, QString(SRCDIR + QLatin1String("/data/scopeSwitching/ScarceTwo.qml")));
     QObject *obj = c.create();
 
-    ScarceResourceProvider *srp = 0;
+    ScarceResourceProvider *srp = nullptr;
     srp = qobject_cast<ScarceResourceProvider*>(QQmlProperty::read(obj, "a").value<QObject*>());
 
     QBENCHMARK {

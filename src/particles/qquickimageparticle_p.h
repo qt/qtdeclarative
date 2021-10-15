@@ -224,7 +224,7 @@ class QQuickImageParticle : public QQuickParticlePainter
     QML_NAMED_ELEMENT(ImageParticle)
     QML_ADDED_IN_VERSION(2, 0)
 public:
-    explicit QQuickImageParticle(QQuickItem *parent = 0);
+    explicit QQuickImageParticle(QQuickItem *parent = nullptr);
     virtual ~QQuickImageParticle();
 
     enum Status { Null, Ready, Loading, Error };

@@ -82,7 +82,7 @@ public:
     };
     Q_ENUM(AffectableParameters)
 
-    explicit QQuickAttractorAffector(QQuickItem *parent = 0);
+    explicit QQuickAttractorAffector(QQuickItem *parent = nullptr);
 
     qreal strength() const
     {

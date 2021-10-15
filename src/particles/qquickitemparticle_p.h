@@ -67,7 +67,7 @@ class QQuickItemParticle : public QQuickParticlePainter
     QML_ADDED_IN_VERSION(2, 0)
     QML_ATTACHED(QQuickItemParticleAttached)
 public:
-    explicit QQuickItemParticle(QQuickItem *parent = 0);
+    explicit QQuickItemParticle(QQuickItem *parent = nullptr);
     ~QQuickItemParticle();
 
     bool fade() const { return m_fade; }

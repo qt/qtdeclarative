@@ -63,7 +63,7 @@ class QQuickWindowInspector : public QObject
     Q_OBJECT
 
 public:
-    explicit QQuickWindowInspector(QQuickWindow *quickWindow, QObject *parent = 0);
+    explicit QQuickWindowInspector(QQuickWindow *quickWindow, QObject *parent = nullptr);
 
     QQuickItem *overlay() const { return m_overlay; }
     QQuickItem *topVisibleItemAt(const QPointF &pos) const;

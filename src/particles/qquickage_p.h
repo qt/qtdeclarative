@@ -63,7 +63,7 @@ class QQuickAgeAffector : public QQuickParticleAffector
     QML_ADDED_IN_VERSION(2, 0)
 
 public:
-    explicit QQuickAgeAffector(QQuickItem *parent = 0);
+    explicit QQuickAgeAffector(QQuickItem *parent = nullptr);
 
     int lifeLeft() const
     {
