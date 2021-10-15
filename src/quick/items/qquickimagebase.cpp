@@ -51,6 +51,19 @@
 
 QT_BEGIN_NAMESPACE
 
+bool isScalableImageFormat(const QUrl &url)
+{
+    if (url.scheme() == QLatin1String("image")) {
+        // Custom image provider; let the provider deal with it.
+        return false;
+    }
+
+    const QString stringUrl = url.path(QUrl::PrettyDecoded);
+    return stringUrl.endsWith(QLatin1String("svg"))
+        || stringUrl.endsWith(QLatin1String("svgz"))
+        || stringUrl.endsWith(QLatin1String("pdf"));
+}
+
 // This function gives derived classes the chance set the devicePixelRatio
 // if they're not happy with our implementation of it.
 bool QQuickImageBasePrivate::updateDevicePixelRatio(qreal targetDevicePixelRatio)
@@ -58,17 +71,7 @@ bool QQuickImageBasePrivate::updateDevicePixelRatio(qreal targetDevicePixelRatio
     // QQuickImageProvider and SVG and PDF can generate a high resolution image when
     // sourceSize is set. If sourceSize is not set then the provider default size will
     // be used, as usual.
-    bool setDevicePixelRatio = false;
-    if (url.scheme() == QLatin1String("image")) {
-        setDevicePixelRatio = true;
-    } else {
-        QString stringUrl = url.path(QUrl::PrettyDecoded);
-        if (stringUrl.endsWith(QLatin1String("svg")) ||
-            stringUrl.endsWith(QLatin1String("svgz")) ||
-            stringUrl.endsWith(QLatin1String("pdf"))) {
-            setDevicePixelRatio = true;
-        }
-    }
+    const bool setDevicePixelRatio = isScalableImageFormat(url);
 
     if (setDevicePixelRatio)
         devicePixelRatio = targetDevicePixelRatio;
@@ -326,7 +329,7 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
         const qreal targetDevicePixelRatio = (window() ? window()->effectiveDevicePixelRatio() : qApp->devicePixelRatio());
         d->devicePixelRatio = 1.0;
         bool updatedDevicePixelRatio = false;
-        if (d->sourcesize.isValid())
+        if (d->sourcesize.isValid() || isScalableImageFormat(d->url))
             updatedDevicePixelRatio = d->updateDevicePixelRatio(targetDevicePixelRatio);
 
         if (!updatedDevicePixelRatio) {
@@ -343,7 +346,8 @@ void QQuickImageBase::loadPixmap(const QUrl &url, LoadPixmapOptions loadOptions)
                 (loadOptions & HandleDPR) ? d->sourcesize * d->devicePixelRatio : QSize(),
                 options,
                 (loadOptions & UseProviderOptions) ? d->providerOptions : QQuickImageProviderOptions(),
-                d->currentFrame, d->frameCount);
+                d->currentFrame, d->frameCount,
+                d->devicePixelRatio);
 
     if (d->pix.isLoading()) {
         if (d->progress != 0.0) {

@@ -419,7 +419,8 @@ static void maybeRemoveAlpha(QImage *image)
 
 static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *errorString, QSize *impsize, int *frameCount,
                       const QRect &requestRegion, const QSize &requestSize, const QQuickImageProviderOptions &providerOptions,
-                      QQuickImageProviderOptions::AutoTransform *appliedTransform = nullptr, int frame = 0)
+                      QQuickImageProviderOptions::AutoTransform *appliedTransform = nullptr, int frame = 0,
+                      qreal devicePixelRatio = 1.0)
 {
     QImageReader imgio(dev);
     if (providerOptions.autoTransform() != QQuickImageProviderOptions::UsePluginDefaultTransform)
@@ -433,7 +434,7 @@ static bool readImage(const QUrl& url, QIODevice *dev, QImage *image, QString *e
     if (frameCount)
         *frameCount = imgio.imageCount();
 
-    QSize scSize = QQuickImageProviderWithOptions::loadSize(imgio.size(), requestSize, imgio.format(), providerOptions);
+    QSize scSize = QQuickImageProviderWithOptions::loadSize(imgio.size(), requestSize, imgio.format(), providerOptions, devicePixelRatio);
     if (scSize.isValid())
         imgio.setScaledSize(scSize);
     if (!requestRegion.isNull())
@@ -1334,7 +1335,8 @@ void QQuickPixmapData::removeFromCache()
 
 static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, QQmlEngine *engine, const QUrl &url,
                                               const QRect &requestRegion, const QSize &requestSize,
-                                              const QQuickImageProviderOptions &providerOptions, int frame, bool *ok)
+                                              const QQuickImageProviderOptions &providerOptions, int frame, bool *ok,
+                                              qreal devicePixelRatio)
 {
     if (url.scheme() == QLatin1String("image")) {
         QSize readSize;
@@ -1424,7 +1426,8 @@ static QQuickPixmapData* createPixmapDataSync(QQuickPixmap *declarativePixmap, Q
             QImage image;
             QQuickImageProviderOptions::AutoTransform appliedTransform = providerOptions.autoTransform();
             int frameCount;
-            if (readImage(url, &f, &image, &errorString, &readSize, &frameCount, requestRegion, requestSize, providerOptions, &appliedTransform, frame)) {
+            if (readImage(url, &f, &image, &errorString, &readSize, &frameCount, requestRegion, requestSize,
+                          providerOptions, &appliedTransform, frame, devicePixelRatio)) {
                 *ok = true;
                 return new QQuickPixmapData(declarativePixmap, url, QQuickTextureFactory::textureFactoryForImage(image), readSize, requestRegion, requestSize,
                                             providerOptions, appliedTransform, frame, frameCount);
@@ -1641,7 +1644,8 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QRect &reques
 }
 
 void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QRect &requestRegion, const QSize &requestSize,
-                        QQuickPixmap::Options options, const QQuickImageProviderOptions &providerOptions, int frame, int frameCount)
+                        QQuickPixmap::Options options, const QQuickImageProviderOptions &providerOptions, int frame, int frameCount,
+                        qreal devicePixelRatio)
 {
     if (d) {
         d->declarativePixmaps.remove(this);
@@ -1691,7 +1695,7 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QRect &reques
         if (!(options & QQuickPixmap::Asynchronous)) {
             bool ok = false;
             PIXMAP_PROFILE(pixmapStateChanged<QQuickProfiler::PixmapLoadingStarted>(url));
-            d = createPixmapDataSync(this, engine, url, requestRegion, requestSize, providerOptions, frame, &ok);
+            d = createPixmapDataSync(this, engine, url, requestRegion, requestSize, providerOptions, frame, &ok, devicePixelRatio);
             if (ok) {
                 PIXMAP_PROFILE(pixmapLoadingFinished(url, QSize(width(), height())));
                 if (options & QQuickPixmap::Cache)

@@ -172,7 +172,8 @@ public:
     void load(QQmlEngine *, const QUrl &, const QRect &requestRegion, const QSize &requestSize);
     void load(QQmlEngine *, const QUrl &, const QRect &requestRegion, const QSize &requestSize, QQuickPixmap::Options options);
     void load(QQmlEngine *, const QUrl &, const QRect &requestRegion, const QSize &requestSize,
-              QQuickPixmap::Options options, const QQuickImageProviderOptions &providerOptions, int frame = 0, int frameCount = 1);
+              QQuickPixmap::Options options, const QQuickImageProviderOptions &providerOptions, int frame = 0, int frameCount = 1,
+              qreal devicePixelRatio = 1.0);
 
     void clear();
     void clear(QObject *);
@@ -214,7 +215,8 @@ public:
     virtual QQuickTextureFactory *requestTexture(const QString &id, QSize *size, const QSize &requestedSize, const QQuickImageProviderOptions &options);
     virtual QQuickImageResponse *requestImageResponse(const QString &id, const QSize &requestedSize, const QQuickImageProviderOptions &options);
 
-    static QSize loadSize(const QSize &originalSize, const QSize &requestedSize, const QByteArray &format, const QQuickImageProviderOptions &options);
+    static QSize loadSize(const QSize &originalSize, const QSize &requestedSize, const QByteArray &format, const QQuickImageProviderOptions &options,
+                          qreal devicePixelRatio = 1.0);
     static QQuickImageProviderWithOptions *checkedCast(QQuickImageProvider *provider);
 };
 
