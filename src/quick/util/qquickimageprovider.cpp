@@ -681,14 +681,21 @@ QQuickImageResponse *QQuickImageProviderWithOptions::requestImageResponse(const 
     and \a options. If the calculation otherwise concludes that scaled loading
     is not recommended, an invalid size is returned.
 */
-QSize QQuickImageProviderWithOptions::loadSize(const QSize &originalSize, const QSize &requestedSize, const QByteArray &format, const QQuickImageProviderOptions &options)
+QSize QQuickImageProviderWithOptions::loadSize(const QSize &originalSize, const QSize &requestedSize, const QByteArray &format, const QQuickImageProviderOptions &options,
+                                               qreal devicePixelRatio)
 {
     QSize res;
-    if ((requestedSize.width() <= 0 && requestedSize.height() <= 0) || originalSize.isEmpty())
+    const bool formatIsScalable = (format == "svg" || format == "svgz" || format == "pdf");
+    const bool noRequestedSize = requestedSize.width() <= 0 && requestedSize.height() <= 0;
+    if ((noRequestedSize && !formatIsScalable) || originalSize.isEmpty())
         return res;
 
+    // If no sourceSize was set and we're loading an SVG, ensure that we provide
+    // a default size that accounts for DPR so that the image isn't blurry.
+    if (noRequestedSize && formatIsScalable)
+        return originalSize * devicePixelRatio;
+
     const bool preserveAspectCropOrFit = options.preserveAspectRatioCrop() || options.preserveAspectRatioFit();
-    const bool formatIsScalable = (format == "svg" || format == "svgz" || format == "pdf");
 
     if (!preserveAspectCropOrFit && formatIsScalable && !requestedSize.isEmpty())
         return requestedSize;
