@@ -84,6 +84,7 @@ private slots:
     void activeFocusOnClose3();
     void activeFocusOnClosingSeveralPopups();
     void activeFocusAfterExit();
+    void activeFocusOnDelayedEnter();
     void hover_data();
     void hover();
     void wheel_data();
@@ -783,6 +784,30 @@ void tst_QQuickPopup::activeFocusAfterExit()
     QVERIFY(!popup2->isVisible());
     QTRY_VERIFY(!popup2->hasActiveFocus());
     QTRY_VERIFY(popup1->hasActiveFocus());
+}
+
+void tst_QQuickPopup::activeFocusOnDelayedEnter()
+{
+    // Test that after opening two popups, first of which has an animation, does not cause
+    // the first one to receive focus after the animation stops.
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("activeFocusOnDelayedEnter.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup1 = window->property("popup1").value<QQuickPopup*>();
+    QVERIFY(popup1);
+    QSignalSpy openedSpy(popup1, SIGNAL(opened()));
+
+    QQuickPopup *popup2 = window->property("popup2").value<QQuickPopup*>();
+    QVERIFY(popup2);
+
+    popup1->open();
+    popup2->open();
+    openedSpy.wait();
+    QTRY_VERIFY(popup2->hasActiveFocus());
 }
 
 void tst_QQuickPopup::hover_data()
