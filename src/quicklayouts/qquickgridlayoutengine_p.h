@@ -78,7 +78,7 @@ public:
         if (!sizeHintCacheDirty)
             return cachedSizeHints;
 
-        QQuickLayout::effectiveSizeHints_helper(m_item, cachedSizeHints, 0, useFallbackToWidthOrHeight);
+        QQuickLayout::effectiveSizeHints_helper(m_item, cachedSizeHints, nullptr, useFallbackToWidthOrHeight);
         useFallbackToWidthOrHeight = false;
 
         sizeHintCacheDirty = false;
