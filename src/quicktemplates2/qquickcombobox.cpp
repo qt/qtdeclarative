@@ -1649,7 +1649,7 @@ qreal QQuickComboBox::implicitIndicatorHeight() const
 /*!
     \readonly
     \since QtQuick.Controls 2.14 (Qt 5.14)
-    \qmlproperty string QtQuick.Controls::ComboBox::currentValue
+    \qmlproperty var QtQuick.Controls::ComboBox::currentValue
 
     This property holds the value of the current item in the combo box.
 
