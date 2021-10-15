@@ -91,6 +91,7 @@ private slots:
     void wheel();
     void parentDestroyed();
     void nested();
+    void modelessOnModalOnModeless();
     void grabber();
     void cursorShape();
     void componentComplete();
@@ -998,6 +999,48 @@ void tst_QQuickPopup::nested()
 
     QTRY_COMPARE(modelessPopup->isVisible(), false);
     QCOMPARE(modalPopup->isVisible(), true);
+}
+
+void tst_QQuickPopup::modelessOnModalOnModeless()
+{
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("modelessOnModalOnModeless.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickPopup *modelessPopup = window->property("modelessPopup").value<QQuickPopup *>();
+    QVERIFY(modelessPopup);
+
+    QQuickButton *button = window->property("button").value<QQuickButton *>();
+    QVERIFY(button);
+    QQuickPopup *modalPopup = window->property("modalPopup").value<QQuickPopup *>();
+    QVERIFY(modalPopup);
+    QQuickPopup *tooltip = window->property("tooltip").value<QQuickPopup *>();
+    QVERIFY(modalPopup);
+
+    modelessPopup->open();
+    QCOMPARE(modelessPopup->isVisible(), true);
+    QTRY_COMPARE(modelessPopup->isOpened(), true);
+
+    const auto buttonPoint = button->mapToScene(button->boundingRect().center()).toPoint();
+    // click into the button, should not be blocked
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, buttonPoint);
+    QVERIFY(button->isChecked());
+
+    modalPopup->open();
+    QCOMPARE(modalPopup->isVisible(), true);
+    QTRY_COMPARE(modalPopup->isOpened(), true);
+    // click into the button, should be blocked
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, buttonPoint);
+    QVERIFY(button->isChecked());
+
+    tooltip->setVisible(true);
+    QCOMPARE(tooltip->isVisible(), true);
+    QTRY_COMPARE(tooltip->isOpened(), true);
+    // click into the button, should be blocked
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, buttonPoint);
+    QVERIFY(button->isChecked());
 }
 
 // QTBUG-56697
