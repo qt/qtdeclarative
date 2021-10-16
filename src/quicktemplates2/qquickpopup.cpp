@@ -741,6 +741,8 @@ static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQ
         item->setParentItem(parent);
         item->stackBefore(popup->popupItem());
         item->setZ(popup->z());
+        // needed for the virtual keyboard to set a containment mask on the dimmer item
+        parent->setProperty("_q_dimmerItem", QVariant::fromValue<QQuickItem*>(item));
         if (popup->isModal()) {
             item->setAcceptedMouseButtons(Qt::AllButtons);
 #if QT_CONFIG(cursor)
@@ -785,6 +787,10 @@ void QQuickPopupPrivate::destroyOverlay()
 {
     if (dimmer) {
         qCDebug(lcDimmer) << "destroying dimmer" << dimmer;
+        if (QObject *dimmerParentItem = dimmer->parentItem()) {
+            if (dimmerParentItem->property("_q_dimmerItem").value<QQuickItem*>() == dimmer)
+                dimmerParentItem->setProperty("_q_dimmerItem", QVariant());
+        }
         dimmer->setParentItem(nullptr);
         dimmer->deleteLater();
         dimmer = nullptr;
