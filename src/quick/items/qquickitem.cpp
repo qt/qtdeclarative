@@ -6790,16 +6790,17 @@ void QQuickItem::setX(qreal v)
     d->x.removeBindingUnlessInWrapper();
     if (qt_is_nan(v))
         return;
-    if (d->x == v)
+
+    const qreal oldx = d->x;
+    if (oldx == v)
         return;
 
-    qreal oldx = d->x;
     d->x = v;
 
     d->dirty(QQuickItemPrivate::Position);
 
-    geometryChange(QRectF(v, d->y, d->width, d->height),
-                   QRectF(oldx, d->y, d->width, d->height));
+    const qreal y = d->y, w = d->width, h = d->height;
+    geometryChange(QRectF(v, y, w, h), QRectF(oldx, y, w, h));
 }
 
 void QQuickItem::setY(qreal v)
@@ -6808,18 +6809,19 @@ void QQuickItem::setY(qreal v)
     d->y.removeBindingUnlessInWrapper();
     if (qt_is_nan(v))
         return;
-    if (d->y == v)
+
+    const qreal oldy = d->y;
+    if (oldy == v)
         return;
 
-    qreal oldy = d->y;
     d->y = v;
 
     d->dirty(QQuickItemPrivate::Position);
 
     // we use v instead of d->y, as that avoid a method call
     // and we have v anyway in scope
-    geometryChange(QRectF(d->x, v, d->width, d->height),
-                   QRectF(d->x, oldy, d->width, d->height));
+    const qreal x = d->x, w = d->width, h = d->height;
+    geometryChange(QRectF(x, v, w, h), QRectF(x, oldy, w, h));
 }
 
 /*!
@@ -6831,8 +6833,8 @@ void QQuickItem::setPosition(const QPointF &pos)
     if (QPointF(d->x, d->y) == pos)
         return;
 
-    qreal oldx = d->x;
-    qreal oldy = d->y;
+    const qreal oldx = d->x;
+    const qreal oldy = d->y;
 
     /* This preserves the bindings, because that was what the code used to do
        The effect of this is that you can have
@@ -6852,8 +6854,8 @@ void QQuickItem::setPosition(const QPointF &pos)
 
     d->dirty(QQuickItemPrivate::Position);
 
-    geometryChange(QRectF(d->x, d->y, d->width, d->height),
-                   QRectF(oldx, oldy, d->width, d->height));
+    const qreal w = d->width, h = d->height;
+    geometryChange(QRectF(pos.x(), pos.y(), w, h), QRectF(oldx, oldy, w, h));
 }
 
 /* The bindable methods return an object which supports inspection (hasBinding) and
@@ -6888,16 +6890,16 @@ void QQuickItem::setWidth(qreal w)
         return;
 
     d->widthValidFlag = true;
-    if (d->width == w)
+    const qreal oldWidth = d->width;
+    if (oldWidth == w)
         return;
 
-    qreal oldWidth = d->width;
     d->width = w;
 
     d->dirty(QQuickItemPrivate::Size);
 
-    geometryChange(QRectF(d->x, d->y, w, d->height),
-                   QRectF(d->x, d->y, oldWidth, d->height));
+    const qreal x = d->x, y = d->y, h = d->height;
+    geometryChange(QRectF(x, y, w, h), QRectF(x, y, oldWidth, h));
 }
 
 void QQuickItem::resetWidth()
@@ -7022,19 +7024,18 @@ void QQuickItem::setImplicitWidth(qreal w)
         changed = false;
     }
 
-    qreal oldWidth = d->width.valueBypassingBindings();
+    const qreal oldWidth = d->width.valueBypassingBindings();
     Q_ASSERT(!d->width.hasBinding() || QQmlPropertyBinding::isUndefined(d->width.binding()));
     // we need to keep the binding if its undefined (therefore we can't use operator=/setValue)
     d->width.setValueBypassingBindings(w);
 
     d->dirty(QQuickItemPrivate::Size);
 
-    qreal x = d->x.valueBypassingBindings();
-    qreal y = d->y.valueBypassingBindings();
-    qreal width = w;
-    qreal height = d->height.valueBypassingBindings();
-    geometryChange(QRectF(x, y, width, height),
-                   QRectF(x, y, oldWidth, height));
+    const qreal x = d->x.valueBypassingBindings();
+    const qreal y = d->y.valueBypassingBindings();
+    const qreal width = w;
+    const qreal height = d->height.valueBypassingBindings();
+    geometryChange(QRectF(x, y, width, height), QRectF(x, y, oldWidth, height));
 
     if (changed)
         d->implicitWidthChanged();
@@ -7088,16 +7089,16 @@ void QQuickItem::setHeight(qreal h)
         return;
 
     d->heightValidFlag = true;
-    if (d->height == h)
+    const qreal oldHeight = d->height;
+    if (oldHeight == h)
         return;
 
-    qreal oldHeight = d->height;
     d->height = h;
 
     d->dirty(QQuickItemPrivate::Size);
 
-    geometryChange(QRectF(d->x, d->y, d->width, h),
-                   QRectF(d->x, d->y, d->width, oldHeight));
+    const qreal x = d->x, y = d->y, w = d->width;
+    geometryChange(QRectF(x, y, w, h), QRectF(x, y, w, oldHeight));
 }
 
 void QQuickItem::resetHeight()
@@ -7154,17 +7155,17 @@ void QQuickItem::setImplicitHeight(qreal h)
         changed = false;
     }
 
-    qreal oldHeight = d->height.valueBypassingBindings();
+    const qreal oldHeight = d->height.valueBypassingBindings();
     Q_ASSERT(!d->height.hasBinding() || QQmlPropertyBinding::isUndefined(d->height.binding()));
     // we need to keep the binding if its undefined (therefore we can't use operator=/setValue)
     d->height.setValueBypassingBindings(h);
 
     d->dirty(QQuickItemPrivate::Size);
 
-    qreal x = d->x.valueBypassingBindings();
-    qreal y = d->y.valueBypassingBindings();
-    qreal width = d->width.valueBypassingBindings();
-    qreal height = d->height.valueBypassingBindings();
+    const qreal x = d->x.valueBypassingBindings();
+    const qreal y = d->y.valueBypassingBindings();
+    const qreal width = d->width.valueBypassingBindings();
+    const qreal height = d->height.valueBypassingBindings();
     geometryChange(QRectF(x, y, width, height),
                    QRectF(x, y, width, oldHeight));
 
@@ -7203,8 +7204,8 @@ void QQuickItem::setImplicitSize(qreal w, qreal h)
     if (wDone && hDone)
         return;
 
-    qreal oldWidth = width;
-    qreal oldHeight = height;
+    const qreal oldWidth = width;
+    const qreal oldHeight = height;
     if (!wDone) {
         width = w;
         d->width = w;
@@ -7216,8 +7217,8 @@ void QQuickItem::setImplicitSize(qreal w, qreal h)
 
     d->dirty(QQuickItemPrivate::Size);
 
-    qreal x = d->x.valueBypassingBindings();
-    qreal y = d->y.valueBypassingBindings();
+    const qreal x = d->x.valueBypassingBindings();
+    const qreal y = d->y.valueBypassingBindings();
     geometryChange(QRectF(x, y, width, height),
                    QRectF(x, y, oldWidth, oldHeight));
 
@@ -7270,15 +7271,15 @@ void QQuickItem::setSize(const QSizeF &size)
     if (d->width == size.width() && d->height == size.height())
         return;
 
-    qreal oldHeight = d->height;
-    qreal oldWidth = d->width;
+    const qreal oldHeight = d->height;
+    const qreal oldWidth = d->width;
     d->height.setValueBypassingBindings(size.height());
     d->width.setValueBypassingBindings(size.width());
 
     d->dirty(QQuickItemPrivate::Size);
 
-    geometryChange(QRectF(d->x, d->y, d->width, d->height),
-                   QRectF(d->x, d->y, oldWidth, oldHeight));
+    const qreal x = d->x, y = d->y;
+    geometryChange(QRectF(x, y, size.width(), size.height()), QRectF(x, y, oldWidth, oldHeight));
 }
 
 /*!
