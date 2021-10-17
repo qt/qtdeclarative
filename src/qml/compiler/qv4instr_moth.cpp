@@ -154,7 +154,7 @@ void dumpBytecode(const char *code, int len, int nLocals, int nFormals, int /*st
     const char *start = code;
     const char *end = code + len;
     while (code < end) {
-        const CompiledData::CodeOffsetToLine *codeToLine = std::lower_bound(lineNumberMapping.constBegin(), lineNumberMapping.constEnd(), static_cast<uint>(code - start) + 1, findLine) - 1;
+        const auto codeToLine = std::lower_bound(lineNumberMapping.constBegin(), lineNumberMapping.constEnd(), static_cast<uint>(code - start) + 1, findLine) - 1;
         int line = int(codeToLine->line);
         if (line != lastLine)
             lastLine = line;
