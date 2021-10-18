@@ -155,7 +155,17 @@ bool QQmlDelegateChoice::match(int row, int column, const QVariant &value) const
     if (!m_value.isValid() && m_row < 0 && m_column < 0)
         return true;
 
-    const bool roleMatched = (m_value.isValid()) ? value == m_value : true;
+    bool roleMatched = true;
+    if (m_value.isValid()) {
+        roleMatched = (value == m_value);
+        if (!roleMatched) {
+            bool valueOk = false;
+            bool mValueOk = false;
+            roleMatched = (value.toInt(&valueOk) == m_value.toInt(&mValueOk) && valueOk && mValueOk);
+        }
+        if (!roleMatched)
+            roleMatched = (value.toString() == m_value.toString());
+    }
     const bool rowMatched = (m_row < 0 ) ? true : m_row == row;
     const bool columnMatched = (m_column < 0 ) ? true : m_column == column;
     return roleMatched && rowMatched && columnMatched;
