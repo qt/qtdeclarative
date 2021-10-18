@@ -532,21 +532,19 @@ function(qt6_add_qml_module target)
             PROPERTIES QT_RESOURCE_ALIAS "qmldir"
         )
 
-        if(NOT ANDROID)
-            foreach(prefix IN LISTS prefixes)
-                set(resource_targets)
-                    qt6_add_resources(${target} ${qmldir_resource_name}
-                        FILES ${arg_OUTPUT_DIRECTORY}/qmldir
-                        PREFIX "${prefix}"
-                        OUTPUT_TARGETS resource_targets
-                    )
-                    list(APPEND output_targets ${resource_targets})
-                # If we are adding the same file twice, we need a different resource
-                # name for the second one. It has the same QT_RESOURCE_ALIAS but a
-                # different prefix, so we can't put it in the same resource.
-                string(APPEND qmldir_resource_name "_copy")
-            endforeach()
-        endif()
+        foreach(prefix IN LISTS prefixes)
+            set(resource_targets)
+            qt6_add_resources(${target} ${qmldir_resource_name}
+                FILES ${arg_OUTPUT_DIRECTORY}/qmldir
+                PREFIX "${prefix}"
+                OUTPUT_TARGETS resource_targets
+            )
+            list(APPEND output_targets ${resource_targets})
+            # If we are adding the same file twice, we need a different resource
+            # name for the second one. It has the same QT_RESOURCE_ALIAS but a
+            # different prefix, so we can't put it in the same resource.
+            string(APPEND qmldir_resource_name "_copy")
+        endforeach()
     endif()
 
     if(NOT arg_NO_PLUGIN AND NOT arg_NO_CREATE_PLUGIN_TARGET)
@@ -926,8 +924,12 @@ function(_qt_internal_target_generate_qmldir target)
             string(APPEND content "optional ")
         endif()
 
-        _qt_internal_get_qml_plugin_basename(plugin_basename ${plugin_target})
-        string(APPEND content "plugin ${plugin_basename}\n")
+        get_target_property(target_path ${target} QT_QML_MODULE_TARGET_PATH)
+        _qt_internal_get_qml_plugin_output_name(plugin_output_name ${plugin_target}
+            TARGET_PATH "${target_path}"
+            URI "${uri}"
+        )
+        string(APPEND content "plugin ${plugin_output_name}\n")
 
         _qt_internal_qmldir_item(classname QT_QML_MODULE_CLASS_NAME)
     endif()
@@ -1140,32 +1142,15 @@ function(qt6_add_qml_plugin target)
         )
     endif()
 
-    if (ANDROID)
-        # Adjust Qml plugin names on Android similar to qml_plugin.prf which calls
-        # $$qt5LibraryTarget($$TARGET, "qml/$$TARGETPATH/").
-        # Example plugin names:
-        # qtdeclarative
-        #   TARGET_PATH: QtQml/Models
-        #   file name:   libqml_QtQml_Models_modelsplugin_arm64-v8a.so
-        # qtquickcontrols2
-        #   TARGET_PATH: QtQuick/Controls.2/Material
-        #   file name:
-        #     libqml_QtQuick_Controls.2_Material_qtquickcontrols2materialstyleplugin_arm64-v8a.so
-        if(NOT arg_TARGET_PATH AND TARGET "${arg_BACKING_TARGET}")
-            get_target_property(arg_TARGET_PATH ${arg_BACKING_TARGET} QT_QML_MODULE_TARGET_PATH)
-        endif()
-        if(arg_TARGET_PATH)
-            string(REPLACE "/" "_" android_plugin_name_infix_name "${arg_TARGET_PATH}")
-        else()
-            string(REPLACE "." "_" android_plugin_name_infix_name "${arg_URI}")
-        endif()
-
-        _qt_internal_get_qml_plugin_basename(plugin_basename ${target})
-        set(final_android_qml_plugin_name
-            "qml_${android_plugin_name_infix_name}_${plugin_basename}")
+    if(ANDROID)
+        _qt_internal_get_qml_plugin_output_name(plugin_output_name ${target}
+            BACKING_TARGET "${arg_BACKING_TARGET}"
+            TARGET_PATH "${arg_TARGET_PATH}"
+            URI "${arg_URI}"
+        )
         set_target_properties(${target}
             PROPERTIES
-            LIBRARY_OUTPUT_NAME "${final_android_qml_plugin_name}"
+            LIBRARY_OUTPUT_NAME "${plugin_output_name}"
         )
         qt6_android_apply_arch_suffix(${target})
     endif()
@@ -2255,17 +2240,65 @@ function(_qt_internal_add_static_qml_plugin_dependencies plugin_target backing_t
     endif()
 endfunction()
 
-# The function returns the base output name of a qml plugin that will be used as library output
-# name and in a qmldir file as the 'plugin <plugin_basename>' record.
-function(_qt_internal_get_qml_plugin_basename out_var plugin_target)
-    set(plugin_basename)
+# The function returns the output name of a qml plugin that will be used as library output
+# name and in a qmldir file as the 'plugin <plugin_output_name>' record.
+function(_qt_internal_get_qml_plugin_output_name out_var plugin_target)
+    cmake_parse_arguments(arg
+        ""
+        "BACKING_TARGET;TARGET_PATH;URI"
+        ""
+        ${ARGN}
+    )
+    set(plugin_name)
     if(TARGET ${plugin_target})
-        get_target_property(plugin_basename ${plugin_target} OUTPUT_NAME)
+        get_target_property(plugin_name ${plugin_target} OUTPUT_NAME)
     endif()
-    if(NOT plugin_basename)
-        set(plugin_basename "${plugin_target}")
+    if(NOT plugin_name)
+        set(plugin_name "${plugin_target}")
     endif()
-    set(${out_var} "${plugin_basename}" PARENT_SCOPE)
+
+    if(ANDROID)
+        # In Android all plugins are stored in directly the /libs directory. This means that plugin
+        # names must be unique in scope of apk. To make this work we prepend uri-based prefix to
+        # each qml plugin in case if users don't use the manually written qmldir files.
+        get_target_property(no_generate_qmldir ${target} QT_QML_MODULE_NO_GENERATE_QMLDIR)
+        if(TARGET "${arg_BACKING_TARGET}")
+            get_target_property(no_generate_qmldir ${arg_BACKING_TARGET}
+                QT_QML_MODULE_NO_GENERATE_QMLDIR)
+
+            # Adjust Qml plugin names on Android similar to qml_plugin.prf which calls
+            # $$qt5LibraryTarget($$TARGET, "qml/$$TARGETPATH/").
+            # Example plugin names:
+            # qtdeclarative
+            #   TARGET_PATH: QtQml/Models
+            #   file name:   libqml_QtQml_Models_modelsplugin_x86_64.so
+            # qtquickcontrols2
+            #   TARGET_PATH: QtQuick/Controls.2/Material
+            #   file name:
+            #     libqml_QtQuick_Controls.2_Material_qtquickcontrols2materialstyleplugin_x86_64.so
+            if(NOT arg_TARGET_PATH)
+                get_target_property(arg_TARGET_PATH ${arg_BACKING_TARGET}
+                QT_QML_MODULE_TARGET_PATH)
+            endif()
+        endif()
+        if(arg_TARGET_PATH)
+            string(REPLACE "/" "_" android_plugin_name_infix_name "${arg_TARGET_PATH}")
+        else()
+            string(REPLACE "." "_" android_plugin_name_infix_name "${arg_URI}")
+        endif()
+
+        # If plugin supposed to use manually written qmldir file we don't prepend the uri-based
+        # prefix to the plugin output name. User should keep the file name of a QML plugin in
+        # qmldir the same as the name of plugin on a file system. Exception is the
+        # ABI-/platform-specific suffix that has the separate processing and should not be
+        # a part of plugin name in qmldir.
+        if(NOT no_generate_qmldir)
+            set(plugin_name
+                "qml_${android_plugin_name_infix_name}_${plugin_name}")
+        endif()
+    endif()
+
+    set(${out_var} "${plugin_name}" PARENT_SCOPE)
 endfunction()
 
 # Used to add extra dependencies between ${target} and ${dep_target} qml plugins in a static

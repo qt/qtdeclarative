@@ -429,49 +429,59 @@ QString QQmlPluginImporter::resolvePlugin(const QString &qmldirPluginPath, const
         searchPaths.prepend(qmldirPluginPath);
 
     for (const QString &pluginPath : qAsConst(searchPaths)) {
-        QString resolvedPath;
+        QString resolvedBasePath;
         if (pluginPath == QLatin1String(".")) {
             if (qmldirPluginPathIsRelative && !qmldirPluginPath.isEmpty()
                     && qmldirPluginPath != QLatin1String(".")) {
-                resolvedPath = QDir::cleanPath(qmldirPath + u'/' + qmldirPluginPath);
+                resolvedBasePath = QDir::cleanPath(qmldirPath + u'/' + qmldirPluginPath);
             } else {
-                resolvedPath = qmldirPath;
+                resolvedBasePath = qmldirPath;
             }
         } else {
             if (QDir::isRelativePath(pluginPath))
-                resolvedPath = QDir::cleanPath(qmldirPath + u'/' + pluginPath);
+                resolvedBasePath = QDir::cleanPath(qmldirPath + u'/' + pluginPath);
             else
-                resolvedPath = pluginPath;
+                resolvedBasePath = pluginPath;
         }
 
         // hack for resources, should probably go away
-        if (resolvedPath.startsWith(u':'))
-            resolvedPath = QCoreApplication::applicationDirPath();
+        if (resolvedBasePath.startsWith(u':'))
+            resolvedBasePath = QCoreApplication::applicationDirPath();
 
-        if (!resolvedPath.endsWith(u'/'))
-            resolvedPath += u'/';
+        if (!resolvedBasePath.endsWith(u'/'))
+            resolvedBasePath += u'/';
 
-#if defined(Q_OS_ANDROID)
-        if (qmldirPath.size() > 25 && qmldirPath.at(0) == QLatin1Char(':')
-                && qmldirPath.at(1) == QLatin1Char('/') &&
-                qmldirPath.startsWith(QStringLiteral(":/android_rcc_bundle/qml/"),
-                                      Qt::CaseInsensitive)) {
-            QString pluginName = qmldirPath.mid(21) + u'/' + baseName;
-            pluginName.replace(QLatin1Char('/'), QLatin1Char('_'));
-            QString bundledPath = resolvedPath + QLatin1String("lib") + pluginName;
-            for (const QString &suffix : suffixes) {
-                const QString absolutePath = typeLoader->absoluteFilePath(bundledPath + suffix);
-                if (!absolutePath.isEmpty())
-                    return absolutePath;
-            }
-        }
-#endif
-        resolvedPath += prefix + baseName;
+        QString resolvedPath = resolvedBasePath + prefix + baseName;
         for (const QString &suffix : suffixes) {
             const QString absolutePath = typeLoader->absoluteFilePath(resolvedPath + suffix);
             if (!absolutePath.isEmpty())
                 return absolutePath;
         }
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 4, 0)
+#    if defined(Q_OS_ANDROID)
+        if (qmldirPath.size() > 25 && qmldirPath.at(0) == QLatin1Char(':')
+            && qmldirPath.at(1) == QLatin1Char('/')
+            && qmldirPath.startsWith(QStringLiteral(":/android_rcc_bundle/qml/"),
+                                     Qt::CaseInsensitive)) {
+            QString pluginName = qmldirPath.mid(21) + u'/' + baseName;
+            pluginName.replace(QLatin1Char('/'), QLatin1Char('_'));
+            QString bundledPath = resolvedBasePath + QLatin1String("lib") + pluginName;
+            for (const QString &suffix : suffixes) {
+                const QString absolutePath = typeLoader->absoluteFilePath(bundledPath + suffix);
+                if (!absolutePath.isEmpty()) {
+                    qWarning("The implicit resolving of Qml plugin locations using the URI "
+                             "embedded in the filename has been deprecated. Please use the "
+                             "modern CMake API to create QML modules or set the name of "
+                             "QML plugin in qmldir file, that matches the name of plugin "
+                             "on file system. The correct plugin name is '%s'.",
+                             qPrintable(pluginName));
+                    return absolutePath;
+                }
+            }
+        }
+#    endif
+#endif
     }
 
     qCDebug(lcQmlImport) << "resolvePlugin" << "Could not resolve plugin"
