@@ -217,6 +217,7 @@ bool QQuickPinchHandler::wantsPointerEvent(QPointerEvent *event)
  */
 
 /*!
+    \readonly
     \qmlproperty bool QtQuick::PinchHandler::active
 
     This property is \c true when all the constraints (epecially
