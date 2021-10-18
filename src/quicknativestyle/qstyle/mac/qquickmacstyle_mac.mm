@@ -238,50 +238,6 @@ static QLinearGradient titlebarGradientInactive()
     return qt_mac_applicationIsInDarkMode() ? darkGradient : lightGradient;
 }
 
-/*
-    Since macOS 10.14 AppKit is using transparency more extensively, especially for the
-    dark theme. Inactive buttons, for example, are semi-transparent. And we use them to
-    draw tab widget's tab bar. The combination of NSBox (also a part of tab widget)
-    and these transparent buttons gives us an undesired side-effect: an outline of
-    NSBox is visible through transparent buttons. To avoid this, we have this hack below:
-    we clip the area where the line would be visible through the buttons. The area we
-    want to clip away can be described as an intersection of the option's rect and
-    the tab widget's tab bar rect. But some adjustments are required, since those rects
-    are anyway adjusted during the rendering and they are not exactly what you'll see on
-    the screen. Thus this switch-statement inside.
-*/
-static void clipTabBarFrame(const QStyleOption *option, const QMacStyle *style, CGContextRef ctx)
-{
-    Q_ASSERT(option);
-    Q_ASSERT(style);
-    Q_ASSERT(ctx);
-
-    if (qt_mac_applicationIsInDarkMode()) {
-//        QTabWidget *tabWidget = qobject_cast<QTabWidget *>(option->styleObject);
-//        Q_ASSERT(tabWidget);
-
-//        QRect tabBarRect = style->subElementRect(QStyle::SE_TabWidgetTabBar, option, tabWidget).adjusted(2, 0, -3, 0);
-//        switch (tabWidget->tabPosition()) {
-//        case QTabWidget::South:
-//            tabBarRect.setY(tabBarRect.y() + tabBarRect.height() / 2);
-//            break;
-//        case QTabWidget::North:
-//        case QTabWidget::West:
-//            tabBarRect = tabBarRect.adjusted(0, 2, 0, -2);
-//            break;
-//        case QTabWidget::East:
-//            tabBarRect = tabBarRect.adjusted(tabBarRect.width() / 2, 2, tabBarRect.width() / 2, -2);
-//        }
-
-//        const QRegion clipPath = QRegion(option->rect) - tabBarRect;
-//        QVarLengthArray<CGRect, 3> cgRects;
-//        for (const QRect &qtRect : clipPath)
-//            cgRects.push_back(qtRect.toCGRect());
-//        if (cgRects.size())
-//            CGContextClipToRects(ctx, &cgRects[0], size_t(cgRects.size()));
-    }
-}
-
 static const QColor titlebarSeparatorLineActive(111, 111, 111);
 static const QColor titlebarSeparatorLineInactive(131, 131, 131);
 static const QColor darkModeSeparatorLine(88, 88, 88);
@@ -341,15 +297,7 @@ static const QColor lightTabBarTabLineSelected(189, 189, 189);
 static const QColor darkTabBarTabLineSelected(90, 90, 90);
 static const QColor tabBarTabLineSelected() { return isDarkMode() ? darkTabBarTabLineSelected : lightTabBarTabLineSelected; }
 
-static const QColor tabBarCloseButtonBackgroundHovered(162, 162, 162);
-static const QColor tabBarCloseButtonBackgroundPressed(153, 153, 153);
-static const QColor tabBarCloseButtonBackgroundSelectedHovered(192, 192, 192);
-static const QColor tabBarCloseButtonBackgroundSelectedPressed(181, 181, 181);
-static const QColor tabBarCloseButtonCross(100, 100, 100);
-static const QColor tabBarCloseButtonCrossSelected(115, 115, 115);
-
 static const int closeButtonSize = 14;
-static const qreal closeButtonCornerRadius = 2.0;
 
 #ifndef QT_NO_ACCESSIBILITY // This ifdef to avoid "unused function" warning.
 QBrush brushForToolButton(bool isOnKeyWindow)
@@ -366,25 +314,6 @@ QBrush brushForToolButton(bool isOnKeyWindow)
 
 static const int headerSectionArrowHeight = 6;
 static const int headerSectionSeparatorInset = 2;
-
-// One for each of QStyleHelper::WidgetSizePolicy
-static const QMarginsF comboBoxFocusRingMargins[3] = {
-    { 0.5, 2, 3.5, 4 },
-    { 0.5, 1, 2.5, 4 },
-    { 0.5, 1.5, 2.5, 3.5 }
-};
-
-static const QMarginsF pullDownButtonShadowMargins[3] = {
-    { 0.5, -1, 0.5, 2 },
-    { 0.5, -1.5, 0.5, 2.5 },
-    { 0.5, 0, 0.5, 1 }
-};
-
-static const QMarginsF pushButtonShadowMargins[3] = {
-    { 1.5, -1.5, 1.5, 4.5 },
-    { 1.5, -1, 1.5, 4 },
-    { 1.5, 0.5, 1.5, 2.5 }
-};
 
 // These are frame heights as reported by Xcode 9's Interface Builder.
 // Alignemnet rectangle's heights match for push and popup buttons
@@ -496,56 +425,6 @@ static bool setupSlider(NSSlider *slider, const QStyleOptionSlider *sl)
     [slider layoutSubtreeIfNeeded];
 
     return true;
-}
-
-static bool isInMacUnifiedToolbarArea(QWindow *window, int windowY)
-{
-    QPlatformNativeInterface *nativeInterface = QGuiApplication::platformNativeInterface();
-    QPlatformNativeInterface::NativeResourceForIntegrationFunction function =
-        nativeInterface->nativeResourceFunctionForIntegration("testContentBorderPosition");
-    if (!function)
-        return false; // Not Cocoa platform plugin.
-
-    typedef bool (*TestContentBorderPositionFunction)(QWindow *, int);
-    return (reinterpret_cast<TestContentBorderPositionFunction>(function))(window, windowY);
-}
-
-
-static void drawTabCloseButton(QPainter *p, bool hover, bool selected, bool pressed, bool documentMode)
-{
-    p->setRenderHints(QPainter::Antialiasing);
-    QRect rect(0, 0, closeButtonSize, closeButtonSize);
-    const int width = rect.width();
-    const int height = rect.height();
-
-    if (hover) {
-        // draw background circle
-        QColor background;
-        if (selected) {
-            if (documentMode)
-                background = pressed ? tabBarCloseButtonBackgroundSelectedPressed : tabBarCloseButtonBackgroundSelectedHovered;
-            else
-                background = QColor(255, 255, 255, pressed ? 150 : 100); // Translucent white
-        } else {
-            background = pressed ? tabBarCloseButtonBackgroundPressed : tabBarCloseButtonBackgroundHovered;
-            if (!documentMode)
-                background = background.lighter(pressed ? 135 : 140); // Lighter tab background, lighter color
-        }
-
-        p->setPen(Qt::transparent);
-        p->setBrush(background);
-        p->drawRoundedRect(rect, closeButtonCornerRadius, closeButtonCornerRadius);
-    }
-
-    // draw cross
-    const int margin = 3;
-    QPen crossPen;
-    crossPen.setColor(selected ? (documentMode ? tabBarCloseButtonCrossSelected : Qt::white) : tabBarCloseButtonCross);
-    crossPen.setWidthF(1.1);
-    crossPen.setCapStyle(Qt::FlatCap);
-    p->setPen(crossPen);
-    p->drawLine(margin, margin, width - margin, height - margin);
-    p->drawLine(margin, height - margin, width - margin, margin);
 }
 
 QRect rotateTabPainter(QPainter *p, QStyleOptionTab::Shape shape, QRect tabRect)
@@ -1100,34 +979,6 @@ static QSize qt_aqua_get_known_size(QStyle::ContentsType ct, const QStyleOption 
     return ret;
 }
 
-#if defined(QMAC_QAQUASTYLE_SIZE_CONSTRAIN) || defined(DEBUG_SIZE_CONSTRAINT)
-static QStyleHelper::WidgetSizePolicy qt_aqua_guess_size(
-        const QSize &large,
-        const QSize &small,
-        const QSize &mini)
-{
-    if (large == QSize(-1, -1)) {
-        if (small != QSize(-1, -1))
-            return QStyleHelper::SizeSmall;
-        if (mini != QSize(-1, -1))
-            return QStyleHelper::SizeMini;
-        return QStyleHelper::SizeDefault;
-    } else if (small == QSize(-1, -1)) {
-        if (mini != QSize(-1, -1))
-            return QStyleHelper::SizeMini;
-        return QStyleHelper::SizeLarge;
-    } else if (mini == QSize(-1, -1)) {
-        return QStyleHelper::SizeLarge;
-    }
-
-    if (qEnvironmentVariableIsSet("QWIDGET_ALL_SMALL"))
-        return QStyleHelper::SizeSmall;
-    else if (qEnvironmentVariableIsSet("QWIDGET_ALL_MINI"))
-        return QStyleHelper::SizeMini;
-
-    return QStyleHelper::SizeLarge;
-}
-#endif
 
 QPainterPath QMacStylePrivate::windowPanelPath(const QRectF &r) const
 {
@@ -1292,7 +1143,7 @@ QStyleHelper::WidgetSizePolicy QMacStylePrivate::effectiveAquaSizeConstrain(cons
 }
 
 QStyleHelper::WidgetSizePolicy QMacStylePrivate::aquaSizeConstrain(const QStyleOption *option,
-                                       QStyle::ContentsType ct, QSize szHint, QSize *insz) const
+                                       QStyle::ContentsType /*ct*/, QSize /*szHint*/, QSize * /*insz*/) const
 {
     if (!option)
         return QStyleHelper::SizeLarge;
@@ -4099,7 +3950,6 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
         }
         break;
     case CE_ToolBar: {
-        const QStyleOptionToolBar *toolBar = qstyleoption_cast<const QStyleOptionToolBar *>(opt);
         const bool isDarkMode = qt_mac_applicationIsInDarkMode();
 
         // Unified title and toolbar drawing. In this mode the cocoa platform plugin will
@@ -4696,9 +4546,7 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                 QMacStylePrivate::scrollBars.append(QPointer<QObject>(opt->styleObject));
 
             static const CGFloat knobWidths[] = { 7.0, 5.0, 5.0 };
-            static const CGFloat expandedKnobWidths[] = { 11.0, 9.0, 9.0 };
             const auto cocoaSize = d->effectiveAquaSizeConstrain(opt);
-            const CGFloat maxExpandScale = expandedKnobWidths[cocoaSize] / knobWidths[cocoaSize];
 
             const bool isTransient = proxy()->styleHint(SH_ScrollBar_Transient, opt);
 //            if (!isTransient)
