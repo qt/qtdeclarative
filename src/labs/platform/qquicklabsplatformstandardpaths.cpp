@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformstandardpaths_p.h"
+#include "qquicklabsplatformstandardpaths_p.h"
 
 #include <QtQml/qqmlengine.h>
 
@@ -46,7 +46,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype StandardPaths
     \inherits QtObject
-//!     \instantiates QQuickPlatformStandardPaths
+//!     \instantiates QQuickLabsPlatformStandardPaths
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief Provides access to the standard system paths.
@@ -75,15 +75,15 @@ static QList<QUrl> toUrlList(const QStringList &paths)
     return urls;
 }
 
-QQuickPlatformStandardPaths::QQuickPlatformStandardPaths(QObject *parent)
+QQuickLabsPlatformStandardPaths::QQuickLabsPlatformStandardPaths(QObject *parent)
     : QObject(parent)
 {
 }
 
-QObject *QQuickPlatformStandardPaths::create(QQmlEngine *engine, QJSEngine *scriptEngine)
+QObject *QQuickLabsPlatformStandardPaths::create(QQmlEngine *engine, QJSEngine *scriptEngine)
 {
     Q_UNUSED(scriptEngine);
-    return new QQuickPlatformStandardPaths(engine);
+    return new QQuickLabsPlatformStandardPaths(engine);
 }
 
 /*!
@@ -93,7 +93,7 @@ QObject *QQuickPlatformStandardPaths::create(QQmlEngine *engine, QJSEngine *scri
 
     \sa QStandardPaths::displayName()
 */
-QString QQuickPlatformStandardPaths::displayName(QStandardPaths::StandardLocation type)
+QString QQuickLabsPlatformStandardPaths::displayName(QStandardPaths::StandardLocation type)
 {
     return QStandardPaths::displayName(type);
 }
@@ -105,7 +105,7 @@ QString QQuickPlatformStandardPaths::displayName(QStandardPaths::StandardLocatio
 
     \sa QStandardPaths::findExecutable()
 */
-QUrl QQuickPlatformStandardPaths::findExecutable(const QString &executableName, const QStringList &paths)
+QUrl QQuickLabsPlatformStandardPaths::findExecutable(const QString &executableName, const QStringList &paths)
 {
     return QUrl::fromLocalFile(QStandardPaths::findExecutable(executableName, paths));
 }
@@ -117,7 +117,7 @@ QUrl QQuickPlatformStandardPaths::findExecutable(const QString &executableName, 
 
     \sa QStandardPaths::locate()
 */
-QUrl QQuickPlatformStandardPaths::locate(QStandardPaths::StandardLocation type, const QString &fileName, QStandardPaths::LocateOptions options)
+QUrl QQuickLabsPlatformStandardPaths::locate(QStandardPaths::StandardLocation type, const QString &fileName, QStandardPaths::LocateOptions options)
 {
     return QUrl::fromLocalFile(QStandardPaths::locate(type, fileName, options));
 }
@@ -129,7 +129,7 @@ QUrl QQuickPlatformStandardPaths::locate(QStandardPaths::StandardLocation type, 
 
     \sa QStandardPaths::locateAll()
 */
-QList<QUrl> QQuickPlatformStandardPaths::locateAll(QStandardPaths::StandardLocation type, const QString &fileName, QStandardPaths::LocateOptions options)
+QList<QUrl> QQuickLabsPlatformStandardPaths::locateAll(QStandardPaths::StandardLocation type, const QString &fileName, QStandardPaths::LocateOptions options)
 {
     return toUrlList(QStandardPaths::locateAll(type, fileName, options));
 }
@@ -141,7 +141,7 @@ QList<QUrl> QQuickPlatformStandardPaths::locateAll(QStandardPaths::StandardLocat
 
     \sa QStandardPaths::setTestModeEnabled()
 */
-void QQuickPlatformStandardPaths::setTestModeEnabled(bool testMode)
+void QQuickLabsPlatformStandardPaths::setTestModeEnabled(bool testMode)
 {
     QStandardPaths::setTestModeEnabled(testMode);
 }
@@ -153,7 +153,7 @@ void QQuickPlatformStandardPaths::setTestModeEnabled(bool testMode)
 
     \sa QStandardPaths::standardLocations()
 */
-QList<QUrl> QQuickPlatformStandardPaths::standardLocations(QStandardPaths::StandardLocation type)
+QList<QUrl> QQuickLabsPlatformStandardPaths::standardLocations(QStandardPaths::StandardLocation type)
 {
     return toUrlList(QStandardPaths::standardLocations(type));
 }
@@ -165,7 +165,7 @@ QList<QUrl> QQuickPlatformStandardPaths::standardLocations(QStandardPaths::Stand
 
     \sa QStandardPaths::writableLocation()
 */
-QUrl QQuickPlatformStandardPaths::writableLocation(QStandardPaths::StandardLocation type)
+QUrl QQuickLabsPlatformStandardPaths::writableLocation(QStandardPaths::StandardLocation type)
 {
     return QUrl::fromLocalFile(QStandardPaths::writableLocation(type));
 }

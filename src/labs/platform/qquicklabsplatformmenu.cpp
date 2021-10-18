@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformmenu_p.h"
-#include "qquickplatformmenubar_p.h"
-#include "qquickplatformmenuitem_p.h"
-#include "qquickplatformiconloader_p.h"
+#include "qquicklabsplatformmenu_p.h"
+#include "qquicklabsplatformmenubar_p.h"
+#include "qquicklabsplatformmenuitem_p.h"
+#include "qquicklabsplatformiconloader_p.h"
 
 #include <QtCore/qloggingcategory.h>
 #include <QtGui/qicon.h>
@@ -55,7 +55,7 @@
 #include "widgets/qwidgetplatform_p.h"
 
 #if QT_CONFIG(systemtrayicon)
-#include "qquickplatformsystemtrayicon_p.h"
+#include "qquicklabsplatformsystemtrayicon_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -63,7 +63,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Menu
     \inherits QtObject
-//! \instantiates QQuickPlatformMenu
+//! \instantiates QQuickLabsPlatformMenu
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native menu.
@@ -194,7 +194,7 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformMenus)
 
-QQuickPlatformMenu::QQuickPlatformMenu(QObject *parent)
+QQuickLabsPlatformMenu::QQuickLabsPlatformMenu(QObject *parent)
     : QObject(parent),
       m_complete(false),
       m_enabled(true),
@@ -210,7 +210,7 @@ QQuickPlatformMenu::QQuickPlatformMenu(QObject *parent)
 {
 }
 
-QQuickPlatformMenu::~QQuickPlatformMenu()
+QQuickLabsPlatformMenu::~QQuickLabsPlatformMenu()
 {
     if (m_menuBar)
         m_menuBar->removeMenu(this);
@@ -225,21 +225,21 @@ QQuickPlatformMenu::~QQuickPlatformMenu()
     m_handle = nullptr;
 }
 
-void QQuickPlatformMenu::unparentSubmenus()
+void QQuickLabsPlatformMenu::unparentSubmenus()
 {
-    for (QQuickPlatformMenuItem *item : qAsConst(m_items)) {
-        if (QQuickPlatformMenu *subMenu = item->subMenu())
+    for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items)) {
+        if (QQuickLabsPlatformMenu *subMenu = item->subMenu())
             subMenu->setParentMenu(nullptr);
         item->setMenu(nullptr);
     }
 }
 
-QPlatformMenu *QQuickPlatformMenu::handle() const
+QPlatformMenu *QQuickLabsPlatformMenu::handle() const
 {
     return m_handle;
 }
 
-QPlatformMenu * QQuickPlatformMenu::create()
+QPlatformMenu * QQuickLabsPlatformMenu::create()
 {
     if (!m_handle) {
         if (m_menuBar && m_menuBar->handle())
@@ -264,10 +264,10 @@ QPlatformMenu * QQuickPlatformMenu::create()
         qCDebug(qtLabsPlatformMenus) << "Menu ->" << m_handle;
 
         if (m_handle) {
-            connect(m_handle, &QPlatformMenu::aboutToShow, this, &QQuickPlatformMenu::aboutToShow);
-            connect(m_handle, &QPlatformMenu::aboutToHide, this, &QQuickPlatformMenu::aboutToHide);
+            connect(m_handle, &QPlatformMenu::aboutToShow, this, &QQuickLabsPlatformMenu::aboutToShow);
+            connect(m_handle, &QPlatformMenu::aboutToHide, this, &QQuickLabsPlatformMenu::aboutToHide);
 
-            for (QQuickPlatformMenuItem *item : qAsConst(m_items))
+            for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items))
                 m_handle->insertMenuItem(item->create(), nullptr);
 
             if (m_menuItem) {
@@ -279,7 +279,7 @@ QPlatformMenu * QQuickPlatformMenu::create()
     return m_handle;
 }
 
-void QQuickPlatformMenu::destroy()
+void QQuickLabsPlatformMenu::destroy()
 {
     if (!m_handle)
         return;
@@ -292,7 +292,7 @@ void QQuickPlatformMenu::destroy()
     m_handle = nullptr;
 }
 
-void QQuickPlatformMenu::sync()
+void QQuickLabsPlatformMenu::sync()
 {
     if (!m_complete || !create())
         return;
@@ -311,13 +311,13 @@ void QQuickPlatformMenu::sync()
         m_systemTrayIcon->handle()->updateMenu(m_handle);
 #endif
 
-    for (QQuickPlatformMenuItem *item : qAsConst(m_items))
+    for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items))
         item->sync();
 }
 
 /*!
     \qmldefault
-    \qmlproperty list<Object> Qt.labs.platform::Menu::data
+    \qmlproperty list<QtObject> Qt.labs.platform::Menu::data
 
     This default property holds the list of all objects declared as children of
     the menu. The data property includes objects that are not \l MenuItem instances,
@@ -325,7 +325,7 @@ void QQuickPlatformMenu::sync()
 
     \sa items
 */
-QQmlListProperty<QObject> QQuickPlatformMenu::data()
+QQmlListProperty<QObject> QQuickLabsPlatformMenu::data()
 {
     return QQmlListProperty<QObject>(this, nullptr, data_append, data_count, data_at, data_clear);
 }
@@ -335,9 +335,9 @@ QQmlListProperty<QObject> QQuickPlatformMenu::data()
 
     This property holds the list of items in the menu.
 */
-QQmlListProperty<QQuickPlatformMenuItem> QQuickPlatformMenu::items()
+QQmlListProperty<QQuickLabsPlatformMenuItem> QQuickLabsPlatformMenu::items()
 {
-    return QQmlListProperty<QQuickPlatformMenuItem>(this, nullptr, items_append, items_count, items_at, items_clear);
+    return QQmlListProperty<QQuickLabsPlatformMenuItem>(this, nullptr, items_append, items_count, items_at, items_clear);
 }
 
 /*!
@@ -347,12 +347,12 @@ QQmlListProperty<QQuickPlatformMenuItem> QQuickPlatformMenu::items()
     This property holds the menubar that the menu belongs to, or \c null if the
     menu is not in a menubar.
 */
-QQuickPlatformMenuBar *QQuickPlatformMenu::menuBar() const
+QQuickLabsPlatformMenuBar *QQuickLabsPlatformMenu::menuBar() const
 {
     return m_menuBar;
 }
 
-void QQuickPlatformMenu::setMenuBar(QQuickPlatformMenuBar *menuBar)
+void QQuickLabsPlatformMenu::setMenuBar(QQuickLabsPlatformMenuBar *menuBar)
 {
     if (m_menuBar == menuBar)
         return;
@@ -369,12 +369,12 @@ void QQuickPlatformMenu::setMenuBar(QQuickPlatformMenuBar *menuBar)
     This property holds the parent menu that the menu belongs to, or \c null if the
     menu is not a sub-menu.
 */
-QQuickPlatformMenu *QQuickPlatformMenu::parentMenu() const
+QQuickLabsPlatformMenu *QQuickLabsPlatformMenu::parentMenu() const
 {
     return m_parentMenu;
 }
 
-void QQuickPlatformMenu::setParentMenu(QQuickPlatformMenu *menu)
+void QQuickLabsPlatformMenu::setParentMenu(QQuickLabsPlatformMenu *menu)
 {
     if (m_parentMenu == menu)
         return;
@@ -391,12 +391,12 @@ void QQuickPlatformMenu::setParentMenu(QQuickPlatformMenu *menu)
     This property holds the system tray icon that the menu belongs to, or \c null
     if the menu is not in a system tray icon.
 */
-QQuickPlatformSystemTrayIcon *QQuickPlatformMenu::systemTrayIcon() const
+QQuickLabsPlatformSystemTrayIcon *QQuickLabsPlatformMenu::systemTrayIcon() const
 {
     return m_systemTrayIcon;
 }
 
-void QQuickPlatformMenu::setSystemTrayIcon(QQuickPlatformSystemTrayIcon *icon)
+void QQuickLabsPlatformMenu::setSystemTrayIcon(QQuickLabsPlatformSystemTrayIcon *icon)
 {
     if (m_systemTrayIcon == icon)
         return;
@@ -412,11 +412,11 @@ void QQuickPlatformMenu::setSystemTrayIcon(QQuickPlatformSystemTrayIcon *icon)
 
     This property holds the item that presents the menu (in a parent menu).
 */
-QQuickPlatformMenuItem *QQuickPlatformMenu::menuItem() const
+QQuickLabsPlatformMenuItem *QQuickLabsPlatformMenu::menuItem() const
 {
     if (!m_menuItem) {
-        QQuickPlatformMenu *that = const_cast<QQuickPlatformMenu *>(this);
-        m_menuItem = new QQuickPlatformMenuItem(that);
+        QQuickLabsPlatformMenu *that = const_cast<QQuickLabsPlatformMenu *>(this);
+        m_menuItem = new QQuickLabsPlatformMenuItem(that);
         m_menuItem->setSubMenu(that);
         m_menuItem->setText(m_title);
         m_menuItem->setIcon(icon());
@@ -432,12 +432,12 @@ QQuickPlatformMenuItem *QQuickPlatformMenu::menuItem() const
 
     This property holds whether the menu is enabled. The default value is \c true.
 */
-bool QQuickPlatformMenu::isEnabled() const
+bool QQuickLabsPlatformMenu::isEnabled() const
 {
     return m_enabled;
 }
 
-void QQuickPlatformMenu::setEnabled(bool enabled)
+void QQuickLabsPlatformMenu::setEnabled(bool enabled)
 {
     if (m_enabled == enabled)
         return;
@@ -455,12 +455,12 @@ void QQuickPlatformMenu::setEnabled(bool enabled)
 
     This property holds whether the menu is visible. The default value is \c true.
 */
-bool QQuickPlatformMenu::isVisible() const
+bool QQuickLabsPlatformMenu::isVisible() const
 {
     return m_visible;
 }
 
-void QQuickPlatformMenu::setVisible(bool visible)
+void QQuickLabsPlatformMenu::setVisible(bool visible)
 {
     if (m_visible == visible)
         return;
@@ -478,12 +478,12 @@ void QQuickPlatformMenu::setVisible(bool visible)
 
     This property holds the minimum width of the menu. The default value is \c -1 (no minimum width).
 */
-int QQuickPlatformMenu::minimumWidth() const
+int QQuickLabsPlatformMenu::minimumWidth() const
 {
     return m_minimumWidth;
 }
 
-void QQuickPlatformMenu::setMinimumWidth(int width)
+void QQuickLabsPlatformMenu::setMinimumWidth(int width)
 {
     if (m_minimumWidth == width)
         return;
@@ -502,12 +502,12 @@ void QQuickPlatformMenu::setMinimumWidth(int width)
     \value Menu.DefaultMenu A normal menu (default).
     \value Menu.EditMenu An edit menu with pre-populated cut, copy and paste items.
 */
-QPlatformMenu::MenuType QQuickPlatformMenu::type() const
+QPlatformMenu::MenuType QQuickLabsPlatformMenu::type() const
 {
     return m_type;
 }
 
-void QQuickPlatformMenu::setType(QPlatformMenu::MenuType type)
+void QQuickLabsPlatformMenu::setType(QPlatformMenu::MenuType type)
 {
     if (m_type == type)
         return;
@@ -522,12 +522,12 @@ void QQuickPlatformMenu::setType(QPlatformMenu::MenuType type)
 
     This property holds the menu's title.
 */
-QString QQuickPlatformMenu::title() const
+QString QQuickLabsPlatformMenu::title() const
 {
     return m_title;
 }
 
-void QQuickPlatformMenu::setTitle(const QString &title)
+void QQuickLabsPlatformMenu::setTitle(const QString &title)
 {
     if (m_title == title)
         return;
@@ -547,12 +547,12 @@ void QQuickPlatformMenu::setTitle(const QString &title)
 
     \sa title
 */
-QFont QQuickPlatformMenu::font() const
+QFont QQuickLabsPlatformMenu::font() const
 {
     return m_font;
 }
 
-void QQuickPlatformMenu::setFont(const QFont& font)
+void QQuickLabsPlatformMenu::setFont(const QFont& font)
 {
     if (m_font == font)
         return;
@@ -570,15 +570,15 @@ void QQuickPlatformMenu::setFont(const QFont& font)
 
     This property holds the menu item's icon.
 */
-QQuickPlatformIcon QQuickPlatformMenu::icon() const
+QQuickLabsPlatformIcon QQuickLabsPlatformMenu::icon() const
 {
     if (!m_iconLoader)
-        return QQuickPlatformIcon();
+        return QQuickLabsPlatformIcon();
 
     return iconLoader()->icon();
 }
 
-void QQuickPlatformMenu::setIcon(const QQuickPlatformIcon &icon)
+void QQuickLabsPlatformMenu::setIcon(const QQuickLabsPlatformIcon &icon)
 {
     if (iconLoader()->icon() == icon)
         return;
@@ -595,7 +595,7 @@ void QQuickPlatformMenu::setIcon(const QQuickPlatformIcon &icon)
 
     Adds an \a item to the end of the menu.
 */
-void QQuickPlatformMenu::addItem(QQuickPlatformMenuItem *item)
+void QQuickLabsPlatformMenu::addItem(QQuickLabsPlatformMenuItem *item)
 {
     insertItem(m_items.count(), item);
 }
@@ -605,7 +605,7 @@ void QQuickPlatformMenu::addItem(QQuickPlatformMenuItem *item)
 
     Inserts an \a item at the specified \a index in the menu.
 */
-void QQuickPlatformMenu::insertItem(int index, QQuickPlatformMenuItem *item)
+void QQuickLabsPlatformMenu::insertItem(int index, QQuickLabsPlatformMenuItem *item)
 {
     if (!item || m_items.contains(item))
         return;
@@ -614,7 +614,7 @@ void QQuickPlatformMenu::insertItem(int index, QQuickPlatformMenuItem *item)
     m_data.append(item);
     item->setMenu(this);
     if (m_handle && item->create()) {
-        QQuickPlatformMenuItem *before = m_items.value(index + 1);
+        QQuickLabsPlatformMenuItem *before = m_items.value(index + 1);
         m_handle->insertMenuItem(item->handle(), before ? before->create() : nullptr);
     }
     sync();
@@ -626,7 +626,7 @@ void QQuickPlatformMenu::insertItem(int index, QQuickPlatformMenuItem *item)
 
     Removes an \a item from the menu.
 */
-void QQuickPlatformMenu::removeItem(QQuickPlatformMenuItem *item)
+void QQuickLabsPlatformMenu::removeItem(QQuickLabsPlatformMenuItem *item)
 {
     if (!item || !m_items.removeOne(item))
         return;
@@ -644,7 +644,7 @@ void QQuickPlatformMenu::removeItem(QQuickPlatformMenuItem *item)
 
     Adds a \a submenu to the end of the menu.
 */
-void QQuickPlatformMenu::addMenu(QQuickPlatformMenu *menu)
+void QQuickLabsPlatformMenu::addMenu(QQuickLabsPlatformMenu *menu)
 {
     insertMenu(m_items.count(), menu);
 }
@@ -654,7 +654,7 @@ void QQuickPlatformMenu::addMenu(QQuickPlatformMenu *menu)
 
     Inserts a \a submenu at the specified \a index in the menu.
 */
-void QQuickPlatformMenu::insertMenu(int index, QQuickPlatformMenu *menu)
+void QQuickLabsPlatformMenu::insertMenu(int index, QQuickLabsPlatformMenu *menu)
 {
     if (!menu)
         return;
@@ -668,7 +668,7 @@ void QQuickPlatformMenu::insertMenu(int index, QQuickPlatformMenu *menu)
 
     Removes a \a submenu from the menu.
 */
-void QQuickPlatformMenu::removeMenu(QQuickPlatformMenu *menu)
+void QQuickLabsPlatformMenu::removeMenu(QQuickLabsPlatformMenu *menu)
 {
     if (!menu)
         return;
@@ -682,12 +682,12 @@ void QQuickPlatformMenu::removeMenu(QQuickPlatformMenu *menu)
 
     Removes all items from the menu.
 */
-void QQuickPlatformMenu::clear()
+void QQuickLabsPlatformMenu::clear()
 {
     if (m_items.isEmpty())
         return;
 
-    for (QQuickPlatformMenuItem *item : qAsConst(m_items)) {
+    for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items)) {
         m_data.removeOne(item);
         if (m_handle)
             m_handle->removeMenuItem(item->handle());
@@ -711,7 +711,7 @@ void QQuickPlatformMenu::clear()
 
     Opens the menu at the specified \a target item, optionally aligned to a menu \a item.
 */
-void QQuickPlatformMenu::open(QQmlV4Function *args)
+void QQuickLabsPlatformMenu::open(QQmlV4Function *args)
 {
     if (!m_handle)
         return;
@@ -732,12 +732,12 @@ void QQuickPlatformMenu::open(QQmlV4Function *args)
             targetItem = qobject_cast<QQuickItem *>(object->object());
     }
 
-    QQuickPlatformMenuItem *menuItem = nullptr;
+    QQuickLabsPlatformMenuItem *menuItem = nullptr;
     if (args->length() > 1) {
         QV4::ScopedValue value(scope, (*args)[1]);
         QV4::Scoped<QV4::QObjectWrapper> object(scope, value->as<QV4::QObjectWrapper>());
         if (object)
-            menuItem = qobject_cast<QQuickPlatformMenuItem *>(object->object());
+            menuItem = qobject_cast<QQuickLabsPlatformMenuItem *>(object->object());
     }
 
     QPoint offset;
@@ -765,17 +765,17 @@ void QQuickPlatformMenu::open(QQmlV4Function *args)
 
     Closes the menu.
 */
-void QQuickPlatformMenu::close()
+void QQuickLabsPlatformMenu::close()
 {
     if (m_handle)
         m_handle->dismiss();
 }
 
-void QQuickPlatformMenu::classBegin()
+void QQuickLabsPlatformMenu::classBegin()
 {
 }
 
-void QQuickPlatformMenu::componentComplete()
+void QQuickLabsPlatformMenu::componentComplete()
 {
     m_complete = true;
     if (m_handle && m_iconLoader)
@@ -783,12 +783,12 @@ void QQuickPlatformMenu::componentComplete()
     sync();
 }
 
-QQuickPlatformIconLoader *QQuickPlatformMenu::iconLoader() const
+QQuickLabsPlatformIconLoader *QQuickLabsPlatformMenu::iconLoader() const
 {
     if (!m_iconLoader) {
-        QQuickPlatformMenu *that = const_cast<QQuickPlatformMenu *>(this);
+        QQuickLabsPlatformMenu *that = const_cast<QQuickLabsPlatformMenu *>(this);
         static int slot = staticMetaObject.indexOfSlot("updateIcon()");
-        m_iconLoader = new QQuickPlatformIconLoader(slot, that);
+        m_iconLoader = new QQuickLabsPlatformIconLoader(slot, that);
         m_iconLoader->setEnabled(m_complete);
     }
     return m_iconLoader;
@@ -805,7 +805,7 @@ static QWindow *effectiveWindow(QWindow *window, QPoint *offset)
     return window;
 }
 
-QWindow *QQuickPlatformMenu::findWindow(QQuickItem *target, QPoint *offset) const
+QWindow *QQuickLabsPlatformMenu::findWindow(QQuickItem *target, QPoint *offset) const
 {
     if (target)
         return effectiveWindow(target->window(), offset);
@@ -828,60 +828,60 @@ QWindow *QQuickPlatformMenu::findWindow(QQuickItem *target, QPoint *offset) cons
     return nullptr;
 }
 
-void QQuickPlatformMenu::data_append(QQmlListProperty<QObject> *property, QObject *object)
+void QQuickLabsPlatformMenu::data_append(QQmlListProperty<QObject> *property, QObject *object)
 {
-    QQuickPlatformMenu *menu = static_cast<QQuickPlatformMenu *>(property->object);
-    if (QQuickPlatformMenuItem *item = qobject_cast<QQuickPlatformMenuItem *>(object))
+    QQuickLabsPlatformMenu *menu = static_cast<QQuickLabsPlatformMenu *>(property->object);
+    if (QQuickLabsPlatformMenuItem *item = qobject_cast<QQuickLabsPlatformMenuItem *>(object))
         menu->addItem(item);
-    else if (QQuickPlatformMenu *subMenu = qobject_cast<QQuickPlatformMenu *>(object))
+    else if (QQuickLabsPlatformMenu *subMenu = qobject_cast<QQuickLabsPlatformMenu *>(object))
         menu->addMenu(subMenu);
     else
         menu->m_data.append(object);
 }
 
-qsizetype QQuickPlatformMenu::data_count(QQmlListProperty<QObject> *property)
+qsizetype QQuickLabsPlatformMenu::data_count(QQmlListProperty<QObject> *property)
 {
-    QQuickPlatformMenu *menu = static_cast<QQuickPlatformMenu *>(property->object);
+    QQuickLabsPlatformMenu *menu = static_cast<QQuickLabsPlatformMenu *>(property->object);
     return menu->m_data.count();
 }
 
-QObject *QQuickPlatformMenu::data_at(QQmlListProperty<QObject> *property, qsizetype index)
+QObject *QQuickLabsPlatformMenu::data_at(QQmlListProperty<QObject> *property, qsizetype index)
 {
-    QQuickPlatformMenu *menu = static_cast<QQuickPlatformMenu *>(property->object);
+    QQuickLabsPlatformMenu *menu = static_cast<QQuickLabsPlatformMenu *>(property->object);
     return menu->m_data.value(index);
 }
 
-void QQuickPlatformMenu::data_clear(QQmlListProperty<QObject> *property)
+void QQuickLabsPlatformMenu::data_clear(QQmlListProperty<QObject> *property)
 {
-    QQuickPlatformMenu *menu = static_cast<QQuickPlatformMenu *>(property->object);
+    QQuickLabsPlatformMenu *menu = static_cast<QQuickLabsPlatformMenu *>(property->object);
     menu->m_data.clear();
 }
 
-void QQuickPlatformMenu::items_append(QQmlListProperty<QQuickPlatformMenuItem> *property, QQuickPlatformMenuItem *item)
+void QQuickLabsPlatformMenu::items_append(QQmlListProperty<QQuickLabsPlatformMenuItem> *property, QQuickLabsPlatformMenuItem *item)
 {
-    QQuickPlatformMenu *menu = static_cast<QQuickPlatformMenu *>(property->object);
+    QQuickLabsPlatformMenu *menu = static_cast<QQuickLabsPlatformMenu *>(property->object);
     menu->addItem(item);
 }
 
-qsizetype QQuickPlatformMenu::items_count(QQmlListProperty<QQuickPlatformMenuItem> *property)
+qsizetype QQuickLabsPlatformMenu::items_count(QQmlListProperty<QQuickLabsPlatformMenuItem> *property)
 {
-    QQuickPlatformMenu *menu = static_cast<QQuickPlatformMenu *>(property->object);
+    QQuickLabsPlatformMenu *menu = static_cast<QQuickLabsPlatformMenu *>(property->object);
     return menu->m_items.count();
 }
 
-QQuickPlatformMenuItem *QQuickPlatformMenu::items_at(QQmlListProperty<QQuickPlatformMenuItem> *property, qsizetype index)
+QQuickLabsPlatformMenuItem *QQuickLabsPlatformMenu::items_at(QQmlListProperty<QQuickLabsPlatformMenuItem> *property, qsizetype index)
 {
-    QQuickPlatformMenu *menu = static_cast<QQuickPlatformMenu *>(property->object);
+    QQuickLabsPlatformMenu *menu = static_cast<QQuickLabsPlatformMenu *>(property->object);
     return menu->m_items.value(index);
 }
 
-void QQuickPlatformMenu::items_clear(QQmlListProperty<QQuickPlatformMenuItem> *property)
+void QQuickLabsPlatformMenu::items_clear(QQmlListProperty<QQuickLabsPlatformMenuItem> *property)
 {
-    QQuickPlatformMenu *menu = static_cast<QQuickPlatformMenu *>(property->object);
+    QQuickLabsPlatformMenu *menu = static_cast<QQuickLabsPlatformMenu *>(property->object);
     menu->clear();
 }
 
-void QQuickPlatformMenu::updateIcon()
+void QQuickLabsPlatformMenu::updateIcon()
 {
     if (!m_handle || !m_iconLoader)
         return;
@@ -892,4 +892,4 @@ void QQuickPlatformMenu::updateIcon()
 
 QT_END_NAMESPACE
 
-#include "moc_qquickplatformmenu_p.cpp"
+#include "moc_qquicklabsplatformmenu_p.cpp"

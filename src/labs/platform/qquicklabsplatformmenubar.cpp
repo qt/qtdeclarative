@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformmenubar_p.h"
-#include "qquickplatformmenu_p.h"
+#include "qquicklabsplatformmenubar_p.h"
+#include "qquicklabsplatformmenu_p.h"
 
 #include <QtCore/qloggingcategory.h>
 #include <QtGui/qpa/qplatformmenu.h>
@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuBar
     \inherits QtObject
-//!     \instantiates QQuickPlatformMenuBar
+//!     \instantiates QQuickLabsPlatformMenuBar
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native menubar.
@@ -105,7 +105,7 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformMenus)
 
-QQuickPlatformMenuBar::QQuickPlatformMenuBar(QObject *parent)
+QQuickLabsPlatformMenuBar::QQuickLabsPlatformMenuBar(QObject *parent)
     : QObject(parent),
       m_complete(false),
       m_window(nullptr),
@@ -115,22 +115,22 @@ QQuickPlatformMenuBar::QQuickPlatformMenuBar(QObject *parent)
     qCDebug(qtLabsPlatformMenus) << "MenuBar ->" << m_handle;
 }
 
-QQuickPlatformMenuBar::~QQuickPlatformMenuBar()
+QQuickLabsPlatformMenuBar::~QQuickLabsPlatformMenuBar()
 {
-    for (QQuickPlatformMenu *menu : qAsConst(m_menus))
+    for (QQuickLabsPlatformMenu *menu : qAsConst(m_menus))
         menu->setMenuBar(nullptr);
     delete m_handle;
     m_handle = nullptr;
 }
 
-QPlatformMenuBar *QQuickPlatformMenuBar::handle() const
+QPlatformMenuBar *QQuickLabsPlatformMenuBar::handle() const
 {
     return m_handle;
 }
 
 /*!
     \qmldefault
-    \qmlproperty list<Object> Qt.labs.platform::MenuBar::data
+    \qmlproperty list<QtObject> Qt.labs.platform::MenuBar::data
 
     This default property holds the list of all objects declared as children of
     the menubar. The data property includes objects that are not \l Menu instances,
@@ -138,7 +138,7 @@ QPlatformMenuBar *QQuickPlatformMenuBar::handle() const
 
     \sa menus
 */
-QQmlListProperty<QObject> QQuickPlatformMenuBar::data()
+QQmlListProperty<QObject> QQuickLabsPlatformMenuBar::data()
 {
     return QQmlListProperty<QObject>(this, nullptr, data_append, data_count, data_at, data_clear);
 }
@@ -148,9 +148,9 @@ QQmlListProperty<QObject> QQuickPlatformMenuBar::data()
 
     This property holds the list of menus in the menubar.
 */
-QQmlListProperty<QQuickPlatformMenu> QQuickPlatformMenuBar::menus()
+QQmlListProperty<QQuickLabsPlatformMenu> QQuickLabsPlatformMenuBar::menus()
 {
-    return QQmlListProperty<QQuickPlatformMenu>(this, nullptr, menus_append, menus_count, menus_at, menus_clear);
+    return QQmlListProperty<QQuickLabsPlatformMenu>(this, nullptr, menus_append, menus_count, menus_at, menus_clear);
 }
 
 /*!
@@ -162,12 +162,12 @@ QQmlListProperty<QQuickPlatformMenu> QQuickPlatformMenuBar::menus()
     the QML parent objects until a \l Window or an \l Item that has a window
     is found.
 */
-QWindow *QQuickPlatformMenuBar::window() const
+QWindow *QQuickLabsPlatformMenuBar::window() const
 {
     return m_window;
 }
 
-void QQuickPlatformMenuBar::setWindow(QWindow *window)
+void QQuickLabsPlatformMenuBar::setWindow(QWindow *window)
 {
     if (m_window == window)
         return;
@@ -184,7 +184,7 @@ void QQuickPlatformMenuBar::setWindow(QWindow *window)
 
     Adds a \a menu to end of the menubar.
 */
-void QQuickPlatformMenuBar::addMenu(QQuickPlatformMenu *menu)
+void QQuickLabsPlatformMenuBar::addMenu(QQuickLabsPlatformMenu *menu)
 {
     insertMenu(m_menus.count(), menu);
 }
@@ -194,12 +194,12 @@ void QQuickPlatformMenuBar::addMenu(QQuickPlatformMenu *menu)
 
     Inserts a \a menu at the specified \a index in the menubar.
 */
-void QQuickPlatformMenuBar::insertMenu(int index, QQuickPlatformMenu *menu)
+void QQuickLabsPlatformMenuBar::insertMenu(int index, QQuickLabsPlatformMenu *menu)
 {
     if (!menu || m_menus.contains(menu))
         return;
 
-    QQuickPlatformMenu *before = m_menus.value(index);
+    QQuickLabsPlatformMenu *before = m_menus.value(index);
     m_menus.insert(index, menu);
     m_data.append(menu);
     menu->setMenuBar(this);
@@ -214,7 +214,7 @@ void QQuickPlatformMenuBar::insertMenu(int index, QQuickPlatformMenu *menu)
 
     Removes a \a menu from the menubar.
 */
-void QQuickPlatformMenuBar::removeMenu(QQuickPlatformMenu *menu)
+void QQuickLabsPlatformMenuBar::removeMenu(QQuickLabsPlatformMenu *menu)
 {
     if (!menu || !m_menus.removeOne(menu))
         return;
@@ -231,12 +231,12 @@ void QQuickPlatformMenuBar::removeMenu(QQuickPlatformMenu *menu)
 
     Removes all menus from the menubar.
 */
-void QQuickPlatformMenuBar::clear()
+void QQuickLabsPlatformMenuBar::clear()
 {
     if (m_menus.isEmpty())
         return;
 
-    for (QQuickPlatformMenu *menu : qAsConst(m_menus)) {
+    for (QQuickLabsPlatformMenu *menu : qAsConst(m_menus)) {
         m_data.removeOne(menu);
         if (m_handle)
             m_handle->removeMenu(menu->handle());
@@ -248,20 +248,20 @@ void QQuickPlatformMenuBar::clear()
     emit menusChanged();
 }
 
-void QQuickPlatformMenuBar::classBegin()
+void QQuickLabsPlatformMenuBar::classBegin()
 {
 }
 
-void QQuickPlatformMenuBar::componentComplete()
+void QQuickLabsPlatformMenuBar::componentComplete()
 {
     m_complete = true;
-    for (QQuickPlatformMenu *menu : qAsConst(m_menus))
+    for (QQuickLabsPlatformMenu *menu : qAsConst(m_menus))
         menu->sync();
     if (!m_window)
         setWindow(findWindow());
 }
 
-QWindow *QQuickPlatformMenuBar::findWindow() const
+QWindow *QQuickLabsPlatformMenuBar::findWindow() const
 {
     QObject *obj = parent();
     while (obj) {
@@ -276,58 +276,58 @@ QWindow *QQuickPlatformMenuBar::findWindow() const
     return nullptr;
 }
 
-void QQuickPlatformMenuBar::data_append(QQmlListProperty<QObject> *property, QObject *object)
+void QQuickLabsPlatformMenuBar::data_append(QQmlListProperty<QObject> *property, QObject *object)
 {
-    QQuickPlatformMenuBar *menuBar = static_cast<QQuickPlatformMenuBar *>(property->object);
-    QQuickPlatformMenu *menu = qobject_cast<QQuickPlatformMenu *>(object);
+    QQuickLabsPlatformMenuBar *menuBar = static_cast<QQuickLabsPlatformMenuBar *>(property->object);
+    QQuickLabsPlatformMenu *menu = qobject_cast<QQuickLabsPlatformMenu *>(object);
     if (menu)
         menuBar->addMenu(menu);
     else
         menuBar->m_data.append(object);
 }
 
-qsizetype QQuickPlatformMenuBar::data_count(QQmlListProperty<QObject> *property)
+qsizetype QQuickLabsPlatformMenuBar::data_count(QQmlListProperty<QObject> *property)
 {
-    QQuickPlatformMenuBar *menuBar = static_cast<QQuickPlatformMenuBar *>(property->object);
+    QQuickLabsPlatformMenuBar *menuBar = static_cast<QQuickLabsPlatformMenuBar *>(property->object);
     return menuBar->m_data.count();
 }
 
-QObject *QQuickPlatformMenuBar::data_at(QQmlListProperty<QObject> *property, qsizetype index)
+QObject *QQuickLabsPlatformMenuBar::data_at(QQmlListProperty<QObject> *property, qsizetype index)
 {
-    QQuickPlatformMenuBar *menuBar = static_cast<QQuickPlatformMenuBar *>(property->object);
+    QQuickLabsPlatformMenuBar *menuBar = static_cast<QQuickLabsPlatformMenuBar *>(property->object);
     return menuBar->m_data.value(index);
 }
 
-void QQuickPlatformMenuBar::data_clear(QQmlListProperty<QObject> *property)
+void QQuickLabsPlatformMenuBar::data_clear(QQmlListProperty<QObject> *property)
 {
-    QQuickPlatformMenuBar *menuBar = static_cast<QQuickPlatformMenuBar *>(property->object);
+    QQuickLabsPlatformMenuBar *menuBar = static_cast<QQuickLabsPlatformMenuBar *>(property->object);
     menuBar->m_data.clear();
 }
 
-void QQuickPlatformMenuBar::menus_append(QQmlListProperty<QQuickPlatformMenu> *property, QQuickPlatformMenu *menu)
+void QQuickLabsPlatformMenuBar::menus_append(QQmlListProperty<QQuickLabsPlatformMenu> *property, QQuickLabsPlatformMenu *menu)
 {
-    QQuickPlatformMenuBar *menuBar = static_cast<QQuickPlatformMenuBar *>(property->object);
+    QQuickLabsPlatformMenuBar *menuBar = static_cast<QQuickLabsPlatformMenuBar *>(property->object);
     menuBar->addMenu(menu);
 }
 
-qsizetype QQuickPlatformMenuBar::menus_count(QQmlListProperty<QQuickPlatformMenu> *property)
+qsizetype QQuickLabsPlatformMenuBar::menus_count(QQmlListProperty<QQuickLabsPlatformMenu> *property)
 {
-    QQuickPlatformMenuBar *menuBar = static_cast<QQuickPlatformMenuBar *>(property->object);
+    QQuickLabsPlatformMenuBar *menuBar = static_cast<QQuickLabsPlatformMenuBar *>(property->object);
     return menuBar->m_menus.count();
 }
 
-QQuickPlatformMenu *QQuickPlatformMenuBar::menus_at(QQmlListProperty<QQuickPlatformMenu> *property, qsizetype index)
+QQuickLabsPlatformMenu *QQuickLabsPlatformMenuBar::menus_at(QQmlListProperty<QQuickLabsPlatformMenu> *property, qsizetype index)
 {
-    QQuickPlatformMenuBar *menuBar = static_cast<QQuickPlatformMenuBar *>(property->object);
+    QQuickLabsPlatformMenuBar *menuBar = static_cast<QQuickLabsPlatformMenuBar *>(property->object);
     return menuBar->m_menus.value(index);
 }
 
-void QQuickPlatformMenuBar::menus_clear(QQmlListProperty<QQuickPlatformMenu> *property)
+void QQuickLabsPlatformMenuBar::menus_clear(QQmlListProperty<QQuickLabsPlatformMenu> *property)
 {
-    QQuickPlatformMenuBar *menuBar = static_cast<QQuickPlatformMenuBar *>(property->object);
+    QQuickLabsPlatformMenuBar *menuBar = static_cast<QQuickLabsPlatformMenuBar *>(property->object);
     menuBar->clear();
 }
 
 QT_END_NAMESPACE
 
-#include "moc_qquickplatformmenubar_p.cpp"
+#include "moc_qquicklabsplatformmenubar_p.cpp"

@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPLATFORMMESSAGEDIALOG_P_H
-#define QQUICKPLATFORMMESSAGEDIALOG_P_H
+#ifndef QQUICKLABSPLATFORMCOLORDIALOG_P_H
+#define QQUICKLABSPLATFORMCOLORDIALOG_P_H
 
 //
 //  W A R N I N G
@@ -48,74 +48,51 @@
 // We mean it.
 //
 
-#include "qquickplatformdialog_p.h"
+#include "qquicklabsplatformdialog_p.h"
+#include <QtGui/qcolor.h>
 #include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPlatformMessageDialog : public QQuickPlatformDialog
+class QQuickLabsPlatformColorDialog : public QQuickLabsPlatformDialog
 {
     Q_OBJECT
-    Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
-    Q_PROPERTY(QString informativeText READ informativeText WRITE setInformativeText NOTIFY informativeTextChanged FINAL)
-    Q_PROPERTY(QString detailedText READ detailedText WRITE setDetailedText NOTIFY detailedTextChanged FINAL)
-    Q_PROPERTY(QPlatformDialogHelper::StandardButtons buttons READ buttons WRITE setButtons NOTIFY buttonsChanged FINAL)
-    Q_FLAGS(QPlatformDialogHelper::StandardButtons)
+    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
+    Q_PROPERTY(QColor currentColor READ currentColor WRITE setCurrentColor NOTIFY currentColorChanged FINAL)
+    Q_PROPERTY(QColorDialogOptions::ColorDialogOptions options READ options WRITE setOptions NOTIFY optionsChanged FINAL)
+    Q_FLAGS(QColorDialogOptions::ColorDialogOptions)
 
 public:
-    explicit QQuickPlatformMessageDialog(QObject *parent = nullptr);
+    explicit QQuickLabsPlatformColorDialog(QObject *parent = nullptr);
 
-    QString text() const;
-    void setText(const QString &text);
+    QColor color() const;
+    void setColor(const QColor &color);
 
-    QString informativeText() const;
-    void setInformativeText(const QString &text);
+    QColor currentColor() const;
+    void setCurrentColor(const QColor &color);
 
-    QString detailedText() const;
-    void setDetailedText(const QString &text);
-
-    QPlatformDialogHelper::StandardButtons buttons() const;
-    void setButtons(QPlatformDialogHelper::StandardButtons buttons);
+    QColorDialogOptions::ColorDialogOptions options() const;
+    void setOptions(QColorDialogOptions::ColorDialogOptions options);
 
 Q_SIGNALS:
-    void textChanged();
-    void informativeTextChanged();
-    void detailedTextChanged();
-    void buttonsChanged();
-    void clicked(QPlatformDialogHelper::StandardButton button);
-
-    void okClicked();
-    void saveClicked();
-    void saveAllClicked();
-    void openClicked();
-    void yesClicked();
-    void yesToAllClicked();
-    void noClicked();
-    void noToAllClicked();
-    void abortClicked();
-    void retryClicked();
-    void ignoreClicked();
-    void closeClicked();
-    void cancelClicked();
-    void discardClicked();
-    void helpClicked();
-    void applyClicked();
-    void resetClicked();
-    void restoreDefaultsClicked();
+    void colorChanged();
+    void currentColorChanged();
+    void optionsChanged();
 
 protected:
+    bool useNativeDialog() const override;
     void onCreate(QPlatformDialogHelper *dialog) override;
     void onShow(QPlatformDialogHelper *dialog) override;
-
-private Q_SLOTS:
-    void handleClick(QPlatformDialogHelper::StandardButton button);
+    void accept() override;
 
 private:
-    QSharedPointer<QMessageDialogOptions> m_options;
+    QColor m_color;
+    QColor m_currentColor; // TODO: QColorDialogOptions::initialColor
+    QSharedPointer<QColorDialogOptions> m_options;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPlatformMessageDialog)
+QML_DECLARE_TYPE(QQuickLabsPlatformColorDialog)
 
-#endif // QQUICKPLATFORMMESSAGEDIALOG_P_H
+#endif // QQUICKLABSPLATFORMCOLORDIALOG_P_H

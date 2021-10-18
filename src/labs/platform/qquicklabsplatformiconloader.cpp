@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: http://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Platform module of the Qt Toolkit.
@@ -34,48 +34,68 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformicon_p.h"
+#include "qquicklabsplatformiconloader_p.h"
+
+#include <QtCore/qobject.h>
+#include <QtCore/qmetaobject.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
-QUrl QQuickPlatformIcon::source() const
+QQuickLabsPlatformIconLoader::QQuickLabsPlatformIconLoader(int slot, QObject *parent)
+    : m_parent(parent),
+      m_slot(slot),
+      m_enabled(false)
 {
-    return m_source;
+    Q_ASSERT(slot != -1 && parent);
 }
 
-void QQuickPlatformIcon::setSource(const QUrl& source)
+bool QQuickLabsPlatformIconLoader::isEnabled() const
 {
-    m_source = source;
+    return m_enabled;
 }
 
-QString QQuickPlatformIcon::name() const
+void QQuickLabsPlatformIconLoader::setEnabled(bool enabled)
 {
-    return m_name;
+    m_enabled = enabled;
+    if (m_enabled)
+        loadIcon();
 }
 
-void QQuickPlatformIcon::setName(const QString& name)
+QIcon QQuickLabsPlatformIconLoader::toQIcon() const
 {
-    m_name = name;
+    QIcon fallback = QPixmap::fromImage(image());
+    QIcon icon = QIcon::fromTheme(m_icon.name(), fallback);
+    icon.setIsMask(m_icon.isMask());
+    return icon;
 }
 
-bool QQuickPlatformIcon::isMask() const
+QQuickLabsPlatformIcon QQuickLabsPlatformIconLoader::icon() const
 {
-    return m_mask;
+    return m_icon;
 }
 
-void QQuickPlatformIcon::setMask(bool mask)
+void QQuickLabsPlatformIconLoader::setIcon(const QQuickLabsPlatformIcon& icon)
 {
-    m_mask = mask;
+    m_icon = icon;
+    if (m_enabled)
+        loadIcon();
 }
 
-bool QQuickPlatformIcon::operator==(const QQuickPlatformIcon &other) const
+void QQuickLabsPlatformIconLoader::loadIcon()
 {
-    return m_source == other.m_source && m_name == other.m_name && m_mask == other.m_mask;
-}
+    if (m_icon.source().isEmpty()) {
+        clear(m_parent);
+    } else {
+        load(qmlEngine(m_parent), m_icon.source());
+        if (m_slot != -1 && isLoading()) {
+            connectFinished(m_parent, m_slot);
+            m_slot = -1;
+        }
+    }
 
-bool QQuickPlatformIcon::operator!=(const QQuickPlatformIcon &other) const
-{
-    return !(*this == other);
+    if (!isLoading())
+        m_parent->metaObject()->method(m_slot).invoke(m_parent);
 }
 
 QT_END_NAMESPACE

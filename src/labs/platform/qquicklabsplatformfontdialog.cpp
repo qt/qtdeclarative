@@ -34,14 +34,14 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformfontdialog_p.h"
+#include "qquicklabsplatformfontdialog_p.h"
 
 QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype FontDialog
     \inherits Dialog
-//!     \instantiates QQuickPlatformFontDialog
+//!     \instantiates QQuickLabsPlatformFontDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native font dialog.
@@ -87,8 +87,8 @@ QT_BEGIN_NAMESPACE
     \labs
 */
 
-QQuickPlatformFontDialog::QQuickPlatformFontDialog(QObject *parent)
-    : QQuickPlatformDialog(QPlatformTheme::FontDialog, parent),
+QQuickLabsPlatformFontDialog::QQuickLabsPlatformFontDialog(QObject *parent)
+    : QQuickLabsPlatformDialog(QPlatformTheme::FontDialog, parent),
       m_options(QFontDialogOptions::create())
 {
 }
@@ -106,12 +106,12 @@ QQuickPlatformFontDialog::QQuickPlatformFontDialog(QObject *parent)
 
     \sa currentFont, {Dialog::}{accepted()}
 */
-QFont QQuickPlatformFontDialog::font() const
+QFont QQuickLabsPlatformFontDialog::font() const
 {
     return m_font;
 }
 
-void QQuickPlatformFontDialog::setFont(const QFont &font)
+void QQuickLabsPlatformFontDialog::setFont(const QFont &font)
 {
     if (m_font == font)
         return;
@@ -132,14 +132,14 @@ void QQuickPlatformFontDialog::setFont(const QFont &font)
 
     \sa font
 */
-QFont QQuickPlatformFontDialog::currentFont() const
+QFont QQuickLabsPlatformFontDialog::currentFont() const
 {
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(handle()))
         return fontDialog->currentFont();
     return m_currentFont;
 }
 
-void QQuickPlatformFontDialog::setCurrentFont(const QFont &font)
+void QQuickLabsPlatformFontDialog::setCurrentFont(const QFont &font)
 {
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(handle()))
         fontDialog->setCurrentFont(font);
@@ -164,12 +164,12 @@ void QQuickPlatformFontDialog::setCurrentFont(const QFont &font)
     \value FontDialog.ProportionalFonts Show proportional fonts.
     \value FontDialog.NoButtons Don't display \uicontrol OK and \uicontrol Cancel buttons (useful for "live dialogs").
 */
-QFontDialogOptions::FontDialogOptions QQuickPlatformFontDialog::options() const
+QFontDialogOptions::FontDialogOptions QQuickLabsPlatformFontDialog::options() const
 {
     return m_options->options();
 }
 
-void QQuickPlatformFontDialog::setOptions(QFontDialogOptions::FontDialogOptions options)
+void QQuickLabsPlatformFontDialog::setOptions(QFontDialogOptions::FontDialogOptions options)
 {
     if (options == m_options->options())
         return;
@@ -178,31 +178,31 @@ void QQuickPlatformFontDialog::setOptions(QFontDialogOptions::FontDialogOptions 
     emit optionsChanged();
 }
 
-bool QQuickPlatformFontDialog::useNativeDialog() const
+bool QQuickLabsPlatformFontDialog::useNativeDialog() const
 {
-    return QQuickPlatformDialog::useNativeDialog()
+    return QQuickLabsPlatformDialog::useNativeDialog()
             && !m_options->testOption(QFontDialogOptions::DontUseNativeDialog);
 }
 
-void QQuickPlatformFontDialog::onCreate(QPlatformDialogHelper *dialog)
+void QQuickLabsPlatformFontDialog::onCreate(QPlatformDialogHelper *dialog)
 {
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog)) {
-        connect(fontDialog, &QPlatformFontDialogHelper::currentFontChanged, this, &QQuickPlatformFontDialog::currentFontChanged);
+        connect(fontDialog, &QPlatformFontDialogHelper::currentFontChanged, this, &QQuickLabsPlatformFontDialog::currentFontChanged);
         fontDialog->setOptions(m_options);
     }
 }
 
-void QQuickPlatformFontDialog::onShow(QPlatformDialogHelper *dialog)
+void QQuickLabsPlatformFontDialog::onShow(QPlatformDialogHelper *dialog)
 {
     m_options->setWindowTitle(title());
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog))
         fontDialog->setOptions(m_options);
 }
 
-void QQuickPlatformFontDialog::accept()
+void QQuickLabsPlatformFontDialog::accept()
 {
     setFont(currentFont());
-    QQuickPlatformDialog::accept();
+    QQuickLabsPlatformDialog::accept();
 }
 
 QT_END_NAMESPACE

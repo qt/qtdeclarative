@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPLATFORMMENUSEPARATOR_P_H
-#define QQUICKPLATFORMMENUSEPARATOR_P_H
+#ifndef QQUICKLABSPLATFORMMENUSEPARATOR_P_H
+#define QQUICKLABSPLATFORMMENUSEPARATOR_P_H
 
 //
 //  W A R N I N G
@@ -48,20 +48,20 @@
 // We mean it.
 //
 
-#include "qquickplatformmenuitem_p.h"
+#include "qquicklabsplatformmenuitem_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPlatformMenuSeparator : public QQuickPlatformMenuItem
+class QQuickLabsPlatformMenuSeparator : public QQuickLabsPlatformMenuItem
 {
     Q_OBJECT
 
 public:
-    explicit QQuickPlatformMenuSeparator(QObject *parent = nullptr);
+    explicit QQuickLabsPlatformMenuSeparator(QObject *parent = nullptr);
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPlatformMenuSeparator)
+QML_DECLARE_TYPE(QQuickLabsPlatformMenuSeparator)
 
-#endif // QQUICKPLATFORMMENUSEPARATOR_P_H
+#endif // QQUICKLABSPLATFORMMENUSEPARATOR_P_H

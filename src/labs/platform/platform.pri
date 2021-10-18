@@ -1,39 +1,39 @@
 HEADERS += \
-    $$PWD/qquickplatformcolordialog_p.h \
-    $$PWD/qquickplatformdialog_p.h \
-    $$PWD/qquickplatformfiledialog_p.h \
-    $$PWD/qquickplatformfolderdialog_p.h \
-    $$PWD/qquickplatformfontdialog_p.h \
-    $$PWD/qquickplatformicon_p.h \
-    $$PWD/qquickplatformiconloader_p.h \
-    $$PWD/qquickplatformmenu_p.h \
-    $$PWD/qquickplatformmenubar_p.h \
-    $$PWD/qquickplatformmenuitem_p.h \
-    $$PWD/qquickplatformmenuitemgroup_p.h \
-    $$PWD/qquickplatformmenuseparator_p.h \
-    $$PWD/qquickplatformmessagedialog_p.h \
-    $$PWD/qquickplatformstandardpaths_p.h
+    $$PWD/qquicklabsplatformcolordialog_p.h \
+    $$PWD/qquicklabsplatformdialog_p.h \
+    $$PWD/qquicklabsplatformfiledialog_p.h \
+    $$PWD/qquicklabsplatformfolderdialog_p.h \
+    $$PWD/qquicklabsplatformfontdialog_p.h \
+    $$PWD/qquicklabsplatformicon_p.h \
+    $$PWD/qquicklabsplatformiconloader_p.h \
+    $$PWD/qquicklabsplatformmenu_p.h \
+    $$PWD/qquicklabsplatformmenubar_p.h \
+    $$PWD/qquicklabsplatformmenuitem_p.h \
+    $$PWD/qquicklabsplatformmenuitemgroup_p.h \
+    $$PWD/qquicklabsplatformmenuseparator_p.h \
+    $$PWD/qquicklabsplatformmessagedialog_p.h \
+    $$PWD/qquicklabsplatformstandardpaths_p.h
 
 SOURCES += \
-    $$PWD/qquickplatformcolordialog.cpp \
-    $$PWD/qquickplatformdialog.cpp \
-    $$PWD/qquickplatformfiledialog.cpp \
-    $$PWD/qquickplatformfolderdialog.cpp \
-    $$PWD/qquickplatformfontdialog.cpp \
-    $$PWD/qquickplatformicon.cpp \
-    $$PWD/qquickplatformiconloader.cpp \
-    $$PWD/qquickplatformmenu.cpp \
-    $$PWD/qquickplatformmenubar.cpp \
-    $$PWD/qquickplatformmenuitem.cpp \
-    $$PWD/qquickplatformmenuitemgroup.cpp \
-    $$PWD/qquickplatformmenuseparator.cpp \
-    $$PWD/qquickplatformmessagedialog.cpp \
-    $$PWD/qquickplatformstandardpaths.cpp
+    $$PWD/qquicklabsplatformcolordialog.cpp \
+    $$PWD/qquicklabsplatformdialog.cpp \
+    $$PWD/qquicklabsplatformfiledialog.cpp \
+    $$PWD/qquicklabsplatformfolderdialog.cpp \
+    $$PWD/qquicklabsplatformfontdialog.cpp \
+    $$PWD/qquicklabsplatformicon.cpp \
+    $$PWD/qquicklabsplatformiconloader.cpp \
+    $$PWD/qquicklabsplatformmenu.cpp \
+    $$PWD/qquicklabsplatformmenubar.cpp \
+    $$PWD/qquicklabsplatformmenuitem.cpp \
+    $$PWD/qquicklabsplatformmenuitemgroup.cpp \
+    $$PWD/qquicklabsplatformmenuseparator.cpp \
+    $$PWD/qquicklabsplatformmessagedialog.cpp \
+    $$PWD/qquicklabsplatformstandardpaths.cpp
 
 
 qtConfig(systemtrayicon) {
     HEADERS += \
-        $$PWD/qquickplatformsystemtrayicon_p.h
+        $$PWD/qquicklabsplatformsystemtrayicon_p.h
     SOURCES += \
-        $$PWD/qquickplatformsystemtrayicon.cpp
+        $$PWD/qquicklabsplatformsystemtrayicon.cpp
 }

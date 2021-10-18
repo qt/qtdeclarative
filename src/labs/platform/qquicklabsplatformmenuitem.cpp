@@ -34,10 +34,10 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformmenuitem_p.h"
-#include "qquickplatformmenu_p.h"
-#include "qquickplatformmenuitemgroup_p.h"
-#include "qquickplatformiconloader_p.h"
+#include "qquicklabsplatformmenuitem_p.h"
+#include "qquicklabsplatformmenu_p.h"
+#include "qquicklabsplatformmenuitemgroup_p.h"
+#include "qquicklabsplatformiconloader_p.h"
 
 #include <QtGui/qicon.h>
 #if QT_CONFIG(shortcut)
@@ -54,7 +54,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MenuItem
     \inherits QtObject
-//!     \instantiates QQuickPlatformMenuItem
+//!     \instantiates QQuickLabsPlatformMenuItem
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native menu item.
@@ -100,7 +100,7 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when the menu item is hovered by the user.
 */
 
-QQuickPlatformMenuItem::QQuickPlatformMenuItem(QObject *parent)
+QQuickLabsPlatformMenuItem::QQuickLabsPlatformMenuItem(QObject *parent)
     : QObject(parent),
       m_complete(false),
       m_enabled(true),
@@ -117,7 +117,7 @@ QQuickPlatformMenuItem::QQuickPlatformMenuItem(QObject *parent)
 {
 }
 
-QQuickPlatformMenuItem::~QQuickPlatformMenuItem()
+QQuickLabsPlatformMenuItem::~QQuickLabsPlatformMenuItem()
 {
     if (m_menu)
         m_menu->removeItem(this);
@@ -139,12 +139,12 @@ QQuickPlatformMenuItem::~QQuickPlatformMenuItem()
     m_handle = nullptr;
 }
 
-QPlatformMenuItem *QQuickPlatformMenuItem::handle() const
+QPlatformMenuItem *QQuickLabsPlatformMenuItem::handle() const
 {
     return m_handle;
 }
 
-QPlatformMenuItem *QQuickPlatformMenuItem::create()
+QPlatformMenuItem *QQuickLabsPlatformMenuItem::create()
 {
     if (!m_handle && m_menu && m_menu->handle()) {
         m_handle = m_menu->handle()->createMenuItem();
@@ -157,14 +157,14 @@ QPlatformMenuItem *QQuickPlatformMenuItem::create()
             m_handle = QWidgetPlatform::createMenuItem();
 
         if (m_handle) {
-            connect(m_handle, &QPlatformMenuItem::activated, this, &QQuickPlatformMenuItem::activate);
-            connect(m_handle, &QPlatformMenuItem::hovered, this, &QQuickPlatformMenuItem::hovered);
+            connect(m_handle, &QPlatformMenuItem::activated, this, &QQuickLabsPlatformMenuItem::activate);
+            connect(m_handle, &QPlatformMenuItem::hovered, this, &QQuickLabsPlatformMenuItem::hovered);
         }
     }
     return m_handle;
 }
 
-void QQuickPlatformMenuItem::sync()
+void QQuickLabsPlatformMenuItem::sync()
 {
     if (!m_complete || !create())
         return;
@@ -206,12 +206,12 @@ void QQuickPlatformMenuItem::sync()
     This property holds the menu that the item belongs to, or \c null if the
     item is not in a menu.
 */
-QQuickPlatformMenu *QQuickPlatformMenuItem::menu() const
+QQuickLabsPlatformMenu *QQuickLabsPlatformMenuItem::menu() const
 {
     return m_menu;
 }
 
-void QQuickPlatformMenuItem::setMenu(QQuickPlatformMenu *menu)
+void QQuickLabsPlatformMenuItem::setMenu(QQuickLabsPlatformMenu *menu)
 {
     if (m_menu == menu)
         return;
@@ -227,12 +227,12 @@ void QQuickPlatformMenuItem::setMenu(QQuickPlatformMenu *menu)
     This property holds the sub-menu that the item contains, or \c null if
     the item is not a sub-menu item.
 */
-QQuickPlatformMenu *QQuickPlatformMenuItem::subMenu() const
+QQuickLabsPlatformMenu *QQuickLabsPlatformMenuItem::subMenu() const
 {
     return m_subMenu;
 }
 
-void QQuickPlatformMenuItem::setSubMenu(QQuickPlatformMenu *menu)
+void QQuickLabsPlatformMenuItem::setSubMenu(QQuickLabsPlatformMenu *menu)
 {
     if (m_subMenu == menu)
         return;
@@ -248,12 +248,12 @@ void QQuickPlatformMenuItem::setSubMenu(QQuickPlatformMenu *menu)
     This property holds the group that the item belongs to, or \c null if the
     item is not in a group.
 */
-QQuickPlatformMenuItemGroup *QQuickPlatformMenuItem::group() const
+QQuickLabsPlatformMenuItemGroup *QQuickLabsPlatformMenuItem::group() const
 {
     return m_group;
 }
 
-void QQuickPlatformMenuItem::setGroup(QQuickPlatformMenuItemGroup *group)
+void QQuickLabsPlatformMenuItem::setGroup(QQuickLabsPlatformMenuItemGroup *group)
 {
     if (m_group == group)
         return;
@@ -285,12 +285,12 @@ void QQuickPlatformMenuItem::setGroup(QQuickPlatformMenuItemGroup *group)
 
     When an item is disabled, it is not possible to trigger it through its \l shortcut.
 */
-bool QQuickPlatformMenuItem::isEnabled() const
+bool QQuickLabsPlatformMenuItem::isEnabled() const
 {
     return m_enabled && (!m_group || m_group->isEnabled());
 }
 
-void QQuickPlatformMenuItem::setEnabled(bool enabled)
+void QQuickLabsPlatformMenuItem::setEnabled(bool enabled)
 {
     if (m_enabled == enabled)
         return;
@@ -307,12 +307,12 @@ void QQuickPlatformMenuItem::setEnabled(bool enabled)
 
     This property holds whether the item is visible. The default value is \c true.
 */
-bool QQuickPlatformMenuItem::isVisible() const
+bool QQuickLabsPlatformMenuItem::isVisible() const
 {
     return m_visible && (!m_group || m_group->isVisible());
 }
 
-void QQuickPlatformMenuItem::setVisible(bool visible)
+void QQuickLabsPlatformMenuItem::setVisible(bool visible)
 {
     if (m_visible == visible)
         return;
@@ -332,12 +332,12 @@ void QQuickPlatformMenuItem::setVisible(bool visible)
 
     \sa MenuSeparator
 */
-bool QQuickPlatformMenuItem::isSeparator() const
+bool QQuickLabsPlatformMenuItem::isSeparator() const
 {
     return m_separator;
 }
 
-void QQuickPlatformMenuItem::setSeparator(bool separator)
+void QQuickLabsPlatformMenuItem::setSeparator(bool separator)
 {
     if (m_separator == separator)
         return;
@@ -360,12 +360,12 @@ void QQuickPlatformMenuItem::setSeparator(bool separator)
 
     \sa checked, MenuItemGroup
 */
-bool QQuickPlatformMenuItem::isCheckable() const
+bool QQuickLabsPlatformMenuItem::isCheckable() const
 {
     return m_checkable;
 }
 
-void QQuickPlatformMenuItem::setCheckable(bool checkable)
+void QQuickLabsPlatformMenuItem::setCheckable(bool checkable)
 {
     if (m_checkable == checkable)
         return;
@@ -383,12 +383,12 @@ void QQuickPlatformMenuItem::setCheckable(bool checkable)
 
     \sa checkable, MenuItemGroup
 */
-bool QQuickPlatformMenuItem::isChecked() const
+bool QQuickLabsPlatformMenuItem::isChecked() const
 {
     return m_checked;
 }
 
-void QQuickPlatformMenuItem::setChecked(bool checked)
+void QQuickLabsPlatformMenuItem::setChecked(bool checked)
 {
     if (m_checked == checked)
         return;
@@ -424,12 +424,12 @@ void QQuickPlatformMenuItem::setChecked(bool checked)
     specifying a role for the items in that submenu has no effect. They will
     never be moved to the application menu.
 */
-QPlatformMenuItem::MenuRole QQuickPlatformMenuItem::role() const
+QPlatformMenuItem::MenuRole QQuickLabsPlatformMenuItem::role() const
 {
     return m_role;
 }
 
-void QQuickPlatformMenuItem::setRole(QPlatformMenuItem::MenuRole role)
+void QQuickLabsPlatformMenuItem::setRole(QPlatformMenuItem::MenuRole role)
 {
     if (m_role == role)
         return;
@@ -444,12 +444,12 @@ void QQuickPlatformMenuItem::setRole(QPlatformMenuItem::MenuRole role)
 
     This property holds the menu item's text.
 */
-QString QQuickPlatformMenuItem::text() const
+QString QQuickLabsPlatformMenuItem::text() const
 {
     return m_text;
 }
 
-void QQuickPlatformMenuItem::setText(const QString &text)
+void QQuickLabsPlatformMenuItem::setText(const QString &text)
 {
     if (m_text == text)
         return;
@@ -478,12 +478,12 @@ void QQuickPlatformMenuItem::setText(const QString &text)
     }
     \endcode
 */
-QVariant QQuickPlatformMenuItem::shortcut() const
+QVariant QQuickLabsPlatformMenuItem::shortcut() const
 {
     return m_shortcut;
 }
 
-bool QQuickPlatformMenuItem::event(QEvent *e)
+bool QQuickLabsPlatformMenuItem::event(QEvent *e)
 {
 #if QT_CONFIG(shortcut)
     if (e->type() == QEvent::Shortcut) {
@@ -497,7 +497,7 @@ bool QQuickPlatformMenuItem::event(QEvent *e)
     return QObject::event(e);
 }
 
-void QQuickPlatformMenuItem::setShortcut(const QVariant& shortcut)
+void QQuickLabsPlatformMenuItem::setShortcut(const QVariant& shortcut)
 {
     if (m_shortcut == shortcut)
         return;
@@ -537,12 +537,12 @@ void QQuickPlatformMenuItem::setShortcut(const QVariant& shortcut)
 
     \sa text
 */
-QFont QQuickPlatformMenuItem::font() const
+QFont QQuickLabsPlatformMenuItem::font() const
 {
     return m_font;
 }
 
-void QQuickPlatformMenuItem::setFont(const QFont& font)
+void QQuickLabsPlatformMenuItem::setFont(const QFont& font)
 {
     if (m_font == font)
         return;
@@ -570,15 +570,15 @@ void QQuickPlatformMenuItem::setFont(const QFont& font)
 
     \sa QIcon::fromTheme()
 */
-QQuickPlatformIcon QQuickPlatformMenuItem::icon() const
+QQuickLabsPlatformIcon QQuickLabsPlatformMenuItem::icon() const
 {
     if (!m_iconLoader)
-        return QQuickPlatformIcon();
+        return QQuickLabsPlatformIcon();
 
     return m_iconLoader->icon();
 }
 
-void QQuickPlatformMenuItem::setIcon(const QQuickPlatformIcon &icon)
+void QQuickLabsPlatformMenuItem::setIcon(const QQuickLabsPlatformIcon &icon)
 {
     if (iconLoader()->icon() == icon)
         return;
@@ -592,17 +592,17 @@ void QQuickPlatformMenuItem::setIcon(const QQuickPlatformIcon &icon)
 
     Toggles the \l checked state to its opposite state.
 */
-void QQuickPlatformMenuItem::toggle()
+void QQuickLabsPlatformMenuItem::toggle()
 {
     if (m_checkable)
         setChecked(!m_checked);
 }
 
-void QQuickPlatformMenuItem::classBegin()
+void QQuickLabsPlatformMenuItem::classBegin()
 {
 }
 
-void QQuickPlatformMenuItem::componentComplete()
+void QQuickLabsPlatformMenuItem::componentComplete()
 {
     if (m_handle && m_iconLoader)
         m_iconLoader->setEnabled(true);
@@ -610,24 +610,24 @@ void QQuickPlatformMenuItem::componentComplete()
     sync();
 }
 
-QQuickPlatformIconLoader *QQuickPlatformMenuItem::iconLoader() const
+QQuickLabsPlatformIconLoader *QQuickLabsPlatformMenuItem::iconLoader() const
 {
     if (!m_iconLoader) {
-        QQuickPlatformMenuItem *that = const_cast<QQuickPlatformMenuItem *>(this);
+        QQuickLabsPlatformMenuItem *that = const_cast<QQuickLabsPlatformMenuItem *>(this);
         static int slot = staticMetaObject.indexOfSlot("updateIcon()");
-        m_iconLoader = new QQuickPlatformIconLoader(slot, that);
+        m_iconLoader = new QQuickLabsPlatformIconLoader(slot, that);
         m_iconLoader->setEnabled(m_complete);
     }
     return m_iconLoader;
 }
 
-void QQuickPlatformMenuItem::activate()
+void QQuickLabsPlatformMenuItem::activate()
 {
     toggle();
     emit triggered();
 }
 
-void QQuickPlatformMenuItem::updateIcon()
+void QQuickLabsPlatformMenuItem::updateIcon()
 {
     if (!m_handle || !m_iconLoader)
         return;
@@ -638,4 +638,4 @@ void QQuickPlatformMenuItem::updateIcon()
 
 QT_END_NAMESPACE
 
-#include "moc_qquickplatformmenuitem_p.cpp"
+#include "moc_qquicklabsplatformmenuitem_p.cpp"

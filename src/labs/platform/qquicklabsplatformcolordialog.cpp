@@ -34,14 +34,14 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformcolordialog_p.h"
+#include "qquicklabsplatformcolordialog_p.h"
 
 QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype ColorDialog
     \inherits Dialog
-//! \instantiates QQuickPlatformColorDialog
+//! \instantiates QQuickLabsPlatformColorDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native color dialog.
@@ -87,8 +87,8 @@ QT_BEGIN_NAMESPACE
     \labs
 */
 
-QQuickPlatformColorDialog::QQuickPlatformColorDialog(QObject *parent)
-    : QQuickPlatformDialog(QPlatformTheme::ColorDialog, parent),
+QQuickLabsPlatformColorDialog::QQuickLabsPlatformColorDialog(QObject *parent)
+    : QQuickLabsPlatformDialog(QPlatformTheme::ColorDialog, parent),
       m_options(QColorDialogOptions::create())
 {
 }
@@ -106,12 +106,12 @@ QQuickPlatformColorDialog::QQuickPlatformColorDialog(QObject *parent)
 
     \sa currentColor, {Dialog::}{accepted()}
 */
-QColor QQuickPlatformColorDialog::color() const
+QColor QQuickLabsPlatformColorDialog::color() const
 {
     return m_color;
 }
 
-void QQuickPlatformColorDialog::setColor(const QColor &color)
+void QQuickLabsPlatformColorDialog::setColor(const QColor &color)
 {
     if (m_color == color)
         return;
@@ -132,14 +132,14 @@ void QQuickPlatformColorDialog::setColor(const QColor &color)
 
     \sa color
 */
-QColor QQuickPlatformColorDialog::currentColor() const
+QColor QQuickLabsPlatformColorDialog::currentColor() const
 {
     if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(handle()))
         return colorDialog->currentColor();
     return m_currentColor;
 }
 
-void QQuickPlatformColorDialog::setCurrentColor(const QColor &color)
+void QQuickLabsPlatformColorDialog::setCurrentColor(const QColor &color)
 {
     if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(handle()))
         colorDialog->setCurrentColor(color);
@@ -161,12 +161,12 @@ void QQuickPlatformColorDialog::setCurrentColor(const QColor &color)
     \value ColorDialog.ShowAlphaChannel Allow the user to select the alpha component of a color.
     \value ColorDialog.NoButtons Don't display \uicontrol OK and \uicontrol Cancel buttons (useful for "live dialogs").
 */
-QColorDialogOptions::ColorDialogOptions QQuickPlatformColorDialog::options() const
+QColorDialogOptions::ColorDialogOptions QQuickLabsPlatformColorDialog::options() const
 {
     return m_options->options();
 }
 
-void QQuickPlatformColorDialog::setOptions(QColorDialogOptions::ColorDialogOptions options)
+void QQuickLabsPlatformColorDialog::setOptions(QColorDialogOptions::ColorDialogOptions options)
 {
     if (options == m_options->options())
         return;
@@ -175,32 +175,32 @@ void QQuickPlatformColorDialog::setOptions(QColorDialogOptions::ColorDialogOptio
     emit optionsChanged();
 }
 
-bool QQuickPlatformColorDialog::useNativeDialog() const
+bool QQuickLabsPlatformColorDialog::useNativeDialog() const
 {
-    return QQuickPlatformDialog::useNativeDialog()
+    return QQuickLabsPlatformDialog::useNativeDialog()
             && !m_options->testOption(QColorDialogOptions::DontUseNativeDialog);
 }
 
-void QQuickPlatformColorDialog::onCreate(QPlatformDialogHelper *dialog)
+void QQuickLabsPlatformColorDialog::onCreate(QPlatformDialogHelper *dialog)
 {
     if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(dialog)) {
-        connect(colorDialog, &QPlatformColorDialogHelper::currentColorChanged, this, &QQuickPlatformColorDialog::currentColorChanged);
+        connect(colorDialog, &QPlatformColorDialogHelper::currentColorChanged, this, &QQuickLabsPlatformColorDialog::currentColorChanged);
         colorDialog->setOptions(m_options);
         colorDialog->setCurrentColor(m_currentColor);
     }
 }
 
-void QQuickPlatformColorDialog::onShow(QPlatformDialogHelper *dialog)
+void QQuickLabsPlatformColorDialog::onShow(QPlatformDialogHelper *dialog)
 {
     m_options->setWindowTitle(title());
     if (QPlatformColorDialogHelper *colorDialog = qobject_cast<QPlatformColorDialogHelper *>(dialog))
         colorDialog->setOptions(m_options);
 }
 
-void QQuickPlatformColorDialog::accept()
+void QQuickLabsPlatformColorDialog::accept()
 {
     setColor(currentColor());
-    QQuickPlatformDialog::accept();
+    QQuickLabsPlatformDialog::accept();
 }
 
 QT_END_NAMESPACE

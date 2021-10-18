@@ -38,25 +38,25 @@
 #include <QtQml/qqml.h>
 #include <QtCore/qloggingcategory.h>
 
-#include "qquickplatformdialog_p.h"
-#include "qquickplatformcolordialog_p.h"
-#include "qquickplatformfiledialog_p.h"
-#include "qquickplatformfolderdialog_p.h"
-#include "qquickplatformfontdialog_p.h"
-#include "qquickplatformmessagedialog_p.h"
+#include "qquicklabsplatformdialog_p.h"
+#include "qquicklabsplatformcolordialog_p.h"
+#include "qquicklabsplatformfiledialog_p.h"
+#include "qquicklabsplatformfolderdialog_p.h"
+#include "qquicklabsplatformfontdialog_p.h"
+#include "qquicklabsplatformmessagedialog_p.h"
 
-#include "qquickplatformmenu_p.h"
-#include "qquickplatformmenubar_p.h"
-#include "qquickplatformmenuitem_p.h"
-#include "qquickplatformmenuitemgroup_p.h"
-#include "qquickplatformmenuseparator_p.h"
+#include "qquicklabsplatformmenu_p.h"
+#include "qquicklabsplatformmenubar_p.h"
+#include "qquicklabsplatformmenuitem_p.h"
+#include "qquicklabsplatformmenuitemgroup_p.h"
+#include "qquicklabsplatformmenuseparator_p.h"
 
-#include "qquickplatformstandardpaths_p.h"
+#include "qquicklabsplatformstandardpaths_p.h"
 #if QT_CONFIG(systemtrayicon)
-# include "qquickplatformsystemtrayicon_p.h"
+# include "qquicklabsplatformsystemtrayicon_p.h"
 #endif
 
-#include "qquickplatformicon_p.h"
+#include "qquicklabsplatformicon_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -80,36 +80,36 @@ QtLabsPlatformPlugin::QtLabsPlatformPlugin(QObject *parent) : QQmlExtensionPlugi
 
 void QtLabsPlatformPlugin::registerTypes(const char *uri)
 {
-    qmlRegisterUncreatableType<QQuickPlatformDialog>(uri, 1, 0, "Dialog", QQuickPlatformDialog::tr("Dialog is an abstract base class"));
-    qmlRegisterType<QQuickPlatformColorDialog>(uri, 1, 0, "ColorDialog");
-    qmlRegisterType<QQuickPlatformFileDialog>(uri, 1, 0, "FileDialog");
-    qmlRegisterAnonymousType<QQuickPlatformFileNameFilter>(uri, 1);
-    qmlRegisterType<QQuickPlatformFolderDialog>(uri, 1, 0, "FolderDialog");
-    qmlRegisterType<QQuickPlatformFontDialog>(uri, 1, 0, "FontDialog");
-    qmlRegisterType<QQuickPlatformMessageDialog>(uri, 1, 0, "MessageDialog");
+    qmlRegisterUncreatableType<QQuickLabsPlatformDialog>(uri, 1, 0, "Dialog", QQuickLabsPlatformDialog::tr("Dialog is an abstract base class"));
+    qmlRegisterType<QQuickLabsPlatformColorDialog>(uri, 1, 0, "ColorDialog");
+    qmlRegisterType<QQuickLabsPlatformFileDialog>(uri, 1, 0, "FileDialog");
+    qmlRegisterAnonymousType<QQuickLabsPlatformFileNameFilter>(uri, 1);
+    qmlRegisterType<QQuickLabsPlatformFolderDialog>(uri, 1, 0, "FolderDialog");
+    qmlRegisterType<QQuickLabsPlatformFontDialog>(uri, 1, 0, "FontDialog");
+    qmlRegisterType<QQuickLabsPlatformMessageDialog>(uri, 1, 0, "MessageDialog");
 
-    qmlRegisterType<QQuickPlatformMenu>(uri, 1, 0, "Menu");
-    qmlRegisterType<QQuickPlatformMenuBar>(uri, 1, 0, "MenuBar");
-    qmlRegisterType<QQuickPlatformMenuItem>(uri, 1, 0, "MenuItem");
-    qmlRegisterType<QQuickPlatformMenuItem, 1>(uri, 1, 1, "MenuItem");
-    qmlRegisterType<QQuickPlatformMenuItemGroup>(uri, 1, 0, "MenuItemGroup");
-    qmlRegisterType<QQuickPlatformMenuSeparator>(uri, 1, 0, "MenuSeparator");
+    qmlRegisterType<QQuickLabsPlatformMenu>(uri, 1, 0, "Menu");
+    qmlRegisterType<QQuickLabsPlatformMenuBar>(uri, 1, 0, "MenuBar");
+    qmlRegisterType<QQuickLabsPlatformMenuItem>(uri, 1, 0, "MenuItem");
+    qmlRegisterType<QQuickLabsPlatformMenuItem, 1>(uri, 1, 1, "MenuItem");
+    qmlRegisterType<QQuickLabsPlatformMenuItemGroup>(uri, 1, 0, "MenuItemGroup");
+    qmlRegisterType<QQuickLabsPlatformMenuSeparator>(uri, 1, 0, "MenuSeparator");
     qRegisterMetaType<QPlatformMenu::MenuType>();
 
-    qmlRegisterUncreatableType<QPlatformDialogHelper>(uri, 1, 0, "StandardButton", QQuickPlatformDialog::tr("Cannot create an instance of StandardButton"));
-    qmlRegisterSingletonType<QQuickPlatformStandardPaths>(uri, 1, 0, "StandardPaths", QQuickPlatformStandardPaths::create);
+    qmlRegisterUncreatableType<QPlatformDialogHelper>(uri, 1, 0, "StandardButton", QQuickLabsPlatformDialog::tr("Cannot create an instance of StandardButton"));
+    qmlRegisterSingletonType<QQuickLabsPlatformStandardPaths>(uri, 1, 0, "StandardPaths", QQuickLabsPlatformStandardPaths::create);
     qRegisterMetaType<QStandardPaths::StandardLocation>();
     qRegisterMetaType<QStandardPaths::LocateOptions>();
 
 #if QT_CONFIG(systemtrayicon)
-    qmlRegisterType<QQuickPlatformSystemTrayIcon>(uri, 1, 0, "SystemTrayIcon");
-    qmlRegisterType<QQuickPlatformSystemTrayIcon, 1>(uri, 1, 1, "SystemTrayIcon");
+    qmlRegisterType<QQuickLabsPlatformSystemTrayIcon>(uri, 1, 0, "SystemTrayIcon");
+    qmlRegisterType<QQuickLabsPlatformSystemTrayIcon, 1>(uri, 1, 1, "SystemTrayIcon");
     qRegisterMetaType<QPlatformSystemTrayIcon::ActivationReason>();
     qRegisterMetaType<QPlatformSystemTrayIcon::MessageIcon>();
 #endif
 
-    qmlRegisterAnonymousType<QQuickPlatformIcon>(uri, 1);
-    qRegisterMetaType<QQuickPlatformIcon>();
+    qmlRegisterAnonymousType<QQuickLabsPlatformIcon>(uri, 1);
+    qRegisterMetaType<QQuickLabsPlatformIcon>();
 }
 
 QT_END_NAMESPACE

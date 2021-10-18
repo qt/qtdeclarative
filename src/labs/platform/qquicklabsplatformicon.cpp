@@ -34,53 +34,48 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPLATFORMICON_P_H
-#define QQUICKPLATFORMICON_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include <QtCore/qurl.h>
-#include <QtCore/qstring.h>
+#include "qquicklabsplatformicon_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QObject;
-
-class QQuickPlatformIcon
+QUrl QQuickLabsPlatformIcon::source() const
 {
-    Q_GADGET
-    Q_PROPERTY(QUrl source READ source WRITE setSource)
-    Q_PROPERTY(QString name READ name WRITE setName)
-    Q_PROPERTY(bool mask READ isMask WRITE setMask)
+    return m_source;
+}
 
-public:
-    QUrl source() const;
-    void setSource(const QUrl &source);
+void QQuickLabsPlatformIcon::setSource(const QUrl& source)
+{
+    m_source = source;
+}
 
-    QString name() const;
-    void setName(const QString &name);
+QString QQuickLabsPlatformIcon::name() const
+{
+    return m_name;
+}
 
-    bool isMask() const;
-    void setMask(bool mask);
+void QQuickLabsPlatformIcon::setName(const QString& name)
+{
+    m_name = name;
+}
 
-    bool operator==(const QQuickPlatformIcon &other) const;
-    bool operator!=(const QQuickPlatformIcon &other) const;
+bool QQuickLabsPlatformIcon::isMask() const
+{
+    return m_mask;
+}
 
-private:
-    bool m_mask = false;
-    QUrl m_source;
-    QString m_name;
-};
+void QQuickLabsPlatformIcon::setMask(bool mask)
+{
+    m_mask = mask;
+}
+
+bool QQuickLabsPlatformIcon::operator==(const QQuickLabsPlatformIcon &other) const
+{
+    return m_source == other.m_source && m_name == other.m_name && m_mask == other.m_mask;
+}
+
+bool QQuickLabsPlatformIcon::operator!=(const QQuickLabsPlatformIcon &other) const
+{
+    return !(*this == other);
+}
 
 QT_END_NAMESPACE
-
-#endif // QQUICKPLATFORMICON_P_H

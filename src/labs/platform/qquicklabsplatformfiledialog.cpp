@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformfiledialog_p.h"
+#include "qquicklabsplatformfiledialog_p.h"
 
 #include <QtCore/qlist.h>
 
@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype FileDialog
     \inherits Dialog
-//!     \instantiates QQuickPlatformFileDialog
+//!     \instantiates QQuickLabsPlatformFileDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native file dialog.
@@ -95,8 +95,8 @@ QT_BEGIN_NAMESPACE
     \sa FolderDialog, StandardPaths
 */
 
-QQuickPlatformFileDialog::QQuickPlatformFileDialog(QObject *parent)
-    : QQuickPlatformDialog(QPlatformTheme::FileDialog, parent),
+QQuickLabsPlatformFileDialog::QQuickLabsPlatformFileDialog(QObject *parent)
+    : QQuickLabsPlatformDialog(QPlatformTheme::FileDialog, parent),
       m_fileMode(OpenFile),
       m_options(QFileDialogOptions::create()),
       m_selectedNameFilter(nullptr)
@@ -115,12 +115,12 @@ QQuickPlatformFileDialog::QQuickPlatformFileDialog(QObject *parent)
     \value FileDialog.OpenFiles The dialog is used to select multiple existing files.
     \value FileDialog.SaveFile The dialog is used to select any file. The file does not have to exist.
 */
-QQuickPlatformFileDialog::FileMode QQuickPlatformFileDialog::fileMode() const
+QQuickLabsPlatformFileDialog::FileMode QQuickLabsPlatformFileDialog::fileMode() const
 {
     return m_fileMode;
 }
 
-void QQuickPlatformFileDialog::setFileMode(FileMode mode)
+void QQuickLabsPlatformFileDialog::setFileMode(FileMode mode)
 {
     if (mode == m_fileMode)
         return;
@@ -159,12 +159,12 @@ void QQuickPlatformFileDialog::setFileMode(FileMode mode)
 
     \sa currentFile, {Dialog::}{accepted()}
 */
-QUrl QQuickPlatformFileDialog::file() const
+QUrl QQuickLabsPlatformFileDialog::file() const
 {
     return addDefaultSuffix(m_files.value(0));
 }
 
-void QQuickPlatformFileDialog::setFile(const QUrl &file)
+void QQuickLabsPlatformFileDialog::setFile(const QUrl &file)
 {
     setFiles(QList<QUrl>() << file);
 }
@@ -182,12 +182,12 @@ void QQuickPlatformFileDialog::setFile(const QUrl &file)
 
     \sa currentFiles, {Dialog::}{accepted()}
 */
-QList<QUrl> QQuickPlatformFileDialog::files() const
+QList<QUrl> QQuickLabsPlatformFileDialog::files() const
 {
     return addDefaultSuffixes(m_files);
 }
 
-void QQuickPlatformFileDialog::setFiles(const QList<QUrl> &files)
+void QQuickLabsPlatformFileDialog::setFiles(const QList<QUrl> &files)
 {
     if (m_files == files)
         return;
@@ -210,12 +210,12 @@ void QQuickPlatformFileDialog::setFiles(const QList<QUrl> &files)
 
     \sa file, currentFiles
 */
-QUrl QQuickPlatformFileDialog::currentFile() const
+QUrl QQuickLabsPlatformFileDialog::currentFile() const
 {
     return currentFiles().value(0);
 }
 
-void QQuickPlatformFileDialog::setCurrentFile(const QUrl &file)
+void QQuickLabsPlatformFileDialog::setCurrentFile(const QUrl &file)
 {
     setCurrentFiles(QList<QUrl>() << file);
 }
@@ -231,14 +231,14 @@ void QQuickPlatformFileDialog::setCurrentFile(const QUrl &file)
 
     \sa files, currentFile
 */
-QList<QUrl> QQuickPlatformFileDialog::currentFiles() const
+QList<QUrl> QQuickLabsPlatformFileDialog::currentFiles() const
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
         return fileDialog->selectedFiles();
     return m_options->initiallySelectedFiles();
 }
 
-void QQuickPlatformFileDialog::setCurrentFiles(const QList<QUrl> &files)
+void QQuickLabsPlatformFileDialog::setCurrentFiles(const QList<QUrl> &files)
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle())) {
         for (const QUrl &file : files)
@@ -255,14 +255,14 @@ void QQuickPlatformFileDialog::setCurrentFiles(const QList<QUrl> &files)
 
     \sa FolderDialog
 */
-QUrl QQuickPlatformFileDialog::folder() const
+QUrl QQuickLabsPlatformFileDialog::folder() const
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
         return fileDialog->directory();
     return m_options->initialDirectory();
 }
 
-void QQuickPlatformFileDialog::setFolder(const QUrl &folder)
+void QQuickLabsPlatformFileDialog::setFolder(const QUrl &folder)
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
         fileDialog->setDirectory(folder);
@@ -286,12 +286,12 @@ void QQuickPlatformFileDialog::setFolder(const QUrl &folder)
     \value FileDialog.ReadOnly Indicates that the dialog doesn't allow creating directories.
     \value FileDialog.HideNameFilterDetails Indicates if the file name filter details are hidden or not.
 */
-QFileDialogOptions::FileDialogOptions QQuickPlatformFileDialog::options() const
+QFileDialogOptions::FileDialogOptions QQuickLabsPlatformFileDialog::options() const
 {
     return m_options->options();
 }
 
-void QQuickPlatformFileDialog::setOptions(QFileDialogOptions::FileDialogOptions options)
+void QQuickLabsPlatformFileDialog::setOptions(QFileDialogOptions::FileDialogOptions options)
 {
     if (options == m_options->options())
         return;
@@ -300,7 +300,7 @@ void QQuickPlatformFileDialog::setOptions(QFileDialogOptions::FileDialogOptions 
     emit optionsChanged();
 }
 
-void QQuickPlatformFileDialog::resetOptions()
+void QQuickLabsPlatformFileDialog::resetOptions()
 {
     setOptions({});
 }
@@ -326,12 +326,12 @@ void QQuickPlatformFileDialog::resetOptions()
 
     \sa selectedNameFilter
 */
-QStringList QQuickPlatformFileDialog::nameFilters() const
+QStringList QQuickLabsPlatformFileDialog::nameFilters() const
 {
     return m_options->nameFilters();
 }
 
-void QQuickPlatformFileDialog::setNameFilters(const QStringList &filters)
+void QQuickLabsPlatformFileDialog::setNameFilters(const QStringList &filters)
 {
     if (filters == m_options->nameFilters())
         return;
@@ -346,7 +346,7 @@ void QQuickPlatformFileDialog::setNameFilters(const QStringList &filters)
     emit nameFiltersChanged();
 }
 
-void QQuickPlatformFileDialog::resetNameFilters()
+void QQuickLabsPlatformFileDialog::resetNameFilters()
 {
     setNameFilters(QStringList());
 }
@@ -394,11 +394,11 @@ void QQuickPlatformFileDialog::resetNameFilters()
 
     \sa nameFilters
 */
-QQuickPlatformFileNameFilter *QQuickPlatformFileDialog::selectedNameFilter() const
+QQuickLabsPlatformFileNameFilter *QQuickLabsPlatformFileDialog::selectedNameFilter() const
 {
     if (!m_selectedNameFilter) {
-        QQuickPlatformFileDialog *that = const_cast<QQuickPlatformFileDialog *>(this);
-        m_selectedNameFilter = new QQuickPlatformFileNameFilter(that);
+        QQuickLabsPlatformFileDialog *that = const_cast<QQuickLabsPlatformFileDialog *>(this);
+        m_selectedNameFilter = new QQuickLabsPlatformFileNameFilter(that);
         m_selectedNameFilter->setOptions(m_options);
     }
     return m_selectedNameFilter;
@@ -413,12 +413,12 @@ QQuickPlatformFileNameFilter *QQuickPlatformFileDialog::selectedNameFilter() con
 
     If the first character is a dot ('.'), it is removed.
 */
-QString QQuickPlatformFileDialog::defaultSuffix() const
+QString QQuickLabsPlatformFileDialog::defaultSuffix() const
 {
     return m_options->defaultSuffix();
 }
 
-void QQuickPlatformFileDialog::setDefaultSuffix(const QString &suffix)
+void QQuickLabsPlatformFileDialog::setDefaultSuffix(const QString &suffix)
 {
     if (suffix == m_options->defaultSuffix())
         return;
@@ -427,7 +427,7 @@ void QQuickPlatformFileDialog::setDefaultSuffix(const QString &suffix)
     emit defaultSuffixChanged();
 }
 
-void QQuickPlatformFileDialog::resetDefaultSuffix()
+void QQuickLabsPlatformFileDialog::resetDefaultSuffix()
 {
     setDefaultSuffix(QString());
 }
@@ -445,12 +445,12 @@ void QQuickPlatformFileDialog::resetDefaultSuffix()
 
     \sa rejectLabel
 */
-QString QQuickPlatformFileDialog::acceptLabel() const
+QString QQuickLabsPlatformFileDialog::acceptLabel() const
 {
     return m_options->labelText(QFileDialogOptions::Accept);
 }
 
-void QQuickPlatformFileDialog::setAcceptLabel(const QString &label)
+void QQuickLabsPlatformFileDialog::setAcceptLabel(const QString &label)
 {
     if (label == m_options->labelText(QFileDialogOptions::Accept))
         return;
@@ -459,7 +459,7 @@ void QQuickPlatformFileDialog::setAcceptLabel(const QString &label)
     emit acceptLabelChanged();
 }
 
-void QQuickPlatformFileDialog::resetAcceptLabel()
+void QQuickLabsPlatformFileDialog::resetAcceptLabel()
 {
     setAcceptLabel(QString());
 }
@@ -476,12 +476,12 @@ void QQuickPlatformFileDialog::resetAcceptLabel()
 
     \sa acceptLabel
 */
-QString QQuickPlatformFileDialog::rejectLabel() const
+QString QQuickLabsPlatformFileDialog::rejectLabel() const
 {
     return m_options->labelText(QFileDialogOptions::Reject);
 }
 
-void QQuickPlatformFileDialog::setRejectLabel(const QString &label)
+void QQuickLabsPlatformFileDialog::setRejectLabel(const QString &label)
 {
     if (label == m_options->labelText(QFileDialogOptions::Reject))
         return;
@@ -490,29 +490,29 @@ void QQuickPlatformFileDialog::setRejectLabel(const QString &label)
     emit rejectLabelChanged();
 }
 
-void QQuickPlatformFileDialog::resetRejectLabel()
+void QQuickLabsPlatformFileDialog::resetRejectLabel()
 {
     setRejectLabel(QString());
 }
 
-bool QQuickPlatformFileDialog::useNativeDialog() const
+bool QQuickLabsPlatformFileDialog::useNativeDialog() const
 {
-    return QQuickPlatformDialog::useNativeDialog()
+    return QQuickLabsPlatformDialog::useNativeDialog()
             && !m_options->testOption(QFileDialogOptions::DontUseNativeDialog);
 }
 
-void QQuickPlatformFileDialog::onCreate(QPlatformDialogHelper *dialog)
+void QQuickLabsPlatformFileDialog::onCreate(QPlatformDialogHelper *dialog)
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
         // TODO: emit currentFileChanged only when the first entry in currentFiles changes
-        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickPlatformFileDialog::currentFileChanged);
-        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickPlatformFileDialog::currentFilesChanged);
-        connect(fileDialog, &QPlatformFileDialogHelper::directoryEntered, this, &QQuickPlatformFileDialog::folderChanged);
+        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickLabsPlatformFileDialog::currentFileChanged);
+        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickLabsPlatformFileDialog::currentFilesChanged);
+        connect(fileDialog, &QPlatformFileDialogHelper::directoryEntered, this, &QQuickLabsPlatformFileDialog::folderChanged);
         fileDialog->setOptions(m_options);
     }
 }
 
-void QQuickPlatformFileDialog::onShow(QPlatformDialogHelper *dialog)
+void QQuickLabsPlatformFileDialog::onShow(QPlatformDialogHelper *dialog)
 {
     m_options->setWindowTitle(title());
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
@@ -524,29 +524,29 @@ void QQuickPlatformFileDialog::onShow(QPlatformDialogHelper *dialog)
             const QString filter = m_options->nameFilters().value(index);
             m_options->setInitiallySelectedNameFilter(filter);
             fileDialog->selectNameFilter(filter);
-            connect(fileDialog, &QPlatformFileDialogHelper::filterSelected, m_selectedNameFilter, &QQuickPlatformFileNameFilter::update);
+            connect(fileDialog, &QPlatformFileDialogHelper::filterSelected, m_selectedNameFilter, &QQuickLabsPlatformFileNameFilter::update);
         }
     }
     if (m_firstShow)
         m_firstShow = false;
 }
 
-void QQuickPlatformFileDialog::onHide(QPlatformDialogHelper *dialog)
+void QQuickLabsPlatformFileDialog::onHide(QPlatformDialogHelper *dialog)
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
         if (m_selectedNameFilter)
-            disconnect(fileDialog, &QPlatformFileDialogHelper::filterSelected, m_selectedNameFilter, &QQuickPlatformFileNameFilter::update);
+            disconnect(fileDialog, &QPlatformFileDialogHelper::filterSelected, m_selectedNameFilter, &QQuickLabsPlatformFileNameFilter::update);
     }
 }
 
-void QQuickPlatformFileDialog::accept()
+void QQuickLabsPlatformFileDialog::accept()
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
         setFiles(fileDialog->selectedFiles());
-    QQuickPlatformDialog::accept();
+    QQuickLabsPlatformDialog::accept();
 }
 
-QUrl QQuickPlatformFileDialog::addDefaultSuffix(const QUrl &file) const
+QUrl QQuickLabsPlatformFileDialog::addDefaultSuffix(const QUrl &file) const
 {
     QUrl url = file;
     const QString path = url.path();
@@ -556,7 +556,7 @@ QUrl QQuickPlatformFileDialog::addDefaultSuffix(const QUrl &file) const
     return url;
 }
 
-QList<QUrl> QQuickPlatformFileDialog::addDefaultSuffixes(const QList<QUrl> &files) const
+QList<QUrl> QQuickLabsPlatformFileDialog::addDefaultSuffixes(const QList<QUrl> &files) const
 {
     QList<QUrl> urls;
     urls.reserve(files.size());
@@ -565,17 +565,17 @@ QList<QUrl> QQuickPlatformFileDialog::addDefaultSuffixes(const QList<QUrl> &file
     return urls;
 }
 
-QQuickPlatformFileNameFilter::QQuickPlatformFileNameFilter(QObject *parent)
+QQuickLabsPlatformFileNameFilter::QQuickLabsPlatformFileNameFilter(QObject *parent)
     : QObject(parent), m_index(-1)
 {
 }
 
-int QQuickPlatformFileNameFilter::index() const
+int QQuickLabsPlatformFileNameFilter::index() const
 {
     return m_index;
 }
 
-void QQuickPlatformFileNameFilter::setIndex(int index)
+void QQuickLabsPlatformFileNameFilter::setIndex(int index)
 {
     if (m_index == index)
         return;
@@ -584,22 +584,22 @@ void QQuickPlatformFileNameFilter::setIndex(int index)
     emit indexChanged(index);
 }
 
-QString QQuickPlatformFileNameFilter::name() const
+QString QQuickLabsPlatformFileNameFilter::name() const
 {
     return m_name;
 }
 
-QStringList QQuickPlatformFileNameFilter::extensions() const
+QStringList QQuickLabsPlatformFileNameFilter::extensions() const
 {
     return m_extensions;
 }
 
-QSharedPointer<QFileDialogOptions> QQuickPlatformFileNameFilter::options() const
+QSharedPointer<QFileDialogOptions> QQuickLabsPlatformFileNameFilter::options() const
 {
     return m_options;
 }
 
-void QQuickPlatformFileNameFilter::setOptions(const QSharedPointer<QFileDialogOptions> &options)
+void QQuickLabsPlatformFileNameFilter::setOptions(const QSharedPointer<QFileDialogOptions> &options)
 {
     m_options = options;
 }
@@ -629,7 +629,7 @@ static QStringList extractExtensions(QStringView filter)
     return extensions;
 }
 
-void QQuickPlatformFileNameFilter::update(const QString &filter)
+void QQuickLabsPlatformFileNameFilter::update(const QString &filter)
 {
     const QStringList filters = nameFilters();
 
@@ -649,12 +649,12 @@ void QQuickPlatformFileNameFilter::update(const QString &filter)
         emit extensionsChanged(m_extensions);
 }
 
-QStringList QQuickPlatformFileNameFilter::nameFilters() const
+QStringList QQuickLabsPlatformFileNameFilter::nameFilters() const
 {
     return m_options ? m_options->nameFilters() : QStringList();
 }
 
-QString QQuickPlatformFileNameFilter::nameFilter(int index) const
+QString QQuickLabsPlatformFileNameFilter::nameFilter(int index) const
 {
     return m_options ? m_options->nameFilters().value(index) : QString();
 }

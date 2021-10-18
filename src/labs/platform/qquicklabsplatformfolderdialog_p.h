@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPLATFORMFOLDERDIALOG_P_H
-#define QQUICKPLATFORMFOLDERDIALOG_P_H
+#ifndef QQUICKLABSPLATFORMFOLDERDIALOG_P_H
+#define QQUICKLABSPLATFORMFOLDERDIALOG_P_H
 
 //
 //  W A R N I N G
@@ -48,13 +48,13 @@
 // We mean it.
 //
 
-#include "qquickplatformdialog_p.h"
+#include "qquicklabsplatformdialog_p.h"
 #include <QtCore/qurl.h>
 #include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPlatformFolderDialog : public QQuickPlatformDialog
+class QQuickLabsPlatformFolderDialog : public QQuickLabsPlatformDialog
 {
     Q_OBJECT
     Q_PROPERTY(QUrl folder READ folder WRITE setFolder NOTIFY folderChanged FINAL)
@@ -65,7 +65,7 @@ class QQuickPlatformFolderDialog : public QQuickPlatformDialog
     Q_FLAGS(QFileDialogOptions::FileDialogOptions)
 
 public:
-    explicit QQuickPlatformFolderDialog(QObject *parent = nullptr);
+    explicit QQuickLabsPlatformFolderDialog(QObject *parent = nullptr);
 
     QUrl folder() const;
     void setFolder(const QUrl &folder);
@@ -105,6 +105,6 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPlatformFolderDialog)
+QML_DECLARE_TYPE(QQuickLabsPlatformFolderDialog)
 
-#endif // QQUICKPLATFORMFOLDERDIALOG_P_H
+#endif // QQUICKLABSPLATFORMFOLDERDIALOG_P_H
