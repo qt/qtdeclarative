@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformdialog_p.h"
+#include "qquicklabsplatformdialog_p.h"
 
 #include <QtCore/qloggingcategory.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype Dialog
     \inherits QtObject
-//! \instantiates QQuickPlatformDialog
+//! \instantiates QQuickLabsPlatformDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief The base class of native dialogs.
@@ -87,7 +87,7 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformDialogs)
 
-QQuickPlatformDialog::QQuickPlatformDialog(QPlatformTheme::DialogType type, QObject *parent)
+QQuickLabsPlatformDialog::QQuickLabsPlatformDialog(QPlatformTheme::DialogType type, QObject *parent)
     : QObject(parent),
       m_visible(false),
       m_complete(false),
@@ -100,12 +100,12 @@ QQuickPlatformDialog::QQuickPlatformDialog(QPlatformTheme::DialogType type, QObj
 {
 }
 
-QQuickPlatformDialog::~QQuickPlatformDialog()
+QQuickLabsPlatformDialog::~QQuickLabsPlatformDialog()
 {
     destroy();
 }
 
-QPlatformDialogHelper *QQuickPlatformDialog::handle() const
+QPlatformDialogHelper *QQuickLabsPlatformDialog::handle() const
 {
     return m_handle;
 }
@@ -117,7 +117,7 @@ QPlatformDialogHelper *QQuickPlatformDialog::handle() const
     This default property holds the list of all objects declared as children of
     the dialog.
 */
-QQmlListProperty<QObject> QQuickPlatformDialog::data()
+QQmlListProperty<QObject> QQuickLabsPlatformDialog::data()
 {
     return QQmlListProperty<QObject>(this, &m_data);
 }
@@ -131,12 +131,12 @@ QQmlListProperty<QObject> QQuickPlatformDialog::data()
     the QML parent objects until a \l Window or an \l Item that has a window
     is found.
 */
-QWindow *QQuickPlatformDialog::parentWindow() const
+QWindow *QQuickLabsPlatformDialog::parentWindow() const
 {
     return m_parentWindow;
 }
 
-void QQuickPlatformDialog::setParentWindow(QWindow *window)
+void QQuickLabsPlatformDialog::setParentWindow(QWindow *window)
 {
     if (m_parentWindow == window)
         return;
@@ -150,12 +150,12 @@ void QQuickPlatformDialog::setParentWindow(QWindow *window)
 
     This property holds the title of the dialog.
 */
-QString QQuickPlatformDialog::title() const
+QString QQuickLabsPlatformDialog::title() const
 {
     return m_title;
 }
 
-void QQuickPlatformDialog::setTitle(const QString &title)
+void QQuickLabsPlatformDialog::setTitle(const QString &title)
 {
     if (m_title == title)
         return;
@@ -169,12 +169,12 @@ void QQuickPlatformDialog::setTitle(const QString &title)
 
     This property holds the window flags of the dialog. The default value is \c Qt.Dialog.
 */
-Qt::WindowFlags QQuickPlatformDialog::flags() const
+Qt::WindowFlags QQuickLabsPlatformDialog::flags() const
 {
     return m_flags;
 }
 
-void QQuickPlatformDialog::setFlags(Qt::WindowFlags flags)
+void QQuickLabsPlatformDialog::setFlags(Qt::WindowFlags flags)
 {
     if (m_flags == flags)
         return;
@@ -193,12 +193,12 @@ void QQuickPlatformDialog::setFlags(Qt::WindowFlags flags)
     \value Qt.WindowModal The dialog is modal to a single window hierarchy and blocks input to its parent window, all grandparent windows, and all siblings of its parent and grandparent windows.
     \value Qt.ApplicationModal The dialog is modal to the application and blocks input to all windows.
 */
-Qt::WindowModality QQuickPlatformDialog::modality() const
+Qt::WindowModality QQuickLabsPlatformDialog::modality() const
 {
     return m_modality;
 }
 
-void QQuickPlatformDialog::setModality(Qt::WindowModality modality)
+void QQuickLabsPlatformDialog::setModality(Qt::WindowModality modality)
 {
     if (m_modality == modality)
         return;
@@ -214,12 +214,12 @@ void QQuickPlatformDialog::setModality(Qt::WindowModality modality)
 
     \sa open(), close()
 */
-bool QQuickPlatformDialog::isVisible() const
+bool QQuickLabsPlatformDialog::isVisible() const
 {
     return m_handle && m_visible;
 }
 
-void QQuickPlatformDialog::setVisible(bool visible)
+void QQuickLabsPlatformDialog::setVisible(bool visible)
 {
     if (visible)
         open();
@@ -239,12 +239,12 @@ void QQuickPlatformDialog::setVisible(bool visible)
     \note MessageDialog sets the result to the value of the clicked standard
           button instead of using the standard result codes.
 */
-int QQuickPlatformDialog::result() const
+int QQuickLabsPlatformDialog::result() const
 {
     return m_result;
 }
 
-void QQuickPlatformDialog::setResult(int result)
+void QQuickLabsPlatformDialog::setResult(int result)
 {
     if (m_result == result)
         return;
@@ -260,7 +260,7 @@ void QQuickPlatformDialog::setResult(int result)
 
     \sa visible, close()
 */
-void QQuickPlatformDialog::open()
+void QQuickLabsPlatformDialog::open()
 {
     if (m_visible || !create())
         return;
@@ -278,7 +278,7 @@ void QQuickPlatformDialog::open()
 
     \sa visible, open()
 */
-void QQuickPlatformDialog::close()
+void QQuickLabsPlatformDialog::close()
 {
     if (!m_handle || !m_visible)
         return;
@@ -296,7 +296,7 @@ void QQuickPlatformDialog::close()
 
     \sa reject()
 */
-void QQuickPlatformDialog::accept()
+void QQuickLabsPlatformDialog::accept()
 {
     done(Accepted);
 }
@@ -308,7 +308,7 @@ void QQuickPlatformDialog::accept()
 
     \sa accept()
 */
-void QQuickPlatformDialog::reject()
+void QQuickLabsPlatformDialog::reject()
 {
     done(Rejected);
 }
@@ -320,7 +320,7 @@ void QQuickPlatformDialog::reject()
 
     \sa accept(), reject(), result
 */
-void QQuickPlatformDialog::done(int result)
+void QQuickLabsPlatformDialog::done(int result)
 {
     close();
     setResult(result);
@@ -331,11 +331,11 @@ void QQuickPlatformDialog::done(int result)
         emit rejected();
 }
 
-void QQuickPlatformDialog::classBegin()
+void QQuickLabsPlatformDialog::classBegin()
 {
 }
 
-void QQuickPlatformDialog::componentComplete()
+void QQuickLabsPlatformDialog::componentComplete()
 {
     m_complete = true;
     if (!m_parentWindow)
@@ -344,10 +344,10 @@ void QQuickPlatformDialog::componentComplete()
 
 static const char *qmlTypeName(const QObject *object)
 {
-    return object->metaObject()->className() + qstrlen("QQuickPlatform");
+    return object->metaObject()->className() + qstrlen("QQuickLabsPlatform");
 }
 
-bool QQuickPlatformDialog::create()
+bool QQuickLabsPlatformDialog::create()
 {
     if (!m_handle) {
         if (useNativeDialog())
@@ -357,41 +357,41 @@ bool QQuickPlatformDialog::create()
         qCDebug(qtLabsPlatformDialogs) << qmlTypeName(this) << "->" << m_handle;
         if (m_handle) {
             onCreate(m_handle);
-            connect(m_handle, &QPlatformDialogHelper::accept, this, &QQuickPlatformDialog::accept);
-            connect(m_handle, &QPlatformDialogHelper::reject, this, &QQuickPlatformDialog::reject);
+            connect(m_handle, &QPlatformDialogHelper::accept, this, &QQuickLabsPlatformDialog::accept);
+            connect(m_handle, &QPlatformDialogHelper::reject, this, &QQuickLabsPlatformDialog::reject);
         }
     }
     return m_handle;
 }
 
-void QQuickPlatformDialog::destroy()
+void QQuickLabsPlatformDialog::destroy()
 {
     delete m_handle;
     m_handle = nullptr;
 }
 
-bool QQuickPlatformDialog::useNativeDialog() const
+bool QQuickLabsPlatformDialog::useNativeDialog() const
 {
     return !QCoreApplication::testAttribute(Qt::AA_DontUseNativeDialogs)
             && QGuiApplicationPrivate::platformTheme()->usePlatformNativeDialog(m_type);
 }
 
-void QQuickPlatformDialog::onCreate(QPlatformDialogHelper *dialog)
+void QQuickLabsPlatformDialog::onCreate(QPlatformDialogHelper *dialog)
 {
     Q_UNUSED(dialog);
 }
 
-void QQuickPlatformDialog::onShow(QPlatformDialogHelper *dialog)
+void QQuickLabsPlatformDialog::onShow(QPlatformDialogHelper *dialog)
 {
     Q_UNUSED(dialog);
 }
 
-void QQuickPlatformDialog::onHide(QPlatformDialogHelper *dialog)
+void QQuickLabsPlatformDialog::onHide(QPlatformDialogHelper *dialog)
 {
     Q_UNUSED(dialog);
 }
 
-QWindow *QQuickPlatformDialog::findParentWindow() const
+QWindow *QQuickLabsPlatformDialog::findParentWindow() const
 {
     QObject *obj = parent();
     while (obj) {
@@ -408,4 +408,4 @@ QWindow *QQuickPlatformDialog::findParentWindow() const
 
 QT_END_NAMESPACE
 
-#include "moc_qquickplatformdialog_p.cpp"
+#include "moc_qquicklabsplatformdialog_p.cpp"

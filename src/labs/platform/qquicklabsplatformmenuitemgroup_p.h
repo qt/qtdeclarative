@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPLATFORMMENUITEMGROUP_P_H
-#define QQUICKPLATFORMMENUITEMGROUP_P_H
+#ifndef QQUICKLABSPLATFORMMENUITEMGROUP_P_H
+#define QQUICKLABSPLATFORMMENUITEMGROUP_P_H
 
 //
 //  W A R N I N G
@@ -54,21 +54,21 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPlatformMenuItem;
-class QQuickPlatformMenuItemGroupPrivate;
+class QQuickLabsPlatformMenuItem;
+class QQuickLabsPlatformMenuItemGroupPrivate;
 
-class QQuickPlatformMenuItemGroup : public QObject
+class QQuickLabsPlatformMenuItemGroup : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
     Q_PROPERTY(bool exclusive READ isExclusive WRITE setExclusive NOTIFY exclusiveChanged FINAL)
-    Q_PROPERTY(QQuickPlatformMenuItem *checkedItem READ checkedItem WRITE setCheckedItem NOTIFY checkedItemChanged FINAL)
-    Q_PROPERTY(QQmlListProperty<QQuickPlatformMenuItem> items READ items NOTIFY itemsChanged FINAL)
+    Q_PROPERTY(QQuickLabsPlatformMenuItem *checkedItem READ checkedItem WRITE setCheckedItem NOTIFY checkedItemChanged FINAL)
+    Q_PROPERTY(QQmlListProperty<QQuickLabsPlatformMenuItem> items READ items NOTIFY itemsChanged FINAL)
 
 public:
-    explicit QQuickPlatformMenuItemGroup(QObject *parent = nullptr);
-    ~QQuickPlatformMenuItemGroup();
+    explicit QQuickLabsPlatformMenuItemGroup(QObject *parent = nullptr);
+    ~QQuickLabsPlatformMenuItemGroup();
 
     bool isEnabled() const;
     void setEnabled(bool enabled);
@@ -79,18 +79,18 @@ public:
     bool isExclusive() const;
     void setExclusive(bool exclusive);
 
-    QQuickPlatformMenuItem *checkedItem() const;
-    void setCheckedItem(QQuickPlatformMenuItem *item);
+    QQuickLabsPlatformMenuItem *checkedItem() const;
+    void setCheckedItem(QQuickLabsPlatformMenuItem *item);
 
-    QQmlListProperty<QQuickPlatformMenuItem> items();
+    QQmlListProperty<QQuickLabsPlatformMenuItem> items();
 
-    Q_INVOKABLE void addItem(QQuickPlatformMenuItem *item);
-    Q_INVOKABLE void removeItem(QQuickPlatformMenuItem *item);
+    Q_INVOKABLE void addItem(QQuickLabsPlatformMenuItem *item);
+    Q_INVOKABLE void removeItem(QQuickLabsPlatformMenuItem *item);
     Q_INVOKABLE void clear();
 
 Q_SIGNALS:
-    void triggered(QQuickPlatformMenuItem *item);
-    void hovered(QQuickPlatformMenuItem *item);
+    void triggered(QQuickLabsPlatformMenuItem *item);
+    void hovered(QQuickLabsPlatformMenuItem *item);
 
     void enabledChanged();
     void visibleChanged();
@@ -99,25 +99,25 @@ Q_SIGNALS:
     void itemsChanged();
 
 private:
-    QQuickPlatformMenuItem *findCurrent() const;
+    QQuickLabsPlatformMenuItem *findCurrent() const;
     void updateCurrent();
     void activateItem();
     void hoverItem();
 
-    static void items_append(QQmlListProperty<QQuickPlatformMenuItem> *prop, QQuickPlatformMenuItem *obj);
-    static qsizetype items_count(QQmlListProperty<QQuickPlatformMenuItem> *prop);
-    static QQuickPlatformMenuItem *items_at(QQmlListProperty<QQuickPlatformMenuItem> *prop, qsizetype index);
-    static void items_clear(QQmlListProperty<QQuickPlatformMenuItem> *prop);
+    static void items_append(QQmlListProperty<QQuickLabsPlatformMenuItem> *prop, QQuickLabsPlatformMenuItem *obj);
+    static qsizetype items_count(QQmlListProperty<QQuickLabsPlatformMenuItem> *prop);
+    static QQuickLabsPlatformMenuItem *items_at(QQmlListProperty<QQuickLabsPlatformMenuItem> *prop, qsizetype index);
+    static void items_clear(QQmlListProperty<QQuickLabsPlatformMenuItem> *prop);
 
     bool m_enabled;
     bool m_visible;
     bool m_exclusive;
-    QQuickPlatformMenuItem *m_checkedItem;
-    QList<QQuickPlatformMenuItem*> m_items;
+    QQuickLabsPlatformMenuItem *m_checkedItem;
+    QList<QQuickLabsPlatformMenuItem*> m_items;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPlatformMenuItemGroup)
+QML_DECLARE_TYPE(QQuickLabsPlatformMenuItemGroup)
 
-#endif // QQUICKPLATFORMMENUITEMGROUP_P_H
+#endif // QQUICKLABSPLATFORMMENUITEMGROUP_P_H

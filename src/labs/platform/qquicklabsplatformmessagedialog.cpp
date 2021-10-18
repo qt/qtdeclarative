@@ -34,7 +34,7 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformmessagedialog_p.h"
+#include "qquicklabsplatformmessagedialog_p.h"
 
 #include <QtQml/qqmlinfo.h>
 
@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype MessageDialog
     \inherits Dialog
-//!     \instantiates QQuickPlatformMessageDialog
+//!     \instantiates QQuickLabsPlatformMessageDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native message dialog.
@@ -222,8 +222,8 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when \uicontrol {Restore Defaults} is clicked.
 */
 
-QQuickPlatformMessageDialog::QQuickPlatformMessageDialog(QObject *parent)
-    : QQuickPlatformDialog(QPlatformTheme::MessageDialog, parent),
+QQuickLabsPlatformMessageDialog::QQuickLabsPlatformMessageDialog(QObject *parent)
+    : QQuickLabsPlatformDialog(QPlatformTheme::MessageDialog, parent),
       m_options(QMessageDialogOptions::create())
 {
 }
@@ -235,12 +235,12 @@ QQuickPlatformMessageDialog::QQuickPlatformMessageDialog(QObject *parent)
 
     \sa informativeText, detailedText
 */
-QString QQuickPlatformMessageDialog::text() const
+QString QQuickLabsPlatformMessageDialog::text() const
 {
     return m_options->text();
 }
 
-void QQuickPlatformMessageDialog::setText(const QString &text)
+void QQuickLabsPlatformMessageDialog::setText(const QString &text)
 {
     if (m_options->text() == text)
         return;
@@ -258,12 +258,12 @@ void QQuickPlatformMessageDialog::setText(const QString &text)
 
     \sa text, detailedText
 */
-QString QQuickPlatformMessageDialog::informativeText() const
+QString QQuickLabsPlatformMessageDialog::informativeText() const
 {
     return m_options->informativeText();
 }
 
-void QQuickPlatformMessageDialog::setInformativeText(const QString &text)
+void QQuickLabsPlatformMessageDialog::setInformativeText(const QString &text)
 {
     if (m_options->informativeText() == text)
         return;
@@ -279,12 +279,12 @@ void QQuickPlatformMessageDialog::setInformativeText(const QString &text)
 
     \sa text, informativeText
 */
-QString QQuickPlatformMessageDialog::detailedText() const
+QString QQuickLabsPlatformMessageDialog::detailedText() const
 {
     return m_options->detailedText();
 }
 
-void QQuickPlatformMessageDialog::setDetailedText(const QString &text)
+void QQuickLabsPlatformMessageDialog::setDetailedText(const QString &text)
 {
     if (m_options->detailedText() == text)
         return;
@@ -322,12 +322,12 @@ void QQuickPlatformMessageDialog::setDetailedText(const QString &text)
 
     \sa clicked()
 */
-QPlatformDialogHelper::StandardButtons QQuickPlatformMessageDialog::buttons() const
+QPlatformDialogHelper::StandardButtons QQuickLabsPlatformMessageDialog::buttons() const
 {
     return m_options->standardButtons();
 }
 
-void QQuickPlatformMessageDialog::setButtons(QPlatformDialogHelper::StandardButtons buttons)
+void QQuickLabsPlatformMessageDialog::setButtons(QPlatformDialogHelper::StandardButtons buttons)
 {
     if (m_options->standardButtons() == buttons)
         return;
@@ -336,22 +336,22 @@ void QQuickPlatformMessageDialog::setButtons(QPlatformDialogHelper::StandardButt
     emit buttonsChanged();
 }
 
-void QQuickPlatformMessageDialog::onCreate(QPlatformDialogHelper *dialog)
+void QQuickLabsPlatformMessageDialog::onCreate(QPlatformDialogHelper *dialog)
 {
     if (QPlatformMessageDialogHelper *messageDialog = qobject_cast<QPlatformMessageDialogHelper *>(dialog)) {
-        connect(messageDialog, &QPlatformMessageDialogHelper::clicked, this, &QQuickPlatformMessageDialog::handleClick);
+        connect(messageDialog, &QPlatformMessageDialogHelper::clicked, this, &QQuickLabsPlatformMessageDialog::handleClick);
         messageDialog->setOptions(m_options);
     }
 }
 
-void QQuickPlatformMessageDialog::onShow(QPlatformDialogHelper *dialog)
+void QQuickLabsPlatformMessageDialog::onShow(QPlatformDialogHelper *dialog)
 {
     m_options->setWindowTitle(title());
     if (QPlatformMessageDialogHelper *messageDialog = qobject_cast<QPlatformMessageDialogHelper *>(dialog))
         messageDialog->setOptions(m_options);
 }
 
-void QQuickPlatformMessageDialog::handleClick(QPlatformDialogHelper::StandardButton button)
+void QQuickLabsPlatformMessageDialog::handleClick(QPlatformDialogHelper::StandardButton button)
 {
     done(button);
     emit clicked(button);

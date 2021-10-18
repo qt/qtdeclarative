@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPLATFORMFILEDIALOG_P_H
-#define QQUICKPLATFORMFILEDIALOG_P_H
+#ifndef QQUICKLABSPLATFORMFILEDIALOG_P_H
+#define QQUICKLABSPLATFORMFILEDIALOG_P_H
 
 //
 //  W A R N I N G
@@ -48,15 +48,15 @@
 // We mean it.
 //
 
-#include "qquickplatformdialog_p.h"
+#include "qquicklabsplatformdialog_p.h"
 #include <QtCore/qurl.h>
 #include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPlatformFileNameFilter;
+class QQuickLabsPlatformFileNameFilter;
 
-class QQuickPlatformFileDialog : public QQuickPlatformDialog
+class QQuickLabsPlatformFileDialog : public QQuickLabsPlatformDialog
 {
     Q_OBJECT
     Q_PROPERTY(FileMode fileMode READ fileMode WRITE setFileMode NOTIFY fileModeChanged FINAL)
@@ -67,14 +67,14 @@ class QQuickPlatformFileDialog : public QQuickPlatformDialog
     Q_PROPERTY(QUrl folder READ folder WRITE setFolder NOTIFY folderChanged FINAL)
     Q_PROPERTY(QFileDialogOptions::FileDialogOptions options READ options WRITE setOptions RESET resetOptions NOTIFY optionsChanged FINAL)
     Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters RESET resetNameFilters NOTIFY nameFiltersChanged FINAL)
-    Q_PROPERTY(QQuickPlatformFileNameFilter *selectedNameFilter READ selectedNameFilter CONSTANT)
+    Q_PROPERTY(QQuickLabsPlatformFileNameFilter *selectedNameFilter READ selectedNameFilter CONSTANT)
     Q_PROPERTY(QString defaultSuffix READ defaultSuffix WRITE setDefaultSuffix RESET resetDefaultSuffix NOTIFY defaultSuffixChanged FINAL)
     Q_PROPERTY(QString acceptLabel READ acceptLabel WRITE setAcceptLabel RESET resetAcceptLabel NOTIFY acceptLabelChanged FINAL)
     Q_PROPERTY(QString rejectLabel READ rejectLabel WRITE setRejectLabel RESET resetRejectLabel NOTIFY rejectLabelChanged FINAL)
     Q_FLAGS(QFileDialogOptions::FileDialogOptions)
 
 public:
-    explicit QQuickPlatformFileDialog(QObject *parent = nullptr);
+    explicit QQuickLabsPlatformFileDialog(QObject *parent = nullptr);
 
     enum FileMode {
         OpenFile,
@@ -109,7 +109,7 @@ public:
     void setNameFilters(const QStringList &filters);
     void resetNameFilters();
 
-    QQuickPlatformFileNameFilter *selectedNameFilter() const;
+    QQuickLabsPlatformFileNameFilter *selectedNameFilter() const;
 
     QString defaultSuffix() const;
     void setDefaultSuffix(const QString &suffix);
@@ -151,10 +151,10 @@ private:
     QList<QUrl> m_files;
     bool m_firstShow = true;
     QSharedPointer<QFileDialogOptions> m_options;
-    mutable QQuickPlatformFileNameFilter *m_selectedNameFilter;
+    mutable QQuickLabsPlatformFileNameFilter *m_selectedNameFilter;
 };
 
-class QQuickPlatformFileNameFilter : public QObject
+class QQuickLabsPlatformFileNameFilter : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int index READ index WRITE setIndex NOTIFY indexChanged FINAL)
@@ -162,7 +162,7 @@ class QQuickPlatformFileNameFilter : public QObject
     Q_PROPERTY(QStringList extensions READ extensions NOTIFY extensionsChanged FINAL)
 
 public:
-    explicit QQuickPlatformFileNameFilter(QObject *parent = nullptr);
+    explicit QQuickLabsPlatformFileNameFilter(QObject *parent = nullptr);
 
     int index() const;
     void setIndex(int index);
@@ -192,6 +192,6 @@ private:
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPlatformFileDialog)
+QML_DECLARE_TYPE(QQuickLabsPlatformFileDialog)
 
-#endif // QQUICKPLATFORMFILEDIALOG_P_H
+#endif // QQUICKLABSPLATFORMFILEDIALOG_P_H

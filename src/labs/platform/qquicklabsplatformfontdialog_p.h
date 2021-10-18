@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPLATFORMICONLOADER_P_H
-#define QQUICKPLATFORMICONLOADER_P_H
+#ifndef QQUICKLABSPLATFORMFONTDIALOG_P_H
+#define QQUICKLABSPLATFORMFONTDIALOG_P_H
 
 //
 //  W A R N I N G
@@ -48,39 +48,51 @@
 // We mean it.
 //
 
-#include <QtCore/qurl.h>
-#include <QtCore/qstring.h>
-#include <QtGui/qicon.h>
-#include <QtQuick/private/qquickpixmapcache_p.h>
-
-#include "qquickplatformicon_p.h"
+#include "qquicklabsplatformdialog_p.h"
+#include <QtGui/qfont.h>
+#include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
-class QObject;
-
-class QQuickPlatformIconLoader : public QQuickPixmap
+class QQuickLabsPlatformFontDialog : public QQuickLabsPlatformDialog
 {
+    Q_OBJECT
+    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
+    Q_PROPERTY(QFont currentFont READ currentFont WRITE setCurrentFont NOTIFY currentFontChanged FINAL)
+    Q_PROPERTY(QFontDialogOptions::FontDialogOptions options READ options WRITE setOptions NOTIFY optionsChanged FINAL)
+    Q_FLAGS(QFontDialogOptions::FontDialogOptions)
+
 public:
-    QQuickPlatformIconLoader(int slot, QObject *parent);
+    explicit QQuickLabsPlatformFontDialog(QObject *parent = nullptr);
 
-    bool isEnabled() const;
-    void setEnabled(bool enabled);
+    QFont font() const;
+    void setFont(const QFont &font);
 
-    QIcon toQIcon() const;
+    QFont currentFont() const;
+    void setCurrentFont(const QFont &font);
 
-    QQuickPlatformIcon icon() const;
-    void setIcon(const QQuickPlatformIcon &icon);
+    QFontDialogOptions::FontDialogOptions options() const;
+    void setOptions(QFontDialogOptions::FontDialogOptions options);
+
+Q_SIGNALS:
+    void fontChanged();
+    void currentFontChanged();
+    void optionsChanged();
+
+protected:
+    bool useNativeDialog() const override;
+    void onCreate(QPlatformDialogHelper *dialog) override;
+    void onShow(QPlatformDialogHelper *dialog) override;
+    void accept() override;
 
 private:
-    void loadIcon();
-
-    QObject *m_parent;
-    int m_slot;
-    bool m_enabled;
-    QQuickPlatformIcon m_icon;
+    QFont m_font;
+    QFont m_currentFont; // TODO: QFontDialogOptions::initialFont
+    QSharedPointer<QFontDialogOptions> m_options;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQUICKPLATFORMICONLOADER_P_H
+QML_DECLARE_TYPE(QQuickLabsPlatformFontDialog)
+
+#endif // QQUICKLABSPLATFORMFONTDIALOG_P_H

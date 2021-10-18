@@ -34,65 +34,32 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPLATFORMCOLORDIALOG_P_H
-#define QQUICKPLATFORMCOLORDIALOG_P_H
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
-
-#include "qquickplatformdialog_p.h"
-#include <QtGui/qcolor.h>
-#include <QtQml/qqml.h>
+#include "qquicklabsplatformmenuseparator_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPlatformColorDialog : public QQuickPlatformDialog
+/*!
+    \qmltype MenuSeparator
+    \inherits MenuItem
+//!     \instantiates QQuickLabsPlatformMenuSeparator
+    \inqmlmodule Qt.labs.platform
+    \since 5.8
+    \brief A native menu separator.
+
+    The MenuSeparator type is provided for convenience. It is a MenuItem
+    that has the \l {MenuItem::}{separator} property set to \c true by default.
+
+    \image qtlabsplatform-menubar.png
+
+    \labs
+
+    \sa Menu, MenuItem
+*/
+
+QQuickLabsPlatformMenuSeparator::QQuickLabsPlatformMenuSeparator(QObject *parent)
+    : QQuickLabsPlatformMenuItem(parent)
 {
-    Q_OBJECT
-    Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
-    Q_PROPERTY(QColor currentColor READ currentColor WRITE setCurrentColor NOTIFY currentColorChanged FINAL)
-    Q_PROPERTY(QColorDialogOptions::ColorDialogOptions options READ options WRITE setOptions NOTIFY optionsChanged FINAL)
-    Q_FLAGS(QColorDialogOptions::ColorDialogOptions)
-
-public:
-    explicit QQuickPlatformColorDialog(QObject *parent = nullptr);
-
-    QColor color() const;
-    void setColor(const QColor &color);
-
-    QColor currentColor() const;
-    void setCurrentColor(const QColor &color);
-
-    QColorDialogOptions::ColorDialogOptions options() const;
-    void setOptions(QColorDialogOptions::ColorDialogOptions options);
-
-Q_SIGNALS:
-    void colorChanged();
-    void currentColorChanged();
-    void optionsChanged();
-
-protected:
-    bool useNativeDialog() const override;
-    void onCreate(QPlatformDialogHelper *dialog) override;
-    void onShow(QPlatformDialogHelper *dialog) override;
-    void accept() override;
-
-private:
-    QColor m_color;
-    QColor m_currentColor; // TODO: QColorDialogOptions::initialColor
-    QSharedPointer<QColorDialogOptions> m_options;
-};
+    setSeparator(true);
+}
 
 QT_END_NAMESPACE
-
-QML_DECLARE_TYPE(QQuickPlatformColorDialog)
-
-#endif // QQUICKPLATFORMCOLORDIALOG_P_H

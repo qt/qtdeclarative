@@ -34,15 +34,15 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformmenuitemgroup_p.h"
-#include "qquickplatformmenuitem_p.h"
+#include "qquicklabsplatformmenuitemgroup_p.h"
+#include "qquicklabsplatformmenuitem_p.h"
 
 QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype MenuItemGroup
     \inherits QtObject
-//!     \instantiates QQuickPlatformMenuItemGroup
+//!     \instantiates QQuickLabsPlatformMenuItemGroup
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A group for managing native menu items.
@@ -133,12 +133,12 @@ QT_BEGIN_NAMESPACE
     \sa MenuItem::hovered()
 */
 
-QQuickPlatformMenuItemGroup::QQuickPlatformMenuItemGroup(QObject *parent)
+QQuickLabsPlatformMenuItemGroup::QQuickLabsPlatformMenuItemGroup(QObject *parent)
     : QObject(parent), m_enabled(true), m_visible(true), m_exclusive(true), m_checkedItem(nullptr)
 {
 }
 
-QQuickPlatformMenuItemGroup::~QQuickPlatformMenuItemGroup()
+QQuickLabsPlatformMenuItemGroup::~QQuickLabsPlatformMenuItemGroup()
 {
     clear();
 }
@@ -151,12 +151,12 @@ QQuickPlatformMenuItemGroup::~QQuickPlatformMenuItemGroup()
     The enabled state of the group affects the enabled state of each item in the group,
     except that explicitly disabled items are not enabled even if the group is enabled.
 */
-bool QQuickPlatformMenuItemGroup::isEnabled() const
+bool QQuickLabsPlatformMenuItemGroup::isEnabled() const
 {
     return m_enabled;
 }
 
-void QQuickPlatformMenuItemGroup::setEnabled(bool enabled)
+void QQuickLabsPlatformMenuItemGroup::setEnabled(bool enabled)
 {
     if (m_enabled == enabled)
         return;
@@ -164,7 +164,7 @@ void QQuickPlatformMenuItemGroup::setEnabled(bool enabled)
     m_enabled = enabled;
     emit enabledChanged();
 
-    for (QQuickPlatformMenuItem *item : qAsConst(m_items)) {
+    for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items)) {
         if (item->m_enabled) {
             item->sync();
             emit item->enabledChanged();
@@ -180,12 +180,12 @@ void QQuickPlatformMenuItemGroup::setEnabled(bool enabled)
     The visibility of the group affects the visibility of each item in the group,
     except that explicitly hidden items are not visible even if the group is visible.
 */
-bool QQuickPlatformMenuItemGroup::isVisible() const
+bool QQuickLabsPlatformMenuItemGroup::isVisible() const
 {
     return m_visible;
 }
 
-void QQuickPlatformMenuItemGroup::setVisible(bool visible)
+void QQuickLabsPlatformMenuItemGroup::setVisible(bool visible)
 {
     if (m_visible == visible)
         return;
@@ -193,7 +193,7 @@ void QQuickPlatformMenuItemGroup::setVisible(bool visible)
     m_visible = visible;
     emit visibleChanged();
 
-    for (QQuickPlatformMenuItem *item : qAsConst(m_items)) {
+    for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items)) {
         if (item->m_visible) {
             item->sync();
             emit item->visibleChanged();
@@ -209,12 +209,12 @@ void QQuickPlatformMenuItemGroup::setVisible(bool visible)
     In an exclusive menu item group, only one item can be checked at any time;
     checking another item automatically unchecks the previously checked one.
 */
-bool QQuickPlatformMenuItemGroup::isExclusive() const
+bool QQuickLabsPlatformMenuItemGroup::isExclusive() const
 {
     return m_exclusive;
 }
 
-void QQuickPlatformMenuItemGroup::setExclusive(bool exclusive)
+void QQuickLabsPlatformMenuItemGroup::setExclusive(bool exclusive)
 {
     if (m_exclusive == exclusive)
         return;
@@ -222,7 +222,7 @@ void QQuickPlatformMenuItemGroup::setExclusive(bool exclusive)
     m_exclusive = exclusive;
     emit exclusiveChanged();
 
-    for (QQuickPlatformMenuItem *item : qAsConst(m_items))
+    for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items))
         item->sync();
 }
 
@@ -231,12 +231,12 @@ void QQuickPlatformMenuItemGroup::setExclusive(bool exclusive)
 
     This property holds the currently checked item in the group, or \c null if no item is checked.
 */
-QQuickPlatformMenuItem *QQuickPlatformMenuItemGroup::checkedItem() const
+QQuickLabsPlatformMenuItem *QQuickLabsPlatformMenuItemGroup::checkedItem() const
 {
     return m_checkedItem;
 }
 
-void QQuickPlatformMenuItemGroup::setCheckedItem(QQuickPlatformMenuItem *item)
+void QQuickLabsPlatformMenuItemGroup::setCheckedItem(QQuickLabsPlatformMenuItem *item)
 {
     if (m_checkedItem == item)
         return;
@@ -256,9 +256,9 @@ void QQuickPlatformMenuItemGroup::setCheckedItem(QQuickPlatformMenuItem *item)
 
     This property holds the list of items in the group.
 */
-QQmlListProperty<QQuickPlatformMenuItem> QQuickPlatformMenuItemGroup::items()
+QQmlListProperty<QQuickLabsPlatformMenuItem> QQuickLabsPlatformMenuItemGroup::items()
 {
-    return QQmlListProperty<QQuickPlatformMenuItem>(this, nullptr, items_append, items_count, items_at, items_clear);
+    return QQmlListProperty<QQuickLabsPlatformMenuItem>(this, nullptr, items_append, items_count, items_at, items_clear);
 }
 
 /*!
@@ -266,7 +266,7 @@ QQmlListProperty<QQuickPlatformMenuItem> QQuickPlatformMenuItemGroup::items()
 
     Adds an \a item to the group.
 */
-void QQuickPlatformMenuItemGroup::addItem(QQuickPlatformMenuItem *item)
+void QQuickLabsPlatformMenuItemGroup::addItem(QQuickLabsPlatformMenuItem *item)
 {
     if (!item || m_items.contains(item))
         return;
@@ -274,9 +274,9 @@ void QQuickPlatformMenuItemGroup::addItem(QQuickPlatformMenuItem *item)
     m_items.append(item);
     item->setGroup(this);
 
-    connect(item, &QQuickPlatformMenuItem::checkedChanged, this, &QQuickPlatformMenuItemGroup::updateCurrent);
-    connect(item, &QQuickPlatformMenuItem::triggered, this, &QQuickPlatformMenuItemGroup::activateItem);
-    connect(item, &QQuickPlatformMenuItem::hovered, this, &QQuickPlatformMenuItemGroup::hoverItem);
+    connect(item, &QQuickLabsPlatformMenuItem::checkedChanged, this, &QQuickLabsPlatformMenuItemGroup::updateCurrent);
+    connect(item, &QQuickLabsPlatformMenuItem::triggered, this, &QQuickLabsPlatformMenuItemGroup::activateItem);
+    connect(item, &QQuickLabsPlatformMenuItem::hovered, this, &QQuickLabsPlatformMenuItemGroup::hoverItem);
 
     if (m_exclusive && item->isChecked())
         setCheckedItem(item);
@@ -289,7 +289,7 @@ void QQuickPlatformMenuItemGroup::addItem(QQuickPlatformMenuItem *item)
 
     Removes an \a item from the group.
 */
-void QQuickPlatformMenuItemGroup::removeItem(QQuickPlatformMenuItem *item)
+void QQuickLabsPlatformMenuItemGroup::removeItem(QQuickLabsPlatformMenuItem *item)
 {
     if (!item || !m_items.contains(item))
         return;
@@ -297,9 +297,9 @@ void QQuickPlatformMenuItemGroup::removeItem(QQuickPlatformMenuItem *item)
     m_items.removeOne(item);
     item->setGroup(nullptr);
 
-    disconnect(item, &QQuickPlatformMenuItem::checkedChanged, this, &QQuickPlatformMenuItemGroup::updateCurrent);
-    disconnect(item, &QQuickPlatformMenuItem::triggered, this, &QQuickPlatformMenuItemGroup::activateItem);
-    disconnect(item, &QQuickPlatformMenuItem::hovered, this, &QQuickPlatformMenuItemGroup::hoverItem);
+    disconnect(item, &QQuickLabsPlatformMenuItem::checkedChanged, this, &QQuickLabsPlatformMenuItemGroup::updateCurrent);
+    disconnect(item, &QQuickLabsPlatformMenuItem::triggered, this, &QQuickLabsPlatformMenuItemGroup::activateItem);
+    disconnect(item, &QQuickLabsPlatformMenuItem::hovered, this, &QQuickLabsPlatformMenuItemGroup::hoverItem);
 
     if (m_checkedItem == item)
         setCheckedItem(nullptr);
@@ -312,16 +312,16 @@ void QQuickPlatformMenuItemGroup::removeItem(QQuickPlatformMenuItem *item)
 
     Removes all items from the group.
 */
-void QQuickPlatformMenuItemGroup::clear()
+void QQuickLabsPlatformMenuItemGroup::clear()
 {
     if (m_items.isEmpty())
         return;
 
-    for (QQuickPlatformMenuItem *item : qAsConst(m_items)) {
+    for (QQuickLabsPlatformMenuItem *item : qAsConst(m_items)) {
         item->setGroup(nullptr);
-        disconnect(item, &QQuickPlatformMenuItem::checkedChanged, this, &QQuickPlatformMenuItemGroup::updateCurrent);
-        disconnect(item, &QQuickPlatformMenuItem::triggered, this, &QQuickPlatformMenuItemGroup::activateItem);
-        disconnect(item, &QQuickPlatformMenuItem::hovered, this, &QQuickPlatformMenuItemGroup::hoverItem);
+        disconnect(item, &QQuickLabsPlatformMenuItem::checkedChanged, this, &QQuickLabsPlatformMenuItemGroup::updateCurrent);
+        disconnect(item, &QQuickLabsPlatformMenuItem::triggered, this, &QQuickLabsPlatformMenuItemGroup::activateItem);
+        disconnect(item, &QQuickLabsPlatformMenuItem::hovered, this, &QQuickLabsPlatformMenuItemGroup::hoverItem);
     }
 
     setCheckedItem(nullptr);
@@ -330,63 +330,63 @@ void QQuickPlatformMenuItemGroup::clear()
     emit itemsChanged();
 }
 
-QQuickPlatformMenuItem *QQuickPlatformMenuItemGroup::findCurrent() const
+QQuickLabsPlatformMenuItem *QQuickLabsPlatformMenuItemGroup::findCurrent() const
 {
-    for (QQuickPlatformMenuItem *item : m_items) {
+    for (QQuickLabsPlatformMenuItem *item : m_items) {
         if (item->isChecked())
             return item;
     }
     return nullptr;
 }
 
-void QQuickPlatformMenuItemGroup::updateCurrent()
+void QQuickLabsPlatformMenuItemGroup::updateCurrent()
 {
     if (!m_exclusive)
         return;
 
-    QQuickPlatformMenuItem *item = qobject_cast<QQuickPlatformMenuItem*>(sender());
+    QQuickLabsPlatformMenuItem *item = qobject_cast<QQuickLabsPlatformMenuItem*>(sender());
     if (item && item->isChecked())
         setCheckedItem(item);
 }
 
-void QQuickPlatformMenuItemGroup::activateItem()
+void QQuickLabsPlatformMenuItemGroup::activateItem()
 {
-    QQuickPlatformMenuItem *item = qobject_cast<QQuickPlatformMenuItem*>(sender());
+    QQuickLabsPlatformMenuItem *item = qobject_cast<QQuickLabsPlatformMenuItem*>(sender());
     if (item)
         emit triggered(item);
 }
 
-void QQuickPlatformMenuItemGroup::hoverItem()
+void QQuickLabsPlatformMenuItemGroup::hoverItem()
 {
-    QQuickPlatformMenuItem *item = qobject_cast<QQuickPlatformMenuItem*>(sender());
+    QQuickLabsPlatformMenuItem *item = qobject_cast<QQuickLabsPlatformMenuItem*>(sender());
     if (item)
         emit hovered(item);
 }
 
-void QQuickPlatformMenuItemGroup::items_append(QQmlListProperty<QQuickPlatformMenuItem> *prop, QQuickPlatformMenuItem *item)
+void QQuickLabsPlatformMenuItemGroup::items_append(QQmlListProperty<QQuickLabsPlatformMenuItem> *prop, QQuickLabsPlatformMenuItem *item)
 {
-    QQuickPlatformMenuItemGroup *group = static_cast<QQuickPlatformMenuItemGroup *>(prop->object);
+    QQuickLabsPlatformMenuItemGroup *group = static_cast<QQuickLabsPlatformMenuItemGroup *>(prop->object);
     group->addItem(item);
 }
 
-qsizetype QQuickPlatformMenuItemGroup::items_count(QQmlListProperty<QQuickPlatformMenuItem> *prop)
+qsizetype QQuickLabsPlatformMenuItemGroup::items_count(QQmlListProperty<QQuickLabsPlatformMenuItem> *prop)
 {
-    QQuickPlatformMenuItemGroup *group = static_cast<QQuickPlatformMenuItemGroup *>(prop->object);
+    QQuickLabsPlatformMenuItemGroup *group = static_cast<QQuickLabsPlatformMenuItemGroup *>(prop->object);
     return group->m_items.count();
 }
 
-QQuickPlatformMenuItem *QQuickPlatformMenuItemGroup::items_at(QQmlListProperty<QQuickPlatformMenuItem> *prop, qsizetype index)
+QQuickLabsPlatformMenuItem *QQuickLabsPlatformMenuItemGroup::items_at(QQmlListProperty<QQuickLabsPlatformMenuItem> *prop, qsizetype index)
 {
-    QQuickPlatformMenuItemGroup *group = static_cast<QQuickPlatformMenuItemGroup *>(prop->object);
+    QQuickLabsPlatformMenuItemGroup *group = static_cast<QQuickLabsPlatformMenuItemGroup *>(prop->object);
     return group->m_items.value(index);
 }
 
-void QQuickPlatformMenuItemGroup::items_clear(QQmlListProperty<QQuickPlatformMenuItem> *prop)
+void QQuickLabsPlatformMenuItemGroup::items_clear(QQmlListProperty<QQuickLabsPlatformMenuItem> *prop)
 {
-    QQuickPlatformMenuItemGroup *group = static_cast<QQuickPlatformMenuItemGroup *>(prop->object);
+    QQuickLabsPlatformMenuItemGroup *group = static_cast<QQuickLabsPlatformMenuItemGroup *>(prop->object);
     group->clear();
 }
 
 QT_END_NAMESPACE
 
-#include "moc_qquickplatformmenuitemgroup_p.cpp"
+#include "moc_qquicklabsplatformmenuitemgroup_p.cpp"

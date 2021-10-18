@@ -34,9 +34,9 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformsystemtrayicon_p.h"
-#include "qquickplatformmenu_p.h"
-#include "qquickplatformiconloader_p.h"
+#include "qquicklabsplatformsystemtrayicon_p.h"
+#include "qquicklabsplatformmenu_p.h"
+#include "qquicklabsplatformiconloader_p.h"
 
 #include <QtCore/qloggingcategory.h>
 #include <QtGui/qpa/qplatformtheme.h>
@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmltype SystemTrayIcon
     \inherits QtObject
-//!     \instantiates QQuickPlatformSystemTrayIcon
+//!     \instantiates QQuickLabsPlatformSystemTrayIcon
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A system tray icon.
@@ -165,7 +165,7 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformTray)
 
-QQuickPlatformSystemTrayIcon::QQuickPlatformSystemTrayIcon(QObject *parent)
+QQuickLabsPlatformSystemTrayIcon::QQuickLabsPlatformSystemTrayIcon(QObject *parent)
     : QObject(parent),
       m_complete(false),
       m_visible(false),
@@ -179,12 +179,12 @@ QQuickPlatformSystemTrayIcon::QQuickPlatformSystemTrayIcon(QObject *parent)
     qCDebug(qtLabsPlatformTray) << "SystemTrayIcon ->" << m_handle;
 
     if (m_handle) {
-        connect(m_handle, &QPlatformSystemTrayIcon::activated, this, &QQuickPlatformSystemTrayIcon::activated);
-        connect(m_handle, &QPlatformSystemTrayIcon::messageClicked, this, &QQuickPlatformSystemTrayIcon::messageClicked);
+        connect(m_handle, &QPlatformSystemTrayIcon::activated, this, &QQuickLabsPlatformSystemTrayIcon::activated);
+        connect(m_handle, &QPlatformSystemTrayIcon::messageClicked, this, &QQuickLabsPlatformSystemTrayIcon::messageClicked);
     }
 }
 
-QQuickPlatformSystemTrayIcon::~QQuickPlatformSystemTrayIcon()
+QQuickLabsPlatformSystemTrayIcon::~QQuickLabsPlatformSystemTrayIcon()
 {
     if (m_menu)
         m_menu->setSystemTrayIcon(nullptr);
@@ -195,7 +195,7 @@ QQuickPlatformSystemTrayIcon::~QQuickPlatformSystemTrayIcon()
     m_handle = nullptr;
 }
 
-QPlatformSystemTrayIcon *QQuickPlatformSystemTrayIcon::handle() const
+QPlatformSystemTrayIcon *QQuickLabsPlatformSystemTrayIcon::handle() const
 {
     return m_handle;
 }
@@ -206,7 +206,7 @@ QPlatformSystemTrayIcon *QQuickPlatformSystemTrayIcon::handle() const
 
     This property holds whether the system tray is available.
 */
-bool QQuickPlatformSystemTrayIcon::isAvailable() const
+bool QQuickLabsPlatformSystemTrayIcon::isAvailable() const
 {
     return m_handle && m_handle->isSystemTrayAvailable();
 }
@@ -219,7 +219,7 @@ bool QQuickPlatformSystemTrayIcon::isAvailable() const
 
     \sa showMessage()
 */
-bool QQuickPlatformSystemTrayIcon::supportsMessages() const
+bool QQuickLabsPlatformSystemTrayIcon::supportsMessages() const
 {
     return m_handle && m_handle->supportsMessages();
 }
@@ -231,12 +231,12 @@ bool QQuickPlatformSystemTrayIcon::supportsMessages() const
 
     The default value is \c false.
 */
-bool QQuickPlatformSystemTrayIcon::isVisible() const
+bool QQuickLabsPlatformSystemTrayIcon::isVisible() const
 {
     return m_visible;
 }
 
-void QQuickPlatformSystemTrayIcon::setVisible(bool visible)
+void QQuickLabsPlatformSystemTrayIcon::setVisible(bool visible)
 {
     if (m_visible == visible)
         return;
@@ -257,12 +257,12 @@ void QQuickPlatformSystemTrayIcon::setVisible(bool visible)
 
     This property holds the tooltip of the system tray icon.
 */
-QString QQuickPlatformSystemTrayIcon::tooltip() const
+QString QQuickLabsPlatformSystemTrayIcon::tooltip() const
 {
     return m_tooltip;
 }
 
-void QQuickPlatformSystemTrayIcon::setTooltip(const QString &tooltip)
+void QQuickLabsPlatformSystemTrayIcon::setTooltip(const QString &tooltip)
 {
     if (m_tooltip == tooltip)
         return;
@@ -279,12 +279,12 @@ void QQuickPlatformSystemTrayIcon::setTooltip(const QString &tooltip)
 
     This property holds a menu for the system tray icon.
 */
-QQuickPlatformMenu *QQuickPlatformSystemTrayIcon::menu() const
+QQuickLabsPlatformMenu *QQuickLabsPlatformSystemTrayIcon::menu() const
 {
     return m_menu;
 }
 
-void QQuickPlatformSystemTrayIcon::setMenu(QQuickPlatformMenu *menu)
+void QQuickLabsPlatformSystemTrayIcon::setMenu(QQuickLabsPlatformMenu *menu)
 {
     if (m_menu == menu)
         return;
@@ -307,7 +307,7 @@ void QQuickPlatformSystemTrayIcon::setMenu(QQuickPlatformMenu *menu)
 
     This property holds the geometry of the system tray icon.
 */
-QRect QQuickPlatformSystemTrayIcon::geometry() const
+QRect QQuickLabsPlatformSystemTrayIcon::geometry() const
 {
     return m_handle ? m_handle->geometry() : QRect();
 }
@@ -327,15 +327,15 @@ QRect QQuickPlatformSystemTrayIcon::geometry() const
     }
     \endcode
 */
-QQuickPlatformIcon QQuickPlatformSystemTrayIcon::icon() const
+QQuickLabsPlatformIcon QQuickLabsPlatformSystemTrayIcon::icon() const
 {
     if (!m_iconLoader)
-        return QQuickPlatformIcon();
+        return QQuickLabsPlatformIcon();
 
     return m_iconLoader->icon();
 }
 
-void QQuickPlatformSystemTrayIcon::setIcon(const QQuickPlatformIcon &icon)
+void QQuickLabsPlatformSystemTrayIcon::setIcon(const QQuickLabsPlatformIcon &icon)
 {
     if (iconLoader()->icon() == icon)
         return;
@@ -349,7 +349,7 @@ void QQuickPlatformSystemTrayIcon::setIcon(const QQuickPlatformIcon &icon)
 
     Shows the system tray icon.
 */
-void QQuickPlatformSystemTrayIcon::show()
+void QQuickLabsPlatformSystemTrayIcon::show()
 {
     setVisible(true);
 }
@@ -359,7 +359,7 @@ void QQuickPlatformSystemTrayIcon::show()
 
     Hides the system tray icon.
 */
-void QQuickPlatformSystemTrayIcon::hide()
+void QQuickLabsPlatformSystemTrayIcon::hide()
 {
     setVisible(false);
 }
@@ -376,13 +376,13 @@ void QQuickPlatformSystemTrayIcon::hide()
 
     \sa supportsMessages, messageClicked()
 */
-void QQuickPlatformSystemTrayIcon::showMessage(const QString &title, const QString &msg, QPlatformSystemTrayIcon::MessageIcon icon, int msecs)
+void QQuickLabsPlatformSystemTrayIcon::showMessage(const QString &title, const QString &msg, QPlatformSystemTrayIcon::MessageIcon icon, int msecs)
 {
     if (m_handle)
         m_handle->showMessage(title, msg, QIcon(), icon, msecs);
 }
 
-void QQuickPlatformSystemTrayIcon::init()
+void QQuickLabsPlatformSystemTrayIcon::init()
 {
     if (!m_handle)
         return;
@@ -395,7 +395,7 @@ void QQuickPlatformSystemTrayIcon::init()
         m_iconLoader->setEnabled(true);
 }
 
-void QQuickPlatformSystemTrayIcon::cleanup()
+void QQuickLabsPlatformSystemTrayIcon::cleanup()
 {
     if (m_handle)
         m_handle->cleanup();
@@ -403,29 +403,29 @@ void QQuickPlatformSystemTrayIcon::cleanup()
         m_iconLoader->setEnabled(false);
 }
 
-void QQuickPlatformSystemTrayIcon::classBegin()
+void QQuickLabsPlatformSystemTrayIcon::classBegin()
 {
 }
 
-void QQuickPlatformSystemTrayIcon::componentComplete()
+void QQuickLabsPlatformSystemTrayIcon::componentComplete()
 {
     m_complete = true;
     if (m_visible)
         init();
 }
 
-QQuickPlatformIconLoader *QQuickPlatformSystemTrayIcon::iconLoader() const
+QQuickLabsPlatformIconLoader *QQuickLabsPlatformSystemTrayIcon::iconLoader() const
 {
     if (!m_iconLoader) {
-        QQuickPlatformSystemTrayIcon *that = const_cast<QQuickPlatformSystemTrayIcon *>(this);
+        QQuickLabsPlatformSystemTrayIcon *that = const_cast<QQuickLabsPlatformSystemTrayIcon *>(this);
         static int slot = staticMetaObject.indexOfSlot("updateIcon()");
-        m_iconLoader = new QQuickPlatformIconLoader(slot, that);
+        m_iconLoader = new QQuickLabsPlatformIconLoader(slot, that);
         m_iconLoader->setEnabled(m_complete);
     }
     return m_iconLoader;
 }
 
-void QQuickPlatformSystemTrayIcon::updateIcon()
+void QQuickLabsPlatformSystemTrayIcon::updateIcon()
 {
     if (!m_handle || !m_iconLoader)
         return;
@@ -440,4 +440,4 @@ void QQuickPlatformSystemTrayIcon::updateIcon()
 
 QT_END_NAMESPACE
 
-#include "moc_qquickplatformsystemtrayicon_p.cpp"
+#include "moc_qquicklabsplatformsystemtrayicon_p.cpp"

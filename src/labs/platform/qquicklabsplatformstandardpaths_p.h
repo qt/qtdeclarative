@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPLATFORMSTANDARDPATHS_P_H
-#define QQUICKPLATFORMSTANDARDPATHS_P_H
+#ifndef QQUICKLABSPLATFORMSTANDARDPATHS_P_H
+#define QQUICKLABSPLATFORMSTANDARDPATHS_P_H
 
 //
 //  W A R N I N G
@@ -61,13 +61,13 @@ QT_BEGIN_NAMESPACE
 class QQmlEngine;
 class QJSEngine;
 
-class QQuickPlatformStandardPaths : public QObject
+class QQuickLabsPlatformStandardPaths : public QObject
 {
     Q_OBJECT
     Q_ENUMS(QStandardPaths::StandardLocation QStandardPaths::LocateOptions)
 
 public:
-    explicit QQuickPlatformStandardPaths(QObject *parent = nullptr);
+    explicit QQuickLabsPlatformStandardPaths(QObject *parent = nullptr);
 
     static QObject *create(QQmlEngine *engine, QJSEngine *scriptEngine);
 
@@ -80,13 +80,13 @@ public:
     Q_INVOKABLE static QUrl writableLocation(QStandardPaths::StandardLocation type);
 
 private:
-    Q_DISABLE_COPY(QQuickPlatformStandardPaths)
+    Q_DISABLE_COPY(QQuickLabsPlatformStandardPaths)
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPlatformStandardPaths)
+QML_DECLARE_TYPE(QQuickLabsPlatformStandardPaths)
 Q_DECLARE_METATYPE(QStandardPaths::StandardLocation)
 Q_DECLARE_METATYPE(QStandardPaths::LocateOptions)
 
-#endif // QQUICKPLATFORMSTANDARDPATHS_P_H
+#endif // QQUICKLABSPLATFORMSTANDARDPATHS_P_H

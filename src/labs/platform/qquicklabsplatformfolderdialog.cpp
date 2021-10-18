@@ -34,14 +34,14 @@
 **
 ****************************************************************************/
 
-#include "qquickplatformfolderdialog_p.h"
+#include "qquicklabsplatformfolderdialog_p.h"
 
 QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype FolderDialog
     \inherits Dialog
-//!     \instantiates QQuickPlatformFolderDialog
+//!     \instantiates QQuickLabsPlatformFolderDialog
     \inqmlmodule Qt.labs.platform
     \since 5.8
     \brief A native folder dialog.
@@ -92,8 +92,8 @@ QT_BEGIN_NAMESPACE
     \sa FileDialog, StandardPaths
 */
 
-QQuickPlatformFolderDialog::QQuickPlatformFolderDialog(QObject *parent)
-    : QQuickPlatformDialog(QPlatformTheme::FileDialog, parent),
+QQuickLabsPlatformFolderDialog::QQuickLabsPlatformFolderDialog(QObject *parent)
+    : QQuickLabsPlatformDialog(QPlatformTheme::FileDialog, parent),
       m_options(QFileDialogOptions::create())
 {
     m_options->setFileMode(QFileDialogOptions::Directory);
@@ -113,12 +113,12 @@ QQuickPlatformFolderDialog::QQuickPlatformFolderDialog(QObject *parent)
 
     \sa currentFolder, {Dialog::}{accepted()}
 */
-QUrl QQuickPlatformFolderDialog::folder() const
+QUrl QQuickLabsPlatformFolderDialog::folder() const
 {
     return m_folder;
 }
 
-void QQuickPlatformFolderDialog::setFolder(const QUrl &folder)
+void QQuickLabsPlatformFolderDialog::setFolder(const QUrl &folder)
 {
     if (m_folder == folder)
         return;
@@ -139,7 +139,7 @@ void QQuickPlatformFolderDialog::setFolder(const QUrl &folder)
 
     \sa folder
 */
-QUrl QQuickPlatformFolderDialog::currentFolder() const
+QUrl QQuickLabsPlatformFolderDialog::currentFolder() const
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle())) {
         const QList<QUrl> selectedFiles = fileDialog->selectedFiles();
@@ -150,7 +150,7 @@ QUrl QQuickPlatformFolderDialog::currentFolder() const
     return m_options->initialDirectory();
 }
 
-void QQuickPlatformFolderDialog::setCurrentFolder(const QUrl &folder)
+void QQuickLabsPlatformFolderDialog::setCurrentFolder(const QUrl &folder)
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
         fileDialog->setDirectory(folder);
@@ -173,12 +173,12 @@ void QQuickPlatformFolderDialog::setCurrentFolder(const QUrl &folder)
     \value FolderDialog.DontResolveSymlinks Don't resolve symlinks in the folder dialog. By default symlinks are resolved.
     \value FolderDialog.ReadOnly Indicates that the dialog doesn't allow creating directories.
 */
-QFileDialogOptions::FileDialogOptions QQuickPlatformFolderDialog::options() const
+QFileDialogOptions::FileDialogOptions QQuickLabsPlatformFolderDialog::options() const
 {
     return m_options->options();
 }
 
-void QQuickPlatformFolderDialog::setOptions(QFileDialogOptions::FileDialogOptions options)
+void QQuickLabsPlatformFolderDialog::setOptions(QFileDialogOptions::FileDialogOptions options)
 {
     if (options == m_options->options())
         return;
@@ -187,7 +187,7 @@ void QQuickPlatformFolderDialog::setOptions(QFileDialogOptions::FileDialogOption
     emit optionsChanged();
 }
 
-void QQuickPlatformFolderDialog::resetOptions()
+void QQuickLabsPlatformFolderDialog::resetOptions()
 {
     setOptions({});
 }
@@ -204,12 +204,12 @@ void QQuickPlatformFolderDialog::resetOptions()
 
     \sa rejectLabel
 */
-QString QQuickPlatformFolderDialog::acceptLabel() const
+QString QQuickLabsPlatformFolderDialog::acceptLabel() const
 {
     return m_options->labelText(QFileDialogOptions::Accept);
 }
 
-void QQuickPlatformFolderDialog::setAcceptLabel(const QString &label)
+void QQuickLabsPlatformFolderDialog::setAcceptLabel(const QString &label)
 {
     if (label == m_options->labelText(QFileDialogOptions::Accept))
         return;
@@ -218,7 +218,7 @@ void QQuickPlatformFolderDialog::setAcceptLabel(const QString &label)
     emit acceptLabelChanged();
 }
 
-void QQuickPlatformFolderDialog::resetAcceptLabel()
+void QQuickLabsPlatformFolderDialog::resetAcceptLabel()
 {
     setAcceptLabel(QString());
 }
@@ -235,12 +235,12 @@ void QQuickPlatformFolderDialog::resetAcceptLabel()
 
     \sa acceptLabel
 */
-QString QQuickPlatformFolderDialog::rejectLabel() const
+QString QQuickLabsPlatformFolderDialog::rejectLabel() const
 {
     return m_options->labelText(QFileDialogOptions::Reject);
 }
 
-void QQuickPlatformFolderDialog::setRejectLabel(const QString &label)
+void QQuickLabsPlatformFolderDialog::setRejectLabel(const QString &label)
 {
     if (label == m_options->labelText(QFileDialogOptions::Reject))
         return;
@@ -249,36 +249,36 @@ void QQuickPlatformFolderDialog::setRejectLabel(const QString &label)
     emit rejectLabelChanged();
 }
 
-void QQuickPlatformFolderDialog::resetRejectLabel()
+void QQuickLabsPlatformFolderDialog::resetRejectLabel()
 {
     setRejectLabel(QString());
 }
 
-bool QQuickPlatformFolderDialog::useNativeDialog() const
+bool QQuickLabsPlatformFolderDialog::useNativeDialog() const
 {
-    return QQuickPlatformDialog::useNativeDialog()
+    return QQuickLabsPlatformDialog::useNativeDialog()
             && !m_options->testOption(QFileDialogOptions::DontUseNativeDialog);
 }
 
-void QQuickPlatformFolderDialog::onCreate(QPlatformDialogHelper *dialog)
+void QQuickLabsPlatformFolderDialog::onCreate(QPlatformDialogHelper *dialog)
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
-        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickPlatformFolderDialog::currentFolderChanged);
+        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickLabsPlatformFolderDialog::currentFolderChanged);
         fileDialog->setOptions(m_options);
     }
 }
 
-void QQuickPlatformFolderDialog::onShow(QPlatformDialogHelper *dialog)
+void QQuickLabsPlatformFolderDialog::onShow(QPlatformDialogHelper *dialog)
 {
     m_options->setWindowTitle(title());
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog))
         fileDialog->setOptions(m_options);
 }
 
-void QQuickPlatformFolderDialog::accept()
+void QQuickLabsPlatformFolderDialog::accept()
 {
     setFolder(currentFolder());
-    QQuickPlatformDialog::accept();
+    QQuickLabsPlatformDialog::accept();
 }
 
 QT_END_NAMESPACE

@@ -10,20 +10,20 @@ qt_internal_add_qml_module(qtlabsplatformplugin
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
     SOURCES
-        qquickplatformcolordialog.cpp qquickplatformcolordialog_p.h
-        qquickplatformdialog.cpp qquickplatformdialog_p.h
-        qquickplatformfiledialog.cpp qquickplatformfiledialog_p.h
-        qquickplatformfolderdialog.cpp qquickplatformfolderdialog_p.h
-        qquickplatformfontdialog.cpp qquickplatformfontdialog_p.h
-        qquickplatformicon.cpp qquickplatformicon_p.h
-        qquickplatformiconloader.cpp qquickplatformiconloader_p.h
-        qquickplatformmenu.cpp qquickplatformmenu_p.h
-        qquickplatformmenubar.cpp qquickplatformmenubar_p.h
-        qquickplatformmenuitem.cpp qquickplatformmenuitem_p.h
-        qquickplatformmenuitemgroup.cpp qquickplatformmenuitemgroup_p.h
-        qquickplatformmenuseparator.cpp qquickplatformmenuseparator_p.h
-        qquickplatformmessagedialog.cpp qquickplatformmessagedialog_p.h
-        qquickplatformstandardpaths.cpp qquickplatformstandardpaths_p.h
+        qquicklabsplatformcolordialog.cpp qquicklabsplatformcolordialog_p.h
+        qquicklabsplatformdialog.cpp qquicklabsplatformdialog_p.h
+        qquicklabsplatformfiledialog.cpp qquicklabsplatformfiledialog_p.h
+        qquicklabsplatformfolderdialog.cpp qquicklabsplatformfolderdialog_p.h
+        qquicklabsplatformfontdialog.cpp qquicklabsplatformfontdialog_p.h
+        qquicklabsplatformicon.cpp qquicklabsplatformicon_p.h
+        qquicklabsplatformiconloader.cpp qquicklabsplatformiconloader_p.h
+        qquicklabsplatformmenu.cpp qquicklabsplatformmenu_p.h
+        qquicklabsplatformmenubar.cpp qquicklabsplatformmenubar_p.h
+        qquicklabsplatformmenuitem.cpp qquicklabsplatformmenuitem_p.h
+        qquicklabsplatformmenuitemgroup.cpp qquicklabsplatformmenuitemgroup_p.h
+        qquicklabsplatformmenuseparator.cpp qquicklabsplatformmenuseparator_p.h
+        qquicklabsplatformmessagedialog.cpp qquicklabsplatformmessagedialog_p.h
+        qquicklabsplatformstandardpaths.cpp qquicklabsplatformstandardpaths_p.h
         qtlabsplatformplugin.cpp
     DEFINES
         QT_NO_CAST_FROM_ASCII
@@ -81,7 +81,7 @@ qt_internal_extend_target(qtlabsplatformplugin CONDITION TARGET Qt::Widgets AND 
 
 qt_internal_extend_target(qtlabsplatformplugin CONDITION QT_FEATURE_systemtrayicon
     SOURCES
-        qquickplatformsystemtrayicon.cpp qquickplatformsystemtrayicon_p.h
+        qquicklabsplatformsystemtrayicon.cpp qquicklabsplatformsystemtrayicon_p.h
 )
 
 qt_internal_add_docs(qtlabsplatformplugin

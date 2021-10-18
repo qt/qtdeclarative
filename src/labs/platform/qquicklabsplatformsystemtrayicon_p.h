@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPLATFORMSYSTEMTRAYICON_P_H
-#define QQUICKPLATFORMSYSTEMTRAYICON_P_H
+#ifndef QQUICKLABSPLATFORMSYSTEMTRAYICON_P_H
+#define QQUICKLABSPLATFORMSYSTEMTRAYICON_P_H
 
 //
 //  W A R N I N G
@@ -54,16 +54,16 @@
 #include <QtQml/qqmlparserstatus.h>
 #include <QtQml/qqml.h>
 
-#include "qquickplatformicon_p.h"
+#include "qquicklabsplatformicon_p.h"
 
 QT_REQUIRE_CONFIG(systemtrayicon);
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPlatformMenu;
-class QQuickPlatformIconLoader;
+class QQuickLabsPlatformMenu;
+class QQuickLabsPlatformIconLoader;
 
-class QQuickPlatformSystemTrayIcon : public QObject, public QQmlParserStatus
+class QQuickLabsPlatformSystemTrayIcon : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
@@ -71,14 +71,14 @@ class QQuickPlatformSystemTrayIcon : public QObject, public QQmlParserStatus
     Q_PROPERTY(bool supportsMessages READ supportsMessages CONSTANT FINAL)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
     Q_PROPERTY(QString tooltip READ tooltip WRITE setTooltip NOTIFY tooltipChanged FINAL)
-    Q_PROPERTY(QQuickPlatformMenu *menu READ menu WRITE setMenu NOTIFY menuChanged FINAL)
+    Q_PROPERTY(QQuickLabsPlatformMenu *menu READ menu WRITE setMenu NOTIFY menuChanged FINAL)
     Q_PROPERTY(QRect geometry READ geometry NOTIFY geometryChanged FINAL REVISION(1, 1))
-    Q_PROPERTY(QQuickPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(1, 1))
+    Q_PROPERTY(QQuickLabsPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(1, 1))
     Q_ENUMS(QPlatformSystemTrayIcon::ActivationReason QPlatformSystemTrayIcon::MessageIcon)
 
 public:
-    explicit QQuickPlatformSystemTrayIcon(QObject *parent = nullptr);
-    ~QQuickPlatformSystemTrayIcon();
+    explicit QQuickLabsPlatformSystemTrayIcon(QObject *parent = nullptr);
+    ~QQuickLabsPlatformSystemTrayIcon();
 
     QPlatformSystemTrayIcon *handle() const;
 
@@ -91,13 +91,13 @@ public:
     QString tooltip() const;
     void setTooltip(const QString &tooltip);
 
-    QQuickPlatformMenu *menu() const;
-    void setMenu(QQuickPlatformMenu *menu);
+    QQuickLabsPlatformMenu *menu() const;
+    void setMenu(QQuickLabsPlatformMenu *menu);
 
     QRect geometry() const;
 
-    QQuickPlatformIcon icon() const;
-    void setIcon(const QQuickPlatformIcon &icon);
+    QQuickLabsPlatformIcon icon() const;
+    void setIcon(const QQuickLabsPlatformIcon &icon);
 
 public Q_SLOTS:
     void show();
@@ -122,7 +122,7 @@ protected:
     void classBegin() override;
     void componentComplete() override;
 
-    QQuickPlatformIconLoader *iconLoader() const;
+    QQuickLabsPlatformIconLoader *iconLoader() const;
 
 private Q_SLOTS:
     void updateIcon();
@@ -131,15 +131,15 @@ private:
     bool m_complete;
     bool m_visible;
     QString m_tooltip;
-    QQuickPlatformMenu *m_menu;
-    mutable QQuickPlatformIconLoader *m_iconLoader;
+    QQuickLabsPlatformMenu *m_menu;
+    mutable QQuickLabsPlatformIconLoader *m_iconLoader;
     QPlatformSystemTrayIcon *m_handle;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPlatformSystemTrayIcon)
+QML_DECLARE_TYPE(QQuickLabsPlatformSystemTrayIcon)
 Q_DECLARE_METATYPE(QPlatformSystemTrayIcon::ActivationReason)
 Q_DECLARE_METATYPE(QPlatformSystemTrayIcon::MessageIcon)
 
-#endif // QQUICKPLATFORMSYSTEMTRAYICON_P_H
+#endif // QQUICKLABSPLATFORMSYSTEMTRAYICON_P_H

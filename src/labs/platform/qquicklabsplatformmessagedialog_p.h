@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPLATFORMFONTDIALOG_P_H
-#define QQUICKPLATFORMFONTDIALOG_P_H
+#ifndef QQUICKLABSPLATFORMMESSAGEDIALOG_P_H
+#define QQUICKLABSPLATFORMMESSAGEDIALOG_P_H
 
 //
 //  W A R N I N G
@@ -48,51 +48,74 @@
 // We mean it.
 //
 
-#include "qquickplatformdialog_p.h"
-#include <QtGui/qfont.h>
+#include "qquicklabsplatformdialog_p.h"
 #include <QtQml/qqml.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQuickPlatformFontDialog : public QQuickPlatformDialog
+class QQuickLabsPlatformMessageDialog : public QQuickLabsPlatformDialog
 {
     Q_OBJECT
-    Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
-    Q_PROPERTY(QFont currentFont READ currentFont WRITE setCurrentFont NOTIFY currentFontChanged FINAL)
-    Q_PROPERTY(QFontDialogOptions::FontDialogOptions options READ options WRITE setOptions NOTIFY optionsChanged FINAL)
-    Q_FLAGS(QFontDialogOptions::FontDialogOptions)
+    Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
+    Q_PROPERTY(QString informativeText READ informativeText WRITE setInformativeText NOTIFY informativeTextChanged FINAL)
+    Q_PROPERTY(QString detailedText READ detailedText WRITE setDetailedText NOTIFY detailedTextChanged FINAL)
+    Q_PROPERTY(QPlatformDialogHelper::StandardButtons buttons READ buttons WRITE setButtons NOTIFY buttonsChanged FINAL)
+    Q_FLAGS(QPlatformDialogHelper::StandardButtons)
 
 public:
-    explicit QQuickPlatformFontDialog(QObject *parent = nullptr);
+    explicit QQuickLabsPlatformMessageDialog(QObject *parent = nullptr);
 
-    QFont font() const;
-    void setFont(const QFont &font);
+    QString text() const;
+    void setText(const QString &text);
 
-    QFont currentFont() const;
-    void setCurrentFont(const QFont &font);
+    QString informativeText() const;
+    void setInformativeText(const QString &text);
 
-    QFontDialogOptions::FontDialogOptions options() const;
-    void setOptions(QFontDialogOptions::FontDialogOptions options);
+    QString detailedText() const;
+    void setDetailedText(const QString &text);
+
+    QPlatformDialogHelper::StandardButtons buttons() const;
+    void setButtons(QPlatformDialogHelper::StandardButtons buttons);
 
 Q_SIGNALS:
-    void fontChanged();
-    void currentFontChanged();
-    void optionsChanged();
+    void textChanged();
+    void informativeTextChanged();
+    void detailedTextChanged();
+    void buttonsChanged();
+    void clicked(QPlatformDialogHelper::StandardButton button);
+
+    void okClicked();
+    void saveClicked();
+    void saveAllClicked();
+    void openClicked();
+    void yesClicked();
+    void yesToAllClicked();
+    void noClicked();
+    void noToAllClicked();
+    void abortClicked();
+    void retryClicked();
+    void ignoreClicked();
+    void closeClicked();
+    void cancelClicked();
+    void discardClicked();
+    void helpClicked();
+    void applyClicked();
+    void resetClicked();
+    void restoreDefaultsClicked();
 
 protected:
-    bool useNativeDialog() const override;
     void onCreate(QPlatformDialogHelper *dialog) override;
     void onShow(QPlatformDialogHelper *dialog) override;
-    void accept() override;
+
+private Q_SLOTS:
+    void handleClick(QPlatformDialogHelper::StandardButton button);
 
 private:
-    QFont m_font;
-    QFont m_currentFont; // TODO: QFontDialogOptions::initialFont
-    QSharedPointer<QFontDialogOptions> m_options;
+    QSharedPointer<QMessageDialogOptions> m_options;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPlatformFontDialog)
+QML_DECLARE_TYPE(QQuickLabsPlatformMessageDialog)
 
-#endif // QQUICKPLATFORMFONTDIALOG_P_H
+#endif // QQUICKLABSPLATFORMMESSAGEDIALOG_P_H

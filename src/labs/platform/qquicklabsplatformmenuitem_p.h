@@ -34,8 +34,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKPLATFORMMENUITEM_P_H
-#define QQUICKPLATFORMMENUITEM_P_H
+#ifndef QQUICKLABSPLATFORMMENUITEM_P_H
+#define QQUICKLABSPLATFORMMENUITEM_P_H
 
 //
 //  W A R N I N G
@@ -55,22 +55,22 @@
 #include <QtQml/qqmlparserstatus.h>
 #include <QtQml/qqml.h>
 
-#include "qquickplatformicon_p.h"
+#include "qquicklabsplatformicon_p.h"
 
 QT_BEGIN_NAMESPACE
 
 class QPlatformMenuItem;
-class QQuickPlatformMenu;
-class QQuickPlatformIconLoader;
-class QQuickPlatformMenuItemGroup;
+class QQuickLabsPlatformMenu;
+class QQuickLabsPlatformIconLoader;
+class QQuickLabsPlatformMenuItemGroup;
 
-class QQuickPlatformMenuItem : public QObject, public QQmlParserStatus
+class QQuickLabsPlatformMenuItem : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
-    Q_PROPERTY(QQuickPlatformMenu *menu READ menu NOTIFY menuChanged FINAL)
-    Q_PROPERTY(QQuickPlatformMenu *subMenu READ subMenu NOTIFY subMenuChanged FINAL)
-    Q_PROPERTY(QQuickPlatformMenuItemGroup *group READ group WRITE setGroup NOTIFY groupChanged FINAL)
+    Q_PROPERTY(QQuickLabsPlatformMenu *menu READ menu NOTIFY menuChanged FINAL)
+    Q_PROPERTY(QQuickLabsPlatformMenu *subMenu READ subMenu NOTIFY subMenuChanged FINAL)
+    Q_PROPERTY(QQuickLabsPlatformMenuItemGroup *group READ group WRITE setGroup NOTIFY groupChanged FINAL)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
     Q_PROPERTY(bool separator READ isSeparator WRITE setSeparator NOTIFY separatorChanged FINAL)
@@ -80,25 +80,25 @@ class QQuickPlatformMenuItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
     Q_PROPERTY(QVariant shortcut READ shortcut WRITE setShortcut NOTIFY shortcutChanged FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
-    Q_PROPERTY(QQuickPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(1, 1))
+    Q_PROPERTY(QQuickLabsPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(1, 1))
     Q_ENUMS(QPlatformMenuItem::MenuRole)
 
 public:
-    explicit QQuickPlatformMenuItem(QObject *parent = nullptr);
-    ~QQuickPlatformMenuItem();
+    explicit QQuickLabsPlatformMenuItem(QObject *parent = nullptr);
+    ~QQuickLabsPlatformMenuItem();
 
     QPlatformMenuItem *handle() const;
     QPlatformMenuItem *create();
     void sync();
 
-    QQuickPlatformMenu *menu() const;
-    void setMenu(QQuickPlatformMenu* menu);
+    QQuickLabsPlatformMenu *menu() const;
+    void setMenu(QQuickLabsPlatformMenu* menu);
 
-    QQuickPlatformMenu *subMenu() const;
-    void setSubMenu(QQuickPlatformMenu *menu);
+    QQuickLabsPlatformMenu *subMenu() const;
+    void setSubMenu(QQuickLabsPlatformMenu *menu);
 
-    QQuickPlatformMenuItemGroup *group() const;
-    void setGroup(QQuickPlatformMenuItemGroup *group);
+    QQuickLabsPlatformMenuItemGroup *group() const;
+    void setGroup(QQuickLabsPlatformMenuItemGroup *group);
 
     bool isEnabled() const;
     void setEnabled(bool enabled);
@@ -127,8 +127,8 @@ public:
     QFont font() const;
     void setFont(const QFont &font);
 
-    QQuickPlatformIcon icon() const;
-    void setIcon(const QQuickPlatformIcon &icon);
+    QQuickLabsPlatformIcon icon() const;
+    void setIcon(const QQuickLabsPlatformIcon &icon);
 
 public Q_SLOTS:
     void toggle();
@@ -155,7 +155,7 @@ protected:
     void classBegin() override;
     void componentComplete() override;
 
-    QQuickPlatformIconLoader *iconLoader() const;
+    QQuickLabsPlatformIconLoader *iconLoader() const;
 
     bool event(QEvent *e) override;
 private Q_SLOTS:
@@ -173,19 +173,19 @@ private:
     QString m_text;
     QVariant m_shortcut;
     QFont m_font;
-    QQuickPlatformMenu *m_menu;
-    QQuickPlatformMenu *m_subMenu;
-    QQuickPlatformMenuItemGroup *m_group;
-    mutable QQuickPlatformIconLoader *m_iconLoader;
+    QQuickLabsPlatformMenu *m_menu;
+    QQuickLabsPlatformMenu *m_subMenu;
+    QQuickLabsPlatformMenuItemGroup *m_group;
+    mutable QQuickLabsPlatformIconLoader *m_iconLoader;
     QPlatformMenuItem *m_handle;
     int m_shortcutId = -1;
 
-    friend class QQuickPlatformMenu;
-    friend class QQuickPlatformMenuItemGroup;
+    friend class QQuickLabsPlatformMenu;
+    friend class QQuickLabsPlatformMenuItemGroup;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickPlatformMenuItem)
+QML_DECLARE_TYPE(QQuickLabsPlatformMenuItem)
 
-#endif // QQUICKPLATFORMMENUITEM_P_H
+#endif // QQUICKLABSPLATFORMMENUITEM_P_H
