@@ -309,7 +309,7 @@ bool QQuickPopupPrivate::tryClose(const QPointF &pos, QQuickPopup::ClosePolicy f
     const bool onOutside = closePolicy & (flags & outsideFlags);
     const bool onOutsideParent = closePolicy & (flags & outsideParentFlags);
     if (onOutside || onOutsideParent) {
-        if (!contains(pos)) {
+        if (!contains(pos) && (!dimmer || dimmer->contains(dimmer->mapFromScene(pos)))) {
             if (!onOutsideParent || !parentItem || !parentItem->contains(parentItem->mapFromScene(pos))) {
                 closeOrReject();
                 return true;
@@ -742,6 +742,7 @@ static QQuickItem *createDimmer(QQmlComponent *component, QQuickPopup *popup, QQ
         item->stackBefore(popup->popupItem());
         item->setZ(popup->z());
         // needed for the virtual keyboard to set a containment mask on the dimmer item
+        qCDebug(lcDimmer) << "dimmer" << item << "registered with" << parent;
         parent->setProperty("_q_dimmerItem", QVariant::fromValue<QQuickItem*>(item));
         if (popup->isModal()) {
             item->setAcceptedMouseButtons(Qt::AllButtons);

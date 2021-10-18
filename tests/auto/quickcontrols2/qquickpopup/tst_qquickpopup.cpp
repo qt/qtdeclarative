@@ -111,6 +111,7 @@ private slots:
     void centerInOverlayWithinStackViewItem();
     void destroyDuringExitTransition();
     void releaseAfterExitTransition();
+    void dimmerContainmentMask();
 };
 
 tst_QQuickPopup::tst_QQuickPopup()
@@ -1622,6 +1623,74 @@ void tst_QQuickPopup::releaseAfterExitTransition()
     QTRY_VERIFY(popup->isOpened());
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
     QTRY_VERIFY(!popup->isOpened());
+}
+
+class ContainmentMask : public QObject
+{
+    Q_OBJECT
+public:
+    mutable bool called = false;
+    Q_INVOKABLE bool contains(const QPointF &point) const
+    {
+        called = true;
+        // let clicks at {1, 1} through the dimmer
+        return point != QPoint(1, 1);
+    }
+};
+
+/*
+    Test case for behavior we rely on in the virtual keyboard:
+    To prevent the virtual keyboard from being blocked by modal popups,
+    it sets a containment mask on the dimmer item, and lets clicks through
+    that hit the virtual keyboard.
+*/
+void tst_QQuickPopup::dimmerContainmentMask()
+{
+    ContainmentMask containmentMask;
+    int expectedClickCount = 0;
+
+    QQuickApplicationHelper helper(this, "dimmerContainmentMask.qml");
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QCOMPARE(window->property("clickCount").toInt(), expectedClickCount);
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickOverlay *overlay = QQuickOverlay::overlay(window);
+    QQuickPopup *modalPopup = window->property("modalPopup").value<QQuickPopup *>();
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QCOMPARE(window->property("clickCount"), ++expectedClickCount);
+
+    modalPopup->open();
+    QTRY_VERIFY(modalPopup->isOpened());
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QCOMPARE(window->property("clickCount"), expectedClickCount); // blocked by modal
+    QTRY_VERIFY(!modalPopup->isOpened()); // auto-close
+
+    modalPopup->open();
+    QTRY_VERIFY(modalPopup->isOpened());
+
+    QPointer<QQuickItem> dimmer = overlay->property("_q_dimmerItem").value<QQuickItem *>();
+    QVERIFY(dimmer);
+    dimmer->setContainmentMask(&containmentMask);
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QVERIFY(containmentMask.called);
+    QCOMPARE(window->property("clickCount"), ++expectedClickCount); // let through by containment mask
+    QVERIFY(modalPopup->isOpened()); // no auto-close
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(2, 2));
+    QCOMPARE(window->property("clickCount"), expectedClickCount); // blocked by modal
+    QTRY_VERIFY(!modalPopup->isOpened()); // auto-close
+    QTRY_VERIFY(!dimmer);
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(1, 1));
+    QCOMPARE(window->property("clickCount"), ++expectedClickCount); // no mask left behind
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(2, 2));
+    QCOMPARE(window->property("clickCount"), ++expectedClickCount); // no mask left behind
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
