@@ -49,6 +49,7 @@ private slots:
     void urlListModel();
     void dragDelegateWithMouseArea_data();
     void dragDelegateWithMouseArea();
+    void delegateChooserEnumRole();
 };
 
 tst_QQuickListView2::tst_QQuickListView2()
@@ -162,6 +163,18 @@ void tst_QQuickListView2::dragDelegateWithMouseArea()
     ));
 
     QCOMPARE(contentPosition(listview), expectedContentPosition);
+}
+
+void tst_QQuickListView2::delegateChooserEnumRole()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("delegateChooserEnumRole.qml")));
+    QQuickListView *listview = qobject_cast<QQuickListView*>(window.rootObject());
+    QVERIFY(listview);
+    QTRY_COMPARE(listview->count(), 3);
+    QCOMPARE(listview->itemAtIndex(0)->property("delegateType").toInt(), 0);
+    QCOMPARE(listview->itemAtIndex(1)->property("delegateType").toInt(), 1);
+    QCOMPARE(listview->itemAtIndex(2)->property("delegateType").toInt(), 2);
 }
 
 QTEST_MAIN(tst_QQuickListView2)
