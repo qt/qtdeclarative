@@ -1585,17 +1585,17 @@ static int MatchScore(const QV4::Value &actual, QMetaType conversionMetaType)
             else if (v.canConvert(conversionMetaType))
                 return 5;
             return 10;
-        } else if (conversionType == QMetaType::QJsonObject) {
-            return 5;
-        } else if (conversionType == qMetaTypeId<QJSValue>()) {
-            return 0;
-        } else {
-            return 10;
         }
 
-    } else {
-        return 10;
+        if (conversionType == QMetaType::QJsonObject)
+            return 5;
+        if (conversionType == qMetaTypeId<QJSValue>())
+            return 0;
+        if (conversionType == QMetaType::QVariantMap)
+            return 5;
     }
+
+    return 10;
 }
 
 static int numDefinedArguments(QV4::CallData *callArgs)
@@ -1708,46 +1708,66 @@ static const QQmlPropertyData *ResolveOverloaded(
 
     const QQmlPropertyData *best = nullptr;
     int bestParameterScore = INT_MAX;
-    int bestMatchScore = INT_MAX;
+    int bestMaxMatchScore = INT_MAX;
+    int bestSumMatchScore = INT_MAX;
 
     QV4::Scope scope(engine);
     QV4::ScopedValue v(scope);
 
     for (int i = 0; i < methodCount; ++i) {
         const QQmlPropertyData *attempt = methods + i;
-        QQmlMetaObject::ArgTypeStorage storage;
-        int methodArgumentCount = 0;
-        if (attempt->hasArguments()) {
-            if (attempt->isConstructor()) {
-                if (!object.constructorParameterTypes(attempt->coreIndex(), &storage, nullptr))
-                    continue;
-            } else {
-                if (!object.methodParameterTypes(attempt->coreIndex(), &storage, nullptr))
-                    continue;
+
+        // QQmlV4Function overrides anything that doesn't provide the exact number of arguments
+        int methodParameterScore = 1;
+        // QQmlV4Function overrides the "no idea" option, which is 10
+        int maxMethodMatchScore = 9;
+        // QQmlV4Function cannot provide a best sum of match scores as we don't match the arguments
+        int sumMethodMatchScore = bestSumMatchScore;
+
+        if (!attempt->isV4Function()) {
+            QQmlMetaObject::ArgTypeStorage storage;
+            int methodArgumentCount = 0;
+            if (attempt->hasArguments()) {
+                if (attempt->isConstructor()) {
+                    if (!object.constructorParameterTypes(attempt->coreIndex(), &storage, nullptr))
+                        continue;
+                } else {
+                    if (!object.methodParameterTypes(attempt->coreIndex(), &storage, nullptr))
+                        continue;
+                }
+                methodArgumentCount = storage.size();
             }
-            methodArgumentCount = storage.size();
+
+            if (methodArgumentCount > argumentCount)
+                continue; // We don't have sufficient arguments to call this method
+
+            methodParameterScore = (definedArgumentCount == methodArgumentCount)
+                    ? 0
+                    : (definedArgumentCount - methodArgumentCount + 1);
+            if (methodParameterScore > bestParameterScore)
+                continue; // We already have a better option
+
+            maxMethodMatchScore = 0;
+            sumMethodMatchScore = 0;
+            for (int ii = 0; ii < methodArgumentCount; ++ii) {
+                const int score = MatchScore((v = QV4::Value::fromStaticValue(callArgs->args[ii])),
+                                             storage[ii]);
+                maxMethodMatchScore = qMax(maxMethodMatchScore, score);
+                sumMethodMatchScore += score;
+            }
         }
 
-        if (methodArgumentCount > argumentCount)
-            continue; // We don't have sufficient arguments to call this method
-
-        int methodParameterScore = definedArgumentCount - methodArgumentCount;
-        if (methodParameterScore > bestParameterScore)
-            continue; // We already have a better option
-
-        int methodMatchScore = 0;
-        for (int ii = 0; ii < methodArgumentCount; ++ii) {
-            methodMatchScore += MatchScore((v = QV4::Value::fromStaticValue(callArgs->args[ii])),
-                                           storage[ii]);
-        }
-
-        if (bestParameterScore > methodParameterScore || bestMatchScore > methodMatchScore) {
+        if (bestParameterScore > methodParameterScore || bestMaxMatchScore > maxMethodMatchScore
+                || (bestParameterScore == methodParameterScore
+                    && bestMaxMatchScore == maxMethodMatchScore
+                    && bestSumMatchScore > sumMethodMatchScore)) {
             best = attempt;
             bestParameterScore = methodParameterScore;
-            bestMatchScore = methodMatchScore;
+            bestMaxMatchScore = maxMethodMatchScore;
+            bestSumMatchScore = sumMethodMatchScore;
         }
 
-        if (bestParameterScore == 0 && bestMatchScore == 0)
+        if (bestParameterScore == 0 && bestMaxMatchScore == 0)
             break; // We can't get better than that
 
     };
@@ -2259,6 +2279,12 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
         return call();
     };
 
+    if (d()->methodCount != 1) {
+        method = ResolveOverloaded(object, d()->methods, d()->methodCount, v4, callData);
+        if (method == nullptr)
+            return Encode::undefined();
+    }
+
     if (method->isV4Function()) {
         return doCall([&]() {
             QV4::ScopedValue rv(scope, QV4::Value::undefinedValue());
@@ -2270,12 +2296,6 @@ ReturnedValue QObjectMethod::callInternal(const Value *thisObject, const Value *
 
             return rv->asReturnedValue();
         });
-    }
-
-    if (d()->methodCount != 1) {
-        method = ResolveOverloaded(object, d()->methods, d()->methodCount, v4, callData);
-        if (method == nullptr)
-            return Encode::undefined();
     }
 
     return doCall([&]() { return CallPrecise(object, *method, v4, callData); });

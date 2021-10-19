@@ -3345,6 +3345,47 @@ void tst_qqmlecmascript::callQtInvokables()
     QJSValue callback = qvariant_cast<QJSValue>(o->actuals().at(1));
     QVERIFY(!callback.isNull());
     QVERIFY(callback.isCallable());
+
+    o->reset();
+    QVERIFY(EVALUATE_VALUE("object.method_overload2('foo', 12, [1, 2, 3])", QV4::Primitive::undefinedValue()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 31);
+    QCOMPARE(o->actuals().count(), 3);
+    QCOMPARE(qvariant_cast<QString>(o->actuals().at(0)), QStringLiteral("foo"));
+    QCOMPARE(qvariant_cast<int>(o->actuals().at(1)), 12);
+    QCOMPARE(qvariant_cast<QVariantList>(o->actuals().at(2)), (QVariantList {1.0, 2.0, 3.0}));
+
+    o->reset();
+    QVERIFY(EVALUATE_VALUE("object.method_overload2(11, 12, {a: 1, b: 2})", QV4::Primitive::undefinedValue()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 31);
+    QCOMPARE(o->actuals().count(), 3);
+    QCOMPARE(qvariant_cast<int>(o->actuals().at(0)), 11);
+    QCOMPARE(qvariant_cast<int>(o->actuals().at(1)), 12);
+    QCOMPARE(qvariant_cast<QVariantMap>(o->actuals().at(2)),
+             (QVariantMap { {QStringLiteral("a"), 1.0}, {QStringLiteral("b"), 2.0}, }));
+
+    o->reset();
+    QVERIFY(EVALUATE_VALUE("object.method_overload2([1, 'bar', 0.2])",
+                           QV4::Primitive::undefinedValue()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 32);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QVariantList>(o->actuals().at(0)),
+             (QVariantList {1.0, QStringLiteral("bar"), 0.2}));
+
+    o->reset();
+    QVERIFY(EVALUATE_VALUE("object.method_overload2({one: 1, two: 'bar', three: 0.2})",
+                           QV4::Primitive::undefinedValue()));
+    QCOMPARE(o->error(), false);
+    QCOMPARE(o->invoked(), 33);
+    QCOMPARE(o->actuals().count(), 1);
+    QCOMPARE(qvariant_cast<QVariantMap>(o->actuals().at(0)),
+             (QVariantMap {
+                  {QStringLiteral("one"), 1.0},
+                  {QStringLiteral("two"), QStringLiteral("bar")},
+                  {QStringLiteral("three"), 0.2}
+              }));
 }
 
 void tst_qqmlecmascript::resolveClashingProperties()

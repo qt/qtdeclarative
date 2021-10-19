@@ -891,6 +891,26 @@ public:
 
     Q_INVOKABLE void method_unknown(NonRegisteredType) { invoke(28); }
 
+    Q_INVOKABLE void method_overload2(QQmlV4Function *v)
+    {
+        invoke(31);
+        QV4::Scope scope(v->v4engine());
+        for (int i = 0, end = v->length(); i != end; ++i) {
+            QV4::ScopedValue v4Value(scope, (*v)[i]);
+            m_actuals.append(v->v4engine()->toVariant(v4Value, QMetaType()));
+        }
+    }
+    Q_INVOKABLE void method_overload2(const QVariantList &list)
+    {
+        invoke(32);
+        m_actuals << QVariant(list);
+    }
+    Q_INVOKABLE void method_overload2(const QVariantMap &map) { invoke(33); m_actuals << map; }
+    Q_INVOKABLE void method_overload2(int a) { invoke(34); m_actuals << a; }
+    Q_INVOKABLE void method_overload2(int a, int b) { invoke(35); m_actuals << a << b; }
+    Q_INVOKABLE void method_overload2(QString a) { invoke(36); m_actuals << a; }
+    Q_INVOKABLE void method_overload2() { invoke(37); }
+
 private:
     friend class MyInvokableBaseObject;
     void invoke(int idx) { if (m_invoked != -1) m_invokedError = true; m_invoked = idx;}
