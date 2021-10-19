@@ -1129,8 +1129,8 @@ void QQuickPropertyAction::setProperty(const QString &n)
 }
 
 /*!
-    \qmlproperty Object QtQuick::PropertyAction::target
-    \qmlproperty list<Object> QtQuick::PropertyAction::targets
+    \qmlproperty QtObject QtQuick::PropertyAction::target
+    \qmlproperty list<QtObject> QtQuick::PropertyAction::targets
     \qmlproperty string QtQuick::PropertyAction::property
     \qmlproperty string QtQuick::PropertyAction::properties
 
@@ -1165,7 +1165,7 @@ QQmlListProperty<QObject> QQuickPropertyAction::targets()
 }
 
 /*!
-    \qmlproperty list<Object> QtQuick::PropertyAction::exclude
+    \qmlproperty list<QtObject> QtQuick::PropertyAction::exclude
     This property holds the objects that should not be affected by this action.
 
     \sa targets
@@ -2464,9 +2464,9 @@ void QQuickPropertyAnimation::setProperties(const QString &prop)
 
 /*!
     \qmlproperty string QtQuick::PropertyAnimation::properties
-    \qmlproperty list<Object> QtQuick::PropertyAnimation::targets
+    \qmlproperty list<QtObject> QtQuick::PropertyAnimation::targets
     \qmlproperty string QtQuick::PropertyAnimation::property
-    \qmlproperty Object QtQuick::PropertyAnimation::target
+    \qmlproperty QtObject QtQuick::PropertyAnimation::target
 
     These properties are used as a set to determine which properties should be animated.
     The singular and plural forms are functionally identical, e.g.
@@ -2559,7 +2559,7 @@ QQmlListProperty<QObject> QQuickPropertyAnimation::targets()
 }
 
 /*!
-    \qmlproperty list<Object> QtQuick::PropertyAnimation::exclude
+    \qmlproperty list<QtObject> QtQuick::PropertyAnimation::exclude
     This property holds the items not to be affected by this animation.
     \sa PropertyAnimation::targets
 */

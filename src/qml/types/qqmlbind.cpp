@@ -216,7 +216,7 @@ void QQmlBind::setWhen(bool v)
 }
 
 /*!
-    \qmlproperty Object QtQml::Binding::target
+    \qmlproperty QtObject QtQml::Binding::target
 
     The object to be updated.
 */

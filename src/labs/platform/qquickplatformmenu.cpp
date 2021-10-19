@@ -317,7 +317,7 @@ void QQuickPlatformMenu::sync()
 
 /*!
     \qmldefault
-    \qmlproperty list<Object> Qt.labs.platform::Menu::data
+    \qmlproperty list<QtObject> Qt.labs.platform::Menu::data
 
     This default property holds the list of all objects declared as children of
     the menu. The data property includes objects that are not \l MenuItem instances,

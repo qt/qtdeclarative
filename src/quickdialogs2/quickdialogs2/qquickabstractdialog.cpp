@@ -121,7 +121,7 @@ QPlatformDialogHelper *QQuickAbstractDialog::handle() const
 
 /*!
     \qmldefault
-    \qmlproperty list<Object> QtQuick.Dialogs::Dialog::data
+    \qmlproperty list<QtObject> QtQuick.Dialogs::Dialog::data
 
     This default property holds the list of all objects declared as children of
     the dialog.

@@ -624,7 +624,7 @@ void QQuickPopupPrivate::setBottomMargin(qreal value, bool reset)
 
 /*!
     \since QtQuick.Controls 2.5 (Qt 5.12)
-    \qmlproperty Object QtQuick.Controls::Popup::anchors.centerIn
+    \qmlproperty Item QtQuick.Controls::Popup::anchors.centerIn
 
     Anchors provide a way to position an item by specifying its
     relationship with other items.
@@ -1723,7 +1723,7 @@ void QQuickPopup::setContentItem(QQuickItem *item)
 }
 
 /*!
-    \qmlproperty list<Object> QtQuick.Controls::Popup::contentData
+    \qmlproperty list<QtObject> QtQuick.Controls::Popup::contentData
     \qmldefault
 
     This property holds the list of content data.

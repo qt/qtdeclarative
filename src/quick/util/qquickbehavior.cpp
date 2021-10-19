@@ -311,7 +311,7 @@ QVariant QQuickBehavior::targetValue() const
     \readonly
     \qmlpropertygroup QtQuick::Behavior::targetProperty
     \qmlproperty string QtQuick::Behavior::targetProperty.name
-    \qmlproperty Object QtQuick::Behavior::targetProperty.object
+    \qmlproperty QtObject QtQuick::Behavior::targetProperty.object
 
     \table
     \header

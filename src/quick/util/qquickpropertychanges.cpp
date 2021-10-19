@@ -134,7 +134,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty Object QtQuick::PropertyChanges::target
+    \qmlproperty QtObject QtQuick::PropertyChanges::target
     This property holds the object which contains the properties to be changed.
 */
 

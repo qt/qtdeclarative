@@ -440,7 +440,7 @@ QQuickScrollView::QQuickScrollView(QQuickItem *parent)
 }
 
 /*!
-    \qmlproperty list<Object> QtQuick.Controls::ScrollView::contentData
+    \qmlproperty list<QtObject> QtQuick.Controls::ScrollView::contentData
     \qmldefault
 
     This property holds the list of content data.

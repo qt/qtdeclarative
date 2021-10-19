@@ -618,7 +618,7 @@ QVariant QQuickContainer::contentModel() const
 }
 
 /*!
-    \qmlproperty list<Object> QtQuick.Controls::Container::contentData
+    \qmlproperty list<QtObject> QtQuick.Controls::Container::contentData
     \qmldefault
 
     This property holds the list of content data.

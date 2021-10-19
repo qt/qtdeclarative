@@ -3293,7 +3293,7 @@ void QQuickItemPrivate::data_append(QQmlListProperty<QObject> *prop, QObject *o)
 }
 
 /*!
-    \qmlproperty list<Object> QtQuick::Item::data
+    \qmlproperty list<QtObject> QtQuick::Item::data
     \qmldefault
 
     The data property allows you to freely mix visual children and resources
@@ -4955,7 +4955,7 @@ QQmlListProperty<QObject> QQuickItemPrivate::resources()
 
 /*!
     \qmlproperty list<Item> QtQuick::Item::children
-    \qmlproperty list<Object> QtQuick::Item::resources
+    \qmlproperty list<QtObject> QtQuick::Item::resources
 
     The children property contains the list of visual children of this item.
     The resources property contains non-visual resources that you want to

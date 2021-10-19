@@ -340,7 +340,7 @@ void QQuickPane::resetContentHeight()
 }
 
 /*!
-    \qmlproperty list<Object> QtQuick.Controls::Pane::contentData
+    \qmlproperty list<QtObject> QtQuick.Controls::Pane::contentData
     \qmldefault
 
     This property holds the list of content data.

@@ -1664,7 +1664,7 @@ QPair<QQuickItem*, QQuickPointerHandler*> QQuickWindowPrivate::findCursorItemAnd
 #endif
 
 /*!
-    \qmlproperty list<Object> Window::data
+    \qmlproperty list<QtObject> Window::data
     \qmldefault
 
     The data property allows you to freely mix visual children, resources
