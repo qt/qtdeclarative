@@ -130,6 +130,8 @@ private slots:
     void qmlCreateObjectAutoParent_data();
     void qmlCreateObjectAutoParent();
     void qmlCreateObjectWithProperties();
+    void qmlCreateObjectClean();
+    void qmlCreateObjectDirty();
     void qmlIncubateObject();
     void qmlCreateParentReference();
     void async();
@@ -329,6 +331,42 @@ void tst_qqmlcomponent::qmlCreateObjectWithProperties()
         testBindingThisObj->setProperty("width", 200);
         QCOMPARE(testBindingThisObj->property("testValue").value<int>(), 200 * 3);
     }
+}
+
+void tst_qqmlcomponent::qmlCreateObjectClean()
+{
+    QQmlEngine engine;
+    QVERIFY(engine.outputWarningsToStandardError());
+    QObject::connect(&engine, &QQmlEngine::warnings, [](const QList<QQmlError> &) {
+        QFAIL("Calls with suitable parameters should not generate any warnings.");
+    });
+    QQmlComponent component(&engine, testFileUrl("createObjectClean.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+
+    QVERIFY(qvariant_cast<QObject *>(object->property("a")) != nullptr);
+    QVERIFY(qvariant_cast<QObject *>(object->property("b")) != nullptr);
+    QVERIFY(qvariant_cast<QObject *>(object->property("c")) != nullptr);
+    QVERIFY(qvariant_cast<QObject *>(object->property("d")) != nullptr);
+}
+
+void tst_qqmlcomponent::qmlCreateObjectDirty()
+{
+    QQmlEngine engine;
+    engine.setOutputWarningsToStandardError(false);
+    QObject::connect(&engine, &QQmlEngine::warnings, [](const QList<QQmlError> &warnings) {
+        QCOMPARE(warnings.count(), 1);
+        QCOMPARE(warnings[0].description(),
+                "QML Component: Unsuitable arguments passed to createObject(). The first argument "
+                "should be a QObject* or null, and the second argument should be a JavaScript "
+                "object or a QVariantMap");
+    });
+    QQmlComponent component(&engine, testFileUrl("createObjectDirty.qml"));
+    QVERIFY2(component.errorString().isEmpty(), component.errorString().toUtf8());
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
+    QVERIFY(qvariant_cast<QObject *>(object->property("a")) != nullptr);
 }
 
 void tst_qqmlcomponent::qmlCreateParentReference()

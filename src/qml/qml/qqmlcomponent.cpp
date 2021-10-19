@@ -374,24 +374,52 @@ QObject *QQmlComponentPrivate::doBeginCreate(QQmlComponent *q, QQmlContext *cont
     return q->beginCreate(context);
 }
 
-bool QQmlComponentPrivate::setInitialProperty(QObject *component, const QString& name, const QVariant &value)
+bool QQmlComponentPrivate::setInitialProperty(
+        QObject *base, const QString &name, const QVariant &value)
 {
+    const QStringList properties = name.split(u'.');
+
+    if (properties.size() > 1) {
+        QV4::Scope scope(engine->handle());
+        QV4::ScopedObject object(scope, QV4::QObjectWrapper::wrap(scope.engine, base));
+        QV4::ScopedString segment(scope);
+
+        for (int i = 0; i < properties.length() - 1; ++i) {
+            segment = scope.engine->newString(properties.at(i));
+            object = object->get(segment);
+            if (scope.engine->hasException)
+                break;
+        }
+        segment = scope.engine->newString(properties.last());
+        object->put(segment, scope.engine->metaTypeToJS(value.metaType(), value.constData()));
+        if (scope.engine->hasException) {
+            state.errors.push_back(scope.engine->catchExceptionAsQmlError());
+            scope.engine->hasException = false;
+            return false;
+        }
+        return true;
+    }
+
     QQmlProperty prop = QQmlComponentPrivate::removePropertyFromRequired(
-            component, name, requiredProperties(), engine);
+            base, name, requiredProperties(), engine);
     QQmlPropertyPrivate *privProp = QQmlPropertyPrivate::get(prop);
     const bool isValid = prop.isValid();
     if (!isValid || !privProp->writeValueProperty(value, {})) {
         QQmlError error{};
         error.setUrl(url);
-        if (isValid)
-            error.setDescription(QLatin1String("Could not set initial property %1").arg(name));
-        else
-            error.setDescription(QLatin1String("Setting initial properties failed: %2 does not have a property called %1").arg(name,
-                                                                                            QQmlMetaType::prettyTypeName(component)));
+        if (isValid) {
+            error.setDescription(QStringLiteral("Could not set initial property %1").arg(name));
+        } else {
+            error.setDescription(QStringLiteral("Setting initial properties failed: "
+                                                "%2 does not have a property called %1")
+                                         .arg(name, QQmlMetaType::prettyTypeName(base)));
+        }
         state.errors.push_back(error);
         return false;
-    } else
-        return true;
+    }
+
+    return true;
+
 }
 
 /*!
@@ -1455,6 +1483,7 @@ QQmlError QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(const RequiredP
     return  error;
 }
 
+#if QT_DEPRECATED_SINCE(6, 3)
 /*!
     \internal
 */
@@ -1463,6 +1492,10 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     Q_D(QQmlComponent);
     Q_ASSERT(d->engine);
     Q_ASSERT(args);
+
+    qmlWarning(this) << "Unsuitable arguments passed to createObject(). The first argument should "
+                        "be a QObject* or null, and the second argument should be a JavaScript "
+                        "object or a QVariantMap";
 
     QObject *parent = nullptr;
     QV4::ExecutionEngine *v4 = args->v4engine();
@@ -1522,6 +1555,57 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     QQmlData::get(rv)->indestructible = false;
 
     args->setReturnValue(object->asReturnedValue());
+}
+#endif
+
+/*!
+    \internal
+ */
+QObject *QQmlComponent::createObject(QObject *parent, const QVariantMap &properties)
+{
+    Q_D(QQmlComponent);
+    Q_ASSERT(d->engine);
+
+    QQmlContext *ctxt = creationContext();
+    if (!ctxt)
+        ctxt = d->engine->rootContext();
+
+    QObject *rv = beginCreate(ctxt);
+    if (!rv)
+        return nullptr;
+
+    Q_ASSERT(d->state.errors.isEmpty()); // otherwise beginCreate() would return nullptr
+
+    QQmlComponent_setQmlParent(rv, parent);
+
+    if (!properties.isEmpty()) {
+        setInitialProperties(rv, properties);
+        if (!d->state.errors.isEmpty()) {
+            qmlWarning(rv, d->state.errors);
+            d->state.errors.clear();
+        }
+    }
+
+    if (!d->requiredProperties().empty()) {
+        QList<QQmlError> errors;
+        for (const auto &requiredProperty: qAsConst(d->requiredProperties())) {
+            errors.push_back(QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(
+                    requiredProperty));
+        }
+        if (!errors.isEmpty())
+            qmlWarning(rv, errors);
+        delete rv;
+        return nullptr;
+    }
+
+    d->completeCreate();
+
+    QQmlData *qmlData = QQmlData::get(rv);
+    Q_ASSERT(qmlData);
+    qmlData->explicitIndestructibleSet = false;
+    qmlData->indestructible = false;
+
+    return rv;
 }
 
 /*!
