@@ -1270,5 +1270,38 @@ Item {
             var layout = createTemporaryObject(layout_dependentWidth_QTBUG_87253_Component, container)
             waitForRendering(layout)
         }
+
+        //---------------------------
+        Component {
+            id: rowlayoutWithRectangle_Component
+            RowLayout {
+                property alias spy : signalSpy
+                Rectangle {
+                    color: "red"
+                    implicitWidth: 10
+                    implicitHeight: 10
+                }
+                SignalSpy {
+                    id: signalSpy
+                    target: parent
+                    signalName: "implicitWidthChanged"
+                }
+            }
+        }
+
+        // QTBUG-93988
+        function test_ensurePolished() {
+            var layout = createTemporaryObject(rowlayoutWithRectangle_Component, container)
+            compare(layout.spy.count, 1)
+            waitForRendering(layout)
+            compare(layout.implicitWidth, 10)
+            var r0 = layout.children[0]
+
+            r0.implicitWidth = 42
+            compare(layout.spy.count, 1)    // Not yet updated, awaiting PolishEvent...
+            layout.ensurePolished()
+            compare(layout.spy.count, 2)
+            compare(layout.implicitWidth, 42)
+        }
     }
 }

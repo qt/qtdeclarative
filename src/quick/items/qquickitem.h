@@ -358,6 +358,7 @@ public:
     Q_INVOKABLE void forceActiveFocus(Qt::FocusReason reason);
     Q_REVISION(2, 1) Q_INVOKABLE QQuickItem *nextItemInFocusChain(bool forward = true);
     Q_INVOKABLE QQuickItem *childAt(qreal x, qreal y) const;
+    Q_INVOKABLE void ensurePolished();
 
     Q_REVISION(6, 3) Q_INVOKABLE void dumpItemTree() const;
 

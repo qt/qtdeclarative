@@ -3915,6 +3915,8 @@ QSGTransformNode *QQuickItemPrivate::createTransformNode()
     item. When the scene graph is ready to render this item, it calls
     updatePolish() to do any item layout as required before it renders the
     next frame.
+
+    \sa ensurePolished()
   */
 void QQuickItem::updatePolish()
 {
@@ -4467,7 +4469,7 @@ void QQuickItem::update()
     When the scene graph processes the request, it will call updatePolish()
     on this item.
 
-    \sa updatePolish(), QQuickTest::qIsPolishScheduled()
+    \sa updatePolish(), QQuickTest::qIsPolishScheduled(), ensurePolished()
   */
 void QQuickItem::polish()
 {
@@ -4481,6 +4483,26 @@ void QQuickItem::polish()
             if (maybeupdate) d->window->maybeUpdate();
         }
     }
+}
+
+/*!
+    \since 6.3
+
+    Calls updatePolish()
+
+    This can be useful for items such as Layouts (or Positioners) which delay calculation of
+    their implicitWidth and implicitHeight until they receive a PolishEvent.
+
+    Normally, if e.g. a child item is added or removed to a Layout, the implicit size is not
+    immediately calculated (this is an optimization). In some cases it might be desirable to
+    query the implicit size of the layout right after a child item has been added.
+    If this is the case, use this function right before querying the implicit size.
+
+    \sa updatePolish(), polish()
+  */
+void QQuickItem::ensurePolished()
+{
+    updatePolish();
 }
 
 static bool unwrapMapFromToFromItemArgs(QQmlV4Function *args, const QQuickItem *itemForWarning, const QString &functionNameForWarning,
