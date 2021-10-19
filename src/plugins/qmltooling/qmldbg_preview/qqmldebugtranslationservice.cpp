@@ -294,7 +294,7 @@ public:
             return currentQuickView->rootObject();
         return nullptr;
     }
-    QQuickView* currentQuickView;
+    QQuickView* currentQuickView = nullptr;
 
 private:
     CodeMarker codeMarker(const TranslationBindingInformation &information)
