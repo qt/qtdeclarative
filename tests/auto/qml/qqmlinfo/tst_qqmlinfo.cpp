@@ -83,8 +83,8 @@ void tst_qqmlinfo::nestedQmlObject()
 {
     QQmlComponent component(&engine, testFileUrl("nestedQmlObject.qml"));
 
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
 
     QObject *nested = qvariant_cast<QObject *>(object->property("nested"));
     QVERIFY(nested != nullptr);
@@ -104,8 +104,8 @@ void tst_qqmlinfo::nestedComponent()
 {
     QQmlComponent component(&engine, testFileUrl("NestedComponent.qml"));
 
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
+    QScopedPointer<QObject> object(component.create());
+    QVERIFY(!object.isNull());
 
     QObject *nested = qvariant_cast<QObject *>(object->property("nested"));
     QVERIFY(nested != nullptr);
