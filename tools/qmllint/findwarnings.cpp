@@ -74,7 +74,10 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
             // no target set, connection comes from parentF
             QQmlJSScope::Ptr scope = m_currentScope;
             do {
-                scope = scope->parentScope(); // TODO: rename method
+                if (auto parentScope = scope->parentScope(); !parentScope.isNull())
+                    scope = parentScope;
+                else
+                    break;
             } while (scope->scopeType() != QQmlJSScope::QMLScope);
             targetScope = m_rootScopeImports.value(scope->baseTypeName());
         } else {

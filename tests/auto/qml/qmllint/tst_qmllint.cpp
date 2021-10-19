@@ -858,6 +858,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("required property in Component") << QStringLiteral("requiredPropertyInComponent.qml");
     QTest::newRow("bytearray") << QStringLiteral("bytearray.qml");
     QTest::newRow("initReadonly") << QStringLiteral("initReadonly.qml");
+    QTest::newRow("connectionNoParent") << QStringLiteral("connectionNoParent.qml"); // QTBUG-97600
 }
 
 void TestQmllint::cleanQmlCode()
