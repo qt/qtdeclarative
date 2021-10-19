@@ -1708,7 +1708,10 @@ static QVariant objectToVariant(QV4::ExecutionEngine *e, const QV4::Object *o, V
         }
 
         result = list;
-    } else if (!o->as<FunctionObject>()) {
+    } else if (const FunctionObject *f = o->as<FunctionObject>()) {
+        // If it's a FunctionObject, we can only save it as QJSValue.
+        result = QVariant::fromValue(QJSValuePrivate::fromReturnedValue(f->asReturnedValue()));
+    } else {
         QVariantMap map;
         QV4::Scope scope(e);
         QV4::ObjectIterator it(scope, o, QV4::ObjectIterator::EnumerableOnly);

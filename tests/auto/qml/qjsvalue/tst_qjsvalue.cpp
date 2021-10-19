@@ -1146,7 +1146,7 @@ void tst_QJSValue::toVariant()
         QVERIFY(func2.isCallable());
         QCOMPARE(func2.call().toInt(), 10);
 
-        QCOMPARE(func.toVariant(), QVariant());
+        QCOMPARE(func.toVariant().metaType(), QMetaType::fromType<QJSValue>());
     }
 }
 

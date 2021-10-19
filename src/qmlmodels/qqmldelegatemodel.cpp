@@ -1033,7 +1033,8 @@ void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *mod
                 auto propName = QString::fromUtf8(prop.name());
                 bool wasInRequired = false;
                 QQmlProperty componentProp = QQmlComponentPrivate::removePropertyFromRequired(
-                        object, propName, requiredProperties, &wasInRequired);
+                            object, propName, requiredProperties,
+                            QQmlEnginePrivate::get(incubatorPriv->enginePriv), &wasInRequired);
                 // only write to property if it was actually requested by the component
                 if (wasInRequired && prop.hasNotifySignal()) {
                     QMetaMethod changeSignal = prop.notifySignal();

@@ -137,7 +137,9 @@ public:
     static void completeDeferred(QQmlEnginePrivate *enginePriv, DeferredState *deferredState);
 
     static void complete(QQmlEnginePrivate *enginePriv, ConstructionState *state);
-    static QQmlProperty removePropertyFromRequired(QObject *createdComponent, const QString &name, RequiredProperties& requiredProperties, bool *wasInRequiredProperties = nullptr);
+    static QQmlProperty removePropertyFromRequired(
+            QObject *createdComponent, const QString &name, RequiredProperties &requiredProperties,
+            QQmlEngine *engine, bool *wasInRequiredProperties = nullptr);
 
     QQmlEngine *engine;
     QQmlGuardedContextData creationContext;

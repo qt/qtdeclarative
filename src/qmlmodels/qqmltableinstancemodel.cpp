@@ -425,7 +425,8 @@ bool QQmlTableInstanceModel::setRequiredProperty(int index, const QString &name,
         return false;
 
     QQmlProperty componentProp = QQmlComponentPrivate::removePropertyFromRequired(
-                modelItem->object, name, props, &wasInRequired);
+                modelItem->object, name, props, QQmlEnginePrivate::get(task->enginePriv),
+                &wasInRequired);
     if (wasInRequired)
         componentProp.write(value);
     return wasInRequired;

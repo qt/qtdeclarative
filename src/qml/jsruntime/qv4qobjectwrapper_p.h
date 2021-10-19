@@ -183,6 +183,9 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
 
     static void setProperty(ExecutionEngine *engine, QObject *object, int propertyIndex, const Value &value);
     void setProperty(ExecutionEngine *engine, int propertyIndex, const Value &value);
+    static void setProperty(
+            ExecutionEngine *engine, QObject *object,
+            const QQmlPropertyData *property, const Value &value);
 
     void destroyObject(bool lastCall);
 
@@ -198,8 +201,6 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     static bool virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value);
 
 protected:
-    static void setProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, const Value &value);
-
     static bool virtualIsEqualTo(Managed *that, Managed *o);
     static ReturnedValue create(ExecutionEngine *engine, QObject *object);
 

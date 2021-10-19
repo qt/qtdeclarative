@@ -56,6 +56,8 @@
 #include "qqmlvaluetypeproxybinding_p.h"
 #include <private/qjsvalue_p.h>
 #include <private/qv4functionobject_p.h>
+#include <private/qv4qobjectwrapper_p.h>
+#include <private/qqmlbuiltinfunctions_p.h>
 
 #include <QStringList>
 #include <QVector>
@@ -1433,6 +1435,21 @@ bool QQmlPropertyPrivate::write(
                 o = nullptr;
             prop.append(&prop, o);
         }
+    } else if (variantMetaType == QMetaType::fromType<QJSValue>()) {
+        QJSValue jsValue = qvariant_cast<QJSValue>(value);
+        const QV4::FunctionObject *f
+                = QJSValuePrivate::asManagedType<QV4::FunctionObject>(&jsValue);
+        if (f && f->isBinding()) {
+            QV4::QObjectWrapper::setProperty(
+                    f->engine(), object, &property, f->asReturnedValue());
+            return true;
+        }
+        return false;
+    } else if (enginePriv && propertyMetaType == QMetaType::fromType<QJSValue>()) {
+        // We can convert everything into a QJSValue if we have an engine.
+        QJSValue jsValue = QJSValuePrivate::fromReturnedValue(
+                    enginePriv->v4engine()->metaTypeToJS(variantMetaType, value.constData()));
+        return property.writeProperty(object, &jsValue, flags);
     } else {
         Q_ASSERT(variantMetaType != propertyMetaType);
 

@@ -475,7 +475,9 @@ bool QObjectWrapper::setQmlProperty(
     return true;
 }
 
-void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property, const Value &value)
+void QObjectWrapper::setProperty(
+        ExecutionEngine *engine, QObject *object,
+        const QQmlPropertyData *property, const Value &value)
 {
     if (!property->isWritable() && !property->isQList()) {
         QString error = QLatin1String("Cannot assign to read-only property \"") +

@@ -46,6 +46,28 @@
 
 #include <algorithm>
 
+class WithQJSValue : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QJSValue v READ v WRITE setV NOTIFY vChanged)
+
+public:
+    QJSValue v() const { return m_v; }
+    void setV(const QJSValue &newV)
+    {
+        if (!m_v.strictlyEquals(newV)) {
+            m_v = newV;
+            emit vChanged();
+        }
+    }
+
+signals:
+    void vChanged();
+
+private:
+    QJSValue m_v;
+};
+
 class MyIC : public QObject, public QQmlIncubationController
 {
     Q_OBJECT
@@ -130,6 +152,7 @@ private slots:
     void testSetInitialProperties();
     void createInsideJSModule();
     void qmlErrorIsReported();
+    void initJSValueProp();
 
 private:
     QQmlEngine engine;
@@ -1022,6 +1045,22 @@ void tst_qqmlcomponent::qmlErrorIsReported()
     QVERIFY(std::any_of(componentErrors.begin(), componentErrors.end(), [&](const QQmlError &e) {
         return errorMessage.match(e.toString()).hasMatch();
     }));
+}
+
+void tst_qqmlcomponent::initJSValueProp()
+{
+    qmlRegisterType<WithQJSValue>("ComponentTest", 1, 0, "WithQJSValue");
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import ComponentTest\nWithQJSValue {}", QUrl());
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.createWithInitialProperties({{ u"v"_qs, 5}}));
+    QVERIFY(!o.isNull());
+    WithQJSValue *withQJSValue = qobject_cast<WithQJSValue *>(o.data());
+    QVERIFY(withQJSValue);
+    const QJSValue jsValue = withQJSValue->v();
+    QVERIFY(jsValue.isNumber());
+    QCOMPARE(jsValue.toInt(), 5);
 }
 
 QTEST_MAIN(tst_qqmlcomponent)

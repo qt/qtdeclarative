@@ -304,7 +304,8 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
            for (auto it = initialProperties.cbegin(); it != initialProperties.cend(); ++it) {
                auto component = tresult;
                auto name = it.key();
-               QQmlProperty prop = QQmlComponentPrivate::removePropertyFromRequired(component, name, requiredProperties);
+               QQmlProperty prop = QQmlComponentPrivate::removePropertyFromRequired(
+                           component, name, requiredProperties, QQmlEnginePrivate::get(enginePriv));
                if (!prop.isValid() || !prop.write(it.value())) {
                    QQmlError error{};
                    error.setUrl(compilationUnit->url());

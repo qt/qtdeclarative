@@ -376,7 +376,8 @@ QObject *QQmlComponentPrivate::doBeginCreate(QQmlComponent *q, QQmlContext *cont
 
 bool QQmlComponentPrivate::setInitialProperty(QObject *component, const QString& name, const QVariant &value)
 {
-    QQmlProperty prop = QQmlComponentPrivate::removePropertyFromRequired(component, name, requiredProperties());
+    QQmlProperty prop = QQmlComponentPrivate::removePropertyFromRequired(
+            component, name, requiredProperties(), engine);
     QQmlPropertyPrivate *privProp = QQmlPropertyPrivate::get(prop);
     const bool isValid = prop.isValid();
     if (!isValid || !privProp->writeValueProperty(value, {})) {
@@ -1037,9 +1038,11 @@ void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionS
  * classes which create components should not need it and should only need to call
  * setInitialProperties.
  */
-QQmlProperty QQmlComponentPrivate::removePropertyFromRequired(QObject *createdComponent, const QString &name, RequiredProperties &requiredProperties, bool* wasInRequiredProperties)
+QQmlProperty QQmlComponentPrivate::removePropertyFromRequired(
+        QObject *createdComponent, const QString &name, RequiredProperties &requiredProperties,
+        QQmlEngine *engine, bool *wasInRequiredProperties)
 {
-    QQmlProperty prop(createdComponent, name);
+    QQmlProperty prop(createdComponent, name, engine);
     auto privProp = QQmlPropertyPrivate::get(prop);
     if (prop.isValid()) {
         // resolve outstanding required properties
@@ -1418,7 +1421,8 @@ void QQmlComponentPrivate::setInitialProperties(QV4::ExecutionEngine *engine, QV
             qmlWarning(createdComponent, engine->catchExceptionAsQmlError());
             continue;
         } else if (isTopLevelProperty) {
-            auto prop = removePropertyFromRequired(createdComponent, name->toQString(), requiredProperties);
+            auto prop = removePropertyFromRequired(createdComponent, name->toQString(),
+                                                   requiredProperties, engine->qmlEngine());
         }
     }
 
