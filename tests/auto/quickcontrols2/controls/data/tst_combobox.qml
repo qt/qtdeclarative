@@ -52,6 +52,7 @@ import QtQuick
 import QtQuick.Window
 import QtTest
 import QtQuick.Controls
+import QtQuick.NativeStyle as NativeStyle
 
 TestCase {
     id: testCase
@@ -1255,9 +1256,14 @@ TestCase {
         verify(control.button)
         verify(control.combobox)
 
+        var macOSStyle = Qt.platform.pluginName === "cocoa"
+                       && control.combobox.background instanceof NativeStyle.StyleItem
+        var expectedComboBoxFontPixelSize = macOSStyle
+                                  ? control.combobox.background.styleFont(control.combobox).pixelSize
+                                  : 30
         compare(control.font.pixelSize, 30)
         compare(control.button.font.pixelSize, 20)
-        compare(control.combobox.font.pixelSize, 30)
+        compare(control.combobox.font.pixelSize, expectedComboBoxFontPixelSize)
 
 //        verify(control.combobox.popup)
 //        var popup = control.combobox.popup
@@ -1278,13 +1284,21 @@ TestCase {
 //        compare(listview.contentItem.children[idx2].font.pixelSize, 25)
 
         control.font.pixelSize = control.font.pixelSize + 10
-        compare(control.combobox.font.pixelSize, 40)
+        if (!macOSStyle) expectedComboBoxFontPixelSize += 10
+        compare(control.combobox.font.pixelSize, expectedComboBoxFontPixelSize)
 //        waitForRendering(listview)
 //        compare(listview.contentItem.children[idx1].font.pixelSize, 25)
 //        compare(listview.contentItem.children[idx2].font.pixelSize, 25)
 
         control.combobox.font.pixelSize = control.combobox.font.pixelSize + 5
-        compare(control.combobox.font.pixelSize, 45)
+        if (!macOSStyle) {
+            // We only support the default system font (and font size) on MacOS style.
+            // Therefore, adjusting the font is not supported on MacOS style.
+            // Current behavior is that the font property *is* changed, but it is not
+            // guaranteed that the drawing will be correct.
+            // However, this might change in the future, so we don't test it.
+            compare(control.combobox.font.pixelSize, 45)
+        }
 //        waitForRendering(listview)
 
 //        idx1 = getChild(listview.contentItem, "delegate", -1)
