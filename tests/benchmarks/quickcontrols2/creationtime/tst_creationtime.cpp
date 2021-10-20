@@ -54,8 +54,8 @@ private slots:
     void initTestCase();
     void init();
 
-    void basicStyle();
-    void basicStyle_data();
+    void basic();
+    void basic_data();
 
     void fusion();
     void fusion_data();
@@ -105,17 +105,18 @@ static void doBenchmark(QQuickStyleHelper &styleHelper, const QUrl &url)
     qDeleteAll(objects);
 }
 
-void tst_CreationTime::basicStyle()
+void tst_CreationTime::basic()
 {
     QFETCH(QUrl, url);
     doBenchmark(styleHelper, url);
 }
 
-void tst_CreationTime::basicStyle_data()
+void tst_CreationTime::basic_data()
 {
     QTest::addColumn<QUrl>("url");
+    // Calendar is excluded because it's a singleton and can't be created.
     addTestRowForEachControl(styleHelper.engine.data(), QQC2_IMPORT_PATH, "basic", "QtQuick/Controls/Basic",
-        QStringList() << "ApplicationWindow");
+        QStringList() << "ApplicationWindow" << "Calendar");
 }
 
 void tst_CreationTime::fusion()

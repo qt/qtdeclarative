@@ -62,12 +62,34 @@ set(qml_files
     "Tumbler.qml"
     "VerticalHeaderView.qml"
 )
+if (QT_FEATURE_quicktemplates2_calendar)
+    list(APPEND qml_files
+        "Calendar.qml"
+        "CalendarModel.qml"
+        "DayOfWeekRow.qml"
+        "MonthGrid.qml"
+        "WeekNumberColumn.qml"
+    )
+endif()
+
 set_source_files_properties(Action.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.3;6.0"
 )
 set_source_files_properties(ActionGroup.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.3;6.0"
 )
+if (QT_FEATURE_quicktemplates2_calendar)
+    set_source_files_properties(Calendar.qml PROPERTIES
+        QT_QML_SINGLETON_TYPE TRUE
+        QT_QML_SOURCE_VERSIONS "6.3"
+    )
+    set_source_files_properties(CalendarModel.qml PROPERTIES
+        QT_QML_SOURCE_VERSIONS "6.3"
+    )
+    set_source_files_properties(DayOfWeekRow.qml PROPERTIES
+        QT_QML_SOURCE_VERSIONS "6.3"
+    )
+endif()
 set_source_files_properties(DelayButton.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.2;6.0"
 )
@@ -89,6 +111,11 @@ set_source_files_properties(MenuBarItem.qml PROPERTIES
 set_source_files_properties(MenuSeparator.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.1;6.0"
 )
+if (QT_FEATURE_quicktemplates2_calendar)
+    set_source_files_properties(MonthGrid.qml PROPERTIES
+        QT_QML_SOURCE_VERSIONS "6.3"
+    )
+endif()
 set_source_files_properties(RoundButton.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.1;6.0"
 )
@@ -107,6 +134,11 @@ set_source_files_properties(ToolSeparator.qml PROPERTIES
 set_source_files_properties(VerticalHeaderView.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.15;6.0"
 )
+if (QT_FEATURE_quicktemplates2_calendar)
+    set_source_files_properties(WeekNumberColumn.qml PROPERTIES
+        QT_QML_SOURCE_VERSIONS "6.3"
+    )
+endif()
 
 qt_internal_add_qml_module(qtquickcontrols2basicstyleplugin
     URI "QtQuick.Controls.Basic"

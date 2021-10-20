@@ -10,4 +10,5 @@ SUBDIRS += \
     imagine/automotive \
     imagine/musicplayer
 
+qtHaveModule(sql): SUBDIRS += eventcalendar
 qtHaveModule(widgets): SUBDIRS += flatstyle

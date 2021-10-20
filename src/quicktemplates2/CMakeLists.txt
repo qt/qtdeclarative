@@ -162,6 +162,18 @@ qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quick_listview AN
         qquicktumbler_p_p.h
 )
 
+qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quicktemplates2_calendar
+    SOURCES
+        qquickcalendar.cpp qquickcalendar_p.h
+        qquickcalendarmodel.cpp qquickcalendarmodel_p.h
+        qquickdayofweekmodel.cpp qquickdayofweekmodel_p.h
+        qquickdayofweekrow.cpp qquickdayofweekrow_p.h
+        qquickmonthgrid.cpp qquickmonthgrid_p.h
+        qquickmonthmodel.cpp qquickmonthmodel_p.h
+        qquickweeknumbercolumn.cpp qquickweeknumbercolumn_p.h
+        qquickweeknumbermodel.cpp qquickweeknumbermodel_p.h
+)
+
 qt_internal_extend_Target(qtquicktemplates2plugin
     SOURCES
         qtquicktemplates2plugin.cpp

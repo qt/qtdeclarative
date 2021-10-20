@@ -1,0 +1,54 @@
+# Generated from eventcalendar.pro.
+
+cmake_minimum_required(VERSION 3.16)
+project(eventcalendar LANGUAGES CXX)
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+set(CMAKE_AUTOMOC ON)
+
+if(NOT DEFINED INSTALL_EXAMPLESDIR)
+  set(INSTALL_EXAMPLESDIR "examples")
+endif()
+
+set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols2/eventcalendar")
+
+find_package(Qt6 COMPONENTS Core)
+find_package(Qt6 COMPONENTS Gui)
+find_package(Qt6 COMPONENTS Sql)
+find_package(Qt6 COMPONENTS Qml)
+
+qt_add_executable(eventcalendar
+    event.h
+    eventcalendar.cpp
+    eventmodel.cpp eventmodel.h
+    sqleventdatabase.cpp sqleventdatabase.h
+)
+set_target_properties(eventcalendar PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
+target_link_libraries(eventcalendar PUBLIC
+    Qt::Core
+    Qt::Gui
+    Qt::Qml
+    Qt::Sql
+)
+
+qt_add_qml_module(eventcalendar
+    URI App
+    VERSION 1.0
+    QML_FILES
+        MonthGridDelegate.qml
+        eventcalendar.qml
+    RESOURCES
+        qtquickcontrols2.conf
+    NO_RESOURCE_TARGET_PATH
+)
+
+install(TARGETS eventcalendar
+    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
+    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
+    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
+)
+

@@ -2,6 +2,9 @@
 
 add_subdirectory(gallery)
 add_subdirectory(chattutorial)
+if (QT_FEATURE_quicktemplates2_calendar AND TARGET Qt::Sql)
+    add_subdirectory(eventcalendar)
+endif()
 add_subdirectory(texteditor)
 add_subdirectory(contactlist)
 add_subdirectory(sidepanel)
