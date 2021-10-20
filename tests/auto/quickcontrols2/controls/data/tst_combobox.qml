@@ -940,13 +940,14 @@ TestCase {
             verify(popupYSpy.count === 1)
         }
 
+        var leftLayoutMargin = control.background.layoutMargins === undefined ? 0 : control.popup.layoutMargins.left
         // follow the control outside the horizontal window bounds
         control.x = -control.width / 2
         compare(control.x, -control.width / 2)
-        compare(control.popup.contentItem.parent.x, -control.width / 2)
+        compare(control.popup.contentItem.parent.x, -control.width / 2 + leftLayoutMargin)
         control.x = testCase.width - control.width / 2
         compare(control.x, testCase.width - control.width / 2)
-        compare(control.popup.contentItem.parent.x, testCase.width - control.width / 2)
+        compare(control.popup.contentItem.parent.x, testCase.width - control.width / 2 + leftLayoutMargin)
 
         // close the popup when hidden (QTBUG-67684)
         control.popup.open()
