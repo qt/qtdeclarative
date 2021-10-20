@@ -40,6 +40,19 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlengine.h>
 
+// on top of testing different cache configurations, we can also test namespace
+// generation for the test classes using the same macro
+#ifdef QMLTC_TESTS_DISABLE_CACHE
+#    if QMLTC_TESTS_DISABLE_CACHE
+#        define PREPEND_NAMESPACE(name) QT_PREPEND_NAMESPACE(name)
+#    else
+#        define PREPEND_NAMESPACE(name)                                                            \
+            ::QmltcTest::name // silent contract that the namespace is QmltcTest
+#    endif
+#else
+#    error "QMLTC_TESTS_DISABLE_CACHE is supposed to be defined and be equal to either 0 or 1"
+#endif
+
 tst_qmltc::tst_qmltc()
 {
 #if defined(QMLTC_TESTS_DISABLE_CACHE) && QMLTC_TESTS_DISABLE_CACHE
@@ -75,20 +88,20 @@ void tst_qmltc::qmlNameConflictResolution()
     QQmlEngine e;
     // Note: the C++ class name is derived from the source qml file path, not
     // the output .h/.cpp, so: NameConflict class name for NameConflict.qml
-    q_qmltc::NameConflict created(&e); // note: declared in ResolvedNameConflict.h
+    PREPEND_NAMESPACE(NameConflict) created(&e); // note: declared in ResolvedNameConflict.h
 }
 
 void tst_qmltc::helloWorld()
 {
     QQmlEngine e;
-    q_qmltc::HelloWorld created(&e);
+    PREPEND_NAMESPACE(HelloWorld) created(&e);
     QSKIP("Nothing is supported yet.");
 }
 
 void tst_qmltc::qtQuickIncludes()
 {
     QQmlEngine e;
-    q_qmltc::simpleQtQuickTypes created(&e); // it should just compile as well
+    PREPEND_NAMESPACE(simpleQtQuickTypes) created(&e); // it should just compile as well
     // since the file name is lower-case, let's also test that it's marked as
     // QML_ANONYMOUS
     const QMetaObject *mo = created.metaObject();

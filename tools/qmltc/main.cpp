@@ -91,6 +91,11 @@ int main(int argc, char **argv)
         QCoreApplication::translate("main", "resource path")
     };
     parser.addOption(resourcePathOption);
+    QCommandLineOption namespaceOption {
+        u"namespace"_qs, QCoreApplication::translate("main", "Namespace of the generated C++ code"),
+        QCoreApplication::translate("main", "namespace")
+    };
+    parser.addOption(namespaceOption);
 
     parser.process(app);
 
@@ -160,6 +165,7 @@ int main(int argc, char **argv)
     QmltcCompilerInfo info;
     info.outputCppFile = outputCppFile;
     info.outputHFile = outputHFile;
+    info.outputNamespace = parser.value(namespaceOption);
     info.resourcePath = parser.value(resourcePathOption);
 
     QQmlJSImporter importer { importPaths, /* resource file mapper */ nullptr };

@@ -426,3 +426,55 @@ function(qt_internal_add_qml_module target)
         endif()
     endif()
 endfunction()
+
+# This function is an internal wrapper around qt6_target_compile_qml_to_cpp().
+# It sets up some pre-defined Qt-specific arguments when calling the
+# qt6_target_compile_qml_to_cpp(). All keywords supported by
+# qt6_target_compile_qml_to_cpp() can be used.
+#
+# Unlike the public command version, the following changes are present:
+# - NAMESPACE argument is set to QT_NAMESPACE by default
+#
+# See qt6_target_compile_qml_to_cpp() for the full set of supported keywords.
+function(qt_internal_target_compile_qml_to_cpp target)
+    set(option_args "")
+    set(single_args NAMESPACE)
+    set(multi_args FILES)
+    qt_parse_all_arguments(arg "qt_internal_target_compile_qml_to_cpp"
+        "${option_args}"
+        "${single_args}"
+        "${multi_args}"
+        ${ARGN}
+    )
+
+    # internal-only logic:
+    if(NOT arg_NAMESPACE)
+        # NB: assume Qt Core is present. we're in an internal function, so it's
+        # a safe enough assumption
+
+        # Apparently, -DQT_NAMESPACE only exists within qtbase or qt5's
+        # top-level build. Thus, in many other cases that option is unspecified.
+        # To avoid dealing with this, we can query the QT_NAMESPACE for QtCore's
+        # compile definitions (because we have it there).
+        get_target_property(arg_NAMESPACE ${QT_CMAKE_EXPORT_NAMESPACE}::Core _qt_namespace)
+    endif()
+
+    set(target_compile_qml_to_cpp_args "")
+    # Pass through options if given (these are present/absent, not true/false)
+    foreach(opt IN LISTS option_args)
+        if(arg_${opt})
+            list(APPEND target_compile_qml_to_cpp_args ${opt})
+        endif()
+    endforeach()
+    # Pass through single and multi-value args as provided.
+    foreach(arg IN LISTS single_args multi_args)
+        if(DEFINED arg_${arg})
+            list(APPEND target_compile_qml_to_cpp_args ${arg} ${arg_${arg}})
+        endif()
+    endforeach()
+
+    qt6_target_compile_qml_to_cpp(${target}
+        ${target_compile_qml_to_cpp_args}
+    )
+
+endfunction()

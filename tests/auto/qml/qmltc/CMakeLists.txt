@@ -32,7 +32,8 @@ qt6_add_qml_module(tst_qmltc_diskcache
 target_compile_definitions(tst_qmltc_diskcache PRIVATE
     QMLTC_TESTS_DISABLE_CACHE=0
 )
-qt6_target_compile_qml_to_cpp(tst_qmltc_diskcache
+qt_internal_target_compile_qml_to_cpp(tst_qmltc_diskcache
+    NAMESPACE QmltcTest
     FILES
         ${qml_sources}
 )
@@ -55,7 +56,8 @@ qt6_add_qml_module(tst_qmltc_nodiskcache
 target_compile_definitions(tst_qmltc_nodiskcache PRIVATE
     QMLTC_TESTS_DISABLE_CACHE=1
 )
-qt6_target_compile_qml_to_cpp(tst_qmltc_nodiskcache
+qt_internal_target_compile_qml_to_cpp(tst_qmltc_nodiskcache
+    # NAMESPACE QmltcTest # use QT_NAMESPACE instead
     FILES
         ${qml_sources}
 )

@@ -1014,7 +1014,7 @@ endfunction()
 # Compile Qml files (.qml) to C++ source files with Qml Type Compiler (qmltc).
 function(qt6_target_compile_qml_to_cpp target)
     set(args_option "")
-    set(args_single "")
+    set(args_single NAMESPACE)
     set(args_multi FILES)
 
     # TODO: add qmltypes argument
@@ -1054,6 +1054,11 @@ function(qt6_target_compile_qml_to_cpp target)
     set(qmltc_executable "$<TARGET_FILE:${QT_CMAKE_EXPORT_NAMESPACE}::qmltc>")
     if(CMAKE_GENERATOR STREQUAL "Ninja Multi-Config" AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.20")
         set(qmltc_executable "$<COMMAND_CONFIG:${qmltc_executable}>")
+    endif()
+
+    set(common_args "")
+    if(arg_NAMESPACE)
+        list(APPEND common_args --namespace "${arg_NAMESPACE}")
     endif()
 
     foreach(qml_file_src IN LISTS arg_FILES)
@@ -1096,6 +1101,7 @@ function(qt6_target_compile_qml_to_cpp target)
                 --header "${compiled_header}"
                 --impl "${compiled_cpp}"
                 --resource-path "${file_resource_path}"
+                ${common_args}
                 ${file_absolute}
             COMMAND_EXPAND_LISTS
             DEPENDS

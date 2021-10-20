@@ -40,8 +40,10 @@ struct QmltcCodeWriter
 {
     static void writeGlobalHeader(QmltcOutputWrapper &code, const QString &sourcePath,
                                   const QString &hPath, const QString &cppPath,
+                                  const QString &outNamespace,
                                   const QSet<QString> &requiredCppIncludes);
-    static void writeGlobalFooter(QmltcOutputWrapper &code, const QString &sourcePath);
+    static void writeGlobalFooter(QmltcOutputWrapper &code, const QString &sourcePath,
+                                  const QString &outNamespace);
     static void write(QmltcOutputWrapper &code, const QmltcProgram &program);
     static void write(QmltcOutputWrapper &code, const QmltcType &type);
     static void write(QmltcOutputWrapper &code, const QmltcEnum &enumeration);

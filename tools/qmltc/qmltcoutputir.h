@@ -126,6 +126,7 @@ struct QmltcProgram
     QString url; // QML file url
     QString cppPath; // C++ output .cpp path
     QString hPath; // C++ output .h path
+    QString outNamespace;
     QSet<QString> includes; // non-default C++ include files
 
     QList<QmltcType> compiledTypes; // all QML types that are compiled to C++

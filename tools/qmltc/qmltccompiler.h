@@ -45,6 +45,7 @@ struct QmltcCompilerInfo
 {
     QString outputCppFile;
     QString outputHFile;
+    QString outputNamespace;
     QString resourcePath;
 };
 

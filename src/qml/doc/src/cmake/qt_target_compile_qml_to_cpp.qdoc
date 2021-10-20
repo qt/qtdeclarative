@@ -40,6 +40,7 @@
 qt_target_compile_qml_to_cpp(
     target
     FILES ...
+    [NAMESPACE namespace]
 )
 
 \endcode
@@ -66,6 +67,10 @@ module, defined with qt_add_qml_module() command.
 most cases, all the target's QML files would be specified in the FILES. This
 way, FILES argument is equivalent to QML_FILES argument of the
 qt_add_qml_module() command.
+
+\c NAMESPACE argument defines a namespace, in which the generated C++ code
+resides. By default, no namespace is specified for user projects. The code
+generated from Qt's own sources is put under a QT_NAMESPACE namespace.
 
 While processing FILES, the following source file properties are respected:
 \list

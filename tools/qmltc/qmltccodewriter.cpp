@@ -96,6 +96,7 @@ static std::pair<QString, QString> functionSignatures(const QmltcMethodBase &met
 
 void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString &sourcePath,
                                         const QString &hPath, const QString &cppPath,
+                                        const QString &outNamespace,
                                         const QSet<QString> &requiredCppIncludes)
 {
     Q_UNUSED(cppPath);
@@ -137,21 +138,26 @@ void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString 
     code.rawAppendToCpp(u"#include <private/qobject_p.h>"); // NB: for private properties
     code.rawAppendToCpp(u"#include <private/qqmlglobal_p.h>"); // QQml_setParent_noEvent()
 
-    code.rawAppendToHeader(u""); // blank line
-    code.rawAppendToHeader(u"namespace q_qmltc {");
-
     code.rawAppendToCpp(u""); // blank line
     code.rawAppendToCpp(u"QT_USE_NAMESPACE // avoid issues with QT_NAMESPACE");
-    code.rawAppendToCpp(u"namespace q_qmltc {");
+    if (!outNamespace.isEmpty()) {
+        code.rawAppendToHeader(u""); // blank line
+        code.rawAppendToHeader(u"namespace %1 {"_qs.arg(outNamespace));
+        code.rawAppendToCpp(u""); // blank line
+        code.rawAppendToCpp(u"namespace %1 {"_qs.arg(outNamespace));
+    }
 }
 
-void QmltcCodeWriter::writeGlobalFooter(QmltcOutputWrapper &code, const QString &sourcePath)
+void QmltcCodeWriter::writeGlobalFooter(QmltcOutputWrapper &code, const QString &sourcePath,
+                                        const QString &outNamespace)
 {
-    code.rawAppendToCpp(u"} // namespace q_qmltc");
-    code.rawAppendToCpp(u""); // blank line
+    if (!outNamespace.isEmpty()) {
+        code.rawAppendToCpp(u"} // namespace %1"_qs.arg(outNamespace));
+        code.rawAppendToCpp(u""); // blank line
+        code.rawAppendToHeader(u"} // namespace %1"_qs.arg(outNamespace));
+        code.rawAppendToHeader(u""); // blank line
+    }
 
-    code.rawAppendToHeader(u"} // namespace q_qmltc");
-    code.rawAppendToHeader(u""); // blank line
     code.rawAppendToHeader(u"#endif // %1_H"_qs.arg(urlToMacro(sourcePath)));
     code.rawAppendToHeader(u""); // blank line
 }
@@ -179,7 +185,8 @@ static void writeToFile(const QString &path, const QByteArray &data)
 
 void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcProgram &program)
 {
-    writeGlobalHeader(code, program.url, program.hPath, program.cppPath, program.includes);
+    writeGlobalHeader(code, program.url, program.hPath, program.cppPath, program.outNamespace,
+                      program.includes);
     // TODO: keep the "NOT IMPLEMENTED" as long as we don't actually compile
     // useful code
     code.rawAppendToHeader(u"/* QMLTC: NOT IMPLEMENTED */");
@@ -191,7 +198,7 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcProgram &progra
     // write all the types and their content
     for (const QmltcType &type : qAsConst(program.compiledTypes))
         write(code, type);
-    writeGlobalFooter(code, program.url);
+    writeGlobalFooter(code, program.url, program.outNamespace);
 
     writeToFile(program.hPath, code.code().header.toUtf8());
     writeToFile(program.cppPath, code.code().cpp.toUtf8());
