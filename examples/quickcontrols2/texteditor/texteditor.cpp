@@ -57,7 +57,6 @@
 #include <QDebug>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include <QQmlFileSelector>
 #include <QQuickStyle>
 
 #include "documenthandler.h"
@@ -87,7 +86,7 @@ int main(int argc, char *argv[])
 #endif
 
     QQmlApplicationEngine engine;
-    QQmlFileSelector::get(&engine)->setExtraSelectors(selectors);
+    engine.setExtraFileSelectors(selectors);
 
     engine.load(QUrl("qrc:/qml/texteditor.qml"));
     if (engine.rootObjects().isEmpty())

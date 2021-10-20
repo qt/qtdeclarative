@@ -90,8 +90,7 @@ QT_BEGIN_NAMESPACE
   directories used for selection must start with a '+' character, so you will not accidentally
   trigger this feature unless you have directories with such names inside your project.
 
-  If a new QQmlFileSelector is set on the engine, the old one will be replaced. Use
-  \l QQmlFileSelector::get() to query or use the existing instance.
+  If a new QQmlFileSelector is set on the engine, the old one will be replaced.
  */
 
 /*!
