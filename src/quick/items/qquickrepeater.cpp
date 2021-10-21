@@ -161,7 +161,7 @@ QQuickRepeater::~QQuickRepeater()
 }
 
 /*!
-    \qmlproperty any QtQuick::Repeater::model
+    \qmlproperty var QtQuick::Repeater::model
 
     The model providing data for the repeater.
 

@@ -296,7 +296,7 @@ void QQmlBind::setProperty(const QString &p)
 }
 
 /*!
-    \qmlproperty any QtQml::Binding::value
+    \qmlproperty var QtQml::Binding::value
 
     The value to be set on the target object and property.  This can be a
     constant (which isn't very useful), or a bound expression.

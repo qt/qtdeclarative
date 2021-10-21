@@ -1177,7 +1177,7 @@ QQmlListProperty<QObject> QQuickPropertyAction::exclude()
 }
 
 /*!
-    \qmlproperty any QtQuick::PropertyAction::value
+    \qmlproperty var QtQuick::PropertyAction::value
     This property holds the value to be set on the property.
 
     If the PropertyAction is defined within a \l Transition or \l Behavior,

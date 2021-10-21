@@ -397,7 +397,7 @@ QQuickPen *QQuickRectangle::border()
 }
 
 /*!
-    \qmlproperty any QtQuick::Rectangle::gradient
+    \qmlproperty var QtQuick::Rectangle::gradient
 
     The gradient to use to fill the rectangle.
 
