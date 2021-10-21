@@ -1139,7 +1139,7 @@ Item {
 
         function test_columnIsOutsideGrid()
         {
-            ignoreWarning(/QML Item: Layout: column \(2\) should be less than the number of columns \(2\)/);
+            ignoreWarning(/.*: Layout: column \(2\) should be less than the number of columns \(2\)/);
             var layout = layout_columnIsOutsideGrid_Component.createObject(container);
             layout.width = layout.implicitWidth
             layout.height = layout.implicitHeight

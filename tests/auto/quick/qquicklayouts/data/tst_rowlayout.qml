@@ -126,7 +126,7 @@ Item {
 
         function test_warnAboutLayoutItemsWithAnchors()
         {
-            var regex = new RegExp("QML Item: Detected anchors on an item that is managed by a layout. "
+            var regex = new RegExp(".*: Detected anchors on an item that is managed by a layout. "
                                  + "This is undefined behavior; use Layout.alignment instead.")
             for (var i = 0; i < 7; ++i) {
                 ignoreWarning(regex)

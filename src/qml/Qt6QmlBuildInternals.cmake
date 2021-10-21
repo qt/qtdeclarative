@@ -9,6 +9,7 @@ macro(qt_internal_get_internal_add_qml_module_keywords
         internal_option_args internal_single_args internal_multi_args)
     set(${option_args}
         DESIGNER_SUPPORTED
+        FOLLOW_FOREIGN_VERSIONING
         NO_PLUGIN
         NO_PLUGIN_OPTIONAL
         NO_CREATE_PLUGIN_TARGET
@@ -290,6 +291,10 @@ function(qt_internal_add_qml_module target)
         endif()
     endforeach()
 
+    if (arg_FOLLOW_FOREIGN_VERSIONING)
+        message(FATAL_ERROR "Do not set FOLLOW_FOREIGN_VERSIONING for module ${target}. It is already set by default for internal modules.")
+    endif()
+
     # Update the backing and plugin targets with qml-specific things.
     qt6_add_qml_module(${target}
         ${add_qml_module_args}
@@ -297,6 +302,7 @@ function(qt_internal_add_qml_module target)
         OUTPUT_DIRECTORY ${arg_OUTPUT_DIRECTORY}
         RESOURCE_PREFIX "/qt-project.org/imports"
         OUTPUT_TARGETS output_targets
+        FOLLOW_FOREIGN_VERSIONING
     )
 
     if(output_targets)

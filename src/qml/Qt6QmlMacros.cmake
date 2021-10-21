@@ -9,6 +9,7 @@ function(qt6_add_qml_module target)
         STATIC
         SHARED
         DESIGNER_SUPPORTED
+        FOLLOW_FOREIGN_VERSIONING
         NO_PLUGIN
         NO_PLUGIN_OPTIONAL
         NO_CREATE_PLUGIN_TARGET
@@ -441,6 +442,7 @@ function(qt6_add_qml_module target)
         QT_QML_MODULE_NO_GENERATE_QMLDIR "${arg_NO_GENERATE_QMLDIR}"
         QT_QML_MODULE_NO_PLUGIN "${arg_NO_PLUGIN}"
         QT_QML_MODULE_NO_PLUGIN_OPTIONAL "${arg_NO_PLUGIN_OPTIONAL}"
+        QT_QML_MODULE_FOLLOW_FOREIGN_VERSIONING "${arg_FOLLOW_FOREIGN_VERSIONING}"
         QT_QML_MODULE_URI "${arg_URI}"
         QT_QML_MODULE_TARGET_PATH "${arg_TARGET_PATH}"
         QT_QML_MODULE_VERSION "${arg_VERSION}"
@@ -1926,6 +1928,16 @@ function(_qt_internal_qml_type_registration target)
         --major-version=${major_version}
         --minor-version=${minor_version}
     )
+
+
+    # Add --follow-foreign-versioning if requested
+    get_target_property(follow_foreign_versioning ${target} QT_QML_MODULE_FOLLOW_FOREIGN_VERSIONING)
+
+    if (follow_foreign_versioning)
+        list(APPEND cmd_args
+            --follow-foreign-versioning
+        )
+    endif()
 
     # Add past minor versions
     get_target_property(past_major_versions ${target} QT_QML_MODULE_PAST_MAJOR_VERSIONS)

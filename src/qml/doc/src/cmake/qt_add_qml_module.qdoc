@@ -57,6 +57,7 @@ qt_add_qml_module(
     [RESOURCES ...]
     [OUTPUT_TARGETS out_targets_var]
     [DESIGNER_SUPPORTED]
+    [FOLLOW_FOREIGN_VERSIONING]
     [NO_PLUGIN_OPTIONAL]
     [NO_CREATE_PLUGIN_TARGET]
     [NO_GENERATE_PLUGIN_SOURCE]
@@ -493,5 +494,20 @@ The \c DESIGNER_SUPPORTED keyword should be given if the QML module supports
 Qt Quick Designer. When present, the generated \c qmldir file will contain
 a \c designersupported line. See \l{Module Definition qmldir Files} for how
 this affects the way Qt Quick Designer handles the plugin.
+
+The \c FOLLOW_FOREIGN_VERSIONING keyword relates to base types of your own
+C++-defined QML types that live in different QML modules. Typically, the
+versioning scheme of your module does not match that of the module providing
+the base types. Therefore, by default all revisions of the base types are
+made available in any import of your module. If \c FOLLOW_FOREIGN_VERSIONING
+is given, the version information attached to the base types and their
+properties is respected. So, an \c {import MyModule 2.8} will then only make
+available versioned properties up to version \c{2.8} of any base types outside
+\c{MyModule}.
+
+This is mostly useful if you want to keep your module version in sync
+with other modules you're basing types on. In that case you might want your custom
+types to not expose properties from a module's base type version greater than the one being
+imported.
 
 */
