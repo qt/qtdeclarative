@@ -24,6 +24,7 @@ qt_internal_add_qml_module(QuickControls2Impl
         qquickmnemoniclabel.cpp qquickmnemoniclabel_p.h
         qquickpaddedrectangle.cpp qquickpaddedrectangle_p.h
         qquickplaceholdertext.cpp qquickplaceholdertext_p.h
+        qquickplatformtheme.cpp qquickplatformtheme_p.h
         qtquickcontrols2foreign_p.h
         qtquickcontrols2implglobal_p.h
     DEFINES
