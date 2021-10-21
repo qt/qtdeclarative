@@ -52,6 +52,7 @@ import QtQuick
 import QtTest
 import QtQuick.Controls
 import QtQuick.Templates as T
+import QtQuick.NativeStyle as NativeStyle
 
 TestCase {
     id: testCase
@@ -566,16 +567,32 @@ TestCase {
         var window = createTemporaryObject(component, testCase)
         verify(window)
 
+        // macos style will always use the default system font unless it was explicitly set on a
+        // control, and in that case the behavior is undefined.
+        var macOSStyle = Qt.platform.pluginName === "cocoa"
+                       && window.popup.button.background instanceof NativeStyle.StyleItem
+        var defaultButtonFontPixelSize = macOSStyle
+                                  ? window.popup.button.background.styleFont(window.popup.button).pixelSize
+                                  : undefined
+
         compare(window.font.pixelSize, 40)
         compare(window.pane.font.pixelSize, 30)
         compare(window.pane.button.font.pixelSize, 20)
         compare(window.popup.font.pixelSize, 40)
-        compare(window.popup.button.font.pixelSize, 40)
-
         var idx1 = getChild(window.popup.listview.contentItem, "delegate", -1)
-        compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 40)
         var idx2 = getChild(window.popup.listview.contentItem, "delegate", idx1)
-        compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 40)
+        window.popup.listview.contentItem.children[idx1].fontspy.clear()
+        window.popup.listview.contentItem.children[idx2].fontspy.clear()
+        window.popup.button.fontspy.clear()
+        if (macOSStyle) {
+            compare(window.popup.button.font.pixelSize, defaultButtonFontPixelSize)
+            compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, defaultButtonFontPixelSize)
+            compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, defaultButtonFontPixelSize)
+        } else {
+            compare(window.popup.button.font.pixelSize, 40)
+            compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 40)
+            compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 40)
+        }
 
         window.pane.button.font.pixelSize = 30
         compare(window.font.pixelSize, 40)
@@ -586,12 +603,19 @@ TestCase {
         compare(window.pane.button.fontspy.count, 1)
         compare(window.popup.font.pixelSize, 40)
         compare(window.popup.fontspy.count, 0)
-        compare(window.popup.button.font.pixelSize, 40)
         compare(window.popup.button.fontspy.count, 0)
-        compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 40)
+        if (macOSStyle) {
+            compare(window.popup.button.font.pixelSize, defaultButtonFontPixelSize)
+            compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, defaultButtonFontPixelSize)
+            compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, defaultButtonFontPixelSize)
+        } else {
+            compare(window.popup.button.font.pixelSize, 40)
+            compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 40)
+            compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 40)
+        }
         compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 0)
-        compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 40)
         compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 0)
+
 
         window.font.pixelSize = 50
         compare(window.font.pixelSize, 50)
@@ -602,12 +626,22 @@ TestCase {
         compare(window.pane.button.fontspy.count, 1)
         compare(window.popup.font.pixelSize, 50)
         compare(window.popup.fontspy.count, 1)
-        compare(window.popup.button.font.pixelSize, 50)
-        compare(window.popup.button.fontspy.count, 1)
-        compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 50)
-        compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 1)
-        compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 50)
-        compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 1)
+        if (macOSStyle) {
+            compare(window.popup.button.font.pixelSize, defaultButtonFontPixelSize)
+            compare(window.popup.button.fontspy.count, 0)
+            compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, defaultButtonFontPixelSize)
+            compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 0)
+            compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, defaultButtonFontPixelSize)
+            compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 0)
+        } else {
+            compare(window.popup.button.font.pixelSize, 50)
+            compare(window.popup.button.fontspy.count, 1)
+            compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 50)
+            compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 1)
+            compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 50)
+            compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 1)
+        }
+
 
         window.popup.button.font.pixelSize = 10
         compare(window.font.pixelSize, 50)
@@ -619,11 +653,20 @@ TestCase {
         compare(window.popup.font.pixelSize, 50)
         compare(window.popup.fontspy.count, 1)
         compare(window.popup.button.font.pixelSize, 10)
-        compare(window.popup.button.fontspy.count, 2)
-        compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 50)
-        compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 1)
-        compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 50)
-        compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 1)
+        if (macOSStyle) {
+            compare(window.popup.button.fontspy.count, 1)
+            compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, defaultButtonFontPixelSize)
+            compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 0)
+            compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, defaultButtonFontPixelSize)
+            compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 0)
+        } else {
+            compare(window.popup.button.fontspy.count, 2)
+            compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 50)
+            compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 1)
+            compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 50)
+            compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 1)
+        }
+
 
         window.popup.font.pixelSize = 60
         compare(window.font.pixelSize, 50)
@@ -635,11 +678,19 @@ TestCase {
         compare(window.popup.font.pixelSize, 60)
         compare(window.popup.fontspy.count, 2)
         compare(window.popup.button.font.pixelSize, 10)
-        compare(window.popup.button.fontspy.count, 2)
-        compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 60)
-        compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 2)
-        compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 60)
-        compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 2)
+        if (macOSStyle) {
+            compare(window.popup.button.fontspy.count, 1)
+            compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, defaultButtonFontPixelSize)
+            compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 0)
+            compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, defaultButtonFontPixelSize)
+            compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 0)
+        } else {
+            compare(window.popup.button.fontspy.count, 2)
+            compare(window.popup.listview.contentItem.children[idx1].font.pixelSize, 60)
+            compare(window.popup.listview.contentItem.children[idx1].fontspy.count, 2)
+            compare(window.popup.listview.contentItem.children[idx2].font.pixelSize, 60)
+            compare(window.popup.listview.contentItem.children[idx2].fontspy.count, 2)
+        }
     }
 
     Component {
@@ -1303,7 +1354,7 @@ TestCase {
         var anotherItem = createTemporaryObject(rect, applicationWindow.contentItem, { x: 100, y: 100, width: 50, height: 50 })
         verify(anotherItem)
 
-        ignoreWarning(Qt.resolvedUrl("tst_popup.qml") + ":77:9: QML Popup: Popup can only be centered within its immediate parent or Overlay.overlay")
+        ignoreWarning(new RegExp(".*QML Popup: Popup can only be centered within its immediate parent or Overlay.overlay"))
         control.anchors.centerIn = anotherItem
         // The property will change, because we can't be sure that the parent
         // in QQuickPopupAnchors::setCenterIn() is the final parent, as some reparenting can happen.
