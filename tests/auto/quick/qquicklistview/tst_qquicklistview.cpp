@@ -306,6 +306,7 @@ private slots:
 
 
     void singletonModelLifetime();
+    void QTBUG_92809();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -10222,6 +10223,31 @@ void tst_QQuickListView::singletonModelLifetime()
     QQmlApplicationEngine engine(testFile("singletonModelLifetime.qml"));
     // needs event loop iteration for callLater to execute
     QTRY_VERIFY(engine.rootObjects().first()->property("alive").toBool());
+}
+
+void tst_QQuickListView::QTBUG_92809()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QTRY_VERIFY(window);
+    window->setSource(testFileUrl("qtbug_92809.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview != nullptr);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    listview->setCurrentIndex(1);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    listview->setCurrentIndex(2);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    listview->setCurrentIndex(3);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    QTest::qWait(500);
+    listview->setCurrentIndex(10);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    QTest::qWait(500);
+    int currentIndex = listview->currentIndex();
+    QTRY_COMPARE(currentIndex, 9);
 }
 
 QTEST_MAIN(tst_QQuickListView)
