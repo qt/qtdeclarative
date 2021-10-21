@@ -120,6 +120,52 @@ int qmlRegisterAnonymousType(const char *uri, int versionMajor)
     return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
 }
 
+//! \internal
+template<typename T, int metaObjectRevisionMinor>
+int qmlRegisterAnonymousType(const char *uri, int versionMajor)
+{
+    QQmlPrivate::RegisterType type = {
+        1,
+        QQmlPrivate::QmlMetaType<T>::self(),
+        QQmlPrivate::QmlMetaType<T>::list(),
+        0,
+        nullptr,
+        nullptr,
+        QString(),
+        QQmlPrivate::ValueType<T, void>::create,
+
+        uri,
+        QTypeRevision::fromVersion(versionMajor, 0),
+        nullptr,
+        QQmlPrivate::StaticMetaObject<T>::staticMetaObject(),
+
+        QQmlPrivate::attachedPropertiesFunc<T>(),
+        QQmlPrivate::attachedPropertiesMetaObject<T>(),
+
+        QQmlPrivate::StaticCastSelector<T, QQmlParserStatus>::cast(),
+        QQmlPrivate::StaticCastSelector<T, QQmlPropertyValueSource>::cast(),
+        QQmlPrivate::StaticCastSelector<T, QQmlPropertyValueInterceptor>::cast(),
+
+        nullptr,
+        nullptr,
+
+        nullptr,
+        QTypeRevision::fromMinorVersion(metaObjectRevisionMinor),
+        QQmlPrivate::StaticCastSelector<T, QQmlFinalizerHook>::cast()
+    };
+
+    return QQmlPrivate::qmlregister(QQmlPrivate::TypeRegistration, &type);
+}
+
+//! \internal
+template<typename T>
+void qmlRegisterAnonymousTypesAndRevisions(const char *uri, int versionMajor)
+{
+    QQmlPrivate::qmlRegisterTypeAndRevisions<T, void>(
+            uri, versionMajor, QQmlPrivate::StaticMetaObject<T>::staticMetaObject(), nullptr,
+            nullptr, true);
+}
+
 int Q_QML_EXPORT qmlRegisterTypeNotAvailable(const char *uri, int versionMajor, int versionMinor,
                                              const char *qmlName, const QString& message);
 
@@ -807,35 +853,35 @@ inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject,
                                              const QMetaObject *classInfoMetaObject,
                                              const QMetaObject *extensionMetaObject)
 {
-    QQmlPrivate::RegisterTypeAndRevisions type = {
-        1,
-        QMetaType(),
-        QMetaType(),
-        0,
-        nullptr,
-        nullptr,
-        nullptr,
+    QQmlPrivate::RegisterTypeAndRevisions type = { 1,
+                                                   QMetaType(),
+                                                   QMetaType(),
+                                                   0,
+                                                   nullptr,
+                                                   nullptr,
+                                                   nullptr,
 
-        uri,
-        QTypeRevision::fromMajorVersion(versionMajor),
+                                                   uri,
+                                                   QTypeRevision::fromMajorVersion(versionMajor),
 
-        metaObject,
-        (classInfoMetaObject ? classInfoMetaObject : metaObject),
+                                                   metaObject,
+                                                   (classInfoMetaObject ? classInfoMetaObject
+                                                                        : metaObject),
 
-        nullptr,
-        nullptr,
+                                                   nullptr,
+                                                   nullptr,
 
-        -1,
-        -1,
-        -1,
+                                                   -1,
+                                                   -1,
+                                                   -1,
 
-        nullptr,
-        extensionMetaObject,
+                                                   nullptr,
+                                                   extensionMetaObject,
 
-        &qmlCreateCustomParser<void>,
-        qmlTypeIds,
-        -1
-    };
+                                                   &qmlCreateCustomParser<void>,
+                                                   qmlTypeIds,
+                                                   -1,
+                                                   false };
 
     qmlregister(QQmlPrivate::TypeAndRevisionsRegistration, &type);
 }

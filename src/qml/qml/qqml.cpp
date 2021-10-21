@@ -465,7 +465,9 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                 *reinterpret_cast<RegisterQmlUnitCacheHook *>(data));
     case TypeAndRevisionsRegistration: {
         const RegisterTypeAndRevisions &type = *reinterpret_cast<RegisterTypeAndRevisions *>(data);
-        const char *elementName = classElementName(type.classInfoMetaObject);
+        const char *elementName = (type.structVersion > 1 && type.forceAnonymous)
+                ? nullptr
+                : classElementName(type.classInfoMetaObject);
         const bool creatable = (elementName != nullptr)
                 && boolClassInfo(type.classInfoMetaObject, "QML.Creatable", true);
 
@@ -520,7 +522,6 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                 continue;
             if (revision.hasMajorVersion() && revision.majorVersion() > type.version.majorVersion())
                 break;
-
             // When removed, we still add revisions, but anonymous ones
             if (removed.isValid() && !(revision < removed)) {
                 revisionRegistration.elementName = nullptr;
@@ -696,37 +697,40 @@ void QQmlPrivate::qmlunregister(RegistrationType type, quintptr data)
 
 namespace QQmlPrivate {
 template<>
-void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
-        const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject,
-        QVector<int> *qmlTypeIds, const QMetaObject *extension)
+void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(const char *uri, int versionMajor,
+                                                             const QMetaObject *classInfoMetaObject,
+                                                             QVector<int> *qmlTypeIds,
+                                                             const QMetaObject *extension, bool)
 {
     using T = QQmlTypeNotAvailable;
 
-    RegisterTypeAndRevisions type = {
-        1,
-        QMetaType::fromType<T *>(),
-        QMetaType::fromType<QQmlListProperty<T>>(),
-        0,
-        nullptr,
-        nullptr,
-        nullptr,
+    RegisterTypeAndRevisions type = { 1,
+                                      QMetaType::fromType<T *>(),
+                                      QMetaType::fromType<QQmlListProperty<T>>(),
+                                      0,
+                                      nullptr,
+                                      nullptr,
+                                      nullptr,
 
-        uri,
-        QTypeRevision::fromMajorVersion(versionMajor),
+                                      uri,
+                                      QTypeRevision::fromMajorVersion(versionMajor),
 
-        &QQmlTypeNotAvailable::staticMetaObject,
-        classInfoMetaObject,
+                                      &QQmlTypeNotAvailable::staticMetaObject,
+                                      classInfoMetaObject,
 
-        attachedPropertiesFunc<T>(),
-        attachedPropertiesMetaObject<T>(),
+                                      attachedPropertiesFunc<T>(),
+                                      attachedPropertiesMetaObject<T>(),
 
-        StaticCastSelector<T, QQmlParserStatus>::cast(),
-        StaticCastSelector<T, QQmlPropertyValueSource>::cast(),
-        StaticCastSelector<T, QQmlPropertyValueInterceptor>::cast(),
+                                      StaticCastSelector<T, QQmlParserStatus>::cast(),
+                                      StaticCastSelector<T, QQmlPropertyValueSource>::cast(),
+                                      StaticCastSelector<T, QQmlPropertyValueInterceptor>::cast(),
 
-        nullptr, extension, qmlCreateCustomParser<T>, qmlTypeIds,
-        QQmlPrivate::StaticCastSelector<T,QQmlFinalizerHook>::cast()
-    };
+                                      nullptr,
+                                      extension,
+                                      qmlCreateCustomParser<T>,
+                                      qmlTypeIds,
+                                      QQmlPrivate::StaticCastSelector<T, QQmlFinalizerHook>::cast(),
+                                      false };
 
     qmlregister(TypeAndRevisionsRegistration, &type);
 }

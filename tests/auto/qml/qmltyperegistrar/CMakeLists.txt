@@ -33,6 +33,11 @@ qt_internal_add_test(tst_qmltyperegistrar
         tst_qmltyperegistrarPrivate
 )
 
+qt_internal_extend_target(tst_qmltyperegistrar CONDITION TARGET Qt::Quick
+    PUBLIC_LIBRARIES
+        Qt::Quick
+    )
+
 #### Keys ignored in scope 2:.:.:tst_qmltyperegistrar.pro:<TRUE>:
 # QMLTYPES_FILENAME = "tst_qmltyperegistrar.qmltypes"
 # QML_FOREIGN_METATYPES = "foreign/foreign_metatypes.json"

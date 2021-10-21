@@ -137,6 +137,13 @@ int main(int argc, char **argv)
     foreignTypesOption.setValueName(QStringLiteral("foreign types"));
     parser.addOption(foreignTypesOption);
 
+    QCommandLineOption followForeignVersioningOption(QStringLiteral("follow-foreign-versioning"));
+    followForeignVersioningOption.setDescription(
+            QStringLiteral("If this option is set the versioning scheme of foreign base classes "
+                           "will be respected instead of ignored. Mostly useful for modules who "
+                           "want to follow Qt's versioning scheme."));
+    parser.addOption(followForeignVersioningOption);
+
     parser.addPositionalArgument(QStringLiteral("[MOC generated json file]"),
                                  QStringLiteral("MOC generated json output."));
 
@@ -208,6 +215,7 @@ int main(int argc, char **argv)
     const auto majorVersion = parser.value(majorVersionOption);
     const auto pastMajorVersions = parser.values(pastMajorVersionOption);
     const auto minorVersion = parser.value(minorVersionOption);
+    const bool followForeignVersioning = parser.isSet(followForeignVersioningOption);
 
     for (const auto &version : pastMajorVersions) {
         fprintf(output, "\n    qmlRegisterModule(\"%s\", %s, 0);\n    qmlRegisterModule(\"%s\", %s, 254);",
@@ -223,6 +231,26 @@ int main(int argc, char **argv)
 
     const QVector<QJsonObject> types = processor.types();
     const QVector<QJsonObject> foreignTypes = processor.foreignTypes();
+    QVector<QString> typesRegisteredAnonymously;
+
+    const auto &findType = [&](const QString &name) -> QJsonValue {
+        for (const QJsonObject &type : types) {
+            if (type[QLatin1String("qualifiedClassName")] != name)
+                continue;
+            return type;
+        }
+        return QJsonValue();
+    };
+
+    const auto &findTypeForeign = [&](const QString &name) -> QJsonValue {
+        for (const QJsonObject &type : foreignTypes) {
+            if (type[QLatin1String("qualifiedClassName")] != name)
+                continue;
+            return type;
+        }
+        return QJsonValue();
+    };
+
     for (const QJsonObject &classDef : types) {
         const QString className = classDef[QLatin1String("qualifiedClassName")].toString();
 
@@ -324,6 +352,85 @@ int main(int argc, char **argv)
 
                 fprintf(output, "\n    qmlRegisterTypesAndRevisions<%s>(\"%s\", %s);",
                         qPrintable(className), qPrintable(module), qPrintable(majorVersion));
+
+                const QJsonValue superClasses = classDef[QLatin1String("superClasses")];
+
+                if (superClasses.isArray()) {
+                    for (const QJsonValue &object : superClasses.toArray()) {
+                        if (object[QStringLiteral("access")] != QStringLiteral("public"))
+                            continue;
+
+                        QString superClassName = object[QStringLiteral("name")].toString();
+
+                        QVector<QString> classesToCheck;
+
+                        auto checkForRevisions = [&](const QString &typeName) -> void {
+                            auto type = findType(typeName);
+
+                            if (!type.isObject()) {
+                                type = findTypeForeign(typeName);
+                                if (!type.isObject())
+                                    return;
+
+                                for (const QString &section :
+                                     { QStringLiteral("properties"), QStringLiteral("signals"),
+                                       QStringLiteral("methods") }) {
+                                    bool foundRevisionEntry = false;
+                                    for (const auto &entry : type[section].toArray()) {
+                                        if (entry.toObject().contains(QStringLiteral("revision"))) {
+                                            foundRevisionEntry = true;
+                                            break;
+                                        }
+                                    }
+                                    if (foundRevisionEntry) {
+                                        if (typesRegisteredAnonymously.contains(typeName))
+                                            break;
+
+                                        typesRegisteredAnonymously.append(typeName);
+
+                                        if (followForeignVersioning) {
+                                            fprintf(output,
+                                                    "\n    "
+                                                    "qmlRegisterAnonymousTypesAndRevisions<%s>(\"%"
+                                                    "s\", "
+                                                    "%s);",
+                                                    qPrintable(typeName), qPrintable(module),
+                                                    qPrintable(majorVersion));
+                                            break;
+                                        }
+
+                                        for (const QString &version :
+                                             pastMajorVersions + QStringList { majorVersion }) {
+                                            fprintf(output,
+                                                    "\n    "
+                                                    "qmlRegisterAnonymousType<%s, 254>(\"%s\", "
+                                                    "%s);",
+                                                    qPrintable(typeName), qPrintable(module),
+                                                    qPrintable(version));
+                                        }
+                                        break;
+                                    }
+                                }
+                            }
+
+                            const QJsonValue superClasses = type[QLatin1String("superClasses")];
+
+                            if (superClasses.isArray()) {
+                                for (const QJsonValue &object : superClasses.toArray()) {
+                                    if (object[QStringLiteral("access")]
+                                        != QStringLiteral("public"))
+                                        continue;
+                                    classesToCheck << object[QStringLiteral("name")].toString();
+                                }
+                            }
+                        };
+
+                        checkForRevisions(superClassName);
+
+                        while (!classesToCheck.isEmpty())
+                            checkForRevisions(classesToCheck.takeFirst());
+                    }
+                }
             } else {
                 fprintf(output, "\n    QMetaType::fromType<%s%s>().id();",
                         qPrintable(className),

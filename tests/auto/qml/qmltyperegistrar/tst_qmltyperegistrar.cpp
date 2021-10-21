@@ -339,4 +339,21 @@ void tst_qmltyperegistrar::methodReturnType()
     QVERIFY(qmltypesData.contains("type: \"QQmlComponent\""));
 }
 
+#ifdef QT_QUICK_LIB
+void tst_qmltyperegistrar::foreignRevisionedProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData("import QmlTypeRegistrarTest\n"
+              "ForeignRevisionedProperty {\n"
+              "    activeFocusOnTab: true\n"
+              "}",
+              QUrl());
+
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer o(c.create());
+    QVERIFY(!o.isNull());
+}
+#endif
+
 QTEST_MAIN(tst_qmltyperegistrar)

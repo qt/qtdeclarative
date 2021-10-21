@@ -511,6 +511,8 @@ namespace QQmlPrivate
         QQmlCustomParser *(*customParserFactory)();
         QVector<int> *qmlTypeIds;
         int finalizerCast;
+
+        bool forceAnonymous;
     };
 
     struct RegisterInterface {
@@ -957,14 +959,16 @@ namespace QQmlPrivate
     template<typename T, typename E>
     void qmlRegisterTypeAndRevisions(const char *uri, int versionMajor,
                                      const QMetaObject *classInfoMetaObject,
-                                     QVector<int> *qmlTypeIds, const QMetaObject *extension)
+                                     QVector<int> *qmlTypeIds, const QMetaObject *extension,
+                                     bool forceAnonymous = false)
     {
         RegisterTypeAndRevisions type = {
-            1,
+            2,
             QmlMetaType<T>::self(),
             QmlMetaType<T>::list(),
             int(sizeof(T)),
-            Constructors<T>::createInto, nullptr,
+            Constructors<T>::createInto,
+            nullptr,
             ValueType<T, E>::create,
 
             uri,
@@ -986,6 +990,8 @@ namespace QQmlPrivate
             &qmlCreateCustomParser<T>,
             qmlTypeIds,
             StaticCastSelector<T, QQmlFinalizerHook>::cast(),
+
+            forceAnonymous
         };
 
         // Initialize the extension so that we can find it by name or ID.
@@ -1015,7 +1021,7 @@ namespace QQmlPrivate
     template<>
     void Q_QML_EXPORT qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
             const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject,
-            QVector<int> *qmlTypeIds, const QMetaObject *);
+            QVector<int> *qmlTypeIds, const QMetaObject *, bool);
 
     constexpr QtPrivate::QMetaTypeInterface metaTypeForNamespace(
             const QtPrivate::QMetaTypeInterface::MetaObjectFn &metaObjectFunction, const char *name)

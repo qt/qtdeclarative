@@ -38,6 +38,10 @@
 #include <QtCore/qtimeline.h>
 #include <QtCore/qrect.h>
 
+#ifdef QT_QUICK_LIB
+#    include <QtQuick/qquickitem.h>
+#endif
+
 class Interface {};
 class Interface2 {};
 class Interface3 {};
@@ -454,6 +458,17 @@ public:
     Q_INVOKABLE QQmlComponent *createAThing(int) { return nullptr; }
 };
 
+#ifdef QT_QUICK_LIB
+class ForeignRevisionedProperty : public QQuickItem
+{
+    Q_OBJECT
+    QML_ELEMENT
+
+public:
+    explicit ForeignRevisionedProperty(QQuickItem *parent = nullptr) : QQuickItem(parent) {};
+};
+#endif
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -488,6 +503,10 @@ private slots:
     void immediateNames();
     void derivedFromForeignPrivate();
     void methodReturnType();
+
+#ifdef QT_QUICK_LIB
+    void foreignRevisionedProperty();
+#endif
 
 private:
     QByteArray qmltypesData;
