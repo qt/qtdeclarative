@@ -1785,7 +1785,7 @@ void QQuickItemViewPrivate::refill(qreal from, qreal to)
 
     do {
         bufferPause.stop();
-        if (currentChanges.hasPendingChanges() || bufferedChanges.hasPendingChanges()) {
+        if (currentChanges.hasPendingChanges() || bufferedChanges.hasPendingChanges() || currentChanges.active) {
             currentChanges.reset();
             bufferedChanges.reset();
             releaseVisibleItems(reusableFlag);
