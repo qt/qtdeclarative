@@ -50,6 +50,7 @@ private slots:
     void dragDelegateWithMouseArea_data();
     void dragDelegateWithMouseArea();
     void delegateChooserEnumRole();
+    void QTBUG_92809();
 };
 
 tst_QQuickListView2::tst_QQuickListView2()
@@ -165,6 +166,7 @@ void tst_QQuickListView2::dragDelegateWithMouseArea()
     QCOMPARE(contentPosition(listview), expectedContentPosition);
 }
 
+
 void tst_QQuickListView2::delegateChooserEnumRole()
 {
     QQuickView window;
@@ -175,6 +177,31 @@ void tst_QQuickListView2::delegateChooserEnumRole()
     QCOMPARE(listview->itemAtIndex(0)->property("delegateType").toInt(), 0);
     QCOMPARE(listview->itemAtIndex(1)->property("delegateType").toInt(), 1);
     QCOMPARE(listview->itemAtIndex(2)->property("delegateType").toInt(), 2);
+}
+
+void tst_QQuickListView2::QTBUG_92809()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QTRY_VERIFY(window);
+    window->setSource(testFileUrl("qtbug_92809.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview != nullptr);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    listview->setCurrentIndex(1);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    listview->setCurrentIndex(2);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    listview->setCurrentIndex(3);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    QTest::qWait(500);
+    listview->setCurrentIndex(10);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    QTest::qWait(500);
+    int currentIndex = listview->currentIndex();
+    QTRY_COMPARE(currentIndex, 9);
 }
 
 QTEST_MAIN(tst_QQuickListView2)
