@@ -51,6 +51,7 @@
 import QtQuick
 import QtTest
 import QtQuick.Controls
+import QtQuick.NativeStyle as NativeStyle
 
 TestCase {
     id: testCase
@@ -556,7 +557,7 @@ TestCase {
     }
 
     function test_warning() {
-        ignoreWarning(Qt.resolvedUrl("tst_scrollbar.qml") + ":55:1: QML TestCase: ScrollBar must be attached to a Flickable or ScrollView")
+        ignoreWarning(/.*QML TestCase: ScrollBar must be attached to a Flickable or ScrollView/)
         testCase.ScrollBar.vertical = null
     }
 
@@ -802,7 +803,14 @@ TestCase {
         compare(control.visible, true)
         compare(control.policy, ScrollBar.AsNeeded)
 
-        if (Qt.platform.pluginName !== "windows") {
+        var windowsStyle = false
+        var macOSStyle = false
+        if (control.background instanceof NativeStyle.StyleItem) {
+            windowsStyle = Qt.platform.pluginName === "windows"
+            macOSStyle = Qt.platform.pluginName === "cocoa"
+        }
+
+        if (!windowsStyle && !macOSStyle) {
             control.size = 0.5
             verify(control.state === "active" || control.contentItem.state === "active")
 
@@ -814,7 +822,7 @@ TestCase {
 
         control.policy = ScrollBar.AlwaysOn
         compare(control.visible, true)
-        if (Qt.platform.pluginName !== "windows") {
+        if (!windowsStyle && !macOSStyle) {
             verify(control.state === "active" || control.contentItem.state === "active")
         }
     }

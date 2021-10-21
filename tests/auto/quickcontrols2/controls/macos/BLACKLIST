@@ -1,8 +1,2 @@
 # See qtbase/src/testlib/qtestblacklist.cpp for format
 
-# QTBUG-95678
-# Blacklisted in order to get the native macOS style under
-# regression control
-[ScrollBar::test_policy]
-*
-
