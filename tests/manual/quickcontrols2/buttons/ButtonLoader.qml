@@ -50,6 +50,7 @@
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Templates as T
 
 Item {
     id: root
@@ -65,7 +66,7 @@ Item {
     property bool checked
     property var down: undefined
 
-    property AbstractButton activeButton: round ? roundButton : button
+    property T.AbstractButton activeButton: round ? roundButton : button
 
     Button {
         id: button
