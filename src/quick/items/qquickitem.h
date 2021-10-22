@@ -480,8 +480,12 @@ private:
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItem::Flags)
 
 #ifndef QT_NO_DEBUG_STREAM
-QDebug Q_QUICK_EXPORT operator<<(QDebug debug, QQuickItem *item);
+QDebug Q_QUICK_EXPORT operator<<(QDebug debug,
+#if QT_VERSION >= QT_VERSION_CHECK(7, 0, 0)
+                                 const
 #endif
+                                 QQuickItem *item);
+#endif // QT_NO_DEBUG_STREAM
 
 QT_END_NAMESPACE
 

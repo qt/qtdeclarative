@@ -4938,7 +4938,13 @@ void QQuickItem::dumpItemTree() const
 void QQuickItemPrivate::dumpItemTree(int indent) const
 {
     Q_Q(const QQuickItem);
-    qDebug().nospace().noquote() << QString(indent * 4, QLatin1Char(' ')) << q;
+
+    qDebug().nospace().noquote() << QString(indent * 4, QLatin1Char(' ')) <<
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+                                    const_cast<QQuickItem *>(q);
+#else
+                                    q;
+#endif
     for (const QQuickItem *ch : childItems) {
         auto itemPriv = QQuickItemPrivate::get(ch);
         itemPriv->dumpItemTree(indent + 1);
@@ -8657,8 +8663,11 @@ bool QQuickItem::event(QEvent *ev)
 }
 
 #ifndef QT_NO_DEBUG_STREAM
-// FIXME: Qt 6: Make this QDebug operator<<(QDebug debug, const QQuickItem *item)
-QDebug operator<<(QDebug debug, QQuickItem *item)
+QDebug operator<<(QDebug debug,
+#if QT_VERSION >= QT_VERSION_CHECK(7, 0, 0)
+                  const
+#endif
+                  QQuickItem *item)
 {
     QDebugStateSaver saver(debug);
     debug.nospace();
@@ -8680,7 +8689,7 @@ QDebug operator<<(QDebug debug, QQuickItem *item)
     debug << ')';
     return debug;
 }
-#endif
+#endif // QT_NO_DEBUG_STREAM
 
 /*!
     \fn bool QQuickItem::isTextureProvider() const
