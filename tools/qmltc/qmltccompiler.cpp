@@ -84,32 +84,49 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
     Q_ASSERT(!type->baseType()->internalName().isEmpty());
     const QString baseClass = type->baseType()->internalName();
 
-    const bool documentRoot = (type == m_visitor->result());
+    const auto rootType = m_visitor->result();
+    const bool documentRoot = (type == rootType);
     const bool baseTypeIsCompiledQml = false; // TODO: support this in QmltcTypeResolver
     const bool isAnonymous = type->internalName().at(0).isLower();
 
     current.baseClasses = { baseClass };
     if (!documentRoot) {
-        current.documentRootType = m_visitor->result()->internalName();
+        // make document root a friend to allow it to access init and finalize
+        current.otherCode << u"friend class %1;"_qs.arg(rootType->internalName());
     } else {
-        current.typeCount = int(m_visitor->qmlScopes().size());
+        // make QQmltcObjectCreationBase<DocumentRoot> a friend to allow it to
+        // be created for the root object
+        current.otherCode << u"friend class QQmltcObjectCreationBase<%1>;"_qs.arg(
+                rootType->internalName());
+
+        current.typeCount = QmltcVariable { u"uint"_qs, u"q_qmltc_typeCount"_qs, QString() };
+        Q_ASSERT(m_visitor->qmlScopes().size() > 0);
+        QList<QQmlJSScope::ConstPtr> typesWithBaseTypeCount = m_visitor->qmlScopesWithQmlBases();
+        QStringList typeCountComponents;
+        typeCountComponents.reserve(1 + typesWithBaseTypeCount.size());
+        // add this document's type counts minus document root
+        typeCountComponents << QString::number(m_visitor->qmlScopes().size() - 1);
+        for (const QQmlJSScope::ConstPtr &t : qAsConst(typesWithBaseTypeCount)) {
+            if (t == type) { // t is this document's root
+                typeCountComponents << t->baseTypeName() + u"::" + current.typeCount->name;
+            } else {
+                typeCountComponents << t->internalName() + u"::" + current.typeCount->name;
+            }
+        }
+        current.typeCount->defaultValue = typeCountComponents.join(u" + "_qs);
     }
+
+    current.mocCode = {
+        u"Q_OBJECT"_qs,
+        // Note: isAnonymous holds for non-root types in the document as well
+        isAnonymous ? u"QML_ANONYMOUS"_qs : u"QML_ELEMENT"_qs,
+    };
 
     // add special member functions
     current.basicCtor.access = QQmlJSMetaMethod::Protected;
     current.init.access = QQmlJSMetaMethod::Protected;
     current.finalize.access = QQmlJSMetaMethod::Protected;
     current.fullCtor.access = QQmlJSMetaMethod::Public;
-    if (!documentRoot) {
-        // make document root a friend to allow it to access init and finalize
-        auto root = m_visitor->result();
-        current.otherCode << u"friend class %1;"_qs.arg(root->internalName());
-    }
-    current.mocCode = {
-        u"Q_OBJECT"_qs,
-        // Note: isAnonymous holds for non-root types in the document as well
-        isAnonymous ? u"QML_ANONYMOUS"_qs : u"QML_ELEMENT"_qs,
-    };
 
     current.basicCtor.name = current.cppType;
     current.fullCtor.name = current.cppType;
@@ -118,18 +135,20 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
     current.finalize.name = u"qmltc_finalize"_qs;
     current.finalize.returnType = u"void"_qs;
 
+    QmltcVariable creator(u"QQmltcObjectCreationHelper*"_qs, u"creator"_qs);
     QmltcVariable engine(u"QQmlEngine*"_qs, u"engine"_qs);
     QmltcVariable parent(u"QObject*"_qs, u"parent"_qs, u"nullptr"_qs);
     current.basicCtor.parameterList = { parent };
-    current.fullCtor.parameterList = { engine, parent };
     QmltcVariable ctxtdata(u"const QQmlRefPointer<QQmlContextData>&"_qs, u"parentContext"_qs);
     QmltcVariable finalizeFlag(u"bool"_qs, u"canFinalize"_qs);
     if (documentRoot) {
-        current.init.parameterList = { engine, ctxtdata, finalizeFlag };
-        current.finalize.parameterList = { engine, finalizeFlag };
+        current.fullCtor.parameterList = { engine, parent };
+        current.init.parameterList = { creator, engine, ctxtdata, finalizeFlag };
+        current.finalize.parameterList = { creator, engine, finalizeFlag };
     } else {
-        current.init.parameterList = { engine, ctxtdata };
-        current.finalize.parameterList = { engine };
+        current.fullCtor.parameterList = { creator, engine, parent };
+        current.init.parameterList = { creator, engine, ctxtdata };
+        current.finalize.parameterList = { creator, engine };
     }
 
     current.fullCtor.initializerList = { current.basicCtor.name + u"(" + parent.name + u")" };
@@ -145,12 +164,30 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
 
     // compilation stub:
     current.fullCtor.body << u"Q_UNUSED(engine);"_qs;
+    current.init.body << u"Q_UNUSED(creator);"_qs;
     current.init.body << u"Q_UNUSED(engine);"_qs;
     current.init.body << u"Q_UNUSED(parentContext);"_qs;
     current.finalize.body << u"Q_UNUSED(engine);"_qs;
+    current.finalize.body << u"Q_UNUSED(creator);"_qs;
     if (documentRoot) {
+        current.fullCtor.body << u"// document root:"_qs;
+        // if it's document root, we want to create our QQmltcObjectCreationBase
+        // that would store all the created objects
+        current.fullCtor.body << u"QQmltcObjectCreationBase<%1> objectHolder;"_qs.arg(
+                type->internalName());
+        current.fullCtor.body << u"QQmltcObjectCreationHelper creator = objectHolder.view();"_qs;
+        // now call init
+        current.fullCtor.body << current.init.name
+                        + u"(&creator, engine, QQmlContextData::get(engine->rootContext()), /* "
+                          u"finalize */ true);";
+
         current.init.body << u"Q_UNUSED(canFinalize);"_qs;
         current.finalize.body << u"Q_UNUSED(canFinalize);"_qs;
+    } else {
+        current.fullCtor.body << u"// not document root:"_qs;
+        // just call init, we don't do any setup here otherwise
+        current.fullCtor.body << current.init.name
+                        + u"(creator, engine, QQmlData::get(parent)->outerContext);";
     }
     current.init.body << u"return nullptr;"_qs;
 }

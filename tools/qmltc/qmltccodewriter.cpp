@@ -128,15 +128,20 @@ void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString 
     for (const auto &requiredInclude : requiredCppIncludes)
         code.rawAppendToHeader(u"#include \"" + requiredInclude + u"\"");
     code.rawAppendToHeader(u"// END(custom_cpp_includes)");
+    code.rawAppendToHeader(u"// qmltc support library:");
+    code.rawAppendToHeader(u"#include <private/qqmltcobjectcreationhelper_p.h>");
 
     code.rawAppendToCpp(u"#include \"" + hPath + u"\""); // include own .h file
 
     code.rawAppendToCpp(u""); // blank line
     code.rawAppendToCpp(u"#include <private/qobject_p.h>"); // NB: for private properties
+    code.rawAppendToCpp(u"#include <private/qqmlglobal_p.h>"); // QQml_setParent_noEvent()
 
     code.rawAppendToHeader(u""); // blank line
     code.rawAppendToHeader(u"namespace q_qmltc {");
+
     code.rawAppendToCpp(u""); // blank line
+    code.rawAppendToCpp(u"QT_USE_NAMESPACE // avoid issues with QT_NAMESPACE");
     code.rawAppendToCpp(u"namespace q_qmltc {");
 }
 
@@ -263,17 +268,14 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
         }
     }
 
-    if (type.documentRootType) {
-        code.rawAppendToHeader(u""); // blank line
-        code.rawAppendToHeader(u"private:");
-        code.rawAppendToHeader(u"friend class " + *type.documentRootType + u";", 1);
-    }
-
     if (type.typeCount) {
+        // we know that typeCount variable is very special
         code.rawAppendToHeader(u""); // blank line
-        code.rawAppendToHeader(u"public:");
-        code.rawAppendToHeader(u"constexpr static uint qmltc_typeCount = "
-                                       + QString::number(*type.typeCount) + u";",
+        code.rawAppendToHeader(u"protected:");
+        Q_ASSERT(!type.typeCount->defaultValue.isEmpty());
+        code.rawAppendToHeader(u"constexpr static %1 %2 = %3;"_qs.arg(type.typeCount->cppType,
+                                                                      type.typeCount->name,
+                                                                      type.typeCount->defaultValue),
                                1);
     }
 

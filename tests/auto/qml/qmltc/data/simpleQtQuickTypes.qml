@@ -8,4 +8,5 @@ Item {
     {
         return p
     }
+    Item {}
 }

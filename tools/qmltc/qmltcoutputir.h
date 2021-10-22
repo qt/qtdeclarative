@@ -116,12 +116,8 @@ struct QmltcType
     // member variables: properties and just variables
     QList<QmltcVariable> variables;
 
-    // we want to use certain private/protected functions by document root, so
-    // record it to make it a friend
-    std::optional<QString> documentRootType;
-
     // QML document root specific:
-    std::optional<int> typeCount = 0; // the number of QML types defined in a document
+    std::optional<QmltcVariable> typeCount; // the number of QML types defined in a document
 };
 
 // Represents whole QML program, compiled to C++
