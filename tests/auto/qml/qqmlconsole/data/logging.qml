@@ -30,7 +30,8 @@
 import QtQuick 2.0
 
 QtObject {
-    id:root
+    id: root
+
     required property var customObject
     required property var stringListProperty
 
@@ -49,14 +50,14 @@ QtObject {
         consoleCount();
         consoleCount();
 
-        var a = [1, 2];
-        var b = {a: "hello", d: 1 };
-        b.toString = function() { return JSON.stringify(b) }
-        var c
-        var d = 12;
-        var e = function() { return 5;};
-        var f = true;
-        var g = {toString: function() { throw new Error('toString'); }};
+        const a = [1, 2];
+        const b = { a: "hello", d: 1 };
+        b.toString = function() { return JSON.stringify(b); }
+        let c;
+        const d = 12;
+        const e = function() { return 5; };
+        const f = true;
+        const g = { toString: function() { throw new Error('toString'); } };
 
         console.log(a);
         console.log(b);
@@ -79,6 +80,6 @@ QtObject {
             return;
         }
 
-        throw ("console.log(exception) should have raised an exception");
+        throw "console.log(exception) should have raised an exception";
     }
 }

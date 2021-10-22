@@ -129,7 +129,7 @@ void QQmlLoggingCategory::componentComplete()
 {
     m_initialized = true;
     if (m_name.isNull()) {
-        qmlWarning(this) << QLatin1String("Declaring the name of the LoggingCategory is mandatory and cannot be changed later !");
+        qmlWarning(this) << QLatin1String("Declaring the name of a LoggingCategory is mandatory and cannot be changed later");
     } else {
         QScopedPointer<QLoggingCategory> category(new QLoggingCategory(m_name.constData(), QtMsgType(m_defaultLogLevel)));
         m_category.swap(category);
@@ -138,23 +138,30 @@ void QQmlLoggingCategory::componentComplete()
 
 void QQmlLoggingCategory::setDefaultLogLevel(DefaultLogLevel defaultLogLevel)
 {
+    if (m_defaultLogLevel == defaultLogLevel)
+        return;
+
     if (m_initialized) {
-        qmlWarning(this) << QLatin1String("The defaultLogLevel of a LoggingCategory cannot be changed after the Item is created");
+        qmlWarning(this) << QLatin1String("The defaultLogLevel of a LoggingCategory cannot be changed after the component is completed");
         return;
     }
 
     m_defaultLogLevel = defaultLogLevel;
 }
 
-
 void QQmlLoggingCategory::setName(const QString &name)
 {
+    const QByteArray newName = name.toUtf8();
+
+    if (m_name == newName)
+        return;
+
     if (m_initialized) {
-        qmlWarning(this) << QLatin1String("The name of a LoggingCategory cannot be changed after the Item is created");
+        qmlWarning(this) << QLatin1String("The name of a LoggingCategory cannot be changed after the component is completed");
         return;
     }
 
-    m_name = name.toUtf8();
+    m_name = newName;
 }
 
 #include "moc_qqmlloggingcategory_p.cpp"

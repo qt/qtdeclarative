@@ -40,7 +40,7 @@
 import QtQuick 2.12
 
 Item {
-    id:root
+    id: root
 
     LoggingCategory {
         id: testCategory
@@ -69,8 +69,11 @@ Item {
         console.warn(testCategoryStartingFromWarning, "console.warn");
         console.error(testCategoryStartingFromWarning, "console.error");
 
-        testCategory.name = "qt.test2";
-        testCategory.defaultLogLevel = LoggingCategory.Debug;
+        testCategory.name = "qt.test"; // should be silent
+        testCategoryStartingFromWarning.name = "qt.test.other"; // should issue a warning
+
+        testCategory.defaultLogLevel = LoggingCategory.Debug; // should be silent
+        testCategoryStartingFromWarning.defaultLogLevel = LoggingCategory.Debug; // should issue a warning
 
         console.error(emptyCategory, "console.error");
     }
