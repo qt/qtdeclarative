@@ -78,6 +78,7 @@ class QQuickMaterialStyle : public QQuickAttachedObject
     Q_PROPERTY(QColor buttonColor READ buttonColor NOTIFY buttonColorChanged FINAL)
     Q_PROPERTY(QColor buttonDisabledColor READ buttonDisabledColor NOTIFY buttonDisabledColorChanged FINAL)
     Q_PROPERTY(QColor highlightedButtonColor READ highlightedButtonColor NOTIFY buttonColorChanged FINAL)
+    Q_PROPERTY(QColor highlightedCheckedButtonColor READ highlightedCheckedButtonColor NOTIFY buttonColorChanged FINAL REVISION(6, 2))
     Q_PROPERTY(QColor frameColor READ frameColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor rippleColor READ rippleColor NOTIFY themeChanged FINAL)
     Q_PROPERTY(QColor highlightedRippleColor READ highlightedRippleColor NOTIFY themeOrAccentChanged FINAL)
@@ -229,6 +230,7 @@ public:
     QColor buttonColor() const;
     QColor buttonDisabledColor() const;
     QColor highlightedButtonColor() const;
+    QColor highlightedCheckedButtonColor() const;
     QColor highlightedButtonDisabledColor() const;
     QColor frameColor() const;
     QColor rippleColor() const;
@@ -295,7 +297,7 @@ private:
 
     QColor backgroundColor(Shade shade) const;
     QColor accentColor(Shade shade) const;
-    QColor buttonColor(bool highlighted) const;
+    QColor buttonColor(bool highlighted, bool checked = false) const;
     Shade themeShade() const;
 
     // These reflect whether a color value was explicitly set on the specific

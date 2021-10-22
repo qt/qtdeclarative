@@ -907,7 +907,7 @@ QColor QQuickMaterialStyle::iconDisabledColor() const
     return QColor::fromRgba(m_theme == Light ? iconDisabledColorLight : iconDisabledColorDark);
 }
 
-QColor QQuickMaterialStyle::buttonColor(bool highlighted) const
+QColor QQuickMaterialStyle::buttonColor(bool highlighted, bool checked) const
 {
     Shade shade = themeShade();
 
@@ -916,7 +916,14 @@ QColor QQuickMaterialStyle::buttonColor(bool highlighted) const
     if (m_explicitBackground) {
         color = backgroundColor(shade);
     } else if (highlighted) {
-        color = accentColor(shade);
+        if (m_theme == Light) {
+            color = accentColor(shade);
+            if (checked)
+                color = color.lighter();
+        } else {
+            // A highlighted + checked button should become darker.
+            color = accentColor(checked ? Shade100 : shade);
+        }
     } else if (elevation() > 0) {
         color = QColor::fromRgba(m_theme == Light ? raisedButtonColorLight
                                                   : raisedButtonColorDark);
@@ -943,6 +950,11 @@ QColor QQuickMaterialStyle::buttonDisabledColor() const
 QColor QQuickMaterialStyle::highlightedButtonColor() const
 {
     return buttonColor(true);
+}
+
+QColor QQuickMaterialStyle::highlightedCheckedButtonColor() const
+{
+    return buttonColor(true, true);
 }
 
 QColor QQuickMaterialStyle::frameColor() const
