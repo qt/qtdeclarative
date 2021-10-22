@@ -369,12 +369,8 @@ void QQmlBind::setDelayed(bool delayed)
 
     The default value is \c Binding.RestoreBindingOrValue.
 
-    If you rely on any specific behavior regarding the restoration of plain
-    values when bindings get disabled you should migrate to explicitly set the
-    restoreMode.
-
-    Reliance on a restoreMode that doesn't restore the previous binding or value
-    for a specific property results in a run-time warning.
+    \note This property exists for backwards compatibility with earlier versions
+          of Qt. Don't use it in new code.
 */
 QQmlBind::RestorationMode QQmlBind::restoreMode() const
 {
