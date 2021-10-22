@@ -81,12 +81,18 @@ qmltyperegistrar_compiler.output = $$TYPEREGISTRATIONS
 qmltyperegistrar_compiler.variable_out = SOURCES
 qmltyperegistrar_compiler.name = Automatic QML type registration
 qmltyperegistrar_compiler.dependency_type = TYPE_C
+QMAKE_EXTRA_COMPILERS += qmltyperegistrar_compiler
 
-qmltyperegistrar_qmltypes.input = METATYPES_JSON
-qmltyperegistrar_qmltypes.depends = $$TYPEREGISTRATIONS
-qmltyperegistrar_qmltypes.output = $$QMLTYPES_FILENAME
-qmltyperegistrar_qmltypes.CONFIG = no_link
-qmltyperegistrar_qmltypes.commands = $$escape_expand(\\n)  # force creation of rule
+!contains(TEMPLATE, "vc.*") {  # work around QTBUG-91033
+    # Create a fake extra compiler to announce that we generate $$QMLTYPES_FILENAME.
+    # This allows us to use $$QMLTYPES_FILENAME as input in other extra compilers.
+    qmltyperegistrar_qmltypes.input = METATYPES_JSON
+    qmltyperegistrar_qmltypes.depends = $$TYPEREGISTRATIONS
+    qmltyperegistrar_qmltypes.output = $$QMLTYPES_FILENAME
+    qmltyperegistrar_qmltypes.CONFIG = no_link
+    qmltyperegistrar_qmltypes.commands = $$escape_expand(\\n)  # force creation of rule
+    QMAKE_EXTRA_COMPILERS += qmltyperegistrar_qmltypes
+}
 
 install_qmltypes {
     INSTALL_QML_FILES = false
@@ -109,5 +115,3 @@ install_qmltypes {
         else: COPIES += do_install_qmltypes
     }
 }
-
-QMAKE_EXTRA_COMPILERS += qmltyperegistrar_compiler qmltyperegistrar_qmltypes
