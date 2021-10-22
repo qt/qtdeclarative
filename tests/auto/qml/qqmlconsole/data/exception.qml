@@ -30,12 +30,12 @@ import QtQuick 2.0
 
 QtObject {
     function exceptionFail() {
-        console.exception("Exception 2")
+        console.exception("Exception 2");
     }
 
     Component.onCompleted: {
         try {
-            console.exception("Exception 1")
+            console.exception("Exception 1");
         } catch (e) {
             console.log(e);
         }
