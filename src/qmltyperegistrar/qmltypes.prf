@@ -74,6 +74,7 @@ METATYPES_JSON = $${TARGET_BASENAME}_metatypes.json
 
 TYPEREGISTRATIONS = $${TARGET_BASENAME}_qmltyperegistrations$${first(QMAKE_EXT_CPP)}
 
+qmltyperegistrar_compiler.CONFIG += combine
 qmltyperegistrar_compiler.commands = \
     $$QML_TYPEREGISTRAR $$QML_TYPEREGISTRAR_FLAGS -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 qmltyperegistrar_compiler.input = METATYPES_JSON
@@ -82,8 +83,11 @@ qmltyperegistrar_compiler.variable_out = SOURCES
 qmltyperegistrar_compiler.name = Automatic QML type registration
 qmltyperegistrar_compiler.dependency_type = TYPE_C
 
-QMAKE_EXTRA_COMPILERS += qmltyperegistrar_compiler
-QMAKE_CLEAN += $$QMLTYPES_FILENAME
+qmltyperegistrar_qmltypes.input = METATYPES_JSON
+qmltyperegistrar_qmltypes.depends = $$TYPEREGISTRATIONS
+qmltyperegistrar_qmltypes.output = $$QMLTYPES_FILENAME
+qmltyperegistrar_qmltypes.CONFIG = no_link
+qmltyperegistrar_qmltypes.commands = $$escape_expand(\\n)  # force creation of rule
 
 install_qmltypes {
     INSTALL_QML_FILES = false
@@ -106,3 +110,5 @@ install_qmltypes {
         else: COPIES += do_install_qmltypes
     }
 }
+
+QMAKE_EXTRA_COMPILERS += qmltyperegistrar_compiler qmltyperegistrar_qmltypes
