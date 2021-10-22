@@ -46,6 +46,7 @@
 #include <QtGui/QMouseEvent>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
 
@@ -3852,13 +3853,11 @@ void tst_qquicktext::fontFormatSizes()
     QFETCH(QString, textWithTag);
     QFETCH(bool, fontIsBigger);
 
-    QQuickView *view = new QQuickView;
     {
-        view->setSource(testFileUrl("pointFontSizes.qml"));
-        view->show();
-
-        QQuickText *qtext = view->rootObject()->findChild<QQuickText*>("text");
-        QQuickText *qtextWithTag = view->rootObject()->findChild<QQuickText*>("textWithTag");
+        QQuickView view;
+        QVERIFY(QQuickTest::showView(view, testFileUrl("pointFontSizes.qml")));
+        QQuickText *qtext = view.rootObject()->findChild<QQuickText*>("text");
+        QQuickText *qtextWithTag = view.rootObject()->findChild<QQuickText*>("textWithTag");
         QVERIFY(qtext != nullptr);
         QVERIFY(qtextWithTag != nullptr);
 
@@ -3866,7 +3865,7 @@ void tst_qquicktext::fontFormatSizes()
         qtextWithTag->setText(textWithTag);
 
         for (int size = 6; size < 100; size += 4) {
-            view->rootObject()->setProperty("pointSize", size);
+            view.rootObject()->setProperty("pointSize", size);
             if (fontIsBigger)
                 QVERIFY(qtext->height() <= qtextWithTag->height());
             else
@@ -3875,9 +3874,10 @@ void tst_qquicktext::fontFormatSizes()
     }
 
     {
-        view->setSource(testFileUrl("pixelFontSizes.qml"));
-        QQuickText *qtext = view->rootObject()->findChild<QQuickText*>("text");
-        QQuickText *qtextWithTag = view->rootObject()->findChild<QQuickText*>("textWithTag");
+        QQuickView view;
+        QVERIFY(QQuickTest::showView(view, testFileUrl("pixelFontSizes.qml")));
+        QQuickText *qtext = view.rootObject()->findChild<QQuickText*>("text");
+        QQuickText *qtextWithTag = view.rootObject()->findChild<QQuickText*>("textWithTag");
         QVERIFY(qtext != nullptr);
         QVERIFY(qtextWithTag != nullptr);
 
@@ -3885,14 +3885,13 @@ void tst_qquicktext::fontFormatSizes()
         qtextWithTag->setText(textWithTag);
 
         for (int size = 6; size < 100; size += 4) {
-            view->rootObject()->setProperty("pixelSize", size);
+            view.rootObject()->setProperty("pixelSize", size);
             if (fontIsBigger)
                 QVERIFY(qtext->height() <= qtextWithTag->height());
             else
                 QVERIFY(qtext->height() >= qtextWithTag->height());
         }
     }
-    delete view;
 }
 
 typedef qreal (*ExpectedBaseline)(QQuickText *item);
