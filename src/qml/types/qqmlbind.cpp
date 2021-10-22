@@ -82,7 +82,12 @@ public:
     QQmlNullableValue<bool> when;
     QPointer<QObject> obj;
     QString propName;
-    QQmlNullableValue<QJSValue> value;
+
+    // An invalid QVariant has special semantics that you may explicitly want when writing the
+    // value. Therefore we need to denote "is not set" in a different way. We do this by wrapping
+    // the value in QQmlNullableValue.
+    QQmlNullableValue<QVariant> value;
+
     QQmlProperty prop;
     QQmlAnyBinding prevBind;
     QV4::PersistentValue v4Value;
@@ -296,13 +301,13 @@ void QQmlBind::setProperty(const QString &p)
     The value to be set on the target object and property.  This can be a
     constant (which isn't very useful), or a bound expression.
 */
-QJSValue QQmlBind::value() const
+QVariant QQmlBind::value() const
 {
     Q_D(const QQmlBind);
     return d->value.value;
 }
 
-void QQmlBind::setValue(const QJSValue &v)
+void QQmlBind::setValue(const QVariant &v)
 {
     Q_D(QQmlBind);
     d->value = v;
@@ -512,7 +517,7 @@ void QQmlBind::eval()
     }
 
     d->writingProperty = true;
-    d->prop.write(d->value.value.toVariant());
+    d->prop.write(d->value.value);
     d->writingProperty = false;
 }
 
