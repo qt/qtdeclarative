@@ -252,6 +252,8 @@ void TestQmlformat::testFormat_data()
                                   << "emptyObject.formatted.qml" << QStringList {};
     QTest::newRow("arrow functions") << "arrowFunctions.qml"
                                      << "arrowFunctions.formatted.qml" << QStringList {};
+    QTest::newRow("settings") << "settings/Example1.qml"
+                              << "settings/Example1.formatted.qml" << QStringList {};
 }
 
 void TestQmlformat::testFormat()
