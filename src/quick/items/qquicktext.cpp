@@ -815,7 +815,7 @@ QRectF QQuickTextPrivate::setupTextLayout(qreal *const baseline)
         truncated = false;
         elide = false;
         int unwrappedLineCount = 1;
-        int maxLineCount = maximumLineCount();
+        const int maxLineCount = maximumLineCount();
         height = 0;
         qreal naturalHeight = 0;
         qreal previousHeight = 0;
