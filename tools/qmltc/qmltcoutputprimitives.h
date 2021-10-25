@@ -74,6 +74,7 @@ public:
             m_code->memberScopes.push(str);
         }
         ~MemberNameScope() { m_code->memberScopes.pop(); }
+        Q_DISABLE_COPY_MOVE(MemberNameScope)
     };
 
     struct HeaderIndentationScope
@@ -81,6 +82,7 @@ public:
         QmltcOutputWrapper *m_code;
         HeaderIndentationScope(QmltcOutputWrapper *code) : m_code(code) { ++m_code->headerIndent; }
         ~HeaderIndentationScope() { --m_code->headerIndent; }
+        Q_DISABLE_COPY_MOVE(HeaderIndentationScope)
     };
 
     struct CppIndentationScope
@@ -88,6 +90,7 @@ public:
         QmltcOutputWrapper *m_code;
         CppIndentationScope(QmltcOutputWrapper *code) : m_code(code) { ++m_code->cppIndent; }
         ~CppIndentationScope() { --m_code->cppIndent; }
+        Q_DISABLE_COPY_MOVE(CppIndentationScope)
     };
 
     // appends string \a what with extra indentation \a extraIndent to current
