@@ -417,7 +417,8 @@ QQuickPropertyChangesPrivate::property(const QString &property)
     Q_Q(QQuickPropertyChanges);
     QQmlData *ddata = QQmlData::get(q);
     QQmlProperty prop = QQmlPropertyPrivate::create(
-                object, property, ddata ? ddata->outerContext : QQmlRefPointer<QQmlContextData>());
+                object, property, ddata ? ddata->outerContext : QQmlRefPointer<QQmlContextData>(),
+                QQmlPropertyPrivate::InitFlag::None);
     if (!prop.isValid()) {
         qmlWarning(q) << QQuickPropertyChanges::tr("Cannot assign to non-existent property \"%1\"").arg(property);
         return QQmlProperty();

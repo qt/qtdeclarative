@@ -203,6 +203,11 @@ private slots:
 
     void dontRemoveQPropertyBinding();
     void compatResolveUrls();
+
+    void initFlags_data();
+    void initFlags();
+
+    void constructFromPlainMetaObject();
 private:
     QQmlEngine engine;
 };
@@ -2389,6 +2394,112 @@ void tst_qqmlproperty::compatResolveUrls()
     QSKIP("Testing the QML_COMPAT_RESOLVE_URLS_ON_ASSIGNMENT "
           "environment variable requires QProcess.");
 #endif
+}
+
+void tst_qqmlproperty::initFlags_data()
+{
+    QTest::addColumn<bool>("passObject");
+    QTest::addColumn<QString>("name");
+    QTest::addColumn<QQmlPropertyPrivate::InitFlags>("flags");
+
+    const QString names[] = {
+        QStringLiteral("foo"),
+        QStringLiteral("self.foo"),
+        QStringLiteral("onFoo"),
+        QStringLiteral("self.onFoo"),
+        QStringLiteral("bar"),
+        QStringLiteral("self.bar"),
+        QStringLiteral("abar"),
+        QStringLiteral("self.abar"),
+    };
+
+    const QQmlPropertyPrivate::InitFlags flagSets[] = {
+        QQmlPropertyPrivate::InitFlag::None,
+        QQmlPropertyPrivate::InitFlag::AllowId,
+        QQmlPropertyPrivate::InitFlag::AllowSignal,
+        QQmlPropertyPrivate::InitFlag::AllowId | QQmlPropertyPrivate::InitFlag::AllowSignal,
+    };
+
+    for (int i = 0; i < 2; ++i) {
+        const bool passObject = (i != 0);
+        for (const QString &name : names) {
+            for (const QQmlPropertyPrivate::InitFlags flagSet : flagSets) {
+                const QString rowName = QStringLiteral("%1,%2,%3")
+                        .arg(passObject).arg(name).arg(flagSet.toInt());
+                QTest::addRow("%s", qPrintable(rowName)) << passObject << name << flagSet;
+            }
+        }
+    }
+}
+
+void tst_qqmlproperty::initFlags()
+{
+    QFETCH(bool, passObject);
+    QFETCH(QString, name);
+    QFETCH(QQmlPropertyPrivate::InitFlags, flags);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(R"(
+        import QtQml
+        QtObject {
+            id: self
+            signal foo()
+            property int bar: 12
+            property alias abar: self.bar
+        }
+    )", QUrl());
+    QVERIFY(c.isReady());
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QQmlRefPointer<QQmlContextData> context = QQmlContextData::get(qmlContext(o.data()));
+
+    const QQmlProperty property = QQmlPropertyPrivate::create(
+                    passObject ? o.data() : nullptr, name, context, flags);
+
+    const bool usesId = name.startsWith(QStringLiteral("self."));
+    const bool hasSignal = name.endsWith(QStringLiteral("foo"));
+    if (!passObject && !usesId) {
+        QVERIFY(!property.isValid());
+    } else if (usesId && !(flags & QQmlPropertyPrivate::InitFlag::AllowId)) {
+        QVERIFY(!property.isValid());
+    } else if (hasSignal && !(flags & QQmlPropertyPrivate::InitFlag::AllowSignal)) {
+        QVERIFY(!property.isValid());
+    } else {
+        QVERIFY(property.isValid());
+        if (name.endsWith(QStringLiteral("bar"))) {
+            QVERIFY(property.isProperty());
+            QCOMPARE(property.name(), usesId ? name.mid(strlen("self.")) : name);
+            QCOMPARE(property.propertyMetaType(), QMetaType::fromType<int>());
+        } else {
+            QVERIFY(property.isSignalProperty());
+            QCOMPARE(property.name(), QStringLiteral("onFoo"));
+            QVERIFY(!property.propertyMetaType().isValid());
+        }
+    }
+
+}
+
+void tst_qqmlproperty::constructFromPlainMetaObject()
+{
+    QScopedPointer<PropertyObject> obj(new PropertyObject);
+
+    QQmlData *data = QQmlData::get(obj.data());
+    QVERIFY(data == nullptr);
+
+    QQmlProperty prop(obj.data(), "rectProperty");
+    QVERIFY(prop.isValid());
+    QVERIFY(prop.isProperty());
+    QCOMPARE(prop.propertyMetaType(), QMetaType::fromType<QRect>());
+
+    QQmlProperty sig(obj.data(), "onOddlyNamedNotifySignal");
+    QVERIFY(sig.isValid());
+    QVERIFY(sig.isSignalProperty());
+    QVERIFY(!sig.propertyMetaType().isValid());
+
+    data = QQmlData::get(obj.data());
+    QVERIFY(data == nullptr);
 }
 
 QTEST_MAIN(tst_qqmlproperty)

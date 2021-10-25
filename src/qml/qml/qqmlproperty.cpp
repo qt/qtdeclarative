@@ -58,6 +58,7 @@
 #include <private/qv4functionobject_p.h>
 #include <private/qv4qobjectwrapper_p.h>
 #include <private/qqmlbuiltinfunctions_p.h>
+#include <private/qqmlirbuilder_p.h>
 
 #include <QStringList>
 #include <QVector>
@@ -234,14 +235,15 @@ QQmlProperty::QQmlProperty(QObject *obj, const QString &name, QQmlEngine *engine
 }
 
 QQmlProperty QQmlPropertyPrivate::create(QObject *target, const QString &propertyName,
-                                         const QQmlRefPointer<QQmlContextData> &context)
+                                         const QQmlRefPointer<QQmlContextData> &context,
+                                         QQmlPropertyPrivate::InitFlags flags)
 {
     QQmlProperty result;
     auto d = new QQmlPropertyPrivate;
     result.d = d;
     d->context = context;
     d->engine = context ? context->engine() : nullptr;
-    d->initProperty(target, propertyName);
+    d->initProperty(target, propertyName, flags);
     if (!result.isValid()) {
         d->object = nullptr;
         d->context = nullptr;
@@ -265,10 +267,10 @@ QQmlRefPointer<QQmlContextData> QQmlPropertyPrivate::effectiveContext() const
         return nullptr;
 }
 
-void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
+// ### Qt7: Do not accept the "onFoo" syntax for signals anymore, and change the flags accordingly.
+void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
+                                       QQmlPropertyPrivate::InitFlags flags)
 {
-    if (!obj) return;
-
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache = context ? context->imports() : nullptr;
 
     QObject *currentObject = obj;
@@ -319,12 +321,30 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
             }
 
             QQmlPropertyData local;
-            QQmlPropertyData *property =
-                    QQmlPropertyCache::property(engine, currentObject, pathName, context, &local);
+            QQmlPropertyData *property = currentObject
+                    ? QQmlPropertyCache::property(engine, currentObject, pathName, context, &local)
+                    : nullptr;
 
-            if (!property) return; // Not a property
-            if (property->isFunction())
+            if (!property) {
+                // Not a property; Might be an ID
+                if (!(flags & InitFlag::AllowId))
+                    return;
+
+                for (auto idContext = context; idContext; idContext = idContext->parent()) {
+                    const int objectId = idContext->propertyIndex(pathName.toString());
+                    if (objectId != -1 && objectId < idContext->numIdValues()) {
+                        currentObject = context->idValue(objectId);
+                        break;
+                    }
+                }
+
+                if (!currentObject)
+                    return;
+
+                continue;
+            } else if (property->isFunction()) {
                 return; // Not an object property
+            }
 
             if (ii == (path.count() - 2) && QQmlMetaType::isValueType(property->propType())) {
                 // We're now at a value type property
@@ -362,12 +382,41 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
         }
 
         terminal = path.last();
+    } else if (!currentObject) {
+        return;
     }
 
-    if (terminal.size() >= 3 && terminal.at(0) == u'o' && terminal.at(1) == u'n'
-            && (terminal.at(2).isUpper() || terminal.at(2) == u'_')) {
+    auto findSignalInMetaObject = [&](const QByteArray &signalName) {
+        const QMetaMethod method = findSignalByName(currentObject->metaObject(), signalName);
+        if (!method.isValid())
+            return false;
 
-        QString signalName = terminal.mid(2).toString();
+        object = currentObject;
+        core.load(method);
+        return true;
+    };
+
+    QQmlData *ddata = QQmlData::get(currentObject, false);
+    auto findChangeSignal = [&](QStringView signalName) {
+        const QString changed = QStringLiteral("Changed");
+        if (signalName.endsWith(changed)) {
+            const QStringView propName = signalName.first(signalName.length() - changed.length());
+            QQmlPropertyData *d = ddata->propertyCache->property(propName, currentObject, context);
+            while (d && d->isFunction())
+                d = ddata->propertyCache->overrideData(d);
+
+            if (d && d->notifyIndex() != -1) {
+                object = currentObject;
+                core = *ddata->propertyCache->signal(d->notifyIndex());
+                return true;
+            }
+        }
+        return false;
+    };
+
+    const QString terminalString = terminal.toString();
+    if (QmlIR::IRBuilder::isSignalPropertyName(terminalString)) {
+        QString signalName = terminalString.mid(2);
         int firstNon_;
         int length = signalName.length();
         for (firstNon_ = 0; firstNon_ < length; ++firstNon_)
@@ -375,13 +424,14 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
                 break;
         signalName[firstNon_] = signalName.at(firstNon_).toLower();
 
-        // XXX - this code treats methods as signals
-
-        QQmlData *ddata = QQmlData::get(currentObject, false);
         if (ddata && ddata->propertyCache) {
-
             // Try method
-            QQmlPropertyData *d = ddata->propertyCache->property(signalName, currentObject, context);
+            QQmlPropertyData *d = ddata->propertyCache->property(
+                        signalName, currentObject, context);
+
+            // ### Qt7: This code treats methods as signals. It should use d->isSignal().
+            //          That would be a change in behavior, though. Right now you can construct a
+            //          QQmlProperty from such a thing.
             while (d && !d->isFunction())
                 d = ddata->propertyCache->overrideData(d);
 
@@ -391,39 +441,53 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
                 return;
             }
 
-            // Try property
-            if (signalName.endsWith(QLatin1String("Changed"))) {
-                const QStringView propName = QStringView{signalName}.mid(0, signalName.length() - 7);
-                QQmlPropertyData *d = ddata->propertyCache->property(propName, currentObject, context);
-                while (d && d->isFunction())
-                    d = ddata->propertyCache->overrideData(d);
-
-                if (d && d->notifyIndex() != -1) {
-                    object = currentObject;
-                    core = *ddata->propertyCache->signal(d->notifyIndex());
-                    return;
-                }
-            }
-
-        } else {
-            QMetaMethod method = findSignalByName(currentObject->metaObject(),
-                                                  signalName.toLatin1());
-            if (method.isValid()) {
-                object = currentObject;
-                core.load(method);
+            if (findChangeSignal(signalName))
                 return;
-            }
+        } else if (findSignalInMetaObject(signalName.toUtf8())) {
+            return;
         }
     }
 
-    // Property
-    QQmlPropertyData local;
-    QQmlPropertyData *property =
-        QQmlPropertyCache::property(engine, currentObject, terminal, context, &local);
-    if (property && !property->isFunction()) {
-        object = currentObject;
-        core = *property;
-        nameCache = terminal.toString();
+    if (ddata && ddata->propertyCache) {
+        QQmlPropertyData *property = ddata->propertyCache->property(
+                    terminal, currentObject, context);
+
+        // Technically, we might find an override that is not a function.
+        while (property && !property->isSignal()) {
+            if (!property->isFunction()) {
+                object = currentObject;
+                core = *property;
+                nameCache = terminalString;
+                return;
+            }
+            property = ddata->propertyCache->overrideData(property);
+        }
+
+        if (!(flags & InitFlag::AllowSignal))
+            return;
+
+        if (property) {
+            Q_ASSERT(property->isSignal());
+            object = currentObject;
+            core = *property;
+            return;
+        }
+
+        // At last: Try the change signal.
+        findChangeSignal(terminal);
+    } else {
+        // We might still find the property in the metaobject, even without property cache.
+        const QByteArray propertyName = terminal.toUtf8();
+        const QMetaProperty prop = findPropertyByName(currentObject->metaObject(), propertyName);
+
+        if (prop.isValid()) {
+            object = currentObject;
+            core.load(prop);
+            return;
+        }
+
+        if (flags & InitFlag::AllowSignal)
+            findSignalInMetaObject(terminal.toUtf8());
     }
 }
 
@@ -709,7 +773,6 @@ QString QQmlProperty::name() const
     if (!d)
         return QString();
     if (d->nameCache.isEmpty()) {
-        // ###
         if (!d->object) {
         } else if (d->isValueType()) {
             const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForValueType(d->core.propType());
@@ -718,8 +781,15 @@ QString QQmlProperty::name() const
             const char *vtName = valueTypeMetaObject->property(d->valueTypeData.coreIndex()).name();
             d->nameCache = d->core.name(d->object) + QLatin1Char('.') + QString::fromUtf8(vtName);
         } else if (type() & SignalProperty) {
-            QString name = QLatin1String("on") + d->core.name(d->object);
-            name[2] = name.at(2).toUpper();
+            // ### Qt7: Return the original signal name here. Do not prepend "on"
+            QString name = QStringLiteral("on") + d->core.name(d->object);
+            for (int i = 2, end = name.length(); i != end; ++i) {
+                const QChar c = name.at(i);
+                if (c != u'_') {
+                    name[i] = c.toUpper();
+                    break;
+                }
+            }
             d->nameCache = name;
         } else {
             d->nameCache = d->core.name(d->object);
@@ -1765,6 +1835,16 @@ QMetaMethod QQmlPropertyPrivate::findSignalByName(const QMetaObject *mo, const Q
     }
 
     return QMetaMethod();
+}
+
+/*!
+    Return the property corresponding to \a name
+*/
+QMetaProperty QQmlPropertyPrivate::findPropertyByName(const QMetaObject *mo, const QByteArray &name)
+{
+    Q_ASSERT(mo);
+    const int i = mo->indexOfProperty(name);
+    return i < 0 ? QMetaProperty() : mo->property(i);
 }
 
 /*! \internal
