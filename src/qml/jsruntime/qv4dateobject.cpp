@@ -95,7 +95,7 @@
 // QDateTime already included above
 #else
 #  ifdef Q_OS_WIN
-#    include <windows.h>
+#    include <qt_windows.h>
 #  else
 #    ifndef Q_OS_VXWORKS
 #      include <sys/time.h>

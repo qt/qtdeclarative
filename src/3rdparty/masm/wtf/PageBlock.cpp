@@ -32,7 +32,7 @@
 
 #if OS(WINDOWS)
 #include <malloc.h>
-#include <windows.h>
+#include <qt_windows.h>
 #endif
 
 namespace WTF {

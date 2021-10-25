@@ -57,7 +57,7 @@
 #    include "qplatformdefs.h"
 #  endif
 #else
-#  include <windows.h>
+#  include <qt_windows.h>
 #endif
 
 using namespace QV4;

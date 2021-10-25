@@ -64,7 +64,7 @@
 #include <wtf/UnusedParam.h>
 
 #if OS(WINDOWS)
-#include <windows.h>
+#include <qt_windows.h>
 #elif OS(QNX)
 #include <atomic.h>
 #endif

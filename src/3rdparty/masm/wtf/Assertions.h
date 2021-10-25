@@ -215,7 +215,7 @@ WTF_EXPORT_PRIVATE void WTFInstallReportBacktraceOnCrashHook();
 
 #if OS(WINCE)
 /* FIXME: We include this here only to avoid a conflict with the ASSERT macro. */
-#include <windows.h>
+#include <qt_windows.h>
 #undef min
 #undef max
 #undef ERROR
