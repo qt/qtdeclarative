@@ -2005,7 +2005,7 @@ void QQuickItemPrivate::updateSubFocusItem(QQuickItem *scope, bool focus)
     \qml
     Item {
         id: layerRoot
-        layer.enabled = true
+        layer.enabled: true
         layer.effect: ShaderEffect {
             fragmentShader: "effect.frag.qsb"
         }
