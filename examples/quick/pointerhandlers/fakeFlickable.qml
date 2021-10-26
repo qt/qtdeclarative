@@ -136,13 +136,13 @@ Rectangle {
             Row {
                 id: buttonRow
                 spacing: 4
-                TapHandlerButton {
+                Button {
                     text: "⭯"
-                    onClicked: ff.rotation -= 45
+                    onTapped: ff.rotation -= 45
                 }
-                TapHandlerButton {
+                Button {
                     text: "⭮"
-                    onClicked: ff.rotation += 45
+                    onTapped: ff.rotation += 45
                 }
             }
         }
