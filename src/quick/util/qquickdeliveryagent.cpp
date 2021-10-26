@@ -1182,6 +1182,8 @@ bool QQuickDeliveryAgentPrivate::deliverTouchCancelEvent(QTouchEvent *event)
     const_cast<QPointingDevicePrivate *>(QPointingDevicePrivate::get(event->pointingDevice()))->
             sendTouchCancelEvent(event);
 
+    cancelTouchMouseSynthesis();
+
     return true;
 }
 
