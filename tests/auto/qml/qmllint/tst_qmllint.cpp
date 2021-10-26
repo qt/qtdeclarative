@@ -919,6 +919,9 @@ void TestQmllint::settingsFile()
     QVERIFY(runQmllint("settings/unusedImportWarning/unused.qml", false, QStringList(), false)
                     .contains(QStringLiteral("Warning: %1:2:1: Unused import at %1:2:1")
                                       .arg(testFile("settings/unusedImportWarning/unused.qml"))));
+    QVERIFY(runQmllint("settings/bare/bare.qml", false, { "--bare" }, false, false)
+                    .contains(QStringLiteral("Failed to import base modules. Aborting.")));
+    QVERIFY(runQmllint("settings/qmltypes/qmltypes.qml", true, QStringList(), false).isEmpty());
 }
 
 void TestQmllint::lazyAndDirect()

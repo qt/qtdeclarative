@@ -290,7 +290,8 @@ All warnings can be set to three levels:
                 QLatin1String("Do not include default import directories or the current directory. "
                               "This may be used to run qmllint on a project using a different Qt version."));
     parser.addOption(qmlImportNoDefault);
-    settings.addOption(QLatin1String("DisableDefaultImports"), false);
+    const QString qmlImportNoDefaultSetting = QLatin1String("DisableDefaultImports");
+    settings.addOption(qmlImportNoDefaultSetting, false);
 
     QCommandLineOption qmltypesFilesOption(
             QStringList() << "i"
@@ -364,39 +365,28 @@ All warnings can be set to three levels:
     }
 
     // use host qml import path as a sane default if not explicitly disabled
-    QStringList qmlImportPaths = parser.isSet(qmlImportNoDefault)
-            ? QStringList {}
-#   ifndef QT_BOOTSTRAPPED
-            : QStringList { QLibraryInfo::path(QLibraryInfo::QmlImportsPath), QDir::currentPath() };
-#   else
-            : QStringList { QDir::currentPath() };
-#   endif
+    QStringList defaultImportPaths =
+            QStringList { QLibraryInfo::path(QLibraryInfo::QmlImportsPath), QDir::currentPath() };
 
-    if (parser.isSet(qmlImportPathsOption))
-        qmlImportPaths << parser.values(qmlImportPathsOption);
+    QStringList qmlImportPaths =
+            parser.isSet(qmlImportNoDefault) ? QStringList {} : defaultImportPaths;
 
-    qmlImportPaths << settings.value(qmlImportPathsSetting).toStringList();
-
-    QStringList qmltypesFiles;
+    QStringList defaultQmltypesFiles;
     if (parser.isSet(qmltypesFilesOption)) {
-        qmltypesFiles = parser.values(qmltypesFilesOption);
-    } else if (settings.isSet(qmltypesFilesSetting)
-               && !settings.value(qmltypesFilesSetting).toStringList().isEmpty()) {
-        qmltypesFiles = parser.values(qmltypesFilesSetting);
+        defaultQmltypesFiles = parser.values(qmltypesFilesOption);
     } else {
         // If none are given explicitly, use the qmltypes files from the current directory.
         QDirIterator it(".", {"*.qmltypes"}, QDir::Files);
         while (it.hasNext()) {
             it.next();
-            qmltypesFiles.append(it.fileInfo().absoluteFilePath());
+            defaultQmltypesFiles.append(it.fileInfo().absoluteFilePath());
         }
     }
+    QStringList qmltypesFiles = defaultQmltypesFiles;
 
-    QStringList resourceFiles;
-    if (parser.isSet(resourceOption))
-        resourceFiles << parser.values(resourceOption);
-    else if (settings.isSet(resourceSetting))
-        resourceFiles << settings.value(resourceSetting).toStringList();
+    const QStringList defaultResourceFiles =
+            parser.isSet(resourceOption) ? parser.values(resourceOption) : QStringList {};
+    QStringList resourceFiles = defaultResourceFiles;
 
 #else
     bool silent = false;
@@ -418,6 +408,37 @@ All warnings can be set to three levels:
         if (!parser.isSet(ignoreSettings)) {
             settings.search(filename);
             updateLogLevels();
+
+            const QDir fileDir = QFileInfo(filename).absoluteDir();
+            auto addAbsolutePaths = [&](QStringList &list, const QStringList &entries) {
+                for (const QString &file : entries)
+                    list << (QFileInfo(file).isAbsolute() ? file : fileDir.filePath(file));
+            };
+
+            resourceFiles = defaultResourceFiles;
+
+            addAbsolutePaths(resourceFiles, settings.value(resourceSetting).toStringList());
+
+            qmltypesFiles = defaultQmltypesFiles;
+            if (settings.isSet(qmltypesFilesSetting)
+                && !settings.value(qmltypesFilesSetting).toStringList().isEmpty()) {
+                qmltypesFiles = {};
+                addAbsolutePaths(qmltypesFiles,
+                                 settings.value(qmltypesFilesSetting).toStringList());
+            }
+
+            if (parser.isSet(qmlImportNoDefault)
+                || (settings.isSet(qmlImportNoDefaultSetting)
+                    && settings.value(qmlImportNoDefaultSetting).toBool())) {
+                qmlImportPaths = {};
+            } else {
+                qmlImportPaths = defaultImportPaths;
+            }
+
+            if (parser.isSet(qmlImportPathsOption))
+                qmlImportPaths << parser.values(qmlImportPathsOption);
+
+            addAbsolutePaths(qmlImportPaths, settings.value(qmlImportPathsSetting).toStringList());
         }
 #else
     const auto arguments = app.arguments();
