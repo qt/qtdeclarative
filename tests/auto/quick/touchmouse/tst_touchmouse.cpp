@@ -150,6 +150,12 @@ public:
         ++touchUngrabCount;
     }
 
+    void dumpEventList()
+    {
+        for (const auto &event : eventList)
+            qDebug() << event;
+    }
+
     bool event(QEvent *event) override {
         return QQuickItem::event(event);
     }
@@ -247,6 +253,7 @@ private slots:
 
     void hoverEnabled();
     void implicitUngrab();
+    void touchCancelWillCancelMousePress();
 
 protected:
     bool eventFilter(QObject *, QEvent *event) override
@@ -1546,6 +1553,40 @@ void tst_TouchMouse::implicitUngrab()
     QCOMPARE(eventItem->eventList.at(0).type, QEvent::UngrabMouse);
     QTest::touchEvent(&window, device).release(0, p1);   // clean up potential state
 }
+
+void tst_TouchMouse::touchCancelWillCancelMousePress()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("singleitem.qml")));
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root != nullptr);
+
+    EventItem *eventItem = root->findChild<EventItem*>("eventItem1");
+    eventItem->acceptMouse = true;
+    eventItem->setAcceptTouchEvents(false);
+    QPoint p1(20, 20);
+
+    // Begin a new touch, that gets converted to a mouse press
+    QTest::touchEvent(&window, device).press(0, p1);
+    QCOMPARE(eventItem->eventList.count(), 1);
+    QCOMPARE(eventItem->eventList.at(0).type, QEvent::MouseButtonPress);
+
+    // Cancel it...
+    QTouchEvent cancelEvent(QEvent::TouchCancel, device);
+    QCoreApplication::sendEvent(&window, &cancelEvent);
+    QCOMPARE(eventItem->eventList.count(), 3);
+    QCOMPARE(eventItem->eventList.at(1).type, QEvent::TouchCancel);
+    QCOMPARE(eventItem->eventList.at(2).type, QEvent::UngrabMouse);
+
+    // Begin a second touch. Since the last one was cancelled, this
+    // should end up as a new mouse press on the target item.
+    QTest::touchEvent(&window, device).press(0, p1);
+    QVERIFY(eventItem->eventList.count() >= 5);
+    QCOMPARE(eventItem->eventList.at(3).type, QEvent::MouseButtonPress);
+
+    QTest::touchEvent(&window, device).release(0, p1);   // clean up potential state
+}
+
 QTEST_MAIN(tst_TouchMouse)
 
 #include "tst_touchmouse.moc"
