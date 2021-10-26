@@ -48,8 +48,8 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.14
-import Qt.labs.animation 1.0
+import QtQuick
+import Qt.labs.animation
 
 Item {
     id: root
