@@ -203,6 +203,7 @@ private slots:
     void revertNullObjectBinding();
     void bindableProperties();
     void parentChangeInvolvingBindings();
+    void deferredProperties();
 };
 
 void tst_qquickstates::initTestCase()
@@ -1807,6 +1808,42 @@ void tst_qquickstates::parentChangeInvolvingBindings()
    root->setHeight(300);
    QCOMPARE(root->property("childWidth").toInt(), 300);
    QCOMPARE(root->property("childRotation").toInt(), 50);
+}
+
+void tst_qquickstates::deferredProperties()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("cleanPropertyChange.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QQuickRectangle> root(qobject_cast<QQuickRectangle *>(c.create()));
+    QVERIFY(root);
+
+    QCOMPARE(root->color(), QColor(Qt::red));
+    QCOMPARE(qvariant_cast<QColor>(root->property("extendedColor")), QColor(Qt::cyan));
+    QCOMPARE(root->width(), 100.0);
+    QCOMPARE(root->height(), 100.0);
+
+    QCOMPARE(root->state(), QString());
+    root->setState(QStringLiteral("green"));
+
+    QCOMPARE(root->color(), QColor(Qt::yellow));
+    QCOMPARE(qvariant_cast<QColor>(root->property("extendedColor")), QColor(Qt::blue));
+    QCOMPARE(root->width(), 90.0);
+    QCOMPARE(root->height(), 90.0);
+
+    QMetaObject::invokeMethod(root.get(), "didSomething");
+    const QColor green = qRgb(0x00, 0x80, 0x00);
+    QCOMPARE(root->color(), green);
+    QCOMPARE(qvariant_cast<QColor>(root->property("extendedColor")), green);
+    QCOMPARE(root->width(), 90.0);
+    QCOMPARE(root->height(), 90.0);
+
+    root->setState(QString());
+
+    QCOMPARE(root->color(), QColor(Qt::red));
+    QCOMPARE(qvariant_cast<QColor>(root->property("extendedColor")), QColor(Qt::cyan));
+    QCOMPARE(root->width(), 100.0);
+    QCOMPARE(root->height(), 100.0);
 }
 
 QTEST_MAIN(tst_qquickstates)

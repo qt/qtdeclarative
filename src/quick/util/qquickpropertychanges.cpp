@@ -53,6 +53,7 @@
 #include <private/qqmlboundsignal_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include <private/qqmlpropertybinding_p.h>
+#include <private/qqmlirbuilder_p.h>
 
 #include <QtCore/qdebug.h>
 
@@ -70,9 +71,9 @@ QT_BEGIN_NAMESPACE
     \l State. This enables an item's property values to be changed when it
     \l {Qt Quick States}{changes between states}.
 
-    To create a PropertyChanges object, specify the \l target item whose
-    properties are to be modified, and define the new property values or
-    bindings. For example:
+    To create a PropertyChanges object, bind to properties of the target
+    item like you would bind to local properties. This way you can define
+    the new property values or bindings. For example:
 
     \snippet qml/propertychanges.qml import
     \codeline
@@ -93,8 +94,7 @@ QT_BEGIN_NAMESPACE
 
     \qml
     PropertyChanges {
-        target: myMouseArea
-        onClicked: doSomethingDifferent()
+        myMouseArea.onClicked: doSomethingDifferent()
     }
     \endqml
 
@@ -130,12 +130,22 @@ QT_BEGIN_NAMESPACE
     changed implicitly through their parent's state, they should be set explicitly in all PropertyChanges.
     An item will still not be enabled/visible if one of its parents is not enabled or visible.
 
+    \note For backwards compatibility with Qt 5, you can also specify PropertyChanges using
+    the \l target property and plain property names without IDs. For example:
+    \c {PropertyChanges { target: myItem; x: 15 }}. The form with ID instead of \l target
+    is recommended. You may also need to use the form with \l target if the file is to be
+    edited with \l{Qt Design Studio}. Mind that \l{Qt Design Studio} also imposes a number
+    of further restrictions on the files it can work with.
+
     \sa {Qt Quick Examples - Animation#States}{States example}, {Qt Quick States}, {Qt QML}
 */
 
 /*!
     \qmlproperty QtObject QtQuick::PropertyChanges::target
     This property holds the object which contains the properties to be changed.
+
+    \note You generally don't have to use this property. It only exists for
+    compatibility with Qt 5 and for compatibility with \l{Qt Design Studio}.
 */
 
 class QQuickReplaceSignalHandler : public QQuickStateActionEvent
@@ -285,18 +295,15 @@ void QQuickPropertyChangesPrivate::decodeBinding(const QString &propertyPrefix, 
         return;
     }
 
-    if (propertyName.count() >= 3 &&
-        propertyName.at(0) == QLatin1Char('o') &&
-        propertyName.at(1) == QLatin1Char('n') &&
-        propertyName.at(2).isUpper()) {
+    if (binding->isSignalHandler() || QmlIR::IRBuilder::isSignalPropertyName(propertyName)) {
         QQmlProperty prop = property(propertyName);
         if (prop.isSignalProperty()) {
             QQuickReplaceSignalHandler *handler = new QQuickReplaceSignalHandler;
             handler->property = prop;
             handler->expression.adopt(
                         new QQmlBoundSignalExpression(
-                            object, QQmlPropertyPrivate::get(prop)->signalIndex(),
-                            QQmlContextData::get(qmlContext(q)), object,
+                            prop.object(), QQmlPropertyPrivate::get(prop)->signalIndex(),
+                            QQmlContextData::get(qmlContext(q)), prop.object(),
                             compilationUnit->runtimeFunctions.at(binding->value.compiledScriptIndex)));
             signalReplacements << handler;
             return;
@@ -364,6 +371,10 @@ void QQuickPropertyChangesParser::applyBindings(QObject *obj, const QQmlRefPoint
     p->bindings = bindings;
     p->compilationUnit = compilationUnit;
     p->decoded = false;
+
+    QQmlData *data = QQmlData::get(obj);
+    Q_ASSERT(data && !data->wasDeleted(obj));
+    data->releaseDeferredData();
 }
 
 QQuickPropertyChanges::QQuickPropertyChanges()
@@ -418,7 +429,7 @@ QQuickPropertyChangesPrivate::property(const QString &property)
     QQmlData *ddata = QQmlData::get(q);
     QQmlProperty prop = QQmlPropertyPrivate::create(
                 object, property, ddata ? ddata->outerContext : QQmlRefPointer<QQmlContextData>(),
-                QQmlPropertyPrivate::InitFlag::None);
+                QQmlPropertyPrivate::InitFlag::AllowId | QQmlPropertyPrivate::InitFlag::AllowSignal);
     if (!prop.isValid()) {
         qmlWarning(q) << QQuickPropertyChanges::tr("Cannot assign to non-existent property \"%1\"").arg(property);
         return QQmlProperty();

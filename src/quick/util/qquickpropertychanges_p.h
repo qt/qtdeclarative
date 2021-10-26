@@ -67,6 +67,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPropertyChanges : public QQuickStateOperation
     QML_NAMED_ELEMENT(PropertyChanges)
     QML_ADDED_IN_VERSION(2, 0)
     QML_CUSTOMPARSER
+    Q_CLASSINFO("ImmediatePropertyNames", "target,restoreEntryValues,explicit,objectName")
 
 public:
     QQuickPropertyChanges();

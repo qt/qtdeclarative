@@ -70,7 +70,12 @@ Item {
 
         states: State {
            name: "resized"; when: mouseArea.pressed
-           PropertyChanges { target: rect; color: "blue"; height: container.height }
+           PropertyChanges {
+               rect {
+                   color: "blue"
+                   height: container.height
+               }
+           }
         }
     }
 }
@@ -88,7 +93,7 @@ Rectangle {
 
         states: State {
             name: "widerText"
-            PropertyChanges { target: myText; width: undefined }
+            PropertyChanges { myText.width: undefined }
         }
     }
 
