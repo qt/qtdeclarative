@@ -371,12 +371,18 @@ target. For executables, the value will be the target path appended to
 \c{${CMAKE_CURRENT_BINARY_DIR}}, whereas for other targets it will be just
 \c{${CMAKE_CURRENT_BINARY_DIR}}. When the structure of the source tree
 matches the structure of QML module target paths (which is highly recommended),
-\l QT_QML_OUTPUT_DIRECTORY often isn't needed. The need for specifying the
-\c OUTPUT_DIRECTORY keyword should be rare, but if it is used, it is likely
-that the caller will also need to add to the \l IMPORT_PATH to ensure that
-\l{qmllint-auto}{linting}, \l{qmlcachegen-auto}{cached compilation} of qml
-sources and \l{qt6_import_qml_plugins}{automatic importing} of plugins in
-static builds all work correctly.
+\l QT_QML_OUTPUT_DIRECTORY often isn't needed. In order to match the structure
+of the target paths, you have to call your directories \e exactly like the
+segments of your module URI. For example, if your module URI is
+\c{MyUpperCaseThing.mylowercasething}, you need to put this in a directory
+called \c{MyUpperCaseThing/mylowercasething/}.
+
+The need for specifying the \c OUTPUT_DIRECTORY keyword should be rare, but if
+it is used, it is likely that the caller will also need to add to the
+\l IMPORT_PATH to ensure that \l{qmllint-auto}{linting},
+\l{qmlcachegen-auto}{cached compilation} of qml sources and
+\l{qt6_import_qml_plugins}{automatic importing} of plugins in static builds all
+work correctly.
 
 \target NO_GENERATE_PLUGIN_SOURCE
 By default, \c{qt_add_qml_module()} will auto-generate a \c{.cpp} file that
