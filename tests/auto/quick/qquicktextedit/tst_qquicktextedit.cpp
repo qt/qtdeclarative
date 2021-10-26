@@ -30,6 +30,7 @@
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <math.h>
 #include <QFile>
+#include <QtQuick/QQuickTextDocument>
 #include <QTextDocument>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
@@ -179,6 +180,8 @@ private slots:
     void clipRect();
     void implicitSizeBinding_data();
     void implicitSizeBinding();
+    void largeTextObservesViewport_data();
+    void largeTextObservesViewport();
 
     void signal_editingfinished();
 
@@ -3682,6 +3685,122 @@ void tst_qquicktextedit::implicitSizeBinding()
     textObject->resetHeight();
     QCOMPARE(textObject->width(), textObject->implicitWidth());
     QCOMPARE(textObject->height(), textObject->implicitHeight());
+}
+
+void tst_qquicktextedit::largeTextObservesViewport_data()
+{
+    QTest::addColumn<QString>("text");
+    QTest::addColumn<QQuickTextEdit::TextFormat>("textFormat");
+    QTest::addColumn<bool>("parentIsViewport");
+    QTest::addColumn<int>("cursorPos");
+    QTest::addColumn<int>("expectedBlockTolerance");
+    QTest::addColumn<int>("expectedBlocksAboveViewport");
+    QTest::addColumn<int>("expectedBlocksPastViewport");
+    QTest::addColumn<int>("expectedRenderedRegionMin");
+    QTest::addColumn<int>("expectedRenderedRegionMax");
+
+    QString text;
+    {
+        QStringList lines;
+        // "line 100" is 8 characters; many lines are longer, some are shorter
+        // so we populate 1250 lines, 11389 characters
+        const int lineCount = QQuickTextEditPrivate::largeTextSizeThreshold / 8;
+        lines.reserve(lineCount);
+        for (int i = 0; i < lineCount; ++i)
+            lines << QLatin1String("line ") + QString::number(i);
+        text = lines.join('\n');
+    }
+    Q_ASSERT(text.size() > QQuickTextEditPrivate::largeTextSizeThreshold);
+
+    // by default, the root item acts as the viewport:
+    // QQuickTextEdit doesn't populate lines of text beyond the bottom of the window
+    // cursor position 1000 is on line 121
+    QTest::newRow("default plain text") << text << QQuickTextEdit::PlainText << false << 1000 << 4 << 115 << 147 << 1700 << 2700;
+    // make the rectangle into a viewport item, and move the text upwards:
+    // QQuickTextEdit doesn't populate lines of text beyond the bottom of the viewport rectangle
+    QTest::newRow("clipped plain text") << text << QQuickTextEdit::PlainText << true << 1000 << 4 << 123 << 141 << 1800 << 2600;
+
+    {
+        QStringList lines;
+        // "line 100" is 8 characters; many lines are longer, some are shorter
+        // so we populate 1250 lines, 11389 characters
+        const int lineCount = QQuickTextEditPrivate::largeTextSizeThreshold / 8;
+        lines.reserve(lineCount);
+        // add a table (of contents, perhaps): ensure that doesn't get included in renderedRegion after we've scrolled past it
+        lines << QLatin1String("<table border='1'><tr><td>Chapter 1<td></tr><tr><td>Chapter 2</td></tr><tr><td>etc</td></tr></table>");
+        for (int i = 0; i < lineCount; ++i) {
+            if (i > 0 && i % 50 == 0)
+                // chapter heading with floating image: ensure that doesn't get included in renderedRegion after we've scrolled past it
+                lines << QLatin1String("<img style='float:left;' src='http/exists.png' height='32'/><h1>chapter ") +
+                         QString::number(i / 50) + QLatin1String("</h1>");
+            lines << QLatin1String("<p>line ") + QString::number(i) + QLatin1String("</p>");
+        }
+        text = lines.join('\n');
+    }
+    Q_ASSERT(text.size() > QQuickTextEditPrivate::largeTextSizeThreshold);
+
+    // by default, the root item acts as the viewport:
+    // QQuickTextEdit doesn't populate blocks beyond the bottom of the window
+    QTest::newRow("default styled text") << text << QQuickTextEdit::RichText << false << 1000 << 4 << 123 << 141 << 3200 << 4100;
+    // make the rectangle into a viewport item, and move the text upwards:
+    // QQuickTextEdit doesn't populate blocks that don't intersect the viewport rectangle
+    QTest::newRow("clipped styled text") << text << QQuickTextEdit::RichText << true << 1000 << 4 << 127 << 138 << 3300 << 4100;
+    // get the "chapter 2" heading into the viewport
+    QTest::newRow("heading visible") << text << QQuickTextEdit::RichText << true << 780 << 4 << 102 << 112 << 2600 << 3300;
+}
+
+void tst_qquicktextedit::largeTextObservesViewport()
+{
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to few fonts installed on offscreen/minimal platforms");
+
+    QFETCH(QString, text);
+    QFETCH(QQuickTextEdit::TextFormat, textFormat);
+    QFETCH(bool, parentIsViewport);
+    QFETCH(int, cursorPos);
+    QFETCH(int, expectedBlockTolerance);
+    QFETCH(int, expectedBlocksAboveViewport);
+    QFETCH(int, expectedBlocksPastViewport);
+    QFETCH(int, expectedRenderedRegionMin);
+    QFETCH(int, expectedRenderedRegionMax);
+
+    QQuickView window;
+    QByteArray errorMessage;
+    QVERIFY2(QQuickTest::initView(window, testFileUrl("viewport.qml"), true, &errorMessage), errorMessage.constData());
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QQuickTextEdit *textItem = window.rootObject()->findChild<QQuickTextEdit*>();
+    QVERIFY(textItem);
+    QQuickItem *viewportItem = textItem->parentItem();
+    QQuickTextEditPrivate *textPriv = QQuickTextEditPrivate::get(textItem);
+
+    viewportItem->setFlag(QQuickItem::ItemIsViewport, parentIsViewport);
+    textItem->setTextFormat(textFormat);
+    textItem->setText(text);
+    textItem->setFocus(true);
+    if (lcTests().isDebugEnabled())
+        QTest::qWait(1000);
+    textItem->setCursorPosition(cursorPos);
+    auto cursorRect = textItem->cursorRectangle();
+    textItem->setY(-cursorRect.top());
+    qCDebug(lcTests) << "text size" << textItem->text().size() << "lines" << textItem->lineCount() << "font" << textItem->font();
+    Q_ASSERT(textItem->text().size() > QQuickTextEditPrivate::largeTextSizeThreshold);
+    QVERIFY(textItem->flags().testFlag(QQuickItem::ItemObservesViewport)); // large text sets this flag automatically
+    QCOMPARE(textItem->viewportItem(), parentIsViewport ? viewportItem : viewportItem->parentItem());
+    QTRY_VERIFY(textPriv->firstBlockInViewport > 0); // wait for rendering
+    qCDebug(lcTests) << "first block rendered" << textPriv->firstBlockInViewport
+                     << "expected" << expectedBlocksAboveViewport
+                     << "first block past viewport" << textPriv->firstBlockPastViewport
+                     << "expected" << expectedBlocksPastViewport
+                     << "region" << textPriv->renderedRegion
+                     << "expected range" << expectedRenderedRegionMin << expectedRenderedRegionMax;
+    if (lcTests().isDebugEnabled())
+        QTest::qWait(1000);
+    QVERIFY(qAbs(textPriv->firstBlockInViewport - expectedBlocksAboveViewport) < expectedBlockTolerance);
+    QVERIFY(qAbs(textPriv->firstBlockPastViewport - expectedBlocksPastViewport) < expectedBlockTolerance);
+    QVERIFY(textPriv->renderedRegion.top() > expectedRenderedRegionMin);
+    QVERIFY(textPriv->renderedRegion.bottom() < expectedRenderedRegionMax);
 }
 
 void tst_qquicktextedit::signal_editingfinished()

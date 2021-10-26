@@ -142,6 +142,7 @@ public:
     bool determineHorizontalAlignment();
     bool setHAlign(QQuickTextEdit::HAlignment, bool forceAlign = false);
     void mirrorChange() override;
+    bool transformChanged(QQuickItem *transformedItem) override;
     qreal getImplicitWidth() const override;
     Qt::LayoutDirection textDirection(const QString &text) const;
     bool isLinkHoveredConnected();
@@ -189,6 +190,9 @@ public:
     int lastSelectionStart;
     int lastSelectionEnd;
     int lineCount;
+    int firstBlockInViewport = -1;
+    int firstBlockPastViewport = -1;
+    QRectF renderedRegion;
 
     enum UpdateType {
         UpdateNone,
@@ -226,6 +230,8 @@ public:
     bool selectByKeyboardSet:1;
     bool hadSelection : 1;
     bool markdownText : 1;
+
+    static const int largeTextSizeThreshold;
 };
 
 QT_END_NAMESPACE
