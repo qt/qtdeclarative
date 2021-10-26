@@ -21,12 +21,13 @@ qt_add_executable(pointerhandlersexample WIN32 MACOSX_BUNDLE main.cpp)
 
 target_link_libraries(pointerhandlersexample PUBLIC
     Qt::Core
-        Qt::Gui
-        Qt::Qml
-        Qt::Quick
-        Qt::Svg
-        pointerhandlers_shared
+    Qt::Gui
+    Qt::Qml
+    Qt::Quick
+    Qt::Svg
 )
+
+add_dependencies(pointerhandlersexample pointerhandlers_shared)
 
 qt_add_qml_module(pointerhandlersexample
     URI pointerhandlers
