@@ -1,0 +1,11 @@
+import QtQuick.tooling 1.2
+Module {
+    dependencies: []
+    Component {
+        name: "Thing"
+        prototype: "QObject"
+        exports: [
+            "Custom/Thing 1.0",
+        ]
+    }
+}
