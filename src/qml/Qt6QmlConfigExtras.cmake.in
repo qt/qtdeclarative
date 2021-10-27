@@ -11,3 +11,10 @@ if(NOT QT_NO_CREATE_TARGETS AND
         qt@PROJECT_VERSION_MAJOR@_import_qml_plugins
     )
 endif()
+
+if(ANDROID)
+     # Set the default staging path of qml modules when building for Android
+    if("${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "")
+        set(QT_QML_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/android-qml")
+    endif()
+endif()
