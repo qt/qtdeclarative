@@ -256,14 +256,15 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
                 scope->setExtensionTypeName(readStringBinding(script));
             } else if (name == QLatin1String("deferredNames")) {
                 readDeferredNames(script, scope);
+            } else if (name == QLatin1String("immediateNames")) {
+                readImmediateNames(script, scope);
             } else {
                 addWarning(script->firstSourceLocation(),
                            tr("Expected only name, prototype, defaultProperty, attachedType, "
                               "valueType, exports, interfaces, isSingleton, isCreatable, "
-                              "isComposite, hasCustomParser, "
-                              "exportMetaObjectRevisions and deferredNames script bindings, not "
-                              "\"%1\".")
-                                   .arg(name));
+                              "isComposite, hasCustomParser, exportMetaObjectRevisions, "
+                              "deferredNames, and immediateNames in script bindings, not \"%1\".")
+                           .arg(name));
             }
         } else {
             addWarning(member->firstSourceLocation(),
@@ -736,13 +737,11 @@ void QQmlJSTypeDescriptionReader::readMetaObjectRevisions(UiScriptBinding *ast,
     }
 }
 
-void QQmlJSTypeDescriptionReader::readDeferredNames(UiScriptBinding *ast,
-                                                    const QQmlJSScope::Ptr &scope)
+QStringList QQmlJSTypeDescriptionReader::readStringList(UiScriptBinding *ast)
 {
     auto *arrayLit = getArray(ast);
-
     if (!arrayLit)
-        return;
+        return {};
 
     QStringList list;
 
@@ -751,13 +750,25 @@ void QQmlJSTypeDescriptionReader::readDeferredNames(UiScriptBinding *ast,
         if (!stringLit) {
             addError(arrayLit->firstSourceLocation(),
                      tr("Expected array literal with only string literal members."));
-            return;
+            return {};
         }
 
         list << stringLit->value.toString();
     }
 
-    scope->setOwnDeferredNames(list);
+    return list;
+}
+
+void QQmlJSTypeDescriptionReader::readDeferredNames(UiScriptBinding *ast,
+                                                    const QQmlJSScope::Ptr &scope)
+{
+    scope->setOwnDeferredNames(readStringList(ast));
+}
+
+void QQmlJSTypeDescriptionReader::readImmediateNames(UiScriptBinding *ast,
+                                                    const QQmlJSScope::Ptr &scope)
+{
+    scope->setOwnImmediateNames(readStringList(ast));
 }
 
 void QQmlJSTypeDescriptionReader::readEnumValues(UiScriptBinding *ast, QQmlJSMetaEnum *metaEnum)

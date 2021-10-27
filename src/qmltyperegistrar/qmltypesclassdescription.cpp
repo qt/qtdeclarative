@@ -187,6 +187,8 @@ void QmlTypesClassDescription::collect(
                 hasCustomParser = true;
         } else if (name == QLatin1String("DeferredPropertyNames")) {
             deferredNames = value.split(u',');
+        } else if (name == QLatin1String("ImmediatePropertyNames")) {
+            immediateNames = value.split(u',');
         }
     }
 

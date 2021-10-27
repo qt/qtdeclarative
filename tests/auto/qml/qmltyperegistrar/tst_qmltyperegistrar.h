@@ -418,6 +418,20 @@ struct DeferredPropertyNames : public QObject
     Q_CLASSINFO("DeferredPropertyNames", "A,B,C")
 };
 
+struct ImmediatePropertyNamesEmpty : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_CLASSINFO("ImmediatePropertyNames", "")
+};
+
+struct ImmediatePropertyNames : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+    Q_CLASSINFO("ImmediatePropertyNames", "A,B,C")
+};
+
 namespace ForeignNamespace
 {
 Q_NAMESPACE
@@ -471,6 +485,7 @@ private slots:
     void namespacesAndValueTypes();
     void namespaceExtendedNamespace();
     void deferredNames();
+    void immediateNames();
     void derivedFromForeignPrivate();
     void methodReturnType();
 

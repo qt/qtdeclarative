@@ -82,7 +82,10 @@ private:
     void readExports(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
     void readInterfaces(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
     void readMetaObjectRevisions(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
+
+    QStringList readStringList(QQmlJS::AST::UiScriptBinding *ast);
     void readDeferredNames(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
+    void readImmediateNames(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
     void readEnumValues(QQmlJS::AST::UiScriptBinding *ast, QQmlJSMetaEnum *metaEnum);
 
     void addError(const QQmlJS::SourceLocation &loc, const QString &message);

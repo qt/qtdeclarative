@@ -57,6 +57,7 @@ struct QmlTypesClassDescription
     bool hasCustomParser = false;
     QStringList implementsInterfaces;
     QStringList deferredNames;
+    QStringList immediateNames;
 
     enum CollectMode {
         TopLevel,

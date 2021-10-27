@@ -216,6 +216,8 @@ public:
 
     void setOwnDeferredNames(const QStringList &names) { m_ownDeferredNames = names; }
     QStringList ownDeferredNames() const { return m_ownDeferredNames; }
+    void setOwnImmediateNames(const QStringList &names) { m_ownImmediateNames = names; }
+    QStringList ownImmediateNames() const { return m_ownImmediateNames; }
 
     bool isNameDeferred(const QString &name) const;
 
@@ -431,6 +433,7 @@ private:
     QList<Export> m_exports;
     QStringList m_interfaceNames;
     QStringList m_ownDeferredNames;
+    QStringList m_ownImmediateNames;
 
     QString m_defaultPropertyName;
     QString m_parentPropertyName;

@@ -553,11 +553,19 @@ bool QQmlJSScope::isNameDeferred(const QString &name) const
     bool isDeferred = false;
 
     searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        if (scope->ownDeferredNames().isEmpty())
-            return false;
+        const QStringList immediate = scope->ownImmediateNames();
+        if (!immediate.isEmpty()) {
+            isDeferred = !immediate.contains(name);
+            return true;
+        }
 
-        isDeferred = scope->ownDeferredNames().contains(name);
-        return true;
+        const QStringList deferred = scope->ownDeferredNames();
+        if (!deferred.isEmpty()) {
+            isDeferred = deferred.contains(name);
+            return true;
+        }
+
+        return false;
     });
 
     return isDeferred;

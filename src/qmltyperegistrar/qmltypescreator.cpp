@@ -127,6 +127,14 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
         m_qml.writeArrayBinding(QLatin1String("deferredNames"), deferredNames);
     }
 
+    if (!collector.immediateNames.isEmpty()) {
+        QStringList immediateNames;
+        for (const QString &name : collector.immediateNames)
+            immediateNames << enquote(name);
+
+        m_qml.writeArrayBinding(QLatin1String("immediateNames"), immediateNames);
+    }
+
     m_qml.writeArrayBinding(QLatin1String("exportMetaObjectRevisions"), metaObjects);
 
     if (!collector.attachedType.isEmpty())
