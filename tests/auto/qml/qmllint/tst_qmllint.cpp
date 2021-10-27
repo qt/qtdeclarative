@@ -705,6 +705,15 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("cycleHead.qml")
             << QStringLiteral("MenuItem is part of an inheritance cycle: MenuItem -> MenuItem")
             << QString() << false;
+    QTest::newRow("badGeneralizedGroup1")
+            << QStringLiteral("badGeneralizedGroup1.qml")
+            << QStringLiteral("Binding assigned to \"aaaa\", "
+                              "but no property \"aaaa\" exists in the current element")
+            << QString() << false;
+    QTest::newRow("badGeneralizedGroup2")
+            << QStringLiteral("badGeneralizedGroup2.qml")
+            << QStringLiteral("unknown grouped property scope aself")
+            << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -859,6 +868,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("bytearray") << QStringLiteral("bytearray.qml");
     QTest::newRow("initReadonly") << QStringLiteral("initReadonly.qml");
     QTest::newRow("connectionNoParent") << QStringLiteral("connectionNoParent.qml"); // QTBUG-97600
+    QTest::newRow("goodGeneralizedGroup") << QStringLiteral("goodGeneralizedGroup.qml");
 }
 
 void TestQmllint::cleanQmlCode()

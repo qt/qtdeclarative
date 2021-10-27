@@ -39,6 +39,14 @@ Module {
         Property { name: "contentChildren"; type: "QQuickItem"; isList: true; isReadonly: true }
     }
     Component {
+        name: "WithImmediate"
+        prototype: "QObject"
+        exports: ["Things/WithImmediate 1.0"]
+        exportMetaObjectRevisions: [256]
+        immediateNames: ["contentData"]
+        Property { name: "contentData"; type: "double" }
+    }
+    Component {
         name: "MyScreen"
         prototype: "QObject"
         exports: [

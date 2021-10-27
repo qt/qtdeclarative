@@ -432,6 +432,14 @@ void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self,
     }
 }
 
+void QQmlJSScope::resolveGeneralizedGroup(const Ptr &self, const ConstPtr &baseType,
+                                          const QHash<QString, ConstPtr> &contextualTypes,
+                                          QSet<QString> *usedTypes)
+{
+    self->m_baseType = baseType;
+    resolveNonEnumTypes(self, contextualTypes, usedTypes);
+}
+
 QQmlJSScope::ConstPtr QQmlJSScope::findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope)
 {
     auto qmlScope = scope;

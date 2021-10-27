@@ -340,6 +340,10 @@ public:
     static void resolveEnums(const QQmlJSScope::Ptr &self,
                              const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes,
                              QSet<QString> *usedTypes = nullptr);
+    static void resolveGeneralizedGroup(const QQmlJSScope::Ptr &self,
+                                        const QQmlJSScope::ConstPtr &baseType,
+                                        const QHash<QString, ConstPtr> &contextualTypes,
+                                        QSet<QString> *usedTypes = nullptr);
 
     void setSourceLocation(const QQmlJS::SourceLocation &sourceLocation)
     {

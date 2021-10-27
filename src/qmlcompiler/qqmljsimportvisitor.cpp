@@ -155,7 +155,12 @@ void QQmlJSImportVisitor::leaveEnvironment()
     m_currentScope = m_currentScope->parentScope();
 }
 
-void QQmlJSImportVisitor::resolveAliases()
+static bool mayBeUnresolvedGeneralizedGroupedProperty(const QQmlJSScope::ConstPtr &scope)
+{
+    return scope->scopeType() == QQmlJSScope::GroupedPropertyScope && !scope->baseType();
+}
+
+void QQmlJSImportVisitor::resolveAliasesAndIds()
 {
     QQueue<QQmlJSScope::Ptr> objects;
     objects.enqueue(m_exportedRootScope);
@@ -234,8 +239,19 @@ void QQmlJSImportVisitor::resolveAliases()
         }
 
         const auto childScopes = object->childScopes();
-        for (const auto &childScope : childScopes)
+        for (const auto &childScope : childScopes) {
+            if (mayBeUnresolvedGeneralizedGroupedProperty(childScope)) {
+                const QString name = childScope->internalName();
+                if (object->isNameDeferred(name)) {
+                    auto it = m_scopesById.find(name);
+                    if (it != m_scopesById.end()) {
+                        QQmlJSScope::resolveGeneralizedGroup(
+                                    childScope, *it, m_rootScopeImports, &m_usedTypes);
+                    }
+                }
+            }
             objects.enqueue(childScope);
+        }
 
         if (doRequeue)
             requeue.enqueue(object);
@@ -349,8 +365,6 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
     for (const auto &scope : m_objectDefinitionScopes) {
         if (checkInheritanceCycle(scope) == CycleFound)
             return;
-
-        checkGroupedAndAttachedScopes(scope);
     }
 
     for (const auto &scope : m_pendingDefaultProperties.keys()) {
@@ -358,7 +372,11 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
             return;
     }
 
-    resolveAliases();
+    resolveAliasesAndIds();
+
+    for (const auto &scope : m_objectDefinitionScopes)
+        checkGroupedAndAttachedScopes(scope);
+
     processDefaultProperties();
     processPropertyTypes();
     processPropertyBindings();

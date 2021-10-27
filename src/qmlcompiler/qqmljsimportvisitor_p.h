@@ -261,7 +261,7 @@ protected:
 
 private:
     void importBaseModules();
-    void resolveAliases();
+    void resolveAliasesAndIds();
     void visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr);
     void processImportWarnings(const QString &what, const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation());
     void addImportWithLocation(const QString &name, const QQmlJS::SourceLocation &loc);
