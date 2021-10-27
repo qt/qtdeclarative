@@ -53,6 +53,19 @@ modules under the same base location. This allows the project to use a source
 directory structure that doesn't exactly match the URI structure of the QML
 modules, or to merge sets of QML modules under a common base point.
 
+When building QML modules for Android, \c QT_QML_OUTPUT_DIRECTORY is set to
+\c{${CMAKE_BINARY_DIR}/android-qml} by default. The Android deployment routine
+uses this directory to locate the required QML modules in the build tree.
+The output directory of a QML module can also be set for a project or for each
+QML module target by the user and it can therefore differ from the Android
+default directory. In this case, to successfully deploy the executable on
+Android, the \e{target path} of the QML module must be based on the module URI.
+Also, the \l{cmake-target-property-QT_QML_IMPORT_PATH}{QT_QML_IMPORT_PATH}
+property of the executable target must contain the import paths of all QML
+modules that are built in the project tree, have a custom output directory,
+and are used by the executable target. This behavior will likely change in
+a future Qt version due to improvements in the build system implementation.
+
 */
 
 

@@ -1436,7 +1436,6 @@ function(qt6_target_qml_sources target)
 
         get_filename_component(file_absolute ${qml_file_src} ABSOLUTE)
         __qt_get_relative_resource_path_for_file(file_resource_path ${qml_file_src})
-        set(qml_file_out ${output_dir}/${file_resource_path})
 
         # For the tooling steps below, run the tools on the copied qml file in
         # the build directory, not the source directory. This is required
