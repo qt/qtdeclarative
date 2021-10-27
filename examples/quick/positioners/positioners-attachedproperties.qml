@@ -90,14 +90,14 @@ Rectangle {
               anchors.leftMargin: 20
               anchors.verticalCenter: parent.verticalCenter
               text: "Index: " + parent.Positioner.index
-              + (parent.Positioner.isFirstItem ? " (First)" : "")
-              + (parent.Positioner.isLastItem ? " (Last)" : "")
+                  + (parent.Positioner.isFirstItem ? " (First)" : "")
+                  + (parent.Positioner.isLastItem ? " (Last)" : "")
             }
 
             // When mouse is clicked, display the values of the positioner
             MouseArea {
-            anchors.fill: parent
-            onClicked: column.showInfo(green.Positioner)
+                anchors.fill: parent
+                onClicked: column.showInfo(green.Positioner)
             }
         }
         //! [0]
@@ -113,14 +113,14 @@ Rectangle {
               anchors.leftMargin: 20
               anchors.verticalCenter: parent.verticalCenter
               text: "Index: " + parent.Positioner.index
-              + (parent.Positioner.isFirstItem ? " (First)" : "")
-              + (parent.Positioner.isLastItem ? " (Last)" : "")
+                  + (parent.Positioner.isFirstItem ? " (First)" : "")
+                  + (parent.Positioner.isLastItem ? " (Last)" : "")
             }
 
             // When mouse is clicked, display the values of the positioner
             MouseArea {
-            anchors.fill: parent
-            onClicked: column.showInfo(blue.Positioner)
+                anchors.fill: parent
+                onClicked: column.showInfo(blue.Positioner)
             }
         }
 
@@ -135,14 +135,14 @@ Rectangle {
               anchors.leftMargin: 20
               anchors.verticalCenter: parent.verticalCenter
               text: "Index: " + parent.Positioner.index
-              + (parent.Positioner.isFirstItem ? " (First)" : "")
-              + (parent.Positioner.isLastItem ? " (Last)" : "")
+                  + (parent.Positioner.isFirstItem ? " (First)" : "")
+                  + (parent.Positioner.isLastItem ? " (Last)" : "")
             }
 
             // When mouse is clicked, display the values of the positioner
             MouseArea {
-            anchors.fill: parent
-            onClicked: column.showInfo(purple.Positioner)
+                anchors.fill: parent
+                onClicked: column.showInfo(purple.Positioner)
             }
         }
 
@@ -159,8 +159,8 @@ Rectangle {
                 anchors.leftMargin: 20
                 anchors.verticalCenter: parent.verticalCenter
                 text: "Index: " + parent.Positioner.index
-                + (parent.Positioner.isFirstItem ? " (First)" : "")
-                + (parent.Positioner.isLastItem ? " (Last)" : "")
+                    + (parent.Positioner.isFirstItem ? " (First)" : "")
+                    + (parent.Positioner.isLastItem ? " (Last)" : "")
             }
         }
 
