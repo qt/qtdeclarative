@@ -608,7 +608,7 @@ namespace QQmlPrivate
     };
 
     struct Q_QML_EXPORT AOTCompiledContext {
-        enum: uint { InvalidStringId = std::numeric_limits<uint>::max() };
+        enum: uint { InvalidStringId = (std::numeric_limits<uint>::max)() };
 
         QQmlContextData *qmlContext;
         QObject *qmlScopeObject;
