@@ -72,11 +72,14 @@ private Q_SLOTS:
 
     void lazyAndDirect();
 
+    void missingBuiltinsNoCrash();
 private:
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
-                       const QStringList &extraArgs = QStringList(), bool ignoreSettings = true);
+                       const QStringList &extraArgs = QStringList(), bool ignoreSettings = true,
+                       bool addIncludeDirs = true);
     QString runQmllint(const QString &fileToLint, bool shouldSucceed,
-                       const QStringList &extraArgs = QStringList(), bool ignoreSettings = true);
+                       const QStringList &extraArgs = QStringList(), bool ignoreSettings = true,
+                       bool addIncludeDirs = true);
 
     QString m_qmllintPath;
     QString m_qmljsrootgenPath;
@@ -818,14 +821,18 @@ void TestQmllint::cleanQmlCode()
 
 QString TestQmllint::runQmllint(const QString &fileToLint,
                                 std::function<void(QProcess &)> handleResult,
-                                const QStringList &extraArgs, bool ignoreSettings)
+                                const QStringList &extraArgs, bool ignoreSettings,
+                                bool addIncludeDirs)
 {
     auto qmlImportDir = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
     QStringList args;
 
-    args << (QFileInfo(fileToLint).isAbsolute() ? fileToLint : testFile(fileToLint))
-         << QStringLiteral("-I") << qmlImportDir
-         << QStringLiteral("-I") << dataDirectory();
+    args << (QFileInfo(fileToLint).isAbsolute() ? fileToLint : testFile(fileToLint));
+
+    if (addIncludeDirs) {
+        args << QStringLiteral("-I") << qmlImportDir
+             << QStringLiteral("-I") << dataDirectory();
+    }
 
     if (ignoreSettings)
         QStringLiteral("--ignore-settings");
@@ -857,7 +864,8 @@ QString TestQmllint::runQmllint(const QString &fileToLint,
 }
 
 QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
-                                const QStringList &extraArgs, bool ignoreSettings)
+                                const QStringList &extraArgs, bool ignoreSettings,
+                                bool addIncludeDirs)
 {
     return runQmllint(
             fileToLint,
@@ -870,7 +878,7 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
                 else
                     QVERIFY(process.exitCode() != 0);
             },
-            extraArgs, ignoreSettings);
+            extraArgs, ignoreSettings, addIncludeDirs);
 }
 
 void TestQmllint::requiredProperty()
@@ -916,6 +924,12 @@ void TestQmllint::settingsFile()
 void TestQmllint::lazyAndDirect()
 {
     QVERIFY(runQmllint("LazyAndDirect/Lazy.qml", true, {}, false).isEmpty());
+}
+
+void TestQmllint::missingBuiltinsNoCrash()
+{
+    QVERIFY(runQmllint("missingBuiltinsNoCrash.qml", false, { "--bare" }, false, false)
+                    .contains(QStringLiteral("Failed to import base modules. Aborting.")));
 }
 
 QTEST_MAIN(TestQmllint)

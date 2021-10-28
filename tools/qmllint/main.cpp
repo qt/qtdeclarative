@@ -179,6 +179,9 @@ static bool lint_file(const QString &filename, const bool silent, QJsonArray *js
             parser.rootNode()->accept(&v);
             success = v.check();
 
+            if (v.logger().hasErrors())
+                return;
+
             if (json) {
                 for (const auto &error : v.logger().errors())
                     addJsonWarning(error);
