@@ -742,6 +742,7 @@ void QQuickSplitViewPrivate::createHandleItem(int index)
     context->setContextObject(q);
     QQuickItem *handleItem = qobject_cast<QQuickItem*>(m_handle->beginCreate(context));
     if (handleItem) {
+        handleItem->setParent(q);
         qCDebug(qlcQQuickSplitView) << "- successfully created handle item" << handleItem << "for split item at index" << index;
 
         // Insert the item to our list of items *before* its parent is set to us,
