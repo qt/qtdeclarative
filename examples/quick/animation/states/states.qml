@@ -101,13 +101,23 @@ Rectangle {
         // In state 'middleRight', move the image to middleRightRect
         State {
             name: "middleRight"
-            PropertyChanges { target: userIcon; x: middleRightRect.x; y: middleRightRect.y }
+            PropertyChanges {
+                userIcon {
+                    x: middleRightRect.x
+                    y: middleRightRect.y
+                }
+            }
         },
 
         // In state 'bottomLeft', move the image to bottomLeftRect
         State {
             name: "bottomLeft"
-            PropertyChanges { target: userIcon; x: bottomLeftRect.x; y: bottomLeftRect.y  }
+            PropertyChanges {
+                userIcon {
+                    x: bottomLeftRect.x
+                    y: bottomLeftRect.y
+                }
+            }
         }
         // ![0]
     ]

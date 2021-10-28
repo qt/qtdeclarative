@@ -143,8 +143,13 @@ Item {
             states: State {
                 name: "pressed"
                 when: mouse.pressed
-                PropertyChanges { target: sticky; rotation: 8; scale: 1 }
-                PropertyChanges { target: page; z: 8 }
+                PropertyChanges {
+                    sticky {
+                        rotation: 8
+                        scale: 1
+                    }
+                    page.z: 8
+                }
             }
 
             transitions: Transition {

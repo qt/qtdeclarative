@@ -115,47 +115,41 @@ Rectangle {
             State {
                 name: "horizontal"
                 PropertyChanges {
-                    target: knob
-                    max: root.width - knob.width
-                    scrolledX: Math.min(max, Math.max(0, max * flick.contentX / (flick.width - flick.contentWidth)))
-                    scrolledY: 1
-                    scrollDistance: flick.width - flick.contentWidth
-                    width: flick.width * (flick.width / flick.contentWidth) - (height - anchors.margins) * 2
-                    height: root.height - 2
-                }
-                PropertyChanges {
-                    target: drag
-                    xAxis.minimum: 0
-                    xAxis.maximum: knob.max
-                    yAxis.minimum: 1
-                    yAxis.maximum: 1
-                }
-                PropertyChanges {
-                    target: root
-                    position: knob.x / drag.xAxis.maximum
+                    knob {
+                        max: root.width - knob.width
+                        scrolledX: Math.min(max, Math.max(0, max * flick.contentX / (flick.width - flick.contentWidth)))
+                        scrolledY: 1
+                        scrollDistance: flick.width - flick.contentWidth
+                        width: flick.width * (flick.width / flick.contentWidth) - (height - anchors.margins) * 2
+                        height: root.height - 2
+                    }
+                    drag {
+                        xAxis.minimum: 0
+                        xAxis.maximum: knob.max
+                        yAxis.minimum: 1
+                        yAxis.maximum: 1
+                    }
+                    root.position: knob.x / drag.xAxis.maximum
                 }
             },
             State {
                 name: "vertical"
                 PropertyChanges {
-                    target: knob
-                    max: root.height - knob.height
-                    scrolledX: 1
-                    scrolledY: Math.min(max, Math.max(0, max * flick.contentY / (flick.height - flick.contentHeight)))
-                    scrollDistance: flick.height - flick.contentHeight
-                    width: root.width - 2
-                    height: root.width - 2
-                }
-                PropertyChanges {
-                    target: drag
-                    xAxis.minimum: 1
-                    xAxis.maximum: 1
-                    yAxis.minimum: 0
-                    yAxis.maximum: knob.max
-                }
-                PropertyChanges {
-                    target: root
-                    position: knob.y / drag.yAxis.maximum
+                    knob {
+                        max: root.height - knob.height
+                        scrolledX: 1
+                        scrolledY: Math.min(max, Math.max(0, max * flick.contentY / (flick.height - flick.contentHeight)))
+                        scrollDistance: flick.height - flick.contentHeight
+                        width: root.width - 2
+                        height: root.width - 2
+                    }
+                    drag {
+                        xAxis.minimum: 1
+                        xAxis.maximum: 1
+                        yAxis.minimum: 0
+                        yAxis.maximum: knob.max
+                    }
+                    root.position: knob.y / drag.yAxis.maximum
                 }
             }
         ]

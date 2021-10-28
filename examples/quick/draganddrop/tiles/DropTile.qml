@@ -70,8 +70,7 @@ DropArea {
             State {
                 when: dragTarget.containsDrag
                 PropertyChanges {
-                    target: dropRectangle
-                    color: "grey"
+                    dropRectangle.color: "grey"
                 }
             }
         ]

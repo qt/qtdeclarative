@@ -75,7 +75,7 @@ Flipable {
 
     states: State {
         name: "back"; when: container.flipped
-        PropertyChanges { target: rotation; angle: container.angle }
+        PropertyChanges { rotation.angle: container.angle }
     }
 
     transitions: Transition {

@@ -195,16 +195,33 @@ Rectangle {
             states: State {
                 name: "Details"
 
-                PropertyChanges { target: background; color: "white" }
-                PropertyChanges { target: recipeImage; width: 130; height: 130 } // Make picture bigger
-                PropertyChanges { target: recipe; detailsOpacity: 1; x: 0 } // Make details visible
-                PropertyChanges { target: recipe; height: listView.height } // Fill the entire list area with the detailed view
+                PropertyChanges {
+                    background.color: "white"
+                    recipeImage {
+                         // Make picture bigger
+                        width: 130
+                        height: 130
+                    }
+                    recipe {
+                        // Make details visible
+                        detailsOpacity: 1
+                        x: 0
+
+                        // Fill the entire list area with the detailed view
+                        height: listView.height
+                    }
+                }
 
                 // Move the list so that this item is at the top.
-                PropertyChanges { target: recipe.ListView.view; explicit: true; contentY: recipe.y }
+                PropertyChanges {
+                    recipe.ListView.view.contentY: recipe.y
+                    explicit: true;
+                }
 
                 // Disallow flicking while we're in detailed view
-                PropertyChanges { target: recipe.ListView.view; interactive: false }
+                PropertyChanges {
+                    recipe.ListView.view.interactive: false
+                }
             }
 
             transitions: Transition {

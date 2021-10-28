@@ -268,9 +268,11 @@ Item {
         name: "Day"
         when: window.activeSuns > 0
 
-        PropertyChanges { target: gradientStopA; color: "DeepSkyBlue" }
-        PropertyChanges { target: gradientStopB; color: "SkyBlue" }
-        PropertyChanges { target: stars; opacity: 0 }
+        PropertyChanges {
+            gradientStopA.color: "DeepSkyBlue"
+            gradientStopB.color: "SkyBlue"
+            stars.opacity: 0
+        }
     }
 
     //! [top-level transitions]

@@ -102,8 +102,10 @@ FocusScope {
 
     states: State {
         name: "hasText"; when: textInput.text != ''
-        PropertyChanges { target: typeSomething; opacity: 0 }
-        PropertyChanges { target: clear; opacity: 1 }
+        PropertyChanges {
+            typeSomething.opacity: 0
+            clear.opacity: 1
+        }
     }
 
     transitions: [

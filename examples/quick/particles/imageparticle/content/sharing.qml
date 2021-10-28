@@ -87,7 +87,7 @@ Rectangle {
         states: State {
             name: "Current"
             when: pet.ListView.isCurrentItem
-            PropertyChanges { target: pet; x: 20 }
+            PropertyChanges { pet.x: 20 }
         }
         transitions: Transition {
             NumberAnimation { properties: "x"; duration: 200 }

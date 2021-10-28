@@ -80,7 +80,7 @@ Rectangle {
     states: State {
         name: "pressed"
         when: mouseArea.pressed
-        PropertyChanges { target: gradientStop; color: "#333333" }
+        PropertyChanges { gradientStop.color: "#333333" }
     }
 }
 

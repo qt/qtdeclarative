@@ -119,6 +119,8 @@ ItemDelegate {
             when: delegate.checked
 
             PropertyChanges {
+                // TODO: When Qt Design Studio supports generalized grouped properties, change to:
+                //       grid.visible: true
                 target: grid
                 visible: true
             }

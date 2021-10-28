@@ -66,8 +66,7 @@ Package {
                 name: "gridded"
                 when: root.inGrid
                 PropertyChanges {
-                    target: wrapper
-                    rotation: 0
+                    wrapper.rotation: 0
                 }
                 ParentChange {
                     target: wrapper

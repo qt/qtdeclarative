@@ -145,9 +145,10 @@ Rectangle {
                 states : State {
                     name: "right"
                     PropertyChanges {
-                        target: rect;
-                        x: window.width - 76;
-                        color: delegateInstance.ballColor
+                        rect {
+                            x: window.width - 76;
+                            color: delegateInstance.ballColor
+                        }
                     }
                 }
 

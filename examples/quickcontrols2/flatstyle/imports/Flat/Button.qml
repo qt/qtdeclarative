@@ -77,16 +77,12 @@ T.Button {
             State {
                 name: "normal"
                 when: !control.down
-                PropertyChanges {
-                    target: buttonBackground
-                }
             },
             State {
                 name: "down"
                 when: control.down
                 PropertyChanges {
-                    target: buttonBackground
-                    border.color: Theme.mainColorDarker
+                    buttonBackground.border.color: Theme.mainColorDarker
                 }
             }
         ]
@@ -112,8 +108,7 @@ T.Button {
                 name: "down"
                 when: control.down
                 PropertyChanges {
-                    target: textItem
-                    color: Theme.mainColorDarker
+                    textItem.color: Theme.mainColorDarker
                 }
             }
         ]

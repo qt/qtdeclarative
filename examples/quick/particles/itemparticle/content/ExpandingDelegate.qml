@@ -182,16 +182,37 @@ import "../../../modelviews/listview/content"
             states: State {
                 name: "Details"
 
-                PropertyChanges { target: background; color: "white" }
-                PropertyChanges { target: recipeImage; width: 130; height: 130 } // Make picture bigger
-                PropertyChanges { target: recipe; detailsOpacity: 1; x: 0; opacity: 1 } // Make details visible
-                PropertyChanges { target: recipe; height: root.height; width: root.height; x:0; y:0; z:100} // Fill the entire list area with the detailed view
+                PropertyChanges {
+                    background.color: "white"
+                    recipeImage {
+                        // Make picture bigger
+                        width: 130
+                        height: 130
+                    }
+                    recipe {
+                        // Make details visible
+                        detailsOpacity: 1
+                        x: 0
+                        opacity: 1
 
-                // Move the list so that this item is at the top.
-                //PropertyChanges { target: recipe.ListView.view; explicit: true; contentY: recipe.y }
+                        // Fill the entire list area with the detailed view
+                        height: root.height
+                        width: root.height
+                        x:0
+                        y:0
+                        z:100
+                    }
+                }
 
-                // Disallow flicking while we're in detailed view
-                //PropertyChanges { target: recipe.ListView.view; interactive: false }
+                // Move the list so that this item is at the top and
+                // disallow flicking while we're in detailed view
+                // PropertyChanges {
+                //     recipe.ListView.view {
+                //         explicit: true
+                //         contentY: recipe.y
+                //         interactive: false
+                //     }
+                // }
             }
 
             transitions: Transition {

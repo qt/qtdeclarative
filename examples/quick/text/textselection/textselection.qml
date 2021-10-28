@@ -208,14 +208,18 @@ Rectangle {
     states: [
         State {
             name: "selection"
-            PropertyChanges { target: startHandle; opacity: 1.0 }
-            PropertyChanges { target: endHandle; opacity: 1.0 }
+            PropertyChanges {
+                startHandle.opacity: 1.0
+                endHandle.opacity: 1.0
+            }
         },
         State {
             name: "menu"
-            PropertyChanges { target: startHandle; opacity: 0.5 }
-            PropertyChanges { target: endHandle; opacity: 0.5 }
-            PropertyChanges { target: menu; opacity: 1.0 }
+            PropertyChanges {
+                startHandle.opacity: 0.5
+                endHandle.opacity: 0.5
+                menu.opacity: 1.0
+            }
         }
     ]
 }

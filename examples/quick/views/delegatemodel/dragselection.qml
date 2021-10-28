@@ -91,7 +91,7 @@ Item {
                         when: visibleContainer.drag.active
                         AnchorChanges { target:  draggable; anchors { horizontalCenter: undefined; verticalCenter: undefined} }
                         ParentChange { target: selectionView; parent: draggable; x: 0; y: 0 }
-                        PropertyChanges { target: root; dragging: true }
+                        PropertyChanges { root.dragging: true }
                         ParentChange { target: draggable; parent: root }
                     }
                 }
@@ -156,15 +156,17 @@ Item {
                     State {
                         name: "selected"
                         ParentChange { target: content; parent: selectionContainer; x: 3; y: 3 }
-                        PropertyChanges { target: packageRoot; DelegateModel.inItems: visibleContainer.drag.active }
-                        PropertyChanges { target: gradientStart; color: "#017423" }
-                        PropertyChanges { target: gradientStart; color: "#007423" }
+                        PropertyChanges {
+                            packageRoot.DelegateModel.inItems: visibleContainer.drag.active
+                            gradientStart.color: "#017423"
+                        }
+                        PropertyChanges { gradientStart.color: "#007423" }
                     }, State {
                         name: "visible"
-                        PropertyChanges { target: packageRoot; DelegateModel.inItems: true }
+                        PropertyChanges { packageRoot.DelegateModel.inItems: true }
                         ParentChange { target: content; parent: visibleContainer; x: 3; y: 3 }
-                        PropertyChanges { target: gradientStart; color: "#8AC953" }
-                        PropertyChanges { target: gradientStart; color: "#8BC953" }
+                        PropertyChanges { gradientStart.color: "#8AC953" }
+                        PropertyChanges { gradientStart.color: "#8BC953" }
                     }
                 ]
                 transitions: Transition {

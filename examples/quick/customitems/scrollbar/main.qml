@@ -71,8 +71,10 @@ Rectangle {
         states: State {
             name: "ShowBars"
             when: view.movingVertically || view.movingHorizontally
-            PropertyChanges { target: verticalScrollBar; opacity: 1 }
-            PropertyChanges { target: horizontalScrollBar; opacity: 1 }
+            PropertyChanges {
+                verticalScrollBar.opacity: 1
+                horizontalScrollBar.opacity: 1
+            }
         }
 
         transitions: Transition {

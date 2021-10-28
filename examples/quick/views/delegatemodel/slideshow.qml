@@ -104,15 +104,19 @@ Rectangle {
                         when: root.displayItem === delegateItem
                         name: "inDisplay";
                         ParentChange { target: image; parent: imageContainer; x: 75; y: 75; width: 150; height: 150 }
-                        PropertyChanges { target: image; z: 2 }
-                        PropertyChanges { target: delegateItem; DelegateModel.inItems: false }
+                        PropertyChanges {
+                            image.z: 2
+                            delegateItem.DelegateModel.inItems: false
+                        }
                     },
                     State {
                         when: root.displayItem !== delegateItem
                         name: "inList";
                         ParentChange { target: image; parent: delegateItem; x: 2; y: 2; width: 75; height: 75 }
-                        PropertyChanges { target: image; z: 1 }
-                        PropertyChanges { target: delegateItem; DelegateModel.inItems: true }
+                        PropertyChanges {
+                            image.z: 1
+                            delegateItem.DelegateModel.inItems: true
+                        }
                     }
                 ]
 

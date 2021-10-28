@@ -93,8 +93,7 @@ T.CheckBox {
                 when: control.checked && !control.down
 
                 PropertyChanges {
-                    target: rectangle
-                    visible: true
+                    rectangle.visible: true
                 }
             },
             State {
@@ -102,13 +101,8 @@ T.CheckBox {
                 when: !control.checked && control.down
 
                 PropertyChanges {
-                    target: rectangle
-                    color: Theme.mainColorDarker
-                }
-
-                PropertyChanges {
-                    target: checkboxHandle
-                    border.color: Theme.mainColorDarker
+                    rectangle.color: Theme.mainColorDarker
+                    checkboxHandle.border.color: Theme.mainColorDarker
                 }
             },
             State {
@@ -117,8 +111,7 @@ T.CheckBox {
                 when: control.checked && control.down
 
                 PropertyChanges {
-                    target: rectangle
-                    visible: true
+                    rectangle.visible: true
                 }
             }
         ]

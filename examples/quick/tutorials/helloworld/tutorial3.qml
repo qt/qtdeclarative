@@ -70,7 +70,13 @@ Rectangle {
 //![2]
         states: State {
             name: "down"; when: mouseArea.pressed == true
-            PropertyChanges { target: helloText; y: 160; rotation: 180; color: "red" }
+            PropertyChanges {
+                helloText {
+                    y: 160
+                    rotation: 180
+                    color: "red"
+                }
+            }
         }
 //![2]
 

@@ -281,16 +281,17 @@ Item {
                     parent: root
                 }
                 PropertyChanges {
-                    target: image
-                    source: image.media
-                    x: 0
-                    y: 0
-                    width: root.width
-                    height: root.height
-                    z: 101
-                    opacity: 1
-                    rotation: 0
-                    darken: 0
+                    image {
+                        source: image.media
+                        x: 0
+                        y: 0
+                        width: root.width
+                        height: root.height
+                        z: 101
+                        opacity: 1
+                        rotation: 0
+                        darken: 0
+                    }
                 }
             }
             transitions: Transition {

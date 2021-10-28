@@ -100,7 +100,12 @@ FocusScope {
 
                     states: State {
                         name: "active"; when: container.activeFocus
-                        PropertyChanges { target: content; color: "#FCFFF5"; scale: 1.1 }
+                        PropertyChanges {
+                            content {
+                                color: "#FCFFF5"
+                                scale: 1.1
+                            }
+                        }
                     }
 
                     transitions: Transition {

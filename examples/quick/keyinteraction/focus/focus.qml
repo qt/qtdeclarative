@@ -119,23 +119,29 @@ Rectangle {
         states:  [
             State {
                 name: "showTabViews"
-                PropertyChanges { target: tabMenu; y:  160 }
-                PropertyChanges { target: gridMenu; y: 320 }
-                PropertyChanges { target: listMenu; y: 640 }
+                PropertyChanges {
+                    tabMenu.y:  160
+                    gridMenu.y: 320
+                    listMenu.y: 640
+                }
             },
 
             State {
                 name: "showGridViews"
-                PropertyChanges { target: tabMenu; y:    0 }
-                PropertyChanges { target: gridMenu; y: 160 }
-                PropertyChanges { target: listMenu; y: 480 }
+                PropertyChanges {
+                    tabMenu.y:    0
+                    gridMenu.y: 160
+                    listMenu.y: 480
+                }
             },
 
             State {
                 name: "showListViews"
-                PropertyChanges { target: tabMenu; y: -160 }
-                PropertyChanges { target: gridMenu; y: 0 }
-                PropertyChanges { target: listMenu; y: 320 }
+                PropertyChanges {
+                    tabMenu.y: -160
+                    gridMenu.y: 0
+                    listMenu.y: 320
+                }
             }
         ]
 
@@ -166,9 +172,14 @@ Rectangle {
     states: State {
         name: "contextMenuOpen"
         when: !mainView.activeFocus
-        PropertyChanges { target: contextMenu; x: 0; open: true }
-        PropertyChanges { target: mainView; x: 130 }
-        PropertyChanges { target: shade; opacity: 0.25 }
+        PropertyChanges {
+            contextMenu {
+                x: 0
+                open: true
+            }
+            mainView.x: 130
+            shade.opacity: 0.25
+        }
     }
 
     transitions: Transition {

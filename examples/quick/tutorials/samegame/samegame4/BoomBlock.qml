@@ -124,14 +124,14 @@ Item {
         State {
             name: "AliveState"
             when: block.spawned == true && block.dying == false
-            PropertyChanges { target: img; opacity: 1 }
+            PropertyChanges { img.opacity: 1 }
         },
 
         State {
             name: "DeathState"
             when: block.dying == true
             StateChangeScript { script: particles.burst(50); }
-            PropertyChanges { target: img; opacity: 0 }
+            PropertyChanges { img.opacity: 0 }
             StateChangeScript { script: block.destroy(1000); }
         }
     ]

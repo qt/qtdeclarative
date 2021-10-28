@@ -107,13 +107,17 @@ Item {
     states: [
         State {
             name: "on"
-            PropertyChanges { target: knob; x: 78 }
-            PropertyChanges { target: toggleswitch; on: true }
+            PropertyChanges {
+                knob.x: 78
+                toggleswitch.on: true
+            }
         },
         State {
             name: "off"
-            PropertyChanges { target: knob; x: 1 }
-            PropertyChanges { target: toggleswitch; on: false }
+            PropertyChanges {
+                knob.x: 1
+                toggleswitch.on: false
+            }
         }
     ]
 //![6]
