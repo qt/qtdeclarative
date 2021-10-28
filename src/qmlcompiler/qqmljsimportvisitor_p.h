@@ -146,6 +146,7 @@ protected:
     QString m_rootId;
     QStringView m_inlineComponentName;
     bool m_nextIsInlineComponent = false;
+    bool m_aborted = false;
     QStringList m_qmltypesFiles;
     QQmlJSScope::Ptr m_currentScope;
     QQmlJSScope::Ptr m_savedBindingOuterScope;
@@ -260,10 +261,11 @@ protected:
             m_outstandingConnections; // Connections whose target we have not encountered
 
 private:
-    void importBaseModules();
+    bool importBaseModules();
     void resolveAliasesAndIds();
+
     void visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr);
-    void processImportWarnings(const QString &what, const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation());
+    bool processImportWarnings(const QString &what, const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation());
     void addImportWithLocation(const QString &name, const QQmlJS::SourceLocation &loc);
 };
 

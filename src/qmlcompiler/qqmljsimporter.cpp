@@ -338,6 +338,15 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
             break;
     }
 
+    if (!qmltypesFiles.isEmpty()) {
+        m_warnings.append({
+                              QStringLiteral("Failed to find the following builtins: %1").arg(qmltypesFiles.join(u", ")),
+                              QtWarningMsg,
+                              QQmlJS::SourceLocation()
+                          });
+        return m_builtins;
+    }
+
     // Process them together since there they have interdependencies that wouldn't get resolved
     // otherwise
     processImport(result, &m_builtins);

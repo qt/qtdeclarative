@@ -185,6 +185,9 @@ static bool lint_file(const QString &filename, const bool silent, QJsonArray *js
             parser.rootNode()->accept(&v);
             success = v.check();
 
+            if (logger.hasErrors())
+                return;
+
             QQmlJSTypeInfo typeInfo;
             Codegen codegen { &importer, filename, qmltypesFiles, &logger, &typeInfo, code };
             QQmlJSSaveFunction saveFunction = [](const QV4::CompiledData::SaveableUnitPointer &,
