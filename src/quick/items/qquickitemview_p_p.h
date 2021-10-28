@@ -279,7 +279,7 @@ public:
     QPauseAnimationJob bufferPause;
 
     QQmlComponent *highlightComponent;
-    FxViewItem *highlight;
+    std::unique_ptr<FxViewItem> highlight;
     int highlightRange;     // enum value
     qreal highlightRangeStart;
     qreal highlightRangeEnd;

@@ -400,7 +400,7 @@ int QQuickGridViewPrivate::snapIndex() const
         if (item->index == -1)
             continue;
         qreal itemTop = item->position();
-        FxGridItemSG *hItem = static_cast<FxGridItemSG*>(highlight);
+        FxGridItemSG *hItem = static_cast<FxGridItemSG*>(highlight.get());
         if (itemTop >= hItem->rowPos()-rowSize()/2 && itemTop < hItem->rowPos()+rowSize()/2) {
             FxGridItemSG *gridItem = static_cast<FxGridItemSG*>(item);
             index = gridItem->index;
@@ -700,10 +700,9 @@ void QQuickGridViewPrivate::createHighlight(bool onDestruction)
 {
     bool changed = false;
     if (highlight) {
-        if (trackedItem == highlight)
+        if (trackedItem == highlight.get())
             trackedItem = nullptr;
-        delete highlight;
-        highlight = nullptr;
+        highlight.reset();
 
         delete highlightXAnimator;
         delete highlightYAnimator;
@@ -720,7 +719,8 @@ void QQuickGridViewPrivate::createHighlight(bool onDestruction)
     if (currentItem) {
         QQuickItem *item = createHighlightItem();
         if (item) {
-            FxGridItemSG *newHighlight = new FxGridItemSG(item, q, true);
+            std::unique_ptr<FxGridItemSG> newHighlight
+                    = std::make_unique<FxGridItemSG>(item, q, true);
             newHighlight->trackGeometry(true);
             if (autoHighlight)
                 resetHighlightPosition();
@@ -731,7 +731,7 @@ void QQuickGridViewPrivate::createHighlight(bool onDestruction)
             highlightYAnimator->target = QQmlProperty(item, QLatin1String("y"));
             highlightYAnimator->userDuration = highlightMoveDuration;
 
-            highlight = newHighlight;
+            highlight = std::move(newHighlight);
             changed = true;
         }
     }
@@ -762,7 +762,7 @@ void QQuickGridViewPrivate::resetHighlightPosition()
 {
     if (highlight && currentItem) {
         FxGridItemSG *cItem = static_cast<FxGridItemSG*>(currentItem);
-        static_cast<FxGridItemSG*>(highlight)->setPosition(cItem->colPos(), cItem->rowPos());
+        static_cast<FxGridItemSG *>(highlight.get())->setPosition(cItem->colPos(), cItem->rowPos());
     }
 }
 
@@ -2096,7 +2096,8 @@ void QQuickGridView::viewportMoved(Qt::Orientations orient)
             if (pos != d->highlight->position()) {
                 d->highlightXAnimator->stop();
                 d->highlightYAnimator->stop();
-                static_cast<FxGridItemSG*>(d->highlight)->setPosition(static_cast<FxGridItemSG*>(d->highlight)->colPos(), pos);
+                FxGridItemSG *sgHighlight = static_cast<FxGridItemSG *>(d->highlight.get());
+                sgHighlight->setPosition(sgHighlight->colPos(), pos);
             } else {
                 d->updateHighlight();
             }
@@ -2105,7 +2106,10 @@ void QQuickGridView::viewportMoved(Qt::Orientations orient)
             int idx = d->snapIndex();
             if (idx >= 0 && idx != d->currentIndex) {
                 d->updateCurrent(idx);
-                if (d->currentItem && static_cast<FxGridItemSG*>(d->currentItem)->colPos() != static_cast<FxGridItemSG*>(d->highlight)->colPos() && d->autoHighlight) {
+                if (d->currentItem
+                        && static_cast<FxGridItemSG*>(d->currentItem)->colPos()
+                            != static_cast<FxGridItemSG*>(d->highlight.get())->colPos()
+                        && d->autoHighlight) {
                     if (d->flow == FlowLeftToRight)
                         d->highlightXAnimator->to = d->currentItem->itemX();
                     else
