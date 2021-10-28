@@ -57,7 +57,7 @@ void QQuickFusionKnob::paint(QPainter *painter)
     if (w <= 0 || h <= 0)
         return;
 
-    QColor color = QQuickItemPrivate::get(this)->palette()->button();
+    QColor color = QQuickItemPrivate::get(this)->palette()->button().toHsv();
     color.setHsv(color.hue(),
                  qMin(140, color .saturation()),
                  qMax(180, color.value()));

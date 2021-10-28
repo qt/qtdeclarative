@@ -87,7 +87,7 @@ QColor QQuickFusionStyle::outline(QQuickPalette *palette)
 
 QColor QQuickFusionStyle::highlightedOutline(QQuickPalette *palette)
 {
-    QColor highlightedOutline = highlight(palette).darker(125);
+    QColor highlightedOutline = highlight(palette).darker(125).toHsv();
     if (highlightedOutline.value() > 160)
         highlightedOutline.setHsl(highlightedOutline.hue(), highlightedOutline.saturation(), 160);
     return highlightedOutline;
@@ -103,6 +103,7 @@ QColor QQuickFusionStyle::buttonColor(QQuickPalette *palette, bool highlighted, 
     QColor buttonColor = palette->button();
     int val = qGray(buttonColor.rgb());
     buttonColor = buttonColor.lighter(100 + qMax(1, (180 - val)/6));
+    buttonColor = buttonColor.toHsv();
     buttonColor.setHsv(buttonColor.hue(), int(buttonColor.saturation() * 0.75), buttonColor.value());
     if (highlighted)
         buttonColor = mergedColors(buttonColor, highlightedOutline(palette).lighter(130), 90);
@@ -132,16 +133,17 @@ QColor QQuickFusionStyle::gradientStop(const QColor &baseColor)
 QColor QQuickFusionStyle::mergedColors(const QColor &colorA, const QColor &colorB, int factor)
 {
     const int maxFactor = 100;
-    QColor tmp = colorA;
-    tmp.setRed((tmp.red() * factor) / maxFactor + (colorB.red() * (maxFactor - factor)) / maxFactor);
-    tmp.setGreen((tmp.green() * factor) / maxFactor + (colorB.green() * (maxFactor - factor)) / maxFactor);
-    tmp.setBlue((tmp.blue() * factor) / maxFactor + (colorB.blue() * (maxFactor - factor)) / maxFactor);
+    const auto rgbColorB = colorB.toRgb();
+    QColor tmp = colorA.toRgb();
+    tmp.setRed((tmp.red() * factor) / maxFactor + (rgbColorB.red() * (maxFactor - factor)) / maxFactor);
+    tmp.setGreen((tmp.green() * factor) / maxFactor + (rgbColorB.green() * (maxFactor - factor)) / maxFactor);
+    tmp.setBlue((tmp.blue() * factor) / maxFactor + (rgbColorB.blue() * (maxFactor - factor)) / maxFactor);
     return tmp;
 }
 
 QColor QQuickFusionStyle::grooveColor(QQuickPalette *palette)
 {
-    QColor color = buttonColor(palette);
+    QColor color = buttonColor(palette).toHsv();
     color.setHsv(color.hue(),
                  qMin(255, color.saturation()),
                  qMin<int>(255, color.value() * 0.9));

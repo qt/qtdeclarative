@@ -170,7 +170,9 @@ private:
 
 inline QColor qt_premultiply_color(const QColor &c)
 {
-    return QColor::fromRgbF(c.redF() * c.alphaF(), c.greenF() * c.alphaF(), c.blueF() * c.alphaF(), c.alphaF());
+    float r, g, b, a;
+    c.getRgbF(&r, &g, &b, &a);
+    return QColor::fromRgbF(r * a, g * a, b * a, a);
 }
 
 

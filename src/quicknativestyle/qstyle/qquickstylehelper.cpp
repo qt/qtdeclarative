@@ -249,7 +249,6 @@ QPolygonF calcLines(const QStyleOptionSlider *dial)
 void drawDial(const QStyleOptionSlider *option, QPainter *painter)
 {
     QPalette pal = option->palette;
-    QColor buttonColor = pal.button().color();
     const int width = option->rect.width();
     const int height = option->rect.height();
     const bool enabled = option->state & QStyle::State_Enabled;
@@ -268,6 +267,7 @@ void drawDial(const QStyleOptionSlider *option, QPainter *painter)
 
     // setting color before BEGIN_STYLE_PIXMAPCACHE since
     // otherwise it is not set when the image is in the cache
+    QColor buttonColor = pal.button().color().toHsv();
     buttonColor.setHsv(buttonColor .hue(),
                        qMin(140, buttonColor .saturation()),
                        qMax(180, buttonColor.value()));
@@ -320,7 +320,7 @@ void drawDial(const QStyleOptionSlider *option, QPainter *painter)
     p->drawEllipse(br.adjusted(1, 1, -1, -1));
 
     if (option->state & QStyle::State_HasFocus) {
-        QColor highlight = pal.highlight().color();
+        QColor highlight = pal.highlight().color().toHsv();
         highlight.setHsv(highlight.hue(),
                          qMin(160, highlight.saturation()),
                          qMax(230, highlight.value()));

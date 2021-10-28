@@ -6015,7 +6015,7 @@ QPixmap QCommonStyle::generatedIconPixmap(QIcon::Mode iconMode, const QPixmap &p
         QImage im = pixmap.toImage().convertToFormat(QImage::Format_ARGB32);
 
         // Create a colortable based on the background (black -> bg -> white)
-        QColor bg = opt->palette.color(QPalette::Disabled, QPalette::Window);
+        const QColor bg = opt->palette.color(QPalette::Disabled, QPalette::Window).toRgb();
         int red = bg.red();
         int green = bg.green();
         int blue = bg.blue();

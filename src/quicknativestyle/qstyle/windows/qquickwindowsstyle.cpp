@@ -863,6 +863,7 @@ void QWindowsStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, 
             QColor bg_col = fropt->backgroundColor;
             if (!bg_col.isValid())
                 bg_col = p->background().color();
+            bg_col = bg_col.toRgb();
             // Create an "XOR" color.
             QColor patternCol((bg_col.red() ^ 0xff) & 0xff,
                               (bg_col.green() ^ 0xff) & 0xff,

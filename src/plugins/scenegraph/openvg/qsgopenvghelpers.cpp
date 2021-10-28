@@ -334,10 +334,12 @@ void qDrawSubImage(VGImage image, const QRectF &sourceRect, const QPointF &destO
 const QVector<VGfloat> qColorToVGColor(const QColor &color, float opacity)
 {
     QVector<VGfloat> vgColor(4);
-    vgColor[0] = color.redF();
-    vgColor[1] = color.greenF();
-    vgColor[2] = color.blueF();
-    vgColor[3] = color.alphaF() * opacity;
+    float r, g, b, a;
+    color.getRgbF(&r, &g, &b, &a);
+    vgColor[0] = r;
+    vgColor[1] = g;
+    vgColor[2] = b;
+    vgColor[3] = a * opacity;
     return vgColor;
 }
 

@@ -45,7 +45,8 @@ QQuickColor::QQuickColor(QObject *parent) :
 
 QColor QQuickColor::transparent(const QColor &color, qreal opacity) const
 {
-    return QColor(color.red(), color.green(), color.blue(),
+    const auto rgbColor = color.toRgb();
+    return QColor(rgbColor.red(), rgbColor.green(), rgbColor.blue(),
                   int(qreal(255) * qBound(qreal(0), opacity, qreal(1))));
 }
 
@@ -56,10 +57,12 @@ QColor QQuickColor::blend(const QColor &a, const QColor &b, qreal factor) const
     if (factor >= 1.0)
         return b;
 
+    const auto rgbA = a.toRgb();
+    const auto rgbB = b.toRgb();
     QColor color;
-    color.setRedF(a.redF() * (1.0 - factor) + b.redF() * factor);
-    color.setGreenF(a.greenF() * (1.0 - factor) + b.greenF() * factor);
-    color.setBlueF(a.blueF() * (1.0 - factor) + b.blueF() * factor);
+    color.setRedF(rgbA.redF() * (1.0 - factor) + rgbB.redF() * factor);
+    color.setGreenF(rgbA.greenF() * (1.0 - factor) + rgbB.greenF() * factor);
+    color.setBlueF(rgbA.blueF() * (1.0 - factor) + rgbB.blueF() * factor);
     return color;
 }
 

@@ -87,17 +87,19 @@ static QGradientStop interpolateStop(const QGradientStop &firstStop, const QGrad
     double distance = secondStop.first - firstStop.first;
     double distanceDelta = newPos - firstStop.first;
     double modifierValue = distanceDelta / distance;
-    int redDelta = (secondStop.second.red() - firstStop.second.red()) * modifierValue;
-    int greenDelta = (secondStop.second.green() - firstStop.second.green()) * modifierValue;
-    int blueDelta = (secondStop.second.blue() - firstStop.second.blue()) * modifierValue;
-    int alphaDelta = (secondStop.second.alpha() - firstStop.second.alpha()) * modifierValue;
+    const auto firstStopRgbColor = firstStop.second.toRgb();
+    const auto secondStopRgbColor = secondStop.second.toRgb();
+    int redDelta = (secondStopRgbColor.red() - firstStopRgbColor.red()) * modifierValue;
+    int greenDelta = (secondStopRgbColor.green() - firstStopRgbColor.green()) * modifierValue;
+    int blueDelta = (secondStopRgbColor.blue() - firstStopRgbColor.blue()) * modifierValue;
+    int alphaDelta = (secondStopRgbColor.alpha() - firstStopRgbColor.alpha()) * modifierValue;
 
     QGradientStop newStop;
     newStop.first = newPos;
-    newStop.second = QColor(firstStop.second.red() + redDelta,
-                            firstStop.second.green() + greenDelta,
-                            firstStop.second.blue() + blueDelta,
-                            firstStop.second.alpha() + alphaDelta);
+    newStop.second = QColor(firstStopRgbColor.red() + redDelta,
+                            firstStopRgbColor.green() + greenDelta,
+                            firstStopRgbColor.blue() + blueDelta,
+                            firstStopRgbColor.alpha() + alphaDelta);
 
     return newStop;
 }

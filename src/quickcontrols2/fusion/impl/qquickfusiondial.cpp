@@ -70,7 +70,6 @@ void QQuickFusionDial::paint(QPainter *painter)
     if (width <= 0 || height <= 0 || !isVisible())
         return;
 
-    QColor buttonColor = QQuickItemPrivate::get(this)->palette()->button();
     const bool enabled = isEnabled();
     qreal r = qMin(width, height) / 2.0;
     r -= r/50;
@@ -85,6 +84,7 @@ void QQuickFusionDial::paint(QPainter *painter)
     QRectF br = QRectF(dx + 0.5, dy + 0.5,
                        int(r * 2 - 2 * d_ - 2),
                        int(r * 2 - 2 * d_ - 2));
+    QColor buttonColor = QQuickItemPrivate::get(this)->palette()->button().toHsv();
     buttonColor.setHsv(buttonColor .hue(),
                        qMin(140, buttonColor .saturation()),
                        qMax(180, buttonColor.value()));
@@ -125,7 +125,7 @@ void QQuickFusionDial::paint(QPainter *painter)
     painter->drawEllipse(br.adjusted(1, 1, -1, -1));
 
     if (m_highlight) {
-        QColor highlight = QQuickItemPrivate::get(this)->palette()->highlight();
+        QColor highlight = QQuickItemPrivate::get(this)->palette()->highlight().toHsv();
         highlight.setHsv(highlight.hue(),
                          qMin(160, highlight.saturation()),
                          qMax(230, highlight.value()));

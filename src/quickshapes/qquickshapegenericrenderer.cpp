@@ -63,11 +63,13 @@ struct ColoredVertex // must match QSGGeometry::ColoredPoint2D
 
 static inline QQuickShapeGenericRenderer::Color4ub colorToColor4ub(const QColor &c)
 {
+    float r, g, b, a;
+    c.getRgbF(&r, &g, &b, &a);
     QQuickShapeGenericRenderer::Color4ub color = {
-        uchar(qRound(c.redF() * c.alphaF() * 255)),
-        uchar(qRound(c.greenF() * c.alphaF() * 255)),
-        uchar(qRound(c.blueF() * c.alphaF() * 255)),
-        uchar(qRound(c.alphaF() * 255))
+        uchar(qRound(r * a * 255)),
+        uchar(qRound(g * a * 255)),
+        uchar(qRound(b * a * 255)),
+        uchar(qRound(a * 255))
     };
     return color;
 }

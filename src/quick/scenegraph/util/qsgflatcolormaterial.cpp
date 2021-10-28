@@ -78,11 +78,10 @@ bool FlatColorMaterialRhiShader::updateUniformData(RenderState &state,
 
     const QColor &c = mat->color();
     if (!oldMat || c != oldMat->color() || state.isOpacityDirty()) {
-        const float opacity = state.opacity() * c.alphaF();
-        QVector4D v(c.redF() * opacity,
-                    c.greenF() * opacity,
-                    c.blueF() * opacity,
-                    opacity);
+        float r, g, b, a;
+        c.getRgbF(&r, &g, &b, &a);
+        const float opacity = state.opacity() * a;
+        QVector4D v(r * opacity, g * opacity, b * opacity, opacity);
         Q_ASSERT(sizeof(v) == 16);
         memcpy(buf->data() + 64, &v, 16);
         changed = true;

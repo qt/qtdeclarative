@@ -262,7 +262,7 @@ public:
 
     QVariant tint(const QVariant &baseVar, const QVariant &tintVar) override
     {
-        QColor tintColor = tintVar.value<QColor>();
+        QColor tintColor = tintVar.value<QColor>().toRgb();
 
         int tintAlpha = tintColor.alpha();
         if (tintAlpha == 0xFF) {
@@ -272,7 +272,7 @@ public:
         }
 
         // tint the base color and return the final color
-        QColor baseColor = baseVar.value<QColor>();
+        QColor baseColor = baseVar.value<QColor>().toRgb();
         qreal a = tintColor.alphaF();
         qreal inv_a = 1.0 - a;
 

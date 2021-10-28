@@ -363,7 +363,7 @@ void RhiVisualizer::ChangeVis::gather(Node *n)
     if (n->type() == QSGNode::GeometryNodeType && n->element()->batch && visualizer->m_visualizeChangeSet.contains(n)) {
         const uint dirty = visualizer->m_visualizeChangeSet.value(n);
         const bool tinted = (dirty & QSGNODE_DIRTY_PARENT) != 0;
-        const QColor color = QColor::fromHsvF((rand() & 1023) / 1023.0f, 0.3f, 1.0f);
+        const QColor color = QColor::fromHsvF((rand() & 1023) / 1023.0f, 0.3f, 1.0f).toRgb();
         const float alpha = 0.5f;
 
         QMatrix4x4 matrix = visualizer->m_renderer->m_current_projection_matrix;
@@ -490,7 +490,7 @@ void RhiVisualizer::BatchVis::gather(Batch *b)
     QMatrix4x4 rotation;
     memcpy(dc.uniforms.data + 64, rotation.constData(), 64);
 
-    QColor color = QColor::fromHsvF((rand() & 1023) / 1023.0, 1.0, 1.0);
+    const QColor color = QColor::fromHsvF((rand() & 1023) / 1023.0, 1.0, 1.0).toRgb();
 
     float c[4] = {
         float(color.redF()),

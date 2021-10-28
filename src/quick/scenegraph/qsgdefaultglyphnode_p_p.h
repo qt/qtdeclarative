@@ -78,7 +78,10 @@ public:
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
     int compare(const QSGMaterial *other) const override;
 
-    void setColor(const QColor &c) { setColor(QVector4D(c.redF(), c.greenF(), c.blueF(), c.alphaF())); }
+    void setColor(const QColor &c) {
+        const auto rgbC = c.toRgb();
+        setColor(QVector4D(rgbC.redF(), rgbC.greenF(), rgbC.blueF(), rgbC.alphaF()));
+    }
     void setColor(const QVector4D &color);
     const QVector4D &color() const { return m_color; }
 
@@ -116,7 +119,10 @@ public:
     void setStyleShift(const QVector2D &shift) { m_styleShift = shift; }
     const QVector2D &styleShift() const { return m_styleShift; }
 
-    void setStyleColor(const QColor &c) { m_styleColor = QVector4D(c.redF(), c.greenF(), c.blueF(), c.alphaF()); }
+    void setStyleColor(const QColor &c) {
+        const auto rgbC = c.toRgb();
+        m_styleColor = QVector4D(rgbC.redF(), rgbC.greenF(), rgbC.blueF(), rgbC.alphaF());
+    }
     void setStyleColor(const QVector4D &color) { m_styleColor = color; }
     const QVector4D &styleColor() const { return m_styleColor; }
 

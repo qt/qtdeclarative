@@ -131,10 +131,8 @@ bool NoisyShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial
     }
 
     NoisyMaterial *mat = static_cast<NoisyMaterial *>(newMaterial);
-    float c[4] = { float(mat->state.color.redF()),
-                   float(mat->state.color.greenF()),
-                   float(mat->state.color.blueF()),
-                   float(mat->state.color.alphaF()) };
+    float c[4];
+    mat->state.color.getRgbF(&c[0], &c[1], &c[2], &c[3]);
     memcpy(buf->data() + 64, c, 16);
 
     const QSize s = mat->state.texture->textureSize();

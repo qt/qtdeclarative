@@ -75,13 +75,14 @@ QRectF QSGDefaultRectangleNode::rect() const
 void QSGDefaultRectangleNode::setColor(const QColor &color)
 {
     if (color != m_color) {
-        m_color = color;
+        float r, g, b, a;
+        color.getRgbF(&r, &g, &b, &a);
         QSGGeometry::ColoredPoint2D *pts = m_geometry.vertexDataAsColoredPoint2D();
         for (int i = 0; i < 4; ++i) {
-            pts[i].r = uchar(qRound(m_color.redF() * m_color.alphaF() * 255));
-            pts[i].g = uchar(qRound(m_color.greenF() * m_color.alphaF() * 255));
-            pts[i].b = uchar(qRound(m_color.blueF() * m_color.alphaF() * 255));
-            pts[i].a = uchar(qRound(m_color.alphaF() * 255));
+            pts[i].r = uchar(qRound(r * a * 255));
+            pts[i].g = uchar(qRound(g * a * 255));
+            pts[i].b = uchar(qRound(b * a * 255));
+            pts[i].a = uchar(qRound(a * 255));
         }
         markDirty(QSGNode::DirtyGeometry);
     }

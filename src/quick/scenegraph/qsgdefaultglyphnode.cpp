@@ -104,7 +104,8 @@ void QSGDefaultGlyphNode::update()
             }
         }
 
-        m_material = new QSGTextMaskMaterial(m_context, QVector4D(m_color.redF(), m_color.greenF(), m_color.blueF(), m_color.alphaF()), font, glyphFormat);
+        const auto rgbColor = m_color.toRgb();
+        m_material = new QSGTextMaskMaterial(m_context, QVector4D(rgbColor.redF(), rgbColor.greenF(), rgbColor.blueF(), rgbColor.alphaF()), font, glyphFormat);
     } else if (m_style == QQuickText::Outline) {
         QSGOutlinedTextMaterial *material = new QSGOutlinedTextMaterial(m_context, font);
         material->setStyleColor(m_styleColor);

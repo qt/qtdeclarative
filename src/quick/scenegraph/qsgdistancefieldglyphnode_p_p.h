@@ -146,7 +146,10 @@ class Q_QUICK_PRIVATE_EXPORT QSGHiQSubPixelDistanceFieldTextMaterial : public QS
 public:
     QSGMaterialType *type() const override;
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
-    void setColor(const QColor &color) override { m_color = QVector4D(color.redF(), color.greenF(), color.blueF(), color.alphaF()); }
+    void setColor(const QColor &color) override {
+        const auto rgbColor = color.toRgb();
+        m_color = QVector4D(rgbColor.redF(), rgbColor.greenF(), rgbColor.blueF(), rgbColor.alphaF());
+    }
 };
 
 class Q_QUICK_PRIVATE_EXPORT QSGLoQSubPixelDistanceFieldTextMaterial : public QSGDistanceFieldTextMaterial
@@ -154,7 +157,10 @@ class Q_QUICK_PRIVATE_EXPORT QSGLoQSubPixelDistanceFieldTextMaterial : public QS
 public:
     QSGMaterialType *type() const override;
     QSGMaterialShader *createShader(QSGRendererInterface::RenderMode renderMode) const override;
-    void setColor(const QColor &color) override { m_color = QVector4D(color.redF(), color.greenF(), color.blueF(), color.alphaF()); }
+    void setColor(const QColor &color) override {
+        const auto rgbColor = color.toRgb();
+        m_color = QVector4D(rgbColor.redF(), rgbColor.greenF(), rgbColor.blueF(), rgbColor.alphaF());
+    }
 };
 
 QT_END_NAMESPACE

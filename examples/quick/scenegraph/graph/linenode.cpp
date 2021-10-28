@@ -123,10 +123,8 @@ bool LineShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial,
     }
 
     LineMaterial *mat = static_cast<LineMaterial *>(newMaterial);
-    float c[4] = { float(mat->state.color.redF()),
-                   float(mat->state.color.greenF()),
-                   float(mat->state.color.blueF()),
-                   float(mat->state.color.alphaF()) };
+    float c[4];
+    mat->state.color.getRgbF(&c[0], &c[1], &c[2], &c[3]);
     memcpy(buf->data() + 64, c, 16);
     memcpy(buf->data() + 84, &mat->state.size, 4);
     memcpy(buf->data() + 88, &mat->state.spread, 4);

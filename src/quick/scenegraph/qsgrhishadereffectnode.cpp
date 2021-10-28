@@ -228,7 +228,9 @@ QSGRhiShaderEffectMaterialShader::QSGRhiShaderEffectMaterialShader(const QSGRhiS
 
 static inline QColor qsg_premultiply_color(const QColor &c)
 {
-    return QColor::fromRgbF(c.redF() * c.alphaF(), c.greenF() * c.alphaF(), c.blueF() * c.alphaF(), c.alphaF());
+    float r, g, b, a;
+    c.getRgbF(&r, &g, &b, &a);
+    return QColor::fromRgbF(r * a, g * a, b * a, a);
 }
 
 bool QSGRhiShaderEffectMaterialShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
@@ -275,7 +277,7 @@ bool QSGRhiShaderEffectMaterialShader::updateUniformData(RenderState &state, QSG
             changed = true;
             switch (int(c.value.userType())) {
             case QMetaType::QColor: {
-                const QColor v = qsg_premultiply_color(qvariant_cast<QColor>(c.value));
+                const QColor v = qsg_premultiply_color(qvariant_cast<QColor>(c.value)).toRgb();
                 const float f[4] = { float(v.redF()), float(v.greenF()), float(v.blueF()), float(v.alphaF()) };
                 Q_ASSERT(sizeof(f) == c.size);
                 memcpy(dst, f, sizeof(f));

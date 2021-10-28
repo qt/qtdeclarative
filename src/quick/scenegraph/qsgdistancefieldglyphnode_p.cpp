@@ -208,10 +208,9 @@ QSGMaterialType *QSGDistanceFieldTextMaterial::type() const
 
 void QSGDistanceFieldTextMaterial::setColor(const QColor &color)
 {
-    m_color = QVector4D(color.redF() * color.alphaF(),
-                        color.greenF() * color.alphaF(),
-                        color.blueF() * color.alphaF(),
-                        color.alphaF());
+    float r, g, b, a;
+    color.getRgbF(&r, &g, &b, &a);
+    m_color = QVector4D(r * a, g * a, b * a, a);
 }
 
 QSGMaterialShader *QSGDistanceFieldTextMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
@@ -312,10 +311,9 @@ QSGDistanceFieldStyledTextMaterial::~QSGDistanceFieldStyledTextMaterial()
 
 void QSGDistanceFieldStyledTextMaterial::setStyleColor(const QColor &color)
 {
-    m_styleColor = QVector4D(color.redF() * color.alphaF(),
-                             color.greenF() * color.alphaF(),
-                             color.blueF() * color.alphaF(),
-                             color.alphaF());
+    float r, g, b, a;
+    color.getRgbF(&r, &g, &b, &a);
+    m_styleColor = QVector4D(r * a, g * a, b * a, a);
 }
 
 int QSGDistanceFieldStyledTextMaterial::compare(const QSGMaterial *o) const

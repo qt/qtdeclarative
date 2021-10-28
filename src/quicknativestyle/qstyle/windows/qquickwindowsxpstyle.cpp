@@ -2245,7 +2245,7 @@ void QWindowsXPStyle::drawControl(ControlElement element, const QStyleOption *op
 #if 0 && QT_CONFIG(rubberband)
     case CE_RubberBand:
         if (qstyleoption_cast<const QStyleOptionRubberBand *>(option)) {
-            QColor highlight = option->palette.color(QPalette::Active, QPalette::Highlight);
+            QColor highlight = option->palette.color(QPalette::Active, QPalette::Highlight).toRgb();
             p->save();
             p->setPen(highlight.darker(120));
             QColor dimHighlight(qMin(highlight.red()/2 + 110, 255),
