@@ -51,9 +51,6 @@
 // We mean it.
 //
 
-#include <functional>
-#include <type_traits>
-
 #include <QtQml/qtqmlglobal.h>
 #include <QtQml/qqmlparserstatus.h>
 #include <QtQml/qqmllist.h>
@@ -70,6 +67,8 @@
 #include <QtCore/qmetacontainer.h>
 #include <QtCore/qdebug.h>
 
+#include <functional>
+#include <type_traits>
 #include <limits>
 
 QT_BEGIN_NAMESPACE
