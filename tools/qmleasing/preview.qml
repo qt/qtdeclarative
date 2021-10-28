@@ -100,11 +100,12 @@ Item {
             name: "moved"
 
             PropertyChanges {
-                target: rectangle
-                x: 567
-                y: 9
-                anchors.bottomMargin: 6
-                anchors.topMargin: 9
+                rectangle {
+                    x: 567
+                    y: 9
+                    anchors.bottomMargin: 6
+                    anchors.topMargin: 9
+                }
             }
         }
     ]

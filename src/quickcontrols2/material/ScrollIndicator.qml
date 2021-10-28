@@ -59,7 +59,7 @@ T.ScrollIndicator {
         states: State {
             name: "active"
             when: control.active
-            PropertyChanges { target: control.contentItem; opacity: 0.75 }
+            PropertyChanges { control.contentItem.opacity: 0.75 }
         }
 
         transitions: [

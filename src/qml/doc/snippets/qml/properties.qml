@@ -132,8 +132,7 @@ Rectangle {
     states: State {
         name: "WARNING"
         PropertyChanges {
-            target: rectangle
-            color: warning.color
+            rectangle.color: warning.color
         }
     }
 }

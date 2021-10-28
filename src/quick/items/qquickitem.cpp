@@ -5047,11 +5047,11 @@ QQmlListProperty<QQuickItem> QQuickItemPrivate::visibleChildren()
         states: [
             State {
                 name: "red_color"
-                PropertyChanges { target: root; color: "red" }
+                PropertyChanges { root.color: "red" }
             },
             State {
                 name: "blue_color"
-                PropertyChanges { target: root; color: "blue" }
+                PropertyChanges { root.color: "blue" }
             }
         ]
     }

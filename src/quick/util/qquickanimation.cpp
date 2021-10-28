@@ -2517,8 +2517,18 @@ void QQuickPropertyAnimation::setProperties(const QString &prop)
            Item { id: uselessItem }
            states: State {
                name: "state1"
-               PropertyChanges { target: theRect; x: 200; y: 200; z: 4 }
-               PropertyChanges { target: uselessItem; x: 10; y: 10; z: 2 }
+               PropertyChanges {
+                   theRect {
+                       x: 200
+                       y: 200
+                       z: 4
+                   }
+                   uselessItem {
+                       x: 10
+                       y: 10
+                       z: 2
+                   }
+               }
            }
            transitions: Transition {
                //animate both theRect's and uselessItem's x and y to their final values

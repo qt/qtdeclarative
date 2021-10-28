@@ -117,26 +117,16 @@ Item {
             name: "hovered"
 
             PropertyChanges {
-                target: normalBackground
-                opacity: 0
-            }
-
-            PropertyChanges {
-                target: hoveredBackground
-                opacity: 1
+                normalBackground.opacity: 0
+                hoveredBackground.opacity: 1
             }
         },
         State {
             name: "pressed"
 
             PropertyChanges {
-                target: normalBackground
-                opacity: 0
-            }
-
-            PropertyChanges {
-                target: pressedBackground
-                opacity: 1
+                normalBackground.opacity: 0
+                pressedBackground.opacity: 1
             }
         }
     ]
