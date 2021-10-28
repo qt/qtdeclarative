@@ -211,18 +211,12 @@ bool QQmlTypeData::tryLoadFromDiskCache()
         }
     }
 
-    QQmlType containingType;
-    auto containingTypeName = finalUrl().fileName().split(QLatin1Char('.')).first();
-    QTypeRevision version;
-    QQmlImportNamespace *ns = nullptr;
-    m_importCache.resolveType(containingTypeName, &containingType, &version, &ns);
     for (auto&& ic: ics) {
         QString const nameString = m_compiledData->stringAt(ic.nameIndex);
-        QByteArray const name = nameString.toUtf8();
         auto importUrl = finalUrl();
         importUrl.setFragment(QString::number(ic.objectIndex));
         auto import = new QQmlImportInstance();
-        m_importCache.addInlineComponentImport(import, nameString, importUrl, containingType);
+        m_importCache.addInlineComponentImport(import, nameString, importUrl, QQmlType());
     }
 
     return true;
