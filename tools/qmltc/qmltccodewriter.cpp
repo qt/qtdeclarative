@@ -209,6 +209,9 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
     for (const QString &mocLine : qAsConst(type.mocCode))
         code.rawAppendToHeader(mocLine, 1);
 
+    for (const QString &otherLine : qAsConst(type.otherCode))
+        code.rawAppendToHeader(otherLine, 1);
+
     QmltcOutputWrapper::MemberNameScope typeScope(&code, type.cppType);
     Q_UNUSED(typeScope);
     {

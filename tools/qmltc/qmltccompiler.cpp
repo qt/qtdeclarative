@@ -65,6 +65,7 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info)
     program.cppPath = m_info.outputCppFile;
     program.hPath = m_info.outputHFile;
     program.compiledTypes = compiledTypes;
+    program.includes = m_visitor->cppIncludeFiles();
 
     QmltcOutput out;
     QmltcOutputWrapper code(out);
@@ -78,11 +79,14 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
         return;
     }
 
+    Q_ASSERT(!type->internalName().isEmpty());
     current.cppType = type->internalName();
+    Q_ASSERT(!type->baseType()->internalName().isEmpty());
     const QString baseClass = type->baseType()->internalName();
 
     const bool documentRoot = (type == m_visitor->result());
     const bool baseTypeIsCompiledQml = false; // TODO: support this in QmltcTypeResolver
+    const bool isAnonymous = type->internalName().at(0).isLower();
 
     current.baseClasses = { baseClass };
     if (!documentRoot) {
@@ -96,6 +100,16 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
     current.init.access = QQmlJSMetaMethod::Protected;
     current.finalize.access = QQmlJSMetaMethod::Protected;
     current.fullCtor.access = QQmlJSMetaMethod::Public;
+    if (!documentRoot) {
+        // make document root a friend to allow it to access init and finalize
+        auto root = m_visitor->result();
+        current.otherCode << u"friend class %1;"_qs.arg(root->internalName());
+    }
+    current.mocCode = {
+        u"Q_OBJECT"_qs,
+        // Note: isAnonymous holds for non-root types in the document as well
+        isAnonymous ? u"QML_ANONYMOUS"_qs : u"QML_ELEMENT"_qs,
+    };
 
     current.basicCtor.name = current.cppType;
     current.fullCtor.name = current.cppType;

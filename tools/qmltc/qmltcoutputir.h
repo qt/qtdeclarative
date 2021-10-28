@@ -99,6 +99,7 @@ struct QmltcType
     QString cppType; // C++ type of the QML type
     QStringList baseClasses; // C++ type names of base classes
     QStringList mocCode; // Qt MOC code
+    QStringList otherCode; // Random code that doesn't fit any category, e.g. friend declarations
 
     // member types: enumerations and child types
     QList<QmltcEnum> enums;

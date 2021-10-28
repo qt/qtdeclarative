@@ -41,6 +41,8 @@ QT_BEGIN_NAMESPACE
 
 class QmltcVisitor : public QQmlJSImportVisitor
 {
+    void findCppIncludes();
+
 public:
     QmltcVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
                  const QString &implicitImportDirectory,
@@ -49,12 +51,21 @@ public:
     bool visit(QQmlJS::AST::UiObjectDefinition *) override;
     void endVisit(QQmlJS::AST::UiObjectDefinition *) override;
 
+    bool visit(QQmlJS::AST::UiObjectBinding *) override;
+    void endVisit(QQmlJS::AST::UiObjectBinding *) override;
+
+    void endVisit(QQmlJS::AST::UiProgram *) override;
+
     // NB: overwrite result() method to return ConstPtr
     QQmlJSScope::ConstPtr result() const { return QQmlJSImportVisitor::result(); }
+    QList<QQmlJSScope::ConstPtr> qmlScopesWithQmlBases() const { return m_qmlTypesWithQmlBases; }
+    QSet<QString> cppIncludeFiles() const { return m_cppIncludes; }
 
 protected:
     QStringList m_qmlTypeNames; // names of QML types arranged as a stack
     QHash<QString, int> m_qmlTypeNameCounts;
+    QList<QQmlJSScope::ConstPtr> m_qmlTypesWithQmlBases; // QML types with composite/QML base types
+    QSet<QString> m_cppIncludes; // all C++ includes found from QQmlJSScope hierarchy
 };
 
 QT_END_NAMESPACE

@@ -8,6 +8,7 @@ set(cpp_sources
 set(qml_sources
     data/HelloWorld.qml
     data/NameConflict.qml
+    data/simpleQtQuickTypes.qml
 )
 
 set_source_files_properties(data/NameConflict.qml PROPERTIES
@@ -19,7 +20,7 @@ qt_internal_add_test(tst_qmltc_diskcache
     LIBRARIES
         Qt::Core
         Qt::QmlPrivate
-        Qt::Quick
+        Qt::QuickPrivate
 )
 qt6_add_qml_module(tst_qmltc_diskcache
     VERSION 1.0
@@ -42,7 +43,7 @@ qt_internal_add_test(tst_qmltc_nodiskcache
     LIBRARIES
         Qt::Core
         Qt::QmlPrivate
-        Qt::Quick
+        Qt::QuickPrivate
 )
 qt6_add_qml_module(tst_qmltc_nodiskcache
     VERSION 1.0

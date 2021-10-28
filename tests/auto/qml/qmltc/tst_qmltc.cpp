@@ -31,9 +31,11 @@
 // Generated headers:
 #include "ResolvedNameConflict.h"
 #include "helloworld.h"
+#include "simpleqtquicktypes.h"
 
 // Qt:
 #include <QtCore/qstring.h>
+#include <QtCore/qbytearray.h>
 #include <QtCore/qurl.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlengine.h>
@@ -81,6 +83,17 @@ void tst_qmltc::helloWorld()
     QQmlEngine e;
     q_qmltc::HelloWorld created(&e);
     QSKIP("Nothing is supported yet.");
+}
+
+void tst_qmltc::qtQuickIncludes()
+{
+    QQmlEngine e;
+    q_qmltc::simpleQtQuickTypes created(&e); // it should just compile as well
+    // since the file name is lower-case, let's also test that it's marked as
+    // QML_ANONYMOUS
+    const QMetaObject *mo = created.metaObject();
+    QVERIFY(mo);
+    QCOMPARE(mo->classInfo(mo->indexOfClassInfo("QML.Element")).value(), "anonymous");
 }
 
 QTEST_MAIN(tst_qmltc)

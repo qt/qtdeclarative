@@ -1694,6 +1694,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
                      uiob->qualifiedTypeNameId->identifierToken);
     QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
 
+    m_qmlTypes.append(m_currentScope); // new QMLScope is created here, so add it
     m_objectBindingScopes << m_currentScope;
     return true;
 }
