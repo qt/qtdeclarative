@@ -52,6 +52,7 @@
 #define ENGINE_H
 
 #include <QWindow>
+#include <QtCore/qt_windows.h> // suppress windows.h include coming from d3d11_1.h
 
 #include <d3d11_1.h>
 #include <dxgi1_3.h>
