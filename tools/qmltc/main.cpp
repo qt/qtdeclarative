@@ -182,6 +182,11 @@ int main(int argc, char **argv)
     if (logger.hasWarnings() || logger.hasErrors())
         return EXIT_FAILURE;
 
+    if (logger.hasWarnings() || logger.hasErrors()) {
+        // TODO: how do we print errors/warnings/etc.?
+        return EXIT_FAILURE;
+    }
+
     QmltcCompiler compiler(url, &typeResolver, &visitor, &logger);
     compiler.compile(info);
     if (logger.hasWarnings() || logger.hasErrors())

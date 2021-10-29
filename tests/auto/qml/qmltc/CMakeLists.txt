@@ -11,6 +11,14 @@ set(qml_sources
     data/simpleQtQuickTypes.qml
     data/typeWithEnums.qml
     data/methods.qml
+    data/properties.qml
+)
+
+set(common_libraries
+    Qt::Core
+    Qt::QmlPrivate
+    Qt::QuickPrivate
+    Qt::Gui # QColor, QMatrix4x4, ...
 )
 
 set_source_files_properties(data/NameConflict.qml PROPERTIES
@@ -20,9 +28,7 @@ qt_internal_add_test(tst_qmltc_diskcache
     SOURCES
         ${cpp_sources}
     LIBRARIES
-        Qt::Core
-        Qt::QmlPrivate
-        Qt::QuickPrivate
+        ${common_libraries}
 )
 qt6_add_qml_module(tst_qmltc_diskcache
     VERSION 1.0
@@ -44,9 +50,7 @@ qt_internal_add_test(tst_qmltc_nodiskcache
     SOURCES
         ${cpp_sources}
     LIBRARIES
-        Qt::Core
-        Qt::QmlPrivate
-        Qt::QuickPrivate
+        ${common_libraries}
 )
 qt6_add_qml_module(tst_qmltc_nodiskcache
     VERSION 1.0

@@ -34,13 +34,17 @@
 #include "simpleqtquicktypes.h"
 #include "typewithenums.h"
 #include "methods.h"
+#include "properties.h"
 
 // Qt:
 #include <QtCore/qstring.h>
 #include <QtCore/qbytearray.h>
 #include <QtCore/qurl.h>
+#include <QtCore/qmetatype.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmllist.h>
+#include <private/qqmltimer_p.h>
 
 // on top of testing different cache configurations, we can also test namespace
 // generation for the test classes using the same macro
@@ -76,6 +80,8 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/QmltcTests/data/HelloWorld.qml"),
         QUrl("qrc:/QmltcTests/data/simpleQtQuickTypes.qml"),
         QUrl("qrc:/QmltcTests/data/typeWithEnums.qml"),
+        QUrl("qrc:/QmltcTests/data/methods.qml"),
+        QUrl("qrc:/QmltcTests/data/properties.qml"),
     };
 
     QQmlEngine e;
@@ -131,6 +137,7 @@ void tst_qmltc::enumerations()
     QCOMPARE(PREPEND_NAMESPACE(typeWithEnums)::ValuesSpecified::D_, 42);
 
     const QMetaObject *mo = created.metaObject();
+    QVERIFY(mo);
     const QMetaEnum enumerator1 = mo->enumerator(mo->indexOfEnumerator("NoValuesSpecified"));
     QCOMPARE(enumerator1.enumName(), "NoValuesSpecified");
     QCOMPARE(enumerator1.keyCount(), 4);
@@ -186,6 +193,52 @@ void tst_qmltc::methods()
     QCOMPARE(metaTypedMethod.parameterMetaType(1), QMetaType::fromType<int>());
     QCOMPARE(metaTypedMethod.returnMetaType(), QMetaType::fromType<QString>());
     QCOMPARE(metaTypedMethod.parameterNames(), QList<QByteArray>({ "a", "b" }));
+}
+
+void tst_qmltc::properties()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(properties) created(&e); // check that it is creatable
+
+    // what we can do is compare the types via QMetaType
+    const QMetaObject *mo = created.metaObject();
+    QVERIFY(mo);
+
+    const auto propertyMetaType = [&](const char *propertyName) {
+        return mo->property(mo->indexOfProperty(propertyName)).metaType();
+    };
+
+    QCOMPARE(propertyMetaType("boolP"), QMetaType::fromType<bool>());
+    QCOMPARE(propertyMetaType("doubleP"), QMetaType::fromType<double>());
+    QCOMPARE(propertyMetaType("intP"), QMetaType::fromType<int>());
+    QCOMPARE(propertyMetaType("listQtObjP"), QMetaType::fromType<QQmlListProperty<QObject>>());
+    QCOMPARE(propertyMetaType("realP"), QMetaType::fromType<double>());
+    QCOMPARE(propertyMetaType("stringP"), QMetaType::fromType<QString>());
+    QCOMPARE(propertyMetaType("urlP"), QMetaType::fromType<QUrl>());
+    QCOMPARE(propertyMetaType("varP"), QMetaType::fromType<QVariant>());
+
+    QCOMPARE(propertyMetaType("colorP"), QMetaType::fromType<QColor>());
+    QCOMPARE(propertyMetaType("dateP"), QMetaType::fromType<QDateTime>());
+    QCOMPARE(propertyMetaType("fontP"), QMetaType::fromType<QFont>());
+    QCOMPARE(propertyMetaType("matrix4x4P"), QMetaType::fromType<QMatrix4x4>());
+    QCOMPARE(propertyMetaType("pointP"), QMetaType::fromType<QPointF>());
+    QCOMPARE(propertyMetaType("quatP"), QMetaType::fromType<QQuaternion>());
+    QCOMPARE(propertyMetaType("rectP"), QMetaType::fromType<QRectF>());
+    QCOMPARE(propertyMetaType("sizeP"), QMetaType::fromType<QSizeF>());
+    QCOMPARE(propertyMetaType("vec2dP"), QMetaType::fromType<QVector2D>());
+    QCOMPARE(propertyMetaType("vec3dP"), QMetaType::fromType<QVector3D>());
+    QCOMPARE(propertyMetaType("vec4dP"), QMetaType::fromType<QVector4D>());
+
+    QCOMPARE(propertyMetaType("defaultObjP"), QMetaType::fromType<QObject *>());
+
+    // attributes:
+    QCOMPARE(mo->classInfo(mo->indexOfClassInfo("DefaultProperty")).value(), "defaultObjP");
+    QVERIFY(!mo->property(mo->indexOfProperty("readonlyStringP")).isWritable());
+    QVERIFY(mo->property(mo->indexOfProperty("requiredRealP")).isRequired());
+
+    // extra:
+    QCOMPARE(propertyMetaType("timerP"), QMetaType::fromType<QQmlTimer *>());
+    QCOMPARE(propertyMetaType("listNumP"), QMetaType::fromType<QQmlListProperty<QQmlComponent>>());
 }
 
 QTEST_MAIN(tst_qmltc)

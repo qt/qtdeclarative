@@ -122,7 +122,8 @@ void QQmlJSScope::insertJSIdentifier(const QString &name, const JavaScriptIdenti
 void QQmlJSScope::insertPropertyIdentifier(const QQmlJSMetaProperty &property)
 {
     addOwnProperty(property);
-    QQmlJSMetaMethod method(property.propertyName() + QLatin1String("Changed"), QLatin1String("void"));
+    QQmlJSMetaMethod method(property.propertyName() + u"Changed"_qs, u"void"_qs);
+    method.setMethodType(QQmlJSMetaMethod::Signal);
     addOwnMethod(method);
 }
 

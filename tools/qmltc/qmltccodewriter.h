@@ -50,6 +50,7 @@ struct QmltcCodeWriter
     static void write(QmltcOutputWrapper &code, const QmltcMethod &method);
     static void write(QmltcOutputWrapper &code, const QmltcCtor &ctor);
     static void write(QmltcOutputWrapper &code, const QmltcVariable &var);
+    static void write(QmltcOutputWrapper &code, const QmltcProperty &prop);
 };
 
 QT_END_NAMESPACE

@@ -3,7 +3,7 @@
 ** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the test suite of the Qt Toolkit.
+** This file is part of the tools applications of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:GPL-EXCEPT$
 ** Commercial License Usage
@@ -26,28 +26,43 @@
 **
 ****************************************************************************/
 
-#include <qtest.h>
+#ifndef QMLTCPROPERTYUTILS_H
+#define QMLTCPROPERTYUTILS_H
 
-class tst_qmltc : public QObject
+#include <private/qqmljsmetatypes_p.h>
+
+QT_BEGIN_NAMESPACE
+
+/*!
+    \internal
+
+    Tells whether property \a p is a pointer type.
+*/
+inline bool isPointer(const QQmlJSMetaProperty &p)
 {
-    Q_OBJECT
+    Q_ASSERT(p.type());
+    return p.type()->accessSemantics() == QQmlJSScope::AccessSemantics::Reference;
+}
 
-    bool isCacheDisabled() const
-    {
-        static bool isDisabled = []() { return qgetenv("QML_DISABLE_DISK_CACHE") == "1"_qba; }();
-        return isDisabled;
+/*!
+    \internal
+
+    Returns an underlying C++ type of \a p property.
+*/
+inline QString getUnderlyingType(const QQmlJSMetaProperty &p)
+{
+    QString underlyingType = p.type()->internalName();
+    // NB: can be a pointer or a list, can't be both (list automatically assumes
+    // that it holds pointers though). check isList() first, as list<QtObject>
+    // would be both a list and a pointer (weird).
+    if (p.isList()) {
+        underlyingType = u"QQmlListProperty<" + underlyingType + u">";
+    } else if (isPointer(p)) {
+        underlyingType += u"*"_qs;
     }
+    return underlyingType;
+}
 
-public:
-    tst_qmltc();
+QT_END_NAMESPACE
 
-private slots:
-    void initTestCase();
-
-    void qmlNameConflictResolution();
-    void helloWorld();
-    void qtQuickIncludes();
-    void enumerations();
-    void methods();
-    void properties();
-};
+#endif // QMLTCPROPERTYUTILS_H

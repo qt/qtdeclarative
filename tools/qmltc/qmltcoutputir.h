@@ -58,6 +58,18 @@ struct QmltcVariable
     }
 };
 
+struct QmltcProperty : QmltcVariable
+{
+    QString containingClass;
+    QString signalName;
+
+    QmltcProperty() = default;
+    QmltcProperty(const QString t, const QString &n, const QString &c, const QString &s)
+        : QmltcVariable(t, n), containingClass(c), signalName(s)
+    {
+    }
+};
+
 // Represents QML -> C++ compiled enumeration type
 struct QmltcEnum
 {
@@ -115,8 +127,9 @@ struct QmltcType
 
     // member functions: methods, signals and slots
     QList<QmltcMethod> functions;
-    // member variables: properties and just variables
+    // member variables
     QList<QmltcVariable> variables;
+    QList<QmltcProperty> properties;
 
     // QML document root specific:
     std::optional<QmltcVariable> typeCount; // the number of QML types defined in a document

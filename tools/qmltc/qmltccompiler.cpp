@@ -30,6 +30,7 @@
 #include "qmltcoutputir.h"
 #include "qmltccodewriter.h"
 #include "qmltccompilerutils.h"
+#include "qmltcpropertyutils.h"
 
 #include <QtCore/qloggingcategory.h>
 
@@ -209,10 +210,31 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
         compileEnum(current, it.value());
 
     const auto methods = type->ownMethods();
-    const auto properties = type->ownProperties();
+    auto properties = type->ownProperties().values();
     current.functions.reserve(methods.size() + properties.size() * 3); // sensible default
     for (const QQmlJSMetaMethod &m : methods)
         compileMethod(current, m);
+
+    current.variables.reserve(properties.size());
+    // Note: index() is the (future) meta property index, so make sure given
+    // properties are ordered by that index before compiling
+    std::sort(properties.begin(), properties.end(),
+              [](const QQmlJSMetaProperty &x, const QQmlJSMetaProperty &y) {
+                  return x.index() < y.index();
+              });
+    for (const QQmlJSMetaProperty &p : qAsConst(properties)) {
+        if (p.index() == -1) {
+            recordError(type->sourceLocation(),
+                        u"Internal error: property '%1' has incomplete information"_qs.arg(
+                                p.propertyName()));
+            continue;
+        }
+        if (p.isAlias()) {
+            recordError(type->sourceLocation(), u"Property aliases are not supported"_qs);
+        } else {
+            compileProperty(current, p, type);
+        }
+    }
 }
 
 void QmltcCompiler::compileEnum(QmltcType &current, const QQmlJSMetaEnum &e)
@@ -294,6 +316,77 @@ void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m)
     if (methodType == QQmlJSMetaMethod::Method)
         compiled.declarationPrefixes << u"Q_INVOKABLE"_qs;
     current.functions.emplaceBack(compiled);
+}
+
+void QmltcCompiler::compileProperty(QmltcType &current, const QQmlJSMetaProperty &p,
+                                    const QQmlJSScope::ConstPtr &owner)
+{
+    Q_ASSERT(!p.isAlias()); // will be handled separately
+    Q_ASSERT(p.type());
+
+    const QString name = p.propertyName();
+    const QString variableName = u"m_" + name;
+    const QString underlyingType = getUnderlyingType(p);
+    // only check for isList() here as it needs some special arrangements.
+    // otherwise, getUnderlyingType() handles the specifics of a type in C++
+    if (p.isList()) {
+        const QString storageName = variableName + u"_storage";
+        current.variables.emplaceBack(u"QList<" + p.type()->internalName() + u" *>", storageName,
+                                      QString());
+        current.basicCtor.initializerList.emplaceBack(variableName + u"(" + underlyingType
+                                                      + u"(this, std::addressof(" + storageName
+                                                      + u")))");
+    }
+
+    // along with property, also add relevant moc code, so that we can use the
+    // property in Qt/QML contexts
+    QStringList mocPieces;
+    mocPieces.reserve(10);
+    mocPieces << underlyingType << name;
+
+    // 1. add setter and getter
+    if (p.isWritable()) {
+        QmltcMethod setter {};
+        setter.returnType = u"void"_qs;
+        setter.name = p.write();
+        // QQmlJSAotVariable
+        setter.parameterList.emplaceBack(wrapInConstRef(underlyingType), name + u"_", u""_qs);
+        setter.body << variableName + u".setValue(" + name + u"_);";
+        current.functions.emplaceBack(setter);
+        mocPieces << u"WRITE"_qs << setter.name;
+    }
+
+    QmltcMethod getter {};
+    getter.returnType = underlyingType;
+    getter.name = p.read();
+    getter.body << u"return " + variableName + u".value();";
+    current.functions.emplaceBack(getter);
+    mocPieces << u"READ"_qs << getter.name;
+
+    // 2. add bindable
+    QmltcMethod bindable {};
+    bindable.returnType = u"QBindable<" + underlyingType + u">";
+    bindable.name = p.bindable();
+    bindable.body << u"return QBindable<" + underlyingType + u">(std::addressof(" + variableName
+                    + u"));";
+    current.functions.emplaceBack(bindable);
+    mocPieces << u"BINDABLE"_qs << bindable.name;
+
+    // 3. add/check notify (actually, this is already done inside QmltcVisitor)
+
+    if (owner->isPropertyRequired(name))
+        mocPieces << u"REQUIRED"_qs;
+
+    // 4. add moc entry
+    // e.g. Q_PROPERTY(QString p READ getP WRITE setP BINDABLE bindableP)
+    current.mocCode << u"Q_PROPERTY(" + mocPieces.join(u" "_qs) + u")";
+
+    // 5. add extra moc entry if this property is marked default
+    if (name == owner->defaultPropertyName())
+        current.mocCode << u"Q_CLASSINFO(\"DefaultProperty\", \"%1\")"_qs.arg(name);
+
+    // structure: (C++ type name, name, C++ class name, C++ signal name)
+    current.properties.emplaceBack(underlyingType, variableName, current.cppType, p.notify());
 }
 
 QT_END_NAMESPACE

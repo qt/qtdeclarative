@@ -54,6 +54,8 @@ public:
     bool visit(QQmlJS::AST::UiObjectBinding *) override;
     void endVisit(QQmlJS::AST::UiObjectBinding *) override;
 
+    bool visit(QQmlJS::AST::UiPublicMember *) override;
+
     void endVisit(QQmlJS::AST::UiProgram *) override;
 
     // NB: overwrite result() method to return ConstPtr

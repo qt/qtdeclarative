@@ -66,8 +66,10 @@ private:
     void compileType(QmltcType &current, const QQmlJSScope::ConstPtr &type);
     void compileEnum(QmltcType &current, const QQmlJSMetaEnum &e);
     void compileMethod(QmltcType &current, const QQmlJSMetaMethod &m);
+    void compileProperty(QmltcType &current, const QQmlJSMetaProperty &p,
+                         const QQmlJSScope::ConstPtr &owner);
 
-    bool hasErrors() const { return m_logger->hasErrors(); } // TODO: count warnings as errors?
+    bool hasErrors() const { return m_logger->hasErrors() || m_logger->hasWarnings(); }
     void recordError(const QQmlJS::SourceLocation &location, const QString &message,
                      QQmlJSLoggerCategory category = Log_Compiler)
     {

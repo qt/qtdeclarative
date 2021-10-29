@@ -179,6 +179,44 @@ void QmltcVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
     QQmlJSImportVisitor::endVisit(uiob);
 }
 
+bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
+{
+    if (!QQmlJSImportVisitor::visit(publicMember))
+        return false;
+
+    // augment property: set its write/read/etc. methods
+    if (publicMember->type == QQmlJS::AST::UiPublicMember::Property) {
+        const auto name = publicMember->name.toString();
+        QQmlJSMetaProperty prop = m_currentScope->ownProperty(name);
+        const QString nameWithUppercase = name[0].toUpper() + name.sliced(1);
+        prop.setRead(name);
+        prop.setWrite(u"set" + nameWithUppercase);
+        prop.setBindable(u"bindable" + nameWithUppercase);
+        prop.setNotify(name + u"Changed");
+        // also check that notify is already a method of m_currentScope
+        {
+            const auto methods = m_currentScope->ownMethods(prop.notify());
+            if (methods.size() != 1) {
+                const QString errorString =
+                        methods.isEmpty() ? u"no signal"_qs : u"too many signals"_qs;
+                m_logger->logCritical(
+                        u"internal error: %1 found for property '%2'"_qs.arg(errorString, name),
+                        Log_Compiler, publicMember->identifierToken);
+                return false;
+            } else if (methods[0].methodType() != QQmlJSMetaMethod::Signal) {
+                m_logger->logCritical(
+                        u"internal error: method %1 of property %2 must be a signal"_qs.arg(
+                                prop.notify(), name),
+                        Log_Compiler, publicMember->identifierToken);
+                return false;
+            }
+        }
+        m_currentScope->addOwnProperty(prop);
+    }
+
+    return true;
+}
+
 void QmltcVisitor::endVisit(QQmlJS::AST::UiProgram *program)
 {
     QQmlJSImportVisitor::endVisit(program);

@@ -253,14 +253,6 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
         for (const auto &child : qAsConst(type.children))
             write(code, child);
 
-        // variables (mostly properties)
-        if (!type.variables.isEmpty()) {
-            code.rawAppendToHeader(u""); // blank line
-            code.rawAppendToHeader(u"protected:", -1); // TODO: or private?
-        }
-        for (const auto &variable : qAsConst(type.variables))
-            write(code, variable);
-
         // functions (special case due to functions/signals/slots, etc.)
         QHash<QString, QList<const QmltcMethod *>> functionsByCategory;
         for (const auto &function : qAsConst(type.functions))
@@ -273,6 +265,16 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
             for (const QmltcMethod *function : qAsConst(it.value()))
                 write(code, *function);
         }
+
+        // variables and properties
+        if (!type.variables.isEmpty() || !type.properties.isEmpty()) {
+            code.rawAppendToHeader(u""); // blank line
+            code.rawAppendToHeader(u"protected:", -1);
+        }
+        for (const auto &property : qAsConst(type.properties))
+            write(code, property);
+        for (const auto &variable : qAsConst(type.variables))
+            write(code, variable);
     }
 
     if (type.typeCount) {
@@ -361,6 +363,13 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcVariable &var)
 {
     const QString optionalPart = var.defaultValue.isEmpty() ? u""_qs : u" = " + var.defaultValue;
     code.rawAppendToHeader(var.cppType + u" " + var.name + optionalPart + u";");
+}
+
+void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcProperty &prop)
+{
+    Q_ASSERT(prop.defaultValue.isEmpty()); // we don't support it yet
+    code.rawAppendToHeader(u"Q_OBJECT_BINDABLE_PROPERTY(%1, %2, %3, &%1::%4)"_qs.arg(
+            prop.containingClass, prop.cppType, prop.name, prop.signalName));
 }
 
 QT_END_NAMESPACE
