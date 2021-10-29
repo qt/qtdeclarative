@@ -1006,30 +1006,30 @@ void QQmlComponentPrivate::beginDeferred(QQmlEnginePrivate *enginePriv,
     QQmlData *ddata = QQmlData::get(object);
     Q_ASSERT(!ddata->deferredData.isEmpty());
 
-    deferredState->constructionStates.reserve(ddata->deferredData.size());
+    deferredState->reserve(ddata->deferredData.size());
 
     for (QQmlData::DeferredData *deferredData : qAsConst(ddata->deferredData)) {
         enginePriv->inProgressCreations++;
 
-        ConstructionState *state = new ConstructionState;
-        state->completePending = true;
+        ConstructionState state;
+        state.completePending = true;
 
-        state->creator.reset(new QQmlObjectCreator(
+        state.creator.reset(new QQmlObjectCreator(
                                  deferredData->context->parent(), deferredData->compilationUnit,
                                  QQmlRefPointer<QQmlContextData>()));
 
-        if (!state->creator->populateDeferredProperties(object, deferredData))
-            state->errors << state->creator->errors;
+        if (!state.creator->populateDeferredProperties(object, deferredData))
+            state.errors << state.creator->errors;
         deferredData->bindings.clear();
 
-        deferredState->constructionStates += state;
+        deferredState->push_back(std::move(state));
     }
 }
 
 void QQmlComponentPrivate::completeDeferred(QQmlEnginePrivate *enginePriv, QQmlComponentPrivate::DeferredState *deferredState)
 {
-    for (ConstructionState *state : qAsConst(deferredState->constructionStates))
-        complete(enginePriv, state);
+    for (ConstructionState &state : *deferredState)
+        complete(enginePriv, &state);
 }
 
 void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionState *state)

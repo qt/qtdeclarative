@@ -83,23 +83,23 @@ static bool beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
         if (range.first == bindings.end())
             continue;
 
-        QQmlComponentPrivate::ConstructionState *state = new QQmlComponentPrivate::ConstructionState;
-        state->completePending = true;
+        QQmlComponentPrivate::ConstructionState state;
+        state.completePending = true;
 
         QQmlContextData *creationContext = nullptr;
-        state->creator.reset(new QQmlObjectCreator(deferData->context->parent(), deferData->compilationUnit, creationContext));
+        state.creator.reset(new QQmlObjectCreator(deferData->context->parent(), deferData->compilationUnit, creationContext));
 
         enginePriv->inProgressCreations++;
 
         std::deque<const QV4::CompiledData::Binding *> reversedBindings;
         std::copy(range.first, range.second, std::front_inserter(reversedBindings));
-        state->creator->beginPopulateDeferred(deferData->context);
+        state.creator->beginPopulateDeferred(deferData->context);
         for (const QV4::CompiledData::Binding *binding : reversedBindings)
-            state->creator->populateDeferredBinding(property, deferData->deferredIdx, binding);
-        state->creator->finalizePopulateDeferred();
-        state->errors << state->creator->errors;
+            state.creator->populateDeferredBinding(property, deferData->deferredIdx, binding);
+        state.creator->finalizePopulateDeferred();
+        state.errors << state.creator->errors;
 
-        deferredState->constructionStates += state;
+        deferredState->push_back(std::move(state));
 
         // Cleanup any remaining deferred bindings for this property, also in inner contexts,
         // to avoid executing them later and overriding the property that was just populated.

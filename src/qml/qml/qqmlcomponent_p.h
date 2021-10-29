@@ -112,27 +112,13 @@ public:
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
 
     struct ConstructionState {
-        ConstructionState()
-            : completePending(false)
-        {}
-        ~ConstructionState()
-        {
-        }
-
-        QScopedPointer<QQmlObjectCreator> creator;
+        std::unique_ptr<QQmlObjectCreator> creator;
         QList<QQmlError> errors;
-        bool completePending;
+        bool completePending = false;
     };
     ConstructionState state;
 
-    struct DeferredState {
-        ~DeferredState() {
-            qDeleteAll(constructionStates);
-            constructionStates.clear();
-        }
-        QVector<ConstructionState *> constructionStates;
-    };
-
+    using DeferredState = std::vector<ConstructionState>;
     static void beginDeferred(QQmlEnginePrivate *enginePriv, QObject *object, DeferredState* deferredState);
     static void completeDeferred(QQmlEnginePrivate *enginePriv, DeferredState *deferredState);
 
