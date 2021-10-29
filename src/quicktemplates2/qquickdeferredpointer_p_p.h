@@ -49,139 +49,118 @@
 //
 
 #include <QtCore/qglobal.h>
+#include <QtQml/private/qflagpointer_p.h>
+#include <QtQml/private/qqmlcomponent_p.h>
 
 QT_BEGIN_NAMESPACE
 
-template<typename T>
-class QQuickDeferredPointer
+class QQuickUntypedDeferredPointer
 {
+    Q_DISABLE_COPY_MOVE(QQuickUntypedDeferredPointer)
 public:
-    inline QQuickDeferredPointer();
-    inline QQuickDeferredPointer(T *);
-    inline QQuickDeferredPointer(const QQuickDeferredPointer<T> &o);
+    QQmlComponentPrivate::DeferredState *deferredState() const
+    {
+        return value.isT1() ? nullptr : &value.asT2()->state;
+    }
 
-    inline bool isNull() const;
+    void clearDeferredState()
+    {
+        if (value.isT1())
+            return;
+        value.clearFlag();
+        DeferredState *state = value.asT2();
+        value = state->value;
+        delete state;
+    }
 
-    inline bool wasExecuted() const;
-    inline void setExecuted();
+    bool wasExecuted() const { return value.isT1() && value.flag(); }
+    void setExecuted()
+    {
+        Q_ASSERT(value.isT1());
+        value.setFlag();
+    }
 
-    inline bool isExecuting() const;
-    inline void setExecuting(bool);
+    bool isExecuting() const { return value.isT2() && value.flag(); }
+    bool setExecuting(bool b)
+    {
+        if (b) {
+            if (value.isT2()) {
+                // Not our state. Set the flag, but leave it alone.
+                value.setFlag();
+                return false;
+            }
 
-    inline operator T*() const;
-    inline operator bool() const;
+            value = new DeferredState {
+                QQmlComponentPrivate::DeferredState(),
+                value.asT1()
+            };
+            value.setFlag();
+            return true;
+        }
 
-    inline T *data() const;
-    inline T *operator*() const;
-    inline T *operator->() const;
+        if (value.isT2()) {
+            value.clearFlag();
+            return true;
+        }
 
-    inline QQuickDeferredPointer<T> &operator=(T *);
-    inline QQuickDeferredPointer<T> &operator=(const QQuickDeferredPointer &o);
+        return false;
+    }
+
+protected:
+    QQuickUntypedDeferredPointer() = default;
+    QQuickUntypedDeferredPointer(void *v) : value(v)
+    {
+        Q_ASSERT(value.isT1());
+        Q_ASSERT(!value.flag());
+    }
+
+    QQuickUntypedDeferredPointer &operator=(void *v)
+    {
+        if (value.isT1())
+            value = v;
+        else
+            value.asT2()->value = v;
+        return *this;
+    }
+
+    ~QQuickUntypedDeferredPointer()
+    {
+        if (value.isT2())
+            delete value.asT2();
+    }
+
+    void *data() const { return value.isT1() ? value.asT1() : value.asT2()->value; }
 
 private:
-    quintptr ptr_value = 0;
+    struct DeferredState
+    {
+        QQmlComponentPrivate::DeferredState state;
+        void *value = nullptr;
+    };
 
-    static const quintptr WasExecutedBit = 0x1;
-    static const quintptr IsExecutingBit = 0x2;
-    static const quintptr FlagsMask = WasExecutedBit | IsExecutingBit;
+    QBiPointer<void, DeferredState> value;
 };
 
 template<typename T>
-QQuickDeferredPointer<T>::QQuickDeferredPointer()
+class QQuickDeferredPointer : public QQuickUntypedDeferredPointer
 {
-}
+    Q_DISABLE_COPY_MOVE(QQuickDeferredPointer)
+public:
+    QQuickDeferredPointer() = default;
+    ~QQuickDeferredPointer() = default;
 
-template<typename T>
-QQuickDeferredPointer<T>::QQuickDeferredPointer(T *v)
-: ptr_value(quintptr(v))
-{
-    Q_ASSERT((ptr_value & FlagsMask) == 0);
-}
+    QQuickDeferredPointer(T *v) : QQuickUntypedDeferredPointer(v) {}
+    QQuickDeferredPointer<T> &operator=(T *o) {
+        QQuickUntypedDeferredPointer::operator=(o);
+        return *this;
+    }
 
-template<typename T>
-QQuickDeferredPointer<T>::QQuickDeferredPointer(const QQuickDeferredPointer<T> &o)
-: ptr_value(o.ptr_value)
-{
-}
-
-template<typename T>
-bool QQuickDeferredPointer<T>::isNull() const
-{
-    return 0 == (ptr_value & (~FlagsMask));
-}
-
-template<typename T>
-bool QQuickDeferredPointer<T>::wasExecuted() const
-{
-    return ptr_value & WasExecutedBit;
-}
-
-template<typename T>
-void QQuickDeferredPointer<T>::setExecuted()
-{
-    ptr_value |= WasExecutedBit;
-}
-
-template<typename T>
-bool QQuickDeferredPointer<T>::isExecuting() const
-{
-    return ptr_value & IsExecutingBit;
-}
-
-template<typename T>
-void QQuickDeferredPointer<T>::setExecuting(bool b)
-{
-    if (b)
-        ptr_value |= IsExecutingBit;
-    else
-        ptr_value &= ~IsExecutingBit;
-}
-
-template<typename T>
-QQuickDeferredPointer<T>::operator T*() const
-{
-    return data();
-}
-
-template<typename T>
-QQuickDeferredPointer<T>::operator bool() const
-{
-    return !isNull();
-}
-
-template<typename T>
-T *QQuickDeferredPointer<T>::data() const
-{
-    return (T *)(ptr_value & ~FlagsMask);
-}
-
-template<typename T>
-T *QQuickDeferredPointer<T>::operator*() const
-{
-    return (T *)(ptr_value & ~FlagsMask);
-}
-
-template<typename T>
-T *QQuickDeferredPointer<T>::operator->() const
-{
-    return (T *)(ptr_value & ~FlagsMask);
-}
-
-template<typename T>
-QQuickDeferredPointer<T> &QQuickDeferredPointer<T>::operator=(T *o)
-{
-    Q_ASSERT((quintptr(o) & FlagsMask) == 0);
-
-    ptr_value = quintptr(o) | (ptr_value & FlagsMask);
-    return *this;
-}
-
-template<typename T>
-QQuickDeferredPointer<T> &QQuickDeferredPointer<T>::operator=(const QQuickDeferredPointer &o)
-{
-    ptr_value = o.ptr_value;
-    return *this;
-}
+    T *data() const { return static_cast<T *>(QQuickUntypedDeferredPointer::data()); }
+    operator bool() const { return data() != nullptr; }
+    operator T*() const { return data(); }
+    T *operator*() const { return data(); }
+    T *operator->() const { return data(); }
+};
 
 QT_END_NAMESPACE
 

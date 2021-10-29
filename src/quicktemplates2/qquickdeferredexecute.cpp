@@ -48,15 +48,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QtQuickPrivate {
 
-typedef QHash<size_t, QQmlComponentPrivate::DeferredState *> DeferredStates;
-
-static inline size_t qHash(QObject *object, const QString &propertyName)
-{
-    return ::qHash(object) + ::qHash(propertyName);
-}
-
-Q_GLOBAL_STATIC(DeferredStates, deferredStates)
-
 static void cancelDeferred(QQmlData *ddata, int propertyIndex)
 {
     auto dit = ddata->deferredData.rbegin();
@@ -110,20 +101,25 @@ static bool beginDeferred(QQmlEnginePrivate *enginePriv, const QQmlProperty &pro
     return enginePriv->inProgressCreations > wasInProgress;
 }
 
-void beginDeferred(QObject *object, const QString &property)
+void beginDeferred(QObject *object, const QString &property,
+                   QQuickUntypedDeferredPointer *delegate, bool isOwnState)
 {
     QQmlData *data = QQmlData::get(object);
     if (data && !data->deferredData.isEmpty() && !data->wasDeleted(object) && data->context) {
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine());
 
-        QQmlComponentPrivate::DeferredState *state = new QQmlComponentPrivate::DeferredState;
-        if (beginDeferred(ep, QQmlProperty(object, property), state))
-            deferredStates()->insert(qHash(object, property), state);
-        else
-            delete state;
+        QQmlComponentPrivate::DeferredState state;
+        if (beginDeferred(ep, QQmlProperty(object, property), &state)) {
+            if (QQmlComponentPrivate::DeferredState *delegateState = delegate->deferredState())
+                delegateState->swap(state);
+        } else if (isOwnState) {
+            delegate->clearDeferredState();
+        }
 
         // Release deferred data for those compilation units that no longer have deferred bindings
         data->releaseDeferredData();
+    } else if (isOwnState) {
+        delegate->clearDeferredState();
     }
 }
 
@@ -134,15 +130,22 @@ void cancelDeferred(QObject *object, const QString &property)
         cancelDeferred(data, QQmlProperty(object, property).index());
 }
 
-void completeDeferred(QObject *object, const QString &property)
+void completeDeferred(QObject *object, const QString &property, QQuickUntypedDeferredPointer *delegate)
 {
+    Q_UNUSED(property);
+    QQmlComponentPrivate::DeferredState *state = delegate->deferredState();
+    if (!state)
+        return;
+
     QQmlData *data = QQmlData::get(object);
-    QQmlComponentPrivate::DeferredState *state = deferredStates()->take(qHash(object, property));
-    if (data && state && !data->wasDeleted(object)) {
+    if (data && !data->wasDeleted(object)) {
+        QQmlComponentPrivate::DeferredState localState = std::move(*state);
+        delegate->clearDeferredState();
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine());
-        QQmlComponentPrivate::completeDeferred(ep, state);
+        QQmlComponentPrivate::completeDeferred(ep, &localState);
+    } else {
+        delegate->clearDeferredState();
     }
-    delete state;
 }
 
 } // QtQuickPrivate
