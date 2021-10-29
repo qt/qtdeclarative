@@ -31,6 +31,8 @@
 #include "qmltccodewriter.h"
 #include <QtCore/qloggingcategory.h>
 
+#include <algorithm>
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcQmltcCompiler, "qml.qmltc.compiler", QtWarningMsg);
@@ -192,6 +194,30 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
                         + u"(creator, engine, QQmlData::get(parent)->outerContext);";
     }
     current.init.body << u"return nullptr;"_qs;
+
+    // compile components of a type:
+    // - enums
+    // - properties
+    // - methods
+    // - bindings
+
+    const auto enums = type->ownEnumerations();
+    current.enums.reserve(enums.size());
+    for (auto it = enums.begin(); it != enums.end(); ++it)
+        compileEnum(current, it.value());
+}
+
+void QmltcCompiler::compileEnum(QmltcType &current, const QQmlJSMetaEnum &e)
+{
+    const auto intValues = e.values();
+    QStringList values;
+    values.reserve(intValues.size());
+    std::transform(intValues.cbegin(), intValues.cend(), std::back_inserter(values),
+                   [](int x) { return QString::number(x); });
+
+    // structure: (C++ type name, enum keys, enum values, MOC line)
+    current.enums.emplaceBack(e.name(), e.keys(), std::move(values),
+                              u"Q_ENUM(%1)"_qs.arg(e.name()));
 }
 
 QT_END_NAMESPACE

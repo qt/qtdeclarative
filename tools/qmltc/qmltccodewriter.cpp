@@ -302,6 +302,7 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcEnum &enumerati
         code.rawAppendToHeader(str, 1);
     }
     code.rawAppendToHeader(u"};");
+    code.rawAppendToHeader(enumeration.ownMocLine);
 }
 
 void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcMethod &method)

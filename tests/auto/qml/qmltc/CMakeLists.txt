@@ -9,6 +9,7 @@ set(qml_sources
     data/HelloWorld.qml
     data/NameConflict.qml
     data/simpleQtQuickTypes.qml
+    data/typeWithEnums.qml
 )
 
 set_source_files_properties(data/NameConflict.qml PROPERTIES

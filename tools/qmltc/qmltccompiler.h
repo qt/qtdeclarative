@@ -64,6 +64,7 @@ private:
     QmltcCompilerInfo m_info {}; // miscellaneous input/output information
 
     void compileType(QmltcType &current, const QQmlJSScope::ConstPtr &type);
+    void compileEnum(QmltcType &current, const QQmlJSMetaEnum &e);
 
     bool hasErrors() const { return m_logger->hasErrors(); } // TODO: count warnings as errors?
     void recordError(const QQmlJS::SourceLocation &location, const QString &message,

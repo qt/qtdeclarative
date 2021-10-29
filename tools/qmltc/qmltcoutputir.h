@@ -64,10 +64,11 @@ struct QmltcEnum
     QString cppType; // C++ type of an enum
     QStringList keys; // enumerator keys
     QStringList values; // enumerator values
+    QString ownMocLine; // special MOC line that follows enum declaration
 
     QmltcEnum() = default;
-    QmltcEnum(const QString &t, const QStringList &ks, const QStringList &vs)
-        : cppType(t), keys(ks), values(vs)
+    QmltcEnum(const QString &t, const QStringList &ks, const QStringList &vs, const QString &l)
+        : cppType(t), keys(ks), values(vs), ownMocLine(l)
     {
     }
 };

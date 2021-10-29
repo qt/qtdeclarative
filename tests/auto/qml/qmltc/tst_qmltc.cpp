@@ -32,6 +32,7 @@
 #include "ResolvedNameConflict.h"
 #include "helloworld.h"
 #include "simpleqtquicktypes.h"
+#include "typewithenums.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -72,6 +73,8 @@ void tst_qmltc::initTestCase()
     QUrl urls[] = {
         QUrl("qrc:/QmltcTests/data/NameConflict.qml"),
         QUrl("qrc:/QmltcTests/data/HelloWorld.qml"),
+        QUrl("qrc:/QmltcTests/data/simpleQtQuickTypes.qml"),
+        QUrl("qrc:/QmltcTests/data/typeWithEnums.qml"),
     };
 
     QQmlEngine e;
@@ -107,6 +110,37 @@ void tst_qmltc::qtQuickIncludes()
     const QMetaObject *mo = created.metaObject();
     QVERIFY(mo);
     QCOMPARE(mo->classInfo(mo->indexOfClassInfo("QML.Element")).value(), "anonymous");
+}
+
+void tst_qmltc::enumerations()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(typeWithEnums) created(&e);
+
+    // sanity
+    QCOMPARE(PREPEND_NAMESPACE(typeWithEnums)::NoValuesSpecified::A, 0);
+    QCOMPARE(PREPEND_NAMESPACE(typeWithEnums)::NoValuesSpecified::B, 1);
+    QCOMPARE(PREPEND_NAMESPACE(typeWithEnums)::NoValuesSpecified::C, 2);
+    QCOMPARE(PREPEND_NAMESPACE(typeWithEnums)::NoValuesSpecified::D, 3);
+
+    QCOMPARE(PREPEND_NAMESPACE(typeWithEnums)::ValuesSpecified::A_, 1);
+    QCOMPARE(PREPEND_NAMESPACE(typeWithEnums)::ValuesSpecified::B_, 2);
+    QCOMPARE(PREPEND_NAMESPACE(typeWithEnums)::ValuesSpecified::B2_, 3);
+    QCOMPARE(PREPEND_NAMESPACE(typeWithEnums)::ValuesSpecified::C_, 41);
+    QCOMPARE(PREPEND_NAMESPACE(typeWithEnums)::ValuesSpecified::D_, 42);
+
+    const QMetaObject *mo = created.metaObject();
+    const QMetaEnum enumerator1 = mo->enumerator(mo->indexOfEnumerator("NoValuesSpecified"));
+    QCOMPARE(enumerator1.enumName(), "NoValuesSpecified");
+    QCOMPARE(enumerator1.keyCount(), 4);
+    QCOMPARE(enumerator1.key(2), "C");
+    QCOMPARE(enumerator1.value(2), PREPEND_NAMESPACE(typeWithEnums)::NoValuesSpecified::C);
+
+    const QMetaEnum enumerator2 = mo->enumerator(mo->indexOfEnumerator("ValuesSpecified"));
+    QCOMPARE(enumerator2.enumName(), "ValuesSpecified");
+    QCOMPARE(enumerator2.keyCount(), 5);
+    QCOMPARE(enumerator2.key(2), "B2_");
+    QCOMPARE(enumerator2.value(2), PREPEND_NAMESPACE(typeWithEnums)::ValuesSpecified::B2_);
 }
 
 QTEST_MAIN(tst_qmltc)

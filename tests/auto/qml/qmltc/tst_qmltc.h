@@ -47,4 +47,5 @@ private slots:
     void qmlNameConflictResolution();
     void helloWorld();
     void qtQuickIncludes();
+    void enumerations();
 };
