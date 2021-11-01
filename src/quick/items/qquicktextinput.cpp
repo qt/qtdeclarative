@@ -1523,11 +1523,7 @@ void QQuickTextInput::inputMethodEvent(QInputMethodEvent *ev)
 {
     Q_D(QQuickTextInput);
     const bool wasComposing = d->hasImState;
-    if (d->m_readOnly) {
-        ev->ignore();
-    } else {
-        d->processInputMethodEvent(ev);
-    }
+    d->processInputMethodEvent(ev);
     if (!ev->isAccepted())
         QQuickImplicitSizeItem::inputMethodEvent(ev);
 
