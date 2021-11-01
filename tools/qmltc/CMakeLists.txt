@@ -11,6 +11,7 @@ qt_internal_add_tool(${target_name}
         qmltctyperesolver.h
         qmltcvisitor.h qmltcvisitor.cpp
         qmltccompiler.h qmltccompiler.cpp
+        qmltccompilerutils.h
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII

@@ -29,6 +29,8 @@
 #include "qmltccompiler.h"
 #include "qmltcoutputir.h"
 #include "qmltccodewriter.h"
+#include "qmltccompilerutils.h"
+
 #include <QtCore/qloggingcategory.h>
 
 #include <algorithm>
@@ -205,6 +207,12 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
     current.enums.reserve(enums.size());
     for (auto it = enums.begin(); it != enums.end(); ++it)
         compileEnum(current, it.value());
+
+    const auto methods = type->ownMethods();
+    const auto properties = type->ownProperties();
+    current.functions.reserve(methods.size() + properties.size() * 3); // sensible default
+    for (const QQmlJSMetaMethod &m : methods)
+        compileMethod(current, m);
 }
 
 void QmltcCompiler::compileEnum(QmltcType &current, const QQmlJSMetaEnum &e)
@@ -218,6 +226,74 @@ void QmltcCompiler::compileEnum(QmltcType &current, const QQmlJSMetaEnum &e)
     // structure: (C++ type name, enum keys, enum values, MOC line)
     current.enums.emplaceBack(e.name(), e.keys(), std::move(values),
                               u"Q_ENUM(%1)"_qs.arg(e.name()));
+}
+
+static QList<QmltcVariable>
+compileMethodParameters(const QStringList &names,
+                        const QList<QSharedPointer<const QQmlJSScope>> &types,
+                        bool allowUnnamed = false)
+{
+    QList<QmltcVariable> parameters;
+    const auto size = names.size();
+    parameters.reserve(size);
+    for (qsizetype i = 0; i < size; ++i) {
+        Q_ASSERT(types[i]); // assume verified
+        QString name = names[i];
+        Q_ASSERT(allowUnnamed || !name.isEmpty()); // assume verified
+        if (name.isEmpty() && allowUnnamed)
+            name = u"unnamed_" + QString::number(i);
+        parameters.emplaceBack(augmentInternalName(types[i]), name, QString());
+    }
+    return parameters;
+}
+
+void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m)
+{
+    const auto figureReturnType = [](const QQmlJSMetaMethod &m) {
+        const bool isVoidMethod =
+                m.returnTypeName() == u"void" || m.methodType() == QQmlJSMetaMethod::Signal;
+        Q_ASSERT(isVoidMethod || m.returnType());
+        QString type;
+        if (isVoidMethod) {
+            type = u"void"_qs;
+        } else {
+            type = augmentInternalName(m.returnType());
+        }
+        return type;
+    };
+
+    const auto returnType = figureReturnType(m);
+    const auto paramNames = m.parameterNames();
+    const auto paramTypes = m.parameterTypes();
+    Q_ASSERT(paramNames.size() == paramTypes.size()); // assume verified
+    const QList<QmltcVariable> compiledParams = compileMethodParameters(paramNames, paramTypes);
+    const auto methodType = QQmlJSMetaMethod::Type(m.methodType());
+
+    QStringList code;
+    if (methodType != QQmlJSMetaMethod::Signal) {
+        // just put "unimplemented" for now
+        for (const QmltcVariable &param : compiledParams)
+            code << u"Q_UNUSED(%1);"_qs.arg(param.name);
+        code << u"Q_UNIMPLEMENTED();"_qs;
+
+        if (returnType != u"void"_qs) {
+            code << u"return %1;"_qs.arg(m.returnType()->accessSemantics()
+                                                         == QQmlJSScope::AccessSemantics::Reference
+                                                 ? u"nullptr"_qs
+                                                 : returnType + u"{}");
+        }
+    }
+
+    QmltcMethod compiled {};
+    compiled.returnType = returnType;
+    compiled.name = m.methodName();
+    compiled.parameterList = std::move(compiledParams);
+    compiled.body = std::move(code);
+    compiled.type = methodType;
+    compiled.access = m.access();
+    if (methodType == QQmlJSMetaMethod::Method)
+        compiled.declarationPrefixes << u"Q_INVOKABLE"_qs;
+    current.functions.emplaceBack(compiled);
 }
 
 QT_END_NAMESPACE

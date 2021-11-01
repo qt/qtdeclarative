@@ -3,7 +3,7 @@
 ** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the test suite of the Qt Toolkit.
+** This file is part of the tools applications of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:GPL-EXCEPT$
 ** Commercial License Usage
@@ -26,27 +26,41 @@
 **
 ****************************************************************************/
 
-#include <qtest.h>
+#ifndef QMLTCCOMPILERUTILS_H
+#define QMLTCCOMPILERUTILS_H
 
-class tst_qmltc : public QObject
+#include <QtCore/qstring.h>
+#include <private/qqmljsscope_p.h>
+
+QT_BEGIN_NAMESPACE
+
+/*!
+    \internal
+
+    Wraps \a type into \c const and \c & if that is a "good" thing to do (e.g.
+    the type is not a pointer type).
+*/
+inline QString wrapInConstRef(QString type)
 {
-    Q_OBJECT
+    if (!type.endsWith(u'*'))
+        type = u"const " + type + u"&";
+    return type;
+}
 
-    bool isCacheDisabled() const
-    {
-        static bool isDisabled = []() { return qgetenv("QML_DISABLE_DISK_CACHE") == "1"_qba; }();
-        return isDisabled;
-    }
+/*!
+    \internal
 
-public:
-    tst_qmltc();
+    Returns an internalName() of \a s, using the accessSemantics() to augment
+    the result
+*/
+inline QString augmentInternalName(const QQmlJSScope::ConstPtr &s)
+{
+    Q_ASSERT(s->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence);
+    const QString suffix =
+            (s->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) ? u" *"_qs : u""_qs;
+    return s->internalName() + suffix;
+}
 
-private slots:
-    void initTestCase();
+QT_END_NAMESPACE
 
-    void qmlNameConflictResolution();
-    void helloWorld();
-    void qtQuickIncludes();
-    void enumerations();
-    void methods();
-};
+#endif // QMLTCCOMPILERUTILS_H

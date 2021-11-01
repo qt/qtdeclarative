@@ -33,6 +33,7 @@
 #include "helloworld.h"
 #include "simpleqtquicktypes.h"
 #include "typewithenums.h"
+#include "methods.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -141,6 +142,50 @@ void tst_qmltc::enumerations()
     QCOMPARE(enumerator2.keyCount(), 5);
     QCOMPARE(enumerator2.key(2), "B2_");
     QCOMPARE(enumerator2.value(2), PREPEND_NAMESPACE(typeWithEnums)::ValuesSpecified::B2_);
+}
+
+void tst_qmltc::methods()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(methods) created(&e);
+
+    const QMetaObject *mo = created.metaObject();
+    QVERIFY(mo);
+
+    QMetaMethod metaJustSignal = mo->method(mo->indexOfSignal("justSignal()"));
+    QMetaMethod metaTypedSignal = mo->method(mo->indexOfSignal(
+            QMetaObject::normalizedSignature("typedSignal(QString,QObject *,double)")));
+    QMetaMethod metaJustMethod = mo->method(mo->indexOfMethod("justMethod()"));
+    QMetaMethod metaUntypedMethod = mo->method(mo->indexOfMethod(
+            QMetaObject::normalizedSignature("untypedMethod(QVariant,QVariant)")));
+    QMetaMethod metaTypedMethod = mo->method(
+            mo->indexOfMethod(QMetaObject::normalizedSignature("typedMethod(double,int)")));
+
+    QVERIFY(metaJustSignal.isValid());
+    QVERIFY(metaTypedSignal.isValid());
+    QVERIFY(metaJustMethod.isValid());
+    QVERIFY(metaUntypedMethod.isValid());
+    QVERIFY(metaTypedMethod.isValid());
+
+    QCOMPARE(metaJustSignal.methodType(), QMetaMethod::Signal);
+    QCOMPARE(metaTypedSignal.methodType(), QMetaMethod::Signal);
+    QCOMPARE(metaJustMethod.methodType(), QMetaMethod::Method);
+    QCOMPARE(metaUntypedMethod.methodType(), QMetaMethod::Method);
+    QCOMPARE(metaTypedMethod.methodType(), QMetaMethod::Method);
+
+    QCOMPARE(metaTypedSignal.parameterMetaType(0), QMetaType::fromType<QString>());
+    QCOMPARE(metaTypedSignal.parameterMetaType(1), QMetaType::fromType<QObject *>());
+    QCOMPARE(metaTypedSignal.parameterMetaType(2), QMetaType::fromType<double>());
+    QCOMPARE(metaTypedSignal.parameterNames(), QList<QByteArray>({ "a", "b", "c" }));
+
+    QCOMPARE(metaUntypedMethod.parameterMetaType(0), QMetaType::fromType<QVariant>());
+    QCOMPARE(metaUntypedMethod.parameterMetaType(1), QMetaType::fromType<QVariant>());
+    QCOMPARE(metaUntypedMethod.parameterNames(), QList<QByteArray>({ "d", "c" }));
+
+    QCOMPARE(metaTypedMethod.parameterMetaType(0), QMetaType::fromType<double>());
+    QCOMPARE(metaTypedMethod.parameterMetaType(1), QMetaType::fromType<int>());
+    QCOMPARE(metaTypedMethod.returnMetaType(), QMetaType::fromType<QString>());
+    QCOMPARE(metaTypedMethod.parameterNames(), QList<QByteArray>({ "a", "b" }));
 }
 
 QTEST_MAIN(tst_qmltc)

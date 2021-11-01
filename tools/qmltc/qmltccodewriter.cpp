@@ -309,7 +309,10 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcMethod &method)
 {
     const auto [hSignature, cppSignature] = functionSignatures(method);
     // Note: augment return type with preambles in declaration
-    code.rawAppendToHeader(method.returnType + u" " + hSignature + u";");
+    QString prefix = method.declarationPrefixes.join(u' ');
+    if (!prefix.isEmpty())
+        prefix.append(u' ');
+    code.rawAppendToHeader(prefix + method.returnType + u" " + hSignature + u";");
 
     // do not generate method implementation if it is a signal
     const auto methodType = method.type;
@@ -331,13 +334,12 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcMethod &method)
 void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcCtor &ctor)
 {
     const auto [hSignature, cppSignature] = functionSignatures(ctor);
-    const QString returnTypeWithSpace = ctor.returnType.isEmpty() ? u""_qs : ctor.returnType + u" ";
-
-    code.rawAppendToHeader(returnTypeWithSpace + hSignature + u";");
+    QString prefix = ctor.declarationPrefixes.join(u' ');
+    if (!prefix.isEmpty())
+        prefix.append(u' ');
+    code.rawAppendToHeader(prefix + hSignature + u";");
 
     code.rawAppendToCpp(u""); // blank line
-    if (!returnTypeWithSpace.isEmpty())
-        code.rawAppendToCpp(returnTypeWithSpace);
     code.rawAppendSignatureToCpp(cppSignature);
     if (!ctor.initializerList.isEmpty()) {
         code.rawAppendToCpp(u":", 1);

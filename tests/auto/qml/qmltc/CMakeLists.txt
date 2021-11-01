@@ -10,6 +10,7 @@ set(qml_sources
     data/NameConflict.qml
     data/simpleQtQuickTypes.qml
     data/typeWithEnums.qml
+    data/methods.qml
 )
 
 set_source_files_properties(data/NameConflict.qml PROPERTIES

@@ -75,16 +75,17 @@ struct QmltcEnum
 
 struct QmltcMethodBase
 {
-    QString returnType; // C++ return type
     QString name; // C++ function name
     QList<QmltcVariable> parameterList; // C++ function parameter list
     QStringList body; // C++ function code
     QQmlJSMetaMethod::Access access = QQmlJSMetaMethod::Public; // access specifier
+    QStringList declarationPrefixes;
 };
 
 // Represents QML -> C++ compiled function
 struct QmltcMethod : QmltcMethodBase
 {
+    QString returnType; // C++ return type
     QQmlJSMetaMethod::Type type = QQmlJSMetaMethod::Method; // Qt function type
 };
 
