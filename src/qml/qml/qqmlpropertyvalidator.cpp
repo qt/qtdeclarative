@@ -248,7 +248,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
             continue;
         }
 
-        if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty
+        if ((pd && binding->type == QV4::CompiledData::Binding::Type_AttachedProperty)
                 || (!pd && binding->type == QV4::CompiledData::Binding::Type_GroupProperty)) {
             if (instantiatingBinding && (instantiatingBinding->isAttachedProperty()
                                          || instantiatingBinding->isGroupProperty())) {
@@ -258,6 +258,8 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
                                  ? QStringLiteral("Attached")
                                  : QStringLiteral("Group")));
             }
+            continue;
+        } else if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
             continue;
         }
 

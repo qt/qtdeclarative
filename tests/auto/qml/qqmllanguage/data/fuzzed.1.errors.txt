@@ -1,2 +1,2 @@
-2:8:Cannot assign to non-existent property "_G"
+2:11:Non-existent attached object
 

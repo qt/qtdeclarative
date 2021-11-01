@@ -340,24 +340,39 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
         }
     }
 
-    if (QQmlPropertyCache *thisCache = propertyCaches->at(objectIndex)) {
-        auto binding = obj->bindingsBegin();
-        auto end = obj->bindingsEnd();
-        for ( ; binding != end; ++binding)
-            if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
-                QQmlBindingInstantiationContext context(objectIndex, &(*binding), stringAt(binding->propertyNameIndex), thisCache);
+    QQmlPropertyCache *thisCache = propertyCaches->at(objectIndex);
+    auto binding = obj->bindingsBegin();
+    auto end = obj->bindingsEnd();
+    for (; binding != end; ++binding) {
+        switch (binding->type) {
+        case QV4::CompiledData::Binding::Type_Object:
+        case QV4::CompiledData::Binding::Type_GroupProperty:
+            // We can resolve object and group properties if we have a property cache.
+            if (thisCache)
+                break;
+            continue;
+        case QV4::CompiledData::Binding::Type_AttachedProperty:
+            // We can always resolve attached properties.
+            break;
+        default:
+            // Everything else is of no interest here.
+            continue;
+        }
 
-                // Binding to group property where we failed to look up the type of the
-                // property? Possibly a group property that is an alias that's not resolved yet.
-                // Let's attempt to resolve it after we're done with the aliases and fill in the
-                // propertyCaches entry then.
-                if (!context.resolveInstantiatingProperty())
-                    pendingGroupPropertyBindings->append(context);
+        QQmlBindingInstantiationContext context(
+                    objectIndex, &(*binding), stringAt(binding->propertyNameIndex), thisCache);
 
-                QQmlError error = buildMetaObjectRecursively(binding->value.objectIndex, context, VMEMetaObjectIsRequired::Maybe);
-                if (error.isValid())
-                    return error;
-            }
+        // Binding to group property where we failed to look up the type of the
+        // property? Possibly a group property that is an alias that's not resolved yet.
+        // Let's attempt to resolve it after we're done with the aliases and fill in the
+        // propertyCaches entry then.
+        if (!thisCache || !context.resolveInstantiatingProperty())
+            pendingGroupPropertyBindings->append(context);
+
+        QQmlError error = buildMetaObjectRecursively(
+                    binding->value.objectIndex, context, VMEMetaObjectIsRequired::Maybe);
+        if (error.isValid())
+            return error;
     }
 
     QQmlError noError;

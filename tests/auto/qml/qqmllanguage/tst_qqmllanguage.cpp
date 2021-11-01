@@ -383,6 +383,9 @@ private slots:
     void propertyNecromancy();
     void generalizedGroupedProperty();
 
+    void groupedAttachedProperty_data();
+    void groupedAttachedProperty();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -650,8 +653,6 @@ void tst_qqmllanguage::errors_data()
     QTest::newRow("invalidAttachedProperty.9") << "invalidAttachedProperty.9.qml" << "invalidAttachedProperty.9.errors.txt" << false;
     QTest::newRow("invalidAttachedProperty.10") << "invalidAttachedProperty.10.qml" << "invalidAttachedProperty.10.errors.txt" << false;
     QTest::newRow("invalidAttachedProperty.11") << "invalidAttachedProperty.11.qml" << "invalidAttachedProperty.11.errors.txt" << false;
-    QTest::newRow("invalidAttachedProperty.12") << "invalidAttachedProperty.12.qml" << "invalidAttachedProperty.12.errors.txt" << false;
-    QTest::newRow("invalidAttachedProperty.13") << "invalidAttachedProperty.13.qml" << "invalidAttachedProperty.13.errors.txt" << false;
 
     QTest::newRow("assignValueToSignal") << "assignValueToSignal.qml" << "assignValueToSignal.errors.txt" << false;
     QTest::newRow("emptySignal") << "emptySignal.qml" << "emptySignal.errors.txt" << false;
@@ -6583,12 +6584,23 @@ void tst_qqmllanguage::generalizedGroupedProperty()
     QVERIFY(!o.isNull());
 
     QCOMPARE(o->objectName(), QStringLiteral("foo"));
+    MyAttachedObject *rootAttached = static_cast<MyAttachedObject *>(
+                qmlAttachedPropertiesObject<MyQmlObject>(o.data()));
+    QVERIFY(rootAttached);
+    QCOMPARE(rootAttached->value(), 0);
+    QCOMPARE(rootAttached->value2(), 0);
 
     ImmediateProperties *child = qvariant_cast<ImmediateProperties *>(o->property("child"));
     QVERIFY(child);
     QCOMPARE(child->objectName(), QStringLiteral("barrrrr"));
     qmlExecuteDeferred(child);
     QCOMPARE(o->objectName(), QStringLiteral("barrrrr ..."));
+    QCOMPARE(rootAttached->value(), 10);
+    QCOMPARE(rootAttached->value2(), 0);
+    MyAttachedObject *childAttached = static_cast<MyAttachedObject *>(
+                qmlAttachedPropertiesObject<MyQmlObject>(child));
+    QVERIFY(childAttached);
+    QCOMPARE(childAttached->value(), 0);
 
     o->metaObject()->invokeMethod(o.data(), "something");
     QCOMPARE(o->objectName(), QStringLiteral("rabrab ..."));
@@ -6598,12 +6610,15 @@ void tst_qqmllanguage::generalizedGroupedProperty()
     qmlExecuteDeferred(meanChild);
     QCOMPARE(child->objectName(), QStringLiteral("bar"));
     QCOMPARE(o->objectName(), QStringLiteral("bar ..."));
+    QCOMPARE(childAttached->value(), 11);
 
     ImmediateProperties *deferred = qvariant_cast<ImmediateProperties *>(o->property("deferred"));
     QVERIFY(deferred);
     QCOMPARE(deferred->objectName(), QStringLiteral("holz"));
     qmlExecuteDeferred(deferred);
     QCOMPARE(o->objectName(), QStringLiteral("holz ..."));
+    QCOMPARE(rootAttached->value(), 10);
+    QCOMPARE(rootAttached->value2(), 12);
 
     ImmediateProperties *meanDeferred
             = qvariant_cast<ImmediateProperties *>(o->property("meanDeferred"));
@@ -6624,6 +6639,32 @@ void tst_qqmllanguage::generalizedGroupedProperty()
         QVERIFY(bad.isError());
         QVERIFY(bad.errorString().contains(QStringLiteral("Invalid grouped property access")));
     }
+}
+
+void tst_qqmllanguage::groupedAttachedProperty_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addRow("12") << QStringLiteral("validAttachedProperty.12.qml");
+    QTest::addRow("13") << QStringLiteral("validAttachedProperty.13.qml");
+}
+
+void tst_qqmllanguage::groupedAttachedProperty()
+{
+    QFETCH(QString, file);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl(file));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    MyTypeObject *typed = qobject_cast<MyTypeObject *>(o.data());
+    QVERIFY(typed != nullptr);
+    MyGroupedObject *grouped = typed->grouped();
+    QVERIFY(grouped != nullptr);
+    MyAttachedObject *attached = qobject_cast<MyAttachedObject *>(
+                qmlAttachedPropertiesObject<MyQmlObject>(grouped));
+    QVERIFY(attached != nullptr);
+    QCOMPARE(attached->value(), 10);
 }
 
 QTEST_MAIN(tst_qqmllanguage)
