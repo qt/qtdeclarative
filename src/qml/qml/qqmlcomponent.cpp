@@ -907,9 +907,10 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
 {
     Q_Q(QQmlComponent);
     auto cleanup = qScopeGuard([this] {
-        if (!state.errors.isEmpty()) {
-            for (const auto &e : qAsConst(state.errors))
+        if (!state.errors.isEmpty() && lcQmlComponentGeneral().isDebugEnabled()) {
+            for (const auto &e : qAsConst(state.errors)) {
                 qCDebug(lcQmlComponentGeneral) << "QQmlComponent: " << e.toString();
+            }
         }
     });
     if (!context) {
