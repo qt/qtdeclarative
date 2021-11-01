@@ -84,6 +84,7 @@ private:
     Q_ENUM(RestorationMode)
     QML_NAMED_ELEMENT(Binding)
     QML_ADDED_IN_VERSION(2, 0)
+    Q_CLASSINFO("ImmediatePropertyNames", "objectName,target,property,value,when,delayed,restoreMode");
 
 public:
     QQmlBind(QObject *parent=nullptr);

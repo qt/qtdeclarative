@@ -49,6 +49,7 @@
 #include <qqmlengine.h>
 #include <qqmlcontext.h>
 #include <qqmlproperty.h>
+#include <qqmlpropertymap.h>
 #include <qqmlinfo.h>
 
 #include <QtCore/qfile.h>
@@ -56,6 +57,8 @@
 #include <QtCore/qtimer.h>
 #include <QtCore/qloggingcategory.h>
 #include <private/qqmlanybinding_p.h>
+#include <private/qv4qmlcontext_p.h>
+#include <private/qqmlcomponent_p.h>
 
 #include <private/qobject_p.h>
 
@@ -63,62 +66,302 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcBindingRemoval)
 
+enum class QQmlBindEntryKind: quint8 {
+    V4Value,
+    Variant,
+    Binding,
+    None
+};
+
+/*!
+ * \internal
+ * QQmlBindEntryContent can store one of QV4::Value, QVariant, QQmlAnyBinding, or nothing,
+ * as denoted by QQmlBindEntryKind. It expects the calling code to know what is stored at
+ * any time. On each method invocation, the current kind has to be passed as last parameter
+ * and the new kind is returned.
+ */
+union QQmlBindEntryContent {
+public:
+    QQmlBindEntryContent() {}
+    ~QQmlBindEntryContent() {}
+
+    [[nodiscard]] QQmlBindEntryKind set(
+            QQmlBindEntryContent &&other, QQmlBindEntryKind newKind, QQmlBindEntryKind oldKind)
+    {
+        silentDestroy(oldKind);
+        switch (newKind) {
+        case QQmlBindEntryKind::V4Value:
+            new (&v4Value) QV4::PersistentValue(std::move(other.v4Value));
+            break;
+        case QQmlBindEntryKind::Variant:
+            new (&variant) QVariant(std::move(other.variant));
+            break;
+        case QQmlBindEntryKind::Binding:
+            new (&binding) QQmlAnyBinding(std::move(other.binding));
+            break;
+        case QQmlBindEntryKind::None:
+            break;
+        }
+        return newKind;
+    }
+
+    [[nodiscard]] QQmlBindEntryKind set(
+            const QQmlBindEntryContent &other, QQmlBindEntryKind newKind, QQmlBindEntryKind oldKind)
+    {
+        silentDestroy(oldKind);
+        switch (newKind) {
+        case QQmlBindEntryKind::V4Value:
+            new (&v4Value) QV4::PersistentValue(other.v4Value);
+            break;
+        case QQmlBindEntryKind::Variant:
+            new (&variant) QVariant(other.variant);
+            break;
+        case QQmlBindEntryKind::Binding:
+            new (&binding) QQmlAnyBinding(other.binding);
+            break;
+        case QQmlBindEntryKind::None:
+            break;
+        }
+        return newKind;
+    }
+
+    [[nodiscard]] QQmlBindEntryKind destroy(QQmlBindEntryKind kind)
+    {
+        switch (kind) {
+        case QQmlBindEntryKind::V4Value:
+            v4Value.~PersistentValue();
+            break;
+        case QQmlBindEntryKind::Variant:
+            variant.~QVariant();
+            break;
+        case QQmlBindEntryKind::Binding:
+            binding.~QQmlAnyBinding();
+            break;
+        case QQmlBindEntryKind::None:
+            break;
+        }
+        return QQmlBindEntryKind::None;
+    }
+
+    [[nodiscard]] QQmlBindEntryKind set(QVariant v, QQmlBindEntryKind oldKind)
+    {
+        silentDestroy(oldKind);
+        new (&variant) QVariant(std::move(v));
+        return QQmlBindEntryKind::Variant;
+    }
+
+    [[nodiscard]] QQmlBindEntryKind set(QV4::PersistentValue v, QQmlBindEntryKind oldKind)
+    {
+        silentDestroy(oldKind);
+        new (&v4Value) QV4::PersistentValue(std::move(v));
+        return QQmlBindEntryKind::V4Value;
+    }
+
+    [[nodiscard]] QQmlBindEntryKind set(QQmlAnyBinding v, QQmlBindEntryKind oldKind)
+    {
+        silentDestroy(oldKind);
+        new (&binding) QQmlAnyBinding(std::move(v));
+        return QQmlBindEntryKind::Binding;
+    }
+
+    QV4::PersistentValue v4Value;
+    QVariant variant;
+    QQmlAnyBinding binding;
+
+private:
+    void silentDestroy(QQmlBindEntryKind oldKind)
+    {
+        const QQmlBindEntryKind dead = destroy(oldKind);
+        Q_ASSERT(dead == QQmlBindEntryKind::None);
+        Q_UNUSED(dead);
+    }
+
+    QQmlBindEntryContent &operator=(const QQmlBindEntryContent &) = delete;
+    QQmlBindEntryContent &operator=(QQmlBindEntryContent &&) = delete;
+};
+
+/*!
+ * \internal
+ * QQmlBindEntry holds two QQmlBindEntryContent members, along with their kinds.
+ * The \l current content is the value or binding the Binding element installs on
+ * the target if enabled (that is, if \l{when}). The \l previous content is what
+ * the target holds before the Binding element installs its binding or value. It
+ * is restored if !\l{when}. The \l prop member holds the target property.
+ */
+struct QQmlBindEntry
+{
+    QQmlBindEntry() = default;
+    QQmlBindEntry(QQmlBindEntry &&other) : prop(std::move(other.prop))
+    {
+        currentKind = current.set(std::move(other.current), other.currentKind, currentKind);
+        previousKind = previous.set(std::move(other.previous), other.previousKind, previousKind);
+    }
+
+    QQmlBindEntry(const QQmlBindEntry &other)
+        : prop(other.prop)
+    {
+        currentKind = current.set(other.current, other.currentKind, currentKind);
+        previousKind = previous.set(other.previous, other.previousKind, previousKind);
+    }
+
+    ~QQmlBindEntry()
+    {
+        currentKind = current.destroy(currentKind);
+        previousKind = previous.destroy(previousKind);
+    }
+
+    QQmlBindEntry &operator=(QQmlBindEntry &&other)
+    {
+        if (this == &other)
+            return *this;
+        prop = std::move(other.prop);
+        currentKind = current.set(std::move(other.current), other.currentKind, currentKind);
+        previousKind = previous.set(std::move(other.previous), other.previousKind, previousKind);
+        return *this;
+    }
+
+    QQmlBindEntry &operator=(const QQmlBindEntry &other)
+    {
+        if (this == &other)
+            return *this;
+        prop = other.prop;
+        currentKind = current.set(other.current, other.currentKind, currentKind);
+        previousKind = previous.set(other.previous, other.previousKind, previousKind);
+        return *this;
+    }
+
+
+    QQmlBindEntryContent current;
+    QQmlBindEntryContent previous;
+    QQmlProperty prop;
+    QQmlBindEntryKind currentKind = QQmlBindEntryKind::None;
+    QQmlBindEntryKind previousKind = QQmlBindEntryKind::None;
+
+    void validate(QQmlBind *q) const;
+    void clearPrev();
+    void setTarget(QQmlBind *q, const QQmlProperty &p);
+};
+
 class QQmlBindPrivate : public QObjectPrivate
 {
 public:
     QQmlBindPrivate()
-        : obj(nullptr)
-        , prevBind(nullptr)
-        , prevIsVariant(false)
+        : when(true)
         , componentComplete(true)
         , delayed(false)
         , pendingEval(false)
         , restoreBinding(true)
         , restoreValue(true)
         , writingProperty(false)
-    {}
+        , lastIsTarget(false)
+    {
+    }
     ~QQmlBindPrivate() { }
 
-    QQmlNullableValue<bool> when;
+    // There can be multiple entries when using the generalized grouped
+    // property syntax. One is used for target/property/value.
+    QVarLengthArray<QQmlBindEntry, 1> entries;
+
+    // The target object if using the \l target property
     QPointer<QObject> obj;
+
+    // Any values we need to create a proxy for. This is necessary when
+    // using the \l delayed member on generalized grouped properties. See
+    // the note on \l delayed.
+    std::unique_ptr<QQmlPropertyMap> delayedValues;
+
+    // The property name if using the \l property property.
     QString propName;
 
-    // An invalid QVariant has special semantics that you may explicitly want when writing the
-    // value. Therefore we need to denote "is not set" in a different way. We do this by wrapping
-    // the value in QQmlNullableValue.
-    QQmlNullableValue<QVariant> value;
+    // Whether the binding is enabled.
+    bool when: 1;
 
-    QQmlProperty prop;
-    QQmlAnyBinding prevBind;
-    QV4::PersistentValue v4Value;
-    QVariant prevValue;
-    bool prevIsVariant:1;
+    // Whether we have already parsed any generalized grouped properties
+    // we might need.
     bool componentComplete:1;
-    bool delayed:1;
-    bool pendingEval:1;
-    bool restoreBinding:1;
-    bool restoreValue:1;
-    bool writingProperty: 1;
 
-    void validate(QObject *binding) const;
-    void clearPrev();
-    bool prevBindingSet() const;
+    // Whether we should run in "delayed" mode and proxy all values before
+    // applying them to the target.
+    bool delayed:1;
+
+    // In delayed mode, when using the target/property mode, the \l value
+    // is the proxy. Then pendingEval denotes that a timer is active to
+    // apply the value. We should not start another timer then.
+    bool pendingEval:1;
+
+    // Whether we should restore bindings on !when.
+    // TODO: Deprecate this and always do.
+    bool restoreBinding:1;
+
+    // Whether we should restore values on !when.
+    // TODO: Deprecate this and always do.
+    bool restoreValue:1;
+
+    // writingProperty tracks whether we are updating the target property
+    // when using target/property/value. We use this information to warn about
+    // binding removal if we detect the target property to be updated while we
+    // are not writing it. This doesn't remove the Binding after all.
+    // For generalized grouped properties, we don't have to do this as writing
+    // the target property does remove the binding, just like it removes any
+    // other binding.
+    bool writingProperty:1;
+
+    // Whether the last entry is the the target property referred to by the
+    // \l target object and the \l property property. This will generally be
+    // the case when using \l target and \l property.
+    bool lastIsTarget:1;
+
+    QQmlBindEntry *targetEntry();
+    void validate(QQmlBind *binding) const;
+    void decodeBinding(
+            QQmlBind *q, const QString &propertyPrefix, QQmlData::DeferredData *deferredData,
+            const QV4::CompiledData::Binding *binding,
+            QQmlComponentPrivate::ConstructionState *immediateState);
+    void createDelayedValues();
+    void onDelayedValueChanged(const QString &delayedName);
+    void evalDelayed();
+    void buildBindEntries(QQmlBind *q, QQmlComponentPrivate::DeferredState *deferredState);
 };
 
-void QQmlBindPrivate::validate(QObject *binding) const
+void QQmlBindEntry::validate(QQmlBind *q) const
 {
-    if (!obj || (when.isValid() && !when))
-        return;
-
-    if (!prop.isValid()) {
-        qmlWarning(binding) << "Property '" << propName << "' does not exist on " << QQmlMetaType::prettyTypeName(obj) << ".";
-        return;
-    }
-
     if (!prop.isWritable()) {
-        qmlWarning(binding) << "Property '" << propName << "' on " << QQmlMetaType::prettyTypeName(obj) << " is read-only.";
-        return;
+        qmlWarning(q) << "Property '" << prop.name() << "' on "
+                      << QQmlMetaType::prettyTypeName(prop.object()) << " is read-only.";
     }
+}
+
+QQmlBindEntry *QQmlBindPrivate::targetEntry()
+{
+    if (!lastIsTarget) {
+        entries.append(QQmlBindEntry());
+        lastIsTarget = true;
+    }
+    return &entries.last();
+}
+
+void QQmlBindPrivate::validate(QQmlBind *q) const
+{
+    if (!when)
+        return;
+
+    qsizetype iterationEnd = entries.length();
+    if (lastIsTarget) {
+        if (obj) {
+            Q_ASSERT(!entries.isEmpty());
+            const QQmlBindEntry &last = entries.last();
+            if (!last.prop.isValid()) {
+                qmlWarning(q) << "Property '" << propName << "' does not exist on "
+                              << QQmlMetaType::prettyTypeName(obj) << ".";
+                --iterationEnd;
+            }
+        } else {
+            --iterationEnd;
+        }
+    }
+
+    for (qsizetype i = 0; i < iterationEnd; ++i)
+        entries[i].validate(q);
 }
 
 /*!
@@ -141,10 +384,10 @@ void QQmlBindPrivate::validate(QObject *binding) const
     For example, in a C++ application that maps an "app.enteredText" property
     into QML, you can use Binding to update the enteredText property.
 
-    \code
+    \qml
     TextEdit { id: myTextField; text: "Please type here..." }
-    Binding { target: app; property: "enteredText"; value: myTextField.text }
-    \endcode
+    Binding { app.enteredText: myTextField.text }
+    \endqml
 
     When \c{text} changes, the C++ property \c{enteredText} will update
     automatically.
@@ -190,12 +433,12 @@ QQmlBind::QQmlBind(QObject *parent)
     This property holds when the binding is active.
     This should be set to an expression that evaluates to true when you want the binding to be active.
 
-    \code
+    \qml
     Binding {
-        target: contactName; property: 'text'
-        value: name; when: list.ListView.isCurrentItem
+        contactName.text: name
+        when: list.ListView.isCurrentItem
     }
-    \endcode
+    \endqml
 
     By default, any binding or value that was set perviously is restored when the binding becomes
     inactive. You can customize the restoration behavior using the \l restoreMode property.
@@ -211,7 +454,7 @@ bool QQmlBind::when() const
 void QQmlBind::setWhen(bool v)
 {
     Q_D(QQmlBind);
-    if (!d->when.isNull && d->when == v)
+    if (d->when == v)
         return;
 
     d->when = v;
@@ -223,7 +466,24 @@ void QQmlBind::setWhen(bool v)
 /*!
     \qmlproperty QtObject QtQml::Binding::target
 
-    The object to be updated.
+    The object to be updated. You only need to use this property if you can't
+    supply the binding target declaratively. The following two pieces of code
+    are equivalent.
+
+    \qml
+    Binding { contactName.text: name }
+    \endqml
+
+    \qml
+    Binding {
+        target: contactName
+        property: "text"
+        value: name
+    }
+    \endqml
+
+    The former one is much more compact, but you cannot replace the target
+    object or property at run time. With the latter one you can.
 */
 QObject *QQmlBind::object()
 {
@@ -234,7 +494,7 @@ QObject *QQmlBind::object()
 void QQmlBind::setObject(QObject *obj)
 {
     Q_D(QQmlBind);
-    if (d->obj && d->when.isValid() && d->when) {
+    if (d->obj && d->when) {
         /* if we switch the object at runtime, we need to restore the
            previous binding on the old object before continuing */
         d->when = false;
@@ -270,6 +530,14 @@ void QQmlBind::setObject(QObject *obj)
         value: 100
     }
     \endqml
+
+    You only need to use this property if you can't supply the binding target
+    declaratively. The following snippet of code is equivalent to the above
+    binding, but more compact:
+
+    \qml
+    Binding { item.rectangle.x: 100 }
+    \endqml
 */
 QString QQmlBind::property() const
 {
@@ -280,7 +548,7 @@ QString QQmlBind::property() const
 void QQmlBind::setProperty(const QString &p)
 {
     Q_D(QQmlBind);
-    if (!d->propName.isEmpty() && d->when.isValid() && d->when) {
+    if (!d->propName.isEmpty() && d->when) {
         /* if we switch the property name at runtime, we need to restore the
            previous binding on the old object before continuing */
         d->when = false;
@@ -300,17 +568,24 @@ void QQmlBind::setProperty(const QString &p)
 
     The value to be set on the target object and property.  This can be a
     constant (which isn't very useful), or a bound expression.
+
+    You only need to use this property if you can't supply the binding target
+    declaratively. Otherwise you can directly bind to the target.
 */
 QVariant QQmlBind::value() const
 {
     Q_D(const QQmlBind);
-    return d->value.value;
+    if (!d->lastIsTarget)
+        return QVariant();
+    Q_ASSERT(d->entries.last().currentKind == QQmlBindEntryKind::Variant);
+    return d->entries.last().current.variant;
 }
 
 void QQmlBind::setValue(const QVariant &v)
 {
     Q_D(QQmlBind);
-    d->value = v;
+    QQmlBindEntry *targetEntry = d->targetEntry();
+    targetEntry->currentKind = targetEntry->current.set(v, targetEntry->currentKind);
     prepareEval();
 }
 
@@ -326,11 +601,19 @@ void QQmlBind::setValue(const QVariant &v)
 
     \code
     Binding {
-        target: contactName; property: 'text'
-        value: givenName + " " + familyName; when: list.ListView.isCurrentItem
+        contactName.text.value: givenName + " " + familyName
+        when: list.ListView.isCurrentItem
         delayed: true
     }
     \endcode
+
+    \note Using the \l delayed property incurs a run time cost as the Binding
+          element has to create a proxy for the value, so that it can delay its
+          application to the actual target. When using the \l target and
+          \l property properties, this cost is lower because the \l value
+          property can be re-used as proxy. When using the form shown above,
+          Binding will allocate a separate object with a dynamic meta-object to
+          hold the proxy values.
 */
 bool QQmlBind::delayed() const
 {
@@ -345,6 +628,28 @@ void QQmlBind::setDelayed(bool delayed)
         return;
 
     d->delayed = delayed;
+    if (!d->componentComplete)
+        return;
+
+    d->delayedValues.reset();
+
+    QVarLengthArray<QQmlBindEntry, 1> oldEntries = std::move(d->entries);
+    d->entries.clear();
+    d->buildBindEntries(this, nullptr);
+
+    if (d->lastIsTarget) {
+        d->entries.append(std::move(oldEntries.last()));
+        oldEntries.pop_back();
+    }
+
+    for (qsizetype i = 0, end = oldEntries.length(); i < end; ++i) {
+        QQmlBindEntry &newEntry = d->entries[i];
+        QQmlBindEntry &oldEntry = oldEntries[i];
+        newEntry.previousKind = newEntry.previous.set(
+                    std::move(oldEntry.previous), oldEntry.previousKind, newEntry.previousKind);
+        if (d->delayed && oldEntry.currentKind == QQmlBindEntryKind::Binding)
+            QQmlAnyBinding::removeBindingFrom(oldEntry.prop);
+    }
 
     if (!d->delayed)
         eval();
@@ -396,20 +701,24 @@ void QQmlBind::setRestoreMode(RestorationMode newMode)
 void QQmlBind::setTarget(const QQmlProperty &p)
 {
     Q_D(QQmlBind);
+    d->targetEntry()->setTarget(this, p);
+}
 
+void QQmlBindEntry::setTarget(QQmlBind *q, const QQmlProperty &p)
+{
     if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
-        if (QObject *oldObject = d->prop.object()) {
-            QMetaProperty prop = oldObject->metaObject()->property(d->prop.index());
-            if (prop.hasNotifySignal()) {
-                QByteArray signal('2' + prop.notifySignal().methodSignature());
+        if (QObject *oldObject = prop.object()) {
+            QMetaProperty metaProp = oldObject->metaObject()->property(prop.index());
+            if (metaProp.hasNotifySignal()) {
+                QByteArray signal('2' + metaProp.notifySignal().methodSignature());
                 QObject::disconnect(oldObject, signal.constData(),
-                                    this, SLOT(targetValueChanged()));
+                                    q, SLOT(targetValueChanged()));
             }
         }
-        p.connectNotifySignal(this, SLOT(targetValueChanged()));
+        p.connectNotifySignal(q, SLOT(targetValueChanged()));
     }
 
-    d->prop = p;
+    prop = p;
 }
 
 void QQmlBind::classBegin()
@@ -418,14 +727,225 @@ void QQmlBind::classBegin()
     d->componentComplete = false;
 }
 
+static QQmlAnyBinding createBinding(
+        const QQmlProperty &prop, const QV4::CompiledData::Binding *binding,
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
+        const QQmlRefPointer<QQmlContextData> &contextData,
+        QObject *scopeObject)
+{
+    switch (binding->type) {
+    case QV4::CompiledData::Binding::Type_Translation:
+    case QV4::CompiledData::Binding::Type_TranslationById:
+        return QQmlAnyBinding::createTranslationBinding(prop, compilationUnit, binding, scopeObject);
+    case QV4::CompiledData::Binding::Type_Script: {
+        const QQmlBinding::Identifier id = binding->value.compiledScriptIndex;
+        if (id == QQmlBinding::Invalid) {
+            return QQmlAnyBinding::createFromCodeString(
+                    prop, compilationUnit->bindingValueAsString(binding), scopeObject,
+                    contextData, compilationUnit->finalUrlString(), binding->location.line);
+        }
+        QV4::Scope scope(contextData->engine()->handle());
+        QV4::Scoped<QV4::QmlContext> qmlCtxt(
+                scope, QV4::QmlContext::create(
+                               scope.engine->rootContext(), contextData, scopeObject));
+        return QQmlAnyBinding::createFromFunction(
+                prop, compilationUnit->runtimeFunctions.at(id), scopeObject, contextData,
+                qmlCtxt);
+    }
+    default:
+        break;
+    }
+    return QQmlAnyBinding();
+}
+
+void QQmlBindPrivate::decodeBinding(
+        QQmlBind *q, const QString &propertyPrefix,
+        QQmlData::DeferredData *deferredData,
+        const QV4::CompiledData::Binding *binding,
+        QQmlComponentPrivate::ConstructionState  *immediateState)
+{
+    const QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit
+            = deferredData->compilationUnit;
+    const QString propertyName = propertyPrefix
+            + compilationUnit->stringAt(binding->propertyNameIndex);
+
+    if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty
+        || binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
+        const QString pre = propertyName + u'.';
+        const QV4::CompiledData::Object *subObj
+                = compilationUnit->objectAt(binding->value.objectIndex);
+        const QV4::CompiledData::Binding *subBinding = subObj->bindingTable();
+        for (quint32 i = 0; i < subObj->nBindings; ++i, ++subBinding)
+            decodeBinding(q, pre, deferredData, subBinding, immediateState);
+        return;
+    }
+
+    QQmlBindEntry entry;
+    QQmlContext *context = qmlContext(q);
+    const QQmlRefPointer<QQmlContextData> contextData = QQmlContextData::get(context);
+    entry.prop = QQmlPropertyPrivate::create(nullptr, propertyName, contextData,
+                                             QQmlPropertyPrivate::InitFlag::AllowId);
+    if (!entry.prop.isValid()) {
+        // Try again in the context of this object. If that works, it's a regular property.
+        // ... unless we're not supposed to handle regular properties. Then ignore it.
+        if (!immediateState)
+            return;
+
+        QQmlProperty property(q, propertyName);
+        if (property.isValid()) {
+            if (!immediateState->creator) {
+                immediateState->completePending = true;
+                immediateState->creator = std::make_unique<QQmlObjectCreator>(
+                            deferredData->context->parent(), deferredData->compilationUnit,
+                            contextData);
+                immediateState->creator->beginPopulateDeferred(deferredData->context);
+            }
+            immediateState->creator->populateDeferredBinding(
+                        property, deferredData->deferredIdx, binding);
+        } else {
+            qmlWarning(q).nospace() << "Unknown name " << propertyName
+                                    << ". The binding is ignored.";
+        }
+        return;
+    }
+
+    const auto setVariant = [&entry](QVariant var) {
+        entry.currentKind = entry.current.set(std::move(var), entry.currentKind);
+    };
+
+    const auto setBinding = [&entry](QQmlAnyBinding binding) {
+        entry.currentKind = entry.current.set(binding, entry.currentKind);
+    };
+
+    switch (binding->type) {
+    case QV4::CompiledData::Binding::Type_AttachedProperty:
+    case QV4::CompiledData::Binding::Type_GroupProperty:
+        Q_UNREACHABLE(); // Handled above
+        break;
+    case QV4::CompiledData::Binding::Type_Translation:
+    case QV4::CompiledData::Binding::Type_TranslationById:
+    case QV4::CompiledData::Binding::Type_Script:
+        if (delayed) {
+            if (!delayedValues)
+                createDelayedValues();
+            const QString delayedName = QString::number(entries.length());
+            delayedValues->insert(delayedName, QVariant());
+            QQmlProperty bindingTarget = QQmlProperty(delayedValues.get(), delayedName);
+            Q_ASSERT(bindingTarget.isValid());
+            QQmlAnyBinding anyBinding = createBinding(
+                    bindingTarget, binding, compilationUnit, contextData, q);
+            anyBinding.installOn(bindingTarget);
+        } else {
+            setBinding(createBinding(entry.prop, binding, compilationUnit, contextData, q));
+        }
+        break;
+    case QV4::CompiledData::Binding::Type_String:
+        setVariant(compilationUnit->bindingValueAsString(binding));
+        break;
+    case QV4::CompiledData::Binding::Type_Number:
+        setVariant(compilationUnit->bindingValueAsNumber(binding));
+        break;
+    case QV4::CompiledData::Binding::Type_Boolean:
+        setVariant(binding->valueAsBoolean());
+        break;
+    case QV4::CompiledData::Binding::Type_Null:
+        setVariant(QVariant::fromValue(nullptr));
+        break;
+    }
+
+    entries.append(std::move(entry));
+}
+
+void QQmlBindPrivate::createDelayedValues()
+{
+    delayedValues = std::make_unique<QQmlPropertyMap>();
+    QObject::connect(
+            delayedValues.get(), &QQmlPropertyMap::valueChanged,
+            delayedValues.get(), [this](const QString &delayedName, const QVariant &value) {
+                Q_UNUSED(value);
+                onDelayedValueChanged(delayedName);
+            }
+    );
+}
+
+void QQmlBindPrivate::onDelayedValueChanged(const QString &delayedName)
+{
+    Q_ASSERT(delayed);
+    Q_ASSERT(delayedValues);
+    const QString pendingName = QStringLiteral("pending");
+    QStringList pending = qvariant_cast<QStringList>((*delayedValues)[pendingName]);
+    if (componentComplete && pending.size() == 0)
+        QTimer::singleShot(0, delayedValues.get(), [this]() { evalDelayed(); });
+    else if (pending.contains(delayedName))
+        return;
+
+    pending.append(delayedName);
+    (*delayedValues)[pendingName].setValue(std::move(pending));
+}
+
+void QQmlBindPrivate::evalDelayed()
+{
+    if (!when || !delayedValues)
+        return;
+
+    const QString pendingName = QStringLiteral("pending");
+    const QStringList pending = qvariant_cast<QStringList>((*delayedValues)[pendingName]);
+    for (const QString &delayedName : pending) {
+        bool ok;
+        const int delayedIndex = delayedName.toInt(&ok);
+        Q_ASSERT(ok);
+        Q_ASSERT(delayedIndex >= 0 && delayedIndex < entries.length());
+        entries[delayedIndex].prop.write((*delayedValues)[delayedName]);
+    }
+    (*delayedValues)[pendingName].setValue(QStringList());
+}
+
+void QQmlBindPrivate::buildBindEntries(QQmlBind *q, QQmlComponentPrivate::DeferredState *deferredState)
+{
+    QQmlData *data = QQmlData::get(q);
+    if (data && !data->deferredData.isEmpty()) {
+        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(data->context->engine());
+        for (QQmlData::DeferredData *deferredData : data->deferredData) {
+            QMultiHash<int, const QV4::CompiledData::Binding *> *bindings = &deferredData->bindings;
+            if (deferredState) {
+                QQmlComponentPrivate::ConstructionState constructionState;
+                for (auto it = bindings->cbegin(); it != bindings->cend(); ++it)
+                    decodeBinding(q, QString(), deferredData, *it, &constructionState);
+
+
+                if (constructionState.creator.get()) {
+                    ++ep->inProgressCreations;
+                    constructionState.creator->finalizePopulateDeferred();
+                    constructionState.errors << constructionState.creator->errors;
+                    deferredState->push_back(std::move(constructionState));
+                }
+            } else {
+                for (auto it = bindings->cbegin(); it != bindings->cend(); ++it)
+                    decodeBinding(q, QString(), deferredData, *it, nullptr);
+            }
+        }
+
+        if (deferredState) {
+            data->releaseDeferredData();
+            if (!deferredState->empty())
+                QQmlComponentPrivate::completeDeferred(ep, deferredState);
+        }
+    }
+}
+
 void QQmlBind::componentComplete()
 {
     Q_D(QQmlBind);
+    QQmlComponentPrivate::DeferredState deferredState;
+    d->buildBindEntries(this, &deferredState);
     d->componentComplete = true;
-    if (!d->prop.isValid()) {
-        setTarget(QQmlProperty(d->obj, d->propName, qmlContext(this)));
-        d->validate(this);
+    if (!d->propName.isEmpty() || d->obj) {
+        QQmlBindEntry *target = d->targetEntry();
+        if (!target->prop.isValid())
+            target->setTarget(this, QQmlProperty(d->obj, d->propName, qmlContext(this)));
     }
+    d->validate(this);
+    d->evalDelayed();
     eval();
 }
 
@@ -441,79 +961,108 @@ void QQmlBind::prepareEval()
     }
 }
 
-void QQmlBindPrivate::clearPrev()
+void QQmlBindEntry::clearPrev()
 {
-    prevBind = nullptr;
-    v4Value.clear();
-    prevValue.clear();
-    prevIsVariant = false;
-}
-
-bool QQmlBindPrivate::prevBindingSet() const
-{
-    return prevBind;
+    previousKind = previous.destroy(previousKind);
 }
 
 void QQmlBind::eval()
 {
     Q_D(QQmlBind);
     d->pendingEval = false;
-    if (!d->prop.isValid() || d->value.isNull || !d->componentComplete)
+    if (!d->componentComplete)
         return;
 
-    if (d->when.isValid()) {
+    for (QQmlBindEntry &entry : d->entries) {
+        if (!entry.prop.isValid() || (entry.currentKind == QQmlBindEntryKind::None))
+            continue;
+
         if (!d->when) {
             //restore any previous binding
-            if (d->prevBindingSet()) {
+            switch (entry.previousKind) {
+            case QQmlBindEntryKind::Binding:
                 if (d->restoreBinding) {
-                    QQmlAnyBinding p = d->prevBind;
-                    d->clearPrev(); // Do that before setBinding(), as setBinding() may recurse.
-                    p.installOn(d->prop);
+                    QQmlAnyBinding p = std::move(entry.previous.binding);
+                    entry.clearPrev(); // Do that before setBinding(), as setBinding() may recurse.
+                    p.installOn(entry.prop);
                 }
-            } else if (!d->v4Value.isEmpty()) {
+                break;
+            case QQmlBindEntryKind::V4Value:
                 if (d->restoreValue) {
-                    auto propPriv = QQmlPropertyPrivate::get(d->prop);
+                    auto propPriv = QQmlPropertyPrivate::get(entry.prop);
                     QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(propPriv->object);
                     Q_ASSERT(vmemo);
-                    vmemo->setVMEProperty(propPriv->core.coreIndex(), *d->v4Value.valueRef());
-                    d->clearPrev();
+                    vmemo->setVMEProperty(propPriv->core.coreIndex(),
+                                          *entry.previous.v4Value.valueRef());
+                    entry.clearPrev();
                 }
-            } else if (d->prevIsVariant) {
+                break;
+            case QQmlBindEntryKind::Variant:
                 if (d->restoreValue) {
-                    d->prop.write(d->prevValue);
-                    d->clearPrev();
+                    entry.prop.write(entry.previous.variant);
+                    entry.clearPrev();
                 }
+                break;
+            case QQmlBindEntryKind::None:
+                break;
             }
-            return;
+            continue;
         }
 
         //save any set binding for restoration
-        if (!d->prevBindingSet() && d->v4Value.isEmpty() && !d->prevIsVariant) {
+        if (entry.previousKind == QQmlBindEntryKind::None) {
             // try binding first; we need to use takeFrom to properly unlink the binding
-            d->prevBind = QQmlAnyBinding::takeFrom(d->prop);
-
-            if (!d->prevBindingSet()) { // nope, try a V4 value next
-                auto propPriv = QQmlPropertyPrivate::get(d->prop);
+            QQmlAnyBinding prevBind = QQmlAnyBinding::takeFrom(entry.prop);
+            if (prevBind) {
+                entry.previousKind = entry.previous.set(std::move(prevBind), entry.previousKind);
+            } else {
+                // nope, try a V4 value next
+                auto propPriv = QQmlPropertyPrivate::get(entry.prop);
                 auto propData = propPriv->core;
                 if (!propPriv->valueTypeData.isValid() && propData.isVarProperty()) {
                     QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(propPriv->object);
                     Q_ASSERT(vmemo);
                     auto retVal = vmemo->vmeProperty(propData.coreIndex());
-                    d->v4Value = QV4::PersistentValue(vmemo->engine, retVal);
-                } else { // nope, use the meta object to get a QVariant
-                    d->prevValue = d->prop.read();
-                    d->prevIsVariant = true;
+                    entry.previousKind = entry.previous.set(
+                                QV4::PersistentValue(vmemo->engine, retVal), entry.previousKind);
+                } else {
+                    // nope, use the meta object to get a QVariant
+                    entry.previousKind = entry.previous.set(entry.prop.read(), entry.previousKind);
                 }
             }
         }
 
         // NOTE: removeBinding has no effect on QProperty classes, but
         // we already used takeBinding to remove it
-        QQmlPropertyPrivate::removeBinding(d->prop);
+        QQmlPropertyPrivate::removeBinding(entry.prop);
     }
 
+    if (!d->when)
+        return;
+
     d->writingProperty = true;
-    d->prop.write(d->value.value);
+    for (qsizetype i = 0, end = d->entries.length(); i != end; ++i) {
+        QQmlBindEntry &entry = d->entries[i];
+        if (!entry.prop.isValid())
+            continue;
+        switch (entry.currentKind) {
+        case QQmlBindEntryKind::Variant:
+            entry.prop.write(entry.current.variant);
+            break;
+        case QQmlBindEntryKind::Binding:
+            Q_ASSERT(!d->delayed);
+            entry.current.binding.installOn(entry.prop);
+            break;
+        case QQmlBindEntryKind::V4Value: {
+            auto propPriv = QQmlPropertyPrivate::get(entry.prop);
+            QQmlVMEMetaObject::get(propPriv->object)->setVMEProperty(
+                        propPriv->core.coreIndex(), *entry.current.v4Value.valueRef());
+            break;
+        }
+        case QQmlBindEntryKind::None:
+            break;
+        }
+    }
     d->writingProperty = false;
 }
 
@@ -523,7 +1072,7 @@ void QQmlBind::targetValueChanged()
     if (d->writingProperty)
         return;
 
-    if (d->when.isValid() && !d->when)
+    if (!d->when)
         return;
 
     QUrl url;

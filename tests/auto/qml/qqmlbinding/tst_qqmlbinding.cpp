@@ -28,7 +28,8 @@
 #include <qtest.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
-#include <private/qqmlbind_p.h>
+#include <QtQml/private/qqmlbind_p.h>
+#include <QtQml/private/qqmlcomponentattached_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include "WithBindableProperties.h"
@@ -60,6 +61,7 @@ private slots:
     void bindingDoesNoWeirdConversion();
     void bindNaNToInt();
     void intOverflow();
+    void generalizedGroupedProperties();
 
 private:
     QQmlEngine engine;
@@ -383,15 +385,76 @@ void tst_qqmlbinding::delayed()
     QScopedPointer<QQuickItem> item {qobject_cast<QQuickItem*>(c.create())};
 
     QVERIFY(item != nullptr);
+
+    // objectName is not deferred
+    QCOMPARE(item->objectName(), QStringLiteral("c: 10"));
+
+    // constants are never delayed
+    QCOMPARE(item->x(), 10.0);
+    QCOMPARE(item->y(), 20.0);
+
     // update on creation
     QCOMPARE(item->property("changeCount").toInt(), 1);
+    QCOMPARE(item->property("changeCount2").toInt(), 1);
 
     QMetaObject::invokeMethod(item.get(), "updateText");
     // doesn't update immediately
     QCOMPARE(item->property("changeCount").toInt(), 1);
+    QCOMPARE(item->property("changeCount2").toInt(), 1);
 
     // only updates once (non-delayed would update twice)
     QTRY_COMPARE(item->property("changeCount").toInt(), 2);
+    QTRY_COMPARE(item->property("changeCount2").toInt(), 2);
+
+    item->setProperty("delayed", QVariant::fromValue<bool>(false));
+    QCOMPARE(item->property("changeCount"), 2);
+    QCOMPARE(item->property("changeCount2"), 2);
+
+    QMetaObject::invokeMethod(item.get(), "resetText");
+    QCOMPARE(item->property("changeCount"), 4);
+    QCOMPARE(item->property("changeCount2"), 4);
+
+    QMetaObject::invokeMethod(item.get(), "updateText");
+    QCOMPARE(item->property("changeCount"), 6);
+    QCOMPARE(item->property("changeCount2"), 6);
+
+    item->setProperty("delayed", QVariant::fromValue<bool>(true));
+    QCOMPARE(item->property("changeCount"), 6);
+    QCOMPARE(item->property("changeCount2"), 6);
+
+    QMetaObject::invokeMethod(item.get(), "resetText");
+    QCOMPARE(item->property("changeCount"), 6);
+    QCOMPARE(item->property("changeCount2"), 6);
+
+    QMetaObject::invokeMethod(item.get(), "updateText");
+    QCOMPARE(item->property("changeCount"), 6);
+    QCOMPARE(item->property("changeCount2"), 6);
+
+    item->setProperty("delayed", QVariant::fromValue<bool>(false));
+    // Intermediate change is ignored
+    QCOMPARE(item->property("changeCount"), 6);
+    QCOMPARE(item->property("changeCount2"), 6);
+
+    item->setProperty("delayed", QVariant::fromValue<bool>(true));
+    QCOMPARE(item->property("changeCount"), 6);
+    QCOMPARE(item->property("changeCount2"), 6);
+
+    QMetaObject::invokeMethod(item.get(), "resetText");
+    QCOMPARE(item->property("changeCount"), 6);
+    QCOMPARE(item->property("changeCount2"), 6);
+
+    // only updates once (non-delayed would update twice)
+    QTRY_COMPARE(item->property("changeCount").toInt(), 7);
+    QTRY_COMPARE(item->property("changeCount2").toInt(), 7);
+
+    QMetaObject::invokeMethod(item.get(), "updateText");
+    // doesn't update immediately
+    QCOMPARE(item->property("changeCount").toInt(), 7);
+    QCOMPARE(item->property("changeCount2").toInt(), 7);
+
+    // only updates once (non-delayed would update twice)
+    QTRY_COMPARE(item->property("changeCount").toInt(), 8);
+    QTRY_COMPARE(item->property("changeCount2").toInt(), 8);
 }
 
 void tst_qqmlbinding::bindingOverwriting()
@@ -452,6 +515,84 @@ void tst_qqmlbinding::intOverflow()
     QCOMPARE(obj->property("b"), 5);
     QCOMPARE(obj->property("a").toDouble(), 1.09951162778e+12);
 }
+
+void tst_qqmlbinding::generalizedGroupedProperties()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("generalizedGroupedProperty.qml");
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(QStringLiteral(
+                               "%1:8:29: QML Binding: Unknown name \"root.objectNameChanged\". "
+                               "The binding is ignored.").arg(url.toString())));
+    QScopedPointer<QObject> root(c.create());
+    QVERIFY(!root.isNull());
+
+    QCOMPARE(root->objectName(), QStringLiteral("barrrrr ..."));
+    QCOMPARE(root->property("i").toInt(), 2);
+
+    QQmlComponentAttached *rootAttached = qobject_cast<QQmlComponentAttached *>(
+                qmlAttachedPropertiesObject<QQmlComponent>(root.data()));
+    QVERIFY(rootAttached);
+    QCOMPARE(rootAttached->objectName(), QStringLiteral("foo"));
+
+    QQmlBind *child = qvariant_cast<QQmlBind *>(root->property("child"));
+    QVERIFY(child);
+    QCOMPARE(child->objectName(), QStringLiteral("barrrrr"));
+    QQmlComponentAttached *childAttached = qobject_cast<QQmlComponentAttached *>(
+                qmlAttachedPropertiesObject<QQmlComponent>(child));
+    QVERIFY(childAttached);
+    QCOMPARE(childAttached->objectName(), QString());
+    QCOMPARE(child->when(), true);
+    child->setWhen(false);
+
+    QCOMPARE(root->objectName(), QStringLiteral("foo"));
+    QCOMPARE(root->property("i").toInt(), 112);
+    QCOMPARE(rootAttached->objectName(), QString());
+
+    QQmlBind *meanChild = qvariant_cast<QQmlBind *>(root->property("meanChild"));
+    QVERIFY(meanChild);
+    QCOMPARE(meanChild->when(), false);
+
+    // This one is immediate
+    QCOMPARE(qvariant_cast<QString>(meanChild->QObject::property("extra")),
+             QStringLiteral("foo extra"));
+
+    meanChild->setWhen(true);
+    QCOMPARE(qvariant_cast<QString>(meanChild->QObject::property("extra")),
+             QStringLiteral("foo extra"));
+
+    QCOMPARE(root->objectName(), QStringLiteral("foo"));
+    QCOMPARE(root->property("i").toInt(), 3);
+    QCOMPARE(child->objectName(), QStringLiteral("bar"));
+    QCOMPARE(childAttached->objectName(), QStringLiteral("bar"));
+
+    child->setWhen(true);
+    QCOMPARE(child->objectName(), QStringLiteral("bar"));
+    QCOMPARE(root->objectName(), QStringLiteral("bar ..."));
+    QCOMPARE(rootAttached->objectName(), QStringLiteral("foo"));
+    QCOMPARE(root->property("i").toInt(), 2);
+
+    meanChild->setWhen(false);
+    // root->property("i") is now unspecified. Too bad.
+    // In fact we restore the binding from before meanChild was activated, but that's
+    // not what the user would expect here. We currently don't see that the value has
+    // been meddled with.
+    // TODO: Fix this. It's not related to generalized grouped properties, though.
+    QCOMPARE(root->objectName(), QStringLiteral("barrrrr ..."));
+    QCOMPARE(rootAttached->objectName(), QStringLiteral("foo"));
+    QCOMPARE(child->objectName(), QStringLiteral("barrrrr"));
+    QCOMPARE(childAttached->objectName(), QString());
+
+    child->setWhen(false);
+    QCOMPARE(root->objectName(), QStringLiteral("foo"));
+    // root->property("i").toInt() is still unspecified.
+    QCOMPARE(rootAttached->objectName(), QString());
+}
+
 QTEST_MAIN(tst_qqmlbinding)
 
 #include "tst_qqmlbinding.moc"
