@@ -1081,7 +1081,7 @@ QObject *QtObject::createQmlObject(const QString &qml, QObject *parent, const QU
 }
 
 /*!
-\qmlmethod object Qt::createComponent(url, mode, parent)
+\qmlmethod Component Qt::createComponent(url url, enumeration mode, QtObject parent)
 
 Returns a \l Component object created using the QML file at the specified \a url,
 or \c null if an empty string was given.
