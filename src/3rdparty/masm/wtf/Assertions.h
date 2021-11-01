@@ -116,7 +116,11 @@
 /* WTF logging functions can process %@ in the format string to log a NSObject* but the printf format attribute
    emits a warning when %@ is used in the format string.  Until <rdar://problem/5195437> is resolved we can't include
    the attribute when being used from Objective-C code in case it decides to use %@. */
-#if COMPILER(GCC) && !defined(__OBJC__)
+/* clang requires the attribute before the function (and pretends to be GCC), breaking the common
+   usage  of the macro. Instead of modifying WTF code all over the place, simply disable the attribute
+   for clang.
+ */
+#if COMPILER(GCC) && !defined(__OBJC__) && !COMPILER(CLANG)
 #define WTF_ATTRIBUTE_PRINTF(formatStringArgument, extraArguments) __attribute__((__format__(printf, formatStringArgument, extraArguments)))
 #else
 #define WTF_ATTRIBUTE_PRINTF(formatStringArgument, extraArguments) 
