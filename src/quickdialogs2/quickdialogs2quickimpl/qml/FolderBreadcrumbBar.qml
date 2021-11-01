@@ -100,6 +100,7 @@ DialogsQuickImpl.FolderBreadcrumbBar {
         focusPolicy: Qt.TabFocus
     }
     textField: TextField {
-        text: control.fileDialog.selectedFile
+        text: (control.dialog as DialogsQuickImpl.FileDialogImpl)?.selectedFile
+            ?? (control.dialog as DialogsQuickImpl.FolderDialogImpl).currentFolder
     }
 }

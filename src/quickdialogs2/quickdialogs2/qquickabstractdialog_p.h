@@ -59,6 +59,7 @@
 #include <QtQml/qqmlparserstatus.h>
 #include <QtQml/qqmllist.h>
 #include <QtQml/qqml.h>
+#include <QtQuickDialogs2Utils/private/qquickdialogtype_p.h>
 
 #include "qtquickdialogs2global_p.h"
 
@@ -84,7 +85,7 @@ class Q_QUICKDIALOGS2_PRIVATE_EXPORT QQuickAbstractDialog : public QObject, publ
     QML_ADDED_IN_VERSION(6, 2)
 
 public:
-    explicit QQuickAbstractDialog(QPlatformTheme::DialogType type, QObject *parent = nullptr);
+    explicit QQuickAbstractDialog(QQuickDialogType type, QObject *parent = nullptr);
     ~QQuickAbstractDialog();
 
     QPlatformDialogHelper *handle() const;
@@ -143,16 +144,16 @@ protected:
 
     QWindow *findParentWindow() const;
 
-private:
     bool m_visibleRequested = false;
     bool m_visible = false;
     bool m_complete = false;
+    bool m_firstShow = true;
     StandardCode m_result = Rejected;
     QWindow *m_parentWindow = nullptr;
     QString m_title;
     Qt::WindowFlags m_flags = Qt::Dialog;
     Qt::WindowModality m_modality = Qt::WindowModal;
-    QPlatformTheme::DialogType m_type;
+    QQuickDialogType m_type = QQuickDialogType::FileDialog;
     QList<QObject *> m_data;
     std::unique_ptr<QPlatformDialogHelper> m_handle;
 };

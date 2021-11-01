@@ -53,13 +53,15 @@
 
 #include <QtQuickTemplates2/private/qquickcontainer_p_p.h>
 #include <QtQuickTemplates2/private/qquickdeferredexecute_p_p.h>
-
-#include "qquickfiledialogimpl_p.h"
+#include <QtQuickTemplates2/private/qquickdialog_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQuickAbstractButton;
 class QQuickTextField;
+
+class QQuickFileDialogImpl;
+class QQuickFolderDialogImpl;
 
 class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFolderBreadcrumbBarPrivate : public QQuickContainerPrivate
 {
@@ -88,6 +90,12 @@ public:
     void handleTextFieldHidden();
     void ungrabEditPathShortcuts();
 
+    QQuickFileDialogImpl *asFileDialog() const;
+    QQuickFolderDialogImpl *asFolderDialog() const;
+    bool isFileDialog() const;
+    QUrl dialogFolder() const;
+    void setDialogFolder(const QUrl &folder);
+
     qreal getContentWidth() const override;
     qreal getContentHeight() const override;
     void resizeContent() override;
@@ -97,7 +105,7 @@ public:
     void itemImplicitHeightChanged(QQuickItem *item) override;
 
 private:
-    QQuickFileDialogImpl *fileDialog = nullptr;
+    QQuickDialog *dialog = nullptr;
     QList<QString> folderPaths;
     QQmlComponent *buttonDelegate = nullptr;
     QQmlComponent *separatorDelegate = nullptr;

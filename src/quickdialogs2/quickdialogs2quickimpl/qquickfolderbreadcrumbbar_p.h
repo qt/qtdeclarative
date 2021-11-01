@@ -64,7 +64,7 @@ class QQuickFolderBreadcrumbBarPrivate;
 class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFolderBreadcrumbBar : public QQuickContainer
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickFileDialogImpl *fileDialog READ fileDialog WRITE setFileDialog NOTIFY fileDialogChanged)
+    Q_PROPERTY(QQuickDialog *dialog READ dialog WRITE setDialog NOTIFY dialogChanged)
     Q_PROPERTY(QQmlComponent *buttonDelegate READ buttonDelegate WRITE setButtonDelegate NOTIFY buttonDelegateChanged)
     Q_PROPERTY(QQmlComponent *separatorDelegate READ separatorDelegate WRITE setSeparatorDelegate NOTIFY separatorDelegateChanged)
     Q_PROPERTY(QQuickAbstractButton *upButton READ upButton WRITE setUpButton NOTIFY upButtonChanged)
@@ -76,8 +76,8 @@ class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFolderBreadcrumbBar : public
 public:
     explicit QQuickFolderBreadcrumbBar(QQuickItem *parent = nullptr);
 
-    QQuickFileDialogImpl *fileDialog() const;
-    void setFileDialog(QQuickFileDialogImpl *fileDialog);
+    QQuickDialog *dialog() const;
+    void setDialog(QQuickDialog *dialog);
 
     QQmlComponent *buttonDelegate();
     void setButtonDelegate(QQmlComponent *delegate);
@@ -95,7 +95,7 @@ public:
     void setTextField(QQuickTextField *textField);
 
 Q_SIGNALS:
-    void fileDialogChanged();
+    void dialogChanged();
     void buttonDelegateChanged();
     void separatorDelegateChanged();
     void upButtonChanged();

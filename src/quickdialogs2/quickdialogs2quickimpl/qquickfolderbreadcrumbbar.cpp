@@ -54,6 +54,8 @@
 
 #include "qquickfiledialogimpl_p.h"
 #include "qquickfiledialogimpl_p_p.h"
+#include "qquickfolderdialogimpl_p.h"
+#include "qquickfolderdialogimpl_p_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -134,8 +136,8 @@ void QQuickFolderBreadcrumbBarPrivate::repopulate()
             q->removeItem(q->itemAt(0));
     };
 
-    qCDebug(lcDelegates) << "- getting paths for directory" << fileDialog->currentFolder();
-    folderPaths = crumbPathsForFolder(fileDialog->currentFolder());
+    qCDebug(lcDelegates) << "- getting paths for directory" << dialogFolder();
+    folderPaths = crumbPathsForFolder(dialogFolder());
 
     while (q->count() > 0)
         q->removeItem(q->itemAt(0));
@@ -196,7 +198,7 @@ void QQuickFolderBreadcrumbBarPrivate::crumbClicked()
         const QUrl folderUrl = QUrl::fromLocalFile(folderPaths.at(buttonIndex / 2));
         // TODO: don't repopulate the whole model when clicking on crumbs
         qCDebug(lcCurrentItem) << "setting file dialog's folder to" << folderUrl;
-        fileDialog->setCurrentFolder(folderUrl);
+        setDialogFolder(folderUrl);
     }
 }
 
@@ -231,9 +233,9 @@ void QQuickFolderBreadcrumbBarPrivate::executeUpButton(bool complete)
 
 void QQuickFolderBreadcrumbBarPrivate::goUp()
 {
-    QDir dir(QQmlFile::urlToLocalFileOrQrc(fileDialog->currentFolder()));
+    QDir dir(QQmlFile::urlToLocalFileOrQrc(dialogFolder()));
     dir.cdUp();
-    fileDialog->setCurrentFolder(QUrl::fromLocalFile(dir.absolutePath()));
+    setDialogFolder(QUrl::fromLocalFile(dir.absolutePath()));
 }
 
 static inline QString textFieldName()
@@ -261,7 +263,7 @@ void QQuickFolderBreadcrumbBarPrivate::executeTextField(bool complete)
 
 void QQuickFolderBreadcrumbBarPrivate::toggleTextFieldVisibility()
 {
-    textField->setText(QQmlFile::urlToLocalFileOrQrc(fileDialog->currentFolder()));
+    textField->setText(QQmlFile::urlToLocalFileOrQrc(dialogFolder()));
 
     qCDebug(lcTextInput).nospace() << "text field visibility was " << textField->isVisible()
         << "; setting it to " << !textField->isVisible();
@@ -280,14 +282,20 @@ void QQuickFolderBreadcrumbBarPrivate::toggleTextFieldVisibility()
     contentItem->setVisible(!textField->isVisible());
 
     // When the TextField is visible, certain items in the dialog need to be disabled.
-    auto fileDialogPrivate = QQuickFileDialogImplPrivate::get(fileDialog);
-    fileDialogPrivate->updateEnabled();
+    if (auto fileDialog = asFileDialog()) {
+        auto fileDialogPrivate = QQuickFileDialogImplPrivate::get(fileDialog);
+        fileDialogPrivate->updateEnabled();
+    } else if (auto folderDialog = asFolderDialog()) {
+        auto folderDialogPrivate = QQuickFolderDialogImplPrivate::get(folderDialog);
+        folderDialogPrivate->updateEnabled();
+    }
 }
 
 void QQuickFolderBreadcrumbBarPrivate::textFieldAccepted()
 {
     const QUrl fileUrl = QUrl::fromLocalFile(textField->text());
-    const bool mustExist = fileDialog->options()->acceptMode() != QFileDialogOptions::AcceptSave;
+    const auto fileDialog = asFileDialog();
+    const bool mustExist = fileDialog ? fileDialog->options()->acceptMode() != QFileDialogOptions::AcceptSave : true;
     const bool enteredPathIsValidUrl = fileUrl.isValid();
     bool enteredPathExists = false;
     bool enteredPathIsDir = false;
@@ -308,16 +316,21 @@ void QQuickFolderBreadcrumbBarPrivate::textFieldAccepted()
 
     if (enteredPathIsDir && (enteredPathExists || !mustExist)) {
         qCDebug(lcTextInput) << "path entered is a folder; setting folder";
-        fileDialog->setCurrentFolder(fileUrl);
+        setDialogFolder(fileUrl);
     } else if (!enteredPathIsDir && (enteredPathExists || !mustExist)) {
         qCDebug(lcTextInput) << "path entered is a file; setting file and calling accept()";
         // It's important that we set the currentFile here, as that's what
         // QQuickPlatformFileDialog::selectedFiles() needs to return, and
         // QQuickFileDialog::accept() sets its file property based on
         // selectedFiles().
-        fileDialog->setCurrentFile(fileUrl);
-        fileDialog->setSelectedFile(fileUrl);
-        fileDialog->accept();
+        if (isFileDialog()) {
+            auto fileDialog = asFileDialog();
+            fileDialog->setCurrentFile(fileUrl);
+            fileDialog->setSelectedFile(fileUrl);
+            fileDialog->accept();
+        } else {
+            setDialogFolder(fileUrl);
+        }
     } else {
         qCDebug(lcTextInput) << "path entered is not valid; not setting file/folder";
     }
@@ -327,7 +340,7 @@ void QQuickFolderBreadcrumbBarPrivate::textFieldAccepted()
     // We should only toggle visibility if the dialog is actually closed, otherwise
     // we'll end up toggling twice, and the text input will be visible the next time
     // the dialog is opened.
-    if (fileDialog->isVisible())
+    if (dialog->isVisible())
         toggleTextFieldVisibility();
 }
 
@@ -367,7 +380,7 @@ void QQuickFolderBreadcrumbBarPrivate::handleTextFieldShown()
     qCDebug(lcShortcuts) << "text field was shown; grabbing/ungrabbing relevant shortcuts...";
 
     // Disable the back/escape shortcuts for QQuickPopup so that the TextField can get them.
-    auto popupItem = qobject_cast<QQuickPopupItem*>(fileDialog->popupItem());
+    auto popupItem = qobject_cast<QQuickPopupItem*>(dialog->popupItem());
     popupItem->ungrabShortcut();
 
     appPrivate->shortcutMap.removeShortcut(editPathToggleShortcutId, q);
@@ -417,7 +430,7 @@ void QQuickFolderBreadcrumbBarPrivate::handleTextFieldHidden()
     }
 
     // Re-enable the back/escape shortcuts for QQuickPopup now that TextField no longer needs them.
-    auto popupItem = qobject_cast<QQuickPopupItem*>(fileDialog->popupItem());
+    auto popupItem = qobject_cast<QQuickPopupItem*>(dialog->popupItem());
     if (popupItem)
         popupItem->grabShortcut();
 
@@ -448,6 +461,33 @@ void QQuickFolderBreadcrumbBarPrivate::ungrabEditPathShortcuts()
         editPathEscapeShortcutId = 0;
     }
 #endif
+}
+
+QQuickFileDialogImpl *QQuickFolderBreadcrumbBarPrivate::asFileDialog() const
+{
+    return qobject_cast<QQuickFileDialogImpl*>(dialog);
+}
+
+QQuickFolderDialogImpl *QQuickFolderBreadcrumbBarPrivate::asFolderDialog() const
+{
+    return qobject_cast<QQuickFolderDialogImpl*>(dialog);
+}
+
+bool QQuickFolderBreadcrumbBarPrivate::isFileDialog() const
+{
+    return asFileDialog();
+}
+
+QUrl QQuickFolderBreadcrumbBarPrivate::dialogFolder() const
+{
+    return dialog->property("currentFolder").toUrl();
+}
+
+void QQuickFolderBreadcrumbBarPrivate::setDialogFolder(const QUrl &folder)
+{
+    Q_Q(QQuickFolderBreadcrumbBar);
+    if (!dialog->setProperty("currentFolder", folder))
+        qmlWarning(q) << "Failed to set currentFolder property of dialog" << dialog->objectName() << "to" << folder;
 }
 
 qreal QQuickFolderBreadcrumbBarPrivate::getContentWidth() const
@@ -535,29 +575,42 @@ QQuickFolderBreadcrumbBar::QQuickFolderBreadcrumbBar(QQuickItem *parent)
     d->changeTypes |= QQuickItemPrivate::Geometry | QQuickItemPrivate::ImplicitWidth | QQuickItemPrivate::ImplicitHeight;
 }
 
-QQuickFileDialogImpl *QQuickFolderBreadcrumbBar::fileDialog() const
+QQuickDialog *QQuickFolderBreadcrumbBar::dialog() const
 {
     Q_D(const QQuickFolderBreadcrumbBar);
-    return d->fileDialog;
+    return d->dialog;
 }
 
-void QQuickFolderBreadcrumbBar::setFileDialog(QQuickFileDialogImpl *fileDialog)
+void QQuickFolderBreadcrumbBar::setDialog(QQuickDialog *dialog)
 {
     Q_D(QQuickFolderBreadcrumbBar);
-    if (fileDialog == d->fileDialog)
+    if (dialog == d->dialog)
         return;
 
-    if (d->fileDialog)
-        QObjectPrivate::disconnect(d->fileDialog, &QQuickFileDialogImpl::currentFolderChanged,
-            d, &QQuickFolderBreadcrumbBarPrivate::folderChanged);
+    if (d->dialog) {
+        if (auto fileDialog = d->asFileDialog()) {
+            // TODO: rename impl's currentFolder too, when name is decided
+            QObjectPrivate::disconnect(fileDialog, &QQuickFileDialogImpl::currentFolderChanged,
+                d, &QQuickFolderBreadcrumbBarPrivate::folderChanged);
+        } else if (auto folderDialog = d->asFolderDialog()) {
+            QObjectPrivate::disconnect(folderDialog, &QQuickFolderDialogImpl::currentFolderChanged,
+                d, &QQuickFolderBreadcrumbBarPrivate::folderChanged);
+        }
+    }
 
-    d->fileDialog = fileDialog;
+    d->dialog = dialog;
 
-    if (d->fileDialog)
-        QObjectPrivate::connect(d->fileDialog, &QQuickFileDialogImpl::currentFolderChanged,
-            d, &QQuickFolderBreadcrumbBarPrivate::folderChanged);
+    if (d->dialog) {
+        if (auto fileDialog = d->asFileDialog()) {
+            QObjectPrivate::connect(fileDialog, &QQuickFileDialogImpl::currentFolderChanged,
+                d, &QQuickFolderBreadcrumbBarPrivate::folderChanged);
+        } else if (auto folderDialog = d->asFolderDialog()) {
+            QObjectPrivate::connect(folderDialog, &QQuickFolderDialogImpl::currentFolderChanged,
+                d, &QQuickFolderBreadcrumbBarPrivate::folderChanged);
+        }
+    }
 
-    emit fileDialogChanged();
+    emit dialogChanged();
 }
 
 QQmlComponent *QQuickFolderBreadcrumbBar::buttonDelegate()
@@ -740,7 +793,7 @@ void QQuickFolderBreadcrumbBar::itemChange(QQuickItem::ItemChange change, const 
     QQuickContainer::itemChange(change, data);
 
     if (change == QQuickItem::ItemVisibleHasChanged && isComponentComplete()) {
-        if (data.boolValue && d->fileDialog->isVisible()) {
+        if (data.boolValue && d->dialog->isVisible()) {
             // It's visible.
             d->handleTextFieldHidden();
 

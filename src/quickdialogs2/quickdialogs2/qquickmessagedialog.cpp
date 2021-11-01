@@ -107,7 +107,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QQuickMessageDialog::QQuickMessageDialog(QObject *parent)
-    : QQuickAbstractDialog(QPlatformTheme::DialogType::MessageDialog, parent),
+    : QQuickAbstractDialog(QQuickDialogType::MessageDialog, parent),
       m_options(QMessageDialogOptions::create())
 {
 }

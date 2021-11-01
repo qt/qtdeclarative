@@ -54,16 +54,52 @@ Q_LOGGING_CATEGORY(lcDialogs, "qt.quick.dialogs")
 
     A dialog that can be backed by different implementations.
 
-    Each dialog has a handle to QPlatformDialogHelper, which is created in create().
-    The helper acts as an intermediary between the QML-facing dialog object
+    Each dialog has a QPlatformDialogHelper handle, which is created in create():
+
+    - First we attempt to create a native dialog (e.g. QWindowsFileDialogHelper) through
+      QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper().
+    - If that fails, we try to create the Qt Quick fallback dialog (e.g. QQuickPlatformFileDialog)
+      through QQuickDialogImplFactory::createPlatformDialogHelper().
+
+    The handle acts as an intermediary between the QML-facing dialog object
     and the native/widget/quick implementation:
 
-    +------------+      +------------------------------------+      +-------------------------------------+
-    |            |      |                                    |      |                                     |
-    | FileDialog |----->| Native/Widget/Quick QPlatformFile- |----->| Native OS dialog/QQuickFileDialog/  |
-    |            |      | DialogHelper subclass              |      | QQuickFileDialogImpl                |
-    |            |      |                                    |      |                                     |
-    +------------+      +------------------------------------+      +-------------------------------------+
+            +---------------------------+
+            | FileDialog created in QML |
+            +---------------------------+
+                         |
+                         |
+                         v                         +----------------------+
+                +------------------+               | attempt to create    |     +------+
+                |useNativeDialog()?|-----false---->| QQuickPlatformDialog |---->| done |
+                +------------------+               | instance and set     |     +------+
+                         |                         | m_handle to it       |
+                         |                         +----------------------+
+                         v                                  ^
+                        true                                |
+                         |                                  |
+                         v                                  |
+               +---------------------+                      |
+               | attempt to create   |                      |
+               | QWindowsFileDialog- |                      |
+               | Helper instance and |                      |
+               | set m_handle to it  |                      |
+               +---------------------+                      |
+                         |                                  |
+                         v                                  |
+                 +-----------------+                        |
+                 | m_handle valid? |--------------------->false
+                 +-----------------+
+                         |
+                         v
+                        true
+                         |
+                      +------+
+                      | done |
+                      +------+
+
+    If QWindowsFileDialogHelper is created, it creates a native dialog.
+    If QQuickPlatformDialog is created, it creates a non-native QQuickFileDialogImpl.
 */
 
 /*!
@@ -106,7 +142,7 @@ Q_LOGGING_CATEGORY(lcDialogs, "qt.quick.dialogs")
 
 Q_DECLARE_LOGGING_CATEGORY(lcDialogs)
 
-QQuickAbstractDialog::QQuickAbstractDialog(QPlatformTheme::DialogType type, QObject *parent)
+QQuickAbstractDialog::QQuickAbstractDialog(QQuickDialogType type, QObject *parent)
     : QObject(parent),
       m_type(type)
 {
@@ -379,20 +415,28 @@ static const char *qmlTypeName(const QObject *object)
     return object->metaObject()->className() + qstrlen("QQuickPlatform");
 }
 
+QPlatformTheme::DialogType toPlatformDialogType(QQuickDialogType quickDialogType)
+{
+    return quickDialogType == QQuickDialogType::FolderDialog
+        ? QPlatformTheme::FileDialog : static_cast<QPlatformTheme::DialogType>(quickDialogType);
+}
+
 bool QQuickAbstractDialog::create()
 {
     qCDebug(lcDialogs) << qmlTypeName(this) << "attempting to create dialog backend of type"
-        << m_type << "with parent window" << m_parentWindow;
+        << int(m_type) << "with parent window" << m_parentWindow;
     if (m_handle)
         return m_handle.get();
 
     qCDebug(lcDialogs) << "- attempting to create a native dialog";
-    if (useNativeDialog())
-        m_handle.reset(QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(m_type));
+    if (useNativeDialog()) {
+        m_handle.reset(QGuiApplicationPrivate::platformTheme()->createPlatformDialogHelper(
+            toPlatformDialogType(m_type)));
+    }
 
     if (!m_handle) {
         qCDebug(lcDialogs) << "- attempting to create a quick dialog";
-        m_handle.reset(QQuickDialogImplFactory::createPlatformDialogHelper(m_type, this));
+        m_handle = QQuickDialogImplFactory::createPlatformDialogHelper(m_type, this);
     }
 
     qCDebug(lcDialogs) << qmlTypeName(this) << "created ->" << m_handle.get();
@@ -416,7 +460,7 @@ bool QQuickAbstractDialog::useNativeDialog() const
         return false;
     }
 
-    if (!QGuiApplicationPrivate::platformTheme()->usePlatformNativeDialog(m_type)) {
+    if (!QGuiApplicationPrivate::platformTheme()->usePlatformNativeDialog(toPlatformDialogType(m_type))) {
         qCDebug(lcDialogs) << "  - the platform theme told us a native dialog isn't available; not using native dialog";
         return false;
     }
@@ -432,6 +476,7 @@ void QQuickAbstractDialog::onCreate(QPlatformDialogHelper *dialog)
 void QQuickAbstractDialog::onShow(QPlatformDialogHelper *dialog)
 {
     Q_UNUSED(dialog);
+    m_firstShow = false;
 }
 
 void QQuickAbstractDialog::onHide(QPlatformDialogHelper *dialog)

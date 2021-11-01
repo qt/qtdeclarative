@@ -56,7 +56,7 @@ import QtQuick.Layouts
 import "."
 
 ColumnLayout {
-    property alias dialog: fileDialog
+    property alias dialog: folderDialog
 
     // Put it all in another ColumnLayout so we can easily add margins.
     ColumnLayout {
@@ -111,7 +111,7 @@ ColumnLayout {
                 }
                 TextField {
                     id: resultTextField
-                    text: fileDialog.result === 1 ? qsTr("Accepted") : qsTr("Rejected")
+                    text: folderDialog.result === 1 ? qsTr("Accepted") : qsTr("Rejected")
                     readOnly: true
                     enabled: false
                 }
@@ -121,7 +121,7 @@ ColumnLayout {
                 }
                 TextField {
                     id: titleTextField
-                    text: qsTr("Choose a file")
+                    text: qsTr("Choose a folder")
                 }
             }
         }
@@ -147,38 +147,15 @@ ColumnLayout {
                 }
 
                 Label {
-                    text: qsTr("currentFile")
-                }
-                TextField {
-                    id: currentFileTextField
-                    text: fileDialog.currentFile
-                    readOnly: true
-                    selectByMouse: true
-
-                    Layout.fillWidth: true
-                }
-
-                Label {
                     text: qsTr("currentFolder")
                 }
                 TextField {
                     id: currentFolderTextField
-                    text: fileDialog.currentFolder
+                    text: folderDialog.currentFolder
                     readOnly: true
                     selectByMouse: true
 
                     Layout.fillWidth: true
-                }
-
-                Label {
-                    text: qsTr("currentFiles")
-
-                    Layout.alignment: Qt.AlignTop
-                }
-                StringListView {
-                    id: currentFilesListView
-                    // QTBUG-72906
-                    model: [].concat(fileDialog.currentFiles)
                 }
 
                 Label {
@@ -190,16 +167,16 @@ ColumnLayout {
                     id: fileOptionsColumnLayout
 
                     CheckBox {
+                        id: showDirsOnlyCheckBox
+                        text: qsTr("ShowDirsOnly")
+
+                        readonly property int fileOption: checked ? FileDialog.ShowDirsOnly : 0
+                    }
+                    CheckBox {
                         id: dontResolveSymlinksCheckBox
                         text: qsTr("DontResolveSymlinks")
 
                         readonly property int fileOption: checked ? FileDialog.DontResolveSymlinks : 0
-                    }
-                    CheckBox {
-                        id: dontConfirmOverwriteCheckBox
-                        text: qsTr("DontConfirmOverwrite")
-
-                        readonly property int fileOption: checked ? FileDialog.DontConfirmOverwrite : 0
                     }
                     CheckBox {
                         id: readOnlyCheckBox
@@ -207,56 +184,6 @@ ColumnLayout {
 
                         readonly property int fileOption: checked ? FileDialog.ReadOnly : 0
                     }
-                    CheckBox {
-                        id: hideNameFilterDetailsCheckBox
-                        text: qsTr("HideNameFilterDetails")
-
-                        readonly property int fileOption: checked ? FileDialog.HideNameFilterDetails : 0
-                    }
-                }
-
-                Label {
-                    text: qsTr("fileMode")
-
-                    Layout.alignment: Qt.AlignTop
-                }
-                ButtonGroup {
-                    id: fileModeButtonGroup
-                    buttons: fileModeColumnLayout.children
-                }
-                ColumnLayout {
-                    id: fileModeColumnLayout
-
-                    RadioButton {
-                        text: qsTr("OpenFile")
-
-                        readonly property int fileMode: FileDialog.OpenFile
-                    }
-                    RadioButton {
-                        text: qsTr("OpenFiles")
-                        checked: true
-
-                        readonly property int fileMode: FileDialog.OpenFiles
-                    }
-                    RadioButton {
-                        text: qsTr("SaveFile")
-
-                        readonly property int fileMode: FileDialog.SaveFile
-                    }
-                }
-
-                Label {
-                    text: qsTr("nameFilters")
-                }
-                TextField {
-                    id: nameFiltersTextField
-                    text: ["Text files (*.txt)", "HTML files (*.html), Images (*.jpg *.png *.svg)"].join(",")
-
-                    Layout.fillWidth: true
-
-                    ToolTip.text: qsTr("For this example, a comma-separated string")
-                    ToolTip.visible: hovered
-                    ToolTip.delay: Theme.toolTipDelay
                 }
 
                 Label {
@@ -268,89 +195,29 @@ ColumnLayout {
                 }
 
                 Label {
-                    text: qsTr("selectedFile")
+                    text: qsTr("selectedFolder")
                 }
                 TextField {
                     id: selectedFileTextField
-                    text: fileDialog.selectedFile
+                    text: folderDialog.selectedFolder
                     readOnly: true
                     selectByMouse: true
 
                     Layout.fillWidth: true
-                }
-
-                Label {
-                    text: qsTr("selectedFiles")
-
-                    Layout.alignment: Qt.AlignTop
-                }
-                StringListView {
-                    id: selectedFilesListView
-                    // QTBUG-72906
-                    model: [].concat(fileDialog.selectedFiles)
-                }
-
-                Label {
-                    text: qsTr("selectedNameFilter.name")
-                }
-                TextField {
-                    id: selectedNameFilterNameTextField
-                    text: fileDialog.selectedNameFilter.name
-                    readOnly: true
-                    selectByMouse: true
-
-                    Layout.fillWidth: true
-                }
-
-                Label {
-                    text: qsTr("selectedNameFilter.globs")
-
-                    Layout.alignment: Qt.AlignTop
-                }
-                StringListView {
-                    id: selectedNameFilterGlobsListView
-                    // QTBUG-72906
-                    model: [].concat(fileDialog.selectedNameFilter.globs)
-                }
-
-                Label {
-                    text: qsTr("selectedNameFilter.index")
-                }
-                TextField {
-                    id: selectedNameFilterIndexTextField
-                    text: fileDialog.selectedNameFilter.index
-                    readOnly: true
-                    selectByMouse: true
-
-                    Layout.fillWidth: true
-                }
-
-                Label {
-                    text: qsTr("selectedNameFilter.extensions")
-
-                    Layout.alignment: Qt.AlignTop
-                }
-                StringListView {
-                    id: selectedNameFilterExtensionsListView
-                    // QTBUG-72906
-                    model: [].concat(fileDialog.selectedNameFilter.extensions)
                 }
             }
         }
 
-        FileDialog {
-            id: fileDialog
+        FolderDialog {
+            id: folderDialog
 
             modality: modalityButtonGroup.checkedButton.modality
             title: titleTextField.text
 
             acceptLabel: acceptLabelTextField.text
-            fileMode: fileModeButtonGroup.checkedButton.fileMode
-            options: dontResolveSymlinksCheckBox.fileOption
-                | dontConfirmOverwriteCheckBox.fileOption
+            options: showDirsOnlyCheckBox.fileOption
+                | dontResolveSymlinksCheckBox.fileOption
                 | readOnlyCheckBox.fileOption
-                | hideNameFilterDetailsCheckBox.fileOption
-            nameFilters: nameFiltersTextField.text.split(",")
             rejectLabel: rejectLabelTextField.text
         }
     }

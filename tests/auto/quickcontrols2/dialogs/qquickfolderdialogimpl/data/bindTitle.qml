@@ -50,88 +50,16 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtQuick.Layouts
-
-import Qt.labs.settings
+import QtQuick.Dialogs
 
 ApplicationWindow {
-    id: window
-    width: 800
-    height: 600
-    title: "dialogs - style: " + style
-    visible: true
+    width: 640
+    height: 480
 
-    required property string style
+    property alias dialog: dialog
 
-    Component.onCompleted: {
-        x = Screen.width / 2 - width / 2
-        y = Screen.height / 2 - height / 2
-    }
-
-    Settings {
-        id: settings
-
-        property alias useNativeDialogs: useNativeDialogsCheckBox.checked
-        property alias lastTabBarIndex: tabBar.currentIndex
-    }
-
-    Page {
-        anchors.fill: parent
-
-        header: TabBar {
-            id: tabBar
-
-            TabButton {
-                text: qsTr("FileDialog")
-            }
-            TabButton {
-                text: qsTr("FolderDialog")
-            }
-            TabButton {
-                text: qsTr("FontDialog")
-            }
-            TabButton {
-                text: qsTr("MessageBox")
-            }
-        }
-
-        ScrollView {
-            id: scrollView
-            anchors.fill: parent
-            clip: true
-
-            StackLayout {
-                id: stackLayout
-                currentIndex: tabBar.currentIndex
-                width: scrollView.width
-
-                FileDialogPage {}
-                FolderDialogPage {}
-                FontDialogPage {}
-                MessageDialogPage {}
-            }
-        }
-    }
-
-    footer: ToolBar {
-        RowLayout {
-            anchors.fill: parent
-
-            CheckBox {
-                id: useNativeDialogsCheckBox
-                text: qsTr("Use Native Dialogs (requires restart)")
-                checked: settings.useNativeDialogs
-            }
-
-            Item {
-                Layout.fillWidth: true
-            }
-
-            Button {
-                text: qsTr("Open")
-
-                onClicked: stackLayout.children[stackLayout.currentIndex].dialog.open()
-            }
-        }
+    FolderDialog {
+        id: dialog
+        title: "Test Title"
     }
 }

@@ -37,56 +37,66 @@
 **
 ****************************************************************************/
 
-#include "qquickdialogimplfactory_p.h"
+#ifndef QQUICKFOLDERDIALOG_P_P_H
+#define QQUICKFOLDERDIALOG_P_P_H
 
-#include <QtCore/qloggingcategory.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This Folder is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header Folder may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#include "qquickplatformfiledialog_p.h"
-#include "qquickplatformfolderdialog_p.h"
-#include "qquickplatformfontdialog_p.h"
-#include "qquickplatformmessagedialog_p.h"
+#include <QtQuickTemplates2/private/qquickdialog_p_p.h>
+#include <QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>
+
+#include "qquickfolderdialogimpl_p.h"
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \internal
-
-    Creates concrete QML-based dialogs.
-*/
-
-Q_LOGGING_CATEGORY(lcQuickDialogImplFactory, "qt.quick.dialogs.quickdialogimplfactory")
-
-std::unique_ptr<QPlatformDialogHelper> QQuickDialogImplFactory::createPlatformDialogHelper(QQuickDialogType type, QObject *parent)
+class QQuickFolderDialogImplPrivate : public QQuickDialogPrivate
 {
-    std::unique_ptr<QPlatformDialogHelper> dialogHelper;
-    switch (type) {
-    case QQuickDialogType::FileDialog: {
-        dialogHelper.reset(new QQuickPlatformFileDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FolderDialog: {
-        dialogHelper.reset(new QQuickPlatformFolderDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FontDialog: {
-        dialogHelper.reset(new QQuickPlatformFontDialog(parent));
-        break;
-    }
-    case QQuickDialogType::MessageDialog: {
-        auto dialog = new QQuickPlatformMessageDialog(parent);
-        if (!dialog->isValid()) {
-            delete dialog;
-            return nullptr;
-        }
+    Q_DECLARE_PUBLIC(QQuickFolderDialogImpl)
 
-        dialogHelper.reset(dialog);
-        break;
-    }
-    default:
-        break;
+public:
+    QQuickFolderDialogImplPrivate();
+
+    static QQuickFolderDialogImplPrivate *get(QQuickFolderDialogImpl *dialog)
+    {
+        return dialog->d_func();
     }
 
-    return dialogHelper;
-}
+    QQuickFolderDialogImplAttached *attachedOrWarn();
+
+    void updateEnabled();
+    void updateSelectedFolder(const QString &oldFolderPath);
+
+    void handleAccept() override;
+    void handleClick(QQuickAbstractButton *button) override;
+
+    QSharedPointer<QFileDialogOptions> options;
+    QUrl currentFolder;
+    QUrl selectedFolder;
+    QString acceptLabel;
+    QString rejectLabel;
+};
+
+class QQuickFolderDialogImplAttachedPrivate : public QObjectPrivate
+{
+public:
+    Q_DECLARE_PUBLIC(QQuickFolderDialogImplAttached)
+
+    void folderDialogListViewCurrentIndexChanged();
+
+    QPointer<QQuickDialogButtonBox> buttonBox;
+    QPointer<QQuickListView> folderDialogListView;
+    QPointer<QQuickFolderBreadcrumbBar> breadcrumbBar;
+};
 
 QT_END_NAMESPACE
+
+#endif // QQUICKFOLDERDIALOG_P_P_H

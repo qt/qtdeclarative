@@ -4,6 +4,7 @@
 
 set(qml_files
     "qml/FileDialog.qml"
+    "qml/FolderDialog.qml"
     "qml/FileDialogDelegate.qml"
     "qml/FileDialogDelegateLabel.qml"
     "qml/FolderBreadcrumbBar.qml"
@@ -12,6 +13,7 @@ set(qml_files
     "qml/MessageDialog.qml"
     "qml/+Fusion/FileDialog.qml"
     "qml/+Fusion/FileDialogDelegate.qml"
+    "qml/+Fusion/FolderDialog.qml"
     "qml/+Fusion/FolderBreadcrumbBar.qml"
     "qml/+Fusion/FontDialog.qml"
     "qml/+Fusion/MessageDialog.qml"
@@ -45,11 +47,16 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         qquickfiledialogimpl.cpp
         qquickfiledialogimpl_p.h
         qquickfiledialogimpl_p_p.h
+        qquickfolderdialogimpl.cpp
+        qquickfolderdialogimpl_p.h
+        qquickfolderdialogimpl_p_p.h
         qquickfolderbreadcrumbbar.cpp
         qquickfolderbreadcrumbbar_p.h
         qquickfolderbreadcrumbbar_p_p.h
         qquickplatformfiledialog.cpp
         qquickplatformfiledialog_p.h
+        qquickplatformfolderdialog.cpp
+        qquickplatformfolderdialog_p.h
         qquickplatformfontdialog_p.h
         qquickplatformfontdialog.cpp
         qtquickdialogs2quickimplforeign_p.h

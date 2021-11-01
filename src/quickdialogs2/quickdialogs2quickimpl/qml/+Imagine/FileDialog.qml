@@ -120,7 +120,7 @@ FileDialogImpl {
 
         DialogsImpl.FolderBreadcrumbBar {
             id: breadcrumbBar
-            fileDialog: control
+            dialog: control
 
             Layout.leftMargin: 16
             Layout.rightMargin: 16
@@ -147,7 +147,7 @@ FileDialogImpl {
             objectName: "fileDialogDelegate" + index
             width: ListView.view.width
             highlighted: ListView.isCurrentItem
-            fileDialog: control
+            dialog: control
             fileDetailRowWidth: nameFiltersComboBox.width
         }
     }

@@ -74,7 +74,7 @@ DialogsQuickImpl.FileDialogDelegate {
     required property date fileModified
     required property bool fileIsDir
 
-    required property int fileDetailRowWidth
+    property int fileDetailRowWidth
 
     contentItem: FileDialogDelegateLabel {
         delegate: control

@@ -47,6 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_LOGGING_CATEGORY(lcDialogs)
 Q_LOGGING_CATEGORY(lcFileDialog, "qt.quick.dialogs.filedialog")
 
 /*!
@@ -99,13 +100,11 @@ Q_LOGGING_CATEGORY(lcFileDialog, "qt.quick.dialogs.filedialog")
 
     \include includes/fallback.qdocinc
 
-    //! \sa FolderDialog, StandardPaths
+    \sa FolderDialog, [QtCoreQml]StandardPaths
 */
 
-Q_DECLARE_LOGGING_CATEGORY(lcDialogs)
-
 QQuickFileDialog::QQuickFileDialog(QObject *parent)
-    : QQuickAbstractDialog(QPlatformTheme::FileDialog, parent),
+    : QQuickAbstractDialog(QQuickDialogType::FileDialog, parent),
       m_fileMode(OpenFile),
       m_options(QFileDialogOptions::create()),
       m_selectedNameFilter(nullptr)
@@ -262,11 +261,7 @@ void QQuickFileDialog::setCurrentFiles(const QList<QUrl> &currentFiles)
     This property holds the folder where files are selected. It can be set to
     control the initial directory that is shown when the dialog is opened.
 
-\omit
-    For selecting a folder, use FolderDialog instead.
-
-    \sa FolderDialog
-\endomit
+    For selecting a folder, use \l FolderDialog instead.
 */
 QUrl QQuickFileDialog::currentFolder() const
 {
@@ -574,8 +569,7 @@ void QQuickFileDialog::onShow(QPlatformDialogHelper *dialog)
         if (m_firstShow && initialDir.isValid() && QDir(QQmlFile::urlToLocalFileOrQrc(initialDir)).exists())
             fileDialog->setDirectory(m_options->initialDirectory());
     }
-    if (m_firstShow)
-        m_firstShow = false;
+    QQuickAbstractDialog::onShow(dialog);
 }
 
 void QQuickFileDialog::onHide(QPlatformDialogHelper *dialog)

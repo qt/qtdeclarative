@@ -57,13 +57,13 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQuickFileDialogImpl;
+class QQuickDialog;
 class QQuickFileDialogDelegatePrivate;
 
 class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFileDialogDelegate : public QQuickItemDelegate
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickFileDialogImpl *fileDialog READ fileDialog WRITE setFileDialog NOTIFY fileDialogChanged)
+    Q_PROPERTY(QQuickDialog *dialog READ dialog WRITE setDialog NOTIFY dialogChanged)
     Q_PROPERTY(QUrl file READ file WRITE setFile NOTIFY fileChanged)
     QML_NAMED_ELEMENT(FileDialogDelegate)
     QML_ADDED_IN_VERSION(6, 2)
@@ -71,14 +71,14 @@ class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFileDialogDelegate : public 
 public:
     explicit QQuickFileDialogDelegate(QQuickItem *parent = nullptr);
 
-    QQuickFileDialogImpl *fileDialog() const;
-    void setFileDialog(QQuickFileDialogImpl *fileDialog);
+    QQuickDialog *dialog() const;
+    void setDialog(QQuickDialog *dialog);
 
     QUrl file() const;
     void setFile(const QUrl &file);
 
 Q_SIGNALS:
-    void fileDialogChanged();
+    void dialogChanged();
     void fileChanged();
 
 protected:

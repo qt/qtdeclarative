@@ -5,6 +5,7 @@ qt_internal_add_module(QuickControlsTestUtilsPrivate
     SOURCES
         controlstestutils.cpp
         controlstestutils_p.h
+        dialogstestutils.cpp
         dialogstestutils_p.h
         qtest_quickcontrols_p.h
     DEFINES
@@ -16,6 +17,7 @@ qt_internal_add_module(QuickControlsTestUtilsPrivate
         Qt::QmlPrivate
         Qt::Quick
         Qt::QuickControls2
+        Qt::QuickDialogs2QuickImplPrivate
         Qt::QuickPrivate
         Qt::QuickTemplates2
         Qt::QuickTemplates2Private

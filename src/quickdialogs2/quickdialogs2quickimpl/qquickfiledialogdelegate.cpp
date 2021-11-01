@@ -47,6 +47,7 @@
 #include <QtQuickTemplates2/private/qquickitemdelegate_p_p.h>
 
 #include "qquickfiledialogimpl_p.h"
+#include "qquickfolderdialogimpl_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -60,7 +61,9 @@ public:
 
     bool acceptKeyClick(Qt::Key key) const override;
 
+    QQuickDialog *dialog = nullptr;
     QQuickFileDialogImpl *fileDialog = nullptr;
+    QQuickFolderDialogImpl *folderDialog = nullptr;
     QUrl file;
 };
 
@@ -80,7 +83,10 @@ void QQuickFileDialogDelegatePrivate::highlightFile()
     const int index = q->property("index").toInt(&converted);
     if (converted) {
         attached->view()->setCurrentIndex(index);
-        fileDialog->setCurrentFile(file);
+        if (fileDialog)
+            fileDialog->setCurrentFile(file);
+        else if (folderDialog)
+            folderDialog->setSelectedFolder(file);
     }
 }
 
@@ -89,8 +95,12 @@ void QQuickFileDialogDelegatePrivate::chooseFile()
     const QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(file));
     if (fileInfo.isDir()) {
         // If it's a directory, navigate to it.
-        fileDialog->setCurrentFolder(file);
+        if (fileDialog)
+            fileDialog->setCurrentFolder(file);
+        else
+            folderDialog->setCurrentFolder(file);
     } else {
+        Q_ASSERT(fileDialog);
         // Otherwise it's a file, so select it and close the dialog.
         fileDialog->setSelectedFile(file);
         fileDialog->accept();
@@ -116,20 +126,22 @@ QQuickFileDialogDelegate::QQuickFileDialogDelegate(QQuickItem *parent)
         d, &QQuickFileDialogDelegatePrivate::chooseFile);
 }
 
-QQuickFileDialogImpl *QQuickFileDialogDelegate::fileDialog() const
+QQuickDialog *QQuickFileDialogDelegate::dialog() const
 {
     Q_D(const QQuickFileDialogDelegate);
-    return d->fileDialog;
+    return d->dialog;
 }
 
-void QQuickFileDialogDelegate::setFileDialog(QQuickFileDialogImpl *fileDialog)
+void QQuickFileDialogDelegate::setDialog(QQuickDialog *dialog)
 {
     Q_D(QQuickFileDialogDelegate);
-    if (fileDialog == d->fileDialog)
+    if (dialog == d->dialog)
         return;
 
-    d->fileDialog = fileDialog;
-    emit fileDialogChanged();
+    d->dialog = dialog;
+    d->fileDialog = qobject_cast<QQuickFileDialogImpl*>(dialog);
+    d->folderDialog = qobject_cast<QQuickFolderDialogImpl*>(dialog);
+    emit dialogChanged();
 }
 
 QUrl QQuickFileDialogDelegate::file() const
@@ -141,10 +153,20 @@ QUrl QQuickFileDialogDelegate::file() const
 void QQuickFileDialogDelegate::setFile(const QUrl &file)
 {
     Q_D(QQuickFileDialogDelegate);
-    if (file == d->file)
+    QUrl adjustedFile = file;
+#ifdef Q_OS_WIN32
+    // Work around QTBUG-99105 (FolderListModel uses lowercase drive letter).
+    QString path = adjustedFile.path();
+    const int driveColonIndex = path.indexOf(QLatin1Char(':'));
+    if (driveColonIndex == 2) {
+        path.replace(1, 1, path.at(1).toUpper());
+        adjustedFile.setPath(path);
+    }
+#endif
+    if (adjustedFile == d->file)
         return;
 
-    d->file = file;
+    d->file = adjustedFile;
     emit fileChanged();
 }
 

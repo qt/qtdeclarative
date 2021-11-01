@@ -51,8 +51,11 @@
 // We mean it.
 //
 
+#include <memory>
+
 #include <QtCore/qobject.h>
-#include <QtGui/qpa/qplatformtheme.h>
+#include <QtGui/qpa/qplatformdialoghelper.h>
+#include <QtQuickDialogs2Utils/private/qquickdialogtype_p.h>
 
 #include "qtquickdialogs2quickimplglobal_p.h"
 
@@ -61,8 +64,7 @@ QT_BEGIN_NAMESPACE
 class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickDialogImplFactory
 {
 public:
-    static QPlatformDialogHelper *createPlatformDialogHelper(QPlatformTheme::DialogType type,
-        QObject *parent);
+    static std::unique_ptr<QPlatformDialogHelper> createPlatformDialogHelper(QQuickDialogType type, QObject *parent);
 };
 
 QT_END_NAMESPACE

@@ -77,6 +77,16 @@
     QCOMPARE(actualPaths, expectedPaths); \
 }
 
+QT_BEGIN_NAMESPACE
+class QWindow;
+
+class QQuickListView;
+
+class QQuickAbstractButton;
+
+class QQuickDialogButtonBox;
+class QQuickFolderBreadcrumbBar;
+
 namespace QQuickDialogTestUtils
 {
 
@@ -153,6 +163,15 @@ public:
     QuickDialogType *quickDialog = nullptr;
 };
 
+bool verifyFileDialogDelegates(QQuickListView *fileDialogListView, const QStringList &expectedFiles, QString &failureMessage);
+
+bool verifyBreadcrumbDelegates(QQuickFolderBreadcrumbBar *breadcrumbBar, const QUrl &expectedFolder, QString &failureMessage);
+
+QQuickAbstractButton *findDialogButton(QQuickDialogButtonBox *box, const QString &buttonText);
+
+void enterText(QWindow *window, const QString &textToEnter);
 }
+
+QT_END_NAMESPACE
 
 #endif // DIALOGSTESTUTILS_H

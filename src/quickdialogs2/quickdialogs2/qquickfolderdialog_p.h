@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKFILEDIALOG_P_H
-#define QQUICKFILEDIALOG_P_H
+#ifndef QQUICKFOLDERDIALOG_P_H
+#define QQUICKFOLDERDIALOG_P_H
 
 //
 //  W A R N I N G
@@ -60,65 +60,30 @@ QT_BEGIN_NAMESPACE
 
 class QQuickFileNameFilter;
 
-class Q_QUICKDIALOGS2_PRIVATE_EXPORT QQuickFileDialog : public QQuickAbstractDialog
+class Q_QUICKDIALOGS2_PRIVATE_EXPORT QQuickFolderDialog : public QQuickAbstractDialog
 {
     Q_OBJECT
-    Q_PROPERTY(FileMode fileMode READ fileMode WRITE setFileMode NOTIFY fileModeChanged FINAL)
-    Q_PROPERTY(QUrl selectedFile READ selectedFile NOTIFY selectedFileChanged FINAL)
-    Q_PROPERTY(QList<QUrl> selectedFiles READ selectedFiles NOTIFY selectedFilesChanged FINAL)
-    Q_PROPERTY(QUrl currentFile READ currentFile WRITE setCurrentFile NOTIFY currentFileChanged FINAL)
-    Q_PROPERTY(QList<QUrl> currentFiles READ currentFiles WRITE setCurrentFiles NOTIFY currentFilesChanged FINAL)
     Q_PROPERTY(QUrl currentFolder READ currentFolder WRITE setCurrentFolder NOTIFY currentFolderChanged FINAL)
+    Q_PROPERTY(QUrl selectedFolder READ selectedFolder WRITE setSelectedFolder NOTIFY selectedFolderChanged FINAL)
     Q_PROPERTY(QFileDialogOptions::FileDialogOptions options READ options WRITE setOptions RESET resetOptions NOTIFY optionsChanged FINAL)
-    Q_PROPERTY(QStringList nameFilters READ nameFilters WRITE setNameFilters RESET resetNameFilters NOTIFY nameFiltersChanged FINAL)
-    Q_PROPERTY(QQuickFileNameFilter *selectedNameFilter READ selectedNameFilter CONSTANT)
-    Q_PROPERTY(QString defaultSuffix READ defaultSuffix WRITE setDefaultSuffix RESET resetDefaultSuffix NOTIFY defaultSuffixChanged FINAL)
     Q_PROPERTY(QString acceptLabel READ acceptLabel WRITE setAcceptLabel RESET resetAcceptLabel NOTIFY acceptLabelChanged FINAL)
     Q_PROPERTY(QString rejectLabel READ rejectLabel WRITE setRejectLabel RESET resetRejectLabel NOTIFY rejectLabelChanged FINAL)
     Q_FLAGS(QFileDialogOptions::FileDialogOptions)
-    QML_NAMED_ELEMENT(FileDialog)
-    QML_ADDED_IN_VERSION(6, 2)
-    Q_MOC_INCLUDE(<QtQuickDialogs2Utils/private/qquickfilenamefilter_p.h>)
+    QML_NAMED_ELEMENT(FolderDialog)
+    QML_ADDED_IN_VERSION(6, 3)
 
 public:
-    explicit QQuickFileDialog(QObject *parent = nullptr);
-
-    enum FileMode {
-        OpenFile,
-        OpenFiles,
-        SaveFile
-    };
-    Q_ENUM(FileMode)
-
-    FileMode fileMode() const;
-    void setFileMode(FileMode fileMode);
-
-    QUrl selectedFile() const;
-
-    QList<QUrl> selectedFiles() const;
-
-    QUrl currentFile() const;
-    void setCurrentFile(const QUrl &file);
-
-    QList<QUrl> currentFiles() const;
-    void setCurrentFiles(const QList<QUrl> &currentFiles);
+    explicit QQuickFolderDialog(QObject *parent = nullptr);
 
     QUrl currentFolder() const;
-    void setCurrentFolder(const QUrl &currentFolder);
+    void setCurrentFolder(const QUrl &folder);
+
+    QUrl selectedFolder() const;
+    void setSelectedFolder(const QUrl &folder);
 
     QFileDialogOptions::FileDialogOptions options() const;
     void setOptions(QFileDialogOptions::FileDialogOptions options);
     void resetOptions();
-
-    QStringList nameFilters() const;
-    void setNameFilters(const QStringList &filters);
-    void resetNameFilters();
-
-    QQuickFileNameFilter *selectedNameFilter() const;
-
-    QString defaultSuffix() const;
-    void setDefaultSuffix(const QString &suffix);
-    void resetDefaultSuffix();
 
     QString acceptLabel() const;
     void setAcceptLabel(const QString &label);
@@ -129,15 +94,9 @@ public:
     void resetRejectLabel();
 
 Q_SIGNALS:
-    void fileModeChanged();
-    void selectedFileChanged();
-    void selectedFilesChanged();
-    void currentFileChanged();
-    void currentFilesChanged();
     void currentFolderChanged();
+    void selectedFolderChanged();
     void optionsChanged();
-    void nameFiltersChanged();
-    void defaultSuffixChanged();
     void acceptLabelChanged();
     void rejectLabelChanged();
 
@@ -145,23 +104,13 @@ protected:
     bool useNativeDialog() const override;
     void onCreate(QPlatformDialogHelper *dialog) override;
     void onShow(QPlatformDialogHelper *dialog) override;
-    void onHide(QPlatformDialogHelper *dialog) override;
-    void accept() override;
 
 private:
-    QUrl addDefaultSuffix(const QUrl &file) const;
-    QList<QUrl> addDefaultSuffixes(const QList<QUrl> &files) const;
-
-    void setSelectedFiles(const QList<QUrl> &selectedFiles);
-
-    FileMode m_fileMode;
-    QList<QUrl> m_selectedFiles;
     QSharedPointer<QFileDialogOptions> m_options;
-    mutable QQuickFileNameFilter *m_selectedNameFilter;
 };
 
 QT_END_NAMESPACE
 
-QML_DECLARE_TYPE(QQuickFileDialog)
+QML_DECLARE_TYPE(QQuickFolderDialog)
 
-#endif // QQUICKFILEDIALOG_P_H
+#endif // QQUICKFOLDERDIALOG_P_H

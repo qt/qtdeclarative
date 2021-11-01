@@ -103,9 +103,6 @@ private slots:
     void done();
 
 private:
-    QQuickAbstractButton *findDialogButton(QQuickDialogButtonBox *box, const QString &buttonText);
-    void enterText(QWindow *window, const QString &textToEnter);
-
     QTemporaryDir tempDir;
     QScopedPointer<QFile> tempFile1;
     QScopedPointer<QFile> tempFile2;
@@ -115,24 +112,6 @@ private:
     QScopedPointer<QFile> tempSubFile2;
     QDir oldCurrentDir;
 };
-
-QQuickAbstractButton *tst_QQuickFileDialogImpl::findDialogButton(QQuickDialogButtonBox *box, const QString &buttonText)
-{
-    for (int i = 0; i < box->count(); ++i) {
-        auto button = qobject_cast<QQuickAbstractButton*>(box->itemAt(i));
-        if (button && button->text().toUpper() == buttonText.toUpper())
-            return button;
-    }
-    return nullptr;
-}
-
-void tst_QQuickFileDialogImpl::enterText(QWindow *window, const QString &textToEnter)
-{
-    for (int i = 0; i < textToEnter.size(); ++i) {
-        const QChar key = textToEnter.at(i);
-        QTest::keyClick(window, key.toLatin1());
-    }
-}
 
 tst_QQuickFileDialogImpl::tst_QQuickFileDialogImpl()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
@@ -197,86 +176,6 @@ void tst_QQuickFileDialogImpl::cleanupTestCase()
 {
     // Just in case...
     QDir::setCurrent(oldCurrentDir.path());
-}
-
-bool verifyFileDialogDelegates(QQuickListView *fileDialogListView, const QStringList &expectedFiles,
-    QString &failureMessage)
-{
-    if (QQuickTest::qIsPolishScheduled(fileDialogListView)) {
-        if (!QQuickTest::qWaitForItemPolished(fileDialogListView)) {
-            failureMessage = QLatin1String("Failed to polish fileDialogListView");
-            return false;
-        }
-    }
-
-    QStringList actualFiles;
-    for (int i = 0; i < fileDialogListView->count(); ++i) {
-        auto delegate = qobject_cast<QQuickFileDialogDelegate*>(findViewDelegateItem(fileDialogListView, i));
-        if (!delegate) {
-            failureMessage = QString::fromLatin1("Delegate at index %1 is null").arg(i);
-            return false;
-        }
-
-        // Need to call absoluteFilePath on Windows; see comment in dialogtestutil.h.
-        actualFiles.append(QFileInfo(delegate->file().toLocalFile()).absoluteFilePath());
-    }
-
-    if (actualFiles != expectedFiles) {
-        failureMessage = QString::fromLatin1("Mismatch in actual vs expected "
-            "delegates in fileDialogListView:\n    expected: %1\n      actual: %2")
-            .arg(QDebug::toString(expectedFiles)).arg(QDebug::toString(actualFiles));
-        return false;
-    }
-
-    return true;
-}
-
-bool verifyBreadcrumbDelegates(QQuickFolderBreadcrumbBar *breadcrumbBar, const QUrl &expectedFolder,
-    QString &failureMessage)
-{
-    if (!breadcrumbBar) {
-        failureMessage = QLatin1String("breadcrumbBar is null");
-        return false;
-    }
-
-    auto breadcrumbBarListView = qobject_cast<QQuickListView*>(breadcrumbBar->contentItem());
-    if (!breadcrumbBarListView) {
-        failureMessage = QLatin1String("breadcrumbBar's ListView is null");
-        return false;
-    }
-
-    if (QQuickTest::qIsPolishScheduled(breadcrumbBarListView)) {
-        if (!QQuickTest::qWaitForItemPolished(breadcrumbBarListView)) {
-            failureMessage = QLatin1String("Failed to polish breadcrumbBarListView");
-            return false;
-        }
-    }
-
-    QStringList actualCrumbs;
-    for (int i = 0; i < breadcrumbBarListView->count(); ++i) {
-        auto delegate = qobject_cast<QQuickAbstractButton*>(findViewDelegateItem(breadcrumbBarListView, i));
-        if (!delegate) {
-            // It's a separator or some other non-crumb item.
-            continue;
-        }
-
-        actualCrumbs.append(delegate->text());
-    }
-
-    QStringList expectedCrumbs = QQuickFolderBreadcrumbBarPrivate::crumbPathsForFolder(expectedFolder);
-    for (int i = 0; i < expectedCrumbs.size(); ++i) {
-        QString &crumbPath = expectedCrumbs[i];
-        crumbPath = QQuickFolderBreadcrumbBarPrivate::folderBaseName(crumbPath);
-    }
-
-    if (actualCrumbs != expectedCrumbs) {
-        failureMessage = QString::fromLatin1("Mismatch in actual vs expected "
-            "delegates in breadcrumbBarListView:\n    expected: %1\n      actual: %2")
-            .arg(QDebug::toString(expectedCrumbs)).arg(QDebug::toString(actualCrumbs));
-        return false;
-    }
-
-    return true;
 }
 
 void tst_QQuickFileDialogImpl::defaults()
@@ -615,7 +514,7 @@ void tst_QQuickFileDialogImpl::chooseFolderViaEnter()
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
 
-    // Fhe first delegate in the view should be selected and have focus.
+    // The first delegate in the view should be selected and have focus.
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempDir.path()));
     COMPARE_URL(dialogHelper.dialog->currentFile(), QUrl::fromLocalFile(tempSubDir.path()));
     COMPARE_URLS(dialogHelper.dialog->currentFiles(), { QUrl::fromLocalFile(tempSubDir.path()) });

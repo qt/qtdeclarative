@@ -96,7 +96,7 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(lcFontDialog, "qt.quick.dialogs.fontdialog")
 
 QQuickFontDialog::QQuickFontDialog(QObject *parent)
-    : QQuickAbstractDialog(QPlatformTheme::FontDialog, parent),
+    : QQuickAbstractDialog(QQuickDialogType::FontDialog, parent),
       m_options(QFontDialogOptions::create())
 {
 }
@@ -218,6 +218,8 @@ void QQuickFontDialog::onShow(QPlatformDialogHelper *dialog)
     m_options->setWindowTitle(title());
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog))
         fontDialog->setOptions(m_options); // setOptions only assigns a member and isn't virtual
+
+    QQuickAbstractDialog::onShow(dialog);
 }
 
 QT_END_NAMESPACE

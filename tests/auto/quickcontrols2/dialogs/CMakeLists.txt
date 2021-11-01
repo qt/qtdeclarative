@@ -1,3 +1,4 @@
 add_subdirectory(qquickfiledialogimpl)
+add_subdirectory(qquickfolderdialogimpl)
 add_subdirectory(qquickfontdialogimpl)
 add_subdirectory(qquickmessagedialogimpl)
