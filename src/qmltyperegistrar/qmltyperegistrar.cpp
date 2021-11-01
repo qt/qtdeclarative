@@ -258,7 +258,7 @@ int main(int argc, char **argv)
         QString extendedName;
         bool seenQmlElement = false;
         const QJsonArray classInfos = classDef.value(QLatin1String("classInfos")).toArray();
-        for (const QJsonValue v : classInfos) {
+        for (const QJsonValueRef v : classInfos) {
             const QString name = v[QStringLiteral("name")].toString();
             if (name == QStringLiteral("QML.Element"))
                 seenQmlElement = true;
@@ -356,7 +356,7 @@ int main(int argc, char **argv)
                 const QJsonValue superClasses = classDef[QLatin1String("superClasses")];
 
                 if (superClasses.isArray()) {
-                    for (const QJsonValue &object : superClasses.toArray()) {
+                    for (const QJsonValueRef object : superClasses.toArray()) {
                         if (object[QStringLiteral("access")] != QStringLiteral("public"))
                             continue;
 
@@ -376,7 +376,7 @@ int main(int argc, char **argv)
                                      { QStringLiteral("properties"), QStringLiteral("signals"),
                                        QStringLiteral("methods") }) {
                                     bool foundRevisionEntry = false;
-                                    for (const auto &entry : type[section].toArray()) {
+                                    for (const QJsonValueRef entry : type[section].toArray()) {
                                         if (entry.toObject().contains(QStringLiteral("revision"))) {
                                             foundRevisionEntry = true;
                                             break;
@@ -416,7 +416,7 @@ int main(int argc, char **argv)
                             const QJsonValue superClasses = type[QLatin1String("superClasses")];
 
                             if (superClasses.isArray()) {
-                                for (const QJsonValue &object : superClasses.toArray()) {
+                                for (const QJsonValueRef object : superClasses.toArray()) {
                                     if (object[QStringLiteral("access")]
                                         != QStringLiteral("public"))
                                         continue;
