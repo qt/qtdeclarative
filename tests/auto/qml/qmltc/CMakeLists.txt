@@ -11,7 +11,7 @@ set(qml_sources
 )
 
 set_source_files_properties(data/NameConflict.qml PROPERTIES
-    QT_QMLTC_FILE_BASENAME data/ResolvedNameConflict)
+    QT_QMLTC_FILE_BASENAME ResolvedNameConflict)
 
 qt_internal_add_test(tst_qmltc_diskcache
     SOURCES

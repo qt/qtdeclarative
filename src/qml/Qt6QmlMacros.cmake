@@ -1011,6 +1011,8 @@ function(qt6_target_compile_qml_to_cpp target)
     endif()
 
     get_target_property(target_source_dir ${target} SOURCE_DIR)
+    get_target_property(target_binary_dir ${target} BINARY_DIR)
+
     set(generated_sources_other_scope)
 
     set(compiled_files) # compiled files list to be used to generate MOC C++
@@ -1032,24 +1034,23 @@ function(qt6_target_compile_qml_to_cpp target)
         # we ensured earlier that prefix always ends with "/"
         file(TO_CMAKE_PATH "${prefix}${file_resource_path}" file_resource_path)
 
-        file(RELATIVE_PATH file_relative ${CMAKE_CURRENT_SOURCE_DIR} ${file_absolute})
-        string(REGEX REPLACE "\.qml$" "" compiled_file_base ${file_relative})
-        string(REGEX REPLACE "[$#?]+" "_" compiled_file ${compiled_file_base})
+        get_filename_component(file_basename ${file_absolute} NAME_WLE) # extension is always .qml
+        string(REGEX REPLACE "[$#?]+" "_" compiled_file ${file_basename})
         string(TOLOWER ${compiled_file} file_name)
 
-        # NB: use <path>/<lowercase(file_name)>.<extension> pattern. if
+        # NB: use <lowercase(file_name)>.<extension> pattern. if
         # lowercase(file_name) is already taken (e.g. project has main.qml and
         # main.h/main.cpp), the compilation might fail. in this case, expect
         # user to specify QT_QMLTC_FILE_BASENAME
         get_source_file_property(specified_file_name ${qml_file_src} QT_QMLTC_FILE_BASENAME)
-        if (specified_file_name) # if present, overwrite the default behavior
-            set(file_name ${specified_file_name})
+        if (specified_file_name)
+            get_filename_component(file_name ${specified_file_name} NAME_WLE)
         endif()
 
-        set(compiled_header
-            "${CMAKE_CURRENT_BINARY_DIR}/.qmltc/${target}/${file_name}.h")
-        set(compiled_cpp
-            "${CMAKE_CURRENT_BINARY_DIR}/.qmltc/${target}/${file_name}.cpp")
+        # Note: add '${target}' to path to avoid potential conflicts where 2+
+        # distinct targets use the same ${target_binary_dir}/.qmltc/ output dir
+        set(compiled_header "${target_binary_dir}/.qmltc/${target}/${file_name}.h")
+        set(compiled_cpp "${target_binary_dir}/.qmltc/${target}/${file_name}.cpp")
         get_filename_component(out_dir ${compiled_header} DIRECTORY)
 
         add_custom_command(

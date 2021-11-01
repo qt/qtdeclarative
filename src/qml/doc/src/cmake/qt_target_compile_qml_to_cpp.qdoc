@@ -73,9 +73,10 @@ While processing FILES, the following source file properties are respected:
         non-default .h and .cpp file name, which might be useful to e.g. resolve
         conflicting file names (imagine you have main.qml that is being
         compiled, but main.h already exists, so #include "main.h" might not do
-        what you expect it to do). Unlike in the case of default behavior, the
-        QT_QMLTC_FILE_BASENAME is taken as is, without being lower-cased or
-        processed by any other means
+        what you expect it to do). QT_QMLTC_FILE_BASENAME is expected to be a
+        file name (without extension), so any preceding directory is ignored.
+        Unlike in the case of default behavior, the QT_QMLTC_FILE_BASENAME is
+        not lower-cased.
 \endlist
 
 */
