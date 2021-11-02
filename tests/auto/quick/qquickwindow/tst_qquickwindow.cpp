@@ -327,30 +327,68 @@ protected:
     }
 };
 
-class MouseRecordingWindow : public QQuickWindow
+class PointerRecordingWindow : public QQuickWindow
 {
 public:
-    explicit MouseRecordingWindow(QWindow *parent = nullptr) : QQuickWindow(parent) { }
+    explicit PointerRecordingWindow(QWindow *parent = nullptr) : QQuickWindow(parent) { }
 
 protected:
+    bool event(QEvent *event) override {
+        if (event->isPointerEvent()) {
+            qCDebug(lcTests) << event;
+            m_events << PointerEvent { event->type(), static_cast<QPointerEvent *>(event)->pointingDevice() };
+        }
+        return QQuickWindow::event(event);
+    }
+
     void mousePressEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << event->source();
+        m_mouseEvents << PointerEvent { event->type(), event->pointingDevice() };
         QQuickWindow::mousePressEvent(event);
     }
     void mouseMoveEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << event->source();
+        m_mouseEvents << PointerEvent { event->type(), event->pointingDevice() };
         QQuickWindow::mouseMoveEvent(event);
     }
     void mouseReleaseEvent(QMouseEvent *event) override {
         qCDebug(lcTests) << event;
-        m_mouseEvents << event->source();
+        m_mouseEvents << PointerEvent { event->type(), event->pointingDevice() };
         QQuickWindow::mouseReleaseEvent(event);
     }
 
+    void touchEvent(QTouchEvent * event) override {
+        qCDebug(lcTests) << event;
+        m_touchEvents << PointerEvent { event->type(), event->pointingDevice() };
+        QQuickWindow::touchEvent(event);
+    }
+
+#if QT_CONFIG(tabletevent)
+    void tabletEvent(QTabletEvent * event) override {
+        qCDebug(lcTests) << event;
+        m_tabletEvents << PointerEvent { event->type(), event->pointingDevice() };
+        QQuickWindow::tabletEvent(event);
+    }
+#endif
+
+#if QT_CONFIG(wheelevent)
+    void wheelEvent(QWheelEvent * event) override {
+        qCDebug(lcTests) << event;
+        m_tabletEvents << PointerEvent { event->type(), event->pointingDevice() };
+        QQuickWindow::wheelEvent(event);
+    }
+#endif
+
 public:
-    QList<Qt::MouseEventSource> m_mouseEvents;
+    struct PointerEvent
+    {
+        QEvent::Type type;
+        const QPointingDevice *device;
+    };
+    QList<PointerEvent> m_events;
+    QList<PointerEvent> m_mouseEvents;
+    QList<PointerEvent> m_touchEvents;
+    QList<PointerEvent> m_tabletEvents;
 };
 
 class MouseRecordingItem : public QQuickItem
@@ -510,6 +548,9 @@ private slots:
     void testChildMouseEventFilter();
     void testChildMouseEventFilter_data();
     void cleanupGrabsOnRelease();
+
+    void subclassWithPointerEventVirtualOverrides_data();
+    void subclassWithPointerEventVirtualOverrides();
 
 #if QT_CONFIG(shortcut)
     void testShortCut();
@@ -1250,7 +1291,7 @@ void tst_qquickwindow::synthMouseFromTouch()
     QFETCH(bool, acceptTouch);
 
     QCoreApplication::setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents, synthMouse);
-    QScopedPointer<MouseRecordingWindow> window(new MouseRecordingWindow);
+    QScopedPointer<PointerRecordingWindow> window(new PointerRecordingWindow);
     QScopedPointer<MouseRecordingItem> item(new MouseRecordingItem(acceptTouch, nullptr));
     item->setParentItem(window->contentItem());
     window->resize(250, 250);
@@ -1295,7 +1336,7 @@ void tst_qquickwindow::synthMouseDoubleClickFromTouch()
     QFETCH(bool, expectedSynthesizedDoubleClickEvent);
 
     QCoreApplication::setAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents, true);
-    QScopedPointer<MouseRecordingWindow> window(new MouseRecordingWindow);
+    QScopedPointer<PointerRecordingWindow> window(new PointerRecordingWindow);
     QScopedPointer<MouseRecordingItem> item(new MouseRecordingItem(false, nullptr));
     item->setParentItem(window->contentItem());
     window->resize(250, 250);
@@ -3576,6 +3617,57 @@ void tst_qquickwindow::cleanupGrabsOnRelease()
     // 2. One for the parent (since the mouse button was finally released)
     QCOMPARE(child->mouseUngrabEventCount, 1);
     QCOMPARE(parent->mouseUngrabEventCount, 1);
+}
+
+void tst_qquickwindow::subclassWithPointerEventVirtualOverrides_data()
+{
+    QTest::addColumn<QPointingDevice::DeviceType>("deviceType");
+
+    QTest::newRow("mouse click") << QPointingDevice::DeviceType::Mouse;
+    QTest::newRow("touch tap") << QPointingDevice::DeviceType::TouchScreen;
+    QTest::newRow("stylus tap") << QPointingDevice::DeviceType::Stylus;
+}
+
+void tst_qquickwindow::subclassWithPointerEventVirtualOverrides() // QTBUG-97859
+{
+    QFETCH(QPointingDevice::DeviceType, deviceType);
+
+    PointerRecordingWindow window;
+    window.resize(250, 250);
+    window.setPosition(100, 100);
+    window.setTitle(QTest::currentTestFunction());
+    window.show();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+    const qint64 stylusId = 1234567890;
+
+    const QPoint pos(120, 120);
+    switch (static_cast<QPointingDevice::DeviceType>(deviceType)) {
+    case QPointingDevice::DeviceType::Mouse:
+        QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, pos);
+        QTRY_COMPARE(window.m_mouseEvents.count(), 3); // separate move before press
+        QCOMPARE(window.m_events.count(), 3);
+        break;
+    case QPointingDevice::DeviceType::TouchScreen:
+        QTest::touchEvent(&window, touchDevice).press(0, pos, &window);
+        QTest::touchEvent(&window, touchDevice).release(0, pos, &window);
+        QTRY_COMPARE(window.m_touchEvents.count(), 2);
+        QCOMPARE(window.m_events.count(), 2);
+        break;
+    case QPointingDevice::DeviceType::Stylus:
+        // press (pressure is 0.8)
+        QWindowSystemInterface::handleTabletEvent(&window, pos, window.mapToGlobal(pos),
+            int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen),
+            Qt::LeftButton, 0.8, 0, 0, 0, 0, 0, stylusId, Qt::NoModifier);
+        // release (pressure is 0)
+        QWindowSystemInterface::handleTabletEvent(&window, pos, window.mapToGlobal(pos),
+            int(QInputDevice::DeviceType::Stylus), int(QPointingDevice::PointerType::Pen),
+            Qt::NoButton, 0, 0, 0, 0, 0, 0, stylusId, Qt::NoModifier);
+        QTRY_COMPARE(window.m_tabletEvents.count(), 2);
+        QVERIFY(window.m_events.count() >= window.m_tabletEvents.count()); // tablet + synth-mouse events
+        break;
+    default:
+        break;
+    }
 }
 
 #if QT_CONFIG(shortcut)
