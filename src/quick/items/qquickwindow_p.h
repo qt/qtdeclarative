@@ -287,6 +287,7 @@ public:
     uint hasActiveSwapchain : 1;
     uint hasRenderableSwapchain : 1;
     uint swapchainJustBecameRenderable : 1;
+    bool windowEventDispatch = false;
 
 private:
     static void cleanupNodesOnShutdown(QQuickItem *);

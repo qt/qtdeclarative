@@ -1338,6 +1338,38 @@ bool QQuickWindow::event(QEvent *e)
     QQuickDeliveryAgent *da = d->deliveryAgent;
     if (e->isPointerEvent()) {
         /*
+            We can't bypass the virtual functions like mousePressEvent() tabletEvent() etc.,
+            for the sake of code that subclasses QQuickWindow and overrides them, even though
+            we no longer need them as entry points for Qt Quick event delivery.
+            So dispatch to them now, ahead of normal delivery, and stop them from calling
+            back into this function if they were called from here (avoid recursion).
+            It could also be that user code expects them to work as entry points, too;
+            in that case, windowEventDispatch _won't_ be set, so the event comes here and
+            we'll dispatch it further below.
+        */
+        if (d->windowEventDispatch)
+            return false;
+        {
+            const bool wasAccepted = e->isAccepted();
+            QBoolBlocker windowEventDispatchGuard(d->windowEventDispatch, true);
+            qCDebug(lcPtr) << "dispatching to window functions in case of override" << e;
+            QWindow::event(e);
+            if (e->isAccepted() && !wasAccepted)
+                return true;
+        }
+        /*
+            QQuickWindow does not override touchEvent(). If the application has a subclass
+            of QQuickWindow which allows the event to remain accepted, it means they want
+            to stop propagation here, so return early (below). But otherwise we will call
+            QWindow::touchEvent(), which will ignore(); in that case, we need to continue
+            with the usual delivery below, so we need to undo the ignore().
+        */
+        auto pe = static_cast<QPointerEvent *>(e);
+        if (QQuickDeliveryAgentPrivate::isTouchEvent(pe))
+            e->accept();
+        // end of dispatch to user-overridden virtual window functions
+
+        /*
             When delivering update and release events to existing grabbers,
             use the subscene delivery agent, if any.  A possible scenario:
             1) Two touchpoints pressed on the main window: QQuickWindowPrivate::deliveryAgent delivers to QQuick3DViewport,
@@ -1350,7 +1382,6 @@ bool QQuickWindow::event(QEvent *e)
             With single-point events (mouse, or only one finger) it's simplified: there can only be one subscene of interest;
             for (pt : pe->points()) would only iterate once, so we might as well skip that logic.
         */
-        auto pe = static_cast<QPointerEvent *>(e);
         if (pe->pointCount()) {
             if (QQuickDeliveryAgentPrivate::subsceneAgentsExist) {
                 bool ret = false;
@@ -1521,13 +1552,18 @@ bool QQuickWindow::event(QEvent *e)
     else if (e->type() == QEvent::Type(QQuickWindowPrivate::TriggerContextCreationFailure))
         d->windowManager->handleContextCreationFailure(this);
 
-    return QWindow::event(e);
+    if (e->isPointerEvent())
+        return true;
+    else
+        return QWindow::event(e);
 }
 
 /*! \reimp */
 void QQuickWindow::keyPressEvent(QKeyEvent *e)
 {
     Q_D(QQuickWindow);
+    if (d->windowEventDispatch)
+        return;
     auto da = d->deliveryAgentPrivate();
     Q_ASSERT(da);
     da->deliverKeyEvent(e);
@@ -1537,6 +1573,8 @@ void QQuickWindow::keyPressEvent(QKeyEvent *e)
 void QQuickWindow::keyReleaseEvent(QKeyEvent *e)
 {
     Q_D(QQuickWindow);
+    if (d->windowEventDispatch)
+        return;
     auto da = d->deliveryAgentPrivate();
     Q_ASSERT(da);
     da->deliverKeyEvent(e);
@@ -1547,6 +1585,8 @@ void QQuickWindow::keyReleaseEvent(QKeyEvent *e)
 void QQuickWindow::wheelEvent(QWheelEvent *event)
 {
     Q_D(QQuickWindow);
+    if (d->windowEventDispatch)
+        return;
     auto da = d->deliveryAgentPrivate();
     Q_ASSERT(da);
     da->deliverSinglePointEventUntilAccepted(event);
@@ -1558,6 +1598,8 @@ void QQuickWindow::wheelEvent(QWheelEvent *event)
 void QQuickWindow::tabletEvent(QTabletEvent *event)
 {
     Q_D(QQuickWindow);
+    if (d->windowEventDispatch)
+        return;
     auto da = d->deliveryAgentPrivate();
     Q_ASSERT(da);
     da->deliverPointerEvent(event);
@@ -1568,6 +1610,8 @@ void QQuickWindow::tabletEvent(QTabletEvent *event)
 void QQuickWindow::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickWindow);
+    if (d->windowEventDispatch)
+        return;
     auto da = d->deliveryAgentPrivate();
     Q_ASSERT(da);
     da->handleMouseEvent(event);
@@ -1576,6 +1620,8 @@ void QQuickWindow::mousePressEvent(QMouseEvent *event)
 void QQuickWindow::mouseMoveEvent(QMouseEvent *event)
 {
     Q_D(QQuickWindow);
+    if (d->windowEventDispatch)
+        return;
     auto da = d->deliveryAgentPrivate();
     Q_ASSERT(da);
     da->handleMouseEvent(event);
@@ -1584,6 +1630,8 @@ void QQuickWindow::mouseMoveEvent(QMouseEvent *event)
 void QQuickWindow::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QQuickWindow);
+    if (d->windowEventDispatch)
+        return;
     auto da = d->deliveryAgentPrivate();
     Q_ASSERT(da);
     da->handleMouseEvent(event);
@@ -1592,6 +1640,8 @@ void QQuickWindow::mouseDoubleClickEvent(QMouseEvent *event)
 void QQuickWindow::mouseReleaseEvent(QMouseEvent *event)
 {
     Q_D(QQuickWindow);
+    if (d->windowEventDispatch)
+        return;
     auto da = d->deliveryAgentPrivate();
     Q_ASSERT(da);
     da->handleMouseEvent(event);
