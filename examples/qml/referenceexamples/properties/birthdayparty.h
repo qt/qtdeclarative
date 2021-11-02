@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,6 +47,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #ifndef BIRTHDAYPARTY_H
 #define BIRTHDAYPARTY_H
 
@@ -69,28 +70,28 @@ class BirthdayParty : public QObject
 // ![3]
     QML_ELEMENT
 public:
-    BirthdayParty(QObject *parent = nullptr);
+    using QObject::QObject;
 
     Person *host() const;
     void setHost(Person *);
 
     QQmlListProperty<Person> guests();
-    void appendGuest(Person*);
+    void appendGuest(Person *);
     qsizetype guestCount() const;
     Person *guest(qsizetype) const;
     void clearGuests();
-    void replaceGuest(qsizetype, Person*);
+    void replaceGuest(qsizetype, Person *);
     void removeLastGuest();
 
 private:
-    static void appendGuest(QQmlListProperty<Person>*, Person*);
-    static qsizetype guestCount(QQmlListProperty<Person>*);
-    static Person* guest(QQmlListProperty<Person>*, qsizetype);
-    static void clearGuests(QQmlListProperty<Person>*);
-    static void replaceGuest(QQmlListProperty<Person>*, qsizetype, Person*);
-    static void removeLastGuest(QQmlListProperty<Person>*);
+    static void appendGuest(QQmlListProperty<Person> *, Person *);
+    static qsizetype guestCount(QQmlListProperty<Person> *);
+    static Person* guest(QQmlListProperty<Person> *, qsizetype);
+    static void clearGuests(QQmlListProperty<Person> *);
+    static void replaceGuest(QQmlListProperty<Person> *, qsizetype, Person *);
+    static void removeLastGuest(QQmlListProperty<Person> *);
 
-    Person *m_host;
+    Person *m_host = nullptr;
     QList<Person *> m_guests;
 };
 // ![3]

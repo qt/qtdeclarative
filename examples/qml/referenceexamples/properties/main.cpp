@@ -63,10 +63,10 @@ int main(int argc, char ** argv)
     auto *party = qobject_cast<BirthdayParty *>(component.create());
 
     if (party && party->host()) {
-        qWarning() << party->host()->name() << "is having a birthday!";
-        qWarning() << "They are inviting:";
-        for (int ii = 0; ii < party->guestCount(); ++ii)
-            qWarning() << "   " << party->guest(ii)->name();
+        qInfo() << party->host()->name() << "is having a birthday!\n"
+            "They are inviting:";
+        for (qsizetype ii = 0; ii < party->guestCount(); ++ii)
+            qInfo() << "   " << party->guest(ii)->name();
         return EXIT_SUCCESS;
     }
 

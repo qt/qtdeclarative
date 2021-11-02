@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,6 +47,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #ifndef PERSON_H
 #define PERSON_H
 
@@ -63,7 +64,7 @@ class ShoeDescription : public QObject
     Q_PROPERTY(qreal price READ price WRITE setPrice NOTIFY shoeChanged)
     QML_ANONYMOUS
 public:
-    ShoeDescription(QObject *parent = nullptr);
+    using QObject::QObject;
 
     int size() const;
     void setSize(int);
@@ -76,14 +77,15 @@ public:
 
     qreal price() const;
     void setPrice(qreal);
+
 signals:
     void shoeChanged();
 
 private:
-    int m_size;
+    int m_size = 0;
     QColor m_color;
     QString m_brand;
-    qreal m_price;
+    qreal m_price = 0;
 };
 
 class Person : public QObject
@@ -95,12 +97,13 @@ class Person : public QObject
 // ![0]
     QML_ANONYMOUS
 public:
-    Person(QObject *parent = nullptr);
+    using QObject::QObject;
 
     QString name() const;
     void setName(const QString &);
 
     ShoeDescription *shoe();
+
 signals:
     void nameChanged();
 
@@ -114,7 +117,7 @@ class Boy : public Person
     Q_OBJECT
     QML_ELEMENT
 public:
-    Boy(QObject * parent = nullptr);
+    using Person::Person;
 };
 
 class Girl : public Person
@@ -122,7 +125,7 @@ class Girl : public Person
     Q_OBJECT
     QML_ELEMENT
 public:
-    Girl(QObject * parent = nullptr);
+    using Person::Person;
 };
 
 #endif // PERSON_H

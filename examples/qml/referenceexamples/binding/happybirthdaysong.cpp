@@ -50,10 +50,9 @@
 #include "happybirthdaysong.h"
 #include <QTimer>
 
-HappyBirthdaySong::HappyBirthdaySong(QObject *parent)
-: QObject(parent), m_line(-1)
+HappyBirthdaySong::HappyBirthdaySong(QObject *parent) :
+    QObject(parent)
 {
-    setName(QString());
     auto *timer = new QTimer(this);
     QObject::connect(timer, &QTimer::timeout, this, &HappyBirthdaySong::advance);
     timer->start(1000);

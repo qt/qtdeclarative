@@ -64,14 +64,14 @@ int main(int argc, char ** argv)
     auto *party = qobject_cast<BirthdayParty *>(component.create());
 
     if (party && party->host()) {
-        qWarning() << party->host()->name() << "is having a birthday!";
+        qInfo() << party->host()->name() << "is having a birthday!";
 
         if (qobject_cast<Boy *>(party->host()))
-            qWarning() << "He is inviting:";
+            qInfo() << "He is inviting:";
         else
-            qWarning() << "She is inviting:";
+            qInfo() << "She is inviting:";
 
-        for (int ii = 0; ii < party->guestCount(); ++ii) {
+        for (qsizetype ii = 0; ii < party->guestCount(); ++ii) {
             Person *guest = party->guest(ii);
 
             QDate rsvpDate;
@@ -81,9 +81,9 @@ int main(int argc, char ** argv)
                 rsvpDate = attached->property("rsvp").toDate();
 
             if (rsvpDate.isNull())
-                qWarning() << "   " << guest->name() << "RSVP date: Hasn't RSVP'd";
+                qInfo() << "   " << guest->name() << "RSVP date: Hasn't RSVP'd";
             else
-                qWarning() << "   " << guest->name() << "RSVP date:" << qPrintable(rsvpDate.toString());
+                qInfo() << "   " << guest->name() << "RSVP date:" << rsvpDate.toString();
         }
 
         party->startParty();

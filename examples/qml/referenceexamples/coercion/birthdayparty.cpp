@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,12 +47,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "birthdayparty.h"
 
-BirthdayParty::BirthdayParty(QObject *parent)
-: QObject(parent), m_host(nullptr)
-{
-}
+#include "birthdayparty.h"
 
 Person *BirthdayParty::host() const
 {
@@ -69,13 +65,12 @@ QQmlListProperty<Person> BirthdayParty::guests()
     return {this, &m_guests};
 }
 
-int BirthdayParty::guestCount() const
+qsizetype BirthdayParty::guestCount() const
 {
     return m_guests.count();
 }
 
-Person *BirthdayParty::guest(int index) const
+Person *BirthdayParty::guest(qsizetype index) const
 {
     return m_guests.at(index);
 }
-

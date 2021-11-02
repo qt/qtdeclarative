@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,6 +47,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #ifndef BIRTHDAYPARTY_H
 #define BIRTHDAYPARTY_H
 
@@ -62,7 +63,7 @@ class BirthdayPartyAttached : public QObject
     Q_PROPERTY(QDate rsvp READ rsvp WRITE setRsvp)
     QML_ANONYMOUS
 public:
-    BirthdayPartyAttached(QObject *object);
+    using QObject::QObject;
 
     QDate rsvp() const;
     void setRsvp(QDate);
@@ -83,14 +84,14 @@ class BirthdayParty : public QObject
     QML_ELEMENT
     QML_ATTACHED(BirthdayPartyAttached)
 public:
-    BirthdayParty(QObject *parent = nullptr);
+    using QObject::QObject;
 
     Person *host() const;
     void setHost(Person *);
 
     QQmlListProperty<Person> guests();
-    int guestCount() const;
-    Person *guest(int) const;
+    qsizetype guestCount() const;
+    Person *guest(qsizetype) const;
 
     QString announcement() const;
     void setAnnouncement(const QString &);
@@ -98,11 +99,12 @@ public:
     static BirthdayPartyAttached *qmlAttachedProperties(QObject *);
 
     void startParty();
+
 signals:
     void partyStarted(QTime time);
 
 private:
-    Person *m_host;
+    Person *m_host = nullptr;
     QList<Person *> m_guests;
 };
 

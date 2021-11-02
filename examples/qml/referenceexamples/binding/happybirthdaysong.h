@@ -64,7 +64,7 @@ class HappyBirthdaySong : public QObject, public QQmlPropertyValueSource
     Q_INTERFACES(QQmlPropertyValueSource)
     QML_ELEMENT
 public:
-    HappyBirthdaySong(QObject *parent = nullptr);
+    explicit HappyBirthdaySong(QObject *parent = nullptr);
 
     void setTarget(const QQmlProperty &) override;
 
@@ -77,7 +77,7 @@ private slots:
 signals:
     void nameChanged();
 private:
-    int m_line;
+    qsizetype m_line = -1;
     QStringList m_lyrics;
     QQmlProperty m_target;
     QString m_name;
