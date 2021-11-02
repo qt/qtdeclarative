@@ -741,9 +741,8 @@ void tst_qqmllistmodel::syncError()
     component.setData(qml.toUtf8(),
                       QUrl::fromLocalFile(QString("dummy.qml")));
     QTest::ignoreMessage(QtWarningMsg,error.toUtf8());
-    QObject *obj = component.create();
-    QVERIFY(obj);
-    delete obj;
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY2(obj, qPrintable(component.errorString()));
 }
 
 /*
@@ -1093,12 +1092,10 @@ void tst_qqmllistmodel::set_model_cache()
 {
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("setmodelcachelist.qml"));
-    QObject *model = component.create();
-    QVERIFY2(component.errorString().isEmpty(), QTest::toString(component.errorString()));
+    QScopedPointer<QObject> model(component.create());
+    QVERIFY2(component.errorString().isEmpty(), qPrintable(component.errorString()));
     QVERIFY(model != nullptr);
     QVERIFY(model->property("ok").toBool());
-
-    delete model;
 }
 
 void tst_qqmllistmodel::property_changes()
@@ -1291,15 +1288,13 @@ void tst_qqmllistmodel::signal_handlers()
 
     QQmlEngine eng;
     QQmlComponent component(&eng, testFileUrl("signalhandlers.qml"));
-    QObject *model = component.create();
-    QQmlListModel *lm = qobject_cast<QQmlListModel *>(model);
+    QScopedPointer<QObject> model(component.create());
+    QQmlListModel *lm = qobject_cast<QQmlListModel *>(model.data());
     QVERIFY(lm != nullptr);
     lm->setDynamicRoles(dynamicRoles);
-    QVERIFY2(component.errorString().isEmpty(), QTest::toString(component.errorString()));
+    QVERIFY2(component.errorString().isEmpty(), qPrintable(component.errorString()));
     QVERIFY(model != nullptr);
     QVERIFY(model->property("ok").toBool());
-
-    delete model;
 }
 
 void tst_qqmllistmodel::role_mode_data()
