@@ -7399,6 +7399,7 @@ void QQuickItem::setSize(const QSizeF &size)
 
 /*!
     \qmlproperty bool QtQuick::Item::activeFocus
+    \readonly
 
     This read-only property indicates whether the item has active focus.
 
@@ -7433,6 +7434,7 @@ void QQuickItem::setSize(const QSizeF &size)
 */
 /*!
     \property QQuickItem::activeFocus
+    \readonly
 
     This read-only property indicates whether the item has active focus.
 
