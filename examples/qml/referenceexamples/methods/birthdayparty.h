@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,6 +47,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #ifndef BIRTHDAYPARTY_H
 #define BIRTHDAYPARTY_H
 
@@ -61,21 +62,21 @@ class BirthdayParty : public QObject
     Q_PROPERTY(QQmlListProperty<Person> guests READ guests)
     QML_ELEMENT
 public:
-    BirthdayParty(QObject *parent = nullptr);
+    using QObject::QObject;
 
     Person *host() const;
     void setHost(Person *);
 
     QQmlListProperty<Person> guests();
-    int guestCount() const;
-    Person *guest(int) const;
+    qsizetype guestCount() const;
+    Person *guest(qsizetype) const;
 
 // ![0]
     Q_INVOKABLE void invite(const QString &name);
 // ![0]
 
 private:
-    Person *m_host;
+    Person *m_host = nullptr;
     QList<Person *> m_guests;
 };
 

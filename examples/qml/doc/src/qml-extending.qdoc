@@ -168,10 +168,12 @@ developed in the previous examples into two types - a \c Boy and a \c Girl.
 \snippet referenceexamples/coercion/person.h 0
 
 The Person class remains unaltered in this example and the Boy and Girl C++
-classes are trivial extensions of it.  As an example, the inheritance used here
-is a little contrived, but in real applications it is likely that the two
-extensions would add additional properties or modify the Person classes
-behavior.
+classes are trivial extensions of it. The types and their QML name are
+registered with the QML engine.
+
+As an example, the inheritance used here is a little contrived, but in real
+applications it is likely that the two extensions would add additional
+properties or modify the Person classes behavior.
 
 \section2 Define People as a Base Class
 
@@ -186,15 +188,6 @@ While we want to disallow instantiating Person from within QML, it still needs
 to be registered with the QML engine, so that it can be used as a property type
 and other types can be coerced to it. This is what the QML_UNCREATABLE macro
 does.
-
-\section2 Define Boy and Girl
-
-The implementation of Boy and Girl is trivial.
-
-\snippet referenceexamples/coercion/person.cpp 1
-
-All that is necessary is to implement the constructor, and to register the types
-and their QML name with the QML engine.
 
 \section1 Running the Example
 

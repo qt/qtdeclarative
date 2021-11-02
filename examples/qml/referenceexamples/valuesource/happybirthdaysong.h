@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,6 +47,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #ifndef HAPPYBIRTHDAYSONG_H
 #define HAPPYBIRTHDAYSONG_H
 
@@ -66,7 +67,7 @@ class HappyBirthdaySong : public QObject, public QQmlPropertyValueSource
 // ![1]
     QML_ELEMENT
 public:
-    HappyBirthdaySong(QObject *parent = nullptr);
+    explicit HappyBirthdaySong(QObject *parent = nullptr);
 
     void setTarget(const QQmlProperty &) override;
 // ![1]
@@ -78,7 +79,7 @@ private slots:
     void advance();
 
 private:
-    int m_line;
+    qsizetype m_line = -1;
     QStringList m_lyrics;
     QQmlProperty m_target;
     QString m_name;

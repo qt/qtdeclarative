@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,14 +47,10 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #include "person.h"
 
 // ![0]
-Person::Person(QObject *parent)
-: QObject(parent), m_shoeSize(0)
-{
-}
-
 QString Person::name() const
 {
     return m_name;

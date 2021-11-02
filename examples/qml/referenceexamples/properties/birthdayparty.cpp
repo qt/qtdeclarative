@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,12 +47,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "birthdayparty.h"
 
-BirthdayParty::BirthdayParty(QObject *parent)
-: QObject(parent), m_host(nullptr)
-{
-}
+#include "birthdayparty.h"
 
 // ![0]
 Person *BirthdayParty::host() const
@@ -76,10 +72,10 @@ QQmlListProperty<Person> BirthdayParty::guests()
              &BirthdayParty::removeLastGuest};
 }
 
-void BirthdayParty::appendGuest(Person* p) {
+void BirthdayParty::appendGuest(Person *p)
+{
     m_guests.append(p);
 }
-
 
 qsizetype BirthdayParty::guestCount() const
 {
@@ -107,12 +103,14 @@ void BirthdayParty::removeLastGuest()
 
 // ![0]
 
-void BirthdayParty::appendGuest(QQmlListProperty<Person>* list, Person* p) {
-    reinterpret_cast< BirthdayParty* >(list->data)->appendGuest(p);
+void BirthdayParty::appendGuest(QQmlListProperty<Person> *list, Person *p)
+{
+    reinterpret_cast< BirthdayParty *>(list->data)->appendGuest(p);
 }
 
-void BirthdayParty::clearGuests(QQmlListProperty<Person>* list) {
-    reinterpret_cast< BirthdayParty* >(list->data)->clearGuests();
+void BirthdayParty::clearGuests(QQmlListProperty<Person>* list)
+{
+    reinterpret_cast< BirthdayParty *>(list->data)->clearGuests();
 }
 
 void BirthdayParty::replaceGuest(QQmlListProperty<Person> *list, qsizetype i, Person *p)
@@ -125,10 +123,12 @@ void BirthdayParty::removeLastGuest(QQmlListProperty<Person> *list)
     reinterpret_cast< BirthdayParty* >(list->data)->removeLastGuest();
 }
 
-Person* BirthdayParty::guest(QQmlListProperty<Person>* list, qsizetype i) {
+Person* BirthdayParty::guest(QQmlListProperty<Person> *list, qsizetype i)
+{
     return reinterpret_cast< BirthdayParty* >(list->data)->guest(i);
 }
 
-qsizetype BirthdayParty::guestCount(QQmlListProperty<Person>* list) {
+qsizetype BirthdayParty::guestCount(QQmlListProperty<Person> *list)
+{
     return reinterpret_cast< BirthdayParty* >(list->data)->guestCount();
 }

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,6 +47,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #include <QCoreApplication>
 #include <QQmlEngine>
 #include <QQmlComponent>
@@ -63,14 +64,14 @@ int main(int argc, char ** argv)
     auto *party = qobject_cast<BirthdayParty *>(component.create());
 
     if (party && party->host()) {
-        qWarning() << party->host()->name() << "is having a birthday!";
+        qInfo() << party->host()->name() << "is having a birthday!";
 
         if (qobject_cast<Boy *>(party->host()))
-            qWarning() << "He is inviting:";
+            qInfo() << "He is inviting:";
         else
-            qWarning() << "She is inviting:";
+            qInfo() << "She is inviting:";
 
-        for (int ii = 0; ii < party->guestCount(); ++ii) {
+        for (qsizetype ii = 0; ii < party->guestCount(); ++ii) {
             Person *guest = party->guest(ii);
 
             //! [query rsvp]
@@ -81,9 +82,9 @@ int main(int argc, char ** argv)
                 rsvpDate = attached->property("rsvp").toDate();
             //! [query rsvp]
             if (rsvpDate.isNull())
-                qWarning() << "   " << guest->name() << "RSVP date: Hasn't RSVP'd";
+                qInfo() << "   " << guest->name() << "RSVP date: Hasn't RSVP'd";
             else
-                qWarning() << "   " << guest->name() << "RSVP date:" << qPrintable(rsvpDate.toString());
+                qInfo() << "   " << guest->name() << "RSVP date:" << rsvpDate.toString();
         }
 
         return EXIT_SUCCESS;

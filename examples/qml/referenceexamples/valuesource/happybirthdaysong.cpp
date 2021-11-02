@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,13 +47,13 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #include "happybirthdaysong.h"
 #include <QTimer>
 
-HappyBirthdaySong::HappyBirthdaySong(QObject *parent)
-: QObject(parent), m_line(-1)
+HappyBirthdaySong::HappyBirthdaySong(QObject *parent) :
+      QObject(parent)
 {
-    setName(QString());
     auto *timer = new QTimer(this);
     QObject::connect(timer, &QTimer::timeout, this, &HappyBirthdaySong::advance);
     timer->start(1000);

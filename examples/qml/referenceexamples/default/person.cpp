@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,12 +47,8 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
-#include "person.h"
 
-Person::Person(QObject *parent)
-: QObject(parent), m_shoeSize(0)
-{
-}
+#include "person.h"
 
 QString Person::name() const
 {
@@ -73,16 +69,3 @@ void Person::setShoeSize(int s)
 {
     m_shoeSize = s;
 }
-
-
-Boy::Boy(QObject * parent)
-: Person(parent)
-{
-}
-
-
-Girl::Girl(QObject * parent)
-: Person(parent)
-{
-}
-

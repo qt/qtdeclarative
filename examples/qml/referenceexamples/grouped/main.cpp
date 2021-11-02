@@ -63,23 +63,23 @@ int main(int argc, char ** argv)
     auto *party = qobject_cast<BirthdayParty *>(component.create());
 
     if (party && party->host()) {
-        qWarning() << party->host()->name() << "is having a birthday!";
+        qInfo() << party->host()->name() << "is having a birthday!";
 
         if (qobject_cast<Boy *>(party->host()))
-            qWarning() << "He is inviting:";
+            qInfo() << "He is inviting:";
         else
-            qWarning() << "She is inviting:";
+            qInfo() << "She is inviting:";
 
         Person *bestShoe = nullptr;
-        for (int ii = 0; ii < party->guestCount(); ++ii) {
+        for (qsizetype ii = 0; ii < party->guestCount(); ++ii) {
             Person *guest = party->guest(ii);
-            qWarning() << "   " << guest->name();
+            qInfo() << "   " << guest->name();
 
             if (!bestShoe || bestShoe->shoe()->price() < guest->shoe()->price())
                 bestShoe = guest;
         }
         if (bestShoe)
-            qWarning() << bestShoe->name() << "is wearing the best shoes!";
+            qInfo() << bestShoe->name() << "is wearing the best shoes!";
 
         return EXIT_SUCCESS;
     }

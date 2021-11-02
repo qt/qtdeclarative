@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,6 +47,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #ifndef PERSON_H
 #define PERSON_H
 
@@ -60,16 +61,17 @@ class Person : public QObject
     Q_PROPERTY(int shoeSize READ shoeSize WRITE setShoeSize)
     QML_ELEMENT
 public:
-    Person(QObject *parent = nullptr);
+    using QObject::QObject;
 
     QString name() const;
     void setName(const QString &);
 
     int shoeSize() const;
     void setShoeSize(int);
+
 private:
     QString m_name;
-    int m_shoeSize;
+    int m_shoeSize = 0;
 };
 
 #endif // PERSON_H

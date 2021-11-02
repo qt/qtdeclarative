@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,6 +47,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
 #include <QCoreApplication>
 #include <QQmlEngine>
 #include <QQmlComponent>
@@ -60,12 +61,13 @@ int main(int argc, char ** argv)
     QQmlEngine engine;
     QQmlComponent component(&engine, QUrl("qrc:example.qml"));
     auto *person = qobject_cast<Person *>(component.create());
-    if (person) {
-        qWarning() << "The person's name is" << person->name();
-        qWarning() << "They wear a" << person->shoeSize() << "sized shoe";
-    } else {
+    if (!person) {
         qWarning() << component.errors();
+        return EXIT_FAILURE;
     }
+
+     qInfo() << "The person's name is" << person->name()
+         << "\nThey wear a" << person->shoeSize() << "sized shoe";
 
     return EXIT_SUCCESS;
 }
