@@ -257,6 +257,7 @@ QPair<QString, QString> resolveImportPath(const QString &uri, const QString &ver
     const QStringList parts = uri.split(dot, Qt::SkipEmptyParts);
 
     QString ver = version;
+    QPair<QString, QString> candidate;
     while (true) {
         for (const QString &qmlImportPath : qAsConst(g_qmlImportPaths)) {
             // Search for the most specific version first, and search
@@ -271,8 +272,15 @@ QPair<QString, QString> resolveImportPath(const QString &uri, const QString &ver
                 if (relativePath.endsWith(slash))
                     relativePath.chop(1);
                 const QString candidatePath = QDir::cleanPath(qmlImportPath + slash + relativePath);
-                if (QDir(candidatePath).exists())
-                    return qMakePair(candidatePath, relativePath); // import found
+                const QDir candidateDir(candidatePath);
+                if (candidateDir.exists()) {
+                    const auto newCandidate = qMakePair(candidatePath, relativePath); // import found
+                    if (candidateDir.exists(u"qmldir"_qs)) // if it has a qmldir, we are fine
+                        return newCandidate;
+                    else if (candidate.first.isEmpty())
+                        candidate = newCandidate;
+                    // otherwise we keep looking if we can find the module again (with a qmldir this time)
+                }
             } else {
                 for (int index = parts.count() - 1; index >= 0; --index) {
                     QString relativePath = parts.mid(0, index + 1).join(slash)
@@ -280,8 +288,14 @@ QPair<QString, QString> resolveImportPath(const QString &uri, const QString &ver
                     if (relativePath.endsWith(slash))
                         relativePath.chop(1);
                     const QString candidatePath = QDir::cleanPath(qmlImportPath + slash + relativePath);
-                    if (QDir(candidatePath).exists())
-                        return qMakePair(candidatePath, relativePath); // import found
+                    const QDir candidateDir(candidatePath);
+                    if (candidateDir.exists()) {
+                        const auto newCandidate = qMakePair(candidatePath, relativePath); // import found
+                        if (candidateDir.exists(u"qmldir"_qs))
+                            return newCandidate;
+                        else if (candidate.first.isEmpty())
+                            candidate = newCandidate;
+                    }
                 }
             }
         }
@@ -297,7 +311,7 @@ QPair<QString, QString> resolveImportPath(const QString &uri, const QString &ver
             ver = ver.mid(0, lastDot);
     }
 
-    return QPair<QString, QString>(); // not found
+    return candidate;
 }
 
 // Find absolute file system paths and plugins for a list of modules.

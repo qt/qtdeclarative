@@ -46,6 +46,7 @@ private Q_SLOTS:
     void rootPath();
     void modules_data();
     void modules();
+    void qmldirPreference();
 
 private:
     void runQmlimportscanner(const QString &mode, const QString &fileToScan,
@@ -121,6 +122,31 @@ void TestQmlimportscanner::modules()
     qmlFile.write("import " + name.toUtf8() + "\nQtObject {}");
     qmlFile.close();
     runQmlimportscanner("-qmlFiles", qmlFile.fileName(), testFile(name + ".json"));
+}
+
+void TestQmlimportscanner::qmldirPreference()
+{
+    // ###
+    QStringList with  {u"-importPath"_qs, testFile("With")};
+    QStringList withOut {u"-importPath"_qs, testFile("WithOut")};
+    QStringList genericArgs {u"-qmlFiles"_qs, testFile("qmldirpref.qml"), u"-importPath"_qs,
+                             QLibraryInfo::path(QLibraryInfo::QmlImportsPath)};
+
+
+    // found path should not depend  on order of importPath arguments
+    QStringList argcombis[2] { genericArgs + with + withOut, genericArgs + withOut + with };
+    for (const auto &allArgs: argcombis) {
+        QProcess process;
+        process.start(m_qmlimportscannerPath, allArgs);
+        QVERIFY(process.waitForFinished());
+        QCOMPARE(process.exitStatus(), QProcess::NormalExit);
+        QCOMPARE(process.exitCode(), 0);
+        QVERIFY(process.readAllStandardError().isEmpty());
+        auto output = process.readAllStandardOutput();
+        // check that the "With" path is used, and the "WithOut" path is ignored
+        QVERIFY(output.contains("With/Module"));
+        QVERIFY(!output.contains("WithOut/Module"));
+    }
 }
 
 void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QString &pathToScan,
