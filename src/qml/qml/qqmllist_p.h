@@ -55,6 +55,7 @@
 #include "qqmlmetaobject_p.h"
 #include "qqmlmetatype_p.h"
 #include "qqmlengine_p.h"
+#include <QtQml/private/qbipointer_p.h>
 
 QT_BEGIN_NAMESPACE
 

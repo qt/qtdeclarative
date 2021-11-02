@@ -53,7 +53,6 @@
 
 #include <QtQml/qtqmlglobal.h>
 
-#include <private/qflagpointer_p.h>
 #include <private/qqmlpropertycache_p.h>
 
 #include <QtCore/qvarlengtharray.h>

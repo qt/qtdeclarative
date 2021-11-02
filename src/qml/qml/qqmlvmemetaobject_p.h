@@ -66,7 +66,7 @@
 #include "qqmlguard_p.h"
 
 #include <private/qqmlguardedcontextdata_p.h>
-#include <private/qflagpointer_p.h>
+#include <private/qbipointer_p.h>
 
 #include <private/qv4object_p.h>
 #include <private/qv4value_p.h>

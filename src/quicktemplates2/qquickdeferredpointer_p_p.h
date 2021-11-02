@@ -49,7 +49,7 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <QtQml/private/qflagpointer_p.h>
+#include <QtQml/private/qbipointer_p.h>
 #include <QtQml/private/qqmlcomponent_p.h>
 
 QT_BEGIN_NAMESPACE

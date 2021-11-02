@@ -56,7 +56,6 @@
 #include <private/qv4value_p.h>
 #include <private/qv4string_p.h>
 #include <private/qv4engine_p.h>
-#include <private/qflagpointer_p.h>
 #include <private/qv4mm_p.h>
 #include <private/qv4persistent_p.h>
 

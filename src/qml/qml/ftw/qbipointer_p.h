@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QFLAGPOINTER_P_H
-#define QFLAGPOINTER_P_H
+#ifndef QBIPOINTER_P_H
+#define QBIPOINTER_P_H
 
 //
 //  W A R N I N G
@@ -241,4 +241,4 @@ T2 *QBiPointer<T, T2>::asT2() const
 
 QT_END_NAMESPACE
 
-#endif // QFLAGPOINTER_P_H
+#endif // QBIPOINTER_P_H

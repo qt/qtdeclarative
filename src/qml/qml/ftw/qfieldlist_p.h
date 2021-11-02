@@ -54,7 +54,6 @@
 #include <QtCore/qglobal.h>
 #include <QtCore/qtaggedpointer.h>
 
-#include <private/qflagpointer_p.h>
 
 // QForwardFieldList is a super simple linked list that can only prepend
 template<class N, N *N::*nextMember, typename Tag = QtPrivate::TagInfo<N>>

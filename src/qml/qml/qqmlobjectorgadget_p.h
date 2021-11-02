@@ -52,6 +52,7 @@
 //
 
 #include <private/qqmlmetaobject_p.h>
+#include <private/qbipointer_p.h>
 
 QT_BEGIN_NAMESPACE
 

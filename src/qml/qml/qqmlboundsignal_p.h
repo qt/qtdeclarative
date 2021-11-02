@@ -55,7 +55,6 @@
 
 #include <private/qqmljavascriptexpression_p.h>
 #include <private/qqmlnotifier_p.h>
-#include <private/qflagpointer_p.h>
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmlglobal_p.h>
 

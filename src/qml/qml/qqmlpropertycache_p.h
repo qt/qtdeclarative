@@ -52,7 +52,6 @@
 //
 
 #include <private/qqmlrefcount_p.h>
-#include <private/qflagpointer_p.h>
 #include "qqmlnotifier_p.h"
 #include <private/qqmlpropertyindex_p.h>
 
