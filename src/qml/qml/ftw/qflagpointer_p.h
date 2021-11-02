@@ -66,6 +66,16 @@ template <> struct QFlagPointerAlignment<void>
 };
 }
 
+/*!
+    \internal
+    \class template<typename T1, typename T2> QBiPointer<T1, T2>
+
+    \short QBiPointer can be thought of as a space-optimized std::variant<T1*, T2*>
+    with a nicer API to check the active pointer. Its other main feature is that
+    it only requires sizeof(void *) space.
+
+    \note It can also store one additional flag for a user defined purpose.
+ */
 template<typename T, typename T2>
 class QBiPointer {
 public:
