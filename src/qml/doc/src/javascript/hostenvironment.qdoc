@@ -70,11 +70,10 @@ to use from C++. See
 \l {qtqml-cppintegration-interactqmlfromcpp.html}{Interacting with QML Objects from C++}
 for more information.
 
-Type assertions can also be used in order to cast an object to a different
-object type. If the object is actually of the given type, then the type
-assertion returns the same object. If not, it returns \c null. In the following
-snippet we assert that the \c parent object is a \c Rectangle before accessing
-a specific member of it.
+Type assertions (sometimes called \e as-casts) can also be used in order to cast an object to a
+different object type. If the object is actually of the given type, then the type assertion returns
+the same object. If not, it returns \c null. In the following snippet we assert that the \c parent
+object is a \c Rectangle before accessing a specific member of it.
 
 \qml
 Item {
