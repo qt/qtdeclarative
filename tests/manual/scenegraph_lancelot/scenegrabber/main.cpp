@@ -52,6 +52,8 @@
 
 //#define GRABBERDEBUG
 
+static const QSize DefaultGrabSize(320, 480);
+
 class GrabbingView : public QQuickView
 {
     Q_OBJECT
@@ -106,6 +108,11 @@ private slots:
 #ifdef GRABBERDEBUG
         printf("...sceneStabilized IN\n");
 #endif
+        if (QGuiApplication::platformName() == QLatin1String("eglfs")) {
+            QSize grabSize = initialSize().isEmpty() ? DefaultGrabSize : initialSize();
+            lastGrab = lastGrab.copy(QRect(QPoint(0, 0), grabSize));
+        }
+
         if (ofile == "-") {   // Write to stdout
             QFile of;
 #ifdef Q_OS_WIN
@@ -204,6 +211,9 @@ int main(int argc, char *argv[])
                 item->setVisible(false);
         }
     }
+
+    if (v.initialSize().isEmpty())
+        v.resize(DefaultGrabSize);
 
     v.show();
 
