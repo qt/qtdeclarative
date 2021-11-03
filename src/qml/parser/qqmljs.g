@@ -2124,6 +2124,7 @@ CoverInitializedName: IdentifierReference Initializer_In;
         if (auto *c = asAnonymousClassDefinition(sym(2).Expression))
             c->name = stringRef(1);
         AST::BinaryExpression *assignment = new (pool) AST::BinaryExpression(left, QSOperator::Assign, sym(2).Expression);
+        assignment->operatorToken = loc(2);
         AST::PatternProperty *node = new (pool) AST::PatternProperty(name, assignment);
         node->colonToken = loc(1);
         sym(1).Node = node;
