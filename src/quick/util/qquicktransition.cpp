@@ -435,10 +435,12 @@ void QQuickTransition::setEnabled(bool enabled)
 
 /*!
     \qmlproperty bool QtQuick::Transition::running
+    \readonly
 
     This property holds whether the transition is currently running.
 
-    This property is read only.
+    \note Unlike Animation::running, this property is read only,
+    and can not be used to control the transition.
 */
 bool QQuickTransition::running() const
 {
