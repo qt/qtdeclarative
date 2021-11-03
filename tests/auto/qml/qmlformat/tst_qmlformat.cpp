@@ -40,6 +40,7 @@ class TestQmlformat: public QQmlDataTest
     Q_OBJECT
 
 public:
+    enum class RunOption { OnCopy, OrigToCopy };
     TestQmlformat();
 
 private Q_SLOTS:
@@ -56,7 +57,8 @@ private Q_SLOTS:
 
 private:
     QString readTestFile(const QString &path);
-    QString runQmlformat(const QString &fileToFormat, QStringList args, bool shouldSucceed = true);
+    QString runQmlformat(const QString &fileToFormat, QStringList args, bool shouldSucceed = true,
+                         RunOption rOption = RunOption::OnCopy);
 
     QString m_qmlformatPath;
     QStringList m_excludedDirs;
@@ -209,51 +211,64 @@ void TestQmlformat::testFormat_data()
     QTest::addColumn<QString>("file");
     QTest::addColumn<QString>("fileFormatted");
     QTest::addColumn<QStringList>("args");
+    QTest::addColumn<RunOption>("runOption");
 
-    QTest::newRow("example1")
+    QTest::newRow("example1") << "Example1.qml"
+                              << "Example1.formatted.qml" << QStringList {} << RunOption::OnCopy;
+    QTest::newRow("example1 (tabs)")
             << "Example1.qml"
-            << "Example1.formatted.qml" << QStringList {};
-    QTest::newRow("example1 (tabs)") << "Example1.qml"
-                                     << "Example1.formatted.tabs.qml" << QStringList { "-t" };
+            << "Example1.formatted.tabs.qml" << QStringList { "-t" } << RunOption::OnCopy;
     QTest::newRow("example1 (two spaces)")
             << "Example1.qml"
-            << "Example1.formatted.2spaces.qml" << QStringList { "-w", "2" };
-    QTest::newRow("annotation")
-            << "Annotations.qml"
-            << "Annotations.formatted.qml" << QStringList {};
+            << "Example1.formatted.2spaces.qml" << QStringList { "-w", "2" } << RunOption::OnCopy;
+    QTest::newRow("annotation") << "Annotations.qml"
+                                << "Annotations.formatted.qml" << QStringList {}
+                                << RunOption::OnCopy;
     QTest::newRow("front inline") << "FrontInline.qml"
-                                  << "FrontInline.formatted.qml" << QStringList {};
+                                  << "FrontInline.formatted.qml" << QStringList {}
+                                  << RunOption::OnCopy;
     QTest::newRow("if blocks") << "IfBlocks.qml"
-                               << "IfBlocks.formatted.qml" << QStringList {};
-    QTest::newRow("read-only properties") << "readOnlyProps.qml"
-                                          << "readOnlyProps.formatted.qml" << QStringList {};
+                               << "IfBlocks.formatted.qml" << QStringList {} << RunOption::OnCopy;
+    QTest::newRow("read-only properties")
+            << "readOnlyProps.qml"
+            << "readOnlyProps.formatted.qml" << QStringList {} << RunOption::OnCopy;
     QTest::newRow("states and transitions")
             << "statesAndTransitions.qml"
-            << "statesAndTransitions.formatted.qml" << QStringList {};
-    QTest::newRow("large bindings") << "largeBindings.qml"
-                                    << "largeBindings.formatted.qml" << QStringList {};
-    QTest::newRow("verbatim strings") << "verbatimString.qml"
-                                      << "verbatimString.formatted.qml" << QStringList {};
-    QTest::newRow("inline components") << "inlineComponents.qml"
-                                       << "inlineComponents.formatted.qml" << QStringList {};
+            << "statesAndTransitions.formatted.qml" << QStringList {} << RunOption::OnCopy;
+    QTest::newRow("large bindings")
+            << "largeBindings.qml"
+            << "largeBindings.formatted.qml" << QStringList {} << RunOption::OnCopy;
+    QTest::newRow("verbatim strings")
+            << "verbatimString.qml"
+            << "verbatimString.formatted.qml" << QStringList {} << RunOption::OnCopy;
+    QTest::newRow("inline components")
+            << "inlineComponents.qml"
+            << "inlineComponents.formatted.qml" << QStringList {} << RunOption::OnCopy;
     QTest::newRow("nested ifs") << "nestedIf.qml"
-                                << "nestedIf.formatted.qml" << QStringList {};
+                                << "nestedIf.formatted.qml" << QStringList {} << RunOption::OnCopy;
     QTest::newRow("QTBUG-85003") << "QtBug85003.qml"
-                                 << "QtBug85003.formatted.qml" << QStringList {};
-    QTest::newRow("nested functions") << "nestedFunctions.qml"
-                                      << "nestedFunctions.formatted.qml" << QStringList {};
-    QTest::newRow("multiline comments") << "multilineComment.qml"
-                                        << "multilineComment.formatted.qml" << QStringList {};
+                                 << "QtBug85003.formatted.qml" << QStringList {}
+                                 << RunOption::OnCopy;
+    QTest::newRow("nested functions")
+            << "nestedFunctions.qml"
+            << "nestedFunctions.formatted.qml" << QStringList {} << RunOption::OnCopy;
+    QTest::newRow("multiline comments")
+            << "multilineComment.qml"
+            << "multilineComment.formatted.qml" << QStringList {} << RunOption::OnCopy;
     QTest::newRow("for of") << "forOf.qml"
-                            << "forOf.formatted.qml" << QStringList {};
-    QTest::newRow("property names") << "propertyNames.qml"
-                                    << "propertyNames.formatted.qml" << QStringList {};
+                            << "forOf.formatted.qml" << QStringList {} << RunOption::OnCopy;
+    QTest::newRow("property names")
+            << "propertyNames.qml"
+            << "propertyNames.formatted.qml" << QStringList {} << RunOption::OnCopy;
     QTest::newRow("empty object") << "emptyObject.qml"
-                                  << "emptyObject.formatted.qml" << QStringList {};
-    QTest::newRow("arrow functions") << "arrowFunctions.qml"
-                                     << "arrowFunctions.formatted.qml" << QStringList {};
+                                  << "emptyObject.formatted.qml" << QStringList {}
+                                  << RunOption::OnCopy;
+    QTest::newRow("arrow functions")
+            << "arrowFunctions.qml"
+            << "arrowFunctions.formatted.qml" << QStringList {} << RunOption::OnCopy;
     QTest::newRow("settings") << "settings/Example1.qml"
-                              << "settings/Example1.formatted.qml" << QStringList {};
+                              << "settings/Example1.formatted_mac_cr.qml" << QStringList {}
+                              << RunOption::OrigToCopy;
 }
 
 void TestQmlformat::testFormat()
@@ -261,8 +276,9 @@ void TestQmlformat::testFormat()
     QFETCH(QString, file);
     QFETCH(QString, fileFormatted);
     QFETCH(QStringList, args);
+    QFETCH(RunOption, runOption);
 
-    QCOMPARE(runQmlformat(testFile(file), args), readTestFile(fileFormatted));
+    QCOMPARE(runQmlformat(testFile(file), args, true, runOption), readTestFile(fileFormatted));
 }
 
 #if !defined(QTEST_CROSS_COMPILED) // sources not available when cross compiled
@@ -297,18 +313,24 @@ void TestQmlformat::testExample()
 #endif
 
 QString TestQmlformat::runQmlformat(const QString &fileToFormat, QStringList args,
-                                    bool shouldSucceed)
+                                    bool shouldSucceed, RunOption rOptions)
 {
     // Copy test file to temporary location
     QTemporaryDir tempDir;
     const QString tempFile = tempDir.path() + QDir::separator() + "to_format.qml";
-    QFile::copy(fileToFormat, tempFile);
 
-    args << QLatin1String("-i");
-    args << tempFile;
+    if (rOptions == RunOption::OnCopy) {
+        QFile::copy(fileToFormat, tempFile);
+        args << QLatin1String("-i");
+        args << tempFile;
+    } else {
+        args << fileToFormat;
+    }
 
     auto verify = [&]() {
         QProcess process;
+        if (rOptions == RunOption::OrigToCopy)
+            process.setStandardOutputFile(tempFile);
         process.start(m_qmlformatPath, args);
         QVERIFY(process.waitForFinished());
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);

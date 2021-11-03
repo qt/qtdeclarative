@@ -1,4 +1,5 @@
 *_crlf.*         eol=crlf
+*_mac_cr.*       eol=cr
 .tag             export-subst
 .gitignore       export-ignore
 .gitattributes   export-ignore
