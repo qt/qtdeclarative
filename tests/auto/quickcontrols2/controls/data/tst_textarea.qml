@@ -352,7 +352,7 @@ TestCase {
     }
 
     function test_warning() {
-        ignoreWarning(Qt.resolvedUrl("tst_textarea.qml") + ":55:1: QML TestCase: TextArea must be attached to a Flickable")
+        ignoreWarning(/QML TestCase: TextArea must be attached to a Flickable/)
         testCase.TextArea.flickable = null
     }
 

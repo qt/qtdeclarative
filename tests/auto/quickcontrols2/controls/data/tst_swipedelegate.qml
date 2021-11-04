@@ -216,8 +216,7 @@ TestCase {
         var control = createTemporaryObject(swipeDelegateComponent, testCase);
         verify(control);
 
-        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-            ":168:9: QML SwipeDelegate: cannot set both behind and left/right properties")
+        ignoreWarning(/QML SwipeDelegate: cannot set both behind and left\/right properties/)
         control.swipe.behind = itemComponent;
 
         // Shouldn't be any warnings when unsetting delegates.
@@ -225,8 +224,7 @@ TestCase {
         compare(control.swipe.leftItem, null);
 
         // right is still set.
-        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-            ":168:9: QML SwipeDelegate: cannot set both behind and left/right properties")
+        ignoreWarning(/QML SwipeDelegate: cannot set both behind and left\/right properties/)
         control.swipe.behind = itemComponent;
 
         control.swipe.right = null;
@@ -234,12 +232,10 @@ TestCase {
 
         control.swipe.behind = itemComponent;
 
-        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-            ":168:9: QML SwipeDelegate: cannot set both behind and left/right properties")
+        ignoreWarning(/QML SwipeDelegate: cannot set both behind and left\/right properties/)
         control.swipe.left = itemComponent;
 
-        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-            ":168:9: QML SwipeDelegate: cannot set both behind and left/right properties")
+        ignoreWarning(/QML SwipeDelegate: cannot set both behind and left\/right properties/)
         control.swipe.right = itemComponent;
 
         control.swipe.behind = null;
@@ -253,8 +249,7 @@ TestCase {
 
         var oldLeft = control.swipe.left;
         var oldLeftItem = control.swipe.leftItem;
-        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-            ":168:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
+        ignoreWarning(/QML SwipeDelegate: left\/right\/behind properties may only be set when swipe.position is 0/)
         control.swipe.left = null;
         compare(control.swipe.left, oldLeft);
         compare(control.swipe.leftItem, oldLeftItem);
@@ -264,8 +259,7 @@ TestCase {
 
         var oldRight = control.swipe.right;
         var oldRightItem = control.swipe.rightItem;
-        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-            ":168:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
+        ignoreWarning(/QML SwipeDelegate: left\/right\/behind properties may only be set when swipe.position is 0/)
         control.swipe.right = null;
         compare(control.swipe.right, oldRight);
         compare(control.swipe.rightItem, oldRightItem);
@@ -290,8 +284,7 @@ TestCase {
 
         var oldBehind = control.swipe.behind;
         var oldBehindItem = control.swipe.behindItem;
-        ignoreWarning(Qt.resolvedUrl("tst_swipedelegate.qml") +
-            ":168:9: QML SwipeDelegate: left/right/behind properties may only be set when swipe.position is 0")
+        ignoreWarning(/QML SwipeDelegate: left\/right\/behind properties may only be set when swipe.position is 0/)
         control.swipe.behind = null;
         compare(control.swipe.behind, oldBehind);
         compare(control.swipe.behindItem, oldBehindItem);
