@@ -187,7 +187,7 @@ TestCase {
     }
 
     function test_warning() {
-        ignoreWarning(Qt.resolvedUrl("tst_scrollindicator.qml") + ":55:1: QML TestCase: ScrollIndicator must be attached to a Flickable")
+        ignoreWarning(/QML TestCase: ScrollIndicator must be attached to a Flickable/)
         testCase.ScrollIndicator.vertical = null
     }
 

@@ -399,15 +399,15 @@ TestCase {
         verify(control)
 
         // missing arguments
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: push: missing arguments")
+        ignoreWarning(/QML StackView: push: missing arguments/)
         compare(control.push(), null)
 
         // nothing to push
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: push: nothing to push")
+        ignoreWarning(/QML StackView: push: nothing to push/)
         compare(control.push(StackView.Immediate), null)
 
         // unsupported type
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: push: QtObject is not supported. Must be Item or Component.")
+        ignoreWarning(/QML StackView: push: QtObject is not supported. Must be Item or Component./)
         control.push(Qt.createQmlObject('import QtQml; QtObject { }', control))
 
         // push(item)
@@ -449,6 +449,13 @@ TestCase {
         compare(control.currentItem, item6)
     }
 
+     // Escape special Regexp characters with a '\' (backslash) prefix so that \a str can be
+     // used as a Regexp pattern.
+    function escapeRegExp(str) {
+        // "$&" is the last matched substring
+        return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    }
+
     function test_pop() {
         var control = createTemporaryObject(stackView, testCase)
         verify(control)
@@ -459,7 +466,7 @@ TestCase {
 
         control.push(items, StackView.Immediate)
 
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: pop: too many arguments")
+        ignoreWarning(/QML StackView: pop: too many arguments/)
         compare(control.pop(1, 2, 3), null)
 
         // pop the top most item
@@ -483,7 +490,7 @@ TestCase {
         compare(control.currentItem, items[2])
 
         // don't pop non-existent item
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: pop: unknown argument: " + testCase)
+        ignoreWarning(new RegExp(".*QML StackView: pop: unknown argument: " + escapeRegExp(testCase.toString())))
         compare(control.pop(testCase, StackView.Immediate), null)
         compare(control.depth, 3)
         compare(control.currentItem, items[2])
@@ -499,15 +506,15 @@ TestCase {
         verify(control)
 
         // missing arguments
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: replace: missing arguments")
+        ignoreWarning(/QML StackView: replace: missing arguments/)
         compare(control.replace(), null)
 
         // nothing to push
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: replace: nothing to push")
+        ignoreWarning(/QML StackView: replace: nothing to push/)
         compare(control.replace(StackView.Immediate), null)
 
         // unsupported type
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: replace: QtObject is not supported. Must be Item or Component.")
+        ignoreWarning(/QML StackView: replace: QtObject is not supported. Must be Item or Component./)
         compare(control.replace(Qt.createQmlObject('import QtQml; QtObject { }', control)), null)
 
         // replace(item)
@@ -1016,20 +1023,18 @@ TestCase {
         var control = createTemporaryObject(stackView, testCase, {initialItem: component})
         verify(control)
 
-        var error = Qt.resolvedUrl("non-existent.qml") + ":-1 No such file or directory"
-
         ignoreWarning("QQmlComponent: Component is not ready")
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: push: " + error)
+        ignoreWarning(/QML StackView: push: .*non-existent.qml:-1 No such file or directory/)
         control.push(Qt.resolvedUrl("non-existent.qml"))
 
         ignoreWarning("QQmlComponent: Component is not ready")
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: replace: " + error)
+        ignoreWarning(/QML StackView: replace: .*non-existent.qml:-1 No such file or directory/)
         control.replace(Qt.resolvedUrl("non-existent.qml"))
 
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: push: invalid url: x://[v]")
+        ignoreWarning(/QML StackView: push: invalid url: x:\/\/\[v\]/)
         control.push("x://[v]")
 
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: replace: invalid url: x://[v]")
+        ignoreWarning(/QML StackView: replace: invalid url: x:\/\/\[v\]/)
         control.replace("x://[v]")
 
         control.pop()
@@ -1131,7 +1136,7 @@ TestCase {
         compare(control.depth, 1)
 
         // Pushing the same Item should do nothing.
-        ignoreWarning(Qt.resolvedUrl("tst_stackview.qml") + ":69:9: QML StackView: push: nothing to push")
+        ignoreWarning(/QML StackView: push: nothing to push/)
         control.push(item, StackView.Immediate)
         compare(control.currentItem, item)
         compare(control.depth, 1)
