@@ -51,12 +51,11 @@
 // We mean it.
 //
 
-#include <QtCore/qproperty.h>
-#include <QtCore/private/qproperty_p.h>
-
-#include "qqmlpropertydata_p.h"
-#include "qqmljavascriptexpression_p.h"
+#include <private/qqmljavascriptexpression_p.h>
+#include <private/qqmlpropertydata_p.h>
 #include <private/qv4alloca_p.h>
+
+#include <QtCore/qproperty.h>
 
 #include <memory>
 
@@ -67,6 +66,7 @@ namespace QV4 {
 }
 
 class QQmlPropertyBinding;
+class QQmlScriptString;
 
 class Q_QML_PRIVATE_EXPORT QQmlPropertyBindingJS : public QQmlJavaScriptExpression
 {

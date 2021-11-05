@@ -53,7 +53,7 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <private/qqmlglobal_p.h>
+#include <private/qtqmlglobal_p.h>
 
 QT_REQUIRE_CONFIG(qml_xml_http_request);
 

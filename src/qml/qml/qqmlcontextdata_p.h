@@ -51,10 +51,11 @@
 // We mean it.
 //
 
-#include <QtQml/private/qqmlglobal_p.h>
+#include <QtQml/private/qtqmlglobal_p.h>
 #include <QtQml/private/qqmlcontext_p.h>
 #include <QtQml/private/qqmlguard_p.h>
 #include <QtQml/private/qqmltypenamecache_p.h>
+#include <QtQml/private/qqmlnotifier_p.h>
 #include <QtQml/private/qv4identifierhash_p.h>
 #include <QtQml/private/qv4executablecompilationunit_p.h>
 

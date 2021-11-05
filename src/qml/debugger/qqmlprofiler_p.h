@@ -51,17 +51,19 @@
 // We mean it.
 //
 
-#include <private/qv4function_p.h>
-#include <private/qqmlboundsignal_p.h>
 #include <private/qfinitestack_p.h>
 #include <private/qqmlbinding_p.h>
+#include <private/qqmlboundsignal_p.h>
+#include <private/qqmlglobal_p.h>
+#include <private/qv4function_p.h>
+
 #if QT_CONFIG(qml_debug)
-#include "qqmlprofilerdefinitions_p.h"
 #include "qqmlabstractprofileradapter_p.h"
+#include "qqmlprofilerdefinitions_p.h"
 #endif
 
-#include <QUrl>
-#include <QString>
+#include <QtCore/qurl.h>
+#include <QtCore/qstring.h>
 
 QT_BEGIN_NAMESPACE
 

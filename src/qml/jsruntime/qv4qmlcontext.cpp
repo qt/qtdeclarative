@@ -39,23 +39,23 @@
 
 #include "qv4qmlcontext_p.h"
 
-#include <private/qqmlengine_p.h>
-#include <private/qqmlcontext_p.h>
-
-#include <private/qv4engine_p.h>
-#include <private/qv4value_p.h>
-#include <private/qv4objectproto_p.h>
-#include <private/qv4mm_p.h>
-#include <private/qv4function_p.h>
-#include <private/qv4compileddata_p.h>
-#include <private/qqmltypewrapper_p.h>
-#include <private/qqmllistwrapper_p.h>
-#include <private/qqmljavascriptexpression_p.h>
 #include <private/qjsvalue_p.h>
-#include <private/qv4qobjectwrapper_p.h>
-#include <private/qv4module_p.h>
-#include <private/qv4lookup_p.h>
+#include <private/qqmlcontext_p.h>
+#include <private/qqmlengine_p.h>
+#include <private/qqmlglobal_p.h>
+#include <private/qqmljavascriptexpression_p.h>
+#include <private/qqmllistwrapper_p.h>
+#include <private/qqmltypewrapper_p.h>
+#include <private/qv4compileddata_p.h>
+#include <private/qv4engine_p.h>
+#include <private/qv4function_p.h>
 #include <private/qv4identifiertable_p.h>
+#include <private/qv4lookup_p.h>
+#include <private/qv4mm_p.h>
+#include <private/qv4module_p.h>
+#include <private/qv4objectproto_p.h>
+#include <private/qv4qobjectwrapper_p.h>
+#include <private/qv4value_p.h>
 
 #include <QtCore/qloggingcategory.h>
 

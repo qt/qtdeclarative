@@ -52,14 +52,15 @@
 //
 
 #include "qqmlproperty.h"
-#include "qqmlengine.h"
 
 #include <private/qobject_p.h>
-#include <private/qtqmlglobal_p.h>
-#include <private/qqmlrefcount_p.h>
 #include <private/qqmlcontextdata_p.h>
 #include <private/qqmlpropertydata_p.h>
 #include <private/qqmlpropertyindex_p.h>
+#include <private/qqmlrefcount_p.h>
+#include <private/qtqmlglobal_p.h>
+
+#include <QtQml/qqmlengine.h>
 
 QT_BEGIN_NAMESPACE
 

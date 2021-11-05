@@ -51,9 +51,8 @@
 // We mean it.
 //
 
-#include <QtCore/qglobal.h>
-#include <QtCore/qvariant.h>
 #include <private/qqmldata_p.h>
+#include <private/qqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

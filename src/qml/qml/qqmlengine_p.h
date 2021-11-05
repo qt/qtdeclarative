@@ -53,56 +53,43 @@
 
 #include "qqmlengine.h"
 
-#include "qqmltypeloader_p.h"
-#include "qqmlimport_p.h"
-#include <private/qpodvector_p.h>
-#include "qqml.h"
-#include "qqmlvaluetype_p.h"
-#include "qqmlcontext.h"
-#include "qqmlcontextdata_p.h"
-#include "qqmlexpression.h"
-#include "qqmlproperty_p.h"
-#include "qqmlmetatype_p.h"
-#include <private/qintrusivelist_p.h>
-#include <private/qrecyclepool_p.h>
 #include <private/qfieldlist_p.h>
-#include <private/qv4engine_p.h>
+#include <private/qintrusivelist_p.h>
+#include <private/qjsengine_p.h>
 #include <private/qjsvalue_p.h>
+#include <private/qpodvector_p.h>
+#include <private/qqmldirparser_p.h>
+#include <private/qqmlimport_p.h>
+#include <private/qqmlmetatype_p.h>
+#include <private/qqmlnotifier_p.h>
+#include <private/qqmlproperty_p.h>
+#include <private/qqmltypeloader_p.h>
+#include <private/qqmlvaluetype_p.h>
+#include <private/qrecyclepool_p.h>
+#include <private/qv4engine_p.h>
+
+#include <QtQml/qqml.h>
+#include <QtQml/qqmlcontext.h>
 
 #include <QtCore/qlist.h>
-#include <QtCore/qpair.h>
-#include <QtCore/qstack.h>
+#include <QtCore/qmetaobject.h>
 #include <QtCore/qmutex.h>
+#include <QtCore/qpair.h>
+#include <QtCore/qproperty.h>
+#include <QtCore/qstack.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qthread.h>
-#include <QtCore/QMetaProperty>
-
-#include <private/qobject_p.h>
-
-#include <private/qjsengine_p.h>
-#include <private/qqmldirparser_p.h>
-
-#include <qproperty.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlContext;
-class QQmlEngine;
-class QQmlContextPrivate;
-class QQmlExpression;
-class QQmlImportDatabase;
-class QNetworkReply;
 class QNetworkAccessManager;
-class QQmlNetworkAccessManagerFactory;
-class QQmlTypeNameCache;
-class QQmlComponentAttached;
 class QQmlDelayedError;
-class QQmlObjectCreator;
-class QDir;
 class QQmlIncubator;
+class QQmlMetaObject;
+class QQmlNetworkAccessManagerFactory;
+class QQmlObjectCreator;
 class QQmlProfiler;
 class QQmlPropertyCapture;
-class QQmlMetaObject;
 
 struct QObjectForeign {
     Q_GADGET

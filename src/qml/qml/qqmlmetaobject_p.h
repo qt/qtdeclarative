@@ -51,10 +51,9 @@
 // We mean it.
 //
 
-#include <QtQml/qtqmlglobal.h>
-
 #include <private/qqmlpropertycache_p.h>
 
+#include <QtQml/qtqmlglobal.h>
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qmetaobject.h>
 

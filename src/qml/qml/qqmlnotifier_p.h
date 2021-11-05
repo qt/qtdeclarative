@@ -51,13 +51,14 @@
 // We mean it.
 //
 
-#include "qqmldata_p.h"
 #include <QtCore/qmetaobject.h>
 #include <private/qmetaobject_p.h>
+#include <private/qtqmlglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
 class QQmlNotifierEndpoint;
+class QQmlData;
 class Q_QML_PRIVATE_EXPORT QQmlNotifier
 {
 public:

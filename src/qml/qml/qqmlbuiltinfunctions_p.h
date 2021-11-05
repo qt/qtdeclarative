@@ -51,15 +51,17 @@
 // We mean it.
 //
 
-#include <private/qqmlglobal_p.h>
-#include <private/qv4functionobject_p.h>
 #include <private/qjsengine_p.h>
+#include <private/qqmlglobal_p.h>
 #include <private/qqmlplatform_p.h>
+#include <private/qv4functionobject_p.h>
+
 #include <QtCore/qnamespace.h>
 #include <QtCore/qdatetime.h>
 #include <QtCore/qsize.h>
 #include <QtCore/qrect.h>
 #include <QtCore/qpoint.h>
+
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlengine.h>
 

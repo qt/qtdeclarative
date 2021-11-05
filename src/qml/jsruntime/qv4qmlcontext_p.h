@@ -51,12 +51,12 @@
 // We mean it.
 //
 
-#include <QtCore/qglobal.h>
-#include <private/qtqmlglobal_p.h>
-
-#include <private/qv4object_p.h>
-#include <private/qv4context_p.h>
 #include <private/qqmlcontextdata_p.h>
+#include <private/qtqmlglobal_p.h>
+#include <private/qv4context_p.h>
+#include <private/qv4object_p.h>
+
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 

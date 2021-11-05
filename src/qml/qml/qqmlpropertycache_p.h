@@ -51,19 +51,15 @@
 // We mean it.
 //
 
-#include <private/qqmlrefcount_p.h>
-#include "qqmlnotifier_p.h"
-#include <private/qqmlpropertyindex_p.h>
-
 #include <private/qlinkedstringhash_p.h>
+#include <private/qqmlenumdata_p.h>
+#include <private/qqmlenumvalue_p.h>
+#include <private/qqmlpropertydata_p.h>
+#include <private/qqmlrefcount_p.h>
+
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qversionnumber.h>
-
-#include <private/qv4value_p.h>
-#include <private/qqmlpropertydata_p.h>
-#include <private/qqmlenumdata_p.h>
-#include <private/qqmlenumvalue_p.h>
 
 #include <limits>
 
@@ -72,8 +68,9 @@ QT_BEGIN_NAMESPACE
 class QCryptographicHash;
 class QJSEngine;
 class QMetaObjectBuilder;
-class QQmlVMEMetaObject;
+class QQmlContextData;
 class QQmlPropertyCacheMethodArguments;
+class QQmlVMEMetaObject;
 
 class RefCountedMetaObject {
 public:

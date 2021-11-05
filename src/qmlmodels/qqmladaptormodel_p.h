@@ -53,7 +53,7 @@
 
 #include <QtCore/qabstractitemmodel.h>
 
-#include <private/qqmlglobal_p.h>
+#include <private/qtqmlglobal_p.h>
 #include <private/qqmllistaccessor_p.h>
 #include <private/qtqmlmodelsglobal_p.h>
 #include <private/qqmlguard_p.h>

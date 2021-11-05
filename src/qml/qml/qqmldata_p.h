@@ -57,6 +57,7 @@
 #include <private/qv4value_p.h>
 #include <private/qv4persistent_p.h>
 #include <private/qqmlrefcount_p.h>
+#include <private/qqmlpropertycache_p.h>
 #include <qqmlprivate.h>
 #include <qjsengine.h>
 #include <qvector.h>

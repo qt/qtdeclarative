@@ -38,13 +38,17 @@
 ****************************************************************************/
 
 #include "qqmlpropertybinding_p.h"
+
+#include <private/qqmlbinding_p.h>
+#include <private/qqmlglobal_p.h>
+#include <private/qqmlscriptstring_p.h>
 #include <private/qv4functionobject_p.h>
 #include <private/qv4jscall_p.h>
-#include <qqmlinfo.h>
-#include <QtCore/qloggingcategory.h>
-#include <private/qqmlscriptstring_p.h>
-#include <private/qqmlbinding_p.h>
 #include <private/qv4qmlcontext_p.h>
+
+#include <QtQml/qqmlinfo.h>
+
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
 
