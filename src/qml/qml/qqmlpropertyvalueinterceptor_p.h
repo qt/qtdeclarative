@@ -54,6 +54,7 @@
 #include <private/qtqmlglobal_p.h>
 #include <private/qqmlpropertyindex_p.h>
 #include <QtCore/qobject.h>
+#include <QtCore/qproperty.h>
 
 QT_BEGIN_NAMESPACE
 
