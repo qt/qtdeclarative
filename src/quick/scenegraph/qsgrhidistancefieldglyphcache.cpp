@@ -39,6 +39,7 @@
 
 #include "qsgrhidistancefieldglyphcache_p.h"
 #include "qsgcontext_p.h"
+#include "qsgdefaultrendercontext_p.h"
 #include <QtGui/private/qdistancefield_p.h>
 #include <QtCore/qelapsedtimer.h>
 #include <QtQml/private/qqmlglobal_p.h>
@@ -54,11 +55,12 @@ DEFINE_BOOL_CONFIG_OPTION(qsgPreferFullSizeGlyphCacheTextures, QSG_PREFER_FULLSI
 #  define QSG_RHI_DISTANCEFIELD_GLYPH_CACHE_PADDING 2
 #endif
 
-QSGRhiDistanceFieldGlyphCache::QSGRhiDistanceFieldGlyphCache(QRhi *rhi,
+QSGRhiDistanceFieldGlyphCache::QSGRhiDistanceFieldGlyphCache(QSGDefaultRenderContext *rc,
                                                              const QRawFont &font,
                                                              int renderTypeQuality)
     : QSGDistanceFieldGlyphCache(font, renderTypeQuality)
-    , m_rhi(rhi)
+    , m_rc(rc)
+    , m_rhi(rc->rhi())
 {
     // Load a pregenerated cache if the font contains one
     loadPregeneratedCache(font);
@@ -66,13 +68,19 @@ QSGRhiDistanceFieldGlyphCache::QSGRhiDistanceFieldGlyphCache(QRhi *rhi,
 
 QSGRhiDistanceFieldGlyphCache::~QSGRhiDistanceFieldGlyphCache()
 {
-    for (int i = 0; i < m_textures.count(); ++i)
-        delete m_textures[i].texture;
+    // A plain delete should work, but just in case commitResourceUpdates was
+    // not called and something is enqueued on the update batch for a texture,
+    // defer until the end of the frame.
+    for (int i = 0; i < m_textures.count(); ++i) {
+        if (m_textures[i].texture)
+            m_textures[i].texture->deleteLater();
+    }
 
     delete m_areaAllocator;
 
     // should be empty, but just in case
-    qDeleteAll(m_pendingDispose);
+    for (QRhiTexture *t : qAsConst(m_pendingDispose))
+        t->deleteLater();
 }
 
 void QSGRhiDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
@@ -178,15 +186,13 @@ void QSGRhiDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> &gly
         texInfo->uploads.append(QRhiTextureUploadEntry(0, 0, subresDesc));
     }
 
-    if (!m_resourceUpdates)
-        m_resourceUpdates = m_rhi->nextResourceUpdateBatch();
-
+    QRhiResourceUpdateBatch *resourceUpdates = m_rc->glyphCacheResourceUpdates();
     for (int i = 0; i < glyphs.size(); ++i) {
         TextureInfo *texInfo = m_glyphsTexture.value(glyphs.at(i).glyph());
         if (!texInfo->uploads.isEmpty()) {
             QRhiTextureUploadDescription desc;
             desc.setEntries(texInfo->uploads.cbegin(), texInfo->uploads.cend());
-            m_resourceUpdates->uploadTexture(texInfo->texture, desc);
+            resourceUpdates->uploadTexture(texInfo->texture, desc);
             texInfo->uploads.clear();
         }
     }
@@ -229,12 +235,10 @@ void QSGRhiDistanceFieldGlyphCache::createTexture(TextureInfo *texInfo,
 
     texInfo->texture = m_rhi->newTexture(QRhiTexture::RED_OR_ALPHA8, QSize(width, height), 1, QRhiTexture::UsedAsTransferSource);
     if (texInfo->texture->create()) {
-        if (!m_resourceUpdates)
-            m_resourceUpdates = m_rhi->nextResourceUpdateBatch();
-
+        QRhiResourceUpdateBatch *resourceUpdates = m_rc->glyphCacheResourceUpdates();
         QRhiTextureSubresourceUploadDescription subresDesc(pixels, width * height);
         subresDesc.setSourceSize(QSize(width, height));
-        m_resourceUpdates->uploadTexture(texInfo->texture, QRhiTextureUploadEntry(0, 0, subresDesc));
+        resourceUpdates->uploadTexture(texInfo->texture, QRhiTextureUploadEntry(0, 0, subresDesc));
     } else {
         qWarning("Failed to create distance field glyph cache");
     }
@@ -257,17 +261,15 @@ void QSGRhiDistanceFieldGlyphCache::resizeTexture(TextureInfo *texInfo, int widt
 
     updateRhiTexture(oldTexture, texInfo->texture, texInfo->size);
 
-    if (!m_resourceUpdates)
-        m_resourceUpdates = m_rhi->nextResourceUpdateBatch();
-
+    QRhiResourceUpdateBatch *resourceUpdates = m_rc->glyphCacheResourceUpdates();
     if (useTextureResizeWorkaround()) {
         QRhiTextureSubresourceUploadDescription subresDesc(texInfo->image.constBits(),
                                                            oldWidth * oldHeight);
         subresDesc.setSourceSize(QSize(oldWidth, oldHeight));
-        m_resourceUpdates->uploadTexture(texInfo->texture, QRhiTextureUploadEntry(0, 0, subresDesc));
+        resourceUpdates->uploadTexture(texInfo->texture, QRhiTextureUploadEntry(0, 0, subresDesc));
         texInfo->image = texInfo->image.copy(0, 0, width, height);
     } else {
-        m_resourceUpdates->copyTexture(texInfo->texture, oldTexture);
+        resourceUpdates->copyTexture(texInfo->texture, oldTexture);
     }
 
     m_pendingDispose.insert(oldTexture);
@@ -547,14 +549,13 @@ bool QSGRhiDistanceFieldGlyphCache::loadPregeneratedCache(const QRawFont &font)
 
 void QSGRhiDistanceFieldGlyphCache::commitResourceUpdates(QRhiResourceUpdateBatch *mergeInto)
 {
-    if (m_resourceUpdates) {
-        mergeInto->merge(m_resourceUpdates);
-        m_resourceUpdates->release();
-        m_resourceUpdates = nullptr;
+    if (QRhiResourceUpdateBatch *resourceUpdates = m_rc->maybeGlyphCacheResourceUpdates()) {
+        mergeInto->merge(resourceUpdates);
+        m_rc->releaseGlyphCacheResourceUpdates();
     }
 
     // now let's assume the resource updates will be committed in this frame
-    for (QRhiTexture *t : m_pendingDispose)
+    for (QRhiTexture *t : qAsConst(m_pendingDispose))
         t->deleteLater(); // will be deleted after the frame is submitted -> safe
 
     m_pendingDispose.clear();
@@ -604,7 +605,8 @@ void QSGRhiDistanceFieldGlyphCache::saveTexture(QRhiTexture *texture, const QStr
     };
 
     QRhiReadbackDescription rb(texture);
-    m_resourceUpdates->readBackTexture(rb, rbResult);
+    QRhiResourceUpdateBatch *resourceUpdates = m_rc->glyphCacheResourceUpdates();
+    resourceUpdates->readBackTexture(rb, rbResult);
 }
 #endif
 

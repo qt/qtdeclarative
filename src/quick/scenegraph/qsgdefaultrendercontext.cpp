@@ -64,6 +64,7 @@ QSGDefaultRenderContext::QSGDefaultRenderContext(QSGContext *context)
     , m_currentFrameRenderPass(nullptr)
     , m_separateIndexBuffer(false)
     , m_useDepthBufferFor2D(true)
+    , m_glyphCacheResourceUpdates(nullptr)
 {
 }
 
@@ -88,6 +89,8 @@ void QSGDefaultRenderContext::initialize(const QSGRenderContext::InitParams *par
         m_rhiAtlasManager = new QSGRhiAtlasTexture::Manager(this, m_initParams.initialSurfacePixelSize, m_initParams.maybeSurface);
     // unlike OpenGL (and like WebGL), QRhi does not guarantee buffer usage types can be mixed
     m_separateIndexBuffer = true;
+
+    m_glyphCacheResourceUpdates = nullptr;
 
     m_sg->renderContextInitialized(this);
 
@@ -140,9 +143,10 @@ void QSGDefaultRenderContext::invalidate()
     }
     m_fontEnginesToClean.clear();
 
-
     qDeleteAll(m_glyphCaches);
     m_glyphCaches.clear();
+
+    releaseGlyphCacheResourceUpdates();
 
     m_rhi = nullptr;
 
@@ -296,11 +300,32 @@ QSGDistanceFieldGlyphCache *QSGDefaultRenderContext::distanceFieldGlyphCache(con
     QString key = fontKey(font, renderTypeQuality);
     QSGDistanceFieldGlyphCache *cache = m_glyphCaches.value(key, 0);
     if (!cache) {
-        cache = new QSGRhiDistanceFieldGlyphCache(m_rhi, font, renderTypeQuality);
+        cache = new QSGRhiDistanceFieldGlyphCache(this, font, renderTypeQuality);
         m_glyphCaches.insert(key, cache);
     }
 
     return cache;
+}
+
+QRhiResourceUpdateBatch *QSGDefaultRenderContext::maybeGlyphCacheResourceUpdates()
+{
+    return m_glyphCacheResourceUpdates;
+}
+
+QRhiResourceUpdateBatch *QSGDefaultRenderContext::glyphCacheResourceUpdates()
+{
+    if (!m_glyphCacheResourceUpdates)
+        m_glyphCacheResourceUpdates = m_rhi->nextResourceUpdateBatch();
+
+    return m_glyphCacheResourceUpdates;
+}
+
+void QSGDefaultRenderContext::releaseGlyphCacheResourceUpdates()
+{
+    if (m_glyphCacheResourceUpdates) {
+        m_glyphCacheResourceUpdates->release();
+        m_glyphCacheResourceUpdates = nullptr;
+    }
 }
 
 QT_END_NAMESPACE

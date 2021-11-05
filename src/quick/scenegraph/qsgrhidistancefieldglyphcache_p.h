@@ -57,10 +57,12 @@
 
 QT_BEGIN_NAMESPACE
 
+class QSGDefaultRenderContext;
+
 class Q_QUICK_PRIVATE_EXPORT QSGRhiDistanceFieldGlyphCache : public QSGDistanceFieldGlyphCache
 {
 public:
-    QSGRhiDistanceFieldGlyphCache(QRhi *rhi, const QRawFont &font, int renderTypeQuality);
+    QSGRhiDistanceFieldGlyphCache(QSGDefaultRenderContext *rc, const QRawFont &font, int renderTypeQuality);
     virtual ~QSGRhiDistanceFieldGlyphCache();
 
     void requestGlyphs(const QSet<glyph_t> &glyphs) override;
@@ -114,11 +116,11 @@ private:
         return &m_textures[index];
     }
 
+    QSGDefaultRenderContext *m_rc;
     QRhi *m_rhi;
     mutable int m_maxTextureSize = 0;
     int m_maxTextureCount = 3;
     QSGAreaAllocator *m_areaAllocator = nullptr;
-    QRhiResourceUpdateBatch *m_resourceUpdates = nullptr;
     QList<TextureInfo> m_textures;
     QHash<glyph_t, TextureInfo *> m_glyphsTexture;
     QSet<glyph_t> m_unusedGlyphs;

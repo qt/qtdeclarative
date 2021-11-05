@@ -56,10 +56,13 @@
 
 QT_BEGIN_NAMESPACE
 
+class QSGDefaultRenderContext;
+
 class QSGRhiTextureGlyphCache : public QImageTextureGlyphCache
 {
 public:
-    QSGRhiTextureGlyphCache(QRhi *rhi, QFontEngine::GlyphFormat format, const QTransform &matrix,
+    QSGRhiTextureGlyphCache(QSGDefaultRenderContext *rc,
+                            QFontEngine::GlyphFormat format, const QTransform &matrix,
                             const QColor &color = QColor());
     ~QSGRhiTextureGlyphCache();
 
@@ -86,9 +89,9 @@ private:
     void prepareGlyphImage(QImage *img);
     QRhiTexture *createEmptyTexture(QRhiTexture::Format format);
 
+    QSGDefaultRenderContext *m_rc;
     QRhi *m_rhi;
     bool m_resizeWithTextureCopy;
-    QRhiResourceUpdateBatch *m_resourceUpdates = nullptr;
     QRhiTexture *m_texture = nullptr;
     QSize m_size;
     bool m_bgra = false;

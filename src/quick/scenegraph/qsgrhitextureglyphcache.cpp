@@ -38,15 +38,18 @@
 ****************************************************************************/
 
 #include "qsgrhitextureglyphcache_p.h"
+#include "qsgdefaultrendercontext_p.h"
 #include <qrgb.h>
 #include <private/qdrawhelper_p.h>
 
 QT_BEGIN_NAMESPACE
 
-QSGRhiTextureGlyphCache::QSGRhiTextureGlyphCache(QRhi *rhi, QFontEngine::GlyphFormat format, const QTransform &matrix,
+QSGRhiTextureGlyphCache::QSGRhiTextureGlyphCache(QSGDefaultRenderContext *rc,
+                                                 QFontEngine::GlyphFormat format, const QTransform &matrix,
                                                  const QColor &color)
     : QImageTextureGlyphCache(format, matrix, color),
-      m_rhi(rhi)
+      m_rc(rc),
+      m_rhi(rc->rhi())
 {
     // Some OpenGL implementations, for instance macOS, have issues with
     // GL_ALPHA render targets. Similarly, BGRA may be problematic on GLES 2.0.
@@ -56,13 +59,15 @@ QSGRhiTextureGlyphCache::QSGRhiTextureGlyphCache(QRhi *rhi, QFontEngine::GlyphFo
 
 QSGRhiTextureGlyphCache::~QSGRhiTextureGlyphCache()
 {
-    if (m_resourceUpdates)
-        m_resourceUpdates->release();
-
-    delete m_texture;
+    // A plain delete should work, but just in case commitResourceUpdates was
+    // not called and something is enqueued on the update batch for m_texture,
+    // defer until the end of the frame.
+    if (m_texture)
+        m_texture->deleteLater();
 
     // should be empty, but just in case
-    qDeleteAll(m_pendingDispose);
+    for (QRhiTexture *t : qAsConst(m_pendingDispose))
+        t->deleteLater();
 }
 
 QRhiTexture *QSGRhiTextureGlyphCache::createEmptyTexture(QRhiTexture::Format format)
@@ -73,8 +78,7 @@ QRhiTexture *QSGRhiTextureGlyphCache::createEmptyTexture(QRhiTexture::Format for
         return nullptr;
     }
 
-    if (!m_resourceUpdates)
-        m_resourceUpdates = m_rhi->nextResourceUpdateBatch();
+    QRhiResourceUpdateBatch *resourceUpdates = m_rc->glyphCacheResourceUpdates();
 
     // The new texture must be cleared to 0 always, this cannot be avoided
     // otherwise artifacts will occur around the glyphs.
@@ -85,7 +89,7 @@ QRhiTexture *QSGRhiTextureGlyphCache::createEmptyTexture(QRhiTexture::Format for
         data.fill(0, m_size.width() * m_size.height() * 4);
     QRhiTextureSubresourceUploadDescription subresDesc(data.constData(), data.size());
     subresDesc.setSourceSize(m_size);
-    m_resourceUpdates->uploadTexture(t, QRhiTextureUploadEntry(0, 0, subresDesc));
+    resourceUpdates->uploadTexture(t, QRhiTextureUploadEntry(0, 0, subresDesc));
 
     return t;
 }
@@ -116,11 +120,9 @@ void QSGRhiTextureGlyphCache::resizeTextureData(int width, int height)
         if (!t)
             return;
 
-        if (!m_resourceUpdates)
-            m_resourceUpdates = m_rhi->nextResourceUpdateBatch();
-
+        QRhiResourceUpdateBatch *resourceUpdates = m_rc->glyphCacheResourceUpdates();
         if (m_resizeWithTextureCopy) {
-            m_resourceUpdates->copyTexture(t, m_texture);
+            resourceUpdates->copyTexture(t, m_texture);
         } else {
             QImageTextureGlyphCache::resizeTextureData(width, height);
             QImage img = image();
@@ -128,7 +130,7 @@ void QSGRhiTextureGlyphCache::resizeTextureData(int width, int height)
             QRhiTextureSubresourceUploadDescription subresDesc(img);
             const QSize oldSize = m_texture->pixelSize();
             subresDesc.setSourceSize(QSize(qMin(oldSize.width(), width), qMin(oldSize.height(), height)));
-            m_resourceUpdates->uploadTexture(t, QRhiTextureUploadEntry(0, 0, subresDesc));
+            resourceUpdates->uploadTexture(t, QRhiTextureUploadEntry(0, 0, subresDesc));
         }
 
         m_pendingDispose.insert(m_texture);
@@ -222,12 +224,10 @@ void QSGRhiTextureGlyphCache::endFillTexture()
             return;
     }
 
-    if (!m_resourceUpdates)
-        m_resourceUpdates = m_rhi->nextResourceUpdateBatch();
-
+    QRhiResourceUpdateBatch *resourceUpdates = m_rc->glyphCacheResourceUpdates();
     QRhiTextureUploadDescription desc;
     desc.setEntries(m_uploads.cbegin(), m_uploads.cend());
-    m_resourceUpdates->uploadTexture(m_texture, desc);
+    resourceUpdates->uploadTexture(m_texture, desc);
     m_uploads.clear();
 }
 
@@ -251,14 +251,13 @@ int QSGRhiTextureGlyphCache::maxTextureHeight() const
 
 void QSGRhiTextureGlyphCache::commitResourceUpdates(QRhiResourceUpdateBatch *mergeInto)
 {
-    if (m_resourceUpdates) {
-        mergeInto->merge(m_resourceUpdates);
-        m_resourceUpdates->release();
-        m_resourceUpdates = nullptr;
+    if (QRhiResourceUpdateBatch *resourceUpdates = m_rc->maybeGlyphCacheResourceUpdates()) {
+        mergeInto->merge(resourceUpdates);
+        m_rc->releaseGlyphCacheResourceUpdates();
     }
 
     // now let's assume the resource updates will be committed in this frame
-    for (QRhiTexture *t : m_pendingDispose)
+    for (QRhiTexture *t : qAsConst(m_pendingDispose))
         t->deleteLater(); // will be deleted after the frame is submitted -> safe
 
     m_pendingDispose.clear();
