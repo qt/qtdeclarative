@@ -29,6 +29,7 @@
 #define WITH_BINDABLE_H
 
 #include <QObject>
+#include <QtCore/qproperty.h>
 #include <qqml.h>
 
 class WithBinding : public QObject {

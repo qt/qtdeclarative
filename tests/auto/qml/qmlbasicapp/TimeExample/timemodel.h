@@ -55,6 +55,7 @@
 #include <QtCore/qdatetime.h>
 #include <QtCore/qbasictimer.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qproperty.h>
 
 class TimeModel : public QObject
 {
