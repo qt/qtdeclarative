@@ -494,7 +494,8 @@ void QObjectWrapper::setProperty(
                     const QQmlPropertyIndex originalIndex(property->coreIndex(), -1);
                     auto [targetObject, targetIndex] = QQmlPropertyPrivate::findAliasTarget(object, originalIndex);
                     Q_ASSERT(targetObject);
-                    QQmlPropertyCache *targetCache = QQmlData::get(targetObject)->propertyCache;
+                    QQmlPropertyCache *targetCache
+                            = QQmlData::get(targetObject)->propertyCache.data();
                     Q_ASSERT(targetCache);
                     QQmlPropertyData *targetProperty = targetCache->property(targetIndex.coreIndex());
                     object = targetObject;
@@ -739,9 +740,8 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, int p
     if (!ddata)
         return;
 
-    QQmlPropertyCache *cache = ddata->propertyCache;
-    Q_ASSERT(cache);
-    QQmlPropertyData *property = cache->property(propertyIndex);
+    Q_ASSERT(ddata->propertyCache);
+    QQmlPropertyData *property = ddata->propertyCache->property(propertyIndex);
     Q_ASSERT(property); // We resolved this property earlier, so it better exist!
     return setProperty(engine, object, property, value);
 }
@@ -762,7 +762,7 @@ bool QObjectWrapper::virtualIsEqualTo(Managed *a, Managed *b)
 ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
 {
     if (QJSEngine *jsEngine = engine->jsEngine()) {
-        if (QQmlPropertyCache *cache = QQmlData::ensurePropertyCache(jsEngine, object)) {
+        if (QQmlPropertyCache *cache = QQmlData::ensurePropertyCache(jsEngine, object).data()) {
             ReturnedValue result = QV4::Encode::null();
             void *args[] = { &result, &engine };
             if (cache->callJSFactoryMethod(object, args))
@@ -961,7 +961,7 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
     }
 
     lookup->qobjectLookup.ic = This->internalClass();
-    lookup->qobjectLookup.propertyCache = ddata->propertyCache;
+    lookup->qobjectLookup.propertyCache = ddata->propertyCache.data();
     lookup->qobjectLookup.propertyCache->addref();
     lookup->qobjectLookup.propertyData = property;
     lookup->getter = QV4::QObjectWrapper::lookupGetter;
@@ -1162,7 +1162,7 @@ ReturnedValue QObjectWrapper::method_connect(const FunctionObject *b, const Valu
     slot->function.set(scope.engine, f);
 
     if (QQmlData *ddata = QQmlData::get(signalObject)) {
-        if (QQmlPropertyCache *propertyCache = ddata->propertyCache) {
+        if (QQmlPropertyCache *propertyCache = ddata->propertyCache.data()) {
             QQmlPropertyPrivate::flushSignal(signalObject, propertyCache->methodIndexToSignalIndex(signalIndex));
         }
     }
@@ -1296,10 +1296,8 @@ void QObjectWrapper::destroyObject(bool lastCall)
                 // If the object is C++-owned, we still have to release the weak reference we have
                 // to it.
                 ddata->jsWrapper.clear();
-                if (lastCall && ddata->propertyCache) {
-                    ddata->propertyCache->release();
+                if (lastCall && ddata->propertyCache)
                     ddata->propertyCache = nullptr;
-                }
             }
         }
     }

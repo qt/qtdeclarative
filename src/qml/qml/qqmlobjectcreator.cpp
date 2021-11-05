@@ -1331,12 +1331,8 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
     QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches->at(index);
     Q_ASSERT(!cache.isNull());
-    if (installPropertyCache) {
-        if (ddata->propertyCache)
-            ddata->propertyCache->release();;
-        ddata->propertyCache = cache.data();
-        ddata->propertyCache->addref();
-    }
+    if (installPropertyCache)
+        ddata->propertyCache = cache;
 
     QObject *scopeObject = instance;
     qSwap(_scopeObject, scopeObject);
@@ -1529,10 +1525,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         Q_ASSERT(!cache.isNull());
         // install on _object
         vmeMetaObject = new QQmlVMEMetaObject(v4, _qobject, cache, compilationUnit, _compiledObjectIndex);
-        if (_ddata->propertyCache)
-            _ddata->propertyCache->release();
-        _ddata->propertyCache = cache.data();
-        _ddata->propertyCache->addref();
+        _ddata->propertyCache = cache;
         scopeObjectProtector = _ddata->jsWrapper.value();
     } else {
         vmeMetaObject = QQmlVMEMetaObject::get(_qobject);

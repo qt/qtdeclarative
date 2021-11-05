@@ -229,10 +229,9 @@ void QQmlPropertyBinding::handleUndefinedAssignment(QQmlEnginePrivate *ep, void 
     QQmlPropertyData valueTypeData;
     QQmlData *data = QQmlData::get(target(), false);
     Q_ASSERT(data);
-    if (Q_UNLIKELY(!data->propertyCache)) {
+    if (Q_UNLIKELY(!data->propertyCache))
         data->propertyCache = ep->cache(target()->metaObject());
-        data->propertyCache->addref();
-    }
+
     propertyData = data->propertyCache->property(targetIndex().coreIndex());
     Q_ASSERT(propertyData);
     Q_ASSERT(!targetIndex().hasValueTypeIndex());
@@ -300,10 +299,9 @@ QString QQmlPropertyBinding::createBindingLoopErrorDescription(QJSEnginePrivate 
     QQmlPropertyData valueTypeData;
     QQmlData *data = QQmlData::get(target(), false);
     Q_ASSERT(data);
-    if (Q_UNLIKELY(!data->propertyCache)) {
+    if (Q_UNLIKELY(!data->propertyCache))
         data->propertyCache = ep->cache(target()->metaObject());
-        data->propertyCache->addref();
-    }
+
     propertyData = data->propertyCache->property(targetIndex().coreIndex());
     Q_ASSERT(propertyData);
     Q_ASSERT(!targetIndex().hasValueTypeIndex());

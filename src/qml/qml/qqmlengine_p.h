@@ -213,15 +213,16 @@ public:
     QString offlineStorageDatabaseDirectory() const;
 
     // These methods may be called from the loader thread
-    inline QQmlPropertyCache *cache(const QQmlType &, QTypeRevision version);
+    inline QQmlRefPointer<QQmlPropertyCache> cache(const QQmlType &, QTypeRevision version);
     using QJSEnginePrivate::cache;
 
     // These methods may be called from the loader thread
     QQmlMetaObject rawMetaObjectForType(QMetaType metaType) const;
     QQmlMetaObject metaObjectForType(QMetaType metaType) const;
-    QQmlPropertyCache *propertyCacheForType(QMetaType metaType);
-    QQmlPropertyCache *rawPropertyCacheForType(QMetaType metaType);
-    QQmlPropertyCache *rawPropertyCacheForType(QMetaType metaType, QTypeRevision version);
+    QQmlRefPointer<QQmlPropertyCache> propertyCacheForType(QMetaType metaType);
+    QQmlRefPointer<QQmlPropertyCache> rawPropertyCacheForType(QMetaType metaType);
+    QQmlRefPointer<QQmlPropertyCache> rawPropertyCacheForType(
+            QMetaType metaType, QTypeRevision version);
     void registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
     void unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
     QV4::ExecutableCompilationUnit *obtainExecutableCompilationUnit(int typeId);
@@ -321,7 +322,7 @@ private:
     static bool s_designerMode;
 
     void cleanupScarceResources();
-    QQmlPropertyCache *findPropertyCacheInCompositeTypes(int t) const;
+    QQmlRefPointer<QQmlPropertyCache> findPropertyCacheInCompositeTypes(int t) const;
 };
 
 /*
@@ -359,7 +360,8 @@ Returns a QQmlPropertyCache for \a type with \a minorVersion.
 
 The returned cache is not referenced, so if it is to be stored, call addref().
 */
-QQmlPropertyCache *QQmlEnginePrivate::cache(const QQmlType &type, QTypeRevision version)
+QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::cache(
+        const QQmlType &type, QTypeRevision version)
 {
     Q_ASSERT(type.isValid());
     Q_ASSERT(type.containsRevisionedAttributes());

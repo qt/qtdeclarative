@@ -727,10 +727,8 @@ bool QQmlBinding::setTarget(QObject *object, int coreIndex, bool coreIsAlias, in
     m_targetIndex = QQmlPropertyIndex(coreIndex, valueTypeIndex);
 
     QQmlData *data = QQmlData::get(m_target.data(), true);
-    if (!data->propertyCache) {
+    if (!data->propertyCache)
         data->propertyCache = QQmlEnginePrivate::get(engine())->cache(m_target->metaObject());
-        data->propertyCache->addref();
-    }
 
     return true;
 }
@@ -742,10 +740,8 @@ void QQmlBinding::getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyD
     QQmlData *data = QQmlData::get(m_target.data(), false);
     Q_ASSERT(data);
 
-    if (Q_UNLIKELY(!data->propertyCache)) {
+    if (Q_UNLIKELY(!data->propertyCache))
         data->propertyCache = QQmlEnginePrivate::get(engine())->cache(m_target->metaObject());
-        data->propertyCache->addref();
-    }
 
     *propertyData = data->propertyCache->property(m_targetIndex.coreIndex());
     Q_ASSERT(*propertyData);

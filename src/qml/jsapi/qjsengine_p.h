@@ -87,8 +87,9 @@ public:
     Q_OBJECT_BINDABLE_PROPERTY(QJSEnginePrivate, QString, uiLanguage, &QJSEnginePrivate::uiLanguageChanged);
 
     // These methods may be called from the QML loader thread
-    inline QQmlPropertyCache *cache(QObject *obj, QTypeRevision version = QTypeRevision(), bool doRef = false);
-    inline QQmlPropertyCache *cache(const QMetaObject *obj, QTypeRevision version = QTypeRevision(), bool doRef = false);
+    inline QQmlRefPointer<QQmlPropertyCache> cache(QObject *obj, QTypeRevision version = QTypeRevision());
+    inline QQmlRefPointer<QQmlPropertyCache> cache(
+            const QMetaObject *obj, QTypeRevision version = QTypeRevision());
 };
 
 /*!
@@ -106,14 +107,14 @@ and deleted before the loader thread has a chance to use or reference it.  This
 can't currently happen as the cache holds a reference to the
 QQmlPropertyCache until the QQmlEngine is destroyed.
 */
-QQmlPropertyCache *QJSEnginePrivate::cache(QObject *obj, QTypeRevision version, bool doRef)
+QQmlRefPointer<QQmlPropertyCache> QJSEnginePrivate::cache(QObject *obj, QTypeRevision version)
 {
     if (!obj || QObjectPrivate::get(obj)->metaObject || QObjectPrivate::get(obj)->wasDeleted)
-        return nullptr;
+        return QQmlRefPointer<QQmlPropertyCache>();
 
     QMutexLocker locker(&this->mutex);
     const QMetaObject *mo = obj->metaObject();
-    return QQmlMetaType::propertyCache(mo, version, doRef);
+    return QQmlMetaType::propertyCache(mo, version);
 }
 
 /*!
@@ -125,12 +126,13 @@ exist for the lifetime of the QQmlEngine.
 
 The returned cache is not referenced, so if it is to be stored, call addref().
 */
-QQmlPropertyCache *QJSEnginePrivate::cache(const QMetaObject *metaObject, QTypeRevision version, bool doRef)
+QQmlRefPointer<QQmlPropertyCache> QJSEnginePrivate::cache(
+        const QMetaObject *metaObject, QTypeRevision version)
 {
     Q_ASSERT(metaObject);
 
     QMutexLocker locker(&this->mutex);
-    return QQmlMetaType::propertyCache(metaObject, version, doRef);
+    return QQmlMetaType::propertyCache(metaObject, version);
 }
 
 

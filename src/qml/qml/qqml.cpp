@@ -778,7 +778,7 @@ static void captureObjectProperty(
 
 static bool inherits(const QQmlPropertyCache *descendent, const QQmlPropertyCache *ancestor)
 {
-    for (const QQmlPropertyCache *cache = descendent; cache; cache = cache->parent()) {
+    for (const QQmlPropertyCache *cache = descendent; cache; cache = cache->parent().data()) {
         if (cache == ancestor)
             return true;
     }
@@ -797,7 +797,7 @@ static ObjectPropertyResult loadObjectProperty(QV4::Lookup *l, QObject *object, 
         return ObjectPropertyResult::Deleted;
     Q_ASSERT(!QQmlData::wasDeleted(object));
     const QQmlPropertyCache *propertyCache = l->qobjectLookup.propertyCache;
-    if (!inherits(qmlData->propertyCache, propertyCache))
+    if (!inherits(qmlData->propertyCache.data(), propertyCache))
         return ObjectPropertyResult::NeedsInit;
     const QQmlPropertyData *property = l->qobjectLookup.propertyData;
     captureObjectProperty(object, propertyCache, property, qmlContext);
@@ -813,7 +813,7 @@ static ObjectPropertyResult storeObjectProperty(QV4::Lookup *l, QObject *object,
     if (qmlData->isQueuedForDeletion)
         return ObjectPropertyResult::Deleted;
     Q_ASSERT(!QQmlData::wasDeleted(object));
-    if (!inherits(qmlData->propertyCache, l->qobjectLookup.propertyCache))
+    if (!inherits(qmlData->propertyCache.data(), l->qobjectLookup.propertyCache))
         return ObjectPropertyResult::NeedsInit;
     const QQmlPropertyData *property = l->qobjectLookup.propertyData;
     QQmlPropertyPrivate::removeBinding(object, QQmlPropertyIndex(property->coreIndex()));
@@ -889,7 +889,7 @@ static bool initObjectLookup(
     if (l->qobjectLookup.propertyCache)
         l->qobjectLookup.propertyCache->release();
 
-    l->qobjectLookup.propertyCache = ddata->propertyCache;
+    l->qobjectLookup.propertyCache = ddata->propertyCache.data();
     l->qobjectLookup.propertyCache->addref();
     l->qobjectLookup.propertyData = property;
     return true;

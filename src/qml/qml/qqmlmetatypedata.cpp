@@ -51,9 +51,7 @@ QQmlMetaTypeData::QQmlMetaTypeData()
 
 QQmlMetaTypeData::~QQmlMetaTypeData()
 {
-    for (auto it = propertyCaches.begin(), end = propertyCaches.end(); it != end; ++it)
-        (*it)->release();
-
+    propertyCaches.clear();
     // Do this before the attached properties disappear.
     types.clear();
     undeletableTypes.clear();
@@ -118,15 +116,16 @@ bool QQmlMetaTypeData::registerModuleTypes(const QString &uri)
     return false;
 }
 
-QQmlPropertyCache *QQmlMetaTypeData::propertyCacheForVersion(int index, QTypeRevision version) const
+QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCacheForVersion(
+        int index, QTypeRevision version) const
 {
     return (index < typePropertyCaches.length())
-            ? typePropertyCaches.at(index).value(version).data()
-            : nullptr;
+            ? typePropertyCaches.at(index).value(version)
+            : QQmlRefPointer<QQmlPropertyCache>();
 }
 
 void QQmlMetaTypeData::setPropertyCacheForVersion(int index, QTypeRevision version,
-                                                  QQmlPropertyCache *cache)
+                                                  const QQmlRefPointer<QQmlPropertyCache> &cache)
 {
     if (index >= typePropertyCaches.length())
         typePropertyCaches.resize(index + 1);
@@ -141,25 +140,28 @@ void QQmlMetaTypeData::clearPropertyCachesForVersion(int index)
 
 QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject, QTypeRevision version)
 {
-    if (QQmlPropertyCache *rv = propertyCaches.value(metaObject))
+    if (QQmlRefPointer<QQmlPropertyCache> rv = propertyCaches.value(metaObject))
         return rv;
 
-    if (!metaObject->superClass()) {
-        QQmlPropertyCache *rv = new QQmlPropertyCache(metaObject);
+    QQmlRefPointer<QQmlPropertyCache> rv;
+    if (const QMetaObject *superMeta = metaObject->superClass())
+        rv = propertyCache(superMeta, version)->copyAndAppend(metaObject, version);
+    else
+        rv.adopt(new QQmlPropertyCache(metaObject));
+
+    const auto *mop = reinterpret_cast<const QMetaObjectPrivate *>(metaObject->d.data);
+    if (!(mop->flags & DynamicMetaObject))
         propertyCaches.insert(metaObject, rv);
-        return rv;
-    }
-    auto super = propertyCache(metaObject->superClass(), version);
-    QQmlPropertyCache *rv = super->copyAndAppend(metaObject, version);
-    propertyCaches.insert(metaObject, rv);
+
     return rv;
 }
 
-QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, QTypeRevision version)
+QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(
+        const QQmlType &type, QTypeRevision version)
 {
     Q_ASSERT(type.isValid());
 
-    if (QQmlPropertyCache *pc = propertyCacheForVersion(type.index(), version))
+    if (auto pc = propertyCacheForVersion(type.index(), version))
         return pc;
 
     QVector<QQmlType> types;
@@ -189,12 +191,12 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, QTypeRe
 
     const QTypeRevision maxVersion = QTypeRevision::fromVersion(combinedVersion.majorVersion(),
                                                                 maxMinorVersion);
-    if (QQmlPropertyCache *pc = propertyCacheForVersion(type.index(), maxVersion)) {
+    if (auto pc = propertyCacheForVersion(type.index(), maxVersion)) {
         setPropertyCacheForVersion(type.index(), maxVersion, pc);
         return pc;
     }
 
-    QQmlPropertyCache *raw = propertyCache(type.metaObject(), combinedVersion).data();
+    QQmlRefPointer<QQmlPropertyCache> raw = propertyCache(type.metaObject(), combinedVersion);
 
     bool hasCopied = false;
 
@@ -262,9 +264,6 @@ QQmlPropertyCache *QQmlMetaTypeData::propertyCache(const QQmlType &type, QTypeRe
 #endif
 
     setPropertyCacheForVersion(type.index(), version, raw);
-
-    if (hasCopied)
-        raw->release();
 
     if (version != maxVersion)
         setPropertyCacheForVersion(type.index(), maxVersion, raw);

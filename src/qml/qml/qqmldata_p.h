@@ -224,7 +224,7 @@ public:
 
     QV4::WeakValue jsWrapper;
 
-    QQmlPropertyCache *propertyCache;
+    QQmlRefPointer<QQmlPropertyCache> propertyCache;
 
     QQmlGuardImpl *guards;
 
@@ -261,7 +261,7 @@ public:
 
     static inline void flushPendingBinding(QObject *, QQmlPropertyIndex propertyIndex);
 
-    static QQmlPropertyCache *ensurePropertyCache(QJSEngine *engine, QObject *object)
+    static QQmlRefPointer<QQmlPropertyCache> ensurePropertyCache(QJSEngine *engine, QObject *object)
     {
         Q_ASSERT(engine);
         QQmlData *ddata = QQmlData::get(object, /*create*/true);
@@ -278,7 +278,8 @@ private:
     mutable QQmlDataExtended *extendedData;
 
     Q_NEVER_INLINE static QQmlData *createQQmlData(QObjectPrivate *priv);
-    Q_NEVER_INLINE static QQmlPropertyCache *createPropertyCache(QJSEngine *engine, QObject *object);
+    Q_NEVER_INLINE static QQmlRefPointer<QQmlPropertyCache> createPropertyCache(
+            QJSEngine *engine, QObject *object);
 
     void flushPendingBindingImpl(QQmlPropertyIndex index);
 

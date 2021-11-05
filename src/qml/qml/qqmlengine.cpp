@@ -1553,7 +1553,7 @@ void QQmlData::destroyed(QObject *object)
         free(bindingBits);
 
     if (propertyCache)
-        propertyCache->release();
+        propertyCache = nullptr;
 
     ownContext = nullptr;
 
@@ -1608,10 +1608,10 @@ QQmlData *QQmlData::createQQmlData(QObjectPrivate *priv)
     return static_cast<QQmlData *>(priv->declarativeData);
 }
 
-QQmlPropertyCache *QQmlData::createPropertyCache(QJSEngine *engine, QObject *object)
+QQmlRefPointer<QQmlPropertyCache> QQmlData::createPropertyCache(QJSEngine *engine, QObject *object)
 {
     QQmlData *ddata = QQmlData::get(object, /*create*/true);
-    ddata->propertyCache = QJSEnginePrivate::get(engine)->cache(object, QTypeRevision {}, true);
+    ddata->propertyCache = QJSEnginePrivate::get(engine)->cache(object, QTypeRevision {});
     return ddata->propertyCache;
 }
 
@@ -1932,14 +1932,15 @@ QString QQmlEnginePrivate::offlineStorageDatabaseDirectory() const
     return q->offlineStoragePath() + QDir::separator() + QLatin1String("Databases") + QDir::separator();
 }
 
-static QQmlPropertyCache *propertyCacheForPotentialInlineComponentType(int t, const QHash<int, QV4::ExecutableCompilationUnit *>::const_iterator &iter) {
+static QQmlRefPointer<QQmlPropertyCache> propertyCacheForPotentialInlineComponentType(
+        int t, const QHash<int, QV4::ExecutableCompilationUnit *>::const_iterator &iter) {
     if (t != (*iter)->typeIds.id.id()) {
         // this is an inline component, and what we have in the iterator is currently the parent compilation unit
         for (auto &&icDatum: (*iter)->inlineComponentData)
             if (icDatum.typeIds.id.id() == t)
                 return (*iter)->propertyCaches.at(icDatum.objectIndex);
     }
-    return (*iter)->rootPropertyCache().data();
+    return (*iter)->rootPropertyCache();
 }
 
 /*!
@@ -1949,7 +1950,7 @@ static QQmlPropertyCache *propertyCacheForPotentialInlineComponentType(int t, co
  */
 QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(QMetaType metaType) const
 {
-    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(metaType.id()))
+    if (auto composite = findPropertyCacheInCompositeTypes(metaType.id()))
         return QQmlMetaObject(composite);
 
     return QQmlMetaObject(QQmlMetaType::qmlType(metaType).baseMetaObject());
@@ -1962,7 +1963,7 @@ QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(QMetaType metaType) const
  */
 QQmlMetaObject QQmlEnginePrivate::metaObjectForType(QMetaType metaType) const
 {
-    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(metaType.id()))
+    if (auto composite = findPropertyCacheInCompositeTypes(metaType.id()))
         return QQmlMetaObject(composite);
 
     return QQmlMetaObject(QQmlMetaType::qmlType(metaType).metaObject());
@@ -1973,13 +1974,15 @@ QQmlMetaObject QQmlEnginePrivate::metaObjectForType(QMetaType metaType) const
  *
  * Look up by type's metaObject and version.
  */
-QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(QMetaType metaType)
+QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::propertyCacheForType(QMetaType metaType)
 {
-    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(metaType.id()))
+    if (auto composite = findPropertyCacheInCompositeTypes(metaType.id()))
         return composite;
 
     const QQmlType type = QQmlMetaType::qmlType(metaType);
-    return type.isValid() ? cache(type.metaObject(), type.version()) : nullptr;
+    return type.isValid()
+            ? cache(type.metaObject(), type.version())
+            : QQmlRefPointer<QQmlPropertyCache>();
 }
 
 /*!
@@ -1989,13 +1992,15 @@ QQmlPropertyCache *QQmlEnginePrivate::propertyCacheForType(QMetaType metaType)
  * TODO: Is this correct? Passing a plain QTypeRevision() rather than QTypeRevision::zero() or
  *       the actual type's version seems strange. The behavior has been in place for a while.
  */
-QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(QMetaType metaType)
+QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::rawPropertyCacheForType(QMetaType metaType)
 {
-    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(metaType.id()))
+    if (auto composite = findPropertyCacheInCompositeTypes(metaType.id()))
         return composite;
 
     const QQmlType type = QQmlMetaType::qmlType(metaType);
-    return type.isValid() ? cache(type.baseMetaObject(), QTypeRevision()) : nullptr;
+    return type.isValid()
+            ? cache(type.baseMetaObject(), QTypeRevision())
+            : QQmlRefPointer<QQmlPropertyCache>();
 }
 
 /*!
@@ -2004,15 +2009,15 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(QMetaType metaType
  * Look up by QQmlType and version. We only fall back to lookup by metaobject if the type
  * has no revisiononed attributes here. Unspecified versions are interpreted as "any".
  */
-QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(
+QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::rawPropertyCacheForType(
         QMetaType metaType, QTypeRevision version)
 {
-    if (QQmlPropertyCache *composite = findPropertyCacheInCompositeTypes(metaType.id()))
+    if (auto composite = findPropertyCacheInCompositeTypes(metaType.id()))
         return composite;
 
     const QQmlType type = QQmlMetaType::qmlType(metaType);
     if (!type.isValid())
-        return nullptr;
+        return QQmlRefPointer<QQmlPropertyCache>();
 
     if (type.containsRevisionedAttributes())
         return QQmlMetaType::propertyCache(type, version);
@@ -2020,15 +2025,15 @@ QQmlPropertyCache *QQmlEnginePrivate::rawPropertyCacheForType(
     if (const QMetaObject *metaObject = type.metaObject())
         return cache(metaObject, version);
 
-    return nullptr;
+    return QQmlRefPointer<QQmlPropertyCache>();
 }
 
-QQmlPropertyCache *QQmlEnginePrivate::findPropertyCacheInCompositeTypes(int t) const
+QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::findPropertyCacheInCompositeTypes(int t) const
 {
     QMutexLocker locker(&this->mutex);
     auto iter = m_compositeTypes.constFind(t);
     return (iter == m_compositeTypes.constEnd())
-            ? nullptr
+            ? QQmlRefPointer<QQmlPropertyCache>()
             : propertyCacheForPotentialInlineComponentType(t, iter);
 }
 

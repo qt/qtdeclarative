@@ -129,14 +129,15 @@ struct QQmlMetaTypeData
     QList<QQmlPrivate::AutoParentFunction> parentFunctions;
     QVector<QQmlPrivate::QmlUnitCacheLookupFunction> lookupCachedQmlUnit;
 
-    QHash<const QMetaObject *, QQmlPropertyCache *> propertyCaches;
+    QHash<const QMetaObject *, QQmlRefPointer<QQmlPropertyCache>> propertyCaches;
 
-    QQmlPropertyCache *propertyCacheForVersion(int index, QTypeRevision version) const;
-    void setPropertyCacheForVersion(int index, QTypeRevision version, QQmlPropertyCache *cache);
+    QQmlRefPointer<QQmlPropertyCache> propertyCacheForVersion(int index, QTypeRevision version) const;
+    void setPropertyCacheForVersion(
+            int index, QTypeRevision version, const QQmlRefPointer<QQmlPropertyCache> &cache);
     void clearPropertyCachesForVersion(int index);
 
     QQmlRefPointer<QQmlPropertyCache> propertyCache(const QMetaObject *metaObject, QTypeRevision version);
-    QQmlPropertyCache *propertyCache(const QQmlType &type, QTypeRevision version);
+    QQmlRefPointer<QQmlPropertyCache> propertyCache(const QQmlType &type, QTypeRevision version);
 
     void setTypeRegistrationFailures(QStringList *failures)
     {

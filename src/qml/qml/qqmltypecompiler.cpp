@@ -350,8 +350,8 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(const QmlIR::Object 
             const QMetaObject *attachedType = type.attachedPropertiesType(enginePrivate);
             if (!attachedType)
                 COMPILE_EXCEPTION(binding, tr("Non-existent attached object"));
-            QQmlPropertyCache *cache = compiler->enginePrivate()->cache(attachedType);
-            if (!resolveSignalHandlerExpressions(attachedObj, bindingPropertyName, cache))
+            QQmlRefPointer<QQmlPropertyCache> cache = compiler->enginePrivate()->cache(attachedType);
+            if (!resolveSignalHandlerExpressions(attachedObj, bindingPropertyName, cache.data()))
                 return false;
             continue;
         }
@@ -806,7 +806,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         // If the version is given, use it and look up by QQmlType.
         // Otherwise, make sure we look up by metaobject.
         // TODO: Is this correct?
-        QQmlPropertyCache *pc = pd->typeVersion().hasMinorVersion()
+        QQmlRefPointer<QQmlPropertyCache> pc = pd->typeVersion().hasMinorVersion()
                 ? enginePrivate->rawPropertyCacheForType(pd->propType(), pd->typeVersion())
                 : enginePrivate->rawPropertyCacheForType(pd->propType());
         const QMetaObject *mo = pc ? pc->firstCppMetaObject() : nullptr;
@@ -845,8 +845,9 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         qmlObjects->append(syntheticComponent);
         const int componentIndex = qmlObjects->count() - 1;
         // Keep property caches symmetric
-        QQmlPropertyCache *componentCache = enginePrivate->cache(&QQmlComponent::staticMetaObject);
-        propertyCaches.append(componentCache);
+        QQmlRefPointer<QQmlPropertyCache> componentCache
+                = enginePrivate->cache(&QQmlComponent::staticMetaObject);
+        propertyCaches.append(componentCache.data());
 
         QmlIR::Binding *syntheticBinding = pool->New<QmlIR::Binding>();
         *syntheticBinding = *binding;
@@ -1243,7 +1244,7 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
     QString defaultPropertyName;
     QQmlPropertyData *defaultProperty = nullptr;
     if (obj->indexOfDefaultPropertyOrAlias != -1) {
-        QQmlPropertyCache *cache = propertyCache->parent();
+        QQmlPropertyCache *cache = propertyCache->parent().data();
         defaultPropertyName = cache->defaultPropertyName();
         defaultProperty = cache->defaultProperty();
     } else {

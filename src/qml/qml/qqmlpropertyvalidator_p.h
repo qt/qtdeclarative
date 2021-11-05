@@ -73,7 +73,7 @@ private:
             int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding,
             bool populatingValueTypeGroupProperty = false) const;
     QQmlError validateLiteralBinding(
-            QQmlPropertyCache *propertyCache, QQmlPropertyData *property,
+            const QQmlRefPointer<QQmlPropertyCache> &propertyCache, QQmlPropertyData *property,
             const QV4::CompiledData::Binding *binding) const;
     QQmlError validateObjectBinding(
             QQmlPropertyData *property, const QString &propertyName,

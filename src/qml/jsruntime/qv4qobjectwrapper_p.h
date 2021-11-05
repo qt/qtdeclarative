@@ -261,15 +261,15 @@ inline ReturnedValue QObjectWrapper::lookupGetterImpl(Lookup *lookup, ExecutionE
         if (property->isOverridden() && (!useOriginalProperty || property->isFunction() || property->isSignalHandler()))
             return revertLookup();
 
-        QQmlPropertyCache *fromMo = ddata->propertyCache;
-        QQmlPropertyCache *toMo = lookup->qobjectLookup.propertyCache;
+        const QQmlPropertyCache *fromMo = ddata->propertyCache.data();
+        const QQmlPropertyCache *toMo = lookup->qobjectLookup.propertyCache;
         bool canConvert = false;
         while (fromMo) {
             if (fromMo == toMo) {
                 canConvert = true;
                 break;
             }
-            fromMo = fromMo->parent();
+            fromMo = fromMo->parent().data();
         }
         if (!canConvert)
             return revertLookup();

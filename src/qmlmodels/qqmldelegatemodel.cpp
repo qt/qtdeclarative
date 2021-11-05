@@ -2381,11 +2381,7 @@ QQmlDelegateModelItem::QQmlDelegateModelItem(
         // model item so that the QML engine can use the revision information
         // when resolving the properties (rather than falling back to just
         // inspecting the QObject in the model item directly).
-        QQmlData *qmldata = QQmlData::get(this, true);
-        if (qmldata->propertyCache)
-            qmldata->propertyCache->release();
-        qmldata->propertyCache = accessor->propertyCache.data();
-        qmldata->propertyCache->addref();
+        QQmlData::get(this, true)->propertyCache = accessor->propertyCache;
     }
 }
 

@@ -156,23 +156,23 @@ public:
 class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount
 {
 public:
-    QQmlPropertyCache();
+    QQmlPropertyCache() = default;
     QQmlPropertyCache(const QMetaObject *, QTypeRevision metaObjectRevision = QTypeRevision::zero());
     ~QQmlPropertyCache() override;
 
     void update(const QMetaObject *);
     void invalidate(const QMetaObject *);
 
-    QQmlPropertyCache *copy();
+    QQmlRefPointer<QQmlPropertyCache> copy();
 
-    QQmlPropertyCache *copyAndAppend(
+    QQmlRefPointer<QQmlPropertyCache> copyAndAppend(
                 const QMetaObject *, QTypeRevision typeVersion,
                 QQmlPropertyData::Flags propertyFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyData::Flags methodFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyData::Flags signalFlags = QQmlPropertyData::Flags());
 
-    QQmlPropertyCache *copyAndReserve(int propertyCount,
-                                      int methodCount, int signalCount, int enumCount);
+    QQmlRefPointer<QQmlPropertyCache> copyAndReserve(
+            int propertyCount, int methodCount, int signalCount, int enumCount);
     void appendProperty(const QString &, QQmlPropertyData::Flags flags, int coreIndex,
                         QMetaType propType, QTypeRevision revision, int notifyIndex);
     void appendSignal(const QString &, QQmlPropertyData::Flags, int coreIndex,
@@ -203,9 +203,12 @@ public:
 
     QString defaultPropertyName() const;
     QQmlPropertyData *defaultProperty() const;
-    inline QQmlPropertyCache *parent() const;
+
+    // Return a reference here so that we don't have to addref/release all the time
+    inline const QQmlRefPointer<QQmlPropertyCache> &parent() const;
+
     // is used by the Qml Designer
-    void setParent(QQmlPropertyCache *newParent);
+    void setParent(QQmlRefPointer<QQmlPropertyCache> newParent);
 
     inline QQmlPropertyData *overrideData(QQmlPropertyData *) const;
     inline bool isAllowedInRevision(QQmlPropertyData *) const;
@@ -254,7 +257,7 @@ private:
     friend class QQmlComponentAndAliasResolver;
     friend class QQmlMetaObject;
 
-    inline QQmlPropertyCache *copy(int reserve);
+    inline QQmlRefPointer<QQmlPropertyCache> copy(int reserve);
 
     void append(const QMetaObject *, QTypeRevision typeVersion,
                 QQmlPropertyData::Flags propertyFlags = QQmlPropertyData::Flags(),
@@ -311,8 +314,8 @@ private:
         return handleOverride(name, data, findNamedProperty(name));
     }
 
-    int propertyIndexCacheStart; // placed here to avoid gap between QQmlRefCount and _parent
-    QQmlPropertyCache *_parent;
+    int propertyIndexCacheStart = 0; // placed here to avoid gap between QQmlRefCount and _parent
+    QQmlRefPointer<QQmlPropertyCache> _parent;
 
     IndexCache propertyIndexCache;
     IndexCache methodIndexCache;
@@ -326,13 +329,12 @@ private:
     QByteArray _dynamicStringData;
     QByteArray _listPropertyAssignBehavior;
     QString _defaultPropertyName;
-    QQmlPropertyCacheMethodArguments *argumentsCache;
+    QQmlPropertyCacheMethodArguments *argumentsCache = nullptr;
     QByteArray _checksum;
-    int methodIndexCacheStart;
-    int signalHandlerIndexCacheStart;
-    int _jsFactoryMethodIndex;
-    bool _hasPropertyOverrides;
-    bool _ownMetaObject;
+    int methodIndexCacheStart = 0;
+    int signalHandlerIndexCacheStart = 0;
+    int _jsFactoryMethodIndex = -1;
+    bool _hasPropertyOverrides = false;
 };
 
 // Returns this property cache's metaObject.  May be null if it hasn't been created yet.
@@ -347,7 +349,7 @@ inline const QMetaObject *QQmlPropertyCache::firstCppMetaObject() const
 {
     const QQmlPropertyCache *p = this;
     while (!p->_metaObject || p->_metaObject.isShared())
-        p = p->parent();
+        p = p->parent().data();
     return p->_metaObject;
 }
 
@@ -415,7 +417,7 @@ inline QString QQmlPropertyCache::defaultPropertyName() const
     return _defaultPropertyName;
 }
 
-inline QQmlPropertyCache *QQmlPropertyCache::parent() const
+inline const QQmlRefPointer<QQmlPropertyCache> &QQmlPropertyCache::parent() const
 {
     return _parent;
 }

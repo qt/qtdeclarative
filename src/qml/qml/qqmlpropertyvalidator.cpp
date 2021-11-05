@@ -151,7 +151,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
     QString defaultPropertyName;
     QQmlPropertyData *defaultProperty = nullptr;
     if (obj->indexOfDefaultPropertyOrAlias != -1) {
-        QQmlPropertyCache *cache = propertyCache->parent();
+        QQmlPropertyCache *cache = propertyCache->parent().data();
         defaultPropertyName = cache->defaultPropertyName();
         defaultProperty = cache->defaultProperty();
     } else {
@@ -379,7 +379,9 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
     return noError;
 }
 
-QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *propertyCache, QQmlPropertyData *property, const QV4::CompiledData::Binding *binding) const
+QQmlError QQmlPropertyValidator::validateLiteralBinding(
+        const QQmlRefPointer<QQmlPropertyCache> &propertyCache, QQmlPropertyData *property,
+        const QV4::CompiledData::Binding *binding) const
 {
     if (property->isQList()) {
         return qQmlCompileError(binding->valueLocation, tr("Cannot assign primitives to lists"));
@@ -659,9 +661,9 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(QQmlPropertyCache *prope
 */
 bool QQmlPropertyValidator::canCoerce(QMetaType to, QQmlPropertyCache *fromMo) const
 {
-    QQmlPropertyCache *toMo = enginePrivate->rawPropertyCacheForType(to);
+    QQmlRefPointer<QQmlPropertyCache> toMo = enginePrivate->rawPropertyCacheForType(to);
 
-    if (toMo == nullptr) {
+    if (toMo.isNull()) {
         // if we have an inline component from the current file,
         // it is not properly registered at this point, as registration
         // only occurs after the whole file has been validated
@@ -677,7 +679,7 @@ bool QQmlPropertyValidator::canCoerce(QMetaType to, QQmlPropertyCache *fromMo) c
     while (fromMo) {
         if (fromMo == toMo)
             return true;
-        fromMo = fromMo->parent();
+        fromMo = fromMo->parent().data();
     }
     return false;
 }
@@ -769,7 +771,8 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
         // actual property type before we applied any extensions that might
         // effect the properties on the type, but don't effect assignability
         // Not passing a version ensures that we get the raw metaObject.
-        QQmlPropertyCache *propertyMetaObject = enginePrivate->rawPropertyCacheForType(propType);
+        QQmlRefPointer<QQmlPropertyCache> propertyMetaObject
+                = enginePrivate->rawPropertyCacheForType(propType);
         if (!propertyMetaObject) {
             // if we have an inline component from the current file,
             // it is not properly registered at this point, as registration
@@ -790,7 +793,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
             QQmlPropertyCache *c = propertyCaches.at(binding->value.objectIndex);
             while (c && !isAssignable) {
                 isAssignable |= c == propertyMetaObject;
-                c = c->parent();
+                c = c->parent().data();
             }
 
             if (!isAssignable) {

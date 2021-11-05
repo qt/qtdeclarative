@@ -1442,7 +1442,9 @@ void QQuickShaderEffectImpl::updateShaderVars(Shader shaderType)
     clearMappers(shaderType);
 
     auto *engine = qmlEngine(m_item);
-    QQmlPropertyCache *propCache = engine ? QQmlData::ensurePropertyCache(engine, m_item) : nullptr;
+    QQmlRefPointer<QQmlPropertyCache> propCache = engine
+            ? QQmlData::ensurePropertyCache(engine, m_item)
+            : QQmlRefPointer<QQmlPropertyCache>();
 
     if (!m_itemMetaObject)
         m_itemMetaObject = m_item->metaObject();

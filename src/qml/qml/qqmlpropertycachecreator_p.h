@@ -446,10 +446,11 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
 template <typename ObjectContainer>
 inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache)
 {
-    QQmlRefPointer<QQmlPropertyCache> cache;
-    cache.adopt(baseTypeCache->copyAndReserve(obj->propertyCount() + obj->aliasCount(),
-                                              obj->functionCount() + obj->propertyCount() + obj->aliasCount() + obj->signalCount(),
-                                              obj->signalCount() + obj->propertyCount() + obj->aliasCount(), obj->enumCount()));
+    QQmlRefPointer<QQmlPropertyCache> cache = baseTypeCache->copyAndReserve(
+            obj->propertyCount() + obj->aliasCount(),
+            obj->functionCount() + obj->propertyCount() + obj->aliasCount() + obj->signalCount(),
+            obj->signalCount() + obj->propertyCount() + obj->aliasCount(),
+            obj->enumCount());
 
     propertyCaches->set(objectIndex, cache);
     propertyCaches->setNeedsVMEMetaObject(objectIndex);
@@ -508,7 +509,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
     QSet<QString> seenSignals;
     seenSignals << QStringLiteral("destroyed") << QStringLiteral("parentChanged") << QStringLiteral("objectNameChanged");
     QQmlPropertyCache *parentCache = cache.data();
-    while ((parentCache = parentCache->parent())) {
+    while ((parentCache = parentCache->parent().data())) {
         if (int pSigCount = parentCache->signalCount()) {
             int pSigOffset = parentCache->signalOffset();
             for (int i = pSigOffset; i < pSigCount; ++i) {
@@ -965,19 +966,19 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         if (!QQmlMetaType::isValueType(targetProperty->propType()) && valueTypeIndex != -1) {
             // deep alias property
             *type = targetProperty->propType();
-            targetCache = enginePriv->propertyCacheForType(*type);
-            Q_ASSERT(targetCache);
-            targetProperty = targetCache->property(valueTypeIndex);
+            QQmlRefPointer<QQmlPropertyCache> typeCache = enginePriv->propertyCacheForType(*type);
+            Q_ASSERT(typeCache);
+            QQmlPropertyData *typeProperty = typeCache->property(valueTypeIndex);
 
-            if (targetProperty == nullptr) {
+            if (typeProperty == nullptr) {
                 return qQmlCompileError(alias.referenceLocation,
                                         QQmlPropertyCacheCreatorBase::tr("Invalid alias target"));
             }
 
-            *type = targetProperty->propType();
-            writable = targetProperty->isWritable();
-            resettable = targetProperty->isResettable();
-            bindable = targetProperty->isBindable();
+            *type = typeProperty->propType();
+            writable = typeProperty->isWritable();
+            resettable = typeProperty->isResettable();
+            bindable = typeProperty->isBindable();
         } else {
             // value type or primitive type or enum
             *type = targetProperty->propType();

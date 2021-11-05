@@ -149,16 +149,6 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 }
 
 /*!
-Creates a new empty QQmlPropertyCache.
-*/
-QQmlPropertyCache::QQmlPropertyCache()
-    : propertyIndexCacheStart(0), _parent(nullptr),
-      argumentsCache(nullptr), methodIndexCacheStart(0), signalHandlerIndexCacheStart(0),
-      _jsFactoryMethodIndex(-1), _hasPropertyOverrides(false)
-{
-}
-
-/*!
 Creates a new QQmlPropertyCache of \a metaObject.
 */
 QQmlPropertyCache::QQmlPropertyCache(const QMetaObject *metaObject, QTypeRevision metaObjectRevision)
@@ -192,16 +182,13 @@ QQmlPropertyCache::~QQmlPropertyCache()
     // We must clear this prior to releasing the parent incase it is a
     // linked hash
     stringCache.clear();
-    if (_parent) _parent->release();
-
-    _parent = nullptr;
 }
 
-QQmlPropertyCache *QQmlPropertyCache::copy(int reserve)
+QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCache::copy(int reserve)
 {
-    QQmlPropertyCache *cache = new QQmlPropertyCache();
+    QQmlRefPointer<QQmlPropertyCache> cache = QQmlRefPointer<QQmlPropertyCache>(
+            new QQmlPropertyCache(), QQmlRefPointer<QQmlPropertyCache>::Adopt);
     cache->_parent = this;
-    cache->_parent->addref();
     cache->propertyIndexCacheStart = propertyIndexCache.count() + propertyIndexCacheStart;
     cache->methodIndexCacheStart = methodIndexCache.count() + methodIndexCacheStart;
     cache->signalHandlerIndexCacheStart = signalHandlerIndexCache.count() + signalHandlerIndexCacheStart;
@@ -214,15 +201,15 @@ QQmlPropertyCache *QQmlPropertyCache::copy(int reserve)
     return cache;
 }
 
-QQmlPropertyCache *QQmlPropertyCache::copy()
+QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCache::copy()
 {
     return copy(0);
 }
 
-QQmlPropertyCache *QQmlPropertyCache::copyAndReserve(int propertyCount, int methodCount,
-                                                     int signalCount, int enumCount)
+QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCache::copyAndReserve(
+        int propertyCount, int methodCount, int signalCount, int enumCount)
 {
-    QQmlPropertyCache *rv = copy(propertyCount + methodCount + signalCount);
+    QQmlRefPointer<QQmlPropertyCache> rv = copy(propertyCount + methodCount + signalCount);
     rv->propertyIndexCache.reserve(propertyCount);
     rv->methodIndexCache.reserve(methodCount);
     rv->signalHandlerIndexCache.reserve(signalCount);
@@ -367,17 +354,13 @@ QQmlPropertyData *QQmlPropertyCache::defaultProperty() const
     return property(defaultPropertyName(), nullptr, nullptr);
 }
 
-void QQmlPropertyCache::setParent(QQmlPropertyCache *newParent)
+void QQmlPropertyCache::setParent(QQmlRefPointer<QQmlPropertyCache> newParent)
 {
-    if (_parent == newParent)
-        return;
-    if (_parent)
-        _parent->release();
-    _parent = newParent;
-    _parent->addref();
+    if (_parent != newParent)
+        _parent = std::move(newParent);
 }
 
-QQmlPropertyCache *
+QQmlRefPointer<QQmlPropertyCache>
 QQmlPropertyCache::copyAndAppend(const QMetaObject *metaObject,
                                  QTypeRevision typeVersion,
                                  QQmlPropertyData::Flags propertyFlags,
@@ -389,9 +372,10 @@ QQmlPropertyCache::copyAndAppend(const QMetaObject *metaObject,
     // Reserve enough space in the name hash for all the methods (including signals), all the
     // signal handlers and all the properties.  This assumes no name clashes, but this is the
     // common case.
-    QQmlPropertyCache *rv = copy(QMetaObjectPrivate::get(metaObject)->methodCount +
-                                         QMetaObjectPrivate::get(metaObject)->signalCount +
-                                         QMetaObjectPrivate::get(metaObject)->propertyCount);
+    QQmlRefPointer<QQmlPropertyCache> rv = copy(
+            QMetaObjectPrivate::get(metaObject)->methodCount
+            + QMetaObjectPrivate::get(metaObject)->signalCount
+            + QMetaObjectPrivate::get(metaObject)->propertyCount);
 
     rv->append(metaObject, typeVersion, propertyFlags, methodFlags, signalFlags);
 
@@ -824,7 +808,7 @@ int QQmlPropertyCache::originalClone(const QObject *object, int index)
 {
     QQmlData *data = QQmlData::get(object, false);
     if (data && data->propertyCache) {
-        QQmlPropertyCache *cache = data->propertyCache;
+        QQmlPropertyCache *cache = data->propertyCache.data();
         QQmlPropertyData *sig = cache->signal(index);
         while (sig && sig->isCloned()) {
             --index;
@@ -921,14 +905,13 @@ qQmlPropertyCacheProperty(QJSEngine *engine, QObject *obj, T name,
     QQmlData *ddata = QQmlData::get(obj, false);
 
     if (ddata && ddata->propertyCache) {
-        cache = ddata->propertyCache;
+        cache = ddata->propertyCache.data();
     } else if (engine) {
         QJSEnginePrivate *ep = QJSEnginePrivate::get(engine);
-        cache = ep->cache(obj);
-        if (cache) {
+        if (auto newCache = ep->cache(obj)) {
+            cache = newCache.data();
             ddata = QQmlData::get(obj, true);
-            cache->addref();
-            ddata->propertyCache = cache;
+            ddata->propertyCache = std::move(newCache);
         }
     }
 

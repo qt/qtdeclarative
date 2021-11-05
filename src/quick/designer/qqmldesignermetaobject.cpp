@@ -78,11 +78,11 @@ struct MetaPropertyData {
     QVector<QPair<QVariant, bool> > m_data;
 };
 
-static QQmlPropertyCache *cacheForObject(QObject *object, QQmlEngine *engine)
+static QQmlRefPointer<QQmlPropertyCache> cacheForObject(QObject *object, QQmlEngine *engine)
 {
     QQmlVMEMetaObject *metaObject = QQmlVMEMetaObject::get(object);
     if (metaObject)
-        return metaObject->cache.data();
+        return metaObject->cache;
 
     return QQmlEnginePrivate::get(engine)->cache(object);
 }
@@ -135,9 +135,7 @@ QQmlDesignerMetaObject::QQmlDesignerMetaObject(QObject *object, QQmlEngine *engi
     if (ddata && ddata->propertyCache) {
         cache->setParent(ddata->propertyCache);
         cache->invalidate(metaObject);
-        ddata->propertyCache->release();
-        ddata->propertyCache = cache.data();
-        ddata->propertyCache->addref();
+        ddata->propertyCache = cache;
     }
 
 }

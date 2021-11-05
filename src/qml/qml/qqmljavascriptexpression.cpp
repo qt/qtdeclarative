@@ -349,7 +349,7 @@ void QQmlPropertyCapture::captureProperty(QObject *o, int c, int n, bool doNotif
     if (c >= 0) {
         const QQmlData *ddata = QQmlData::get(o, /*create=*/false);
         const QMetaObject *metaObjectForBindable = nullptr;
-        if (auto const propCache = ddata ? ddata->propertyCache : nullptr; propCache) {
+        if (auto const propCache = (ddata ? ddata->propertyCache.data() : nullptr)) {
             Q_ASSERT(propCache->property(c));
             if (propCache->property(c)->isBindable())
                 metaObjectForBindable = propCache->metaObject();

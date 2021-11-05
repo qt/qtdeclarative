@@ -173,9 +173,10 @@ public:
     static QQmlType qmlType(QMetaType metaType);
     static QQmlType qmlType(const QUrl &unNormalizedUrl, bool includeNonFileImports = false);
 
-    static QQmlPropertyCache *propertyCache(const QMetaObject *metaObject,
-                                            QTypeRevision version = QTypeRevision(), bool doRef = false);
-    static QQmlPropertyCache *propertyCache(const QQmlType &type, QTypeRevision version);
+    static QQmlRefPointer<QQmlPropertyCache> propertyCache(
+            const QMetaObject *metaObject, QTypeRevision version = QTypeRevision());
+    static QQmlRefPointer<QQmlPropertyCache> propertyCache(
+            const QQmlType &type, QTypeRevision version);
 
     static void freeUnusedTypesAndCaches();
 

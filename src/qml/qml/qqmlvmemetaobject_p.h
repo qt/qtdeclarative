@@ -102,7 +102,7 @@ public:
     QMetaObject *toDynamicMetaObject(QObject *o) override;
 
     // Used by auto-tests for inspection
-    QQmlPropertyCache *propertyCache() const { return cache.data(); }
+    QQmlRefPointer<QQmlPropertyCache> propertyCache() const { return cache; }
 
     bool intercepts(QQmlPropertyIndex propertyIndex) const
     {

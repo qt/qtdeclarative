@@ -224,12 +224,8 @@ public:
     }
 
     void dropPropertyCache() {
-        if (QQmlData *ddata = QQmlData::get(object, /*create*/false)) {
-            if (ddata->propertyCache) {
-                ddata->propertyCache->release();
-                ddata->propertyCache = nullptr;
-            }
-        }
+        if (QQmlData *ddata = QQmlData::get(object, /*create*/false))
+            ddata->propertyCache = nullptr;
     }
 
     QQmlOpenMetaObject *q;
@@ -430,7 +426,6 @@ void QQmlOpenMetaObject::setCached(bool c)
         if (!d->type->d->cache)
             d->type->d->cache = new QQmlPropertyCache(this);
         qmldata->propertyCache = d->type->d->cache;
-        d->type->d->cache->addref();
     } else {
         if (d->type->d->cache)
             d->type->d->cache->release();

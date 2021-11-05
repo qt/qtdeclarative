@@ -1279,17 +1279,15 @@ QQmlType QQmlMetaType::qmlType(const QUrl &unNormalizedUrl, bool includeNonFileI
         return QQmlType();
 }
 
-QQmlPropertyCache *QQmlMetaType::propertyCache(const QMetaObject *metaObject, QTypeRevision version, bool doRef)
+QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::propertyCache(
+        const QMetaObject *metaObject, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data; // not const: the cache is created on demand
-    auto ret =  data->propertyCache(metaObject, version);
-    if (doRef)
-        return ret.take();
-    else
-        return ret.data();
+    return data->propertyCache(metaObject, version);
 }
 
-QQmlPropertyCache *QQmlMetaType::propertyCache(const QQmlType &type, QTypeRevision version)
+QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::propertyCache(
+        const QQmlType &type, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data; // not const: the cache is created on demand
     return data->propertyCache(type, version);
@@ -1360,14 +1358,10 @@ void QQmlMetaType::freeUnusedTypesAndCaches()
     bool deletedAtLeastOneCache;
     do {
         deletedAtLeastOneCache = false;
-        QHash<const QMetaObject *, QQmlPropertyCache *>::Iterator it = data->propertyCaches.begin();
+        auto it = data->propertyCaches.begin();
         while (it != data->propertyCaches.end()) {
-
             if ((*it)->count() == 1) {
-                QQmlPropertyCache *pc = nullptr;
-                qSwap(pc, *it);
                 it = data->propertyCaches.erase(it);
-                pc->release();
                 deletedAtLeastOneCache = true;
             } else {
                 ++it;
