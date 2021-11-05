@@ -59,6 +59,7 @@ QT_BEGIN_NAMESPACE
 class QRhi;
 class QRhiCommandBuffer;
 class QRhiRenderPassDescriptor;
+class QRhiResourceUpdateBatch;
 class QSGMaterialShader;
 class QSurface;
 
@@ -143,6 +144,10 @@ public:
         return m_currentDevicePixelRatio;
     }
 
+    QRhiResourceUpdateBatch *maybeGlyphCacheResourceUpdates();
+    QRhiResourceUpdateBatch *glyphCacheResourceUpdates();
+    void releaseGlyphCacheResourceUpdates();
+
 protected:
     static QString fontKey(const QRawFont &font, int renderTypeQuality);
 
@@ -156,6 +161,7 @@ protected:
     qreal m_currentDevicePixelRatio;
     bool m_separateIndexBuffer;
     bool m_useDepthBufferFor2D;
+    QRhiResourceUpdateBatch *m_glyphCacheResourceUpdates;
 };
 
 QT_END_NAMESPACE
