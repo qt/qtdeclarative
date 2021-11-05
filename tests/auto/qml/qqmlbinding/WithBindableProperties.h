@@ -30,6 +30,7 @@
 
 #include <QObject>
 #include <qqml.h>
+#include <QtCore/qproperty.h>
 
 
 class WithBindableProperties : public QObject
