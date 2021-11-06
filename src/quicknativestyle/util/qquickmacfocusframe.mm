@@ -91,13 +91,6 @@ void QQuickMacFocusFrame::moveToItem(QQuickItem *item)
     }
 
     const QQuickFocusFrameDescription &config = getDescriptionForItem(item);
-    if (!config.isValid()) {
-        m_focusFrame->setParentItem(nullptr);
-        m_focusFrame->setVisible(false);
-        return;
-    }
-
-    m_focusFrame->setVisible(true);
     QMetaObject::invokeMethod(m_focusFrame.data(), "moveToItem",
                               Q_ARG(QVariant, QVariant::fromValue(config.target)),
                               Q_ARG(QVariant, QVariant::fromValue(config.margins)),
