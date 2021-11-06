@@ -49,6 +49,13 @@ Item {
     z: 100
 
     function moveToItem(item, margins, radius) {
+        if (!item) {
+            targetItem = null;
+            parent = null;
+            visible = false;
+            return;
+        }
+        visible = true
         parent = item.parent
         targetItem = item
         leftOffset = margins.left
@@ -68,24 +75,14 @@ Item {
     property real frameSize: 0
     property real frameRadius: 0
 
-    property point targetItemPos: {
-        if (!targetItem)
-            return Qt.point(0, 0)
-        // Force a reevaluation if
-        // the target item moves
-        targetItem.x
-        targetItem.y
-        mapFromItem(targetItem, Qt.point(0, 0))
-    }
-
     // systemFrameColor is set to NSColor.keyboardFocusIndicatorColor from cpp
     property color systemFrameColor
 
     Rectangle {
         id: focusFrame
         z: 10
-        x: targetItemPos.x + leftOffset - frameSize
-        y: targetItemPos.y + topOffset - frameSize
+        x: targetItem ? targetItem.x + leftOffset - frameSize : 0
+        y: targetItem ? targetItem.y + topOffset - frameSize : 0
         width: targetItem ? targetItem.width - leftOffset - rightOffset + (frameSize * 2) : 0
         height: targetItem ? targetItem.height - topOffset - bottomOffset + (frameSize * 2) : 0
         radius: frameRadius
