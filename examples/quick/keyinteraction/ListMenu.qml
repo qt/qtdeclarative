@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,55 +48,72 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.1
+import QtQml
+import QtQuick
 
-Item {
-    id: container
-    required property int index
+FocusScope {
+    id: menu
+    clip: true
+    required property Item keyUpTarget
+    required property Item keyLeftTarget
 
-    width: ListView.view.width; height: 60; anchors.leftMargin: 10; anchors.rightMargin: 10
+    ListView {
+        id: list1
+        y: activeFocus ? 10 : 40; width: parent.width / 3; height: parent.height - 20
+        focus: true
+        KeyNavigation.up: menu.keyUpTarget
+        KeyNavigation.left: menu.keyLeftTarget
+        KeyNavigation.right: list2
+        model: 10; cacheBuffer: 200
+        delegate: ListViewDelegate {}
+
+        Behavior on y {
+            NumberAnimation { duration: 600; easing.type: Easing.OutQuint }
+        }
+    }
+
+    ListView {
+        id: list2
+        y: activeFocus ? 10 : 40; x: parseInt(parent.width / 3); width: parent.width / 3; height: parent.height - 20
+        KeyNavigation.up: menu.keyUpTarget
+        KeyNavigation.left: list1
+        KeyNavigation.right: list3
+        model: 10; cacheBuffer: 200
+        delegate: ListViewDelegate {}
+
+        Behavior on y {
+            NumberAnimation { duration: 600; easing.type: Easing.OutQuint }
+        }
+    }
+
+    ListView {
+        id: list3
+        y: activeFocus ? 10 : 40; x: parseInt(2 * parent.width / 3); width: parent.width / 3; height: parent.height - 20
+        KeyNavigation.up: menu.keyUpTarget
+        KeyNavigation.left: list2
+        model: 10; cacheBuffer: 200
+        delegate: ListViewDelegate {}
+
+        Behavior on y {
+            NumberAnimation { duration: 600; easing.type: Easing.OutQuint }
+        }
+    }
+
+    Rectangle { width: parent.width; height: 1; color: "#D1DBBD" }
 
     Rectangle {
-        id: content
-        anchors.centerIn: parent; width: container.width - 40; height: container.height - 10
-        color: "transparent"
-        antialiasing: true
-        radius: 10
-
-        Rectangle { anchors.fill: parent; anchors.margins: 3; color: "#91AA9D"; antialiasing: true; radius: 8 }
-    }
-
-    Text {
-        id: label
-        anchors.centerIn: content
-        text: "List element " + (container.index + 1)
-        color: "#193441"
-        font.pixelSize: 14
-    }
-
-    MouseArea {
-        id: mouseArea
-        anchors.fill: parent
-        hoverEnabled: true
-
-        onClicked: {
-            container.ListView.view.currentIndex = container.index
-            container.forceActiveFocus()
+        y: 1; width: parent.width; height: 10
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: "#3E606F" }
+            GradientStop { position: 1.0; color: "transparent" }
         }
     }
 
-    states: State {
-        name: "active"; when: container.activeFocus
-        PropertyChanges {
-            content {
-                color: "#FCFFF5"
-                scale: 1.1
-            }
-            label.font.pixelSize: 16
+    Rectangle {
+        y: parent.height - 10; width: parent.width; height: 10
+        gradient: Gradient {
+            GradientStop { position: 1.0; color: "#3E606F" }
+            GradientStop { position: 0.0; color: "transparent" }
         }
-    }
-
-    transitions: Transition {
-        NumberAnimation { properties: "scale"; duration: 100 }
     }
 }

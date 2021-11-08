@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,72 +48,71 @@
 **
 ****************************************************************************/
 
-import QtQml 2.1
-import QtQuick 2.1
+import QtQuick
 
 FocusScope {
     id: menu
-    clip: true
     required property Item keyUpTarget
-    required property Item keyLeftTarget
-
-    ListView {
-        id: list1
-        y: activeFocus ? 10 : 40; width: parent.width / 3; height: parent.height - 20
-        focus: true
-        KeyNavigation.up: menu.keyUpTarget
-        KeyNavigation.left: menu.keyLeftTarget
-        KeyNavigation.right: list2
-        model: 10; cacheBuffer: 200
-        delegate: ListViewDelegate {}
-
-        Behavior on y {
-            NumberAnimation { duration: 600; easing.type: Easing.OutQuint }
-        }
-    }
-
-    ListView {
-        id: list2
-        y: activeFocus ? 10 : 40; x: parseInt(parent.width / 3); width: parent.width / 3; height: parent.height - 20
-        KeyNavigation.up: menu.keyUpTarget
-        KeyNavigation.left: list1
-        KeyNavigation.right: list3
-        model: 10; cacheBuffer: 200
-        delegate: ListViewDelegate {}
-
-        Behavior on y {
-            NumberAnimation { duration: 600; easing.type: Easing.OutQuint }
-        }
-    }
-
-    ListView {
-        id: list3
-        y: activeFocus ? 10 : 40; x: parseInt(2 * parent.width / 3); width: parent.width / 3; height: parent.height - 20
-        KeyNavigation.up: menu.keyUpTarget
-        KeyNavigation.left: list2
-        model: 10; cacheBuffer: 200
-        delegate: ListViewDelegate {}
-
-        Behavior on y {
-            NumberAnimation { duration: 600; easing.type: Easing.OutQuint }
-        }
-    }
-
-    Rectangle { width: parent.width; height: 1; color: "#D1DBBD" }
+    required property Item keyDownTarget
 
     Rectangle {
-        y: 1; width: parent.width; height: 10
+        anchors.fill: parent
+        clip: true
         gradient: Gradient {
-            GradientStop { position: 0.0; color: "#3E606F" }
-            GradientStop { position: 1.0; color: "transparent" }
+            GradientStop { position: 0.0; color: "#193441" }
+            GradientStop { position: 1.0; color: Qt.darker("#193441") }
         }
-    }
 
-    Rectangle {
-        y: parent.height - 10; width: parent.width; height: 10
-        gradient: Gradient {
-            GradientStop { position: 1.0; color: "#3E606F" }
-            GradientStop { position: 0.0; color: "transparent" }
+        Row {
+            id: tabView
+            anchors.fill: parent; anchors.leftMargin: 20; anchors.rightMargin: 20
+            Repeater {
+                activeFocusOnTab: false
+                model: 5
+                Item {
+                    id: container
+                    width: 152; height: 152
+                    activeFocusOnTab: true
+                    focus: true
+
+                    KeyNavigation.up: menu.keyUpTarget
+                    KeyNavigation.down: menu.keyDownTarget
+
+                    Rectangle {
+                        id: content
+                        color: "transparent"
+                        antialiasing: true
+                        anchors.fill: parent; anchors.margins: 20; radius: 10
+
+                        Rectangle { color: "#91AA9D"; anchors.fill: parent; anchors.margins: 3; radius: 8; antialiasing: true }
+                        Image { source: "images/qt-logo.png"; anchors.centerIn: parent }
+                    }
+
+                    MouseArea {
+                        id: mouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+
+                        onClicked: {
+                            container.forceActiveFocus()
+                        }
+                    }
+
+                    states: State {
+                        name: "active"; when: container.activeFocus
+                        PropertyChanges {
+                            content {
+                                color: "#FCFFF5"
+                                scale: 1.1
+                            }
+                        }
+                    }
+
+                    transitions: Transition {
+                        NumberAnimation { properties: "scale"; duration: 100 }
+                    }
+                }
+            }
         }
     }
 }
