@@ -52,14 +52,14 @@ basic "Hello World" application with the following files:
 \li \c chattutorial.pro - Provides the qmake configuration
 \endlist
 
-\note Delete the \c MainForm.ui.qml from the project as we will
-not use it in this tutorial.
+\note Delete the \c MainForm.ui.qml and \c qml.qrc files from the project, as
+we will not use them in this tutorial.
 
 \section2 main.cpp
 
 The default code in \c main.cpp has two includes:
 
-\quotefromfile chattutorial/chapter1-settingup/main.cpp
+\quotefromfile chattutorial/chapter1/main.cpp
 \skipto include
 \printline include
 \printline include
@@ -96,7 +96,7 @@ Once we've set up things in C++, we can move on to the user interface in QML.
 
 Let's modify the default QML code to suit our needs.
 
-\quotefromfile chattutorial/chapter1-settingup/main.qml
+\quotefromfile chattutorial/chapter1/main.qml
 \skipto import
 \printuntil import QtQuick.Controls
 
@@ -145,7 +145,7 @@ which screen the user is viewing, it is much easier to use \l Page.
 For now, we'll just add one page, but in the next chapter, we'll demonstrate
 how to navigate between several pages.
 
-\quotefromfile chattutorial/chapter1-settingup/main.qml
+\quotefromfile chattutorial/chapter1/main.qml
 \skipto Page
 \printuntil }
 \printuntil }
@@ -183,7 +183,7 @@ The \c .pro or \l {Creating Project Files}{project} file contains all of the
 information needed by \l {qmake Manual}{qmake} to generate a Makefile, which is
 then used to compile and link the application.
 
-\quotefromfile chattutorial/chapter1-settingup/chapter1-settingup.pro
+\quotefromfile chattutorial/chapter1/chapter1.pro
 \printline TEMPLATE
 
 The first line tells \c qmake which kind of project this is. We're building an
@@ -234,7 +234,7 @@ can display text, be checked on and off, and react to mouse clicks.
 
 Here is our ListView:
 
-\quotefromfile chattutorial/chapter2-lists/main.qml
+\quotefromfile chattutorial/chapter2/main.qml
 \dots 8
 \codeline
 \skipto ListView
@@ -303,7 +303,7 @@ vertical space.
 In this chapter, you'll learn how to use \l StackView to navigate between pages
 in an application. Here's the revised \c main.qml:
 
-\quotefromfile chattutorial/chapter3-navigation/main.qml
+\quotefromfile chattutorial/chapter3/main.qml
 \skipto import
 \printuntil }
 \printuntil }
@@ -362,7 +362,7 @@ application-wide and context-sensitive actions and controls, such as navigation
 buttons and search fields. Best of all, it has a background color that, as
 usual, comes from the application style. Here it is in action:
 
-\quotefromfile chattutorial/chapter3-navigation/ContactPage.qml
+\quotefromfile chattutorial/chapter3/ContactPage.qml
 \skipto header
 \printuntil }
 \printuntil }
@@ -389,7 +389,7 @@ name, which it then uses to display the relevant conversation. Note the
 
 Let's step through \c ConversationPage.qml, beginning with the imports:
 
-\quotefromfile chattutorial/chapter3-navigation/ConversationPage.qml
+\quotefromfile chattutorial/chapter3/ConversationPage.qml
 \skipto import
 \printline import
 \printline import
@@ -459,7 +459,7 @@ accommodating the Pane.
 
 Let's look at the listview in detail:
 
-\quotefromfile chattutorial/chapter3-navigation/ConversationPage.qml
+\quotefromfile chattutorial/chapter3/ConversationPage.qml
 \skipto ListView
 \printuntil ScrollBar
 \printuntil }
@@ -539,13 +539,13 @@ purpose, as it provides a read-only data model for SQL result sets.
 Let's take a look at our \c SqlContactModel class that derives from
 QSqlQueryModel:
 
-\quotefromfile chattutorial/chapter4-models/sqlcontactmodel.h
+\quotefromfile chattutorial/chapter4/sqlcontactmodel.h
 \skipto #include
 \printuntil };
 
 There's not much going on here, so let's move on to the \c .cpp file:
 
-\quotefromfile chattutorial/chapter4-models/sqlcontactmodel.cpp
+\quotefromfile chattutorial/chapter4/sqlcontactmodel.cpp
 \skipto #include
 \printuntil }
 \printuntil }
@@ -572,7 +572,7 @@ all rows of the \c Contacts table.
 
 \c SqlConversationModel is more complex:
 
-\quotefromfile chattutorial/chapter4-models/sqlconversationmodel.h
+\quotefromfile chattutorial/chapter4/sqlconversationmodel.h
 \skipto #include
 \printuntil };
 
@@ -592,7 +592,7 @@ QML, hence the \c Q_INVOKABLE macro.
 
 Let's take a look at the \c .cpp file:
 
-\quotefromfile chattutorial/chapter4-models/sqlconversationmodel.cpp
+\quotefromfile chattutorial/chapter4/sqlconversationmodel.cpp
 \skipto #include
 \printuntil }
 \printuntil }
@@ -649,7 +649,7 @@ of \l QSqlTableModel::OnManualSubmit, we must manually call
 
 Now that we've established the model classes, let's take a look at \c main.cpp:
 
-\quotefromfile chattutorial/chapter4-models/main.cpp
+\quotefromfile chattutorial/chapter4/main.cpp
 \skipto #include
 \printuntil return app.exec();
 \printuntil }
@@ -666,7 +666,7 @@ Now that we have the models available as QML types, there are some minor
 changes to be done to \c ContactPage.qml. To be able to use the types,
 we must first import them using the URI we set in \c main.cpp:
 
-\quotefromfile chattutorial/chapter4-models/ContactPage.qml
+\quotefromfile chattutorial/chapter4/ContactPage.qml
 \skipto import io.qt.examples.chattutorial
 \printline import io.qt.examples.chattutorial
 
@@ -683,7 +683,7 @@ Within the delegate, we use a different syntax for accessing the model data:
 In \c ConversationPage.qml, we add the same \c chattutorial import, and replace
 the dummy model:
 
-\quotefromfile chattutorial/chapter4-models/ConversationPage.qml
+\quotefromfile chattutorial/chapter4/ConversationPage.qml
 \skipto model: SqlConversationModel {
 \printuntil }
 
@@ -792,7 +792,7 @@ means that it will be used when the \l {Basic Style}{Basic style} (which is the
 style that is used when none is specified) is in
 use. Here's the new file:
 
-\quotefromfile chattutorial/chapter5-styling/ChatToolBar.qml
+\quotefromfile chattutorial/chapter5/ChatToolBar.qml
 \skipto import
 \printuntil }
 
@@ -803,7 +803,7 @@ of the file, nothing needs to be different.
 
 Back in \c ContactPage.qml, we update the code to use the new type:
 
-\quotefromfile chattutorial/chapter5-styling/ContactPage.qml
+\quotefromfile chattutorial/chapter5/ContactPage.qml
 \skipto ToolBar
 \printuntil }
 \printuntil }
@@ -817,13 +817,13 @@ that the selection feature is not accidentally triggered.
 
 Here's \c +Material/ChatToolBar.qml:
 
-\quotefromfile chattutorial/chapter5-styling/+Material/ChatToolBar.qml
+\quotefromfile chattutorial/chapter5/+Material/ChatToolBar.qml
 \skipto import
 \printuntil }
 
 We'll make the same changes to \c ConversationPage.qml:
 
-\quotefromfile chattutorial/chapter5-styling/ConversationPage.qml
+\quotefromfile chattutorial/chapter5/ConversationPage.qml
 \skipto header: ChatToolBar
 \printuntil }
 \printuntil }
