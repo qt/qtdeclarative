@@ -1,13 +1,9 @@
-# Generated from mousearea.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(mousearea LANGUAGES CXX)
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
   set(INSTALL_EXAMPLESDIR "examples")
@@ -15,19 +11,12 @@ endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/mousearea")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Quick)
-find_package(Qt6 COMPONENTS Qml)
+find_package(Qt6 COMPONENTS Core Gui Quick Qml)
 
-qt_add_executable(mousearea
+qt_add_executable(mouseareaexample WIN32 MACOSX_BUNDLE
     main.cpp
 )
-set_target_properties(mousearea PROPERTIES
-    WIN32_EXECUTABLE TRUE
-    MACOSX_BUNDLE TRUE
-)
-target_link_libraries(mousearea PUBLIC
+target_link_libraries(mouseareaexample PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Qml
@@ -36,19 +25,15 @@ target_link_libraries(mousearea PUBLIC
 
 
 # Resources:
-set(mousearea_resource_files
-    "mousearea-wheel-example.qml"
-    "mousearea.qml"
+qt_add_qml_module(mouseareaexample
+    URI mousearea
+    VERSION 1.0
+    QML_FILES
+        "mousearea-wheel-example.qml"
+        "mousearea.qml"
 )
 
-qt6_add_resources(mousearea "mousearea"
-    PREFIX
-        "/mousearea"
-    FILES
-        ${mousearea_resource_files}
-)
-
-install(TARGETS mousearea
+install(TARGETS mouseareaexample
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"

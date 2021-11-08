@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,7 +48,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.4
+import QtQuick
 
 Rectangle {
     id: box
@@ -177,7 +177,7 @@ Rectangle {
         id: info
         anchors.bottom: btn.top; anchors.horizontalCenter: parent.horizontalCenter; anchors.margins: 20
 
-        onTextChanged: console.log(text)
+        onTextChanged: function(text) { console.log(text) }
     }
 
     Text {
