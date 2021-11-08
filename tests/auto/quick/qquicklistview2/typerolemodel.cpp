@@ -35,7 +35,7 @@ TypeRoleModel::TypeRoleModel(QObject *parent)
     _mapRoleNames[TextRole] = "text";
 }
 
-int TypeRoleModel::rowCount(const QModelIndex &parent) const
+int TypeRoleModel::rowCount(const QModelIndex &) const
 {
     return 3;
 }
