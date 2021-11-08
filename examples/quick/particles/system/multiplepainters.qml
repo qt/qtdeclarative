@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -49,22 +49,58 @@
 ****************************************************************************/
 
 import QtQuick
-import shared
+import QtQuick.Particles
 
-Item {
-    height: 480
-    width: 320
-    LauncherList {
-        id: ll
+Rectangle {
+    id: root
+    width: 360
+    height: 600
+    color: "darkblue"
+    property bool cloneMode: false
+    ParticleSystem {
+        id: sys
+    }
+    MouseArea {
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample("All at once", "Uses all ImageParticle features",  Qt.resolvedUrl("allatonce.qml"));
-            addExample("Colored", "Colorized image particles",  Qt.resolvedUrl("colored.qml"));
-            addExample("Color Table", "Color-over-life rainbow particles",  Qt.resolvedUrl("colortable.qml"));
-            addExample("Deformation", "Deformed particles",  Qt.resolvedUrl("deformation.qml"));
-            addExample("Rotation", "Rotated particles",  Qt.resolvedUrl("rotation.qml"));
-            addExample("Sharing", "Multiple ImageParticles on the same particles",  Qt.resolvedUrl("sharing.qml"));
-            addExample("Sprites", "Particles rendered with sprites",  Qt.resolvedUrl("sprites.qml"));
-        }
+        onClicked: cloneMode = !cloneMode;
+    }
+    Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        text: "Click to Toggle"
+        color: "white"
+        font.pixelSize: 24
+    }
+    Emitter {
+        system: sys
+        y:root.height + 20
+        width: root.width
+        emitRate: 200
+        lifeSpan: 4000
+        startTime: 4000
+        velocity: PointDirection { y: -120; }
+    }
+
+    ImageParticle {
+        system: sys
+        visible: !cloneMode
+        source: "images/particle2.png"
+    }
+
+    ImageParticle {
+        system: sys
+        visible: cloneMode
+        z: 0
+        source: "images/particle3.png"
+    }
+
+    ImageParticle {
+        system: sys
+        clip: true
+        visible: cloneMode
+        y: 120
+        height: 240
+        width: root.width
+        z: 1
+        source: "qrc:///particleresources/glowdot.png"
     }
 }

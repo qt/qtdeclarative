@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,23 +48,49 @@
 **
 ****************************************************************************/
 
+import QtQuick.Particles
 import QtQuick
-import shared
 
-Item {
-    height: 480
-    width: 320
-    LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("All at once", "Uses all ImageParticle features",  Qt.resolvedUrl("allatonce.qml"));
-            addExample("Colored", "Colorized image particles",  Qt.resolvedUrl("colored.qml"));
-            addExample("Color Table", "Color-over-life rainbow particles",  Qt.resolvedUrl("colortable.qml"));
-            addExample("Deformation", "Deformed particles",  Qt.resolvedUrl("deformation.qml"));
-            addExample("Rotation", "Rotated particles",  Qt.resolvedUrl("rotation.qml"));
-            addExample("Sharing", "Multiple ImageParticles on the same particles",  Qt.resolvedUrl("sharing.qml"));
-            addExample("Sprites", "Particles rendered with sprites",  Qt.resolvedUrl("sprites.qml"));
+Rectangle {
+    id: root
+    width: 360
+    height: 540
+    color: "black"
+
+    ParticleSystem { id: particles }
+
+    ImageParticle {
+        system: particles
+        colorVariation: 0.5
+        alpha: 0
+
+        //! [0]
+        source: "qrc:///particleresources/glowdot.png"
+        colorTable: "images/colortable.png"
+        sizeTable: "images/colortable.png"
+        //! [0]
+    }
+
+    Emitter {
+        system: particles
+        emitRate: 500
+        lifeSpan: 2000
+
+        y: root.height / 2 + Math.sin(t * 2) * root.height * 0.3
+        x: root.width / 2 + Math.cos(t) * root.width * 0.3
+        property real t;
+
+        NumberAnimation on t {
+            from: 0; to: Math.PI * 2; duration: 10000; loops: Animation.Infinite
         }
+
+        velocityFromMovement: 20
+
+        velocity: PointDirection { xVariation: 5; yVariation: 5;}
+        acceleration: PointDirection { xVariation: 5; yVariation: 5;}
+
+        size: 16
+        //endSize: 8
+        //sizeVariation: 8
     }
 }

@@ -1,12 +1,20 @@
 <RCC>
-    <qresource prefix="/particles/imageparticle">
+    <qresource prefix="/imageparticle">
         <file>imageparticle.qml</file>
-        <file>content/allatonce.qml</file>
-        <file>content/colored.qml</file>
-        <file>content/colortable.qml</file>
-        <file>content/deformation.qml</file>
-        <file>content/rotation.qml</file>
-        <file>content/sharing.qml</file>
-        <file>content/sprites.qml</file>
+        <file>allatonce.qml</file>
+        <file>colored.qml</file>
+        <file>colortable.qml</file>
+        <file>deformation.qml</file>
+        <file>rotation.qml</file>
+        <file>sharing.qml</file>
+        <file>sprites.qml</file>
+        <file>images/bear_tiles.png</file>
+        <file>images/colortable.png</file>
+        <file>images/starfish_0.png</file>
+        <file>images/starfish_1.png</file>
+        <file>images/starfish_2.png</file>
+        <file>images/starfish_3.png</file>
+        <file>images/starfish_4.png</file>
+        <file>images/flower.png</file>
     </qresource>
 </RCC>

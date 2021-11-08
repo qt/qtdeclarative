@@ -1,10 +1,13 @@
 <RCC>
-    <qresource prefix="/particles/system">
+    <qresource prefix="/system">
         <file>system.qml</file>
-        <file>content/dynamiccomparison.qml</file>
-        <file>content/dynamicemitters.qml</file>
-        <file>content/multiplepainters.qml</file>
-        <file>content/startstop.qml</file>
-        <file>content/timedgroupchanges.qml</file>
+        <file>dynamiccomparison.qml</file>
+        <file>dynamicemitters.qml</file>
+        <file>multiplepainters.qml</file>
+        <file>startstop.qml</file>
+        <file>timedgroupchanges.qml</file>
+        <file>images/sparkleSize.png</file>
+        <file>images/particle2.png</file>
+        <file>images/particle3.png</file>
     </qresource>
 </RCC>

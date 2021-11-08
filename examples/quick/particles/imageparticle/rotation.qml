@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -49,22 +49,35 @@
 ****************************************************************************/
 
 import QtQuick
-import shared
+import QtQuick.Particles
 
-Item {
-    height: 480
-    width: 320
-    LauncherList {
-        id: ll
+Rectangle {
+    color: "goldenrod"
+    width: 2000
+    height: 2000
+    ParticleSystem {id: sys}
+    ImageParticle {
+        id: up
+        system: sys
+        source: "images/starfish_2.png"
+        autoRotation: true //leaving these two settings at default allows you to test going up performance levels
+        rotation: -90
+    }
+
+    Emitter {
+        anchors.centerIn: parent
+        system: sys
+        emitRate: 10
+        size: 200
+        lifeSpan: 10000
+        velocity: AngleDirection {angleVariation: 360; magnitudeVariation: 100;}
+    }
+
+    MouseArea {
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample("All at once", "Uses all ImageParticle features",  Qt.resolvedUrl("allatonce.qml"));
-            addExample("Colored", "Colorized image particles",  Qt.resolvedUrl("colored.qml"));
-            addExample("Color Table", "Color-over-life rainbow particles",  Qt.resolvedUrl("colortable.qml"));
-            addExample("Deformation", "Deformed particles",  Qt.resolvedUrl("deformation.qml"));
-            addExample("Rotation", "Rotated particles",  Qt.resolvedUrl("rotation.qml"));
-            addExample("Sharing", "Multiple ImageParticles on the same particles",  Qt.resolvedUrl("sharing.qml"));
-            addExample("Sprites", "Particles rendered with sprites",  Qt.resolvedUrl("sprites.qml"));
+        onClicked: {
+            up.autoRotation = !up.autoRotation
+            up.rotation = up.autoRotation ? -90 : 0
         }
     }
 }

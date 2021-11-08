@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,23 +48,23 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
-import "../../shared" as Examples
+import QtQuick
+import shared
 
 Item {
     height: 480
     width: 320
-    Examples.LauncherList {
+    LauncherList {
         id: ll
         anchors.fill: parent
         Component.onCompleted: {
-            addExample("Velocity from Motion", "Particle motion just by moving emitters",  Qt.resolvedUrl("content/velocityfrommotion.qml"));
-            addExample("Burst and Pulse", "Emit imperatively",  Qt.resolvedUrl("content/burstandpulse.qml"));
-            addExample("Custom Emitter", "Custom starting state",  Qt.resolvedUrl("content/customemitter.qml"));
-            addExample("Emit Mask", "Emit arbitrary shapes",  Qt.resolvedUrl("content/emitmask.qml"));
-            addExample("Maximum Emitted", "Put a limit on emissions",  Qt.resolvedUrl("content/maximumemitted.qml"));
-            addExample("Shape and Direction", "Creates a portal effect",  Qt.resolvedUrl("content/shapeanddirection.qml"));
-            addExample("TrailEmitter", "Emit from other particles",  Qt.resolvedUrl("content/trailemitter.qml"));
+            addExample("Velocity from Motion", "Particle motion just by moving emitters",  Qt.resolvedUrl("velocityfrommotion.qml"));
+            addExample("Burst and Pulse", "Emit imperatively",  Qt.resolvedUrl("burstandpulse.qml"));
+            addExample("Custom Emitter", "Custom starting state",  Qt.resolvedUrl("customemitter.qml"));
+            addExample("Emit Mask", "Emit arbitrary shapes",  Qt.resolvedUrl("emitmask.qml"));
+            addExample("Maximum Emitted", "Put a limit on emissions",  Qt.resolvedUrl("maximumemitted.qml"));
+            addExample("Shape and Direction", "Creates a portal effect",  Qt.resolvedUrl("shapeanddirection.qml"));
+            addExample("TrailEmitter", "Emit from other particles",  Qt.resolvedUrl("trailemitter.qml"));
         }
     }
 }

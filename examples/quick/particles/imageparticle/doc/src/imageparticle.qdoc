@@ -35,25 +35,25 @@
     Each example is a small QML file emphasizing a particular type or feature.
 
     All at once shows off several of the features of ImageParticle at the same time.
-    \snippet particles/imageparticle/content/allatonce.qml 0
+    \snippet particles/imageparticle/allatonce.qml 0
 
     Colored shows a simple ImageParticle with some color variation.
-    \snippet particles/imageparticle/content/colored.qml 0
+    \snippet particles/imageparticle/colored.qml 0
 
     Color Table sets the color over life on the particles to provide a fixed rainbow effect.
-    \snippet particles/imageparticle/content/colortable.qml 0
+    \snippet particles/imageparticle/colortable.qml 0
 
     Deformation spins and squishes a starfish particle.
-    \snippet particles/imageparticle/content/deformation.qml spin
-    \snippet particles/imageparticle/content/deformation.qml deform
+    \snippet particles/imageparticle/deformation.qml spin
+    \snippet particles/imageparticle/deformation.qml deform
 
     Rotation demonstrates the autoRotate property, so that particles rotate in the direction that they travel.
 
     Sharing demonstrates what happens when multiple ImageParticles try to render the same particle.
     The following ImageParticle renders the particles inside the ListView:
-    \snippet particles/imageparticle/content/sharing.qml 0
+    \snippet particles/imageparticle/sharing.qml 0
     The following ImageParticle is placed inside the list highlight, and renders the particles above the other ImageParticle.
-    \snippet particles/imageparticle/content/sharing.qml 1
+    \snippet particles/imageparticle/sharing.qml 1
     Note that because it sets the color and alpha in this ImageParticle, it renders the particles in a different color.
     Since it doesn't specify anything about the rotation, it shares the rotation with the other ImageParticle so that the flowers are rotated the same way in both.
     Note that you can undo rotation in another ImageParticle, you just need to explicitly set rotationVariation to 0.

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -49,22 +49,50 @@
 ****************************************************************************/
 
 import QtQuick
-import shared
+import QtQuick.Particles
 
-Item {
-    height: 480
-    width: 320
-    LauncherList {
-        id: ll
+Rectangle {
+    width: 360
+    height: 540
+    color: "black"
+    ParticleSystem {
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample("All at once", "Uses all ImageParticle features",  Qt.resolvedUrl("allatonce.qml"));
-            addExample("Colored", "Colorized image particles",  Qt.resolvedUrl("colored.qml"));
-            addExample("Color Table", "Color-over-life rainbow particles",  Qt.resolvedUrl("colortable.qml"));
-            addExample("Deformation", "Deformed particles",  Qt.resolvedUrl("deformation.qml"));
-            addExample("Rotation", "Rotated particles",  Qt.resolvedUrl("rotation.qml"));
-            addExample("Sharing", "Multiple ImageParticles on the same particles",  Qt.resolvedUrl("sharing.qml"));
-            addExample("Sprites", "Particles rendered with sprites",  Qt.resolvedUrl("sprites.qml"));
+        ImageParticle {
+            groups: ["stars"]
+            anchors.fill: parent
+            source: "qrc:///particleresources/star.png"
+        }
+        Emitter {
+            group: "stars"
+            emitRate: 800
+            lifeSpan: 2400
+            size: 24
+            sizeVariation: 8
+            anchors.fill: parent
+        }
+
+        // ![0]
+        ImageParticle {
+            anchors.fill: parent
+            source: "qrc:///particleresources/star.png"
+            alpha: 0
+            alphaVariation: 0.2
+            colorVariation: 1.0
+        }
+        // ![0]
+
+        Emitter {
+            anchors.centerIn: parent
+            emitRate: 400
+            lifeSpan: 2400
+            size: 48
+            sizeVariation: 8
+            velocity: AngleDirection {angleVariation: 180; magnitude: 60}
+        }
+
+        Turbulence {
+            anchors.fill: parent
+            strength: 2
         }
     }
 }

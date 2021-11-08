@@ -52,54 +52,98 @@ import QtQuick
 import QtQuick.Particles
 
 Rectangle {
-    id: root;
-    width: 360
-    height: 600
+    id: root
     color: "black"
-
-    function newPithySaying() {
-        switch (Math.floor(Math.random()*16)) {
-            case 0: return "Hello World";
-            case 1: return "G'day Mate";
-            case 2: return "Code Less";
-            case 3: return "Create More";
-            case 4: return "Deploy Everywhere";
-            case 5: return "Qt Meta-object Language";
-            case 6: return "Qt Magic Language";
-            case 7: return "Fluid UIs";
-            case 8: return "Touchable";
-            case 9: return "How's it going?";
-            case 10: return "Do you like text?";
-            case 11: return "Enjoy!";
-            case 12: return "ERROR: Out of pith";
-            case 13: return "Punctuation Failure";
-            case 14: return "I can go faster";
-            case 15: return "I can go slower";
-            default: return "OMGWTFBBQ";
-        }
+    width: 640
+    height: 480
+    ParticleSystem {
+        id: sys
     }
 
-    ParticleSystem {
-        anchors.fill: parent
-        id: syssy
+    ImageParticle {
+        system: sys
+        source: "qrc:///particleresources/glowdot.png"
+        color: "white"
+        colorVariation: 1.0
+        alpha: 0.1
+        entryEffect: ImageParticle.None
+    }
+
+    Emitter {
+        id: emitter
+        system: sys
+        width: parent.width/2
+        velocity: PointDirection {y: 72; yVariation: 24}
+        lifeSpan: 10000
+        emitRate: 1000
+        enabled: false
+        size: 32
+    }
+
+    //! [fake]
+    Item {
+        id: fakeEmitter
+        function burst(number) {
+            while (number > 0) {
+                var item = fakeParticle.createObject(root);
+                item.lifeSpan = Math.random() * 5000 + 5000;
+                item.x = Math.random() * (root.width/2) + (root.width/2);
+                item.y = 0;
+                number--;
+            }
+        }
+
+        Component {
+            id: fakeParticle
+            Image {
+                id: container
+                property int lifeSpan: 10000
+                width: 32
+                height: 32
+                source: "qrc:///particleresources/glowdot.png"
+                y: 0
+                PropertyAnimation on y {from: -16; to: root.height-16; duration: container.lifeSpan; running: true}
+                SequentialAnimation on opacity {
+                    running: true
+                    NumberAnimation { from:0; to: 1; duration: 500}
+                    PauseAnimation { duration: container.lifeSpan - 1000}
+                    NumberAnimation { from:1; to: 0; duration: 500}
+                    ScriptAction { script: container.destroy(); }
+                }
+            }
+        }
+    }
+    //! [fake]
+
+    //Hooked to a timer, but click for extra bursts that really stress performance
+    Timer {
+        interval: 10000
+        triggeredOnStart: true
+        repeat: true
+        running: true
+        onTriggered: {
+            emitter.burst(1000);
+            fakeEmitter.burst(1000);
+        }
+    }
+    Text {
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        text: "1000 particles"
+        color: "white"
         MouseArea {
             anchors.fill: parent
-            onClicked: syssy.running = !syssy.running
+            onClicked: emitter.burst(1000);
         }
-        Emitter {
-            anchors.centerIn: parent
-            emitRate: 1
-            lifeSpan: 4800
-            lifeSpanVariation: 1600
-            velocity: AngleDirection {angleVariation: 360; magnitude: 40; magnitudeVariation: 20}
-        }
-        ItemParticle {
-            delegate: Text {
-                text: root.newPithySaying();
-                color: "white"
-                font.pixelSize: 18
-                font.bold: true
-            }
+    }
+    Text {
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        text: "1000 items"
+        color: "white"
+        MouseArea {
+            anchors.fill: parent
+            onClicked: fakeEmitter.burst(1000);
         }
     }
 }

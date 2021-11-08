@@ -48,4 +48,4 @@
 **
 ****************************************************************************/
 #include "../../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(particles/emitters/emitters)
+DECLARATIVE_EXAMPLE_MAIN(emitters/emitters)

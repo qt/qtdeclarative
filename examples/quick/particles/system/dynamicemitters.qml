@@ -49,20 +49,102 @@
 ****************************************************************************/
 
 import QtQuick
-import shared
+import QtQuick.Particles
 
-Item {
+Rectangle {
+    id: root
+    color: "black"
+    width: 640
     height: 480
-    width: 320
-    LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("Dynamic Comparison", "Compares with dynamically created elements",  Qt.resolvedUrl("dynamiccomparison.qml"));
-            addExample("StartStop", "Start and stop the simulation", Qt.resolvedUrl("startstop.qml"));
-            addExample("Timed group changes", "Emit into managed groups",  Qt.resolvedUrl("timedgroupchanges.qml"));
-            addExample("Dynamic Emitters", "Dynamically instantiated emitters with a single system",  Qt.resolvedUrl("dynamicemitters.qml"));
-            addExample("Multiple Painters", "Several ParticlePainters on the same logical particles",  Qt.resolvedUrl("multiplepainters.qml"));
+    ParticleSystem {
+        id: sys
+    }
+    ImageParticle {
+        system: sys
+        source: "qrc:///particleresources/glowdot.png"
+        color: "white"
+        colorVariation: 1.0
+        alpha: 0.1
+    }
+
+    Component {
+        id: emitterComp
+        Emitter {
+            id: container
+            Emitter {
+                id: emitMore
+                system: sys
+                emitRate: 128
+                lifeSpan: 600
+                size: 16
+                endSize: 8
+                velocity: AngleDirection {angleVariation:360; magnitude: 60}
+            }
+
+            property int life: 2600
+            property real targetX: 0
+            property real targetY: 0
+            function go() {
+                xAnim.start();
+                yAnim.start();
+                container.enabled = true
+            }
+            system: sys
+            emitRate: 32
+            lifeSpan: 600
+            size: 24
+            endSize: 8
+            NumberAnimation on x {
+                id: xAnim;
+                to: targetX
+                duration: life
+                running: false
+            }
+            NumberAnimation on y {
+                id: yAnim;
+                to: targetY
+                duration: life
+                running: false
+            }
+            Timer {
+                interval: life
+                running: true
+                onTriggered: container.destroy();
+            }
         }
+    }
+
+    function customEmit(x,y) {
+        //! [0]
+        for (var i=0; i<8; i++) {
+            var obj = emitterComp.createObject(root);
+            obj.x = x
+            obj.y = y
+            obj.targetX = Math.random() * 240 - 120 + obj.x
+            obj.targetY = Math.random() * 240 - 120 + obj.y
+            obj.life = Math.round(Math.random() * 2400) + 200
+            obj.emitRate = Math.round(Math.random() * 32) + 32
+            obj.go();
+        }
+        //! [0]
+    }
+
+    Timer {
+        interval: 10000
+        triggeredOnStart: true
+        running: true
+        repeat: true
+        onTriggered: customEmit(Math.random() * 320, Math.random() * 480)
+    }
+    MouseArea {
+        anchors.fill: parent
+        onClicked: (mouse)=> customEmit(mouse.x, mouse.y);
+    }
+
+    Text {
+        anchors.horizontalCenter: parent.horizontalCenter
+        text: "Click Somewhere"
+        color: "white"
+        font.pixelSize: 24
     }
 }

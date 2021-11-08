@@ -48,23 +48,75 @@
 **
 ****************************************************************************/
 
-import QtQuick
-import shared
+import QtQuick 2.0
+import QtQuick.Particles 2.0
 
-Item {
-    height: 480
-    width: 320
-    LauncherList {
-        id: ll
+Rectangle {
+    id: root
+    width: 360
+    height: 540
+    color: "black"
+    Image {
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample("All at once", "Uses all ImageParticle features",  Qt.resolvedUrl("allatonce.qml"));
-            addExample("Colored", "Colorized image particles",  Qt.resolvedUrl("colored.qml"));
-            addExample("Color Table", "Color-over-life rainbow particles",  Qt.resolvedUrl("colortable.qml"));
-            addExample("Deformation", "Deformed particles",  Qt.resolvedUrl("deformation.qml"));
-            addExample("Rotation", "Rotated particles",  Qt.resolvedUrl("rotation.qml"));
-            addExample("Sharing", "Multiple ImageParticles on the same particles",  Qt.resolvedUrl("sharing.qml"));
-            addExample("Sprites", "Particles rendered with sprites",  Qt.resolvedUrl("sprites.qml"));
+        source: "images/portal_bg.png"
+    }
+
+    ParticleSystem {
+        id: particles
+        anchors.fill: parent
+
+        ImageParticle {
+            groups: ["center","edge"]
+            anchors.fill: parent
+            source: "qrc:///particleresources/glowdot.png"
+            colorVariation: 0.1
+            color: "#009999FF"
+        }
+
+        Emitter {
+            anchors.fill: parent
+            group: "center"
+            emitRate: 400
+            lifeSpan: 2000
+            size: 20
+            sizeVariation: 2
+            endSize: 0
+            //! [0]
+            shape: EllipseShape {fill: false}
+            velocity: TargetDirection {
+                targetX: root.width/2
+                targetY: root.height/2
+                proportionalMagnitude: true
+                magnitude: 0.5
+            }
+            //! [0]
+        }
+
+        Emitter {
+            anchors.fill: parent
+            group: "edge"
+            startTime: 2000
+            emitRate: 2000
+            lifeSpan: 2000
+            size: 28
+            sizeVariation: 2
+            endSize: 16
+            shape: EllipseShape {fill: false}
+            velocity: TargetDirection {
+                targetX: root.width/2
+                targetY: root.height/2
+                proportionalMagnitude: true
+                magnitude: 0.1
+                magnitudeVariation: 0.1
+            }
+            acceleration: TargetDirection {
+                targetX: root.width/2
+                targetY: root.height/2
+                targetVariation: 200
+                proportionalMagnitude: true
+                magnitude: 0.1
+                magnitudeVariation: 0.1
+            }
         }
     }
 }

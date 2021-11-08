@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -49,22 +49,73 @@
 ****************************************************************************/
 
 import QtQuick
-import shared
+import QtQuick.Particles
 
 Item {
-    height: 480
-    width: 320
-    LauncherList {
-        id: ll
+    width: 360
+    height: 600
+
+    Image {
+        source: "images/backgroundLeaves.jpg"
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample("All at once", "Uses all ImageParticle features",  Qt.resolvedUrl("allatonce.qml"));
-            addExample("Colored", "Colorized image particles",  Qt.resolvedUrl("colored.qml"));
-            addExample("Color Table", "Color-over-life rainbow particles",  Qt.resolvedUrl("colortable.qml"));
-            addExample("Deformation", "Deformed particles",  Qt.resolvedUrl("deformation.qml"));
-            addExample("Rotation", "Rotated particles",  Qt.resolvedUrl("rotation.qml"));
-            addExample("Sharing", "Multiple ImageParticles on the same particles",  Qt.resolvedUrl("sharing.qml"));
-            addExample("Sprites", "Particles rendered with sprites",  Qt.resolvedUrl("sprites.qml"));
+    }
+    ParticleSystem {
+        anchors.fill: parent
+        Emitter {
+            width: parent.width
+            emitRate: 4
+            lifeSpan: 14000
+            size: 80
+            velocity: PointDirection { y: 160; yVariation: 80; xVariation: 20 }
         }
+
+        ImageParticle {
+            anchors.fill: parent
+            id: particles
+            sprites: [Sprite {
+                    source: "images/realLeaf1.png"
+                    frameCount: 1
+                    frameDuration: 1
+                    to: {"a":1, "b":1, "c":1, "d":1}
+                }, Sprite {
+                    name: "a"
+                    source: "images/realLeaf1.png"
+                    frameCount: 1
+                    frameDuration: 10000
+                },
+                Sprite {
+                    name: "b"
+                    source: "images/realLeaf2.png"
+                    frameCount: 1
+                    frameDuration: 10000
+                },
+                Sprite {
+                    name: "c"
+                    source: "images/realLeaf3.png"
+                    frameCount: 1
+                    frameDuration: 10000
+                },
+                Sprite {
+                    name: "d"
+                    source: "images/realLeaf4.png"
+                    frameCount: 1
+                    frameDuration: 10000
+                }
+            ]
+
+            width: 100
+            height: 100
+            x: 20
+            y: 20
+            z:4
+        }
+
+        //! [0]
+        Friction {
+            anchors.fill: parent
+            anchors.margins: -40
+            factor: 0.4
+        }
+        //! [0]
     }
 }
