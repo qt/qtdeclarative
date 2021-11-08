@@ -1116,7 +1116,7 @@ void tst_qqmllistmodel::property_changes()
 
     QQmlExpression expr(engine.rootContext(), &model, script_setup);
     expr.evaluate();
-    QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
+    QVERIFY2(!expr.hasError(), qPrintable(expr.error().toString()));
 
     QString signalHandler = "on" + QString(roleName[0].toUpper()) + roleName.mid(1, roleName.length()) + "Changed:";
     QString qml = "import QtQuick 2.0\n"
@@ -1130,13 +1130,13 @@ void tst_qqmllistmodel::property_changes()
     component.setData(qml.toUtf8(), QUrl::fromLocalFile(""));
     engine.rootContext()->setContextProperty("model", &model);
     QObject *connectionsObject = component.create();
-    QVERIFY2(component.errorString().isEmpty(), QTest::toString(component.errorString()));
+    QVERIFY2(component.errorString().isEmpty(), qPrintable(component.errorString()));
 
     QSignalSpy spyItemsChanged(&model, SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)));
 
     expr.setExpression(script_change);
     expr.evaluate();
-    QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
+    QVERIFY2(!expr.hasError(), qPrintable(expr.error().toString()));
 
     // test the object returned by get() emits the correct signals
     QCOMPARE(connectionsObject->property("gotSignal").toBool(), itemsChanged);
@@ -1576,7 +1576,7 @@ void tst_qqmllistmodel::modify_through_delegate()
         "   }\n"
         "}\n", QUrl());
 
-    QObject *scene = component.create();
+    QScopedPointer<QObject> scene(component.create());
     QQmlListModel *model = scene->findChild<QQmlListModel*>("testModel");
 
     const QHash<int, QByteArray> roleNames = model->roleNames();
@@ -1614,7 +1614,7 @@ void tst_qqmllistmodel::stringifyModelEntry()
     QQmlListModel *model = scene->findChild<QQmlListModel*>("testModel");
     QQmlExpression expr(engine.rootContext(), model, "JSON.stringify(get(0));");
     QVariant v = expr.evaluate();
-    QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
+    QVERIFY2(!expr.hasError(), qPrintable(expr.error().toString()));
     const QString expectedString = QStringLiteral("{\"age\":22,\"name\":\"Joe\"}");
     QCOMPARE(v.toString(), expectedString);
 }
@@ -1636,7 +1636,7 @@ void tst_qqmllistmodel::qobjectTrackerForDynamicModelObjects()
     QQmlListModel *model = scene->findChild<QQmlListModel*>("testModel");
     QQmlExpression expr(engine.rootContext(), model, "get(0);");
     QVariant v = expr.evaluate();
-    QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
+    QVERIFY2(!expr.hasError(), qPrintable(expr.error().toString()));
 
     QObject *obj = v.value<QObject*>();
     QVERIFY(obj);
@@ -1663,7 +1663,7 @@ void tst_qqmllistmodel::crash_append_empty_array()
     QSignalSpy spy(model, &QQmlListModel::rowsAboutToBeInserted);
     QQmlExpression expr(engine.rootContext(), model, "append(new Array())");
     expr.evaluate();
-    QVERIFY2(!expr.hasError(), QTest::toString(expr.error().toString()));
+    QVERIFY2(!expr.hasError(), qPrintable(expr.error().toString()));
     QCOMPARE(spy.count(), 0);
 }
 
@@ -1774,21 +1774,20 @@ void tst_qqmllistmodel::objectDestroyed()
                    })",
             QUrl());
 
-    QObject *obj = new QObject;
-    bool destroyed = false;
-    connect(obj, &QObject::destroyed, [&]() { destroyed = true; });
+    std::unique_ptr<QObject> obj = std::make_unique<QObject>();
+    connect(obj.get(), &QObject::destroyed, [&]() { obj.release(); });
 
-    engine.rootContext()->setContextProperty(u"contextObject"_qs, obj);
-    engine.setObjectOwnership(obj, QJSEngine::JavaScriptOwnership);
+    engine.rootContext()->setContextProperty(u"contextObject"_qs, obj.get());
+    engine.setObjectOwnership(obj.get(), QJSEngine::JavaScriptOwnership);
 
     delete component.create();
-    QVERIFY(!destroyed);
+    QVERIFY(obj);
     engine.collectGarbage();
     QTest::qSleep(250);
-    QVERIFY(!destroyed);
+    QVERIFY(obj);
     engine.evaluate(u"model.clear();"_qs);
     engine.collectGarbage();
-    QTRY_VERIFY(destroyed);
+    QTRY_VERIFY(!obj);
 }
 
 void tst_qqmllistmodel::destroyObject()
