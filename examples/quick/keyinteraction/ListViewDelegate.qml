@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,70 +48,55 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.1
+import QtQuick
 
-FocusScope {
-    id: menu
-    property alias interactive: gridView.interactive
-    required property Item keyUpTarget
-    required property Item keyDownTarget
-    required property Item keyLeftTarget
+Item {
+    id: container
+    required property int index
+
+    width: ListView.view.width; height: 60; anchors.leftMargin: 10; anchors.rightMargin: 10
 
     Rectangle {
+        id: content
+        anchors.centerIn: parent; width: container.width - 40; height: container.height - 10
+        color: "transparent"
+        antialiasing: true
+        radius: 10
+
+        Rectangle { anchors.fill: parent; anchors.margins: 3; color: "#91AA9D"; antialiasing: true; radius: 8 }
+    }
+
+    Text {
+        id: label
+        anchors.centerIn: content
+        text: "List element " + (container.index + 1)
+        color: "#193441"
+        font.pixelSize: 14
+    }
+
+    MouseArea {
+        id: mouseArea
         anchors.fill: parent
-        clip: true
-        gradient: Gradient {
-            GradientStop { position: 0.0; color: "#193441" }
-            GradientStop { position: 1.0; color: Qt.darker("#193441") }
+        hoverEnabled: true
+
+        onClicked: {
+            container.ListView.view.currentIndex = container.index
+            container.forceActiveFocus()
         }
+    }
 
-        GridView {
-            id: gridView
-            anchors.fill: parent; anchors.leftMargin: 20; anchors.rightMargin: 20
-            cellWidth: 152; cellHeight: 152
-            focus: true
-            model: 12
-
-            KeyNavigation.up: menu.keyUpTarget
-            KeyNavigation.down: menu.keyDownTarget
-            KeyNavigation.left: menu.keyLeftTarget
-
-            delegate: Item {
-                id: container
-                width: GridView.view.cellWidth
-                height: GridView.view.cellHeight
-                required property int index
-
-                Rectangle {
-                    id: content
-                    color: "transparent"
-                    antialiasing: true
-                    anchors.fill: parent; anchors.margins: 20; radius: 10
-
-                    Rectangle { color: "#91AA9D"; anchors.fill: parent; anchors.margins: 3; radius: 8; antialiasing: true }
-                    Image { source: "images/qt-logo.png"; anchors.centerIn: parent }
-                }
-
-                MouseArea {
-                    id: mouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-
-                    onClicked: {
-                        container.GridView.view.currentIndex = container.index
-                        container.forceActiveFocus()
-                    }
-                }
-
-                states: State {
-                    name: "active"; when: container.activeFocus
-                    PropertyChanges { target: content; color: "#FCFFF5"; scale: 1.1 }
-                }
-
-                transitions: Transition {
-                    NumberAnimation { properties: "scale"; duration: 100 }
-                }
+    states: State {
+        name: "active"; when: container.activeFocus
+        PropertyChanges {
+            content {
+                color: "#FCFFF5"
+                scale: 1.1
             }
+            label.font.pixelSize: 16
         }
+    }
+
+    transitions: Transition {
+        NumberAnimation { properties: "scale"; duration: 100 }
     }
 }

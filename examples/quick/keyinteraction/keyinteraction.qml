@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -48,10 +48,10 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.1
+import QtQuick
 
 Loader {//Just loader, since there's only one.
-    source: "focus/focus.qml"
+    source: "focus.qml"
     focus: true
     // Exception to the standard sizing, because this is primarily a desktop
     // example and it benefits from being able to see everything at once.
