@@ -1,3 +1,3 @@
 TEMPLATE = subdirs
 SUBDIRS = quickwidget \
-          qquickviewcomparison
+          qquickwidgetversuswindow_opengl

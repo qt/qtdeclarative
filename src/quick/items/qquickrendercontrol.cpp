@@ -157,7 +157,8 @@ QQuickRenderControlPrivate::QQuickRenderControlPrivate(QQuickRenderControl *rend
       ownRhi(true),
       cb(nullptr),
       offscreenSurface(nullptr),
-      sampleCount(1)
+      sampleCount(1),
+      frameStatus(NotRecordingFrame)
 {
     if (!sg) {
         qAddPostRoutine(cleanup);
@@ -428,6 +429,7 @@ void QQuickRenderControl::invalidate()
     // also essential to allow a subsequent initialize() to succeed.
     d->rc->invalidate();
 
+    d->frameStatus = QQuickRenderControlPrivate::NotRecordingFrame;
     d->initialized = false;
 }
 
@@ -635,7 +637,23 @@ void QQuickRenderControl::beginFrame()
 
     emit d->window->beforeFrameBegin();
 
-    d->rhi->beginOffscreenFrame(&d->cb);
+    QRhi::FrameOpResult result = d->rhi->beginOffscreenFrame(&d->cb);
+
+    switch (result) {
+    case QRhi::FrameOpSuccess:
+    case QRhi::FrameOpSwapChainOutOfDate:
+        d->frameStatus = QQuickRenderControlPrivate::RecordingFrame;
+        break;
+    case QRhi::FrameOpError:
+        d->frameStatus = QQuickRenderControlPrivate::ErrorInBeginFrame;
+        break;
+    case QRhi::FrameOpDeviceLost:
+        d->frameStatus = QQuickRenderControlPrivate::DeviceLostInBeginFrame;
+        break;
+    default:
+        d->frameStatus = QQuickRenderControlPrivate::NotRecordingFrame;
+        break;
+    }
 }
 
 /*!
@@ -658,6 +676,7 @@ void QQuickRenderControl::endFrame()
 
     d->rhi->endOffscreenFrame();
     d->cb = nullptr;
+    d->frameStatus = QQuickRenderControlPrivate::NotRecordingFrame;
 
     emit d->window->afterFrameEnd();
 }

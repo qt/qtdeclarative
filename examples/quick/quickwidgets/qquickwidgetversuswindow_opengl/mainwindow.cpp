@@ -158,7 +158,7 @@ void MainWindow::updateView()
             ? m_currentRootObject->property("currentText").toString()
             : QStringLiteral("Hello Qt");
 
-    QUrl source("qrc:qquickviewcomparison/test.qml");
+    QUrl source("qrc:qquickwidgetversuswindow_opengl/test.qml");
 
     if (m_state == UseWindow) {
         auto *quickView = new QQuickView;

@@ -92,6 +92,7 @@ class Q_QUICK_PRIVATE_EXPORT QSGRhiSupport
 public:
     static QSGRhiSupport *instance_internal();
     static QSGRhiSupport *instance();
+    static int chooseSampleCount(int samples, QRhi *rhi);
     static int chooseSampleCountForWindowWithRhi(QWindow *window, QRhi *rhi);
     static QImage grabAndBlockInCurrentFrame(QRhi *rhi, QRhiCommandBuffer *cb, QRhiTexture *src = nullptr);
     static void checkEnvQSgInfo();

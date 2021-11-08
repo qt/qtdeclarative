@@ -455,9 +455,9 @@ const void *QSGRhiSupport::rifResource(QSGRendererInterface::Resource res,
     }
 }
 
-int QSGRhiSupport::chooseSampleCountForWindowWithRhi(QWindow *window, QRhi *rhi)
+int QSGRhiSupport::chooseSampleCount(int samples, QRhi *rhi)
 {
-    int msaaSampleCount = qMax(QSurfaceFormat::defaultFormat().samples(), window->requestedFormat().samples());
+    int msaaSampleCount = samples;
     if (qEnvironmentVariableIsSet("QSG_SAMPLES"))
         msaaSampleCount = qEnvironmentVariableIntValue("QSG_SAMPLES");
     msaaSampleCount = qMax(1, msaaSampleCount);
@@ -478,6 +478,11 @@ int QSGRhiSupport::chooseSampleCountForWindowWithRhi(QWindow *window, QRhi *rhi)
         }
     }
     return msaaSampleCount;
+}
+
+int QSGRhiSupport::chooseSampleCountForWindowWithRhi(QWindow *window, QRhi *rhi)
+{
+    return chooseSampleCount(qMax(QSurfaceFormat::defaultFormat().samples(), window->requestedFormat().samples()), rhi);
 }
 
 // must be called on the main thread
