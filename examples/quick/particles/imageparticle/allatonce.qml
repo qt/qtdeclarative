@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -49,22 +49,62 @@
 ****************************************************************************/
 
 import QtQuick
-import shared
+import QtQuick.Particles
 
-Item {
+Rectangle {
+    color: "white"
+    width: 640
     height: 480
-    width: 320
-    LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("All at once", "Uses all ImageParticle features",  Qt.resolvedUrl("allatonce.qml"));
-            addExample("Colored", "Colorized image particles",  Qt.resolvedUrl("colored.qml"));
-            addExample("Color Table", "Color-over-life rainbow particles",  Qt.resolvedUrl("colortable.qml"));
-            addExample("Deformation", "Deformed particles",  Qt.resolvedUrl("deformation.qml"));
-            addExample("Rotation", "Rotated particles",  Qt.resolvedUrl("rotation.qml"));
-            addExample("Sharing", "Multiple ImageParticles on the same particles",  Qt.resolvedUrl("sharing.qml"));
-            addExample("Sprites", "Particles rendered with sprites",  Qt.resolvedUrl("sprites.qml"));
-        }
+    ParticleSystem {
+        id: sys
+    }
+
+    ImageParticle {
+        // ![0]
+        sprites: [
+            Sprite {
+                name: "bear"
+                source: "images/bear_tiles.png"
+                frameCount: 13
+                frameDuration: 120
+            }
+        ]
+        colorVariation: 0.5
+        rotationVelocityVariation: 360
+        colorTable: "images/colortable.png"
+        // ![0]
+        system: sys
+    }
+
+    Friction {
+        factor: 0.1
+        system: sys
+    }
+
+    Emitter {
+        system: sys
+        anchors.centerIn: parent
+        id: particles
+        emitRate: 200
+        lifeSpan: 6000
+        velocity: AngleDirection {angleVariation: 360; magnitude: 80; magnitudeVariation: 40}
+        size: 60
+        endSize: 120
+    }
+
+    Text {
+        x: 16
+        y: 16
+        text: "QML..."
+        style: Text.Outline; styleColor: "#AAAAAA"
+        font.pixelSize: 32
+    }
+    Text {
+        anchors.bottom: parent.bottom
+        anchors.right: parent.right
+        anchors.margins: 16
+        text: "... can you be trusted with the power?"
+        style: Text.Outline; styleColor: "#AAAAAA"
+        font.pixelSize: width > 400 ? 32 : 16
     }
 }

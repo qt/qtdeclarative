@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2017 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -52,54 +52,91 @@ import QtQuick
 import QtQuick.Particles
 
 Rectangle {
-    id: root;
-    width: 360
-    height: 600
-    color: "black"
-
-    function newPithySaying() {
-        switch (Math.floor(Math.random()*16)) {
-            case 0: return "Hello World";
-            case 1: return "G'day Mate";
-            case 2: return "Code Less";
-            case 3: return "Create More";
-            case 4: return "Deploy Everywhere";
-            case 5: return "Qt Meta-object Language";
-            case 6: return "Qt Magic Language";
-            case 7: return "Fluid UIs";
-            case 8: return "Touchable";
-            case 9: return "How's it going?";
-            case 10: return "Do you like text?";
-            case 11: return "Enjoy!";
-            case 12: return "ERROR: Out of pith";
-            case 13: return "Punctuation Failure";
-            case 14: return "I can go faster";
-            case 15: return "I can go slower";
-            default: return "OMGWTFBBQ";
-        }
+    width: 320
+    height: 480
+    color: "#222222"
+    id: root
+    Image {
+        source: "images/candle.png"
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottomMargin: -60
+        anchors.horizontalCenterOffset: 2
     }
-
     ParticleSystem {
         anchors.fill: parent
-        id: syssy
         MouseArea {
             anchors.fill: parent
-            onClicked: syssy.running = !syssy.running
+            onClicked: turb.enabled = !turb.enabled
+        }
+
+        //! [0]
+        Turbulence {
+            id: turb
+            enabled: true
+            height: (parent.height / 2) - 4
+            width: parent.width
+            x: parent. width / 4
+            anchors.fill: parent
+            strength: 32
+            NumberAnimation on strength{from: 16; to: 64; easing.type: Easing.InOutBounce; duration: 1800; loops: -1}
+        }
+        //! [0]
+
+        ImageParticle {
+            groups: ["smoke"]
+            source: "qrc:///particleresources/glowdot.png"
+            color: "#11111111"
+            colorVariation: 0
+        }
+        ImageParticle {
+            groups: ["flame"]
+            source: "qrc:///particleresources/glowdot.png"
+            color: "#11ff400f"
+            colorVariation: 0.1
         }
         Emitter {
             anchors.centerIn: parent
-            emitRate: 1
-            lifeSpan: 4800
-            lifeSpanVariation: 1600
-            velocity: AngleDirection {angleVariation: 360; magnitude: 40; magnitudeVariation: 20}
+            group: "flame"
+
+            emitRate: 120
+            lifeSpan: 1200
+            size: 20
+            endSize: 10
+            sizeVariation: 10
+            acceleration: PointDirection { y: -40 }
+            velocity: AngleDirection { angle: 270; magnitude: 20; angleVariation: 22; magnitudeVariation: 5 }
         }
-        ItemParticle {
-            delegate: Text {
-                text: root.newPithySaying();
-                color: "white"
-                font.pixelSize: 18
-                font.bold: true
-            }
+        TrailEmitter {
+            id: smoke1
+            width: root.width
+            height: root.height/2
+            group: "smoke"
+            follow: "flame"
+
+            emitRatePerParticle: 1
+            lifeSpan: 2400
+            lifeSpanVariation: 400
+            size: 16
+            endSize: 8
+            sizeVariation: 8
+            acceleration: PointDirection { y: -40 }
+            velocity: AngleDirection { angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
+        }
+        TrailEmitter {
+            id: smoke2
+            width: root.width
+            height: root.height/2 - 20
+            group: "smoke"
+            follow: "flame"
+
+            emitRatePerParticle: 4
+            lifeSpan: 2400
+            size: 36
+            endSize: 24
+            sizeVariation: 12
+            acceleration: PointDirection { y: -40 }
+            velocity: AngleDirection { angle: 270; magnitude: 40; angleVariation: 22; magnitudeVariation: 5 }
         }
     }
 }

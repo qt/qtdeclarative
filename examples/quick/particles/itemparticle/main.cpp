@@ -48,4 +48,4 @@
 **
 ****************************************************************************/
 #include "../../shared/shared.h"
-DECLARATIVE_EXAMPLE_MAIN(particleview)
+DECLARATIVE_EXAMPLE_MAIN(itemparticle/itemparticle)

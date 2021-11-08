@@ -1,16 +1,31 @@
 <RCC>
-    <qresource prefix="/particles/affectors">
+    <qresource prefix="/affectors">
         <file>affectors.qml</file>
-        <file>content/age.qml</file>
-        <file>content/attractor.qml</file>
-        <file>content/customaffector.qml</file>
-        <file>content/friction.qml</file>
-        <file>content/gravity.qml</file>
-        <file>content/GreyButton.qml</file>
-        <file>content/groupgoal.qml</file>
-        <file>content/move.qml</file>
-        <file>content/spritegoal.qml</file>
-        <file>content/turbulence.qml</file>
-        <file>content/wander.qml</file>
+        <file>age.qml</file>
+        <file>attractor.qml</file>
+        <file>customaffector.qml</file>
+        <file>friction.qml</file>
+        <file>gravity.qml</file>
+        <file>GreyButton.qml</file>
+        <file>groupgoal.qml</file>
+        <file>move.qml</file>
+        <file>spritegoal.qml</file>
+        <file>turbulence.qml</file>
+        <file>wander.qml</file>
+        <file>images/snowflake.png</file>
+        <file>images/finalfrontier.png</file>
+        <file>images/meteor.png</file>
+        <file>images/rocket.png</file>
+        <file>images/rocket2.png</file>
+        <file>images/backgroundLeaves.jpg</file>
+        <file>images/realLeaf1.png</file>
+        <file>images/realLeaf2.png</file>
+        <file>images/realLeaf3.png</file>
+        <file>images/realLeaf4.png</file>
+        <file>images/particleA.png</file>
+        <file>images/matchmask.png</file>
+        <file>images/nullRock.png</file>
+        <file>images/_explo.png</file>
+        <file>images/candle.png</file>
     </qresource>
 </RCC>

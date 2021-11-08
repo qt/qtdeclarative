@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/itemparticle">
+        <file>itemparticle.qml</file>
+        <file>delegates.qml</file>
+        <file>script.js</file>
+        <file>images/rocket.png</file>
+    </qresource>
+</RCC>

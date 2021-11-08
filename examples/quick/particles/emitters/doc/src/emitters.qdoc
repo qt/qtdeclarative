@@ -34,27 +34,27 @@
     Each example is a small QML file emphasizing a particular type or feature.
 
     Velocity from motion gives the effect of strong particle motion through primarily moving the emitters:
-    \snippet particles/emitters/content/velocityfrommotion.qml 0
+    \snippet particles/emitters/velocityfrommotion.qml 0
 
     Burst and pulse calls the burst and pulse methods on two idential emitters.
-    \snippet particles/emitters/content/burstandpulse.qml 0
+    \snippet particles/emitters/burstandpulse.qml 0
     Note how burst takes an argument of number of particles to emit, and pulse takes an argument of number of milliseconds to emit for.
     This gives a slightly different behaviour, which is easy to see in this example.
 
     Custom Emitter connects to the emitParticles signal to set arbitrary values on particle data as they're emitted;
-    \snippet particles/emitters/content/customemitter.qml 0
+    \snippet particles/emitters/customemitter.qml 0
     This is used to emit curving particles in six rotating spokes.
 
     Emit mask sets an image mask on the Emitter, to emit out of an arbitrary shape.
-    \snippet particles/emitters/content/emitmask.qml 0
+    \snippet particles/emitters/emitmask.qml 0
 
     Maximum emitted emits no more than a certain number of particles at a time. This example makes it easy to see what happens when the limit is reached.
 
     Shape and Direction emits particles out of an unfilled Ellipse shape, using a TargetDirection
-    \snippet particles/emitters/content/shapeanddirection.qml 0
+    \snippet particles/emitters/shapeanddirection.qml 0
     This sends the particles towards the center of the ellipse with proportional speed, keeping the ellipse outline as they move to the center.
 
     TrailEmitter uses that type to add smoke particles to trail the fire particles in the scene.
-    \snippet particles/emitters/content/customemitter.qml 0
+    \snippet particles/emitters/customemitter.qml 0
 
 */

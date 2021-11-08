@@ -35,7 +35,7 @@
     Each example is a small QML file emphasizing a particular type or feature.
 
     Dynamic comparison compares using the particle system to getting a similar effect with the following code that dynamically instantiates Image types.
-    \snippet particles/system/content/dynamiccomparison.qml fake
+    \snippet particles/system/dynamiccomparison.qml fake
     Note how the Image objects are not able to be randomly colorized.
 
     Start and Stop simply sets the running and paused states of a ParticleSystem. While the system does not perform any simulation when stopped or paused, a restart restarts the simulation from the beginning, while unpausing resumes the simulation from where it was.
@@ -43,14 +43,14 @@
     Timed group changes is an example that highlights the ParticleGroup type. While normally referring to groups with a string name is sufficient, additional effects can be
     done by setting properties on groups.
     The first group has a variable duration on it, but always transitions to the second group.
-    \snippet particles/system/content/timedgroupchanges.qml 0
+    \snippet particles/system/timedgroupchanges.qml 0
     The second group has a TrailEmitter on it, and a fixed duration for emitting into the third group. By placing the TrailEmitter as a direct child of the ParticleGroup, it automatically selects that group to follow.
-    \snippet particles/system/content/timedgroupchanges.qml 1
+    \snippet particles/system/timedgroupchanges.qml 1
     The third group has an Affector as a direct child, which makes the affector automatically target this group. The affector means that as soon as particles enter this group, a burst function can be called on another emitter, using the x,y positions of this particle.
-    \snippet particles/system/content/timedgroupchanges.qml 2
+    \snippet particles/system/timedgroupchanges.qml 2
 
     If TrailEmitter does not suit your needs for multiple emitters, you can also dynamically create Emitters while still using the same ParticleSystem and image particle
-    \snippet particles/system/content/dynamicemitters.qml 0
+    \snippet particles/system/dynamicemitters.qml 0
     Note that this effect, a flurry of flying rainbow spears, would be better served with TrailEmitter. It is only done with dynamic emitters in this example to show the concept more simply.
 
     Multiple Painters shows how to control paint ordering of individual particles. While the paint ordering of particles within one ImagePainter is not strictly defined, ImageParticle objects follow the normal Z-ordering rules for \l {Qt Quick} items. This example allow you to paint the inside of the particles above the black borders using a pair of ImageParticles each painting different parts of the same logical particle.

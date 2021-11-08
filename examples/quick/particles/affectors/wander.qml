@@ -49,22 +49,59 @@
 ****************************************************************************/
 
 import QtQuick
-import shared
+import QtQuick.Particles
 
-Item {
-    height: 480
-    width: 320
-    LauncherList {
-        id: ll
+Rectangle {
+    width: 360
+    height: 540
+    ParticleSystem { id: particles }
+    ImageParticle {
+        system: particles
+        sprites: Sprite {
+            name: "snow"
+            source: "images/snowflake.png"
+            frameCount: 51
+            frameDuration: 40
+            frameDurationVariation: 8
+        }
+    }
+
+    //! [0]
+    Wander {
+        id: wanderer
+        system: particles
         anchors.fill: parent
-        Component.onCompleted: {
-            addExample("All at once", "Uses all ImageParticle features",  Qt.resolvedUrl("allatonce.qml"));
-            addExample("Colored", "Colorized image particles",  Qt.resolvedUrl("colored.qml"));
-            addExample("Color Table", "Color-over-life rainbow particles",  Qt.resolvedUrl("colortable.qml"));
-            addExample("Deformation", "Deformed particles",  Qt.resolvedUrl("deformation.qml"));
-            addExample("Rotation", "Rotated particles",  Qt.resolvedUrl("rotation.qml"));
-            addExample("Sharing", "Multiple ImageParticles on the same particles",  Qt.resolvedUrl("sharing.qml"));
-            addExample("Sprites", "Particles rendered with sprites",  Qt.resolvedUrl("sprites.qml"));
+        xVariance: 360/(wanderer.affectedParameter+1);
+        pace: 100*(wanderer.affectedParameter+1);
+    }
+    //! [0]
+
+    Emitter {
+        system: particles
+        emitRate: 20
+        lifeSpan: 7000
+        velocity: PointDirection { y:80; yVariation: 40; }
+        acceleration: PointDirection { y: 4 }
+        size: 20
+        sizeVariation: 10
+        width: parent.width
+        height: 100
+    }
+    Row {
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        spacing: 4
+        GreyButton {
+            text:"dx/dt"
+            onClicked: wanderer.affectedParameter = Wander.Position;
+        }
+        GreyButton {
+            text:"dv/dt"
+            onClicked: wanderer.affectedParameter = Wander.Velocity;
+        }
+        GreyButton {
+            text:"da/dt"
+            onClicked: wanderer.affectedParameter = Wander.Acceleration;
         }
     }
 }

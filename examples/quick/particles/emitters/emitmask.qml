@@ -48,23 +48,37 @@
 **
 ****************************************************************************/
 
-import QtQuick
-import shared
+import QtQuick 2.0
+import QtQuick.Particles 2.0
 
-Item {
-    height: 480
-    width: 320
-    LauncherList {
-        id: ll
-        anchors.fill: parent
-        Component.onCompleted: {
-            addExample("All at once", "Uses all ImageParticle features",  Qt.resolvedUrl("allatonce.qml"));
-            addExample("Colored", "Colorized image particles",  Qt.resolvedUrl("colored.qml"));
-            addExample("Color Table", "Color-over-life rainbow particles",  Qt.resolvedUrl("colortable.qml"));
-            addExample("Deformation", "Deformed particles",  Qt.resolvedUrl("deformation.qml"));
-            addExample("Rotation", "Rotated particles",  Qt.resolvedUrl("rotation.qml"));
-            addExample("Sharing", "Multiple ImageParticles on the same particles",  Qt.resolvedUrl("sharing.qml"));
-            addExample("Sprites", "Particles rendered with sprites",  Qt.resolvedUrl("sprites.qml"));
+Rectangle {
+    color: "goldenrod"
+    width: 400
+    height: 400
+    ParticleSystem {
+        width: 300
+        height: 300
+        anchors.centerIn: parent
+
+        ImageParticle {
+            source: "qrc:///particleresources/glowdot.png"
+            z: 2
+            anchors.fill: parent
+            color: "#336666CC"
+            colorVariation: 0.0
         }
+
+        Emitter {
+            anchors.fill: parent
+            emitRate: 6000
+            lifeSpan: 720
+            size: 10
+            //! [0]
+            shape: MaskShape {
+                source: "images/starfish_mask.png"
+            }
+            //! [0]
+        }
+
     }
 }
