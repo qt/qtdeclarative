@@ -6595,14 +6595,19 @@ void tst_qqmllanguage::generalizedGroupedProperty()
     ImmediateProperties *child = qvariant_cast<ImmediateProperties *>(o->property("child"));
     QVERIFY(child);
     QCOMPARE(child->objectName(), QStringLiteral("barrrrr"));
-    qmlExecuteDeferred(child);
-    QCOMPARE(o->objectName(), QStringLiteral("barrrrr ..."));
-    QCOMPARE(rootAttached->value(), 10);
-    QCOMPARE(rootAttached->value2(), 0);
+
     MyAttachedObject *childAttached = static_cast<MyAttachedObject *>(
                 qmlAttachedPropertiesObject<MyQmlObject>(child));
     QVERIFY(childAttached);
     QCOMPARE(childAttached->value(), 0);
+
+    qmlExecuteDeferred(child);
+    QCOMPARE(childAttached->value(), 4);
+
+    QCOMPARE(o->objectName(), QStringLiteral("barrrrr ..."));
+    QCOMPARE(rootAttached->value(), 10);
+    QCOMPARE(rootAttached->value2(), 0);
+    QCOMPARE(childAttached->value(), 4);
 
     o->metaObject()->invokeMethod(o.data(), "something");
     QCOMPARE(o->objectName(), QStringLiteral("rabrab ..."));

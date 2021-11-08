@@ -285,7 +285,7 @@ void QQmlObjectCreator::populateDeferred(QObject *instance, int deferredIndex,
 
 void QQmlObjectCreator::populateDeferred(QObject *instance, int deferredIndex)
 {
-    doPopulateDeferred(instance, deferredIndex, [this]() { setupBindings(true); });
+    doPopulateDeferred(instance, deferredIndex, [this]() { setupBindings(ApplyDeferred); });
 }
 
 bool QQmlObjectCreator::populateDeferredProperties(QObject *instance,
@@ -625,7 +625,7 @@ static QQmlType qmlTypeForObject(QObject *object)
     return type;
 }
 
-void QQmlObjectCreator::setupBindings(bool applyDeferredBindings)
+void QQmlObjectCreator::setupBindings(BindingSetupFlags mode)
 {
     QQmlListProperty<void> savedList;
     qSwap(_currentList, savedList);
@@ -698,11 +698,10 @@ void QQmlObjectCreator::setupBindings(bool applyDeferredBindings)
             continue;
 
         if (binding->flags & QV4::CompiledData::Binding::IsDeferredBinding) {
-            if (!applyDeferredBindings)
+            if (!(mode & ApplyDeferred))
                 continue;
-        } else {
-            if (applyDeferredBindings)
-                continue;
+        } else if (!(mode & ApplyImmediate)) {
+            continue;
         }
 
         if (property && property->isQList()) {
@@ -1656,7 +1655,9 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
 
     if (_compiledObject->nFunctions > 0)
         setupFunctions();
-    setupBindings();
+    setupBindings((binding && (binding->flags & QV4::CompiledData::Binding::IsDeferredBinding))
+                  ? BindingMode::ApplyAll
+                  : BindingMode::ApplyImmediate);
 
     for (int aliasIndex = 0; aliasIndex != _compiledObject->aliasCount(); ++aliasIndex) {
         const QV4::CompiledData::Alias* alias = _compiledObject->aliasesBegin() + aliasIndex;

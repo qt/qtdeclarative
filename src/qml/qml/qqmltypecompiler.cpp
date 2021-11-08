@@ -1226,14 +1226,16 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject()
 
 bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
 {
+    using namespace QV4::CompiledData;
+
     QmlIR::Object *obj = qmlObjects->at(objectIndex);
     if (obj->idNameIndex != 0)
         _seenObjectWithId = true;
 
-    if (obj->flags & QV4::CompiledData::Object::IsComponent) {
+    if (obj->flags & Object::IsComponent) {
         Q_ASSERT(obj->bindingCount() == 1);
-        const QV4::CompiledData::Binding *componentBinding = obj->firstBinding();
-        Q_ASSERT(componentBinding->type == QV4::CompiledData::Binding::Type_Object);
+        const Binding *componentBinding = obj->firstBinding();
+        Q_ASSERT(componentBinding->type == Binding::Type_Object);
         return scanObject(componentBinding->value.objectIndex);
     }
 
@@ -1280,40 +1282,61 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
     }
 
     for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
-        QQmlPropertyData *pd = nullptr;
         QString name = stringAt(binding->propertyNameIndex);
 
         if (customParser) {
-            if (binding->type == QV4::CompiledData::Binding::Type_AttachedProperty) {
+            if (binding->type == Binding::Type_AttachedProperty) {
                 if (customParser->flags() & QQmlCustomParser::AcceptsAttachedProperties) {
-                    binding->flags |= QV4::CompiledData::Binding::IsCustomParserBinding;
-                    obj->flags |= QV4::CompiledData::Object::HasCustomParserBindings;
+                    binding->flags |= Binding::IsCustomParserBinding;
+                    obj->flags |= Object::HasCustomParserBindings;
                     continue;
                 }
             } else if (QmlIR::IRBuilder::isSignalPropertyName(name)
                        && !(customParser->flags() & QQmlCustomParser::AcceptsSignalHandlers)) {
-                obj->flags |= QV4::CompiledData::Object::HasCustomParserBindings;
-                binding->flags |= QV4::CompiledData::Binding::IsCustomParserBinding;
+                obj->flags |= Object::HasCustomParserBindings;
+                binding->flags |= Binding::IsCustomParserBinding;
                 continue;
             }
         }
 
-        if (name.isEmpty()) {
-            pd = defaultProperty;
-            name = defaultPropertyName;
-        } else {
-            if (name.constData()->isUpper())
-                continue;
+        const bool hasPropertyData = [&]() {
+            if (name.isEmpty()) {
+                name = defaultPropertyName;
+                if (defaultProperty)
+                    return true;
+            } else if (name.constData()->isUpper()) {
+                // Upper case names cannot be custom-parsed unless they are attached properties
+                // and the custom parser explicitly accepts them. See above for that case.
+                return false;
+            } else {
+                bool notInRevision = false;
+                if (propertyResolver.property(
+                            name, &notInRevision, QQmlPropertyResolver::CheckRevision)) {
+                    return true;
+                }
+            }
 
-            bool notInRevision = false;
-            pd = propertyResolver.property(name, &notInRevision,
-                                           QQmlPropertyResolver::CheckRevision);
-        }
+            if (!customParser)
+                return false;
+
+            if (binding->flags & Binding::IsSignalHandlerExpression
+                        || binding->flags & Binding::IsSignalHandlerObject
+                        || binding->flags & Binding::IsPropertyObserver) {
+                // These signal handlers cannot be custom-parsed. We have already established
+                // that the signal exists.
+                return false;
+            }
+
+            // If the property isn't found, we may want to custom-parse the binding.
+            obj->flags |= Object::HasCustomParserBindings;
+            binding->flags |= Binding::IsCustomParserBinding;
+            return false;
+        }();
 
         bool seenSubObjectWithId = false;
         bool isExternal = false;
-        if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
-            const bool isOwnProperty = pd || binding->isAttachedProperty();
+        if (binding->type >= Binding::Type_Object) {
+            const bool isOwnProperty = hasPropertyData || binding->isAttachedProperty();
             isExternal = !isOwnProperty && binding->isGroupProperty();
             if (isOwnProperty || isExternal) {
                 qSwap(_seenObjectWithId, seenSubObjectWithId);
@@ -1337,7 +1360,7 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
                 qWarning("Binding on %s is not deferred as requested by the DeferredPropertyNames "
                          "class info because one or more of its sub-objects contain an id.",
                          qPrintable(name));
-            } else if (binding->type == QV4::CompiledData::Binding::Type_GroupProperty) {
+            } else if (binding->type == Binding::Type_GroupProperty) {
                 qWarning("Binding on %s is not deferred as requested by the DeferredPropertyNames "
                          "class info because it constitutes a group property.", qPrintable(name));
             } else {
@@ -1345,7 +1368,7 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
             }
         }
 
-        if (binding->type >= QV4::CompiledData::Binding::Type_Object) {
+        if (binding->type >= Binding::Type_Object) {
             if (isExternal && !isDeferred && !customParser) {
                 COMPILE_EXCEPTION(
                             binding, tr("Cannot assign to non-existent property \"%1\"").arg(name));
@@ -1353,20 +1376,8 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
         }
 
         if (isDeferred) {
-            binding->flags |= QV4::CompiledData::Binding::IsDeferredBinding;
-            obj->flags |= QV4::CompiledData::Object::HasDeferredBindings;
-        }
-
-        if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
-            || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject
-            || binding->flags & QV4::CompiledData::Binding::IsPropertyObserver)
-            continue;
-
-        if (!pd) {
-            if (customParser) {
-                obj->flags |= QV4::CompiledData::Object::HasCustomParserBindings;
-                binding->flags |= QV4::CompiledData::Binding::IsCustomParserBinding;
-            }
+            binding->flags |= Binding::IsDeferredBinding;
+            obj->flags |= Object::HasDeferredBindings;
         }
     }
 

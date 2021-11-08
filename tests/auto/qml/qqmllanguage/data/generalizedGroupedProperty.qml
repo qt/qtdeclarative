@@ -12,6 +12,7 @@ QtObject {
         root.objectName: objectName + " ..."
         root.onSomething: objectName = "rabrab"
         root.MyQmlObject.value: 10
+        MyQmlObject.value: 4
     }
 
     property QtObject meanChild: ImmediateProperties {

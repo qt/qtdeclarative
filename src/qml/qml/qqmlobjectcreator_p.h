@@ -171,7 +171,15 @@ private:
                           const QQmlPropertyPrivate *qmlProperty,
                           const QV4::CompiledData::Binding *binding);
 
-    void setupBindings(bool applyDeferredBindings = false);
+    enum BindingMode {
+        ApplyNone      = 0x0,
+        ApplyImmediate = 0x1,
+        ApplyDeferred  = 0x2,
+        ApplyAll       = ApplyImmediate | ApplyDeferred,
+    };
+    Q_DECLARE_FLAGS(BindingSetupFlags, BindingMode);
+
+    void setupBindings(BindingSetupFlags mode = BindingMode::ApplyImmediate);
     bool setPropertyBinding(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setPropertyValue(const QQmlPropertyData *property, const QV4::CompiledData::Binding *binding);
     void setupFunctions();
