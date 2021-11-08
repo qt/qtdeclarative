@@ -1,5 +1,3 @@
-# Generated from qmlcompiler.pro.
-
 #####################################################################
 ## QmlCompilerPrivate Module:
 #####################################################################
@@ -31,5 +29,12 @@ qt_internal_add_module(QmlCompilerPrivate
         Qt::QmlPrivate
 )
 
-#### Keys ignored in scope 1:.:.:qmlcompiler.pro:<TRUE>:
-# _OPTION = "host_build"
+qt_internal_add_resource(QmlCompilerPrivate "builtins"
+    PREFIX
+        "/qt-project.org/qml/builtins"
+    BASE
+        "${CMAKE_CURRENT_SOURCE_DIR}/../imports/builtins/"
+    FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/../imports/builtins/builtins.qmltypes"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../imports/builtins/jsroot.qmltypes"
+)
