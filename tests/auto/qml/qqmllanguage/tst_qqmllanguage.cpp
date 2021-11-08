@@ -374,6 +374,8 @@ private slots:
 
     void jittedAsCast();
 
+    void ambiguousContainingType();
+
 private:
     QQmlEngine engine;
     QStringList defaultImportPathList;
@@ -6442,6 +6444,20 @@ void tst_qqmllanguage::jittedAsCast()
     QCOMPARE(o->property("running").toBool(), true);
     QTRY_COMPARE(o->property("running").toBool(), false);
     QCOMPARE(o->property("interval").toInt(), 10);
+}
+
+void tst_qqmllanguage::ambiguousContainingType()
+{
+    // Need to do it twice, so that we load from disk cache the second time.
+    for (int i = 0; i < 2; ++i) {
+        QQmlEngine engine;
+
+        // Should not crash when loading the type
+        QQmlComponent c(&engine, testFileUrl("ambiguousBinding/ambiguousContainingType.qml"));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(!o.isNull());
+    }
 }
 
 QTEST_MAIN(tst_qqmllanguage)
