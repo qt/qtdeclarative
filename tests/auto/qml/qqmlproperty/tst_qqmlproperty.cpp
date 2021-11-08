@@ -2423,7 +2423,7 @@ void tst_qqmlproperty::initFlags_data()
     for (int i = 0; i < 2; ++i) {
         const bool passObject = (i != 0);
         for (const QString &name : names) {
-            for (const QQmlPropertyPrivate::InitFlags flagSet : flagSets) {
+            for (const auto &flagSet : flagSets) {
                 const QString rowName = QStringLiteral("%1,%2,%3")
                         .arg(passObject).arg(name).arg(flagSet.toInt());
                 QTest::addRow("%s", qPrintable(rowName)) << passObject << name << flagSet;
