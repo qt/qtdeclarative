@@ -321,19 +321,32 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
 
     QStringList qmltypesFiles = { QStringLiteral("builtins.qmltypes"),
                                   QStringLiteral("jsroot.qmltypes") };
+    const auto importBuiltins = [&](const QStringList &imports) {
+        for (auto const &dir : imports) {
+            QDirIterator it { dir, qmltypesFiles, QDir::NoFilter, QDirIterator::Subdirectories };
+            while (it.hasNext() && !qmltypesFiles.isEmpty()) {
+                readQmltypes(it.next(), &result.objects, &result.dependencies);
+                qmltypesFiles.removeOne(it.fileName());
+            }
 
-    for (auto const &dir : m_importPaths) {
-        QDirIterator it { dir, qmltypesFiles, QDir::NoFilter, QDirIterator::Subdirectories };
-        while (it.hasNext() && !qmltypesFiles.isEmpty()) {
-            readQmltypes(it.next(), &result.objects, &result.dependencies);
-            qmltypesFiles.removeOne(it.fileName());
+            importDependencies(result, &m_builtins);
+
+            if (qmltypesFiles.isEmpty())
+                return;
         }
+    };
 
-        importDependencies(result, &m_builtins);
-
-        if (qmltypesFiles.isEmpty())
-            break;
+    importBuiltins(m_importPaths);
+    if (!qmltypesFiles.isEmpty()) {
+        const QString pathsString =
+                m_importPaths.isEmpty() ? u"<empty>"_qs : m_importPaths.join(u"\n\t");
+        m_warnings.append({ QStringLiteral("Failed to find the following builtins: %1 (so will use "
+                                           "qrc). Import paths used:\n\t%2")
+                                    .arg(qmltypesFiles.join(u", "), pathsString),
+                            QtWarningMsg, QQmlJS::SourceLocation() });
+        importBuiltins({ u":/qt-project.org/qml/builtins"_qs }); // use qrc as a "last resort"
     }
+    Q_ASSERT(qmltypesFiles.isEmpty()); // since qrc must cover it in all the bad cases
 
     // Process them together since there they have interdependencies that wouldn't get resolved
     // otherwise

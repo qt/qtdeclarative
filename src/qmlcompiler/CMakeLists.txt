@@ -21,6 +21,16 @@ qt_internal_add_module(QmlCompilerPrivate
         Qt::CorePrivate
 )
 
+qt_internal_add_resource(QmlCompilerPrivate "builtins"
+    PREFIX
+        "/qt-project.org/qml/builtins"
+    BASE
+        "${CMAKE_CURRENT_SOURCE_DIR}/../imports/builtins/"
+    FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/../imports/builtins/builtins.qmltypes"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../imports/builtins/jsroot.qmltypes"
+)
+
 add_dependencies(QmlCompilerPrivate QmlDevToolsPrivate)
 get_target_property(devtools_includes QmlDevToolsPrivate EXTRA_INCLUDE_DIRECTORIES)
 target_include_directories(QmlCompilerPrivate PUBLIC ${devtools_includes})
