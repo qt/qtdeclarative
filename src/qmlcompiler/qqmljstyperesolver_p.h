@@ -55,6 +55,7 @@ public:
     enum BaseOrExtension { Base, Extension };
     enum Semantics { Static, Dynamic };
     enum TypeStorage { Direct, Indirect };
+    enum ParentMode { UseDocumentParent, UseParentProperty };
 
     struct GlobalProperty
     {
@@ -130,6 +131,9 @@ public:
     TypeStorage typeStorage() const { return m_typeStorage; }
     Semantics semantics() const { return m_semantics; }
 
+    void setParentMode(ParentMode mode) { m_parentMode = mode; }
+    ParentMode parentMode() const { return m_parentMode; }
+
     QQmlJSScope::ConstPtr
     storedType(const QQmlJSScope::ConstPtr &type,
                ComponentIsGeneric allowComponent = ComponentIsGeneric::No) const;
@@ -181,6 +185,7 @@ protected:
 
     TypeStorage m_typeStorage = Direct;
     Semantics m_semantics = Dynamic;
+    ParentMode m_parentMode = UseParentProperty;
     QQmlJSLogger *m_logger;
 };
 

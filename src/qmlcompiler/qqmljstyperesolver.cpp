@@ -71,6 +71,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Do
     , m_document(document)
     , m_typeStorage(storage)
     , m_semantics(semantics)
+    , m_parentMode(semantics == Static ? UseDocumentParent : UseParentProperty)
     , m_logger(logger)
 {
     const QHash<QString, QQmlJSScope::ConstPtr> builtinTypes = importer->builtinInternalNames();
@@ -598,7 +599,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
                     base, [&](const QQmlJSScope::ConstPtr &found, BaseOrExtension mode) {
                         if (found->hasOwnProperty(name)) {
                             QQmlJSMetaProperty prop = found->ownProperty(name);
-                            if (m_semantics == QQmlJSTypeResolver::Static
+                            if (m_parentMode == UseDocumentParent
                                     && name == base->parentPropertyName()) {
                                 QQmlJSScope::ConstPtr baseParent = base->parentScope();
                                 if (baseParent && baseParent->inherits(prop.type())

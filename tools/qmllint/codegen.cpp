@@ -54,10 +54,15 @@ void Codegen::setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document)
     m_entireSourceCodeLines = document->code.split(u'\n');
     m_typeResolver = std::make_unique<QQmlJSTypeResolver>(
             m_importer, document,
-            // Type resolving is only static here due the inability to resolve parent properties
-            // dynamically (QTBUG-95530). Currently this has no other side effects. Re-evaluate once
-            // that changes.
-            QQmlJSTypeResolver::Indirect, QQmlJSTypeResolver::Static, m_logger);
+            QQmlJSTypeResolver::Indirect, QQmlJSTypeResolver::Dynamic, m_logger);
+
+    // Type resolving is using document parent mode here so that it produces fewer false positives
+    // on the "parent" property of QQuickItem. It does produce a few false negatives this way
+    // because items can be reparented. Furthermore, even if items are not reparented, the document
+    // parent may indeed not be their visual parent. See QTBUG-95530. Eventually, we'll need
+    // cleverer logic to deal with this.
+    m_typeResolver->setParentMode(QQmlJSTypeResolver::UseDocumentParent);
+
     // TODO: using silentLogger for visitor actually hides potential issues but
     // using m_logger instead fails some tests, so for now let's leave the old
     // behavior for consistency. the proper fix is anyway to remove this visitor
