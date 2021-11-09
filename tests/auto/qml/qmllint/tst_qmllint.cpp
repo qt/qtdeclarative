@@ -889,6 +889,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("initReadonly") << QStringLiteral("initReadonly.qml");
     QTest::newRow("connectionNoParent") << QStringLiteral("connectionNoParent.qml"); // QTBUG-97600
     QTest::newRow("goodGeneralizedGroup") << QStringLiteral("goodGeneralizedGroup.qml");
+    QTest::newRow("on binding in grouped property") << QStringLiteral("onBindingInGroupedProperty.qml");
 }
 
 void TestQmllint::cleanQmlCode()
