@@ -76,7 +76,6 @@ QQmlJSImportVisitor::QQmlJSImportVisitor(QQmlJSImporter *importer, QQmlJSLogger 
                                          const QString &implicitImportDirectory,
                                          const QStringList &qmltypesFiles)
     : m_implicitImportDirectory(implicitImportDirectory),
-      m_rootId(u"<id>"_qs),
       m_qmltypesFiles(qmltypesFiles),
       m_currentScope(QQmlJSScope::create(QQmlJSScope::JSFunctionScope)),
       m_importer(importer),
@@ -1313,12 +1312,6 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
 
         }();
         m_scopesById.insert(name, m_currentScope);
-
-        // TODO: Discard this once we properly store binding values and can just use
-        // QQmlJSScope::property() to obtain this
-        if (m_currentScope->parentScope() && !m_currentScope->parentScope()->parentScope())
-            m_rootId = name;
-
         return true;
     }
 

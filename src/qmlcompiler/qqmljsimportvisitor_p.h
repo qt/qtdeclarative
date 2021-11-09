@@ -143,7 +143,6 @@ protected:
     void throwRecursionDepthError() override;
 
     QString m_implicitImportDirectory;
-    QString m_rootId;
     QStringView m_inlineComponentName;
     bool m_nextIsInlineComponent = false;
     bool m_aborted = false;
