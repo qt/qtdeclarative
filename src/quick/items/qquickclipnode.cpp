@@ -115,6 +115,18 @@ void QQuickDefaultClipNode::updateGeometry()
         }
 
     }
+#ifdef QSG_RUNTIME_DESCRIPTION
+#ifndef QT_NO_DEBUG_STREAM
+    QString desc;
+    {
+        QDebug dbg(&desc);
+        dbg << m_rect;
+        if (!qFuzzyIsNull(m_radius))
+            dbg << "radius" << m_radius;
+    }
+    qsgnode_set_description(this, desc);
+#endif
+#endif
     setClipRect(m_rect);
     markDirty(DirtyGeometry);
 }
