@@ -1177,8 +1177,18 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
     const auto id = scriptBinding->qualifiedId;
     const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
     if (!id->next && id->name == QLatin1String("id")) {
-        const auto *idExpression = cast<IdentifierExpression *>(statement->expression);
-        const QString &name = idExpression->name.toString();
+        const QString name = [&]() {
+            if (const auto *idExpression = cast<IdentifierExpression *>(statement->expression)) {
+                return idExpression->name.toString();
+            } else if (const auto *idString = cast<StringLiteral *>(statement->expression)) {
+                m_logger.log(u"ids do not need quotation marks"_qs, Log_Syntax,
+                             idString->firstSourceLocation());
+                return idString->value.toString();
+            }
+            m_logger.log(u"Failed to parse id"_qs, Log_Syntax,
+                         statement->expression->firstSourceLocation());
+            return QString();
+        }();
         if (!name.isEmpty())
             m_scopesById.insert(name, m_currentScope);
 
