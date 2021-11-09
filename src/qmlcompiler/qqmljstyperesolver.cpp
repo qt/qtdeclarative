@@ -113,12 +113,21 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Do
     Q_ASSERT(m_numberPrototype->internalName() == u"NumberPrototype"_qs);
 }
 
+/*!
+    \internal
+
+    Initializes the type resolver. As part of that initialization, makes \a
+    visitor traverse the program.
+*/
 void QQmlJSTypeResolver::init(QQmlJSImportVisitor &visitor)
 {
     m_document->program->accept(&visitor);
 
     QQueue<QQmlJSScope::Ptr> objects;
-    objects.enqueue(visitor.result());
+    QQmlJSScope::Ptr root = visitor.result();
+    if (!root)
+        return;
+    objects.enqueue(root);
     m_objectsById = visitor.addressableScopes();
     m_signalHandlers = visitor.signalHandlers();
 

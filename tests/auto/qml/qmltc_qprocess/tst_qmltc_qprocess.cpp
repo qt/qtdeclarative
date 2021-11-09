@@ -55,6 +55,8 @@ class tst_qmltc_qprocess : public QQmlDataTest
     QString runQmltc(const QString &inputFile, bool shouldSucceed,
                      const QStringList &extraArgs = {});
 
+    QString modifiedPath(const QString &path) { return path + u".orig"_qs; }
+
 public:
     tst_qmltc_qprocess() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
 
@@ -63,6 +65,8 @@ private slots:
     void cleanupTestCase();
 
     void sanity();
+    void noBuiltins();
+    void noQtQml();
 };
 
 void tst_qmltc_qprocess::initTestCase()
@@ -142,6 +146,48 @@ QString tst_qmltc_qprocess::runQmltc(const QString &inputFile, bool shouldSuccee
 void tst_qmltc_qprocess::sanity()
 {
     QVERIFY(runQmltc(u"dummy.qml"_qs, true).isEmpty());
+}
+
+void tst_qmltc_qprocess::noBuiltins()
+{
+    const auto renameBack = [&](const QString &original) {
+        const auto current = modifiedPath(original);
+        QFile file(current);
+        QVERIFY(file.exists());
+        QVERIFY(file.rename(original));
+    };
+
+    for (QString builtin : { u"builtins.qmltypes"_qs, u"jsroot.qmltypes"_qs }) {
+        const auto path = QLibraryInfo::path(QLibraryInfo::QmlImportsPath) + u"/"_qs + builtin;
+
+        QScopeGuard scope(std::bind(renameBack, path));
+        QFile file(path);
+        QVERIFY(file.exists());
+        QVERIFY(file.rename(modifiedPath(path)));
+
+        // test that qmltc exits gracefully
+        const auto errors = runQmltc(u"dummy.qml"_qs, false);
+        QVERIFY(errors.contains(u"Failed to find the following builtins: %1"_qs.arg(builtin)));
+        QVERIFY(errors.contains(u"Failed to import base modules. Aborting."_qs));
+    }
+}
+
+void tst_qmltc_qprocess::noQtQml()
+{
+    const auto renameBack = [&](const QString &original) {
+        const auto current = modifiedPath(original);
+        QVERIFY(QDir(current).exists());
+        QVERIFY(QDir().rename(current, original));
+    };
+
+    const auto modulePath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath) + u"/QtQml"_qs;
+    QScopeGuard scope(std::bind(renameBack, modulePath));
+    QVERIFY(QDir(modulePath).exists());
+    QVERIFY(QDir().rename(modulePath, modifiedPath(modulePath)));
+
+    // test that qmltc exits gracefully
+    const auto errors = runQmltc(u"dummy.qml"_qs, false);
+    QVERIFY(errors.contains(u"Failed to import QtQml. Are your include paths set up properly?"_qs));
 }
 
 QTEST_MAIN(tst_qmltc_qprocess)

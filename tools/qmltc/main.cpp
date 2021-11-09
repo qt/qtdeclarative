@@ -124,7 +124,7 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
 
     QStringList importPaths = parser.values(importPathOption);
-    importPaths.append(QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath));
+    importPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
     importPaths.append(QFileInfo(url).absolutePath());
     QStringList qmltypesFiles = parser.values(qmltypesOption);
 
@@ -173,14 +173,14 @@ int main(int argc, char **argv)
     QmltcTypeResolver typeResolver { &importer, &document, QQmlJSTypeResolver::Indirect,
                                      QQmlJSTypeResolver::Static, &logger };
     typeResolver.init(visitor);
+    if (logger.hasWarnings() || logger.hasErrors())
+        return EXIT_FAILURE;
 
     QmltcCompiler compiler(url, &typeResolver, &visitor, &logger);
     compiler.compile(info);
-
-    if (logger.hasWarnings() || logger.hasErrors()) {
-        // TODO: how do we print errors/warnings/etc.?
+    if (logger.hasWarnings() || logger.hasErrors())
         return EXIT_FAILURE;
-    }
+
     return EXIT_SUCCESS;
 #else
     // we need the parser at least for --resource-path option (and maybe for
