@@ -131,17 +131,28 @@ void QQuickDayOfWeekRow::setSource(const QVariant &source)
     In addition to the \c index property, a list of model data roles
     are available in the context of each delegate:
     \table
-        \row \li \b model.day : int \li The day of week (\l Qt::DayOfWeek)
-        \row \li \b model.longName : string \li The long version of the day name; for example, "Monday" (\l QLocale::LongFormat)
-        \row \li \b model.shortName : string \li The short version of the day name; for example, "Mon" (\l QLocale::ShortFormat)
-        \row \li \b model.narrowName : string \li A special version of the day name for use when space is limited; for example, "M" (\l QLocale::NarrowFormat)
+        \row
+        \li \b model.day : int
+        \li The day of week (\l Qt::DayOfWeek)
+        \row
+        \li \b model.longName : string
+        \li The long version of the day name; for example,
+   "Monday" (\l QLocale::LongFormat)
+        \row
+        \li \b model.shortName : string
+        \li The short version of the day name; for example, "Mon"
+        (\l QLocale::ShortFormat)
+        \row
+        \li \b model.narrowName : string
+        \li A special version of the day name for use when space is limited.
+        For example, "M" (\l QLocale::NarrowFormat)
     \endtable
 
     The following snippet presents the default implementation of the item
     delegate. It can be used as a starting point for implementing custom
     delegates.
 
-    \snippet DayOfWeekRow.qml delegate
+    \snippet basic/DayOfWeekRow.qml delegate
 */
 QQmlComponent *QQuickDayOfWeekRow::delegate() const
 {

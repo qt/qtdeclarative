@@ -232,7 +232,7 @@ QString QQuickFolderListModelPrivate::resolvePath(const QUrl &path)
 /*!
     \qmltype FolderListModel
     \inqmlmodule Qt.labs.folderlistmodel
-    \instantiates QQuickFolderListModel
+//!    \instantiates QQuickFolderListModel
     \ingroup qtquick-models
     \brief The FolderListModel provides a model of the contents of a file system folder.
 

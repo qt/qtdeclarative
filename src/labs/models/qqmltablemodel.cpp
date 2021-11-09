@@ -49,7 +49,7 @@ Q_LOGGING_CATEGORY(lcTableModel, "qt.qml.tablemodel")
 
 /*!
     \qmltype TableModel
-    \instantiates QQmlTableModel
+//!    \instantiates QQmlTableModel
     \inqmlmodule Qt.labs.qmlmodels
     \brief Encapsulates a simple table model.
     \since 5.14
@@ -124,7 +124,9 @@ Q_LOGGING_CATEGORY(lcTableModel, "qt.qml.tablemodel")
     TableModel {
         TableModelColumn {
             display: function(modelIndex) { return rows[modelIndex.row][0].checked }
-            setDisplay: function(modelIndex, cellData) { rows[modelIndex.row][0].checked = cellData }
+            setDisplay: function(modelIndex, cellData) {
+                    rows[modelIndex.row][0].checked = cellData
+                }
         }
         // ...
 

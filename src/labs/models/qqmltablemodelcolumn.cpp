@@ -45,7 +45,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype TableModelColumn
-    \instantiates QQmlTableModelColumn
+//!  \instantiates QQmlTableModelColumn
     \inqmlmodule Qt.labs.qmlmodels
     \brief Represents a column in a model.
     \since 5.14

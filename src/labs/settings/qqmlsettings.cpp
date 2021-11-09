@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Settings
-    \instantiates QQmlSettings
+//!    \instantiates QQmlSettings
     \inqmlmodule Qt.labs.settings
     \ingroup settings
     \brief Provides persistent platform-independent application settings.

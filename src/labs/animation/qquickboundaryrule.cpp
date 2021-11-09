@@ -1,3 +1,4 @@
+
 /****************************************************************************
 **
 ** Copyright (C) 2019 The Qt Company Ltd.
@@ -128,7 +129,7 @@ void QQuickBoundaryReturnJob::updateState(QAbstractAnimationJob::State newState,
 
 /*!
     \qmltype BoundaryRule
-    \instantiates QQuickBoundaryRule
+//!    \instantiates QQuickBoundaryRule
     \inqmlmodule Qt.labs.animation
     \ingroup qtquick-transitions-animations
     \ingroup qtquick-interceptors
@@ -146,7 +147,8 @@ void QQuickBoundaryReturnJob::updateState(QAbstractAnimationJob::State newState,
 
     Note that a property cannot have more than one assigned BoundaryRule.
 
-    \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation#Behaviors}{Behavior example}, {Qt QML}
+    \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation#Behaviors}{Behavior
+example}, {Qt QML}
 */
 
 QQuickBoundaryRule::QQuickBoundaryRule(QObject *parent)

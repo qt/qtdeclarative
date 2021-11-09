@@ -99,7 +99,7 @@ public:
 /*!
     \qmltype WavefrontMesh
     \inqmlmodule Qt.labs.wavefrontmesh
-    \instantiates QWavefrontMesh
+//!    \instantiates QWavefrontMesh
     \ingroup qtquick-effects
     \brief The WavefrontMesh provides a mesh based on a Wavefront .obj file.
     \since 5.12
@@ -161,8 +161,9 @@ public:
         \endqml
     \endtable
 
-    \note Since the input is a 3D torus, we need to define the projection plane. This would not be necessary when
-    using a 2D shape as input. We use the XY plane in this case, because of the orientation of the input.
+    \note Since the input is a 3D torus, we need to define the projection plane. This would not be
+necessary when using a 2D shape as input. We use the XY plane in this case, because of the
+orientation of the input.
 */
 
 QWavefrontMesh::QWavefrontMesh(QObject *parent)

@@ -44,10 +44,9 @@
 #include <QRandomGenerator>
 QT_BEGIN_NAMESPACE
 
-
 /*!
     \qmltype Emitter
-    \instantiates QQuickParticleEmitter
+//!    \instantiates QQuickParticleEmitter
     \inqmlmodule QtQuick.Particles
     \brief Emits logical particles.
     \ingroup qtquick-particles
@@ -63,7 +62,6 @@ QT_BEGIN_NAMESPACE
     in the particle's lifetime by any Affector element in the same
     ParticleSystem. This includes attributes like lifespan.
 */
-
 
 /*!
     \qmlproperty ParticleSystem QtQuick.Particles::Emitter::system

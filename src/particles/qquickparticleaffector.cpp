@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype Affector
-    \instantiates QQuickParticleAffector
+//!    \instantiates QQuickParticleAffector
     \inqmlmodule QtQuick.Particles
     \brief Applies alterations to the attributes of logical particles at any
     point in their lifetime.
@@ -53,22 +53,26 @@ QT_BEGIN_NAMESPACE
     The base Affector does not alter any attributes, but can be used to emit a signal
     when a particle meets certain conditions.
 
-    If an affector has a defined size, then it will only affect particles within its size and position on screen.
+    If an affector has a defined size, then it will only affect particles within its size and
+position on screen.
 
-    Affectors have different performance characteristics to the other particle system elements. In particular,
-    they have some simplifications to try to maintain a simulation at real-time or faster. When running a system
-    with Affectors, irregular frame timings that grow too large ( > one second per frame) will cause the Affectors
-    to try and cut corners with a faster but less accurate simulation. If the system has multiple affectors the order
-    in which they are applied is not guaranteed, and when simulating larger time shifts they will simulate the whole
-    shift each, which can lead to different results compared to smaller time shifts.
+    Affectors have different performance characteristics to the other particle system elements. In
+particular, they have some simplifications to try to maintain a simulation at real-time or faster.
+When running a system with Affectors, irregular frame timings that grow too large ( > one second per
+frame) will cause the Affectors to try and cut corners with a faster but less accurate simulation.
+If the system has multiple affectors the order in which they are applied is not guaranteed, and when
+simulating larger time shifts they will simulate the whole shift each, which can lead to different
+results compared to smaller time shifts.
 
-    Accurate simulation for large numbers of particles (hundreds) with multiple affectors may be possible on some hardware,
-    but on less capable hardware you should expect small irregularties in the simulation as simulates with worse granularity.
+    Accurate simulation for large numbers of particles (hundreds) with multiple affectors may be
+possible on some hardware, but on less capable hardware you should expect small irregularties in the
+simulation as simulates with worse granularity.
 */
 /*!
     \qmlproperty ParticleSystem QtQuick.Particles::Affector::system
     This is the system which will be affected by the element.
-    If the Affector is a direct child of a ParticleSystem, it will automatically be associated with it.
+    If the Affector is a direct child of a ParticleSystem, it will automatically be associated with
+   it.
 */
 /*!
     \qmlproperty list<string> QtQuick.Particles::Affector::groups

@@ -44,7 +44,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \qmltype DelegateChoice
-    \instantiates QQmlDelegateChoice
+//!    \instantiates QQmlDelegateChoice
     \inqmlmodule Qt.labs.qmlmodels
     \brief Encapsulates a delegate and when to use it.
 
@@ -173,7 +173,7 @@ bool QQmlDelegateChoice::match(int row, int column, const QVariant &value) const
 
 /*!
     \qmltype DelegateChooser
-    \instantiates QQmlDelegateChooser
+//!    \instantiates QQmlDelegateChooser
     \inqmlmodule Qt.labs.qmlmodels
     \brief Allows a view to use different delegates for different types of items in the model.
 

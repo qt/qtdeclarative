@@ -209,7 +209,8 @@ The next line tells \c qmake that we have a collection of
 \l {The Qt Resource System}{resources} that should be built into the
 executable.
 
-\printline target.path
+\skipto target
+\printline
 
 This line replaces deployment settings that come with the default project file.
 It determines where the example is copied, on running "\c{make install}".

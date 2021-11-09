@@ -192,7 +192,7 @@ void QQuickWeekNumberColumn::setSource(const QVariant &source)
     delegate. It can be used as a starting point for implementing custom
     delegates.
 
-    \snippet WeekNumberColumn.qml delegate
+    \snippet basic/WeekNumberColumn.qml delegate
 */
 QQmlComponent *QQuickWeekNumberColumn::delegate() const
 {

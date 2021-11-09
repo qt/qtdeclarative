@@ -164,7 +164,7 @@ QQmlDelegateModelParts::QQmlDelegateModelParts(QQmlDelegateModel *parent)
 
 /*!
     \qmltype DelegateModel
-    \instantiates QQmlDelegateModel
+//!    \instantiates QQmlDelegateModel
     \inqmlmodule QtQml.Models
     \brief Encapsulates a model and delegate.
 
@@ -742,11 +742,11 @@ QQmlDelegateModelGroup *QQmlDelegateModelPrivate::group_at(
 
     \note In contrast to normal attached properties, those cannot be set in a declarative way.
     The following would result in an error:
-    \badqml
+    \badcode
     delegate: Rectangle {
         DelegateModel.inSelected: true
     }
-    \endqml
+    \endcode
 
     \snippet delegatemodel/delegatemodelgroup.qml 0
     \keyword dm-groups-property

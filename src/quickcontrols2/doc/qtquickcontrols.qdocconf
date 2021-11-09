@@ -36,6 +36,7 @@ depends = qtcore qtgui qtdoc qtqml qtqmlmodels qtquick qtsql qtwidgets qtlabspla
 # \example controls/tabs
 exampledirs += ../../../examples/quickcontrols2 \
                ../../quicktemplates2 \
+               ../ \
                snippets
 
 examples.fileextensions += "*.conf"

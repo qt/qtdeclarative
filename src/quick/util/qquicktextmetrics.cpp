@@ -282,7 +282,7 @@ QString QQuickTextMetrics::elidedText() const
     This should match the intended renderType where you draw the text.
 
     \since 6.3
-    \sa Text.renderType
+    \sa {Text::renderType}{Text.renderType}
 */
 QQuickText::RenderType QQuickTextMetrics::renderType() const
 {
