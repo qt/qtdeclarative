@@ -1507,6 +1507,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     name.chop(1);
 
     bool needsResolution = false;
+    int scopesEnteredCounter = 0;
     for (auto group = uiob->qualifiedId; group->next; group = group->next) {
         const QString idName = group->name.toString();
 
@@ -1516,11 +1517,11 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
         const auto scopeKind = idName.front().isUpper() ? QQmlJSScope::AttachedPropertyScope
                                                         : QQmlJSScope::GroupedPropertyScope;
         bool exists = enterEnvironmentNonUnique(scopeKind, idName, group->firstSourceLocation());
+        ++scopesEnteredCounter;
         needsResolution = needsResolution || !exists;
     }
 
-    while (m_currentScope->scopeType() == QQmlJSScope::GroupedPropertyScope
-           || m_currentScope->scopeType() == QQmlJSScope::AttachedPropertyScope) {
+    for (int i=0; i < scopesEnteredCounter; ++i) { // leave the scopes we entered again
         leaveEnvironment();
     }
 
@@ -1544,6 +1545,7 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
     leaveEnvironment();
 
     auto group = uiob->qualifiedId;
+    int scopesEnteredCounter = 0;
     for (; group->next; group = group->next) {
         const QString idName = group->name.toString();
 
@@ -1553,7 +1555,9 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
         const auto scopeKind = idName.front().isUpper() ? QQmlJSScope::AttachedPropertyScope
                                                         : QQmlJSScope::GroupedPropertyScope;
         // definitely exists
-        enterEnvironmentNonUnique(scopeKind, idName, group->firstSourceLocation());
+        [[maybe_unused]] bool exists = enterEnvironmentNonUnique(scopeKind, idName, group->firstSourceLocation());
+        Q_ASSERT(exists);
+        scopesEnteredCounter++;
     }
 
     // on ending the visit to UiObjectBinding, set the property type to the
@@ -1570,10 +1574,8 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
                                                   uiob->firstSourceLocation(), uiob->hasOnToken };
     }
 
-    while (m_currentScope->scopeType() == QQmlJSScope::GroupedPropertyScope
-           || m_currentScope->scopeType() == QQmlJSScope::AttachedPropertyScope) {
+    for (int i = 0; i < scopesEnteredCounter; ++i)
         leaveEnvironment();
-    }
 }
 
 bool QQmlJSImportVisitor::visit(ExportDeclaration *)

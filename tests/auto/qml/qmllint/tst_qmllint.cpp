@@ -806,6 +806,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("QQmlEasingEnums::Type") << QStringLiteral("animationEasing.qml");
     QTest::newRow("required property in Component") << QStringLiteral("requiredPropertyInComponent.qml");
     QTest::newRow("connectionNoParent") << QStringLiteral("connectionNoParent.qml"); // QTBUG-97600
+    QTest::newRow("on binding in grouped property") << QStringLiteral("onBindingInGroupedProperty.qml");
 }
 
 void TestQmllint::cleanQmlCode()
