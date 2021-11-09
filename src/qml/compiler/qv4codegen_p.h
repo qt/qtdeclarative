@@ -91,8 +91,8 @@ public:
 
 inline CodegenWarningInterface *defaultCodegenWarningInterface()
 {
-    static CodegenWarningInterface interface;
-    return &interface;
+    static CodegenWarningInterface iface;
+    return &iface;
 }
 
 class Q_QMLCOMPILER_PRIVATE_EXPORT Codegen: protected QQmlJS::AST::Visitor
@@ -102,7 +102,7 @@ protected:
     using Instruction = QV4::Moth::Instruction;
 public:
     Codegen(QV4::Compiler::JSUnitGenerator *jsUnitGenerator, bool strict,
-            CodegenWarningInterface *interface = defaultCodegenWarningInterface());
+            CodegenWarningInterface *iface = defaultCodegenWarningInterface());
 
     void generateFromProgram(const QString &fileName,
                              const QString &finalUrl,
