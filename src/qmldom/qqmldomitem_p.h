@@ -518,7 +518,7 @@ public:
     T const *as() const
     {
         if (m_options & SimpleWrapOption::ValueType) {
-            if (m_value.metaType().id() == QMetaType::fromType<T>().id())
+            if (m_value.metaType() == QMetaType::fromType<T>())
                 return reinterpret_cast<const T *>(m_value.constData());
             return nullptr;
         } else {
@@ -529,7 +529,7 @@ public:
     T *mutableAs()
     {
         if (m_options & SimpleWrapOption::ValueType) {
-            if (m_value.metaType().id() == QMetaType::fromType<T>().id())
+            if (m_value.metaType() == QMetaType::fromType<T>())
                 return reinterpret_cast<T *>(m_value.data());
             return nullptr;
         } else {
@@ -582,7 +582,7 @@ public:
     T const *asT() const
     {
         if constexpr (domTypeIsValueWrap(T::kindValue)) {
-            if (m_value.metaType().id() == QMetaType::fromType<T>().id())
+            if (m_value.metaType() == QMetaType::fromType<T>())
                 return reinterpret_cast<const T *>(m_value.constData());
             return nullptr;
         } else if constexpr (domTypeIsObjWrap(T::kindValue)) {
@@ -597,7 +597,7 @@ public:
     T *mutableAsT()
     {
         if (domTypeIsValueWrap(T::kindValue)) {
-            if (m_value.metaType().id() == QMetaType::fromType<T>().id())
+            if (m_value.metaType() == QMetaType::fromType<T>())
                 return reinterpret_cast<T *>(m_value.data());
             return nullptr;
         } else if constexpr (domTypeIsObjWrap(T::kindValue)) {
