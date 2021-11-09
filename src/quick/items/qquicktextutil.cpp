@@ -42,6 +42,7 @@
 #include <QtQml/qqmlinfo.h>
 
 #include <private/qqmlglobal_p.h>
+#include <private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -65,6 +66,8 @@ QQuickItem *QQuickTextUtil::createCursor(
                         .arg(QString::fromUtf8(className));
             }
             component->completeCreate();
+            if (parent->clip())
+                QQuickItemPrivate::get(parent)->dirty(QQuickItemPrivate::Size);
             return item;
         }
     } else if (component->isLoading()) {
