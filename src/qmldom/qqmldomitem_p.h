@@ -588,7 +588,9 @@ public:
         } else if constexpr (domTypeIsObjWrap(T::kindValue)) {
             return m_value.value<T *>();
         } else {
-            Q_ASSERT_X(false, "SimpleObjectWrapT", "wrapping of unexpected type");
+            // need dependent static assert to not unconditially trigger
+            static_assert(!std::is_same_v<T, T>, "wrapping of unexpected type");
+            return nullptr; // necessary to avoid warnings on INTEGRITY
         }
     }
 
