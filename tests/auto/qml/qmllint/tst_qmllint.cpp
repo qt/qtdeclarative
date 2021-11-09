@@ -629,6 +629,22 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Method \"deprecatedInherited(c, d)\" is deprecated (Reason: This deprecation should be visible!)")
             << QString()
             << false;
+
+    QTest::newRow("string as id")
+        << QStringLiteral("stringAsId.qml")
+        << QStringLiteral("ids do not need quotation marks")
+        << QString()
+        << false;
+    QTest::newRow("stringIdUsedInWarning")
+        << QStringLiteral("stringIdUsedInWarning.qml")
+        << QStringLiteral("Component.onCompleted: console.log(stringy.i)")
+        << QString()
+        << false;
+    QTest::newRow("Invalid id (expression)")
+        << QStringLiteral("invalidId1.qml")
+        << QStringLiteral("Failed to parse id")
+        << QString()
+        << false;
     QTest::newRow("multilineString")
             << QStringLiteral("multilineString.qml")
             << QStringLiteral("String contains unescaped line terminator which is deprecated. Use "
