@@ -246,15 +246,6 @@ private:
         QQmlJSRegisterContent accumulatorOut;
 
         QHash<int, InstructionAnnotation> annotations;
-
-        /** Stores the reason that a register has become unavailable.
-         *
-         * checkInputRegister() will use this message over a generic one
-         * when the register should be there but isn't. setRegister() wipes
-         * it on register assignment.
-         */
-        QHash<int, QString> registerDeletionReason;
-
         bool needsMorePasses = false;
     };
 

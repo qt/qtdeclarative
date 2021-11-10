@@ -1689,23 +1689,18 @@ QString QQmlJSTypePropagator::registerName(int registerIndex) const
 void QQmlJSTypePropagator::setRegister(int index, const QQmlJSRegisterContent &content)
 {
     m_state.registers[index] = content;
-    m_state.registerDeletionReason.remove(index);
 }
 
 void QQmlJSTypePropagator::setRegister(int index, const QQmlJSScope::ConstPtr &content)
 {
     m_state.registers[index] = m_typeResolver->globalType(content);
-    m_state.registerDeletionReason.remove(index);
 }
 
 QQmlJSRegisterContent QQmlJSTypePropagator::checkedInputRegister(int reg)
 {
     QQmlJSVirtualRegisters::ConstIterator regIt = m_state.registers.find(reg);
     if (regIt == m_state.registers.constEnd()) {
-        if (m_state.registerDeletionReason.contains(reg))
-            setError(m_state.registerDeletionReason[reg]);
-        else
-            setError(u"Type error: could not infer the type of an expression"_qs);
+        setError(u"Type error: could not infer the type of an expression"_qs);
         return {};
     }
     return *regIt;
