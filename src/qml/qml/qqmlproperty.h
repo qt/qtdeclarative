@@ -89,6 +89,10 @@ public:
     QQmlProperty(const QQmlProperty &);
     QQmlProperty &operator=(const QQmlProperty &);
 
+    QQmlProperty(QQmlProperty &&other) noexcept : d(std::exchange(other.d, nullptr)) {}
+    QT_MOVE_ASSIGNMENT_OPERATOR_IMPL_VIA_MOVE_AND_SWAP(QQmlProperty);
+
+    void swap(QQmlProperty &other) noexcept { qSwap(d, other.d); }
     bool operator==(const QQmlProperty &) const;
 
     Type type() const;
@@ -132,7 +136,7 @@ public:
 
 private:
     friend class QQmlPropertyPrivate;
-    QQmlPropertyPrivate *d;
+    QQmlPropertyPrivate *d = nullptr;
 };
 typedef QList<QQmlProperty> QQmlProperties;
 

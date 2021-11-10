@@ -79,10 +79,15 @@ template <> struct QFlagPointerAlignment<void>
 template<typename T, typename T2>
 class QBiPointer {
 public:
-    inline QBiPointer();
+    constexpr QBiPointer() noexcept = default;
+    ~QBiPointer() noexcept = default;
+    QBiPointer(const QBiPointer &o) noexcept = default;
+    QBiPointer(QBiPointer &&o) noexcept = default;
+    QBiPointer<T, T2> &operator=(const QBiPointer<T, T2> &o) noexcept = default;
+    QBiPointer<T, T2> &operator=(QBiPointer<T, T2> &&o) noexcept = default;
+
     inline QBiPointer(T *);
     inline QBiPointer(T2 *);
-    inline QBiPointer(const QBiPointer<T, T2> &o);
 
     inline bool isNull() const;
     inline bool isT1() const;
@@ -93,7 +98,6 @@ public:
     inline void clearFlag();
     inline void setFlagValue(bool);
 
-    inline QBiPointer<T, T2> &operator=(const QBiPointer<T, T2> &o);
     inline QBiPointer<T, T2> &operator=(T *);
     inline QBiPointer<T, T2> &operator=(T2 *);
 
@@ -112,7 +116,7 @@ public:
         return !(ptr1 == ptr2);
     }
 
-    friend inline void swap(QBiPointer<T, T2> ptr1, QBiPointer<T, T2> ptr2)
+    friend inline void swap(QBiPointer<T, T2> &ptr1, QBiPointer<T, T2> &ptr2) noexcept
     {
         qSwap(ptr1.ptr_value, ptr2.ptr_value);
     }
@@ -127,11 +131,6 @@ private:
     static const quintptr Flag2Bit = 0x2;
     static const quintptr FlagsMask = FlagBit | Flag2Bit;
 };
-
-template<typename T, typename T2>
-QBiPointer<T, T2>::QBiPointer()
-{
-}
 
 template<typename T, typename T2>
 QBiPointer<T, T2>::QBiPointer(T *v)
@@ -149,12 +148,6 @@ QBiPointer<T, T2>::QBiPointer(T2 *v)
     Q_STATIC_ASSERT_X(QtPrivate::QFlagPointerAlignment<T2>::Value >= 4,
                       "Type T2 does not have sufficient alignment");
     Q_ASSERT((quintptr(v) & FlagsMask) == 0);
-}
-
-template<typename T, typename T2>
-QBiPointer<T, T2>::QBiPointer(const QBiPointer<T, T2> &o)
-: ptr_value(o.ptr_value)
-{
 }
 
 template<typename T, typename T2>
@@ -198,13 +191,6 @@ void QBiPointer<T, T2>::setFlagValue(bool v)
 {
     if (v) setFlag();
     else clearFlag();
-}
-
-template<typename T, typename T2>
-QBiPointer<T, T2> &QBiPointer<T, T2>::operator=(const QBiPointer<T, T2> &o)
-{
-    ptr_value = o.ptr_value;
-    return *this;
 }
 
 template<typename T, typename T2>

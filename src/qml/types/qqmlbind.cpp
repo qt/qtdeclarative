@@ -81,6 +81,7 @@ enum class QQmlBindEntryKind: quint8 {
  * and the new kind is returned.
  */
 union QQmlBindEntryContent {
+    Q_DISABLE_COPY_MOVE(QQmlBindEntryContent)
 public:
     QQmlBindEntryContent() {}
     ~QQmlBindEntryContent() {}
@@ -175,9 +176,6 @@ private:
         Q_ASSERT(dead == QQmlBindEntryKind::None);
         Q_UNUSED(dead);
     }
-
-    QQmlBindEntryContent &operator=(const QQmlBindEntryContent &) = delete;
-    QQmlBindEntryContent &operator=(QQmlBindEntryContent &&) = delete;
 };
 
 /*!
@@ -191,7 +189,7 @@ private:
 struct QQmlBindEntry
 {
     QQmlBindEntry() = default;
-    QQmlBindEntry(QQmlBindEntry &&other) : prop(std::move(other.prop))
+    QQmlBindEntry(QQmlBindEntry &&other) noexcept : prop(std::move(other.prop))
     {
         currentKind = current.set(std::move(other.current), other.currentKind, currentKind);
         previousKind = previous.set(std::move(other.previous), other.previousKind, previousKind);
@@ -210,7 +208,7 @@ struct QQmlBindEntry
         previousKind = previous.destroy(previousKind);
     }
 
-    QQmlBindEntry &operator=(QQmlBindEntry &&other)
+    QQmlBindEntry &operator=(QQmlBindEntry &&other) noexcept
     {
         if (this == &other)
             return *this;

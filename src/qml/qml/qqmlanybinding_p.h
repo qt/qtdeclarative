@@ -78,9 +78,8 @@
 class QQmlAnyBinding {
 public:
 
-    QQmlAnyBinding() = default;
+    constexpr QQmlAnyBinding() noexcept = default;
     QQmlAnyBinding(std::nullptr_t) : d(static_cast<QQmlAbstractBinding *>(nullptr)) {}
-
 
     /*!
         \internal
@@ -286,7 +285,7 @@ public:
         Stores a null binding. For purpose of classification, the null bindings is
         treated as a QQmlAbstractPropertyBindings.
      */
-    QQmlAnyBinding& operator=(std::nullptr_t )
+    QQmlAnyBinding &operator=(std::nullptr_t)
     {
         clear();
         return *this;
@@ -341,7 +340,7 @@ public:
         \internal
         Stores \a binding and keeps a reference to it.
      */
-    QQmlAnyBinding& operator=(QQmlAbstractBinding *binding)
+    QQmlAnyBinding &operator=(QQmlAbstractBinding *binding)
     {
         clear();
         if (binding) {
@@ -355,7 +354,7 @@ public:
         \internal
         Stores the binding stored in \a binding and keeps a reference to it.
      */
-    QQmlAnyBinding& operator=(const QQmlAbstractBinding::Ptr &binding)
+    QQmlAnyBinding &operator=(const QQmlAbstractBinding::Ptr &binding)
     {
         clear();
         if (binding) {
@@ -369,7 +368,7 @@ public:
         \internal
         Stores \a binding's binding, taking ownership from \a binding.
      */
-    QQmlAnyBinding& operator=(QQmlAbstractBinding::Ptr &&binding)
+    QQmlAnyBinding &operator=(QQmlAbstractBinding::Ptr &&binding)
     {
         clear();
         if (binding) {
@@ -382,7 +381,7 @@ public:
         \internal
         Stores the binding stored in \a untypedBinding and keeps a reference to it.
      */
-    QQmlAnyBinding& operator=(const QUntypedPropertyBinding &untypedBinding)
+    QQmlAnyBinding &operator=(const QUntypedPropertyBinding &untypedBinding)
     {
         clear();
         auto binding = QPropertyBindingPrivate::get(untypedBinding);
@@ -398,7 +397,7 @@ public:
         \overload
         Stores the binding stored in \a untypedBinding, taking ownership from it.
      */
-    QQmlAnyBinding& operator=(const QUntypedPropertyBinding &&untypedBinding)
+    QQmlAnyBinding &operator=(QUntypedPropertyBinding &&untypedBinding)
     {
         clear();
         auto binding = QPropertyBindingPrivate::get(untypedBinding);
@@ -409,17 +408,17 @@ public:
         return *this;
     }
 
-    QQmlAnyBinding(const QQmlAnyBinding &other)
-    {
-        *this = other;
-    }
+    QQmlAnyBinding(QQmlAnyBinding &&other) noexcept
+        : d(std::exchange(other.d, QBiPointer<QQmlAbstractBinding, QPropertyBindingPrivate>()))
+    {}
 
-    friend void swap(const QQmlAnyBinding &a, const QQmlAnyBinding &b)
-    {
-        qSwap(a.d, b.d);
-    }
+    QQmlAnyBinding(const QQmlAnyBinding &other) noexcept { *this = other; }
+    QT_MOVE_ASSIGNMENT_OPERATOR_IMPL_VIA_MOVE_AND_SWAP(QQmlAnyBinding)
 
-    QQmlAnyBinding& operator=(const QQmlAnyBinding &other)
+    friend void swap(QQmlAnyBinding &a, QQmlAnyBinding &b) noexcept { qSwap(a.d, b.d); }
+    void swap(QQmlAnyBinding &other) noexcept { qSwap(d, other.d); }
+
+    QQmlAnyBinding &operator=(const QQmlAnyBinding &other) noexcept
     {
         clear();
         if (auto abstractBinding = other.asAbstractBinding())
@@ -439,11 +438,9 @@ public:
         return p1.d != p2.d;
     }
 
-    ~QQmlAnyBinding() {
-        clear();
-    }
+    ~QQmlAnyBinding() noexcept { clear(); }
 private:
-    void clear() {
+    void clear() noexcept {
         if (d.isNull())
             return;
         if (d.isT1()) {
@@ -458,7 +455,7 @@ private:
         }
         d = static_cast<QQmlAbstractBinding *>(nullptr);
     }
-    QBiPointer<QQmlAbstractBinding, QPropertyBindingPrivate> d = static_cast<QQmlAbstractBinding *>(nullptr);
+    QBiPointer<QQmlAbstractBinding, QPropertyBindingPrivate> d;
 };
 
 

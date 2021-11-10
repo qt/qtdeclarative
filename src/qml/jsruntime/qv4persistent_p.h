@@ -63,7 +63,11 @@ struct Q_QML_EXPORT PersistentValueStorage
     ~PersistentValueStorage();
 
     Value *allocate();
-    static void free(Value *e);
+    static void free(Value *v)
+    {
+        if (v)
+            freeUnchecked(v);
+    }
 
     void mark(MarkStack *markStack);
 
@@ -88,18 +92,24 @@ struct Q_QML_EXPORT PersistentValueStorage
     ExecutionEngine *engine;
     void *firstPage;
 private:
+    static void freeUnchecked(Value *v);
     static void freePage(void *page);
 };
 
 class Q_QML_EXPORT PersistentValue
 {
 public:
-    PersistentValue() {}
+    constexpr PersistentValue() noexcept = default;
     PersistentValue(const PersistentValue &other);
     PersistentValue &operator=(const PersistentValue &other);
+
+    PersistentValue(PersistentValue &&other) noexcept : val(std::exchange(other.val, nullptr)) {}
+    void swap(PersistentValue &other) noexcept { qSwap(val, other.val); }
+    QT_MOVE_ASSIGNMENT_OPERATOR_IMPL_VIA_MOVE_AND_SWAP(PersistentValue);
+    ~PersistentValue() { PersistentValueStorage::free(val); }
+
     PersistentValue &operator=(const WeakValue &other);
     PersistentValue &operator=(Object *object);
-    ~PersistentValue();
 
     PersistentValue(ExecutionEngine *engine, const Value &value);
     PersistentValue(ExecutionEngine *engine, ReturnedValue value);

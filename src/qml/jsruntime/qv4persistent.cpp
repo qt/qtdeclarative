@@ -219,11 +219,9 @@ Value *PersistentValueStorage::allocate()
     return v;
 }
 
-void PersistentValueStorage::free(Value *v)
+void PersistentValueStorage::freeUnchecked(Value *v)
 {
-    if (!v)
-        return;
-
+    Q_ASSERT(v);
     Page *p = getPage(v);
 
     *v = Encode(p->header.freeList);
@@ -287,11 +285,6 @@ PersistentValue::PersistentValue(ExecutionEngine *engine, Object *object)
 
     val = engine->memoryManager->m_persistentValues->allocate();
     *val = object;
-}
-
-PersistentValue::~PersistentValue()
-{
-    PersistentValueStorage::free(val);
 }
 
 PersistentValue &PersistentValue::operator=(const PersistentValue &other)

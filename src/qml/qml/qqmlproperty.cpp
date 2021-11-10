@@ -123,10 +123,7 @@ qWarning() << "Pixel size should now be 24:" << property.read().toInt();
 /*!
     Create an invalid QQmlProperty.
 */
-QQmlProperty::QQmlProperty()
-: d(nullptr)
-{
-}
+QQmlProperty::QQmlProperty() = default;
 
 /*!  \internal */
 QQmlProperty::~QQmlProperty()
