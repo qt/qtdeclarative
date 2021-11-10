@@ -55,8 +55,9 @@
 #include <private/qqmlimport_p.h>
 #include <private/qqmltypeloaderqmldircontent_p.h>
 
-#include <QtCore/qversionnumber.h>
+#include <QtCore/qjsonarray.h>
 #include <QtCore/qplugin.h>
+#include <QtCore/qversionnumber.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -65,8 +66,6 @@ class QQmlPluginImporter
     Q_DISABLE_COPY_MOVE(QQmlPluginImporter)
 
 public:
-    using StaticPluginPair = QPair<QStaticPlugin, QJsonArray>;
-
     QQmlPluginImporter(const QString &uri, QTypeRevision version, QQmlImportDatabase *database,
                    const QQmlTypeLoaderQmldirContent *qmldir, QQmlTypeLoader *typeLoader,
                    QList<QQmlError> *errors)
@@ -90,8 +89,13 @@ public:
     static QStringList plugins();
 
 private:
+    struct StaticPluginData {
+        QStaticPlugin plugin;
+        QJsonArray uriList;
+    };
+
     static QString truncateToDirectory(const QString &qmldirFilePath);
-    bool populatePluginPairVector(QVector<StaticPluginPair> &result,
+    bool populatePluginDataVector(QVector<StaticPluginData> &result,
                                   const QStringList &versionUris);
 
     QString resolvePlugin(const QString &qmldirPluginPath, const QString &baseName);
