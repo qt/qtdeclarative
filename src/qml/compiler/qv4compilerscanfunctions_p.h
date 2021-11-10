@@ -83,6 +83,13 @@ public:
     ScanFunctions(Codegen *cg, const QString &sourceCode, ContextType defaultProgramType);
     void operator()(QQmlJS::AST::Node *node);
 
+    // see comment at its call site in generateJSCodeForFunctionsAndBindings
+    // for why this function is necessary
+    void handleTopLevelFunctionFormals(QQmlJS::AST::FunctionExpression *node) {
+        if (node && node->formals)
+            node->formals->accept(this);
+    }
+
     void enterGlobalEnvironment(ContextType compilationMode);
     void enterEnvironment(QQmlJS::AST::Node *node, ContextType compilationMode,
                           const QString &name);
