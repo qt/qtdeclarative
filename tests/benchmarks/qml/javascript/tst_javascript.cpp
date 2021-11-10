@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,9 +26,9 @@
 **
 ****************************************************************************/
 
-#include <QDir>
+#include <QDirIterator>
 #include <QDebug>
-#include <qtest.h>
+#include <QTest>
 #include <QQmlEngine>
 #include <QQmlComponent>
 
@@ -39,8 +39,7 @@ class tst_javascript : public QObject
     Q_OBJECT
 
 public:
-    tst_javascript();
-    virtual ~tst_javascript();
+    tst_javascript() { registerTypes(); }
 
 private slots:
     void run_data();
@@ -50,59 +49,35 @@ private:
     QQmlEngine engine;
 };
 
-tst_javascript::tst_javascript()
-{
-    registerTypes();
-}
-
-tst_javascript::~tst_javascript()
-{
-}
-
 void tst_javascript::run_data()
 {
     QTest::addColumn<QString>("file");
-
-    QDir dir(SRCDIR "/data");
-
-    QStringList files = dir.entryList(QDir::Files | QDir::NoDotAndDotDot);
-
-    for (int ii = 0; ii < files.count(); ++ii) {
-        QString file = files.at(ii);
-        if (file.endsWith(".qml") && file.at(0).isLower()) {
-
-            QString testName = file.left(file.length() - 4 /* strlen(".qml") */);
-            QString fileName = QLatin1String(SRCDIR) + QLatin1String("/data/") + file;
-
-
-            QTest::newRow(qPrintable(testName)) << fileName;
-
-        }
+    QDirIterator listing(SRCDIR "/data", QStringList{u"*.qml"_qs},
+                         QDir::Files | QDir::NoDotAndDotDot);
+    while (listing.hasNext()) {
+        auto info = listing.nextFileInfo();
+        const QString base = info.baseName();
+        if (!base.isEmpty() && base.at(0).isLower())
+            QTest::newRow(qPrintable(base)) << info.filePath();
     }
 }
 
 void tst_javascript::run()
 {
     QFETCH(QString, file);
-
     QQmlComponent c(&engine, file);
 
-    if (c.isError()) {
+    if (c.isError())
         qWarning() << c.errors();
-    }
-
     QVERIFY(!c.isError());
 
-    QObject *o = c.create();
-    QVERIFY(o != 0);
-
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
     QMetaMethod method = o->metaObject()->method(o->metaObject()->indexOfMethod("runtest()"));
 
     QBENCHMARK {
-        method.invoke(o);
+        method.invoke(o.get());
     }
-
-    delete o;
 }
 
 QTEST_MAIN(tst_javascript)
