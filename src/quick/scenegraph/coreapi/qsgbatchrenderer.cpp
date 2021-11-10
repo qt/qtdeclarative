@@ -991,8 +991,8 @@ void Renderer::releaseCachedResources()
 
     m_rhi->releaseCachedResources();
 
-    m_vertexUploadPool.shrink(0);
-    m_indexUploadPool.shrink(0);
+    m_vertexUploadPool.resize(0);
+    m_indexUploadPool.resize(0);
 }
 
 void Renderer::invalidateAndRecycleBatch(Batch *b)
