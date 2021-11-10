@@ -507,7 +507,7 @@ bool QQmlPluginImporter::populatePluginDataVector(QVector<StaticPluginData> &res
         QObject *instance = plugin.instance();
         if (qobject_cast<QQmlEngineExtensionPlugin *>(instance)
                 || qobject_cast<QQmlExtensionPlugin *>(instance)) {
-            QJsonArray metaTagsUriList = plugin.metaData().value(
+            const QJsonArray metaTagsUriList = plugin.metaData().value(
                         QStringLiteral("uri")).toArray();
             if (metaTagsUriList.isEmpty()) {
                 if (errors) {
@@ -523,7 +523,7 @@ bool QQmlPluginImporter::populatePluginDataVector(QVector<StaticPluginData> &res
                 return false;
             }
             // A plugin can be set up to handle multiple URIs, so go through the list:
-            for (const QJsonValueRef metaTagUri : metaTagsUriList) {
+            for (const QJsonValueConstRef metaTagUri : metaTagsUriList) {
                 if (versionUris.contains(metaTagUri.toString())) {
                     result.append({ plugin, metaTagsUriList });
                     break;
@@ -585,8 +585,8 @@ QTypeRevision QQmlPluginImporter::importPlugins() {
                 return QTypeRevision();
 
             for (const QString &versionUri : versionUris) {
-                for (StaticPluginData &pair : pluginPairs) {
-                    for (QJsonValueRef metaTagUri : pair.uriList) {
+                for (const StaticPluginData &pair : qAsConst(pluginPairs)) {
+                    for (const QJsonValueConstRef metaTagUri : pair.uriList) {
                         if (versionUri == metaTagUri.toString()) {
                             staticPluginsFound++;
                             QObject *instance = pair.plugin.instance();
