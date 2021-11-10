@@ -423,6 +423,7 @@ private slots:
 
     void asCast();
     void functionNameInFunctionScope();
+    void functionAsDefaultArgument();
 
 private:
 //    static void propertyVarWeakRefCallback(v8::Persistent<v8::Value> object, void* parameter);
@@ -9917,6 +9918,16 @@ void tst_qqmlecmascript::functionNameInFunctionScope()
     QCOMPARE(m2.property("a").toInt(), 2);
     QVERIFY(m2.property("b").isCallable());
     QVERIFY(m2.property("c").isCallable());
+}
+
+
+void tst_qqmlecmascript::functionAsDefaultArgument()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("functionAsDefaultArgument.qml"));
+    QScopedPointer root(component.create());
+    QVERIFY(root);
+    QCOMPARE(root->objectName(), "didRun");
 }
 
 QTEST_MAIN(tst_qqmlecmascript)
