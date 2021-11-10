@@ -93,6 +93,228 @@ using namespace QV4;
         return scope.engine->throwTypeError(QString::fromUtf8(msg)); \
     } while (false)
 
+/*!
+\qmltype Qt
+\inqmlmodule QtQml
+//! \instantiates QQmlEnginePrivate
+\ingroup qml-utility-elements
+\keyword QmlGlobalQtObject
+\brief Provides a global object with useful enums and functions from Qt.
+
+\c Qt is a singleton type that provides utility functions, properties, and
+enums. Here is an example showing how to use this type:
+
+\qml
+import QtQuick 2.0
+
+Text {
+    color: Qt.rgba(1, 0, 0, 1)
+    text: Qt.md5("hello, world")
+}
+\endqml
+
+
+\section1 Enums
+
+The Qt object contains the enums available in the \l [QtCore]{Qt}{Qt Namespace}. For example, you can access
+the \l Qt::LeftButton and \l Qt::RightButton enumeration values as \c Qt.LeftButton and \c Qt.RightButton.
+
+
+\section1 Types
+
+The Qt object also contains helper functions for creating objects of specific
+data types. This is primarily useful when setting the properties of an item
+when the property has one of the following types:
+\list
+\li \c rect - use \l{Qt::rect()}{Qt.rect()}
+\li \c point - use \l{Qt::point()}{Qt.point()}
+\li \c size - use \l{Qt::size()}{Qt.size()}
+\endlist
+
+If the \c QtQuick module has been imported, the following helper functions for
+creating objects of specific data types are also available for clients to use:
+\list
+\li \c color - use \l{Qt::rgba()}{Qt.rgba()}, \l{Qt::hsla()}{Qt.hsla()}, \l{Qt::darker()}{Qt.darker()}, \l{Qt::lighter()}{Qt.lighter()} or \l{Qt::tint()}{Qt.tint()}
+\li \c font - use \l{Qt::font()}{Qt.font()}
+\li \c vector2d - use \l{Qt::vector2d()}{Qt.vector2d()}
+\li \c vector3d - use \l{Qt::vector3d()}{Qt.vector3d()}
+\li \c vector4d - use \l{Qt::vector4d()}{Qt.vector4d()}
+\li \c quaternion - use \l{Qt::quaternion()}{Qt.quaternion()}
+\li \c matrix4x4 - use \l{Qt::matrix4x4()}{Qt.matrix4x4()}
+\endlist
+
+There are also string based constructors for these types. See \l{qtqml-typesystem-basictypes.html}{QML Basic Types} for more information.
+
+\section1 Date/Time Formatters
+
+The Qt object contains several functions for formatting QDateTime, QDate and QTime values.
+
+\list
+    \li \l{Qt::formatDateTime}{string Qt.formatDateTime(datetime date, variant format)}
+    \li \l{Qt::formatDate}{string Qt.formatDate(datetime date, variant format)}
+    \li \l{Qt::formatTime}{string Qt.formatTime(datetime date, variant format)}
+\endlist
+
+The format specification is described at \l{Qt::formatDateTime}{Qt.formatDateTime}.
+
+
+\section1 Dynamic Object Creation
+The following functions on the global object allow you to dynamically create QML
+items from files or strings. See \l{Dynamic QML Object Creation from JavaScript} for an overview
+of their use.
+
+\list
+    \li \l{Qt::createComponent()}{object Qt.createComponent(url)}
+    \li \l{Qt::createQmlObject()}{object Qt.createQmlObject(string qml, object parent, string filepath)}
+\endlist
+
+
+\section1 Other Functions
+
+The following functions are also on the Qt object.
+
+\list
+    \li \l{Qt::quit()}{Qt.quit()}
+    \li \l{Qt::md5()}{Qt.md5(string)}
+    \li \l{Qt::btoa()}{string Qt.btoa(string)}
+    \li \l{Qt::atob()}{string Qt.atob(string)}
+    \li \l{Qt::binding()}{object Qt.binding(function)}
+    \li \l{Qt::locale()}{object Qt.locale()}
+    \li \l{Qt::resolvedUrl()}{string Qt.resolvedUrl(string)}
+    \li \l{Qt::openUrlExternally()}{Qt.openUrlExternally(string)}
+    \li \l{Qt::fontFamilies()}{list<string> Qt.fontFamilies()}
+\endlist
+*/
+
+/*!
+    \qmlproperty object Qt::platform
+    \since 5.1
+
+    The \c platform object provides info about the underlying platform.
+
+    Its properties are:
+
+    \table
+    \row
+    \li \c platform.os
+    \li
+
+    This read-only property contains the name of the operating system.
+
+    Possible values are:
+
+    \list
+        \li \c "android" - Android
+        \li \c "ios" - iOS
+        \li \c "tvos" - tvOS
+        \li \c "linux" - Linux
+        \li \c "osx" - \macos
+        \li \c "qnx" - QNX (since Qt 5.9.3)
+        \li \c "unix" - Other Unix-based OS
+        \li \c "windows" - Windows
+        \li \c "wasm" - WebAssembly
+    \endlist
+
+    \row
+    \li \c platform.pluginName
+    \li This is the name of the platform set on the QGuiApplication instance
+        as returned by \l QGuiApplication::platformName()
+
+    \endtable
+*/
+
+/*!
+    \qmlproperty object Qt::application
+    \since 5.1
+
+    The \c application object provides access to global application state
+    properties shared by many QML components.
+
+    It is the same as the \l Application singleton.
+
+    The following example uses the \c application object to indicate
+    whether the application is currently active:
+
+    \snippet qml/application.qml document
+
+    \note When using QML without a QGuiApplication, the following properties will be undefined:
+    \list
+    \li application.active
+    \li application.state
+    \li application.layoutDirection
+    \li application.font
+    \endlist
+*/
+
+/*!
+    \qmlproperty object Qt::inputMethod
+    \since 5.0
+
+    The \c inputMethod object allows access to application's QInputMethod object
+    and all its properties and slots. See the QInputMethod documentation for
+    further details.
+*/
+
+/*!
+    \qmlproperty object Qt::styleHints
+    \since 5.5
+
+    The \c styleHints object provides platform-specific style hints and settings.
+    See the QStyleHints documentation for further details.
+
+    \note The \c styleHints object is only available when using the Qt Quick module.
+
+    The following example uses the \c styleHints object to determine whether an
+    item should gain focus on mouse press or touch release:
+    \code
+    import QtQuick 2.4
+
+    MouseArea {
+        id: button
+
+        onPressed: {
+            if (!Qt.styleHints.setFocusOnTouchRelease)
+                button.forceActiveFocus()
+        }
+        onReleased: {
+            if (Qt.styleHints.setFocusOnTouchRelease)
+                button.forceActiveFocus()
+        }
+    }
+    \endcode
+*/
+
+/*!
+\qmlmethod object Qt::include(string url, jsobject callback)
+\deprecated
+
+This method should not be used. Use ECMAScript modules, and the native
+JavaScript \c import and \c export statements instead.
+
+Includes another JavaScript file. This method can only be used from within JavaScript files,
+and not regular QML files.
+
+This imports all functions from \a url into the current script's namespace.
+
+Qt.include() returns an object that describes the status of the operation.  The object has
+a single property, \c {status}, that is set to one of the following values:
+
+\table
+\header \li Symbol \li Value \li Description
+\row \li result.OK \li 0 \li The include completed successfully.
+\row \li result.LOADING \li 1 \li Data is being loaded from the network.
+\row \li result.NETWORK_ERROR \li 2 \li A network error occurred while fetching the url.
+\row \li result.EXCEPTION \li 3 \li A JavaScript exception occurred while executing the included code.
+An additional \c exception property will be set in this case.
+\endtable
+
+The \c status property will be updated as the operation progresses.
+
+If provided, \a callback is invoked when the operation completes.  The callback is passed
+the same object as is returned from the Qt.include() call.
+*/
+// Qt.include() is implemented in qv4include.cpp
+
 QtObject::QtObject(ExecutionEngine *engine)
     : m_engine(engine)
 {
