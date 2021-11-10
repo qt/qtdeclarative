@@ -308,7 +308,7 @@ int main(int argc, char **argv)
         QString targetName = className;
         QString extendedName;
         bool seenQmlElement = false;
-        const QJsonArray classInfos = classDef.value(QLatin1String("classInfos")).toArray();
+        QJsonArray classInfos = classDef.value(QLatin1String("classInfos")).toArray();
         for (const QJsonValueRef v : classInfos) {
             const QString name = v[QStringLiteral("name")].toString();
             if (name == QStringLiteral("QML.Element"))

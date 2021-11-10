@@ -507,7 +507,7 @@ bool QQmlPluginImporter::populatePluginDataVector(QVector<StaticPluginData> &res
         QObject *instance = plugin.instance();
         if (qobject_cast<QQmlEngineExtensionPlugin *>(instance)
                 || qobject_cast<QQmlExtensionPlugin *>(instance)) {
-            const QJsonArray metaTagsUriList = plugin.metaData().value(
+            QJsonArray metaTagsUriList = plugin.metaData().value(
                         QStringLiteral("uri")).toArray();
             if (metaTagsUriList.isEmpty()) {
                 if (errors) {
@@ -585,8 +585,8 @@ QTypeRevision QQmlPluginImporter::importPlugins() {
                 return QTypeRevision();
 
             for (const QString &versionUri : versionUris) {
-                for (const StaticPluginData &pair : qAsConst(pluginPairs)) {
-                    for (const QJsonValueRef metaTagUri : pair.uriList) {
+                for (StaticPluginData &pair : pluginPairs) {
+                    for (QJsonValueRef metaTagUri : pair.uriList) {
                         if (versionUri == metaTagUri.toString()) {
                             staticPluginsFound++;
                             QObject *instance = pair.plugin.instance();
