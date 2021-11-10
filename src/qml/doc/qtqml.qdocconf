@@ -65,3 +65,6 @@ navigation.qmltypespage = "Qt QML QML Types"
 
 # suppress qdoc warnings for \instantiates entries
 spurious += "C\\+\\+ class .*\\\\instantiates .*"
+
+# Fail the documentation build if there are more warnings than the limit
+warninglimit = 0
