@@ -280,6 +280,23 @@ public:
     void executeRuntimeFunction(const QUrl &url, qsizetype functionIndex, QObject *thisObject,
                                 int argc = 0, void **args = nullptr, QMetaType *types = nullptr);
     QV4::ExecutableCompilationUnit *compilationUnitFromUrl(const QUrl &url);
+    QQmlRefPointer<QQmlContextData>
+    createInternalContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                          const QQmlRefPointer<QQmlContextData> &parentContext,
+                          int subComponentIndex, bool isComponentRoot);
+    static void setInternalContext(QObject *This, const QQmlRefPointer<QQmlContextData> &context,
+                                   QQmlContextData::QmlObjectKind kind)
+    {
+        Q_ASSERT(This);
+        QQmlData *ddata = QQmlData::get(This, /*create*/ true);
+        // NB: copied from QQmlObjectCreator::createInstance()
+        //
+        // the if-statement logic to determine the kind is:
+        // if (static_cast<quint32>(index) == 0 || ddata->rootObjectInCreation || isInlineComponent)
+        // then QQmlContextData::DocumentRoot. here, we pass this through qmltc
+        context->installContext(ddata, kind);
+        Q_ASSERT(qmlEngine(This));
+    }
 
 private:
     class SingletonInstances : private QHash<QQmlType, QJSValue>

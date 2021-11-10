@@ -585,45 +585,6 @@ ContextRegistrator::ContextRegistrator(QQmlEngine *engine, QObject *This)
     Q_ASSERT(qmlEngine(This));
 }
 
-QQmlRefPointer<QQmlContextData>
-ContextRegistrator::create(QQmlEngine *engine, const QUrl &url,
-                           const QQmlRefPointer<QQmlContextData> &parentContext, int index)
-{
-    Q_ASSERT(index >= 0);
-    QQmlRefPointer<QQmlContextData> context;
-    if (index == 0) {
-        // create context the same way it is done in QQmlObjectCreator::create()
-        context = QQmlContextData::createRefCounted(parentContext);
-        context->setInternal(true);
-        auto unit = QQmlEnginePrivate::get(engine)->compilationUnitFromUrl(url);
-        context->setImports(unit->typeNameCache);
-        context->initFromTypeCompilationUnit(unit, index);
-    } else {
-        // non-root objects adopt parent context and use that one instead of
-        // creating own
-        context = parentContext;
-        // assume context is initialized in the root object
-    }
-    return context;
-}
-
-void ContextRegistrator::set(QObject *This, const QQmlRefPointer<QQmlContextData> &context,
-                             QQmlContextData::QmlObjectKind kind)
-{
-    Q_ASSERT(This);
-    QQmlData *ddata = QQmlData::get(This, /*create*/ true);
-
-    // NB: copied from QQmlObjectCreator::createInstance()
-    //
-    // the if-statement logic is: if (static_cast<quint32>(index) == 0 ||
-    // ddata->rootObjectInCreation || isInlineComponent) then
-    // QQmlContextData::DocumentRoot
-    context->installContext(ddata, kind);
-    if (kind == QQmlContextData::DocumentRoot)
-        context->setContextObject(This);
-    Q_ASSERT(qmlEngine(This));
-}
-
 HelloWorld::HelloWorld(QQmlEngine *e, QObject *parent)
     : QObject(parent), ContextRegistrator(e, this)
 {

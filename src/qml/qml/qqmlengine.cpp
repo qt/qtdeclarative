@@ -72,6 +72,7 @@
 #include <QtCore/qmutex.h>
 #include <QtCore/qthread.h>
 #include <private/qthread_p.h>
+#include <private/qqmlscriptdata_p.h>
 
 #if QT_CONFIG(qml_network)
 #include "qqmlnetworkaccessmanagerfactory.h"
@@ -1947,6 +1948,36 @@ QV4::ExecutableCompilationUnit *QQmlEnginePrivate::compilationUnitFromUrl(const 
     if (!unit->engine)
         unit->linkToEngine(v4engine());
     return unit;
+}
+
+QQmlRefPointer<QQmlContextData>
+QQmlEnginePrivate::createInternalContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
+                                         const QQmlRefPointer<QQmlContextData> &parentContext,
+                                         int subComponentIndex, bool isComponentRoot)
+{
+    Q_ASSERT(unit);
+
+    QQmlRefPointer<QQmlContextData> context;
+    context = QQmlContextData::createRefCounted(parentContext);
+    context->setInternal(true);
+    context->setImports(unit->typeNameCache);
+    context->initFromTypeCompilationUnit(unit, subComponentIndex);
+
+    if (isComponentRoot && unit->dependentScripts.count()) {
+        QV4::ExecutionEngine *v4 = v4engine();
+        Q_ASSERT(v4);
+        QV4::Scope scope(v4);
+
+        QV4::ScopedObject scripts(scope, v4->newArrayObject(unit->dependentScripts.count()));
+        context->setImportedScripts(QV4::PersistentValue(v4, scripts.asReturnedValue()));
+        QV4::ScopedValue v(scope);
+        for (int i = 0; i < unit->dependentScripts.count(); ++i) {
+            QQmlRefPointer<QQmlScriptData> s = unit->dependentScripts.at(i);
+            scripts->put(i, (v = s->scriptValueForContext(context)));
+        }
+    }
+
+    return context;
 }
 
 #if defined(Q_OS_WIN)

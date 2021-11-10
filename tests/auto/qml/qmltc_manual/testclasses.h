@@ -39,6 +39,7 @@
 
 #include <private/qqmlrefcount_p.h>
 #include <private/qqmlcontextdata_p.h>
+#include <private/qqmlengine_p.h>
 
 // utility class that sets up QQmlContext for passed QObject. can be used as a
 // base class to ensure that qmlEngine(object) is valid during initializer list
@@ -46,11 +47,28 @@
 struct ContextRegistrator
 {
     ContextRegistrator(QQmlEngine *engine, QObject *This);
+
     static QQmlRefPointer<QQmlContextData>
     create(QQmlEngine *engine, const QUrl &url,
-           const QQmlRefPointer<QQmlContextData> &parentContext, int index);
+           const QQmlRefPointer<QQmlContextData> &parentContext, int index)
+    {
+        // test-specific wrapping that is document-root-agnostic. calls proper
+        // creation for index == 0 and falls back to returning parentContext
+        // otherwise. the qmltc generates exactly that but with an implicit
+        // index check
+        if (index == 0) {
+            auto priv = QQmlEnginePrivate::get(engine);
+            return priv->createInternalContext(priv->compilationUnitFromUrl(url), parentContext, 0,
+                                               true);
+        }
+        return parentContext;
+    }
+
     static void set(QObject *This, const QQmlRefPointer<QQmlContextData> &context,
-                    QQmlContextData::QmlObjectKind kind);
+                    QQmlContextData::QmlObjectKind kind)
+    {
+        QQmlEnginePrivate::setInternalContext(This, context, kind);
+    }
 };
 
 class HelloWorld : public QObject, public ContextRegistrator

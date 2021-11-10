@@ -185,10 +185,8 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
         }
     }
 
-    context = QQmlContextData::createRefCounted(parentContext);
-    context->setInternal(true);
-    context->setImports(compilationUnit->typeNameCache);
-    context->initFromTypeCompilationUnit(compilationUnit, subComponentIndex);
+    context = QQmlEnginePrivate::get(engine)->createInternalContext(
+            compilationUnit, parentContext, subComponentIndex, isComponentRoot);
 
     if (!sharedState->rootContext) {
         sharedState->rootContext = context;
@@ -202,15 +200,8 @@ QObject *QQmlObjectCreator::create(int subComponentIndex, QObject *parent, QQmlI
     if (topLevelCreator)
         sharedState->allJavaScriptObjects = scope.alloc(compilationUnit->totalObjectCount());
 
-    if (isComponentRoot && compilationUnit->dependentScripts.count()) {
-        QV4::ScopedObject scripts(scope, v4->newArrayObject(compilationUnit->dependentScripts.count()));
-        context->setImportedScripts(QV4::PersistentValue(v4, scripts.asReturnedValue()));
-        QV4::ScopedValue v(scope);
-        for (int i = 0; i < compilationUnit->dependentScripts.count(); ++i) {
-            QQmlRefPointer<QQmlScriptData> s = compilationUnit->dependentScripts.at(i);
-            scripts->put(i, (v = s->scriptValueForContext(context)));
-        }
-    } else if (sharedState->creationContext) {
+    if (!isComponentRoot && sharedState->creationContext) {
+        // otherwise QQmlEnginePrivate::createInternalContext() handles it
         context->setImportedScripts(sharedState->creationContext->importedScripts());
     }
 
