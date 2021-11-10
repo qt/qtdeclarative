@@ -86,8 +86,6 @@ public:
     QQmlJSScope::ConstPtr metaObjectType() const { return m_metaObjectType; }
     QQmlJSScope::ConstPtr jsGlobalObject() const { return m_jsGlobalObject; }
 
-    QQmlJSImporter *importer() const { return m_importer; }
-
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
     QQmlJSScope::ConstPtr scopeForId(const QString &id) const;
 
@@ -175,7 +173,6 @@ protected:
     QQmlJSScope::ConstPtr m_metaObjectType;
     QQmlJSScope::ConstPtr m_jsGlobalObject;
 
-    QQmlJSImporter *m_importer = nullptr;
     const QmlIR::Document *m_document = nullptr;
 
     QHash<QString, QQmlJSScope::ConstPtr> m_objectsById;
