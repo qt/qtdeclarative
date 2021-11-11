@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -70,7 +70,7 @@ int main(int argc, char ** argv)
     view.setResizeMode(QQuickView::SizeRootObjectToView);
     view.setInitialProperties({{"model", QVariant::fromValue(&model)}});
 //![0]
-    view.setSource(QUrl("qrc:view.qml"));
+    view.setSource(QUrl("qrc:/abstractitemmodel/view.qml"));
     view.show();
 
     return app.exec();
