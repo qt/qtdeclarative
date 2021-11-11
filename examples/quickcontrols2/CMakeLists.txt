@@ -1,5 +1,7 @@
 qt_internal_add_example(gallery)
-add_subdirectory(chattutorial)
+if (TARGET Qt::Sql)
+    add_subdirectory(chattutorial)
+endif()
 if (QT_FEATURE_quicktemplates2_calendar AND TARGET Qt::Sql)
     qt_internal_add_example(eventcalendar)
 endif()
