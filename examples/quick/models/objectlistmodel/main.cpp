@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the demonstration applications of the Qt Toolkit.
@@ -80,7 +80,7 @@ int main(int argc, char ** argv)
     view.setInitialProperties({{ "model", QVariant::fromValue(dataList) }});
 //![0]
 
-    view.setSource(QUrl("qrc:view.qml"));
+    view.setSource(QUrl("qrc:/objectlistmodel/view.qml"));
     view.show();
 
     return app.exec();
