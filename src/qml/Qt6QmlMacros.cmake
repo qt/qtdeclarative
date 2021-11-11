@@ -975,9 +975,43 @@ function(_qt_internal_write_deferred_qmldir_file target)
     configure_file(${__qt_qml_macros_module_base_dir}/Qt6qmldirTemplate.cmake.in ${qmldir_file} @ONLY)
 endfunction()
 
+# With a macOS framework Qt build, moc needs to be passed -F<qt-framework-path>
+# arguments to resolve framework style includes like #include <QtCore/qobject.h>
+# Extract the location of the Qt frameworks by querying the imported location of
+# the target (where target is a Qt library). Do not care about non-Qt targets.
+function(_qt_internal_qml_get_qt_framework_path target out_var)
+    set(value "")
+    # NOTE: only exercise IMPORTED_LOCATION of various flavors. this seems to be
+    # good enough in other places (e.g. when locating qmlimportscanner)
+    get_target_property(target_path ${target} IMPORTED_LOCATION)
+    if(NOT target_path)
+        set(configs "RELWITHDEBINFO;RELEASE;MINSIZEREL;DEBUG")
+        foreach(config ${configs})
+            get_target_property(target_path ${target} IMPORTED_LOCATION_${config})
+            # NOTE: to be fair, any location is good enough. the macro
+            # definitions we need must not vary between configurations
+            if(target_path)
+                break()
+            endif()
+        endforeach()
+    endif()
+    string(REGEX REPLACE "(.*)/Qt[^/]+\\.framework.*" "\\1" target_fw_path "${target_path}")
+    if(target_fw_path)
+        set(value "${target_fw_path}")
+    endif()
+    set(${out_var} "${value}" PARENT_SCOPE)
+endfunction()
+
+function(_qt_internal_qml_get_qt_framework_path_moc_option target out_var)
+    _qt_internal_qml_get_qt_framework_path(${target} target_fw_path)
+    if(target_fw_path)
+        set(${out_var} "-F${target_fw_path}" PARENT_SCOPE)
+    else()
+        set(${out_var} "" PARENT_SCOPE)
+    endif()
+endfunction()
+
 # Compile Qml files (.qml) to C++ source files with Qml Type Compiler (qmltc).
-#
-#
 function(qt6_target_compile_qml_to_cpp target)
     set(args_option "")
     set(args_single "")
@@ -1086,8 +1120,22 @@ function(qt6_target_compile_qml_to_cpp target)
         list(APPEND compiled_files ${compiled_header})
     endforeach()
 
+    set(extra_moc_options "")
+    if(APPLE AND QT_FEATURE_framework)
+        # this is a special case, where we need -F options passed to manual moc.
+        # since we're in qmltc code, we only ever need to check QtCore and QtQml
+        # for framework path
+        list(APPEND link_libs ${QT_CMAKE_EXPORT_NAMESPACE}::Core ${QT_CMAKE_EXPORT_NAMESPACE}::Qml)
+        foreach(lib ${link_libs})
+            _qt_internal_qml_get_qt_framework_path_moc_option(${lib} moc_option)
+            if(moc_option)
+                list(APPEND extra_moc_options ${moc_option})
+            endif()
+        endforeach()
+    endif()
+
     # run MOC manually for the generated files
-    qt6_wrap_cpp(compiled_moc_files ${compiled_files} TARGET ${target})
+    qt6_wrap_cpp(compiled_moc_files ${compiled_files} TARGET ${target} OPTIONS ${extra_moc_options})
     set_source_files_properties(${compiled_moc_files} PROPERTIES SKIP_AUTOGEN ON)
     target_sources(${target} PRIVATE ${compiled_moc_files})
     if(NOT target_source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR)
