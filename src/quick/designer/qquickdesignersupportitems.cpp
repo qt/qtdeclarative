@@ -72,7 +72,6 @@ static void stopAnimation(QObject *object)
 //        QQuickScriptAction *scriptAimation = qobject_cast<QQuickScriptAction*>(animation);
 //        if (scriptAimation) FIXME
 //            scriptAimation->setScript(QQmlScriptString());
-        animation->setLoops(1);
         animation->complete();
         animation->setDisableUserControl();
     } else if (timer) {
