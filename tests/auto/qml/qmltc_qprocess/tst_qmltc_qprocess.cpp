@@ -168,7 +168,6 @@ void tst_qmltc_qprocess::noBuiltins()
         // test that qmltc exits gracefully
         const auto errors = runQmltc(u"dummy.qml"_qs, false);
         QVERIFY(errors.contains(u"Failed to find the following builtins: %1"_qs.arg(builtin)));
-        QVERIFY(errors.contains(u"Failed to import base modules. Aborting."_qs));
     }
 }
 

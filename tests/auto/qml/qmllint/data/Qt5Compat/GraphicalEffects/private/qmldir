@@ -1,0 +1,2 @@
+module Qt5Compat.GraphicalEffects.private
+typeinfo plugins.qmltypes

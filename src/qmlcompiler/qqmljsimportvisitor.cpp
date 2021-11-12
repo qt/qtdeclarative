@@ -296,21 +296,19 @@ QString QQmlJSImportVisitor::implicitImportDirectory(
     return QFileInfo(localFile).canonicalPath() + u'/';
 }
 
-bool QQmlJSImportVisitor::processImportWarnings(const QString &what, const QQmlJS::SourceLocation &srcLocation)
+void QQmlJSImportVisitor::processImportWarnings(
+        const QString &what, const QQmlJS::SourceLocation &srcLocation)
 {
     const auto warnings = m_importer->takeWarnings();
-
     if (warnings.isEmpty())
-        return true;
+        return;
 
     m_logger->logWarning(QStringLiteral("Warnings occurred while importing %1:").arg(what),
                          Log_Import, srcLocation);
     m_logger->processMessages(warnings, QtWarningMsg, Log_Import);
-
-    return false;
 }
 
-bool QQmlJSImportVisitor::importBaseModules()
+void QQmlJSImportVisitor::importBaseModules()
 {
     Q_ASSERT(m_rootScopeImports.isEmpty());
     m_rootScopeImports = m_importer->importBuiltins();
@@ -347,25 +345,17 @@ bool QQmlJSImportVisitor::importBaseModules()
         }
     }
 
-    return processImportWarnings(QStringLiteral("base modules"));
+    processImportWarnings(QStringLiteral("base modules"));
 }
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiProgram *)
 {
-    if (!importBaseModules()) {
-        m_logger->logCritical(u"Failed to import base modules. Aborting."_qs, Log_Import);
-        m_aborted = true;
-        return false;
-    }
-
+    importBaseModules();
     return true;
 }
 
 void QQmlJSImportVisitor::endVisit(UiProgram *)
 {
-    if (m_aborted)
-        return;
-
     for (const auto &scope : m_objectBindingScopes) {
         if (checkInheritanceCycle(scope) == CycleFound)
             return;
