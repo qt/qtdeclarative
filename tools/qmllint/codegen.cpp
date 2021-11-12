@@ -28,8 +28,9 @@
 
 #include "codegen.h"
 
-#include <QtQmlCompiler/private/qqmljstypepropagator_p.h>
 #include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
+#include <QtQmlCompiler/private/qqmljsshadowcheck_p.h>
+#include <QtQmlCompiler/private/qqmljstypepropagator_p.h>
 
 #include <QFileInfo>
 
@@ -326,7 +327,11 @@ bool Codegen::generateFunction(
     function->code = context->code;
     function->sourceLocations = context->sourceLocationTable.get();
 
-    propagator.run(function, error);
+    QQmlJSCompilePass::InstructionAnnotations annotations = propagator.run(function, error);
+    if (!error->isValid()) {
+        QQmlJSShadowCheck shadowCheck(m_unitGenerator, m_typeResolver.get(), m_logger);
+        shadowCheck.run(&annotations, function, error);
+    }
     if (error->isValid()) {
         error->type = context->returnsClosure ? QtDebugMsg : QtWarningMsg;
         return false;

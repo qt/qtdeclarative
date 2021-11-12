@@ -639,8 +639,6 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
                     QString::fromLatin1("Type of property \"%2\" not found").arg(propertyName),
                     Log_Type, getCurrentSourceLocation());
         }
-
-        rejectShadowableMember(m_state.accumulatorIn, m_state.accumulatorOut);
     }
 }
 
@@ -694,8 +692,6 @@ void QQmlJSTypePropagator::generate_StoreProperty(int nameIndex, int base)
                          .arg(m_state.accumulatorIn.descriptiveName(), property.descriptiveName()));
         return;
     }
-
-    rejectShadowableMember(callBase, property);
 }
 
 void QQmlJSTypePropagator::generate_SetLookup(int index, int base)
@@ -1690,42 +1686,6 @@ bool QQmlJSTypePropagator::canConvertFromTo(const QQmlJSRegisterContent &from,
                                             const QQmlJSRegisterContent &to)
 {
     return m_typeResolver->canConvertFromTo(from, to);
-}
-
-void QQmlJSTypePropagator::rejectShadowableMember(const QQmlJSRegisterContent &base,
-                                                  const QQmlJSRegisterContent &member)
-{
-    if (m_typeResolver->semantics() == QQmlJSTypeResolver::Dynamic
-        && member.scopeType()->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
-        switch (base.variant()) {
-        case QQmlJSRegisterContent::ObjectProperty:
-        case QQmlJSRegisterContent::ExtensionObjectProperty:
-        case QQmlJSRegisterContent::ScopeProperty:
-        case QQmlJSRegisterContent::ExtensionScopeProperty: {
-            QString name;
-
-            if (member.isProperty()) {
-                const QQmlJSMetaProperty property = member.property();
-                if (property.isFinal()) // final properties can't be shadowed
-                    break;
-                name = member.property().propertyName();
-            } else if (member.isMethod()) {
-                name = member.method().front().methodName();
-            } else {
-                Q_UNREACHABLE();
-            }
-
-            setError(u"Member %1 of %2 can be shadowed"_qs
-                             .arg(name, m_state.accumulatorIn.descriptiveName()));
-            return;
-        }
-        default:
-            // In particular ObjectById is fine as that cannot change into something else
-            // Singleton should also be fine, unless the factory function creates an object
-            // with different property types than the declared class.
-            break;
-        }
-    }
 }
 
 QT_END_NAMESPACE

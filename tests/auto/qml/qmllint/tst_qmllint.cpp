@@ -82,6 +82,7 @@ private Q_SLOTS:
 
     void attachedPropertyReuse();
 
+    void shadowable();
     void tooFewParameters();
     void qQmlV4Function();
     void missingBuiltinsNoCrash();
@@ -1053,6 +1054,12 @@ void TestQmllint::attachedPropertyReuse()
                     .contains(QStringLiteral(
                             "Using attached type KeyNavigation already initialized in a parent "
                             "scope. Reference it by id instead")));
+}
+
+void TestQmllint::shadowable()
+{
+    QVERIFY(runQmllint("shadowable.qml", false, {"--compiler=warning"}, false).contains(
+            QStringLiteral("with type NotSoSimple can be shadowed")));
 }
 
 void TestQmllint::tooFewParameters()

@@ -220,8 +220,6 @@ private:
     void propagateScopeLookupCall(const QString &functionName, int argc, int argv);
     void saveRegisterStateForJump(int offset);
     bool canConvertFromTo(const QQmlJSRegisterContent &from, const QQmlJSRegisterContent &to);
-    void rejectShadowableMember(const QQmlJSRegisterContent &base,
-                                const QQmlJSRegisterContent &property);
 
     QString registerName(int registerIndex) const;
 
