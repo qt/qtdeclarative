@@ -45,6 +45,7 @@
 #include "qqmljsimporter_p.h"
 
 #include <QtCore/qvariant.h>
+#include <QtCore/qstack.h>
 
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
@@ -247,6 +248,8 @@ protected:
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
     QSet<QQmlJSScope::ConstPtr> m_literalScopesToCheck;
     QQmlJS::SourceLocation m_pendingSignalHandler;
+
+    QStack<int> m_runtimeIdCounters;
 
     struct OutstandingConnection
     {

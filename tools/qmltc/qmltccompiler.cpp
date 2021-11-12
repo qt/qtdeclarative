@@ -31,6 +31,7 @@
 #include "qmltccodewriter.h"
 #include "qmltccompilerutils.h"
 #include "qmltcpropertyutils.h"
+#include "qmltccompilerpieces.h"
 
 #include <QtCore/qloggingcategory.h>
 
@@ -39,6 +40,9 @@
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcQmltcCompiler, "qml.qmltc.compiler", QtWarningMsg);
+
+const QString QmltcCodeGenerator::privateEngineName = u"ePriv"_qs;
+const QString QmltcCodeGenerator::urlMethodName = u"q_qmltc_docUrl"_qs;
 
 QmltcCompiler::QmltcCompiler(const QString &url, QmltcTypeResolver *resolver, QmltcVisitor *visitor,
                              QQmlJSLogger *logger)
@@ -59,6 +63,9 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info)
     QList<QmltcType> compiledTypes;
     compiledTypes.reserve(types.size());
 
+    QmltcMethod urlMethod;
+    compileUrlMethod(urlMethod);
+
     for (const QQmlJSScope::ConstPtr &type : types) {
         compiledTypes.emplaceBack(); // creates empty type
         compileType(compiledTypes.back(), type);
@@ -73,10 +80,20 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info)
     program.outNamespace = m_info.outputNamespace;
     program.compiledTypes = compiledTypes;
     program.includes = m_visitor->cppIncludeFiles();
+    program.urlMethod = urlMethod;
 
     QmltcOutput out;
     QmltcOutputWrapper code(out);
     QmltcCodeWriter::write(code, program);
+}
+
+void QmltcCompiler::compileUrlMethod(QmltcMethod &urlMethod)
+{
+    urlMethod.name = QmltcCodeGenerator::urlMethodName;
+    urlMethod.returnType = u"const QUrl&"_qs;
+    urlMethod.body << u"static QUrl url {QStringLiteral(\"qrc:%1\")};"_qs.arg(m_info.resourcePath);
+    urlMethod.body << u"return url;"_qs;
+    urlMethod.declarationPrefixes << u"static"_qs;
 }
 
 void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr &type)
@@ -169,11 +186,10 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
         current.basicCtor.body << u"QQml_setParent_noEvent(this, " + parent.name + u");";
     }
 
+    QmltcCodeGenerator generator { rootType };
+
     // compilation stub:
     current.fullCtor.body << u"Q_UNUSED(engine);"_qs;
-    current.init.body << u"Q_UNUSED(creator);"_qs;
-    current.init.body << u"Q_UNUSED(engine);"_qs;
-    current.init.body << u"Q_UNUSED(parentContext);"_qs;
     current.finalize.body << u"Q_UNUSED(engine);"_qs;
     current.finalize.body << u"Q_UNUSED(creator);"_qs;
     if (documentRoot) {
@@ -188,7 +204,6 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
                         + u"(&creator, engine, QQmlContextData::get(engine->rootContext()), /* "
                           u"finalize */ true);";
 
-        current.init.body << u"Q_UNUSED(canFinalize);"_qs;
         current.finalize.body << u"Q_UNUSED(canFinalize);"_qs;
     } else {
         current.fullCtor.body << u"// not document root:"_qs;
@@ -196,7 +211,8 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
         current.fullCtor.body << current.init.name
                         + u"(creator, engine, QQmlData::get(parent)->outerContext);";
     }
-    current.init.body << u"return nullptr;"_qs;
+
+    auto postponedGenerate = generator.generate_qmlContextSetup(current, type);
 
     // compile components of a type:
     // - enums

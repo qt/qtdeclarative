@@ -143,6 +143,7 @@ struct QmltcProgram
     QString hPath; // C++ output .h path
     QString outNamespace;
     QSet<QString> includes; // non-default C++ include files
+    QmltcMethod urlMethod; // returns QUrl of the QML document
 
     QList<QmltcType> compiledTypes; // all QML types that are compiled to C++
 };

@@ -12,6 +12,7 @@ set(qml_sources
     data/typeWithEnums.qml
     data/methods.qml
     data/properties.qml
+    data/ObjectWithId.qml
 )
 
 set(common_libraries

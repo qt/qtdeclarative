@@ -35,6 +35,7 @@
 #include "typewithenums.h"
 #include "methods.h"
 #include "properties.h"
+#include "objectwithid.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -82,6 +83,7 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/QmltcTests/data/typeWithEnums.qml"),
         QUrl("qrc:/QmltcTests/data/methods.qml"),
         QUrl("qrc:/QmltcTests/data/properties.qml"),
+        QUrl("qrc:/QmltcTests/data/ObjectWithId.qml"),
     };
 
     QQmlEngine e;
@@ -239,6 +241,18 @@ void tst_qmltc::properties()
     // extra:
     QCOMPARE(propertyMetaType("timerP"), QMetaType::fromType<QQmlTimer *>());
     QCOMPARE(propertyMetaType("listNumP"), QMetaType::fromType<QQmlListProperty<QQmlComponent>>());
+}
+
+void tst_qmltc::id()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(ObjectWithId) created(&e); // shouldn't crash here
+
+    auto objectCtx = QQmlContextData::get(e.contextForObject(&created));
+    QVERIFY(objectCtx);
+    QCOMPARE(objectCtx->parent(), QQmlContextData::get(e.rootContext()));
+    QCOMPARE(objectCtx->asQQmlContext()->objectForName("objectWithId"), &created);
+    QCOMPARE(objectCtx->contextObject(), &created);
 }
 
 QTEST_MAIN(tst_qmltc)

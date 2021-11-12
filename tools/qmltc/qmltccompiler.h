@@ -63,6 +63,7 @@ private:
     QQmlJSLogger *m_logger = nullptr;
     QmltcCompilerInfo m_info {}; // miscellaneous input/output information
 
+    void compileUrlMethod(QmltcMethod &urlMethod);
     void compileType(QmltcType &current, const QQmlJSScope::ConstPtr &type);
     void compileEnum(QmltcType &current, const QQmlJSMetaEnum &e);
     void compileMethod(QmltcType &current, const QQmlJSMetaMethod &m);

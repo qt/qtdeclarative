@@ -11,6 +11,7 @@ qt_internal_add_tool(${target_name}
         qmltctyperesolver.h
         qmltcvisitor.h qmltcvisitor.cpp
         qmltccompiler.h qmltccompiler.cpp
+        qmltccompilerpieces.h
         qmltccompilerutils.h
         qmltcpropertyutils.h
     DEFINES

@@ -110,6 +110,8 @@ QQmlJSImportVisitor::QQmlJSImportVisitor(QQmlJSImporter *importer, QQmlJSLogger 
     }
     for (const auto &jsGlobVar : jsGlobVars)
         m_currentScope->insertJSIdentifier(jsGlobVar, globalJavaScript);
+
+    m_runtimeIdCounters.push(0); // global (this document's) runtime id counter
 }
 
 QQmlJSImportVisitor::~QQmlJSImportVisitor() = default;
@@ -1047,11 +1049,13 @@ bool QQmlJSImportVisitor::visit(UiInlineComponent *component)
 
     m_nextIsInlineComponent = true;
     m_inlineComponentName = component->name;
+    m_runtimeIdCounters.push(0); // add new id counter, since counters are component-local
     return true;
 }
 
 void QQmlJSImportVisitor::endVisit(UiInlineComponent *)
 {
+    m_runtimeIdCounters.pop();
     m_inlineComponentName = QStringView();
     Q_ASSERT(!m_nextIsInlineComponent);
 }
@@ -1302,6 +1306,7 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
 
         }();
         m_scopesById.insert(name, m_currentScope);
+        m_currentScope->setRuntimeId(m_runtimeIdCounters.top()++);
         return true;
     }
 

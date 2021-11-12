@@ -192,6 +192,9 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcProgram &progra
     code.rawAppendToHeader(u"/* QMLTC: NOT IMPLEMENTED */");
     code.rawAppendToCpp(u"/* QMLTC: NOT IMPLEMENTED */");
 
+    // url method comes first
+    writeUrl(code, program.urlMethod);
+
     // forward declare all the types first
     for (const QmltcType &type : qAsConst(program.compiledTypes))
         code.rawAppendToHeader(u"class " + type.cppType + u";");
@@ -370,6 +373,27 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcProperty &prop)
     Q_ASSERT(prop.defaultValue.isEmpty()); // we don't support it yet
     code.rawAppendToHeader(u"Q_OBJECT_BINDABLE_PROPERTY(%1, %2, %3, &%1::%4)"_qs.arg(
             prop.containingClass, prop.cppType, prop.name, prop.signalName));
+}
+
+void QmltcCodeWriter::writeUrl(QmltcOutputWrapper &code, const QmltcMethod &urlMethod)
+{
+    // unlike ordinary methods, url function only exists in .cpp
+    Q_ASSERT(!urlMethod.returnType.isEmpty());
+    const auto [hSignature, _] = functionSignatures(urlMethod);
+    Q_UNUSED(_);
+    // Note: augment return type with preambles in declaration
+    QString prefix = urlMethod.declarationPrefixes.join(u' ');
+    if (!prefix.isEmpty())
+        prefix.append(u' ');
+    code.rawAppendToCpp(prefix + urlMethod.returnType + u" " + hSignature);
+    code.rawAppendToCpp(u"{");
+    {
+        QmltcOutputWrapper::CppIndentationScope cppIndent(&code);
+        Q_UNUSED(cppIndent);
+        for (const QString &line : qAsConst(urlMethod.body))
+            code.rawAppendToCpp(line);
+    }
+    code.rawAppendToCpp(u"}");
 }
 
 QT_END_NAMESPACE

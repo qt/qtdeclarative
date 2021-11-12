@@ -50,4 +50,5 @@ private slots:
     void enumerations();
     void methods();
     void properties();
+    void id();
 };
