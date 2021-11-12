@@ -18,8 +18,6 @@ qt_internal_add_module(QuickTestUtilsPrivate
         qml/platformquirks_p.h
         qml/qmlutils.cpp
         qml/qmlutils_p.h
-        qml/qqmljsastdumper.cpp
-        qml/qqmljsastdumper_p.h
         qml/testhttpserver.cpp
         qml/testhttpserver_p.h
         ${quick_sources}

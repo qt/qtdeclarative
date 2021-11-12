@@ -33,7 +33,7 @@
 #include <private/qqmljsast_p.h>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
-#include <QtQuickTestUtils/private/qqmljsastdumper_p.h>
+#include <QtQmlDom/private/qqmldomastdumper_p.h>
 
 #include <qtest.h>
 #include <QDir>
@@ -747,7 +747,9 @@ void tst_qqmlparser::annotations()
         Parser parser2(&engine2);
         QVERIFY(parser2.parse());
 
-        QCOMPARE(AstDumper::diff(parser.ast(), parser2.rootNode(), 3, DumperOptions::NoAnnotations | DumperOptions::NoLocations), QString());
+        using namespace QQmlJS::Dom;
+        QString diff = astNodeDiff(parser.ast(), parser2.rootNode(), 3, AstDumperOption::NoAnnotations | AstDumperOption::NoLocations);
+        QVERIFY2(diff.isEmpty(), qPrintable(diff));
     }
 }
 

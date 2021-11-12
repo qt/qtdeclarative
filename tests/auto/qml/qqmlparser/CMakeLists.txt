@@ -19,6 +19,7 @@ qt_internal_add_test(tst_qqmlparser
         Qt::Gui
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
+        Qt::QmlDomPrivate
     TESTDATA ${test_data}
 )
 
