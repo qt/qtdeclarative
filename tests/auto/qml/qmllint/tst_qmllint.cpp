@@ -663,6 +663,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("cycleHead.qml")
             << QStringLiteral("MenuItem is part of an inheritance cycle: MenuItem -> MenuItem")
             << QString() << false;
+    QTest::newRow("missingQmltypes")
+            << QStringLiteral("missingQmltypes.qml")
+            << QStringLiteral("QML types file does not exist")
+            << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -921,7 +925,8 @@ void TestQmllint::settingsFile()
                     .contains(QStringLiteral("Warning: %1:2:1: Unused import at %1:2:1")
                                       .arg(testFile("settings/unusedImportWarning/unused.qml"))));
     QVERIFY(runQmllint("settings/bare/bare.qml", false, { "--bare" }, false, false)
-                    .contains(QStringLiteral("Failed to import base modules. Aborting.")));
+                    .contains(QStringLiteral("Failed to find the following builtins: "
+                                             "builtins.qmltypes, jsroot.qmltypes")));
     QVERIFY(runQmllint("settings/qmltypes/qmltypes.qml", true, QStringList(), false).isEmpty());
 }
 
@@ -933,7 +938,8 @@ void TestQmllint::lazyAndDirect()
 void TestQmllint::missingBuiltinsNoCrash()
 {
     QVERIFY(runQmllint("missingBuiltinsNoCrash.qml", false, { "--bare" }, false, false)
-                    .contains(QStringLiteral("Failed to import base modules. Aborting.")));
+                    .contains(QStringLiteral("Failed to find the following builtins: "
+                                             "builtins.qmltypes, jsroot.qmltypes")));
 }
 
 QTEST_MAIN(TestQmllint)

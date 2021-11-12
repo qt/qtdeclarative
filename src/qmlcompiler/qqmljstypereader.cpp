@@ -89,6 +89,7 @@ QQmlJSScope::Ptr QQmlJSTypeReader::operator()()
                 m_qmltypesFiles, m_file, code);
     rootNode->accept(&membersVisitor);
     auto result = membersVisitor.result();
+    Q_ASSERT(result);
     result->setInternalName(scopeName);
     return result;
 }
