@@ -20,6 +20,7 @@ set(qmake_immediate_resource_files
     "FileDialogPage.qml"
     "FontDialogPage.qml"
     "StringListView.qml"
+    "MessageDialogPage.qml"
     "qmldir"
     "Theme.qml"
 )

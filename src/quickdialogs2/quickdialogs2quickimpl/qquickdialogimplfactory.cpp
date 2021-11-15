@@ -43,6 +43,7 @@
 
 #include "qquickplatformfiledialog_p.h"
 #include "qquickplatformfontdialog_p.h"
+#include "qquickplatformmessagedialog_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -70,6 +71,15 @@ QPlatformDialogHelper *QQuickDialogImplFactory::createPlatformDialogHelper(
     }
     case QPlatformTheme::FontDialog: {
         auto dialog = new QQuickPlatformFontDialog(parent);
+
+        if (!dialog->isValid()) {
+            delete dialog;
+            return nullptr;
+        }
+        return dialog;
+    }
+    case QPlatformTheme::MessageDialog: {
+        auto dialog = new QQuickPlatformMessageDialog(parent);
 
         if (!dialog->isValid()) {
             delete dialog;

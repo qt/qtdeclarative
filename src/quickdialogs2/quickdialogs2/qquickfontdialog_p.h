@@ -51,9 +51,9 @@
 // We mean it.
 //
 
-#include "qquickabstractdialog_p.h"
-
 #include <QtGui/qfont.h>
+
+#include "qquickabstractdialog_p.h"
 
 QT_BEGIN_NAMESPACE
 

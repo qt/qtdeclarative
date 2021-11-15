@@ -85,6 +85,8 @@ public:
 
     void updateLanguage();
 
+    QPlatformDialogHelper::StandardButton standardButton(QQuickAbstractButton *button) const;
+
     Qt::Alignment alignment;
     QQuickDialogButtonBox::Position position = QQuickDialogButtonBox::Footer;
     QPlatformDialogHelper::StandardButtons standardButtons = QPlatformDialogHelper::NoButton;

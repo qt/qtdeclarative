@@ -473,6 +473,14 @@ void QQuickDialogButtonBoxPrivate::updateLanguage()
     }
 }
 
+QPlatformDialogHelper::StandardButton QQuickDialogButtonBoxPrivate::standardButton(QQuickAbstractButton *button) const {
+    QQuickDialogButtonBoxAttached *attached = qobject_cast<QQuickDialogButtonBoxAttached *>(qmlAttachedPropertiesObject<QQuickDialogButtonBox>(button, false));
+    if (attached)
+        return QQuickDialogButtonBoxAttachedPrivate::get(attached)->standardButton;
+    else
+        return QPlatformDialogHelper::NoButton;
+}
+
 QQuickDialogButtonBox::QQuickDialogButtonBox(QQuickItem *parent)
     : QQuickContainer(*(new QQuickDialogButtonBoxPrivate), parent)
 {

@@ -9,22 +9,27 @@ set(qml_files
     "qml/FolderBreadcrumbBar.qml"
     "qml/FontDialog.qml"
     "qml/FontDialogContent.qml"
+    "qml/MessageDialog.qml"
     "qml/+Fusion/FileDialog.qml"
     "qml/+Fusion/FileDialogDelegate.qml"
     "qml/+Fusion/FolderBreadcrumbBar.qml"
     "qml/+Fusion/FontDialog.qml"
+    "qml/+Fusion/MessageDialog.qml"
     "qml/+Imagine/FileDialog.qml"
     "qml/+Imagine/FileDialogDelegate.qml"
     "qml/+Imagine/FolderBreadcrumbBar.qml"
     "qml/+Imagine/FontDialog.qml"
+    "qml/+Imagine/MessageDialog.qml"
     "qml/+Material/FileDialog.qml"
     "qml/+Material/FileDialogDelegate.qml"
     "qml/+Material/FolderBreadcrumbBar.qml"
     "qml/+Material/FontDialog.qml"
+    "qml/+Material/MessageDialog.qml"
     "qml/+Universal/FileDialog.qml"
     "qml/+Universal/FileDialogDelegate.qml"
     "qml/+Universal/FolderBreadcrumbBar.qml"
     "qml/+Universal/FontDialog.qml"
+    "qml/+Universal/MessageDialog.qml"
 )
 
 qt_internal_add_qml_module(QuickDialogs2QuickImpl
@@ -52,6 +57,11 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         qquickfontdialogimpl_p.h
         qquickfontdialogimpl_p_p.h
         qquickfontdialogimpl.cpp
+        qquickmessagedialogimpl_p.h
+        qquickmessagedialogimpl_p_p.h
+        qquickmessagedialogimpl.cpp
+        qquickplatformmessagedialog_p.h
+        qquickplatformmessagedialog.cpp
     QML_FILES
         ${qml_files}
     DEFINES
