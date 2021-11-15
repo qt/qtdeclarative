@@ -43,6 +43,7 @@
 #include <private/qv4scopedvalue_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include <qcolor.h>
+#include <qsignalspy.h>
 
 #include <algorithm>
 
@@ -155,6 +156,7 @@ private slots:
     void createInsideJSModule();
     void qmlErrorIsReported();
     void initJSValueProp();
+    void qmlPropertySignalExists();
 
 private:
     QQmlEngine engine;
@@ -1099,6 +1101,22 @@ void tst_qqmlcomponent::initJSValueProp()
     const QJSValue jsValue = withQJSValue->v();
     QVERIFY(jsValue.isNumber());
     QCOMPARE(jsValue.toInt(), 5);
+}
+
+void tst_qqmlcomponent::qmlPropertySignalExists()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.setData("import QtQml; QtObject { property int p: 41; function doStuff() { p++; } }",
+                      QUrl());
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+
+    QSignalSpy changeSignalSpy(o.get(), SIGNAL(pChanged()));
+    QVERIFY(QMetaObject::invokeMethod(o.get(), "doStuff"));
+    QCOMPARE(changeSignalSpy.count(), 1);
+    QCOMPARE(o->property("p").toInt(), 42);
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
