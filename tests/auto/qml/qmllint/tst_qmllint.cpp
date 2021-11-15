@@ -86,6 +86,7 @@ private Q_SLOTS:
     void tooFewParameters();
     void qQmlV4Function();
     void missingBuiltinsNoCrash();
+    void absolutePath();
 
 private:
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
@@ -1080,6 +1081,12 @@ void TestQmllint::missingBuiltinsNoCrash()
     QVERIFY(runQmllint("missingBuiltinsNoCrash.qml", false, { "--bare" }, false, false)
                     .contains(QStringLiteral("Failed to find the following builtins: "
                                              "builtins.qmltypes, jsroot.qmltypes")));
+}
+
+void TestQmllint::absolutePath()
+{
+    const QString absolutePath = QFileInfo(testFile("memberNotFound.qml")).absoluteFilePath();
+    QVERIFY(runQmllint(absolutePath, false, { "--absolute-path" }).contains(absolutePath));
 }
 
 QTEST_MAIN(TestQmllint)

@@ -61,9 +61,9 @@
 
 constexpr int JSON_LOGGING_FORMAT_REVISION = 1;
 
-static bool lint_file(const QString &filename, const bool silent, QJsonArray *json,
-                      const QStringList &qmlImportPaths, const QStringList &qmltypesFiles,
-                      const QStringList &resourceFiles,
+static bool lint_file(const QString &filename, const bool silent, const bool useAbsolutePath,
+                      QJsonArray *json, const QStringList &qmlImportPaths,
+                      const QStringList &qmltypesFiles, const QStringList &resourceFiles,
                       const QMap<QString, QQmlJSLogger::Option> &options, QQmlJSImporter &importer)
 {
     QJsonArray warnings;
@@ -170,7 +170,8 @@ static bool lint_file(const QString &filename, const bool silent, QJsonArray *js
 
             importer.setResourceFileMapper(mapper);
 
-            QQmlJSLogger logger(filename, code, silent || json);
+            QQmlJSLogger logger(useAbsolutePath ? info.absoluteFilePath() : filename, code,
+                                silent || json);
             FindWarningVisitor v {
                 &importer,
                 &logger,
@@ -314,6 +315,12 @@ All warnings can be set to three levels:
     const QString qmltypesFilesSetting = QLatin1String("OverwriteImportTypes");
     settings.addOption(qmltypesFilesSetting);
 
+    QCommandLineOption absolutePath(
+            QStringList() << "absolute-path",
+            QLatin1String("Use absolute paths for logging instead of relative ones."));
+    absolutePath.setFlags(QCommandLineOption::HiddenFromHelp);
+    parser.addOption(absolutePath);
+
     parser.addPositionalArgument(QLatin1String("files"),
                                  QLatin1String("list of qml or js files to verify"));
 
@@ -348,6 +355,7 @@ All warnings can be set to three levels:
     }
 
     bool silent = parser.isSet(silentOption);
+    bool useAbsolutePath = parser.isSet(absolutePath);
     bool useJson = parser.isSet(jsonOption);
 
     // use host qml import path as a sane default if not explicitly disabled
@@ -376,6 +384,7 @@ All warnings can be set to three levels:
 
 #else
     bool silent = false;
+    bool useAbsolutePaths = false;
     bool useJson = false;
     bool warnUnqualified = true;
     bool warnWithStatement = true;
@@ -430,8 +439,8 @@ All warnings can be set to three levels:
     const auto arguments = app.arguments();
     for (const QString &filename : arguments) {
 #endif
-        success &= lint_file(filename, silent, useJson ? &jsonFiles : nullptr, qmlImportPaths,
-                             qmltypesFiles, resourceFiles, options, importer);
+        success &= lint_file(filename, silent, useAbsolutePath, useJson ? &jsonFiles : nullptr,
+                             qmlImportPaths, qmltypesFiles, resourceFiles, options, importer);
     }
 
     if (useJson) {
