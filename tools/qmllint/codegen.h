@@ -52,6 +52,7 @@
 
 #include <QtQmlCompiler/private/qqmljstyperesolver_p.h>
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
+#include <QtQmlCompiler/private/qqmljscompilepass_p.h>
 
 class Codegen : public QQmlJSAotCompiler
 {
@@ -70,20 +71,7 @@ public:
     QQmlJSAotFunction globalCode() const override;
 
 private:
-    struct Function
-    {
-        QV4::Compiler::ContextType contextType = QV4::Compiler::ContextType::Binding;
-        QQmlJS::AST::FunctionExpression *ast = nullptr;
-        bool isQPropertyBinding = false;
-
-        QQmlJSScope::ConstPtr returnType;
-        QList<QQmlJSScope::ConstPtr> argumentTypes;
-        QQmlJSScope::ConstPtr qmlScope;
-
-        QString generatedCode;
-        QStringList includes;
-        QQmlJS::DiagnosticMessage error;
-    };
+    using Function = QQmlJSCompilePass::Function;
 
     const QmlIR::Document *m_document = nullptr;
     const QString m_fileName;
@@ -104,9 +92,11 @@ private:
 
     QQmlJS::DiagnosticMessage diagnose(const QString &message, QtMsgType type,
                                        const QQmlJS::SourceLocation &location);
-    bool generateFunction(const QV4::Compiler::Context *context, Function *function) const;
-    void instructionOffsetToSrcLocation(const QV4::Compiler::Context *context, uint offset,
-                                        QQmlJS::SourceLocation *srcLoc) const;
+    bool generateFunction(QV4::Compiler::ContextType contextType,
+                          const QV4::Compiler::Context *context,
+                          QQmlJS::AST::FunctionExpression *ast,
+                          Function *function,
+                          QQmlJS::DiagnosticMessage *error) const;
 };
 
 #endif

@@ -39,45 +39,20 @@
 //
 // We mean it.
 
-#include <private/qv4bytecodehandler_p.h>
-#include <private/qv4compiler_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsscope_p.h>
-#include <private/qqmljslogger_p.h>
+#include <private/qqmljscompilepass_p.h>
 
-#include "qqmljstyperesolver_p.h"
-#include "qqmljsregistercontent_p.h"
 
 QT_BEGIN_NAMESPACE
 
-struct QQmlJSTypePropagator : public QV4::Moth::ByteCodeHandler
+struct QQmlJSTypePropagator : public QQmlJSCompilePass
 {
     QQmlJSTypePropagator(QV4::Compiler::JSUnitGenerator *unitGenerator,
                          QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
                          QQmlJSTypeInfo *typeInfo = nullptr);
-    ~QQmlJSTypePropagator();
-    auto returnType() const { return m_returnType; }
 
-    struct Error
-    {
-        QString message;
-        int instructionOffset;
-        bool isSet() const { return !message.isEmpty(); }
-    };
-
-    struct InstructionAnnotation
-    {
-        QQmlJSVirtualRegisters registers;
-        QQmlJSVirtualRegisters expectedTargetTypesBeforeJump;
-    };
-
-    using TypePropagationResult = QHash<int, InstructionAnnotation>;
-
-    TypePropagationResult
-    propagateTypes(const QV4::Compiler::Context *context, const QQmlJS::AST::BoundNames &arguments,
-                   const QQmlJSScope::ConstPtr &returnType, const QQmlJSScope::ConstPtr &qmlScope,
-                   const QHash<QString, QQmlJSScope::ConstPtr> &addressableScopes,
-                   bool isSignalHandler, Error *error);
+    InstructionAnnotations run(const Function *m_function, QQmlJS::DiagnosticMessage *error);
 
     void generate_Ret() override;
     void generate_Debug() override;
@@ -218,34 +193,18 @@ struct QQmlJSTypePropagator : public QV4::Moth::ByteCodeHandler
     Verdict startInstruction(QV4::Moth::Instr::Type instr) override;
     void endInstruction(QV4::Moth::Instr::Type instr) override;
 
-    enum RegisterShortcuts {
-        Accumulator = QV4::CallData::Accumulator,
-        FirstArgument = QV4::CallData::OffsetCount
-    };
-
 private:
-    void setError(const QString &message)
-    {
-        m_error->message = message;
-        m_error->instructionOffset = currentInstructionOffset();
-    }
-
     struct ExpectedRegisterState
     {
         int originatingOffset = 0;
-        QQmlJSVirtualRegisters registers;
+        VirtualRegisters registers;
     };
 
-    struct PassState
+    struct PassState : QQmlJSCompilePass::State
     {
-        bool skipInstructionsUntilNextJumpTarget = false;
+        InstructionAnnotations annotations;
         QSet<int> jumpTargets;
-
-        QQmlJSVirtualRegisters registers;
-        QQmlJSRegisterContent accumulatorIn;
-        QQmlJSRegisterContent accumulatorOut;
-
-        QHash<int, InstructionAnnotation> annotations;
+        bool skipInstructionsUntilNextJumpTarget = false;
         bool needsMorePasses = false;
     };
 
@@ -273,24 +232,13 @@ private:
     QQmlJSMetaMethod bestMatchForCall(const QList<QQmlJSMetaMethod> &methods, int argc, int argv,
                                       QStringList *errors);
 
-    QQmlJS::AST::BoundNames m_arguments;
     QQmlJSRegisterContent m_returnType;
-    bool m_isSignalHandler = false;
-
-    QQmlJSTypeResolver *m_typeResolver = nullptr;
-    QV4::Compiler::JSUnitGenerator *m_jsUnitGenerator = nullptr;
-
-    QQmlJSScope::ConstPtr m_currentScope;
-    const QV4::Compiler::Context *m_currentContext;
-    QHash<QString, QQmlJSScope::ConstPtr> m_addressableScopes;
-    QQmlJSLogger *m_logger;
-    QQmlJSTypeInfo *m_typeInfo;
+    QQmlJSTypeInfo *m_typeInfo = nullptr;
 
     // Not part of the state, as the back jumps are the reason for running multiple passes
     QMultiHash<int, ExpectedRegisterState> m_jumpOriginRegisterStateByTargetInstructionOffset;
 
     PassState m_state;
-    Error *m_error = nullptr;
 };
 
 QT_END_NAMESPACE

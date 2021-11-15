@@ -125,7 +125,6 @@ Codegen::compileBinding(const QV4::Compiler::Context *context, const QmlIR::Bind
     }
 
     Function function;
-    function.contextType = QV4::Compiler::ContextType::Binding;
     function.qmlScope = m_scopeType;
 
     const QString propertyName = m_document->stringAt(irBinding.propertyNameIndex);
@@ -183,8 +182,8 @@ Codegen::compileBinding(const QV4::Compiler::Context *context, const QmlIR::Bind
     auto astNode =
             m_currentObject->functionsAndExpressions->slowAt(irBinding.value.compiledScriptIndex)
                     ->node;
-    function.ast = astNode->asFunctionDefinition();
-    if (!function.ast) {
+    auto ast = astNode->asFunctionDefinition();
+    if (!ast) {
         QQmlJS::AST::Statement *stmt = astNode->statementCast();
         if (!stmt) {
             Q_ASSERT(astNode->expressionCast());
@@ -195,20 +194,21 @@ Codegen::compileBinding(const QV4::Compiler::Context *context, const QmlIR::Bind
         body = body->finish();
 
         QString name = "binding for "; // ####
-        function.ast = new (m_pool) QQmlJS::AST::FunctionDeclaration(m_pool->newString(name),
+        ast = new (m_pool) QQmlJS::AST::FunctionDeclaration(m_pool->newString(name),
                                                                      /*formals*/ nullptr, body);
-        function.ast->lbraceToken = astNode->firstSourceLocation();
-        function.ast->functionToken = function.ast->lbraceToken;
-        function.ast->rbraceToken = astNode->lastSourceLocation();
+        ast->lbraceToken = astNode->firstSourceLocation();
+        ast->functionToken = ast->lbraceToken;
+        ast->rbraceToken = astNode->lastSourceLocation();
     }
 
-    if (!generateFunction(context, &function)) {
+    QQmlJS::DiagnosticMessage error;
+    if (!generateFunction(QV4::Compiler::ContextType::Binding, context, ast, &function, &error)) {
         // If it's a signal and the function just returns a closure, it's harmless.
         // Otherwise promote the message to warning level.
-        return diagnose(QStringLiteral("Could not compile binding for %1: %2")
-                                .arg(propertyName, function.error.message),
-                        (isSignal && function.error.type == QtDebugMsg) ? QtDebugMsg : QtWarningMsg,
-                        function.error.loc);
+        return diagnose(
+                QStringLiteral("Could not compile binding for %1: %2")
+                        .arg(propertyName, error.message),
+                (isSignal && error.type == QtDebugMsg) ? QtDebugMsg : QtWarningMsg, error.loc);
     }
 
     return QQmlJSAotFunction {};
@@ -224,17 +224,16 @@ Codegen::compileFunction(const QV4::Compiler::Context *context, const QmlIR::Fun
     const QString functionName = m_document->stringAt(irFunction.nameIndex);
 
     Function function;
-    function.contextType = QV4::Compiler::ContextType::Function;
     function.qmlScope = m_scopeType;
 
     auto astNode = m_currentObject->functionsAndExpressions->slowAt(irFunction.index)->node;
-    function.ast = astNode->asFunctionDefinition();
-    Q_ASSERT(function.ast);
 
-    if (!generateFunction(context, &function)) {
+    QQmlJS::DiagnosticMessage error;
+    if (!generateFunction(QV4::Compiler::ContextType::Function, context,
+                          astNode->asFunctionDefinition(), &function, &error)) {
         return diagnose(QStringLiteral("Could not compile function %1: %2")
-                                .arg(functionName, function.error.message),
-                        QtWarningMsg, function.error.loc);
+                                .arg(functionName, error.message),
+                        QtWarningMsg, error.loc);
     }
 
     return QQmlJSAotFunction {};
@@ -266,31 +265,22 @@ QQmlJS::DiagnosticMessage Codegen::diagnose(const QString &message, QtMsgType ty
     return QQmlJS::DiagnosticMessage { message, type, location };
 }
 
-void Codegen::instructionOffsetToSrcLocation(const QV4::Compiler::Context *context, uint offset,
-                                             QQmlJS::SourceLocation *srcLoc) const
+bool Codegen::generateFunction(
+        QV4::Compiler::ContextType contextType,
+        const QV4::Compiler::Context *context,
+        QQmlJS::AST::FunctionExpression *ast,
+        Function *function,
+        QQmlJS::DiagnosticMessage *error) const
 {
-    Q_ASSERT(context->sourceLocationTable);
-    const auto &entries = context->sourceLocationTable->entries;
-    auto item = std::lower_bound(entries.begin(), entries.end(), offset,
-                                 [](auto entry, uint offset) { return entry.offset < offset; });
-
-    Q_ASSERT(item != entries.end());
-    *srcLoc = item->location;
-}
-
-bool Codegen::generateFunction(const QV4::Compiler::Context *context, Function *function) const
-{
-    const auto error = [&](const QString &message) {
-        QQmlJS::DiagnosticMessage msg;
-        msg.loc = function->ast->firstSourceLocation();
-        msg.message = message;
-        function->error = msg;
+    const auto fail = [&](const QString &message) {
+        error->loc = ast->firstSourceLocation();
+        error->message = message;
         return false;
     };
 
     QQmlJS::AST::BoundNames arguments;
-    if (function->ast->formals)
-        arguments = function->ast->formals->formals();
+    if (ast->formals)
+        arguments = ast->formals->formals();
 
     if (function->argumentTypes.isEmpty()) {
         for (const QQmlJS::AST::BoundName &argument : qAsConst(arguments)) {
@@ -301,11 +291,11 @@ bool Codegen::generateFunction(const QV4::Compiler::Context *context, Function *
                     function->argumentTypes.append(rawType);
                     continue;
                 } else {
-                    return error(QStringLiteral("Cannot store the argument type %1.")
+                    return fail(QStringLiteral("Cannot store the argument type %1.")
                                          .arg(rawType ? rawType->internalName() : "<unknown>"));
                 }
             } else {
-                return error(
+                return fail(
                         QStringLiteral("Functions without type annotations won't be compiled"));
                 return false;
             }
@@ -315,33 +305,30 @@ bool Codegen::generateFunction(const QV4::Compiler::Context *context, Function *
     QQmlJSTypePropagator propagator(m_unitGenerator, m_typeResolver.get(), m_logger, m_typeInfo);
 
     if (!function->returnType) {
-        if (function->ast->typeAnnotation) {
-            function->returnType = m_typeResolver->typeFromAST(function->ast->typeAnnotation->type);
+        if (ast->typeAnnotation) {
+            function->returnType = m_typeResolver->typeFromAST(ast->typeAnnotation->type);
             if (!function->returnType)
-                return error(QStringLiteral("Cannot resolve return type"));
+                return fail(QStringLiteral("Cannot resolve return type"));
         }
     }
 
     if (function->returnType) {
         if (!m_typeResolver->storedType(
                     function->returnType, QQmlJSTypeResolver::ComponentIsGeneric::Yes)) {
-            return error(QStringLiteral("Cannot store the return type %1.")
+            return fail(QStringLiteral("Cannot store the return type %1.")
                                  .arg(function->returnType->internalName()));
         }
     }
 
-    QQmlJSTypePropagator::Error propagationError;
-    auto typePropagationResult = propagator.propagateTypes(
-            context, arguments, function->returnType, function->qmlScope,
-            m_typeResolver->objectsById(),
-            !function->returnType && function->contextType == QV4::Compiler::ContextType::Binding,
-            &propagationError);
-    if (propagationError.isSet()) {
-        QQmlJS::DiagnosticMessage msg;
-        msg.type = context->returnsClosure ? QtDebugMsg : QtWarningMsg;
-        instructionOffsetToSrcLocation(context, propagationError.instructionOffset, &msg.loc);
-        msg.message = propagationError.message;
-        function->error = msg;
+    function->isSignalHandler = !function->returnType
+            && contextType == QV4::Compiler::ContextType::Binding;
+    function->addressableScopes = m_typeResolver->objectsById();
+    function->code = context->code;
+    function->sourceLocations = context->sourceLocationTable.get();
+
+    propagator.run(function, error);
+    if (error->isValid()) {
+        error->type = context->returnsClosure ? QtDebugMsg : QtWarningMsg;
         return false;
     }
 

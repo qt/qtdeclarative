@@ -34,50 +34,28 @@ QT_BEGIN_NAMESPACE
 QQmlJSTypePropagator::QQmlJSTypePropagator(QV4::Compiler::JSUnitGenerator *unitGenerator,
                                            QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
                                            QQmlJSTypeInfo *typeInfo)
-    : m_typeResolver(typeResolver),
-      m_jsUnitGenerator(unitGenerator),
-      m_logger(logger),
-      m_typeInfo(typeInfo)
+    : QQmlJSCompilePass(unitGenerator, typeResolver, logger), m_typeInfo(typeInfo)
 {
 }
 
-QQmlJSTypePropagator::~QQmlJSTypePropagator() { }
-
-QQmlJSTypePropagator::TypePropagationResult QQmlJSTypePropagator::propagateTypes(
-        const QV4::Compiler::Context *context, const QQmlJS::AST::BoundNames &arguments,
-        const QQmlJSScope::ConstPtr &returnType, const QQmlJSScope::ConstPtr &qmlScope,
-        const QHash<QString, QQmlJSScope::ConstPtr> &addressableScopes, bool isSignalHandler,
-        Error *error)
+QQmlJSCompilePass::InstructionAnnotations QQmlJSTypePropagator::run(
+        const Function *function, QQmlJS::DiagnosticMessage *error)
 {
+    m_function = function;
     m_error = error;
-    m_currentScope = qmlScope;
-    m_currentContext = context;
-    m_addressableScopes = addressableScopes;
-    m_arguments = arguments;
-    m_returnType = m_typeResolver->globalType(returnType);
-    m_isSignalHandler = isSignalHandler;
+    m_returnType = m_typeResolver->globalType(m_function->returnType);
 
     do {
         m_state = PassState();
-
-        for (int i = 0; i < arguments.count(); ++i) {
-            auto argument = arguments.at(i);
-            setRegister(FirstArgument + i,
-                        argument.typeAnnotation
-                                ? m_typeResolver->typeFromAST(argument.typeAnnotation->type)
-                                : m_typeResolver->varType());
-        }
-
-        const int registerCount = context->registerCountInFunction;
-        for (int i = FirstArgument + arguments.count(); i < registerCount; ++i)
-            setRegister(i, m_typeResolver->voidType());
+        m_state.State::operator=(initialState(m_function, m_typeResolver));
 
         reset();
-        decode(context->code.constData(), static_cast<uint>(context->code.length()));
+        decode(m_function->code.constData(), static_cast<uint>(m_function->code.length()));
 
-        if (m_error->isSet())
-            break;
-    } while (m_state.needsMorePasses);
+        // If we have found unresolved backwards jumps, we need to start over with a fresh state.
+        // Mind that m_jumpOriginRegisterStateByTargetInstructionOffset is retained in that case.
+        // This means that we won't start over for the same reason again.
+    } while (!m_error->isValid() && m_state.needsMorePasses);
 
     return m_state.annotations;
 }
@@ -95,7 +73,7 @@ QQmlJSTypePropagator::TypePropagationResult QQmlJSTypePropagator::propagateTypes
 
 void QQmlJSTypePropagator::generate_Ret()
 {
-    if (m_isSignalHandler) {
+    if (m_function->isSignalHandler) {
         // Signal handlers cannot return anything.
     } else if (!m_returnType.isValid() && m_state.accumulatorIn.isValid()
                && m_typeResolver->containedType(m_state.accumulatorIn)
@@ -236,7 +214,7 @@ void QQmlJSTypePropagator::generate_LoadClosure(int value)
 void QQmlJSTypePropagator::generate_LoadName(int nameIndex)
 {
     const QString name = m_jsUnitGenerator->stringForIndex(nameIndex);
-    m_state.accumulatorOut = m_typeResolver->scopedType(m_currentScope, name);
+    m_state.accumulatorOut = m_typeResolver->scopedType(m_function->qmlScope, name);
     if (!m_state.accumulatorOut.isValid())
         setError(u"Cannot find name "_qs + name);
 }
@@ -248,8 +226,8 @@ void QQmlJSTypePropagator::generate_LoadGlobalLookup(int index)
 
 QQmlJS::SourceLocation QQmlJSTypePropagator::getCurrentSourceLocation() const
 {
-    Q_ASSERT(m_currentContext->sourceLocationTable);
-    const auto &entries = m_currentContext->sourceLocationTable->entries;
+    Q_ASSERT(m_function->sourceLocations);
+    const auto &entries = m_function->sourceLocations->entries;
 
     auto item = std::lower_bound(entries.begin(), entries.end(), currentInstructionOffset(),
                                  [](auto entry, uint offset) { return entry.offset < offset; });
@@ -261,8 +239,8 @@ QQmlJS::SourceLocation QQmlJSTypePropagator::getCurrentSourceLocation() const
 
 QQmlJS::SourceLocation QQmlJSTypePropagator::getCurrentBindingSourceLocation() const
 {
-    Q_ASSERT(m_currentContext->sourceLocationTable);
-    const auto &entries = m_currentContext->sourceLocationTable->entries;
+    Q_ASSERT(m_function->sourceLocations);
+    const auto &entries = m_function->sourceLocations->entries;
 
     Q_ASSERT(!entries.isEmpty());
     return combine(entries.constFirst().location, entries.constLast().location);
@@ -272,17 +250,17 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
 {
     auto location = getCurrentSourceLocation();
 
-    if (m_currentScope->isInCustomParserParent()) {
-        Q_ASSERT(!m_currentScope->baseType().isNull());
+    if (m_function->qmlScope->isInCustomParserParent()) {
+        Q_ASSERT(!m_function->qmlScope->baseType().isNull());
         // Only ignore custom parser based elements if it's not Connections.
-        if (m_currentScope->baseType()->internalName() != u"QQmlConnections"_qs)
+        if (m_function->qmlScope->baseType()->internalName() != u"QQmlConnections"_qs)
             return;
     }
 
     m_logger->logWarning(QLatin1String("Unqualified access"), Log_UnqualifiedAccess, location);
 
-    auto childScopes = m_currentScope->childScopes();
-    for (qsizetype i = 0; i < m_currentScope->childScopes().length(); i++) {
+    auto childScopes = m_function->qmlScope->childScopes();
+    for (qsizetype i = 0; i < m_function->qmlScope->childScopes().length(); i++) {
         auto &scope = childScopes[i];
         if (location.offset > scope->sourceLocation().offset) {
             if (i + 1 < childScopes.length()
@@ -331,10 +309,11 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
         }
     }
 
-    for (QQmlJSScope::ConstPtr scope = m_currentScope; !scope.isNull();
+    for (QQmlJSScope::ConstPtr scope = m_function->qmlScope; !scope.isNull();
          scope = scope->parentScope()) {
         if (scope->hasProperty(name)) {
-            auto it = std::find_if(m_addressableScopes.constBegin(), m_addressableScopes.constEnd(),
+            auto it = std::find_if(m_function->addressableScopes.constBegin(),
+                                   m_function->addressableScopes.constEnd(),
                                    [&](const QQmlJSScope::ConstPtr ptr) { return ptr == scope; });
 
             FixSuggestion suggestion { Log_UnqualifiedAccess, QtInfoMsg, {} };
@@ -342,7 +321,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
             QQmlJS::SourceLocation fixLocation = location;
             fixLocation.length = 0;
 
-            QString id = it == m_addressableScopes.constEnd() ? u"<id>"_qs : it.key();
+            QString id = it == m_function->addressableScopes.constEnd() ? u"<id>"_qs : it.key();
 
             suggestion.fixes << FixSuggestion::Fix {
                 name + QLatin1String(" is a member of a parent element\n")
@@ -351,7 +330,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
                 QtInfoMsg, fixLocation, id + u"."_qs
             };
 
-            if (it == m_addressableScopes.constEnd()) {
+            if (it == m_function->addressableScopes.constEnd()) {
                 suggestion.fixes << FixSuggestion::Fix {
                     u"You first have to give the element an id"_qs,
                     QtInfoMsg,
@@ -444,7 +423,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
 
 
     m_state.accumulatorOut = m_typeResolver->scopedType(
-                m_currentScope,
+                m_function->qmlScope,
                 m_state.accumulatorIn.isImportNamespace()
                     ? m_jsUnitGenerator->stringForIndex(m_state.accumulatorIn.importNamespace())
                       + u'.' + name
@@ -454,18 +433,18 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
         && m_state.accumulatorOut.variant() == QQmlJSRegisterContent::ScopeAttached) {
         QQmlJSScope::ConstPtr attachedType = m_state.accumulatorOut.scopeType();
 
-        for (QQmlJSScope::ConstPtr scope = m_currentScope->parentScope(); !scope.isNull();
+        for (QQmlJSScope::ConstPtr scope = m_function->qmlScope->parentScope(); !scope.isNull();
              scope = scope->parentScope()) {
             if (m_typeInfo->usedAttachedTypes.values(scope).contains(attachedType)) {
-                auto it = std::find(m_addressableScopes.constBegin(),
-                                    m_addressableScopes.constEnd(), scope);
+                auto it = std::find(m_function->addressableScopes.constBegin(),
+                                    m_function->addressableScopes.constEnd(), scope);
 
                 FixSuggestion suggestion { Log_AttachedPropertyReuse, QtInfoMsg, {} };
 
                 QQmlJS::SourceLocation fixLocation = getCurrentSourceLocation();
                 fixLocation.length = 0;
 
-                QString id = it == m_addressableScopes.constEnd() ? u"<id>"_qs : it.key();
+                QString id = it == m_function->addressableScopes.constEnd() ? u"<id>"_qs : it.key();
 
                 suggestion.fixes << FixSuggestion::Fix {
                     u"Using attached type %1 already initialized in a parent scope. Reference it by id instead:"_qs
@@ -476,7 +455,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
                 fixLocation = scope->sourceLocation();
                 fixLocation.length = 0;
 
-                if (it == m_addressableScopes.constEnd()) {
+                if (it == m_function->addressableScopes.constEnd()) {
                     suggestion.fixes
                             << FixSuggestion::Fix { u"You first have to give the element an id"_qs,
                                                     QtInfoMsg,
@@ -488,20 +467,20 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
             }
         }
 
-        m_typeInfo->usedAttachedTypes.insert(m_currentScope, attachedType);
+        m_typeInfo->usedAttachedTypes.insert(m_function->qmlScope, attachedType);
     }
 
     if (!m_state.accumulatorOut.isValid() && m_typeResolver->isPrefix(name)) {
         const QQmlJSRegisterContent inType = m_state.accumulatorIn.isValid()
                 ? m_state.accumulatorIn
-                : m_typeResolver->globalType(m_currentScope);
+                : m_typeResolver->globalType(m_function->qmlScope);
         m_state.accumulatorOut = QQmlJSRegisterContent::create(
                     inType.storedType(), nameIndex, QQmlJSRegisterContent::ScopeModulePrefix,
                     m_typeResolver->containedType(inType));
         return;
     }
 
-    checkDeprecated(m_currentScope, name, false);
+    checkDeprecated(m_function->qmlScope, name, false);
 
     bool isRestricted = checkRestricted(name);
 
@@ -520,7 +499,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
 void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
 {
     const QString name = m_jsUnitGenerator->stringForIndex(nameIndex);
-    const QQmlJSRegisterContent type = m_typeResolver->scopedType(m_currentScope, name);
+    const QQmlJSRegisterContent type = m_typeResolver->scopedType(m_function->qmlScope, name);
 
     if (!type.isValid()) {
         setError(u"Cannot find name "_qs + name);
@@ -532,7 +511,7 @@ void QQmlJSTypePropagator::generate_StoreNameSloppy(int nameIndex)
         return;
     }
 
-    if (!type.isWritable() && !m_currentScope->hasOwnProperty(name)) {
+    if (!type.isWritable() && !m_function->qmlScope->hasOwnProperty(name)) {
         setError(u"Can't assign to read-only property %1"_qs.arg(name));
 
         m_logger->logWarning(u"Cannot assign to read-only property %1"_qs.arg(name), Log_Property,
@@ -901,7 +880,7 @@ void QQmlJSTypePropagator::generate_CallPossiblyDirectEval(int argc, int argv)
 
 void QQmlJSTypePropagator::propagateScopeLookupCall(const QString &functionName, int argc, int argv)
 {
-    if (QQmlJSScope::ConstPtr scope = QQmlJSScope::findCurrentQMLScope(m_currentScope)) {
+    if (QQmlJSScope::ConstPtr scope = QQmlJSScope::findCurrentQMLScope(m_function->qmlScope)) {
         const auto methods = scope->methods(functionName);
         if (!methods.isEmpty()) {
             propagateCall(methods, argc, argv);
@@ -921,7 +900,7 @@ void QQmlJSTypePropagator::generate_CallQmlContextPropertyLookup(int index, int 
 {
     const QString name = m_jsUnitGenerator->lookupName(index);
     propagateScopeLookupCall(name, argc, argv);
-    checkDeprecated(m_currentScope, name, true);
+    checkDeprecated(m_function->qmlScope, name, true);
 }
 
 void QQmlJSTypePropagator::generate_CallWithSpread(int func, int thisObject, int argc, int argv)
@@ -1481,7 +1460,7 @@ void QQmlJSTypePropagator::generate_GetTemplateObject(int index)
 QV4::Moth::ByteCodeHandler::Verdict
 QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type instr)
 {
-    if (m_error->isSet())
+    if (m_error->isValid())
         return SkipInstruction;
 
     if (m_state.jumpTargets.contains(currentInstructionOffset()))
@@ -1632,7 +1611,7 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
         if (m_state.accumulatorOut.isValid()) {
             setRegister(Accumulator, m_state.accumulatorOut);
             m_state.accumulatorOut.reset();
-        } else if (!m_error->isSet()) {
+        } else if (!m_error->isValid()) {
             setError(u"Instruction is expected to populate the accumulator"_qs);
             return;
         }
@@ -1678,12 +1657,13 @@ QString QQmlJSTypePropagator::registerName(int registerIndex) const
 {
     if (registerIndex == Accumulator)
         return u"accumulator"_qs;
-    if (registerIndex >= FirstArgument && registerIndex < FirstArgument + m_arguments.count()) {
-        const int argIdx = registerIndex - FirstArgument;
-        return u"argument %1 (\"%2\")"_qs.arg(argIdx).arg(m_arguments.at(argIdx).id);
+    if (registerIndex >= FirstArgument
+            && registerIndex < FirstArgument + m_function->argumentTypes.count()) {
+        return u"argument %1"_qs.arg(registerIndex - FirstArgument);
     }
 
-    return u"temporary register %1"_qs.arg(registerIndex - FirstArgument - m_arguments.count());
+    return u"temporary register %1"_qs.arg(
+            registerIndex - FirstArgument - m_function->argumentTypes.count());
 }
 
 void QQmlJSTypePropagator::setRegister(int index, const QQmlJSRegisterContent &content)
@@ -1698,7 +1678,7 @@ void QQmlJSTypePropagator::setRegister(int index, const QQmlJSScope::ConstPtr &c
 
 QQmlJSRegisterContent QQmlJSTypePropagator::checkedInputRegister(int reg)
 {
-    QQmlJSVirtualRegisters::ConstIterator regIt = m_state.registers.find(reg);
+    VirtualRegisters::ConstIterator regIt = m_state.registers.find(reg);
     if (regIt == m_state.registers.constEnd()) {
         setError(u"Type error: could not infer the type of an expression"_qs);
         return {};

@@ -191,9 +191,6 @@ private:
     // TODO: Constant string/number/bool/enumval
 };
 
-// map from register index to expected type
-using QQmlJSVirtualRegisters = QHash<int, QQmlJSRegisterContent>;
-
 QT_END_NAMESPACE
 
 #endif // REGISTERCONTENT_H

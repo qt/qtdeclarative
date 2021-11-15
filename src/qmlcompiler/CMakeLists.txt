@@ -9,6 +9,7 @@ qt_internal_add_module(QmlCompilerPrivate
         qcoloroutput_p.h qcoloroutput.cpp
         qdeferredpointer_p.h
         qqmljsannotation_p.h qqmljsannotation.cpp
+        qqmljscompilepass_p.h
         qqmljscompiler.cpp qqmljscompiler_p.h
         qqmljsimporter.cpp qqmljsimporter_p.h
         qqmljsimportvisitor.cpp qqmljsimportvisitor_p.h
