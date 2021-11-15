@@ -223,7 +223,7 @@ int QV4::Compiler::JSUnitGenerator::registerConstant(QV4::ReturnedValue v)
     return constants.size() - 1;
 }
 
-QV4::ReturnedValue QV4::Compiler::JSUnitGenerator::constant(int idx)
+QV4::ReturnedValue QV4::Compiler::JSUnitGenerator::constant(int idx) const
 {
     return constants.at(idx);
 }

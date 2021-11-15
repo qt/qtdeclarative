@@ -89,7 +89,10 @@ public:
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
     QQmlJSScope::ConstPtr scopeForId(const QString &id) const;
 
-    bool isPrefix(const QString &name) { return m_imports.contains(name) && !m_imports[name]; }
+    bool isPrefix(const QString &name) const
+    {
+        return m_imports.contains(name) && !m_imports[name];
+    }
 
     QQmlJSScope::ConstPtr typeForName(const QString &name) const { return m_imports[name]; }
     QQmlJSScope::ConstPtr typeFromAST(QQmlJS::AST::Type *type) const;
@@ -137,7 +140,7 @@ public:
                ComponentIsGeneric allowComponent = ComponentIsGeneric::No) const;
 
     const QHash<QString, QQmlJSScope::ConstPtr> &objectsById() { return m_objectsById; }
-    const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers()
+    const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers() const
     {
         return m_signalHandlers;
     }

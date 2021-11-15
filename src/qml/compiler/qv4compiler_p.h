@@ -131,7 +131,7 @@ struct Q_QMLCOMPILER_PRIVATE_EXPORT JSUnitGenerator {
     int registerRegExp(QQmlJS::AST::RegExpLiteral *regexp);
 
     int registerConstant(ReturnedValue v);
-    ReturnedValue constant(int idx);
+    ReturnedValue constant(int idx) const;
 
     int registerJSClass(const QStringList &members);
 
