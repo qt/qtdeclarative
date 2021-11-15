@@ -295,4 +295,4 @@ int main(int argc, char *argv[])
     return _realmain(argc, argv);
 }
 
-#include "tst_scenegraph.moc"
+#include "tst_baseline_scenegraph.moc"
