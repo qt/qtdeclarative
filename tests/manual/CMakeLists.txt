@@ -7,7 +7,6 @@ add_subdirectory(pointer)
 # add_subdirectory(qmltypememory) # TODO: C++ API changed
 # add_subdirectory(quickwidgetviewer) # TODO: C++ API changed
 add_subdirectory(scalablepath)
-add_subdirectory(scenegraph_lancelot)
 add_subdirectory(shapestest)
 add_subdirectory(tableview)
 add_subdirectory(text)
