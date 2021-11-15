@@ -296,9 +296,9 @@ bool Codegen::generateFunction(const QV4::Compiler::Context *context, Function *
         for (const QQmlJS::AST::BoundName &argument : qAsConst(arguments)) {
             if (argument.typeAnnotation) {
                 const auto rawType = m_typeResolver->typeFromAST(argument.typeAnnotation->type);
-                if (const auto storedType = m_typeResolver->storedType(
+                if (m_typeResolver->storedType(
                             rawType, QQmlJSTypeResolver::ComponentIsGeneric::Yes)) {
-                    function->argumentTypes.append(storedType);
+                    function->argumentTypes.append(rawType);
                     continue;
                 } else {
                     return error(QStringLiteral("Cannot store the argument type %1.")
@@ -323,10 +323,8 @@ bool Codegen::generateFunction(const QV4::Compiler::Context *context, Function *
     }
 
     if (function->returnType) {
-        if (auto returnType = m_typeResolver->storedType(
+        if (!m_typeResolver->storedType(
                     function->returnType, QQmlJSTypeResolver::ComponentIsGeneric::Yes)) {
-            function->returnType = returnType;
-        } else {
             return error(QStringLiteral("Cannot store the return type %1.")
                                  .arg(function->returnType->internalName()));
         }
