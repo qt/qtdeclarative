@@ -1,16 +1,16 @@
 import QtQml
 import QtQuick // for matrix4x4, vectorNd, rect, etc.
 QtObject {
-    property bool boolP
-    property double doubleP
-    property int intP
+    property bool boolP: true
+    property double doubleP: 0.5
+    property int intP: 42
     property list<QtObject> listQtObjP // always list of QML objects
-    property real realP
-    property string stringP
-    property url urlP
-    property var varP
+    property real realP: 2.32
+    property string stringP: "hello, world"
+    property url urlP: "https://www.qt.io/"
+    property var varP: 42.42
 
-    property color colorP
+    property color colorP: "blue"
     property date dateP
     property font fontP
     property matrix4x4 matrix4x4P
@@ -29,4 +29,8 @@ QtObject {
     // extra:
     property Timer timerP
     property list<Component> listNumP
+
+    // special:
+    property QtObject nullObjP: null
+    property var nullVarP: null
 }

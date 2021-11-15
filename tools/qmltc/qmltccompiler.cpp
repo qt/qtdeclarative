@@ -251,6 +251,10 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
             compileProperty(current, p, type);
         }
     }
+
+    const QMultiHash<QString, QQmlJSMetaPropertyBinding> allBindings = type->ownPropertyBindings();
+    for (auto it = allBindings.begin(); it != allBindings.end(); ++it)
+        compileBinding(current, it.value(), type, BindingAccessorData { type });
 }
 
 void QmltcCompiler::compileEnum(QmltcType &current, const QQmlJSMetaEnum &e)
@@ -403,6 +407,89 @@ void QmltcCompiler::compileProperty(QmltcType &current, const QQmlJSMetaProperty
 
     // structure: (C++ type name, name, C++ class name, C++ signal name)
     current.properties.emplaceBack(underlyingType, variableName, current.cppType, p.notify());
+}
+
+void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
+                                   const QQmlJSScope::ConstPtr &type,
+                                   const BindingAccessorData &accessor)
+{
+    Q_UNUSED(current);
+    Q_UNUSED(accessor);
+    QString propertyName = binding.propertyName();
+    if (propertyName.isEmpty()) {
+        // if empty, try default property
+        for (QQmlJSScope::ConstPtr t = type->baseType(); t && propertyName.isEmpty();
+             t = t->baseType()) {
+            propertyName = t->defaultPropertyName();
+        }
+    }
+    Q_ASSERT(!propertyName.isEmpty());
+    QQmlJSMetaProperty p = type->property(propertyName);
+    Q_ASSERT(p.isValid());
+    QQmlJSScope::ConstPtr propertyType = p.type();
+    Q_ASSERT(propertyType);
+
+    // NB: we assume here that QmltcVisitor took care of type mismatches and
+    // other errors, so the compiler just needs to add correct instructions,
+    // without if-checking every type
+
+    QmltcCodeGenerator generator {
+        QQmlJSScope::ConstPtr()
+    }; // NB: we don't need document root here
+
+    switch (binding.bindingType()) {
+    case QQmlJSMetaPropertyBinding::BoolLiteral: {
+        const bool value = binding.literalValue().toBool();
+        generator.generate_assignToProperty(current, type, p, value ? u"true"_qs : u"false"_qs,
+                                            accessor.name);
+        break;
+    }
+    case QQmlJSMetaPropertyBinding::NumberLiteral: {
+        const QString value = QString::number(binding.literalValue().toDouble());
+        generator.generate_assignToProperty(current, type, p, value, accessor.name);
+        break;
+    }
+    case QQmlJSMetaPropertyBinding::StringLiteral: {
+        const QString value = binding.literalValue().toString();
+        generator.generate_assignToProperty(
+                current, type, p, QmltcCodeGenerator::toStringLiteral(value), accessor.name);
+        break;
+    }
+    case QQmlJSMetaPropertyBinding::Null: {
+        // poor check: null bindings are only supported for var and objects
+        if (propertyType != m_typeResolver->varType()
+            && propertyType->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
+            // TODO: this should really be done before the compiler here
+            recordError(binding.sourceLocation(),
+                        u"Cannot assign null to incompatible property"_qs);
+        } else if (propertyType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
+            generator.generate_assignToProperty(current, type, p, u"nullptr"_qs, accessor.name);
+        } else {
+            generator.generate_assignToProperty(current, type, p,
+                                                u"QVariant::fromValue(nullptr)"_qs, accessor.name);
+        }
+        break;
+    }
+
+    // case QQmlJSMetaPropertyBinding::RegExpLiteral:
+    // case QQmlJSMetaPropertyBinding::Translation:
+    // case QQmlJSMetaPropertyBinding::TranslationById:
+    // case QQmlJSMetaPropertyBinding::Script:
+    // case QQmlJSMetaPropertyBinding::Object:
+    // case QQmlJSMetaPropertyBinding::Interceptor:
+    // case QQmlJSMetaPropertyBinding::ValueSource:
+    // case QQmlJSMetaPropertyBinding::AttachedProperty:
+    // case QQmlJSMetaPropertyBinding::GroupProperty:
+    case QQmlJSMetaPropertyBinding::Invalid: {
+        Q_UNREACHABLE(); // this is truly something that must not happen here
+        break;
+    }
+    default: {
+        m_logger->logWarning(u"Binding type is not supported (yet)"_qs, Log_Compiler,
+                             binding.sourceLocation());
+        break;
+    }
+    }
 }
 
 QT_END_NAMESPACE

@@ -190,7 +190,8 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
         QQmlJSMetaProperty prop = m_currentScope->ownProperty(name);
         const QString nameWithUppercase = name[0].toUpper() + name.sliced(1);
         prop.setRead(name);
-        prop.setWrite(u"set" + nameWithUppercase);
+        if (prop.isWritable())
+            prop.setWrite(u"set" + nameWithUppercase);
         prop.setBindable(u"bindable" + nameWithUppercase);
         prop.setNotify(name + u"Changed");
         // also check that notify is already a method of m_currentScope

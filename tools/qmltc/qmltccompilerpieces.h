@@ -51,6 +51,18 @@ struct QmltcCodeGenerator
 
     QQmlJSScope::ConstPtr documentRoot;
 
+    static QString escapeString(QString s)
+    {
+        return s.replace(u"\\"_qs, u"\\\\"_qs)
+                .replace(u"\""_qs, u"\\\""_qs)
+                .replace(u"\n"_qs, u"\\n"_qs);
+    }
+
+    static QString toStringLiteral(const QString &s)
+    {
+        return u"QStringLiteral(\"" + escapeString(s) + u"\")";
+    }
+
     /*!
         \internal
 
@@ -61,6 +73,10 @@ struct QmltcCodeGenerator
     */
     [[nodiscard]] inline decltype(auto) generate_qmlContextSetup(QmltcType &current,
                                                                  const QQmlJSScope::ConstPtr &type);
+
+    inline void generate_assignToProperty(QmltcType &current, const QQmlJSScope::ConstPtr &type,
+                                          const QQmlJSMetaProperty &p, const QString &value,
+                                          const QString &accessor);
 };
 
 inline decltype(auto)
@@ -150,6 +166,32 @@ QmltcCodeGenerator::generate_qmlContextSetup(QmltcType &current, const QQmlJSSco
     };
 
     return QScopeGuard(generateFinalLines);
+}
+
+inline void QmltcCodeGenerator::generate_assignToProperty(QmltcType &current,
+                                                          const QQmlJSScope::ConstPtr &type,
+                                                          const QQmlJSMetaProperty &p,
+                                                          const QString &value,
+                                                          const QString &accessor)
+{
+    Q_ASSERT(p.isValid());
+    Q_ASSERT(!p.isList()); // TODO: check this one
+    Q_ASSERT(!p.isPrivate());
+    Q_UNUSED(type);
+
+    QStringList code;
+    code.reserve(6); // always should be enough
+
+    if (!p.isWritable()) {
+        Q_ASSERT(type->hasOwnProperty(p.propertyName())); // otherwise we cannot set it
+        code << u"%1->m_%2 = %3;"_qs.arg(accessor, p.propertyName(), value);
+    } else {
+        const QString setter = p.write();
+        Q_ASSERT(!setter.isEmpty()); // in practice could be empty, but ignore it for now
+        code << u"%1->%2(%3);"_qs.arg(accessor, setter, value);
+    }
+
+    current.init.body += code;
 }
 
 QT_END_NAMESPACE

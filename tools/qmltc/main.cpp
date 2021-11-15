@@ -46,6 +46,7 @@
 
 void setupLogger(QQmlJSLogger &logger) // prepare logger to work with compiler
 {
+    // TODO: support object bindings and change to setCategoryLevel(QtInfoMsg)
     logger.setCategoryError(Log_Compiler, true);
 }
 

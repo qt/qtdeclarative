@@ -107,7 +107,8 @@ void tst_qmltc::helloWorld()
 {
     QQmlEngine e;
     PREPEND_NAMESPACE(HelloWorld) created(&e);
-    QSKIP("Nothing is supported yet.");
+    QCOMPARE(created.hello(), u"Hello, World");
+    QSKIP("Not everything is supported yet.");
 }
 
 void tst_qmltc::qtQuickIncludes()
@@ -219,6 +220,10 @@ void tst_qmltc::properties()
     QCOMPARE(propertyMetaType("urlP"), QMetaType::fromType<QUrl>());
     QCOMPARE(propertyMetaType("varP"), QMetaType::fromType<QVariant>());
 
+    QCOMPARE(propertyMetaType("nullObjP"), QMetaType::fromType<QObject *>());
+    QCOMPARE(propertyMetaType("nullVarP"), QMetaType::fromType<QVariant>());
+
+    QCOMPARE(propertyMetaType("varP"), QMetaType::fromType<QVariant>());
     QCOMPARE(propertyMetaType("colorP"), QMetaType::fromType<QColor>());
     QCOMPARE(propertyMetaType("dateP"), QMetaType::fromType<QDateTime>());
     QCOMPARE(propertyMetaType("fontP"), QMetaType::fromType<QFont>());
@@ -241,6 +246,26 @@ void tst_qmltc::properties()
     // extra:
     QCOMPARE(propertyMetaType("timerP"), QMetaType::fromType<QQmlTimer *>());
     QCOMPARE(propertyMetaType("listNumP"), QMetaType::fromType<QQmlListProperty<QQmlComponent>>());
+
+    // now, test property values:
+    QCOMPARE(created.boolP(), true);
+    QCOMPARE(created.doubleP(), 0.5);
+    QCOMPARE(created.intP(), 42);
+    QCOMPARE(created.realP(), 2.32);
+    QCOMPARE(created.stringP(), u"hello, world"_qs);
+    QCOMPARE(created.urlP(), u"https://www.qt.io/"_qs);
+    QCOMPARE(created.varP(), 42.42);
+
+    QCOMPARE(created.boolP(), true);
+    QCOMPARE(created.boolP(), true);
+
+    QCOMPARE(created.colorP(), QColor(u"blue"_qs));
+
+    QCOMPARE(created.readonlyStringP(), u"foobar"_qs);
+
+    // nulls:
+    QCOMPARE(created.nullObjP(), nullptr);
+    QCOMPARE(created.nullVarP(), QVariant::fromValue(nullptr));
 }
 
 void tst_qmltc::id()

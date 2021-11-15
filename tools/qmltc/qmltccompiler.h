@@ -70,6 +70,27 @@ private:
     void compileProperty(QmltcType &current, const QQmlJSMetaProperty &p,
                          const QQmlJSScope::ConstPtr &owner);
 
+    /*!
+        \internal
+
+        Helper structure that holds the information necessary for most bindings,
+        such as accessor name, which is used to reference the properties. For
+        example:
+        > (accessor.name)->(propertyName) results in "this->myProperty"
+
+        This data is also used in more advanced scenarios by attached and
+        grouped properties
+    */
+    struct BindingAccessorData
+    {
+        QQmlJSScope::ConstPtr scope; // usually the current type
+        QString name = u"this"_qs;
+        QString propertyName = QString();
+        bool isValueType = false;
+    };
+    void compileBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
+                        const QQmlJSScope::ConstPtr &type, const BindingAccessorData &accessor);
+
     bool hasErrors() const { return m_logger->hasErrors() || m_logger->hasWarnings(); }
     void recordError(const QQmlJS::SourceLocation &location, const QString &message,
                      QQmlJSLoggerCategory category = Log_Compiler)
