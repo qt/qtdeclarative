@@ -48,6 +48,7 @@
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qjsondocument.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopeguard.h>
 
 #if QT_CONFIG(commandlineparser)

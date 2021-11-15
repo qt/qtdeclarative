@@ -29,6 +29,7 @@
 #include "qmltccompiler.h"
 #include "qmltcoutputir.h"
 #include "qmltccodewriter.h"
+#include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
 
