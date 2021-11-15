@@ -1,1 +1,1 @@
-5:1:Expected token `:'
+4:5:Read-only properties require an initializer.

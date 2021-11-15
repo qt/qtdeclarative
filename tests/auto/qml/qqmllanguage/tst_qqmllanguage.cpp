@@ -163,6 +163,8 @@ private slots:
     void scriptStringWithoutSourceCode();
     void scriptStringComparison();
     void defaultPropertyListOrder();
+    void defaultPropertyWithInitializer_data();
+    void defaultPropertyWithInitializer();
     void declaredPropertyValues();
     void dontDoubleCallClassBegin();
     void reservedWords_data();
@@ -2667,6 +2669,32 @@ void tst_qqmllanguage::defaultPropertyListOrder()
     QCOMPARE(container->getChildren()->at(3)->property("index"), QVariant(3));
     QCOMPARE(container->getChildren()->at(4)->property("index"), QVariant(4));
     QCOMPARE(container->getChildren()->at(5)->property("index"), QVariant(5));
+}
+
+void tst_qqmllanguage::defaultPropertyWithInitializer_data()
+{
+    QTest::addColumn<QUrl>("file");
+    QTest::addColumn<QString>("objectName");
+
+    QTest::newRow("base") << testFileUrl("DefaultPropertyWithInitializer.qml") << u"default"_qs;
+    QTest::newRow("user") << testFileUrl("DefaultPropertyWithInitializerUser.qml") << u"changed"_qs;
+    QTest::newRow("list base") << testFileUrl("DefaultPropertyWithListInitializer.qml") << u"1"_qs;
+    QTest::newRow("list user") << testFileUrl("DefaultPropertyWithListInitializerUser.qml") << u"2"_qs;
+}
+
+void tst_qqmllanguage::defaultPropertyWithInitializer()
+{
+    QFETCH(QUrl, file);
+    QFETCH(QString, objectName);
+
+    QQmlComponent component(&engine, file);
+    VERIFY_ERRORS(0);
+
+    QScopedPointer<QObject> root(component.create());
+    QVERIFY(root);
+    auto entry = root->property("entry").value<QObject *>();
+    QVERIFY(entry);
+    QCOMPARE(entry->objectName(), objectName);
 }
 
 void tst_qqmllanguage::declaredPropertyValues()

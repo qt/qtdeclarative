@@ -37,11 +37,14 @@
 **
 ****************************************************************************/
 
+#include <QString>
 #include <QLocale>
 #include "qqmljsast_p.h"
 
 #include "qqmljsastvisitor_p.h"
 #include <qlocale.h>
+
+#include <algorithm>
 
 QT_BEGIN_NAMESPACE
 
@@ -1646,6 +1649,20 @@ void UiAnnotation::accept0(BaseVisitor *visitor)
     }
 
     visitor->endVisit(this);
+}
+
+SourceLocation UiPropertyAttributes::firstSourceLocation() const
+{
+    std::array<const SourceLocation *, 4> tokens {&m_propertyToken, &m_defaultToken, &m_readonlyToken, &m_requiredToken};
+    const auto it = std::min_element(tokens.begin(), tokens.end(), compareLocationsByBegin<true>);
+    return **it;
+}
+
+SourceLocation UiPropertyAttributes::lastSourceLocation() const
+{
+    std::array<const SourceLocation *, 4> tokens {&m_propertyToken, &m_defaultToken, &m_readonlyToken, &m_requiredToken};
+    const auto it = std::max_element(tokens.begin(), tokens.end(), compareLocationsByBegin<false>);
+    return **it;
 }
 
 } } // namespace QQmlJS::AST

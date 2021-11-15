@@ -198,7 +198,7 @@ public:
                       .arg(quotedString(typeStr), quotedString(el->typeModifier),
                            quotedString(el->name), boolStr(el->isDefaultMember()),
                            boolStr(el->isReadonly()), boolStr(el->isRequired()),
-                           loc(el->defaultToken()), loc(el->readonlyToken()), loc(el->propertyToken),
+                           loc(el->defaultToken()), loc(el->readonlyToken()), loc(el->propertyToken()),
                            loc(el->requiredToken()), loc(el->typeModifierToken), loc(el->typeToken),
                            loc(el->identifierToken), loc(el->colonToken),
                            semicolonToken(el->semicolonToken)));

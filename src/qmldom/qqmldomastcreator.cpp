@@ -372,7 +372,7 @@ public:
             MethodInfo *mPtr;
             Path p = current<QmlObject>().addMethod(m, AddOption::KeepExisting, &mPtr);
             pushEl(p, *mPtr, el);
-            FileLocations::addRegion(nodeStack.last().fileLocations, u"signal", el->propertyToken);
+            FileLocations::addRegion(nodeStack.last().fileLocations, u"signal", el->propertyToken());
             MethodInfo &mInfo = std::get<MethodInfo>(currentNode().value);
             AST::UiParameterList *args = el->parameters;
             while (args) {
@@ -404,7 +404,7 @@ public:
                     current<QmlObject>().addPropertyDef(p, AddOption::KeepExisting, &pPtr);
             pushEl(pPathFromOwner, *pPtr, el);
             FileLocations::addRegion(nodeStack.last().fileLocations, u"property",
-                                     el->propertyToken);
+                                     el->propertyToken());
             if (p.name == u"id")
                 qmlFile.addError(
                         myParseErrors()
