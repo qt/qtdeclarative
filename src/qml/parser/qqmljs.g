@@ -1315,8 +1315,7 @@ UiObjectMember: T_READONLY UiObjectMemberListPropertyNoInitialiser;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = sym(2).UiPublicMember;
-        node->isReadonlyMember = true;
-        node->readonlyToken = loc(1);
+        node->m_readonlyToken = loc(1);
         sym(1).Node = node;
     } break;
 ./
@@ -1340,8 +1339,7 @@ UiObjectMember: T_DEFAULT UiObjectMemberPropertyNoInitialiser;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = sym(2).UiPublicMember;
-        node->isDefaultMember = true;
-        node->defaultToken = loc(1);
+        node->m_defaultToken = loc(1);
         sym(1).Node = node;
     } break;
 ./
@@ -1351,8 +1349,7 @@ UiObjectMember: T_REQUIRED UiObjectMemberListPropertyNoInitialiser;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = sym(2).UiPublicMember;
-        node->isRequired = true;
-        node->requiredToken = loc(1);
+        node->m_requiredToken = loc(1);
         sym(1).Node = node;
     } break;
 ./
@@ -1361,10 +1358,8 @@ UiObjectMember: T_DEFAULT T_REQUIRED UiObjectMemberListPropertyNoInitialiser;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = sym(3).UiPublicMember;
-        node->isRequired = true;
-        node->requiredToken = loc(2);
-        node->isDefaultMember = true;
-        node->defaultToken = loc(1);
+        node->m_requiredToken = loc(2);
+        node->m_defaultToken = loc(1);
         sym(1).Node = node;
     } break;
 ./
@@ -1373,10 +1368,8 @@ UiObjectMember: T_REQUIRED T_DEFAULT UiObjectMemberListPropertyNoInitialiser;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = sym(3).UiPublicMember;
-        node->isRequired = true;
-        node->requiredToken = loc(1);
-        node->isDefaultMember = true;
-        node->defaultToken = loc(2);
+        node->m_requiredToken = loc(1);
+        node->m_defaultToken = loc(2);
         sym(1).Node = node;
     } break;
 ./
@@ -1385,8 +1378,7 @@ UiObjectMember: T_DEFAULT UiObjectMemberListPropertyNoInitialiser;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = sym(2).UiPublicMember;
-        node->isDefaultMember = true;
-        node->defaultToken = loc(1);
+        node->m_defaultToken = loc(1);
         sym(1).Node = node;
     } break;
 ./
@@ -1395,10 +1387,8 @@ UiObjectMember: T_DEFAULT T_REQUIRED UiObjectMemberPropertyNoInitialiser;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = sym(3).UiPublicMember;
-        node->isDefaultMember = true;
-        node->defaultToken = loc(1);
-        node->isRequired = true;
-        node->requiredToken = loc(2);
+        node->m_defaultToken = loc(1);
+        node->m_requiredToken = loc(2);
         sym(1).Node = node;
     } break;
 ./
@@ -1408,10 +1398,8 @@ UiObjectMember: T_REQUIRED T_DEFAULT UiObjectMemberPropertyNoInitialiser;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = sym(3).UiPublicMember;
-        node->isDefaultMember = true;
-        node->defaultToken = loc(2);
-        node->isRequired = true;
-        node->requiredToken = loc(1);
+        node->m_defaultToken = loc(2);
+        node->m_requiredToken = loc(1);
         sym(1).Node = node;
     } break;
 ./
@@ -1438,8 +1426,7 @@ UiObjectMember: T_REQUIRED UiObjectMemberPropertyNoInitialiser;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = sym(2).UiPublicMember;
-        node->requiredToken = loc(1);
-        node->isRequired = true;
+        node->m_requiredToken = loc(1);
         sym(1).Node = node;
     } break;
 ./
@@ -1462,8 +1449,7 @@ UiObjectMember: T_READONLY UiObjectMemberWithScriptStatement;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = sym(2).UiPublicMember;
-        node->isReadonlyMember = true;
-        node->readonlyToken = loc(1);
+        node->m_readonlyToken = loc(1);
         sym(1).Node = node;
     } break;
 ./
@@ -1472,8 +1458,7 @@ UiObjectMember: T_DEFAULT UiObjectMemberWithScriptStatement;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = sym(2).UiPublicMember;
-        node->isDefaultMember = true;
-        node->defaultToken = loc(1);
+        node->m_defaultToken = loc(1);
         sym(1).Node = node;
     } break;
 ./
@@ -1510,8 +1495,7 @@ UiObjectMember: T_READONLY UiObjectMemberWithArray;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = sym(2).UiPublicMember;
-        node->isReadonlyMember = true;
-        node->readonlyToken = loc(1);
+        node->m_readonlyToken = loc(1);
         sym(1).Node = node;
     } break;
 ./
@@ -1545,8 +1529,7 @@ UiObjectMember: T_READONLY UiObjectMemberExpressionStatementLookahead;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = sym(2).UiPublicMember;
-        node->isReadonlyMember = true;
-        node->readonlyToken = loc(1);
+        node->m_readonlyToken = loc(1);
         sym(1).Node = node;
     } break;
 ./

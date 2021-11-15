@@ -365,7 +365,7 @@ public:
             MethodInfo m;
             m.name = el->name.toString();
             m.typeName = toString(el->memberType);
-            m.isReadonly = el->isReadonlyMember;
+            m.isReadonly = el->isReadonly();
             m.access = MethodInfo::Public;
             m.methodType = MethodInfo::Signal;
             m.isList = el->typeModifier == QLatin1String("list");
@@ -393,10 +393,10 @@ public:
             PropertyDefinition p;
             p.name = el->name.toString();
             p.typeName = toString(el->memberType);
-            p.isReadonly = el->isReadonlyMember;
-            p.isDefaultMember = el->isDefaultMember;
+            p.isReadonly = el->isReadonly();
+            p.isDefaultMember = el->isDefaultMember();
             p.isList = el->typeModifier == QLatin1String("list");
-            p.isRequired = el->isRequired;
+            p.isRequired = el->isRequired();
             if (!el->typeModifier.isEmpty())
                 p.typeName = el->typeModifier.toString() + QChar(u'<') + p.typeName + QChar(u'>');
             PropertyDefinition *pPtr;
@@ -413,10 +413,10 @@ public:
                                 .withPath(currentNodeEl().path));
             if (p.isDefaultMember)
                 FileLocations::addRegion(nodeStack.last().fileLocations, u"default",
-                                         el->defaultToken);
+                                         el->defaultToken());
             if (p.isRequired)
                 FileLocations::addRegion(nodeStack.last().fileLocations, u"required",
-                                         el->requiredToken);
+                                         el->requiredToken());
             if (el->statement) {
                 BindingType bType = BindingType::Normal;
                 SourceLocation loc = combineLocations(el->statement);

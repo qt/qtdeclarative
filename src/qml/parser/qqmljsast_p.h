@@ -61,6 +61,10 @@
 
 QT_BEGIN_NAMESPACE
 
+namespace QQmlJS {
+    class Parser;
+}
+
 #define QQMLJS_DECLARE_AST_NODE(name) \
   enum { K = Kind_##name };
 
@@ -3372,25 +3376,26 @@ public:
 
     UiPublicMember(UiQualifiedId *memberType,
                    QStringView name)
-        : type(Property), memberType(memberType), name(name), statement(nullptr), binding(nullptr), isDefaultMember(false), isReadonlyMember(false), parameters(nullptr)
+        : type(Property), memberType(memberType), name(name), statement(nullptr), binding(nullptr), parameters(nullptr)
     { kind = K; }
 
     UiPublicMember(UiQualifiedId *memberType,
                    QStringView name,
                    Statement *statement)
-        : type(Property), memberType(memberType), name(name), statement(statement), binding(nullptr), isDefaultMember(false), isReadonlyMember(false), parameters(nullptr)
+        : type(Property), memberType(memberType), name(name), statement(statement), binding(nullptr), parameters(nullptr)
     { kind = K; }
 
     void accept0(BaseVisitor *visitor) override;
 
     SourceLocation firstSourceLocation() const override
     {
-      if (defaultToken.isValid())
-        return defaultToken;
-      else if (readonlyToken.isValid())
-          return readonlyToken;
-      else if (requiredToken.isValid())
-          return requiredToken;
+      // ### FIXME: return the first(!) modifier token
+      if (defaultToken().isValid())
+        return defaultToken();
+      else if (readonlyToken().isValid())
+          return readonlyToken();
+      else if (requiredToken().isValid())
+          return requiredToken();
 
       return propertyToken;
     }
@@ -3405,6 +3410,13 @@ public:
       return semicolonToken;
     }
 
+    SourceLocation defaultToken() const { return m_defaultToken; }
+    bool isDefaultMember() const { return defaultToken().isValid(); }
+    SourceLocation requiredToken() const { return m_requiredToken; }
+    bool isRequired() const { return requiredToken().isValid(); }
+    SourceLocation readonlyToken() const { return m_readonlyToken; }
+    bool isReadonly() const { return readonlyToken().isValid(); }
+
 // attributes
     enum { Signal, Property } type;
     QStringView typeModifier;
@@ -3412,20 +3424,19 @@ public:
     QStringView name;
     Statement *statement; // initialized with a JS expression
     UiObjectMember *binding; // initialized with a QML object or array.
-    bool isDefaultMember;
-    bool isReadonlyMember;
-    bool isRequired = false;
     UiParameterList *parameters;
     // TODO: merge source locations
-    SourceLocation defaultToken;
-    SourceLocation readonlyToken;
     SourceLocation propertyToken;
-    SourceLocation requiredToken;
     SourceLocation typeModifierToken;
     SourceLocation typeToken;
     SourceLocation identifierToken;
     SourceLocation colonToken;
     SourceLocation semicolonToken;
+private:
+    friend class QQmlJS::Parser;
+    SourceLocation m_defaultToken;
+    SourceLocation m_readonlyToken;
+    SourceLocation m_requiredToken;
 };
 
 class QML_PARSER_EXPORT UiObjectDefinition: public UiObjectMember

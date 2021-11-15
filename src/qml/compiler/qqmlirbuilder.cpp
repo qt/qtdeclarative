@@ -984,8 +984,8 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             const QStringView &name = node->name;
 
             Property *property = New<Property>();
-            property->isReadOnly = node->isReadonlyMember;
-            property->isRequired = node->isRequired;
+            property->isReadOnly = node->isReadonly();
+            property->isRequired = node->isRequired();
 
             QV4::CompiledData::BuiltinType builtinPropertyType = Parameter::stringToBuiltinType(memberType);
             bool typeFound = builtinPropertyType != QV4::CompiledData::BuiltinType::InvalidBuiltin;
@@ -1026,7 +1026,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             if (illegalNames.contains(propName))
                 error = tr("Illegal property name");
             else
-                error = _object->appendProperty(property, propName, node->isDefaultMember, node->defaultToken, &errorLocation);
+                error = _object->appendProperty(property, propName, node->isDefaultMember(), node->defaultToken(), &errorLocation);
 
             if (!error.isEmpty()) {
                 if (errorLocation.startLine == 0)
@@ -1409,7 +1409,7 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
 {
     Alias *alias = New<Alias>();
     alias->flags = 0;
-    if (node->isReadonlyMember)
+    if (node->isReadonly())
         alias->flags |= QV4::CompiledData::Alias::IsReadOnly;
 
     const QString propName = node->name.toString();
@@ -1465,7 +1465,7 @@ bool IRBuilder::appendAlias(QQmlJS::AST::UiPublicMember *node)
      if (illegalNames.contains(propName))
          error = tr("Illegal property name");
      else
-         error = _object->appendAlias(alias, propName, node->isDefaultMember, node->defaultToken, &errorLocation);
+         error = _object->appendAlias(alias, propName, node->isDefaultMember(), node->defaultToken(), &errorLocation);
 
      if (!error.isEmpty()) {
          if (errorLocation.startLine == 0)

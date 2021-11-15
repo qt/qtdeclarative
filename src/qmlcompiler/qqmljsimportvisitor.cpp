@@ -1109,7 +1109,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         QQmlJSMetaProperty prop;
         prop.setPropertyName(publicMember->name.toString());
         prop.setIsList(publicMember->typeModifier == QLatin1String("list"));
-        prop.setIsWritable(!publicMember->isReadonlyMember);
+        prop.setIsWritable(!publicMember->isReadonly());
         prop.setAliasExpression(aliasExpr);
         const auto type = isAlias ? QQmlJSScope::ConstPtr() : m_rootScopeImports.value(typeName);
         if (type) {
@@ -1122,11 +1122,11 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             prop.setTypeName(typeName);
         }
         prop.setAnnotations(parseAnnotations(publicMember->annotations));
-        if (publicMember->isDefaultMember)
+        if (publicMember->isDefaultMember())
             m_currentScope->setOwnDefaultPropertyName(prop.propertyName());
         prop.setIndex(m_currentScope->ownProperties().size());
         m_currentScope->insertPropertyIdentifier(prop);
-        if (publicMember->isRequired)
+        if (publicMember->isRequired())
             m_currentScope->setPropertyLocallyRequired(prop.propertyName(), true);
 
         parseLiteralBinding(publicMember->name.toString(), publicMember->statement);
