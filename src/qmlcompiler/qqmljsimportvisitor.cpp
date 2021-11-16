@@ -520,15 +520,17 @@ void QQmlJSImportVisitor::processDefaultProperties()
                     Log_Property, it.value().constFirst()->sourceLocation());
         }
 
-        QQmlJSMetaPropertyBinding binding(defaultProp);
         auto propType = defaultProp.type();
         if (propType.isNull() || !propType->isFullyResolved())
             return;
 
         const auto scopes = *it;
         for (const auto &scope : scopes) {
-            binding.setValue(QQmlJSScope::ConstPtr(scope));
-            binding.setValueTypeName(getScopeName(scope, QQmlJSScope::QMLScope));
+            // Note: in this specific code path, binding on default property
+            // means an object binding (we work with pending objects here)
+            QQmlJSMetaPropertyBinding binding(defaultProp);
+            binding.setObject(getScopeName(scope, QQmlJSScope::QMLScope),
+                              QQmlJSScope::ConstPtr(scope));
             it.key()->addOwnPropertyBinding(binding);
 
             if (!scope->isFullyResolved()) // should be an error somewhere else
@@ -572,7 +574,39 @@ void QQmlJSImportVisitor::processPropertyTypes()
 
 void QQmlJSImportVisitor::processPropertyBindingObjects()
 {
-    for (const PendingPropertyObjectBinding &objectBinding : m_pendingPropertyObjectBindings) {
+    QSet<QPair<QQmlJSScope::Ptr, QString>> foundLiterals;
+    {
+        // Note: populating literals here is special, because we do not store
+        // them in m_pendingPropertyObjectBindings, so we have to lookup all
+        // bindings on a property for each scope and see if there are any
+        // literal bindings there. this is safe to do once at the beginning
+        // because this function doesn't add new literal bindings and all
+        // literal bindings must already be added at this point.
+        QSet<QPair<QQmlJSScope::Ptr, QString>> visited;
+        for (const PendingPropertyObjectBinding &objectBinding :
+             qAsConst(m_pendingPropertyObjectBindings)) {
+            // unique because it's per-scope and per-property
+            const auto uniqueBindingId = qMakePair(objectBinding.scope, objectBinding.name);
+            if (visited.contains(uniqueBindingId))
+                continue;
+            visited.insert(uniqueBindingId);
+
+            auto [existingBindingsBegin, existingBindingsEnd] =
+                    uniqueBindingId.first->ownPropertyBindings(uniqueBindingId.second);
+            const bool hasLiteralBindings =
+                    std::any_of(existingBindingsBegin, existingBindingsEnd,
+                                [](const QQmlJSMetaPropertyBinding &x) { return x.hasLiteral(); });
+            if (hasLiteralBindings)
+                foundLiterals.insert(uniqueBindingId);
+        }
+    }
+
+    QSet<QPair<QQmlJSScope::Ptr, QString>> foundObjects;
+    QSet<QPair<QQmlJSScope::Ptr, QString>> foundInterceptors;
+    QSet<QPair<QQmlJSScope::Ptr, QString>> foundValueSources;
+
+    for (const PendingPropertyObjectBinding &objectBinding :
+         qAsConst(m_pendingPropertyObjectBindings)) {
         const QString propertyName = objectBinding.name;
         QQmlJSScope::ConstPtr childScope = objectBinding.childScope;
 
@@ -585,42 +619,45 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
             if (property.type()->causesImplicitComponentWrapping())
                 objectBinding.childScope->setIsWrappedInImplicitComponent(!objectBinding.childScope->causesImplicitComponentWrapping());
 
-            QQmlJSMetaPropertyBinding binding =
-                    objectBinding.scope->hasOwnPropertyBinding(propertyName)
-                    ? objectBinding.scope->ownPropertyBinding(propertyName)
-                    : QQmlJSMetaPropertyBinding(property);
+            // unique because it's per-scope and per-property
+            const auto uniqueBindingId = qMakePair(objectBinding.scope, objectBinding.name);
+
+            QQmlJSMetaPropertyBinding newBinding(property);
+            newBinding.setSourceLocation(objectBinding.location);
 
             const QString typeName = getScopeName(childScope, QQmlJSScope::QMLScope);
 
             if (objectBinding.onToken) {
                 if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueInterceptor"))) {
-                    if (binding.hasInterceptor()) {
+                    if (foundInterceptors.contains(uniqueBindingId)) {
                         m_logger->logWarning(
                                 QStringLiteral("Duplicate interceptor on property \"%1\"")
                                         .arg(propertyName),
                                 Log_Property, objectBinding.location);
                     } else {
-                        binding.setInterceptor(childScope);
-                        binding.setInterceptorTypeName(typeName);
+                        foundInterceptors.insert(uniqueBindingId);
 
-                        objectBinding.scope->addOwnPropertyBinding(binding);
+                        newBinding.setInterceptor(typeName, childScope);
+                        objectBinding.scope->addOwnPropertyBinding(newBinding);
                     }
                 } else if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueSource"))) {
-                    if (binding.hasValueSource()) {
+                    if (foundValueSources.contains(uniqueBindingId)) {
                         m_logger->logWarning(
                                 QStringLiteral("Duplicate value source on property \"%1\"")
                                         .arg(propertyName),
                                 Log_Property, objectBinding.location);
-                    } else if (binding.hasValue()) {
+                    } else if (foundObjects.contains(uniqueBindingId)
+                               || foundLiterals.contains(uniqueBindingId)) {
                         m_logger->logWarning(
                                 QStringLiteral("Cannot combine value source and binding on "
                                                "property \"%1\"")
                                         .arg(propertyName),
                                 Log_Property, objectBinding.location);
                     } else {
-                        binding.setValueSource(childScope);
-                        binding.setValueSourceTypeName(typeName);
-                        objectBinding.scope->addOwnPropertyBinding(binding);
+                        foundValueSources.insert(uniqueBindingId);
+
+                        newBinding.setValueSource(typeName, childScope);
+                        objectBinding.scope->addOwnPropertyBinding(newBinding);
                     }
                 } else {
                     m_logger->logWarning(
@@ -631,16 +668,17 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
                 }
             } else {
                 // TODO: Warn here if binding.hasValue() is true
-                if (binding.hasValueSource()) {
+                if (foundValueSources.contains(uniqueBindingId)) {
                     m_logger->logWarning(
                             QStringLiteral(
                                     "Cannot combine value source and binding on property \"%1\"")
                                     .arg(propertyName),
                             Log_Property, objectBinding.location);
                 } else {
-                    binding.setValue(childScope);
-                    binding.setValueTypeName(typeName);
-                    objectBinding.scope->addOwnPropertyBinding(binding);
+                    foundObjects.insert(uniqueBindingId);
+
+                    newBinding.setObject(typeName, childScope);
+                    objectBinding.scope->addOwnPropertyBinding(newBinding);
                 }
             }
         } else if (!objectBinding.scope->isFullyResolved()) {
@@ -1242,34 +1280,43 @@ void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
     if (exprStatement == nullptr)
         return;
 
-    QQmlJSMetaPropertyBinding binding;
-
-    // TODO: The literal values are not used yet but may be used later to further validate bindings
-    binding.setLiteralValue(
-            u""_qs); // If no literal value can be provided, use empty string as a place holder
-
+    QVariant value;
     QString literalType;
+    QQmlJSMetaPropertyBinding::BindingType bindingType = QQmlJSMetaPropertyBinding::Invalid;
 
     switch (exprStatement->expression->kind) {
     case Node::Kind_TrueLiteral:
-    case Node::Kind_FalseLiteral:
+        value = true;
         literalType = u"bool"_qs;
+        bindingType = QQmlJSMetaPropertyBinding::BoolLiteral;
+        break;
+    case Node::Kind_FalseLiteral:
+        value = false;
+        literalType = u"bool"_qs;
+        bindingType = QQmlJSMetaPropertyBinding::BoolLiteral;
         break;
     case Node::Kind_NullExpression:
-        literalType = u"var"_qs;
+        // Note: because we set value to nullptr, Null binding returns false in
+        // QQmlJSMetaPropertyBinding::hasLiteral()
+        value = QVariant::fromValue(nullptr);
+        Q_ASSERT(value.isNull());
+        literalType = u"var"_qs; // QTBUG-98409
+        bindingType = QQmlJSMetaPropertyBinding::Null;
         break;
     case Node::Kind_NumericLiteral:
         literalType = u"double"_qs;
-        binding.setLiteralValue(cast<NumericLiteral *>(exprStatement->expression)->value);
+        value = cast<NumericLiteral *>(exprStatement->expression)->value;
+        bindingType = QQmlJSMetaPropertyBinding::NumberLiteral;
         break;
     case Node::Kind_StringLiteral:
         literalType = u"string"_qs;
-        binding.setLiteralValue(cast<StringLiteral *>(exprStatement->expression)->value.toString());
+        value = cast<StringLiteral *>(exprStatement->expression)->value.toString();
+        bindingType = QQmlJSMetaPropertyBinding::StringLiteral;
         break;
     case Node::Kind_RegExpLiteral:
-        literalType = u"$anonymous$.QRegularExpression"_qs;
-        binding.setLiteralValue(
-                cast<RegExpLiteral *>(exprStatement->expression)->pattern.toString());
+        literalType = u"QRegularExpression"_qs;
+        value = cast<RegExpLiteral *>(exprStatement->expression)->pattern.toString();
+        bindingType = QQmlJSMetaPropertyBinding::RegExpLiteral;
         break;
     default:
         return;
@@ -1278,9 +1325,8 @@ void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
     if (!m_rootScopeImports.contains(literalType))
         return;
 
-    binding.setValue(m_rootScopeImports[literalType]);
-    binding.setValueTypeName(literalType);
-    binding.setPropertyName(name);
+    QQmlJSMetaPropertyBinding binding(name);
+    binding.setLiteral(bindingType, literalType, value, m_rootScopeImports[literalType]);
     binding.setSourceLocation(exprStatement->expression->firstSourceLocation());
 
     m_currentScope->addOwnPropertyBinding(binding);
@@ -1371,6 +1417,8 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
         m_signalHandlers.insert(firstSourceLocation,
                                 { scopeSignal.parameterNames(), hasMultilineStatementBody });
     }
+
+    // TODO: before leaving the scopes, we must create the binding.
 
     // Leave any group/attached scopes so that the binding scope doesn't see its properties.
     while (m_currentScope->scopeType() == QQmlJSScope::GroupedPropertyScope

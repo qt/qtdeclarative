@@ -144,7 +144,7 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor &visitor)
 
     for (const auto &scope : visitor.literalScopesToCheck()) {
         for (const auto &binding : scope->ownPropertyBindings()) {
-            if (!binding.isLiteralBinding())
+            if (!binding.hasLiteral())
                 continue;
 
             const QQmlJSMetaProperty property = scope->property(binding.propertyName());
@@ -157,9 +157,9 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor &visitor)
                                          Log_Type, binding.sourceLocation());
                     continue;
                 }
-                if (!canConvertFromTo(binding.value(), property.type())) {
+                if (!canConvertFromTo(binding.literalType(), property.type())) {
                     m_logger->logWarning(u"Cannot assign binding of type %1 to %2"_qs
-                                                 .arg(binding.valueTypeName())
+                                                 .arg(binding.literalTypeName())
                                                  .arg(property.typeName()),
                                          Log_Type, binding.sourceLocation());
                 }
@@ -575,8 +575,10 @@ static bool isAssignedToDefaultProperty(const QQmlJSScope::ConstPtr &parent,
     const QList<QQmlJSMetaPropertyBinding> defaultPropBindings
             = bindingHolder->propertyBindings(defaultPropertyName);
     for (const QQmlJSMetaPropertyBinding &binding : defaultPropBindings) {
-        if (binding.value() == child)
+        if (binding.bindingType() == QQmlJSMetaPropertyBinding::Object
+            && binding.objectType() == child) {
             return true;
+        }
     }
     return false;
 }

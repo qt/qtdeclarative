@@ -247,11 +247,13 @@ public:
     {
         return m_propertyBindings;
     }
-    QQmlJSMetaPropertyBinding ownPropertyBinding(const QString &name) const
+    QPair<QMultiHash<QString, QQmlJSMetaPropertyBinding>::const_iterator,
+          QMultiHash<QString, QQmlJSMetaPropertyBinding>::const_iterator>
+    ownPropertyBindings(const QString &name) const
     {
-        return m_propertyBindings.value(name);
+        return m_propertyBindings.equal_range(name);
     }
-    bool hasOwnPropertyBinding(const QString &name) const
+    bool hasOwnPropertyBindings(const QString &name) const
     {
         return m_propertyBindings.contains(name);
     }
