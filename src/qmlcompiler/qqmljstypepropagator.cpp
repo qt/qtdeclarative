@@ -577,7 +577,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
                && m_state.accumulatorIn.variant() == QQmlJSRegisterContent::ObjectModulePrefix) {
         m_logger->logWarning(u"Cannot load singleton as property of object"_qs, Log_Type,
                              getCurrentSourceLocation());
-        m_state.accumulatorOut.reset();
+        m_state.accumulatorOut = QQmlJSRegisterContent();
     }
 
     bool isRestricted = checkRestricted(propertyName);
@@ -756,19 +756,16 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         return;
     }
 
-    bool isRestricted = checkRestricted(propertyName);
-
     if (!member.isMethod()) {
         setError(u"Type %1 does not have a property %2 for calling"_qs
                          .arg(callBase.descriptiveName(), propertyName));
 
-        const QString typeName = m_typeResolver->containedTypeName(m_state.accumulatorIn);
-
-        if (isRestricted)
+        if (checkRestricted(propertyName))
             return;
 
         m_logger->logWarning(
-                u"Property \"%1\" not found on type \"%2\""_qs.arg(propertyName).arg(typeName),
+                u"Property \"%1\" not found on type \"%2\""_qs.arg(
+                        propertyName, m_typeResolver->containedTypeName(callBase)),
                 Log_Type, getCurrentSourceLocation());
         return;
     }
@@ -961,7 +958,7 @@ void QQmlJSTypePropagator::generate_DeadTemporalZoneCheck(int name)
 
 void QQmlJSTypePropagator::generate_ThrowException()
 {
-    m_state.accumulatorOut.reset();
+    m_state.accumulatorOut = QQmlJSRegisterContent();
 }
 
 void QQmlJSTypePropagator::generate_GetException()
@@ -1139,8 +1136,8 @@ void QQmlJSTypePropagator::generate_ToObject()
 void QQmlJSTypePropagator::generate_Jump(int offset)
 {
     saveRegisterStateForJump(offset);
-    m_state.accumulatorIn.reset();
-    m_state.accumulatorOut.reset();
+    m_state.accumulatorIn = QQmlJSRegisterContent();
+    m_state.accumulatorOut = QQmlJSRegisterContent();
     m_state.skipInstructionsUntilNextJumpTarget = true;
 }
 
@@ -1569,7 +1566,7 @@ QQmlJSTypePropagator::startInstruction(QV4::Moth::Instr::Type instr)
         break;
     default:
         if (instructionWritesAccumulatorWithoutReading)
-            m_state.accumulatorIn.reset();
+            m_state.accumulatorIn = QQmlJSRegisterContent();
         else
             m_state.accumulatorIn = checkedInputRegister(Accumulator);
     }
@@ -1606,7 +1603,7 @@ void QQmlJSTypePropagator::endInstruction(QV4::Moth::Instr::Type instr)
         // for the next instruction.
         if (m_state.accumulatorOut.isValid()) {
             setRegister(Accumulator, m_state.accumulatorOut);
-            m_state.accumulatorOut.reset();
+            m_state.accumulatorOut = QQmlJSRegisterContent();
         } else if (!m_error->isValid()) {
             setError(u"Instruction is expected to populate the accumulator"_qs);
             return;

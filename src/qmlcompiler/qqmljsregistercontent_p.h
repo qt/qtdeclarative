@@ -83,9 +83,7 @@ public:
     };
 
     QQmlJSRegisterContent() = default;
-
     bool isValid() const { return !m_storedType.isNull(); }
-    void reset() { m_storedType = {}; }
 
     QString descriptiveName() const;
 
