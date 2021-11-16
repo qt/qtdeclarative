@@ -53,7 +53,6 @@ class QQmlJSTypeResolver
 {
 public:
     enum BaseOrExtension { Base, Extension };
-    enum TypeStorage { Direct, Indirect };
     enum ParentMode { UseDocumentParent, UseParentProperty };
 
     struct GlobalProperty
@@ -63,7 +62,8 @@ public:
         QString setter;
     };
 
-    QQmlJSTypeResolver(QQmlJSImporter *importer, TypeStorage storage, QQmlJSLogger *logger);
+    QQmlJSTypeResolver(QQmlJSImporter *importer, QQmlJSLogger *logger);
+
     // Note: must be called after the construction to read the QML program
     void init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *program);
 
@@ -127,14 +127,11 @@ public:
     QQmlJSScope::ConstPtr containedType(const QQmlJSRegisterContent &container) const;
     QString containedTypeName(const QQmlJSRegisterContent &container) const;
 
-    TypeStorage typeStorage() const { return m_typeStorage; }
-
     void setParentMode(ParentMode mode) { m_parentMode = mode; }
     ParentMode parentMode() const { return m_parentMode; }
 
     QQmlJSScope::ConstPtr
-    storedType(const QQmlJSScope::ConstPtr &type,
-               ComponentIsGeneric allowComponent = ComponentIsGeneric::No) const;
+    storedType(const QQmlJSScope::ConstPtr &type) const;
 
     const QHash<QString, QQmlJSScope::ConstPtr> &objectsById() { return m_objectsById; }
     const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers() const
@@ -178,7 +175,6 @@ protected:
     QHash<QString, QQmlJSScope::ConstPtr> m_imports;
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
 
-    TypeStorage m_typeStorage = Direct;
     ParentMode m_parentMode = UseParentProperty;
     QQmlJSLogger *m_logger = nullptr;
 };

@@ -164,6 +164,13 @@ public:
                                         uint importNamespaceStringId, ContentVariant variant,
                                         const QQmlJSScope::ConstPtr &scope = {});
 
+    QQmlJSRegisterContent storedIn(const QQmlJSScope::ConstPtr &newStoredType) const
+    {
+        QQmlJSRegisterContent result = *this;
+        result.m_storedType = newStoredType;
+        return result;
+    }
+
 private:
     enum ContentKind { Type, Property, Enum, Method, ImportNamespace };
 

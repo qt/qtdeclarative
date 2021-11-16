@@ -143,26 +143,35 @@ protected:
         return newState;
     }
 
-    QQmlJS::SourceLocation currentSourceLocation() const
+    QQmlJS::SourceLocation sourceLocation(int instructionOffset) const
     {
         Q_ASSERT(m_function);
         Q_ASSERT(m_function->sourceLocations);
-        const int offset = currentInstructionOffset();
         const auto &entries = m_function->sourceLocations->entries;
-        auto item = std::lower_bound(entries.begin(), entries.end(), offset,
+        auto item = std::lower_bound(entries.begin(), entries.end(), instructionOffset,
                                      [](auto entry, uint offset) { return entry.offset < offset; });
 
         Q_ASSERT(item != entries.end());
         return item->location;
     }
 
-    void setError(const QString &message)
+    QQmlJS::SourceLocation currentSourceLocation() const
+    {
+        return sourceLocation(currentInstructionOffset());
+    }
+
+    void setError(const QString &message, int instructionOffset)
     {
         Q_ASSERT(m_error);
         if (m_error->isValid())
             return;
         m_error->message = message;
-        m_error->loc = currentSourceLocation();
+        m_error->loc = sourceLocation(instructionOffset);
+    }
+
+    void setError(const QString &message)
+    {
+        setError(message, currentInstructionOffset());
     }
 
     // Stub out all the methods so that passes can choose to only implement part of them.

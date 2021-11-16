@@ -30,6 +30,7 @@
 
 #include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
 #include <QtQmlCompiler/private/qqmljsshadowcheck_p.h>
+#include <QtQmlCompiler/private/qqmljsstoragegeneralizer_p.h>
 #include <QtQmlCompiler/private/qqmljstypepropagator_p.h>
 
 #include <QFileInfo>
@@ -263,23 +264,17 @@ bool Codegen::generateFunction(QV4::Compiler::ContextType contextType,
     if (function->argumentTypes.isEmpty()) {
         for (const QQmlJS::AST::BoundName &argument : qAsConst(arguments)) {
             if (argument.typeAnnotation) {
-                const auto rawType = m_typeResolver->typeFromAST(argument.typeAnnotation->type);
-                if (m_typeResolver->storedType(rawType,
-                                               QQmlJSTypeResolver::ComponentIsGeneric::Yes)) {
-                    function->argumentTypes.append(rawType);
-                    continue;
+                if (const auto type = m_typeResolver->typeFromAST(argument.typeAnnotation->type)) {
+                    function->argumentTypes.append(type);
                 } else {
-                    return fail(QStringLiteral("Cannot store the argument type %1.")
-                                        .arg(rawType ? rawType->internalName() : u"<unknown>"_qs));
+                    return fail(QStringLiteral("Cannot resolve argument type %1")
+                                .arg(argument.typeAnnotation->type->toString()));
                 }
             } else {
                 return fail(QStringLiteral("Functions without type annotations won't be compiled"));
-                return false;
             }
         }
     }
-
-    QQmlJSTypePropagator propagator(m_unitGenerator, m_typeResolver.get(), m_logger, m_typeInfo);
 
     if (!function->returnType) {
         if (ast->typeAnnotation) {
@@ -289,25 +284,24 @@ bool Codegen::generateFunction(QV4::Compiler::ContextType contextType,
         }
     }
 
-    if (function->returnType) {
-        if (!m_typeResolver->storedType(function->returnType,
-                                        QQmlJSTypeResolver::ComponentIsGeneric::Yes)) {
-            return fail(QStringLiteral("Cannot store the return type %1.")
-                                 .arg(function->returnType->internalName()));
-        }
-    }
-
     function->isSignalHandler =
             !function->returnType && contextType == QV4::Compiler::ContextType::Binding;
     function->addressableScopes = m_typeResolver->objectsById();
     function->code = context->code;
     function->sourceLocations = context->sourceLocationTable.get();
 
+    QQmlJSTypePropagator propagator(m_unitGenerator, m_typeResolver.get(), m_logger, m_typeInfo);
     QQmlJSCompilePass::InstructionAnnotations annotations = propagator.run(function, error);
     if (!error->isValid()) {
         QQmlJSShadowCheck shadowCheck(m_unitGenerator, m_typeResolver.get(), m_logger);
         shadowCheck.run(&annotations, function, error);
     }
+
+    if (!error->isValid()) {
+        QQmlJSStorageGeneralizer generalizer(m_unitGenerator, m_typeResolver.get(), m_logger);
+        generalizer.run(annotations, function, error);
+    }
+
     if (error->isValid()) {
         error->type = context->returnsClosure ? QtDebugMsg : QtWarningMsg;
         return false;

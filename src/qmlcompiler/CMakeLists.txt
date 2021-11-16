@@ -20,6 +20,7 @@ qt_internal_add_module(QmlCompilerPrivate
         qqmljsresourcefilemapper.cpp qqmljsresourcefilemapper_p.h
         qqmljsscope.cpp qqmljsscope_p.h
         qqmljsshadowcheck.cpp qqmljsshadowcheck_p.h
+        qqmljsstoragegeneralizer.cpp qqmljsstoragegeneralizer_p.h
         qqmljsstreamwriter.cpp qqmljsstreamwriter_p.h
         qqmljstypedescriptionreader.cpp qqmljstypedescriptionreader_p.h
         qqmljstypepropagator.cpp qqmljstypepropagator_p.h
