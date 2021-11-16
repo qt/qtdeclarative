@@ -51,6 +51,7 @@ private slots:
     void dragDelegateWithMouseArea();
     void delegateChooserEnumRole();
     void QTBUG_92809();
+    void footerUpdate();
 };
 
 tst_QQuickListView2::tst_QQuickListView2()
@@ -203,6 +204,23 @@ void tst_QQuickListView2::QTBUG_92809()
     QTest::qWait(500);
     int currentIndex = listview->currentIndex();
     QTRY_COMPARE(currentIndex, 9);
+}
+
+void tst_QQuickListView2::footerUpdate()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QTRY_VERIFY(window);
+    window->setSource(testFileUrl("footerUpdate.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview != nullptr);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+    QQuickItem *footer = listview->footerItem();
+    QTRY_VERIFY(footer);
+    QVERIFY(QQuickTest::qWaitForItemPolished(footer));
+    QTRY_COMPARE(footer->y(), 0);
 }
 
 QTEST_MAIN(tst_QQuickListView2)

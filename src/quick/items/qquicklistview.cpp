@@ -1639,6 +1639,10 @@ void QQuickListViewPrivate::fixup(AxisData &data, qreal minExtent, qreal maxExte
         return;
     }
 
+    // update footer if all visible items have been removed
+    if (visibleItems.count() == 0)
+        updateFooter();
+
     correctFlick = false;
     fixupMode = moveReason == Mouse ? fixupMode : Immediate;
     bool strictHighlightRange = haveHighlightRange && highlightRange == QQuickListView::StrictlyEnforceRange;
