@@ -53,7 +53,6 @@ class QQmlJSTypeResolver
 {
 public:
     enum BaseOrExtension { Base, Extension };
-    enum Semantics { Static, Dynamic };
     enum TypeStorage { Direct, Indirect };
     enum ParentMode { UseDocumentParent, UseParentProperty };
 
@@ -65,7 +64,7 @@ public:
     };
 
     QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Document *document,
-                       TypeStorage storage, Semantics semantics, QQmlJSLogger *logger);
+                       TypeStorage storage, QQmlJSLogger *logger);
     // Note: must be called after the construction to read the QML program
     void init(QQmlJSImportVisitor &visitor);
 
@@ -130,7 +129,6 @@ public:
     QString containedTypeName(const QQmlJSRegisterContent &container) const;
 
     TypeStorage typeStorage() const { return m_typeStorage; }
-    Semantics semantics() const { return m_semantics; }
 
     void setParentMode(ParentMode mode) { m_parentMode = mode; }
     ParentMode parentMode() const { return m_parentMode; }
@@ -184,7 +182,6 @@ protected:
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
 
     TypeStorage m_typeStorage = Direct;
-    Semantics m_semantics = Dynamic;
     ParentMode m_parentMode = UseParentProperty;
     QQmlJSLogger *m_logger;
 };

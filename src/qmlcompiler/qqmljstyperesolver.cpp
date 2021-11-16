@@ -65,12 +65,9 @@ static bool searchBaseAndExtensionTypes(const QQmlJSScope::ConstPtr type, const 
 }
 
 QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Document *document,
-                                       TypeStorage storage, Semantics semantics,
-                                       QQmlJSLogger *logger)
+                                       TypeStorage storage, QQmlJSLogger *logger)
     : m_document(document)
     , m_typeStorage(storage)
-    , m_semantics(semantics)
-    , m_parentMode(semantics == Static ? UseDocumentParent : UseParentProperty)
     , m_logger(logger)
 {
     const QHash<QString, QQmlJSScope::ConstPtr> builtinTypes = importer->builtinInternalNames();

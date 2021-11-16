@@ -54,8 +54,7 @@ void Codegen::setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document)
     m_unitGenerator = &document->jsGenerator;
     m_entireSourceCodeLines = document->code.split(u'\n');
     m_typeResolver = std::make_unique<QQmlJSTypeResolver>(
-            m_importer, document,
-            QQmlJSTypeResolver::Indirect, QQmlJSTypeResolver::Dynamic, m_logger);
+            m_importer, document, QQmlJSTypeResolver::Indirect, m_logger);
 
     // Type resolving is using document parent mode here so that it produces fewer false positives
     // on the "parent" property of QQuickItem. It does produce a few false negatives this way

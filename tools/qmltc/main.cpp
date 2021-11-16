@@ -172,12 +172,8 @@ int main(int argc, char **argv)
     QQmlJSLogger logger(url, sourceCode, /* silent */ false);
     setupLogger(logger);
     QmltcVisitor visitor(&importer, &logger, implicitImportDirectory, qmltypesFiles);
-    // Type resolving is only static here due the inability to resolve parent
-    // properties dynamically (QTBUG-95530). Indirect type storage is used as
-    // this is a current option in qmllint (it doesn't mean that it is correct
-    // for the compiler).
-    QmltcTypeResolver typeResolver { &importer, &document, QQmlJSTypeResolver::Indirect,
-                                     QQmlJSTypeResolver::Static, &logger };
+    QmltcTypeResolver typeResolver {
+        &importer, &document, QQmlJSTypeResolver::Indirect, &logger };
     typeResolver.init(visitor);
     if (logger.hasWarnings() || logger.hasErrors())
         return EXIT_FAILURE;

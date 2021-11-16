@@ -40,8 +40,8 @@ class QmltcTypeResolver : public QQmlJSTypeResolver
 {
 public:
     QmltcTypeResolver(QQmlJSImporter *importer, const QmlIR::Document *document,
-                      TypeStorage storage, Semantics semantics, QQmlJSLogger *logger)
-        : QQmlJSTypeResolver(importer, document, storage, semantics, logger)
+                      TypeStorage storage, QQmlJSLogger *logger)
+        : QQmlJSTypeResolver(importer, document, storage, logger)
     {
     }
 };
