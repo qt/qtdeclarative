@@ -663,6 +663,9 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("2Interceptors")
             << QStringLiteral("2interceptors.qml")
             << QStringLiteral("Duplicate interceptor on property \"x\"") << QString() << false;
+    QTest::newRow("ValueSource+2Interceptors")
+            << QStringLiteral("valueSourceBetween2interceptors.qml")
+            << QStringLiteral("Duplicate interceptor on property \"x\"") << QString() << false;
     QTest::newRow("2ValueSources")
             << QStringLiteral("2valueSources.qml")
             << QStringLiteral("Duplicate value source on property \"x\"") << QString() << false;
@@ -778,13 +781,18 @@ void TestQmllint::dirtyQmlCode()
         return QStringLiteral("qmllint output '%1' must contain '%2'").arg(output, substring);
     };
 
+    // output.contains() expect fails:
     QEXPECT_FAIL("BadLiteralBindingDate",
                  "We're currently not able to verify any non-trivial QString conversion that "
                  "requires QQmlStringConverters",
                  Abort);
+
     QVERIFY2(output.contains(warningMessage), qPrintable(toDescription(output, warningMessage)));
+
+    // !output.contains() expect fails:
     QEXPECT_FAIL("badAttachedPropertyNested", "We cannot discern between types and instances",
                  Abort);
+
     if (!notContained.isEmpty())
         QVERIFY2(!output.contains(notContained), qPrintable(toDescription(output, notContained)));
 }
