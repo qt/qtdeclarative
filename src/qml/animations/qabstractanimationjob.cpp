@@ -240,6 +240,7 @@ void QQmlAnimationTimer::registerRunningAnimation(QAbstractAnimationJob *animati
 
 void QQmlAnimationTimer::unregisterRunningAnimation(QAbstractAnimationJob *animation)
 {
+    unsetJobTimer(animation);
     if (animation->userControlDisabled())
         return;
 
@@ -306,9 +307,10 @@ QAbstractAnimationJob::~QAbstractAnimationJob()
 
         Q_ASSERT(m_state == Stopped);
         if (oldState == Running) {
-            Q_ASSERT(QQmlAnimationTimer::instance(false) == m_timer);
-            if (m_timer)
+            if (m_timer) {
+                Q_ASSERT(QQmlAnimationTimer::instance(false) == m_timer);
                 m_timer->unregisterAnimation(this);
+            }
         }
         Q_ASSERT(!m_hasRegisteredTimer);
     }

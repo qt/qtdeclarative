@@ -116,6 +116,7 @@ private slots:
     void fastFlickingBug();
     void opacityAnimationFromZero();
     void alwaysRunToEndInSequentialAnimationBug();
+    void cleanupWhenRenderThreadStops();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -1996,6 +1997,19 @@ void tst_qquickanimations::alwaysRunToEndInSequentialAnimationBug()
     QVERIFY(root->property("onStoppedCalled").value<bool>());
     QVERIFY(root->property("onFinishedCalled").value<bool>());
     QCOMPARE(whiteRect->property("opacity").value<qreal>(),1.0);
+}
+
+void tst_qquickanimations::cleanupWhenRenderThreadStops()
+{
+    QQuickView view(QUrl::fromLocalFile("data/cleanupWhenRenderThreadStops.qml"));
+    view.show();
+    view.setPersistentOpenGLContext(false);
+    view.setPersistentSceneGraph(false);
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
+    QTest::qWait(50);
+    view.hide();
+    view.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&view));
 }
 
 QTEST_MAIN(tst_qquickanimations)
