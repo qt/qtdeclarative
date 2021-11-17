@@ -3175,6 +3175,17 @@ bool Codegen::visit(YieldExpression *ast)
         return false;
     }
 
+    auto innerMostCurentFunctionContext = _context;
+    while (innerMostCurentFunctionContext && innerMostCurentFunctionContext->contextType != ContextType::Function)
+        innerMostCurentFunctionContext = innerMostCurentFunctionContext->parent;
+
+    Q_ASSERT(innerMostCurentFunctionContext); // yield outside function would have been rejected by parser
+
+    if (!innerMostCurentFunctionContext->isGenerator) {
+        throwSyntaxError(ast->firstSourceLocation(), u"Yield is only valid in generator functions"_qs);
+        return false;
+    }
+
     RegisterScope scope(this);
     TailCallBlocker blockTailCalls(this);
     Reference expr = ast->expression ? expression(ast->expression) : Reference::fromConst(this, Encode::undefined());
