@@ -401,21 +401,33 @@ void tst_qmlcachegen::versionChecksForAheadOfTimeUnits()
 
     Q_ASSERT(!temporaryModifiedCachedUnit);
     QQmlMetaType::CachedUnitLookupError error = QQmlMetaType::CachedUnitLookupError::NoError;
+    QLoggingCategory::setFilterRules("qt.qml.diskcache.debug=true");
     const QQmlPrivate::CachedQmlUnit *originalUnit = QQmlMetaType::findCachedCompilationUnit(
             QUrl("qrc:/data/versionchecks.qml"), &error);
+    QLoggingCategory::setFilterRules(QString());
     QVERIFY2(originalUnit, versionCheckErrorString(error));
     QV4::CompiledData::Unit *tweakedUnit = (QV4::CompiledData::Unit *)malloc(originalUnit->qmlData->unitSize);
     memcpy(reinterpret_cast<void *>(tweakedUnit),
            reinterpret_cast<const void *>(originalUnit->qmlData),
            originalUnit->qmlData->unitSize);
     tweakedUnit->version = QV4_DATA_STRUCTURE_VERSION - 1;
-    temporaryModifiedCachedUnit = new QQmlPrivate::CachedQmlUnit{tweakedUnit, nullptr, nullptr};
 
-    auto testHandler = [](const QUrl &url) -> const QQmlPrivate::CachedQmlUnit * {
+    const auto testHandler = [](const QUrl &url) -> const QQmlPrivate::CachedQmlUnit * {
         if (url == QUrl("qrc:/data/versionchecks.qml"))
             return temporaryModifiedCachedUnit;
         return nullptr;
     };
+
+    const auto dropModifiedUnit = qScopeGuard([&testHandler]() {
+        Q_ASSERT(temporaryModifiedCachedUnit);
+        free(const_cast<QV4::CompiledData::Unit *>(temporaryModifiedCachedUnit->qmlData));
+        delete temporaryModifiedCachedUnit;
+        temporaryModifiedCachedUnit = nullptr;
+
+        QQmlMetaType::removeCachedUnitLookupFunction(testHandler);
+    });
+
+    temporaryModifiedCachedUnit = new QQmlPrivate::CachedQmlUnit{tweakedUnit, nullptr, nullptr};
     QQmlMetaType::prependCachedUnitLookupFunction(testHandler);
 
     {
@@ -429,13 +441,6 @@ void tst_qmlcachegen::versionChecksForAheadOfTimeUnits()
         CleanlyLoadingComponent component(&engine, QUrl("qrc:/data/versionchecks.qml"));
         QCOMPARE(component.status(), QQmlComponent::Ready);
     }
-
-    Q_ASSERT(temporaryModifiedCachedUnit);
-    free(const_cast<QV4::CompiledData::Unit *>(temporaryModifiedCachedUnit->qmlData));
-    delete temporaryModifiedCachedUnit;
-    temporaryModifiedCachedUnit = nullptr;
-
-    QQmlMetaType::removeCachedUnitLookupFunction(testHandler);
 }
 
 void tst_qmlcachegen::retainedResources()
