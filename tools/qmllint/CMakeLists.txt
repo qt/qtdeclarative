@@ -9,15 +9,13 @@ qt_internal_add_tool(${target_name}
     TARGET_DESCRIPTION "QML Syntax Verifier"
     TOOLS_TARGET Qml # special case
     SOURCES
-        findwarnings.cpp findwarnings.h
-        codegen.cpp codegen.h
-        codegenwarninginterface.cpp codegenwarninginterface.h
         main.cpp
         ../shared/qqmltoolingsettings.h
         ../shared/qqmltoolingsettings.cpp
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlCompilerPrivate
+        Qt::QmlLintPrivate
 )
 qt_internal_return_unless_building_tools()
 

@@ -26,13 +26,15 @@
 **
 ****************************************************************************/
 
-#include "codegen.h"
+#include "codegen_p.h"
 
 #include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
 #include <QtQmlCompiler/private/qqmljsshadowcheck_p.h>
 #include <QtQmlCompiler/private/qqmljstypepropagator_p.h>
 
 #include <QFileInfo>
+
+QT_BEGIN_NAMESPACE
 
 Codegen::Codegen(QQmlJSImporter *importer, const QString &fileName,
                  const QStringList &qmltypesFiles, QQmlJSLogger *logger, QQmlJSTypeInfo *typeInfo,
@@ -119,9 +121,9 @@ Codegen::compileBinding(const QV4::Compiler::Context *context, const QmlIR::Bind
             return "nothing";
         };
 
-        return diagnose(
-                QStringLiteral("Binding is not a script binding, but %1.").arg(bindingName()),
-                QtDebugMsg, bindingLocation);
+        return diagnose(QStringLiteral("Binding is not a script binding, but %1.")
+                                .arg(QString::fromUtf8(bindingName())),
+                        QtDebugMsg, bindingLocation);
     }
 
     Function function;
@@ -193,7 +195,7 @@ Codegen::compileBinding(const QV4::Compiler::Context *context, const QmlIR::Bind
         auto body = new (m_pool) QQmlJS::AST::StatementList(stmt);
         body = body->finish();
 
-        QString name = "binding for "; // ####
+        QString name = u"binding for "_qs; // ####
         ast = new (m_pool) QQmlJS::AST::FunctionDeclaration(m_pool->newString(name),
                                                                      /*formals*/ nullptr, body);
         ast->lbraceToken = astNode->firstSourceLocation();
@@ -205,10 +207,10 @@ Codegen::compileBinding(const QV4::Compiler::Context *context, const QmlIR::Bind
     if (!generateFunction(QV4::Compiler::ContextType::Binding, context, ast, &function, &error)) {
         // If it's a signal and the function just returns a closure, it's harmless.
         // Otherwise promote the message to warning level.
-        return diagnose(
-                QStringLiteral("Could not compile binding for %1: %2")
-                        .arg(propertyName, error.message),
-                (isSignal && error.type == QtDebugMsg) ? QtDebugMsg : QtWarningMsg, error.loc);
+        return diagnose(QStringLiteral("Could not compile binding for %1: %2")
+                                .arg(propertyName, error.message),
+                        (isSignal && error.type == QtDebugMsg) ? QtDebugMsg : QtWarningMsg,
+                        error.loc);
     }
 
     return QQmlJSAotFunction {};
@@ -265,12 +267,10 @@ QQmlJS::DiagnosticMessage Codegen::diagnose(const QString &message, QtMsgType ty
     return QQmlJS::DiagnosticMessage { message, type, location };
 }
 
-bool Codegen::generateFunction(
-        QV4::Compiler::ContextType contextType,
-        const QV4::Compiler::Context *context,
-        QQmlJS::AST::FunctionExpression *ast,
-        Function *function,
-        QQmlJS::DiagnosticMessage *error) const
+bool Codegen::generateFunction(QV4::Compiler::ContextType contextType,
+                               const QV4::Compiler::Context *context,
+                               QQmlJS::AST::FunctionExpression *ast, Function *function,
+                               QQmlJS::DiagnosticMessage *error) const
 {
     const auto fail = [&](const QString &message) {
         error->loc = ast->firstSourceLocation();
@@ -286,17 +286,16 @@ bool Codegen::generateFunction(
         for (const QQmlJS::AST::BoundName &argument : qAsConst(arguments)) {
             if (argument.typeAnnotation) {
                 const auto rawType = m_typeResolver->typeFromAST(argument.typeAnnotation->type);
-                if (m_typeResolver->storedType(
-                            rawType, QQmlJSTypeResolver::ComponentIsGeneric::Yes)) {
+                if (m_typeResolver->storedType(rawType,
+                                               QQmlJSTypeResolver::ComponentIsGeneric::Yes)) {
                     function->argumentTypes.append(rawType);
                     continue;
                 } else {
                     return fail(QStringLiteral("Cannot store the argument type %1.")
-                                         .arg(rawType ? rawType->internalName() : "<unknown>"));
+                                        .arg(rawType ? rawType->internalName() : u"<unknown>"_qs));
                 }
             } else {
-                return fail(
-                        QStringLiteral("Functions without type annotations won't be compiled"));
+                return fail(QStringLiteral("Functions without type annotations won't be compiled"));
                 return false;
             }
         }
@@ -313,15 +312,15 @@ bool Codegen::generateFunction(
     }
 
     if (function->returnType) {
-        if (!m_typeResolver->storedType(
-                    function->returnType, QQmlJSTypeResolver::ComponentIsGeneric::Yes)) {
+        if (!m_typeResolver->storedType(function->returnType,
+                                        QQmlJSTypeResolver::ComponentIsGeneric::Yes)) {
             return fail(QStringLiteral("Cannot store the return type %1.")
                                  .arg(function->returnType->internalName()));
         }
     }
 
-    function->isSignalHandler = !function->returnType
-            && contextType == QV4::Compiler::ContextType::Binding;
+    function->isSignalHandler =
+            !function->returnType && contextType == QV4::Compiler::ContextType::Binding;
     function->addressableScopes = m_typeResolver->objectsById();
     function->code = context->code;
     function->sourceLocations = context->sourceLocationTable.get();
@@ -338,3 +337,5 @@ bool Codegen::generateFunction(
 
     return true;
 }
+
+QT_END_NAMESPACE

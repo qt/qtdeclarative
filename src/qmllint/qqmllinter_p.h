@@ -26,19 +26,43 @@
 **
 ****************************************************************************/
 
-#include "codegenwarninginterface.h"
+#ifndef QMLLINT_P_H
+#define QMLLINT_P_H
+
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
 
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
+#include <QtQmlCompiler/private/qqmljsimporter_p.h>
 
-void CodegenWarningInterface::reportVarUsedBeforeDeclaration(
-        const QString &name, const QString &fileName, QQmlJS::SourceLocation declarationLocation,
-        QQmlJS::SourceLocation accessLocation)
+#include <QtCore/qjsonarray.h>
+#include <QtCore/qstring.h>
+#include <QtCore/qmap.h>
+
+QT_BEGIN_NAMESPACE
+
+class QQmlLinter
 {
-    Q_UNUSED(fileName)
-    m_logger->logWarning(
-            u"Variable \"%1\" is used here before its declaration. The declaration is at %2:%3."_qs
-                    .arg(name)
-                    .arg(declarationLocation.startLine)
-                    .arg(declarationLocation.startColumn),
-            Log_Type, accessLocation);
-}
+public:
+    QQmlLinter(const QStringList &importPaths, bool useAbsolutePath = false);
+
+    bool lintFile(const QString &filename, const bool silent, QJsonArray *json,
+                  const QStringList &qmlImportPaths, const QStringList &qmltypesFiles,
+                  const QStringList &resourceFiles,
+                  const QMap<QString, QQmlJSLogger::Option> &options);
+
+private:
+    bool m_useAbsolutePath;
+    QQmlJSImporter m_importer;
+};
+
+QT_END_NAMESPACE
+
+#endif // QMLLINT_P_H

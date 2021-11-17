@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#ifndef CODEGEN_H
-#define CODEGEN_H
+#ifndef CODEGEN_P_H
+#define CODEGEN_P_H
 
 //
 //  W A R N I N G
@@ -53,6 +53,8 @@
 #include <QtQmlCompiler/private/qqmljstyperesolver_p.h>
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
 #include <QtQmlCompiler/private/qqmljscompilepass_p.h>
+
+QT_BEGIN_NAMESPACE
 
 class Codegen : public QQmlJSAotCompiler
 {
@@ -94,9 +96,10 @@ private:
                                        const QQmlJS::SourceLocation &location);
     bool generateFunction(QV4::Compiler::ContextType contextType,
                           const QV4::Compiler::Context *context,
-                          QQmlJS::AST::FunctionExpression *ast,
-                          Function *function,
+                          QQmlJS::AST::FunctionExpression *ast, Function *function,
                           QQmlJS::DiagnosticMessage *error) const;
 };
+
+QT_END_NAMESPACE
 
 #endif

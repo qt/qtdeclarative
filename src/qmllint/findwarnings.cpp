@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-#include "findwarnings.h"
+#include "findwarnings_p.h"
 
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include <QtQmlCompiler/private/qqmljstypedescriptionreader_p.h>
@@ -40,6 +40,8 @@
 #include <QtCore/qfile.h>
 #include <QtCore/qdiriterator.h>
 #include <QtCore/qscopedvaluerollback.h>
+
+QT_BEGIN_NAMESPACE
 
 bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
 {
@@ -239,3 +241,5 @@ bool FindWarningVisitor::check()
 
     return !m_logger->hasWarnings() && !m_logger->hasErrors();
 }
+
+QT_END_NAMESPACE

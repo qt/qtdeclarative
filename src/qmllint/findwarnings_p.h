@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#ifndef FINDUNQUALIFIED_H
-#define FINDUNQUALIFIED_H
+#ifndef FINDUNQUALIFIED_P_H
+#define FINDUNQUALIFIED_P_H
 
 //
 //  W A R N I N G
@@ -51,6 +51,8 @@
 
 #include <QtCore/qscopedpointer.h>
 
+QT_BEGIN_NAMESPACE
+
 class FindWarningVisitor : public QQmlJSImportVisitor
 {
     Q_DISABLE_COPY_MOVE(FindWarningVisitor)
@@ -64,11 +66,13 @@ private:
     void parseComments(const QList<QQmlJS::SourceLocation> &comments);
 
     // work around compiler error in clang11
-    using QQmlJSImportVisitor::visit;
     using QQmlJSImportVisitor::endVisit;
+    using QQmlJSImportVisitor::visit;
 
     bool visit(QQmlJS::AST::UiObjectDefinition *uiod) override;
     void endVisit(QQmlJS::AST::UiObjectDefinition *uiod) override;
 };
 
-#endif // FINDUNQUALIFIED_H
+QT_END_NAMESPACE
+
+#endif // FINDUNQUALIFIED_P_H

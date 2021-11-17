@@ -72,6 +72,7 @@ add_subdirectory(plugins)
 
 if(QT_FEATURE_qml_devtools)
     add_subdirectory(qmlcompiler)
+    add_subdirectory(qmllint)
     add_subdirectory(qmldom)
 
     # Build qmlcachegen now, so that we can use it in src/imports.

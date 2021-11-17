@@ -26,24 +26,23 @@
 **
 ****************************************************************************/
 
-#ifndef CODEGENWARNINGINTERFACE_H
-#define CODEGENWARNINGINTERFACE_H
+#include "codegenwarninginterface_p.h"
 
-#include <QtQml/private/qv4codegen_p.h>
+#include <QtQmlCompiler/private/qqmljslogger_p.h>
 
-QT_FORWARD_DECLARE_CLASS(QQmlJSLogger)
+QT_BEGIN_NAMESPACE
 
-class CodegenWarningInterface final : public QV4::Compiler::CodegenWarningInterface
+void CodegenWarningInterface::reportVarUsedBeforeDeclaration(
+        const QString &name, const QString &fileName, QQmlJS::SourceLocation declarationLocation,
+        QQmlJS::SourceLocation accessLocation)
 {
-public:
-    CodegenWarningInterface(QQmlJSLogger *logger) : m_logger(logger) { }
+    Q_UNUSED(fileName)
+    m_logger->logWarning(
+            u"Variable \"%1\" is used here before its declaration. The declaration is at %2:%3."_qs
+                    .arg(name)
+                    .arg(declarationLocation.startLine)
+                    .arg(declarationLocation.startColumn),
+            Log_Type, accessLocation);
+}
 
-    void reportVarUsedBeforeDeclaration(const QString &name, const QString &fileName,
-                                        QQmlJS::SourceLocation declarationLocation,
-                                        QQmlJS::SourceLocation accessLocation) override;
-
-private:
-    QQmlJSLogger *m_logger;
-};
-
-#endif // CODEGENWARNINGINTERFACE_H
+QT_END_NAMESPACE

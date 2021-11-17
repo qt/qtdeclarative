@@ -31,6 +31,7 @@
 #include <QProcess>
 #include <QString>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtQmlLint/private/qqmllinter_p.h>
 
 class TestQmllint: public QQmlDataTest
 {
@@ -95,14 +96,21 @@ private:
     QString runQmllint(const QString &fileToLint, bool shouldSucceed,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true,
                        bool addIncludeDirs = true);
+    void callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings = nullptr);
 
     QString m_qmllintPath;
     QString m_qmljsrootgenPath;
     QString m_qmltyperegistrarPath;
+
+    QStringList m_defaultImportPaths;
+    QQmlLinter m_linter;
 };
 
 TestQmllint::TestQmllint()
-    : QQmlDataTest(QT_QMLTEST_DATADIR)
+    : QQmlDataTest(QT_QMLTEST_DATADIR),
+      m_defaultImportPaths({ QLibraryInfo::path(QLibraryInfo::QmlImportsPath), dataDirectory() }),
+      m_linter(m_defaultImportPaths)
+
 {
 }
 
@@ -754,7 +762,6 @@ void TestQmllint::dirtyQmlCode()
 
     if (warningMessage.contains(QLatin1String("%1")))
         warningMessage = warningMessage.arg(testFile(filename));
-
     const QString output = runQmllint(filename, [&](QProcess &process) {
         QVERIFY(process.waitForFinished());
         QCOMPARE(process.exitStatus(), QProcess::NormalExit);
@@ -908,8 +915,11 @@ void TestQmllint::cleanQmlCode_data()
 void TestQmllint::cleanQmlCode()
 {
     QFETCH(QString, filename);
-    const QString warnings = runQmllint(filename, true);
-    QVERIFY2(warnings.isEmpty(), qPrintable(warnings));
+
+    QJsonArray warnings;
+
+    callQmllint(filename, true, &warnings);
+    QVERIFY2(warnings.isEmpty(), qPrintable(QJsonDocument(warnings).toJson()));
 }
 
 QString TestQmllint::runQmllint(const QString &fileToLint,
@@ -972,6 +982,22 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
                     QVERIFY(process.exitCode() != 0);
             },
             extraArgs, ignoreSettings, addIncludeDirs);
+}
+
+void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings)
+{
+    QJsonArray jsonOutput;
+
+    bool success = m_linter.lintFile(QFileInfo(fileToLint).isAbsolute() ? fileToLint
+                                                                        : testFile(fileToLint),
+                                     true, warnings ? &jsonOutput : nullptr, m_defaultImportPaths,
+                                     QStringList(), QStringList(), {});
+    QCOMPARE(success, shouldSucceed);
+
+    if (warnings) {
+        Q_ASSERT(jsonOutput.size() == 1);
+        *warnings = jsonOutput.at(0)[u"warnings"_qs].toArray();
+    }
 }
 
 void TestQmllint::requiredProperty()
