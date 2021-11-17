@@ -46,6 +46,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qpluginloader.h>
 #include <QtCore/qdir.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qjsonarray.h>
 
 #include <unordered_map>
