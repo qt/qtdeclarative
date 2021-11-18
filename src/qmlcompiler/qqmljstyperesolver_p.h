@@ -183,7 +183,7 @@ protected:
 
     TypeStorage m_typeStorage = Direct;
     ParentMode m_parentMode = UseParentProperty;
-    QQmlJSLogger *m_logger;
+    QQmlJSLogger *m_logger = nullptr;
 };
 
 QT_END_NAMESPACE
