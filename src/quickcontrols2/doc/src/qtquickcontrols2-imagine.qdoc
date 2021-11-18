@@ -2383,7 +2383,7 @@
     See Sketch's \l {https://sketchapp.com/docs/exporting/}{Exporting} documentation.
 
     Qt Quick Controls also provides a
-    \l {http://code.qt.io/cgit/qt/qtquickcontrols2.git/tree/src/quickcontrols2/imagine/design}
+    \l {http://code.qt.io/cgit/qt/qtdeclarative.git/tree/src/quickcontrols2/imagine/design}
     {plugin} for Sketch that automatically fixes the thickness of the 9-patch lines
     after the assets are exported. To install this file, double-click on it.
     Once Sketch has confirmed that the 9-patch export plugin has been installed,
