@@ -313,12 +313,6 @@ public:
             node->accept(visitor);
     }
 
-    // ### Remove when we can. This is part of the qmldevtools library, though.
-    inline static void acceptChild(Node *node, BaseVisitor *visitor)
-    {
-        return accept(node, visitor);
-    }
-
     virtual void accept0(BaseVisitor *visitor) = 0;
     virtual SourceLocation firstSourceLocation() const = 0;
     virtual SourceLocation lastSourceLocation() const = 0;
