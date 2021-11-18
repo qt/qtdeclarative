@@ -52,10 +52,10 @@
 //
 
 #include <QtCore/qglobal.h>
-#include <QtCore/qshareddata.h>
-#include <QtCore/qdebug.h>
+#include <QtCore/qstring.h>
+#include <QtCore/qvector.h>
 
-#include <cstring>
+#include <cstdlib>
 
 QT_BEGIN_NAMESPACE
 
@@ -63,14 +63,12 @@ namespace QQmlJS {
 
 class Managed;
 
-class MemoryPool : public QSharedData
+class MemoryPool
 {
-    MemoryPool(const MemoryPool &other);
-    void operator =(const MemoryPool &other);
+    Q_DISABLE_COPY_MOVE(MemoryPool);
 
 public:
-    MemoryPool() {}
-
+    MemoryPool() = default;
     ~MemoryPool()
     {
         if (_blocks) {

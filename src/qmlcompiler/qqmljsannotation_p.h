@@ -39,10 +39,13 @@
 //
 // We mean it.
 
-#include <variant>
 
 #include <private/qqmljsast_p.h>
-#include <qglobal.h>
+
+#include <QtCore/qglobal.h>
+#include <QtCore/qhash.h>
+
+#include <variant>
 
 QT_BEGIN_NAMESPACE
 
