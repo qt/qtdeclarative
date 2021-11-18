@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLJSSHADOWCHECK_P_H
-#define QQMLJSSHADOWCHECK_P_H
+#ifndef QQMLJSFUNCTIONINITIALIAZER_P_H
+#define QQMLJSFUNCTIONINITIALIAZER_P_H
 
 //
 //  W A R N I N G
@@ -43,34 +43,39 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlJSShadowCheck : public QQmlJSCompilePass
+class QQmlJSFunctionInitializer
 {
+    Q_DISABLE_COPY_MOVE(QQmlJSFunctionInitializer)
 public:
-    QQmlJSShadowCheck(const QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
-                      const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger)
-        : QQmlJSCompilePass(jsUnitGenerator, typeResolver, logger)
+    QQmlJSFunctionInitializer(
+            const QQmlJSTypeResolver *typeResolver, const QmlIR::Object *object,
+            const QmlIR::Object *scope)
+        : m_typeResolver(typeResolver)
+        , m_currentObject(object)
+        , m_scopeType(typeResolver->scopeForLocation(scope->location))
+        , m_objectType(typeResolver->scopeForLocation(object->location))
     {}
 
-    ~QQmlJSShadowCheck() = default;
-
-    void run(const InstructionAnnotations *annotations, const Function *function,
-             QQmlJS::DiagnosticMessage *error);
+    QQmlJSCompilePass::Function run(
+            const QV4::Compiler::Context *context,
+            const QString &propertyName, const QmlIR::Binding &irBinding,
+            QQmlJS::DiagnosticMessage *error);
+    QQmlJSCompilePass::Function run(
+            const QV4::Compiler::Context *context,
+            const QString &functionName, const QmlIR::Function &irFunction,
+            QQmlJS::DiagnosticMessage *error);
 
 private:
-    void generate_LoadProperty(int nameIndex) override;
-    void generate_GetLookup(int index) override;
-    void generate_StoreProperty(int nameIndex, int base) override;
-    void generate_SetLookup(int index, int base) override;
+    void populateSignature(
+            const QV4::Compiler::Context *context, QQmlJS::AST::FunctionExpression *ast,
+            QQmlJSCompilePass::Function *function, QQmlJS::DiagnosticMessage *error);
 
-    QV4::Moth::ByteCodeHandler::Verdict startInstruction(QV4::Moth::Instr::Type) override;
-    void endInstruction(QV4::Moth::Instr::Type) override;
-
-    void checkShadowing(const QQmlJSRegisterContent &baseType, const QString &propertyName);
-
-    const InstructionAnnotations *m_annotations = nullptr;
-    State m_state;
+    const QQmlJSTypeResolver *m_typeResolver = nullptr;
+    const QmlIR::Object *m_currentObject = nullptr;
+    const QQmlJSScope::ConstPtr m_scopeType;
+    const QQmlJSScope::ConstPtr m_objectType;
 };
 
 QT_END_NAMESPACE
 
-#endif // QQMLJSSHADOWCHECK_P_H
+#endif // QQMLJSFUNCTIONINITIALIZER_P_H

@@ -181,7 +181,7 @@ public:
 
     static const QMap<QString, Option> &options();
 
-    QQmlJSLogger(const QString &fileName, const QString &code, bool silent = false);
+    QQmlJSLogger();
     ~QQmlJSLogger() = default;
 
     bool hasWarnings() const { return !m_warnings.isEmpty(); }
@@ -231,7 +231,13 @@ public:
         m_ignoredWarnings[line] = categories;
     }
 
+    void setSilent(bool silent) { m_output.setSilent(silent); }
+    bool isSilent() const { return m_output.isSilent(); }
+
+    void setCode(const QString &code) { m_code = code; }
     QString code() const { return m_code; }
+
+    void setFileName(const QString &fileName) { m_fileName =  fileName; }
     QString fileName() const { return m_fileName; }
 
 private:
@@ -241,8 +247,8 @@ private:
     void log(const QString &message, QQmlJSLoggerCategory category, const QQmlJS::SourceLocation &,
              QtMsgType type, bool showContext, bool showFileName);
 
-    const QString m_fileName;
-    const QString m_code;
+    QString m_fileName;
+    QString m_code;
 
     QColorOutput m_output;
 

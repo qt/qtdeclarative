@@ -170,8 +170,10 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
 
             m_importer.setResourceFileMapper(mapper);
 
-            m_logger.reset(new QQmlJSLogger(m_useAbsolutePath ? info.absoluteFilePath() : filename,
-                                            code, silent || json));
+            m_logger.reset(new QQmlJSLogger);
+            m_logger->setFileName(m_useAbsolutePath ? info.absoluteFilePath() : filename);
+            m_logger->setCode(code);
+            m_logger->setSilent(silent || json);
             FindWarningVisitor v {
                 &m_importer,
                 m_logger.get(),
@@ -184,24 +186,31 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
                 m_logger->setCategoryLevel(it.value().m_category, it.value().m_level);
             }
 
-            std::unique_ptr<QQmlJSTypeResolver> typeResolver
-                    = std::make_unique<QQmlJSTypeResolver>(&m_importer);
+            QQmlJSTypeResolver typeResolver(&m_importer);
 
             // Type resolving is using document parent mode here so that it produces fewer false positives
             // on the "parent" property of QQuickItem. It does produce a few false negatives this way
             // because items can be reparented. Furthermore, even if items are not reparented, the document
             // parent may indeed not be their visual parent. See QTBUG-95530. Eventually, we'll need
             // cleverer logic to deal with this.
-            typeResolver->setParentMode(QQmlJSTypeResolver::UseDocumentParent);
+            typeResolver.setParentMode(QQmlJSTypeResolver::UseDocumentParent);
 
-            typeResolver->init(&v, parser.rootNode());
+            typeResolver.init(&v, parser.rootNode());
             success = v.check();
 
             if (m_logger->hasErrors())
                 return;
 
             QQmlJSTypeInfo typeInfo;
-            Codegen codegen { filename, qmltypesFiles, m_logger.get(), &typeInfo, code };
+
+            const QStringList resourcePaths = mapper
+                    ? mapper->resourcePaths(QQmlJSResourceFileMapper::localFileFilter(filename))
+                    : QStringList();
+            const QString resolvedPath = (resourcePaths.size() == 1)
+                    ? u':' + resourcePaths.first()
+                    : filename;
+
+            Codegen codegen { &m_importer, resolvedPath, qmltypesFiles, m_logger.get(), &typeInfo };
             codegen.setTypeResolver(std::move(typeResolver));
             QQmlJSSaveFunction saveFunction = [](const QV4::CompiledData::SaveableUnitPointer &,
                                                  const QQmlJSAotFunctionMap &,

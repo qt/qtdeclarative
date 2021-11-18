@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
  */
 
 QQmlJSTypePropagator::QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
-                                           QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
+                                           const QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
                                            QQmlJSTypeInfo *typeInfo)
     : QQmlJSCompilePass(unitGenerator, typeResolver, logger), m_typeInfo(typeInfo)
 {
@@ -430,7 +430,6 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
 {
     const int nameIndex = m_jsUnitGenerator->lookupNameIndex(index);
     const QString name = m_jsUnitGenerator->stringForIndex(nameIndex);
-
 
     m_state.accumulatorOut = m_typeResolver->scopedType(
                 m_function->qmlScope,

@@ -82,7 +82,11 @@ QQmlJSScope::Ptr QQmlJSTypeReader::operator()()
     if (!rootNode)
         return errorResult();
 
-    QQmlJSLogger logger(m_file, code, /* silent */ true);
+    QQmlJSLogger logger;
+    logger.setFileName(m_file);
+    logger.setCode(code);
+    logger.setSilent(true);
+
     QQmlJSImportVisitor membersVisitor(
             m_importer, &logger,
             QQmlJSImportVisitor::implicitImportDirectory(m_file, m_importer->resourceFileMapper()),

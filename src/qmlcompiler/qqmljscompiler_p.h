@@ -42,9 +42,13 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
 
-#include <private/qqmljsdiagnosticmessage_p.h>
-#include <private/qv4compileddata_p.h>
 #include <private/qqmlirbuilder_p.h>
+#include <private/qqmljscompilepass_p.h>
+#include <private/qqmljsdiagnosticmessage_p.h>
+#include <private/qqmljsimporter_p.h>
+#include <private/qqmljslogger_p.h>
+#include <private/qqmljstyperesolver_p.h>
+#include <private/qv4compileddata_p.h>
 
 #include <functional>
 
@@ -72,18 +76,42 @@ struct QQmlJSAotFunction
 class QQmlJSAotCompiler
 {
 public:
+    QQmlJSAotCompiler(QQmlJSImporter *importer, const QString &resourcePath,
+                      const QStringList &qmltypesFiles, QQmlJSLogger *logger);
+
     virtual ~QQmlJSAotCompiler() = default;
 
-    virtual void setDocument(const QmlIR::JSCodeGen *codegen, const QmlIR::Document *document) = 0;
-    virtual void setScope(const QmlIR::Object *object, const QmlIR::Object *scope) = 0;
+    virtual void setDocument(const QmlIR::JSCodeGen *codegen, const QmlIR::Document *document);
+    virtual void setScope(const QmlIR::Object *object, const QmlIR::Object *scope);
     virtual std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> compileBinding(
-            const QV4::Compiler::Context *context,
-            const QmlIR::Binding &binding) = 0;
+            const QV4::Compiler::Context *context, const QmlIR::Binding &irBinding);
     virtual std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage> compileFunction(
-            const QV4::Compiler::Context *context,
-            const QmlIR::Function &function) = 0;
+            const QV4::Compiler::Context *context, const QmlIR::Function &irFunction);
 
-    virtual QQmlJSAotFunction globalCode() const = 0;
+    virtual QQmlJSAotFunction globalCode() const;
+
+protected:
+    virtual QQmlJS::DiagnosticMessage diagnose(
+            const QString &message, QtMsgType type, const QQmlJS::SourceLocation &location) const;
+
+    QQmlJSTypeResolver m_typeResolver;
+    QStringList m_entireSourceCodeLines;
+
+    const QString m_resourcePath;
+    const QStringList m_qmltypesFiles;
+
+    const QmlIR::Document *m_document = nullptr;
+    const QmlIR::Object *m_currentObject = nullptr;
+    const QmlIR::Object *m_currentScope = nullptr;
+    const QV4::Compiler::JSUnitGenerator *m_unitGenerator = nullptr;
+
+    QQmlJSImporter *m_importer = nullptr;
+    QQmlJSLogger *m_logger = nullptr;
+
+private:
+    QQmlJSAotFunction doCompile(
+            const QV4::Compiler::Context *context, QQmlJSCompilePass::Function *function,
+            QQmlJS::DiagnosticMessage *error);
 };
 
 

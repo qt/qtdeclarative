@@ -83,7 +83,10 @@ class tst_qqmljsscope : public QQmlDataTest
         };
 
         QQmlJSImporter importer { importPaths, /* resource file mapper */ nullptr };
-        QQmlJSLogger logger(url, sourceCode, /* silent */ true);
+        QQmlJSLogger logger;
+        logger.setFileName(url);
+        logger.setCode(sourceCode);
+        logger.setSilent(true);
         QQmlJSImportVisitor visitor(&importer, &logger, dataDirectory());
         QQmlJSTypeResolver typeResolver { &importer };
         typeResolver.init(&visitor, document.program);

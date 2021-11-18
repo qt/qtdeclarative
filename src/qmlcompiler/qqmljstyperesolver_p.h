@@ -133,7 +133,7 @@ public:
     QQmlJSScope::ConstPtr
     storedType(const QQmlJSScope::ConstPtr &type) const;
 
-    const QHash<QString, QQmlJSScope::ConstPtr> &objectsById() { return m_objectsById; }
+    const QHash<QString, QQmlJSScope::ConstPtr> &objectsById() const { return m_objectsById; }
     const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers() const
     {
         return m_signalHandlers;

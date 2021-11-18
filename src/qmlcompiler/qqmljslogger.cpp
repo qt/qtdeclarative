@@ -94,7 +94,7 @@ const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
     return optionsMap;
 }
 
-QQmlJSLogger::QQmlJSLogger(const QString &fileName, const QString &code, bool silent) : m_fileName(fileName), m_code(code), m_output(silent)
+QQmlJSLogger::QQmlJSLogger()
 {
     const auto &opt = options();
     for (auto it = opt.cbegin(); it != opt.cend(); ++it) {

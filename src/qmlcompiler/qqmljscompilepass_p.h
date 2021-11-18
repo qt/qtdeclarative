@@ -40,7 +40,6 @@
 // We mean it.
 
 
-#include <private/qqmljscompiler_p.h>
 #include <private/qqmljslogger_p.h>
 #include <private/qqmljsregistercontent_p.h>
 #include <private/qqmljsscope_p.h>

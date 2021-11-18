@@ -59,48 +59,27 @@ QT_BEGIN_NAMESPACE
 class Codegen : public QQmlJSAotCompiler
 {
 public:
-    Codegen(const QString &fileName, const QStringList &qmltypesFiles,
-            QQmlJSLogger *logger, QQmlJSTypeInfo *typeInfo, const QString &m_code);
+    Codegen(QQmlJSImporter *importer, const QString &fileName, const QStringList &qmltypesFiles,
+            QQmlJSLogger *logger, QQmlJSTypeInfo *typeInfo);
 
     void setDocument(const QmlIR::JSCodeGen *codegen, const QmlIR::Document *document) override;
-    void setScope(const QmlIR::Object *object, const QmlIR::Object *scope) override;
     std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage>
     compileBinding(const QV4::Compiler::Context *context, const QmlIR::Binding &irBinding) override;
     std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage>
     compileFunction(const QV4::Compiler::Context *context,
                     const QmlIR::Function &irFunction) override;
 
-    QQmlJSAotFunction globalCode() const override;
-
-    void setTypeResolver(std::unique_ptr<QQmlJSTypeResolver> typeResolver)
+    void setTypeResolver(QQmlJSTypeResolver typeResolver)
     {
         m_typeResolver = std::move(typeResolver);
     }
 
 private:
-    using Function = QQmlJSCompilePass::Function;
-
-    const QmlIR::Document *m_document = nullptr;
-    const QString m_fileName;
-    const QStringList m_resourceFiles;
-    const QStringList m_qmltypesFiles;
-
-    const QmlIR::Object *m_currentObject = nullptr;
-    QQmlJSScope::ConstPtr m_scopeType;
-    QQmlJSScope::ConstPtr m_objectType;
-    const QV4::Compiler::JSUnitGenerator *m_unitGenerator = nullptr;
-    QStringList m_entireSourceCodeLines;
-    QQmlJSLogger *m_logger;
     QQmlJSTypeInfo *m_typeInfo;
-    const QString m_code;
-    std::unique_ptr<QQmlJSTypeResolver> m_typeResolver;
 
-    QQmlJS::DiagnosticMessage diagnose(const QString &message, QtMsgType type,
-                                       const QQmlJS::SourceLocation &location);
-    bool generateFunction(QV4::Compiler::ContextType contextType,
-                          const QV4::Compiler::Context *context,
-                          QQmlJS::AST::FunctionExpression *ast, Function *function,
-                          QQmlJS::DiagnosticMessage *error) const;
+    bool analyzeFunction(const QV4::Compiler::Context *context,
+                          QQmlJSCompilePass::Function *function,
+                         QQmlJS::DiagnosticMessage *error);
 };
 
 QT_END_NAMESPACE

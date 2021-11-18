@@ -40,7 +40,7 @@ QT_BEGIN_NAMESPACE
 class QColorOutputPrivate
 {
 public:
-    QColorOutputPrivate(bool silent) : m_currentColorID(-1), m_silent(silent)
+    QColorOutputPrivate()
     {
         /* - QIODevice::Unbuffered because we want it to appear when the user actually calls,
          *   performance is considered of lower priority.
@@ -69,7 +69,9 @@ public:
     QColorOutput::ColorCode color(int id) const { return m_colorMapping.value(id); }
     bool containsColor(int id) const { return m_colorMapping.contains(id); }
 
+    void setSilent(bool silent) { m_silent = silent; }
     bool isSilent() const { return m_silent; }
+
     void setCurrentColorID(int colorId) { m_currentColorID = colorId; }
 
     bool coloringEnabled() const { return m_coloringEnabled; }
@@ -77,9 +79,9 @@ public:
 private:
     QFile                       m_out;
     QColorOutput::ColorMapping  m_colorMapping;
-    int                         m_currentColorID;
-    bool                        m_coloringEnabled;
-    bool                        m_silent;
+    int                         m_currentColorID = -1;
+    bool                        m_coloringEnabled = false;
+    bool                        m_silent = false;
 
     /*!
      Returns true if it's suitable to send colored output to \c stderr.
@@ -221,10 +223,13 @@ const char *const QColorOutputPrivate::backgrounds[] =
 /*!
   Constructs a ColorOutput instance, ready for use.
  */
-QColorOutput::QColorOutput(bool silent) : d(new QColorOutputPrivate(silent)) {}
+QColorOutput::QColorOutput() : d(new QColorOutputPrivate) {}
 
 // must be here so that QScopedPointer has access to the complete type
 QColorOutput::~QColorOutput() = default;
+
+bool QColorOutput::isSilent() const { return d->isSilent(); }
+void QColorOutput::setSilent(bool silent) { d->setSilent(silent); }
 
 /*!
  Sends \a message to \c stderr, using the color looked up in the color mapping using \a colorID.

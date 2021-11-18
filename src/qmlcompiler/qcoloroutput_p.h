@@ -91,8 +91,11 @@ public:
     using ColorCode = QFlags<ColorCodeComponent>;
     using ColorMapping = QHash<int, ColorCode>;
 
-    QColorOutput(bool silent);
+    QColorOutput();
     ~QColorOutput();
+
+    bool isSilent() const;
+    void setSilent(bool silent);
 
     void insertMapping(int colorID, ColorCode colorCode);
 

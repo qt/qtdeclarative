@@ -170,7 +170,9 @@ int main(int argc, char **argv)
     info.resourcePath = parser.value(resourcePathOption);
 
     QQmlJSImporter importer { importPaths, /* resource file mapper */ nullptr };
-    QQmlJSLogger logger(url, sourceCode, /* silent */ false);
+    QQmlJSLogger logger;
+    logger.setFileName(url);
+    logger.setCode(sourceCode);
     setupLogger(logger);
     QmltcVisitor visitor(&importer, &logger, implicitImportDirectory, qmltypesFiles);
     QmltcTypeResolver typeResolver { &importer };
