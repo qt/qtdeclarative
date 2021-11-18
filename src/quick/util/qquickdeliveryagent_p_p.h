@@ -76,8 +76,8 @@ struct QQuickPointingDeviceExtra {
 
 class Q_QUICK_PRIVATE_EXPORT QQuickDeliveryAgentPrivate : public QObjectPrivate
 {
-    Q_DECLARE_PUBLIC(QQuickDeliveryAgent)
 public:
+    Q_DECLARE_PUBLIC(QQuickDeliveryAgent)
     QQuickDeliveryAgentPrivate(QQuickItem *root);
     ~QQuickDeliveryAgentPrivate();
 

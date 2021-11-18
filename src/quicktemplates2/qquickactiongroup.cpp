@@ -139,9 +139,9 @@ QT_BEGIN_NAMESPACE
 
 class QQuickActionGroupPrivate : public QObjectPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickActionGroup)
 
-public:
     void clear();
     void actionTriggered();
     void _q_updateCurrent();

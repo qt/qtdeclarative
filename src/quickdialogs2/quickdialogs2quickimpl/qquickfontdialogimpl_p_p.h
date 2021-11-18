@@ -81,11 +81,11 @@ public:
 
 class QQuickFontDialogImplAttachedPrivate : public QObjectPrivate
 {
-    Q_DECLARE_PUBLIC(QQuickFontDialogImplAttached)
-
     void currentFontChanged(const QFont &font);
 
 public:
+    Q_DECLARE_PUBLIC(QQuickFontDialogImplAttached)
+
     QPointer<QQuickDialogButtonBox> buttonBox;
     QPointer<QQuickListView> familyListView;
     QPointer<QQuickListView> styleListView;

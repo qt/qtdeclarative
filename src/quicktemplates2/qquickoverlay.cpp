@@ -590,9 +590,9 @@ bool QQuickOverlay::eventFilter(QObject *object, QEvent *event)
 
 class QQuickOverlayAttachedPrivate : public QObjectPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickOverlayAttached)
 
-public:
     void setWindow(QQuickWindow *newWindow);
 
     QQuickWindow *window = nullptr;

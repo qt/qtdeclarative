@@ -57,9 +57,9 @@ class QQuickMenu;
 
 class QQuickMenuItemPrivate : public QQuickAbstractButtonPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickMenuItem)
 
-public:
     static QQuickMenuItemPrivate *get(QQuickMenuItem *item)
     {
         return item->d_func();

@@ -58,9 +58,9 @@ class QQuickMenuBarItem;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuBarPrivate : public QQuickContainerPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickMenuBar)
 
-public:
     static QQuickMenuBarPrivate *get(QQuickMenuBar *menuBar)
     {
         return menuBar->d_func();

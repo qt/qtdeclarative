@@ -125,9 +125,9 @@ public:
 
 class QQuickSwipeViewAttachedPrivate : public QObjectPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickSwipeViewAttached)
 
-public:
     static QQuickSwipeViewAttachedPrivate *get(QQuickSwipeViewAttached *attached)
     {
         return attached->d_func();

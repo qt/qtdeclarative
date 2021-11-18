@@ -70,9 +70,9 @@ class QQuickTextAreaPrivate : public QQuickTextEditPrivate, public QQuickItemCha
     , public QAccessible::ActivationObserver
 #endif
 {
+public:
     Q_DECLARE_PUBLIC(QQuickTextArea)
 
-public:
     QQuickTextAreaPrivate();
     ~QQuickTextAreaPrivate();
 

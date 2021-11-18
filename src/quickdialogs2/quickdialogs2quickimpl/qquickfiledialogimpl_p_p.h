@@ -60,9 +60,9 @@ class QQuickFileNameFilter;
 
 class QQuickFileDialogImplPrivate : public QQuickDialogPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickFileDialogImpl)
 
-public:
     QQuickFileDialogImplPrivate();
 
     static QQuickFileDialogImplPrivate *get(QQuickFileDialogImpl *dialog)
@@ -92,12 +92,12 @@ public:
 
 class QQuickFileDialogImplAttachedPrivate : public QObjectPrivate
 {
-    Q_DECLARE_PUBLIC(QQuickFileDialogImplAttached)
-
     void nameFiltersComboBoxItemActivated(int index);
     void fileDialogListViewCurrentIndexChanged();
 
 public:
+    Q_DECLARE_PUBLIC(QQuickFileDialogImplAttached)
+
     QPointer<QQuickDialogButtonBox> buttonBox;
     QPointer<QQuickComboBox> nameFiltersComboBox;
     QPointer<QQuickListView> fileDialogListView;

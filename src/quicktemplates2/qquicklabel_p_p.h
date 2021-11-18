@@ -65,9 +65,9 @@ class QQuickLabelPrivate : public QQuickTextPrivate, public QQuickItemChangeList
     , public QAccessible::ActivationObserver
 #endif
 {
+public:
     Q_DECLARE_PUBLIC(QQuickLabel)
 
-public:
     QQuickLabelPrivate();
     ~QQuickLabelPrivate();
 

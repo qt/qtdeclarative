@@ -56,9 +56,9 @@ QT_BEGIN_NAMESPACE
 
 class Q_QUICKCONTROLS2IMPL_PRIVATE_EXPORT QQuickIconImagePrivate : public QQuickImagePrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickIconImage)
 
-public:
     ~QQuickIconImagePrivate() override;
     void updateIcon();
     void updateFillMode();

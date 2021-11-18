@@ -63,9 +63,9 @@ class QQuickMenuItem;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickMenuPrivate : public QQuickPopupPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickMenu)
 
-public:
     QQuickMenuPrivate();
 
     static QQuickMenuPrivate *get(QQuickMenu *menu)

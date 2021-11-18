@@ -73,9 +73,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControlPrivate : public QQuickItemP
     , public QAccessible::ActivationObserver
 #endif
 {
+public:
     Q_DECLARE_PUBLIC(QQuickControl)
 
-public:
     QQuickControlPrivate();
     ~QQuickControlPrivate();
 

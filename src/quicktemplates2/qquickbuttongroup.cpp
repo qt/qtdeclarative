@@ -151,9 +151,9 @@ QT_BEGIN_NAMESPACE
 
 class QQuickButtonGroupPrivate : public QObjectPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickButtonGroup)
 
-public:
     void clear();
     void buttonClicked();
     void _q_updateCurrent();

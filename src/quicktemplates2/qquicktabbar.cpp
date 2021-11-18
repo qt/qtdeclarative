@@ -97,9 +97,9 @@ QT_BEGIN_NAMESPACE
 
 class QQuickTabBarPrivate : public QQuickContainerPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickTabBar)
 
-public:
     void updateCurrentItem();
     void updateCurrentIndex();
     void updateLayout();

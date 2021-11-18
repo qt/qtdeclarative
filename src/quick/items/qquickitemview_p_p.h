@@ -102,8 +102,8 @@ public:
 
 class Q_QUICK_AUTOTEST_EXPORT QQuickItemViewPrivate : public QQuickFlickablePrivate, public QQuickItemViewTransitionChangeListener, public QAnimationJobChangeListener
 {
-    Q_DECLARE_PUBLIC(QQuickItemView)
 public:
+    Q_DECLARE_PUBLIC(QQuickItemView)
     QQuickItemViewPrivate();
     ~QQuickItemViewPrivate();
 

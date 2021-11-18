@@ -55,9 +55,9 @@ QT_BEGIN_NAMESPACE
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogButtonBoxPrivate : public QQuickContainerPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickDialogButtonBox)
 
-public:
     static QQuickDialogButtonBoxPrivate *get(QQuickDialogButtonBox *box)
     {
         return box->d_func();

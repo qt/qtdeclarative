@@ -63,9 +63,9 @@ QT_BEGIN_NAMESPACE
 
 class QQuickSelectionRectanglePrivate : public QQuickControlPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickSelectionRectangle)
 
-public:
     QQuickSelectionRectanglePrivate();
 
     void updateDraggingState(bool isDragging);

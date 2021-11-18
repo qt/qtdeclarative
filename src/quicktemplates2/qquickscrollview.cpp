@@ -125,9 +125,9 @@ QT_BEGIN_NAMESPACE
 
 class QQuickScrollViewPrivate : public QQuickPanePrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickScrollView)
 
-public:
     QQmlListProperty<QObject> contentData() override;
     QQmlListProperty<QQuickItem> contentChildren() override;
     QList<QQuickItem *> contentChildItems() const override;

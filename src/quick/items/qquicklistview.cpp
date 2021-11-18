@@ -64,8 +64,8 @@ class FxListItemSG;
 
 class QQuickListViewPrivate : public QQuickItemViewPrivate
 {
-    Q_DECLARE_PUBLIC(QQuickListView)
 public:
+    Q_DECLARE_PUBLIC(QQuickListView)
     static QQuickListViewPrivate* get(QQuickListView *item) { return item->d_func(); }
 
     Qt::Orientation layoutOrientation() const override;

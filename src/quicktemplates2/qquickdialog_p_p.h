@@ -59,9 +59,9 @@ class QQuickDialogButtonBox;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialogPrivate : public QQuickPopupPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickDialog)
 
-public:
     static QQuickDialogPrivate *get(QQuickDialog *dialog)
     {
         return dialog->d_func();

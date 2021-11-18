@@ -88,9 +88,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupPrivate
     , public QQuickItemChangeListener
     , public QQuickPaletteProviderPrivateBase<QQuickPopup, QQuickPopupPrivate>
 {
+public:
     Q_DECLARE_PUBLIC(QQuickPopup)
 
-public:
     QQuickPopupPrivate();
 
     static QQuickPopupPrivate *get(QQuickPopup *popup)

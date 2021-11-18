@@ -747,9 +747,9 @@ void QQuickApplicationWindow::resizeEvent(QResizeEvent *event)
 
 class QQuickApplicationWindowAttachedPrivate : public QObjectPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickApplicationWindowAttached)
 
-public:
     void windowChange(QQuickWindow *wnd);
     void activeFocusChange();
 

@@ -60,9 +60,9 @@ class QQuickTextField;
 
 class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFolderBreadcrumbBarPrivate : public QQuickContainerPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickFolderBreadcrumbBar)
 
-public:
     QQuickItem *createDelegateItem(QQmlComponent *component, const QVariantMap &initialProperties);
     static QString folderBaseName(const QString &folderPath);
     static QStringList crumbPathsForFolder(const QUrl &folder);

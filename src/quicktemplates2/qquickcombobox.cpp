@@ -217,9 +217,9 @@ QVariant QQuickComboBoxDelegateModel::variantValue(int index, const QString &rol
 
 class QQuickComboBoxPrivate : public QQuickControlPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickComboBox)
 
-public:
     bool isPopupVisible() const;
     void showPopup();
     void hidePopup(bool accept);

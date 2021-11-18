@@ -158,9 +158,9 @@ static QQuickItem *findAttachedItem(QObject *parent)
 
 class QQuickAttachedObjectPrivate : public QObjectPrivate, public QQuickItemChangeListener
 {
+public:
     Q_DECLARE_PUBLIC(QQuickAttachedObject)
 
-public:
     static QQuickAttachedObjectPrivate *get(QQuickAttachedObject *attachedObject)
     {
         return attachedObject->d_func();

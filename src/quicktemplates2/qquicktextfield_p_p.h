@@ -68,9 +68,9 @@ class QQuickTextFieldPrivate : public QQuickTextInputPrivate, public QQuickItemC
     , public QAccessible::ActivationObserver
 #endif
 {
+public:
     Q_DECLARE_PUBLIC(QQuickTextField)
 
-public:
     QQuickTextFieldPrivate();
     ~QQuickTextFieldPrivate();
 

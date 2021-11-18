@@ -60,9 +60,9 @@ class QQuickDrawer;
 
 class QQuickOverlayPrivate : public QQuickItemPrivate, public QQuickItemChangeListener
 {
+public:
     Q_DECLARE_PUBLIC(QQuickOverlay)
 
-public:
     static QQuickOverlayPrivate *get(QQuickOverlay *overlay)
     {
         return overlay->d_func();

@@ -49,9 +49,9 @@ QT_BEGIN_NAMESPACE
 
 class QQuickFileDialogDelegatePrivate : public QQuickItemDelegatePrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickFileDialogDelegate)
 
-public:
     void highlightFile();
     void chooseFile();
 

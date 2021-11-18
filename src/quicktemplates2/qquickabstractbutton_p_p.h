@@ -61,9 +61,9 @@ class QQuickButtonGroup;
 
 class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickAbstractButtonPrivate : public QQuickControlPrivate
 {
+public:
     Q_DECLARE_PUBLIC(QQuickAbstractButton)
 
-public:
     static QQuickAbstractButtonPrivate *get(QQuickAbstractButton *button)
     {
         return button->d_func();
