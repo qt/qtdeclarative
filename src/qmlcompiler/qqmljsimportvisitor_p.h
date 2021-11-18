@@ -64,7 +64,7 @@ public:
 
     QQmlJSScope::Ptr result() const;
 
-    QQmlJSLogger &logger() { return *m_logger; }
+    QQmlJSLogger *logger() { return m_logger; }
 
     QHash<QString, QQmlJSScope::ConstPtr> imports() const { return m_rootScopeImports; }
     QHash<QString, QQmlJSScope::ConstPtr> addressableScopes() const { return m_scopesById; }
