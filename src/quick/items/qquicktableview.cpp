@@ -429,6 +429,7 @@
 
 /*!
     \qmlproperty ItemSelectionModel QtQuick::TableView::selectionModel
+    \since 6.2
 
     This property can be set to control which delegate items should be shown as
     selected. If the delegate has a \c {required property bool selected}
