@@ -62,7 +62,7 @@ public:
     Codegen(const QString &fileName, const QStringList &qmltypesFiles,
             QQmlJSLogger *logger, QQmlJSTypeInfo *typeInfo, const QString &m_code);
 
-    void setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document) override;
+    void setDocument(const QmlIR::JSCodeGen *codegen, const QmlIR::Document *document) override;
     void setScope(const QmlIR::Object *object, const QmlIR::Object *scope) override;
     std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage>
     compileBinding(const QV4::Compiler::Context *context, const QmlIR::Binding &irBinding) override;
@@ -85,11 +85,10 @@ private:
     const QStringList m_resourceFiles;
     const QStringList m_qmltypesFiles;
 
-    QQmlJS::MemoryPool *m_pool = nullptr;
     const QmlIR::Object *m_currentObject = nullptr;
     QQmlJSScope::ConstPtr m_scopeType;
     QQmlJSScope::ConstPtr m_objectType;
-    QV4::Compiler::JSUnitGenerator *m_unitGenerator = nullptr;
+    const QV4::Compiler::JSUnitGenerator *m_unitGenerator = nullptr;
     QStringList m_entireSourceCodeLines;
     QQmlJSLogger *m_logger;
     QQmlJSTypeInfo *m_typeInfo;

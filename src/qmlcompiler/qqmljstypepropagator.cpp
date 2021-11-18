@@ -31,7 +31,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlJSTypePropagator::QQmlJSTypePropagator(QV4::Compiler::JSUnitGenerator *unitGenerator,
+QQmlJSTypePropagator::QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                                            QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
                                            QQmlJSTypeInfo *typeInfo)
     : QQmlJSCompilePass(unitGenerator, typeResolver, logger), m_typeInfo(typeInfo)

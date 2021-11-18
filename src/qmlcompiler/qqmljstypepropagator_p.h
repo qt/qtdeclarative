@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 
 struct QQmlJSTypePropagator : public QQmlJSCompilePass
 {
-    QQmlJSTypePropagator(QV4::Compiler::JSUnitGenerator *unitGenerator,
+    QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                          QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
                          QQmlJSTypeInfo *typeInfo = nullptr);
 

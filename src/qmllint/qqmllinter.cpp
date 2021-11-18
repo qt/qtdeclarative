@@ -185,7 +185,7 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
             }
 
             std::unique_ptr<QQmlJSTypeResolver> typeResolver
-                    = std::make_unique<QQmlJSTypeResolver>(&m_importer, m_logger.get());
+                    = std::make_unique<QQmlJSTypeResolver>(&m_importer);
 
             // Type resolving is using document parent mode here so that it produces fewer false positives
             // on the "parent" property of QQuickItem. It does produce a few false negatives this way

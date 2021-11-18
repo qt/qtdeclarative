@@ -47,11 +47,10 @@ Codegen::Codegen(const QString &fileName, const QStringList &qmltypesFiles, QQml
 {
 }
 
-void Codegen::setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document)
+void Codegen::setDocument(const QmlIR::JSCodeGen *codegen, const QmlIR::Document *document)
 {
     Q_UNUSED(codegen);
     m_document = document;
-    m_pool = document->jsParserEngine.pool();
     m_unitGenerator = &document->jsGenerator;
     m_entireSourceCodeLines = document->code.split(u'\n');
 }
@@ -164,19 +163,20 @@ Codegen::compileBinding(const QV4::Compiler::Context *context, const QmlIR::Bind
             m_currentObject->functionsAndExpressions->slowAt(irBinding.value.compiledScriptIndex)
                     ->node;
     auto ast = astNode->asFunctionDefinition();
+    QQmlJS::MemoryPool pool;
     if (!ast) {
         QQmlJS::AST::Statement *stmt = astNode->statementCast();
         if (!stmt) {
             Q_ASSERT(astNode->expressionCast());
             QQmlJS::AST::ExpressionNode *expr = astNode->expressionCast();
-            stmt = new (m_pool) QQmlJS::AST::ExpressionStatement(expr);
+            stmt = new (&pool) QQmlJS::AST::ExpressionStatement(expr);
         }
-        auto body = new (m_pool) QQmlJS::AST::StatementList(stmt);
+        auto body = new (&pool) QQmlJS::AST::StatementList(stmt);
         body = body->finish();
 
         QString name = u"binding for "_qs; // ####
-        ast = new (m_pool) QQmlJS::AST::FunctionDeclaration(m_pool->newString(name),
-                                                                     /*formals*/ nullptr, body);
+        ast = new (&pool) QQmlJS::AST::FunctionDeclaration(
+                    pool.newString(name), /*formals*/ nullptr, body);
         ast->lbraceToken = astNode->firstSourceLocation();
         ast->functionToken = ast->lbraceToken;
         ast->rbraceToken = astNode->lastSourceLocation();

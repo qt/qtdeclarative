@@ -62,7 +62,7 @@ public:
         QString setter;
     };
 
-    QQmlJSTypeResolver(QQmlJSImporter *importer, QQmlJSLogger *logger);
+    QQmlJSTypeResolver(QQmlJSImporter *importer);
 
     // Note: must be called after the construction to read the QML program
     void init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *program);

@@ -63,8 +63,7 @@ static bool searchBaseAndExtensionTypes(const QQmlJSScope::ConstPtr type, const 
     return false;
 }
 
-QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, QQmlJSLogger *logger)
-    : m_logger(logger)
+QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
 {
     const QHash<QString, QQmlJSScope::ConstPtr> builtinTypes = importer->builtinInternalNames();
     m_voidType = builtinTypes[u"void"_qs];
@@ -114,6 +113,13 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, QQmlJSLogger *l
 */
 void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *program)
 {
+    m_logger = visitor->logger();
+
+    m_objectsById.clear();
+    m_objectsByLocation.clear();
+    m_imports.clear();
+    m_signalHandlers.clear();
+
     program->accept(visitor);
 
     m_objectsById = visitor->addressableScopes();

@@ -173,8 +173,9 @@ int main(int argc, char **argv)
     QQmlJSLogger logger(url, sourceCode, /* silent */ false);
     setupLogger(logger);
     QmltcVisitor visitor(&importer, &logger, implicitImportDirectory, qmltypesFiles);
-    QmltcTypeResolver typeResolver { &importer, &logger };
+    QmltcTypeResolver typeResolver { &importer };
     typeResolver.init(&visitor, document.program);
+
     if (logger.hasWarnings() || logger.hasErrors())
         return EXIT_FAILURE;
 
