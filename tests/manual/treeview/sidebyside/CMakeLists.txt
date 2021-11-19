@@ -14,6 +14,7 @@ qt_internal_add_manual_test(treeview_sidebyside
     GUI
     SOURCES
         testmodel.cpp testmodel.h
+        uicallback.h
         main.cpp
     PUBLIC_LIBRARIES
         Qt::Gui

@@ -71,6 +71,11 @@ if (QT_FEATURE_quicktemplates2_calendar)
         "WeekNumberColumn.qml"
     )
 endif()
+if (QT_FEATURE_quick_treeview)
+    list(APPEND qml_files
+        "TreeViewDelegate.qml"
+    )
+endif()
 
 set_source_files_properties(Action.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.3;6.0"

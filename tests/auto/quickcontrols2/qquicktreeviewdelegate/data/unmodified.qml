@@ -37,39 +37,23 @@
 **
 ****************************************************************************/
 
-#include <QtQuick/qquickview.h>
-#include <QtQuick/qquickwindow.h>
-#include <QtQml/qqmlapplicationengine.h>
-#include <QtQml/qqmlcontext.h>
+import QtQuick
+import TestModel
+import QtQuick.Controls
 
-#include <QtQuick/private/qquicktreeview_p.h>
-#include <QtQuick/private/qquicktreeview_p_p.h>
+Item {
+    width: 800
+    height: 600
 
-#include <QtGui/qguiapplication.h>
+    property alias treeView: treeView
 
-#ifdef QT_WIDGETS_LIB
-#include <QtWidgets/qapplication.h>
-#include <QtGui/qfilesystemmodel.h>
-#endif
+    TreeView {
+        id: treeView
+        anchors.fill:parent
+        anchors.margins: 10
+        model: TestModel {}
+        clip: true
 
-#include "testmodel.h"
-
-int main(int c, char **args) {
-#ifdef QT_WIDGETS_LIB
-    QApplication app(c, args);
-#else
-    QGuiApplication app(c, args);
-#endif
-
-    QFileSystemModel model;
-    model.setRootPath("/");
-
-    QQmlApplicationEngine engine("qrc:data/treeview.qml");
-    engine.rootContext()->setContextProperty("fileSystemModel", &model);
-
-    QQuickWindow *window = static_cast<QQuickWindow *>(engine.rootObjects().at(0));
-    auto treeView = window->property("treeView").value<QQuickTreeView *>();
-    treeView->expand(0);
-
-    return app.exec();
+        delegate: TreeViewDelegate {}
+    }
 }

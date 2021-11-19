@@ -37,39 +37,47 @@
 **
 ****************************************************************************/
 
+#ifndef TESTMODEL_H
+#define TESTMODEL_H
+
+#include <QtCore/qabstractitemmodel.h>
 #include <QtQuick/qquickview.h>
-#include <QtQuick/qquickwindow.h>
-#include <QtQml/qqmlapplicationengine.h>
-#include <QtQml/qqmlcontext.h>
 
-#include <QtQuick/private/qquicktreeview_p.h>
-#include <QtQuick/private/qquicktreeview_p_p.h>
+class TreeItem
+{
+public:
+    explicit TreeItem(TreeItem *parent = nullptr);
+    ~TreeItem();
 
-#include <QtGui/qguiapplication.h>
+    int row() const;
+    QVector<TreeItem *> m_childItems;
+    TreeItem *m_parentItem;
+    QVector<QVariant> m_entries;
+};
 
-#ifdef QT_WIDGETS_LIB
-#include <QtWidgets/qapplication.h>
-#include <QtGui/qfilesystemmodel.h>
-#endif
+// ########################################################
 
-#include "testmodel.h"
+class TestModel : public QAbstractItemModel
+{
+    Q_OBJECT
 
-int main(int c, char **args) {
-#ifdef QT_WIDGETS_LIB
-    QApplication app(c, args);
-#else
-    QGuiApplication app(c, args);
-#endif
+public:
+    explicit TestModel(QObject *parent = nullptr);
 
-    QFileSystemModel model;
-    model.setRootPath("/");
+    void createTreeRecursive(TreeItem *item, int childCount, int currentDepth, int maxDepth);
+    TreeItem *treeItem(const QModelIndex &index) const;
+    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+    int columnCount(const QModelIndex & = QModelIndex()) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
+    QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
+    QModelIndex parent(const QModelIndex &index) const override;
 
-    QQmlApplicationEngine engine("qrc:data/treeview.qml");
-    engine.rootContext()->setContextProperty("fileSystemModel", &model);
+    bool insertRows(int position, int rows, const QModelIndex &parent) override;
 
-    QQuickWindow *window = static_cast<QQuickWindow *>(engine.rootObjects().at(0));
-    auto treeView = window->property("treeView").value<QQuickTreeView *>();
-    treeView->expand(0);
+private:
+    QScopedPointer<TreeItem> m_rootItem;
+    int m_columnCount = 2;
+};
 
-    return app.exec();
-}
+#endif // TESTMODEL_H

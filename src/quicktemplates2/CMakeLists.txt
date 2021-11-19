@@ -156,6 +156,11 @@ qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quick_tableview
         qquickheaderview_p_p.h
 )
 
+qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quick_treeview
+    SOURCES
+        qquicktreeviewdelegate.cpp qquicktreeviewdelegate_p.h
+)
+
 qt_internal_extend_target(QuickTemplates2 CONDITION QT_FEATURE_quick_listview AND QT_FEATURE_quick_pathview
     SOURCES
         qquicktumbler.cpp qquicktumbler_p.h

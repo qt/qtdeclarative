@@ -35,3 +35,8 @@ add_subdirectory(styleimports)
 add_subdirectory(styleimportscompiletimematerial)
 add_subdirectory(styleimportscompiletimeqmlonly)
 add_subdirectory(translation)
+
+if (QT_FEATURE_quick_treeview)
+    add_subdirectory(qquicktreeviewdelegate)
+endif()
+

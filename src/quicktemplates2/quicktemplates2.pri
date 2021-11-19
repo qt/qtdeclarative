@@ -180,3 +180,10 @@ qtConfig(quick-listview):qtConfig(quick-pathview) {
     SOURCES += \
         $$PWD/qquicktumbler.cpp
 }
+
+qtConfig(quick-treeview) {
+    HEADERS += \
+        $$PWD/qquicktreeviewdelegate_p.h
+    SOURCES += \
+        $$PWD/qquicktreeviewdelegate.cpp
+}

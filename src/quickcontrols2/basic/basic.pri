@@ -65,3 +65,8 @@ QML_FILES += \
     $$PWD/ToolTip.qml \
     $$PWD/Tumbler.qml \
     $$PWD/VerticalHeaderView.qml
+
+qtConfig(quick-treeview) {
+    QML_FILES += \
+        $$PWD/TreeViewDelegate.qml \
+}

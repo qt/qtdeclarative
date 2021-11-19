@@ -88,8 +88,9 @@ void tst_ObjectCount::cleanup()
 static void initTestRows(QQmlEngine *engine)
 {
     // Calendar is excluded because it's a singleton and can't be created.
+    // TreeViewDelegate is excluded since it's a delegate that can only be created by TreeView.
     addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "basic", "QtQuick/Controls/Basic",
-        QStringList() << "Calendar");
+        QStringList() << "Calendar" << "TreeViewDelegate");
     addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "fusion", "QtQuick/Controls/Fusion",
         QStringList() << "ButtonPanel" << "CheckIndicator" << "RadioIndicator" << "SliderGroove" << "SliderHandle" << "SwitchIndicator");
     addTestRowForEachControl(engine, QQC2_IMPORT_PATH, "imagine", "QtQuick/Controls/Imagine");
