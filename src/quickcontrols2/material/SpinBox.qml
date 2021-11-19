@@ -81,10 +81,10 @@ T.SpinBox {
     }
 
     up.indicator: Item {
-        x: control.mirrored ? 0 : parent.width - width
+        x: control.mirrored ? 0 : control.width - width
         implicitWidth: control.Material.touchTarget
         implicitHeight: control.Material.touchTarget
-        height: parent.height
+        height: control.height
         width: height
 
         Ripple {
@@ -115,10 +115,10 @@ T.SpinBox {
     }
 
     down.indicator: Item {
-        x: control.mirrored ? parent.width - width : 0
+        x: control.mirrored ? control.width - width : 0
         implicitWidth: control.Material.touchTarget
         implicitHeight: control.Material.touchTarget
-        height: parent.height
+        height: control.height
         width: height
 
         Ripple {

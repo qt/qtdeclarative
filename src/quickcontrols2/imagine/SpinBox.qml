@@ -102,8 +102,8 @@ T.SpinBox {
     }
 
     up.indicator: NinePatchImage {
-        x: control.mirrored ? 0 : parent.width - width
-        height: parent.height
+        x: control.mirrored ? 0 : control.width - width
+        height: control.height
 
         source: Imagine.url + "spinbox-indicator"
         NinePatchImageSelector on source {
@@ -120,8 +120,8 @@ T.SpinBox {
     }
 
     down.indicator: NinePatchImage {
-        x: control.mirrored ? parent.width - width : 0
-        height: parent.height
+        x: control.mirrored ? control.width - width : 0
+        height: control.height
 
         source: Imagine.url + "spinbox-indicator"
         NinePatchImageSelector on source {

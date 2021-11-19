@@ -84,9 +84,9 @@ T.SpinBox {
 
     up.indicator: Item {
         implicitWidth: 28
-        height: parent.height + 4
+        height: control.height + 4
         y: -2
-        x: control.mirrored ? 0 : parent.width - width
+        x: control.mirrored ? 0 : control.width - width
 
         Rectangle {
             x: 2; y: 4
@@ -110,9 +110,9 @@ T.SpinBox {
 
     down.indicator: Item {
         implicitWidth: 28
-        height: parent.height + 4
+        height: control.height + 4
         y: -2
-        x: control.mirrored ? parent.width - width : 0
+        x: control.mirrored ? control.width - width : 0
 
         Rectangle {
             x: 2; y: 4
