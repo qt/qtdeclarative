@@ -47,7 +47,7 @@ qt_feature("quick-gridview" PRIVATE
 )
 qt_feature("quick-itemview" PRIVATE
     LABEL "ItemView item"
-    CONDITION QT_FEATURE_quick_gridview OR QT_FEATURE_quick_listview OR QT_FEATURE_quick_tableview
+    CONDITION QT_FEATURE_quick_gridview OR QT_FEATURE_quick_listview OR QT_FEATURE_quick_tableview OR QT_FEATURE_quick_treeview
 )
 qt_feature("quick-viewtransitions" PRIVATE
     LABEL "Transitions required for ItemViews and Positioners"
@@ -63,6 +63,12 @@ qt_feature("quick-tableview" PRIVATE
     SECTION "Qt Quick"
     LABEL "TableView item"
     PURPOSE "Provides the TableView item."
+    CONDITION QT_FEATURE_qml_table_model
+)
+qt_feature("quick-treeview" PRIVATE
+    SECTION "Qt Quick"
+    LABEL "TreeView item"
+    PURPOSE "Provides the TreeView item."
     CONDITION QT_FEATURE_qml_table_model
 )
 qt_feature("quick-particles" PRIVATE
@@ -118,6 +124,7 @@ qt_configure_add_summary_entry(ARGS "quick-flipable")
 qt_configure_add_summary_entry(ARGS "quick-gridview")
 qt_configure_add_summary_entry(ARGS "quick-listview")
 qt_configure_add_summary_entry(ARGS "quick-tableview")
+qt_configure_add_summary_entry(ARGS "quick-treeview")
 qt_configure_add_summary_entry(ARGS "quick-path")
 qt_configure_add_summary_entry(ARGS "quick-pathview")
 qt_configure_add_summary_entry(ARGS "quick-positioners")

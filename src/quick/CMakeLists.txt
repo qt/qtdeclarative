@@ -456,6 +456,12 @@ qt_internal_extend_target(Quick CONDITION QT_FEATURE_quick_tableview
         items/qquickselectable_p.h
 )
 
+qt_internal_extend_target(Quick CONDITION QT_FEATURE_quick_treeview
+    SOURCES
+        items/qquicktreeview.cpp items/qquicktreeview_p.h
+        items/qquicktreeview_p_p.h
+)
+
 qt_internal_extend_target(Quick CONDITION QT_FEATURE_quick_pathview
     SOURCES
         items/qquickpathview.cpp items/qquickpathview_p.h

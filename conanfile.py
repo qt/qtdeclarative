@@ -64,6 +64,7 @@ _qtdeclarative_features = [
     "quick-shadereffect",
     "quick-sprite",
     "quick-tableview",
+    "quick-treeview",
 ]
 
 
