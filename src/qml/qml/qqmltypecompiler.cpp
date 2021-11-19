@@ -529,6 +529,13 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
     if (!string.constData()->isUpper())
         return true;
 
+    // reject any "complex" expression (even simple arithmetic)
+    // we do this by excluding everything that is not part of a
+    // valid identifier or a dot
+    for (const QChar c: string)
+        if (!(c.isLetterOrNumber() || c == u'.' || c == u'_' || c.isSpace()))
+            return true;
+
     // we support one or two '.' in the enum phrase:
     // * <TypeName>.<EnumValue>
     // * <TypeName>.<ScopedEnumName>.<EnumValue>
