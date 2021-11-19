@@ -145,6 +145,7 @@ void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString 
     code.rawAppendToHeader(u"#include <QtQml/qqml.h>"); // used for attached properties
 
     code.rawAppendToHeader(u"#include <private/qqmlengine_p.h>"); // executeRuntimeFunction(), etc.
+    code.rawAppendToHeader(u"#include <private/qqmltcobjectcreationhelper_p.h>"); // QmltcSupportLib
 
     code.rawAppendToHeader(u"#include <QtQml/qqmllist.h>"); // QQmlListProperty
 
@@ -225,6 +226,22 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcProgram &progra
     // write all the types and their content
     for (const QmltcType &type : qAsConst(program.compiledTypes))
         write(code, type);
+
+    // add typeCount definitions. after all types have been written down (so
+    // they are now complete types as per C++). practically, this only concerns
+    // document root type
+    for (const QmltcType &type : qAsConst(program.compiledTypes)) {
+        if (!type.typeCount)
+            continue;
+        code.rawAppendToHeader(u""); // blank line
+        code.rawAppendToHeader(u"constexpr %1 %2::%3()"_qs.arg(type.typeCount->returnType,
+                                                               type.cppType, type.typeCount->name));
+        code.rawAppendToHeader(u"{");
+        for (const QString &line : qAsConst(type.typeCount->body))
+            code.rawAppendToHeader(line, 1);
+        code.rawAppendToHeader(u"}");
+    }
+
     writeGlobalFooter(code, program.url, program.outNamespace);
 
     writeToFile(program.hPath, code.code().header.toUtf8());
@@ -271,9 +288,6 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
     code.rawAppendToHeader(u"{");
     for (const QString &mocLine : qAsConst(type.mocCode))
         code.rawAppendToHeader(mocLine, 1);
-
-    for (const QString &otherLine : qAsConst(type.otherCode))
-        code.rawAppendToHeader(otherLine, 1);
 
     QmltcOutputWrapper::MemberNameScope typeScope(&code, type.cppType);
     Q_UNUSED(typeScope);
@@ -331,11 +345,10 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
             QmltcCodeWriter::write(code, type.baselineCtor);
             QmltcCodeWriter::write(code, type.init);
             QmltcCodeWriter::write(code, type.endInit);
+            QmltcCodeWriter::write(code, type.beginClass);
             QmltcCodeWriter::write(code, type.completeComponent);
             QmltcCodeWriter::write(code, type.finalizeComponent);
             QmltcCodeWriter::write(code, type.handleOnCompleted);
-
-            // code.rawAppendToHeader(u"public:", -1);
         }
 
         // children
@@ -356,14 +369,16 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
             write(code, variable);
     }
 
+    code.rawAppendToHeader(u"private:", -1);
+    for (const QString &otherLine : qAsConst(type.otherCode))
+        code.rawAppendToHeader(otherLine, 1);
+
     if (type.typeCount) {
-        // we know that typeCount variable is very special
+        // add typeCount declaration, definition is added later
         code.rawAppendToHeader(u""); // blank line
         code.rawAppendToHeader(u"protected:");
-        Q_ASSERT(!type.typeCount->defaultValue.isEmpty());
-        code.rawAppendToHeader(u"constexpr static %1 %2 = %3;"_qs.arg(type.typeCount->cppType,
-                                                                      type.typeCount->name,
-                                                                      type.typeCount->defaultValue),
+        code.rawAppendToHeader(u"constexpr static %1 %2();"_qs.arg(type.typeCount->returnType,
+                                                                   type.typeCount->name),
                                1);
     }
 

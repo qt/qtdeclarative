@@ -290,8 +290,6 @@ protected:
     QSet<QQmlJSScope::ConstPtr> m_literalScopesToCheck;
     QQmlJS::SourceLocation m_pendingSignalHandler;
 
-    QStack<int> m_runtimeIdCounters;
-
 private:
     void importBaseModules();
     void resolveAliasesAndIds();

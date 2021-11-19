@@ -51,7 +51,8 @@ class CodeGenerator
 {
 public:
     CodeGenerator(const QString &url, QQmlJSLogger *logger, QmlIR::Document *doc,
-                  const QmltcTypeResolver *localResolver, const QmltcCompilerInfo *info);
+                  const QmltcTypeResolver *localResolver, const QmltcVisitor *visitor,
+                  const QmltcCompilerInfo *info);
 
     // TODO: this should really be just QQmlJSScope::ConstPtr (and maybe C++
     // class name), but bindings are currently not represented in QQmlJSScope,
@@ -65,11 +66,30 @@ public:
     const QList<CodeGenObject> &objects() const { return m_objects; }
     bool ignoreObject(const CodeGenObject &object) const;
 
+    qsizetype codegenObjectIndex(const QQmlJSScope::ConstPtr &type) const
+    {
+        Q_ASSERT(m_typeToObjectIndex.contains(type));
+        return m_typeToObjectIndex[type];
+    }
+
+    const CodeGenObject &objectFromType(const QQmlJSScope::ConstPtr &type) const
+    {
+        return m_objects[codegenObjectIndex(type)];
+    }
+
+    QString stringAt(int index) const { return m_doc->stringAt(index); }
+
+    // QmlIR::Binding-specific sort function
+    static QList<typename QmlIR::PoolList<QmlIR::Binding>::Iterator>
+    toOrderedSequence(typename QmlIR::PoolList<QmlIR::Binding>::Iterator first,
+                      typename QmlIR::PoolList<QmlIR::Binding>::Iterator last, qsizetype n);
+
 private:
     QString m_url; // document url
     QQmlJSLogger *m_logger = nullptr;
     QmlIR::Document *m_doc = nullptr;
     const QmltcTypeResolver *m_localTypeResolver = nullptr;
+    const QmltcVisitor *m_visitor = nullptr;
 
     const QmltcCompilerInfo *m_info = nullptr;
 
@@ -145,16 +165,8 @@ private:
     bool m_isAnonymous = false; // crutch to distinguish QML_ELEMENT from QML_ANONYMOUS
 
 public:
-    // code compilation functions that produce "compiled" entities
-    void compileObject(QmltcType &current, const CodeGenObject &object,
-                       std::function<void(QmltcType &, const CodeGenObject &)> compileElements);
-    void compileObjectElements(QmltcType &current, const CodeGenObject &object);
     void compileQQmlComponentElements(QmltcType &current, const CodeGenObject &object);
 
-private:
-    void compileEnum(QmltcType &current, const QQmlJSMetaEnum &e);
-    void compileProperty(QmltcType &current, const QQmlJSMetaProperty &p,
-                         const QQmlJSScope::ConstPtr &owner);
     void compileAlias(QmltcType &current, const QQmlJSMetaProperty &alias,
                       const QQmlJSScope::ConstPtr &owner);
     void compileMethod(QmltcType &current, const QQmlJSMetaMethod &m, const QmlIR::Function *f,
@@ -173,6 +185,8 @@ private:
     };
     void compileBinding(QmltcType &current, const QmlIR::Binding &binding,
                         const CodeGenObject &object, const AccessorData &accessor);
+
+private:
     // special case (for simplicity)
     void compileScriptBinding(QmltcType &current, const QmlIR::Binding &binding,
                               const QString &bindingSymbolName, const CodeGenObject &object,

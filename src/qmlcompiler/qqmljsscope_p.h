@@ -430,9 +430,6 @@ public:
     AccessSemantics accessSemantics() const { return m_semantics; }
     bool isReferenceType() const { return m_semantics == QQmlJSScope::AccessSemantics::Reference; }
 
-    void setRuntimeId(int id) { m_runtimeId = id; }
-    int runtimeId() const { return m_runtimeId; }
-
     bool isIdInCurrentQmlScopes(const QString &id) const;
     bool isIdInCurrentJSScopes(const QString &id) const;
     bool isIdInjectedFromSignal(const QString &id) const;
@@ -617,7 +614,6 @@ private:
     AccessSemantics m_semantics = AccessSemantics::Reference;
 
     QQmlJS::SourceLocation m_sourceLocation;
-    int m_runtimeId = -1; // an index counterpart of "foobar" in `id: foobar`
 };
 Q_DECLARE_TYPEINFO(QQmlJSScope::QmlIRCompatibilityBindingData, Q_RELOCATABLE_TYPE);
 
