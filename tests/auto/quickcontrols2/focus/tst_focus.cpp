@@ -62,7 +62,6 @@ private slots:
     void policy_data();
     void policy();
 
-    void reason_data();
     void reason();
 
     void visualFocus();
@@ -240,59 +239,212 @@ void tst_focus::policy()
     QVERIFY(!control->hasVisualFocus());
 }
 
-void tst_focus::reason_data()
-{
-    QTest::addColumn<QString>("name");
-
-    QTest::newRow("Control") << "Control";
-    QTest::newRow("TextField") << "TextField";
-    QTest::newRow("TextArea") << "TextArea";
-    QTest::newRow("SpinBox") << "SpinBox";
-    QTest::newRow("ComboBox") << "ComboBox";
-}
-
 void tst_focus::reason()
 {
-    QFETCH(QString, name);
+    QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusAllControls);
+    auto resetTabFocusBehavior = qScopeGuard([]{
+        QGuiApplication::styleHints()->setTabFocusBehavior(Qt::TabFocusBehavior(-1));
+    });
 
-    QQmlEngine engine;
-    QQmlComponent component(&engine);
-    component.setData(QString("import QtQuick.Controls; ApplicationWindow { width: 100; height: 100; %1 { anchors.fill: parent } }").arg(name).toUtf8(), QUrl());
+    QQuickView view;
+    view.setSource(testFileUrl("focusReason.qml"));
+    view.show();
+    view.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&view));
 
-    QScopedPointer<QQuickApplicationWindow> window(qobject_cast<QQuickApplicationWindow *>(component.create()));
-    QVERIFY(window.data());
+    QQuickControl *control = view.findChild<QQuickControl *>("control");
+    QQuickControl *combobox = view.findChild<QQuickControl *>("combobox");
+    QQuickControl *editcombo = view.findChild<QQuickControl *>("editcombo");
+    QQuickControl *spinbox = view.findChild<QQuickControl *>("spinbox");
+    QQuickControl *customText = view.findChild<QQuickControl *>("customText");
+    QQuickControl *customItem = view.findChild<QQuickControl *>("customItem");
+    // not a QQuickControl subclass
+    QQuickItem *textfield = view.findChild<QQuickItem *>("textfield");
 
-    QQuickItem *control = window->contentItem()->childItems().first();
+    // helper for clicking into a control
+    const auto itemCenter = [](const QQuickItem *item) -> QPoint {
+        return item->mapToScene(item->clipRect().center()).toPoint();
+    };
+
     QVERIFY(control);
+    QVERIFY(combobox);
+    QVERIFY(editcombo);
+    QVERIFY(spinbox);
+    QVERIFY(textfield);
+    QVERIFY(customText);
+    QVERIFY(customItem);
 
-    window->show();
-    window->requestActivate();
-    QVERIFY(QTest::qWaitForWindowActive(window.data()));
+    // setting focusPolicy to Strong/WheelFocus doesn't implicitly turn on event delivery
+    customText->setAcceptedMouseButtons(Qt::LeftButton);
+    customItem->setAcceptedMouseButtons(Qt::LeftButton);
+    customItem->setWheelEnabled(true);
 
-    QCOMPARE(control->property("focusReason").toInt(), int(Qt::OtherFocusReason));
-    control->forceActiveFocus(Qt::MouseFocusReason);
+    // window activation -> ActiveWindowFocusReason
+    QVERIFY(control->hasFocus());
     QVERIFY(control->hasActiveFocus());
-    QCOMPARE(control->property("focusReason").toInt(), int(Qt::MouseFocusReason));
+    if (control->focusReason() != Qt::ActiveWindowFocusReason
+     && QStringList{"windows", "offscreen"}.contains(QGuiApplication::platformName())) {
+        QEXPECT_FAIL("", "On Windows and offscreen platforms, window activation does not set focus reason", Continue);
+    }
+    QCOMPARE(control->focusReason(), Qt::ActiveWindowFocusReason);
 
-    QEXPECT_FAIL("TextArea", "TODO: TextArea::visualFocus?", Continue);
-    QEXPECT_FAIL("TextField", "TODO: TextField::visualFocus?", Continue);
-    QCOMPARE(control->property("visualFocus"), QVariant(false));
+    // test setter/getter
+    control->setFocus(false, Qt::MouseFocusReason);
+    QCOMPARE(control->focusReason(), Qt::MouseFocusReason);
+    control->setFocus(true, Qt::TabFocusReason);
+    QCOMPARE(control->focusReason(), Qt::TabFocusReason);
+    control->setFocus(false, Qt::BacktabFocusReason);
+    QCOMPARE(control->focusReason(), Qt::BacktabFocusReason);
+    control->forceActiveFocus(Qt::ShortcutFocusReason);
+    QCOMPARE(control->focusReason(), Qt::ShortcutFocusReason);
+    control->setFocusReason(Qt::PopupFocusReason);
+    QCOMPARE(control->focusReason(), Qt::PopupFocusReason);
 
-    window->contentItem()->setFocus(false, Qt::TabFocusReason);
-    QVERIFY(!control->hasActiveFocus());
-    QCOMPARE(control->property("focusReason").toInt(), int(Qt::TabFocusReason));
+    // programmatic focus changes
+    combobox->setFocus(true, Qt::OtherFocusReason);
+    QCOMPARE(control->focusReason(), Qt::OtherFocusReason);
 
-    QEXPECT_FAIL("TextArea", "", Continue);
-    QEXPECT_FAIL("TextField", "", Continue);
-    QCOMPARE(control->property("visualFocus"), QVariant(false));
+    QVERIFY(combobox->hasFocus());
+    QVERIFY(combobox->hasActiveFocus());
+    QCOMPARE(combobox->focusReason(), Qt::OtherFocusReason);
 
-    control->forceActiveFocus(Qt::TabFocusReason);
+    // tab focus -> TabFocusReason
+    QTest::keyClick(&view, Qt::Key_Tab);
+    QVERIFY(editcombo->hasFocus());
+    QVERIFY(editcombo->hasActiveFocus());
+    QCOMPARE(qApp->focusObject(), editcombo->contentItem());
+    QCOMPARE(combobox->focusReason(), Qt::TabFocusReason);
+    QCOMPARE(editcombo->focusReason(), Qt::TabFocusReason);
+    editcombo->setFocusReason(Qt::NoFocusReason); // reset so that we can verify that focusOut sets it
+
+    QTest::keyClick(&view, Qt::Key_Tab);
+    QVERIFY(spinbox->hasFocus());
+    QVERIFY(spinbox->hasActiveFocus());
+    QCOMPARE(qApp->focusObject(), spinbox->contentItem());
+    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
+    QCOMPARE(editcombo->focusReason(), Qt::TabFocusReason);
+    QCOMPARE(spinbox->focusReason(), Qt::TabFocusReason);
+    spinbox->setFocusReason(Qt::NoFocusReason);
+
+    QTest::keyClick(&view, Qt::Key_Tab);
+    QVERIFY(customText->hasFocus());
+    QVERIFY(customText->hasActiveFocus());
+    QCOMPARE(qApp->focusObject(), customText);
+    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
+    QCOMPARE(spinbox->focusReason(), Qt::TabFocusReason);
+    QCOMPARE(customText->focusReason(), Qt::TabFocusReason);
+    customText->setFocusReason(Qt::NoFocusReason);
+
+    QTest::keyClick(&view, Qt::Key_Tab);
+    QCOMPARE(qApp->focusObject(), customItem);
+    QVERIFY(customItem->hasFocus());
+    QVERIFY(customItem->hasActiveFocus());
+    QCOMPARE(customText->focusReason(), Qt::TabFocusReason);
+    QCOMPARE(customItem->focusReason(), Qt::TabFocusReason);
+    customItem->setFocusReason(Qt::NoFocusReason);
+
+    QTest::keyClick(&view, Qt::Key_Tab);
+    QVERIFY(textfield->hasFocus());
+    QVERIFY(textfield->hasActiveFocus());
+    QCOMPARE(qApp->focusObject(), textfield);
+    QCOMPARE(customItem->focusReason(), Qt::TabFocusReason);
+
+    QTest::keyClick(&view, Qt::Key_Tab);
+    QVERIFY(control->hasFocus());
     QVERIFY(control->hasActiveFocus());
-    QCOMPARE(control->property("focusReason").toInt(), int(Qt::TabFocusReason));
+    QCOMPARE(control->focusReason(), Qt::TabFocusReason);
 
-    QEXPECT_FAIL("TextArea", "", Continue);
-    QEXPECT_FAIL("TextField", "", Continue);
-    QCOMPARE(control->property("visualFocus"), QVariant(true));
+    // backtab -> BacktabFocusReason
+    QTest::keyClick(&view, Qt::Key_Tab, Qt::ShiftModifier);
+    QVERIFY(textfield->hasFocus());
+    QCOMPARE(control->focusReason(), Qt::BacktabFocusReason);
+
+    QTest::keyClick(&view, Qt::Key_Tab, Qt::ShiftModifier);
+    QVERIFY(customItem->hasFocus());
+    QCOMPARE(customItem->focusReason(), Qt::BacktabFocusReason);
+
+    QTest::keyClick(&view, Qt::Key_Tab, Qt::ShiftModifier);
+    QVERIFY(customText->hasFocus());
+    QCOMPARE(customText->focusReason(), Qt::BacktabFocusReason);
+
+    QTest::keyClick(&view, Qt::Key_Tab, Qt::ShiftModifier);
+    QVERIFY(spinbox->hasFocus());
+    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
+    QCOMPARE(spinbox->focusReason(), Qt::BacktabFocusReason);
+
+    QTest::keyClick(&view, Qt::Key_Tab, Qt::ShiftModifier);
+    QVERIFY(editcombo->hasFocus());
+    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
+    QCOMPARE(editcombo->focusReason(), Qt::BacktabFocusReason);
+
+    QTest::keyClick(&view, Qt::Key_Tab, Qt::ShiftModifier);
+    QVERIFY(combobox->hasFocus());
+    QCOMPARE(combobox->focusReason(), Qt::BacktabFocusReason);
+
+    // click focus -> MouseFocusReason
+    QTest::mouseClick(&view, Qt::LeftButton, {}, itemCenter(editcombo));
+    QTRY_VERIFY(editcombo->hasFocus());
+    QVERIFY(editcombo->contentItem()->hasFocus());
+    QVERIFY(editcombo->hasActiveFocus());
+    QVERIFY(editcombo->contentItem()->hasActiveFocus());
+    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
+    QCOMPARE(editcombo->focusReason(), Qt::MouseFocusReason);
+    editcombo->setFocusReason(Qt::NoFocusReason);
+
+    QTest::mouseClick(&view, Qt::LeftButton, {}, itemCenter(combobox)); // opens popup
+    QTest::mouseClick(&view, Qt::LeftButton, {}, itemCenter(combobox)); // closes popup
+
+    QVERIFY(combobox->hasFocus());
+    QVERIFY(combobox->hasActiveFocus());
+    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
+    QCOMPARE(editcombo->focusReason(), Qt::MouseFocusReason);
+    QCOMPARE(combobox->focusReason(), Qt::MouseFocusReason);
+    combobox->setFocusReason(Qt::NoFocusReason);
+
+    QTest::mouseClick(&view, Qt::LeftButton, {}, itemCenter(spinbox));
+    QVERIFY(spinbox->hasFocus());
+    QVERIFY(spinbox->hasActiveFocus());
+    QCOMPARE(combobox->focusReason(), Qt::MouseFocusReason);
+    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
+    QCOMPARE(spinbox->focusReason(), Qt::MouseFocusReason);
+    spinbox->setFocusReason(Qt::NoFocusReason);
+
+    QTest::mouseClick(&view, Qt::LeftButton, {}, itemCenter(customText));
+    QTRY_VERIFY2(customText->contentItem()->hasFocus(), qPrintable(qApp->focusObject()->objectName()));
+    QVERIFY(customText->contentItem()->hasActiveFocus());
+    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
+    QCOMPARE(spinbox->focusReason(), Qt::MouseFocusReason);
+    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
+    QCOMPARE(customText->focusReason(), Qt::MouseFocusReason);
+    customText->setFocusReason(Qt::NoFocusReason);
+
+    QTest::mouseClick(&view, Qt::LeftButton, {}, itemCenter(customItem));
+    QVERIFY(customItem->hasFocus());
+    QVERIFY(customItem->hasActiveFocus());
+    QEXPECT_FAIL("", "Events on content item not filtered - QTBUG-75862", Continue);
+    QCOMPARE(customText->focusReason(), Qt::MouseFocusReason);
+    QCOMPARE(customItem->focusReason(), Qt::MouseFocusReason);
+    customItem->setFocusReason(Qt::NoFocusReason);
+
+    QTest::mouseClick(&view, Qt::LeftButton, {}, itemCenter(textfield));
+    QCOMPARE(customItem->focusReason(), Qt::MouseFocusReason);
+    customItem->setFocusReason(Qt::NoFocusReason);
+    customText->setFocusReason(Qt::NoFocusReason);
+
+    // Wheel focus -> MouseFocusReason
+    QWheelEvent wheelEvent(QPointF(customItem->width() / 2, customItem->height() / 2), QPointF(),
+                           QPoint(), QPoint(0, 10), Qt::NoButton, Qt::NoModifier,
+                           Qt::NoScrollPhase, false);
+    QGuiApplication::sendEvent(customItem, &wheelEvent);
+    QVERIFY(customItem->hasActiveFocus());
+    QCOMPARE(customItem->focusReason(), Qt::MouseFocusReason);
+
+    // Popup opens -> PopupFocusReason
+    QTest::mouseClick(&view, Qt::RightButton, {}, itemCenter(control));
+    QTRY_VERIFY(!customItem->hasActiveFocus());
+    QEXPECT_FAIL("", "Popup opening doesn't set the focus reason", Continue);
+    QCOMPARE(customItem->focusReason(), Qt::PopupFocusReason);
+    QTest::keyClick(&view, Qt::Key_Escape); // close the popup
 }
 
 void tst_focus::visualFocus()
