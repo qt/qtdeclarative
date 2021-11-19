@@ -218,7 +218,7 @@ int main(int argv, char *argc[])
     parser.setApplicationDescription(QLatin1String(R"(QML syntax verifier and analyzer
 
 All warnings can be set to three levels:
-    disabled - Fully disables the warning.
+    disable - Fully disables the warning.
     info - Displays the warning but does not influence the return code.
     warning - Displays the warning and leads to a non-zero exit code if encountered.
 )"));
