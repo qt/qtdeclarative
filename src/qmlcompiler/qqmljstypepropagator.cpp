@@ -31,6 +31,17 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+ * \internal
+ * \class QQmlJSTypePropagator
+ *
+ * QQmlJSTypePropagator is the initial pass that performs the type inference and
+ * annotates every register in use at any instruction with the possible types it
+ * may hold. This includes information on how and in what scope the values are
+ * retrieved. These annotations may be used by further compile passes for
+ * refinement or code generation.
+ */
+
 QQmlJSTypePropagator::QQmlJSTypePropagator(const QV4::Compiler::JSUnitGenerator *unitGenerator,
                                            QQmlJSTypeResolver *typeResolver, QQmlJSLogger *logger,
                                            QQmlJSTypeInfo *typeInfo)

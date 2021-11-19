@@ -30,6 +30,27 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+ * \internal
+ * \class QQmlJSShadowCheck
+ *
+ * This pass looks for possible shadowing when accessing members of QML-exposed
+ * types. A member can be shadowed if a non-final property is re-declared in a
+ * derived class. As the QML engine will always pick up the most derived variant
+ * of that property, we cannot rely on any property of a type to be actually
+ * accessible, unless one of a few special cases holds:
+ *
+ * 1. We are dealing with a direct scope lookup, without an intermediate object.
+ *    Such lookups are protected from shadowing. For example "property int a: b"
+ *    always works.
+ * 2. The object we are retrieving the property from is identified by an ID, or
+ *    an attached property or a singleton. Such objects cannot be replaced.
+ *    Therefore we can be sure to see all the type information at compile time.
+ * 3. The property is declared final.
+ * 4. The object we are retrieving the property from is a value type. Value
+ *    types cannot be used polymorphically.
+ */
+
 void QQmlJSShadowCheck::run(
         const InstructionAnnotations *annotations, const Function *function,
         QQmlJS::DiagnosticMessage *error)

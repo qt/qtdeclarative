@@ -30,6 +30,20 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+ * \internal
+ * \class QQmlJSStorageGeneralizer
+ *
+ * The QQmlJSStorageGeneralizer is a compile pass that changes all type
+ * annotations and the function signature to use a generic storage type like
+ * QVariant or QObject*. This is necessary if we cannot rely on the original
+ * type to be immediately accessible, for example because we cannot include its
+ * header.
+ *
+ * QQmlJSStorageGeneralizer does not have to use the byte code at all but
+ * operates only on the annotations and the function description.
+ */
+
 QQmlJSCompilePass::InstructionAnnotations QQmlJSStorageGeneralizer::run(
         InstructionAnnotations annotations, Function *function,
         QQmlJS::DiagnosticMessage *error)
