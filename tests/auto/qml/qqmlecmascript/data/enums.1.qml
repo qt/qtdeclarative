@@ -35,4 +35,7 @@ MyQmlObject {
 
     // Enum values defined both in a type and a related type
     property int l: MyQmlObject.MultiplyDefined
+
+    // Enum arithmetic
+    property int m: MyQmlObject.EnumValue2 | MyQmlObject.EnumValue3
 }

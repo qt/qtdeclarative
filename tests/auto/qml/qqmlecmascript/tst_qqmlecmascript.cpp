@@ -1390,6 +1390,7 @@ void tst_qqmlecmascript::enums()
     QCOMPARE(object->property("j").toInt(), 19);
     QCOMPARE(object->property("k").toInt(), 42);
     QCOMPARE(object->property("l").toInt(), 333);
+    QCOMPARE(object->property("m").toInt(), 3);
     }
     // Non-existent enums
     {
