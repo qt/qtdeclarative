@@ -121,6 +121,7 @@ void tst_QQuickListView2::dragDelegateWithMouseArea()
 
     QScopedPointer<QQuickView> window(createView());
     QVERIFY(window);
+    window->setFlag(Qt::FramelessWindowHint);
     window->setSource(testFileUrl("delegateWithMouseArea.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
