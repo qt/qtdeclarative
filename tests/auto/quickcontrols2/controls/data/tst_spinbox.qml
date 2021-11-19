@@ -688,6 +688,31 @@ TestCase {
         compare(control.up.indicator.s, "this is the one");
     }
 
+    Component {
+        id: overriddenSpinBoxWithIds
+        SpinBox {
+            value: 50
+            up.indicator: Rectangle {
+                id: uhOh1
+                property string s: "up"
+            }
+            down.indicator: Rectangle {
+                id: uhOh2
+                property string s: "down"
+            }
+        }
+    }
+
+    function test_indicatorOverriddenWithIds() {
+        var control = createTemporaryObject(overriddenSpinBoxWithIds, testCase)
+        verify(control)
+        // TODO: Use failOnWarning() here when it has been implemented
+        // Specifying an id will result in both the default indicator implementations
+        // and the custom ones being created, but it shouldn't result in any TypeErrors.
+        compare(control.up.indicator.s, "up");
+        compare(control.down.indicator.s, "down");
+    }
+
     function test_valueEnterFromOutsideRange() {
         // Check that changing from 2 to 99 goes to 98 then changing to 99 puts it back to 98
         var control = createTemporaryObject(spinBox, testCase, {from: 2, to: 98, value: 2, editable: true})

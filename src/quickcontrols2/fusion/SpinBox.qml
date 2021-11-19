@@ -79,9 +79,9 @@ T.SpinBox {
     }
 
     up.indicator: PaddedRectangle {
-        x: control.mirrored ? 1 : parent.width - width - 1
+        x: control.mirrored ? 1 : control.width - width - 1
         y: 1
-        height: parent.height / 2 - 1
+        height: control.height / 2 - 1
         implicitWidth: 16
         implicitHeight: 10
 
@@ -103,9 +103,9 @@ T.SpinBox {
     }
 
     down.indicator: PaddedRectangle {
-        x: control.mirrored ? 1 : parent.width - width - 1
-        y: parent.height - height - 1
-        height: parent.height / 2 - 1
+        x: control.mirrored ? 1 : control.width - width - 1
+        y: control.height - height - 1
+        height: control.height / 2 - 1
         implicitWidth: 16
         implicitHeight: 10
 
