@@ -39,6 +39,7 @@ qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_object_model
 qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_table_model
     SOURCES
         qqmltableinstancemodel.cpp qqmltableinstancemodel_p.h
+        qqmltreemodeltotablemodel.cpp qqmltreemodeltotablemodel_p_p.h
 )
 
 qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_list_model
