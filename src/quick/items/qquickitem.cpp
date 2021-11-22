@@ -4567,10 +4567,10 @@ static bool unwrapMapFromToFromItemArgs(QQmlV4Function *args, const QQuickItem *
 }
 
 /*!
-    \qmlmethod object QtQuick::Item::mapFromItem(Item item, real x, real y)
-    \qmlmethod object QtQuick::Item::mapFromItem(Item item, point p)
-    \qmlmethod object QtQuick::Item::mapFromItem(Item item, real x, real y, real width, real height)
-    \qmlmethod object QtQuick::Item::mapFromItem(Item item, rect r)
+    \qmlmethod point QtQuick::Item::mapFromItem(Item item, real x, real y)
+    \qmlmethod point QtQuick::Item::mapFromItem(Item item, point p)
+    \qmlmethod rect QtQuick::Item::mapFromItem(Item item, real x, real y, real width, real height)
+    \qmlmethod rect QtQuick::Item::mapFromItem(Item item, rect r)
 
     Maps the point (\a x, \a y) or rect (\a x, \a y, \a width, \a height), which is in \a
     item's coordinate system, to this item's coordinate system, and returns a \l point or \l rect
@@ -4622,10 +4622,10 @@ QTransform QQuickItem::itemTransform(QQuickItem *other, bool *ok) const
 }
 
 /*!
-    \qmlmethod object QtQuick::Item::mapToItem(Item item, real x, real y)
-    \qmlmethod object QtQuick::Item::mapToItem(Item item, point p)
-    \qmlmethod object QtQuick::Item::mapToItem(Item item, real x, real y, real width, real height)
-    \qmlmethod object QtQuick::Item::mapToItem(Item item, rect r)
+    \qmlmethod point QtQuick::Item::mapToItem(Item item, real x, real y)
+    \qmlmethod point QtQuick::Item::mapToItem(Item item, point p)
+    \qmlmethod rect QtQuick::Item::mapToItem(Item item, real x, real y, real width, real height)
+    \qmlmethod rect QtQuick::Item::mapToItem(Item item, rect r)
 
     Maps the point (\a x, \a y) or rect (\a x, \a y, \a width, \a height), which is in this
     item's coordinate system, to \a item's coordinate system, and returns a \l point or \l rect
@@ -4707,7 +4707,7 @@ static bool unwrapMapFromToFromGlobalArgs(QQmlV4Function *args, const QQuickItem
 
 /*!
     \since 5.7
-    \qmlmethod object QtQuick::Item::mapFromGlobal(real x, real y)
+    \qmlmethod point QtQuick::Item::mapFromGlobal(real x, real y)
 
     Maps the point (\a x, \a y), which is in the global coordinate system, to the
     item's coordinate system, and returns a \l point  matching the mapped coordinate.
@@ -4734,7 +4734,7 @@ void QQuickItem::mapFromGlobal(QQmlV4Function *args) const
 
 /*!
     \since 5.7
-    \qmlmethod object QtQuick::Item::mapToGlobal(real x, real y)
+    \qmlmethod point QtQuick::Item::mapToGlobal(real x, real y)
 
     Maps the point (\a x, \a y), which is in this item's coordinate system, to the
     global coordinate system, and returns a \l point  matching the mapped coordinate.
