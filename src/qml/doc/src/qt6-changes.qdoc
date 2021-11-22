@@ -56,11 +56,19 @@
     relative URLs in QML in this way, so in Qt 6, the URL stays relative, and only gets resolved
     when this is required (e.g. when it is used as the source of an Image component).
     If you depend on the old behavior, you can use \c Qt.resolvedUrl
-    \oldcode
+
+    For example, if you have code like
+
+    \code
     property url imageFolder: "./images"
-    \newcode
+    \endcode
+
+    you can rewrite it as
+
+    \code
     property url imageFolder: Qt.resolvedUrl("./images")
     \endcode
+
     Qt.resolvedUrl can be used in both Qt 5 and 6.
 
     \section2 Variant Properties
@@ -69,9 +77,16 @@
     the same way as \c var properties.
     Code that relied on implicit string conversion triggered on assignment to variant properties
     should be updated to explicitly create an object of the correct type.
-    \oldcode
+
+    For example, if you have code like
+
+    \code
     property variant myColor: "red"
-    \newcode
+    \endcode
+
+    you can rewrite it as
+
+    \code
     property variant myColor: Qt.color("red")
     \endcode
 
@@ -100,13 +115,19 @@
     \c QQmlListProperty's  \c CountFunction and \c AtFunction have been changed to use \c qsizetype
     instead of \c int to align with the corresponding changes in Qt's containers.
 
-    \oldcode
+    For example, if you have code like
+
+    \code
     int myCountFunction(QQmlListProperty<MyType> *);
     MyType *myAtFunction(QQmlListProperty<MyType> *, int);
 
     QQmlListProperty<MyType> myReadOnlyList(containingObject, container, &myCountFunction,
                                             &myAtFunction);
-    \newcode
+    \endcode
+
+    you can rewrite it as
+
+    \code
     qsizetype myCountFunction(QQmlListProperty<MyType> *);
     MyType *myAtFunction(QQmlListProperty<MyType> *, qsizetype);
 
@@ -123,37 +144,59 @@
 
     \list
     \li The QQmlListProperty constructor taking a reference has been removed.
-    \oldcode
+
+    For example, if you have code like
+
+    \code
     QQmlListProperty<QObject>(owner, owner->objectList);
-    \newcode
+    \endcode
+
+    you can rewrite it as
+
+    \code
     QQmlListProperty<QObject>(owner, &owner->objectList);
     \endcode
 
     \li The functions \c qmlDebug, \c qmlInfo, \c qmlWarning,  \c qmlContext and \c qmlEngine used
     to exist both in the global namespace (or Qt namespace in namespaced builds), and in the \c
     QtQml namespace. These functions now exist only in the global namespace.
-    \oldcode
+
+    For example, if you have code like
+
+    \code
     QQmlEngine *engine = QtQml::qmlEngine(qmlObject);
-    \newcode
+    \endcode
+
+    you can rewrite it as
+
+    \code
     QQmlEngine *engine = qmlEngine(qmlObject);
     \endcode
 
     \li The \c qmlRegisterType overload taking no arguments has been removed. Use
     \c qmlRegisterAnonymousType instead, or switch to declarative type registration with
     \c QML_ANONYMOUS.
-    \oldcode
+
+    For example, if you have code like
+
+    \code
     class AnonymousType : public QObject {
       // ...
     };
 
     qmlRegisterType<AnonymousType>();
-    \newcode
+    \endcode
+
+    you can rewrite it as
+
+    \code
     class AnonymousType : public QObject {
       // ...
     };
 
     qmlRegisterAnonymousType<AnonymousType>("MyModule", 1);
     \endcode
+
     Or alternatively
     \code
     class AnonymousType : public QObject {
@@ -167,7 +210,9 @@
     version, or switch to declarative type registration with QML_EXTENDED
     and QML_INTERFACE.
 
-    \oldcode
+    For example, if you have code like
+
+    \code
     struct GreetInterface
     {
        virtual ~GreetInterface();
@@ -176,7 +221,11 @@
     Q_DECLARE_INTERFACE(GreetInterface, "org.hi.GreetInterface")
 
     qmlRegisterInterface<GreetInterface>("Greeter");
-    \newcode
+    \endcode
+
+    you can rewrite it as
+
+    \code
     struct GreetInterface
     {
        virtual ~GreetInterface();
@@ -186,7 +235,9 @@
 
     qmlRegisterInterface<GreetInterface>("Greeter", 1);
     \endcode
+
     Alternatively
+
     \code
     struct GreetInterface
     {
@@ -196,6 +247,7 @@
     };
     Q_DECLARE_INTERFACE(GreetInterface, "org.hi.GreetInterface")
     \endcode
+
     \note In new code, declarative type registration should be preferred.
 
     \li The function \c QJSValue::engine has been removed. If access to the engine is required, a
@@ -208,10 +260,17 @@
 
     \li \c QJSEngine::installTranslatorFunctions has been removed. \c QJSEngine::installExtensions
     is available as a replacement.
-    \oldcode
+
+    For example, if you have code like
+
+    \code
     QJSEngine engine;
     engine.installTranslatorFunctions();
-    \newcode
+    \endcode
+
+    you can rewrite it as
+
+    \code
     QJSEngine engine;
     engine.installExtensions(QJSEngine::TranslationExtension);
     \endcode
