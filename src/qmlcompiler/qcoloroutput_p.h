@@ -43,6 +43,8 @@
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qstring.h>
 
+QT_BEGIN_NAMESPACE
+
 class QColorOutputPrivate;
 
 class QColorOutput
@@ -108,5 +110,7 @@ private:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QColorOutput::ColorCode)
+
+QT_END_NAMESPACE
 
 #endif // QCOLOROUTPUT_H

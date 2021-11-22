@@ -28,6 +28,8 @@
 
 #include "qqmljsannotation_p.h"
 
+QT_BEGIN_NAMESPACE
+
 bool QQmlJSAnnotation::isDeprecation() const { return name == QStringLiteral("Deprecated"); }
 
 QQQmlJSDeprecation QQmlJSAnnotation::deprecation() const {
@@ -44,3 +46,5 @@ QQQmlJSDeprecation QQmlJSAnnotation::deprecation() const {
 
     return deprecation;
 }
+
+QT_END_NAMESPACE

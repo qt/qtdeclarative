@@ -28,6 +28,8 @@
 
 #include "qqmljslogger_p.h"
 
+QT_BEGIN_NAMESPACE
+
 const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
     static QMap<QString, QQmlJSLogger::Option> optionsMap = {
         { QStringLiteral("required"),
@@ -244,3 +246,5 @@ void QQmlJSLogger::printFix(const FixSuggestion &fix)
                        + u'\n');
     }
 }
+
+QT_END_NAMESPACE

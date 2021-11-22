@@ -35,6 +35,8 @@
 #include <unistd.h>
 #endif
 
+QT_BEGIN_NAMESPACE
+
 class QColorOutputPrivate
 {
 public:
@@ -333,3 +335,5 @@ void QColorOutput::insertMapping(int colorID, const ColorCode colorCode)
 {
     d->insertColor(colorID, colorCode);
 }
+
+QT_END_NAMESPACE

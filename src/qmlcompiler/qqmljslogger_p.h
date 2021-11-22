@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#ifndef QLOGGER_H
-#define QLOGGER_H
+#ifndef QQMLJSLOGGER_P_H
+#define QQMLJSLOGGER_P_H
 
 //
 //  W A R N I N G
@@ -49,6 +49,8 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
 #include <QtCore/qset.h>
+
+QT_BEGIN_NAMESPACE
 
 /*!
     \internal
@@ -253,4 +255,6 @@ private:
     QHash<uint32_t, QSet<QQmlJSLoggerCategory>> m_ignoredWarnings;
 };
 
-#endif // QLOGGER_H
+QT_END_NAMESPACE
+
+#endif // QQMLJSLOGGER_P_H

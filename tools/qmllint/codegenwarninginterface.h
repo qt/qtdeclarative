@@ -31,7 +31,8 @@
 
 #include <QtQml/private/qv4codegen_p.h>
 
-class QQmlJSLogger;
+QT_FORWARD_DECLARE_CLASS(QQmlJSLogger)
+
 class CodegenWarningInterface final : public QV4::Compiler::CodegenWarningInterface
 {
 public:
