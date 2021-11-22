@@ -137,7 +137,7 @@ void SquircleRenderer::init()
 {
     if (!m_program) {
         QSGRendererInterface *rif = m_window->rendererInterface();
-        Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::OpenGL || rif->graphicsApi() == QSGRendererInterface::OpenGLRhi);
+        Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::OpenGL);
 
         initializeOpenGLFunctions();
 
