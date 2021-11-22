@@ -241,7 +241,12 @@ typename QIntrusiveList<N, member>::iterator QIntrusiveList<N, member>::end()
 template<class N, QIntrusiveListNode N::*member>
 N *QIntrusiveList<N, member>::nodeToN(QIntrusiveListNode *node)
 {
+    QT_WARNING_PUSH
+#if defined(Q_CC_CLANG) && Q_CC_CLANG >= 1300
+    QT_WARNING_DISABLE_CLANG("-Wnull-pointer-subtraction")
+#endif
     return (N *)((char *)node - ((char *)&(((N *)nullptr)->*member) - (char *)nullptr));
+    QT_WARNING_POP
 }
 
 QIntrusiveListNode::QIntrusiveListNode()
