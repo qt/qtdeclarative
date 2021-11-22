@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule QtQml.WorkerScript 2.\QtMinorVersion
+    \qmlmodule QtQml.WorkerScript
     \title Qt QML WorkerScript QML Types
     \ingroup qmlmodules
     \brief Provides QML types for worker scripts.

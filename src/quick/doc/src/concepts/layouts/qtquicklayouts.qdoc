@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule QtQuick.Layouts 1.\QtMinorVersion
+    \qmlmodule QtQuick.Layouts
     \title Qt Quick Layouts QML Types
     \ingroup qmlmodules
     \brief Provides QML types for arranging QML items in a user interface.

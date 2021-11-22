@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule QtQml.Models 2.\QtMinorVersion
+    \qmlmodule QtQml.Models
     \title Qt QML Models QML Types
     \ingroup qmlmodules
     \brief Provides QML types for data models

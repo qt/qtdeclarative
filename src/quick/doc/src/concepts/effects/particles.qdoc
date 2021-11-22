@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule QtQuick.Particles 2.\QtMinorVersion
+    \qmlmodule QtQuick.Particles
     \title Qt Quick Particles QML Types
     \ingroup qmlmodules
     \brief Provides QML types for particle effects
