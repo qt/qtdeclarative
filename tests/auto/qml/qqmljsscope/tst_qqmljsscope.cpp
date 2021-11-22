@@ -124,7 +124,6 @@ void tst_qqmljsscope::orderedBindings()
     auto [pBindingsBegin, pBindingsEnd] = root->ownPropertyBindings(u"p"_qs);
     QVERIFY(std::distance(pBindingsBegin, pBindingsEnd) == 2);
 
-    QEXPECT_FAIL("", "Bindings are not ordered properly", Abort);
     // check that the bindings are properly ordered
     QCOMPARE(pBindingsBegin->bindingType(), QQmlJSMetaPropertyBinding::Object);
     QCOMPARE(std::next(pBindingsBegin)->bindingType(), QQmlJSMetaPropertyBinding::Interceptor);
