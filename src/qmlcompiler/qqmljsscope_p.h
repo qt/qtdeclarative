@@ -258,8 +258,7 @@ public:
         return m_propertyBindings.contains(name);
     }
 
-    bool hasPropertyBinding(const QString &name) const;
-    QQmlJSMetaPropertyBinding propertyBinding(const QString &name) const;
+    bool hasPropertyBindings(const QString &name) const;
     QList<QQmlJSMetaPropertyBinding> propertyBindings(const QString &name) const;
 
     static QQmlJSScope::ConstPtr ownerOfProperty(const QQmlJSScope::ConstPtr &self,

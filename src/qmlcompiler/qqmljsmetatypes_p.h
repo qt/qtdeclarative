@@ -416,8 +416,8 @@ private:
 public:
 
     QQmlJSMetaPropertyBinding() = default;
-    QQmlJSMetaPropertyBinding(const QString &propName) : m_propertyName(propName) { }
-    QQmlJSMetaPropertyBinding(const QQmlJSMetaProperty &prop)
+    explicit QQmlJSMetaPropertyBinding(const QString &propName) : m_propertyName(propName) { }
+    explicit QQmlJSMetaPropertyBinding(const QQmlJSMetaProperty &prop)
         : QQmlJSMetaPropertyBinding(prop.propertyName())
     {
     }

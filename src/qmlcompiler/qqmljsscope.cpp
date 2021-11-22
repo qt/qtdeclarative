@@ -519,31 +519,18 @@ bool QQmlJSScope::isPropertyLocallyRequired(const QString &name) const
     return m_requiredPropertyNames.contains(name);
 }
 
-bool QQmlJSScope::hasPropertyBinding(const QString &name) const
+bool QQmlJSScope::hasPropertyBindings(const QString &name) const
 {
     return searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        return scope->m_propertyBindings.contains(name);
+        return scope->hasOwnPropertyBindings(name);
     });
-}
-
-QQmlJSMetaPropertyBinding QQmlJSScope::propertyBinding(const QString &name) const
-{
-    QQmlJSMetaPropertyBinding binding;
-    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        const auto it = scope->m_propertyBindings.find(name);
-        if (it == scope->m_propertyBindings.end())
-            return false;
-        binding = *it;
-        return true;
-    });
-    return binding;
 }
 
 QList<QQmlJSMetaPropertyBinding> QQmlJSScope::propertyBindings(const QString &name) const
 {
     QList<QQmlJSMetaPropertyBinding> bindings;
     searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
-        const auto range = scope->m_propertyBindings.equal_range(name);
+        const auto range = scope->ownPropertyBindings(name);
         for (auto it = range.first; it != range.second; ++it)
             bindings.append(*it);
         return false;

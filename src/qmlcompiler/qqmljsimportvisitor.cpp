@@ -740,7 +740,7 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                         bool found =
                                 std::find_if(scopesToSearch.constBegin(), scopesToSearch.constEnd(),
                                              [&](QQmlJSScope::ConstPtr scope) {
-                                                 return scope->hasPropertyBinding(propName);
+                                                 return scope->hasPropertyBindings(propName);
                                              })
                                 != scopesToSearch.constEnd();
 
