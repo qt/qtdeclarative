@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-\qmlmodule QtQml 2.\QtMinorVersion
+\qmlmodule QtQml
 \title Qt QML QML Types
 \ingroup qmlmodules
 \brief List of QML types provided by the Qt QML module

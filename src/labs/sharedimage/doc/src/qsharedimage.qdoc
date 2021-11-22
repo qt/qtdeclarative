@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule Qt.labs.sharedimage 1
+    \qmlmodule Qt.labs.sharedimage
     \title Qt Quick Shared Image Provider
     \ingroup qmlmodules
     \brief Adds an image provider which utilizes shared CPU memory

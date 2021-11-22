@@ -26,7 +26,7 @@
 ****************************************************************************/
 
 /*!
-    \qmlmodule Qt.labs.qmlmodels 1.0
+    \qmlmodule Qt.labs.qmlmodels
     \title Qt QML Models experimental QML Types
     \ingroup qmlmodules
     \brief Provides QML experimental types for data models.
