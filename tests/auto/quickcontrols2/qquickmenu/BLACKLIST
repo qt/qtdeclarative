@@ -4,3 +4,11 @@ macos # Can't control cursor (QTBUG-76312)
 # QTBUG-87018
 [subMenuDisabledMouse]
 macos
+
+# QTBUG-98491
+[disableWhenTriggered]
+macos
+
+# QTBUG-98491
+[subMenuPosition]
+macos
