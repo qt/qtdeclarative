@@ -2,3 +2,11 @@
 macos ci
 [reparent]
 macos ci
+
+#QTBUG-98516
+[pathTransition]
+macos ci
+
+#QTBUG-98516
+[opacityAnimationFromZero]
+macos ci
