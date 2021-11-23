@@ -52,11 +52,14 @@ QQmlLinter::QQmlLinter(const QStringList &importPaths, bool useAbsolutePath)
 {
 }
 
-bool QQmlLinter::lintFile(const QString &filename, const bool silent, QJsonArray *json,
-                          const QStringList &qmlImportPaths, const QStringList &qmltypesFiles,
-                          const QStringList &resourceFiles,
+bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, const bool silent,
+                          QJsonArray *json, const QStringList &qmlImportPaths,
+                          const QStringList &qmltypesFiles, const QStringList &resourceFiles,
                           const QMap<QString, QQmlJSLogger::Option> &options)
 {
+    // Make sure that we don't expose an old logger if we return before a new one is created.
+    m_logger.reset();
+
     QJsonArray warnings;
     QJsonObject result;
 
@@ -112,19 +115,25 @@ bool QQmlLinter::lintFile(const QString &filename, const bool silent, QJsonArray
         warnings << jsonMessage;
     };
 
-    QFile file(filename);
-    if (!file.open(QFile::ReadOnly)) {
-        if (json) {
-            result[u"openFailed"] = true;
-            success = false;
-        } else if (!silent) {
-            qWarning() << "Failed to open file" << filename << file.error();
-        }
-        return false;
-    }
+    QString code;
 
-    QString code = QString::fromUtf8(file.readAll());
-    file.close();
+    if (fileContents == nullptr) {
+        QFile file(filename);
+        if (!file.open(QFile::ReadOnly)) {
+            if (json) {
+                result[u"openFailed"] = true;
+                success = false;
+            } else if (!silent) {
+                qWarning() << "Failed to open file" << filename << file.error();
+            }
+            return false;
+        }
+
+        code = QString::fromUtf8(file.readAll());
+        file.close();
+    } else {
+        code = *fileContents;
+    }
 
     QQmlJS::Engine engine;
     QQmlJS::Lexer lexer(&engine);
@@ -161,28 +170,30 @@ bool QQmlLinter::lintFile(const QString &filename, const bool silent, QJsonArray
 
             m_importer.setResourceFileMapper(mapper);
 
-            QQmlJSLogger logger(m_useAbsolutePath ? info.absoluteFilePath() : filename, code,
-                                silent || json);
+            m_logger.reset(new QQmlJSLogger(m_useAbsolutePath ? info.absoluteFilePath() : filename,
+                                            code, silent || json));
             FindWarningVisitor v {
                 &m_importer,
-                &logger,
+                m_logger.get(),
                 qmltypesFiles,
                 engine.comments(),
             };
 
             for (auto it = options.cbegin(); it != options.cend(); ++it) {
-                logger.setCategoryError(it.value().m_category, it.value().m_error);
-                logger.setCategoryLevel(it.value().m_category, it.value().m_level);
+                m_logger->setCategoryError(it.value().m_category, it.value().m_error);
+                m_logger->setCategoryLevel(it.value().m_category, it.value().m_level);
             }
 
             parser.rootNode()->accept(&v);
             success = v.check();
 
-            if (logger.hasErrors())
+            if (m_logger->hasErrors())
                 return;
 
             QQmlJSTypeInfo typeInfo;
-            Codegen codegen { &m_importer, filename, qmltypesFiles, &logger, &typeInfo, code };
+            Codegen codegen {
+                &m_importer, filename, qmltypesFiles, m_logger.get(), &typeInfo, code
+            };
             QQmlJSSaveFunction saveFunction = [](const QV4::CompiledData::SaveableUnitPointer &,
                                                  const QQmlJSAotFunctionMap &,
                                                  QString *) { return true; };
@@ -191,17 +202,17 @@ bool QQmlLinter::lintFile(const QString &filename, const bool silent, QJsonArray
 
             QLoggingCategory::setFilterRules(u"qt.qml.compiler=false"_qs);
 
-            CodegenWarningInterface interface(&logger);
+            CodegenWarningInterface interface(m_logger.get());
             qCompileQmlFile(filename, saveFunction, &codegen, &error, true, &interface);
 
-            success &= !logger.hasWarnings() && !logger.hasErrors();
+            success &= !m_logger->hasWarnings() && !m_logger->hasErrors();
 
             if (json) {
-                for (const auto &error : logger.errors())
+                for (const auto &error : m_logger->errors())
                     addJsonWarning(error);
-                for (const auto &warning : logger.warnings())
+                for (const auto &warning : m_logger->warnings())
                     addJsonWarning(warning);
-                for (const auto &info : logger.infos())
+                for (const auto &info : m_logger->infos())
                     addJsonWarning(info);
             }
         };

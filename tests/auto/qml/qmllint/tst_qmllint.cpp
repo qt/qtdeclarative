@@ -1021,8 +1021,8 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
 
     bool success = m_linter.lintFile(QFileInfo(fileToLint).isAbsolute() ? fileToLint
                                                                         : testFile(fileToLint),
-                                     true, warnings ? &jsonOutput : nullptr, m_defaultImportPaths,
-                                     QStringList(), QStringList(), {});
+                                     nullptr, true, warnings ? &jsonOutput : nullptr,
+                                     m_defaultImportPaths, QStringList(), QStringList(), {});
     QCOMPARE(success, shouldSucceed);
 
     if (warnings) {

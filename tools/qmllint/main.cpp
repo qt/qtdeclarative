@@ -266,8 +266,8 @@ All warnings can be set to three levels:
     const auto arguments = app.arguments();
     for (const QString &filename : arguments) {
 #endif
-        success &= linter.lintFile(filename, silent, useJson ? &jsonFiles : nullptr, qmlImportPaths,
-                                   qmltypesFiles, resourceFiles, options);
+        success &= linter.lintFile(filename, nullptr, silent, useJson ? &jsonFiles : nullptr,
+                                   qmlImportPaths, qmltypesFiles, resourceFiles, options);
     }
 
     if (useJson) {

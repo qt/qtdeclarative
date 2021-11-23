@@ -45,6 +45,7 @@
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qmap.h>
+#include <QtCore/qscopedpointer.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -53,14 +54,17 @@ class QQmlLinter
 public:
     QQmlLinter(const QStringList &importPaths, bool useAbsolutePath = false);
 
-    bool lintFile(const QString &filename, const bool silent, QJsonArray *json,
-                  const QStringList &qmlImportPaths, const QStringList &qmltypesFiles,
-                  const QStringList &resourceFiles,
+    bool lintFile(const QString &filename, const QString *fileContents, const bool silent,
+                  QJsonArray *json, const QStringList &qmlImportPaths,
+                  const QStringList &qmltypesFiles, const QStringList &resourceFiles,
                   const QMap<QString, QQmlJSLogger::Option> &options);
+
+    const QQmlJSLogger *logger() const { return m_logger.get(); }
 
 private:
     bool m_useAbsolutePath;
     QQmlJSImporter m_importer;
+    QScopedPointer<QQmlJSLogger> m_logger;
 };
 
 QT_END_NAMESPACE
