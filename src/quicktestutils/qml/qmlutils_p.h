@@ -40,6 +40,7 @@
 // We mean it.
 //
 
+#include <QtCore/QTemporaryDir>
 #include <QtCore/QDir>
 #include <QtCore/QUrl>
 #include <QtCore/QCoreApplication>
@@ -89,7 +90,9 @@ private:
     // The path to the "data" directory, if found.
     const QString m_dataDirectory;
     const QUrl m_dataDirectoryUrl;
+    QTemporaryDir m_cacheDir;
     QString m_directory;
+    bool m_usesOwnCacheDir = false;
 };
 
 class QQmlTestMessageHandler

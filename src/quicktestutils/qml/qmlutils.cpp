@@ -50,11 +50,17 @@ QQmlDataTest::QQmlDataTest(const char *qmlTestDataDir) :
         : QUrl::fromLocalFile(m_dataDirectory + QLatin1Char('/')))
 {
     m_instance = this;
+    if (m_cacheDir.isValid() && !qEnvironmentVariableIsSet("QML_DISK_CACHE_PATH")) {
+        m_usesOwnCacheDir = true;
+        qputenv("QML_DISK_CACHE_PATH", m_cacheDir.path().toLocal8Bit());
+    }
 }
 
 QQmlDataTest::~QQmlDataTest()
 {
     m_instance = nullptr;
+    if (m_usesOwnCacheDir)
+        qunsetenv("QML_DISK_CACHE_PATH");
 }
 
 void QQmlDataTest::initTestCase()
