@@ -1177,11 +1177,10 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
 
     if (obj->flags & QV4::CompiledData::Object::IsComponent) {
         isComponent = true;
-        QQmlComponent *component = new QQmlComponent(engine, compilationUnit.data(), index, parent);
+        instance = createComponent(engine, compilationUnit.data(), index, parent, context);
         typeName = QStringLiteral("<component>");
-        QQmlComponentPrivate::get(component)->creationContext = context;
-        instance = component;
-        ddata = QQmlData::get(instance, /*create*/true);
+        ddata = QQmlData::get(instance);
+        Q_ASSERT(ddata); // we just created it inside createComponent
     } else {
         QV4::ResolvedTypeReference *typeRef = resolvedType(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
@@ -1685,8 +1684,19 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     return errors.isEmpty();
 }
 
-
-
+/*!
+    \internal
+*/
+QQmlComponent *QQmlObjectCreator::createComponent(QQmlEngine *engine,
+                                                  QV4::ExecutableCompilationUnit *compilationUnit,
+                                                  int index, QObject *parent,
+                                                  const QQmlRefPointer<QQmlContextData> &context)
+{
+    QQmlComponent *component = new QQmlComponent(engine, compilationUnit, index, parent);
+    QQmlComponentPrivate::get(component)->creationContext = context;
+    QQmlData::get(component, /*create*/ true);
+    return component;
+}
 
 QQmlObjectCreatorRecursionWatcher::QQmlObjectCreatorRecursionWatcher(QQmlObjectCreator *creator)
     : sharedState(creator->sharedState)

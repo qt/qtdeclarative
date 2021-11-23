@@ -152,6 +152,11 @@ public:
     RequiredProperties &requiredProperties() {return sharedState->requiredProperties;}
     bool componentHadRequiredProperties() const {return sharedState->hadRequiredProperties;}
 
+    static QQmlComponent *createComponent(QQmlEngine *engine,
+                                          QV4::ExecutableCompilationUnit *compilationUnit,
+                                          int index, QObject *parent,
+                                          const QQmlRefPointer<QQmlContextData> &context);
+
 private:
     QQmlObjectCreator(QQmlRefPointer<QQmlContextData> contextData,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit,
