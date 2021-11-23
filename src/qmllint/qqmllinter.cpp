@@ -184,16 +184,26 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
                 m_logger->setCategoryLevel(it.value().m_category, it.value().m_level);
             }
 
-            parser.rootNode()->accept(&v);
+            std::unique_ptr<QQmlJSTypeResolver> typeResolver
+                    = std::make_unique<QQmlJSTypeResolver>(
+                        &m_importer, QQmlJSTypeResolver::TypeStorage::Indirect, m_logger.get());
+
+            // Type resolving is using document parent mode here so that it produces fewer false positives
+            // on the "parent" property of QQuickItem. It does produce a few false negatives this way
+            // because items can be reparented. Furthermore, even if items are not reparented, the document
+            // parent may indeed not be their visual parent. See QTBUG-95530. Eventually, we'll need
+            // cleverer logic to deal with this.
+            typeResolver->setParentMode(QQmlJSTypeResolver::UseDocumentParent);
+
+            typeResolver->init(&v, parser.rootNode());
             success = v.check();
 
             if (m_logger->hasErrors())
                 return;
 
             QQmlJSTypeInfo typeInfo;
-            Codegen codegen {
-                &m_importer, filename, qmltypesFiles, m_logger.get(), &typeInfo, code
-            };
+            Codegen codegen { filename, qmltypesFiles, m_logger.get(), &typeInfo, code };
+            codegen.setTypeResolver(std::move(typeResolver));
             QQmlJSSaveFunction saveFunction = [](const QV4::CompiledData::SaveableUnitPointer &,
                                                  const QQmlJSAotFunctionMap &,
                                                  QString *) { return true; };

@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 class Codegen : public QQmlJSAotCompiler
 {
 public:
-    Codegen(QQmlJSImporter *importer, const QString &fileName, const QStringList &qmltypesFiles,
+    Codegen(const QString &fileName, const QStringList &qmltypesFiles,
             QQmlJSLogger *logger, QQmlJSTypeInfo *typeInfo, const QString &m_code);
 
     void setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document) override;
@@ -72,6 +72,11 @@ public:
 
     QQmlJSAotFunction globalCode() const override;
 
+    void setTypeResolver(std::unique_ptr<QQmlJSTypeResolver> typeResolver)
+    {
+        m_typeResolver = std::move(typeResolver);
+    }
+
 private:
     using Function = QQmlJSCompilePass::Function;
 
@@ -79,7 +84,6 @@ private:
     const QString m_fileName;
     const QStringList m_resourceFiles;
     const QStringList m_qmltypesFiles;
-    QQmlJSImporter *m_importer = nullptr;
 
     QQmlJS::MemoryPool *m_pool = nullptr;
     const QmlIR::Object *m_currentObject = nullptr;

@@ -63,10 +63,9 @@ public:
         QString setter;
     };
 
-    QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Document *document,
-                       TypeStorage storage, QQmlJSLogger *logger);
+    QQmlJSTypeResolver(QQmlJSImporter *importer, TypeStorage storage, QQmlJSLogger *logger);
     // Note: must be called after the construction to read the QML program
-    void init(QQmlJSImportVisitor &visitor);
+    void init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *program);
 
     QQmlJSScope::ConstPtr voidType() const { return m_voidType; }
     QQmlJSScope::ConstPtr qQmlV4FunctionType() const { return m_qQmlV4FunctionType; }
@@ -173,8 +172,6 @@ protected:
     QQmlJSScope::ConstPtr m_listPropertyType;
     QQmlJSScope::ConstPtr m_metaObjectType;
     QQmlJSScope::ConstPtr m_jsGlobalObject;
-
-    const QmlIR::Document *m_document = nullptr;
 
     QHash<QString, QQmlJSScope::ConstPtr> m_objectsById;
     QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> m_objectsByLocation;

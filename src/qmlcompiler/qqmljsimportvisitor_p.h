@@ -260,16 +260,6 @@ protected:
 
     QStack<int> m_runtimeIdCounters;
 
-    struct OutstandingConnection
-    {
-        QString targetName;
-        QQmlJSScope::Ptr scope;
-        QQmlJS::AST::UiObjectDefinition *uiod;
-    };
-
-    QVarLengthArray<OutstandingConnection, 3>
-            m_outstandingConnections; // Connections whose target we have not encountered
-
 private:
     void importBaseModules();
     void resolveAliasesAndIds();

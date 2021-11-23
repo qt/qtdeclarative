@@ -63,10 +63,9 @@ static bool searchBaseAndExtensionTypes(const QQmlJSScope::ConstPtr type, const 
     return false;
 }
 
-QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Document *document,
-                                       TypeStorage storage, QQmlJSLogger *logger)
-    : m_document(document)
-    , m_typeStorage(storage)
+QQmlJSTypeResolver::QQmlJSTypeResolver(
+        QQmlJSImporter *importer, TypeStorage storage, QQmlJSLogger *logger)
+    : m_typeStorage(storage)
     , m_logger(logger)
 {
     const QHash<QString, QQmlJSScope::ConstPtr> builtinTypes = importer->builtinInternalNames();
@@ -115,16 +114,16 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer, const QmlIR::Do
     Initializes the type resolver. As part of that initialization, makes \a
     visitor traverse the program.
 */
-void QQmlJSTypeResolver::init(QQmlJSImportVisitor &visitor)
+void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *program)
 {
-    m_document->program->accept(&visitor);
+    program->accept(visitor);
 
-    m_objectsById = visitor.addressableScopes();
-    m_objectsByLocation = visitor.scopesBylocation();
-    m_signalHandlers = visitor.signalHandlers();
-    m_imports = visitor.imports();
+    m_objectsById = visitor->addressableScopes();
+    m_objectsByLocation = visitor->scopesBylocation();
+    m_signalHandlers = visitor->signalHandlers();
+    m_imports = visitor->imports();
 
-    for (const auto &scope : visitor.literalScopesToCheck()) {
+    for (const auto &scope : visitor->literalScopesToCheck()) {
         for (const auto &binding : scope->ownPropertyBindings()) {
             if (!binding.hasLiteral())
                 continue;

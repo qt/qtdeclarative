@@ -859,10 +859,38 @@ void QQmlJSImportVisitor::checkSignals()
             const auto &pair = scopeAndPair.data;
             const QString signal = signalName(pair.first);
 
-            if (!it.key()->hasMethod(signal)) {
+            const QQmlJSScope::ConstPtr signalScope = it.key();
+            if (!signalScope->hasMethod(signal)) {
                 m_logger->logWarning(QStringLiteral("no matching signal found for handler \"%1\"")
                                              .arg(pair.first),
                                      Log_UnqualifiedAccess, location);
+
+                // There is a small chance of suggesting this fix for things that are not actually
+                // QtQml/Connections elements, but rather some other thing that is also called
+                // "Connections". However, I guess we can live with this.
+                if (signalScope->baseTypeName() == QStringLiteral("Connections")) {
+
+                    // Cut to the end of the line to avoid hairy issues with pre-existing function()
+                    // and the colon.
+                    const qsizetype newLength = m_logger->code().indexOf(u'\n', location.end())
+                            - location.offset;
+
+                    const FixSuggestion suggestion {
+                        Log_UnqualifiedAccess,
+                        {
+                            FixSuggestion::Fix {
+                                QStringLiteral("Implicitly defining %1 as signal handler in "
+                                               "Connections is deprecated. Create a function "
+                                               "instead").arg(pair.first),
+                                QQmlJS::SourceLocation(location.offset, newLength,
+                                                       location.startLine, location.startColumn),
+                                QStringLiteral("function %1(%2) { ... }")
+                                                .arg(pair.first, pair.second.join(u", "))
+                                }
+                        }
+                    };
+                    m_logger->suggestFix(suggestion);
+                }
                 continue;
             }
 
@@ -1072,6 +1100,8 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
     addDefaultProperties();
     if (m_currentScope->scopeType() == QQmlJSScope::QMLScope)
         m_qmlTypes.append(m_currentScope);
+
+    m_objectDefinitionScopes << m_currentScope;
     return true;
 }
 

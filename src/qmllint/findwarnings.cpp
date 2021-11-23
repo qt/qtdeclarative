@@ -43,66 +43,6 @@
 
 QT_BEGIN_NAMESPACE
 
-bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
-{
-    QQmlJSImportVisitor::visit(uiod);
-
-    const QString name = m_currentScope->baseTypeName();
-    if (name.endsWith(u"Connections"_qs)) {
-        QString target;
-        auto member = uiod->initializer->members;
-        while (member) {
-            if (member->member->kind == QQmlJS::AST::Node::Kind_UiScriptBinding) {
-                auto asBinding = static_cast<QQmlJS::AST::UiScriptBinding *>(member->member);
-                if (asBinding->qualifiedId->name == u"target"_qs) {
-                    if (asBinding->statement->kind == QQmlJS::AST::Node::Kind_ExpressionStatement) {
-                        auto expr = static_cast<QQmlJS::AST::ExpressionStatement *>(
-                                            asBinding->statement)
-                                            ->expression;
-                        if (auto idexpr =
-                                    QQmlJS::AST::cast<QQmlJS::AST::IdentifierExpression *>(expr)) {
-                            target = idexpr->name.toString();
-                        } else {
-                            // more complex expressions are not supported
-                        }
-                    }
-                    break;
-                }
-            }
-            member = member->next;
-        }
-        QQmlJSScope::ConstPtr targetScope;
-        if (target.isEmpty()) {
-            // no target set, connection comes from parentF
-            QQmlJSScope::Ptr scope = m_currentScope;
-            do {
-                if (auto parentScope = scope->parentScope(); !parentScope.isNull())
-                    scope = parentScope;
-                else
-                    break;
-            } while (scope->scopeType() != QQmlJSScope::QMLScope);
-            targetScope = m_rootScopeImports.value(scope->baseTypeName());
-        } else {
-            // there was a target, check if we already can find it
-            auto scopeIt = m_scopesById.find(target);
-            if (scopeIt != m_scopesById.end()) {
-                targetScope = *scopeIt;
-            } else {
-                m_outstandingConnections.push_back({ target, m_currentScope, uiod });
-                return false; // visit children later once target is known
-            }
-        }
-        for (const auto scope = targetScope; targetScope; targetScope = targetScope->baseType()) {
-            const auto connectionMethods = targetScope->ownMethods();
-            for (const auto &method : connectionMethods)
-                m_currentScope->addOwnMethod(method);
-        }
-    }
-
-    m_objectDefinitionScopes << m_currentScope;
-    return true;
-}
-
 void FindWarningVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *uiod)
 {
     auto childScope = m_currentScope;
@@ -223,22 +163,6 @@ void FindWarningVisitor::parseComments(const QList<QQmlJS::SourceLocation> &comm
 
 bool FindWarningVisitor::check()
 {
-    // now that all ids are known, revisit any Connections whose target were perviously unknown
-    for (auto const &outstandingConnection: m_outstandingConnections) {
-        auto targetScope = m_scopesById[outstandingConnection.targetName];
-        if (outstandingConnection.scope) {
-            for (const auto scope = targetScope; targetScope;
-                 targetScope = targetScope->baseType()) {
-                const auto connectionMethods = targetScope->ownMethods();
-                for (const auto &method : connectionMethods)
-                    outstandingConnection.scope->addOwnMethod(method);
-            }
-        }
-        QScopedValueRollback<QQmlJSScope::Ptr> rollback(m_currentScope,
-                                                        outstandingConnection.scope);
-        outstandingConnection.uiod->initializer->accept(this);
-    }
-
     return !m_logger->hasWarnings() && !m_logger->hasErrors();
 }
 

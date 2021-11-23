@@ -36,12 +36,10 @@
 
 QT_BEGIN_NAMESPACE
 
-Codegen::Codegen(QQmlJSImporter *importer, const QString &fileName,
-                 const QStringList &qmltypesFiles, QQmlJSLogger *logger, QQmlJSTypeInfo *typeInfo,
-                 const QString &code)
+Codegen::Codegen(const QString &fileName, const QStringList &qmltypesFiles, QQmlJSLogger *logger,
+                 QQmlJSTypeInfo *typeInfo, const QString &code)
     : m_fileName(fileName),
       m_qmltypesFiles(qmltypesFiles),
-      m_importer(importer),
       m_logger(logger),
       m_typeInfo(typeInfo),
       m_code(code)
@@ -55,26 +53,6 @@ void Codegen::setDocument(QmlIR::JSCodeGen *codegen, QmlIR::Document *document)
     m_pool = document->jsParserEngine.pool();
     m_unitGenerator = &document->jsGenerator;
     m_entireSourceCodeLines = document->code.split(u'\n');
-    m_typeResolver = std::make_unique<QQmlJSTypeResolver>(
-            m_importer, document, QQmlJSTypeResolver::Indirect, m_logger);
-
-    // Type resolving is using document parent mode here so that it produces fewer false positives
-    // on the "parent" property of QQuickItem. It does produce a few false negatives this way
-    // because items can be reparented. Furthermore, even if items are not reparented, the document
-    // parent may indeed not be their visual parent. See QTBUG-95530. Eventually, we'll need
-    // cleverer logic to deal with this.
-    m_typeResolver->setParentMode(QQmlJSTypeResolver::UseDocumentParent);
-
-    // TODO: using silentLogger for visitor actually hides potential issues but
-    // using m_logger instead fails some tests, so for now let's leave the old
-    // behavior for consistency. the proper fix is anyway to remove this visitor
-    // and use FindWarningsVisitor instead.
-    QQmlJSLogger silentLogger(m_fileName, document->code, /* silent */ true);
-    QQmlJSImportVisitor visitor(m_importer, &silentLogger,
-                                QQmlJSImportVisitor::implicitImportDirectory(
-                                        m_fileName, m_importer->resourceFileMapper()),
-                                m_qmltypesFiles);
-    m_typeResolver->init(visitor);
 }
 
 void Codegen::setScope(const QmlIR::Object *object, const QmlIR::Object *scope)

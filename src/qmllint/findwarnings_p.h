@@ -69,7 +69,6 @@ private:
     using QQmlJSImportVisitor::endVisit;
     using QQmlJSImportVisitor::visit;
 
-    bool visit(QQmlJS::AST::UiObjectDefinition *uiod) override;
     void endVisit(QQmlJS::AST::UiObjectDefinition *uiod) override;
 };
 

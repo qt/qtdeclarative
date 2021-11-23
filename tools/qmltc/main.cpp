@@ -174,8 +174,8 @@ int main(int argc, char **argv)
     setupLogger(logger);
     QmltcVisitor visitor(&importer, &logger, implicitImportDirectory, qmltypesFiles);
     QmltcTypeResolver typeResolver {
-        &importer, &document, QQmlJSTypeResolver::Indirect, &logger };
-    typeResolver.init(visitor);
+        &importer, QQmlJSTypeResolver::Indirect, &logger };
+    typeResolver.init(&visitor, document.program);
     if (logger.hasWarnings() || logger.hasErrors())
         return EXIT_FAILURE;
 

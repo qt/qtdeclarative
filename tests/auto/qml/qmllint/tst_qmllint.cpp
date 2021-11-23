@@ -353,7 +353,12 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("AutomatchedSignalHandler")
             << QStringLiteral("AutomatchedSignalHandler.qml")
             << QString("Warning: %1:12:36: Unqualified access")
-            << QStringLiteral("no matching signal found")
+            << QString()
+            << false;
+    QTest::newRow("AutomatchedSignalHandler2")
+            << QStringLiteral("AutomatchedSignalHandler.qml")
+            << QString("Info: Implicitly defining onClicked as signal handler")
+            << QString()
             << false;
     QTest::newRow("MemberNotFound")
             << QStringLiteral("memberNotFound.qml")

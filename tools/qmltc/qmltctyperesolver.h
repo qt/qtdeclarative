@@ -39,9 +39,8 @@ QT_BEGIN_NAMESPACE
 class QmltcTypeResolver : public QQmlJSTypeResolver
 {
 public:
-    QmltcTypeResolver(QQmlJSImporter *importer, const QmlIR::Document *document,
-                      TypeStorage storage, QQmlJSLogger *logger)
-        : QQmlJSTypeResolver(importer, document, storage, logger)
+    QmltcTypeResolver(QQmlJSImporter *importer, TypeStorage storage, QQmlJSLogger *logger)
+        : QQmlJSTypeResolver(importer, storage, logger)
     {
     }
 };
