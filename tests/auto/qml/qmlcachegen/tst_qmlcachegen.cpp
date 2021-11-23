@@ -736,6 +736,7 @@ void tst_qmlcachegen::inlineComponent()
     QVERIFY2(ok, errors);
     QQmlEngine engine;
     CleanlyLoadingComponent component(&engine, testFileUrl("inlineComponentWithId.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QTest::ignoreMessage(QtMsgType::QtInfoMsg, "42");
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
@@ -749,7 +750,9 @@ void tst_qmlcachegen::posthocRequired()
     CleanlyLoadingComponent component(&engine, testFileUrl("posthocrequired.qml"));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(obj.isNull() && component.isError());
-    QVERIFY(component.errorString().contains(QStringLiteral("Required property x was not initialized")));
+    QVERIFY2(component.errorString().contains(
+                 QStringLiteral("Required property x was not initialized")),
+             qPrintable(component.errorString()));
 }
 
 void tst_qmlcachegen::scriptStringCachegenInteraction()

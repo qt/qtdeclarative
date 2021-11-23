@@ -70,6 +70,7 @@ if(QT_FEATURE_private_tests)
         # Calls qt6_target_qml_sources() directly, which needs CMake 3.19+
         add_subdirectory(qmlcachegen)
     endif()
+    add_subdirectory(qmlcppcodegen)
     add_subdirectory(animation)
     add_subdirectory(qqmlecmascript)
     add_subdirectory(qqmlanybinding)

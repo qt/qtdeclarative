@@ -259,6 +259,16 @@ set_target_properties(someTarget PROPERTIES
 This explicitly selects qmlcachegen as the program to be used, even if
 better alternatives are available.
 
+Furthermore, you can pass extra arguments to qmlcachegen, by setting the
+\c QT_QMLCACHEGEN_ARGUMENTS option. In particular, the \c --only-bytecode
+option will turn off compilation of QML script code to C++. For example:
+
+\badcode
+set_target_properties(someTarget PROPERTIES
+    QT_QMLCACHEGEN_ARGUMENTS "--only-bytecode"
+)
+\endcode
+
 \target qmllint-auto
 \section2 Linting QML sources
 
