@@ -5803,16 +5803,6 @@ Class QQmlPropertyValueSource
 QQmlPropertyValueSource (0x0x7fb1bc9b4de0) 0 nearly-empty
     vptr=((& QQmlPropertyValueSource::_ZTV23QQmlPropertyValueSource) + 16)
 
-Class QQmlPrivate::RegisterType
-   size=176 align=8
-   base size=170 base align=8
-QQmlPrivate::RegisterType (0x0x7fb1bca165a0) 0
-
-Class QQmlPrivate::RegisterTypeAndRevisions
-   size=152 align=8
-   base size=152 base align=8
-QQmlPrivate::RegisterTypeAndRevisions (0x0x7fb1bca16600) 0
-
 Class QQmlPrivate::RegisterInterface
    size=48 align=8
    base size=42 base align=8
