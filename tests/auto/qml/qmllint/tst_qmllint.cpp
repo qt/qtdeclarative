@@ -195,7 +195,7 @@ void TestQmllint::testUnknownCausesFail()
 {
     QString unknownNotFound = runQmllint("unknownElement.qml", false);
     QVERIFY(unknownNotFound.contains(
-                QStringLiteral("Warning: %1: Unknown was not found. Did you add all import paths?").arg(testFile("unknownElement.qml"))));
+                QStringLiteral("Warning: %1:4:5: Unknown was not found. Did you add all import paths?").arg(testFile("unknownElement.qml"))));
     unknownNotFound = runQmllint("TypeWithUnknownPropertyType.qml", false);
     QVERIFY(unknownNotFound.contains(
             QStringLiteral(
@@ -416,7 +416,7 @@ void TestQmllint::dirtyQmlCode_data()
             << false;
     QTest::newRow("badQmldirImportAndDepend")
             << QStringLiteral("qmldirImportAndDepend/bad.qml")
-            << QString("Warning: %1: Item was not found. Did you add all import paths?")
+            << QString("Warning: %1:3:1: Item was not found. Did you add all import paths?")
             << QString()
             << false;
     QTest::newRow("javascriptMethodsInModule")
@@ -949,11 +949,29 @@ QString TestQmllint::runQmllint(const QString &fileToLint,
         handleResult(process);
         errors = process.readAllStandardError();
 
-        if (isSilent)
-            QVERIFY(errors.isEmpty());
+        QStringList lines = errors.split(u'\n', Qt::SkipEmptyParts);
+
+        auto end = std::remove_if(lines.begin(), lines.end(), [](const QString &line) {
+            return !line.startsWith("Warning: ") && !line.startsWith("Error: ");
+        });
+
+        std::sort(lines.begin(), end);
+        auto it = std::unique(lines.begin(), end);
+        if (it != end) {
+            qDebug() << "The warnings and errors were generated more than once:";
+            do {
+                qDebug() << *it;
+            } while (++it != end);
+            QTest::qFail("Duplicate warnings and errors", __FILE__, __LINE__);
+        }
+
+        if (isSilent) {
+            QTest::qVerify(errors.isEmpty(), "errors.isEmpty()", "Silent mode outputs messages",
+                           __FILE__, __LINE__);
+        }
 
         if (QTest::currentTestFailed()) {
-            qDebug() << "Command:" << process.program() << args.join(u' ');
+            qDebug().noquote() << "Command:" << process.program() << args.join(u' ');
             qDebug() << "Exit status:" << process.exitStatus();
             qDebug() << "Exit code:" << process.exitCode();
             qDebug() << "stderr:" << errors;

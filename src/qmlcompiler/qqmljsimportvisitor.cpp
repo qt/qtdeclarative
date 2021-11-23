@@ -364,6 +364,8 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
     }
 
     for (const auto &scope : m_objectDefinitionScopes) {
+        if (m_pendingDefaultProperties.contains(scope))
+            continue; // We're going to check this one below.
         if (checkInheritanceCycle(scope) == CycleFound)
             return;
     }
@@ -956,7 +958,7 @@ QQmlJSImportVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
             m_logger->logWarning(
                     scope->baseTypeName()
                             + QStringLiteral(" was not found. Did you add all import paths?"),
-                    Log_Import);
+                    Log_Import, scope->sourceLocation());
             break;
         }
     }
