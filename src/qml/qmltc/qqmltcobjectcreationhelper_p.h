@@ -108,6 +108,7 @@ public:
     {
         Q_ASSERT(m_data);
         Q_ASSERT(i >= 0 && i + offset() < m_size);
+        Q_ASSERT(m_data[i + offset()] == nullptr); // prevent accidental resets
         m_data[i + offset()] = object;
     }
 };
@@ -122,7 +123,7 @@ template<typename QmltcGeneratedType>
 class QQmltcObjectCreationBase
 {
     // Note: +1 for the document root itself
-    std::array<QObject *, QmltcGeneratedType::q_qmltc_typeCount + 1> m_objects;
+    std::array<QObject *, QmltcGeneratedType::q_qmltc_typeCount + 1> m_objects = {};
 
 public:
     QQmltcObjectCreationHelper view()
