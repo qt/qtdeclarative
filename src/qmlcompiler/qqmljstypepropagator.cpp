@@ -273,7 +273,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
 
             if (jsId.has_value() && jsId->kind == QQmlJSScope::JavaScriptIdentifier::Injected) {
 
-                FixSuggestion suggestion { Log_UnqualifiedAccess, QtInfoMsg, {} };
+                FixSuggestion suggestion { Log_UnqualifiedAccess, {} };
 
                 const QQmlJSScope::JavaScriptIdentifier id = jsId.value();
 
@@ -300,7 +300,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
                                                   "function instead.\n")
                                       .arg(id.location.startLine)
                                       .arg(id.location.startColumn),
-                    QtInfoMsg, fixLocation, fixString
+                    fixLocation, fixString
                 };
 
                 m_logger->suggestFix(suggestion);
@@ -316,7 +316,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
                                    m_function->addressableScopes.constEnd(),
                                    [&](const QQmlJSScope::ConstPtr ptr) { return ptr == scope; });
 
-            FixSuggestion suggestion { Log_UnqualifiedAccess, QtInfoMsg, {} };
+            FixSuggestion suggestion { Log_UnqualifiedAccess, {} };
 
             QQmlJS::SourceLocation fixLocation = location;
             fixLocation.length = 0;
@@ -327,13 +327,12 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
                 name + QLatin1String(" is a member of a parent element\n")
                         + QLatin1String("      You can qualify the access with its id "
                                         "to avoid this warning:\n"),
-                QtInfoMsg, fixLocation, id + u"."_qs
+                fixLocation, id + u"."_qs
             };
 
             if (it == m_function->addressableScopes.constEnd()) {
                 suggestion.fixes << FixSuggestion::Fix {
                     u"You first have to give the element an id"_qs,
-                    QtInfoMsg,
                     QQmlJS::SourceLocation {},
                     {}
                 };
@@ -439,7 +438,12 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
                 auto it = std::find(m_function->addressableScopes.constBegin(),
                                     m_function->addressableScopes.constEnd(), scope);
 
-                FixSuggestion suggestion { Log_AttachedPropertyReuse, QtInfoMsg, {} };
+                m_logger->logWarning(
+                            u"Using attached type %1 already initialized in a parent scope."_qs
+                                .arg(name),
+                            Log_AttachedPropertyReuse, getCurrentSourceLocation());
+
+                FixSuggestion suggestion { Log_AttachedPropertyReuse, {} };
 
                 QQmlJS::SourceLocation fixLocation = getCurrentSourceLocation();
                 fixLocation.length = 0;
@@ -447,9 +451,8 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
                 QString id = it == m_function->addressableScopes.constEnd() ? u"<id>"_qs : it.key();
 
                 suggestion.fixes << FixSuggestion::Fix {
-                    u"Using attached type %1 already initialized in a parent scope. Reference it by id instead:"_qs
-                            .arg(name),
-                    QtWarningMsg, fixLocation, id + u"."_qs
+                    u"Reference it by id instead:"_qs,
+                    fixLocation, id + u"."_qs
                 };
 
                 fixLocation = scope->sourceLocation();
@@ -458,7 +461,6 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
                 if (it == m_function->addressableScopes.constEnd()) {
                     suggestion.fixes
                             << FixSuggestion::Fix { u"You first have to give the element an id"_qs,
-                                                    QtInfoMsg,
                                                     QQmlJS::SourceLocation {},
                                                     {} };
                 }

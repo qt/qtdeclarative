@@ -111,12 +111,10 @@ enum QQmlJSLoggerCategory {
 struct FixSuggestion
 {
     QQmlJSLoggerCategory category;
-    QtMsgType level;
 
     struct Fix
     {
         QString message;
-        QtMsgType type;
         QQmlJS::SourceLocation cutLocation = QQmlJS::SourceLocation();
         QString replacementString = QString();
     };

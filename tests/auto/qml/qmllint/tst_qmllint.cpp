@@ -1056,13 +1056,13 @@ void TestQmllint::anchors()
 
 void TestQmllint::attachedPropertyReuse()
 {
-    QVERIFY(runQmllint("attachedPropNotReused.qml", true,
+    QVERIFY(runQmllint("attachedPropNotReused.qml", false,
                        QStringList() << "--multiple-attached-objects"
                                      << "warning",
                        false)
                     .contains(QStringLiteral(
                             "Using attached type KeyNavigation already initialized in a parent "
-                            "scope. Reference it by id instead")));
+                            "scope")));
 }
 
 void TestQmllint::shadowable()

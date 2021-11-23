@@ -175,7 +175,7 @@ void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category,
 
 void QQmlJSLogger::suggestFix(const FixSuggestion &fix)
 {
-    if (isMsgTypeLess(fix.level, m_categoryLevels[fix.category]))
+    if (isMsgTypeLess(QtInfoMsg, m_categoryLevels[fix.category]))
         return;
     printFix(fix);
 }
@@ -221,7 +221,7 @@ void QQmlJSLogger::printContext(const QQmlJS::SourceLocation &location)
 void QQmlJSLogger::printFix(const FixSuggestion &fix)
 {
     for (const auto &fixItem : fix.fixes) {
-        m_output.writePrefixedMessage(fixItem.message, fixItem.type);
+        m_output.writePrefixedMessage(fixItem.message, QtInfoMsg);
 
         if (!fixItem.cutLocation.isValid())
             continue;
