@@ -203,11 +203,11 @@ void tst_QQuickFileDialogImpl::defaults()
     QQuickFileDialogImpl *quickDialog = window->findChild<QQuickFileDialogImpl*>();
     QTRY_VERIFY(quickDialog->isOpened());
     QVERIFY(quickDialog);
-    COMPARE_URL(quickDialog->selectedFile(), QUrl());
     COMPARE_URL(quickDialog->currentFolder(), QUrl::fromLocalFile(QDir().absolutePath()));
-    COMPARE_URL(dialog->currentFile(), QUrl::fromLocalFile(tempSubDir.path()));
-    COMPARE_URLS(dialog->currentFiles(), { QUrl::fromLocalFile(tempSubDir.path()) });
-    COMPARE_URL(quickDialog->currentFile(), QUrl::fromLocalFile(tempSubDir.path()));
+    COMPARE_URL(dialog->selectedFile(), QUrl::fromLocalFile(tempSubDir.path()));
+    COMPARE_URLS(dialog->selectedFiles(), { QUrl::fromLocalFile(tempSubDir.path()) });
+    COMPARE_URL(dialog->currentFile(), dialog->selectedFile());
+    COMPARE_URLS(dialog->currentFiles(), dialog->selectedFiles());
     QCOMPARE(quickDialog->title(), QString());
 }
 
@@ -221,12 +221,10 @@ void tst_QQuickFileDialogImpl::chooseFileViaStandardButtons()
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
 
     // Select the delegate by clicking once.
-    QSignalSpy dialogFileChangedSpy(dialogHelper.dialog, SIGNAL(selectedFileChanged()));
-    QVERIFY(dialogFileChangedSpy.isValid());
+    QSignalSpy dialogSelectedFileChangedSpy(dialogHelper.dialog, SIGNAL(selectedFileChanged()));
+    QVERIFY(dialogSelectedFileChangedSpy.isValid());
     QSignalSpy dialogCurrentFileChangedSpy(dialogHelper.dialog, SIGNAL(currentFileChanged()));
     QVERIFY(dialogCurrentFileChangedSpy.isValid());
-    QSignalSpy quickDialogCurrentFileChangedSpy(dialogHelper.quickDialog, SIGNAL(currentFileChanged(const QUrl &)));
-    QVERIFY(quickDialogCurrentFileChangedSpy.isValid());
 
     auto fileDialogListView = dialogHelper.quickDialog->findChild<QQuickListView*>("fileDialogListView");
     QVERIFY(fileDialogListView);
@@ -234,13 +232,12 @@ void tst_QQuickFileDialogImpl::chooseFileViaStandardButtons()
     QTRY_VERIFY(findViewDelegateItem(fileDialogListView, 2, delegate));
     COMPARE_URL(delegate->file(), QUrl::fromLocalFile(tempFile2->fileName()));
     QVERIFY(clickButton(delegate));
-    COMPARE_URL(dialogHelper.quickDialog->currentFile(), QUrl::fromLocalFile(tempFile2->fileName()));
-    COMPARE_URL(dialogHelper.dialog->currentFile(), QUrl::fromLocalFile(tempFile2->fileName()));
-    COMPARE_URLS(dialogHelper.dialog->currentFiles(), { QUrl::fromLocalFile(tempFile2->fileName()) });
-    // Only currentFile-related signals should be emitted.
-    QCOMPARE(dialogFileChangedSpy.count(), 0);
+    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl::fromLocalFile(tempFile2->fileName()));
+    COMPARE_URL(dialogHelper.quickDialog->selectedFile(), QUrl::fromLocalFile(tempFile2->fileName()));
+    COMPARE_URL(dialogHelper.dialog->currentFile(), dialogHelper.dialog->selectedFile());
+    COMPARE_URLS(dialogHelper.dialog->currentFiles(), { dialogHelper.dialog->selectedFile() });
+    QCOMPARE(dialogSelectedFileChangedSpy.count(), 1);
     QCOMPARE(dialogCurrentFileChangedSpy.count(), 1);
-    QCOMPARE(quickDialogCurrentFileChangedSpy.count(), 1);
 
     // Click the "Open" button.
     QVERIFY(dialogHelper.quickDialog->footer());
@@ -251,8 +248,9 @@ void tst_QQuickFileDialogImpl::chooseFileViaStandardButtons()
     QVERIFY(clickButton(openButton));
     COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl::fromLocalFile(tempFile2->fileName()));
     COMPARE_URLS(dialogHelper.dialog->selectedFiles(), { QUrl::fromLocalFile(tempFile2->fileName()) });
-    QCOMPARE(dialogFileChangedSpy.count(), 1);
     COMPARE_URL(dialogHelper.quickDialog->selectedFile(), QUrl::fromLocalFile(tempFile2->fileName()));
+    QCOMPARE(dialogSelectedFileChangedSpy.count(), 1);
+    QCOMPARE(dialogCurrentFileChangedSpy.count(), 1);
     QTRY_VERIFY(!dialogHelper.quickDialog->isVisible());
     QVERIFY(!dialogHelper.dialog->isVisible());
 }
@@ -407,13 +405,12 @@ void tst_QQuickFileDialogImpl::changeFolderViaStandardButtons()
     QTRY_VERIFY(findViewDelegateItem(fileDialogListView, 0, delegate));
     COMPARE_URL(delegate->file(), QUrl::fromLocalFile(tempSubDir.path()));
     QVERIFY(clickButton(delegate));
-    // The selectedFile and currentFolder shouldn't change yet.
-    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl());
-    COMPARE_URLS(dialogHelper.dialog->selectedFiles(), {});
+    // The selectedFile should change, but not currentFolder.
+    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl::fromLocalFile(tempSubDir.path()));
+    COMPARE_URLS(dialogHelper.dialog->selectedFiles(), { QUrl::fromLocalFile(tempSubDir.path()) });
+    COMPARE_URL(dialogHelper.dialog->currentFile(), dialogHelper.dialog->selectedFile());
+    COMPARE_URLS(dialogHelper.dialog->currentFiles(), dialogHelper.dialog->selectedFiles());
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempDir.path()));
-    // The currentFile should, though.
-    COMPARE_URL(dialogHelper.dialog->currentFile(), QUrl::fromLocalFile(tempSubDir.path()));
-    COMPARE_URLS(dialogHelper.dialog->currentFiles(), { QUrl::fromLocalFile(tempSubDir.path()) });
 
     // Click the "Open" button. The dialog should navigate to that directory, but still be open.
     QVERIFY(dialogHelper.quickDialog->footer());
@@ -422,7 +419,7 @@ void tst_QQuickFileDialogImpl::changeFolderViaStandardButtons()
     QQuickAbstractButton* openButton = findDialogButton(dialogButtonBox, "Open");
     QVERIFY(openButton);
     QVERIFY(clickButton(openButton));
-    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl());
+    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempSubDir.path()));
     QVERIFY(dialogHelper.dialog->isVisible());
 
@@ -448,13 +445,15 @@ void tst_QQuickFileDialogImpl::changeFolderViaDoubleClick()
     COMPARE_URL(subDirDelegate->file(), QUrl::fromLocalFile(tempSubDir.path()));
     QVERIFY(doubleClickButton(subDirDelegate));
     // The first file in the directory should be selected, which is "sub-sub-dir".
-    COMPARE_URL(dialogHelper.dialog->currentFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
-    COMPARE_URLS(dialogHelper.dialog->currentFiles(), { QUrl::fromLocalFile(tempSubSubDir.path()) });
+    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
+    COMPARE_URLS(dialogHelper.dialog->selectedFiles(), { QUrl::fromLocalFile(tempSubSubDir.path()) });
+    COMPARE_URL(dialogHelper.dialog->currentFile(), dialogHelper.dialog->selectedFile());
+    COMPARE_URLS(dialogHelper.dialog->currentFiles(), { dialogHelper.dialog->selectedFiles() });
     QQuickFileDialogDelegate *subSubDirDelegate = nullptr;
     QTRY_VERIFY(findViewDelegateItem(fileDialogListView, 0, subSubDirDelegate));
     QCOMPARE(subSubDirDelegate->isHighlighted(), true);
-    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl());
-    COMPARE_URLS(dialogHelper.dialog->selectedFiles(), {});
+    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
+    COMPARE_URLS(dialogHelper.dialog->selectedFiles(), { QUrl::fromLocalFile(tempSubSubDir.path()) });
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempSubDir.path()));
     // Since we only chose a folder, the dialog should still be open.
     QVERIFY(dialogHelper.dialog->isVisible());
@@ -489,14 +488,14 @@ void tst_QQuickFileDialogImpl::chooseFolderViaTextEdit()
     // Hit enter to accept.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
     // The first file in the directory should be selected, which is "sub-sub-dir".
-    COMPARE_URL(dialogHelper.dialog->currentFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
+    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
     auto fileDialogListView = dialogHelper.quickDialog->findChild<QQuickListView*>("fileDialogListView");
     QVERIFY(fileDialogListView);
     QQuickFileDialogDelegate *subSubDirDelegate = nullptr;
     QTRY_VERIFY(findViewDelegateItem(fileDialogListView, 0, subSubDirDelegate));
     QCOMPARE(subSubDirDelegate->isHighlighted(), true);
-    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl());
-    COMPARE_URLS(dialogHelper.dialog->selectedFiles(), {});
+    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
+    COMPARE_URLS(dialogHelper.dialog->selectedFiles(), { QUrl::fromLocalFile(tempSubSubDir.path()) });
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempSubDir.path()));
     QTRY_VERIFY(dialogHelper.dialog->isVisible());
 
@@ -590,15 +589,15 @@ void tst_QQuickFileDialogImpl::chooseFileAndThenFolderViaTextEdit()
     // Hit enter to accept.
     QTest::keyClick(dialogHelper.window(), Qt::Key_Return);
     // The first file in the directory should be selected, which is "sub-sub-dir".
-    COMPARE_URL(dialogHelper.dialog->currentFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
+    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
     auto fileDialogListView = dialogHelper.quickDialog->findChild<QQuickListView*>("fileDialogListView");
     QVERIFY(fileDialogListView);
     QQuickFileDialogDelegate *subSubDirDelegate = nullptr;
     QTRY_VERIFY(findViewDelegateItem(fileDialogListView, 0, subSubDirDelegate));
     QCOMPARE(subSubDirDelegate->isHighlighted(), true);
     // We just changed directories, so the actual selected file shouldn't change.
-    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl::fromLocalFile(tempFile2->fileName()));
-    COMPARE_URLS(dialogHelper.dialog->selectedFiles(), { QUrl::fromLocalFile(tempFile2->fileName()) });
+    COMPARE_URL(dialogHelper.dialog->selectedFile(), QUrl::fromLocalFile(tempSubSubDir.path()));
+    COMPARE_URLS(dialogHelper.dialog->selectedFiles(), { QUrl::fromLocalFile(tempSubSubDir.path()) });
     COMPARE_URL(dialogHelper.dialog->currentFolder(), QUrl::fromLocalFile(tempSubDir.path()));
     QTRY_VERIFY(dialogHelper.dialog->isVisible());
 

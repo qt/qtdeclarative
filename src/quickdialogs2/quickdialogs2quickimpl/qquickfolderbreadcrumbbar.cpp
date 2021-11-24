@@ -319,13 +319,8 @@ void QQuickFolderBreadcrumbBarPrivate::textFieldAccepted()
         setDialogFolder(fileUrl);
     } else if (!enteredPathIsDir && (enteredPathExists || !mustExist)) {
         qCDebug(lcTextInput) << "path entered is a file; setting file and calling accept()";
-        // It's important that we set the currentFile here, as that's what
-        // QQuickPlatformFileDialog::selectedFiles() needs to return, and
-        // QQuickFileDialog::accept() sets its file property based on
-        // selectedFiles().
         if (isFileDialog()) {
             auto fileDialog = asFileDialog();
-            fileDialog->setCurrentFile(fileUrl);
             fileDialog->setSelectedFile(fileUrl);
             fileDialog->accept();
         } else {

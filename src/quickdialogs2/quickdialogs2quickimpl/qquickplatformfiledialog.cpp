@@ -103,7 +103,7 @@ QQuickPlatformFileDialog::QQuickPlatformFileDialog(QObject *parent)
 //            urls += QUrl::fromLocalFile(file);
 //        emit filesSelected(urls);
 //    });
-    connect(m_dialog, &QQuickFileDialogImpl::currentFileChanged, this, &QQuickPlatformFileDialog::currentChanged);
+    connect(m_dialog, &QQuickFileDialogImpl::selectedFileChanged, this, &QQuickPlatformFileDialog::currentChanged);
     connect(m_dialog, &QQuickFileDialogImpl::currentFolderChanged, this, &QQuickPlatformFileDialog::directoryEntered);
     connect(m_dialog, &QQuickFileDialogImpl::filterSelected, this, &QQuickPlatformFileDialog::filterSelected);
 
@@ -150,7 +150,7 @@ void QQuickPlatformFileDialog::selectFile(const QUrl &file)
 QList<QUrl> QQuickPlatformFileDialog::selectedFiles() const
 {
     // TODO: support for multiple selected files
-    return { m_dialog->currentFile() };
+    return { m_dialog->selectedFile() };
 }
 
 void QQuickPlatformFileDialog::setFilter()

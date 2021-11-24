@@ -159,18 +159,16 @@ void QQuickFileDialog::setFileMode(FileMode mode)
     \qmlproperty url QtQuick.Dialogs::FileDialog::selectedFile
     \readonly
 
-    This property holds the final accepted file.
+    This property holds the last file that was selected in the dialog.
 
     If there are multiple selected files, this property refers to the first
     file.
 
-    Unlike the \l currentFile property, the \c selectedFile property is not
-    updated while the user is selecting files in the dialog, but only after the
-    final selection has been made. That is, when the user has clicked
-    \uicontrol OK to accept a file. Alternatively, the
-    \l {Dialog::}{accepted()} signal can be handled to get the final selection.
+    The value of this property is updated each time the user selects a file in
+    the dialog, and when the dialog is accepted. Handle the
+    \l {Dialog::}{accepted()} signal to get the final selection.
 
-    \sa selectedFiles, currentFile, {Dialog::}{accepted()}, currentFolder
+    \sa selectedFiles, {Dialog::}{accepted()}, currentFolder
 */
 QUrl QQuickFileDialog::selectedFile() const
 {
@@ -180,15 +178,13 @@ QUrl QQuickFileDialog::selectedFile() const
 /*!
     \qmlproperty list<url> QtQuick.Dialogs::FileDialog::selectedFiles
 
-    This property holds the final accepted files.
+    This property holds the last files that were selected in the dialog.
 
-    Unlike the \l currentFiles property, the \c selectedFiles property is not
-    updated while the user is selecting files in the dialog, but only after the
-    final selection has been made. That is, when the user has clicked
-    \uicontrol OK to accept files. Alternatively, the \l {Dialog::}{accepted()}
-    signal can be handled to get the final selection.
+    The value of this property is updated each time the user selects files in
+    the dialog, and when the dialog is accepted. Handle the
+    \l {Dialog::}{accepted()} signal to get the final selection.
 
-    \sa currentFiles, {Dialog::}{accepted()}, currentFolder
+    \sa {Dialog::}{accepted()}, currentFolder
 */
 QList<QUrl> QQuickFileDialog::selectedFiles() const
 {
@@ -202,57 +198,48 @@ void QQuickFileDialog::setSelectedFiles(const QList<QUrl> &selectedFiles)
 
     bool firstChanged = m_selectedFiles.value(0) != selectedFiles.value(0);
     m_selectedFiles = selectedFiles;
-    if (firstChanged)
+    if (firstChanged) {
         emit selectedFileChanged();
+        emit currentFileChanged();
+    }
     emit selectedFilesChanged();
+    emit currentFilesChanged();
 }
 
 /*!
     \qmlproperty url QtQuick.Dialogs::FileDialog::currentFile
+    \deprecated [6.3] Use \l selectedFile instead.
 
     This property holds the currently selected file in the dialog.
-
-    Unlike the \l selectedFile property, the \c currentFile property is updated
-    while the user is selecting files in the dialog, even before the final
-    selection has been made.
 
     \sa selectedFile, currentFiles, currentFolder
 */
 QUrl QQuickFileDialog::currentFile() const
 {
-    return currentFiles().value(0);
+    return selectedFile();
 }
 
 void QQuickFileDialog::setCurrentFile(const QUrl &file)
 {
-    setCurrentFiles(QList<QUrl>() << file);
+    setSelectedFiles(QList<QUrl>() << file);
 }
 
 /*!
     \qmlproperty list<url> QtQuick.Dialogs::FileDialog::currentFiles
+    \deprecated [6.3] Use \l selectedFiles instead.
 
     This property holds the currently selected files in the dialog.
-
-    Unlike the \l selectedFiles property, the \c currentFiles property is
-    updated while the user is selecting files in the dialog, even before the
-    final selection has been made.
 
     \sa selectedFiles, currentFile, currentFolder
 */
 QList<QUrl> QQuickFileDialog::currentFiles() const
 {
-    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle()))
-        return fileDialog->selectedFiles();
-    return m_options->initiallySelectedFiles();
+    return selectedFiles();
 }
 
 void QQuickFileDialog::setCurrentFiles(const QList<QUrl> &currentFiles)
 {
-    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle())) {
-        for (const QUrl &file : currentFiles)
-            fileDialog->selectFile(file);
-    }
-    m_options->setInitiallySelectedFiles(currentFiles);
+    setSelectedFiles(currentFiles);
 }
 
 /*!
@@ -541,10 +528,13 @@ bool QQuickFileDialog::useNativeDialog() const
 void QQuickFileDialog::onCreate(QPlatformDialogHelper *dialog)
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
-        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickFileDialog::currentFileChanged);
-        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, &QQuickFileDialog::currentFilesChanged);
+        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, [=](){ setSelectedFiles(fileDialog->selectedFiles()); });
         connect(fileDialog, &QPlatformFileDialogHelper::directoryEntered, this, &QQuickFileDialog::currentFolderChanged);
         fileDialog->setOptions(m_options);
+
+        // Need to call this manually once on creation because QPlatformFileDialogHelper::currentChanged
+        // has already been emitted by this point (because of QQuickFileDialogImplPrivate::updateSelectedFile).
+        setSelectedFiles(fileDialog->selectedFiles());
     }
 }
 
@@ -578,15 +568,6 @@ void QQuickFileDialog::onHide(QPlatformDialogHelper *dialog)
         if (m_selectedNameFilter)
             disconnect(fileDialog, &QPlatformFileDialogHelper::filterSelected, m_selectedNameFilter, &QQuickFileNameFilter::update);
     }
-}
-
-void QQuickFileDialog::accept()
-{
-    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle())) {
-        // Take the currently selected files and make them the final set of files.
-        setSelectedFiles(fileDialog->selectedFiles());
-    }
-    QQuickAbstractDialog::accept();
 }
 
 QUrl QQuickFileDialog::addDefaultSuffix(const QUrl &file) const
