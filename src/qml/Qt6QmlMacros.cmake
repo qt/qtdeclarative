@@ -2013,10 +2013,18 @@ but this file does not exist.  Possible reasons include:
     endif()
 
     # Facilitate self-import so we can find the qmldir file
-    list(APPEND cmd_args "${CMAKE_CURRENT_BINARY_DIR}")
+    get_target_property(module_out_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
+    if(module_out_dir)
+        list(APPEND cmd_args "${module_out_dir}")
+    endif()
 
-    if(NOT "${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "" AND EXISTS "${QT_QML_OUTPUT_DIRECTORY}")
-        list(APPEND cmd_args "${QT_QML_OUTPUT_DIRECTORY}")
+    # Find qmldir files we copied to the build directory
+    if(NOT "${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "")
+        if(EXISTS "${QT_QML_OUTPUT_DIRECTORY}")
+            list(APPEND cmd_args "${QT_QML_OUTPUT_DIRECTORY}")
+        endif()
+    else()
+        list(APPEND cmd_args "${CMAKE_CURRENT_BINARY_DIR}")
     endif()
 
     # All of the module's .qml files will be listed in one of the generated
