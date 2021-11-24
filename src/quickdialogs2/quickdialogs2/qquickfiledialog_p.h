@@ -146,7 +146,6 @@ protected:
     void onCreate(QPlatformDialogHelper *dialog) override;
     void onShow(QPlatformDialogHelper *dialog) override;
     void onHide(QPlatformDialogHelper *dialog) override;
-    void accept() override;
 
 private:
     QUrl addDefaultSuffix(const QUrl &file) const;

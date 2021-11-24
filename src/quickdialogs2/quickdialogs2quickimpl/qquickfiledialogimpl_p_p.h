@@ -78,7 +78,7 @@ public:
     void setNameFilters(const QStringList &filters);
 
     void updateEnabled();
-    void updateCurrentFile(const QString &oldFolderPath);
+    void updateSelectedFile(const QString &oldFolderPath);
 
     void handleAccept() override;
     void handleClick(QQuickAbstractButton *button) override;
@@ -86,7 +86,6 @@ public:
     QSharedPointer<QFileDialogOptions> options;
     QUrl currentFolder;
     QUrl selectedFile;
-    QUrl currentFile;
     QStringList nameFilters;
     mutable QQuickFileNameFilter *selectedNameFilter = nullptr;
     QString acceptLabel;

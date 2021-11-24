@@ -72,7 +72,6 @@ class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFileDialogImpl : public QQui
     Q_OBJECT
     Q_PROPERTY(QUrl currentFolder READ currentFolder WRITE setCurrentFolder NOTIFY currentFolderChanged FINAL)
     Q_PROPERTY(QUrl selectedFile READ selectedFile WRITE setSelectedFile NOTIFY selectedFileChanged FINAL)
-    Q_PROPERTY(QUrl currentFile READ currentFile WRITE setCurrentFile NOTIFY currentFileChanged FINAL)
     Q_PROPERTY(QStringList nameFilters READ nameFilters NOTIFY nameFiltersChanged FINAL)
     Q_PROPERTY(QQuickFileNameFilter *selectedNameFilter READ selectedNameFilter CONSTANT)
     QML_NAMED_ELEMENT(FileDialogImpl)
@@ -92,9 +91,6 @@ public:
     QUrl selectedFile() const;
     void setSelectedFile(const QUrl &file);
 
-    QUrl currentFile() const;
-    void setCurrentFile(const QUrl &currentFile);
-
     QSharedPointer<QFileDialogOptions> options() const;
     void setOptions(const QSharedPointer<QFileDialogOptions> &options);
 
@@ -111,8 +107,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void currentFolderChanged(const QUrl &folderUrl);
-    void selectedFileChanged();
-    void currentFileChanged(const QUrl &currentFileUrl);
+    void selectedFileChanged(const QUrl &selectedFileUrl);
     void nameFiltersChanged();
     void fileSelected(const QUrl &fileUrl);
     void filterSelected(const QString &filter);

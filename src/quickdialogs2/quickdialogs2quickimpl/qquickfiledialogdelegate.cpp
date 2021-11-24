@@ -84,7 +84,7 @@ void QQuickFileDialogDelegatePrivate::highlightFile()
     if (converted) {
         attached->view()->setCurrentIndex(index);
         if (fileDialog)
-            fileDialog->setCurrentFile(file);
+            fileDialog->setSelectedFile(file);
         else if (folderDialog)
             folderDialog->setSelectedFolder(file);
     }
