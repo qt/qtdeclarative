@@ -681,6 +681,15 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("valueSource_Value.qml")
             << QStringLiteral("Cannot combine value source and binding on property \"obj\"")
             << QString() << false;
+    QTest::newRow("ValueSource+ListValue")
+            << QStringLiteral("valueSource_listValue.qml")
+            << QStringLiteral("Cannot combine value source and binding on property \"objs\"")
+            << QString() << false;
+    QTest::newRow("NonExistentListProperty")
+            << QStringLiteral("nonExistentListProperty.qml")
+            << QStringLiteral("Property \"objs\" is invalid or does not exist")
+            << QString()
+            << false;
     QTest::newRow("QtQuick.Window 2.0")
             << QStringLiteral("qtquickWindow20.qml")
             << QStringLiteral("Property \"window\" not found on type \"QQuickWindow\"") << QString()

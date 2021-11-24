@@ -127,6 +127,15 @@ void tst_qqmljsscope::orderedBindings()
     // check that the bindings are properly ordered
     QCOMPARE(pBindingsBegin->bindingType(), QQmlJSMetaPropertyBinding::Object);
     QCOMPARE(std::next(pBindingsBegin)->bindingType(), QQmlJSMetaPropertyBinding::Interceptor);
+
+    auto [itemsBindingsBegin, itemsBindingsEnd] = root->ownPropertyBindings(u"items"_qs);
+    QVERIFY(std::distance(itemsBindingsBegin, itemsBindingsEnd) == 2);
+
+    QCOMPARE(itemsBindingsBegin->bindingType(), QQmlJSMetaPropertyBinding::Object);
+    QCOMPARE(std::next(itemsBindingsBegin)->bindingType(), QQmlJSMetaPropertyBinding::Object);
+
+    QCOMPARE(itemsBindingsBegin->objectType()->baseTypeName(), u"Item"_qs);
+    QCOMPARE(std::next(itemsBindingsBegin)->objectType()->baseTypeName(), u"Text"_qs);
 }
 
 QTEST_MAIN(tst_qqmljsscope)

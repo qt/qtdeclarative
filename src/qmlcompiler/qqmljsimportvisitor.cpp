@@ -1460,11 +1460,25 @@ bool QQmlJSImportVisitor::visit(UiArrayBinding *arrayBinding)
     return true;
 }
 
-void QQmlJSImportVisitor::endVisit(UiArrayBinding *)
+void QQmlJSImportVisitor::endVisit(UiArrayBinding *arrayBinding)
 {
+    // immediate children (QML scopes) of m_currentScope are the objects inside
+    // the array binding. note that we always work with object bindings here as
+    // this is the only kind of bindings that UiArrayBinding is created for. any
+    // other expressions involving lists (e.g. `var p: [1,2,3]`) are considered
+    // to be script bindings
+    const auto children = m_currentScope->childScopes();
+    const auto propertyName = getScopeName(m_currentScope, QQmlJSScope::QMLScope);
     leaveEnvironment();
 
-    // TODO: Actually generate a binding from the scope
+    qsizetype i = 0;
+    for (auto element = arrayBinding->members; element; element = element->next, ++i) {
+        const auto &type = children[i];
+        Q_ASSERT(type->scopeType() == QQmlJSScope::QMLScope);
+        m_pendingPropertyObjectBindings
+                << PendingPropertyObjectBinding { m_currentScope, type, propertyName,
+                                                  element->firstSourceLocation(), false };
+    }
 }
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiEnumDeclaration *uied)
