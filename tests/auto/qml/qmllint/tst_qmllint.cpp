@@ -1104,9 +1104,13 @@ void TestQmllint::attachedPropertyReuse()
                        QStringList() << "--multiple-attached-objects"
                                      << "warning",
                        false)
-                    .contains(QStringLiteral(
-                            "Using attached type KeyNavigation already initialized in a parent "
-                            "scope")));
+                    .contains(QStringLiteral("Using attached type QQuickKeyNavigationAttached "
+                                             "already initialized in a parent "
+                                             "scope")));
+    QVERIFY(runQmllint("attachedPropEnum.qml", true,
+                       QStringList() << "--multiple-attached-objects"
+                                     << "warning")
+                    .isEmpty());
 }
 
 void TestQmllint::shadowable()

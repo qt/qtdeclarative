@@ -428,50 +428,6 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
                       + u'.' + name
                     : name);
 
-    if (m_typeInfo != nullptr
-        && m_state.accumulatorOut.variant() == QQmlJSRegisterContent::ScopeAttached) {
-        QQmlJSScope::ConstPtr attachedType = m_state.accumulatorOut.scopeType();
-
-        for (QQmlJSScope::ConstPtr scope = m_function->qmlScope->parentScope(); !scope.isNull();
-             scope = scope->parentScope()) {
-            if (m_typeInfo->usedAttachedTypes.values(scope).contains(attachedType)) {
-                auto it = std::find(m_function->addressableScopes.constBegin(),
-                                    m_function->addressableScopes.constEnd(), scope);
-
-                m_logger->logWarning(
-                            u"Using attached type %1 already initialized in a parent scope."_qs
-                                .arg(name),
-                            Log_AttachedPropertyReuse, getCurrentSourceLocation());
-
-                FixSuggestion suggestion { Log_AttachedPropertyReuse, {} };
-
-                QQmlJS::SourceLocation fixLocation = getCurrentSourceLocation();
-                fixLocation.length = 0;
-
-                QString id = it == m_function->addressableScopes.constEnd() ? u"<id>"_qs : it.key();
-
-                suggestion.fixes << FixSuggestion::Fix {
-                    u"Reference it by id instead:"_qs,
-                    fixLocation, id + u"."_qs
-                };
-
-                fixLocation = scope->sourceLocation();
-                fixLocation.length = 0;
-
-                if (it == m_function->addressableScopes.constEnd()) {
-                    suggestion.fixes
-                            << FixSuggestion::Fix { u"You first have to give the element an id"_qs,
-                                                    QQmlJS::SourceLocation {},
-                                                    {} };
-                }
-
-                m_logger->suggestFix(suggestion);
-            }
-        }
-
-        m_typeInfo->usedAttachedTypes.insert(m_function->qmlScope, attachedType);
-    }
-
     if (!m_state.accumulatorOut.isValid() && m_typeResolver->isPrefix(name)) {
         const QQmlJSRegisterContent inType = m_state.accumulatorIn.isValid()
                 ? m_state.accumulatorIn
@@ -561,6 +517,52 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
                     ? m_jsUnitGenerator->stringForIndex(m_state.accumulatorIn.importNamespace())
                       + u'.' + propertyName
                     : propertyName);
+
+    if (m_typeInfo != nullptr
+        && m_state.accumulatorIn.variant() == QQmlJSRegisterContent::ScopeAttached) {
+        QQmlJSScope::ConstPtr attachedType = m_state.accumulatorIn.scopeType();
+
+        for (QQmlJSScope::ConstPtr scope = m_function->qmlScope->parentScope(); !scope.isNull();
+             scope = scope->parentScope()) {
+            if (m_typeInfo->usedAttachedTypes.values(scope).contains(attachedType)) {
+
+                // Ignore enum accesses, as these will not cause the attached object to be created
+                if (m_state.accumulatorOut.isValid() && m_state.accumulatorOut.isEnumeration())
+                    continue;
+
+                auto it = std::find(m_function->addressableScopes.constBegin(),
+                                    m_function->addressableScopes.constEnd(), scope);
+
+                m_logger->logWarning(
+                        u"Using attached type %1 already initialized in a parent scope."_qs.arg(
+                                m_state.accumulatorIn.scopeType()->internalName()),
+                        Log_AttachedPropertyReuse, getCurrentSourceLocation());
+
+                FixSuggestion suggestion { Log_AttachedPropertyReuse, {} };
+
+                QQmlJS::SourceLocation fixLocation = getCurrentSourceLocation();
+                fixLocation.length = 0;
+
+                QString id = it == m_function->addressableScopes.constEnd() ? u"<id>"_qs : it.key();
+
+                suggestion.fixes << FixSuggestion::Fix { u"Reference it by id instead:"_qs,
+                                                         fixLocation, id + u"."_qs };
+
+                fixLocation = scope->sourceLocation();
+                fixLocation.length = 0;
+
+                if (it == m_function->addressableScopes.constEnd()) {
+                    suggestion.fixes
+                            << FixSuggestion::Fix { u"You first have to give the element an id"_qs,
+                                                    QQmlJS::SourceLocation {},
+                                                    {} };
+                }
+
+                m_logger->suggestFix(suggestion);
+            }
+        }
+        m_typeInfo->usedAttachedTypes.insert(m_function->qmlScope, attachedType);
+    }
 
     if (!m_state.accumulatorOut.isValid()) {
         if (m_typeResolver->isPrefix(propertyName)) {
