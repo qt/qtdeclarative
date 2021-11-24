@@ -39,7 +39,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcTypeResolver, "qml.compiler.typeresolver", QtInfoMsg);
+Q_LOGGING_CATEGORY(lcTypeResolver, "qt.qml.compiler.typeresolver", QtInfoMsg);
 
 template<typename Action>
 static bool searchBaseAndExtensionTypes(const QQmlJSScope::ConstPtr type, const Action &check)

@@ -38,9 +38,9 @@
 
 #include <limits>
 
-Q_LOGGING_CATEGORY(lcAotCompiler, "qml.compiler.aot", QtWarningMsg);
-
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcAotCompiler, "qt.qml.compiler.aot", QtWarningMsg);
 
 static const int FileScopeCodeIndex = -1;
 

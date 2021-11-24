@@ -56,7 +56,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcItemViewDelegateRecycling, "qt.quick.itemview.delegaterecycling")
+Q_LOGGING_CATEGORY(lcItemViewDelegateRecycling, "qt.qml.delegatemodel.recycling")
 
 class QQmlDelegateModelItem;
 

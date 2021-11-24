@@ -84,7 +84,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcRootProperties, "qml.rootObjectProperties");
+Q_LOGGING_CATEGORY(lcRootProperties, "qt.qml.rootObjectProperties");
 
 using namespace QV4;
 

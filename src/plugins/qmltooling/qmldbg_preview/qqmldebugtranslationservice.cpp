@@ -66,8 +66,6 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQmlTooling, "qt.quick.qmltooling.debugtranslation")
-
 using namespace QQmlDebugTranslation;
 
 QDebug operator<<(QDebug debug, const TranslationBindingInformation &translationBindingInformation)
