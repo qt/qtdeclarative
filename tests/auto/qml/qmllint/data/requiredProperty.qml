@@ -1,7 +1,9 @@
-import QtQml 2.15
+import QtQuick 2.15
 
-QtObject {
-    property int x
-    required x
-    x: 5
+Item {
+    component Required : QtObject {
+        property int x
+        required x
+    }
+    Required { x: 5 }
 }
