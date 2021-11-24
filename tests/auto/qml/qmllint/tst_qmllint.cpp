@@ -751,6 +751,10 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("missingQmltypes.qml")
             << QStringLiteral("QML types file does not exist")
             << QString() << false;
+    QTest::newRow("enumInvalid")
+            << QStringLiteral("enumInvalid.qml")
+            << QStringLiteral("Property \"red\" not found on type \"QtObject\"")
+            << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()

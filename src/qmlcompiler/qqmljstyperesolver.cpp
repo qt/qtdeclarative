@@ -682,6 +682,10 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
 bool QQmlJSTypeResolver::checkEnums(const QQmlJSScope::ConstPtr &scope, const QString &name,
                                     QQmlJSRegisterContent *result, BaseOrExtension mode) const
 {
+    // You can't have lower case enum names in QML, even if we know the enums here.
+    if (name.isEmpty() || !name.at(0).isUpper())
+        return false;
+
     const auto enums = scope->ownEnumerations();
     for (const auto &enumeration : enums) {
         if (enumeration.name() == name) {
