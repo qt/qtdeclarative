@@ -54,11 +54,11 @@ set(reused_dir_targets
     imageelements_shared
     delegatechooser_shared
     pointerhandlers_shared
-    particles/affectors_shared
-    particles/emitters_shared
-    particles/imageparticle_shared
-    particles/itemparticle_shared
-    particles/system_shared
+    affectors_shared
+    emitters_shared
+    imageparticle_shared
+    itemparticle_shared
+    system_shared
     draganddrop_shared
 )
 foreach(target IN LISTS reused_dir_targets)
