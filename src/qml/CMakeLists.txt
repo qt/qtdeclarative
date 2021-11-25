@@ -386,6 +386,7 @@ qt_internal_add_qml_module(Qml
         Qt::CorePrivate
     PUBLIC_LIBRARIES
         Qt::Core
+        Qt::QmlIntegration
     PRIVATE_MODULE_INTERFACE
         Qt::CorePrivate
     EXTRA_CMAKE_FILES

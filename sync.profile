@@ -1,4 +1,5 @@
 %modules = ( # path to module name map
+    "QtQmlIntegration" => "$basedir/src/qmlintegration",
     "QtQml" => "$basedir/src/qml",
     "QtQmlCore" => "$basedir/src/core",
     "QtQuick" => "$basedir/src/quick",

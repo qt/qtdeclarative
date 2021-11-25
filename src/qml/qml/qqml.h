@@ -824,10 +824,6 @@ struct QmlTypeAndRevisionsRegistration<T, Resolved, void, false, true, false> {
     }
 };
 
-template<typename T = void, typename... Args>
-void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor,
-                                  QList<int> *qmlTypeIds = nullptr);
-
 template<typename T, typename... Args>
 void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds)
 {

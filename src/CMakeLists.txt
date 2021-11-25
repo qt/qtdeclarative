@@ -6,6 +6,7 @@ if (NOT QT_FEATURE_commandlineparser)
 endif()
 
 add_subdirectory(qmltyperegistrar)
+add_subdirectory(qmlintegration)
 add_subdirectory(qml)
 add_subdirectory(qmlmodels)
 
