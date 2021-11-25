@@ -1,0 +1,123 @@
+/****************************************************************************
+**
+** Copyright (C) 2021 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qt_deploy_qml_imports.html
+\ingroup cmake-commands-qtqml
+
+\title qt_deploy_qml_imports
+\target qt_deploy_qml_imports
+
+\summary {Deploy the runtime components of QML modules needed by an executable.}
+
+\include cmake-find-package-qml.qdocinc
+
+Unlike most other CMake commands provided by Qt, \c{qt_deploy_qml_imports()}
+can only be called from a deployment script. It cannot be called directly by the
+project.
+
+\preliminarycmakecommand
+
+\section1 Synopsis
+
+\badcode
+qt_deploy_qml_imports(
+    TARGET target
+    [QML_DIR qml_dir]
+    [PLUGINS_FOUND var_name]
+    [NO_QT_IMPORTS]
+)
+\endcode
+
+\section1 Description
+
+\note This command does not usually need to be called directly. It is used
+      internally by other higher level commands, but projects wishing to
+      implement more customized deployment logic may find it useful.
+
+When installing an application that uses QML, it may be non-trivial to work out
+which QML modules and which parts of those QML modules need to also be
+installed. Because QML plugins are not linked directly to an application's
+executable, \l{qt_deploy_runtime_dependencies()} won't find these QML modules.
+The \c{qt_deploy_qml_imports()} command provides the necessary logic which
+complements \l{qt_deploy_runtime_dependencies()} and deploys the runtime parts
+of all QML modules imported by the application.
+
+The \c{TARGET} option is mandatory and should specify a \c{target} that is an
+executable (on macOS, it should be an app bundle) and also a QML module.
+All QML sources that were added to the \c{target} via
+\l{qt6_add_qml_module}{qt_add_qml_module()} or
+\l{qt6_target_qml_sources}{qt_target_qml_sources()} will be recursively scanned
+for QML imports. The \c{NO_IMPORT_SCAN} option must not have been given to
+\l{qt6_add_qml_module}{qt_add_qml_module()}. The \c{qmldir} files and plugins
+from the imported QML modules will be deployed. The \c{NO_QT_IMPORTS} option
+can be given to skip deploying any QML modules provided by Qt.
+
+By default, the runtime parts of imported QML modules will be deployed to the
+\c{Resources/qml} directory for a macOS app bundle target, and to the \c{qml}
+directory under the base installation location for other platforms. For the
+non-macOS case, the \c{QML_DIR} option can be used to override this default
+choice.
+
+The command will store a list of all QML plugins it deploys in the variable
+named by the \c{PLUGINS_FOUND} option, if given. This is often passed as the
+\c{ADDITIONAL_MODULES} argument in a subsequent call to
+\l{qt_deploy_runtime_dependencies()}.
+
+\sa {qt6_generate_deploy_qml_app_script}{qt_generate_deploy_qml_app_script()},
+    qt_deploy_runtime_dependencies(), QT_DEPLOY_QML_DIR
+
+\section1 Example
+
+\badcode
+cmake_minimum_required(VERSION 3.16...3.22)
+project(MyThings)
+
+find_package(Qt6 REQUIRED COMPONENTS Core Qml)
+qt_standard_project_setup()
+
+qt_add_executable(MyApp main.cpp)
+qt_add_qml_module(MyApp
+    URI Application
+    VERSION 1.0
+    QML_FILES main.qml MyThing.qml
+)
+
+# The following script must only be executed at install time
+set(deploy_script "${CMAKE_CURRENT_BINARY_DIR}/deploy_MyApp.cmake")
+
+file(GENERATE OUTPUT ${deploy_script} CONTENTS "
+include(\"${QT_DEPLOY_SUPPORT}\")
+qt_deploy_qml_imports(
+    EXECUTABLE \"\${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:MyApp>\"
+)
+")
+
+install(TARGETS MyApp)
+install(SCRIPT ${deploy_script})
+\endcode
+*/

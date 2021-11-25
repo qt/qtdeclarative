@@ -1,0 +1,149 @@
+/****************************************************************************
+**
+** Copyright (C) 2021 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qt_generate_deploy_qml_app_script.html
+\ingroup cmake-commands-qtqml
+
+\title qt_generate_deploy_qml_app_script
+\target qt6_generate_deploy_qml_app_script
+
+\summary {Generate a deployment script for a QML application.}
+
+\include cmake-find-package-qml.qdocinc
+
+\preliminarycmakecommand
+
+\section1 Synopsis
+
+\badcode
+qt_generate_deploy_qml_app_script(
+    TARGET target
+    FILENAME_VARIABLE var_name
+    [NO_UNSUPPORTED_PLATFORM_ERROR]
+    [DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM]
+    [MACOS_BUNDLE_POST_BUILD]
+)
+\endcode
+
+\versionlessCMakeCommandsNote qt6_generate_deploy_qml_app_script()
+
+\section1 Description
+
+Installing an executable target that is also a QML module requires deploying
+a number of things in addition to the target itself. Qt libraries and other
+libraries from the project, Qt plugins, and the runtime parts of all QML modules
+the application uses may all need to be installed too. The installed layout
+is also going to be different for macOS app bundles compared to other platforms.
+The \c{qt_generate_deploy_qml_app_script()} is a convenience command intended
+to simplify that process, similar to what
+\l{qt6_generate_deploy_app_script}{qt_generate_deploy_app_script()} does for
+non-QML applications.
+
+The command expects the application to follow Qt's recommended install
+directory structure fairly closely. That structure is based on CMake's default
+install layout, as determined by \l{GNUInstallDirs} (except for macOS app
+bundles, which follow Apple's requirements instead). QML modules are installed
+to the appropriate location for the platform. For macOS bundles, each QML
+module's \c{qmldir} file is installed under the appropriate subdirectory below
+\c{Resources/qml} and the module's plugin (if present) is installed under
+\c{PlugIns}. The app bundle is assumed to be installed directly to the base
+installation location (see the \l{Example} further below). For all other platforms,
+both the \c{qmldir} and the module's plugin are installed under the appropriate
+subdirectory below \c{qml}, which itself is relative to the base installation
+location.
+
+\c{qt_generate_deploy_qml_app_script()} generates a script whose name will be
+stored in the variable named by the \c{FILENAME_VARIABLE} option. That script
+is only written at CMake generate-time. It is intended to be used with the
+\l{install(SCRIPT)} command, which should come after the application's target
+has been installed using \l{install(TARGETS)}.
+
+The deployment script will call \l{qt_deploy_qml_imports()} with a suitable set
+of options for the standard install layout. For macOS app bundles and Windows
+targets, it will then also call \l{qt_deploy_runtime_dependencies()}, again
+with suitable options for the standard install layout.
+
+Calling \c{qt_generate_deploy_qml_app_script()} for a platform that is not
+supported by \c{qt_deploy_runtime_dependencies} will result in a fatal error,
+unless the \c{NO_UNSUPPORTED_PLATFORM_ERROR} option is given. When the option
+is given and the project is built for an unsupported platform, neither QML modules
+nor regular runtime dependencies will be installed.
+To ensure that the QML modules are still installed, specify both the
+\c{NO_UNSUPPORTED_PLATFORM_ERROR} and
+\c{DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM} options.
+The latter option will ensure that QML modules built as part of the project
+are still installed.
+
+The \c{MACOS_BUNDLE_POST_BUILD} option enables an extra step when \c{target}
+is a macOS app bundle. A post-build rule will be created which uses the
+deployment script to deploy enough of the imported QML modules to allow the
+application to run directly from the build directory (essentially just the
+\c{qmldir} files and symlinks to plugins). This is usually desirable to support
+development of the application. \c{MACOS_BUNDLE_POST_BUILD} is ignored for all
+other platforms.
+
+For deploying a non-QML application, use
+\l{qt6_generate_deploy_app_script}{qt_generate_deploy_app_script()}
+instead. It is an error to call both \c{qt_generate_deploy_qml_app_script()}
+and \l{qt6_generate_deploy_app_script}{qt_generate_deploy_app_script()} for the
+same target.
+
+\sa {qt6_standard_project_setup}{qt_standard_project_setup()},
+    {qt6_generate_deploy_app_script}{qt_generate_deploy_app_script()}
+
+\section1 Example
+
+\badcode
+cmake_minimum_required(VERSION 3.16...3.22)
+project(MyThings)
+
+find_package(Qt6 REQUIRED COMPONENTS Core Qml)
+qt_standard_project_setup()
+
+qt_add_executable(MyApp main.cpp)
+qt_add_qml_module(MyApp
+    URI Application
+    VERSION 1.0
+    QML_FILES main.qml MyThing.qml
+)
+
+install(TARGETS MyApp
+    BUNDLE  DESTINATION .
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+qt_generate_deploy_qml_app_script(
+    TARGET MyApp
+    FILENAME_VARIABLE deploy_script
+    MACOS_BUNDLE_POST_BUILD
+    NO_UNSUPPORTED_PLATFORM_ERROR
+    DEPLOY_USER_QML_MODULES_ON_UNSUPPORTED_PLATFORM
+)
+install(SCRIPT ${deploy_script})
+\endcode
+*/

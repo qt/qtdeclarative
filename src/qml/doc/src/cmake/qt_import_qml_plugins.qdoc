@@ -48,7 +48,9 @@ qt_import_qml_plugins(target)
       using a non-static Qt, it will do nothing and return immediately.
 
 \c{qt_import_qml_plugins()} runs \c{qmlimportscanner} on the \c target
-immediately as part of the call. It finds the static QML plugins used by the
+immediately as part of the call (unless the \c{NO_IMPORT_SCAN} option was
+passed to \l{qt6_add_qml_module}{qt_add_qml_module()} when defining the QML
+module). It finds the static QML plugins used by the
 \c target and links it to those plugins so that they are part of the executable
 or shared library that \c target represents. The search follows QML module
 imports recursively.

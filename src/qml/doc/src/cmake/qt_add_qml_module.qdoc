@@ -66,6 +66,7 @@ qt_add_qml_module(
     [NO_LINT]
     [NO_CACHEGEN]
     [NO_RESOURCE_TARGET_PATH]
+    [NO_IMPORT_SCAN]
 )
 
 \endcode
@@ -172,7 +173,8 @@ be created in the same directory as the \c qmldir file.
 
 If using a statically built Qt, the backing target's \c{.qml} files will be
 scanned during the CMake configure run to determine the imports used by the
-module and set up linking relationships. When a \c{.qml} file is added to or
+module and to set up linking relationships (the \c{NO_IMPORT_SCAN} keyword
+can be given to disable this). When a \c{.qml} file is added to or
 removed from the module, CMake will normally re-run automatically and the
 relevant files will be re-scanned, since a \c{CMakeLists.txt} file will have
 been modified. During the course of development, an existing \c{.qml} file may
@@ -403,9 +405,10 @@ called \c{MyUpperCaseThing/mylowercasething/}.
 The need for specifying the \c OUTPUT_DIRECTORY keyword should be rare, but if
 it is used, it is likely that the caller will also need to add to the
 \l IMPORT_PATH to ensure that \l{qmllint-auto}{linting},
-\l{qmlcachegen-auto}{cached compilation} of qml sources and
-\l{qt6_import_qml_plugins}{automatic importing} of plugins in static builds all
-work correctly.
+\l{qmlcachegen-auto}{cached compilation} of qml sources,
+\l{qt6_import_qml_plugins}{automatic importing} of plugins in static builds,
+and \l{qt_deploy_qml_imports}{deploying imported QML modules} for non-static
+builds all work correctly.
 
 \target NO_GENERATE_PLUGIN_SOURCE
 By default, \c{qt_add_qml_module()} will auto-generate a \c{.cpp} file that
@@ -526,10 +529,19 @@ is given, the version information attached to the base types and their
 properties is respected. So, an \c {import MyModule 2.8} will then only make
 available versioned properties up to version \c{2.8} of any base types outside
 \c{MyModule}.
-
 This is mostly useful if you want to keep your module version in sync
 with other modules you're basing types on. In that case you might want your custom
 types to not expose properties from a module's base type version greater than the one being
 imported.
 
+For static Qt builds, \c{qmlimportscanner} is run at configure time to scan the
+\c{.qml} files of a QML module and identify the QML imports it uses (see
+\l{qt6_import_qml_plugins}{qt_import_qml_plugins()}). For non-static Qt builds,
+if the target is an executable, a similar scan is performed at build time
+to provide the information needed by deployment scripts (see
+\l{qt_deploy_qml_imports()}). Both scans can be disabled by providing the
+\c{NO_IMPORT_SCAN} option. Doing so means the project takes on the
+responsibility of ensuring all required plugins are instantiated and linked for
+static builds. For non-static builds the project must manually work out
+and deploy all QML modules used by an executable target.
 */
