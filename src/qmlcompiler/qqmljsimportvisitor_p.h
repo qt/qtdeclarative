@@ -46,7 +46,7 @@
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <private/qqmljsimporter_p.h>
-
+#include <private/qv4compileddata_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -66,6 +66,10 @@ public:
 
     QHash<QString, QQmlJSScope::ConstPtr> imports() const { return m_rootScopeImports; }
     QHash<QString, QQmlJSScope::ConstPtr> addressableScopes() const { return m_scopesById; }
+    QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> scopesBylocation() const
+    {
+        return m_scopesByIrLocation;
+    }
 
     static QString implicitImportDirectory(
             const QString &localFile, QQmlJSResourceFileMapper *mapper);
@@ -144,6 +148,10 @@ protected:
     QQmlJSScope::ConstPtr m_globalScope;
     QHash<QString, QQmlJSScope::ConstPtr> m_scopesById;
     QHash<QString, QQmlJSScope::ConstPtr> m_rootScopeImports;
+
+    // We need to record the locations as IR locations because those contain less data.
+    // This way we can look up objects by IR location later.
+    QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> m_scopesByIrLocation;
 
     // Maps all qmlNames to the source location of their import
     QMultiHash<QString, QQmlJS::SourceLocation> m_importTypeLocationMap;
