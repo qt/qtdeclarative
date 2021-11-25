@@ -1249,11 +1249,7 @@ bool QQmlPropertyPrivate::writeEnumProperty(const QMetaProperty &prop, int idx, 
     QVariant v = value;
     if (prop.isEnumType()) {
         QMetaEnum menum = prop.enumerator();
-        if (v.userType() == QMetaType::QString
-#ifdef QT3_SUPPORT
-            || v.userType() == QVariant::CString
-#endif
-            ) {
+        if (v.userType() == QMetaType::QString) {
             bool ok;
             if (prop.isFlagType())
                 v = QVariant(menum.keysToValue(value.toByteArray(), &ok));
