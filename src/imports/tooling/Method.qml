@@ -46,4 +46,5 @@ Member {
     property bool isConstructor: false
     property bool isList: false
     property bool isPointer: false
+    property bool isJavaScriptFunction: false
 }

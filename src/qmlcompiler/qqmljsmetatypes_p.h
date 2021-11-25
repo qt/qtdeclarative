@@ -187,6 +187,12 @@ public:
     bool isConstructor() const { return m_isConstructor; }
     void setIsConstructor(bool isConstructor) { m_isConstructor = isConstructor; }
 
+    bool isJavaScriptFunction() const { return m_isJavaScriptFunction; }
+    void setIsJavaScriptFunction(bool isJavaScriptFunction)
+    {
+        m_isJavaScriptFunction = isJavaScriptFunction;
+    }
+
     bool isValid() const { return !m_name.isEmpty(); }
 
     const QVector<QQmlJSAnnotation>& annotations() const { return m_annotations; }
@@ -247,6 +253,7 @@ private:
     Access m_methodAccess = Private;
     int m_revision = 0;
     bool m_isConstructor = false;
+    bool m_isJavaScriptFunction = false;
 };
 
 class QQmlJSMetaProperty

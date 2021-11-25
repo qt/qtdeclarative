@@ -89,6 +89,7 @@ private Q_SLOTS:
     void missingBuiltinsNoCrash();
     void absolutePath();
     void multiGrouped();
+    void javascriptVariableArgs();
 
 private:
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
@@ -1167,6 +1168,11 @@ void TestQmllint::absolutePath()
 void TestQmllint::multiGrouped()
 {
     QVERIFY(runQmllint("multiGrouped.qml", true, {"--compiler=warning"}).isEmpty());
+}
+
+void TestQmllint::javascriptVariableArgs()
+{
+    QVERIFY(runQmllint("javascriptVariableArgs.qml", true, { "--compiler", "warning" }).isEmpty());
 }
 
 QTEST_MAIN(TestQmllint)

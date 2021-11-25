@@ -793,6 +793,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
 QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMethod> &methods,
                                                         int argc, int argv, QStringList *errors)
 {
+    QQmlJSMetaMethod javascriptFunction;
     for (const auto &method : methods) {
         const auto argumentTypes = method.parameterTypes();
         if (argumentTypes.size() == 1
@@ -801,6 +802,10 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
                            "disclose its return type."_qs);
             continue;
         }
+
+        // If we encounter a JavaScript function, use this as a fallback if no other method matches
+        if (method.isJavaScriptFunction())
+            javascriptFunction = method;
 
         if (argc != argumentTypes.size()) {
             errors->append(u"Function expects %1 arguments, but %2 were provided"_qs
@@ -835,7 +840,7 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
         if (matches)
             return method;
     }
-    return QQmlJSMetaMethod();
+    return javascriptFunction;
 }
 
 void QQmlJSTypePropagator::propagateCall(const QList<QQmlJSMetaMethod> &methods, int argc, int argv)

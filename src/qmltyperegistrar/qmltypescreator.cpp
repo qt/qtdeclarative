@@ -262,6 +262,9 @@ void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &typ
         const auto isConstructor = obj.find(QLatin1String("isConstructor"));
         if (isConstructor != obj.constEnd() && isConstructor->toBool())
             m_qml.writeScriptBinding(QLatin1String("isConstructor"), QLatin1String("true"));
+        const auto isJavaScriptFunction = obj.find(QLatin1String("isJavaScriptFunction"));
+        if (isJavaScriptFunction != obj.constEnd() && isJavaScriptFunction->toBool())
+            m_qml.writeScriptBinding(QLatin1String("isJavaScriptFunction"), QLatin1String("true"));
         for (const QJsonValue argument : arguments) {
             const QJsonObject obj = argument.toObject();
             m_qml.writeStartObject(QLatin1String("Parameter"));

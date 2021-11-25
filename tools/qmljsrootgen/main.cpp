@@ -250,6 +250,7 @@ static QString buildClass(const QJSManagedValue &value, QJsonArray *classes,
 
             methodObject.insert(QStringLiteral("access"), QStringLiteral("public"));
             methodObject.insert(QStringLiteral("name"), info.name);
+            methodObject.insert(QStringLiteral("isJavaScriptFunction"), true);
 
             const int formalParams = propFunction->getLength();
             if (propFunction->isConstructor()) {

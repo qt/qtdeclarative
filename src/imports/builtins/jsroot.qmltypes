@@ -26,14 +26,16 @@ Module {
             name: "constructor"
             type: "ArrayBuffer"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "slice"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
-        Method { name: "toString" }
+        Method { name: "toString"; isJavaScriptFunction: true }
     }
     Component {
         name: "ArrayPrototype"
@@ -44,103 +46,125 @@ Module {
             name: "constructor"
             type: "Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "toString" }
-        Method { name: "toLocaleString" }
+        Method { name: "toString"; isJavaScriptFunction: true }
+        Method { name: "toLocaleString"; isJavaScriptFunction: true }
         Method {
             name: "concat"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "copyWithin"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
-        Method { name: "entries" }
+        Method { name: "entries"; isJavaScriptFunction: true }
         Method {
             name: "fill"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "find"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "findIndex"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "includes"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "join"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "keys" }
-        Method { name: "pop" }
+        Method { name: "keys"; isJavaScriptFunction: true }
+        Method { name: "pop"; isJavaScriptFunction: true }
         Method {
             name: "push"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "reverse" }
-        Method { name: "shift" }
+        Method { name: "reverse"; isJavaScriptFunction: true }
+        Method { name: "shift"; isJavaScriptFunction: true }
         Method {
             name: "slice"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "sort"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "splice"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "unshift"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "indexOf"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "lastIndexOf"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "every"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "some"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "forEach"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "map"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "filter"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "reduce"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "reduceRight"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "values" }
+        Method { name: "values"; isJavaScriptFunction: true }
     }
     Component {
         name: "Atomics"
@@ -148,18 +172,21 @@ Module {
         prototype: "ObjectPrototype"
         Method {
             name: "add"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
         Method {
             name: "and"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
         Method {
             name: "compareExchange"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -167,39 +194,46 @@ Module {
         }
         Method {
             name: "exchange"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
         Method {
             name: "isLockFree"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "load"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "or"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
         Method {
             name: "store"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
         Method {
             name: "sub"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
         Method {
             name: "wait"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -207,12 +241,14 @@ Module {
         }
         Method {
             name: "wake"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
         Method {
             name: "xor"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -227,28 +263,29 @@ Module {
             name: "constructor"
             type: "Boolean"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "toString" }
-        Method { name: "valueOf" }
+        Method { name: "toString"; isJavaScriptFunction: true }
+        Method { name: "valueOf"; isJavaScriptFunction: true }
     }
     Component {
         name: "Console"
         accessSemantics: "reference"
         prototype: "ObjectPrototype"
-        Method { name: "debug" }
-        Method { name: "log" }
-        Method { name: "info" }
-        Method { name: "warn" }
-        Method { name: "error" }
-        Method { name: "assert" }
-        Method { name: "count" }
-        Method { name: "profile" }
-        Method { name: "profileEnd" }
-        Method { name: "time" }
-        Method { name: "timeEnd" }
-        Method { name: "trace" }
-        Method { name: "exception" }
+        Method { name: "debug"; isJavaScriptFunction: true }
+        Method { name: "log"; isJavaScriptFunction: true }
+        Method { name: "info"; isJavaScriptFunction: true }
+        Method { name: "warn"; isJavaScriptFunction: true }
+        Method { name: "error"; isJavaScriptFunction: true }
+        Method { name: "assert"; isJavaScriptFunction: true }
+        Method { name: "count"; isJavaScriptFunction: true }
+        Method { name: "profile"; isJavaScriptFunction: true }
+        Method { name: "profileEnd"; isJavaScriptFunction: true }
+        Method { name: "time"; isJavaScriptFunction: true }
+        Method { name: "timeEnd"; isJavaScriptFunction: true }
+        Method { name: "trace"; isJavaScriptFunction: true }
+        Method { name: "exception"; isJavaScriptFunction: true }
     }
     Component { name: "DataView"; accessSemantics: "reference"; prototype: "DataViewPrototype" }
     Component {
@@ -262,102 +299,125 @@ Module {
             name: "constructor"
             type: "DataView"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "getInt8"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "getUint8"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "getInt16"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "getUint16"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "getInt32"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "getUint32"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "getFloat32"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "getFloat64"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "setInt8"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setUint8"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setInt16"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setUint16"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setInt32"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setUint32"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setFloat32"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setFloat64"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "getUInt8"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "getUInt16"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "getUInt32"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "setUInt8"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "setUInt16"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "setUInt32"
+            isJavaScriptFunction: true
             Parameter {}
         }
     }
@@ -375,6 +435,7 @@ Module {
             name: "constructor"
             type: "Date"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -383,68 +444,76 @@ Module {
             Parameter {}
             Parameter {}
         }
-        Method { name: "toString" }
-        Method { name: "toDateString" }
-        Method { name: "toTimeString" }
-        Method { name: "toLocaleString" }
-        Method { name: "toLocaleDateString" }
-        Method { name: "toLocaleTimeString" }
-        Method { name: "valueOf" }
-        Method { name: "getTime" }
-        Method { name: "getYear" }
-        Method { name: "getFullYear" }
-        Method { name: "getUTCFullYear" }
-        Method { name: "getMonth" }
-        Method { name: "getUTCMonth" }
-        Method { name: "getDate" }
-        Method { name: "getUTCDate" }
-        Method { name: "getDay" }
-        Method { name: "getUTCDay" }
-        Method { name: "getHours" }
-        Method { name: "getUTCHours" }
-        Method { name: "getMinutes" }
-        Method { name: "getUTCMinutes" }
-        Method { name: "getSeconds" }
-        Method { name: "getUTCSeconds" }
-        Method { name: "getMilliseconds" }
-        Method { name: "getUTCMilliseconds" }
-        Method { name: "getTimezoneOffset" }
+        Method { name: "toString"; isJavaScriptFunction: true }
+        Method { name: "toDateString"; isJavaScriptFunction: true }
+        Method { name: "toTimeString"; isJavaScriptFunction: true }
+        Method { name: "toLocaleString"; isJavaScriptFunction: true }
+        Method { name: "toLocaleDateString"; isJavaScriptFunction: true }
+        Method { name: "toLocaleTimeString"; isJavaScriptFunction: true }
+        Method { name: "valueOf"; isJavaScriptFunction: true }
+        Method { name: "getTime"; isJavaScriptFunction: true }
+        Method { name: "getYear"; isJavaScriptFunction: true }
+        Method { name: "getFullYear"; isJavaScriptFunction: true }
+        Method { name: "getUTCFullYear"; isJavaScriptFunction: true }
+        Method { name: "getMonth"; isJavaScriptFunction: true }
+        Method { name: "getUTCMonth"; isJavaScriptFunction: true }
+        Method { name: "getDate"; isJavaScriptFunction: true }
+        Method { name: "getUTCDate"; isJavaScriptFunction: true }
+        Method { name: "getDay"; isJavaScriptFunction: true }
+        Method { name: "getUTCDay"; isJavaScriptFunction: true }
+        Method { name: "getHours"; isJavaScriptFunction: true }
+        Method { name: "getUTCHours"; isJavaScriptFunction: true }
+        Method { name: "getMinutes"; isJavaScriptFunction: true }
+        Method { name: "getUTCMinutes"; isJavaScriptFunction: true }
+        Method { name: "getSeconds"; isJavaScriptFunction: true }
+        Method { name: "getUTCSeconds"; isJavaScriptFunction: true }
+        Method { name: "getMilliseconds"; isJavaScriptFunction: true }
+        Method { name: "getUTCMilliseconds"; isJavaScriptFunction: true }
+        Method { name: "getTimezoneOffset"; isJavaScriptFunction: true }
         Method {
             name: "setTime"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "setMilliseconds"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "setUTCMilliseconds"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "setSeconds"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setUTCSeconds"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setMinutes"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setUTCMinutes"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setHours"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -452,6 +521,7 @@ Module {
         }
         Method {
             name: "setUTCHours"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -459,43 +529,51 @@ Module {
         }
         Method {
             name: "setDate"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "setUTCDate"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "setMonth"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setUTCMonth"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setYear"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "setFullYear"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setUTCFullYear"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
-        Method { name: "toUTCString" }
-        Method { name: "toGMTString" }
-        Method { name: "toISOString" }
+        Method { name: "toUTCString"; isJavaScriptFunction: true }
+        Method { name: "toGMTString"; isJavaScriptFunction: true }
+        Method { name: "toISOString"; isJavaScriptFunction: true }
         Method {
             name: "toJSON"
+            isJavaScriptFunction: true
             Parameter {}
         }
     }
@@ -517,9 +595,10 @@ Module {
             name: "constructor"
             type: "Error"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "toString" }
+        Method { name: "toString"; isJavaScriptFunction: true }
     }
     Component {
         name: "EvalError"
@@ -539,9 +618,10 @@ Module {
             name: "constructor"
             type: "EvalError"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "toString" }
+        Method { name: "toString"; isJavaScriptFunction: true }
     }
     Component {
         name: "Float32Array"
@@ -557,6 +637,7 @@ Module {
             name: "constructor"
             type: "Float32Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -576,6 +657,7 @@ Module {
             name: "constructor"
             type: "Float64Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -601,24 +683,28 @@ Module {
             name: "constructor"
             type: "Function"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "toString" }
+        Method { name: "toString"; isJavaScriptFunction: true }
         Method {
             name: "apply"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "call"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "bind"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "connect" }
-        Method { name: "disconnect" }
+        Method { name: "connect"; isJavaScriptFunction: true }
+        Method { name: "disconnect"; isJavaScriptFunction: true }
     }
     Component {
         name: "GlobalObject"
@@ -637,43 +723,50 @@ Module {
             name: "Object"
             type: "Object"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "String"
             type: "String"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "Symbol"; type: "undefined"; isConstructor: true }
+        Method { name: "Symbol"; type: "undefined"; isConstructor: true; isJavaScriptFunction: true }
         Method {
             name: "Number"
             type: "Number"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "Boolean"
             type: "Boolean"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "Array"
             type: "Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "Function"
             type: "Function"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "Date"
             type: "Date"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -686,6 +779,7 @@ Module {
             name: "RegExp"
             type: "RegExp"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
@@ -693,78 +787,95 @@ Module {
             name: "Error"
             type: "Error"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "EvalError"
             type: "EvalError"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "RangeError"
             type: "RangeError"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "ReferenceError"
             type: "ReferenceError"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "SyntaxError"
             type: "SyntaxError"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "TypeError"
             type: "TypeError"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "URIError"
             type: "URIError"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "Promise"
             type: "Promise"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "URL"; type: "URL"; isConstructor: true }
-        Method { name: "URLSearchParams"; type: "URLSearchParams"; isConstructor: true }
+        Method { name: "URL"; type: "URL"; isConstructor: true; isJavaScriptFunction: true }
+        Method {
+            name: "URLSearchParams"
+            type: "URLSearchParams"
+            isConstructor: true
+            isJavaScriptFunction: true
+        }
         Method {
             name: "SharedArrayBuffer"
             type: "SharedArrayBuffer"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "ArrayBuffer"
             type: "ArrayBuffer"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "DataView"
             type: "DataView"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "WeakSet"; type: "WeakSet"; isConstructor: true }
-        Method { name: "Set"; type: "Set"; isConstructor: true }
-        Method { name: "WeakMap"; type: "WeakMap"; isConstructor: true }
-        Method { name: "Map"; type: "Map"; isConstructor: true }
+        Method { name: "WeakSet"; type: "WeakSet"; isConstructor: true; isJavaScriptFunction: true }
+        Method { name: "Set"; type: "Set"; isConstructor: true; isJavaScriptFunction: true }
+        Method { name: "WeakMap"; type: "WeakMap"; isConstructor: true; isJavaScriptFunction: true }
+        Method { name: "Map"; type: "Map"; isConstructor: true; isJavaScriptFunction: true }
         Method {
             name: "Int8Array"
             type: "Int8Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -773,6 +884,7 @@ Module {
             name: "Uint8Array"
             type: "Uint8Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -781,6 +893,7 @@ Module {
             name: "Int16Array"
             type: "Int16Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -789,6 +902,7 @@ Module {
             name: "Uint16Array"
             type: "Uint16Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -797,6 +911,7 @@ Module {
             name: "Int32Array"
             type: "Int32Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -805,6 +920,7 @@ Module {
             name: "Uint32Array"
             type: "Uint32Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -813,6 +929,7 @@ Module {
             name: "Uint8ClampedArray"
             type: "Uint8ClampedArray"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -821,6 +938,7 @@ Module {
             name: "Float32Array"
             type: "Float32Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -829,6 +947,7 @@ Module {
             name: "Float64Array"
             type: "Float64Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -837,62 +956,74 @@ Module {
             name: "Proxy"
             type: "Proxy"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "eval"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "parseInt"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "parseFloat"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "isNaN"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "isFinite"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "decodeURI"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "decodeURIComponent"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "encodeURI"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "encodeURIComponent"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "escape"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "unescape"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "qsTranslate" }
-        Method { name: "QT_TRANSLATE_NOOP" }
-        Method { name: "qsTr" }
-        Method { name: "QT_TR_NOOP" }
-        Method { name: "qsTrId" }
-        Method { name: "QT_TRID_NOOP" }
-        Method { name: "print" }
-        Method { name: "gc" }
+        Method { name: "qsTranslate"; isJavaScriptFunction: true }
+        Method { name: "QT_TRANSLATE_NOOP"; isJavaScriptFunction: true }
+        Method { name: "qsTr"; isJavaScriptFunction: true }
+        Method { name: "QT_TR_NOOP"; isJavaScriptFunction: true }
+        Method { name: "qsTrId"; isJavaScriptFunction: true }
+        Method { name: "QT_TRID_NOOP"; isJavaScriptFunction: true }
+        Method { name: "print"; isJavaScriptFunction: true }
+        Method { name: "gc"; isJavaScriptFunction: true }
     }
     Component { name: "Int16Array"; accessSemantics: "reference"; prototype: "Int16ArrayPrototype" }
     Component {
@@ -904,6 +1035,7 @@ Module {
             name: "constructor"
             type: "Int16Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -919,6 +1051,7 @@ Module {
             name: "constructor"
             type: "Int32Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -934,6 +1067,7 @@ Module {
             name: "constructor"
             type: "Int8Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -949,85 +1083,103 @@ Module {
         Property { name: "length" }
         Method {
             name: "copyWithin"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
-        Method { name: "entries" }
+        Method { name: "entries"; isJavaScriptFunction: true }
         Method {
             name: "every"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "fill"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "filter"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "find"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "findIndex"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "forEach"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "includes"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "indexOf"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "join"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "keys" }
+        Method { name: "keys"; isJavaScriptFunction: true }
         Method {
             name: "lastIndexOf"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "map"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "reduce"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "reduceRight"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "reverse" }
+        Method { name: "reverse"; isJavaScriptFunction: true }
         Method {
             name: "some"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "set"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "slice"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "subarray"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
-        Method { name: "toLocaleString" }
-        Method { name: "toString" }
-        Method { name: "values" }
+        Method { name: "toLocaleString"; isJavaScriptFunction: true }
+        Method { name: "toString"; isJavaScriptFunction: true }
+        Method { name: "values"; isJavaScriptFunction: true }
     }
     Component {
         name: "JSON"
@@ -1035,11 +1187,13 @@ Module {
         prototype: "ObjectPrototype"
         Method {
             name: "parse"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "stringify"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -1051,32 +1205,37 @@ Module {
         accessSemantics: "reference"
         prototype: "ObjectPrototype"
         Property { name: "size"; type: "number" }
-        Method { name: "constructor"; type: "Map"; isConstructor: true }
-        Method { name: "clear" }
+        Method { name: "constructor"; type: "Map"; isConstructor: true; isJavaScriptFunction: true }
+        Method { name: "clear"; isJavaScriptFunction: true }
         Method {
             name: "delete"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "forEach"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "get"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "has"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "keys" }
+        Method { name: "keys"; isJavaScriptFunction: true }
         Method {
             name: "set"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
-        Method { name: "values" }
-        Method { name: "entries" }
+        Method { name: "values"; isJavaScriptFunction: true }
+        Method { name: "entries"; isJavaScriptFunction: true }
     }
     Component {
         name: "Math"
@@ -1097,6 +1256,7 @@ Module {
         }
         Method {
             name: "abs"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1106,6 +1266,7 @@ Module {
         }
         Method {
             name: "acos"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1115,6 +1276,7 @@ Module {
         }
         Method {
             name: "acosh"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1124,6 +1286,7 @@ Module {
         }
         Method {
             name: "asin"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1133,6 +1296,7 @@ Module {
         }
         Method {
             name: "asinh"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1142,6 +1306,7 @@ Module {
         }
         Method {
             name: "atan"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1151,6 +1316,7 @@ Module {
         }
         Method {
             name: "atanh"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1161,6 +1327,7 @@ Module {
         }
         Method {
             name: "atan2"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
@@ -1171,6 +1338,7 @@ Module {
         }
         Method {
             name: "cbrt"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1180,6 +1348,7 @@ Module {
         }
         Method {
             name: "ceil"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1189,6 +1358,7 @@ Module {
         }
         Method {
             name: "clz32"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1198,6 +1368,7 @@ Module {
         }
         Method {
             name: "cos"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1207,6 +1378,7 @@ Module {
         }
         Method {
             name: "cosh"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1216,6 +1388,7 @@ Module {
         }
         Method {
             name: "exp"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1225,6 +1398,7 @@ Module {
         }
         Method {
             name: "expm1"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1234,6 +1408,7 @@ Module {
         }
         Method {
             name: "floor"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1243,6 +1418,7 @@ Module {
         }
         Method {
             name: "fround"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1253,6 +1429,7 @@ Module {
         }
         Method {
             name: "hypot"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
@@ -1264,6 +1441,7 @@ Module {
         }
         Method {
             name: "imul"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
@@ -1274,6 +1452,7 @@ Module {
         }
         Method {
             name: "log"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1283,6 +1462,7 @@ Module {
         }
         Method {
             name: "log10"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1292,6 +1472,7 @@ Module {
         }
         Method {
             name: "log1p"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1301,6 +1482,7 @@ Module {
         }
         Method {
             name: "log2"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1311,6 +1493,7 @@ Module {
         }
         Method {
             name: "max"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
@@ -1322,6 +1505,7 @@ Module {
         }
         Method {
             name: "min"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
@@ -1333,6 +1517,7 @@ Module {
         }
         Method {
             name: "pow"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
@@ -1344,6 +1529,7 @@ Module {
         }
         Method {
             name: "round"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1353,6 +1539,7 @@ Module {
         }
         Method {
             name: "sign"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1362,6 +1549,7 @@ Module {
         }
         Method {
             name: "sin"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1371,6 +1559,7 @@ Module {
         }
         Method {
             name: "sinh"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1380,6 +1569,7 @@ Module {
         }
         Method {
             name: "sqrt"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1389,6 +1579,7 @@ Module {
         }
         Method {
             name: "tan"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1398,6 +1589,7 @@ Module {
         }
         Method {
             name: "tanh"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
@@ -1407,6 +1599,7 @@ Module {
         }
         Method {
             name: "trunc"
+            isJavaScriptFunction: true
             Parameter {}
         }
     }
@@ -1419,24 +1612,29 @@ Module {
             name: "constructor"
             type: "Number"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "toString"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "toLocaleString" }
-        Method { name: "valueOf" }
+        Method { name: "toLocaleString"; isJavaScriptFunction: true }
+        Method { name: "valueOf"; isJavaScriptFunction: true }
         Method {
             name: "toFixed"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "toExponential"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "toPrecision"
+            isJavaScriptFunction: true
             Parameter {}
         }
     }
@@ -1449,30 +1647,36 @@ Module {
             name: "constructor"
             type: "Object"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "toString" }
-        Method { name: "toLocaleString" }
-        Method { name: "valueOf" }
+        Method { name: "toString"; isJavaScriptFunction: true }
+        Method { name: "toLocaleString"; isJavaScriptFunction: true }
+        Method { name: "valueOf"; isJavaScriptFunction: true }
         Method {
             name: "hasOwnProperty"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "isPrototypeOf"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "propertyIsEnumerable"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "__defineGetter__"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "__defineSetter__"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
@@ -1486,15 +1690,18 @@ Module {
             name: "constructor"
             type: "Promise"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "then"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "catch"
+            isJavaScriptFunction: true
             Parameter {}
         }
     }
@@ -1511,45 +1718,46 @@ Module {
         Property { name: "uiLanguage"; type: "string" }
         Method {
             name: "callLater"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "objectNameChanged" }
-        Method { name: "include" }
-        Method { name: "isQtObject" }
-        Method { name: "color" }
-        Method { name: "rgba" }
-        Method { name: "hsla" }
-        Method { name: "hsva" }
-        Method { name: "colorEqual" }
-        Method { name: "rect" }
-        Method { name: "point" }
-        Method { name: "size" }
-        Method { name: "vector2d" }
-        Method { name: "vector3d" }
-        Method { name: "vector4d" }
-        Method { name: "quaternion" }
-        Method { name: "matrix4x4" }
-        Method { name: "lighter" }
-        Method { name: "darker" }
-        Method { name: "alpha" }
-        Method { name: "tint" }
-        Method { name: "formatDate" }
-        Method { name: "formatTime" }
-        Method { name: "formatDateTime" }
-        Method { name: "locale" }
-        Method { name: "url" }
-        Method { name: "resolvedUrl" }
-        Method { name: "openUrlExternally" }
-        Method { name: "font" }
-        Method { name: "fontFamilies" }
-        Method { name: "md5" }
-        Method { name: "btoa" }
-        Method { name: "atob" }
-        Method { name: "quit" }
-        Method { name: "exit" }
-        Method { name: "createQmlObject" }
-        Method { name: "createComponent" }
-        Method { name: "binding" }
+        Method { name: "objectNameChanged"; isJavaScriptFunction: true }
+        Method { name: "include"; isJavaScriptFunction: true }
+        Method { name: "isQtObject"; isJavaScriptFunction: true }
+        Method { name: "color"; isJavaScriptFunction: true }
+        Method { name: "rgba"; isJavaScriptFunction: true }
+        Method { name: "hsla"; isJavaScriptFunction: true }
+        Method { name: "hsva"; isJavaScriptFunction: true }
+        Method { name: "colorEqual"; isJavaScriptFunction: true }
+        Method { name: "rect"; isJavaScriptFunction: true }
+        Method { name: "point"; isJavaScriptFunction: true }
+        Method { name: "size"; isJavaScriptFunction: true }
+        Method { name: "vector2d"; isJavaScriptFunction: true }
+        Method { name: "vector3d"; isJavaScriptFunction: true }
+        Method { name: "vector4d"; isJavaScriptFunction: true }
+        Method { name: "quaternion"; isJavaScriptFunction: true }
+        Method { name: "matrix4x4"; isJavaScriptFunction: true }
+        Method { name: "lighter"; isJavaScriptFunction: true }
+        Method { name: "darker"; isJavaScriptFunction: true }
+        Method { name: "alpha"; isJavaScriptFunction: true }
+        Method { name: "tint"; isJavaScriptFunction: true }
+        Method { name: "formatDate"; isJavaScriptFunction: true }
+        Method { name: "formatTime"; isJavaScriptFunction: true }
+        Method { name: "formatDateTime"; isJavaScriptFunction: true }
+        Method { name: "locale"; isJavaScriptFunction: true }
+        Method { name: "url"; isJavaScriptFunction: true }
+        Method { name: "resolvedUrl"; isJavaScriptFunction: true }
+        Method { name: "openUrlExternally"; isJavaScriptFunction: true }
+        Method { name: "font"; isJavaScriptFunction: true }
+        Method { name: "fontFamilies"; isJavaScriptFunction: true }
+        Method { name: "md5"; isJavaScriptFunction: true }
+        Method { name: "btoa"; isJavaScriptFunction: true }
+        Method { name: "atob"; isJavaScriptFunction: true }
+        Method { name: "quit"; isJavaScriptFunction: true }
+        Method { name: "exit"; isJavaScriptFunction: true }
+        Method { name: "createQmlObject"; isJavaScriptFunction: true }
+        Method { name: "createComponent"; isJavaScriptFunction: true }
+        Method { name: "binding"; isJavaScriptFunction: true }
     }
     Component {
         name: "QtApplication"
@@ -1561,16 +1769,16 @@ Module {
         Property { name: "version"; type: "string" }
         Property { name: "organization"; type: "string" }
         Property { name: "domain"; type: "string" }
-        Method { name: "objectNameChanged" }
-        Method { name: "aboutToQuit" }
-        Method { name: "nameChanged" }
-        Method { name: "versionChanged" }
-        Method { name: "organizationChanged" }
-        Method { name: "domainChanged" }
-        Method { name: "setName" }
-        Method { name: "setVersion" }
-        Method { name: "setOrganization" }
-        Method { name: "setDomain" }
+        Method { name: "objectNameChanged"; isJavaScriptFunction: true }
+        Method { name: "aboutToQuit"; isJavaScriptFunction: true }
+        Method { name: "nameChanged"; isJavaScriptFunction: true }
+        Method { name: "versionChanged"; isJavaScriptFunction: true }
+        Method { name: "organizationChanged"; isJavaScriptFunction: true }
+        Method { name: "domainChanged"; isJavaScriptFunction: true }
+        Method { name: "setName"; isJavaScriptFunction: true }
+        Method { name: "setVersion"; isJavaScriptFunction: true }
+        Method { name: "setOrganization"; isJavaScriptFunction: true }
+        Method { name: "setDomain"; isJavaScriptFunction: true }
     }
     Component {
         name: "QtApplicationArguments"
@@ -1585,7 +1793,7 @@ Module {
         accessSemantics: "reference"
         prototype: "ObjectPrototype"
         Property { name: "objectName"; type: "string" }
-        Method { name: "objectNameChanged" }
+        Method { name: "objectNameChanged"; isJavaScriptFunction: true }
     }
     Component {
         name: "QtPlatform"
@@ -1594,14 +1802,14 @@ Module {
         Property { name: "objectName"; type: "string" }
         Property { name: "os"; type: "string" }
         Property { name: "pluginName"; type: "string" }
-        Method { name: "objectNameChanged" }
+        Method { name: "objectNameChanged"; isJavaScriptFunction: true }
     }
     Component {
         name: "QtStyleHints"
         accessSemantics: "reference"
         prototype: "ObjectPrototype"
         Property { name: "objectName"; type: "string" }
-        Method { name: "objectNameChanged" }
+        Method { name: "objectNameChanged"; isJavaScriptFunction: true }
     }
     Component {
         name: "RangeError"
@@ -1621,9 +1829,10 @@ Module {
             name: "constructor"
             type: "RangeError"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "toString" }
+        Method { name: "toString"; isJavaScriptFunction: true }
     }
     Component {
         name: "ReferenceError"
@@ -1643,9 +1852,10 @@ Module {
             name: "constructor"
             type: "ReferenceError"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "toString" }
+        Method { name: "toString"; isJavaScriptFunction: true }
     }
     Component {
         name: "Reflect"
@@ -1653,65 +1863,78 @@ Module {
         prototype: "ObjectPrototype"
         Method {
             name: "apply"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
         Method {
             name: "construct"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "defineProperty"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
         Method {
             name: "deleteProperty"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "get"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "getOwnPropertyDescriptor"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "getPrototypeOf"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "has"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "isExtensible"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "ownKeys"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "preventExtensions"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "set"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
         }
         Method {
             name: "setPrototypeOf"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
@@ -1737,20 +1960,24 @@ Module {
             name: "constructor"
             type: "RegExp"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "exec"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "test"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "toString" }
+        Method { name: "toString"; isJavaScriptFunction: true }
         Method {
             name: "compile"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
@@ -1761,27 +1988,31 @@ Module {
         accessSemantics: "reference"
         prototype: "ObjectPrototype"
         Property { name: "size"; type: "number" }
-        Method { name: "constructor"; type: "Set"; isConstructor: true }
+        Method { name: "constructor"; type: "Set"; isConstructor: true; isJavaScriptFunction: true }
         Method {
             name: "add"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "clear" }
+        Method { name: "clear"; isJavaScriptFunction: true }
         Method {
             name: "delete"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "entries" }
+        Method { name: "entries"; isJavaScriptFunction: true }
         Method {
             name: "forEach"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "has"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "keys" }
-        Method { name: "values" }
+        Method { name: "keys"; isJavaScriptFunction: true }
+        Method { name: "values"; isJavaScriptFunction: true }
     }
     Component {
         name: "SharedArrayBuffer"
@@ -1797,10 +2028,12 @@ Module {
             name: "constructor"
             type: "SharedArrayBuffer"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "slice"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
@@ -1820,110 +2053,136 @@ Module {
             name: "constructor"
             type: "String"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "toString" }
-        Method { name: "valueOf" }
+        Method { name: "toString"; isJavaScriptFunction: true }
+        Method { name: "valueOf"; isJavaScriptFunction: true }
         Method {
             name: "charAt"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "charCodeAt"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "codePointAt"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "concat"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "endsWith"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "indexOf"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "includes"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "lastIndexOf"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "localeCompare"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "match"
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "normalize" }
+        Method { name: "normalize"; isJavaScriptFunction: true }
         Method {
             name: "padEnd"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "padStart"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "repeat"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "replace"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "search"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "slice"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "split"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "startsWith"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "substr"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
         Method {
             name: "substring"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
-        Method { name: "toLowerCase" }
-        Method { name: "toLocaleLowerCase" }
-        Method { name: "toUpperCase" }
-        Method { name: "toLocaleUpperCase" }
-        Method { name: "trim" }
-        Method { name: "arg" }
+        Method { name: "toLowerCase"; isJavaScriptFunction: true }
+        Method { name: "toLocaleLowerCase"; isJavaScriptFunction: true }
+        Method { name: "toUpperCase"; isJavaScriptFunction: true }
+        Method { name: "toLocaleUpperCase"; isJavaScriptFunction: true }
+        Method { name: "trim"; isJavaScriptFunction: true }
+        Method { name: "arg"; isJavaScriptFunction: true }
     }
     Component {
         name: "SymbolPrototype"
         accessSemantics: "reference"
         prototype: "ObjectPrototype"
-        Method { name: "constructor"; type: "undefined"; isConstructor: true }
-        Method { name: "toString" }
-        Method { name: "valueOf" }
+        Method {
+            name: "constructor"
+            type: "undefined"
+            isConstructor: true
+            isJavaScriptFunction: true
+        }
+        Method { name: "toString"; isJavaScriptFunction: true }
+        Method { name: "valueOf"; isJavaScriptFunction: true }
     }
     Component {
         name: "SyntaxError"
@@ -1943,9 +2202,10 @@ Module {
             name: "constructor"
             type: "SyntaxError"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "toString" }
+        Method { name: "toString"; isJavaScriptFunction: true }
     }
     Component {
         name: "TypeError"
@@ -1965,9 +2225,10 @@ Module {
             name: "constructor"
             type: "TypeError"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "toString" }
+        Method { name: "toString"; isJavaScriptFunction: true }
     }
     Component {
         name: "URIError"
@@ -1987,9 +2248,10 @@ Module {
             name: "constructor"
             type: "URIError"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
         }
-        Method { name: "toString" }
+        Method { name: "toString"; isJavaScriptFunction: true }
     }
     Component { name: "URL"; accessSemantics: "reference"; prototype: "URLPrototype" }
     Component {
@@ -2008,8 +2270,8 @@ Module {
         Property { name: "search" }
         Property { name: "searchParams" }
         Property { name: "username" }
-        Method { name: "toString" }
-        Method { name: "toJSON" }
+        Method { name: "toString"; isJavaScriptFunction: true }
+        Method { name: "toJSON"; isJavaScriptFunction: true }
     }
     Component {
         name: "URLSearchParams"
@@ -2020,18 +2282,18 @@ Module {
         name: "URLSearchParamsPrototype"
         accessSemantics: "reference"
         prototype: "ObjectPrototype"
-        Method { name: "toString" }
-        Method { name: "sort" }
-        Method { name: "append" }
-        Method { name: "delete" }
-        Method { name: "has" }
-        Method { name: "set" }
-        Method { name: "get" }
-        Method { name: "getAll" }
-        Method { name: "forEach" }
-        Method { name: "entries" }
-        Method { name: "keys" }
-        Method { name: "values" }
+        Method { name: "toString"; isJavaScriptFunction: true }
+        Method { name: "sort"; isJavaScriptFunction: true }
+        Method { name: "append"; isJavaScriptFunction: true }
+        Method { name: "delete"; isJavaScriptFunction: true }
+        Method { name: "has"; isJavaScriptFunction: true }
+        Method { name: "set"; isJavaScriptFunction: true }
+        Method { name: "get"; isJavaScriptFunction: true }
+        Method { name: "getAll"; isJavaScriptFunction: true }
+        Method { name: "forEach"; isJavaScriptFunction: true }
+        Method { name: "entries"; isJavaScriptFunction: true }
+        Method { name: "keys"; isJavaScriptFunction: true }
+        Method { name: "values"; isJavaScriptFunction: true }
     }
     Component {
         name: "Uint16Array"
@@ -2047,6 +2309,7 @@ Module {
             name: "constructor"
             type: "Uint16Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -2066,6 +2329,7 @@ Module {
             name: "constructor"
             type: "Uint32Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -2081,6 +2345,7 @@ Module {
             name: "constructor"
             type: "Uint8Array"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -2100,6 +2365,7 @@ Module {
             name: "constructor"
             type: "Uint8ClampedArray"
             isConstructor: true
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
             Parameter {}
@@ -2110,21 +2376,25 @@ Module {
         name: "WeakMapPrototype"
         accessSemantics: "reference"
         prototype: "ObjectPrototype"
-        Method { name: "constructor"; type: "WeakMap"; isConstructor: true }
+        Method { name: "constructor"; type: "WeakMap"; isConstructor: true; isJavaScriptFunction: true }
         Method {
             name: "delete"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "get"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "has"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "set"
+            isJavaScriptFunction: true
             Parameter {}
             Parameter {}
         }
@@ -2134,17 +2404,20 @@ Module {
         name: "WeakSetPrototype"
         accessSemantics: "reference"
         prototype: "ObjectPrototype"
-        Method { name: "constructor"; type: "WeakSet"; isConstructor: true }
+        Method { name: "constructor"; type: "WeakSet"; isConstructor: true; isJavaScriptFunction: true }
         Method {
             name: "add"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "delete"
+            isJavaScriptFunction: true
             Parameter {}
         }
         Method {
             name: "has"
+            isJavaScriptFunction: true
             Parameter {}
         }
     }
