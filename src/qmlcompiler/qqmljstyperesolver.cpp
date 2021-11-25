@@ -35,7 +35,6 @@
 
 #include <private/qduplicatetracker_p.h>
 
-#include <QtCore/qqueue.h>
 #include <QtCore/qloggingcategory.h>
 
 QT_BEGIN_NAMESPACE
@@ -120,26 +119,9 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor &visitor)
 {
     m_document->program->accept(&visitor);
 
-    QQueue<QQmlJSScope::Ptr> objects;
-    QQmlJSScope::Ptr root = visitor.result();
-    if (!root)
-        return;
-    objects.enqueue(root);
     m_objectsById = visitor.addressableScopes();
+    m_objectsByLocation = visitor.scopesBylocation();
     m_signalHandlers = visitor.signalHandlers();
-
-    while (!objects.isEmpty()) {
-        const QQmlJSScope::Ptr object = objects.dequeue();
-        const QQmlJS::SourceLocation location = object->sourceLocation();
-        qCDebug(lcTypeResolver()).nospace() << "inserting " << object.data() << " at "
-                                            << location.startLine << ':' << location.startColumn;
-        m_objectsByLocation.insert({ location.startLine, location.startColumn }, object);
-
-        const auto childScopes = object->childScopes();
-        for (const auto &childScope : childScopes)
-            objects.enqueue(childScope);
-    }
-
     m_imports = visitor.imports();
 
     for (const auto &scope : visitor.literalScopesToCheck()) {

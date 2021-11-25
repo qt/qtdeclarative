@@ -123,6 +123,7 @@ void QQmlJSImportVisitor::enterEnvironment(QQmlJSScope::ScopeType type, const QS
     setScopeName(m_currentScope, type, name);
     m_currentScope->setIsComposite(true);
     m_currentScope->setSourceLocation(location);
+    m_scopesByIrLocation.insert({ location.startLine, location.startColumn }, m_currentScope);
 }
 
 bool QQmlJSImportVisitor::enterEnvironmentNonUnique(QQmlJSScope::ScopeType type,
@@ -147,6 +148,7 @@ bool QQmlJSImportVisitor::enterEnvironmentNonUnique(QQmlJSScope::ScopeType type,
         return false;
     }
     // enter found scope
+    m_scopesByIrLocation.insert({ location.startLine, location.startColumn }, *it);
     m_currentScope = *it;
     return true;
 }

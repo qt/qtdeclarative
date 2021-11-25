@@ -88,6 +88,7 @@ private Q_SLOTS:
     void qQmlV4Function();
     void missingBuiltinsNoCrash();
     void absolutePath();
+    void multiGrouped();
 
 private:
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
@@ -1156,6 +1157,11 @@ void TestQmllint::absolutePath()
 {
     const QString absolutePath = QFileInfo(testFile("memberNotFound.qml")).absoluteFilePath();
     QVERIFY(runQmllint(absolutePath, false, { "--absolute-path" }).contains(absolutePath));
+}
+
+void TestQmllint::multiGrouped()
+{
+    QVERIFY(runQmllint("multiGrouped.qml", true, {"--compiler=warning"}).isEmpty());
 }
 
 QTEST_MAIN(TestQmllint)
