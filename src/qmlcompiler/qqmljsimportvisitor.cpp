@@ -1819,12 +1819,26 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 
     const QString propertyName = group->name.toString();
 
-    if (m_scopesById.values().contains(childScope)
-        && m_currentScope->isNameDeferred(propertyName)) {
-        m_logger->logWarning(
-                u"Assigning an id to an object bound to deferred property \"%1\" will make the property immediate"_qs
-                        .arg(propertyName),
-                Log_DeferredPropertyId, uiob->firstSourceLocation());
+    if (m_currentScope->isNameDeferred(propertyName)) {
+        bool foundIds = false;
+        QList<QQmlJSScope::Ptr> childScopes { childScope };
+
+        while (!childScopes.isEmpty()) {
+            const QQmlJSScope::Ptr &scope = childScopes.takeFirst();
+            if (m_scopesById.values().contains(scope)) {
+                foundIds = true;
+                break;
+            }
+
+            childScopes << scope->childScopes();
+        }
+
+        if (foundIds) {
+            m_logger->logWarning(
+                    u"Cannot defer property assignment to \"%1\". Assigning an id to an object or one of its sub-objects bound to a deferred property will make the assignment immediate."_qs
+                            .arg(propertyName),
+                    Log_DeferredPropertyId, uiob->firstSourceLocation());
+        }
     }
 
     if (m_currentScope->isInCustomParserParent()) {

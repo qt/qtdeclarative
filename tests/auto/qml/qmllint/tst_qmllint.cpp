@@ -742,8 +742,17 @@ void TestQmllint::dirtyQmlCode_data()
             << false;
     QTest::newRow("DeferredPropertyID")
             << QStringLiteral("deferredPropertyID.qml")
-            << QStringLiteral("Assigning an id to an object bound to deferred property "
-                              "\"contentData\" will make the property immediate")
+            << QStringLiteral(
+                       "Cannot defer property assignment to "
+                       "\"contentData\". Assigning an id to an object or one of its sub-objects "
+                       "bound to a deferred property will make the assignment immediate.")
+            << QString() << false;
+    QTest::newRow("DeferredPropertyNestedID")
+            << QStringLiteral("deferredPropertyNestedID.qml")
+            << QStringLiteral(
+                       "Cannot defer property assignment to "
+                       "\"contentData\". Assigning an id to an object or one of its sub-objects "
+                       "bound to a deferred property will make the assignment immediate.")
             << QString() << false;
     QTest::newRow("cachedDependency")
             << QStringLiteral("cachedDependency.qml")
