@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -218,9 +218,14 @@ Item {
     /*! \internal */
     property bool qtest_valid:false
     /*! \internal */
+    property bool qtest_reentrancy_guard: false
 
     /*! \internal */
     function qtest_update() {
+        if (qtest_reentrancy_guard)
+            return;
+        qtest_reentrancy_guard = true;
+
         if (qtest_prevTarget != null) {
             var prevHandlerName = qtest_signalHandlerName(qtest_prevSignalName)
             var prevFunc = qtest_prevTarget[prevHandlerName]
@@ -251,6 +256,8 @@ Item {
         } else {
             spy.qtest_valid = false
         }
+
+        qtest_reentrancy_guard = false;
     }
 
     /*! \internal */
