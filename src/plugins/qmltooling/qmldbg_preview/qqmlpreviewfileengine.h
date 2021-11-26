@@ -90,7 +90,8 @@ public:
     bool rename(const QString &newName) override;
     bool renameOverwrite(const QString &newName) override;
     bool link(const QString &newName) override;
-    bool mkdir(const QString &dirName, bool createParentDirectories) const override;
+    bool mkdir(const QString &dirName, bool createParentDirectories,
+               std::optional<QFile::Permissions> permissions = std::nullopt) const override;
     bool rmdir(const QString &dirName, bool recurseParentDirectories) const override;
     bool setSize(qint64 size) override;
     bool caseSensitive() const override;

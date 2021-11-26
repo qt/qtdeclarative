@@ -304,9 +304,10 @@ bool QQmlPreviewFileEngine::link(const QString &newName)
     return m_fallback ? m_fallback->link(newName) : false;
 }
 
-bool QQmlPreviewFileEngine::mkdir(const QString &dirName, bool createParentDirectories) const
+bool QQmlPreviewFileEngine::mkdir(const QString &dirName, bool createParentDirectories,
+                                  std::optional<QFile::Permissions> permissions) const
 {
-    return m_fallback ? m_fallback->mkdir(dirName, createParentDirectories) : false;
+    return m_fallback ? m_fallback->mkdir(dirName, createParentDirectories, permissions) : false;
 }
 
 bool QQmlPreviewFileEngine::rmdir(const QString &dirName, bool recurseParentDirectories) const
