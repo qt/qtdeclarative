@@ -70,25 +70,32 @@ void tst_SignalSpy::testValid()
 
 void tst_SignalSpy::testCount()
 {
-    QQuickView window;
-    window.resize(200, 200);
-    window.setSource(testFileUrl("signalspy.qml"));
-    window.show();
-    QVERIFY(QTest::qWaitForWindowActive(&window));
-    QVERIFY(window.rootObject() != nullptr);
+    const QUrl urls[] = {
+        testFileUrl("signalspy.qml"),
+        testFileUrl("signalspy2.qml"),
+    };
+    for (const auto &url : urls) {
+        QQuickView window;
+        window.resize(200, 200);
+        window.setSource(url);
+        window.show();
+        QVERIFY(QTest::qWaitForWindowActive(&window));
+        QVERIFY(window.rootObject() != nullptr);
 
-    QObject *mouseSpy = window.rootObject()->findChild<QObject*>("mouseSpy");
-    QCOMPARE(mouseSpy->property("count").toInt(), 0);
+        QObject *mouseSpy = window.rootObject()->findChild<QObject *>("mouseSpy");
+        QCOMPARE(mouseSpy->property("count").toInt(), 0);
 
-    QObject *propertyMapSpy = window.rootObject()->findChild<QObject*>("propertyMapSpy");
-    QCOMPARE(propertyMapSpy->property("count").toInt(), 0);
+        QObject *propertyMapSpy = window.rootObject()->findChild<QObject *>("propertyMapSpy");
+        QCOMPARE(propertyMapSpy->property("count").toInt(), 0);
 
-    QTest::mouseClick(&window, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(100, 100));
-    QTRY_COMPARE(mouseSpy->property("count").toInt(), 1);
+        QTest::mouseClick(&window, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(100, 100));
+        QTRY_COMPARE(mouseSpy->property("count").toInt(), 1);
 
-    MyPropertyMap *propertyMap = static_cast<MyPropertyMap *>(window.rootObject()->findChild<QObject*>("propertyMap"));
-    Q_EMIT propertyMap->mySignal();
-    QCOMPARE(propertyMapSpy->property("count").toInt(), 1);
+        MyPropertyMap *propertyMap = static_cast<MyPropertyMap *>(
+                window.rootObject()->findChild<QObject *>("propertyMap"));
+        Q_EMIT propertyMap->mySignal();
+        QCOMPARE(propertyMapSpy->property("count").toInt(), 1);
+    }
 }
 
 QTEST_MAIN(tst_SignalSpy)
