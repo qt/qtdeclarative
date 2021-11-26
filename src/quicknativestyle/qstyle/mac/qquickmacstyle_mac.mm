@@ -2768,8 +2768,8 @@ void QMacStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPai
         const auto cw = QMacStylePrivate::CocoaControl(ct, cs);
         auto *tb = static_cast<NSButton *>(d->cocoaControl(cw));
         tb.enabled = isEnabled;
-        tb.state = (opt->state & State_NoChange) ? NSMixedState :
-                   (opt->state & State_On) ? NSOnState : NSOffState;
+        tb.state = (opt->state & State_NoChange) ? NSControlStateValueMixed :
+                   (opt->state & State_On) ? NSControlStateValueOn : NSControlStateValueOff;
         [tb highlight:isPressed];
         const auto vOffset = [=] {
             // As measured
@@ -2792,7 +2792,7 @@ void QMacStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPai
             break;
         const auto cw = QMacStylePrivate::CocoaControl(QMacStylePrivate::Button_Disclosure, QStyleHelper::SizeLarge);
         NSButtonCell *triangleCell = static_cast<NSButtonCell *>(d->cocoaCell(cw));
-        [triangleCell setState:(opt->state & State_Open) ? NSOnState : NSOffState];
+        [triangleCell setState:(opt->state & State_Open) ? NSControlStateValueOn : NSControlStateValueOff];
 //        bool viewHasFocus = (w && w->hasFocus()) || (opt->state & State_HasFocus);
         bool viewHasFocus = false;
         [triangleCell setBackgroundStyle:((opt->state & State_Selected) && viewHasFocus) ? NSBackgroundStyleDark : NSBackgroundStyleLight];
@@ -3168,7 +3168,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
 
             pb.enabled = isEnabled;
             [pb highlight:isPressed];
-            pb.state = isHighlighted && !isPressed ? NSOnState : NSOffState;
+            pb.state = isHighlighted && !isPressed ? NSControlStateValueOn : NSControlStateValueOff;
             d->drawNSViewInRect(pb, frameRect, p, ^(CGContextRef, const CGRect &r) {
                 QMacAutoReleasePool pool;
                 [pb.cell drawBezelWithFrame:r inView:pb.superview];
@@ -3364,7 +3364,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
             pb.enabled = isEnabled;
             [pb highlight:isPressed];
             // Set off state when inactive. See needsInactiveHack for when it's selected
-            pb.state = (isActive && isSelected && !isPressed) ? NSOnState : NSOffState;
+            pb.state = (isActive && isSelected && !isPressed) ? NSControlStateValueOn : NSControlStateValueOff;
 
             const auto drawBezelBlock = ^(CGContextRef ctx, const CGRect &r) {
                 QMacAutoReleasePool pool;
@@ -5028,12 +5028,12 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                         const auto cs = d->effectiveAquaSizeConstrain(opt);
                         const auto cw = QMacStylePrivate::CocoaControl(ct, cs);
                         auto *pb = static_cast<NSButton *>(d->cocoaControl(cw));
-                        pb.bezelStyle = NSShadowlessSquareBezelStyle; // TODO Use NSTexturedRoundedBezelStyle in the future.
+                        pb.bezelStyle = NSBezelStyleShadowlessSquare; // TODO Use NSTexturedRoundedBezelStyle in the future.
                         pb.frame = opt->rect.toCGRect();
-                        pb.buttonType = NSPushOnPushOffButton;
+                        pb.buttonType = NSButtonTypePushOnPushOff;
                         pb.enabled = isEnabled;
                         [pb highlight:isPressed];
-                        pb.state = isHighlighted && !isPressed ? NSOnState : NSOffState;
+                        pb.state = isHighlighted && !isPressed ? NSControlStateValueOn : NSControlStateValueOff;
                         const auto buttonRect = proxy()->subControlRect(cc, tb, SC_ToolButton);
                         d->drawNSViewInRect(pb, buttonRect, p, ^(CGContextRef, const CGRect &rect) {
                             QMacAutoReleasePool pool;
