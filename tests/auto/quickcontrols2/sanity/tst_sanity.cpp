@@ -45,18 +45,6 @@
 using namespace QQuickVisualTestUtils;
 using namespace QQuickControlsTestUtils;
 
-Q_GLOBAL_STATIC(QObjectList, qt_qobjects)
-
-extern "C" Q_DECL_EXPORT void qt_addQObject(QObject *object)
-{
-    qt_qobjects->append(object);
-}
-
-extern "C" Q_DECL_EXPORT void qt_removeQObject(QObject *object)
-{
-    qt_qobjects->removeAll(object);
-}
-
 class tst_Sanity : public QObject
 {
     Q_OBJECT
@@ -64,20 +52,15 @@ public:
     tst_Sanity();
 
 private slots:
-    void init();
-    void cleanup();
     void initTestCase();
 
     void jsFiles();
     void qmllint();
     void qmllint_data();
-    void ids();
-    void ids_data();
 
 private:
     QMap<QString, QString> sourceQmlFiles;
     QMap<QString, QString> installedQmlFiles;
-    QQuickStyleHelper styleHelper;
     QStringList m_importPaths;
 
     QQmlLinter m_linter;
@@ -95,72 +78,10 @@ tst_Sanity::tst_Sanity()
     for (const QString &key : m_options.keys())
         m_options[key].setLevel(u"disable"_qs);
 
+    m_options[u"deferred-property-id"_qs].setLevel(u"warning"_qs);
     m_options[u"controls-sanity"_qs].setLevel(u"warning"_qs);
     m_options[u"multiple-attached-objects"_qs].setLevel(u"warning"_qs);
 }
-
-void tst_Sanity::init()
-{
-    qtHookData[QHooks::AddQObject] = reinterpret_cast<quintptr>(&qt_addQObject);
-    qtHookData[QHooks::RemoveQObject] = reinterpret_cast<quintptr>(&qt_removeQObject);
-}
-
-void tst_Sanity::cleanup()
-{
-    qt_qobjects->clear();
-    qtHookData[QHooks::AddQObject] = 0;
-    qtHookData[QHooks::RemoveQObject] = 0;
-}
-
-class BaseValidator : public QQmlJS::AST::Visitor
-{
-public:
-    QString errors() const { return m_errors.join(", "); }
-
-    bool validate(const QString& filePath)
-    {
-        m_errors.clear();
-        m_fileName = QFileInfo(filePath).fileName();
-
-        QFile file(filePath);
-        if (!file.open(QFile::ReadOnly)) {
-            m_errors += QString("%1: failed to open (%2)").arg(m_fileName, file.errorString());
-            return false;
-        }
-
-        QQmlJS::Engine engine;
-        QQmlJS::Lexer lexer(&engine);
-        lexer.setCode(QString::fromUtf8(file.readAll()), /*line = */ 1);
-
-        QQmlJS::Parser parser(&engine);
-        if (!parser.parse()) {
-            const auto diagnosticMessages = parser.diagnosticMessages();
-            for (const QQmlJS::DiagnosticMessage &msg : diagnosticMessages)
-                m_errors += QString("%s:%d : %s").arg(m_fileName).arg(msg.loc.startLine).arg(msg.message);
-            return false;
-        }
-
-        QQmlJS::AST::UiProgram* ast = parser.ast();
-        ast->accept(this);
-        return m_errors.isEmpty();
-    }
-
-protected:
-    void addError(const QString& error, QQmlJS::AST::Node *node)
-    {
-        m_errors += QString("%1:%2 : %3").arg(m_fileName).arg(node->firstSourceLocation().startLine).arg(error);
-    }
-
-    void throwRecursionDepthError() final
-    {
-        m_errors += QString::fromLatin1("%1: Maximum statement or expression depth exceeded")
-                            .arg(m_fileName);
-    }
-
-private:
-    QString m_fileName;
-    QStringList m_errors;
-};
 
 void tst_Sanity::initTestCase()
 {
@@ -217,71 +138,6 @@ void tst_Sanity::qmllint()
 }
 
 void tst_Sanity::qmllint_data()
-{
-    QTest::addColumn<QString>("control");
-    QTest::addColumn<QString>("filePath");
-
-    QMap<QString, QString>::const_iterator it;
-    for (it = sourceQmlFiles.constBegin(); it != sourceQmlFiles.constEnd(); ++it)
-        QTest::newRow(qPrintable(it.key())) << it.key() << it.value();
-}
-
-class IdValidator : public BaseValidator
-{
-public:
-    IdValidator() : m_depth(0) { }
-
-protected:
-    bool visit(QQmlJS::AST::UiObjectBinding *) override
-    {
-        ++m_depth;
-        return true;
-    }
-
-    void endVisit(QQmlJS::AST::UiObjectBinding *) override
-    {
-        --m_depth;
-    }
-
-    bool visit(QQmlJS::AST::UiScriptBinding *node) override
-    {
-        if (m_depth == 0)
-            return true;
-
-        QQmlJS::AST::UiQualifiedId *id = node->qualifiedId;
-        if (id && id->name ==  QStringLiteral("id"))
-            addError(QString("Internal IDs are not allowed (%1)").arg(extractName(node->statement)), node);
-        return true;
-    }
-
-private:
-    QString extractName(QQmlJS::AST::Statement *statement)
-    {
-        QQmlJS::AST::ExpressionStatement *expressionStatement = static_cast<QQmlJS::AST::ExpressionStatement *>(statement);
-        if (!expressionStatement)
-            return QString();
-
-        QQmlJS::AST::IdentifierExpression *expression = static_cast<QQmlJS::AST::IdentifierExpression *>(expressionStatement->expression);
-        if (!expression)
-            return QString();
-
-        return expression->name.toString();
-    }
-
-    int m_depth;
-};
-
-void tst_Sanity::ids()
-{
-    QFETCH(QString, control);
-    QFETCH(QString, filePath);
-
-    IdValidator validator;
-    if (!validator.validate(filePath))
-        QFAIL(qPrintable(validator.errors()));
-}
-
-void tst_Sanity::ids_data()
 {
     QTest::addColumn<QString>("control");
     QTest::addColumn<QString>("filePath");

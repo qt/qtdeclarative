@@ -100,6 +100,7 @@ enum QQmlJSLoggerCategory {
     Log_Signal,
     Log_Type,
     Log_Property,
+    Log_DeferredPropertyId,
     Log_UnqualifiedAccess,
     Log_UnusedImport,
     Log_MultilineString,

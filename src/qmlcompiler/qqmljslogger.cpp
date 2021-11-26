@@ -65,6 +65,12 @@ const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
         { QStringLiteral("property"),
           QQmlJSLogger::Option(Log_Property, QStringLiteral("UnknownProperty"),
                                QStringLiteral("Warn about unknown properties"), QtInfoMsg) },
+        { QStringLiteral("deferred-property-id"),
+          QQmlJSLogger::Option(
+                  Log_DeferredPropertyId, QStringLiteral("DeferredPropertyId"),
+                  QStringLiteral(
+                          "Warn about making deferred properties immediate by giving them an id."),
+                  QtInfoMsg) },
         { QStringLiteral("unqualified"),
           QQmlJSLogger::Option(
                   Log_UnqualifiedAccess, QStringLiteral("UnqualifiedAccess"),
@@ -83,7 +89,8 @@ const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
         { QStringLiteral("controls-sanity"),
           QQmlJSLogger::Option(
                   Log_ControlsSanity, QStringLiteral("ControlsSanity"),
-                  QStringLiteral("Performance checks used for QuickControl's implementation"), QtCriticalMsg, false) },
+                  QStringLiteral("Performance checks used for QuickControl's implementation"),
+                  QtCriticalMsg, false) },
         { QStringLiteral("multiple-attached-objects"),
           QQmlJSLogger::Option(
                   Log_AttachedPropertyReuse, QStringLiteral("AttachedPropertyReuse"),

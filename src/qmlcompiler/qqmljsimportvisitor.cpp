@@ -1824,7 +1824,7 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
         m_logger->logWarning(
                 u"Assigning an id to an object bound to deferred property \"%1\" will make the property immediate"_qs
                         .arg(propertyName),
-                Log_Property, uiob->firstSourceLocation());
+                Log_DeferredPropertyId, uiob->firstSourceLocation());
     }
 
     if (m_currentScope->isInCustomParserParent()) {
