@@ -1,0 +1,89 @@
+/****************************************************************************
+**
+** Copyright (C) 2021 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qt6_generate_foreign_qml_types.html
+\ingroup cmake-commands-qtqml
+
+\title qt6_generate_foreign_qml_types
+\target qt6_generate_foreign_qml_types
+
+\summary{Registers types from one target in a QML module.}
+
+\section1 Synopsis
+
+\badcode
+qt_add_qml_module(
+    foreign_target
+    qml_lib_target
+)
+
+\endcode
+
+\versionlessCMakeCommandsNote qt6_generate_foreign_qml_types()
+
+\section1 Description
+
+\c qt6_generate_foreign_qml_types enables the registration of types marked via QML registration
+macros (like \l QML_ELEMENT) in \c foreign_lib in the QML module \c qml_lib_target.
+
+This can be useful when one wants to create a library with optional QML integration, without
+depending directly on QML.
+
+\badcode
+// myclass.h
+#include <QtQmlIntegration/qqmlintegration.h>
+
+class MyClass : public QObject
+{
+    QML_ELEMENT
+    Q_OBJECT
+
+    // [...]
+};
+\endcode
+
+\badcode
+# CMakeLists.txt
+qt_add_library(mylib myclass.h ...)
+target_link_libraries(mylib Qt::Core Qt::QmlIntegration)
+
+qt_add_qml_module(mylib_declarative
+  VERSION 1.0
+  URI "mylib"
+  ...
+)
+qt6_generate_foreign_qml_types(mylib mylib_declarative)
+\endcode
+
+\note In the example above, \c mylib does not depend on QtQml or QtQuick, but only on the
+header-only QmlIntegration target (for the QtQmlIntegration/qqmlintegration.h header, which provides
+the \c QML_ELEMENT macro).
+
+The effect is equivalent to using \c QML_FOREIGN with custom structs in the QML library to expose
+the types.
+*/
