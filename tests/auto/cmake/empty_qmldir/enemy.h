@@ -30,6 +30,7 @@
 #define ENEMY_H
 
 #include <QtQml/qqml.h>
+#include <QtCore/qproperty.h>
 
 class Enemy : public QObject
 {
