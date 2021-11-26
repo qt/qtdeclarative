@@ -159,11 +159,12 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     {
         // ...
         component = new QQmlComponent(engine, QUrl("http://www.example.com/main.qml"));
-        if (component->isLoading())
-            QObject::connect(component, SIGNAL(statusChanged(QQmlComponent::Status)),
-                             this, SLOT(continueLoading()));
-        else
+        if (component->isLoading()) {
+            QObject::connect(component, &QQmlComponent::statusChanged,
+                             this, &MyApplication::continueLoading);
+        } else {
             continueLoading();
+        }
     }
 
     void MyApplication::continueLoading()
@@ -304,7 +305,7 @@ V4_DEFINE_EXTENSION(QQmlComponentExtension, componentExtension);
     Specifies whether the QQmlComponent should load the component immediately, or asynchonously.
 
     \value PreferSynchronous Prefer loading/compiling the component immediately, blocking the thread.
-    This is not always possible; for example, remote URLs will always load asynchronously.
+           This is not always possible; for example, remote URLs will always load asynchronously.
     \value Asynchronous Load/compile the component in a background thread.
 */
 
@@ -428,14 +429,16 @@ QQmlComponent::~QQmlComponent()
 
 /*!
     \qmlproperty enumeration Component::status
+
     This property holds the status of component loading. The status can be one of the
     following:
+
     \list
-    \li Component.Null - no data is available for the component
-    \li Component.Ready - the component has been loaded, and can be used to create instances.
-    \li Component.Loading - the component is currently being loaded
-    \li Component.Error - an error occurred while loading the component.
-               Calling errorString() will provide a human-readable description of any errors.
+    \li \c{Component.Null} - no data is available for the component
+    \li \c{Component.Ready} - the component has been loaded, and can be used to create instances.
+    \li \c{Component.Loading} - the component is currently being loaded
+    \li \c{Component.Error} - an error occurred while loading the component.
+        Calling \l errorString() will provide a human-readable description of any errors.
     \endlist
  */
 
@@ -766,7 +769,7 @@ QList<QQmlError> QQmlComponent::errors() const
 
 /*!
     \internal
-    errorString is only meant as a way to get the errors in script
+    errorString() is only meant as a way to get the errors from QML side.
 */
 QString QQmlComponent::errorString() const
 {
@@ -807,9 +810,8 @@ QQmlComponent::QQmlComponent(QQmlComponentPrivate &dd, QObject *parent)
 }
 
 /*!
-    Create an object instance from this component. Returns \nullptr if creation
-    failed. \a context specifies the context within which to create the object
-    instance.
+    Create an object instance from this component, within the specified \a context.
+    Returns \nullptr if creation failed.
 
     If \a context is \nullptr (the default), it will create the instance in the
     \l {QQmlEngine::rootContext()}{root context} of the engine.
@@ -838,9 +840,8 @@ QObject *QQmlComponent::create(QQmlContext *context)
 }
 
 /*!
-    Create an object instance of this component, and initialize its toplevel
-    properties with \a initialProperties. \a context specifies the context
-    where the object instance is to be created.
+    Create an object instance of this component, within the specified \a context,
+    and initialize its top-level properties with \a initialProperties.
 
     \omit
     TODO: also mention errorString() when QTBUG-93239 is fixed
@@ -870,20 +871,21 @@ QObject *QQmlComponent::createWithInitialProperties(const QVariantMap& initialPr
 }
 
 /*!
-    This method provides advanced control over component instance creation.
+    Create an object instance from this component, within the specified \a context.
+    Returns \nullptr if creation failed.
+
+    \note This method provides advanced control over component instance creation.
     In general, programmers should use QQmlComponent::create() to create object
     instances.
 
-    Create an object instance from this component. Returns \nullptr if creation
-    failed. \a publicContext specifies the context within which to create the object
-    instance.
-
     When QQmlComponent constructs an instance, it occurs in three steps:
+
     \list 1
     \li The object hierarchy is created, and constant values are assigned.
     \li Property bindings are evaluated for the first time.
     \li If applicable, QQmlParserStatus::componentComplete() is called on objects.
     \endlist
+
     QQmlComponent::beginCreate() differs from QQmlComponent::create() in that it
     only performs step 1. QQmlComponent::completeCreate() must be called to
     complete steps 2 and 3.
@@ -896,11 +898,11 @@ QObject *QQmlComponent::createWithInitialProperties(const QVariantMap& initialPr
 
     \sa completeCreate(), QQmlEngine::ObjectOwnership
 */
-QObject *QQmlComponent::beginCreate(QQmlContext *publicContext)
+QObject *QQmlComponent::beginCreate(QQmlContext *context)
 {
     Q_D(QQmlComponent);
-    Q_ASSERT(publicContext);
-    return d->beginCreate(QQmlContextData::get(publicContext));
+    Q_ASSERT(context);
+    return d->beginCreate(QQmlContextData::get(context));
 }
 
 QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> context)
@@ -962,8 +964,8 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
     if (rv) {
         QQmlData *ddata = QQmlData::get(rv);
         Q_ASSERT(ddata);
-        //top level objects should never get JS ownership.
-        //if JS ownership is needed this needs to be explicitly undone (like in component.createObject())
+        // top-level objects should never get JS ownership.
+        // if JS ownership is needed this needs to be explicitly undone (like in createObject())
         ddata->indestructible = true;
         ddata->explicitIndestructibleSet = true;
         ddata->rootObjectInCreation = false;
@@ -1023,20 +1025,20 @@ void QQmlComponentPrivate::complete(QQmlEnginePrivate *enginePriv, ConstructionS
 }
 
 /*!
- * \internal
- * Finds the matching toplevel property with name \a name of the component \a createdComponent.
- * If it was a required property or an alias to a required property contained in \a
- * requiredProperties, it is removed from it.
- *
- * If wasInRequiredProperties is non-null, the referenced boolean is set to true iff the property
- * was found in requiredProperties.
- *
- * Returns the QQmlProperty with name \a name (which might be invalid if there is no such property),
- * for further processing (for instance, actually setting the property value).
- *
- * Note: This method is used in QQmlComponent and QQmlIncubator to manage required properties. Most
- * classes which create components should not need it and should only need to call
- * setInitialProperties.
+    \internal
+    Finds the matching top-level property with name \a name of the component \a createdComponent.
+    If it was a required property or an alias to a required property contained in \a
+    requiredProperties, it is removed from it.
+
+    If wasInRequiredProperties is non-null, the referenced boolean is set to true iff the property
+    was found in requiredProperties.
+
+    Returns the QQmlProperty with name \a name (which might be invalid if there is no such property),
+    for further processing (for instance, actually setting the property value).
+
+    Note: This method is used in QQmlComponent and QQmlIncubator to manage required properties. Most
+    classes which create components should not need it and should only need to call
+    setInitialProperties.
  */
 QQmlProperty QQmlComponentPrivate::removePropertyFromRequired(QObject *createdComponent, const QString &name, RequiredProperties &requiredProperties, bool* wasInRequiredProperties)
 {
@@ -1147,14 +1149,14 @@ QQmlComponentAttached *QQmlComponent::qmlAttachedProperties(QObject *obj)
     \a incubator. \a context specifies the context within which to create the object
     instance.
 
-    If \a context is 0 (the default), it will create the instance in the
+    If \a context is \nullptr (by default), it will create the instance in the
     engine's \l {QQmlEngine::rootContext()}{root context}.
 
     \a forContext specifies a context that this object creation depends upon.
     If the \a forContext is being created asynchronously, and the
     \l QQmlIncubator::IncubationMode is \l QQmlIncubator::AsynchronousIfNested,
-    this object will also be created asynchronously. If \a forContext is 0
-    (the default), the \a context will be used for this decision.
+    this object will also be created asynchronously.
+    If \a forContext is \nullptr (by default), the \a context will be used for this decision.
 
     The created object and its creation status are available via the
     \a incubator.
@@ -1202,8 +1204,7 @@ void QQmlComponent::create(QQmlIncubator &incubator, QQmlContext *context, QQmlC
 }
 
 /*!
-   Set toplevel \a properties of the \a component.
-
+   Set top-level \a properties of the \a component.
 
    This method provides advanced control over component instance creation.
    In general, programmers should use
@@ -1340,7 +1341,7 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
 }
 
 /*!
-    \qmlmethod object Component::createObject(QtObject parent, object properties)
+    \qmlmethod QtObject Component::createObject(QtObject parent, object properties)
 
     Creates and returns an object instance of this component that will have
     the given \a parent and \a properties. The \a properties argument is optional.
@@ -1369,9 +1370,10 @@ static void QQmlComponent_setQmlParent(QObject *me, QObject *parent)
     below creates an object with initial \c x and \c y values of 100 and 100, respectively:
 
     \js
-        var component = Qt.createComponent("Button.qml");
-        if (component.status == Component.Ready)
-            component.createObject(parent, {x: 100, y: 100});
+        const component = Qt.createComponent("Button.qml");
+        if (component.status === Component.Ready) {
+            component.createObject(parent, { x: 100, y: 100 });
+        }
     \endjs
 
     Dynamically created instances can be deleted with the \c destroy() method.
@@ -1522,7 +1524,7 @@ void QQmlComponent::createObject(QQmlV4Function *args)
 }
 
 /*!
-    \qmlmethod object Component::incubateObject(Item parent, object properties, enumeration mode)
+    \qmlmethod object Component::incubateObject(QtObject parent, object properties, enumeration mode)
 
     Creates an incubator for an instance of this component. Incubators allow new component
     instances to be instantiated asynchronously and do not cause freezes in the UI.
@@ -1544,29 +1546,29 @@ void QQmlComponent::createObject(QQmlV4Function *args)
     properties:
 
     \list
-    \li status The status of the incubator. Valid values are Component.Ready, Component.Loading and
+    \li \c status - The status of the incubator. Valid values are Component.Ready, Component.Loading and
        Component.Error.
-    \li object The created object instance. Will only be available once the incubator is in the
+    \li \c object - The created object instance. Will only be available once the incubator is in the
        Ready status.
-    \li onStatusChanged Specifies a callback function to be invoked when the status changes. The
+    \li \c onStatusChanged - Specifies a callback function to be invoked when the status changes. The
        status is passed as a parameter to the callback.
-    \li forceCompletion() Call to complete incubation synchronously.
+    \li \c{forceCompletion()} - Call to complete incubation synchronously.
     \endlist
 
     The following example demonstrates how to use an incubator:
 
     \js
-        var component = Qt.createComponent("Button.qml");
+        const component = Qt.createComponent("Button.qml");
 
-        var incubator = component.incubateObject(parent, { x: 10, y: 10 });
-        if (incubator.status != Component.Ready) {
+        const incubator = component.incubateObject(parent, { x: 10, y: 10 });
+        if (incubator.status !== Component.Ready) {
             incubator.onStatusChanged = function(status) {
-                if (status == Component.Ready) {
-                    print ("Object", incubator.object, "is now ready!");
+                if (status === Component.Ready) {
+                    print("Object", incubator.object, "is now ready!");
                 }
-            }
+            };
         } else {
-            print ("Object", incubator.object, "is ready immediately!");
+            print("Object", incubator.object, "is ready immediately!");
         }
     \endjs
 
