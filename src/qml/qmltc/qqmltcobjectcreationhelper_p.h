@@ -67,7 +67,7 @@ QT_BEGIN_NAMESPACE
 class QQmltcObjectCreationHelper
 {
     QObject **m_data = nullptr; // QObject* array
-    [[maybe_unused]] const qsizetype m_size = 0; // size of m_data array, exists for bounds checking
+    const qsizetype m_size = 0; // size of m_data array, exists for bounds checking
     const qsizetype m_offset = 0; // global offset into m_data array
     const qsizetype m_nonRoot = 1; // addresses the "+ 1" in QQmltcObjectCreationBase::m_objects
 
@@ -81,6 +81,7 @@ public:
     QQmltcObjectCreationHelper(QObject **data, qsizetype size)
         : m_data(data), m_size(size), m_nonRoot(0 /* root object */)
     {
+        Q_UNUSED(m_size);
     }
 
     /*!
