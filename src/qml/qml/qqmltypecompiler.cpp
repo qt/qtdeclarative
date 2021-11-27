@@ -532,7 +532,7 @@ bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, 
     // reject any "complex" expression (even simple arithmetic)
     // we do this by excluding everything that is not part of a
     // valid identifier or a dot
-    for (const QChar c: string)
+    for (const QChar &c : string)
         if (!(c.isLetterOrNumber() || c == u'.' || c == u'_' || c.isSpace()))
             return true;
 
