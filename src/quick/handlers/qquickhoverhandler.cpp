@@ -124,6 +124,13 @@ void QQuickHoverHandler::handleEventPoint(QQuickEventPoint *point)
     setPassiveGrab(point);
 }
 
+void QQuickHoverHandler::onGrabChanged(QQuickPointerHandler *grabber, QQuickEventPoint::GrabTransition transition, QQuickEventPoint *point)
+{
+    QQuickSinglePointHandler::onGrabChanged(grabber, transition, point);
+    if (grabber == this && transition == QQuickEventPoint::CancelGrabPassive)
+        setHovered(false);
+}
+
 /*!
     \qmlproperty bool QtQuick::HoverHandler::hovered
     \readonly

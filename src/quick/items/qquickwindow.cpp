@@ -2146,6 +2146,15 @@ bool QQuickWindowPrivate::deliverHoverEvent(QQuickItem *item, const QPointF &sce
                 while (!hoverItems.isEmpty() && !itemsToHover.contains(hoverItems.at(0))) {
                     QQuickItem *hoverLeaveItem = hoverItems.takeFirst();
                     sendHoverEvent(QEvent::HoverLeave, hoverLeaveItem, scenePos, lastScenePos, modifiers, timestamp, accepted);
+                    QQuickItemPrivate *hoverLeaveItemPrivate = QQuickItemPrivate::get(hoverLeaveItem);
+                    if (hoverLeaveItemPrivate->hasPointerHandlers()) {
+                        for (QQuickPointerHandler *handler : hoverLeaveItemPrivate->extra->pointerHandlers) {
+                            if (auto *hh = qmlobject_cast<QQuickHoverHandler *>(handler)) {
+                                QQuickPointerEvent *pointerEvent = pointerEventInstance(QQuickPointerDevice::genericMouseDevice(), QEvent::MouseMove);
+                                pointerEvent->point(0)->cancelPassiveGrab(hh);
+                            }
+                        }
+                    }
                 }
 
                 if (!hoverItems.isEmpty() && hoverItems.at(0) == item) {//Not entering a new Item
