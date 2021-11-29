@@ -71,6 +71,9 @@ public:
         return renderControl->d_func();
     }
 
+    static bool isRenderWindowFor(QQuickWindow *quickWin, const QWindow *renderWin);
+    virtual bool isRenderWindow(const QWindow *w) { Q_UNUSED(w); return false; }
+
     static void cleanup();
 
     void windowDestroyed();

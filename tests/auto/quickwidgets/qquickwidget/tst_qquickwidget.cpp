@@ -48,6 +48,10 @@
 
 #include <QtQuickWidgets/QQuickWidget>
 
+#if QT_CONFIG(graphicsview)
+# include <QtWidgets/QGraphicsView>
+# include <QtWidgets/QGraphicsProxyWidget>
+#endif
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
 class MouseRecordingQQWidget : public QQuickWidget
@@ -145,6 +149,10 @@ private slots:
     void tabKey();
     void resizeOverlay();
     void controls();
+    void focusOnClick();
+#if QT_CONFIG(graphicsview)
+    void focusOnClickInProxyWidget();
+#endif
 
 private:
     QPointingDevice *device = QTest::createTouchDevice();
@@ -766,6 +774,92 @@ void tst_qquickwidget::controls()
     widget.show();
     QVERIFY(QTest::qWaitForWindowExposed(&widget));
 }
+
+void tst_qquickwidget::focusOnClick()
+{
+    QQuickWidget quick;
+    quick.setSource(testFileUrl("FocusOnClick.qml"));
+    quick.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&quick));
+    QQuickItem *rootItem = quick.rootObject();
+    QVERIFY(rootItem);
+    QWindow *window = quick.windowHandle();
+    QVERIFY(window);
+
+    QQuickItem *text1 = rootItem->findChild<QQuickItem *>("text1");
+    QVERIFY(text1);
+    QQuickItem *text2 = rootItem->findChild<QQuickItem *>("text2");
+    QVERIFY(text2);
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(75, 25));
+    QTRY_VERIFY(text1->hasActiveFocus());
+    QVERIFY(!text2->hasActiveFocus());
+
+    QTest::mouseClick(window, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(75, 75));
+    QTRY_VERIFY(text2->hasActiveFocus());
+    QVERIFY(!text1->hasActiveFocus());
+
+}
+
+#if QT_CONFIG(graphicsview)
+void tst_qquickwidget::focusOnClickInProxyWidget()
+{
+    QGraphicsScene scene(0,0,400,400);
+
+    QGraphicsView view1(&scene);
+    view1.setFrameStyle(QFrame::NoFrame);
+    view1.resize(400,400);
+    view1.show();
+
+
+
+    QQuickWidget* quick = new QQuickWidget(testFileUrl("FocusOnClick.qml"));
+    quick->resize(300,100);
+    quick->setAttribute(Qt::WA_AcceptTouchEvents);
+    QGraphicsProxyWidget* proxy =  scene.addWidget(quick);
+    proxy->setAcceptTouchEvents(true);
+
+   // QTRY_VERIFY(quick->rootObject());
+    QQuickItem *rootItem = quick->rootObject();
+    QVERIFY(rootItem);
+    QQuickItem *text1 = rootItem->findChild<QQuickItem *>("text1");
+    QVERIFY(text1);
+    QQuickItem *text2 = rootItem->findChild<QQuickItem *>("text2");
+    QVERIFY(text2);
+
+    QVERIFY(QTest::qWaitForWindowExposed(&view1));
+    QWindow *window1 = view1.windowHandle();
+    QVERIFY(window1);
+
+    // Click in the QGraphicsView, outside the QuickWidget
+    QTest::mouseClick(window1, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(300, 300));
+    QTRY_VERIFY(!text1->hasActiveFocus());
+    QTRY_VERIFY(!text2->hasActiveFocus());
+
+    // Click on text1
+    QTest::mouseClick(window1, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(75, 25));
+    QTRY_VERIFY(text1->hasActiveFocus());
+    QVERIFY(!text2->hasActiveFocus());
+
+
+    // Now create a second view and repeat, in order to verify that we handle one QQuickItem being in multiple windows
+    QGraphicsView view2(&scene);
+    view2.resize(400,400);
+    view2.show();
+
+    QVERIFY(QTest::qWaitForWindowExposed(&view2));
+    QWindow *window2 = view2.windowHandle();
+    QVERIFY(window2);
+
+    QTest::mouseClick(window2, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(300, 300));
+    QTRY_VERIFY(!text1->hasActiveFocus());
+    QTRY_VERIFY(!text2->hasActiveFocus());
+
+    QTest::mouseClick(window2, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(75, 25));
+    QTRY_VERIFY(text1->hasActiveFocus());
+    QVERIFY(!text2->hasActiveFocus());
+}
+#endif
 
 QTEST_MAIN(tst_qquickwidget)
 
