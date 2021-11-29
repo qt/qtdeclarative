@@ -76,7 +76,7 @@ T.DelayButton {
     }
 
     background: NinePatchImage {
-        source: Imagine.url + "delaybutton-background"
+        source: control.Imagine.url + "delaybutton-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
@@ -94,7 +94,7 @@ T.DelayButton {
             height: parent.height
             visible: false
 
-            source: Imagine.url + "delaybutton-progress"
+            source: control.Imagine.url + "delaybutton-progress"
             NinePatchImageSelector on source {
                 states: [
                     {"disabled": !control.enabled},
@@ -112,7 +112,7 @@ T.DelayButton {
             height: control.background.height
             visible: false
 
-            source: Imagine.url + "delaybutton-mask"
+            source: control.Imagine.url + "delaybutton-mask"
             NinePatchImageSelector on source {
                 states: [
                     {"disabled": !control.enabled},

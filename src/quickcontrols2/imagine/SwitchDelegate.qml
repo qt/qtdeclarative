@@ -74,7 +74,7 @@ T.SwitchDelegate {
         width: Math.max(implicitWidth, handle.leftPadding && handle.rightPadding ? handle.implicitWidth : 2 * handle.implicitWidth)
         height: Math.max(implicitHeight, handle.implicitHeight)
 
-        source: Imagine.url + "switchdelegate-indicator"
+        source: control.Imagine.url + "switchdelegate-indicator"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
@@ -97,7 +97,7 @@ T.SwitchDelegate {
             x: Math.max(minPos, Math.min(maxPos, control.visualPosition * parent.width - (width / 2)))
             y: (parent.height - height) / 2
 
-            source: Imagine.url + "switchdelegate-handle"
+            source: control.Imagine.url + "switchdelegate-handle"
             NinePatchImageSelector on source {
                 states: [
                     {"disabled": !control.enabled},
@@ -133,7 +133,7 @@ T.SwitchDelegate {
     }
 
     background: NinePatchImage {
-        source: Imagine.url + "switchdelegate-background"
+        source: control.Imagine.url + "switchdelegate-background"
         NinePatchImageSelector on source {
             states: [
                 {"disabled": !control.enabled},
