@@ -463,7 +463,8 @@ function(qt6_add_qml_module target)
 
     set(ensure_set_properties
         QT_QML_MODULE_PLUGIN_TYPES_FILE
-        QT_QML_MODULE_RESOURCE_PATHS
+        QT_QML_MODULE_RESOURCES       # Original files as provided by the project (absolute)
+        QT_QML_MODULE_RESOURCE_PATHS  # By qmlcachegen (resource paths)
         QT_QMLCACHEGEN_DIRECT_CALLS
         QT_QMLCACHEGEN_EXECUTABLE
         QT_QMLCACHEGEN_ARGUMENTS
@@ -1519,6 +1520,11 @@ function(qt6_target_qml_sources target)
         endif()
     endif()
     _qt_internal_canonicalize_resource_path("${arg_PREFIX}" arg_PREFIX)
+    if(arg_PREFIX STREQUAL resource_prefix)
+        set(prefix_override "")
+    else()
+        set(prefix_override "${arg_PREFIX}")
+    endif()
     if(NOT arg_PREFIX STREQUAL "/")
         string(APPEND arg_PREFIX "/")
     endif()
@@ -1600,39 +1606,60 @@ function(qt6_target_qml_sources target)
     set(output_targets)
     set(copied_files)
 
-    foreach(file_src IN LISTS arg_QML_FILES arg_RESOURCES)
-        # We need to copy the file to the build directory now so that when
-        # qmlimportscanner is run in qt6_import_qml_plugins() as part of
-        # target finalizers, the files will be there. We need to do this
-        # in a way that CMake doesn't create a dependency on the source or it
-        # will re-run CMake every time the file is modified. We also don't
-        # want to update the file's timestamp if its contents won't change.
-        # We still enforce the dependency on the source file by adding a
-        # build-time rule. This avoids having to re-run CMake just to re-copy
-        # the file.
-        get_filename_component(file_absolute ${file_src} ABSOLUTE)
-        __qt_get_relative_resource_path_for_file(file_resource_path ${file_src})
+    # We want to set source file properties in the target's own scope if we can.
+    # That's the canonical place the properties will be read from.
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+        set(scope_option TARGET_DIRECTORY ${target})
+    else()
+        set(scope_option "")
+    endif()
 
-        set(file_out ${output_dir}/${file_resource_path})
+    foreach(file_set IN ITEMS QML_FILES RESOURCES)
+        foreach(file_src IN LISTS arg_${file_set})
+            get_filename_component(file_absolute ${file_src} ABSOLUTE)
 
-        # Don't generate or copy the file in an in-source build if the source
-        # and destination paths are the same, it will cause a ninja dependency
-        # cycle at build time.
-        if(NOT file_out STREQUAL file_absolute)
-            get_filename_component(file_out_dir ${file_out} DIRECTORY)
-            file(MAKE_DIRECTORY ${file_out_dir})
-
-            execute_process(COMMAND
-                ${CMAKE_COMMAND} -E copy_if_different ${file_absolute} ${file_out}
+            # Store the original files so the project can query them later.
+            set_property(TARGET ${target} APPEND PROPERTY
+                QT_QML_MODULE_${file_set} ${file_absolute}
             )
+            if(prefix_override)
+                set_source_files_properties(${file_absolute} ${scope_option}
+                    PROPERTIES
+                        QT_QML_MODULE_PREFIX_OVERRIDE "${prefix_override}"
+                )
+            endif()
 
-            add_custom_command(OUTPUT ${file_out}
-                COMMAND ${CMAKE_COMMAND} -E copy ${file_src} ${file_out}
-                DEPENDS ${file_absolute}
-                WORKING_DIRECTORY $<TARGET_PROPERTY:${target},SOURCE_DIR>
-            )
-            list(APPEND copied_files ${file_out})
-        endif()
+            # We need to copy the file to the build directory now so that when
+            # qmlimportscanner is run in qt6_import_qml_plugins() as part of
+            # target finalizers, the files will be there. We need to do this
+            # in a way that CMake doesn't create a dependency on the source or it
+            # will re-run CMake every time the file is modified. We also don't
+            # want to update the file's timestamp if its contents won't change.
+            # We still enforce the dependency on the source file by adding a
+            # build-time rule. This avoids having to re-run CMake just to re-copy
+            # the file.
+            __qt_get_relative_resource_path_for_file(file_resource_path ${file_src})
+            set(file_out ${output_dir}/${file_resource_path})
+
+            # Don't generate or copy the file in an in-source build if the source
+            # and destination paths are the same, it will cause a ninja dependency
+            # cycle at build time.
+            if(NOT file_out STREQUAL file_absolute)
+                get_filename_component(file_out_dir ${file_out} DIRECTORY)
+                file(MAKE_DIRECTORY ${file_out_dir})
+
+                execute_process(COMMAND
+                    ${CMAKE_COMMAND} -E copy_if_different ${file_absolute} ${file_out}
+                )
+
+                add_custom_command(OUTPUT ${file_out}
+                    COMMAND ${CMAKE_COMMAND} -E copy ${file_src} ${file_out}
+                    DEPENDS ${file_absolute}
+                    WORKING_DIRECTORY $<TARGET_PROPERTY:${target},SOURCE_DIR>
+                )
+                list(APPEND copied_files ${file_out})
+            endif()
+        endforeach()
     endforeach()
 
     set(generated_sources_other_scope)
