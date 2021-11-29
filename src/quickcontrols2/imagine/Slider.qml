@@ -61,7 +61,7 @@ T.Slider {
         x: Math.round(control.leftPadding + (control.horizontal ? control.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2))
         y: Math.round(control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.visualPosition * (control.availableHeight - height)))
 
-        source: Imagine.url + "slider-handle"
+        source: control.Imagine.url + "slider-handle"
         ImageSelector on source {
             states: [
                 {"vertical": control.vertical},
@@ -78,7 +78,7 @@ T.Slider {
     background: NinePatchImage {
         scale: control.horizontal && control.mirrored ? -1 : 1
 
-        source: Imagine.url + "slider-background"
+        source: control.Imagine.url + "slider-background"
         NinePatchImageSelector on source {
             states: [
                 {"vertical": control.vertical},
@@ -103,7 +103,7 @@ T.Slider {
                 ? control.handle.height / 2 + control.position * (parent.height - control.handle.height)
                 : parent.height
 
-            source: Imagine.url + "slider-progress"
+            source: control.Imagine.url + "slider-progress"
             NinePatchImageSelector on source {
                 states: [
                     {"vertical": control.vertical},
