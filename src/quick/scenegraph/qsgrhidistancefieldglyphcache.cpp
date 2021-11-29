@@ -86,8 +86,8 @@ void QSGRhiDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
 
         int padding = QSG_RHI_DISTANCEFIELD_GLYPH_CACHE_PADDING;
         QRectF boundingRect = glyphData(glyphIndex).boundingRect;
-        int glyphWidth = qCeil(boundingRect.width()) + distanceFieldRadius() * 2;
-        int glyphHeight = qCeil(boundingRect.height()) + distanceFieldRadius() * 2;
+        int glyphWidth = qCeil(boundingRect.width() + distanceFieldRadius() * 2);
+        int glyphHeight = qCeil(boundingRect.height() + distanceFieldRadius() * 2);
         QSize glyphSize(glyphWidth + padding * 2, glyphHeight + padding * 2);
         QRect alloc = m_areaAllocator->allocate(glyphSize);
 
@@ -98,8 +98,8 @@ void QSGRhiDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
 
                 TexCoord unusedCoord = glyphTexCoord(unusedGlyph);
                 QRectF unusedGlyphBoundingRect = glyphData(unusedGlyph).boundingRect;
-                int unusedGlyphWidth = qCeil(unusedGlyphBoundingRect.width()) + distanceFieldRadius() * 2;
-                int unusedGlyphHeight = qCeil(unusedGlyphBoundingRect.height())  + distanceFieldRadius() * 2;
+                int unusedGlyphWidth = qCeil(unusedGlyphBoundingRect.width() + distanceFieldRadius() * 2);
+                int unusedGlyphHeight = qCeil(unusedGlyphBoundingRect.height() + distanceFieldRadius() * 2);
                 m_areaAllocator->deallocate(QRect(unusedCoord.x - padding,
                                                   unusedCoord.y - padding,
                                                   padding * 2 + unusedGlyphWidth,

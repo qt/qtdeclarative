@@ -122,7 +122,7 @@ void QSGOpenGLDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs
 
         // We need to add a buffer to avoid glyphs that overlap the border between two
         // textures causing the height of the textures to extend beyond the limit.
-        m_maxTextureHeight = m_maxTextureWidth - (qCeil(m_referenceFont.pixelSize() * scaleFactor) + distanceFieldRadius() * 2 + padding * 2);
+        m_maxTextureHeight = m_maxTextureWidth - (qCeil(m_referenceFont.pixelSize() * scaleFactor + distanceFieldRadius() * 2) + padding * 2);
     }
 
     if (m_areaAllocator == nullptr)
@@ -132,8 +132,8 @@ void QSGOpenGLDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs
         glyph_t glyphIndex = *it;
 
         QRectF boundingRect = glyphData(glyphIndex).boundingRect;
-        int glyphWidth = qCeil(boundingRect.width()) + distanceFieldRadius() * 2;
-        int glyphHeight = qCeil(boundingRect.height()) + distanceFieldRadius() * 2;
+        int glyphWidth = qCeil(boundingRect.width() + distanceFieldRadius()) * 2;
+        int glyphHeight = qCeil(boundingRect.height() + distanceFieldRadius()) * 2;
         QSize glyphSize(glyphWidth + padding * 2, glyphHeight + padding * 2);
         QRect alloc = m_areaAllocator->allocate(glyphSize);
 
@@ -144,8 +144,8 @@ void QSGOpenGLDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs
 
                 TexCoord unusedCoord = glyphTexCoord(unusedGlyph);
                 QRectF unusedGlyphBoundingRect = glyphData(unusedGlyph).boundingRect;
-                int unusedGlyphWidth = qCeil(unusedGlyphBoundingRect.width()) + distanceFieldRadius() * 2;
-                int unusedGlyphHeight = qCeil(unusedGlyphBoundingRect.height())  + distanceFieldRadius() * 2;
+                int unusedGlyphWidth = qCeil(unusedGlyphBoundingRect.width() + distanceFieldRadius()) * 2;
+                int unusedGlyphHeight = qCeil(unusedGlyphBoundingRect.height()  + distanceFieldRadius()) * 2;
                 m_areaAllocator->deallocate(QRect(unusedCoord.x - padding,
                                                   unusedCoord.y - padding,
                                                   padding * 2 + unusedGlyphWidth,
