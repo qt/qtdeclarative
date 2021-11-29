@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick
 
 Item {
     id: root
@@ -38,7 +38,7 @@ Item {
     property alias pressed: tap.pressed
     signal tapped
     width: 140
-    height: 400
+    height: 260
 
     DragHandler {
         id: dragHandler

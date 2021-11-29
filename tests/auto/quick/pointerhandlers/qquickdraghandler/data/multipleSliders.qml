@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -26,12 +26,12 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
+import QtQuick
 
 Rectangle {
     id: root
-    width: 900
-    height: 850
+    width: 600
+    height: 540
     objectName: "root"
     color: "#222222"
 
