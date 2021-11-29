@@ -116,6 +116,7 @@ public:
 #if QT_CONFIG(wheelevent)
     uint lastWheelEventAccepted = 0;
 #endif
+    uchar compressedTouchCount = 0;
     bool allowChildEventFiltering = true;
     bool allowDoubleClick = true;
     bool frameSynchronousHoverEnabled = true;
