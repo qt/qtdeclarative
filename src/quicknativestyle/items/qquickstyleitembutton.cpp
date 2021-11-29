@@ -49,6 +49,7 @@ void QQuickStyleItemButton::connectToControl() const
     QQuickStyleItem::connectToControl();
     auto button = control<QQuickButton>();
     connect(button, &QQuickButton::downChanged, this, &QQuickStyleItem::markImageDirty);
+    connect(button, &QQuickButton::checkedChanged, this, &QQuickStyleItem::markImageDirty);
 }
 
 StyleItemGeometry QQuickStyleItemButton::calculateGeometry()
