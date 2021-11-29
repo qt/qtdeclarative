@@ -77,6 +77,8 @@ private slots:
     void reposition();
     void header();
 
+    void dragHandlerInteraction();
+
     void hover_data();
     void hover();
 
@@ -524,6 +526,21 @@ void tst_QQuickDrawer::header()
     QVERIFY(clickSpy.isValid());
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(button->x() + button->width() / 2, button->y() + button->height() / 2));
     QCOMPARE(clickSpy.count(), 1);
+}
+
+void tst_QQuickDrawer::dragHandlerInteraction()
+{
+    QQuickControlsApplicationHelper helper(this, u"dragHandlerInteraction.qml"_qs);
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    auto window = helper.appWindow;;
+    QVERIFY(window);
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+    QTest::mousePress(window, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(250, 250));
+    QTest::mouseMove(window, QPoint(100, 100));
+    QTest::mouseRelease(window, Qt::LeftButton, Qt::KeyboardModifiers(), QPoint(100, 100));
+    QTRY_COMPARE(window->property("changedCounter").toInt(), 2); // became active and inactive
 }
 
 void tst_QQuickDrawer::hover_data()
