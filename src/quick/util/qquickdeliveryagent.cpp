@@ -1204,6 +1204,7 @@ void QQuickDeliveryAgentPrivate::deliverDelayedTouchEvent()
     // event loop recursions (e.g if it the touch starts a dnd session).
     QScopedPointer<QTouchEvent> e(delayedTouch.take());
     qCDebug(lcTouchCmprs) << "delivering" << e.data();
+    compressedTouchCount = 0;
     deliverPointerEvent(e.data());
 }
 
@@ -1360,10 +1361,35 @@ QQuickPointingDeviceExtra *QQuickDeliveryAgentPrivate::deviceExtra(const QInputD
     return extra;
 }
 
+/*!
+    \internal
+    This function is called from handleTouchEvent() in case a series of touch
+    events containing only \c Updated and \c Stationary points arrives within a
+    short period of time. (Some touchscreens are more "jittery" than others.)
+
+    It would be a waste of CPU time to deliver events and have items in the
+    scene getting modified more often than once per frame; so here we try to
+    coalesce the series of updates into a single event containing all updates
+    that occur within one frame period, and deliverDelayedTouchEvent() is
+    called from flushFrameSynchronousEvents() to send that single event. This
+    is the reason why touch compression lives here so far, instead of in a
+    lower layer: the render loop updates the scene in sync with the screen's
+    vsync, and flushFrameSynchronousEvents() is called from there (for example
+    from QSGThreadedRenderLoop::polishAndSync(), and equivalent places in other
+    render loops). It would be preferable to move this code down to a lower
+    level eventually, though, because it's not fundamentally a Qt Quick concern.
+
+    This optimization can be turned off by setting the environment variable
+    \c QML_NO_TOUCH_COMPRESSION.
+
+    Returns \c true if "done", \c false if the caller needs to finish the
+    \a event delivery.
+*/
 bool QQuickDeliveryAgentPrivate::compressTouchEvent(QTouchEvent *event)
 {
     QEventPoint::States states = event->touchPointStates();
     if (states.testFlag(QEventPoint::State::Pressed) || states.testFlag(QEventPoint::State::Released)) {
+        qCDebug(lcTouchCmprs) << "no compression" << event;
         // we can only compress an event that doesn't include any pressed or released points
         return false;
     }
@@ -1371,7 +1397,12 @@ bool QQuickDeliveryAgentPrivate::compressTouchEvent(QTouchEvent *event)
     if (!delayedTouch) {
         delayedTouch.reset(new QMutableTouchEvent(event->type(), event->pointingDevice(), event->modifiers(), event->points()));
         delayedTouch->setTimestamp(event->timestamp());
-        qCDebug(lcTouchCmprs) << "delayed" << delayedTouch.data();
+        for (qsizetype i = 0; i < delayedTouch->pointCount(); ++i) {
+            auto &tp = delayedTouch->point(i);
+            QMutableEventPoint::from(tp).detach();
+        }
+        ++compressedTouchCount;
+        qCDebug(lcTouchCmprs) << "delayed" << compressedTouchCount << delayedTouch.data();
         if (QQuickWindow *window = rootItem->window())
             window->maybeUpdate();
         return true;
@@ -1405,7 +1436,14 @@ bool QQuickDeliveryAgentPrivate::compressTouchEvent(QTouchEvent *event)
             // TODO optimize, or move event compression elsewhere
             delayedTouch.reset(new QMutableTouchEvent(event->type(), event->pointingDevice(), event->modifiers(), tpts));
             delayedTouch->setTimestamp(event->timestamp());
-            qCDebug(lcTouchCmprs) << "coalesced" << delayedTouch.data();
+            for (qsizetype i = 0; i < delayedTouch->pointCount(); ++i) {
+                auto &tp = delayedTouch->point(i);
+                QMutableEventPoint::from(tp).detach();
+            }
+            ++compressedTouchCount;
+            qCDebug(lcTouchCmprs) << "coalesced" << compressedTouchCount << delayedTouch.data();
+            if (QQuickWindow *window = rootItem->window())
+                window->maybeUpdate();
             return true;
         }
     }

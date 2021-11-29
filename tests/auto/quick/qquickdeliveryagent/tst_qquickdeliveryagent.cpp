@@ -35,6 +35,7 @@
 #include <QtQuick/QQuickView>
 #include <QtQuick/QQuickWindow>
 #include <QtQuick/private/qquickflickable_p.h>
+#include <QtQuick/private/qquickpointhandler_p.h>
 #include <QtQuick/private/qquickshadereffectsource_p.h>
 #include <QtQuick/private/qquicktaphandler_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
@@ -133,6 +134,7 @@ public:
 private slots:
     void passiveGrabberOrder();
     void tapHandlerDoesntOverrideSubsceneGrabber();
+    void touchCompression();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -222,6 +224,58 @@ void tst_qquickdeliveryagent::tapHandlerDoesntOverrideSubsceneGrabber() // QTBUG
     qCDebug(lcTests) << "clicking subscene TextEdit set cursorPos to" << cursorPos;
     QVERIFY(textEdit->property("cursorPosition").toInt() > cursorPos);
     QCOMPARE(clickSpy.count(), 0); // doesn't tap
+}
+
+void tst_qquickdeliveryagent::touchCompression()
+{
+    QQuickView window;
+    // avoid interference from X11 window managers, so we can look at eventpoint globalPosition
+    window.setFlag(Qt::FramelessWindowHint);
+#ifdef DISABLE_HOVER_IN_IRRELEVANT_TESTS
+    QQuickWindowPrivate::get(&window)->deliveryAgentPrivate()->frameSynchronousHoverEnabled = false;
+#endif
+    QVERIFY(QQuickTest::showView(window, testFileUrl("pointHandler.qml")));
+    QQuickDeliveryAgent *windowAgent = QQuickWindowPrivate::get(&window)->deliveryAgent;
+    QQuickDeliveryAgentPrivate *agentPriv = static_cast<QQuickDeliveryAgentPrivate *>(QQuickDeliveryAgentPrivate::get(windowAgent));
+    QQuickItem *root = qobject_cast<QQuickItem*>(window.rootObject());
+    QVERIFY(root);
+    QQuickPointHandler *rootHandler = root->findChild<QQuickPointHandler *>();
+    QVERIFY(rootHandler);
+    QTest::QTouchEventSequence touch = QTest::touchEvent(&window, touchDevice.data());
+    QPoint pt1(30, 50);
+    QPoint pt2(70, 50);
+    // Press and drag fast, alternating moving and stationary points
+    touch.press(11, pt1).press(12, pt2).commit();
+    QQuickTouchUtils::flush(&window);
+    QTest::qWait(50); // not critical, but let it hopefully render a frame or two
+    QCOMPARE(agentPriv->compressedTouchCount, 0);
+    for (int m = 1; m < 4; ++m) {
+        pt1 += {0, 1};
+        pt2 -= {0, 1};
+        if (m % 2)
+            touch.move(11, pt1).stationary(12).commit();
+        else
+            touch.stationary(11).move(12, pt2).commit();
+        // don't call QQuickTouchUtils::flush() here: we want to see the compression happen
+        if (agentPriv->compressedTouchCount) {
+            if (m % 2) {
+                QCOMPARE(agentPriv->delayedTouch->point(0).position().toPoint(), pt1);
+                QCOMPARE(agentPriv->delayedTouch->point(0).globalPosition().toPoint(), root->mapToGlobal(pt1).toPoint());
+            } else {
+                QCOMPARE(agentPriv->delayedTouch->point(1).position().toPoint(), pt2);
+                QCOMPARE(agentPriv->delayedTouch->point(1).globalPosition().toPoint(), root->mapToGlobal(pt2).toPoint());
+            }
+        }
+        // we can't guarantee that a CI VM is fast enough, but usually compressedTouchCount == m
+        qCDebug(lcTests) << "compressedTouchCount" << agentPriv->compressedTouchCount << "expected" << m;
+        qCDebug(lcTests) << "PointHandler still sees" << rootHandler->point().position() << "while" << pt1 << "was likely not yet delivered";
+    }
+    QTRY_COMPARE(rootHandler->point().position().toPoint(), pt1);
+    touch.release(11, pt1).release(12, pt2).commit();
+    // should be delivered, bypassing compression; when PointHandler gets the release, it will reset its point
+    QTRY_COMPARE(rootHandler->active(), false);
+    QCOMPARE(rootHandler->point().position(), QPointF());
+    QCOMPARE(agentPriv->compressedTouchCount, 0);
 }
 
 QTEST_MAIN(tst_qquickdeliveryagent)
