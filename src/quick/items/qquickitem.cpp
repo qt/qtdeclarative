@@ -7392,14 +7392,12 @@ void QQuickItem::setFocus(bool focus, Qt::FocusReason reason)
         while (scope && !scope->isFocusScope() && scope->parentItem())
             scope = scope->parentItem();
         if (d->window) {
-            if (reason != Qt::PopupFocusReason) {
-                auto da = d->deliveryAgentPrivate();
-                Q_ASSERT(da);
-                if (focus)
-                    da->setFocusInScope(scope, this, reason);
-                else
-                    da->clearFocusInScope(scope, this, reason);
-            }
+            auto da = d->deliveryAgentPrivate();
+            Q_ASSERT(da);
+            if (focus)
+                da->setFocusInScope(scope, this, reason);
+            else
+                da->clearFocusInScope(scope, this, reason);
         } else {
             // do the focus changes from setFocusInScope/clearFocusInScope that are
             // unrelated to a window

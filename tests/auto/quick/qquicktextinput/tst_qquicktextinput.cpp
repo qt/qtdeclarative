@@ -3756,8 +3756,6 @@ void tst_qquicktextinput::focusOutNotClearSelection()
     input.setFocus(false, Qt::PopupFocusReason);
     QGuiApplication::processEvents();
     QTRY_COMPARE(input.selectedText(), QLatin1String("llo"));
-    // QTBUG-36332 and 36292: a popup window does not take focus
-    QTRY_COMPARE(input.hasActiveFocus(), true);
 
     input.setFocus(true);
     QTRY_COMPARE(input.hasActiveFocus(), true);

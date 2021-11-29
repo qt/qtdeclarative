@@ -473,7 +473,7 @@ bool QQuickPopupPrivate::prepareEnterTransition()
         emit q->visibleChanged();
 
         if (focus)
-            popupItem->setFocus(true);
+            popupItem->setFocus(true, Qt::PopupFocusReason);
     }
     return true;
 }
@@ -495,7 +495,7 @@ bool QQuickPopupPrivate::prepareExitTransition()
         if (!hadActiveFocusBeforeExitTransition)
             hadActiveFocusBeforeExitTransition = popupItem->hasActiveFocus();
         if (focus)
-            popupItem->setFocus(false);
+            popupItem->setFocus(false, Qt::PopupFocusReason);
         transitionState = ExitTransition;
         hideOverlay();
         emit q->aboutToHide();
@@ -537,13 +537,13 @@ void QQuickPopupPrivate::finalizeExitTransition()
             }
         }
         if (nextFocusPopup) {
-            nextFocusPopup->forceActiveFocus();
+            nextFocusPopup->forceActiveFocus(Qt::PopupFocusReason);
         } else {
             QQuickApplicationWindow *applicationWindow = qobject_cast<QQuickApplicationWindow*>(window);
             if (applicationWindow)
-                applicationWindow->contentItem()->setFocus(true);
+                applicationWindow->contentItem()->setFocus(true, Qt::PopupFocusReason);
             else
-                window->contentItem()->setFocus(true);
+                window->contentItem()->setFocus(true, Qt::PopupFocusReason);
         }
     }
 
