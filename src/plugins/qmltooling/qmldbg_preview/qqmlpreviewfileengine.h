@@ -67,7 +67,7 @@ public:
 
     void setFileName(const QString &file) override;
 
-    bool open(QIODevice::OpenMode flags) override ;
+    bool open(QIODevice::OpenMode flags, std::optional<QFile::Permissions> permissions) override;
     bool close() override;
     qint64 size() const override;
     qint64 pos() const override;
