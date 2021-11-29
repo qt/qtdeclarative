@@ -83,6 +83,11 @@
 #include <QtQuick/qquickgraphicsdevice.h>
 #include <QtQuick/qquickrendertarget.h>
 
+#include "private/qwidget_p.h"
+
+#include <QtWidgets/qgraphicsscene.h>
+#include <QtWidgets/qgraphicsview.h>
+
 QT_BEGIN_NAMESPACE
 
 QQuickWidgetOffscreenWindow::QQuickWidgetOffscreenWindow(QQuickWindowPrivate &dd, QQuickRenderControl *control)
@@ -104,18 +109,79 @@ public:
     }
 };
 
+class QQuickWidgetRenderControlPrivate;
+
 class QQuickWidgetRenderControl : public QQuickRenderControl
 {
+    Q_DECLARE_PRIVATE(QQuickWidgetRenderControl)
 public:
-    QQuickWidgetRenderControl(QQuickWidget *quickwidget) : m_quickWidget(quickwidget) {}
-    QWindow *renderWindow(QPoint *offset) override {
-        if (offset)
-            *offset = m_quickWidget->mapTo(m_quickWidget->window(), QPoint());
-        return m_quickWidget->window()->windowHandle();
+    QQuickWidgetRenderControl(QQuickWidget *quickwidget);
+    QWindow *renderWindow(QPoint *offset) override;
+
+};
+
+class QQuickWidgetRenderControlPrivate : public QQuickRenderControlPrivate
+{
+public:
+    Q_DECLARE_PUBLIC(QQuickWidgetRenderControl)
+    QQuickWidgetRenderControlPrivate(QQuickWidgetRenderControl *renderControl, QQuickWidget *qqw)
+        : QQuickRenderControlPrivate(renderControl)
+        , m_quickWidget(qqw)
+    {
     }
-private:
+
+    bool isRenderWindow(const QWindow *w) override {
+#if QT_CONFIG(graphicsview)
+        QWidgetPrivate *widgetd = QWidgetPrivate::get(m_quickWidget);
+        auto *proxy = (widgetd && widgetd->extra) ? widgetd->extra->proxyWidget : nullptr;
+        auto *scene = proxy ? proxy->scene() : nullptr;
+        if (scene) {
+            for (const auto &view : scene->views()) {
+                if (view->window()->windowHandle() == w)
+                    return true;
+            }
+        }
+
+        return m_quickWidget->window()->windowHandle() == w;
+#endif
+    }
     QQuickWidget *m_quickWidget;
 };
+
+QQuickWidgetRenderControl::QQuickWidgetRenderControl(QQuickWidget *quickWidget)
+    : QQuickRenderControl(*(new QQuickWidgetRenderControlPrivate(this, quickWidget)), nullptr)
+{
+}
+
+QWindow *QQuickWidgetRenderControl::renderWindow(QPoint *offset)
+{
+    Q_D(QQuickWidgetRenderControl);
+    if (offset)
+        *offset = d->m_quickWidget->mapTo(d->m_quickWidget->window(), QPoint());
+
+    QWindow *result = nullptr;
+#if QT_CONFIG(graphicsview)
+    QWidgetPrivate *widgetd = QWidgetPrivate::get(d->m_quickWidget);
+    if (widgetd->extra) {
+        if (auto proxy = widgetd->extra->proxyWidget) {
+            auto scene = proxy->scene();
+            if (scene) {
+                const auto views = scene->views();
+                if (!views.isEmpty()) {
+                    // Get the first QGV containing the proxy. Not ideal, but the callers
+                    // of this function aren't prepared to handle more than one render window.
+                    auto candidateView = views.first();
+                    result = candidateView->window()->windowHandle();
+                }
+            }
+        }
+    }
+#endif
+    if (!result)
+        result = d->m_quickWidget->window()->windowHandle();
+
+    return result;
+}
 
 void QQuickWidgetPrivate::initOffscreenWindow()
 {

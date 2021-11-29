@@ -80,6 +80,9 @@ public:
 
     QQuickWindow *window() const;
 
+protected:
+    QQuickRenderControl(QQuickRenderControlPrivate &dd, QObject * parent);
+
 Q_SIGNALS:
     void renderRequested();
     void sceneChanged();

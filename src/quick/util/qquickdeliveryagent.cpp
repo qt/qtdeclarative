@@ -49,7 +49,7 @@
 #include <QtQuick/private/qquickdrag_p.h>
 #endif
 #include <QtQuick/private/qquickprofiler_p.h>
-#include <QtQuick/qquickrendercontrol.h>
+#include <QtQuick/private/qquickrendercontrol_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -316,7 +316,7 @@ void QQuickDeliveryAgentPrivate::translateTouchEvent(QTouchEvent *touchEvent)
 static inline bool windowHasFocus(QQuickWindow *win)
 {
     const QWindow *focusWindow = QGuiApplication::focusWindow();
-    return win == focusWindow || QQuickRenderControl::renderWindowFor(win) == focusWindow;
+    return win == focusWindow || QQuickRenderControlPrivate::isRenderWindowFor(win, focusWindow) || !focusWindow;
 }
 
 #ifdef Q_OS_WEBOS

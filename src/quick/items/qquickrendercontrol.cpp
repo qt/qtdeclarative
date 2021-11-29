@@ -181,6 +181,14 @@ QQuickRenderControl::QQuickRenderControl(QObject *parent)
 }
 
 /*!
+ \internal
+*/
+QQuickRenderControl::QQuickRenderControl(QQuickRenderControlPrivate &dd, QObject * parent)
+    : QObject(dd, parent)
+{
+}
+
+/*!
   Destroys the instance. Releases all scenegraph resources.
 
   \sa invalidate()
@@ -552,6 +560,14 @@ QWindow *QQuickRenderControl::renderWindowFor(QQuickWindow *win, QPoint *offset)
     if (rc)
         return rc->renderWindow(offset);
     return nullptr;
+}
+
+bool QQuickRenderControlPrivate::isRenderWindowFor(QQuickWindow *quickWin, const QWindow *renderWin)
+{
+    QQuickRenderControl *rc = QQuickWindowPrivate::get(quickWin)->renderControl;
+    if (rc)
+        return QQuickRenderControlPrivate::get(rc)->isRenderWindow(renderWin);
+    return false;
 }
 
 /*!
