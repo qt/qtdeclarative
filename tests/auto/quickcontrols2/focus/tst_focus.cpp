@@ -432,7 +432,6 @@ void tst_focus::reason()
     // Popup opens -> PopupFocusReason
     QTest::mouseClick(&view, Qt::RightButton, {}, itemCenter(control));
     QTRY_VERIFY(!customItem->hasActiveFocus());
-    QEXPECT_FAIL("", "Popup opening doesn't set the focus reason", Continue);
     QCOMPARE(customItem->focusReason(), Qt::PopupFocusReason);
     QTest::keyClick(&view, Qt::Key_Escape); // close the popup
 }
