@@ -226,7 +226,7 @@ private:
     QList<int> m_targetIndexes;
     QList<QObject *> m_targetItems;
 
-    QQuickItem *m_item;
+    QPointer<QQuickItem> m_item;
     int m_index;
 };
 
