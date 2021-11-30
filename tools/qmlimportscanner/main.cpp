@@ -648,6 +648,7 @@ int main(int argc, char *argv[])
     QStringList qmlImportPaths;
     QStringList qrcFiles;
     bool generateCmakeContent = false;
+    QString outputFile;
 
     int i = 1;
     while (i < args.count()) {
@@ -676,6 +677,14 @@ int main(int argc, char *argv[])
              generateCmakeContent = true;
         } else if (arg == QLatin1String("-qrcFiles")) {
             argReceiver = &qrcFiles;
+        } else if (arg == QLatin1String("-output-file")) {
+            if (i >= args.count()) {
+                std::cerr << "-output-file requires an argument\n";
+                return 1;
+            }
+            outputFile = args.at(i);
+            ++i;
+            continue;
         } else {
             std::cerr << qPrintable(appName) << ": Invalid argument: \""
                 << qPrintable(arg) << "\"\n";
@@ -716,6 +725,17 @@ int main(int argc, char *argv[])
         content = QJsonDocument(QJsonArray::fromVariantList(imports)).toJson();
     }
 
-    std::cout << content.constData() << std::endl;
+    if (outputFile.isEmpty()) {
+        std::cout << content.constData() << std::endl;
+    } else {
+        QFile f(outputFile);
+        if (!f.open(QIODevice::WriteOnly | QIODevice::Text)) {
+            std::cerr << qPrintable(appName) << ": Unable to write to output file: \""
+                << qPrintable(outputFile) << "\"\n";
+            return 1;
+        }
+        QTextStream out(&f);
+        out << content << "\n";
+    }
     return 0;
 }
