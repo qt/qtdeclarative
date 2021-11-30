@@ -555,9 +555,15 @@ void QQuickItemViewTransitionableItem::stopTransition()
 
 
 QQuickViewTransitionAttached::QQuickViewTransitionAttached(QObject *parent)
-    : QObject(parent), m_item(nullptr), m_index(-1)
+    : QObject(parent), m_index(-1)
 {
 }
+
+QQuickItem *QQuickViewTransitionAttached::item() const
+{
+    return m_item.data();
+}
+
 /*!
     \qmltype ViewTransition
     \instantiates QQuickViewTransitionAttached
