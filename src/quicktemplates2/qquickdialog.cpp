@@ -209,6 +209,18 @@ QQuickDialog::QQuickDialog(QQuickDialogPrivate &dd, QObject *parent)
     QObject::connect(d->popupItem, &QQuickPopupItem::implicitFooterHeightChanged, this, &QQuickDialog::implicitFooterHeightChanged);
 }
 
+QQuickDialog::~QQuickDialog()
+{
+    Q_D(QQuickDialog);
+    QObject::disconnect(d->popupItem, &QQuickPopupItem::titleChanged, this, &QQuickDialog::titleChanged);
+    QObject::disconnect(d->popupItem, &QQuickPopupItem::headerChanged, this, &QQuickDialog::headerChanged);
+    QObject::disconnect(d->popupItem, &QQuickPopupItem::footerChanged, this, &QQuickDialog::footerChanged);
+    QObject::disconnect(d->popupItem, &QQuickPopupItem::implicitHeaderWidthChanged, this, &QQuickDialog::implicitHeaderWidthChanged);
+    QObject::disconnect(d->popupItem, &QQuickPopupItem::implicitHeaderHeightChanged, this, &QQuickDialog::implicitHeaderHeightChanged);
+    QObject::disconnect(d->popupItem, &QQuickPopupItem::implicitFooterWidthChanged, this, &QQuickDialog::implicitFooterWidthChanged);
+    QObject::disconnect(d->popupItem, &QQuickPopupItem::implicitFooterHeightChanged, this, &QQuickDialog::implicitFooterHeightChanged);
+}
+
 /*!
     \qmlproperty string QtQuick.Controls::Dialog::title
 

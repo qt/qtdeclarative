@@ -76,6 +76,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickDialog : public QQuickPopup
 
 public:
     explicit QQuickDialog(QObject *parent = nullptr);
+    ~QQuickDialog();
 
     QString title() const;
     void setTitle(const QString &title);
