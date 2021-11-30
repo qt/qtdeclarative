@@ -317,7 +317,8 @@ public:
     bool scanObject();
 
 private:
-    bool scanObject(int objectIndex);
+    enum class ScopeDeferred { False, True };
+    bool scanObject(int objectIndex, ScopeDeferred scopeDeferred);
 
     QVector<QmlIR::Object*> *qmlObjects;
     const QQmlPropertyCacheVector * const propertyCaches;

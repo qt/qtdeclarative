@@ -1224,14 +1224,15 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject()
 {
     for (int i = 0; i < qmlObjects->size(); ++i) {
         if ((qmlObjects->at(i)->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
-                && !scanObject(i)) {
+                && !scanObject(i, ScopeDeferred::False)) {
             return false;
         }
     }
-    return scanObject(/*root object*/0);
+    return scanObject(/*root object*/0, ScopeDeferred::False);
 }
 
-bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
+bool QQmlDeferredAndCustomParserBindingScanner::scanObject(
+        int objectIndex, ScopeDeferred scopeDeferred)
 {
     using namespace QV4::CompiledData;
 
@@ -1243,7 +1244,8 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
         Q_ASSERT(obj->bindingCount() == 1);
         const Binding *componentBinding = obj->firstBinding();
         Q_ASSERT(componentBinding->type == Binding::Type_Object);
-        return scanObject(componentBinding->value.objectIndex);
+        // Components are separate from their surrounding scope. They cannot be deferred.
+        return scanObject(componentBinding->value.objectIndex, ScopeDeferred::False);
     }
 
     QQmlPropertyCache *propertyCache = propertyCaches->at(objectIndex);
@@ -1347,7 +1349,11 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
             isExternal = !isOwnProperty && binding->isGroupProperty();
             if (isOwnProperty || isExternal) {
                 qSwap(_seenObjectWithId, seenSubObjectWithId);
-                const bool subObjectValid = scanObject(binding->value.objectIndex);
+                const bool subObjectValid = scanObject(
+                            binding->value.objectIndex,
+                            (isExternal || scopeDeferred == ScopeDeferred::True)
+                                ? ScopeDeferred::True
+                                : ScopeDeferred::False);
                 qSwap(_seenObjectWithId, seenSubObjectWithId);
                 if (!subObjectValid)
                     return false;
@@ -1368,8 +1374,16 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(int objectIndex)
                          "class info because one or more of its sub-objects contain an id.",
                          qPrintable(name));
             } else if (binding->type == Binding::Type_GroupProperty) {
-                qWarning("Binding on %s is not deferred as requested by the DeferredPropertyNames "
-                         "class info because it constitutes a group property.", qPrintable(name));
+                // The binding may already be deferred via the surrounding scope.
+                // e.g. PropertyChanges { control.contentItem.opacity: 0.75 }
+                // Here, contentItem is a group property which prevents its deferral. But as
+                // control is already deferred by being a generalized group property, there is
+                // no point in warning here.
+                if (scopeDeferred == ScopeDeferred::False) {
+                    qWarning("Binding on %s is not deferred as requested by the "
+                             "DeferredPropertyNames class info because it constitutes a group "
+                             "property.", qPrintable(name));
+                }
             } else {
                 isDeferred = true;
             }
