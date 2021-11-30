@@ -83,6 +83,12 @@ Window {
                 property int count: 0
 
                 onTriggered: {
+
+                    // This triggers the crash without retranslate().
+                    // retranslate() got cleverer in 6.2, sidestepping the issue.
+                    replaceExit.animations[0].target = null;
+                    replaceExit.animations[0].target = replaceExit.ViewTransition.item
+
                     console.log("timer within", root, "is about to call retranslate")
                     window.engine.retranslate()
                     window.calledTranslate()
