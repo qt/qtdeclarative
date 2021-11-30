@@ -491,6 +491,8 @@ public:
     // (e.g. when parent has ItemIsViewport and child has ItemObservesViewport)
     quint32 subtreeTransformChangedEnabled:1;
     quint32 inDestructor:1; // has entered ~QQuickItem
+    quint32 focusReason:4;
+    // Bit 49
 
     enum DirtyType {
         TransformOrigin         = 0x00000001,

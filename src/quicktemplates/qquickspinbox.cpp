@@ -1100,7 +1100,7 @@ void QQuickSpinBox::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
     if (newItem) {
         newItem->setActiveFocusOnTab(true);
         if (d->activeFocus)
-            newItem->forceActiveFocus(d->focusReason);
+            newItem->forceActiveFocus(static_cast<Qt::FocusReason>(d->focusReason));
 #if QT_CONFIG(cursor)
         if (d->editable)
             newItem->setCursor(Qt::IBeamCursor);

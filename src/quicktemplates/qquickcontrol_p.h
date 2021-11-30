@@ -40,7 +40,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickControl : public QQuickItem
     Q_PROPERTY(QLocale locale READ locale WRITE setLocale RESET resetLocale NOTIFY localeChanged FINAL)
     Q_PROPERTY(bool mirrored READ isMirrored NOTIFY mirroredChanged FINAL)
     Q_PROPERTY(Qt::FocusPolicy focusPolicy READ focusPolicy WRITE setFocusPolicy NOTIFY focusPolicyChanged FINAL)
-    Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL)
+    QT6_ONLY(Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL))
     Q_PROPERTY(bool visualFocus READ hasVisualFocus NOTIFY visualFocusChanged FINAL)
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged FINAL)
     Q_PROPERTY(bool hoverEnabled READ isHoverEnabled WRITE setHoverEnabled RESET resetHoverEnabled NOTIFY hoverEnabledChanged FINAL)
@@ -107,7 +107,6 @@ public:
     Qt::FocusPolicy focusPolicy() const;
     void setFocusPolicy(Qt::FocusPolicy policy);
 
-    Qt::FocusReason focusReason() const;
     void setFocusReason(Qt::FocusReason reason);
 
     bool hasVisualFocus() const;
@@ -176,7 +175,6 @@ Q_SIGNALS:
     void localeChanged();
     void mirroredChanged();
     void focusPolicyChanged();
-    void focusReasonChanged();
     void visualFocusChanged();
     void hoveredChanged();
     void hoverEnabledChanged();

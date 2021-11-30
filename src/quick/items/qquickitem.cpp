@@ -3198,6 +3198,7 @@ QQuickItemPrivate::QQuickItemPrivate()
     , maybeHasSubsceneDeliveryAgent(true)
     , subtreeTransformChangedEnabled(true)
     , inDestructor(false)
+    , focusReason(Qt::OtherFocusReason)
     , dirtyAttributes(0)
     , nextDirtyItem(nullptr)
     , prevDirtyItem(nullptr)
@@ -7831,6 +7832,30 @@ QQuickItem *QQuickItem::scopedFocusItem() const
         return nullptr;
     else
         return d->subFocusItem;
+}
+
+/*!
+    \qmlproperty enumeration QtQuick::Item::focusReason
+    \since 6.7
+
+    \input item.qdocinc focus-reason
+
+    \note This property was a member of {QQuickControl} {Control} until Qt 6.7.
+*/
+Qt::FocusReason QQuickItem::focusReason() const
+{
+    Q_D(const QQuickItem);
+    return static_cast<Qt::FocusReason>(d->focusReason);
+}
+
+void QQuickItem::setFocusReason(Qt::FocusReason reason)
+{
+    Q_D(QQuickItem);
+    if (d->focusReason == reason)
+        return;
+
+    d->focusReason = reason;
+    emit focusReasonChanged();
 }
 
 /*!

@@ -973,7 +973,7 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
         }
         break;
     case ItemActiveFocusHasChanged:
-        if (isKeyFocusReason(d->focusReason))
+        if (isKeyFocusReason(static_cast<Qt::FocusReason>(d->focusReason)))
             emit visualFocusChanged();
         break;
     default:
@@ -1393,29 +1393,11 @@ void QQuickControl::setFocusPolicy(Qt::FocusPolicy policy)
     emit focusPolicyChanged();
 }
 
-/*!
-    \qmlproperty enumeration QtQuick.Controls::Control::focusReason
-    \readonly
-
-    \include qquickcontrol-focusreason.qdocinc
-
-    \sa visualFocus
-*/
-Qt::FocusReason QQuickControl::focusReason() const
-{
-    Q_D(const QQuickControl);
-    return d->focusReason;
-}
-
 void QQuickControl::setFocusReason(Qt::FocusReason reason)
 {
-    Q_D(QQuickControl);
-    if (d->focusReason == reason)
-        return;
-
-    Qt::FocusReason oldReason = d->focusReason;
-    d->focusReason = reason;
-    emit focusReasonChanged();
+    Q_D(const QQuickControl);
+    Qt::FocusReason oldReason = static_cast<Qt::FocusReason>(d->focusReason);
+    QQuickItem::setFocusReason(reason);
     if (isKeyFocusReason(oldReason) != isKeyFocusReason(reason))
         emit visualFocusChanged();
 }
@@ -1432,12 +1414,12 @@ void QQuickControl::setFocusReason(Qt::FocusReason reason)
     \l Item::activeFocus. This ensures that key focus is only visualized when
     interacting with keys - not when interacting via touch or mouse.
 
-    \sa focusReason, Item::activeFocus
+    \sa Item::focusReason, Item::activeFocus
 */
 bool QQuickControl::hasVisualFocus() const
 {
     Q_D(const QQuickControl);
-    return d->activeFocus && isKeyFocusReason(d->focusReason);
+    return d->activeFocus && isKeyFocusReason(static_cast<Qt::FocusReason>(d->focusReason));
 }
 
 /*!

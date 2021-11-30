@@ -101,6 +101,8 @@ class Q_QUICK_EXPORT QQuickItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(bool focus READ hasFocus WRITE setFocus NOTIFY focusChanged FINAL)
     Q_PROPERTY(bool activeFocus READ hasActiveFocus NOTIFY activeFocusChanged FINAL)
     Q_PROPERTY(bool activeFocusOnTab READ activeFocusOnTab WRITE setActiveFocusOnTab NOTIFY activeFocusOnTabChanged FINAL REVISION(2, 1))
+    QT6_ONLY(Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged))
+    QT7_ONLY(Q_PROPERTY(Qt::FocusReason focusReason READ focusReason WRITE setFocusReason NOTIFY focusReasonChanged FINAL))
 
     Q_PROPERTY(qreal rotation READ rotation WRITE setRotation NOTIFY rotationChanged)
     Q_PROPERTY(qreal scale READ scale WRITE setScale NOTIFY scaleChanged)
@@ -270,6 +272,9 @@ public:
     bool isFocusScope() const;
     QQuickItem *scopedFocusItem() const;
 
+    Qt::FocusReason focusReason() const;
+    void setFocusReason(Qt::FocusReason reason);
+
     bool isAncestorOf(const QQuickItem *child) const;
 
     Qt::MouseButtons acceptedMouseButtons() const;
@@ -383,6 +388,7 @@ Q_SIGNALS:
     void stateChanged(const QString &);
     void focusChanged(bool);
     void activeFocusChanged(bool);
+    Q_REVISION(6, 7) void focusReasonChanged();
     Q_REVISION(2, 1) void activeFocusOnTabChanged(bool);
     void parentChanged(QQuickItem *);
     void transformOriginChanged(TransformOrigin);
