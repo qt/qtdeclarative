@@ -2742,6 +2742,180 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     endmacro()
 endif()
 
+# This function is currently in Technical Preview.
+# Its signature and behavior might change.
+function(qt6_query_qml_module target)
+
+    if(NOT TARGET ${target})
+        message(FATAL_ERROR "\"${target}\" is not a target")
+    endif()
+
+    get_target_property(is_imported ${target} IMPORTED)
+    if(is_imported)
+        message(FATAL_ERROR
+            "Only targets built by the project can be used with this command, "
+            "but target \"${target}\" is imported."
+        )
+    endif()
+
+    get_target_property(uri ${target} QT_QML_MODULE_URI)
+    if(NOT uri)
+        message(FATAL_ERROR
+            "Target \"${target}\" does not appear to be a QML module"
+            )
+    endif()
+
+    set(no_value_options "")
+    set(single_value_options
+        URI
+        VERSION
+        PLUGIN_TARGET
+        MODULE_RESOURCE_PATH
+        TARGET_PATH
+        QMLDIR
+        TYPEINFO
+        QML_FILES
+        QML_FILES_DEPLOY_PATHS   # relative to target path
+        QML_FILES_PREFIX_OVERRIDES
+        RESOURCES
+        RESOURCES_DEPLOY_PATHS   # relative to target path
+        RESOURCES_PREFIX_OVERRIDES
+    )
+    set(multi_value_options "")
+    cmake_parse_arguments(PARSE_ARGV 1 arg
+        "${no_value_options}" "${single_value_options}" "${multi_value_options}"
+    )
+    if(arg_UNPARSED_ARGUMENTS)
+        message(FATAL_ERROR "Unexpected arguments: ${arg_UNPARSED_ARGUMENTS}")
+    endif()
+
+    if(arg_URI)
+        set(${arg_URI} "${uri}" PARENT_SCOPE)
+    endif()
+
+    if(arg_VERSION)
+        get_property(version TARGET ${target} PROPERTY QT_QML_MODULE_VERSION)
+        set(${arg_VERSION} "${version}" PARENT_SCOPE)
+    endif()
+
+    if(arg_PLUGIN_TARGET)
+        # There might not be a plugin target, so return an empty string for that
+        get_property(plugin_target TARGET ${target} PROPERTY QT_QML_MODULE_PLUGIN_TARGET)
+        set(${arg_PLUGIN_TARGET} "${plugin_target}" PARENT_SCOPE)
+    endif()
+
+    if(arg_MODULE_RESOURCE_PATH)
+        # Note that QT_QML_MODULE_RESOURCE_PREFIX is not the RESOURCE_PREFIX
+        # passed to qt6_add_qml_module(). It is that plus the target path, which
+        # corresponds to what we mean by the MODULE_RESOURCE_PATH.
+        get_property(prefix TARGET ${target} PROPERTY QT_QML_MODULE_RESOURCE_PREFIX)
+        set(${arg_MODULE_RESOURCE_PATH} "${prefix}" PARENT_SCOPE)
+    endif()
+
+    string(REPLACE "." "/" target_path "${uri}")
+    if(arg_TARGET_PATH)
+        set(${arg_TARGET_PATH} "${target_path}" PARENT_SCOPE)
+    endif()
+
+    get_target_property(output_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
+
+    if(arg_QMLDIR)
+        set(${arg_QMLDIR} "${output_dir}/qmldir" PARENT_SCOPE)
+    endif()
+
+    # This should always be set to something non-empty
+    get_target_property(typeinfo ${target} QT_QML_MODULE_TYPEINFO)
+    if(arg_TYPEINFO)
+        set(${arg_TYPEINFO} "${output_dir}/${typeinfo}" PARENT_SCOPE)
+    endif()
+
+    get_target_property(target_source_dir ${target} SOURCE_DIR)
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+        set(scope_option TARGET_DIRECTORY ${target})
+    else()
+        set(scope_option "")
+        if(NOT target_source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR AND
+           (arg_QML_FILES_DEPLOY_PATHS OR arg_RESOURCES_DEPLOY_PATHS))
+            # This isn't a fatal error because it will only be a problem if any
+            # qml or resource files actually have source file properties set.
+            message(WARNING
+                "Calling qt6_query_qml_module() from a different directory scope "
+                "to the one in which target \"${target}\" was created. "
+                "This requires CMake 3.18 or later to be robust, but you are using "
+                "CMake ${CMAKE_VERSION}. Deployment paths may not be correct."
+            )
+        endif()
+    endif()
+
+    # Because of how CMake lists work, in particular appending empty strings,
+    # we have to use a placeholder to represent empty values and then replace
+    # them at the end. If we don't do this, any list that starts with an empty
+    # value ends up discarding that empty value because it is indistinguishable
+    # from an empty list.
+    set(empty_placeholder "__qt_empty_placeholder__")
+
+    foreach(file_set IN ITEMS QML_FILES RESOURCES)
+        # NOTE: We converted these files to absolute paths already when storing them
+        get_target_property(files ${target} QT_QML_MODULE_${file_set})
+
+        if(arg_${file_set})
+            set(${arg_${file_set}} "${files}" PARENT_SCOPE)
+        endif()
+
+        if(arg_${file_set}_DEPLOY_PATHS OR arg_${file_set}_PREFIX_OVERRIDES)
+            set(deploy_paths "")
+            set(prefix_overrides "")
+            foreach(abs_file IN LISTS files)
+                # The QT_QML_MODULE_PREFIX_OVERRIDE is the PREFIX value that was passed to
+                # qt_target_qml_sources. It has no relation to the QT_QML_MODULE_RESOURCE_PREFIX
+                # property or the computed MODULE_RESOURCE_PATH variable above.
+                get_property(prefix_override SOURCE ${abs_file} ${scope_option}
+                    PROPERTY QT_QML_MODULE_PREFIX_OVERRIDE
+                )
+                if("${prefix_override}" STREQUAL "")
+                    list(APPEND prefix_overrides "${empty_placeholder}")
+                else()
+                    list(APPEND prefix_overrides "${prefix_override}")
+                endif()
+
+                # We can't provide a deploy path when the resource prefix is
+                # overridden. We still need to store an empty deploy path for it
+                # though so that the file lists all line up correctly.
+                if(NOT "${prefix_override}" STREQUAL "")
+                    list(APPEND deploy_paths "${empty_placeholder}")
+                else()
+                    # Careful how we check whether this property is set. Projects might
+                    # use a resource alias that matches one of CMake's false constants,
+                    # so we must use get_property(), not get_source_file_property(),
+                    # then compare the result with an empty string.
+                    get_property(alias
+                                 SOURCE ${abs_file} ${scope_option} PROPERTY QT_RESOURCE_ALIAS)
+                    if(NOT "${alias}" STREQUAL "")
+                        list(APPEND deploy_paths "${alias}")
+                    else()
+                        file(RELATIVE_PATH rel_file ${target_source_dir} ${abs_file})
+                        list(APPEND deploy_paths "${rel_file}")
+                    endif()
+                endif()
+            endforeach()
+            string(REPLACE "${empty_placeholder}" "" deploy_paths "${deploy_paths}")
+            string(REPLACE "${empty_placeholder}" "" prefix_overrides "${prefix_overrides}")
+            if(arg_${file_set}_DEPLOY_PATHS)
+                set(${arg_${file_set}_DEPLOY_PATHS} "${deploy_paths}" PARENT_SCOPE)
+            endif()
+            if(arg_${file_set}_PREFIX_OVERRIDES)
+                set(${arg_${file_set}_PREFIX_OVERRIDES} "${prefix_overrides}" PARENT_SCOPE)
+            endif()
+        endif()
+    endforeach()
+endfunction()
+
+if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
+    macro(qt_query_qml_module)
+        qt6_query_qml_module(${ARGV})
+    endmacro()
+endif()
+
 
 function(_qt_internal_add_static_qml_plugin_dependencies plugin_target backing_target)
     # Protect against multiple calls of qt_add_qml_plugin.
