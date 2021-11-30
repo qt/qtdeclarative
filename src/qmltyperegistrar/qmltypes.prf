@@ -43,16 +43,35 @@ qt_module_deps = $$resolve_depends(qt_module_deps, "QT.", ".depends" ".run_depen
 qt_module_deps = $$replace(qt_module_deps, _private$, '')
 qt_module_deps = $$unique(qt_module_deps)
 
+# We know we need to prefer the CMake debug build type for qmake debug builds. Which of the CMake
+# release build types should be preferred for a qmake release build is guesswork. We apply a
+# heuristic here:
+#
+# If you've gone to the trouble of building a "minsizerel" Qt, you probably want to use it for your
+# qmake "release" builds. Conversely, if you have both a "release" and a "relwithdebinfo" Qt, you
+# probably want to use the "release" Qt build for qmake "release" builds and the "relwithdebinfo"
+# one for qmake "debug" builds.
+#
+# If no fitting build type exists, we accept the others. On linux, for example, we typically
+# have only a single "relwithdebinfo" Qt build for both debug and release builds of user projects.
+build_types = minsizerel release relwithdebinfo debug
+CONFIG(debug, debug|release): build_types = $$reverse(build_types)
+
 for(dep, qt_module_deps) {
     android:ABI = _$${ANDROID_TARGET_ARCH}
-    METATYPES_FILENAME = $$lower($$eval(QT.$${dep}.module))$${ABI}_metatypes.json
-    INSTALLED_METATYPES = $$[QT_INSTALL_LIBS]/metatypes/$$METATYPES_FILENAME
-    isEmpty(MODULE_BASE_OUTDIR) {
-        QML_FOREIGN_METATYPES += $$INSTALLED_METATYPES
-    } else {
-        MODULE_BASE_METATYPES = $$MODULE_BASE_OUTDIR/lib/metatypes/$$METATYPES_FILENAME
-        exists($$MODULE_BASE_METATYPES): QML_FOREIGN_METATYPES += $$MODULE_BASE_METATYPES
-        else: QML_FOREIGN_METATYPES += $$INSTALLED_METATYPES
+    infixed_module_name = $$eval(QT.$${dep}.module)
+
+    for(build_type, build_types) {
+        isEmpty(QT_LIBINFIX) {
+            metatypes_filename = $$lower($${infixed_module_name})$${ABI}_$${build_type}_metatypes.json
+        } else {
+            metatypes_filename = $$lower($$replace($${infixed_module_name}, $$QT_LIBINFIX, ''))$${ABI}_$${build_type}_metatypes.json
+        }
+        metatypes_filepath = $$[QT_INSTALL_LIBS]/metatypes/$${metatypes_filename}
+        exists($${metatypes_filepath}) {
+            QML_FOREIGN_METATYPES += $${metatypes_filepath}
+            break()
+        }
     }
 }
 
