@@ -413,8 +413,8 @@ void TestQmllint::dirtyQmlCode_data()
             << QString("Warning: %1:5:26: Type \"QPalette\" of property \"palette\" not found")
             << QString() << false;
     QTest::newRow("incompleteQmltypes2") << QStringLiteral("incompleteQmltypes2.qml")
-                                         << QString("Warning: %1:5:26: Type \"CustomPalette\" of "
-                                                    "property \"palette2\" not fully resolved")
+                                         << QString("Warning: %1:5:35: Property \"weDontKnowIt\" "
+                                                    "not found on type \"CustomPalette\"")
                                          << QString() << false;
     QTest::newRow("inheritanceCylce")
             << QStringLiteral("Cycle1.qml")
@@ -930,6 +930,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("connectionNoParent") << QStringLiteral("connectionNoParent.qml"); // QTBUG-97600
     QTest::newRow("goodGeneralizedGroup") << QStringLiteral("goodGeneralizedGroup.qml");
     QTest::newRow("on binding in grouped property") << QStringLiteral("onBindingInGroupedProperty.qml");
+    QTest::newRow("declared property of JS object") << QStringLiteral("bareQt.qml");
 }
 
 void TestQmllint::cleanQmlCode()

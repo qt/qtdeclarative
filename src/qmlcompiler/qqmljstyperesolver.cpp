@@ -488,7 +488,10 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
         m_logger->logWarning(u"Object type %1 is not derived from QObject or QQmlComponent"_qs.arg(
                                      type->internalName()),
                              Log_Compiler);
-        return {};
+
+        // Reference types that are not QObject or QQmlComponent are likely JavaScript objects.
+        // We don't want to deal with those, but m_jsValueType is the best generic option.
+        return m_jsValueType;
     }
 
     if (type == voidType())
