@@ -255,6 +255,18 @@ target will be the \c target followed by \c{_qmllint}. An \c{all_qmllint}
 target which depends on all the individual \c{*_qmllint} targets is also
 provided as a convenience.
 
+\target qml-cmake-singletons
+\section2 Singletons
+
+If a QML module has \c{.qml} files which provide singleton types, these files
+need to have their \c QT_QML_SINGLETON_TYPE source property set to \c TRUE, to
+ensure that the \singleton command is written into the
+\l{Module Definition qmldir Files}{qmldir} file. This must be done in addition
+to the QML file containing the \c {pragma Singleton} statement.
+
+See \l{qt_target_qml_sources_example}{qt_target_qml_sources()} for an example on
+how to set the \c QT_QML_SINGLETON_TYPE property.
+
 \section1 Arguments
 
 The \c target specifies the name of the backing target for the QML module.

@@ -14,6 +14,9 @@ set_source_files_properties(TemplateFile.qml PROPERTIES
     QT_QML_SKIP_QMLLINT TRUE
     QT_QML_SKIP_CACHEGEN TRUE
 )
+set_source_files_properties(FunnySingleton.qml PROPERTIES
+    QT_QML_SINGLETON_TYPE TRUE
+)
 qt_add_qml_module(qt_target_qml_sources_example
     URI Example
     VERSION 2.3
@@ -21,6 +24,7 @@ qt_add_qml_module(qt_target_qml_sources_example
     QML_FILES
         nested/way/down/File.qml
         TemplateFile.qml
+        FunnySingleton.qml
 )
 
 set_source_files_properties(some_old_thing.qml PROPERTIES
