@@ -249,7 +249,7 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
 }
 
 void CheckIdentifiers::operator()(
-        const QHash<QString, QQmlJSScope::ConstPtr> &qmlIDs,
+        const QQmlJSScopesById &qmlIDs,
         const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers,
         const MemberAccessChains &memberAccessChains, const QQmlJSScope::ConstPtr &root,
         const QString &rootId) const
@@ -281,10 +281,10 @@ void CheckIdentifiers::operator()(
                 continue;
             }
 
-            auto it = qmlIDs.find(memberAccessBase.m_name);
-            if (it != qmlIDs.end()) {
-                if (!it->isNull()) {
-                    checkMemberAccess(memberAccessChain, *it);
+            if (!memberAccessBase.m_name.isEmpty()) {
+                auto scope = qmlIDs.scope(memberAccessBase.m_name, currentScope);
+                if (!scope.isNull()) {
+                    checkMemberAccess(memberAccessChain, scope);
                     continue;
                 } else if (!memberAccessChain.isEmpty()) {
                     // It could be a qualified type name

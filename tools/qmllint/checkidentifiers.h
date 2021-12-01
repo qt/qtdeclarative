@@ -33,6 +33,7 @@
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include <QtQmlCompiler/private/qqmljsimporter_p.h>
 #include <QtQmlCompiler/private/qqmljsmetatypes_p.h>
+#include <QtQmlCompiler/private/qqmljsscopesbyid_p.h>
 
 class QColorOutput;
 
@@ -53,7 +54,7 @@ public:
         m_logger(logger), m_code(code), m_types(types), m_fileName(fileName)
     {}
 
-    void operator()(const QHash<QString, QQmlJSScope::ConstPtr> &qmlIDs,
+    void operator()(const QQmlJSScopesById &qmlIDs,
                     const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers,
                     const MemberAccessChains &memberAccessChains, const QQmlJSScope::ConstPtr &root,
                     const QString &rootId) const;

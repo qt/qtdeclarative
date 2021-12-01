@@ -170,14 +170,14 @@ void QQmlJSImportVisitor::resolveAliases()
             if (!property.isAlias() || !property.type().isNull())
                 continue;
 
-            QStringList components = property.typeName().split(u'.');
-            QQmlJSScope::ConstPtr type;
+            QStringList components = property.typeName().split(u'.', Qt::SkipEmptyParts);
             QQmlJSMetaProperty targetProperty;
 
             // The first component has to be an ID. Find the object it refers to.
-            const auto it = m_scopesById.find(components.takeFirst());
-            if (it != m_scopesById.end()) {
-                type = *it;
+            QQmlJSScope::ConstPtr type = components.isEmpty()
+                    ? QQmlJSScope::ConstPtr()
+                    : m_scopesById.scope(components.takeFirst(), object);
+            if (!type.isNull()) {
 
                 // Any further components are nested properties of that object.
                 // Technically we can only resolve a limited depth in the engine, but the rules
@@ -1157,7 +1157,8 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
     if (!id->next && id->name == QLatin1String("id")) {
         const auto *idExpression = cast<IdentifierExpression *>(statement->expression);
         const QString &name = idExpression->name.toString();
-        m_scopesById.insert(name, m_currentScope);
+        if (!name.isEmpty())
+            m_scopesById.insert(name, m_currentScope);
 
         // TODO: Discard this once we properly store binding values and can just use
         // QQmlJSScope::property() to obtain this

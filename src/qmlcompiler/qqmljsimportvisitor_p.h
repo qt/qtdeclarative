@@ -42,6 +42,7 @@
 #include "qqmljsscope_p.h"
 #include "qqmljsannotation_p.h"
 #include "qqmljslogger_p.h"
+#include "qqmljsscopesbyid_p.h"
 
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsdiagnosticmessage_p.h>
@@ -65,7 +66,7 @@ public:
     QQmlJSLogger &logger() { return m_logger; }
 
     QHash<QString, QQmlJSScope::ConstPtr> imports() const { return m_rootScopeImports; }
-    QHash<QString, QQmlJSScope::ConstPtr> addressableScopes() const { return m_scopesById; }
+    QQmlJSScopesById addressableScopes() const { return m_scopesById; }
     QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> scopesBylocation() const
     {
         return m_scopesByIrLocation;
@@ -145,7 +146,7 @@ protected:
     QQmlJSScope::Ptr m_savedBindingOuterScope;
     QQmlJSScope::Ptr m_exportedRootScope;
     QQmlJSScope::ConstPtr m_globalScope;
-    QHash<QString, QQmlJSScope::ConstPtr> m_scopesById;
+    QQmlJSScopesById m_scopesById;
     QHash<QString, QQmlJSScope::ConstPtr> m_rootScopeImports;
 
     // We need to record the locations as IR locations because those contain less data.
@@ -178,6 +179,10 @@ protected:
     void processPropertyBindingObjects();
     void checkSignals();
     void flushPendingSignalParameters();
+
+    QQmlJSScope::ConstPtr scopeById(const QString &id, const QQmlJSScope::ConstPtr &current);
+
+    enum HasCycle { CycleFound, CycleNotFound };
 
     void checkInheritanceCycle(QQmlJSScope::ConstPtr scope);
     void checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope);

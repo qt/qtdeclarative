@@ -12,6 +12,7 @@ qt_internal_add_module(QmlCompilerPrivate
         qqmljsmetatypes_p.h
         qqmljsresourcefilemapper.cpp qqmljsresourcefilemapper_p.h
         qqmljsscope.cpp qqmljsscope_p.h
+        qqmljsscopesbyid_p.h
         qqmljsstreamwriter.cpp qqmljsstreamwriter_p.h
         qqmljstypedescriptionreader.cpp qqmljstypedescriptionreader_p.h
         qqmljstypereader.cpp qqmljstypereader_p.h

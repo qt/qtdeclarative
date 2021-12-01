@@ -85,9 +85,8 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
             targetScope = m_rootScopeImports.value(scope->baseTypeName());
         } else {
             // there was a target, check if we already can find it
-            auto scopeIt = m_scopesById.find(target);
-            if (scopeIt != m_scopesById.end()) {
-                targetScope = *scopeIt;
+            if (auto scope = m_scopesById.scope(target, m_currentScope)) {
+                targetScope = scope;
             } else {
                 m_outstandingConnections.push_back({ target, m_currentScope, uiod });
                 return false; // visit children later once target is known
@@ -243,8 +242,9 @@ bool FindWarningVisitor::check()
 {
     // now that all ids are known, revisit any Connections whose target were perviously unknown
     for (auto const &outstandingConnection: m_outstandingConnections) {
-        auto targetScope = m_scopesById[outstandingConnection.targetName];
         if (outstandingConnection.scope) {
+            auto targetScope = m_scopesById.scope(outstandingConnection.targetName,
+                                                  outstandingConnection.scope);
             for (const auto scope = targetScope; targetScope;
                  targetScope = targetScope->baseType()) {
                 const auto connectionMethods = targetScope->ownMethods();
