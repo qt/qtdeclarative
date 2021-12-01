@@ -80,6 +80,11 @@ The following request urls will then result in the appropriate action:
 \endtable
 */
 
+static QList<QByteArrayView> ignoredHeaders = {
+    "HTTP2-Settings", // We ignore this
+    "Upgrade", // We ignore this as well
+};
+
 static QUrl localHostUrl(quint16 port)
 {
     QUrl url;
@@ -274,6 +279,12 @@ void TestHTTPServer::readyRead()
                 bool prefixFound = false;
                 for (const QByteArray &prefix : m_waitData.headerPrefixes) {
                     if (line.startsWith(prefix)) {
+                        prefixFound = true;
+                        break;
+                    }
+                }
+                for (QByteArrayView ignore : ignoredHeaders) {
+                    if (line.startsWith(ignore)) {
                         prefixFound = true;
                         break;
                     }
