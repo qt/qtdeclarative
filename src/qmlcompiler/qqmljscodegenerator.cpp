@@ -695,7 +695,7 @@ void QQmlJSCodeGenerator::generate_LoadQmlContextPropertyLookup(int index)
     }
 
     const QString indexString = QString::number(index);
-    const QQmlJSScope::ConstPtr scopeForId = m_typeResolver->scopeForId(name);
+    const QQmlJSScope::ConstPtr scopeForId = m_typeResolver->scopeForId(name, m_function->qmlScope);
     if (!scopeForId.isNull()) {
         const QString lookup = u"aotContext->loadContextIdLookup("_qs
                 + indexString + u", &"_qs + m_state.accumulatorVariableOut + u')';
@@ -706,8 +706,6 @@ void QQmlJSCodeGenerator::generate_LoadQmlContextPropertyLookup(int index)
     }
 
     const bool isProperty = m_state.accumulatorOut.isProperty();
-    QQmlJSScope::ConstPtr qmlScope = QQmlJSScope::findCurrentQMLScope(m_function->qmlScope);
-
     const QQmlJSScope::ConstPtr scope = m_state.accumulatorOut.scopeType();
     const QQmlJSScope::ConstPtr stored = m_state.accumulatorOut.storedType();
     if (isProperty) {

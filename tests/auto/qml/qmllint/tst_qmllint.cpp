@@ -780,6 +780,14 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("enumInvalid.qml")
             << QStringLiteral("Property \"red\" not found on type \"QtObject\"")
             << QString() << false;
+    QTest::newRow("inaccessibleId")
+            << QStringLiteral("inaccessibleId.qml")
+            << QStringLiteral("Property \"objectName\" not found on type \"int\"")
+            << QString() << false;
+    QTest::newRow("inaccessibleId2")
+            << QStringLiteral("inaccessibleId2.qml")
+            << QStringLiteral("Property \"objectName\" not found on type \"int\"")
+            << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -940,6 +948,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("goodGeneralizedGroup") << QStringLiteral("goodGeneralizedGroup.qml");
     QTest::newRow("on binding in grouped property") << QStringLiteral("onBindingInGroupedProperty.qml");
     QTest::newRow("declared property of JS object") << QStringLiteral("bareQt.qml");
+    QTest::newRow("ID overrides property") << QStringLiteral("accessibleId.qml");
 }
 
 void TestQmllint::cleanQmlCode()

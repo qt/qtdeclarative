@@ -161,9 +161,10 @@ QQmlJSTypeResolver::scopeForLocation(const QV4::CompiledData::Location &location
     return m_objectsByLocation[location];
 }
 
-QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopeForId(const QString &id) const
+QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopeForId(
+        const QString &id, const QQmlJSScope::ConstPtr &referrer) const
 {
-    return m_objectsById[id];
+    return m_objectsById.scope(id, referrer);
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::typeFromAST(QQmlJS::AST::Type *type) const
@@ -574,7 +575,7 @@ static bool isAssignedToDefaultProperty(const QQmlJSScope::ConstPtr &parent,
 QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr &scope,
                                                      const QString &name) const
 {
-    if (QQmlJSScope::ConstPtr identified = scopeForId(name)) {
+    if (QQmlJSScope::ConstPtr identified = scopeForId(name, scope)) {
         return QQmlJSRegisterContent::create(storedType(identified), identified,
                                              QQmlJSRegisterContent::ObjectById, scope);
     }

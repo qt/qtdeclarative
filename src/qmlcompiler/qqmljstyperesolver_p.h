@@ -39,12 +39,12 @@
 //
 // We mean it.
 
-#include "qqmljsregistercontent_p.h"
-
-#include <private/qqmljsscope_p.h>
-#include <private/qqmljsast_p.h>
 #include <private/qqmlirbuilder_p.h>
+#include <private/qqmljsast_p.h>
 #include <private/qqmljslogger_p.h>
+#include <private/qqmljsregistercontent_p.h>
+#include <private/qqmljsscope_p.h>
+#include <private/qqmljsscopesbyid_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -85,7 +85,8 @@ public:
     QQmlJSScope::ConstPtr jsGlobalObject() const { return m_jsGlobalObject; }
 
     QQmlJSScope::ConstPtr scopeForLocation(const QV4::CompiledData::Location &location) const;
-    QQmlJSScope::ConstPtr scopeForId(const QString &id) const;
+    QQmlJSScope::ConstPtr scopeForId(
+            const QString &id, const QQmlJSScope::ConstPtr &referrer) const;
 
     bool isPrefix(const QString &name) const
     {
@@ -133,7 +134,7 @@ public:
     QQmlJSScope::ConstPtr
     storedType(const QQmlJSScope::ConstPtr &type) const;
 
-    const QHash<QString, QQmlJSScope::ConstPtr> &objectsById() const { return m_objectsById; }
+    const QQmlJSScopesById &objectsById() const { return m_objectsById; }
     const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers() const
     {
         return m_signalHandlers;
@@ -170,7 +171,7 @@ protected:
     QQmlJSScope::ConstPtr m_metaObjectType;
     QQmlJSScope::ConstPtr m_jsGlobalObject;
 
-    QHash<QString, QQmlJSScope::ConstPtr> m_objectsById;
+    QQmlJSScopesById m_objectsById;
     QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> m_objectsByLocation;
     QHash<QString, QQmlJSScope::ConstPtr> m_imports;
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;

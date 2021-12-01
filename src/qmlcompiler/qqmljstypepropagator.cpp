@@ -323,25 +323,20 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
     for (QQmlJSScope::ConstPtr scope = m_function->qmlScope; !scope.isNull();
          scope = scope->parentScope()) {
         if (scope->hasProperty(name)) {
-            auto it = std::find_if(m_function->addressableScopes.constBegin(),
-                                   m_function->addressableScopes.constEnd(),
-                                   [&](const QQmlJSScope::ConstPtr ptr) { return ptr == scope; });
+            const QString id = m_function->addressableScopes.id(scope);
 
             FixSuggestion suggestion { Log_UnqualifiedAccess, {} };
 
             QQmlJS::SourceLocation fixLocation = location;
             fixLocation.length = 0;
-
-            QString id = it == m_function->addressableScopes.constEnd() ? u"<id>"_qs : it.key();
-
             suggestion.fixes << FixSuggestion::Fix {
                 name + QLatin1String(" is a member of a parent element\n")
                         + QLatin1String("      You can qualify the access with its id "
                                         "to avoid this warning:\n"),
-                fixLocation, id + u"."_qs
+                fixLocation, (id.isEmpty() ? u"<id>."_qs : (id + u'.'))
             };
 
-            if (it == m_function->addressableScopes.constEnd()) {
+            if (id.isEmpty()) {
                 suggestion.fixes << FixSuggestion::Fix {
                     u"You first have to give the element an id"_qs,
                     QQmlJS::SourceLocation {},
@@ -540,8 +535,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
                 if (m_state.accumulatorOut.isValid() && m_state.accumulatorOut.isEnumeration())
                     continue;
 
-                auto it = std::find(m_function->addressableScopes.constBegin(),
-                                    m_function->addressableScopes.constEnd(), scope);
+                const QString id = m_function->addressableScopes.id(scope);
 
                 m_logger->logWarning(
                         u"Using attached type %1 already initialized in a parent scope."_qs.arg(
@@ -553,15 +547,16 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
                 QQmlJS::SourceLocation fixLocation = getCurrentSourceLocation();
                 fixLocation.length = 0;
 
-                QString id = it == m_function->addressableScopes.constEnd() ? u"<id>"_qs : it.key();
-
-                suggestion.fixes << FixSuggestion::Fix { u"Reference it by id instead:"_qs,
-                                                         fixLocation, id + u"."_qs };
+                suggestion.fixes << FixSuggestion::Fix {
+                    u"Reference it by id instead:"_qs,
+                    fixLocation,
+                    id.isEmpty() ? u"<id>."_qs : (id + u'.')
+                };
 
                 fixLocation = scope->sourceLocation();
                 fixLocation.length = 0;
 
-                if (it == m_function->addressableScopes.constEnd()) {
+                if (id.isEmpty()) {
                     suggestion.fixes
                             << FixSuggestion::Fix { u"You first have to give the element an id"_qs,
                                                     QQmlJS::SourceLocation {},

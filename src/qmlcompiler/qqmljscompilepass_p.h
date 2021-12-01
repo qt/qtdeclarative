@@ -73,7 +73,7 @@ public:
 
     struct Function
     {
-        QHash<QString, QQmlJSScope::ConstPtr> addressableScopes;
+        QQmlJSScopesById addressableScopes;
         QList<QQmlJSScope::ConstPtr> argumentTypes;
         QQmlJSScope::ConstPtr returnType;
         QQmlJSScope::ConstPtr qmlScope;

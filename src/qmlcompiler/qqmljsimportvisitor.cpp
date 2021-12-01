@@ -181,16 +181,14 @@ void QQmlJSImportVisitor::resolveAliasesAndIds()
                 continue;
 
             QStringList components = property.aliasExpression().split(u'.');
-            QQmlJSScope::ConstPtr type;
             QQmlJSMetaProperty targetProperty;
 
             bool foundProperty = false;
 
             // The first component has to be an ID. Find the object it refers to.
-            const auto it = m_scopesById.find(components.takeFirst());
-            if (it != m_scopesById.end()) {
+            QQmlJSScope::ConstPtr type = m_scopesById.scope(components.takeFirst(), object);
+            if (!type.isNull()) {
                 foundProperty = true;
-                type = *it;
 
                 // Any further components are nested properties of that object.
                 // Technically we can only resolve a limited depth in the engine, but the rules
@@ -246,10 +244,10 @@ void QQmlJSImportVisitor::resolveAliasesAndIds()
             if (mayBeUnresolvedGeneralizedGroupedProperty(childScope)) {
                 const QString name = childScope->internalName();
                 if (object->isNameDeferred(name)) {
-                    auto it = m_scopesById.find(name);
-                    if (it != m_scopesById.end()) {
+                    const QQmlJSScope::ConstPtr deferred = m_scopesById.scope(name, childScope);
+                    if (!deferred.isNull()) {
                         QQmlJSScope::resolveGeneralizedGroup(
-                                    childScope, *it, m_rootScopeImports, &m_usedTypes);
+                                    childScope, deferred, m_rootScopeImports, &m_usedTypes);
                     }
                 }
             }
@@ -1386,7 +1384,8 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
             return QString();
 
         }();
-        m_scopesById.insert(name, m_currentScope);
+        if (!name.isEmpty())
+            m_scopesById.insert(name, m_currentScope);
         m_currentScope->setRuntimeId(m_runtimeIdCounters.top()++);
         return true;
     }
@@ -1821,11 +1820,11 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 
     if (m_currentScope->isNameDeferred(propertyName)) {
         bool foundIds = false;
-        QList<QQmlJSScope::Ptr> childScopes { childScope };
+        QList<QQmlJSScope::ConstPtr> childScopes { childScope };
 
         while (!childScopes.isEmpty()) {
-            const QQmlJSScope::Ptr &scope = childScopes.takeFirst();
-            if (m_scopesById.values().contains(scope)) {
+            const QQmlJSScope::ConstPtr scope = childScopes.takeFirst();
+            if (!m_scopesById.id(scope).isEmpty()) {
                 foundIds = true;
                 break;
             }

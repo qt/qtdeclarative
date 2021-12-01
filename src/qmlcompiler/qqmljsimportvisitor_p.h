@@ -39,10 +39,11 @@
 //
 // We mean it.
 
-#include "qqmljsscope_p.h"
 #include "qqmljsannotation_p.h"
-#include "qqmljslogger_p.h"
 #include "qqmljsimporter_p.h"
+#include "qqmljslogger_p.h"
+#include "qqmljsscope_p.h"
+#include "qqmljsscopesbyid_p.h"
 
 #include <QtCore/qvariant.h>
 #include <QtCore/qstack.h>
@@ -68,7 +69,7 @@ public:
     QQmlJSLogger *logger() { return m_logger; }
 
     QHash<QString, QQmlJSScope::ConstPtr> imports() const { return m_rootScopeImports; }
-    QHash<QString, QQmlJSScope::ConstPtr> addressableScopes() const { return m_scopesById; }
+    QQmlJSScopesById addressableScopes() const { return m_scopesById; }
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> signalHandlers() const
     {
         return m_signalHandlers;
@@ -156,7 +157,7 @@ protected:
     QQmlJSScope::Ptr m_savedBindingOuterScope;
     QQmlJSScope::Ptr m_exportedRootScope;
     QQmlJSScope::ConstPtr m_globalScope;
-    QHash<QString, QQmlJSScope::ConstPtr> m_scopesById;
+    QQmlJSScopesById m_scopesById;
     QHash<QString, QQmlJSScope::ConstPtr> m_rootScopeImports;
     QList<QQmlJSScope::ConstPtr> m_qmlTypes;
 
@@ -190,6 +191,8 @@ protected:
     void processPropertyBindingObjects();
     void checkSignals();
     void flushPendingSignalParameters();
+
+    QQmlJSScope::ConstPtr scopeById(const QString &id, const QQmlJSScope::ConstPtr &current);
 
     enum HasCycle { CycleFound, CycleNotFound };
 
