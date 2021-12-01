@@ -169,7 +169,7 @@ QQuickSelectionRectanglePrivate::QQuickSelectionRectanglePrivate()
     m_dragHandler->setTarget(nullptr);
 
     QObject::connect(&m_scrollTimer, &QTimer::timeout, [&]{
-        if (m_topLeftHandle && m_draggedHandle == m_topLeftHandle)
+        if (m_topLeftHandle && m_draggedHandle == m_topLeftHandle.data())
             m_selectable->setSelectionStartPos(m_scrollToPoint);
         else
             m_selectable->setSelectionEndPos(m_scrollToPoint);
@@ -253,13 +253,13 @@ QQuickItem *QQuickSelectionRectanglePrivate::handleUnderPos(const QPointF &pos)
     if (m_topLeftHandle) {
         const QPointF localPos = m_topLeftHandle->mapFromItem(handlerTarget, pos);
         if (m_topLeftHandle->contains(localPos))
-            return m_topLeftHandle;
+            return m_topLeftHandle.data();
     }
 
     if (m_bottomRightHandle) {
         const QPointF localPos = m_bottomRightHandle->mapFromItem(handlerTarget, pos);
         if (m_bottomRightHandle->contains(localPos))
-            return m_bottomRightHandle;
+            return m_bottomRightHandle.data();
     }
 
     return nullptr;
@@ -359,10 +359,10 @@ void QQuickSelectionRectanglePrivate::updateHandles()
     const QRectF rect = m_selectable->selectionRectangle().normalized();
 
     if (!m_topLeftHandle && m_topLeftHandleDelegate)
-        m_topLeftHandle = createHandle(m_topLeftHandleDelegate, Qt::TopLeftCorner);
+        m_topLeftHandle.reset(createHandle(m_topLeftHandleDelegate, Qt::TopLeftCorner));
 
     if (!m_bottomRightHandle && m_bottomRightHandleDelegate)
-        m_bottomRightHandle = createHandle(m_bottomRightHandleDelegate, Qt::BottomRightCorner);
+        m_bottomRightHandle.reset(createHandle(m_bottomRightHandleDelegate, Qt::BottomRightCorner));
 
     if (m_topLeftHandle) {
         m_topLeftHandle->setX(rect.x() - (m_topLeftHandle->width() / 2));

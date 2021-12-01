@@ -88,9 +88,9 @@ public:
 
     QQmlComponent *m_topLeftHandleDelegate = nullptr;
     QQmlComponent *m_bottomRightHandleDelegate = nullptr;
-    QPointer<QQuickItem> m_topLeftHandle;
-    QPointer<QQuickItem> m_bottomRightHandle;
-    QPointer<QQuickItem> m_draggedHandle = nullptr;
+    QScopedPointer<QQuickItem> m_topLeftHandle;
+    QScopedPointer<QQuickItem> m_bottomRightHandle;
+    QPointer<QQuickItem> m_draggedHandle;
 
     QQuickSelectable *m_selectable = nullptr;
 
