@@ -1722,6 +1722,15 @@ Type: UiQualifiedId;
     } break;
 ./
 
+Type: T_VOID;
+/.
+    case $rule_number: {
+        AST::UiQualifiedId *id = new (pool) AST::UiQualifiedId(stringRef(1));
+        id->identifierToken = loc(1);
+        sym(1).Type = new (pool) AST::Type(id->finish());
+    } break;
+./
+
 TypeAnnotation: T_COLON Type;
 /.
     case $rule_number: {

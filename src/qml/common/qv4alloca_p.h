@@ -100,8 +100,10 @@ QT_END_NAMESPACE
     type *name = nullptr
 
 #define Q_ALLOCA_ASSIGN(type, name, size) \
-    _qt_alloca_##name.allocate(size); \
-    name = static_cast<type*>(_qt_alloca_##name.data())
+    do { \
+        _qt_alloca_##name.allocate(size); \
+        name = static_cast<type*>(_qt_alloca_##name.data()); \
+    } while (false)
 
 #endif
 

@@ -472,8 +472,10 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
     const QMetaType frameReturn = frame->returnType();
     Q_ALLOCA_DECLARE(void, transformedResult);
     if (frame->returnValue() && returnType != frameReturn) {
-        Q_ASSERT(returnType.sizeOf() > 0);
-        Q_ALLOCA_ASSIGN(void, transformedResult, returnType.sizeOf());
+        if (returnType.sizeOf() > 0)
+            Q_ALLOCA_ASSIGN(void, transformedResult, returnType.sizeOf());
+        else
+            transformedResult = frame; // Some non-null marker value
     }
 
     QQmlPrivate::AOTCompiledContext aotContext;
