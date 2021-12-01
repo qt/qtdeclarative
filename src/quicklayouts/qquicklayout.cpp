@@ -73,7 +73,11 @@
 
     The \l fillWidth and \l fillHeight properties can either be \c true or \c false. If they are \c
     false, the item's size will be fixed to its preferred size. Otherwise, it will grow or shrink
-    between its minimum and maximum size as the layout is resized.
+    between its minimum and maximum size as the layout is resized. If there are multiple items
+    with \l fillWidth (or \l fillHeight) set to \c true, the layout will grow or shrink the items
+    relative to the ratio of their preferred size.
+
+    For more details on the layout algorithm, see also the \l {Qt Quick Layouts Overview}.
 
     \note Do not bind to the x, y, width, or height properties of items in a layout,
     as this would conflict with the goals of Layout, and can also cause binding loops.

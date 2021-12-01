@@ -103,9 +103,16 @@
     \l{Layout::minimumWidth}{minimum}, \l{Layout::preferredWidth}{preferred},
     and \l{Layout::maximumWidth}{maximum} sizes of all items where \l{Layout::fillWidth}{Layout.fillWidth} or
     \l{Layout::fillHeight}{Layout.fillHeight} is set to \c true.
+
+    The \l{Layout::preferredWidth}{preferred} width and height is the \e actual width and
+    height of an item if the layout is not bound to a specific size itself. If the layout is set
+    to a specific size, it will distribute additional space based on the ratio of preferred sizes
+    of its items (taking minimum and maximum sizes into account).
+
     For instance, the following will produce a layout with two rectangles lying side-by-side that
     stretches horizontally. The azure rectangle can be resized from 50x150 to 300x150, and the plum
-    rectangle can be resized from 100x100 to ∞x100.
+    rectangle can be resized from 100x100 to ∞x100. As long as the minimum and maximum width of each
+    item is not reached, the plum rectangle will have two times the width of the azure one.
 
     \snippet qml/windowconstraints.qml rowlayout
 
