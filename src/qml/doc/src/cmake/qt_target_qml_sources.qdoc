@@ -193,6 +193,7 @@ can be overridden by setting the \c QT_RESOURCE_ALIAS property on the source
 file. This is commonly used to collect files from different directories and
 have them appear in the resources under a common location.
 
+\target qt_target_qml_sources_example
 \snippet cmake/qt_target_qml_sources/CMakeLists.txt 0
 
 In the above example, the \c qt_target_qml_sources_example target's resources
@@ -200,6 +201,7 @@ will end up with the following contents:
 
 \list
 \li \c{/my.company.com/imports/Example/File.qml}
+\li \c{/my.company.com/imports/Example/FunnySingleton.qml}
 \li \c{/my.company.com/imports/Example/templates/File.qml}
 \li \c{/my.company.com/imports/Example/some_old_thing.qml}
 \li \c{/my.company.com/imports/Example/button-types.png}
@@ -210,8 +212,15 @@ The generated \c qmldir file will contain the following type entries:
 
 \badcode
 File 2.0 File.qml
+singleton FunnySingleton 2.0 FunnySingleton.qml
 OldThing 1.1 some_old_thing.qml
 OldThing 2.0 some_old_thing.qml
 \endcode
+
+\note The source FunnySingleton.qml file must already contain
+the \c {pragma Singleton} statement. Setting the \c QT_QML_SINGLETON_TYPE source
+property does not automatically generate the pragma.
+
+\snippet cmake/qt_target_qml_sources/FunnySingleton.qml 0
 
 */
