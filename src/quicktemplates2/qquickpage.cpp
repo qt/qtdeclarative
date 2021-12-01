@@ -164,8 +164,6 @@ void QQuickPagePrivate::itemVisibilityChanged(QQuickItem *item)
 {
     Q_Q(QQuickPage);
     QQuickPanePrivate::itemVisibilityChanged(item);
-    if (QQmlData::wasDeleted(q))
-        return;
     if (item == header) {
         QBoolBlocker signalGuard(emittingImplicitSizeChangedSignals);
         emit q->implicitHeaderWidthChanged();
