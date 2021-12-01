@@ -1226,24 +1226,42 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
     if (!name.isEmpty()) {
         QQmlJSMetaMethod method(name);
         method.setMethodType(QQmlJSMetaMethod::Method);
-        method.setIsJavaScriptFunction(true);
 
         if (!m_pendingMethodAnnotations.isEmpty()) {
             method.setAnnotations(m_pendingMethodAnnotations);
             m_pendingMethodAnnotations.clear();
         }
 
+        bool formalsFullyTyped = true;
+        bool anyFormalTyped = false;
         if (const auto *formals = fexpr->formals) {
             const auto parameters = formals->formals();
             for (const auto &parameter : parameters) {
                 const QString type = parameter.typeName();
-                method.addParameter(parameter.id,
-                                    type.isEmpty() ? QStringLiteral("var") : type);
+                if (type.isEmpty()) {
+                    formalsFullyTyped = false;
+                    method.addParameter(parameter.id, QStringLiteral("var"));
+                }  else {
+                    anyFormalTyped = true;
+                    method.addParameter(parameter.id, type);
+                }
             }
         }
-        method.setReturnTypeName(fexpr->typeAnnotation
-                                 ? fexpr->typeAnnotation->type->toString()
-                                 : QStringLiteral("var"));
+
+        // If a function is fully typed, we can call it like a C++ function.
+        method.setIsJavaScriptFunction(!formalsFullyTyped);
+
+        // Methods with explicit return type return that.
+        // Methods with only untyped arguments return an untyped value.
+        // Methods with at least one typed argument but no explicit return type return void.
+        // In order to make a function without arguments return void, you have to specify that.
+        if (fexpr->typeAnnotation)
+            method.setReturnTypeName(fexpr->typeAnnotation->type->toString());
+        else if (anyFormalTyped)
+            method.setReturnTypeName(QStringLiteral("void"));
+        else
+            method.setReturnTypeName(QStringLiteral("var"));
+
         m_currentScope->addOwnMethod(method);
 
         if (m_currentScope->scopeType() != QQmlJSScope::QMLScope) {

@@ -107,7 +107,8 @@ void QQmlJSFunctionInitializer::populateSignature(
         if (ast->typeAnnotation) {
             function->returnType = m_typeResolver->typeFromAST(ast->typeAnnotation->type);
             if (!function->returnType)
-                signatureError(u"Cannot resolve return type"_qs);
+                signatureError(u"Cannot resolve return type %1"_qs.arg(
+                                   QmlIR::IRBuilder::asString(ast->typeAnnotation->type->typeId)));
         }
     }
 

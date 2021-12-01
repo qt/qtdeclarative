@@ -55,6 +55,7 @@ set(qml_files
     failures.qml
     fileDialog.qml
     funcWithParams.qml
+    functionReturningVoid.qml
     globals.qml
     idAccess.qml
     immediateQuit.qml

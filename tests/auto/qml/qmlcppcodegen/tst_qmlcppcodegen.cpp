@@ -108,6 +108,7 @@ private slots:
     void jsMathObject();
     void intEnumCompare();
     void attachedSelf();
+    void functionReturningVoid();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1611,6 +1612,22 @@ void tst_QmlCppCodegen::attachedSelf()
     QObject *handle = qvariant_cast<QObject *>(o->property("aa"));
     QVERIFY(handle);
     QVERIFY(qvariant_cast<QObject *>(handle->property("rect")) != nullptr);
+}
+
+void tst_QmlCppCodegen::functionReturningVoid()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/functionReturningVoid.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    // It should be able to call the methods and wrap the void values into invalid QVariants,
+    // without crashing.
+    QVERIFY(o->metaObject()->indexOfProperty("aa") >= 0);
+    QVERIFY(o->metaObject()->indexOfProperty("bb") >= 0);
+    QVERIFY(!o->property("aa").isValid());
+    QVERIFY(!o->property("bb").isValid());
 }
 
 void tst_QmlCppCodegen::runInterpreted()

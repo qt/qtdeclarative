@@ -1189,7 +1189,8 @@ void TestQmllint::multiGrouped()
 
 void TestQmllint::javascriptVariableArgs()
 {
-    QVERIFY(runQmllint("javascriptVariableArgs.qml", true, { "--compiler", "warning" }).isEmpty());
+    QVERIFY(runQmllint("javascriptVariableArgs.qml", false, { "--compiler", "warning" })
+            .contains(QStringLiteral("Function expects 0 arguments, but 2 were provided")));
 }
 
 QTEST_MAIN(TestQmllint)

@@ -5,6 +5,8 @@ Module {
 
     Component {
         name: "void"
+        extension: "undefined"
+        exports: ["QML/void 1.0"]
         accessSemantics: "none"
     }
 
