@@ -159,6 +159,43 @@ TestCase {
         compare(control.first.position, 0.5)
     }
 
+    function test_setToFromUpdatesHandles() {
+        var control = createTemporaryObject(sliderComponent, testCase, { from: 0, to: 100, "first.value": 50, "second.value": 75 })
+        verify(control)
+
+        let firstPos = control.first.position
+        let secondPos = control.second.position
+
+        var firstPosChangesSpy = signalSpy.createObject(control, {target: control.first, signalName: "positionChanged"})
+        verify(firstPosChangesSpy.valid)
+
+        var secondPosChangesSpy = signalSpy.createObject(control, {target: control.second, signalName: "positionChanged"})
+        verify(secondPosChangesSpy.valid)
+
+        // Increasing the 'to' value, so the positions of the handles should be
+        // moved to the left (become smaller)
+        control.to = 200;
+        compare(firstPosChangesSpy.count, 1)
+        compare(secondPosChangesSpy.count, 1)
+        verify(control.first.position < firstPos)
+        verify(control.second.position < secondPos)
+
+        // resetting the values
+        control.to = 100
+        firstPosChangesSpy.clear()
+        secondPosChangesSpy.clear()
+        firstPos = control.first.position
+        secondPos = control.second.position
+
+        // Decreasing the 'from' value, so the positions of the handles should
+        // be moved to the right (become larger)
+        control.from = -100
+        compare(firstPosChangesSpy.count, 1)
+        compare(secondPosChangesSpy.count, 1)
+        verify(control.first.position > firstPos)
+        verify(control.second.position > secondPos)
+    }
+
     function test_setValues() {
         var control = createTemporaryObject(sliderComponent, testCase)
         verify(control)

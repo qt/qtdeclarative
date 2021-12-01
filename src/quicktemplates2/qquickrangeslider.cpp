@@ -679,6 +679,10 @@ void QQuickRangeSlider::setFrom(qreal from)
     if (isComponentComplete()) {
         d->first->setValue(d->first->value());
         d->second->setValue(d->second->value());
+        auto *firstPrivate = QQuickRangeSliderNodePrivate::get(d->first);
+        auto *secondPrivate = QQuickRangeSliderNodePrivate::get(d->second);
+        firstPrivate->updatePosition(true);
+        secondPrivate->updatePosition();
     }
 }
 
@@ -707,6 +711,10 @@ void QQuickRangeSlider::setTo(qreal to)
     if (isComponentComplete()) {
         d->first->setValue(d->first->value());
         d->second->setValue(d->second->value());
+        auto *firstPrivate = QQuickRangeSliderNodePrivate::get(d->first);
+        auto *secondPrivate = QQuickRangeSliderNodePrivate::get(d->second);
+        firstPrivate->updatePosition(true);
+        secondPrivate->updatePosition();
     }
 }
 
