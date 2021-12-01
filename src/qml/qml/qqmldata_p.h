@@ -228,8 +228,7 @@ public:
 
     QQmlGuardImpl *guards;
 
-    static QQmlData *get(const QObject *object, bool create = false) {
-        QObjectPrivate *priv = QObjectPrivate::get(const_cast<QObject *>(object));
+    static QQmlData *get(const QObjectPrivate *priv, bool create = false) {
         // If QObjectData::isDeletingChildren is set then access to QObjectPrivate::declarativeData has
         // to be avoided because QObjectPrivate::currentChildBeingDeleted is in use.
         if (priv->isDeletingChildren || priv->wasDeleted) {
@@ -238,10 +237,16 @@ public:
         } else if (priv->declarativeData) {
             return static_cast<QQmlData *>(priv->declarativeData);
         } else if (create) {
-            return createQQmlData(priv);
+            QObjectPrivate *mutablePriv = const_cast<QObjectPrivate *>(priv);
+            return createQQmlData(mutablePriv);
         } else {
             return nullptr;
         }
+    }
+
+    static QQmlData *get(const QObject *object, bool create = false) {
+        const QObjectPrivate *priv = QObjectPrivate::get(object);
+        return QQmlData::get(priv, create);
     }
 
     static bool keepAliveDuringGarbageCollection(const QObject *object) {
@@ -255,6 +260,7 @@ public:
     QHash<QQmlAttachedPropertiesFunc, QObject *> *attachedProperties() const;
 
     static inline bool wasDeleted(const QObject *);
+    static inline bool wasDeleted(const QObjectPrivate *);
 
     static void markAsDeleted(QObject *);
     static void setQueuedForDeletion(QObject *);
@@ -316,17 +322,22 @@ private:
     Q_DISABLE_COPY(QQmlData);
 };
 
+bool QQmlData::wasDeleted(const QObjectPrivate *priv)
+{
+    if (!priv || priv->wasDeleted || priv->isDeletingChildren)
+        return true;
+
+    const QQmlData *ddata = QQmlData::get(priv);
+    return ddata && ddata->isQueuedForDeletion;
+}
+
 bool QQmlData::wasDeleted(const QObject *object)
 {
     if (!object)
         return true;
 
     const QObjectPrivate *priv = QObjectPrivate::get(object);
-    if (!priv || priv->wasDeleted || priv->isDeletingChildren)
-        return true;
-
-    const QQmlData *ddata = QQmlData::get(object);
-    return ddata && ddata->isQueuedForDeletion;
+    return QQmlData::wasDeleted(priv);
 }
 
 QQmlNotifierEndpoint *QQmlData::notify(int index)
