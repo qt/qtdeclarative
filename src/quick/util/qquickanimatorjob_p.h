@@ -119,10 +119,16 @@ public:
     virtual void setTarget(QQuickItem *target);
     QQuickItem *target() const { return m_target; }
 
-    void setFrom(qreal from) { m_from = from; }
+    void setFrom(qreal from) {
+        m_from = from;
+        boundValue();
+    }
     qreal from() const { return m_from; }
 
-    void setTo(qreal to) { m_to = to; }
+    void setTo(qreal to) {
+        m_to = to;
+        boundValue();
+    }
     qreal to() const { return m_to; }
 
     void setDuration(int duration) { m_duration = duration; }
@@ -168,6 +174,7 @@ protected:
     void debugAnimation(QDebug d) const override;
 
     qreal progress(int time) const;
+    void boundValue();
 
     QPointer<QQuickItem> m_target;
     QQuickAnimatorController *m_controller;
