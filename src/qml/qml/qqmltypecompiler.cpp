@@ -350,7 +350,7 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(
             const QMetaObject *attachedType = type.attachedPropertiesType(enginePrivate);
             if (!attachedType)
                 COMPILE_EXCEPTION(binding, tr("Non-existent attached object"));
-            QQmlRefPointer<QQmlPropertyCache> cache = compiler->enginePrivate()->cache(attachedType);
+            QQmlRefPointer<QQmlPropertyCache> cache = QQmlMetaType::propertyCache(attachedType);
             if (!resolveSignalHandlerExpressions(attachedObj, bindingPropertyName, cache.data()))
                 return false;
             continue;
@@ -856,7 +856,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(
         const int componentIndex = qmlObjects->count() - 1;
         // Keep property caches symmetric
         QQmlRefPointer<QQmlPropertyCache> componentCache
-                = enginePrivate->cache(&QQmlComponent::staticMetaObject);
+                = QQmlMetaType::propertyCache(&QQmlComponent::staticMetaObject);
         propertyCaches.append(componentCache);
 
         QmlIR::Binding *syntheticBinding = pool->New<QmlIR::Binding>();

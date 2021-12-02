@@ -136,7 +136,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlBindingInstantiationContext::instantiating
             return enginePrivate->rawPropertyCacheForType(instantiatingProperty->propType(),
                                                           instantiatingProperty->typeVersion());
         } else if (const QMetaObject *vtmo = QQmlMetaType::metaObjectForValueType(instantiatingProperty->propType())) {
-            return enginePrivate->cache(vtmo, instantiatingProperty->typeVersion());
+            return QQmlMetaType::propertyCache(vtmo, instantiatingProperty->typeVersion());
         }
     }
     return QQmlRefPointer<QQmlPropertyCache>();

@@ -94,7 +94,7 @@ class ResolvedTypeReference;
 // map from name index
 struct ResolvedTypeReferenceMap: public QHash<int, ResolvedTypeReference*>
 {
-    bool addToHash(QCryptographicHash *hash, QQmlEngine *engine) const;
+    bool addToHash(QCryptographicHash *hash) const;
 };
 
 class Q_QML_PRIVATE_EXPORT ExecutableCompilationUnit final: public CompiledData::CompilationUnit,

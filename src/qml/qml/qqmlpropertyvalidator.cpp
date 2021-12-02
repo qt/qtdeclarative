@@ -710,7 +710,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
 
         const QV4::CompiledData::Object *targetObject = compilationUnit->objectAt(binding->value.objectIndex);
         if (auto *typeRef = resolvedType(targetObject->inheritedTypeNameIndex)) {
-            QQmlRefPointer<QQmlPropertyCache> cache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+            QQmlRefPointer<QQmlPropertyCache> cache = typeRef->createPropertyCache();
             const QMetaObject *mo = cache->firstCppMetaObject();
             QQmlType qmlType;
             while (mo && !qmlType.isValid()) {

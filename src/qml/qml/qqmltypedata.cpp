@@ -252,14 +252,15 @@ void QQmlTypeData::createTypeAndPropertyCaches(
     pendingGroupPropertyBindings.resolveMissingPropertyCaches(engine, &m_compiledData->propertyCaches);
 }
 
-static bool addTypeReferenceChecksumsToHash(const QList<QQmlTypeData::TypeReference> &typeRefs, QCryptographicHash *hash, QQmlEngine *engine)
+static bool addTypeReferenceChecksumsToHash(
+        const QList<QQmlTypeData::TypeReference> &typeRefs, QCryptographicHash *hash)
 {
     for (const auto &typeRef: typeRefs) {
         if (typeRef.typeData) {
             const auto unit = typeRef.typeData->compilationUnit()->unitData();
             hash->addData(unit->md5Checksum, sizeof(unit->md5Checksum));
         } else if (typeRef.type.isValid()) {
-            const auto propertyCache = QQmlEnginePrivate::get(engine)->cache(typeRef.type.metaObject());
+            const auto propertyCache = QQmlMetaType::propertyCache(typeRef.type.metaObject());
             bool ok = false;
             hash->addData(propertyCache->checksum(&ok));
             if (!ok)
@@ -417,12 +418,10 @@ void QQmlTypeData::done()
         }
     }
 
-    QQmlEngine *const engine = typeLoader()->engine();
-
-    const auto dependencyHasher = [engine, &resolvedTypeCache, this]() {
+    const auto dependencyHasher = [&resolvedTypeCache, this]() {
         QCryptographicHash hash(QCryptographicHash::Md5);
-        return (resolvedTypeCache.addToHash(&hash, engine)
-                && ::addTypeReferenceChecksumsToHash(m_compositeSingletons, &hash, engine))
+        return (resolvedTypeCache.addToHash(&hash)
+                && ::addTypeReferenceChecksumsToHash(m_compositeSingletons, &hash))
                 ? hash.result()
                 : QByteArray();
     };
@@ -451,7 +450,7 @@ void QQmlTypeData::done()
         return;
 
     {
-        QQmlEnginePrivate *const enginePrivate = QQmlEnginePrivate::get(engine);
+        QQmlEnginePrivate *const enginePrivate = QQmlEnginePrivate::get(typeLoader()->engine());
         m_compiledData->inlineComponentData = m_inlineComponentData;
         {
             // Sanity check property bindings
@@ -954,7 +953,7 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
             }
 
             if (qmlType.containsRevisionedAttributes())
-                ref->setTypePropertyCache(engine->cache(qmlType, resolvedType->version));
+                ref->setTypePropertyCache(QQmlMetaType::propertyCache(qmlType, resolvedType->version));
         }
         ref->setVersion(resolvedType->version);
         ref->doDynamicTypeCheck();

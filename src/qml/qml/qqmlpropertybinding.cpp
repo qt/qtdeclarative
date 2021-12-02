@@ -179,7 +179,7 @@ void QQmlPropertyBindingJS::expressionChanged()
         const auto ctxt = context();
         QQmlEngine *engine = ctxt ? ctxt->engine() : nullptr;
         if (engine)
-            err.setDescription(asBinding()->createBindingLoopErrorDescription(QQmlEnginePrivate::get(engine)));
+            err.setDescription(asBinding()->createBindingLoopErrorDescription());
         else
             err.setDescription(QString::fromLatin1("Binding loop detected"));
         err.setObject(asBinding()->target());
@@ -230,7 +230,7 @@ void QQmlPropertyBinding::handleUndefinedAssignment(QQmlEnginePrivate *ep, void 
     QQmlData *data = QQmlData::get(target(), false);
     Q_ASSERT(data);
     if (Q_UNLIKELY(!data->propertyCache))
-        data->propertyCache = ep->cache(target()->metaObject());
+        data->propertyCache = QQmlMetaType::propertyCache(target()->metaObject());
 
     propertyData = data->propertyCache->property(targetIndex().coreIndex());
     Q_ASSERT(propertyData);
@@ -293,14 +293,14 @@ void QQmlPropertyBinding::handleUndefinedAssignment(QQmlEnginePrivate *ep, void 
     }
 }
 
-QString QQmlPropertyBinding::createBindingLoopErrorDescription(QJSEnginePrivate *ep)
+QString QQmlPropertyBinding::createBindingLoopErrorDescription()
 {
     QQmlPropertyData *propertyData = nullptr;
     QQmlPropertyData valueTypeData;
     QQmlData *data = QQmlData::get(target(), false);
     Q_ASSERT(data);
     if (Q_UNLIKELY(!data->propertyCache))
-        data->propertyCache = ep->cache(target()->metaObject());
+        data->propertyCache = QQmlMetaType::propertyCache(target()->metaObject());
 
     propertyData = data->propertyCache->property(targetIndex().coreIndex());
     Q_ASSERT(propertyData);
@@ -316,7 +316,6 @@ void QQmlPropertyBinding::bindingErrorCallback(QPropertyBindingPrivate *that)
     auto engine = qmlEngine(target);
     if (!engine)
         return;
-    auto ep = QQmlEnginePrivate::get(engine);
 
     auto error = This->bindingError();
     QQmlError qmlError;
@@ -326,11 +325,11 @@ void QQmlPropertyBinding::bindingErrorCallback(QPropertyBindingPrivate *that)
     qmlError.setUrl(QUrl {location.sourceFile});
     auto description = error.description();
     if (error.type() == QPropertyBindingError::BindingLoop) {
-        description = This->createBindingLoopErrorDescription(ep);
+        description = This->createBindingLoopErrorDescription();
     }
     qmlError.setDescription(description);
     qmlError.setObject(target);
-    ep->warning(qmlError);
+    QQmlEnginePrivate::get(engine)->warning(qmlError);
 }
 
 QUntypedPropertyBinding QQmlTranslationPropertyBinding::create(const QQmlPropertyData *pd, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit, const QV4::CompiledData::Binding *binding)

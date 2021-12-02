@@ -312,7 +312,7 @@ void tst_qquickdesignersupport::dynamicProperty()
     QVERIFY(simpleItem);
 
     QQuickDesignerSupportProperties::registerNodeInstanceMetaObject(simpleItem, view->engine());
-    QQuickDesignerSupportProperties::getPropertyCache(simpleItem, view->engine());
+    QQuickDesignerSupportProperties::getPropertyCache(simpleItem);
 
     QQuickDesignerSupportProperties::createNewDynamicProperty(simpleItem, view->engine(), QLatin1String("dynamicProperty"));
 

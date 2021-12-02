@@ -121,9 +121,9 @@ QObject *QQuickDesignerSupportProperties::readQObjectProperty(const QMetaPropert
     return QQmlMetaType::toQObject(metaProperty.read(object));
 }
 
-void QQuickDesignerSupportProperties::getPropertyCache(QObject *object, QQmlEngine *engine)
+void QQuickDesignerSupportProperties::getPropertyCache(QObject *object)
 {
-    QQmlEnginePrivate::get(engine)->cache(object->metaObject());
+    QQmlMetaType::propertyCache(object->metaObject());
 }
 
 static QQuickDesignerSupport::PropertyNameList propertyNameListForWritableProperties(QObject *object,

@@ -208,8 +208,6 @@ public:
     // These methods may be called from any thread
     QString offlineStorageDatabaseDirectory() const;
 
-    // These methods may be called from the loader thread
-    inline QQmlRefPointer<QQmlPropertyCache> cache(const QQmlType &, QTypeRevision version);
     using QJSEnginePrivate::cache;
 
     // These methods may be called from the loader thread
@@ -360,19 +358,6 @@ inline void QQmlEnginePrivate::dereferenceScarceResources()
             cleanupScarceResources();
         }
     }
-}
-
-/*!
-Returns a QQmlPropertyCache for \a type with \a minorVersion.
-
-The returned cache is not referenced, so if it is to be stored, call addref().
-*/
-QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::cache(
-        const QQmlType &type, QTypeRevision version)
-{
-    Q_ASSERT(type.isValid());
-    Q_ASSERT(type.containsRevisionedAttributes());
-    return QQmlMetaType::propertyCache(type, version);
 }
 
 QV4::ExecutionEngine *QQmlEnginePrivate::getV4Engine(QQmlEngine *e)

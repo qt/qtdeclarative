@@ -1732,7 +1732,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::propertyCacheForType(QMetaT
 
     const QQmlType type = QQmlMetaType::qmlType(metaType);
     return type.isValid()
-            ? cache(type.metaObject(), type.version())
+            ? QQmlMetaType::propertyCache(type.metaObject(), type.version())
             : QQmlRefPointer<QQmlPropertyCache>();
 }
 
@@ -1750,7 +1750,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::rawPropertyCacheForType(QMe
 
     const QQmlType type = QQmlMetaType::qmlType(metaType);
     return type.isValid()
-            ? cache(type.baseMetaObject(), QTypeRevision())
+            ? QQmlMetaType::propertyCache(type.baseMetaObject(), QTypeRevision())
             : QQmlRefPointer<QQmlPropertyCache>();
 }
 
@@ -1774,7 +1774,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::rawPropertyCacheForType(
         return QQmlMetaType::propertyCache(type, version);
 
     if (const QMetaObject *metaObject = type.metaObject())
-        return cache(metaObject, version);
+        return QQmlMetaType::propertyCache(metaObject, version);
 
     return QQmlRefPointer<QQmlPropertyCache>();
 }

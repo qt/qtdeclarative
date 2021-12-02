@@ -88,7 +88,7 @@ public:
     static bool isPropertyQObject(const QMetaProperty &metaProperty);
     static QObject *readQObjectProperty(const QMetaProperty &metaProperty, QObject *object);
 
-    static void getPropertyCache(QObject *object, QQmlEngine *engine);
+    static void getPropertyCache(QObject *object);
     static bool isPropertyBlackListed(const QQuickDesignerSupport::PropertyName &propertyName);
     static QQuickDesignerSupport::PropertyNameList propertyNameListForWritableProperties(QObject *object);
     static QQuickDesignerSupport::PropertyNameList allPropertyNames(QObject *object,

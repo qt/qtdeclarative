@@ -83,12 +83,12 @@ QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::propertyCache() const
 /*!
 Returns the property cache, creating one if it doesn't already exist.  The cache is not referenced.
 */
-QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::createPropertyCache(QQmlEngine *engine)
+QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::createPropertyCache()
 {
     if (m_typePropertyCache) {
         return m_typePropertyCache;
     } else if (m_type.isValid()) {
-        m_typePropertyCache = QQmlEnginePrivate::get(engine)->cache(m_type.metaObject(), m_version);
+        m_typePropertyCache = QQmlMetaType::propertyCache(m_type.metaObject(), m_version);
         return m_typePropertyCache;
     } else {
         Q_ASSERT(m_compilationUnit);
@@ -96,11 +96,11 @@ QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::createPropertyCache(QQm
     }
 }
 
-bool ResolvedTypeReference::addToHash(QCryptographicHash *hash, QQmlEngine *engine)
+bool ResolvedTypeReference::addToHash(QCryptographicHash *hash)
 {
     if (m_type.isValid() && !m_type.isInlineComponentType()) {
         bool ok = false;
-        hash->addData(createPropertyCache(engine)->checksum(&ok));
+        hash->addData(createPropertyCache()->checksum(&ok));
         return ok;
     }
     if (!m_compilationUnit)

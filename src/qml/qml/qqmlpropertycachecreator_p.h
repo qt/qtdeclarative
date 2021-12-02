@@ -308,7 +308,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
                         const CompiledObject *obj = objectContainer->objectAt(context.referencingObjectIndex);
                         auto *typeRef = objectContainer->resolvedType(obj->inheritedTypeNameIndex);
                         Q_ASSERT(typeRef);
-                        QQmlRefPointer<QQmlPropertyCache> baseTypeCache = typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+                        QQmlRefPointer<QQmlPropertyCache> baseTypeCache = typeRef->createPropertyCache();
                         QQmlError error = createMetaObject(context.referencingObjectIndex, obj, baseTypeCache);
                         if (error.isValid())
                             return error;
@@ -403,7 +403,7 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
             }
         }
 
-        return typeRef->createPropertyCache(QQmlEnginePrivate::get(enginePrivate));
+        return typeRef->createPropertyCache();
     } else if (const QV4::CompiledData::Binding *binding = context.instantiatingBinding) {
         if (binding->isAttachedProperty()) {
             auto *typeRef = objectContainer->resolvedType(
@@ -420,7 +420,7 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
                 *error = qQmlCompileError(binding->location, QQmlPropertyCacheCreatorBase::tr("Non-existent attached object"));
                 return nullptr;
             }
-            return enginePrivate->cache(attachedMo);
+            return QQmlMetaType::propertyCache(attachedMo);
         } else if (binding->isGroupProperty()) {
             const auto *obj = objectContainer->objectAt(binding->value.objectIndex);
             if (!stringAt(obj->inheritedTypeNameIndex).isEmpty())

@@ -86,8 +86,6 @@ public:
 
     // These methods may be called from the QML loader thread
     inline QQmlRefPointer<QQmlPropertyCache> cache(QObject *obj, QTypeRevision version = QTypeRevision());
-    inline QQmlRefPointer<QQmlPropertyCache> cache(
-            const QMetaObject *obj, QTypeRevision version = QTypeRevision());
 };
 
 /*!
@@ -113,24 +111,6 @@ QQmlRefPointer<QQmlPropertyCache> QJSEnginePrivate::cache(QObject *obj, QTypeRev
     const QMetaObject *mo = obj->metaObject();
     return QQmlMetaType::propertyCache(mo, version);
 }
-
-/*!
-Returns a QQmlPropertyCache for \a metaObject.
-
-As the cache is persisted for the life of the engine, \a metaObject must be
-a static "compile time" meta-object, or a meta-object that is otherwise known to
-exist for the lifetime of the QQmlEngine.
-
-The returned cache is not referenced, so if it is to be stored, call addref().
-*/
-QQmlRefPointer<QQmlPropertyCache> QJSEnginePrivate::cache(
-        const QMetaObject *metaObject, QTypeRevision version)
-{
-    Q_ASSERT(metaObject);
-
-    return QQmlMetaType::propertyCache(metaObject, version);
-}
-
 
 QT_END_NAMESPACE
 

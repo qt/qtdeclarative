@@ -96,7 +96,7 @@ protected:
 
 private:
     QQmlDesignerMetaObject(QObject *object, QQmlEngine *engine);
-    void init(QObject *, QQmlEngine *engine);
+    void init(QObject *);
     QQmlOpenMetaObjectType *type() const { return m_openMetaObject->type(); }
 
     QPointer<QQmlContext> m_context;

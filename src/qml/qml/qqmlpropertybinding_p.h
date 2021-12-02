@@ -170,7 +170,7 @@ private:
 
     Q_NEVER_INLINE void handleUndefinedAssignment(QQmlEnginePrivate *ep, void *dataPtr);
 
-    QString createBindingLoopErrorDescription(QJSEnginePrivate *ep);
+    QString createBindingLoopErrorDescription();
 
     struct TargetData {
         enum BoundFunction : bool {
