@@ -196,6 +196,8 @@ void TestQmlimportscanner::runQmlimportscanner(const QString &mode, const QStrin
         }
 #endif
 
+        object.remove("components");
+        object.remove("scripts");
         bool found = false;
         for (auto it = expectedArray.begin(), end = expectedArray.end(); it != end; ++it) {
             if (*it == object) {
