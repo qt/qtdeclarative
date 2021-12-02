@@ -53,6 +53,7 @@
 
 #include <QtQml/qtqmlglobal.h>
 #include <QtQml/private/qstringhash_p.h>
+#include <QtQml/private/qqmltype_p.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qversionnumber.h>
@@ -114,12 +115,24 @@ public:
     quint8 minimumMinorVersion() const { return m_minMinorVersion.loadRelaxed(); }
     quint8 maximumMinorVersion() const { return m_maxMinorVersion.loadRelaxed(); }
 
-    QQmlType type(const QHashedStringRef &, QTypeRevision version) const;
-    QQmlType type(const QV4::String *, QTypeRevision version) const;
+    QQmlType type(const QHashedStringRef &name, QTypeRevision version) const
+    {
+        QMutexLocker lock(&m_mutex);
+        return findType(m_typeHash.value(name), version);
+    }
+
+    QQmlType type(const QV4::String *name, QTypeRevision version) const
+    {
+        QMutexLocker lock(&m_mutex);
+        return findType(m_typeHash.value(name), version);
+    }
 
     void walkCompositeSingletons(const std::function<void(const QQmlType &)> &callback) const;
 
 private:
+    static Q_QML_PRIVATE_EXPORT QQmlType findType(
+            const QList<QQmlTypePrivate *> *types, QTypeRevision version);
+
     const QString m_module;
     const quint8 m_majorVersion = 0;
 

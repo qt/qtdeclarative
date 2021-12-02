@@ -104,16 +104,131 @@ public:
         const QQmlImportRef *importNamespace;
         int scriptIndex;
     };
-    Result query(const QHashedStringRef &) const;
-    Result query(const QHashedStringRef &, const QQmlImportRef *importNamespace) const;
-    Result query(const QV4::String *, QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion) const;
-    Result query(const QV4::String *, const QQmlImportRef *importNamespace) const;
+
+    enum class QueryNamespaced { No, Yes };
+
+    // Restrict the types allowed for key. We don't want QV4::ScopedString, for  example.
+
+    template<QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion>
+    Result query(const QHashedStringRef &key) const
+    {
+        return doQuery<const QHashedStringRef &, recursionRestriction>(key);
+    }
+
+    template<QueryNamespaced queryNamespaced = QueryNamespaced::Yes>
+    Result query(const QHashedStringRef &key, const QQmlImportRef *importNamespace) const
+    {
+        return doQuery<const QHashedStringRef &, queryNamespaced>(key, importNamespace);
+    }
+
+    template<QQmlImport::RecursionRestriction recursionRestriction = QQmlImport::PreventRecursion>
+    Result query(const QV4::String *key) const
+    {
+        return doQuery<const QV4::String *, recursionRestriction>(key);
+    }
+
+    template<QueryNamespaced queryNamespaced = QueryNamespaced::Yes>
+    Result query(const QV4::String *key, const QQmlImportRef *importNamespace) const
+    {
+        return doQuery<const QV4::String *, queryNamespaced>(key, importNamespace);
+    }
 
 private:
     friend class QQmlImports;
 
+    static QHashedStringRef toHashedStringRef(const QHashedStringRef &key) { return key; }
+    static QHashedStringRef toHashedStringRef(const QV4::String *key)
+    {
+        const QV4::Heap::String *heapString = key->d();
+
+        // toQString() would also do simplifyString(). Therefore, we can be sure that this
+        // is safe. Any other operation on the string data cannot keep references on the
+        // non-simplified pieces.
+        if (heapString->subtype >= QV4::Heap::String::StringType_Complex)
+            heapString->simplifyString();
+
+        // This is safe because the string data is backed by the QV4::String we got as
+        // parameter. The contract about passing V4 values as parameters is that you have to
+        // scope them first, so that they don't get gc'd while the callee is working on them.
+        const QStringPrivate &text = heapString->text();
+        return QHashedStringRef(QStringView(text.ptr, text.size));
+    }
+
+    static QString toQString(const QHashedStringRef &key) { return key.toString(); }
+    static QString toQString(const QV4::String *key) { return key->toQStringNoThrow(); }
+
+    template<typename Key, QQmlImport::RecursionRestriction recursionRestriction>
+    Result doQuery(Key name) const
+    {
+        Result result = doQuery(m_namedImports, name);
+
+        if (!result.isValid())
+            result = typeSearch(m_anonymousImports, name);
+
+        if (!result.isValid())
+            result = doQuery(m_anonymousCompositeSingletons, name);
+
+        if (!result.isValid()) {
+            // Look up anonymous types from the imports of this document
+            // ### it would be nice if QQmlImports allowed us to resolve a namespace
+            // first, and then types on it.
+            QQmlImportNamespace *typeNamespace = nullptr;
+            QList<QQmlError> errors;
+            QQmlType t;
+            bool typeRecursionDetected = false;
+            const bool typeFound = m_imports.resolveType(
+                        toHashedStringRef(name), &t, nullptr, &typeNamespace, &errors,
+                        QQmlType::AnyRegistrationType,
+                        recursionRestriction == QQmlImport::AllowRecursion
+                            ? &typeRecursionDetected
+                            : nullptr);
+            if (typeFound)
+                return Result(t);
+
+        }
+
+        return result;
+    }
+
+    template<typename Key, QueryNamespaced queryNamespaced>
+    Result doQuery(Key name, const QQmlImportRef *importNamespace) const
+    {
+        Q_ASSERT(importNamespace && importNamespace->scriptIndex == -1);
+
+        if constexpr (queryNamespaced == QueryNamespaced::Yes) {
+            QMap<const QQmlImportRef *, QStringHash<QQmlImportRef> >::const_iterator it
+                    = m_namespacedImports.constFind(importNamespace);
+            if (it != m_namespacedImports.constEnd()) {
+                Result r = doQuery(*it, name);
+                if (r.isValid())
+                    return r;
+            }
+        }
+
+        Result result = typeSearch(importNamespace->modules, name);
+
+        if (!result.isValid())
+            result = doQuery(importNamespace->compositeSingletons, name);
+
+        if (!result.isValid()) {
+            // Look up types from the imports of this document
+            // ### it would be nice if QQmlImports allowed us to resolve a namespace
+            // first, and then types on it.
+            const QString qualifiedTypeName = importNamespace->m_qualifier + u'.' + toQString(name);
+            QQmlImportNamespace *typeNamespace = nullptr;
+            QList<QQmlError> errors;
+            QQmlType t;
+            bool typeFound = m_imports.resolveType(
+                        qualifiedTypeName, &t, nullptr, &typeNamespace, &errors);
+            if (typeFound)
+                return Result(t);
+        }
+
+        return result;
+    }
+
     template<typename Key>
-    Result query(const QStringHash<QQmlImportRef> &imports, Key key) const
+    Result doQuery(const QStringHash<QQmlImportRef> &imports, Key key) const
     {
         QQmlImportRef *i = imports.value(key);
         if (i) {
@@ -129,7 +244,7 @@ private:
     }
 
     template<typename Key>
-    Result query(const QStringHash<QUrl> &urls, Key key) const
+    Result doQuery(const QStringHash<QUrl> &urls, Key key) const
     {
         QUrl *url = urls.value(key);
         if (url) {

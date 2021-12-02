@@ -87,23 +87,8 @@ void QQmlTypeModule::remove(const QQmlTypePrivate *type)
         QQmlMetaType::removeQQmlTypePrivate(elementIt.value(), type);
 }
 
-QQmlType QQmlTypeModule::type(const QHashedStringRef &name, QTypeRevision version) const
+QQmlType QQmlTypeModule::findType(const QList<QQmlTypePrivate *> *types, QTypeRevision version)
 {
-    QMutexLocker lock(&m_mutex);
-    QList<QQmlTypePrivate *> *types = m_typeHash.value(name);
-    if (types) {
-        for (int ii = 0; ii < types->count(); ++ii)
-            if (types->at(ii)->version.minorVersion() <= version.minorVersion())
-                return QQmlType(types->at(ii));
-    }
-
-    return QQmlType();
-}
-
-QQmlType QQmlTypeModule::type(const QV4::String *name, QTypeRevision version) const
-{
-    QMutexLocker lock(&m_mutex);
-    QList<QQmlTypePrivate *> *types = m_typeHash.value(name);
     if (types) {
         for (int ii = 0; ii < types->count(); ++ii)
             if (types->at(ii)->version.minorVersion() <= version.minorVersion())
