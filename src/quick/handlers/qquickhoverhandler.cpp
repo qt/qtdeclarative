@@ -85,8 +85,11 @@ QQuickHoverHandler::~QQuickHoverHandler()
 
 void QQuickHoverHandler::componentComplete()
 {
-    parentItem()->setAcceptHoverEvents(true);
-    QQuickItemPrivate::get(parentItem())->setHasHoverInChild(true);
+    QQuickSinglePointHandler::componentComplete();
+    if (auto par = parentItem()) {
+        par->setAcceptHoverEvents(true);
+        QQuickItemPrivate::get(par)->setHasHoverInChild(true);
+    }
 }
 
 bool QQuickHoverHandler::wantsPointerEvent(QQuickPointerEvent *event)

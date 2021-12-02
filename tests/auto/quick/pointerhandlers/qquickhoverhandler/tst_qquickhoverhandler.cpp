@@ -62,6 +62,7 @@ private slots:
     void hoverHandlerAndUnderlyingMouseArea();
     void movingItemWithHoverHandler();
     void margin();
+    void window();
 
 private:
     void createView(QScopedPointer<QQuickView> &window, const char *fileName);
@@ -360,6 +361,28 @@ void tst_HoverHandler::margin() // QTBUG-85303
 //    QCOMPARE(hoveredSpy.count(), 2);
 #if QT_CONFIG(cursor)
     QCOMPARE(window->cursor().shape(), Qt::ArrowCursor);
+#endif
+}
+
+void tst_HoverHandler::window() // QTBUG-98717
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("windowCursorShape.qml"));
+    QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(component.create()));
+    QVERIFY(!window.isNull());
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+#if QT_CONFIG(cursor)
+    if (isPlatformWayland())
+         QSKIP("Wayland: QCursor::setPos() doesn't work.");
+#ifdef Q_OS_MACOS
+    QSKIP("macOS: QCursor::setPos() doesn't work (QTBUG-76312).");
+#endif
+    auto cursorPos = window->mapToGlobal(QPoint(100, 100));
+    qCDebug(lcPointerTests) << "in window @" << window->position() << "setting cursor pos" << cursorPos;
+    QCursor::setPos(cursorPos);
+    QTRY_COMPARE(window->cursor().shape(), Qt::OpenHandCursor);
 #endif
 }
 

@@ -207,9 +207,11 @@ void QQuickPointerHandler::setCursorShape(Qt::CursorShape shape)
         return;
     d->cursorShape = shape;
     d->cursorSet = true;
-    QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(parentItem());
-    itemPriv->hasCursorHandler = true;
-    itemPriv->setHasCursorInChild(true);
+    if (auto *par = qmlobject_cast<QQuickItem *>(parent())) {
+        QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(par);
+        itemPriv->hasCursorHandler = true;
+        itemPriv->setHasCursorInChild(true);
+    }
     emit cursorShapeChanged();
 }
 
@@ -220,9 +222,11 @@ void QQuickPointerHandler::resetCursorShape()
         return;
     d->cursorShape = Qt::ArrowCursor;
     d->cursorSet = false;
-    QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(parentItem());
-    itemPriv->hasCursorHandler = false;
-    itemPriv->setHasCursorInChild(itemPriv->hasCursor);
+    if (auto *parent = parentItem()) {
+        QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(parent);
+        itemPriv->hasCursorHandler = false;
+        itemPriv->setHasCursorInChild(itemPriv->hasCursor);
+    }
     emit cursorShapeChanged();
 }
 
@@ -457,6 +461,14 @@ void QQuickPointerHandler::classBegin()
 
 void QQuickPointerHandler::componentComplete()
 {
+    Q_D(const QQuickPointerHandler);
+    if (d->cursorSet) {
+        if (auto *parent = parentItem()) {
+            QQuickItemPrivate *itemPriv = QQuickItemPrivate::get(parent);
+            itemPriv->hasCursorHandler = true;
+            itemPriv->setHasCursorInChild(true);
+        }
+    }
 }
 
 QQuickPointerEvent *QQuickPointerHandler::currentEvent()
