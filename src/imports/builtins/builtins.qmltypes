@@ -21,14 +21,6 @@ Module {
     }
 
     Component {
-        // QQmlV4Function is the name for varargs. If such parameter is declared
-        // we can invoke the method with any number of QJSValue parameters.
-        // Access semantics are not "value" because the actual QQmlV4Function object
-        // is passed as a pointer.
-        name: "QQmlV4Function"
-    }
-
-    Component {
         name: "QObject"
         accessSemantics: "reference"
         exports: ["QML/QtObject 1.0"]

@@ -67,7 +67,6 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
 {
     const QHash<QString, QQmlJSScope::ConstPtr> builtinTypes = importer->builtinInternalNames();
     m_voidType = builtinTypes[u"void"_qs];
-    m_qQmlV4FunctionType = builtinTypes[u"QQmlV4Function"_qs];
     m_realType = builtinTypes[u"double"_qs];
     m_floatType = builtinTypes[u"float"_qs];
     m_intType = builtinTypes[u"int"_qs];

@@ -789,18 +789,12 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
 {
     QQmlJSMetaMethod javascriptFunction;
     for (const auto &method : methods) {
-        const auto argumentTypes = method.parameterTypes();
-        if (argumentTypes.size() == 1
-            && argumentTypes.first() == m_typeResolver->qQmlV4FunctionType()) {
-            errors->append(u"Function accepts a variable number of untyped arguments and doesn't "
-                           "disclose its return type."_qs);
-            continue;
-        }
 
         // If we encounter a JavaScript function, use this as a fallback if no other method matches
         if (method.isJavaScriptFunction())
             javascriptFunction = method;
 
+        const auto argumentTypes = method.parameterTypes();
         if (argc != argumentTypes.size()) {
             errors->append(u"Function expects %1 arguments, but %2 were provided"_qs
                                    .arg(argumentTypes.size())

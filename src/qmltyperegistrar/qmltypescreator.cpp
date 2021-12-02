@@ -265,8 +265,14 @@ void QmlTypesCreator::writeMethods(const QJsonArray &methods, const QString &typ
         const auto isJavaScriptFunction = obj.find(QLatin1String("isJavaScriptFunction"));
         if (isJavaScriptFunction != obj.constEnd() && isJavaScriptFunction->toBool())
             m_qml.writeScriptBinding(QLatin1String("isJavaScriptFunction"), QLatin1String("true"));
-        for (const QJsonValue argument : arguments) {
-            const QJsonObject obj = argument.toObject();
+        for (qsizetype i = 0, end = arguments.size(); i != end; ++i) {
+            const QJsonObject obj = arguments[i].toObject();
+            if (i == 0 && end == 1 &&
+                    obj[QLatin1String("type")].toString() == QLatin1String("QQmlV4Function*")) {
+                m_qml.writeScriptBinding(QLatin1String("isJavaScriptFunction"),
+                                         QLatin1String("true"));
+                break;
+            }
             m_qml.writeStartObject(QLatin1String("Parameter"));
             const QString name = obj[QLatin1String("name")].toString();
             if (!name.isEmpty())

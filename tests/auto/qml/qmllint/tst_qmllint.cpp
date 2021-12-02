@@ -1166,9 +1166,7 @@ void TestQmllint::tooFewParameters()
 
 void TestQmllint::qQmlV4Function()
 {
-    QVERIFY(runQmllint("varargs.qml", false, {"--compiler=warning"}, false).contains(
-            QStringLiteral("Function accepts a variable number of untyped arguments and "
-                           "doesn't disclose its return type.")));
+    QVERIFY(runQmllint("varargs.qml", true, {"--compiler=warning"}, false).isEmpty());
 }
 
 void TestQmllint::missingBuiltinsNoCrash()
