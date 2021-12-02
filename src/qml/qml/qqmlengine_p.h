@@ -178,6 +178,7 @@ public:
     mutable QNetworkAccessManager *networkAccessManager = nullptr;
     mutable QQmlNetworkAccessManagerFactory *networkAccessManagerFactory = nullptr;
 #endif
+    mutable QRecursiveMutex imageProviderMutex;
     QHash<QString,QSharedPointer<QQmlImageProviderBase> > imageProviders;
     QSharedPointer<QQmlImageProviderBase> imageProvider(const QString &providerId) const;
 
@@ -371,8 +372,6 @@ QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::cache(
 {
     Q_ASSERT(type.isValid());
     Q_ASSERT(type.containsRevisionedAttributes());
-
-    QMutexLocker locker(&this->mutex);
     return QQmlMetaType::propertyCache(type, version);
 }
 

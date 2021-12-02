@@ -81,8 +81,6 @@ public:
     static void addToDebugServer(QJSEngine *q);
     static void removeFromDebugServer(QJSEngine *q);
 
-    // Shared by QQmlEngine
-    mutable QRecursiveMutex mutex;
     void uiLanguageChanged() { Q_Q(QJSEngine); if (q) q->uiLanguageChanged(); }
     Q_OBJECT_BINDABLE_PROPERTY(QJSEnginePrivate, QString, uiLanguage, &QJSEnginePrivate::uiLanguageChanged);
 
@@ -112,7 +110,6 @@ QQmlRefPointer<QQmlPropertyCache> QJSEnginePrivate::cache(QObject *obj, QTypeRev
     if (!obj || QObjectPrivate::get(obj)->metaObject || QObjectPrivate::get(obj)->wasDeleted)
         return QQmlRefPointer<QQmlPropertyCache>();
 
-    QMutexLocker locker(&this->mutex);
     const QMetaObject *mo = obj->metaObject();
     return QQmlMetaType::propertyCache(mo, version);
 }
@@ -131,7 +128,6 @@ QQmlRefPointer<QQmlPropertyCache> QJSEnginePrivate::cache(
 {
     Q_ASSERT(metaObject);
 
-    QMutexLocker locker(&this->mutex);
     return QQmlMetaType::propertyCache(metaObject, version);
 }
 
