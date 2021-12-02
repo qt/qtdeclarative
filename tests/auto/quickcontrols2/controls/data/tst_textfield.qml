@@ -660,4 +660,34 @@ TestCase {
         compare(control.width, control.parent.width)
         compare(control.background.width, control.width)
     }
+
+    // QTBUG-95558
+    Component {
+        id: textFieldWithPointSizeSet
+        TextField {
+            font.pointSize: 24
+        }
+    }
+
+    Component {
+        id: textFieldWithPixelSizeSet
+        TextField {
+            font.pixelSize: 42
+        }
+    }
+
+    function test_setPointSizeDoesNotWarn() { // QTBUG-95558
+        // macOS is special: 43eca45b061fe965fe2a6f1876d4a35a58e3a9e4
+        if (Qt.platform.os === "osx" || Qt.platform.os === "macos")
+            skip("TextField hard-codes pixel size on macOS")
+        failOnWarning("Both point size and pixel size set. Using pixel size.")
+        var textField = createTemporaryObject(textFieldWithPointSizeSet, testCase)
+        verify(textField)
+    }
+
+    function test_setPixelSizeDoesNotWarn() {
+        failOnWarning("Both point size and pixel size set. Using pixel size.")
+        var textField = createTemporaryObject(textFieldWithPixelSizeSet, testCase)
+        verify(textField)
+    }
 }
