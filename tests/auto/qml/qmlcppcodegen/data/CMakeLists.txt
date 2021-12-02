@@ -21,6 +21,7 @@ set(qml_files
     ProgressBar/Timeline.qml
     ProgressBar/TimelineAnimation.qml
     RootWithoutId.qml
+    SelectionRectangle.qml
     Test.qml
     TestCase.qml
     aliasLookup.qml

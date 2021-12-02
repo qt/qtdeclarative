@@ -107,6 +107,7 @@ private slots:
     void listIndices();
     void jsMathObject();
     void intEnumCompare();
+    void attachedSelf();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1597,6 +1598,19 @@ void tst_QmlCppCodegen::intEnumCompare()
         QCOMPARE(o->property("c").toBool(), false);
         QCOMPARE(o->property("d").toBool(), false);
     }
+}
+
+void tst_QmlCppCodegen::attachedSelf()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/SelectionRectangle.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QObject *handle = qvariant_cast<QObject *>(o->property("aa"));
+    QVERIFY(handle);
+    QVERIFY(qvariant_cast<QObject *>(handle->property("rect")) != nullptr);
 }
 
 void tst_QmlCppCodegen::runInterpreted()
