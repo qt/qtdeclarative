@@ -73,6 +73,8 @@ inline QString linkTargetLiteral()
 {
     return QStringLiteral("linkTarget");
 }
+inline QString componentsLiteral() { return QStringLiteral("components"); }
+inline QString scriptsLiteral() { return QStringLiteral("scripts"); }
 
 void printUsage(const QString &appNameIn)
 {
@@ -218,15 +220,21 @@ QVariantMap pluginsForModulePath(const QString &modulePath, const QString &versi
     }
 
     QVariantList importsFromFiles;
+    QStringList componentFiles;
+    QStringList scriptFiles;
     const auto components = parser.components();
     for (const auto &component : components) {
+        const QString componentFullPath = modulePath + QLatin1Char('/') + component.fileName;
+        componentFiles.append(componentFullPath);
         importsFromFiles
-                += findQmlImportsInQmlFile(modulePath + QLatin1Char('/') + component.fileName);
+                += findQmlImportsInQmlFile(componentFullPath);
     }
     const auto scripts = parser.scripts();
     for (const auto &script : scripts) {
+        const QString scriptFullPath = modulePath + QLatin1Char('/') + script.fileName;
+        scriptFiles.append(scriptFullPath);
         importsFromFiles
-                += findQmlImportsInJavascriptFile(modulePath + QLatin1Char('/') + script.fileName);
+                += findQmlImportsInJavascriptFile(scriptFullPath);
     }
 
     for (const QVariant &import : importsFromFiles) {
@@ -241,6 +249,10 @@ QVariantMap pluginsForModulePath(const QString &modulePath, const QString &versi
 
     if (!importsAndDependencies.isEmpty())
         pluginInfo[dependenciesLiteral()] = importsAndDependencies;
+    if (!componentFiles.isEmpty())
+        pluginInfo[componentsLiteral()] = componentFiles;
+    if (!scriptFiles.isEmpty())
+        pluginInfo[scriptsLiteral()] = scriptFiles;
     return pluginInfo;
 }
 
@@ -332,6 +344,8 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
             QString plugins = plugininfo.value(pluginsLiteral()).toString();
             bool isOptional = plugininfo.value(pluginIsOptionalLiteral(), QVariant(false)).toBool();
             QString classnames = plugininfo.value(classnamesLiteral()).toString();
+            QStringList components = plugininfo.value(componentsLiteral()).toStringList();
+            QStringList scripts = plugininfo.value(scriptsLiteral()).toStringList();
             if (!linkTarget.isEmpty())
                 import.insert(linkTargetLiteral(), linkTarget);
             if (!plugins.isEmpty())
@@ -354,6 +368,14 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
                     if (!importsCopy.contains(depImport))
                         importsCopy.append(depImport);
                 }
+            }
+            if (!components.isEmpty()) {
+                components.removeDuplicates();
+                import.insert(componentsLiteral(), components);
+            }
+            if (!scripts.isEmpty()) {
+                scripts.removeDuplicates();
+                import.insert(scriptsLiteral(), scripts);
             }
         }
         import.remove(versionLiteral());
@@ -585,8 +607,20 @@ QString generateCmakeIncludeFileContent(const QVariantList &importList) {
 
             const QMap<QString, QVariant> &importDict = importVariant.toMap();
             for (auto it = importDict.cbegin(); it != importDict.cend(); ++it) {
-                s << it.key().toUpper() << QLatin1Char(';')
-                  << it.value().toString() << QLatin1Char(';');
+                s << it.key().toUpper() << QLatin1Char(';');
+                // QVariant can implicitly convert QString to the QStringList with the single
+                // element, let's use this.
+                QStringList args = it.value().toStringList();
+                if (args.isEmpty()) {
+                    // This should not happen, but if it does, the result of the
+                    // 'cmake_parse_arguments' call will be incorrect, so follow up semicolon
+                    // indicates that the single-/multiarg option is empty.
+                    s << QLatin1Char(';');
+                } else {
+                    for (auto arg : args) {
+                        s << arg << QLatin1Char(';');
+                    }
+                }
             }
             s << QStringLiteral("\")\n");
             ++importsCount;

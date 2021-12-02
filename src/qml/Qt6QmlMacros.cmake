@@ -2427,7 +2427,7 @@ macro(_qt_internal_parse_qml_imports_entry prefix index)
     cmake_parse_arguments("${prefix}"
         ""
         "CLASSNAME;NAME;PATH;PLUGIN;RELATIVEPATH;TYPE;VERSION;LINKTARGET"
-        ""
+        "COMPONENTS;SCRIPTS"
         ${qml_import_scanner_import_${index}}
     )
 endmacro()
