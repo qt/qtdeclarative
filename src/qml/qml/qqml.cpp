@@ -1218,7 +1218,7 @@ void AOTCompiledContext::initLoadAttachedLookup(uint index, QObject *object) con
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
     QV4::Scope scope(engine->handle());
     QV4::ScopedString name(scope, compilationUnit->runtimeStrings[l->nameIndex]);
-    QQmlTypeNameCache::Result r = qmlContext->imports()->query(name);
+    QQmlTypeNameCache::Result r = qmlContext->imports()->query<QQmlImport::AllowRecursion>(name);
 
     if (!r.isValid() || !r.type.isValid()) {
         scope.engine->throwTypeError();
