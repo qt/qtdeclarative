@@ -85,6 +85,7 @@ struct QQmlMetaTypeData
     MetaObjects metaObjectToType;
     QVector<QHash<QTypeRevision, QQmlRefPointer<QQmlPropertyCache>>> typePropertyCaches;
     QHash<int, QQmlValueType *> metaTypeToValueType;
+    QHash<const QtPrivate::QMetaTypeInterface *, QV4::ExecutableCompilationUnit *> compositeTypes;
 
     struct VersionedUri {
         VersionedUri() = default;

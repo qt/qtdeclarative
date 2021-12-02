@@ -306,11 +306,9 @@ void ExecutableCompilationUnit::unlink()
     if (engine)
         nextCompilationUnit.remove();
 
-    if (isRegisteredWithEngine) {
+    if (isRegistered) {
         Q_ASSERT(data && propertyCaches.count() > 0 && propertyCaches.at(/*root object*/0));
-        if (qmlEngine)
-            qmlEngine->unregisterInternalCompositeType(this);
-        isRegisteredWithEngine = false;
+        QQmlMetaType::unregisterInternalCompositeType(this);
     }
 
     propertyCaches.clear();
@@ -404,7 +402,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
         if (!types.isValid())
             types = CompositeMetaTypeIds::fromCompositeName(rootPropertyCache()->className());
         typeIds = types;
-        qmlEngine->registerInternalCompositeType(this);
+        QQmlMetaType::registerInternalCompositeType(this);
 
     } else {
         const QV4::CompiledData::Object *obj = objectAt(/*root object*/0);

@@ -51,6 +51,9 @@ QQmlMetaTypeData::QQmlMetaTypeData()
 
 QQmlMetaTypeData::~QQmlMetaTypeData()
 {
+    for (auto iter = compositeTypes.cbegin(), end = compositeTypes.cend(); iter != end; ++iter)
+        iter.value()->isRegistered = false;
+
     propertyCaches.clear();
     // Do this before the attached properties disappear.
     types.clear();

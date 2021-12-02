@@ -931,8 +931,7 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                 if (qmlType.isValid()) {
                     // this is required for inline components in singletons
                     auto type = qmlType.lookupInlineComponentById(qmlType.inlineComponentId()).typeId();
-                    auto exUnit = engine->obtainExecutableCompilationUnit(
-                                type.isValid() ? type.id() : -1);
+                    auto exUnit = QQmlMetaType::obtainExecutableCompilationUnit(type);
                     if (exUnit) {
                         ref->setCompilationUnit(exUnit);
                         ref->setTypePropertyCache(engine->propertyCacheForType(type));

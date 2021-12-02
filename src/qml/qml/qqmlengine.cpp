@@ -247,8 +247,6 @@ QQmlEnginePrivate::~QQmlEnginePrivate()
 
     QQmlMetaType::freeUnusedTypesAndCaches();
 
-    for (auto iter = m_compositeTypes.cbegin(), end = m_compositeTypes.cend(); iter != end; ++iter)
-        iter.value()->isRegisteredWithEngine = false;
 #if QT_CONFIG(qml_debug)
     delete profiler;
 #endif
@@ -1696,17 +1694,6 @@ QString QQmlEnginePrivate::offlineStorageDatabaseDirectory() const
     return q->offlineStoragePath() + QDir::separator() + QLatin1String("Databases") + QDir::separator();
 }
 
-static QQmlRefPointer<QQmlPropertyCache> propertyCacheForPotentialInlineComponentType(
-        int t, const QHash<int, QV4::ExecutableCompilationUnit *>::const_iterator &iter) {
-    if (t != (*iter)->typeIds.id.id()) {
-        // this is an inline component, and what we have in the iterator is currently the parent compilation unit
-        for (auto &&icDatum: (*iter)->inlineComponentData)
-            if (icDatum.typeIds.id.id() == t)
-                return (*iter)->propertyCaches.at(icDatum.objectIndex);
-    }
-    return (*iter)->rootPropertyCache();
-}
-
 /*!
  * \internal
  *
@@ -1714,7 +1701,7 @@ static QQmlRefPointer<QQmlPropertyCache> propertyCacheForPotentialInlineComponen
  */
 QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(QMetaType metaType) const
 {
-    if (auto composite = findPropertyCacheInCompositeTypes(metaType.id()))
+    if (auto composite = QQmlMetaType::findPropertyCacheInCompositeTypes(metaType))
         return QQmlMetaObject(composite);
 
     return QQmlMetaObject(QQmlMetaType::qmlType(metaType).baseMetaObject());
@@ -1727,7 +1714,7 @@ QQmlMetaObject QQmlEnginePrivate::rawMetaObjectForType(QMetaType metaType) const
  */
 QQmlMetaObject QQmlEnginePrivate::metaObjectForType(QMetaType metaType) const
 {
-    if (auto composite = findPropertyCacheInCompositeTypes(metaType.id()))
+    if (auto composite = QQmlMetaType::findPropertyCacheInCompositeTypes(metaType))
         return QQmlMetaObject(composite);
 
     return QQmlMetaObject(QQmlMetaType::qmlType(metaType).metaObject());
@@ -1740,7 +1727,7 @@ QQmlMetaObject QQmlEnginePrivate::metaObjectForType(QMetaType metaType) const
  */
 QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::propertyCacheForType(QMetaType metaType)
 {
-    if (auto composite = findPropertyCacheInCompositeTypes(metaType.id()))
+    if (auto composite = QQmlMetaType::findPropertyCacheInCompositeTypes(metaType))
         return composite;
 
     const QQmlType type = QQmlMetaType::qmlType(metaType);
@@ -1758,7 +1745,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::propertyCacheForType(QMetaT
  */
 QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::rawPropertyCacheForType(QMetaType metaType)
 {
-    if (auto composite = findPropertyCacheInCompositeTypes(metaType.id()))
+    if (auto composite = QQmlMetaType::findPropertyCacheInCompositeTypes(metaType))
         return composite;
 
     const QQmlType type = QQmlMetaType::qmlType(metaType);
@@ -1776,7 +1763,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::rawPropertyCacheForType(QMe
 QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::rawPropertyCacheForType(
         QMetaType metaType, QTypeRevision version)
 {
-    if (auto composite = findPropertyCacheInCompositeTypes(metaType.id()))
+    if (auto composite = QQmlMetaType::findPropertyCacheInCompositeTypes(metaType))
         return composite;
 
     const QQmlType type = QQmlMetaType::qmlType(metaType);
@@ -1790,43 +1777,6 @@ QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::rawPropertyCacheForType(
         return cache(metaObject, version);
 
     return QQmlRefPointer<QQmlPropertyCache>();
-}
-
-QQmlRefPointer<QQmlPropertyCache> QQmlEnginePrivate::findPropertyCacheInCompositeTypes(int t) const
-{
-    QMutexLocker locker(&this->mutex);
-    auto iter = m_compositeTypes.constFind(t);
-    return (iter == m_compositeTypes.constEnd())
-            ? QQmlRefPointer<QQmlPropertyCache>()
-            : propertyCacheForPotentialInlineComponentType(t, iter);
-}
-
-void QQmlEnginePrivate::registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
-{
-    compilationUnit->isRegisteredWithEngine = true;
-
-    QMutexLocker locker(&this->mutex);
-    // The QQmlCompiledData is not referenced here, but it is removed from this
-    // hash in the QQmlCompiledData destructor
-    m_compositeTypes.insert(compilationUnit->typeIds.id.id(), compilationUnit);
-    for (auto &&data: compilationUnit->inlineComponentData)
-        m_compositeTypes.insert(data.typeIds.id.id(), compilationUnit);
-}
-
-void QQmlEnginePrivate::unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
-{
-    compilationUnit->isRegisteredWithEngine = false;
-
-    QMutexLocker locker(&this->mutex);
-    m_compositeTypes.remove(compilationUnit->typeIds.id.id());
-    for (auto&& icDatum: compilationUnit->inlineComponentData)
-        m_compositeTypes.remove(icDatum.typeIds.id.id());
-}
-
-QV4::ExecutableCompilationUnit *QQmlEnginePrivate::obtainExecutableCompilationUnit(int typeId)
-{
-    QMutexLocker locker(&this->mutex);
-    return m_compositeTypes.value(typeId, nullptr);
 }
 
 template<>

@@ -254,6 +254,11 @@ public:
     static bool isValueType(QMetaType type);
     static QQmlValueType *valueType(QMetaType metaType);
     static const QMetaObject *metaObjectForValueType(QMetaType type);
+
+    static QQmlRefPointer<QQmlPropertyCache> findPropertyCacheInCompositeTypes(QMetaType t);
+    static void registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
+    static void unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
+    static QV4::ExecutableCompilationUnit *obtainExecutableCompilationUnit(QMetaType type);
 };
 
 Q_DECLARE_TYPEINFO(QQmlMetaType, Q_RELOCATABLE_TYPE);

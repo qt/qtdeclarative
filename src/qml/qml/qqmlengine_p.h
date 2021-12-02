@@ -218,9 +218,6 @@ public:
     QQmlRefPointer<QQmlPropertyCache> rawPropertyCacheForType(QMetaType metaType);
     QQmlRefPointer<QQmlPropertyCache> rawPropertyCacheForType(
             QMetaType metaType, QTypeRevision version);
-    void registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
-    void unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
-    QV4::ExecutableCompilationUnit *obtainExecutableCompilationUnit(int typeId);
 
     bool isTypeLoaded(const QUrl &url) const;
     bool isScriptLoaded(const QUrl &url) const;
@@ -329,13 +326,9 @@ private:
     SingletonInstances singletonInstances;
     QHash<int, QQmlGadgetPtrWrapper *> cachedValueTypeInstances;
 
-    // These members must be protected by the engine's mutex as they are required by
-    // the threaded loader.  Only access them through their respective accessor methods.
-    QHash<int, QV4::ExecutableCompilationUnit *> m_compositeTypes;
     static bool s_designerMode;
 
     void cleanupScarceResources();
-    QQmlRefPointer<QQmlPropertyCache> findPropertyCacheInCompositeTypes(int t) const;
 };
 
 /*

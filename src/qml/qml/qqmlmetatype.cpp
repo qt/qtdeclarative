@@ -591,6 +591,10 @@ CompositeMetaTypeIds QQmlMetaType::registerInternalCompositeType(const QByteArra
     QMetaType ptr_type(new QQmlMetaTypeInterface(ptr, (QObject **)nullptr));
     QMetaType lst_type(new QQmlListMetaTypeInterface(lst, (QQmlListProperty<QObject> *)nullptr, ptr_type.iface()));
 
+    // Retrieve the IDs once, so that the types are added to QMetaType's custom type registry.
+    ptr_type.id();
+    lst_type.id();
+
     return {ptr_type, lst_type};
 }
 
@@ -1648,6 +1652,57 @@ QQmlValueType *QQmlMetaType::valueType(QMetaType type)
     if (const QMetaObject *mo = metaObjectForValueType(type))
         return *data->metaTypeToValueType.insert(type.id(), new QQmlValueType(type, mo));
     return *data->metaTypeToValueType.insert(type.id(), nullptr);
+}
+
+static QQmlRefPointer<QQmlPropertyCache> propertyCacheForPotentialInlineComponentType(
+        QMetaType t, const QHash<const QtPrivate::QMetaTypeInterface *,
+                                 QV4::ExecutableCompilationUnit *>::const_iterator &iter) {
+    if (t != (*iter)->typeIds.id) {
+        // this is an inline component, and what we have in the iterator is currently the parent compilation unit
+        for (auto &&icDatum: (*iter)->inlineComponentData)
+            if (icDatum.typeIds.id == t)
+                return (*iter)->propertyCaches.at(icDatum.objectIndex);
+    }
+    return (*iter)->rootPropertyCache();
+}
+
+QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::findPropertyCacheInCompositeTypes(QMetaType t)
+{
+    const QQmlMetaTypeDataPtr data;
+
+    auto iter = data->compositeTypes.constFind(t.iface());
+    return (iter == data->compositeTypes.constEnd())
+            ? QQmlRefPointer<QQmlPropertyCache>()
+            : propertyCacheForPotentialInlineComponentType(t, iter);
+}
+
+void QQmlMetaType::registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
+{
+    compilationUnit->isRegistered = true;
+
+    QQmlMetaTypeDataPtr data;
+
+    // The QQmlCompiledData is not referenced here, but it is removed from this
+    // hash in the QQmlCompiledData destructor
+    data->compositeTypes.insert(compilationUnit->typeIds.id.iface(), compilationUnit);
+    for (auto &&inlineData: compilationUnit->inlineComponentData)
+        data->compositeTypes.insert(inlineData.typeIds.id.iface(), compilationUnit);
+}
+
+void QQmlMetaType::unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)
+{
+    compilationUnit->isRegistered = false;
+
+    QQmlMetaTypeDataPtr data;
+    data->compositeTypes.remove(compilationUnit->typeIds.id.iface());
+    for (auto&& icDatum: compilationUnit->inlineComponentData)
+        data->compositeTypes.remove(icDatum.typeIds.id.iface());
+}
+
+QV4::ExecutableCompilationUnit *QQmlMetaType::obtainExecutableCompilationUnit(QMetaType type)
+{
+    const QQmlMetaTypeDataPtr data;
+    return data->compositeTypes.value(type.iface());
 }
 
 QT_END_NAMESPACE
