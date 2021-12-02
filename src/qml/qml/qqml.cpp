@@ -1285,7 +1285,7 @@ void AOTCompiledContext::initLoadAttachedLookup(
         if (const QQmlImportRef *importRef = qmlContext->imports()->query(import).importNamespace)
             type = qmlContext->imports()->query(name, importRef).type;
     } else {
-        type = qmlContext->imports()->query(name).type;
+        type = qmlContext->imports()->query<QQmlImport::AllowRecursion>(name).type;
     }
 
     if (!type.isValid()) {
