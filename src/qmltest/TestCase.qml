@@ -1179,6 +1179,45 @@ Item {
     }
 
     /*!
+        \qmlmethod TestCase::failOnWarning(message)
+        \since 6.3
+
+        Fails the test if a warning \a message appears during the test run.
+        Similar to \c{QTest::failOnWarning(message)} in C++.
+
+        \a message can be either a string, or a regular expression providing a
+        pattern of messages. In the latter case, the first encountered message
+        would fail the test.
+
+        For example, the following snippet will fail a test if a warning is
+        produced:
+        \qml
+        failOnWarning("Something bad happened")
+        \endqml
+
+        And the following snippet will fail a test if any warning matching a
+        pattern is encountered:
+        \qml
+        failOnWarning(new RegExp("[0-9]+ bad things happened"))
+        \endqml
+
+        \note Despite being a JavaScript RegExp object, it will not be
+        interpreted as such; instead, the pattern will be passed to \l
+        QRegularExpression.
+
+        \note ignoreMessage() takes precedence over this function, so any
+        warnings that match a pattern given to both \c ignoreMessage() and \c
+        failOnWarning() will be ignored.
+
+        \sa warn()
+    */
+    function failOnWarning(msg) {
+        if (msg === undefined)
+            msg = ""
+        qtest_results.failOnWarning(msg)
+    }
+
+    /*!
         \qmlmethod TestCase::wait(ms)
 
         Waits for \a ms milliseconds while processing Qt events.

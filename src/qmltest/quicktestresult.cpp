@@ -645,10 +645,21 @@ void QuickTestResult::ignoreWarning(const QJSValue &message)
 {
     if (message.isRegExp()) {
 #if QT_CONFIG(regularexpression)
-        QTestLog::ignoreMessage(QtWarningMsg, message.toVariant().toRegularExpression());
+        QTestLog::ignoreMessage(QtWarningMsg, qjsvalue_cast<QRegularExpression>(message));
 #endif
     } else {
         QTestLog::ignoreMessage(QtWarningMsg, message.toString().toUtf8());
+    }
+}
+
+void QuickTestResult::failOnWarning(const QJSValue &message)
+{
+    if (message.isRegExp()) {
+#if QT_CONFIG(regularexpression)
+        QTestLog::failOnWarning(qjsvalue_cast<QRegularExpression>(message));
+#endif
+    } else {
+        QTestLog::failOnWarning(message.toString().toUtf8());
     }
 }
 

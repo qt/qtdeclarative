@@ -143,6 +143,7 @@ public Q_SLOTS:
     void warn(const QString &message, const QUrl &location, int line);
 
     void ignoreWarning(const QJSValue &message);
+    void failOnWarning(const QJSValue &message);
 
     void wait(int ms);
     void sleep(int ms);

@@ -76,6 +76,10 @@ TestCase {
         function stringify(str) {
             return str;
         }
+
+        function failOnWarning(msg) {
+            failmsg = msg; // use failmsg property for simplicity
+        }
     }
 
     TestCase {
@@ -308,5 +312,32 @@ TestCase {
 
     function test_blacklistWithData(row) {
         verify(row.success)
+    }
+
+    function test_failOnWarning() {
+        compare(functions.failmsg, "invalid") // Checks that init() was run
+
+        failOnWarning("Warning that will never appear") // shouldn't fail the test
+
+        // without going to C++ or QTestLog introspection, we can kind of only
+        // make sure that TestCase does correct job by duck-typing TestResult
+        testCase.failOnWarning(undefined)
+        compare(functions.failmsg, "")
+
+        testCase.failOnWarning("foobar")
+        compare(functions.failmsg, "foobar")
+
+        // one case that is actually testable is whether ignoreWarning()
+        // suppresses the failure of failOnWarning()
+        var pattern = new RegExp("This warning has to happen")
+        var string = "And this one too!"
+
+        failOnWarning(pattern)
+        ignoreWarning(pattern)
+        console.warn("This warning has to happen!!")
+
+        failOnWarning(string)
+        ignoreWarning(string)
+        console.warn(string)
     }
 }
