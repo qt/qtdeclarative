@@ -501,7 +501,7 @@ void QQmlTypeData::done()
             auto type = QQmlMetaType::typeForUrl(finalUrlString(), hashedStringRef, false, &errors);
             Q_ASSERT(errors.empty());
             if (type.isValid()) {
-                for (auto const &icDatum : m_inlineComponentData) {
+                for (auto const &icDatum : qAsConst(m_inlineComponentData)) {
                     Q_ASSERT(icDatum.typeIds.isValid());
                     QQmlType existingType = type.lookupInlineComponentById(type.lookupInlineComponentIdByName(m_compiledData->stringAt(icDatum.nameIndex)));
                     type.associateInlineComponent(m_compiledData->stringAt(icDatum.nameIndex),
@@ -652,7 +652,6 @@ void QQmlTypeData::continueLoadFromIR()
     for (auto const& object: m_document->objects) {
         for (auto it = object->inlineComponentsBegin(); it != object->inlineComponentsEnd(); ++it) {
             QString const nameString = m_document->stringAt(it->nameIndex);
-            QByteArray const name = nameString.toUtf8();
             auto importUrl = finalUrl();
             importUrl.setFragment(QString::number(it->objectIndex));
             auto import = new QQmlImportInstance(); // Note: The cache takes ownership of the QQmlImportInstance
@@ -888,8 +887,7 @@ void QQmlTypeData::resolveTypes()
 
 QQmlError QQmlTypeData::buildTypeResolutionCaches(
         QQmlRefPointer<QQmlTypeNameCache> *typeNameCache,
-        QV4::ResolvedTypeReferenceMap *resolvedTypeCache
-        ) const
+        QV4::ResolvedTypeReferenceMap *resolvedTypeCache) const
 {
     typeNameCache->adopt(new QQmlTypeNameCache(m_importCache));
 
