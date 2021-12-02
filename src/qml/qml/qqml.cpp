@@ -102,7 +102,7 @@ QQmlContext *qmlContext(const QObject *obj)
 
 QQmlEngine *qmlEngine(const QObject *obj)
 {
-    QQmlData *data = QQmlData::get(obj, false);
+    QQmlData *data = QQmlData::get(obj);
     if (!data || !data->context)
         return nullptr;
     return data->context->engine();

@@ -806,7 +806,7 @@ int QQmlPropertyCache::originalClone(int index)
 
 int QQmlPropertyCache::originalClone(const QObject *object, int index)
 {
-    QQmlData *data = QQmlData::get(object, false);
+    QQmlData *data = QQmlData::get(object);
     if (data && data->propertyCache) {
         QQmlPropertyCache *cache = data->propertyCache.data();
         QQmlPropertyData *sig = cache->signal(index);

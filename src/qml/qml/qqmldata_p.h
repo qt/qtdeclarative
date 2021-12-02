@@ -228,7 +228,7 @@ public:
 
     QQmlGuardImpl *guards;
 
-    static QQmlData *get(const QObjectPrivate *priv, bool create = false) {
+    static QQmlData *get(QObjectPrivate *priv, bool create) {
         // If QObjectData::isDeletingChildren is set then access to QObjectPrivate::declarativeData has
         // to be avoided because QObjectPrivate::currentChildBeingDeleted is in use.
         if (priv->isDeletingChildren || priv->wasDeleted) {
@@ -237,16 +237,29 @@ public:
         } else if (priv->declarativeData) {
             return static_cast<QQmlData *>(priv->declarativeData);
         } else if (create) {
-            QObjectPrivate *mutablePriv = const_cast<QObjectPrivate *>(priv);
-            return createQQmlData(mutablePriv);
+            return createQQmlData(priv);
         } else {
             return nullptr;
         }
     }
 
-    static QQmlData *get(const QObject *object, bool create = false) {
-        const QObjectPrivate *priv = QObjectPrivate::get(object);
-        return QQmlData::get(priv, create);
+    static QQmlData *get(const QObjectPrivate *priv) {
+        // If QObjectData::isDeletingChildren is set then access to QObjectPrivate::declarativeData has
+        // to be avoided because QObjectPrivate::currentChildBeingDeleted is in use.
+        if (priv->isDeletingChildren || priv->wasDeleted)
+            return nullptr;
+        if (priv->declarativeData)
+            return static_cast<QQmlData *>(priv->declarativeData);
+        return nullptr;
+    }
+
+    static QQmlData *get(QObject *object, bool create) {
+        return QQmlData::get(QObjectPrivate::get(object), create);
+    }
+
+    static QQmlData *get(const QObject *object) {
+        return QQmlData::get(QObjectPrivate::get(object));
+
     }
 
     static bool keepAliveDuringGarbageCollection(const QObject *object) {

@@ -408,7 +408,7 @@ ReturnedValue QQmlTypeWrapper::virtualInstanceOf(const Object *typeObject, const
         // we're a composite type; a composite type cannot be equal to a
         // non-composite object instance (Rectangle{} is never an instance of
         // CustomRectangle)
-        QQmlData *theirDData = QQmlData::get(wrapperObject, /*create=*/false);
+        QQmlData *theirDData = QQmlData::get(wrapperObject);
         Q_ASSERT(theirDData); // must exist, otherwise how do we have a QObjectWrapper for it?!
         if (!theirDData->compilationUnit)
             return Encode(false);

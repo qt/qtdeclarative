@@ -1158,7 +1158,7 @@ void QJSEnginePrivate::removeFromDebugServer(QJSEngine *q)
  */
 QJSEngine *qjsEngine(const QObject *object)
 {
-    QQmlData *data = QQmlData::get(object, false);
+    QQmlData *data = QQmlData::get(object);
     if (!data || data->jsWrapper.isNullOrUndefined())
         return nullptr;
     return data->jsWrapper.engine()->jsEngine();
