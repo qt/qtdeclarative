@@ -294,17 +294,24 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name)
                         currentObject = qmlAttachedPropertiesObject(currentObject, func);
                         if (!currentObject) return; // Something is broken with the attachable type
                     } else if (r.importNamespace) {
-                        if ((ii + 1) == path.count()) return; // No type following the namespace
+                        if (++ii == path.count())
+                            return; // No type following the namespace
 
-                        ++ii; r = typeNameCache->query(path.at(ii), r.importNamespace);
-                        if (!r.type.isValid()) return; // Invalid type in namespace
+                        // TODO: Do we really _not_ want to query the namespaced types here?
+                        r = typeNameCache->query<QQmlTypeNameCache::QueryNamespaced::No>(
+                                    path.at(ii), r.importNamespace);
+
+                        if (!r.type.isValid())
+                            return; // Invalid type in namespace
 
                         QQmlEnginePrivate *enginePrivate = QQmlEnginePrivate::get(engine);
                         QQmlAttachedPropertiesFunc func = r.type.attachedPropertiesFunction(enginePrivate);
-                        if (!func) return; // Not an attachable type
+                        if (!func)
+                            return; // Not an attachable type
 
                         currentObject = qmlAttachedPropertiesObject(currentObject, func);
-                        if (!currentObject) return; // Something is broken with the attachable type
+                        if (!currentObject)
+                            return; // Something is broken with the attachable type
 
                     } else if (r.scriptIndex != -1) {
                         return; // Not a type
