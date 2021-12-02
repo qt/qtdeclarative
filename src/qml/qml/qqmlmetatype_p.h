@@ -174,6 +174,8 @@ public:
     static QQmlType qmlType(const QUrl &unNormalizedUrl, bool includeNonFileImports = false);
 
     static QQmlRefPointer<QQmlPropertyCache> propertyCache(
+            QObject *object, QTypeRevision version = QTypeRevision());
+    static QQmlRefPointer<QQmlPropertyCache> propertyCache(
             const QMetaObject *metaObject, QTypeRevision version = QTypeRevision());
     static QQmlRefPointer<QQmlPropertyCache> propertyCache(
             const QQmlType &type, QTypeRevision version);

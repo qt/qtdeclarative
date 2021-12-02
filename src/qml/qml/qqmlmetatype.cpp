@@ -1279,6 +1279,19 @@ QQmlType QQmlMetaType::qmlType(const QUrl &unNormalizedUrl, bool includeNonFileI
         return QQmlType();
 }
 
+/*!
+Returns a QQmlPropertyCache for \a obj if one is available.
+
+If \a obj is null, being deleted or contains a dynamic meta object,
+nullptr is returned.
+*/
+QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::propertyCache(QObject *obj, QTypeRevision version)
+{
+    if (!obj || QObjectPrivate::get(obj)->metaObject || QObjectPrivate::get(obj)->wasDeleted)
+        return QQmlRefPointer<QQmlPropertyCache>();
+    return QQmlMetaType::propertyCache(obj->metaObject(), version);
+}
+
 QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::propertyCache(
         const QMetaObject *metaObject, QTypeRevision version)
 {

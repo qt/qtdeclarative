@@ -847,8 +847,7 @@ static bool initObjectLookup(
 
     QQmlPropertyData *property;
     if (!ddata->propertyCache) {
-        property = QQmlPropertyCache::property(
-                    aotContext->engine, object, name, aotContext->qmlContext, nullptr);
+        property = QQmlPropertyCache::property(object, name, aotContext->qmlContext, nullptr);
     } else {
         property = ddata->propertyCache->property(
                     name.getPointer(), object, aotContext->qmlContext);

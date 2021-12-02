@@ -202,11 +202,11 @@ protected:
     static ReturnedValue create(ExecutionEngine *engine, QObject *object);
 
     static QQmlPropertyData *findProperty(
-            ExecutionEngine *engine, QObject *o, const QQmlRefPointer<QQmlContextData> &qmlContext,
+            QObject *o, const QQmlRefPointer<QQmlContextData> &qmlContext,
             String *name, RevisionMode revisionMode, QQmlPropertyData *local);
 
     QQmlPropertyData *findProperty(
-            ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
+            const QQmlRefPointer<QQmlContextData> &qmlContext,
             String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);

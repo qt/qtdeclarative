@@ -281,13 +281,12 @@ public:
     static inline void flushPendingBinding(QObject *object, int coreIndex);
     void flushPendingBinding(int coreIndex);
 
-    static QQmlRefPointer<QQmlPropertyCache> ensurePropertyCache(QJSEngine *engine, QObject *object)
+    static QQmlRefPointer<QQmlPropertyCache> ensurePropertyCache(QObject *object)
     {
-        Q_ASSERT(engine);
         QQmlData *ddata = QQmlData::get(object, /*create*/true);
         if (Q_LIKELY(ddata->propertyCache))
             return ddata->propertyCache;
-        return createPropertyCache(engine, object);
+        return createPropertyCache(object);
     }
 
     Q_ALWAYS_INLINE static uint offsetForBit(int bit) { return static_cast<uint>(bit) / BitsPerType; }
@@ -298,8 +297,7 @@ private:
     mutable QQmlDataExtended *extendedData;
 
     Q_NEVER_INLINE static QQmlData *createQQmlData(QObjectPrivate *priv);
-    Q_NEVER_INLINE static QQmlRefPointer<QQmlPropertyCache> createPropertyCache(
-            QJSEngine *engine, QObject *object);
+    Q_NEVER_INLINE static QQmlRefPointer<QQmlPropertyCache> createPropertyCache(QObject *object);
 
     Q_ALWAYS_INLINE bool hasBitSet(int bit) const
     {

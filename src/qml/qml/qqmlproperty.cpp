@@ -326,7 +326,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
 
             QQmlPropertyData local;
             QQmlPropertyData *property = currentObject
-                    ? QQmlPropertyCache::property(engine, currentObject, pathName, context, &local)
+                    ? QQmlPropertyCache::property(currentObject, pathName, context, &local)
                     : nullptr;
 
             if (!property) {

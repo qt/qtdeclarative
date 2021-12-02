@@ -896,8 +896,8 @@ static inline QByteArray qQmlPropertyCacheToString(const QV4::String *string)
 
 template<typename T>
 QQmlPropertyData *
-qQmlPropertyCacheProperty(QJSEngine *engine, QObject *obj, T name,
-                          const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData *local)
+qQmlPropertyCacheProperty(QObject *obj, T name, const QQmlRefPointer<QQmlContextData> &context,
+                          QQmlPropertyData *local)
 {
     QQmlPropertyCache *cache = nullptr;
 
@@ -905,13 +905,10 @@ qQmlPropertyCacheProperty(QJSEngine *engine, QObject *obj, T name,
 
     if (ddata && ddata->propertyCache) {
         cache = ddata->propertyCache.data();
-    } else if (engine) {
-        QJSEnginePrivate *ep = QJSEnginePrivate::get(engine);
-        if (auto newCache = ep->cache(obj)) {
-            cache = newCache.data();
-            ddata = QQmlData::get(obj, true);
-            ddata->propertyCache = std::move(newCache);
-        }
+    } else if (auto newCache = QQmlMetaType::propertyCache(obj)) {
+        cache = newCache.data();
+        ddata = QQmlData::get(obj, true);
+        ddata->propertyCache = std::move(newCache);
     }
 
     QQmlPropertyData *rv = nullptr;
@@ -927,25 +924,25 @@ qQmlPropertyCacheProperty(QJSEngine *engine, QObject *obj, T name,
     return rv;
 }
 
-QQmlPropertyData *
-QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QV4::String *name,
-                            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData *local)
+QQmlPropertyData *QQmlPropertyCache::property(
+        QObject *obj, const QV4::String *name, const QQmlRefPointer<QQmlContextData> &context,
+        QQmlPropertyData *local)
 {
-    return qQmlPropertyCacheProperty<const QV4::String *>(engine, obj, name, context, local);
+    return qQmlPropertyCacheProperty<const QV4::String *>(obj, name, context, local);
 }
 
-QQmlPropertyData *
-QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, QStringView name,
-                            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData *local)
+QQmlPropertyData *QQmlPropertyCache::property(
+        QObject *obj, QStringView name, const QQmlRefPointer<QQmlContextData> &context,
+        QQmlPropertyData *local)
 {
-    return qQmlPropertyCacheProperty<const QStringView &>(engine, obj, name, context, local);
+    return qQmlPropertyCacheProperty<const QStringView &>(obj, name, context, local);
 }
 
-QQmlPropertyData *
-QQmlPropertyCache::property(QJSEngine *engine, QObject *obj, const QLatin1String &name,
-                            const QQmlRefPointer<QQmlContextData> &context, QQmlPropertyData *local)
+QQmlPropertyData *QQmlPropertyCache::property(
+        QObject *obj, const QLatin1String &name, const QQmlRefPointer<QQmlContextData> &context,
+        QQmlPropertyData *local)
 {
-    return qQmlPropertyCacheProperty<const QLatin1String &>(engine, obj, name, context, local);
+    return qQmlPropertyCacheProperty<const QLatin1String &>(obj, name, context, local);
 }
 
 // this function is copied from qmetaobject.cpp

@@ -83,34 +83,7 @@ public:
 
     void uiLanguageChanged() { Q_Q(QJSEngine); if (q) q->uiLanguageChanged(); }
     Q_OBJECT_BINDABLE_PROPERTY(QJSEnginePrivate, QString, uiLanguage, &QJSEnginePrivate::uiLanguageChanged);
-
-    // These methods may be called from the QML loader thread
-    inline QQmlRefPointer<QQmlPropertyCache> cache(QObject *obj, QTypeRevision version = QTypeRevision());
 };
-
-/*!
-Returns a QQmlPropertyCache for \a obj if one is available.
-
-If \a obj is null, being deleted or contains a dynamic meta object 0
-is returned.
-
-The returned cache is not referenced, so if it is to be stored, call addref().
-
-XXX thread There is a potential future race condition in this and all the cache()
-functions.  As the QQmlPropertyCache is returned unreferenced, when called
-from the loader thread, it is possible that the cache will have been dereferenced
-and deleted before the loader thread has a chance to use or reference it.  This
-can't currently happen as the cache holds a reference to the
-QQmlPropertyCache until the QQmlEngine is destroyed.
-*/
-QQmlRefPointer<QQmlPropertyCache> QJSEnginePrivate::cache(QObject *obj, QTypeRevision version)
-{
-    if (!obj || QObjectPrivate::get(obj)->metaObject || QObjectPrivate::get(obj)->wasDeleted)
-        return QQmlRefPointer<QQmlPropertyCache>();
-
-    const QMetaObject *mo = obj->metaObject();
-    return QQmlMetaType::propertyCache(mo, version);
-}
 
 QT_END_NAMESPACE
 

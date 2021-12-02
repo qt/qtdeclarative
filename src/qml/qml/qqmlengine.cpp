@@ -1360,10 +1360,10 @@ QQmlData *QQmlData::createQQmlData(QObjectPrivate *priv)
     return static_cast<QQmlData *>(priv->declarativeData);
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlData::createPropertyCache(QJSEngine *engine, QObject *object)
+QQmlRefPointer<QQmlPropertyCache> QQmlData::createPropertyCache(QObject *object)
 {
     QQmlData *ddata = QQmlData::get(object, /*create*/true);
-    ddata->propertyCache = QJSEnginePrivate::get(engine)->cache(object, QTypeRevision {});
+    ddata->propertyCache = QQmlMetaType::propertyCache(object, QTypeRevision {});
     return ddata->propertyCache;
 }
 
@@ -1814,7 +1814,7 @@ QJSValue QQmlEnginePrivate::singletonInstance<QJSValue>(const QQmlType &type)
             type.createProxy(o);
 
             // if this object can use a property cache, create it now
-            QQmlData::ensurePropertyCache(q, o);
+            QQmlData::ensurePropertyCache(o);
 
             // even though the object is defined in C++, qmlContext(obj) and qmlEngine(obj)
             // should behave identically to QML singleton types. You can, however, manually

@@ -358,8 +358,7 @@ static bool readObjectProperty(
         QVariant *target)
 {
     QQmlPropertyData local;
-    if (QQmlPropertyData *property =
-        QQmlPropertyCache::property(data->engine(), object, name, data, &local)) {
+    if (QQmlPropertyData *property = QQmlPropertyCache::property(object, name, data, &local)) {
         *target = object->metaObject()->property(property->coreIndex()).read(object);
         return true;
     }

@@ -208,8 +208,6 @@ public:
     // These methods may be called from any thread
     QString offlineStorageDatabaseDirectory() const;
 
-    using QJSEnginePrivate::cache;
-
     // These methods may be called from the loader thread
     QQmlMetaObject rawMetaObjectForType(QMetaType metaType) const;
     QQmlMetaObject metaObjectForType(QMetaType metaType) const;

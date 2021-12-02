@@ -213,12 +213,15 @@ public:
     inline QQmlPropertyData *overrideData(QQmlPropertyData *) const;
     inline bool isAllowedInRevision(QQmlPropertyData *) const;
 
-    static QQmlPropertyData *property(QJSEngine *, QObject *, QStringView,
-                                      const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData *);
-    static QQmlPropertyData *property(QJSEngine *, QObject *, const QLatin1String &,
-                                      const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData *);
-    static QQmlPropertyData *property(QJSEngine *, QObject *, const QV4::String *,
-                                      const QQmlRefPointer<QQmlContextData> &, QQmlPropertyData *);
+    static QQmlPropertyData *property(
+            QObject *, QStringView, const QQmlRefPointer<QQmlContextData> &,
+            QQmlPropertyData *);
+    static QQmlPropertyData *property(
+            QObject *, const QLatin1String &, const QQmlRefPointer<QQmlContextData> &,
+            QQmlPropertyData *);
+    static QQmlPropertyData *property(
+            QObject *, const QV4::String *, const QQmlRefPointer<QQmlContextData> &,
+            QQmlPropertyData *);
 
     //see QMetaObjectPrivate::originalClone
     int originalClone(int index);

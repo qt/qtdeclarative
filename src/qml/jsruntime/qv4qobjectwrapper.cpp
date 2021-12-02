@@ -234,15 +234,14 @@ void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
 }
 
 QQmlPropertyData *QObjectWrapper::findProperty(
-        ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext, String *name,
+        const QQmlRefPointer<QQmlContextData> &qmlContext, String *name,
         RevisionMode revisionMode, QQmlPropertyData *local) const
 {
-    QObject *o = d()->object();
-    return findProperty(engine, o, qmlContext, name, revisionMode, local);
+    return findProperty(d()->object(), qmlContext, name, revisionMode, local);
 }
 
 QQmlPropertyData *QObjectWrapper::findProperty(
-        ExecutionEngine *engine, QObject *o, const QQmlRefPointer<QQmlContextData> &qmlContext,
+        QObject *o, const QQmlRefPointer<QQmlContextData> &qmlContext,
         String *name, RevisionMode revisionMode, QQmlPropertyData *local)
 {
     Q_UNUSED(revisionMode);
@@ -252,7 +251,7 @@ QQmlPropertyData *QObjectWrapper::findProperty(
     if (ddata && ddata->propertyCache)
         result = ddata->propertyCache->property(name, o, qmlContext);
     else
-        result = QQmlPropertyCache::property(engine->jsEngine(), o, name, qmlContext, local);
+        result = QQmlPropertyCache::property(o, name, qmlContext, local);
     return result;
 }
 
@@ -357,7 +356,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(
         return *methodValue;
 
     QQmlPropertyData local;
-    QQmlPropertyData *result = findProperty(v4, qmlContext, name, revisionMode, &local);
+    QQmlPropertyData *result = findProperty(qmlContext, name, revisionMode, &local);
 
     if (!result) {
         // Check for attached properties
@@ -400,7 +399,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(
 
     QQmlData *ddata = QQmlData::get(object, false);
     QQmlPropertyData local;
-    QQmlPropertyData *result = findProperty(engine, object, qmlContext, name, revisionMode, &local);
+    QQmlPropertyData *result = findProperty(object, qmlContext, name, revisionMode, &local);
 
     if (result) {
         if (revisionMode == QV4::QObjectWrapper::CheckRevision && result->hasRevision()) {
@@ -455,7 +454,7 @@ bool QObjectWrapper::setQmlProperty(
         return false;
 
     QQmlPropertyData local;
-    QQmlPropertyData *result = QQmlPropertyCache::property(engine->jsEngine(), object, name, qmlContext, &local);
+    QQmlPropertyData *result = QQmlPropertyCache::property(object, name, qmlContext, &local);
     if (!result)
         return false;
 
@@ -757,13 +756,11 @@ bool QObjectWrapper::virtualIsEqualTo(Managed *a, Managed *b)
 
 ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
 {
-    if (QJSEngine *jsEngine = engine->jsEngine()) {
-        if (QQmlRefPointer<QQmlPropertyCache> cache = QQmlData::ensurePropertyCache(jsEngine, object)) {
-            ReturnedValue result = QV4::Encode::null();
-            void *args[] = { &result, &engine };
-            if (cache->callJSFactoryMethod(object, args))
-                return result;
-        }
+    if (QQmlRefPointer<QQmlPropertyCache> cache = QQmlData::ensurePropertyCache(object)) {
+        ReturnedValue result = QV4::Encode::null();
+        void *args[] = { &result, &engine };
+        if (cache->callJSFactoryMethod(object, args))
+            return result;
     }
     return (engine->memoryManager->allocate<QV4::QObjectWrapper>(object))->asReturnedValue();
 }
@@ -827,7 +824,7 @@ PropertyAttributes QObjectWrapper::virtualGetOwnProperty(const Managed *m, Prope
             ScopedString n(scope, id.asStringOrSymbol());
             QQmlRefPointer<QQmlContextData> qmlContext = scope.engine->callingQmlContext();
             QQmlPropertyData local;
-            if (that->findProperty(scope.engine, qmlContext, n, IgnoreRevision, &local)
+            if (that->findProperty(qmlContext, n, IgnoreRevision, &local)
                     || n->equals(scope.engine->id_destroy()) || n->equals(scope.engine->id_toString())) {
                 if (p) {
                     // ### probably not the fastest implementation
@@ -942,7 +939,7 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
     QQmlData *ddata = QQmlData::get(qobj, false);
     if (!ddata || !ddata->propertyCache) {
         QQmlPropertyData local;
-        QQmlPropertyData *property = QQmlPropertyCache::property(engine->jsEngine(), qobj, name, qmlContext, &local);
+        QQmlPropertyData *property = QQmlPropertyCache::property(qobj, name, qmlContext, &local);
         return property ? getProperty(engine, qobj, property) : QV4::Encode::undefined();
     }
     QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobj, qmlContext);

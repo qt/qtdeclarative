@@ -78,13 +78,13 @@ struct MetaPropertyData {
     QVector<QPair<QVariant, bool> > m_data;
 };
 
-static QQmlRefPointer<QQmlPropertyCache> cacheForObject(QObject *object, QQmlEngine *engine)
+static QQmlRefPointer<QQmlPropertyCache> cacheForObject(QObject *object)
 {
     QQmlVMEMetaObject *metaObject = QQmlVMEMetaObject::get(object);
     if (metaObject)
         return metaObject->cache;
 
-    return QQmlEnginePrivate::get(engine)->cache(object);
+    return QQmlMetaType::propertyCache(object);
 }
 
 QQmlDesignerMetaObject* QQmlDesignerMetaObject::getNodeInstanceMetaObject(QObject *object, QQmlEngine *engine)
@@ -124,7 +124,7 @@ void QQmlDesignerMetaObject::init(QObject *object)
 }
 
 QQmlDesignerMetaObject::QQmlDesignerMetaObject(QObject *object, QQmlEngine *engine)
-    : QQmlVMEMetaObject(engine->handle(), object, cacheForObject(object, engine), /*qml compilation unit*/nullptr, /*qmlObjectId*/-1),
+    : QQmlVMEMetaObject(engine->handle(), object, cacheForObject(object), /*qml compilation unit*/nullptr, /*qmlObjectId*/-1),
       m_context(engine->contextForObject(object)),
       m_data(new MetaPropertyData)
 {
