@@ -64,12 +64,6 @@ public:
 
 private:
     void parseComments(const QList<QQmlJS::SourceLocation> &comments);
-
-    // work around compiler error in clang11
-    using QQmlJSImportVisitor::endVisit;
-    using QQmlJSImportVisitor::visit;
-
-    void endVisit(QQmlJS::AST::UiObjectDefinition *uiod) override;
 };
 
 QT_END_NAMESPACE
