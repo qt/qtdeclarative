@@ -240,26 +240,6 @@ QQmlImageProviderBase::~QQmlImageProviderBase()
 {
 }
 
-
-QQmlEnginePrivate::QQmlEnginePrivate(QQmlEngine *e)
-: propertyCapture(nullptr), rootContext(nullptr),
-#if QT_CONFIG(qml_debug)
-  profiler(nullptr),
-#endif
-  outputWarningsToMsgLog(true),
-  erroredBindings(nullptr), inProgressCreations(0),
-#if QT_CONFIG(qml_worker_script)
-  workerScriptEngine(nullptr),
-#endif
-  activeObjectCreator(nullptr),
-#if QT_CONFIG(qml_network)
-  networkAccessManager(nullptr), networkAccessManagerFactory(nullptr),
-#endif
-  scarceResourcesRefCount(0), importDatabase(e), typeLoader(e),
-  uniqueId(1), incubatorCount(0), incubationController(nullptr)
-{
-}
-
 QQmlEnginePrivate::~QQmlEnginePrivate()
 {
     if (inProgressCreations)
@@ -1445,7 +1425,7 @@ static void dumpwarning(const QList<QQmlError> &errors)
 void QQmlEnginePrivate::warning(const QQmlError &error)
 {
     Q_Q(QQmlEngine);
-    q->warnings(QList<QQmlError>() << error);
+    emit q->warnings(QList<QQmlError>({error}));
     if (outputWarningsToMsgLog)
         dumpwarning(error);
 }
@@ -1453,7 +1433,7 @@ void QQmlEnginePrivate::warning(const QQmlError &error)
 void QQmlEnginePrivate::warning(const QList<QQmlError> &errors)
 {
     Q_Q(QQmlEngine);
-    q->warnings(errors);
+    emit q->warnings(errors);
     if (outputWarningsToMsgLog)
         dumpwarning(errors);
 }

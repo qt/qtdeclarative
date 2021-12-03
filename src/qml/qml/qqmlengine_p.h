@@ -135,7 +135,7 @@ class Q_QML_PRIVATE_EXPORT QQmlEnginePrivate : public QJSEnginePrivate
 {
     Q_DECLARE_PUBLIC(QQmlEngine)
 public:
-    QQmlEnginePrivate(QQmlEngine *);
+    explicit QQmlEnginePrivate(QQmlEngine *q) : importDatabase(q), typeLoader(q) {}
     ~QQmlEnginePrivate() override;
 
     void init();
@@ -143,47 +143,47 @@ public:
     // is just qmlClearTypeRegistrations (which can't be called while an engine exists)
     static bool baseModulesUninitialized;
 
-    QQmlPropertyCapture *propertyCapture;
+    QQmlPropertyCapture *propertyCapture = nullptr;
 
     QRecyclePool<QQmlJavaScriptExpressionGuard> jsExpressionGuardPool;
     QRecyclePool<TriggerList> qPropertyTriggerPool;
 
-    QQmlContext *rootContext;
+    QQmlContext *rootContext = nullptr;
     Q_OBJECT_BINDABLE_PROPERTY(QQmlEnginePrivate, QString, translationLanguage);
 
 #if !QT_CONFIG(qml_debug)
     static const quintptr profiler = 0;
 #else
-    QQmlProfiler *profiler;
+    QQmlProfiler *profiler = nullptr;
 #endif
 
-    bool outputWarningsToMsgLog;
+    bool outputWarningsToMsgLog = true;
 
     // Bindings that have had errors during startup
-    QQmlDelayedError *erroredBindings;
-    int inProgressCreations;
+    QQmlDelayedError *erroredBindings = nullptr;
+    int inProgressCreations = 0;
 
     QV4::ExecutionEngine *v4engine() const { return q_func()->handle(); }
 
 #if QT_CONFIG(qml_worker_script)
-    QThread *workerScriptEngine;
+    QThread *workerScriptEngine = nullptr;
 #endif
 
     QUrl baseUrl;
 
-    QQmlObjectCreator *activeObjectCreator;
+    QQmlObjectCreator *activeObjectCreator = nullptr;
 #if QT_CONFIG(qml_network)
     QNetworkAccessManager *createNetworkAccessManager(QObject *parent) const;
     QNetworkAccessManager *getNetworkAccessManager() const;
-    mutable QNetworkAccessManager *networkAccessManager;
-    mutable QQmlNetworkAccessManagerFactory *networkAccessManagerFactory;
+    mutable QNetworkAccessManager *networkAccessManager = nullptr;
+    mutable QQmlNetworkAccessManagerFactory *networkAccessManagerFactory = nullptr;
 #endif
     QHash<QString,QSharedPointer<QQmlImageProviderBase> > imageProviders;
     QSharedPointer<QQmlImageProviderBase> imageProvider(const QString &providerId) const;
 
     QList<QQmlAbstractUrlInterceptor *> urlInterceptors;
 
-    int scarceResourcesRefCount;
+    int scarceResourcesRefCount = 0;
     void referenceScarceResources();
     void dereferenceScarceResources();
 
@@ -191,11 +191,6 @@ public:
     QQmlTypeLoader typeLoader;
 
     QString offlineStoragePath;
-
-    mutable quint32 uniqueId;
-    inline quint32 getUniqueId() const {
-        return uniqueId++;
-    }
 
     // Unfortunate workaround to avoid a circular dependency between
     // qqmlengine_p.h and qqmlincubator_p.h
@@ -205,8 +200,8 @@ public:
         QIntrusiveListNode nextWaitingFor;
     };
     QIntrusiveList<Incubator, &Incubator::next> incubatorList;
-    unsigned int incubatorCount;
-    QQmlIncubationController *incubationController;
+    unsigned int incubatorCount = 0;
+    QQmlIncubationController *incubationController = nullptr;
     void incubate(QQmlIncubator &, const QQmlRefPointer<QQmlContextData> &);
 
     // These methods may be called from any thread
@@ -251,8 +246,6 @@ public:
     inline static QQmlEnginePrivate *get(QV4::ExecutionEngine *e);
 
     static QList<QQmlError> qmlErrorFromDiagnostics(const QString &fileName, const QList<QQmlJS::DiagnosticMessage> &diagnosticMessages);
-
-    static void defineModule();
 
     static bool designerMode();
     static void activateDesignerMode();
