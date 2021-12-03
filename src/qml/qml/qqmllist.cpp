@@ -59,7 +59,8 @@ QQmlListReferencePrivate::QQmlListReferencePrivate()
 {
 }
 
-QQmlListReference QQmlListReferencePrivate::init(const QQmlListProperty<QObject> &prop, QMetaType propType, QQmlEngine *engine)
+QQmlListReference QQmlListReferencePrivate::init(
+        const QQmlListProperty<QObject> &prop, QMetaType propType)
 {
     QQmlListReference rv;
 
@@ -67,7 +68,6 @@ QQmlListReference QQmlListReferencePrivate::init(const QQmlListProperty<QObject>
 
     rv.d = new QQmlListReferencePrivate;
     rv.d->object = prop.object;
-    rv.d->setEngine(engine);
     rv.d->property = prop;
     rv.d->propertyType = propType;
 
@@ -132,12 +132,8 @@ Constructs a QQmlListReference from a QVariant \a variant containing a QQmlListP
 owning the list property is destroyed after the reference is constructed, it will automatically
 become invalid.  That is, it is safe to hold QQmlListReference instances even after the object is
 deleted.
-
-The \a engine is required to look up the element type, which may be a dynamically created QML type.
-If it's omitted, only pre-registered types are available. The element type is needed when inserting
-values into the list and when the value meta type is explicitly retrieved.
 */
-QQmlListReference::QQmlListReference(const QVariant &variant, QQmlEngine *engine)
+QQmlListReference::QQmlListReference(const QVariant &variant)
     : d(nullptr)
 {
     const QMetaType t = variant.metaType();
@@ -146,7 +142,6 @@ QQmlListReference::QQmlListReference(const QVariant &variant, QQmlEngine *engine
 
     d = new QQmlListReferencePrivate;
     d->propertyType = t;
-    d->setEngine(engine);
 
     d->property.~QQmlListProperty();
     t.construct(&d->property, variant.constData());
@@ -159,13 +154,9 @@ Constructs a QQmlListReference for \a object's \a property.  If \a property is n
 property, an invalid QQmlListReference is created.  If \a object is destroyed after
 the reference is constructed, it will automatically become invalid.  That is, it is safe to hold
 QQmlListReference instances even after \a object is deleted.
-
-The \a engine is required to look up the element type, which may be a dynamically created QML type.
-If it's omitted, only pre-registered types are available. The element type is needed when inserting
-values into the list and when the value meta type is explicitly retrieved.
 */
-QQmlListReference::QQmlListReference(QObject *object, const char *property, QQmlEngine *engine)
-: d(nullptr)
+QQmlListReference::QQmlListReference(QObject *object, const char *property)
+    : d(nullptr)
 {
     if (!object || !property) return;
 
@@ -178,7 +169,6 @@ QQmlListReference::QQmlListReference(QObject *object, const char *property, QQml
     d = new QQmlListReferencePrivate;
     d->object = object;
     d->propertyType = data->propType();
-    d->setEngine(engine);
 
     void *args[] = { &d->property, nullptr };
     QMetaObject::metacall(object, QMetaObject::ReadProperty, data->coreIndex(), args);

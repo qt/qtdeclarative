@@ -100,7 +100,7 @@ QQmlRefPointer<QV4::ExecutableCompilationUnit> QQmlTypeCompiler::compile()
                 QQmlComponentAndAliasResolver resolver(this);
                 if (!resolver.resolve(result.processedRoot))
                     return nullptr;
-                pendingGroupPropertyBindings.resolveMissingPropertyCaches(engine, &m_propertyCaches);
+                pendingGroupPropertyBindings.resolveMissingPropertyCaches(&m_propertyCaches);
                 pendingGroupPropertyBindings.clear(); // anything that can be processed is now processed
             }
         } while (result.canResume);
@@ -817,8 +817,8 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(
         // Otherwise, make sure we look up by metaobject.
         // TODO: Is this correct?
         QQmlRefPointer<QQmlPropertyCache> pc = pd->typeVersion().hasMinorVersion()
-                ? enginePrivate->rawPropertyCacheForType(pd->propType(), pd->typeVersion())
-                : enginePrivate->rawPropertyCacheForType(pd->propType());
+                ? QQmlMetaType::rawPropertyCacheForType(pd->propType(), pd->typeVersion())
+                : QQmlMetaType::rawPropertyCacheForType(pd->propType());
         const QMetaObject *mo = pc ? pc->firstCppMetaObject() : nullptr;
         while (mo) {
             if (mo == &QQmlComponent::staticMetaObject)

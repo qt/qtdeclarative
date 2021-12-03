@@ -62,6 +62,7 @@ class QQmlTypeModule;
 class QRecursiveMutex;
 class QQmlError;
 class QQmlValueType;
+class QQmlMetaObject;
 
 namespace QV4 { class ExecutableCompilationUnit; }
 
@@ -179,6 +180,14 @@ public:
             const QMetaObject *metaObject, QTypeRevision version = QTypeRevision());
     static QQmlRefPointer<QQmlPropertyCache> propertyCache(
             const QQmlType &type, QTypeRevision version);
+
+    // These methods may be called from the loader thread
+    static QQmlMetaObject rawMetaObjectForType(QMetaType metaType);
+    static QQmlMetaObject metaObjectForType(QMetaType metaType);
+    static QQmlRefPointer<QQmlPropertyCache> propertyCacheForType(QMetaType metaType);
+    static QQmlRefPointer<QQmlPropertyCache> rawPropertyCacheForType(QMetaType metaType);
+    static QQmlRefPointer<QQmlPropertyCache> rawPropertyCacheForType(
+            QMetaType metaType, QTypeRevision version);
 
     static void freeUnusedTypesAndCaches();
 

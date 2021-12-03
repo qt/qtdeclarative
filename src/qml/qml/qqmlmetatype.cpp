@@ -1306,6 +1306,101 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::propertyCache(
     return data->propertyCache(type, version);
 }
 
+/*!
+ * \internal
+ *
+ * Look up by type's baseMetaObject.
+ */
+QQmlMetaObject QQmlMetaType::rawMetaObjectForType(QMetaType metaType)
+{
+    const QQmlMetaTypeDataPtr data;
+    if (auto composite = data->findPropertyCacheInCompositeTypes(metaType))
+        return QQmlMetaObject(composite);
+
+    const QQmlTypePrivate *type = data->idToType.value(metaType.id());
+    return (type && type->typeId == metaType) ? type->baseMetaObject : nullptr;
+}
+
+/*!
+ * \internal
+ *
+ * Look up by type's metaObject.
+ */
+QQmlMetaObject QQmlMetaType::metaObjectForType(QMetaType metaType)
+{
+    const QQmlMetaTypeDataPtr data;
+    if (auto composite = data->findPropertyCacheInCompositeTypes(metaType))
+        return QQmlMetaObject(composite);
+
+    const QQmlTypePrivate *type = data->idToType.value(metaType.id());
+    return (type && type->typeId == metaType)
+            ? QQmlType(type).metaObject()
+            : nullptr;
+}
+
+/*!
+ * \internal
+ *
+ * Look up by type's metaObject and version.
+ */
+QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::propertyCacheForType(QMetaType metaType)
+{
+    QQmlMetaTypeDataPtr data;
+    if (auto composite = data->findPropertyCacheInCompositeTypes(metaType))
+        return composite;
+
+    const QQmlTypePrivate *type = data->idToType.value(metaType.id());
+    return (type && type->typeId == metaType)
+            ? data->propertyCache(QQmlType(type).metaObject(), type->version)
+            : QQmlRefPointer<QQmlPropertyCache>();
+}
+
+/*!
+ * \internal
+ *
+ * Look up by type's baseMetaObject and unspecified/any version.
+ * TODO: Is this correct? Passing a plain QTypeRevision() rather than QTypeRevision::zero() or
+ *       the actual type's version seems strange. The behavior has been in place for a while.
+ */
+QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::rawPropertyCacheForType(QMetaType metaType)
+{
+    QQmlMetaTypeDataPtr data;
+    if (auto composite = QQmlMetaType::findPropertyCacheInCompositeTypes(metaType))
+        return composite;
+
+    const QQmlTypePrivate *type = data->idToType.value(metaType.id());
+    return (type && type->typeId == metaType)
+            ? data->propertyCache(type->baseMetaObject, QTypeRevision())
+            : QQmlRefPointer<QQmlPropertyCache>();
+}
+
+/*!
+ * \internal
+ *
+ * Look up by QQmlType and version. We only fall back to lookup by metaobject if the type
+ * has no revisiononed attributes here. Unspecified versions are interpreted as "any".
+ */
+QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::rawPropertyCacheForType(
+        QMetaType metaType, QTypeRevision version)
+{
+    QQmlMetaTypeDataPtr data;
+    if (auto composite = data->findPropertyCacheInCompositeTypes(metaType))
+        return composite;
+
+    const QQmlTypePrivate *typePriv = data->idToType.value(metaType.id());
+    if (!typePriv || typePriv->typeId != metaType)
+        return QQmlRefPointer<QQmlPropertyCache>();
+
+    const QQmlType type(typePriv);
+    if (type.containsRevisionedAttributes())
+        return data->propertyCache(type, version);
+
+    if (const QMetaObject *metaObject = type.metaObject())
+        return data->propertyCache(metaObject, version);
+
+    return QQmlRefPointer<QQmlPropertyCache>();
+}
+
 void QQmlMetaType::unregisterType(int typeIndex)
 {
     QQmlMetaTypeDataPtr data;
@@ -1667,26 +1762,10 @@ QQmlValueType *QQmlMetaType::valueType(QMetaType type)
     return *data->metaTypeToValueType.insert(type.id(), nullptr);
 }
 
-static QQmlRefPointer<QQmlPropertyCache> propertyCacheForPotentialInlineComponentType(
-        QMetaType t, const QHash<const QtPrivate::QMetaTypeInterface *,
-                                 QV4::ExecutableCompilationUnit *>::const_iterator &iter) {
-    if (t != (*iter)->typeIds.id) {
-        // this is an inline component, and what we have in the iterator is currently the parent compilation unit
-        for (auto &&icDatum: (*iter)->inlineComponentData)
-            if (icDatum.typeIds.id == t)
-                return (*iter)->propertyCaches.at(icDatum.objectIndex);
-    }
-    return (*iter)->rootPropertyCache();
-}
-
 QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::findPropertyCacheInCompositeTypes(QMetaType t)
 {
     const QQmlMetaTypeDataPtr data;
-
-    auto iter = data->compositeTypes.constFind(t.iface());
-    return (iter == data->compositeTypes.constEnd())
-            ? QQmlRefPointer<QQmlPropertyCache>()
-            : propertyCacheForPotentialInlineComponentType(t, iter);
+    return data->findPropertyCacheInCompositeTypes(t);
 }
 
 void QQmlMetaType::registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit)

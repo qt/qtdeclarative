@@ -329,7 +329,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
                                     );
                     }
 
-                    if (!enginePrivate->propertyCacheForType(type)) {
+                    if (!QQmlMetaType::propertyCacheForType(type)) {
                         return recordError(binding->location,
                                            tr("Invalid grouped property access: Property \"%1\" with type \"%2\", which is not a value type")
                                            .arg(name)
@@ -661,7 +661,7 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(
 */
 bool QQmlPropertyValidator::canCoerce(QMetaType to, QQmlRefPointer<QQmlPropertyCache> fromMo) const
 {
-    QQmlRefPointer<QQmlPropertyCache> toMo = enginePrivate->rawPropertyCacheForType(to);
+    QQmlRefPointer<QQmlPropertyCache> toMo = QQmlMetaType::rawPropertyCacheForType(to);
 
     if (toMo.isNull()) {
         // if we have an inline component from the current file,
@@ -772,7 +772,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
         // effect the properties on the type, but don't effect assignability
         // Not passing a version ensures that we get the raw metaObject.
         QQmlRefPointer<QQmlPropertyCache> propertyMetaObject
-                = enginePrivate->rawPropertyCacheForType(propType);
+                = QQmlMetaType::rawPropertyCacheForType(propType);
         if (!propertyMetaObject) {
             // if we have an inline component from the current file,
             // it is not properly registered at this point, as registration

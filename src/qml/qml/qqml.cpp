@@ -869,12 +869,8 @@ static bool initObjectLookup(
 
         const QMetaObject *typeMetaObject = type.metaObject();
         const QMetaObject *foundMetaObject = propType.metaObject();
-        if (!foundMetaObject) {
-            if (QQmlEngine *engine = aotContext->qmlEngine()) {
-                foundMetaObject = QQmlEnginePrivate::get(engine)->metaObjectForType(
-                            propType).metaObject();
-            }
-        }
+        if (!foundMetaObject)
+            foundMetaObject = QQmlMetaType::metaObjectForType(propType).metaObject();
 
         while (foundMetaObject) {
             if (foundMetaObject == typeMetaObject)
@@ -1318,7 +1314,8 @@ bool AOTCompiledContext::loadTypeLookup(uint index, void *target) const
                 ->compilationUnit()->typeIds.id;
     }
 
-    *static_cast<const QMetaObject **>(target) = ep->metaObjectForType(metaType).metaObject();
+    *static_cast<const QMetaObject **>(target)
+            = QQmlMetaType::metaObjectForType(metaType).metaObject();
     return true;
 }
 

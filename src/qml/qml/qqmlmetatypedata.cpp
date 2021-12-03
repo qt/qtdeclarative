@@ -141,7 +141,8 @@ void QQmlMetaTypeData::clearPropertyCachesForVersion(int index)
         typePropertyCaches[index].clear();
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(const QMetaObject *metaObject, QTypeRevision version)
+QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(
+        const QMetaObject *metaObject, QTypeRevision version)
 {
     if (QQmlRefPointer<QQmlPropertyCache> rv = propertyCaches.value(metaObject))
         return rv;
@@ -272,6 +273,28 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(
         setPropertyCacheForVersion(type.index(), maxVersion, raw);
 
     return raw;
+}
+
+static QQmlRefPointer<QQmlPropertyCache> propertyCacheForPotentialInlineComponentType(
+        QMetaType t,
+        const QHash<const QtPrivate::QMetaTypeInterface *,
+                    QV4::ExecutableCompilationUnit *>::const_iterator &iter) {
+    if (t != (*iter)->typeIds.id) {
+        // this is an inline component, and what we have in the iterator is currently the parent compilation unit
+        for (auto &&icDatum: (*iter)->inlineComponentData)
+            if (icDatum.typeIds.id == t)
+                return (*iter)->propertyCaches.at(icDatum.objectIndex);
+    }
+    return (*iter)->rootPropertyCache();
+}
+
+QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::findPropertyCacheInCompositeTypes(
+        QMetaType t) const
+{
+    auto iter = compositeTypes.constFind(t.iface());
+    return (iter == compositeTypes.constEnd())
+            ? QQmlRefPointer<QQmlPropertyCache>()
+            : propertyCacheForPotentialInlineComponentType(t, iter);
 }
 
 QT_END_NAMESPACE

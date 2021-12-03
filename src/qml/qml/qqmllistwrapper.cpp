@@ -103,8 +103,7 @@ QVariant QmlListWrapper::toVariant() const
 QQmlListReference QmlListWrapper::toListReference() const
 {
     Heap::QmlListWrapper *wrapper = d();
-    return QQmlListReferencePrivate::init(
-                wrapper->property(), QMetaType(wrapper->propertyType), engine()->qmlEngine());
+    return QQmlListReferencePrivate::init(wrapper->property(), QMetaType(wrapper->propertyType));
 }
 
 

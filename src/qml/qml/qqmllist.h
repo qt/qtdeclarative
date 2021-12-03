@@ -197,8 +197,19 @@ class Q_QML_EXPORT QQmlListReference
 {
 public:
     QQmlListReference();
-    explicit QQmlListReference(const QVariant &variant, QQmlEngine *engine = nullptr);
-    QQmlListReference(QObject *, const char *property, QQmlEngine * = nullptr);
+
+#if QT_DEPRECATED_SINCE(6, 3)
+    QT_DEPRECATED_X("Drop the QQmlEngine* argument")
+    QQmlListReference(const QVariant &variant, QQmlEngine *)
+        : QQmlListReference(variant) {}
+
+    QT_DEPRECATED_X("Drop the QQmlEngine* argument")
+    QQmlListReference(QObject *o, const char *property, QQmlEngine *)
+        : QQmlListReference(o, property) {}
+#endif
+
+    explicit QQmlListReference(const QVariant &variant);
+    QQmlListReference(QObject *o, const char *property);
     QQmlListReference(const QQmlListReference &);
     QQmlListReference &operator=(const QQmlListReference &);
     ~QQmlListReference();

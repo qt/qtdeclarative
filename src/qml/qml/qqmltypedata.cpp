@@ -249,7 +249,7 @@ void QQmlTypeData::createTypeAndPropertyCaches(
             &m_compiledData->propertyCaches, m_compiledData.data());
     aliasCreator.appendAliasPropertiesToMetaObjects(engine);
 
-    pendingGroupPropertyBindings.resolveMissingPropertyCaches(engine, &m_compiledData->propertyCaches);
+    pendingGroupPropertyBindings.resolveMissingPropertyCaches(&m_compiledData->propertyCaches);
 }
 
 static bool addTypeReferenceChecksumsToHash(
@@ -899,8 +899,6 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
 
     m_importCache.populateCache(typeNameCache->data());
 
-    QQmlEnginePrivate * const engine = QQmlEnginePrivate::get(typeLoader()->engine());
-
     for (auto resolvedType = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd(); resolvedType != end; ++resolvedType) {
         QScopedPointer<QV4::ResolvedTypeReference> ref(new QV4::ResolvedTypeReference);
         QQmlType qmlType = resolvedType->type;
@@ -933,7 +931,7 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
                     auto exUnit = QQmlMetaType::obtainExecutableCompilationUnit(type);
                     if (exUnit) {
                         ref->setCompilationUnit(exUnit);
-                        ref->setTypePropertyCache(engine->propertyCacheForType(type));
+                        ref->setTypePropertyCache(QQmlMetaType::propertyCacheForType(type));
                     }
                 }
             } else {

@@ -1182,7 +1182,7 @@ QVariant QQmlPropertyPrivate::readValueProperty()
 
         QQmlListProperty<QObject> prop;
         core.readProperty(object, &prop);
-        return QVariant::fromValue(QQmlListReferencePrivate::init(prop, core.propType(), engine));
+        return QVariant::fromValue(QQmlListReferencePrivate::init(prop, core.propType()));
 
     } else if (core.isQObject()) {
 
@@ -1383,11 +1383,11 @@ bool QQmlPropertyPrivate::write(
         } else {
             varType = variantMetaType;
         }
-        QQmlMetaObject valMo = rawMetaObjectForType(enginePriv, varType);
+        QQmlMetaObject valMo = rawMetaObjectForType(varType);
         if (valMo.isNull() || !varType.flags().testFlag(QMetaType::PointerToQObject))
             return false;
         QObject *o = *static_cast<QObject *const *>(val.constData());
-        QQmlMetaObject propMo = rawMetaObjectForType(enginePriv, propertyMetaType);
+        QQmlMetaObject propMo = rawMetaObjectForType(propertyMetaType);
 
         if (o)
             valMo = o;
@@ -1458,14 +1458,7 @@ bool QQmlPropertyPrivate::write(
     } else if (property.isQList()) {
         QQmlMetaObject listType;
 
-        if (enginePriv) {
-            listType = enginePriv->rawMetaObjectForType(QQmlMetaType::listType(propertyMetaType));
-        } else {
-            const QQmlType type = QQmlMetaType::qmlType(QQmlMetaType::listType(propertyMetaType));
-            if (!type.isValid())
-                return false;
-            listType = type.baseMetaObject();
-        }
+        listType = QQmlMetaType::rawMetaObjectForType(QQmlMetaType::listType(propertyMetaType));
         if (listType.isNull())
             return false;
 
@@ -1592,19 +1585,13 @@ bool QQmlPropertyPrivate::write(
     return true;
 }
 
-QQmlMetaObject QQmlPropertyPrivate::rawMetaObjectForType(
-            QQmlEnginePrivate *engine, QMetaType metaType)
+QQmlMetaObject QQmlPropertyPrivate::rawMetaObjectForType(QMetaType metaType)
 {
     if (metaType.flags() & QMetaType::PointerToQObject) {
         if (const QMetaObject *metaObject = metaType.metaObject())
             return metaObject;
     }
-    if (engine)
-        return engine->rawMetaObjectForType(metaType);
-    const QQmlType type = QQmlMetaType::qmlType(metaType);
-    if (type.isValid())
-        return QQmlMetaObject(type.baseMetaObject());
-    return QQmlMetaObject();
+    return QQmlMetaType::rawMetaObjectForType(metaType);
 }
 
 /*!

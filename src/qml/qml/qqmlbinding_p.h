@@ -161,8 +161,8 @@ private:
     inline bool enabledFlag() const;
     inline void setEnabledFlag(bool);
 
-    static QQmlBinding *newBinding(QQmlEnginePrivate *engine, const QQmlPropertyData *property);
-    static QQmlBinding *newBinding(QQmlEnginePrivate *engine, QMetaType propertyType);
+    static QQmlBinding *newBinding(const QQmlPropertyData *property);
+    static QQmlBinding *newBinding(QMetaType propertyType);
 
     QQmlSourceLocation *m_sourceLocation = nullptr; // used for Qt.binding() created functions
     QV4::PersistentValue m_boundFunction; // used for Qt.binding() that are created from a bound function object

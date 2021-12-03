@@ -2050,9 +2050,6 @@ bool CallArgument::fromValue(
     qvariantPtr = new (&allocData) QVariant();
     type = QVariantWrappedType;
 
-    const QQmlEnginePrivate *ep = engine->qmlEngine()
-            ? QQmlEnginePrivate::get(engine->qmlEngine())
-            : nullptr;
     QVariant v = engine->toVariant(value, metaType);
 
     if (v.metaType() == metaType) {
@@ -2066,7 +2063,7 @@ bool CallArgument::fromValue(
         return true;
     }
 
-    const QQmlMetaObject mo = ep ? ep->rawMetaObjectForType(metaType) : QQmlMetaObject();
+    const QQmlMetaObject mo = QQmlMetaType::rawMetaObjectForType(metaType);
     if (!mo.isNull()) {
         QObject *obj = QQmlMetaType::toQObject(v);
 

@@ -208,14 +208,6 @@ public:
     // These methods may be called from any thread
     QString offlineStorageDatabaseDirectory() const;
 
-    // These methods may be called from the loader thread
-    QQmlMetaObject rawMetaObjectForType(QMetaType metaType) const;
-    QQmlMetaObject metaObjectForType(QMetaType metaType) const;
-    QQmlRefPointer<QQmlPropertyCache> propertyCacheForType(QMetaType metaType);
-    QQmlRefPointer<QQmlPropertyCache> rawPropertyCacheForType(QMetaType metaType);
-    QQmlRefPointer<QQmlPropertyCache> rawPropertyCacheForType(
-            QMetaType metaType, QTypeRevision version);
-
     bool isTypeLoaded(const QUrl &url) const;
     bool isScriptLoaded(const QUrl &url) const;
 

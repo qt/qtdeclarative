@@ -389,14 +389,13 @@ ReturnedValue QQmlTypeWrapper::virtualInstanceOf(const Object *typeObject, const
 {
     Q_ASSERT(typeObject->as<QV4::QQmlTypeWrapper>());
     const QV4::QQmlTypeWrapper *typeWrapper = static_cast<const QV4::QQmlTypeWrapper *>(typeObject);
-    QV4::ExecutionEngine *engine = typeObject->internalClass()->engine;
-    QQmlEnginePrivate *qenginepriv = QQmlEnginePrivate::get(engine->qmlEngine());
 
     // can only compare a QObject* against a QML type
     const QObjectWrapper *wrapper = var.as<QObjectWrapper>();
     if (!wrapper)
         return QV4::Encode(false);
 
+    QV4::ExecutionEngine *engine = typeObject->internalClass()->engine;
     // in case the wrapper outlived the QObject*
     const QObject *wrapperObject = wrapper->object();
     if (!wrapperObject)
@@ -413,13 +412,14 @@ ReturnedValue QQmlTypeWrapper::virtualInstanceOf(const Object *typeObject, const
         if (!theirDData->compilationUnit)
             return Encode(false);
 
+        QQmlEnginePrivate *qenginepriv = QQmlEnginePrivate::get(engine->qmlEngine());
         QQmlRefPointer<QQmlTypeData> td = qenginepriv->typeLoader.getType(typeWrapper->d()->type().sourceUrl());
         if (ExecutableCompilationUnit *cu = td->compilationUnit())
-            myQmlType = qenginepriv->metaObjectForType(cu->typeIds.id);
+            myQmlType = QQmlMetaType::metaObjectForType(cu->typeIds.id);
         else
             return Encode(false); // It seems myQmlType has some errors, so we could not compile it.
     } else {
-        myQmlType = qenginepriv->metaObjectForType(myTypeId);
+        myQmlType = QQmlMetaType::metaObjectForType(myTypeId);
     }
 
     const QMetaObject *theirType = wrapperObject->metaObject();

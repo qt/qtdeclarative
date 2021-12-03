@@ -64,7 +64,7 @@ class QQmlListReferencePrivate
 public:
     QQmlListReferencePrivate();
 
-    static QQmlListReference init(const QQmlListProperty<QObject> &, QMetaType, QQmlEngine *);
+    static QQmlListReference init(const QQmlListProperty<QObject> &, QMetaType);
 
     QPointer<QObject> object;
     QQmlListProperty<QObject> property;
@@ -78,26 +78,18 @@ public:
         return ref->d;
     }
 
-    void setEngine(QQmlEngine *engine)
-    {
-        m_elementTypeOrEngine = engine;
-    }
-
     const QMetaObject *elementType()
     {
-        if (m_elementTypeOrEngine.isT2()) {
-            const QMetaType listType = QQmlMetaType::listType(propertyType);
-            const QQmlEngine *engine = m_elementTypeOrEngine.asT2();
-            const QQmlEnginePrivate *p = engine ? QQmlEnginePrivate::get(engine) : nullptr;
-            m_elementTypeOrEngine = p ? p->rawMetaObjectForType(listType).metaObject()
-                                      : QQmlMetaType::qmlType(listType).baseMetaObject();
+        if (!m_elementType) {
+            m_elementType = QQmlMetaType::rawMetaObjectForType(
+                        QQmlMetaType::listType(propertyType)).metaObject();
         }
 
-        return m_elementTypeOrEngine.asT1();
+        return m_elementType;
     }
 
 private:
-    QBiPointer<const QMetaObject, QQmlEngine> m_elementTypeOrEngine;
+    const QMetaObject *m_elementType = nullptr;
 };
 
 

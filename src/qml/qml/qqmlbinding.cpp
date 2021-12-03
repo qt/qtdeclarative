@@ -69,7 +69,7 @@ QT_BEGIN_NAMESPACE
 
 QQmlBinding *QQmlBinding::create(const QQmlPropertyData *property, const QQmlScriptString &script, QObject *obj, QQmlContext *ctxt)
 {
-    QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
+    QQmlBinding *b = newBinding(property);
 
     if (ctxt && !ctxt->isValid())
         return b;
@@ -125,7 +125,7 @@ QQmlBinding *QQmlBinding::create(
         const QQmlPropertyData *property, const QString &str, QObject *obj,
         const QQmlRefPointer<QQmlContextData> &ctxt, const QString &url, quint16 lineNumber)
 {
-    QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), property);
+    QQmlBinding *b = newBinding(property);
 
     b->setNotifyOnValueChanged(true);
     b->QQmlJavaScriptExpression::setContext(ctxt);
@@ -147,7 +147,7 @@ QQmlBinding *QQmlBinding::create(QMetaType propertyType, QV4::Function *function
                                  const QQmlRefPointer<QQmlContextData> &ctxt,
                                  QV4::ExecutionContext *scope)
 {
-    QQmlBinding *b = newBinding(QQmlEnginePrivate::get(ctxt), propertyType);
+    QQmlBinding *b = newBinding(propertyType);
 
     b->setNotifyOnValueChanged(true);
     b->QQmlJavaScriptExpression::setContext(ctxt);
@@ -603,8 +603,7 @@ void QQmlBinding::handleWriteError(const void *result, QMetaType resultType, QMe
     if (resultType.flags() & QMetaType::PointerToQObject) {
         if (QObject *o = *(QObject *const *)result) {
             valueType = o->metaObject()->className();
-            QQmlMetaObject propertyMetaObject = QQmlPropertyPrivate::rawMetaObjectForType(
-                        QQmlEnginePrivate::get(engine()), metaType);
+            QQmlMetaObject propertyMetaObject = QQmlPropertyPrivate::rawMetaObjectForType(metaType);
             if (!propertyMetaObject.isNull())
                 propertyType = propertyMetaObject.className();
         }
@@ -801,8 +800,8 @@ class QObjectPointerBinding: public QQmlNonbindingBinding
     QQmlMetaObject targetMetaObject;
 
 public:
-    QObjectPointerBinding(QQmlEnginePrivate *engine, QMetaType propertyType)
-        : targetMetaObject(QQmlPropertyPrivate::rawMetaObjectForType(engine, propertyType))
+    QObjectPointerBinding(QMetaType propertyType)
+        : targetMetaObject(QQmlPropertyPrivate::rawMetaObjectForType(propertyType))
     {}
 
 protected:
@@ -831,11 +830,8 @@ protected:
             if (resultMo.isNull())
                 resultMo = resultObject->metaObject();
         } else if (type == QMetaType::fromType<QVariant>()) {
-            QVariant value = *static_cast<QVariant *>(result);
-            QQmlEngine *qmlEngine = engine();
-            Q_ASSERT(qmlEngine);
-            resultMo = QQmlPropertyPrivate::rawMetaObjectForType(
-                        QQmlEnginePrivate::get(qmlEngine), value.metaType());
+            const QVariant value = *static_cast<QVariant *>(result);
+            resultMo = QQmlPropertyPrivate::rawMetaObjectForType(value.metaType());
             if (resultMo.isNull())
                 return slowWrite(*pd, vtpd, result, type, isUndefined, flags);
             resultObject = *static_cast<QObject *const *>(value.constData());
@@ -873,11 +869,8 @@ protected:
                 resultMo = resultObject->metaObject();
             }
         } else if (auto variant = result.as<QV4::VariantObject>()) {
-            QVariant value = variant->d()->data();
-            QQmlEngine *qmlEngine = engine();
-            Q_ASSERT(qmlEngine);
-            resultMo = QQmlPropertyPrivate::rawMetaObjectForType(
-                        QQmlEnginePrivate::get(qmlEngine), value.metaType());
+            const QVariant value = variant->d()->data();
+            resultMo = QQmlPropertyPrivate::rawMetaObjectForType(value.metaType());
             if (resultMo.isNull())
                 return slowWrite(*pd, vtpd, result, isUndefined, flags);
             resultObject = *static_cast<QObject *const *>(value.constData());
@@ -910,15 +903,15 @@ private:
     }
 };
 
-QQmlBinding *QQmlBinding::newBinding(QQmlEnginePrivate *engine, const QQmlPropertyData *property)
+QQmlBinding *QQmlBinding::newBinding(const QQmlPropertyData *property)
 {
-    return newBinding(engine, property ? property->propType() : QMetaType());
+    return newBinding(property ? property->propType() : QMetaType());
 }
 
-QQmlBinding *QQmlBinding::newBinding(QQmlEnginePrivate *engine, QMetaType propertyType)
+QQmlBinding *QQmlBinding::newBinding(QMetaType propertyType)
 {
     if (propertyType.flags() & QMetaType::PointerToQObject)
-        return new QObjectPointerBinding(engine, propertyType);
+        return new QObjectPointerBinding(propertyType);
 
     if (propertyType == QMetaType::fromType<QQmlBinding *>())
         return new QQmlBindingBinding;

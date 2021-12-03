@@ -81,7 +81,7 @@ struct QQmlBindingInstantiationContext {
             const QQmlRefPointer<QQmlPropertyCache> &referencingObjectPropertyCache);
 
     bool resolveInstantiatingProperty();
-    QQmlRefPointer<QQmlPropertyCache> instantiatingPropertyCache(QQmlEnginePrivate *enginePrivate) const;
+    QQmlRefPointer<QQmlPropertyCache> instantiatingPropertyCache() const;
 
     int referencingObjectIndex = -1;
     const QV4::CompiledData::Binding *instantiatingBinding = nullptr;
@@ -92,7 +92,7 @@ struct QQmlBindingInstantiationContext {
 
 struct QQmlPendingGroupPropertyBindings : public QVector<QQmlBindingInstantiationContext>
 {
-    void resolveMissingPropertyCaches(QQmlEnginePrivate *enginePrivate, QQmlPropertyCacheVector *propertyCaches) const;
+    void resolveMissingPropertyCaches(QQmlPropertyCacheVector *propertyCaches) const;
 };
 
 struct QQmlPropertyCacheCreatorBase
@@ -383,7 +383,7 @@ template <typename ObjectContainer>
 inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContainer>::propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlError *error) const
 {
     if (context.instantiatingProperty) {
-        return context.instantiatingPropertyCache(enginePrivate);
+        return context.instantiatingPropertyCache();
     } else if (obj->inheritedTypeNameIndex != 0) {
         auto *typeRef = objectContainer->resolvedType(obj->inheritedTypeNameIndex);
         Q_ASSERT(typeRef);
@@ -967,7 +967,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         if (!QQmlMetaType::isValueType(targetProperty->propType()) && valueTypeIndex != -1) {
             // deep alias property
             *type = targetProperty->propType();
-            QQmlRefPointer<QQmlPropertyCache> typeCache = enginePriv->propertyCacheForType(*type);
+            QQmlRefPointer<QQmlPropertyCache> typeCache = QQmlMetaType::propertyCacheForType(*type);
             Q_ASSERT(typeCache);
             QQmlPropertyData *typeProperty = typeCache->property(valueTypeIndex);
 

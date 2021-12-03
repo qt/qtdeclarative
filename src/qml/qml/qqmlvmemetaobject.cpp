@@ -250,9 +250,8 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
             const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
             if (pd && valueTypeIndex != -1 && !QQmlMetaType::valueType(pd->propType())) {
                 // deep alias
-                QQmlEnginePrivate *enginePriv = QQmlEnginePrivate::get(metaObject->compilationUnit->engine->qmlEngine());
                 const QQmlRefPointer<QQmlPropertyCache> newPropertyCache
-                        = enginePriv->propertyCacheForType(pd->propType());
+                        = QQmlMetaType::propertyCacheForType(pd->propType());
                 void *argv[1] = { &target };
                 QMetaObject::metacall(target, QMetaObject::ReadProperty, coreIndex, argv);
                 Q_ASSERT(newPropertyCache);
