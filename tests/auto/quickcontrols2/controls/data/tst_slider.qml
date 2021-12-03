@@ -944,4 +944,12 @@ TestCase {
 
         touch.release(0, control, x0 + data.dx2, y0 + data.dy2).commit()
     }
+
+    function test_nullTexture() {
+        failOnWarning("No QSGTexture provided from updateSampledImage(). This is wrong.")
+        var control = createTemporaryObject(slider, testCase, {width: -100})
+        verify(control)
+        control.visible = true
+        waitForRendering(control)
+    }
 }
