@@ -134,6 +134,7 @@ public:
     virtual void itemRotationChanged(QQuickItem *) {}
     virtual void itemImplicitWidthChanged(QQuickItem *) {}
     virtual void itemImplicitHeightChanged(QQuickItem *) {}
+    virtual void itemFocusChanged(QQuickItem *, Qt::FocusReason /* reason */) {}
 
     virtual QQuickAnchorsPrivate *anchorPrivate() { return nullptr; }
 };

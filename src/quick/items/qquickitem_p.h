@@ -331,6 +331,7 @@ public:
         ImplicitWidth = 0x100,
         ImplicitHeight = 0x200,
         Enabled = 0x400,
+        AllChanges = 0xFFFFFFFF
     };
 
     Q_DECLARE_FLAGS(ChangeTypes, ChangeType)
@@ -357,6 +358,32 @@ public:
         ChangeTypes types;
         QQuickGeometryChange gTypes;  //NOTE: not used for ==
     };
+
+    // call QQuickItemChangeListener PMF
+    template <typename Fn, typename ...Args>
+    void notifyChangeListeners(QQuickItemPrivate::ChangeTypes changeTypes, Fn &&function, Args &&...args)
+    {
+        if (changeListeners.isEmpty())
+            return;
+
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & changeTypes)
+                (change.listener->*function)(args...);
+        }
+    }
+    // call functor
+    template <typename Fn>
+    void notifyChangeListeners(QQuickItemPrivate::ChangeTypes changeTypes, Fn &&function) {
+        if (changeListeners.isEmpty())
+            return;
+
+        const auto listeners = changeListeners; // NOTE: intentional copy (QTBUG-54732)
+        for (const QQuickItemPrivate::ChangeListener &change : listeners) {
+            if (change.types & changeTypes)
+                function(change);
+        }
+    }
 
     struct ExtraData {
         ExtraData();
