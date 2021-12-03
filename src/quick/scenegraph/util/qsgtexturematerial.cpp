@@ -81,6 +81,10 @@ void QSGOpaqueTextureMaterialRhiShader::updateSampledImage(RenderState &state, i
     Q_ASSERT(oldMaterial == nullptr || newMaterial->type() == oldMaterial->type());
     QSGOpaqueTextureMaterial *tx = static_cast<QSGOpaqueTextureMaterial *>(newMaterial);
     QSGTexture *t = tx->texture();
+    if (!t) {
+        *texture = nullptr;
+        return;
+    }
 
     t->setFiltering(tx->filtering());
     t->setMipmapFiltering(tx->mipmapFiltering());
