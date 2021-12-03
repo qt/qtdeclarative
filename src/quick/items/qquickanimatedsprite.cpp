@@ -894,7 +894,7 @@ void QQuickAnimatedSprite::prepareNextFrame(QSGSpriteNode *node)
         maybeUpdate();
     }
 
-    qreal frameCount = d->m_spriteEngine->spriteFrames();
+    int frameCount = d->m_spriteEngine->spriteFrames();
     bool reverse = d->m_spriteEngine->sprite()->reverse();
     if (reverse)
         frameAt = (frameCount - 1) - frameAt;
@@ -931,15 +931,15 @@ void QQuickAnimatedSprite::prepareNextFrame(QSGSpriteNode *node)
             x2 = x1 - w;
             y2 = y1;
         } else {
-            x2 = 1.0 - w;
+            x2 = d->m_sheetSize.width() - w;
             y2 = y1 - h;
-            if (y2 < 0.0) {
+            if (y2 < 0) {
                 //the last row may not fill the entire width
                 int maxRowFrames = d->m_sheetSize.width() / d->m_spriteEngine->spriteWidth();
                 if (d->m_spriteEngine->maxFrames() % maxRowFrames)
                     x2 = ((d->m_spriteEngine->maxFrames() % maxRowFrames) - 1) * w;
 
-                y2 = 1.0 - h;
+                y2 = d->m_sheetSize.height() - h;
             }
         }
     } else {
@@ -947,10 +947,10 @@ void QQuickAnimatedSprite::prepareNextFrame(QSGSpriteNode *node)
             x2 = x1 + w;
             y2 = y1;
         } else {
-            x2 = 0.0;
+            x2 = 0;
             y2 = y1 + h;
-            if (y2 >= 1.0)
-                y2 = 0.0;
+            if (y2 >= d->m_sheetSize.height())
+                y2 = 0;
         }
     }
 
