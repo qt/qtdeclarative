@@ -384,6 +384,7 @@ qt_internal_add_qml_module(Qml
         qmldirparser
     LIBRARIES
         Qt::CorePrivate
+        ${FWCoreFoundation}
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::QmlIntegration
