@@ -54,7 +54,7 @@ namespace QQmlPrivate {
 
 template <typename T> class QList;
 
-template<typename T = void, typename... Args>
+template<typename... Args>
 void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor,
                                   QList<int> *qmlTypeIds = nullptr);
 
@@ -89,7 +89,7 @@ QT_END_NAMESPACE
     Q_CLASSINFO("QML.Singleton", "true") \
     enum class QmlIsSingleton {yes = true}; \
     template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlSingleton; \
-    template<typename T, typename... Args> \
+    template<typename... Args> \
     friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
 
 #define QML_ADDED_IN_MINOR_VERSION(VERSION) \
@@ -117,14 +117,14 @@ QT_END_NAMESPACE
     Q_CLASSINFO("QML.Extended", #EXTENDED_TYPE) \
     using QmlExtendedType = EXTENDED_TYPE; \
     template<class, class> friend struct QML_PRIVATE_NAMESPACE::QmlExtended; \
-    template<typename T, typename... Args> \
+    template<typename... Args> \
     friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
 
 #define QML_EXTENDED_NAMESPACE(EXTENDED_NAMESPACE) \
     Q_CLASSINFO("QML.Extended", #EXTENDED_NAMESPACE) \
     static constexpr const QMetaObject *qmlExtendedNamespace() { return &EXTENDED_NAMESPACE::staticMetaObject; } \
     template<class, class> friend struct QML_PRIVATE_NAMESPACE::QmlExtendedNamespace; \
-    template<typename T, typename... Args> \
+    template<typename... Args> \
     friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
 
 #define QML_NAMESPACE_EXTENDED(EXTENDED_NAMESPACE) \
@@ -134,7 +134,7 @@ QT_END_NAMESPACE
     Q_CLASSINFO("QML.Element", "anonymous") \
     enum class QmlIsInterface {yes = true}; \
     template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlInterface; \
-    template<typename T, typename... Args> \
+    template<typename... Args> \
     friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
 
 #define QML_IMPLEMENTS_INTERFACES(INTERFACES) \
@@ -147,7 +147,7 @@ QT_END_NAMESPACE
     using QmlSequenceValueType = VALUE_TYPE; \
     enum class QmlIsSequence {yes = true}; \
     template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlSequence; \
-    template<typename T, typename... Args> \
+    template<typename... Args> \
     friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
 
 #define QML_UNAVAILABLE \

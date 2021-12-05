@@ -49,7 +49,7 @@ namespace QQmlPrivate {
     template<typename, typename> struct QmlSingleton;
 
 }
-template<typename T, typename... Args>
+template<typename... Args>
 void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor, QList<int> *);
 QT_END_NAMESPACE
 
@@ -57,7 +57,7 @@ QT_END_NAMESPACE
     Q_CLASSINFO("QML.Singleton", "true") \
     enum class QmlIsSingleton {yes = true}; \
     template<typename, typename> friend struct QML_PRIVATE_NAMESPACE::QmlSingleton; \
-    template<typename T, typename... Args> \
+    template<typename... Args> \
     friend void QML_REGISTER_TYPES_AND_REVISIONS(const char *uri, int versionMajor, QList<int> *);
 
 #define QML_NAMED_ELEMENT(NAME) \

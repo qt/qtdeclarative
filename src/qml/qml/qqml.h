@@ -824,23 +824,17 @@ struct QmlTypeAndRevisionsRegistration<T, Resolved, void, false, true, false> {
     }
 };
 
-template<typename T, typename... Args>
+template<typename... T>
 void qmlRegisterTypesAndRevisions(const char *uri, int versionMajor, QList<int> *qmlTypeIds)
 {
-    QmlTypeAndRevisionsRegistration<
+    (QmlTypeAndRevisionsRegistration<
             T, typename QQmlPrivate::QmlResolved<T>::Type,
             typename QQmlPrivate::QmlExtended<T>::Type,
             QQmlPrivate::QmlSingleton<T>::Value,
             QQmlPrivate::QmlInterface<T>::Value,
             QQmlPrivate::QmlSequence<T>::Value>
             ::registerTypeAndRevisions(uri, versionMajor, qmlTypeIds,
-                                       QQmlPrivate::QmlExtendedNamespace<T>::metaObject());
-    qmlRegisterTypesAndRevisions<Args...>(uri, versionMajor, qmlTypeIds);
-}
-
-template<>
-inline void qmlRegisterTypesAndRevisions<>(const char *, int, QList<int> *)
-{
+                                       QQmlPrivate::QmlExtendedNamespace<T>::metaObject()), ...);
 }
 
 inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject,
