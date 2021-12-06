@@ -515,6 +515,16 @@ void TestQmllint::dirtyQmlCode_data()
         << QStringLiteral("Cannot assign binding of type QString to int")
         << QString()
         << false;
+    QTest::newRow("bad constant number to string")
+        << QStringLiteral("numberToStringProperty.qml")
+        << QStringLiteral("Cannot assign a numeric constant to a string property")
+        << QString()
+        << false;
+    QTest::newRow("bad unary minus to string")
+        << QStringLiteral("unaryMinusToStringProperty.qml")
+        << QStringLiteral("Cannot assign a numeric constant to a string property")
+        << QString()
+        << false;
     QTest::newRow("BadBinding")
             << QStringLiteral("badBinding.qml")
             << QStringLiteral("Binding assigned to \"doesNotExist\", but no property "

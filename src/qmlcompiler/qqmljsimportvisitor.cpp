@@ -1335,7 +1335,8 @@ void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
     QString literalType;
     QQmlJSMetaPropertyBinding::BindingType bindingType = QQmlJSMetaPropertyBinding::Invalid;
 
-    switch (exprStatement->expression->kind) {
+    auto expr = exprStatement->expression;
+    switch (expr->kind) {
     case Node::Kind_TrueLiteral:
         value = true;
         literalType = u"bool"_qs;
@@ -1356,21 +1357,21 @@ void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
         break;
     case Node::Kind_NumericLiteral:
         literalType = u"double"_qs;
-        value = cast<NumericLiteral *>(exprStatement->expression)->value;
+        value = cast<NumericLiteral *>(expr)->value;
         bindingType = QQmlJSMetaPropertyBinding::NumberLiteral;
         break;
     case Node::Kind_StringLiteral:
         literalType = u"string"_qs;
-        value = cast<StringLiteral *>(exprStatement->expression)->value.toString();
+        value = cast<StringLiteral *>(expr)->value.toString();
         bindingType = QQmlJSMetaPropertyBinding::StringLiteral;
         break;
     case Node::Kind_RegExpLiteral:
         literalType = u"regexp"_qs;
-        value = cast<RegExpLiteral *>(exprStatement->expression)->pattern.toString();
+        value = cast<RegExpLiteral *>(expr)->pattern.toString();
         bindingType = QQmlJSMetaPropertyBinding::RegExpLiteral;
         break;
     case Node::Kind_TemplateLiteral: {
-        auto templateLit = QQmlJS::AST::cast<QQmlJS::AST::TemplateLiteral *>(exprStatement->expression);
+        auto templateLit = QQmlJS::AST::cast<QQmlJS::AST::TemplateLiteral *>(expr);
         Q_ASSERT(templateLit);
         value = templateLit->value.toString();
         if (templateLit->hasNoSubstitution) {
@@ -1382,7 +1383,14 @@ void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
         break;
     }
     default:
-        return;
+        if (QQmlJS::AST::UnaryMinusExpression *unaryMinus = QQmlJS::AST::cast<QQmlJS::AST::UnaryMinusExpression *>(expr)) {
+            if (QQmlJS::AST::NumericLiteral *lit = QQmlJS::AST::cast<QQmlJS::AST::NumericLiteral *>(unaryMinus->expression)) {
+                literalType = u"double"_qs;
+                bindingType = QQmlJSMetaPropertyBinding::NumberLiteral;
+                value = -lit->value;
+            }
+        }
+        break;
     }
 
     if (!QQmlJSMetaPropertyBinding::isLiteralBinding(bindingType))

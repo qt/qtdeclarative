@@ -146,6 +146,9 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *p
                                                  .arg(binding.literalTypeName())
                                                  .arg(property.typeName()),
                                          Log_Type, binding.sourceLocation());
+                } else if (property.type() == m_stringType && isNumeric(binding.literalType())) {
+                    m_logger->logWarning(u"Cannot assign a numeric constant to a string property"_qs,
+                                         Log_Type, binding.sourceLocation());
                 }
             }
         }
