@@ -110,9 +110,7 @@ void tst_palette::palette_data()
     QTest::addColumn<QString>("testFile");
     QTest::addColumn<QPalette>("expectedPalette");
 
-    QPalette defaultPalette = QQuickTheme::palette(QQuickTheme::System);
-    defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
-    defaultPalette.setColor(QPalette::Text, QColor("#101010"));
+    const QPalette defaultPalette = QQuickTheme::palette(QQuickTheme::System);
 
     QTest::newRow("Control") << "palette-control-default.qml" << defaultPalette;
     QTest::newRow("AppWindow") << "palette-appwindow-default.qml" << defaultPalette;
@@ -194,9 +192,7 @@ void tst_palette::inheritance()
     QObject *grandChild = window->property("grandChild").value<QObject *>();
     QVERIFY(control && child && grandChild);
 
-    QPalette defaultPalette = QQuickTheme::palette(QQuickTheme::System);
-    defaultPalette.setColor(QPalette::Base, QColor("#efefef"));
-    defaultPalette.setColor(QPalette::Text, QColor("#101010"));
+    const QPalette defaultPalette = QQuickTheme::palette(QQuickTheme::System);
 
     auto windowPalette = QQuickWindowPrivate::get(window.get())->palette();
 
