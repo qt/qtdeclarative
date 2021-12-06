@@ -39,6 +39,7 @@
 
 #include <QtQml/private/qv4codegen_p.h>
 #include <QtQml/private/qqmlstringconverters_p.h>
+#include <QtQml/private/qqmlirbuilder_p.h>
 
 #include <algorithm>
 
@@ -1323,6 +1324,32 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ClassExpression *)
     leaveEnvironment();
 }
 
+
+// ### TODO: add warning about suspicious translation binding when returning false?
+static std::optional<QQmlJSMetaPropertyBinding> handleTranslationBinding(QStringView base, QQmlJS::AST::ArgumentList *args,
+                                                                         const QHash<QString, QQmlJSScope::ConstPtr> &rootScopeImports)
+{
+    std::optional<QQmlJSMetaPropertyBinding> maybeBinding = std::nullopt;
+    QStringView mainString;
+    auto registerMainString = [&](QStringView string) {
+        mainString = string;
+        return 0;
+    };
+    auto discardCommentString = [](QStringView) {return -1;};
+    auto finalizeBinding = [&](QV4::CompiledData::Binding::ValueType type, QV4::CompiledData::TranslationData) {
+        QQmlJSMetaPropertyBinding binding;
+        if (type == QV4::CompiledData::Binding::Type_Translation)
+            binding.setTranslation(mainString);
+        else if (type == QV4::CompiledData::Binding::Type_TranslationById)
+            binding.setTarnslationId(mainString);
+        else
+            binding.setLiteral(QQmlJSMetaPropertyBinding::StringLiteral, u"string"_qs, mainString.toString(), rootScopeImports[u"string"_qs]);
+        maybeBinding = binding;
+    };
+    QmlIR::tryGeneratingTranslationBindingBase(base, args, registerMainString, discardCommentString, finalizeBinding);
+    return maybeBinding;
+}
+
 void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
                                               const QQmlJS::AST::Statement *statement)
 {
@@ -1388,6 +1415,18 @@ void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
                 literalType = u"double"_qs;
                 bindingType = QQmlJSMetaPropertyBinding::NumberLiteral;
                 value = -lit->value;
+            }
+        } else if (QQmlJS::AST::CallExpression *call = QQmlJS::AST::cast<QQmlJS::AST::CallExpression *>(expr)) {
+            if (QQmlJS::AST::IdentifierExpression *base = QQmlJS::AST::cast<QQmlJS::AST::IdentifierExpression *>(call->base)) {
+                if (auto translationBindingOpt = handleTranslationBinding(base->name, call->arguments, m_rootScopeImports)) {
+                    auto translationBinding = translationBindingOpt.value();
+                    translationBinding.setPropertyName(name);
+                    translationBinding.setSourceLocation(expr->firstSourceLocation());
+                    m_currentScope->addOwnPropertyBinding(translationBinding);
+                    if (translationBinding.bindingType() == QQmlJSMetaPropertyBinding::BindingType::StringLiteral)
+                        m_literalScopesToCheck << m_currentScope;
+                    return;
+                }
             }
         }
         break;

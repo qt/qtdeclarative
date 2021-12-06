@@ -525,6 +525,16 @@ void TestQmllint::dirtyQmlCode_data()
         << QStringLiteral("Cannot assign a numeric constant to a string property")
         << QString()
         << false;
+    QTest::newRow("bad tranlsation binding (qsTr)")
+        << QStringLiteral("bad_qsTr.qml")
+        << QStringLiteral("")
+        << QString()
+        << false;
+    QTest::newRow("bad string binding (QT_TR_NOOP)")
+        << QStringLiteral("bad_QT_TR_NOOP.qml")
+        << QStringLiteral("Cannot assign binding of type string to int")
+        << QString()
+        << false;
     QTest::newRow("BadBinding")
             << QStringLiteral("badBinding.qml")
             << QStringLiteral("Binding assigned to \"doesNotExist\", but no property "
@@ -829,6 +839,9 @@ void TestQmllint::dirtyQmlCode()
         QEXPECT_FAIL("BadLiteralBindingDate",
                      "We're currently not able to verify any non-trivial QString conversion that "
                      "requires QQmlStringConverters",
+                     Abort);
+        QEXPECT_FAIL("bad tranlsation binding (qsTr)",
+                     "We currently do not check translation binding",
                      Abort);
 
         if (exitsNormally)

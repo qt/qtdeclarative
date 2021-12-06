@@ -394,7 +394,11 @@ private:
     // binding. separating the non-overlapping bits would indicate what we
     // require for each binding type more clearly
 
-    QVariant m_literalValue; // constant in literal (or null) expression
+    //union {
+        QString m_translationString;
+        QString m_translationId;
+        QVariant m_literalValue; // constant in literal (or null) expression
+    //};
 
     QWeakPointer<const QQmlJSScope> m_value; // object type of Object binding *OR* a literal type
     QString m_valueTypeName;
@@ -450,6 +454,19 @@ public:
         m_value = type;
         m_valueTypeName = typeName;
         m_literalValue = value;
+    }
+
+    // ### TODO: we might need comment and translation number at some point
+    void setTranslation(QStringView translation)
+    {
+        setBindingTypeOnce(BindingType::Translation);
+        m_translationString = translation.toString();
+    }
+
+    void setTarnslationId(QStringView id)
+    {
+        setBindingTypeOnce(BindingType::TranslationById);
+        m_translationId = id.toString();
     }
 
     void setObject(const QString &typeName, const QSharedPointer<const QQmlJSScope> &type)
