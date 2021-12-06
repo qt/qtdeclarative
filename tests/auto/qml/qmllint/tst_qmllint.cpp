@@ -949,6 +949,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("on binding in grouped property") << QStringLiteral("onBindingInGroupedProperty.qml");
     QTest::newRow("declared property of JS object") << QStringLiteral("bareQt.qml");
     QTest::newRow("ID overrides property") << QStringLiteral("accessibleId.qml");
+    QTest::newRow("matchByName") << QStringLiteral("matchByName.qml");
 }
 
 void TestQmllint::cleanQmlCode()

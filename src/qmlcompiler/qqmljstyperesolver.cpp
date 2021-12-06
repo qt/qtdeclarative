@@ -380,6 +380,9 @@ bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
     if (from == m_voidType)
         return true;
 
+    if (to.isNull())
+        return false;
+
     if (from == m_jsPrimitiveType) {
         // You can cast any primitive (in particular null) to a nullptr
         return isPrimitive(to) || to->accessSemantics() == QQmlJSScope::AccessSemantics::Reference;
@@ -388,8 +391,12 @@ bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
     if (to == m_jsPrimitiveType)
         return isPrimitive(from);
 
-    for (auto baseType = from->baseType(); baseType; baseType = baseType->baseType()) {
+    const bool matchByName = !to->isComposite();
+    Q_ASSERT(!matchByName || !to->internalName().isEmpty());
+    for (auto baseType = from; baseType; baseType = baseType->baseType()) {
         if (baseType == to)
+            return true;
+        if (matchByName && baseType->internalName() == to->internalName())
             return true;
     }
 
