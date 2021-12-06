@@ -883,11 +883,13 @@ QImage QSGRhiSupport::grabOffscreenForProtectedContent(QQuickWindow *window)
     }
 
     QScopedPointer<QOffscreenSurface> offscreenSurface(maybeCreateOffscreenSurface(window));
-    QScopedPointer<QRhi> rhi(createRhi(offscreenWindow.data() ? offscreenWindow.data() : window, offscreenSurface.data()));
-    if (!rhi) {
+    RhiCreateResult rhiResult = createRhi(offscreenWindow.data() ? offscreenWindow.data() : window, offscreenSurface.data());
+    if (!rhiResult.rhi) {
         qWarning("Failed to initialize QRhi for offscreen readback");
         return QImage();
     }
+    QScopedPointer<QRhi> rhiOwner(rhiResult.rhi);
+    QRhi *rhi = rhiResult.own ? rhiOwner.data() : rhiOwner.take();
 
     const QSize pixelSize = window->size() * window->devicePixelRatio();
     QScopedPointer<QRhiTexture> texture(rhi->newTexture(QRhiTexture::RGBA8, pixelSize, 1,
@@ -913,10 +915,10 @@ QImage QSGRhiSupport::grabOffscreenForProtectedContent(QQuickWindow *window)
 
     // Backup the original Rhi
     QRhi *currentRhi = wd->rhi;
-    wd->rhi = rhi.data();
+    wd->rhi = rhi;
 
     QSGDefaultRenderContext::InitParams params;
-    params.rhi = rhi.data();
+    params.rhi = rhi;
     params.sampleCount = 1;
     params.initialSurfacePixelSize = pixelSize;
     params.maybeSurface = window;
@@ -940,7 +942,7 @@ QImage QSGRhiSupport::grabOffscreenForProtectedContent(QQuickWindow *window)
     wd->renderSceneGraph(window->size());
     wd->setCustomCommandBuffer(nullptr);
 
-    QImage image = grabAndBlockInCurrentFrame(rhi.data(), cb, texture.data());
+    QImage image = grabAndBlockInCurrentFrame(rhi, cb, texture.data());
     rhi->endOffscreenFrame();
 
     image.setDevicePixelRatio(window->devicePixelRatio());
