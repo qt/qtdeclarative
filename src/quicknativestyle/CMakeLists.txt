@@ -22,6 +22,10 @@ if(MACOS)
     list(APPEND qml_files "util/FocusFrame.qml")
 endif()
 
+if(QT_FEATURE_quick_treeview)
+    list(APPEND qml_files "controls/DefaultTreeViewDelegate.qml")
+endif()
+
 qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
     URI "QtQuick.NativeStyle"
     VERSION "${PROJECT_VERSION}"
@@ -71,6 +75,11 @@ qt_internal_add_qml_module(qtquickcontrols2nativestyleplugin
         Qt::QuickControls2Private
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
+)
+
+qt_internal_extend_target(qtquickcontrols2nativestyleplugin CONDITION QT_FEATURE_quick_treeview
+    SOURCES
+        items/qquickstyleitemtreeindicator.cpp items/qquickstyleitemtreeindicator.h
 )
 
 qt_internal_extend_target(qtquickcontrols2nativestyleplugin CONDITION MACOS

@@ -30,6 +30,13 @@ SOURCES += \
     $$PWD/qquickstyleitemprogressbar.cpp \
     $$PWD/qquickstyleitemdial.cpp \
 
+qtConfig(quick-treeview) {
+    HEADERS += \
+        $$PWD/qquickstyleitemtreeindicator.h \
+    SOURCES += \
+        $$PWD/qquickstyleitemtreeindicator.cpp \
+}
+
 macos {
     HEADERS += $$PWD/qquickstyleitemscrollviewcorner.h
     SOURCES += $$PWD/qquickstyleitemscrollviewcorner.cpp

@@ -20,6 +20,12 @@ set(qml_files
     "Dial.qml"
 )
 
+if (QT_FEATURE_quick_treeview)
+    list(APPEND qml_files
+        "TreeViewDelegate.qml"
+    )
+endif()
+
 qt_internal_add_qml_module(qtquickcontrols2macosstyleplugin
     URI "QtQuick.Controls.macOS"
     VERSION "${PROJECT_VERSION}"

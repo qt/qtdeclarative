@@ -12,3 +12,9 @@ QML_FILES += \
     $$PWD/DefaultScrollBar.qml \
     $$PWD/DefaultProgressBar.qml \
     $$PWD/DefaultDial.qml \
+
+qtConfig(quick-treeview) {
+    QML_FILES += \
+        $$PWD/DefaultTreeViewDelegate.qml \
+}
+
