@@ -708,10 +708,11 @@ with multiple windows.
   When implementing QQuickItem::updatePaintNode() in a custom item,
   if it can render a lot of details over a large geometric area,
   you should think about whether it's efficient to limit the graphics
-  to the viewport; if so, you can set the \l ItemObservesViewport flag
-  and read the currently exposed area from QQuickItem::clipRect().
-  One consequence is that updatePaintNode() will be called more often
-  (typically once per frame whenever content is moving in the viewport).
+  to the viewport; if so, you can set the \l {QQuickItem::}
+  {ItemObservesViewport} flag and read the currently exposed area from
+  QQuickItem::clipRect(). One consequence is that updatePaintNode() will be
+  called more often (typically once per frame whenever content is moving in
+  the viewport).
 
   \section2 Vertex Buffers
 

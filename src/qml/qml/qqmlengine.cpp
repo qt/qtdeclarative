@@ -1638,7 +1638,6 @@ bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList
   storage is placed.
 
   The SQL databases created with \c openDatabaseSync() are stored here.
-  \sa \l{Qt Quick Local Storage QML Types}
 
   The default is QML/OfflineStorage in the platform-standard
   user application data directory.
@@ -1646,6 +1645,8 @@ bool QQmlEngine::importPlugin(const QString &filePath, const QString &uri, QList
   Note that the path may not currently exist on the filesystem, so
   callers wanting to \e create new files at this location should create
   it first - see QDir::mkpath().
+
+  \sa {Qt Quick Local Storage QML Types}
 */
 void QQmlEngine::setOfflineStoragePath(const QString& dir)
 {

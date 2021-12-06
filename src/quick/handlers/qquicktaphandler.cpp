@@ -266,13 +266,13 @@ void QQuickTapHandler::timerEvent(QTimerEvent *event)
            item, while the \l timeHeld property keeps counting, and the
            \l longPressed() signal will be emitted regardless of drag distance.
            However, like \c WithinBounds, if the point leaves the bounds,
-           the tap gesture is \l canceled(), \l active() becomes \c false, and
-           \l timeHeld stops counting. This is suitable for implementing
-           press-drag-release components, such as menus, in which a single
-           TapHandler detects press, \c timeHeld drives an "opening" animation,
-           and then the user can drag to a menu item and release, while never
-           leaving the bounds of the parent scene containing the menu.
-           This value was added in Qt 6.3.
+           the tap gesture is \l {PointerHandler::}{canceled()}, \l active()
+           becomes \c false, and \l timeHeld stops counting. This is suitable
+           for implementing press-drag-release components, such as menus, in
+           which a single TapHandler detects press, \c timeHeld drives an
+           "opening" animation, and then the user can drag to a menu item and
+           release, while never leaving the bounds of the parent scene containing
+           the menu. This value was added in Qt 6.3.
 */
 void QQuickTapHandler::setGesturePolicy(QQuickTapHandler::GesturePolicy gesturePolicy)
 {
@@ -416,8 +416,8 @@ void QQuickTapHandler::updateTimeHeld()
 
     \note If \l gesturePolicy is set to \c TapHandler.DragWithinBounds,
     \c timeHeld does not stop counting even when the pressed point is moved
-    beyond the drag threshold, but only when the point leaves the \l parent
-    item's \l {QtQuick::Item::contains()}{bounds}.
+    beyond the drag threshold, but only when the point leaves the \l {Item::}
+    {parent} item's \l {QtQuick::Item::contains()}{bounds}.
 */
 
 /*!

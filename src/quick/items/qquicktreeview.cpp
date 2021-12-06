@@ -46,6 +46,7 @@
 
 /*!
     \qmltype TreeView
+    \inqmlmodule QtQuick
     \ingroup qtquick-views
     \since 6.3
     \inherits TableView
@@ -65,11 +66,11 @@
 
     To allow for maximum flexibility, TreeView itself will not position the delegate
     items into a tree structure. This burden is placed on the delegate.
-    \l {Qt Quick Controls} offers a ready-made \l TreeViewDelegate that can be
+    \l {Qt Quick Controls} offers a ready-made TreeViewDelegate that can be
     used for this, which has the advantage that it works out-of-the-box and
     renders a tree which follows the style of the platform where the application runs.
 
-    Even if \l TreeViewDelegate is customizable, there might be situations
+    Even if TreeViewDelegate is customizable, there might be situations
     where you want to render the tree in a different way, or ensure that
     the delegate ends up as mininal as possible, e.g for performance reasons.
     Creating your own delegate from scratch is easy, since TreeView offers
@@ -95,7 +96,7 @@
                 therefore, only delegate items in that column will have this
                 property set to \c true.
                 A node in the tree should typically be indented according to its
-                \c depth, and show an indicator if \c hasChildren is \l true.
+                \c depth, and show an indicator if \c hasChildren is \c true.
                 Delegate items in other columns will have this property set to
                 \c false, and will show data from the remaining columns
                 in the model (and typically not be indented).
@@ -119,11 +120,11 @@
 /*!
     \qmlmethod int QtQuick::TreeView::depth(row)
 
-    Returns the depth (the number of parents up to
-    the root) of the given \a row.
+    Returns the depth (the number of parents up to the root) of the given \a row.
 
     \a row should be the row in the view (table row), and not a row in the model.
-    If \a row is not between \c 0 and \l rows, the return value will be \c -1.
+    If \a row is not between \c 0 and \l {TableView::}{rows}, the return value will
+    be \c -1.
 
     \sa modelIndex()
 */
@@ -134,9 +135,8 @@
     Returns if the given \a row in the view is shown as expanded.
 
     \a row should be the row in the view (table row), and not a row in the model.
-    If \a row is not between \c 0 and \l rows, the return value will be \c false.
-
-    \sa viewIndex
+    If \a row is not between \c 0 and \l {TableView::}{rows}, the return value will
+    be \c false.
 */
 
 /*!
@@ -244,9 +244,8 @@
     \qmlmethod point QtQuick::TreeView::cellAtIndex(modelIndex)
 
     Convenience function for doing:
-    \code
-    Qt.point(columnAtIndex(modelIndex), rowAtIndex(modelIndex))
-    \endcode
+
+    \c {Qt.point(columnAtIndex(}\a modelIndex\c{), rowAtIndex(}\a modelIndex\c{))}
 
     A cell is simply a \l point that combines row and column into
     a single type. Note that \c point.x will map to the column, and
@@ -256,7 +255,7 @@
 /*!
     \qmlsignal QtQuick::TreeView::expanded(row)
 
-    This signal is emitted when a row is expanded in the view.
+    This signal is emitted when a \a row is expanded in the view.
 
     \sa collapsed(), expand(), collapse(), toggleExpanded()
 */
@@ -264,7 +263,7 @@
 /*!
     \qmlsignal QtQuick::TreeView::collapsed(row)
 
-    This signal is emitted when a row is collapsed in the view.
+    This signal is emitted when a \a row is collapsed in the view.
 
     \sa expanded(), expand(), collapse(), toggleExpanded()
 */

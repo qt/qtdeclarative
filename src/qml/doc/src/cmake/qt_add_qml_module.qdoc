@@ -284,7 +284,7 @@ provided as a convenience.
 
 If a QML module has \c{.qml} files which provide singleton types, these files
 need to have their \c QT_QML_SINGLETON_TYPE source property set to \c TRUE, to
-ensure that the \singleton command is written into the
+ensure that the \c singleton command is written into the
 \l{Module Definition qmldir Files}{qmldir} file. This must be done in addition
 to the QML file containing the \c {pragma Singleton} statement.
 

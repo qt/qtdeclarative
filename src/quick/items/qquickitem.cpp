@@ -5589,7 +5589,7 @@ QRectF QQuickItem::boundingRect() const
     Returns the rectangular area within this item that is currently visible in
     \l viewportItem(), if there is a viewport; otherwise, the extents of this
     item in its own coordinate system: a rectangle from \c{0, 0} to \l width()
-    and \l height(). This is the region intended to remain visible if \a clip()
+    and \l height(). This is the region intended to remain visible if \l clip
     is \c true. It can also be used in updatePaintNode() to limit the graphics
     added to the scene graph.
 
@@ -5602,7 +5602,7 @@ QRectF QQuickItem::boundingRect() const
 
     In case of nested viewport items, clipRect() is the intersection of the
     \c {boundingRect}s of all ancestors that have the \l ItemIsViewport flag set,
-    mapped to the coordinate system of \em this item.
+    mapped to the coordinate system of \e this item.
 
     \sa boundingRect()
 */
