@@ -144,8 +144,13 @@ QSGNode *QQuickStyleItem::updatePaintNode(QSGNode *oldNode, QQuickItem::UpdatePa
     QSGNinePatchNode *node = static_cast<QSGNinePatchNode *>(oldNode);
     if (!node)
         node = window()->createNinePatchNode();
-    if (m_paintedImage.isNull())
-        return node;
+
+    if (m_paintedImage.isNull()) {
+        // If we cannot create a texture, the node should not exist either
+        // because its material requires a texture.
+        delete node;
+        return nullptr;
+    }
 
     const auto texture = window()->createTextureFromImage(m_paintedImage, QQuickWindow::TextureCanUseAtlas);
 
