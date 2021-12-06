@@ -754,7 +754,6 @@ public:
         : CommentableDomElement(pathFromOwner), m_name(name), m_values(values)
     {
     }
-    EnumDecl &operator=(const EnumDecl &) = default;
 
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
 
@@ -794,7 +793,6 @@ public:
     DomType kind() const override { return kindValue; }
 
     QmlObject(Path pathFromOwner = Path());
-    QmlObject &operator=(const QmlObject &) = default;
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor) override;
     bool iterateBaseDirectSubpaths(DomItem &self, DirectVisitor);
     QList<QString> fields() const;
