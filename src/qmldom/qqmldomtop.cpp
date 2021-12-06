@@ -757,19 +757,28 @@ void LoadInfo::doAddDependencies(DomItem &self)
     // sychronous add of all dependencies
     DomItem el = self.path(elementCanonicalPath());
     if (el.internalKind() == DomType::ExternalItemInfo) {
-        DomItem currentImports = el.field(Fields::currentItem).field(Fields::imports);
+        DomItem currentFile = el.field(Fields::currentItem);
+        DomItem currentImports = currentFile.field(Fields::imports);
+        QString currentFilePath = currentFile.canonicalFilePath();
         int iEnd = currentImports.indexes();
         for (int i = 0; i < iEnd; ++i) {
             DomItem import = currentImports.index(i);
             if (const Import *importPtr = import.as<Import>()) {
-                if (!importPtr->filePath().isEmpty()) {
-                    addDependency(self,
-                                  Dependency { QString(), importPtr->version, importPtr->filePath(),
-                                               DomType::Empty });
+                if (importPtr->uri.isDirectory()) {
+                    QString path = importPtr->uri.absoluteLocalPath(currentFilePath);
+                    if (!path.isEmpty()) {
+                        addDependency(
+                                self,
+                                Dependency { QString(), importPtr->version, path, DomType::Empty });
+                    } else {
+                        self.addError(DomEnvironment::myErrors().error(
+                                tr("Ignoring dependencies for non resolved path import %1")
+                                        .arg(importPtr->uri.toString())));
+                    }
                 } else {
                     addDependency(self,
-                                  Dependency { importPtr->uri, importPtr->version, QString(),
-                                               DomType::ModuleIndex });
+                                  Dependency { importPtr->uri.moduleUri(), importPtr->version,
+                                               QString(), DomType::ModuleIndex });
                 }
             }
         }
@@ -808,7 +817,7 @@ void LoadInfo::doAddDependencies(DomItem &self)
         }
     } else if (!el) {
         self.addError(DomEnvironment::myErrors().error(
-                tr("Ignoring dependencies for empty (invalid) type")
+                tr("Ignoring dependencies for empty (invalid) type %1")
                         .arg(domTypeToString(el.internalKind()))));
     } else {
         self.addError(
@@ -1376,10 +1385,7 @@ void DomEnvironment::loadModuleDependency(DomItem &self, QString uri, Version v,
                                           Callback loadCallback, Callback endCallback,
                                           ErrorHandler errorHandler)
 {
-    if (uri.startsWith(u"file://") || uri.startsWith(u"http://") || uri.startsWith(u"https://")) {
-        self.addError(myErrors().error(tr("directory import not yet handled (%1)").arg(uri)));
-        return;
-    }
+    Q_ASSERT(!uri.contains(u'/'));
     Path p = Paths::moduleIndexPath(uri, v.majorVersion);
     if (v.majorVersion == Version::Latest) {
         // load both the latest .<version> directory, and the common one
@@ -2190,8 +2196,8 @@ QString DomEnvironment::globalScopeName() const
 
 QList<Import> DomEnvironment::defaultImplicitImports()
 {
-    return QList<Import>({ Import::fromUriString(QLatin1String("QML"), Version(1, 0)),
-                           Import(QLatin1String("QtQml"), Version(6, 0)) });
+    return QList<Import>({ Import::fromUriString(u"QML"_qs, Version(1, 0)),
+                           Import(QmlUri::fromUriString(u"QtQml"_qs), Version(6, 0)) });
 }
 
 QList<Import> DomEnvironment::implicitImports() const

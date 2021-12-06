@@ -2396,7 +2396,7 @@ DomItem DomItem::fromCode(QString code, DomType fileType)
             [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
             LoadOption::DefaultLoad, fileType);
     env.loadPendingDependencies();
-    return tFile;
+    return tFile.fileObject();
 }
 
 Empty::Empty()

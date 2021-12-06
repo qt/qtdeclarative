@@ -205,7 +205,7 @@ public:
 
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
 
-    QString uri() const { return m_uri; }
+    QmlUri uri() const { return m_uri; }
 
     QMultiMap<QString, Export> exports() const { return m_exports; }
 
@@ -224,7 +224,7 @@ private:
     void parse();
     void setFromQmldir();
 
-    QString m_uri;
+    QmlUri m_uri;
     QQmlDirParser m_qmldir;
     QList<QQmlDirParser::Plugin> m_plugins;
     QList<Import> m_imports;
@@ -318,9 +318,19 @@ public:
     {
         index_type idx = index_type(m_imports.length());
         m_imports.append(i);
-        m_importScope.addImport(
-                (i.importId.isEmpty() ? QStringList() : i.importId.split(QChar::fromLatin1('.'))),
-                i.importedPath());
+        if (i.uri.isModule()) {
+            m_importScope.addImport((i.importId.isEmpty()
+                                             ? QStringList()
+                                             : i.importId.split(QChar::fromLatin1('.'))),
+                                    i.importedPath());
+        } else {
+            QString path = i.uri.absoluteLocalPath(canonicalFilePath());
+            if (!path.isEmpty())
+                m_importScope.addImport((i.importId.isEmpty()
+                                                 ? QStringList()
+                                                 : i.importId.split(QChar::fromLatin1('.'))),
+                                        Paths::qmlDirPath(path));
+        }
         return Path::Field(Fields::imports).index(idx);
     }
     std::shared_ptr<QQmlJS::Engine> engine() const { return m_engine; }

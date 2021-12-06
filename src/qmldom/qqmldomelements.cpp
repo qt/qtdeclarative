@@ -65,6 +65,7 @@
 #include <QtCore/QRegularExpression>
 #include <QtCore/QDir>
 #include <QtCore/QBasicMutex>
+#include <QtCore/QUrl>
 
 #include <optional>
 #include <limits>
@@ -73,12 +74,6 @@ QT_BEGIN_NAMESPACE
 
 namespace QQmlJS {
 namespace Dom {
-
-static bool uriHasSchema(QStringView importStr)
-{
-    QRegularExpression schemaRe(QStringLiteral(u"\\A[a-zA-Z][-+.a-zA-Z0-9]+:"));
-    return schemaRe.match(importStr).hasMatch();
-}
 
 namespace Paths {
 
@@ -89,41 +84,17 @@ Path moduleIndexPath(QString uri, int majorVersion, ErrorHandler errorHandler)
         version = QLatin1String("Latest");
     else if (majorVersion == Version::Undefined)
         version = QString();
-    if (uriHasSchema(uri)) {
-        if (majorVersion != Version::Undefined)
-            Path::myErrors()
-                    .error(Path::tr("The module directory import %1 cannot have a version")
-                                   .arg(uri))
-                    .handle(errorHandler);
-        version = QString();
-    } else {
-        QRegularExpression moduleRe(QLatin1String(R"(\A\w+(?:\.\w+)*\Z)"));
-        auto m = moduleRe.match(uri);
-        if (!m.isValid())
-            Path::myErrors()
-                    .error(Path::tr("Invalid module name in import %1").arg(uri))
-                    .handle(errorHandler);
-    }
+    QRegularExpression moduleRe(QLatin1String(R"(\A\w+(?:\.\w+)*\Z)"));
+    auto m = moduleRe.match(uri);
+    if (!m.isValid())
+        Path::myErrors()
+                .error(Path::tr("Invalid module name in import %1").arg(uri))
+                .handle(errorHandler);
     return Path::Root(PathRoot::Env).field(Fields::moduleIndexWithUri).key(uri).key(version);
 }
 
-Path moduleScopePath(QString uri, Version version, ErrorHandler errorHandler)
+Path moduleScopePath(QString uri, Version version, ErrorHandler)
 {
-    if (uriHasSchema(uri)) {
-        if (version.isValid())
-            Path::myErrors()
-                    .error(Path::tr("The module directory import %1 cannot have a version")
-                                   .arg(uri))
-                    .handle(errorHandler);
-        version = {};
-    } else {
-        QRegularExpression moduleRe(QLatin1String(R"(\A\w+(?:\.\w+)*\Z)"));
-        auto m = moduleRe.match(uri);
-        if (!m.isValid())
-            Path::myErrors()
-                    .error(Path::tr("Invalid module name in import %1").arg(uri))
-                    .handle(errorHandler);
-    }
     return Path::Root(PathRoot::Env)
             .field(Fields::moduleIndexWithUri)
             .key(uri)
@@ -329,60 +300,41 @@ QRegularExpression Import::importRe()
 
 Import Import::fromUriString(QString importStr, Version v, QString importId, ErrorHandler handler)
 {
-    if (uriHasSchema(importStr)) {
-        return Import(importStr, v, importId);
-    } else {
-        auto m = importRe().match(importStr);
-        if (m.hasMatch()) {
-            if (v.majorVersion == Version::Undefined && v.minorVersion == Version::Undefined)
-                v = Version::fromString(m.captured(2));
-            else if (!m.captured(u"version").isEmpty())
-                domParsingErrors()
-                        .warning(tr("Version %1 in import string '%2' overridden by explicit "
-                                    "version %3")
-                                         .arg(m.captured(2), importStr, v.stringValue()))
-                        .handle(handler);
-            if (importId.isEmpty())
-                importId = m.captured(u"importId");
-            else if (!m.captured(u"importId").isEmpty())
-                domParsingErrors()
-                        .warning(tr("namespace %1 in import string '%2' overridden by explicit "
-                                    "importId %3")
-                                         .arg(m.captured(u"importId"), importStr, importId))
-                        .handle(handler);
-            return Import(m.captured(u"uri").trimmed(), v, importId);
-        }
-        domParsingErrors()
-                .error(tr("Unexpected URI format in import '%1'").arg(importStr))
-                .handle(handler);
-        return Import();
+    auto m = importRe().match(importStr);
+    if (m.hasMatch()) {
+        if (v.majorVersion == Version::Undefined && v.minorVersion == Version::Undefined)
+            v = Version::fromString(m.captured(2));
+        else if (!m.captured(u"version").isEmpty())
+            domParsingErrors()
+                    .warning(tr("Version %1 in import string '%2' overridden by explicit "
+                                "version %3")
+                                     .arg(m.captured(2), importStr, v.stringValue()))
+                    .handle(handler);
+        if (importId.isEmpty())
+            importId = m.captured(u"importId");
+        else if (!m.captured(u"importId").isEmpty())
+            domParsingErrors()
+                    .warning(tr("namespace %1 in import string '%2' overridden by explicit "
+                                "importId %3")
+                                     .arg(m.captured(u"importId"), importStr, importId))
+                    .handle(handler);
+        return Import(QmlUri::fromUriString(m.captured(u"uri").trimmed()), v, importId);
     }
+    domParsingErrors()
+            .error(tr("Unexpected URI format in import '%1'").arg(importStr))
+            .handle(handler);
+    return Import();
 }
 
-Import Import::fromFileString(QString importStr, QString baseDir, QString importId,
-                              ErrorHandler handler)
+Import Import::fromFileString(QString importStr, QString importId, ErrorHandler)
 {
-    Version v;
-    if (uriHasSchema(importStr))
-        return Import(importStr, v, importId);
-    QFileInfo p(importStr);
-    if (p.isRelative())
-        p = QFileInfo(QDir(baseDir).filePath(importStr));
-    QString path = p.canonicalFilePath();
-    if (path.isEmpty()) {
-        domParsingErrors()
-                .warning(tr("Non existing directory or file referred in URI of import '%1'")
-                                 .arg(importStr))
-                .handle(handler);
-        path = p.filePath();
-    }
-    return Import(QLatin1String("file://") + path, v, importId);
+    return Import(QmlUri::fromDirectoryString(importStr), Version(), importId);
 }
 
 bool Import::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
 {
     bool cont = true;
-    cont = cont && self.dvValueField(visitor, Fields::uri, uri);
+    cont = cont && self.dvValueField(visitor, Fields::uri, uri.toString());
     cont = cont && self.dvWrapField(visitor, Fields::version, version);
     if (!importId.isEmpty())
         cont = cont && self.dvValueField(visitor, Fields::importId, importId);
@@ -392,22 +344,14 @@ bool Import::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     return cont;
 }
 
-void Import::writeOut(DomItem &self, OutWriter &ow) const
+void Import::writeOut(DomItem &, OutWriter &ow) const
 {
     if (implicit)
         return;
     ow.ensureNewline();
     ow.writeRegion(u"import").space();
-    if (uriHasSchema(uri)) {
-        if (uri.startsWith(u"file://")) {
-            QFileInfo myPath(self.canonicalFilePath());
-            QString relPath = myPath.dir().relativeFilePath(uri.mid(7));
-            ow.writeRegion(u"uri", dumperToString([relPath](Sink s) { sinkEscaped(s, relPath); }));
-        } else {
-            ow.writeRegion(u"uri", dumperToString([this](Sink s) { sinkEscaped(s, this->uri); }));
-        }
-    } else {
-        ow.writeRegion(u"uri", uri);
+    ow.writeRegion(u"uri", uri.toString());
+    if (uri.isModule()) {
         QString vString = version.stringValue();
         if (!vString.isEmpty())
             ow.space().write(vString);
@@ -1878,6 +1822,150 @@ void EnumItem::writeOut(DomItem &self, OutWriter &ow) const
     }
     if (myIndex >= 0 && self.container().indexes() != myIndex + 1)
         ow.writeRegion(u"comma", u",");
+}
+
+QmlUri QmlUri::fromString(const QString &str)
+{
+    if (str.startsWith(u'"'))
+        return fromDirectoryString(str.mid(1, str.length() - 2)
+                                           .replace(u"\\\""_qs, u"\""_qs)
+                                           .replace(u"\\\\"_qs, u"\\"_qs));
+    else
+        return fromUriString(str);
+}
+
+QmlUri QmlUri::fromUriString(const QString &str)
+{
+    QRegularExpression moduleUriRe(QLatin1String(R"(\A\w+(?:\.\w+)*\Z)"));
+    return QmlUri((moduleUriRe.match(str).hasMatch() ? Kind::ModuleUri : Kind::Invalid), str);
+}
+
+QmlUri QmlUri::fromDirectoryString(const QString &str)
+{
+    QUrl url(str);
+    if (url.isValid() && url.scheme().length() > 1)
+        return QmlUri(url);
+    if (!str.isEmpty()) {
+        QFileInfo path(str);
+        return QmlUri((path.isRelative() ? Kind::RelativePath : Kind::AbsolutePath), str);
+    }
+    return {};
+}
+
+bool QmlUri::isValid() const
+{
+    return m_kind != Kind::Invalid;
+}
+
+bool QmlUri::isDirectory() const
+{
+    switch (m_kind) {
+    case Kind::Invalid:
+    case Kind::ModuleUri:
+        break;
+    case Kind::DirectoryUrl:
+    case Kind::RelativePath:
+    case Kind::AbsolutePath:
+        return true;
+    }
+    return false;
+}
+
+bool QmlUri::isModule() const
+{
+    return m_kind == Kind::ModuleUri;
+}
+
+QString QmlUri::moduleUri() const
+{
+    if (m_kind == Kind::ModuleUri)
+        return std::get<QString>(m_value);
+    return QString();
+}
+
+QString QmlUri::localPath() const
+{
+    switch (m_kind) {
+    case Kind::Invalid:
+    case Kind::ModuleUri:
+        break;
+    case Kind::DirectoryUrl: {
+        const QUrl &url = std::get<QUrl>(m_value);
+        if (url.scheme().compare(u"file", Qt::CaseInsensitive) == 0)
+            return url.path();
+        break;
+    }
+    case Kind::RelativePath:
+    case Kind::AbsolutePath:
+        return std::get<QString>(m_value);
+    }
+    return QString();
+}
+
+QString QmlUri::absoluteLocalPath(const QString &basePath) const
+{
+    switch (m_kind) {
+    case Kind::Invalid:
+    case Kind::ModuleUri:
+        break;
+    case Kind::DirectoryUrl: {
+        const QUrl &url = std::get<QUrl>(m_value);
+        if (url.scheme().compare(u"file", Qt::CaseInsensitive) == 0)
+            return url.path();
+        break;
+    }
+    case Kind::RelativePath: {
+        if (!basePath.isEmpty())
+            return QDir(basePath).filePath(std::get<QString>(m_value));
+        break;
+    }
+    case Kind::AbsolutePath:
+        return std::get<QString>(m_value);
+    }
+    return QString();
+}
+
+QUrl QmlUri::directoryUrl() const
+{
+    if (m_kind == Kind::DirectoryUrl)
+        return std::get<QUrl>(m_value);
+    return QUrl {};
+}
+
+QString QmlUri::directoryString() const
+{
+    switch (m_kind) {
+    case Kind::Invalid:
+    case Kind::ModuleUri:
+        break;
+    case Kind::DirectoryUrl:
+        return std::get<QUrl>(m_value).toString(); // set formatting? options?
+    case Kind::RelativePath:
+    case Kind::AbsolutePath:
+        return std::get<QString>(m_value);
+    }
+    return QString();
+}
+
+QString QmlUri::toString() const
+{
+    switch (m_kind) {
+    case Kind::Invalid:
+        break;
+    case Kind::ModuleUri:
+        return std::get<QString>(m_value);
+    case Kind::DirectoryUrl:
+    case Kind::RelativePath:
+    case Kind::AbsolutePath:
+        return u"\""_qs + directoryString().replace(u'\\', u"\\\\"_qs).replace(u'"', u"\\\""_qs)
+                + u"\""_qs;
+    }
+    return QString();
+}
+
+QmlUri::Kind QmlUri::kind() const
+{
+    return m_kind;
 }
 
 } // end namespace Dom

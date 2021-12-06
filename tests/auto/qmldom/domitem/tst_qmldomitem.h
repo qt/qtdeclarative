@@ -513,6 +513,49 @@ private slots:
         }
     }
 
+    void testImports()
+    {
+        QString baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/domitem");
+        QString testFile1 = baseDir + QLatin1String("/TestImports.qml");
+        DomItem env = DomEnvironment::create(
+                QStringList(),
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+        DomItem tFile;
+        env.loadFile(
+                testFile1, QString(),
+                [&tFile](Path, DomItem &, DomItem &newIt) { tFile = newIt.fileObject(); },
+                LoadOption::DefaultLoad);
+        env.loadPendingDependencies();
+
+        QVERIFY(tFile);
+        QList<QmlUri> importedModules;
+        for (auto &import : tFile.field(Fields::imports).values()) {
+            if (const Import *importPtr = import.as<Import>()) {
+                if (!importPtr->implicit)
+                    importedModules.append(importPtr->uri);
+            }
+        }
+        QCOMPARE(importedModules.at(0).moduleUri(), u"QtQuick"_qs);
+        QCOMPARE(importedModules.at(0).directoryString(), u""_qs);
+        QCOMPARE(importedModules.at(1).directoryString(), u"../.."_qs);
+        QCOMPARE(importedModules.at(1).localPath(), u"../.."_qs);
+        QCOMPARE(importedModules.at(1).absoluteLocalPath(), QString());
+        QCOMPARE(importedModules.at(1).absoluteLocalPath(u"/bla/bla"_qs), u"/bla/bla/../..");
+        QCOMPARE(importedModules.at(2).directoryString(), u"../dommerging"_qs);
+        QCOMPARE(importedModules.at(2).localPath(), u"../dommerging"_qs);
+        QCOMPARE(importedModules.at(2).absoluteLocalPath(), QString());
+        QCOMPARE(importedModules.at(2).absoluteLocalPath(u"/bla/bla"_qs),
+                 u"/bla/bla/../dommerging");
+        QCOMPARE(importedModules.at(3).directoryString(), u"C:/some/path"_qs);
+        QCOMPARE(importedModules.at(3).localPath(), u"C:/some/path"_qs);
+        QCOMPARE(importedModules.at(4).directoryString(), u"http://bla.com/"_qs);
+        QCOMPARE(importedModules.at(4).directoryUrl().toString(), u"http://bla.com/"_qs);
+        QCOMPARE(importedModules.at(5).absoluteLocalPath(), u"/absolute/path"_qs);
+        QVERIFY(QmlUri::fromDirectoryString("QtQuick") != importedModules.at(0));
+        QCOMPARE(QmlUri::fromUriString("QtQuick"), importedModules.at(0));
+    }
     void testDeepCopy()
     {
         QString baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/domitem");

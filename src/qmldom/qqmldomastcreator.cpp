@@ -304,7 +304,7 @@ public:
         // implicit imports
         // add implicit directory import
         if (!fInfo.canonicalPath().isEmpty()) {
-            Import selfDirImport(QLatin1String("file://") + fInfo.canonicalPath());
+            Import selfDirImport(QmlUri::fromDirectoryString(fInfo.canonicalPath()));
             selfDirImport.implicit = true;
             qmlFilePtr->addImport(selfDirImport);
         }
@@ -352,7 +352,6 @@ public:
             createMap(DomType::Import,
                       qmlFilePtr->addImport(Import::fromFileString(
                               el->fileName.toString(),
-                              QFileInfo(qmlFilePtr->canonicalFilePath()).dir().absolutePath(),
                               el->importId.toString())),
                       el);
         return true;

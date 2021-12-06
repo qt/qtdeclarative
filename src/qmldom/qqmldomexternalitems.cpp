@@ -140,9 +140,9 @@ void QmldirFile::parse()
 
 void QmldirFile::setFromQmldir()
 {
-    m_uri = m_qmldir.typeNamespace();
-    if (m_uri.isEmpty())
-        m_uri = QStringLiteral(u"file://") + canonicalFilePath();
+    m_uri = QmlUri::fromUriString(m_qmldir.typeNamespace());
+    if (m_uri.isValid())
+        m_uri = QmlUri::fromDirectoryString(canonicalFilePath());
     Path exportsPath = Path::Field(Fields::exports);
     QDir baseDir = QFileInfo(canonicalFilePath()).dir();
     int majorVersion = Version::Undefined;
@@ -166,7 +166,7 @@ void QmldirFile::setFromQmldir()
                         el.version.hasMinorVersion() ? el.version.minorVersion() : 0);
         exp.typeName = el.typeName;
         exp.typePath = Paths::qmlFileObjectPath(canonicalExportFilePath);
-        exp.uri = uri();
+        exp.uri = uri().toString();
         m_exports.insert(exp.typeName, exp);
     }
     for (auto const &el : m_qmldir.scripts()) {
@@ -183,7 +183,7 @@ void QmldirFile::setFromQmldir()
                 Version((el.version.hasMajorVersion() ? el.version.majorVersion() : majorVersion),
                         el.version.hasMinorVersion() ? el.version.minorVersion() : 0);
         exp.typePath = Paths::jsFilePath(canonicalExportFilePath).field(Fields::rootComponent);
-        exp.uri = uri();
+        exp.uri = uri().toString();
         exp.typeName = el.nameSpace;
         m_exports.insert(exp.typeName, exp);
     }
@@ -199,8 +199,9 @@ void QmldirFile::setFromQmldir()
                         (imp.version.hasMinorVersion() ? imp.version.minorVersion()
                                                        : int(Version::Latest)));
         }
-        m_imports.append(Import(uri, v));
-        m_autoExports.append(ModuleAutoExport { Import(uri, v), isAutoImport });
+        m_imports.append(Import(QmlUri::fromUriString(uri), v));
+        m_autoExports.append(
+                ModuleAutoExport { Import(QmlUri::fromUriString(uri), v), isAutoImport });
     }
     for (QQmlDirParser::Import const &imp : m_qmldir.dependencies()) {
         QString uri = imp.module;
@@ -210,7 +211,7 @@ void QmldirFile::setFromQmldir()
                 (imp.version.hasMajorVersion() ? imp.version.majorVersion() : int(Version::Latest)),
                 (imp.version.hasMinorVersion() ? imp.version.minorVersion()
                                                : int(Version::Latest)));
-        m_imports.append(Import(uri, v));
+        m_imports.append(Import(QmlUri::fromUriString(uri), v));
     }
     bool hasInvalidTypeinfo = false;
     for (auto const &el : m_qmldir.typeInfos()) {
@@ -236,7 +237,7 @@ void QmldirFile::setFromQmldir()
         }
     }
     bool hasErrors = false;
-    for (auto const &el : m_qmldir.errors(uri())) {
+    for (auto const &el : m_qmldir.errors(uri().toString())) {
         ErrorMessage msg = myParsingErrors().errorMessage(el);
         addErrorLocal(msg);
         if (msg.level == ErrorLevel::Error || msg.level == ErrorLevel::Fatal)
@@ -269,7 +270,7 @@ QCborValue pluginData(QQmlDirParser::Plugin &pl, QStringList cNames)
 bool QmldirFile::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
 {
     bool cont = ExternalOwningItem::iterateDirectSubpaths(self, visitor);
-    cont = cont && self.dvValueField(visitor, Fields::uri, uri());
+    cont = cont && self.dvValueField(visitor, Fields::uri, uri().toString());
     cont = cont && self.dvValueField(visitor, Fields::designerSupported, designerSupported());
     cont = cont && self.dvReferencesField(visitor, Fields::qmltypesFiles, m_qmltypesFilePaths);
     cont = cont && self.dvWrapField(visitor, Fields::exports, m_exports);

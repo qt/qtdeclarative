@@ -260,6 +260,38 @@ inline bool operator>=(const Version &v1, const Version &v2)
     return v1.compare(v2) >= 0;
 }
 
+class QMLDOM_EXPORT QmlUri
+{
+public:
+    enum class Kind { Invalid, ModuleUri, DirectoryUrl, RelativePath, AbsolutePath };
+    QmlUri() = default;
+    static QmlUri fromString(const QString &importStr);
+    static QmlUri fromUriString(const QString &importStr);
+    static QmlUri fromDirectoryString(const QString &importStr);
+    bool isValid() const;
+    bool isDirectory() const;
+    bool isModule() const;
+    QString moduleUri() const;
+    QString localPath() const;
+    QString absoluteLocalPath(const QString &basePath = QString()) const;
+    QUrl directoryUrl() const;
+    QString directoryString() const;
+    QString toString() const;
+    Kind kind() const;
+
+    friend bool operator==(const QmlUri &i1, const QmlUri &i2)
+    {
+        return i1.m_kind == i2.m_kind && i1.m_value == i2.m_value;
+    }
+    friend bool operator!=(const QmlUri &i1, const QmlUri &i2) { return !(i1 == i2); }
+
+private:
+    QmlUri(const QUrl &url) : m_kind(Kind::DirectoryUrl), m_value(url) { }
+    QmlUri(Kind kind, const QString &value) : m_kind(kind), m_value(value) { }
+    Kind m_kind = Kind::Invalid;
+    std::variant<QString, QUrl> m_value;
+};
+
 class QMLDOM_EXPORT Import
 {
     Q_DECLARE_TR_FUNCTIONS(Import)
@@ -268,38 +300,27 @@ public:
 
     static Import fromUriString(QString importStr, Version v = Version(),
                                 QString importId = QString(), ErrorHandler handler = nullptr);
-    static Import fromFileString(QString importStr, QString baseDir = QString(),
-                                 QString importId = QString(), ErrorHandler handler = nullptr);
+    static Import fromFileString(QString importStr, QString importId = QString(),
+                                 ErrorHandler handler = nullptr);
 
-    Import(QString uri = QString(), Version version = Version(), QString importId = QString())
+    Import(QmlUri uri = QmlUri(), Version version = Version(), QString importId = QString())
         : uri(uri), version(version), importId(importId)
     {
     }
 
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor);
-    bool isDirectoryImport() const
-    {
-        return uri.startsWith(u"http://") || uri.startsWith(u"https://")
-                || uri.startsWith(u"file://");
-    }
-    QString filePath() const
-    {
-        if (uri.startsWith(u"file://"))
-            return uri.mid(7);
-        return QString();
-    }
-    bool isSpecialImport() const { return uri.startsWith(u"<"); }
     Path importedPath() const
     {
-        if (isDirectoryImport()) {
-            if (!filePath().isEmpty()) {
-                return Paths::qmlDirPath(filePath());
+        if (uri.isDirectory()) {
+            QString path = uri.absoluteLocalPath();
+            if (!path.isEmpty()) {
+                return Paths::qmlDirPath(path);
             } else {
                 Q_ASSERT_X(false, "Import", "url imports not supported");
-                return Paths::qmldirFilePath(uri);
+                return Paths::qmldirFilePath(uri.directoryString());
             }
         } else {
-            return Paths::moduleScopePath(uri, version);
+            return Paths::moduleScopePath(uri.moduleUri(), version);
         }
     }
     Import baseImport() const { return Import { uri, version }; }
@@ -315,7 +336,7 @@ public:
 
     static QRegularExpression importRe();
 
-    QString uri;
+    QmlUri uri;
     Version version;
     QString importId;
     RegionComments comments;

@@ -239,9 +239,9 @@ QList<DomItem> ModuleIndex::autoExports(DomItem &self) const
         DomItem autoExports = self.path(p).field(Fields::autoExports);
         for (DomItem i : autoExports.values()) {
             if (const ModuleAutoExport *iPtr = i.as<ModuleAutoExport>()) {
-                if (!knownAutoImportUris.contains(iPtr->import.uri)
+                if (!knownAutoImportUris.contains(iPtr->import.uri.toString())
                     || !knownExports.contains(*iPtr)) {
-                    knownAutoImportUris.insert(iPtr->import.uri);
+                    knownAutoImportUris.insert(iPtr->import.uri.toString());
                     knownExports.append(*iPtr);
                     res.append(i);
                     cachedPaths.append(i.canonicalPath());
