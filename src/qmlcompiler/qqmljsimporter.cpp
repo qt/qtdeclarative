@@ -449,11 +449,11 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
         if (it->isEmpty())
             return false;
 
-        const auto import = m_seenQmldirFiles.constFind(*it);
-        Q_ASSERT(import != m_seenQmldirFiles.constEnd());
+        Q_ASSERT(m_seenQmldirFiles.contains(*it));
+        const QQmlJSImporter::Import import = m_seenQmldirFiles.value(*it);
 
-        importDependencies(*import, cacheTypes.get(), prefix, version, isDependency);
-        processImport(*import, cacheTypes.get(), prefix, version);
+        importDependencies(import, cacheTypes.get(), prefix, version, isDependency);
+        processImport(import, cacheTypes.get(), prefix, version);
 
         const bool typesFromCache = getTypesFromCache();
         Q_ASSERT(typesFromCache);
@@ -480,12 +480,13 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
         } else {
             qmldirPath = modulePath + SlashQmldir;
         }
-        const auto it = m_seenQmldirFiles.constFind(qmldirPath);
 
+        const auto it = m_seenQmldirFiles.constFind(qmldirPath);
         if (it != m_seenQmldirFiles.constEnd()) {
+            const QQmlJSImporter::Import import = *it;
             m_seenImports.insert(importId, qmldirPath);
-            importDependencies(*it, cacheTypes.get(), prefix, version, isDependency);
-            processImport(*it, cacheTypes.get(), prefix, version);
+            importDependencies(import, cacheTypes.get(), prefix, version, isDependency);
+            processImport(import, cacheTypes.get(), prefix, version);
 
             const bool typesFromCache = getTypesFromCache();
             Q_ASSERT(typesFromCache);
