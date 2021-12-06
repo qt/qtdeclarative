@@ -134,3 +134,5 @@ qt6_add_qml_module(codegen_test_module
         ${resource_files}
     OUTPUT_DIRECTORY TestTypes # Make sure tst_qmlcachegen doesn't see our output
 )
+
+qt_autogen_tools_initial_setup(codegen_test_moduleplugin)
