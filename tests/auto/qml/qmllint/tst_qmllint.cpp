@@ -1048,14 +1048,14 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
 
     bool success = m_linter.lintFile(QFileInfo(fileToLint).isAbsolute() ? fileToLint
                                                                         : testFile(fileToLint),
-                                     nullptr, true, warnings ? &jsonOutput : nullptr,
+                                     nullptr, false, warnings ? &jsonOutput : nullptr,
                                      m_defaultImportPaths, QStringList(), QStringList(), {});
-    QCOMPARE(success, shouldSucceed);
-
     if (warnings) {
-        Q_ASSERT(jsonOutput.size() == 1);
+        QVERIFY2(jsonOutput.size() == 1, QJsonDocument(jsonOutput).toJson());
         *warnings = jsonOutput.at(0)[u"warnings"_qs].toArray();
     }
+
+    QCOMPARE(success, shouldSucceed);
 }
 
 void TestQmllint::requiredProperty()

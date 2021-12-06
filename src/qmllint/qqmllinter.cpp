@@ -121,7 +121,11 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
         QFile file(filename);
         if (!file.open(QFile::ReadOnly)) {
             if (json) {
-                result[u"openFailed"] = true;
+                addJsonWarning(QQmlJS::DiagnosticMessage {
+                    QStringLiteral("Failed to open file %1: %2").arg(filename, file.errorString()),
+                    QtCriticalMsg,
+                    QQmlJS::SourceLocation()
+                });
                 success = false;
             } else if (!silent) {
                 qWarning() << "Failed to open file" << filename << file.error();

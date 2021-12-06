@@ -51,7 +51,7 @@
 
 #include <cstdio>
 
-constexpr int JSON_LOGGING_FORMAT_REVISION = 1;
+constexpr int JSON_LOGGING_FORMAT_REVISION = 2;
 
 int main(int argv, char *argc[])
 {
