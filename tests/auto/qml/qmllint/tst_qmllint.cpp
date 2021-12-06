@@ -505,6 +505,16 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("unknown attached property scope WrongAttached.")
             << QString()
             << false;
+    QTest::newRow("bad template literal (simple)")
+        << QStringLiteral("badTemplateStringSimple.qml")
+        << QStringLiteral("Cannot assign binding of type string to int")
+        << QString()
+        << false;
+    QTest::newRow("bad template literal (substitution)")
+        << QStringLiteral("badTemplateStringSubstitution.qml")
+        << QStringLiteral("Cannot assign binding of type QString to int")
+        << QString()
+        << false;
     QTest::newRow("BadBinding")
             << QStringLiteral("badBinding.qml")
             << QStringLiteral("Binding assigned to \"doesNotExist\", but no property "

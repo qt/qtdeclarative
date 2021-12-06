@@ -1369,12 +1369,25 @@ void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
         value = cast<RegExpLiteral *>(exprStatement->expression)->pattern.toString();
         bindingType = QQmlJSMetaPropertyBinding::RegExpLiteral;
         break;
+    case Node::Kind_TemplateLiteral: {
+        auto templateLit = QQmlJS::AST::cast<QQmlJS::AST::TemplateLiteral *>(exprStatement->expression);
+        Q_ASSERT(templateLit);
+        value = templateLit->value.toString();
+        if (templateLit->hasNoSubstitution) {
+            literalType = u"string"_qs;
+            bindingType = QQmlJSMetaPropertyBinding::StringLiteral;
+        } else {
+            bindingType = QQmlJSMetaPropertyBinding::Script;
+        }
+        break;
+    }
     default:
         return;
     }
 
-    if (!m_rootScopeImports.contains(literalType))
+    if (!QQmlJSMetaPropertyBinding::isLiteralBinding(bindingType))
         return;
+    Q_ASSERT(m_rootScopeImports.contains(literalType)); // built-ins must contain support for all literal bindings
 
     QQmlJSMetaPropertyBinding binding(name);
     binding.setLiteral(bindingType, literalType, value, m_rootScopeImports[literalType]);
