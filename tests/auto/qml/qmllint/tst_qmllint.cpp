@@ -240,7 +240,7 @@ void TestQmllint::qmltypes_data()
 void TestQmllint::qmltypes()
 {
     QFETCH(QString, file);
-    runQmllint(file, true);
+    callQmllint(file, true);
 }
 
 #ifdef QT_QMLJSROOTGEN_PRESENT
