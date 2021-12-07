@@ -455,11 +455,8 @@ ReturnedValue QQmlTypeWrapper::virtualResolveLookupGetter(const Object *object, 
                             QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobjectSingleton, qmlContext);
                             if (property) {
                                 ScopedValue val(scope, Value::fromReturnedValue(QV4::QObjectWrapper::wrap(engine, qobjectSingleton)));
-                                lookup->qobjectLookup.qmlTypeIc = This->internalClass();
-                                lookup->qobjectLookup.ic = val->objectValue()->internalClass();
-                                lookup->qobjectLookup.propertyCache = ddata->propertyCache;
-                                lookup->qobjectLookup.propertyCache->addref();
-                                lookup->qobjectLookup.propertyData = property;
+                                setupQObjectLookup(lookup, ddata, property,
+                                                   val->objectValue(), This);
                                 lookup->getter = QQmlTypeWrapper::lookupSingletonProperty;
                                 return lookup->getter(lookup, engine, *object);
                             }

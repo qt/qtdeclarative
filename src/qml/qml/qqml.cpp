@@ -845,12 +845,7 @@ static bool initObjectLookup(
 
     Q_ASSERT(ddata->propertyCache);
 
-    if (l->qobjectLookup.propertyCache)
-        l->qobjectLookup.propertyCache->release();
-
-    l->qobjectLookup.propertyCache = ddata->propertyCache;
-    l->qobjectLookup.propertyCache->addref();
-    l->qobjectLookup.propertyData = property;
+    QV4::setupQObjectLookup(l, ddata, property);
     return true;
 }
 
