@@ -152,7 +152,6 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 Creates a new QQmlPropertyCache of \a metaObject.
 */
 QQmlPropertyCache::QQmlPropertyCache(const QMetaObject *metaObject, QTypeRevision metaObjectRevision)
-    : QQmlPropertyCache()
 {
     Q_ASSERT(metaObject);
 
