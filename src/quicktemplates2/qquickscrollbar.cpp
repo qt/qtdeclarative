@@ -169,7 +169,7 @@ QQuickScrollBarPrivate::VisualArea QQuickScrollBarPrivate::visualArea() const
 
     qreal visualSize = qBound<qreal>(0, qMax(size, minimumSize) + qMin<qreal>(0, visualPos), 1.0 - visualPos);
 
-    visualPos = qBound<qreal>(0, visualPos, 1.0 - visualSize);
+    visualPos = qBound<qreal>(0, visualPos, qMax<qreal>(0, 1.0 - visualSize));
 
     return VisualArea(visualPos, visualSize);
 }
