@@ -268,7 +268,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
             return;
     }
 
-    m_logger->logWarning(QLatin1String("Unqualified access"), Log_UnqualifiedAccess, location);
+    std::optional<FixSuggestion> suggestion;
 
     auto childScopes = m_function->qmlScope->childScopes();
     for (qsizetype i = 0; i < m_function->qmlScope->childScopes().length(); i++) {
@@ -284,7 +284,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
 
             if (jsId.has_value() && jsId->kind == QQmlJSScope::JavaScriptIdentifier::Injected) {
 
-                FixSuggestion suggestion { Log_UnqualifiedAccess, {} };
+                suggestion = FixSuggestion {};
 
                 const QQmlJSScope::JavaScriptIdentifier id = jsId.value();
 
@@ -304,7 +304,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
 
                 fixString += handler.isMultiline ? u") "_qs : u") => "_qs;
 
-                suggestion.fixes << FixSuggestion::Fix {
+                suggestion->fixes << FixSuggestion::Fix {
                     name
                             + QString::fromLatin1(" is accessible in this scope because "
                                                   "you are handling a signal at %1:%2. Use a "
@@ -313,8 +313,6 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
                                       .arg(id.location.startColumn),
                     fixLocation, fixString
                 };
-
-                m_logger->suggestFix(suggestion);
             }
             break;
         }
@@ -325,11 +323,11 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
         if (scope->hasProperty(name)) {
             const QString id = m_function->addressableScopes.id(scope);
 
-            FixSuggestion suggestion { Log_UnqualifiedAccess, {} };
+            suggestion = FixSuggestion {};
 
             QQmlJS::SourceLocation fixLocation = location;
             fixLocation.length = 0;
-            suggestion.fixes << FixSuggestion::Fix {
+            suggestion->fixes << FixSuggestion::Fix {
                 name + QLatin1String(" is a member of a parent element\n")
                         + QLatin1String("      You can qualify the access with its id "
                                         "to avoid this warning:\n"),
@@ -337,16 +335,15 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
             };
 
             if (id.isEmpty()) {
-                suggestion.fixes << FixSuggestion::Fix {
-                    u"You first have to give the element an id"_qs,
-                    QQmlJS::SourceLocation {},
-                    {}
+                suggestion->fixes << FixSuggestion::Fix {
+                    u"You first have to give the element an id"_qs, QQmlJS::SourceLocation {}, {}
                 };
             }
-
-            m_logger->suggestFix(suggestion);
         }
     }
+
+    m_logger->logWarning(QLatin1String("Unqualified access"), Log_UnqualifiedAccess, location, true,
+                         true, suggestion);
 }
 
 void QQmlJSTypePropagator::checkDeprecated(QQmlJSScope::ConstPtr scope, const QString &name,
@@ -537,12 +534,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
 
                 const QString id = m_function->addressableScopes.id(scope);
 
-                m_logger->logWarning(
-                        u"Using attached type %1 already initialized in a parent scope."_qs.arg(
-                                m_state.accumulatorIn.scopeType()->internalName()),
-                        Log_AttachedPropertyReuse, getCurrentSourceLocation());
-
-                FixSuggestion suggestion { Log_AttachedPropertyReuse, {} };
+                FixSuggestion suggestion;
 
                 QQmlJS::SourceLocation fixLocation = getCurrentSourceLocation();
                 fixLocation.length = 0;
@@ -563,7 +555,11 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
                                                     {} };
                 }
 
-                m_logger->suggestFix(suggestion);
+                m_logger->logWarning(
+                        u"Using attached type %1 already initialized in a parent scope."_qs.arg(
+                                m_state.accumulatorIn.scopeType()->internalName()),
+                        Log_AttachedPropertyReuse, getCurrentSourceLocation(), true, true,
+                        suggestion);
             }
         }
         m_typeInfo->usedAttachedTypes.insert(m_function->qmlScope, attachedType);

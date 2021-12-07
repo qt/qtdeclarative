@@ -834,9 +834,7 @@ void QQmlJSImportVisitor::checkSignals()
 
             const QQmlJSScope::ConstPtr signalScope = it.key();
             if (!signalScope->hasMethod(signal)) {
-                m_logger->logWarning(QStringLiteral("no matching signal found for handler \"%1\"")
-                                             .arg(pair.first),
-                                     Log_UnqualifiedAccess, location);
+                std::optional<FixSuggestion> fix;
 
                 // There is a small chance of suggesting this fix for things that are not actually
                 // QtQml/Connections elements, but rather some other thing that is also called
@@ -848,22 +846,21 @@ void QQmlJSImportVisitor::checkSignals()
                     const qsizetype newLength = m_logger->code().indexOf(u'\n', location.end())
                             - location.offset;
 
-                    const FixSuggestion suggestion {
-                        Log_UnqualifiedAccess,
-                        {
-                            FixSuggestion::Fix {
-                                QStringLiteral("Implicitly defining %1 as signal handler in "
-                                               "Connections is deprecated. Create a function "
-                                               "instead").arg(pair.first),
-                                QQmlJS::SourceLocation(location.offset, newLength,
-                                                       location.startLine, location.startColumn),
-                                QStringLiteral("function %1(%2) { ... }")
-                                                .arg(pair.first, pair.second.join(u", "))
-                                }
-                        }
-                    };
-                    m_logger->suggestFix(suggestion);
+                    fix = FixSuggestion { { FixSuggestion::Fix {
+                            QStringLiteral("Implicitly defining %1 as signal handler in "
+                                           "Connections is deprecated. Create a function "
+                                           "instead")
+                                    .arg(pair.first),
+                            QQmlJS::SourceLocation(location.offset, newLength, location.startLine,
+                                                   location.startColumn),
+                            QStringLiteral("function %1(%2) { ... }")
+                                    .arg(pair.first, pair.second.join(u", ")) } } };
                 }
+
+                m_logger->logWarning(QStringLiteral("no matching signal found for handler \"%1\"")
+                                             .arg(pair.first),
+                                     Log_UnqualifiedAccess, location, true, true, fix);
+
                 continue;
             }
 

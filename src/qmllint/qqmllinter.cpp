@@ -76,7 +76,8 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
         json->append(result);
     });
 
-    auto addJsonWarning = [&](const QQmlJS::DiagnosticMessage &message) {
+    auto addJsonWarning = [&](const QQmlJS::DiagnosticMessage &message,
+                              const std::optional<FixSuggestion> &suggestion = {}) {
         QJsonObject jsonMessage;
 
         QString type;
@@ -111,6 +112,21 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
         }
 
         jsonMessage[u"message"_qs] = message.message;
+
+        QJsonArray suggestions;
+        if (suggestion.has_value()) {
+            for (const auto &fix : suggestion->fixes) {
+                QJsonObject jsonFix;
+                jsonFix[u"message"] = fix.message;
+                jsonFix[u"line"_qs] = static_cast<int>(fix.cutLocation.startLine);
+                jsonFix[u"column"_qs] = static_cast<int>(fix.cutLocation.startColumn);
+                jsonFix[u"charOffset"_qs] = static_cast<int>(fix.cutLocation.offset);
+                jsonFix[u"length"_qs] = static_cast<int>(fix.cutLocation.length);
+                jsonFix[u"replacement"_qs] = fix.replacementString;
+                suggestions << jsonFix;
+            }
+        }
+        jsonMessage[u"suggestions"] = suggestions;
 
         warnings << jsonMessage;
     };
@@ -153,15 +169,16 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
     success = isJavaScript ? (isESModule ? parser.parseModule() : parser.parseProgram())
                            : parser.parse();
 
-    if (!success && !silent) {
+    if (!success) {
         const auto diagnosticMessages = parser.diagnosticMessages();
         for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
             if (json) {
                 addJsonWarning(m);
-            } else {
-                qWarning().noquote() << QString::fromLatin1("%1:%2 : %3")
+            } else if (!silent) {
+                qWarning().noquote() << QString::fromLatin1("%1:%2:%3: %4")
                                                 .arg(filename)
                                                 .arg(m.loc.startLine)
+                                                .arg(m.loc.startColumn)
                                                 .arg(m.message);
             }
         }
@@ -231,11 +248,11 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
 
             if (json) {
                 for (const auto &error : m_logger->errors())
-                    addJsonWarning(error);
+                    addJsonWarning(error, error.fixSuggestion);
                 for (const auto &warning : m_logger->warnings())
-                    addJsonWarning(warning);
+                    addJsonWarning(warning, warning.fixSuggestion);
                 for (const auto &info : m_logger->infos())
-                    addJsonWarning(info);
+                    addJsonWarning(info, info.fixSuggestion);
             }
         };
 

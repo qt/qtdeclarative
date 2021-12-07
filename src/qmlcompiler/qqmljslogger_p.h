@@ -50,6 +50,8 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qset.h>
 
+#include <optional>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -113,8 +115,6 @@ enum QQmlJSLoggerCategory {
 
 struct FixSuggestion
 {
-    QQmlJSLoggerCategory category;
-
     struct Fix
     {
         QString message;
@@ -122,6 +122,11 @@ struct FixSuggestion
         QString replacementString = QString();
     };
     QList<Fix> fixes;
+};
+
+struct Message : public QQmlJS::DiagnosticMessage
+{
+    std::optional<FixSuggestion> fixSuggestion;
 };
 
 class QQmlJSLogger
@@ -188,9 +193,9 @@ public:
     bool hasWarnings() const { return !m_warnings.isEmpty(); }
     bool hasErrors() const { return !m_errors.isEmpty(); }
 
-    const QList<QQmlJS::DiagnosticMessage> &infos() const { return m_infos; }
-    const QList<QQmlJS::DiagnosticMessage> &warnings() const { return m_warnings; }
-    const QList<QQmlJS::DiagnosticMessage> &errors() const { return m_errors; }
+    const QList<Message> &infos() const { return m_infos; }
+    const QList<Message> &warnings() const { return m_warnings; }
+    const QList<Message> &errors() const { return m_errors; }
 
     QtMsgType categoryLevel(QQmlJSLoggerCategory category) const { return m_categoryLevels[category]; }
     void setCategoryLevel(QQmlJSLoggerCategory category, QtMsgType Level) { m_categoryLevels[category] = Level; }
@@ -203,26 +208,27 @@ public:
 
     void logInfo(const QString &message, QQmlJSLoggerCategory category,
                  const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation(),
-                 bool showContext = true, bool showFileName = true)
+                 bool showContext = true, bool showFileName = true,
+                 const std::optional<FixSuggestion> &suggestion = {})
     {
-        log(message, category, srcLocation, QtInfoMsg, showContext, showFileName);
+        log(message, category, srcLocation, QtInfoMsg, showContext, showFileName, suggestion);
     }
 
     void logWarning(const QString &message, QQmlJSLoggerCategory category,
                     const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation(),
-                    bool showContext = true, bool showFileName = true)
+                    bool showContext = true, bool showFileName = true,
+                    const std::optional<FixSuggestion> &suggestion = {})
     {
-        log(message, category, srcLocation, QtWarningMsg, showContext, showFileName);
+        log(message, category, srcLocation, QtWarningMsg, showContext, showFileName, suggestion);
     }
 
     void logCritical(const QString &message, QQmlJSLoggerCategory category,
                      const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation(),
-                     bool showContext = true, bool showFileName = true)
+                     bool showContext = true, bool showFileName = true,
+                     const std::optional<FixSuggestion> &suggestion = {})
     {
-        log(message, category, srcLocation, QtCriticalMsg, showContext, showFileName);
+        log(message, category, srcLocation, QtCriticalMsg, showContext, showFileName, suggestion);
     }
-
-    void suggestFix(const FixSuggestion &fix);
 
     void processMessages(const QList<QQmlJS::DiagnosticMessage> &messages, QtMsgType level,
                          QQmlJSLoggerCategory category);
@@ -246,7 +252,8 @@ private:
     void printFix(const FixSuggestion &fix);
 
     void log(const QString &message, QQmlJSLoggerCategory category, const QQmlJS::SourceLocation &,
-             QtMsgType type, bool showContext, bool showFileName);
+             QtMsgType type, bool showContext, bool showFileName,
+             const std::optional<FixSuggestion> &suggestion);
 
     QString m_fileName;
     QString m_code;
@@ -256,9 +263,9 @@ private:
     QtMsgType m_categoryLevels[QQmlJSLoggerCategory_Last + 1] = {};
     bool m_categoryError[QQmlJSLoggerCategory_Last + 1] = {};
 
-    QList<QQmlJS::DiagnosticMessage> m_infos;
-    QList<QQmlJS::DiagnosticMessage> m_warnings;
-    QList<QQmlJS::DiagnosticMessage> m_errors;
+    QList<Message> m_infos;
+    QList<Message> m_warnings;
+    QList<Message> m_errors;
     QHash<uint32_t, QSet<QQmlJSLoggerCategory>> m_ignoredWarnings;
 };
 

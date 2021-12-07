@@ -92,13 +92,27 @@ private Q_SLOTS:
     void javascriptVariableArgs();
 
 private:
+    enum DefaultIncludeOption { NoDefaultIncludes, UseDefaultIncludes };
+    enum ContainOption { StringNotContained, StringContained };
+    enum ReplacementOption {
+        NoReplacementSearch,
+        DoReplacementSearch,
+    };
+
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true,
                        bool addIncludeDirs = true);
     QString runQmllint(const QString &fileToLint, bool shouldSucceed,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true,
                        bool addIncludeDirs = true);
-    void callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings = nullptr);
+    void callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings = nullptr,
+                     QStringList includeDirs = {}, QStringList qmltypesFiles = {},
+                     QStringList resources = {},
+                     DefaultIncludeOption defaultIncludes = UseDefaultIncludes);
+
+    void searchWarnings(const QJsonArray &warnings, const QString &string, const QString &filename,
+                        ContainOption shouldContain = StringContained,
+                        ReplacementOption searchReplacements = NoReplacementSearch);
 
     QString m_qmllintPath;
     QString m_qmljsrootgenPath;
@@ -339,488 +353,416 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::addColumn<QString>("filename");
     QTest::addColumn<QString>("warningMessage");
     QTest::addColumn<QString>("notContained");
+    QTest::addColumn<QString>("replacement");
     QTest::addColumn<bool>("exitsNormally");
 
     QTest::newRow("Invalid_syntax_QML")
-            << QStringLiteral("failure1.qml")
-            << QStringLiteral("%1:4 : Expected token `:'")
-            << QString()
-            << false;
+            << QStringLiteral("failure1.qml") << QStringLiteral("%1:4:8: Expected token `:'")
+            << QString() << QString() << false;
     QTest::newRow("Invalid_syntax_JS")
-            << QStringLiteral("failure1.js")
-            << QStringLiteral("%1:4 : Expected token `;'")
-            << QString()
-            << false;
+            << QStringLiteral("failure1.js") << QStringLiteral("%1:4:12: Expected token `;'")
+            << QString() << QString() << false;
     QTest::newRow("AutomatchedSignalHandler")
             << QStringLiteral("AutomatchedSignalHandler.qml")
-            << QString("Warning: %1:12:36: Unqualified access")
-            << QString()
-            << false;
+            << QString("Warning: %1:12:36: Unqualified access") << QString() << QString() << false;
     QTest::newRow("AutomatchedSignalHandler2")
             << QStringLiteral("AutomatchedSignalHandler.qml")
-            << QString("Info: Implicitly defining onClicked as signal handler")
-            << QString()
-            << false;
+            << QString("Info: Implicitly defining onClicked as signal handler") << QString()
+            << QString() << false;
     QTest::newRow("MemberNotFound")
             << QStringLiteral("memberNotFound.qml")
             << QString("Warning: %1:6:31: Property \"foo\" not found on type \"QtObject\"")
-            << QString()
-            << false;
+            << QString() << QString() << false;
     QTest::newRow("UnknownJavascriptMethd")
             << QStringLiteral("unknownJavascriptMethod.qml")
             << QString("Warning: %1:5:25: Property \"foo2\" not found on type \"Methods\"")
-            << QString()
-            << false;
+            << QString() << QString() << false;
     QTest::newRow("badAlias") << QStringLiteral("badAlias.qml")
                               << QString("Warning: %1:3:1: Cannot resolve alias \"wrong\"")
-                              << QString() << false;
-    QTest::newRow("badAliasProperty1")
-            << QStringLiteral("badAliasProperty.qml")
-            << QString("Warning: %1:3:1: Cannot resolve alias \"wrong\"") << QString() << false;
+                              << QString() << QString() << false;
+    QTest::newRow("badAliasProperty1") << QStringLiteral("badAliasProperty.qml")
+                                       << QString("Warning: %1:3:1: Cannot resolve alias \"wrong\"")
+                                       << QString() << QString() << false;
     QTest::newRow("badAliasExpression")
             << QStringLiteral("badAliasExpression.qml")
             << QString("Warning: %1:5:26: Invalid alias expression. Only IDs and field member "
                        "expressions can be aliased")
-            << QString()
-            << false;
-    QTest::newRow("aliasCycle1")
-            << QStringLiteral("aliasCycle.qml")
-            << QString("Warning: %1:3:1: Alias \"b\" is part of an alias cycle")
-            << QString()
-            << false;
-    QTest::newRow("aliasCycle2")
-            << QStringLiteral("aliasCycle.qml")
-            << QString("Warning: %1:3:1: Alias \"a\" is part of an alias cycle")
-            << QString()
-            << false;
+            << QString() << QString() << false;
+    QTest::newRow("aliasCycle1") << QStringLiteral(
+            "aliasCycle.qml") << QString("Warning: %1:3:1: Alias \"b\" is part of an alias cycle")
+                                 << QString() << QString() << false;
+    QTest::newRow("aliasCycle2") << QStringLiteral(
+            "aliasCycle.qml") << QString("Warning: %1:3:1: Alias \"a\" is part of an alias cycle")
+                                 << QString() << QString() << false;
     QTest::newRow("badParent")
             << QStringLiteral("badParent.qml")
-            << QString("Warning: %1:5:34: Property \"rrr\" not found on type \"Item\"")
-            << QString()
-            << false;
+            << QString("Warning: %1:5:34: Property \"rrr\" not found on type \"Item\"") << QString()
+            << QString() << false;
     QTest::newRow("parentIsComponent")
             << QStringLiteral("parentIsComponent.qml")
             << QString("Warning: %1:7:39: Property \"progress\" not found on type \"QQuickItem\"")
-            << QString()
-            << false;
+            << QString() << QString() << false;
     QTest::newRow("badTypeAssertion")
             << QStringLiteral("badTypeAssertion.qml")
             << QString("Warning: %1:5:39: Property \"rrr\" not found on type \"QQuickItem\"")
-            << QString()
-            << false;
+            << QString() << QString() << false;
     QTest::newRow("incompleteQmltypes")
             << QStringLiteral("incompleteQmltypes.qml")
             << QString("Warning: %1:5:26: Type \"QPalette\" of property \"palette\" not found")
-            << QString() << false;
+            << QString() << QString() << false;
     QTest::newRow("incompleteQmltypes2") << QStringLiteral("incompleteQmltypes2.qml")
                                          << QString("Warning: %1:5:35: Property \"weDontKnowIt\" "
                                                     "not found on type \"CustomPalette\"")
-                                         << QString() << false;
-    QTest::newRow("inheritanceCylce")
-            << QStringLiteral("Cycle1.qml")
-            << QString("Warning: %1: Cycle2 is part of an inheritance cycle: Cycle2 -> Cycle3 -> Cycle1 -> Cycle2")
-            << QString()
-            << false;
+                                         << QString() << QString() << false;
+    QTest::newRow("inheritanceCylce") << QStringLiteral("Cycle1.qml")
+                                      << QString("Warning: %1: Cycle2 is part of an inheritance "
+                                                 "cycle: Cycle2 -> Cycle3 -> Cycle1 -> Cycle2")
+                                      << QString() << QString() << false;
     QTest::newRow("badQmldirImportAndDepend")
             << QStringLiteral("qmldirImportAndDepend/bad.qml")
             << QString("Warning: %1:3:1: Item was not found. Did you add all import paths?")
-            << QString()
-            << false;
+            << QString() << QString() << false;
     QTest::newRow("javascriptMethodsInModule")
             << QStringLiteral("javascriptMethodsInModuleBad.qml")
             << QString("Warning: %1:5:21: Property \"unknownFunc\" not found on type \"Foo\"")
-            << QString()
-            << false;
-    QTest::newRow("badEnumFromQtQml")
-            << QStringLiteral("badEnumFromQtQml.qml")
-            << QString("Warning: %1:4:30: Property \"Linear123\" not found on type \"QQmlEasingEnums\"")
-            << QString()
-            << false;
+            << QString() << QString() << false;
+    QTest::newRow("badEnumFromQtQml") << QStringLiteral("badEnumFromQtQml.qml")
+                                      << QString("Warning: %1:4:30: Property \"Linear123\" not "
+                                                 "found on type \"QQmlEasingEnums\"")
+                                      << QString() << QString() << false;
     QTest::newRow("anchors3")
             << QStringLiteral("anchors3.qml")
-            << QString("Cannot assign binding of type QQuickItem to QQuickAnchorLine")
-            << QString()
-            << false;
-    QTest::newRow("nanchors1")
-            << QStringLiteral("nanchors1.qml")
-            << QString("unknown grouped property scope nanchors.")
-            << QString()
-            << false;
-    QTest::newRow("nanchors2")
-            << QStringLiteral("nanchors2.qml")
-            << QString("unknown grouped property scope nanchors.")
-            << QString()
-            << false;
-    QTest::newRow("nanchors3")
-            << QStringLiteral("nanchors3.qml")
-            << QString("unknown grouped property scope nanchors.")
-            << QString()
-            << false;
-    QTest::newRow("badAliasObject")
-            << QStringLiteral("badAliasObject.qml")
-            << QString("Warning: %1:8:40: Property \"wrongwrongwrong\" not found on type \"QtObject\"")
-            << QString()
-            << false;
+            << QString("Cannot assign binding of type QQuickItem to QQuickAnchorLine") << QString()
+            << QString() << false;
+    QTest::newRow("nanchors1") << QStringLiteral("nanchors1.qml")
+                               << QString("unknown grouped property scope nanchors.") << QString()
+                               << QString() << false;
+    QTest::newRow("nanchors2") << QStringLiteral("nanchors2.qml")
+                               << QString("unknown grouped property scope nanchors.") << QString()
+                               << QString() << false;
+    QTest::newRow("nanchors3") << QStringLiteral("nanchors3.qml")
+                               << QString("unknown grouped property scope nanchors.") << QString()
+                               << QString() << false;
+    QTest::newRow("badAliasObject") << QStringLiteral("badAliasObject.qml")
+                                    << QString("Warning: %1:8:40: Property \"wrongwrongwrong\" not "
+                                               "found on type \"QtObject\"")
+                                    << QString() << QString() << false;
     QTest::newRow("badScript")
             << QStringLiteral("badScript.qml")
             << QString("Warning: %1:5:21: Property \"stuff\" not found on type \"Empty\"")
-            << QString()
-            << false;
+            << QString() << QString() << false;
     QTest::newRow("badScriptOnAttachedProperty")
             << QStringLiteral("badScript.attached.qml")
-            << QString("Warning: %1:3:26: Unqualified access") << QString() << false;
-    QTest::newRow("brokenNamespace")
-            << QStringLiteral("brokenNamespace.qml")
-            << QString("Warning: %1:4:19: Type not found in namespace") << QString() << false;
+            << QString("Warning: %1:3:26: Unqualified access") << QString() << QString() << false;
+    QTest::newRow("brokenNamespace") << QStringLiteral("brokenNamespace.qml")
+                                     << QString("Warning: %1:4:19: Type not found in namespace")
+                                     << QString() << QString() << false;
     QTest::newRow("segFault (bad)")
             << QStringLiteral("SegFault.bad.qml")
             << QStringLiteral("Property \"foobar\" not found on type \"QQuickScreenAttached\"")
-            << QString()
-            << false;
+            << QString() << QString() << false;
     QTest::newRow("VariableUsedBeforeDeclaration")
             << QStringLiteral("useBeforeDeclaration.qml")
             << QStringLiteral("%1:5:9: Variable \"argq\" is used here before its declaration. "
                               "The declaration is at 6:13.")
-            << QString()
-            << false;
+            << QString() << QString() << false;
     QTest::newRow("SignalParameterMismatch")
             << QStringLiteral("namedSignalParameters.qml")
             << QStringLiteral("Parameter 1 to signal handler for \"onSig\" is called \"argarg\". "
                               "The signal has a parameter of the same name in position 2.")
-            << QStringLiteral("onSig2")
-            << false;
+            << QStringLiteral("onSig2") << QString() << false;
     QTest::newRow("TooManySignalParameters")
             << QStringLiteral("tooManySignalParameters.qml")
             << QStringLiteral("Signal handler for \"onSig\" has more formal parameters "
                               "than the signal it handles.")
-            << QString()
-            << false;
-    QTest::newRow("OnAssignment")
-            << QStringLiteral("onAssignment.qml")
-            << QStringLiteral("Property \"loops\" not found on type \"bool\"")
-            << QString()
-            << false;
-    QTest::newRow("BadAttached")
-            << QStringLiteral("badAttached.qml")
-            << QStringLiteral("unknown attached property scope WrongAttached.")
-            << QString()
-            << false;
+            << QString() << QString() << false;
+    QTest::newRow("OnAssignment") << QStringLiteral("onAssignment.qml")
+                                  << QStringLiteral("Property \"loops\" not found on type \"bool\"")
+                                  << QString() << QString() << false;
+    QTest::newRow("BadAttached") << QStringLiteral("badAttached.qml")
+                                 << QStringLiteral("unknown attached property scope WrongAttached.")
+                                 << QString() << QString() << false;
+    QTest::newRow("BadBinding") << QStringLiteral("badBinding.qml")
+                                << QStringLiteral(
+                                           "Binding assigned to \"doesNotExist\", but no property "
+                                           "\"doesNotExist\" exists in the current element.")
+                                << QString() << QString() << false;
     QTest::newRow("bad template literal (simple)")
-        << QStringLiteral("badTemplateStringSimple.qml")
-        << QStringLiteral("Cannot assign binding of type string to int")
-        << QString()
-        << false;
+            << QStringLiteral("badTemplateStringSimple.qml")
+            << QStringLiteral("Cannot assign binding of type string to int") << QString()
+            << QString() << false;
     QTest::newRow("bad template literal (substitution)")
-        << QStringLiteral("badTemplateStringSubstitution.qml")
-        << QStringLiteral("Cannot assign binding of type QString to int")
-        << QString()
-        << false;
+            << QStringLiteral("badTemplateStringSubstitution.qml")
+            << QStringLiteral("Cannot assign binding of type QString to int") << QString()
+            << QString() << false;
     QTest::newRow("bad constant number to string")
-        << QStringLiteral("numberToStringProperty.qml")
-        << QStringLiteral("Cannot assign a numeric constant to a string property")
-        << QString()
-        << false;
+            << QStringLiteral("numberToStringProperty.qml")
+            << QStringLiteral("Cannot assign a numeric constant to a string property") << QString()
+            << QString() << false;
     QTest::newRow("bad unary minus to string")
-        << QStringLiteral("unaryMinusToStringProperty.qml")
-        << QStringLiteral("Cannot assign a numeric constant to a string property")
-        << QString()
-        << false;
+            << QStringLiteral("unaryMinusToStringProperty.qml")
+            << QStringLiteral("Cannot assign a numeric constant to a string property") << QString()
+            << QString() << false;
     QTest::newRow("bad tranlsation binding (qsTr)")
-        << QStringLiteral("bad_qsTr.qml")
-        << QStringLiteral("")
-        << QString()
-        << false;
-    QTest::newRow("bad string binding (QT_TR_NOOP)")
-        << QStringLiteral("bad_QT_TR_NOOP.qml")
-        << QStringLiteral("Cannot assign binding of type string to int")
-        << QString()
-        << false;
-    QTest::newRow("BadBinding")
-            << QStringLiteral("badBinding.qml")
-            << QStringLiteral("Binding assigned to \"doesNotExist\", but no property "
-                              "\"doesNotExist\" exists in the current element.")
-            << QString()
+            << QStringLiteral("bad_qsTr.qml") << QStringLiteral("") << QString() << QString()
             << false;
+    QTest::newRow("bad string binding (QT_TR_NOOP)")
+            << QStringLiteral("bad_QT_TR_NOOP.qml")
+            << QStringLiteral("Cannot assign binding of type string to int") << QString()
+            << QString() << false;
     QTest::newRow("BadScriptBindingOnGroup")
             << QStringLiteral("badScriptBinding.group.qml")
             << QStringLiteral("Warning: %1:3:10: Binding assigned to \"bogusProperty\", but no "
                               "property \"bogusProperty\" exists in the current element.")
-            << QString() << false;
+            << QString() << QString() << false;
     QTest::newRow("BadScriptBindingOnAttachedType")
             << QStringLiteral("badScriptBinding.attached.qml")
             << QStringLiteral("Warning: %1:5:12: Binding assigned to \"bogusProperty\", but no "
                               "property \"bogusProperty\" exists in the current element.")
-            << QString() << false;
+            << QString() << QString() << false;
     QTest::newRow("BadScriptBindingOnAttachedSignalHandler")
             << QStringLiteral("badScriptBinding.attachedSignalHandler.qml")
             << QStringLiteral(
                        "Warning: %1:3:10: no matching signal found for handler \"onBogusSignal\"")
-            << QString() << false;
+            << QString() << QString() << false;
     QTest::newRow("BadPropertyType")
             << QStringLiteral("badPropertyType.qml")
             << QStringLiteral("No type found for property \"bad\". This may be due to a missing "
                               "import statement or incomplete qmltypes files.")
-            << QString()
-            << false;
+            << QString() << QString() << false;
     QTest::newRow("Deprecation (Property, with reason)")
             << QStringLiteral("deprecatedPropertyReason.qml")
-            << QStringLiteral("Property \"deprecated\" is deprecated (Reason: Test)")
-            << QString()
-            << false;
+            << QStringLiteral("Property \"deprecated\" is deprecated (Reason: Test)") << QString()
+            << QString() << false;
     QTest::newRow("Deprecation (Property, no reason)")
             << QStringLiteral("deprecatedProperty.qml")
-            << QStringLiteral("Property \"deprecated\" is deprecated")
-            << QString()
+            << QStringLiteral("Property \"deprecated\" is deprecated") << QString() << QString()
             << false;
     QTest::newRow("Deprecation (Property binding, with reason)")
             << QStringLiteral("deprecatedPropertyBindingReason.qml")
             << QStringLiteral("Binding on deprecated property \"deprecatedReason\" (Reason: Test)")
-            << QString()
-            << false;
+            << QString() << QString() << false;
     QTest::newRow("Deprecation (Property binding, no reason)")
             << QStringLiteral("deprecatedPropertyBinding.qml")
-            << QStringLiteral("Binding on deprecated property \"deprecated\"")
-            << QString()
-            << false;
+            << QStringLiteral("Binding on deprecated property \"deprecated\"") << QString()
+            << QString() << false;
     QTest::newRow("Deprecation (Type, with reason)")
             << QStringLiteral("deprecatedTypeReason.qml")
             << QStringLiteral("Type \"TypeDeprecatedReason\" is deprecated (Reason: Test)")
-            << QString()
-            << false;
+            << QString() << QString() << false;
     QTest::newRow("Deprecation (Type, no reason)")
             << QStringLiteral("deprecatedType.qml")
-            << QStringLiteral("Type \"TypeDeprecated\" is deprecated")
-            << QString()
+            << QStringLiteral("Type \"TypeDeprecated\" is deprecated") << QString() << QString()
             << false;
     QTest::newRow("MissingDefaultProperty")
             << QStringLiteral("defaultPropertyWithoutKeyword.qml")
             << QStringLiteral("Cannot assign to non-existent default property") << QString()
-            << false;
+            << QString() << false;
     QTest::newRow("MissingDefaultPropertyDefinedInTheSameType")
             << QStringLiteral("defaultPropertyWithinTheSameType.qml")
             << QStringLiteral("Cannot assign to non-existent default property") << QString()
-            << false;
+            << QString() << false;
     QTest::newRow("DoubleAssignToDefaultProperty")
             << QStringLiteral("defaultPropertyWithDoubleAssignment.qml")
             << QStringLiteral("Cannot assign multiple objects to a default non-list property")
-            << QString()
-            << false;
+            << QString() << QString() << false;
     QTest::newRow("DefaultPropertyWithWrongType(string)")
             << QStringLiteral("defaultPropertyWithWrongType.qml")
             << QStringLiteral("Cannot assign to default property of incompatible type")
-            << QStringLiteral("Cannot assign to non-existent default property")
+            << QStringLiteral("Cannot assign to non-existent default property") << QString()
             << false;
     QTest::newRow("MultiDefaultPropertyWithWrongType")
             << QStringLiteral("multiDefaultPropertyWithWrongType.qml")
             << QStringLiteral("Cannot assign to default property of incompatible type")
-            << QStringLiteral("Cannot assign to non-existent default property")
+            << QStringLiteral("Cannot assign to non-existent default property") << QString()
             << false;
     QTest::newRow("InvalidImport")
             << QStringLiteral("invalidImport.qml")
             << QStringLiteral("Failed to import FooBar. Are your include paths set up properly?")
-            << QString()
-            << false;
+            << QString() << QString() << false;
     QTest::newRow("Unused Import (simple)")
-            << QStringLiteral("unused_simple.qml")
-            << QStringLiteral("Unused import at %1:1:1")
-            << QString()
-            << true;
+            << QStringLiteral("unused_simple.qml") << QStringLiteral("Unused import at %1:1:1")
+            << QString() << QString() << true;
     QTest::newRow("Unused Import (prefix)")
-            << QStringLiteral("unused_prefix.qml")
-            << QStringLiteral("Unused import at %1:1:1")
-            << QString()
-            << true;
-    QTest::newRow("TypePropertAccess")
-            << QStringLiteral("typePropertyAccess.qml")
-            << QString()
-            << QString()
-            << false;
+            << QStringLiteral("unused_prefix.qml") << QStringLiteral("Unused import at %1:1:1")
+            << QString() << QString() << true;
+    QTest::newRow("TypePropertAccess") << QStringLiteral("typePropertyAccess.qml") << QString()
+                                       << QString() << QString() << false;
     QTest::newRow("badAttachedProperty")
             << QStringLiteral("badAttachedProperty.qml")
-            << QString("Property \"progress\" not found on type \"TestType\"")
-            << QString()
-            << false;
+            << QString("Property \"progress\" not found on type \"TestType\"") << QString()
+            << QString() << false;
     QTest::newRow("badAttachedPropertyNested")
             << QStringLiteral("badAttachedPropertyNested.qml")
             << QString("12:41: Property \"progress\" not found on type \"QObject\"")
-            << QString("6:37: Property \"progress\" not found on type \"QObject\"")
+            << QString("6:37: Property \"progress\" not found on type \"QObject\"") << QString()
             << false;
     QTest::newRow("badAttachedPropertyTypeString")
             << QStringLiteral("badAttachedPropertyTypeString.qml")
-            << QString("Cannot assign binding of type string to int") << QString() << false;
+            << QString("Cannot assign binding of type string to int") << QString() << QString()
+            << false;
     QTest::newRow("badAttachedPropertyTypeQtObject")
             << QStringLiteral("badAttachedPropertyTypeQtObject.qml")
             << QString("Property \"count\" of type \"int\" is assigned an incompatible type "
                        "\"QtObject\"")
-            << QString()
-            << false;
+            << QString() << QString() << false;
     // should succeed, but it does not:
-    QTest::newRow("attachedPropertyAccess")
-            << QStringLiteral("goodAttachedPropertyAccess.qml")
-            << QString()
-            << QString()
-            << true;
+    QTest::newRow("attachedPropertyAccess") << QStringLiteral("goodAttachedPropertyAccess.qml")
+                                            << QString() << QString() << QString() << true;
     // should succeed, but it does not:
-    QTest::newRow("attachedPropertyNested")
-            << QStringLiteral("goodAttachedPropertyNested.qml")
-            << QString()
-            << QString()
-            << true;
+    QTest::newRow("attachedPropertyNested") << QStringLiteral("goodAttachedPropertyNested.qml")
+                                            << QString() << QString() << QString() << true;
     QTest::newRow("deprecatedFunction")
             << QStringLiteral("deprecatedFunction.qml")
-            << QStringLiteral("Method \"deprecated(foobar)\" is deprecated (Reason: No particular reason.)")
-            << QString()
-            << false;
+            << QStringLiteral("Method \"deprecated(foobar)\" is deprecated (Reason: No particular "
+                              "reason.)")
+            << QString() << QString() << false;
     QTest::newRow("deprecatedFunctionInherited")
             << QStringLiteral("deprecatedFunctionInherited.qml")
-            << QStringLiteral("Method \"deprecatedInherited(c, d)\" is deprecated (Reason: This deprecation should be visible!)")
-            << QString()
-            << false;
+            << QStringLiteral("Method \"deprecatedInherited(c, d)\" is deprecated (Reason: This "
+                              "deprecation should be visible!)")
+            << QString() << QString() << false;
 
-    QTest::newRow("string as id")
-        << QStringLiteral("stringAsId.qml")
-        << QStringLiteral("ids do not need quotation marks")
-        << QString()
-        << false;
-    QTest::newRow("stringIdUsedInWarning")
-        << QStringLiteral("stringIdUsedInWarning.qml")
-        << QStringLiteral("Component.onCompleted: console.log(stringy.i)")
-        << QString()
-        << false;
+    QTest::newRow("string as id") << QStringLiteral("stringAsId.qml")
+                                  << QStringLiteral("ids do not need quotation marks") << QString()
+                                  << QString() << false;
+    QTest::newRow("stringIdUsedInWarning") << QStringLiteral("stringIdUsedInWarning.qml")
+                                           << QStringLiteral("i is a member of a parent element")
+                                           << QString() << QStringLiteral("stringy.") << false;
     QTest::newRow("Invalid id (expression)")
-        << QStringLiteral("invalidId1.qml")
-        << QStringLiteral("Failed to parse id")
-        << QString()
-        << false;
+            << QStringLiteral("invalidId1.qml") << QStringLiteral("Failed to parse id") << QString()
+            << QString() << false;
     QTest::newRow("multilineString")
             << QStringLiteral("multilineString.qml")
             << QStringLiteral("String contains unescaped line terminator which is deprecated. Use "
                               "a template literal instead.")
-            << QString() << true;
+            << QString() << QString() << true;
     QTest::newRow("unresolvedType")
             << QStringLiteral("unresolvedType.qml")
             << QStringLiteral("UnresolvedType was not found. Did you add all import paths?")
-            << QStringLiteral("incompatible type") << false;
+            << QStringLiteral("incompatible type") << QString() << false;
     QTest::newRow("invalidInterceptor")
             << QStringLiteral("invalidInterceptor.qml")
             << QStringLiteral("On-binding for property \"angle\" has wrong type \"Item\"")
-            << QString() << false;
-    QTest::newRow("2Interceptors")
-            << QStringLiteral("2interceptors.qml")
-            << QStringLiteral("Duplicate interceptor on property \"x\"") << QString() << false;
+            << QString() << QString() << false;
+    QTest::newRow("2Interceptors") << QStringLiteral("2interceptors.qml")
+                                   << QStringLiteral("Duplicate interceptor on property \"x\"")
+                                   << QString() << QString() << false;
     QTest::newRow("ValueSource+2Interceptors")
             << QStringLiteral("valueSourceBetween2interceptors.qml")
-            << QStringLiteral("Duplicate interceptor on property \"x\"") << QString() << false;
-    QTest::newRow("2ValueSources")
-            << QStringLiteral("2valueSources.qml")
-            << QStringLiteral("Duplicate value source on property \"x\"") << QString() << false;
+            << QStringLiteral("Duplicate interceptor on property \"x\"") << QString() << QString()
+            << false;
+    QTest::newRow("2ValueSources") << QStringLiteral("2valueSources.qml")
+                                   << QStringLiteral("Duplicate value source on property \"x\"")
+                                   << QString() << QString() << false;
     QTest::newRow("ValueSource+Value")
             << QStringLiteral("valueSource_Value.qml")
             << QStringLiteral("Cannot combine value source and binding on property \"obj\"")
-            << QString() << false;
+            << QString() << QString() << false;
     QTest::newRow("ValueSource+ListValue")
             << QStringLiteral("valueSource_listValue.qml")
             << QStringLiteral("Cannot combine value source and binding on property \"objs\"")
-            << QString() << false;
+            << QString() << QString() << false;
     QTest::newRow("NonExistentListProperty")
             << QStringLiteral("nonExistentListProperty.qml")
-            << QStringLiteral("Property \"objs\" is invalid or does not exist")
-            << QString()
-            << false;
+            << QStringLiteral("Property \"objs\" is invalid or does not exist") << QString()
+            << QString() << false;
     QTest::newRow("QtQuick.Window 2.0")
             << QStringLiteral("qtquickWindow20.qml")
             << QStringLiteral("Property \"window\" not found on type \"QQuickWindow\"") << QString()
-            << false;
+            << QString() << false;
     QTest::newRow("unresolvedAttachedType")
             << QStringLiteral("unresolvedAttachedType.qml")
             << QStringLiteral("unknown attached property scope UnresolvedAttachedType.")
-            << QStringLiteral("Property \"property\" is invalid or does not exist") << false;
+            << QStringLiteral("Property \"property\" is invalid or does not exist") << QString()
+            << false;
     QTest::newRow("nestedInlineComponents")
             << QStringLiteral("nestedInlineComponents.qml")
-            << QStringLiteral("Nested inline components are not supported") << QString() << false;
-    QTest::newRow("WithStatement")
-            << QStringLiteral("WithStatement.qml")
-            << QStringLiteral("with statements are strongly discouraged") << QString() << false;
+            << QStringLiteral("Nested inline components are not supported") << QString()
+            << QString() << false;
+    QTest::newRow("WithStatement") << QStringLiteral("WithStatement.qml")
+                                   << QStringLiteral("with statements are strongly discouraged")
+                                   << QString() << QString() << false;
     QTest::newRow("BindingTypeMismatch")
             << QStringLiteral("bindingTypeMismatch.qml")
-            << QStringLiteral("Cannot assign binding of type QString to int") << QString() << false;
+            << QStringLiteral("Cannot assign binding of type QString to int") << QString()
+            << QString() << false;
     QTest::newRow("BindingTypeMismatchFunction")
             << QStringLiteral("bindingTypeMismatchFunction.qml")
-            << QStringLiteral("Cannot assign binding of type QString to int") << QString() << false;
+            << QStringLiteral("Cannot assign binding of type QString to int") << QString()
+            << QString() << false;
     QTest::newRow("BadLiteralBinding")
             << QStringLiteral("badLiteralBinding.qml")
-            << QStringLiteral("Cannot assign binding of type string to int") << QString() << false;
+            << QStringLiteral("Cannot assign binding of type string to int") << QString()
+            << QString() << false;
     QTest::newRow("BadLiteralBindingDate")
             << QStringLiteral("badLiteralBindingDate.qml")
             << QStringLiteral("Cannot assign binding of type QString to QDateTime") << QString()
-            << false;
+            << QString() << false;
     QTest::newRow("BadModulePrefix")
             << QStringLiteral("badModulePrefix.qml")
-            << QStringLiteral("Cannot load singleton as property of object") << QString() << false;
+            << QStringLiteral("Cannot load singleton as property of object") << QString()
+            << QString() << false;
     QTest::newRow("BadModulePrefix2")
             << QStringLiteral("badModulePrefix2.qml")
             << QStringLiteral("Cannot use non-reference type QRectF as base "
                               "of namespaced attached type")
-            << QString() << false;
+            << QString() << QString() << false;
     QTest::newRow("AssignToReadOnlyProperty")
             << QStringLiteral("assignToReadOnlyProperty.qml")
             << QStringLiteral("Cannot assign to read-only property activeFocus") << QString()
-            << false;
+            << QString() << false;
     QTest::newRow("AssignToReadOnlyProperty")
             << QStringLiteral("assignToReadOnlyProperty2.qml")
             << QStringLiteral("Cannot assign to read-only property activeFocus") << QString()
-            << false;
+            << QString() << false;
     QTest::newRow("DeferredPropertyID")
             << QStringLiteral("deferredPropertyID.qml")
             << QStringLiteral(
                        "Cannot defer property assignment to "
                        "\"contentData\". Assigning an id to an object or one of its sub-objects "
                        "bound to a deferred property will make the assignment immediate.")
-            << QString() << false;
+            << QString() << QString() << false;
     QTest::newRow("DeferredPropertyNestedID")
             << QStringLiteral("deferredPropertyNestedID.qml")
             << QStringLiteral(
                        "Cannot defer property assignment to "
                        "\"contentData\". Assigning an id to an object or one of its sub-objects "
                        "bound to a deferred property will make the assignment immediate.")
-            << QString() << false;
+            << QString() << QString() << false;
     QTest::newRow("cachedDependency")
-            << QStringLiteral("cachedDependency.qml")
-            << QStringLiteral("Unused import at %1:1:1")
-            << QStringLiteral("Cannot assign binding of type QQuickItem to QObject")
+            << QStringLiteral("cachedDependency.qml") << QStringLiteral("Unused import at %1:1:1")
+            << QStringLiteral("Cannot assign binding of type QQuickItem to QObject") << QString()
             << true;
     QTest::newRow("cycle in import")
             << QStringLiteral("cycleHead.qml")
             << QStringLiteral("MenuItem is part of an inheritance cycle: MenuItem -> MenuItem")
-            << QString() << false;
+            << QString() << QString() << false;
     QTest::newRow("badGeneralizedGroup1")
             << QStringLiteral("badGeneralizedGroup1.qml")
             << QStringLiteral("Binding assigned to \"aaaa\", "
                               "but no property \"aaaa\" exists in the current element")
-            << QString() << false;
-    QTest::newRow("badGeneralizedGroup2")
-            << QStringLiteral("badGeneralizedGroup2.qml")
-            << QStringLiteral("unknown grouped property scope aself")
-            << QString() << false;
+            << QString() << QString() << false;
+    QTest::newRow("badGeneralizedGroup2") << QStringLiteral("badGeneralizedGroup2.qml")
+                                          << QStringLiteral("unknown grouped property scope aself")
+                                          << QString() << QString() << false;
     QTest::newRow("missingQmltypes")
             << QStringLiteral("missingQmltypes.qml")
-            << QStringLiteral("QML types file does not exist")
-            << QString() << false;
-    QTest::newRow("enumInvalid")
-            << QStringLiteral("enumInvalid.qml")
-            << QStringLiteral("Property \"red\" not found on type \"QtObject\"")
-            << QString() << false;
+            << QStringLiteral("QML types file does not exist") << QString() << QString() << false;
+    QTest::newRow("enumInvalid") << QStringLiteral(
+            "enumInvalid.qml") << QStringLiteral("Property \"red\" not found on type \"QtObject\"")
+                                 << QString() << QString() << false;
     QTest::newRow("inaccessibleId")
             << QStringLiteral("inaccessibleId.qml")
-            << QStringLiteral("Property \"objectName\" not found on type \"int\"")
+            << QStringLiteral("Property \"objectName\" not found on type \"int\"") << QString()
             << QString() << false;
     QTest::newRow("inaccessibleId2")
             << QStringLiteral("inaccessibleId2.qml")
-            << QStringLiteral("Property \"objectName\" not found on type \"int\"")
+            << QStringLiteral("Property \"objectName\" not found on type \"int\"") << QString()
             << QString() << false;
     QTest::newRow("unknownTypeCustomParser")
             << QStringLiteral("unknownTypeCustomParser.qml")
-            << QStringLiteral("TypeDoesNotExist was not found.") << QString() << false;
+            << QStringLiteral("TypeDoesNotExist was not found.") << QString() << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -828,53 +770,45 @@ void TestQmllint::dirtyQmlCode()
     QFETCH(QString, filename);
     QFETCH(QString, warningMessage);
     QFETCH(QString, notContained);
+    QFETCH(QString, replacement);
     QFETCH(bool, exitsNormally);
 
     if (warningMessage.contains(QLatin1String("%1")))
         warningMessage = warningMessage.arg(testFile(filename));
-    const QString output = runQmllint(filename, [&](QProcess &process) {
-        QVERIFY(process.waitForFinished());
-        QCOMPARE(process.exitStatus(), QProcess::NormalExit);
-        QEXPECT_FAIL("attachedPropertyAccess", "We cannot discern between types and instances",
-                     Abort);
-        QEXPECT_FAIL("attachedPropertyNested", "We cannot discern between types and instances",
-                     Abort);
-        QEXPECT_FAIL("BadLiteralBindingDate",
-                     "We're currently not able to verify any non-trivial QString conversion that "
-                     "requires QQmlStringConverters",
-                     Abort);
-        QEXPECT_FAIL("bad tranlsation binding (qsTr)",
-                     "We currently do not check translation binding",
-                     Abort);
 
-        if (exitsNormally)
-            QVERIFY(process.exitCode() == 0);
-        else
-            QVERIFY(process.exitCode() != 0);
-    });
+    QJsonArray warnings;
 
-    const auto toDescription = [](const QString &output, const QString &substring) {
-        // Note: this actually produces a very poorly formatted multi-line
-        // description, but this is how we also do it in cleanQmlCode test case,
-        // so this should suffice. in any case this mainly aids the debugging
-        // and CI stays (or should stay) clean.
-        return QStringLiteral("qmllint output '%1' must contain '%2'").arg(output, substring);
-    };
-
-    // output.contains() expect fails:
+    QEXPECT_FAIL("attachedPropertyAccess", "We cannot discern between types and instances", Abort);
+    QEXPECT_FAIL("attachedPropertyNested", "We cannot discern between types and instances", Abort);
     QEXPECT_FAIL("BadLiteralBindingDate",
                  "We're currently not able to verify any non-trivial QString conversion that "
                  "requires QQmlStringConverters",
                  Abort);
-
-    QVERIFY2(output.contains(warningMessage), qPrintable(toDescription(output, warningMessage)));
-
-    // !output.contains() expect fails:
-    QEXPECT_FAIL("badAttachedPropertyNested", "We cannot discern between types and instances",
+    QEXPECT_FAIL("bad tranlsation binding (qsTr)", "We currently do not check translation binding",
                  Abort);
 
-    if (!notContained.isEmpty())
-        QVERIFY2(!output.contains(notContained), qPrintable(toDescription(output, notContained)));
+    callQmllint(filename, exitsNormally, &warnings);
+
+    if (!warningMessage.isEmpty()) {
+        // output.contains() expect fails:
+        QEXPECT_FAIL("BadLiteralBindingDate",
+                     "We're currently not able to verify any non-trivial QString conversion that "
+                     "requires QQmlStringConverters",
+                     Abort);
+
+        searchWarnings(warnings, warningMessage, filename);
+    }
+
+    if (!notContained.isEmpty()) {
+        // !output.contains() expect fails:
+        QEXPECT_FAIL("badAttachedPropertyNested", "We cannot discern between types and instances",
+                     Abort);
+
+        searchWarnings(warnings, notContained, filename, StringNotContained);
+    }
+
+    if (!replacement.isEmpty())
+        searchWarnings(warnings, replacement, filename, StringContained, DoReplacementSearch);
 }
 
 void TestQmllint::cleanQmlCode_data()
@@ -1078,20 +1012,85 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
             extraArgs, ignoreSettings, addIncludeDirs);
 }
 
-void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings)
+void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings,
+                              QStringList includeDirs, QStringList qmltypesFiles,
+                              QStringList resources, DefaultIncludeOption defaultIncludes)
 {
     QJsonArray jsonOutput;
 
-    bool success = m_linter.lintFile(QFileInfo(fileToLint).isAbsolute() ? fileToLint
-                                                                        : testFile(fileToLint),
-                                     nullptr, false, warnings ? &jsonOutput : nullptr,
-                                     m_defaultImportPaths, QStringList(), QStringList(), {});
+    bool success = m_linter.lintFile(
+            QFileInfo(fileToLint).isAbsolute() ? fileToLint : testFile(fileToLint), nullptr, true,
+            warnings ? &jsonOutput : nullptr,
+            defaultIncludes == UseDefaultIncludes ? m_defaultImportPaths + includeDirs
+                                                  : includeDirs,
+            qmltypesFiles, resources, {});
+    QCOMPARE(success, shouldSucceed);
+
     if (warnings) {
         QVERIFY2(jsonOutput.size() == 1, QJsonDocument(jsonOutput).toJson());
         *warnings = jsonOutput.at(0)[u"warnings"_qs].toArray();
     }
 
     QCOMPARE(success, shouldSucceed);
+}
+
+void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &substring,
+                                 const QString &filename, ContainOption shouldContain,
+                                 ReplacementOption searchReplacements)
+{
+    bool contains = false;
+
+    auto toDisplayWarningType = [](const QString &warningType) {
+        return warningType.first(1).toUpper() + warningType.mid(1);
+    };
+
+    for (const QJsonValue &warning : warnings) {
+        // We're currently recreating the output that the logger would write to the console,
+        // so we can keep using our existing test data without modification.
+        // In the future our test data should be replaced with a structured representation of the
+        // warning it expects, possibly as a QQmlJS::DiagnosticMessage.
+        const QString warningMessage =
+                u"%1: %2:%3 %4"_qs
+                        .arg(toDisplayWarningType(warning[u"type"].toString()), testFile(filename))
+                        .arg(warning[u"line"].isUndefined()
+                                     ? u""_qs
+                                     : u"%1:%2:"_qs.arg(warning[u"line"].toInt())
+                                               .arg(warning[u"column"].toInt()))
+                        .arg(warning[u"message"].toString());
+        if (warningMessage.contains(substring)) {
+            contains = true;
+            break;
+        }
+
+        for (const QJsonValue &fix : warning[u"suggestions"].toArray()) {
+            const QString jsonFixMessage = u"Info: "_qs + fix[u"message"].toString();
+            if (jsonFixMessage.contains(substring)) {
+                contains = true;
+                break;
+            }
+            if (searchReplacements == DoReplacementSearch
+                && fix[u"replacement"].toString().contains(substring)) {
+                contains = true;
+                break;
+            }
+        }
+    }
+
+    const auto toDescription = [](const QJsonArray &warnings, const QString &substring,
+                                  bool must = true) {
+        // Note: this actually produces a very poorly formatted multi-line
+        // description, but this is how we also do it in cleanQmlCode test case,
+        // so this should suffice. in any case this mainly aids the debugging
+        // and CI stays (or should stay) clean.
+        return QStringLiteral("qmllint output '%1' %2 contain '%3'")
+                .arg(QString::fromUtf8(QJsonDocument(warnings).toJson()),
+                     must ? u"must" : u"must NOT", substring);
+    };
+
+    if (shouldContain == StringContained)
+        QVERIFY2(contains, qPrintable(toDescription(warnings, substring)));
+    else
+        QVERIFY2(!contains, qPrintable(toDescription(warnings, substring, false)));
 }
 
 void TestQmllint::requiredProperty()

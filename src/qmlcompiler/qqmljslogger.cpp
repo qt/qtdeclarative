@@ -134,7 +134,7 @@ static bool isMsgTypeLess(QtMsgType a, QtMsgType b)
 
 void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category,
                        const QQmlJS::SourceLocation &srcLocation, QtMsgType type, bool showContext,
-                       bool showFileName)
+                       bool showFileName, const std::optional<FixSuggestion> &suggestion)
 {
     if (isMsgTypeLess(type, m_categoryLevels[category]))
         return;
@@ -166,10 +166,11 @@ void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category,
             machineType = type;
     }
 
-    QQmlJS::DiagnosticMessage diagMsg;
+    Message diagMsg;
     diagMsg.message = message;
     diagMsg.loc = srcLocation;
     diagMsg.type = machineType;
+    diagMsg.fixSuggestion = suggestion;
 
     switch (machineType) {
     case QtWarningMsg: m_warnings.push_back(diagMsg); break;
@@ -180,13 +181,9 @@ void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category,
 
     if (srcLocation.isValid() && !m_code.isEmpty() && showContext)
         printContext(srcLocation);
-}
 
-void QQmlJSLogger::suggestFix(const FixSuggestion &fix)
-{
-    if (isMsgTypeLess(QtInfoMsg, m_categoryLevels[fix.category]))
-        return;
-    printFix(fix);
+    if (suggestion.has_value())
+        printFix(suggestion.value());
 }
 
 void QQmlJSLogger::processMessages(const QList<QQmlJS::DiagnosticMessage> &messages,
