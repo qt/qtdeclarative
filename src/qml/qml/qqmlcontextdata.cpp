@@ -61,7 +61,7 @@ void QQmlContextData::installContext(QQmlData *ddata, QQmlContextData::QmlObject
         } else {
             ddata->context = this;
         }
-        ddata->ownContext = ddata->context;
+        ddata->ownContext.reset(ddata->context);
     } else if (!ddata->context) {
         ddata->context = this;
     }
@@ -175,7 +175,7 @@ QQmlContextData::~QQmlContextData()
     addref();
     if (m_engine)
         invalidate();
-    m_linkedContext = nullptr;
+    m_linkedContext.reset();
 
     Q_ASSERT(refCount() == 1);
     clearContext();
@@ -195,8 +195,9 @@ QQmlContextData::~QQmlContextData()
 
     QQmlGuardedContextData *contextGuard = m_contextGuards;
     while (contextGuard) {
+        // TODO: Is this dead code? Why?
         QQmlGuardedContextData *next = contextGuard->next();
-        contextGuard->reset();
+        contextGuard->setContextData({});
         contextGuard = next;
     }
     m_contextGuards = nullptr;

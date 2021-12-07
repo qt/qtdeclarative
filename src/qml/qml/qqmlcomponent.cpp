@@ -316,7 +316,7 @@ void QQmlComponentPrivate::typeDataReady(QQmlTypeData *)
     Q_ASSERT(typeData);
 
     fromTypeData(typeData);
-    typeData = nullptr;
+    typeData.reset();
     progress = 1.0;
 
     emit q->statusChanged(q->status());
@@ -335,7 +335,7 @@ void QQmlComponentPrivate::typeDataProgress(QQmlTypeData *, qreal p)
 void QQmlComponentPrivate::fromTypeData(const QQmlRefPointer<QQmlTypeData> &data)
 {
     url = data->finalUrl();
-    compilationUnit = data->compilationUnit();
+    compilationUnit.reset(data->compilationUnit());
 
     if (!compilationUnit) {
         Q_ASSERT(data->isError());
@@ -357,10 +357,10 @@ void QQmlComponentPrivate::clear()
 {
     if (typeData) {
         typeData->unregisterCallback(this);
-        typeData = nullptr;
+        typeData.reset();
     }
 
-    compilationUnit = nullptr;
+    compilationUnit.reset();
 }
 
 QObject *QQmlComponentPrivate::doBeginCreate(QQmlComponent *q, QQmlContext *context)
@@ -452,7 +452,7 @@ QQmlComponent::~QQmlComponent()
 
     if (d->typeData) {
         d->typeData->unregisterCallback(d);
-        d->typeData = nullptr;
+        d->typeData.reset();
     }
 }
 
@@ -633,7 +633,7 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, QV4::ExecutableCompilationUnit 
     : QQmlComponent(engine, parent)
 {
     Q_D(QQmlComponent);
-    d->compilationUnit = compilationUnit;
+    d->compilationUnit.reset(compilationUnit);
     d->start = start;
     d->url = compilationUnit->finalUrl();
     d->progress = 1.0;

@@ -49,7 +49,7 @@ QT_BEGIN_NAMESPACE
 class QQmlOpenMetaObjectTypePrivate
 {
 public:
-    QQmlOpenMetaObjectTypePrivate() : mem(nullptr), cache(nullptr) {}
+    QQmlOpenMetaObjectTypePrivate() : mem(nullptr) {}
 
     void init(const QMetaObject *metaObj);
 
@@ -58,7 +58,7 @@ public:
     QHash<QByteArray, int> names;
     QMetaObjectBuilder mob;
     QMetaObject *mem;
-    QQmlPropertyCache *cache;
+    QQmlRefPointer<QQmlPropertyCache> cache;
     QSet<QQmlOpenMetaObject*> referers;
 };
 
@@ -72,8 +72,6 @@ QQmlOpenMetaObjectType::~QQmlOpenMetaObjectType()
 {
     if (d->mem)
         free(d->mem);
-    if (d->cache)
-        d->cache->release();
     delete d;
 }
 
@@ -225,7 +223,7 @@ public:
 
     void dropPropertyCache() {
         if (QQmlData *ddata = QQmlData::get(object, /*create*/false))
-            ddata->propertyCache = nullptr;
+            ddata->propertyCache.reset();
     }
 
     QQmlOpenMetaObject *q;
@@ -250,7 +248,8 @@ QQmlOpenMetaObject::QQmlOpenMetaObject(QObject *obj, const QMetaObject *base)
     op->metaObject = this;
 }
 
-QQmlOpenMetaObject::QQmlOpenMetaObject(QObject *obj, QQmlOpenMetaObjectType *type)
+QQmlOpenMetaObject::QQmlOpenMetaObject(
+        QObject *obj, const QQmlRefPointer<QQmlOpenMetaObjectType> &type)
 : d(new QQmlOpenMetaObjectPrivate(this, obj))
 {
     d->type = type;
@@ -424,12 +423,11 @@ void QQmlOpenMetaObject::setCached(bool c)
     QQmlData *qmldata = QQmlData::get(d->object, true);
     if (d->cacheProperties) {
         if (!d->type->d->cache)
-            d->type->d->cache = new QQmlPropertyCache(this);
+            d->type->d->cache.adopt(new QQmlPropertyCache(this));
         qmldata->propertyCache = d->type->d->cache;
     } else {
-        if (d->type->d->cache)
-            d->type->d->cache->release();
-        qmldata->propertyCache = nullptr;
+        d->type->d->cache.reset();
+        qmldata->propertyCache.reset();
     }
 }
 

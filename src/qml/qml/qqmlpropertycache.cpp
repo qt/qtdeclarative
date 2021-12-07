@@ -187,7 +187,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCache::copy(int reserve)
 {
     QQmlRefPointer<QQmlPropertyCache> cache = QQmlRefPointer<QQmlPropertyCache>(
             new QQmlPropertyCache(), QQmlRefPointer<QQmlPropertyCache>::Adopt);
-    cache->_parent = this;
+    cache->_parent.reset(this);
     cache->propertyIndexCacheStart = propertyIndexCache.count() + propertyIndexCacheStart;
     cache->methodIndexCacheStart = methodIndexCache.count() + methodIndexCacheStart;
     cache->signalHandlerIndexCacheStart = signalHandlerIndexCache.count() + signalHandlerIndexCacheStart;

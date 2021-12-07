@@ -1255,7 +1255,7 @@ void QObjectWrapper::destroyObject(bool lastCall)
                 if (ddata && ddata->ownContext) {
                     Q_ASSERT(ddata->ownContext.data() == ddata->context);
                     ddata->ownContext->emitDestruction();
-                    ddata->ownContext = nullptr;
+                    ddata->ownContext.reset();
                     ddata->context = nullptr;
                 }
                 // This object is notionally destroyed now
@@ -1270,7 +1270,7 @@ void QObjectWrapper::destroyObject(bool lastCall)
                 // to it.
                 ddata->jsWrapper.clear();
                 if (lastCall && ddata->propertyCache)
-                    ddata->propertyCache = nullptr;
+                    ddata->propertyCache.reset();
             }
         }
     }

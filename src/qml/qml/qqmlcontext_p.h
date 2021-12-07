@@ -105,7 +105,7 @@ private:
     friend class QQmlContextData;
 
     QQmlContextPrivate(QQmlContextData *data) : m_data(data) {}
-    QQmlContextPrivate(QQmlContext *publicContext, QQmlContextData *parent,
+    QQmlContextPrivate(QQmlContext *publicContext, const QQmlRefPointer<QQmlContextData> &parent,
                        QQmlEngine *engine = nullptr);
 
     // Intentionally a bare pointer. QQmlContextData knows whether it owns QQmlContext or vice

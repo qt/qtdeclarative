@@ -536,7 +536,7 @@ void QQmlJavaScriptExpression::setupFunction(QV4::ExecutionContext *qmlContext, 
         return;
     m_qmlScope.set(qmlContext->engine(), *qmlContext);
     m_v4Function = f;
-    setCompilationUnit(m_v4Function->executableCompilationUnit());
+    m_compilationUnit.reset(m_v4Function->executableCompilationUnit());
 }
 
 void QQmlJavaScriptExpression::setCompilationUnit(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)

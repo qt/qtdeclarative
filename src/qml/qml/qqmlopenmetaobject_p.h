@@ -93,7 +93,7 @@ class Q_QML_PRIVATE_EXPORT QQmlOpenMetaObject : public QAbstractDynamicMetaObjec
 {
 public:
     QQmlOpenMetaObject(QObject *, const QMetaObject * = nullptr);
-    QQmlOpenMetaObject(QObject *, QQmlOpenMetaObjectType *);
+    QQmlOpenMetaObject(QObject *, const QQmlRefPointer<QQmlOpenMetaObjectType> &);
     ~QQmlOpenMetaObject() override;
 
     QVariant value(const QByteArray &) const;

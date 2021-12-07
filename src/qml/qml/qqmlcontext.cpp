@@ -152,7 +152,7 @@ QT_BEGIN_NAMESPACE
 
 /*! \internal */
 QQmlContext::QQmlContext(QQmlEngine *e, bool)
-    : QObject(*(new QQmlContextPrivate(this, nullptr, e)))
+    : QObject(*(new QQmlContextPrivate(this, QQmlRefPointer<QQmlContextData>(), e)))
 {
 }
 
@@ -161,9 +161,9 @@ QQmlContext::QQmlContext(QQmlEngine *e, bool)
     QObject \a parent.
 */
 QQmlContext::QQmlContext(QQmlEngine *engine, QObject *parent)
-    : QObject(*(new QQmlContextPrivate(
-                    this, engine ? QQmlContextData::get(engine->rootContext()).data() : nullptr)),
-              parent)
+    : QObject(*(new QQmlContextPrivate(this, engine
+                                       ? QQmlContextData::get(engine->rootContext())
+                                       : QQmlRefPointer<QQmlContextData>())), parent)
 {
 }
 
@@ -172,9 +172,9 @@ QQmlContext::QQmlContext(QQmlEngine *engine, QObject *parent)
     QObject \a parent.
 */
 QQmlContext::QQmlContext(QQmlContext *parentContext, QObject *parent)
-    : QObject(*(new QQmlContextPrivate(
-                    this, parentContext ? QQmlContextData::get(parentContext).data() : nullptr)),
-              parent)
+    : QObject(*(new QQmlContextPrivate(this, parentContext
+                                       ? QQmlContextData::get(parentContext)
+                                       : QQmlRefPointer<QQmlContextData>())), parent)
 {
 }
 
@@ -555,7 +555,8 @@ void QQmlContextPrivate::emitDestruction()
 // deref'd. It's OK to pass a half-created publicContext here. We will not dereference it during
 // construction.
 QQmlContextPrivate::QQmlContextPrivate(
-        QQmlContext *publicContext, QQmlContextData *parent, QQmlEngine *engine) :
+        QQmlContext *publicContext, const QQmlRefPointer<QQmlContextData> &parent,
+        QQmlEngine *engine) :
     m_data(new QQmlContextData(QQmlContextData::OwnedByPublicContext, publicContext,
                                parent, engine))
 {

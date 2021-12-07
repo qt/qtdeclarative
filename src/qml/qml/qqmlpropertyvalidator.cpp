@@ -793,7 +793,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
             QQmlRefPointer<QQmlPropertyCache> c = propertyCaches.at(binding->value.objectIndex);
             while (c && !isAssignable) {
                 isAssignable |= c == propertyMetaObject;
-                c = c->parent().data();
+                c = c->parent();
             }
 
             if (!isAssignable) {

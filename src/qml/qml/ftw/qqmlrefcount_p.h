@@ -105,6 +105,17 @@ public:
     friend bool operator==(const QQmlRefPointer &a, const QQmlRefPointer &b) { return a.o == b.o; }
     friend bool operator!=(const QQmlRefPointer &a, const QQmlRefPointer &b) { return !(a == b); }
 
+    void reset(T *t = nullptr)
+    {
+        if (t == o)
+            return;
+        if (o)
+            o->release();
+        if (t)
+            t->addref();
+        o = t;
+    }
+
 private:
     T *o;
 };

@@ -50,8 +50,7 @@
 QT_BEGIN_NAMESPACE
 
 QQmlScriptData::QQmlScriptData()
-    : typeNameCache(nullptr)
-      , m_loaded(false)
+    : m_loaded(false)
 {
 }
 
@@ -100,7 +99,7 @@ QQmlRefPointer<QQmlContextData> QQmlScriptData::qmlContextDataForContext(
     }
     QV4::ScopedValue v(scope);
     for (int ii = 0; ii < scripts.count(); ++ii) {
-        v = scripts.at(ii)->scriptData()->scriptValueForContext(qmlContextData.data());
+        v = scripts.at(ii)->scriptData()->scriptValueForContext(qmlContextData);
         scriptsArray->put(ii, v);
     }
 

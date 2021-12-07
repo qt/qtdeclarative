@@ -1466,7 +1466,7 @@ void QQmlXMLHttpRequest::finished()
     dispatchCallbackSafely();
 
     m_thisObject.clear();
-    m_qmlContext = nullptr;
+    m_qmlContext.reset();
 }
 
 

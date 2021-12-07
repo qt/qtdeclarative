@@ -351,7 +351,7 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(
             if (!attachedType)
                 COMPILE_EXCEPTION(binding, tr("Non-existent attached object"));
             QQmlRefPointer<QQmlPropertyCache> cache = QQmlMetaType::propertyCache(attachedType);
-            if (!resolveSignalHandlerExpressions(attachedObj, bindingPropertyName, cache.data()))
+            if (!resolveSignalHandlerExpressions(attachedObj, bindingPropertyName, cache))
                 return false;
             continue;
         }

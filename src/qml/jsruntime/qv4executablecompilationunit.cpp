@@ -320,7 +320,7 @@ void ExecutableCompilationUnit::unlink()
 
     dependentScripts.clear();
 
-    typeNameCache = nullptr;
+    typeNameCache.reset();
 
     qDeleteAll(resolvedTypes);
     resolvedTypes.clear();

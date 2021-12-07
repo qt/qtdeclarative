@@ -245,7 +245,7 @@ QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectsIncrementally()
     if (nodeIt != nodesSorted.rend()) {
         const auto &ic = allICs[nodeIt->index];
         QV4::ResolvedTypeReference *typeRef = objectContainer->resolvedType(ic.nameIndex);
-        Q_ASSERT(propertyCaches->at(ic.objectIndex) == nullptr);
+        Q_ASSERT(propertyCaches->at(ic.objectIndex).isNull());
         Q_ASSERT(typeRef->typePropertyCache().isNull()); // not set yet
 
         QByteArray icTypeName { objectContainer->stringAt(ic.nameIndex).toUtf8() };
@@ -461,7 +461,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
         newClassName = typeClassName;
     }
     if (newClassName.isEmpty()) {
-        newClassName = QQmlMetaObject(baseTypeCache.data()).className();
+        newClassName = QQmlMetaObject(baseTypeCache).className();
         newClassName.append("_QML_");
         newClassName.append(QByteArray::number(classIndexCounter.fetchAndAddRelaxed(1)));
     }

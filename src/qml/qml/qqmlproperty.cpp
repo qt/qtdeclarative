@@ -152,8 +152,10 @@ QQmlProperty::QQmlProperty(QObject *obj)
 QQmlProperty::QQmlProperty(QObject *obj, QQmlContext *ctxt)
 : d(new QQmlPropertyPrivate)
 {
-    d->context = ctxt?QQmlContextData::get(ctxt):nullptr;
-    d->engine = ctxt?ctxt->engine():nullptr;
+    if (ctxt) {
+        d->context = QQmlContextData::get(ctxt);
+        d->engine = ctxt->engine();
+    }
     d->initDefault(obj);
 }
 
@@ -204,12 +206,15 @@ QQmlProperty::QQmlProperty(QObject *obj, const QString &name)
 QQmlProperty::QQmlProperty(QObject *obj, const QString &name, QQmlContext *ctxt)
 : d(new QQmlPropertyPrivate)
 {
-    d->context = ctxt?QQmlContextData::get(ctxt):nullptr;
-    d->engine = ctxt?ctxt->engine():nullptr;
+    if (ctxt) {
+        d->context = QQmlContextData::get(ctxt);
+        d->engine = ctxt->engine();
+    }
+
     d->initProperty(obj, name);
     if (!isValid()) {
         d->object = nullptr;
-        d->context = nullptr;
+        d->context.reset();
         d->engine = nullptr;
     }
 }
@@ -226,7 +231,7 @@ QQmlProperty::QQmlProperty(QObject *obj, const QString &name, QQmlEngine *engine
     d->initProperty(obj, name);
     if (!isValid()) {
         d->object = nullptr;
-        d->context = nullptr;
+        d->context.reset();
         d->engine = nullptr;
     }
 }
@@ -243,7 +248,7 @@ QQmlProperty QQmlPropertyPrivate::create(QObject *target, const QString &propert
     d->initProperty(target, propertyName, flags);
     if (!result.isValid()) {
         d->object = nullptr;
-        d->context = nullptr;
+        d->context.reset();
         d->engine = nullptr;
     }
     return result;

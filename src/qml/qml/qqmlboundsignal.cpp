@@ -249,7 +249,7 @@ QQmlBoundSignal::QQmlBoundSignal(QObject *target, int signal, QObject *owner,
                                  QQmlEngine *engine)
     : QQmlNotifierEndpoint(QQmlNotifierEndpoint::QQmlBoundSignal),
       m_prevSignal(nullptr), m_nextSignal(nullptr),
-      m_enabled(true), m_expression(nullptr)
+      m_enabled(true)
 {
     addToObject(owner);
 

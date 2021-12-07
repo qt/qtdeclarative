@@ -140,7 +140,7 @@ QQmlIncubatorPrivate::~QQmlIncubatorPrivate()
 
 void QQmlIncubatorPrivate::clear()
 {
-    compilationUnit = nullptr;
+    compilationUnit.reset();
     if (next.isInList()) {
         next.remove();
         enginePriv->incubatorCount--;
@@ -152,7 +152,7 @@ void QQmlIncubatorPrivate::clear()
     if (!rootContext.isNull()) {
         if (rootContext->incubator())
             rootContext->setIncubator(nullptr);
-        rootContext = nullptr;
+        rootContext.setContextData({});
     }
 
     if (nextWaitingFor.isInList()) {

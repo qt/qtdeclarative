@@ -103,14 +103,14 @@ public:
 
     QQmlGuardedContextData *next() const { return m_next; }
 
+private:
     void reset()
     {
-        m_contextData = nullptr;
+        m_contextData.reset();
         m_next = nullptr;
         m_prev = nullptr;
     }
 
-private:
     void unlink()
     {
         if (m_prev) {

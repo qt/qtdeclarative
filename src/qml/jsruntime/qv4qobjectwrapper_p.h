@@ -254,7 +254,7 @@ inline ReturnedValue QObjectWrapper::lookupGetterImpl(Lookup *lookup, ExecutionE
         return revertLookup();
 
     QQmlPropertyData *property = lookup->qobjectLookup.propertyData;
-    if (ddata->propertyCache != lookup->qobjectLookup.propertyCache) {
+    if (ddata->propertyCache.data() != lookup->qobjectLookup.propertyCache) {
         if (property->isOverridden() && (!useOriginalProperty || property->isFunction() || property->isSignalHandler()))
             return revertLookup();
 

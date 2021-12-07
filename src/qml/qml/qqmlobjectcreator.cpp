@@ -92,7 +92,7 @@ QQmlObjectCreator::QQmlObjectCreator(
     sharedState->allCreatedObjects.allocate(compilationUnit->totalObjectCount());
     sharedState->allJavaScriptObjects = nullptr;
     sharedState->creationContext = creationContext;
-    sharedState->rootContext = nullptr;
+    sharedState->rootContext.reset();
     sharedState->hadRequiredProperties = false;
 
     if (auto profiler = QQmlEnginePrivate::get(engine)->profiler) {
@@ -127,7 +127,6 @@ void QQmlObjectCreator::init(QQmlRefPointer<QQmlContextData> providedParentConte
         compilationUnit->linkToEngine(v4);
 
     qmlUnit = compilationUnit->unitData();
-    context = nullptr;
     _qobject = nullptr;
     _scopeObject = nullptr;
     _bindingTarget = nullptr;
@@ -135,7 +134,6 @@ void QQmlObjectCreator::init(QQmlRefPointer<QQmlContextData> providedParentConte
     _compiledObject = nullptr;
     _compiledObjectIndex = -1;
     _ddata = nullptr;
-    _propertyCache = nullptr;
     _vmeMetaObject = nullptr;
     _qmlContext = nullptr;
 }
@@ -1307,7 +1305,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
                 bindings << binding;
             }
         }
-        customParser->applyBindings(instance, compilationUnit.data(), bindings);
+        customParser->applyBindings(instance, compilationUnit, bindings);
 
         customParser->engine = nullptr;
         customParser->imports = (QQmlTypeNameCache*)nullptr;
@@ -1661,7 +1659,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         if (!target)
             continue;
         QQmlData *targetDData = QQmlData::get(target, /*create*/false);
-        if (targetDData == nullptr || targetDData->propertyCache == nullptr)
+        if (targetDData == nullptr || targetDData->propertyCache.isNull())
             continue;
         int coreIndex = QQmlPropertyIndex::fromEncoded(alias->encodedMetaPropertyIndex).coreIndex();
         QQmlPropertyData *const targetProperty = targetDData->propertyCache->property(coreIndex);

@@ -314,7 +314,7 @@ void QQmlTypeData::done()
             const auto encounteredErrors = errors();
             for (const QQmlError &e : encounteredErrors)
                 qCDebug(DBG_DISK_CACHE) << e.toString();
-            m_compiledData = nullptr;
+            m_compiledData.reset();
         }
     });
 
@@ -432,7 +432,7 @@ void QQmlTypeData::done()
         if (!loadFromSource())
             return;
         m_backupSourceCode = SourceCodeData();
-        m_compiledData = nullptr;
+        m_compiledData.reset();
     }
 
     if (!m_document.isNull()) {

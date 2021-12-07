@@ -256,7 +256,7 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
 {
     if (QQmlData *d = QQmlData::get(o)) {
         if (d->ownContext) {
-            for (QQmlRefPointer<QQmlContextData> lc = d->ownContext->linkedContext().data(); lc;
+            for (QQmlRefPointer<QQmlContextData> lc = d->ownContext->linkedContext(); lc;
                  lc = lc->linkedContext()) {
                 lc->invalidate();
                 if (lc->contextObject() == o)
@@ -265,7 +265,7 @@ void QQmlPrivate::qdeclarativeelement_destructor(QObject *o)
             d->ownContext->invalidate();
             if (d->ownContext->contextObject() == o)
                 d->ownContext->setContextObject(nullptr);
-            d->ownContext = nullptr;
+            d->ownContext.reset();
             d->context = nullptr;
         }
 
@@ -285,7 +285,7 @@ QQmlData::QQmlData()
       bindingBitsArraySize(InlineBindingArraySize), notifyList(nullptr),
       bindings(nullptr), signalHandlers(nullptr), nextContextObject(nullptr), prevContextObject(nullptr),
       lineNumber(0), columnNumber(0), jsEngineId(0),
-      propertyCache(nullptr), guards(nullptr), extendedData(nullptr)
+      guards(nullptr), extendedData(nullptr)
 {
     memset(bindingBitsValue, 0, sizeof(bindingBitsValue));
     init();
@@ -426,7 +426,7 @@ void QQmlData::setQueuedForDeletion(QObject *object)
                 ddata->context->emitDestruction();
                 if (ddata->ownContext->contextObject() == object)
                     ddata->ownContext->setContextObject(nullptr);
-                ddata->ownContext = nullptr;
+                ddata->ownContext.reset();
                 ddata->context = nullptr;
             }
             ddata->isQueuedForDeletion = true;
@@ -1258,7 +1258,7 @@ void QQmlData::destroyed(QObject *object)
     if (bindings && !bindings->ref.deref())
         delete bindings;
 
-    compilationUnit = nullptr;
+    compilationUnit.reset();
 
     qDeleteAll(deferredData);
     deferredData.clear();
@@ -1305,9 +1305,9 @@ void QQmlData::destroyed(QObject *object)
         free(bindingBits);
 
     if (propertyCache)
-        propertyCache = nullptr;
+        propertyCache.reset();
 
-    ownContext = nullptr;
+    ownContext.reset();
 
     while (guards) {
         QQmlGuard<QObject> *guard = static_cast<QQmlGuard<QObject> *>(guards);
