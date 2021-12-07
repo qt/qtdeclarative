@@ -411,16 +411,16 @@ private:
         m_bindingType = type;
     }
 
-    bool isLiteralBinding() const
-    {
-        return m_bindingType == BindingType::BoolLiteral
-                || m_bindingType == BindingType::NumberLiteral
-                || m_bindingType == BindingType::StringLiteral
-                || m_bindingType == BindingType::RegExpLiteral
-                || m_bindingType == BindingType::Null; // special. we record it as literal
-    }
+    bool isLiteralBinding() const { return isLiteralBinding(m_bindingType); }
+
 
 public:
+    static bool isLiteralBinding(BindingType type)
+    {
+        return type == BindingType::BoolLiteral || type == BindingType::NumberLiteral
+                || type == BindingType::StringLiteral || type == BindingType::RegExpLiteral
+                || type == BindingType::Null; // special. we record it as literal
+    }
 
     QQmlJSMetaPropertyBinding() = default;
     explicit QQmlJSMetaPropertyBinding(const QString &propName) : m_propertyName(propName) { }
@@ -445,6 +445,7 @@ public:
     void setLiteral(BindingType kind, const QString &typeName, const QVariant &value,
                     const QSharedPointer<const QQmlJSScope> &type)
     {
+        Q_ASSERT(isLiteralBinding(kind));
         setBindingTypeOnce(kind);
         m_value = type;
         m_valueTypeName = typeName;
