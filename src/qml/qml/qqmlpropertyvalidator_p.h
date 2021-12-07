@@ -79,7 +79,7 @@ private:
             QQmlPropertyData *property, const QString &propertyName,
             const QV4::CompiledData::Binding *binding) const;
 
-    bool canCoerce(QMetaType to, QQmlPropertyCache *fromMo) const;
+    bool canCoerce(QMetaType to, QQmlRefPointer<QQmlPropertyCache> fromMo) const;
 
     Q_REQUIRED_RESULT QVector<QQmlError> recordError(
             const QV4::CompiledData::Location &location, const QString &description) const;

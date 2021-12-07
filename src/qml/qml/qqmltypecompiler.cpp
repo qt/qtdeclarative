@@ -316,7 +316,7 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions()
 {
     for (int objectIndex = 0; objectIndex < qmlObjects.count(); ++objectIndex) {
         const QmlIR::Object * const obj = qmlObjects.at(objectIndex);
-        QQmlPropertyCache *cache = propertyCaches->at(objectIndex);
+        QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches->at(objectIndex);
         if (!cache)
             continue;
         if (QQmlCustomParser *customParser = customParsers.value(obj->inheritedTypeNameIndex)) {
@@ -330,9 +330,9 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions()
     return true;
 }
 
-bool SignalHandlerResolver::resolveSignalHandlerExpressions(const QmlIR::Object *obj,
-                                                            const QString &typeName,
-                                                            QQmlPropertyCache *propertyCache)
+bool SignalHandlerResolver::resolveSignalHandlerExpressions(
+        const QmlIR::Object *obj, const QString &typeName,
+        const QQmlRefPointer<QQmlPropertyCache> &propertyCache)
 {
     // map from signal name defined in qml itself to list of parameters
     QHash<QString, QStringList> customSignals;
@@ -473,7 +473,7 @@ QQmlEnumTypeResolver::QQmlEnumTypeResolver(QQmlTypeCompiler *typeCompiler)
 bool QQmlEnumTypeResolver::resolveEnumBindings()
 {
     for (int i = 0; i < qmlObjects.count(); ++i) {
-        QQmlPropertyCache *propertyCache = propertyCaches->at(i);
+        QQmlRefPointer<QQmlPropertyCache> propertyCache = propertyCaches->at(i);
         if (!propertyCache)
             continue;
         const QmlIR::Object *obj = qmlObjects.at(i);
@@ -515,7 +515,9 @@ bool QQmlEnumTypeResolver::assignEnumToBinding(QmlIR::Binding *binding, QStringV
     return true;
 }
 
-bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(const QmlIR::Object *obj, const QQmlPropertyCache *propertyCache, const QQmlPropertyData *prop, QmlIR::Binding *binding)
+bool QQmlEnumTypeResolver::tryQualifiedEnumAssignment(
+        const QmlIR::Object *obj, const QQmlRefPointer<QQmlPropertyCache> &propertyCache,
+        const QQmlPropertyData *prop, QmlIR::Binding *binding)
 {
     bool isIntProp = (prop->propType().id() == QMetaType::Int) && !prop->isEnum();
     if (!prop->isEnum() && !isIntProp)
@@ -693,7 +695,7 @@ QQmlAliasAnnotator::QQmlAliasAnnotator(QQmlTypeCompiler *typeCompiler)
 void QQmlAliasAnnotator::annotateBindingsToAliases()
 {
     for (int i = 0; i < qmlObjects.count(); ++i) {
-        QQmlPropertyCache *propertyCache = propertyCaches->at(i);
+        QQmlRefPointer<QQmlPropertyCache> propertyCache = propertyCaches->at(i);
         if (!propertyCache)
             continue;
 
@@ -725,7 +727,7 @@ void QQmlScriptStringScanner::scan()
 {
     const QMetaType scriptStringMetaType = QMetaType::fromType<QQmlScriptString>();
     for (int i = 0; i < qmlObjects.count(); ++i) {
-        QQmlPropertyCache *propertyCache = propertyCaches->at(i);
+        QQmlRefPointer<QQmlPropertyCache> propertyCache = propertyCaches->at(i);
         if (!propertyCache)
             continue;
 
@@ -774,7 +776,8 @@ static bool isUsableComponent(const QMetaObject *metaObject)
     return false;
 }
 
-void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlIR::Object *obj, QQmlPropertyCache *propertyCache)
+void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(
+        const QmlIR::Object *obj, const QQmlRefPointer<QQmlPropertyCache> &propertyCache)
 {
     QQmlPropertyResolver propertyResolver(propertyCache);
 
@@ -854,7 +857,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
         // Keep property caches symmetric
         QQmlRefPointer<QQmlPropertyCache> componentCache
                 = enginePrivate->cache(&QQmlComponent::staticMetaObject);
-        propertyCaches.append(componentCache.data());
+        propertyCaches.append(componentCache);
 
         QmlIR::Binding *syntheticBinding = pool->New<QmlIR::Binding>();
         *syntheticBinding = *binding;
@@ -891,7 +894,7 @@ bool QQmlComponentAndAliasResolver::resolve(int root)
                     obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
                 break; // left current inline component (potentially entered a new one)
         }
-        QQmlPropertyCache *cache = propertyCaches.at(i);
+        QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches.at(i);
         if (obj->inheritedTypeNameIndex == 0 && !cache)
             continue;
 
@@ -1108,7 +1111,7 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
         if (property.isEmpty()) {
             alias->flags |= QV4::CompiledData::Alias::AliasPointsToPointerObject;
         } else {
-            QQmlPropertyCache *targetCache = propertyCaches.at(targetObjectIndex);
+            QQmlRefPointer<QQmlPropertyCache> targetCache = propertyCaches.at(targetObjectIndex);
             if (!targetCache) {
                 *error = qQmlCompileError(
                         alias->referenceLocation,
@@ -1248,7 +1251,7 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(
         return scanObject(componentBinding->value.objectIndex, ScopeDeferred::False);
     }
 
-    QQmlPropertyCache *propertyCache = propertyCaches->at(objectIndex);
+    QQmlRefPointer<QQmlPropertyCache> propertyCache = propertyCaches->at(objectIndex);
     if (!propertyCache)
         return true;
 
@@ -1421,7 +1424,7 @@ void QQmlDefaultPropertyMerger::mergeDefaultProperties()
 
 void QQmlDefaultPropertyMerger::mergeDefaultProperties(int objectIndex)
 {
-    QQmlPropertyCache *propertyCache = propertyCaches->at(objectIndex);
+    QQmlRefPointer<QQmlPropertyCache> propertyCache = propertyCaches->at(objectIndex);
     if (!propertyCache)
         return;
 

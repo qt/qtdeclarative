@@ -114,7 +114,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         return validateObject(componentBinding->value.objectIndex, componentBinding);
     }
 
-    QQmlPropertyCache *propertyCache = propertyCaches.at(objectIndex);
+    QQmlRefPointer<QQmlPropertyCache> propertyCache = propertyCaches.at(objectIndex);
     if (!propertyCache)
         return QVector<QQmlError>();
 
@@ -659,7 +659,7 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(
     Returns true if from can be assigned to a (QObject) property of type
     to.
 */
-bool QQmlPropertyValidator::canCoerce(QMetaType to, QQmlPropertyCache *fromMo) const
+bool QQmlPropertyValidator::canCoerce(QMetaType to, QQmlRefPointer<QQmlPropertyCache> fromMo) const
 {
     QQmlRefPointer<QQmlPropertyCache> toMo = enginePrivate->rawPropertyCacheForType(to);
 
@@ -679,7 +679,7 @@ bool QQmlPropertyValidator::canCoerce(QMetaType to, QQmlPropertyCache *fromMo) c
     while (fromMo) {
         if (fromMo == toMo)
             return true;
-        fromMo = fromMo->parent().data();
+        fromMo = fromMo->parent();
     }
     return false;
 }
@@ -747,7 +747,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
     } else if (property->isQList()) {
         const QMetaType listType = QQmlMetaType::listType(property->propType());
         if (!QQmlMetaType::isInterface(listType)) {
-            QQmlPropertyCache *source = propertyCaches.at(binding->value.objectIndex);
+            QQmlRefPointer<QQmlPropertyCache> source = propertyCaches.at(binding->value.objectIndex);
             if (!canCoerce(listType, source)) {
                 return qQmlCompileError(binding->valueLocation, tr("Cannot assign object to list property \"%1\"").arg(propertyName));
             }
@@ -790,7 +790,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
             // Will be true if the assigned type inherits propertyMetaObject
             // Determine isAssignable value
             bool isAssignable = false;
-            QQmlPropertyCache *c = propertyCaches.at(binding->value.objectIndex);
+            QQmlRefPointer<QQmlPropertyCache> c = propertyCaches.at(binding->value.objectIndex);
             while (c && !isAssignable) {
                 isAssignable |= c == propertyMetaObject;
                 c = c->parent().data();

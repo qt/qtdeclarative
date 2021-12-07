@@ -173,8 +173,12 @@ QQmlRefPointer<T>::~QQmlRefPointer()
 template<class T>
 QQmlRefPointer<T> &QQmlRefPointer<T>::operator=(const QQmlRefPointer<T> &other)
 {
-    if (other.o) other.o->addref();
-    if (o) o->release();
+    if (o == other.o)
+        return *this;
+    if (other.o)
+        other.o->addref();
+    if (o)
+        o->release();
     o = other.o;
     return *this;
 }

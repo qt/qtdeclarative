@@ -65,17 +65,17 @@ public:
         CacheNeedsVMEMetaObject
     };
 
-    QQmlPropertyCacheVector() {}
-    QQmlPropertyCacheVector(QQmlPropertyCacheVector &&other)
-        : data(std::move(other.data)) {}
-    QQmlPropertyCacheVector &operator=(QQmlPropertyCacheVector &&other) {
-        QVector<QTaggedPointer<QQmlPropertyCache, Tag>> moved(std::move(other.data));
-        data.swap(moved);
-        return *this;
-    }
+    QQmlPropertyCacheVector() = default;
+    QQmlPropertyCacheVector(QQmlPropertyCacheVector &&) = default;
+    QQmlPropertyCacheVector &operator=(QQmlPropertyCacheVector &&) = default;
 
     ~QQmlPropertyCacheVector() { clear(); }
-    void resize(int size) { return data.resize(size); }
+    void resize(int size)
+    {
+        Q_ASSERT(size >= data.size());
+        return data.resize(size);
+    }
+
     int count() const { return data.count(); }
     void clear()
     {
@@ -86,8 +86,11 @@ public:
         data.clear();
     }
 
-    void append(QQmlPropertyCache *cache) { cache->addref(); data.append(QTaggedPointer<QQmlPropertyCache, Tag>(cache)); }
-    QQmlPropertyCache *at(int index) const { return data.at(index).data(); }
+    void append(const QQmlRefPointer<QQmlPropertyCache> &cache) {
+        cache->addref();
+        data.append(QTaggedPointer<QQmlPropertyCache, Tag>(cache.data()));
+    }
+    QQmlRefPointer<QQmlPropertyCache> at(int index) const { return data.at(index).data(); }
     void set(int index, const QQmlRefPointer<QQmlPropertyCache> &replacement) {
         if (QQmlPropertyCache *oldCache = data.at(index).data()) {
             if (replacement.data() == oldCache)

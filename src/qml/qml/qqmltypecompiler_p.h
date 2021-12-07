@@ -195,7 +195,7 @@ public:
 
 private:
     bool resolveSignalHandlerExpressions(const QmlIR::Object *obj, const QString &typeName,
-                                         QQmlPropertyCache *propertyCache);
+                                         const QQmlRefPointer<QQmlPropertyCache> &propertyCache);
 
     QQmlEnginePrivate *enginePrivate;
     const QVector<QmlIR::Object*> &qmlObjects;
@@ -222,9 +222,9 @@ private:
     {
         return assignEnumToBinding(binding, QStringView(enumName), enumValue, isQtObject);
     }
-    bool tryQualifiedEnumAssignment(const QmlIR::Object *obj, const QQmlPropertyCache *propertyCache,
-                                    const QQmlPropertyData *prop,
-                                    QmlIR::Binding *binding);
+    bool tryQualifiedEnumAssignment(
+            const QmlIR::Object *obj, const QQmlRefPointer<QQmlPropertyCache> &propertyCache,
+            const QQmlPropertyData *prop, QmlIR::Binding *binding);
     int evaluateEnum(const QString &scope, QStringView enumName, QStringView enumValue, bool *ok) const;
 
 
@@ -280,7 +280,8 @@ public:
     bool resolve(int root = 0);
 
 protected:
-    void findAndRegisterImplicitComponents(const QmlIR::Object *obj, QQmlPropertyCache *propertyCache);
+    void findAndRegisterImplicitComponents(
+            const QmlIR::Object *obj, const QQmlRefPointer<QQmlPropertyCache> &propertyCache);
     bool collectIdsAndAliases(int objectIndex);
     bool resolveAliases(int componentIndex);
     void propertyDataForAlias(QmlIR::Alias *alias, int *type, quint32 *propertyFlags);
