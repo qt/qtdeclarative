@@ -875,10 +875,7 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
         return QV4::Object::virtualResolveLookupGetter(object, engine, lookup);
     }
 
-    lookup->qobjectLookup.ic = This->internalClass();
-    lookup->qobjectLookup.propertyCache = ddata->propertyCache;
-    lookup->qobjectLookup.propertyCache->addref();
-    lookup->qobjectLookup.propertyData = property;
+    QV4::setupQObjectLookup(lookup, ddata, property, This);
     lookup->getter = QV4::QObjectWrapper::lookupGetter;
     return lookup->getter(lookup, engine, *object);
 }
