@@ -147,6 +147,7 @@ Module {
 
     Component {
         name: "QRegularExpression"
+        exports: ["QML/regexp 1.0"]
         extension: "RegExp"
         accessSemantics: "value"
     }

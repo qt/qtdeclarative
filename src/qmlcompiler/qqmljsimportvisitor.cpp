@@ -1365,7 +1365,7 @@ void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
         bindingType = QQmlJSMetaPropertyBinding::StringLiteral;
         break;
     case Node::Kind_RegExpLiteral:
-        literalType = u"QRegularExpression"_qs;
+        literalType = u"regexp"_qs;
         value = cast<RegExpLiteral *>(exprStatement->expression)->pattern.toString();
         bindingType = QQmlJSMetaPropertyBinding::RegExpLiteral;
         break;
