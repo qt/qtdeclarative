@@ -227,6 +227,35 @@ Q_STATIC_ASSERT(std::is_standard_layout<Lookup>::value);
 // across 32-bit and 64-bit (matters when cross-compiling).
 Q_STATIC_ASSERT(offsetof(Lookup, getter) == 0);
 
+inline void setupQObjectLookup(
+        Lookup *lookup, const QQmlData *ddata, QQmlPropertyData *propertyData)
+{
+    if (QQmlPropertyCache *cache = lookup->qobjectLookup.propertyCache)
+        cache->release();
+
+    Q_ASSERT(!ddata->propertyCache.isNull());
+    lookup->qobjectLookup.propertyCache = ddata->propertyCache.data();
+    lookup->qobjectLookup.propertyCache->addref();
+    lookup->qobjectLookup.propertyData = propertyData;
+}
+
+inline void setupQObjectLookup(
+        Lookup *lookup, const QQmlData *ddata, QQmlPropertyData *propertyData,
+        const Object *self)
+{
+    lookup->qobjectLookup.ic = self->internalClass();
+    setupQObjectLookup(lookup, ddata, propertyData);
+}
+
+
+inline void setupQObjectLookup(
+        Lookup *lookup, const QQmlData *ddata, QQmlPropertyData *propertyData,
+        const Object *self, const Object *qmlType)
+{
+    lookup->qobjectLookup.qmlTypeIc = qmlType->internalClass();
+    setupQObjectLookup(lookup, ddata, propertyData, self);
+}
+
 }
 
 QT_END_NAMESPACE
