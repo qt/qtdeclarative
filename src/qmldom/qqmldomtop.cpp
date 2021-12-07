@@ -503,6 +503,20 @@ void DomUniverse::execQueue()
     }
 }
 
+void DomUniverse::removePath(const QString &path)
+{
+    QMutexLocker l(mutex());
+    auto toDelete = [path](auto it) {
+        QString p = it.key();
+        return p.startsWith(path) && (p.size() == path.size() || p.at(path.size()) == u'/');
+    };
+    m_qmlDirectoryWithPath.removeIf(toDelete);
+    m_qmldirFileWithPath.removeIf(toDelete);
+    m_qmlFileWithPath.removeIf(toDelete);
+    m_jsFileWithPath.removeIf(toDelete);
+    m_qmltypesFileWithPath.removeIf(toDelete);
+}
+
 std::shared_ptr<OwningItem> LoadInfo::doCopy(DomItem &self) const
 {
     std::shared_ptr<LoadInfo> res(new LoadInfo(*this));
@@ -1454,6 +1468,20 @@ void DomEnvironment::loadBuiltins(DomItem &self, Callback callback, ErrorHandler
         }
     }
     myErrors().error(tr("Could not find builtins.qmltypes file")).handle(h);
+}
+
+void DomEnvironment::removePath(const QString &path)
+{
+    QMutexLocker l(mutex());
+    auto toDelete = [path](auto it) {
+        QString p = it.key();
+        return p.startsWith(path) && (p.size() == path.size() || p.at(path.size()) == u'/');
+    };
+    m_qmlDirectoryWithPath.removeIf(toDelete);
+    m_qmldirFileWithPath.removeIf(toDelete);
+    m_qmlFileWithPath.removeIf(toDelete);
+    m_jsFileWithPath.removeIf(toDelete);
+    m_qmltypesFileWithPath.removeIf(toDelete);
 }
 
 shared_ptr<DomUniverse> DomEnvironment::universe() const {

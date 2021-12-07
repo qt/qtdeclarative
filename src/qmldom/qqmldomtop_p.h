@@ -261,6 +261,8 @@ public:
                   std::optional<DomType> fileType = std::optional<DomType>());
     void execQueue();
 
+    void removePath(const QString &dir);
+
     std::shared_ptr<ExternalItemPair<GlobalScope>> globalScopeWithName(QString name) const
     {
         QMutexLocker l(mutex());
@@ -698,6 +700,7 @@ public:
                               Callback loadCallback = nullptr, Callback endCallback = nullptr,
                               ErrorHandler = nullptr);
     void loadBuiltins(DomItem &self, Callback callback = nullptr, ErrorHandler h = nullptr);
+    void removePath(const QString &path);
 
     std::shared_ptr<DomUniverse> universe() const;
 

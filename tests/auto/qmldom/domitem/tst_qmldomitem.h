@@ -45,9 +45,10 @@
 #include <QtQmlDom/private/qqmldomfieldfilter_p.h>
 
 #include <QtTest/QtTest>
-#include <QCborValue>
-#include <QDebug>
-#include <QLibraryInfo>
+#include <QtCore/QCborValue>
+#include <QtCore/QDebug>
+#include <QtCore/QLibraryInfo>
+#include <QtCore/QFileInfo>
 
 #include <memory>
 
@@ -503,6 +504,13 @@ private slots:
             QCOMPARE(p1->bindings.first().toString(), mPInfo.bindings.first().toString());
             QCOMPARE(p1->propertyDefs.first().toString(), mPInfo.propertyDefs.first().toString());
         }
+        QString bPath = QFileInfo(baseDir).canonicalPath();
+        if (!bPath.isEmpty()) {
+            Path p = tFile.canonicalPath();
+            Q_ASSERT(env.path(p));
+            env.ownerAs<DomEnvironment>()->removePath(bPath);
+            Q_ASSERT(!env.path(p));
+        }
     }
 
     void testDeepCopy()
@@ -544,6 +552,13 @@ private slots:
         if (!univFileDiffs.isEmpty())
             qDebug() << "testDeepCopy.univFileDiffs:" << univFileDiffs;
         QVERIFY(univFileDiffs.isEmpty());
+        QString bPath = QFileInfo(baseDir).canonicalFilePath();
+        if (!bPath.isEmpty()) {
+            Path p = f.canonicalPath();
+            Q_ASSERT(env.path(p));
+            env.ownerAs<DomEnvironment>()->removePath(bPath);
+            Q_ASSERT(!env.path(p));
+        }
     }
 
     void testInMemory()
