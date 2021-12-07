@@ -278,7 +278,8 @@ public:
     static void markAsDeleted(QObject *);
     static void setQueuedForDeletion(QObject *);
 
-    static inline void flushPendingBinding(QObject *, QQmlPropertyIndex propertyIndex);
+    static inline void flushPendingBinding(QObject *object, int coreIndex);
+    void flushPendingBinding(int coreIndex);
 
     static QQmlRefPointer<QQmlPropertyCache> ensurePropertyCache(QJSEngine *engine, QObject *object)
     {
@@ -299,8 +300,6 @@ private:
     Q_NEVER_INLINE static QQmlData *createQQmlData(QObjectPrivate *priv);
     Q_NEVER_INLINE static QQmlRefPointer<QQmlPropertyCache> createPropertyCache(
             QJSEngine *engine, QObject *object);
-
-    void flushPendingBindingImpl(QQmlPropertyIndex index);
 
     Q_ALWAYS_INLINE bool hasBitSet(int bit) const
     {
@@ -425,11 +424,11 @@ void QQmlData::clearPendingBindingBit(int coreIndex)
     clearBit(coreIndex * 2 + 1);
 }
 
-void QQmlData::flushPendingBinding(QObject *o, QQmlPropertyIndex propertyIndex)
+void QQmlData::flushPendingBinding(QObject *object, int coreIndex)
 {
-    QQmlData *data = QQmlData::get(o, false);
-    if (data && data->hasPendingBindingBit(propertyIndex.coreIndex()))
-        data->flushPendingBindingImpl(propertyIndex);
+    QQmlData *data = QQmlData::get(object, false);
+    if (data && data->hasPendingBindingBit(coreIndex))
+        data->flushPendingBinding(coreIndex);
 }
 
 QT_END_NAMESPACE

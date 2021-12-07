@@ -110,6 +110,7 @@ private slots:
     void attachedSelf();
     void functionReturningVoid();
     void functionCallOnNamespaced();
+    void flushBeforeCapture();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1649,6 +1650,19 @@ void tst_QmlCppCodegen::functionCallOnNamespaced()
         QVERIFY(o);
         QCOMPARE(o->property("r"), QVariant::fromValue(QRectF(5.0, 10.0, 1.0, 1.0)));
     }
+}
+
+void tst_QmlCppCodegen::flushBeforeCapture()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/noBindingLoop.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->property("deviation").toDouble(), 9.0 / 3.3333);
+    QCOMPARE(o->property("samples").toInt(), 16);
+    QCOMPARE(o->property("radius").toDouble(), 8.0);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

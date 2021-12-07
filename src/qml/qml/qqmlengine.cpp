@@ -446,17 +446,17 @@ void QQmlData::setQueuedForDeletion(QObject *object)
     }
 }
 
-void QQmlData::flushPendingBindingImpl(QQmlPropertyIndex index)
+void QQmlData::flushPendingBinding(int coreIndex)
 {
-    clearPendingBindingBit(index.coreIndex());
+    clearPendingBindingBit(coreIndex);
 
     // Find the binding
     QQmlAbstractBinding *b = bindings;
-    while (b && (b->targetPropertyIndex().coreIndex() != index.coreIndex() ||
+    while (b && (b->targetPropertyIndex().coreIndex() != coreIndex ||
                  b->targetPropertyIndex().hasValueTypeIndex()))
         b = b->nextBinding();
 
-    if (b && b->targetPropertyIndex().coreIndex() == index.coreIndex() &&
+    if (b && b->targetPropertyIndex().coreIndex() == coreIndex &&
             !b->targetPropertyIndex().hasValueTypeIndex())
         b->setEnabled(true, QQmlPropertyData::BypassInterceptor |
                             QQmlPropertyData::DontRemoveBinding);

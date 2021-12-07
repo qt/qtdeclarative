@@ -13,6 +13,7 @@ set(qml_files
     BindingExpression.qml
     Dummy.qml
     Enums.qml
+    Loopy.qml
     Panel.qml
     ProgressBar/Keyframe.qml
     ProgressBar/KeyframeGroup.qml
@@ -75,6 +76,7 @@ set(qml_files
     math.qml
     methods.qml
     modulePrefix.qml
+    noBindingLoop.qml
     noQQmlData.qml
     nonNotifyable.qml
     noscope.qml
