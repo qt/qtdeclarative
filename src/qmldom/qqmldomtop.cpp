@@ -363,7 +363,7 @@ void DomUniverse::execQueue()
     DomItem newValue; // current ExternalItemPair
     DomItem univ = DomItem(topPtr);
     QFileInfo path(canonicalPath);
-    QList<ErrorMessage> messages;
+    QVector<ErrorMessage> messages;
 
     if (t.kind == DomType::QmlFile || t.kind == DomType::QmltypesFile
         || t.kind == DomType::QmldirFile || t.kind == DomType::QmlDirectory) {
@@ -808,7 +808,8 @@ void LoadInfo::doAddDependencies(DomItem &self)
             });
         });
     } else if (shared_ptr<ModuleIndex> elPtr = el.ownerAs<ModuleIndex>()) {
-        for (Path qmldirPath : elPtr->qmldirsToLoad(el)) {
+        const auto qmldirs = elPtr->qmldirsToLoad(el);
+        for (const Path &qmldirPath : qmldirs) {
             Path canonicalPath = qmldirPath[2];
             if (canonicalPath && !canonicalPath.headName().isEmpty())
                 addDependency(self,
@@ -1149,7 +1150,8 @@ bool DomEnvironment::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
                 },
                 [this](DomItem &) {
                     QSet<QString> res;
-                    for (const Path &p : loadInfoPaths())
+                    const auto infoPaths = loadInfoPaths();
+                    for (const Path &p : infoPaths)
                         res.insert(p.toString());
                     return res;
                 },
@@ -1397,10 +1399,12 @@ void DomEnvironment::loadModuleDependency(DomItem &self, QString uri, Version v,
         QString subPathV = subPathComponents.join(u'/');
         QRegularExpression vRe(QRegularExpression::anchoredPattern(
                 QRegularExpression::escape(lastComponent) + QStringLiteral(u"\\.([0-9]*)")));
-        for (QString path : loadPaths()) {
+        const auto lPaths = loadPaths();
+        for (const QString &path : lPaths) {
             QDir dir(path + (subPathV.isEmpty() ? QStringLiteral(u"") : QStringLiteral(u"/"))
                      + subPathV);
-            for (QString dirNow : dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot)) {
+            const auto eList = dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+            for (const QString &dirNow : eList) {
                 auto m = vRe.match(dirNow);
                 if (m.hasMatch()) {
                     int majorV = m.captured(1).toInt();
@@ -1465,7 +1469,8 @@ void DomEnvironment::loadModuleDependency(DomItem &self, QString uri, Version v,
 void DomEnvironment::loadBuiltins(DomItem &self, Callback callback, ErrorHandler h)
 {
     QString builtinsName = QLatin1String("builtins.qmltypes");
-    for (QString path : loadPaths()) {
+    const auto lPaths = loadPaths();
+    for (const QString &path : lPaths) {
         QDir dir(path);
         QFileInfo fInfo(dir.filePath(builtinsName));
         if (fInfo.isFile()) {
@@ -1729,7 +1734,8 @@ std::shared_ptr<ExternalItemInfoBase> DomEnvironment::qmlDirWithPath(DomItem &se
 QSet<QString> DomEnvironment::qmlDirPaths(DomItem &self, EnvLookup options) const
 {
     QSet<QString> res = qmlDirectoryPaths(self, options);
-    for (QString p : qmldirFilePaths(self, options)) {
+    const auto qmldirFiles = qmldirFilePaths(self, options);
+    for (const QString &p : qmldirFiles) {
         if (p.endsWith(u"/qmldir")) {
             res.insert(p.left(p.length() - 7));
         } else {
@@ -2123,16 +2129,16 @@ void DomEnvironment::loadPendingDependencies(DomItem &self)
         }
         if (loadInfo) {
             auto cleanup = qScopeGuard([this, elToDo, &self] {
-                QList<Callback> endCallbakcs;
+                QList<Callback> endCallbacks;
                 {
                     QMutexLocker l(mutex());
                     m_inProgress.removeOne(elToDo);
                     if (m_inProgress.isEmpty() && m_loadsWithWork.isEmpty()) {
-                        endCallbakcs = m_allLoadedCallback;
+                        endCallbacks = m_allLoadedCallback;
                         m_allLoadedCallback.clear();
                     }
                 }
-                for (Callback cb : endCallbakcs)
+                for (const Callback &cb : qAsConst(endCallbacks))
                     cb(self.canonicalPath(), self, self);
             });
             DomItem loadInfoObj = self.copy(loadInfo);
