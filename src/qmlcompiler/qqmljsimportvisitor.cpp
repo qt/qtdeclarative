@@ -531,7 +531,7 @@ void QQmlJSImportVisitor::processDefaultProperties()
         for (const auto &scope : scopes) {
             // Note: in this specific code path, binding on default property
             // means an object binding (we work with pending objects here)
-            QQmlJSMetaPropertyBinding binding(defaultProp);
+            QQmlJSMetaPropertyBinding binding(scope->sourceLocation(), defaultProp);
             binding.setObject(getScopeName(scope, QQmlJSScope::QMLScope),
                               QQmlJSScope::ConstPtr(scope));
             it.key()->addOwnPropertyBinding(binding);
@@ -625,8 +625,7 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
             // unique because it's per-scope and per-property
             const auto uniqueBindingId = qMakePair(objectBinding.scope, objectBinding.name);
 
-            QQmlJSMetaPropertyBinding newBinding(property);
-            newBinding.setSourceLocation(objectBinding.location);
+            QQmlJSMetaPropertyBinding newBinding(objectBinding.location, property);
 
             const QString typeName = getScopeName(childScope, QQmlJSScope::QMLScope);
 
@@ -824,7 +823,7 @@ void QQmlJSImportVisitor::processPropertyBindings()
                 m_logger->logWarning(message, Log_Deprecation, location);
             }
 
-            QQmlJSMetaPropertyBinding binding(property);
+            QQmlJSMetaPropertyBinding binding(location, property);
 
             // TODO: Actually store the value
 
@@ -1326,8 +1325,10 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ClassExpression *)
 
 
 // ### TODO: add warning about suspicious translation binding when returning false?
-static std::optional<QQmlJSMetaPropertyBinding> handleTranslationBinding(QStringView base, QQmlJS::AST::ArgumentList *args,
-                                                                         const QHash<QString, QQmlJSScope::ConstPtr> &rootScopeImports)
+static std::optional<QQmlJSMetaPropertyBinding>
+handleTranslationBinding(QStringView base, QQmlJS::AST::ArgumentList *args,
+                         const QHash<QString, QQmlJSScope::ConstPtr> &rootScopeImports,
+                         const QQmlJS::SourceLocation &location)
 {
     std::optional<QQmlJSMetaPropertyBinding> maybeBinding = std::nullopt;
     QStringView mainString;
@@ -1336,12 +1337,13 @@ static std::optional<QQmlJSMetaPropertyBinding> handleTranslationBinding(QString
         return 0;
     };
     auto discardCommentString = [](QStringView) {return -1;};
-    auto finalizeBinding = [&](QV4::CompiledData::Binding::ValueType type, QV4::CompiledData::TranslationData) {
-        QQmlJSMetaPropertyBinding binding;
+    auto finalizeBinding = [&](QV4::CompiledData::Binding::ValueType type,
+                               QV4::CompiledData::TranslationData) {
+        QQmlJSMetaPropertyBinding binding(location);
         if (type == QV4::CompiledData::Binding::Type_Translation)
             binding.setTranslation(mainString);
         else if (type == QV4::CompiledData::Binding::Type_TranslationById)
-            binding.setTarnslationId(mainString);
+            binding.setTranslationId(mainString);
         else
             binding.setLiteral(QQmlJSMetaPropertyBinding::StringLiteral, u"string"_qs, mainString.toString(), rootScopeImports[u"string"_qs]);
         maybeBinding = binding;
@@ -1418,10 +1420,11 @@ void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
             }
         } else if (QQmlJS::AST::CallExpression *call = QQmlJS::AST::cast<QQmlJS::AST::CallExpression *>(expr)) {
             if (QQmlJS::AST::IdentifierExpression *base = QQmlJS::AST::cast<QQmlJS::AST::IdentifierExpression *>(call->base)) {
-                if (auto translationBindingOpt = handleTranslationBinding(base->name, call->arguments, m_rootScopeImports)) {
+                if (auto translationBindingOpt = handleTranslationBinding(
+                            base->name, call->arguments, m_rootScopeImports,
+                            expr->firstSourceLocation())) {
                     auto translationBinding = translationBindingOpt.value();
                     translationBinding.setPropertyName(name);
-                    translationBinding.setSourceLocation(expr->firstSourceLocation());
                     m_currentScope->addOwnPropertyBinding(translationBinding);
                     if (translationBinding.bindingType() == QQmlJSMetaPropertyBinding::BindingType::StringLiteral)
                         m_literalScopesToCheck << m_currentScope;
@@ -1436,9 +1439,8 @@ void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
         return;
     Q_ASSERT(m_rootScopeImports.contains(literalType)); // built-ins must contain support for all literal bindings
 
-    QQmlJSMetaPropertyBinding binding(name);
+    QQmlJSMetaPropertyBinding binding(exprStatement->expression->firstSourceLocation(), name);
     binding.setLiteral(bindingType, literalType, value, m_rootScopeImports[literalType]);
-    binding.setSourceLocation(exprStatement->expression->firstSourceLocation());
 
     m_currentScope->addOwnPropertyBinding(binding);
 

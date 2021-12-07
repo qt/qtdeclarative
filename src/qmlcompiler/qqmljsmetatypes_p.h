@@ -384,8 +384,8 @@ public:
     };
 
 private:
-    QString m_propertyName; // TODO: this is a debug-only information
     QQmlJS::SourceLocation m_sourceLocation;
+    QString m_propertyName; // TODO: this is a debug-only information
     BindingType m_bindingType = BindingType::Invalid;
 
     // TODO: the below should really be put into a union (of sorts). despite the
@@ -426,10 +426,14 @@ public:
                 || type == BindingType::Null; // special. we record it as literal
     }
 
-    QQmlJSMetaPropertyBinding() = default;
-    explicit QQmlJSMetaPropertyBinding(const QString &propName) : m_propertyName(propName) { }
-    explicit QQmlJSMetaPropertyBinding(const QQmlJSMetaProperty &prop)
-        : QQmlJSMetaPropertyBinding(prop.propertyName())
+    QQmlJSMetaPropertyBinding(QQmlJS::SourceLocation location) : m_sourceLocation(location) { }
+    explicit QQmlJSMetaPropertyBinding(QQmlJS::SourceLocation location, const QString &propName)
+        : m_sourceLocation(location), m_propertyName(propName)
+    {
+    }
+    explicit QQmlJSMetaPropertyBinding(QQmlJS::SourceLocation location,
+                                       const QQmlJSMetaProperty &prop)
+        : QQmlJSMetaPropertyBinding(location, prop.propertyName())
     {
     }
 
@@ -437,10 +441,6 @@ public:
     QString propertyName() const { return m_propertyName; }
 
     const QQmlJS::SourceLocation &sourceLocation() const { return m_sourceLocation; }
-    void setSourceLocation(const QQmlJS::SourceLocation &sourceLocation)
-    {
-        m_sourceLocation = sourceLocation;
-    }
 
     BindingType bindingType() const { return m_bindingType; }
 
@@ -463,7 +463,7 @@ public:
         m_translationString = translation.toString();
     }
 
-    void setTarnslationId(QStringView id)
+    void setTranslationId(QStringView id)
     {
         setBindingTypeOnce(BindingType::TranslationById);
         m_translationId = id.toString();
