@@ -209,35 +209,58 @@ void TestQmllint::testUnqualified_data()
 
 void TestQmllint::testUnknownCausesFail()
 {
-    QString unknownNotFound = runQmllint("unknownElement.qml", false);
-    QVERIFY(unknownNotFound.contains(
-                QStringLiteral("Warning: %1:4:5: Unknown was not found. Did you add all import paths?").arg(testFile("unknownElement.qml"))));
-    unknownNotFound = runQmllint("TypeWithUnknownPropertyType.qml", false);
-    QVERIFY(unknownNotFound.contains(
-            QStringLiteral(
-                    "Warning: %1:4:5: Something was not found. Did you add all import paths?")
-                    .arg(testFile("TypeWithUnknownPropertyType.qml"))));
+    {
+        QJsonArray warnings;
+        callQmllint("unknownElement.qml", false, &warnings);
+        searchWarnings(
+                warnings,
+                QStringLiteral(
+                        "Warning: %1:4:5: Unknown was not found. Did you add all import paths?")
+                        .arg(testFile("unknownElement.qml")),
+                "unknownElement.qml");
+    }
+    {
+        QJsonArray warnings;
+        callQmllint("TypeWithUnknownPropertyType.qml", false, &warnings);
+        searchWarnings(
+                warnings,
+                QStringLiteral(
+                        "Warning: %1:4:5: Something was not found. Did you add all import paths?")
+                        .arg(testFile("TypeWithUnknownPropertyType.qml")),
+                "TypeWithUnknownPropertyType.qml");
+    }
 }
 
 void TestQmllint::directoryPassedAsQmlTypesFile()
 {
-    const QStringList iArg = QStringList() << QStringLiteral("-i") << dataDirectory();
-    const QString errorMessages = runQmllint("unknownElement.qml", false, iArg);
-    const QString expectedError = QStringLiteral("Warning: QML types file cannot be a directory: ") + dataDirectory();
-    QVERIFY2(errorMessages.contains(expectedError), qPrintable(QString::fromLatin1(
-        "Expected error to contain \"%1\", but it didn't: %2").arg(expectedError, errorMessages)));
+    QJsonArray warnings;
+    callQmllint("unknownElement.qml", false, &warnings, {}, { dataDirectory() });
+    searchWarnings(warnings,
+                   QStringLiteral("QML types file cannot be a directory: ") + dataDirectory(),
+                   "unknownElement.qml");
 }
 
 void TestQmllint::oldQmltypes()
 {
-    const QString errors = runQmllint("oldQmltypes.qml", false);
-    QVERIFY(errors.contains(QStringLiteral("Warning: typeinfo not declared in qmldir file")));
-    QVERIFY(!errors.contains(QStringLiteral("Warning: QQuickItem was not found. Did you add all import paths?")));
-    QVERIFY(errors.contains(QStringLiteral("Warning: Found deprecated dependency specifications")));
+    QJsonArray warnings;
+    callQmllint("oldQmltypes.qml", false, &warnings);
+    searchWarnings(warnings, QStringLiteral("typeinfo not declared in qmldir file"),
+                   "oldQmltypes.qml");
+    searchWarnings(warnings,
+                   QStringLiteral("QQuickItem was not found. Did you add all import paths?"),
+                   "oldQmltypes.qml", StringNotContained);
+    searchWarnings(warnings, QStringLiteral("Found deprecated dependency specifications"),
+                   "oldQmltypes.qml");
 
     // Checking for both lines separately so that we don't have to mess with the line endings.b
-    QVERIFY(errors.contains(QStringLiteral("Meta object revision and export version differ, ignoring the revision.")));
-    QVERIFY(errors.contains(QStringLiteral("Revision 0 corresponds to version 0.0; it should be 1.0.")));
+    searchWarnings(
+            warnings,
+            QStringLiteral(
+                    "Meta object revision and export version differ, ignoring the revision."),
+            "oldQmltypes.qml");
+    searchWarnings(warnings,
+                   QStringLiteral("Revision 0 corresponds to version 0.0; it should be 1.0."),
+                   "oldQmltypes.qml");
 }
 
 void TestQmllint::qmltypes_data()
@@ -338,14 +361,11 @@ void TestQmllint::autoqmltypes()
 
 void TestQmllint::resources()
 {
-    runQmllint(testFile("resource.qml"), true,
-               {QStringLiteral("--resource"), testFile("resource.qrc")});
-    runQmllint(testFile("badResource.qml"), false,
-               {QStringLiteral("--resource"), testFile("resource.qrc")});
-    runQmllint(testFile("resource.qml"), false, {});
-    runQmllint(testFile("badResource.qml"), true, {});
-    runQmllint(testFile("T/b.qml"), true,
-               {QStringLiteral("--resource"), testFile("T/a.qrc")});
+    callQmllint(testFile("resource.qml"), true, nullptr, {}, {}, { testFile("resource.qrc") });
+    callQmllint(testFile("badResource.qml"), false, nullptr, {}, {}, { testFile("resource.qrc") });
+    callQmllint(testFile("resource.qml"), false);
+    callQmllint(testFile("badResource.qml"), true);
+    callQmllint(testFile("T/b.qml"), true, nullptr, {}, {}, { testFile("T/a.qrc") });
 }
 
 void TestQmllint::dirtyQmlCode_data()
@@ -1083,7 +1103,7 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
         // so this should suffice. in any case this mainly aids the debugging
         // and CI stays (or should stay) clean.
         return QStringLiteral("qmllint output '%1' %2 contain '%3'")
-                .arg(QString::fromUtf8(QJsonDocument(warnings).toJson()),
+                .arg(QString::fromUtf8(QJsonDocument(warnings).toJson(QJsonDocument::Compact)),
                      must ? u"must" : u"must NOT", substring);
     };
 
@@ -1098,29 +1118,44 @@ void TestQmllint::requiredProperty()
     QVERIFY(runQmllint("requiredProperty.qml", true).isEmpty());
 
     {
-        const QString errors = runQmllint("requiredMissingProperty.qml", false);
-        QVERIFY(errors.contains(
-                QStringLiteral("Property \"foo\" was marked as required but does not exist.")));
+        QJsonArray warnings;
+        callQmllint("requiredMissingProperty.qml", false, &warnings);
+        searchWarnings(
+                warnings,
+                QStringLiteral("Property \"foo\" was marked as required but does not exist."),
+                "requiredMissingProperty.qml");
     }
 
     QVERIFY(runQmllint("requiredPropertyBindings.qml", true).isEmpty());
 
     {
-        const QString errors = runQmllint("requiredPropertyBindingsNow.qml", false);
-        QVERIFY(errors.contains(QStringLiteral(
-                "Component is missing required property required_now_string from Base")));
-        QVERIFY(errors.contains(QStringLiteral(
-                "Component is missing required property required_defined_here_string from here")));
+        QJsonArray warnings;
+        callQmllint("requiredPropertyBindingsNow.qml", false, &warnings);
+
+        searchWarnings(
+                warnings,
+                QStringLiteral(
+                        "Component is missing required property required_now_string from Base"),
+                "requiredPropertyBindingsNow.qml");
+        searchWarnings(warnings,
+                       QStringLiteral("Component is missing required property "
+                                      "required_defined_here_string from here"),
+                       "requiredPropertyBindingsNow.qml");
     }
 
     {
-        const QString errors = runQmllint("requiredPropertyBindingsLater.qml", false);
-        QVERIFY(errors.contains(
+        QJsonArray warnings;
+        callQmllint("requiredPropertyBindingsLater.qml", false, &warnings);
+        searchWarnings(
+                warnings,
                 QStringLiteral("Component is missing required property required_later_string from "
-                               "Base (marked as required by Derived)")));
-        QVERIFY(errors.contains(
+                               "Base (marked as required by Derived)"),
+                "requiredPropertyBindingsLater.qml");
+        searchWarnings(
+                warnings,
                 QStringLiteral("Component is missing required property required_even_later_string "
-                               "from Base (marked as required by here)")));
+                               "from Base (marked as required by here)"),
+                "requiredPropertyBindingsLater.qml");
     }
 }
 
@@ -1139,10 +1174,10 @@ void TestQmllint::settingsFile()
 
 void TestQmllint::additionalImplicitImport()
 {
-    QVERIFY(runQmllint("additionalImplicitImport.qml", true,
-                       QStringList() << "--resource" << testFile("implicitImportResource.qrc"),
-                       false)
-            .isEmpty());
+    QJsonArray warnings;
+    callQmllint("additionalImplicitImport.qml", true, &warnings, {}, {},
+                { testFile("implicitImportResource.qrc") });
+    QVERIFY(warnings.isEmpty());
 }
 
 void TestQmllint::listIndices()
