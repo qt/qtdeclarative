@@ -219,7 +219,7 @@ void tst_QQuickFontDialogImpl::clickAroundInTheFamilyListView()
             dialogHelper.quickDialog->findChild<QQuickListView *>("sizeListView");
     QVERIFY(fontSizeListView);
 
-    QSignalSpy currentFontSpy(dialogHelper.dialog, SIGNAL(currentFontChanged()));
+    QSignalSpy selectedFontSpy(dialogHelper.dialog, SIGNAL(selectedFontChanged()));
     QSignalSpy styleModelSpy(fontStyleListView, SIGNAL(modelChanged()));
     QSignalSpy sizeModelSpy(fontSizeListView, SIGNAL(modelChanged()));
 
@@ -234,18 +234,18 @@ void tst_QQuickFontDialogImpl::clickAroundInTheFamilyListView()
     const int maxNumberOfFamiliesToTest = 10;
 
     for (auto i = 1; i < qMin(fontListModel.size(), maxNumberOfFamiliesToTest); ++i) {
-        currentFontSpy.clear();
+        selectedFontSpy.clear();
         styleModelSpy.clear();
         sizeModelSpy.clear();
 
         const QString err = QString("LOOP INDEX %1, EXPECTED %2, ACTUAL %3").arg(i);
 
-        const QFont currentFont = dialogHelper.dialog->currentFont();
+        const QFont selectedFont = dialogHelper.dialog->selectedFont();
 
         const auto oldStyleModel = fontStyleListView->model();
         const auto oldSizeModel = fontSizeListView->model();
 
-        const QString expected1 = fontListModel[i - 1], actual1 = currentFont.family();
+        const QString expected1 = fontListModel[i - 1], actual1 = selectedFont.family();
         QVERIFY2(expected1 == actual1, qPrintable(err.arg(expected1, actual1)));
 
         QQuickAbstractButton *fontDelegate =
@@ -255,22 +255,17 @@ void tst_QQuickFontDialogImpl::clickAroundInTheFamilyListView()
         QVERIFY2(clickButton(fontDelegate), qPrintable(QString("LOOP INDEX %1").arg(i)));
 
         const QString expected2 = fontListModel[i],
-                      actual2 = dialogHelper.dialog->currentFont().family();
+                      actual2 = dialogHelper.dialog->selectedFont().family();
         QVERIFY2(expected2 == actual2, qPrintable(err.arg(expected2, actual2).append(", FONT ").append(fontDelegate->text())));
-        const int currentFontSpyCount = currentFontSpy.count();
-        QVERIFY2(currentFontSpyCount == 1, qPrintable(err.arg(1).arg(currentFontSpyCount).append(", FONT ").append(fontDelegate->text())));
+        const int selectedFontSpyCount = selectedFontSpy.count();
+        QVERIFY2(selectedFontSpyCount == 1, qPrintable(err.arg(1).arg(selectedFontSpyCount).append(", FONT ").append(fontDelegate->text())));
         QVERIFY2((oldStyleModel == fontStyleListView->model()) != (styleModelSpy.count() == 1),
                  qPrintable(QString("LOOP INDEX %1").arg(i)));
         QVERIFY2((oldSizeModel == fontSizeListView->model()) != (sizeModelSpy.count() == 1),
                  qPrintable(QString("LOOP INDEX %1").arg(i)));
     }
 
-    // Then accept it to close it.
-    QVERIFY(dialogHelper.dialog->currentFont() != dialogHelper.dialog->selectedFont());
-
     CLOSE_DIALOG("Ok");
-
-    QVERIFY(dialogHelper.dialog->currentFont() == dialogHelper.dialog->selectedFont());
 }
 
 void tst_QQuickFontDialogImpl::settingUnderlineAndStrikeoutEffects()
@@ -281,7 +276,7 @@ void tst_QQuickFontDialogImpl::settingUnderlineAndStrikeoutEffects()
     QVERIFY(dialogHelper.openDialog());
     QTRY_VERIFY(dialogHelper.isQuickDialogOpen());
 
-    QSignalSpy currentFontSpy(dialogHelper.dialog, SIGNAL(currentFontChanged()));
+    QSignalSpy selectedFontSpy(dialogHelper.dialog, SIGNAL(selectedFontChanged()));
 
     QQuickCheckBox *underlineCheckBox =
             dialogHelper.quickDialog->findChild<QQuickCheckBox *>("underlineEffect");
@@ -291,32 +286,32 @@ void tst_QQuickFontDialogImpl::settingUnderlineAndStrikeoutEffects()
             dialogHelper.quickDialog->findChild<QQuickCheckBox *>("strikeoutEffect");
     QVERIFY(strikeoutCheckBox);
 
-    QVERIFY(!dialogHelper.dialog->currentFont().underline());
-    QVERIFY(!dialogHelper.dialog->currentFont().strikeOut());
+    QVERIFY(!dialogHelper.dialog->selectedFont().underline());
+    QVERIFY(!dialogHelper.dialog->selectedFont().strikeOut());
 
     QVERIFY(clickButton(underlineCheckBox));
 
-    QCOMPARE(currentFontSpy.count(), 1);
-    QVERIFY(dialogHelper.dialog->currentFont().underline());
-    QVERIFY(!dialogHelper.dialog->currentFont().strikeOut());
+    QCOMPARE(selectedFontSpy.count(), 1);
+    QVERIFY(dialogHelper.dialog->selectedFont().underline());
+    QVERIFY(!dialogHelper.dialog->selectedFont().strikeOut());
 
     QVERIFY(clickButton(underlineCheckBox));
 
-    QCOMPARE(currentFontSpy.count(), 2);
-    QVERIFY(!dialogHelper.dialog->currentFont().underline());
-    QVERIFY(!dialogHelper.dialog->currentFont().strikeOut());
+    QCOMPARE(selectedFontSpy.count(), 2);
+    QVERIFY(!dialogHelper.dialog->selectedFont().underline());
+    QVERIFY(!dialogHelper.dialog->selectedFont().strikeOut());
 
     QVERIFY(clickButton(strikeoutCheckBox));
 
-    QCOMPARE(currentFontSpy.count(), 3);
-    QVERIFY(!dialogHelper.dialog->currentFont().underline());
-    QVERIFY(dialogHelper.dialog->currentFont().strikeOut());
+    QCOMPARE(selectedFontSpy.count(), 3);
+    QVERIFY(!dialogHelper.dialog->selectedFont().underline());
+    QVERIFY(dialogHelper.dialog->selectedFont().strikeOut());
 
     QVERIFY(clickButton(strikeoutCheckBox));
 
-    QCOMPARE(currentFontSpy.count(), 4);
-    QVERIFY(!dialogHelper.dialog->currentFont().underline());
-    QVERIFY(!dialogHelper.dialog->currentFont().strikeOut());
+    QCOMPARE(selectedFontSpy.count(), 4);
+    QVERIFY(!dialogHelper.dialog->selectedFont().underline());
+    QVERIFY(!dialogHelper.dialog->selectedFont().strikeOut());
 
     // Then accept it to close it.
     CLOSE_DIALOG("Ok");
@@ -340,20 +335,16 @@ void tst_QQuickFontDialogImpl::changeFontSize()
     const QQuickItemDelegate *firstSizeDelegate =
             qobject_cast<QQuickItemDelegate *>(findViewDelegateItem(fontSizeListView, 0));
 
-    QCOMPARE(dialogHelper.dialog->currentFont().pointSize(), firstSizeDelegate->text().toInt());
+    QCOMPARE(dialogHelper.dialog->selectedFont().pointSize(), firstSizeDelegate->text().toInt());
 
     sizeEdit->setText("15");
-    QCOMPARE(dialogHelper.dialog->currentFont().pointSize(), 15);
+    QCOMPARE(dialogHelper.dialog->selectedFont().pointSize(), 15);
 
     sizeEdit->setText("22");
-    QCOMPARE(dialogHelper.dialog->currentFont().pointSize(), 22);
-
-    QVERIFY(dialogHelper.dialog->currentFont() != dialogHelper.dialog->selectedFont());
+    QCOMPARE(dialogHelper.dialog->selectedFont().pointSize(), 22);
 
     // Then accept it to close it.
     CLOSE_DIALOG("Ok");
-
-    QVERIFY(dialogHelper.dialog->currentFont() == dialogHelper.dialog->selectedFont());
 }
 
 void tst_QQuickFontDialogImpl::changeDialogTitle()
@@ -520,7 +511,7 @@ void tst_QQuickFontDialogImpl::setCurrentFontFromApi()
 {
     CREATE_DIALOG_TEST_HELPER
 
-    QSignalSpy currentFontSpy(dialogHelper.dialog, SIGNAL(currentFontChanged()));
+    QSignalSpy selectedFontSpy(dialogHelper.dialog, SIGNAL(selectedFontChanged()));
 
     // Open the dialog.
     QVERIFY(dialogHelper.openDialog());
@@ -543,9 +534,9 @@ void tst_QQuickFontDialogImpl::setCurrentFontFromApi()
     QVERIFY(fontSizeEdit);
 
     // From when the listviews are populated
-    QCOMPARE(currentFontSpy.count(), 1);
+    QCOMPARE(selectedFontSpy.count(), 1);
 
-    currentFontSpy.clear();
+    selectedFontSpy.clear();
 
     // testing some available fonts
     const auto familyModel = fontFamilyListView->model().toStringList();
@@ -553,12 +544,12 @@ void tst_QQuickFontDialogImpl::setCurrentFontFromApi()
     const int maxNumberOfFontFamilies = 10, maxNumberOfStyles = 3;
     int size = 10;
     int familyCounter = 0;
-    for (auto family = familyModel.cbegin(); family != familyModel.cend() && familyCounter < maxNumberOfFontFamilies; family++,  familyCounter++)
+    for (auto family = familyModel.cbegin(); family != familyModel.cend() && familyCounter < maxNumberOfFontFamilies; family++, familyCounter++)
     {
         const QString style = QFontDatabase::styles(*family).constFirst();
 
         const QFont f = QFontDatabase::font(*family, style, size);
-        dialogHelper.dialog->setCurrentFont(f);
+        dialogHelper.dialog->setSelectedFont(f);
 
         const int familyIndex = fontFamilyListView->currentIndex();
         QVERIFY(familyIndex >= 0);
@@ -569,16 +560,16 @@ void tst_QQuickFontDialogImpl::setCurrentFontFromApi()
         QCOMPARE(styleModel.at(fontStyleListView->currentIndex()), style);
         QCOMPARE(fontSizeEdit->text(), QString::number(size++));
 
-        QCOMPARE(currentFontSpy.count(), ++spyCounter);
+        QCOMPARE(selectedFontSpy.count(), ++spyCounter);
 
         for (int styleIt = 0; styleIt < qMin(styleModel.count(), maxNumberOfStyles); ++styleIt) {
             const QString currentStyle = styleModel.at(styleIt);
 
             const QFont f = QFontDatabase::font(*family, currentStyle, size);
-            dialogHelper.dialog->setCurrentFont(f);
+            dialogHelper.dialog->setSelectedFont(f);
 
             QCOMPARE(styleModel.at(fontStyleListView->currentIndex()), currentStyle);
-            QCOMPARE(currentFontSpy.count(), ++spyCounter);
+            QCOMPARE(selectedFontSpy.count(), ++spyCounter);
         }
     }
 

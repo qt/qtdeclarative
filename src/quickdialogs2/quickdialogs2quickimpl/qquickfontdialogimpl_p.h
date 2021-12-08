@@ -92,7 +92,6 @@ public:
 Q_SIGNALS:
     void optionsChanged();
     void currentFontChanged(const QFont &font);
-    void fontSelected(const QFont &font);
 
 private:
     void keyReleaseEvent(QKeyEvent *event) override;

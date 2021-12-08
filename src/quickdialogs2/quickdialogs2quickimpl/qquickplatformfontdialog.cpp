@@ -104,7 +104,6 @@ QQuickPlatformFontDialog::QQuickPlatformFontDialog(QObject *parent)
 
     connect(m_dialog, &QQuickFontDialogImpl::currentFontChanged,
             this, &QQuickPlatformFontDialog::currentFontChanged);
-    connect(m_dialog, &QQuickFontDialogImpl::fontSelected, this, &QQuickPlatformFontDialog::fontSelected);
 }
 
 bool QQuickPlatformFontDialog::isValid() const

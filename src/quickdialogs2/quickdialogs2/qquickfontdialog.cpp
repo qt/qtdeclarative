@@ -103,12 +103,12 @@ QQuickFontDialog::QQuickFontDialog(QObject *parent)
 
 /*!
     \qmlproperty font QtQuick.Dialogs::FontDialog::currentFont
+    \deprecated [6.3] Use \l selectedFont instead.
 
     This property holds the currently selected font in the dialog.
 
-    Unlike the \l selectedFont property, the \c currentFont property is updated
-    while the user is selecting fonts in the dialog, even before the final
-    selection has been made.
+    The \c currentFont property is updated while the user is selecting
+    fonts in the dialog, even before the final selection has been made.
 
     \sa selectedFont
 */
@@ -130,29 +130,31 @@ void QQuickFontDialog::setCurrentFont(const QFont &font)
 /*!
     \qmlproperty font QtQuick.Dialogs::FontDialog::selectedFont
 
-    This property holds the final accepted font.
+    This property holds the currently selected font in the dialog.
 
-    Unlike the \l currentFont property, the \c selectedFont property is not updated
-    while the user is selecting fonts in the dialog, but only after the final
-    selection has been made. That is, when the user has clicked \uicontrol Open
-    to accept a font. Alternatively, the \l {Dialog::}{accepted()} signal
-    can be handled to get the final selection.
+    The \c selectedFont property is updated while the user is selecting
+    fonts in the dialog, even before the final selection has been made.
+
+    The \l {Dialog::}{accepted()} signal can be handled to get the final selection.
+    When the user has clicked \uicontrol Open to accept a font, a signal handler
+    for the \l {Dialog::}{accepted()} signal can query the selectedFont property to
+    get the final font that was selected by the user.
 
     \sa currentFont, {Dialog::}{accepted()}
 */
 
 QFont QQuickFontDialog::selectedFont() const
 {
-    return m_selectedFont;
+    if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(handle()))
+        return fontDialog->currentFont();
+    return QFont();
 }
 
 void QQuickFontDialog::setSelectedFont(const QFont &font)
 {
-    if (m_selectedFont == font)
-        return;
-
-    m_selectedFont = font;
-    emit selectedFontChanged();
+    if (QPlatformFontDialogHelper *fontDialog =
+        qobject_cast<QPlatformFontDialogHelper *>(handle()))
+            fontDialog->setCurrentFont(font);
 }
 
 /*!
@@ -205,8 +207,8 @@ void QQuickFontDialog::onCreate(QPlatformDialogHelper *dialog)
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog)) {
         connect(fontDialog, &QPlatformFontDialogHelper::currentFontChanged, this,
                 &QQuickFontDialog::currentFontChanged);
-        connect(fontDialog, &QPlatformFontDialogHelper::fontSelected, this,
-                &QQuickFontDialog::setSelectedFont);
+        connect(fontDialog, &QPlatformFontDialogHelper::currentFontChanged, this,
+                &QQuickFontDialog::selectedFontChanged);
         fontDialog->setOptions(m_options);
     }
 }
@@ -216,13 +218,6 @@ void QQuickFontDialog::onShow(QPlatformDialogHelper *dialog)
     m_options->setWindowTitle(title());
     if (QPlatformFontDialogHelper *fontDialog = qobject_cast<QPlatformFontDialogHelper *>(dialog))
         fontDialog->setOptions(m_options); // setOptions only assigns a member and isn't virtual
-}
-
-void QQuickFontDialog::accept()
-{
-    if (auto fontDialog = qobject_cast<QPlatformFontDialogHelper *>(handle()))
-        setSelectedFont(fontDialog->currentFont());
-    QQuickAbstractDialog::accept();
 }
 
 QT_END_NAMESPACE

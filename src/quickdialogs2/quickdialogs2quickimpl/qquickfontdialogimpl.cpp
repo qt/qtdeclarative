@@ -843,9 +843,6 @@ void QQuickFontDialogImplAttachedPrivate::currentFontChanged(const QFont &font)
     }
 
     fontDialogImpl->setCurrentFont(font);
-
-    if (fontDialogImpl->options()->testOption(QFontDialogOptions::NoButtons))
-        emit fontDialogImpl->fontSelected(font);
 }
 
 void QQuickFontDialogImplAttached::selectFontInListViews(const QFont &font)

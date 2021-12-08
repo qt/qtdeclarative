@@ -90,10 +90,8 @@ protected:
     bool useNativeDialog() const override;
     void onCreate(QPlatformDialogHelper *dialog) override;
     void onShow(QPlatformDialogHelper *dialog) override;
-    void accept() override;
 
 private:
-    QFont m_selectedFont;
     QSharedPointer<QFontDialogOptions> m_options;
 };
 
