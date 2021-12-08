@@ -75,6 +75,7 @@ inline QString linkTargetLiteral()
 }
 inline QString componentsLiteral() { return QStringLiteral("components"); }
 inline QString scriptsLiteral() { return QStringLiteral("scripts"); }
+inline QString preferLiteral() { return QStringLiteral("prefer"); }
 
 void printUsage(const QString &appNameIn)
 {
@@ -183,7 +184,6 @@ QVariantMap pluginsForModulePath(const QString &modulePath, const QString &versi
         pluginNameList.append(plugin.name);
         isOptional = plugin.optional;
     }
-
     pluginInfo[pluginsLiteral()] = pluginNameList.join(QLatin1Char(' '));
 
     if (plugins.size() > 1) {
@@ -253,6 +253,10 @@ QVariantMap pluginsForModulePath(const QString &modulePath, const QString &versi
         pluginInfo[componentsLiteral()] = componentFiles;
     if (!scriptFiles.isEmpty())
         pluginInfo[scriptsLiteral()] = scriptFiles;
+
+    if (!parser.preferredPath().isEmpty())
+        pluginInfo[preferLiteral()] = parser.preferredPath();
+
     return pluginInfo;
 }
 
@@ -346,6 +350,7 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
             QString classnames = plugininfo.value(classnamesLiteral()).toString();
             QStringList components = plugininfo.value(componentsLiteral()).toStringList();
             QStringList scripts = plugininfo.value(scriptsLiteral()).toStringList();
+            QString prefer = plugininfo.value(preferLiteral()).toString();
             if (!linkTarget.isEmpty())
                 import.insert(linkTargetLiteral(), linkTarget);
             if (!plugins.isEmpty())
@@ -376,6 +381,9 @@ QVariantList findPathsForModuleImports(const QVariantList &imports)
             if (!scripts.isEmpty()) {
                 scripts.removeDuplicates();
                 import.insert(scriptsLiteral(), scripts);
+            }
+            if (!prefer.isEmpty()) {
+                import.insert(preferLiteral(), prefer);
             }
         }
         import.remove(versionLiteral());
