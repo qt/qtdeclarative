@@ -62,6 +62,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickHoverHandler : public QQuickSinglePointHandle
 {
     Q_OBJECT
     Q_PROPERTY(bool hovered READ isHovered NOTIFY hoveredChanged)
+    Q_PROPERTY(bool blocking READ isBlocking WRITE setBlocking NOTIFY blockingChanged REVISION(6, 3))
     QML_NAMED_ELEMENT(HoverHandler)
     QML_ADDED_IN_VERSION(2, 12)
 
@@ -73,8 +74,12 @@ public:
 
     bool isHovered() const { return m_hovered; }
 
+    bool isBlocking() const { return m_blocking; }
+    void setBlocking(bool blocking);
+
 Q_SIGNALS:
     void hoveredChanged();
+    Q_REVISION(6, 3) void blockingChanged();
 
 protected:
     void componentComplete() override;
@@ -87,6 +92,7 @@ private:
 private:
     bool m_hovered = false;
     bool m_hoveredTablet = false;
+    bool m_blocking = false;
 };
 
 QT_END_NAMESPACE

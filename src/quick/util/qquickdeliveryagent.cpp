@@ -1145,6 +1145,11 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
                     // Mark the whole item as updated, even if only the handler is
                     // actually in a hovered state (because of HoverHandler.margins)
                     hoverItems[item] = currentHoverId;
+                    if (hh->isBlocking()) {
+                        qCDebug(lcHoverTrace) << "skipping rest of hover delivery due to blocking" << hh;
+                        accepted = true;
+                        break;
+                    }
                 }
             }
         }

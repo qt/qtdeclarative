@@ -55,7 +55,7 @@ Rectangle {
     id: root
     width: 640
     height: 480
-    color: "#444"
+    color: rootHover.hovered ? "#555" : "#444"
 
     Component {
         id: buttonsAndStuff
@@ -63,6 +63,11 @@ Rectangle {
             anchors.fill: parent
             anchors.margins: 8
             spacing: 8
+
+            CheckBox {
+                id: hoverBlockingCB
+                text: "Button hover is blocking"
+            }
 
             Rectangle {
                 objectName: "buttonWithMA"
@@ -98,6 +103,7 @@ Rectangle {
                     id: buttonHH
                     objectName: "buttonHH"
                     acceptedDevices: PointerDevice.AllDevices
+                    blocking: hoverBlockingCB.checked
                     cursorShape: tapHandler.pressed ? Qt.BusyCursor : Qt.PointingHandCursor
                 }
 
@@ -152,9 +158,9 @@ Rectangle {
         objectName: "topSidebar"
         radius: 5
         antialiasing: true
-        x: -radius
+        x: -10
         y: -radius
-        width: 120
+        width: 200
         height: 200
         border.color: topSidebarHH.hovered ? "cyan" : "black"
         color: "#777"
@@ -181,16 +187,21 @@ Rectangle {
             sourceComponent: buttonsAndStuff
             anchors.fill: parent
         }
+
+        Text {
+            anchors { left: parent.left; bottom: parent.bottom; margins: 12 }
+            text: "Hover Handler"
+        }
     }
 
     Rectangle {
         objectName: "bottomSidebar"
         radius: 5
         antialiasing: true
-        x: -radius
+        x: -10
         anchors.bottom: parent.bottom
         anchors.bottomMargin: -radius
-        width: 120
+        width: 200
         height: 200
         border.color: bottomSidebarMA.containsMouse ? "cyan" : "black"
         color: "#777"
@@ -207,6 +218,11 @@ Rectangle {
             objectName: "bottomSidebarLoader"
             sourceComponent: buttonsAndStuff
             anchors.fill: parent
+        }
+
+        Text {
+            anchors { left: parent.left; bottom: parent.bottom; margins: 12 }
+            text: "MouseArea"
         }
     }
 

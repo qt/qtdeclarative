@@ -58,6 +58,7 @@ public:
     {}
 
 private slots:
+    void hoverHandlerAndUnderlyingHoverHandler_data();
     void hoverHandlerAndUnderlyingHoverHandler();
     void mouseAreaAndUnderlyingHoverHandler();
     void hoverHandlerAndUnderlyingMouseArea();
@@ -82,8 +83,18 @@ void tst_HoverHandler::createView(QScopedPointer<QQuickView> &window, const char
     QVERIFY(window->rootObject() != nullptr);
 }
 
+void tst_HoverHandler::hoverHandlerAndUnderlyingHoverHandler_data()
+{
+    QTest::addColumn<bool>("blocking");
+
+    QTest::newRow("default: nonblocking") << false;
+    QTest::newRow("blocking") << true;
+}
+
 void tst_HoverHandler::hoverHandlerAndUnderlyingHoverHandler()
 {
+    QFETCH(bool, blocking);
+
     QScopedPointer<QQuickView> windowPtr;
     createView(windowPtr, "lesHoverables.qml");
     QQuickView * window = windowPtr.data();
@@ -95,6 +106,9 @@ void tst_HoverHandler::hoverHandlerAndUnderlyingHoverHandler()
     QVERIFY(topSidebarHH);
     QQuickHoverHandler *buttonHH = button->findChild<QQuickHoverHandler *>("buttonHH");
     QVERIFY(buttonHH);
+
+    QCOMPARE(buttonHH->isBlocking(), false); // default property value
+    buttonHH->setBlocking(blocking);
 
     QPoint buttonCenter(button->mapToScene(QPointF(button->width() / 2, button->height() / 2)).toPoint());
     QPoint rightOfButton(button->mapToScene(QPointF(button->width() + 2, button->height() / 2)).toPoint());
@@ -121,8 +135,8 @@ void tst_HoverHandler::hoverHandlerAndUnderlyingHoverHandler()
 #endif
 
     QTest::mouseMove(window, buttonCenter);
-    QCOMPARE(topSidebarHH->isHovered(), true);
-    QCOMPARE(sidebarHoveredSpy.count(), 1);
+    QCOMPARE(topSidebarHH->isHovered(), !blocking);
+    QCOMPARE(sidebarHoveredSpy.count(), blocking ? 2 : 1);
     QCOMPARE(buttonHH->isHovered(), true);
     QCOMPARE(buttonHoveredSpy.count(), 1);
 #if QT_CONFIG(cursor)
@@ -131,7 +145,7 @@ void tst_HoverHandler::hoverHandlerAndUnderlyingHoverHandler()
 
     QTest::mouseMove(window, rightOfButton);
     QCOMPARE(topSidebarHH->isHovered(), true);
-    QCOMPARE(sidebarHoveredSpy.count(), 1);
+    QCOMPARE(sidebarHoveredSpy.count(), blocking ? 3 : 1);
     QCOMPARE(buttonHH->isHovered(), false);
     QCOMPARE(buttonHoveredSpy.count(), 2);
 #if QT_CONFIG(cursor)
@@ -140,7 +154,7 @@ void tst_HoverHandler::hoverHandlerAndUnderlyingHoverHandler()
 
     QTest::mouseMove(window, outOfSidebar);
     QCOMPARE(topSidebarHH->isHovered(), false);
-    QCOMPARE(sidebarHoveredSpy.count(), 2);
+    QCOMPARE(sidebarHoveredSpy.count(), blocking ? 4 : 2);
     QCOMPARE(buttonHH->isHovered(), false);
     QCOMPARE(buttonHoveredSpy.count(), 2);
 #if QT_CONFIG(cursor)

@@ -83,6 +83,22 @@ QQuickHoverHandler::~QQuickHoverHandler()
         QQuickItemPrivate::get(parent)->setHasHoverInChild(false);
 }
 
+/*!
+    \qmlproperty bool QtQuick::HoverHandler::blocking
+    \since 6.3
+
+    Whether this handler prevents other items or handlers behind it from
+    being hovered at the same timee. This property is \c false by default.
+*/
+void QQuickHoverHandler::setBlocking(bool blocking)
+{
+    if (m_blocking == blocking)
+        return;
+
+    m_blocking = blocking;
+    emit blockingChanged();
+}
+
 bool QQuickHoverHandler::event(QEvent *event)
 {
     switch (event->type())
