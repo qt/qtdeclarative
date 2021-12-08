@@ -30,8 +30,8 @@
     \brief A list of objects, functions, and properties supported in QML.
 
     This reference contains a list of objects, functions and
-    properties supported by the \l{QQmlEngine}{QML engine}. For a detailed
-    description, see the \l{ECMA-262} specification.
+    properties supported by the \l{QJSEngine}{JavaScript engine} in Qt.
+    For a detailed description, see the \l{ECMA-262} specification.
 
     \section1 The Global Object
 
