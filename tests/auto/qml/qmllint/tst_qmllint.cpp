@@ -818,6 +818,9 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("inaccessibleId2.qml")
             << QStringLiteral("Property \"objectName\" not found on type \"int\"")
             << QString() << false;
+    QTest::newRow("unknownTypeCustomParser")
+            << QStringLiteral("unknownTypeCustomParser.qml")
+            << QStringLiteral("TypeDoesNotExist was not found.") << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()

@@ -262,9 +262,9 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
     auto location = getCurrentSourceLocation();
 
     if (m_function->qmlScope->isInCustomParserParent()) {
-        Q_ASSERT(!m_function->qmlScope->baseType().isNull());
         // Only ignore custom parser based elements if it's not Connections.
-        if (m_function->qmlScope->baseType()->internalName() != u"QQmlConnections"_qs)
+        if (m_function->qmlScope->baseType().isNull()
+            || m_function->qmlScope->baseType()->internalName() != u"QQmlConnections"_qs)
             return;
     }
 
