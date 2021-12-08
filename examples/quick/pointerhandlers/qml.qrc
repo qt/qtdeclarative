@@ -2,14 +2,12 @@
     <qresource prefix="/pointerhandlers">
         <file>flingAnimation.qml</file>
         <file>fakeFlickable.qml</file>
-        <file>flickablesWithHandlers.qml</file>
         <file>joystick.qml</file>
         <file>map.qml</file>
         <file>mixer.qml</file>
         <file>multibuttons.qml</file>
-        <file>photosurface.qml</file>
+        <file>pieMenu.qml</file>
         <file>pinchHandler.qml</file>
-        <file>pointerDrag.qml</file>
         <file>pointerhandlers.qml</file>
         <file>singlePointHandlerProperties.qml</file>
         <file>sidebar.qml</file>
@@ -21,6 +19,8 @@
         <file>components/FlashAnimation.qml</file>
         <file>components/LeftDrawer.qml</file>
         <file>components/MomentumAnimation.qml</file>
+        <file>components/MouseFeedbackSprite.qml</file>
+        <file>components/QuadPieMenu.qml</file>
         <file>components/ScrollBar.qml</file>
         <file>components/Slider.qml</file>
         <file>components/TouchpointFeedbackSprite.qml</file>
