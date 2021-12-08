@@ -109,6 +109,7 @@ private slots:
     void intEnumCompare();
     void attachedSelf();
     void functionReturningVoid();
+    void functionCallOnNamespaced();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1628,6 +1629,17 @@ void tst_QmlCppCodegen::functionReturningVoid()
     QVERIFY(o->metaObject()->indexOfProperty("bb") >= 0);
     QVERIFY(!o->property("aa").isValid());
     QVERIFY(!o->property("bb").isValid());
+}
+
+void tst_QmlCppCodegen::functionCallOnNamespaced()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/themergood.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->property("i").toInt(), 12);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

@@ -1,10 +1,10 @@
 set(cpp_sources
-    birthdayparty.cpp
-    birthdayparty.h
+    birthdayparty.cpp birthdayparty.h
     cppbaseclass.h
     objectwithmethod.h
-    person.cpp
-    person.h
+    person.cpp person.h
+    theme.cpp theme.h
+    timelinetheme.cpp timelinetheme.h
 )
 
 set(qml_files
@@ -97,6 +97,7 @@ set(qml_files
     stringLength.qml
     testlogger.js
     text.qml
+    themergood.qml
     undefinedResets.qml
     unknownParameter.qml
     unusedAttached.qml

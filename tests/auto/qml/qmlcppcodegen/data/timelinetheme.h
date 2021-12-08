@@ -1,0 +1,18 @@
+#ifndef TIMELINETHEME_H
+#define TIMELINETHEME_H
+
+#include "theme.h"
+
+#include <QtQml/qqmlregistration.h>
+
+class TimelineTheme : public Utils::Theme
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT(Theme)
+    QML_SINGLETON
+
+public:
+    explicit TimelineTheme(QObject *parent = nullptr);
+};
+
+#endif // TIMELINETHEME_H

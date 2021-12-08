@@ -280,7 +280,7 @@ QQmlJSScope::findType(const QString &name,
         return *type;
     }
 
-    const auto colonColon = name.indexOf(QStringLiteral("::"));
+    const auto colonColon = name.lastIndexOf(QStringLiteral("::"));
     if (colonColon > 0) {
         const QString outerTypeName = name.left(colonColon);
         const auto outerType = contextualTypes.constFind(outerTypeName);
