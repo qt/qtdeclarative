@@ -529,13 +529,6 @@ void QQmlJSImportVisitor::processDefaultProperties()
 
         const auto scopes = *it;
         for (const auto &scope : scopes) {
-            // Note: in this specific code path, binding on default property
-            // means an object binding (we work with pending objects here)
-            QQmlJSMetaPropertyBinding binding(scope->sourceLocation(), defaultProp);
-            binding.setObject(getScopeName(scope, QQmlJSScope::QMLScope),
-                              QQmlJSScope::ConstPtr(scope));
-            it.key()->addOwnPropertyBinding(binding);
-
             if (!scope->isFullyResolved()) // should be an error somewhere else
                 continue;
 
@@ -624,9 +617,6 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
 
             // unique because it's per-scope and per-property
             const auto uniqueBindingId = qMakePair(objectBinding.scope, objectBinding.name);
-
-            QQmlJSMetaPropertyBinding newBinding(objectBinding.location, property);
-
             const QString typeName = getScopeName(childScope, QQmlJSScope::QMLScope);
 
             if (objectBinding.onToken) {
@@ -638,9 +628,6 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
                                 Log_Property, objectBinding.location);
                     } else {
                         foundInterceptors.insert(uniqueBindingId);
-
-                        newBinding.setInterceptor(typeName, childScope);
-                        objectBinding.scope->addOwnPropertyBinding(newBinding);
                     }
                 } else if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueSource"))) {
                     if (foundValueSources.contains(uniqueBindingId)) {
@@ -657,9 +644,6 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
                                 Log_Property, objectBinding.location);
                     } else {
                         foundValueSources.insert(uniqueBindingId);
-
-                        newBinding.setValueSource(typeName, childScope);
-                        objectBinding.scope->addOwnPropertyBinding(newBinding);
                     }
                 } else {
                     m_logger->logWarning(
@@ -678,9 +662,6 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
                             Log_Property, objectBinding.location);
                 } else {
                     foundObjects.insert(uniqueBindingId);
-
-                    newBinding.setObject(typeName, childScope);
-                    objectBinding.scope->addOwnPropertyBinding(newBinding);
                 }
             }
         } else if (!objectBinding.scope->isFullyResolved()) {
@@ -822,12 +803,6 @@ void QQmlJSImportVisitor::processPropertyBindings()
 
                 m_logger->logWarning(message, Log_Deprecation, location);
             }
-
-            QQmlJSMetaPropertyBinding binding(location, property);
-
-            // TODO: Actually store the value
-
-            visibilityScope->addOwnPropertyBinding(binding);
         }
     }
 }
@@ -934,11 +909,41 @@ void QQmlJSImportVisitor::checkSignals()
 
 void QQmlJSImportVisitor::addDefaultProperties()
 {
-    if (m_currentScope == m_exportedRootScope || m_currentScope->parentScope()->isArrayScope()
+    QQmlJSScope::ConstPtr parentScope = m_currentScope->parentScope();
+    if (m_currentScope == m_exportedRootScope || parentScope->isArrayScope()
         || m_currentScope->isInlineComponent()) // inapplicable
         return;
 
     m_pendingDefaultProperties[m_currentScope->parentScope()] << m_currentScope;
+
+    if (parentScope->isInCustomParserParent())
+        return;
+
+    /* consider:
+     *
+     *      QtObject { // <- parentScope
+     *          default property var p // (1)
+     *          QtObject {} // (2)
+     *      }
+     *
+     * `p` (1) is a property of a subtype of QtObject, it couldn't be used
+     * in a property binding (2)
+     */
+    // thus, use a base type of parent scope to detect a default property
+    parentScope = parentScope->baseType();
+
+    const QString defaultPropertyName =
+            parentScope ? parentScope->defaultPropertyName() : QString();
+
+    if (defaultPropertyName.isEmpty()) // an error somewhere else
+        return;
+
+    // Note: in this specific code path, binding on default property
+    // means an object binding (we work with pending objects here)
+    QQmlJSMetaPropertyBinding binding(m_currentScope->sourceLocation(), defaultPropertyName);
+    binding.setObject(getScopeName(m_currentScope, QQmlJSScope::QMLScope),
+                      QQmlJSScope::ConstPtr(m_currentScope));
+    m_currentScope->parentScope()->addOwnPropertyBinding(binding);
 }
 
 QQmlJSImportVisitor::HasCycle
@@ -1352,13 +1357,13 @@ handleTranslationBinding(QStringView base, QQmlJS::AST::ArgumentList *args,
     return maybeBinding;
 }
 
-void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
+bool QQmlJSImportVisitor::parseLiteralBinding(const QString name,
                                               const QQmlJS::AST::Statement *statement)
 {
     const auto *exprStatement = cast<const ExpressionStatement *>(statement);
 
     if (exprStatement == nullptr)
-        return;
+        return false;
 
     QVariant value;
     QString literalType;
@@ -1428,7 +1433,7 @@ void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
                     m_currentScope->addOwnPropertyBinding(translationBinding);
                     if (translationBinding.bindingType() == QQmlJSMetaPropertyBinding::BindingType::StringLiteral)
                         m_literalScopesToCheck << m_currentScope;
-                    return;
+                    return true;
                 }
             }
         }
@@ -1436,7 +1441,7 @@ void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
     }
 
     if (!QQmlJSMetaPropertyBinding::isLiteralBinding(bindingType))
-        return;
+        return false;
     Q_ASSERT(m_rootScopeImports.contains(literalType)); // built-ins must contain support for all literal bindings
 
     QQmlJSMetaPropertyBinding binding(exprStatement->expression->firstSourceLocation(), name);
@@ -1445,6 +1450,7 @@ void QQmlJSImportVisitor::parseLiteralBinding(const QString name,
     m_currentScope->addOwnPropertyBinding(binding);
 
     m_literalScopesToCheck << m_currentScope;
+    return true;
 }
 
 bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
@@ -1493,7 +1499,11 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
     if (signal.isEmpty()) {
         m_propertyBindings[m_currentScope].append(
                 { m_savedBindingOuterScope, group->firstSourceLocation(), name.toString() });
-        parseLiteralBinding(name.toString(), scriptBinding->statement);
+        if (!parseLiteralBinding(name.toString(), scriptBinding->statement)) {
+            QQmlJSMetaPropertyBinding binding(group->firstSourceLocation(), name.toString());
+            // TODO: Actually store the value
+            m_savedBindingOuterScope->addOwnPropertyBinding(binding);
+        }
     } else {
         const auto statement = scriptBinding->statement;
         QStringList signalParameters;
@@ -1590,6 +1600,9 @@ void QQmlJSImportVisitor::endVisit(UiArrayBinding *arrayBinding)
         m_pendingPropertyObjectBindings
                 << PendingPropertyObjectBinding { m_currentScope, type, propertyName,
                                                   element->firstSourceLocation(), false };
+        QQmlJSMetaPropertyBinding binding(element->firstSourceLocation(), propertyName);
+        binding.setObject(getScopeName(type, QQmlJSScope::QMLScope), QQmlJSScope::ConstPtr(type));
+        m_currentScope->addOwnPropertyBinding(binding);
     }
 }
 
@@ -1927,6 +1940,21 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
         m_pendingPropertyObjectBindings
                 << PendingPropertyObjectBinding { m_currentScope, childScope, propertyName,
                                                   uiob->firstSourceLocation(), uiob->hasOnToken };
+
+        QQmlJSMetaPropertyBinding binding(uiob->firstSourceLocation(), propertyName);
+        if (uiob->hasOnToken) {
+            if (childScope->hasInterface(u"QQmlPropertyValueInterceptor"_qs)) {
+                binding.setInterceptor(getScopeName(childScope, QQmlJSScope::QMLScope),
+                                       QQmlJSScope::ConstPtr(childScope));
+            } else { // if (childScope->hasInterface(u"QQmlPropertyValueSource"_qs))
+                binding.setValueSource(getScopeName(childScope, QQmlJSScope::QMLScope),
+                                       QQmlJSScope::ConstPtr(childScope));
+            }
+        } else {
+            binding.setObject(getScopeName(childScope, QQmlJSScope::QMLScope),
+                              QQmlJSScope::ConstPtr(childScope));
+        }
+        m_currentScope->addOwnPropertyBinding(binding);
     }
 
     for (int i = 0; i < scopesEnteredCounter; ++i)
