@@ -1012,7 +1012,8 @@ void QQmlJSImportVisitor::addDefaultProperties()
     QQmlJSMetaPropertyBinding binding(m_currentScope->sourceLocation(), defaultPropertyName);
     binding.setObject(getScopeName(m_currentScope, QQmlJSScope::QMLScope),
                       QQmlJSScope::ConstPtr(m_currentScope));
-    m_currentScope->parentScope()->addOwnPropertyBinding(binding);
+    m_currentScope->parentScope()->addOwnPropertyBinding(binding,
+                                                         QQmlJSScope::UnnamedPropertyTarget);
 }
 
 void QQmlJSImportVisitor::breakInheritanceCycles(const QQmlJSScope::Ptr &originalScope)
@@ -1674,7 +1675,7 @@ void QQmlJSImportVisitor::endVisit(UiArrayBinding *arrayBinding)
                                                   element->firstSourceLocation(), false };
         QQmlJSMetaPropertyBinding binding(element->firstSourceLocation(), propertyName);
         binding.setObject(getScopeName(type, QQmlJSScope::QMLScope), QQmlJSScope::ConstPtr(type));
-        m_currentScope->addOwnPropertyBinding(binding);
+        m_currentScope->addOwnPropertyBinding(binding, QQmlJSScope::ListPropertyTarget);
     }
 }
 

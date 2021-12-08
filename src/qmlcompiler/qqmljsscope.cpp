@@ -604,6 +604,97 @@ bool QQmlJSScope::isPropertyLocallyRequired(const QString &name) const
     return m_requiredPropertyNames.contains(name);
 }
 
+static_assert(QTypeInfo<QQmlJSScope::QmlIRCompatibilityBindingData>::isRelocatable,
+              "We really want T to be relocatable as it improves QList<T> performance");
+
+void QQmlJSScope::addOwnPropertyBindingInQmlIROrder(const QQmlJSMetaPropertyBinding &binding,
+                                                    BindingTargetSpecifier specifier)
+{
+    // the order:
+    // * ordinary bindings are prepended to the binding array
+    // * list bindings are properly ordered within each other, so basically
+    //   prepended "in bulk"
+    // * bindings to default properties (which are not explicitly mentioned in
+    //   binding expression) are inserted by source location's offset
+
+    switch (specifier) {
+    case BindingTargetSpecifier::SimplePropertyTarget: {
+        m_propertyBindingsArray.emplaceFront(binding.propertyName(),
+                                             binding.sourceLocation().offset);
+        break;
+    }
+    case BindingTargetSpecifier::ListPropertyTarget: {
+        const auto bindingOnTheSameProperty =
+                [&](const QQmlJSScope::QmlIRCompatibilityBindingData &x) {
+                    return x.propertyName == binding.propertyName();
+                };
+        // fake "prepend in bulk" by appending a list binding to the sequence of
+        // bindings to the same property. there's an implicit QML language
+        // guarantee that such sequence does not contain arbitrary in-between
+        // bindings that do not belong to the same list property
+        auto pos = std::find_if_not(m_propertyBindingsArray.begin(), m_propertyBindingsArray.end(),
+                                    bindingOnTheSameProperty);
+        Q_ASSERT(pos == m_propertyBindingsArray.begin()
+                 || std::prev(pos)->propertyName == binding.propertyName());
+        m_propertyBindingsArray.emplace(pos, binding.propertyName(),
+                                        binding.sourceLocation().offset);
+        break;
+    }
+    case BindingTargetSpecifier::UnnamedPropertyTarget: {
+        // see QmlIR::PoolList<>::findSortedInsertionPoint()
+        const auto findInsertionPoint = [this](const QQmlJSMetaPropertyBinding &x) {
+            qsizetype pos = -1;
+            for (auto it = m_propertyBindingsArray.cbegin(); it != m_propertyBindingsArray.cend();
+                 ++it) {
+                if (!(it->sourceLocationOffset <= x.sourceLocation().offset))
+                    break;
+                ++pos;
+            }
+            return pos;
+        };
+
+        // see QmlIR::PoolList<>::insertAfter()
+        const auto insertAfter = [this](qsizetype pos, const QQmlJSMetaPropertyBinding &x) {
+            if (pos == -1) {
+                m_propertyBindingsArray.emplaceFront(x.propertyName(), x.sourceLocation().offset);
+            } else if (pos == m_propertyBindingsArray.size()) {
+                m_propertyBindingsArray.emplaceBack(x.propertyName(), x.sourceLocation().offset);
+            } else {
+                // since we insert *after*, use (pos + 1) as insertion point
+                m_propertyBindingsArray.emplace(pos + 1, x.propertyName(),
+                                                x.sourceLocation().offset);
+            }
+        };
+
+        const qsizetype insertionPos = findInsertionPoint(binding);
+        insertAfter(insertionPos, binding);
+        break;
+    }
+    default: {
+        Q_UNREACHABLE();
+        break;
+    }
+    }
+}
+
+QList<QQmlJSMetaPropertyBinding> QQmlJSScope::ownPropertyBindingsInQmlIROrder() const
+{
+    QList<QQmlJSMetaPropertyBinding> qmlIrOrdered;
+    qmlIrOrdered.reserve(m_propertyBindingsArray.size());
+
+    for (const auto &data : m_propertyBindingsArray) {
+        const auto [first, last] = m_propertyBindings.equal_range(data.propertyName);
+        Q_ASSERT(first != last);
+        auto binding = std::find_if(first, last, [&](const QQmlJSMetaPropertyBinding &x) {
+            return x.sourceLocation().offset == data.sourceLocationOffset;
+        });
+        Q_ASSERT(binding != last);
+        qmlIrOrdered.append(*binding);
+    }
+
+    return qmlIrOrdered;
+}
+
 bool QQmlJSScope::hasPropertyBindings(const QString &name) const
 {
     return searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {

@@ -179,6 +179,12 @@ public:
         bool isConst;
     };
 
+    enum BindingTargetSpecifier {
+        SimplePropertyTarget, // e.g. `property int p: 42`
+        ListPropertyTarget, // e.g. `property list<Item> pList: [ Text {} ]`
+        UnnamedPropertyTarget // default property bindings, where property name is unspecified
+    };
+
     static QQmlJSScope::Ptr create(ScopeType type = QQmlJSScope::QMLScope,
                                    const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
     static QQmlJSScope::Ptr clone(const QQmlJSScope::ConstPtr &origin);
@@ -278,8 +284,11 @@ public:
     bool isPropertyRequired(const QString &name) const;
     bool isPropertyLocallyRequired(const QString &name) const;
 
-    void addOwnPropertyBinding(const QQmlJSMetaPropertyBinding &binding)
+    void addOwnPropertyBinding(
+            const QQmlJSMetaPropertyBinding &binding,
+            BindingTargetSpecifier specifier = BindingTargetSpecifier::SimplePropertyTarget)
     {
+        Q_ASSERT(binding.sourceLocation().isValid());
         m_propertyBindings.insert(binding.propertyName(), binding);
 
         // NB: insert() prepends \a binding to the list of bindings, but we need
@@ -287,6 +296,10 @@ public:
         using iter = typename QMultiHash<QString, QQmlJSMetaPropertyBinding>::iterator;
         QPair<iter, iter> r = m_propertyBindings.equal_range(binding.propertyName());
         std::rotate(r.first, std::next(r.first), r.second);
+
+        // additionally store bindings in the QmlIR compatible order
+        addOwnPropertyBindingInQmlIROrder(binding, specifier);
+        Q_ASSERT(m_propertyBindings.size() == m_propertyBindingsArray.size());
     }
     QMultiHash<QString, QQmlJSMetaPropertyBinding> ownPropertyBindings() const
     {
@@ -298,6 +311,7 @@ public:
     {
         return m_propertyBindings.equal_range(name);
     }
+    QList<QQmlJSMetaPropertyBinding> ownPropertyBindingsInQmlIROrder() const;
     bool hasOwnPropertyBindings(const QString &name) const
     {
         return m_propertyBindings.contains(name);
@@ -463,6 +477,22 @@ public:
     */
     bool isInCustomParserParent() const;
 
+    /*! \internal
+
+        Minimal information about a QQmlJSMetaPropertyBinding that allows it to
+        be manipulated similarly to QmlIR::Binding.
+    */
+    struct QmlIRCompatibilityBindingData
+    {
+        QmlIRCompatibilityBindingData() = default;
+        QmlIRCompatibilityBindingData(const QString &name, quint32 offset)
+            : propertyName(name), sourceLocationOffset(offset)
+        {
+        }
+        QString propertyName; // bound property name
+        quint32 sourceLocationOffset = 0; // binding's source location offset
+    };
+
 private:
     QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
     QQmlJSScope(const QQmlJSScope &) = default;
@@ -478,11 +508,19 @@ private:
             const QQmlJSScope::Ptr &childScope, const QQmlJSScope::Ptr &self,
             const QQmlJSScope::ContextualTypes &contextualTypes, QSet<QString> *usedTypes);
 
+    void addOwnPropertyBindingInQmlIROrder(const QQmlJSMetaPropertyBinding &binding,
+                                           BindingTargetSpecifier specifier);
+
     QHash<QString, JavaScriptIdentifier> m_jsIdentifiers;
 
     QMultiHash<QString, QQmlJSMetaMethod> m_methods;
     QHash<QString, QQmlJSMetaProperty> m_properties;
     QMultiHash<QString, QQmlJSMetaPropertyBinding> m_propertyBindings;
+
+    // a special QmlIR compatibility bindings array, ordered the same way as
+    // bindings in QmlIR::Object
+    QList<QmlIRCompatibilityBindingData> m_propertyBindingsArray;
+
     QHash<QString, QQmlJSMetaEnum> m_enumerations;
 
     QVector<QQmlJSAnnotation> m_annotations;
@@ -520,6 +558,7 @@ private:
     QQmlJS::SourceLocation m_sourceLocation;
     int m_runtimeId = -1; // an index counterpart of "foobar" in `id: foobar`
 };
+Q_DECLARE_TYPEINFO(QQmlJSScope::QmlIRCompatibilityBindingData, Q_RELOCATABLE_TYPE);
 
 template<>
 class QDeferredFactory<QQmlJSScope>
