@@ -6,7 +6,8 @@
         "plugin": "qmlplugin",
         "pluginIsOptional": true,
         "relativePath": "QtQml",
-        "type": "module"
+        "type": "module",
+        "prefer":":/qt-project.org/imports/QtQml/"
     },
     {
         "name": "Methods.js",
@@ -19,7 +20,8 @@
         "plugin": "modelsplugin",
         "pluginIsOptional": true,
         "relativePath": "QtQml/Models",
-        "type": "module"
+        "type": "module",
+        "prefer":":/qt-project.org/imports/QtQml/Models/"
     },
     {
         "classname": "QtQmlWorkerScriptPlugin",
@@ -28,6 +30,7 @@
         "plugin": "workerscriptplugin",
         "pluginIsOptional": true,
         "relativePath": "QtQml/WorkerScript",
-        "type": "module"
+        "type": "module",
+        "prefer":":/qt-project.org/imports/QtQml/WorkerScript/"
     }
 ]
