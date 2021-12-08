@@ -19,6 +19,7 @@ public:
     Q_ENUM(Area);
 
     Q_INVOKABLE int index(Utils::Theme::Area area) const;
+    Q_INVOKABLE QRectF area(Utils::Theme::Area area) const;
 };
 }
 

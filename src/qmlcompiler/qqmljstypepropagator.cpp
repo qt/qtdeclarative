@@ -794,6 +794,12 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
         if (method.isJavaScriptFunction())
             javascriptFunction = method;
 
+        if (method.returnType().isNull() && !method.returnTypeName().isEmpty()) {
+            errors->append(u"return type %1 cannot be resolved"_qs
+                                   .arg(method.returnTypeName()));
+            continue;
+        }
+
         const auto argumentTypes = method.parameterTypes();
         if (argc != argumentTypes.size()) {
             errors->append(u"Function expects %1 arguments, but %2 were provided"_qs

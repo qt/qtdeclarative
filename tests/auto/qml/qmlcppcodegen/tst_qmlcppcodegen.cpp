@@ -1634,12 +1634,21 @@ void tst_QmlCppCodegen::functionReturningVoid()
 void tst_QmlCppCodegen::functionCallOnNamespaced()
 {
     QQmlEngine engine;
-    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/themergood.qml"_qs));
-    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
-    QScopedPointer<QObject> o(c.create());
-    QVERIFY(o);
+    {
+        QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/themergood.qml"_qs));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+        QCOMPARE(o->property("i").toInt(), 12);
+    }
 
-    QCOMPARE(o->property("i").toInt(), 12);
+    {
+        QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/themerbad.qml"_qs));
+        QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+        QScopedPointer<QObject> o(c.create());
+        QVERIFY(o);
+        QCOMPARE(o->property("r"), QVariant::fromValue(QRectF(5.0, 10.0, 1.0, 1.0)));
+    }
 }
 
 void tst_QmlCppCodegen::runInterpreted()

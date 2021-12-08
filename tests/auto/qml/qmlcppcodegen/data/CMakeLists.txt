@@ -97,6 +97,7 @@ set(qml_files
     stringLength.qml
     testlogger.js
     text.qml
+    themerbad.qml
     themergood.qml
     undefinedResets.qml
     unknownParameter.qml

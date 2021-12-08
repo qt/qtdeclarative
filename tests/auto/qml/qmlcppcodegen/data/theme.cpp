@@ -13,4 +13,13 @@ int Theme::index(Area area) const
     return -1;
 }
 
+QRectF Theme::area(Area area) const
+{
+    switch(area) {
+        case TopLeft: return QRectF(0.0, 0.0, 5.0, 10.0);
+        case BottomRight: return QRectF(5.0, 10.0, 1.0, 1.0);
+    }
+    return QRectF();
+}
+
 }
