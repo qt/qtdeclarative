@@ -70,6 +70,7 @@ struct QQmlProfilerDefinitions {
         SceneGraphFrame,
         MemoryAllocation,
         DebugMessage,
+        Quick3DFrame,
 
         MaximumMessage
     };
@@ -124,6 +125,21 @@ struct QQmlProfilerDefinitions {
         NumGUIThreadFrameTypes = MaximumSceneGraphFrameType - NumRenderThreadFrameTypes
     };
 
+    enum Quick3DFrameType {
+        Quick3DRenderFrame,     // Render Thread
+        Quick3DSynchronizeFrame,
+        Quick3DPrepareFrame,
+        Quick3DMeshLoad,
+        Quick3DCustomMeshLoad,
+        Quick3DTextureLoad,
+        Quick3DGenerateShader,
+        Quick3DLoadShader,
+        Quick3DParticleUpdate,  // GUI Thread
+        MaximumQuick3DFrameType,
+        NumQuick3DRenderThreadFrameTypes = Quick3DParticleUpdate,
+        NumQuick3DGUIThreadFrameTypes = MaximumQuick3DFrameType - NumQuick3DRenderThreadFrameTypes,
+    };
+
     enum ProfileFeature {
         ProfileJavaScript,
         ProfileMemory,
@@ -137,6 +153,7 @@ struct QQmlProfilerDefinitions {
         ProfileHandlingSignal,
         ProfileInputEvents,
         ProfileDebugMessages,
+        ProfileQuick3D,
 
         MaximumProfileFeature
     };

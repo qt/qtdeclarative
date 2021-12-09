@@ -67,6 +67,16 @@ QQmlProfilerServiceImpl::QQmlProfilerServiceImpl(QObject *parent) :
         addGlobalProfiler(quickAdapter);
         quickAdapter->setService(this);
     }
+
+    // try to load QQuick3D profiler adapter if it exists
+    QQmlAbstractProfilerAdapter *quick3DAdapter =
+            loadQQmlAbstractProfilerAdapter(QLatin1String("QQuick3DProfilerAdapter"));
+    if (quick3DAdapter) {
+        addGlobalProfiler(quick3DAdapter);
+        quick3DAdapter->setService(this);
+    }
+
+
 }
 
 QQmlProfilerServiceImpl::~QQmlProfilerServiceImpl()
