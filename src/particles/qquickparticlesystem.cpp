@@ -767,10 +767,9 @@ void QQuickParticleSystem::reset()
 
     timeInt = 0;
     //Clear guarded pointers which have been deleted
-    int cleared = 0;
-    cleared += m_emitters.removeAll(nullptr);
-    cleared += m_painters.removeAll(nullptr);
-    cleared += m_affectors.removeAll(nullptr);
+    m_emitters.removeAll(nullptr);
+    m_painters.removeAll(nullptr);
+    m_affectors.removeAll(nullptr);
 
     bySysIdx.resize(0);
     initGroups();//Also clears all logical particles
