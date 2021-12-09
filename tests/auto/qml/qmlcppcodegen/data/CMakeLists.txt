@@ -11,6 +11,9 @@ set(qml_files
     AccessModelMethodsFromOutside.qml
     BaseMember.qml
     BindingExpression.qml
+    Cycle1.qml
+    Cycle2.qml
+    Cycle3.qml
     Dummy.qml
     Enums.qml
     Loopy.qml
@@ -43,6 +46,7 @@ set(qml_files
     conversions.qml
     conversions2.qml
     curlygrouped.qml
+    cycleHead.qml
     deadShoeSize.qml
     dialog.qml
     dynamicscene.qml

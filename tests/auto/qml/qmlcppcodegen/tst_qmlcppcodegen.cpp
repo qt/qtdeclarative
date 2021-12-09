@@ -627,27 +627,35 @@ void tst_QmlCppCodegen::conversions()
 void tst_QmlCppCodegen::interestingFiles_data()
 {
     QTest::addColumn<QString>("file");
-    QTest::addRow("conversions2") << u"conversions2.qml"_qs;
-    QTest::addRow("TestCase") << u"TestCase.qml"_qs;
-    QTest::addRow("layouts") << u"layouts.qml"_qs;
-    QTest::addRow("interactive") << u"interactive.qml"_qs;
-    QTest::addRow("Panel") << u"Panel.qml"_qs;
-    QTest::addRow("ProgressBar") << u"ProgressBar/ProgressBar.ui.qml"_qs;
-    QTest::addRow("Root") << u"ProgressBar/Root.qml"_qs;
-    QTest::addRow("noscope") << u"noscope.qml"_qs;
-    QTest::addRow("dynamicscene") << u"dynamicscene.qml"_qs;
-    QTest::addRow("curlygrouped") << u"curlygrouped.qml"_qs;
+    QTest::addColumn<bool>("isValid");
+
+    QTest::addRow("conversions2") << u"conversions2.qml"_qs << true;
+    QTest::addRow("TestCase") << u"TestCase.qml"_qs << true;
+    QTest::addRow("layouts") << u"layouts.qml"_qs << true;
+    QTest::addRow("interactive") << u"interactive.qml"_qs << true;
+    QTest::addRow("Panel") << u"Panel.qml"_qs << true;
+    QTest::addRow("ProgressBar") << u"ProgressBar/ProgressBar.ui.qml"_qs << true;
+    QTest::addRow("Root") << u"ProgressBar/Root.qml"_qs << true;
+    QTest::addRow("noscope") << u"noscope.qml"_qs << true;
+    QTest::addRow("dynamicscene") << u"dynamicscene.qml"_qs << true;
+    QTest::addRow("curlygrouped") << u"curlygrouped.qml"_qs << true;
+    QTest::addRow("cycleHead") << u"cycleHead.qml"_qs << false;
 }
 
 void tst_QmlCppCodegen::interestingFiles()
 {
     QFETCH(QString, file);
+    QFETCH(bool, isValid);
 
     QQmlEngine engine;
     QQmlComponent component(&engine, QUrl(u"qrc:/TestTypes/%1"_qs.arg(file)));
-    QVERIFY2(!component.isError(), component.errorString().toUtf8());
-    QScopedPointer<QObject> object(component.create());
-    QVERIFY(!object.isNull());
+    if (isValid) {
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(!object.isNull());
+    } else {
+        QVERIFY(component.isError());
+    }
 }
 
 void tst_QmlCppCodegen::extendedTypes()

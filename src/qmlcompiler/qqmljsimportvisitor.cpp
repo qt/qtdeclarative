@@ -360,20 +360,20 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiProgram *)
 void QQmlJSImportVisitor::endVisit(UiProgram *)
 {
     for (const auto &scope : m_objectBindingScopes) {
-        if (checkInheritanceCycle(scope) == CycleFound)
-            return;
+        breakInheritanceCycles(scope);
+        checkDeprecation(scope);
     }
 
     for (const auto &scope : m_objectDefinitionScopes) {
         if (m_pendingDefaultProperties.contains(scope))
             continue; // We're going to check this one below.
-        if (checkInheritanceCycle(scope) == CycleFound)
-            return;
+        breakInheritanceCycles(scope);
+        checkDeprecation(scope);
     }
 
     for (const auto &scope : m_pendingDefaultProperties.keys()) {
-        if (checkInheritanceCycle(scope) == CycleFound)
-            return;
+        breakInheritanceCycles(scope);
+        checkDeprecation(scope);
     }
 
     resolveAliasesAndIds();
@@ -943,12 +943,43 @@ void QQmlJSImportVisitor::addDefaultProperties()
     m_currentScope->parentScope()->addOwnPropertyBinding(binding);
 }
 
-QQmlJSImportVisitor::HasCycle
-QQmlJSImportVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
+void QQmlJSImportVisitor::breakInheritanceCycles(const QQmlJSScope::Ptr &originalScope)
 {
-    QQmlJSScope::ConstPtr originalScope = scope;
     QList<QQmlJSScope::ConstPtr> scopes;
-    while (!scope.isNull()) {
+    for (QQmlJSScope::ConstPtr scope = originalScope; scope;) {
+        if (scopes.contains(scope)) {
+            QString inheritenceCycle;
+            for (const auto &seen : qAsConst(scopes)) {
+                if (!inheritenceCycle.isEmpty())
+                    inheritenceCycle.append(QLatin1String(" -> "));
+                inheritenceCycle.append(seen->baseTypeName());
+            }
+
+            m_logger->logWarning(QStringLiteral("%1 is part of an inheritance cycle: %2")
+                                         .arg(scope->internalName())
+                                         .arg(inheritenceCycle),
+                                 Log_InheritanceCycle);
+            originalScope->clearBaseType();
+            break;
+        }
+
+        scopes.append(scope);
+
+        const auto newScope = scope->baseType();
+        if (newScope.isNull() && !scope->baseTypeName().isEmpty()) {
+            m_logger->logWarning(
+                    scope->baseTypeName()
+                            + QStringLiteral(" was not found. Did you add all import paths?"),
+                    Log_Import, scope->sourceLocation());
+        }
+
+        scope = newScope;
+    }
+}
+
+void QQmlJSImportVisitor::checkDeprecation(const QQmlJSScope::ConstPtr &originalScope)
+{
+    for (QQmlJSScope::ConstPtr scope = originalScope; scope; scope = scope->baseType()) {
         for (const QQmlJSAnnotation &annotation : scope->annotations()) {
             if (annotation.isDeprecation()) {
                 QQQmlJSDeprecation deprecation = annotation.deprecation();
@@ -962,38 +993,7 @@ QQmlJSImportVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
                 m_logger->logWarning(message, Log_Deprecation, originalScope->sourceLocation());
             }
         }
-
-        if (scopes.contains(scope)) {
-            QString inheritenceCycle;
-            for (const auto &seen : qAsConst(scopes)) {
-                if (!inheritenceCycle.isEmpty())
-                    inheritenceCycle.append(QLatin1String(" -> "));
-                inheritenceCycle.append(seen->baseTypeName());
-            }
-
-            m_logger->logWarning(QStringLiteral("%1 is part of an inheritance cycle: %2")
-                                         .arg(scope->internalName())
-                                         .arg(inheritenceCycle),
-                                 Log_InheritanceCycle);
-            return CycleFound;
-        }
-
-        scopes.append(scope);
-
-        if (scope->baseTypeName().isEmpty()) {
-            break;
-        } else if (auto newScope = scope->baseType()) {
-            scope = newScope;
-        } else {
-            m_logger->logWarning(
-                    scope->baseTypeName()
-                            + QStringLiteral(" was not found. Did you add all import paths?"),
-                    Log_Import, scope->sourceLocation());
-            break;
-        }
     }
-
-    return CycleNotFound;
 }
 
 void QQmlJSImportVisitor::checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope)

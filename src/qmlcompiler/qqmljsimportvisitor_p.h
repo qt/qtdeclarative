@@ -194,9 +194,8 @@ protected:
 
     QQmlJSScope::ConstPtr scopeById(const QString &id, const QQmlJSScope::ConstPtr &current);
 
-    enum HasCycle { CycleFound, CycleNotFound };
-
-    HasCycle checkInheritanceCycle(QQmlJSScope::ConstPtr scope);
+    void breakInheritanceCycles(const QQmlJSScope::Ptr &scope);
+    void checkDeprecation(const QQmlJSScope::ConstPtr &scope);
     void checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope);
 
     QQmlJSLogger *m_logger;
