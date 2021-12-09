@@ -138,7 +138,8 @@ EnumDecl QmltypesReader::enumFromMetaEnum(const QQmlJSMetaEnum &metaEnum)
     return res;
 }
 
-void QmltypesReader::insertComponent(QQmlJSScope::Ptr jsScope)
+void QmltypesReader::insertComponent(const QQmlJSScope::Ptr &jsScope,
+                                     const QList<QQmlJSScope::Export> &exportsList)
 {
     QmltypesComponent comp;
     QMap<int, QmlObject> objects;
@@ -146,7 +147,6 @@ void QmltypesReader::insertComponent(QQmlJSScope::Ptr jsScope)
     bool incrementedPath = false;
     QString prototype;
     QString defaultPropertyName;
-    QList<QQmlJSScope::Export> exportsList;
     {
         QHash<QString, QQmlJSMetaProperty> els = jsScope->ownProperties();
         auto it = els.cbegin();
@@ -185,7 +185,6 @@ void QmltypesReader::insertComponent(QQmlJSScope::Ptr jsScope)
 #else
     defaultPropertyName = jsScope->ownDefaultPropertyName();
 #endif // QT_VERSION <= 0x060200
-    exportsList = jsScope->exports();
     comp.setInterfaceNames(jsScope->interfaceNames());
     QString typeName = jsScope->ownAttachedTypeName();
     comp.setAttachedTypeName(typeName);
@@ -265,13 +264,19 @@ bool QmltypesReader::parse()
 {
     QQmlJSTypeDescriptionReader reader(qmltypesFilePtr()->canonicalFilePath(),
                                        qmltypesFilePtr()->code());
-    QHash<QString, QQmlJSScope::Ptr> objects;
     QStringList dependencies;
+#if QT_VERSION < QT_VERSION_CHECK(6, 3, 0)
+    QHash<QString, QQmlJSScope::Ptr> objects;
     m_isValid = reader(&objects, &dependencies);
+    for (const auto &obj : qAsConst(objects))
+        insertComponent(obj, obj->exports());
+#else
+    QHash<QString, QQmlJSExportedScope> objects;
+    m_isValid = reader(&objects, &dependencies);
+    for (const auto &obj : qAsConst(objects))
+        insertComponent(obj.scope, obj.exports);
+#endif
     qmltypesFilePtr()->setIsValid(m_isValid);
-    for (const auto &obj : objects) {
-        insertComponent(obj);
-    }
     return m_isValid;
 }
 

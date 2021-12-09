@@ -205,9 +205,6 @@ public:
     bool causesImplicitComponentWrapping() const;
     bool isComponentRootElement() const;
 
-    void addExport(const QString &name, const QString &package, const QTypeRevision &version);
-    QList<Export> exports() const { return m_exports; }
-
     void setInterfaceNames(const QStringList& interfaces) { m_interfaceNames = interfaces; }
     QStringList interfaceNames() const { return m_interfaceNames; }
 
@@ -445,7 +442,6 @@ private:
     QQmlJSScope::WeakConstPtr m_baseType;
 
     ScopeType m_scopeType = QMLScope;
-    QList<Export> m_exports;
     QStringList m_interfaceNames;
     QStringList m_ownDeferredNames;
     QStringList m_ownImmediateNames;
@@ -467,6 +463,11 @@ private:
 
     QQmlJS::SourceLocation m_sourceLocation;
     int m_runtimeId = -1; // an index counterpart of "foobar" in `id: foobar`
+};
+
+struct QQmlJSExportedScope {
+    QQmlJSScope::Ptr scope;
+    QList<QQmlJSScope::Export> exports;
 };
 
 struct QQmlJSTypeInfo

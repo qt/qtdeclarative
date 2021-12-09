@@ -56,9 +56,7 @@ public:
     explicit QQmlJSTypeDescriptionReader(QString fileName, QString data)
         : m_fileName(std::move(fileName)), m_source(std::move(data)) {}
 
-    bool operator()(
-            QHash<QString, QQmlJSScope::Ptr> *objects,
-            QStringList *dependencies);
+    bool operator()(QHash<QString, QQmlJSExportedScope> *objects, QStringList *dependencies);
 
     QString errorMessage() const { return m_errorMessage; }
     QString warningMessage() const { return m_warningMessage; }
@@ -79,9 +77,10 @@ private:
     double readNumericBinding(QQmlJS::AST::UiScriptBinding *ast);
     QTypeRevision readNumericVersionBinding(QQmlJS::AST::UiScriptBinding *ast);
     int readIntBinding(QQmlJS::AST::UiScriptBinding *ast);
-    void readExports(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
+    QList<QQmlJSScope::Export> readExports(QQmlJS::AST::UiScriptBinding *ast);
     void readInterfaces(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
-    void readMetaObjectRevisions(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
+    void checkMetaObjectRevisions(
+            QQmlJS::AST::UiScriptBinding *ast, const QList<QQmlJSScope::Export> &exports);
 
     QStringList readStringList(QQmlJS::AST::UiScriptBinding *ast);
     void readDeferredNames(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
@@ -97,7 +96,7 @@ private:
     QString m_source;
     QString m_errorMessage;
     QString m_warningMessage;
-    QHash<QString, QQmlJSScope::Ptr> *m_objects = nullptr;
+    QHash<QString, QQmlJSExportedScope> *m_objects = nullptr;
     QStringList *m_dependencies = nullptr;
 };
 

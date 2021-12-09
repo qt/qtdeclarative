@@ -74,7 +74,8 @@ private:
     void insertProperty(QQmlJSScope::Ptr jsScope, const QQmlJSMetaProperty &property,
                         QMap<int, QmlObject> &objs);
     void insertSignalOrMethod(const QQmlJSMetaMethod &metaMethod, QMap<int, QmlObject> &objs);
-    void insertComponent(QQmlJSScope::Ptr jsScope);
+    void insertComponent(const QQmlJSScope::Ptr &jsScope,
+                         const QList<QQmlJSScope::Export> &exportsList);
     EnumDecl enumFromMetaEnum(const QQmlJSMetaEnum &metaEnum);
 
     std::shared_ptr<QmltypesFile> qmltypesFilePtr() { return m_qmltypesFilePtr; }

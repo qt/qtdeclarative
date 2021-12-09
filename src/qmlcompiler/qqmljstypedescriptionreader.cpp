@@ -54,7 +54,7 @@ QString toString(const UiQualifiedId *qualifiedId, QChar delimiter = QLatin1Char
 }
 
 bool QQmlJSTypeDescriptionReader::operator()(
-        QHash<QString, QQmlJSScope::Ptr> *objects,
+        QHash<QString, QQmlJSExportedScope> *objects,
         QStringList *dependencies)
 {
     Engine engine;
@@ -191,6 +191,7 @@ void QQmlJSTypeDescriptionReader::readDependencies(UiScriptBinding *ast)
 void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
 {
     QQmlJSScope::Ptr scope = QQmlJSScope::create();
+    QList<QQmlJSScope::Export> exports;
 
     for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
         UiObjectMember *member = it->member;
@@ -221,11 +222,11 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
             } else if (name == QLatin1String("parentProperty")) {
                 scope->setOwnParentPropertyName(readStringBinding(script));
             } else if (name == QLatin1String("exports")) {
-                readExports(script, scope);
+                exports = readExports(script);
             } else if (name == QLatin1String("interfaces")) {
                 readInterfaces(script, scope);
             } else if (name == QLatin1String("exportMetaObjectRevisions")) {
-                readMetaObjectRevisions(script, scope);
+                checkMetaObjectRevisions(script, exports);
             } else if (name == QLatin1String("attachedType")) {
                 scope->setOwnAttachedTypeName(readStringBinding(script));
             } else if (name == QLatin1String("valueType")) {
@@ -277,7 +278,7 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
         return;
     }
 
-    m_objects->insert(scope->internalName(), scope);
+    m_objects->insert(scope->internalName(), {scope, exports});
 }
 
 void QQmlJSTypeDescriptionReader::readSignalOrMethod(UiObjectDefinition *ast, bool isMethod,
@@ -620,12 +621,13 @@ ArrayPattern* QQmlJSTypeDescriptionReader::getArray(UiScriptBinding *ast)
     return arrayLit;
 }
 
-void QQmlJSTypeDescriptionReader::readExports(UiScriptBinding *ast, const QQmlJSScope::Ptr &scope)
+QList<QQmlJSScope::Export> QQmlJSTypeDescriptionReader::readExports(UiScriptBinding *ast)
 {
+    QList<QQmlJSScope::Export> exports;
     auto *arrayLit = getArray(ast);
 
     if (!arrayLit)
-        return;
+        return exports;
 
     for (PatternElementList *it = arrayLit->elements; it; it = it->next) {
         auto *stringLit = cast<StringLiteral *>(it->element->initializer);
@@ -633,7 +635,7 @@ void QQmlJSTypeDescriptionReader::readExports(UiScriptBinding *ast, const QQmlJS
         if (!stringLit) {
             addError(arrayLit->firstSourceLocation(),
                      tr("Expected array literal with only string literal members."));
-            return;
+            return exports;
         }
 
         QString exp = stringLit->value.toString();
@@ -653,8 +655,10 @@ void QQmlJSTypeDescriptionReader::readExports(UiScriptBinding *ast, const QQmlJS
         QString name = exp.mid(slashIdx + 1, spaceIdx - (slashIdx+1));
 
         // ### relocatable exports where package is empty?
-        scope->addExport(name, package, version);
+        exports.append(QQmlJSScope::Export(package, name, version));
     }
+
+    return exports;
 }
 
 void QQmlJSTypeDescriptionReader::readInterfaces(UiScriptBinding *ast, const QQmlJSScope::Ptr &scope)
@@ -680,8 +684,8 @@ void QQmlJSTypeDescriptionReader::readInterfaces(UiScriptBinding *ast, const QQm
     scope->setInterfaceNames(list);
 }
 
-void QQmlJSTypeDescriptionReader::readMetaObjectRevisions(UiScriptBinding *ast,
-                                                    const QQmlJSScope::Ptr &scope)
+void QQmlJSTypeDescriptionReader::checkMetaObjectRevisions(
+        UiScriptBinding *ast, const QList<QQmlJSScope::Export> &exports)
 {
     Q_ASSERT(ast);
 
@@ -704,7 +708,7 @@ void QQmlJSTypeDescriptionReader::readMetaObjectRevisions(UiScriptBinding *ast,
     }
 
     int exportIndex = 0;
-    const int exportCount = scope->exports().size();
+    const int exportCount = exports.size();
     for (PatternElementList *it = arrayLit->elements; it; it = it->next, ++exportIndex) {
         auto *numberLit = cast<NumericLiteral *>(it->element->initializer);
         if (!numberLit) {
@@ -728,7 +732,7 @@ void QQmlJSTypeDescriptionReader::readMetaObjectRevisions(UiScriptBinding *ast,
 
         const QTypeRevision metaObjectVersion
                 = QTypeRevision::fromEncodedVersion(metaObjectRevision);
-        const QTypeRevision exportVersion = scope->exports()[exportIndex].version();
+        const QTypeRevision exportVersion = exports[exportIndex].version();
         if (metaObjectVersion != exportVersion) {
             addWarning(numberLit->firstSourceLocation(),
                        tr("Meta object revision and export version differ, ignoring the revision.\n"

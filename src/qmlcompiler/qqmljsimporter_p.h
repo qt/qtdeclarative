@@ -100,8 +100,8 @@ private:
     };
 
     struct Import {
-        QHash<QString, QQmlJSScope::Ptr> objects;
-        QHash<QString, QQmlJSScope::Ptr> scripts;
+        QHash<QString, QQmlJSExportedScope> objects;
+        QHash<QString, QQmlJSExportedScope> scripts;
         QList<QQmlDirParser::Import> imports;
         QList<QQmlDirParser::Import> dependencies;
     };
@@ -115,7 +115,7 @@ private:
     void importDependencies(const QQmlJSImporter::Import &import, AvailableTypes *types,
                             const QString &prefix = QString(),
                             QTypeRevision version = QTypeRevision(), bool isDependency = false);
-    void readQmltypes(const QString &filename, QHash<QString, QQmlJSScope::Ptr> *objects,
+    void readQmltypes(const QString &filename, QHash<QString, QQmlJSExportedScope> *objects,
                       QList<QQmlDirParser::Import> *dependencies);
     Import readQmldir(const QString &dirname);
     QQmlJSScope::Ptr localFile2ScopeTree(const QString &filePath);

@@ -449,12 +449,6 @@ QQmlJSScope::ConstPtr QQmlJSScope::findCurrentQMLScope(const QQmlJSScope::ConstP
     return qmlScope;
 }
 
-void QQmlJSScope::addExport(const QString &name, const QString &package,
-                            const QTypeRevision &version)
-{
-    m_exports.append(Export(package, name, version));
-}
-
 bool QQmlJSScope::hasProperty(const QString &name) const
 {
     return searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
