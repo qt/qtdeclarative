@@ -901,9 +901,23 @@ void QQuickWindowPrivate::cleanup(QSGNode *n)
 
     When the user attempts to close a window, the \l closing signal will be
     emitted. You can force the window to stay open (for example to prompt the
-    user to save changes) by writing an \c onClosing handler and setting
-    \c {close.accepted = false}.
+    user to save changes) by writing an \c onClosing handler that sets
+    \c {close.accepted = false} unless it's safe to close the window (for example,
+    because there are no more unsaved changes).
+
+    \code
+    onClosing: (close) => {
+        if (document.changed) {
+            close.accepted = false
+            confirmExitPopup.open()
+        }
+    }
+
+    // The confirmExitPopup allows user to save or discard the document,
+    // or to cancel the closing.
+    \endcode
 */
+
 /*!
     \class QQuickWindow
     \since 5.0
