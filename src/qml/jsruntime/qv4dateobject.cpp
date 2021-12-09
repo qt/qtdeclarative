@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,7 +37,6 @@
 **
 ****************************************************************************/
 
-
 #include "qv4dateobject_p.h"
 #include "qv4objectproto_p.h"
 #include "qv4scopedvalue_p.h"
@@ -48,63 +47,10 @@
 
 #include <QtCore/QDebug>
 #include <QtCore/QDateTime>
+#include <QtCore/private/qlocaltime_p.h>
 #include <QtCore/QStringList>
 
-#include <time.h>
-
 #include <wtf/MathExtras.h>
-
-#if QT_CONFIG(timezone) && !defined(Q_OS_WIN)
-/*
-  See QTBUG-56899.  Although we don't (yet) have a proper way to reset the
-  system zone, the code below, that uses QTimeZone::systemTimeZone(), works
-  adequately on Linux.
-
-  QTimeZone::systemTimeZone() will automatically produce an updated value on
-  non-android Linux systems when the TZ environment variable or the relevant
-  files in /etc are changed. On other platforms it won't, and the information
-  produced here may be incorrect after changes to the system time zone.
-
-  We accept this defect for now because the localtime_r approach will
-  consistently produce incorrect results for some time zones, not only when
-  the system time zone changes. This is a worse problem, see also QTBUG-84474.
-
-  On windows we have a better implementation of getLocalTZA that hopefully
-  updates on time zone changes. However, we currently use the worse
-  implementation of DaylightSavingTA (returning either an hour or 0).
-
-  QTimeZone::systemTimeZone() on Linux is also slower than other approaches
-  because it has to poll the relevant files (if TZ is not set). See
-  QTBUG-75585 for an explanation and possible workarounds.
- */
-#define USE_QTZ_SYSTEM_ZONE
-#elif defined(Q_OS_WASM)
-/*
-    TODO: evaluate using this version of the code more generally, rather than
-    the #else branches of the various USE_QTZ_SYSTEM_ZONE choices. It might even
-    work better than the timezone variant; experiments needed.
-*/
-// Kludge around the lack of time-zone info using QDateTime.
-// It uses localtime() and friends to determine offsets from UTC.
-#define USE_QDT_LOCAL_TIME
-#endif
-
-#ifdef USE_QTZ_SYSTEM_ZONE
-#include <QtCore/QTimeZone>
-#elif defined(USE_QDT_LOCAL_TIME)
-// QDateTime already included above
-#else
-#  ifdef Q_OS_WIN
-#    include <qt_windows.h>
-#  else
-#    ifndef Q_OS_VXWORKS
-#      include <sys/time.h>
-#    else
-#      include "qplatformdefs.h"
-#    endif
-#    include <unistd.h> // for _POSIX_THREAD_SAFE_FUNCTIONS
-#  endif
-#endif // USE_QTZ_SYSTEM_ZONE
 
 using namespace QV4;
 
@@ -351,7 +297,6 @@ static inline double MakeDate(double day, double time)
     return day * msPerDay + time;
 }
 
-#ifdef USE_QTZ_SYSTEM_ZONE
 /*
   ECMAScript specifies use of a fixed (current, standard) time-zone offset,
   LocalTZA; and LocalTZA + DaylightSavingTA(t) is taken to be (see LocalTime and
@@ -369,42 +314,10 @@ static inline double MakeDate(double day, double time)
   against the ECMAScript spec is https://github.com/tc39/ecma262/issues/725
   and they've now changed the spec so that the following conforms to it ;^>
 */
-
 static inline double DaylightSavingTA(double t, double localTZA) // t is a UTC time
 {
-    return QTimeZone::systemTimeZone().offsetFromUtc(
-        QDateTime::fromMSecsSinceEpoch(qint64(t), Qt::UTC)) * 1e3 - localTZA;
+    return QLocalTime::getUtcOffset(qint64(t)) * 1e3 - localTZA;
 }
-#elif defined(USE_QDT_LOCAL_TIME)
-static inline double DaylightSavingTA(double t, double localTZA) // t is a UTC time
-{
-    return QDateTime::fromMSecsSinceEpoch(qint64(t), Qt::UTC
-        ).toLocalTime().offsetFromUtc() * 1e3 - localTZA;
-}
-#else
-// This implementation fails to take account of past changes in standard offset.
-static inline double DaylightSavingTA(double t, double /*localTZA*/)
-{
-    struct tm tmtm;
-#if defined(Q_CC_MSVC)
-    __time64_t  tt = (__time64_t)(t / msPerSecond);
-    // _localtime_64_s returns non-zero on failure
-    if (_localtime64_s(&tmtm, &tt) != 0)
-#elif !defined(QT_NO_THREAD) && defined(_POSIX_THREAD_SAFE_FUNCTIONS)
-    long int tt = (long int)(t / msPerSecond);
-    if (!localtime_r((const time_t*) &tt, &tmtm))
-#else
-    // Returns shared static data which may be overwritten at any time
-    // (for MinGW/Windows localtime is luckily thread safe)
-    long int tt = (long int)(t / msPerSecond);
-    if (struct tm *tmtm_p = localtime((const time_t*) &tt))
-        tmtm = *tmtm_p;
-    else
-#endif
-        return 0;
-    return (tmtm.tm_isdst > 0) ? msPerHour : 0;
-}
-#endif // USE_QTZ_SYSTEM_ZONE
 
 static inline double LocalTime(double t, double localTZA)
 {
@@ -735,49 +648,7 @@ static inline QString ToLocaleTimeString(double t)
 
 static double getLocalTZA()
 {
-#ifndef Q_OS_WIN
-    tzset();
-#endif
-#ifdef USE_QTZ_SYSTEM_ZONE
-    // TODO: QTimeZone::resetSystemTimeZone(), see QTBUG-56899 and comment above.
-    // Standard offset, with no daylight-savings adjustment, in ms:
-    return QTimeZone::systemTimeZone().standardTimeOffset(QDateTime::currentDateTime()) * 1e3;
-#elif defined(USE_QDT_LOCAL_TIME)
-    QDate today = QDate::currentDate();
-    QDateTime near = today.startOfDay(Qt::LocalTime);
-    // Early out if we're in standard time anyway:
-    if (!near.isDaylightTime())
-        return near.offsetFromUtc() * 1000;
-    int year, month;
-    today.getDate(&year, &month, nullptr);
-    // One of the solstices is probably in standard time:
-    QDate summer(year, 6, 21), winter(year - (month < 7 ? 1 : 0), 12, 21);
-    // But check the one closest to the present by preference, in case there's a
-    // standard time offset change between them:
-    QDateTime far = summer.startOfDay(Qt::LocalTime);
-    near = winter.startOfDay(Qt::LocalTime);
-    if (month > 3 && month < 10)
-        near.swap(far);
-    bool isDst = near.isDaylightTime();
-    if (isDst && far.isDaylightTime()) // Permanent DST, probably an hour west:
-        return (qMin(near.offsetFromUtc(), far.offsetFromUtc()) - 3600) * 1000;
-    return (isDst ? far : near).offsetFromUtc() * 1000;
-#else
-#  ifdef Q_OS_WIN
-    TIME_ZONE_INFORMATION tzInfo;
-    GetTimeZoneInformation(&tzInfo);
-    return -tzInfo.Bias * 60.0 * 1000.0;
-#  else
-    struct tm t;
-    time_t curr;
-    time(&curr);
-    localtime_r(&curr, &t); // Wrong: includes DST offset
-    time_t locl = mktime(&t);
-    gmtime_r(&curr, &t);
-    time_t globl = mktime(&t);
-    return (double(locl) - double(globl)) * 1000.0;
-#  endif
-#endif // USE_QTZ_SYSTEM_ZONE
+    return QLocalTime::getCurrentStandardUtcOffset() * 1e3;
 }
 
 DEFINE_OBJECT_VTABLE(DateObject);

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
@@ -41,6 +41,35 @@
 
 #include <time.h>
 
+#undef QT_CAN_CHANGE_SYSTEM_ZONE
+/* See QTBUG-56899. We don't (yet) have a proper way to reset the system zone,
+   Testing Date.timeZoneUpdated() is only possible on systems where we have a
+   way to change the system zone in use.
+*/
+#ifdef Q_OS_ANDROID
+/* Android's time_t-related system functions don't seem to care about the TZ
+   environment variable. If we can find a way to change the zone those functions
+   use, try implementing it here.
+*/
+#elif defined(Q_OS_UNIX)
+static void setTimeZone(const QByteArray &tz)
+{
+    if (tz.isEmpty())
+        qunsetenv("TZ");
+    else
+        qputenv("TZ", tz);
+    ::tzset();
+}
+#define QT_CAN_CHANGE_SYSTEM_ZONE
+#else
+/* On Windows, adjusting the timezone (such that GetTimeZoneInformation() will
+   notice) requires additional privileges that aren't normally enabled for a
+   process. This can be achieved by calling AdjustTokenPrivileges() and then
+   SetTimeZoneInformation(), which will require linking to a different library
+   to access that API.
+*/
+#endif
+
 class tst_qqmllocale : public QQmlDataTest
 {
     Q_OBJECT
@@ -74,7 +103,7 @@ private slots:
     void dateTimeFormat();
     void timeFormat_data();
     void timeFormat();
-#if defined(Q_OS_UNIX) && QT_CONFIG(timezone)
+#ifdef QT_CAN_CHANGE_SYSTEM_ZONE
     void timeZoneUpdated();
 #endif
     void formattedDataSize_data();
@@ -1370,6 +1399,7 @@ void tst_qqmllocale::localeAsCppProperty()
     QCOMPARE(item->property("testLocale").toLocale().name(), QLatin1String("nb_NO"));
 }
 
+#ifdef QT_CAN_CHANGE_SYSTEM_ZONE
 class DateFormatter : public QObject
 {
     Q_OBJECT
@@ -1386,49 +1416,21 @@ QString DateFormatter::getLocalizedForm(const QString &isoTimestamp)
     return locale.toString(input);
 }
 
-#if defined(Q_OS_UNIX) && QT_CONFIG(timezone)
-// Currently disabled on Windows as adjusting the timezone
-// requires additional privileges that aren't normally
-// enabled for a process. This can be achieved by calling
-// AdjustTokenPrivileges() and then SetTimeZoneInformation(),
-// which will require linking to a different library to access that API.
-static void setTimeZone(const QByteArray &tz)
-{
-    if (tz.isEmpty())
-        qunsetenv("TZ");
-    else
-        qputenv("TZ", tz);
-    ::tzset();
-
-// following left for future reference, see comment above
-// #if defined(Q_OS_WIN32)
-//     ::_tzset();
-// #endif
-}
-
 void tst_qqmllocale::timeZoneUpdated()
 {
-    // Note: This test may not reliably hit the QEXPECT_FAIL clauses below if the initial
-    //       system time zone is equivalent to either Australia/Brisbane or Asia/Kalkota.
-
-    // Initialize the system time zone, so that we actually _change_ something below.
-    QVERIFY2(QTimeZone::systemTimeZone().isValid(),
-             "You know, Toto, I do believe we're not in Kansas any more.");
-
     QByteArray original(qgetenv("TZ"));
-
-    // Set the timezone to Brisbane time, AEST-10:00
-    setTimeZone(QByteArray("Australia/Brisbane"));
-
     QScopedPointer<QObject> obj;
+
     auto cleanup = qScopeGuard([&original, &obj] {
         // Restore to original time zone
         setTimeZone(original);
         QMetaObject::invokeMethod(obj.data(), "resetTimeZone");
     });
 
-    DateFormatter formatter;
+    // Set the timezone to Brisbane time, AEST-10:00
+    setTimeZone(QByteArray("Australia/Brisbane"));
 
+    DateFormatter formatter;
     QQmlEngine e;
     e.rootContext()->setContextObject(&formatter);
 
@@ -1436,27 +1438,15 @@ void tst_qqmllocale::timeZoneUpdated()
     QVERIFY2(!c.isError(), qPrintable(c.errorString()));
     obj.reset(c.create());
     QVERIFY(obj);
-
-#if (!defined(Q_OS_LINUX) && !defined(Q_OS_QNX)) || defined(Q_OS_ANDROID)
-    QEXPECT_FAIL("",
-                 "Date.timeZoneUpdated() only works on non-Android Linux with QT_CONFIG(timezone).",
-                 Continue);
-#endif
     QVERIFY(obj->property("success").toBool());
 
     // Change to Indian time, IST-05:30
     setTimeZone(QByteArray("Asia/Kolkata"));
 
     QMetaObject::invokeMethod(obj.data(), "check");
-
-#if (!defined(Q_OS_LINUX) && !defined(Q_OS_QNX)) || defined(Q_OS_ANDROID)
-    QEXPECT_FAIL("",
-                 "Date.timeZoneUpdated() only works on non-Android Linux with QT_CONFIG(timezone).",
-                 Continue);
-#endif
     QVERIFY(obj->property("success").toBool());
 }
-#endif // Unix && timezone
+#endif // QT_CAN_CHANGE_SYSTEM_ZONE
 
 QTEST_MAIN(tst_qqmllocale)
 
