@@ -7718,8 +7718,10 @@ void QQuickItem::setAcceptedMouseButtons(Qt::MouseButtons buttons)
     d->extra.setTag(d->extra.tag().setFlag(QQuickItemPrivate::LeftMouseButtonAccepted, buttons & Qt::LeftButton));
 
     buttons &= ~Qt::LeftButton;
-    if (buttons || d->extra.isAllocated())
-        d->extra.value().acceptedMouseButtons = buttons;
+    if (buttons || d->extra.isAllocated()) {
+        d->extra.value().acceptedMouseButtonsWithoutHandlers = buttons;
+        d->extra.value().acceptedMouseButtons = d->extra->pointerHandlers.isEmpty() ? buttons : Qt::AllButtons;
+    }
 }
 
 /*!
@@ -8960,10 +8962,11 @@ bool QQuickItemPrivate::hasHoverHandlers() const
 
 void QQuickItemPrivate::addPointerHandler(QQuickPointerHandler *h)
 {
+    Q_ASSERT(h);
     Q_Q(QQuickItem);
     // Accept all buttons, and leave filtering to pointerEvent() and/or user JS,
     // because there can be multiple handlers...
-    q->setAcceptedMouseButtons(Qt::AllButtons);
+    extra.value().acceptedMouseButtons = Qt::AllButtons;
     auto &handlers = extra.value().pointerHandlers;
     if (!handlers.contains(h))
         handlers.prepend(h);
@@ -8974,6 +8977,19 @@ void QQuickItemPrivate::addPointerHandler(QQuickPointerHandler *h)
             _q_resourceObjectDeleted(o);
         });
     }
+}
+
+void QQuickItemPrivate::removePointerHandler(QQuickPointerHandler *h)
+{
+    Q_ASSERT(h);
+    Q_Q(QQuickItem);
+    auto &handlers = extra.value().pointerHandlers;
+    handlers.removeOne(h);
+    auto &res = extra.value().resourcesList;
+    res.removeOne(h);
+    QObject::disconnect(h, &QObject::destroyed, q, nullptr);
+    if (handlers.isEmpty())
+        extra.value().acceptedMouseButtons = extra.value().acceptedMouseButtonsWithoutHandlers;
 }
 
 #if QT_CONFIG(quick_shadereffect)

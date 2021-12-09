@@ -68,7 +68,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPointerHandler : public QObject, public QQmlP
     Q_PROPERTY(bool enabled READ enabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(bool active READ active NOTIFY activeChanged)
     Q_PROPERTY(QQuickItem * target READ target WRITE setTarget NOTIFY targetChanged)
-    Q_PROPERTY(QQuickItem * parent READ parentItem CONSTANT)
+    Q_PROPERTY(QQuickItem * parent READ parentItem WRITE setParentItem NOTIFY parentChanged)
     Q_PROPERTY(GrabPermissions grabPermissions READ grabPermissions WRITE setGrabPermissions NOTIFY grabPermissionChanged)
     Q_PROPERTY(qreal margin READ margin WRITE setMargin NOTIFY marginChanged)
     Q_PROPERTY(int dragThreshold READ dragThreshold WRITE setDragThreshold RESET resetDragThreshold NOTIFY dragThresholdChanged REVISION(2, 15))
@@ -110,6 +110,7 @@ public:
     void setTarget(QQuickItem *target);
 
     QQuickItem * parentItem() const;
+    void setParentItem(QQuickItem *p);
 
     void handlePointerEvent(QPointerEvent *event);
 
@@ -142,6 +143,7 @@ Q_SIGNALS:
 #if QT_CONFIG(cursor)
     Q_REVISION(2, 15) void cursorShapeChanged();
 #endif
+    Q_REVISION(6, 3) void parentChanged();
 
 protected:
     QQuickPointerHandler(QQuickPointerHandlerPrivate &dd, QQuickItem *parent);

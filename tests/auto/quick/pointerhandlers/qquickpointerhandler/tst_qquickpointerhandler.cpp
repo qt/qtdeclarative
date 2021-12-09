@@ -252,6 +252,7 @@ private slots:
     void handlerInWindow();
     void dynamicCreationInWindow();
     void cppConstruction();
+    void reparenting();
 
 protected:
     bool eventFilter(QObject *, QEvent *event) override
@@ -731,6 +732,42 @@ void tst_PointerHandlers::cppConstruction()
 
     // wait to avoid getting a double click event
     QTest::qWait(qApp->styleHints()->mouseDoubleClickInterval() + 10);
+}
+
+void tst_PointerHandlers::reparenting()
+{
+    QScopedPointer<QQuickView> windowPtr;
+    createView(windowPtr, "reparenting.qml");
+    QQuickView * window = windowPtr.data();
+
+    QQuickItem *topItem = window->rootObject()->findChild<QQuickItem*>("top");
+    QVERIFY(topItem);
+    QQuickItem *bottomItem = window->rootObject()->findChild<QQuickItem*>("bottom");
+    QVERIFY(bottomItem);
+    EventHandler *handler = window->rootObject()->findChild<EventHandler*>("eventHandler");
+    QVERIFY(handler);
+    topItem->setAcceptedMouseButtons(Qt::RightButton);
+
+    for (int i = 1; i < 5; ++i) {
+        QQuickItem *expectedParentItem = (i % 2 ? topItem : bottomItem);
+        QQuickItem *unexpectedParentItem = (i % 2 ? bottomItem : topItem);
+        qCDebug(lcPointerTests) << "initial parent" << handler->parentItem() << "waiting for" << expectedParentItem;
+        QTRY_COMPARE(handler->parentItem(), expectedParentItem);
+        QCOMPARE(handler->target(), expectedParentItem);
+        QVERIFY(QQuickItemPrivate::get(expectedParentItem)->extra.isAllocated());
+        QVERIFY(QQuickItemPrivate::get(expectedParentItem)->extra->resourcesList.contains(handler));
+        if (QQuickItemPrivate::get(unexpectedParentItem)->extra.isAllocated())
+            QVERIFY(!QQuickItemPrivate::get(unexpectedParentItem)->extra->resourcesList.contains(handler));
+        QCOMPARE(expectedParentItem->acceptedMouseButtons(), Qt::AllButtons);
+        QCOMPARE(unexpectedParentItem->acceptedMouseButtons(), unexpectedParentItem == topItem ? Qt::RightButton : Qt::NoButton);
+
+        QPoint pt = expectedParentItem->mapToScene(expectedParentItem->boundingRect().center()).toPoint();
+        qCDebug(lcPointerTests) << "click @" << pt;
+        QTest::mousePress(window, Qt::LeftButton, Qt::NoModifier, pt);
+        QTRY_COMPARE(handler->pressEventCount, i);
+        QTest::mouseRelease(window, Qt::LeftButton, Qt::NoModifier, pt);
+        QTRY_COMPARE(handler->releaseEventCount, i);
+    }
 }
 
 QTEST_MAIN(tst_PointerHandlers)

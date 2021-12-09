@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(lcPointerHandlerDispatch, "qt.quick.handler.dispatch")
 Q_LOGGING_CATEGORY(lcPointerHandlerGrab, "qt.quick.handler.grab")
 Q_LOGGING_CATEGORY(lcPointerHandlerActive, "qt.quick.handler.active")
+Q_DECLARE_LOGGING_CATEGORY(lcHandlerParent)
 
 /*!
     \qmltype PointerHandler
@@ -626,6 +627,20 @@ QQuickItem *QQuickPointerHandler::parentItem() const
     return qmlobject_cast<QQuickItem *>(QObject::parent());
 }
 
+void QQuickPointerHandler::setParentItem(QQuickItem *p)
+{
+    if (QObject::parent() == p)
+        return;
+
+    qCDebug(lcHandlerParent) << "reparenting handler" << this << ":" << parent() << "->" << p;
+    if (auto *oldParent = static_cast<QQuickItem *>(QObject::parent()))
+        QQuickItemPrivate::get(oldParent)->removePointerHandler(this);
+    setParent(p);
+    if (p)
+        QQuickItemPrivate::get(p)->addPointerHandler(this);
+    emit parentChanged();
+}
+
 QQuickItem *QQuickPointerHandler::target() const
 {
     Q_D(const QQuickPointerHandler);
@@ -725,7 +740,6 @@ void QQuickPointerHandler::handlePointerEventImpl(QPointerEvent *event)
 }
 
 /*!
-    \readonly
     \qmlproperty Item QtQuick::PointerHandler::parent
 
     The \l Item which is the scope of the handler; the Item in which it was declared.

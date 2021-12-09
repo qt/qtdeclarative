@@ -286,6 +286,7 @@ public:
     bool hasPointerHandlers() const;
     bool hasHoverHandlers() const;
     virtual void addPointerHandler(QQuickPointerHandler *h);
+    virtual void removePointerHandler(QQuickPointerHandler *h);
 
     // data property
     static void data_append(QQmlListProperty<QObject> *, QObject *);
@@ -430,6 +431,7 @@ public:
         // extremely common to set acceptedMouseButtons to LeftButton, but very
         // rare to use any of the other buttons.
         Qt::MouseButtons acceptedMouseButtons;
+        Qt::MouseButtons acceptedMouseButtonsWithoutHandlers;
 
         QQuickItem::TransformOrigin origin:5;
         uint transparentForPositioner : 1;
