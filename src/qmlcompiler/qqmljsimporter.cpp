@@ -209,6 +209,19 @@ void QQmlJSImporter::importDependencies(const QQmlJSImporter::Import &import,
     }
 }
 
+static QString internalName(const QQmlJSScope::ConstPtr &scope)
+{
+    if (const auto *factory = scope.factory())
+        return factory->internalName();
+    return scope->internalName();
+}
+
+static bool isComposite(const QQmlJSScope::ConstPtr &scope)
+{
+    // The only thing the factory can do is load a composite type.
+    return scope.factory() || scope->isComposite();
+}
+
 void QQmlJSImporter::processImport(const QQmlJSImporter::Import &import,
                                    QQmlJSImporter::AvailableTypes *types, const QString &prefix,
                                    QTypeRevision version)
@@ -225,15 +238,16 @@ void QQmlJSImporter::processImport(const QQmlJSImporter::Import &import,
     // add objects
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         const auto &val = it.value();
-        const QString name = val.scope->isComposite()
-                ? prefixedName(anonPrefix, val.scope->internalName())
-                : val.scope->internalName();
+
+        const QString name = isComposite(val.scope)
+                ? prefixedName(anonPrefix, internalName(val.scope))
+                : internalName(val.scope);
         types->cppNames.insert(name, val.scope);
 
         if (val.exports.isEmpty()) {
             types->qmlNames.insert(
                         prefixedName(prefix, prefixedName(
-                                         anonPrefix, val.scope->internalName())), val.scope);
+                                         anonPrefix, internalName(val.scope))), val.scope);
         }
 
         for (const auto &valExport : val.exports) {

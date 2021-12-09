@@ -45,8 +45,9 @@
 
 #include <QtQml/private/qqmljssourcelocation_p.h>
 
-#include <QtCore/qset.h>
+#include <QtCore/qfileinfo.h>
 #include <QtCore/qhash.h>
+#include <QtCore/qset.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qversionnumber.h>
 
@@ -72,6 +73,11 @@ public:
     bool isValid() const
     {
         return !m_filePath.isEmpty() && m_importer != nullptr;
+    }
+
+    QString internalName() const
+    {
+        return QFileInfo(m_filePath).baseName();
     }
 
 private:

@@ -32,7 +32,6 @@
 
 #include <QtCore/qqueue.h>
 #include <QtCore/qsharedpointer.h>
-#include <QtCore/qfileinfo.h>
 
 #include <private/qduplicatetracker_p.h>
 
@@ -648,7 +647,7 @@ QQmlJSScope QDeferredFactory<QQmlJSScope>::create() const
     QQmlJSTypeReader typeReader(m_importer, m_filePath);
     QQmlJSScope::Ptr result = typeReader();
     m_importer->m_warnings.append(typeReader.errors());
-    result->setInternalName(QFileInfo(m_filePath).baseName());
+    result->setInternalName(internalName());
     return std::move(*result);
 }
 
