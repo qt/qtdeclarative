@@ -222,18 +222,18 @@ static bool isComposite(const QQmlJSScope::ConstPtr &scope)
     return scope.factory() || scope->isComposite();
 }
 
-void QQmlJSImporter::processImport(const QQmlJSImporter::Import &import,
-                                   QQmlJSImporter::AvailableTypes *types, const QString &prefix,
-                                   QTypeRevision version)
+void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
+                                   const QQmlJSImporter::Import &import,
+                                   QQmlJSImporter::AvailableTypes *types)
 {
     const QString anonPrefix = QStringLiteral("$anonymous$");
     QHash<QString, QList<QQmlJSScope::Export>> seenExports;
 
-    if (!prefix.isEmpty())
-        types->qmlNames.insert(prefix, {}); // Empty type means "this is the prefix"
+    if (!importDescription.prefix().isEmpty())
+        types->qmlNames.insert(importDescription.prefix(), {}); // Empty type means "this is the prefix"
 
     for (auto it = import.scripts.begin(); it != import.scripts.end(); ++it)
-        types->qmlNames.insert(prefixedName(prefix, it.key()), it->scope);
+        types->qmlNames.insert(prefixedName(importDescription.prefix(), it.key()), it->scope);
 
     // add objects
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
@@ -246,12 +246,12 @@ void QQmlJSImporter::processImport(const QQmlJSImporter::Import &import,
 
         if (val.exports.isEmpty()) {
             types->qmlNames.insert(
-                        prefixedName(prefix, prefixedName(
+                        prefixedName(importDescription.prefix(), prefixedName(
                                          anonPrefix, internalName(val.scope))), val.scope);
         }
 
         for (const auto &valExport : val.exports) {
-            const QString &name = prefixedName(prefix, valExport.type());
+            const QString &name = prefixedName(importDescription.prefix(), valExport.type());
             // Resolve conflicting qmlNames within an import
             if (types->qmlNames.contains(name)) {
                 const auto &existing = types->qmlNames[name];
@@ -259,19 +259,19 @@ void QQmlJSImporter::processImport(const QQmlJSImporter::Import &import,
                 if (existing == val.scope)
                     continue;
 
-                if (valExport.version() > version)
+                if (valExport.version() > importDescription.version())
                     continue;
 
                 const auto existingExports = seenExports.value(name);
                 auto betterExport =
-                        std::find_if(existingExports.constBegin(), existingExports.constEnd(),
-                                     [&](const QQmlJSScope::Export &exportEntry) {
-                                         return exportEntry.type() == name
-                                                 && exportEntry.version()
-                                                 <= version // Ensure that the entry isn't newer
-                                                            // than the module version
-                                                 && valExport.version() < exportEntry.version();
-                                     });
+                        std::find_if(
+                            existingExports.constBegin(), existingExports.constEnd(),
+                            [&](const QQmlJSScope::Export &exportEntry) {
+                                return exportEntry.type() == name
+                                        // Ensure that the entry isn't newer than the module version
+                                        && exportEntry.version() <= importDescription.version()
+                                        && valExport.version() < exportEntry.version();
+                            });
 
                 if (betterExport != existingExports.constEnd())
                     continue;
@@ -370,7 +370,9 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
 
     // Process them together since there they have interdependencies that wouldn't get resolved
     // otherwise
-    processImport(result, &m_builtins);
+    const QQmlJSScope::Import builtinImport(
+                QString(), QStringLiteral("QML"), QTypeRevision::fromVersion(1, 0), false, true);
+    processImport(builtinImport, result, &m_builtins);
 
     return m_builtins;
 }
@@ -430,7 +432,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
     if (isDependency)
         Q_ASSERT(prefix.isEmpty());
 
-    const CacheKey cacheKey = { prefix, moduleCacheName, version, isFile, isDependency  };
+    const QQmlJSScope::Import cacheKey(prefix, moduleCacheName, version, isFile, isDependency);
 
     auto getTypesFromCache = [&]() -> bool {
         if (!m_cachedImportTypes.contains(cacheKey))
@@ -470,7 +472,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
         const QQmlJSImporter::Import import = m_seenQmldirFiles.value(*it);
 
         importDependencies(import, cacheTypes.get(), prefix, version, isDependency);
-        processImport(import, cacheTypes.get(), prefix, version);
+        processImport(cacheKey, import, cacheTypes.get());
 
         const bool typesFromCache = getTypesFromCache();
         Q_ASSERT(typesFromCache);
@@ -503,7 +505,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
             const QQmlJSImporter::Import import = *it;
             m_seenImports.insert(importId, qmldirPath);
             importDependencies(import, cacheTypes.get(), prefix, version, isDependency);
-            processImport(import, cacheTypes.get(), prefix, version);
+            processImport(cacheKey, import, cacheTypes.get());
 
             const bool typesFromCache = getTypesFromCache();
             Q_ASSERT(typesFromCache);
@@ -516,7 +518,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
             m_seenQmldirFiles.insert(qmldirPath, import);
             m_seenImports.insert(importId, qmldirPath);
             importDependencies(import, cacheTypes.get(), prefix, version, isDependency);
-            processImport(import, cacheTypes.get(), prefix, version);
+            processImport(cacheKey, import, cacheTypes.get());
 
             const bool typesFromCache = getTypesFromCache();
             Q_ASSERT(typesFromCache);

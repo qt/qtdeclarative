@@ -110,8 +110,8 @@ private:
     bool importHelper(const QString &module, AvailableTypes *types,
                       const QString &prefix = QString(), QTypeRevision version = QTypeRevision(),
                       bool isDependency = false, bool isFile = false);
-    void processImport(const Import &import, AvailableTypes *types,
-                       const QString &prefix = QString(), QTypeRevision version = QTypeRevision());
+    void processImport(const QQmlJSScope::Import &importDescription, const Import &import,
+                       AvailableTypes *types);
     void importDependencies(const QQmlJSImporter::Import &import, AvailableTypes *types,
                             const QString &prefix = QString(),
                             QTypeRevision version = QTypeRevision(), bool isDependency = false);
@@ -122,29 +122,8 @@ private:
 
     QStringList m_importPaths;
 
-    struct CacheKey
-    {
-        QString prefix;
-        QString name;
-        QTypeRevision version;
-        bool isFile = false;
-        bool isDependency = false;
-
-        friend inline size_t qHash(const CacheKey &key, size_t seed = 0) noexcept
-        {
-            return qHashMulti(seed, key.prefix, key.name, key.version,
-                              key.isFile, key.isDependency);
-        }
-
-        friend inline bool operator==(const CacheKey &a, const CacheKey &b)
-        {
-            return a.prefix == b.prefix && a.name == b.name && a.version == b.version
-                    && a.isFile == b.isFile && a.isDependency == b.isDependency;
-        }
-    };
-
     QHash<QPair<QString, QTypeRevision>, QString> m_seenImports;
-    QHash<CacheKey, QSharedPointer<AvailableTypes>> m_cachedImportTypes;
+    QHash<QQmlJSScope::Import, QSharedPointer<AvailableTypes>> m_cachedImportTypes;
     QHash<QString, Import> m_seenQmldirFiles;
 
     QHash<QString, QQmlJSScope::Ptr> m_importedFiles;
