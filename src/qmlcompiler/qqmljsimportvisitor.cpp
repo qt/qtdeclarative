@@ -310,12 +310,15 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
     processPropertyBindingObjects();
     checkRequiredProperties();
 
-    for (const auto &scope : m_objectBindingScopes)
-        checkInheritanceCycle(scope);
+    for (const auto &scope : m_objectBindingScopes) {
+        breakInheritanceCycles(scope);
+        checkDeprecation(scope);
+    }
 
     for (const auto &scope : m_objectDefinitionScopes) {
         checkGroupedAndAttachedScopes(scope);
-        checkInheritanceCycle(scope);
+        breakInheritanceCycles(scope);
+        checkDeprecation(scope);
     }
 
     auto unusedImports = m_importLocations;
@@ -801,25 +804,10 @@ void QQmlJSImportVisitor::addDefaultProperties()
     m_pendingDefaultProperties[m_currentScope->parentScope()] << m_currentScope;
 }
 
-void QQmlJSImportVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
+void QQmlJSImportVisitor::breakInheritanceCycles(const QQmlJSScope::Ptr &originalScope)
 {
-    QQmlJSScope::ConstPtr originalScope = scope;
     QList<QQmlJSScope::ConstPtr> scopes;
-    while (!scope.isNull()) {
-        for (const QQmlJSAnnotation &annotation : scope->annotations()) {
-            if (annotation.isDeprecation()) {
-                QQQmlJSDeprecation deprecation = annotation.deprecation();
-
-                QString message =
-                        QStringLiteral("Type \"%1\" is deprecated").arg(scope->internalName());
-
-                if (!deprecation.reason.isEmpty())
-                    message.append(QStringLiteral(" (Reason: %1)").arg(deprecation.reason));
-
-                m_logger.log(message, Log_Deprecation, originalScope->sourceLocation());
-            }
-        }
-
+    for (QQmlJSScope::ConstPtr scope = originalScope; scope;) {
         if (scopes.contains(scope)) {
             QString inheritenceCycle;
             for (const auto &seen : qAsConst(scopes)) {
@@ -832,20 +820,38 @@ void QQmlJSImportVisitor::checkInheritanceCycle(QQmlJSScope::ConstPtr scope)
                                  .arg(scope->internalName())
                                  .arg(inheritenceCycle),
                          Log_InheritanceCycle);
+            originalScope->clearBaseType();
             break;
         }
 
         scopes.append(scope);
 
-        if (scope->baseTypeName().isEmpty()) {
-            break;
-        } else if (auto newScope = scope->baseType()) {
-            scope = newScope;
-        } else {
+        const auto newScope = scope->baseType();
+        if (newScope.isNull() && !scope->baseTypeName().isEmpty()) {
             m_logger.log(scope->baseTypeName()
                                  + QStringLiteral(" was not found. Did you add all import paths?"),
                          Log_Import);
-            break;
+        }
+
+        scope = newScope;
+    }
+}
+
+void QQmlJSImportVisitor::checkDeprecation(const QQmlJSScope::ConstPtr &originalScope)
+{
+    for (QQmlJSScope::ConstPtr scope = originalScope; scope; scope = scope->baseType()) {
+        for (const QQmlJSAnnotation &annotation : scope->annotations()) {
+            if (annotation.isDeprecation()) {
+                QQQmlJSDeprecation deprecation = annotation.deprecation();
+
+                QString message =
+                        QStringLiteral("Type \"%1\" is deprecated").arg(scope->internalName());
+
+                if (!deprecation.reason.isEmpty())
+                    message.append(QStringLiteral(" (Reason: %1)").arg(deprecation.reason));
+
+                m_logger.log(message, Log_Deprecation, originalScope->sourceLocation());
+            }
         }
     }
 }

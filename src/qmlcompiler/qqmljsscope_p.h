@@ -219,6 +219,7 @@ public:
     void setBaseTypeName(const QString &baseTypeName) { m_baseTypeName = baseTypeName; }
     QString baseTypeName() const { return m_baseTypeName; }
     QQmlJSScope::ConstPtr baseType() const { return m_baseType; }
+    void clearBaseType() { m_baseType = QQmlJSScope::WeakConstPtr(); }
 
     void addOwnProperty(const QQmlJSMetaProperty &prop) { m_properties.insert(prop.propertyName(), prop); }
     QHash<QString, QQmlJSMetaProperty> ownProperties() const { return m_properties; }
