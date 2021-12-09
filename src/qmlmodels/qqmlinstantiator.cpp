@@ -128,7 +128,8 @@ void QQmlInstantiatorPrivate::_q_createdItem(int idx, QObject* item)
         return;
     if (requestedIndex != idx) // Asynchronous creation, reference the object
         (void)instanceModel->object(idx);
-    item->setParent(q);
+    if (!item->parent())
+        item->setParent(q);
     if (objects.size() < idx + 1) {
         int modelCount = instanceModel->count();
         if (objects.capacity() < modelCount)

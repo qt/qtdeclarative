@@ -83,13 +83,10 @@ Rectangle {
         z: 10000
         anchors.fill: parent
 
-        // TODO use Instantiator to create these... but we need to be able to set their parents to glassPane somehow (QTBUG-64546)
-        TouchpointFeedbackSprite { }
-        TouchpointFeedbackSprite { }
-        TouchpointFeedbackSprite { }
-        TouchpointFeedbackSprite { }
-        TouchpointFeedbackSprite { }
-        TouchpointFeedbackSprite { }
+        Instantiator {
+            model: 10
+            delegate: TouchpointFeedbackSprite { parent: glassPane }
+        }
 
         MouseFeedbackSprite { }
     }

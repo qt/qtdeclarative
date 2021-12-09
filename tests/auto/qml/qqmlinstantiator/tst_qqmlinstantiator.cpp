@@ -56,6 +56,8 @@ private slots:
 
     void asynchronous_data();
     void asynchronous();
+
+    void handlerWithParent();
 };
 
 tst_qqmlinstantiator::tst_qqmlinstantiator()
@@ -273,6 +275,19 @@ void tst_qqmlinstantiator::asynchronous()
         QCOMPARE(object->parent(), instantiator);
         QCOMPARE(object->property("success").toBool(), true);
         QCOMPARE(object->property("idx").toInt(), i);
+    }
+}
+
+void tst_qqmlinstantiator::handlerWithParent()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("handlerWithParent.qml"));
+    QObject *rootObject = component.create();
+    QVERIFY(rootObject != nullptr);
+    const auto handlers = rootObject->findChildren<QObject *>("pointHandler");
+    QCOMPARE(handlers.count(), 2);
+    for (const auto *h : handlers) {
+        QCOMPARE(h->parent(), rootObject);
     }
 }
 
