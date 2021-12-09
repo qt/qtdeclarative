@@ -6,6 +6,11 @@ QtObject {
     property variant qdate: new Date(2008,11,24)                    // 2008/12/24 hh:mm:ss.zzz
     property variant qdatetime: new Date(2008,11,24,14,15,38,200)   // 2008/12/24 14:15:38.200
 
+    property variant qdatetime0: new Date(2021, 6)                  // 2021-07-01 00:00:00
+    property variant qdatetime0utc: new Date(Date.UTC(2021, 6))     // 2021-07-01 00:00:00 UTC
+    property variant qdatetime1: new Date(2021, 7, 0)               // 2021-07-31 00:00:00
+    property variant qdatetime1utc: new Date(Date.UTC(2021, 7, 0))  // 2021-07-31 00:00:00 UTC
+
     property variant qdatetime2: new Date(2852,11,31,23,59,59,500)  // 2852/12/31 23:59:59.500
     property variant qdatetime3: new Date(2000,0,1,0,0,0,0)         // 2000/01/01 00:00:00.000
     property variant qdatetime4: new Date(2001,1,2)                 // 2001/02/02 hh:mm:ss.zzz
