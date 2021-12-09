@@ -303,14 +303,12 @@ QQuickItem *QQuickSelectionRectanglePrivate::createHandle(QQmlComponent *delegat
     // Add pointer handlers to it
     QQuickDragHandler *dragHandler = new QQuickDragHandler();
     dragHandler->setTarget(nullptr);
-    dragHandler->setParent(handleItem);
-    QQuickItemPrivate::get(handleItem)->addPointerHandler(dragHandler);
+    dragHandler->setParentItem(handleItem);
 
     QQuickHoverHandler *hoverHandler = new QQuickHoverHandler();
     hoverHandler->setTarget(nullptr);
-    hoverHandler->setParent(handleItem);
+    hoverHandler->setParentItem(handleItem);
     hoverHandler->setCursorShape(Qt::SizeFDiagCursor);
-    QQuickItemPrivate::get(handleItem)->addPointerHandler(hoverHandler);
 
     QObject::connect(dragHandler, &QQuickDragHandler::activeChanged, [this, corner, handleItem, dragHandler]() {
         if (dragHandler->active()) {
@@ -425,6 +423,8 @@ QQuickSelectionRectangle::QQuickSelectionRectangle(QQuickItem *parent)
     : QQuickControl(*(new QQuickSelectionRectanglePrivate), parent)
 {
     Q_D(QQuickSelectionRectangle);
+    d->m_tapHandler->setParent(this);
+    d->m_dragHandler->setParent(this);
 
     QObject::connect(this, &QQuickItem::enabledChanged, [=]() {
         d->m_scrollTimer.stop();
@@ -447,8 +447,8 @@ void QQuickSelectionRectangle::setTarget(QQuickItem *target)
 
     if (d->m_selectable) {
         d->m_scrollTimer.stop();
-        d->m_tapHandler->setParent(nullptr);
-        d->m_dragHandler->setParent(nullptr);
+        d->m_tapHandler->setParent(this);
+        d->m_dragHandler->setParent(this);
         d->m_target->disconnect(this);
     }
 
@@ -463,10 +463,8 @@ void QQuickSelectionRectangle::setTarget(QQuickItem *target)
 
     if (d->m_selectable) {
         const auto handlerTarget = d->m_selectable->selectionPointerHandlerTarget();
-        d->m_dragHandler->setParent(handlerTarget);
-        d->m_tapHandler->setParent(handlerTarget);
-        QQuickItemPrivate::get(handlerTarget)->addPointerHandler(d->m_tapHandler);
-        QQuickItemPrivate::get(handlerTarget)->addPointerHandler(d->m_dragHandler);
+        d->m_dragHandler->setParentItem(handlerTarget);
+        d->m_tapHandler->setParentItem(handlerTarget);
         d->connectToTarget();
         d->updateSelectionMode();
     }
