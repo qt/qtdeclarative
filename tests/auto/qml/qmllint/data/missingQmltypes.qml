@@ -1,4 +1,4 @@
 import QtQml
-import Qt5Compat.GraphicalEffects.private
+import Fake5Compat.GraphicalEffects.private
 
 QtObject {}
