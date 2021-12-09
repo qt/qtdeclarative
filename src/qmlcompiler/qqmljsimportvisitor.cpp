@@ -75,9 +75,9 @@ inline QString getScopeName(const QQmlJSScope::ConstPtr &scope, QQmlJSScope::Sco
 
 QQmlJSImportVisitor::QQmlJSImportVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
                                          const QString &implicitImportDirectory,
-                                         const QStringList &qmltypesFiles)
+                                         const QStringList &qmldirFiles)
     : m_implicitImportDirectory(implicitImportDirectory),
-      m_qmltypesFiles(qmltypesFiles),
+      m_qmldirFiles(qmldirFiles),
       m_currentScope(QQmlJSScope::create(QQmlJSScope::JSFunctionScope)),
       m_importer(importer),
       m_logger(logger)
@@ -321,8 +321,8 @@ void QQmlJSImportVisitor::importBaseModules()
         addImportWithLocation(name, invalidLoc);
     }
 
-    if (!m_qmltypesFiles.isEmpty())
-        m_importer->importQmltypes(m_qmltypesFiles);
+    if (!m_qmldirFiles.isEmpty())
+        m_importer->importQmldirs(m_qmldirFiles);
 
     // Pulling in the modules and neighboring qml files of the qmltypes we're trying to lint is not
     // something we need to do.

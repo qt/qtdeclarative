@@ -70,11 +70,11 @@ int main(int argc, char **argv)
         QCoreApplication::translate("main", "import directory")
     };
     parser.addOption(importPathOption);
-    QCommandLineOption qmltypesOption {
-        u"i"_qs, QCoreApplication::translate("main", "Include extra qmltypes"),
-        QCoreApplication::translate("main", "qmltypes file")
+    QCommandLineOption qmldirOption {
+        u"i"_qs, QCoreApplication::translate("main", "Include extra qmldir files"),
+        QCoreApplication::translate("main", "qmldir file")
     };
-    parser.addOption(qmltypesOption);
+    parser.addOption(qmldirOption);
     QCommandLineOption outputCppOption {
         u"impl"_qs, QCoreApplication::translate("main", "Generated C++ source file path"),
         QCoreApplication::translate("main", "cpp path")
@@ -132,7 +132,7 @@ int main(int argc, char **argv)
     QStringList importPaths = parser.values(importPathOption);
     importPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
     importPaths.append(QFileInfo(url).absolutePath());
-    QStringList qmltypesFiles = parser.values(qmltypesOption);
+    QStringList qmldirFiles = parser.values(qmldirOption);
 
     QString outputCppFile;
     if (!parser.isSet(outputCppOption)) {
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
     logger.setFileName(url);
     logger.setCode(sourceCode);
     setupLogger(logger);
-    QmltcVisitor visitor(&importer, &logger, implicitImportDirectory, qmltypesFiles);
+    QmltcVisitor visitor(&importer, &logger, implicitImportDirectory, qmldirFiles);
     QmltcTypeResolver typeResolver { &importer };
     typeResolver.init(&visitor, document.program);
 

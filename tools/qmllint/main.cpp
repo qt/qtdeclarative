@@ -130,17 +130,19 @@ All warnings can be set to three levels:
     const QString qmlImportNoDefaultSetting = QLatin1String("DisableDefaultImports");
     settings.addOption(qmlImportNoDefaultSetting, false);
 
-    QCommandLineOption qmltypesFilesOption(
+    QCommandLineOption qmldirFilesOption(
             QStringList() << "i"
                           << "qmltypes",
-            QLatin1String("Import the specified qmltypes files. By default, all qmltypes files "
-                          "found in the current directory are used. When this option is set, you "
-                          "have to explicitly add files from the current directory if you want "
-                          "them to be used."),
-            QLatin1String("qmltypes"));
-    parser.addOption(qmltypesFilesOption);
-    const QString qmltypesFilesSetting = QLatin1String("OverwriteImportTypes");
-    settings.addOption(qmltypesFilesSetting);
+            QLatin1String("Import the specified qmldir files. By default, the qmldir file found "
+                          "in the current directory is used if present. If no qmldir file is found,"
+                          "but qmltypes files are, those are imported instead. When this option is "
+                          "set, you have to explicitly add the qmldir or any qmltypes files in the "
+                          "current directory if you want it to be used. Importing qmltypes files "
+                          "without their corresponding qmldir file is inadvisable."),
+            QLatin1String("qmldirs"));
+    parser.addOption(qmldirFilesOption);
+    const QString qmldirFilesSetting = QLatin1String("OverwriteImportTypes");
+    settings.addOption(qmldirFilesSetting);
 
     QCommandLineOption absolutePath(
             QStringList() << "absolute-path",
@@ -192,18 +194,25 @@ All warnings can be set to three levels:
     QStringList qmlImportPaths =
             parser.isSet(qmlImportNoDefault) ? QStringList {} : defaultImportPaths;
 
-    QStringList defaultQmltypesFiles;
-    if (parser.isSet(qmltypesFilesOption)) {
-        defaultQmltypesFiles = parser.values(qmltypesFilesOption);
+    QStringList defaultQmldirFiles;
+    if (parser.isSet(qmldirFilesOption)) {
+        defaultQmldirFiles = parser.values(qmldirFilesOption);
     } else {
-        // If none are given explicitly, use the qmltypes files from the current directory.
-        QDirIterator it(".", {"*.qmltypes"}, QDir::Files);
-        while (it.hasNext()) {
-            it.next();
-            defaultQmltypesFiles.append(it.fileInfo().absoluteFilePath());
+        // If nothing given explicitly, use the qmldir file from the current directory.
+        QFileInfo qmldirFile(QStringLiteral("qmldir"));
+        if (qmldirFile.isFile()) {
+            defaultQmldirFiles.append(qmldirFile.absoluteFilePath());
+        } else {
+            // If no qmldir file is found, use the qmltypes files
+            // from the current directory for backwards compatibility.
+            QDirIterator it(".", {"*.qmltypes"}, QDir::Files);
+            while (it.hasNext()) {
+                it.next();
+                defaultQmldirFiles.append(it.fileInfo().absoluteFilePath());
+            }
         }
     }
-    QStringList qmltypesFiles = defaultQmltypesFiles;
+    QStringList qmldirFiles = defaultQmldirFiles;
 
     const QStringList defaultResourceFiles =
             parser.isSet(resourceOption) ? parser.values(resourceOption) : QStringList {};
@@ -241,12 +250,12 @@ All warnings can be set to three levels:
 
             addAbsolutePaths(resourceFiles, settings.value(resourceSetting).toStringList());
 
-            qmltypesFiles = defaultQmltypesFiles;
-            if (settings.isSet(qmltypesFilesSetting)
-                && !settings.value(qmltypesFilesSetting).toStringList().isEmpty()) {
-                qmltypesFiles = {};
-                addAbsolutePaths(qmltypesFiles,
-                                 settings.value(qmltypesFilesSetting).toStringList());
+            qmldirFiles = defaultQmldirFiles;
+            if (settings.isSet(qmldirFilesSetting)
+                && !settings.value(qmldirFilesSetting).toStringList().isEmpty()) {
+                qmldirFiles = {};
+                addAbsolutePaths(qmldirFiles,
+                                 settings.value(qmldirFilesSetting).toStringList());
             }
 
             if (parser.isSet(qmlImportNoDefault)
@@ -267,7 +276,7 @@ All warnings can be set to three levels:
     for (const QString &filename : arguments) {
 #endif
         success &= linter.lintFile(filename, nullptr, silent, useJson ? &jsonFiles : nullptr,
-                                   qmlImportPaths, qmltypesFiles, resourceFiles, options);
+                                   qmlImportPaths, qmldirFiles, resourceFiles, options);
     }
 
     if (useJson) {

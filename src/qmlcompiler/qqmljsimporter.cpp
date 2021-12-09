@@ -439,17 +439,32 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
 /*!
  * Imports types from the specified \a qmltypesFiles.
  */
-void QQmlJSImporter::importQmltypes(const QStringList &qmltypesFiles)
+void QQmlJSImporter::importQmldirs(const QStringList &qmldirFiles)
 {
     AvailableTypes types(builtinImportHelper().cppNames);
 
-    for (const auto &qmltypeFile : qmltypesFiles) {
+    for (const auto &file : qmldirFiles) {
         Import result;
-        readQmltypes(qmltypeFile, &result.objects, &result.dependencies);
+        QString qmldirName;
+        if (file.endsWith(SlashQmldir)) {
+            result = readQmldir(file.chopped(SlashQmldir.size()));
+            qmldirName = file;
+        } else {
+            m_warnings.append({
+                QStringLiteral("Argument %1 to -i option is not a qmldir file. Assuming qmltypes.")
+                                  .arg(file),
+                QtWarningMsg,
+                QQmlJS::SourceLocation()
+            });
 
-        // Append _FAKE_QMLDIR to our made up qmldir name so that if it ever gets used somewhere else except for cache lookups,
-        // it will blow up due to a missing file instead of producing weird results.
-        const QString qmldirName = qmltypeFile + QStringLiteral("_FAKE_QMLDIR");
+            readQmltypes(file, &result.objects, &result.dependencies);
+
+            // Append _FAKE_QMLDIR to our made up qmldir name so that if it ever gets used somewhere
+            // else except for cache lookups, it will blow up due to a missing file instead of
+            // producing weird results.
+            qmldirName = file + QStringLiteral("_FAKE_QMLDIR");
+        }
+
         m_seenQmldirFiles.insert(qmldirName, result);
 
         for (const auto &object : qAsConst(result.objects)) {

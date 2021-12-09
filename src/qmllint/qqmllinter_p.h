@@ -56,7 +56,7 @@ public:
 
     bool lintFile(const QString &filename, const QString *fileContents, const bool silent,
                   QJsonArray *json, const QStringList &qmlImportPaths,
-                  const QStringList &qmltypesFiles, const QStringList &resourceFiles,
+                  const QStringList &qmldirFiles, const QStringList &resourceFiles,
                   const QMap<QString, QQmlJSLogger::Option> &options);
 
     const QQmlJSLogger *logger() const { return m_logger.get(); }

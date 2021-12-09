@@ -44,12 +44,12 @@
 QT_BEGIN_NAMESPACE
 
 FindWarningVisitor::FindWarningVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
-                                       QStringList qmltypesFiles,
+                                       QStringList qmldirFiles,
                                        QList<QQmlJS::SourceLocation> comments)
     : QQmlJSImportVisitor(
             importer, logger,
             implicitImportDirectory(logger->fileName(), importer->resourceFileMapper()),
-            qmltypesFiles)
+            qmldirFiles)
 {
     parseComments(comments);
 }

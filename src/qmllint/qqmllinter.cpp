@@ -54,7 +54,7 @@ QQmlLinter::QQmlLinter(const QStringList &importPaths, bool useAbsolutePath)
 
 bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, const bool silent,
                           QJsonArray *json, const QStringList &qmlImportPaths,
-                          const QStringList &qmltypesFiles, const QStringList &resourceFiles,
+                          const QStringList &qmldirFiles, const QStringList &resourceFiles,
                           const QMap<QString, QQmlJSLogger::Option> &options)
 {
     // Make sure that we don't expose an old logger if we return before a new one is created.
@@ -198,7 +198,7 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
             FindWarningVisitor v {
                 &m_importer,
                 m_logger.get(),
-                qmltypesFiles,
+                qmldirFiles,
                 engine.comments(),
             };
 
@@ -231,7 +231,7 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
                     ? u':' + resourcePaths.first()
                     : filename;
 
-            Codegen codegen { &m_importer, resolvedPath, qmltypesFiles, m_logger.get(), &typeInfo };
+            Codegen codegen { &m_importer, resolvedPath, qmldirFiles, m_logger.get(), &typeInfo };
             codegen.setTypeResolver(std::move(typeResolver));
             QQmlJSSaveFunction saveFunction = [](const QV4::CompiledData::SaveableUnitPointer &,
                                                  const QQmlJSAotFunctionMap &,

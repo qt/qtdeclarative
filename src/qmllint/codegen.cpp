@@ -39,8 +39,8 @@
 QT_BEGIN_NAMESPACE
 
 Codegen::Codegen(QQmlJSImporter *importer, const QString &fileName,
-                 const QStringList &qmltypesFiles, QQmlJSLogger *logger, QQmlJSTypeInfo *typeInfo)
-    : QQmlJSAotCompiler(importer, fileName, qmltypesFiles, logger)
+                 const QStringList &qmldirFiles, QQmlJSLogger *logger, QQmlJSTypeInfo *typeInfo)
+    : QQmlJSAotCompiler(importer, fileName, qmldirFiles, logger)
     , m_typeInfo(typeInfo)
 {
 }

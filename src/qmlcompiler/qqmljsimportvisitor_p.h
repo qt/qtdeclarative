@@ -61,7 +61,7 @@ class QQmlJSImportVisitor : public QQmlJS::AST::Visitor
 public:
     QQmlJSImportVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
                         const QString &implicitImportDirectory,
-                        const QStringList &qmltypesFiles = QStringList());
+                        const QStringList &qmldirFiles = QStringList());
     ~QQmlJSImportVisitor();
 
     QQmlJSScope::Ptr result() const;
@@ -152,7 +152,7 @@ protected:
     QString m_implicitImportDirectory;
     QStringView m_inlineComponentName;
     bool m_nextIsInlineComponent = false;
-    QStringList m_qmltypesFiles;
+    QStringList m_qmldirFiles;
     QQmlJSScope::Ptr m_currentScope;
     QQmlJSScope::Ptr m_savedBindingOuterScope;
     QQmlJSScope::Ptr m_exportedRootScope;

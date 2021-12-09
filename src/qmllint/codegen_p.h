@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 class Codegen : public QQmlJSAotCompiler
 {
 public:
-    Codegen(QQmlJSImporter *importer, const QString &fileName, const QStringList &qmltypesFiles,
+    Codegen(QQmlJSImporter *importer, const QString &fileName, const QStringList &qmldirFiles,
             QQmlJSLogger *logger, QQmlJSTypeInfo *typeInfo);
 
     void setDocument(const QmlIR::JSCodeGen *codegen, const QmlIR::Document *document) override;

@@ -1022,7 +1022,7 @@ function(qt6_target_compile_qml_to_cpp target)
     set(args_single NAMESPACE)
     set(args_multi FILES)
 
-    # TODO: add qmltypes argument
+    # TODO: add qmldir argument
     # TODO: add qml import path argument
 
     cmake_parse_arguments(PARSE_ARGV 1 arg
@@ -1555,7 +1555,12 @@ function(qt6_target_qml_sources target)
     endif()
 
     if(NOT no_cachegen AND arg_QML_FILES)
-        _qt_internal_genex_getproperty(types_file    ${target} QT_QML_MODULE_PLUGIN_TYPES_FILE)
+
+        # Even if we don't generate a qmldir file, it still should be here, manually written.
+        # We can pass it unconditionally. If it's not there, qmlcachegen or qmlsc might warn,
+        # but that's not fatal.
+        set(qmldir_file ${output_dir}/qmldir)
+
         _qt_internal_genex_getproperty(qmlcachegen   ${target} QT_QMLCACHEGEN_EXECUTABLE)
         _qt_internal_genex_getproperty(direct_calls  ${target} QT_QMLCACHEGEN_DIRECT_CALLS)
         _qt_internal_genex_getjoinedproperty(arguments ${target}
@@ -1575,7 +1580,7 @@ function(qt6_target_qml_sources target)
         endif()
         set(cachegen_args
             ${import_paths}
-            "$<${have_types_file}:-i$<SEMICOLON>${types_file}>"
+            -i "${qmldir_file}"
             "$<${have_direct_calls}:--direct-calls>"
             "$<${have_arguments}:${arguments}>"
             ${qrc_resource_args}

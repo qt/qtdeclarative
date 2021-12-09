@@ -112,8 +112,8 @@ int main(int argc, char **argv)
     parser.addOption(directCallsOption);
     QCommandLineOption importsOption(
                 QStringLiteral("i"),
-                QCoreApplication::translate("main", "Import extra qmltypes"),
-                QCoreApplication::translate("main", "qmltypes file"));
+                QCoreApplication::translate("main", "Import extra qmldir"),
+                QCoreApplication::translate("main", "qmldir file"));
     parser.addOption(importsOption);
     QCommandLineOption importPathOption(
                 QStringLiteral("I"),

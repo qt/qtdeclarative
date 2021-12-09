@@ -353,9 +353,10 @@ void TestQmllint::autoqmltypes()
     process.waitForFinished();
 
     QCOMPARE(process.exitStatus(), QProcess::NormalExit);
-    QCOMPARE(process.exitCode(), 0);
+    QVERIFY(process.exitCode() != 0);
 
-    QVERIFY(process.readAllStandardError().isEmpty());
+    QVERIFY(process.readAllStandardError()
+                .contains("is not a qmldir file. Assuming qmltypes"));
     QVERIFY(process.readAllStandardOutput().isEmpty());
 }
 
@@ -1169,7 +1170,8 @@ void TestQmllint::settingsFile()
     QVERIFY(runQmllint("settings/bare/bare.qml", false, { "--bare" }, false, false)
                     .contains(QStringLiteral("Failed to find the following builtins: "
                                              "builtins.qmltypes, jsroot.qmltypes")));
-    QVERIFY(runQmllint("settings/qmltypes/qmltypes.qml", true, QStringList(), false).isEmpty());
+    QVERIFY(runQmllint("settings/qmltypes/qmltypes.qml", false, QStringList(), false)
+                    .contains(QStringLiteral("not a qmldir file. Assuming qmltypes.")));
 }
 
 void TestQmllint::additionalImplicitImport()
