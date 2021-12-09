@@ -3891,27 +3891,27 @@ void tst_QQuickItem::viewport_data()
     QTest::newRow("inner and outer: vp and observing, inner pos offset") << true
         << false << true << true
         << false << true << true
-        << QPoint(120, 120) << QPoint() << QRect(55, 55, 80, 80) << QRect(0, 0, 175, 175);
+        << QPoint(120, 120) << QPoint() << QRect(55, 55, 80, 80) << QRect(0, 0, 290, 290);
     QTest::newRow("inner and outer: vp and observing, inner neg offset") << true
         << false << true << true
         << false << true << true
-        << QPoint(-70, -50) << QPoint() << QRect(105, 85, 170, 190) << QRect(65, 45, 225, 245);
+        << QPoint(-70, -50) << QPoint() << QRect(105, 85, 170, 190) << QRect(0, 0, 290, 290);
     QTest::newRow("inner and outer: vp and observing, outer pos offset") << true
         << false << true << true
         << false << true << true
-         << QPoint() << QPoint(220, 220) << QRect(55, 55, 20, 20) << QRect(0, 0, 75, 75);
+         << QPoint() << QPoint(220, 220) << QRect(55, 55, 20, 20) << QRect(0, 0, 290, 290);
     QTest::newRow("inner and outer: vp and observing, outer neg offset") << true
         << false << true << true
         << false << true << true
-        << QPoint() << QPoint(-70, -50) << QRect(65, 55, 190, 200) << QRect(65, 45, 225, 245);
+        << QPoint() << QPoint(-70, -50) << QRect(65, 55, 190, 200) << QRect(0, 0, 290, 290);
     QTest::newRow("inner and outer: vp and observing, pos and neg offset") << true
         << false << true << true
         << false << true << true
-        << QPoint(150, 150) << QPoint(-170, -150) << QRect(55, 55, 50, 50) << QRect(15, 0, 275, 290);
+        << QPoint(150, 150) << QPoint(-170, -150) << QRect(55, 55, 50, 50) << QRect(0, 0, 290, 290);
     QTest::newRow("inner and outer: vp and observing, neg and pos offset") << true
         << false << true << true
         << false << true << true
-        << QPoint(-180, -210) << QPoint(100, 115) << QRect(215, 245, 60, 30) << QRect(75, 90, 215, 200);
+        << QPoint(-180, -210) << QPoint(100, 115) << QRect(215, 245, 60, 30) << QRect(0, 0, 290, 290);
     QTest::newRow("inner and outer: vp not observing") << true
         << false << true << false
         << false << true << false
@@ -3919,19 +3919,19 @@ void tst_QQuickItem::viewport_data()
     QTest::newRow("inner and outer: vp not observing, inner pos offset") << true
         << false << true << false
         << false << true << false
-        << QPoint(120, 120) << QPoint() << QRect(55, 55, 120, 120) << QRect(0, 0, 175, 175);
+        << QPoint(120, 120) << QPoint() << QRect(55, 55, 220, 220) << QRect(0, 0, 290, 290);
     QTest::newRow("inner and outer: vp not observing, inner neg offset") << true
         << false << true << false
         << false << true << false
-        << QPoint(-70, -50) << QPoint() << QRect(65, 55, 210, 220) << QRect(65, 45, 225, 245);
+        << QPoint(-70, -50) << QPoint() << QRect(55, 55, 220, 220) << QRect(0, 0, 290, 290);
     QTest::newRow("inner and outer: vp not observing, outer pos offset") << true
         << false << true << false
         << false << true << false
-         << QPoint() << QPoint(220, 220) << QRect(55, 55, 20, 20) << QRect(0, 0, 75, 75);
+         << QPoint() << QPoint(220, 220) << QRect(55, 55, 220, 220) << QRect(0, 0, 290, 290);
     QTest::newRow("inner and outer: vp not observing, outer neg offset") << true
         << false << true << false
         << false << true << false
-        << QPoint() << QPoint(-70, -50) << QRect(65, 55, 210, 220) << QRect(65, 45, 225, 245);
+        << QPoint() << QPoint(-70, -50) << QRect(55, 55, 220, 220) << QRect(0, 0, 290, 290);
     QTest::newRow("inner clipping and observing") << true
         << true << true << true
         << false << false << false

@@ -5587,11 +5587,11 @@ QRectF QQuickItem::boundingRect() const
 
 /*!
     Returns the rectangular area within this item that is currently visible in
-    \l viewportItem(), if there is a viewport; otherwise, the extents of this
-    item in its own coordinate system: a rectangle from \c{0, 0} to \l width()
-    and \l height(). This is the region intended to remain visible if \l clip
-    is \c true. It can also be used in updatePaintNode() to limit the graphics
-    added to the scene graph.
+    \l viewportItem(), if there is a viewport and the \l ItemObservesViewport
+    flag is set; otherwise, the extents of this item in its own coordinate
+    system: a rectangle from \c{0, 0} to \l width() and \l height(). This is
+    the region intended to remain visible if \l clip is \c true. It can also be
+    used in updatePaintNode() to limit the graphics added to the scene graph.
 
     For example, a large drawing or a large text document might be shown in a
     Flickable that occupies only part of the application's Window: in that
@@ -5610,14 +5610,16 @@ QRectF QQuickItem::clipRect() const
 {
     Q_D(const QQuickItem);
     QRectF ret(0, 0, d->width, d->height);
-    if (QQuickItem *viewport = viewportItem()) {
-        // if the viewport is already "this", there's nothing to intersect;
-        // and don't call clipRect() again, to avoid infinite recursion
-        if (viewport == this)
-            return ret;
-        const auto mappedViewportRect = mapRectFromItem(viewport, viewport->clipRect());
-        qCDebug(lcVP) << this << "intersecting" << viewport << mappedViewportRect << ret << "->" << mappedViewportRect.intersected(ret);
-        return mappedViewportRect.intersected(ret);
+    if (flags().testFlag(QQuickItem::ItemObservesViewport)) {
+        if (QQuickItem *viewport = viewportItem()) {
+            // if the viewport is already "this", there's nothing to intersect;
+            // and don't call clipRect() again, to avoid infinite recursion
+            if (viewport == this)
+                return ret;
+            const auto mappedViewportRect = mapRectFromItem(viewport, viewport->clipRect());
+            qCDebug(lcVP) << this << "intersecting" << viewport << mappedViewportRect << ret << "->" << mappedViewportRect.intersected(ret);
+            return mappedViewportRect.intersected(ret);
+        }
     }
     return ret;
 }
