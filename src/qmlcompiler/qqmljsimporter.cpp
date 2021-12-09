@@ -154,8 +154,12 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
         auto mo = qmlComponents.find(it.key());
         if (mo == qmlComponents.end()) {
             QQmlJSScope::Ptr imported = localFile2ScopeTree(filePath);
-            if (it->singleton)
-                imported->setIsSingleton(true);
+            if (it->singleton) {
+                if (auto *factory = imported.factory())
+                    factory->setIsSingleton(true);
+                else
+                    imported->setIsSingleton(true);
+            }
             mo = qmlComponents.insert(it.key(), {imported, QList<QQmlJSScope::Export>() });
         }
 
@@ -311,14 +315,18 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
     // only happen when enumerations are involved, thus the strategy is to
     // resolve enumerations (which can potentially create new child scopes)
     // before resolving the type fully
-    for (auto it = import.objects.begin(); it != import.objects.end(); ++it)
-        QQmlJSScope::resolveEnums(it->scope, tempTypes.cppNames, nullptr);
+    for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
+        if (QDeferredFactory<QQmlJSScope> *factory = it->scope.factory())
+            factory->setImport(importDescription);
+        else
+            QQmlJSScope::resolveEnums(it->scope, tempTypes.cppNames, nullptr);
+    }
 
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         const auto &val = it.value();
 
         // Otherwise we have already done it in localFile2ScopeTree()
-        if (val.scope->baseType().isNull())
+        if (!val.scope.factory() && val.scope->baseType().isNull())
             QQmlJSScope::resolveNonEnumTypes(val.scope, tempTypes.cppNames);
     }
 }

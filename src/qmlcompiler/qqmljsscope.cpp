@@ -663,6 +663,22 @@ QQmlJSScope QDeferredFactory<QQmlJSScope>::create() const
     QQmlJSScope::Ptr result = typeReader();
     m_importer->m_warnings.append(typeReader.errors());
     result->setInternalName(internalName());
+
+    if (m_import.isValid()) {
+        auto availableTypes = m_importer->m_cachedImportTypes.find(m_import);
+        Q_ASSERT(availableTypes != m_importer->m_cachedImportTypes.end());
+
+        QQmlJSImporter::AvailableTypes tempTypes(m_importer->builtinInternalNames());
+        tempTypes.cppNames.insert((*availableTypes)->cppNames);
+
+        QQmlJSScope::resolveEnums(result, tempTypes.cppNames, nullptr);
+        if (result->baseType().isNull())
+            QQmlJSScope::resolveNonEnumTypes(result, tempTypes.cppNames);
+    }
+
+    if (m_isSingleton)
+        result->setIsSingleton(true);
+
     return std::move(*result);
 }
 

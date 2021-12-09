@@ -56,34 +56,6 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlJSImporter;
-class QQmlJSScope;
-
-template<>
-class QDeferredFactory<QQmlJSScope>
-{
-public:
-    QDeferredFactory() = default;
-
-    QDeferredFactory(QQmlJSImporter *importer, const QString &filePath) :
-        m_filePath(filePath), m_importer(importer)
-    {}
-
-    QQmlJSScope create() const;
-
-    bool isValid() const
-    {
-        return !m_filePath.isEmpty() && m_importer != nullptr;
-    }
-
-    QString internalName() const
-    {
-        return QFileInfo(m_filePath).baseName();
-    }
-
-private:
-    QString m_filePath;
-    QQmlJSImporter *m_importer = nullptr;
-};
 
 class QQmlJSScope
 {
@@ -503,6 +475,45 @@ private:
 
     QQmlJS::SourceLocation m_sourceLocation;
     int m_runtimeId = -1; // an index counterpart of "foobar" in `id: foobar`
+};
+
+template<>
+class QDeferredFactory<QQmlJSScope>
+{
+public:
+    QDeferredFactory() = default;
+
+    QDeferredFactory(QQmlJSImporter *importer, const QString &filePath) :
+        m_filePath(filePath), m_importer(importer)
+    {}
+
+    QQmlJSScope create() const;
+
+    bool isValid() const
+    {
+        return !m_filePath.isEmpty() && m_importer != nullptr;
+    }
+
+    QString internalName() const
+    {
+        return QFileInfo(m_filePath).baseName();
+    }
+
+    void setIsSingleton(bool isSingleton)
+    {
+        m_isSingleton = isSingleton;
+    }
+
+    void setImport(const QQmlJSScope::Import &import)
+    {
+        m_import = import;
+    }
+
+private:
+    QQmlJSScope::Import m_import;
+    QString m_filePath;
+    QQmlJSImporter *m_importer = nullptr;
+    bool m_isSingleton = false;
 };
 
 struct QQmlJSExportedScope {
