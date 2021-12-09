@@ -60,7 +60,7 @@ public:
     void setResourceFileMapper(QQmlJSResourceFileMapper *mapper) { m_mapper = mapper; }
 
     ImportedTypes importBuiltins();
-    void importQmltypes(const QStringList &qmltypesFiles);
+    void importQmldirs(const QStringList &qmltypesFiles);
 
     QQmlJSScope::Ptr importFile(const QString &file);
     ImportedTypes importDirectory(const QString &directory, const QString &prefix = QString());

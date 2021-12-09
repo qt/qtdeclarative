@@ -77,7 +77,7 @@ class QQmlJSAotCompiler
 {
 public:
     QQmlJSAotCompiler(QQmlJSImporter *importer, const QString &resourcePath,
-                      const QStringList &qmltypesFiles, QQmlJSLogger *logger);
+                      const QStringList &qmldirFiles, QQmlJSLogger *logger);
 
     virtual ~QQmlJSAotCompiler() = default;
 
@@ -98,7 +98,7 @@ protected:
     QStringList m_entireSourceCodeLines;
 
     const QString m_resourcePath;
-    const QStringList m_qmltypesFiles;
+    const QStringList m_qmldirFiles;
 
     const QmlIR::Document *m_document = nullptr;
     const QmlIR::Object *m_currentObject = nullptr;

@@ -44,8 +44,8 @@ static QString uniqueNameFromPieces(const QStringList &pieces, QHash<QString, in
 }
 
 QmltcVisitor::QmltcVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
-                           const QString &implicitImportDirectory, const QStringList &qmltypesFiles)
-    : QQmlJSImportVisitor(importer, logger, implicitImportDirectory, qmltypesFiles)
+                           const QString &implicitImportDirectory, const QStringList &qmldirFiles)
+    : QQmlJSImportVisitor(importer, logger, implicitImportDirectory, qmldirFiles)
 {
     m_qmlTypeNames.append(QFileInfo(logger->fileName()).baseName()); // put document root
 }

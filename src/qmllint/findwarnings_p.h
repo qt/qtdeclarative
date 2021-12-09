@@ -58,7 +58,7 @@ class FindWarningVisitor : public QQmlJSImportVisitor
     Q_DISABLE_COPY_MOVE(FindWarningVisitor)
 public:
     explicit FindWarningVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
-                                QStringList qmltypesFiles, QList<QQmlJS::SourceLocation> comments);
+                                QStringList qmldirFiles, QList<QQmlJS::SourceLocation> comments);
     ~FindWarningVisitor() override = default;
     bool check();
 

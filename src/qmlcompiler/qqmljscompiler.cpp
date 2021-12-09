@@ -620,11 +620,11 @@ bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFile
 }
 
 QQmlJSAotCompiler::QQmlJSAotCompiler(
-        QQmlJSImporter *importer, const QString &resourcePath, const QStringList &qmltypesFiles,
+        QQmlJSImporter *importer, const QString &resourcePath, const QStringList &qmldirFiles,
         QQmlJSLogger *logger)
     : m_typeResolver(importer)
     , m_resourcePath(resourcePath)
-    , m_qmltypesFiles(qmltypesFiles)
+    , m_qmldirFiles(qmldirFiles)
     , m_importer(importer)
     , m_logger(logger)
 {
@@ -642,7 +642,7 @@ void QQmlJSAotCompiler::setDocument(
     m_entireSourceCodeLines = irDocument->code.split(u'\n');
     QQmlJSImportVisitor visitor(m_importer, m_logger,
                                 resourcePathInfo.canonicalPath() + u'/',
-                                m_qmltypesFiles);
+                                m_qmldirFiles);
     m_typeResolver.init(&visitor, irDocument->program);
 }
 

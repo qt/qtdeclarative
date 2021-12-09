@@ -46,7 +46,7 @@ class QmltcVisitor : public QQmlJSImportVisitor
 public:
     QmltcVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
                  const QString &implicitImportDirectory,
-                 const QStringList &qmltypesFiles = QStringList());
+                 const QStringList &qmldirFiles = QStringList());
 
     bool visit(QQmlJS::AST::UiObjectDefinition *) override;
     void endVisit(QQmlJS::AST::UiObjectDefinition *) override;
