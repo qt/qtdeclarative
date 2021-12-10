@@ -906,7 +906,7 @@ public:
     QQuickKeyEvent theKeyEvent;
 };
 
-class QQuickKeysAttached : public QObject, public QQuickItemKeyFilter
+class Q_QUICK_PRIVATE_EXPORT QQuickKeysAttached : public QObject, public QQuickItemKeyFilter
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickKeysAttached)

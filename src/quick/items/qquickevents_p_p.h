@@ -72,7 +72,7 @@ class QPointerEvent;
 class QMouseEvent;
 class QQuickPointerHandler;
 
-class QQuickKeyEvent : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickKeyEvent : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(int key READ key CONSTANT)
