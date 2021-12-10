@@ -129,6 +129,19 @@ void QQmlJSImporter::readQmltypes(
     }
 }
 
+static QString internalName(const QQmlJSScope::ConstPtr &scope)
+{
+    if (const auto *factory = scope.factory())
+        return factory->internalName();
+    return scope->internalName();
+}
+
+static bool isComposite(const QQmlJSScope::ConstPtr &scope)
+{
+    // The only thing the factory can do is load a composite type.
+    return scope.factory() || scope->isComposite();
+}
+
 QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
 {
     Import result;
@@ -171,7 +184,7 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
             continue;
         }
 
-        auto mo = qmlComponents.find(it.key());
+        auto mo = qmlComponents.find(it->fileName);
         if (mo == qmlComponents.end()) {
             QQmlJSScope::Ptr imported = localFile2ScopeTree(filePath);
             if (it->singleton) {
@@ -180,7 +193,7 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
                 else
                     imported->setIsSingleton(true);
             }
-            mo = qmlComponents.insert(it.key(), {imported, QList<QQmlJSScope::Export>() });
+            mo = qmlComponents.insert(it->fileName, {imported, QList<QQmlJSScope::Export>() });
         }
 
         mo->exports.append(QQmlJSScope::Export(reader.typeNamespace(), it.key(), it->version));
@@ -191,7 +204,12 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
     const auto scripts = reader.scripts();
     for (const auto &script : scripts) {
         const QString filePath = path + QLatin1Char('/') + script.fileName;
-        result.scripts.insert(script.nameSpace, { localFile2ScopeTree(filePath), {}});
+        auto mo = result.scripts.find(script.fileName);
+        if (mo == result.scripts.end())
+            mo = result.scripts.insert(script.fileName, { localFile2ScopeTree(filePath), {} });
+
+        mo->exports.append(QQmlJSScope::Export(
+                               reader.typeNamespace(), script.nameSpace, script.version));
     }
     return result;
 }
@@ -213,17 +231,11 @@ void QQmlJSImporter::importDependencies(const QQmlJSImporter::Import &import,
     }
 }
 
-static QString internalName(const QQmlJSScope::ConstPtr &scope)
+static bool isVersionAllowed(const QQmlJSScope::Export &exportEntry,
+                             const QQmlJSScope::Import &importDescription)
 {
-    if (const auto *factory = scope.factory())
-        return factory->internalName();
-    return scope->internalName();
-}
-
-static bool isComposite(const QQmlJSScope::ConstPtr &scope)
-{
-    // The only thing the factory can do is load a composite type.
-    return scope.factory() || scope->isComposite();
+    return !importDescription.version().isValid()
+            || exportEntry.version() <= importDescription.version();
 }
 
 void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
@@ -233,11 +245,78 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
     const QString anonPrefix = QStringLiteral("$anonymous$");
     QHash<QString, QList<QQmlJSScope::Export>> seenExports;
 
+    const auto insertExports = [&](const QQmlJSExportedScope &val) {
+        // Resolve conflicting qmlNames within an import
+        for (const auto &valExport : val.exports) {
+            const QString name = prefixedName(importDescription.prefix(), valExport.type());
+            if (!isVersionAllowed(valExport, importDescription))
+                continue;
+
+            const auto it = types->qmlNames.constFind(name);
+            if (it != types->qmlNames.constEnd()) {
+
+                // The same set of exports can declare the same name multiple times for different
+                // versions. That's the common thing and we would just continue here when we hit
+                // it again after having inserted successfully once.
+                // However, it can also declare *different* names. Then we need to do the whole
+                // thing again.
+                if (*it == val.scope)
+                    continue;
+
+                const auto existingExports = seenExports.value(name);
+                enum { LowerVersion, SameVersion, HigherVersion } seenVersion = LowerVersion;
+                for (const QQmlJSScope::Export &entry : existingExports) {
+                    if (entry.type() != name || !isVersionAllowed(entry, importDescription))
+                        continue;
+
+                    if (valExport.version() < entry.version()) {
+                        seenVersion = HigherVersion;
+                        break;
+                    }
+
+                    if (seenVersion == LowerVersion && valExport.version() == entry.version())
+                        seenVersion = SameVersion;
+                }
+
+                switch (seenVersion) {
+                case LowerVersion:
+                    break;
+                case SameVersion: {
+                    m_warnings.append({
+                        QStringLiteral("Ambiguous type detected. "
+                                       "%1 %2.%3 is defined multiple times.")
+                            .arg(name)
+                            .arg(valExport.version().majorVersion())
+                            .arg(valExport.version().minorVersion()),
+                        QtCriticalMsg,
+                        QQmlJS::SourceLocation()
+                    });
+
+                    // Remove the name. We don't know which one to use.
+                    types->qmlNames.remove(name);
+                    continue;
+                }
+                case HigherVersion:
+                    continue;
+                }
+            }
+
+            types->qmlNames.insert(name, val.scope);
+
+            // We replace the exports for name, as the new set is clearly superior when we get here.
+            seenExports.insert(name, val.exports);
+        }
+    };
+
     if (!importDescription.prefix().isEmpty())
         types->qmlNames.insert(importDescription.prefix(), {}); // Empty type means "this is the prefix"
 
-    for (auto it = import.scripts.begin(); it != import.scripts.end(); ++it)
-        types->qmlNames.insert(prefixedName(importDescription.prefix(), it.key()), it->scope);
+    for (auto it = import.scripts.begin(); it != import.scripts.end(); ++it) {
+        types->cppNames.insert(prefixedName(anonPrefix, internalName(it->scope)), it->scope);
+        // You cannot have a script without an export
+        Q_ASSERT(!it->exports.isEmpty());
+        insertExports(*it);
+    }
 
     // add objects
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
@@ -249,40 +328,12 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
         types->cppNames.insert(name, val.scope);
 
         if (val.exports.isEmpty()) {
+            // Insert an unresolvable dummy name
             types->qmlNames.insert(
                         prefixedName(importDescription.prefix(), prefixedName(
                                          anonPrefix, internalName(val.scope))), val.scope);
-        }
-
-        for (const auto &valExport : val.exports) {
-            const QString &name = prefixedName(importDescription.prefix(), valExport.type());
-            // Resolve conflicting qmlNames within an import
-            if (types->qmlNames.contains(name)) {
-                const auto &existing = types->qmlNames[name];
-
-                if (existing == val.scope)
-                    continue;
-
-                if (valExport.version() > importDescription.version())
-                    continue;
-
-                const auto existingExports = seenExports.value(name);
-                auto betterExport =
-                        std::find_if(
-                            existingExports.constBegin(), existingExports.constEnd(),
-                            [&](const QQmlJSScope::Export &exportEntry) {
-                                return exportEntry.type() == name
-                                        // Ensure that the entry isn't newer than the module version
-                                        && exportEntry.version() <= importDescription.version()
-                                        && valExport.version() < exportEntry.version();
-                            });
-
-                if (betterExport != existingExports.constEnd())
-                    continue;
-            }
-
-            types->qmlNames.insert(name, val.scope);
-            seenExports.insert(name, val.exports);
+        } else {
+            insertExports(val);
         }
     }
 
