@@ -384,12 +384,11 @@ void tst_HoverHandler::window() // QTBUG-98717
 #if QT_CONFIG(cursor)
     if (isPlatformWayland())
          QSKIP("Wayland: QCursor::setPos() doesn't work.");
-#ifdef Q_OS_MACOS
-    QSKIP("macOS: QCursor::setPos() doesn't work (QTBUG-76312).");
-#endif
     auto cursorPos = window->mapToGlobal(QPoint(100, 100));
     qCDebug(lcPointerTests) << "in window @" << window->position() << "setting cursor pos" << cursorPos;
     QCursor::setPos(cursorPos);
+    if (!QTest::qWaitFor([cursorPos]{ return QCursor::pos() == cursorPos; }))
+        QSKIP("QCursor::setPos() doesn't work (QTBUG-76312).");
     QTRY_COMPARE(window->cursor().shape(), Qt::OpenHandCursor);
 #endif
 }
