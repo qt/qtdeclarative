@@ -203,6 +203,9 @@ private slots:
 
     void dontRemoveQPropertyBinding();
     void compatResolveUrls();
+
+    void bindToNonQObjectTarget();
+
 private:
     QQmlEngine engine;
 };
@@ -2351,6 +2354,22 @@ void tst_qqmlproperty::compatResolveUrls()
     QSKIP("Testing the QML_COMPAT_RESOLVE_URLS_ON_ASSIGNMENT "
           "environment variable requires QProcess.");
 #endif
+}
+
+void tst_qqmlproperty::bindToNonQObjectTarget()
+{
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("bindToNonQObjectTarget.qml");
+    QQmlComponent component(&engine, url);
+
+    // Yes, we can still create the component. The result of the script expression will only be
+    // known once it's executed.
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+
+    QTest::ignoreMessage(QtWarningMsg,
+                         qPrintable(url.toString() + ":14:7: Unable to assign QFont to QObject*"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
 }
 
 QTEST_MAIN(tst_qqmlproperty)
