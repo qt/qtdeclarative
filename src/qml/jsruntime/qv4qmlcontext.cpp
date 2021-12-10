@@ -302,8 +302,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                 if (base)
                     *base = QV4::QObjectWrapper::wrap(v4, scopeObject);
 
-                if (lookup && propertyData && lookup->qmlContextPropertyGetter
-                        != QQmlContextWrapper::lookupScopeObjectProperty) {
+                if (lookup && propertyData) {
                     QQmlData *ddata = QQmlData::get(scopeObject, false);
                     if (ddata && ddata->propertyCache) {
                         ScopedValue val(scope, base ? *base : Value::fromReturnedValue(QV4::QObjectWrapper::wrap(v4, scopeObject)));
