@@ -121,15 +121,6 @@ private slots:
         QCOMPARE(binding, pInfo.field(Fields::bindings).index(0));
     }
 
-    void testFromScratch()
-    {
-        // QmlFile
-        // add import
-        // set prop
-        // add prop
-        // ubObj
-    }
-
 private:
     std::shared_ptr<DomEnvironment> envPtr;
     DomItem env;
