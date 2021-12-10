@@ -1984,7 +1984,7 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
 
         if (item->clip()) {
             Q_ASSERT(itemPriv->clipNode() == nullptr);
-            QQuickDefaultClipNode *clip = new QQuickDefaultClipNode(item->boundingRect());
+            QQuickDefaultClipNode *clip = new QQuickDefaultClipNode(item->clipRect());
             itemPriv->extra.value().clipNode = clip;
             clip->update();
 
@@ -2108,7 +2108,7 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
     }
 
     if ((dirty & QQuickItemPrivate::Size) && itemPriv->clipNode()) {
-        itemPriv->clipNode()->setRect(item->boundingRect());
+        itemPriv->clipNode()->setRect(item->clipRect());
         itemPriv->clipNode()->update();
     }
 
