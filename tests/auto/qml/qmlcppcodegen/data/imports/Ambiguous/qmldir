@@ -1,0 +1,5 @@
+module Ambiguous
+
+Thing 1.0 Thing1.qml
+Thing 1.0 Thing2.qml
+NotHere 1.12 Here.qml
