@@ -2199,6 +2199,8 @@ bool QQuickWindowPrivate::deliverSinglePointEventUntilAccepted(QQuickPointerEven
     QVector<QQuickItem *> targetItems = pointerTargets(contentItem, point, false, false);
 
     for (QQuickItem *item : targetItems) {
+        if (!item->window())
+            continue;
         QQuickItemPrivate *itemPrivate = QQuickItemPrivate::get(item);
         event->localize(item);
         // Let Pointer Handlers have the first shot
