@@ -134,15 +134,14 @@ FolderDialogImpl {
             model: FolderListModel {
                 folder: control.currentFolder
                 showFiles: false
-                showDirsFirst: true
+                sortCaseSensitive: false
             }
-            delegate: DialogsImpl.FileDialogDelegate {
-                objectName: "fileDialogDelegate" + index
+            delegate: DialogsImpl.FolderDialogDelegate {
+                objectName: "folderDialogDelegate" + index
                 x: 1
                 width: ListView.view.width - 2
                 highlighted: ListView.isCurrentItem
                 dialog: control
-                fileDetailRowWidth: 200
 
                 KeyNavigation.backtab: breadcrumbBar
                 KeyNavigation.tab: control.footer
@@ -154,12 +153,11 @@ FolderDialogImpl {
         id: buttonBox
         standardButtons: control.standardButtons
         spacing: 6
-        horizontalPadding: 0
-        verticalPadding: 0
+        leftPadding: 0
+        rightPadding: 12
+        topPadding: 0
+        bottomPadding: 12
         background: null
-
-        Layout.rightMargin: 12
-        Layout.bottomMargin: 12
     }
 
     T.Overlay.modal: Rectangle {

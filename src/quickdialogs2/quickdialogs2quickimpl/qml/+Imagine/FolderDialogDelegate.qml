@@ -37,71 +37,61 @@
 **
 ****************************************************************************/
 
-import QtQuick
 import QtQuick.Controls
-import QtQuick.Controls.impl
-import QtQuick.Controls.Universal
+import QtQuick.Controls.Imagine
+import QtQuick.Controls.Imagine.impl
+import QtQuick.Controls.impl as ControlsImpl
 import QtQuick.Dialogs.quickimpl as DialogsQuickImpl
 
-DialogsQuickImpl.FolderBreadcrumbBar {
+DialogsQuickImpl.FileDialogDelegate {
     id: control
 
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
-                            implicitContentWidth + (upButton ? upButton.implicitWidth + upButtonSpacing : 0)
-                            + leftPadding + rightPadding)
+                            implicitContentWidth + leftPadding + rightPadding)
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
-                             implicitContentHeight + topPadding + bottomPadding)
-    upButtonSpacing: 20
-    padding: 1
+                             implicitContentHeight + topPadding + bottomPadding,
+                             implicitIndicatorHeight + topPadding + bottomPadding)
 
-    background: Rectangle {
-        color: control.Universal.background
-    }
-    contentItem: ListView {
-        id: listView
-        currentIndex: control.currentIndex
-        model: control.contentModel
-        orientation: ListView.Horizontal
-        snapMode: ListView.SnapToItem
-        highlightMoveDuration: 0
-        interactive: false
-        clip: true
-    }
-    buttonDelegate: ToolButton {
-        id: buttonDelegateRoot
-        text: folderName
+    spacing: 12
 
-        // The default is a bit too wide for short directory names.
-        Binding {
-            target: buttonDelegateRoot.background
-            property: "implicitWidth"
-            value: 48
+    topPadding: background ? background.topPadding : 0
+    leftPadding: background ? background.leftPadding : 0
+    rightPadding: background ? background.rightPadding : 0
+    bottomPadding: background ? background.bottomPadding : 0
+
+    topInset: background ? -background.topInset || 0 : 0
+    leftInset: background ? -background.leftInset || 0 : 0
+    rightInset: background ? -background.rightInset || 0 : 0
+    bottomInset: background ? -background.bottomInset || 0 : 0
+
+    file: fileUrl
+
+    icon.width: 16
+    icon.height: 16
+    icon.color: highlighted ? palette.highlightedText : palette.text
+    icon.source: "qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/folder-icon-round.png"
+
+    required property int index
+    required property string fileName
+    required property url fileUrl
+    required property date fileModified
+
+    contentItem: FolderDialogDelegateLabel {
+        delegate: control
+        fileDetailRowTextColor: Qt.lighter(control.icon.color)
+    }
+
+    background: NinePatchImage {
+        source: "qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/imagine/filedialogdelegate-background"
+        NinePatchImageSelector on source {
+            states: [
+                { "disabled": !control.enabled },
+                { "pressed": control.down },
+                { "focused": control.visualFocus },
+                { "highlighted": control.highlighted },
+                { "mirrored": control.mirrored },
+                { "hovered": control.hovered }
+            ]
         }
-
-        required property int index
-        required property string folderName
-    }
-    separatorDelegate: IconImage {
-        id: iconImage
-        source: "qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/crumb-separator-icon-square.png"
-        sourceSize: Qt.size(8, 8)
-        // The image is 8x8, and add 2 px padding on each side.
-        width: 8 + 4
-        height: control.contentItem.height
-        color: Color.transparent(control.Universal.foreground, enabled ? 1.0 : 0.2)
-        y: (control.height - height) / 2
-    }
-    upButton: ToolButton {
-        x: control.leftPadding
-        y: control.topPadding
-        icon.source: "qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/images/up-icon-square.png"
-        icon.width: 16
-        icon.height: 16
-        width: height
-        focusPolicy: Qt.TabFocus
-    }
-    textField: TextField {
-        text: (control.dialog as DialogsQuickImpl.FileDialogImpl)?.selectedFile
-            ?? (control.dialog as DialogsQuickImpl.FolderDialogImpl).currentFolder
     }
 }

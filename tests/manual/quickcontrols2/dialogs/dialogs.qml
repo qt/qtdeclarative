@@ -114,6 +114,9 @@ ApplicationWindow {
     }
 
     footer: ToolBar {
+        leftPadding: 12
+        rightPadding: 12
+
         RowLayout {
             anchors.fill: parent
 
