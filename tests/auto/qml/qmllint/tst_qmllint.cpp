@@ -90,6 +90,7 @@ private Q_SLOTS:
     void absolutePath();
     void multiGrouped();
     void javascriptVariableArgs();
+    void unknownTypeInRegister();
 
 private:
     enum DefaultIncludeOption { NoDefaultIncludes, UseDefaultIncludes };
@@ -1264,6 +1265,13 @@ void TestQmllint::javascriptVariableArgs()
 {
     QVERIFY(runQmllint("javascriptVariableArgs.qml", false, { "--compiler", "warning" })
             .contains(QStringLiteral("Function expects 0 arguments, but 2 were provided")));
+}
+
+void TestQmllint::unknownTypeInRegister()
+{
+    QVERIFY(runQmllint("unknownTypeInRegister.qml", false, { "--compiler", "warning" })
+                    .contains(QStringLiteral(
+                            "Functions without type annotations won't be compiled")));
 }
 
 QTEST_MAIN(TestQmllint)
