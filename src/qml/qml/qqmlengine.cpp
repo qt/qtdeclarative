@@ -1906,11 +1906,17 @@ void QQmlEnginePrivate::executeRuntimeFunction(const QUrl &url, qsizetype functi
                                                QObject *thisObject, int argc, void **args,
                                                QMetaType *types)
 {
-    Q_Q(QQmlEngine);
     const auto unit = compilationUnitFromUrl(url);
     if (!unit)
         return;
+    executeRuntimeFunction(unit, functionIndex, thisObject, argc, args, types);
+}
 
+void QQmlEnginePrivate::executeRuntimeFunction(const QV4::ExecutableCompilationUnit *unit,
+                                               qsizetype functionIndex, QObject *thisObject,
+                                               int argc, void **args, QMetaType *types)
+{
+    Q_ASSERT(unit);
     Q_ASSERT((functionIndex >= 0) && (functionIndex < unit->runtimeFunctions.length()));
     Q_ASSERT(thisObject);
 
@@ -1918,8 +1924,8 @@ void QQmlEnginePrivate::executeRuntimeFunction(const QUrl &url, qsizetype functi
     Q_ASSERT(ddata && ddata->outerContext);
 
     // implicitly sets the return value, if it is present
-    q->handle()->callInContext(unit->runtimeFunctions[functionIndex], thisObject,
-                               ddata->outerContext, argc, args, types);
+    v4engine()->callInContext(unit->runtimeFunctions[functionIndex], thisObject,
+                              ddata->outerContext, argc, args, types);
 }
 
 QV4::ExecutableCompilationUnit *QQmlEnginePrivate::compilationUnitFromUrl(const QUrl &url)

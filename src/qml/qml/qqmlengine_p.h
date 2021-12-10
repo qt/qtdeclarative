@@ -272,6 +272,9 @@ public:
 
     void executeRuntimeFunction(const QUrl &url, qsizetype functionIndex, QObject *thisObject,
                                 int argc = 0, void **args = nullptr, QMetaType *types = nullptr);
+    void executeRuntimeFunction(const QV4::ExecutableCompilationUnit *unit, qsizetype functionIndex,
+                                QObject *thisObject, int argc = 0, void **args = nullptr,
+                                QMetaType *types = nullptr);
     QV4::ExecutableCompilationUnit *compilationUnitFromUrl(const QUrl &url);
     QQmlRefPointer<QQmlContextData>
     createInternalContext(const QQmlRefPointer<QV4::ExecutableCompilationUnit> &unit,
