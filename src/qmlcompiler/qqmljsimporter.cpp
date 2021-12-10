@@ -136,6 +136,26 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
     result.imports.append(reader.imports());
     result.dependencies.append(reader.dependencies());
 
+    const auto typeInfos = reader.typeInfos();
+    for (const auto &typeInfo : typeInfos) {
+        const QString typeInfoPath = QFileInfo(typeInfo).isRelative()
+                ? path + u'/' + typeInfo : typeInfo;
+        readQmltypes(typeInfoPath, &result.objects, &result.dependencies);
+    }
+
+    if (typeInfos.isEmpty() && !reader.plugins().isEmpty()) {
+        const QString defaultTypeInfoPath = path + SlashPluginsDotQmltypes;
+        if (QFile::exists(defaultTypeInfoPath)) {
+            m_warnings.append({
+                                  QStringLiteral("typeinfo not declared in qmldir file: ")
+                                    + defaultTypeInfoPath,
+                                  QtWarningMsg,
+                                  QQmlJS::SourceLocation()
+                              });
+            readQmltypes(defaultTypeInfoPath, &result.objects, &result.dependencies);
+        }
+    }
+
     QHash<QString, QQmlJSExportedScope> qmlComponents;
     const auto components = reader.components();
     for (auto it = components.begin(), end = components.end(); it != end; ++it) {
@@ -163,26 +183,6 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
     }
     for (auto it = qmlComponents.begin(), end = qmlComponents.end(); it != end; ++it)
         result.objects.insert(it.key(), it.value());
-
-    const auto typeInfos = reader.typeInfos();
-    for (const auto &typeInfo : typeInfos) {
-        const QString typeInfoPath = QFileInfo(typeInfo).isRelative()
-                ? path + u'/' + typeInfo : typeInfo;
-        readQmltypes(typeInfoPath, &result.objects, &result.dependencies);
-    }
-
-    if (typeInfos.isEmpty() && !reader.plugins().isEmpty()) {
-        const QString defaultTypeInfoPath = path + SlashPluginsDotQmltypes;
-        if (QFile::exists(defaultTypeInfoPath)) {
-            m_warnings.append({
-                                  QStringLiteral("typeinfo not declared in qmldir file: ")
-                                    + defaultTypeInfoPath,
-                                  QtWarningMsg,
-                                  QQmlJS::SourceLocation()
-                              });
-            readQmltypes(defaultTypeInfoPath, &result.objects, &result.dependencies);
-        }
-    }
 
     const auto scripts = reader.scripts();
     for (const auto &script : scripts) {
