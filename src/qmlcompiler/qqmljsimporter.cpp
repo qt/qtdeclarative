@@ -151,12 +151,12 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
             continue;
         }
 
-        auto mo = qmlComponents.find(it.key());
+        auto mo = qmlComponents.find(it->fileName);
         if (mo == qmlComponents.end()) {
             QQmlJSScope::Ptr imported = localFile2ScopeTree(filePath);
             if (it->singleton)
                 imported->setIsSingleton(true);
-            mo = qmlComponents.insert(it.key(), imported);
+            mo = qmlComponents.insert(it->fileName, imported);
         }
 
         (*mo)->addExport(it.key(), reader.typeNamespace(), it->version);
@@ -187,7 +187,10 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
     const auto scripts = reader.scripts();
     for (const auto &script : scripts) {
         const QString filePath = path + QLatin1Char('/') + script.fileName;
-        result.scripts.insert(script.nameSpace, localFile2ScopeTree(filePath));
+        auto mo = result.scripts.find(script.fileName);
+        if (mo == result.scripts.end())
+            mo = result.scripts.insert(script.fileName, localFile2ScopeTree(filePath));
+        (*mo)->addExport(script.nameSpace, reader.typeNamespace(), script.version);
     }
     return result;
 }
@@ -209,58 +212,110 @@ void QQmlJSImporter::importDependencies(const QQmlJSImporter::Import &import,
     }
 }
 
+static bool isVersionAllowed(const QQmlJSScope::Export &exportEntry,
+                             const QTypeRevision &importVersion)
+{
+    return !importVersion.isValid() || exportEntry.version() <= importVersion;
+}
+
 void QQmlJSImporter::processImport(const QQmlJSImporter::Import &import,
                                    QQmlJSImporter::AvailableTypes *types, const QString &prefix,
                                    QTypeRevision version)
 {
     const QString anonPrefix = QStringLiteral("$anonymous$");
+    QHash<QString, QList<QQmlJSScope::Export>> seenExports;
+
+    const auto insertExports = [&](const QQmlJSScope::ConstPtr &val) {
+        // Resolve conflicting qmlNames within an import
+        const auto exports = val->exports();
+        for (const auto &valExport : exports) {
+            const QString name = prefixedName(prefix, valExport.type());
+            if (!isVersionAllowed(valExport, version))
+                continue;
+
+            const auto it = types->qmlNames.constFind(name);
+            if (it != types->qmlNames.constEnd()) {
+
+                // The same set of exports can declare the same name multiple times for different
+                // versions. That's the common thing and we would just continue here when we hit
+                // it again after having inserted successfully once.
+                // However, it can also declare *different* names. Then we need to do the whole
+                // thing again.
+                if (*it == val)
+                    continue;
+
+                const auto existingExports = seenExports.value(name);
+                enum { LowerVersion, SameVersion, HigherVersion } seenVersion = LowerVersion;
+                for (const QQmlJSScope::Export &entry : existingExports) {
+                    if (entry.type() != name || !isVersionAllowed(entry, version))
+                        continue;
+
+                    if (valExport.version() < entry.version()) {
+                        seenVersion = HigherVersion;
+                        break;
+                    }
+
+                    if (seenVersion == LowerVersion && valExport.version() == entry.version())
+                        seenVersion = SameVersion;
+                }
+
+                switch (seenVersion) {
+                case LowerVersion:
+                    break;
+                case SameVersion: {
+                    m_warnings.append({
+                        QStringLiteral("Ambiguous type detected. "
+                                       "%1 %2.%3 is defined multiple times.")
+                            .arg(name)
+                            .arg(valExport.version().majorVersion())
+                            .arg(valExport.version().minorVersion()),
+                        QtCriticalMsg,
+                        QQmlJS::SourceLocation()
+                    });
+
+                    // Remove the name. We don't know which one to use.
+                    types->qmlNames.remove(name);
+                    continue;
+                }
+                case HigherVersion:
+                    continue;
+                }
+            }
+
+            types->qmlNames.insert(name, val);
+
+            // We replace the exports for name, as the new set is clearly superior when we get here.
+            seenExports.insert(name, val->exports());
+        }
+    };
 
     if (!prefix.isEmpty())
         types->qmlNames.insert(prefix, {}); // Empty type means "this is the prefix"
 
-    for (auto it = import.scripts.begin(); it != import.scripts.end(); ++it)
-        types->qmlNames.insert(prefixedName(prefix, it.key()), it.value());
+    for (auto it = import.scripts.begin(); it != import.scripts.end(); ++it) {
+        types->cppNames.insert(prefixedName(anonPrefix, (*it)->internalName()), *it);
+        // You cannot have a script without an export
+        Q_ASSERT(!(*it)->exports().isEmpty());
+        insertExports(*it);
+    }
 
     // add objects
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         const auto &val = it.value();
         types->cppNames.insert(val->internalName(), val);
 
+        const QString name = val->isComposite()
+                ? prefixedName(anonPrefix, val->internalName())
+                : val->internalName();
+        types->cppNames.insert(name, val);
+
         const auto exports = val->exports();
         if (exports.isEmpty()) {
-            types->qmlNames.insert(
-                        prefixedName(prefix, prefixedName(anonPrefix, val->internalName())), val);
-        }
-
-        for (const auto &valExport : exports) {
-            const QString &name = prefixedName(prefix, valExport.type());
-            // Resolve conflicting qmlNames within an import
-            if (types->qmlNames.contains(name)) {
-                const auto &existing = types->qmlNames[name];
-
-                if (existing == val)
-                    continue;
-
-                if (valExport.version() > version)
-                    continue;
-
-                const auto existingExports = existing->exports();
-
-                auto betterExport =
-                        std::find_if(existingExports.constBegin(), existingExports.constEnd(),
-                                     [&](const QQmlJSScope::Export &exportEntry) {
-                                         return exportEntry.type() == name
-                                                 && exportEntry.version()
-                                                 <= version // Ensure that the entry isn't newer
-                                                            // than the module version
-                                                 && valExport.version() < exportEntry.version();
-                                     });
-
-                if (betterExport != existingExports.constEnd())
-                    continue;
-            }
-
-            types->qmlNames.insert(name, val);
+            // Insert an unresolvable dummy name
+            types->qmlNames.insert(prefixedName(prefix, prefixedName(
+                                         anonPrefix, val->internalName())), val);
+        } else {
+            insertExports(val);
         }
     }
 
