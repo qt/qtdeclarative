@@ -1384,7 +1384,7 @@ bool QQmlPropertyPrivate::write(
             varType = variantMetaType;
         }
         QQmlMetaObject valMo = rawMetaObjectForType(enginePriv, varType);
-        if (valMo.isNull())
+        if (valMo.isNull() || !varType.flags().testFlag(QMetaType::PointerToQObject))
             return false;
         QObject *o = *static_cast<QObject *const *>(val.constData());
         QQmlMetaObject propMo = rawMetaObjectForType(enginePriv, propertyMetaType);
