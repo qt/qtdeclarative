@@ -278,7 +278,7 @@ public:
     static void data_clear(QQmlListProperty<QObject> *);
 };
 
-class QQuickFlickableVisibleArea : public QObject
+class Q_QUICK_PRIVATE_EXPORT QQuickFlickableVisibleArea : public QObject
 {
     Q_OBJECT
 
