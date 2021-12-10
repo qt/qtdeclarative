@@ -5290,11 +5290,16 @@ bool QQuickItemPrivate::transformChanged(QQuickItem *transformedItem)
             extra->layer->updateMatrix();
     }
 #endif
-    const bool ret = childWantsIt || q->flags().testFlag(QQuickItem::ItemObservesViewport);
+    const bool thisWantsIt = q->flags().testFlag(QQuickItem::ItemObservesViewport);
+    const bool ret = childWantsIt || thisWantsIt;
     if (!ret && componentComplete && subtreeTransformChangedEnabled) {
         qCDebug(lcVP) << "turned off subtree transformChanged notification after checking all children of" << q;
         subtreeTransformChangedEnabled = false;
     }
+    // If ItemObservesViewport, clipRect() calculates the intersection with the viewport;
+    // so each time the item moves in the viewport, its clipnode needs to be updated.
+    if (thisWantsIt && q->clip())
+        dirty(QQuickItemPrivate::Clip);
     return ret;
 }
 
