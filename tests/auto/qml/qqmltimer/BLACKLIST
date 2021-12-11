@@ -1,2 +1,8 @@
 [restartWhenEventPosted]
 msvc-2019
+
+[triggeredOnStart]
+macos ci
+
+[triggeredOnStartRepeat]
+macos ci
