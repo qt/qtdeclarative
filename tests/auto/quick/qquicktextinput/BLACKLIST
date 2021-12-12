@@ -2,6 +2,14 @@
 [mouseSelectionMode]
 opensuse-leap
 
+# QTBUG-99150
+[copyAndPaste]
+opensuse-leap
+
+# QTBUG-99150
+[canPaste]
+opensuse-leap
+
 # QTBUG-82058
 [setInputMask]
 macos ci
