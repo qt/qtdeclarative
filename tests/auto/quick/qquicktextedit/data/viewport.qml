@@ -10,7 +10,7 @@ Item {
         border.color: "red"
 
         TextEdit {
-            font.pointSize: 10
+            font.pixelSize: 10
             cursorDelegate: Rectangle {
                 border.color: "green"
                 border.width: 2
