@@ -813,7 +813,7 @@ void QQuickLayout::invalidate(QQuickItem * /*childItem*/)
             qCDebug(lcQuickLayouts) << "QQuickLayout::invalidate(), polish()";
             polish();
         } else {
-            qWarning() << "Qt Quick Layouts: Polish loop detected. Aborting after two iterations.";
+            qmlWarning(this) << "Qt Quick Layouts: Polish loop detected. Aborting after two iterations.";
         }
     }
 }
