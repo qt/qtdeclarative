@@ -1,0 +1,223 @@
+/****************************************************************************
+**
+** Copyright (C) 2022 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qtqml-tool-qmltc.html
+\title QML Type Compiler
+\brief A tool to compile QML types to C++ ahead of time.
+
+The QML Type Compiler, \c qmltc, is a tool shipped with Qt to translate QML
+types into C++ types that are \e{ahead-of-time} compiled as part of the user
+code. Using qmltc can lead to better run-time performance due to more
+optimization opportunities available to the compiler compared to a
+QQmlComponent-based object creation. The qmltc is part of the Qt Quick Compiler
+toolchain.
+
+By design, qmltc outputs user-facing code. That code is supposed to be utilized
+by the C++ application directly, otherwise you won't see any benefit. The
+generated code essentially replaces QQmlComponent and its APIs to create objects
+from QML documents. In order to enable qmltc:
+
+\list
+    \li Create a \l{qt_add_qml_module}{proper QML module} for your application.
+
+    \li Invoke qmltc, for example, through the \l{qt_target_compile_qml_to_cpp}
+    {CMake API}.
+
+    \li \c{#include} the generated header file(s) in the application source
+    code.
+
+    \li Instantiate an object of the generated type.
+\endlist
+
+In this workflow qmltc usually runs during the build process. Thus, when qmltc
+rejects a QML document (whether due to errors or warnings, or because of
+constructs qmltc doesn't yet support), the build process will fail. This is
+similar to how you receive qmllint errors when you enable the automatic
+generation of linting targets during \l{qt_add_qml_module}{QML module creation}
+and then attempt to "build" them to run the qmllint.
+
+\warning qmltc is currently in a Tech Preview stage and might not compile an
+arbitrary QML program (see \l{Known limitations} for more details). When qmltc
+fails, nothing is generated as your application cannot sensibly use the qmltc
+output. If your program contains errors (or unsolvable warnings), they should be
+fixed to enable the compilation. The general rule is to adhere to the best
+practices and follow \l{qmllint} advice.
+
+\section2 Using qmltc in a QML application
+
+From the build system perspective, adding qmltc compilation is not much
+different from adding qml cache generation. Naively, the build process could be
+described as:
+
+\image qmltc-compilation-scheme.png
+
+While the real compilation process is much trickier, this diagram captures the
+core components that qmltc uses: the QML files themselves and qmldir with
+qmltypes information. Simpler applications typically have rather primitive
+qmldir yet, in general, qmldir could be complex, providing essential, nicely
+packed type information that qmltc relies on to perform correct QML-to-C++
+translation.
+
+Nevertheless, adding an extra build step is not enough in qmltc case. The
+application code must also be modified to use qmltc-generated classes instead of
+QQmlComponent or its higher-level alternatives.
+
+\section3 Compiling QML code with qmltc
+
+Qt, starting from Qt 6, uses CMake to build its various components. User
+projects can - and are encouraged to - also use CMake to build their components
+using Qt. Adding out-of-the-box qmltc compilation support to your project would
+require a CMake-driven build flow as well since this flow is centered around
+proper QML modules and their infrastructure.
+
+The easy way to add qmltc compilation is by using the dedicated
+\l{qt_target_compile_qml_to_cpp}{CMake API} as part of a QML module creation for
+the application. Consider a simple application directory structure:
+
+\badcode
+.
+├── CMakeLists.txt
+├── myspecialtype.h     // C++ type exposed to QML
+├── myspecialtype.cpp
+├── myApp.qml           // main QML page
+├── MyButton.qml        // custom UI button
+├── MySlider.qml        // custom UI slider
+└── main.cpp            // main C++ application file
+\endcode
+
+Then the CMake code would usually look similar to the following:
+
+\snippet qmltc/CMakeLists.txt qmltc-app-name
+\codeline
+\snippet qmltc/CMakeLists.txt qmltc-add-qml-module
+\codeline
+\snippet qmltc/CMakeLists.txt qmltc-compile-to-cpp
+
+\section3 Using the generated C++
+
+Unlike in the case of QQmlComponent instantiation, the output of qmltc, being
+C++ code, is used directly by the application. Generally, constructing a new
+object in C++ is equivalent to creating a new object through
+QQmlComponent::create(). Once created, the object could be manipulated from C++
+or, for example, combined with QQuickWindow to be drawn on screen. Given a
+\c{myApp.qml} file, the application code (in both cases) would typically look
+like this:
+
+\table 100 %
+
+\header
+    \li Using QQmlComponent
+    \li Using qmltc-generated class
+\row
+    \li \snippet qmltc/tst_qmltc_examples.cpp qqmlcomponent-include
+    \li \snippet qmltc/tst_qmltc_examples.cpp qmltc-include
+\row
+    \li \snippet qmltc/tst_qmltc_examples.cpp qqmlcomponent-app-code-0
+        \codeline
+        \snippet qmltc/tst_qmltc_examples.cpp qqmlcomponent-app-code-1
+        \codeline
+        \snippet qmltc/tst_qmltc_examples.cpp qqmlcomponent-app-code-2
+        \codeline
+        \snippet qmltc/tst_qmltc_examples.cpp qmltc-app-exec
+
+    \li \snippet qmltc/tst_qmltc_examples.cpp qmltc-app-code
+        \codeline
+        \snippet qmltc/tst_qmltc_examples.cpp qmltc-app-exec
+\endtable
+
+\section2 QML engine
+
+The generated code uses QQmlEngine to interact with dynamic parts of a QML
+document - mainly the JavaScript code. For this to work, no special arrangements
+are needed. Any QQmlEngine instance passed to the constructor of a
+qmltc-generated class object should work correctly as does
+\c{QQmlComponent(engine)}. This also means that you can use
+\l{QQmlEngine}{QQmlEngine methods} that affect QML behavior. However, there are
+caveats. Unlike QQmlComponent-based object creation, qmltc itself \e{does not}
+rely on QQmlEngine when compiling the code to C++. For instance,
+\c{QQmlEngine::addImportPath("/foo/bar/")} - normally resulting in an additional
+import path to scan for - would be completely ignored by the ahead-of-time qmltc
+procedure.
+
+\note To add import paths to the qmltc compilation, consider using a relevant
+argument of the \l{qt_target_compile_qml_to_cpp}{CMake command} instead.
+
+Generally, you can think of it this way: QQmlEngine involves the application
+process to run, while qmltc does not as it operates \e{before} your application
+is even compiled. Since qmltc makes no attempt to introspect your application's
+C++ source code, there is no way for it to know about certain kinds of QML
+manipulations you, as a user, do. Instead of using QQmlEngine and related
+run-time routines to expose types to QML, adding import paths, etc. you are,
+practically, required to create \l{qt_add_qml_module}{well-behaving QML modules}
+and use \l{Defining QML Types from C++}{declarative QML type registration}.
+
+\warning Despite qmltc working closely with QQmlEngine and creating C++ code,
+the generated classes cannot be further exposed to QML and used through
+QQmlComponent.
+
+\section2 Known limitations
+
+Despite covering many common QML features, qmltc is still in the early stage of
+development with many things yet to be supported. To name a few:
+
+\list
+    \li Translation APIs (qsTr() and similar methods)
+
+    \li Inline components
+
+    \li Imported QML modules that consist of QML-defined types (such as
+    \c{QtQuick.Controls}). At present, you can reliably use \c{QtQml} and
+    \c{QtQuick} modules as well as any other QML module that \b{only} contains
+    C++ classes exposed to QML
+
+    \li Singleton QML types
+\endlist
+
+On top of this, there are some more fundamental peculiarities to consider:
+
+\list
+    \li Qt's QML modules usually rely on C++ libraries to do the heavy lifting.
+    Often enough, these libraries do not provide public C++ API (since their
+    primary usage is through QML). For the users of qmltc, this means that their
+    apps need to link against private Qt libraries.
+
+    \li Due to the nature of qmltc code generation, QML plugins are unusable for
+    compilation purposes. Instead, QML modules - that use a plugin - have to
+    ensure that the plugin data is accessible at compile time. Such QML modules
+    would then have \e optional plugins. In most cases, the compile-time
+    information can be provided through a header file (with C++ declarations)
+    and linkable library (with C++ definitions). The user code is responsible
+    (usually through CMake) for including a path to the header file and linking
+    against the QML module library.
+\endlist
+
+Given the tech preview status of the compiler, you might also encounter bugs in
+qmltc, in the generated code, or some other related part. We encourage you to
+\l{https://bugreports.qt.io/}{submit a bug report} in this case.
+
+*/
