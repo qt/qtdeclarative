@@ -6,3 +6,6 @@ macos ci
 
 [triggeredOnStartRepeat]
 macos ci
+
+[notRepeatingStart]
+macos ci
