@@ -75,7 +75,6 @@ FolderDialogImpl {
 
     standardButtons: T.Dialog.Open | T.Dialog.Cancel
 
-    FolderDialogImpl.buttonBox: buttonBox
     FolderDialogImpl.folderDialogListView: folderDialogListView
     FolderDialogImpl.breadcrumbBar: breadcrumbBar
 

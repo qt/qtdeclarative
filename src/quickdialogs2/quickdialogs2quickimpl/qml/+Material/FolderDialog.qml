@@ -68,7 +68,6 @@ FolderDialogImpl {
 
     Material.elevation: 24
 
-    FolderDialogImpl.buttonBox: buttonBox
     FolderDialogImpl.folderDialogListView: folderDialogListView
     FolderDialogImpl.breadcrumbBar: breadcrumbBar
 
