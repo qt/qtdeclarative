@@ -57,7 +57,7 @@ int qt_sg_envInt(const char *name, int defaultValue);
 
 static QElapsedTimer qsg_renderer_timer;
 
-DEFINE_BOOL_CONFIG_OPTION(qsgDisableCompressedAtlas, QSG_DISABLE_COMPRESSED_ATLAS)
+DEFINE_BOOL_CONFIG_OPTION(qsgEnableCompressedAtlas, QSG_ENABLE_COMPRESSED_ATLAS)
 
 namespace QSGRhiAtlasTexture
 {
@@ -124,7 +124,7 @@ QSGTexture *Manager::create(const QImage &image, bool hasAlphaChannel)
 QSGTexture *Manager::create(const QSGCompressedTextureFactory *factory)
 {
     QSGTexture *t = nullptr;
-    if (qsgDisableCompressedAtlas() || !factory->textureData()->isValid())
+    if (!qsgEnableCompressedAtlas() || !factory->textureData()->isValid())
         return t;
 
     unsigned int format = factory->textureData()->glInternalFormat();
