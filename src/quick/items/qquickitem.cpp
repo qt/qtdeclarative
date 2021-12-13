@@ -2393,6 +2393,8 @@ QQuickItem::~QQuickItem()
 
     delete d->_anchors; d->_anchors = nullptr;
     delete d->_stateGroup; d->_stateGroup = nullptr;
+
+    d->isQuickItem = false;
 }
 
 /*!
@@ -3239,6 +3241,8 @@ QQuickItemPrivate::~QQuickItemPrivate()
 void QQuickItemPrivate::init(QQuickItem *parent)
 {
     Q_Q(QQuickItem);
+
+    isQuickItem = true;
 
     baselineOffset = 0.0;
 

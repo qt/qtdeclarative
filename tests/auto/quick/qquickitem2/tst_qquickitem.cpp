@@ -146,6 +146,8 @@ private slots:
     void viewport_data();
     void viewport();
 
+    void qobject_castOnDestruction();
+
 private:
     QQmlEngine engine;
     bool qt_tab_all_widgets() {
@@ -3997,6 +3999,19 @@ void tst_QQuickItem::viewport()
 
     QCOMPARE(contentItem->clipRect().toRect(), expectedContentClipRect);
     QCOMPARE(viewportTestItem->clipRect().toRect(), expectedViewportTestRect);
+}
+
+// Test that in a slot connected to destroyed() the emitter is
+// is no longer a QQuickItem.
+void tst_QQuickItem::qobject_castOnDestruction()
+{
+    QQuickItem item;
+    QObject::connect(&item, &QObject::destroyed, [](QObject *object)
+    {
+        QVERIFY(!qobject_cast<QQuickItem *>(object));
+        QVERIFY(!dynamic_cast<QQuickItem *>(object));
+        QVERIFY(!object->isQuickItemType());
+    });
 }
 
 QTEST_MAIN(tst_QQuickItem)

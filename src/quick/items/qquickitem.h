@@ -483,6 +483,21 @@ private:
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickItem::Flags)
 
+#ifndef Q_QDOC
+template <> inline QQuickItem *qobject_cast<QQuickItem *>(QObject *o)
+{
+    if (!o || !o->isQuickItemType())
+        return nullptr;
+    return static_cast<QQuickItem *>(o);
+}
+template <> inline const QQuickItem *qobject_cast<const QQuickItem *>(const QObject *o)
+{
+    if (!o || !o->isQuickItemType())
+        return nullptr;
+    return static_cast<const QQuickItem *>(o);
+}
+#endif // !Q_QDOC
+
 #ifndef QT_NO_DEBUG_STREAM
 QDebug Q_QUICK_EXPORT operator<<(QDebug debug,
 #if QT_VERSION >= QT_VERSION_CHECK(7, 0, 0)
