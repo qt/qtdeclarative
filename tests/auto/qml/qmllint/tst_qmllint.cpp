@@ -645,6 +645,11 @@ void TestQmllint::dirtyQmlCode_data()
                               "deprecation should be visible!)")
             << QString() << QString() << false;
 
+    QTest::newRow("duplicated id")
+        << QStringLiteral("duplicateId.qml")
+        << QStringLiteral("Found a duplicated id. id root was first declared ")
+        << QString() << QString() << false;
+
     QTest::newRow("string as id") << QStringLiteral("stringAsId.qml")
                                   << QStringLiteral("ids do not need quotation marks") << QString()
                                   << QString() << false;

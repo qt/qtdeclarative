@@ -1450,29 +1450,51 @@ bool QQmlJSImportVisitor::parseLiteralBinding(const QString name,
     return true;
 }
 
+void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scriptBinding)
+{
+    const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
+    const QString name = [&]() {
+        if (const auto *idExpression = cast<IdentifierExpression *>(statement->expression))
+            return idExpression->name.toString();
+        else if (const auto *idString = cast<StringLiteral *>(statement->expression)) {
+            m_logger->logInfo(u"ids do not need quotation marks"_qs, Log_Syntax, idString->firstSourceLocation());
+            return idString->value.toString();
+        }
+        m_logger->logWarning(u"Failed to parse id"_qs, Log_Syntax, statement->expression->firstSourceLocation());
+        return QString();
+
+    }();
+    if (m_scopesById.existsAnywhereInDocument(name)) {
+        // ### TODO: find an alternative to breakInhertianceCycles here
+        // we shouldn't need to search for the current root component in any case here
+        breakInheritanceCycles(m_currentScope);
+        if (auto otherScopeWithID = m_scopesById.scope(name, m_currentScope)) {
+            auto otherLocation = otherScopeWithID->sourceLocation();
+            // critical because subsequent analysis cannot cope with messed up ids
+            // and the file is invalid
+            m_logger->logCritical(
+                u"Found a duplicated id. id %1 was first declared at %2:%3"_qs.arg(
+                            name,
+                            QString::number(otherLocation.startLine),
+                            QString::number(otherLocation.startColumn)),
+                Log_Syntax, // ??
+                scriptBinding->firstSourceLocation()
+            );
+        }
+    }
+    if (!name.isEmpty())
+        m_scopesById.insert(name, m_currentScope);
+    m_currentScope->setRuntimeId(m_runtimeIdCounters.top()++);
+}
+
 bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
 {
     m_savedBindingOuterScope = m_currentScope;
     const auto id = scriptBinding->qualifiedId;
-    const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
     if (!id->next && id->name == QLatin1String("id")) {
-        const QString name = [&]() {
-            if (const auto *idExpression = cast<IdentifierExpression *>(statement->expression))
-                return idExpression->name.toString();
-            else if (const auto *idString = cast<StringLiteral *>(statement->expression)) {
-                m_logger->logInfo(u"ids do not need quotation marks"_qs, Log_Syntax, idString->firstSourceLocation());
-                return idString->value.toString();
-            }
-            m_logger->logWarning(u"Failed to parse id"_qs, Log_Syntax, statement->expression->firstSourceLocation());
-            return QString();
-
-        }();
-        if (!name.isEmpty())
-            m_scopesById.insert(name, m_currentScope);
-        m_currentScope->setRuntimeId(m_runtimeIdCounters.top()++);
+        handleIdDeclaration(scriptBinding);
         return true;
     }
-
 
     auto group = id;
     for (; group->next; group = group->next) {
@@ -1547,6 +1569,7 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
         leaveEnvironment();
     }
 
+    const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
     if (!statement || !statement->expression->asFunctionDefinition()) {
         enterEnvironment(QQmlJSScope::JSFunctionScope, QStringLiteral("binding"),
                          scriptBinding->statement->firstSourceLocation());

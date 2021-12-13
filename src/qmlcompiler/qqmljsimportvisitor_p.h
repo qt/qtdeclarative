@@ -265,6 +265,7 @@ protected:
 private:
     void importBaseModules();
     void resolveAliasesAndIds();
+    void handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scriptBinding);
 
     void visitFunctionExpressionHelper(QQmlJS::AST::FunctionExpression *fexpr);
     void processImportWarnings(

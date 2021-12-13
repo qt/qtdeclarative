@@ -59,11 +59,18 @@ public:
         return QString();
     }
 
+    /*!
+        \internal
+        Returns the scope that has id \a id in the component to which \a referrer belongs to.
+        If no such scope exists, a null scope is returned.
+     */
     QQmlJSScope::ConstPtr scope(const QString &id, const QQmlJSScope::ConstPtr &referrer) const
     {
         Q_ASSERT(!id.isEmpty());
-        const QQmlJSScope::ConstPtr root = componentRoot(referrer);
         const auto range =  m_scopesById.equal_range(id);
+        if (range.first == range.second)
+            return QQmlJSScope::ConstPtr();
+        const QQmlJSScope::ConstPtr root = componentRoot(referrer);
         for (auto it = range.first; it != range.second; ++it) {
             if (componentRoot(*it) == root)
                 return *it;
@@ -78,6 +85,15 @@ public:
     }
 
     void clear() { m_scopesById.clear(); }
+
+    /*!
+        \internal
+        Returns \c true if \a id exists anywhere in the current document.
+        This is still allowed if the other occurrence is in a different (inline) component.
+        Check the return value of scope to know whether the id has already been assigned
+        in a givne scope.
+    */
+    bool existsAnywhereInDocument(const QString &id) const { return m_scopesById.contains(id); }
 
 private:
     static QQmlJSScope::ConstPtr componentRoot(const QQmlJSScope::ConstPtr &inner)
