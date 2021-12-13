@@ -634,8 +634,9 @@ void tst_qqmlqt::openUrlExternally()
 {
     MyUrlHandler handler;
 
+    const QUrl htmlTestFile = testFileUrl("test.html");
     QDesktopServices::setUrlHandler("test", &handler, "noteCall");
-    QDesktopServices::setUrlHandler("file", &handler, "noteCall");
+    QDesktopServices::setUrlHandler(htmlTestFile.scheme(), &handler, "noteCall");
 
     QQmlComponent component(&engine, testFileUrl("openUrlExternally.qml"));
     QScopedPointer<QObject> object(component.create());
@@ -646,18 +647,19 @@ void tst_qqmlqt::openUrlExternally()
     object->setProperty("testFile", true);
 
     QCOMPARE(handler.called,2);
-    QCOMPARE(handler.last, testFileUrl("test.html"));
+    QCOMPARE(handler.last, htmlTestFile);
 
     QDesktopServices::unsetUrlHandler("test");
-    QDesktopServices::unsetUrlHandler("file");
+    QDesktopServices::unsetUrlHandler(htmlTestFile.scheme());
 }
 
 void tst_qqmlqt::openUrlExternally_pragmaLibrary()
 {
     MyUrlHandler handler;
 
+    const QUrl htmlTestFile = testFileUrl("test.html");
     QDesktopServices::setUrlHandler("test", &handler, "noteCall");
-    QDesktopServices::setUrlHandler("file", &handler, "noteCall");
+    QDesktopServices::setUrlHandler(htmlTestFile.scheme(), &handler, "noteCall");
 
     QQmlComponent component(&engine, testFileUrl("openUrlExternally_lib.qml"));
     QScopedPointer<QObject> object(component.create());
@@ -668,10 +670,10 @@ void tst_qqmlqt::openUrlExternally_pragmaLibrary()
     object->setProperty("testFile", true);
 
     QCOMPARE(handler.called,2);
-    QCOMPARE(handler.last, testFileUrl("test.html"));
+    QCOMPARE(handler.last, htmlTestFile);
 
     QDesktopServices::unsetUrlHandler("test");
-    QDesktopServices::unsetUrlHandler("file");
+    QDesktopServices::unsetUrlHandler(htmlTestFile.scheme());
 }
 
 void tst_qqmlqt::md5()
