@@ -828,6 +828,11 @@ bool QQuickTextEditPrivate::transformChanged(QQuickItem *transformedItem)
                 qCDebug(lcVP) << "viewport" << vp << "now goes beyond rendered region" << renderedRegion << "; updating";
                 q->updateWholeDocument();
             }
+            const bool textCursorVisible = cursorVisible && q->cursorRectangle().intersects(vp);
+            if (cursorItem)
+                cursorItem->setVisible(textCursorVisible);
+            else
+                control->setCursorVisible(textCursorVisible);
         }
     }
     return QQuickImplicitSizeItemPrivate::transformChanged(transformedItem);
@@ -2291,7 +2296,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
 
     if (d->cursorComponent == nullptr) {
         QSGInternalRectangleNode* cursor = nullptr;
-        if (!isReadOnly() && d->cursorVisible && d->control->cursorOn())
+        if (!isReadOnly() && d->cursorVisible && d->control->cursorOn() && d->control->cursorVisible())
             cursor = d->sceneGraphContext()->createInternalRectangleNode(d->control->cursorRect(), d->color);
         rootNode->resetCursorNode(cursor);
     }
