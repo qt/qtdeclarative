@@ -214,6 +214,49 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
     return result;
 }
 
+QQmlJSImporter::Import QQmlJSImporter::readDirectory(const QString &directory)
+{
+    Import import;
+    if (directory.startsWith(u':')) {
+        if (m_mapper) {
+            const auto resources = m_mapper->filter(
+                        QQmlJSResourceFileMapper::resourceQmlDirectoryFilter(directory.mid(1)));
+            for (const auto &entry : resources) {
+                const QString name = QFileInfo(entry.resourcePath).baseName();
+                if (name.front().isUpper()) {
+                    import.objects.insert(name, {
+                            localFile2ScopeTree(entry.filePath),
+                            { QQmlJSScope::Export(QString(), name, QTypeRevision()) }
+                    });
+                }
+            }
+        } else {
+            qWarning() << "Cannot read files from resource directory" << directory
+                       << "because no resource file mapper was provided";
+        }
+
+        return import;
+    }
+
+    QDirIterator it {
+        directory,
+        QStringList() << QLatin1String("*.qml"),
+        QDir::NoFilter
+    };
+    while (it.hasNext()) {
+        it.next();
+        if (!it.fileName().front().isUpper())
+            continue; // Non-uppercase names cannot be imported anyway.
+
+        const QString name = QFileInfo(it.filePath()).baseName();
+        import.objects.insert(name, {
+                localFile2ScopeTree(it.filePath()),
+                { QQmlJSScope::Export(QString(), name, QTypeRevision()) }
+        });
+    }
+    return import;
+}
+
 void QQmlJSImporter::importDependencies(const QQmlJSImporter::Import &import,
                                         QQmlJSImporter::AvailableTypes *types,
                                         const QString &prefix, QTypeRevision version,
@@ -553,8 +596,19 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
         return typesFromCache;
     }
 
-    const auto modulePaths = isFile ? QStringList { module }
-                                    : qQmlResolveImportPaths(module, m_importPaths, version);
+    QStringList modulePaths;
+    if (isFile) {
+        const auto import = readDirectory(module);
+        m_seenQmldirFiles.insert(module, import);
+        m_seenImports.insert(importId, module);
+        importDependencies(import, cacheTypes.get(), prefix, version, isDependency);
+        processImport(cacheKey, import, cacheTypes.get());
+
+        // Try to load a qmldir below, on top of the directory import.
+        modulePaths.append(module);
+    } else {
+        modulePaths = qQmlResolveImportPaths(module, m_importPaths, version);
+    }
 
     for (auto const &modulePath : modulePaths) {
         QString qmldirPath;
@@ -592,6 +646,8 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
             m_seenQmldirFiles.insert(qmldirPath, import);
             m_seenImports.insert(importId, qmldirPath);
             importDependencies(import, cacheTypes.get(), prefix, version, isDependency);
+
+            // Potentially merges with the result of readDirectory() above.
             processImport(cacheKey, import, cacheTypes.get());
 
             const bool typesFromCache = getTypesFromCache();
@@ -600,8 +656,14 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
         }
     }
 
-    m_seenImports.insert(importId, QString());
+    if (isFile) {
+        // We've loaded the directory above
+        const bool typesFromCache = getTypesFromCache();
+        Q_ASSERT(typesFromCache);
+        return typesFromCache;
+    }
 
+    m_seenImports.insert(importId, QString());
     return false;
 }
 
@@ -627,44 +689,7 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importDirectory(
         const QString &directory, const QString &prefix)
 {
     QQmlJSImporter::AvailableTypes types({});
-
-    if (directory.startsWith(u':')) {
-        if (m_mapper) {
-            const auto resources = m_mapper->filter(
-                        QQmlJSResourceFileMapper::resourceQmlDirectoryFilter(directory.mid(1)));
-            for (const auto &entry : resources) {
-                const QString name = QFileInfo(entry.resourcePath).baseName();
-                if (name.front().isUpper()) {
-                    types.qmlNames.insert(prefixedName(prefix, name),
-                                          localFile2ScopeTree(entry.filePath));
-                }
-            }
-        } else {
-            qWarning() << "Cannot read files from resource directory" << directory
-                       << "because no resource file mapper was provided";
-        }
-
-        importHelper(directory, &types, QString(), QTypeRevision(), false, true);
-
-        return types.qmlNames;
-    }
-
-    QDirIterator it {
-        directory,
-        QStringList() << QLatin1String("*.qml"),
-        QDir::NoFilter
-    };
-    while (it.hasNext()) {
-        it.next();
-        if (!it.fileName().front().isUpper())
-            continue; // Non-uppercase names cannot be imported anyway.
-
-        types.qmlNames.insert(prefixedName(prefix, QFileInfo(it.filePath()).baseName()),
-                              localFile2ScopeTree(it.filePath()));
-    }
-
-    importHelper(directory, &types, QString(), QTypeRevision(), false, true);
-
+    importHelper(directory, &types, prefix, QTypeRevision(), false, true);
     return types.qmlNames;
 }
 

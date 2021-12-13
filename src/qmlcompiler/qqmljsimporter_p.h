@@ -118,6 +118,8 @@ private:
     void readQmltypes(const QString &filename, QHash<QString, QQmlJSExportedScope> *objects,
                       QList<QQmlDirParser::Import> *dependencies);
     Import readQmldir(const QString &dirname);
+    Import readDirectory(const QString &directory);
+
     QQmlJSScope::Ptr localFile2ScopeTree(const QString &filePath);
 
     QStringList m_importPaths;

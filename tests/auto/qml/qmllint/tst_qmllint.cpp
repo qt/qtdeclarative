@@ -1045,7 +1045,7 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
             defaultIncludes == UseDefaultIncludes ? m_defaultImportPaths + includeDirs
                                                   : includeDirs,
             qmltypesFiles, resources, {});
-    QCOMPARE(success, shouldSucceed);
+    QVERIFY2(success == shouldSucceed, QJsonDocument(jsonOutput).toJson());
 
     if (warnings) {
         QVERIFY2(jsonOutput.size() == 1, QJsonDocument(jsonOutput).toJson());
