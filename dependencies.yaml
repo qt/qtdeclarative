@@ -11,3 +11,6 @@ dependencies:
   ../qtsvg:
     ref: d4333de46a2e34a13603aa7f0877363795911f57
     required: false
+  ../qtlanguageserver:
+    ref: ab54c44550b6fc6e610d90706059464365424dbb
+    required: false
