@@ -188,13 +188,25 @@ public:
 
 void QQuickTreeViewDelegatePrivate::updateIndicatorVisibility()
 {
-    if (auto indicator = q_func()->indicator())
-        indicator->setVisible(m_isTreeNode && m_hasChildren);
+    Q_Q(QQuickTreeViewDelegate);
+
+    if (auto indicator = q_func()->indicator()) {
+        const bool insideDelegateBounds = indicator->x() + indicator->width() < q->width();
+        indicator->setVisible(m_isTreeNode && m_hasChildren && insideDelegateBounds);
+    }
 }
 
 QQuickTreeViewDelegate::QQuickTreeViewDelegate(QQuickItem *parent)
     : QQuickAbstractButton(*(new QQuickTreeViewDelegatePrivate), parent)
 {
+}
+
+void QQuickTreeViewDelegate::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
+{
+    Q_D(QQuickTreeViewDelegate);
+
+    QQuickAbstractButton::geometryChange(newGeometry, oldGeometry);
+    d->updateIndicatorVisibility();
 }
 
 void QQuickTreeViewDelegate::mousePressEvent(QMouseEvent *event)
