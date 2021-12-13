@@ -72,7 +72,8 @@ T.TreeViewDelegate {
     }
 
     contentItem: Label {
-        clip: true
+        clip: false
         text: model.display
+        elide: Text.ElideRight
     }
 }
