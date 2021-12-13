@@ -245,7 +245,7 @@
 
     Convenience function for doing:
 
-    \c {Qt.point(columnAtIndex(}\a modelIndex\c{), rowAtIndex(}\a modelIndex\c{))}
+    \c {Qt.point(columnAtIndex(}\a {modelIndex}\c{), rowAtIndex(}\a {modelIndex}\c{))}
 
     A cell is simply a \l point that combines row and column into
     a single type. Note that \c point.x will map to the column, and

@@ -103,7 +103,8 @@ QT_BEGIN_NAMESPACE
 /*!
     \qmlsignal QtQuick.Dialogs::MessageDialog::buttonClicked(QPlatformDialogHelper::StandardButton button, QPlatformDialogHelper::ButtonRole role)
 
-    This signal is emitted when a button is clicked.
+    This signal is emitted when a \a button with the specified \a role is
+    clicked.
 */
 
 QQuickMessageDialog::QQuickMessageDialog(QObject *parent)

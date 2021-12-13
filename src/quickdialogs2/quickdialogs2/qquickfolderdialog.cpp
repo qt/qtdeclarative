@@ -61,8 +61,8 @@ Q_DECLARE_LOGGING_CATEGORY(lcDialogs)
     To show a folder dialog, construct an instance of FolderDialog, set the
     desired properties, and call \l {Dialog::}{open()}. The \l currentFolder
     property can be used to determine the currently selected folder in the
-    dialog. The \l folder property is updated only after the final selection
-    has been made by accepting the dialog.
+    dialog. The \l selectedFolder property is updated only after the final
+    selection has been made by accepting the dialog.
 
     \code
     MenuItem {
@@ -95,7 +95,7 @@ Q_DECLARE_LOGGING_CATEGORY(lcDialogs)
 
     \include includes/fallback.qdocinc
 
-    \sa FileDialog, [QtCoreQml]StandardPaths
+    \sa FileDialog, {QtCore::}{StandardPaths}
 */
 
 QQuickFolderDialog::QQuickFolderDialog(QObject *parent)

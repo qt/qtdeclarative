@@ -100,7 +100,7 @@ Q_LOGGING_CATEGORY(lcFileDialog, "qt.quick.dialogs.filedialog")
 
     \include includes/fallback.qdocinc
 
-    \sa FolderDialog, [QtCoreQml]StandardPaths
+    \sa FolderDialog, {QtCore::}{StandardPaths}
 */
 
 QQuickFileDialog::QQuickFileDialog(QObject *parent)

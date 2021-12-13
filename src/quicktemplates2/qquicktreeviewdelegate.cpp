@@ -67,9 +67,9 @@ QT_BEGIN_NAMESPACE
     \endcode
 
     TreeViewDelegate inherits \l AbstractButton, which means that
-    it's composed of three items: a \l {QQuickControl::}{background},
-    a \l {QQuickControl::}{contentItem}, and an
-    \l {QQuickAbstractButton::}{indicator}. TreeViewDelegate takes care
+    it's composed of three items: a \l[QML]{Control::}{background},
+    a \l [QML]{Control::}{contentItem}, and an
+    \l [QML]{AbstractButton::}{indicator}. TreeViewDelegate takes care
     of \l {indentation}{indenting} the contentItem and the indicator according
     their location in the tree. The indicator will only be visible if the
     delegate item is inside the \l {isTreeNode}{tree column}, and renders
@@ -77,7 +77,7 @@ QT_BEGIN_NAMESPACE
 
     If you change the indicator, it will no longer be indented by default.
     Instead you need to indent it yourself by setting the
-    \l {QQuickItem::}{x position} of the indicator, taking the \l depth and
+    \l [QML] {Item::x}{x position} of the indicator, taking the \l depth and
     \l indentation into account. Below is an example of how to do that:
 
     \code
@@ -88,13 +88,13 @@ QT_BEGIN_NAMESPACE
     }
     \endcode
 
-    The position of the contentItem is controlled with \l {QQuickControl::}{padding}.
+    The position of the contentItem is controlled with \l [QML]{Control::}{padding}.
     This means that you can change the contentItem without dealing with indentation.
     But it also means that you should avoid changing padding to something else, as
     that will remove the indentation. The space to the left of the indicator is instead
     controlled with \l leftMargin. The space between the indicator and the contentItem
-    is controlled with \l {QQuickControl::}{spacing}. And the space to the right of the
-    contentItem is controlled with \l {QQuickControl::}{rightMargin}.
+    is controlled with \l [QML]{Control::}{spacing}. And the space to the right of the
+    contentItem is controlled with \l rightMargin.
 
     \sa TreeView
 */
@@ -121,8 +121,8 @@ QT_BEGIN_NAMESPACE
     property set to \c true.
 
     A node in the tree is \l{indentation}{indented} according to its \c depth, and show
-    an \l indicator if \c haschildren is true. Delegate items in other
-    columns will have this property set to \c false.
+    an \l [QML]{AbstractButton::}{indicator} if hasChildren is \c true. Delegate items
+    in other columns will have this property set to \c false.
 */
 
 /*!
