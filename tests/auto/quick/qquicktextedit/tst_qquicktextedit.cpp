@@ -3821,6 +3821,9 @@ void tst_qquicktextedit::largeTextObservesViewport()
     QVERIFY(qAbs(textPriv->firstBlockPastViewport - expectedBlocksPastViewport) < expectedBlockTolerance);
     QVERIFY(textPriv->renderedRegion.top() > expectedRenderedRegionMin);
     QVERIFY(textPriv->renderedRegion.bottom() < expectedRenderedRegionMax);
+    QVERIFY(textPriv->cursorItem);
+    qCDebug(lcTests) << "cursor rect" << textItem->cursorRectangle() << "visible?" << textPriv->cursorItem->isVisible();
+    QCOMPARE(textPriv->cursorItem->isVisible(), textPriv->renderedRegion.intersects(textItem->cursorRectangle()));
 }
 
 void tst_qquicktextedit::signal_editingfinished()
