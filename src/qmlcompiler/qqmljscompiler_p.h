@@ -124,12 +124,14 @@ bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFuncti
                      QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error,
                      bool storeSourceLocation = false,
                      QV4::Compiler::CodegenWarningInterface *interface =
-                             QV4::Compiler::defaultCodegenWarningInterface());
+                             QV4::Compiler::defaultCodegenWarningInterface(),
+                     const QString *fileContents = nullptr);
 bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                      QQmlJSSaveFunction saveFunction, QQmlJSAotCompiler *aotCompiler,
                      QQmlJSCompileError *error, bool storeSourceLocation = false,
                      QV4::Compiler::CodegenWarningInterface *interface =
-                             QV4::Compiler::defaultCodegenWarningInterface());
+                             QV4::Compiler::defaultCodegenWarningInterface(),
+                     const QString *fileContents = nullptr);
 bool qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl,
                     QQmlJSSaveFunction saveFunction, QQmlJSCompileError *error);
 

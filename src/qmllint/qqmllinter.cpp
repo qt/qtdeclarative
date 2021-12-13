@@ -242,7 +242,8 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
             QLoggingCategory::setFilterRules(u"qt.qml.compiler=false"_qs);
 
             CodegenWarningInterface interface(m_logger.get());
-            qCompileQmlFile(filename, saveFunction, &codegen, &error, true, &interface);
+            qCompileQmlFile(filename, saveFunction, &codegen, &error, true, &interface,
+                            fileContents);
 
             success &= !m_logger->hasWarnings() && !m_logger->hasErrors();
 

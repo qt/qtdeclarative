@@ -201,20 +201,24 @@ private:
 
 bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFunction,
                      QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error,
-                     bool storeSourceLocation, QV4::Compiler::CodegenWarningInterface *interface)
+                     bool storeSourceLocation, QV4::Compiler::CodegenWarningInterface *interface,
+                     const QString *fileContents)
 {
     QmlIR::Document irDocument(/*debugMode*/false);
     return qCompileQmlFile(irDocument, inputFileName, saveFunction, aotCompiler, error,
-                           storeSourceLocation, interface);
+                           storeSourceLocation, interface, fileContents);
 }
 
 bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
                      QQmlJSSaveFunction saveFunction, QQmlJSAotCompiler *aotCompiler,
                      QQmlJSCompileError *error, bool storeSourceLocation,
-                     QV4::Compiler::CodegenWarningInterface *interface)
+                     QV4::Compiler::CodegenWarningInterface *interface, const QString *fileContents)
 {
     QString sourceCode;
-    {
+
+    if (fileContents != nullptr) {
+        sourceCode = *fileContents;
+    } else {
         QFile f(inputFileName);
         if (!f.open(QIODevice::ReadOnly)) {
             error->message = QLatin1String("Error opening ") + inputFileName + QLatin1Char(':') + f.errorString();
