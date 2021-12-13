@@ -114,6 +114,7 @@ signals:
 
 protected:
     QFont defaultFont() const override;
+    void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void componentComplete() override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
