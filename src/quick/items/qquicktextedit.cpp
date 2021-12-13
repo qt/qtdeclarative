@@ -2087,7 +2087,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     QQuickTextNodeEngine engine;
     QQuickTextNodeEngine frameDecorationsEngine;
 
-    if (!oldNode || nodeIterator < d->textNodeMap.end()) {
+    if (!oldNode || nodeIterator < d->textNodeMap.end() || d->textNodeMap.isEmpty()) {
 
         if (!oldNode)
             rootNode = new RootNode;
@@ -2184,9 +2184,10 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                 QTextFrame::iterator it = textFrame->begin();
                 while (!it.atEnd()) {
                     QTextBlock block = it.currentBlock();
-                    ++it;
-                    if (block.position() < firstDirtyPos)
+                    if (block.position() < firstDirtyPos) {
+                        ++it;
                         continue;
+                    }
 
                     if (!engine.hasContents())
                         nodeOffset = d->document->documentLayout()->blockBoundingRect(block).topLeft();
@@ -2199,6 +2200,21 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                             inView = coveredRegion.bottom() > viewport.top();
                         }
                         if (d->firstBlockInViewport < 0 && inView) {
+                            // During backward scrolling, we need to iterate backwards from textNodeMap.begin() to fill the top of the viewport.
+                            if (coveredRegion.top() > viewport.top() + 1) {
+                                qCDebug(lcVP) << "checking backwards from block" << block.blockNumber() << "@" << nodeOffset.y() << coveredRegion;
+                                while (it != textFrame->begin() && it.currentBlock().layout() &&
+                                       it.currentBlock().layout()->boundingRect().top() + nodeOffset.y() > viewport.top())
+                                    --it;
+                                if (!it.currentBlock().layout())
+                                    ++it;
+                                if (Q_LIKELY(it.currentBlock().layout())) {
+                                    block = it.currentBlock();
+                                    coveredRegion = block.layout()->boundingRect().adjusted(nodeOffset.x(), nodeOffset.y(), nodeOffset.x(), nodeOffset.y());
+                                } else {
+                                    qCWarning(lcVP) << "failed to find a text block with layout during back-scrolling";
+                                }
+                            }
                             qCDebug(lcVP) << "first block in viewport" << block.blockNumber() << "@" << nodeOffset.y() << coveredRegion;
                             d->firstBlockInViewport = block.blockNumber();
                             if (block.layout())
@@ -2240,6 +2256,7 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
                         resetEngine(&engine, d->color, d->selectedTextColor, d->selectionColor);
                         nodeStart = block.next().position();
                     }
+                    ++it;
                 }
             }
             if (Q_LIKELY(node && !node->parent()))
