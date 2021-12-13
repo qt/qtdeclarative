@@ -107,16 +107,12 @@ private:
 class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickFolderDialogImplAttached : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QQuickDialogButtonBox *buttonBox READ buttonBox WRITE setButtonBox NOTIFY buttonBoxChanged FINAL)
     Q_PROPERTY(QQuickListView *folderDialogListView READ folderDialogListView WRITE setFolderDialogListView NOTIFY folderDialogListViewChanged)
     Q_PROPERTY(QQuickFolderBreadcrumbBar *breadcrumbBar READ breadcrumbBar WRITE setBreadcrumbBar NOTIFY breadcrumbBarChanged)
     Q_MOC_INCLUDE(<QtQuickTemplates2/private/qquickdialogbuttonbox_p.h>)
 
 public:
     explicit QQuickFolderDialogImplAttached(QObject *parent = nullptr);
-
-    QQuickDialogButtonBox *buttonBox() const;
-    void setButtonBox(QQuickDialogButtonBox *buttonBox);
 
     QQuickListView *folderDialogListView() const;
     void setFolderDialogListView(QQuickListView *folderDialogListView);
@@ -125,7 +121,6 @@ public:
     void setBreadcrumbBar(QQuickFolderBreadcrumbBar *breadcrumbBar);
 
 Q_SIGNALS:
-    void buttonBoxChanged();
     void folderDialogListViewChanged();
     void breadcrumbBarChanged();
 

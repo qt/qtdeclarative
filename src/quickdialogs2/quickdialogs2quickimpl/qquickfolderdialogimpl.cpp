@@ -59,11 +59,14 @@ QQuickFolderDialogImplPrivate::QQuickFolderDialogImplPrivate()
 void QQuickFolderDialogImplPrivate::updateEnabled()
 {
     Q_Q(QQuickFolderDialogImpl);
+    if (!buttonBox)
+        return;
+
     QQuickFolderDialogImplAttached *attached = attachedOrWarn();
     if (!attached)
         return;
 
-    auto openButton = attached->buttonBox()->standardButton(QPlatformDialogHelper::Open);
+    auto openButton = buttonBox->standardButton(QPlatformDialogHelper::Open);
     if (!openButton) {
         qmlWarning(q).nospace() << "Can't update Open button's enabled state because it wasn't found";
         return;
@@ -248,7 +251,7 @@ void QQuickFolderDialogImpl::setAcceptLabel(const QString &label)
     if (!attached)
         return;
 
-    auto acceptButton = attached->buttonBox()->standardButton(QPlatformDialogHelper::Open);
+    auto acceptButton = d->buttonBox->standardButton(QPlatformDialogHelper::Open);
     if (!acceptButton) {
         qmlWarning(this).nospace() << "Can't set accept label to " << label
             << "; failed to find Open button in DialogButtonBox of " << this;
@@ -263,11 +266,10 @@ void QQuickFolderDialogImpl::setRejectLabel(const QString &label)
 {
     Q_D(QQuickFolderDialogImpl);
     d->rejectLabel = label;
-    QQuickFolderDialogImplAttached *attached = d->attachedOrWarn();
-    if (!attached)
+    if (!d->buttonBox)
         return;
 
-    auto rejectButton = attached->buttonBox()->standardButton(QPlatformDialogHelper::Cancel);
+    auto rejectButton = d->buttonBox->standardButton(QPlatformDialogHelper::Cancel);
     if (!rejectButton) {
         qmlWarning(this).nospace() << "Can't set reject label to " << label
             << "; failed to find Open button in DialogButtonBox of " << this;
@@ -291,13 +293,13 @@ void QQuickFolderDialogImpl::componentComplete()
     if (!attached)
         return;
 
-    Q_ASSERT(attached->buttonBox());
-    const int buttonCount = attached->buttonBox()->count();
+    Q_ASSERT(d->buttonBox);
+    const int buttonCount = d->buttonBox->count();
     if (buttonCount == 0)
         return;
 
     QQuickAbstractButton *rightMostButton = qobject_cast<QQuickAbstractButton *>(
-        attached->buttonBox()->itemAt(buttonCount - 1));
+        d->buttonBox->itemAt(buttonCount - 1));
     if (!rightMostButton) {
         qmlWarning(this) << "Can't find right-most button in DialogButtonBox";
         return;
@@ -358,49 +360,6 @@ QQuickFolderDialogImplAttached::QQuickFolderDialogImplAttached(QObject *parent)
         qmlWarning(this) << "FolderDialogImpl attached properties should only be "
             << "accessed through the root FileDialogImpl instance";
     }
-}
-
-QQuickDialogButtonBox *QQuickFolderDialogImplAttached::buttonBox() const
-{
-    Q_D(const QQuickFolderDialogImplAttached);
-    return d->buttonBox;
-}
-
-void QQuickFolderDialogImplAttached::setButtonBox(QQuickDialogButtonBox *buttonBox)
-{
-    Q_D(QQuickFolderDialogImplAttached);
-    if (buttonBox == d->buttonBox)
-        return;
-
-    if (d->buttonBox) {
-        QQuickFolderDialogImpl *folderDialogImpl = qobject_cast<QQuickFolderDialogImpl*>(parent());
-        if (folderDialogImpl) {
-            auto dialogPrivate = QQuickDialogPrivate::get(folderDialogImpl);
-            QObjectPrivate::disconnect(d->buttonBox, &QQuickDialogButtonBox::accepted,
-                dialogPrivate, &QQuickDialogPrivate::handleAccept);
-            QObjectPrivate::disconnect(d->buttonBox, &QQuickDialogButtonBox::rejected,
-                dialogPrivate, &QQuickDialogPrivate::handleReject);
-            QObjectPrivate::disconnect(d->buttonBox, &QQuickDialogButtonBox::clicked,
-                dialogPrivate, &QQuickDialogPrivate::handleClick);
-        }
-    }
-
-    d->buttonBox = buttonBox;
-
-    if (buttonBox) {
-        QQuickFolderDialogImpl *folderDialogImpl = qobject_cast<QQuickFolderDialogImpl*>(parent());
-        if (folderDialogImpl) {
-            auto dialogPrivate = QQuickDialogPrivate::get(folderDialogImpl);
-            QObjectPrivate::connect(d->buttonBox, &QQuickDialogButtonBox::accepted,
-                dialogPrivate, &QQuickDialogPrivate::handleAccept);
-            QObjectPrivate::connect(d->buttonBox, &QQuickDialogButtonBox::rejected,
-                dialogPrivate, &QQuickDialogPrivate::handleReject);
-            QObjectPrivate::connect(d->buttonBox, &QQuickDialogButtonBox::clicked,
-                dialogPrivate, &QQuickDialogPrivate::handleClick);
-        }
-    }
-
-    emit buttonBoxChanged();
 }
 
 QQuickListView *QQuickFolderDialogImplAttached::folderDialogListView() const
