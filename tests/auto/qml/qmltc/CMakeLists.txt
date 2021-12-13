@@ -143,3 +143,8 @@ qt_internal_target_compile_qml_to_cpp(tst_qmltc_nodiskcache
     FILES
         ${qml_sources}
 )
+
+# Add qmltc documentation example to the tests. This is not beautiful but allows
+# to nicely test the documentation snippets automatically (and so making sure
+# the code there is up-to-date)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/qml/doc/snippets/qmltc snippets)
