@@ -19,7 +19,7 @@ qhp.QtQuickDialogs.subprojects.qmltypes.indexTitle = Qt Quick Dialogs QML Types
 qhp.QtQuickDialogs.subprojects.qmltypes.selectors = qmlclass
 qhp.QtQuickDialogs.subprojects.qmltypes.sortPages = true
 
-depends = qtcore qtgui qtdoc qtqml qtquick qtquickcontrols qtlabsplatform
+depends = qtcore qtqmlcore qtgui qtdoc qtqml qtquick qtquickcontrols qtlabsplatform
 
 # This module has no documented C++ types, clear the module header
 moduleheader =
