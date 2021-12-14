@@ -1611,6 +1611,7 @@ function(qt6_target_qml_sources target)
         # but that's not fatal.
         set(qmldir_file ${output_dir}/qmldir)
 
+        _qt_internal_genex_getproperty(qmltypes_file ${target} QT_QML_MODULE_PLUGIN_TYPES_FILE)
         _qt_internal_genex_getproperty(qmlcachegen   ${target} QT_QMLCACHEGEN_EXECUTABLE)
         _qt_internal_genex_getproperty(direct_calls  ${target} QT_QMLCACHEGEN_DIRECT_CALLS)
         _qt_internal_genex_getjoinedproperty(arguments ${target}
@@ -1864,7 +1865,8 @@ function(qt6_target_qml_sources target)
                     ${qmlcachegen_cmd}
                     "${file_absolute}"
                     $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
-                    "$<$<BOOL:${types_file}>:${types_file}>"
+                    "$<$<BOOL:${qmltypes_file}>:${qmltypes_file}>"
+                    "${qmldir_file}"
             )
 
             target_sources(${target} PRIVATE ${compiled_file})
