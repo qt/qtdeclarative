@@ -167,12 +167,6 @@ ColumnLayout {
                     id: folderOptionsColumnLayout
 
                     CheckBox {
-                        id: showDirsOnlyCheckBox
-                        text: qsTr("ShowDirsOnly")
-
-                        readonly property int folderOption: checked ? FolderDialog.ShowDirsOnly : 0
-                    }
-                    CheckBox {
                         id: dontResolveSymlinksCheckBox
                         text: qsTr("DontResolveSymlinks")
 
@@ -214,9 +208,7 @@ ColumnLayout {
             title: titleTextField.text
 
             acceptLabel: acceptLabelTextField.text
-            options: showDirsOnlyCheckBox.folderOption
-                | dontResolveSymlinksCheckBox.folderOption
-                | readOnlyCheckBox.folderOption
+            options: dontResolveSymlinksCheckBox.folderOption | readOnlyCheckBox.folderOption
             rejectLabel: rejectLabelTextField.text
         }
     }
