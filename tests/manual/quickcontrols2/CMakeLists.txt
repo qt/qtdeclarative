@@ -1,7 +1,6 @@
 # Generated from manual.pro.
 
 add_subdirectory(buttons)
-add_subdirectory(dialogs)
 add_subdirectory(fonts)
 add_subdirectory(gifs)
 add_subdirectory(headerview)

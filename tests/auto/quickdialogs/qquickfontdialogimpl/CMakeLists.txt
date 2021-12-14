@@ -19,6 +19,7 @@ qt_internal_add_test(tst_qquickfontdialogimpl
         Qt::QuickControlsTestUtilsPrivate
         Qt::QuickDialogs2Private
         Qt::QuickDialogs2QuickImplPrivate
+        Qt::QuickDialogs2UtilsPrivate
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
         Qt::QuickTest

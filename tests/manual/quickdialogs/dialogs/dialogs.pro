@@ -6,7 +6,9 @@ SOURCES += dialogs.cpp
 RESOURCES += \
     dialogs.qml \
     FileDialogPage.qml \
+    FolderDialogPage.qml \
     FontDialogPage.qml \
+    MessageBoxPage.qml \
     StringListView.qml \
     qmldir \
     Theme.qml

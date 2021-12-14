@@ -85,7 +85,13 @@ ApplicationWindow {
                 text: qsTr("FileDialog")
             }
             TabButton {
+                text: qsTr("FolderDialog")
+            }
+            TabButton {
                 text: qsTr("FontDialog")
+            }
+            TabButton {
+                text: qsTr("MessageBox")
             }
         }
 
@@ -100,12 +106,17 @@ ApplicationWindow {
                 width: scrollView.width
 
                 FileDialogPage {}
+                FolderDialogPage {}
                 FontDialogPage {}
+                MessageDialogPage {}
             }
         }
     }
 
     footer: ToolBar {
+        leftPadding: 12
+        rightPadding: 12
+
         RowLayout {
             anchors.fill: parent
 

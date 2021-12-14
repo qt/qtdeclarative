@@ -7,7 +7,6 @@ endif()
 add_subdirectory(cursor)
 add_subdirectory(customization)
 add_subdirectory(designer)
-add_subdirectory(dialogs)
 if(NOT ANDROID) # QTBUG-100258
 add_subdirectory(focus)
 endif()
