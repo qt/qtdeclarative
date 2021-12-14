@@ -183,7 +183,7 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
     static ReturnedValue getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property);
 
     static ReturnedValue virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup);
-    static ReturnedValue lookupGetter(Lookup *l, ExecutionEngine *engine, const Value &object);
+
     template <typename ReversalFunctor> static ReturnedValue lookupGetterImpl(Lookup *l, ExecutionEngine *engine, const Value &object, bool useOriginalProperty, ReversalFunctor revert);
     static bool virtualResolveLookupSetter(Object *object, ExecutionEngine *engine, Lookup *lookup, const Value &value);
 
