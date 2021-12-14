@@ -1,4 +1,4 @@
-add_subdirectory(dynamicview1)
-add_subdirectory(dynamicview2)
-add_subdirectory(dynamicview3)
-add_subdirectory(dynamicview4)
+qt_internal_add_example(dynamicview1)
+qt_internal_add_example(dynamicview2)
+qt_internal_add_example(dynamicview3)
+qt_internal_add_example(dynamicview4)
