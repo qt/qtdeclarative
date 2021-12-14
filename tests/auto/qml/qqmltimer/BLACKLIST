@@ -9,3 +9,9 @@ macos ci
 
 [notRepeatingStart]
 macos ci
+
+[repeat]
+macos ci arm
+
+[changeDuration]
+macos ci arm
