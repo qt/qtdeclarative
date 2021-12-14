@@ -16,3 +16,14 @@ qt_internal_add_test(tst_windows
         Qt::QuickControls2
     TESTDATA ${test_data}
 )
+
+# Make the QML files available to Creator's locator.
+target_sources(tst_windows
+    PRIVATE
+        ${test_data}
+)
+
+set_source_files_properties(${test_data}
+    PROPERTIES
+        HEADER_FILE_ONLY ON
+)
