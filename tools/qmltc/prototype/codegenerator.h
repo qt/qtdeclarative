@@ -74,8 +74,8 @@ private:
     QHash<QQmlJSScope::ConstPtr, qsizetype> m_typeToObjectIndex; // TODO: remove this
     // parents for each type that will (also) create the type
     QHash<QQmlJSScope::ConstPtr, QQmlJSScope::ConstPtr> m_immediateParents;
-    // mapping from to-be-wrapped object to the wrapper's object pseudo-index
-    QHash<int, int> m_implicitComponentMapping;
+    // mapping from component-wrapped object to component index (real or not)
+    QHash<int, int> m_componentIndices;
 
     QQmlJSAotMethod m_urlMethod;
 

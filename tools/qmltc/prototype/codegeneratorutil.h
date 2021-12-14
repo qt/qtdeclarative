@@ -121,6 +121,8 @@ struct CodeGeneratorUtility
                                       const QString &overloaded);
     static QString generate_addressof(const QString &addressed);
     static QString generate_getPrivateClass(const QString &accessor, const QQmlJSMetaProperty &p);
+    static QString generate_setIdValue(const QString &context, qsizetype index,
+                                       const QString &accessor, const QString &idString);
 };
 
 #endif // CODEGENERATORUTIL_H

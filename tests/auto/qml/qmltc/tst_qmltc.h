@@ -50,7 +50,7 @@ private slots:
     void enumerations();
     void methods();
     void properties();
-    void id();
+    void ids();
 
     void signalHandlers();
     void jsFunctions();

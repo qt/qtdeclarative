@@ -20,6 +20,7 @@ set(qml_sources
     data/methods.qml
     data/properties.qml
     data/ObjectWithId.qml
+    data/documentWithIds.qml
 
     data/signalHandlers.qml
     data/javaScriptFunctions.qml

@@ -270,12 +270,17 @@ void CodeGenerator::constructObjects(QSet<QString> &requiredCppIncludes)
         requiredCppIncludes = findCppIncludes(context, objects);
     };
     executor.addPass(populateCppIncludes);
+    const auto resolveExplicitComponents = [&](const Qml2CppContext &context,
+                                               QList<Qml2CppObject> &objects) {
+        m_componentIndices.insert(findAndResolveExplicitComponents(context, objects));
+    };
     const auto resolveImplicitComponents = [&](const Qml2CppContext &context,
                                                QList<Qml2CppObject> &objects) {
-        m_implicitComponentMapping = findAndResolveImplicitComponents(context, objects);
+        m_componentIndices.insert(findAndResolveImplicitComponents(context, objects));
     };
+    executor.addPass(resolveExplicitComponents);
     executor.addPass(resolveImplicitComponents);
-    executor.addPass(&setObjectIds);
+    executor.addPass(&setObjectIds); // NB: must be after Component resolution
     const auto setImmediateParents = [&](const Qml2CppContext &context,
                                          QList<Qml2CppObject> &objects) {
         m_immediateParents = findImmediateParents(context, objects);
@@ -544,10 +549,11 @@ void CodeGenerator::compileObject(QQmlJSAotObject &compiled, const CodeGenObject
     }
     // 3. set id if it's present in the QML document
     if (!m_doc->stringAt(object.irObject->idNameIndex).isEmpty()) {
-        Q_ASSERT(object.irObject->id >= 0);
         compiled.init.body << u"// 3. set id since it exists"_qs;
-        compiled.init.body << u"context->setIdValue(" + QString::number(object.irObject->id)
-                        + u", this);";
+        compiled.init.body << CodeGeneratorUtility::generate_setIdValue(
+                                      u"context"_qs, object.irObject->id, u"this"_qs,
+                                      m_doc->stringAt(object.irObject->idNameIndex))
+                        + u";";
     }
 
     // TODO: we might want to optimize storage space when there are no object
@@ -1311,17 +1317,21 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
             return;
         }
 
+        if (p.isList() || (binding.flags & QmlIR::Binding::IsListItem)) {
+            const QString refName = u"listref_" + propertyName;
+            const auto uniqueId = UniqueStringId(current, refName);
+            if (!m_listReferencesCreated.contains(uniqueId)) {
+                m_listReferencesCreated.insert(uniqueId);
+                // TODO: figure if Unicode support is needed here
+                current.endInit.body << u"QQmlListReference " + refName + u"(" + objectAddr
+                                + u", QByteArrayLiteral(\"" + propertyName + u"\"));";
+                current.endInit.body << u"Q_ASSERT(" + refName + u".canAppend());";
+            }
+        }
+
         const auto setObjectBinding = [&](const QString &value) {
             if (p.isList() || (binding.flags & QmlIR::Binding::IsListItem)) {
                 const QString refName = u"listref_" + propertyName;
-                const auto uniqueId = UniqueStringId(current, refName);
-                if (!m_listReferencesCreated.contains(uniqueId)) {
-                    m_listReferencesCreated.insert(uniqueId);
-                    // TODO: figure if Unicode support is needed here
-                    current.endInit.body << u"QQmlListReference " + refName + u"(" + objectAddr
-                                    + u", QByteArrayLiteral(\"" + propertyName + u"\"));";
-                    current.endInit.body << u"Q_ASSERT(" + refName + u".canAppend());";
-                }
                 current.endInit.body << refName + u".append(" + value + u");";
             } else {
                 addPropertyLine(propertyName, p, value, /* through QVariant = */ true);
@@ -1333,23 +1343,34 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
             // object binding separation also does not apply here
             const QString objectName = makeGensym(u"sc"_qs);
             Q_ASSERT(m_typeToObjectIndex.contains(bindingObject.type));
-            Q_ASSERT(m_implicitComponentMapping.contains(
-                    int(m_typeToObjectIndex[bindingObject.type])));
-            const int index =
-                    m_implicitComponentMapping[int(m_typeToObjectIndex[bindingObject.type])];
+            const int objectIndex = int(m_typeToObjectIndex[bindingObject.type]);
+            Q_ASSERT(m_componentIndices.contains(objectIndex));
+            const int index = m_componentIndices[objectIndex];
             current.endInit.body << u"{"_qs;
             current.endInit.body << QStringLiteral(
                                             "auto thisContext = QQmlData::get(%1)->outerContext;")
                                             .arg(qobjectParent);
             current.endInit.body << QStringLiteral(
                                             "auto %1 = QQmlObjectCreator::createComponent(engine, "
-                                            "QQmlEnginePrivate::get(engine)->"
-                                            "compilationUnitFromUrl(%2()), %3, %4, thisContext);")
-                                            .arg(objectName, m_urlMethod.name,
+                                            "%2, %3, %4, thisContext);")
+                                            .arg(objectName,
+                                                 CodeGeneratorUtility::compilationUnitVariable.name,
                                                  QString::number(index), qobjectParent);
             current.endInit.body << QStringLiteral("thisContext->installContext(QQmlData::get(%1), "
                                                    "QQmlContextData::OrdinaryObject);")
                                             .arg(objectName);
+            const auto isExplicitComponent = [](const QQmlJSScope::ConstPtr &type) {
+                auto base = QQmlJSScope::nonCompositeBaseType(type);
+                return base && base->internalName() == u"QQmlComponent"_qs;
+            };
+            if (!m_doc->stringAt(bindingObject.irObject->idNameIndex).isEmpty()
+                && isExplicitComponent(bindingObject.type)) {
+                current.endInit.body
+                        << CodeGeneratorUtility::generate_setIdValue(
+                                   u"thisContext"_qs, bindingObject.irObject->id, objectName,
+                                   m_doc->stringAt(bindingObject.irObject->idNameIndex))
+                                + u";";
+            }
             setObjectBinding(objectName);
             current.endInit.body << u"}"_qs;
             break;

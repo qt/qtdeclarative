@@ -164,6 +164,12 @@ static decltype(auto) findIrLocation(const QmlIR::Document *doc, InputIterator f
 
 Q_LOGGING_CATEGORY(lcDefaultPasses, "qml.qmltc.compilerpasses", QtWarningMsg);
 
+static bool isComponent(const QQmlJSScope::ConstPtr &type)
+{
+    auto base = QQmlJSScope::nonCompositeBaseType(type);
+    return base && base->internalName() == u"QQmlComponent"_qs;
+}
+
 void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
 {
     const auto verifyProperty = [&](const QQmlJSMetaProperty &property,
@@ -241,6 +247,13 @@ void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
 
     const auto verifyBinding = [&](const QmlIR::Binding &binding,
                                    const QQmlJSScope::ConstPtr &type) {
+        // QQmlComponent-wrapped types are special. consider:
+        // `Component { QtObject {} }`
+        // Component doesn't have a default property so this is an error in
+        // normal code
+        if (isComponent(type))
+            return;
+
         QString propName = context.document->stringAt(binding.propertyNameIndex);
         if (propName.isEmpty()) {
             Q_ASSERT(type);
@@ -840,6 +853,23 @@ QSet<QString> findCppIncludes(const Qml2CppContext &context, QList<Qml2CppObject
     return cppIncludes;
 }
 
+QHash<int, int> findAndResolveExplicitComponents(const Qml2CppContext &context,
+                                                 QList<Qml2CppObject> &objects)
+{
+    QHash<int, int> identity;
+    // NB: unlike in the case of implicit components, we only need to look at
+    // the objects array and ignore the bindings
+    for (Qml2CppObject &o : objects) {
+        if (isComponent(o.type)) {
+            o.irObject->flags |= QV4::CompiledData::Object::IsComponent;
+            Q_ASSERT(context.typeIndices->contains(o.type));
+            const int index = int(context.typeIndices->value(o.type, -1));
+            identity[index] = index;
+        }
+    }
+    return identity;
+}
+
 template<typename Update>
 static void updateImplicitComponents(const Qml2CppContext &context, Qml2CppObject &object,
                                      QList<Qml2CppObject> &objects, Update update)
@@ -878,11 +908,15 @@ static void updateImplicitComponents(const Qml2CppContext &context, Qml2CppObjec
 QHash<int, int> findAndResolveImplicitComponents(const Qml2CppContext &context,
                                                  QList<Qml2CppObject> &objects)
 {
-    // TODO: this pass is incomplete. Other cases include component definitions:
-    // `Component { Item {} }` and maybe something else
     int syntheticComponentCount = 0;
     QHash<int, int> indexMapping;
     const auto setQQmlComponentFlag = [&](Qml2CppObject &object, int objectIndex) {
+        if (object.irObject->flags & QV4::CompiledData::Object::IsComponent) {
+            // this ir object is *already* marked as Component. which means it
+            // is the case of explicit component bound to Component property:
+            // property Component p: Component{ ... }
+            return;
+        }
         object.irObject->flags |= QV4::CompiledData::Object::IsComponent;
         Q_ASSERT(!indexMapping.contains(objectIndex));
         // TODO: the mapping construction is very ad-hoc, it could be that the
@@ -898,14 +932,35 @@ QHash<int, int> findAndResolveImplicitComponents(const Qml2CppContext &context,
     return indexMapping;
 }
 
-static void setObjectId(const Qml2CppContext &context, int objectIndex,
-                        QHash<int, int> &idToObjectIndex)
+static void setObjectId(const Qml2CppContext &context, const QList<Qml2CppObject> &objects,
+                        int objectIndex, QHash<int, int> &idToObjectIndex)
 {
-    // TODO: this method is basically a copy-paste of
+    // TODO: this method is basically a (modified) version of
     // QQmlComponentAndAliasResolver::collectIdsAndAliases()
 
-    QmlIR::Object *irObject = context.document->objectAt(objectIndex);
+    const auto isImplicitComponent = [](const Qml2CppObject &object) {
+        // special (to this code) way to detect implicit components after
+        // findAndResolveImplicitComponents() is run: unlike
+        // QQmlComponentAndAliasResolver we do *not* create synthetic
+        // components, but instead mark existing objects with IsComponent flag.
+        // this gives a bad side effect (for the logic here) that we cannot
+        // really distinguish between implicit and explicit components anymore
+        return object.irObject->flags & QV4::CompiledData::Object::IsComponent
+                && !isComponent(object.type);
+    };
+
+    const Qml2CppObject &object = objects.at(objectIndex);
+    Q_ASSERT(object.irObject == context.document->objectAt(objectIndex));
+    QmlIR::Object *irObject = object.irObject;
+    Q_ASSERT(object.type); // assume verified
     Q_ASSERT(irObject); // assume verified
+
+    if (isImplicitComponent(object)) {
+        // Note: somehow QmlIR ensures that implicit components have no
+        // idNameIndex set when setting ids for the document root. this logic
+        // can't do it, so reject implicit components straight away instead
+        return;
+    }
 
     if (irObject->idNameIndex != 0) {
         if (idToObjectIndex.contains(irObject->idNameIndex)) {
@@ -928,18 +983,28 @@ static void setObjectId(const Qml2CppContext &context, int objectIndex,
                           && binding.type != QV4::CompiledData::Binding::Type_GroupProperty) {
                           return;
                       }
-                      setObjectId(context, binding.value.objectIndex, idToObjectIndex);
+                      setObjectId(context, objects, binding.value.objectIndex, idToObjectIndex);
                   });
 }
 
 void setObjectIds(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
 {
     Q_UNUSED(objects);
+
     QHash<int, int> idToObjectIndex;
-    Q_ASSERT(objects.at(0).irObject == context.document->objectAt(0));
-    // NB: unlike QQmlTypeCompiler, only set id for the root, completely
-    // ignoring the Components
-    setObjectId(context, 0, idToObjectIndex);
+    const auto set = [&](int index) {
+        idToObjectIndex.clear();
+        Q_ASSERT(objects.at(index).irObject == context.document->objectAt(index));
+        setObjectId(context, objects, index, idToObjectIndex);
+    };
+
+    // NB: in reality, we need to do the same also for implicit components, but
+    // for now this is good enough
+    for (qsizetype i = 1; i < objects.size(); ++i) {
+        if (isComponent(objects[i].type))
+            set(i);
+    }
+    set(0);
 }
 
 QHash<QQmlJSScope::ConstPtr, QQmlJSScope::ConstPtr>

@@ -64,6 +64,13 @@ QSet<QQmlJSMetaProperty> deferredResolveValidateAliases(const Qml2CppContext &co
 // finds all required C++ include files that are needed for the generated C++
 QSet<QString> findCppIncludes(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
 
+// finds and resolves explicit QQmlComponent types. returns (essentially) a set
+// of QmlIR::Object indices that represent types derived from QQmlComponent. the
+// return value is a QHash<> to be compatible with
+// findAndResolveImplicitComponents()
+QHash<int, int> findAndResolveExplicitComponents(const Qml2CppContext &context,
+                                                 QList<Qml2CppObject> &objects);
+
 // finds and resolves implicit QQmlComponent types. returns a mapping from
 // QmlIR::Object that is being wrapped into a QQmlComponent to an index of that
 // implicit wrapper, which is a synthetic QmlIR::Object
