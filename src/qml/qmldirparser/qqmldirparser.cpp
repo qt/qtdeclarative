@@ -296,6 +296,16 @@ bool QQmlDirParser::parse(const QString &source)
                 reportError(lineNumber, 0, QStringLiteral("designersupported does not expect any argument"));
             else
                 _designerSupported = true;
+        } else if (sections[0] == QLatin1String("static")) {
+            if (sectionCount != 1)
+                reportError(lineNumber, 0, QStringLiteral("static does not expect any argument"));
+            else
+                _isStaticModule = true;
+        } else if (sections[0] == QLatin1String("system")) {
+            if (sectionCount != 1)
+                reportError(lineNumber, 0, QStringLiteral("system does not expect any argument"));
+            else
+                _isSystemModule = true;
         } else if (sections[0] == QLatin1String("import")
                    || sections[0] == QLatin1String("depends")) {
             if (!readImport(sections, sectionCount, Import::Default))

@@ -18,6 +18,8 @@ macro(qt_internal_get_internal_add_qml_module_keywords
         NO_GENERATE_QMLDIR
         NO_LINT
         NO_CACHEGEN
+        __QT_INTERNAL_STATIC_MODULE
+        __QT_INTERNAL_SYSTEM_MODULE
     )
     set(${single_args}
         URI

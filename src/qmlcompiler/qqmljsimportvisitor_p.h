@@ -167,6 +167,8 @@ protected:
 
     // Maps all qmlNames to the source location of their import
     QMultiHash<QString, QQmlJS::SourceLocation> m_importTypeLocationMap;
+    // Maps all static modules to the source location of their import
+    QMultiHash<QString, QQmlJS::SourceLocation> m_importStaticModuleLocationMap;
     // Contains all import source locations (could be extracted from above but that is expensive)
     QSet<QQmlJS::SourceLocation> m_importLocations;
     // A set of all types that have been used during type resolution

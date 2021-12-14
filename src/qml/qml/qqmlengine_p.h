@@ -96,7 +96,7 @@ struct QObjectForeign {
     QML_FOREIGN(QObject)
     QML_NAMED_ELEMENT(QtObject)
     QML_ADDED_IN_VERSION(2, 0)
-    Q_CLASSINFO("QML.Root", "QML")
+    Q_CLASSINFO("QML.OmitFromQmlTypes", "true")
 };
 
 // This needs to be declared here so that the pool for it can live in QQmlEnginePrivate.

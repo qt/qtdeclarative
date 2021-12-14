@@ -65,9 +65,9 @@ public:
     QQmlJSScope::Ptr importFile(const QString &file);
     ImportedTypes importDirectory(const QString &directory, const QString &prefix = QString());
 
-    ImportedTypes importModule(
-            const QString &module, const QString &prefix = QString(),
-            QTypeRevision version = QTypeRevision());
+    ImportedTypes importModule(const QString &module, const QString &prefix = QString(),
+                               QTypeRevision version = QTypeRevision(),
+                               QStringList *staticModuleList = nullptr);
 
     ImportedTypes builtinInternalNames();
 
@@ -97,9 +97,19 @@ private:
 
         // Names the importing component sees, including any prefixes
         QHash<QString, QQmlJSScope::ConstPtr> qmlNames;
+
+        // Static modules included here
+        QStringList staticModules;
+
+        // Whether a system module has been imported
+        bool hasSystemModule = false;
     };
 
     struct Import {
+        QString name;
+        bool isStaticModule;
+        bool isSystemModule;
+
         QHash<QString, QQmlJSExportedScope> objects;
         QHash<QString, QQmlJSExportedScope> scripts;
         QList<QQmlDirParser::Import> imports;

@@ -32,6 +32,7 @@ qt_internal_add_qml_module(Qml
     URI "QtQml"
     VERSION "${PROJECT_VERSION}"
     DESIGNER_SUPPORTED
+    __QT_INTERNAL_SYSTEM_MODULE
     PLUGIN_TARGET qmlplugin
     CLASS_NAME QtQmlPlugin
     IMPORTS ${module_dynamic_qml_imports}

@@ -32,6 +32,11 @@ function(qt6_add_qml_module target)
         # Used only by _qt_internal_qml_type_registration()
         # TODO: Remove this once qt6_extract_metatypes does not install by default.
         __QT_INTERNAL_INSTALL_METATYPES_JSON
+
+        # Used to mark modules as having static side effects (i.e. if they install an image provider)
+        __QT_INTERNAL_STATIC_MODULE
+        # Used to mark modules as being a system module that provides all builtins
+        __QT_INTERNAL_SYSTEM_MODULE
     )
 
     set(args_single
@@ -453,6 +458,8 @@ function(qt6_add_qml_module target)
         _qt_qml_module_installed_plugin_target "${arg_INSTALLED_PLUGIN_TARGET}"
 
         QT_QML_MODULE_DESIGNER_SUPPORTED "${arg_DESIGNER_SUPPORTED}"
+        QT_QML_MODULE_IS_STATIC "${arg___QT_INTERNAL_STATIC_MODULE}"
+        QT_QML_MODULE_IS_SYSTEM "${arg___QT_INTERNAL_SYSTEM_MODULE}"
         QT_QML_MODULE_OUTPUT_DIRECTORY "${arg_OUTPUT_DIRECTORY}"
         QT_QML_MODULE_RESOURCE_PREFIX "${qt_qml_module_resource_prefix}"
         QT_QML_MODULE_PAST_MAJOR_VERSIONS "${arg_PAST_MAJOR_VERSIONS}"
@@ -952,6 +959,16 @@ function(_qt_internal_target_generate_qmldir target)
     get_target_property(designer_supported ${target} QT_QML_MODULE_DESIGNER_SUPPORTED)
     if(designer_supported)
         string(APPEND content "designersupported\n")
+    endif()
+
+    get_target_property(static_module ${target} QT_QML_MODULE_IS_STATIC)
+    if (static_module)
+       string(APPEND content "static\n")
+    endif()
+
+    get_target_property(system_module ${target} QT_QML_MODULE_IS_SYSTEM)
+    if (system_module)
+       string(APPEND content "system\n")
     endif()
 
     _qt_internal_qmldir_item(typeinfo QT_QML_MODULE_TYPEINFO)

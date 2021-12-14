@@ -180,8 +180,9 @@ void QmlTypesClassDescription::collect(
                 isSingleton = true;
         } else if (name == QLatin1String("QML.Foreign")) {
             foreignTypeName = value;
-        } else if (name == QLatin1String("QML.Root")) {
-            isRootClass = true;
+        } else if (name == QLatin1String("QML.OmitFromQmlTypes")) {
+            if (value == QLatin1String("true"))
+                omitFromQmlTypes = true;
         } else if (name == QLatin1String("QML.HasCustomParser")) {
             if (value == QLatin1String("true"))
                 hasCustomParser = true;

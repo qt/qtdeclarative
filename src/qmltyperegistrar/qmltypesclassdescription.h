@@ -53,8 +53,8 @@ struct QmlTypesClassDescription
     QTypeRevision removedInRevision;
     bool isCreatable = true;
     bool isSingleton = false;
-    bool isRootClass = false;
     bool hasCustomParser = false;
+    bool omitFromQmlTypes = false;
     QStringList implementsInterfaces;
     QStringList deferredNames;
     QStringList immediateNames;

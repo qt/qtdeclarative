@@ -146,6 +146,9 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
 {
     Import result;
     auto reader = createQmldirParserForFile(path + SlashQmldir);
+    result.name = reader.typeNamespace();
+    result.isStaticModule = reader.isStaticModule();
+    result.isSystemModule = reader.isSystemModule();
     result.imports.append(reader.imports());
     result.dependencies.append(reader.dependencies());
 
@@ -354,6 +357,14 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
     if (!importDescription.prefix().isEmpty())
         types->qmlNames.insert(importDescription.prefix(), {}); // Empty type means "this is the prefix"
 
+    if (!importDescription.isDependency()) {
+        if (import.isStaticModule)
+            types->staticModules << import.name;
+
+        if (import.isSystemModule)
+            types->hasSystemModule = true;
+    }
+
     for (auto it = import.scripts.begin(); it != import.scripts.end(); ++it) {
         types->cppNames.insert(prefixedName(anonPrefix, internalName(it->scope)), it->scope);
         // You cannot have a script without an export
@@ -520,10 +531,13 @@ void QQmlJSImporter::importQmldirs(const QStringList &qmldirFiles)
     }
 }
 
-QQmlJSImporter::ImportedTypes QQmlJSImporter::importModule(
-        const QString &module, const QString &prefix, QTypeRevision version)
+QQmlJSImporter::ImportedTypes QQmlJSImporter::importModule(const QString &module,
+                                                           const QString &prefix,
+                                                           QTypeRevision version,
+                                                           QStringList *staticModuleList)
 {
-    AvailableTypes result(builtinImportHelper().cppNames);
+    const AvailableTypes builtins = builtinImportHelper();
+    AvailableTypes result(builtins.cppNames);
     if (!importHelper(module, &result, prefix, version)) {
         m_warnings.append({
                               QStringLiteral("Failed to import %1. Are your include paths set up properly?").arg(module),
@@ -531,6 +545,16 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importModule(
                               QQmlJS::SourceLocation()
                           });
     }
+
+    // If we imported a system module add all builtin QML types
+    if (result.hasSystemModule) {
+        for (const QString &name : builtins.qmlNames.keys())
+            result.qmlNames.insert(prefixedName(prefix, name), builtins.qmlNames[name]);
+    }
+
+    if (staticModuleList)
+        *staticModuleList << result.staticModules;
+
     return result.qmlNames;
 }
 
@@ -558,6 +582,8 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
         const auto &cacheEntry = m_cachedImportTypes[cacheKey];
 
         types->cppNames.insert(cacheEntry->cppNames);
+        types->staticModules << cacheEntry->staticModules;
+        types->hasSystemModule = cacheEntry->hasSystemModule;
 
         // No need to import qml names for dependencies
         if (!isDependency)

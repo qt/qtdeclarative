@@ -895,6 +895,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("duplicateQmldirImport") << QStringLiteral("qmldirImport/duplicate.qml");
     QTest::newRow("Used imports") << QStringLiteral("used.qml");
     QTest::newRow("Unused imports (multi)") << QStringLiteral("unused_multi.qml");
+    QTest::newRow("Unused static module") << QStringLiteral("unused_static.qml");
     QTest::newRow("compositeSingleton") << QStringLiteral("compositesingleton.qml");
     QTest::newRow("stringLength") << QStringLiteral("stringLength.qml");
     QTest::newRow("stringLength2") << QStringLiteral("stringLength2.qml");
@@ -947,6 +948,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("declared property of JS object") << QStringLiteral("bareQt.qml");
     QTest::newRow("ID overrides property") << QStringLiteral("accessibleId.qml");
     QTest::newRow("matchByName") << QStringLiteral("matchByName.qml");
+    QTest::newRow("QObject.hasOwnProperty") << QStringLiteral("qobjectHasOwnProperty.qml");
 }
 
 void TestQmllint::cleanQmlCode()

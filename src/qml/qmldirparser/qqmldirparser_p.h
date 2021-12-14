@@ -157,6 +157,8 @@ public:
     QList<Script> scripts() const { return _scripts; }
     QList<Plugin> plugins() const { return _plugins; }
     bool designerSupported() const { return _designerSupported; }
+    bool isStaticModule() const { return _isStaticModule; }
+    bool isSystemModule() const { return _isSystemModule; }
 
     QStringList typeInfos() const { return _typeInfos; }
     QStringList classNames() const { return _classNames; }
@@ -177,6 +179,8 @@ private:
     QList<Script> _scripts;
     QList<Plugin> _plugins;
     bool _designerSupported = false;
+    bool _isStaticModule = false;
+    bool _isSystemModule = false;
     QStringList _typeInfos;
     QStringList _classNames;
     QString _linkTarget;

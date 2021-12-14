@@ -23,61 +23,118 @@ Module {
     }
 
     Component {
+        file: "private/qqmlengine_p.h"
         name: "QObject"
+        extension: "Object"
         accessSemantics: "reference"
         exports: ["QML/QtObject 1.0"]
         exportMetaObjectRevisions: [256]
-
-        Method {
-            name: "toString"
+        Property {
+            name: "objectName"
             type: "QString"
+            bindable: "bindableObjectName"
+            read: "objectName"
+            write: "setObjectName"
+            notify: "objectNameChanged"
+            index: 0
         }
-
+        Signal {
+            name: "objectNameChanged"
+            Parameter { name: "objectName"; type: "QString" }
+        }
+        Method {
+            name: "_q_reregisterTimers"
+            Parameter { type: "void"; isPointer: true }
+        }
+        Method { name: "toString"; type: "string" }
+        Method { name: "destroy" }
         Method {
             name: "destroy"
-        }
-
-        Method {
-            name: "destroy"
-
-            Parameter {
-                name: "delay"
-                type: "int"
-            }
+            Parameter { name: "delay"; type: "int" }
         }
     }
 
     Component {
+        file: "qqmlcomponent.h"
         name: "QQmlComponent"
         accessSemantics: "reference"
         prototype: "QObject"
         exports: ["QML/Component 1.0"]
         exportMetaObjectRevisions: [256]
-
+        attachedType: "QQmlComponentAttached"
+        Enum {
+            name: "CompilationMode"
+            values: ["PreferSynchronous", "Asynchronous"]
+        }
         Enum {
             name: "Status"
             values: ["Null", "Ready", "Loading", "Error"]
         }
-
+        Property {
+            name: "progress"
+            type: "double"
+            read: "progress"
+            notify: "progressChanged"
+            index: 0
+            isReadonly: true
+        }
         Property {
             name: "status"
             type: "Status"
+            read: "status"
+            notify: "statusChanged"
+            index: 1
             isReadonly: true
         }
-
+        Property { name: "url"; type: "QUrl"; read: "url"; index: 2; isReadonly: true }
         Signal {
             name: "statusChanged"
-
-            Parameter {
-                type: "QQmlComponent::Status"
-            }
-
+            Parameter { type: "QQmlComponent::Status" }
         }
-
+        Signal {
+            name: "progressChanged"
+            Parameter { type: "double" }
+        }
         Method {
-            name: "errorString"
-            type: "QString"
+            name: "loadUrl"
+            Parameter { name: "url"; type: "QUrl" }
         }
+        Method {
+            name: "loadUrl"
+            Parameter { name: "url"; type: "QUrl" }
+            Parameter { name: "mode"; type: "CompilationMode" }
+        }
+        Method {
+            name: "setData"
+            Parameter { type: "QByteArray" }
+            Parameter { name: "baseUrl"; type: "QUrl" }
+        }
+        Method { name: "errorString"; type: "QString" }
+        Method { name: "createObject"; isJavaScriptFunction: true }
+        Method {
+            name: "createObject"
+            type: "QObject"
+            isPointer: true
+            Parameter { name: "parent"; type: "QObject"; isPointer: true }
+            Parameter { name: "properties"; type: "QVariantMap" }
+        }
+        Method {
+            name: "createObject"
+            type: "QObject"
+            isPointer: true
+            Parameter { name: "parent"; type: "QObject"; isPointer: true }
+        }
+        Method { name: "createObject"; type: "QObject"; isPointer: true }
+        Method { name: "incubateObject"; isJavaScriptFunction: true }
+    }
+
+    Component {
+        file: "private/qqmlcomponentattached_p.h"
+        name: "QQmlComponentAttached"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        Signal { name: "completed" }
+        Signal { name: "destruction" }
     }
 
     Component {

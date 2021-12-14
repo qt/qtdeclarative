@@ -336,88 +336,25 @@ static QJsonArray members(const QJsonObject *classDef,
 
 void QmlTypesCreator::writeComponents()
 {
-    const QLatin1String nameKey("name");
     const QLatin1String signalsKey("signals");
     const QLatin1String enumsKey("enums");
     const QLatin1String propertiesKey("properties");
     const QLatin1String slotsKey("slots");
     const QLatin1String methodsKey("methods");
-    const QLatin1String accessKey("access");
-    const QLatin1String typeKey("type");
-    const QLatin1String returnTypeKey("returnType");
-    const QLatin1String argumentsKey("arguments");
-
-    const QLatin1String destroyedName("destroyed");
-    const QLatin1String deleteLaterName("deleteLater");
-    const QLatin1String toStringName("toString");
-    const QLatin1String destroyName("destroy");
-    const QLatin1String delayName("delay");
 
     const QLatin1String signalElement("Signal");
     const QLatin1String componentElement("Component");
     const QLatin1String methodElement("Method");
 
-    const QLatin1String publicAccess("public");
-    const QLatin1String intType("int");
-    const QLatin1String stringType("string");
-
-    auto writeRootClass = [&](const QJsonObject *classDef) {
-        // Hide destroyed() signals
-        QJsonArray componentSignals = members(classDef, signalsKey, m_version);
-        for (auto it = componentSignals.begin(); it != componentSignals.end();) {
-            if (it->toObject().value(nameKey).toString() == destroyedName)
-                it = componentSignals.erase(it);
-            else
-                ++it;
-        }
-        writeMethods(componentSignals, signalElement);
-
-        // Hide deleteLater() methods
-        QJsonArray componentMethods = members(classDef, methodsKey, m_version);
-        const QJsonArray componentSlots = members(classDef, slotsKey, m_version);
-        for (const QJsonValue componentSlot : componentSlots)
-            componentMethods.append(componentSlot);
-        for (auto it = componentMethods.begin(); it != componentMethods.end();) {
-            if (it->toObject().value(nameKey).toString() == deleteLaterName)
-                it = componentMethods.erase(it);
-            else
-                ++it;
-        }
-
-        // Add toString()
-        QJsonObject toStringMethod;
-        toStringMethod.insert(nameKey, toStringName);
-        toStringMethod.insert(accessKey, publicAccess);
-        toStringMethod.insert(returnTypeKey, stringType);
-        componentMethods.append(toStringMethod);
-
-        // Add destroy()
-        QJsonObject destroyMethod;
-        destroyMethod.insert(nameKey, destroyName);
-        destroyMethod.insert(accessKey, publicAccess);
-        componentMethods.append(destroyMethod);
-
-        // Add destroy(int)
-        QJsonObject destroyMethodWithArgument;
-        destroyMethodWithArgument.insert(nameKey, destroyName);
-        destroyMethodWithArgument.insert(accessKey, publicAccess);
-        QJsonObject delayArgument;
-        delayArgument.insert(nameKey, delayName);
-        delayArgument.insert(typeKey, intType);
-        QJsonArray destroyArguments;
-        destroyArguments.append(delayArgument);
-        destroyMethodWithArgument.insert(argumentsKey, destroyArguments);
-        componentMethods.append(destroyMethodWithArgument);
-
-        writeMethods(componentMethods, methodElement);
-    };
-
     for (const QJsonObject &component : m_ownTypes) {
-        m_qml.writeStartObject(componentElement);
-
         QmlTypesClassDescription collector;
         collector.collect(&component, m_ownTypes, m_foreignTypes,
                           QmlTypesClassDescription::TopLevel, m_version);
+
+        if (collector.omitFromQmlTypes)
+            continue;
+
+        m_qml.writeStartObject(componentElement);
 
         writeClassProperties(collector);
 
@@ -426,13 +363,9 @@ void QmlTypesCreator::writeComponents()
 
             writeProperties(members(classDef, propertiesKey, m_version));
 
-            if (collector.isRootClass) {
-                writeRootClass(classDef);
-            } else {
-                writeMethods(members(classDef, signalsKey, m_version), signalElement);
-                writeMethods(members(classDef, slotsKey, m_version), methodElement);
-                writeMethods(members(classDef, methodsKey, m_version), methodElement);
-            }
+            writeMethods(members(classDef, signalsKey, m_version), signalElement);
+            writeMethods(members(classDef, slotsKey, m_version), methodElement);
+            writeMethods(members(classDef, methodsKey, m_version), methodElement);
         }
         m_qml.writeEndObject();
 

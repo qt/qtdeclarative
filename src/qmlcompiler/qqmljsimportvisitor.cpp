@@ -398,6 +398,9 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
             break;
     }
 
+    for (const QQmlJS::SourceLocation &import : m_importStaticModuleLocationMap.values())
+        unusedImports.remove(import);
+
     for (const auto &import : unusedImports) {
         m_logger->logInfo(QString::fromLatin1("Unused import at %1:%2:%3")
                                   .arg(m_logger->fileName())
@@ -1715,12 +1718,25 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     }
     path.chop(1);
 
+    QStringList staticModulesProvided;
+
     const auto imported = m_importer->importModule(
-                path, prefix, import->version ? import->version->version : QTypeRevision());
+            path, prefix, import->version ? import->version->version : QTypeRevision(),
+            &staticModulesProvided);
 
     m_rootScopeImports.insert(imported);
     for (const QString &key : imported.keys())
         addImportLocation(key);
+
+    if (prefix.isEmpty()) {
+        for (const QString &staticModule : staticModulesProvided) {
+            // Always prefer a direct import of static module to it being imported as a dependency
+            if (path != staticModule && m_importStaticModuleLocationMap.contains(staticModule))
+                continue;
+
+            m_importStaticModuleLocationMap[staticModule] = import->firstSourceLocation();
+        }
+    }
 
     processImportWarnings(QStringLiteral("module \"%1\"").arg(path), import->firstSourceLocation());
     return true;

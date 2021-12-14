@@ -1,6 +1,7 @@
 qt_internal_add_qml_module(LabsSharedImage
     URI "Qt.labs.sharedimage"
     VERSION "${PROJECT_VERSION}"
+    __QT_INTERNAL_STATIC_MODULE
     PLUGIN_TARGET sharedimageplugin
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
