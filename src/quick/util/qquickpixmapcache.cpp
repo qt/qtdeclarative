@@ -235,6 +235,7 @@ public:
     static QMutex readerMutex;
 };
 
+class QQuickPixmapStore;
 class QQuickPixmapData
 {
 public:
@@ -307,9 +308,9 @@ public:
 
     int cost() const;
     void addref();
-    void release();
+    void release(QQuickPixmapStore *store = nullptr);
     void addToCache();
-    void removeFromCache();
+    void removeFromCache(QQuickPixmapStore *store = nullptr);
 
     uint refCount;
     int frameCount;
@@ -1107,7 +1108,7 @@ QQuickPixmapStore::~QQuickPixmapStore()
             leakedPixmaps++;
 #endif
             while (currRefCount > 0) {
-                pixmap->release();
+                pixmap->release(this);
                 currRefCount--;
             }
         }
@@ -1186,7 +1187,7 @@ void QQuickPixmapStore::shrinkCache(int remove)
             remove -= data->cost();
             m_unreferencedCost -= data->cost();
         }
-        data->removeFromCache();
+        data->removeFromCache(this);
         delete data;
     }
 }
@@ -1278,7 +1279,7 @@ void QQuickPixmapData::addref()
         pixmapStore()->referencePixmap(this);
 }
 
-void QQuickPixmapData::release()
+void QQuickPixmapData::release(QQuickPixmapStore *store)
 {
     Q_ASSERT(refCount > 0);
     --refCount;
@@ -1295,17 +1296,18 @@ void QQuickPixmapData::release()
             QQuickPixmapReader::readerMutex.unlock();
         }
 
+        store = store ? store : pixmapStore();
         if (pixmapStatus == QQuickPixmap::Ready
 #ifdef Q_OS_WEBOS
                 && storeToCache
 #endif
                 ) {
             if (inCache)
-                pixmapStore()->unreferencePixmap(this);
+                store->unreferencePixmap(this);
             else
                 delete this;
         } else {
-            removeFromCache();
+            removeFromCache(store);
             delete this;
         }
     }
@@ -1322,14 +1324,17 @@ void QQuickPixmapData::addToCache()
     }
 }
 
-void QQuickPixmapData::removeFromCache()
+void QQuickPixmapData::removeFromCache(QQuickPixmapStore *store)
 {
+
     if (inCache) {
+        if (!store)
+            store = pixmapStore();
         QQuickPixmapKey key = { &url, &requestRegion, &requestSize, frame, providerOptions };
-        pixmapStore()->m_cache.remove(key);
+        store->m_cache.remove(key);
         inCache = false;
         PIXMAP_PROFILE(pixmapCountChanged<QQuickProfiler::PixmapCacheCountChanged>(
-                url, pixmapStore()->m_cache.count()));
+                url, store->m_cache.count()));
     }
 }
 
