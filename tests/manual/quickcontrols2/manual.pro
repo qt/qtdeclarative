@@ -1,7 +1,6 @@
 TEMPLATE = subdirs
 SUBDIRS += \
     buttons \
-    dialogs \
     fonts \
     gifs \
     headerview \
