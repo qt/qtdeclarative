@@ -41,6 +41,7 @@
 #include "qv4jscall_p.h"
 #include "qv4string_p.h"
 #include <private/qv4identifiertable_p.h>
+#include <private/qv4qobjectwrapper_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -144,47 +145,76 @@ ReturnedValue Lookup::getterGeneric(Lookup *l, ExecutionEngine *engine, const Va
     return l->resolvePrimitiveGetter(engine, object);
 }
 
+static inline void setupObjectLookupTwoClasses(Lookup *l, const Lookup &first, const Lookup &second)
+{
+    Heap::InternalClass *ic1 = first.objectLookup.ic;
+    const uint offset1 = first.objectLookup.offset;
+    Heap::InternalClass *ic2 = second.objectLookup.ic;
+    const uint offset2 = second.objectLookup.offset;
+
+    l->objectLookupTwoClasses.ic = ic1;
+    l->objectLookupTwoClasses.ic2 = ic2;
+    l->objectLookupTwoClasses.offset = offset1;
+    l->objectLookupTwoClasses.offset2 = offset2;
+}
+
+static inline void setupProtoLookupTwoClasses(Lookup *l, const Lookup &first, const Lookup &second)
+{
+    const quintptr protoId1 = first.protoLookup.protoId;
+    const Value *data1 = first.protoLookup.data;
+    const quintptr protoId2 = second.protoLookup.protoId;
+    const Value *data2 = second.protoLookup.data;
+
+    l->protoLookupTwoClasses.protoId = protoId1;
+    l->protoLookupTwoClasses.protoId2 = protoId2;
+    l->protoLookupTwoClasses.data = data1;
+    l->protoLookupTwoClasses.data2 = data2;
+}
+
 ReturnedValue Lookup::getterTwoClasses(Lookup *l, ExecutionEngine *engine, const Value &object)
 {
     if (const Object *o = object.as<Object>()) {
-        Lookup first = *l;
-        Lookup second = *l;
 
-        ReturnedValue result = second.resolveGetter(engine, o);
+        // Do the resolution on a second lookup, then merge.
+        Lookup second;
+        memset(&second, 0, sizeof(Lookup));
+        second.nameIndex = l->nameIndex;
+        second.getter = getterGeneric;
+        const ReturnedValue result = second.resolveGetter(engine, o);
 
-        if (first.getter == getter0Inline && (second.getter == getter0Inline || second.getter == getter0MemberData)) {
-            l->objectLookupTwoClasses.ic = first.objectLookup.ic;
-            l->objectLookupTwoClasses.ic2 = second.objectLookup.ic;
-            l->objectLookupTwoClasses.offset = first.objectLookup.offset;
-            l->objectLookupTwoClasses.offset2 = second.objectLookup.offset;
-            l->getter = second.getter == getter0Inline ? getter0Inlinegetter0Inline : getter0Inlinegetter0MemberData;
+        if (l->getter == getter0Inline
+                && (second.getter == getter0Inline || second.getter == getter0MemberData)) {
+            setupObjectLookupTwoClasses(l, *l, second);
+            l->getter = (second.getter == getter0Inline)
+                    ? getter0Inlinegetter0Inline
+                    : getter0Inlinegetter0MemberData;
             return result;
         }
-        if (first.getter == getter0MemberData && (second.getter == getter0Inline || second.getter == getter0MemberData)) {
-            l->objectLookupTwoClasses.ic = second.objectLookup.ic;
-            l->objectLookupTwoClasses.ic2 = first.objectLookup.ic;
-            l->objectLookupTwoClasses.offset = second.objectLookup.offset;
-            l->objectLookupTwoClasses.offset2 = first.objectLookup.offset;
-            l->getter = second.getter == getter0Inline ? getter0Inlinegetter0MemberData : getter0MemberDatagetter0MemberData;
+
+        if (l->getter == getter0MemberData
+                && (second.getter == getter0Inline || second.getter == getter0MemberData)) {
+            setupObjectLookupTwoClasses(l, second, *l);
+            l->getter = (second.getter == getter0Inline)
+                    ? getter0Inlinegetter0MemberData
+                    : getter0MemberDatagetter0MemberData;
             return result;
         }
-        if (first.getter == getterProto && second.getter == getterProto) {
-            l->protoLookupTwoClasses.protoId = first.protoLookup.protoId;
-            l->protoLookupTwoClasses.protoId2 = second.protoLookup.protoId;
-            l->protoLookupTwoClasses.data = first.protoLookup.data;
-            l->protoLookupTwoClasses.data2 = second.protoLookup.data;
+
+
+        if (l->getter == getterProto && second.getter == getterProto) {
+            setupProtoLookupTwoClasses(l, *l, second);
             l->getter = getterProtoTwoClasses;
             return result;
         }
-        if (first.getter == getterProtoAccessor && second.getter == getterProtoAccessor) {
-            l->protoLookupTwoClasses.protoId = first.protoLookup.protoId;
-            l->protoLookupTwoClasses.protoId2 = second.protoLookup.protoId;
-            l->protoLookupTwoClasses.data = first.protoLookup.data;
-            l->protoLookupTwoClasses.data2 = second.protoLookup.data;
+
+        if (l->getter == getterProtoAccessor && second.getter == getterProtoAccessor) {
+            setupProtoLookupTwoClasses(l, *l, second);
             l->getter = getterProtoAccessorTwoClasses;
             return result;
         }
 
+        // If any of the above options were true, the propertyCache was inactive.
+        second.releasePropertyCache();
     }
 
     l->getter = getterFallback;
@@ -371,7 +401,19 @@ ReturnedValue Lookup::getterIndexed(Lookup *l, ExecutionEngine *engine, const Va
     }
     l->getter = getterFallback;
     return getterFallback(l, engine, object);
+}
 
+ReturnedValue Lookup::getterQObject(Lookup *lookup, ExecutionEngine *engine, const Value &object)
+{
+    const auto revertLookup = [lookup, engine, &object]() {
+        lookup->qobjectLookup.propertyCache->release();
+        lookup->qobjectLookup.propertyCache = nullptr;
+        lookup->getter = Lookup::getterGeneric;
+        return Lookup::getterGeneric(lookup, engine, object);
+    };
+
+    return QObjectWrapper::lookupGetterImpl(
+                lookup, engine, object, /*useOriginalProperty*/ false, revertLookup);
 }
 
 ReturnedValue Lookup::primitiveGetterProto(Lookup *l, ExecutionEngine *engine, const Value &object)
@@ -463,23 +505,30 @@ bool Lookup::setterGeneric(Lookup *l, ExecutionEngine *engine, Value &object, co
 
 bool Lookup::setterTwoClasses(Lookup *l, ExecutionEngine *engine, Value &object, const Value &value)
 {
-    Lookup first = *l;
-    Lookup second = *l;
+    // A precondition of this method is that l->objectLookup is the active variant of the union.
+    Q_ASSERT(l->setter == setter0MemberData || l->setter == setter0Inline);
 
     if (object.isObject()) {
+
+        // As l->objectLookup is active, we can stash some members here, before resolving.
+        Heap::InternalClass *ic = l->objectLookup.ic;
+        const uint index = l->objectLookup.index;
+
         if (!l->resolveSetter(engine, static_cast<Object *>(&object), value)) {
             l->setter = setterFallback;
             return false;
         }
 
         if (l->setter == Lookup::setter0MemberData || l->setter == Lookup::setter0Inline) {
-            l->objectLookupTwoClasses.ic = first.objectLookup.ic;
-            l->objectLookupTwoClasses.ic2 = second.objectLookup.ic;
-            l->objectLookupTwoClasses.offset = first.objectLookup.index;
-            l->objectLookupTwoClasses.offset2 = second.objectLookup.index;
+            l->objectLookupTwoClasses.ic = ic;
+            l->objectLookupTwoClasses.ic2 = ic;
+            l->objectLookupTwoClasses.offset = index;
+            l->objectLookupTwoClasses.offset2 = index;
             l->setter = setter0setter0;
             return true;
         }
+
+        l->releasePropertyCache();
     }
 
     l->setter = setterFallback;
@@ -548,6 +597,13 @@ bool Lookup::setterInsert(Lookup *l, ExecutionEngine *engine, Value &object, con
 
     l->setter = setterFallback;
     return setterFallback(l, engine, object, value);
+}
+
+bool Lookup::setterQObject(Lookup *l, ExecutionEngine *engine, Value &object, const Value &v)
+{
+    // This setter just marks the presence of a qobjectlookup. It only does anything with it when
+    // running AOT-compiled code, though.
+    return QV4::Lookup::setterFallback(l, engine, object, v);
 }
 
 bool Lookup::arrayLengthSetter(Lookup *, ExecutionEngine *engine, Value &object, const Value &value)

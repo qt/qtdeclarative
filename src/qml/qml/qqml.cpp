@@ -888,7 +888,7 @@ bool AOTCompiledContext::captureLookup(uint index, QObject *object) const
 
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
     if (l->getter != QV4::QQmlTypeWrapper::lookupSingletonProperty
-            && l->getter != QV4::QObjectWrapper::lookupGetter) {
+            && l->getter != QV4::Lookup::getterQObject) {
         return false;
     }
 
@@ -918,8 +918,8 @@ QMetaType AOTCompiledContext::lookupResultMetaType(uint index) const
     if (l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupScopeObjectProperty
             || l->qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupContextObjectProperty
             || l->getter == QV4::QQmlTypeWrapper::lookupSingletonProperty
-            || l->getter == QV4::QObjectWrapper::lookupGetter
-            || l->setter == QV4::QObjectWrapper::lookupSetter) {
+            || l->getter == QV4::Lookup::getterQObject
+            || l->setter == QV4::Lookup::setterQObject) {
         return l->qobjectLookup.propertyData->propType();
     } else if (l->getter == QV4::QQmlValueTypeWrapper::lookupGetter) {
         return QMetaType(l->qgadgetLookup.metaType);
@@ -1249,7 +1249,7 @@ bool AOTCompiledContext::getObjectLookup(uint index, QObject *object, void *targ
     if (!object)
         return doThrow();
 
-    if (l->getter != QV4::QObjectWrapper::lookupGetter)
+    if (l->getter != QV4::Lookup::getterQObject)
         return false;
 
     switch (loadObjectProperty(l, object, target, qmlContext)) {
@@ -1273,7 +1273,7 @@ void AOTCompiledContext::initGetObjectLookup(uint index, QObject *object, QMetaT
     } else {
         QV4::Lookup *l = compilationUnit->runtimeLookups + index;
         if (initObjectLookup(this, l, object, type))
-            l->getter = QV4::QObjectWrapper::lookupGetter;
+            l->getter = QV4::Lookup::getterQObject;
         else
             engine->handle()->throwTypeError();
     }
@@ -1343,7 +1343,7 @@ bool AOTCompiledContext::setObjectLookup(uint index, QObject *object, void *valu
         return doThrow();
 
     QV4::Lookup *l = compilationUnit->runtimeLookups + index;
-    if (l->setter != QV4::QObjectWrapper::lookupSetter)
+    if (l->setter != QV4::Lookup::setterQObject)
         return false;
 
     switch (storeObjectProperty(l, object, value)) {
@@ -1367,7 +1367,7 @@ void AOTCompiledContext::initSetObjectLookup(uint index, QObject *object, QMetaT
     } else {
         QV4::Lookup *l = compilationUnit->runtimeLookups + index;
         if (initObjectLookup(this, l, object, type))
-            l->setter = QV4::QObjectWrapper::lookupSetter;
+            l->setter = QV4::Lookup::setterQObject;
         else
             engine->handle()->throwTypeError();
     }
