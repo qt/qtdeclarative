@@ -72,4 +72,8 @@ QHash<int, int> findAndResolveImplicitComponents(const Qml2CppContext &context,
 
 void setObjectIds(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
 
+// finds an immediate parent of each to-be-compiled type
+QHash<QQmlJSScope::ConstPtr, QQmlJSScope::ConstPtr>
+findImmediateParents(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
+
 #endif // QML2CPPPASSES_H

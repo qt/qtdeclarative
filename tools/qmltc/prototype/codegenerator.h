@@ -72,6 +72,8 @@ private:
     QList<CodeGenObject> m_objects;
     // mapping from type to m_objects index
     QHash<QQmlJSScope::ConstPtr, qsizetype> m_typeToObjectIndex; // TODO: remove this
+    // parents for each type that will (also) create the type
+    QHash<QQmlJSScope::ConstPtr, QQmlJSScope::ConstPtr> m_immediateParents;
     // mapping from to-be-wrapped object to the wrapper's object pseudo-index
     QHash<int, int> m_implicitComponentMapping;
 
