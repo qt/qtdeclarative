@@ -8714,7 +8714,7 @@ QDebug operator<<(QDebug debug,
     QDebugStateSaver saver(debug);
     debug.nospace();
     if (!item) {
-        debug << "QQuickItem(0)";
+        debug << "QQuickItem(nullptr)";
         return debug;
     }
 

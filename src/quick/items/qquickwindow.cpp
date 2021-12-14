@@ -4162,7 +4162,7 @@ QDebug operator<<(QDebug debug, const QQuickWindow *win)
     QDebugStateSaver saver(debug);
     debug.nospace();
     if (!win) {
-        debug << "QQuickWindow(0)";
+        debug << "QQuickWindow(nullptr)";
         return debug;
     }
 
