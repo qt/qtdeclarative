@@ -183,9 +183,11 @@ void CodeGeneratorWriter::write(GeneratedCodeUtils &code, const QQmlJSAotObject 
     // generate class preamble
     code.appendToHeader(classString(compiled));
     code.appendToHeader(u"{");
-    for (const QString &mocLine : qAsConst(compiled.mocCode)) {
+    for (const QString &mocLine : qAsConst(compiled.mocCode))
         code.appendToHeader(mocLine, 1);
-    }
+
+    for (const QString &otherLine : qAsConst(compiled.otherCode))
+        code.appendToHeader(otherLine, 1);
 
     GeneratedCodeUtils::MemberNamespaceScope thisObjectScope(code, compiled.cppType);
     Q_UNUSED(thisObjectScope);
@@ -204,15 +206,15 @@ void CodeGeneratorWriter::write(GeneratedCodeUtils &code, const QQmlJSAotObject 
             CodeGeneratorWriter::write(code, compiled.baselineCtor);
             CodeGeneratorWriter::write(code, compiled.init);
 
-            // NB: when singleton, this ctor won't be public
+            // NB: when non-document root, this ctor won't be public
             code.appendToHeader(getFunctionCategory(compiled.externalCtor) + u":", -1);
             CodeGeneratorWriter::write(code, compiled.externalCtor);
-            // TODO: actually should figure how to make this one protected
-            code.appendToHeader(u"public:", -1);
+            code.appendToHeader(u"protected:", -1);
             CodeGeneratorWriter::write(code, compiled.endInit);
             CodeGeneratorWriter::write(code, compiled.completeComponent);
             CodeGeneratorWriter::write(code, compiled.finalizeComponent);
             CodeGeneratorWriter::write(code, compiled.handleOnCompleted);
+            code.appendToHeader(u"public:", -1);
         }
 
         // generate dtor

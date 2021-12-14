@@ -137,6 +137,7 @@ struct QQmlJSAotObject
     QStringList baseClasses; // C++ class names of base classes
     // TODO: also add "creation string"?
     QStringList mocCode;
+    QStringList otherCode; // code that doesn't fit any category, e.g. friend declarations
 
     // TODO: does it really need to be QHash and not QList?
 

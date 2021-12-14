@@ -247,8 +247,8 @@ void CodeGenerator::constructObjects(QSet<QString> &requiredCppIncludes)
         m_objects.emplaceBack(CodeGenObject { irObject, object });
     }
 
-    // objects are constructed, now we can run compiler passes to make sure they
-    // are in good state
+    // objects are constructed, now we can run compiler passes to make sure the
+    // objects are in good state
     Qml2CppCompilerPassExecutor executor(m_doc, m_localTypeResolver, m_url, m_objects,
                                          m_typeToObjectIndex);
     executor.addPass(&verifyTypes);
@@ -276,6 +276,11 @@ void CodeGenerator::constructObjects(QSet<QString> &requiredCppIncludes)
     };
     executor.addPass(resolveImplicitComponents);
     executor.addPass(&setObjectIds);
+    const auto setImmediateParents = [&](const Qml2CppContext &context,
+                                         QList<Qml2CppObject> &objects) {
+        m_immediateParents = findImmediateParents(context, objects);
+    };
+    executor.addPass(setImmediateParents);
     // run all passes:
     executor.run(m_logger);
 }
@@ -373,14 +378,16 @@ void CodeGenerator::compileObject(QQmlJSAotObject &compiled, const CodeGenObject
 
     // add ctors code
     compiled.baselineCtor.access = QQmlJSMetaMethod::Protected;
-    compiled.externalCtor.access = QQmlJSMetaMethod::Public;
+    if (documentRoot) {
+        compiled.externalCtor.access = QQmlJSMetaMethod::Public;
+    } else {
+        compiled.externalCtor.access = QQmlJSMetaMethod::Protected;
+    }
     compiled.init.access = QQmlJSMetaMethod::Protected;
-    // TODO: all below could actually be hidden? (but need to befriend the
-    // document root, etc.)
-    compiled.endInit.access = QQmlJSMetaMethod::Public;
-    compiled.completeComponent.access = QQmlJSMetaMethod::Public;
-    compiled.finalizeComponent.access = QQmlJSMetaMethod::Public;
-    compiled.handleOnCompleted.access = QQmlJSMetaMethod::Public;
+    compiled.endInit.access = QQmlJSMetaMethod::Protected;
+    compiled.completeComponent.access = QQmlJSMetaMethod::Protected;
+    compiled.finalizeComponent.access = QQmlJSMetaMethod::Protected;
+    compiled.handleOnCompleted.access = QQmlJSMetaMethod::Protected;
 
     compiled.baselineCtor.name = compiled.cppType;
     compiled.externalCtor.name = compiled.cppType;
@@ -411,6 +418,17 @@ void CodeGenerator::compileObject(QQmlJSAotObject &compiled, const CodeGenObject
     } else {
         compiled.init.parameterList = { engine, ctxtdata };
         compiled.endInit.parameterList = { engine, CodeGeneratorUtility::compilationUnitVariable };
+    }
+
+    if (!documentRoot) {
+        // make document root a friend to allow protected member function access
+        Q_ASSERT(m_objects[0].type);
+        compiled.otherCode << u"friend class %1;"_qs.arg(m_objects[0].type->internalName());
+        // additionally, befriend the immediate parent of this type
+        if (auto parent = m_immediateParents.value(object.type);
+            parent && parent != m_objects[0].type) {
+            compiled.otherCode << u"friend class %1;"_qs.arg(parent->internalName());
+        }
     }
 
     if (baseTypeIsCompiledQml) {

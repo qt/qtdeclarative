@@ -33,6 +33,8 @@
 #include <QtCore/qqueue.h>
 #include <QtCore/qloggingcategory.h>
 
+#include <algorithm>
+
 static QString const cppKeywords[] = {
     u"alignas"_qs,
     u"alignof"_qs,
@@ -938,4 +940,31 @@ void setObjectIds(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
     // NB: unlike QQmlTypeCompiler, only set id for the root, completely
     // ignoring the Components
     setObjectId(context, 0, idToObjectIndex);
+}
+
+QHash<QQmlJSScope::ConstPtr, QQmlJSScope::ConstPtr>
+findImmediateParents(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
+{
+    Q_UNUSED(context);
+
+    QSet<QQmlJSScope::ConstPtr> suitableParents;
+    std::transform(objects.cbegin(), objects.cend(),
+                   std::inserter(suitableParents, suitableParents.end()),
+                   [](const Qml2CppObject &object) { return object.type; });
+
+    QHash<QQmlJSScope::ConstPtr, QQmlJSScope::ConstPtr> immediateParents;
+
+    // suitable parents are the ones that would eventually create the child
+    // types (through recursive logic), so the first such parent in a hierarchy
+    // is an immediate parent
+    for (const Qml2CppObject &object : objects) {
+        for (auto parent = object.type->parentScope(); parent; parent = parent->parentScope()) {
+            if (suitableParents.contains(parent)) {
+                immediateParents.insert(object.type, parent);
+                break;
+            }
+        }
+    }
+
+    return immediateParents;
 }
