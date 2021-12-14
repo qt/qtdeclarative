@@ -127,7 +127,7 @@ ColumnLayout {
         }
 
         GroupBox {
-            title: qsTr("FileDialog properties")
+            title: qsTr("FolderDialog properties")
 
             Layout.fillWidth: true
 
@@ -164,25 +164,25 @@ ColumnLayout {
                     Layout.alignment: Qt.AlignTop
                 }
                 ColumnLayout {
-                    id: fileOptionsColumnLayout
+                    id: folderOptionsColumnLayout
 
                     CheckBox {
                         id: showDirsOnlyCheckBox
                         text: qsTr("ShowDirsOnly")
 
-                        readonly property int fileOption: checked ? FileDialog.ShowDirsOnly : 0
+                        readonly property int folderOption: checked ? FolderDialog.ShowDirsOnly : 0
                     }
                     CheckBox {
                         id: dontResolveSymlinksCheckBox
                         text: qsTr("DontResolveSymlinks")
 
-                        readonly property int fileOption: checked ? FileDialog.DontResolveSymlinks : 0
+                        readonly property int folderOption: checked ? FolderDialog.DontResolveSymlinks : 0
                     }
                     CheckBox {
                         id: readOnlyCheckBox
                         text: qsTr("ReadOnly")
 
-                        readonly property int fileOption: checked ? FileDialog.ReadOnly : 0
+                        readonly property int folderOption: checked ? FolderDialog.ReadOnly : 0
                     }
                 }
 
@@ -198,7 +198,6 @@ ColumnLayout {
                     text: qsTr("selectedFolder")
                 }
                 TextField {
-                    id: selectedFileTextField
                     text: folderDialog.selectedFolder
                     readOnly: true
                     selectByMouse: true
@@ -215,9 +214,9 @@ ColumnLayout {
             title: titleTextField.text
 
             acceptLabel: acceptLabelTextField.text
-            options: showDirsOnlyCheckBox.fileOption
-                | dontResolveSymlinksCheckBox.fileOption
-                | readOnlyCheckBox.fileOption
+            options: showDirsOnlyCheckBox.folderOption
+                | dontResolveSymlinksCheckBox.folderOption
+                | readOnlyCheckBox.folderOption
             rejectLabel: rejectLabelTextField.text
         }
     }
