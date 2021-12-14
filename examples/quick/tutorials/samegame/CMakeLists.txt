@@ -1,4 +1,4 @@
-add_subdirectory(samegame1)
-add_subdirectory(samegame2)
-add_subdirectory(samegame3)
-add_subdirectory(samegame4)
+qt_internal_add_example(samegame1)
+qt_internal_add_example(samegame2)
+qt_internal_add_example(samegame3)
+qt_internal_add_example(samegame4)

@@ -1,6 +1,6 @@
 # Generated from qml.pro.
 
-add_subdirectory(dynamicscene)
+qt_internal_add_example(dynamicscene)
 add_subdirectory(referenceexamples)
 add_subdirectory(tutorials)
 qt_internal_add_example(shell)

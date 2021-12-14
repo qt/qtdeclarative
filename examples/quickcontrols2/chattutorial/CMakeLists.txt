@@ -1,10 +1,10 @@
 # Generated from chattutorial.pro.
 
-add_subdirectory(chapter1)
-add_subdirectory(chapter2)
-add_subdirectory(chapter3)
+qt_internal_add_example(chapter1)
+qt_internal_add_example(chapter2)
+qt_internal_add_example(chapter3)
 if (TARGET Qt::Sql)
-    add_subdirectory(chapter4)
-    add_subdirectory(chapter5)
+    qt_internal_add_example(chapter4)
+    qt_internal_add_example(chapter5)
 endif()
 
