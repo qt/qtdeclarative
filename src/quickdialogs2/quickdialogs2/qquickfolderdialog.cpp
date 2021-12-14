@@ -174,7 +174,6 @@ void QQuickFolderDialog::setSelectedFolder(const QUrl &folder)
     the option and on the platform).
 
     Available options:
-    \value FolderDialog.ShowDirsOnly Only show directories in the folder dialog. By default both folders and directories are shown.
     \value FolderDialog.DontResolveSymlinks Don't resolve symlinks in the folder dialog. By default symlinks are resolved.
     \value FolderDialog.ReadOnly Indicates that the dialog doesn't allow creating directories.
 */
