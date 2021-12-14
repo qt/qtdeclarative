@@ -5,6 +5,18 @@ QtObject {
     property double doubleP: 0.5
     property int intP: 42
     property list<QtObject> listQtObjP // always list of QML objects
+    listQtObjP: [
+        Text {
+            id: listQtObjP_child_0
+            text: "child0"
+        },
+        QtObject {
+            property string what: "child1"
+        },
+        Item {
+            Rectangle { id: listQtObjP_child_2_rect }
+        }
+    ]
     property real realP: 2.32
     property string stringP: "hello, world"
     property url urlP: "https://www.qt.io/"
@@ -27,10 +39,33 @@ QtObject {
     required property real requiredRealP
 
     // extra:
-    property Timer timerP
-    property list<Component> listNumP
+    property Timer timerP: Timer {
+        interval: 42
+    }
+    property list<Component> listCompP
 
     // special:
     property QtObject nullObjP: null
     property var nullVarP: null
+
+    // Component-wrapped
+    property QtObject table: TableView {
+        property Component before: Component { Text { text: "beforeDelegate" } }
+        delegate: Text { // implicit component
+            text: "delegate"
+        }
+        property Component after: Component { Text { text: "afterDelegate" } }
+    }
+
+    property QtObject explicitCompP: Component { // explicit component
+        Text {
+            id: explicitText
+            text: "not a delegate"
+        }
+    }
+
+    property QtObject sentinelForComponent: QtObject {
+        id: sentinel
+        property string text: "should be correctly created"
+    }
 }

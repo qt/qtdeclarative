@@ -236,3 +236,12 @@ QString CodeGeneratorUtility::generate_getPrivateClass(const QString &accessor,
     const QString privateType = p.privateClass();
     return u"static_cast<" + privateType + u" *>(QObjectPrivate::get(" + accessor + u"))";
 }
+
+QString CodeGeneratorUtility::generate_setIdValue(const QString &context, qsizetype index,
+                                                  const QString &accessor, const QString &idString)
+{
+    Q_ASSERT(index >= 0);
+    const QString idComment = u"/* id: " + idString + u" */";
+    return context + u"->setIdValue(" + QString::number(index) + idComment + u", " + accessor
+            + u")";
+}

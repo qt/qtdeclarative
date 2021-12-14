@@ -36,6 +36,7 @@
 #include "methods.h"
 #include "properties.h"
 #include "objectwithid.h"
+#include "documentwithids.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -131,6 +132,7 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/QmltcTests/data/methods.qml"),
         QUrl("qrc:/QmltcTests/data/properties.qml"),
         QUrl("qrc:/QmltcTests/data/ObjectWithId.qml"),
+        QUrl("qrc:/QmltcTests/data/documentWithIds.qml"),
 
         QUrl("qrc:/QmltcTests/data/signalHandlers.qml"),
         QUrl("qrc:/QmltcTests/data/javaScriptFunctions.qml"),
@@ -339,7 +341,11 @@ void tst_qmltc::properties()
 
     // extra:
     QCOMPARE(propertyMetaType("timerP"), QMetaType::fromType<QQmlTimer *>());
-    QCOMPARE(propertyMetaType("listNumP"), QMetaType::fromType<QQmlListProperty<QQmlComponent>>());
+    QCOMPARE(propertyMetaType("listCompP"), QMetaType::fromType<QQmlListProperty<QQmlComponent>>());
+
+    QCOMPARE(propertyMetaType("table"), QMetaType::fromType<QObject *>());
+    QCOMPARE(propertyMetaType("explicitCompP"), QMetaType::fromType<QObject *>());
+    QCOMPARE(propertyMetaType("sentinelForComponent"), QMetaType::fromType<QObject *>());
 
     // now, test property values:
     QCOMPARE(created.boolP(), true);
@@ -357,21 +363,170 @@ void tst_qmltc::properties()
 
     QCOMPARE(created.readonlyStringP(), u"foobar"_qs);
 
+    // object bindinds:
+    const auto objectCtx = e.contextForObject(&created);
+    QQmlListReference listQtObj(&created, "listQtObjP");
+    QCOMPARE(listQtObj.size(), 3);
+    {
+        QQuickText *child0 = qobject_cast<QQuickText *>(listQtObj.at(0));
+        QVERIFY(child0);
+        QCOMPARE(child0->text(), u"child0"_qs);
+        QCOMPARE(objectCtx->objectForName("listQtObjP_child_0"), child0);
+
+        QObject *child1 = listQtObj.at(1);
+        QVERIFY(child1);
+        QCOMPARE(child1->property("what").toString(), u"child1"_qs);
+
+        QQuickItem *child2 = qobject_cast<QQuickItem *>(listQtObj.at(2));
+        QVERIFY(child2);
+        QQmlListReference data(child2, "data");
+        QCOMPARE(data.size(), 1);
+        QQuickRectangle *child2Rect = qobject_cast<QQuickRectangle *>(data.at(0));
+        QVERIFY(child2Rect);
+        QCOMPARE(objectCtx->objectForName("listQtObjP_child_2_rect"), child2Rect);
+    }
+
+    QQmlTimer *timer = created.timerP();
+    QVERIFY(timer);
+    QCOMPARE(timer->interval(), 42);
+
     // nulls:
     QCOMPARE(created.nullObjP(), nullptr);
     QCOMPARE(created.nullVarP(), QVariant::fromValue(nullptr));
+
+    QQuickTableView *table = qobject_cast<QQuickTableView *>(created.table());
+    QVERIFY(table);
+    {
+        QQmlComponent *beforeDelegate = qvariant_cast<QQmlComponent *>(table->property("before"));
+        QVERIFY(beforeDelegate);
+        QQmlComponent *delegate = table->delegate();
+        QVERIFY(delegate);
+        QQmlComponent *afterDelegate = qvariant_cast<QQmlComponent *>(table->property("after"));
+        QVERIFY(afterDelegate);
+
+        QScopedPointer<QObject> beforeDelegateObject(beforeDelegate->create());
+        QVERIFY(beforeDelegateObject);
+        QVERIFY(qobject_cast<QQuickText *>(beforeDelegateObject.get()));
+        QCOMPARE(beforeDelegateObject->property("text").toString(), u"beforeDelegate"_qs);
+
+        QScopedPointer<QObject> delegateObject(delegate->create());
+        QVERIFY(delegateObject);
+        QVERIFY(qobject_cast<QQuickText *>(delegateObject.get()));
+        QCOMPARE(delegateObject->property("text").toString(), u"delegate"_qs);
+
+        QScopedPointer<QObject> afterDelegateObject(afterDelegate->create());
+        QVERIFY(afterDelegateObject);
+        QVERIFY(qobject_cast<QQuickText *>(afterDelegateObject.get()));
+        QCOMPARE(afterDelegateObject->property("text").toString(), u"afterDelegate"_qs);
+    }
+
+    QQmlComponent *explicitComp = qobject_cast<QQmlComponent *>(created.explicitCompP());
+    QVERIFY(explicitComp);
+    QScopedPointer<QObject> explicitCompObject(explicitComp->create());
+    QVERIFY(explicitCompObject);
+    QVERIFY(qobject_cast<QQuickText *>(explicitCompObject.get()));
+    QCOMPARE(explicitCompObject->property("text").toString(), u"not a delegate"_qs);
+
+    QObject *sentinelForComponent = created.sentinelForComponent();
+    QVERIFY(sentinelForComponent);
+    QCOMPARE(sentinelForComponent->property("text").toString(), u"should be correctly created"_qs);
 }
 
-void tst_qmltc::id()
+void tst_qmltc::ids()
 {
-    QQmlEngine e;
-    PREPEND_NAMESPACE(ObjectWithId) created(&e); // shouldn't crash here
+    {
+        QQmlEngine e;
+        PREPEND_NAMESPACE(ObjectWithId) created(&e); // shouldn't crash here
 
-    auto objectCtx = QQmlContextData::get(e.contextForObject(&created));
-    QVERIFY(objectCtx);
-    QCOMPARE(objectCtx->parent(), QQmlContextData::get(e.rootContext()));
-    QCOMPARE(objectCtx->asQQmlContext()->objectForName("objectWithId"), &created);
-    QCOMPARE(objectCtx->contextObject(), &created);
+        auto objectCtx = QQmlContextData::get(e.contextForObject(&created));
+        QVERIFY(objectCtx);
+        QCOMPARE(objectCtx->parent(), QQmlContextData::get(e.rootContext()));
+        QCOMPARE(objectCtx->asQQmlContext()->objectForName("objectWithId"), &created);
+        QCOMPARE(objectCtx->contextObject(), &created);
+    }
+
+    {
+        QQmlEngine e;
+        PREPEND_NAMESPACE(documentWithIds) created(&e); // shouldn't crash here
+
+        auto ctx = e.contextForObject(&created);
+        QVERIFY(ctx);
+        auto objectCtx = QQmlContextData::get(ctx);
+        QVERIFY(objectCtx);
+        QCOMPARE(objectCtx->parent(), QQmlContextData::get(e.rootContext()));
+        QCOMPARE(objectCtx->contextObject(), &created);
+
+        // first check that ids match object names
+        const auto objectNameById = [&ctx](const QString &id) {
+            auto object = ctx->objectForName(id);
+            if (!object)
+                return QString();
+            return object->objectName();
+        };
+
+        QCOMPARE(objectNameById("rectangle"), u"rectangle"_qs);
+        QCOMPARE(objectNameById("row"), u"row"_qs);
+        QCOMPARE(objectNameById("textInRectangle"), u"textInRectangle"_qs);
+        QCOMPARE(objectNameById("itemInList"), u"itemInList"_qs);
+        QCOMPARE(objectNameById("objectInList"), u"objectInList"_qs);
+        QCOMPARE(objectNameById("item"), u"item"_qs);
+        QCOMPARE(objectNameById("gridView"), u"gridView"_qs);
+        QCOMPARE(objectNameById("tableView"), u"tableView"_qs);
+        QCOMPARE(objectNameById("sentinel"), u"sentinel"_qs);
+
+        const auto verifyComponent = [&](QQmlComponent *component, const QString &componentId,
+                                         const QString &objectId) {
+            QVERIFY(component);
+            if (!componentId.isEmpty()) // empty string for implicit components
+                QCOMPARE(ctx->objectForName(componentId), component);
+            QCOMPARE(ctx->objectForName(objectId), nullptr);
+
+            QScopedPointer<QObject> root(component->create());
+            QCOMPARE(root->objectName(), objectId);
+            auto rootCtx = e.contextForObject(root.get());
+            QVERIFY(rootCtx);
+            QCOMPARE(rootCtx->objectForName(objectId), root.get());
+        };
+
+        auto explicitComponent = qobject_cast<QQmlComponent *>(created.explicitCompProperty());
+        verifyComponent(explicitComponent, u"explicitComponent"_qs, u"explicitText"_qs);
+
+        QQmlListReference children(&created, "data");
+        QCOMPARE(children.size(), 2);
+        QQuickTableView *table = qobject_cast<QQuickTableView *>(children.at(1));
+        QVERIFY(table);
+        QCOMPARE(ctx->objectForName(u"tableView"_qs), table);
+        QCOMPARE(table->objectName(), u"tableView"_qs);
+
+        auto before = qvariant_cast<QQmlComponent *>(table->property("before"));
+        verifyComponent(before, u"beforeDelegate"_qs, u"beforeDelegateText"_qs);
+        auto after = qvariant_cast<QQmlComponent *>(table->property("after"));
+        verifyComponent(after, u"afterDelegate"_qs, u"afterDelegateText"_qs);
+
+        auto delegate = table->delegate();
+        verifyComponent(delegate, /* implicit component */ QString(), u"delegateRect"_qs);
+
+        // TableView is really special when you add Component to a default
+        // property. see QQuickFlickablePrivate::data_append
+        QQmlComponent *beforeChild = nullptr;
+        QQmlComponent *afterChild = nullptr;
+        const auto tableChildren = table->children(); // QObject::children()
+        QVERIFY(tableChildren.size() >= 2);
+        for (QObject *child : tableChildren) {
+            auto comp = qobject_cast<QQmlComponent *>(child);
+            if (!comp)
+                continue;
+            // this is bad, but there doesn't seem to be any better choice
+            if (ctx->objectForName(u"beforeDelegateDefaultProperty"_qs) == comp)
+                beforeChild = comp;
+            else if (ctx->objectForName(u"afterDelegateDefaultProperty"_qs) == comp)
+                afterChild = comp;
+        }
+        // we just used ctx->objectForName() to find these components, so
+        // there's no point in checking the same condition in verifyComponent()
+        verifyComponent(beforeChild, QString(), u"beforeDelegateDefaultPropertyText"_qs);
+        verifyComponent(afterChild, QString(), u"afterDelegateDefaultPropertyText"_qs);
+    }
 }
 
 void tst_qmltc::signalHandlers()
