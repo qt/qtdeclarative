@@ -72,7 +72,7 @@ private slots:
 
 private:
     QString newImageFileName() const;
-    void fillRequestTestsData(const QString &id);
+    void fillRequestTestsData(const char *id);
     void runTest(bool async, QQuickImageProvider *provider);
 };
 
@@ -161,7 +161,7 @@ QString tst_qquickimageprovider::newImageFileName() const
     return QString("image://test/image-%1.png").arg(count++);
 }
 
-void tst_qquickimageprovider::fillRequestTestsData(const QString &id)
+void tst_qquickimageprovider::fillRequestTestsData(const char *id)
 {
     QTest::addColumn<QString>("source");
     QTest::addColumn<QString>("imageId");
@@ -170,39 +170,39 @@ void tst_qquickimageprovider::fillRequestTestsData(const QString &id)
     QTest::addColumn<QString>("error");
 
     QString fileName = newImageFileName();
-    QTest::newRow(QTest::toString(id + " simple test"))
+    QTest::addRow("%s simple test", id)
             << "image://test/" + fileName << fileName << "" << QSize(100,100) << "";
 
     fileName = newImageFileName();
-    QTest::newRow(QTest::toString(id + " simple test with capitalization"))//As it's a URL, should make no difference
+    QTest::addRow("%s simple test with capitalization", id)//As it's a URL, should make no difference
             << "image://Test/" + fileName << fileName << "" << QSize(100,100) << "";
 
     fileName = newImageFileName();
-    QTest::newRow(QTest::toString(id + " url with no id"))
+    QTest::addRow("%s url with no id", id)
         << "image://test/" + fileName << "" + fileName << "" << QSize(100,100) << "";
 
     fileName = newImageFileName();
-    QTest::newRow(QTest::toString(id + " url with path"))
+    QTest::addRow("%s url with path", id)
         << "image://test/test/path" + fileName << "test/path" + fileName << "" << QSize(100,100) << "";
 
     fileName = newImageFileName();
-    QTest::newRow(QTest::toString(id + " url with fragment"))
+    QTest::addRow("%s url with fragment", id)
         << "image://test/faq.html?#question13" + fileName << "faq.html?#question13" + fileName << "" << QSize(100,100) << "";
 
     fileName = newImageFileName();
-    QTest::newRow(QTest::toString(id + " url with query"))
+    QTest::addRow("%s url with query", id)
         << "image://test/cgi-bin/drawgraph.cgi?type=pie&color=green" + fileName << "cgi-bin/drawgraph.cgi?type=pie&color=green" + fileName
         << "" << QSize(100,100) << "";
 
     fileName = newImageFileName();
-    QTest::newRow(QTest::toString(id + " scaled image"))
+    QTest::addRow("%s scaled image", id)
             << "image://test/" + fileName << fileName << "sourceSize: \"80x30\"" << QSize(80,30) << "";
 
-    QTest::newRow(QTest::toString(id + " missing"))
+    QTest::addRow("%s missing", id)
         << "image://test/no-such-file.png" << "no-such-file.png" << "" << QSize(100,100)
         << "<Unknown File>:2:1: QML Image: Failed to get image from provider: image://test/no-such-file.png";
 
-    QTest::newRow(QTest::toString(id + " unknown provider"))
+    QTest::addRow("%s unknown provider", id)
         << "image://bogus/exists.png" << "" << "" << QSize()
         << "<Unknown File>:2:1: QML Image: Invalid image provider: image://bogus/exists.png";
 }
