@@ -185,6 +185,17 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
     }
 
     if (success && !isJavaScript) {
+        const auto processMessages = [&]() {
+            if (json) {
+                for (const auto &error : m_logger->errors())
+                    addJsonWarning(error, error.fixSuggestion);
+                for (const auto &warning : m_logger->warnings())
+                    addJsonWarning(warning, warning.fixSuggestion);
+                for (const auto &info : m_logger->infos())
+                    addJsonWarning(info, info.fixSuggestion);
+            }
+        };
+
         const auto check = [&](QQmlJSResourceFileMapper *mapper) {
             if (m_importer.importPaths() != qmlImportPaths)
                 m_importer.setImportPaths(qmlImportPaths);
@@ -219,8 +230,10 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
             typeResolver.init(&v, parser.rootNode());
             success = v.check();
 
-            if (m_logger->hasErrors())
+            if (m_logger->hasErrors()) {
+                processMessages();
                 return;
+            }
 
             QQmlJSTypeInfo typeInfo;
 
@@ -247,14 +260,7 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
 
             success &= !m_logger->hasWarnings() && !m_logger->hasErrors();
 
-            if (json) {
-                for (const auto &error : m_logger->errors())
-                    addJsonWarning(error, error.fixSuggestion);
-                for (const auto &warning : m_logger->warnings())
-                    addJsonWarning(warning, warning.fixSuggestion);
-                for (const auto &info : m_logger->infos())
-                    addJsonWarning(info, info.fixSuggestion);
-            }
+            processMessages();
         };
 
         if (resourceFiles.isEmpty()) {
