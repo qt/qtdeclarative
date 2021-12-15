@@ -918,6 +918,55 @@ TestCase {
         compare(doubleClickedSpy.count, 1)
     }
 
+    // It should be possible to quickly click a button whose doubleClicked signal
+    // is not connected to anything.
+    function test_fastClick() {
+        let control = createTemporaryObject(button, testCase, { text: "Hello" })
+        verify(control)
+
+        let pressedSpy = signalSpy.createObject(control, { target: control, signalName: "pressed" })
+        verify(pressedSpy.valid)
+
+        let releasedSpy = signalSpy.createObject(control, { target: control, signalName: "released" })
+        verify(releasedSpy.valid)
+
+        let clickedSpy = signalSpy.createObject(control, { target: control, signalName: "clicked" })
+        verify(clickedSpy.valid)
+
+        // Can't listen to doubleClicked because it would cause it to be emitted.
+        // We instead just check that clicked is emitted twice.
+
+        mouseDoubleClickSequence(control)
+        compare(pressedSpy.count, 2)
+        compare(releasedSpy.count, 2)
+        compare(clickedSpy.count, 2)
+
+        let touch = touchEvent(control)
+        touch.press(0, control)
+        touch.commit()
+        compare(pressedSpy.count, 3)
+        compare(releasedSpy.count, 2)
+        compare(clickedSpy.count, 2)
+
+        touch.release(0, control)
+        touch.commit()
+        compare(pressedSpy.count, 3)
+        compare(releasedSpy.count, 3)
+        compare(clickedSpy.count, 3)
+
+        touch.press(0, control)
+        touch.commit()
+        compare(pressedSpy.count, 4)
+        compare(releasedSpy.count, 3)
+        compare(clickedSpy.count, 3)
+
+        touch.release(0, control)
+        touch.commit()
+        compare(pressedSpy.count, 4)
+        compare(releasedSpy.count, 4)
+        compare(clickedSpy.count, 4)
+    }
+
     function test_checkedShouldNotSetCheckable() {
          let control = createTemporaryObject(button, testCase, { checked: true })
          verify(control)

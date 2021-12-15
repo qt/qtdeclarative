@@ -80,6 +80,7 @@ public:
     virtual bool acceptKeyClick(Qt::Key key) const;
 
     bool isPressAndHoldConnected();
+    bool isDoubleClickConnected();
     void startPressAndHold();
     void stopPressAndHold();
 
