@@ -2359,7 +2359,7 @@ but this file does not exist.  Possible reasons include:
     # .qrc files, so there's no need to list the files individually. We provide
     # the .qrc files instead because they have the additional information for
     # each file's resource alias.
-    get_target_property(qrc_files ${target} _qt_generated_qrc_files)
+    get_property(qrc_files TARGET ${target} PROPERTY _qt_generated_qrc_files)
     if (qrc_files)
         list(APPEND cmd_args "-qrcFiles" ${qrc_files})
     endif()
