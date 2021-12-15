@@ -1549,73 +1549,109 @@ QSet<int> DomEnvironment::moduleIndexMajorVersions(DomItem &, QString uri, EnvLo
     return res;
 }
 
+std::shared_ptr<ModuleIndex> DomEnvironment::lookupModuleInEnv(const QString &uri, int majorVersion) const
+{
+    QMutexLocker l(mutex());
+    auto it = m_moduleIndexWithUri.find(uri);
+    if (it == m_moduleIndexWithUri.end())
+        return {}; // we haven't seen the module yet
+    if (it->empty())
+        return {}; // module contains nothing
+    if (majorVersion == Version::Latest)
+        return it->last(); // map is ordered by version, so last == Latest
+    else
+        return it->value(majorVersion); // null shared_ptr is fine if no match
+}
+
+DomEnvironment::ModuleLookupResult DomEnvironment::moduleIndexWithUriHelper(DomItem &self, QString uri, int majorVersion, EnvLookup options) const
+{
+    std::shared_ptr<ModuleIndex> res;
+    if (options != EnvLookup::BaseOnly)
+        res = lookupModuleInEnv(uri, majorVersion);
+    // if there is no base, or if we should not consider it
+    // then the only result we can end up with is the module we looked up above
+    if (options == EnvLookup::NoBase || !m_base)
+        return {std::move(res), ModuleLookupResult::FromGlobal };
+    const std::shared_ptr existingMod =
+            m_base->moduleIndexWithUri(self, uri, majorVersion, options, Changeable::ReadOnly);
+    if (!res)  // the only module we can find at all is the one in base (might be null, too, though)
+        return { std::move(existingMod), ModuleLookupResult::FromBase };
+    if (!existingMod) // on the other hand, if there was nothing in base, we can only return what was in the larger env
+        return {std::move(res), ModuleLookupResult::FromGlobal };
+
+    // if we have  both res and existingMod, res and existingMod should be the same
+    // _unless_ we looked for the latest version. Then one might have a higher version than the other
+    // and we have to check it
+
+    if (majorVersion == Version::Latest) {
+        if (res->majorVersion() >= existingMod->majorVersion())
+            return { std::move(res), ModuleLookupResult::FromGlobal };
+        else
+            return { std::move(existingMod), ModuleLookupResult::FromBase };
+    } else {
+        // doesn't really matter which we return, but the other overload benefits from using the
+        // version from m_moduleIndexWithUri
+        return { std::move(res), ModuleLookupResult::FromGlobal };
+    }
+}
+
 std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(DomItem &self, QString uri,
                                                                 int majorVersion, EnvLookup options,
                                                                 Changeable changeable,
                                                                 ErrorHandler errorHandler)
 {
+    // sanity checks
     Q_ASSERT((changeable == Changeable::ReadOnly
               || (majorVersion >= 0 || majorVersion == Version::Undefined))
              && "A writeable moduleIndexWithUri call should have a version (not with "
                 "Version::Latest)");
-    std::shared_ptr<ModuleIndex> res;
     if (changeable == Changeable::Writable && (m_options & Option::Exported))
         myErrors().error(tr("A mutable module was requested in a multithreaded environment")).handle(errorHandler);
-    if (options != EnvLookup::BaseOnly) {
+
+
+    // use the overload which does not care about changing m_moduleIndexWithUri to find a candidate
+    auto [candidate, origin] = moduleIndexWithUriHelper(self, uri, majorVersion, options);
+
+    // A ModuleIndex from m_moduleIndexWithUri can always be returned
+    if (candidate && origin == ModuleLookupResult::FromGlobal)
+        return candidate;
+
+    // If we don't want to modify anything, return the candidate that we have found (if any)
+    if (changeable == Changeable::ReadOnly)
+        return candidate;
+
+    // Else we want to create a modifyable version
+    std::shared_ptr<ModuleIndex> newModulePtr = [&, candidate = candidate](){
+        // which is a completely new module in case we don't have candidate
+        if (!candidate)
+            return std::shared_ptr<ModuleIndex>(new ModuleIndex(uri, majorVersion));
+        // or a copy of the candidate otherwise
+        DomItem existingModObj = self.copy(candidate);
+        return candidate->makeCopy(existingModObj);
+    }();
+
+    DomItem newModule = self.copy(newModulePtr);
+    Path p = newModule.canonicalPath();
+    {
         QMutexLocker l(mutex());
-        auto it = m_moduleIndexWithUri.find(uri);
-        if (it != m_moduleIndexWithUri.end()) {
-            if (majorVersion == Version::Latest) {
-                auto begin = it->begin();
-                auto end = it->end();
-                if (begin != end)
-                    res = *--end;
-            } else {
-                auto it2 = it->find(majorVersion);
-                if (it2 != it->end())
-                    return *it2;
-            }
-        }
+        auto &modsNow = m_moduleIndexWithUri[uri];
+        // As we do not hold the lock for the whole operation, some other thread
+        // might have created the module already
+        if (auto it = modsNow.find(majorVersion); it != modsNow.end())
+            return *it;
+        modsNow.insert(majorVersion, newModulePtr);
     }
-    std::shared_ptr<ModuleIndex> newModulePtr;
-    if (options != EnvLookup::NoBase && m_base) {
-        std::shared_ptr<ModuleIndex> existingMod =
-                m_base->moduleIndexWithUri(self, uri, majorVersion, options, Changeable::ReadOnly);
-        if (res && majorVersion == Version::Latest
-            && (!existingMod || res->majorVersion() >= existingMod->majorVersion()))
-            return res;
-        if (changeable == Changeable::Writable) {
-            DomItem existingModObj = self.copy(existingMod);
-            newModulePtr = existingMod->makeCopy(existingModObj);
-        } else {
-            return existingMod;
-        }
+    if (p) {
+        std::shared_ptr<LoadInfo> lInfo(new LoadInfo(p));
+        addLoadInfo(self, lInfo);
+    } else {
+        myErrors()
+                .error(tr("Could not get path for newly created ModuleIndex %1 %2")
+                               .arg(uri)
+                               .arg(majorVersion))
+                .handle(errorHandler);
     }
-    if (!newModulePtr && res)
-        return res;
-    if (!newModulePtr && changeable == Changeable::Writable)
-        newModulePtr = std::shared_ptr<ModuleIndex>(new ModuleIndex(uri, majorVersion));
-    if (newModulePtr) {
-        DomItem newModule = self.copy(newModulePtr);
-        Path p = newModule.canonicalPath();
-        {
-            QMutexLocker l(mutex());
-            auto &modsNow = m_moduleIndexWithUri[uri];
-            if (modsNow.contains(majorVersion))
-                return modsNow.value(majorVersion);
-            modsNow.insert(majorVersion, newModulePtr);
-        }
-        if (p) {
-            std::shared_ptr<LoadInfo> lInfo(new LoadInfo(p));
-            addLoadInfo(self, lInfo);
-        } else {
-            myErrors()
-                    .error(tr("Could not get path for newly created ModuleIndex %1 %2")
-                                   .arg(uri)
-                                   .arg(majorVersion))
-                    .handle(errorHandler);
-        }
-    }
+
     return newModulePtr;
 }
 
@@ -1623,34 +1659,10 @@ std::shared_ptr<ModuleIndex> DomEnvironment::moduleIndexWithUri(DomItem &self, Q
                                                                 int majorVersion,
                                                                 EnvLookup options) const
 {
-    std::shared_ptr<ModuleIndex> res;
-    if (options != EnvLookup::BaseOnly) {
-        QMutexLocker l(mutex());
-        auto it = m_moduleIndexWithUri.find(uri);
-        if (it != m_moduleIndexWithUri.end()) {
-            if (majorVersion == Version::Latest) {
-                auto begin = it->begin();
-                auto end = it->end();
-                if (begin != end)
-                    res = *--end;
-            } else {
-                auto it2 = it->find(majorVersion);
-                if (it2 != it->end())
-                    return *it2;
-            }
-        }
-    }
-    if (options != EnvLookup::NoBase && m_base) {
-        std::shared_ptr existingMod =
-                m_base->moduleIndexWithUri(self, uri, majorVersion, options, Changeable::ReadOnly);
-        if (res && majorVersion == Version::Latest
-            && (!existingMod || res->majorVersion() >= existingMod->majorVersion())) {
-            return res;
-        }
-        return existingMod;
-    }
-    return res;
+    return moduleIndexWithUriHelper(self, uri, majorVersion, options).module;
 }
+
+
 
 std::shared_ptr<ExternalItemInfo<QmlDirectory>>
 DomEnvironment::qmlDirectoryWithPath(DomItem &self, QString path, EnvLookup options) const
