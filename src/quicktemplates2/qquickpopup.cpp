@@ -235,6 +235,19 @@ Q_LOGGING_CATEGORY(lcPopup, "qt.quick.controls.popup")
     This allows the built-in styles to animate on these properties without losing any explicitly
     defined value.
 
+    \section1 Back/Escape Event Handling
+
+    By default, a Popup will close if the Escape or Back keys are pressed. This
+    can be problematic for popups which contain items that want to handle those
+    events themselves. There are two solutions to this:
+
+    \list
+    \li Set Popup's \l closePolicy to a value that does not include
+        \c {Popup.CloseOnEscape}.
+    \li Handle \l {Keys}' \l {Keys::}{shortcutOverride} signal and accept the
+        event before Popup can.
+    \endlist
+
     \sa {Popup Controls}, {Customizing Popup}, ApplicationWindow
 */
 
