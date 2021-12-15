@@ -675,7 +675,7 @@ public:
             qmlFile.addError(myParseErrors()
                                      .warning(tr("id attributes should only be a lower case letter "
                                                  "followed by letters, numbers or underscore, "
-                                                 "assuming it refers to an id property"))
+                                                 "assuming they refer to an id property"))
                                      .withPath(bPathFromOwner));
         pushEl(bPathFromOwner, *bPtr, el);
         FileLocations::addRegion(nodeStack.last().fileLocations, u"colon", el->colonToken);
@@ -752,7 +752,7 @@ public:
                         myParseErrors()
                                 .warning(tr("id attributes should only be a lower case letter "
                                             "followed by letters, numbers or underscore, not %1 "
-                                            "%2, assuming it refers to a property")
+                                            "%2, assuming they refer to a property")
                                                  .arg(script->code(), script->astRelocatableDump()))
                                 .withPath(pathFromOwner));
             }
