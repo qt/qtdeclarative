@@ -11,6 +11,7 @@ qt6_add_qml_module(tst_qmltc_qprocess
     URI QmltcQProcessTests
     QML_FILES
         data/dummy.qml
+        data/inlineComponent.qml
 )
 add_dependencies(tst_qmltc_qprocess Qt::qmltc)
 

@@ -52,6 +52,7 @@ public:
             const QStringList &qmltypesFiles = QStringList());
 
     bool visit(QQmlJS::AST::UiImport *import) override;
+    bool visit(QQmlJS::AST::UiInlineComponent *) override;
 
     QString getImplicitImportDirectory() const { return m_implicitImportDirectory; }
     QStringList getImportedDirectories() const { return m_importedDirectories; }

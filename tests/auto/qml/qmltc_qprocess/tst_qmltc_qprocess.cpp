@@ -67,6 +67,7 @@ private slots:
     void sanity();
     void noBuiltins();
     void noQtQml();
+    void inlineComponent();
 };
 
 void tst_qmltc_qprocess::initTestCase()
@@ -85,7 +86,8 @@ void tst_qmltc_qprocess::initTestCase()
     QVERIFY(QDir(m_tmpPath).removeRecursively()); // in case it's already there
     QVERIFY(QDir().mkpath(m_tmpPath));
 
-    m_resourcePaths = { { u"dummy.qml"_qs, u"data/dummy.qml"_qs } };
+    m_resourcePaths = { { u"dummy.qml"_qs, u"data/dummy.qml"_qs },
+                        { u"inlineComponent.qml"_qs, u"data/inlineComponent.qml"_qs } };
 }
 
 void tst_qmltc_qprocess::cleanupTestCase()
@@ -187,6 +189,13 @@ void tst_qmltc_qprocess::noQtQml()
     // test that qmltc exits gracefully
     const auto errors = runQmltc(u"dummy.qml"_qs, false);
     QVERIFY(errors.contains(u"Failed to import QtQml. Are your include paths set up properly?"_qs));
+}
+
+void tst_qmltc_qprocess::inlineComponent()
+{
+    const auto errors = runQmltc(u"inlineComponent.qml"_qs, false);
+    QEXPECT_FAIL("", "qmltc does not support inline components at the moment", Continue);
+    QVERIFY(!errors.contains(u"Inline components are not supported"_qs));
 }
 
 QTEST_MAIN(tst_qmltc_qprocess)
