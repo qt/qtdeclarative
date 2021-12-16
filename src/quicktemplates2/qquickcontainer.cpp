@@ -225,6 +225,7 @@ void QQuickContainerPrivate::cleanup()
     QObject::disconnect(contentModel, &QQmlObjectModel::countChanged, q, &QQuickContainer::countChanged);
     QObject::disconnect(contentModel, &QQmlObjectModel::childrenChanged, q, &QQuickContainer::contentChildrenChanged);
     delete contentModel;
+    contentModel = nullptr;
 }
 
 QQuickItem *QQuickContainerPrivate::itemAt(int index) const
@@ -436,7 +437,7 @@ void QQuickContainerPrivate::contentChildren_clear(QQmlListProperty<QQuickItem> 
 void QQuickContainerPrivate::updateContentWidth()
 {
     Q_Q(QQuickContainer);
-    if (hasContentWidth || qFuzzyCompare(contentWidth, implicitContentWidth))
+    if (hasContentWidth || qFuzzyCompare(contentWidth, implicitContentWidth) || !contentModel)
         return;
 
     contentWidth = implicitContentWidth;
@@ -446,7 +447,7 @@ void QQuickContainerPrivate::updateContentWidth()
 void QQuickContainerPrivate::updateContentHeight()
 {
     Q_Q(QQuickContainer);
-    if (hasContentHeight || qFuzzyCompare(contentHeight, implicitContentHeight))
+    if (hasContentHeight || qFuzzyCompare(contentHeight, implicitContentHeight) || !contentModel)
         return;
 
     contentHeight = implicitContentHeight;
