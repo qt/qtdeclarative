@@ -4,7 +4,6 @@ qt_internal_add_module(QmlLintPrivate
     SOURCES
         codegen_p.h codegen.cpp
         codegenwarninginterface_p.h codegenwarninginterface.cpp
-        findwarnings_p.h findwarnings.cpp
         qqmllinter_p.h qqmllinter.cpp
     PUBLIC_LIBRARIES
         Qt::CorePrivate

@@ -42,6 +42,8 @@
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
 #include <QtQmlCompiler/private/qqmljsimporter_p.h>
 
+#include <QtQml/private/qqmljssourcelocation_p.h>
+
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qmap.h>
@@ -62,6 +64,8 @@ public:
     const QQmlJSLogger *logger() const { return m_logger.get(); }
 
 private:
+    void parseComments(QQmlJSLogger *logger, const QList<QQmlJS::SourceLocation> &comments);
+
     bool m_useAbsolutePath;
     QQmlJSImporter m_importer;
     QScopedPointer<QQmlJSLogger> m_logger;

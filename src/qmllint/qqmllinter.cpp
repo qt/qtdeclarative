@@ -30,9 +30,9 @@
 
 #include "codegen_p.h"
 #include "codegenwarninginterface_p.h"
-#include "findwarnings_p.h"
 
 #include <QtQmlCompiler/private/qqmljsimporter_p.h>
+#include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
 
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qfileinfo.h>
@@ -50,6 +50,82 @@ QT_BEGIN_NAMESPACE
 QQmlLinter::QQmlLinter(const QStringList &importPaths, bool useAbsolutePath)
     : m_useAbsolutePath(useAbsolutePath), m_importer(importPaths, nullptr)
 {
+}
+
+void QQmlLinter::parseComments(QQmlJSLogger *logger, const QList<QQmlJS::SourceLocation> &comments)
+{
+    QHash<int, QSet<QQmlJSLoggerCategory>> disablesPerLine;
+    QHash<int, QSet<QQmlJSLoggerCategory>> enablesPerLine;
+    QHash<int, QSet<QQmlJSLoggerCategory>> oneLineDisablesPerLine;
+
+    const QString code = logger->code();
+    const QStringList lines = code.split(u'\n');
+
+    for (const auto &loc : comments) {
+        const QString comment = code.mid(loc.offset, loc.length);
+        if (!comment.startsWith(u" qmllint ") && !comment.startsWith(u"qmllint "))
+            continue;
+
+        QStringList words = comment.split(u' ');
+        if (words.constFirst().isEmpty())
+            words.removeFirst();
+
+        const QString command = words.at(1);
+
+        QSet<QQmlJSLoggerCategory> categories;
+        for (qsizetype i = 2; i < words.size(); i++) {
+            const QString category = words.at(i);
+            const auto option = logger->options().constFind(category);
+            if (option != logger->options().constEnd())
+                categories << option->m_category;
+            else
+                logger->logWarning(u"qmllint directive on unknown category \"%1\""_qs.arg(category),
+                                   Log_Syntax, loc);
+        }
+
+        if (categories.isEmpty()) {
+            for (const auto &option : logger->options())
+                categories << option.m_category;
+        }
+
+        if (command == u"disable"_qs) {
+            const QString line = lines[loc.startLine - 1];
+            const QString preComment = line.left(line.indexOf(comment) - 2);
+
+            bool lineHasContent = false;
+            for (qsizetype i = 0; i < preComment.size(); i++) {
+                if (!preComment[i].isSpace()) {
+                    lineHasContent = true;
+                    break;
+                }
+            }
+
+            if (lineHasContent)
+                oneLineDisablesPerLine[loc.startLine] |= categories;
+            else
+                disablesPerLine[loc.startLine] |= categories;
+        } else if (command == u"enable"_qs) {
+            enablesPerLine[loc.startLine + 1] |= categories;
+        } else {
+            logger->logWarning(u"Invalid qmllint directive \"%1\" provided"_qs.arg(command),
+                               Log_Syntax, loc);
+        }
+    }
+
+    if (disablesPerLine.isEmpty() && oneLineDisablesPerLine.isEmpty())
+        return;
+
+    QSet<QQmlJSLoggerCategory> currentlyDisabled;
+    for (qsizetype i = 1; i <= lines.length(); i++) {
+        currentlyDisabled.unite(disablesPerLine[i]).subtract(enablesPerLine[i]);
+
+        currentlyDisabled.unite(oneLineDisablesPerLine[i]);
+
+        if (!currentlyDisabled.isEmpty())
+            logger->ignoreWarnings(i, currentlyDisabled);
+
+        currentlyDisabled.subtract(oneLineDisablesPerLine[i]);
+    }
 }
 
 bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, const bool silent,
@@ -206,12 +282,12 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
             m_logger->setFileName(m_useAbsolutePath ? info.absoluteFilePath() : filename);
             m_logger->setCode(code);
             m_logger->setSilent(silent || json);
-            FindWarningVisitor v {
-                &m_importer,
-                m_logger.get(),
-                qmldirFiles,
-                engine.comments(),
-            };
+            QQmlJSImportVisitor v { &m_importer, m_logger.get(),
+                                    QQmlJSImportVisitor::implicitImportDirectory(
+                                            m_logger->fileName(), m_importer.resourceFileMapper()),
+                                    qmldirFiles };
+
+            parseComments(m_logger.get(), engine.comments());
 
             for (auto it = options.cbegin(); it != options.cend(); ++it) {
                 m_logger->setCategoryError(it.value().m_category, it.value().m_error);
@@ -228,7 +304,7 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
             typeResolver.setParentMode(QQmlJSTypeResolver::UseDocumentParent);
 
             typeResolver.init(&v, parser.rootNode());
-            success = v.check();
+            success = !m_logger->hasWarnings() && !m_logger->hasErrors();
 
             if (m_logger->hasErrors()) {
                 processMessages();
