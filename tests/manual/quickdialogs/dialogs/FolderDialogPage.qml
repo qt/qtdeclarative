@@ -147,6 +147,14 @@ ColumnLayout {
                 }
 
                 Label {
+                    text: qsTr("rejectLabel")
+                }
+                TextField {
+                    id: rejectLabelTextField
+                    text: qsTr("Cancel")
+                }
+
+                Label {
                     text: qsTr("currentFolder")
                 }
                 TextField {
@@ -178,14 +186,6 @@ ColumnLayout {
 
                         readonly property int folderOption: checked ? FolderDialog.ReadOnly : 0
                     }
-                }
-
-                Label {
-                    text: qsTr("rejectLabel")
-                }
-                TextField {
-                    id: rejectLabelTextField
-                    text: qsTr("Cancel")
                 }
 
                 Label {
