@@ -51,6 +51,7 @@ private slots:
     void methods();
     void properties();
     void ids();
+    void importNamespace();
 
     void signalHandlers();
     void jsFunctions();

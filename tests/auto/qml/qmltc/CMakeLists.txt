@@ -21,6 +21,7 @@ set(qml_sources
     data/properties.qml
     data/ObjectWithId.qml
     data/documentWithIds.qml
+    data/importNamespace.qml
 
     data/signalHandlers.qml
     data/javaScriptFunctions.qml

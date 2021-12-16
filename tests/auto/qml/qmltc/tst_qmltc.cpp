@@ -37,6 +37,7 @@
 #include "properties.h"
 #include "objectwithid.h"
 #include "documentwithids.h"
+#include "importnamespace.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -133,6 +134,7 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/QmltcTests/data/properties.qml"),
         QUrl("qrc:/QmltcTests/data/ObjectWithId.qml"),
         QUrl("qrc:/QmltcTests/data/documentWithIds.qml"),
+        QUrl("qrc:/QmltcTests/data/importNamespace.qml"),
 
         QUrl("qrc:/QmltcTests/data/signalHandlers.qml"),
         QUrl("qrc:/QmltcTests/data/javaScriptFunctions.qml"),
@@ -527,6 +529,13 @@ void tst_qmltc::ids()
         verifyComponent(beforeChild, QString(), u"beforeDelegateDefaultPropertyText"_qs);
         verifyComponent(afterChild, QString(), u"afterDelegateDefaultPropertyText"_qs);
     }
+}
+
+void tst_qmltc::importNamespace()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(importNamespace) created(&e); // compilation of this type shouldn't crash
+    QCOMPARE(created.text(), u"hello, world"_qs);
 }
 
 void tst_qmltc::signalHandlers()
