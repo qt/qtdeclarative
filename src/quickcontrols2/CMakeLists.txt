@@ -33,6 +33,7 @@ qt_internal_add_qml_module(QuickControls2
         Qt::GuiPrivate
         Qt::QmlPrivate
         Qt::QuickPrivate
+        Qt::QuickTemplates2
         Qt::QuickTemplates2Private
     PUBLIC_LIBRARIES
         Qt::Core
