@@ -240,7 +240,7 @@ static QRectF alignedRect(Qt::LayoutDirection direction, Qt::Alignment alignment
 void QQuickDialogButtonBoxPrivate::resizeContent()
 {
     Q_Q(QQuickDialogButtonBox);
-    if (!contentItem)
+    if (!contentItem || !contentModel)
         return;
 
     QRectF geometry = q->boundingRect().adjusted(q->leftPadding(), q->topPadding(), -q->rightPadding(), -q->bottomPadding());
@@ -325,6 +325,9 @@ void QQuickDialogButtonBoxPrivate::updateLayout()
 qreal QQuickDialogButtonBoxPrivate::getContentWidth() const
 {
     Q_Q(const QQuickDialogButtonBox);
+    if (!contentModel)
+        return 0;
+
     const int count = contentModel->count();
     const qreal totalSpacing = qMax(0, count - 1) * spacing;
     qreal totalWidth = totalSpacing;
@@ -344,6 +347,9 @@ qreal QQuickDialogButtonBoxPrivate::getContentWidth() const
 qreal QQuickDialogButtonBoxPrivate::getContentHeight() const
 {
     Q_Q(const QQuickDialogButtonBox);
+    if (!contentModel)
+        return 0;
+
     const int count = contentModel->count();
     qreal maxHeight = 0;
     for (int i = 0; i < count; ++i) {
