@@ -57,6 +57,7 @@
 #include "groupedproperty.h"
 #include "groupedproperty_qquicktext.h"
 #include "localimport.h"
+#include "localimport_explicit.h"
 #include "newpropertyboundtoold.h"
 #include "oldpropertyboundtonew.h"
 #include "nonlocalqmlpropertyboundtoany.h"
@@ -1169,11 +1170,9 @@ void tst_qmltc::groupedProperty_qquicktext()
     QCOMPARE(childAnchors->bottomMargin(), qreal(11));
 }
 
-void tst_qmltc::localImport()
+template<typename T>
+void localImport_impl(T &created)
 {
-    QQmlEngine e;
-    PREPEND_NAMESPACE(localImport) created(&e);
-
     QCOMPARE(created.baseMessage(), QStringLiteral(u"base"));
     QCOMPARE(created.count(), 1);
     QCOMPARE(created.derivedMessage(), QStringLiteral(u"derived"));
@@ -1199,6 +1198,20 @@ void tst_qmltc::localImport()
     QCOMPARE(children.at(1)->property("text").toString(), QStringLiteral("derived.child[1]"));
     QCOMPARE(children.at(2)->property("text").toString(), QStringLiteral("derived.child[2]"));
     QCOMPARE(children.at(2)->property("hello").toString(), QStringLiteral("Hello, World"));
+}
+
+void tst_qmltc::localImport()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(localImport) created(&e);
+    localImport_impl(created);
+}
+
+void tst_qmltc::explicitLocalImport()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(localImport_explicit) created(&e);
+    localImport_impl(created);
 }
 
 void tst_qmltc::newPropertyBoundToOld()

@@ -38,28 +38,6 @@ Visitor::Visitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
 {
 }
 
-bool Visitor::visit(QQmlJS::AST::UiImport *import)
-{
-    if (!QQmlJSImportVisitor::visit(import))
-        return false;
-
-    auto filename = import->fileName.toString();
-    if (filename.isEmpty())
-        return true;
-
-    const QFileInfo file(filename);
-    const QString absolute =
-            file.isRelative() ? QDir(m_implicitImportDirectory).filePath(filename) : filename;
-
-    QFileInfo path(absolute);
-    if (path.isDir()) {
-        m_importedDirectories.append(filename);
-    } else if (path.isFile() && absolute.endsWith(u".qml"_qs)) {
-        m_importedFiles.append(filename);
-    }
-    return true;
-}
-
 bool Visitor::visit(QQmlJS::AST::UiInlineComponent *component)
 {
     if (!QQmlJSImportVisitor::visit(component))

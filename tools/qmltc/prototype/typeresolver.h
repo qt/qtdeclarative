@@ -74,21 +74,14 @@ public:
 
     QQmlJSScope::Ptr scopeForLocation(const QV4::CompiledData::Location &location) const;
 
-    // returns a mapping from "QML name" (typically QML file name without
-    // extension) to {file path, QML scope/type pointer} pair. the mapping
-    // contains only native, non-C++ originated, QML types that would be
-    // compiled into C++.
-    QHash<QString, std::pair<QString, QQmlJSScope::Ptr>> gatherCompiledQmlTypes() const;
+    // returns an import pair {url, modifiable type} for a given \a type
+    QPair<QString, QQmlJSScope::Ptr> importedType(const QQmlJSScope::ConstPtr &type) const;
 
 private:
     QQmlJSImporter *m_importer = nullptr;
 
     QHash<QV4::CompiledData::Location, QQmlJSScope::Ptr> m_objectsByLocationNonConst;
-    QString m_implicitImportDir; // implicit QML import directory
     QQmlJSScope::Ptr m_root;
-
-    QList<QString> m_importedDirs;
-    QList<QString> m_importedFiles;
 };
 }
 

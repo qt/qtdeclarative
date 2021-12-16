@@ -44,19 +44,11 @@
 namespace Qmltc {
 class Visitor : public QQmlJSImportVisitor
 {
-    QStringList m_importedDirectories;
-    QStringList m_importedFiles;
-
 public:
     Visitor(QQmlJSImporter *importer, QQmlJSLogger *logger, const QString &implicitImportDirectory,
             const QStringList &qmltypesFiles = QStringList());
 
-    bool visit(QQmlJS::AST::UiImport *import) override;
     bool visit(QQmlJS::AST::UiInlineComponent *) override;
-
-    QString getImplicitImportDirectory() const { return m_implicitImportDirectory; }
-    QStringList getImportedDirectories() const { return m_importedDirectories; }
-    QStringList getImportedQmlFiles() const { return m_importedFiles; }
 };
 }
 
