@@ -65,6 +65,9 @@ public:
     QQmlJSScope::Ptr importFile(const QString &file);
     ImportedTypes importDirectory(const QString &directory, const QString &prefix = QString());
 
+    // ### qmltc needs this. once re-written, we no longer need to expose this
+    QHash<QString, QQmlJSScope::Ptr> importedFiles() const { return m_importedFiles; }
+
     ImportedTypes importModule(
             const QString &module, const QString &prefix = QString(),
             QTypeRevision version = QTypeRevision());

@@ -539,8 +539,7 @@ static void setupQmlCppType(const Qml2CppContext &context, const QQmlJSScope::Pt
         return;
     }
 
-    // TODO: in reality, the file path could be something else instead of
-    // "<qml_file_name>_qmltc.h", but this is not supported right now
+    // TODO: this does not cover QT_QMLTC_FILE_BASENAME renaming
     filePath = QFileInfo(filePath).baseName().toLower() + u".h"_qs;
     type->setFileName(filePath); // this file name will be discovered during findCppIncludes
 
@@ -566,17 +565,26 @@ static void setupQmlCppType(const Qml2CppContext &context, const QQmlJSScope::Pt
 
 QSet<QString> setupQmlCppTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
 {
+    // TODO: in general, the whole logic here is incomplete. it will suffice as
+    // long as we only import QML types from our own module and C++ types from
+    // any module. importing QML types (that are presumably compiled) from
+    // external modules is not supported, so we can get away with it
+
     QSet<QString> qmlBaseTypes;
-    QHash<QString, std::pair<QString, QQmlJSScope::Ptr>> qmlTypes =
-            context.typeResolver->gatherCompiledQmlTypes();
     for (const auto &object : objects) {
         // 1. set up object itself
         setupQmlCppType(context, object.type, context.documentUrl);
 
         // 2. set up the base type if it is also QML originated
-        auto [url, potentialQmlType] = qmlTypes.value(object.type->baseTypeName());
-        if (potentialQmlType) { // it is an actual QML type
-            setupQmlCppType(context, potentialQmlType, url);
+        if (auto base = object.type->baseType(); base->isComposite()) {
+            auto pair = context.typeResolver->importedType(base);
+            if (pair.first.isEmpty()) {
+                context.recordError(object.type->sourceLocation(),
+                                    u"QML base type has unknown origin. Do you miss an import?"_qs);
+                continue;
+            }
+
+            setupQmlCppType(context, pair.second, pair.first);
             qmlBaseTypes.insert(object.type->baseTypeName());
         }
     }

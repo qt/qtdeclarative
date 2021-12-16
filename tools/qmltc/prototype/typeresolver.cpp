@@ -39,44 +39,6 @@
 
 Q_LOGGING_CATEGORY(lcTypeResolver2, "qml.compiler.typeresolver", QtInfoMsg);
 
-static QString prefixedName(const QString &prefix, const QString &name)
-{
-    Q_ASSERT(!prefix.endsWith(u'.'));
-    return prefix.isEmpty() ? name : (prefix + QLatin1Char('.') + name);
-}
-
-// TODO: this method is a (almost identical) copy-paste of QQmlJSImporter::importDirectory().
-static void customImportDirectory(QHash<QString, std::pair<QString, QQmlJSScope::Ptr>> &qmlTypes,
-                                  QQmlJSImporter *importer, const QString &directory,
-                                  const QString &prefix = QString())
-{
-    if (directory.startsWith(u':')) {
-        if (QQmlJSResourceFileMapper *mapper = importer->resourceFileMapper()) {
-            const auto resources = mapper->filter(
-                    QQmlJSResourceFileMapper::resourceQmlDirectoryFilter(directory.mid(1)));
-            for (const auto &entry : resources) {
-                const QString name = QFileInfo(entry.resourcePath).baseName();
-                if (name.front().isUpper()) {
-                    qmlTypes.insert(
-                            prefixedName(prefix, name),
-                            std::make_pair(entry.filePath, importer->importFile(entry.filePath)));
-                }
-            }
-        }
-        return;
-    }
-
-    QDirIterator it { directory, QStringList() << QLatin1String("*.qml"), QDir::NoFilter };
-    while (it.hasNext()) {
-        it.next();
-        if (!it.fileName().front().isUpper())
-            continue; // Non-uppercase names cannot be imported anyway.
-
-        qmlTypes.insert(prefixedName(prefix, QFileInfo(it.filePath()).baseName()),
-                        std::make_pair(it.filePath(), importer->importFile(it.filePath())));
-    }
-}
-
 namespace Qmltc {
 
 TypeResolver::TypeResolver(QQmlJSImporter *importer)
@@ -103,10 +65,6 @@ void TypeResolver::init(Visitor &visitor, QQmlJS::AST::Node *program)
         for (const auto &childScope : childScopes)
             objects.enqueue(childScope);
     }
-
-    m_implicitImportDir = visitor.getImplicitImportDirectory();
-    m_importedDirs = visitor.getImportedDirectories();
-    m_importedFiles = visitor.getImportedQmlFiles();
 }
 
 QQmlJSScope::Ptr TypeResolver::scopeForLocation(const QV4::CompiledData::Location &location) const
@@ -116,33 +74,14 @@ QQmlJSScope::Ptr TypeResolver::scopeForLocation(const QV4::CompiledData::Locatio
     return m_objectsByLocationNonConst.value(location);
 }
 
-QHash<QString, std::pair<QString, QQmlJSScope::Ptr>> TypeResolver::gatherCompiledQmlTypes() const
+QPair<QString, QQmlJSScope::Ptr> TypeResolver::importedType(const QQmlJSScope::ConstPtr &type) const
 {
-    QHash<QString, std::pair<QString, QQmlJSScope::Ptr>> qmlTypes;
-    // implicit directory first
-    customImportDirectory(qmlTypes, m_importer, m_implicitImportDir);
-    // followed by subdirectories and absolute directories
-    for (const QString &dir : m_importedDirs) {
-        QString dirPath = dir;
-        const QFileInfo dirInfo(dir);
-        if (dirInfo.isRelative()) {
-            dirPath = QDir(m_implicitImportDir).filePath(dirPath);
-        }
-        customImportDirectory(qmlTypes, m_importer, dirPath);
-    }
-    // followed by individual files
-    for (const QString &file : m_importedFiles) {
-        QString filePath = file;
-        const QFileInfo fileInfo(file);
-        if (fileInfo.isRelative()) {
-            filePath = QDir(m_implicitImportDir).filePath(filePath);
-        }
-        // TODO: file importing is untested
-        const QString baseName = QFileInfo(filePath).baseName();
-        if (baseName.front().isUpper())
-            qmlTypes.insert(baseName, std::make_pair(filePath, m_importer->importFile(filePath)));
-    }
-    return qmlTypes;
+    const auto files = m_importer->importedFiles();
+    auto it = std::find_if(files.cbegin(), files.cend(), [&](const QQmlJSScope::Ptr &importedType) {
+        return importedType.data() == type.data();
+    });
+    if (it == files.cend())
+        return {};
+    return { it.key(), it.value() };
 }
-
 }

@@ -72,6 +72,7 @@ private slots:
     void groupedProperty();
     void groupedProperty_qquicktext();
     void localImport();
+    void explicitLocalImport();
     void newPropertyBoundToOld();
     void oldPropertyBoundToNew();
     void nonLocalQmlPropertyBoundToAny();

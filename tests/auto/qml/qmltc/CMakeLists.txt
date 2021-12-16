@@ -41,6 +41,7 @@ set(qml_sources
     data/groupedProperty.qml
     data/groupedProperty_qquicktext.qml
     data/localImport.qml
+    data/localImport_explicit.qml
     data/newPropertyBoundToOld.qml
     data/oldPropertyBoundToNew.qml
     data/nonLocalQmlPropertyBoundToAny.qml
