@@ -96,7 +96,7 @@ void QmltypesReader::insertSignalOrMethod(const QQmlJSMetaMethod &metaMethod,
         methodInfo.methodType = MethodInfo::MethodType::Signal;
         break;
     default:
-        Q_ASSERT(false);
+        Q_UNREACHABLE();
     }
     QStringList pNames = metaMethod.parameterNames();
     QStringList pTypes = metaMethod.parameterTypeNames();

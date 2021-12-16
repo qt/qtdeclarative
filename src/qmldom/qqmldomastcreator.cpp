@@ -232,8 +232,8 @@ class QmlDomAstCreator final : public AST::Visitor
             case DomType::MethodInfo:
                 break;
             default:
-                qDebug() << "unexpected type" << domTypeToString(currentNode().kind);
-                Q_ASSERT(false);
+                qCWarning(domLog) << "unexpected type" << domTypeToString(currentNode().kind);
+                Q_UNREACHABLE();
             }
             base = currentNodeEl().fileLocations;
             if (p.length() > 2) {
@@ -248,11 +248,11 @@ class QmlDomAstCreator final : public AST::Visitor
                     p = p.last();
                 else {
                     qCWarning(domLog) << "unexpected path to QmlObject in createMap" << p;
-                    Q_ASSERT(false);
+                    Q_UNREACHABLE();
                 }
             } else {
                 qCWarning(domLog) << "unexpected path to QmlObject in createMap" << p;
-                Q_ASSERT(false);
+                Q_UNREACHABLE();
             }
             break;
         case DomType::EnumItem:
@@ -274,7 +274,7 @@ class QmlDomAstCreator final : public AST::Visitor
             break;
         default:
             qCWarning(domLog) << "Unexpected type in createMap:" << domTypeToString(k);
-            Q_ASSERT(false);
+            Q_UNREACHABLE();
             break;
         }
         return createMap(base, p, n);
@@ -484,7 +484,7 @@ public:
             *mPtr = m;
         } break;
         default:
-            Q_ASSERT(false);
+            Q_UNREACHABLE();
         }
         removeCurrentNode({});
     }
@@ -564,8 +564,8 @@ public:
             }
             return false;
         } else {
-            qCWarning(creatorLog) << "source el:" << static_cast<AST::Node *>(el);
-            Q_ASSERT(false);
+            qCWarning(creatorLog) << "unhandled source el:" << static_cast<AST::Node *>(el);
+            Q_UNREACHABLE();
         }
         return true;
     }
@@ -617,7 +617,7 @@ public:
                 sPathFromOwner = std::get<QmlObject>(containingObject.value).addChild(scope, &sPtr);
                 break;
             default:
-                Q_ASSERT(false);
+                Q_UNREACHABLE();
             }
         }
         Q_ASSERT_X(sPtr, className, "could not recover new scope");
@@ -648,16 +648,16 @@ public:
                 if (p[p.length() - 2] == Path::Field(Fields::objects))
                     std::get<QmlComponent>(containingObject.value).m_objects[idx] = obj;
                 else
-                    Q_ASSERT(false);
+                    Q_UNREACHABLE();
                 break;
             case DomType::QmlObject:
                 if (p[p.length() - 2] == Path::Field(Fields::children))
                     std::get<QmlObject>(containingObject.value).m_children[idx] = obj;
                 else
-                    Q_ASSERT(false);
+                    Q_UNREACHABLE();
                 break;
             default:
-                Q_ASSERT(false);
+                Q_UNREACHABLE();
             }
         }
         removeCurrentNode(DomType::QmlObject);
@@ -766,7 +766,7 @@ public:
         else if (idPtr)
             pushEl(pathFromOwner, *idPtr, el);
         else
-            Q_ASSERT(false);
+            Q_UNREACHABLE();
         loadAnnotations(el);
         // avoid duplicate colon location for id?
         FileLocations::addRegion(nodeStack.last().fileLocations, u"colon", el->colonToken);
@@ -789,7 +789,7 @@ public:
             Id *idPtr = valueFromMultimap(comp.m_ids, id.name, idx);
             *idPtr = id;
         } else {
-            Q_ASSERT(false);
+            Q_UNREACHABLE();
         }
         removeCurrentNode({});
     }
@@ -945,7 +945,7 @@ public:
         default:
             qCWarning(domLog) << "Unexpected container object for annotation:"
                               << domTypeToString(containingElement.kind);
-            Q_ASSERT(false);
+            Q_UNREACHABLE();
         }
         pushEl(pathFromOwner, *aPtr, el);
         return true;
@@ -973,7 +973,7 @@ public:
             std::get<MethodInfo>(containingElement.value).annotations[currentIndex()] = a;
             break;
         default:
-            Q_ASSERT(false);
+            Q_UNREACHABLE();
         }
         removeCurrentNode(DomType::QmlObject);
     }
