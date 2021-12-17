@@ -415,7 +415,7 @@ void QQmlJSScope::resolveTypes(const QQmlJSScope::Ptr &self,
     const auto resolveAll = [](const QQmlJSScope::Ptr &self,
                                const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes,
                                QSet<QString> *usedTypes) {
-        resolveEnums(self, contextualTypes, usedTypes);
+        resolveEnums(self, findType(u"int"_qs, contextualTypes, usedTypes));
         resolveType(self, contextualTypes, usedTypes);
     };
     resolveTypesInternal(resolveAll, updateChildScope, self, contextualTypes, usedTypes);
@@ -428,11 +428,8 @@ void QQmlJSScope::resolveNonEnumTypes(const QQmlJSScope::Ptr &self,
     resolveTypesInternal(resolveType, updateChildScope, self, contextualTypes, usedTypes);
 }
 
-void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self,
-                               const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes,
-                               QSet<QString> *usedTypes)
+void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &intType)
 {
-    const auto intType = findType(QStringLiteral("int"), contextualTypes, usedTypes);
     Q_ASSERT(intType); // There always has to be a builtin "int" type
     for (auto it = self->m_enumerations.begin(), end = self->m_enumerations.end(); it != end;
          ++it) {
@@ -451,6 +448,10 @@ void QQmlJSScope::resolveGeneralizedGroup(const Ptr &self, const ConstPtr &baseT
                                           const QHash<QString, ConstPtr> &contextualTypes,
                                           QSet<QString> *usedTypes)
 {
+    // Generalized group properties are always composite,
+    // which means we expect contextualTypes to be QML names.
+    Q_ASSERT(self->isComposite());
+
     self->m_baseType = baseType;
     resolveNonEnumTypes(self, contextualTypes, usedTypes);
 }
@@ -678,18 +679,7 @@ QQmlJSScope QDeferredFactory<QQmlJSScope>::create() const
     QQmlJSScope::Ptr result = typeReader();
     m_importer->m_warnings.append(typeReader.errors());
     result->setInternalName(internalName());
-
-    if (m_import.isValid()) {
-        auto availableTypes = m_importer->m_cachedImportTypes.find(m_import);
-        Q_ASSERT(availableTypes != m_importer->m_cachedImportTypes.end());
-
-        QQmlJSImporter::AvailableTypes tempTypes(m_importer->builtinInternalNames());
-        tempTypes.cppNames.insert((*availableTypes)->cppNames);
-
-        QQmlJSScope::resolveEnums(result, tempTypes.cppNames, nullptr);
-        if (result->baseType().isNull())
-            QQmlJSScope::resolveNonEnumTypes(result, tempTypes.cppNames);
-    }
+    QQmlJSScope::resolveEnums(result, m_importer->builtinInternalNames().value(u"int"_qs));
 
     if (m_isSingleton)
         result->setIsSingleton(true);
