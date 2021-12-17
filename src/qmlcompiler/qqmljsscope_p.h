@@ -367,8 +367,7 @@ public:
                                     const QHash<QString, ConstPtr> &contextualTypes,
                                     QSet<QString> *usedTypes = nullptr);
     static void resolveEnums(const QQmlJSScope::Ptr &self,
-                             const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes,
-                             QSet<QString> *usedTypes = nullptr);
+                             const QQmlJSScope::ConstPtr &intType);
     static void resolveGeneralizedGroup(const QQmlJSScope::Ptr &self,
                                         const QQmlJSScope::ConstPtr &baseType,
                                         const QHash<QString, ConstPtr> &contextualTypes,
@@ -513,13 +512,7 @@ public:
         m_isSingleton = isSingleton;
     }
 
-    void setImport(const QQmlJSScope::Import &import)
-    {
-        m_import = import;
-    }
-
 private:
-    QQmlJSScope::Import m_import;
     QString m_filePath;
     QQmlJSImporter *m_importer = nullptr;
     bool m_isSingleton = false;
