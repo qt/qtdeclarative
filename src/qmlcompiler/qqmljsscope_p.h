@@ -136,19 +136,35 @@ public:
     class Export {
     public:
         Export() = default;
-        Export(QString package, QString type, const QTypeRevision &version);
+        Export(QString package, QString type, QTypeRevision version, QTypeRevision revision);
 
         bool isValid() const;
 
         QString package() const { return m_package; }
         QString type() const { return m_type; }
         QTypeRevision version() const { return m_version; }
+        QTypeRevision revision() const { return m_revision; }
 
     private:
         QString m_package;
         QString m_type;
         QTypeRevision m_version;
+        QTypeRevision m_revision;
     };
+
+    template<typename Pointer>
+    struct ExportedScope {
+        Pointer scope;
+        QList<QQmlJSScope::Export> exports;
+    };
+
+    template<typename Pointer>
+    struct ImportedScope {
+        Pointer scope;
+        QTypeRevision revision;
+    };
+
+    using ContextualTypes = QHash<QString, ImportedScope<ConstPtr>>;
 
     struct JavaScriptIdentifier
     {
@@ -242,8 +258,9 @@ public:
     // relevant base class (in the hierarchy starting from QObject) of a C++ type.
     void setBaseTypeName(const QString &baseTypeName) { m_baseTypeName = baseTypeName; }
     QString baseTypeName() const { return m_baseTypeName; }
-    QQmlJSScope::ConstPtr baseType() const { return m_baseType; }
-    void clearBaseType() { m_baseType = QQmlJSScope::WeakConstPtr(); }
+    QQmlJSScope::ConstPtr baseType() const { return m_baseType.scope; }
+    QTypeRevision baseTypeRevision() const { return m_baseType.revision; }
+    void clearBaseType() { m_baseType = {}; }
 
     void addOwnProperty(const QQmlJSMetaProperty &prop) { m_properties.insert(prop.propertyName(), prop); }
     QHash<QString, QQmlJSMetaProperty> ownProperties() const { return m_properties; }
@@ -360,18 +377,18 @@ public:
         return result;
     }
 
-    static void resolveTypes(const QQmlJSScope::Ptr &self,
-                             const QHash<QString, ConstPtr> &contextualTypes,
-                             QSet<QString> *usedTypes = nullptr);
-    static void resolveNonEnumTypes(const QQmlJSScope::Ptr &self,
-                                    const QHash<QString, ConstPtr> &contextualTypes,
-                                    QSet<QString> *usedTypes = nullptr);
-    static void resolveEnums(const QQmlJSScope::Ptr &self,
-                             const QQmlJSScope::ConstPtr &intType);
-    static void resolveGeneralizedGroup(const QQmlJSScope::Ptr &self,
-                                        const QQmlJSScope::ConstPtr &baseType,
-                                        const QHash<QString, ConstPtr> &contextualTypes,
-                                        QSet<QString> *usedTypes = nullptr);
+    static QTypeRevision resolveTypes(
+            const Ptr &self, const QQmlJSScope::ContextualTypes &contextualTypes,
+            QSet<QString> *usedTypes = nullptr);
+    static void resolveNonEnumTypes(
+            const QQmlJSScope::Ptr &self, const QQmlJSScope::ContextualTypes &contextualTypes,
+            QSet<QString> *usedTypes = nullptr);
+    static void resolveEnums(
+            const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &intType);
+    static void resolveGeneralizedGroup(
+            const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &baseType,
+            const QQmlJSScope::ContextualTypes &contextualTypes,
+            QSet<QString> *usedTypes = nullptr);
 
     void setSourceLocation(const QQmlJS::SourceLocation &sourceLocation)
     {
@@ -388,6 +405,16 @@ public:
         for (QQmlJSScope::ConstPtr base = type; base; base = base->baseType()) {
             if (!base->isComposite())
                 return base;
+        }
+        return {};
+    }
+
+    static QTypeRevision nonCompositeBaseRevision(const ImportedScope<QQmlJSScope::ConstPtr> &scope)
+    {
+        for (auto base = scope; base.scope;
+             base = { base.scope->m_baseType.scope, base.scope->m_baseType.revision }) {
+            if (!base.scope->isComposite())
+                return base.revision;
         }
         return {};
     }
@@ -435,15 +462,15 @@ public:
 private:
     QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
 
-    static QQmlJSScope::ConstPtr
-    findType(const QString &name, const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes,
-             QSet<QString> *usedTypes = nullptr);
-    static void resolveType(const QQmlJSScope::Ptr &self,
-                            const QHash<QString, ConstPtr> &contextualTypes,
-                            QSet<QString> *usedTypes);
-    static void updateChildScope(const QQmlJSScope::Ptr &childScope, const QQmlJSScope::Ptr &self,
-                                 const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes,
-                                 QSet<QString> *usedTypes);
+    static ImportedScope<QQmlJSScope::ConstPtr> findType(
+            const QString &name, const ContextualTypes &contextualTypes,
+            QSet<QString> *usedTypes = nullptr);
+    static QTypeRevision resolveType(
+            const QQmlJSScope::Ptr &self, const ContextualTypes &contextualTypes,
+            QSet<QString> *usedTypes);
+    static void updateChildScope(
+            const QQmlJSScope::Ptr &childScope, const QQmlJSScope::Ptr &self,
+            const QQmlJSScope::ContextualTypes &contextualTypes, QSet<QString> *usedTypes);
 
     QHash<QString, JavaScriptIdentifier> m_jsIdentifiers;
 
@@ -459,7 +486,10 @@ private:
     QString m_fileName;
     QString m_internalName;
     QString m_baseTypeName;
-    QQmlJSScope::WeakConstPtr m_baseType;
+
+    // We only need the revision for the base type as inheritance is
+    // the only relation between two types where the revisions matter.
+    ImportedScope<QQmlJSScope::WeakConstPtr> m_baseType;
 
     ScopeType m_scopeType = QMLScope;
     QStringList m_interfaceNames;
@@ -518,10 +548,8 @@ private:
     bool m_isSingleton = false;
 };
 
-struct QQmlJSExportedScope {
-    QQmlJSScope::Ptr scope;
-    QList<QQmlJSScope::Export> exports;
-};
+using QQmlJSExportedScope = QQmlJSScope::ExportedScope<QQmlJSScope::Ptr>;
+using QQmlJSImportedScope = QQmlJSScope::ImportedScope<QQmlJSScope::ConstPtr>;
 
 struct QQmlJSTypeInfo
 {

@@ -176,7 +176,8 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
             mo = qmlComponents.insert(it->fileName, {imported, QList<QQmlJSScope::Export>() });
         }
 
-        mo->exports.append(QQmlJSScope::Export(reader.typeNamespace(), it.key(), it->version));
+        mo->exports.append(QQmlJSScope::Export(
+                               reader.typeNamespace(), it.key(), it->version, QTypeRevision()));
     }
     for (auto it = qmlComponents.begin(), end = qmlComponents.end(); it != end; ++it)
         result.objects.insert(it.key(), it.value());
@@ -209,7 +210,8 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
             mo = result.scripts.insert(script.fileName, { localFile2ScopeTree(filePath), {} });
 
         mo->exports.append(QQmlJSScope::Export(
-                               reader.typeNamespace(), script.nameSpace, script.version));
+                               reader.typeNamespace(), script.nameSpace,
+                               script.version, QTypeRevision()));
     }
     return result;
 }
@@ -245,14 +247,21 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
     const QString anonPrefix = QStringLiteral("$anonymous$");
     QHash<QString, QList<QQmlJSScope::Export>> seenExports;
 
-    const auto insertExports = [&](const QQmlJSExportedScope &val) {
+    const auto insertExports = [&](const QQmlJSExportedScope &val, const QString &cppName) {
+        QQmlJSScope::Export bestExport;
+
         // Resolve conflicting qmlNames within an import
         for (const auto &valExport : val.exports) {
-            const QString name = prefixedName(importDescription.prefix(), valExport.type());
+            const QString qmlName = prefixedName(importDescription.prefix(), valExport.type());
             if (!isVersionAllowed(valExport, importDescription))
                 continue;
 
-            const auto it = types->qmlNames.constFind(name);
+            // Even if the QML name is overridden by some other type, we still want
+            // to insert the C++ type, with the highest revision available.
+            if (!bestExport.isValid() || valExport.version() > bestExport.version())
+                bestExport = valExport;
+
+            const auto it = types->qmlNames.constFind(qmlName);
             if (it != types->qmlNames.constEnd()) {
 
                 // The same set of exports can declare the same name multiple times for different
@@ -260,13 +269,13 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
                 // it again after having inserted successfully once.
                 // However, it can also declare *different* names. Then we need to do the whole
                 // thing again.
-                if (*it == val.scope)
+                if (it->scope == val.scope && it->revision == valExport.version())
                     continue;
 
-                const auto existingExports = seenExports.value(name);
+                const auto existingExports = seenExports.value(qmlName);
                 enum { LowerVersion, SameVersion, HigherVersion } seenVersion = LowerVersion;
                 for (const QQmlJSScope::Export &entry : existingExports) {
-                    if (entry.type() != name || !isVersionAllowed(entry, importDescription))
+                    if (entry.type() != qmlName || !isVersionAllowed(entry, importDescription))
                         continue;
 
                     if (valExport.version() < entry.version()) {
@@ -285,7 +294,7 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
                     m_warnings.append({
                         QStringLiteral("Ambiguous type detected. "
                                        "%1 %2.%3 is defined multiple times.")
-                            .arg(name)
+                            .arg(qmlName)
                             .arg(valExport.version().majorVersion())
                             .arg(valExport.version().minorVersion()),
                         QtCriticalMsg,
@@ -293,7 +302,7 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
                     });
 
                     // Remove the name. We don't know which one to use.
-                    types->qmlNames.remove(name);
+                    types->qmlNames.remove(qmlName);
                     continue;
                 }
                 case HigherVersion:
@@ -301,39 +310,40 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
                 }
             }
 
-            types->qmlNames.insert(name, val.scope);
-
-            // We replace the exports for name, as the new set is clearly superior when we get here.
-            seenExports.insert(name, val.exports);
+            types->qmlNames.insert(qmlName, { val.scope, valExport.version() });
+            seenExports[qmlName].append(valExport);
         }
+
+        if (bestExport.isValid())
+            types->cppNames.insert(cppName, { val.scope, bestExport.revision() });
     };
 
     if (!importDescription.prefix().isEmpty())
         types->qmlNames.insert(importDescription.prefix(), {}); // Empty type means "this is the prefix"
 
     for (auto it = import.scripts.begin(); it != import.scripts.end(); ++it) {
-        types->cppNames.insert(prefixedName(anonPrefix, internalName(it->scope)), it->scope);
         // You cannot have a script without an export
         Q_ASSERT(!it->exports.isEmpty());
-        insertExports(*it);
+        insertExports(*it, prefixedName(anonPrefix, internalName(it->scope)));
     }
 
     // add objects
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         const auto &val = it.value();
 
-        const QString name = isComposite(val.scope)
+        const QString cppName = isComposite(val.scope)
                 ? prefixedName(anonPrefix, internalName(val.scope))
                 : internalName(val.scope);
-        types->cppNames.insert(name, val.scope);
 
         if (val.exports.isEmpty()) {
             // Insert an unresolvable dummy name
             types->qmlNames.insert(
                         prefixedName(importDescription.prefix(), prefixedName(
-                                         anonPrefix, internalName(val.scope))), val.scope);
+                                         anonPrefix, internalName(val.scope))),
+                        { val.scope, QTypeRevision() });
+            types->cppNames.insert(cppName, { val.scope, QTypeRevision() });
         } else {
-            insertExports(val);
+            insertExports(val, cppName);
         }
     }
 
@@ -366,7 +376,7 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
     // only happen when enumerations are involved, thus the strategy is to
     // resolve enumerations (which can potentially create new child scopes)
     // before resolving the type fully
-    const QQmlJSScope::ConstPtr intType = tempTypes.cppNames.value(u"int"_qs);
+    const QQmlJSScope::ConstPtr intType = tempTypes.cppNames.value(u"int"_qs).scope;
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         if (!it->scope.factory())
             QQmlJSScope::resolveEnums(it->scope, intType);
@@ -648,8 +658,9 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importDirectory(
             for (const auto &entry : resources) {
                 const QString name = QFileInfo(entry.resourcePath).baseName();
                 if (name.front().isUpper()) {
-                    types.qmlNames.insert(prefixedName(prefix, name),
-                                          localFile2ScopeTree(entry.filePath));
+                    types.qmlNames.insert(
+                                prefixedName(prefix, name),
+                                { localFile2ScopeTree(entry.filePath), QTypeRevision() });
                 }
             }
         } else {
@@ -673,7 +684,7 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importDirectory(
             continue; // Non-uppercase names cannot be imported anyway.
 
         types.qmlNames.insert(prefixedName(prefix, QFileInfo(it.filePath()).baseName()),
-                              localFile2ScopeTree(it.filePath()));
+                              { localFile2ScopeTree(it.filePath()), QTypeRevision() });
     }
 
     importHelper(directory, &types, QString(), QTypeRevision(), false, true);
@@ -694,7 +705,7 @@ void QQmlJSImporter::setImportPaths(const QStringList &importPaths)
 
 QQmlJSScope::ConstPtr QQmlJSImporter::jsGlobalObject() const
 {
-    return m_builtins.cppNames[u"GlobalObject"_qs];
+    return m_builtins.cppNames[u"GlobalObject"_qs].scope;
 }
 
 QT_END_NAMESPACE

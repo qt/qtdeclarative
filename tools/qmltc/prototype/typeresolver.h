@@ -46,12 +46,12 @@ public:
     QStringList gatherKnownCppClassNames() const
     {
         QStringList cppNames;
-        QHash<QString, QQmlJSScope::ConstPtr> builtins = m_importer->builtinInternalNames();
+        QQmlJSImporter::ImportedTypes builtins = m_importer->builtinInternalNames();
         cppNames.reserve(builtins.size() + m_imports.size());
-        const auto getInternalName = [](const QQmlJSScope::ConstPtr &t) {
-            if (!t)
+        const auto getInternalName = [](const QQmlJSImportedScope &t) {
+            if (!t.scope)
                 return QString();
-            return t->internalName();
+            return t.scope->internalName();
         };
         std::transform(builtins.cbegin(), builtins.cend(), std::back_inserter(cppNames),
                        getInternalName);
