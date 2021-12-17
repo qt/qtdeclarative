@@ -1,0 +1,65 @@
+import QtQuick.tooling 1.2
+Module {
+    Component {
+        file: "typewithproperties.h"
+        name: "TypeWithProperties"
+        accessSemantics: "reference"
+        prototype: "QObject"
+        exports: ["QmltcTests/TypeWithProperties 1.0"]
+        exportMetaObjectRevisions: [256]
+        Property {
+            name: "a"
+            type: "double"
+            bindable: "bindableA"
+            read: "a"
+            write: "setA"
+            index: 0
+        }
+        Property {
+            name: "b"
+            type: "QString"
+            read: "b"
+            write: "setB"
+            notify: "bChanged"
+            index: 1
+        }
+        Property {
+            name: "c"
+            type: "QVariant"
+            read: "c"
+            write: "setC"
+            notify: "cWeirdSignal"
+            index: 2
+        }
+        Property {
+            name: "d"
+            type: "QVariant"
+            bindable: "bindableD"
+            read: "d"
+            write: "setD"
+            notify: "dSignal"
+            index: 3
+        }
+        Property {
+            name: "e"
+            type: "QString"
+            bindable: "bindableE"
+            read: "e"
+            write: "setE"
+            notify: "eChanged"
+            index: 3
+        }
+        Signal { name: "bChanged" }
+        Signal {
+            name: "cWeirdSignal"
+            Parameter { type: "QVariant" }
+        }
+        Signal {
+            name: "dSignal"
+            Parameter { type: "QVariant" }
+            Parameter { type: "QString" }
+        }
+        Signal { name: "eChanged" }
+        Method { name: "wannabeSignal" }
+    }
+}

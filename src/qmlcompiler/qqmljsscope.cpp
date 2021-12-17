@@ -149,6 +149,21 @@ QList<QQmlJSMetaMethod> QQmlJSScope::methods(const QString &name) const
     return results;
 }
 
+QList<QQmlJSMetaMethod> QQmlJSScope::methods(const QString &name, QQmlJSMetaMethod::Type type) const
+{
+    QList<QQmlJSMetaMethod> results;
+
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        const auto ownMethods = scope->ownMethods(name);
+        for (const auto &method : ownMethods) {
+            if (method.methodType() == type)
+                results.append(method);
+        }
+        return false;
+    });
+    return results;
+}
+
 bool QQmlJSScope::hasEnumeration(const QString &name) const
 {
     return searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
