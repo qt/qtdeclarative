@@ -811,6 +811,21 @@ void QQmlJSImportVisitor::processPropertyBindings()
     }
 }
 
+static std::optional<QQmlJSMetaProperty>
+propertyForChangeHandler(const QQmlJSScope::ConstPtr &scope, QString name)
+{
+    if (!name.endsWith(QLatin1String("Changed")))
+        return {};
+    constexpr int length = int(sizeof("Changed") / sizeof(char)) - 1;
+    name.chop(length);
+    auto p = scope->property(name);
+    const bool isBindable = !p.bindable().isEmpty();
+    const bool canNotify = !p.notify().isEmpty();
+    if (p.isValid() && (isBindable || canNotify))
+        return p;
+    return {};
+}
+
 void QQmlJSImportVisitor::checkSignals()
 {
     for (auto it = m_signals.constBegin(); it != m_signals.constEnd(); ++it) {
@@ -820,7 +835,32 @@ void QQmlJSImportVisitor::checkSignals()
             const auto signal = QQmlJSUtils::signalName(pair.first);
 
             const QQmlJSScope::ConstPtr signalScope = it.key();
-            if (!signal.has_value() || !signalScope->hasMethod(*signal)) {
+            std::optional<QQmlJSMetaMethod> signalMethod;
+            const auto setSignalMethod = [&](const QQmlJSScope::ConstPtr &scope,
+                                             const QString &name) {
+                const auto methods = scope->methods(name, QQmlJSMetaMethod::Signal);
+                if (!methods.isEmpty())
+                    signalMethod = methods[0];
+            };
+
+            if (signal.has_value()) {
+                if (signalScope->hasMethod(*signal)) {
+                    setSignalMethod(signalScope, *signal);
+                } else if (auto p = propertyForChangeHandler(signalScope, *signal); p.has_value()) {
+                    // we have a change handler of the form "onXChanged" where 'X'
+                    // is a property name
+
+                    // NB: qqmltypecompiler prefers signal to bindable
+                    if (auto notify = p->notify(); !notify.isEmpty()) {
+                        setSignalMethod(signalScope, notify);
+                    } else {
+                        Q_ASSERT(!p->bindable().isEmpty());
+                        signalMethod = QQmlJSMetaMethod {}; // use dummy in this case
+                    }
+                }
+            }
+
+            if (!signalMethod.has_value()) { // haven't found anything
                 std::optional<FixSuggestion> fix;
 
                 // There is a small chance of suggesting this fix for things that are not actually
@@ -851,19 +891,7 @@ void QQmlJSImportVisitor::checkSignals()
                 continue;
             }
 
-            QQmlJSMetaMethod scopeSignal;
-            for (QQmlJSScope::ConstPtr scope = it.key(); scope; scope = scope->baseType()) {
-                const auto methods = scope->ownMethods();
-                const auto methodsRange = methods.equal_range(*signal);
-                for (auto method = methodsRange.first; method != methodsRange.second; ++method) {
-                    if (method->methodType() != QQmlJSMetaMethod::Signal)
-                        continue;
-                    scopeSignal = *method;
-                    break;
-                }
-            }
-
-            const QStringList signalParameters = scopeSignal.parameterNames();
+            const QStringList signalParameters = signalMethod->parameterNames();
 
             if (pair.second.length() > signalParameters.length()) {
                 m_logger->logWarning(QStringLiteral("Signal handler for \"%2\" has more formal"
@@ -1528,17 +1556,9 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
                                            qMakePair(name.toString(), signalParameters) });
 
         QQmlJSMetaMethod scopeSignal;
-        for (QQmlJSScope::ConstPtr qmlScope = m_savedBindingOuterScope;
-             qmlScope; qmlScope = qmlScope->baseType()) {
-            const auto methods = qmlScope->ownMethods();
-            const auto methodsRange = methods.equal_range(*signal);
-            for (auto method = methodsRange.first; method != methodsRange.second; ++method) {
-                if (method->methodType() != QQmlJSMetaMethod::Signal)
-                    continue;
-                scopeSignal = *method;
-                break;
-            }
-        }
+        const auto methods = m_savedBindingOuterScope->methods(*signal, QQmlJSMetaMethod::Signal);
+        if (!methods.isEmpty())
+            scopeSignal = methods[0];
 
         const auto firstSourceLocation = statement->firstSourceLocation();
         bool hasMultilineStatementBody =

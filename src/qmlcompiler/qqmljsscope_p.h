@@ -193,6 +193,7 @@ public:
 
     bool hasMethod(const QString &name) const;
     QList<QQmlJSMetaMethod> methods(const QString &name) const;
+    QList<QQmlJSMetaMethod> methods(const QString &name, QQmlJSMetaMethod::Type type) const;
 
     void addOwnEnumeration(const QQmlJSMetaEnum &enumeration) { m_enumerations.insert(enumeration.name(), enumeration); }
     QHash<QString, QQmlJSMetaEnum> ownEnumerations() const { return m_enumerations; }

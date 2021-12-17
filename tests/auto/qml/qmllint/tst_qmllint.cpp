@@ -788,6 +788,24 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Property \"objectName\" not found on type \"Foozle\"")
             << QStringLiteral("Unqualified access")
             << QString() << false;
+    QTest::newRow("cppPropertyChangeHandlers-wrong-parameters-size-bindable")
+            << QStringLiteral("badCppPropertyChangeHandlers1.qml")
+            << QStringLiteral("Signal handler for \"onAChanged\" has more formal parameters than "
+                              "the signal it handles")
+            << QString() << QString() << false;
+    QTest::newRow("cppPropertyChangeHandlers-wrong-parameters-size-notify")
+            << QStringLiteral("badCppPropertyChangeHandlers2.qml")
+            << QStringLiteral("Signal handler for \"onBChanged\" has more formal parameters than "
+                              "the signal it handles")
+            << QString() << QString() << false;
+    QTest::newRow("cppPropertyChangeHandlers-no-property")
+            << QStringLiteral("badCppPropertyChangeHandlers3.qml")
+            << QStringLiteral("no matching signal found for handler \"onXChanged\"") << QString()
+            << QString() << false;
+    QTest::newRow("cppPropertyChangeHandlers-not-a-signal")
+            << QStringLiteral("badCppPropertyChangeHandlers4.qml")
+            << QStringLiteral("no matching signal found for handler \"onWannabeSignal\"")
+            << QString() << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -947,6 +965,8 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("ID overrides property") << QStringLiteral("accessibleId.qml");
     QTest::newRow("matchByName") << QStringLiteral("matchByName.qml");
     QTest::newRow("QObject.hasOwnProperty") << QStringLiteral("qobjectHasOwnProperty.qml");
+    QTest::newRow("cppPropertyChangeHandlers")
+            << QStringLiteral("goodCppPropertyChangeHandlers.qml");
 }
 
 void TestQmllint::cleanQmlCode()
