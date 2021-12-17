@@ -785,6 +785,11 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("unknownTypeCustomParser")
             << QStringLiteral("unknownTypeCustomParser.qml")
             << QStringLiteral("TypeDoesNotExist was not found.") << QString() << QString() << false;
+    QTest::newRow("nonNullStored")
+            << QStringLiteral("nonNullStored.qml")
+            << QStringLiteral("Property \"objectName\" not found on type \"Foozle\"")
+            << QStringLiteral("Unqualified access")
+            << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
