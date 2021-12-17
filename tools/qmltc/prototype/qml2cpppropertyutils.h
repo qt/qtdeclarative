@@ -31,18 +31,12 @@
 
 #include <private/qqmljsmetatypes_p.h>
 
-inline bool isPointer(const QQmlJSMetaProperty &p)
-{
-    Q_ASSERT(p.type());
-    return p.type()->accessSemantics() == QQmlJSScope::AccessSemantics::Reference;
-}
-
 inline QString getUnderlyingType(const QQmlJSMetaProperty &p)
 {
     QString underlyingType = p.type()->internalName();
     if (p.isList()) {
         underlyingType = u"QQmlListProperty<" + underlyingType + u">";
-    } else if (isPointer(p)) {
+    } else if (p.type()->isReferenceType()) {
         underlyingType += u"*"_qs;
     }
     return underlyingType;

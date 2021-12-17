@@ -29,11 +29,11 @@
 #include "qmltccompiler.h"
 #include "qmltcoutputir.h"
 #include "qmltccodewriter.h"
-#include "qmltccompilerutils.h"
 #include "qmltcpropertyutils.h"
 #include "qmltccompilerpieces.h"
 
 #include <QtCore/qloggingcategory.h>
+#include <private/qqmljsutils_p.h>
 
 #include <algorithm>
 
@@ -284,7 +284,7 @@ compileMethodParameters(const QStringList &names,
         Q_ASSERT(allowUnnamed || !name.isEmpty()); // assume verified
         if (name.isEmpty() && allowUnnamed)
             name = u"unnamed_" + QString::number(i);
-        parameters.emplaceBack(augmentInternalName(types[i]), name, QString());
+        parameters.emplaceBack(types[i]->augmentedInternalName(), name, QString());
     }
     return parameters;
 }
@@ -299,7 +299,7 @@ void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m)
         if (isVoidMethod) {
             type = u"void"_qs;
         } else {
-            type = augmentInternalName(m.returnType());
+            type = m.returnType()->augmentedInternalName();
         }
         return type;
     };
@@ -370,7 +370,8 @@ void QmltcCompiler::compileProperty(QmltcType &current, const QQmlJSMetaProperty
         setter.returnType = u"void"_qs;
         setter.name = p.write();
         // QQmlJSAotVariable
-        setter.parameterList.emplaceBack(wrapInConstRef(underlyingType), name + u"_", u""_qs);
+        setter.parameterList.emplaceBack(QQmlJSUtils::constRefify(underlyingType), name + u"_",
+                                         u""_qs);
         setter.body << variableName + u".setValue(" + name + u"_);";
         current.functions.emplaceBack(setter);
         mocPieces << u"WRITE"_qs << setter.name;
@@ -451,8 +452,8 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
     }
     case QQmlJSMetaPropertyBinding::StringLiteral: {
         const QString value = binding.literalValue().toString();
-        generator.generate_assignToProperty(
-                current, type, p, QmltcCodeGenerator::toStringLiteral(value), accessor.name);
+        generator.generate_assignToProperty(current, type, p, QQmlJSUtils::toLiteral(value),
+                                            accessor.name);
         break;
     }
     case QQmlJSMetaPropertyBinding::Null: {

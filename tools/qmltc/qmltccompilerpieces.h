@@ -51,18 +51,6 @@ struct QmltcCodeGenerator
 
     QQmlJSScope::ConstPtr documentRoot;
 
-    static QString escapeString(QString s)
-    {
-        return s.replace(u"\\"_qs, u"\\\\"_qs)
-                .replace(u"\""_qs, u"\\\""_qs)
-                .replace(u"\n"_qs, u"\\n"_qs);
-    }
-
-    static QString toStringLiteral(const QString &s)
-    {
-        return u"QStringLiteral(\"" + escapeString(s) + u"\")";
-    }
-
     /*!
         \internal
 

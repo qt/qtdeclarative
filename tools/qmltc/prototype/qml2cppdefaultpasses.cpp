@@ -188,7 +188,7 @@ void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
         auto loc = findIrLocation(context.document, irObject->propertiesBegin(),
                                   irObject->propertiesEnd(), name);
         context.recordError(loc, u"Property '" + name + u"' of unknown type");
-        if (property.isList() && !isPointer(property)) {
+        if (property.isList() && !property.type()->isReferenceType()) {
             context.recordError(loc,
                                 u"Property '" + name
                                         + u"' is a list type that contains non-pointer types");

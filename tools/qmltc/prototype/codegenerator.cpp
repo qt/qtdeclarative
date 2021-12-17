@@ -39,6 +39,8 @@
 
 #include <QtCore/qloggingcategory.h>
 
+#include <private/qqmljsutils_p.h>
+
 #include <optional>
 #include <utility>
 #include <numeric>
@@ -84,7 +86,7 @@ static QString figureReturnType(const QQmlJSMetaMethod &m)
     if (isVoidMethod) {
         type = u"void"_qs;
     } else {
-        type = CodeGeneratorUtility::getInternalNameAwareOfAccessSemantics(m.returnType());
+        type = m.returnType()->augmentedInternalName();
     }
     return type;
 }
@@ -103,9 +105,8 @@ compileMethodParameters(const QStringList &names,
         Q_ASSERT(allowUnnamed || !name.isEmpty()); // assume verified
         if (name.isEmpty() && allowUnnamed)
             name = u"unnamed_" + QString::number(i);
-        paramList.emplaceBack(QQmlJSAotVariable {
-                CodeGeneratorUtility::getInternalNameAwareOfAccessSemantics(types[i]), names[i],
-                QString() });
+        paramList.emplaceBack(
+                QQmlJSAotVariable { types[i]->augmentedInternalName(), names[i], QString() });
     }
     return paramList;
 }
@@ -809,9 +810,8 @@ void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaPr
         setter.returnType = u"void"_qs;
         setter.name = compilationData.write;
         // QQmlJSAotVariable
-        setter.parameterList.emplaceBack(
-                CodeGeneratorUtility::wrapInConstRefIfNotAPointer(underlyingType), name + u"_",
-                u""_qs);
+        setter.parameterList.emplaceBack(QQmlJSUtils::constRefify(underlyingType), name + u"_",
+                                         u""_qs);
         setter.body << variableName + u".setValue(" + name + u"_);";
         setter.body << u"emit " + compilationData.notify + u"();";
         current.functions.emplaceBack(setter);
@@ -873,7 +873,7 @@ void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaPr
                 memberName + u"(QQmlListProperty<" + underlyingType + u">(this, std::addressof("
                 + memberName + u"_storage)))");
         underlyingType = u"QQmlListProperty<" + underlyingType + u">";
-    } else if (isPointer(p)) {
+    } else if (p.type()->isReferenceType()) {
         underlyingType += u'*';
     }
 
@@ -895,8 +895,7 @@ void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaPr
     setter.returnType = u"void"_qs;
     setter.name = compilationData.write;
     // QQmlJSAotVariable
-    setter.parameterList.emplaceBack(
-            CodeGeneratorUtility::wrapInConstRefIfNotAPointer(underlyingType), inputName, u""_qs);
+    setter.parameterList.emplaceBack(QQmlJSUtils::constRefify(underlyingType), inputName, u""_qs);
     setter.body << memberName + u".setValue(" + inputName + u"_);";
     // TODO: Qt.binding() (and old bindings?) requires signal emission
     setter.body << u"emit " + compilationData.notify + u"();";
@@ -1035,7 +1034,7 @@ void CodeGenerator::compileAlias(QQmlJSAotObject &current, const QQmlJSMetaPrope
         info.underlyingType = resultingProperty.type()->internalName();
         if (resultingProperty.isList()) {
             info.underlyingType = u"QQmlListProperty<" + info.underlyingType + u">";
-        } else if (isPointer(resultingProperty)) {
+        } else if (resultingProperty.type()->isReferenceType()) {
             info.underlyingType += u"*"_qs;
         }
         // reset to generic type when having alias to id:
@@ -1080,9 +1079,8 @@ void CodeGenerator::compileAlias(QQmlJSAotObject &current, const QQmlJSMetaPrope
         QList<QQmlJSMetaMethod> methods = type->methods(resultingProperty.write());
         if (methods.isEmpty()) {
             // QQmlJSAotVariable
-            setter.parameterList.emplaceBack(
-                    CodeGeneratorUtility::wrapInConstRefIfNotAPointer(info.underlyingType),
-                    aliasName + u"_", u""_qs);
+            setter.parameterList.emplaceBack(QQmlJSUtils::constRefify(info.underlyingType),
+                                             aliasName + u"_", u""_qs);
         } else {
             setter.parameterList = compileMethodParameters(methods.at(0).parameterNames(),
                                                            methods.at(0).parameterTypes(), true);
@@ -1232,7 +1230,7 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
     }
     case QmlIR::Binding::Type_String: {
         const QString str = m_doc->stringAt(binding.stringIndex);
-        addPropertyLine(propertyName, p, CodeGeneratorUtility::createStringLiteral(str));
+        addPropertyLine(propertyName, p, QQmlJSUtils::toLiteral(str));
         break;
     }
     case QmlIR::Binding::Type_TranslationById: { // TODO: add test
@@ -1323,8 +1321,9 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
             if (!m_listReferencesCreated.contains(uniqueId)) {
                 m_listReferencesCreated.insert(uniqueId);
                 // TODO: figure if Unicode support is needed here
-                current.endInit.body << u"QQmlListReference " + refName + u"(" + objectAddr
-                                + u", QByteArrayLiteral(\"" + propertyName + u"\"));";
+                current.endInit.body << u"QQmlListReference " + refName + u"(" + objectAddr + u", "
+                                + QQmlJSUtils::toLiteral(propertyName, u"QByteArrayLiteral")
+                                + u");";
                 current.endInit.body << u"Q_ASSERT(" + refName + u".canAppend());";
             }
         }
@@ -1641,8 +1640,8 @@ void CodeGenerator::compileScriptBinding(QQmlJSAotObject &current, const QmlIR::
         if (!QmlIR::IRBuilder::isSignalPropertyName(propertyName))
             return BindingKind::JustProperty;
 
-        const auto offset = static_cast<uint>(strlen("on"));
-        signalName = propertyName[offset].toLower() + propertyName.mid(offset + 1);
+        if (auto name = QQmlJSUtils::signalName(propertyName); name.has_value())
+            signalName = *name;
 
         std::optional<QQmlJSMetaMethod> possibleSignal = signalByName(signalName);
         if (possibleSignal) { // signal with signalName exists
