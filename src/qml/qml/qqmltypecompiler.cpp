@@ -53,6 +53,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_LOGGING_CATEGORY(lcQmlTypeCompiler, "qt.qml.typecompiler");
+
 QQmlTypeCompiler::QQmlTypeCompiler(QQmlEnginePrivate *engine, QQmlTypeData *typeData,
                                    QmlIR::Document *parsedQML, const QQmlRefPointer<QQmlTypeNameCache> &typeNameCache,
                                    QV4::ResolvedTypeReferenceMap *resolvedTypeCache, const QV4::CompiledData::DependentTypesHasher &dependencyHasher)
@@ -1383,9 +1385,10 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(
             isDeferred = true;
         } else if (!deferredPropertyNames.isEmpty() && deferredPropertyNames.contains(name)) {
             if (seenSubObjectWithId) {
-                qWarning("Binding on %s is not deferred as requested by the DeferredPropertyNames "
-                         "class info because one or more of its sub-objects contain an id.",
-                         qPrintable(name));
+                qCInfo(lcQmlTypeCompiler,
+                       "Binding on %s is not deferred as requested by the DeferredPropertyNames "
+                       "(%s) class info because one or more of its sub-objects contain an id.",
+                       qPrintable(name), qPrintable(deferredPropertyNames.join(u',')));
             } else if (binding->type == Binding::Type_GroupProperty) {
                 // The binding may already be deferred via the surrounding scope.
                 // e.g. PropertyChanges { control.contentItem.opacity: 0.75 }
@@ -1393,9 +1396,10 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(
                 // control is already deferred by being a generalized group property, there is
                 // no point in warning here.
                 if (scopeDeferred == ScopeDeferred::False) {
-                    qWarning("Binding on %s is not deferred as requested by the "
-                             "DeferredPropertyNames class info because it constitutes a group "
-                             "property.", qPrintable(name));
+                    qCInfo(lcQmlTypeCompiler,
+                           "Binding on %s is not deferred as requested by the DeferredPropertyNames"
+                           " (%s) class info because it constitutes a group property.",
+                           qPrintable(name), qPrintable(deferredPropertyNames.join(u',')));
                 }
             } else {
                 isDeferred = true;
