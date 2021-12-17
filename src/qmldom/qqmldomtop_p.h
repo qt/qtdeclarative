@@ -168,7 +168,6 @@ public:
     ExternalItemPair(const ExternalItemPair &o):
         ExternalItemPairBase(o), valid(o.valid), current(o.current)
     {
-        QMutexLocker l(mutex());
     }
     std::shared_ptr<ExternalOwningItem> validItem() const override { return valid; }
     DomItem validItem(DomItem &self) const override { return self.copy(valid); }
@@ -495,7 +494,6 @@ public:
     ExternalItemInfo(const ExternalItemInfo &o):
         ExternalItemInfoBase(o), current(o.current)
     {
-        QMutexLocker l(mutex());
     }
 
     std::shared_ptr<ExternalItemInfo> makeCopy(DomItem &self) const
@@ -562,7 +560,6 @@ public:
             m_inProgress = o.m_inProgress;
             m_endCallbacks = o.m_endCallbacks;
         }
-        QMutexLocker l(mutex());
     }
 
     Path canonicalPath(DomItem &self) const override;

@@ -131,7 +131,6 @@ ModuleIndex::ModuleIndex(const ModuleIndex &o)
         ensureMinorVersion((*it)->version.minorVersion);
         ++it;
     }
-    QMutexLocker l(mutex());
 }
 
 ModuleIndex::~ModuleIndex()
