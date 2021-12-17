@@ -1669,9 +1669,13 @@ QString QQmlJSTypePropagator::registerName(int registerIndex) const
             registerIndex - FirstArgument - m_function->argumentTypes.count());
 }
 
-void QQmlJSTypePropagator::setRegister(int index, const QQmlJSRegisterContent &content)
+// As the source register content may also be a register, we expect a copy here,
+// rather than a reference. Otherwise you might pass a reference to another entry
+// of m_state.registers, which then becomes invalid when making space for the new
+// entry in the hash.
+void QQmlJSTypePropagator::setRegister(int index, QQmlJSRegisterContent content)
 {
-    m_state.registers[index] = content;
+    m_state.registers[index] = std::move(content);
 }
 
 void QQmlJSTypePropagator::setRegister(int index, const QQmlJSScope::ConstPtr &content)

@@ -315,7 +315,7 @@ private:
 
         QString label;
         QString jumpTarget;
-        QQmlJSCodeGenerator::JumpMode jumpMode;
+        QQmlJSCodeGenerator::JumpMode jumpMode = QQmlJSCodeGenerator::JumpMode::None;
 
         QList<int> previousBlocks;
         int jumpTargetBlock = -1;
