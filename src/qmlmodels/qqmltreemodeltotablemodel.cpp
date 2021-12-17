@@ -661,18 +661,27 @@ void QQmlTreeModelToTableModel::modelLayoutAboutToBeChanged(const QList<QPersist
 void QQmlTreeModelToTableModel::modelLayoutChanged(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint)
 {
     Q_UNUSED(hint)
+
     if (parents.isEmpty()) {
+        emit layoutAboutToBeChanged();
         m_items.clear();
         showModelTopLevelItems(false /*doInsertRows*/);
         const QModelIndex &mi = m_model->index(0, 0);
         const int columnCount = m_model->columnCount(mi);
         emit dataChanged(index(0, 0), index(m_items.count() - 1, columnCount - 1));
+        emit layoutChanged();
+        return;
     }
 
+    bool shouldEmitLayoutChanged = false;
     for (const QPersistentModelIndex &pmi : parents) {
         if (m_expandedItems.contains(pmi)) {
             int row = itemIndex(pmi);
             if (row != -1) {
+                if (!shouldEmitLayoutChanged) {
+                    shouldEmitLayoutChanged = true;
+                    emit layoutAboutToBeChanged();
+                }
                 int rowCount = m_model->rowCount(pmi);
                 if (rowCount > 0) {
                     const QModelIndex &lmi = m_model->index(rowCount - 1, 0, pmi);
@@ -685,6 +694,10 @@ void QQmlTreeModelToTableModel::modelLayoutChanged(const QList<QPersistentModelI
             }
         }
     }
+
+    if (shouldEmitLayoutChanged)
+        emit layoutChanged();
+
     ASSERT_CONSISTENCY();
 }
 
