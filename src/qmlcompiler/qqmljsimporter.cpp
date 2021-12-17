@@ -348,13 +348,27 @@ void QQmlJSImporter::processImport(const QQmlJSImporter::Import &import,
     // only happen when enumerations are involved, thus the strategy is to
     // resolve enumerations (which can potentially create new child scopes)
     // before resolving the type fully
+    const QQmlJSScope::ConstPtr intType = tempTypes.cppNames.value(u"int"_qs);
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it)
-        QQmlJSScope::resolveEnums(it.value(), tempTypes.cppNames, nullptr);
+        QQmlJSScope::resolveEnums(it.value(), intType);
 
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         const auto &val = it.value();
-        if (val->baseType().isNull()) // Otherwise we have already done it in localFile2ScopeTree()
+        if (val->baseType().isNull()) { // Otherwise we have already done it in localFile2ScopeTree()
+            // Composite types use QML names, and we should have resolved those already.
+            // ... except that old qmltypes files might specify composite types with C++ names.
+            // Warn about those.
+            if (val->isComposite()) {
+                m_warnings.append({
+                    QStringLiteral("Found incomplete composite type %1. Do not use qmlplugindump.")
+                                      .arg(val->internalName()),
+                    QtWarningMsg,
+                    QQmlJS::SourceLocation()
+                });
+            }
+
             QQmlJSScope::resolveNonEnumTypes(val, tempTypes.cppNames);
+        }
     }
 }
 

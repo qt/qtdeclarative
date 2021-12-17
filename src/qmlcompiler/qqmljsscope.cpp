@@ -400,7 +400,7 @@ void QQmlJSScope::resolveTypes(const QQmlJSScope::Ptr &self,
     const auto resolveAll = [](const QQmlJSScope::Ptr &self,
                                const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes,
                                QSet<QString> *usedTypes) {
-        resolveEnums(self, contextualTypes, usedTypes);
+        resolveEnums(self, findType(u"int"_qs, contextualTypes, usedTypes));
         resolveType(self, contextualTypes, usedTypes);
     };
     resolveTypesInternal(resolveAll, updateChildScope, self, contextualTypes, usedTypes);
@@ -413,11 +413,8 @@ void QQmlJSScope::resolveNonEnumTypes(const QQmlJSScope::Ptr &self,
     resolveTypesInternal(resolveType, updateChildScope, self, contextualTypes, usedTypes);
 }
 
-void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self,
-                               const QHash<QString, QQmlJSScope::ConstPtr> &contextualTypes,
-                               QSet<QString> *usedTypes)
+void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &intType)
 {
-    const auto intType = findType(QStringLiteral("int"), contextualTypes, usedTypes);
     Q_ASSERT(intType); // There always has to be a builtin "int" type
     for (auto it = self->m_enumerations.begin(), end = self->m_enumerations.end(); it != end;
          ++it) {
