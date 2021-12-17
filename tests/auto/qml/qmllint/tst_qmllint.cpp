@@ -52,6 +52,12 @@ private Q_SLOTS:
     void dirtyQmlCode_data();
     void dirtyQmlCode();
 
+    void compilerWarnings_data();
+    void compilerWarnings();
+
+    void controlsSanity_data();
+    void controlsSanity();
+
     void testUnknownCausesFail();
 
     void directoryPassedAsQmlTypesFile();
@@ -59,12 +65,6 @@ private Q_SLOTS:
 
     void qmltypes_data();
     void qmltypes();
-
-    void functionDeclaration();
-
-    void signalHandler();
-
-    void anchors();
 
 #ifdef QT_QMLJSROOTGEN_PRESENT
     void verifyJsRoot();
@@ -78,19 +78,11 @@ private Q_SLOTS:
     void settingsFile();
 
     void additionalImplicitImport();
-    void listIndices();
-    void lazyAndDirect();
 
     void attachedPropertyReuse();
 
-    void shadowable();
-    void tooFewParameters();
-    void qQmlV4Function();
     void missingBuiltinsNoCrash();
     void absolutePath();
-    void multiGrouped();
-    void javascriptVariableArgs();
-    void unknownTypeInRegister();
 
 private:
     enum DefaultIncludeOption { NoDefaultIncludes, UseDefaultIncludes };
@@ -109,7 +101,8 @@ private:
     void callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings = nullptr,
                      QStringList includeDirs = {}, QStringList qmltypesFiles = {},
                      QStringList resources = {},
-                     DefaultIncludeOption defaultIncludes = UseDefaultIncludes);
+                     DefaultIncludeOption defaultIncludes = UseDefaultIncludes,
+                     QMap<QString, QQmlJSLogger::Option> *options = nullptr);
 
     void searchWarnings(const QJsonArray &warnings, const QString &string, const QString &filename,
                         ContainOption shouldContain = StringContained,
@@ -966,6 +959,73 @@ void TestQmllint::cleanQmlCode()
     QVERIFY2(warnings.isEmpty(), qPrintable(QJsonDocument(warnings).toJson()));
 }
 
+void TestQmllint::compilerWarnings_data()
+{
+    QTest::addColumn<QString>("filename");
+    QTest::addColumn<bool>("shouldSucceed");
+    QTest::addColumn<QString>("warning");
+    QTest::newRow("listIndices") << QStringLiteral("listIndices.qml") << true << QString();
+    QTest::newRow("lazyAndDirect") << QStringLiteral("LazyAndDirect/Lazy.qml") << true << QString();
+    QTest::newRow("qQmlV4Function") << QStringLiteral("varargs.qml") << true << QString();
+    QTest::newRow("multiGrouped") << QStringLiteral("multiGrouped.qml") << true << QString();
+
+    QTest::newRow("shadowable") << QStringLiteral("shadowable.qml") << false
+                                << QStringLiteral("with type NotSoSimple can be shadowed");
+    QTest::newRow("tooFewParameters") << QStringLiteral("tooFewParams.qml") << false
+                                      << QStringLiteral("No matching override found");
+    QTest::newRow("javascriptVariableArgs")
+            << QStringLiteral("javascriptVariableArgs.qml") << false
+            << QStringLiteral("Function expects 0 arguments, but 2 were provided");
+    QTest::newRow("unknownTypeInRegister")
+            << QStringLiteral("unknownTypeInRegister.qml") << false
+            << QStringLiteral("Functions without type annotations won't be compiled");
+}
+
+void TestQmllint::compilerWarnings()
+{
+    QFETCH(QString, filename);
+    QFETCH(bool, shouldSucceed);
+    QFETCH(QString, warning);
+
+    QJsonArray warnings;
+
+    auto options = QQmlJSLogger::options();
+    options[u"compiler"_qs].setLevel(u"warning"_qs);
+
+    callQmllint(filename, shouldSucceed, &warnings, {}, {}, {}, UseDefaultIncludes, &options);
+
+    if (!warning.isEmpty())
+        searchWarnings(warnings, warning, filename);
+}
+
+void TestQmllint::controlsSanity_data()
+{
+    QTest::addColumn<QString>("filename");
+    QTest::addColumn<QString>("warning");
+    QTest::newRow("functionDeclarations") << QStringLiteral("functionDeclarations.qml")
+                                          << QStringLiteral("Declared function \"add\"");
+    QTest::newRow("signalHandlers") << QStringLiteral("signalHandlers.qml")
+                                    << QStringLiteral("Declared signal handler \"onCompleted\"");
+    QTest::newRow("anchors") << QStringLiteral("anchors.qml")
+                             << QStringLiteral("Using anchors here");
+}
+
+void TestQmllint::controlsSanity()
+{
+    QFETCH(QString, filename);
+    QFETCH(QString, warning);
+
+    QJsonArray warnings;
+
+    auto options = QQmlJSLogger::options();
+    options[u"controls-sanity"_qs].setLevel(u"warning"_qs);
+
+    callQmllint(filename, false, &warnings, {}, {}, {}, UseDefaultIncludes, &options);
+
+    if (!warning.isEmpty())
+        searchWarnings(warnings, warning, filename);
+}
+
 QString TestQmllint::runQmllint(const QString &fileToLint,
                                 std::function<void(QProcess &)> handleResult,
                                 const QStringList &extraArgs, bool ignoreSettings,
@@ -1048,7 +1108,8 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
 
 void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings,
                               QStringList includeDirs, QStringList qmltypesFiles,
-                              QStringList resources, DefaultIncludeOption defaultIncludes)
+                              QStringList resources, DefaultIncludeOption defaultIncludes,
+                              QMap<QString, QQmlJSLogger::Option> *options)
 {
     QJsonArray jsonOutput;
 
@@ -1057,7 +1118,7 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
             warnings ? &jsonOutput : nullptr,
             defaultIncludes == UseDefaultIncludes ? m_defaultImportPaths + includeDirs
                                                   : includeDirs,
-            qmltypesFiles, resources, {});
+            qmltypesFiles, resources, options != nullptr ? *options : QQmlJSLogger::options());
     QVERIFY2(success == shouldSucceed, QJsonDocument(jsonOutput).toJson());
 
     if (warnings) {
@@ -1129,7 +1190,11 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
 
 void TestQmllint::requiredProperty()
 {
-    QVERIFY(runQmllint("requiredProperty.qml", true).isEmpty());
+    {
+        QJsonArray warnings;
+        callQmllint("requiredProperty.qml", true, &warnings);
+        QVERIFY2(warnings.isEmpty(), qPrintable(QJsonDocument(warnings).toJson()));
+    }
 
     {
         QJsonArray warnings;
@@ -1140,7 +1205,11 @@ void TestQmllint::requiredProperty()
                 "requiredMissingProperty.qml");
     }
 
-    QVERIFY(runQmllint("requiredPropertyBindings.qml", true).isEmpty());
+    {
+        QJsonArray warnings;
+        callQmllint("requiredPropertyBindings.qml", true, &warnings);
+        QVERIFY2(warnings.isEmpty(), qPrintable(QJsonDocument(warnings).toJson()));
+    }
 
     {
         QJsonArray warnings;
@@ -1195,95 +1264,68 @@ void TestQmllint::additionalImplicitImport()
     QVERIFY(warnings.isEmpty());
 }
 
-void TestQmllint::listIndices()
-{
-    QVERIFY(runQmllint("listIndices.qml", true, {"--compiler=warning"}, false).isEmpty());
-}
-
-void TestQmllint::lazyAndDirect()
-{
-    QVERIFY(runQmllint("LazyAndDirect/Lazy.qml", true, {"--compiler=warning"}, false).isEmpty());
-}
-
-void TestQmllint::functionDeclaration()
-{
-    QVERIFY(runQmllint("functionDeclarations.qml", false, { "--controls-sanity=warning" }, false)
-                    .contains(u"Declared function \"add\""_qs));
-}
-
-void TestQmllint::signalHandler()
-{
-    QVERIFY(runQmllint("signalHandlers.qml", false, { "--controls-sanity=warning" }, false)
-                    .contains(u"Declared signal handler \"onCompleted\""_qs));
-}
-
-void TestQmllint::anchors()
-{
-    QVERIFY(runQmllint("anchors.qml", false, { "--controls-sanity=warning" }, false)
-                    .contains(u"Using anchors here"_qs));
-}
-
 void TestQmllint::attachedPropertyReuse()
 {
-    QVERIFY(runQmllint("attachedPropNotReused.qml", false,
-                       QStringList() << "--multiple-attached-objects"
-                                     << "warning",
-                       false)
-                    .contains(QStringLiteral("Using attached type QQuickKeyNavigationAttached "
-                                             "already initialized in a parent "
-                                             "scope")));
-    QVERIFY(runQmllint("attachedPropEnum.qml", true,
-                       QStringList() << "--multiple-attached-objects"
-                                     << "warning")
-                    .isEmpty());
-}
 
-void TestQmllint::shadowable()
-{
-    QVERIFY(runQmllint("shadowable.qml", false, {"--compiler=warning"}, false).contains(
-            QStringLiteral("with type NotSoSimple can be shadowed")));
-}
+    auto options = QQmlJSLogger::options();
+    options[u"multiple-attached-objects"_qs].setLevel(u"warning"_qs);
+    {
+        QJsonArray warnings;
 
-void TestQmllint::tooFewParameters()
-{
-    QVERIFY(runQmllint("tooFewParams.qml", false, {"--compiler=warning"}, false).contains(
-            QStringLiteral("No matching override found")));
-}
+        callQmllint("attachedPropNotReused.qml", false, &warnings, {}, {}, {}, UseDefaultIncludes,
+                    &options);
 
-void TestQmllint::qQmlV4Function()
-{
-    QVERIFY(runQmllint("varargs.qml", true, {"--compiler=warning"}, false).isEmpty());
+        searchWarnings(warnings,
+                       QStringLiteral("Using attached type QQuickKeyNavigationAttached "
+                                      "already initialized in a parent "
+                                      "scope"),
+                       "attachedPropNotReused.qml");
+    }
+    {
+        QJsonArray warnings;
+        callQmllint("attachedPropEnum.qml", true, &warnings, {}, {}, {}, UseDefaultIncludes,
+                    &options);
+        QVERIFY2(warnings.isEmpty(), qPrintable(QJsonDocument(warnings).toJson()));
+    }
 }
 
 void TestQmllint::missingBuiltinsNoCrash()
 {
-    QVERIFY(runQmllint("missingBuiltinsNoCrash.qml", false, { "--bare" }, false, false)
-                    .contains(QStringLiteral("Failed to find the following builtins: "
-                                             "builtins.qmltypes, jsroot.qmltypes")));
+    // We cannot use the normal linter here since the other tests might have cached the builtins
+    // alread
+    QQmlLinter linter(m_defaultImportPaths);
+
+    QJsonArray jsonOutput;
+    QJsonArray warnings;
+
+    bool success = linter.lintFile(testFile("missingBuiltinsNoCrash.qml"), nullptr, true,
+                                   &jsonOutput, {}, {}, {}, {});
+    QVERIFY2(!success, QJsonDocument(jsonOutput).toJson());
+
+    QVERIFY2(jsonOutput.size() == 1, QJsonDocument(jsonOutput).toJson());
+    warnings = jsonOutput.at(0)[u"warnings"_qs].toArray();
+
+    searchWarnings(warnings,
+                   QStringLiteral("Failed to find the following builtins: "
+                                  "builtins.qmltypes, jsroot.qmltypes"),
+                   "missingBuiltinsNoCrash.qml");
 }
 
 void TestQmllint::absolutePath()
 {
+    // We cannot use the normal linter here since we need to set a different parameter in the
+    // constructor
+    QQmlLinter linter(m_defaultImportPaths, true);
+
     const QString absolutePath = QFileInfo(testFile("memberNotFound.qml")).absoluteFilePath();
-    QVERIFY(runQmllint(absolutePath, false, { "--absolute-path" }).contains(absolutePath));
-}
 
-void TestQmllint::multiGrouped()
-{
-    QVERIFY(runQmllint("multiGrouped.qml", true, {"--compiler=warning"}).isEmpty());
-}
+    QJsonArray jsonOutput;
+    bool success = linter.lintFile(absolutePath, nullptr, true, &jsonOutput, {}, {}, {}, {});
+    QVERIFY(!success);
+    QVERIFY2(jsonOutput.size() == 1, QJsonDocument(jsonOutput).toJson());
+    QJsonArray warnings = jsonOutput.at(0)[u"warnings"_qs].toArray();
 
-void TestQmllint::javascriptVariableArgs()
-{
-    QVERIFY(runQmllint("javascriptVariableArgs.qml", false, { "--compiler", "warning" })
-            .contains(QStringLiteral("Function expects 0 arguments, but 2 were provided")));
-}
-
-void TestQmllint::unknownTypeInRegister()
-{
-    QVERIFY(runQmllint("unknownTypeInRegister.qml", false, { "--compiler", "warning" })
-                    .contains(QStringLiteral(
-                            "Functions without type annotations won't be compiled")));
+    searchWarnings(warnings, absolutePath, absolutePath);
 }
 
 QTEST_MAIN(TestQmllint)
