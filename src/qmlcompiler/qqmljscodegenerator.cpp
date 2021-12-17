@@ -971,7 +971,18 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
     const QString namespaceString = m_state.accumulatorIn.isImportNamespace()
             ? QString::number(m_state.accumulatorIn.importNamespace())
             : u"QQmlPrivate::AOTCompiledContext::InvalidStringId"_qs;
+    const auto storedType = m_state.accumulatorIn.storedType();
+    const bool isReferenceType
+            = (storedType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference);
     if (m_state.accumulatorOut.variant() == QQmlJSRegisterContent::ObjectAttached) {
+        if (!isReferenceType) {
+            // This can happen on incomplete type information. We contextually know that the
+            // type must be a QObject, but we cannot construct the inheritance chain. Then we
+            // store it in a generic type. Technically we could even convert it to QObject*, but
+            // that would be expensive.
+            reject(u"attached object for non-QObject type"_qs);
+        }
+
         const QString lookup = u"aotContext->loadAttachedLookup("_qs + indexString
                 + u", "_qs + use(m_state.accumulatorVariableIn)
                 + u", &"_qs + m_state.accumulatorVariableOut + u')';
@@ -990,10 +1001,6 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
     }
 
     Q_ASSERT(m_state.accumulatorOut.isProperty());
-
-    const auto storedType = m_state.accumulatorIn.storedType();
-    const bool isReferenceType
-            = (storedType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference);
 
     const QQmlJSScope::ConstPtr out = m_state.accumulatorOut.storedType();
     if (isReferenceType) {
