@@ -7,9 +7,12 @@
 #### Libraries
 
 
-# special case begin
 qt_find_package(LTTngUST PROVIDED_TARGETS LTTng::UST MODULE_NAME qml QMAKE_LIB lttng-ust)
-# special case end
+qt_find_package(Python REQUIRED)
+if(Python_Interpreter_FOUND)
+    # Need to make it globally available to the project
+    set(QT_INTERNAL_DECLARATIVE_PYTHON "${Python_EXECUTABLE}" CACHE STRING "")
+endif()
 
 #### Tests
 
@@ -200,13 +203,9 @@ qt_feature("qml-xmllistmodel" PRIVATE
     CONDITION QT_FEATURE_qml_itemmodel AND QT_FEATURE_future
 )
 
-# special case begin
-qt_qml_find_python(__qt_qml_python_path __qt_qml_python_found)
-# special case end
-
 qt_feature("qml-python" PRIVATE
     LABEL "python"
-    CONDITION __qt_qml_python_found # special case
+    CONDITION Python_Interpreter_FOUND
 )
 qt_configure_add_summary_section(NAME "Qt QML")
 qt_configure_add_summary_entry(ARGS "qml-network")
