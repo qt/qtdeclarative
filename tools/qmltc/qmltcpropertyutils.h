@@ -36,17 +36,6 @@ QT_BEGIN_NAMESPACE
 /*!
     \internal
 
-    Tells whether property \a p is a pointer type.
-*/
-inline bool isPointer(const QQmlJSMetaProperty &p)
-{
-    Q_ASSERT(p.type());
-    return p.type()->accessSemantics() == QQmlJSScope::AccessSemantics::Reference;
-}
-
-/*!
-    \internal
-
     Returns an underlying C++ type of \a p property.
 */
 inline QString getUnderlyingType(const QQmlJSMetaProperty &p)
@@ -57,7 +46,7 @@ inline QString getUnderlyingType(const QQmlJSMetaProperty &p)
     // would be both a list and a pointer (weird).
     if (p.isList()) {
         underlyingType = u"QQmlListProperty<" + underlyingType + u">";
-    } else if (isPointer(p)) {
+    } else if (p.type()->isReferenceType()) {
         underlyingType += u"*"_qs;
     }
     return underlyingType;

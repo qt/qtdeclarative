@@ -32,6 +32,7 @@
 
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsscope_p.h>
+#include <private/qqmljsutils_p.h>
 #include <private/qv4compilerscanfunctions_p.h>
 
 #include <QtCore/qdir.h>
@@ -56,18 +57,9 @@ QT_BEGIN_NAMESPACE
         m_body += u"// "_qs + QStringLiteral(#function) + u'\n'; \
     }
 
-static QString escapeString(QString s)
-{
-    return s.replace(u'\\', u"\\\\"_qs)
-            .replace(u'"', u"\\\""_qs)
-            .replace(u'\n', u"\\n"_qs);
-}
-
 QString QQmlJSCodeGenerator::castTargetName(const QQmlJSScope::ConstPtr &type) const
 {
-    return (type->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
-        ? type->internalName() + u" *"_qs
-        : type->internalName();
+    return type->augmentedInternalName();
 }
 
 QQmlJSCodeGenerator::QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerContext,
@@ -81,20 +73,12 @@ QQmlJSCodeGenerator::QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerC
 
 QString QQmlJSCodeGenerator::metaTypeFromType(const QQmlJSScope::ConstPtr &type) const
 {
-    return u"QMetaType::fromType<"_qs + type->internalName()
-            + (type->accessSemantics() == QQmlJSScope::AccessSemantics::Reference
-               ? u" *"_qs
-               : QString())
-            + u">()"_qs;
+    return u"QMetaType::fromType<"_qs + type->augmentedInternalName() + u">()"_qs;
 }
 
 QString QQmlJSCodeGenerator::metaTypeFromName(const QQmlJSScope::ConstPtr &type) const
 {
-    return u"QMetaType::fromName(\""_qs + type->internalName()
-        + ((type->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
-            ? u" *"_qs
-            : QString())
-        + u"\")"_qs;
+    return u"QMetaType::fromName(\""_qs + type->augmentedInternalName() + u"\")"_qs;
 }
 
 QString QQmlJSCodeGenerator::metaObject(const QQmlJSScope::ConstPtr &objectType)
@@ -171,10 +155,7 @@ QQmlJSAotFunction QQmlJSCodeGenerator::run(
 
     for (const QQmlJSScope::ConstPtr &argType : qAsConst(function->argumentTypes)) {
         if (argType) {
-            result.argumentTypes.append(
-                    argType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference
-                            ? (argType->internalName() + u'*')
-                            : argType->internalName());
+            result.argumentTypes.append(argType->augmentedInternalName());
         } else {
             result.argumentTypes.append(u"void"_qs);
         }
@@ -636,12 +617,9 @@ void QQmlJSCodeGenerator::generate_LoadRuntimeString(int stringId)
 {
     INJECT_TRACE_INFO(generate_LoadRuntimeString);
 
-    const QString string = escapeString(m_jsUnitGenerator->stringForIndex(stringId));
-
     m_body += m_state.accumulatorVariableOut;
-    m_body += u" = QStringLiteral(\""_qs;
-    m_body += string;
-    m_body += u"\")"_qs;
+    m_body += u" = "_qs;
+    m_body += QQmlJSUtils::toLiteral(m_jsUnitGenerator->stringForIndex(stringId));
     m_body += u";\n"_qs;
 }
 

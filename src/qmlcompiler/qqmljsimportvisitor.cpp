@@ -40,6 +40,7 @@
 #include <QtQml/private/qv4codegen_p.h>
 #include <QtQml/private/qqmlstringconverters_p.h>
 #include <QtQml/private/qqmlirbuilder_p.h>
+#include <private/qqmljsutils_p.h>
 
 #include <algorithm>
 
@@ -807,33 +808,16 @@ void QQmlJSImportVisitor::processPropertyBindings()
     }
 }
 
-static QString signalName(QStringView handlerName)
-{
-    if (handlerName.startsWith(u"on") && handlerName.size() > 2) {
-        QString signal = handlerName.mid(2).toString();
-        for (int i = 0; i < signal.length(); ++i) {
-            QChar &ch = signal[i];
-            if (ch.isLower())
-                return QString();
-            if (ch.isUpper()) {
-                ch = ch.toLower();
-                return signal;
-            }
-        }
-    }
-    return QString();
-}
-
 void QQmlJSImportVisitor::checkSignals()
 {
     for (auto it = m_signals.constBegin(); it != m_signals.constEnd(); ++it) {
         for (const auto &scopeAndPair : it.value()) {
             const auto location = scopeAndPair.dataLocation;
             const auto &pair = scopeAndPair.data;
-            const QString signal = signalName(pair.first);
+            const auto signal = QQmlJSUtils::signalName(pair.first);
 
             const QQmlJSScope::ConstPtr signalScope = it.key();
-            if (!signalScope->hasMethod(signal)) {
+            if (!signal.has_value() || !signalScope->hasMethod(*signal)) {
                 std::optional<FixSuggestion> fix;
 
                 // There is a small chance of suggesting this fix for things that are not actually
@@ -867,7 +851,7 @@ void QQmlJSImportVisitor::checkSignals()
             QQmlJSMetaMethod scopeSignal;
             for (QQmlJSScope::ConstPtr scope = it.key(); scope; scope = scope->baseType()) {
                 const auto methods = scope->ownMethods();
-                const auto methodsRange = methods.equal_range(signal);
+                const auto methodsRange = methods.equal_range(*signal);
                 for (auto method = methodsRange.first; method != methodsRange.second; ++method) {
                     if (method->methodType() != QQmlJSMetaMethod::Signal)
                         continue;
@@ -1491,9 +1475,9 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
         m_logger->logWarning(u"Using anchors here"_qs, Log_ControlsSanity,
                              scriptBinding->firstSourceLocation());
 
-    const QString signal = signalName(name);
+    const auto signal = QQmlJSUtils::signalName(name);
 
-    if (signal.isEmpty()) {
+    if (!signal.has_value()) {
         m_propertyBindings[m_currentScope].append(
                 { m_savedBindingOuterScope, group->firstSourceLocation(), name.toString() });
         if (!parseLiteralBinding(name.toString(), scriptBinding->statement)) {
@@ -1522,7 +1506,7 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
         for (QQmlJSScope::ConstPtr qmlScope = m_savedBindingOuterScope;
              qmlScope; qmlScope = qmlScope->baseType()) {
             const auto methods = qmlScope->ownMethods();
-            const auto methodsRange = methods.equal_range(signal);
+            const auto methodsRange = methods.equal_range(*signal);
             for (auto method = methodsRange.first; method != methodsRange.second; ++method) {
                 if (method->methodType() != QQmlJSMetaMethod::Signal)
                     continue;

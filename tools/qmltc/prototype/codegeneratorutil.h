@@ -62,35 +62,6 @@ struct CodeGeneratorUtility
         return u"QUrl(QStringLiteral(\"qrc:" + s + u"\"))";
     }
 
-    static QString escapeString(QString s)
-    {
-        return s.replace(u"\\"_qs, u"\\\\"_qs)
-                .replace(u"\""_qs, u"\\\""_qs)
-                .replace(u"\n"_qs, u"\\n"_qs);
-    }
-
-    static QString createStringLiteral(const QString &s)
-    {
-        return u"QStringLiteral(\"" + escapeString(s) + u"\")";
-    }
-
-    static QString getInternalNameAwareOfAccessSemantics(const QQmlJSScope::ConstPtr &s)
-    {
-        // TODO: sequence is not supported yet
-        Q_ASSERT(s->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence);
-        const QString suffix = (s->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
-                ? u" *"_qs
-                : u""_qs;
-        return s->internalName() + suffix;
-    }
-
-    static QString wrapInConstRefIfNotAPointer(QString s)
-    {
-        if (!s.endsWith(u'*'))
-            s = u"const " + s + u"&";
-        return s;
-    }
-
     static QString metaPropertyName(const QString &propertyVariableName)
     {
         return propertyVariableName + u"_meta";

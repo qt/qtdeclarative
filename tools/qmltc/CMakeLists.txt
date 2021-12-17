@@ -12,7 +12,6 @@ qt_internal_add_tool(${target_name}
         qmltcvisitor.h qmltcvisitor.cpp
         qmltccompiler.h qmltccompiler.cpp
         qmltccompilerpieces.h
-        qmltccompilerutils.h
         qmltcpropertyutils.h
 
         prototype/generatedcodeprimitives.h

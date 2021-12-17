@@ -213,6 +213,13 @@ public:
     // QML file. isComposite tells us if this is a C++ or a QML name.
     QString internalName() const { return m_internalName; }
     void setInternalName(const QString &internalName) { m_internalName = internalName; }
+    QString augmentedInternalName() const
+    {
+        QString suffix;
+        if (m_semantics == AccessSemantics::Reference)
+            suffix = u" *"_qs;
+        return m_internalName + suffix;
+    }
 
     bool causesImplicitComponentWrapping() const;
     bool isComponentRootElement() const;
@@ -327,6 +334,7 @@ public:
 
     void setAccessSemantics(AccessSemantics semantics) { m_semantics = semantics; }
     AccessSemantics accessSemantics() const { return m_semantics; }
+    bool isReferenceType() const { return m_semantics == QQmlJSScope::AccessSemantics::Reference; }
 
     void setRuntimeId(int id) { m_runtimeId = id; }
     int runtimeId() const { return m_runtimeId; }
