@@ -65,7 +65,7 @@ public:
 
     QQmlJSLogger &logger() { return m_logger; }
 
-    QHash<QString, QQmlJSScope::ConstPtr> imports() const { return m_rootScopeImports; }
+    QQmlJSImporter::ImportedTypes imports() const { return m_rootScopeImports; }
     QQmlJSScopesById addressableScopes() const { return m_scopesById; }
     QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> scopesBylocation() const
     {
@@ -147,7 +147,7 @@ protected:
     QQmlJSScope::Ptr m_exportedRootScope;
     QQmlJSScope::ConstPtr m_globalScope;
     QQmlJSScopesById m_scopesById;
-    QHash<QString, QQmlJSScope::ConstPtr> m_rootScopeImports;
+    QQmlJSImporter::ImportedTypes m_rootScopeImports;
 
     // We need to record the locations as IR locations because those contain less data.
     // This way we can look up objects by IR location later.

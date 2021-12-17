@@ -494,7 +494,7 @@ void QQmlJSImportVisitor::processPropertyTypes()
 
         auto property = type.scope->ownProperty(type.name);
 
-        if (const auto propertyType = m_rootScopeImports.value(property.typeName())) {
+        if (const auto propertyType = m_rootScopeImports.value(property.typeName()).scope) {
             property.setType(propertyType);
             type.scope->addOwnProperty(property);
         } else {
@@ -943,20 +943,22 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
         if (!m_exportedRootScope)
             m_exportedRootScope = m_currentScope;
 
+        const QTypeRevision revision = QQmlJSScope::resolveTypes(
+                    m_currentScope, m_rootScopeImports, &m_usedTypes);
         if (m_nextIsInlineComponent) {
             m_currentScope->setIsInlineComponent(true);
-            m_rootScopeImports.insert(m_inlineComponentName.toString(), m_currentScope);
+            m_rootScopeImports.insert(
+                        m_inlineComponentName.toString(), { m_currentScope, revision });
             m_nextIsInlineComponent = false;
         }
     } else {
         enterEnvironmentNonUnique(QQmlJSScope::GroupedPropertyScope, superType,
                                   definition->firstSourceLocation());
         Q_ASSERT(m_exportedRootScope);
+        QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
     }
 
     m_currentScope->setAnnotations(parseAnnotations(definition->annotations));
-
-    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
     return true;
 }
 
@@ -1026,7 +1028,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             }
         } else {
             const auto name = publicMember->memberType->name.toString();
-            if (m_rootScopeImports.contains(name) && !m_rootScopeImports[name].isNull()) {
+            if (m_rootScopeImports.contains(name) && !m_rootScopeImports[name].scope.isNull()) {
                 if (m_importTypeLocationMap.contains(name))
                     m_usedTypes.insert(name);
             }
@@ -1036,7 +1038,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         prop.setIsList(publicMember->typeModifier == QLatin1String("list"));
         prop.setIsWritable(!publicMember->isReadonlyMember);
         prop.setIsAlias(isAlias);
-        if (const auto type = m_rootScopeImports.value(typeName)) {
+        if (const auto type = m_rootScopeImports.value(typeName).scope) {
             prop.setType(type);
             const QString internalName = type->internalName();
             prop.setTypeName(internalName.isEmpty() ? typeName : internalName);
@@ -1333,7 +1335,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
                     const QString actualPrefix = prefix.isEmpty()
                             ? QFileInfo(entry.resourcePath).baseName()
                             : prefix;
-                    m_rootScopeImports.insert(actualPrefix, scope);
+                    m_rootScopeImports.insert(actualPrefix, { scope, QTypeRevision() });
 
                     addImportLocation(actualPrefix);
                 } else {
@@ -1357,7 +1359,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
         } else if (path.isFile()) {
             const auto scope = m_importer->importFile(path.canonicalFilePath());
             const QString actualPrefix = prefix.isEmpty() ? scope->internalName() : prefix;
-            m_rootScopeImports.insert(actualPrefix, scope);
+            m_rootScopeImports.insert(actualPrefix, { scope, QTypeRevision() });
             addImportLocation(actualPrefix);
         }
 

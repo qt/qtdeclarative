@@ -82,7 +82,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::UiObjectDefinition *uiod)
                 else
                     break;
             } while (scope->scopeType() != QQmlJSScope::QMLScope);
-            targetScope = m_rootScopeImports.value(scope->baseTypeName());
+            targetScope = m_rootScopeImports.value(scope->baseTypeName()).scope;
         } else {
             // there was a target, check if we already can find it
             if (auto scope = m_scopesById.scope(target, m_currentScope)) {
@@ -306,7 +306,8 @@ void FindWarningVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMembe
 
         const QString name = fieldMember->name.toString();
         if (m_importTypeLocationMap.contains(name)) {
-            if (auto it = m_rootScopeImports.find(name); it != m_rootScopeImports.end() && !*(it))
+            auto it = m_rootScopeImports.find(name);
+            if (it != m_rootScopeImports.end() && !it->scope)
                 m_usedTypes.insert(name);
         }
 

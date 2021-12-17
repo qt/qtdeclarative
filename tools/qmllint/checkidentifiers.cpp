@@ -157,7 +157,7 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
                 detectedRestrictiveName = access.m_name;
                 scope = QQmlJSScope::ConstPtr();
             } else {
-                scope = *it;
+                scope = it->scope;
             }
 
             continue;
@@ -190,7 +190,7 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
 
         QQmlJSScope::ConstPtr rootType;
         if (!access.m_parentType.isEmpty())
-            rootType = m_types.value(access.m_parentType);
+            rootType = m_types.value(access.m_parentType).scope;
         else
             rootType = scope;
 
@@ -222,17 +222,17 @@ void CheckIdentifiers::checkMemberAccess(const QVector<FieldMember> &members,
             auto it = m_types.find(access.m_name);
 
             // Something was found but it wasn't the attached type we were looking for, it could be a prefix
-            if (it != m_types.end() && !(*it) && i+1 < members.length()) {
+            if (it != m_types.end() && !it->scope && i+1 < members.length()) {
                 // See whether this is due to us getting the prefixed property in two accesses (i.e. "T" and "Item")
                 // by checking again with a fixed name.
                 it = m_types.find(access.m_name + QLatin1Char('.') + members[++i].m_name);
 
-                if (it == m_types.end() || !(*it) || (*it)->attachedTypeName().isEmpty())
+                if (it == m_types.end() || !it->scope || it->scope->attachedTypeName().isEmpty())
                     --i;
             }
 
-            if (it != m_types.end() && *it && !(*it)->attachedTypeName().isEmpty()) {
-                if (const auto attached = (*it)->attachedType()) {
+            if (it != m_types.end() && it->scope && !it->scope->attachedTypeName().isEmpty()) {
+                if (const auto attached = it->scope->attachedType()) {
                     scope = attached;
                     continue;
                 }
@@ -295,7 +295,7 @@ void CheckIdentifiers::operator()(
                         const auto typeIt = m_types.find(qualified);
                         if (typeIt != m_types.end()) {
                             memberAccessChain.takeFirst();
-                            checkMemberAccess(memberAccessChain, *typeIt);
+                            checkMemberAccess(memberAccessChain, typeIt->scope);
                             continue;
                         }
                     }
@@ -365,7 +365,7 @@ void CheckIdentifiers::operator()(
             const QString baseName = memberAccessBase.m_name;
             auto typeIt = m_types.find(memberAccessBase.m_name);
             bool baseIsPrefixed = false;
-            while (typeIt != m_types.end() && typeIt->isNull()) {
+            while (typeIt != m_types.end() && typeIt->scope.isNull()) {
                 // This is a namespaced import. Check with the full name.
                 if (!memberAccessChain.isEmpty()) {
                     auto location = memberAccessBase.m_location;
@@ -379,8 +379,8 @@ void CheckIdentifiers::operator()(
                 }
             }
 
-            if (typeIt != m_types.end() && !typeIt->isNull()) {
-                checkMemberAccess(memberAccessChain, *typeIt);
+            if (typeIt != m_types.end() && !typeIt->scope.isNull()) {
+                checkMemberAccess(memberAccessChain, typeIt->scope);
                 continue;
             }
 

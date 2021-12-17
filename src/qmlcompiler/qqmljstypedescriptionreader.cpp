@@ -192,6 +192,7 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
 {
     QQmlJSScope::Ptr scope = QQmlJSScope::create();
 
+    UiScriptBinding *metaObjectRevisions = nullptr;
     for (UiObjectMemberList *it = ast->initializer->members; it; it = it->next) {
         UiObjectMember *member = it->member;
         auto *component = cast<UiObjectDefinition *>(member);
@@ -225,7 +226,7 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
             } else if (name == QLatin1String("interfaces")) {
                 readInterfaces(script, scope);
             } else if (name == QLatin1String("exportMetaObjectRevisions")) {
-                readMetaObjectRevisions(script, scope);
+                metaObjectRevisions = script;
             } else if (name == QLatin1String("attachedType")) {
                 scope->setOwnAttachedTypeName(readStringBinding(script));
             } else if (name == QLatin1String("valueType")) {
@@ -273,6 +274,8 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
         return;
     }
 
+    if (metaObjectRevisions)
+        readMetaObjectRevisions(metaObjectRevisions, scope);
     m_objects->insert(scope->internalName(), scope);
 }
 
@@ -644,7 +647,7 @@ void QQmlJSTypeDescriptionReader::readExports(UiScriptBinding *ast, const QQmlJS
         QString name = exp.mid(slashIdx + 1, spaceIdx - (slashIdx+1));
 
         // ### relocatable exports where package is empty?
-        scope->addExport(name, package, version);
+        scope->addExport(name, package, version, version);
     }
 }
 
@@ -671,8 +674,8 @@ void QQmlJSTypeDescriptionReader::readInterfaces(UiScriptBinding *ast, const QQm
     scope->setInterfaceNames(list);
 }
 
-void QQmlJSTypeDescriptionReader::readMetaObjectRevisions(UiScriptBinding *ast,
-                                                    const QQmlJSScope::Ptr &scope)
+void QQmlJSTypeDescriptionReader::readMetaObjectRevisions(
+        UiScriptBinding *ast, const QQmlJSScope::Ptr &scope)
 {
     Q_ASSERT(ast);
 
@@ -695,7 +698,8 @@ void QQmlJSTypeDescriptionReader::readMetaObjectRevisions(UiScriptBinding *ast,
     }
 
     int exportIndex = 0;
-    const int exportCount = scope->exports().size();
+    QList<QQmlJSScope::Export> exports = scope->exports();
+    const int exportCount = exports.size();
     for (PatternElementList *it = arrayLit->elements; it; it = it->next, ++exportIndex) {
         auto *numberLit = cast<NumericLiteral *>(it->element->initializer);
         if (!numberLit) {
@@ -719,16 +723,20 @@ void QQmlJSTypeDescriptionReader::readMetaObjectRevisions(UiScriptBinding *ast,
 
         const QTypeRevision metaObjectVersion
                 = QTypeRevision::fromEncodedVersion(metaObjectRevision);
-        const QTypeRevision exportVersion = scope->exports()[exportIndex].version();
+        const QQmlJSScope::Export &entry = exports.at(exportIndex);
+        const QTypeRevision exportVersion = entry.version();
         if (metaObjectVersion != exportVersion) {
             addWarning(numberLit->firstSourceLocation(),
-                       tr("Meta object revision and export version differ, ignoring the revision.\n"
+                       tr("Meta object revision and export version differ.\n"
                           "Revision %1 corresponds to version %2.%3; it should be %4.%5.")
                        .arg(metaObjectRevision)
                        .arg(metaObjectVersion.majorVersion()).arg(metaObjectVersion.minorVersion())
                        .arg(exportVersion.majorVersion()).arg(exportVersion.minorVersion()));
+            exports[exportIndex] = QQmlJSScope::Export(
+                        entry.package(), entry.type(), exportVersion, metaObjectVersion);
         }
     }
+    scope->setExports(exports);
 }
 
 void QQmlJSTypeDescriptionReader::readEnumValues(UiScriptBinding *ast, QQmlJSMetaEnum *metaEnum)
