@@ -114,6 +114,7 @@ private slots:
     void unknownAttached();
     void variantlist();
     void popContextAfterRet();
+    void revisions();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1712,6 +1713,18 @@ void tst_QmlCppCodegen::popContextAfterRet()
     QCOMPARE(o->objectName(), u"backgroundBlur"_qs);
     o->setProperty("stackViewDepth", 1);
     QCOMPARE(o->objectName(), u"backgroundImage"_qs);
+}
+
+void tst_QmlCppCodegen::revisions()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/revisions.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->property("delayed").toBool(), true);
+    QCOMPARE(o->property("gotten").toInt(), 5);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

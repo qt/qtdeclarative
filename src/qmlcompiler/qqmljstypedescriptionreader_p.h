@@ -80,7 +80,7 @@ private:
     QList<QQmlJSScope::Export> readExports(QQmlJS::AST::UiScriptBinding *ast);
     void readInterfaces(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);
     void checkMetaObjectRevisions(
-            QQmlJS::AST::UiScriptBinding *ast, const QList<QQmlJSScope::Export> &exports);
+            QQmlJS::AST::UiScriptBinding *ast, QList<QQmlJSScope::Export> *exports);
 
     QStringList readStringList(QQmlJS::AST::UiScriptBinding *ast);
     void readDeferredNames(QQmlJS::AST::UiScriptBinding *ast, const QQmlJSScope::Ptr &scope);

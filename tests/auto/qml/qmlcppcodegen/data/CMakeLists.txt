@@ -94,6 +94,7 @@ set(qml_files
     popContextAfterRet.qml
     pressAndHoldButton.qml
     registerelimination.qml
+    revisions.qml
     scopeVsObject.qml
     script.js
     script.mjs

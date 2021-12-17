@@ -560,7 +560,7 @@ void QQmlJSImportVisitor::processPropertyTypes()
 
         auto property = type.scope->ownProperty(type.name);
 
-        if (const auto propertyType = m_rootScopeImports.value(property.typeName())) {
+        if (const auto propertyType = m_rootScopeImports.value(property.typeName()).scope) {
             property.setType(propertyType);
             type.scope->addOwnProperty(property);
         } else {
@@ -1112,20 +1112,23 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
         if (!m_exportedRootScope)
             m_exportedRootScope = m_currentScope;
 
+        const QTypeRevision revision = QQmlJSScope::resolveTypes(
+                    m_currentScope, m_rootScopeImports, &m_usedTypes);
         if (m_nextIsInlineComponent) {
             m_currentScope->setIsInlineComponent(true);
-            m_rootScopeImports.insert(m_inlineComponentName.toString(), m_currentScope);
+            m_rootScopeImports.insert(
+                        m_inlineComponentName.toString(), { m_currentScope, revision });
             m_nextIsInlineComponent = false;
         }
     } else {
         enterEnvironmentNonUnique(QQmlJSScope::GroupedPropertyScope, superType,
                                   definition->firstSourceLocation());
         Q_ASSERT(m_exportedRootScope);
+        QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
     }
 
     m_currentScope->setAnnotations(parseAnnotations(definition->annotations));
 
-    QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
     addDefaultProperties();
     if (m_currentScope->scopeType() == QQmlJSScope::QMLScope)
         m_qmlTypes.append(m_currentScope);
@@ -1202,7 +1205,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             }
         } else {
             const auto name = publicMember->memberType->name.toString();
-            if (m_rootScopeImports.contains(name) && !m_rootScopeImports[name].isNull()) {
+            if (m_rootScopeImports.contains(name) && !m_rootScopeImports[name].scope.isNull()) {
                 if (m_importTypeLocationMap.contains(name))
                     m_usedTypes.insert(name);
             }
@@ -1212,7 +1215,9 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         prop.setIsList(publicMember->typeModifier == QLatin1String("list"));
         prop.setIsWritable(!publicMember->isReadonly());
         prop.setAliasExpression(aliasExpr);
-        const auto type = isAlias ? QQmlJSScope::ConstPtr() : m_rootScopeImports.value(typeName);
+        const auto type = isAlias
+                ? QQmlJSScope::ConstPtr()
+                : m_rootScopeImports.value(typeName).scope;
         if (type) {
             prop.setType(type);
             const QString internalName = type->internalName();
@@ -1358,7 +1363,7 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ClassExpression *)
 // ### TODO: add warning about suspicious translation binding when returning false?
 static std::optional<QQmlJSMetaPropertyBinding>
 handleTranslationBinding(QStringView base, QQmlJS::AST::ArgumentList *args,
-                         const QHash<QString, QQmlJSScope::ConstPtr> &rootScopeImports,
+                         const QQmlJSImporter::ImportedTypes &rootScopeImports,
                          const QQmlJS::SourceLocation &location)
 {
     std::optional<QQmlJSMetaPropertyBinding> maybeBinding = std::nullopt;
@@ -1371,12 +1376,15 @@ handleTranslationBinding(QStringView base, QQmlJS::AST::ArgumentList *args,
     auto finalizeBinding = [&](QV4::CompiledData::Binding::ValueType type,
                                QV4::CompiledData::TranslationData) {
         QQmlJSMetaPropertyBinding binding(location);
-        if (type == QV4::CompiledData::Binding::Type_Translation)
+        if (type == QV4::CompiledData::Binding::Type_Translation) {
             binding.setTranslation(mainString);
-        else if (type == QV4::CompiledData::Binding::Type_TranslationById)
+        } else if (type == QV4::CompiledData::Binding::Type_TranslationById) {
             binding.setTranslationId(mainString);
-        else
-            binding.setLiteral(QQmlJSMetaPropertyBinding::StringLiteral, u"string"_qs, mainString.toString(), rootScopeImports[u"string"_qs]);
+        } else {
+            binding.setLiteral(
+                        QQmlJSMetaPropertyBinding::StringLiteral, u"string"_qs,
+                        mainString.toString(), rootScopeImports[u"string"_qs].scope);
+        }
         maybeBinding = binding;
     };
     QmlIR::tryGeneratingTranslationBindingBase(base, args, registerMainString, discardCommentString, finalizeBinding);
@@ -1471,7 +1479,7 @@ bool QQmlJSImportVisitor::parseLiteralBinding(const QString name,
     Q_ASSERT(m_rootScopeImports.contains(literalType)); // built-ins must contain support for all literal bindings
 
     QQmlJSMetaPropertyBinding binding(exprStatement->expression->firstSourceLocation(), name);
-    binding.setLiteral(bindingType, literalType, value, m_rootScopeImports[literalType]);
+    binding.setLiteral(bindingType, literalType, value, m_rootScopeImports[literalType].scope);
 
     m_currentScope->addOwnPropertyBinding(binding);
 
@@ -1695,7 +1703,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
                     const QString actualPrefix = prefix.isEmpty()
                             ? QFileInfo(entry.resourcePath).baseName()
                             : prefix;
-                    m_rootScopeImports.insert(actualPrefix, scope);
+                    m_rootScopeImports.insert(actualPrefix, { scope, QTypeRevision() });
 
                     addImportLocation(actualPrefix);
                 } else {
@@ -1719,7 +1727,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
         } else if (path.isFile()) {
             const auto scope = m_importer->importFile(path.canonicalFilePath());
             const QString actualPrefix = prefix.isEmpty() ? scope->internalName() : prefix;
-            m_rootScopeImports.insert(actualPrefix, scope);
+            m_rootScopeImports.insert(actualPrefix, { scope, QTypeRevision() });
             addImportLocation(actualPrefix);
         }
 
@@ -2077,7 +2085,7 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::FieldMemberExpression *fieldMemb
 {
     const QString name = fieldMember->name.toString();
     if (m_importTypeLocationMap.contains(name)) {
-        if (auto it = m_rootScopeImports.find(name); it != m_rootScopeImports.end() && !*(it))
+        if (auto it = m_rootScopeImports.find(name); it != m_rootScopeImports.end() && !it->scope)
             m_usedTypes.insert(name);
     }
 }

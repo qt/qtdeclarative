@@ -65,19 +65,19 @@ static bool searchBaseAndExtensionTypes(const QQmlJSScope::ConstPtr type, const 
 
 QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
 {
-    const QHash<QString, QQmlJSScope::ConstPtr> builtinTypes = importer->builtinInternalNames();
-    m_voidType = builtinTypes[u"void"_qs];
-    m_nullType = builtinTypes[u"std::nullptr_t"_qs];
-    m_realType = builtinTypes[u"double"_qs];
-    m_floatType = builtinTypes[u"float"_qs];
-    m_intType = builtinTypes[u"int"_qs];
-    m_boolType = builtinTypes[u"bool"_qs];
-    m_stringType = builtinTypes[u"QString"_qs];
-    m_urlType = builtinTypes[u"QUrl"_qs];
-    m_dateTimeType = builtinTypes[u"QDateTime"_qs];
-    m_variantListType = builtinTypes[u"QVariantList"_qs];
-    m_varType = builtinTypes[u"QVariant"_qs];
-    m_jsValueType = builtinTypes[u"QJSValue"_qs];
+    const QQmlJSImporter::ImportedTypes builtinTypes = importer->builtinInternalNames();
+    m_voidType = builtinTypes[u"void"_qs].scope;
+    m_nullType = builtinTypes[u"std::nullptr_t"_qs].scope;
+    m_realType = builtinTypes[u"double"_qs].scope;
+    m_floatType = builtinTypes[u"float"_qs].scope;
+    m_intType = builtinTypes[u"int"_qs].scope;
+    m_boolType = builtinTypes[u"bool"_qs].scope;
+    m_stringType = builtinTypes[u"QString"_qs].scope;
+    m_urlType = builtinTypes[u"QUrl"_qs].scope;
+    m_dateTimeType = builtinTypes[u"QDateTime"_qs].scope;
+    m_variantListType = builtinTypes[u"QVariantList"_qs].scope;
+    m_varType = builtinTypes[u"QVariant"_qs].scope;
+    m_jsValueType = builtinTypes[u"QJSValue"_qs].scope;
 
     QQmlJSScope::Ptr jsPrimitiveType = QQmlJSScope::create();
     jsPrimitiveType->setInternalName(u"QJSPrimitiveValue"_qs);
@@ -172,7 +172,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopeForId(
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::typeFromAST(QQmlJS::AST::Type *type) const
 {
-    return m_imports[QmlIR::IRBuilder::asString(type->typeId)];
+    return m_imports[QmlIR::IRBuilder::asString(type->typeId)].scope;
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::typeForConst(QV4::ReturnedValue rv) const
@@ -586,6 +586,23 @@ static bool isAssignedToDefaultProperty(const QQmlJSScope::ConstPtr &parent,
     return false;
 }
 
+static bool isRevisionAllowed(int memberRevision, const QQmlJSScope::ConstPtr &scope)
+{
+    Q_ASSERT(scope->isComposite());
+    const QTypeRevision revision = QTypeRevision::fromEncodedVersion(memberRevision);
+
+    // If the memberRevision is either invalid or 0.0, then everything is allowed.
+    if (!revision.isValid() || revision == QTypeRevision::zero())
+        return true;
+
+    const QTypeRevision typeRevision = QQmlJSScope::nonCompositeBaseRevision(
+                {scope->baseType(), scope->baseTypeRevision()});
+
+    // If the revision is not valid, we haven't found a non-composite base type.
+    // There is nothing we can say about the property then.
+    return typeRevision.isValid() && typeRevision >= revision;
+}
+
 QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr &scope,
                                                      const QString &name) const
 {
@@ -600,6 +617,8 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
                     base, [&](const QQmlJSScope::ConstPtr &found, BaseOrExtension mode) {
                         if (found->hasOwnProperty(name)) {
                             QQmlJSMetaProperty prop = found->ownProperty(name);
+                            if (!isRevisionAllowed(prop.revision(), scope))
+                                return false;
                             if (m_parentMode == UseDocumentParent
                                     && name == base->parentPropertyName()) {
                                 QQmlJSScope::ConstPtr baseParent = base->parentScope();
@@ -614,8 +633,16 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
                             return true;
                         }
 
-                        if (scope->hasOwnMethod(name)) {
-                            const auto methods = scope->ownMethods(name);
+                        if (found->hasOwnMethod(name)) {
+                            auto methods = found->ownMethods(name);
+                            for (auto it = methods.begin(); it != methods.end();) {
+                                if (!isRevisionAllowed(it->revision(), scope))
+                                    it = methods.erase(it);
+                                else
+                                    ++it;
+                            }
+                            if (methods.isEmpty())
+                                return false;
                             result = QQmlJSRegisterContent::create(
                                     jsValueType(), methods, scopeContentVariant(mode, true), scope);
                             return true;

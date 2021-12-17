@@ -249,11 +249,9 @@ void TestQmllint::oldQmltypes()
                    "oldQmltypes.qml");
 
     // Checking for both lines separately so that we don't have to mess with the line endings.b
-    searchWarnings(
-            warnings,
-            QStringLiteral(
-                    "Meta object revision and export version differ, ignoring the revision."),
-            "oldQmltypes.qml");
+    searchWarnings(warnings,
+                   QStringLiteral("Meta object revision and export version differ."),
+                   "oldQmltypes.qml");
     searchWarnings(warnings,
                    QStringLiteral("Revision 0 corresponds to version 0.0; it should be 1.0."),
                    "oldQmltypes.qml");

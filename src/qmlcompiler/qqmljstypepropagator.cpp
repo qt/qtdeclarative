@@ -923,14 +923,17 @@ void QQmlJSTypePropagator::generate_CallPossiblyDirectEval(int argc, int argv)
 
 void QQmlJSTypePropagator::propagateScopeLookupCall(const QString &functionName, int argc, int argv)
 {
-    if (QQmlJSScope::ConstPtr scope = QQmlJSScope::findCurrentQMLScope(m_function->qmlScope)) {
-        const auto methods = scope->methods(functionName);
+    const QQmlJSRegisterContent resolvedContent
+            = m_typeResolver->scopedType(m_function->qmlScope, functionName);
+    if (resolvedContent.isMethod()) {
+        const auto methods = resolvedContent.method();
         if (!methods.isEmpty()) {
             propagateCall(methods, argc, argv);
             return;
         }
     }
 
+    setError(u"method %1 cannot be resolved."_qs.arg(functionName));
     m_state.accumulatorOut = m_typeResolver->globalType(m_typeResolver->jsValueType());
 
     setError(u"Cannot find function '%1'"_qs.arg(functionName));

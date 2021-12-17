@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 class QQmlJSImporter
 {
 public:
-    using ImportedTypes = QHash<QString, QQmlJSScope::ConstPtr>;
+    using ImportedTypes = QHash<QString, QQmlJSImportedScope>;
 
     QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper)
         : m_importPaths(importPaths)
@@ -91,15 +91,15 @@ private:
 
     struct AvailableTypes
     {
-        AvailableTypes(QHash<QString, QQmlJSScope::ConstPtr> builtins)
+        AvailableTypes(ImportedTypes builtins)
             : cppNames(std::move(builtins))
         {}
 
         // C++ names used in qmltypes files for non-composite types
-        QHash<QString, QQmlJSScope::ConstPtr> cppNames;
+        ImportedTypes cppNames;
 
         // Names the importing component sees, including any prefixes
-        QHash<QString, QQmlJSScope::ConstPtr> qmlNames;
+        ImportedTypes qmlNames;
 
         // Static modules included here
         QStringList staticModules;

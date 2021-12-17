@@ -41,6 +41,7 @@
 
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsast_p.h>
+#include <private/qqmljsimporter_p.h>
 #include <private/qqmljslogger_p.h>
 #include <private/qqmljsregistercontent_p.h>
 #include <private/qqmljsscope_p.h>
@@ -90,10 +91,10 @@ public:
 
     bool isPrefix(const QString &name) const
     {
-        return m_imports.contains(name) && !m_imports[name];
+        return m_imports.contains(name) && !m_imports[name].scope;
     }
 
-    QQmlJSScope::ConstPtr typeForName(const QString &name) const { return m_imports[name]; }
+    QQmlJSScope::ConstPtr typeForName(const QString &name) const { return m_imports[name].scope; }
     QQmlJSScope::ConstPtr typeFromAST(QQmlJS::AST::Type *type) const;
     QQmlJSScope::ConstPtr typeForConst(QV4::ReturnedValue rv) const;
     QQmlJSRegisterContent typeForBinaryOperation(QSOperator::Op oper,
@@ -173,7 +174,7 @@ protected:
 
     QQmlJSScopesById m_objectsById;
     QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> m_objectsByLocation;
-    QHash<QString, QQmlJSScope::ConstPtr> m_imports;
+    QQmlJSImporter::ImportedTypes m_imports;
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
 
     ParentMode m_parentMode = UseParentProperty;
