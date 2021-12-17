@@ -106,7 +106,7 @@ compileMethodParameters(const QStringList &names,
         if (name.isEmpty() && allowUnnamed)
             name = u"unnamed_" + QString::number(i);
         paramList.emplaceBack(
-                QQmlJSAotVariable { types[i]->augmentedInternalName(), names[i], QString() });
+                QQmlJSAotVariable { types[i]->augmentedInternalName(), name, QString() });
     }
     return paramList;
 }
@@ -1513,6 +1513,21 @@ static QQmlJSAotObject compileScriptBindingPropertyChangeHandler(
     return bindingFunctor;
 }
 
+static std::optional<QQmlJSMetaProperty>
+propertyForChangeHandler(const QQmlJSScope::ConstPtr &scope, QString name)
+{
+    if (!name.endsWith(QLatin1String("Changed")))
+        return {};
+    constexpr int length = int(sizeof("Changed") / sizeof(char)) - 1;
+    name.chop(length);
+    auto p = scope->property(name);
+    const bool isBindable = !p.bindable().isEmpty();
+    const bool canNotify = !p.notify().isEmpty();
+    if (p.isValid() && (isBindable || canNotify))
+        return p;
+    return {};
+}
+
 void CodeGenerator::compileScriptBinding(QQmlJSAotObject &current, const QmlIR::Binding &binding,
                                          const QString &bindingSymbolName,
                                          const CodeGenObject &object, const QString &propertyName,
@@ -1523,25 +1538,32 @@ void CodeGenerator::compileScriptBinding(QQmlJSAotObject &current, const QmlIR::
 
     // returns signal by name. signal exists if std::optional<> has value
     const auto signalByName = [&](const QString &name) -> std::optional<QQmlJSMetaMethod> {
-        const QList<QQmlJSMetaMethod> signalMethods = objectType->methods(name);
+        const auto signalMethods = objectType->methods(name, QQmlJSMetaMethod::Signal);
         if (signalMethods.isEmpty())
             return {};
-        // TODO: no clue how to handle redefinition, so just record an error
-        if (signalMethods.size() != 1) {
-            recordError(binding.location, u"Binding on redefined signal '" + name + u"'");
-            return {};
-        }
+        // if (signalMethods.size() != 1) return {}; // error somewhere else
         QQmlJSMetaMethod s = signalMethods.at(0);
-        if (s.methodType() != QQmlJSMetaMethod::Signal)
-            return {};
+        Q_ASSERT(s.methodType() == QQmlJSMetaMethod::Signal);
         return s;
+    };
+
+    const auto resolveSignal = [&](const QString &name) -> std::optional<QQmlJSMetaMethod> {
+        auto signal = signalByName(name);
+        if (signal) // found signal
+            return signal;
+        auto property = propertyForChangeHandler(objectType, name);
+        if (!property) // nor signal nor property change handler
+            return {}; // error somewhere else
+        if (auto notify = property->notify(); !notify.isEmpty())
+            return signalByName(notify);
+        return {};
     };
 
     // TODO: add Invalid case which would reject garbage handlers
     enum BindingKind {
         JustProperty, // is a binding on property
-        SignalHandler, // is a slot related to custom signal
-        PropertyChangeHandler, // is a slot related to property's "changed" signal
+        SignalHandler, // is a slot related to some signal
+        BindablePropertyChangeHandler, // is a slot related to property's bindable
     };
 
     // these only make sense when binding is on signal handler
@@ -1556,17 +1578,22 @@ void CodeGenerator::compileScriptBinding(QQmlJSAotObject &current, const QmlIR::
         if (auto name = QQmlJSUtils::signalName(propertyName); name.has_value())
             signalName = *name;
 
-        std::optional<QQmlJSMetaMethod> possibleSignal = signalByName(signalName);
+        std::optional<QQmlJSMetaMethod> possibleSignal = resolveSignal(signalName);
         if (possibleSignal) { // signal with signalName exists
             QQmlJSMetaMethod s = possibleSignal.value();
+
+            // Note: update signal name since it may be different from the one
+            // used to resolve a signal
+            signalName = s.methodName();
+
             const auto paramNames = s.parameterNames();
             const auto paramTypes = s.parameterTypes();
             Q_ASSERT(paramNames.size() == paramTypes.size());
-            slotParameters = compileMethodParameters(paramNames, paramTypes);
+            slotParameters = compileMethodParameters(paramNames, paramTypes, true);
             signalReturnType = figureReturnType(s);
             return BindingKind::SignalHandler;
         } else if (propertyName.endsWith(u"Changed"_qs)) {
-            return BindingKind::PropertyChangeHandler;
+            return BindingKind::BindablePropertyChangeHandler;
         }
         return BindingKind::JustProperty;
     }();
@@ -1657,9 +1684,7 @@ void CodeGenerator::compileScriptBinding(QQmlJSAotObject &current, const QmlIR::
                         + u");";
         break;
     }
-    // TODO: fix code generation for property change handlers - it is broken for
-    // many cases. see QTBUG-91956
-    case BindingKind::PropertyChangeHandler: {
+    case BindingKind::BindablePropertyChangeHandler: {
         const QString objectClassName = objectType->internalName();
         const QString bindingFunctorName = makeGensym(bindingSymbolName + u"Functor");
 
@@ -1670,7 +1695,7 @@ void CodeGenerator::compileScriptBinding(QQmlJSAotObject &current, const QmlIR::
             actualPropertyName = match.captured(1);
             actualPropertyName[0] = actualPropertyName.at(0).toLower();
         } else {
-            recordError(binding.location, u"Missing parameter name in on*Changed handler"_qs);
+            // an error somewhere else
             return;
         }
         if (!objectType->hasProperty(actualPropertyName)) {
@@ -1684,12 +1709,6 @@ void CodeGenerator::compileScriptBinding(QQmlJSAotObject &current, const QmlIR::
                         u"Binding on property '" + actualPropertyName + u"' of unknown type");
             return;
         }
-        QString typeOfQmlBinding =
-                u"std::unique_ptr<QPropertyChangeHandler<" + bindingFunctorName + u">>";
-
-        current.children << compileScriptBindingPropertyChangeHandler(
-                m_doc, binding, object.irObject, m_urlMethod, bindingFunctorName, objectClassName,
-                slotParameters);
 
         QString bindableString = actualProperty.bindable();
         if (bindableString.isEmpty()) { // TODO: always should come from prop.bindalbe()
@@ -1699,6 +1718,14 @@ void CodeGenerator::compileScriptBinding(QQmlJSAotObject &current, const QmlIR::
                                   u"supported");
             break;
         }
+
+        QString typeOfQmlBinding =
+                u"std::unique_ptr<QPropertyChangeHandler<" + bindingFunctorName + u">>";
+
+        current.children << compileScriptBindingPropertyChangeHandler(
+                m_doc, binding, object.irObject, m_urlMethod, bindingFunctorName, objectClassName,
+                slotParameters);
+
         // TODO: the finalize.lastLines has to be used here -- somehow if property gets a binding,
         // the change handler is not updated?!
 

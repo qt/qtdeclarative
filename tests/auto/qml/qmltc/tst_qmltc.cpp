@@ -78,6 +78,7 @@
 #include "keyevents.h"
 #include "privatepropertysubclass.h"
 #include "calqlatrbits.h"
+#include "propertychangeandsignalhandlers.h"
 
 // Qt:
 #include <QtCore/qstring.h>
@@ -1703,6 +1704,71 @@ void tst_qmltc::calqlatrBits()
     QSignalSpy scaleChangedSpy(textItem, &QQuickItem::scaleChanged);
     controller->completeToBeginning();
     QTRY_VERIFY(scaleChangedSpy.count() > 0);
+}
+
+void tst_qmltc::trickyPropertyChangeAndSignalHandlers()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(propertyChangeAndSignalHandlers) created(&e);
+
+    // sanity
+    QCOMPARE(created.aChangedCount1(), 0);
+    QCOMPARE(created.bChangedCount1(), 0);
+    QCOMPARE(created.cChangedCount1(), 0);
+    QCOMPARE(created.dChangedCount1(), 0);
+    QCOMPARE(created.cChangedCount2(), 0);
+    QCOMPARE(created.dChangedCount2(), 0);
+    QCOMPARE(created.cChangedCount3(), 0);
+    QCOMPARE(created.dChangedCount3(), 0);
+    QCOMPARE(created.dChangedStr3(), QString());
+    QCOMPARE(created.cChangedCount4(), 0);
+    QCOMPARE(created.dChangedCount4(), 0);
+    QCOMPARE(created.dChangedStr4(), QString());
+
+    QQmlContext *ctx = e.contextForObject(&created);
+    QVERIFY(ctx);
+    TypeWithProperties *one = qobject_cast<TypeWithProperties *>(ctx->objectForName("one"));
+    QVERIFY(one);
+    TypeWithProperties *two = qobject_cast<TypeWithProperties *>(ctx->objectForName("two"));
+    QVERIFY(two);
+    TypeWithProperties *three = qobject_cast<TypeWithProperties *>(ctx->objectForName("three"));
+    QVERIFY(three);
+    TypeWithProperties *four = qobject_cast<TypeWithProperties *>(ctx->objectForName("four"));
+    QVERIFY(four);
+
+    one->setA(10);
+    QCOMPARE(created.aChangedCount1(), 1);
+    one->setB("1");
+    QCOMPARE(created.bChangedCount1(), 1);
+    one->setC(2.5);
+    QCOMPARE(created.cChangedCount1(), 1);
+    two->setC(44.5);
+    QCOMPARE(created.cChangedCount2(), 1);
+    three->setC(42.0);
+    QCOMPARE(created.cChangedCount3(), 42);
+    three->setD(10);
+    QCOMPARE(created.dChangedCount3(), 10);
+    QCOMPARE(created.dChangedStr3(), u"d changed"_qs);
+    four->setC(1.5);
+    QCOMPARE(created.cChangedCount4(), 2); // cChangedCount4 is int, so 0.5 is truncated
+    four->setD(84);
+    // Note: due to signal-over-property-change-handler preference, we bind to
+    // signal in the case when the property is both bindable and notifiable. in
+    // this test, it would mean that we get proper dChanged*4 values intead of
+    // `undefined` junk
+    QCOMPARE(created.dChangedCount4(), 42);
+    QCOMPARE(created.dChangedStr4(), u"d changed!"_qs);
+
+    created.changeProperties1();
+    QCOMPARE(created.aChangedCount1(), 2);
+    QCOMPARE(created.bChangedCount1(), 2);
+    QCOMPARE(created.cChangedCount1(), 2);
+
+    created.changeProperties2();
+    QCOMPARE(created.cChangedCount2(), 2);
+
+    created.changeProperties3(22);
+    QCOMPARE(created.cChangedCount3(), 22);
 }
 
 QTEST_MAIN(tst_qmltc)

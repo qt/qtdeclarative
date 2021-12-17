@@ -93,4 +93,5 @@ private slots:
     void keyEvents();
     void privateProperties();
     void calqlatrBits(); // corner cases from calqlatr demo
+    void trickyPropertyChangeAndSignalHandlers();
 };

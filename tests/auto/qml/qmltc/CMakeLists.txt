@@ -10,6 +10,8 @@ set(cpp_sources
     # private properties:
     cpptypes/testprivateproperty.h cpptypes/testprivateproperty.cpp
     cpptypes/private/testprivateproperty_p.h
+
+    cpptypes/typewithproperties.h cpptypes/typewithproperties.cpp
 )
 
 set(qml_sources
@@ -64,6 +66,7 @@ set(qml_sources
     data/PrivateProperty.qml
     data/privatePropertySubclass.qml
     data/calqlatrBits.qml
+    data/propertyChangeAndSignalHandlers.qml
 
     # support types:
     data/DefaultPropertySingleChild.qml
