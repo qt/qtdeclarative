@@ -942,8 +942,13 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::storedType(const QQmlJSScope::ConstPtr
         return jsPrimitiveType();
     if (type->isScript())
         return jsValueType();
-    if (type->isComposite())
-        return QQmlJSScope::nonCompositeBaseType(type);
+    if (type->isComposite()) {
+        if (const QQmlJSScope::ConstPtr nonComposite = QQmlJSScope::nonCompositeBaseType(type))
+            return nonComposite;
+
+        // If we can't find the non-composite base, we really don't know what it is.
+        return genericType(type);
+    }
     if (type->fileName().isEmpty())
         return genericType(type);
     return type;
