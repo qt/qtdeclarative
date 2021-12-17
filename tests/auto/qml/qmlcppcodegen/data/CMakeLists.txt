@@ -16,6 +16,7 @@ set(qml_files
     Cycle3.qml
     Dummy.qml
     Enums.qml
+    Foozle.qml
     Loopy.qml
     Panel.qml
     ProgressBar/Keyframe.qml
@@ -106,6 +107,7 @@ set(qml_files
     themerbad.qml
     themergood.qml
     undefinedResets.qml
+    unknownAttached.qml
     unknownParameter.qml
     unusedAttached.qml
     urlString.qml

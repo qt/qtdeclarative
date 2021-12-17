@@ -111,6 +111,7 @@ private slots:
     void functionReturningVoid();
     void functionCallOnNamespaced();
     void flushBeforeCapture();
+    void unknownAttached();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1671,6 +1672,13 @@ void tst_QmlCppCodegen::flushBeforeCapture()
     QCOMPARE(o->property("deviation").toDouble(), 9.0 / 3.3333);
     QCOMPARE(o->property("samples").toInt(), 16);
     QCOMPARE(o->property("radius").toDouble(), 8.0);
+}
+
+void tst_QmlCppCodegen::unknownAttached()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/unknownAttached.qml"_qs));
+    QVERIFY(c.isError());
 }
 
 void tst_QmlCppCodegen::runInterpreted()
