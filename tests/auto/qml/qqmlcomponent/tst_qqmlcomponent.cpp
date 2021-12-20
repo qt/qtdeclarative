@@ -157,6 +157,7 @@ private slots:
     void qmlErrorIsReported();
     void initJSValueProp();
     void qmlPropertySignalExists();
+    void componentTypes();
 
 private:
     QQmlEngine engine;
@@ -1117,6 +1118,47 @@ void tst_qqmlcomponent::qmlPropertySignalExists()
     QVERIFY(QMetaObject::invokeMethod(o.get(), "doStuff"));
     QCOMPARE(changeSignalSpy.count(), 1);
     QCOMPARE(o->property("p").toInt(), 42);
+}
+
+void tst_qqmlcomponent::componentTypes()
+{
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        // not allowed: "Cannot create empty component specification"
+        component.setData("import QtQml; Component { }", QUrl());
+        QVERIFY(!component.isReady());
+    }
+
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadUrl(testFileUrl("ComponentType.qml"));
+        QScopedPointer<QObject> o(component.create());
+        QVERIFY2(!o.isNull(), qPrintable(component.errorString()));
+    }
+
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadUrl(testFileUrl("componentTypes.qml"));
+        QScopedPointer<QObject> o(component.create());
+        QVERIFY2(!o.isNull(), qPrintable(component.errorString()));
+
+        QQmlContext *ctx = engine.contextForObject(o.get());
+
+        QObject *normal = ctx->objectForName(u"normal"_qs);
+        QVERIFY(normal);
+        QCOMPARE(normal->property("text").toString(), u"indirect component"_qs);
+
+        // check (and thus "document" in code) various ways of how ids work
+        QVERIFY(ctx->objectForName(u"accessibleNormal"_qs));
+        QVERIFY(!ctx->objectForName(u"inaccessibleNormal"_qs));
+        QVERIFY(ctx->objectForName(u"accessible"_qs));
+        QVERIFY(!ctx->objectForName(u"inaccessible"_qs));
+        QVERIFY(ctx->objectForName(u"accessibleDelegate"_qs));
+        QVERIFY(!ctx->objectForName(u"inaccessibleDelegate"_qs));
+    }
 }
 
 QTEST_MAIN(tst_qqmlcomponent)
