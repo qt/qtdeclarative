@@ -33,4 +33,4 @@ imagedirs += images
 navigation.qmltypespage = "Qt Qml Models QML Types"
 
 # suppress qdoc warnings for \instantiates entries
-spurious += "C++ class.*\\instantiates.*SelectionModel"
+spurious += "C++ class.*\\\\instantiates.*SelectionModel"
