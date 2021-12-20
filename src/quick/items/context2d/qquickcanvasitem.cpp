@@ -288,7 +288,7 @@ QQuickCanvasItemPrivate::~QQuickCanvasItemPrivate()
     QPainter instead of the more expensive and likely less performing
     JavaScript and Context2D approach.
 
-    \sa Context2D QQuickPaintedItem
+    \sa Context2D, QQuickPaintedItem
 */
 
 QQuickCanvasItem::QQuickCanvasItem(QQuickItem *parent)
