@@ -85,6 +85,7 @@ set(common_libraries
     Qt::Core
     Qt::QmlPrivate
     Qt::QuickPrivate
+    Qt::TestPrivate
     Qt::Gui # QColor, QMatrix4x4, ...
 )
 

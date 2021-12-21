@@ -92,6 +92,8 @@
 
 #include <QtTest/qsignalspy.h>
 
+#include <QtTest/private/qemulationdetector_p.h>
+
 #define SKIP_DUE_TO_QT_NAMESPACE 0
 
 // on top of testing different cache configurations, we can also test namespace
@@ -1582,6 +1584,9 @@ void tst_qmltc::listView()
 #if SKIP_DUE_TO_QT_NAMESPACE
     QSKIP("QTBUG-99198: QT_NAMESPACE used, this test will fail in QVariant::setValue().");
 #endif
+
+    if (QTestPrivate::isRunningArmOnX86())
+        QSKIP("Flaky on QEMU. Sometimes can't correctly run JavaScript code, QTBUG-99355");
 
     QQmlEngine e;
     PREPEND_NAMESPACE(listView) created(&e);
