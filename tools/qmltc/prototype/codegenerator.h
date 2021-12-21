@@ -76,6 +76,8 @@ private:
     QHash<QQmlJSScope::ConstPtr, QQmlJSScope::ConstPtr> m_immediateParents;
     // mapping from component-wrapped object to component index (real or not)
     QHash<int, int> m_componentIndices;
+    // types ignored by the code generator
+    QSet<QQmlJSScope::ConstPtr> m_ignoredTypes;
 
     QQmlJSAotMethod m_urlMethod;
 
@@ -138,7 +140,12 @@ private:
     bool m_isAnonymous = false; // crutch to distinguish QML_ELEMENT from QML_ANONYMOUS
 
     // code compilation functions that produce "compiled" entities
-    void compileObject(QQmlJSAotObject &current, const CodeGenObject &object);
+    void
+    compileObject(QQmlJSAotObject &current, const CodeGenObject &object,
+                  std::function<void(QQmlJSAotObject &, const CodeGenObject &)> compileElements);
+    void compileObjectElements(QQmlJSAotObject &current, const CodeGenObject &object);
+    void compileQQmlComponentElements(QQmlJSAotObject &current, const CodeGenObject &object);
+
     void compileEnum(QQmlJSAotObject &current, const QQmlJSMetaEnum &e);
     void compileProperty(QQmlJSAotObject &current, const QQmlJSMetaProperty &p,
                          const QQmlJSScope::ConstPtr &owner);

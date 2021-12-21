@@ -1136,6 +1136,11 @@ void tst_qqmlcomponent::componentTypes()
         component.loadUrl(testFileUrl("ComponentType.qml"));
         QScopedPointer<QObject> o(component.create());
         QVERIFY2(!o.isNull(), qPrintable(component.errorString()));
+        QQmlComponent *oComponent = qobject_cast<QQmlComponent *>(o.get());
+        QVERIFY(oComponent);
+        QScopedPointer<QObject> enclosed(oComponent->create());
+        QVERIFY(!enclosed.isNull());
+        QCOMPARE(enclosed->objectName(), u"enclosed"_qs);
     }
 
     {
@@ -1158,6 +1163,18 @@ void tst_qqmlcomponent::componentTypes()
         QVERIFY(!ctx->objectForName(u"inaccessible"_qs));
         QVERIFY(ctx->objectForName(u"accessibleDelegate"_qs));
         QVERIFY(!ctx->objectForName(u"inaccessibleDelegate"_qs));
+
+        QCOMPARE(qvariant_cast<QObject *>(o->property("p2"))->property("text").toString(),
+                 u"foo"_qs);
+        auto p3Object = qvariant_cast<QObject *>(o->property("p3"));
+        QVERIFY(p3Object);
+        QVERIFY(p3Object->property("text").toString().isEmpty());
+
+        QQmlComponent *normalComponent = qobject_cast<QQmlComponent *>(normal);
+        QVERIFY(normalComponent);
+        QScopedPointer<QObject> enclosed(normalComponent->create());
+        QVERIFY(enclosed);
+        QCOMPARE(enclosed->objectName(), u"enclosed"_qs);
     }
 }
 

@@ -38,6 +38,8 @@
 #include "objectwithid.h"
 #include "documentwithids.h"
 #include "importnamespace.h"
+#include "componenttype.h"
+#include "componenttypes.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -540,6 +542,47 @@ void tst_qmltc::importNamespace()
     QQmlEngine e;
     PREPEND_NAMESPACE(importNamespace) created(&e); // compilation of this type shouldn't crash
     QCOMPARE(created.text(), u"hello, world"_qs);
+}
+
+void tst_qmltc::componentTypes()
+{
+    {
+        QQmlEngine e;
+        PREPEND_NAMESPACE(ComponentType) created(&e);
+        QQmlContext *ctx = e.contextForObject(&created);
+        QCOMPARE(ctx->objectForName("componentRoot"), &created);
+
+        QScopedPointer<QObject> enclosed(created.create());
+        QVERIFY(enclosed);
+        QCOMPARE(enclosed->objectName(), u"enclosed"_qs);
+    }
+
+    {
+        QQmlEngine e;
+        PREPEND_NAMESPACE(componentTypes) created(&e);
+        QQmlContext *ctx = e.contextForObject(&created);
+
+        QObject *normal = ctx->objectForName(u"normal"_qs);
+        QVERIFY(normal);
+        QCOMPARE(normal->property("text").toString(), u"indirect component"_qs);
+
+        QVERIFY(ctx->objectForName(u"accessibleNormal"_qs));
+        QVERIFY(!ctx->objectForName(u"inaccessibleNormal"_qs));
+        QVERIFY(ctx->objectForName(u"accessible"_qs));
+        QVERIFY(!ctx->objectForName(u"inaccessible"_qs));
+        QVERIFY(ctx->objectForName(u"accessibleDelegate"_qs));
+        QVERIFY(!ctx->objectForName(u"inaccessibleDelegate"_qs));
+
+        QCOMPARE(created.p2()->property("text").toString(), u"foo"_qs);
+        QVERIFY(created.p3()->property("text").toString().isEmpty());
+
+        // ComponentType still subclasses QQmlComponent, so create() works:
+        QQmlComponent *normalComponent = qobject_cast<QQmlComponent *>(normal);
+        QVERIFY(normalComponent);
+        QScopedPointer<QObject> enclosed(normalComponent->create());
+        QVERIFY(enclosed);
+        QCOMPARE(enclosed->objectName(), u"enclosed"_qs);
+    }
 }
 
 void tst_qmltc::signalHandlers()
