@@ -129,6 +129,7 @@ void CodeGeneratorWriter::writeGlobalHeader(GeneratedCodeUtils &code, const QStr
     code.appendToImpl(u"#include <private/qqmlcpponassignment_p.h>"); // QmltcSupportLib
 
     code.appendToImpl(u"#include <private/qqmlobjectcreator_p.h>"); // createComponent()
+    code.appendToImpl(u"#include <private/qqmlcomponent_p.h>"); // QQmlComponentPrivate::get()
 
     code.appendToImpl(u"");
     code.appendToImpl(u"#include <private/qobject_p.h>"); // NB: for private properties

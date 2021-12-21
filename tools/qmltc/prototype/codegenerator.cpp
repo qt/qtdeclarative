@@ -287,6 +287,11 @@ void CodeGenerator::constructObjects(QSet<QString> &requiredCppIncludes)
         m_immediateParents = findImmediateParents(context, objects);
     };
     executor.addPass(setImmediateParents);
+    const auto setIgnoredTypes = [&](const Qml2CppContext &context, QList<Qml2CppObject> &objects) {
+        m_ignoredTypes = collectIgnoredTypes(context, objects);
+    };
+    executor.addPass(setIgnoredTypes);
+
     // run all passes:
     executor.run(m_logger);
 }
@@ -313,35 +318,48 @@ void CodeGenerator::generate(const Options &options)
     if (m_logger->hasErrors() || m_logger->hasWarnings())
         return;
 
-    const auto isWithinSubComponent = [&](QQmlJSScope::ConstPtr type) {
-        for (; type; type = type->parentScope()) {
-            qsizetype index = m_typeToObjectIndex.value(type, -1);
-            if (index < 0)
-                return false;
-            const QmlIR::Object *irObject = m_objects[index].irObject;
-            if (irObject->flags & QV4::CompiledData::Object::IsComponent)
-                return true;
-        }
-        return false;
-    };
+    if (m_objects.isEmpty()) {
+        recordError(QQmlJS::SourceLocation(), u"No relevant QML types to compile."_qs);
+        return;
+    }
 
-    // compile everything
+    const auto isComponent = [](const QQmlJSScope::ConstPtr &type) {
+        auto base = type->baseType();
+        return base && base->internalName() == u"QQmlComponent"_qs;
+    };
+    const auto &root = m_objects.at(0).type;
+
     QList<QQmlJSAotObject> compiledObjects;
-    compiledObjects.reserve(m_objects.size());
-    for (const auto &object : m_objects) {
-        if (object.type->scopeType() != QQmlJSScope::QMLScope) {
-            qCDebug(lcCodeGenerator) << u"Scope '" + object.type->internalName()
-                            + u"' is not QMLScope, so it is skipped.";
-            continue;
-        }
-        if (isWithinSubComponent(object.type)) {
-            // e.g. when creating a view delegate
-            qCDebug(lcCodeGenerator) << u"Scope '" + object.type->internalName()
-                            + u"' is a QQmlComponent sub-component. It won't be compiled to C++.";
-            continue;
-        }
+    if (isComponent(root)) {
+        compiledObjects.reserve(1);
         compiledObjects.emplaceBack(); // create new object
-        compileObject(compiledObjects.back(), object);
+        const auto compile = [this](QQmlJSAotObject &current, const CodeGenObject &object) {
+            this->compileQQmlComponentElements(current, object);
+        };
+        compileObject(compiledObjects.back(), m_objects.at(0), compile);
+    } else {
+        const auto compile = [this](QQmlJSAotObject &current, const CodeGenObject &object) {
+            this->compileObjectElements(current, object);
+        };
+
+        // compile everything
+        compiledObjects.reserve(m_objects.size());
+        for (const auto &object : m_objects) {
+            if (object.type->scopeType() != QQmlJSScope::QMLScope) {
+                qCDebug(lcCodeGenerator) << u"Scope '" + object.type->internalName()
+                                + u"' is not QMLScope, so it is skipped.";
+                continue;
+            }
+            if (m_ignoredTypes.contains(object.type)) {
+                // e.g. object.type is a view delegate
+                qCDebug(lcCodeGenerator) << u"Scope '" + object.type->internalName()
+                                + u"' is a QQmlComponent sub-component. It won't be compiled to "
+                                  u"C++.";
+                continue;
+            }
+            compiledObjects.emplaceBack(); // create new object
+            compileObject(compiledObjects.back(), object, compile);
+        }
     }
     // no point in generating anything if there are errors
     if (m_logger->hasErrors() || m_logger->hasWarnings())
@@ -369,7 +387,9 @@ QString buildCallSpecialMethodValue(bool documentRoot, const QString &outerFlagN
     }
 }
 
-void CodeGenerator::compileObject(QQmlJSAotObject &compiled, const CodeGenObject &object)
+void CodeGenerator::compileObject(
+        QQmlJSAotObject &compiled, const CodeGenObject &object,
+        std::function<void(QQmlJSAotObject &, const CodeGenObject &)> compileElements)
 {
     compiled.cppType = object.type->internalName();
     const QString baseClass = object.type->baseType()->internalName();
@@ -634,6 +654,36 @@ void CodeGenerator::compileObject(QQmlJSAotObject &compiled, const CodeGenObject
         (m_isAnonymous ? u"QML_ANONYMOUS"_qs : u"QML_ELEMENT"_qs),
     };
 
+    compileElements(compiled, object);
+
+    // add finalization steps only to document root
+    if (documentRoot) {
+        compiled.endInit.body << u"if (" + finalizeFlag.name + u") {";
+
+        // at this point, all bindings must've been finished, thus, we need:
+        // 1. componentComplete()
+        // 2. finalize callbacks / componentFinalized()
+        // 3. Component.onCompleted()
+
+        // 1.
+        compiled.endInit.body << u"    this->" + compiled.completeComponent.name
+                        + u"(/* complete component */ true);";
+
+        // 2
+        compiled.endInit.body << u"    this->" + compiled.finalizeComponent.name
+                        + u"(/* finalize component */ true);";
+
+        // 3.
+        compiled.endInit.body << u"    this->" + compiled.handleOnCompleted.name + u"();";
+
+        compiled.endInit.body << u"}"_qs;
+    }
+
+    // compiled.endInit.body << u"Qt::endPropertyUpdateGroup();"_qs;
+}
+
+void CodeGenerator::compileObjectElements(QQmlJSAotObject &compiled, const CodeGenObject &object)
+{
     if (object.type->isSingleton()) {
         if (m_isAnonymous) {
             recordError(object.type->sourceLocation(),
@@ -735,32 +785,48 @@ void CodeGenerator::compileObject(QQmlJSAotObject &compiled, const CodeGenObject
 
     for (; it != sortedBindings.cend(); ++it)
         compileBinding(compiled, **it, object, { object.type, u"this"_qs, u""_qs, false });
+}
 
-    // add finalization steps only to document root
-    if (documentRoot) {
-        compiled.endInit.body << u"if (" + finalizeFlag.name + u") {";
-
-        // at this point, all bindings must've been finished, thus, we need:
-        // 1. componentComplete()
-        // 2. finalize callbacks / componentFinalized()
-        // 3. Component.onCompleted()
-
-        // 1.
-        compiled.endInit.body << u"    this->" + compiled.completeComponent.name
-                        + u"(/* complete component */ true);";
-
-        // 2
-        compiled.endInit.body << u"    this->" + compiled.finalizeComponent.name
-                        + u"(/* finalize component */ true);";
-
-        // 3.
-        compiled.endInit.body << u"    this->" + compiled.handleOnCompleted.name + u"();";
-
-        compiled.endInit.body << u"}"_qs;
+void CodeGenerator::compileQQmlComponentElements(QQmlJSAotObject &compiled,
+                                                 const CodeGenObject &object)
+{
+    if (object.type->isSingleton()) {
+        // it is unclear what to do with singletons in general, so just reject
+        recordError(object.type->sourceLocation(),
+                    QStringLiteral(u"Singleton Component-based types are not supported"));
+        return;
     }
 
-    // compiled.endInit.body << u"Qt::endPropertyUpdateGroup();"_qs;
+    // since we create a document root as QQmlComponent, we only need to fake
+    // QQmlComponent construction in init:
+    compiled.init.body << u"// populate QQmlComponent bits"_qs;
+    compiled.init.body << u"{"_qs;
+    // we already called QQmlComponent(parent) constructor. now we need:
+    // 1. QQmlComponent(engine, parent) logic:
+    compiled.init.body << u"// QQmlComponent(engine, parent):"_qs;
+    compiled.init.body << u"auto d = QQmlComponentPrivate::get(this);"_qs;
+    compiled.init.body << u"Q_ASSERT(d);"_qs;
+    compiled.init.body << u"d->engine = engine;"_qs;
+    compiled.init.body << u"QObject::connect(engine, &QObject::destroyed, this, [d]() {"_qs;
+    compiled.init.body << u"    d->state.creator.reset();"_qs;
+    compiled.init.body << u"    d->engine = nullptr;"_qs;
+    compiled.init.body << u"});"_qs;
+    // 2. QQmlComponent(engine, compilationUnit, start, parent) logic:
+    compiled.init.body << u"// QQmlComponent(engine, compilationUnit, start, parent):"_qs;
+    compiled.init.body
+            << u"auto compilationUnit = QQmlEnginePrivate::get(engine)->compilationUnitFromUrl("
+                    + m_urlMethod.name + u"());";
+    compiled.init.body << u"d->compilationUnit = compilationUnit;"_qs;
+    compiled.init.body << u"d->start = 0;"_qs;
+    compiled.init.body << u"d->url = compilationUnit->finalUrl();"_qs;
+    compiled.init.body << u"d->progress = 1.0;"_qs;
+    // 3. QQmlObjectCreator::createComponent() logic which is left:
+    compiled.init.body << u"// QQmlObjectCreator::createComponent():"_qs;
+    compiled.init.body << u"d->creationContext = context;"_qs;
+    compiled.init.body << u"Q_ASSERT(QQmlData::get(this, /*create*/ false));"_qs;
+    compiled.init.body << u"}"_qs;
 }
+
 void CodeGenerator::compileEnum(QQmlJSAotObject &current, const QQmlJSMetaEnum &e)
 {
     const auto intValues = e.values();
@@ -1271,12 +1337,12 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
             current.endInit.body << QStringLiteral("thisContext->installContext(QQmlData::get(%1), "
                                                    "QQmlContextData::OrdinaryObject);")
                                             .arg(objectName);
-            const auto isExplicitComponent = [](const QQmlJSScope::ConstPtr &type) {
+            const auto isComponentBased = [](const QQmlJSScope::ConstPtr &type) {
                 auto base = QQmlJSScope::nonCompositeBaseType(type);
                 return base && base->internalName() == u"QQmlComponent"_qs;
             };
             if (!m_doc->stringAt(bindingObject.irObject->idNameIndex).isEmpty()
-                && isExplicitComponent(bindingObject.type)) {
+                && isComponentBased(bindingObject.type)) {
                 current.endInit.body
                         << CodeGeneratorUtility::generate_setIdValue(
                                    u"thisContext"_qs, bindingObject.irObject->id, objectName,

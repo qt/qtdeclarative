@@ -83,4 +83,7 @@ void setObjectIds(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
 QHash<QQmlJSScope::ConstPtr, QQmlJSScope::ConstPtr>
 findImmediateParents(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
 
+QSet<QQmlJSScope::ConstPtr> collectIgnoredTypes(const Qml2CppContext &context,
+                                                QList<Qml2CppObject> &objects);
+
 #endif // QML2CPPPASSES_H

@@ -166,6 +166,12 @@ Q_LOGGING_CATEGORY(lcDefaultPasses, "qml.qmltc.compilerpasses", QtWarningMsg);
 
 static bool isComponent(const QQmlJSScope::ConstPtr &type)
 {
+    auto base = type->baseType();
+    return base && base->internalName() == u"QQmlComponent"_qs;
+}
+
+static bool isComponentBased(const QQmlJSScope::ConstPtr &type)
+{
     auto base = QQmlJSScope::nonCompositeBaseType(type);
     return base && base->internalName() == u"QQmlComponent"_qs;
 }
@@ -919,10 +925,17 @@ QHash<int, int> findAndResolveImplicitComponents(const Qml2CppContext &context,
     int syntheticComponentCount = 0;
     QHash<int, int> indexMapping;
     const auto setQQmlComponentFlag = [&](Qml2CppObject &object, int objectIndex) {
-        if (object.irObject->flags & QV4::CompiledData::Object::IsComponent) {
+        // QQmlComponentAndAliasResolver uses QMetaObject of the type and
+        // compares it against QQmlComponent::staticMetaObject. we don't have it
+        // here, so instead we should check whether the type is derived from
+        // QQmlComponent and if so, it doesn't need a QQmlComponent wrapping
+        if (isComponentBased(object.type)) {
+            Q_ASSERT(!isComponent(object.type)
+                     || (object.irObject->flags & QV4::CompiledData::Object::IsComponent));
             // this ir object is *already* marked as Component. which means it
             // is the case of explicit component bound to Component property:
-            // property Component p: Component{ ... }
+            // property Component p: Component { ... }
+            // property Component p: ComponentDerived { ... }
             return;
         }
         object.irObject->flags |= QV4::CompiledData::Object::IsComponent;
@@ -954,7 +967,7 @@ static void setObjectId(const Qml2CppContext &context, const QList<Qml2CppObject
         // this gives a bad side effect (for the logic here) that we cannot
         // really distinguish between implicit and explicit components anymore
         return object.irObject->flags & QV4::CompiledData::Object::IsComponent
-                && !isComponent(object.type);
+                && !isComponentBased(object.type);
     };
 
     const Qml2CppObject &object = objects.at(objectIndex);
@@ -964,9 +977,12 @@ static void setObjectId(const Qml2CppContext &context, const QList<Qml2CppObject
     Q_ASSERT(irObject); // assume verified
 
     if (isImplicitComponent(object)) {
-        // Note: somehow QmlIR ensures that implicit components have no
-        // idNameIndex set when setting ids for the document root. this logic
-        // can't do it, so reject implicit components straight away instead
+        // Note: somehow QQmlTypeCompiler passes ensure that implicit components
+        // have no idNameIndex set when setting ids for the document root. this
+        // logic can't do it, so reject implicit components straight away
+        // instead. the way QQmlTypeCompiler might make it work is through
+        // synthetic components (which are created for every implicit
+        // component): those do not have idNameIndex set
         return;
     }
 
@@ -1040,4 +1056,34 @@ findImmediateParents(const Qml2CppContext &context, QList<Qml2CppObject> &object
     }
 
     return immediateParents;
+}
+
+QSet<QQmlJSScope::ConstPtr> collectIgnoredTypes(const Qml2CppContext &context,
+                                                QList<Qml2CppObject> &objects)
+{
+    Q_UNUSED(context);
+    QSet<QQmlJSScope::ConstPtr> ignored;
+
+    for (const Qml2CppObject &object : objects) {
+        if (!(object.irObject->flags & QV4::CompiledData::Object::IsComponent))
+            continue;
+        if (ignored.contains(object.type))
+            continue;
+
+        // component root elements (and all their children) are ignored by the
+        // code generator as they are going to be created by QQmlComponent
+        QQueue<QQmlJSScope::ConstPtr> objectsQueue;
+        objectsQueue.enqueue(object.type);
+        while (!objectsQueue.isEmpty()) {
+            auto current = objectsQueue.dequeue();
+            if (current && current->scopeType() == QQmlJSScope::QMLScope)
+                ignored.insert(current);
+
+            const auto children = current->childScopes();
+            for (auto child : children)
+                objectsQueue.enqueue(child);
+        }
+    }
+
+    return ignored;
 }
