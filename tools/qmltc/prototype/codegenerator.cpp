@@ -540,8 +540,7 @@ void CodeGenerator::compileObject(QQmlJSAotObject &compiled, const CodeGenObject
     } else { // !baseTypeIsCompiledQml || documentRoot
         // set up current context
         compiled.init.body << u"// 2. normal flow, set context for this object"_qs;
-        const QString enumValue = documentRoot ? u"QQmlContextData::DocumentRoot"_qs
-                                               : u"QQmlContextData::OrdinaryObject"_qs;
+        const QString enumValue = documentRoot ? u"DocumentRoot"_qs : u"OrdinaryObject"_qs;
         compiled.init.body << QStringLiteral(
                                       "%1->setInternalContext(this, context, QQmlContextData::%2);")
                                       .arg(u"QQmlEnginePrivate::get(engine)"_qs, enumValue);
