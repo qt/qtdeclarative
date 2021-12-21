@@ -86,7 +86,7 @@ public:
         if (QTypeInfo<T>::isComplex) {
             for (int i = 0; i < count; ++i)
                 new (data + i) T(vector.at(i));
-        } else {
+        } else if (count) {
             memcpy(data, static_cast<const void*>(vector.constData()), count * sizeof(T));
         }
     }
