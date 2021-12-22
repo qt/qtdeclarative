@@ -138,9 +138,8 @@ qint64 QPipeEndPoint::readData(char *data, qint64 maxlen)
         return 0;
 
     Q_ASSERT(maxlen > 0);
-    Q_ASSERT(maxlen <= std::numeric_limits<int>::max());
     memcpy(data, m_buffer.data(), static_cast<size_t>(maxlen));
-    m_buffer = m_buffer.mid(static_cast<int>(maxlen));
+    m_buffer = m_buffer.mid(maxlen);
     return maxlen;
 }
 
@@ -164,7 +163,7 @@ qint64 QPipeEndPoint::writeData(const char *data, qint64 len)
     Q_ASSERT(prevLen + len > 0);
     Q_ASSERT(prevLen + len <= std::numeric_limits<int>::max());
 
-    buffer.resize(static_cast<int>(prevLen + len));
+    buffer.resize(prevLen + len);
     memcpy(buffer.data() + prevLen, data, static_cast<size_t>(len));
     emit bytesWritten(len);
     emit m_remoteEndPoint->readyRead();
