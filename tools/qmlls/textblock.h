@@ -69,8 +69,8 @@ public:
     int revision() const;
     void setRevision(int rev);
 
-    bool operator==(const TextBlock &other) const;
-    bool operator!=(const TextBlock &other) const;
+    friend bool operator==(const TextBlock &t1, const TextBlock &t2);
+    friend bool operator!=(const TextBlock &t1, const TextBlock &t2);
 
 private:
     TextDocument *m_document = nullptr;
