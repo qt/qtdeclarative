@@ -113,14 +113,14 @@ void TextBlock::setRevision(int rev)
     m_revision = rev;
 }
 
-bool TextBlock::operator==(const TextBlock &other) const
+bool operator==(const TextBlock &t1, const TextBlock &t2)
 {
-    return document() == other.document() && blockNumber() == other.blockNumber();
+    return t1.document() == t2.document() && t1.blockNumber() == t2.blockNumber();
 }
 
-bool TextBlock::operator!=(const TextBlock &other) const
+bool operator!=(const TextBlock &t1, const TextBlock &t2)
 {
-    return !operator==(other);
+    return !(t1 == t2);
 }
 
 } // namespace Utils
