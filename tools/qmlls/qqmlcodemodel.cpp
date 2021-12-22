@@ -63,8 +63,8 @@ synchronization here.
 
 \section2 OpenFiles
 \list
-\li snapshotByUri() returns an OpenDocumentSnapshot of an open document. Form it you can get the
-  document, its latest valid version, scope,... and connected to a specific version of the document
+\li snapshotByUri() returns an OpenDocumentSnapshot of an open document. From it you can get the
+  document, its latest valid version, scope, all connected to a specific version of the document
   and immutable. The signal updatedSnapshot() is called every time a snapshot changes (also for
   every partial change: document change, validDocument change, scope change).
 \li openDocumentByUri() is a lower level and more intrusive access to OpenDocument objects. These
@@ -73,19 +73,19 @@ synchronization here.
   Working on it is more delicate and intrusive, because you have to explicitly acquire its mutex()
   before *any* read or write/modification to it.
   It has a version nuber which is supposed to always change and increase.
-  It is mainly used for highlighting/indenting, and s immediately updated when the user edits a
+  It is mainly used for highlighting/indenting, and is immediately updated when the user edits a
   document. Its use should be avoided if possible, preferring the snapshots.
 \endlist
 
 \section2 Parallelism/Theading
-Most operations are not parallel and usially take place in the main thread (but are still thread
+Most operations are not parallel and usually take place in the main thread (but are still thread
 safe).
 There are two main task that are executed in parallel: Indexing, and OpenDocumentUpdate.
 Indexing is meant to keep the global view up to date.
 OpenDocumentUpdate keeps the snapshots of the open documents up to date.
 
-There is always a tension between bein responsive, using all threads available, and avoid to hog too
-many resources. One can choose different parallelization strategies, we went with a flexiable
+There is always a tension between being responsive, using all threads available, and avoid to hog
+too many resources. One can choose different parallelization strategies, we went with a flexiable
 approach.
 We have (private) functions that execute part of the work: indexSome() and openUpdateSome(). These
 do all locking needed, get some work, do it without locks, and at the end update the state of the
@@ -96,11 +96,6 @@ addDirectoriesToIndex(), the internal addDirectory() and addOpenToUpdate() add m
 
 indexNeedsUpdate() and openNeedUpdate(), check if there is work to do, and if yes ensure that a
 worker thread (or more) that work on it exist.
-
-An initial implementation allowed one to register a callback to be called when a given open document
-had some chosen parts of the snapshot up to date. But I did not need anythign more that the
-updatedSnapshot() signal, so that has been removed, but something like that might become useful in
-the future.
 */
 
 QQmlCodeModel::QQmlCodeModel(QObject *parent)
@@ -119,7 +114,7 @@ OpenDocumentSnapshot QQmlCodeModel::snapshotByUri(const QByteArray &uri)
 
 int QQmlCodeModel::indexEvalProgress() const
 {
-    // should be called with acquired mutex
+    Q_ASSERT(!m_mutex.tryLock()); // should be called while locked
     const int dirCost = 10;
     int costToDo = 1;
     for (const ToIndex &el : qAsConst(m_toIndex))
@@ -151,7 +146,7 @@ void QQmlCodeModel::indexSendProgress(int progress)
     if (progress <= m_lastIndexProgress)
         return;
     m_lastIndexProgress = progress;
-    // to do: send progress
+    // ### actually send progress
 }
 
 bool QQmlCodeModel::indexCancelled()
@@ -216,7 +211,7 @@ void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
 void QQmlCodeModel::addDirectoriesToIndex(const QStringList &paths, QLanguageServer *server)
 {
     Q_UNUSED(server);
-    // to do create progress, &scan in a separate instance
+    // ### create progress, &scan in a separate instance
     const int maxDepth = 5;
     for (const auto &path : paths)
         addDirectory(path, maxDepth);
