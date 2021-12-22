@@ -234,39 +234,17 @@ void QLanguageServer::setupCapabilities(const QLspSpecification::InitializeParam
 const QLspSpecification::InitializeParams &QLanguageServer::clientInfo() const
 {
     const Q_D(QLanguageServer);
-    switch (d->runStatus) {
-    case RunStatus::NotSetup:
-    case RunStatus::SettingUp:
-    case RunStatus::DidSetup:
-    case RunStatus::Initializing:
-        if (int(runStatus()) < int(RunStatus::DidInitialize))
-            qCWarning(lspServerLog) << "asked for Language Server clientInfo before initialization";
-        break;
-    case RunStatus::DidInitialize:
-    case RunStatus::WaitPending:
-    case RunStatus::Stopping:
-    case RunStatus::Stopped:
-        break;
-    }
+
+    if (int(runStatus()) < int(RunStatus::DidInitialize))
+        qCWarning(lspServerLog) << "asked for Language Server clientInfo before initialization";
     return d->clientInfo;
 }
 
 const QLspSpecification::InitializeResult &QLanguageServer::serverInfo() const
 {
     const Q_D(QLanguageServer);
-    switch (d->runStatus) {
-    case RunStatus::NotSetup:
-    case RunStatus::SettingUp:
-    case RunStatus::DidSetup:
-    case RunStatus::Initializing:
+    if (int(runStatus()) < int(RunStatus::DidInitialize))
         qCWarning(lspServerLog) << "asked for Language Server serverInfo before initialization";
-        break;
-    case RunStatus::DidInitialize:
-    case RunStatus::WaitPending:
-    case RunStatus::Stopping:
-    case RunStatus::Stopped:
-        break;
-    }
     return d->serverInfo;
 }
 
