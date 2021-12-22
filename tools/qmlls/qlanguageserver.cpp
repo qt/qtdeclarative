@@ -65,8 +65,6 @@ QLanguageServer::QLanguageServer(const QJsonRpcTransport::DataHandler &h, QObjec
     d->notifySignals.registerHandlers(&d->protocol);
 }
 
-QLanguageServer::~QLanguageServer() { }
-
 QLanguageServerProtocol *QLanguageServer::protocol()
 {
     Q_D(QLanguageServer);
@@ -167,6 +165,7 @@ void QLanguageServer::registerMethods(QJsonRpc::TypedRpc &typedRpc)
                 QJsonValue id = doc.object()[u"id"];
                 {
                     QMutexLocker l(&d->mutex);
+                    // the normal case is d->runStatus == RunStatus::DidInitialize
                     if (d->runStatus != RunStatus::DidInitialize) {
                         if (d->runStatus == RunStatus::DidSetup && !doc.isNull()
                             && doc.object()[u"method"].toString()
