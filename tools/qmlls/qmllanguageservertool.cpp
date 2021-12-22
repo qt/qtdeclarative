@@ -131,9 +131,7 @@ int main(int argv, char *argc[])
 #if QT_CONFIG(commandlineparser)
     QCommandLineParser parser;
     QQmlToolingSettings settings(QLatin1String("qmllanguageserver"));
-    parser.setApplicationDescription(QLatin1String(R"(QML languageserver
-)"));
-
+    parser.setApplicationDescription(QLatin1String(R"(QML languageserver)"));
 
     QCommandLineOption waitOption(QStringList() << "w"
                                                 << "wait",

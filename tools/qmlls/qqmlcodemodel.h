@@ -117,7 +117,7 @@ private:
     void openUpdateStart();
     void openUpdateEnd();
     void openUpdate(const QByteArray &);
-    QMutex m_mutex;
+    mutable QMutex m_mutex;
     int m_lastIndexProgress = 0;
     int m_nIndexInProgress = 0;
     QList<ToIndex> m_toIndex;
