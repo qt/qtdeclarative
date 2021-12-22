@@ -52,8 +52,6 @@
 #include <QOperatingSystemVersion>
 #include <QOffscreenSurface>
 
-#include <QtQml/private/qqmlengine_p.h>
-
 QT_BEGIN_NAMESPACE
 
 #if QT_CONFIG(vulkan)
@@ -966,61 +964,5 @@ QImage QSGRhiSupport::grabOffscreenForProtectedContent(QQuickWindow *window)
     return image;
 }
 #endif
-
-QSGRhiProfileConnection *QSGRhiProfileConnection::instance()
-{
-    static QSGRhiProfileConnection inst;
-    return &inst;
-}
-
-void QSGRhiProfileConnection::initialize(QRhi *rhi)
-{
-#ifdef RHI_REMOTE_PROFILER
-    const QString profHost = qEnvironmentVariable("QSG_RHI_PROFILE_HOST");
-    if (!profHost.isEmpty()) {
-        if (!QQmlEnginePrivate::qml_debugging_enabled) {
-            qWarning("RHI profiling cannot be enabled without QML debugging, for security reasons. "
-                     "Set CONFIG+=qml_debug in the application project.");
-            return;
-        }
-        int profPort = qEnvironmentVariableIntValue("QSG_RHI_PROFILE_PORT");
-        if (!profPort)
-            profPort = 30667;
-        qCDebug(QSG_LOG_INFO, "Sending RHI profiling output to %s:%d", qPrintable(profHost), profPort);
-        m_profConn.reset(new QTcpSocket);
-        QObject::connect(m_profConn.data(), &QAbstractSocket::errorOccurred, m_profConn.data(),
-                         [this](QAbstractSocket::SocketError socketError) { qWarning("  RHI profiler error: %d (%s)",
-                                                                                     socketError, qPrintable(m_profConn->errorString())); });
-        m_profConn->connectToHost(profHost, profPort);
-        m_profConn->waitForConnected(); // blocking wait because we want to send stuff already from the init below
-        rhi->profiler()->setDevice(m_profConn.data());
-        m_lastMemStatWrite.start();
-    }
-#else
-    Q_UNUSED(rhi);
-#endif
-}
-
-void QSGRhiProfileConnection::cleanup()
-{
-#ifdef RHI_REMOTE_PROFILER
-    m_profConn.reset();
-#endif
-}
-
-void QSGRhiProfileConnection::send(QRhi *rhi)
-{
-#ifdef RHI_REMOTE_PROFILER
-    if (m_profConn) {
-        // do this every 5 sec at most
-        if (m_lastMemStatWrite.elapsed() >= 5000) {
-            rhi->profiler()->addVMemAllocatorStats();
-            m_lastMemStatWrite.restart();
-        }
-    }
-#else
-    Q_UNUSED(rhi);
-#endif
-}
 
 QT_END_NAMESPACE

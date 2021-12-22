@@ -852,8 +852,6 @@ void QSGRenderThread::syncAndRender()
     Q_TRACE(QSG_swap_exit);
     Q_QUICK_SG_PROFILE_END(QQuickProfiler::SceneGraphRenderLoopFrame,
                            QQuickProfiler::SceneGraphRenderLoopSwap);
-
-    QSGRhiProfileConnection::instance()->send(rhi);
 }
 
 
@@ -900,8 +898,6 @@ void QSGRenderThread::ensureRhi()
         if (rhi) {
             rhiDeviceLost = false;
             rhiSampleCount = rhiSupport->chooseSampleCountForWindowWithRhi(window, rhi);
-            if (rhiSupport->isProfilingRequested())
-                QSGRhiProfileConnection::instance()->initialize(rhi); // ### this breaks down with multiple windows
         } else {
             if (!rhiDeviceLost) {
                 rhiDoomed = true;

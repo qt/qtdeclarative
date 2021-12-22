@@ -74,14 +74,6 @@
 #include <QtGui/private/qrhimetal_p.h>
 #endif
 
-#if QT_CONFIG(qml_network)
-#define RHI_REMOTE_PROFILER
-#include <QtCore/qelapsedtimer.h>
-#include <QtCore/qscopedpointer.h>
-#include <QtNetwork/qtcpsocket.h>
-#include <QtGui/private/qrhiprofiler_p.h>
-#endif
-
 QT_BEGIN_NAMESPACE
 
 class QSGDefaultRenderContext;
@@ -161,27 +153,6 @@ private:
     uint m_profile : 1;
     uint m_shaderEffectDebug : 1;
     uint m_preferSoftwareRenderer : 1;
-};
-
-// Sends QRhi resource statistics over a QTcpSocket. To be initialized by the
-// renderloop when QSGRhiSupport::isProfilingRequested() is true. From the
-// applications' side this is enabled by setting the env.vars. QSG_RHI_PROFILE=1
-// and QSG_RHI_PROFILE_HOST=<address>. For security, this is also tied to
-// CONFIG+=qml_debug in the application (just like QML debugging), so it won't
-// be doing anything otherwise, even if the env vars are set.
-class QSGRhiProfileConnection
-{
-public:
-    static QSGRhiProfileConnection *instance();
-    void initialize(QRhi *rhi);
-    void cleanup();
-    void send(QRhi *rhi);
-
-private:
-#ifdef RHI_REMOTE_PROFILER
-    QScopedPointer<QTcpSocket> m_profConn;
-    QElapsedTimer m_lastMemStatWrite;
-#endif
 };
 
 QT_END_NAMESPACE

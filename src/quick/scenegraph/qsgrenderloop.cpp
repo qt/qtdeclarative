@@ -108,7 +108,6 @@ void QSGRenderLoop::cleanup()
 
 #ifdef ENABLE_DEFAULT_BACKEND
     QSGRhiSupport::cleanupDefaultVulkanInstance();
-    QSGRhiProfileConnection::instance()->cleanup();
 #endif
 }
 
@@ -463,9 +462,6 @@ bool QSGGuiThreadRenderLoop::ensureRhi(QQuickWindow *window, WindowData &data)
         ownRhi = rhiResult.own;
 
         if (rhi) {
-            if (rhiSupport->isProfilingRequested())
-                QSGRhiProfileConnection::instance()->initialize(rhi);
-
             data.rhiDeviceLost = false;
 
             ok = true;
@@ -718,8 +714,6 @@ void QSGGuiThreadRenderLoop::renderWindow(QQuickWindow *window)
                 int((swapTime - renderTime) / 1000000),
                 int(data.timeBetweenRenders.restart()));
     }
-
-    QSGRhiProfileConnection::instance()->send(rhi);
 
     // Might have been set during syncSceneGraph()
     if (data.updatePending)
