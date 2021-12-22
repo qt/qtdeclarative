@@ -68,7 +68,6 @@ class QLanguageServer : public QObject
     Q_PROPERTY(bool isInitialized READ isInitialized)
 public:
     QLanguageServer(const QJsonRpcTransport::DataHandler &h, QObject *parent = nullptr);
-    ~QLanguageServer();
     enum class RunStatus {
         NotSetup,
         SettingUp,
@@ -79,6 +78,7 @@ public:
         Stopping,
         Stopped
     };
+    Q_ENUM(RunStatus)
 
     QLanguageServerProtocol *protocol();
     void finishSetup();
@@ -108,7 +108,6 @@ signals:
 private:
     void registerMethods(QJsonRpc::TypedRpc &typedRpc);
     void executeShutdown();
-    Q_DISABLE_COPY(QLanguageServer)
     Q_DECLARE_PRIVATE(QLanguageServer)
 };
 
