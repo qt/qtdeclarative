@@ -41,6 +41,7 @@ qt_target_compile_qml_to_cpp(
     target
     FILES ...
     [NAMESPACE namespace]
+    [IMPORT_PATHS ...]
 )
 
 \endcode
@@ -71,6 +72,10 @@ qt_add_qml_module() command.
 \c NAMESPACE argument defines a namespace, in which the generated C++ code
 resides. By default, no namespace is specified for user projects. The code
 generated from Qt's own sources is put under a QT_NAMESPACE namespace.
+
+\c IMPORT_PATHS can be used to add locations that contain QML modules. The
+specified entries are passed to qmltc and allow to correctly import modules that
+do not reside under the location specified by QLibraryInfo::QmlImportsPath.
 
 While processing FILES, the following source file properties are respected:
 \list
