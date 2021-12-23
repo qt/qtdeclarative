@@ -774,7 +774,6 @@ void CodeGenerator::compileEnum(QQmlJSAotObject &current, const QQmlJSMetaEnum &
                               u"Q_ENUM(%1)"_qs.arg(e.name()));
 }
 
-#if 1
 void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaProperty &p,
                                     const QQmlJSScope::ConstPtr &owner)
 {
@@ -850,91 +849,6 @@ void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaPr
     current.properties.emplaceBack(underlyingType, variableName, current.cppType,
                                    compilationData.notify);
 }
-#else
-void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaProperty &p,
-                                    const QQmlJSScope::ConstPtr &owner)
-{
-    if (p.isAlias()) // ignore aliases here, they are processed separately
-        return;
-
-    Q_ASSERT(p.type());
-
-    const QString inputName = p.propertyName() + u"_";
-    const QString memberName = u"m_" + p.propertyName();
-    QString underlyingType = p.type()->internalName();
-    // NB: can be a pointer or a list, can't be both (list automatically assumes
-    // that it holds pointers though). check isList() first, as list<QtObject>
-    // would be both a list and a pointer (weird).
-    if (p.isList()) {
-        current.variables.emplaceBack(u"QList<" + underlyingType + u" *>", memberName + u"_storage",
-                                      QString());
-        current.baselineCtor.initializerList.emplaceBack(
-                memberName + u"(QQmlListProperty<" + underlyingType + u">(this, std::addressof("
-                + memberName + u"_storage)))");
-        underlyingType = u"QQmlListProperty<" + underlyingType + u">";
-    } else if (p.type()->isReferenceType()) {
-        underlyingType += u'*';
-    }
-
-    Qml2CppPropertyData compilationData(p);
-    // structure:
-    // C++ type name
-    // name
-    // default value
-    current.variables.emplaceBack(u"QProperty<" + underlyingType + u">", memberName, QString());
-
-    // with property added, also add relevant moc code, so that we can use the
-    // property in QML contexts
-    QStringList mocLines;
-    mocLines.reserve(10);
-    mocLines << underlyingType << p.propertyName();
-
-    // 1. add setter and getter
-    QQmlJSAotMethod setter {};
-    setter.returnType = u"void"_qs;
-    setter.name = compilationData.write;
-    // QQmlJSAotVariable
-    setter.parameterList.emplaceBack(QQmlJSUtils::constRefify(underlyingType), inputName, u""_qs);
-    setter.body << memberName + u".setValue(" + inputName + u"_);";
-    // TODO: Qt.binding() (and old bindings?) requires signal emission
-    setter.body << u"emit " + compilationData.notify + u"();";
-    current.functions.emplaceBack(setter);
-    mocLines << u"WRITE"_qs << setter.name;
-
-    QQmlJSAotMethod getter {};
-    getter.returnType = underlyingType;
-    getter.name = compilationData.read;
-    getter.body << u"return " + memberName + u".value();";
-    current.functions.emplaceBack(getter);
-    mocLines << u"READ"_qs << getter.name;
-
-    // 2. add bindable
-    QQmlJSAotMethod bindable {};
-    bindable.returnType = u"QBindable<" + underlyingType + u">";
-    bindable.name = compilationData.bindable;
-    bindable.body << u"return QBindable<" + underlyingType + u">(std::addressof(" + memberName
-                    + u"));";
-    current.functions.emplaceBack(bindable);
-    mocLines << u"BINDABLE"_qs << bindable.name;
-
-    // 3. add notify
-    QQmlJSAotMethod notify {};
-    notify.returnType = u"void"_qs;
-    notify.name = compilationData.notify;
-    notify.type = QQmlJSMetaMethod::Signal;
-    current.functions.emplaceBack(notify);
-
-    // 4. add moc entry
-    // Q_PROPERTY(QString text READ text WRITE setText BINDABLE bindableText NOTIFY textChanged)
-    current.mocCode << u"Q_PROPERTY(" + mocLines.join(u" "_qs) + u")";
-
-    // 5. add extra moc entry if this property is default one
-    if (p.propertyName() == owner->defaultPropertyName()) {
-        // Q_CLASSINFO("DefaultProperty", propertyName)
-        current.mocCode << u"Q_CLASSINFO(\"DefaultProperty\", \"%1\")"_qs.arg(p.propertyName());
-    }
-}
-#endif
 
 void CodeGenerator::compileAlias(QQmlJSAotObject &current, const QQmlJSMetaProperty &alias,
                                  const QQmlJSScope::ConstPtr &owner)
