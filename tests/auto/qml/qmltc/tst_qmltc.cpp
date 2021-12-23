@@ -582,6 +582,15 @@ void tst_qmltc::componentTypes()
         QScopedPointer<QObject> enclosed(normalComponent->create());
         QVERIFY(enclosed);
         QCOMPARE(enclosed->objectName(), u"enclosed"_qs);
+
+        QQmlListReference children(&created, "data");
+        QCOMPARE(children.size(), 4);
+        QCOMPARE(ctx->objectForName(u"normal"_qs), children.at(0));
+        QCOMPARE(ctx->objectForName(u"accessibleNormal"_qs), children.at(1));
+        QCOMPARE(ctx->objectForName(u"accessible"_qs), created.p2());
+        QQuickTableView *table = qobject_cast<QQuickTableView *>(children.at(3));
+        QVERIFY(table);
+        QCOMPARE(ctx->objectForName(u"accessibleDelegate"_qs), table->delegate());
     }
 }
 
