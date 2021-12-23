@@ -1105,6 +1105,25 @@ function(qt6_target_compile_qml_to_cpp target)
         list(APPEND qml_module_files ${output_dir}/${qmltypes_file})
     endif()
 
+    get_target_property(potential_qml_modules ${target} LINK_LIBRARIES)
+    foreach(lib ${potential_qml_modules})
+        # get any QT_QML_MODULE_ property, this way we can tell whether we deal
+        # with QML module target or not. use output dir as it's used later
+        get_target_property(external_output_dir ${lib} QT_QML_MODULE_OUTPUT_DIRECTORY)
+        if(NOT external_output_dir) # not a QML module, so not interesting
+            continue()
+        endif()
+
+        get_target_property(external_qmltypes_file ${lib} QT_QML_MODULE_TYPEINFO)
+        if(external_qmltypes)
+            # add linked module's qmltypes file to a list of target
+            # dependencies. unlike qmllint or other tooling, qmltc only cares
+            # about explicitly linked libraries. things like plugins are not
+            # supported by design and would result in C++ compilation errors
+            list(APPEND qml_module_files ${external_output_dir}/${external_qmltypes_file})
+        endif()
+    endforeach()
+
     foreach(qml_file_src IN LISTS arg_FILES)
         if(NOT qml_file_src MATCHES "\\.(qml)$")
             list(APPEND non_qml_files ${qml_file_src})
