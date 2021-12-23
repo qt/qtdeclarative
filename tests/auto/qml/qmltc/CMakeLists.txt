@@ -72,8 +72,9 @@ set(qml_sources
     data/LocalWithOnCompleted.qml
     data/LocallyImported_context.qml
     data/SingletonThing.qml
+)
 
-    # javascript:
+set(js_sources
     data/subfolder/code.js
 )
 
@@ -100,6 +101,7 @@ qt6_add_qml_module(tst_qmltc_diskcache
     URI QmltcTests
     QML_FILES
         ${qml_sources}
+        ${js_sources}
     OUTPUT_DIRECTORY diskcache/QmltcTests
 )
 target_compile_definitions(tst_qmltc_diskcache PRIVATE
@@ -124,6 +126,7 @@ qt6_add_qml_module(tst_qmltc_nodiskcache
     URI QmltcTests
     QML_FILES
         ${qml_sources}
+        ${js_sources}
     OUTPUT_DIRECTORY nodiskcache/QmltcTests
 )
 target_compile_definitions(tst_qmltc_nodiskcache PRIVATE
