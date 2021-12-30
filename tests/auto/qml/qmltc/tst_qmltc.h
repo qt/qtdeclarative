@@ -53,6 +53,7 @@ private slots:
     void ids();
     void importNamespace();
     void componentTypes();
+    void deferredProperties();
 
     void signalHandlers();
     void jsFunctions();

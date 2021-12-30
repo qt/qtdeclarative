@@ -291,6 +291,7 @@ void CodeGenerator::constructObjects(QSet<QString> &requiredCppIncludes)
         m_ignoredTypes = collectIgnoredTypes(context, objects);
     };
     executor.addPass(setIgnoredTypes);
+    executor.addPass(&setDeferredBindings);
 
     // run all passes:
     executor.run(m_logger);
@@ -650,6 +651,17 @@ void CodeGenerator::compileObject(
                         + u"(engine, /* finalize */ false);";
         compiled.endInit.body << u"}"_qs;
     }
+
+    if (object.irObject->flags & QV4::CompiledData::Object::HasDeferredBindings) {
+        compiled.endInit.body << u"{ // defer bindings"_qs;
+        compiled.endInit.body << u"auto ddata = QQmlData::get(this);"_qs;
+        compiled.endInit.body << u"auto thisContext = ddata->outerContext;"_qs;
+        compiled.endInit.body << u"Q_ASSERT(thisContext);"_qs;
+        compiled.endInit.body << u"ddata->deferData(" + QString::number(objectIndex) + u", "
+                        + CodeGeneratorUtility::compilationUnitVariable.name + u", thisContext);";
+        compiled.endInit.body << u"}"_qs;
+    }
+
     // TODO: decide whether begin/end property update group is needed
     // compiled.endInit.body << u"Qt::beginPropertyUpdateGroup(); // defer binding evaluation"_qs;
 
@@ -1168,6 +1180,29 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
                                    const CodeGenObject &object,
                                    const CodeGenerator::AccessorData &accessor)
 {
+    // Note: unlike QQmlObjectCreator, we don't have to do a complicated
+    // deferral logic for bindings: if a binding is deferred, it is not compiled
+    // (potentially, with all the bindings inside of it), period.
+    if (binding.flags & QV4::CompiledData::Binding::IsDeferredBinding) {
+        if (binding.type == QmlIR::Binding::Type_GroupProperty) {
+            // TODO: we should warn about this in QmlCompiler library
+            qCWarning(lcCodeGenerator)
+                    << QStringLiteral("Binding at line %1 column %2 is not deferred as it is a "
+                                      "binding on a group property.")
+                               .arg(QString::number(binding.location.line),
+                                    QString::number(binding.location.column));
+            // we do not support PropertyChanges and other types with similar
+            // behavior yet, so this binding is compiled
+        } else {
+            qCDebug(lcCodeGenerator)
+                    << QStringLiteral(
+                               "Binding at line %1 column %2 is deferred and thus not compiled")
+                               .arg(QString::number(binding.location.line),
+                                    QString::number(binding.location.column));
+            return;
+        }
+    }
+
     // TODO: cache property name somehow, so we don't need to look it up again
     QString propertyName = m_doc->stringAt(binding.propertyNameIndex);
     if (propertyName.isEmpty()) {
@@ -1413,9 +1448,10 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
             // compile bindings of the attached property
             auto sortedBindings = toOrderedSequence(
                     irObject->bindingsBegin(), irObject->bindingsEnd(), irObject->bindingCount());
-            for (auto it : qAsConst(sortedBindings))
+            for (auto it : qAsConst(sortedBindings)) {
                 compileBinding(current, *it, attachedObject,
                                { object.type, attachedMemberName, propertyName, false });
+            }
         }
         break;
     }

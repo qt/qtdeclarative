@@ -26,6 +26,9 @@
 **
 ****************************************************************************/
 
+#ifndef TYPEWITHPROPERTIES_H
+#define TYPEWITHPROPERTIES_H
+
 #include <QtCore/qobject.h>
 #include <QtCore/qproperty.h>
 #include <QtCore/qstring.h>
@@ -70,3 +73,5 @@ Q_SIGNALS:
     void cWeirdSignal(QVariant);
     void dSignal(QString, int);
 };
+
+#endif // TYPEWITHPROPERTIES_H
