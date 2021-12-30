@@ -8,6 +8,8 @@ set(cpp_sources
     cpptypes/private/testprivateproperty_p.h
 
     cpptypes/typewithproperties.h cpptypes/typewithproperties.cpp
+    # deferred:
+    cpptypes/deferredpropertytypes.h cpptypes/deferredpropertytypes.cpp
 )
 
 set(qml_sources
@@ -65,6 +67,10 @@ set(qml_sources
     privatePropertySubclass.qml
     calqlatrBits.qml
     propertyChangeAndSignalHandlers.qml
+    deferredProperties.qml
+    deferredProperties_group.qml
+    deferredProperties_attached.qml
+    deferredProperties_complex.qml
 
     # support types:
     DefaultPropertySingleChild.qml
@@ -105,6 +111,8 @@ qt6_add_qml_module(qmltc_test_module
     QML_FILES
         ${qml_sources}
         ${js_sources}
+    DEPENDENCIES
+        QtQuick
 )
 qt_internal_target_compile_qml_to_cpp(qmltc_test_module
     NAMESPACE QmltcTest
