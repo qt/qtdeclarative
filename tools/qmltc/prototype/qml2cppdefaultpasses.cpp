@@ -176,6 +176,20 @@ static bool isComponentBased(const QQmlJSScope::ConstPtr &type)
     return base && base->internalName() == u"QQmlComponent"_qs;
 }
 
+static QString findPropertyName(const Qml2CppContext &context, const QQmlJSScope::ConstPtr &type,
+                                const QmlIR::Binding &binding)
+{
+    QString name = context.document->stringAt(binding.propertyNameIndex);
+    if (name.isEmpty()) {
+        Q_ASSERT(type);
+        auto base = type->baseType();
+        if (!base)
+            return name;
+        name = base->defaultPropertyName();
+    }
+    return name;
+}
+
 void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
 {
     const auto verifyProperty = [&](const QQmlJSMetaProperty &property,
@@ -260,22 +274,12 @@ void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
         if (isComponent(type))
             return;
 
-        QString propName = context.document->stringAt(binding.propertyNameIndex);
+        const QString propName = findPropertyName(context, type, binding);
+        // it's an error here
         if (propName.isEmpty()) {
-            Q_ASSERT(type);
-            if (propName.isEmpty()) {
-                // if empty, try default property
-                for (QQmlJSScope::ConstPtr t = type->baseType(); t && propName.isEmpty();
-                     t = t->baseType()) {
-                    propName = t->defaultPropertyName();
-                }
-            }
-            // otherwise, it's an error
-            if (propName.isEmpty()) {
-                context.recordError(binding.location,
-                                    u"Cannot assign to non-existent default property"_qs);
-                return;
-            }
+            context.recordError(binding.location,
+                                u"Cannot assign to non-existent default property"_qs);
+            return;
         }
 
         // ignore signal properties
@@ -894,14 +898,7 @@ static void updateImplicitComponents(const Qml2CppContext &context, Qml2CppObjec
         if (object.irObject->flags & QV4::CompiledData::Object::IsComponent) // already set
             return;
 
-        QString propName = context.document->stringAt(binding.propertyNameIndex);
-        if (propName.isEmpty()) {
-            Q_ASSERT(object.type);
-            // if empty, try default property
-            for (QQmlJSScope::ConstPtr t = object.type->baseType(); t && propName.isEmpty();
-                 t = t->baseType())
-                propName = t->defaultPropertyName();
-        }
+        const QString propName = findPropertyName(context, object.type, binding);
         Q_ASSERT(!propName.isEmpty()); // assume verified
         QQmlJSMetaProperty p = object.type->property(propName);
         Q_ASSERT(p.isValid()); // assume verified
