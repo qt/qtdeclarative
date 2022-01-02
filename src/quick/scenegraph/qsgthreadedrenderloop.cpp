@@ -947,6 +947,7 @@ void QSGRenderThread::ensureRhi()
             cd->swapchain->setDepthStencil(cd->depthStencilForSwapchain);
         }
         cd->swapchain->setWindow(window);
+        QSGRhiSupport::instance()->applySwapChainFormat(cd->swapchain);
         qCDebug(QSG_LOG_INFO, "MSAA sample count for the swapchain is %d. Alpha channel requested = %s.",
                 rhiSampleCount, alpha ? "yes" : "no");
         cd->swapchain->setSampleCount(rhiSampleCount);

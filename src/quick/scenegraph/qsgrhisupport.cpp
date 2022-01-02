@@ -231,6 +231,17 @@ void QSGRhiSupport::applySettings()
     if (m_killDeviceFrameCount > 0 && m_rhiBackend == QRhi::D3D11)
         qDebug("Graphics device will be reset every %d frames", m_killDeviceFrameCount);
 
+    QByteArray hdrRequest = qgetenv("QSG_RHI_HDR");
+    if (!hdrRequest.isEmpty()) {
+        hdrRequest = hdrRequest.toLower();
+        if (hdrRequest == QByteArrayLiteral("scrgb") || hdrRequest == QByteArrayLiteral("extendedsrgblinear"))
+            m_swapChainFormat = QRhiSwapChain::HDRExtendedSrgbLinear;
+        else if (hdrRequest == QByteArrayLiteral("hdr10"))
+            m_swapChainFormat = QRhiSwapChain::HDR10;
+        else
+            qWarning("Unknown HDR mode '%s'", hdrRequest.constData());
+    }
+
     const QString backendName = rhiBackendName();
     qCDebug(QSG_LOG_INFO,
             "Using QRhi with backend %s\n"
@@ -964,5 +975,37 @@ QImage QSGRhiSupport::grabOffscreenForProtectedContent(QQuickWindow *window)
     return image;
 }
 #endif
+
+void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet)
+{
+    const char *fmtStr = "unknown";
+    switch (m_swapChainFormat) {
+    case QRhiSwapChain::SDR:
+        fmtStr = "SDR";
+        break;
+    case QRhiSwapChain::HDRExtendedSrgbLinear:
+        fmtStr = "scRGB";
+        break;
+    case QRhiSwapChain::HDR10:
+        fmtStr = "HDR10";
+        break;
+    default:
+        break;
+    }
+
+    if (!scWithWindowSet->isFormatSupported(m_swapChainFormat)) {
+        if (m_swapChainFormat != QRhiSwapChain::SDR) {
+            qCDebug(QSG_LOG_INFO, "Requested a %s swapchain but it is reported to be unsupported with the current display(s). "
+                                  "In multi-screen configurations make sure the window is located on a HDR-enabled screen. "
+                                  "Request ignored, using SDR swapchain.", fmtStr);
+        }
+        return;
+    }
+
+    if (m_swapChainFormat != QRhiSwapChain::SDR)
+        qCDebug(QSG_LOG_INFO, "Creating %s swapchain", fmtStr);
+
+    scWithWindowSet->setFormat(m_swapChainFormat);
+}
 
 QT_END_NAMESPACE

@@ -134,6 +134,9 @@ public:
     QImage grabOffscreenForProtectedContent(QQuickWindow *window);
 #endif
 
+    QRhiSwapChain::Format swapChainFormat() const { return m_swapChainFormat; }
+    void applySwapChainFormat(QRhiSwapChain *scWithWindowSet);
+
 private:
     QSGRhiSupport();
     void applySettings();
@@ -147,6 +150,7 @@ private:
     int m_killDeviceFrameCount;
     QString m_pipelineCacheSave;
     QString m_pipelineCacheLoad;
+    QRhiSwapChain::Format m_swapChainFormat = QRhiSwapChain::SDR;
     uint m_settingsApplied : 1;
     uint m_enableRhi : 1;
     uint m_debugLayer : 1;
