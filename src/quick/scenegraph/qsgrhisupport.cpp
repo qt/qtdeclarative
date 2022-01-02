@@ -1002,10 +1002,12 @@ void QSGRhiSupport::applySwapChainFormat(QRhiSwapChain *scWithWindowSet)
         return;
     }
 
-    if (m_swapChainFormat != QRhiSwapChain::SDR)
-        qCDebug(QSG_LOG_INFO, "Creating %s swapchain", fmtStr);
-
     scWithWindowSet->setFormat(m_swapChainFormat);
+
+    if (m_swapChainFormat != QRhiSwapChain::SDR) {
+        qCDebug(QSG_LOG_INFO, "Creating %s swapchain", fmtStr);
+        qCDebug(QSG_LOG_INFO) << "HDR output info:" << scWithWindowSet->hdrInfo();
+    }
 }
 
 QT_END_NAMESPACE
