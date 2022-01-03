@@ -377,19 +377,20 @@ void QSGCompressedTexture::commitTextureOperations(QRhi *rhi, QRhiResourceUpdate
         return;
     }
 
-    QRhiTexture::Flags texFlags;
-    if (fmt.isSRGB)
-        texFlags |= QRhiTexture::sRGB;
-
-    if (!rhi->isTextureFormatSupported(fmt.rhiFormat, texFlags)) {
-        qWarning("Unsupported compressed format 0x%x", m_textureData.glInternalFormat());
-        return;
-    }
-
     if (!m_texture) {
+        QRhiTexture::Flags texFlags;
+        if (fmt.isSRGB)
+            texFlags |= QRhiTexture::sRGB;
+
+        if (!rhi->isTextureFormatSupported(fmt.rhiFormat, texFlags)) {
+            qCDebug(QSG_LOG_TEXTUREIO, "Compressed texture format possibly unsupported: 0x%x",
+                    m_textureData.glInternalFormat());
+        }
+
         m_texture = rhi->newTexture(fmt.rhiFormat, m_size, 1, texFlags);
         if (!m_texture->create()) {
-            qWarning("Failed to create QRhiTexture for compressed data");
+            qWarning("Failed to create QRhiTexture for compressed data with format 0x%x",
+                     m_textureData.glInternalFormat());
             delete m_texture;
             m_texture = nullptr;
             return;
