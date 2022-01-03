@@ -196,7 +196,7 @@ QQmlContextData::~QQmlContextData()
     QQmlGuardedContextData *contextGuard = m_contextGuards;
     while (contextGuard) {
         QQmlGuardedContextData *next = contextGuard->next();
-        next->reset();
+        contextGuard->reset();
         contextGuard = next;
     }
     m_contextGuards = nullptr;
