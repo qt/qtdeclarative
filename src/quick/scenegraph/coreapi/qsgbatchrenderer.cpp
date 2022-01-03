@@ -920,8 +920,7 @@ Renderer::Renderer(QSGDefaultRenderContext *ctx, QSGRendererInterface::RenderMod
 
 static void qsg_wipeBuffer(Buffer *buffer)
 {
-    if (buffer->buf)
-        delete buffer->buf;
+    delete buffer->buf;
 
     // The free here is ok because we're in one of two situations.
     // 1. We're using the upload pool in which case unmap will have set the
@@ -1031,8 +1030,11 @@ void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
         buffer->buf = m_rhi->newBuffer(QRhiBuffer::Immutable,
                                        isIndexBuf ? QRhiBuffer::IndexBuffer : QRhiBuffer::VertexBuffer,
                                        buffer->size);
-        if (!buffer->buf->create())
+        if (!buffer->buf->create()) {
             qWarning("Failed to build vertex/index buffer of size %d", buffer->size);
+            delete buffer->buf;
+            buffer->buf = nullptr;
+        }
     } else {
         bool needsRebuild = false;
         if (buffer->buf->size() < buffer->size) {
@@ -1046,16 +1048,23 @@ void Renderer::unmap(Buffer *buffer, bool isIndexBuf)
             buffer->nonDynamicChangeCount = 0;
             needsRebuild = true;
         }
-        if (needsRebuild)
-            buffer->buf->create();
+        if (needsRebuild) {
+            if (!buffer->buf->create()) {
+                qWarning("Failed to (re)build vertex/index buffer of size %d", buffer->size);
+                delete buffer->buf;
+                buffer->buf = nullptr;
+            }
+        }
     }
-    if (buffer->buf->type() != QRhiBuffer::Dynamic) {
-        m_resourceUpdates->uploadStaticBuffer(buffer->buf,
-                                             0, buffer->size, buffer->data);
-        buffer->nonDynamicChangeCount += 1;
-    } else {
-        m_resourceUpdates->updateDynamicBuffer(buffer->buf, 0, buffer->size,
-                                               buffer->data);
+    if (buffer->buf) {
+        if (buffer->buf->type() != QRhiBuffer::Dynamic) {
+            m_resourceUpdates->uploadStaticBuffer(buffer->buf,
+                                                 0, buffer->size, buffer->data);
+            buffer->nonDynamicChangeCount += 1;
+        } else {
+            m_resourceUpdates->updateDynamicBuffer(buffer->buf, 0, buffer->size,
+                                                   buffer->data);
+        }
     }
     if (m_visualizer->mode() == Visualizer::VisualizeNothing)
         buffer->data = nullptr;
@@ -3172,6 +3181,9 @@ void Renderer::checkLineWidth(QSGGeometry *g)
 void Renderer::renderMergedBatch(PreparedRenderBatch *renderBatch, bool depthPostPass)
 {
     const Batch *batch = renderBatch->batch;
+    if (!batch->vbo.buf || !batch->ibo.buf)
+        return;
+
     Element *e = batch->first;
     QSGGeometryNode *gn = e->node;
     QSGGeometry *g = gn->geometry();
@@ -3367,6 +3379,9 @@ bool Renderer::prepareRenderUnmergedBatch(Batch *batch, PreparedRenderBatch *ren
 void Renderer::renderUnmergedBatch(PreparedRenderBatch *renderBatch, bool depthPostPass)
 {
     const Batch *batch = renderBatch->batch;
+    if (!batch->vbo.buf)
+        return;
+
     Element *e = batch->first;
 
     if (batch->clipState.type & ClipState::StencilClip)
@@ -3385,11 +3400,13 @@ void Renderer::renderUnmergedBatch(PreparedRenderBatch *renderBatch, bool depthP
 
         const QRhiCommandBuffer::VertexInput vbufBinding(batch->vbo.buf, vOffset);
         if (g->indexCount()) {
-            cb->setVertexInput(VERTEX_BUFFER_BINDING, 1, &vbufBinding,
-                               batch->ibo.buf, iOffset,
-                               effectiveIndexSize == sizeof(quint32) ? QRhiCommandBuffer::IndexUInt32
-                                                                     : QRhiCommandBuffer::IndexUInt16);
-            cb->drawIndexed(g->indexCount());
+            if (batch->ibo.buf) {
+                cb->setVertexInput(VERTEX_BUFFER_BINDING, 1, &vbufBinding,
+                                   batch->ibo.buf, iOffset,
+                                   effectiveIndexSize == sizeof(quint32) ? QRhiCommandBuffer::IndexUInt32
+                                                                         : QRhiCommandBuffer::IndexUInt16);
+                cb->drawIndexed(g->indexCount());
+            }
         } else {
             cb->setVertexInput(VERTEX_BUFFER_BINDING, 1, &vbufBinding);
             cb->draw(g->vertexCount());
