@@ -67,7 +67,7 @@ private:
     bool m_hasExited = false;
 };
 
-class tst_QLanguageServer : public QObject
+class tst_LifeCycle : public QObject
 {
     Q_OBJECT
 
@@ -75,7 +75,7 @@ private slots:
     void lifecycle();
 };
 
-void tst_QLanguageServer::lifecycle()
+void tst_LifeCycle::lifecycle()
 {
     QIOPipe pipe;
     pipe.open(QIODevice::ReadWrite);
@@ -145,5 +145,5 @@ void tst_QLanguageServer::lifecycle()
     QTRY_VERIFY(handler.hasExited());
 }
 
-QTEST_MAIN(tst_QLanguageServer)
-#include <tst_qlanguageserver.moc>
+QTEST_MAIN(tst_LifeCycle)
+#include <tst_lifecycle.moc>
