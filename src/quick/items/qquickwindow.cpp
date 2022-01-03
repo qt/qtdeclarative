@@ -2612,7 +2612,9 @@ QQuickPointerEvent *QQuickWindowPrivate::pointerEventInstance(QEvent *event) con
     }
 
     Q_ASSERT(dev);
-    return pointerEventInstance(dev, event->type())->reset(event);
+    auto pev = pointerEventInstance(dev, event->type());
+    Q_ASSERT(pev);
+    return pev->reset(event);
 }
 
 void QQuickWindowPrivate::deliverPointerEvent(QQuickPointerEvent *event)
