@@ -94,10 +94,8 @@ Item {
 //! [1]
             states: State {
                 when: mouseArea.drag.active
-                ParentChange { target: tile; parent: root }
                 AnchorChanges { target: tile; anchors.verticalCenter: undefined; anchors.horizontalCenter: undefined }
             }
-
         }
     }
 }
