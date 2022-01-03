@@ -293,16 +293,17 @@ void QQuickFlickablePrivate::init()
     viewportPrivate->addItemChangeListener(this, QQuickItemPrivate::Geometry);
 }
 
-/*
-    Returns the amount to overshoot by given a velocity.
-    Will be roughly in range 0 - size/4
+/*!
+    \internal
+    Returns the distance to overshoot, given \a velocity.
+    Will be in range 0 - velocity / 3, but limited to a max of QML_FLICK_OVERSHOOT
 */
-qreal QQuickFlickablePrivate::overShootDistance(qreal size) const
+qreal QQuickFlickablePrivate::overShootDistance(qreal velocity) const
 {
     if (maxVelocity <= 0)
-        return 0.0;
+        return 0;
 
-    return qMin(qreal(QML_FLICK_OVERSHOOT), size/3);
+    return qMin(qreal(QML_FLICK_OVERSHOOT), velocity / 3);
 }
 
 void QQuickFlickablePrivate::AxisData::addVelocitySample(qreal v, qreal maxVelocity)
@@ -1867,13 +1868,13 @@ void QQuickFlickable::viewportMoved(Qt::Orientations orient)
 {
     Q_D(QQuickFlickable);
     if (orient & Qt::Vertical)
-        d->viewportAxisMoved(d->vData, minYExtent(), maxYExtent(), height(), d->fixupY_callback);
+        d->viewportAxisMoved(d->vData, minYExtent(), maxYExtent(), d->fixupY_callback);
     if (orient & Qt::Horizontal)
-        d->viewportAxisMoved(d->hData, minXExtent(), maxXExtent(), width(), d->fixupX_callback);
+        d->viewportAxisMoved(d->hData, minXExtent(), maxXExtent(), d->fixupX_callback);
     d->updateBeginningEnd();
 }
 
-void QQuickFlickablePrivate::viewportAxisMoved(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
+void QQuickFlickablePrivate::viewportAxisMoved(AxisData &data, qreal minExtent, qreal maxExtent,
                                            QQuickTimeLineCallback::Callback fixupCallback)
 {
     if (!scrollingPhase && (pressed || calcVelocity)) {
@@ -1889,10 +1890,15 @@ void QQuickFlickablePrivate::viewportAxisMoved(AxisData &data, qreal minExtent, 
     } else {
         if (timeline.time() > data.vTime) {
             velocityTimeline.reset(data.smoothVelocity);
-            qreal velocity = (data.lastPos - data.move.value()) * 1000 / (timeline.time() - data.vTime);
-            if (!qFuzzyCompare(data.smoothVelocity.value(), velocity))
-                qCDebug(lcVel) << "velocity" << data.smoothVelocity.value() << "->" << velocity;
-            data.smoothVelocity.setValue(velocity);
+            int dt = timeline.time() - data.vTime;
+            if (dt > 2) {
+                qreal velocity = (data.lastPos - data.move.value()) * 1000 / dt;
+                if (!qFuzzyCompare(data.smoothVelocity.value(), velocity))
+                    qCDebug(lcVel) << "velocity" << data.smoothVelocity.value() << "->" << velocity
+                                   << "computed as (" << data.lastPos << "-" << data.move.value() << ") * 1000 / ("
+                                   << timeline.time() << "-" << data.vTime << ")";
+                data.smoothVelocity.setValue(velocity);
+            }
         }
     }
 
@@ -1904,7 +1910,7 @@ void QQuickFlickablePrivate::viewportAxisMoved(AxisData &data, qreal minExtent, 
                 ? data.move.value() - minExtent
                 : maxExtent - data.move.value();
         data.inOvershoot = true;
-        qreal maxDistance = overShootDistance(vSize) - overBound;
+        qreal maxDistance = overShootDistance(qAbs(data.smoothVelocity.value())) - overBound;
         resetTimeline(data);
         if (maxDistance > 0)
             timeline.accel(data.move, -data.smoothVelocity.value(), deceleration*QML_FLICK_OVERSHOOTFRICTION, maxDistance);

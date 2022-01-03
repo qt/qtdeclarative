@@ -195,7 +195,7 @@ public:
     void setViewportX(qreal x);
     void setViewportY(qreal y);
 
-    qreal overShootDistance(qreal size) const;
+    qreal overShootDistance(qreal velocity) const;
 
     void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &) override;
 
@@ -256,7 +256,7 @@ public:
     QQuickFlickable::BoundsMovement boundsMovement;
     QQuickTransition *rebound;
 
-    void viewportAxisMoved(AxisData &data, qreal minExtent, qreal maxExtent, qreal vSize,
+    void viewportAxisMoved(AxisData &data, qreal minExtent, qreal maxExtent,
                        QQuickTimeLineCallback::Callback fixupCallback);
 
     void handlePressEvent(QPointerEvent *);
