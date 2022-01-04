@@ -1746,6 +1746,7 @@ void QQmlDelegateModel::_q_itemsRemoved(int index, int count)
         return;
 
     d->m_count -= count;
+    Q_ASSERT(d->m_count >= 0);
     const QList<QQmlDelegateModelItem *> cache = d->m_cache;
     //Prevents items being deleted in remove loop
     for (QQmlDelegateModelItem *item : cache)
