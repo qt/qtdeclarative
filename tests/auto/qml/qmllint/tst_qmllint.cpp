@@ -84,6 +84,8 @@ private Q_SLOTS:
     void missingBuiltinsNoCrash();
     void absolutePath();
 
+    void importMultipartUri();
+
 private:
     enum DefaultIncludeOption { NoDefaultIncludes, UseDefaultIncludes };
     enum ContainOption { StringNotContained, StringContained };
@@ -1389,6 +1391,13 @@ void TestQmllint::absolutePath()
     QJsonArray warnings = jsonOutput.at(0)[u"warnings"_qs].toArray();
 
     searchWarnings(warnings, absolutePath, absolutePath);
+}
+
+void TestQmllint::importMultipartUri()
+{
+    QJsonArray warnings;
+    callQmllint("here.qml", true, &warnings, {}, { testFile("Elsewhere/qmldir") });
+    QVERIFY(warnings.isEmpty());
 }
 
 QTEST_MAIN(TestQmllint)
