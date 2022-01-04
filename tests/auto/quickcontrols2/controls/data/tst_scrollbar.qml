@@ -956,4 +956,38 @@ TestCase {
         compare(vertical.visualPosition, 0.2)
         compare(vertical.contentItem.y, vertical.topPadding + 0.2 * vertical.availableHeight)
     }
+
+    function test_setting_invalid_property_values() {
+        var control = createTemporaryObject(scrollBar, testCase, {size: 2.0, minimumSize: -1.0})
+        verify(control)
+
+        // check that the values are within the expected range
+        compare(control.size, 1.0)
+        compare(control.minimumSize, 0)
+
+        control.minimumSize = 2.0
+        compare(control.minimumSize, 1.0)
+
+        // test if setting NaN is prevented
+        control.size = NaN
+        control.minimumSize = NaN
+        compare(control.size, 1.0)
+        compare(control.minimumSize, 1.0)
+
+
+        // test if setting float infinity is prevented
+        control.size = Number.POSITIVE_INFINITY
+        control.minimumSize = Number.POSITIVE_INFINITY
+        compare(control.size, 1.0)
+        compare(control.minimumSize, 1.0)
+
+        let oldPosition = control.position;
+        let oldStepSize = control.stepSize;
+
+        control.position = NaN;
+        control.stepSize = NaN;
+
+        compare(oldPosition, control.position)
+        compare(oldStepSize, control.stepSize)
+    }
 }
