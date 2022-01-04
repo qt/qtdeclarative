@@ -2449,16 +2449,19 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
     if (from == to)
         return variable;
 
-    if (from->accessSemantics() == QQmlJSScope::AccessSemantics::Reference
-            && to->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
-        for (QQmlJSScope::ConstPtr base = from; base; base = base->baseType()) {
-            // We still have to cast as other execution paths may result in different types.
-            if (base == to)
-                return u"static_cast<"_qs + to->internalName() + u" *>("_qs + variable + u')';
-        }
-        for (QQmlJSScope::ConstPtr base = to; base; base = base->baseType()) {
-            if (base == from)
-                return u"static_cast<"_qs + to->internalName() + u" *>("_qs + variable + u')';
+    if (from->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
+        if (to->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
+            for (QQmlJSScope::ConstPtr base = from; base; base = base->baseType()) {
+                // We still have to cast as other execution paths may result in different types.
+                if (base == to)
+                    return u"static_cast<"_qs + to->internalName() + u" *>("_qs + variable + u')';
+            }
+            for (QQmlJSScope::ConstPtr base = to; base; base = base->baseType()) {
+                if (base == from)
+                    return u"static_cast<"_qs + to->internalName() + u" *>("_qs + variable + u')';
+            }
+        } else if (to == m_typeResolver->boolType()) {
+            return u'(' + variable + u" != nullptr)"_qs;
         }
     }
 
