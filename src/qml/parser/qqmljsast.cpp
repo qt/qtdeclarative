@@ -45,6 +45,7 @@
 #include <qlocale.h>
 
 #include <algorithm>
+#include <array>
 
 QT_BEGIN_NAMESPACE
 
