@@ -92,6 +92,8 @@ private Q_SLOTS:
     void javascriptVariableArgs();
     void unknownTypeInRegister();
 
+    void importMultipartUri();
+
 private:
     enum DefaultIncludeOption { NoDefaultIncludes, UseDefaultIncludes };
     enum ContainOption { StringNotContained, StringContained };
@@ -1297,6 +1299,13 @@ void TestQmllint::unknownTypeInRegister()
     QVERIFY(runQmllint("unknownTypeInRegister.qml", false, { "--compiler", "warning" })
                     .contains(QStringLiteral(
                             "Functions without type annotations won't be compiled")));
+}
+
+void TestQmllint::importMultipartUri()
+{
+    QJsonArray warnings;
+    callQmllint("here.qml", true, &warnings, {}, { testFile("Elsewhere/qmldir") });
+    QVERIFY(warnings.isEmpty());
 }
 
 QTEST_MAIN(TestQmllint)

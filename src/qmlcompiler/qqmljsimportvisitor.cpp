@@ -1691,7 +1691,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     auto uri = import->importUri;
     while (uri) {
         path.append(uri->name);
-        path.append(u'/');
+        path.append(u'.');
         uri = uri->next;
     }
     path.chop(1);
