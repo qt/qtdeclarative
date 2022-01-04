@@ -87,7 +87,7 @@ private Q_SLOTS:
     void importMultipartUri();
 
 private:
-    enum DefaultIncludeOption { NoDefaultIncludes, UseDefaultIncludes };
+    enum DefaultImportOption { NoDefaultImports, UseDefaultImports };
     enum ContainOption { StringNotContained, StringContained };
     enum ReplacementOption {
         NoReplacementSearch,
@@ -96,14 +96,14 @@ private:
 
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true,
-                       bool addIncludeDirs = true);
+                       bool addImportDirs = true);
     QString runQmllint(const QString &fileToLint, bool shouldSucceed,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true,
-                       bool addIncludeDirs = true);
+                       bool addImportDirs = true);
     void callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings = nullptr,
-                     QStringList includeDirs = {}, QStringList qmltypesFiles = {},
+                     QStringList importDirs = {}, QStringList qmltypesFiles = {},
                      QStringList resources = {},
-                     DefaultIncludeOption defaultIncludes = UseDefaultIncludes,
+                     DefaultImportOption defaultImports = UseDefaultImports,
                      QMap<QString, QQmlJSLogger::Option> *options = nullptr);
 
     void searchWarnings(const QJsonArray &warnings, const QString &string, const QString &filename,
@@ -593,7 +593,7 @@ void TestQmllint::dirtyQmlCode_data()
             << false;
     QTest::newRow("InvalidImport")
             << QStringLiteral("invalidImport.qml")
-            << QStringLiteral("Failed to import FooBar. Are your include paths set up properly?")
+            << QStringLiteral("Failed to import FooBar. Are your import paths set up properly?")
             << QString() << QString() << false;
     QTest::newRow("Unused Import (simple)")
             << QStringLiteral("unused_simple.qml") << QStringLiteral("Unused import at %1:1:1")
@@ -1055,7 +1055,7 @@ void TestQmllint::compilerWarnings()
     if (enableCompilerWarnings)
         options[u"compiler"_qs].setLevel(u"warning"_qs);
 
-    callQmllint(filename, shouldSucceed, &warnings, {}, {}, {}, UseDefaultIncludes, &options);
+    callQmllint(filename, shouldSucceed, &warnings, {}, {}, {}, UseDefaultImports, &options);
 
     if (!warning.isEmpty())
         searchWarnings(warnings, warning, filename);
@@ -1083,7 +1083,7 @@ void TestQmllint::controlsSanity()
     auto options = QQmlJSLogger::options();
     options[u"controls-sanity"_qs].setLevel(u"warning"_qs);
 
-    callQmllint(filename, false, &warnings, {}, {}, {}, UseDefaultIncludes, &options);
+    callQmllint(filename, false, &warnings, {}, {}, {}, UseDefaultImports, &options);
 
     if (!warning.isEmpty())
         searchWarnings(warnings, warning, filename);
@@ -1092,14 +1092,14 @@ void TestQmllint::controlsSanity()
 QString TestQmllint::runQmllint(const QString &fileToLint,
                                 std::function<void(QProcess &)> handleResult,
                                 const QStringList &extraArgs, bool ignoreSettings,
-                                bool addIncludeDirs)
+                                bool addImportDirs)
 {
     auto qmlImportDir = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
     QStringList args;
 
     args << (QFileInfo(fileToLint).isAbsolute() ? fileToLint : testFile(fileToLint));
 
-    if (addIncludeDirs) {
+    if (addImportDirs) {
         args << QStringLiteral("-I") << qmlImportDir
              << QStringLiteral("-I") << dataDirectory();
     }
@@ -1153,7 +1153,7 @@ QString TestQmllint::runQmllint(const QString &fileToLint,
 
 QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
                                 const QStringList &extraArgs, bool ignoreSettings,
-                                bool addIncludeDirs)
+                                bool addImportDirs)
 {
     return runQmllint(
             fileToLint,
@@ -1166,12 +1166,12 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
                 else
                     QVERIFY(process.exitCode() != 0);
             },
-            extraArgs, ignoreSettings, addIncludeDirs);
+            extraArgs, ignoreSettings, addImportDirs);
 }
 
 void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings,
-                              QStringList includeDirs, QStringList qmltypesFiles,
-                              QStringList resources, DefaultIncludeOption defaultIncludes,
+                              QStringList importPaths, QStringList qmldirFiles,
+                              QStringList resources, DefaultImportOption defaultImports,
                               QMap<QString, QQmlJSLogger::Option> *options)
 {
     QJsonArray jsonOutput;
@@ -1179,9 +1179,9 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
     bool success = m_linter.lintFile(
             QFileInfo(fileToLint).isAbsolute() ? fileToLint : testFile(fileToLint), nullptr, true,
             warnings ? &jsonOutput : nullptr,
-            defaultIncludes == UseDefaultIncludes ? m_defaultImportPaths + includeDirs
-                                                  : includeDirs,
-            qmltypesFiles, resources, options != nullptr ? *options : QQmlJSLogger::options());
+            defaultImports == UseDefaultImports ? m_defaultImportPaths + importPaths
+                                                : importPaths,
+            qmldirFiles, resources, options != nullptr ? *options : QQmlJSLogger::options());
     QVERIFY2(success == shouldSucceed, QJsonDocument(jsonOutput).toJson());
 
     if (warnings) {
@@ -1336,7 +1336,7 @@ void TestQmllint::attachedPropertyReuse()
     {
         QJsonArray warnings;
 
-        callQmllint("attachedPropNotReused.qml", false, &warnings, {}, {}, {}, UseDefaultIncludes,
+        callQmllint("attachedPropNotReused.qml", false, &warnings, {}, {}, {}, UseDefaultImports,
                     &options);
 
         searchWarnings(warnings,
@@ -1347,7 +1347,7 @@ void TestQmllint::attachedPropertyReuse()
     }
     {
         QJsonArray warnings;
-        callQmllint("attachedPropEnum.qml", true, &warnings, {}, {}, {}, UseDefaultIncludes,
+        callQmllint("attachedPropEnum.qml", true, &warnings, {}, {}, {}, UseDefaultImports,
                     &options);
         QVERIFY2(warnings.isEmpty(), qPrintable(QJsonDocument(warnings).toJson()));
     }

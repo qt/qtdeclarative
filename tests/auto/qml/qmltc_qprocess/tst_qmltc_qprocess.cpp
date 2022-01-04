@@ -188,7 +188,7 @@ void tst_qmltc_qprocess::noQtQml()
 
     // test that qmltc exits gracefully
     const auto errors = runQmltc(u"dummy.qml"_qs, false);
-    QVERIFY(errors.contains(u"Failed to import QtQml. Are your include paths set up properly?"_qs));
+    QVERIFY(errors.contains(u"Failed to import QtQml. Are your import paths set up properly?"_qs));
 }
 
 void tst_qmltc_qprocess::inlineComponent()

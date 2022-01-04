@@ -567,7 +567,7 @@ QQmlJSImporter::ImportedTypes QQmlJSImporter::importModule(const QString &module
     AvailableTypes result(builtins.cppNames);
     if (!importHelper(module, &result, prefix, version)) {
         m_warnings.append({
-                              QStringLiteral("Failed to import %1. Are your include paths set up properly?").arg(module),
+                              QStringLiteral("Failed to import %1. Are your import paths set up properly?").arg(module),
                               QtWarningMsg,
                               QQmlJS::SourceLocation()
                           });
