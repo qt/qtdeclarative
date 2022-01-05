@@ -123,6 +123,7 @@ void tst_QQuickFileDialogImpl::initTestCase()
     QQmlDataTest::initTestCase();
 
     qputenv("QT_QUICK_DIALOGS_SHOW_DIRS_FIRST", "1");
+    qputenv("QT_QUICK_DIALOGS_PRESELECT_FIRST_FILE", "1");
 
     QVERIFY(tempDir.isValid());
     // QTEST_QUICKCONTROLS_MAIN constructs the test case object once,
