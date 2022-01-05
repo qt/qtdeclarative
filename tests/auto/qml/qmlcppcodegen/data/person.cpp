@@ -24,6 +24,8 @@
 Person::Person(QObject *parent)
     : QObject(parent), m_name(u"Bart"_qs), m_shoeSize(0)
 {
+    m_things.append(u"thing"_qs);
+    m_things.append(30);
 }
 
 QString Person::name() const
@@ -57,3 +59,15 @@ void Person::setShoeSize(int s)
     }
 }
 
+QVariantList Person::things() const
+{
+    return m_things;
+}
+
+void Person::setThings(const QVariantList &things)
+{
+    if (m_things == things)
+        return;
+    m_things = things;
+    emit thingsChanged();
+}
