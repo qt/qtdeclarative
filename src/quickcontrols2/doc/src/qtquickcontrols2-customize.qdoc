@@ -315,6 +315,12 @@
     orphaned items. Always use declarative bindings to assign custom items
     when possible.
 
+    \section4 Don't import QtQuick.Controls in QML implementations
+
+    When writing the QML for your style's implementation of a control,
+    it's important not to import \c {QtQuick.Controls}. Doing so will
+    prevent the QML from being compiled by the QML compiler.
+
     \section3 Attached properties
 
     It is common for a style to have certain properties or attributes that
