@@ -112,6 +112,7 @@ private slots:
     void functionCallOnNamespaced();
     void flushBeforeCapture();
     void unknownAttached();
+    void variantlist();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1679,6 +1680,20 @@ void tst_QmlCppCodegen::unknownAttached()
     QQmlEngine engine;
     QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/unknownAttached.qml"_qs));
     QVERIFY(c.isError());
+}
+
+void tst_QmlCppCodegen::variantlist()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/variantlist.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    const QVariantList things = qvariant_cast<QVariantList>(o->property("things"));
+    QCOMPARE(things.length(), 2);
+    QCOMPARE(things[0].toString(), u"thing"_qs);
+    QCOMPARE(things[1].toInt(), 30);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

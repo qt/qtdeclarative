@@ -930,11 +930,6 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
         return;
     }
 
-    if (m_state.accumulatorOut.isList()) {
-        reject(u"lookup of list property."_qs);
-        return;
-    }
-
     if (m_state.accumulatorOut.isEnumeration()) {
         generateEnumLookup(index);
         return;

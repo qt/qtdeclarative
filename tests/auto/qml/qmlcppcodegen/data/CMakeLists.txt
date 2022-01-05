@@ -112,6 +112,7 @@ set(qml_files
     unusedAttached.qml
     urlString.qml
     valueTypeProperty.qml
+    variantlist.qml
     voidfunction.qml
 )
 
