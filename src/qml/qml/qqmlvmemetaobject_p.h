@@ -115,17 +115,36 @@ public:
         return false;
     }
 
+    QObject *object = nullptr;
+    QQmlRefPointer<QQmlPropertyCache> cache;
+
 protected:
     int metaCall(QObject *o, QMetaObject::Call c, int id, void **a) override;
-    bool intercept(QMetaObject::Call c, int id, void **a);
+    bool intercept(QMetaObject::Call c, int id, void **a)
+    {
+        if (!interceptors)
+            return false;
 
-public:
-    QObject *object;
-    QQmlRefPointer<QQmlPropertyCache> cache;
+        switch (c) {
+        case QMetaObject::WriteProperty:
+            if (*reinterpret_cast<int*>(a[3]) & QQmlPropertyData::BypassInterceptor)
+                return false;
+            break;
+        case QMetaObject::BindableProperty:
+            break;
+        default:
+            return false;
+        }
+
+        return doIntercept(c, id, a);
+    }
+
     QBiPointer<QDynamicMetaObjectData, const QMetaObject> parent;
+    const QMetaObject *metaObject = nullptr;
 
-    QQmlPropertyValueInterceptor *interceptors;
-    const QMetaObject *metaObject;
+private:
+    bool doIntercept(QMetaObject::Call c, int id, void **a);
+    QQmlPropertyValueInterceptor *interceptors = nullptr;
 };
 
 inline QQmlInterceptorMetaObject *QQmlInterceptorMetaObject::get(QObject *obj)
