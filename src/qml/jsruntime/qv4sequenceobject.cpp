@@ -97,6 +97,11 @@ struct QV4Sequence : Object {
 
 }
 
+static const QMetaSequence *meta(const Heap::QV4Sequence *p)
+{
+    return p->typePrivate->extraData.ld;
+}
+
 struct QV4Sequence : public QV4::Object
 {
     V4_OBJECT2(QV4Sequence, QV4::Object)
@@ -104,11 +109,6 @@ struct QV4Sequence : public QV4::Object
     V4_PROTOTYPE(sequencePrototype)
     V4_NEEDS_DESTROY
 public:
-
-    static const QMetaSequence *meta(const Heap::QV4Sequence *p)
-    {
-        return p->typePrivate->extraData.ld;
-    }
 
     qsizetype size() const
     {
@@ -195,11 +195,6 @@ public:
     {
         const auto *p = d();
         return QVariant(p->typePrivate->typeId, p->container);
-    }
-
-    void init()
-    {
-        defineAccessorProperty(QStringLiteral("length"), method_get_length, method_set_length);
     }
 
     //  ### Qt 7 use qsizetype instead.
@@ -418,70 +413,6 @@ public:
         return true;
     }
 
-    static QV4::ReturnedValue method_get_length(const FunctionObject *b, const Value *thisObject, const Value *, int)
-    {
-        QV4::Scope scope(b);
-        QV4::Scoped<QV4Sequence> This(scope, thisObject->as<QV4Sequence>());
-        if (!This)
-            THROW_TYPE_ERROR();
-
-        if (This->d()->isReference) {
-            if (!This->d()->object)
-                RETURN_RESULT(Encode(0));
-            This->loadReference();
-        }
-        RETURN_RESULT(Encode(qint32(This->size())));
-    }
-
-    static QV4::ReturnedValue method_set_length(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
-    {
-        QV4::Scope scope(f);
-        QV4::Scoped<QV4Sequence> This(scope, thisObject->as<QV4Sequence>());
-        if (!This)
-            THROW_TYPE_ERROR();
-
-        quint32 newLength = argc ? argv[0].toUInt32() : 0;
-        /* Qt containers have int (rather than uint) allowable indexes. */
-        if (newLength > INT_MAX) {
-            generateWarning(scope.engine, QLatin1String("Index out of range during length set"));
-            RETURN_UNDEFINED();
-        }
-
-        if (This->d()->isReadOnly)
-            THROW_TYPE_ERROR();
-
-        /* Read the sequence from the QObject property if we're a reference */
-        if (This->d()->isReference) {
-            if (!This->d()->object)
-                RETURN_UNDEFINED();
-            This->loadReference();
-        }
-        /* Determine whether we need to modify the sequence */
-        quint32 newCount = static_cast<quint32>(newLength);
-        quint32 count = static_cast<quint32>(This->size());
-        if (newCount == count) {
-            RETURN_UNDEFINED();
-        } else if (newCount > count) {
-            const QMetaType valueMetaType = meta(This->d())->valueMetaType();
-            /* according to ECMA262r3 we need to insert */
-            /* undefined values increasing length to newLength. */
-            /* We cannot, so we insert default-values instead. */
-            while (newCount > count++)
-                This->append(QVariant(valueMetaType));
-        } else {
-            /* according to ECMA262r3 we need to remove */
-            /* elements until the sequence is the required length. */
-            if (newCount < count)
-                This->removeLast(count - newCount);
-        }
-        /* write back if required. */
-        if (This->d()->isReference) {
-            /* write back.  already checked that object is non-null, so skip that check here. */
-            This->storeReference();
-        }
-        RETURN_UNDEFINED();
-    }
-
     void* getRawContainerPtr() const
     { return d()->container; }
 
@@ -549,7 +480,6 @@ void Heap::QV4Sequence::init(const QQmlType &qmlType, const void *container)
     QV4::Scope scope(internalClass->engine);
     QV4::Scoped<QV4::QV4Sequence> o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
-    o->init();
 }
 
 void Heap::QV4Sequence::init(QObject *object, int propertyIndex, const QQmlType &qmlType,
@@ -569,7 +499,6 @@ void Heap::QV4Sequence::init(QObject *object, int propertyIndex, const QQmlType 
     QV4::Scoped<QV4::QV4Sequence> o(scope, this);
     o->setArrayType(Heap::ArrayData::Custom);
     o->loadReference();
-    o->init();
 }
 
 }
@@ -578,10 +507,76 @@ namespace QV4 {
 DEFINE_OBJECT_VTABLE(QV4Sequence);
 }
 
+static QV4::ReturnedValue method_get_length(const FunctionObject *b, const Value *thisObject, const Value *, int)
+{
+    QV4::Scope scope(b);
+    QV4::Scoped<QV4Sequence> This(scope, thisObject->as<QV4Sequence>());
+    if (!This)
+        THROW_TYPE_ERROR();
+
+    if (This->d()->isReference) {
+        if (!This->d()->object)
+            RETURN_RESULT(Encode(0));
+        This->loadReference();
+    }
+    RETURN_RESULT(Encode(qint32(This->size())));
+}
+
+static QV4::ReturnedValue method_set_length(const FunctionObject *f, const Value *thisObject, const Value *argv, int argc)
+{
+    QV4::Scope scope(f);
+    QV4::Scoped<QV4Sequence> This(scope, thisObject->as<QV4Sequence>());
+    if (!This)
+        THROW_TYPE_ERROR();
+
+    quint32 newLength = argc ? argv[0].toUInt32() : 0;
+    /* Qt containers have int (rather than uint) allowable indexes. */
+    if (newLength > INT_MAX) {
+        generateWarning(scope.engine, QLatin1String("Index out of range during length set"));
+        RETURN_UNDEFINED();
+    }
+
+    if (This->d()->isReadOnly)
+        THROW_TYPE_ERROR();
+
+    /* Read the sequence from the QObject property if we're a reference */
+    if (This->d()->isReference) {
+        if (!This->d()->object)
+            RETURN_UNDEFINED();
+        This->loadReference();
+    }
+    /* Determine whether we need to modify the sequence */
+    quint32 newCount = static_cast<quint32>(newLength);
+    quint32 count = static_cast<quint32>(This->size());
+    if (newCount == count) {
+        RETURN_UNDEFINED();
+    } else if (newCount > count) {
+        const QMetaType valueMetaType = meta(This->d())->valueMetaType();
+        /* according to ECMA262r3 we need to insert */
+        /* undefined values increasing length to newLength. */
+        /* We cannot, so we insert default-values instead. */
+        while (newCount > count++)
+            This->append(QVariant(valueMetaType));
+    } else {
+        /* according to ECMA262r3 we need to remove */
+        /* elements until the sequence is the required length. */
+        if (newCount < count)
+            This->removeLast(count - newCount);
+    }
+    /* write back if required. */
+    if (This->d()->isReference) {
+        /* write back.  already checked that object is non-null, so skip that check here. */
+        This->storeReference();
+    }
+    RETURN_UNDEFINED();
+}
+
+
 void SequencePrototype::init()
 {
     defineDefaultProperty(QStringLiteral("sort"), method_sort, 1);
     defineDefaultProperty(engine()->id_valueOf(), method_valueOf, 0);
+    defineAccessorProperty(QStringLiteral("length"), method_get_length, method_set_length);
 }
 
 ReturnedValue SequencePrototype::method_valueOf(const FunctionObject *f, const Value *thisObject, const Value *, int)
