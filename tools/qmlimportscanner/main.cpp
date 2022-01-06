@@ -79,14 +79,14 @@ inline QString preferLiteral() { return QStringLiteral("prefer"); }
 
 void printUsage(const QString &appNameIn)
 {
-    const std::wstring appName = appNameIn.toStdWString();
+    const std::string appName = appNameIn.toStdString();
     const QString qmlPath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
-    std::wcerr
+    std::cerr
         << "Usage: " << appName << " -rootPath path/to/app/qml/directory -importPath path/to/qt/qml/directory\n"
            "       " << appName << " -qmlFiles file1 file2 -importPath path/to/qt/qml/directory\n"
            "       " << appName << " -qrcFiles file1.qrc file2.qrc -importPath path/to/qt/qml/directory\n\n"
            "Example: " << appName << " -rootPath . -importPath "
-        << QDir::toNativeSeparators(qmlPath).toStdWString()
+        << QDir::toNativeSeparators(qmlPath).toStdString()
         << '\n';
 }
 
