@@ -961,7 +961,7 @@ void QQuickSwipeDelegatePrivate::forwardMouseEvent(QMouseEvent *event, QQuickIte
 {
     Q_Q(QQuickSwipeDelegate);
     QMutableSinglePointEvent localizedEvent(*event);
-    localizedEvent.mutablePoint().setPosition(localPos);
+    QMutableEventPoint::setPosition(localizedEvent.point(0), localPos);
     QGuiApplication::sendEvent(destination, &localizedEvent);
     q->setPressed(!localizedEvent.isAccepted());
 }
