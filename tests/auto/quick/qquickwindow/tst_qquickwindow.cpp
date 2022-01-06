@@ -87,7 +87,7 @@ static TouchEventData makeTouchData(QEvent::Type type, QWindow *w, QEventPoint::
 {
     TouchEventData d = { type, nullptr, w, states, touchPoints };
     for (auto &pt : d.touchPoints)
-        QMutableEventPoint::from(pt).detach();
+        QMutableEventPoint::detach(pt);
     return d;
 }
 static TouchEventData makeTouchData(QEvent::Type type, QWindow *w, QEventPoint::States states,

@@ -1472,11 +1472,10 @@ void QQuickFlickable::mouseReleaseEvent(QMouseEvent *event)
             // Now send the release
             if (auto grabber = qmlobject_cast<QQuickItem *>(event->exclusiveGrabber(event->point(0)))) {
                 // not copying or detaching anything, so make sure we return the original event unchanged
-                QMutableSinglePointEvent *localized = QMutableSinglePointEvent::from(event);
-                const auto oldPosition = localized->mutablePoint().position();
-                localized->mutablePoint().setPosition(grabber->mapFromScene(localized->scenePosition()));
-                QCoreApplication::sendEvent(window(), localized);
-                localized->mutablePoint().setPosition(oldPosition);
+                const auto oldPosition = event->point(0).position();
+                QMutableEventPoint::setPosition(event->point(0), grabber->mapFromScene(event->scenePosition()));
+                QCoreApplication::sendEvent(window(), event);
+                QMutableEventPoint::setPosition(event->point(0), oldPosition);
             }
 
             // And the event has been consumed
@@ -1747,7 +1746,7 @@ void QQuickFlickablePrivate::replayDelayedPress()
             qCDebug(lcReplay) << "replaying" << event.data();
             // Put scenePosition into position, for the sake of QQuickWindowPrivate::translateTouchEvent()
             // TODO remove this if we remove QQuickWindowPrivate::translateTouchEvent()
-            QMutableEventPoint::from(firstPoint).setPosition(firstPoint.scenePosition());
+            QMutableEventPoint::setPosition(firstPoint, firstPoint.scenePosition());
             // Send it through like a fresh press event, and let QQuickWindow
             // (more specifically, QQuickWindowPrivate::deliverPressOrReleaseEvent)
             // find the item or handler that should receive it, as usual.

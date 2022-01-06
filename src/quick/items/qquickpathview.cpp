@@ -1861,7 +1861,7 @@ bool QQuickPathView::childMouseEventFilter(QQuickItem *i, QEvent *e)
         if ((stealThisEvent || contains(localPos)) && (!grabber || !grabber->keepMouseGrab() || grabberDisabled)) {
             // Make a localized copy of the QMouseEvent.
             QMutableSinglePointEvent localizedEvent(*static_cast<QMouseEvent *>(pe));
-            QMutableEventPoint::from(localizedEvent.point(0)).setPosition(localPos);
+            QMutableEventPoint::setPosition(localizedEvent.point(0), localPos);
             localizedEvent.setAccepted(false);
 
             switch (localizedEvent.type()) {
