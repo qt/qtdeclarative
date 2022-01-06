@@ -69,7 +69,7 @@
 #include <QtCore/qcryptographichash.h>
 #include <QtCore/QScopedValueRollback>
 
-#if defined(QML_COMPILE_HASH)
+#if defined(QML_COMPILE_HASH) && defined(QML_COMPILE_HASH_LENGTH) && QML_COMPILE_HASH_LENGTH > 0
 #  ifdef Q_OS_LINUX
 // Place on a separate section on Linux so it's easier to check from outside
 // what the hash version is.
@@ -940,7 +940,7 @@ bool ExecutableCompilationUnit::verifyHeader(
         }
     }
 
-#if defined(QML_COMPILE_HASH)
+#if defined(QML_COMPILE_HASH) && defined(QML_COMPILE_HASH_LENGTH) && QML_COMPILE_HASH_LENGTH > 0
     if (qstrcmp(qml_compile_hash, unit->libraryVersionHash) != 0) {
         *errorString = QStringLiteral("QML library version mismatch. Expected compile hash does not match");
         return false;
