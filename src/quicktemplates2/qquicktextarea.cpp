@@ -383,7 +383,7 @@ void QQuickTextAreaPrivate::ensureCursorVisible()
         flickable->setContentY(cr.top() - tp);
     } else {
         const qreal bp = q->bottomPadding();
-        if (cr.bottom() >= cy + tp + h - bp)
+        if (cr.bottom() >= cy + tp + h - bp && cr.bottom() <= flickable->contentHeight())
             flickable->setContentY(cr.bottom() - h + bp);
     }
 }

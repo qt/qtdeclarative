@@ -88,6 +88,16 @@ TestCase {
     }
 
     Component {
+        id: flickableWithScrollBar
+        Flickable {
+            width: 200
+            height: 200
+            TextArea.flickable: TextArea { }
+            ScrollBar.vertical: ScrollBar { }
+        }
+    }
+
+    Component {
         id: signalSpy
         SignalSpy { }
     }
@@ -99,6 +109,10 @@ TestCase {
 
     FontMetrics {
         id: defaultFontMetrics
+    }
+
+    TestUtil {
+        id: util
     }
 
     function test_creation() {
@@ -349,6 +363,25 @@ TestCase {
         verify(textArea.background)
         compare(textArea.background.width, flickable.width)
         compare(textArea.background.height, flickable.height)
+    }
+
+    function test_scrollable_paste_large() {
+        var control = createTemporaryObject(flickableWithScrollBar, testCase)
+        verify(control)
+
+        var textArea = control.TextArea.flickable
+        verify(textArea)
+
+        if (typeof(textArea.paste) !== "function")
+            skip("Clipboard is not supported on this platform.")
+
+        util.populateClipboardText(100)
+        waitForRendering(control)
+        // don't crash (QTBUG-99582)
+        textArea.paste()
+        // verify that the cursor moved to the bottom after pasting, and we scrolled down to show it
+        tryVerify(function() { return textArea.cursorRectangle.y > 1000 }); // maybe > 2000, depending on font size
+        tryVerify(function() { return control.contentY > textArea.cursorRectangle.y - control.height })
     }
 
     function test_warning() {
