@@ -73,6 +73,8 @@ public:
     bool printAvailableFunctions() const;
     int dragThreshold() const;
 
+    Q_INVOKABLE void populateClipboardText(int lineCount);
+
 Q_SIGNALS:
     void printAvailableFunctionsChanged();
     void dragThresholdChanged();

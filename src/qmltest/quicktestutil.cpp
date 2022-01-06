@@ -47,6 +47,7 @@
 #include <QtQml/private/qjsvalue_p.h>
 
 #include <QtGui/qguiapplication.h>
+#include <QtGui/qclipboard.h>
 #include <QtGui/qstylehints.h>
 #include <QtQml/qqmlengine.h>
 
@@ -60,6 +61,18 @@ bool QuickTestUtil::printAvailableFunctions() const
 int QuickTestUtil::dragThreshold() const
 {
     return QGuiApplication::styleHints()->startDragDistance();
+}
+
+void QuickTestUtil::populateClipboardText(int lineCount)
+{
+#if QT_CONFIG(clipboard)
+    QString fmt(u"%1 bottles of beer on the wall, %1 bottles of beer; "
+                "take one down, pass it around, %2 bottles of beer on the wall."_qs);
+    QStringList lines;
+    for (int i = lineCount; i > 0; --i)
+        lines << fmt.arg(i).arg(i - 1);
+    QGuiApplication::clipboard()->setText(lines.join(u'\n'));
+#endif
 }
 
 QJSValue QuickTestUtil::typeName(const QVariant &v) const
