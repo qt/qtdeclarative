@@ -94,9 +94,9 @@ protected:
                 originalScenePositions[pointIndex] = pe->point(pointIndex).scenePosition();
 
             for (int pointIndex = 0; pointIndex < pe->pointCount(); ++pointIndex) {
-                QMutableEventPoint &mut = QMutableEventPoint::from(pe->point(pointIndex));
-                mut.setScenePosition(vxh->map(mut.scenePosition()));
-                mut.setPosition(mut.position());
+                QEventPoint &p = pe->point(pointIndex);
+                QMutableEventPoint::setScenePosition(p, vxh->map(p.scenePosition()));
+                QMutableEventPoint::setPosition(p, p.position());
             }
 
             qCDebug(lcTests) << "forwarding to subscene DA" << pe;
@@ -108,7 +108,7 @@ protected:
 
             // restore original scene positions
             for (int pointIndex = 0; pointIndex < pe->pointCount(); ++pointIndex)
-                QMutableEventPoint::from(pe->point(pointIndex)).setScenePosition(originalScenePositions.at(pointIndex));
+                QMutableEventPoint::setScenePosition(pe->point(pointIndex), originalScenePositions.at(pointIndex));
 
             pe->setAccepted(false); // reject implicit grab and let it keep propagating
             qCDebug(lcTests) << e << "returning" << ret;

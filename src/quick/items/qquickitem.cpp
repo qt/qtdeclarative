@@ -8917,12 +8917,11 @@ void QQuickItemPrivate::localizedTouchEvent(const QTouchEvent *event, bool isFil
         if ((p.state() == QEventPoint::State::Pressed || p.state() == QEventPoint::State::Released) && isInside)
             anyPressOrReleaseInside = true;
         QEventPoint pCopy(p);
-        QMutableEventPoint mut = QMutableEventPoint::from(pCopy);
         eventStates |= p.state();
         if (p.state() == QEventPoint::State::Released)
-            mut.detach();
-        mut.setPosition(localPos);
-        touchPoints << mut;
+            QMutableEventPoint::detach(pCopy);
+        QMutableEventPoint::setPosition(pCopy, localPos);
+        touchPoints.append(std::move(pCopy));
     }
 
     // Now touchPoints will have only points which are inside the item.
