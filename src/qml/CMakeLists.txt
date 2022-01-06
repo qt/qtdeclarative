@@ -510,22 +510,6 @@ qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_animation
         animations
 )
 
-#### Keys ignored in scope 18:.:common:common/common.pri:NOT build_pass:
-# compile_hash_contents = "// Generated file, DO NOT EDIT" "$${LITERAL_HASH}define QML_COMPILE_HASH "$$QML_COMPILE_HASH"" "$${LITERAL_HASH}define QML_COMPILE_HASH_LENGTH $$str_size($$QML_COMPILE_HASH)"
-# tag = <EMPTY>
-# tagFile = "$$PWD/../../.tag"
-
-#### Keys ignored in scope 19:.:common:common/common.pri:EXISTS _ss_tagFile:
-# QMAKE_INTERNAL_INCLUDED_FILES = "$$tagFile"
-# tag = "$$cat($$tagFile, singleline)"
-
-#### Keys ignored in scope 20:.:common:common/common.pri:NOT tag___equals____ss_{LITERAL_DOLLAR}Format AND %H_ss_{LITERAL_DOLLAR}:
-# QML_COMPILE_HASH = "$$tag"
-
-#### Keys ignored in scope 22:.:common:common/common.pri:EXISTS _ss_PWD/../../.git:
-# QML_COMPILE_HASH = "$$commit"
-# commit = "$$system(git rev-parse HEAD)"
-
 qt_internal_extend_target(Qml CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STREQUAL 5
     COMPILE_OPTIONS
         -fno-strict-aliasing
