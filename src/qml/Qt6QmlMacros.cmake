@@ -1107,6 +1107,10 @@ function(qt6_target_compile_qml_to_cpp target)
 
     get_target_property(potential_qml_modules ${target} LINK_LIBRARIES)
     foreach(lib ${potential_qml_modules})
+        if(NOT TARGET ${lib})
+            continue()
+        endif()
+
         # get any QT_QML_MODULE_ property, this way we can tell whether we deal
         # with QML module target or not. use output dir as it's used later
         get_target_property(external_output_dir ${lib} QT_QML_MODULE_OUTPUT_DIRECTORY)
