@@ -185,7 +185,7 @@ QVector<QEventPoint> QQuickMultiPointHandler::eligiblePoints(QPointerEvent *even
     // In other cases however, check whether it would be OK to steal the grab if the handler chooses to do that.
     bool stealingAllowed = event->isBeginEvent() || event->isEndEvent();
     for (int i = 0; i < event->pointCount(); ++i) {
-        auto &p = QMutableEventPoint::from(event->point(i));
+        auto &p = event->point(i);
         if (QQuickDeliveryAgentPrivate::isMouseEvent(event)) {
             if (static_cast<QMouseEvent *>(event)->buttons() == Qt::NoButton)
                 continue;
