@@ -1989,7 +1989,7 @@ bool QQuickItemViewPrivate::applyModelChanges(ChangeResult *totalInsertionResult
 
     updateUnrequestedIndexes();
 
-    FxViewItem *prevVisibleItemsFirst = visibleItems.count() ? *visibleItems.constBegin() : 0;
+    FxViewItem *prevVisibleItemsFirst = visibleItems.count() ? *visibleItems.constBegin() : nullptr;
     int prevItemCount = itemCount;
     int prevVisibleItemsCount = visibleItems.count();
     bool visibleAffected = false;

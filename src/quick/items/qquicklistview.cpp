@@ -896,12 +896,17 @@ void QQuickListViewPrivate::layoutVisibleItems(int fromModelIndex)
         const qreal from = isContentFlowReversed() ? -position()-displayMarginBeginning-size() : position()-displayMarginBeginning;
         const qreal to = isContentFlowReversed() ? -position()+displayMarginEnd : position()+size()+displayMarginEnd;
 
-        FxViewItem *firstItem = *visibleItems.constBegin();
+        FxListItemSG *firstItem = static_cast<FxListItemSG *>(visibleItems.constFirst());
         bool fixedCurrent = currentItem && firstItem->item == currentItem->item;
         firstVisibleItemPosition = firstItem->position();
         qreal sum = firstItem->size();
         qreal pos = firstItem->position() + firstItem->size() + spacing;
         firstItem->setVisible(firstItem->endPosition() >= from && firstItem->position() <= to);
+
+        // setPosition will affect the position of the item, and its section, if it has one.
+        // This will prevent them from potentially overlapping.
+        if (firstItem->section())
+            firstItem->setPosition(firstItem->position());
 
         for (int i=1; i < visibleItems.count(); ++i) {
             FxListItemSG *item = static_cast<FxListItemSG*>(visibleItems.at(i));
