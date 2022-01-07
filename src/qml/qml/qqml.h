@@ -843,35 +843,37 @@ inline void qmlRegisterNamespaceAndRevisions(const QMetaObject *metaObject,
                                              const QMetaObject *classInfoMetaObject,
                                              const QMetaObject *extensionMetaObject)
 {
-    QQmlPrivate::RegisterTypeAndRevisions type = { 1,
-                                                   QMetaType(),
-                                                   QMetaType(),
-                                                   0,
-                                                   nullptr,
-                                                   nullptr,
-                                                   nullptr,
+    QQmlPrivate::RegisterTypeAndRevisions type = {
+        3,
+        QMetaType(),
+        QMetaType(),
+        0,
+        nullptr,
+        nullptr,
+        nullptr,
 
-                                                   uri,
-                                                   QTypeRevision::fromMajorVersion(versionMajor),
+        uri,
+        QTypeRevision::fromMajorVersion(versionMajor),
 
-                                                   metaObject,
-                                                   (classInfoMetaObject ? classInfoMetaObject
-                                                                        : metaObject),
+        metaObject,
+        (classInfoMetaObject ? classInfoMetaObject : metaObject),
 
-                                                   nullptr,
-                                                   nullptr,
+        nullptr,
+        nullptr,
 
-                                                   -1,
-                                                   -1,
-                                                   -1,
+        -1,
+        -1,
+        -1,
 
-                                                   nullptr,
-                                                   extensionMetaObject,
+        nullptr,
+        extensionMetaObject,
 
-                                                   &qmlCreateCustomParser<void>,
-                                                   qmlTypeIds,
-                                                   -1,
-                                                   false };
+        &qmlCreateCustomParser<void>,
+        qmlTypeIds,
+        -1,
+        false,
+        QMetaSequence()
+    };
 
     qmlregister(QQmlPrivate::TypeAndRevisionsRegistration, &type);
 }

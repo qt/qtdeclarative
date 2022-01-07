@@ -642,6 +642,11 @@ QMetaType QQmlType::qListTypeId() const
     return d ? d->listId : QMetaType{};
 }
 
+QMetaSequence QQmlType::listMetaSequence() const
+{
+    return isSequentialContainer() ? *d->extraData.ld : QMetaSequence();
+}
+
 const QMetaObject *QQmlType::metaObject() const
 {
     if (!d)

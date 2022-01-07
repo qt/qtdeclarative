@@ -88,6 +88,12 @@ void QmlTypesCreator::writeClassProperties(const QmlTypesClassDescription &colle
     if (collector.elementName.isEmpty())
         return;
 
+    if (!collector.sequenceValueType.isEmpty()) {
+        qWarning() << "Ignoring name of sequential container:" << collector.elementName;
+        qWarning() << "Sequential containers are anonymous. Use QML_ANONYMOUS to register them.";
+        return;
+    }
+
     QStringList exports;
     QStringList metaObjects;
 

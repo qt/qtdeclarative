@@ -81,10 +81,10 @@ struct Q_QML_PRIVATE_EXPORT SequencePrototype : public QV4::Object
     static ReturnedValue fromVariant(QV4::ExecutionEngine *engine, const QVariant &v, bool *succeeded);
     static ReturnedValue fromData(QV4::ExecutionEngine *engine, QMetaType type, const void *data, bool *succeeded);
 
-    static int metaTypeForSequence(const Object *object);
+    static QMetaType metaTypeForSequence(const Object *object);
     static QVariant toVariant(Object *object);
     static QVariant toVariant(const Value &array, QMetaType typeHint, bool *succeeded);
-    static void* getRawContainerPtr(const Object *object, int typeHint);
+    static void *getRawContainerPtr(const Object *object, QMetaType typeHint);
 };
 
 }

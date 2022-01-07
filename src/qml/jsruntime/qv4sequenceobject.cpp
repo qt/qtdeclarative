@@ -81,7 +81,7 @@ struct QV4Sequence : Object {
     void init(const QQmlType &qmlType, const void *container);
     void init(QObject *object, int propertyIndex, const QQmlType &qmlType, bool readOnly);
     void destroy() {
-        typePrivate->typeId.destroy(container);
+        typePrivate->listId.destroy(container);
         QQmlType::derefHandle(typePrivate);
         object.destroy();
         Object::destroy();
@@ -110,31 +110,41 @@ struct QV4Sequence : public QV4::Object
     V4_NEEDS_DESTROY
 public:
 
+    static const QMetaSequence *metaSequence(const Heap::QV4Sequence *p)
+    {
+        return p->typePrivate->extraData.ld;
+    }
+
+    static const QMetaType valueMetaType(const Heap::QV4Sequence *p)
+    {
+        return p->typePrivate->typeId;
+    }
+
     qsizetype size() const
     {
         const auto *p = d();
-        return meta(p)->size(p->container);
+        return metaSequence(p)->size(p->container);
     }
 
     QVariant at(int index) const
     {
         const auto *p = d();
-        const auto *m = meta(p);
-        QVariant result(m->valueMetaType());
-        m->valueAtIndex(p->container, index, result.data());
+        QVariant result(valueMetaType(p));
+        metaSequence(p)->valueAtIndex(p->container, index, result.data());
         return result;
     }
 
     void append(const QVariant &item)
     {
         const auto *p = d();
-        const auto *m = meta(p);
-        if (item.metaType() == m->valueMetaType()) {
+        const auto *m = metaSequence(p);
+        const QMetaType v = valueMetaType(p);
+        if (item.metaType() == v) {
             m->addValueAtEnd(p->container, item.constData());
         } else {
             QVariant converted = item;
-            if (!converted.convert(m->valueMetaType()))
-                converted = QVariant(m->valueMetaType());
+            if (!converted.convert(v))
+                converted = QVariant(v);
             m->addValueAtEnd(p->container, converted.constData());
         }
     }
@@ -142,13 +152,14 @@ public:
     void replace(int index, const QVariant &item)
     {
         const auto *p = d();
-        const auto *m = meta(p);
-        if (item.metaType() == m->valueMetaType()) {
+        const auto *m = metaSequence(p);
+        const QMetaType v = valueMetaType(p);
+        if (item.metaType() == v) {
             m->setValueAtIndex(p->container, index, item.constData());
         } else {
             QVariant converted = item;
-            if (!converted.convert(m->valueMetaType()))
-                converted = QVariant(m->valueMetaType());
+            if (!converted.convert(v))
+                converted = QVariant(v);
             m->setValueAtIndex(p->container, index, converted.constData());
         }
     }
@@ -157,9 +168,9 @@ public:
     void sort(const Compare &compare)
     {
         const auto *p = d();
-        const auto *m = meta(p);
+        const auto *m = metaSequence(p);
 
-        QSequentialIterable iterable(*m, p->typePrivate->typeId, p->container);
+        QSequentialIterable iterable(*m, p->typePrivate->listId, p->container);
         if (iterable.canRandomAccessIterate()) {
             std::sort(QSequentialIterable::RandomAccessIterator(iterable.mutableBegin()),
                       QSequentialIterable::RandomAccessIterator(iterable.mutableEnd()),
@@ -176,7 +187,7 @@ public:
     void removeLast(int num)
     {
         const auto *p = d();
-        const auto *m = meta(p);
+        const auto *m = metaSequence(p);
 
         if (m->canEraseRangeAtIterator() && m->hasRandomAccessIterator() && num > 1) {
             void *i = m->end(p->container);
@@ -194,7 +205,7 @@ public:
     QVariant toVariant()
     {
         const auto *p = d();
-        return QVariant(p->typePrivate->typeId, p->container);
+        return QVariant(p->typePrivate->listId, p->container);
     }
 
     //  ### Qt 7 use qsizetype instead.
@@ -249,8 +260,8 @@ public:
         }
 
         quint32 count = quint32(size());
-        const QMetaType valueMetaType = meta(d())->valueMetaType();
-        const QVariant element = engine()->toVariant(value, valueMetaType, false);
+        const QMetaType valueType = valueMetaType(d());
+        const QVariant element = engine()->toVariant(value, valueType, false);
 
         if (index == count) {
             append(element);
@@ -260,7 +271,7 @@ public:
             /* according to ECMA262r3 we need to insert */
             /* the value at the given index, increasing length to index+1. */
             while (index > count++)
-                append(QVariant(valueMetaType));
+                append(QVariant(valueType));
             append(element);
         }
 
@@ -471,7 +482,7 @@ void Heap::QV4Sequence::init(const QQmlType &qmlType, const void *container)
     typePrivate = qmlType.priv();
     QQmlType::refHandle(typePrivate);
 
-    this->container = QMetaType(typePrivate->typeId).create(container);
+    this->container = typePrivate->listId.create(container);
     propertyIndex = -1;
     isReference = false;
     isReadOnly = false;
@@ -490,7 +501,7 @@ void Heap::QV4Sequence::init(QObject *object, int propertyIndex, const QQmlType 
     Q_ASSERT(qmlType.isSequentialContainer());
     typePrivate = qmlType.priv();
     QQmlType::refHandle(typePrivate);
-    container = QMetaType(typePrivate->typeId).create();
+    container = QMetaType(typePrivate->listId).create();
     this->propertyIndex = propertyIndex;
     isReference = true;
     this->isReadOnly = readOnly;
@@ -571,7 +582,6 @@ static QV4::ReturnedValue method_set_length(const FunctionObject *f, const Value
     RETURN_UNDEFINED();
 }
 
-
 void SequencePrototype::init()
 {
     defineDefaultProperty(QStringLiteral("sort"), method_sort, 1);
@@ -612,7 +622,7 @@ ReturnedValue SequencePrototype::newSequence(
     // (as well as object ptr + property index for updated-read and write-back)
     // and so access/mutate avoids variant conversion.
 
-    const QQmlType qmlType = QQmlMetaType::qmlType(sequenceType);
+    const QQmlType qmlType = QQmlMetaType::qmlListType(sequenceType);
     if (qmlType.isSequentialContainer()) {
         *succeeded = true;
         QV4::ScopedObject obj(scope, engine->memoryManager->allocate<QV4Sequence>(
@@ -638,7 +648,7 @@ ReturnedValue SequencePrototype::fromData(ExecutionEngine *engine, QMetaType typ
     // Access and mutation is extremely fast since it will not need to modify any
     // QObject property.
 
-    const QQmlType qmlType = QQmlMetaType::qmlType(type);
+    const QQmlType qmlType = QQmlMetaType::qmlListType(type);
     if (qmlType.isSequentialContainer()) {
         *succeeded = true;
         QV4::ScopedObject obj(scope, engine->memoryManager->allocate<QV4Sequence>(qmlType, data));
@@ -666,18 +676,25 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
     QV4::Scope scope(array.as<Object>()->engine());
     QV4::ScopedArrayObject a(scope, array);
 
-    const QQmlType type = QQmlMetaType::qmlType(typeHint);
+    const QQmlType type = QQmlMetaType::qmlListType(typeHint);
     if (type.isSequentialContainer()) {
-        const QMetaSequence *meta = type.priv()->extraData.ld;
-        const QMetaType containerMetaType(type.priv()->typeId);
+        const QQmlTypePrivate *priv = type.priv();
+        const QMetaSequence *meta = priv->extraData.ld;
+        const QMetaType containerMetaType(priv->listId);
         QVariant result(containerMetaType);
         quint32 length = a->getLength();
         QV4::ScopedValue v(scope);
         for (quint32 i = 0; i < length; ++i) {
-            const QMetaType valueMetaType = meta->valueMetaType();
+            const QMetaType valueMetaType = priv->typeId;
             QVariant variant = scope.engine->toVariant(a->get(i), valueMetaType, false);
-            if (variant.metaType() != valueMetaType && !variant.convert(valueMetaType))
+            const QMetaType originalType = variant.metaType();
+            if (originalType != valueMetaType && !variant.convert(valueMetaType)) {
+                qWarning() << QLatin1String(
+                                  "Could not convert array value at position %1 from %2 to %3")
+                              .arg(QString::number(i), QString::fromUtf8(originalType.name()),
+                                   QString::fromUtf8(valueMetaType.name()));
                 variant = QVariant(valueMetaType);
+            }
             meta->addValueAtEnd(result.data(), variant.constData());
         }
         return result;
@@ -687,20 +704,20 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
     return QVariant();
 }
 
-void* SequencePrototype::getRawContainerPtr(const Object *object, int typeHint)
+void *SequencePrototype::getRawContainerPtr(const Object *object, QMetaType typeHint)
 {
     if (auto *s = object->as<QV4Sequence>()) {
-        if (s->d()->typePrivate->typeId.id() == typeHint)
+        if (s->d()->typePrivate->listId == typeHint)
             return s->getRawContainerPtr();
     }
     return nullptr;
 }
 
-int SequencePrototype::metaTypeForSequence(const QV4::Object *object)
+QMetaType SequencePrototype::metaTypeForSequence(const QV4::Object *object)
 {
     if (auto *s = object->as<QV4Sequence>())
-        return s->d()->typePrivate->typeId.id();
-    return -1;
+        return s->d()->typePrivate->listId;
+    return QMetaType();
 }
 
 QT_END_NAMESPACE

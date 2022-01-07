@@ -132,6 +132,7 @@ public:
 
     QMetaType typeId() const;
     QMetaType qListTypeId() const;
+    QMetaSequence listMetaSequence() const;
 
     const QMetaObject *metaObject() const;
     const QMetaObject *baseMetaObject() const;

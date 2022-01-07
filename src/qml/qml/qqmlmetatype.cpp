@@ -475,12 +475,15 @@ static void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data)
     if (type->baseMetaObject)
         data->metaObjectToType.insert(type->baseMetaObject, type);
 
-    if (type->typeId.isValid()) {
-        data->idToType.insert(type->typeId.id(), type);
-    }
+    if (type->regType == QQmlType::SequentialContainerType) {
+        if (type->listId.isValid())
+            data->idToType.insert(type->listId.id(), type);
+    } else {
+        if (type->typeId.isValid())
+            data->idToType.insert(type->typeId.id(), type);
 
-    if (type->listId.isValid()) {
-        data->idToType.insert(type->listId.id(), type);
+        if (type->listId.flags().testFlag(QMetaType::IsQmlList))
+            data->idToType.insert(type->listId.id(), type);
     }
 
     if (!type->module.isEmpty()) {
@@ -637,8 +640,7 @@ QQmlType QQmlMetaType::registerSequentialContainer(
 
     QQmlMetaTypeDataPtr data;
 
-    const QString typeName = QString::fromUtf8(container.typeName);
-    if (!checkRegistration(QQmlType::SequentialContainerType, data, container.uri, typeName,
+    if (!checkRegistration(QQmlType::SequentialContainerType, data, container.uri, QString(),
                            container.version, {})) {
         return QQmlType();
     }
@@ -646,10 +648,11 @@ QQmlType QQmlMetaType::registerSequentialContainer(
     QQmlTypePrivate *priv = new QQmlTypePrivate(QQmlType::SequentialContainerType);
 
     data->registerType(priv);
-    priv->setName(QString::fromUtf8(container.uri), typeName);
+    priv->setName(QString::fromUtf8(container.uri), QString());
     priv->version = container.version;
     priv->revision = container.revision;
-    priv->typeId = container.typeId;
+    priv->typeId = container.metaSequence.valueMetaType();
+    priv->listId = container.typeId;
     *priv->extraData.ld = container.metaSequence;
 
     addTypeToData(priv, data);
@@ -1067,13 +1070,16 @@ QObject *QQmlMetaType::toQObject(const QVariant &v, bool *ok)
 /*
     Returns the item type for a list of type \a id.
  */
-QMetaType QQmlMetaType::listType(QMetaType metaType)
+QMetaType QQmlMetaType::listValueType(QMetaType metaType)
 {
-    if (!isList(metaType))
-        return QMetaType {};
-    const auto iface = metaType.iface();
-    if (iface->metaObjectFn == &dynamicQmlListMarker)
-        return QMetaType(static_cast<const QQmlListMetaTypeInterface *>(iface)->valueType);
+    if (isList(metaType)) {
+        const auto iface = metaType.iface();
+        if (iface->metaObjectFn == &dynamicQmlListMarker)
+            return QMetaType(static_cast<const QQmlListMetaTypeInterface *>(iface)->valueType);
+    } else if (metaType.flags() & QMetaType::PointerToQObject) {
+        return QMetaType();
+    }
+
     QQmlMetaTypeDataPtr data;
     QQmlTypePrivate *type = data->idToType.value(metaType.id());
     if (type && type->listId == metaType)
@@ -1256,6 +1262,13 @@ QQmlType QQmlMetaType::qmlType(QMetaType metaType)
     const QQmlMetaTypeDataPtr data;
     QQmlTypePrivate *type = data->idToType.value(metaType.id());
     return (type && type->typeId == metaType) ? QQmlType(type) : QQmlType();
+}
+
+QQmlType QQmlMetaType::qmlListType(QMetaType metaType)
+{
+    const QQmlMetaTypeDataPtr data;
+    QQmlTypePrivate *type = data->idToType.value(metaType.id());
+    return (type && type->listId == metaType) ? QQmlType(type) : QQmlType();
 }
 
 /*!

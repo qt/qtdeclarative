@@ -595,6 +595,7 @@ void tst_QJSEngine::toScriptValueQtQml_data()
     QTest::newRow("QList<bool>") << QVariant::fromValue(QList<bool>{true, false, true, false});
     QTest::newRow("QStringList") << QVariant::fromValue(QStringList{"a", "b", "c", "d"});
     QTest::newRow("QList<QUrl>") << QVariant::fromValue(QList<QUrl>{QUrl("htt://a.com"), QUrl("file:///tmp/b/"), QUrl("c.foo"), QUrl("/some/d")});
+    QTest::newRow("QList<QPoint>") << QVariant::fromValue(QList<QPointF>() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42));
 
     static const QStandardItemModel model(4, 4);
     QTest::newRow("QModelIndexList") << QVariant::fromValue(QModelIndexList{ model.index(1, 2), model.index(2, 3), model.index(3, 1), model.index(3, 2)});
@@ -642,8 +643,6 @@ void tst_QJSEngine::toScriptValuenotroundtripped_data()
 
     QTest::newRow("QList<QObject*>") << QVariant::fromValue(QList<QObject*>() << this) << QVariant(QVariantList() << QVariant::fromValue<QObject *>(this));
     QTest::newRow("QObjectList") << QVariant::fromValue(QObjectList() << this) << QVariant(QVariantList() << QVariant::fromValue<QObject *>(this));
-    QTest::newRow("QList<QPoint>") << QVariant::fromValue(QList<QPointF>() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42)) << QVariant(QVariantList() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42));
-    QTest::newRow("QVector<QPoint>") << QVariant::fromValue(QVector<QPointF>() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42)) << QVariant(QVariantList() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42));
     QTest::newRow("VoidStar") << QVariant(QMetaType(QMetaType::VoidStar), nullptr) << QVariant(QMetaType(QMetaType::Nullptr), nullptr);
 }
 

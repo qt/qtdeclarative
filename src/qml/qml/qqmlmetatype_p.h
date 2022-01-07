@@ -172,6 +172,8 @@ public:
     static QQmlType qmlTypeById(int qmlTypeId);
 
     static QQmlType qmlType(QMetaType metaType);
+    static QQmlType qmlListType(QMetaType metaType);
+
     static QQmlType qmlType(const QUrl &unNormalizedUrl, bool includeNonFileImports = false);
 
     static QQmlRefPointer<QQmlPropertyCache> propertyCache(
@@ -198,7 +200,7 @@ public:
 
     static QObject *toQObject(const QVariant &, bool *ok = nullptr);
 
-    static QMetaType listType(QMetaType type);
+    static QMetaType listValueType(QMetaType type);
     static QQmlAttachedPropertiesFunc attachedPropertiesFunc(QQmlEnginePrivate *,
                                                              const QMetaObject *);
     static bool isInterface(QMetaType type);

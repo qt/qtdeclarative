@@ -307,7 +307,7 @@ property is only invoked when the property is reassigned to a different object v
     \ingroup qmlvaluetypes
     \brief a list of QML objects.
 
-    The \c list type refers to a list of QML objects.
+    The \c list type refers to a list of QML objects or values.
 
     A list value can be accessed in a similar way to a JavaScript array:
 
@@ -320,14 +320,14 @@ property is only invoked when the property is reassigned to a different object v
     Values can be dynamically added to the list by using the \c push method,
     as if it were a JavaScript Array
 
-    A \c list can only store QML objects, and cannot contain any
-    \l {QML Value Types}{value type} values. (To store value types within a
-    list, use the \l var type instead.)
+    A \c list can store QML objects or \l{QML Value Types}{value type} values.
 
     When integrating with C++, note that any QQmlListProperty value
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into a \c list value, and vice-versa.
 
+    Similarly any \c{QList<T>} of a registered value type \c{T} is automatically
+    converted into a \c list value, and vice-versa.
 
     \section1 Using the list Type
 
@@ -367,13 +367,17 @@ property is only invoked when the property is reassigned to a different object v
     }
     \endqml
 
-    Objects in a list can be replaced with the \c{[]} operator, just like
-    entries of JavaScript arrays. You can also use \c{push()} to append entries,
-    or you can set the \c length property of the list to truncate or extend it.
-    You can not automatically extend the list by assigning to an index currently
-    out of range, though. Furthermore, if you insert \c null values into the
-    list, those are converted to \c nullptr entries in the underlying
-    QQmlListProperty.
+    Objects and values in a list can be replaced with the \c{[]} operator, just
+    like entries of JavaScript arrays. You can also use \c{push()} to append
+    entries, or you can set the \c length property of the list to truncate or
+    extend it. You can not automatically extend the list by assigning to an
+    index currently out of range, though. Furthermore, if you insert \c null
+    values into a list of objects, those are converted to \c nullptr entries in
+    the underlying QQmlListProperty.
+
+    A list of value types is different from a JavaScript array in one important
+    aspect: Growing it by setting its length does not produce undefined entries,
+    but rather default-constructed instances of the value type.
 
     This value type is provided by the QML language.
 

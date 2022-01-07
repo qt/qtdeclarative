@@ -745,7 +745,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
         // We can convert everything to QVariant :)
         return noError;
     } else if (property->isQList()) {
-        const QMetaType listType = QQmlMetaType::listType(property->propType());
+        const QMetaType listType = QQmlMetaType::listValueType(property->propType());
         if (!QQmlMetaType::isInterface(listType)) {
             QQmlRefPointer<QQmlPropertyCache> source = propertyCaches.at(binding->value.objectIndex);
             if (!canCoerce(listType, source)) {

@@ -391,6 +391,7 @@ private slots:
     void ambiguousContainingType();
     void objectAsBroken();
     void customValueTypes();
+    void valueTypeList();
 
 private:
     QQmlEngine engine;
@@ -6748,6 +6749,49 @@ void tst_qqmllanguage::customValueTypes()
 
     QCOMPARE(qvariant_cast<DerivedValueType>(o->property("derived")).content(), 14);
     QCOMPARE(qvariant_cast<BaseValueType>(o->property("base")).content(), 13);
+}
+
+void tst_qqmllanguage::valueTypeList()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("valueTypeList.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    {
+        QCOMPARE(o->property("c").toInt(), 17);
+        QCOMPARE(qvariant_cast<QPointF>(o->property("d")), QPointF(3, 4));
+        QCOMPARE(qvariant_cast<DerivedValueType>(o->property("y")).content(), 29);
+        const QList<DerivedValueType> x = qvariant_cast<QList<DerivedValueType>>(o->property("x"));
+        QCOMPARE(x.length(), 3);
+        for (const DerivedValueType &d : x)
+            QCOMPARE(d.content(), 29);
+
+        const QList<BaseValueType> baseList
+                = qvariant_cast<QList<BaseValueType>>(o->property("baseList"));
+        QCOMPARE(baseList.length(), 3);
+        for (const BaseValueType &b : baseList)
+            QCOMPARE(b.content(), 29);
+    }
+
+    o->setObjectName(QStringLiteral("foo"));
+    {
+        // See QTBUG-99766
+        QEXPECT_FAIL("", "Write-back for value types is still incomplete", Abort);
+        QCOMPARE(qvariant_cast<QPointF>(o->property("d")), QPointF(12, 4));
+        QCOMPARE(qvariant_cast<DerivedValueType>(o->property("y")).content(), 30);
+        const QList<DerivedValueType> x = qvariant_cast<QList<DerivedValueType>>(o->property("x"));
+        QCOMPARE(x.length(), 3);
+        for (const DerivedValueType &d : x)
+            QCOMPARE(d.content(), 30);
+
+        const QList<BaseValueType> baseList
+                = qvariant_cast<QList<BaseValueType>>(o->property("baseList"));
+        QCOMPARE(baseList.length(), 3);
+        for (const BaseValueType &b : baseList)
+            QCOMPARE(b.content(), 30);
+    }
 }
 
 QTEST_MAIN(tst_qqmllanguage)

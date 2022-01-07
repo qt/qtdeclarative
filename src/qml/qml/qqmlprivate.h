@@ -513,6 +513,7 @@ namespace QQmlPrivate
         int finalizerCast;
 
         bool forceAnonymous;
+        QMetaSequence listMetaSequence;
     };
 
     struct RegisterInterface {
@@ -590,7 +591,11 @@ namespace QQmlPrivate
         int structVersion;
         const char *uri;
         QTypeRevision version;
+
+        // ### Qt7: Remove typeName. It's ignored because the only valid name is "list",
+        //          and that's automatic.
         const char *typeName;
+
         QMetaType typeId;
         QMetaSequence metaSequence;
         QTypeRevision revision;
@@ -931,7 +936,15 @@ namespace QQmlPrivate
             if constexpr (std::is_base_of_v<QObject, T>)
                 return QMetaType::fromType<QQmlListProperty<T>>();
             else
-                return QMetaType();
+                return QMetaType::fromType<QList<T>>();
+        }
+
+        static QMetaSequence sequence()
+        {
+            if constexpr (std::is_base_of_v<QObject, T>)
+                return QMetaSequence();
+            else
+                return QMetaSequence::fromContainer<QList<T>>();
         }
     };
 
@@ -973,7 +986,7 @@ namespace QQmlPrivate
         static_assert(std::is_base_of_v<QObject, T> || !QQmlTypeInfo<T>::hasAttachedProperties);
 
         RegisterTypeAndRevisions type = {
-            2,
+            3,
             QmlMetaType<T>::self(),
             QmlMetaType<T>::list(),
             int(sizeof(T)),
@@ -1001,7 +1014,8 @@ namespace QQmlPrivate
             qmlTypeIds,
             StaticCastSelector<T, QQmlFinalizerHook>::cast(),
 
-            forceAnonymous
+            forceAnonymous,
+            QmlMetaType<T>::sequence(),
         };
 
         // Initialize the extension so that we can find it by name or ID.

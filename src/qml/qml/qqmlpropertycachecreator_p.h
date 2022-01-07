@@ -102,6 +102,7 @@ public:
     static QAtomicInt classIndexCounter;
 
     static QMetaType metaTypeForPropertyType(QV4::CompiledData::BuiltinType type);
+    static QMetaType listTypeForPropertyType(QV4::CompiledData::BuiltinType type);
 
     static QByteArray createClassNameTypeByUrl(const QUrl &url);
 
@@ -650,11 +651,15 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
 
         const QV4::CompiledData::BuiltinType type = p->builtinType();
 
-        if (type == QV4::CompiledData::BuiltinType::Var)
+        if (p->isList)
+            propertyFlags.type = QQmlPropertyData::Flags::QListType;
+        else if (type == QV4::CompiledData::BuiltinType::Var)
             propertyFlags.type = QQmlPropertyData::Flags::VarPropertyType;
 
         if (type != QV4::CompiledData::BuiltinType::InvalidBuiltin) {
-            propertyType = metaTypeForPropertyType(type);
+            propertyType = p->isList
+                    ? listTypeForPropertyType(type)
+                    : metaTypeForPropertyType(type);
         } else {
             Q_ASSERT(!p->isBuiltinType);
 
@@ -698,12 +703,11 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
                     propertyType = typeIds.id;
                 }
             } else {
-                if (p->isList) {
+                if (p->isList)
                     propertyType = qmltype.qListTypeId();
-                } else {
+                else
                     propertyType = qmltype.typeId();
-                    propertyTypeVersion = qmltype.version();
-                }
+                propertyTypeVersion = qmltype.version();
             }
 
             if (p->isList)
@@ -714,7 +718,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
                 propertyFlags.type = QQmlPropertyData::Flags::ValueType;
         }
 
-        if (!p->isReadOnly && !p->isList)
+        if (!p->isReadOnly && !propertyType.flags().testFlag(QMetaType::IsQmlList))
             propertyFlags.setIsWritable(true);
 
 

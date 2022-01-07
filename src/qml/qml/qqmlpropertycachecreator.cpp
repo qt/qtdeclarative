@@ -66,6 +66,26 @@ QMetaType QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(QV4::CompiledDat
     return QMetaType {};
 }
 
+QMetaType QQmlPropertyCacheCreatorBase::listTypeForPropertyType(QV4::CompiledData::BuiltinType type)
+{
+    switch (type) {
+    case QV4::CompiledData::BuiltinType::Var:      return QMetaType::fromType<QList<QVariant>>();
+    case QV4::CompiledData::BuiltinType::Int:      return QMetaType::fromType<QList<int>>();
+    case QV4::CompiledData::BuiltinType::Bool:     return QMetaType::fromType<QList<bool>>();
+    case QV4::CompiledData::BuiltinType::Real:     return QMetaType::fromType<QList<qreal>>();
+    case QV4::CompiledData::BuiltinType::String:   return QMetaType::fromType<QList<QString>>();
+    case QV4::CompiledData::BuiltinType::Url:      return QMetaType::fromType<QList<QUrl>>();
+    case QV4::CompiledData::BuiltinType::Time:     return QMetaType::fromType<QList<QTime>>();
+    case QV4::CompiledData::BuiltinType::Date:     return QMetaType::fromType<QList<QDate>>();
+    case QV4::CompiledData::BuiltinType::DateTime: return QMetaType::fromType<QList<QDateTime>>();
+    case QV4::CompiledData::BuiltinType::Rect:     return QMetaType::fromType<QList<QRectF>>();
+    case QV4::CompiledData::BuiltinType::Point:    return QMetaType::fromType<QList<QPointF>>();
+    case QV4::CompiledData::BuiltinType::Size:     return QMetaType::fromType<QList<QSizeF>>();
+    case QV4::CompiledData::BuiltinType::InvalidBuiltin: break;
+    };
+    return QMetaType {};
+}
+
 QByteArray QQmlPropertyCacheCreatorBase::createClassNameTypeByUrl(const QUrl &url)
 {
     const QString path = url.path();

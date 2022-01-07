@@ -259,7 +259,7 @@ void QQmlObjectCreator::populateDeferred(QObject *instance, int deferredIndex,
 
         const QQmlPropertyData &property = qmlProperty->core;
 
-        if (property.isQList()) {
+        if (property.propType().flags().testFlag(QMetaType::IsQmlList)) {
             void *argv[1] = { (void*)&_currentList };
             QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, property.coreIndex(), argv);
         } else if (_currentList.object) {
@@ -693,7 +693,7 @@ void QQmlObjectCreator::setupBindings(BindingSetupFlags mode)
             continue;
         }
 
-        if (property && property->isQList()) {
+        if (property && property->propType().flags().testFlag(QMetaType::IsQmlList)) {
             if (property->coreIndex() != currentListPropertyIndex) {
                 void *argv[1] = { (void*)&_currentList };
                 QMetaObject::metacall(_qobject, QMetaObject::ReadProperty, property->coreIndex(), argv);
@@ -1081,12 +1081,12 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
                 argv[0] = &value;
                 QMetaObject::metacall(_qobject, QMetaObject::WriteProperty, bindingProperty->coreIndex(), argv);
             }
-        } else if (bindingProperty->isQList()) {
+        } else if (bindingProperty->propType().flags().testFlag(QMetaType::IsQmlList)) {
             Q_ASSERT(_currentList.object);
 
             void *itemToAdd = createdSubObject;
 
-            QMetaType listItemType = QQmlMetaType::listType(bindingProperty->propType());
+            QMetaType listItemType = QQmlMetaType::listValueType(bindingProperty->propType());
             if (listItemType.isValid()) {
                 const char *iid = QQmlMetaType::interfaceIId(listItemType);
                 if (iid)

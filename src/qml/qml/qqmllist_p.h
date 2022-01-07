@@ -82,7 +82,7 @@ public:
     {
         if (!m_elementType) {
             m_elementType = QQmlMetaType::rawMetaObjectForType(
-                        QQmlMetaType::listType(propertyType)).metaObject();
+                        QQmlMetaType::listValueType(propertyType)).metaObject();
         }
 
         return m_elementType;

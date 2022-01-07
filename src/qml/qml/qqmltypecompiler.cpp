@@ -492,7 +492,7 @@ bool QQmlEnumTypeResolver::resolveEnumBindings()
             const QString propertyName = stringAt(binding->propertyNameIndex);
             bool notInRevision = false;
             QQmlPropertyData *pd = resolver.property(propertyName, &notInRevision);
-            if (!pd)
+            if (!pd || pd->isQList())
                 continue;
 
             if (!pd->isEnum() && pd->propType().id() != QMetaType::Int)

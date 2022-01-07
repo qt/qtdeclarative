@@ -251,7 +251,11 @@ void Serialize::serialize(QByteArray &data, const QV4::Value &v, ExecutionEngine
             }
             reserve(data, sizeof(quint32) + length * sizeof(quint32));
             push(data, valueheader(WorkerSequence, length));
-            serialize(data, QV4::Value::fromInt32(QV4::SequencePrototype::metaTypeForSequence(o)), engine); // sequence type
+
+            // sequence type
+            serialize(data, QV4::Value::fromInt32(
+                          QV4::SequencePrototype::metaTypeForSequence(o).id()), engine);
+
             ScopedValue val(scope);
             for (uint ii = 0; ii < seqLength; ++ii)
                 serialize(data, (val = o->get(ii)), engine); // sequence elements

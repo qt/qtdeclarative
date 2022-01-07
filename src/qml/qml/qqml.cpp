@@ -479,7 +479,7 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                 noCreateReason = QLatin1String("Type cannot be created in QML.");
         }
 
-        RegisterType revisionRegistration = {
+        RegisterType typeRevision = {
             1,
             type.typeId,
             type.listId,
@@ -504,6 +504,16 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
             type.structVersion > 0 ? type.finalizerCast : -1
         };
 
+        QQmlPrivate::RegisterSequentialContainer sequenceRevision = {
+            0,
+            type.uri,
+            type.version,
+            nullptr,
+            type.listId,
+            type.structVersion > 1 ? type.listMetaSequence : QMetaSequence(),
+            QTypeRevision(),
+        };
+
         const QTypeRevision added = revisionClassInfo(
                     type.classInfoMetaObject, "QML.AddedInVersion",
                     QTypeRevision::fromMinorVersion(0));
@@ -524,19 +534,28 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                 break;
             // When removed, we still add revisions, but anonymous ones
             if (removed.isValid() && !(revision < removed)) {
-                revisionRegistration.elementName = nullptr;
-                revisionRegistration.create = nullptr;
+                typeRevision.elementName = nullptr;
+                typeRevision.create = nullptr;
             } else {
-                revisionRegistration.elementName = elementName;
-                revisionRegistration.create = creatable ? type.create : nullptr;
-                revisionRegistration.userdata = type.userdata;
+                typeRevision.elementName = elementName;
+                typeRevision.create = creatable ? type.create : nullptr;
+                typeRevision.userdata = type.userdata;
             }
 
-            assignVersions(&revisionRegistration, revision, type.version);
-            revisionRegistration.customParser = type.customParserFactory();
-            const int id = qmlregister(TypeRegistration, &revisionRegistration);
+            assignVersions(&typeRevision, revision, type.version);
+            typeRevision.customParser = type.customParserFactory();
+            const int id = qmlregister(TypeRegistration, &typeRevision);
             if (type.qmlTypeIds)
                 type.qmlTypeIds->append(id);
+
+            if (sequenceRevision.metaSequence != QMetaSequence()) {
+                sequenceRevision.version = typeRevision.version;
+                sequenceRevision.revision = typeRevision.revision;
+                const int id = QQmlPrivate::qmlregister(
+                            QQmlPrivate::SequentialContainerRegistration, &sequenceRevision);
+                if (type.qmlTypeIds)
+                    type.qmlTypeIds->append(id);
+            }
         }
         break;
     }
@@ -594,12 +613,11 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
     case SequentialContainerAndRevisionsRegistration: {
         const RegisterSequentialContainerAndRevisions &type
                 = *reinterpret_cast<RegisterSequentialContainerAndRevisions *>(data);
-        const char *elementName = classElementName(type.classInfoMetaObject);
         RegisterSequentialContainer revisionRegistration = {
             0,
             type.uri,
             type.version,
-            elementName,
+            nullptr,
             type.typeId,
             type.metaSequence,
             QTypeRevision()
@@ -608,10 +626,8 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         const QTypeRevision added = revisionClassInfo(
                     type.classInfoMetaObject, "QML.AddedInVersion",
                     QTypeRevision::fromMinorVersion(0));
-        const QTypeRevision removed = revisionClassInfo(
-                    type.classInfoMetaObject, "QML.RemovedInVersion");
-        QList<QTypeRevision> revisions = revisionClassInfos(type.classInfoMetaObject,
-                                                            "QML.ExtraVersion");
+        QList<QTypeRevision> revisions = revisionClassInfos(
+                    type.classInfoMetaObject, "QML.ExtraVersion");
         revisions.append(added);
         uniqueRevisions(&revisions, type.version, added);
 
@@ -620,12 +636,6 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                 continue;
             if (revision.hasMajorVersion() && revision.majorVersion() > type.version.majorVersion())
                 break;
-
-            // When removed, we still add revisions, but anonymous ones
-            if (removed.isValid() && !(revision < removed))
-                revisionRegistration.typeName = nullptr;
-            else
-                revisionRegistration.typeName = elementName;
 
             assignVersions(&revisionRegistration, revision, type.version);
             const int id = qmlregister(SequentialContainerRegistration, &revisionRegistration);
@@ -697,40 +707,42 @@ void QQmlPrivate::qmlunregister(RegistrationType type, quintptr data)
 
 namespace QQmlPrivate {
 template<>
-void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(const char *uri, int versionMajor,
-                                                             const QMetaObject *classInfoMetaObject,
-                                                             QVector<int> *qmlTypeIds,
-                                                             const QMetaObject *extension, bool)
+void qmlRegisterTypeAndRevisions<QQmlTypeNotAvailable, void>(
+        const char *uri, int versionMajor, const QMetaObject *classInfoMetaObject,
+        QVector<int> *qmlTypeIds, const QMetaObject *extension, bool)
 {
     using T = QQmlTypeNotAvailable;
 
-    RegisterTypeAndRevisions type = { 1,
-                                      QMetaType::fromType<T *>(),
-                                      QMetaType::fromType<QQmlListProperty<T>>(),
-                                      0,
-                                      nullptr,
-                                      nullptr,
-                                      nullptr,
+    RegisterTypeAndRevisions type = {
+        3,
+        QmlMetaType<T>::self(),
+        QmlMetaType<T>::list(),
+        0,
+        nullptr,
+        nullptr,
+        nullptr,
 
-                                      uri,
-                                      QTypeRevision::fromMajorVersion(versionMajor),
+        uri,
+        QTypeRevision::fromMajorVersion(versionMajor),
 
-                                      &QQmlTypeNotAvailable::staticMetaObject,
-                                      classInfoMetaObject,
+        &QQmlTypeNotAvailable::staticMetaObject,
+        classInfoMetaObject,
 
-                                      attachedPropertiesFunc<T>(),
-                                      attachedPropertiesMetaObject<T>(),
+        attachedPropertiesFunc<T>(),
+        attachedPropertiesMetaObject<T>(),
 
-                                      StaticCastSelector<T, QQmlParserStatus>::cast(),
-                                      StaticCastSelector<T, QQmlPropertyValueSource>::cast(),
-                                      StaticCastSelector<T, QQmlPropertyValueInterceptor>::cast(),
+        StaticCastSelector<T, QQmlParserStatus>::cast(),
+        StaticCastSelector<T, QQmlPropertyValueSource>::cast(),
+        StaticCastSelector<T, QQmlPropertyValueInterceptor>::cast(),
 
-                                      nullptr,
-                                      extension,
-                                      qmlCreateCustomParser<T>,
-                                      qmlTypeIds,
-                                      QQmlPrivate::StaticCastSelector<T, QQmlFinalizerHook>::cast(),
-                                      false };
+        nullptr,
+        extension,
+        qmlCreateCustomParser<T>,
+        qmlTypeIds,
+        QQmlPrivate::StaticCastSelector<T, QQmlFinalizerHook>::cast(),
+        false,
+        QmlMetaType<T>::sequence(),
+    };
 
     qmlregister(TypeAndRevisionsRegistration, &type);
 }

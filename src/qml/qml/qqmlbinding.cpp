@@ -530,7 +530,10 @@ Q_NEVER_INLINE bool QQmlBinding::slowWrite(const QQmlPropertyData &core,
 
     if (isUndefined) {
     } else if (core.isQList()) {
-        value = v4engine->toVariant(result, QMetaType::fromType<QList<QObject *> >());
+        if (core.propType().flags() & QMetaType::IsQmlList)
+            value = v4engine->toVariant(result, QMetaType::fromType<QList<QObject *> >());
+        else
+            value = v4engine->toVariant(result, core.propType());
     } else if (result.isNull() && core.isQObject()) {
         value = QVariant::fromValue((QObject *)nullptr);
     } else if (core.propType() == QMetaType::fromType<QList<QUrl>>()) {

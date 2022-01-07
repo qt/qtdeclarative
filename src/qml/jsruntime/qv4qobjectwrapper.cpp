@@ -131,11 +131,12 @@ static ReturnedValue loadProperty(ExecutionEngine *v4, QObject *object,
     Q_ASSERT(!property.isFunction());
     Scope scope(v4);
 
+    const QMetaType propMetaType = property.propType();
     if (property.isQObject()) {
         QObject *rv = nullptr;
         property.readProperty(object, &rv);
         ReturnedValue ret = QObjectWrapper::wrap(v4, rv);
-        if (property.propType().flags().testFlag(QMetaType::IsConst)) {
+        if (propMetaType.flags().testFlag(QMetaType::IsConst)) {
             ScopedValue v(scope, ret);
             if (auto obj = v->as<Object>()) {
                 obj->setInternalClass(obj->internalClass()->cryopreserved());
@@ -145,10 +146,9 @@ static ReturnedValue loadProperty(ExecutionEngine *v4, QObject *object,
         return ret;
     }
 
-    if (property.isQList())
-        return QmlListWrapper::create(v4, object, property.coreIndex(), property.propType());
+    if (property.isQList() && propMetaType.flags().testFlag(QMetaType::IsQmlList))
+        return QmlListWrapper::create(v4, object, property.coreIndex(), propMetaType);
 
-    const QMetaType propMetaType = property.propType();
     switch (property.isEnum() ? QMetaType::Int : propMetaType.id()) {
     case QMetaType::Int: {
         int v = 0;
@@ -205,15 +205,15 @@ static ReturnedValue loadProperty(ExecutionEngine *v4, QObject *object,
     if (QQmlMetaType::isValueType(propMetaType)) {
         if (const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForValueType(propMetaType))
             return QQmlValueTypeWrapper::create(v4, object, property.coreIndex(), valueTypeMetaObject, propMetaType);
-    } else {
-        // see if it's a sequence type
-        bool succeeded = false;
-        ScopedValue retn(scope, SequencePrototype::newSequence(
-                                  v4, propMetaType, object, property.coreIndex(),
-                                  !property.isWritable(), &succeeded));
-        if (succeeded)
-            return retn->asReturnedValue();
     }
+
+    // see if it's a sequence type
+    bool succeeded = false;
+    QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(
+                              v4, propMetaType, object, property.coreIndex(),
+                              !property.isWritable(), &succeeded));
+    if (succeeded)
+        return retn->asReturnedValue();
 
     if (!propMetaType.isValid()) {
         QMetaProperty p = object->metaObject()->property(property.coreIndex());
@@ -221,7 +221,7 @@ static ReturnedValue loadProperty(ExecutionEngine *v4, QObject *object,
                  "'%s::%s'", p.typeName(), object->metaObject()->className(), p.name());
         return Encode::undefined();
     } else {
-        QVariant v(property.propType(), (void *)nullptr);
+        QVariant v(propMetaType);
         property.readProperty(object, v.data());
         return scope.engine->fromVariant(v);
     }
@@ -1541,8 +1541,8 @@ static int MatchScore(const Value &actual, QMetaType conversionMetaType)
             }
         }
 
-        if (auto sequenceMetaType = SequencePrototype::metaTypeForSequence(obj); sequenceMetaType != -1) {
-            if (sequenceMetaType == conversionType)
+        if (auto sequenceMetaType = SequencePrototype::metaTypeForSequence(obj); sequenceMetaType.isValid()) {
+            if (sequenceMetaType == conversionMetaType)
                 return 1;
             else
                 return 10;
@@ -1888,7 +1888,8 @@ bool CallArgument::fromContainerValue(const Value &value, M CallArgument::*membe
 {
     const Object *object = value.as<Object>();
     if (object && object->isListType()) {
-        if (T* ptr = static_cast<T *>(SequencePrototype::getRawContainerPtr(object, type))) {
+        if (T* ptr = static_cast<T *>(SequencePrototype::getRawContainerPtr(
+                                          object, QMetaType(type)))) {
             (this->*member) = ptr;
             return true;
         }
