@@ -116,7 +116,7 @@ Item {
             color: header ? "yellow" : "cyan"
             border.color: "black"
             height: 50
-            width: parent.width
+            width: listView.width
 
             Text {
                 anchors.centerIn: parent
