@@ -387,7 +387,7 @@ QQmlType QQmlMetaType::registerInterface(const QQmlPrivate::RegisterInterface &t
     return QQmlType(priv);
 }
 
-QString registrationTypeString(QQmlType::RegistrationType typeType)
+static QString registrationTypeString(QQmlType::RegistrationType typeType)
 {
     QString typeStr;
     if (typeType == QQmlType::CppType)
@@ -404,14 +404,14 @@ QString registrationTypeString(QQmlType::RegistrationType typeType)
 }
 
 // NOTE: caller must hold a QMutexLocker on "data"
-bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *data,
-                       const char *uri, const QString &typeName, QTypeRevision version,
-                       QMetaType::TypeFlags flags)
+static bool checkRegistration(
+        QQmlType::RegistrationType typeType, QQmlMetaTypeData *data, const char *uri,
+        const QString &typeName, QTypeRevision version, QMetaType::TypeFlags flags)
 {
     if (!typeName.isEmpty()) {
         if (typeName.at(0).isLower() && (flags & QMetaType::PointerToQObject)) {
             QString failure(QCoreApplication::translate("qmlRegisterType", "Invalid QML %1 name \"%2\"; type names must begin with an uppercase letter"));
-            data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName));
+            data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType), typeName));
             return false;
         }
 
@@ -422,7 +422,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
                            "qmlRegisterType",
                            "Invalid QML %1 name \"%2\"; "
                            "value type names should begin with a lowercase letter")
-                       .arg(registrationTypeString(typeType)).arg(typeName);
+                       .arg(registrationTypeString(typeType), typeName);
         }
 
         // There can also be types that aren't even gadgets, and there can be types for namespaces.
@@ -432,7 +432,7 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
         for (int ii = 0; ii < typeNameLen; ++ii) {
             if (!(typeName.at(ii).isLetterOrNumber() || typeName.at(ii) == u'_')) {
                 QString failure(QCoreApplication::translate("qmlRegisterType", "Invalid QML %1 name \"%2\""));
-                data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType)).arg(typeName));
+                data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType), typeName));
                 return false;
             }
         }
@@ -445,8 +445,8 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
             QString failure(QCoreApplication::translate(
                                 "qmlRegisterType",
                                 "Cannot install %1 '%2' into protected module '%3' version '%4'"));
-            data->recordTypeRegFailure(failure.arg(registrationTypeString(typeType))
-                                       .arg(typeName).arg(nameSpace)
+            data->recordTypeRegFailure(failure
+                                       .arg(registrationTypeString(typeType), typeName, nameSpace)
                                        .arg(version.majorVersion()));
             return false;
         }
@@ -456,7 +456,8 @@ bool checkRegistration(QQmlType::RegistrationType typeType, QQmlMetaTypeData *da
 }
 
 // NOTE: caller must hold a QMutexLocker on "data"
-QQmlTypeModule *getTypeModule(const QHashedString &uri, QTypeRevision version, QQmlMetaTypeData *data)
+static QQmlTypeModule *getTypeModule(
+        const QHashedString &uri, QTypeRevision version, QQmlMetaTypeData *data)
 {
     if (QQmlTypeModule *module = data->findTypeModule(uri, version))
         return module;
@@ -464,7 +465,7 @@ QQmlTypeModule *getTypeModule(const QHashedString &uri, QTypeRevision version, Q
 }
 
 // NOTE: caller must hold a QMutexLocker on "data"
-void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data)
+static void addTypeToData(QQmlTypePrivate *type, QQmlMetaTypeData *data)
 {
     Q_ASSERT(type);
 
@@ -690,11 +691,6 @@ void QQmlMetaType::registerModuleImport(const QString &uri, QTypeRevision module
     data->moduleImports.insert(QQmlMetaTypeData::VersionedUri(uri, moduleVersion), import);
 }
 
-static bool operator==(const QQmlDirParser::Import &a, const QQmlDirParser::Import &b)
-{
-    return a.module == b.module && a.version == b.version && a.flags == b.flags;
-}
-
 void QQmlMetaType::unregisterModuleImport(const QString &uri, QTypeRevision moduleVersion,
                                           const QQmlDirParser::Import &import)
 {
@@ -806,7 +802,7 @@ QQmlMetaType::RegistrationResult QQmlMetaType::registerPluginTypes(
             QQmlError error;
             error.setDescription(
                     QStringLiteral("Module namespace '%1' does not match import URI '%2'")
-                            .arg(typeNamespace).arg(uri));
+                            .arg(typeNamespace, uri));
             errors->prepend(error);
         }
         return RegistrationResult::Failure;
@@ -1551,7 +1547,7 @@ QList<QQmlProxyMetaObject::ProxyData> QQmlMetaType::proxyData(const QMetaObject 
     return metaObjects;
 }
 
-bool isInternalType(int idx)
+static bool isInternalType(int idx)
 {
     // Qt internal types
     switch (idx) {

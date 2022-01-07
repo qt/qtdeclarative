@@ -149,6 +149,11 @@ public:
         QString module;
         QTypeRevision version;     // invalid version is latest version, unless Flag::Auto
         Flags flags;
+
+        friend bool operator==(const Import &a, const Import &b)
+        {
+            return a.module == b.module && a.version == b.version && a.flags == b.flags;
+        }
     };
 
     QMultiHash<QString,Component> components() const { return _components; }
