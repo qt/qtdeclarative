@@ -377,8 +377,8 @@ QT_BEGIN_NAMESPACE
         \li Give the Dialog a size.
     \endlist
 
-    \sa {Customizing StackView}, {Navigation Controls}, {Container Controls},
-        {Focus Management in Qt Quick Controls}
+    \sa {Customizing StackView}, {Navigating with StackView}, {Navigation Controls},
+        {Container Controls}, {Focus Management in Qt Quick Controls}
 */
 
 QQuickStackView::QQuickStackView(QQuickItem *parent)
