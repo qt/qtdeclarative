@@ -52,6 +52,8 @@ private slots:
     void delegateChooserEnumRole();
     void QTBUG_92809();
     void footerUpdate();
+
+    void sectionsNoOverlap();
 };
 
 tst_QQuickListView2::tst_QQuickListView2()
@@ -221,6 +223,53 @@ void tst_QQuickListView2::footerUpdate()
     QTRY_VERIFY(footer);
     QVERIFY(QQuickTest::qWaitForItemPolished(footer));
     QTRY_COMPARE(footer->y(), 0);
+}
+
+void tst_QQuickListView2::sectionsNoOverlap()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QTRY_VERIFY(window);
+    window->setSource(testFileUrl("sectionsNoOverlap.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview != nullptr);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem != nullptr);
+    QVERIFY(QQuickTest::qWaitForItemPolished(listview));
+
+    const unsigned int sectionCount = 2, normalDelegateCount = 2;
+    const unsigned int expectedSectionHeight = 48;
+    const unsigned int expectedNormalDelegateHeight = 40;
+
+    unsigned int normalDelegateCounter = 0;
+    for (unsigned int sectionIndex = 0; sectionIndex < sectionCount; ++sectionIndex) {
+        QQuickItem *sectionDelegate =
+                findItem<QQuickItem>(contentItem, "section" + QString::number(sectionIndex + 1));
+        QVERIFY(sectionDelegate);
+
+        QCOMPARE(sectionDelegate->height(), expectedSectionHeight);
+        QVERIFY(sectionDelegate->isVisible());
+        QCOMPARE(sectionDelegate->y(),
+                 qreal(sectionIndex * expectedSectionHeight
+                       + (sectionIndex * normalDelegateCount * expectedNormalDelegateHeight)));
+
+        for (; normalDelegateCounter < ((sectionIndex + 1) * normalDelegateCount);
+             ++normalDelegateCounter) {
+            QQuickItem *normalDelegate = findItem<QQuickItem>(
+                    contentItem, "element" + QString::number(normalDelegateCounter + 1));
+            QVERIFY(normalDelegate);
+
+            QCOMPARE(normalDelegate->height(), expectedNormalDelegateHeight);
+            QVERIFY(normalDelegate->isVisible());
+            QCOMPARE(normalDelegate->y(),
+                     qreal((sectionIndex + 1) * expectedSectionHeight
+                           + normalDelegateCounter * expectedNormalDelegateHeight
+                           + listview->spacing() * normalDelegateCounter));
+        }
+    }
 }
 
 QTEST_MAIN(tst_QQuickListView2)
