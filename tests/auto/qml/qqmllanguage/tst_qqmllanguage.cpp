@@ -390,6 +390,7 @@ private slots:
 
     void ambiguousContainingType();
     void objectAsBroken();
+    void customValueTypes();
 
 private:
     QQmlEngine engine;
@@ -6730,6 +6731,23 @@ void tst_qqmllanguage::objectAsBroken()
 
     QQmlComponent b(&engine, testFileUrl("Broken.qml"));
     QVERIFY(b.isError());
+}
+
+void tst_qqmllanguage::customValueTypes()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("customValueTypes.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QCOMPARE(qvariant_cast<BaseValueType>(o->property("base")).content(), 27);
+    QCOMPARE(qvariant_cast<DerivedValueType>(o->property("derived")).content(), 28);
+
+    o->setObjectName(QStringLiteral("a"));
+
+    QCOMPARE(qvariant_cast<DerivedValueType>(o->property("derived")).content(), 14);
+    QCOMPARE(qvariant_cast<BaseValueType>(o->property("base")).content(), 13);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

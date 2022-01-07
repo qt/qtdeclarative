@@ -912,6 +912,12 @@ namespace QQmlPrivate
     template<class T>
     struct QmlMetaType
     {
+        static constexpr bool hasAcceptableCtors()
+        {
+            return std::is_base_of_v<QObject, T>
+                    || (std::is_default_constructible_v<T> && std::is_copy_constructible_v<T>);
+        }
+
         static QMetaType self()
         {
             if constexpr (std::is_base_of_v<QObject, T>)
@@ -934,6 +940,7 @@ namespace QQmlPrivate
                                           const QMetaObject *classInfoMetaObject,
                                           QVector<int> *qmlTypeIds, const QMetaObject *extension)
     {
+        static_assert(std::is_base_of_v<QObject, T>);
         RegisterSingletonTypeAndRevisions api = {
             0,
 
@@ -962,6 +969,9 @@ namespace QQmlPrivate
                                      QVector<int> *qmlTypeIds, const QMetaObject *extension,
                                      bool forceAnonymous = false)
     {
+        static_assert(QmlMetaType<T>::hasAcceptableCtors());
+        static_assert(std::is_base_of_v<QObject, T> || !QQmlTypeInfo<T>::hasAttachedProperties);
+
         RegisterTypeAndRevisions type = {
             2,
             QmlMetaType<T>::self(),

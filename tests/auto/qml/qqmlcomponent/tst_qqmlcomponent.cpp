@@ -210,6 +210,7 @@ void tst_qqmlcomponent::qmlCreateWindow()
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("createWindow.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QQuickWindow> window(qobject_cast<QQuickWindow *>(component.create()));
     QVERIFY(!window.isNull());
 }

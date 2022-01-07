@@ -27,31 +27,36 @@
 /*!
 \page qtqml-typesystem-valuetypes.html
 \title QML Value Types
-\brief Description of value types provided by the Qt QML module
+\brief Description of QML value types
 
-QML supports a number of value types.
+QML supports built-in and custom value types.
 
-A \e{value type} is one that refers to a simple value, such as an \c int
-or a \c string. This contrasts with a \l{qtqml-typesystem-topic.html#qml-object-types}{QML Object Types},
-which refers to an object with properties, signals, methods and so on. Unlike an object type,
-a value type cannot be used to declare QML objects: it is not possible, for example, to declare an
-\c int{} object or a \c size{} object.
+A \e{value type} is one that is passed by value rather than by reference, such
+as an \c int or a \c string. This contrasts with
+\l{qtqml-typesystem-topic.html#qml-object-types}{QML Object Types}. Object types
+are passed by reference. If you assign an instance of an object type to two
+different properties, both properties carry the same value. Modifying the object
+is reflected in both properties. If you assign an instance of a value type to
+two different properties, the properties carry separate values. If you modify
+one of them, the other one stays the same. Unlike an object type, a value type
+cannot be used to declare QML objects: it is not possible, for example, to
+declare an \c int{} object or a \c size{} object.
 
 Value types can be used to refer to:
 
 \list
-\li A single value (e.g. \l int refers to a single number, \l var can refer to a single list of items)
-\li A value that contains a simple set of property-value pairs (e.g. \l size refers to a value with \c width and \c height attributes)
+\li A single value (e.g. \l int refers to a single number)
+\li A value that contains properties and methods (e.g. \l size refers to a value with \c width and \c height properties)
+\li The generic type \l{var}. It can hold values of any other type but is itself a value type.
 \endlist
 
 When a variable or property holds a value type and it is assigned to another
-variable or property, then a copy of the value is made. In JavaScript, this
-value is called a primitive value.
+variable or property, then a copy of the value is made.
 
 \sa {qtqml-typesystem-topic.html}{The QML Type System}
 
 
-\section1 Supported Value Types
+\section1 Available Value Types
 
 Some value types are supported by the engine by default and do not require an
 \l {Import Statements}{import statement} to be used, while others do require
@@ -63,9 +68,9 @@ document, with the following exceptions:
   \li \c enumeration cannot be used directly as the enumeration must be defined by a registered QML object type
 \endlist
 
-\section2 Value Types Provided By The QML Language
+\section2 Built-in Value Types Provided By The QML Language
 
-The value types supported natively in the QML language are listed below:
+The built-in value types supported natively in the QML language are listed below:
 \annotatedlist qmlvaluetypes
 
 \section2 Value Types Provided By QML Modules
@@ -76,8 +81,8 @@ For example, the value types provided by the \c QtQuick module are listed below:
 
 The \l{QtQml::Qt}{Qt} global object provides useful functions for manipulating values of value types.
 
-Currently only QML modules which are provided by Qt may provide their
-own value types, however this may change in future releases of Qt QML.
+You may define your own value types as described in
+\l{qtqml-cppintegration-definetypes.html}{Defining QML Types from C++}.
 In order to use types provided by a particular QML module, clients
 must import that module in their QML documents.
 

@@ -154,6 +154,48 @@ Message {
 }
 \endqml
 
+\section2 Registering Value Types
+
+Any type with a \l{Q_GADGET} macro can the registered as a
+\l{qtqml-typesystem-valuetypes.html}{QML value type}}. Once such a type is
+registered with the QML type system it can be used as property type in QML
+code. Such an instance can be manipulated from QML; as
+\l{qtqml-cppintegration-exposecppattributes.html}{Exposing Attributes of C++
+Types to QML} explains, the properties and methods of any value type are
+accessible from QML code.
+
+In contrast to object types, value types require \b{lower case} names. The
+preferred way to register them is using the \l{QML_VALUE_TYPE} or
+\l{QML_ANONYMOUS} macros. There is no equivalent to \l{QML_ELEMENT} as your
+C++ classes are typically going to have upper case names. Otherwise the
+registration is very similar to the registration of object types.
+
+For example, suppose you want to register a value type \c{person} that consists
+of two strings for first and last name:
+
+\code
+class Person
+{
+    Q_GADGET
+    Q_PROPERTY(QString firstName READ firstName WRITE setFirstName)
+    Q_PROPERTY(QString lastName READ lastName WRITE setLastName)
+    QML_VALUE_TYPE(person)
+public:
+    // ...
+};
+\endcode
+
+There are some further limitations on what you can do with value types:
+\list
+\li Value types cannot be singletons.
+\li Value types need to be default-constructible and copy-constructible.
+\li Using QProperty as a member of a value type is problematic. Value types get
+    copied, and you would need to decide what to do with any bindings on the
+    QProperty at that point. You should not use QProperty in value types.
+\li Value types cannot provide attached properties.
+\li The API to define extensions to value types (\l{QML_EXTENDED}) is not public
+    and subject to future changes.
+\endlist
 
 \section2 Registering Non-Instantiable Types
 

@@ -75,7 +75,7 @@ void tst_qqmlvaluetypeproviders::qtqmlValueTypes()
 {
     QQmlEngine e;
     QQmlComponent component(&e, testFileUrl("qtqmlValueTypes.qml"));
-    QVERIFY(!component.isError());
+    QVERIFY2(!component.isError(), qPrintable(component.errorString()));
     QVERIFY(component.errors().isEmpty());
     QObject *object = component.create();
     QVERIFY(object != nullptr);

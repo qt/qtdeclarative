@@ -1,1 +1,1 @@
-4:14:Expected property type
+4:5:blah is not a type

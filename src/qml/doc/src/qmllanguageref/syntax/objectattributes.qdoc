@@ -430,11 +430,10 @@ Text {
 }
 \endcode
 
-Grouped property types are value types which have subproperties.  Some of these
-value types are provided by the QML language, while others may only be used if
-the Qt Quick module is imported.  See the documentation about
-\l{QML Value Types} for more information.
-
+Grouped property types are types which have subproperties. If a grouped property
+type is an object type (as opposed to a value type), the property that holds it
+must be read-only. This is to prevent you from replacing the object the
+subproperties belong to.
 
 \section3 Property Aliases
 

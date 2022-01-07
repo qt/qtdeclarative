@@ -653,7 +653,6 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
         if (type == QV4::CompiledData::BuiltinType::Var)
             propertyFlags.type = QQmlPropertyData::Flags::VarPropertyType;
 
-
         if (type != QV4::CompiledData::BuiltinType::InvalidBuiltin) {
             propertyType = metaTypeForPropertyType(type);
         } else {
@@ -709,8 +708,10 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
 
             if (p->isList)
                 propertyFlags.type = QQmlPropertyData::Flags::QListType;
-            else
+            else if (propertyType.flags().testFlag(QMetaType::PointerToQObject))
                 propertyFlags.type = QQmlPropertyData::Flags::QObjectDerivedType;
+            else
+                propertyFlags.type = QQmlPropertyData::Flags::ValueType;
         }
 
         if (!p->isReadOnly && !p->isList)

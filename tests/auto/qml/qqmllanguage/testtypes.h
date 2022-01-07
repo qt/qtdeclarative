@@ -1927,6 +1927,35 @@ private:
     QVariantList mFooProperty;
 };
 
+struct BaseValueType
+{
+    Q_GADGET
+    Q_PROPERTY(int content READ content WRITE setContent)
+    QML_VALUE_TYPE(base)
+
+public:
+    Q_INVOKABLE void increment() { ++m_content; }
+    Q_INVOKABLE QString report() const { return QString::number(m_content); }
+
+    int content() const { return m_content; }
+    void setContent(int content) { m_content = content; }
+
+private:
+    int m_content = 27;
+};
+
+struct DerivedValueType : public BaseValueType
+{
+    Q_GADGET
+    QML_VALUE_TYPE(derived)
+public:
+    DerivedValueType() { increment(); }
+    Q_INVOKABLE int nothing() const { return m_nothing; }
+
+private:
+    int m_nothing = 12;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H

@@ -82,7 +82,8 @@ public:
             QJSValueType         = 6, // Property type is a QScriptValue
                                       // Gap, used to be V4HandleType
             VarPropertyType      = 8, // Property type is a "var" property of VMEMO
-            QVariantType         = 9  // Property is a QVariant
+            QVariantType         = 9, // Property is a QVariant
+            ValueType            = 10 // Property type is a custom value type
         };
 
         // The _otherBits (which "pad" the Flags struct to align it nicely) are used

@@ -88,7 +88,11 @@ QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::createPropertyCache()
     if (m_typePropertyCache) {
         return m_typePropertyCache;
     } else if (m_type.isValid()) {
-        m_typePropertyCache = QQmlMetaType::propertyCache(m_type.metaObject(), m_version);
+        const QMetaObject *metaObject = m_type.metaObject();
+        if (!metaObject) // value type of non-Q_GADGET base with extension
+            metaObject = m_type.extensionMetaObject();
+        Q_ASSERT(metaObject);
+        m_typePropertyCache = QQmlMetaType::propertyCache(metaObject, m_version);
         return m_typePropertyCache;
     } else {
         Q_ASSERT(m_compilationUnit);

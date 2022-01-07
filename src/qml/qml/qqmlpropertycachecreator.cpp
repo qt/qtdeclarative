@@ -48,7 +48,6 @@ QAtomicInt QQmlPropertyCacheCreatorBase::classIndexCounter(0);
 
 QMetaType QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(QV4::CompiledData::BuiltinType type)
 {
-    // TODO: we cannot depend on GUI types in declarative, so we'll have to do the id lookup
     switch (type) {
     case QV4::CompiledData::BuiltinType::Var: return QMetaType::fromType<QVariant>();
     case QV4::CompiledData::BuiltinType::Int: return QMetaType::fromType<int>();
@@ -56,19 +55,12 @@ QMetaType QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(QV4::CompiledDat
     case QV4::CompiledData::BuiltinType::Real: return QMetaType::fromType<qreal>();
     case QV4::CompiledData::BuiltinType::String: return QMetaType::fromType<QString>();
     case QV4::CompiledData::BuiltinType::Url: return QMetaType::fromType<QUrl>();
-    case QV4::CompiledData::BuiltinType::Color: return QMetaType(QMetaType::QColor);
-    case QV4::CompiledData::BuiltinType::Font: return QMetaType(QMetaType::QFont);
     case QV4::CompiledData::BuiltinType::Time: return QMetaType::fromType<QTime>();
     case QV4::CompiledData::BuiltinType::Date: return QMetaType::fromType<QDate>();
     case QV4::CompiledData::BuiltinType::DateTime: return QMetaType::fromType<QDateTime>();
     case QV4::CompiledData::BuiltinType::Rect: return QMetaType::fromType<QRectF>();
     case QV4::CompiledData::BuiltinType::Point: return QMetaType::fromType<QPointF>();
     case QV4::CompiledData::BuiltinType::Size: return QMetaType::fromType<QSizeF>();
-    case QV4::CompiledData::BuiltinType::Vector2D: return QMetaType(QMetaType::QVector2D);
-    case QV4::CompiledData::BuiltinType::Vector3D: return QMetaType(QMetaType::QVector3D);
-    case QV4::CompiledData::BuiltinType::Vector4D: return QMetaType(QMetaType::QVector4D);
-    case QV4::CompiledData::BuiltinType::Matrix4x4: return QMetaType(QMetaType::QMatrix4x4);
-    case QV4::CompiledData::BuiltinType::Quaternion: return QMetaType(QMetaType::QQuaternion);
     case QV4::CompiledData::BuiltinType::InvalidBuiltin: break;
     };
     return QMetaType {};

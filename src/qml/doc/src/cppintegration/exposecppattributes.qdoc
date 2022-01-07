@@ -32,9 +32,9 @@
 QML can easily be extended with functionality defined in C++ code. Due to the
 tight integration of the QML engine with the \l{The Meta-Object System}{Qt
 meta-object system}, any functionality that is appropriately exposed by a
-QObject-derived class is accessible from QML code. This enables C++ data and
-functions to be accessible directly from QML, often with little or no
-modification.
+QObject-derived class or a Q_GADGET type is accessible from QML code. This
+enables C++ data and functions to be accessible directly from QML, often with
+little or no modification.
 
 The QML engine has the ability to introspect QObject instances through the
 meta-object system. This means any QML code can access the following members of
@@ -46,7 +46,7 @@ an instance of a QObject-derived class:
 \li Signals
 \endlist
 
-(Additionally, enums are available if they have been declared with Q_ENUMS.
+(Additionally, enums are available if they have been declared with Q_ENUM.
 See \l{qtqml-cppintegration-data.html}{Data Type Conversion Between QML and C++}
 for more details.)
 
@@ -56,7 +56,12 @@ system}{registered with the QML type system}. However, if a class is to be
 used in a way that requires the engine to access additional type information
 — for example, if the class itself is to be used as a method parameter or
 property, or if one of its enum types is to be used in this way — then the
-class may need to be registered.
+class may need to be registered. Registration is recommended for all types you
+use in QML, as only registered types can be analyzed at compile time.
+
+Registration is required for Q_GADGET types, as they don't derive from a known
+common base and can't be made available automatically. Without registration,
+their properties and methods are inaccessible.
 
 Also note that a number of the important concepts covered in this document are
 demonstrated in the \l{Writing QML Extensions with C++} tutorial.
@@ -85,7 +90,7 @@ A \e property can be specified for any QObject-derived class using the
 Q_PROPERTY() macro. A property is a class data member with an associated read
 function and optional write function.
 
-All properties of a QObject-derived class are accessible from QML.
+All properties of a QObject-derived or Q_GADGET class are accessible from QML.
 
 For example, below is a \c Message class with an \c author property. As
 specified by the Q_PROPERTY macro call, this property is readable through

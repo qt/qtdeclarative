@@ -207,7 +207,8 @@ public:
     QPointF readPropertyAsPointF(int id) const;
     QUrl readPropertyAsUrl(int id) const;
     QDate readPropertyAsDate(int id) const;
-    QDateTime readPropertyAsDateTime(int id);
+    QTime readPropertyAsTime(int id) const;
+    QDateTime readPropertyAsDateTime(int id) const;
     QRectF readPropertyAsRectF(int id) const;
     QObject *readPropertyAsQObject(int id) const;
     QVector<QQmlGuard<QObject> > *readPropertyAsList(int id) const;

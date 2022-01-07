@@ -111,7 +111,7 @@ bool Parameter::initType(QV4::CompiledData::ParameterType *paramType, const QV4:
     const QString typeName = stringGenerator->stringForIndex(typeNameIndex);
     auto builtinType = stringToBuiltinType(typeName);
     if (builtinType == QV4::CompiledData::BuiltinType::InvalidBuiltin) {
-        if (typeName.isEmpty() || !typeName.at(0).isUpper())
+        if (typeName.isEmpty())
             return false;
         paramType->indexIsBuiltinType = false;
         paramType->typeNameIndexOrBuiltinType = typeNameIndex;
@@ -137,23 +137,10 @@ QV4::CompiledData::BuiltinType Parameter::stringToBuiltinType(const QString &typ
         { "real", strlen("real"), QV4::CompiledData::BuiltinType::Real },
         { "string", strlen("string"), QV4::CompiledData::BuiltinType::String },
         { "url", strlen("url"), QV4::CompiledData::BuiltinType::Url },
-        { "color", strlen("color"), QV4::CompiledData::BuiltinType::Color },
-        // Internally QTime, QDate and QDateTime are all supported.
-        // To be more consistent with JavaScript we expose only
-        // QDateTime as it matches closely with the Date JS type.
-        // We also call it "date" to match.
-        // { "time", strlen("time"), Property::Time },
-        // { "date", strlen("date"), Property::Date },
         { "date", strlen("date"), QV4::CompiledData::BuiltinType::DateTime },
         { "rect", strlen("rect"), QV4::CompiledData::BuiltinType::Rect },
         { "point", strlen("point"), QV4::CompiledData::BuiltinType::Point },
         { "size", strlen("size"), QV4::CompiledData::BuiltinType::Size },
-        { "font", strlen("font"), QV4::CompiledData::BuiltinType::Font },
-        { "vector2d", strlen("vector2d"), QV4::CompiledData::BuiltinType::Vector2D },
-        { "vector3d", strlen("vector3d"), QV4::CompiledData::BuiltinType::Vector3D },
-        { "vector4d", strlen("vector4d"), QV4::CompiledData::BuiltinType::Vector4D },
-        { "quaternion", strlen("quaternion"), QV4::CompiledData::BuiltinType::Quaternion },
-        { "matrix4x4", strlen("matrix4x4"), QV4::CompiledData::BuiltinType::Matrix4x4 },
         { "variant", strlen("variant"), QV4::CompiledData::BuiltinType::Var },
         { "var", strlen("var"), QV4::CompiledData::BuiltinType::Var }
     };
@@ -987,29 +974,18 @@ bool IRBuilder::visit(QQmlJS::AST::UiPublicMember *node)
             property->isReadOnly = node->isReadonly();
             property->isRequired = node->isRequired();
 
-            QV4::CompiledData::BuiltinType builtinPropertyType = Parameter::stringToBuiltinType(memberType);
-            bool typeFound = builtinPropertyType != QV4::CompiledData::BuiltinType::InvalidBuiltin;
-            if (typeFound)
+            const QV4::CompiledData::BuiltinType builtinPropertyType
+                    = Parameter::stringToBuiltinType(memberType);
+            if (builtinPropertyType != QV4::CompiledData::BuiltinType::InvalidBuiltin)
                 property->setBuiltinType(builtinPropertyType);
-
-            if (!typeFound && memberType.at(0).isUpper()) {
-                const QStringView &typeModifier = node->typeModifier;
-
+            else
                 property->setCustomType(registerString(memberType));
-                if (typeModifier == QLatin1String("list")) {
-                    property->isList = true;
-                } else if (!typeModifier.isEmpty()) {
-                    recordError(node->typeModifierToken, QCoreApplication::translate("QQmlParser","Invalid property type modifier"));
-                    return false;
-                }
-                typeFound = true;
-            } else if (!node->typeModifier.isNull()) {
-                recordError(node->typeModifierToken, QCoreApplication::translate("QQmlParser","Unexpected property type modifier"));
-                return false;
-            }
 
-            if (!typeFound) {
-                recordError(node->typeToken, QCoreApplication::translate("QQmlParser","Expected property type"));
+            const QStringView &typeModifier = node->typeModifier;
+            if (typeModifier == QLatin1String("list")) {
+                property->isList = true;
+            } else if (!typeModifier.isEmpty()) {
+                recordError(node->typeModifierToken, QCoreApplication::translate("QQmlParser","Invalid property type modifier"));
                 return false;
             }
 

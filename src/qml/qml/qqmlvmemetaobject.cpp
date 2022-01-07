@@ -582,7 +582,21 @@ QDate QQmlVMEMetaObject::readPropertyAsDate(int id) const
     return v->d()->data().value<QDate>();
 }
 
-QDateTime QQmlVMEMetaObject::readPropertyAsDateTime(int id)
+QTime QQmlVMEMetaObject::readPropertyAsTime(int id) const
+{
+    QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
+    if (!md)
+        return QTime();
+
+    QV4::Scope scope(engine);
+    QV4::ScopedValue sv(scope, *(md->data() + id));
+    const QV4::VariantObject *v = sv->as<QV4::VariantObject>();
+    if (!v || v->d()->data().userType() != QMetaType::QTime)
+        return QTime();
+    return v->d()->data().value<QTime>();
+}
+
+QDateTime QQmlVMEMetaObject::readPropertyAsDateTime(int id) const
 {
     QV4::MemberData *md = propertyAndMethodStorageAsMemberData();
     if (!md)
@@ -698,9 +712,6 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         ? nullptr
                         : QQmlEnginePrivate::get(ctxt->engine());
 
-                const QMetaType fallbackMetaType
-                        = QQmlPropertyCacheCreatorBase::metaTypeForPropertyType(t);
-
                 if (c == QMetaObject::ReadProperty) {
                     switch (t) {
                     case QV4::CompiledData::BuiltinType::Int:
@@ -733,22 +744,8 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                     case QV4::CompiledData::BuiltinType::Point:
                         *reinterpret_cast<QPointF *>(a[0]) = readPropertyAsPointF(id);
                         break;
-                    case QV4::CompiledData::BuiltinType::Font:
                     case QV4::CompiledData::BuiltinType::Time:
-                    case QV4::CompiledData::BuiltinType::Color:
-                    case QV4::CompiledData::BuiltinType::Vector2D:
-                    case QV4::CompiledData::BuiltinType::Vector3D:
-                    case QV4::CompiledData::BuiltinType::Vector4D:
-                    case QV4::CompiledData::BuiltinType::Matrix4x4:
-                    case QV4::CompiledData::BuiltinType::Quaternion:
-                        Q_ASSERT(fallbackMetaType.isValid());
-                        if (QV4::MemberData *md = propertyAndMethodStorageAsMemberData()) {
-                            QVariant propertyAsVariant;
-                            if (const QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>())
-                                propertyAsVariant = v->d()->data();
-                            QQml_valueTypeProvider()->readValueType(
-                                        fallbackMetaType, propertyAsVariant, a[0]);
-                        }
+                        *reinterpret_cast<QTime *>(a[0]) = readPropertyAsTime(id);
                         break;
                     case QV4::CompiledData::BuiltinType::Var:
                         if (ep) {
@@ -785,15 +782,37 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                             }
                             quintptr encodedIndex = (inheritanceDepth << (usableBits/2)) + id;
 
-
                             readPropertyAsList(id); // Initializes if necessary
                             *static_cast<QQmlListProperty<QObject> *>(a[0])
                                     = QQmlListProperty<QObject>(
                                         object, reinterpret_cast<void *>(quintptr(encodedIndex)),
                                         list_append, list_count, list_at,
                                         list_clear, list_replace, list_removeLast);
+                        } else if (QV4::MemberData *md = propertyAndMethodStorageAsMemberData()) {
+                            QV4::Scope scope(engine);
+                            QV4::ScopedValue sv(scope, *(md->data() + id));
+
+                            // _id because this is an absolute property ID.
+                            const QQmlPropertyData *propertyData = cache->property(_id);
+
+                            if (propertyData->isQObject()) {
+                                if (const auto *wrap = sv->as<QV4::QObjectWrapper>())
+                                    *reinterpret_cast<QObject **>(a[0]) = wrap->object();
+                                else
+                                    *reinterpret_cast<QObject **>(a[0]) = nullptr;
+                            } else {
+                                const QMetaType propType = propertyData->propType();
+                                const void *data = nullptr;
+                                if (const QV4::VariantObject *v = sv->as<QV4::VariantObject>()) {
+                                    const QVariant &variant = v->d()->data();
+                                    if (variant.metaType() == propType)
+                                        data = variant.constData();
+                                }
+                                propType.destruct(a[0]);
+                                propType.construct(a[0], data);
+                            }
                         } else {
-                            *reinterpret_cast<QObject **>(a[0]) = readPropertyAsQObject(id);
+                            qmlWarning(object) << "Cannot find member data";
                         }
                     }
 
@@ -840,25 +859,9 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         needActivate = *reinterpret_cast<QPointF *>(a[0]) != readPropertyAsPointF(id);
                         writeProperty(id, *reinterpret_cast<QPointF *>(a[0]));
                         break;
-                    case QV4::CompiledData::BuiltinType::Font:
                     case QV4::CompiledData::BuiltinType::Time:
-                    case QV4::CompiledData::BuiltinType::Color:
-                    case QV4::CompiledData::BuiltinType::Vector2D:
-                    case QV4::CompiledData::BuiltinType::Vector3D:
-                    case QV4::CompiledData::BuiltinType::Vector4D:
-                    case QV4::CompiledData::BuiltinType::Matrix4x4:
-                    case QV4::CompiledData::BuiltinType::Quaternion:
-                        Q_ASSERT(fallbackMetaType.isValid());
-                        if (QV4::MemberData *md = propertyAndMethodStorageAsMemberData()) {
-                            const QV4::VariantObject *v = (md->data() + id)->as<QV4::VariantObject>();
-                            if (!v) {
-                                md->set(engine, id, engine->newVariantObject(QVariant()));
-                                v = (md->data() + id)->as<QV4::VariantObject>();
-                                QQml_valueTypeProvider()->initValueType(fallbackMetaType, v->d()->data());
-                            }
-                            needActivate = !QQml_valueTypeProvider()->equalValueType(fallbackMetaType, a[0], v->d()->data());
-                            QQml_valueTypeProvider()->writeValueType(fallbackMetaType, a[0], v->d()->data());
-                        }
+                        needActivate = *reinterpret_cast<QTime *>(a[0]) != readPropertyAsTime(id);
+                        writeProperty(id, *reinterpret_cast<QTime *>(a[0]));
                         break;
                     case QV4::CompiledData::BuiltinType::Var:
                         if (ep)
@@ -868,11 +871,42 @@ int QQmlVMEMetaObject::metaCall(QObject *o, QMetaObject::Call c, int _id, void *
                         if (property.isList) {
                             // Writing such a property is not supported. Content is added through the list property
                             // methods.
-                        } else {
-                            needActivate = *reinterpret_cast<QObject **>(a[0]) != readPropertyAsQObject(id);
-                            writeProperty(id, *reinterpret_cast<QObject **>(a[0]));
-                        }
+                        } else if (QV4::MemberData *md = propertyAndMethodStorageAsMemberData()) {
+                            QV4::Scope scope(engine);
+                            QV4::ScopedValue sv(scope, *(md->data() + id));
 
+                            // _id because this is an absolute property ID.
+                            const QQmlPropertyData *propertyData = cache->property(_id);
+
+                            if (propertyData->isQObject()) {
+                                QObject *arg = *reinterpret_cast<QObject **>(a[0]);
+                                if (const QV4::QObjectWrapper *wrap = sv->as<QV4::QObjectWrapper>())
+                                    needActivate = wrap->object() != arg;
+                                else
+                                    needActivate = true;
+                                if (needActivate)
+                                    writeProperty(id, arg);
+                            } else {
+                                const QMetaType propType = propertyData->propType();
+                                if (const QV4::VariantObject *v = sv->as<QV4::VariantObject>()) {
+                                    QVariant &variant = v->d()->data();
+                                    if (variant.metaType() != propType) {
+                                        needActivate = true;
+                                        variant = QVariant(propType, a[0]);
+                                    } else if (!propType.equals(variant.constData(), a[0])) {
+                                        needActivate = true;
+                                        propType.destruct(variant.data());
+                                        propType.construct(variant.data(), a[0]);
+                                    }
+                                } else {
+                                    needActivate = true;
+                                    md->set(engine, id, engine->newVariantObject(
+                                                QVariant(propType, a[0])));
+                                }
+                            }
+                        } else {
+                            qmlWarning(object) << "Cannot find member data";
+                        }
                     }
 
                     if (needActivate)

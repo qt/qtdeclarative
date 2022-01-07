@@ -15,16 +15,16 @@ QtObject {
     property point p: Qt.point(1, 2)
     property size z: Qt.size(1, 2)
 
-    // the following property types are valid syntax in QML
-    // but their valuetype implementation is provided by QtQuick.
-    // Thus, we can define properties of the type, but not use them.
-    property vector2d v2
-    property vector3d v3
-    property vector4d v4
-    property quaternion q
-    property matrix4x4 m
-    property color c
-    property font f
+    // The following property types used to be special cased at compile time. Thus, we used to be
+    // able to define properties of those type, even though their value type implementations are
+    // provided by QtQuick, not QtQml. We could never use them.
+    // property vector2d v2
+    // property vector3d v3
+    // property vector4d v4
+    // property quaternion q
+    // property matrix4x4 m
+    // property color c
+    // property font f
 
     Component.onCompleted: {
         qtqmlTypeSuccess = true;
