@@ -43,6 +43,22 @@
 
 QT_BEGIN_NAMESPACE
 
+static constexpr bool is_valid(QPalette::ColorGroup cg) noexcept
+{
+    // use a switch to enable "unhandled enum" warnings:
+    switch (cg) {
+    case QPalette::Active:
+    case QPalette::Disabled:
+    case QPalette::Inactive:
+        return true;
+    case QPalette::NColorGroups:
+    case QPalette::Current:
+    case QPalette::All:
+        return false;
+    }
+    Q_UNREACHABLE();
+}
+
 /*!
     \internal
 
@@ -284,20 +300,19 @@ QQuickColorGroup::GroupPtr QQuickPalette::colorGroup(QPalette::ColorGroup groupT
 
 QQuickColorGroup::GroupPtr QQuickPalette::findColorGroup(QPalette::ColorGroup groupTag) const
 {
-    if (auto it = m_colorGroups.find(groupTag); it != m_colorGroups.end()) {
-        return it->second;
-    }
-
-    return nullptr;
+    Q_ASSERT(is_valid(groupTag));
+    return m_colorGroups[groupTag];
 }
 
 void QQuickPalette::registerColorGroup(QQuickColorGroup *group, QPalette::ColorGroup groupTag)
 {
-    if (auto it = m_colorGroups.find(groupTag); it != m_colorGroups.end() && it->second) {
-        it->second->deleteLater();
+    Q_ASSERT(is_valid(groupTag));
+    auto &g = m_colorGroups[groupTag];
+    if (g) {
+        Q_ASSERT(g != group);
+        g->deleteLater();
     }
-
-    m_colorGroups[groupTag] = group;
+    g = group;
 
     group->setGroupTag(groupTag);
 

@@ -50,10 +50,9 @@
 // We mean it.
 //
 
-#include <vector> // Workaround: I think we should include vector to qflatmap_p.h
-#include <QtCore/private/qflatmap_p.h>
-
 #include <QtQuick/private/qquickcolorgroup_p.h>
+
+#include <array>
 
 QT_BEGIN_NAMESPACE
 
@@ -119,7 +118,7 @@ private:
     static constexpr QPalette::ColorGroup defaultCurrentGroup() { return QPalette::Active; }
 
 private:
-    QFlatMap<QPalette::ColorGroup, QQuickColorGroup::GroupPtr> m_colorGroups;
+    std::array<QQuickColorGroup::GroupPtr, QPalette::NColorGroups> m_colorGroups = {};
     QPalette::ColorGroup m_currentGroup;
 };
 
