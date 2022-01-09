@@ -165,6 +165,7 @@ qt_internal_add_qml_module(Quick
         scenegraph/util/qsgtextureprovider.cpp scenegraph/util/qsgtextureprovider.h
         scenegraph/util/qsgtexturereader.cpp scenegraph/util/qsgtexturereader_p.h
         scenegraph/util/qsgvertexcolormaterial.cpp scenegraph/util/qsgvertexcolormaterial.h
+        util/qminimalflatset_p.h
         util/qquickanimation.cpp util/qquickanimation_p.h
         util/qquickanimation_p_p.h
         util/qquickanimationcontroller.cpp util/qquickanimationcontroller_p.h

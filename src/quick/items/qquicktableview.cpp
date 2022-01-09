@@ -1626,29 +1626,29 @@ void QQuickTableViewPrivate::syncLoadedTableFromLoadRequest()
 
     if (loadRequest.edge() == Qt::Edge(0)) {
         // No edge means we're loading the top-left item
-        loadedColumns.insert(loadRequest.column(), 0);
-        loadedRows.insert(loadRequest.row(), 0);
+        loadedColumns.insert(loadRequest.column());
+        loadedRows.insert(loadRequest.row());
         return;
     }
 
     switch (loadRequest.edge()) {
     case Qt::LeftEdge:
-        loadedColumns.insert(loadRequest.column(), 0);
+        loadedColumns.insert(loadRequest.column());
         if (rebuildState == RebuildState::Done)
             emit q->leftColumnChanged();
         break;
     case Qt::RightEdge:
-        loadedColumns.insert(loadRequest.column(), 0);
+        loadedColumns.insert(loadRequest.column());
         if (rebuildState == RebuildState::Done)
             emit q->rightColumnChanged();
         break;
     case Qt::TopEdge:
-        loadedRows.insert(loadRequest.row(), 0);
+        loadedRows.insert(loadRequest.row());
         if (rebuildState == RebuildState::Done)
             emit q->topRowChanged();
         break;
     case Qt::BottomEdge:
-        loadedRows.insert(loadRequest.row(), 0);
+        loadedRows.insert(loadRequest.row());
         if (rebuildState == RebuildState::Done)
             emit q->bottomRowChanged();
         break;
@@ -1866,10 +1866,8 @@ qreal QQuickTableViewPrivate::sizeHintForColumn(int column) const
 {
     // Find the widest cell in the column, and return its width
     qreal columnWidth = 0;
-    for (auto r = loadedRows.cbegin(); r != loadedRows.cend(); ++r) {
-        const int row = r.key();
+    for (const int row : loadedRows)
         columnWidth = qMax(columnWidth, cellWidth(QPoint(column, row)));
-    }
 
     return columnWidth;
 }
@@ -1878,11 +1876,8 @@ qreal QQuickTableViewPrivate::sizeHintForRow(int row) const
 {
     // Find the highest cell in the row, and return its height
     qreal rowHeight = 0;
-    for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c) {
-        const int column = c.key();
+    for (const int column : loadedColumns)
         rowHeight = qMax(rowHeight, cellHeight(QPoint(column, row)));
-    }
-
     return rowHeight;
 }
 
@@ -2097,13 +2092,11 @@ void QQuickTableViewPrivate::relayoutTableItems()
     qreal nextColumnX = loadedTableOuterRect.x();
     qreal nextRowY = loadedTableOuterRect.y();
 
-    for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c) {
-        const int column = c.key();
+    for (const int column : loadedColumns) {
         // Adjust the geometry of all cells in the current column
         const qreal width = getColumnLayoutWidth(column);
 
-        for (auto r = loadedRows.cbegin(); r != loadedRows.cend(); ++r) {
-            const int row = r.key();
+        for (const int row : loadedRows) {
             auto item = loadedTableItem(QPoint(column, row));
             QRectF geometry = item->geometry();
             geometry.moveLeft(nextColumnX);
@@ -2115,13 +2108,11 @@ void QQuickTableViewPrivate::relayoutTableItems()
             nextColumnX += width + cellSpacing.width();
     }
 
-    for (auto r = loadedRows.cbegin(); r != loadedRows.cend(); ++r) {
-        const int row = r.key();
+    for (const int row : loadedRows) {
         // Adjust the geometry of all cells in the current row
         const qreal height = getRowLayoutHeight(row);
 
-        for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c) {
-            const int column = c.key();
+        for (const int column : loadedColumns) {
             auto item = loadedTableItem(QPoint(column, row));
             QRectF geometry = item->geometry();
             geometry.moveTop(nextRowY);
@@ -2134,10 +2125,8 @@ void QQuickTableViewPrivate::relayoutTableItems()
     }
 
     if (Q_UNLIKELY(lcTableViewDelegateLifecycle().isDebugEnabled())) {
-        for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c) {
-            const int column = c.key();
-            for (auto r = loadedRows.cbegin(); r != loadedRows.cend(); ++r) {
-                const int row = r.key();
+        for (const int column : loadedColumns) {
+            for (const int row : loadedRows) {
                 QPoint cell = QPoint(column, row);
                 qCDebug(lcTableViewDelegateLifecycle()) << "relayout item:" << cell << loadedTableItem(cell)->geometry();
             }
@@ -2154,20 +2143,19 @@ void QQuickTableViewPrivate::layoutVerticalEdge(Qt::Edge tableEdge)
 
     if (tableEdge == Qt::LeftEdge) {
         columnThatNeedsLayout = leftColumn();
-        neighbourColumn = loadedColumns.keys().value(1);
+        neighbourColumn = loadedColumns.values().at(1);
         columnWidth = getColumnLayoutWidth(columnThatNeedsLayout);
         const auto neighbourItem = loadedTableItem(QPoint(neighbourColumn, topRow()));
         columnX = neighbourItem->geometry().left() - cellSpacing.width() - columnWidth;
     } else {
         columnThatNeedsLayout = rightColumn();
-        neighbourColumn = loadedColumns.keys().value(loadedColumns.count() - 2);
+        neighbourColumn = loadedColumns.values().at(loadedColumns.count() - 2);
         columnWidth = getColumnLayoutWidth(columnThatNeedsLayout);
         const auto neighbourItem = loadedTableItem(QPoint(neighbourColumn, topRow()));
         columnX = neighbourItem->geometry().right() + cellSpacing.width();
     }
 
-    for (auto r = loadedRows.cbegin(); r != loadedRows.cend(); ++r) {
-        const int row = r.key();
+    for (const int row : loadedRows) {
         auto fxTableItem = loadedTableItem(QPoint(columnThatNeedsLayout, row));
         auto const neighbourItem = loadedTableItem(QPoint(neighbourColumn, row));
         const qreal rowY = neighbourItem->geometry().y();
@@ -2187,16 +2175,15 @@ void QQuickTableViewPrivate::layoutHorizontalEdge(Qt::Edge tableEdge)
 
     if (tableEdge == Qt::TopEdge) {
         rowThatNeedsLayout = topRow();
-        neighbourRow = loadedRows.keys().value(1);
+        neighbourRow = loadedRows.values().at(1);
     } else {
         rowThatNeedsLayout = bottomRow();
-        neighbourRow = loadedRows.keys().value(loadedRows.count() - 2);
+        neighbourRow = loadedRows.values().at(loadedRows.count() - 2);
     }
 
     // Set the width first, since text items in QtQuick will calculate
     // implicitHeight based on the text items width.
-    for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c) {
-        const int column = c.key();
+    for (const int column : loadedColumns) {
         auto fxTableItem = loadedTableItem(QPoint(column, rowThatNeedsLayout));
         auto const neighbourItem = loadedTableItem(QPoint(column, neighbourRow));
         const qreal columnX = neighbourItem->geometry().x();
@@ -2217,8 +2204,7 @@ void QQuickTableViewPrivate::layoutHorizontalEdge(Qt::Edge tableEdge)
         rowY = neighbourItem->geometry().bottom() + cellSpacing.height();
     }
 
-    for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c) {
-        const int column = c.key();
+    for (const int column : loadedColumns) {
         auto fxTableItem = loadedTableItem(QPoint(column, rowThatNeedsLayout));
         fxTableItem->item->setY(rowY);
         fxTableItem->item->setHeight(rowHeight);
@@ -2692,8 +2678,8 @@ void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
     switch (edge) {
     case Qt::LeftEdge: {
         const int column = leftColumn();
-        for (auto r = loadedRows.cbegin(); r != loadedRows.cend(); ++r)
-            unloadItem(QPoint(column, r.key()));
+        for (int row : loadedRows)
+            unloadItem(QPoint(column, row));
         loadedColumns.remove(column);
         syncLoadedTableRectFromLoadedTable();
         if (rebuildState == RebuildState::Done)
@@ -2701,8 +2687,8 @@ void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
         break; }
     case Qt::RightEdge: {
         const int column = rightColumn();
-        for (auto r = loadedRows.cbegin(); r != loadedRows.cend(); ++r)
-            unloadItem(QPoint(column, r.key()));
+        for (int row : loadedRows)
+            unloadItem(QPoint(column, row));
         loadedColumns.remove(column);
         syncLoadedTableRectFromLoadedTable();
         if (rebuildState == RebuildState::Done)
@@ -2710,8 +2696,8 @@ void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
         break; }
     case Qt::TopEdge: {
         const int row = topRow();
-        for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c)
-            unloadItem(QPoint(c.key(), row));
+        for (int col : loadedColumns)
+            unloadItem(QPoint(col, row));
         loadedRows.remove(row);
         syncLoadedTableRectFromLoadedTable();
         if (rebuildState == RebuildState::Done)
@@ -2719,8 +2705,8 @@ void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
         break; }
     case Qt::BottomEdge: {
         const int row = bottomRow();
-        for (auto c = loadedColumns.cbegin(); c != loadedColumns.cend(); ++c)
-            unloadItem(QPoint(c.key(), row));
+        for (int col : loadedColumns)
+            unloadItem(QPoint(col, row));
         loadedRows.remove(row);
         syncLoadedTableRectFromLoadedTable();
         if (rebuildState == RebuildState::Done)
@@ -2736,8 +2722,8 @@ void QQuickTableViewPrivate::loadEdge(Qt::Edge edge, QQmlIncubator::IncubationMo
     const int edgeIndex = nextVisibleEdgeIndexAroundLoadedTable(edge);
     qCDebug(lcTableViewDelegateLifecycle) << edge << edgeIndex;
 
-    const auto visibleCells = edge & (Qt::LeftEdge | Qt::RightEdge)
-            ? loadedRows.keys() : loadedColumns.keys();
+    const auto &visibleCells = edge & (Qt::LeftEdge | Qt::RightEdge)
+            ? loadedRows.values() : loadedColumns.values();
     loadRequest.begin(edge, edgeIndex, visibleCells, incubationMode);
     processLoadRequest();
 }
@@ -3910,8 +3896,7 @@ QPoint QQuickTableView::cellAtPos(const QPointF &position, bool includeSpacing) 
     int foundColumn = -1;
     int foundRow = -1;
 
-    for (auto columnPair : qAsConst(d->loadedColumns)) {
-        const int column = columnPair.first;
+    for (const int column : d->loadedColumns) {
         currentColumnEnd += d->getEffectiveColumnWidth(column);
         if (position.x() < currentColumnEnd) {
             foundColumn = column;
@@ -3927,8 +3912,7 @@ QPoint QQuickTableView::cellAtPos(const QPointF &position, bool includeSpacing) 
         }
     }
 
-    for (auto rowPair : qAsConst(d->loadedRows)) {
-        const int row = rowPair.first;
+    for (const int row : d->loadedRows) {
         currentRowEnd += d->getEffectiveRowHeight(row);
         if (position.y() < currentRowEnd) {
             foundRow = row;

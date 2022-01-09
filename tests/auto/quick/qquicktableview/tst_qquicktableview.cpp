@@ -372,9 +372,9 @@ void tst_QQuickTableView::checkColumnWidthWithoutProvider()
 
     WAIT_UNTIL_POLISHED;
 
-    for (const int column : tableViewPrivate->loadedColumns.keys()) {
+    for (const int column : tableViewPrivate->loadedColumns) {
         const qreal expectedColumnWidth = tableViewPrivate->sizeHintForColumn(column);
-        for (const int row : tableViewPrivate->loadedRows.keys()) {
+        for (const int row : tableViewPrivate->loadedRows) {
             const auto item = tableViewPrivate->loadedTableItem(QPoint(column, row))->item;
             QCOMPARE(item->width(), expectedColumnWidth);
         }
@@ -508,9 +508,9 @@ void tst_QQuickTableView::checkRowHeightWithoutProvider()
 
     WAIT_UNTIL_POLISHED;
 
-    for (const int row : tableViewPrivate->loadedRows.keys()) {
+    for (const int row : tableViewPrivate->loadedRows) {
         const qreal expectedRowHeight = tableViewPrivate->sizeHintForRow(row);
-        for (const int column : tableViewPrivate->loadedColumns.keys()) {
+        for (const int column : tableViewPrivate->loadedColumns) {
             const auto item = tableViewPrivate->loadedTableItem(QPoint(column, row))->item;
             QCOMPARE(item->height(), expectedRowHeight);
         }
@@ -2476,10 +2476,10 @@ void tst_QQuickTableView::hideRowsAndColumns()
     QCOMPARE(tableViewPrivate->loadedRows.count(), expectedRowCount);
     QCOMPARE(tableViewPrivate->loadedColumns.count(), expectedColumnCount);
 
-    for (const int row : tableViewPrivate->loadedRows.keys())
+    for (const int row : tableViewPrivate->loadedRows)
         QVERIFY(!rowsToHideList.contains(row));
 
-    for (const int column : tableViewPrivate->loadedColumns.keys())
+    for (const int column : tableViewPrivate->loadedColumns)
         QVERIFY(!columnsToHideList.contains(column));
 }
 

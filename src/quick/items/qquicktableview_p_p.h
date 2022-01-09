@@ -54,13 +54,13 @@
 #include "qquicktableview_p.h"
 
 #include <QtCore/qtimer.h>
-#include <QtCore/private/qflatmap_p.h>
 #include <QtCore/qitemselectionmodel.h>
 #include <QtQmlModels/private/qqmltableinstancemodel_p.h>
 #include <QtQml/private/qqmlincubator_p.h>
 #include <QtQmlModels/private/qqmlchangeset_p.h>
 #include <QtQml/qqmlinfo.h>
 
+#include <QtQuick/private/qminimalflatset_p.h>
 #include <QtQuick/private/qquickflickable_p_p.h>
 #include <QtQuick/private/qquickitemviewfxitem_p_p.h>
 #include <QtQuick/private/qquickselectable_p.h>
@@ -253,8 +253,8 @@ public:
     // we need to fill up with more rows/columns. loadedTableInnerRect describes the pixels
     // that the loaded table covers if you remove one row/column on each side of the table, and
     // is used to determine rows/columns that are no longer visible and can be unloaded.
-    QFlatMap<int, int> loadedColumns;
-    QFlatMap<int, int> loadedRows;
+    QMinimalFlatSet<int> loadedColumns;
+    QMinimalFlatSet<int> loadedRows;
     QRectF loadedTableOuterRect;
     QRectF loadedTableInnerRect;
 
@@ -368,10 +368,10 @@ public:
     qreal getEffectiveRowHeight(int row) const;
     qreal getEffectiveColumnWidth(int column) const;
 
-    inline int topRow() const { return loadedRows.cbegin().key(); }
-    inline int bottomRow() const { return (--loadedRows.cend()).key(); }
-    inline int leftColumn() const { return loadedColumns.cbegin().key(); }
-    inline int rightColumn() const { return (--loadedColumns.cend()).key(); }
+    int topRow() const { return *loadedRows.cbegin(); }
+    int bottomRow() const { return *loadedRows.crbegin(); }
+    int leftColumn() const { return *loadedColumns.cbegin(); }
+    int rightColumn() const { return *loadedColumns.crbegin(); }
 
     QQuickTableView *rootSyncView() const;
 
