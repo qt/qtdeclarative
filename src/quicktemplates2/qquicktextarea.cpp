@@ -462,7 +462,7 @@ void QQuickTextAreaPrivate::readOnlyChanged(bool isReadOnly)
         accessibleAttached->set_readOnly(isReadOnly);
 #endif
 #if QT_CONFIG(cursor)
-    q_func()->setCursor(isReadOnly ? Qt::ArrowCursor : Qt::IBeamCursor);
+    q_func()->setCursor(isReadOnly && !selectByMouse ? Qt::ArrowCursor : Qt::IBeamCursor);
 #endif
 }
 
