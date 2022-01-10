@@ -150,6 +150,7 @@ public:
         QString m_description;
         QtMsgType m_level;
         bool m_error;
+        bool m_changed = false;
 
         QString levelToString() const {
             switch (m_level) {
@@ -181,6 +182,7 @@ public:
                 return false;
             }
 
+            m_changed = true;
             return true;
         }
     };
@@ -198,12 +200,22 @@ public:
     const QList<Message> &errors() const { return m_errors; }
 
     QtMsgType categoryLevel(QQmlJSLoggerCategory category) const { return m_categoryLevels[category]; }
-    void setCategoryLevel(QQmlJSLoggerCategory category, QtMsgType Level) { m_categoryLevels[category] = Level; }
+    void setCategoryLevel(QQmlJSLoggerCategory category, QtMsgType level)
+    {
+        m_categoryLevels[category] = level;
+        m_categoryChanged[category] = true;
+    }
 
     bool isCategoryError(QQmlJSLoggerCategory category) const { return m_categoryError[category]; }
     void setCategoryError(QQmlJSLoggerCategory category, bool error)
     {
         m_categoryError[category] = error;
+        m_categoryChanged[category] = true;
+    }
+
+    bool wasCategoryChanged(QQmlJSLoggerCategory category) const
+    {
+        return m_categoryChanged[category];
     }
 
     void logInfo(const QString &message, QQmlJSLoggerCategory category,
@@ -262,6 +274,7 @@ private:
 
     QtMsgType m_categoryLevels[QQmlJSLoggerCategory_Last + 1] = {};
     bool m_categoryError[QQmlJSLoggerCategory_Last + 1] = {};
+    bool m_categoryChanged[QQmlJSLoggerCategory_Last + 1] = {};
 
     QList<Message> m_infos;
     QList<Message> m_warnings;

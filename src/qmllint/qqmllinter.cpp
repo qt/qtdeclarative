@@ -290,6 +290,9 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
             parseComments(m_logger.get(), engine.comments());
 
             for (auto it = options.cbegin(); it != options.cend(); ++it) {
+                if (!it.value().m_changed)
+                    continue;
+
                 m_logger->setCategoryError(it.value().m_category, it.value().m_error);
                 m_logger->setCategoryLevel(it.value().m_category, it.value().m_level);
             }

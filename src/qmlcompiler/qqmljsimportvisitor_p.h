@@ -112,6 +112,7 @@ protected:
     bool visit(QQmlJS::AST::ClassExpression *ast) override;
     void endVisit(QQmlJS::AST::ClassExpression *) override;
     bool visit(QQmlJS::AST::UiImport *import) override;
+    bool visit(QQmlJS::AST::UiPragma *pragma) override;
     bool visit(QQmlJS::AST::ClassDeclaration *ast) override;
     void endVisit(QQmlJS::AST::ClassDeclaration *ast) override;
     bool visit(QQmlJS::AST::ForStatement *ast) override;

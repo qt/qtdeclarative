@@ -167,6 +167,12 @@ All warnings can be set to three levels:
                 const QString value = parser.isSet(key) ? parser.value(key)
                                                         : settings.value(settingsName).toString();
                 auto &option = it.value();
+
+                // Do not try to set the levels if it's due to a default config option.
+                // This way we can tell which options have actually been overwritten by the user.
+                if (option.levelToString() == value && !parser.isSet(key))
+                    continue;
+
                 if (!option.setLevel(value)) {
                     qWarning() << "Invalid logging level" << value << "provided for" << it.key()
                                << "(allowed are: disable, info, warning)";

@@ -984,21 +984,29 @@ void TestQmllint::compilerWarnings_data()
     QTest::addColumn<QString>("filename");
     QTest::addColumn<bool>("shouldSucceed");
     QTest::addColumn<QString>("warning");
-    QTest::newRow("listIndices") << QStringLiteral("listIndices.qml") << true << QString();
-    QTest::newRow("lazyAndDirect") << QStringLiteral("LazyAndDirect/Lazy.qml") << true << QString();
-    QTest::newRow("qQmlV4Function") << QStringLiteral("varargs.qml") << true << QString();
-    QTest::newRow("multiGrouped") << QStringLiteral("multiGrouped.qml") << true << QString();
+    QTest::addColumn<bool>("enableCompilerWarnings");
+
+    QTest::newRow("listIndices") << QStringLiteral("listIndices.qml") << true << QString() << true;
+    QTest::newRow("lazyAndDirect")
+            << QStringLiteral("LazyAndDirect/Lazy.qml") << true << QString() << true;
+    QTest::newRow("qQmlV4Function") << QStringLiteral("varargs.qml") << true << QString() << true;
+    QTest::newRow("multiGrouped") << QStringLiteral("multiGrouped.qml") << true << QString()
+                                  << true;
 
     QTest::newRow("shadowable") << QStringLiteral("shadowable.qml") << false
-                                << QStringLiteral("with type NotSoSimple can be shadowed");
+                                << QStringLiteral("with type NotSoSimple can be shadowed") << true;
     QTest::newRow("tooFewParameters") << QStringLiteral("tooFewParams.qml") << false
-                                      << QStringLiteral("No matching override found");
+                                      << QStringLiteral("No matching override found") << true;
     QTest::newRow("javascriptVariableArgs")
             << QStringLiteral("javascriptVariableArgs.qml") << false
-            << QStringLiteral("Function expects 0 arguments, but 2 were provided");
+            << QStringLiteral("Function expects 0 arguments, but 2 were provided") << true;
     QTest::newRow("unknownTypeInRegister")
             << QStringLiteral("unknownTypeInRegister.qml") << false
-            << QStringLiteral("Functions without type annotations won't be compiled");
+            << QStringLiteral("Functions without type annotations won't be compiled") << true;
+    QTest::newRow("pragmaStrict") << QStringLiteral("pragmaStrict.qml") << true
+                                  << QStringLiteral(
+                                             "Functions without type annotations won't be compiled")
+                                  << false;
 }
 
 void TestQmllint::compilerWarnings()
@@ -1006,11 +1014,14 @@ void TestQmllint::compilerWarnings()
     QFETCH(QString, filename);
     QFETCH(bool, shouldSucceed);
     QFETCH(QString, warning);
+    QFETCH(bool, enableCompilerWarnings);
 
     QJsonArray warnings;
 
     auto options = QQmlJSLogger::options();
-    options[u"compiler"_qs].setLevel(u"warning"_qs);
+
+    if (enableCompilerWarnings)
+        options[u"compiler"_qs].setLevel(u"warning"_qs);
 
     callQmllint(filename, shouldSucceed, &warnings, {}, {}, {}, UseDefaultIncludes, &options);
 

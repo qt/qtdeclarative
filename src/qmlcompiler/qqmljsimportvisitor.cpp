@@ -1746,6 +1746,16 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
     return true;
 }
 
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
+{
+    // If a file uses pragma Strict it expects to be compiled, so automatically enable compiler
+    // warnings unless the user has explicitly set the level.
+    if (pragma->name == u"Strict"_qs && !m_logger->wasCategoryChanged(Log_Compiler))
+        m_logger->setCategoryLevel(Log_Compiler, QtWarningMsg);
+
+    return true;
+}
+
 void QQmlJSImportVisitor::throwRecursionDepthError()
 {
     m_logger->logCritical(QStringLiteral("Maximum statement or expression depth exceeded"),
