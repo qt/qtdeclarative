@@ -98,4 +98,6 @@ private:
 
 QT_END_NAMESPACE
 
+Q_DECLARE_METATYPE(QPlatformMenu::MenuType)
+
 #endif // QWIDGETPLATFORMMENU_P_H

@@ -60,10 +60,11 @@ QT_BEGIN_NAMESPACE
 class QQuickLabsPlatformFontDialog : public QQuickLabsPlatformDialog
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(FontDialog)
+    QML_EXTENDED_NAMESPACE(QFontDialogOptions)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QFont currentFont READ currentFont WRITE setCurrentFont NOTIFY currentFontChanged FINAL)
     Q_PROPERTY(QFontDialogOptions::FontDialogOptions options READ options WRITE setOptions NOTIFY optionsChanged FINAL)
-    Q_FLAGS(QFontDialogOptions::FontDialogOptions)
 
 public:
     explicit QQuickLabsPlatformFontDialog(QObject *parent = nullptr);

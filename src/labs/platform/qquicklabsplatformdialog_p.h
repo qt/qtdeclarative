@@ -67,6 +67,8 @@ class QQuickLabsPlatformDialog : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
     Q_INTERFACES(QQmlParserStatus)
+    QML_NAMED_ELEMENT(Dialog)
+    QML_UNCREATABLE("Dialog is an abstract base class")
     Q_PROPERTY(QQmlListProperty<QObject> data READ data FINAL)
     Q_PROPERTY(QWindow *parentWindow READ parentWindow WRITE setParentWindow NOTIFY parentWindowChanged FINAL)
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
@@ -147,6 +149,13 @@ private:
     QPlatformTheme::DialogType m_type;
     QList<QObject *> m_data;
     QPlatformDialogHelper *m_handle;
+};
+
+class QPlatformDialogHelperForeign
+{
+    QML_FOREIGN(QPlatformDialogHelper)
+    QML_NAMED_ELEMENT(StandardButton)
+    QML_UNCREATABLE("Cannot create an instance of StandardButton")
 };
 
 QT_END_NAMESPACE

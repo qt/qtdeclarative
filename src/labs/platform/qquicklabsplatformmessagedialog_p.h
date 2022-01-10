@@ -59,11 +59,12 @@ QT_BEGIN_NAMESPACE
 class QQuickLabsPlatformMessageDialog : public QQuickLabsPlatformDialog
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(MessageDialog)
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged FINAL)
     Q_PROPERTY(QString informativeText READ informativeText WRITE setInformativeText NOTIFY informativeTextChanged FINAL)
     Q_PROPERTY(QString detailedText READ detailedText WRITE setDetailedText NOTIFY detailedTextChanged FINAL)
     Q_PROPERTY(QPlatformDialogHelper::StandardButtons buttons READ buttons WRITE setButtons NOTIFY buttonsChanged FINAL)
-    Q_FLAGS(QPlatformDialogHelper::StandardButtons)
+    QML_EXTENDED_NAMESPACE(QPlatformDialogHelper)
 
 public:
     explicit QQuickLabsPlatformMessageDialog(QObject *parent = nullptr);

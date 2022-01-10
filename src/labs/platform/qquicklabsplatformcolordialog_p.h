@@ -60,10 +60,11 @@ QT_BEGIN_NAMESPACE
 class QQuickLabsPlatformColorDialog : public QQuickLabsPlatformDialog
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(ColorDialog)
+    QML_EXTENDED_NAMESPACE(QColorDialogOptions)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged FINAL)
     Q_PROPERTY(QColor currentColor READ currentColor WRITE setCurrentColor NOTIFY currentColorChanged FINAL)
     Q_PROPERTY(QColorDialogOptions::ColorDialogOptions options READ options WRITE setOptions NOTIFY optionsChanged FINAL)
-    Q_FLAGS(QColorDialogOptions::ColorDialogOptions)
 
 public:
     explicit QQuickLabsPlatformColorDialog(QObject *parent = nullptr);

@@ -62,6 +62,8 @@ class QQuickLabsPlatformFileNameFilter;
 class QQuickLabsPlatformFileDialog : public QQuickLabsPlatformDialog
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(FileDialog)
+    QML_EXTENDED_NAMESPACE(QFileDialogOptions)
     Q_PROPERTY(FileMode fileMode READ fileMode WRITE setFileMode NOTIFY fileModeChanged FINAL)
     Q_PROPERTY(QUrl file READ file WRITE setFile NOTIFY fileChanged FINAL)
     Q_PROPERTY(QList<QUrl> files READ files WRITE setFiles NOTIFY filesChanged FINAL)
@@ -74,7 +76,6 @@ class QQuickLabsPlatformFileDialog : public QQuickLabsPlatformDialog
     Q_PROPERTY(QString defaultSuffix READ defaultSuffix WRITE setDefaultSuffix RESET resetDefaultSuffix NOTIFY defaultSuffixChanged FINAL)
     Q_PROPERTY(QString acceptLabel READ acceptLabel WRITE setAcceptLabel RESET resetAcceptLabel NOTIFY acceptLabelChanged FINAL)
     Q_PROPERTY(QString rejectLabel READ rejectLabel WRITE setRejectLabel RESET resetRejectLabel NOTIFY rejectLabelChanged FINAL)
-    Q_FLAGS(QFileDialogOptions::FileDialogOptions)
 
 public:
     explicit QQuickLabsPlatformFileDialog(QObject *parent = nullptr);
@@ -160,6 +161,7 @@ private:
 class QQuickLabsPlatformFileNameFilter : public QObject
 {
     Q_OBJECT
+    QML_ANONYMOUS
     Q_PROPERTY(int index READ index WRITE setIndex NOTIFY indexChanged FINAL)
     Q_PROPERTY(QString name READ name NOTIFY nameChanged FINAL)
     Q_PROPERTY(QStringList extensions READ extensions NOTIFY extensionsChanged FINAL)

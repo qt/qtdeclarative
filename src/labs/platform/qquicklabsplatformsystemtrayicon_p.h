@@ -69,6 +69,8 @@ class QQuickLabsPlatformIconLoader;
 class QQuickLabsPlatformSystemTrayIcon : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(SystemTrayIcon)
+    QML_EXTENDED_NAMESPACE(QPlatformSystemTrayIcon)
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(bool available READ isAvailable CONSTANT FINAL)
     Q_PROPERTY(bool supportsMessages READ supportsMessages CONSTANT FINAL)
@@ -77,7 +79,6 @@ class QQuickLabsPlatformSystemTrayIcon : public QObject, public QQmlParserStatus
     Q_PROPERTY(QQuickLabsPlatformMenu *menu READ menu WRITE setMenu NOTIFY menuChanged FINAL)
     Q_PROPERTY(QRect geometry READ geometry NOTIFY geometryChanged FINAL REVISION(1, 1))
     Q_PROPERTY(QQuickLabsPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(1, 1))
-    Q_ENUMS(QPlatformSystemTrayIcon::ActivationReason QPlatformSystemTrayIcon::MessageIcon)
 
 public:
     explicit QQuickLabsPlatformSystemTrayIcon(QObject *parent = nullptr);

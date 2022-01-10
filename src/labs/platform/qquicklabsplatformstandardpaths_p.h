@@ -64,7 +64,9 @@ class QJSEngine;
 class QQuickLabsPlatformStandardPaths : public QObject
 {
     Q_OBJECT
-    Q_ENUMS(QStandardPaths::StandardLocation QStandardPaths::LocateOptions)
+    QML_SINGLETON
+    QML_NAMED_ELEMENT(StandardPaths)
+    QML_EXTENDED_NAMESPACE(QStandardPaths)
 
 public:
     explicit QQuickLabsPlatformStandardPaths(QObject *parent = nullptr);

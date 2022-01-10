@@ -7,8 +7,6 @@ qt_internal_add_qml_module(qtlabsplatformplugin
     VERSION "1.1"
     CLASS_NAME QtLabsPlatformPlugin
     PLUGIN_TARGET qtlabsplatformplugin
-    NO_PLUGIN_OPTIONAL
-    NO_GENERATE_PLUGIN_SOURCE
     SOURCES
         qquicklabsplatformcolordialog.cpp qquicklabsplatformcolordialog_p.h
         qquicklabsplatformdialog.cpp qquicklabsplatformdialog_p.h
@@ -24,7 +22,6 @@ qt_internal_add_qml_module(qtlabsplatformplugin
         qquicklabsplatformmenuseparator.cpp qquicklabsplatformmenuseparator_p.h
         qquicklabsplatformmessagedialog.cpp qquicklabsplatformmessagedialog_p.h
         qquicklabsplatformstandardpaths.cpp qquicklabsplatformstandardpaths_p.h
-        qtlabsplatformplugin.cpp
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII

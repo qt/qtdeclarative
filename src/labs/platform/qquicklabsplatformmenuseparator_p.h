@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 class QQuickLabsPlatformMenuSeparator : public QQuickLabsPlatformMenuItem
 {
     Q_OBJECT
-
+    QML_NAMED_ELEMENT(MenuSeparator)
 public:
     explicit QQuickLabsPlatformMenuSeparator(QObject *parent = nullptr);
 };

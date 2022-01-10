@@ -63,6 +63,7 @@ class QQuickLabsPlatformMenuItemGroupPrivate;
 class QQuickLabsPlatformMenuItemGroup : public QObject
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(MenuItemGroup)
     Q_PROPERTY(bool enabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged FINAL)
     Q_PROPERTY(bool visible READ isVisible WRITE setVisible NOTIFY visibleChanged FINAL)
     Q_PROPERTY(bool exclusive READ isExclusive WRITE setExclusive NOTIFY exclusiveChanged FINAL)

@@ -76,6 +76,8 @@ class QQuickLabsPlatformSystemTrayIcon;
 class QQuickLabsPlatformMenu : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(Menu)
+    QML_EXTENDED_NAMESPACE(QPlatformMenu)
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QQmlListProperty<QObject> data READ data FINAL)
     Q_PROPERTY(QQmlListProperty<QQuickLabsPlatformMenuItem> items READ items NOTIFY itemsChanged FINAL)
@@ -90,7 +92,6 @@ class QQuickLabsPlatformMenu : public QObject, public QQmlParserStatus
     Q_PROPERTY(QString title READ title WRITE setTitle NOTIFY titleChanged FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QQuickLabsPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(1, 1))
-    Q_ENUMS(QPlatformMenu::MenuType)
     Q_CLASSINFO("DefaultProperty", "data")
 
 public:
@@ -211,6 +212,5 @@ private:
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickLabsPlatformMenu)
-Q_DECLARE_METATYPE(QPlatformMenu::MenuType)
 
 #endif // QQUICKLABSPLATFORMMENU_P_H

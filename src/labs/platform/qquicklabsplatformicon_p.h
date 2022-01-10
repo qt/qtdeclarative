@@ -54,6 +54,8 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qstring.h>
 
+#include <QtQml/qqmlengine.h>
+
 QT_BEGIN_NAMESPACE
 
 class QObject;
@@ -61,6 +63,7 @@ class QObject;
 class QQuickLabsPlatformIcon
 {
     Q_GADGET
+    QML_ANONYMOUS
     Q_PROPERTY(QUrl source READ source WRITE setSource)
     Q_PROPERTY(QString name READ name WRITE setName)
     Q_PROPERTY(bool mask READ isMask WRITE setMask)

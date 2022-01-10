@@ -195,7 +195,7 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when the menu is about to be hidden from the user.
 */
 
-Q_DECLARE_LOGGING_CATEGORY(qtLabsPlatformMenus)
+Q_LOGGING_CATEGORY(qtLabsPlatformMenus, "qt.labs.platform.menus")
 
 QQuickLabsPlatformMenu::QQuickLabsPlatformMenu(QObject *parent)
     : QObject(parent),

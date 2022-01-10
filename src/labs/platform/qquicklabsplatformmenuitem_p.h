@@ -70,6 +70,8 @@ class QQuickLabsPlatformMenuItemGroup;
 class QQuickLabsPlatformMenuItem : public QObject, public QQmlParserStatus
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(MenuItem)
+    QML_EXTENDED_NAMESPACE(QPlatformMenuItem)
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(QQuickLabsPlatformMenu *menu READ menu NOTIFY menuChanged FINAL)
     Q_PROPERTY(QQuickLabsPlatformMenu *subMenu READ subMenu NOTIFY subMenuChanged FINAL)
@@ -84,7 +86,6 @@ class QQuickLabsPlatformMenuItem : public QObject, public QQmlParserStatus
     Q_PROPERTY(QVariant shortcut READ shortcut WRITE setShortcut NOTIFY shortcutChanged FINAL)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged FINAL)
     Q_PROPERTY(QQuickLabsPlatformIcon icon READ icon WRITE setIcon NOTIFY iconChanged FINAL REVISION(1, 1))
-    Q_ENUMS(QPlatformMenuItem::MenuRole)
 
 public:
     explicit QQuickLabsPlatformMenuItem(QObject *parent = nullptr);

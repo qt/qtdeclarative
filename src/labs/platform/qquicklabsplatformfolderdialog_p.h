@@ -60,12 +60,13 @@ QT_BEGIN_NAMESPACE
 class QQuickLabsPlatformFolderDialog : public QQuickLabsPlatformDialog
 {
     Q_OBJECT
+    QML_NAMED_ELEMENT(FolderDialog)
+    QML_EXTENDED_NAMESPACE(QFileDialogOptions)
     Q_PROPERTY(QUrl folder READ folder WRITE setFolder NOTIFY folderChanged FINAL)
     Q_PROPERTY(QUrl currentFolder READ currentFolder WRITE setCurrentFolder NOTIFY currentFolderChanged FINAL)
     Q_PROPERTY(QFileDialogOptions::FileDialogOptions options READ options WRITE setOptions RESET resetOptions NOTIFY optionsChanged FINAL)
     Q_PROPERTY(QString acceptLabel READ acceptLabel WRITE setAcceptLabel RESET resetAcceptLabel NOTIFY acceptLabelChanged FINAL)
     Q_PROPERTY(QString rejectLabel READ rejectLabel WRITE setRejectLabel RESET resetRejectLabel NOTIFY rejectLabelChanged FINAL)
-    Q_FLAGS(QFileDialogOptions::FileDialogOptions)
 
 public:
     explicit QQuickLabsPlatformFolderDialog(QObject *parent = nullptr);
