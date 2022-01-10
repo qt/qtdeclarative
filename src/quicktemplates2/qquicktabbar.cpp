@@ -115,6 +115,9 @@ public:
 
     bool updatingLayout = false;
     QQuickTabBar::Position position = QQuickTabBar::Header;
+#if QT_CONFIG(wheelevent)
+    QPoint accumulatedAngleDelta;
+#endif
 };
 
 class QQuickTabBarAttachedPrivate : public QObjectPrivate
@@ -382,6 +385,26 @@ void QQuickTabBar::itemRemoved(int index, QQuickItem *item)
     if (isComponentComplete())
         polish();
 }
+
+#if QT_CONFIG(wheelevent)
+void QQuickTabBar::wheelEvent(QWheelEvent *event)
+{
+    Q_D(QQuickTabBar);
+    QQuickContainer::wheelEvent(event);
+    if (d->wheelEnabled) {
+        d->accumulatedAngleDelta += event->angleDelta();
+        int xSteps = d->accumulatedAngleDelta.x() / QWheelEvent::DefaultDeltasPerStep;
+        int ySteps = d->accumulatedAngleDelta.y() / QWheelEvent::DefaultDeltasPerStep;
+        if (xSteps > 0 || ySteps > 0) {
+            decrementCurrentIndex();
+            d->accumulatedAngleDelta = QPoint();
+        } else if (xSteps < 0 || ySteps < 0) {
+            incrementCurrentIndex();
+            d->accumulatedAngleDelta = QPoint();
+        }
+    }
+}
+#endif
 
 QFont QQuickTabBar::defaultFont() const
 {

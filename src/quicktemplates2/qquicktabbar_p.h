@@ -89,6 +89,9 @@ protected:
     void itemAdded(int index, QQuickItem *item) override;
     void itemMoved(int index, QQuickItem *item) override;
     void itemRemoved(int index, QQuickItem *item) override;
+#if QT_CONFIG(wheelevent)
+    void wheelEvent(QWheelEvent *event) override;
+#endif
 
     QFont defaultFont() const override;
 
