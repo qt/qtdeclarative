@@ -65,8 +65,6 @@
 #include <QtCore/qabstractitemmodel.h>
 #endif
 
-QT_REQUIRE_CONFIG(qml_sequence_object);
-
 QT_BEGIN_NAMESPACE
 
 namespace QV4 {

@@ -44,7 +44,6 @@ _qtdeclarative_features = [
     "qml-object-model",
     "qml-preview",
     "qml-profiler",
-    "qml-sequence-object",
     "qml-table-model",
     "qml-worker-script",
     "qml-xml-http-request",

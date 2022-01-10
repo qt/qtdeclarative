@@ -95,11 +95,7 @@
 #include "qv4urlobject_p.h"
 #include "qv4jscall_p.h"
 #include "qv4variantobject_p.h"
-
-#if QT_CONFIG(qml_sequence_object)
 #include "qv4sequenceobject_p.h"
-#endif
-
 #include "qv4qobjectwrapper_p.h"
 #include "qv4memberdata_p.h"
 #include "qv4arraybuffer_p.h"
@@ -636,10 +632,8 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsObjects[VariantProto] = memoryManager->allocate<VariantPrototype>();
     Q_ASSERT(variantPrototype()->getPrototypeOf() == objectPrototype()->d());
 
-#if QT_CONFIG(qml_sequence_object)
     ic = newInternalClass(SequencePrototype::staticVTable(), SequencePrototype::defaultPrototype(this));
     jsObjects[SequenceProto] = ScopedValue(scope, memoryManager->allocObject<SequencePrototype>(ic->d()));
-#endif
 
     ExecutionContext *global = rootContext();
 
@@ -715,9 +709,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     static_cast<VariantPrototype *>(variantPrototype())->init();
 
-#if QT_CONFIG(qml_sequence_object)
     sequencePrototype()->cast<SequencePrototype>()->init();
-#endif
 
     jsObjects[WeakMap_Ctor] = memoryManager->allocate<WeakMapCtor>(global);
     jsObjects[WeakMapProto] = memoryManager->allocate<WeakMapPrototype>();
@@ -1541,10 +1533,8 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
             return v->toVariant();
         } else if (QV4::QmlListWrapper *l = object->as<QV4::QmlListWrapper>()) {
             return l->toVariant();
-#if QT_CONFIG(qml_sequence_object)
         } else if (object->isListType()) {
             return QV4::SequencePrototype::toVariant(object);
-#endif
         }
     }
 
@@ -1569,12 +1559,11 @@ static QVariant toVariant(QV4::ExecutionEngine *e, const QV4::Value &value, QMet
         }
 
         QVariant retn;
-#if QT_CONFIG(qml_sequence_object)
         bool succeeded = false;
         retn = QV4::SequencePrototype::toVariant(value, metaType, &succeeded);
         if (succeeded)
             return retn;
-#endif
+
         if (metaType.isValid()) {
             retn = QVariant(metaType, nullptr);
             auto retnAsIterable = retn.value<QSequentialIterable>();
@@ -1795,7 +1784,6 @@ QV4::ReturnedValue ExecutionEngine::fromData(
 #endif
             case QMetaType::QObjectStar:
                 return QV4::QObjectWrapper::wrap(this, *reinterpret_cast<QObject* const *>(ptr));
-#if QT_CONFIG(qml_sequence_object)
             case QMetaType::QStringList:
                 {
                 bool succeeded = false;
@@ -1806,7 +1794,6 @@ QV4::ReturnedValue ExecutionEngine::fromData(
                     return retn->asReturnedValue();
                 return QV4::Encode(newArrayObject(*reinterpret_cast<const QStringList *>(ptr)));
                 }
-#endif
             case QMetaType::QVariantList:
                 return variantListToJS(this, *reinterpret_cast<const QVariantList *>(ptr));
             case QMetaType::QVariantMap:
@@ -1875,13 +1862,10 @@ QV4::ReturnedValue ExecutionEngine::fromData(
             }
         }
 
-#if QT_CONFIG(qml_sequence_object)
         bool succeeded = false;
         QV4::ScopedValue retn(scope, QV4::SequencePrototype::fromData(this, metaType, ptr, &succeeded));
         if (succeeded)
             return retn->asReturnedValue();
-#endif
-
 
         if (QMetaType::canConvert(metaType, QMetaType::fromType<QSequentialIterable>())) {
             QSequentialIterable lst;

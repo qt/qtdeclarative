@@ -221,9 +221,7 @@ public:
         URIErrorProto,
         PromiseProto,
         VariantProto,
-#if QT_CONFIG(qml_sequence_object)
         SequenceProto,
-#endif
         SharedArrayBufferProto,
         ArrayBufferProto,
         DataViewProto,
@@ -344,9 +342,7 @@ public:
     Object *uRIErrorPrototype() const { return reinterpret_cast<Object *>(jsObjects + URIErrorProto); }
     Object *promisePrototype() const { return reinterpret_cast<Object *>(jsObjects + PromiseProto); }
     Object *variantPrototype() const { return reinterpret_cast<Object *>(jsObjects + VariantProto); }
-#if QT_CONFIG(qml_sequence_object)
     Object *sequencePrototype() const { return reinterpret_cast<Object *>(jsObjects + SequenceProto); }
-#endif
 
     Object *sharedArrayBufferPrototype() const { return reinterpret_cast<Object *>(jsObjects + SharedArrayBufferProto); }
     Object *arrayBufferPrototype() const { return reinterpret_cast<Object *>(jsObjects + ArrayBufferProto); }

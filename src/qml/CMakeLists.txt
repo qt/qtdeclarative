@@ -223,6 +223,7 @@ qt_internal_add_qml_module(Qml
         jsruntime/qv4value.cpp jsruntime/qv4value_p.h
         jsruntime/qv4variantobject.cpp jsruntime/qv4variantobject_p.h
         jsruntime/qv4vme_moth.cpp jsruntime/qv4vme_moth_p.h
+        jsruntime/qv4sequenceobject.cpp jsruntime/qv4sequenceobject_p.h
         jsruntime/qv4vtable_p.h
         memory/qv4heap_p.h
         memory/qv4mm.cpp memory/qv4mm_p.h
@@ -535,11 +536,6 @@ qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_debug
 qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_debug AND QT_FEATURE_translation
     SOURCES
         debugger/qqmldebugtranslationprotocol_p.h
-)
-
-qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_sequence_object
-    SOURCES
-        jsruntime/qv4sequenceobject.cpp jsruntime/qv4sequenceobject_p.h
 )
 
 qt_internal_extend_target(Qml CONDITION UNIX

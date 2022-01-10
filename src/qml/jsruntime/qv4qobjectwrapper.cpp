@@ -58,11 +58,7 @@
 #include <private/qv4identifiertable_p.h>
 #include <private/qv4lookup_p.h>
 #include <private/qv4qmlcontext_p.h>
-
-#if QT_CONFIG(qml_sequence_object)
 #include <private/qv4sequenceobject_p.h>
-#endif
-
 #include <private/qv4objectproto_p.h>
 #include <private/qv4jsonobject_p.h>
 #include <private/qv4regexpobject_p.h>
@@ -210,7 +206,6 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
         if (const QMetaObject *valueTypeMetaObject = QQmlMetaType::metaObjectForValueType(propMetaType))
             return QV4::QQmlValueTypeWrapper::create(v4, object, property.coreIndex(), valueTypeMetaObject, propMetaType);
     } else {
-#if QT_CONFIG(qml_sequence_object)
         // see if it's a sequence type
         bool succeeded = false;
         QV4::ScopedValue retn(scope, QV4::SequencePrototype::newSequence(
@@ -218,7 +213,6 @@ static QV4::ReturnedValue loadProperty(QV4::ExecutionEngine *v4, QObject *object
                                   !property.isWritable(), &succeeded));
         if (succeeded)
             return retn->asReturnedValue();
-#endif
     }
 
     if (!propMetaType.isValid()) {
@@ -1330,7 +1324,6 @@ private:
         quint32 intValue;
         bool boolValue;
         QObject *qobjectPtr;
-#if QT_CONFIG(qml_sequence_object)
         std::vector<int> *stdVectorIntPtr;
         std::vector<qreal> *stdVectorRealPtr;
         std::vector<bool> *stdVectorBoolPtr;
@@ -1338,7 +1331,6 @@ private:
         std::vector<QUrl> *stdVectorQUrlPtr;
 #if QT_CONFIG(qml_itemmodel)
         std::vector<QModelIndex> *stdVectorQModelIndexPtr;
-#endif
 #endif
 
         char allocData[MaxSizeOf7<QVariant,
@@ -1556,14 +1548,12 @@ static int MatchScore(const QV4::Value &actual, QMetaType conversionMetaType)
             }
         }
 
-#if QT_CONFIG(qml_sequence_object)
         if (auto sequenceMetaType = SequencePrototype::metaTypeForSequence(obj); sequenceMetaType != -1) {
             if (sequenceMetaType == conversionType)
                 return 1;
             else
                 return 10;
         }
-#endif
 
         if (obj->as<QV4::QQmlValueTypeWrapper>()) {
             const QVariant v = obj->engine()->toVariant(actual, QMetaType {});
@@ -1827,7 +1817,6 @@ void *CallArgument::dataPtr()
     case QVariantWrappedType:
         return qvariantPtr->data();
     default:
-#if QT_CONFIG(qml_sequence_object)
         if (type == qMetaTypeId<std::vector<int>>())
             return stdVectorIntPtr;
         if (type == qMetaTypeId<std::vector<qreal>>())
@@ -1841,7 +1830,6 @@ void *CallArgument::dataPtr()
 #if QT_CONFIG(qml_itemmodel)
         if (type == qMetaTypeId<std::vector<QModelIndex>>())
             return stdVectorQModelIndexPtr;
-#endif
 #endif
         break;
     }
@@ -1902,7 +1890,6 @@ void CallArgument::initAsType(QMetaType metaType)
     }
 }
 
-#if QT_CONFIG(qml_sequence_object)
 template <class T, class M>
 bool CallArgument::fromContainerValue(const QV4::Value &value, M CallArgument::*member)
 {
@@ -1916,7 +1903,6 @@ bool CallArgument::fromContainerValue(const QV4::Value &value, M CallArgument::*
     (this->*member) = nullptr;
     return false;
 }
-#endif
 
 bool CallArgument::fromValue(
             QMetaType metaType, QV4::ExecutionEngine *engine, const QV4::Value &value)
@@ -2037,7 +2023,6 @@ bool CallArgument::fromValue(
             break;
         }
 
-#if QT_CONFIG(qml_sequence_object)
         if (type == qMetaTypeId<std::vector<int>>()) {
             if (fromContainerValue<std::vector<int>>(value, &CallArgument::stdVectorIntPtr))
                 return true;
@@ -2061,7 +2046,6 @@ bool CallArgument::fromValue(
             }
 #endif
         }
-#endif
         break;
     }
 

@@ -159,11 +159,6 @@ qt_feature("qml-devtools" PRIVATE
     LABEL "QML Development Tools"
     PURPOSE "Provides the QmlDevtools library and various utilities."
 )
-qt_feature("qml-sequence-object" PRIVATE
-    SECTION "QML"
-    LABEL "QML sequence object"
-    PURPOSE "Supports mapping sequence types into QML."
-)
 qt_feature("qml-xml-http-request" PRIVATE
     SECTION "QML"
     LABEL "QML XML http request"
@@ -212,7 +207,6 @@ qt_configure_add_summary_section(NAME "Qt QML")
 qt_configure_add_summary_entry(ARGS "qml-network")
 qt_configure_add_summary_entry(ARGS "qml-debug")
 qt_configure_add_summary_entry(ARGS "qml-jit")
-qt_configure_add_summary_entry(ARGS "qml-sequence-object")
 qt_configure_add_summary_entry(ARGS "qml-xml-http-request")
 qt_configure_add_summary_entry(ARGS "qml-locale")
 qt_configure_end_summary_section() # end of "Qt QML" section
