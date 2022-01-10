@@ -1265,24 +1265,24 @@ bool QMacStylePrivate::CocoaControl::getCocoaButtonTypeAndBezelStyle(NSButtonTyp
 {
     switch (type) {
     case Button_CheckBox:
-        *buttonType = NSSwitchButton;
-        *bezelStyle = NSRegularSquareBezelStyle;
+        *buttonType = NSButtonTypeSwitch;
+        *bezelStyle = NSBezelStyleRegularSquare;
         break;
     case Button_Disclosure:
-        *buttonType = NSOnOffButton;
-        *bezelStyle = NSDisclosureBezelStyle;
+        *buttonType = NSButtonTypeOnOff;
+        *bezelStyle = NSBezelStyleDisclosure;
         break;
     case Button_RadioButton:
-        *buttonType = NSRadioButton;
-        *bezelStyle = NSRegularSquareBezelStyle;
+        *buttonType = NSButtonTypeRadio;
+        *bezelStyle = NSBezelStyleRegularSquare;
         break;
     case Button_SquareButton:
-        *buttonType = NSPushOnPushOffButton;
-        *bezelStyle = NSShadowlessSquareBezelStyle;
+        *buttonType = NSButtonTypePushOnPushOff;
+        *bezelStyle = NSBezelStyleShadowlessSquare;
         break;
     case Button_PushButton:
-        *buttonType = NSPushOnPushOffButton;
-        *bezelStyle = NSRoundedBezelStyle;
+        *buttonType = NSButtonTypePushOnPushOff;
+        *bezelStyle = NSBezelStyleRounded;
         break;
     default:
         return false;
@@ -1601,8 +1601,8 @@ NSCell *QMacStylePrivate::cocoaCell(CocoaControl cocoaControl) const
             break;
         case Button_Disclosure: {
             NSButtonCell *bc = [[NSButtonCell alloc] init];
-            bc.buttonType = NSOnOffButton;
-            bc.bezelStyle = NSDisclosureBezelStyle;
+            bc.buttonType = NSButtonTypeOnOff;
+            bc.bezelStyle = NSBezelStyleDisclosure;
             cell = bc;
             break;
         }
@@ -2467,7 +2467,7 @@ QPixmap QMacStyle::standardPixmap(StandardPixmap standardPixmap, const QStyleOpt
             size = 64;
             break;
     }
-    return icon.pixmap(opt->window, QSize(size, size));
+    return icon.pixmap(QSize(size, size), opt->window->devicePixelRatio());
 }
 
 void QMacStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPainter *p) const
@@ -3011,7 +3011,8 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
                 if (opt->state & State_Enabled)
                     mode = QIcon::Normal;
                 int iconExtent = proxy()->pixelMetric(PM_SmallIconSize);
-                QPixmap pixmap = header->icon.pixmap(opt->window, QSize(iconExtent, iconExtent), mode);
+                QPixmap pixmap = header->icon.pixmap(QSize(iconExtent, iconExtent),
+                                                     opt->window->devicePixelRatio(), mode);
 
                 QRect pixr = header->rect;
                 pixr.setY(header->rect.center().y() - (pixmap.height() / pixmap.devicePixelRatio() - 1) / 2);
@@ -3062,9 +3063,9 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
                                                                             : QIcon::Disabled;
                         QIcon::State iconState = (tb->state & State_On) ? QIcon::On
                                                                          : QIcon::Off;
-                        QPixmap pixmap = tb->icon.pixmap(opt->window,
-                                                         tb->rect.size().boundedTo(tb->iconSize),
-                                                         iconMode, iconState);
+                        QPixmap pixmap = tb->icon.pixmap(tb->rect.size().boundedTo(tb->iconSize),
+                                                         opt->window->devicePixelRatio(), iconMode,
+                                                         iconState);
 
                         // Draw the text if it's needed.
                         if (tb->toolButtonStyle != Qt::ToolButtonIconOnly) {
@@ -3235,7 +3236,8 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
                     QIcon::State state = QIcon::Off;
                     if (btn.state & State_On)
                         state = QIcon::On;
-                    QPixmap pixmap = btn.icon.pixmap(opt->window, btn.iconSize, mode, state);
+                    QPixmap pixmap = btn.icon.pixmap(btn.iconSize, opt->window->devicePixelRatio(),
+                                                     mode, state);
                     int pixmapWidth = pixmap.width() / pixmap.devicePixelRatio();
                     int pixmapHeight = pixmap.height() / pixmap.devicePixelRatio();
                     contentW += pixmapWidth + QMacStylePrivate::PushButtonContentPadding;
@@ -3690,7 +3692,7 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
 //                    iconSize = comboBox->iconSize();
 //                }
 //#endif
-                QPixmap pixmap = mi->icon.pixmap(opt->window, iconSize, mode);
+                QPixmap pixmap = mi->icon.pixmap(iconSize, opt->window->devicePixelRatio(), mode);
                 int pixw = pixmap.width() / pixmap.devicePixelRatio();
                 int pixh = pixmap.height() / pixmap.devicePixelRatio();
                 QRect cr(xpos, mi->rect.y(), checkcol, mi->rect.height());
@@ -3796,10 +3798,12 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
             if (!mi->icon.isNull()) {
                 int iconExtent = proxy()->pixelMetric(PM_SmallIconSize);
                 drawItemPixmap(p, mi->rect,
-                                  Qt::AlignCenter | Qt::TextHideMnemonic | Qt::TextDontClip
-                                  | Qt::TextSingleLine,
-                                  mi->icon.pixmap(opt->window, QSize(iconExtent, iconExtent),
-                          (mi->state & State_Enabled) ? QIcon::Normal : QIcon::Disabled));
+                               Qt::AlignCenter | Qt::TextHideMnemonic | Qt::TextDontClip
+                                       | Qt::TextSingleLine,
+                               mi->icon.pixmap(QSize(iconExtent, iconExtent),
+                                               opt->window->devicePixelRatio(),
+                                               (mi->state & State_Enabled) ? QIcon::Normal
+                                                                           : QIcon::Disabled));
             } else {
                 drawItemText(p, mi->rect,
                                 Qt::AlignCenter | Qt::TextHideMnemonic | Qt::TextDontClip
@@ -4944,7 +4948,10 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                     const auto iconPos = tr.x() - titlebar->icon.actualSize(iconSize).width() - qRound(titleBarIconTitleSpacing);
                     // Only render the icon if it'll be fully visible
                     if (iconPos < tr.right() - titleBarIconTitleSpacing)
-                        p->drawPixmap(iconPos, tr.y(), titlebar->icon.pixmap(opt->window, iconSize, QIcon::Normal));
+                        p->drawPixmap(iconPos, tr.y(),
+                                      titlebar->icon.pixmap(iconSize,
+                                                            opt->window->devicePixelRatio(),
+                                                            QIcon::Normal));
                 }
 
                 if (!titlebar->text.isEmpty())
