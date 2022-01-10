@@ -608,6 +608,55 @@ TestCase {
     }
 
     Component {
+        id: wheelEnabledTabBar
+        TabBar {
+            wheelEnabled: true
+            TabButton { text: "tab1" }
+            TabButton { text: "tab2" }
+        }
+    }
+
+    function test_wheelEnabled() {
+        let control = createTemporaryObject(wheelEnabledTabBar, testCase, {width: 100, height: 100})
+        verify(control)
+
+        let deltas = [
+            120, // common mouse wheel
+            16 // high resolution mouse wheel
+        ]
+
+        for (let delta of deltas) {
+            // increment
+            for (let accumulated = 0; accumulated < 120; accumulated += delta) {
+                // ensure index doesn't change until threshold is reached
+                compare(control.currentIndex, 0)
+                mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
+            }
+            compare(control.currentIndex, 1)
+
+            // reached bounds -> no change
+            for (let accumulated = 0; accumulated < 120; accumulated += delta) {
+                mouseWheel(control, control.width / 2, control.height / 2, -delta, -delta)
+            }
+            compare(control.currentIndex, 1)
+
+            // decrement
+            for (let accumulated = 0; accumulated < 120; accumulated += delta) {
+                // ensure index doesn't change until threshold is reached
+                compare(control.currentIndex, 1)
+                mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
+            }
+            compare(control.currentIndex, 0)
+
+            // reached bounds -> no change
+            for (let accumulated = 0; accumulated < 120; accumulated += delta) {
+                mouseWheel(control, control.width / 2, control.height / 2, delta, delta)
+            }
+            compare(control.currentIndex, 0)
+        }
+    }
+
+    Component {
         id: attachedButton
         TabButton {
             property int index: TabBar.index
