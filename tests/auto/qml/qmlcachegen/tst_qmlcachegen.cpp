@@ -187,6 +187,7 @@ void tst_qmlcachegen::loadGeneratedFile()
 
     QQmlEngine engine;
     CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QCOMPARE(obj->property("value").toInt(), 42);
@@ -251,6 +252,7 @@ void tst_qmlcachegen::translationExpressionSupport()
 
     QQmlEngine engine;
     CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QCOMPARE(obj->property("text").toString(), QString("ALL Ok"));
@@ -293,6 +295,7 @@ void tst_qmlcachegen::signalHandlerParameters()
 
     QQmlEngine engine;
     CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QMetaObject::invokeMethod(obj.data(), "runTest");
@@ -371,6 +374,7 @@ void tst_qmlcachegen::aheadOfTimeCompilation()
 
     QQmlEngine engine;
     CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QVariant result;
@@ -525,6 +529,7 @@ void tst_qmlcachegen::functionExpressions()
 
     QQmlEngine engine;
     CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
 
@@ -622,6 +627,7 @@ void tst_qmlcachegen::fsScriptImport()
 
     QQmlEngine engine;
     CleanlyLoadingComponent component(&engine, QUrl::fromLocalFile(testFilePath));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY(!obj.isNull());
     QCOMPARE(obj->property("value").toInt(), 42);
