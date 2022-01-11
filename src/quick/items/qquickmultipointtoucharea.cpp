@@ -40,11 +40,11 @@
 #include "qquickmultipointtoucharea_p.h"
 #include <QtQuick/qquickwindow.h>
 #include <private/qsgadaptationlayer_p.h>
-#include <private/qevent_p.h>
 #include <private/qquickitem_p.h>
 #include <private/qquickwindow_p.h>
 #include <private/qguiapplication_p.h>
 #include <QtGui/private/qevent_p.h>
+#include <QtGui/private/qeventpoint_p.h>
 #include <QtGui/private/qpointingdevice_p.h>
 #include <QEvent>
 #include <QMouseEvent>

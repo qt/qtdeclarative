@@ -52,6 +52,7 @@
 #include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/private/qeventpoint_p.h>
 #include <QtGui/qstylehints.h>
 #include <QtCore/qmath.h>
 #include "qplatformdefs.h"

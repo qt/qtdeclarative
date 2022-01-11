@@ -30,6 +30,7 @@
 #include <QtTest/QSignalSpy>
 #include <QtGui/QStyleHints>
 #include <QtGui/private/qevent_p.h>
+#include <QtGui/private/qeventpoint_p.h>
 #include <qpa/qwindowsysteminterface.h>
 #include <private/qquickpincharea_p.h>
 #include <QtQuick/private/qquickrectangle_p.h>

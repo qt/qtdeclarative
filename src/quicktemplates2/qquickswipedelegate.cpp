@@ -45,6 +45,7 @@
 
 #include <QtGui/qstylehints.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/private/qeventpoint_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickanimation_p.h>

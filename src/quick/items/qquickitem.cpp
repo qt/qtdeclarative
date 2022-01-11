@@ -53,6 +53,7 @@
 #include <QtGui/qpen.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
+#include <QtGui/private/qeventpoint_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/private/qpointingdevice_p.h>
 #include <QtGui/qinputmethod.h>

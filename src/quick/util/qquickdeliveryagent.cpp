@@ -39,6 +39,7 @@
 
 #include <QtCore/qdebug.h>
 #include <QtGui/private/qevent_p.h>
+#include <QtGui/private/qeventpoint_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/private/qabstractanimationjob_p.h>
