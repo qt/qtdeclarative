@@ -49,7 +49,8 @@
 #include <private/qqmlchangeset_p.h>
 
 #include <QtQml/qqmlinfo.h>
-#include <QtGui/qevent.h>
+
+#include <QtGui/private/qeventpoint_p.h>
 #include <QtGui/qevent.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>

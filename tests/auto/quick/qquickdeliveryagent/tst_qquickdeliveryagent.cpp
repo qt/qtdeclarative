@@ -42,6 +42,8 @@
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 
+#include <QtGui/private/qeventpoint_p.h>
+
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")
 
 // On one hand, uncommenting this will make troubleshooting easier (avoid the 60FPS hover events).
