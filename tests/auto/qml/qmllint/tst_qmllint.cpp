@@ -1269,11 +1269,12 @@ void TestQmllint::settingsFile()
     QVERIFY(runQmllint("settings/unusedImportWarning/unused.qml", false, QStringList(), false)
                     .contains(QStringLiteral("Info: %1:2:1: Unused import at %1:2:1")
                                       .arg(testFile("settings/unusedImportWarning/unused.qml"))));
-    QVERIFY(runQmllint("settings/bare/bare.qml", false, { "--bare" }, false, false)
+    QVERIFY(runQmllint("settings/bare/bare.qml", false, {}, false, false)
                     .contains(QStringLiteral("Failed to find the following builtins: "
                                              "builtins.qmltypes, jsroot.qmltypes")));
     QVERIFY(runQmllint("settings/qmltypes/qmltypes.qml", false, QStringList(), false)
                     .contains(QStringLiteral("not a qmldir file. Assuming qmltypes.")));
+    QVERIFY(runQmllint("settings/qmlimports/qmlimports.qml", true, QStringList(), false).isEmpty());
 }
 
 void TestQmllint::additionalImplicitImport()
