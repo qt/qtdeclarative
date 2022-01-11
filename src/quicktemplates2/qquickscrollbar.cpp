@@ -60,6 +60,7 @@ QT_BEGIN_NAMESPACE
     ScrollBar is an interactive bar that can be used to scroll to a specific
     position. A scroll bar can be either \l vertical or \l horizontal, and can
     be attached to any \l Flickable, such as \l ListView and \l GridView.
+    It can also be used with \l ScrollView.
 
     \code
     Flickable {
@@ -151,7 +152,7 @@ QT_BEGIN_NAMESPACE
         visible.
     \endlist
 
-    \sa ScrollIndicator, {Customizing ScrollBar}, {Indicator Controls}
+    \sa ScrollIndicator, ScrollView, {Customizing ScrollBar}, {Indicator Controls}
 */
 
 static const QQuickItemPrivate::ChangeTypes changeTypes = QQuickItemPrivate::Geometry | QQuickItemPrivate::Destroyed;
