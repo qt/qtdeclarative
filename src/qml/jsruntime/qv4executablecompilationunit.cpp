@@ -75,8 +75,8 @@
 // what the hash version is.
 __attribute__((section(".qml_compile_hash")))
 #  endif
-const char qml_compile_hash[48 + 1] = QML_COMPILE_HASH;
-static_assert(sizeof(QV4::CompiledData::Unit::libraryVersionHash) >= QML_COMPILE_HASH_LENGTH + 1,
+const char qml_compile_hash[QV4::CompiledData::QmlCompileHashSpace] = QML_COMPILE_HASH;
+static_assert(sizeof(QV4::CompiledData::Unit::libraryVersionHash) > QML_COMPILE_HASH_LENGTH,
               "Compile hash length exceeds reserved size in data structure. Please adjust and bump the format version");
 #else
 #  error "QML_COMPILE_HASH must be defined for the build of QtDeclarative to ensure version checking for cache files"
@@ -941,8 +941,14 @@ bool ExecutableCompilationUnit::verifyHeader(
     }
 
 #if defined(QML_COMPILE_HASH) && defined(QML_COMPILE_HASH_LENGTH) && QML_COMPILE_HASH_LENGTH > 0
-    if (qstrcmp(qml_compile_hash, unit->libraryVersionHash) != 0) {
-        *errorString = QStringLiteral("QML library version mismatch. Expected compile hash does not match");
+    if (qstrncmp(qml_compile_hash, unit->libraryVersionHash, QML_COMPILE_HASH_LENGTH) != 0) {
+        *errorString = QStringLiteral("QML compile hashes don't match. Found %1 expected %2")
+                .arg(QString::fromLatin1(
+                         QByteArray(unit->libraryVersionHash, QML_COMPILE_HASH_LENGTH)
+                         .toPercentEncoding()),
+                     QString::fromLatin1(
+                         QByteArray(qml_compile_hash, QML_COMPILE_HASH_LENGTH)
+                         .toPercentEncoding()));
         return false;
     }
 #else
