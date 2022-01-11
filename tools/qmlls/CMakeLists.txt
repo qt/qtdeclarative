@@ -10,6 +10,7 @@ qt_internal_add_tool(${target_name}
         qlanguageserver.h qlanguageserver_p.h qlanguageserver.cpp
         qqmllanguageserver.h qqmllanguageserver.cpp
         qmllanguageservertool.cpp
+        workspace.cpp workspace.h
         textblock.h textblock.cpp
         textcursor.h textcursor.cpp
         textcursor.cpp textcursor.h

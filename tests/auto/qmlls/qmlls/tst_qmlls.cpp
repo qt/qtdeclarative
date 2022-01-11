@@ -98,6 +98,7 @@ public:
 private slots:
     void initTestCase() final;
     void didOpenTextDocument();
+    void testWorkspace();
     void cleanupTestCase();
 
 private:
@@ -105,6 +106,7 @@ private:
     QLanguageServerProtocol m_protocol;
     DiagnosticsHandler m_diagnosticsHandler;
     QString m_qmllsPath;
+    QList<RegistrationParams> m_registrations;
 };
 
 tst_Qmlls::tst_Qmlls()
@@ -146,7 +148,16 @@ void tst_Qmlls::initTestCase()
     tDoc.publishDiagnostics = pDiag;
     pDiag.versionSupport = true;
     clientInfo.capabilities.textDocument = tDoc;
+    QJsonObject workspace({ { u"didChangeWatchedFiles"_qs,
+                              QJsonObject({ { u"dynamicRegistration"_qs, true } }) } });
+    clientInfo.capabilities.workspace = workspace;
     bool didInit = false;
+    m_protocol.registerRegistrationRequestHandler([this](const QByteArray &,
+                                                         const RegistrationParams &params,
+                                                         LSPResponse<std::nullptr_t> &&response) {
+        m_registrations.append(params);
+        response.sendResponse();
+    });
     m_protocol.requestInitialize(clientInfo, [this, &didInit](const InitializeResult &serverInfo) {
         Q_UNUSED(serverInfo);
         m_protocol.notifyInitialized(InitializedParams());
@@ -259,6 +270,41 @@ void tst_Qmlls::didOpenTextDocument()
 
     QTRY_VERIFY_WITH_TIMEOUT(success, 10000);
     m_diagnosticsHandler.clear();
+}
+
+void tst_Qmlls::testWorkspace()
+{
+    QTRY_VERIFY_WITH_TIMEOUT(!m_registrations.isEmpty(), 10000);
+    QByteArray uri = testFileUrl("default/Zzz.qml").toString().toUtf8();
+    DidChangeWatchedFilesParams fChanges;
+    FileEvent fEvent;
+    fEvent.uri = uri;
+    fEvent.type = int(FileChangeType::Changed);
+    fChanges.changes.append(fEvent);
+    m_protocol.notifyDidChangeWatchedFiles(fChanges);
+    DidChangeWorkspaceFoldersParams dChanges;
+    WorkspaceFolder dir;
+    dir.name = "default";
+    dir.uri = uri.mid(uri.lastIndexOf('/'));
+    dChanges.event.added.append(dir);
+    dChanges.event.removed.append(dir);
+    m_protocol.notifyDidChangeWorkspaceFolders(dChanges);
+
+    DidOpenTextDocumentParams oParams;
+    TextDocumentItem textDocument;
+    textDocument.uri = uri;
+    QFile file(testFile("default/Yyy.qml"));
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    textDocument.text = file.readAll().replace("width", "wildth");
+    oParams.textDocument = textDocument;
+    m_protocol.notifyDidOpenTextDocument(oParams);
+
+    QTRY_VERIFY_WITH_TIMEOUT(m_diagnosticsHandler.numDiagnostics(uri) != 0, 30000);
+    m_diagnosticsHandler.clear();
+
+    DidCloseTextDocumentParams closeP;
+    closeP.textDocument.uri = uri;
+    m_protocol.notifyDidCloseTextDocument(closeP);
 }
 
 void tst_Qmlls::cleanupTestCase()

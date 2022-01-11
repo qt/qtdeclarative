@@ -32,6 +32,7 @@
 #include "qqmlcodemodel.h"
 #include "textsynchronization.h"
 #include "qmllintsuggestions.h"
+#include "workspace.h"
 #include "../shared/qqmltoolingsettings.h"
 
 QT_BEGIN_NAMESPACE
@@ -68,6 +69,7 @@ public:
     QLanguageServer *server();
     TextSynchronization *textSynchronization();
     QmlLintSuggestions *lint();
+    WorkspaceHandlers *worspace();
 
 public slots:
     void exit();
@@ -78,6 +80,7 @@ private:
     QLanguageServer m_server;
     TextSynchronization m_textSynchronization;
     QmlLintSuggestions m_lint;
+    WorkspaceHandlers m_workspace;
     int m_returnValue = 1;
 };
 
