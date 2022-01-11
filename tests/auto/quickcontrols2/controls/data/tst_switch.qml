@@ -610,4 +610,27 @@ TestCase {
         // should not get activeFocus on mouseClick on macOS
         compare(control.activeFocus, Qt.platform.os !== "osx" && Qt.platform.os !== "macos")
     }
+
+    Component {
+        id: deletionOrder1
+        Item {
+            Image { id: innerImage }
+            Switch { indicator: innerImage }
+        }
+    }
+
+    Component {
+        id: deletionOrder2
+        Item {
+            Switch { indicator: innerImage }
+            Image { id: innerImage }
+        }
+    }
+
+    function test_deletionOrder() {
+        var control1 = createTemporaryObject(deletionOrder1, testCase)
+        verify(control1)
+        var control2 = createTemporaryObject(deletionOrder2, testCase)
+        verify(control2)
+    }
 }

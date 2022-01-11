@@ -110,6 +110,7 @@ public:
 
     void itemImplicitWidthChanged(QQuickItem *item) override;
     void itemImplicitHeightChanged(QQuickItem *item) override;
+    void itemDestroyed(QQuickItem *item) override;
 
     // copied from qabstractbutton.cpp
     static const int AUTO_REPEAT_DELAY = 300;

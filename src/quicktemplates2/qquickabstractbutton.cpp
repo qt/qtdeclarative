@@ -399,6 +399,17 @@ void QQuickAbstractButtonPrivate::itemImplicitHeightChanged(QQuickItem *item)
         emit q->implicitIndicatorHeightChanged();
 }
 
+void QQuickAbstractButtonPrivate::itemDestroyed(QQuickItem *item)
+{
+    Q_Q(QQuickAbstractButton);
+    QQuickControlPrivate::itemDestroyed(item);
+    if (item == indicator) {
+        indicator = nullptr;
+        emit q->implicitIndicatorWidthChanged();
+        emit q->implicitIndicatorHeightChanged();
+    }
+}
+
 QQuickAbstractButton *QQuickAbstractButtonPrivate::findCheckedButton() const
 {
     Q_Q(const QQuickAbstractButton);
