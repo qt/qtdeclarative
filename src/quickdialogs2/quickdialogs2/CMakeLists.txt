@@ -7,6 +7,8 @@ qt_internal_add_qml_module(QuickDialogs2
     VERSION "${PROJECT_VERSION}"
     CLASS_NAME QtQuickDialogsPlugin
     PLUGIN_TARGET qtquickdialogsplugin
+    DEPENDENCIES
+        QtQuick/auto
     SOURCES
         qquickabstractdialog.cpp
         qquickabstractdialog_p.h
