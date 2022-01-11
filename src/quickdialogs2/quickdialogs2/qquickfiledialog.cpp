@@ -528,7 +528,8 @@ bool QQuickFileDialog::useNativeDialog() const
 void QQuickFileDialog::onCreate(QPlatformDialogHelper *dialog)
 {
     if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(dialog)) {
-        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged, this, [=](){ setSelectedFiles(fileDialog->selectedFiles()); });
+        connect(fileDialog, &QPlatformFileDialogHelper::currentChanged,
+                this, [this, fileDialog](){ setSelectedFiles(fileDialog->selectedFiles()); });
         connect(fileDialog, &QPlatformFileDialogHelper::directoryEntered, this, &QQuickFileDialog::currentFolderChanged);
         fileDialog->setOptions(m_options);
 
