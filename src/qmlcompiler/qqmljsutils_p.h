@@ -39,6 +39,8 @@
 //
 // We mean it.
 
+#include "qqmljslogger_p.h"
+
 #include <QtCore/qstring.h>
 #include <QtCore/qstringview.h>
 #include <QtCore/qstringbuilder.h>
@@ -100,6 +102,10 @@ struct QQmlJSUtils
         }
         return {};
     }
+
+    static std::optional<FixSuggestion> didYouMean(const QString &userInput,
+                                                   const QStringList &candidates,
+                                                   QQmlJS::SourceLocation location);
 };
 
 QT_END_NAMESPACE

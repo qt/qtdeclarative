@@ -806,6 +806,29 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("badCppPropertyChangeHandlers4.qml")
             << QStringLiteral("no matching signal found for handler \"onWannabeSignal\"")
             << QString() << QString() << false;
+    QTest::newRow("didYouMean(binding)")
+            << QStringLiteral("didYouMeanBinding.qml")
+            << QStringLiteral("Binding assigned to \"witdh\", but no property \"witdh\" exists in "
+                              "the current element.")
+            << QString() << QStringLiteral("width") << false;
+    QTest::newRow("didYouMean(unqualified)")
+            << QStringLiteral("didYouMeanUnqualified.qml") << QStringLiteral("Unqualified access")
+            << QString() << QStringLiteral("height") << false;
+    QTest::newRow("didYouMean(unqualifiedCall)")
+            << QStringLiteral("didYouMeanUnqualifiedCall.qml")
+            << QStringLiteral("Unqualified access") << QString() << QStringLiteral("func") << false;
+    QTest::newRow("didYouMean(property)")
+            << QStringLiteral("didYouMeanProperty.qml")
+            << QStringLiteral("Property \"hoight\" not found on type \"Rectangle\"") << QString()
+            << QStringLiteral("height") << false;
+    QTest::newRow("didYouMean(propertyCall)")
+            << QStringLiteral("didYouMeanPropertyCall.qml")
+            << QStringLiteral("Property \"lgg\" not found on type \"Console\"") << QString()
+            << QStringLiteral("log") << false;
+    QTest::newRow("didYouMean(component)")
+            << QStringLiteral("didYouMeanComponent.qml")
+            << QStringLiteral("Itym was not found. Did you add all import paths?") << QString()
+            << QStringLiteral("Item") << false;
 }
 
 void TestQmllint::dirtyQmlCode()

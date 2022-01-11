@@ -27,6 +27,9 @@
 ****************************************************************************/
 
 #include "qqmljstypepropagator_p.h"
+
+#include "qqmljsutils_p.h"
+
 #include <private/qv4compilerscanfunctions_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -342,6 +345,19 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
         }
     }
 
+    if (!suggestion.has_value()) {
+        for (QQmlJSScope::ConstPtr baseScope = m_function->qmlScope; !baseScope.isNull();
+             baseScope = baseScope->baseType()) {
+            if (auto didYouMean = QQmlJSUtils::didYouMean(
+                        name, baseScope->ownProperties().keys() + baseScope->ownMethods().keys(),
+                        location);
+                didYouMean.has_value()) {
+                suggestion = didYouMean;
+                break;
+            }
+        }
+    }
+
     m_logger->logWarning(QLatin1String("Unqualified access"), Log_UnqualifiedAccess, location, true,
                          true, suggestion);
 }
@@ -621,9 +637,22 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
             return;
         }
 
+        std::optional<FixSuggestion> fixSuggestion;
+
+        for (QQmlJSScope::ConstPtr baseScope = baseType; !baseScope.isNull();
+             baseScope = baseScope->baseType()) {
+            if (auto suggestion =
+                        QQmlJSUtils::didYouMean(propertyName, baseScope->ownProperties().keys(),
+                                                getCurrentSourceLocation());
+                suggestion.has_value()) {
+                fixSuggestion = suggestion;
+                break;
+            }
+        }
+
         m_logger->logWarning(
                 u"Property \"%1\" not found on type \"%2\""_qs.arg(propertyName).arg(typeName),
-                Log_Type, getCurrentSourceLocation());
+                Log_Type, getCurrentSourceLocation(), true, true, fixSuggestion);
         return;
     }
 
@@ -768,10 +797,21 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         if (checkRestricted(propertyName))
             return;
 
-        m_logger->logWarning(
-                u"Property \"%1\" not found on type \"%2\""_qs.arg(
-                        propertyName, m_typeResolver->containedTypeName(callBase)),
-                Log_Type, getCurrentSourceLocation());
+        std::optional<FixSuggestion> fixSuggestion;
+
+        for (QQmlJSScope::ConstPtr baseScope = m_typeResolver->containedType(callBase);
+             !baseScope.isNull(); baseScope = baseScope->baseType()) {
+            if (auto suggestion = QQmlJSUtils::didYouMean(
+                        propertyName, baseScope->ownMethods().keys(), getCurrentSourceLocation());
+                suggestion.has_value()) {
+                fixSuggestion = suggestion;
+                break;
+            }
+        }
+
+        m_logger->logWarning(u"Property \"%1\" not found on type \"%2\""_qs.arg(
+                                     propertyName, m_typeResolver->containedTypeName(callBase)),
+                             Log_Type, getCurrentSourceLocation(), true, true, fixSuggestion);
         return;
     }
 
@@ -894,6 +934,7 @@ void QQmlJSTypePropagator::propagateScopeLookupCall(const QString &functionName,
     m_state.accumulatorOut = m_typeResolver->globalType(m_typeResolver->jsValueType());
 
     setError(u"Cannot find function '%1'"_qs.arg(functionName));
+    handleUnqualifiedAccess(functionName);
 }
 
 void QQmlJSTypePropagator::generate_CallGlobalLookup(int index, int argc, int argv)

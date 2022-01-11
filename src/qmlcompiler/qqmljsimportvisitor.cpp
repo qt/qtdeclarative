@@ -772,11 +772,23 @@ void QQmlJSImportVisitor::processPropertyBindings()
                     continue;
 
                 // TODO: Can this be in a better suited category?
+                std::optional<FixSuggestion> fixSuggestion;
+
+                for (QQmlJSScope::ConstPtr baseScope = scope; !baseScope.isNull();
+                     baseScope = baseScope->baseType()) {
+                    if (auto suggestion = QQmlJSUtils::didYouMean(
+                                name, baseScope->ownProperties().keys(), location);
+                        suggestion.has_value()) {
+                        fixSuggestion = suggestion;
+                        break;
+                    }
+                }
+
                 m_logger->logWarning(
                         QStringLiteral("Binding assigned to \"%1\", but no property \"%1\" "
                                        "exists in the current element.")
                                 .arg(name),
-                        Log_Type, location);
+                        Log_Type, location, true, true, fixSuggestion);
                 continue;
             }
 
@@ -985,7 +997,9 @@ void QQmlJSImportVisitor::breakInheritanceCycles(const QQmlJSScope::Ptr &origina
             m_logger->logWarning(
                     scope->baseTypeName()
                             + QStringLiteral(" was not found. Did you add all import paths?"),
-                    Log_Import, scope->sourceLocation());
+                    Log_Import, scope->sourceLocation(), true, true,
+                    QQmlJSUtils::didYouMean(scope->baseTypeName(), m_rootScopeImports.keys(),
+                                            scope->sourceLocation()));
         }
 
         scope = newScope;
