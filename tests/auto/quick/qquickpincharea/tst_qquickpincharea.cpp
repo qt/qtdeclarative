@@ -179,12 +179,12 @@ void tst_QQuickPinchArea::pinchProperties()
     QCOMPARE(rotMaxSpy.count(),1);
 }
 
-QMutableEventPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickItem *i)
+QEventPoint makeTouchPoint(int id, QPoint p, QQuickView *v, QQuickItem *i)
 {
-    QMutableEventPoint touchPoint(id);
-    touchPoint.setPosition(i->mapFromScene(p));
-    touchPoint.setGlobalPosition(v->mapToGlobal(p));
-    touchPoint.setScenePosition(p);
+    QEventPoint touchPoint(id);
+    QMutableEventPoint::setPosition(touchPoint, i->mapFromScene(p));
+    QMutableEventPoint::setGlobalPosition(touchPoint, v->mapToGlobal(p));
+    QMutableEventPoint::setScenePosition(touchPoint, p);
     return touchPoint;
 }
 
