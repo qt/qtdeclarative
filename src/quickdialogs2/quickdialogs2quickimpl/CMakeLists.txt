@@ -32,6 +32,8 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
     VERSION "${PROJECT_VERSION}"
     CLASS_NAME QtQuickDialogs2QuickImplPlugin
     PLUGIN_TARGET qtquickdialogs2quickimplplugin
+    DEPENDENCIES
+        QtQuick/auto
     SOURCES
         qquickdialogimplfactory.cpp
         qquickdialogimplfactory_p.h
