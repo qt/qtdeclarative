@@ -50,6 +50,7 @@
 #include <QQuickRenderControl>
 #include <QOperatingSystemVersion>
 #include <functional>
+#include <QtGui/private/qeventpoint_p.h>
 #include <QtGui/private/qrhi_p.h>
 #if QT_CONFIG(opengl)
 #include <QOpenGLContext>

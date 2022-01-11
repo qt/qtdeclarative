@@ -37,6 +37,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtGui/QScreen>
 #include <QtGui/private/qevent_p.h>
+#include <QtGui/private/qeventpoint_p.h>
 #include <QtGui/private/qpointingdevice_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
