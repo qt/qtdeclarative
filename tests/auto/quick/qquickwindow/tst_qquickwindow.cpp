@@ -68,16 +68,16 @@ struct TouchEventData {
     QList<QEventPoint> touchPoints;
 };
 
-static QMutableEventPoint makeTouchPoint(QQuickItem *item, const QPointF &p, const QPointF &lastPoint = QPointF())
+static QEventPoint makeTouchPoint(QQuickItem *item, const QPointF &p, const QPointF &lastPoint = QPointF())
 {
     QPointF last = lastPoint.isNull() ? p : lastPoint;
 
-    QMutableEventPoint tp;
+    QEventPoint tp;
 
-    tp.setPosition(p);
-    tp.setScenePosition(item->mapToScene(p));
-    tp.setGlobalPosition(item->mapToGlobal(p));
-    tp.setGlobalLastPosition(item->mapToGlobal(last));
+    QMutableEventPoint::setPosition(tp, p);
+    QMutableEventPoint::setScenePosition(tp, item->mapToScene(p));
+    QMutableEventPoint::setGlobalPosition(tp, item->mapToGlobal(p));
+    QMutableEventPoint::setGlobalLastPosition(tp, item->mapToGlobal(last));
     return tp;
 }
 
@@ -1071,13 +1071,13 @@ void tst_qquickwindow::touchEvent_velocity()
     item->setPosition(QPointF(50, 50));
     item->setSize(QSizeF(150, 150));
 
-    QList<QMutableEventPoint> points;
-    QMutableEventPoint tp(1, QEventPoint::State::Pressed);
+    QList<QEventPoint> points;
+    QEventPoint tp(1, QEventPoint::State::Pressed, {}, {});
     const QPointF localPos = item->mapToScene(QPointF(10, 10));
     const QPointF screenPos = window->mapToGlobal(localPos.toPoint());
-    tp.setPosition(localPos);
-    tp.setGlobalPosition(screenPos);
-    tp.setEllipseDiameters(QSizeF(4, 4));
+    QMutableEventPoint::setPosition(tp, localPos);
+    QMutableEventPoint::setGlobalPosition(tp, screenPos);
+    QMutableEventPoint::setEllipseDiameters(tp, QSizeF(4, 4));
     points << tp;
     QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
@@ -1085,11 +1085,11 @@ void tst_qquickwindow::touchEvent_velocity()
     QQuickTouchUtils::flush(window);
     QCOMPARE(item->touchEventCount, 1);
 
-    points[0].setState(QEventPoint::State::Updated);
-    points[0].setPosition(localPos + QPointF(5, 5));
-    points[0].setGlobalPosition(screenPos + QPointF(5, 5));
+    QMutableEventPoint::setState(points[0], QEventPoint::State::Updated);
+    QMutableEventPoint::setPosition(points[0], localPos + QPointF(5, 5));
+    QMutableEventPoint::setGlobalPosition(points[0], screenPos + QPointF(5, 5));
     QVector2D velocity(1.5, 2.5);
-    points[0].setVelocity(velocity);
+    QMutableEventPoint::setVelocity(points[0], velocity);
     QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
@@ -1103,8 +1103,8 @@ void tst_qquickwindow::touchEvent_velocity()
     // during delivery.  If we want it to be transformed, we should add QEventPoint::sceneVelocity
     // so that we can keep transforming it repeatedly during Item-localization.)
     item->setRotation(90); // clockwise
-    points[0].setPosition(points[0].position() + QPointF(5, 5));
-    points[0].setGlobalPosition(points[0].globalPosition() + QPointF(5, 5));
+    QMutableEventPoint::setPosition(points[0], points[0].position() + QPointF(5, 5));
+    QMutableEventPoint::setGlobalPosition(points[0], points[0].globalPosition() + QPointF(5, 5));
     QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
@@ -1114,7 +1114,7 @@ void tst_qquickwindow::touchEvent_velocity()
     QPoint itemLocalPosFromEvent = item->lastEvent.touchPoints[0].position().toPoint();
     QCOMPARE(itemLocalPos, itemLocalPosFromEvent);
 
-    points[0].setState(QEventPoint::State::Released);
+    QMutableEventPoint::setState(points[0], QEventPoint::State::Released);
     QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
@@ -1211,28 +1211,28 @@ void tst_qquickwindow::mouseFromTouch_basic()
     // the first point in each touch event should generate a synth-mouse event.
     item->setAcceptTouchEvents(false);
 
-    QList<QMutableEventPoint> points;
-    QMutableEventPoint tp(1, QEventPoint::State::Pressed);
+    QList<QEventPoint> points;
+    QEventPoint tp(1, QEventPoint::State::Pressed, {}, {});
     const QPointF localPos = item->mapToScene(QPointF(10, 10));
     const QPointF screenPos = window->mapToGlobal(localPos.toPoint());
-    tp.setPosition(localPos);
-    tp.setGlobalPosition(screenPos);
-    tp.setEllipseDiameters(QSizeF(4, 4));
+    QMutableEventPoint::setPosition(tp, localPos);
+    QMutableEventPoint::setGlobalPosition(tp, screenPos);
+    QMutableEventPoint::setEllipseDiameters(tp, QSizeF(4, 4));
     points << tp;
     QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
-    points[0].setState(QEventPoint::State::Updated);
-    points[0].setPosition(localPos + QPointF(5, 5));
-    points[0].setGlobalPosition(screenPos + QPointF(5, 5));
+    QMutableEventPoint::setState(points[0], QEventPoint::State::Updated);
+    QMutableEventPoint::setPosition(points[0], localPos + QPointF(5, 5));
+    QMutableEventPoint::setGlobalPosition(points[0], screenPos + QPointF(5, 5));
     QVector2D velocity(1.5, 2.5);
-    points[0].setVelocity(velocity);
+    QMutableEventPoint::setVelocity(points[0], velocity);
     QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
-    points[0].setState(QEventPoint::State::Released);
+    QMutableEventPoint::setState(points[0], QEventPoint::State::Released);
     QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
@@ -1248,17 +1248,17 @@ void tst_qquickwindow::mouseFromTouch_basic()
 
     // Now the same with a transformation.
     item->setRotation(90); // clockwise
-    points[0].setState(QEventPoint::State::Pressed);
-    points[0].setVelocity(velocity);
-    tp.setPosition(localPos);
-    tp.setGlobalPosition(screenPos);
+    QMutableEventPoint::setState(points[0], QEventPoint::State::Pressed);
+    QMutableEventPoint::setVelocity(points[0], velocity);
+    QMutableEventPoint::setPosition(tp, localPos);
+    QMutableEventPoint::setGlobalPosition(tp, screenPos);
     QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
     QQuickTouchUtils::flush(window);
-    points[0].setState(QEventPoint::State::Updated);
-    points[0].setPosition(localPos + QPointF(5, 5));
-    points[0].setGlobalPosition(screenPos + QPointF(5, 5));
+    QMutableEventPoint::setState(points[0], QEventPoint::State::Updated);
+    QMutableEventPoint::setPosition(points[0], localPos + QPointF(5, 5));
+    QMutableEventPoint::setGlobalPosition(points[0], screenPos + QPointF(5, 5));
     QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QGuiApplication::processEvents();
@@ -1266,7 +1266,7 @@ void tst_qquickwindow::mouseFromTouch_basic()
     QCOMPARE(item->lastMousePos.toPoint(), item->mapFromScene(points[0].position()).toPoint());
     QCOMPARE(item->lastVelocityFromMouseMove, velocity); // Velocity is always in scene coords
 
-    points[0].setState(QEventPoint::State::Released);
+    QMutableEventPoint::setState(points[0], QEventPoint::State::Released);
     QWindowSystemInterface::handleTouchEvent(window, touchDeviceWithVelocity,
                                              QWindowSystemInterfacePrivate::toNativeTouchPoints(points, window));
     QCoreApplication::processEvents();
