@@ -21,4 +21,6 @@ QtObject {
     property NotHere here: NotHere {
         property int c: b + 1
     }
+
+    Component.onCompleted: doesNotExist()
 }
