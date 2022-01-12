@@ -11,12 +11,6 @@ Canvas {
     property var contextInPaint
 
     SignalSpy {
-        id: paintedSpy
-        target: canvas
-        signalName: "paint"
-    }
-
-    SignalSpy {
         id: contextSpy
         target: canvas
         signalName: "contextChanged"
@@ -25,51 +19,6 @@ Canvas {
     onPaint: {
         contextInPaint = context;
     }
-
-    TestCase {
-        name: "ContextTypeStored"
-        when: windowShown
-
-        function test_contextType() {
-            compare(canvas.contextType, "2d");
-        }
-    }
-
-    TestCase {
-        name: "ContextValidWhenTypePredefined"
-        when: canvas.available
-
-        function test_context() {
-            // Wait for the context to become active
-            wait(100);
-            compare(contextSpy.count, 1);
-
-            // Context is available
-            verify(canvas.context)
-        }
-
-        function test_contextIsConsistent() {
-            // Wait for the context to become active
-            wait(100);
-            compare(contextSpy.count, 1);
-
-            // getContext("2d") is the same as the context property
-            compare(canvas.getContext("2d"), canvas.context);
-        }
-
-        function test_paintHadContext() {
-            // Make there was a paint signal
-            wait(100);
-            verify(paintedSpy.count, 1)
-
-            // Paint was called with a valid context when contextType is
-            // specified
-            verify(canvas.contextInPaint)
-
-            // paints context was the correct one
-            compare(canvas.contextInPaint, canvas.getContext("2d"));
-        }
-   }
 
     // See: http://www.w3.org/TR/css3-fonts/#font-prop
     TestCase {
@@ -182,24 +131,6 @@ Canvas {
                 ctx.font = fontStrings[i];
                 compare(ctx.font, originalFont);
             }
-        }
-    }
-
-    TestCase {
-        name: "Colors"
-        when: canvas.available
-
-        function test_colors() {
-            wait(100);
-            compare(contextSpy.count, 1);
-
-            var ctx = canvas.getContext("2d");
-            // QTBUG-47894
-            ctx.strokeStyle = 'hsl(255, 100%, 50%)';
-            var c1 = ctx.strokeStyle.toString();
-            ctx.strokeStyle = 'hsl(320, 100%, 50%)';
-            var c2 = ctx.strokeStyle.toString();
-            verify(c1 !== c2);
         }
     }
 }
