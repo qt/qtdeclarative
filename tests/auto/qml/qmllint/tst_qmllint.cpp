@@ -829,6 +829,14 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("didYouMeanComponent.qml")
             << QStringLiteral("Itym was not found. Did you add all import paths?") << QString()
             << QStringLiteral("Item") << false;
+    QTest::newRow("nullBinding")
+            << QStringLiteral("nullBinding.qml")
+            << QStringLiteral("Cannot assign binding of type $anonymous$.std::nullptr_t to double")
+            << QString() << QString() << false;
+    QTest::newRow("nullBindingFunction")
+            << QStringLiteral("nullBindingFunction.qml")
+            << QStringLiteral("Cannot assign binding of type std::nullptr_t to double") << QString()
+            << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()

@@ -67,6 +67,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
 {
     const QHash<QString, QQmlJSScope::ConstPtr> builtinTypes = importer->builtinInternalNames();
     m_voidType = builtinTypes[u"void"_qs];
+    m_nullType = builtinTypes[u"std::nullptr_t"_qs];
     m_realType = builtinTypes[u"double"_qs];
     m_floatType = builtinTypes[u"float"_qs];
     m_intType = builtinTypes[u"int"_qs];
@@ -291,7 +292,8 @@ bool QQmlJSTypeResolver::isNumeric(const QQmlJSRegisterContent &type) const
 bool QQmlJSTypeResolver::isPrimitive(const QQmlJSScope::ConstPtr &type) const
 {
     return type == m_intType || type == m_realType || type == m_floatType || type == m_boolType
-            || type == m_voidType || type == m_stringType || type == m_jsPrimitiveType;
+            || type == m_voidType || type == m_nullType || type == m_stringType
+            || type == m_jsPrimitiveType;
 }
 
 bool QQmlJSTypeResolver::isNumeric(const QQmlJSScope::ConstPtr &type) const
@@ -386,8 +388,11 @@ bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
     if (to.isNull())
         return false;
 
+    if (from == m_nullType && to->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
+        return true;
+
     if (from == m_jsPrimitiveType) {
-        // You can cast any primitive (in particular null) to a nullptr
+        // You can cast any primitive to a nullptr
         return isPrimitive(to) || to->accessSemantics() == QQmlJSScope::AccessSemantics::Reference;
     }
 

@@ -473,7 +473,7 @@ void QQmlJSCodeGenerator::generate_LoadNull()
     INJECT_TRACE_INFO(generate_LoadNull);
 
     m_body += m_state.accumulatorVariableOut;
-    m_body += u" = QJSPrimitiveNull()"_qs;
+    m_body += u" = nullptr"_qs;
     m_body += u";\n"_qs;
 }
 

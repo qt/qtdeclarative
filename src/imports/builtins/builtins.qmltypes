@@ -11,6 +11,11 @@ Module {
     }
 
     Component {
+        name: "std::nullptr_t"
+        accessSemantics: "none"
+    }
+
+    Component {
         name: "QVariant"
         accessSemantics: "value"
         exports: ["QML/var 1.0", "QML/variant 1.0"]

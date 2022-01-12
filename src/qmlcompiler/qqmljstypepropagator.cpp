@@ -139,7 +139,7 @@ void QQmlJSTypePropagator::generate_LoadFalse()
 
 void QQmlJSTypePropagator::generate_LoadNull()
 {
-    m_state.accumulatorOut = m_typeResolver->globalType(m_typeResolver->jsPrimitiveType());
+    m_state.accumulatorOut = m_typeResolver->globalType(m_typeResolver->nullType());
 }
 
 void QQmlJSTypePropagator::generate_LoadUndefined()

@@ -1412,7 +1412,7 @@ bool QQmlJSImportVisitor::parseLiteralBinding(const QString name,
         // QQmlJSMetaPropertyBinding::hasLiteral()
         value = QVariant::fromValue(nullptr);
         Q_ASSERT(value.isNull());
-        literalType = u"var"_qs; // QTBUG-98409
+        literalType = u"$anonymous$.std::nullptr_t"_qs;
         bindingType = QQmlJSMetaPropertyBinding::Null;
         break;
     case Node::Kind_NumericLiteral:

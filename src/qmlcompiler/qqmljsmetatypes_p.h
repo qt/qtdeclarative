@@ -503,7 +503,11 @@ public:
     QString valueSourceTypeName() const { return m_valueSourceTypeName; }
     QSharedPointer<const QQmlJSScope> valueSourceType() const { return m_valueSource; }
 
-    bool hasLiteral() const { return isLiteralBinding() && !m_literalValue.isNull(); }
+    bool hasLiteral() const
+    {
+        return isLiteralBinding()
+                && (!m_literalValue.isNull() || m_bindingType == QQmlJSMetaPropertyBinding::Null);
+    }
     bool hasObject() const { return m_bindingType == BindingType::Object && !m_value.isNull(); }
     bool hasInterceptor() const
     {
