@@ -892,6 +892,8 @@ void QQmlJSTypePropagator::propagateScopeLookupCall(const QString &functionName,
     }
 
     m_state.accumulatorOut = m_typeResolver->globalType(m_typeResolver->jsValueType());
+
+    setError(u"Cannot find function '%1'"_qs.arg(functionName));
 }
 
 void QQmlJSTypePropagator::generate_CallGlobalLookup(int index, int argc, int argv)
