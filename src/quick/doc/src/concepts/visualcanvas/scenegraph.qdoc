@@ -194,6 +194,7 @@ throttling, use the \c basic render loop instead by setting \c
 {QSG_RENDER_LOOP=basic} in the environment.
 
 \section2 Threaded Render Loop ('threaded')
+\target threaded_render_loop
 
 On many configurations, the scene graph rendering will happen on a
 dedicated render thread. This is done to increase parallelism of
