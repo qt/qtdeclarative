@@ -1,6 +1,17 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR GPL-3.0-only WITH Qt-GPL-exception-1.0
 
+#include <qglobal.h>
+
+// GCC 11 thinks diagMsg.fixSuggestion.fixes.d.ptr is somehow uninitialized in
+// QList::emplaceBack(), probably called from QQmlJsLogger::log()
+// Ditto for GCC 12, but it emits a different warning
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Wuninitialized")
+QT_WARNING_DISABLE_GCC("-Wmaybe-uninitialized")
+#include <qlist.h>
+QT_WARNING_POP
+
 #include "qqmljslogger_p.h"
 
 #include <QtCore/qfile.h>
