@@ -90,6 +90,7 @@ private slots:
     void withoutQmlEngine();
 
     void hideParent();
+    void testPropertyMappings();
 
 private:
     enum PresenceFlags {
@@ -196,6 +197,16 @@ void tst_qquickshadereffect::hideParent()
     view->show();
     QVERIFY(QTest::qWaitForWindowExposed(view.data()));
     // Should finish without crashing.
+    QTRY_VERIFY(view->rootObject()->property("finished").toBool());
+}
+
+void tst_qquickshadereffect::testPropertyMappings()
+{
+    QScopedPointer<QQuickView> view(new QQuickView);
+    view->setSource(QUrl(QStringLiteral("qrc:/data/testProperties.qml")));
+    QCOMPARE(view->status(), QQuickView::Ready);
+    view->show();
+    QVERIFY(QTest::qWaitForWindowExposed(view.data()));
     QTRY_VERIFY(view->rootObject()->property("finished").toBool());
 }
 

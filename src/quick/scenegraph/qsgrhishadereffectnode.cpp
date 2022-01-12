@@ -233,6 +233,20 @@ static inline QColor qsg_premultiply_color(const QColor &c)
     return QColor::fromRgbF(r * a, g * a, b * a, a);
 }
 
+template<typename T>
+static inline void fillUniformBlockMember(char *dst, const T *value, int valueCount, int fieldSizeBytes)
+{
+    const size_t valueBytes = sizeof(T) * valueCount;
+    const size_t fieldBytes = fieldSizeBytes;
+    if (valueBytes <= fieldBytes) {
+        memcpy(dst, value, valueBytes);
+        if (valueBytes < fieldBytes)
+            memset(dst + valueBytes, 0, fieldBytes - valueBytes);
+    } else {
+        memcpy(dst, value, fieldBytes);
+    }
+}
+
 bool QSGRhiShaderEffectMaterialShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
     Q_UNUSED(oldMaterial);
@@ -248,15 +262,13 @@ bool QSGRhiShaderEffectMaterialShader::updateUniformData(RenderState &state, QSG
         if (c.specialType == QSGShaderEffectNode::VariableData::Opacity) {
             if (state.isOpacityDirty()) {
                 const float f = state.opacity();
-                Q_ASSERT(sizeof(f) == c.size);
-                memcpy(dst, &f, sizeof(f));
+                fillUniformBlockMember<float>(dst, &f, 1, c.size);
                 changed = true;
             }
         } else if (c.specialType == QSGShaderEffectNode::VariableData::Matrix) {
             if (state.isMatrixDirty()) {
-                const int sz = 16 * sizeof(float);
-                Q_ASSERT(sz == c.size);
-                memcpy(dst, state.combinedMatrix().constData(), sz);
+                const QMatrix4x4 m = state.combinedMatrix();
+                fillUniformBlockMember<float>(dst, m.constData(), 16, c.size);
                 changed = true;
             }
         } else if (c.specialType == QSGShaderEffectNode::VariableData::SubRect) {
@@ -271,40 +283,34 @@ bool QSGRhiShaderEffectMaterialShader::updateUniformData(RenderState &state, QSG
             }
             const float f[4] = { float(subRect.x()), float(subRect.y()),
                                  float(subRect.width()), float(subRect.height()) };
-            Q_ASSERT(sizeof(f) == c.size);
-            memcpy(dst, f, sizeof(f));
+            fillUniformBlockMember<float>(dst, f, 4, c.size);
         } else if (c.specialType == QSGShaderEffectNode::VariableData::None) {
             changed = true;
             switch (int(c.value.userType())) {
             case QMetaType::QColor: {
                 const QColor v = qsg_premultiply_color(qvariant_cast<QColor>(c.value)).toRgb();
                 const float f[4] = { float(v.redF()), float(v.greenF()), float(v.blueF()), float(v.alphaF()) };
-                Q_ASSERT(sizeof(f) == c.size);
-                memcpy(dst, f, sizeof(f));
+                fillUniformBlockMember<float>(dst, f, 4, c.size);
                 break;
             }
             case QMetaType::Float: {
                 const float f = qvariant_cast<float>(c.value);
-                Q_ASSERT(sizeof(f) == c.size);
-                memcpy(dst, &f, sizeof(f));
+                fillUniformBlockMember<float>(dst, &f, 1, c.size);
                 break;
             }
             case QMetaType::Double: {
                 const float f = float(qvariant_cast<double>(c.value));
-                Q_ASSERT(sizeof(f) == c.size);
-                memcpy(dst, &f, sizeof(f));
+                fillUniformBlockMember<float>(dst, &f, 1, c.size);
                 break;
             }
             case QMetaType::Int: {
-                const int i = c.value.toInt();
-                Q_ASSERT(sizeof(i) == c.size);
-                memcpy(dst, &i, sizeof(i));
+                const qint32 i = c.value.toInt();
+                fillUniformBlockMember<qint32>(dst, &i, 1, c.size);
                 break;
             }
             case QMetaType::Bool: {
-                const bool b = c.value.toBool();
-                Q_ASSERT(sizeof(b) == c.size);
-                memcpy(dst, &b, sizeof(b));
+                const qint32 b = c.value.toBool();
+                fillUniformBlockMember<qint32>(dst, &b, 1, c.size);
                 break;
             }
             case QMetaType::QTransform: { // mat3
@@ -314,67 +320,65 @@ bool QSGRhiShaderEffectMaterialShader::updateUniformData(RenderState &state, QSG
                     { float(v.m21()), float(v.m22()), float(v.m23()) },
                     { float(v.m31()), float(v.m32()), float(v.m33()) }
                 };
-                Q_ASSERT(sizeof(m) == c.size);
-                memcpy(dst, m[0], sizeof(m));
+                // stored as 4 floats per column, 1 unused
+                memset(dst, 0, c.size);
+                const size_t bytesPerColumn = 4 * sizeof(float);
+                if (c.size >= bytesPerColumn)
+                    fillUniformBlockMember<float>(dst, m[0], 3, 3 * sizeof(float));
+                if (c.size >= 2 * bytesPerColumn)
+                    fillUniformBlockMember<float>(dst + bytesPerColumn, m[1], 3, 3 * sizeof(float));
+                if (c.size >= 3 * bytesPerColumn)
+                    fillUniformBlockMember<float>(dst + 2 * bytesPerColumn, m[2], 3, 3 * sizeof(float));
                 break;
             }
             case QMetaType::QSize:
             case QMetaType::QSizeF: { // vec2
                 const QSizeF v = c.value.toSizeF();
                 const float f[2] = { float(v.width()), float(v.height()) };
-                Q_ASSERT(sizeof(f) == c.size);
-                memcpy(dst, f, sizeof(f));
+                fillUniformBlockMember<float>(dst, f, 2, c.size);
                 break;
             }
             case QMetaType::QPoint:
             case QMetaType::QPointF: { // vec2
                 const QPointF v = c.value.toPointF();
                 const float f[2] = { float(v.x()), float(v.y()) };
-                Q_ASSERT(sizeof(f) == c.size);
-                memcpy(dst, f, sizeof(f));
+                fillUniformBlockMember<float>(dst, f, 2, c.size);
                 break;
             }
             case QMetaType::QRect:
             case QMetaType::QRectF: { // vec4
                 const QRectF v = c.value.toRectF();
                 const float f[4] = { float(v.x()), float(v.y()), float(v.width()), float(v.height()) };
-                Q_ASSERT(sizeof(f) == c.size);
-                memcpy(dst, f, sizeof(f));
+                fillUniformBlockMember<float>(dst, f, 4, c.size);
                 break;
             }
             case QMetaType::QVector2D: { // vec2
                 const QVector2D v = qvariant_cast<QVector2D>(c.value);
                 const float f[2] = { float(v.x()), float(v.y()) };
-                Q_ASSERT(sizeof(f) == c.size);
-                memcpy(dst, f, sizeof(f));
+                fillUniformBlockMember<float>(dst, f, 2, c.size);
                 break;
             }
             case QMetaType::QVector3D: { // vec3
                 const QVector3D v = qvariant_cast<QVector3D>(c.value);
                 const float f[3] = { float(v.x()), float(v.y()), float(v.z()) };
-                Q_ASSERT(sizeof(f) == c.size);
-                memcpy(dst, f, sizeof(f));
+                fillUniformBlockMember<float>(dst, f, 3, c.size);
                 break;
             }
             case QMetaType::QVector4D: { // vec4
                 const QVector4D v = qvariant_cast<QVector4D>(c.value);
                 const float f[4] = { float(v.x()), float(v.y()), float(v.z()), float(v.w()) };
-                Q_ASSERT(sizeof(f) == c.size);
-                memcpy(dst, f, sizeof(f));
+                fillUniformBlockMember<float>(dst, f, 4, c.size);
                 break;
             }
             case QMetaType::QQuaternion: { // vec4
                 const QQuaternion v = qvariant_cast<QQuaternion>(c.value);
                 const float f[4] = { float(v.x()), float(v.y()), float(v.z()), float(v.scalar()) };
-                Q_ASSERT(sizeof(f) == c.size);
-                memcpy(dst, f, sizeof(f));
+                fillUniformBlockMember<float>(dst, f, 4, c.size);
                 break;
             }
             case QMetaType::QMatrix4x4: { // mat4
-                const QMatrix4x4 v = qvariant_cast<QMatrix4x4>(c.value);
-                const int sz = 16 * sizeof(float);
-                Q_ASSERT(sz == c.size);
-                memcpy(dst, v.constData(), sz);
+                const QMatrix4x4 m = qvariant_cast<QMatrix4x4>(c.value);
+                fillUniformBlockMember<float>(dst, m.constData(), 16, c.size);
                 break;
             }
             default:
