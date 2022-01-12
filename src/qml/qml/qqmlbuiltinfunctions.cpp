@@ -143,7 +143,7 @@ creating objects of specific data types are also available for clients to use:
 \li \c matrix4x4 - use \l{Qt::matrix4x4()}{Qt.matrix4x4()}
 \endlist
 
-There are also string based constructors for these types. See \l{qtqml-typesystem-basictypes.html}{QML Basic Types} for more information.
+There are also string based constructors for these types. See \l{qtqml-typesystem-valuetypes.html}{QML Value Types} for more information.
 
 \section1 Date/Time Formatters
 
@@ -435,7 +435,7 @@ QVariant QtObject::hsva(double h, double s, double v, double a) const
     Returns \c true if both \a lhs and \a rhs yield equal color values. Both
     arguments may be either color values or string values. If a string value
     is supplied it must be convertible to a color, as described for the
-    \l{colorbasictypedocs}{color} basic type.
+    \l{colorvaluetypedocs}{color} value type.
 */
 bool QtObject::colorEqual(const QVariant &lhs, const QVariant &rhs) const
 {
@@ -503,7 +503,7 @@ QSizeF QtObject::size(double w, double h) const
 
     Returns a font with the properties specified in the \a fontSpecifier object
     or the nearest matching font.  The \a fontSpecifier object should contain
-    key-value pairs where valid keys are the \l{fontbasictypedocs}{font} type's
+    key-value pairs where valid keys are the \l{fontvaluetypedocs}{font} type's
     subproperty names, and the values are valid values for each subproperty.
     Invalid keys will be ignored.
 */

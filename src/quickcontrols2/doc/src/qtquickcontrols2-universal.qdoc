@@ -194,7 +194,7 @@
                 \image qtquickcontrols2-universal-accent.png
     \endtable
 
-    \note Even though the accent can be any \l {colorbasictypedocs}{color}, it is
+    \note Even though the accent can be any \l {colorvaluetypedocs}{color}, it is
     recommended to use one of the \l {pre-defined Universal colors} that have been
     designed to work well with the rest of the Universal style palette.
 

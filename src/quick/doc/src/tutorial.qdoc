@@ -29,12 +29,12 @@
 \page qml-tutorial.html
 \title QML Tutorial
 \brief An introduction to the basic concepts and features of QML.
-\nextpage QML Tutorial 1 - Basic Types
+\nextpage QML Tutorial 1 - Value Types
 
 This tutorial gives an introduction to QML, the language for Qt Quick UIs. It doesn't cover everything;
 the emphasis is on teaching the key principles, and features are introduced as needed.
 
-Through the different steps of this tutorial we will learn about QML basic types, we will create our own QML component
+Through the different steps of this tutorial we will learn about QML value types, we will create our own QML component
 with properties and signals, and we will create a simple animation with the help of states and transitions.
 
 Chapter one starts with a minimal "Hello world" program and the following chapters introduce new concepts.
@@ -44,7 +44,7 @@ The tutorial's source code is located in the \c{examples/quick/tutorials/hellowo
 Tutorial chapters:
 
 \list 1
-\li \l {QML Tutorial 1 - Basic Types}{Basic Types}
+\li \l {QML Tutorial 1 - Value Types}{Value Types}
 \li \l {QML Tutorial 2 - QML Components}{QML Components}
 \li \l {QML Tutorial 3 - States and Transitions}{States and Transitions}
 \endlist
@@ -53,7 +53,7 @@ Tutorial chapters:
 
 /*!
 \page qml-tutorial1.html
-\title QML Tutorial 1 - Basic Types
+\title QML Tutorial 1 - Value Types
 \previouspage QML Tutorial
 \nextpage QML Tutorial 2 - QML Components
 
@@ -113,7 +113,7 @@ qml tutorials/helloworld/tutorial1.qml
 /*!
 \page qml-tutorial2.html
 \title QML Tutorial 2 - QML Components
-\previouspage QML Tutorial 1 - Basic Types
+\previouspage QML Tutorial 1 - Value Types
 \nextpage QML Tutorial 3 - States and Transitions
 
 This chapter adds a color picker to change the color of the text.

@@ -189,7 +189,7 @@ int main()
         }
 
         // ### DomKind
-        // any DomItem belongs to  5 basic types
+        // any DomItem belongs to one of 5 fundamental types
 
         // 1. Object (a C++ object)
         Q_ASSERT(qmlFile.domKind() == DomKind::Object);

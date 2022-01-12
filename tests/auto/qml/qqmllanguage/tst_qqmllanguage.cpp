@@ -108,7 +108,7 @@ private slots:
     void assignObjectToVariant();
     void assignLiteralSignalProperty();
     void assignQmlComponent();
-    void assignBasicTypes();
+    void assignValueTypes();
     void assignTypeExtremes();
     void assignCompositeToType();
     void assignLiteralToVar();
@@ -837,10 +837,10 @@ void tst_qqmllanguage::assignQmlComponent()
     QCOMPARE(child->property("y"), QVariant(11));
 }
 
-// Test literal assignment to all the basic types
-void tst_qqmllanguage::assignBasicTypes()
+// Test literal assignment to all the value types
+void tst_qqmllanguage::assignValueTypes()
 {
-    QQmlComponent component(&engine, testFileUrl("assignBasicTypes.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignValueTypes.qml"));
     VERIFY_ERRORS(0);
     QScopedPointer<MyTypeObject> object(qobject_cast<MyTypeObject *>(component.create()));
     QVERIFY(object != nullptr);
@@ -5244,7 +5244,7 @@ void tst_qqmllanguage::instanceof_data()
     // operands are indeed an instanceof each other, or a string for the
     // expected error message.
 
-    // assert that basic types don't convert to QObject
+    // assert that value types don't convert to QObject
     QTest::newRow("1 instanceof QtObject")
         << testFileUrl("instanceof_qtqml.qml")
         << QVariant(false);

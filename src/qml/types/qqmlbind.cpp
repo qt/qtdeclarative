@@ -513,7 +513,7 @@ void QQmlBind::setObject(QObject *obj)
     The property to be updated.
 
     This can be a group property if the expression results in accessing a
-    property of a \l {QML Basic Types}{value type}. For example:
+    property of a \l {QML Value Types}{value type}. For example:
 
     \qml
     Item {

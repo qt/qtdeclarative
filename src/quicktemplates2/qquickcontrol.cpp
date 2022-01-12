@@ -971,7 +971,7 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
     \endcode
 
     For the full list of available font properties, see the
-    \l [QtQuick]{font}{font QML Basic Type} documentation.
+    \l [QtQuick]{font}{font QML Value Type} documentation.
 */
 QFont QQuickControl::font() const
 {

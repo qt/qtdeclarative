@@ -1,0 +1,549 @@
+/****************************************************************************
+**
+** Copyright (C) 2022 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtqml-typesystem-valuetypes.html
+\title QML Value Types
+\brief Description of value types provided by the Qt QML module
+
+QML supports a number of value types.
+
+A \e{value type} is one that refers to a simple value, such as an \c int
+or a \c string. This contrasts with a \l{qtqml-typesystem-topic.html#qml-object-types}{QML Object Types},
+which refers to an object with properties, signals, methods and so on. Unlike an object type,
+a value type cannot be used to declare QML objects: it is not possible, for example, to declare an
+\c int{} object or a \c size{} object.
+
+Value types can be used to refer to:
+
+\list
+\li A single value (e.g. \l int refers to a single number, \l var can refer to a single list of items)
+\li A value that contains a simple set of property-value pairs (e.g. \l size refers to a value with \c width and \c height attributes)
+\endlist
+
+When a variable or property holds a value type and it is assigned to another
+variable or property, then a copy of the value is made. In JavaScript, this
+value is called a primitive value.
+
+\sa {qtqml-typesystem-topic.html}{The QML Type System}
+
+
+\section1 Supported Value Types
+
+Some value types are supported by the engine by default and do not require an
+\l {Import Statements}{import statement} to be used, while others do require
+the client to import the module which provides them.
+All of the value types listed below may be used as a \c property type in a QML
+document, with the following exceptions:
+\list
+  \li \c list must be used in conjunction with a QML object type
+  \li \c enumeration cannot be used directly as the enumeration must be defined by a registered QML object type
+\endlist
+
+\section2 Value Types Provided By The QML Language
+
+The value types supported natively in the QML language are listed below:
+\annotatedlist qmlvaluetypes
+
+\section2 Value Types Provided By QML Modules
+
+QML modules may extend the QML language with more value types.
+For example, the value types provided by the \c QtQuick module are listed below:
+\annotatedlist qtquickvaluetypes
+
+The \l{QtQml::Qt}{Qt} global object provides useful functions for manipulating values of value types.
+
+Currently only QML modules which are provided by Qt may provide their
+own value types, however this may change in future releases of Qt QML.
+In order to use types provided by a particular QML module, clients
+must import that module in their QML documents.
+
+\section1 Property Change Behavior for Value Types
+
+Some value types have properties: for example, the \l font type has
+\c pixelSize, \c family and \c bold properties. Unlike properties of
+\l{qtqml-typesystem-topic.html#qml-object-types}{object types}, properties of
+value types do not provide their own property change signals. It is only possible
+to create a property change signal handler for the value type property itself:
+
+\code
+Text {
+    // invalid!
+    onFont.pixelSizeChanged: doSomething()
+
+    // also invalid!
+    font {
+        onPixelSizeChanged: doSomething()
+    }
+
+    // but this is ok
+    onFontChanged: doSomething()
+}
+\endcode
+
+Be aware, however, that a property change signal for a value type is emitted
+whenever \e any of its attributes have changed, as well as when the property itself
+changes. Take the following code, for example:
+
+\qml
+Text {
+    onFontChanged: console.log("font changed")
+
+    Text { id: otherText }
+
+    focus: true
+
+    // changing any of the font attributes, or reassigning the property
+    // to a different font value, will invoke the onFontChanged handler
+    Keys.onDigit1Pressed: font.pixelSize += 1
+    Keys.onDigit2Pressed: font.b = !font.b
+    Keys.onDigit3Pressed: font = otherText.font
+}
+\endqml
+
+In contrast, properties of an \l{qtqml-typesystem-topic.html#qml-object-types}{object type}
+emit their own property change signals, and a property change signal handler for an object-type
+property is only invoked when the property is reassigned to a different object value.
+
+*/
+
+/*!
+    \qmlbasictype int
+    \ingroup qmlvaluetypes
+    \brief a whole number, e.g. 0, 10, or -20.
+
+    The \c int type refers to a whole number, e.g. 0, 10, or -20.
+
+    The possible \c int values range from -2147483648 to 2147483647,
+    although most types will only accept a reduced range (which they
+    mention in their documentation).
+
+    Example:
+    \qml
+    NumberAnimation { loops: 5 }
+    \endqml
+
+    This value type is provided by the QML language.
+
+    \sa {QML Value Types}
+*/
+
+/*!
+    \qmlbasictype bool
+    \ingroup qmlvaluetypes
+    \brief a binary true/false value.
+
+    The \c bool type refers to a binary true/false value.
+
+    Example:
+    \qml
+    Item {
+        focus: true
+        clip: false
+    }
+    \endqml
+
+    This value type is provided by the QML language.
+
+    \sa {QML Value Types}
+*/
+
+/*!
+    \qmlbasictype real
+    \ingroup qmlvaluetypes
+
+    \brief a number with a decimal point.
+
+    The \c real type refers to a number with decimal point, e.g. 1.2 or -29.8.
+
+    Example:
+    \qml
+    Item { width: 100.45; height: 150.82 }
+    \endqml
+
+    \b{Note:} In QML all reals are stored in double precision, \l
+    {http://en.wikipedia.org/wiki/IEEE_754} {IEEE floating point}
+    format.
+
+    This value type is provided by the QML language.
+
+    \sa {QML Value Types}
+*/
+
+/*!
+    \qmlbasictype double
+    \ingroup qmlvaluetypes
+
+    \brief a number with a decimal point, stored in double precision.
+
+    The \c double type refers to a number with a decimal point and is stored in double precision, \l
+    {http://en.wikipedia.org/wiki/IEEE_754} {IEEE floating point} format.
+
+    Example:
+    \qml
+    Item {
+        property double number: 32155.2355
+    }
+    \endqml
+
+    This value type is provided by the QML language.
+
+    \sa {QML Value Types}
+*/
+
+/*!
+    \qmlbasictype string
+    \ingroup qmlvaluetypes
+    \brief a free form text string.
+
+    The \c string type refers to a free form text string in quotes, e.g. "Hello world!".
+
+    Example:
+    \qml
+    Text { text: "Hello world!" }
+    \endqml
+
+    Strings have a \c length attribute that holds the number of
+    characters in the string.
+
+    QML extends the JavaScript String type with a \l {String::arg}{arg()} function
+    to support value substitution.
+
+    When integrating with C++, note that any QString value
+    \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
+    converted into a \c string value, and vice-versa.
+
+    This value type is provided by the QML language.
+
+    \sa {QML Value Types}
+*/
+
+/*!
+    \qmlbasictype url
+    \ingroup qmlvaluetypes
+    \brief a resource locator.
+
+    The \c url type refers to a resource locator (like a file name, for example). It can be either
+    absolute, e.g. "http://qt-project.org", or relative, e.g.  "pics/logo.png". A relative URL is
+    resolved relative to the URL of the containing component.
+
+    For example, the following assigns a valid URL to the \l {Image::source}
+    property, which is of type \c url:
+
+    \qml
+    Image { source: "pics/logo.png" }
+    \endqml
+
+    When integrating with C++, note that any QUrl value
+    \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
+    converted into a \c url value, and vice-versa.
+
+    Alternatively you may convert your \c url to a \l{https://developer.mozilla.org/en-US/docs/Web/API/URL}{URL} object
+    in order to access and modify its components:
+    \qml
+    var urlObject = new URL(url);
+    \endqml
+
+    \note In Qt 5, URLs were automatically resolved based on the current context
+    when assigning them to any \c url property. This made it impossible to
+    work with relative URLs and it created inconsistent behavior when reading
+    back a URL previously written to a property. Therefore, the behavior was
+    changed in Qt 6.
+
+    \note When referring to files stored with the \l{resources.html}{Qt Resource System}
+    from within QML, you should use "qrc:///" instead of ":/" as QML requires URL paths.
+    Relative URLs resolved from within that file will use the same protocol.
+
+    Additionally, URLs may contain encoded characters using the 'percent-encoding' scheme
+    specified by \l {https://datatracker.ietf.org/doc/html/rfc3986}{RFC 3986}.  These characters
+    will be preserved within properties of type \c url, to allow QML code to
+    construct precise URL values.
+
+    For example, a local file containing a '#' character, which would normally be
+    interpreted as the beginning of the URL 'fragment' element, can be accessed by
+    encoding the characters of the file name:
+
+    \qml
+    Image { source: encodeURIComponent("/tmp/test#1.png") }
+    \endqml
+
+    This value type is provided by the QML language.
+
+    \sa {QML Value Types}
+*/
+
+
+/*!
+    \qmlbasictype list
+    \ingroup qmlvaluetypes
+    \brief a list of QML objects.
+
+    The \c list type refers to a list of QML objects.
+
+    A list value can be accessed in a similar way to a JavaScript array:
+
+    \list
+    \li Values are assigned using the \c[] square bracket syntax with comma-separated values
+    \li The \c length property provides the number of items in the list
+    \li Values in the list are accessed using the \c [index] syntax
+    \endlist
+
+    Values can be dynamically added to the list by using the \c push method,
+    as if it were a JavaScript Array
+
+    A \c list can only store QML objects, and cannot contain any
+    \l {QML Value Types}{value type} values. (To store value types within a
+    list, use the \l var type instead.)
+
+    When integrating with C++, note that any QQmlListProperty value
+    \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
+    converted into a \c list value, and vice-versa.
+
+
+    \section1 Using the list Type
+
+    For example, the \l Item type has a \l {Item::}{states} list-type property that
+    can be assigned to and used as follows:
+
+    \qml
+    import QtQuick 2.0
+
+    Item {
+        width: 100; height: 100
+
+        states: [
+            State { name: "activated" },
+            State { name: "deactivated" }
+        ]
+
+        Component.onCompleted: {
+            console.log("Name of first state:", states[0].name)
+            for (var i = 0; i < states.length; i++)
+                console.log("state", i, states[i].name)
+        }
+    }
+    \endqml
+
+    The defined \l State objects will be added to the \c states list
+    in the order in which they are defined.
+
+    If the list only contains one object, the square brackets may be omitted:
+
+    \qml
+    import QtQuick 2.0
+
+    Item {
+        width: 100; height: 100
+        states: State { name: "activated" }
+    }
+    \endqml
+
+    Objects in a list can be replaced with the \c{[]} operator, just like
+    entries of JavaScript arrays. You can also use \c{push()} to append entries,
+    or you can set the \c length property of the list to truncate or extend it.
+    You can not automatically extend the list by assigning to an index currently
+    out of range, though. Furthermore, if you insert \c null values into the
+    list, those are converted to \c nullptr entries in the underlying
+    QQmlListProperty.
+
+    This value type is provided by the QML language.
+
+    \sa {QML Value Types}
+*/
+
+ /*!
+    \qmlbasictype var
+    \ingroup qmlvaluetypes
+    \brief a generic property type.
+
+    The \c var type is a generic property type that can refer to any data type.
+
+    It is equivalent to a regular JavaScript variable.
+    For example, var properties can store numbers, strings, objects,
+    arrays and functions:
+
+    \qml
+    Item {
+        property var aNumber: 100
+        property var aBool: false
+        property var aString: "Hello world!"
+        property var anotherString: String("#FF008800")
+        property var aColor: Qt.rgba(0.2, 0.3, 0.4, 0.5)
+        property var aRect: Qt.rect(10, 10, 10, 10)
+        property var aPoint: Qt.point(10, 10)
+        property var aSize: Qt.size(10, 10)
+        property var aVector3d: Qt.vector3d(100, 100, 100)
+        property var anArray: [1, 2, 3, "four", "five", (function() { return "six"; })]
+        property var anObject: { "foo": 10, "bar": 20 }
+        property var aFunction: (function() { return "one"; })
+    }
+    \endqml
+
+    \section1 Change Notification Semantics
+
+    It is important to note that changes in regular properties of JavaScript
+    objects assigned to a var property will \b{not} trigger updates of bindings
+    that access them.  The example below will display "The car has 4 wheels" as
+    the change to the wheels property will not cause the reevaluation of the
+    binding assigned to the "text" property:
+
+    \qml
+    Item {
+        property var car: new Object({wheels: 4})
+
+        Text {
+            text: "The car has " + car.wheels + " wheels";
+        }
+
+        Component.onCompleted: {
+            car.wheels = 6;
+        }
+    }
+    \endqml
+
+    If the onCompleted handler instead had \tt{"car = new Object({wheels: 6})"}
+    then the text would be updated to say "The car has 6 wheels", since the
+    car property itself would be changed, which causes a change notification
+    to be emitted.
+
+    \section1 Property Value Initialization Semantics
+
+    The QML syntax defines that curly braces on the right-hand-side of a
+    property value initialization assignment denote a binding assignment.
+    This can be confusing when initializing a \c var property, as empty curly
+    braces in JavaScript can denote either an expression block or an empty
+    object declaration.  If you wish to initialize a \c var property to an
+    empty object value, you should wrap the curly braces in parentheses.
+
+    For example:
+    \qml
+    Item {
+        property var first:  {}   // nothing = undefined
+        property var second: {{}} // empty expression block = undefined
+        property var third:  ({}) // empty object
+    }
+    \endqml
+
+    In the previous example, the \c first property is bound to an empty
+    expression, whose result is undefined.  The \c second property is bound to
+    an expression which contains a single, empty expression block ("{}"), which
+    similarly has an undefined result.  The \c third property is bound to an
+    expression which is evaluated as an empty object declaration, and thus the
+    property will be initialized with that empty object value.
+
+    Similarly, a colon in JavaScript can be either an object property value
+    assignment, or a code label.  Thus, initializing a var property with an
+    object declaration can also require parentheses:
+
+    \qml
+    Item {
+        property var first: { example: 'true' }    // example is interpreted as a label
+        property var second: ({ example: 'true' }) // example is interpreted as a property
+        property var third: { 'example': 'true' }  // example is interpreted as a property
+        Component.onCompleted: {
+            console.log(first.example) // prints 'undefined', as "first" was assigned a string
+            console.log(second.example) // prints 'true'
+            console.log(third.example) // prints 'true'
+        }
+    }
+    \endqml
+
+    \sa {QML Value Types}
+*/
+/*
+ TODO Qt 5.1: see explanation in expressions.qdoc
+     \section1 Using Scarce Resources with the var Type
+
+    A \c var type property can also hold an image or pixmap.
+    A \c var which contains a QPixmap or QImage is known as a
+    "scarce resource" and the declarative engine will attempt to
+    automatically release such resources after evaluation of any JavaScript
+    expression which requires one to be copied has completed.
+
+    Clients may explicitly release such a scarce resource by calling the
+    "destroy" method on the \c var property from within JavaScript.  They
+    may also explicitly preserve the scarce resource by calling the
+    "preserve" method on the \c var property from within JavaScript.
+
+    This value type is provided by the QML language.
+*/
+
+/*!
+    \qmlbasictype enumeration
+    \ingroup qmlvaluetypes
+    \brief a named enumeration value.
+
+    The \c enumeration type refers to a named enumeration value.
+
+    Each named value can be referred to as \c {<Type>.<value>}. For
+    example, the \l Text type has an \c AlignRight enumeration value:
+
+    \qml
+    Text { horizontalAlignment: Text.AlignRight }
+    \endqml
+
+    (For backwards compatibility, the enumeration value may also be
+    specified as a string, e.g. "AlignRight". This form is not
+    recommended for new code.)
+
+    When integrating with C++, note that any \c enum value
+    \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
+    converted into an \c enumeration value, and vice-versa.
+
+    This value type is provided by the QML language.  Some enumeration values
+    are provided by the QtQuick import.
+
+    \section1 Using the enumeration Type in QML
+
+    The \c enumeration type is a representation of a C++ \c enum type. It is
+    not possible to refer to the \c enumeration type in QML itself; instead, the
+    \l int or \l var types can be used when referring to \c enumeration values
+    from QML code.
+
+    For example:
+
+    \qml
+    import QtQuick 2.0
+
+    Item {
+        // refer to Text.AlignRight using an int type
+        property int enumValue: textItem.horizontalAlignment
+
+        signal valueEmitted(int someValue)
+
+        Text {
+            id: textItem
+            horizontalAlignment: Text.AlignRight
+        }
+
+        // emit valueEmitted() signal, which expects an int, with Text.AlignRight
+        Component.onCompleted: valueEmitted(Text.AlignRight)
+    }
+    \endqml
+
+    \sa {QML Value Types}
+    \sa {qtqml-syntax-objectattributes.html#enumeration-attributes}{Enumeration Attributes}
+*/

@@ -64,7 +64,7 @@ objects such as \c Date and \c Math).
 The functions defined in an imported JavaScript file are available to objects
 defined in the importing QML document, via the
 \c{"Qualifier.functionName(params)"} syntax.  Functions in JavaScript resources
-may take parameters whose type can be any of the supported QML basic types or
+may take parameters whose type can be any of the supported QML value types or
 object types, as well as normal JavaScript types.  The normal
 \l{qtqml-cppintegration-data.html}{data type conversion rules} will apply to
 parameters and return values when calling such functions from QML.

@@ -268,7 +268,7 @@ QMetaObject::invokeMethod():
 \endtable
 
 Notice the parameter and return type specified after the colon. You can use \l
-{QML Basic Types}{basic types} and \l {QML Object Types}{object types} as type
+{QML Value Types}{value types} and \l {QML Object Types}{object types} as type
 names.
 
 If the type is omitted in QML, then you must specify QVariant as type with

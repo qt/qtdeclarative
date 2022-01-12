@@ -84,7 +84,7 @@ QT += qml
 The Qt QML module contains the QML framework and important QML types used in
 applications. The constructs of QML are described in the \l{The QML Reference}.
 
-In addition to the \l{QML Basic Types}, the module comes with
+In addition to the \l{QML Value Types}, the module comes with
 the following QML object types:
 \list
 \li \l Component

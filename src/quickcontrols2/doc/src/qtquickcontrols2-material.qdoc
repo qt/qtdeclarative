@@ -151,7 +151,7 @@
 
     \section2 Pre-defined Material Colors
 
-    Even though primary and accent can be any \l {colorbasictypedocs}{color}, it
+    Even though primary and accent can be any \l {colorvaluetypedocs}{color}, it
     is recommended to use one of the pre-defined colors that have been designed
     to work well with the rest of the Material style palette:
 
@@ -269,7 +269,7 @@
                 \image qtquickcontrols2-material-accent.png
     \endtable
 
-    \note Even though the accent can be any \l {colorbasictypedocs}{color}, it is
+    \note Even though the accent can be any \l {colorvaluetypedocs}{color}, it is
     recommended to use one of the \l {pre-defined Material colors} that have been
     designed to work well with the rest of the Material style palette.
 
@@ -346,7 +346,7 @@
 
     The default value is \c Material.Indigo.
 
-    \note Even though the primary can be any \l {colorbasictypedocs}{color}, it is
+    \note Even though the primary can be any \l {colorvaluetypedocs}{color}, it is
     recommended to use one of the \l {pre-defined Material colors} that have been
     designed to work well with the rest of the Material style palette.
 

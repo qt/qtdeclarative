@@ -310,14 +310,14 @@ signal just before being destroyed.
     resources in Qt 5.0.0, so mark this section as internal for now.
     It should eventually become public API
 
-    There is another section about scarce resources in basictypes.qdoc. It should
+    There is another section about scarce resources in valuetypes.qdoc. It should
     be enabled at the same time.
 
 
 
 \section1 Scarce Resources in JavaScript
 
-As described in the documentation for \l{QML Basic Types}, a \c var type
+As described in the documentation for \l{QML Value Types}, a \c var type
 property may hold a \e{scarce resource} (image or pixmap). There are several
 important semantics of scarce resources which should be noted:
 

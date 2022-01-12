@@ -46,15 +46,15 @@ Wherever the type definitions come from, the engine will enforce type-safety
 for properties and instances of those types.
 
 
-\section1 Basic Types
+\section1 Value Types
 
 The QML language has built-in support for various primitive types including
 integers, double-precision floating point numbers, strings, and boolean values.
 Objects may have properties of these types, and values of these types may be
 passed as arguments to methods of objects.
 
-See the \l{qtqml-typesystem-basictypes.html}{QML Basic Types} documentation for
-more information about basic types.
+See the \l{qtqml-typesystem-valuetypes.html}{QML Value Types} documentation for
+more information about value types.
 
 \section1 JavaScript Types
 

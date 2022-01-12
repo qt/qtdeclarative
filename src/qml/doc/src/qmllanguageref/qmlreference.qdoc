@@ -77,7 +77,7 @@ modules.
 
     \li \l{qtqml-typesystem-topic.html}{The QML Type System}
         \list
-        \li \l{qtqml-typesystem-basictypes.html}{Basic Types}
+        \li \l{qtqml-typesystem-valuetypes.html}{QML Value Types}
         \li \l{qtqml-typesystem-topic.html#javascript-types}{JavaScript Types}
         \li \l{qtqml-typesystem-objecttypes.html}{QML Object Types}
             \list

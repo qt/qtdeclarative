@@ -81,7 +81,7 @@ QT_BEGIN_NAMESPACE
     to save and restore such application settings with the minimum of effort.
 
     Individual setting values are specified by declaring properties within a
-    Settings element. All \l {QML Basic Types}{basic type} properties are
+    Settings element. All \l {QML Value Types}{value type} properties are
     supported. The recommended approach is to use property aliases in order
     to get automatic property updates both ways. The following example shows
     how to use Settings to store and restore the geometry of a window.

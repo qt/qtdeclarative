@@ -59,13 +59,13 @@ has a parent.
 \section1 Basic Qt Data Types
 
 By default, QML recognizes the following Qt data types, which are
-automatically converted to a corresponding \l {QML Basic Types}{QML basic type}
+automatically converted to a corresponding \l {QML Value Types}{QML value type}
 when passed from C++ to QML and vice-versa:
 
 \table
     \row
         \li Qt Type
-        \li QML Basic Type
+        \li QML Value Type
     \row
         \li bool
         \li \l bool
@@ -133,7 +133,7 @@ Item {
 }
 \endqml
 
-See documentation for each individual type under \l {QML Basic Types} for more
+See documentation for each individual type under \l {QML Value Types} for more
 information.
 
 

@@ -132,7 +132,7 @@ using a standard QML \l Text item:
 
 Notice that although the color is specified as a string in QML, it is automatically
 converted to a QColor object for the PieChart \c color property. Automatic conversions are
-provided for various other \l {QML Basic Types}{basic types}; for example, a string
+provided for various other \l {QML Value Types}{value types}; for example, a string
 like "640x480" can be automatically converted to a QSize value.
 
 We'll also create a C++ application that uses a QQuickView to run and

@@ -78,7 +78,7 @@ public:
 private slots:
     void initTestCase() override;
     void arrayIncludesValueType();
-    void assignBasicTypes();
+    void assignValueTypes();
     void assignDate_data();
     void assignDate();
     void assignFunctionThroughAliasToVarProperty();
@@ -495,11 +495,11 @@ void tst_qqmlecmascript::arrayIncludesValueType()
     QVERIFY(success.toBool());
 }
 
-void tst_qqmlecmascript::assignBasicTypes()
+void tst_qqmlecmascript::assignValueTypes()
 {
     QQmlEngine engine;
     {
-    QQmlComponent component(&engine, testFileUrl("assignBasicTypes.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignValueTypes.qml"));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY2(obj, qPrintable(component.errorString()));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(obj.data());
@@ -529,7 +529,7 @@ void tst_qqmlecmascript::assignBasicTypes()
     QCOMPARE(object->urlProperty(), QUrl("main.qml"));
     }
     {
-    QQmlComponent component(&engine, testFileUrl("assignBasicTypes.2.qml"));
+    QQmlComponent component(&engine, testFileUrl("assignValueTypes.2.qml"));
     QScopedPointer<QObject> obj(component.create());
     QVERIFY2(obj, qPrintable(component.errorString()));
     MyTypeObject *object = qobject_cast<MyTypeObject *>(obj.data());

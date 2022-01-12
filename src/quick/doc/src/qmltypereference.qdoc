@@ -59,15 +59,15 @@ information about the concepts which are central to \c QtQuick.
     \li \l{Qt Quick Test QML Types}{Tests} - types for testing QML applications.
     \endlist
 
-\target basic-types
-\section1 Basic Types
+\target value-types
+\section1 Value Types
 
-There are a number of basic types that are
-\l{qtqml-typesystem-basictypes.html#basic-types-provided-by-the-qml-language}
+There are a number of value types that are
+\l{qtqml-typesystem-valuetypes.html#value-types-provided-by-the-qml-language}
 {supported by default in the QML language}.
 
-In addition, the \c QtQuick import provides the following basic types:
-\annotatedlist qtquickbasictypes
+In addition, the \c QtQuick import provides the following value types:
+\annotatedlist qtquickvaluetypes
 
 \section1 Object Types
 
@@ -81,9 +81,9 @@ available when you import \c QtQuick.
 
 /*!
     \qmlbasictype color
-    \ingroup qtquickbasictypes
+    \ingroup qtquickvaluetypes
     \brief an ARGB color value.
-    \target colorbasictypedocs
+    \target colorvaluetypedocs
 
     The \c color type refers to an ARGB color value. It can be specified in a number of ways:
 
@@ -127,7 +127,7 @@ available when you import \c QtQuick.
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into a \c color value, and vice-versa.
 
-    This basic type is provided by the QtQuick import.
+    This value type is provided by the QtQuick import.
 
     \section1 SVG Color Reference
 
@@ -136,14 +136,14 @@ available when you import \c QtQuick.
 
     \include svg-colors.qdocinc
 
-    \sa {QML Basic Types}
+    \sa {QML Value Types}
 */
 
 /*!
     \qmlbasictype font
-    \ingroup qtquickbasictypes
+    \ingroup qtquickvaluetypes
     \brief a font value with the properties of QFont.
-    \target fontbasictypedocs
+    \target fontvaluetypedocs
 
     The \c font type refers to a font value with the properties of QFont.
 
@@ -184,7 +184,7 @@ available when you import \c QtQuick.
     \l{qtqml-cppintegration-data.html}{passed into QML from C++} is automatically
     converted into a \c font value, and vice-versa.
 
-    This basic type is provided by the QtQuick import.
+    This value type is provided by the QtQuick import.
 
     Font weighting is classified on a scale from 0 to 99, where a weight of 0 is ultralight,
     and 99 is extremely black. The following values are supported:
@@ -252,12 +252,12 @@ available when you import \c QtQuick.
            vertical directions.
     \endlist
 
-    \sa {QML Basic Types}
+    \sa {QML Value Types}
 */
 
 /*!
     \qmlbasictype vector2d
-    \ingroup qtquickbasictypes
+    \ingroup qtquickvaluetypes
 
     \brief A vector2d type has x and y attributes.
 
@@ -378,14 +378,14 @@ console.log(c + " " + d); // false true
             \endcode
 \endtable
 
-    This basic type is provided by the QtQuick import.
+    This value type is provided by the QtQuick import.
 
-    \sa {QML Basic Types}
+    \sa {QML Value Types}
 */
 
 /*!
     \qmlbasictype vector3d
-    \ingroup qtquickbasictypes
+    \ingroup qtquickvaluetypes
     \brief a value with x, y, and z attributes.
 
     The \c vector3d type refers to a value with \c x, \c y, and \c z attributes.
@@ -549,14 +549,14 @@ console.log(c + " " + d); // false true
             \endcode
 \endtable
 
-    This basic type is provided by the QtQuick import.
+    This value type is provided by the QtQuick import.
 
-    \sa {QML Basic Types}
+    \sa {QML Value Types}
 */
 
 /*!
     \qmlbasictype vector4d
-    \ingroup qtquickbasictypes
+    \ingroup qtquickvaluetypes
 
     \brief A vector4d type has x, y, z and w attributes.
 
@@ -690,14 +690,14 @@ console.log(c + " " + d); // false true
             \endcode
 \endtable
 
-    This basic type is provided by the QtQuick import.
+    This value type is provided by the QtQuick import.
 
-    \sa {QML Basic Types}
+    \sa {QML Value Types}
 */
 
 /*!
     \qmlbasictype quaternion
-    \ingroup qtquickbasictypes
+    \ingroup qtquickvaluetypes
 
     \brief A quaternion type has scalar, x, y, and z attributes.
 
@@ -850,14 +850,14 @@ console.log(c + " " + d); // false true
             \endcode
     \endtable
 
-    This basic type is provided by the QtQuick import.
+    This value type is provided by the QtQuick import.
 
-    \sa {QML Basic Types}
+    \sa {QML Value Types}
 */
 
 /*!
     \qmlbasictype matrix4x4
-    \ingroup qtquickbasictypes
+    \ingroup qtquickvaluetypes
 
     \brief A matrix4x4 type is a 4-row and 4-column matrix
 
@@ -1098,7 +1098,7 @@ console.log(c + " " + d); // false true
             \endcode
 \endtable
 
-    This basic type is provided by the QtQuick import.
+    This value type is provided by the QtQuick import.
 
-    \sa {QML Basic Types}
+    \sa {QML Value Types}
 */

@@ -68,12 +68,12 @@ Types}{Qt QML Models} page has more information.
 The documentation for the types below applies equally to the types of the same
 name provided by the \l{Qt Quick} module, as they are in fact identical.
 
-\section1 Basic Types
+\section1 Value Types
 
-The following \l{qtqml-typesystem-basictypes.html}{QML basic types} are
+The following \l{qtqml-typesystem-valuetypes.html}{QML Value Types} are
 provided:
 
-\annotatedlist qtqmlbasictypes
+\annotatedlist qtqmlvaluetypes
 
 \section1 Object Types
 
@@ -84,8 +84,8 @@ provided:
 
 /*!
 \qmlbasictype date
-\ingroup qtqmlbasictypes
-\ingroup qtquickbasictypes
+\ingroup qtqmlvaluetypes
+\ingroup qtquickvaluetypes
 \brief a date value.
 
 The \c date type refers to a date value, including the time of the day.
@@ -116,16 +116,16 @@ or a relevant time-zone and selecting a time of day (such as noon)
 that reliably exists (daylight-savings transitions skip an hour, near
 one end or the other of a day).
 
-This basic type is provided by the QML language. It can be implicitly converted
+This value type is provided by the QML language. It can be implicitly converted
 to a \l{QtQml::Date}{Date} object.
 
-\sa {QtQml::Date}{QML Date object}, {QML Basic Types}
+\sa {QtQml::Date}{QML Date object}, {QML Value Types}
 */
 
 /*!
 \qmlbasictype point
-\ingroup qtqmlbasictypes
-\ingroup qtquickbasictypes
+\ingroup qtqmlvaluetypes
+\ingroup qtquickvaluetypes
 \brief a value with x and y attributes.
 
 The \c point type refers to a value with \c x and \c y attributes.
@@ -147,13 +147,13 @@ When integrating with C++, note that any QPoint or QPointF value
 converted into a \c point value. When a \c point value is passed to C++, it
 is automatically converted into a QPointF value.
 
-\sa{QML Basic Types}
+\sa{QML Value Types}
 */
 
 /*!
 \qmlbasictype size
-\ingroup qtqmlbasictypes
-\ingroup qtquickbasictypes
+\ingroup qtqmlvaluetypes
+\ingroup qtquickvaluetypes
 \brief a value with width and height attributes
 
 The \c size type refers to a value with has \c width and \c height attributes.
@@ -185,13 +185,13 @@ When integrating with C++, note that any QSize or QSizeF value
 converted into a \c size value, and vice-versa. When a \c size value is passed to C++, it
 is automatically converted into a QSizeF value.
 
-\sa{QML Basic Types}
+\sa{QML Value Types}
 */
 
 /*!
 \qmlbasictype rect
-\ingroup qtqmlbasictypes
-\ingroup qtquickbasictypes
+\ingroup qtqmlvaluetypes
+\ingroup qtquickvaluetypes
 \brief a value with x, y, width and height attributes.
 
 The \c rect type refers to a value with \c x, \c y, \c width and \c height attributes.
@@ -228,5 +228,5 @@ When integrating with C++, note that any QRect or QRectF value
 converted into a \c rect value, and vice-versa. When a \c rect value is passed to C++, it
 is automatically converted into a QRectF value.
 
-\sa{QML Basic Types}
+\sa{QML Value Types}
 */

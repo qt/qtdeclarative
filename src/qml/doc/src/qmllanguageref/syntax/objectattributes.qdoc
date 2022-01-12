@@ -150,7 +150,7 @@ Rectangle {
 
 \section4 Valid Types in Custom Property Definitions
 
-Any of the \l {QML Basic Types} aside from the \l enumeration type can be used
+Any of the \l {QML Value Types} aside from the \l enumeration type can be used
 as custom property types. For example, these are all valid property declarations:
 
 \qml
@@ -164,11 +164,11 @@ Item {
 (Enumeration values are simply whole number values and can be referred to with
 the \l int type instead.)
 
-Some basic types are provided by the \c QtQuick module and thus cannot be used
-as property types unless the module is imported. See the \l {QML Basic Types}
+Some value types are provided by the \c QtQuick module and thus cannot be used
+as property types unless the module is imported. See the \l {QML Value Types}
 documentation for more details.
 
-Note the \l var basic type is a generic placeholder type that can hold any
+Note the \l var value type is a generic placeholder type that can hold any
 type of value, including lists and objects:
 
 \code
@@ -329,7 +329,7 @@ even though properties of the \c color type store colors and not strings,
 you are able to assign the string \c "red" to a color property, without an
 error being reported.
 
-See \l {QML Basic Types} for a list of the types of properties that are
+See \l {QML Value Types} for a list of the types of properties that are
 supported by default.  Additionally, any available \l {QML Object Types}
 {QML object type} may also be used as a property type.
 
@@ -430,10 +430,10 @@ Text {
 }
 \endcode
 
-Grouped property types are basic types which have subproperties.  Some of these
-basic types are provided by the QML language, while others may only be used if
+Grouped property types are value types which have subproperties.  Some of these
+value types are provided by the QML language, while others may only be used if
 the Qt Quick module is imported.  See the documentation about
-\l{QML Basic Types} for more information.
+\l{QML Value Types} for more information.
 
 
 \section3 Property Aliases
@@ -1132,7 +1132,7 @@ Text {
 }
 \endqml
 
-More information on enumeration usage in QML can be found in the \l {QML Basic Types} \l enumeration documentation.
+More information on enumeration usage in QML can be found in the \l {QML Value Types} \l enumeration documentation.
 
 The ability to declare enumerations in QML was introduced in Qt 5.10.
 
