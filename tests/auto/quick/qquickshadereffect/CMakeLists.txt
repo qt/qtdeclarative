@@ -21,6 +21,7 @@ set(resources_resource_files
     "data/+qsb/red.frag"
     "data/+qsb/test.frag"
     "data/+qsb/test.vert"
+    "data/+qsb/testprop.frag"
     "data/MyIcon.qml"
     "data/connections.qml"
     "data/deleteShaderEffectSource.qml"
@@ -32,6 +33,8 @@ set(resources_resource_files
     "data/test.frag"
     "data/test.vert"
     "data/twoImagesOneShaderEffect.qml"
+    "data/testprop.frag"
+    "data/testProperties.qml"
 )
 
 qt_internal_add_resource(tst_qquickshadereffect "resources"
