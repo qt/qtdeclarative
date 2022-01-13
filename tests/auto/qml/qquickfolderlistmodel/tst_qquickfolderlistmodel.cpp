@@ -85,6 +85,10 @@ private:
 
 void tst_qquickfolderlistmodel::initTestCase()
 {
+#if defined(Q_OS_MACOS) && defined(Q_PROCESSOR_ARM_64)
+    // ### TODO: this is only a temporary workaround for QTBUG-99665
+    QSKIP("Test crashes after running to completion on macos ARM");
+#endif
     // The tests rely on a fixed number of files in the directory with the qml files
     // (the data dir), so disable the disk cache to avoid creating .qmlc files and
     // confusing the test.
