@@ -869,7 +869,9 @@ void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaPr
     Qml2CppPropertyData compilationData(p);
 
     // 1. add setter and getter
-    if (p.isWritable()) {
+    // If p.isList(), it's a QQmlListProperty. Then you can write the underlying list through
+    // the QQmlListProperty object retrieved with the getter. Setting it would make no sense.
+    if (p.isWritable() && !p.isList()) {
         QQmlJSAotMethod setter {};
         setter.returnType = u"void"_qs;
         setter.name = compilationData.write;
@@ -890,13 +892,15 @@ void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaPr
     mocPieces << u"READ"_qs << getter.name;
 
     // 2. add bindable
-    QQmlJSAotMethod bindable {};
-    bindable.returnType = u"QBindable<" + underlyingType + u">";
-    bindable.name = compilationData.bindable;
-    bindable.body << u"return QBindable<" + underlyingType + u">(std::addressof(" + variableName
-                    + u"));";
-    current.functions.emplaceBack(bindable);
-    mocPieces << u"BINDABLE"_qs << bindable.name;
+    if (!p.isList()) {
+        QQmlJSAotMethod bindable {};
+        bindable.returnType = u"QBindable<" + underlyingType + u">";
+        bindable.name = compilationData.bindable;
+        bindable.body << u"return QBindable<" + underlyingType + u">(std::addressof(" + variableName
+                        + u"));";
+        current.functions.emplaceBack(bindable);
+        mocPieces << u"BINDABLE"_qs << bindable.name;
+    }
 
     // 3. add/check notify (actually, this is already done inside QmltcVisitor)
 

@@ -1050,6 +1050,12 @@ void tst_qmltc::listProperty()
              QStringLiteral("Hello from parent.children[0]"));
     QCOMPARE(children.at(1)->property("hello").toString(),
              QStringLiteral("Hello from parent.children[1]"));
+
+    QQmlListReference refIds(&created, "ids");
+    QCOMPARE(refIds.count(), 3);
+    QCOMPARE(refIds.at(0), &created);
+    QCOMPARE(refIds.at(1), ref.at(0));
+    QCOMPARE(refIds.at(2), ref.at(1));
 }
 
 void tst_qmltc::listPropertiesWithTheSameName()

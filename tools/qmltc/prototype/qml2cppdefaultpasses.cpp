@@ -564,9 +564,9 @@ static void setupQmlCppType(const Qml2CppContext &context, const QQmlJSScope::Pt
         Qml2CppPropertyData compiledData(p);
         if (p.read().isEmpty())
             p.setRead(compiledData.read);
-        if (p.write().isEmpty() && p.isWritable())
+        if (p.write().isEmpty() && p.isWritable() && !p.isList())
             p.setWrite(compiledData.write);
-        if (p.bindable().isEmpty())
+        if (p.bindable().isEmpty() && !p.isList())
             p.setBindable(compiledData.bindable);
         // TODO: p.setNotify(compiledData.notify); - ?
         type->addOwnProperty(p);
