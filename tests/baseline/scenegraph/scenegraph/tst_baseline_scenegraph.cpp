@@ -76,7 +76,6 @@ private:
     QString grabberPath;
     int consecutiveErrors;   // Not test failures (image mismatches), but system failures (so no image at all)
     bool aborted;            // This run given up because of too many system failures
-    bool usingRhi;
 };
 
 
