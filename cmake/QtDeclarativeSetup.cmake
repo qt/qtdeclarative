@@ -6,23 +6,26 @@ function(qt_declarative_write_tag_header target_name)
         file(READ "${tag_file}" tag_contents)
         string(STRIP "${tag_contents}" tag_contents)
     endif()
-    if(NOT tag_contents STREQUAL "$Format:%H$")
+    find_program(git_path git)
+
+    if(tag_contents AND NOT tag_contents STREQUAL "$Format:%H$")
         set(QML_COMPILE_HASH "${tag_contents}")
-    elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../.git")
-        find_program(git_path git)
-        if(git_path)
-            execute_process(
-                COMMAND ${git_path} rev-parse HEAD
-                OUTPUT_VARIABLE QML_COMPILE_HASH
-                OUTPUT_STRIP_TRAILING_WHITESPACE
-                WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-        else()
-            message(FATAL_ERROR "Cannot find a 'git' binary to retrieve QML compile hash in PATH!")
-        endif()
+    elseif(git_path AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../.git")
+        execute_process(
+            COMMAND ${git_path} rev-parse HEAD
+            OUTPUT_VARIABLE QML_COMPILE_HASH
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
     else()
-        message(FATAL_ERROR "Cannot find a source for the QML compile hash! "
-                            "You need either a valid git repository or a non-empty .tag file.")
+        set(sources_hash "")
+        file(GLOB_RECURSE qtqml_source_files "${CMAKE_CURRENT_SOURCE_DIR}/*")
+        foreach(file IN LISTS qtqml_source_files)
+            file(SHA1 ${file} file_hash)
+            string(APPEND sources_hash ${file_hash})
+        endforeach()
+        string(SHA1 QML_COMPILE_HASH "${sources_hash}")
     endif()
+
     string(LENGTH "${QML_COMPILE_HASH}" QML_COMPILE_HASH_LENGTH)
     if(QML_COMPILE_HASH_LENGTH GREATER 0)
         configure_file("qml_compile_hash_p.h.in" "${CMAKE_CURRENT_BINARY_DIR}/qml_compile_hash_p.h")
