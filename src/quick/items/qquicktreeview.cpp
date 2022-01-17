@@ -402,24 +402,26 @@ QQuickTreeView::~QQuickTreeView()
 
 int QQuickTreeView::depth(int row) const
 {
-    if (row < 0 || row >= rows())
+    Q_D(const QQuickTreeView);
+    if (row < 0 || row >= d->m_treeModelToTableModel.rowCount())
         return -1;
 
-    return d_func()->m_treeModelToTableModel.depthAtRow(row);
+    return d->m_treeModelToTableModel.depthAtRow(row);
 }
 
 bool QQuickTreeView::isExpanded(int row) const
 {
-    if (row < 0 || row >= rows())
+    Q_D(const QQuickTreeView);
+    if (row < 0 || row >= d->m_treeModelToTableModel.rowCount())
         return false;
 
-    return d_func()->m_treeModelToTableModel.isExpanded(row);
+    return d->m_treeModelToTableModel.isExpanded(row);
 }
 
 void QQuickTreeView::expand(int row)
 {
     Q_D(QQuickTreeView);
-    if (row < 0 || row >= rows())
+    if (row < 0 || row >= d->m_treeModelToTableModel.rowCount())
         return;
 
     if (d->m_treeModelToTableModel.isExpanded(row))
@@ -439,7 +441,7 @@ void QQuickTreeView::expand(int row)
 void QQuickTreeView::collapse(int row)
 {
     Q_D(QQuickTreeView);
-    if (row < 0 || row >= rows())
+    if (row < 0 || row >= d->m_treeModelToTableModel.rowCount())
         return;
 
     if (!d->m_treeModelToTableModel.isExpanded(row))
