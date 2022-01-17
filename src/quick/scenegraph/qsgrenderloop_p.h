@@ -114,8 +114,6 @@ public:
 
     void handleContextCreationFailure(QQuickWindow *window);
 
-    static bool windowWantsVSync(QWindow *w);
-
 Q_SIGNALS:
     void timeToIncubate();
 

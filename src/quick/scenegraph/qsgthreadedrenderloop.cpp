@@ -920,9 +920,10 @@ void QSGRenderThread::ensureRhi()
         if (alpha)
             flags |= QRhiSwapChain::SurfaceHasPreMulAlpha;
 
-        // Request NoVSync if swap interval was set to 0. What this means in
-        // practice is another question, but at least we tried.
-        if (!QSGRenderLoop::windowWantsVSync(window)) {
+        // Request NoVSync if swap interval was set to 0 (either by the app or
+        // by QSG_NO_VSYNC). What this means in practice is another question,
+        // but at least we tried.
+        if (requestedFormat.swapInterval() == 0) {
             qCDebug(QSG_LOG_INFO, "Swap interval is 0, attempting to disable vsync when presenting.");
             flags |= QRhiSwapChain::NoVSync;
         }
@@ -1078,14 +1079,17 @@ void QSGThreadedRenderLoop::startOrStopAnimationTimer()
 {
     int exposedWindows = 0;
     int unthrottledWindows = 0;
+    int badVSync = 0;
     const Window *theOne = nullptr;
     for (int i=0; i<m_windows.size(); ++i) {
         const Window &w = m_windows.at(i);
         if (w.window->isVisible() && w.window->isExposed()) {
             ++exposedWindows;
             theOne = &w;
-            if (!windowWantsVSync(w.window))
+            if (w.actualWindowFormat.swapInterval() == 0)
                 ++unthrottledWindows;
+            if (w.badVSync)
+                ++badVSync;
         }
     }
 
@@ -1104,20 +1108,24 @@ void QSGThreadedRenderLoop::startOrStopAnimationTimer()
     //
     // On top, another case: a window with vsync disabled should disable all the
     // good stuff and go with the system timer.
+    //
+    // Similarly, if there is at least one window where we determined that
+    // vsync based blocking is not working as expected, that should make us
+    // choose the timer based way.
 
-    const bool canUseVSyncBasedAnimation = exposedWindows == 1 && unthrottledWindows == 0;
+    const bool canUseVSyncBasedAnimation = exposedWindows == 1 && unthrottledWindows == 0 && badVSync == 0;
 
     if (m_animation_timer != 0 && (canUseVSyncBasedAnimation || !m_animation_driver->isRunning())) {
-        qCDebug(QSG_LOG_RENDERLOOP, "*** Stopping non-render thread animation timer (exposedWindows=%d unthrottledWindows=%d)",
-                exposedWindows, unthrottledWindows);
+        qCDebug(QSG_LOG_RENDERLOOP, "*** Stopping system (not vsync-based) animation timer (exposedWindows=%d unthrottledWindows=%d badVSync=%d)",
+                exposedWindows, unthrottledWindows, badVSync);
         killTimer(m_animation_timer);
         m_animation_timer = 0;
         // If animations are running, make sure we keep on animating
         if (m_animation_driver->isRunning())
             postUpdateRequest(const_cast<Window *>(theOne));
     } else if (m_animation_timer == 0 && !canUseVSyncBasedAnimation && m_animation_driver->isRunning()) {
-        qCDebug(QSG_LOG_RENDERLOOP, "*** Starting non-render thread animation timer (exposedWindows=%d unthrottledWindows=%d)",
-                exposedWindows, unthrottledWindows);
+        qCDebug(QSG_LOG_RENDERLOOP, "*** Starting system (not vsync-based) animation timer (exposedWindows=%d unthrottledWindows=%d badVSync=%d)",
+                exposedWindows, unthrottledWindows, badVSync);
         m_animation_timer = startTimer(int(sg->vsyncIntervalForAnimationDriver(m_animation_driver)));
     }
 }
@@ -1250,7 +1258,10 @@ void QSGThreadedRenderLoop::handleExposure(QQuickWindow *window)
         win.thread = new QSGRenderThread(this, renderContext);
         win.updateDuringSync = false;
         win.forceRenderPass = true; // also covered by polishAndSync(inExpose=true), but doesn't hurt
+        win.badVSync = false;
         win.timeBetweenPolishAndSyncs.start();
+        win.psTimeAccumulator = 0.0f;
+        win.psTimeSampleCount = 0;
         m_windows << win;
         w = &m_windows.last();
     }
@@ -1504,10 +1515,64 @@ void QSGThreadedRenderLoop::polishAndSync(Window *w, bool inExpose)
     qint64 polishTime = 0;
     qint64 waitTime = 0;
     qint64 syncTime = 0;
+
+    const qint64 elapsedSinceLastMs = w->timeBetweenPolishAndSyncs.restart();
+
+    if (w->actualWindowFormat.swapInterval() != 0) {
+        w->psTimeAccumulator += elapsedSinceLastMs;
+        w->psTimeSampleCount += 1;
+        // cannot be too high because we'd then delay recognition of broken vsync at start
+        static const int PS_TIME_SAMPLE_LENGTH = 20;
+        if (w->psTimeSampleCount > PS_TIME_SAMPLE_LENGTH) {
+            const float t = w->psTimeAccumulator / w->psTimeSampleCount;
+            const float vsyncRate = sg->vsyncIntervalForAnimationDriver(m_animation_driver);
+
+            // What this means is that the last PS_TIME_SAMPLE_LENGTH frames
+            // average to an elapsed time of t milliseconds, whereas the animation
+            // driver (assuming a single window, vsync-based advancing) assumes a
+            // vsyncRate milliseconds for a frame. If now we see that the elapsed
+            // time is way too low (less than half of the approx. expected value),
+            // then we assume that something is wrong with vsync.
+            //
+            // This will not capture everything. Consider a 144 Hz screen with 6.9
+            // ms vsync rate, the half of that is below the default 5 ms timer of
+            // QWindow::requestUpdate(), so this will not trigger even if the
+            // graphics stack does not throttle. But then the whole workaround is
+            // not that important because the animations advance anyway closer to
+            // what's expected (e.g. advancing as if 6-7 ms passed after ca. 5 ms),
+            // the gap is a lot smaller than with the 60 Hz case (animations
+            // advancing as if 16 ms passed after just ca. 5 ms) The workaround
+            // here is present mainly for virtual machines and other broken
+            // environments, most of which will persumably report a 60 Hz screen.
+
+            const float threshold = vsyncRate * 0.5f;
+            const bool badVSync = t < threshold;
+            if (badVSync && !w->badVSync) {
+                // Once we determine something is wrong with the frame rate, set
+                // the flag for the rest of the lifetime of the window. This is
+                // saner and more deterministic than allowing it to be turned on
+                // and off. (a window resize can take up time, leading to higher
+                // elapsed times, thus unnecessarily starting to switch modes,
+                // while some platforms seem to have advanced logic (and adaptive
+                // refresh rates an whatnot) that can eventually start throttling
+                // an unthrottled window, potentially leading to a continuous
+                // switching of modes back and forth which is not desirable.
+                w->badVSync = true;
+                qCDebug(QSG_LOG_INFO, "Window %p is determined to have broken vsync throttling (%f < %f) "
+                                      "switching to system timer to drive gui thread animations to remedy this "
+                                      "(however, render thread animators will likely advance at an incorrect rate).",
+                        w->window, t, threshold);
+                startOrStopAnimationTimer();
+            }
+
+            w->psTimeAccumulator = 0.0f;
+            w->psTimeSampleCount = 0;
+        }
+    }
+
     const bool profileFrames = QSG_LOG_TIME_RENDERLOOP().isDebugEnabled();
     if (profileFrames) {
         timer.start();
-        const qint64 elapsedSinceLastMs = w->timeBetweenPolishAndSyncs.restart();
         qCDebug(QSG_LOG_TIME_RENDERLOOP, "[window %p][gui thread] polishAndSync: start, elapsed since last call: %d ms",
                 window,
                 int(elapsedSinceLastMs));

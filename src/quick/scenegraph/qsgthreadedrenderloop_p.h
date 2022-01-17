@@ -102,8 +102,11 @@ private:
         QSGRenderThread *thread;
         QSurfaceFormat actualWindowFormat;
         QElapsedTimer timeBetweenPolishAndSyncs;
+        float psTimeAccumulator;
+        int psTimeSampleCount;
         uint updateDuringSync : 1;
         uint forceRenderPass : 1;
+        uint badVSync : 1;
     };
 
     friend class QSGRenderThread;

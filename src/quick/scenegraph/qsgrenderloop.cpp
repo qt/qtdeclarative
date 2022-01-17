@@ -136,14 +136,6 @@ void QSGRenderLoop::postJob(QQuickWindow *window, QRunnable *job)
     delete job;
 }
 
-bool QSGRenderLoop::windowWantsVSync(QWindow *window)
-{
-    // if the default backend is used, then this works also for QSG_NO_VSYNC
-    // (-> false), due to QSGDefaultContext::defaultSurfaceFormat()
-
-    return window->requestedFormat().swapInterval() != 0;
-}
-
 #ifdef ENABLE_DEFAULT_BACKEND
 class QSGGuiThreadRenderLoop : public QSGRenderLoop
 {
@@ -519,9 +511,10 @@ bool QSGGuiThreadRenderLoop::ensureRhi(QQuickWindow *window, WindowData &data)
         if (alpha)
             flags |= QRhiSwapChain::SurfaceHasPreMulAlpha;
 
-        // Request NoVSync if swap interval was set to 0. What this means in
-        // practice is another question, but at least we tried.
-        if (!windowWantsVSync(window)) {
+        // Request NoVSync if swap interval was set to 0 (either by the app or
+        // by QSG_NO_VSYNC). What this means in practice is another question,
+        // but at least we tried.
+        if (requestedFormat.swapInterval() == 0) {
             qCDebug(QSG_LOG_INFO, "Swap interval is 0, attempting to disable vsync when presenting.");
             flags |= QRhiSwapChain::NoVSync;
         }
