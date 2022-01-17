@@ -789,7 +789,7 @@ signal for an object type may be defined in an object declaration in a QML
 document with the following syntax:
 
 \code
-    signal <signalName>[([<type> <parameter name>[, ...]])]
+    signal <signalName>[([<parameterName>: <parameterType>[, ...]])]
 \endcode
 
 Attempting to declare two signals or methods with the same name in the same
@@ -805,9 +805,18 @@ import QtQuick 2.0
 Item {
     signal clicked
     signal hovered()
-    signal actionPerformed(string action, var actionResult)
+    signal actionPerformed(action: string, actionResult: int)
 }
 \endqml
+
+You can also specify signal parameters in property style syntax:
+
+\qml
+signal actionCanceled(string action)
+\endqml
+
+In order to be consistent with method declarations, you should prefer the
+type declarations using colons.
 
 If the signal has no parameters, the "()" brackets are optional. If parameters
 are used, the parameter types must be declared, as for the \c string and \c var
@@ -846,7 +855,7 @@ the \c SquareButton.qml file as shown below, with signals \c activated and
 Rectangle {
     id: root
 
-    signal activated(real xPosition, real yPosition)
+    signal activated(xPosition: real, yPosition: real)
     signal deactivated
 
     property int side: 100
@@ -871,6 +880,10 @@ SquareButton {
     onActivated: (xPosition, yPosition)=> console.log("Activated at " + xPosition + "," + yPosition)
 }
 \endqml
+
+Signal handlers don't have to declare their parameter types because the signal
+already specifies them. The arrow function syntax shown above does not support
+type annotations.
 
 See the \l {Signal and Handler Event System} for more details on use of
 signals.
@@ -911,7 +924,7 @@ registering it as a Q_SLOT of the class.  Alternatively, a custom method can
 be added to an object declaration in a QML document with the following syntax:
 
 \code
-    function <functionName>([<parameterName>[, ...]]) { <body> }
+    function <functionName>([<parameterName>[: <parameterType>][, ...]]) [: <returnType>] { <body> }
 \endcode
 
 Methods can be added to a QML type in order to define standalone, reusable
@@ -919,7 +932,8 @@ blocks of JavaScript code.  These methods can be invoked either internally or
 by external objects.
 
 Unlike signals, method parameter types do not have to be declared as they
-default to the \c var type.
+default to the \c var type. You should, however, declare them in order to
+help qmlcachegen generate more performant code, and to improve maintainability.
 
 Attempting to declare two methods or signals with the same name in the same
 type block is an error. However, a new method may reuse the name of an existing
@@ -934,7 +948,7 @@ import QtQuick 2.0
 Rectangle {
     id: rect
 
-    function calculateHeight() {
+    function calculateHeight() : real {
         return rect.width / 2;
     }
 
@@ -962,7 +976,7 @@ Item {
     Text {
         id: label
 
-        function moveTo(newX, newY) {
+        function moveTo(newX: real, newY: real) {
             label.x = newX;
             label.y = newY;
         }
