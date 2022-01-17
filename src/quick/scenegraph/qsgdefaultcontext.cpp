@@ -208,6 +208,7 @@ QSurfaceFormat QSGDefaultContext::defaultSurfaceFormat() const
     static bool useDepth = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
     static bool useStencil = qEnvironmentVariableIsEmpty("QSG_NO_STENCIL_BUFFER");
     static bool enableDebug = qEnvironmentVariableIsSet("QSG_OPENGL_DEBUG");
+    static bool disableVSync = qEnvironmentVariableIsSet("QSG_NO_VSYNC");
     if (useDepth && format.depthBufferSize() == -1)
         format.setDepthBufferSize(24);
     else if (!useDepth)
@@ -221,6 +222,8 @@ QSurfaceFormat QSGDefaultContext::defaultSurfaceFormat() const
     if (QQuickWindow::hasDefaultAlphaBuffer())
         format.setAlphaBufferSize(8);
     format.setSwapBehavior(QSurfaceFormat::DoubleBuffer);
+    if (disableVSync) // swapInterval defaults to 1, it has no -1 special value
+        format.setSwapInterval(0);
     return format;
 }
 

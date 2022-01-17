@@ -184,14 +184,66 @@ testing purposes, the environment variable \c QSG_RENDER_LOOP can be used to
 force the usage of a given loop. To verify which render loop is in use, enable
 the \c qt.scenegraph.general \l {QLoggingCategory}{logging category}.
 
-\note The \c threaded render loop relies on the graphics API
-implementation for throttling, for example, by requesting a swap interval of 1
-in case of OpenGL. Some graphics drivers allow users to override this setting
-and turn it off, ignoring Qt's request. Without blocking in the swap buffers
-operation (or elsewhere), the render loop will run animations too fast and spin
-the CPU at 100%. If a system is known to be unable to provide vsync-based
-throttling, use the \c basic render loop instead by setting \c
-{QSG_RENDER_LOOP=basic} in the environment.
+\section2 Relation to Driving Animations
+
+The \c threaded render loop relies on the graphics API implementation and/or
+the windowing system for throttling, for example, by requesting a swap interval
+of 1 in case of OpenGL, calling Present() with an interval of 0 for Direct 3D,
+or using a presentation made such as \c MAILBOX or \c IMMEDIATE instead of the
+default \c FIFO with Vulkan.
+
+Some graphics drivers allow users to override this setting and turn it off,
+ignoring Qt's request. An example of this would be a system wide control panel
+of the graphics driver that allows overriding the application's settings with
+regards to vsync. It can also happen that a graphics stack is unable to provide
+proper vsync-based throttling, which can be the case in some virtual machines.
+
+Without blocking in the swap/present operation (or some other graphics
+operation), the render loop would advance animations too fast. This is because
+in order to reduce stutter, the \c threaded render loop relies on the
+vsync-based blocking to drive animations. This would be no issue with the \c
+basic render loop, because that always relies on system timers.
+
+Therefore, if a system is known to be unable to provide vsync-based throttling,
+there are two options:
+
+\list
+
+\li Use the \c basic render loop, by setting \c {QSG_RENDER_LOOP=basic} in the
+environment, or
+
+\li set the \c{QSG_NO_VSYNC} environment variable to a non-zero value. By
+explicitly requesting disabling vsync-based blocking, the \c threaded render
+loop will by extension recognize that relying on vsync to drive animations is
+futile, and it will fall back to using system timers.
+
+\endlist
+
+\note Applications that use more than one on-screen Qt Quick window will always
+get the fallback to system timers with the \c threaded render loop, because the
+vsync-based optimization is not compatible with multiple windows by design.
+Therefore, even if there is no vsync provided by the platform, such an
+application would not notice any difference in behavior as long as more than
+one window is visible.
+
+\note Be aware that the rendering loop logic and event processing on the GUI
+(main) thread is not necessarily unthrottled even if waiting for vsync is
+disabled: both render loops schedule updates for windows via
+QWindow::requestUpdate(). This is backed by a 5 ms GUI thread timer on most
+platforms, in order to give time for event processing. On some platforms, e.g.
+macOS, it is using platform-specific APIs (such as, CVDisplayLink) to get
+notified about the appropriate time to prepare a new frame, likely tied to the
+display's vsync in some form. This can be relevant in benchmarking and similar
+situations. For applications and tools attempting to perform low-level
+benchmarking it may be beneficial to set the \c{QT_QPA_UPDATE_IDLE_TIME}
+environment variable to \c 0 in order to potentially reduce idle time on the
+GUI thread. For normal application usage this should not matter in practice,
+however, and the defaults are sufficient in most cases.
+
+\note When in doubt, enable the \c {qt.scenegraph.general} and \c
+{qt.scenegraph.time.renderloop} logging categories for troubleshooting, as
+these may reveal some clues as to why rendering and animations are not running
+at the expected pace.
 
 \section2 Threaded Render Loop ('threaded')
 
@@ -396,7 +448,13 @@ addition to being helpful to Qt contributors.
 
 \li \c {qt.scenegraph.time.renderer} - logs the time spent in the various steps of the renderer
 
-\li \c {qt.scenegraph.time.renderloop} - logs the time spent in the various steps of the render loop
+\li \c {qt.scenegraph.time.renderloop} - logs the time spent in the various
+steps of the render loop. With the \c threaded render loop this gives an
+insight into the time elapsed between the various frame preparation steps both
+on the GUI and the render thread. It can therefore also be a useful
+troubleshooting tool, for example, to confirm how vsync-based throttling and
+other low-level Qt enablers, such as QWindow::requestUpdate(), affect the
+rendering and presentation pipeline.
 
 \li \c {qt.scenegraph.time.glyph} - logs the time spent preparing distance field glyphs
 

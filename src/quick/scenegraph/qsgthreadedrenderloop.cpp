@@ -934,8 +934,10 @@ void QSGRenderThread::ensureRhi()
 
         // Request NoVSync if swap interval was set to 0. What this means in
         // practice is another question, but at least we tried.
-        if (requestedFormat.swapInterval() == 0)
+        if (!QSGRenderLoop::windowWantsVSync(window)) {
+            qCDebug(QSG_LOG_INFO, "Swap interval is 0, attempting to disable vsync when presenting.");
             flags |= QRhiSwapChain::NoVSync;
+        }
 
         cd->swapchain = rhi->newSwapChain();
         static bool depthBufferEnabled = qEnvironmentVariableIsEmpty("QSG_NO_DEPTH_BUFFER");
@@ -1091,12 +1093,15 @@ void QSGThreadedRenderLoop::animationStopped()
 void QSGThreadedRenderLoop::startOrStopAnimationTimer()
 {
     int exposedWindows = 0;
+    int unthrottledWindows = 0;
     const Window *theOne = nullptr;
     for (int i=0; i<m_windows.size(); ++i) {
         const Window &w = m_windows.at(i);
         if (w.window->isVisible() && w.window->isExposed()) {
             ++exposedWindows;
             theOne = &w;
+            if (!windowWantsVSync(w.window))
+                ++unthrottledWindows;
         }
     }
 
@@ -1112,16 +1117,23 @@ void QSGThreadedRenderLoop::startOrStopAnimationTimer()
     // same path as the no-windows case since polishAndSync() is now called
     // potentially for multiple windows over time so it cannot take care of
     // advancing the animation driver anymore.
+    //
+    // On top, another case: a window with vsync disabled should disable all the
+    // good stuff and go with the system timer.
 
-    if (m_animation_timer != 0 && (exposedWindows == 1 || !m_animation_driver->isRunning())) {
-        qCDebug(QSG_LOG_RENDERLOOP, "*** Stopping non-render thread animation timer");
+    const bool canUseVSyncBasedAnimation = exposedWindows == 1 && unthrottledWindows == 0;
+
+    if (m_animation_timer != 0 && (canUseVSyncBasedAnimation || !m_animation_driver->isRunning())) {
+        qCDebug(QSG_LOG_RENDERLOOP, "*** Stopping non-render thread animation timer (exposedWindows=%d unthrottledWindows=%d)",
+                exposedWindows, unthrottledWindows);
         killTimer(m_animation_timer);
         m_animation_timer = 0;
         // If animations are running, make sure we keep on animating
         if (m_animation_driver->isRunning())
             postUpdateRequest(const_cast<Window *>(theOne));
-    } else if (m_animation_timer == 0 && exposedWindows != 1 && m_animation_driver->isRunning()) {
-        qCDebug(QSG_LOG_RENDERLOOP, "*** Starting non-render thread animation timer");
+    } else if (m_animation_timer == 0 && !canUseVSyncBasedAnimation && m_animation_driver->isRunning()) {
+        qCDebug(QSG_LOG_RENDERLOOP, "*** Starting non-render thread animation timer (exposedWindows=%d unthrottledWindows=%d)",
+                exposedWindows, unthrottledWindows);
         m_animation_timer = startTimer(qsgrl_animation_interval());
     }
 }
