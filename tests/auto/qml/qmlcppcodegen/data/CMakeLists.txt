@@ -91,6 +91,7 @@ set(qml_files
     ownProperty.qml
     page.qml
     parentProp.qml
+    popContextAfterRet.qml
     pressAndHoldButton.qml
     registerelimination.qml
     scopeVsObject.qml

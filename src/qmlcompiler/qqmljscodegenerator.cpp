@@ -2188,7 +2188,33 @@ void QQmlJSCodeGenerator::generate_GetTemplateObject(int index)
     BYTECODE_UNIMPLEMENTED();
 }
 
-QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(QV4::Moth::Instr::Type)
+static bool instructionManipulatesContext(QV4::Moth::Instr::Type type)
+{
+    using Type = QV4::Moth::Instr::Type;
+    switch (type) {
+    case Type::PopContext:
+    case Type::PopScriptContext:
+    case Type::CreateCallContext:
+    case Type::CreateCallContext_Wide:
+    case Type::PushCatchContext:
+    case Type::PushCatchContext_Wide:
+    case Type::PushWithContext:
+    case Type::PushWithContext_Wide:
+    case Type::PushBlockContext:
+    case Type::PushBlockContext_Wide:
+    case Type::CloneBlockContext:
+    case Type::CloneBlockContext_Wide:
+    case Type::PushScriptContext:
+    case Type::PushScriptContext_Wide:
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
+QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(
+        QV4::Moth::Instr::Type type)
 {
     m_state.State::operator=(nextStateFromAnnotations(m_state, *m_annotations));
     m_state.accumulatorVariableIn = m_registerVariables.value(Accumulator)
@@ -2202,7 +2228,7 @@ QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(QV4::M
         m_body.setLabel(*labelIt);
         m_body += *labelIt + u":;\n"_qs;
         m_skipUntilNextLabel = false;
-    } else if (m_skipUntilNextLabel) {
+    } else if (m_skipUntilNextLabel && !instructionManipulatesContext(type)) {
         return SkipInstruction;
     }
 
