@@ -1,9 +1,0 @@
-<RCC>
-    <qresource prefix="qt-project.org/QmlRuntime">
-        <file>conf/default.qml</file>
-        <file>conf/resizeToItem.qml</file>
-        <file>conf/content/resizeItemToWindow.qml</file>
-        <file>conf/content/resizeWindowToItem.qml</file>
-        <file>resources/qml-64.png</file>
-    </qresource>
-</RCC>
