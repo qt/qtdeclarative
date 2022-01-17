@@ -136,7 +136,7 @@ property is only invoked when the property is reassigned to a different object v
 */
 
 /*!
-    \qmlbasictype int
+    \qmlvaluetype int
     \ingroup qmlvaluetypes
     \brief a whole number, e.g. 0, 10, or -20.
 
@@ -157,7 +157,7 @@ property is only invoked when the property is reassigned to a different object v
 */
 
 /*!
-    \qmlbasictype bool
+    \qmlvaluetype bool
     \ingroup qmlvaluetypes
     \brief a binary true/false value.
 
@@ -177,7 +177,7 @@ property is only invoked when the property is reassigned to a different object v
 */
 
 /*!
-    \qmlbasictype real
+    \qmlvaluetype real
     \ingroup qmlvaluetypes
 
     \brief a number with a decimal point.
@@ -199,7 +199,7 @@ property is only invoked when the property is reassigned to a different object v
 */
 
 /*!
-    \qmlbasictype double
+    \qmlvaluetype double
     \ingroup qmlvaluetypes
 
     \brief a number with a decimal point, stored in double precision.
@@ -220,7 +220,7 @@ property is only invoked when the property is reassigned to a different object v
 */
 
 /*!
-    \qmlbasictype string
+    \qmlvaluetype string
     \ingroup qmlvaluetypes
     \brief a free form text string.
 
@@ -247,7 +247,7 @@ property is only invoked when the property is reassigned to a different object v
 */
 
 /*!
-    \qmlbasictype url
+    \qmlvaluetype url
     \ingroup qmlvaluetypes
     \brief a resource locator.
 
@@ -303,7 +303,7 @@ property is only invoked when the property is reassigned to a different object v
 
 
 /*!
-    \qmlbasictype list
+    \qmlvaluetype list
     \ingroup qmlvaluetypes
     \brief a list of QML objects.
 
@@ -385,7 +385,7 @@ property is only invoked when the property is reassigned to a different object v
 */
 
  /*!
-    \qmlbasictype var
+    \qmlvaluetype var
     \ingroup qmlvaluetypes
     \brief a generic property type.
 
@@ -485,7 +485,7 @@ property is only invoked when the property is reassigned to a different object v
 */
 
 /*!
-    \qmlbasictype enumeration
+    \qmlvaluetype enumeration
     \ingroup qmlvaluetypes
     \brief a named enumeration value.
 

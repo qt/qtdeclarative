@@ -80,7 +80,7 @@ available when you import \c QtQuick.
 */
 
 /*!
-    \qmlbasictype color
+    \qmlvaluetype color
     \ingroup qtquickvaluetypes
     \brief an ARGB color value.
     \target colorvaluetypedocs
@@ -140,7 +140,7 @@ available when you import \c QtQuick.
 */
 
 /*!
-    \qmlbasictype font
+    \qmlvaluetype font
     \ingroup qtquickvaluetypes
     \brief a font value with the properties of QFont.
     \target fontvaluetypedocs
@@ -256,7 +256,7 @@ available when you import \c QtQuick.
 */
 
 /*!
-    \qmlbasictype vector2d
+    \qmlvaluetype vector2d
     \ingroup qtquickvaluetypes
 
     \brief A vector2d type has x and y attributes.
@@ -384,7 +384,7 @@ console.log(c + " " + d); // false true
 */
 
 /*!
-    \qmlbasictype vector3d
+    \qmlvaluetype vector3d
     \ingroup qtquickvaluetypes
     \brief a value with x, y, and z attributes.
 
@@ -555,7 +555,7 @@ console.log(c + " " + d); // false true
 */
 
 /*!
-    \qmlbasictype vector4d
+    \qmlvaluetype vector4d
     \ingroup qtquickvaluetypes
 
     \brief A vector4d type has x, y, z and w attributes.
@@ -696,7 +696,7 @@ console.log(c + " " + d); // false true
 */
 
 /*!
-    \qmlbasictype quaternion
+    \qmlvaluetype quaternion
     \ingroup qtquickvaluetypes
 
     \brief A quaternion type has scalar, x, y, and z attributes.
@@ -856,7 +856,7 @@ console.log(c + " " + d); // false true
 */
 
 /*!
-    \qmlbasictype matrix4x4
+    \qmlvaluetype matrix4x4
     \ingroup qtquickvaluetypes
 
     \brief A matrix4x4 type is a 4-row and 4-column matrix
