@@ -93,6 +93,7 @@ private slots:
     void expandAndCollapseRoot();
     void toggleExpanded();
     void expandAndCollapseChildren();
+    void expandChildPendingToBeVisible();
     void requiredPropertiesRoot();
     void requiredPropertiesChildren();
     void emptyModel();
@@ -356,6 +357,30 @@ void tst_qquicktreeview::insertRows()
     treeView->expand(2);
     WAIT_UNTIL_POLISHED;
 
+    QCOMPARE(treeView->rows(), 9);
+}
+
+void tst_qquicktreeview::expandChildPendingToBeVisible()
+{
+    // Check that if we expand a row r1, and that row has a child r2 that can
+    // be expanded, we can continue to expand c2 immediately, even if r1 is
+    // still pending to be shown as expanded in the view.
+    LOAD_TREEVIEW("normaltreeview.qml");
+    treeView->expand(0);
+    QVERIFY(treeView->isExpanded(0));
+    // The view has not yet been updated at this point to show
+    // the newly expanded children, so it still has only one row.
+    QCOMPARE(treeView->rows(), 1);
+    // ...but we still expand row 5, which is a child that has children
+    // in the proxy model
+    treeView->expand(4);
+    QVERIFY(treeView->isExpanded(4));
+    QCOMPARE(treeView->rows(), 1);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Now the view have updated to show
+    // all the rows that has been expanded.
     QCOMPARE(treeView->rows(), 9);
 }
 
