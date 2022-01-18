@@ -1674,6 +1674,9 @@ void tst_QQuickMenu::disableWhenTriggered_data()
 // Tests that the menu is dismissed when a menu item sets "enabled = false" in onTriggered().
 void tst_QQuickMenu::disableWhenTriggered()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("Crashes on Android (QTBUG-100256)");
+#endif
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Mouse hovering not functional on offscreen/minimal platforms");
