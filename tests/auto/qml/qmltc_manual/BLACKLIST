@@ -1,0 +1,17 @@
+# QTBUG-100018
+[cppBinding]
+android
+[signalHandlers]
+android
+[jsFunctions]
+android
+[changingBindings]
+android
+[propertyAlias]
+android
+[propertyChangeHandler]
+android
+[localImport]
+android
+[neighbors]
+android

@@ -1,5 +1,6 @@
 [popup]
 macos # Can't control cursor (QTBUG-76312)
+android # QTBUG-100256
 
 # QTBUG-87018
 [subMenuDisabledMouse]
@@ -12,3 +13,16 @@ macos
 # QTBUG-98491
 [subMenuPosition]
 macos
+android # QTBUG-100256
+
+# QTBUG-100256
+[mouse]
+android
+[contextMenuKeyboard]
+android
+[menuSeparator]
+android
+[subMenuMouse]
+android
+[scrollable]
+android
