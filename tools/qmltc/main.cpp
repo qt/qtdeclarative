@@ -39,9 +39,7 @@
 #include <QtCore/qhashfunctions.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qlibraryinfo.h>
-#if QT_CONFIG(commandlineparser)
-#    include <QtCore/qcommandlineparser.h>
-#endif
+#include <QtCore/qcommandlineparser.h>
 
 #include <cstdlib> // EXIT_SUCCESS, EXIT_FAILURE
 
@@ -60,7 +58,6 @@ int main(int argc, char **argv)
     QCoreApplication::setApplicationName(u"qmltc"_qs);
     QCoreApplication::setApplicationVersion(QStringLiteral(QT_VERSION_STR));
 
-#if QT_CONFIG(commandlineparser)
     // command-line parsing:
     QCommandLineParser parser;
     parser.addHelpOption();
@@ -190,13 +187,4 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
-#else
-    // we need the parser at least for --resource-path option (and maybe for
-    // something else in the future), so just fail here if QCommandLine parser
-    // is unavailable
-    fprintf(stderr,
-            "qmltc requires commandlineparser feature enabled. Rebuild Qt with that feature "
-            "present if you want to use this tool\n");
-    return EXIT_FAILURE;
-#endif
 }

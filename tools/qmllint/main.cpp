@@ -61,7 +61,6 @@ int main(int argv, char *argc[])
     QCoreApplication app(argv, argc);
     QCoreApplication::setApplicationName("qmllint");
     QCoreApplication::setApplicationVersion(QT_VERSION_STR);
-#if QT_CONFIG(commandlineparser)
     QCommandLineParser parser;
     QQmlToolingSettings settings(QLatin1String("qmllint"));
     parser.setApplicationDescription(QLatin1String(R"(QML syntax verifier and analyzer
@@ -224,23 +223,11 @@ All warnings can be set to three levels:
             parser.isSet(resourceOption) ? parser.values(resourceOption) : QStringList {};
     QStringList resourceFiles = defaultResourceFiles;
 
-#else
-    bool silent = false;
-    bool useAbsolutePaths = false;
-    bool useJson = false;
-    bool warnUnqualified = true;
-    bool warnWithStatement = true;
-    bool warnInheritanceCycle = true;
-    QStringList qmlImportPaths {};
-    QStringList qmltypesFiles {};
-    QStringList resourceFiles {};
-#endif
     bool success = true;
     QQmlLinter linter(qmlImportPaths, useAbsolutePath);
 
     QJsonArray jsonFiles;
 
-#if QT_CONFIG(commandlineparser)
     for (const QString &filename : positionalArguments) {
         if (!parser.isSet(ignoreSettings)) {
             settings.search(filename);
@@ -277,10 +264,7 @@ All warnings can be set to three levels:
 
             addAbsolutePaths(qmlImportPaths, settings.value(qmlImportPathsSetting).toStringList());
         }
-#else
-    const auto arguments = app.arguments();
-    for (const QString &filename : arguments) {
-#endif
+
         success &= linter.lintFile(filename, nullptr, silent, useJson ? &jsonFiles : nullptr,
                                    qmlImportPaths, qmldirFiles, resourceFiles, options);
     }
