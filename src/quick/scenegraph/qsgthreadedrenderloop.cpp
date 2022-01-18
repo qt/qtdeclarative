@@ -119,15 +119,6 @@ QT_BEGIN_NAMESPACE
 
 #define QSG_RT_PAD "                    (RT) %s"
 
-static inline int qsgrl_animation_interval() {
-    qreal refreshRate = QGuiApplication::primaryScreen()->refreshRate();
-    // To work around that some platforms wrongfully return 0 or something
-    // bogus for refreshrate
-    if (refreshRate < 1)
-        return 16;
-    return int(1000 / refreshRate);
-}
-
 extern Q_GUI_EXPORT QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include_alpha);
 
 // RL: Render Loop
@@ -1127,7 +1118,7 @@ void QSGThreadedRenderLoop::startOrStopAnimationTimer()
     } else if (m_animation_timer == 0 && !canUseVSyncBasedAnimation && m_animation_driver->isRunning()) {
         qCDebug(QSG_LOG_RENDERLOOP, "*** Starting non-render thread animation timer (exposedWindows=%d unthrottledWindows=%d)",
                 exposedWindows, unthrottledWindows);
-        m_animation_timer = startTimer(qsgrl_animation_interval());
+        m_animation_timer = startTimer(int(sg->vsyncIntervalForAnimationDriver(m_animation_driver)));
     }
 }
 

@@ -135,6 +135,7 @@ public:
     virtual QSGSpriteNode *createSpriteNode() = 0;
 #endif
     virtual QAnimationDriver *createAnimationDriver(QObject *parent);
+    virtual float vsyncIntervalForAnimationDriver(QAnimationDriver *driver);
 
     virtual QSize minimumFBOSize() const;
     virtual QSurfaceFormat defaultSurfaceFormat() const = 0;

@@ -128,8 +128,17 @@ public:
         , m_good(0)
     {
         QScreen *screen = QGuiApplication::primaryScreen();
+        if (screen) {
+            qreal refreshRate = screen->refreshRate();
+            // To work around that some platforms wrongfully return 0 or something
+            // bogus for the refresh rate.
+            if (refreshRate < 1)
+                refreshRate = 60;
+            m_vsync = 1000.0f / float(refreshRate);
+        } else {
+            m_vsync = 16.67f;
+        }
         if (screen && !qsg_useConsistentTiming()) {
-            m_vsync = 1000.0 / screen->refreshRate();
             if (m_vsync <= 0)
                 m_mode = TimerMode;
         } else {
@@ -180,7 +189,7 @@ public:
 
             m_time += m_vsync;
 
-            if (delta > m_vsync * 1.25) {
+            if (delta > m_vsync * 1.25f) {
                 m_lag += (delta / m_vsync);
                 m_bad++;
                // We tolerate one bad frame without resorting to timer based. This is
@@ -197,7 +206,7 @@ public:
             }
 
         } else {
-            if (delta < 1.25 * m_vsync) {
+            if (delta < 1.25f * m_vsync) {
                 ++m_good;
             } else {
                 m_good = 0;
@@ -218,12 +227,14 @@ public:
         advanceAnimation();
     }
 
+    float vsyncInterval() const { return m_vsync; } // this should always return something sane, regardless of m_mode
+
     double m_time;
-    double m_vsync;
+    float m_vsync;
     Mode m_mode;
     QElapsedTimer m_timer;
     QElapsedTimer m_wallTime;
-    double m_lag;
+    float m_lag;
     int m_bad;
     int m_good;
 };
@@ -295,6 +306,15 @@ QSGShaderEffectNode *QSGContext::createShaderEffectNode(QSGRenderContext *)
 QAnimationDriver *QSGContext::createAnimationDriver(QObject *parent)
 {
     return new QSGAnimationDriver(parent);
+}
+
+/*!
+    \return the vsync rate (such as, 16.68 ms or similar), if applicable, for
+    the \a driver that was created by createAnimationDriver().
+ */
+float QSGContext::vsyncIntervalForAnimationDriver(QAnimationDriver *driver)
+{
+    return static_cast<QSGAnimationDriver *>(driver)->vsyncInterval();
 }
 
 QSize QSGContext::minimumFBOSize() const
