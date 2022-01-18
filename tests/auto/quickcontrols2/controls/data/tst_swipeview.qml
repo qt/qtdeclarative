@@ -623,4 +623,67 @@ TestCase {
         compare(control.rectanglePressCount, 1)
         compare(control.rectangleReleaseCount, 1)
     }
+
+    // We have a particular customer who came up with this hack to make SwipeView wrap around at the end.
+    // It's not advisible, and perhaps the test can be removed when we add a bool wrap property.
+    Component {
+        id: pathViewWorkaroundComponent
+
+        SwipeView {
+            id: swipeView
+            anchors.left: parent.left
+            width: 100
+            height: 100
+            clip: true
+            Repeater {
+                id: repeater
+                objectName: "peter"
+                delegate: Rectangle {
+                    id: rect
+                    color: "#ffff00"
+                    border.color: "black"
+                    width: 100
+                    height: 100
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        font.pixelSize: 24
+                        text: model.index
+                    }
+                }
+            }
+            contentItem: PathView {
+                id: pathview
+
+                preferredHighlightBegin: 0.5
+                preferredHighlightEnd: 0.5
+                model: swipeView.contentModel
+
+                path: Path {
+                    id: path
+                    startX: (swipeView.width / 2 * -1) * (swipeView.count - 1)
+                    startY: swipeView.height / 2
+                    PathLine {
+                        relativeX: swipeView.width * swipeView.count
+                        relativeY: 0
+                    }
+                }
+            }
+        }
+    }
+
+    function test_child_pathview() {
+        const control = createTemporaryObject(pathViewWorkaroundComponent, testCase)
+        verify(control)
+        const repeater = control.children[0].children[0]
+        const spy = signalSpy.createObject(repeater, {target: repeater, signalName: "itemAdded"})
+        repeater.model = 1
+        tryCompare(spy, "count", 1)
+        const rect = repeater.itemAt(0)
+        tryCompare(rect, "visible", true)
+        if (Qt.platform.pluginName === "offscreen")
+            skip("grabImage() is not functional on the offscreen platform (QTBUG-63185)")
+        var image = grabImage(control)
+        compare(image.pixel(3, 3), "#ffff00")
+    }
 }
