@@ -290,7 +290,6 @@ public:
         // The SDP 6.6.0 x86 MESA driver requires a larger stack than the default.
         setStackSize(1024 * 1024);
 #endif
-        vsyncDelta = qsgrl_animation_interval();
     }
 
     ~QSGRenderThread()
@@ -348,8 +347,6 @@ public:
     bool syncResultedInChanges;
 
     volatile bool active;
-
-    float vsyncDelta;
 
     QMutex mutex;
     QWaitCondition waitCondition;
@@ -1019,10 +1016,6 @@ QSGThreadedRenderLoop::QSGThreadedRenderLoop()
     : sg(QSGContext::createDefaultContext())
     , m_animation_timer(0)
 {
-#if defined(QSG_RENDER_LOOP_DEBUG)
-    qsgrl_timer.start();
-#endif
-
     m_animation_driver = sg->createAnimationDriver(this);
 
     connect(m_animation_driver, SIGNAL(started()), this, SLOT(animationStarted()));
