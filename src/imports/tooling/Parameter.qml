@@ -43,4 +43,5 @@ QtObject {
     property string name
     property string type
     property bool isPointer: false
+    property bool isList: false
 }
