@@ -81,6 +81,9 @@ int main(int argc, char *argv[])
         QLatin1String("Imagine"), QLatin1String("Material"), QLatin1String("Universal") };
 #if defined(Q_OS_MACOS)
     builtInStyles << QLatin1String("macOS");
+    builtInStyles << QLatin1String("iOS");
+#elif defined(Q_OS_IOS)
+    builtInStyles << QLatin1String("iOS");
 #elif defined(Q_OS_WINDOWS)
     builtInStyles << QLatin1String("Windows");
 #endif

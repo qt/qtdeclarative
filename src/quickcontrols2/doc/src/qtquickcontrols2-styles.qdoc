@@ -58,6 +58,12 @@
     The \l {macOS Style} is a native-looking style for macOS.
     \note this style is only available for applications running on macOS.
 
+
+    \section2 iOS Style
+
+    The \l {iOS Style} is a native-looking style for iOS based on image assets.
+    \note this style is only available for applications running on iOS.
+
     \section2 Material Style
 
     \image qtquickcontrols2-material-thumbnail.png
