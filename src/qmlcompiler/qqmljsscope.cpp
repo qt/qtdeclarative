@@ -686,12 +686,25 @@ QQmlJSScope QDeferredFactory<QQmlJSScope>::create() const
 {
     QQmlJSTypeReader typeReader(m_importer, m_filePath);
     QQmlJSScope::Ptr result = typeReader();
-    m_importer->m_warnings.append(typeReader.errors());
+    m_importer->m_globalWarnings.append(typeReader.errors());
     result->setInternalName(internalName());
     QQmlJSScope::resolveEnums(result, m_importer->builtinInternalNames().value(u"int"_qs).scope);
 
-    if (m_isSingleton)
+    if (m_isSingleton && !result->isSingleton()) {
+        m_importer->m_globalWarnings.append(
+                { QStringLiteral(
+                          "Type %1 declared as singleton in qmldir but missing pragma Singleton")
+                          .arg(result->internalName()),
+                  QtCriticalMsg, QQmlJS::SourceLocation() });
         result->setIsSingleton(true);
+    } else if (!m_isSingleton && result->isSingleton()) {
+        m_importer->m_globalWarnings.append(
+                { QStringLiteral("Type %1 not declared as singleton in qmldir "
+                                 "but using pragma Singleton")
+                          .arg(result->internalName()),
+                  QtCriticalMsg, QQmlJS::SourceLocation() });
+        result->setIsSingleton(false);
+    }
 
     return std::move(*result);
 }

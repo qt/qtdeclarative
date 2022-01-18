@@ -1141,8 +1141,10 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
     Q_ASSERT(!superType.isEmpty());
     if (superType.front().isUpper()) {
         enterEnvironment(QQmlJSScope::QMLScope, superType, definition->firstSourceLocation());
-        if (!m_exportedRootScope)
+        if (!m_exportedRootScope) {
             m_exportedRootScope = m_currentScope;
+            m_exportedRootScope->setIsSingleton(m_rootIsSingleton);
+        }
 
         const QTypeRevision revision = QQmlJSScope::resolveTypes(
                     m_currentScope, m_rootScopeImports, &m_usedTypes);
@@ -1806,6 +1808,9 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
     // warnings unless the user has explicitly set the level.
     if (pragma->name == u"Strict"_qs && !m_logger->wasCategoryChanged(Log_Compiler))
         m_logger->setCategoryLevel(Log_Compiler, QtWarningMsg);
+
+    if (pragma->name == u"Singleton")
+        m_rootIsSingleton = true;
 
     return true;
 }

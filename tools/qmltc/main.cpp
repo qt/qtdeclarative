@@ -198,6 +198,17 @@ int main(int argc, char **argv)
     CodeGenerator generator(url, &logger, &document, &typeResolver);
     generator.generate(options);
 
+#    if 0 // TODO: Currently disabled due to QTBUG-100103, remove this #if guard once the issue has
+          // been addressed
+    QList<QQmlJS::DiagnosticMessage> warnings = importer.takeGlobalWarnings();
+
+    if (!warnings.isEmpty()) {
+        logger.logWarning(QStringLiteral("Type warnings occurred while compiling file:"),
+                          Log_Import);
+        logger.processMessages(warnings, QtWarningMsg, Log_Import);
+    }
+#    endif
+
     if (logger.hasWarnings() || logger.hasErrors())
         return EXIT_FAILURE;
 

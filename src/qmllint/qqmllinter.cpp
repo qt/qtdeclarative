@@ -337,6 +337,15 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
             qCompileQmlFile(filename, saveFunction, &codegen, &error, true, &interface,
                             fileContents);
 
+            QList<QQmlJS::DiagnosticMessage> warnings = m_importer.takeGlobalWarnings();
+
+            if (!warnings.isEmpty()) {
+                m_logger->logWarning(
+                        QStringLiteral("Type warnings occurred while evaluating file:"),
+                        Log_Import);
+                m_logger->processMessages(warnings, QtWarningMsg, Log_Import);
+            }
+
             success &= !m_logger->hasWarnings() && !m_logger->hasErrors();
 
             processMessages();

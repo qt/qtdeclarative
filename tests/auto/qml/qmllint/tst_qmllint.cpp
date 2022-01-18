@@ -842,6 +842,17 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Component is missing required property requiredAlias from "
                               "RequiredWithRootLevelAlias")
             << QString() << QString() << false;
+    QTest::newRow("missingSingletonPragma")
+            << QStringLiteral("missingSingletonPragma.qml")
+            << QStringLiteral("Type MissingPragma declared as singleton in qmldir but missing "
+                              "pragma Singleton")
+            << QString() << QString() << false;
+    QTest::newRow("missingSingletonQmldir")
+            << QStringLiteral("missingSingletonQmldir.qml")
+            << QStringLiteral(
+                       "Type MissingQmldirSingleton not declared as singleton in qmldir but using "
+                       "pragma Singleton")
+            << QString() << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()

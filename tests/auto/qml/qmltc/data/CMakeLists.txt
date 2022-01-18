@@ -72,7 +72,7 @@ set(qml_sources
     LocallyImported.qml
     LocalWithOnCompleted.qml
     LocallyImported_context.qml
-    SingletonThing.qml
+#    SingletonThing.qml
 )
 
 set(js_sources
@@ -89,6 +89,9 @@ set(common_libraries
 
 set_source_files_properties(NameConflict.qml PROPERTIES
     QT_QMLTC_FILE_BASENAME ResolvedNameConflict)
+
+# set_source_files_properties(SingletonThing.qml PROPERTIES
+#    QT_QML_SINGLETON_TYPE true)
 
 qt_add_library(qmltc_test_module STATIC)
 qt_autogen_tools_initial_setup(qmltc_test_module)

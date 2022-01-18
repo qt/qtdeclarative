@@ -293,6 +293,14 @@ int main(int argc, char **argv)
                 error.augment(QStringLiteral("Error compiling qml file: ")).print();
                 return EXIT_FAILURE;
             }
+
+            QList<QQmlJS::DiagnosticMessage> warnings = importer.takeGlobalWarnings();
+
+            if (!warnings.isEmpty()) {
+                logger.logWarning(QStringLiteral("Type warnings occurred while compiling file:"),
+                                  Log_Import);
+                logger.processMessages(warnings, QtWarningMsg, Log_Import);
+            }
         }
     } else if (inputFile.endsWith(QLatin1String(".js")) || inputFile.endsWith(QLatin1String(".mjs"))) {
         QQmlJSCompileError error;

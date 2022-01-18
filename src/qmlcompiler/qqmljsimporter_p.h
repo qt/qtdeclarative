@@ -81,6 +81,13 @@ public:
         return result;
     }
 
+    QList<QQmlJS::DiagnosticMessage> takeGlobalWarnings()
+    {
+        const auto result = std::move(m_globalWarnings);
+        m_globalWarnings.clear();
+        return result;
+    }
+
     QStringList importPaths() const { return m_importPaths; }
     void setImportPaths(const QStringList &importPaths);
 
@@ -142,6 +149,7 @@ private:
     QHash<QString, Import> m_seenQmldirFiles;
 
     QHash<QString, QQmlJSScope::Ptr> m_importedFiles;
+    QList<QQmlJS::DiagnosticMessage> m_globalWarnings;
     QList<QQmlJS::DiagnosticMessage> m_warnings;
     AvailableTypes m_builtins;
     QQmlJSResourceFileMapper *m_mapper = nullptr;

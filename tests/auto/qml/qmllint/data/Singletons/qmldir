@@ -1,0 +1,3 @@
+module Singletons
+singleton MissingPragma 1.0 MissingPragma.qml
+MissingQmldirSingleton 1.0 MissingQmldirSingleton.qml

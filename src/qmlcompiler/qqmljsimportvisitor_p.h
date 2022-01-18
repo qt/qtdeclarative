@@ -153,6 +153,7 @@ protected:
     QString m_implicitImportDirectory;
     QStringView m_inlineComponentName;
     bool m_nextIsInlineComponent = false;
+    bool m_rootIsSingleton = false;
     QStringList m_qmldirFiles;
     QQmlJSScope::Ptr m_currentScope;
     QQmlJSScope::Ptr m_savedBindingOuterScope;
