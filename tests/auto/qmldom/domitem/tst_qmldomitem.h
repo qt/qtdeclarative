@@ -425,6 +425,9 @@ private slots:
     }
     void testLoadDep()
     {
+#ifdef Q_OS_ANDROID
+        QSKIP("Test uncompatible with Android (QTBUG-100171)");
+#endif
         QString baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/domitem");
         QStringList qmltypeDirs =
                 QStringList({ baseDir, QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });

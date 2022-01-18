@@ -1,0 +1,7 @@
+# QTBUG-100164
+[verifyCorrectNumberOfMissingTranslations]
+android
+[getElideWarnings]
+android
+[getElideWarningsWhenStateChanged]
+android
