@@ -114,7 +114,7 @@ void tst_QPauseAnimationJob::changeDirectionWhileRunning()
     QTest::qWait(100);
     QCOMPARE(animation.state(), QAbstractAnimationJob::Running);
     animation.setDirection(QAbstractAnimationJob::Backward);
-    QTest::qWait(animation.totalDuration() + 50);
+    QTest::qWait(animation.totalDuration() + 100);
     QCOMPARE(animation.state(), QAbstractAnimationJob::Stopped);
 }
 
@@ -142,7 +142,7 @@ void tst_QPauseAnimationJob::noTimerUpdates()
     animation.start();
     QTest::qWait(animation.totalDuration() + 100);
 
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
     if (animation.state() != QAbstractAnimationJob::Stopped)
         QEXPECT_FAIL("", timerError, Abort);
 #endif
@@ -171,7 +171,7 @@ void tst_QPauseAnimationJob::multiplePauseAnimations()
     animation2.start();
     QTest::qWait(animation.totalDuration() + 100);
 
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN) || defined(Q_OS_MACOS)
     if (animation.state() != QAbstractAnimationJob::Stopped)
         QEXPECT_FAIL("", timerError, Abort);
 #endif
