@@ -168,6 +168,9 @@ function(qt_internal_add_qml_module target)
                     ${ARGN}
             )
             qt_internal_add_module(${target} ${module_args})
+        elseif(arg_SOURCES)
+            # If a module target was pre-created, we still need to pass the additional sources.
+            target_sources(${target} PRIVATE ${arg_SOURCES})
         endif()
     else()
         # Since we are not creating a separate backing target, we have to pass
