@@ -313,7 +313,6 @@ void QQuickSwipeView::geometryChange(const QRectF &newGeometry, const QRectF &ol
 void QQuickSwipeView::itemAdded(int index, QQuickItem *item)
 {
     Q_D(QQuickSwipeView);
-    QQuickItemPrivate::get(item)->setCulled(true); // QTBUG-51078, QTBUG-51669
     if (isComponentComplete())
         item->setSize(QSizeF(d->contentItem->width(), d->contentItem->height()));
     QQuickSwipeViewAttached *attached = qobject_cast<QQuickSwipeViewAttached *>(qmlAttachedPropertiesObject<QQuickSwipeView>(item));
