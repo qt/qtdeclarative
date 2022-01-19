@@ -52,10 +52,12 @@
 //       test sources license. This is intentional to comply with default
 //       snippet license.
 
-#include <QtGui/qguiapplication.h>
-#include <QtCore/qtimer.h>
 #include <QtTest/qtest.h>
+#include <QtCore/qstring.h>
+#include <QtCore/qtimer.h>
+#include <QtGui/qguiapplication.h>
 #include <QtQuick/qquickwindow.h>
+
 //! [qqmlcomponent-include]
 #include <QtQml/qqmlcomponent.h>
 //! [qqmlcomponent-include]
@@ -63,6 +65,8 @@
 //! [qmltc-include]
 #include "myapp.h" // include generated C++ header
 //! [qmltc-include]
+
+#include <algorithm>
 
 class tst_qmltc_examples : public QObject
 {
@@ -77,6 +81,8 @@ public:
 private slots:
     void app();
     void appComponent();
+
+    void helloWorld();
 };
 
 #define CREATE_DUMMY_ARGC_ARGV() \
@@ -145,6 +151,66 @@ void tst_qmltc_examples::appComponent()
 
     window.show();
     app.exec();
+}
+
+#if !defined(QMLTC_TESTS_SOURCE_DIR) || !defined(QMLTC_TESTS_BINARY_DIR)
+#    error "Tests assume that QMLTC_TESTS_{SOURCE,BINARY}_DIR are specified (through CMake)"
+#endif
+
+// Note: QtTest macros need to be in void-returning function, so use output arg.
+template<typename Predicate>
+void readFileContent(QStringList *content, const QString &url, Predicate filter)
+{
+    QVERIFY(content);
+
+    QFile file(url);
+    QVERIFY(file.exists());
+    QVERIFY(file.open(QIODeviceBase::ReadOnly | QIODeviceBase::Text));
+
+    QTextStream stream(&file);
+    while (!stream.atEnd()) {
+        QString line = stream.readLine();
+        if (filter(line))
+            content->append(std::move(line));
+    }
+}
+
+void tst_qmltc_examples::helloWorld()
+{
+    QStringList generatedCode;
+    readFileContent(&generatedCode,
+                    QStringLiteral(QMLTC_TESTS_BINARY_DIR)
+                            + u"/.qmltc/tst_qmltc_examples/helloworld.h",
+                    [](const QString &) { return true; });
+    if (QTest::currentTestFailed())
+        QFAIL("Reading _generated_ C++ content for special/HelloWorld.qml failed");
+
+    QStringList documentationCode;
+    const auto filterDocumentationLines = [encounteredStart = false](QStringView line) mutable {
+        if (line.startsWith(u"// MAGIC_QMLTC_TEST_DELIMITER_LINE")) {
+            encounteredStart = true;
+            return false; // we don't need this specific line
+        }
+        if (!encounteredStart)
+            return false;
+        line = line.trimmed();
+        return !line.isEmpty() && !line.startsWith(u"//");
+    };
+    readFileContent(&documentationCode,
+                    QStringLiteral(QMLTC_TESTS_SOURCE_DIR) + u"/special/HelloWorld.qml.cpp",
+                    filterDocumentationLines);
+    if (QTest::currentTestFailed())
+        QFAIL("Reading special/HelloWorld.qml.cpp failed");
+
+    QVERIFY(!generatedCode.isEmpty());
+    QVERIFY(!documentationCode.isEmpty());
+
+    auto begin = generatedCode.cbegin();
+    for (const QString &existingString : qAsConst(documentationCode)) {
+        auto pos = std::find(begin, generatedCode.cend(), existingString);
+        QVERIFY2(pos != generatedCode.cend(), qPrintable(u"Could not find: " + existingString));
+        begin = std::next(pos);
+    }
 }
 
 #undef CREATE_DUMMY_ARGC_ARGV

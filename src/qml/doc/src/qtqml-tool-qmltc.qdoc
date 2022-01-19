@@ -38,9 +38,12 @@ QQmlComponent-based object creation. The qmltc is part of the Qt Quick Compiler
 toolchain.
 
 By design, qmltc outputs user-facing code. That code is supposed to be utilized
-by the C++ application directly, otherwise you won't see any benefit. The
+by the C++ application directly, otherwise you won't see any benefit. This
 generated code essentially replaces QQmlComponent and its APIs to create objects
-from QML documents. In order to enable qmltc:
+from QML documents. You can find more information under \l{Using qmltc in a QML
+application} and \l{Generated Output Basics}.
+
+In order to enable qmltc:
 
 \list
     \li Create a \l{qt_add_qml_module}{proper QML module} for your application.
@@ -62,7 +65,7 @@ generation of linting targets during \l{qt_add_qml_module}{QML module creation}
 and then attempt to "build" them to run the qmllint.
 
 \warning qmltc is currently in a Tech Preview stage and might not compile an
-arbitrary QML program (see \l{Known limitations} for more details). When qmltc
+arbitrary QML program (see \l{Known Limitations} for more details). When qmltc
 fails, nothing is generated as your application cannot sensibly use the qmltc
 output. If your program contains errors (or unsolvable warnings), they should be
 fixed to enable the compilation. The general rule is to adhere to the best
@@ -113,6 +116,8 @@ the application. Consider a simple application directory structure:
 Then the CMake code would usually look similar to the following:
 
 \snippet qmltc/CMakeLists.txt qmltc-app-name
+\codeline
+\snippet qmltc/CMakeLists.txt qmltc-qml-files
 \codeline
 \snippet qmltc/CMakeLists.txt qmltc-add-qml-module
 \codeline
@@ -180,7 +185,69 @@ and use \l{Defining QML Types from C++}{declarative QML type registration}.
 the generated classes cannot be further exposed to QML and used through
 QQmlComponent.
 
-\section2 Known limitations
+\section2 Generated Output Basics
+
+\c qmltc aims to be compatible with the existing QML execution model. This
+implies that the generated code is roughly equivalent to the internal
+QQmlComponent setup logic and thus you should be able to understand your QML
+type's behavior, semantics and API the same way you do currently - by visually
+inspecting the corresponding QML document.
+
+However, the generated code is still somewhat confusing, especially given that
+your application should use the qmltc output on the C++ side directly. There are
+two parts of the generated code: CMake build files structure and the generated
+C++ format. The former is covered in the \l{qt_target_compile_qml_to_cpp}{CMake
+API of qmltc} and the latter is covered here.
+
+Consider a simple HelloWorld type, that has a \c hello property, a function to
+print that property, and a signal emitted when the object of that type is
+created:
+
+\snippet qmltc/special/HelloWorld.qml qmltc-hello-world-qml
+
+When providing a C++ alternative of this QML type, the C++ class would need a
+\l{Overview - QML and C++ Integration}{QML-specific meta-object system macro},
+Q_PROPERTY decoration for the \c hello property, \c{Q_INVOKABLE} C++ printing
+function and a regular Qt signal definition. Similarly, qmltc would translate
+the given HelloWorld type into roughly the following:
+
+\snippet qmltc/special/HelloWorld.qml.cpp qmltc-hello-world-generated
+
+Even though specific details of the generated type could differ, the universal
+aspects remain. For instance:
+
+\list
+    \li QML types within a document are translated into C++ types, according to
+        the compiler-visible information.
+    \li Properties are translated into C++ properties with Q_PROPERTY
+        declarations.
+    \li JavaScript functions become \c{Q_INVOKABLE} C++ functions.
+    \li QML signals are transformed into C++ Qt signals.
+    \li QML enumerations are converted into C++ enumerations with \c{Q_ENUM}
+        declarations.
+\endlist
+
+\note \c qmltc does not guarantee that the generated C++ stays API-, source- or
+binary-compatible between releases.
+
+An additional detail is the way \c qmltc generates class names. A class name for
+a given QML type is automatically deduced from the QML document defining that
+type: the QML file name without extensions (up to and excluding the first \c{.},
+also known as the base name) becomes a class name. The file name case is
+preserved. Thus, \c{HelloWorld.qml} would result in a \c{class HelloWorld} and
+\c{helloWoRlD.qml} in a \c{class helloWoRlD}. Following the QML convention, if a
+QML document file name starts with a lower-case letter, the generated C++ class
+is assumed to be anonymous and marked with \l{QML_ANONYMOUS}.
+
+For now, although the generated code is ready to be used from the C++
+application side, you should generally limit calls to the generated APIs.
+Instead, prefer implementing the application logic in QML/JavaScript and
+hand-written C++ types exposed to QML, using the qmltc-created classes for
+simple object instantiation. While generated C++ gives you direct (and usually
+faster) access to QML-defined elements of the type, understanding such code
+could be a challenge.
+
+\section2 Known Limitations
 
 Despite covering many common QML features, qmltc is still in the early stage of
 development with many things yet to be supported. To name a few:
