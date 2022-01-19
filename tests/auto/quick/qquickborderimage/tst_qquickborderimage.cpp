@@ -591,11 +591,18 @@ void tst_qquickborderimage::progressAndStatusChanges()
 #if QT_CONFIG(opengl)
 void tst_qquickborderimage::borderImageMesh()
 {
+    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
+        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+
     QQuickView *window = new QQuickView;
 
     window->setSource(testFileUrl("nonmesh.qml"));
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window));
+    if (window->rendererInterface()->graphicsApi() == QSGRendererInterface::Software)
+        QSKIP("Software backend has no ShaderEffect supported, skipping test");
+
     QImage nonmesh = window->grabWindow();
 
     window->setSource(testFileUrl("mesh.qml"));
