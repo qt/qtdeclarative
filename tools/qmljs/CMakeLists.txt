@@ -1,13 +1,11 @@
 # Generated from qmljs.pro.
 
 #####################################################################
-## qmljs Tool:
+## qmljs App:
 #####################################################################
 
-qt_get_tool_target_name(target_name qmljs)
-qt_internal_add_tool(${target_name}
+qt_internal_add_app(qmljs
     TARGET_DESCRIPTION "QML JavaScript Tool"
-    TOOLS_TARGET Qml # special case
     SOURCES
         qmljs.cpp
     DEFINES
@@ -38,6 +36,7 @@ qt_internal_add_tool(${target_name}
         Qt::CorePrivate
         Qt::QmlPrivate
 )
+set_target_properties(qmljs PROPERTIES WIN32_EXECUTABLE FALSE)
 
 #### Keys ignored in scope 1:.:.:qmljs.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "QML" "JavaScript" "Tool"
@@ -46,42 +45,42 @@ qt_internal_add_tool(${target_name}
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(${target_name} CONDITION WIN32
+qt_internal_extend_target(qmljs CONDITION WIN32
     DEFINES
         NOMINMAX
 )
 
-qt_internal_extend_target(${target_name} CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
+qt_internal_extend_target(qmljs CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
     DEFINES
         WTF_USE_UDIS86=1
 )
 
-qt_internal_extend_target(${target_name} CONDITION (TEST_architecture_arch STREQUAL "arm") AND disassembler
+qt_internal_extend_target(qmljs CONDITION (TEST_architecture_arch STREQUAL "arm") AND disassembler
     DEFINES
         WTF_USE_ARMV7_DISASSEMBLER=1
 )
 
-qt_internal_extend_target(${target_name} CONDITION (TEST_architecture_arch STREQUAL "arm64") AND disassembler
+qt_internal_extend_target(qmljs CONDITION (TEST_architecture_arch STREQUAL "arm64") AND disassembler
     DEFINES
         WTF_USE_ARM64_DISASSEMBLER=1
 )
 
-qt_internal_extend_target(${target_name} CONDITION (TEST_architecture_arch STREQUAL "mips") AND disassembler
+qt_internal_extend_target(qmljs CONDITION (TEST_architecture_arch STREQUAL "mips") AND disassembler
     DEFINES
         WTF_USE_MIPS32_DISASSEMBLER=1
 )
 
-qt_internal_extend_target(${target_name} CONDITION NOT disassembler
+qt_internal_extend_target(qmljs CONDITION NOT disassembler
     DEFINES
         WTF_USE_UDIS86=0
 )
 
-qt_internal_extend_target(${target_name} CONDITION CMAKE_BUILD_TYPE STREQUAL Release
+qt_internal_extend_target(qmljs CONDITION CMAKE_BUILD_TYPE STREQUAL Release
     DEFINES
         NDEBUG
 )
 
-qt_internal_extend_target(${target_name} CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND NOT CLANG AND NOT ICC
+qt_internal_extend_target(qmljs CONDITION GCC AND QT_COMPILER_VERSION_MAJOR STRGREATER 6 AND NOT CLANG AND NOT ICC
     COMPILE_OPTIONS
         -Wno-expansion-to-defined
 )
