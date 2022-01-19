@@ -65,8 +65,10 @@ depends += \
     ../../quicklayouts \
     ../../labs
 
-# src/labs/platform has its own documentation project
-excludedirs += ../../labs/platform
+# both have their own documentation project
+excludedirs += \
+    ../../labs/platform \
+    ../../labs/models
 
 exampledirs += \
     ../../../examples/quick \
