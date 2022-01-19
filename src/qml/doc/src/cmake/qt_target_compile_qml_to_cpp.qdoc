@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -32,7 +32,7 @@
 \title qt_target_compile_qml_to_cpp
 \target qt6_target_compile_qml_to_cpp
 
-\brief Compiles QML files (.qml) to C++ source code with Qml Type Compiler (qmltc).
+\brief Compiles QML files (.qml) to C++ source code with \l{Qml Type Compiler}{qmltc}.
 
 \section1 Synopsis
 
@@ -50,11 +50,14 @@ qt_target_compile_qml_to_cpp(
 
 \section1 Description
 
-This command compiles the object structure of the passed QML files to C++ using
-qmltc. By default, qmltc generates lower-case \c{.h} and \c{.cpp} files for a
-given \c{.qml} file, so an arbitrary \c{HelloWorld.qml} ends up being compiled
-into \c{helloworld.h} and \c{helloworld.cpp}. The generated files are then
-automatically added to the target.
+By default, \l{Qml Type Compiler}{qmltc} creates lower-case \c{.h} and \c{.cpp}
+files for a given \c{.qml} file. For example, \c{Foo.qml} ends up being compiled
+into \c{foo.h} and \c{foo.cpp}.
+
+The created C++ files are placed into a dedicated \c{.qmltc/<target>/}
+sub-directory of the \c BINARY_DIR of the \c target passed as an argument to
+this command. These files are then automatically added to the target sources and
+compiled as Qt C++ code along with other source files.
 
 \note This command is in technology preview and may change in future releases.
 
