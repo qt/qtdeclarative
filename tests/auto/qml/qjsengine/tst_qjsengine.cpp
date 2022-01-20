@@ -857,7 +857,11 @@ void tst_QJSEngine::newQObjectRace()
     {
         void run() override
         {
-            for (int i=0;i<1000;++i)
+            int newObjectCount = 1000;
+#if defined(Q_OS_QNX)
+            newObjectCount = 256;
+#endif
+            for (int i=0;i<newObjectCount;++i)
             {
                 QJSEngine e;
                 auto obj = e.newQObject(new QObject);
