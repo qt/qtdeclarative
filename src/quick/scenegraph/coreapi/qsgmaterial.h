@@ -57,7 +57,12 @@ public:
         RequiresFullMatrix  = 0x0008 | RequiresFullMatrixExceptTranslate,
         NoBatching          = 0x0010,
 
-        CustomCompileStep   = NoBatching // ### Qt 7: remove
+#if QT_DEPRECATED_SINCE(6, 3)
+        CustomCompileStep Q_DECL_ENUMERATOR_DEPRECATED_X(
+            "Qt 6 does not have custom shader compilation support. If the intention is to just disable batching, use NoBatching instead."
+        ) = NoBatching
+#endif
+
     };
     Q_DECLARE_FLAGS(Flags, Flag)
 
