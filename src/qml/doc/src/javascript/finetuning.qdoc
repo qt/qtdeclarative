@@ -82,9 +82,12 @@ Running JavaScript code can be influenced by a few environment variables, partic
         \li \c{QV4_MAX_CALL_DEPTH}
         \li Stack overflows when running (as opposed to compiling) JavaScript are prevented by
             controlling the call depth: the number of nested function invocations. By
-            default, an exception is generated if the call depth exceeds 1234. If it contains a
-            number, this environment variable overrides the maximum call depth. Beware that the
-            recursion limit when compiling JavaScript is not affected.
+            default, an exception is generated if the call depth exceeds a maximum number tuned
+            to the platform's default stack size. If the \c{QV4_MAX_CALL_DEPTH} environment
+            variable contains a number, this number is used as maximum call depth. Beware that
+            the recursion limit when compiling JavaScript is not affected. The default maximum
+            call depth is 1234 on most platforms. On QNX it is 640 because on QNX the default
+            stack size is smaller than on most platforms.
     \row
         \li \c{QV4_MM_AGGRESSIVE_GC}
         \li Setting this environment variable runs the garbage collector before each memory

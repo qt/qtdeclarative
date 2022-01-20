@@ -310,7 +310,11 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
             maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);
             if (!ok || maxCallDepth <= 0) {
 #if defined(QT_NO_DEBUG) && !defined(__SANITIZE_ADDRESS__) && !__has_feature(address_sanitizer)
+#ifdef Q_OS_QNX
+                maxCallDepth = 640; // QNX's stack is only 512k by default
+#else
                 maxCallDepth = 1234;
+#endif
 #else
                 // no (tail call) optimization is done, so there'll be a lot mare stack frames active
                 maxCallDepth = 200;
