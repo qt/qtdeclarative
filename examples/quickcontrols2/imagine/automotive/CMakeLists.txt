@@ -1,39 +1,31 @@
-# Generated from automotive.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(automotive LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols2/imagine/automotive")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Quick)
-find_package(Qt6 COMPONENTS QuickControls2)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2)
 
 qt_add_executable(automotive
     automotive.cpp
 )
+
 set_target_properties(automotive PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
+
 target_link_libraries(automotive PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Quick
     Qt::QuickControls2
 )
-
 
 # Resources:
 set(icons_resource_files
@@ -72,6 +64,7 @@ qt6_add_resources(automotive "icons"
     FILES
         ${icons_resource_files}
 )
+
 set(imagine-assets_resource_files
     "imagine-assets/applicationwindow-background.png"
     "imagine-assets/applicationwindow-background@2x.png"
@@ -159,6 +152,7 @@ qt6_add_resources(automotive "imagine-assets"
     FILES
         ${imagine-assets_resource_files}
 )
+
 set(qml_resource_files
     "qml/FeatureButton.qml"
     "qml/LargeLabel.qml"
@@ -173,6 +167,7 @@ qt6_add_resources(automotive "qml"
     FILES
         ${qml_resource_files}
 )
+
 set(qmake_immediate_resource_files
     "qtquickcontrols2.conf"
 )

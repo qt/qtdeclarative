@@ -1,31 +1,26 @@
-# Generated from adding.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(adding LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/referenceexamples/adding")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Qml)
+find_package(Qt6 REQUIRED COMPONENTS Core Qml)
 
 qt_add_executable(adding
     main.cpp
     person.cpp person.h
 )
+
 set_target_properties(adding PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
+
 target_link_libraries(adding PUBLIC
     Qt::Core
     Qt::Qml

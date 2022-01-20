@@ -1,5 +1,3 @@
-# Generated from quick.pro.
-
 qt_internal_add_example(quick-accessibility)
 qt_internal_add_example(animation)
 qt_internal_add_example(draganddrop)
@@ -61,6 +59,7 @@ set(reused_dir_targets
     system_shared
     draganddrop_shared
 )
+
 foreach(target IN LISTS reused_dir_targets)
     if(TARGET ${target})
         qt_autogen_tools(${target} ENABLE_AUTOGEN_TOOLS moc rcc)

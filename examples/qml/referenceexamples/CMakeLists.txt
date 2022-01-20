@@ -1,5 +1,3 @@
-# Generated from referenceexamples.pro.
-
 qt_internal_add_example(adding)
 qt_internal_add_example(coercion)
 qt_internal_add_example(default)

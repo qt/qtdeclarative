@@ -1,29 +1,21 @@
-# Generated from openglunderqml.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(openglunderqml LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/scenegraph/openglunderqml")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Qml)
-find_package(Qt6 COMPONENTS Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 qt_add_executable(openglunderqml
     main.cpp
     squircle.cpp squircle.h
 )
+
 set_target_properties(openglunderqml PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
@@ -31,6 +23,7 @@ set_target_properties(openglunderqml PROPERTIES
     # Prevent name clash with build subdirectory on case-insensitive file systems
     OUTPUT_NAME openglunderqmlapp
 )
+
 target_link_libraries(openglunderqml PUBLIC
     Qt::Core
     Qt::Gui

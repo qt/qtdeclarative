@@ -1,21 +1,15 @@
-# Generated from texteditor.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(texteditor LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols2/texteditor")
 
-find_package(Qt6 COMPONENTS Core Gui Quick QuickControls2)
-find_package(Qt6 COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2 OPTIONAL_COMPONENTS Widgets)
 
 qt_add_executable(texteditor WIN32 MACOSX_BUNDLE
     documenthandler.cpp
@@ -28,7 +22,6 @@ target_link_libraries(texteditor PUBLIC
     Qt::Quick
     Qt::QuickControls2
 )
-
 
 # Resources:
 set(texteditor_resource_files
@@ -56,7 +49,7 @@ endif()
 
 if(CMAKE_CROSSCOMPILING)
     target_compile_definitions(texteditor PUBLIC
-        QT_EXTRA_FILE_SELECTOR="touch" # special case
+        QT_EXTRA_FILE_SELECTOR="touch"
     )
 endif()
 

@@ -1,5 +1,3 @@
-# Generated from scenegraph.pro.
-
 qt_internal_add_example(customgeometry)
 qt_internal_add_example(custommaterial)
 qt_internal_add_example(graph)

@@ -1,5 +1,3 @@
-# Generated from extending-qml.pro.
-
 qt_internal_add_example(chapter1-basics)
 qt_internal_add_example(chapter2-methods)
 qt_internal_add_example(chapter3-bindings)

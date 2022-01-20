@@ -1,32 +1,27 @@
-# Generated from default.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(default LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/referenceexamples/default")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Qml)
+find_package(Qt6 REQUIRED COMPONENTS Core Qml)
 
 qt_add_executable(default
     birthdayparty.cpp birthdayparty.h
     main.cpp
     person.cpp person.h
 )
+
 set_target_properties(default PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
+
 target_link_libraries(default PUBLIC
     Qt::Core
     Qt::Qml

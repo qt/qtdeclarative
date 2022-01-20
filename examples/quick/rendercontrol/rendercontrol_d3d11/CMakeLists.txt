@@ -1,25 +1,22 @@
-# Generated from rendercontrol_d3d11.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(rendercontrol_d3d11 LANGUAGES CXX)
-
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(CMAKE_AUTOMOC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/rendercontrol/rendercontrol_d3d11")
 
-find_package(Qt6 COMPONENTS Core Gui Quick Qml)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 qt_add_executable(rendercontrol_d3d11example WIN32 MACOSX_BUNDLE
     engine.cpp
     main.cpp
     window.cpp
 )
+
 target_link_libraries(rendercontrol_d3d11example PUBLIC
     Qt::Core
     Qt::Gui
@@ -30,7 +27,6 @@ target_link_libraries(rendercontrol_d3d11example PUBLIC
     dxguid
     uuid
 )
-
 
 # Resources:
 qt_add_qml_module(rendercontrol_d3d11example
