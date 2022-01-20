@@ -151,6 +151,9 @@ void tst_QQuickItemLayer::layerEnabled()
 
 void tst_QQuickItemLayer::layerMipmap()
 {
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
+
     QImage fb = runTest("Mipmap.qml");
     QVERIFY(fb.pixel(0, 0) != 0xff000000);
     QVERIFY(fb.pixel(0, 0) != 0xffffffff);
@@ -372,12 +375,18 @@ void tst_QQuickItemLayer::changeZOrder()
 
 void tst_QQuickItemLayer::toggleLayerAndEffect()
 {
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
+
     // This test passes if it doesn't crash.
     runTest("ToggleLayerAndEffect.qml");
 }
 
 void tst_QQuickItemLayer::disableLayer()
 {
+    if (isOffscreen())
+        QSKIP(skipOffscreenMsg);
+
     // This test passes if it doesn't crash.
     runTest("DisableLayer.qml");
 }
