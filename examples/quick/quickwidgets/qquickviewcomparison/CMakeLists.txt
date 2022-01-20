@@ -1,26 +1,15 @@
-# Generated from qquickviewcomparison.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(qquickviewcomparison LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/quickwidgets/qquickviewcomparison")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Quick)
-find_package(Qt6 COMPONENTS Widgets)
-find_package(Qt6 COMPONENTS QuickWidgets)
-find_package(Qt6 COMPONENTS ShaderTools)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickWidgets ShaderTools Widgets)
 
 qt_add_executable(qquickviewcomparison
     fbitem.cpp fbitem.h
@@ -28,10 +17,12 @@ qt_add_executable(qquickviewcomparison
     main.cpp
     mainwindow.cpp mainwindow.h
 )
+
 set_target_properties(qquickviewcomparison PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
+
 target_link_libraries(qquickviewcomparison PUBLIC
     Qt::Core
     Qt::Gui

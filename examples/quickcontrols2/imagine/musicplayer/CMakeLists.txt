@@ -1,39 +1,31 @@
-# Generated from musicplayer.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(musicplayer LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols2/imagine/musicplayer")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Quick)
-find_package(Qt6 COMPONENTS QuickControls2)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2)
 
 qt_add_executable(musicplayer
     musicplayer.cpp
 )
+
 set_target_properties(musicplayer PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
+
 target_link_libraries(musicplayer PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Quick
     Qt::QuickControls2
 )
-
 
 # Resources:
 set(icons_resource_files
@@ -83,6 +75,7 @@ qt6_add_resources(musicplayer "icons"
     FILES
         ${icons_resource_files}
 )
+
 set(imagine-assets_resource_files
     "imagine-assets/applicationwindow-background.png"
     "imagine-assets/button-background-checked-hovered.9.png"
@@ -203,6 +196,7 @@ qt6_add_resources(musicplayer "imagine-assets"
     FILES
         ${imagine-assets_resource_files}
 )
+
 set(qmake_immediate_resource_files
     "images/album-cover.jpg"
     "musicplayer.qml"

@@ -1,23 +1,22 @@
 cmake_minimum_required(VERSION 3.16)
 project(chapter4 LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols2/chattutorial/chapter4")
 
-find_package(Qt6 COMPONENTS Core Gui Qml Quick Sql)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick Sql)
 
 qt_add_executable(chattutorial-chapter4 WIN32 MACOSX_BUNDLE
     main.cpp
     sqlcontactmodel.cpp sqlcontactmodel.h
     sqlconversationmodel.cpp sqlconversationmodel.h
 )
+
 target_link_libraries(chattutorial-chapter4 PRIVATE
     Qt::Core
     Qt::Gui

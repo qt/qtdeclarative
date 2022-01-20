@@ -1,33 +1,27 @@
-# Generated from grouped.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(grouped LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/referenceexamples/grouped")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Qml)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml)
 
 qt_add_executable(grouped
     birthdayparty.cpp birthdayparty.h
     main.cpp
     person.cpp person.h
 )
+
 set_target_properties(grouped PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
+
 target_link_libraries(grouped PUBLIC
     Qt::Core
     Qt::Gui

@@ -1,45 +1,38 @@
-# Generated from gallery.pro.
-
 cmake_minimum_required(VERSION 3.16)
-project(gallery_controls2 LANGUAGES CXX) # special case
-
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
+project(gallery_controls2 LANGUAGES CXX)
 
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols2/gallery")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Quick)
-find_package(Qt6 COMPONENTS QuickControls2)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickControls2)
 
-qt_add_executable(gallery_controls2 # special case
+qt_add_executable(gallery_controls2
     gallery.cpp
 )
-set_target_properties(gallery_controls2 PROPERTIES # special case
+
+set_target_properties(gallery_controls2 PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
-target_link_libraries(gallery_controls2 PUBLIC # special case
+
+target_link_libraries(gallery_controls2 PUBLIC
     Qt::Core
     Qt::Gui
     Qt::Quick
     Qt::QuickControls2
 )
-# special case begin
+
 if(UNIX AND NOT APPLE AND CMAKE_CROSSCOMPILING)
-    find_package(Qt6 COMPONENTS QuickTemplates2)
-     # Work around QTBUG-86533
+    find_package(Qt6 REQUIRED COMPONENTS QuickTemplates2)
+
+    # Work around QTBUG-86533
     target_link_libraries(gallery_controls2 PRIVATE Qt::QuickTemplates2)
 endif()
-# special case end
 
 # Resources:
 set(qmake_immediate_resource_files
@@ -102,14 +95,14 @@ set(qmake_immediate_resource_files
     "qtquickcontrols2.conf"
 )
 
-qt6_add_resources(gallery_controls2 "qmake_immediate" # special case
+qt6_add_resources(gallery_controls2 "qmake_immediate"
     PREFIX
         "/"
     FILES
         ${qmake_immediate_resource_files}
 )
 
-install(TARGETS gallery_controls2 # special case
+install(TARGETS gallery_controls2
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
     LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -5,12 +5,12 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/customitems/painteditem")
 
-find_package(Qt6 COMPONENTS Core Gui Quick Qml)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 add_subdirectory(TextBalloon)
 
@@ -29,6 +29,7 @@ target_link_libraries(painteditemexample PRIVATE
     Qt::Qml
     Qt::Quick
 )
+
 add_dependencies(painteditemexample qmltextballoon)
 
 install(TARGETS painteditemexample

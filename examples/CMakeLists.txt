@@ -1,4 +1,4 @@
-find_package(Qt6 COMPONENTS Sql) # special case
+find_package(Qt6 REQUIRED COMPONENTS Sql)
 
 qt_examples_build_begin(EXTERNAL_BUILD)
 

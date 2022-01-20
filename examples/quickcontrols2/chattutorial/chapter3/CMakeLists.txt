@@ -1,21 +1,20 @@
 cmake_minimum_required(VERSION 3.16)
 project(chapter3 LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quickcontrols2/chattutorial/chapter3")
 
-find_package(Qt6 COMPONENTS Core Gui Qml Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 qt_add_executable(chattutorial-chapter3 WIN32 MACOSX_BUNDLE
     main.cpp
 )
+
 target_link_libraries(chattutorial-chapter3 PRIVATE
     Qt::Core
     Qt::Gui

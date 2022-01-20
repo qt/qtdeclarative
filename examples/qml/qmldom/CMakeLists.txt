@@ -1,17 +1,15 @@
 cmake_minimum_required(VERSION 3.18)
 project(qmldomloadeditwrite LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/qmldomloadeditwrite")
 
-find_package(Qt6 COMPONENTS Core Gui Qml Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Network Qml)
 
 add_compile_definitions(
     QT_QMLTEST_DATADIR="${CMAKE_CURRENT_SOURCE_DIR}/../../../tests/auto/qmldom/domdata"

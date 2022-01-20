@@ -1,20 +1,15 @@
-# Generated from xmlhttprequest.pro.
-
 cmake_minimum_required(VERSION 3.16)
 project(xmlhttprequest LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/xmlhttprequest")
 
-find_package(Qt6 COMPONENTS Core Gui Quick Qml)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick)
 
 qt_add_executable(xmlhttprequestexample
     WIN32
