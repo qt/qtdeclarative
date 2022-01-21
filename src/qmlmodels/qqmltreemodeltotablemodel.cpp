@@ -517,6 +517,32 @@ void QQmlTreeModelToTableModel::expandRow(int n)
     expandPendingRows();
 }
 
+void QQmlTreeModelToTableModel::expandRecursively(int row, int depth)
+{
+    Q_ASSERT(depth == -1 || depth > 0);
+    const int startDepth = depthAtRow(row);
+
+    auto expandHelp = [=] (const auto expandHelp, const QModelIndex &index) -> void {
+        const int rowToExpand = itemIndex(index);
+        if (!m_expandedItems.contains(index))
+            expandRow(rowToExpand);
+
+        if (depth != -1 && depthAtRow(rowToExpand) == startDepth + depth - 1)
+            return;
+
+        const int childCount = m_model->rowCount(index);
+        for (int childRow = 0; childRow < childCount; ++childRow) {
+            const QModelIndex childIndex = m_model->index(childRow, 0, index);
+            if (m_model->hasChildren(childIndex))
+                expandHelp(expandHelp, childIndex);
+        }
+    };
+
+    const QModelIndex index = m_items[row].index;
+    if (index.isValid())
+        expandHelp(expandHelp, index);
+}
+
 void QQmlTreeModelToTableModel::expandPendingRows(bool doInsertRows)
 {
     while (!m_itemsToExpand.isEmpty()) {

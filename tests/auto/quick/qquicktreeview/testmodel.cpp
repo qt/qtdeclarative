@@ -61,18 +61,21 @@ TestModel::TestModel(QObject *parent)
     m_rootItem.reset(new TreeItem());
     for (int col = 0; col < m_columnCount; ++col)
         m_rootItem.data()->m_entries << QVariant(QString("0, %1").arg(col));
-    createTreeRecursive(m_rootItem.data(), 4, 0, 4);
+    createTreeRecursive(m_rootItem.data(), 4, 1);
 }
 
-void TestModel::createTreeRecursive(TreeItem *item, int childCount, int currentDepth, int maxDepth)
+void TestModel::createTreeRecursive(TreeItem *item, int childCount, int currentDepth)
 {
+    if (currentDepth > maxDepth())
+        return;
+
     for (int row = 0; row < childCount; ++row) {
         auto childItem = new TreeItem(item);
         for (int col = 0; col < m_columnCount; ++col)
             childItem->m_entries << QVariant(QString("%1, %2").arg(row).arg(col));
         item->m_childItems.append(childItem);
-        if (currentDepth < maxDepth && row == childCount - 1)
-            createTreeRecursive(childItem, childCount, currentDepth + 1, maxDepth);
+        if (row == childCount - 1)
+            createTreeRecursive(childItem, childCount, currentDepth + 1);
     }
 }
 

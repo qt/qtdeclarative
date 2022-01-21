@@ -90,10 +90,16 @@ private:
 private slots:
     void initTestCase() override;
     void showTreeView();
+    void invalidArguments();
     void expandAndCollapseRoot();
     void toggleExpanded();
     void expandAndCollapseChildren();
     void expandChildPendingToBeVisible();
+    void expandRecursivelyRoot_data();
+    void expandRecursivelyRoot();
+    void expandRecursivelyChild_data();
+    void expandRecursivelyChild();
+    void expandRecursivelyWholeTree();
     void requiredPropertiesRoot();
     void requiredPropertiesChildren();
     void emptyModel();
@@ -120,14 +126,38 @@ void tst_qquicktreeview::showTreeView()
     QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
 }
 
+
+void tst_qquicktreeview::invalidArguments()
+{
+    // Check that we handle gracefully invalid arguments
+    LOAD_TREEVIEW("normaltreeview.qml");
+
+    treeView->expand(-2);
+    QCOMPARE(treeView->rows(), 1);
+    treeView->expandRecursively(200);
+    QCOMPARE(treeView->rows(), 1);
+    treeView->expandRecursively(-2);
+    QCOMPARE(treeView->rows(), 1);
+    treeView->expandRecursively(200);
+    QCOMPARE(treeView->rows(), 1);
+}
+
 void tst_qquicktreeview::expandAndCollapseRoot()
 {
     LOAD_TREEVIEW("normaltreeview.qml");
     // Check that the view only has one row loaded so far (the root of the tree)
     QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
 
+    QSignalSpy expandedSpy(treeView, SIGNAL(expanded(int, int)));
+
     // Expand the root
     treeView->expand(0);
+
+    QCOMPARE(expandedSpy.count(), 1);
+    auto signalArgs = expandedSpy.takeFirst();
+    QVERIFY(signalArgs.at(0).toInt() == 0);
+    QVERIFY(signalArgs.at(1).toInt() == 1);
+
     WAIT_UNTIL_POLISHED;
     // We now expect 5 rows, the root pluss it's 4 children
     QCOMPARE(treeViewPrivate->loadedRows.count(), 5);
@@ -163,14 +193,23 @@ void tst_qquicktreeview::expandAndCollapseChildren()
     LOAD_TREEVIEW("normaltreeview.qml");
 
     const int childCount = 4;
+    QSignalSpy expandedSpy(treeView, SIGNAL(expanded(int, int)));
 
     // Expand the last child of a parent recursively four times
     for (int level = 0; level < 4; ++level) {
         const int nodeToExpand = level * childCount;
         const int firstChildRow = nodeToExpand + 1; // (+ 1 for the root)
         const int lastChildRow = firstChildRow + 4;
+
         treeView->expand(nodeToExpand);
+
+        QCOMPARE(expandedSpy.count(), 1);
+        auto signalArgs = expandedSpy.takeFirst();
+        QVERIFY(signalArgs.at(0).toInt() == nodeToExpand);
+        QVERIFY(signalArgs.at(1).toInt() == 1);
+
         WAIT_UNTIL_POLISHED;
+
         QCOMPARE(treeView->rows(), lastChildRow);
 
         auto childItem1 = treeViewPrivate->loadedTableItem(QPoint(0, firstChildRow))->item;
@@ -381,7 +420,154 @@ void tst_qquicktreeview::expandChildPendingToBeVisible()
 
     // Now the view have updated to show
     // all the rows that has been expanded.
-    QCOMPARE(treeView->rows(), 9);
+       QCOMPARE(treeView->rows(), 9);
+}
+
+void tst_qquicktreeview::expandRecursivelyRoot_data()
+{
+    QTest::addColumn<int>("rowToExpand");
+    QTest::addColumn<int>("depth");
+
+    QTest::newRow("0, -1") << 0 << -1;
+    QTest::newRow("0, 0") << 0 << 0;
+    QTest::newRow("0, 1") << 0 << 1;
+    QTest::newRow("0, 2") << 0 << 2;
+}
+
+void tst_qquicktreeview::expandRecursivelyRoot()
+{
+    // Check that we can expand the root node (row 0), and that
+    // all its children are expanded recursively down to the
+    // given depth.
+    QFETCH(int, rowToExpand);
+    QFETCH(int, depth);
+
+    LOAD_TREEVIEW("normaltreeview.qml");
+    QSignalSpy spy(treeView, SIGNAL(expanded(int, int)));
+
+    treeView->expandRecursively(rowToExpand, depth);
+
+    if (depth == 0) {
+        QCOMPARE(spy.count(), 0);
+    } else {
+
+        QCOMPARE(spy.count(), 1);
+        const auto signalArgs = spy.takeFirst();
+        QVERIFY(signalArgs.at(0).toInt() == rowToExpand);
+        QVERIFY(signalArgs.at(1).toInt() == depth);
+    }
+
+    WAIT_UNTIL_POLISHED;
+
+    const int rowToExpandDepth = treeView->depth(rowToExpand);
+    const int effectiveMaxDepth = depth != -1 ? rowToExpandDepth + depth : model->maxDepth();
+
+    if (depth > 0 || depth == -1)
+        QVERIFY(treeView->isExpanded(rowToExpand));
+    else
+        QVERIFY(!treeView->isExpanded(rowToExpand));
+
+    // Check that all rows after rowToExpand, that are also
+    // children of that row, is expanded (down to depth)
+    for (int currentRow = rowToExpand + 1; currentRow < treeView->rows(); ++currentRow) {
+        const auto modelIndex = treeView->modelIndex(currentRow, 0);
+        const int currentDepth = treeView->depth(currentRow);
+        const bool isChild = currentDepth > rowToExpandDepth;
+        const bool isExpandable = model->rowCount(modelIndex) > 0;
+        const bool shouldBeExpanded = isChild && isExpandable && currentDepth < effectiveMaxDepth;
+        QCOMPARE(treeView->isExpanded(currentRow), shouldBeExpanded);
+    }
+}
+
+void tst_qquicktreeview::expandRecursivelyChild_data()
+{
+    QTest::addColumn<int>("rowToExpand");
+    QTest::addColumn<int>("depth");
+
+    QTest::newRow("5, -1") << 4 << -1;
+    QTest::newRow("5, 0") << 4 << 0;
+    QTest::newRow("5, 1") << 4 << 1;
+    QTest::newRow("5, 2") << 4 << 2;
+    QTest::newRow("5, 3") << 4 << 3;
+}
+
+void tst_qquicktreeview::expandRecursivelyChild()
+{
+    // Check that we can first expand the root node, and the expand
+    // recursive the first child node with children (row 4), and that all
+    // its children of that node are expanded recursively according to depth.
+    QFETCH(int, rowToExpand);
+    QFETCH(int, depth);
+
+    LOAD_TREEVIEW("normaltreeview.qml");
+    QSignalSpy spy(treeView, SIGNAL(expanded(int, int)));
+
+    treeView->expand(0);
+
+    QCOMPARE(spy.count(), 1);
+    auto signalArgs = spy.takeFirst();
+    QVERIFY(signalArgs.at(0).toInt() == 0);
+    QVERIFY(signalArgs.at(1).toInt() == 1);
+
+    treeView->expandRecursively(rowToExpand, depth);
+
+    if (depth == 0) {
+        QCOMPARE(spy.count(), 0);
+    } else {
+        QCOMPARE(spy.count(), 1);
+        signalArgs = spy.takeFirst();
+        QVERIFY(signalArgs.at(0).toInt() == rowToExpand);
+        QVERIFY(signalArgs.at(1).toInt() == depth);
+    }
+
+    WAIT_UNTIL_POLISHED;
+
+    const bool rowToExpandDepth = treeView->depth(rowToExpand);
+    const int effectiveMaxDepth = depth != -1 ? rowToExpandDepth + depth : model->maxDepth();
+
+    // Check that all rows before rowToExpand is not expanded
+    // (except the root node)
+    for (int currentRow = 1; currentRow < rowToExpand; ++currentRow)
+        QVERIFY(!treeView->isExpanded(currentRow));
+
+    // Check if rowToExpand is expanded
+    if (depth > 0 || depth == -1)
+        QVERIFY(treeView->isExpanded(rowToExpand));
+    else
+        QVERIFY(!treeView->isExpanded(rowToExpand));
+
+    // Check that all rows after rowToExpand that is also
+    // children of that row is expanded (down to depth)
+    for (int currentRow = rowToExpand + 1; currentRow < treeView->rows(); ++currentRow) {
+        const int currentDepth = treeView->depth(currentRow);
+        const bool isChild = currentDepth > rowToExpandDepth;
+        const auto modelIndex = treeView->modelIndex(currentRow, 0);
+        const bool isExpandable = model->rowCount(modelIndex) > 0;
+        const bool shouldBeExpanded = isChild && isExpandable && currentDepth < effectiveMaxDepth;
+        QCOMPARE(treeView->isExpanded(currentRow), shouldBeExpanded);
+    }
+}
+
+void tst_qquicktreeview::expandRecursivelyWholeTree()
+{
+    // Check that we expand the whole tree recursively by passing -1, -1
+    LOAD_TREEVIEW("normaltreeview.qml");
+    QSignalSpy spy(treeView, SIGNAL(expanded(int, int)));
+    treeView->expandRecursively(-1, -1);
+
+    QCOMPARE(spy.count(), 1);
+    auto signalArgs = spy.takeFirst();
+    QVERIFY(signalArgs.at(0).toInt() == -1);
+    QVERIFY(signalArgs.at(1).toInt() == -1);
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that all rows that have children are expanded
+    for (int currentRow = 0; currentRow < treeView->rows(); ++currentRow) {
+        const auto modelIndex = treeView->modelIndex(currentRow, 0);
+        const bool isExpandable = model->rowCount(modelIndex) > 0;
+        QCOMPARE(treeView->isExpanded(currentRow), isExpandable);
+    }
 }
 
 QTEST_MAIN(tst_qquicktreeview)

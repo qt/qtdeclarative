@@ -149,7 +149,29 @@
     \note this function will not affect the model, only
     the visual representation in the view.
 
-    \sa collapse(), isExpanded()
+    \sa collapse(), isExpanded(), expandRecursively()
+*/
+
+/*!
+    \qmlmethod QtQuick::TreeView::expandRecursively(row = -1, depth = -1)
+
+    Expands the tree node at the given \a row in the view recursively down to
+    \a depth. \a depth should be relative to the depth of \a row. If
+    \a depth is \c -1, the tree will be expanded all the way down to all leaves.
+
+    For a model that has more than one root, you can also call this function
+    with \a row equal to \c -1. This will expand all roots. Hence, calling
+    expandRecursively(-1, -1), or simply expandRecursively(), will expand
+    all nodes in the model.
+
+    \a row should be the row in the view (table row), and not a row in the model.
+
+    \note This function will not try to \l{QAbstractItemModel::fetchMore}{fetch more} data.
+    \note This function will not affect the model, only the visual representation in the view.
+    \warning If the model contains a large number of items, this function will
+    take some time to execute.
+
+    \sa expand(), collapse(), isExpanded(), depth()
 */
 
 /*!
@@ -253,9 +275,15 @@
 */
 
 /*!
-    \qmlsignal QtQuick::TreeView::expanded(row)
+    \qmlsignal QtQuick::TreeView::expanded(row, depth)
 
     This signal is emitted when a \a row is expanded in the view.
+    \a row and \a depth will be equal to the arguments given to the call
+    that caused the expansion to happen (\l expand() or \l expandRecursively()).
+    In case of \l expand(), \a depth will always be \c 1.
+
+    \note when a row is expanded recursively, the expanded signal will
+    only be emitted for that one row, and not for its descendants.
 
     \sa collapsed(), expand(), collapse(), toggleExpanded()
 */
@@ -420,22 +448,48 @@ bool QQuickTreeView::isExpanded(int row) const
 
 void QQuickTreeView::expand(int row)
 {
+    if (row >= 0)
+        expandRecursively(row, 1);
+}
+
+void QQuickTreeView::expandRecursively(int row, int depth)
+{
     Q_D(QQuickTreeView);
-    if (row < 0 || row >= d->m_treeModelToTableModel.rowCount())
+    if (row >= d->m_treeModelToTableModel.rowCount())
+        return;
+    if (row < 0 && row != -1)
+        return;
+    if (depth == 0 || depth < -1)
         return;
 
-    if (d->m_treeModelToTableModel.isExpanded(row))
-        return;
+    auto expandRowRecursively = [=](int startRow) {
+        d->m_treeModelToTableModel.expandRecursively(startRow, depth);
+        // Update the expanded state of the startRow. The descendant rows that gets
+        // expanded will get the correct state set from initItem/itemReused instead.
+        for (int c = leftColumn(); c <= rightColumn(); ++c) {
+            const QPoint treeNodeCell(c, startRow);
+            if (const auto item = itemAtCell(treeNodeCell))
+                d->setRequiredProperty("expanded", true, d->modelIndexAtCell(treeNodeCell), item, false);
+        }
+    };
 
-    d->m_treeModelToTableModel.expandRow(row);
-
-    for (int c = leftColumn(); c <= rightColumn(); ++c) {
-        const QPoint treeNodeCell(c, row);
-        if (const auto item = itemAtCell(treeNodeCell))
-            d->setRequiredProperty("expanded", true, d->modelIndexAtCell(treeNodeCell), item, false);
+    if (row >= 0) {
+        // Expand only one row recursively
+        const bool isExpanded = d->m_treeModelToTableModel.isExpanded(row);
+        if (isExpanded && depth == 1)
+            return;
+        expandRowRecursively(row);
+    } else {
+        // Expand all root nodes recursively
+        const auto model = d->m_treeModelToTableModel.model();
+        for (int r = 0; r < model->rowCount(); ++r) {
+            const int rootRow = d->m_treeModelToTableModel.itemIndex(model->index(r, 0));
+            if (rootRow != -1)
+                expandRowRecursively(rootRow);
+        }
     }
 
-    emit expanded(row);
+    emit expanded(row, depth);
 }
 
 void QQuickTreeView::collapse(int row)

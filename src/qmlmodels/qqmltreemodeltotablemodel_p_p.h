@@ -137,6 +137,7 @@ public slots:
     bool hasSiblings(int row) const;
     int depthAtRow(int row) const;
     void expandRow(int n);
+    void expandRecursively(int row, int depth);
     void collapseRow(int n);
 
 private slots:

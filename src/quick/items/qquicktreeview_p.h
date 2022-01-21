@@ -75,6 +75,8 @@ public:
     Q_INVOKABLE void collapse(int row);
     Q_INVOKABLE void toggleExpanded(int row);
 
+    Q_REVISION(6, 4) Q_INVOKABLE void expandRecursively(int row = -1, int depth = -1);
+
     Q_INVOKABLE QModelIndex modelIndex(int row, int column) const;
     Q_INVOKABLE QModelIndex modelIndex(const QPoint &cell) const;
     Q_INVOKABLE int rowAtIndex(const QModelIndex &index) const;
@@ -82,7 +84,7 @@ public:
     Q_INVOKABLE QPoint cellAtIndex(const QModelIndex &index) const;
 
 signals:
-    void expanded(int row);
+    void expanded(int row, int depth);
     void collapsed(int row);
 
 private:
