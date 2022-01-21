@@ -122,7 +122,7 @@ FontDialogImpl {
         leftPadding: 16
         rightPadding: 16
         topPadding: 12
-        height: control.title.length > 0 ? implicitHeight : 0
+        visible: control.title.length > 0
 
         background: NinePatchImage {
             width: parent.width
