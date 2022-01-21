@@ -967,6 +967,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("matchByName") << QStringLiteral("matchByName.qml");
     QTest::newRow("cppPropertyChangeHandlers")
             << QStringLiteral("goodCppPropertyChangeHandlers.qml");
+    QTest::newRow("unexportedCppBase") << QStringLiteral("unexportedCppBase.qml");
 }
 
 void TestQmllint::cleanQmlCode()

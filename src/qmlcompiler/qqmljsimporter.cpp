@@ -314,8 +314,12 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
             seenExports[qmlName].append(valExport);
         }
 
-        if (bestExport.isValid())
-            types->cppNames.insert(cppName, { val.scope, bestExport.revision() });
+        types->cppNames.insert(
+            cppName, {
+                val.scope,
+                bestExport.isValid() ? bestExport.revision() : QTypeRevision::zero()
+            }
+        );
     };
 
     if (!importDescription.prefix().isEmpty())
