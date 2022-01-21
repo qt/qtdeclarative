@@ -3714,21 +3714,21 @@ void tst_QJSEngine::dynamicProperties()
 {
     {
         QJSEngine engine;
-        QObject *obj = new QObject;
-        QJSValue wrapper = engine.newQObject(obj);
+        QScopedPointer<QObject> obj(new QObject);
+        QJSValue wrapper = engine.newQObject(obj.data());
         wrapper.setProperty("someRandomProperty", 42);
         QCOMPARE(wrapper.property("someRandomProperty").toInt(), 42);
-        QVERIFY(!qmlContext(obj));
+        QVERIFY(!qmlContext(obj.data()));
     }
     {
         QQmlEngine qmlEngine;
         QQmlComponent component(&qmlEngine);
         component.setData("import QtQml 2.0; QtObject { property QtObject subObject: QtObject {} }", QUrl());
-        QObject *root = component.create(nullptr);
+        QScopedPointer<QObject> root(component.create(nullptr));
         QVERIFY(root);
-        QVERIFY(qmlContext(root));
+        QVERIFY(qmlContext(root.data()));
 
-        QJSValue wrapper = qmlEngine.newQObject(root);
+        QJSValue wrapper = qmlEngine.newQObject(root.data());
         wrapper.setProperty("someRandomProperty", 42);
         QVERIFY(!wrapper.hasProperty("someRandomProperty"));
 
