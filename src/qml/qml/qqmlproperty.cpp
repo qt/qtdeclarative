@@ -331,7 +331,8 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
 
             if (!property) {
                 // Not a property; Might be an ID
-                if (!(flags & InitFlag::AllowId))
+                // You can't look up an ID on a non-null object, though.
+                if (currentObject || !(flags & InitFlag::AllowId))
                     return;
 
                 for (auto idContext = context; idContext; idContext = idContext->parent()) {

@@ -2475,6 +2475,8 @@ void tst_qqmlproperty::initFlags()
     const bool hasSignal = name.endsWith(QStringLiteral("foo"));
     if (!passObject && !usesId) {
         QVERIFY(!property.isValid());
+    } else if (passObject && usesId) {
+        QVERIFY(!property.isValid());
     } else if (usesId && !(flags & QQmlPropertyPrivate::InitFlag::AllowId)) {
         QVERIFY(!property.isValid());
     } else if (hasSignal && !(flags & QQmlPropertyPrivate::InitFlag::AllowSignal)) {
