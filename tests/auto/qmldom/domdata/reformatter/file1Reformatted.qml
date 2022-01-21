@@ -3,6 +3,9 @@ import QtQuick 2.15
 import QtQuick.Window 2.15
 
 Window {
+    property var arr: [1, 2, 3]
+    property var arrTrailingComma: [1, 2, 3,]
+
     height: 480
     title: qsTr("Scroll")
     visible: true

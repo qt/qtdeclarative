@@ -8,6 +8,9 @@ Window {
     height: 480
     title: qsTr("Scroll")
 
+    property var arr: [1,2,3]
+    property var arrTrailingComma: [1,2,3,]
+
     Rectangle {
         anchors.fill: parent
 
