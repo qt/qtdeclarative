@@ -837,6 +837,11 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("nullBindingFunction.qml")
             << QStringLiteral("Cannot assign binding of type std::nullptr_t to double") << QString()
             << QString() << false;
+    QTest::newRow("missingRequiredAlias")
+            << QStringLiteral("missingRequiredAlias.qml")
+            << QStringLiteral("Component is missing required property requiredAlias from "
+                              "RequiredWithRootLevelAlias")
+            << QString() << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -999,6 +1004,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("cppPropertyChangeHandlers")
             << QStringLiteral("goodCppPropertyChangeHandlers.qml");
     QTest::newRow("unexportedCppBase") << QStringLiteral("unexportedCppBase.qml");
+    QTest::newRow("requiredWithRootLevelAlias") << QStringLiteral("RequiredWithRootLevelAlias.qml");
 }
 
 void TestQmllint::cleanQmlCode()

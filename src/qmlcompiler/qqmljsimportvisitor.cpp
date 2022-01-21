@@ -189,6 +189,7 @@ void QQmlJSImportVisitor::resolveAliasesAndIds()
 
             // The first component has to be an ID. Find the object it refers to.
             QQmlJSScope::ConstPtr type = m_scopesById.scope(components.takeFirst(), object);
+            QQmlJSScope::ConstPtr typeScope;
             if (!type.isNull()) {
                 foundProperty = true;
 
@@ -209,6 +210,7 @@ void QQmlJSImportVisitor::resolveAliasesAndIds()
                     const auto target = type->property(name);
                     if (!target.type() && target.isAlias())
                         doRequeue = true;
+                    typeScope = type;
                     type = target.type();
                     targetProperty = target;
                 }
@@ -232,6 +234,12 @@ void QQmlJSImportVisitor::resolveAliasesAndIds()
                 property.setIsList(targetProperty.isList());
                 property.setIsWritable(targetProperty.isWritable());
                 property.setIsPointer(targetProperty.isPointer());
+
+                if (!typeScope.isNull()) {
+                    object->setPropertyLocallyRequired(
+                            property.propertyName(),
+                            typeScope->isPropertyRequired(targetProperty.propertyName()));
+                }
 
                 if (const QString internalName = type->internalName(); !internalName.isEmpty())
                     property.setTypeName(internalName);
@@ -732,6 +740,30 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                                 != scopesToSearch.constEnd();
 
                         if (!found) {
+                            const QString scopeId = m_scopesById.id(defScope);
+                            bool propertyUsedInRootAlias = false;
+                            if (!scopeId.isEmpty()) {
+                                for (const QQmlJSMetaProperty &property :
+                                     m_exportedRootScope->ownProperties()) {
+                                    if (!property.isAlias())
+                                        continue;
+
+                                    QStringList aliasExpression =
+                                            property.aliasExpression().split(u'.');
+
+                                    if (aliasExpression.length() != 2)
+                                        continue;
+                                    if (aliasExpression[0] == scopeId
+                                        && aliasExpression[1] == propName) {
+                                        propertyUsedInRootAlias = true;
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (propertyUsedInRootAlias)
+                                continue;
+
                             const QString propertyScopeName = scopesToSearch.length() > 1
                                     ? getScopeName(scopesToSearch.at(scopesToSearch.length() - 2),
                                                    QQmlJSScope::QMLScope)
