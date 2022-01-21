@@ -16,7 +16,9 @@ function(qt_declarative_write_tag_header target_name)
             OUTPUT_VARIABLE QML_COMPILE_HASH
             OUTPUT_STRIP_TRAILING_WHITESPACE
             WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
-    else()
+    endif()
+    string(LENGTH "${QML_COMPILE_HASH}" QML_COMPILE_HASH_LENGTH)
+    if(QML_COMPILE_HASH_LENGTH EQUAL 0)
         set(sources_hash "")
         file(GLOB_RECURSE qtqml_source_files "${CMAKE_CURRENT_SOURCE_DIR}/*")
         foreach(file IN LISTS qtqml_source_files)
