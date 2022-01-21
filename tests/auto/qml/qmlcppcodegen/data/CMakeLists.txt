@@ -67,6 +67,7 @@ set(qml_files
     immediateQuit.qml
     imports/QmlBench/Globals.qml
     importsFromImportPath.qml
+    invisibleBase.qml
     intEnumCompare.qml
     intOverflow.qml
     interactive.qml

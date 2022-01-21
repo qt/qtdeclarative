@@ -673,10 +673,10 @@ void QQmlJSCodeGenerator::generate_LoadQmlContextPropertyLookup(int index)
     }
 
     const QString indexString = QString::number(index);
-    const QQmlJSScope::ConstPtr scopeForId = m_typeResolver->scopeForId(name, m_function->qmlScope);
-    if (!scopeForId.isNull()) {
+    if (m_state.accumulatorOut.variant() == QQmlJSRegisterContent::ObjectById) {
         const QString lookup = u"aotContext->loadContextIdLookup("_qs
-                + indexString + u", &"_qs + m_state.accumulatorVariableOut + u')';
+                + indexString + u", "_qs
+                + contentPointer(m_state.accumulatorOut, m_state.accumulatorVariableOut) + u')';
         const QString initialization = u"aotContext->initLoadContextIdLookup("_qs
                 + indexString + u')';
         generateLookup(lookup, initialization);

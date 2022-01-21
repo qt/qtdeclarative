@@ -115,6 +115,7 @@ private slots:
     void variantlist();
     void popContextAfterRet();
     void revisions();
+    void invisibleBase();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1725,6 +1726,16 @@ void tst_QmlCppCodegen::revisions()
 
     QCOMPARE(o->property("delayed").toBool(), true);
     QCOMPARE(o->property("gotten").toInt(), 5);
+}
+
+void tst_QmlCppCodegen::invisibleBase()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/invisibleBase.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(qvariant_cast<QObject *>(o->property("n")), o.data());
 }
 
 void tst_QmlCppCodegen::runInterpreted()
