@@ -184,67 +184,6 @@ testing purposes, the environment variable \c QSG_RENDER_LOOP can be used to
 force the usage of a given loop. To verify which render loop is in use, enable
 the \c qt.scenegraph.general \l {QLoggingCategory}{logging category}.
 
-\section2 Relation to Driving Animations
-
-The \c threaded render loop relies on the graphics API implementation and/or
-the windowing system for throttling, for example, by requesting a swap interval
-of 1 in case of OpenGL, calling Present() with an interval of 0 for Direct 3D,
-or using a presentation made such as \c MAILBOX or \c IMMEDIATE instead of the
-default \c FIFO with Vulkan.
-
-Some graphics drivers allow users to override this setting and turn it off,
-ignoring Qt's request. An example of this would be a system wide control panel
-of the graphics driver that allows overriding the application's settings with
-regards to vsync. It can also happen that a graphics stack is unable to provide
-proper vsync-based throttling, which can be the case in some virtual machines.
-
-Without blocking in the swap/present operation (or some other graphics
-operation), the render loop would advance animations too fast. This is because
-in order to reduce stutter, the \c threaded render loop relies on the
-vsync-based blocking to drive animations. This would be no issue with the \c
-basic render loop, because that always relies on system timers.
-
-Therefore, if a system is known to be unable to provide vsync-based throttling,
-there are two options:
-
-\list
-
-\li Use the \c basic render loop, by setting \c {QSG_RENDER_LOOP=basic} in the
-environment, or
-
-\li set the \c{QSG_NO_VSYNC} environment variable to a non-zero value. By
-explicitly requesting disabling vsync-based blocking, the \c threaded render
-loop will by extension recognize that relying on vsync to drive animations is
-futile, and it will fall back to using system timers.
-
-\endlist
-
-\note Applications that use more than one on-screen Qt Quick window will always
-get the fallback to system timers with the \c threaded render loop, because the
-vsync-based optimization is not compatible with multiple windows by design.
-Therefore, even if there is no vsync provided by the platform, such an
-application would not notice any difference in behavior as long as more than
-one window is visible.
-
-\note Be aware that the rendering loop logic and event processing on the GUI
-(main) thread is not necessarily unthrottled even if waiting for vsync is
-disabled: both render loops schedule updates for windows via
-QWindow::requestUpdate(). This is backed by a 5 ms GUI thread timer on most
-platforms, in order to give time for event processing. On some platforms, e.g.
-macOS, it is using platform-specific APIs (such as, CVDisplayLink) to get
-notified about the appropriate time to prepare a new frame, likely tied to the
-display's vsync in some form. This can be relevant in benchmarking and similar
-situations. For applications and tools attempting to perform low-level
-benchmarking it may be beneficial to set the \c{QT_QPA_UPDATE_IDLE_TIME}
-environment variable to \c 0 in order to potentially reduce idle time on the
-GUI thread. For normal application usage this should not matter in practice,
-however, and the defaults are sufficient in most cases.
-
-\note When in doubt, enable the \c {qt.scenegraph.general} and \c
-{qt.scenegraph.time.renderloop} logging categories for troubleshooting, as
-these may reveal some clues as to why rendering and animations are not running
-at the expected pace.
-
 \section2 Threaded Render Loop ('threaded')
 
 On many configurations, the scene graph rendering will happen on a
@@ -352,6 +291,171 @@ the non-threaded renderer.
 \image sg-renderloop-singlethreaded.png
 
 
+\section2 Driving Animations
+
+\section3 What does \c{Advance Animations} refer to in the above diagrams?
+
+By default, a Qt Quick animation (such, as a \l NumberAnimation) is driven by
+the default animation driver. This relies on basic system timers, such as
+QObject::startTimer(). The timer typically runs with an interval of 16
+milliseconds. While this will never be fully accurate and also depends on the
+accuracy of timers in the underlying platform, it has the benefit of being
+independent of the rendering. It provides uniform results regardless of the
+display refresh rate and if synchronization to the display's vertical sync is
+active or not. This is how animations work with the \c basic render loop.
+
+In order to provide more accurate results with less stutter on-screen,
+independent of the render loop design (be it single threaded or multiple
+threads) a render loop may decide to install its own custom animation driver,
+and take the operation of \c advancing it into its own hands, without relying
+on timers.
+
+This is what the \c threaded render loop implements. In fact, it installs not
+one, but two animation drivers: one on the gui thread (to drive regular
+animations, such as \l NumberAnimation), and one on the render thread (to drive
+render thread animations, i.e. the \l Animator types, such as \l
+OpacityAnimator or \l XAnimator). Both of these are advanced during the
+preparation of a frame, i.e. animations are now synchronized with rendering.
+This makes sense due to presentation being throttled to the display's vertical
+sync by the underlying graphics stack.
+
+Therefore, in the diagram for the \c threaded render loop above, there is an
+explicit \c{Advance animations} step on both threads. For the render thread,
+this is trivial: as the thread is being throttled to vsync, advancing
+animations (for \l Animator types) in each frame as if 16.67 milliseconds had
+elapsed gives more accurate results than relying on a system timer. (when
+throttled to the vsync timing, which is \c{1000/60} milliseconds with a 60 Hz
+refresh rate, it is fair to assume that it has been approximately that long
+since the same operation was done for the previous frame)
+
+The same approach works for animations on the gui (main) thread too: due to the
+essential synchronization of data between the gui and render threads, the gui
+thread is effectively throttled to the same rate as the render thread, while
+still having the benefit of having less work to do, leaving more headroom for
+the application logic since much of the rendering preparations are now
+offloaded to the render thread.
+
+While the above examples used 60 frames per second, Qt Quick is prepared for
+other refresh rates as well: the rate is queried from the QScreen and the
+platform. For example, with a 144 Hz screen the interval is 6.94 ms. At the
+same time this is exactly what can cause trouble if vsync-based throttling is
+not functioning as expected, because if what the render loop thinks is
+happening is not matching reality, incorrect animation pacing will occur.
+
+In summary, the \c threaded render loop is expected to provide smoother
+animations with less stutter as long as the following conditions are met:
+
+\list
+
+\li There is exactly one window (as in QQuickWindow) on-screen.
+
+\li VSync-based throttling works as expected with the underyling graphics and
+display stack.
+
+\endlist
+
+\section3 What if there is no or more than one window visible?
+
+When there is no renderable window, for example because our QQuickWindow is
+minimized (Windows) or fully obscured (macOS), we cannot present frames, thus
+cannot rely on the thread "working" in lockstep with the screen refresh rate.
+In this case, the \c threaded render loop automatically switches over to a
+system timer based approach to drive animations, i.e. temporarily switching
+over to the mechanism the \c basic loop would use.
+
+The same is true when there are more than one QQuickWindow instances on-screen.
+The model presented above for advancing animations on the gui thread, enabled
+by its synchronization with the render thread, is not satisfactory anymore, as
+there are now multiple sync points with multiple render threads. (one per
+window.) Here falling back to the system timer based approach becomes necessary
+as well, because how long and often the gui thread will block is now dependent
+on a number of factors, including the content in the windows (are they
+animating? how often are they updating?) and the graphics stack behavior (how
+exactly does it handle two or more threads presenting with wait-for-vsync?). As
+we cannot guarantee being throttled to the presentation rate of the window
+(which window would that be, to begin with?) in a stable, cross-platform
+manner, advancing animations cannot be based on the rendering.
+
+This switch of animation handling mechanisms is transparent to the
+applications.
+
+\section3 What if vsync-based throttling is disfunctional, globally disabled, or the application disabled it itself?
+
+The \c threaded render loop relies on the graphics API implementation and/or
+the windowing system for throttling, for example, by requesting a swap interval
+of 1 in case of OpenGL (GLX, EGL, WGL), calling Present() with an interval of 1
+for Direct 3D, or using the presentation mode \c FIFO with Vulkan.
+
+Some graphics drivers allow users to override this setting and turn it off,
+ignoring Qt's request. An example of this would be a system wide control panel
+of the graphics driver that allows overriding the application's settings with
+regards to vsync. It can also happen that a graphics stack is unable to provide
+proper vsync-based throttling, which can be the case in some virtual machines
+(mainly due to using a software rasterization based implementation of OpenGL or
+Vulkan).
+
+Without blocking in the swap/present operation (or some other graphics
+operation), such a render loop would advance animations too fast. This would be
+no issue with the \c basic render loop, because that always relies on system
+timers. With \c threaded, the behavior can vary based on the Qt version:
+
+\list
+
+\li If a system is known to be unable to provide vsync-based throttling, the
+only option before Qt 6.4 was to use the \c basic render loop, by manually
+setting \c {QSG_RENDER_LOOP=basic} in the environment before running the
+application.
+
+\li Starting with Qt 6.4, setting either the \c{QSG_NO_VSYNC} environment
+variable to a non-zero value, or the window's QSurfaceFormat::swapInterval() to
+\c 0 can both alleviate the problem as well: by explicitly requesting disabling
+vsync-based blocking, regardless of the request having any effect in practice,
+the \c threaded render loop can by extension recognize that relying on vsync to
+drive animations is futile, and it will fall back to using system timers, just
+as it would for more than one window.
+
+\li Even better, starting from Qt 6.4 the scenegraph also attempts to recognize
+using some simple heuristics that the frames are being presented "too fast",
+and automatically switch over to system timers if seen necessary. This means
+that in most cases there will be no need to do anything and applications will
+run animations as expected even when the default render loop is the \c threaded
+one. While this is transparent to applications, for troubleshooting and
+development purposes it is useful to know that this is logged with a \c{"Window
+0x7ffc8489c3d0 is determined to have broken vsync throttling ..."} message
+printed when \c{QSG_INFO} or \c{qt.scenegraph.general} is enabled. This method
+has the downside of activating only after a small set of frames, given that it
+first needs to collect data to evaluate, meaning that when opening a
+QQuickWindow the application may still show overly fast animations for a short
+period of time. Additionally, it may not capture all possible vsync-broken
+situations.
+
+\endlist
+
+Remember however, that by design none of this helps render thread animations
+(the \l Animator types). In the absence of vsync-based blocking,
+\l{Animator}{animators} will advance incorrectly, faster than expected, even
+when the workarounds are activated for regular \l{Animation}{animations}.
+
+\note Be aware that the rendering loop logic and event processing on the GUI
+(main) thread is not necessarily unthrottled even if waiting for vsync is
+disabled: both render loops schedule updates for windows via
+QWindow::requestUpdate(). This is backed by a 5 ms GUI thread timer on most
+platforms, in order to give time for event processing. On some platforms, e.g.
+macOS, it is using platform-specific APIs (such as, CVDisplayLink) to get
+notified about the appropriate time to prepare a new frame, likely tied to the
+display's vsync in some form. This can be relevant in benchmarking and similar
+situations. For applications and tools attempting to perform low-level
+benchmarking it may be beneficial to set the \c{QT_QPA_UPDATE_IDLE_TIME}
+environment variable to \c 0 in order to potentially reduce idle time on the
+GUI thread. For normal application usage the defaults should, in most cases, be
+sufficient.
+
+\note When in doubt, enable the \c {qt.scenegraph.general} and \c
+{qt.scenegraph.time.renderloop} logging categories for troubleshooting, as
+these may reveal some clues as to why rendering and animations are not running
+at the expected pace.
+
+
 \section2 Custom control over rendering with QQuickRenderControl
 
 When using QQuickRenderControl, the responsibility for driving the
@@ -360,6 +464,13 @@ built-in render loop is used. Instead, it is up to the application to
 invoke the polish, synchronize and rendering steps at the appropriate
 time. It is possible to implement either a threaded or non-threaded
 behavior similar to the ones shown above.
+
+Additionally, applications may wish to implement and install their own
+QAnimationDriver in combination with QQuickRenderControl. This gives full
+control over driving Qt Quick animations, which can be particularly important
+for content that is not shown on screen, bearing no relation to the
+presentation rate simply because there is no presenting of the frame happening.
+This is optional, by default animations will advance based on the system timer.
 
 
 \section2 Mixing Scene Graph and the native graphics API
