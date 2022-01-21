@@ -78,7 +78,7 @@ T.Switch {
         border.color: Theme.lightGray
 
         Rectangle {
-            id: rectangle
+            id: nub
 
             width: Theme.baseSize * 2.6
             height: Theme.baseSize * 2.6
@@ -101,7 +101,7 @@ T.Switch {
                         color: Theme.mainColor
                         border.color: Theme.mainColor
                     }
-                    rectangle.x: parent.width - width
+                    nub.x: switchHandle.width - nub.width
 
                 }
             },
@@ -110,7 +110,7 @@ T.Switch {
                 when: !control.checked && control.down
 
                 PropertyChanges {
-                    rectangle.color: Theme.light
+                    nub.color: Theme.light
                 }
 
             },
@@ -120,8 +120,8 @@ T.Switch {
                 when: control.checked && control.down
 
                 PropertyChanges {
-                    rectangle {
-                        x: parent.width - width
+                    nub {
+                        x: switchHandle.width - nub.width
                         color: Theme.light
                     }
                     switchHandle {
