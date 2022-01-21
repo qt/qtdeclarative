@@ -51,7 +51,7 @@
 
 QT_BEGIN_NAMESPACE
 
-DEFINE_BOOL_CONFIG_OPTION(stateChangeDebug, STATECHANGE_DEBUG);
+Q_DECLARE_LOGGING_CATEGORY(lcStates)
 
 class QQuickTransitionManagerPrivate
 {
@@ -240,18 +240,17 @@ void QQuickTransitionManager::transition(const QList<QQuickStateAction> &list,
             action.property.write(action.toValue);
         }
     }
-#ifndef QT_NO_DEBUG_STREAM
-    if (stateChangeDebug()) {
+    if (lcStates().isDebugEnabled()) {
         for (const QQuickStateAction &action : qAsConst(applyList)) {
             if (action.event)
-                qWarning() << "    No transition for event:" << action.event->type();
+                qCDebug(lcStates) << "no transition for event:" << action.event->type();
             else
-                qWarning() << "    No transition for:" << action.property.object()
-                           << action.property.name() << "From:" << action.fromValue
-                           << "To:" << action.toValue;
+                qCDebug(lcStates) << "no transition for:" << action.property.object()
+                                  << action.property.name() << "from:" << action.fromValue
+                                  << "to:" << action.toValue;
         }
     }
-#endif
+
     if (!transition)
         complete();
 }

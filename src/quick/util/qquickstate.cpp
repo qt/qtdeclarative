@@ -49,7 +49,7 @@
 
 QT_BEGIN_NAMESPACE
 
-DEFINE_BOOL_CONFIG_OPTION(stateChangeDebug, STATECHANGE_DEBUG);
+Q_LOGGING_CATEGORY(lcStates, "qt.qml.states")
 
 QQuickStateAction::QQuickStateAction()
 : restore(true), actionDone(false), reverseEvent(false), deletableToBinding(false), fromBinding(nullptr), event(nullptr),
@@ -671,19 +671,16 @@ void QQuickState::apply(QQuickTransition *trans, QQuickState *revert)
     // All the local reverts now become part of the ongoing revertList
     d->revertList << additionalReverts;
 
-#ifndef QT_NO_DEBUG_STREAM
-    // Output for debugging
-    if (stateChangeDebug()) {
+    if (lcStates().isDebugEnabled()) {
         for (const QQuickStateAction &action : qAsConst(applyList)) {
             if (action.event)
-                qWarning() << "    QQuickStateAction event:" << action.event->type();
+                qCDebug(lcStates) << "QQuickStateAction event:" << action.event->type();
             else
-                qWarning() << "    QQuickStateAction:" << action.property.object()
-                           << action.property.name() << "From:" << action.fromValue
-                           << "To:" << action.toValue;
+                qCDebug(lcStates) << "QQuickStateAction on" << action.property.object()
+                                  << action.property.name() << "from:" << action.fromValue
+                                  << "to:" << action.toValue;
         }
     }
-#endif
 
     d->transitionManager.transition(applyList, trans);
 }
