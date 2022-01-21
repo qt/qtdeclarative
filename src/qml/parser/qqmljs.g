@@ -1421,9 +1421,26 @@ UiObjectMemberWithScriptStatement: UiPropertyAttributes UiPropertyType QmlIdenti
     } break;
 ./
 
+UiObjectMemberWithScriptStatement: UiPropertyAttributes T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_COLON UiScriptStatement OptionalSemicolon;
+/.
+    case $rule_number: {
+        AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(4).UiQualifiedId->finish(), stringRef(6), sym(8).Statement);
+        node->typeModifier = stringRef(2);
+        auto attributes = sym(1).UiPropertyAttributes;
+        if (attributes->isRequired())
+            diagnostic_messages.append(compileError(attributes->requiredToken(), QLatin1String("Required properties with initializer do not make sense."), QtCriticalMsg));
+        node->setAttributes(attributes);
+        node->typeModifierToken = loc(2);
+        node->typeToken = loc(4);
+        node->identifierToken = loc(6);
+        node->colonToken = loc(7);
+        sym(1).Node = node;
+    } break;
+./
+
 UiObjectMember: UiObjectMemberWithScriptStatement;
 
-UiObjectMemberWithArray: UiPropertyAttributes T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_COLON T_LBRACKET UiArrayMemberList T_RBRACKET Semicolon;
+UiObjectMemberWithArray: UiPropertyAttributes T_IDENTIFIER T_LT UiPropertyType T_GT QmlIdentifier T_COLON ExpressionStatementLookahead T_LBRACKET UiArrayMemberList T_RBRACKET Semicolon;
 /.
     case $rule_number: {
         AST::UiPublicMember *node = new (pool) AST::UiPublicMember(sym(4).UiQualifiedId->finish(), stringRef(6));
@@ -1441,10 +1458,10 @@ UiObjectMemberWithArray: UiPropertyAttributes T_IDENTIFIER T_LT UiPropertyType T
         propertyName->identifierToken = loc(6);
         propertyName->next = nullptr;
 
-        AST::UiArrayBinding *binding = new (pool) AST::UiArrayBinding(propertyName, sym(9).UiArrayMemberList->finish());
+        AST::UiArrayBinding *binding = new (pool) AST::UiArrayBinding(propertyName, sym(10).UiArrayMemberList->finish());
         binding->colonToken = loc(7);
-        binding->lbracketToken = loc(8);
-        binding->rbracketToken = loc(10);
+        binding->lbracketToken = loc(9);
+        binding->rbracketToken = loc(11);
 
         node->binding = binding;
 

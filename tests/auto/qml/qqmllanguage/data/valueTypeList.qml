@@ -9,10 +9,13 @@ ValueTypeListBase {
     property derived y
     x: [y, y, y]
     baseList: [y, y, y]
+    property list<rect> e: [Qt.rect(1,1,1,1), Qt.rect(2,2,2,2), Qt.rect(3,3,3,3)]
+    property rect f: e[0]
 
     Component.onCompleted: {
         a[2] = 17
         y.increment()
+        e[0] = Qt.rect(a[0],a[1],a[2],a[3])
     }
 
     onObjectNameChanged: {

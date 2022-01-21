@@ -6773,6 +6773,9 @@ void tst_qqmllanguage::valueTypeList()
         QCOMPARE(baseList.length(), 3);
         for (const BaseValueType &b : baseList)
             QCOMPARE(b.content(), 29);
+
+        const QRectF f = qvariant_cast<QRectF>(o->property("f"));
+        QCOMPARE(f, QRectF(0, 2, 17, 1));
     }
 
     o->setObjectName(QStringLiteral("foo"));
