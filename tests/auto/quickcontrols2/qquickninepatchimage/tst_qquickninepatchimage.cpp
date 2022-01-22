@@ -133,7 +133,7 @@ void tst_qquickninepatchimage::ninePatch()
 
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QEXPECT_FAIL("", "Grabbing does not work on offscreen/minimal platforms", Abort);
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
     QCOMPARE(ninePatchImageGrab, generatedImage);
 }
