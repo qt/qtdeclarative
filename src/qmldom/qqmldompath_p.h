@@ -783,8 +783,8 @@ public:
     Path operator *() const { return currentEl.head(); }
     PathIterator operator ++() { currentEl = currentEl.dropFront(); return *this; }
     PathIterator operator ++(int) { PathIterator res{currentEl}; currentEl = currentEl.dropFront(); return res; }
-    bool operator ==(const PathIterator &o) { return currentEl == o.currentEl; }
-    bool operator !=(const PathIterator &o) { return currentEl != o.currentEl; }
+    bool operator ==(const PathIterator &o) const { return currentEl == o.currentEl; }
+    bool operator !=(const PathIterator &o) const { return currentEl != o.currentEl; }
 };
 
 class Source {
