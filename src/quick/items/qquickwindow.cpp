@@ -1413,17 +1413,10 @@ bool QQuickWindow::event(QEvent *e)
                 auto insert = [&](QQuickDeliveryAgent *ptda, const QEventPoint &pt) {
                     if (pt.state() == QEventPoint::Pressed)
                         pe->clearPassiveGrabbers(pt);
-                    auto danpit = deliveryAgentsNeedingPoints.find(ptda);
-                    if (danpit == deliveryAgentsNeedingPoints.end()) {
-                        deliveryAgentsNeedingPoints.insert(ptda, QList<QEventPoint>() << pt);
-                    } else {
-                        auto &ptList = danpit.value();
-                        auto ptid = pt.id();
-                        auto alreadyThere = std::find_if(ptList.constBegin(), ptList.constEnd(),
-                            [ptid] (const QEventPoint &pep) { return pep.id() == ptid; });
-                        if (alreadyThere == ptList.constEnd())
-                            danpit.value().append(pt);
-                    }
+                    auto &ptList = deliveryAgentsNeedingPoints[ptda];
+                    auto idEquals = [](auto id) { return [id] (const auto &e) { return e.id() == id; }; };
+                    if (std::none_of(ptList.cbegin(), ptList.cend(), idEquals(pt.id())))
+                        ptList.append(pt);
                 };
 
                 for (const auto &pt : pe->points()) {
