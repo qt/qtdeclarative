@@ -852,7 +852,7 @@ void QQuickSlider::wheelEvent(QWheelEvent *event)
     if (d->wheelEnabled) {
         const qreal oldValue = d->value;
         const QPointF angle = event->angleDelta();
-        const qreal delta = (qFuzzyIsNull(angle.y()) ? angle.x() : (event->inverted() ? -angle.y() : angle.y())) / QWheelEvent::DefaultDeltasPerStep;
+        const qreal delta = (qFuzzyIsNull(angle.y()) ? angle.x() : (event->inverted() ? -angle.y() : angle.y())) / int(QWheelEvent::DefaultDeltasPerStep);
         const qreal step = qFuzzyIsNull(d->stepSize) ? 0.1 : d->stepSize;
         setValue(oldValue + step * delta);
         const bool wasMoved = !qFuzzyCompare(d->value, oldValue);
