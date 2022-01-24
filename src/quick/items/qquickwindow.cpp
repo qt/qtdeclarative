@@ -1350,13 +1350,13 @@ QObject *QQuickWindow::focusObject() const
 }
 
 /*! \reimp */
-bool QQuickWindow::event(QEvent *e)
+bool QQuickWindow::event(QEvent *event)
 {
     Q_D(QQuickWindow);
 
     // bypass QWindow::event dispatching of input events: deliveryAgent takes care of it
     QQuickDeliveryAgent *da = d->deliveryAgent;
-    if (e->isPointerEvent()) {
+    if (event->isPointerEvent()) {
         /*
             We can't bypass the virtual functions like mousePressEvent() tabletEvent() etc.,
             for the sake of code that subclasses QQuickWindow and overrides them, even though
@@ -1370,11 +1370,11 @@ bool QQuickWindow::event(QEvent *e)
         if (d->windowEventDispatch)
             return false;
         {
-            const bool wasAccepted = e->isAccepted();
+            const bool wasAccepted = event->isAccepted();
             QBoolBlocker windowEventDispatchGuard(d->windowEventDispatch, true);
-            qCDebug(lcPtr) << "dispatching to window functions in case of override" << e;
-            QWindow::event(e);
-            if (e->isAccepted() && !wasAccepted)
+            qCDebug(lcPtr) << "dispatching to window functions in case of override" << event;
+            QWindow::event(event);
+            if (event->isAccepted() && !wasAccepted)
                 return true;
         }
         /*
@@ -1384,9 +1384,9 @@ bool QQuickWindow::event(QEvent *e)
             QWindow::touchEvent(), which will ignore(); in that case, we need to continue
             with the usual delivery below, so we need to undo the ignore().
         */
-        auto pe = static_cast<QPointerEvent *>(e);
+        auto pe = static_cast<QPointerEvent *>(event);
         if (QQuickDeliveryAgentPrivate::isTouchEvent(pe))
-            e->accept();
+            event->accept();
         // end of dispatch to user-overridden virtual window functions
 
         /*
@@ -1486,7 +1486,7 @@ bool QQuickWindow::event(QEvent *e)
         // If we didn't handle it in the block above, handle it now.
         // TODO should we deliver to all DAs at once then, since we don't know which one should get it?
         // or fix QTBUG-90851 so that the event always has points?
-        bool ret = (da && da->event(e));
+        bool ret = (da && da->event(event));
 
         // failsafe: never allow any kind of grab to persist after release
         if (pe->isEndEvent()) {
@@ -1508,12 +1508,12 @@ bool QQuickWindow::event(QEvent *e)
 
         if (ret)
             return true;
-    } else if (e->isInputEvent()) {
-        if (da && da->event(e))
+    } else if (event->isInputEvent()) {
+        if (da && da->event(event))
             return true;
     }
 
-    switch (e->type()) {
+    switch (event->type()) {
     // a few more types that are not QInputEvents, but QQuickDeliveryAgent needs to handle them anyway
     case QEvent::FocusAboutToChange:
     case QEvent::Enter:
@@ -1528,20 +1528,20 @@ bool QQuickWindow::event(QEvent *e)
 #endif
         if (d->inDestructor)
             return false;
-        if (da && da->event(e))
+        if (da && da->event(event))
             return true;
         break;
     case QEvent::LanguageChange:
     case QEvent::LocaleChange:
         if (d->contentItem)
-            QCoreApplication::sendEvent(d->contentItem, e);
+            QCoreApplication::sendEvent(d->contentItem, event);
         break;
     case QEvent::UpdateRequest:
         if (d->windowManager)
             d->windowManager->handleUpdateRequest(this);
         break;
     case QEvent::PlatformSurface:
-        if ((static_cast<QPlatformSurfaceEvent *>(e))->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
+        if ((static_cast<QPlatformSurfaceEvent *>(event))->surfaceEventType() == QPlatformSurfaceEvent::SurfaceAboutToBeDestroyed) {
             // Ensure that the rendering thread is notified before
             // the QPlatformWindow is destroyed.
             if (d->windowManager)
@@ -1554,21 +1554,21 @@ bool QQuickWindow::event(QEvent *e)
         Q_FALLTHROUGH();
     case QEvent::WindowActivate:
         if (d->contentItem)
-            QCoreApplication::sendEvent(d->contentItem, e);
+            QCoreApplication::sendEvent(d->contentItem, event);
         break;
     default:
         break;
     }
 
-    if (e->type() == QEvent::Type(QQuickWindowPrivate::FullUpdateRequest))
+    if (event->type() == QEvent::Type(QQuickWindowPrivate::FullUpdateRequest))
         update();
-    else if (e->type() == QEvent::Type(QQuickWindowPrivate::TriggerContextCreationFailure))
+    else if (event->type() == QEvent::Type(QQuickWindowPrivate::TriggerContextCreationFailure))
         d->windowManager->handleContextCreationFailure(this);
 
-    if (e->isPointerEvent())
+    if (event->isPointerEvent())
         return true;
     else
-        return QWindow::event(e);
+        return QWindow::event(event);
 }
 
 /*! \reimp */
