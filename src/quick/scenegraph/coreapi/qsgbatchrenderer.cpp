@@ -2861,56 +2861,85 @@ void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
         if (!stages)
             continue;
 
-        QSGTexture *prevTex = pd->textureBindingTable[binding];
-        QSGTexture *t = prevTex;
+        QVarLengthArray<QSGTexture *, 4> prevTex = pd->textureBindingTable[binding];
+        QVarLengthArray<QSGTexture *, 4> nextTex = prevTex;
 
-        shader->updateSampledImage(renderState, binding, &t, material, m_currentMaterial);
-        if (!t) {
+        const int count = pd->combinedImageSamplerCount[binding];
+        nextTex.resize(count);
+
+        shader->updateSampledImage(renderState, binding, nextTex.data(), material,
+                                   m_currentMaterial);
+
+        if (nextTex.contains(nullptr)) {
             qWarning("No QSGTexture provided from updateSampledImage(). This is wrong.");
             continue;
         }
 
-        QSGTexturePrivate *td = QSGTexturePrivate::get(t);
-        // prevTex may be invalid at this point, avoid dereferencing it
-        if (t != prevTex || td->hasDirtySamplerOptions()) {
-            // The QSGTexture, and so the sampler parameters, may have changed.
-            // The rhiTexture is not relevant here.
+        bool hasDirtySamplerOptions = false;
+        bool isAnisotropic = false;
+        for (QSGTexture *t : nextTex) {
+            QSGTexturePrivate *td = QSGTexturePrivate::get(t);
+            hasDirtySamplerOptions |= td->hasDirtySamplerOptions();
+            isAnisotropic |= t->anisotropyLevel() != QSGTexture::AnisotropyNone;
             td->resetDirtySamplerOptions();
-            pd->textureBindingTable[binding] = t; // does not own
-            pd->samplerBindingTable[binding] = nullptr;
-            if (t->anisotropyLevel() != QSGTexture::AnisotropyNone) // ###
-                qWarning("QSGTexture anisotropy levels are not currently supported");
-
-            const QSGSamplerDescription samplerDesc = QSGSamplerDescription::fromTexture(t);
-            QRhiSampler *sampler = nullptr;
-            auto it = m_samplers.constFind(samplerDesc);
-            if (it != m_samplers.constEnd()) {
-                sampler = *it;
-                Q_ASSERT(sampler);
-            } else {
-                sampler = newSampler(m_rhi, samplerDesc);
-                if (!sampler->create()) {
-                    qWarning("Failed to build sampler");
-                    delete sampler;
-                    continue;
-                }
-                m_samplers.insert(samplerDesc, sampler);
-            }
-            pd->samplerBindingTable[binding] = sampler; // does not own
         }
 
-        if (pd->textureBindingTable[binding] && pd->samplerBindingTable[binding]) {
-            QRhiTexture *texture = pd->textureBindingTable[binding]->rhiTexture();
-            // texture may be null if the update above failed for any reason,
-            // or if the QSGTexture chose to return null intentionally. This is
-            // valid and we still need to provide something to the shader.
-            if (!texture)
-                texture = dummyTexture();
-            QRhiSampler *sampler = pd->samplerBindingTable[binding];
-            bindings.append(QRhiShaderResourceBinding::sampledTexture(binding,
-                                                                      stages,
-                                                                      texture,
-                                                                      sampler));
+        // prevTex may be invalid at this point, avoid dereferencing it
+        if (nextTex != prevTex || hasDirtySamplerOptions) {
+
+            // The QSGTexture, and so the sampler parameters, may have changed.
+            // The rhiTexture is not relevant here.
+            pd->textureBindingTable[binding] = nextTex; // does not own
+            pd->samplerBindingTable[binding].clear();
+
+            if (isAnisotropic) // ###
+                qWarning("QSGTexture anisotropy levels are not currently supported");
+
+            QVarLengthArray<QRhiSampler *, 4> samplers;
+
+            for (QSGTexture *t : nextTex) {
+                const QSGSamplerDescription samplerDesc = QSGSamplerDescription::fromTexture(t);
+
+                QRhiSampler *sampler = m_samplers[samplerDesc];
+
+                if (!sampler) {
+                    sampler = newSampler(m_rhi, samplerDesc);
+                    if (!sampler->create()) {
+                        qWarning("Failed to build sampler");
+                        delete sampler;
+                        continue;
+                    }
+                    m_samplers[samplerDesc] = sampler;
+                }
+                samplers.append(sampler);
+            }
+
+            pd->samplerBindingTable[binding] = samplers; // does not own
+        }
+
+        if (pd->textureBindingTable[binding].count() == pd->samplerBindingTable[binding].count()) {
+
+            QVarLengthArray<QRhiShaderResourceBinding::TextureAndSampler, 4> textureSamplers;
+
+            for (int i = 0; i < pd->textureBindingTable[binding].count(); ++i) {
+
+                QRhiTexture *texture = pd->textureBindingTable[binding].at(i)->rhiTexture();
+
+                // texture may be null if the update above failed for any reason,
+                // or if the QSGTexture chose to return null intentionally. This is
+                // valid and we still need to provide something to the shader.
+                if (!texture)
+                    texture = dummyTexture();
+
+                QRhiSampler *sampler = pd->samplerBindingTable[binding].at(i);
+
+                textureSamplers.append(
+                        QRhiShaderResourceBinding::TextureAndSampler { texture, sampler });
+            }
+
+            if (!textureSamplers.isEmpty())
+                bindings.append(QRhiShaderResourceBinding::sampledTextures(
+                        binding, stages, count, textureSamplers.constData()));
         }
     }
 

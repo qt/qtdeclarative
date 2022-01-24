@@ -212,9 +212,9 @@ QShader QSGMaterialShaderPrivate::loadShader(const QString &filename)
 void QSGMaterialShaderPrivate::clearCachedRendererData()
 {
     for (int i = 0; i < MAX_SHADER_RESOURCE_BINDINGS; ++i)
-        textureBindingTable[i] = nullptr;
+        textureBindingTable[i].clear();
     for (int i = 0; i < MAX_SHADER_RESOURCE_BINDINGS; ++i)
-        samplerBindingTable[i] = nullptr;
+        samplerBindingTable[i].clear();
 }
 
 static inline QRhiShaderResourceBinding::StageFlags toSrbStage(QShader::Stage stage)
@@ -237,6 +237,7 @@ void QSGMaterialShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
     ubufSize = 0;
     ubufStages = { };
     memset(static_cast<void *>(combinedImageSamplerBindings), 0, sizeof(combinedImageSamplerBindings));
+    memset(static_cast<void *>(combinedImageSamplerCount), 0, sizeof(combinedImageSamplerCount));
     vertexShader = fragmentShader = nullptr;
     masterUniformData.clear();
 
@@ -310,11 +311,22 @@ void QSGMaterialShaderPrivate::prepare(QShader::Variant vertexShaderVariant)
         const int imageSamplersCount = imageSamplers.count();
         for (int i = 0; i < imageSamplersCount; ++i) {
             const QShaderDescription::InOutVariable &var(imageSamplers[i]);
-            if (var.binding >= 0 && var.binding < MAX_SHADER_RESOURCE_BINDINGS)
+
+            if (var.binding < 0)
+                continue;
+
+            if (var.binding < MAX_SHADER_RESOURCE_BINDINGS) {
                 combinedImageSamplerBindings[var.binding] |= toSrbStage(it->shader.stage());
-            else
+
+                int count = 1;
+                for (int dim : var.arrayDims)
+                    count *= dim;
+
+                combinedImageSamplerCount[var.binding] = count;
+            } else {
                 qWarning("Encountered invalid combined image sampler (%s) binding %d",
                          var.name.constData(), var.binding);
+            }
         }
 
         if (it.key() == QShader::VertexStage)
@@ -417,6 +429,37 @@ void QSGMaterialShader::setFlags(Flags flags)
 }
 
 /*!
+    Returns the number of elements in the combined image sampler variable at \a
+    binding. This value is introspected from the shader code.  The variable may
+    be an array, and may have more than one dimension.
+
+    The count reflects the total number of combined image sampler items in the
+    variable. In the following example, the count for \c{srcA} is 1, \c{srcB}
+    is 4, and \c{srcC} is 6.
+
+    \badcode
+    layout (binding = 0) uniform sampler2D srcA;
+    layout (binding = 1) uniform sampler2D srcB[4];
+    layout (binding = 2) uniform sampler2D srcC[2][3];
+    \endcode
+
+    This count is the number of QSGTexture pointers in the texture parameter
+    of \l{QSGMaterialShader::updateSampledImage}.
+
+    \sa QSGMaterialShader::updateSampledImage
+    \since 6.4
+ */
+int QSGMaterialShader::combinedImageSamplerCount(int binding) const
+{
+    Q_D(const QSGMaterialShader);
+
+    if (binding >= 0 && binding < d->MAX_SHADER_RESOURCE_BINDINGS)
+        return d->combinedImageSamplerCount[binding];
+
+    return 0;
+}
+
+/*!
     This function is called by the scene graph to get the contents of the
     shader program's uniform buffer updated. The implementation is not expected
     to perform any real graphics operations, it is merely responsible for
@@ -451,27 +494,35 @@ bool QSGMaterialShader::updateUniformData(RenderState &state,
 }
 
 /*!
-    This function is called by the scene graph to prepare using a sampled image
-    in the shader, typically in form of a combined image sampler.
+    This function is called by the scene graph to prepare use of sampled images
+    in the shader, typically in the form of combined image samplers.
 
     \a binding is the binding number of the sampler. The function is called for
     each combined image sampler variable in the shader code associated with the
     QSGMaterialShader.
 
-    When *\a{texture} is null, it must be set to a QSGTexture pointer before
-    returning. When non-null, it is up to the material to decide if a new
-    \c{QSGTexture *} is stored to it, or if it updates some parameters on the
-    already known QSGTexture. The ownership of the QSGTexture is not
-    transferred.
+    \a{texture} is an array of QSGTexture pointers. The number of elements in
+    the array matches the number of elements in the image sampler variable
+    specified in the shader code. This variable may be an array, and may have
+    more than one dimension.  The number of elements in the array may be
+    found via \l{QSGMaterialShader::combinedImageSamplerCount}
+
+    When an element in \a{texture} is null, it must be set to a valid
+    QSGTexture pointer before returning. When non-null, it is up to the
+    material to decide if a new \c{QSGTexture *} is stored to it, or if it
+    updates some parameters on the already known QSGTexture. The ownership of
+    the QSGTexture is not transferred.
 
     The current rendering \a state is passed from the scene graph. Where
     relevant, it is up to the material to trigger enqueuing texture data
-    uploads.
+    uploads via \l{QSGTexture::commitTextureOperations}.
 
     The subclass specific state can be extracted from \a newMaterial.
 
     \a oldMaterial can be used to minimize changes. When \a oldMaterial is null,
     this shader was just activated.
+
+    \sa QSGMaterialShader::combinedImageSamplerCount
  */
 void QSGMaterialShader::updateSampledImage(RenderState &state,
                                            int binding,

@@ -97,14 +97,15 @@ public:
     int ubufSize = 0;
     QRhiShaderResourceBinding::StageFlags ubufStages;
     QRhiShaderResourceBinding::StageFlags combinedImageSamplerBindings[MAX_SHADER_RESOURCE_BINDINGS];
+    int combinedImageSamplerCount[MAX_SHADER_RESOURCE_BINDINGS];
 
     ShaderStageData *vertexShader = nullptr;
     ShaderStageData *fragmentShader = nullptr;
 
     QByteArray masterUniformData;
 
-    QSGTexture *textureBindingTable[MAX_SHADER_RESOURCE_BINDINGS];
-    QRhiSampler *samplerBindingTable[MAX_SHADER_RESOURCE_BINDINGS];
+    QVarLengthArray<QSGTexture *, 4> textureBindingTable[MAX_SHADER_RESOURCE_BINDINGS];
+    QVarLengthArray<QRhiSampler *, 4> samplerBindingTable[MAX_SHADER_RESOURCE_BINDINGS];
 };
 
 Q_DECLARE_TYPEINFO(QSGMaterialShaderPrivate::ShaderStageData, Q_RELOCATABLE_TYPE);

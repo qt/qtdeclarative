@@ -166,6 +166,8 @@ public:
     void setFlag(Flags flags, bool on = true);
     void setFlags(Flags flags);
 
+    int combinedImageSamplerCount(int binding) const;
+
 protected:
     Q_DECLARE_PRIVATE(QSGMaterialShader)
     QSGMaterialShader(QSGMaterialShaderPrivate &dd);
