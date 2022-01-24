@@ -1151,6 +1151,17 @@ void QSGThreadedRenderLoop::hide(QQuickWindow *window)
     releaseResources(window);
 }
 
+void QSGThreadedRenderLoop::resize(QQuickWindow *window)
+{
+    qCDebug(QSG_LOG_RENDERLOOP) << "reisze()" << window;
+
+    Window *w = windowFor(m_windows, window);
+    if (!w)
+        return;
+
+    w->psTimeAccumulator = 0.0f;
+    w->psTimeSampleCount = 0;
+}
 
 /*
     If the window is first hide it, then perform a complete cleanup

@@ -70,6 +70,7 @@ public:
 
     void show(QQuickWindow *) override {}
     void hide(QQuickWindow *) override;
+    void resize(QQuickWindow *window) override;
 
     void windowDestroyed(QQuickWindow *window) override;
     void exposureChanged(QQuickWindow *window) override;
