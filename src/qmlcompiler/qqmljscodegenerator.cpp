@@ -2491,6 +2491,11 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
         }
     }
 
+    if (from == m_typeResolver->nullType()
+            && to->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
+        return u"static_cast<"_qs + to->internalName() + u" *>("_qs + variable + u')';
+    }
+
     const auto jsValueType = m_typeResolver->jsValueType();
 
     auto isJsValue = [&](const QQmlJSScope::ConstPtr &candidate) {
