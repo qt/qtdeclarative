@@ -1,8 +1,0 @@
-[testInvalidate)
-# QTBUG-65614
-b2qt
-qnx
-
-[testThatStuffWorks]
-b2qt
-qnx
