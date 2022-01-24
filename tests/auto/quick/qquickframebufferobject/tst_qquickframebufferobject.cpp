@@ -28,6 +28,7 @@
 
 #include <qtest.h>
 
+#include <QGuiApplication>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 #include <qopenglcontext.h>
@@ -209,6 +210,10 @@ void tst_QQuickFramebufferObject::testThatStuffWorks()
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
 
+    if (QGuiApplication::platformName() == "offscreen" &&
+            view.rendererInterface()->graphicsApi() == QSGRendererInterface::Software)
+        QSKIP("offscreen software rendering doesn't work with FBOs");
+
     QImage result = view.grabWindow();
 
     QCOMPARE(frameInfo.renderCount, 1);
@@ -248,6 +253,10 @@ void tst_QQuickFramebufferObject::testInvalidate()
     view.show();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
+
+    if (QGuiApplication::platformName() == "offscreen" &&
+            view.rendererInterface()->graphicsApi() == QSGRendererInterface::Software)
+        QSKIP("offscreen software rendering doesn't work with FBOs");
 
     QCOMPARE(frameInfo.fboSize, QSize(200, 200));
 
