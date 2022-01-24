@@ -10,6 +10,11 @@ file(GLOB_RECURSE test_data_glob
     ${CMAKE_CURRENT_SOURCE_DIR}/data/*.qml)
 list(APPEND test_data ${test_data_glob})
 
+file(GLOB_RECURSE test_imports_glob
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/imports/*)
+list(APPEND test_data ${test_imports_glob})
+
 qt_internal_add_test(tst_quicktestmainwithsetup
     QMLTEST
     SOURCES
