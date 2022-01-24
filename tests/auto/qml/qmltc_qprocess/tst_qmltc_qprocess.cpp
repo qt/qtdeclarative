@@ -48,7 +48,7 @@ class tst_qmltc_qprocess : public QQmlDataTest
 
     QString m_qmltcPath;
     QString m_tmpPath;
-    QHash<QString, QString> m_resourcePaths;
+    QStringList m_resources;
 
     QString runQmltc(const QString &inputFile, std::function<void(QProcess &)> handleResult,
                      const QStringList &extraArgs = {});
@@ -70,6 +70,10 @@ private slots:
     void inlineComponent();
 };
 
+#ifndef TST_QMLTC_QPROCESS_RESOURCES
+#  error "This test expects TST_QMLTC_QPROCESS_RESOURCES to be defined through CMake."
+#endif
+
 void tst_qmltc_qprocess::initTestCase()
 {
     QQmlDataTest::initTestCase();
@@ -86,8 +90,7 @@ void tst_qmltc_qprocess::initTestCase()
     QVERIFY(QDir(m_tmpPath).removeRecursively()); // in case it's already there
     QVERIFY(QDir().mkpath(m_tmpPath));
 
-    m_resourcePaths = { { u"dummy.qml"_qs, u"data/dummy.qml"_qs },
-                        { u"inlineComponent.qml"_qs, u"data/inlineComponent.qml"_qs } };
+    m_resources = QStringLiteral(TST_QMLTC_QPROCESS_RESOURCES).split(u"_::_"_qs);
 }
 
 void tst_qmltc_qprocess::cleanupTestCase()
@@ -102,10 +105,8 @@ QString tst_qmltc_qprocess::runQmltc(const QString &inputFile,
     QStringList args;
 
     args << (QFileInfo(inputFile).isAbsolute() ? inputFile : testFile(inputFile));
-    if (auto it = m_resourcePaths.constFind(inputFile); it != m_resourcePaths.cend()) {
-        // otherwise expect resource path to come from extraArgs
-        args << u"--resource-path"_qs << it.value();
-    }
+    for (const QString &resource : m_resources)
+        args << u"--resource"_qs << resource;
     args << u"--header"_qs << (m_tmpPath + u"/"_qs + QFileInfo(inputFile).baseName() + u".h"_qs);
     args << u"--impl"_qs << (m_tmpPath + u"/"_qs + QFileInfo(inputFile).baseName() + u".cpp"_qs);
 
@@ -147,7 +148,8 @@ QString tst_qmltc_qprocess::runQmltc(const QString &inputFile, bool shouldSuccee
 
 void tst_qmltc_qprocess::sanity()
 {
-    QVERIFY(runQmltc(u"dummy.qml"_qs, true).isEmpty());
+    const auto output = runQmltc(u"dummy.qml"_qs, true);
+    QVERIFY2(output.isEmpty(), qPrintable(output));
 }
 
 void tst_qmltc_qprocess::noBuiltins()
