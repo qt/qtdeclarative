@@ -40,7 +40,7 @@
 import QtQuick
 import QtQuick.Templates as T
 import QtQuick.Controls.iOS
-import QtQuick.Controls.Imagine.impl
+import QtQuick.Controls.impl
 
 T.Slider {
     id: control

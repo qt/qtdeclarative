@@ -12,11 +12,10 @@ qt_internal_add_qml_module(qtquickcontrols2imaginestyleimplplugin
     CLASS_NAME QtQuickControls2ImagineStyleImplPlugin
     PLUGIN_TARGET qtquickcontrols2imaginestyleimplplugin
     NO_PLUGIN_OPTIONAL
-    SOURCES
-        qquickimageselector.cpp qquickimageselector_p.h
-        qquickninepatchimage.cpp qquickninepatchimage_p.h
     QML_FILES
         ${qml_files}
+    IMPORTS
+        QtQuick.Controls.impl/auto
     DEFINES
         QT_NO_CAST_FROM_ASCII
         QT_NO_CAST_TO_ASCII

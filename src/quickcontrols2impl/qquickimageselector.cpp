@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Controls 2 module of the Qt Toolkit.
@@ -50,14 +50,14 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(lcQtQuickControlsImagine, "qt.quick.controls.imagine")
+Q_LOGGING_CATEGORY(lcQtQuickControlsImageSelector, "qt.quick.controls.imageselector")
 
 static const int DEFAULT_CACHE = 500;
 
 static inline int cacheSize()
 {
     static bool ok = false;
-    static const int size = qEnvironmentVariableIntValue("QT_QUICK_CONTROLS_IMAGINE_CACHE", &ok);
+    static const int size = qEnvironmentVariableIntValue("QT_QUICK_CONTROLS_IMAGESELECTOR_CACHE", &ok);
     return ok ? size : DEFAULT_CACHE;
 }
 
@@ -274,7 +274,7 @@ void QQuickImageSelector::updateSource()
             cache.insert(key, new QString(bestFilePath));
     }
 
-    qCDebug(lcQtQuickControlsImagine) << m_name << m_activeStates << "->" << bestFilePath;
+    qCDebug(lcQtQuickControlsImageSelector) << m_name << m_activeStates << "->" << bestFilePath;
 
     if (bestFilePath.startsWith(QLatin1Char(':')))
         setSource(QUrl(QLatin1String("qrc") + bestFilePath));

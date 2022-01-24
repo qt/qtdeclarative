@@ -18,6 +18,8 @@ qt_internal_add_qml_module(QuickControls2Impl
         qquickcolorimage.cpp qquickcolorimage_p.h
         qquickiconimage.cpp qquickiconimage_p.h
         qquickiconimage_p_p.h
+        qquickninepatchimage.cpp qquickninepatchimage_p.h
+        qquickimageselector.cpp qquickimageselector_p.h
         qquickiconlabel.cpp qquickiconlabel_p.h
         qquickiconlabel_p_p.h
         qquickitemgroup.cpp qquickitemgroup_p.h
