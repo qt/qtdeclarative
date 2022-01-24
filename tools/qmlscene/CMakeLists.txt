@@ -1,5 +1,3 @@
-# Generated from qmlscene.pro.
-
 #####################################################################
 ## qmlscene App:
 #####################################################################
@@ -18,15 +16,8 @@ qt_internal_add_app(qmlscene
         Qt::Quick
         Qt::QuickPrivate
 )
-qt_internal_return_unless_building_tools()
 
 set_target_properties(qmlscene PROPERTIES WIN32_EXECUTABLE FALSE)
-
-#### Keys ignored in scope 1:.:.:qmlscene.pro:<TRUE>:
-# QMAKE_TARGET_DESCRIPTION = "QML" "Scene" "Viewer"
-
-## Scopes:
-#####################################################################
 
 qt_internal_extend_target(qmlscene CONDITION TARGET Qt::Widgets
     PUBLIC_LIBRARIES
