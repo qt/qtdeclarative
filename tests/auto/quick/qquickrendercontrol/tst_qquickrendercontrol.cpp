@@ -184,7 +184,8 @@ void tst_RenderControl::renderAndReadBackWithRhi()
 
     QQuickItem *rootItem = qobject_cast<QQuickItem *>(rootObject);
     QVERIFY(rootItem);
-    QCOMPARE(rootItem->size(), QSize(200, 200));
+    static const QSize ITEM_SIZE = QSize(200, 200);
+    QCOMPARE(rootItem->size(), ITEM_SIZE);
 
     quickWindow->contentItem()->setSize(rootItem->size());
     quickWindow->setGeometry(0, 0, rootItem->width(), rootItem->height());
@@ -225,9 +226,6 @@ void tst_RenderControl::renderAndReadBackWithRhi()
                                                     QRhiTexture::RenderTarget | QRhiTexture::UsedAsTransferSource));
     QVERIFY(tex->create());
 
-    // depth-stencil is mandatory with RHI, although strictly speaking the
-    // scenegraph could operate without one, but it has no means to figure out
-    // the lack of a ds buffer, so just be nice and provide one.
     QScopedPointer<QRhiRenderBuffer> ds(rhi->newRenderBuffer(QRhiRenderBuffer::DepthStencil, size, 1));
     QVERIFY(ds->create());
 
@@ -251,9 +249,27 @@ void tst_RenderControl::renderAndReadBackWithRhi()
             QVERIFY(tex->create()); // internally we now have a whole new native texture object
             ds->setPixelSize(currentSize);
             QVERIFY(ds->create());
-            QVERIFY(texRt->create());
-            // setRenderTarget is mandatory upon changing something, even if the texRt pointer itself is the same
-            quickWindow->setRenderTarget(QQuickRenderTarget::fromRhiRenderTarget(texRt.data()));
+
+            // Starting from Qt 6.3 we need neither a texRt->create() nor a
+            // quickWindow->setRenderTarget() here. Just recreating the
+            // internal native objects behing tex and ds should (must!) be
+            // functional on its own.
+
+        } else if (frame == 85) {
+            // like the above but now change the size radically so that we can
+            // test that rendering (viewports etc.) is corect.
+            currentSize = QSize(100, 100);
+            tex->setPixelSize(currentSize);
+            QVERIFY(tex->create());
+            ds->setPixelSize(currentSize);
+            QVERIFY(ds->create());
+        } else if (frame == 86) {
+            // reset to the default size
+            currentSize = ITEM_SIZE;
+            tex->setPixelSize(currentSize);
+            QVERIFY(tex->create());
+            ds->setPixelSize(currentSize);
+            QVERIFY(ds->create());
         } else if (frame == 90) {
             // Go berserk, destroy and recreate the texture and related stuff
             // (the QRhi objects themselves, not just the native stuff
@@ -328,24 +344,31 @@ void tst_RenderControl::renderAndReadBackWithRhi()
         QVERIFY(qAbs(qGreen(background) - 130) < maxFuzz);
         QVERIFY(qAbs(qBlue(background) - 180) < maxFuzz);
 
-        background = img.pixel(195, 195);
-        QVERIFY(qAbs(qRed(background) - 70) < maxFuzz);
-        QVERIFY(qAbs(qGreen(background) - 130) < maxFuzz);
-        QVERIFY(qAbs(qBlue(background) - 180) < maxFuzz);
+        // Frame 85 is where we resize to (100, 100), skip for that but from 86
+        // we will back to the proper (200, 200). If failures occur from frame
+        // 85 or - more likely - 86, that is likely because the
+        // scenegraph/QQuickWindow does not correctly pick up the render target
+        // size changes.
+        if (frame != 85) {
+            background = img.pixel(195, 195);
+            QVERIFY(qAbs(qRed(background) - 70) < maxFuzz);
+            QVERIFY(qAbs(qGreen(background) - 130) < maxFuzz);
+            QVERIFY(qAbs(qBlue(background) - 180) < maxFuzz);
 
-        // after about 1.25 seconds (animation time, one iteration is 16 ms
-        // thanks to our custom animation driver) the rectangle reaches a 90
-        // degree rotation, that should be frame 76
-        if (frame <= 2 || (frame >= 76 && frame <= 80)) {
-            QRgb c = img.pixel(28, 28); // rectangle
-            QVERIFY(qAbs(qRed(c) - 152) < maxFuzz);
-            QVERIFY(qAbs(qGreen(c) - 251) < maxFuzz);
-            QVERIFY(qAbs(qBlue(c) - 152) < maxFuzz);
-        } else {
-            QRgb c = img.pixel(28, 28); // background because rectangle got rotated so this pixel is not covered by it
-            QVERIFY(qAbs(qRed(c) - 70) < maxFuzz);
-            QVERIFY(qAbs(qGreen(c) - 130) < maxFuzz);
-            QVERIFY(qAbs(qBlue(c) - 180) < maxFuzz);
+            // after about 1.25 seconds (animation time, one iteration is 16 ms
+            // thanks to our custom animation driver) the rectangle reaches a 90
+            // degree rotation, that should be frame 76
+            if (frame <= 2 || (frame >= 76 && frame <= 80)) {
+                QRgb c = img.pixel(28, 28); // rectangle
+                QVERIFY(qAbs(qRed(c) - 152) < maxFuzz);
+                QVERIFY(qAbs(qGreen(c) - 251) < maxFuzz);
+                QVERIFY(qAbs(qBlue(c) - 152) < maxFuzz);
+            } else {
+                QRgb c = img.pixel(28, 28); // background because rectangle got rotated so this pixel is not covered by it
+                QVERIFY(qAbs(qRed(c) - 70) < maxFuzz);
+                QVERIFY(qAbs(qGreen(c) - 130) < maxFuzz);
+                QVERIFY(qAbs(qBlue(c) - 180) < maxFuzz);
+            }
         }
     }
 }
