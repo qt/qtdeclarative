@@ -8,7 +8,7 @@ function(qt_declarative_write_tag_header target_name)
     endif()
     find_program(git_path git)
 
-    if(tag_contents AND NOT tag_contents STREQUAL "$Format:%H$")
+    if(tag_contents AND NOT tag_contents STREQUAL "$Format:%T$")
         set(QML_COMPILE_HASH "${tag_contents}")
     elseif(git_path AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../.git")
         execute_process(
