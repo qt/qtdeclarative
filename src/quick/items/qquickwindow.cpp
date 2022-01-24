@@ -648,15 +648,15 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
         matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
     const qreal devicePixelRatio = q->effectiveDevicePixelRatio();
     if (redirect.rt.renderTarget) {
-        QRect rect(QPoint(0, 0), redirect.rt.renderTarget->pixelSize());
+        const QSize pixelSize = redirect.rt.renderTarget->pixelSize();
+        QRect rect(QPoint(0, 0), pixelSize);
         renderer->setDeviceRect(rect);
         renderer->setViewportRect(rect);
         if (QQuickRenderControl::renderWindowFor(q)) {
             renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size), matrixFlags);
             renderer->setDevicePixelRatio(devicePixelRatio);
         } else {
-            const QSizeF logicalSize =
-                    redirect.rt.renderTarget->pixelSize() / redirect.devicePixelRatio;
+            const QSizeF logicalSize = pixelSize / redirect.devicePixelRatio;
             renderer->setProjectionMatrixToRect(QRectF(QPointF(0, 0), logicalSize), matrixFlags);
             renderer->setDevicePixelRatio(redirect.devicePixelRatio);
         }
