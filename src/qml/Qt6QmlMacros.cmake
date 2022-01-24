@@ -1101,6 +1101,8 @@ function(qt6_target_compile_qml_to_cpp target)
 
     get_target_property(output_dir ${target} QT_QML_MODULE_OUTPUT_DIRECTORY)
     set(qmldir_file ${output_dir}/qmldir)
+    # TODO: we still need to specify the qmldir here for _explicit_ imports of
+    # own module. in theory this could be pushed to the user side
     list(APPEND common_args "-i" ${qmldir_file})
 
     foreach(import_path IN LISTS arg_IMPORT_PATHS)
@@ -1158,6 +1160,12 @@ function(qt6_target_compile_qml_to_cpp target)
         endif()
     endforeach()
 
+    # qmltc needs qrc files to supply to the QQmlJSResourceFileMapper
+    _qt_internal_genex_getjoinedproperty(qrc_args ${target}
+        _qt_generated_qrc_files "--resource$<SEMICOLON>" "$<SEMICOLON>"
+    )
+    list(APPEND common_args ${qrc_args})
+
     foreach(qml_file_src IN LISTS arg_QML_FILES)
         if(NOT qml_file_src MATCHES "\\.(qml)$")
             list(APPEND non_qml_files ${qml_file_src})
@@ -1165,10 +1173,6 @@ function(qt6_target_compile_qml_to_cpp target)
         endif()
 
         get_filename_component(file_absolute ${qml_file_src} ABSOLUTE)
-        __qt_get_relative_resource_path_for_file(file_resource_path ${qml_file_src})
-
-        # we ensured earlier that prefix always ends with "/"
-        file(TO_CMAKE_PATH "${prefix}${file_resource_path}" file_resource_path)
 
         get_filename_component(file_basename ${file_absolute} NAME_WLE) # extension is always .qml
         string(REGEX REPLACE "[$#?]+" "_" compiled_file ${file_basename})
@@ -1197,7 +1201,6 @@ function(qt6_target_compile_qml_to_cpp target)
                 ${qmltc_executable}
                 --header "${compiled_header}"
                 --impl "${compiled_cpp}"
-                --resource-path "${file_resource_path}"
                 ${common_args}
                 ${file_absolute}
             COMMAND_EXPAND_LISTS
@@ -1205,6 +1208,7 @@ function(qt6_target_compile_qml_to_cpp target)
                 ${qmltc_executable}
                 "${file_absolute}"
                 ${qml_module_files}
+                $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
         )
 
         set_source_files_properties(${compiled_header} ${compiled_cpp}

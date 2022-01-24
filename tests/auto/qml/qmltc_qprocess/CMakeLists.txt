@@ -15,6 +15,15 @@ qt6_add_qml_module(tst_qmltc_qprocess
 )
 add_dependencies(tst_qmltc_qprocess Qt::qmltc)
 
+# fetch --resource arguments manually (mimics the logic of qmltc compilation
+# command)
+_qt_internal_genex_getjoinedproperty(qrc_args tst_qmltc_qprocess
+    _qt_generated_qrc_files "" "_::_"
+)
+target_compile_definitions(tst_qmltc_qprocess PRIVATE
+    TST_QMLTC_QPROCESS_RESOURCES="${qrc_args}"
+)
+
 qt_internal_extend_target(tst_qmltc_qprocess CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/data\\\"

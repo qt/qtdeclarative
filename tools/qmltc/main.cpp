@@ -33,6 +33,7 @@
 
 #include <QtQml/private/qqmlirbuilder_p.h>
 #include <private/qqmljscompiler_p.h>
+#include <private/qqmljsresourcefilemapper_p.h>
 
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qurl.h>
@@ -83,6 +84,7 @@ int main(int argc, char **argv)
         QCoreApplication::translate("main", "h path")
     };
     parser.addOption(outputHOption);
+
     QCommandLineOption resourcePathOption {
         u"resource-path"_qs,
         QCoreApplication::translate(
@@ -90,6 +92,13 @@ int main(int argc, char **argv)
         QCoreApplication::translate("main", "resource path")
     };
     parser.addOption(resourcePathOption);
+    QCommandLineOption resourceOption {
+        u"resource"_qs,
+        QCoreApplication::translate(
+                "main", "Qt resource file that might later contain one of the compiled files"),
+        QCoreApplication::translate("main", "resource file name")
+    };
+    parser.addOption(resourceOption);
     QCommandLineOption namespaceOption {
         u"namespace"_qs, QCoreApplication::translate("main", "Namespace of the generated C++ code"),
         QCoreApplication::translate("main", "namespace")
@@ -129,7 +138,6 @@ int main(int argc, char **argv)
 
     QStringList importPaths = parser.values(importPathOption);
     importPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
-    importPaths.append(QFileInfo(url).absolutePath());
     QStringList qmldirFiles = parser.values(qmldirOption);
 
     QString outputCppFile;
@@ -146,8 +154,8 @@ int main(int argc, char **argv)
         outputHFile = parser.value(outputHOption);
     }
 
-    if (!parser.isSet(resourcePathOption)) {
-        fprintf(stderr, "No resource path for file: %s\n", qPrintable(inputFile));
+    if (!parser.isSet(resourceOption) && !parser.isSet(resourcePathOption)) {
+        fprintf(stderr, "No resource paths for file: %s\n", qPrintable(inputFile));
         return EXIT_FAILURE;
     }
 
@@ -161,19 +169,43 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
+    const QStringList resourceFiles = parser.values(resourceOption);
+    QQmlJSResourceFileMapper mapper(resourceFiles);
+
+    // verify that we can map current file to qrc (then use the qrc path later)
+    const QStringList paths = mapper.resourcePaths(QQmlJSResourceFileMapper::localFileFilter(url));
+    QString resolvedResourcePath;
+    if (paths.size() != 1) {
+        if (parser.isSet(resourcePathOption)) {
+            qWarning("--resource-path option is deprecated. Prefer --resource along with "
+                     "automatically generated resource file");
+            resolvedResourcePath = parser.value(resourcePathOption);
+        } else if (paths.isEmpty()) {
+            fprintf(stderr, "Failed to find a resource path for file: %s\n", qPrintable(inputFile));
+            return EXIT_FAILURE;
+        } else if (paths.size() > 1) {
+            fprintf(stderr, "Too many (expected 1) resource paths for file: %s\n",
+                    qPrintable(inputFile));
+            return EXIT_FAILURE;
+        }
+    } else {
+        resolvedResourcePath = paths.first();
+    }
+
     Options options;
     options.outputCppFile = parser.value(outputCppOption);
     options.outputHFile = parser.value(outputHOption);
-    options.resourcePath = parser.value(resourcePathOption);
+    options.resourcePath = resolvedResourcePath;
     options.outNamespace = parser.value(namespaceOption);
 
-    QQmlJSImporter importer { importPaths, /* resource file mapper */ nullptr };
+    QQmlJSImporter importer { importPaths, &mapper };
     QQmlJSLogger logger;
     logger.setFileName(url);
     logger.setCode(sourceCode);
     setupLogger(logger);
 
-    Qmltc::Visitor visitor(&importer, &logger, implicitImportDirectory, qmldirFiles);
+    Qmltc::Visitor visitor(&importer, &logger,
+                           QQmlJSImportVisitor::implicitImportDirectory(url, &mapper), qmldirFiles);
     Qmltc::TypeResolver typeResolver { &importer };
     typeResolver.init(visitor, document.program);
 
