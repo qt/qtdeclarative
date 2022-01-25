@@ -39,7 +39,7 @@ target_link_libraries(${application_name} PRIVATE Qt::QmlPrivate Qt::QuickPrivat
 # Compile qml files (listed in FILES) to C++ using qmltc and add these files to
 # the application binary:
 qt6_target_compile_qml_to_cpp(${application_name}
-    FILES
+    QML_FILES
         myApp.qml
         MyButton.qml
         MySlider.qml

@@ -1028,7 +1028,7 @@ endfunction()
 function(qt6_target_compile_qml_to_cpp target)
     set(args_option "")
     set(args_single NAMESPACE)
-    set(args_multi FILES IMPORT_PATHS)
+    set(args_multi QML_FILES IMPORT_PATHS)
 
     cmake_parse_arguments(PARSE_ARGV 1 arg
         "${args_option}" "${args_single}" "${args_multi}"
@@ -1037,7 +1037,7 @@ function(qt6_target_compile_qml_to_cpp target)
         message(FATAL_ERROR "Unknown/unexpected arguments: ${arg_UNPARSED_ARGUMENTS}")
     endif()
 
-    if (NOT arg_FILES)
+    if (NOT arg_QML_FILES)
         message(FATAL_ERROR "FILES option not given or contains empty list for target ${target}")
     endif()
 
@@ -1111,7 +1111,7 @@ function(qt6_target_compile_qml_to_cpp target)
         endif()
     endforeach()
 
-    foreach(qml_file_src IN LISTS arg_FILES)
+    foreach(qml_file_src IN LISTS arg_QML_FILES)
         if(NOT qml_file_src MATCHES "\\.(qml)$")
             list(APPEND non_qml_files ${qml_file_src})
             continue()
