@@ -413,7 +413,7 @@ bool QQuickPointerHandler::approveGrabTransition(QPointerEvent *event, const QEv
             if (!allowed && (d->grabPermissions & ApprovesTakeOverByItems) && proposedGrabber->inherits("QQuickItem"))
                 allowed = true;
         } else {
-            if (!allowed && (d->grabPermissions & ApprovesCancellation))
+            if (d->grabPermissions & ApprovesCancellation)
                 allowed = true;
         }
     }
