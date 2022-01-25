@@ -81,7 +81,7 @@ public:
     QQuickWindow *window() const;
 
 protected:
-    QQuickRenderControl(QQuickRenderControlPrivate &dd, QObject * parent);
+    QQuickRenderControl(QQuickRenderControlPrivate &dd, QObject *parent = nullptr);
 
 Q_SIGNALS:
     void renderRequested();
