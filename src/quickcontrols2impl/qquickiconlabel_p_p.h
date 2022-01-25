@@ -65,6 +65,8 @@ class QQuickIconLabelPrivate : public QQuickItemPrivate, public QQuickItemChange
     Q_DECLARE_PUBLIC(QQuickIconLabel)
 
 public:
+    ~QQuickIconLabelPrivate() override;
+
     bool hasIcon() const;
     bool hasText() const;
 

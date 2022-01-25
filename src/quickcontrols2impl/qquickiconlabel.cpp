@@ -60,6 +60,8 @@ static void completeComponent(QQuickItem *item)
         parserStatus->componentComplete();
 }
 
+QQuickIconLabelPrivate::~QQuickIconLabelPrivate() = default;
+
 bool QQuickIconLabelPrivate::hasIcon() const
 {
     return display != QQuickIconLabel::TextOnly && !icon.isEmpty();
