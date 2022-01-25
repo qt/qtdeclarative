@@ -42,30 +42,6 @@ class TypeResolver : public QQmlJSTypeResolver
 public:
     TypeResolver(QQmlJSImporter *importer);
 
-    // helper function for code generator
-    QStringList gatherKnownCppClassNames() const
-    {
-        QStringList cppNames;
-        QQmlJSImporter::ImportedTypes builtins = m_importer->builtinInternalNames();
-        cppNames.reserve(builtins.size() + m_imports.size());
-        const auto getInternalName = [](const QQmlJSImportedScope &t) {
-            if (!t.scope)
-                return QString();
-            return t.scope->internalName();
-        };
-        std::transform(builtins.cbegin(), builtins.cend(), std::back_inserter(cppNames),
-                       getInternalName);
-
-        // builtins must be valid: all QQmlJSScopes are not nullptr and have
-        // non-empty internal names. m_imports may have nullptrs, due to import
-        // namespaces
-        Q_ASSERT(std::find(cppNames.cbegin(), cppNames.cend(), QString()) == cppNames.cend());
-
-        std::transform(m_imports.cbegin(), m_imports.cend(), std::back_inserter(cppNames),
-                       getInternalName);
-        return cppNames;
-    }
-
     void init(Visitor &visitor, QQmlJS::AST::Node *program);
 
     // TODO: this shouldn't be exposed. instead, all the custom passes on

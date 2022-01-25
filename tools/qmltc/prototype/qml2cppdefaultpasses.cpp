@@ -506,23 +506,16 @@ QHash<QString, qsizetype> makeUniqueCppNames(const Qml2CppContext &context,
     QHash<QString, qsizetype> typeCounts;
     for (const QString &str : cppKeywords)
         typeCounts.insert(str, 1);
-    const auto knownCppNames = context.typeResolver->gatherKnownCppClassNames();
-    for (const QString &str : knownCppNames)
-        typeCounts.insert(str, 1);
 
     // root is special:
     QQmlJSScope::Ptr root = context.typeResolver->root();
     QFileInfo fi(context.documentUrl);
     auto cppName = fi.baseName();
-    // TODO: root is special and with implicit import directory cppName might be
-    // in typeCounts.
-#if 0
     if (typeCounts.contains(cppName)) {
         context.recordError(root->sourceLocation(),
                             u"Root object name '" + cppName + u"' is reserved");
         return typeCounts;
     }
-#endif
     if (cppName.isEmpty()) {
         context.recordError(root->sourceLocation(), u"Root object's name is empty"_qs);
         return typeCounts;
