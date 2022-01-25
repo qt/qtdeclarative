@@ -140,6 +140,10 @@ qt6_add_qml_module(codegen_test_module
     VERSION 1.0
     URI TestTypes
     IMPORT_PATH "${CMAKE_CURRENT_SOURCE_DIR}/imports/"
+    DEPENDENCIES
+        QtQuick
+        QtQuick.Templates
+        QtQuick.Shapes
     SOURCES
         ${cpp_sources}
     QML_FILES
@@ -148,5 +152,7 @@ qt6_add_qml_module(codegen_test_module
         ${resource_files}
     OUTPUT_DIRECTORY TestTypes # Make sure tst_qmlcachegen doesn't see our output
 )
+
+add_dependencies(codegen_test_module Qt::Quick Qt::QuickTemplates2 Qt::QuickShapesPrivate)
 
 qt_autogen_tools_initial_setup(codegen_test_moduleplugin)
