@@ -115,7 +115,7 @@ target_compile_definitions(tst_qmltc_diskcache PRIVATE
 )
 qt_internal_target_compile_qml_to_cpp(tst_qmltc_diskcache
     NAMESPACE QmltcTest
-    FILES
+    QML_FILES
         ${qml_sources}
 )
 
@@ -140,7 +140,7 @@ target_compile_definitions(tst_qmltc_nodiskcache PRIVATE
 )
 qt_internal_target_compile_qml_to_cpp(tst_qmltc_nodiskcache
     # NAMESPACE QmltcTest # use QT_NAMESPACE instead
-    FILES
+    QML_FILES
         ${qml_sources}
 )
 
