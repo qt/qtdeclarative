@@ -300,6 +300,11 @@ function(qt_internal_add_qml_module target)
         message(FATAL_ERROR "Do not set FOLLOW_FOREIGN_VERSIONING for module ${target}. It is already set by default for internal modules.")
     endif()
 
+    get_target_property(qt_namespace ${QT_CMAKE_EXPORT_NAMESPACE}::Core _qt_namespace)
+    if(qt_namespace)
+        list(APPEND add_qml_module_args NAMESPACE ${qt_namespace})
+    endif()
+
     # Update the backing and plugin targets with qml-specific things.
     qt6_add_qml_module(${target}
         ${add_qml_module_args}

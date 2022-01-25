@@ -41,10 +41,10 @@
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickControls2/qquickstyle.h>
 
+QT_BEGIN_NAMESPACE
+
 extern void qml_register_types_QtQuick_Controls_macOS();
 Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick_Controls_macOS);
-
-QT_BEGIN_NAMESPACE
 
 class QtQuickControls2MacOSStylePlugin : public QQuickStylePlugin
 {

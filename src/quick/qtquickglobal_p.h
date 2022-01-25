@@ -60,9 +60,9 @@
 #include "qtquickglobal.h"
 #include <QtQuick/private/qtquickexports_p.h>
 
-void Q_QUICK_PRIVATE_EXPORT qml_register_types_QtQuick();
-
 QT_BEGIN_NAMESPACE
+
+void Q_QUICK_PRIVATE_EXPORT qml_register_types_QtQuick();
 
 void Q_QUICK_PRIVATE_EXPORT QQuick_initializeModule();
 

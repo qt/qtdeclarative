@@ -59,9 +59,8 @@
 QT_BEGIN_NAMESPACE
 
 Q_QUICKTEMPLATES2_PRIVATE_EXPORT void QQuickTemplates_initializeModule();
+Q_QUICKTEMPLATES2_PRIVATE_EXPORT void qml_register_types_QtQuick_Templates();
 
 QT_END_NAMESPACE
-
-Q_QUICKTEMPLATES2_PRIVATE_EXPORT void qml_register_types_QtQuick_Templates();
 
 #endif // QTQUICKTEMPLATES2GLOBAL_P_H

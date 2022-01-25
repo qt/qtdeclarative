@@ -43,10 +43,10 @@
 #include <QtQuickControls2/private/qquickstyleplugin_p.h>
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 
+QT_BEGIN_NAMESPACE
+
 extern void qml_register_types_QtQuick_Controls_Basic();
 Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick_Controls_Basic);
-
-QT_BEGIN_NAMESPACE
 
 class QtQuickControls2BasicStylePlugin: public QQuickStylePlugin
 {

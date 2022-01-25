@@ -55,6 +55,10 @@
 
 #include <QtLabsSharedImage/private/qtlabssharedimageexports_p.h>
 
+QT_BEGIN_NAMESPACE
+
 void Q_LABSSHAREDIMAGE_PRIVATE_EXPORT qml_register_types_Qt_labs_sharedimage();
+
+QT_END_NAMESPACE
 
 #endif // QTLABSSHAREDIMAGEGLOBAL_P_H
