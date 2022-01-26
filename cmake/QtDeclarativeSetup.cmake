@@ -1,4 +1,8 @@
-# Generates a header file with a hash.
+# Create a header containing a hash that describes this library.  For a
+# released version of Qt, we'll use the .tag file that is updated by git
+# archive with the tree hash. For unreleased versions, we'll ask git
+# rev-parse. If none of this works, we use CMake to hash all the files
+# in the src/qml/ directory.
 function(qt_declarative_write_tag_header target_name)
     set(tag_file "${CMAKE_CURRENT_SOURCE_DIR}/../../.tag")
     set(tag_contents "")
