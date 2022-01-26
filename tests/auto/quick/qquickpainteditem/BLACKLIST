@@ -1,27 +1,34 @@
 # QTBUG-63053
 [opaquePainting]
 b2qt
+qnx
 
 # QTBUG-63053
 [antialiasing]
 b2qt
+qnx
 
 # QTBUG-63053
 [mipmap]
 b2qt
+qnx
 
 # QTBUG-63053
 [performanceHints]
 b2qt
+qnx
 
 # QTBUG-63053
 [contentScale]
 b2qt
+qnx
 
 # QTBUG-63053
 [contentsBoundingRect]
 b2qt
+qnx
 
 # QTBUG-63053
 [fillColor]
 b2qt
+qnx
