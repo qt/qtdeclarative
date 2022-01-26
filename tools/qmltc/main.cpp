@@ -84,14 +84,6 @@ int main(int argc, char **argv)
         QCoreApplication::translate("main", "h path")
     };
     parser.addOption(outputHOption);
-
-    QCommandLineOption resourcePathOption {
-        u"resource-path"_qs,
-        QCoreApplication::translate(
-                "main", "Qt resource file path corresponding to the file being compiled"),
-        QCoreApplication::translate("main", "resource path")
-    };
-    parser.addOption(resourcePathOption);
     QCommandLineOption resourceOption {
         u"resource"_qs,
         QCoreApplication::translate(
@@ -154,7 +146,7 @@ int main(int argc, char **argv)
         outputHFile = parser.value(outputHOption);
     }
 
-    if (!parser.isSet(resourceOption) && !parser.isSet(resourcePathOption)) {
+    if (!parser.isSet(resourceOption)) {
         fprintf(stderr, "No resource paths for file: %s\n", qPrintable(inputFile));
         return EXIT_FAILURE;
     }
@@ -174,28 +166,19 @@ int main(int argc, char **argv)
 
     // verify that we can map current file to qrc (then use the qrc path later)
     const QStringList paths = mapper.resourcePaths(QQmlJSResourceFileMapper::localFileFilter(url));
-    QString resolvedResourcePath;
-    if (paths.size() != 1) {
-        if (parser.isSet(resourcePathOption)) {
-            qWarning("--resource-path option is deprecated. Prefer --resource along with "
-                     "automatically generated resource file");
-            resolvedResourcePath = parser.value(resourcePathOption);
-        } else if (paths.isEmpty()) {
-            fprintf(stderr, "Failed to find a resource path for file: %s\n", qPrintable(inputFile));
-            return EXIT_FAILURE;
-        } else if (paths.size() > 1) {
-            fprintf(stderr, "Too many (expected 1) resource paths for file: %s\n",
-                    qPrintable(inputFile));
-            return EXIT_FAILURE;
-        }
-    } else {
-        resolvedResourcePath = paths.first();
+    if (paths.isEmpty()) {
+        fprintf(stderr, "Failed to find a resource path for file: %s\n", qPrintable(inputFile));
+        return EXIT_FAILURE;
+    } else if (paths.size() > 1) {
+        fprintf(stderr, "Too many (expected 1) resource paths for file: %s\n",
+                qPrintable(inputFile));
+        return EXIT_FAILURE;
     }
 
     Options options;
     options.outputCppFile = parser.value(outputCppOption);
     options.outputHFile = parser.value(outputHOption);
-    options.resourcePath = resolvedResourcePath;
+    options.resourcePath = paths.first();
     options.outNamespace = parser.value(namespaceOption);
 
     QQmlJSImporter importer { importPaths, &mapper };
