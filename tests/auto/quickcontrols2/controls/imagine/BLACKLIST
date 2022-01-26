@@ -7,3 +7,4 @@
 # QTBUG-95750
 [RangeSlider::test_overlappingHandles]
 b2qt
+qnx
