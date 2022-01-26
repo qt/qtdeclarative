@@ -1437,7 +1437,7 @@ void tst_qqmllocale::timeZoneUpdated()
     obj.reset(c.create());
     QVERIFY(obj);
 
-#if !defined(Q_OS_LINUX) || defined(Q_OS_ANDROID)
+#if (!defined(Q_OS_LINUX) && !defined(Q_OS_QNX)) || defined(Q_OS_ANDROID)
     QEXPECT_FAIL("",
                  "Date.timeZoneUpdated() only works on non-Android Linux with QT_CONFIG(timezone).",
                  Continue);
@@ -1449,7 +1449,7 @@ void tst_qqmllocale::timeZoneUpdated()
 
     QMetaObject::invokeMethod(obj.data(), "check");
 
-#if !defined(Q_OS_LINUX) || defined(Q_OS_ANDROID)
+#if (!defined(Q_OS_LINUX) && !defined(Q_OS_QNX)) || defined(Q_OS_ANDROID)
     QEXPECT_FAIL("",
                  "Date.timeZoneUpdated() only works on non-Android Linux with QT_CONFIG(timezone).",
                  Continue);
