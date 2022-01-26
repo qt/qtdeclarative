@@ -162,6 +162,11 @@ void tst_qqmlapplicationengine::application()
 #if QT_CONFIG(process)
     QDir::setCurrent(buildDir);
     QProcess *testProcess = new QProcess(this);
+#ifdef Q_OS_QNX
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert("QT_FORCE_STDERR_LOGGING", "1"); // QTBUG-76546
+    testProcess->setProcessEnvironment(env);
+#endif
     QStringList args;
     args << qmlFile; // QML file passed as an argument is going to be run by testapp.
     testProcess->start(QLatin1String("testapp/testapp"), args);
