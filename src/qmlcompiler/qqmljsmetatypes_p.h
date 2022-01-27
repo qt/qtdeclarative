@@ -138,7 +138,6 @@ public:
         : m_name(std::move(name))
         , m_returnTypeName(std::move(returnType))
         , m_methodType(Method)
-        , m_methodAccess(Public)
     {}
 
     QString methodName() const { return m_name; }
@@ -250,7 +249,7 @@ private:
     QList<QQmlJSAnnotation> m_annotations;
 
     Type m_methodType = Signal;
-    Access m_methodAccess = Private;
+    Access m_methodAccess = Public;
     int m_revision = 0;
     bool m_isConstructor = false;
     bool m_isJavaScriptFunction = false;
