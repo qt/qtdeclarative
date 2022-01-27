@@ -880,6 +880,7 @@ void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaPr
                                          u""_qs);
         setter.body << variableName + u".setValue(" + name + u"_);";
         setter.body << u"emit " + compilationData.notify + u"();";
+        setter.userVisible = true;
         current.functions.emplaceBack(setter);
         mocPieces << u"WRITE"_qs << setter.name;
     }
@@ -888,6 +889,7 @@ void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaPr
     getter.returnType = underlyingType;
     getter.name = compilationData.read;
     getter.body << u"return " + variableName + u".value();";
+    getter.userVisible = true;
     current.functions.emplaceBack(getter);
     mocPieces << u"READ"_qs << getter.name;
 
@@ -898,6 +900,7 @@ void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaPr
         bindable.name = compilationData.bindable;
         bindable.body << u"return QBindable<" + underlyingType + u">(std::addressof(" + variableName
                         + u"));";
+        bindable.userVisible = true;
         current.functions.emplaceBack(bindable);
         mocPieces << u"BINDABLE"_qs << bindable.name;
     }
@@ -1050,6 +1053,7 @@ void CodeGenerator::compileAlias(QQmlJSAotObject &current, const QQmlJSMetaPrope
         getter.body += prologue;
         getter.body << u"return " + info.readLine + u";";
         // getter.body += writeSpecificEpilogue;
+        getter.userVisible = true;
         current.functions.emplaceBack(getter);
         mocLines << u"READ"_qs << getter.name;
     } // else always an error?
@@ -1082,6 +1086,7 @@ void CodeGenerator::compileAlias(QQmlJSAotObject &current, const QQmlJSMetaPrope
             setter.body << info.writeLine + u";";
         }
         setter.body += writeSpecificEpilogue;
+        setter.userVisible = true;
         current.functions.emplaceBack(setter);
         mocLines << u"WRITE"_qs << setter.name;
     }
@@ -1093,6 +1098,7 @@ void CodeGenerator::compileAlias(QQmlJSAotObject &current, const QQmlJSMetaPrope
         bindable.name = compilationData.bindable;
         bindable.body += prologue;
         bindable.body << u"return " + info.bindableLine + u";";
+        bindable.userVisible = true;
         current.functions.emplaceBack(bindable);
         mocLines << u"BINDABLE"_qs << bindable.name;
     }
@@ -1154,8 +1160,12 @@ void CodeGenerator::compileMethod(QQmlJSAotObject &current, const QQmlJSMetaMeth
     compiled.body = std::move(code);
     compiled.type = methodType;
     compiled.access = m.access();
-    if (methodType != QQmlJSMetaMethod::Signal)
+    if (methodType != QQmlJSMetaMethod::Signal) {
         compiled.declPreambles << u"Q_INVOKABLE"_qs; // TODO: do we need this for signals as well?
+        compiled.userVisible = m.access() == QQmlJSMetaMethod::Public;
+    } else {
+        compiled.userVisible = !m.isImplicitQmlPropertyChangeSignal();
+    }
     current.functions.emplaceBack(compiled);
 }
 

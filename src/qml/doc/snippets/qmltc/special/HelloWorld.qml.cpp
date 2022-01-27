@@ -67,6 +67,7 @@ class HelloWorld : public QObject
     Q_OBJECT
     QML_ELEMENT
     Q_PROPERTY(QString hello WRITE setHello READ hello BINDABLE bindableHello)
+
 public:
     HelloWorld(QQmlEngine * engine, QObject * parent = nullptr);
 
@@ -74,7 +75,6 @@ public:
     void setHello(const QString& hello_);
     QString hello();
     QBindable<QString> bindableHello();
-
     Q_INVOKABLE void printHello(QString prefix, QString suffix);
 
 signals:

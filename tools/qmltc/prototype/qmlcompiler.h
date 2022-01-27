@@ -122,6 +122,7 @@ struct QQmlJSAotMethodBase
 struct QQmlJSAotMethod : QQmlJSAotMethodBase
 {
     QQmlJSMetaMethod::Type type = QQmlJSMetaMethod::Method; // Qt function type
+    bool userVisible = false; // tells if a function is prioritized during the output generation
 };
 
 // Represents C++ special member function

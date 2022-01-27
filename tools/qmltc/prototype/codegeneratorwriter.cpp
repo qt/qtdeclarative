@@ -32,6 +32,7 @@
 #include <QtCore/qfileinfo.h>
 
 #include <utility>
+#include <functional>
 
 static constexpr char16_t newLine[] =
 #ifdef Q_OS_WIN32
@@ -176,6 +177,25 @@ static QString classString(const QQmlJSAotObject &compiled)
     return str;
 }
 
+template<typename Predicate>
+static void dumpFunctions(GeneratedCodeUtils &code, const QList<QQmlJSAotMethod> &functions,
+                          Predicate pred)
+{
+    // functions are _ordered_ by access and kind. ordering is important to
+    // provide consistent output
+    QMap<QString, QList<const QQmlJSAotMethod *>> orderedFunctions;
+    for (const auto &function : functions) {
+        if (pred(function))
+            orderedFunctions[getFunctionCategory(function)].append(std::addressof(function));
+    }
+
+    for (auto it = orderedFunctions.cbegin(); it != orderedFunctions.cend(); ++it) {
+        code.appendToHeader(it.key() + u":", -1);
+        for (const QQmlJSAotMethod *function : qAsConst(it.value()))
+            CodeGeneratorWriter::write(code, *function);
+    }
+}
+
 void CodeGeneratorWriter::write(GeneratedCodeUtils &code, const QQmlJSAotObject &compiled)
 {
     code.appendToHeader(u""); // just new line
@@ -196,37 +216,61 @@ void CodeGeneratorWriter::write(GeneratedCodeUtils &code, const QQmlJSAotObject 
         GeneratedCodeUtils::HeaderIndentationScope headerIndentScope(code);
         Q_UNUSED(headerIndentScope);
 
-        // generate ctor
-        if (compiled.ignoreInit) { // TODO: this branch should be eliminated
-            // NB: here the ctor should be public
-            code.appendToHeader(getFunctionCategory(compiled.baselineCtor) + u":", -1);
-            CodeGeneratorWriter::write(code, compiled.baselineCtor);
-        } else {
-            Q_ASSERT(compiled.baselineCtor.access == compiled.init.access);
-            code.appendToHeader(getFunctionCategory(compiled.init) + u":", -1);
-            CodeGeneratorWriter::write(code, compiled.baselineCtor);
-            CodeGeneratorWriter::write(code, compiled.init);
+        // first, write user-visible code, then everything else. someone might
+        // want to look at the generated code, so let's make an effort when
+        // writing it down
 
-            // NB: when non-document root, this ctor won't be public
-            code.appendToHeader(getFunctionCategory(compiled.externalCtor) + u":", -1);
+        code.appendToHeader(u"// -----------------");
+        code.appendToHeader(u"// External C++ API:");
+        code.appendToHeader(u"public:", -1);
+
+        // NB: when non-document root, the externalCtor won't be public - but we
+        // really don't care about the output format of such types
+        if (!compiled.ignoreInit && compiled.externalCtor.access == QQmlJSMetaMethod::Public) {
+            // TODO: ignoreInit must be eliminated
+
             CodeGeneratorWriter::write(code, compiled.externalCtor);
-            code.appendToHeader(u"protected:", -1);
-            CodeGeneratorWriter::write(code, compiled.endInit);
-            CodeGeneratorWriter::write(code, compiled.completeComponent);
-            CodeGeneratorWriter::write(code, compiled.finalizeComponent);
-            CodeGeneratorWriter::write(code, compiled.handleOnCompleted);
-            code.appendToHeader(u"public:", -1);
         }
-
         // generate dtor
         if (compiled.dtor)
             CodeGeneratorWriter::write(code, *compiled.dtor);
 
         // generate enums
-        code.appendToHeader(u"// BEGIN(enumerations)");
         for (const auto &enumeration : qAsConst(compiled.enums))
             CodeGeneratorWriter::write(code, enumeration);
-        code.appendToHeader(u"// END(enumerations)");
+
+        // generate (visible) functions
+        const auto isUserVisibleFunction = [](const QQmlJSAotMethod &function) {
+            return function.userVisible;
+        };
+        dumpFunctions(code, compiled.functions, isUserVisibleFunction);
+
+        code.appendToHeader(u"// -----------------");
+        code.appendToHeader(u""); // blank line
+        code.appendToHeader(u"// Internal functionality (do NOT use it!):");
+
+        // below are the hidden parts of the class
+
+        // generate (rest of the) ctors
+        if (compiled.ignoreInit) { // TODO: this branch should be eliminated
+            Q_ASSERT(compiled.baselineCtor.access == QQmlJSMetaMethod::Public);
+            code.appendToHeader(u"public:", -1);
+            CodeGeneratorWriter::write(code, compiled.baselineCtor);
+        } else {
+            code.appendToHeader(u"protected:", -1);
+            if (compiled.externalCtor.access != QQmlJSMetaMethod::Public) {
+                Q_ASSERT(compiled.externalCtor.access == QQmlJSMetaMethod::Protected);
+                CodeGeneratorWriter::write(code, compiled.externalCtor);
+            }
+            CodeGeneratorWriter::write(code, compiled.baselineCtor);
+            CodeGeneratorWriter::write(code, compiled.init);
+            CodeGeneratorWriter::write(code, compiled.endInit);
+            CodeGeneratorWriter::write(code, compiled.completeComponent);
+            CodeGeneratorWriter::write(code, compiled.finalizeComponent);
+            CodeGeneratorWriter::write(code, compiled.handleOnCompleted);
+
+            // code.appendToHeader(u"public:", -1);
+        }
 
         // generate child types
         code.appendToHeader(u"// BEGIN(children)");
@@ -235,18 +279,9 @@ void CodeGeneratorWriter::write(GeneratedCodeUtils &code, const QQmlJSAotObject 
         code.appendToHeader(u"// END(children)");
 
         // generate functions
-        code.appendToHeader(u"// BEGIN(functions)");
-        // functions are special as they are grouped by access and kind
-        QHash<QString, QList<const QQmlJSAotMethod *>> functionsByCategory;
-        for (const auto &function : qAsConst(compiled.functions))
-            functionsByCategory[getFunctionCategory(function)].append(std::addressof(function));
-
-        for (auto it = functionsByCategory.cbegin(); it != functionsByCategory.cend(); ++it) {
-            code.appendToHeader(it.key() + u":", -1);
-            for (const QQmlJSAotMethod *function : qAsConst(it.value()))
-                CodeGeneratorWriter::write(code, *function);
-        }
-        code.appendToHeader(u"// END(functions)");
+        code.appendToHeader(u"// BEGIN(hidden_functions)");
+        dumpFunctions(code, compiled.functions, std::not_fn(isUserVisibleFunction));
+        code.appendToHeader(u"// END(hidden_functions)");
 
         if (!compiled.variables.isEmpty() || !compiled.properties.isEmpty()) {
             code.appendToHeader(u""); // blank line
