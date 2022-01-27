@@ -192,6 +192,12 @@ public:
         m_isJavaScriptFunction = isJavaScriptFunction;
     }
 
+    bool isImplicitQmlPropertyChangeSignal() const { return m_isImplicitQmlPropertyChangeSignal; }
+    void setIsImplicitQmlPropertyChangeSignal(bool isPropertyChangeSignal)
+    {
+        m_isImplicitQmlPropertyChangeSignal = isPropertyChangeSignal;
+    }
+
     bool isValid() const { return !m_name.isEmpty(); }
 
     const QVector<QQmlJSAnnotation>& annotations() const { return m_annotations; }
@@ -253,6 +259,7 @@ private:
     int m_revision = 0;
     bool m_isConstructor = false;
     bool m_isJavaScriptFunction = false;
+    bool m_isImplicitQmlPropertyChangeSignal = false;
 };
 
 class QQmlJSMetaProperty
