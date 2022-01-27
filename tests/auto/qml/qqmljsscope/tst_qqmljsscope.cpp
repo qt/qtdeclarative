@@ -97,6 +97,7 @@ private Q_SLOTS:
     void initTestCase() override;
 
     void orderedBindings();
+    void signalCreationDifferences();
 
 public:
     tst_qqmljsscope() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
@@ -138,6 +139,28 @@ void tst_qqmljsscope::orderedBindings()
 
     QCOMPARE(itemsBindingsBegin->objectType()->baseTypeName(), u"Item"_qs);
     QCOMPARE(std::next(itemsBindingsBegin)->objectType()->baseTypeName(), u"Text"_qs);
+}
+
+void tst_qqmljsscope::signalCreationDifferences()
+{
+    QQmlJSScope::ConstPtr root = run(u"signalCreationDifferences.qml"_qs);
+    QVERIFY(root);
+
+    QVERIFY(root->hasOwnProperty(u"myProperty"_qs));
+    QVERIFY(root->hasOwnProperty(u"conflictingProperty"_qs));
+    QCOMPARE(root->ownMethods(u"mySignal"_qs).size(), 1);
+
+    const auto conflicting = root->ownMethods(u"conflictingPropertyChanged"_qs);
+    QCOMPARE(conflicting.size(), 2);
+    QCOMPARE(conflicting[0].methodType(), QQmlJSMetaMethod::Signal);
+    QCOMPARE(conflicting[1].methodType(), QQmlJSMetaMethod::Signal);
+
+    const QQmlJSMetaMethod *explicitMethod = nullptr;
+    if (conflicting[0].isImplicitQmlPropertyChangeSignal())
+        explicitMethod = &conflicting[1];
+    else
+        explicitMethod = &conflicting[0];
+    QCOMPARE(explicitMethod->parameterNames(), QStringList({ u"a"_qs, u"c"_qs }));
 }
 
 QTEST_MAIN(tst_qqmljsscope)

@@ -123,6 +123,7 @@ void QQmlJSScope::insertPropertyIdentifier(const QQmlJSMetaProperty &property)
     addOwnProperty(property);
     QQmlJSMetaMethod method(property.propertyName() + u"Changed"_qs, u"void"_qs);
     method.setMethodType(QQmlJSMetaMethod::Signal);
+    method.setIsImplicitQmlPropertyChangeSignal(true);
     addOwnMethod(method);
 }
 
