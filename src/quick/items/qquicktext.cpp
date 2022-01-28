@@ -2354,7 +2354,7 @@ void QQuickText::resetBaseUrl()
     If the \l style() is not \c Text.Normal, a margin is added to ensure
     that the rendering effect will fit within this rectangle.
 
-    \sa contentWidth(), contentHeight(), clilpRect()
+    \sa contentWidth(), contentHeight(), clipRect()
 */
 QRectF QQuickText::boundingRect() const
 {
