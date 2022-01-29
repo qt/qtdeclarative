@@ -187,6 +187,7 @@ void QQuickWidgetPrivate::initOffscreenWindow()
 {
     Q_Q(QQuickWidget);
     offscreenWindow = new QQuickWidgetOffscreenWindow(*new QQuickWidgetOffscreenWindowPrivate(), renderControl);
+    offscreenWindow->setScreen(q->screen());
     // Do not call create() on offscreenWindow.
 
     QWidget::connect(offscreenWindow, SIGNAL(sceneGraphInitialized()), q, SLOT(createFramebufferObject()));
@@ -1035,9 +1036,7 @@ void QQuickWidgetPrivate::createContext()
 
         context = new QOpenGLContext;
         context->setFormat(offscreenWindow->requestedFormat());
-        const QWindow *win = q->window()->windowHandle();
-        if (win && win->screen())
-            context->setScreen(win->screen());
+        context->setScreen(q->screen());
         QOpenGLContext *shareContext = qt_gl_global_share_context();
         if (!shareContext)
             shareContext = QWidgetPrivate::get(q->window())->shareContext();
@@ -1657,19 +1656,16 @@ bool QQuickWidget::event(QEvent *e)
         d->handleWindowChange();
         break;
 
-    case QEvent::ScreenChangeInternal:
-        if (QWindow *window = this->window()->windowHandle()) {
-            QScreen *newScreen = window->screen();
-
-            if (d->offscreenWindow)
-                d->offscreenWindow->setScreen(newScreen);
-            if (d->offscreenSurface)
-                d->offscreenSurface->setScreen(newScreen);
+    case QEvent::ScreenChangeInternal: {
+        QScreen *newScreen = screen();
+        if (d->offscreenWindow)
+            d->offscreenWindow->setScreen(newScreen);
+        if (d->offscreenSurface)
+            d->offscreenSurface->setScreen(newScreen);
 #if QT_CONFIG(opengl)
-            if (d->context)
-                d->context->setScreen(newScreen);
+        if (d->context)
+            d->context->setScreen(newScreen);
 #endif
-        }
 
         if (d->useSoftwareRenderer
 #if QT_CONFIG(opengl)
@@ -1682,7 +1678,7 @@ bool QQuickWidget::event(QEvent *e)
             d->render(true);
         }
         break;
-
+    }
     case QEvent::Show:
     case QEvent::Move:
         d->updatePosition();
