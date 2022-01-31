@@ -96,24 +96,11 @@
 
 #include <QtTest/private/qemulationdetector_p.h>
 
-#define SKIP_DUE_TO_QT_NAMESPACE 0
-
-// on top of testing different cache configurations, we can also test namespace
-// generation for the test classes using the same macro
-#ifdef QMLTC_TESTS_DISABLE_CACHE
-#    if QMLTC_TESTS_DISABLE_CACHE
-#        define PREPEND_NAMESPACE(name) QT_PREPEND_NAMESPACE(name)
-#        ifdef QT_NAMESPACE
-#            undef SKIP_DUE_TO_QT_NAMESPACE
-#            define SKIP_DUE_TO_QT_NAMESPACE 1 // ### QTBUG-99198
-#        endif
-#    else
-#        define PREPEND_NAMESPACE(name)                                                            \
-            ::QmltcTest::name // silent contract that the namespace is QmltcTest
-#    endif
-#else
+#ifndef QMLTC_TESTS_DISABLE_CACHE
 #    error "QMLTC_TESTS_DISABLE_CACHE is supposed to be defined and be equal to either 0 or 1"
 #endif
+
+#define PREPEND_NAMESPACE(name) ::QmltcTest::name // silent contract that the namespace is QmltcTest
 
 tst_qmltc::tst_qmltc()
 {
@@ -132,53 +119,53 @@ void tst_qmltc::initTestCase()
     // Note: just check whether the QML code is valid. QQmlComponent is good for
     // it. also, we can use qrc to make sure the file is in the resource system.
     QUrl urls[] = {
-        QUrl("qrc:/QmltcTests/data/NameConflict.qml"),
-        QUrl("qrc:/QmltcTests/data/HelloWorld.qml"),
-        QUrl("qrc:/QmltcTests/data/simpleQtQuickTypes.qml"),
-        QUrl("qrc:/QmltcTests/data/typeWithEnums.qml"),
-        QUrl("qrc:/QmltcTests/data/methods.qml"),
-        QUrl("qrc:/QmltcTests/data/properties.qml"),
-        QUrl("qrc:/QmltcTests/data/ObjectWithId.qml"),
-        QUrl("qrc:/QmltcTests/data/documentWithIds.qml"),
-        QUrl("qrc:/QmltcTests/data/importNamespace.qml"),
+        QUrl("qrc:/QmltcTests/NameConflict.qml"),
+        QUrl("qrc:/QmltcTests/HelloWorld.qml"),
+        QUrl("qrc:/QmltcTests/simpleQtQuickTypes.qml"),
+        QUrl("qrc:/QmltcTests/typeWithEnums.qml"),
+        QUrl("qrc:/QmltcTests/methods.qml"),
+        QUrl("qrc:/QmltcTests/properties.qml"),
+        QUrl("qrc:/QmltcTests/ObjectWithId.qml"),
+        QUrl("qrc:/QmltcTests/documentWithIds.qml"),
+        QUrl("qrc:/QmltcTests/importNamespace.qml"),
 
-        QUrl("qrc:/QmltcTests/data/signalHandlers.qml"),
-        QUrl("qrc:/QmltcTests/data/javaScriptFunctions.qml"),
-        QUrl("qrc:/QmltcTests/data/changingBindings.qml"),
-        QUrl("qrc:/QmltcTests/data/propertyAlias.qml"),
-        QUrl("qrc:/QmltcTests/data/propertyAlias_external.qml"),
-        QUrl("qrc:/QmltcTests/data/complexAliases.qml"),
-        QUrl("qrc:/QmltcTests/data/propertyChangeHandler.qml"),
-        QUrl("qrc:/QmltcTests/data/NestedHelloWorld.qml"),
-        QUrl("qrc:/QmltcTests/data/ComponentHelloWorld.qml"),
-        QUrl("qrc:/QmltcTests/data/propertyReturningFunction.qml"),
-        QUrl("qrc:/QmltcTests/data/listProperty.qml"),
-        QUrl("qrc:/QmltcTests/data/listPropertySameName.qml"),
-        QUrl("qrc:/QmltcTests/data/defaultProperty.qml"),
-        QUrl("qrc:/QmltcTests/data/defaultPropertyCorrectSelection.qml"),
-        QUrl("qrc:/QmltcTests/data/attachedProperty.qml"),
-        QUrl("qrc:/QmltcTests/data/groupedProperty.qml"),
-        QUrl("qrc:/QmltcTests/data/groupedProperty_qquicktext.qml"),
-        QUrl("qrc:/QmltcTests/data/localImport.qml"),
-        QUrl("qrc:/QmltcTests/data/newPropertyBoundToOld.qml"),
-        QUrl("qrc:/QmltcTests/data/oldPropertyBoundToNew.qml"),
-        QUrl("qrc:/QmltcTests/data/nonLocalQmlPropertyBoundToAny.qml"),
-        QUrl("qrc:/QmltcTests/data/justAnimation.qml"),
-        QUrl("qrc:/QmltcTests/data/justAnimationOnAlias.qml"),
-        QUrl("qrc:/QmltcTests/data/behaviorAndAnimation.qml"),
-        QUrl("qrc:/QmltcTests/data/behaviorAndAnimationOnAlias.qml"),
-        QUrl("qrc:/QmltcTests/data/bindingsThroughIds.qml"),
-        QUrl("qrc:/QmltcTests/data/localImport_context.qml"),
-        QUrl("qrc:/QmltcTests/data/neighbors_context.qml"),
-        QUrl("qrc:/QmltcTests/data/delegate_context.qml"),
-        QUrl("qrc:/QmltcTests/data/nontrivial_context.qml"),
-        QUrl("qrc:/QmltcTests/data/javascriptCaller.qml"),
-        QUrl("qrc:/QmltcTests/data/listView.qml"),
-        QUrl("qrc:/QmltcTests/data/bindingOnValueType.qml"),
-        QUrl("qrc:/QmltcTests/data/keyEvents.qml"),
-        QUrl("qrc:/QmltcTests/data/PrivateProperty.qml"),
-        QUrl("qrc:/QmltcTests/data/privatePropertySubclass.qml"),
-        QUrl("qrc:/QmltcTests/data/calqlatrBits.qml"),
+        QUrl("qrc:/QmltcTests/signalHandlers.qml"),
+        QUrl("qrc:/QmltcTests/javaScriptFunctions.qml"),
+        QUrl("qrc:/QmltcTests/changingBindings.qml"),
+        QUrl("qrc:/QmltcTests/propertyAlias.qml"),
+        QUrl("qrc:/QmltcTests/propertyAlias_external.qml"),
+        QUrl("qrc:/QmltcTests/complexAliases.qml"),
+        QUrl("qrc:/QmltcTests/propertyChangeHandler.qml"),
+        QUrl("qrc:/QmltcTests/NestedHelloWorld.qml"),
+        QUrl("qrc:/QmltcTests/ComponentHelloWorld.qml"),
+        QUrl("qrc:/QmltcTests/propertyReturningFunction.qml"),
+        QUrl("qrc:/QmltcTests/listProperty.qml"),
+        QUrl("qrc:/QmltcTests/listPropertySameName.qml"),
+        QUrl("qrc:/QmltcTests/defaultProperty.qml"),
+        QUrl("qrc:/QmltcTests/defaultPropertyCorrectSelection.qml"),
+        QUrl("qrc:/QmltcTests/attachedProperty.qml"),
+        QUrl("qrc:/QmltcTests/groupedProperty.qml"),
+        QUrl("qrc:/QmltcTests/groupedProperty_qquicktext.qml"),
+        QUrl("qrc:/QmltcTests/localImport.qml"),
+        QUrl("qrc:/QmltcTests/newPropertyBoundToOld.qml"),
+        QUrl("qrc:/QmltcTests/oldPropertyBoundToNew.qml"),
+        QUrl("qrc:/QmltcTests/nonLocalQmlPropertyBoundToAny.qml"),
+        QUrl("qrc:/QmltcTests/justAnimation.qml"),
+        QUrl("qrc:/QmltcTests/justAnimationOnAlias.qml"),
+        QUrl("qrc:/QmltcTests/behaviorAndAnimation.qml"),
+        QUrl("qrc:/QmltcTests/behaviorAndAnimationOnAlias.qml"),
+        QUrl("qrc:/QmltcTests/bindingsThroughIds.qml"),
+        QUrl("qrc:/QmltcTests/localImport_context.qml"),
+        QUrl("qrc:/QmltcTests/neighbors_context.qml"),
+        QUrl("qrc:/QmltcTests/delegate_context.qml"),
+        QUrl("qrc:/QmltcTests/nontrivial_context.qml"),
+        QUrl("qrc:/QmltcTests/javascriptCaller.qml"),
+        QUrl("qrc:/QmltcTests/listView.qml"),
+        QUrl("qrc:/QmltcTests/bindingOnValueType.qml"),
+        QUrl("qrc:/QmltcTests/keyEvents.qml"),
+        QUrl("qrc:/QmltcTests/PrivateProperty.qml"),
+        QUrl("qrc:/QmltcTests/privatePropertySubclass.qml"),
+        QUrl("qrc:/QmltcTests/calqlatrBits.qml"),
     };
 
     QQmlEngine e;
@@ -952,7 +939,7 @@ void tst_qmltc::propertyChangeHandler()
     {
         QQmlEngine e;
         QQmlComponent c(&e);
-        c.loadUrl(QUrl("qrc:/QmltcTests/data/propertyChangeHandler.qml"));
+        c.loadUrl(QUrl("qrc:/QmltcTests/propertyChangeHandler.qml"));
         QScopedPointer<QObject> root(c.create());
         QVERIFY2(root, qPrintable(c.errorString()));
         QCOMPARE(root->property("watcher").toInt(), 42);
@@ -1467,7 +1454,7 @@ void tst_qmltc::contextHierarchy_rootBaseIsQml()
     {
         QQmlEngine e;
         QQmlComponent c(&e);
-        c.loadUrl(QUrl("qrc:/QmltcTests/data/localImport_context.qml"));
+        c.loadUrl(QUrl("qrc:/QmltcTests/localImport_context.qml"));
         QScopedPointer<QObject> root(c.create());
         QVERIFY2(root, qPrintable(c.errorString()));
         // sanity
@@ -1566,7 +1553,7 @@ void tst_qmltc::contextHierarchy_delegate()
     {
         QQmlEngine e;
         QQmlComponent c(&e);
-        c.loadUrl(QUrl("qrc:/QmltcTests/data/delegate_context.qml"));
+        c.loadUrl(QUrl("qrc:/QmltcTests/delegate_context.qml"));
         QScopedPointer<QObject> root(c.create());
         QVERIFY2(root, qPrintable(c.errorString()));
         QQmlListReference data(root.get(), "data");
@@ -1639,10 +1626,6 @@ void tst_qmltc::javascriptImport()
 
 void tst_qmltc::listView()
 {
-#if SKIP_DUE_TO_QT_NAMESPACE
-    QSKIP("QTBUG-99198: QT_NAMESPACE used, this test will fail in QVariant::setValue().");
-#endif
-
     if (QTestPrivate::isRunningArmOnX86())
         QSKIP("Flaky on QEMU. Sometimes can't correctly run JavaScript code, QTBUG-99355");
 
