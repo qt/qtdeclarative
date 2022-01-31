@@ -82,6 +82,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickApplicationWindow : public QQuickWi
     Q_CLASSINFO("DefaultProperty", "contentData")
     QML_NAMED_ELEMENT(ApplicationWindow)
     QML_ADDED_IN_VERSION(2, 0)
+    QML_ATTACHED(QQuickApplicationWindowAttached)
 
 public:
     explicit QQuickApplicationWindow(QWindow *parent = nullptr);
