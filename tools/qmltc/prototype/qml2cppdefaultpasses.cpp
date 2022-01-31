@@ -527,7 +527,7 @@ QHash<QString, qsizetype> makeUniqueCppNames(const Qml2CppContext &context,
 }
 
 static void setupQmlCppType(const Qml2CppContext &context, const QQmlJSScope::Ptr &type,
-                            QString filePath)
+                            const QString &filePath)
 {
     Q_ASSERT(type);
     if (filePath.isEmpty()) {
@@ -543,8 +543,10 @@ static void setupQmlCppType(const Qml2CppContext &context, const QQmlJSScope::Pt
     }
 
     // TODO: this does not cover QT_QMLTC_FILE_BASENAME renaming
-    filePath = QFileInfo(filePath).baseName().toLower() + u".h"_qs;
-    type->setFileName(filePath); // this file name will be discovered during findCppIncludes
+    if (filePath != context.documentUrl) {
+        // this file name will be discovered during findCppIncludes
+        type->setFileName(QFileInfo(filePath).baseName().toLower() + u".h"_qs);
+    }
 
     const auto properties = type->ownProperties();
     for (auto it = properties.cbegin(); it != properties.cend(); ++it) {
