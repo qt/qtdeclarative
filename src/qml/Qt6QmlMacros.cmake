@@ -1094,6 +1094,25 @@ function(qt6_target_compile_qml_to_cpp target)
             continue()
         endif()
 
+        # if we have a versionless Qt lib, find the public one with a version
+        if(lib MATCHES "^Qt::(.*)")
+            set(lib "${CMAKE_MATCH_1}")
+            if(lib MATCHES "^(.*)Private") # remove "Private"
+                set(lib "${CMAKE_MATCH_1}")
+            endif()
+            set(lib ${QT_CMAKE_EXPORT_NAMESPACE}::${lib})
+            if(NOT TARGET ${lib})
+                continue()
+            endif()
+        endif()
+
+        # when we have a suitable lib, ignore INTERFACE_LIBRARY and IMPORTED
+        get_target_property(lib_type ${lib} TYPE)
+        get_target_property(lib_is_imported ${lib} IMPORTED)
+        if(lib_type STREQUAL "INTERFACE_LIBRARY" OR lib_is_imported)
+            continue()
+        endif()
+
         # get any QT_QML_MODULE_ property, this way we can tell whether we deal
         # with QML module target or not. use output dir as it's used later
         get_target_property(external_output_dir ${lib} QT_QML_MODULE_OUTPUT_DIRECTORY)
