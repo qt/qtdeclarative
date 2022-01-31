@@ -93,10 +93,14 @@ void tst_PressAndHold::pressAndHold()
     QVERIFY(spy.isValid() && waitSpy.isValid());
 
     int startDragDistance = QGuiApplication::styleHints()->startDragDistance();
-    QMouseEvent press(QEvent::MouseButtonPress, QPointF(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-    QMouseEvent press2(QEvent::MouseButtonPress, QPointF(), Qt::RightButton, Qt::RightButton, Qt::NoModifier);
-    QMouseEvent move(QEvent::MouseMove, QPointF(2 * startDragDistance, 2 * startDragDistance), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-    QMouseEvent release(QEvent::MouseButtonRelease, QPointF(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QMouseEvent press(QEvent::MouseButtonPress, QPointF(), QPointF(),
+                      Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QMouseEvent press2(QEvent::MouseButtonPress, QPointF(), QPointF(),
+                       Qt::RightButton, Qt::RightButton, Qt::NoModifier);
+    QMouseEvent move(QEvent::MouseMove, QPointF(2 * startDragDistance, 2 * startDragDistance), QPointF(),
+                     Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QMouseEvent release(QEvent::MouseButtonRelease, QPointF(), QPointF(),
+                        Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
 
     // pressAndHold() emitted
     QGuiApplication::sendEvent(control.data(), &press);
@@ -166,9 +170,12 @@ void tst_PressAndHold::keepSelection()
     QSignalSpy waitSpy(waitControl.data(), SIGNAL(pressAndHold(QQuickMouseEvent*)));
     QVERIFY(spy.isValid() && waitSpy.isValid());
 
-    QMouseEvent press(QEvent::MouseButtonPress, QPointF(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-    QMouseEvent press2(QEvent::MouseButtonPress, QPointF(), Qt::RightButton, Qt::RightButton, Qt::NoModifier);
-    QMouseEvent release(QEvent::MouseButtonRelease, QPointF(), Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QMouseEvent press(QEvent::MouseButtonPress, QPointF(), QPointF(),
+                      Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QMouseEvent press2(QEvent::MouseButtonPress, QPointF(), QPointF(),
+                       Qt::RightButton, Qt::RightButton, Qt::NoModifier);
+    QMouseEvent release(QEvent::MouseButtonRelease, QPointF(), QPointF(),
+                        Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
 
     QVERIFY(!control->property("text").toString().isEmpty());
     QVERIFY(QMetaObject::invokeMethod(control.data(), "selectAll"));

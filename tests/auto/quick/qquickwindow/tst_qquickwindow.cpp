@@ -1867,24 +1867,24 @@ void tst_qquickwindow::ignoreUnhandledMouseEvents()
     item->setParentItem(window->contentItem());
 
     {
-        QMouseEvent me(QEvent::MouseButtonPress, QPointF(50, 50), Qt::LeftButton, Qt::LeftButton,
-                       Qt::NoModifier);
+        QMouseEvent me(QEvent::MouseButtonPress, QPointF(50, 50), window->mapToGlobal(QPointF(50, 50)),
+                       Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
         me.setAccepted(true);
         QVERIFY(QCoreApplication::sendEvent(window, &me));
         QVERIFY(!me.isAccepted());
     }
 
     {
-        QMouseEvent me(QEvent::MouseMove, QPointF(51, 51), Qt::LeftButton, Qt::LeftButton,
-                       Qt::NoModifier);
+        QMouseEvent me(QEvent::MouseMove, QPointF(51, 51), window->mapToGlobal(QPointF(51, 51)),
+                       Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
         me.setAccepted(true);
         QVERIFY(QCoreApplication::sendEvent(window, &me));
         QVERIFY(!me.isAccepted());
     }
 
     {
-        QMouseEvent me(QEvent::MouseButtonRelease, QPointF(51, 51), Qt::LeftButton, Qt::LeftButton,
-                       Qt::NoModifier);
+        QMouseEvent me(QEvent::MouseButtonRelease, QPointF(51, 51), window->mapToGlobal(QPointF(51, 51)),
+                       Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
         me.setAccepted(true);
         QVERIFY(QCoreApplication::sendEvent(window, &me));
         QVERIFY(!me.isAccepted());
