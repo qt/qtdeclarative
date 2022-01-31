@@ -942,14 +942,14 @@ bool QQuickDeliveryAgentPrivate::sendHoverEvent(QEvent::Type type, QQuickItem *i
                                       Qt::KeyboardModifiers modifiers, ulong timestamp)
 {
     auto itemPrivate = QQuickItemPrivate::get(item);
-    const QTransform transform = itemPrivate->windowToItemTransform();
-    QHoverEvent hoverEvent(type, transform.map(scenePos), transform.map(lastScenePos), modifiers);
+    const auto transform = itemPrivate->windowToItemTransform();
+    const auto transformToGlobal = itemPrivate->windowToGlobalTransform();
+    auto globalPos = transformToGlobal.map(scenePos);
+    QHoverEvent hoverEvent(type, transform.map(scenePos), globalPos, transform.map(lastScenePos), modifiers);
     hoverEvent.setTimestamp(timestamp);
     hoverEvent.setAccepted(true);
-    const QTransform transformToGlobal = itemPrivate->windowToGlobalTransform();
     QEventPoint &point = hoverEvent.point(0);
     QMutableEventPoint::setScenePosition(point, scenePos);
-    QMutableEventPoint::setGlobalPosition(point, transformToGlobal.map(scenePos));
     QMutableEventPoint::setGlobalLastPosition(point, transformToGlobal.map(lastScenePos));
 
     hasFiltered.clear();
@@ -1125,7 +1125,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
 
     if (clearHover) {
         // Note: a leave should never stop propagation
-        QHoverEvent hoverEvent(QEvent::HoverLeave, scenePos, lastScenePos, modifiers);
+        QHoverEvent hoverEvent(QEvent::HoverLeave, scenePos, globalPos, lastScenePos, modifiers);
         hoverEvent.setTimestamp(timestamp);
 
         for (QQuickPointerHandler *h : itemPrivate->extra->pointerHandlers) {

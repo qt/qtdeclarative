@@ -2106,11 +2106,12 @@ void tst_qquicktext::linkInteraction()
     QVERIFY(mousePositions.count() > 0);
 
     QPointF mousePosition = mousePositions.first();
+    auto globalPos = textObject->mapToGlobal(mousePosition);
     {
-        QHoverEvent he(QEvent::HoverEnter, mousePosition, QPointF());
+        QHoverEvent he(QEvent::HoverEnter, mousePosition, globalPos, QPointF());
         static_cast<EventSender*>(static_cast<QQuickItem*>(textObject))->sendEvent(&he);
 
-        QMouseEvent me(QEvent::MouseButtonPress, mousePosition, Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+        QMouseEvent me(QEvent::MouseButtonPress, mousePosition, globalPos, Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
         static_cast<EventSender*>(static_cast<QQuickItem*>(textObject))->sendEvent(&me);
     }
 
@@ -2120,11 +2121,12 @@ void tst_qquicktext::linkInteraction()
 
     for (int i = 1; i < mousePositions.count(); ++i) {
         mousePosition = mousePositions.at(i);
+        auto globalPos = textObject->mapToGlobal(mousePosition);
 
-        QHoverEvent he(QEvent::HoverMove, mousePosition, QPointF());
+        QHoverEvent he(QEvent::HoverMove, mousePosition, globalPos, QPointF());
         static_cast<EventSender*>(static_cast<QQuickItem*>(textObject))->sendEvent(&he);
 
-        QMouseEvent me(QEvent::MouseMove, mousePosition, Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+        QMouseEvent me(QEvent::MouseMove, mousePosition, globalPos, Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
         static_cast<EventSender*>(static_cast<QQuickItem*>(textObject))->sendEvent(&me);
     }
 
@@ -2133,10 +2135,10 @@ void tst_qquicktext::linkInteraction()
     QCOMPARE(textObject->linkAt(mousePosition.x(), mousePosition.y()), hoverMoveLink);
 
     {
-        QHoverEvent he(QEvent::HoverLeave, mousePosition, QPointF());
+        QHoverEvent he(QEvent::HoverLeave, mousePosition, globalPos, QPointF());
         static_cast<EventSender*>(static_cast<QQuickItem*>(textObject))->sendEvent(&he);
 
-        QMouseEvent me(QEvent::MouseButtonRelease, mousePosition, Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+        QMouseEvent me(QEvent::MouseButtonRelease, mousePosition, globalPos, Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
         static_cast<EventSender*>(static_cast<QQuickItem*>(textObject))->sendEvent(&me);
     }
 
