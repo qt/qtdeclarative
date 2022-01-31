@@ -33,6 +33,8 @@
 #include <QtGui/QStyleHints>
 #include <QtQuick/qquickview.h>
 #include <QtQuickTest/QtQuickTest>
+#include <QStringListModel>
+#include <QQmlApplicationEngine>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlexpression.h>
@@ -301,6 +303,9 @@ private slots:
     void animatedDelegate();
     void dragDelegateWithMouseArea();
     void dragDelegateWithMouseArea_data();
+
+
+    void singletonModelLifetime();
 
 private:
     template <class T> void items(const QUrl &source);
@@ -10198,6 +10203,25 @@ void tst_QQuickListView::dragDelegateWithMouseArea_data()
         const char *enumValueName = QMetaEnum::fromType<QQuickItemView::LayoutDirection>().valueToKey(layDir);
         QTest::newRow(enumValueName) << static_cast<QQuickItemView::LayoutDirection>(layDir);
     }
+}
+
+class SingletonModel : public QStringListModel
+{
+    Q_OBJECT
+public:
+    SingletonModel(QObject* parent = nullptr) : QStringListModel(parent) { }
+};
+
+void tst_QQuickListView::singletonModelLifetime()
+{
+    // this does not really test any functionality of listview, but we do not have a good way
+    // to unit test QQmlAdaptorModel in isolation.
+    qmlRegisterSingletonType<SingletonModel>("test", 1, 0, "SingletonModel",
+            [](QQmlEngine* , QJSEngine*) -> QObject* { return new SingletonModel; });
+
+    QQmlApplicationEngine engine(testFile("singletonModelLifetime.qml"));
+    // needs event loop iteration for callLater to execute
+    QTRY_VERIFY(engine.rootObjects().first()->property("alive").toBool());
 }
 
 QTEST_MAIN(tst_QQuickListView)

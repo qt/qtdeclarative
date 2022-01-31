@@ -258,7 +258,7 @@ QQmlDelegateModel::~QQmlDelegateModel()
 {
     Q_D(QQmlDelegateModel);
     d->disconnectFromAbstractItemModel();
-    d->m_adaptorModel.setObject(nullptr, this);
+    d->m_adaptorModel.setObject(nullptr);
 
     for (QQmlDelegateModelItem *cacheItem : qAsConst(d->m_cache)) {
         if (cacheItem->object) {

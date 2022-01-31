@@ -962,30 +962,36 @@ QQmlAdaptorModel::~QQmlAdaptorModel()
     accessors->cleanup(*this);
 }
 
-void QQmlAdaptorModel::setModel(const QVariant &variant, QObject *parent, QQmlEngine *engine)
+void QQmlAdaptorModel::setModel(const QVariant &variant, QObject *, QQmlEngine *engine)
 {
     accessors->cleanup(*this);
 
     list.setList(variant, engine);
+    modelStrongReference.clear();
 
     if (QObject *object = qvariant_cast<QObject *>(list.list())) {
-        setObject(object, parent);
+        if (QQmlData *ddata = QQmlData::get(object))
+            modelStrongReference = ddata->jsWrapper;
+        setObject(object);
         if (qobject_cast<QAbstractItemModel *>(object))
             accessors = new VDMAbstractItemModelDataType(this);
         else
             accessors = new VDMObjectDelegateDataType;
     } else if (list.type() == QQmlListAccessor::ListProperty) {
-        setObject(static_cast<const QQmlListReference *>(variant.constData())->object(), parent);
+        auto object = static_cast<const QQmlListReference *>(variant.constData())->object();
+        if (QQmlData *ddata = QQmlData::get(object))
+            modelStrongReference = ddata->jsWrapper;
+        setObject(object);
         accessors = new VDMObjectDelegateDataType;
     } else if (list.type() == QQmlListAccessor::ObjectList) {
-        setObject(nullptr, parent);
+        setObject(nullptr);
         accessors = new VDMObjectDelegateDataType;
     } else if (list.type() != QQmlListAccessor::Invalid
             && list.type() != QQmlListAccessor::Instance) { // Null QObject
-        setObject(nullptr, parent);
+        setObject(nullptr);
         accessors = new VDMListDelegateDataType;
     } else {
-        setObject(nullptr, parent);
+        setObject(nullptr);
         accessors = &qt_vdm_null_accessors;
     }
 }
