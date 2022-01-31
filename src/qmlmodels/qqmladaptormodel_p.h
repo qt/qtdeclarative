@@ -70,7 +70,7 @@ class QQmlDelegateModel;
 class QQmlDelegateModelItem;
 class QQmlDelegateModelItemMetaType;
 
-class Q_QMLMODELS_PRIVATE_EXPORT QQmlAdaptorModel : public QQmlStrongJSQObjectReference<QObject>
+class Q_QMLMODELS_PRIVATE_EXPORT QQmlAdaptorModel : public QQmlGuard<QObject>
 {
 public:
     class Accessors
@@ -114,6 +114,10 @@ public:
     const Accessors *accessors;
     QPersistentModelIndex rootIndex;
     QQmlListAccessor list;
+    // we need to ensure that a JS created model does not get gced, but cannot
+    // arbitrarily set the parent  (using QQmlStrongJSQObjectReference)  of QObject based models,
+    // as that causes issues with singletons
+    QV4::PersistentValue modelStrongReference;
 
     QTypeRevision modelItemRevision = QTypeRevision::zero();
 
@@ -121,7 +125,7 @@ public:
     ~QQmlAdaptorModel();
 
     inline QVariant model() const { return list.list(); }
-    void setModel(const QVariant &variant, QObject *parent);
+    void setModel(const QVariant &variant, QObject *parent = nullptr);
     void invalidateModel();
 
     bool isValid() const;
