@@ -46,6 +46,13 @@ QT_BEGIN_NAMESPACE
 
 Q_GLOBAL_STATIC_WITH_ARGS(QString, GlobalPath, (QLatin1String("qrc:/qt-project.org/imports/QtQuick/Controls/iOS/images/")))
 
+static QQuickIOSStyle::Theme qquickios_effective_theme()
+{
+    return QQuickStylePrivate::isDarkSystemTheme()
+            ? QQuickIOSStyle::Dark
+            : QQuickIOSStyle::Light;
+}
+
 QQuickIOSStyle::QQuickIOSStyle(QObject *parent)
     : QQuickAttachedObject(parent)
 {
@@ -70,6 +77,21 @@ void QQuickIOSStyle::init()
     //     globalsInitialized = true;
     // }
     QQuickAttachedObject::init(); // TODO: lazy init?
+    setTheme(qquickios_effective_theme());
+}
+
+QQuickIOSStyle::Theme QQuickIOSStyle::theme() const
+{
+    return m_theme;
+}
+
+void QQuickIOSStyle::setTheme(Theme theme)
+{
+    if (m_theme == theme)
+        return;
+    m_theme = theme;
+
+    themeChanged();
 }
 
 QT_END_NAMESPACE

@@ -69,6 +69,8 @@ T.Slider {
             states: [
                 {"vertical": control.vertical},
                 {"horizontal": control.horizontal},
+                {"light": IOS.theme == IOS.Light},
+                {"dark": IOS.theme == IOS.Dark},
                 {"disabled": !control.enabled},
             ]
         }
@@ -81,6 +83,8 @@ T.Slider {
             states: [
                 {"vertical": control.vertical},
                 {"horizontal": control.horizontal},
+                {"light": IOS.theme == IOS.Light},
+                {"dark": IOS.theme == IOS.Dark},
                 {"disabled": !control.enabled},
             ]
         }
@@ -102,6 +106,8 @@ T.Slider {
                 states: [
                     {"vertical": control.vertical},
                     {"horizontal": control.horizontal},
+                    {"light": IOS.theme == IOS.Light},
+                    {"dark": IOS.theme == IOS.Dark},
                     {"disabled": !control.enabled},
                 ]
             }
