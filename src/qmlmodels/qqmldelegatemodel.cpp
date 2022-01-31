@@ -259,7 +259,7 @@ QQmlDelegateModel::~QQmlDelegateModel()
 {
     Q_D(QQmlDelegateModel);
     d->disconnectFromAbstractItemModel();
-    d->m_adaptorModel.setObject(nullptr, this);
+    d->m_adaptorModel.setObject(nullptr);
 
     for (QQmlDelegateModelItem *cacheItem : qAsConst(d->m_cache)) {
         if (cacheItem->object) {
@@ -443,7 +443,7 @@ void QQmlDelegateModel::setModel(const QVariant &model)
         _q_itemsRemoved(0, d->m_count);
 
     d->disconnectFromAbstractItemModel();
-    d->m_adaptorModel.setModel(model, this);
+    d->m_adaptorModel.setModel(model);
     d->connectToAbstractItemModel();
 
     d->m_adaptorModel.replaceWatchedRoles(QList<QByteArray>(), d->m_watchedRoles);

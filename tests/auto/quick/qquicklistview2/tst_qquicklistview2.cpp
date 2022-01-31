@@ -31,6 +31,8 @@
 #include <QtQuick/private/qquickitemview_p_p.h>
 #include <QtQuick/private/qquicklistview_p.h>
 #include <QtQuickTest/QtQuickTest>
+#include <QStringListModel>
+#include <QQmlApplicationEngine>
 
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
@@ -52,6 +54,7 @@ private slots:
     void delegateChooserEnumRole();
     void QTBUG_92809();
     void footerUpdate();
+    void singletonModelLifetime();
 };
 
 tst_QQuickListView2::tst_QQuickListView2()
@@ -221,6 +224,26 @@ void tst_QQuickListView2::footerUpdate()
     QTRY_VERIFY(footer);
     QVERIFY(QQuickTest::qWaitForItemPolished(footer));
     QTRY_COMPARE(footer->y(), 0);
+}
+
+
+class SingletonModel : public QStringListModel
+{
+    Q_OBJECT
+public:
+    SingletonModel(QObject* parent = nullptr) : QStringListModel(parent) { }
+};
+
+void tst_QQuickListView2::singletonModelLifetime()
+{
+    // this does not really test any functionality of listview, but we do not have a good way
+    // to unit test QQmlAdaptorModel in isolation.
+    qmlRegisterSingletonType<SingletonModel>("test", 1, 0, "SingletonModel",
+            [](QQmlEngine* , QJSEngine*) -> QObject* { return new SingletonModel; });
+
+    QQmlApplicationEngine engine(testFile("singletonModelLifetime.qml"));
+    // needs event loop iteration for callLater to execute
+    QTRY_VERIFY(engine.rootObjects().first()->property("alive").toBool());
 }
 
 QTEST_MAIN(tst_QQuickListView2)
