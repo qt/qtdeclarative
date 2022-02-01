@@ -3065,12 +3065,17 @@ bool Codegen::visit(ThisExpression *)
     if (hasError())
         return false;
 
-    if (_context->isArrowFunction) {
-        Reference r = referenceForName(QStringLiteral("this"), false);
-        r.isReadonly = true;
-        setExprResult(r);
-        return false;
+    for (Context *parentContext = _context; parentContext; parentContext = parentContext->parent) {
+        if (parentContext->isArrowFunction) {
+            Reference r = referenceForName(QStringLiteral("this"), false);
+            r.isReadonly = true;
+            setExprResult(r);
+            return false;
+        }
+        if (parentContext->contextType != ContextType::Block)
+            break;
     }
+
     setExprResult(Reference::fromThis(this));
     return false;
 }
