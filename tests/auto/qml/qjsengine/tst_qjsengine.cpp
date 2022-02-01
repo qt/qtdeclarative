@@ -280,6 +280,7 @@ private slots:
 
     void uiLanguage();
     void urlObject();
+    void thisInConstructor();
 
 public:
     Q_INVOKABLE QJSValue throwingCppMethod1();
@@ -5473,6 +5474,27 @@ void tst_QJSEngine::urlObject()
     QUrl result2;
     QVERIFY(scope.engine->metaTypeFromJS(urlVariantValue, QMetaType::fromType<QUrl>(), &result2));
     QCOMPARE(result2, url);
+}
+
+void tst_QJSEngine::thisInConstructor()
+{
+    QJSEngine engine;
+    const QJSValue result = engine.evaluate(R"((function() {
+        let a = undefined;
+        class Bugtest {
+            constructor() {
+                (() => {
+                    if (true) {
+                        a = this;
+                    }
+                })();
+            }
+        };
+        new Bugtest();
+        return a;
+    })())");
+    QVERIFY(!result.isUndefined());
+    QVERIFY(result.isObject());
 }
 
 QTEST_MAIN(tst_QJSEngine)
