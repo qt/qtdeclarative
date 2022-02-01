@@ -130,12 +130,18 @@ public:
             CullBack
         };
 
+        enum PolygonMode {
+            Fill,
+            Line,
+        };
+
         bool blendEnable;
         BlendFactor srcColor;
         BlendFactor dstColor;
         ColorMask colorWrite;
         QColor blendConstant;
         CullMode cullMode;
+        PolygonMode polygonMode;
         // This struct is extensible while keeping BC since apps only ever get
         // a ptr to the struct, it is not created by them.
     };

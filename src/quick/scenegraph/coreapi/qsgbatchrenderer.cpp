@@ -2654,6 +2654,7 @@ bool Renderer::ensurePipelineState(Element *e, const ShaderManager::Shader *sms,
     ps->setFlags(flags);
     ps->setTopology(qsg_topology(m_gstate.drawMode));
     ps->setCullMode(m_gstate.cullMode);
+    ps->setPolygonMode(m_gstate.polygonMode);
 
     QRhiGraphicsPipeline::TargetBlend blend;
     blend.colorWrite = m_gstate.colorWrite;
@@ -2793,13 +2794,14 @@ static void rendererToMaterialGraphicsState(QSGMaterialShader::GraphicsPipelineS
     Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::OneMinusSrc1Alpha) == int(QRhiGraphicsPipeline::OneMinusSrc1Alpha));
     Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::A) == int(QRhiGraphicsPipeline::A));
     Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::CullBack) == int(QRhiGraphicsPipeline::Back));
-
+    Q_ASSERT(int(QSGMaterialShader::GraphicsPipelineState::Line) == int(QRhiGraphicsPipeline::Line));
     dst->srcColor = QSGMaterialShader::GraphicsPipelineState::BlendFactor(src->srcColor);
     dst->dstColor = QSGMaterialShader::GraphicsPipelineState::BlendFactor(src->dstColor);
 
     dst->colorWrite = QSGMaterialShader::GraphicsPipelineState::ColorMask(int(src->colorWrite));
 
     dst->cullMode = QSGMaterialShader::GraphicsPipelineState::CullMode(src->cullMode);
+    dst->polygonMode = QSGMaterialShader::GraphicsPipelineState::PolygonMode(src->polygonMode);
 }
 
 static void materialToRendererGraphicsState(GraphicsState *dst,
@@ -2810,6 +2812,7 @@ static void materialToRendererGraphicsState(GraphicsState *dst,
     dst->dstColor = QRhiGraphicsPipeline::BlendFactor(src->dstColor);
     dst->colorWrite = QRhiGraphicsPipeline::ColorMask(int(src->colorWrite));
     dst->cullMode = QRhiGraphicsPipeline::CullMode(src->cullMode);
+    dst->polygonMode = QRhiGraphicsPipeline::PolygonMode(src->polygonMode);
 }
 
 void Renderer::updateMaterialDynamicData(ShaderManager::Shader *sms,
@@ -3712,6 +3715,7 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
     m_gstate.blending = false;
 
     m_gstate.cullMode = QRhiGraphicsPipeline::None;
+    m_gstate.polygonMode = QRhiGraphicsPipeline::Fill;
     m_gstate.colorWrite = QRhiGraphicsPipeline::R
             | QRhiGraphicsPipeline::G
             | QRhiGraphicsPipeline::B
@@ -4027,7 +4031,8 @@ bool operator==(const GraphicsState &a, const GraphicsState &b) noexcept
             && a.stencilTest == b.stencilTest
             && a.sampleCount == b.sampleCount
             && a.drawMode == b.drawMode
-            && a.lineWidth == b.lineWidth;
+            && a.lineWidth == b.lineWidth
+            && a.polygonMode == b.polygonMode;
 }
 
 bool operator!=(const GraphicsState &a, const GraphicsState &b) noexcept
