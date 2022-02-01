@@ -13,4 +13,7 @@ qt6_add_qml_module(additional_qml_module
         Extension.qml
         More.ui.qml
         Less.js
+        ESModule.mjs
+        lowerCase.js
+        lowerCaseModule.mjs
 )

@@ -58,4 +58,6 @@ Clock { // this class is defined in QML (Clock.qml)
     minutes: time.minute
     property Extension extension // from BasicExtension
     property More more: More {}
+    property string fromESModule: ESModule.eee()
+    property string fromJSFile: Less.bar()
 }
