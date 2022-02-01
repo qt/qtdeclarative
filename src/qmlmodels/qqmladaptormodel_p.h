@@ -125,7 +125,7 @@ public:
     ~QQmlAdaptorModel();
 
     inline QVariant model() const { return list.list(); }
-    void setModel(const QVariant &variant, QObject *parent = nullptr);
+    void setModel(const QVariant &variant);
     void invalidateModel();
 
     bool isValid() const;

@@ -461,7 +461,7 @@ void QQmlTableInstanceModel::setModel(const QVariant &model)
     drainReusableItemsPool(0);
     if (auto const aim = abstractItemModel())
         disconnect(aim, &QAbstractItemModel::dataChanged, this, &QQmlTableInstanceModel::dataChangedCallback);
-    m_adaptorModel.setModel(model, this);
+    m_adaptorModel.setModel(model);
     if (auto const aim = abstractItemModel())
         connect(aim, &QAbstractItemModel::dataChanged, this, &QQmlTableInstanceModel::dataChangedCallback);
 }

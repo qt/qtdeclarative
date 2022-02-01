@@ -550,7 +550,7 @@ void QQmlDelegateModel::setRootIndex(const QVariant &root)
         if (!d->m_adaptorModel.isValid() && d->m_adaptorModel.aim()) {
             // The previous root index was invalidated, so we need to reconnect the model.
             d->disconnectFromAbstractItemModel();
-            d->m_adaptorModel.setModel(d->m_adaptorModel.list.list(), this);
+            d->m_adaptorModel.setModel(d->m_adaptorModel.list.list());
             d->connectToAbstractItemModel();
         }
         if (d->m_adaptorModel.canFetchMore())

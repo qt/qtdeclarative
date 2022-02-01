@@ -962,7 +962,7 @@ QQmlAdaptorModel::~QQmlAdaptorModel()
     accessors->cleanup(*this);
 }
 
-void QQmlAdaptorModel::setModel(const QVariant &variant, QObject *)
+void QQmlAdaptorModel::setModel(const QVariant &variant)
 {
     accessors->cleanup(*this);
 
@@ -1048,7 +1048,7 @@ void QQmlAdaptorModel::useImportVersion(QTypeRevision revision)
 
 void QQmlAdaptorModel::objectDestroyed(QObject *)
 {
-    setModel(QVariant(), nullptr);
+    setModel(QVariant());
 }
 
 QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV4::ExecutionEngine *v4)
