@@ -726,6 +726,9 @@ void tst_qqmlecmascript::checkDateTime_data()
     QTest::newRow("nonstandard-format")
         << testFileUrl("checkDateTime-nonstandardFormat.qml")
         << QDateTime::fromString("1991-08-25 20:57:08 GMT+0000", "yyyy-MM-dd hh:mm:ss t");
+    QTest::newRow("nonstandard-format2")
+        << testFileUrl("checkDateTime-nonstandardFormat2.qml")
+        << QDateTime::fromString("Sun, 25 Mar 2018 11:10:49 GMT", "ddd, d MMM yyyy hh:mm:ss t");
 }
 
 void tst_qqmlecmascript::checkDateTime()

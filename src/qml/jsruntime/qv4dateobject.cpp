@@ -650,7 +650,9 @@ static inline double ParseString(const QString &s, double localTZA)
             QStringLiteral("d MMMM, yyyy hh:mm"),
             QStringLiteral("d MMMM, yyyy hh:mm:ss"),
 
+            // ISO 8601 and RFC 2822 with a GMT as prefix on its offset, or GMT as zone.
             QStringLiteral("yyyy-MM-dd hh:mm:ss t"),
+            QStringLiteral("ddd, d MMM yyyy hh:mm:ss t"),
         };
 
         for (const QString &format : formats) {
