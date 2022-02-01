@@ -61,6 +61,9 @@ void tst_basicapp::loadComponent()
     QObject *more = qvariant_cast<QObject*>(o->property("more"));
     QVERIFY(more);
     QCOMPARE(more->objectName(), QStringLiteral("ui.qml"));
+
+    QCOMPARE(o->property("fromESModule").toString(), QStringLiteral("eee"));
+    QCOMPARE(o->property("fromJSFile").toString(), QStringLiteral("bar"));
 }
 
 void tst_basicapp::resourceFiles()
@@ -133,7 +136,10 @@ void tst_basicapp::qmldirContents()
         QVERIFY(qmldir.open(QIODevice::ReadOnly));
         const QByteArray contents = qmldir.readAll();
         QVERIFY(contents.contains("More 1.0 More.ui.qml"));
-        QVERIFY(!contents.contains("Less.js"));
+        QVERIFY(contents.contains("Less.js"));
+        QVERIFY(contents.contains("ESModule.mjs"));
+        QVERIFY(!contents.contains("lowerCase.js"));
+        QVERIFY(!contents.contains("lowerCaseModule.mjs"));
     }
 }
 
