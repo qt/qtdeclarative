@@ -100,6 +100,9 @@ private slots:
     void expandRecursivelyChild_data();
     void expandRecursivelyChild();
     void expandRecursivelyWholeTree();
+    void collapseRecursivelyRoot();
+    void collapseRecursivelyChild();
+    void collapseRecursivelyWholeTree();
     void requiredPropertiesRoot();
     void requiredPropertiesChildren();
     void emptyModel();
@@ -139,6 +142,15 @@ void tst_qquicktreeview::invalidArguments()
     treeView->expandRecursively(-2);
     QCOMPARE(treeView->rows(), 1);
     treeView->expandRecursively(200);
+    QCOMPARE(treeView->rows(), 1);
+
+    treeView->collapse(-2);
+    QCOMPARE(treeView->rows(), 1);
+    treeView->collapseRecursively(200);
+    QCOMPARE(treeView->rows(), 1);
+    treeView->collapseRecursively(-2);
+    QCOMPARE(treeView->rows(), 1);
+    treeView->collapseRecursively(200);
     QCOMPARE(treeView->rows(), 1);
 }
 
@@ -568,6 +580,116 @@ void tst_qquicktreeview::expandRecursivelyWholeTree()
         const bool isExpandable = model->rowCount(modelIndex) > 0;
         QCOMPARE(treeView->isExpanded(currentRow), isExpandable);
     }
+}
+
+void tst_qquicktreeview::collapseRecursivelyRoot()
+{
+    // Check that we can collapse the root node (row 0), and that
+    // all its children are collapsed recursively down to the leaves.
+    LOAD_TREEVIEW("normaltreeview.qml");
+    treeView->expandRecursively();
+    WAIT_UNTIL_POLISHED;
+
+    // Verify that the tree is now fully expanded
+    const int expectedRowCount = 1 + (model->maxDepth() * 4); // root + 4 children per level
+    QCOMPARE(treeView->rows(), expectedRowCount);
+
+    QSignalSpy spy(treeView, SIGNAL(collapsed(int, bool)));
+
+    // Collapse the whole tree again. This time, only the root should end up visible
+    treeView->collapseRecursively();
+
+    QCOMPARE(spy.count(), 1);
+    const auto signalArgs = spy.takeFirst();
+    QVERIFY(signalArgs.at(0).toInt() == -1);
+    QVERIFY(signalArgs.at(1).toBool() == true);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(treeView->rows(), 1);
+
+    // We need to check that all descendants are collapsed as well. But since they're
+    // now no longer visible in the view, we need to expand each parent one by one again to make
+    // them visible, and check that the child inside that has children is still collapsed.
+    // We can do that by simply iterate over the rows in the view as we expand.
+    int currentRow = 0;
+    while (currentRow < treeView->rows()) {
+        const QModelIndex currentIndex = treeView->modelIndex(currentRow, 0);
+        if (model->hasChildren(currentIndex)) {
+            QVERIFY(!treeView->isExpanded(currentRow));
+            treeView->expand(currentRow);
+            WAIT_UNTIL_POLISHED;
+        }
+        currentRow++;
+    }
+
+    // Sanity check that we ended up with all rows expanded again
+    QCOMPARE(currentRow, expectedRowCount);
+}
+
+void tst_qquicktreeview::collapseRecursivelyChild()
+{
+    // Check that we can collapse a child node (row 4), and that all its children
+    // are collapsed recursively down to the leaves (without touching the root).
+    LOAD_TREEVIEW("normaltreeview.qml");
+    treeView->expandRecursively();
+    WAIT_UNTIL_POLISHED;
+
+    // Verify that the tree is now fully expanded
+    const int expectedRowCount = 1 + (model->maxDepth() * 4); // root + 4 children per level
+    QCOMPARE(treeView->rows(), expectedRowCount);
+
+    QSignalSpy spy(treeView, SIGNAL(collapsed(int, bool)));
+
+    // Collapse the 4th child recursive
+    const int rowToCollapse = 4;
+    QCOMPARE(model->data(treeView->modelIndex(rowToCollapse, 0), Qt::DisplayRole), QStringLiteral("3, 0"));
+    treeView->collapseRecursively(rowToCollapse);
+
+    QCOMPARE(spy.count(), 1);
+    const auto signalArgs = spy.takeFirst();
+    QVERIFY(signalArgs.at(0).toInt() == rowToCollapse);
+    QVERIFY(signalArgs.at(1).toBool() == true);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(treeView->rows(), 5); // root + 4 children
+
+    // We need to check that all descendants are collapsed as well. But since they're
+    // now no longer visible in the view, we need to expand each parent one by one again to make
+    // them visible, and check that the child inside that has children is still collapsed.
+    // We can do that by simply iterate over the rows in the view as we expand.
+    int currentRow = 1; // start at first child
+    while (currentRow < treeView->rows()) {
+        const QModelIndex currentIndex = treeView->modelIndex(currentRow, 0);
+        if (model->hasChildren(currentIndex)) {
+            QVERIFY(!treeView->isExpanded(currentRow));
+            treeView->expand(currentRow);
+            WAIT_UNTIL_POLISHED;
+        }
+        currentRow++;
+    }
+
+    // Sanity check that we ended up with all rows expanded again
+    QCOMPARE(currentRow, expectedRowCount);
+}
+
+void tst_qquicktreeview::collapseRecursivelyWholeTree()
+{
+    // Check that we collapse the whole tree recursively by passing -1
+    LOAD_TREEVIEW("normaltreeview.qml");
+    QSignalSpy spy(treeView, SIGNAL(collapsed(int, bool)));
+    treeView->expandRecursively();
+    treeView->collapseRecursively();
+
+    QCOMPARE(spy.count(), 1);
+    auto signalArgs = spy.takeFirst();
+    QVERIFY(signalArgs.at(0).toInt() == -1);
+    QVERIFY(signalArgs.at(1).toBool() == true);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(treeView->rows(), 1); // root
 }
 
 QTEST_MAIN(tst_qquicktreeview)

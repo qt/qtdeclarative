@@ -76,6 +76,7 @@ public:
     Q_INVOKABLE void toggleExpanded(int row);
 
     Q_REVISION(6, 4) Q_INVOKABLE void expandRecursively(int row = -1, int depth = -1);
+    Q_REVISION(6, 4) Q_INVOKABLE void collapseRecursively(int row = -1);
 
     Q_INVOKABLE QModelIndex modelIndex(int row, int column) const;
     Q_INVOKABLE QModelIndex modelIndex(const QPoint &cell) const;
@@ -85,7 +86,7 @@ public:
 
 signals:
     void expanded(int row, int depth);
-    void collapsed(int row);
+    void collapsed(int row, bool recursively);
 
 private:
     Q_DISABLE_COPY(QQuickTreeView)

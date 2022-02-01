@@ -171,7 +171,7 @@
     \warning If the model contains a large number of items, this function will
     take some time to execute.
 
-    \sa expand(), collapse(), isExpanded(), depth()
+    \sa collapseRecursively(), expand(), collapse(), isExpanded(), depth()
 */
 
 /*!
@@ -185,6 +185,25 @@
     the visual representation in the view.
 
     \sa expand(), isExpanded()
+*/
+
+/*!
+    \qmlmethod QtQuick::TreeView::collapseRecursively(row = -1)
+
+    Collapses the tree node at the given \a row in the view recursively down to
+    all leaves.
+
+    For a model has more than one root, you can also call this function
+    with \a row equal to \c -1. This will collapse all roots. Hence, calling
+    collapseRecursively(-1), or simply collapseRecursively(), will collapse
+    all nodes in the model.
+
+    \a row should be the row in the view (table row), and not a row in the model.
+
+    \note this function will not affect the model, only
+    the visual representation in the view.
+
+    \sa expandRecursively(), expand(), collapse(), isExpanded(), depth()
 */
 
 /*!
@@ -289,9 +308,15 @@
 */
 
 /*!
-    \qmlsignal QtQuick::TreeView::collapsed(row)
+    \qmlsignal QtQuick::TreeView::collapsed(row, recursively)
 
     This signal is emitted when a \a row is collapsed in the view.
+    \a row will be equal to the argument given to the call that caused
+    the collapse to happen (\l collapse() or \l collapseRecursively()).
+    If the row was collapsed recursively, \a recursively will be \c true.
+
+    \note when a row is collapsed recursively, the collapsed signal will
+    only be emitted for that one row, and not for its descendants.
 
     \sa expanded(), expand(), collapse(), toggleExpanded()
 */
@@ -509,7 +534,42 @@ void QQuickTreeView::collapse(int row)
             d->setRequiredProperty("expanded", false, d->modelIndexAtCell(treeNodeCell), item, false);
     }
 
-    emit collapsed(row);
+    emit collapsed(row, false);
+}
+
+void QQuickTreeView::collapseRecursively(int row)
+{
+    Q_D(QQuickTreeView);
+    if (row >= d->m_treeModelToTableModel.rowCount())
+        return;
+    if (row < 0 && row != -1)
+        return;
+
+    auto collapseRowRecursive = [=](int startRow) {
+        // Always collapse descendants recursively,
+        // even if the top row itself is already collapsed.
+        d->m_treeModelToTableModel.collapseRecursively(startRow);
+        // Update the expanded state of the (still visible) startRow
+        for (int c = leftColumn(); c <= rightColumn(); ++c) {
+            const QPoint treeNodeCell(c, startRow);
+            if (const auto item = itemAtCell(treeNodeCell))
+                d->setRequiredProperty("expanded", false, d->modelIndexAtCell(treeNodeCell), item, false);
+        }
+    };
+
+    if (row >= 0) {
+        collapseRowRecursive(row);
+    } else {
+        // Collapse all root nodes recursively
+        const auto model = d->m_treeModelToTableModel.model();
+        for (int r = 0; r < model->rowCount(); ++r) {
+            const int rootRow = d->m_treeModelToTableModel.itemIndex(model->index(r, 0));
+            if (rootRow != -1)
+                collapseRowRecursive(rootRow);
+        }
+    }
+
+    emit collapsed(row, true);
 }
 
 void QQuickTreeView::toggleExpanded(int row)

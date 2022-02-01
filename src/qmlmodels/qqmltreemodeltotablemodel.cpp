@@ -563,6 +563,30 @@ void QQmlTreeModelToTableModel::expandPendingRows(bool doInsertRows)
     }
 }
 
+void QQmlTreeModelToTableModel::collapseRecursively(int row)
+{
+    auto collapseHelp = [=] (const auto collapseHelp, const QModelIndex &index) -> void {
+        if (m_expandedItems.contains(index)) {
+            const int rowToCollapse = itemIndex(index);
+            if (rowToCollapse != -1)
+                collapseRow(rowToCollapse);
+            else
+                m_expandedItems.remove(index);
+        }
+
+        const int childCount = m_model->rowCount(index);
+        for (int childRow = 0; childRow < childCount; ++childRow) {
+            const QModelIndex childIndex = m_model->index(childRow, 0, index);
+            if (m_model->hasChildren(childIndex))
+                collapseHelp(collapseHelp, childIndex);
+        }
+    };
+
+    const QModelIndex index = m_items[row].index;
+    if (index.isValid())
+        collapseHelp(collapseHelp, index);
+}
+
 void QQmlTreeModelToTableModel::collapseRow(int n)
 {
     if (!m_model || !isExpanded(n))

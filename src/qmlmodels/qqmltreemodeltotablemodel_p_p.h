@@ -139,6 +139,7 @@ public slots:
     void expandRow(int n);
     void expandRecursively(int row, int depth);
     void collapseRow(int n);
+    void collapseRecursively(int row);
 
 private slots:
     void modelHasBeenDestroyed();
