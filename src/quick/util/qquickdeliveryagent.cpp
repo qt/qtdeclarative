@@ -238,7 +238,7 @@ bool QQuickDeliveryAgentPrivate::deliverTouchAsMouse(QQuickItem *item, QTouchEve
                     if (item->acceptHoverEvents() && p.globalPosition() != QGuiApplicationPrivate::lastCursorPosition) {
                         QPointF localMousePos(qInf(), qInf());
                         if (QWindow *w = item->window())
-                            localMousePos = item->mapFromScene(w->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint()));
+                            localMousePos = item->mapFromScene(w->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition));
                         QMouseEvent mm(QEvent::MouseMove, localMousePos, QGuiApplicationPrivate::lastCursorPosition,
                                        Qt::NoButton, Qt::NoButton, event.modifiers());
                         QCoreApplication::sendEvent(item, &mm);
@@ -608,7 +608,7 @@ bool QQuickDeliveryAgentPrivate::clearHover(ulong timestamp)
     if (!window)
         return false;
 
-    const QPointF lastPos = window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint());
+    const QPointF lastPos = window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition);
     const auto modifiers = QGuiApplication::keyboardModifiers();
     const bool clearHover = true;
 

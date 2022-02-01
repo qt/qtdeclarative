@@ -7784,7 +7784,7 @@ bool QQuickItem::isUnderMouse() const
         return false;
 
     QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
-    return contains(mapFromScene(d->window->mapFromGlobal(cursorPos.toPoint())));
+    return contains(mapFromScene(d->window->mapFromGlobal(cursorPos)));
 }
 
 /*!
@@ -7951,7 +7951,7 @@ void QQuickItem::setCursor(const QCursor &cursor)
         if (d->window) {
             QWindow *renderWindow = QQuickRenderControl::renderWindowFor(d->window);
             QWindow *window = renderWindow ? renderWindow : d->window;
-            QPointF pos = window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint());
+            QPointF pos = window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition);
             if (contains(mapFromScene(pos)))
                 updateCursorPos = pos;
         }
@@ -7980,7 +7980,7 @@ void QQuickItem::unsetCursor()
     if (d->window) {
         QQuickWindowPrivate *windowPrivate = QQuickWindowPrivate::get(d->window);
         if (windowPrivate->cursorItem == this) {
-            QPointF pos = d->window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition.toPoint());
+            QPointF pos = d->window->mapFromGlobal(QGuiApplicationPrivate::lastCursorPosition);
             windowPrivate->updateCursor(pos);
         }
     }
