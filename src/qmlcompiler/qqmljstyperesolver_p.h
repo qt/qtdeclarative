@@ -56,13 +56,6 @@ public:
     enum BaseOrExtension { Base, Extension };
     enum ParentMode { UseDocumentParent, UseParentProperty };
 
-    struct GlobalProperty
-    {
-        QQmlJSScope::ConstPtr type;
-        QString getter;
-        QString setter;
-    };
-
     QQmlJSTypeResolver(QQmlJSImporter *importer);
 
     // Note: must be called after the construction to read the QML program
