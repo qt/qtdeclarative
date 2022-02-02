@@ -558,8 +558,13 @@ void QQmlTreeModelToTableModel::collapseRow(int n)
     removeVisibleRows(n + 1, lastIndex);
 }
 
-int QQmlTreeModelToTableModel::lastChildIndex(const QModelIndex &index)
+int QQmlTreeModelToTableModel::lastChildIndex(const QModelIndex &index) const
 {
+    // The purpose of this function is to return the row of the last decendant of a node N.
+    // But note: index should point to the last child of N, and not N itself!
+    // This means that if index is not expanded, the last child will simply be index itself.
+    // Otherwise, since the tree underneath index can be of any depth, it will instead find
+    // the first sibling of N, get its table row, and simply return the row above.
     if (!m_expandedItems.contains(index))
         return itemIndex(index);
 

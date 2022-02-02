@@ -113,7 +113,7 @@ public:
 
     int itemIndex(const QModelIndex &index) const;
     void expandPendingRows(bool doInsertRows = true);
-    int lastChildIndex(const QModelIndex &index);
+    int lastChildIndex(const QModelIndex &index) const;
     void removeVisibleRows(int startIndex, int endIndex, bool doRemoveRows = true);
 
     void dump() const;
