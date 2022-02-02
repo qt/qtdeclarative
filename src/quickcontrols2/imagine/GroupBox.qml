@@ -48,10 +48,10 @@ T.GroupBox {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding)
 
-    topPadding: (background ? background.topPadding : 0) + (implicitLabelWidth > 0 ? implicitLabelHeight + spacing : 0)
-    leftPadding: background ? background.leftPadding : 0
-    rightPadding: background ? background.rightPadding : 0
-    bottomPadding: background ? background.bottomPadding : 0
+    topPadding: ((background as NinePatchImage)?.topPadding ?? 0) + (implicitLabelWidth > 0 ? implicitLabelHeight + spacing : 0)
+    leftPadding: ((background as NinePatchImage)?.leftPadding ?? 0)
+    rightPadding: ((background as NinePatchImage)?.rightPadding ?? 0)
+    bottomPadding: ((background as NinePatchImage)?.bottomPadding ?? 0)
 
     label: Label {
         width: control.width
