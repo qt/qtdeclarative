@@ -982,8 +982,21 @@ namespace QQmlPrivate
                                      QVector<int> *qmlTypeIds, const QMetaObject *extension,
                                      bool forceAnonymous = false)
     {
+#if QT_DEPRECATED_SINCE(6, 4)
+        // ### Qt7: Remove the warnings, and leave only the static asserts below.
+        if (!QmlMetaType<T>::hasAcceptableCtors()) {
+            qWarning() << QMetaType::fromType<T>().name()
+                       << "is neither a QObject, nor default- and copy-constructible."
+                       << "You should not use it as a QML type.";
+        }
+        if (!std::is_base_of_v<QObject, T> && QQmlTypeInfo<T>::hasAttachedProperties) {
+            qWarning() << QMetaType::fromType<T>().name()
+                       << "is not a QObject, but has attached properties. This won't work.";
+        }
+#else
         static_assert(QmlMetaType<T>::hasAcceptableCtors());
         static_assert(std::is_base_of_v<QObject, T> || !QQmlTypeInfo<T>::hasAttachedProperties);
+#endif
 
         RegisterTypeAndRevisions type = {
             3,
