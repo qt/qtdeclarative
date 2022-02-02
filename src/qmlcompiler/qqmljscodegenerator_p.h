@@ -299,6 +299,7 @@ protected:
     void generateEnumLookup(int index);
 
     QString registerVariable(int index) const;
+    QString changedRegisterVariable() const;
     QQmlJSRegisterContent registerType(int index) const;
 
     Section m_body;

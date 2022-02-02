@@ -46,6 +46,7 @@
 #include <private/qqmljstyperesolver_p.h>
 #include <private/qv4bytecodehandler_p.h>
 #include <private/qv4compiler_p.h>
+#include <private/qflatmap_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -54,6 +55,7 @@ class QQmlJSCompilePass : public QV4::Moth::ByteCodeHandler
     Q_DISABLE_COPY_MOVE(QQmlJSCompilePass)
 public:
     enum RegisterShortcuts {
+        InvalidRegister = -1,
         Accumulator = QV4::CallData::Accumulator,
         FirstArgument = QV4::CallData::OffsetCount
     };
@@ -61,12 +63,13 @@ public:
     using SourceLocationTable = QV4::Compiler::Context::SourceLocationTable;
 
     // map from register index to expected type
-    using VirtualRegisters = QHash<int, QQmlJSRegisterContent>;
+    using VirtualRegisters = QFlatMap<int, QQmlJSRegisterContent>;
 
     struct InstructionAnnotation
     {
-        VirtualRegisters registers;
-        VirtualRegisters expectedTargetTypesBeforeJump;
+        VirtualRegisters typeConversions;
+        QQmlJSRegisterContent changedRegister;
+        int changedRegisterIndex = InvalidRegister;
     };
 
     using InstructionAnnotations = QHash<int, InstructionAnnotation>;
@@ -86,8 +89,43 @@ public:
     struct State
     {
         VirtualRegisters registers;
-        QQmlJSRegisterContent accumulatorIn;
-        QQmlJSRegisterContent accumulatorOut;
+
+        const QQmlJSRegisterContent &accumulatorIn() const
+        {
+            auto it = registers.find(Accumulator);
+            Q_ASSERT(it != registers.end());
+            return it.value();
+        };
+
+        const QQmlJSRegisterContent &accumulatorOut() const
+        {
+            Q_ASSERT(m_changedRegisterIndex == Accumulator);
+            return m_changedRegister;
+        };
+
+        void setRegister(int registerIndex, QQmlJSRegisterContent content)
+        {
+            m_changedRegister = std::move(content);
+            m_changedRegisterIndex = registerIndex;
+        }
+
+        void setAccumulator(QQmlJSRegisterContent content)
+        {
+            setRegister(Accumulator, std::move(content));
+        }
+
+        void clearChangedRegister()
+        {
+            m_changedRegisterIndex = InvalidRegister;
+            m_changedRegister = QQmlJSRegisterContent();
+        }
+
+        int changedRegisterIndex() const { return m_changedRegisterIndex; }
+        const QQmlJSRegisterContent &changedRegister() const { return m_changedRegister; }
+
+    private:
+        QQmlJSRegisterContent m_changedRegister;
+        int m_changedRegisterIndex = InvalidRegister;
     };
 
     QQmlJSCompilePass(const QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
@@ -120,23 +158,25 @@ protected:
     {
         State newState;
 
-        // Usually the initial accumulator type is the output of the previous instruction, but ...
-        newState.accumulatorIn = oldState.accumulatorOut;
-
         const auto instruction = annotations.constFind(currentInstructionOffset());
-        if (instruction != annotations.constEnd()) {
-            const auto target = instruction->expectedTargetTypesBeforeJump.constFind(Accumulator);
-            if (target != instruction->expectedTargetTypesBeforeJump.constEnd()) {
-                // ... the initial type of the accumulator is given in expectedTargetTypesBeforeJump
-                // if the current instruction can be jumped to.
-                newState.accumulatorIn = *target;
-            }
+        if (instruction == annotations.constEnd())
+            return newState;
 
-            newState.registers = instruction->registers;
-            newState.accumulatorOut = instruction->registers[Accumulator];
-        } else {
-            newState.registers = VirtualRegisters();
-            newState.accumulatorOut = QQmlJSRegisterContent();
+        newState.registers = oldState.registers;
+
+        // Usually the initial accumulator type is the output of the previous instruction, but ...
+        if (oldState.changedRegisterIndex() != InvalidRegister)
+            newState.registers[oldState.changedRegisterIndex()] = oldState.changedRegister();
+
+        for (auto it = instruction->typeConversions.begin(),
+             end = instruction->typeConversions.end(); it != end; ++it) {
+            Q_ASSERT(it.key() != InvalidRegister);
+            newState.registers[it.key()] = it.value();
+        }
+
+        if (instruction->changedRegisterIndex != InvalidRegister) {
+            newState.setRegister(instruction->changedRegisterIndex,
+                                 instruction->changedRegister);
         }
 
         return newState;

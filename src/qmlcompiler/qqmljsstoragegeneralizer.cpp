@@ -73,26 +73,32 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSStorageGeneralizer::run(
         }
     }
 
-    const auto transformRegisters = [&](QHash<int, QQmlJSRegisterContent> &registers, int offset) {
-        for (auto j = registers.begin(), jEnd = registers.end(); j != jEnd; ++j) {
-            const QQmlJSRegisterContent &content = *j;
-            if (QQmlJSScope::ConstPtr specific = content.storedType()) {
-                if (QQmlJSScope::ConstPtr generic = m_typeResolver->genericType(specific)) {
-                    *j = content.storedIn(generic);
-                } else {
-                    setError(QStringLiteral("Cannot store the register type %1.")
-                             .arg(specific->internalName()), offset);
-                    return false;
-                }
+    const auto transformRegister = [&](QQmlJSRegisterContent &content, int offset) {
+        if (QQmlJSScope::ConstPtr specific = content.storedType()) {
+            if (QQmlJSScope::ConstPtr generic = m_typeResolver->genericType(specific)) {
+                content = content.storedIn(generic);
+            } else {
+                setError(QStringLiteral("Cannot store the register type %1.")
+                         .arg(specific->internalName()), offset);
+                return false;
             }
         }
         return true;
     };
 
+    const auto transformRegisters
+            = [&](QFlatMap<int, QQmlJSRegisterContent> &registers, int offset) {
+        for (auto j = registers.begin(), jEnd = registers.end(); j != jEnd; ++j) {
+            if (!transformRegister(j.value(), offset))
+                return false;
+        }
+        return true;
+    };
+
     for (auto i = annotations.begin(), iEnd = annotations.end(); i != iEnd; ++i) {
-        if (!transformRegisters(i->registers, i.key()))
+        if (!transformRegister(i->changedRegister, i.key()))
             return InstructionAnnotations();
-        if (!transformRegisters(i->expectedTargetTypesBeforeJump, i.key()))
+        if (!transformRegisters(i->typeConversions, i.key()))
             return InstructionAnnotations();
     }
 

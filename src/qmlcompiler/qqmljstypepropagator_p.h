@@ -223,9 +223,6 @@ private:
 
     QString registerName(int registerIndex) const;
 
-    void setRegister(int index, QQmlJSRegisterContent content);
-    void setRegister(int index, const QQmlJSScope::ConstPtr &content);
-
     QQmlJSRegisterContent checkedInputRegister(int reg);
     QQmlJSMetaMethod bestMatchForCall(const QList<QQmlJSMetaMethod> &methods, int argc, int argv,
                                       QStringList *errors);

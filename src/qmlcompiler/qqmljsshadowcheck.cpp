@@ -64,12 +64,12 @@ void QQmlJSShadowCheck::run(
 
 void QQmlJSShadowCheck::generate_LoadProperty(int nameIndex)
 {
-    checkShadowing(m_state.accumulatorIn, m_jsUnitGenerator->stringForIndex(nameIndex));
+    checkShadowing(m_state.accumulatorIn(), m_jsUnitGenerator->stringForIndex(nameIndex));
 }
 
 void QQmlJSShadowCheck::generate_GetLookup(int index)
 {
-    checkShadowing(m_state.accumulatorIn, m_jsUnitGenerator->lookupName(index));
+    checkShadowing(m_state.accumulatorIn(), m_jsUnitGenerator->lookupName(index));
 }
 
 void QQmlJSShadowCheck::generate_StoreProperty(int nameIndex, int base)
@@ -122,7 +122,7 @@ void QQmlJSShadowCheck::checkShadowing(
         }
 
         setError(u"Member %1 of %2 can be shadowed"_qs
-                         .arg(memberName, m_state.accumulatorIn.descriptiveName()));
+                         .arg(memberName, m_state.accumulatorIn().descriptiveName()));
         return;
     }
     default:
