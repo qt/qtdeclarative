@@ -72,6 +72,7 @@ Q_LOGGING_CATEGORY(lcDialogs, "qt.quick.dialogs")
     \brief The base class of native dialogs.
 
     The Dialog type provides common QML API for native platform dialogs.
+    For the non-native dialog, see \l [QML QtQuickControls]{Dialog}.
 
     To show a native dialog, construct an instance of one of the concrete
     Dialog implementations, set the desired properties, and call \l open().
