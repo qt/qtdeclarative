@@ -27,7 +27,7 @@
 ****************************************************************************/
 #include "qmllintsuggestions.h"
 #include <QtLanguageServer/private/qlanguageserverspec_p.h>
-#include <QtQmlLint/private/qqmllinter_p.h>
+#include <QtQmlCompiler/private/qqmljslinter_p.h>
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qtimer.h>
@@ -135,7 +135,7 @@ void QmlLintSuggestions::diagnose(const QByteArray &uri)
         QStringList resourceFiles;
         QMap<QString, QQmlJSLogger::Option> options;
 
-        QQmlLinter linter(imports, useAbsolutePath);
+        QQmlJSLinter linter(imports, useAbsolutePath);
 
         linter.lintFile(filename, &fileContents, silent, &json, imports, qmltypesFiles,
                         resourceFiles, options);

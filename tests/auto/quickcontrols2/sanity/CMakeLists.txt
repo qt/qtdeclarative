@@ -23,7 +23,7 @@ qt_internal_add_test(tst_sanity
         Qt::QuickTest
         Qt::QuickTestUtilsPrivate
         Qt::TestPrivate
-        Qt::QmlLintPrivate
+        Qt::QmlCompilerPrivate
 )
 
 #### Keys ignored in scope 1:.:.:sanity.pro:<TRUE>:

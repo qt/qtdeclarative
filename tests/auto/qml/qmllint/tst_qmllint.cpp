@@ -31,7 +31,7 @@
 #include <QProcess>
 #include <QString>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
-#include <QtQmlLint/private/qqmllinter_p.h>
+#include <QtQmlCompiler/private/qqmljslinter_p.h>
 
 class TestQmllint: public QQmlDataTest
 {
@@ -115,7 +115,7 @@ private:
     QString m_qmltyperegistrarPath;
 
     QStringList m_defaultImportPaths;
-    QQmlLinter m_linter;
+    QQmlJSLinter m_linter;
 };
 
 TestQmllint::TestQmllint()
@@ -1374,7 +1374,7 @@ void TestQmllint::missingBuiltinsNoCrash()
 {
     // We cannot use the normal linter here since the other tests might have cached the builtins
     // alread
-    QQmlLinter linter(m_defaultImportPaths);
+    QQmlJSLinter linter(m_defaultImportPaths);
 
     QJsonArray jsonOutput;
     QJsonArray warnings;
@@ -1396,7 +1396,7 @@ void TestQmllint::absolutePath()
 {
     // We cannot use the normal linter here since we need to set a different parameter in the
     // constructor
-    QQmlLinter linter(m_defaultImportPaths, true);
+    QQmlJSLinter linter(m_defaultImportPaths, true);
 
     const QString absolutePath = QFileInfo(testFile("memberNotFound.qml")).absoluteFilePath();
 

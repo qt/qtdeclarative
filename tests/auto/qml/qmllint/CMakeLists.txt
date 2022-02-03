@@ -16,7 +16,7 @@ qt_internal_add_test(tst_qmllint
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::QuickTestUtilsPrivate
-        Qt::QmlLintPrivate
+        Qt::QmlCompilerPrivate
     TESTDATA ${test_data}
 )
 

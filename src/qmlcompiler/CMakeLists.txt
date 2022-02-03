@@ -31,6 +31,8 @@ qt_internal_add_module(QmlCompilerPrivate
         qqmljstyperesolver.cpp qqmljstyperesolver_p.h
         qresourcerelocater.cpp qresourcerelocater_p.h
         qqmljsutils_p.h qqmljsutils.cpp
+        qqmljslinter_p.h qqmljslinter.cpp
+        qqmljslintercodegen_p.h qqmljslintercodegen.cpp
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate

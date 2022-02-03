@@ -24,6 +24,6 @@ qt_internal_add_tool(${target_name}
         Qt::CorePrivate
         Qt::QmlDomPrivate
         Qt::LanguageServerPrivate
-        Qt::QmlLintPrivate
+        Qt::QmlCompilerPrivate
 )
 qt_internal_return_unless_building_tools()

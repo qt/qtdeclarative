@@ -26,10 +26,9 @@
 **
 ****************************************************************************/
 
-#include "qqmllinter_p.h"
+#include "qqmljslinter_p.h"
 
-#include "codegen_p.h"
-#include "codegenwarninginterface_p.h"
+#include "qqmljslintercodegen_p.h"
 
 #include <QtQmlCompiler/private/qqmljsimporter_p.h>
 #include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
@@ -47,12 +46,35 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlLinter::QQmlLinter(const QStringList &importPaths, bool useAbsolutePath)
+class CodegenWarningInterface final : public QV4::Compiler::CodegenWarningInterface
+{
+public:
+    CodegenWarningInterface(QQmlJSLogger *logger) : m_logger(logger) { }
+
+    void reportVarUsedBeforeDeclaration(const QString &name, const QString &fileName,
+                                        QQmlJS::SourceLocation declarationLocation,
+                                        QQmlJS::SourceLocation accessLocation) override
+    {
+        Q_UNUSED(fileName)
+        m_logger->logWarning(
+                u"Variable \"%1\" is used here before its declaration. The declaration is at %2:%3."_qs
+                        .arg(name)
+                        .arg(declarationLocation.startLine)
+                        .arg(declarationLocation.startColumn),
+                Log_Type, accessLocation);
+    }
+
+private:
+    QQmlJSLogger *m_logger;
+};
+
+QQmlJSLinter::QQmlJSLinter(const QStringList &importPaths, bool useAbsolutePath)
     : m_useAbsolutePath(useAbsolutePath), m_importer(importPaths, nullptr)
 {
 }
 
-void QQmlLinter::parseComments(QQmlJSLogger *logger, const QList<QQmlJS::SourceLocation> &comments)
+void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
+                                 const QList<QQmlJS::SourceLocation> &comments)
 {
     QHash<int, QSet<QQmlJSLoggerCategory>> disablesPerLine;
     QHash<int, QSet<QQmlJSLoggerCategory>> enablesPerLine;
@@ -128,10 +150,10 @@ void QQmlLinter::parseComments(QQmlJSLogger *logger, const QList<QQmlJS::SourceL
     }
 }
 
-bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, const bool silent,
-                          QJsonArray *json, const QStringList &qmlImportPaths,
-                          const QStringList &qmldirFiles, const QStringList &resourceFiles,
-                          const QMap<QString, QQmlJSLogger::Option> &options)
+bool QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents, const bool silent,
+                            QJsonArray *json, const QStringList &qmlImportPaths,
+                            const QStringList &qmldirFiles, const QStringList &resourceFiles,
+                            const QMap<QString, QQmlJSLogger::Option> &options)
 {
     // Make sure that we don't expose an old logger if we return before a new one is created.
     m_logger.reset();
@@ -213,11 +235,10 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
         QFile file(filename);
         if (!file.open(QFile::ReadOnly)) {
             if (json) {
-                addJsonWarning(QQmlJS::DiagnosticMessage {
-                    QStringLiteral("Failed to open file %1: %2").arg(filename, file.errorString()),
-                    QtCriticalMsg,
-                    QQmlJS::SourceLocation()
-                });
+                addJsonWarning(
+                        QQmlJS::DiagnosticMessage { QStringLiteral("Failed to open file %1: %2")
+                                                            .arg(filename, file.errorString()),
+                                                    QtCriticalMsg, QQmlJS::SourceLocation() });
                 success = false;
             } else if (!silent) {
                 qWarning() << "Failed to open file" << filename << file.error();
@@ -299,11 +320,11 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
 
             QQmlJSTypeResolver typeResolver(&m_importer);
 
-            // Type resolving is using document parent mode here so that it produces fewer false positives
-            // on the "parent" property of QQuickItem. It does produce a few false negatives this way
-            // because items can be reparented. Furthermore, even if items are not reparented, the document
-            // parent may indeed not be their visual parent. See QTBUG-95530. Eventually, we'll need
-            // cleverer logic to deal with this.
+            // Type resolving is using document parent mode here so that it produces fewer false
+            // positives on the "parent" property of QQuickItem. It does produce a few false
+            // negatives this way because items can be reparented. Furthermore, even if items are
+            // not reparented, the document parent may indeed not be their visual parent. See
+            // QTBUG-95530. Eventually, we'll need cleverer logic to deal with this.
             typeResolver.setParentMode(QQmlJSTypeResolver::UseDocumentParent);
 
             typeResolver.init(&v, parser.rootNode());
@@ -319,11 +340,11 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
             const QStringList resourcePaths = mapper
                     ? mapper->resourcePaths(QQmlJSResourceFileMapper::localFileFilter(filename))
                     : QStringList();
-            const QString resolvedPath = (resourcePaths.size() == 1)
-                    ? u':' + resourcePaths.first()
-                    : filename;
+            const QString resolvedPath =
+                    (resourcePaths.size() == 1) ? u':' + resourcePaths.first() : filename;
 
-            Codegen codegen { &m_importer, resolvedPath, qmldirFiles, m_logger.get(), &typeInfo };
+            QQmlJSLinterCodegen codegen { &m_importer, resolvedPath, qmldirFiles, m_logger.get(),
+                                          &typeInfo };
             codegen.setTypeResolver(std::move(typeResolver));
             QQmlJSSaveFunction saveFunction = [](const QV4::CompiledData::SaveableUnitPointer &,
                                                  const QQmlJSAotFunctionMap &,

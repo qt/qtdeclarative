@@ -28,10 +28,9 @@
 
 #include "../shared/qqmltoolingsettings.h"
 
-#include <QtQmlLint/private/qqmllinter_p.h>
-
 #include <QtQmlCompiler/private/qqmljsresourcefilemapper_p.h>
 #include <QtQmlCompiler/private/qqmljscompiler_p.h>
+#include <QtQmlCompiler/private/qqmljslinter_p.h>
 
 #include <QtCore/qdebug.h>
 #include <QtCore/qfile.h>
@@ -224,7 +223,7 @@ All warnings can be set to three levels:
     QStringList resourceFiles = defaultResourceFiles;
 
     bool success = true;
-    QQmlLinter linter(qmlImportPaths, useAbsolutePath);
+    QQmlJSLinter linter(qmlImportPaths, useAbsolutePath);
 
     QJsonArray jsonFiles;
 

@@ -26,7 +26,7 @@
 **
 ****************************************************************************/
 
-#include "codegen_p.h"
+#include "qqmljslintercodegen_p.h"
 
 #include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
 #include <QtQmlCompiler/private/qqmljsshadowcheck_p.h>
@@ -38,14 +38,15 @@
 
 QT_BEGIN_NAMESPACE
 
-Codegen::Codegen(QQmlJSImporter *importer, const QString &fileName,
-                 const QStringList &qmldirFiles, QQmlJSLogger *logger, QQmlJSTypeInfo *typeInfo)
-    : QQmlJSAotCompiler(importer, fileName, qmldirFiles, logger)
-    , m_typeInfo(typeInfo)
+QQmlJSLinterCodegen::QQmlJSLinterCodegen(QQmlJSImporter *importer, const QString &fileName,
+                                         const QStringList &qmldirFiles, QQmlJSLogger *logger,
+                                         QQmlJSTypeInfo *typeInfo)
+    : QQmlJSAotCompiler(importer, fileName, qmldirFiles, logger), m_typeInfo(typeInfo)
 {
 }
 
-void Codegen::setDocument(const QmlIR::JSCodeGen *codegen, const QmlIR::Document *document)
+void QQmlJSLinterCodegen::setDocument(const QmlIR::JSCodeGen *codegen,
+                                      const QmlIR::Document *document)
 {
     Q_UNUSED(codegen);
     m_document = document;
@@ -54,14 +55,15 @@ void Codegen::setDocument(const QmlIR::JSCodeGen *codegen, const QmlIR::Document
 }
 
 std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage>
-Codegen::compileBinding(const QV4::Compiler::Context *context, const QmlIR::Binding &irBinding)
+QQmlJSLinterCodegen::compileBinding(const QV4::Compiler::Context *context,
+                                    const QmlIR::Binding &irBinding)
 {
     QQmlJSFunctionInitializer initializer(&m_typeResolver, m_currentObject, m_currentScope);
 
     QQmlJS::DiagnosticMessage initializationError;
     const QString name = m_document->stringAt(irBinding.propertyNameIndex);
-    QQmlJSCompilePass::Function function = initializer.run(
-                context, name, irBinding, &initializationError);
+    QQmlJSCompilePass::Function function =
+            initializer.run(context, name, irBinding, &initializationError);
     if (initializationError.isValid())
         diagnose(initializationError.message, initializationError.type, initializationError.loc);
 
@@ -80,13 +82,14 @@ Codegen::compileBinding(const QV4::Compiler::Context *context, const QmlIR::Bind
 }
 
 std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage>
-Codegen::compileFunction(const QV4::Compiler::Context *context, const QmlIR::Function &irFunction)
+QQmlJSLinterCodegen::compileFunction(const QV4::Compiler::Context *context,
+                                     const QmlIR::Function &irFunction)
 {
     QQmlJS::DiagnosticMessage initializationError;
     QQmlJSFunctionInitializer initializer(&m_typeResolver, m_currentObject, m_currentScope);
     const QString name = m_document->stringAt(irFunction.nameIndex);
-    QQmlJSCompilePass::Function function = initializer.run(
-                context, name, irFunction, &initializationError);
+    QQmlJSCompilePass::Function function =
+            initializer.run(context, name, irFunction, &initializationError);
     if (initializationError.isValid())
         diagnose(initializationError.message, initializationError.type, initializationError.loc);
 
@@ -99,10 +102,9 @@ Codegen::compileFunction(const QV4::Compiler::Context *context, const QmlIR::Fun
     return QQmlJSAotFunction {};
 }
 
-bool Codegen::analyzeFunction(
-        const QV4::Compiler::Context *context,
-        QQmlJSCompilePass::Function *function,
-        QQmlJS::DiagnosticMessage *error)
+bool QQmlJSLinterCodegen::analyzeFunction(const QV4::Compiler::Context *context,
+                                          QQmlJSCompilePass::Function *function,
+                                          QQmlJS::DiagnosticMessage *error)
 {
     QQmlJSTypePropagator propagator(m_unitGenerator, &m_typeResolver, m_logger, m_typeInfo);
     QQmlJSCompilePass::InstructionAnnotations annotations = propagator.run(function, error);

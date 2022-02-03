@@ -26,8 +26,8 @@
 **
 ****************************************************************************/
 
-#ifndef QMLLINT_P_H
-#define QMLLINT_P_H
+#ifndef QQMLJSLINTERCODEGEN_P_H
+#define QQMLJSLINTERCODEGEN_P_H
 
 //
 //  W A R N I N G
@@ -39,38 +39,49 @@
 //
 // We mean it.
 
+#include <QString>
+#include <QFile>
+#include <QList>
+
+#include <variant>
+#include <memory>
+#include <private/qqmljsdiagnosticmessage_p.h>
+#include <private/qqmlirbuilder_p.h>
+#include <private/qqmljsscope_p.h>
+#include <private/qqmljscompiler_p.h>
+
+#include <QtQmlCompiler/private/qqmljstyperesolver_p.h>
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
-#include <QtQmlCompiler/private/qqmljsimporter_p.h>
-
-#include <QtQml/private/qqmljssourcelocation_p.h>
-
-#include <QtCore/qjsonarray.h>
-#include <QtCore/qstring.h>
-#include <QtCore/qmap.h>
-#include <QtCore/qscopedpointer.h>
+#include <QtQmlCompiler/private/qqmljscompilepass_p.h>
 
 QT_BEGIN_NAMESPACE
 
-class QQmlLinter
+class QQmlJSLinterCodegen : public QQmlJSAotCompiler
 {
 public:
-    QQmlLinter(const QStringList &importPaths, bool useAbsolutePath = false);
+    QQmlJSLinterCodegen(QQmlJSImporter *importer, const QString &fileName,
+                        const QStringList &qmldirFiles, QQmlJSLogger *logger,
+                        QQmlJSTypeInfo *typeInfo);
 
-    bool lintFile(const QString &filename, const QString *fileContents, const bool silent,
-                  QJsonArray *json, const QStringList &qmlImportPaths,
-                  const QStringList &qmldirFiles, const QStringList &resourceFiles,
-                  const QMap<QString, QQmlJSLogger::Option> &options);
+    void setDocument(const QmlIR::JSCodeGen *codegen, const QmlIR::Document *document) override;
+    std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage>
+    compileBinding(const QV4::Compiler::Context *context, const QmlIR::Binding &irBinding) override;
+    std::variant<QQmlJSAotFunction, QQmlJS::DiagnosticMessage>
+    compileFunction(const QV4::Compiler::Context *context,
+                    const QmlIR::Function &irFunction) override;
 
-    const QQmlJSLogger *logger() const { return m_logger.get(); }
+    void setTypeResolver(QQmlJSTypeResolver typeResolver)
+    {
+        m_typeResolver = std::move(typeResolver);
+    }
 
 private:
-    void parseComments(QQmlJSLogger *logger, const QList<QQmlJS::SourceLocation> &comments);
+    QQmlJSTypeInfo *m_typeInfo;
 
-    bool m_useAbsolutePath;
-    QQmlJSImporter m_importer;
-    QScopedPointer<QQmlJSLogger> m_logger;
+    bool analyzeFunction(const QV4::Compiler::Context *context,
+                         QQmlJSCompilePass::Function *function, QQmlJS::DiagnosticMessage *error);
 };
 
 QT_END_NAMESPACE
 
-#endif // QMLLINT_P_H
+#endif

@@ -40,7 +40,7 @@
 #include <QtQml/private/qqmlmetatype_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 #include <QtQuickControlsTestUtils/private/controlstestutils_p.h>
-#include <QtQmlLint/private/qqmllinter_p.h>
+#include <QtQmlCompiler/private/qqmljslinter_p.h>
 
 using namespace QQuickVisualTestUtils;
 using namespace QQuickControlsTestUtils;
@@ -63,7 +63,7 @@ private:
     QMap<QString, QString> installedQmlFiles;
     QStringList m_importPaths;
 
-    QQmlLinter m_linter;
+    QQmlJSLinter m_linter;
     QMap<QString, QQmlJSLogger::Option> m_options;
 };
 
