@@ -1887,7 +1887,7 @@ void CodeGenerator::compileUrlMethod()
 
 void CodeGenerator::recordError(const QQmlJS::SourceLocation &location, const QString &message)
 {
-    m_logger->logCritical(message, Log_Compiler, location);
+    m_logger->log(message, Log_Compiler, location);
 }
 
 void CodeGenerator::recordError(const QV4::CompiledData::Location &location, const QString &message)

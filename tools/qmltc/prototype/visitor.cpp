@@ -42,8 +42,8 @@ bool Visitor::visit(QQmlJS::AST::UiInlineComponent *component)
 {
     if (!QQmlJSImportVisitor::visit(component))
         return false;
-    m_logger->logCritical(u"Inline components are not supported"_qs, Log_Compiler,
-                          component->firstSourceLocation());
+    m_logger->log(u"Inline components are not supported"_qs, Log_Compiler,
+                  component->firstSourceLocation());
     // despite the failure, return true here so that we do not assert in
     // QQmlJSImportVisitor::endVisit(UiInlineComponent)
     return true;

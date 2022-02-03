@@ -669,26 +669,17 @@ QQmlJS::DiagnosticMessage QQmlJSAotCompiler::diagnose(
         const QString &message, QtMsgType type, const QQmlJS::SourceLocation &location) const
 {
     if (isStrict(m_document)
-            && (type == QtWarningMsg || type == QtCriticalMsg || type == QtFatalMsg)
-            && m_logger->isCategoryError(Log_Compiler)) {
+        && (type == QtWarningMsg || type == QtCriticalMsg || type == QtFatalMsg)
+        && !m_logger->isCategoryIgnored(Log_Compiler)
+        && m_logger->categoryLevel(Log_Compiler) == QtCriticalMsg) {
         qFatal("%s:%d: (strict mode) %s",
                qPrintable(QFileInfo(m_resourcePath).fileName()),
                location.startLine, qPrintable(message));
     }
 
-    switch (type) {
-    case QtDebugMsg:
-    case QtInfoMsg:
-        m_logger->logInfo(message, Log_Compiler, location);
-        break;
-    case QtWarningMsg:
-        m_logger->logWarning(message, Log_Compiler, location);
-        break;
-    case QtCriticalMsg:
-    case QtFatalMsg:
-        m_logger->logCritical(message, Log_Compiler, location);
-        break;
-    }
+    // TODO: this is a special place that explicitly sets the severity through
+    // logger's private function
+    m_logger->log(message, Log_Compiler, location, type);
 
     return QQmlJS::DiagnosticMessage {
         message,

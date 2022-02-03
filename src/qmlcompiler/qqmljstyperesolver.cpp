@@ -138,19 +138,19 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *p
                 // If the property is defined in the same scope where it is set,
                 // we are in fact allowed to set it, even if it's not writable.
                 if (!property.isWritable() && !scope->hasOwnProperty(binding.propertyName())) {
-                    m_logger->logWarning(u"Cannot assign to read-only property %1"_qs
-                                                 .arg(binding.propertyName()),
-                                         Log_Type, binding.sourceLocation());
+                    m_logger->log(u"Cannot assign to read-only property %1"_qs.arg(
+                                          binding.propertyName()),
+                                  Log_Type, binding.sourceLocation());
                     continue;
                 }
                 if (!canConvertFromTo(binding.literalType(), property.type())) {
-                    m_logger->logWarning(u"Cannot assign binding of type %1 to %2"_qs
-                                                 .arg(binding.literalTypeName())
-                                                 .arg(property.typeName()),
-                                         Log_Type, binding.sourceLocation());
+                    m_logger->log(u"Cannot assign binding of type %1 to %2"_qs
+                                          .arg(binding.literalTypeName())
+                                          .arg(property.typeName()),
+                                  Log_Type, binding.sourceLocation());
                 } else if (property.type() == m_stringType && isNumeric(binding.literalType())) {
-                    m_logger->logWarning(u"Cannot assign a numeric constant to a string property"_qs,
-                                         Log_Type, binding.sourceLocation());
+                    m_logger->log(u"Cannot assign a numeric constant to a string property"_qs,
+                                  Log_Type, binding.sourceLocation());
                 }
             }
         }
@@ -507,9 +507,9 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
             }
         }
 
-        m_logger->logWarning(u"Object type %1 is not derived from QObject or QQmlComponent"_qs.arg(
-                                     type->internalName()),
-                             Log_Compiler);
+        m_logger->log(u"Object type %1 is not derived from QObject or QQmlComponent"_qs.arg(
+                              type->internalName()),
+                      Log_Compiler, type->sourceLocation());
 
         // Reference types that are not QObject or QQmlComponent are likely JavaScript objects.
         // We don't want to deal with those, but m_jsValueType is the best generic option.
@@ -674,15 +674,14 @@ QQmlJSRegisterContent QQmlJSTypeResolver::scopedType(const QQmlJSScope::ConstPtr
 
         if (const auto attached = type->attachedType()) {
             if (!genericType(attached)) {
-                m_logger->logWarning(u"Cannot resolve generic base of attached %1"_qs.arg(
-                                             attached->internalName()),
-                                     Log_Compiler);
+                m_logger->log(u"Cannot resolve generic base of attached %1"_qs.arg(
+                                      attached->internalName()),
+                              Log_Compiler, attached->sourceLocation());
                 return {};
             } else if (type->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
-                m_logger->logWarning(
-                        u"Cannot retrieve attached object for non-reference type %1"_qs.arg(
-                                type->internalName()),
-                        Log_Compiler);
+                m_logger->log(u"Cannot retrieve attached object for non-reference type %1"_qs.arg(
+                                      type->internalName()),
+                              Log_Compiler, type->sourceLocation());
                 return {};
             } else {
                 // We don't know yet whether we need the attached or the plain object. In direct
@@ -822,15 +821,14 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr
     if (QQmlJSScope::ConstPtr attachedBase = typeForName(name)) {
         if (QQmlJSScope::ConstPtr attached = attachedBase->attachedType()) {
             if (!genericType(attached)) {
-                m_logger->logWarning(u"Cannot resolve generic base of attached %1"_qs.arg(
-                                             attached->internalName()),
-                                     Log_Compiler);
+                m_logger->log(u"Cannot resolve generic base of attached %1"_qs.arg(
+                                      attached->internalName()),
+                              Log_Compiler, attached->sourceLocation());
                 return {};
             } else if (type->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
-                m_logger->logWarning(
-                        u"Cannot retrieve attached object for non-reference type %1"_qs.arg(
-                                type->internalName()),
-                        Log_Compiler);
+                m_logger->log(u"Cannot retrieve attached object for non-reference type %1"_qs.arg(
+                                      type->internalName()),
+                              Log_Compiler, type->sourceLocation());
                 return {};
             } else {
                 return QQmlJSRegisterContent::create(storedType(attached), attached,
@@ -896,10 +894,10 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
     }
     if (type.isImportNamespace()) {
         if (type.scopeType()->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
-            m_logger->logWarning(
+            m_logger->log(
                     u"Cannot use non-reference type %1 as base of namespaced attached type"_qs.arg(
                             type.scopeType()->internalName()),
-                    Log_Type);
+                    Log_Type, type.scopeType()->sourceLocation());
             return {};
         }
 

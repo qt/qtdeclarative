@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the tools applications of the Qt Toolkit.
@@ -34,10 +34,10 @@ const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
     static QMap<QString, QQmlJSLogger::Option> optionsMap = {
         { QStringLiteral("required"),
           QQmlJSLogger::Option(Log_Required, QStringLiteral("RequiredProperty"),
-                               QStringLiteral("Warn about required properties"), QtInfoMsg) },
+                               QStringLiteral("Warn about required properties"), QtWarningMsg) },
         { QStringLiteral("alias"),
           QQmlJSLogger::Option(Log_Alias, QStringLiteral("PropertyAlias"),
-                               QStringLiteral("Warn about alias errors"), QtInfoMsg) },
+                               QStringLiteral("Warn about alias errors"), QtWarningMsg) },
         { QStringLiteral("import"),
           QQmlJSLogger::Option(Log_Import, QStringLiteral("ImportFailure"),
                                QStringLiteral("Warn about failing imports and deprecated qmltypes"),
@@ -49,7 +49,7 @@ const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
                                QtWarningMsg) },
         { QStringLiteral("inheritance-cycle"),
           QQmlJSLogger::Option(Log_InheritanceCycle, QStringLiteral("InheritanceCycle"),
-                               QStringLiteral("Warn about inheritance cycles"), QtInfoMsg) },
+                               QStringLiteral("Warn about inheritance cycles"), QtWarningMsg) },
         { QStringLiteral("deprecated"),
           QQmlJSLogger::Option(Log_Deprecation, QStringLiteral("Deprecated"),
                                QStringLiteral("Warn about deprecated properties and types"),
@@ -64,13 +64,13 @@ const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
                                QtWarningMsg) },
         { QStringLiteral("property"),
           QQmlJSLogger::Option(Log_Property, QStringLiteral("UnknownProperty"),
-                               QStringLiteral("Warn about unknown properties"), QtInfoMsg) },
+                               QStringLiteral("Warn about unknown properties"), QtWarningMsg) },
         { QStringLiteral("deferred-property-id"),
           QQmlJSLogger::Option(
                   Log_DeferredPropertyId, QStringLiteral("DeferredPropertyId"),
                   QStringLiteral(
                           "Warn about making deferred properties immediate by giving them an id."),
-                  QtInfoMsg) },
+                  QtWarningMsg) },
         { QStringLiteral("unqualified"),
           QQmlJSLogger::Option(
                   Log_UnqualifiedAccess, QStringLiteral("UnqualifiedAccess"),
@@ -78,24 +78,23 @@ const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
                   QtWarningMsg) },
         { QStringLiteral("unused-imports"),
           QQmlJSLogger::Option(Log_UnusedImport, QStringLiteral("UnusedImports"),
-                               QStringLiteral("Warn about unused imports"), QtInfoMsg, false) },
+                               QStringLiteral("Warn about unused imports"), QtInfoMsg) },
         { QStringLiteral("multiline-strings"),
           QQmlJSLogger::Option(Log_MultilineString, QStringLiteral("MultilineStrings"),
-                               QStringLiteral("Warn about multiline strings"), QtInfoMsg, false) },
+                               QStringLiteral("Warn about multiline strings"), QtInfoMsg) },
         { QStringLiteral("compiler"),
           QQmlJSLogger::Option(Log_Compiler, QStringLiteral("CompilerWarnings"),
-                               QStringLiteral("Warn about compiler issues"), QtCriticalMsg,
-                               false) },
+                               QStringLiteral("Warn about compiler issues"), QtCriticalMsg, true) },
         { QStringLiteral("controls-sanity"),
           QQmlJSLogger::Option(
                   Log_ControlsSanity, QStringLiteral("ControlsSanity"),
                   QStringLiteral("Performance checks used for QuickControl's implementation"),
-                  QtCriticalMsg, false) },
+                  QtCriticalMsg, true) },
         { QStringLiteral("multiple-attached-objects"),
           QQmlJSLogger::Option(
                   Log_AttachedPropertyReuse, QStringLiteral("AttachedPropertyReuse"),
                   QStringLiteral("Warn if attached types from parent components aren't reused"),
-                  QtCriticalMsg, false) }
+                  QtCriticalMsg, true) }
     };
 
     return optionsMap;
@@ -106,20 +105,20 @@ QQmlJSLogger::QQmlJSLogger()
     const auto &opt = options();
     for (auto it = opt.cbegin(); it != opt.cend(); ++it) {
         m_categoryLevels[it.value().m_category] = it.value().m_level;
-        m_categoryError[it.value().m_category] = it.value().m_error;
+        m_categoryIgnored[it.value().m_category] = it.value().m_ignored;
     }
 
     // These have to be set up manually since we don't expose it as an option
-    m_categoryLevels[Log_RecursionDepthError] = QtInfoMsg;
-    m_categoryError[Log_RecursionDepthError] = true;
-    m_categoryLevels[Log_Syntax] = QtInfoMsg;
-    m_categoryError[Log_Syntax] = true;
+    m_categoryLevels[Log_RecursionDepthError] = QtCriticalMsg;
+    m_categoryLevels[Log_Syntax] = QtWarningMsg; // TODO: because we usually report it as a warning!
+    m_categoryLevels[Log_SyntaxIdQuotation] = QtWarningMsg;
+    m_categoryLevels[Log_SyntaxDuplicateIds] = QtCriticalMsg;
 
     // setup color output
     m_output.insertMapping(QtCriticalMsg, QColorOutput::RedForeground);
-    m_output.insertMapping(QtWarningMsg, QColorOutput::PurpleForeground);
+    m_output.insertMapping(QtWarningMsg, QColorOutput::PurpleForeground); // Yellow?
     m_output.insertMapping(QtInfoMsg, QColorOutput::BlueForeground);
-    m_output.insertMapping(QtDebugMsg, QColorOutput::GreenForeground);
+    m_output.insertMapping(QtDebugMsg, QColorOutput::GreenForeground); // None?
 }
 
 static bool isMsgTypeLess(QtMsgType a, QtMsgType b)
@@ -136,8 +135,10 @@ void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category,
                        const QQmlJS::SourceLocation &srcLocation, QtMsgType type, bool showContext,
                        bool showFileName, const std::optional<FixSuggestion> &suggestion)
 {
-    if (isMsgTypeLess(type, m_categoryLevels[category]))
+    if (isCategoryIgnored(category))
         return;
+
+    // Note: assume \a type is the type we should prefer for logging
 
     if (srcLocation.isValid() && m_ignoredWarnings[srcLocation.startLine].contains(category))
         return;
@@ -153,26 +154,21 @@ void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category,
     if (!prefix.isEmpty())
         prefix.append(QLatin1Char(' '));
 
+    // Note: we do the clamping to [Info, Critical] range since our logger only
+    // supports 3 categories
+    type = std::clamp(type, QtInfoMsg, QtCriticalMsg, isMsgTypeLess);
+
+    // Note: since we clamped our \a type, the output message is not printed
+    // exactly like it was requested, bear with us
     m_output.writePrefixedMessage(prefix + message, type);
-
-    QtMsgType machineType = isMsgTypeLess(QtWarningMsg, type) ? QtCriticalMsg : QtInfoMsg;
-
-    // If this is a category that produces error codes, we need to up all the messages to at least a
-    // warning level
-    if (isCategoryError(category)) {
-        if (isMsgTypeLess(type, QtWarningMsg))
-            machineType = QtWarningMsg;
-        else
-            machineType = type;
-    }
 
     Message diagMsg;
     diagMsg.message = message;
     diagMsg.loc = srcLocation;
-    diagMsg.type = machineType;
+    diagMsg.type = type;
     diagMsg.fixSuggestion = suggestion;
 
-    switch (machineType) {
+    switch (type) {
     case QtWarningMsg: m_warnings.push_back(diagMsg); break;
     case QtCriticalMsg: m_errors.push_back(diagMsg); break;
     case QtInfoMsg: m_infos.push_back(diagMsg); break;
@@ -187,15 +183,17 @@ void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category,
 }
 
 void QQmlJSLogger::processMessages(const QList<QQmlJS::DiagnosticMessage> &messages,
-                                   QtMsgType level, QQmlJSLoggerCategory category)
+                                   QQmlJSLoggerCategory category)
 {
-    if (isMsgTypeLess(level, m_categoryLevels[category]) || messages.isEmpty())
+    if (messages.isEmpty() || isCategoryIgnored(category))
         return;
 
     m_output.write(QStringLiteral("---\n"));
 
+    // TODO: we should instead respect message's category here (potentially, it
+    // should hold a category instead of type)
     for (const QQmlJS::DiagnosticMessage &message : messages)
-        logWarning(message.message, category, QQmlJS::SourceLocation(), false, false);
+        log(message.message, category, QQmlJS::SourceLocation(), false, false);
 
     m_output.write(QStringLiteral("---\n\n"));
 }

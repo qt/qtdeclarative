@@ -46,8 +46,8 @@
 
 void setupLogger(QQmlJSLogger &logger) // prepare logger to work with compiler
 {
-    // TODO: support object bindings and change to setCategoryLevel(QtInfoMsg)
-    logger.setCategoryError(Log_Compiler, true);
+    logger.setCategoryLevel(Log_Compiler, QtCriticalMsg);
+    logger.setCategoryIgnored(Log_Compiler, false);
 }
 
 int main(int argc, char **argv)
@@ -203,9 +203,9 @@ int main(int argc, char **argv)
     QList<QQmlJS::DiagnosticMessage> warnings = importer.takeGlobalWarnings();
 
     if (!warnings.isEmpty()) {
-        logger.logWarning(QStringLiteral("Type warnings occurred while compiling file:"),
-                          Log_Import);
-        logger.processMessages(warnings, QtWarningMsg, Log_Import);
+        logger.log(QStringLiteral("Type warnings occurred while compiling file:"), Log_Import,
+                   QQmlJS::SourceLocation());
+        logger.processMessages(warnings, Log_Import);
     }
 #    endif
 

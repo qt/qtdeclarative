@@ -52,7 +52,7 @@ struct Qml2CppContext
     void recordError(const QQmlJS::SourceLocation &location, const QString &message) const
     {
         Q_ASSERT(logger);
-        logger->logCritical(message, Log_Compiler, location);
+        logger->log(message, Log_Compiler, location);
     }
 
     void recordError(const QV4::CompiledData::Location &location, const QString &message) const

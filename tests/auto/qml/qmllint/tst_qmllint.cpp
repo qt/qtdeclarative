@@ -429,10 +429,11 @@ void TestQmllint::dirtyQmlCode_data()
                                          << QString("Warning: %1:5:35: Property \"weDontKnowIt\" "
                                                     "not found on type \"CustomPalette\"")
                                          << QString() << QString() << false;
-    QTest::newRow("inheritanceCylce") << QStringLiteral("Cycle1.qml")
-                                      << QString("Warning: %1: Cycle2 is part of an inheritance "
-                                                 "cycle: Cycle2 -> Cycle3 -> Cycle1 -> Cycle2")
-                                      << QString() << QString() << false;
+    QTest::newRow("inheritanceCycle")
+            << QStringLiteral("Cycle1.qml")
+            << QString("Warning: %1:2:1: Cycle2 is part of an inheritance cycle: Cycle2 -> Cycle3 "
+                       "-> Cycle1 -> Cycle2")
+            << QString() << QString() << false;
     QTest::newRow("badQmldirImportAndDepend")
             << QStringLiteral("qmldirImportAndDepend/bad.qml")
             << QString("Warning: %1:3:1: Item was not found. Did you add all import paths?")
@@ -1057,7 +1058,7 @@ void TestQmllint::compilerWarnings_data()
     QTest::newRow("unknownTypeInRegister")
             << QStringLiteral("unknownTypeInRegister.qml") << false
             << QStringLiteral("Functions without type annotations won't be compiled") << true;
-    QTest::newRow("pragmaStrict") << QStringLiteral("pragmaStrict.qml") << true
+    QTest::newRow("pragmaStrict") << QStringLiteral("pragmaStrict.qml") << false
                                   << QStringLiteral(
                                              "Functions without type annotations won't be compiled")
                                   << false;
@@ -1332,7 +1333,7 @@ void TestQmllint::settingsFile()
     QVERIFY(runQmllint("settings/unqualifiedSilent/unqualified.qml", true, QStringList(), false)
                     .isEmpty());
     QVERIFY(runQmllint("settings/unusedImportWarning/unused.qml", false, QStringList(), false)
-                    .contains(QStringLiteral("Info: %1:2:1: Unused import at %1:2:1")
+                    .contains(QStringLiteral("Warning: %1:2:1: Unused import at %1:2:1")
                                       .arg(testFile("settings/unusedImportWarning/unused.qml"))));
     QVERIFY(runQmllint("settings/bare/bare.qml", false, {}, false, false)
                     .contains(QStringLiteral("Failed to find the following builtins: "

@@ -486,8 +486,8 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
         break;
     }
     default: {
-        m_logger->logWarning(u"Binding type is not supported (yet)"_qs, Log_Compiler,
-                             binding.sourceLocation());
+        m_logger->log(u"Binding type is not supported (yet)"_qs, Log_Compiler,
+                      binding.sourceLocation());
         break;
     }
     }

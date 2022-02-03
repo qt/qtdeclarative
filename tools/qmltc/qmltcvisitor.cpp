@@ -200,15 +200,14 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
             if (methods.size() != 1) {
                 const QString errorString =
                         methods.isEmpty() ? u"no signal"_qs : u"too many signals"_qs;
-                m_logger->logCritical(
+                m_logger->log(
                         u"internal error: %1 found for property '%2'"_qs.arg(errorString, name),
                         Log_Compiler, publicMember->identifierToken);
                 return false;
             } else if (methods[0].methodType() != QQmlJSMetaMethod::Signal) {
-                m_logger->logCritical(
-                        u"internal error: method %1 of property %2 must be a signal"_qs.arg(
-                                prop.notify(), name),
-                        Log_Compiler, publicMember->identifierToken);
+                m_logger->log(u"internal error: method %1 of property %2 must be a signal"_qs.arg(
+                                      prop.notify(), name),
+                              Log_Compiler, publicMember->identifierToken);
                 return false;
             }
         }
