@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Dialogs module of the Qt Toolkit.
@@ -37,55 +37,35 @@
 **
 ****************************************************************************/
 
-#include "qquickdialogimplfactory_p.h"
+import QtQuick
 
-#include <QtCore/qloggingcategory.h>
-
-#include "qquickplatformfiledialog_p.h"
-#include "qquickplatformfolderdialog_p.h"
-#include "qquickplatformfontdialog_p.h"
-#include "qquickplatformcolordialog_p.h"
-#include "qquickplatformmessagedialog_p.h"
-
-QT_BEGIN_NAMESPACE
-
-/*!
-    \internal
-
-    Creates concrete QML-based dialogs.
-*/
-
-Q_LOGGING_CATEGORY(lcQuickDialogImplFactory, "qt.quick.dialogs.quickdialogimplfactory")
-
-std::unique_ptr<QPlatformDialogHelper> QQuickDialogImplFactory::createPlatformDialogHelper(QQuickDialogType type, QObject *parent)
-{
-    std::unique_ptr<QPlatformDialogHelper> dialogHelper;
-    switch (type) {
-    case QQuickDialogType::ColorDialog: {
-        dialogHelper.reset(new QQuickPlatformColorDialog(parent));
-        break;
+Gradient {
+    GradientStop {
+        position: 0
+        color: "#ff0000"
     }
-    case QQuickDialogType::FileDialog: {
-        dialogHelper.reset(new QQuickPlatformFileDialog(parent));
-        break;
+    GradientStop {
+        position: 0.166666
+        color: "#ffff00"
     }
-    case QQuickDialogType::FolderDialog: {
-        dialogHelper.reset(new QQuickPlatformFolderDialog(parent));
-        break;
+    GradientStop {
+        position: 0.333333
+        color: "#00ff00"
     }
-    case QQuickDialogType::FontDialog: {
-        dialogHelper.reset(new QQuickPlatformFontDialog(parent));
-        break;
+    GradientStop {
+        position: 0.5
+        color: "#00ffff"
     }
-    case QQuickDialogType::MessageDialog: {
-        dialogHelper.reset(new QQuickPlatformMessageDialog(parent));
-        break;
+    GradientStop {
+        position: 0.666666
+        color: "#0000ff"
     }
-    default:
-        break;
+    GradientStop {
+        position: 0.833333
+        color: "#ff00ff"
     }
-
-    return dialogHelper;
+    GradientStop {
+        position: 1
+        color: "#ff0000"
+    }
 }
-
-QT_END_NAMESPACE

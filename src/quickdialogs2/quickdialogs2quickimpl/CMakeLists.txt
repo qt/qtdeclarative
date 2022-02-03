@@ -3,6 +3,8 @@
 #####################################################################
 
 set(qml_files
+    "qml/ColorDialog.qml"
+    "qml/ColorInputs.qml"
     "qml/FileDialog.qml"
     "qml/FolderDialog.qml"
     "qml/FileDialogDelegate.qml"
@@ -12,7 +14,11 @@ set(qml_files
     "qml/FolderDialogDelegateLabel.qml"
     "qml/FontDialog.qml"
     "qml/FontDialogContent.qml"
+    "qml/HueGradient.qml"
     "qml/MessageDialog.qml"
+    "qml/PickerHandle.qml"
+    "qml/SaturationLightnessPicker.qml"
+    "qml/+Fusion/ColorDialog.qml"
     "qml/+Fusion/FileDialog.qml"
     "qml/+Fusion/FileDialogDelegate.qml"
     "qml/+Fusion/FolderDialog.qml"
@@ -20,6 +26,7 @@ set(qml_files
     "qml/+Fusion/FolderDialogDelegate.qml"
     "qml/+Fusion/FontDialog.qml"
     "qml/+Fusion/MessageDialog.qml"
+    "qml/+Imagine/ColorDialog.qml"
     "qml/+Imagine/FileDialog.qml"
     "qml/+Imagine/FileDialogDelegate.qml"
     "qml/+Imagine/FolderBreadcrumbBar.qml"
@@ -27,6 +34,7 @@ set(qml_files
     "qml/+Imagine/FolderDialogDelegate.qml"
     "qml/+Imagine/FontDialog.qml"
     "qml/+Imagine/MessageDialog.qml"
+    "qml/+Material/ColorDialog.qml"
     "qml/+Material/FileDialog.qml"
     "qml/+Material/FileDialogDelegate.qml"
     "qml/+Material/FolderBreadcrumbBar.qml"
@@ -34,6 +42,7 @@ set(qml_files
     "qml/+Material/FolderDialogDelegate.qml"
     "qml/+Material/FontDialog.qml"
     "qml/+Material/MessageDialog.qml"
+    "qml/+Universal/ColorDialog.qml"
     "qml/+Universal/FileDialog.qml"
     "qml/+Universal/FileDialogDelegate.qml"
     "qml/+Universal/FolderBreadcrumbBar.qml"
@@ -52,6 +61,12 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         QtQuick/auto
         QtQuick.Templates/auto
     SOURCES
+        qquickabstractcolorpicker.cpp
+        qquickabstractcolorpicker_p.h
+        qquickabstractcolorpicker_p_p.h
+        qquickcolordialogimpl.cpp
+        qquickcolordialogimpl_p.h
+        qquickcolordialogimpl_p_p.h
         qquickdialogimplfactory.cpp
         qquickdialogimplfactory_p.h
         qquickfiledialogdelegate.cpp
@@ -65,6 +80,8 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         qquickfolderbreadcrumbbar.cpp
         qquickfolderbreadcrumbbar_p.h
         qquickfolderbreadcrumbbar_p_p.h
+        qquickplatformcolordialog.cpp
+        qquickplatformcolordialog_p.h
         qquickplatformfiledialog.cpp
         qquickplatformfiledialog_p.h
         qquickplatformfolderdialog.cpp
@@ -82,6 +99,8 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
         qquickmessagedialogimpl.cpp
         qquickplatformmessagedialog_p.h
         qquickplatformmessagedialog.cpp
+        qquicksaturationlightnesspicker.cpp
+        qquicksaturationlightnesspicker_p.h
     QML_FILES
         ${qml_files}
     DEFINES
@@ -109,6 +128,7 @@ qt_internal_add_qml_module(QuickDialogs2QuickImpl
 
 # Resources:
 set(qtquickdialogs2quickimpl_resource_files
+    "images/checkers.png"
     "images/crumb-separator-icon-round.png"
     "images/crumb-separator-icon-round@2x.png"
     "images/crumb-separator-icon-round@3x.png"
@@ -117,6 +137,10 @@ set(qtquickdialogs2quickimpl_resource_files
     "images/crumb-separator-icon-square@2x.png"
     "images/crumb-separator-icon-square@3x.png"
     "images/crumb-separator-icon-square@4x.png"
+    "images/eye-dropper.png"
+    "images/eye-dropper@2x.png"
+    "images/eye-dropper@3x.png"
+    "images/eye-dropper@4x.png"
     "images/file-icon-round.png"
     "images/file-icon-round@2x.png"
     "images/file-icon-round@3x.png"
@@ -172,4 +196,11 @@ qt_internal_add_resource(QuickDialogs2QuickImpl "QuickDialogs2QuickImpl"
         "/qt-project.org/imports/QtQuick/Dialogs/quickimpl"
     FILES
         ${qtquickdialogs2quickimpl_resource_files}
+)
+
+qt_internal_add_shaders(QuickDialogs2QuickImpl "QuickDialogs2QuickImplShaders"
+    PREFIX
+        "/qt-project.org/imports/QtQuick/Dialogs/quickimpl"
+    FILES
+        "shaders/SaturationLightness.frag"
 )

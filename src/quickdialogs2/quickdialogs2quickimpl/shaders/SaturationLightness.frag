@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Dialogs module of the Qt Toolkit.
@@ -37,55 +37,54 @@
 **
 ****************************************************************************/
 
-#include "qquickdialogimplfactory_p.h"
+#version 450
 
-#include <QtCore/qloggingcategory.h>
+layout(location = 0) in vec2 qt_TexCoord0;
+layout(location = 0) out vec4 fragColor;
+layout(std140, binding = 0) uniform buf {
+    mat4 qt_Matrix;
+    float qt_Opacity;
+    float hue;
+};
 
-#include "qquickplatformfiledialog_p.h"
-#include "qquickplatformfolderdialog_p.h"
-#include "qquickplatformfontdialog_p.h"
-#include "qquickplatformcolordialog_p.h"
-#include "qquickplatformmessagedialog_p.h"
+float hueToIntensity(float v1, float v2, float h) {
+    h = fract(h);
+    if (h < 1.0 / 6.0)
+        return v1 + (v2 - v1) * 6.0 * h;
+    else if (h < 1.0 / 2.0)
+        return v2;
+    else if (h < 2.0 / 3.0)
+        return v1 + (v2 - v1) * 6.0 * (2.0 / 3.0 - h);
 
-QT_BEGIN_NAMESPACE
-
-/*!
-    \internal
-
-    Creates concrete QML-based dialogs.
-*/
-
-Q_LOGGING_CATEGORY(lcQuickDialogImplFactory, "qt.quick.dialogs.quickdialogimplfactory")
-
-std::unique_ptr<QPlatformDialogHelper> QQuickDialogImplFactory::createPlatformDialogHelper(QQuickDialogType type, QObject *parent)
-{
-    std::unique_ptr<QPlatformDialogHelper> dialogHelper;
-    switch (type) {
-    case QQuickDialogType::ColorDialog: {
-        dialogHelper.reset(new QQuickPlatformColorDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FileDialog: {
-        dialogHelper.reset(new QQuickPlatformFileDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FolderDialog: {
-        dialogHelper.reset(new QQuickPlatformFolderDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FontDialog: {
-        dialogHelper.reset(new QQuickPlatformFontDialog(parent));
-        break;
-    }
-    case QQuickDialogType::MessageDialog: {
-        dialogHelper.reset(new QQuickPlatformMessageDialog(parent));
-        break;
-    }
-    default:
-        break;
-    }
-
-    return dialogHelper;
+    return v1;
 }
 
-QT_END_NAMESPACE
+vec3 HSLtoRGB(vec3 color) {
+    float h = color.x;
+    float l = color.z;
+    float s = color.y;
+
+    if (s < 1.0 / 256.0)
+        return vec3(l, l, l);
+
+    float v1;
+    float v2;
+    if (l < 0.5)
+        v2 = l * (1.0 + s);
+    else
+        v2 = (l + s) - (s * l);
+
+    v1 = 2.0 * l - v2;
+
+    float d = 1.0 / 3.0;
+    float r = hueToIntensity(v1, v2, h + d);
+    float g = hueToIntensity(v1, v2, h);
+    float b = hueToIntensity(v1, v2, h - d);
+    return vec3(r, g, b);
+}
+
+void main() {
+    vec4 c = vec4(1.0);
+    c.rgb = HSLtoRGB(vec3(hue, 1.0 - qt_TexCoord0.t, qt_TexCoord0.s));
+    fragColor = c * qt_Opacity;
+}

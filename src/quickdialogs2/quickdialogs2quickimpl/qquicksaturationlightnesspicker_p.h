@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Dialogs module of the Qt Toolkit.
@@ -37,55 +37,46 @@
 **
 ****************************************************************************/
 
-#include "qquickdialogimplfactory_p.h"
+#ifndef QQUICKSATURATIONLIGHTNESSPICKER_P_H
+#define QQUICKSATURATIONLIGHTNESSPICKER_P_H
 
-#include <QtCore/qloggingcategory.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#include "qquickplatformfiledialog_p.h"
-#include "qquickplatformfolderdialog_p.h"
-#include "qquickplatformfontdialog_p.h"
-#include "qquickplatformcolordialog_p.h"
-#include "qquickplatformmessagedialog_p.h"
+#include "qquickabstractcolorpicker_p.h"
+#include "qtquickdialogs2quickimplglobal_p.h"
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \internal
+class QQuickSaturationLightnessPickerPrivate;
 
-    Creates concrete QML-based dialogs.
-*/
-
-Q_LOGGING_CATEGORY(lcQuickDialogImplFactory, "qt.quick.dialogs.quickdialogimplfactory")
-
-std::unique_ptr<QPlatformDialogHelper> QQuickDialogImplFactory::createPlatformDialogHelper(QQuickDialogType type, QObject *parent)
+class Q_QUICKDIALOGS2QUICKIMPL_PRIVATE_EXPORT QQuickSaturationLightnessPicker
+    : public QQuickAbstractColorPicker
 {
-    std::unique_ptr<QPlatformDialogHelper> dialogHelper;
-    switch (type) {
-    case QQuickDialogType::ColorDialog: {
-        dialogHelper.reset(new QQuickPlatformColorDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FileDialog: {
-        dialogHelper.reset(new QQuickPlatformFileDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FolderDialog: {
-        dialogHelper.reset(new QQuickPlatformFolderDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FontDialog: {
-        dialogHelper.reset(new QQuickPlatformFontDialog(parent));
-        break;
-    }
-    case QQuickDialogType::MessageDialog: {
-        dialogHelper.reset(new QQuickPlatformMessageDialog(parent));
-        break;
-    }
-    default:
-        break;
-    }
+    Q_OBJECT
+    QML_NAMED_ELEMENT(SaturationLightnessPickerImpl)
 
-    return dialogHelper;
-}
+public:
+    explicit QQuickSaturationLightnessPicker(QQuickItem *parent = nullptr);
+
+protected:
+    QColor colorAt(const QPointF &pos) override;
+
+private:
+    Q_DISABLE_COPY(QQuickSaturationLightnessPicker)
+    Q_DECLARE_PRIVATE(QQuickSaturationLightnessPicker)
+};
 
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickSaturationLightnessPicker)
+
+#endif // QQUICKSATURATIONLIGHTNESSPICKER_P_H

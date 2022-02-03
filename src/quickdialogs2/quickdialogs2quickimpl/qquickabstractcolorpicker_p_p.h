@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Dialogs module of the Qt Toolkit.
@@ -37,55 +37,68 @@
 **
 ****************************************************************************/
 
-#include "qquickdialogimplfactory_p.h"
+#ifndef QQUICKABSTRACTCOLORPICKER_P_P_H
+#define QQUICKABSTRACTCOLORPICKER_P_P_H
 
-#include <QtCore/qloggingcategory.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#include "qquickplatformfiledialog_p.h"
-#include "qquickplatformfolderdialog_p.h"
-#include "qquickplatformfontdialog_p.h"
-#include "qquickplatformcolordialog_p.h"
-#include "qquickplatformmessagedialog_p.h"
+#include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
+#include <QtQuickTemplates2/private/qquickdeferredexecute_p_p.h>
+
+#include "qquickabstractcolorpicker_p.h"
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \internal
-
-    Creates concrete QML-based dialogs.
-*/
-
-Q_LOGGING_CATEGORY(lcQuickDialogImplFactory, "qt.quick.dialogs.quickdialogimplfactory")
-
-std::unique_ptr<QPlatformDialogHelper> QQuickDialogImplFactory::createPlatformDialogHelper(QQuickDialogType type, QObject *parent)
+class QQuickAbstractColorPickerPrivate : public QQuickControlPrivate
 {
-    std::unique_ptr<QPlatformDialogHelper> dialogHelper;
-    switch (type) {
-    case QQuickDialogType::ColorDialog: {
-        dialogHelper.reset(new QQuickPlatformColorDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FileDialog: {
-        dialogHelper.reset(new QQuickPlatformFileDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FolderDialog: {
-        dialogHelper.reset(new QQuickPlatformFolderDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FontDialog: {
-        dialogHelper.reset(new QQuickPlatformFontDialog(parent));
-        break;
-    }
-    case QQuickDialogType::MessageDialog: {
-        dialogHelper.reset(new QQuickPlatformMessageDialog(parent));
-        break;
-    }
-    default:
-        break;
+    Q_DECLARE_PUBLIC(QQuickAbstractColorPicker);
+
+public:
+    explicit QQuickAbstractColorPickerPrivate();
+
+    static QQuickAbstractColorPickerPrivate *get(QQuickAbstractColorPicker *colorPicker)
+    {
+        return colorPicker->d_func();
     }
 
-    return dialogHelper;
-}
+    bool handlePress(const QPointF &point, ulong timestamp) override;
+    bool handleMove(const QPointF &point, ulong timestamp) override;
+    bool handleRelease(const QPointF &point, ulong timestamp) override;
+    void handleUngrab() override;
+
+    void cancelHandle();
+    void executeHandle(bool complete = false);
+
+    void itemImplicitWidthChanged(QQuickItem *item) override;
+    void itemImplicitHeightChanged(QQuickItem *item) override;
+
+    struct
+    {
+        qreal h = .0;
+        qreal s = .0;
+        union {
+            qreal v = 1.0;
+            qreal l;
+        };
+        qreal a = 1.0;
+    } m_hsva;
+    QPointF m_pressPoint;
+    QQuickDeferredPointer<QQuickItem> m_handle;
+    bool m_pressed : 1;
+
+protected:
+    bool m_hsl : 1; // Use hsv by default.
+};
 
 QT_END_NAMESPACE
+
+#endif // QQUICKABSTRACTCOLORPICKER_P_P_H

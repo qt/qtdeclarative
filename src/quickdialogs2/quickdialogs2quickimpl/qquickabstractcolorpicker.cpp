@@ -1,0 +1,411 @@
+/****************************************************************************
+**
+** Copyright (C) 2022 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the Qt Quick Dialogs module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Lesser General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU Lesser
+** General Public License version 3 as published by the Free Software
+** Foundation and appearing in the file LICENSE.LGPL3 included in the
+** packaging of this file. Please review the following information to
+** ensure the GNU Lesser General Public License version 3 requirements
+** will be met: https://www.gnu.org/licenses/lgpl-3.0.html.
+**
+** GNU General Public License Usage
+** Alternatively, this file may be used under the terms of the GNU
+** General Public License version 2.0 or (at your option) the GNU General
+** Public license version 3 or any later version approved by the KDE Free
+** Qt Foundation. The licenses are as published by the Free Software
+** Foundation and appearing in the file LICENSE.GPL2 and LICENSE.GPL3
+** included in the packaging of this file. Please review the following
+** information to ensure the GNU General Public License requirements will
+** be met: https://www.gnu.org/licenses/gpl-2.0.html and
+** https://www.gnu.org/licenses/gpl-3.0.html.
+**
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+#include "qquickabstractcolorpicker_p_p.h"
+
+#include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
+#include <QtQuickTemplates2/private/qquickdeferredexecute_p_p.h>
+
+#include <qpa/qplatformintegration.h>
+#include <private/qguiapplication_p.h>
+
+QQuickAbstractColorPickerPrivate::QQuickAbstractColorPickerPrivate()
+    : m_pressed(false), m_hsl(false)
+{
+}
+
+static inline QString handleName()
+{
+    return QStringLiteral("handle");
+}
+
+bool QQuickAbstractColorPickerPrivate::handlePress(const QPointF &point, ulong timestamp)
+{
+    Q_Q(QQuickAbstractColorPicker);
+    QQuickControlPrivate::handlePress(point, timestamp);
+    m_pressPoint = point;
+    q->setPressed(true);
+
+    q->updateColor(point);
+    return true;
+}
+
+bool QQuickAbstractColorPickerPrivate::handleMove(const QPointF &point, ulong timestamp)
+{
+    Q_Q(QQuickAbstractColorPicker);
+    QQuickControlPrivate::handleMove(point, timestamp);
+    if (point != m_pressPoint)
+        q->updateColor(point);
+    return true;
+}
+
+bool QQuickAbstractColorPickerPrivate::handleRelease(const QPointF &point, ulong timestamp)
+{
+    Q_Q(QQuickAbstractColorPicker);
+    QQuickControlPrivate::handleRelease(point, timestamp);
+    m_pressPoint = QPointF();
+    q->setKeepMouseGrab(false);
+    q->setKeepTouchGrab(false);
+    q->setPressed(false);
+    q->updateColor(point);
+    return true;
+}
+
+void QQuickAbstractColorPickerPrivate::handleUngrab()
+{
+    Q_Q(QQuickAbstractColorPicker);
+    QQuickControlPrivate::handleUngrab();
+    m_pressPoint = QPointF();
+    q->setPressed(false);
+}
+
+void QQuickAbstractColorPickerPrivate::cancelHandle()
+{
+    Q_Q(QQuickAbstractColorPicker);
+    quickCancelDeferred(q, handleName());
+}
+
+void QQuickAbstractColorPickerPrivate::executeHandle(bool complete)
+{
+    Q_Q(QQuickAbstractColorPicker);
+    if (m_handle.wasExecuted())
+        return;
+
+    if (!m_handle || complete)
+        quickBeginDeferred(q, handleName(), m_handle);
+    if (complete)
+        quickCompleteDeferred(q, handleName(), m_handle);
+}
+
+void QQuickAbstractColorPickerPrivate::itemImplicitWidthChanged(QQuickItem *item)
+{
+    Q_Q(QQuickAbstractColorPicker);
+    QQuickControlPrivate::itemImplicitWidthChanged(item);
+    if (item == m_handle)
+        emit q->implicitHandleWidthChanged();
+}
+
+void QQuickAbstractColorPickerPrivate::itemImplicitHeightChanged(QQuickItem *item)
+{
+    Q_Q(QQuickAbstractColorPicker);
+    QQuickControlPrivate::itemImplicitHeightChanged(item);
+    if (item == m_handle)
+        emit q->implicitHandleHeightChanged();
+}
+
+QQuickAbstractColorPicker::QQuickAbstractColorPicker(QQuickAbstractColorPickerPrivate &dd,
+                                                     QQuickItem *parent)
+    : QQuickControl(dd, parent)
+{
+    setActiveFocusOnTab(true);
+    setAcceptedMouseButtons(Qt::LeftButton);
+}
+
+QColor QQuickAbstractColorPicker::color() const
+{
+    Q_D(const QQuickAbstractColorPicker);
+    return d->m_hsl ? QColor::fromHslF(d->m_hsva.h, d->m_hsva.s, d->m_hsva.l, d->m_hsva.a)
+                    : QColor::fromHsvF(d->m_hsva.h, d->m_hsva.s, d->m_hsva.v, d->m_hsva.a);
+}
+
+void QQuickAbstractColorPicker::setColor(const QColor &c)
+{
+    Q_D(QQuickAbstractColorPicker);
+    if (color() == c)
+        return;
+
+    // When called from QQuickColorDialogImpl, it might not have the same spec as the current color
+    // picker.
+    if (d->m_hsl && c.spec() == QColor::Spec::Hsv) {
+        const auto sl = getSaturationAndLightness(c.hsvSaturationF(), c.valueF());
+        d->m_hsva.h = qBound(.0, c.hsvHueF(), 1.0);
+        d->m_hsva.s = qBound(.0, sl.first, 1.0);
+        d->m_hsva.l = qBound(.0, sl.second, 1.0);
+    } else if (!d->m_hsl && c.spec() == QColor::Spec::Hsl) {
+        const auto sv = getSaturationAndValue(c.hslSaturationF(), c.lightnessF());
+        d->m_hsva.h = qBound(.0, c.hslHueF(), 1.0);
+        d->m_hsva.s = qBound(.0, sv.first, 1.0);
+        d->m_hsva.v = qBound(.0, sv.second, 1.0);
+    } else {
+        d->m_hsva.h = qBound(.0, d->m_hsl ? c.hslHueF() : c.hsvHueF(), 1.0);
+        d->m_hsva.s = qBound(.0, d->m_hsl ? c.hslSaturationF() : c.hsvSaturationF(), 1.0);
+        d->m_hsva.v = qBound(.0, d->m_hsl ? c.lightnessF() : c.valueF(), 1.0);
+    }
+
+    d->m_hsva.a = qBound(.0, c.alphaF(), 1.0);
+
+    emit colorChanged(color());
+}
+
+qreal QQuickAbstractColorPicker::alpha() const
+{
+    Q_D(const QQuickAbstractColorPicker);
+    return d->m_hsva.a;
+}
+
+void QQuickAbstractColorPicker::setAlpha(qreal alpha)
+{
+    Q_D(QQuickAbstractColorPicker);
+
+    if (!qt_is_finite(alpha))
+        return;
+
+    alpha = qBound(.0, alpha, 1.0);
+
+    if (qFuzzyCompare(d->m_hsva.a, alpha))
+        return;
+
+    d->m_hsva.a = alpha;
+
+    emit colorChanged(color());
+}
+
+qreal QQuickAbstractColorPicker::hue() const
+{
+    Q_D(const QQuickAbstractColorPicker);
+    return d->m_hsva.h;
+}
+void QQuickAbstractColorPicker::setHue(qreal hue)
+{
+    Q_D(QQuickAbstractColorPicker);
+
+    if (!qt_is_finite(hue))
+        return;
+
+    d->m_hsva.h = hue;
+
+    emit colorChanged(color());
+}
+
+qreal QQuickAbstractColorPicker::saturation() const
+{
+    Q_D(const QQuickAbstractColorPicker);
+    return d->m_hsva.s;
+}
+
+void QQuickAbstractColorPicker::setSaturation(qreal saturation)
+{
+    Q_D(QQuickAbstractColorPicker);
+    if (!qt_is_finite(saturation))
+        return;
+
+    d->m_hsva.s = saturation;
+
+    emit colorChanged(color());
+}
+qreal QQuickAbstractColorPicker::value() const
+{
+    Q_D(const QQuickAbstractColorPicker);
+    return d->m_hsl ? getSaturationAndValue(d->m_hsva.s, d->m_hsva.l).second : d->m_hsva.v;
+}
+void QQuickAbstractColorPicker::setValue(qreal value)
+{
+    Q_D(QQuickAbstractColorPicker);
+    if (!qt_is_finite(value))
+        return;
+
+    const auto sv = d->m_hsl ? getSaturationAndValue(d->m_hsva.s, d->m_hsva.l)
+                       : std::pair<qreal, qreal>(d->m_hsva.s, value);
+    d->m_hsva.s = sv.first;
+    d->m_hsva.v = sv.second;
+
+    emit colorChanged(color());
+}
+
+qreal QQuickAbstractColorPicker::lightness() const
+{
+    Q_D(const QQuickAbstractColorPicker);
+    return d->m_hsl ? d->m_hsva.l : getSaturationAndLightness(d->m_hsva.s, d->m_hsva.v).second;
+}
+void QQuickAbstractColorPicker::setLightness(qreal lightness)
+{
+    Q_D(QQuickAbstractColorPicker);
+    if (!qt_is_finite(lightness))
+        return;
+
+    const auto sl = !d->m_hsl ? getSaturationAndLightness(d->m_hsva.s, d->m_hsva.v)
+                        : std::pair<qreal, qreal>(d->m_hsva.s, lightness);
+    d->m_hsva.s = sl.first;
+    d->m_hsva.l = sl.second;
+
+    emit colorChanged(color());
+}
+
+/*!
+    \internal
+
+    This property holds whether the slider is pressed.
+*/
+bool QQuickAbstractColorPicker::isPressed() const
+{
+    Q_D(const QQuickAbstractColorPicker);
+    return d->m_pressed;
+}
+
+void QQuickAbstractColorPicker::setPressed(bool pressed)
+{
+    Q_D(QQuickAbstractColorPicker);
+    if (pressed == d->m_pressed)
+        return;
+
+    d->m_pressed = pressed;
+    emit pressedChanged();
+}
+
+/*!
+    \internal
+
+    This property holds the handle item.
+*/
+QQuickItem *QQuickAbstractColorPicker::handle() const
+{
+    QQuickAbstractColorPickerPrivate *d = const_cast<QQuickAbstractColorPickerPrivate *>(d_func());
+    if (!d->m_handle)
+        d->executeHandle();
+    return d->m_handle;
+}
+
+void QQuickAbstractColorPicker::setHandle(QQuickItem *handle)
+{
+    Q_D(QQuickAbstractColorPicker);
+    if (handle == d->m_handle)
+        return;
+
+    if (!d->m_handle.isExecuting())
+        d->cancelHandle();
+
+    const qreal oldImplicitHandleWidth = implicitHandleWidth();
+    const qreal oldImplicitHandleHeight = implicitHandleHeight();
+
+    d->removeImplicitSizeListener(d->m_handle);
+    QQuickControlPrivate::hideOldItem(d->m_handle);
+    d->m_handle = handle;
+
+    if (handle) {
+        if (!handle->parentItem())
+            handle->setParentItem(this);
+        d->addImplicitSizeListener(handle);
+    }
+
+    if (!qFuzzyCompare(oldImplicitHandleWidth, implicitHandleWidth()))
+        emit implicitHandleWidthChanged();
+    if (!qFuzzyCompare(oldImplicitHandleHeight, implicitHandleHeight()))
+        emit implicitHandleHeightChanged();
+    if (!d->m_handle.isExecuting())
+        emit handleChanged();
+}
+
+/*!
+    \internal
+    \readonly
+
+    This property holds the implicit handle width.
+
+    The value is equal to \c {handle ? handle.implicitWidth : 0}.
+
+    This is typically used, together with \l {Control::}{implicitContentWidth} and
+    \l {Control::}{implicitBackgroundWidth}, to calculate the \l {Item::}{implicitWidth}.
+
+    \sa implicitHandleHeight
+*/
+qreal QQuickAbstractColorPicker::implicitHandleWidth() const
+{
+    Q_D(const QQuickAbstractColorPicker);
+    if (!d->m_handle)
+        return 0;
+    return d->m_handle->implicitWidth();
+}
+
+/*!
+    \internal
+    \readonly
+
+    This property holds the implicit handle height.
+
+    The value is equal to \c {handle ? handle.implicitHeight : 0}.
+
+    This is typically used, together with \l {Control::}{implicitContentHeight} and
+    \l {Control::}{implicitBackgroundHeight}, to calculate the \l {Item::}{implicitHeight}.
+
+    \sa implicitHandleWidth
+*/
+qreal QQuickAbstractColorPicker::implicitHandleHeight() const
+{
+    Q_D(const QQuickAbstractColorPicker);
+    if (!d->m_handle)
+        return 0;
+    return d->m_handle->implicitHeight();
+}
+
+void QQuickAbstractColorPicker::componentComplete()
+{
+    Q_D(QQuickAbstractColorPicker);
+    d->executeHandle(true);
+    QQuickControl::componentComplete();
+}
+
+void QQuickAbstractColorPicker::updateColor(const QPointF &pos)
+{
+    QColor c = colorAt(pos);
+    c.setAlphaF(alpha());
+    setColor(c);
+
+    emit colorPicked(c);
+}
+
+std::pair<qreal, qreal> QQuickAbstractColorPicker::getSaturationAndValue(qreal saturation,
+                                                                         qreal lightness)
+{
+    const qreal v = lightness + saturation * qMin(lightness, 1 - lightness);
+    if (v == .0)
+        return { .0, .0 };
+
+    const qreal s = 2 * (1 - lightness / v);
+    return { s, v };
+}
+std::pair<qreal, qreal> QQuickAbstractColorPicker::getSaturationAndLightness(qreal saturation,
+                                                                             qreal value)
+{
+    const qreal l = value * (1 - saturation / 2);
+    if (l == .0)
+        return { .0, .0 };
+
+    const qreal s = (value - l) / qMin(l, 1 - l);
+    return { s, l };
+}

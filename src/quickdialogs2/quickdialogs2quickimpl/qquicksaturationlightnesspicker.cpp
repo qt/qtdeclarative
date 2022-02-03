@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Dialogs module of the Qt Toolkit.
@@ -37,55 +37,43 @@
 **
 ****************************************************************************/
 
-#include "qquickdialogimplfactory_p.h"
+#include "qquicksaturationlightnesspicker_p.h"
+#include "qquickabstractcolorpicker_p_p.h"
 
-#include <QtCore/qloggingcategory.h>
-
-#include "qquickplatformfiledialog_p.h"
-#include "qquickplatformfolderdialog_p.h"
-#include "qquickplatformfontdialog_p.h"
-#include "qquickplatformcolordialog_p.h"
-#include "qquickplatformmessagedialog_p.h"
+#include <QtQuickTemplates2/private/qquickcontrol_p_p.h>
+#include <QtQuickTemplates2/private/qquickdeferredexecute_p_p.h>
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \internal
-
-    Creates concrete QML-based dialogs.
-*/
-
-Q_LOGGING_CATEGORY(lcQuickDialogImplFactory, "qt.quick.dialogs.quickdialogimplfactory")
-
-std::unique_ptr<QPlatformDialogHelper> QQuickDialogImplFactory::createPlatformDialogHelper(QQuickDialogType type, QObject *parent)
+class QQuickSaturationLightnessPickerPrivate : public QQuickAbstractColorPickerPrivate
 {
-    std::unique_ptr<QPlatformDialogHelper> dialogHelper;
-    switch (type) {
-    case QQuickDialogType::ColorDialog: {
-        dialogHelper.reset(new QQuickPlatformColorDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FileDialog: {
-        dialogHelper.reset(new QQuickPlatformFileDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FolderDialog: {
-        dialogHelper.reset(new QQuickPlatformFolderDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FontDialog: {
-        dialogHelper.reset(new QQuickPlatformFontDialog(parent));
-        break;
-    }
-    case QQuickDialogType::MessageDialog: {
-        dialogHelper.reset(new QQuickPlatformMessageDialog(parent));
-        break;
-    }
-    default:
-        break;
-    }
+    Q_DECLARE_PUBLIC(QQuickSaturationLightnessPicker)
 
-    return dialogHelper;
+public:
+    explicit QQuickSaturationLightnessPickerPrivate();
+};
+QQuickSaturationLightnessPickerPrivate::QQuickSaturationLightnessPickerPrivate()
+{
+    m_hsl = true;
+}
+
+QQuickSaturationLightnessPicker::QQuickSaturationLightnessPicker(QQuickItem *parent)
+    : QQuickAbstractColorPicker(*(new QQuickSaturationLightnessPickerPrivate), parent)
+{
+}
+
+QColor QQuickSaturationLightnessPicker::colorAt(const QPointF &pos)
+{
+    const qreal w = width();
+    const qreal h = height();
+    if (w <= 0 || h <= 0)
+        return color();
+    const qreal x = qBound(.0, pos.x(), w);
+    const qreal y = qBound(.0, pos.y(), h);
+    const qreal saturation = 1.0 - (y / h);
+    const qreal lightness = x / w;
+
+    return QColor::fromHslF(hue(), saturation, lightness);
 }
 
 QT_END_NAMESPACE

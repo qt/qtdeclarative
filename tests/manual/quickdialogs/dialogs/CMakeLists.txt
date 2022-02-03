@@ -17,11 +17,12 @@ qt_internal_add_manual_test(dialogs
 # Resources:
 set(qmake_immediate_resource_files
     "dialogs.qml"
+    "ColorDialogPage.qml"
     "FileDialogPage.qml"
     "FolderDialogPage.qml"
     "FontDialogPage.qml"
-    "StringListView.qml"
     "MessageDialogPage.qml"
+    "StringListView.qml"
     "qmldir"
     "Theme.qml"
 )

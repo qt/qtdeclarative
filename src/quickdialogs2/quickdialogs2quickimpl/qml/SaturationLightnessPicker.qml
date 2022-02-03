@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Dialogs module of the Qt Toolkit.
@@ -37,55 +37,38 @@
 **
 ****************************************************************************/
 
-#include "qquickdialogimplfactory_p.h"
+import QtQuick
+import QtQuick.Dialogs
+import QtQuick.Dialogs.quickimpl
 
-#include <QtCore/qloggingcategory.h>
+SaturationLightnessPickerImpl {
+    id: control
 
-#include "qquickplatformfiledialog_p.h"
-#include "qquickplatformfolderdialog_p.h"
-#include "qquickplatformfontdialog_p.h"
-#include "qquickplatformcolordialog_p.h"
-#include "qquickplatformmessagedialog_p.h"
+    implicitWidth: Math.max(background ? background.implicitWidth : 0, contentItem.implicitWidth)
+    implicitHeight: Math.max(background ? background.implicitHeight : 0, contentItem.implicitHeight)
 
-QT_BEGIN_NAMESPACE
-
-/*!
-    \internal
-
-    Creates concrete QML-based dialogs.
-*/
-
-Q_LOGGING_CATEGORY(lcQuickDialogImplFactory, "qt.quick.dialogs.quickdialogimplfactory")
-
-std::unique_ptr<QPlatformDialogHelper> QQuickDialogImplFactory::createPlatformDialogHelper(QQuickDialogType type, QObject *parent)
-{
-    std::unique_ptr<QPlatformDialogHelper> dialogHelper;
-    switch (type) {
-    case QQuickDialogType::ColorDialog: {
-        dialogHelper.reset(new QQuickPlatformColorDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FileDialog: {
-        dialogHelper.reset(new QQuickPlatformFileDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FolderDialog: {
-        dialogHelper.reset(new QQuickPlatformFolderDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FontDialog: {
-        dialogHelper.reset(new QQuickPlatformFontDialog(parent));
-        break;
-    }
-    case QQuickDialogType::MessageDialog: {
-        dialogHelper.reset(new QQuickPlatformMessageDialog(parent));
-        break;
-    }
-    default:
-        break;
+    background: Rectangle {
+        anchors.fill: parent
+        color: control.visualFocus ? (control.pressed ? "#cce0ff" : "#f0f6ff") : (control.pressed ? "#d6d6d6" : "#f6f6f6")
+        border.color: "#353637"
     }
 
-    return dialogHelper;
+    contentItem: ShaderEffect {
+        scale: contentItem.width / width
+        layer.enabled: true
+        layer.smooth: true
+        anchors.fill: parent
+
+        property alias hue: control.hue
+
+        fragmentShader: "qrc:/qt-project.org/imports/QtQuick/Dialogs/quickimpl/shaders/SaturationLightness.frag.qsb"
+    }
+
+    handle: PickerHandle {
+        x: control.leftPadding + control.lightness * control.availableWidth - width / 2
+        y: control.topPadding + (1.0 - control.saturation) * control.availableHeight - height / 2
+        picker: control
+        handleColor: control.color
+        z: 1
+    }
 }
-
-QT_END_NAMESPACE

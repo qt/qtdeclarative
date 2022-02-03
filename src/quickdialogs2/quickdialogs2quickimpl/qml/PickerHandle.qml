@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Dialogs module of the Qt Toolkit.
@@ -37,55 +37,31 @@
 **
 ****************************************************************************/
 
-#include "qquickdialogimplfactory_p.h"
+import QtQuick
+import QtQuick.Templates as T
 
-#include <QtCore/qloggingcategory.h>
+Rectangle {
+    id: root
+    implicitWidth: 16
+    implicitHeight: 16
+    radius: 8
+    color: "transparent"
+    border.color: picker.visualFocus ? "#0066ff" : (picker.pressed ? "#36383a" : "#454647")
+    border.width: 1
 
-#include "qquickplatformfiledialog_p.h"
-#include "qquickplatformfolderdialog_p.h"
-#include "qquickplatformfontdialog_p.h"
-#include "qquickplatformcolordialog_p.h"
-#include "qquickplatformmessagedialog_p.h"
+    required property T.Control picker
 
-QT_BEGIN_NAMESPACE
+    property alias handleColor: circle.color
 
-/*!
-    \internal
-
-    Creates concrete QML-based dialogs.
-*/
-
-Q_LOGGING_CATEGORY(lcQuickDialogImplFactory, "qt.quick.dialogs.quickdialogimplfactory")
-
-std::unique_ptr<QPlatformDialogHelper> QQuickDialogImplFactory::createPlatformDialogHelper(QQuickDialogType type, QObject *parent)
-{
-    std::unique_ptr<QPlatformDialogHelper> dialogHelper;
-    switch (type) {
-    case QQuickDialogType::ColorDialog: {
-        dialogHelper.reset(new QQuickPlatformColorDialog(parent));
-        break;
+    Rectangle {
+        id: circle
+        x: 1
+        y: 1
+        width: 14
+        height: 14
+        radius: 7
+        color: "transparent"
+        border.color: root.picker.visualFocus ? "#0066ff" : (root.picker.pressed ? "#86888a" : "#959697")
+        border.width: 1
     }
-    case QQuickDialogType::FileDialog: {
-        dialogHelper.reset(new QQuickPlatformFileDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FolderDialog: {
-        dialogHelper.reset(new QQuickPlatformFolderDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FontDialog: {
-        dialogHelper.reset(new QQuickPlatformFontDialog(parent));
-        break;
-    }
-    case QQuickDialogType::MessageDialog: {
-        dialogHelper.reset(new QQuickPlatformMessageDialog(parent));
-        break;
-    }
-    default:
-        break;
-    }
-
-    return dialogHelper;
 }
-
-QT_END_NAMESPACE

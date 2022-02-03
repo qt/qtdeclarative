@@ -12,6 +12,8 @@ qt_internal_add_qml_module(QuickDialogs2
     SOURCES
         qquickabstractdialog.cpp
         qquickabstractdialog_p.h
+        qquickcolordialog.cpp
+        qquickcolordialog_p.h
         qquickfiledialog.cpp
         qquickfiledialog_p.h
         qquickfolderdialog.cpp

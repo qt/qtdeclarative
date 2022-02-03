@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the Qt Quick Dialogs module of the Qt Toolkit.
@@ -37,55 +37,61 @@
 **
 ****************************************************************************/
 
-#include "qquickdialogimplfactory_p.h"
+#ifndef QQUICKCOLORDIALOG_P_H
+#define QQUICKCOLORDIALOG_P_H
 
-#include <QtCore/qloggingcategory.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
 
-#include "qquickplatformfiledialog_p.h"
-#include "qquickplatformfolderdialog_p.h"
-#include "qquickplatformfontdialog_p.h"
-#include "qquickplatformcolordialog_p.h"
-#include "qquickplatformmessagedialog_p.h"
+#include "qquickabstractdialog_p.h"
+
+#include <QtGui/qcolor.h>
 
 QT_BEGIN_NAMESPACE
 
-/*!
-    \internal
-
-    Creates concrete QML-based dialogs.
-*/
-
-Q_LOGGING_CATEGORY(lcQuickDialogImplFactory, "qt.quick.dialogs.quickdialogimplfactory")
-
-std::unique_ptr<QPlatformDialogHelper> QQuickDialogImplFactory::createPlatformDialogHelper(QQuickDialogType type, QObject *parent)
+class Q_QUICKDIALOGS2_PRIVATE_EXPORT QQuickColorDialog : public QQuickAbstractDialog
 {
-    std::unique_ptr<QPlatformDialogHelper> dialogHelper;
-    switch (type) {
-    case QQuickDialogType::ColorDialog: {
-        dialogHelper.reset(new QQuickPlatformColorDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FileDialog: {
-        dialogHelper.reset(new QQuickPlatformFileDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FolderDialog: {
-        dialogHelper.reset(new QQuickPlatformFolderDialog(parent));
-        break;
-    }
-    case QQuickDialogType::FontDialog: {
-        dialogHelper.reset(new QQuickPlatformFontDialog(parent));
-        break;
-    }
-    case QQuickDialogType::MessageDialog: {
-        dialogHelper.reset(new QQuickPlatformMessageDialog(parent));
-        break;
-    }
-    default:
-        break;
-    }
+    Q_OBJECT
+    Q_PROPERTY(QColor selectedColor READ selectedColor WRITE setSelectedColor NOTIFY selectedColorChanged)
+    Q_PROPERTY(QColorDialogOptions::ColorDialogOptions options READ options WRITE setOptions RESET resetOptions NOTIFY optionsChanged)
+    Q_FLAGS(QColorDialogOptions::ColorDialogOptions)
+    QML_NAMED_ELEMENT(ColorDialog)
+    QML_ADDED_IN_VERSION(6, 4)
 
-    return dialogHelper;
-}
+public:
+    explicit QQuickColorDialog(QObject *parent = nullptr);
+
+    QColor selectedColor() const;
+    void setSelectedColor(const QColor &color);
+
+    QColorDialogOptions::ColorDialogOptions options() const;
+    void setOptions(QColorDialogOptions::ColorDialogOptions options);
+    void resetOptions();
+
+Q_SIGNALS:
+    void selectedColorChanged();
+    void optionsChanged();
+
+protected:
+    bool useNativeDialog() const override;
+    void onCreate(QPlatformDialogHelper *dialog) override;
+    void onShow(QPlatformDialogHelper *dialog) override;
+
+private:
+    QSharedPointer<QColorDialogOptions> m_options;
+    QColor m_selectedColor;
+};
 
 QT_END_NAMESPACE
+
+QML_DECLARE_TYPE(QQuickColorDialog)
+
+#endif // QQUICKCOLORDIALOG_P_H
