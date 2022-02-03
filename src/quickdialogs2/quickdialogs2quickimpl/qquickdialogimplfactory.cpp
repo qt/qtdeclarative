@@ -73,13 +73,7 @@ std::unique_ptr<QPlatformDialogHelper> QQuickDialogImplFactory::createPlatformDi
         break;
     }
     case QQuickDialogType::MessageDialog: {
-        auto dialog = new QQuickPlatformMessageDialog(parent);
-        if (!dialog->isValid()) {
-            delete dialog;
-            return nullptr;
-        }
-
-        dialogHelper.reset(dialog);
+        dialogHelper.reset(new QQuickPlatformMessageDialog(parent));
         break;
     }
     default:
