@@ -272,16 +272,16 @@ protected:
 
     QString conversion(const QQmlJSRegisterContent &from,
                        const QQmlJSRegisterContent &to,
-                       const QString &variable) const
+                       const QString &variable)
     {
         return conversion(from.storedType(), to.storedType(), variable);
     }
 
     QString conversion(const QQmlJSScope::ConstPtr &from,
                        const QQmlJSScope::ConstPtr &to,
-                       const QString &variable) const;
+                       const QString &variable);
 
-    QString errorReturnValue() const;
+    QString errorReturnValue();
     void reject(const QString &thing);
 
     QString metaTypeFromType(const QQmlJSScope::ConstPtr &type) const;

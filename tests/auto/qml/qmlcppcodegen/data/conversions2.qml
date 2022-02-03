@@ -5,6 +5,10 @@ Item {
     id: spy
     visible: false
 
+    Rectangle {
+        id: rect
+    }
+
     TestUtil {
         id: util
     }
@@ -14,6 +18,10 @@ Item {
     readonly property alias count: spy.qtest_count
     readonly property alias valid:spy.qtest_valid
     readonly property alias signalArguments:spy.qtest_signalArguments
+
+    function clearRectGradient() {
+        rect.gradient = null;
+    }
 
     function clear() {
         qtest_count = 0
