@@ -1243,10 +1243,10 @@ void QObjectWrapper::destroyObject(bool lastCall)
     Heap::QObjectWrapper *h = d();
     Q_ASSERT(h->internalClass);
 
-    if (h->object()) {
-        QQmlData *ddata = QQmlData::get(h->object(), false);
+    if (QObject *o = h->object()) {
+        QQmlData *ddata = QQmlData::get(o, false);
         if (ddata) {
-            if (!h->object()->parent() && !ddata->indestructible) {
+            if (!o->parent() && !ddata->indestructible) {
                 if (ddata && ddata->ownContext) {
                     Q_ASSERT(ddata->ownContext.data() == ddata->context);
                     ddata->ownContext->emitDestruction();
@@ -1257,9 +1257,9 @@ void QObjectWrapper::destroyObject(bool lastCall)
                 ddata->isQueuedForDeletion = true;
                 ddata->disconnectNotifiers();
                 if (lastCall)
-                    delete h->object();
+                    delete o;
                 else
-                    h->object()->deleteLater();
+                    o->deleteLater();
             } else {
                 // If the object is C++-owned, we still have to release the weak reference we have
                 // to it.
