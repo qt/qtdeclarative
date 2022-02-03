@@ -110,15 +110,12 @@ QT_DECLARE_SEQUENTIAL_CONTAINER(QRealStdVectorForeign, std::vector<qreal>, doubl
 QT_DECLARE_SEQUENTIAL_CONTAINER(QRealListForeign, QList<qreal>, double);
 #endif
 
+QT_DECLARE_SEQUENTIAL_CONTAINER(QDoubleStdVectorForeign, std::vector<double>, double);
+QT_DECLARE_SEQUENTIAL_CONTAINER(QFloatStdVectorForeign, std::vector<float>, float);
 QT_DECLARE_SEQUENTIAL_CONTAINER(QIntStdVectorForeign, std::vector<int>, int);
 QT_DECLARE_SEQUENTIAL_CONTAINER(QBoolStdVectorForeign, std::vector<bool>, bool);
 QT_DECLARE_SEQUENTIAL_CONTAINER(QStringStdVectorForeign, std::vector<QString>, QString);
 QT_DECLARE_SEQUENTIAL_CONTAINER(QUrlStdVectorForeign, std::vector<QUrl>, QUrl);
-
-QT_DECLARE_SEQUENTIAL_CONTAINER(QIntListForeign, QList<int>, int);
-QT_DECLARE_SEQUENTIAL_CONTAINER(QBoolListForeign, QList<bool>, bool);
-QT_DECLARE_SEQUENTIAL_CONTAINER(QStringListForeign, QStringList, QString);
-QT_DECLARE_SEQUENTIAL_CONTAINER(QUrlListForeign, QList<QUrl>, QUrl);
 
 #if QT_CONFIG(qml_itemmodel)
 QT_DECLARE_SEQUENTIAL_CONTAINER(QModelIndexListForeign, QModelIndexList, QModelIndex);

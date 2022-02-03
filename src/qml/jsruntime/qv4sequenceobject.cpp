@@ -129,8 +129,14 @@ public:
     QVariant at(int index) const
     {
         const auto *p = d();
-        QVariant result(valueMetaType(p));
-        metaSequence(p)->valueAtIndex(p->container, index, result.data());
+        const QMetaType v = valueMetaType(p);
+        QVariant result;
+        if (v == QMetaType::fromType<QVariant>()) {
+            metaSequence(p)->valueAtIndex(p->container, index, &result);
+        } else {
+            result = QVariant(v);
+            metaSequence(p)->valueAtIndex(p->container, index, result.data());
+        }
         return result;
     }
 
@@ -141,6 +147,8 @@ public:
         const QMetaType v = valueMetaType(p);
         if (item.metaType() == v) {
             m->addValueAtEnd(p->container, item.constData());
+        } else if (v == QMetaType::fromType<QVariant>()) {
+            m->addValueAtEnd(p->container, &item);
         } else {
             QVariant converted = item;
             if (!converted.convert(v))
@@ -156,6 +164,8 @@ public:
         const QMetaType v = valueMetaType(p);
         if (item.metaType() == v) {
             m->setValueAtIndex(p->container, index, item.constData());
+        } else if (v == QMetaType::fromType<QVariant>()) {
+            m->setValueAtIndex(p->container, index, &item);
         } else {
             QVariant converted = item;
             if (!converted.convert(v))
@@ -270,8 +280,11 @@ public:
         } else {
             /* according to ECMA262r3 we need to insert */
             /* the value at the given index, increasing length to index+1. */
-            while (index > count++)
-                append(QVariant(valueType));
+            while (index > count++) {
+                append(valueType == QMetaType::fromType<QVariant>()
+                       ? QVariant()
+                       : QVariant(valueType));
+            }
             append(element);
         }
 
@@ -687,15 +700,19 @@ QVariant SequencePrototype::toVariant(const QV4::Value &array, QMetaType typeHin
         for (quint32 i = 0; i < length; ++i) {
             const QMetaType valueMetaType = priv->typeId;
             QVariant variant = scope.engine->toVariant(a->get(i), valueMetaType, false);
-            const QMetaType originalType = variant.metaType();
-            if (originalType != valueMetaType && !variant.convert(valueMetaType)) {
-                qWarning() << QLatin1String(
-                                  "Could not convert array value at position %1 from %2 to %3")
-                              .arg(QString::number(i), QString::fromUtf8(originalType.name()),
-                                   QString::fromUtf8(valueMetaType.name()));
-                variant = QVariant(valueMetaType);
+            if (valueMetaType == QMetaType::fromType<QVariant>()) {
+                meta->addValueAtEnd(result.data(), &variant);
+            } else {
+                const QMetaType originalType = variant.metaType();
+                if (originalType != valueMetaType && !variant.convert(valueMetaType)) {
+                    qWarning() << QLatin1String(
+                                      "Could not convert array value at position %1 from %2 to %3")
+                                  .arg(QString::number(i), QString::fromUtf8(originalType.name()),
+                                       QString::fromUtf8(valueMetaType.name()));
+                    variant = QVariant(valueMetaType);
+                }
+                meta->addValueAtEnd(result.data(), variant.constData());
             }
-            meta->addValueAtEnd(result.data(), variant.constData());
         }
         return result;
     }

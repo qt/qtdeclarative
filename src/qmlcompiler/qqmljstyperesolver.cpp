@@ -73,6 +73,7 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     m_intType = builtinTypes[u"int"_qs].scope;
     m_boolType = builtinTypes[u"bool"_qs].scope;
     m_stringType = builtinTypes[u"QString"_qs].scope;
+    m_stringListType = builtinTypes[u"QStringList"_qs].scope;
     m_urlType = builtinTypes[u"QUrl"_qs].scope;
     m_dateTimeType = builtinTypes[u"QDateTime"_qs].scope;
     m_variantListType = builtinTypes[u"QVariantList"_qs].scope;
@@ -520,7 +521,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
 
     if (isPrimitive(type) || type == m_jsValueType || type == m_listPropertyType
         || type == m_urlType || type == m_dateTimeType || type == m_variantListType
-        || type == m_varType) {
+        || type == m_varType || type == m_stringListType) {
         return type;
     }
 

@@ -23,6 +23,17 @@ Module {
     }
 
     Component {
+        name: "QVariantList"
+        valueType: "QVariant"
+        accessSemantics: "sequence"
+    }
+
+    Component {
+        name: "QVariantMap"
+        accessSemantics: "value"
+    }
+
+    Component {
         name: "QJSValue"
         accessSemantics: "value"
     }
@@ -173,6 +184,12 @@ Module {
     }
 
     Component {
+        name: "QStringList"
+        valueType: "QString"
+        accessSemantics: "sequence"
+    }
+
+    Component {
         name: "bool"
         extension: "Boolean"
         exports: ["QML/bool 1.0"]
@@ -193,17 +210,6 @@ Module {
         extension: "Url"
         exports: ["QML/url 1.0"]
         exportMetaObjectRevisions: [256]
-        accessSemantics: "value"
-    }
-
-    Component {
-        name: "QVariantList"
-        valueType: "QVariant"
-        accessSemantics: "sequence"
-    }
-
-    Component {
-        name: "QVariantMap"
         accessSemantics: "value"
     }
 
