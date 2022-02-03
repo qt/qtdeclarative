@@ -139,6 +139,7 @@ QQmlJSAotFunction QQmlJSCodeGenerator::run(
 
             const QQmlJSScope::ConstPtr storedType = registerTypeIt.key();
             if (storedType == m_typeResolver->nullType()
+                    || storedType == m_typeResolver->emptyListType()
                     || storedType == m_typeResolver->voidType()) {
                 continue;
             }
@@ -1674,9 +1675,9 @@ void QQmlJSCodeGenerator::generate_DeclareVar(int varName, int isDeletable)
 
 void QQmlJSCodeGenerator::generate_DefineArray(int argc, int args)
 {
-    Q_UNUSED(argc);
     Q_UNUSED(args);
-    reject(u"DefineArray"_qs);
+    if (argc > 0)
+        reject(u"DefineArray"_qs);
 }
 
 void QQmlJSCodeGenerator::generate_DefineObjectLiteral(int internalClassId, int argc, int args)
@@ -2489,6 +2490,16 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
         if (to == from)
             return QString();
         reject(u"Conversion from null to %1"_qs.arg(to->internalName()));
+    }
+
+    if (from == m_typeResolver->emptyListType()) {
+        if (to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence)
+            return castTargetName(to) + u"()"_qs;
+        if (to == m_typeResolver->varType())
+            return u"QVariant(QVariantList())"_qs;
+        if (to == from)
+            return QString();
+        reject(u"Conversion from empty list to %1"_qs.arg(to->internalName()));
     }
 
     if (from == to)

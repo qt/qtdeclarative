@@ -1133,9 +1133,10 @@ void QQmlJSTypePropagator::generate_DeclareVar(int varName, int isDeletable)
 
 void QQmlJSTypePropagator::generate_DefineArray(int argc, int args)
 {
-    Q_UNUSED(argc);
     Q_UNUSED(args);
-    m_state.accumulatorOut = m_typeResolver->globalType(m_typeResolver->jsValueType());
+    m_state.accumulatorOut = m_typeResolver->globalType(argc == 0
+                                                        ? m_typeResolver->emptyListType()
+                                                        : m_typeResolver->jsValueType());
 }
 
 void QQmlJSTypePropagator::generate_DefineObjectLiteral(int internalClassId, int argc, int args)

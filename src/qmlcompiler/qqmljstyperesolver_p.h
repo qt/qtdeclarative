@@ -62,6 +62,7 @@ public:
     void init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *program);
 
     QQmlJSScope::ConstPtr voidType() const { return m_voidType; }
+    QQmlJSScope::ConstPtr emptyListType() const { return m_emptyListType; }
     QQmlJSScope::ConstPtr nullType() const { return m_nullType; }
     QQmlJSScope::ConstPtr realType() const { return m_realType; }
     QQmlJSScope::ConstPtr floatType() const { return m_floatType; }
@@ -88,6 +89,7 @@ public:
         return m_imports.contains(name) && !m_imports[name].scope;
     }
 
+    QQmlJSScope::ConstPtr listType(const QQmlJSScope::ConstPtr &elementType) const;
     QQmlJSScope::ConstPtr typeForName(const QString &name) const { return m_imports[name].scope; }
     QQmlJSScope::ConstPtr typeFromAST(QQmlJS::AST::Type *type) const;
     QQmlJSScope::ConstPtr typeForConst(QV4::ReturnedValue rv) const;
@@ -149,6 +151,7 @@ protected:
     QQmlJSRegisterContent lengthProperty(bool isWritable, const QQmlJSScope::ConstPtr &scope) const;
 
     QQmlJSScope::ConstPtr m_voidType;
+    QQmlJSScope::ConstPtr m_emptyListType;
     QQmlJSScope::ConstPtr m_nullType;
     QQmlJSScope::ConstPtr m_numberPrototype;
     QQmlJSScope::ConstPtr m_realType;
@@ -174,6 +177,9 @@ protected:
 
     ParentMode m_parentMode = UseParentProperty;
     QQmlJSLogger *m_logger = nullptr;
+
+    // This needs to be mutable as it's a cache. We create the list types on demand.
+    mutable QHash<QQmlJSScope::ConstPtr, QQmlJSScope::Ptr> m_listTypes;
 };
 
 QT_END_NAMESPACE

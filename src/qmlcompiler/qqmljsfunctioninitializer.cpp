@@ -181,7 +181,11 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
         }
 
         const auto property = m_objectType->property(propertyName);
-        function.returnType = property.type();
+        function.returnType = property.isList()
+                ? m_typeResolver->listType(property.type())
+                : QQmlJSScope::ConstPtr(property.type());
+
+
         if (!function.returnType) {
             diagnose(u"Cannot resolve property type %1 for binding on %2"_qs.arg(
                          property.typeName(), propertyName),

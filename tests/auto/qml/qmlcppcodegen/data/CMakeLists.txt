@@ -110,6 +110,7 @@ set(qml_files
     text.qml
     themerbad.qml
     themergood.qml
+    typedArray.qml
     undefinedResets.qml
     unknownAttached.qml
     unknownParameter.qml

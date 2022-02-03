@@ -80,6 +80,11 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     m_varType = builtinTypes[u"QVariant"_qs].scope;
     m_jsValueType = builtinTypes[u"QJSValue"_qs].scope;
 
+    QQmlJSScope::Ptr emptyListType = QQmlJSScope::create();
+    emptyListType->setInternalName(u"void*"_qs);
+    emptyListType->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
+    m_emptyListType = emptyListType;
+
     QQmlJSScope::Ptr jsPrimitiveType = QQmlJSScope::create();
     jsPrimitiveType->setInternalName(u"QJSPrimitiveValue"_qs);
     jsPrimitiveType->setFileName(u"qjsprimitivevalue.h"_qs);
@@ -169,6 +174,31 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopeForId(
         const QString &id, const QQmlJSScope::ConstPtr &referrer) const
 {
     return m_objectsById.scope(id, referrer);
+}
+
+QQmlJSScope::ConstPtr QQmlJSTypeResolver::listType(const QQmlJSScope::ConstPtr &elementType) const
+{
+    switch (elementType->accessSemantics()) {
+    case QQmlJSScope::AccessSemantics::Reference:
+        return m_listPropertyType;
+    case QQmlJSScope::AccessSemantics::Value: {
+        auto it = m_listTypes.find(elementType);
+        if (it != m_listTypes.end())
+            return *it;
+        QQmlJSScope::Ptr listType = QQmlJSScope::create();
+        listType->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
+        listType->setValueTypeName(elementType->internalName());
+        listType->setInternalName(u"QList<%1>"_qs.arg(elementType->internalName()));
+        listType->setFileName(elementType->fileName());
+        QQmlJSScope::resolveTypes(listType, m_imports);
+        Q_ASSERT(listType->valueType() == elementType);
+        m_listTypes[elementType] = listType;
+        return listType;
+    }
+    default:
+        break;
+    }
+    return QQmlJSScope::ConstPtr();
 }
 
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::typeFromAST(QQmlJS::AST::Type *type) const
@@ -400,6 +430,9 @@ bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,
     if (to == m_jsPrimitiveType)
         return isPrimitive(from);
 
+    if (from == m_emptyListType)
+        return to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence;
+
     const bool matchByName = !to->isComposite();
     Q_ASSERT(!matchByName || !to->internalName().isEmpty());
     for (auto baseType = from; baseType; baseType = baseType->baseType()) {
@@ -521,7 +554,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
 
     if (isPrimitive(type) || type == m_jsValueType || type == m_listPropertyType
         || type == m_urlType || type == m_dateTimeType || type == m_variantListType
-        || type == m_varType || type == m_stringListType) {
+        || type == m_varType || type == m_stringListType || type == m_emptyListType) {
         return type;
     }
 
@@ -530,6 +563,10 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
 
     if (type->scopeType() == QQmlJSScope::EnumScope)
         return m_intType;
+
+    if (type->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
+        return listType(genericType(type->valueType()));
+    }
 
     return m_varType;
 }
