@@ -37,9 +37,6 @@
 **
 ****************************************************************************/
 
-#ifndef QQUICKFONTDIALOG_CPP
-#define QQUICKFONTDIALOG_CPP
-
 #include "qquickfontdialog_p.h"
 
 #include <QtCore/qloggingcategory.h>
@@ -223,5 +220,3 @@ void QQuickFontDialog::onShow(QPlatformDialogHelper *dialog)
 }
 
 QT_END_NAMESPACE
-
-#endif // QQUICKFONTDIALOG_CPP
