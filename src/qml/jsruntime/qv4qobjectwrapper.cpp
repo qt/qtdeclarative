@@ -1237,8 +1237,7 @@ void Heap::QObjectWrapper::markObjects(Heap::Base *that, QV4::MarkStack *markSta
 void QObjectWrapper::destroyObject(bool lastCall)
 {
     Heap::QObjectWrapper *h = d();
-    if (!h->internalClass)
-        return; // destroyObject already got called
+    Q_ASSERT(h->internalClass);
 
     if (h->object()) {
         QQmlData *ddata = QQmlData::get(h->object(), false);
@@ -1268,7 +1267,7 @@ void QObjectWrapper::destroyObject(bool lastCall)
         }
     }
 
-    h->~Data();
+    h->destroy();
 }
 
 
