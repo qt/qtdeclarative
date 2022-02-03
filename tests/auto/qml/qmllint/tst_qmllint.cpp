@@ -831,7 +831,7 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("Item") << false;
     QTest::newRow("nullBinding")
             << QStringLiteral("nullBinding.qml")
-            << QStringLiteral("Cannot assign binding of type $anonymous$.std::nullptr_t to double")
+            << QStringLiteral("Cannot assign binding of type $internal$.std::nullptr_t to double")
             << QString() << QString() << false;
     QTest::newRow("nullBindingFunction")
             << QStringLiteral("nullBindingFunction.qml")

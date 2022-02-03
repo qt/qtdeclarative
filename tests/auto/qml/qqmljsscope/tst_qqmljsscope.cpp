@@ -98,6 +98,7 @@ private Q_SLOTS:
 
     void orderedBindings();
     void signalCreationDifferences();
+    void allTypesAvailable();
 
 public:
     tst_qqmljsscope() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
@@ -161,6 +162,20 @@ void tst_qqmljsscope::signalCreationDifferences()
     else
         explicitMethod = &conflicting[0];
     QCOMPARE(explicitMethod->parameterNames(), QStringList({ u"a"_qs, u"c"_qs }));
+}
+
+void tst_qqmljsscope::allTypesAvailable()
+{
+        const QStringList importPaths = {
+            QLibraryInfo::path(QLibraryInfo::QmlImportsPath),
+            dataDirectory(),
+        };
+
+        QQmlJSImporter importer { importPaths, /* resource file mapper */ nullptr };
+        const auto types = importer.importModule(u"QtQml"_qs);
+        QVERIFY(types.contains(u"$internal$.QObject"_qs));
+        QVERIFY(types.contains(u"QtObject"_qs));
+        QCOMPARE(types[u"$internal$.QObject"_qs].scope, types[u"QtObject"_qs].scope);
 }
 
 QTEST_MAIN(tst_qqmljsscope)

@@ -289,7 +289,12 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
                                    const QQmlJSImporter::Import &import,
                                    QQmlJSImporter::AvailableTypes *types)
 {
+    // In the list of QML types we prefix unresolvable QML names with $anonymous$, and C++
+    // names with $internal$. This is to avoid clashes between them.
+    // In the list of C++ types we insert types that don't have a C++ name as their
+    // QML name prefixed with $anonymous$.
     const QString anonPrefix = QStringLiteral("$anonymous$");
+    const QString internalPrefix = QStringLiteral("$internal$");
     QHash<QString, QList<QQmlJSScope::Export>> seenExports;
 
     const auto insertExports = [&](const QQmlJSExportedScope &val, const QString &cppName) {
@@ -359,12 +364,15 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
             seenExports[qmlName].append(valExport);
         }
 
-        types->cppNames.insert(
-            cppName, {
-                val.scope,
-                bestExport.isValid() ? bestExport.revision() : QTypeRevision::zero()
-            }
-        );
+        const QTypeRevision bestRevision = bestExport.isValid()
+                ? bestExport.revision()
+                : QTypeRevision::zero();
+        types->cppNames.insert(cppName, { val.scope, bestRevision });
+
+        const QTypeRevision bestVersion = bestExport.isValid()
+                ? bestExport.version()
+                : QTypeRevision::zero();
+        types->qmlNames.insert(prefixedName(internalPrefix, cppName), { val.scope, bestVersion });
     };
 
     if (!importDescription.prefix().isEmpty())
@@ -395,9 +403,7 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
         if (val.exports.isEmpty()) {
             // Insert an unresolvable dummy name
             types->qmlNames.insert(
-                        prefixedName(importDescription.prefix(), prefixedName(
-                                         anonPrefix, internalName(val.scope))),
-                        { val.scope, QTypeRevision() });
+                        prefixedName(internalPrefix, cppName), { val.scope, QTypeRevision() });
             types->cppNames.insert(cppName, { val.scope, QTypeRevision() });
         } else {
             insertExports(val, cppName);
