@@ -5,7 +5,5 @@ opensuse-leap
 windows gcc
 [touchDragFlickableBehindButton]
 windows gcc
-[touchAndDragHandlerOnFlickable]
-macos # QTBUG-86729
 [touchDragSliderAndFlickable]
 * # QTBUG-86729
