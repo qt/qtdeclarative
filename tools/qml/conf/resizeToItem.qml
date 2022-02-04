@@ -52,6 +52,6 @@ import QmlRuntime.Config 1.0
 Configuration {
     PartialScene {
         itemType: "QQuickItem"
-        container: "content/resizeWindowToItem.qml"
+        container: "qrc:/qt-project.org/QmlRuntime/conf/content/resizeWindowToItem.qml"
     }
 }
