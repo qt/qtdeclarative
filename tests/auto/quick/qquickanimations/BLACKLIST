@@ -1,8 +1,3 @@
-[simplePath]
-macos ci
-[reparent]
-macos ci
-
 #QTBUG-98516
 [pathTransition]
 macos ci

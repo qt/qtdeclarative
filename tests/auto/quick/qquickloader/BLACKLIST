@@ -2,5 +2,3 @@
 # QTBUG-63049
 [asyncToSync1]
 b2qt
-[urlToComponent]
-macos
