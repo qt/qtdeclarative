@@ -350,6 +350,8 @@ QQmlJSTypeResolver::containedType(const QQmlJSRegisterContent &container) const
         return jsValueType();
     if (container.isImportNamespace())
         return container.scopeType();
+    if (container.isConversion())
+        return container.conversionResult();
 
     Q_UNREACHABLE();
     return {};
@@ -460,10 +462,27 @@ static QQmlJSRegisterContent::ContentVariant mergeVariants(QQmlJSRegisterContent
 QQmlJSRegisterContent QQmlJSTypeResolver::merge(const QQmlJSRegisterContent &a,
                                                 const QQmlJSRegisterContent &b) const
 {
+    QList<QQmlJSScope::ConstPtr> origins;
+    if (a.isConversion())
+        origins.append(a.conversionOrigins());
+    else
+        origins.append(containedType(a));
+
+    if (b.isConversion())
+        origins.append(b.conversionOrigins());
+    else
+        origins.append(containedType(b));
+
+    std::sort(origins.begin(), origins.end());
+    const auto erase = std::unique(origins.begin(), origins.end());
+    origins.erase(erase, origins.end());
+
     return QQmlJSRegisterContent::create(
-            merge(a.storedType(), b.storedType()),
-            merge(containedType(a), containedType(b)), mergeVariants(a.variant(), b.variant()),
-            merge(a.scopeType(), b.scopeType()));
+                merge(a.storedType(), b.storedType()),
+                origins,
+                merge(containedType(a), containedType(b)),
+                mergeVariants(a.variant(), b.variant()),
+                merge(a.scopeType(), b.scopeType()));
 }
 
 static QQmlJSScope::ConstPtr commonBaseType(const QQmlJSScope::ConstPtr &a,
@@ -955,6 +974,10 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
 
         return {};
     }
+    if (type.isConversion()) {
+        const auto result = memberType(type.conversionResult(), name);
+        return result.isValid() ? result : memberEnumType(type.scopeType(), name);
+    }
 
     Q_UNREACHABLE();
     return {};
@@ -976,6 +999,8 @@ QQmlJSRegisterContent QQmlJSTypeResolver::valueType(const QQmlJSRegisterContent 
     if (listType.isType()) {
         scope = listType.type();
         value = valueType(scope);
+    } else if (listType.isConversion()) {
+        value = valueType(listType.conversionResult());
     } else if (listType.isProperty()) {
         const auto prop = listType.property();
         if (prop.isList()) {
@@ -1011,6 +1036,8 @@ bool QQmlJSTypeResolver::registerContains(const QQmlJSRegisterContent &reg,
 {
     if (reg.isType())
         return reg.type() == type;
+    if (reg.isConversion())
+        return reg.conversionResult() == type;
     if (reg.isProperty()) {
         const auto prop = reg.property();
         return prop.isList() ? type == listPropertyType() : prop.type() == type;

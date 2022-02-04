@@ -67,6 +67,10 @@ QString QQmlJSRegisterContent::descriptiveName() const
     case ImportNamespace: {
         return u"import namespace %1"_qs.arg(std::get<uint>(m_content));
     }
+    case Conversion: {
+        return u"conversion to %1"_qs.arg(
+                    std::get<ConvertedTypes>(m_content).result->internalName());
+    }
     }
     Q_UNREACHABLE();
     return result + u"wat?"_qs;
@@ -83,6 +87,9 @@ bool QQmlJSRegisterContent::isList() const
         return prop.isList()
                 || prop.type()->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence;
     }
+    case Conversion:
+        return std::get<ConvertedTypes>(m_content).result->accessSemantics()
+                == QQmlJSScope::AccessSemantics::Sequence;
     default:
         return false;
     }
@@ -150,6 +157,17 @@ QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr 
 {
     QQmlJSRegisterContent result(storedType, scope, variant);
     result.m_content = importNamespaceStringId;
+    return result;
+}
+
+QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr &storedType,
+                                                    const QList<QQmlJSScope::ConstPtr> origins,
+                                                    const QQmlJSScope::ConstPtr &conversion,
+                                                    ContentVariant variant,
+                                                    const QQmlJSScope::ConstPtr &scope)
+{
+    QQmlJSRegisterContent result(storedType, scope, variant);
+    result.m_content = ConvertedTypes { origins, conversion };
     return result;
 }
 

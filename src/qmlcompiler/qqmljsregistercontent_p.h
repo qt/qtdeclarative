@@ -98,6 +98,7 @@ public:
     bool isEnumeration() const { return m_content.index() == Enum; }
     bool isMethod() const { return m_content.index() == Method; }
     bool isImportNamespace() const { return m_content.index() == ImportNamespace; }
+    bool isConversion() const { return m_content.index() == Conversion; }
     bool isList() const;
 
     bool isWritable() const;
@@ -118,6 +119,16 @@ public:
     QList<QQmlJSMetaMethod> method() const { return std::get<QList<QQmlJSMetaMethod>>(m_content); }
     uint importNamespace() const { return std::get<uint>(m_content); }
 
+    QQmlJSScope::ConstPtr conversionResult() const
+    {
+        return std::get<ConvertedTypes>(m_content).result;
+    }
+
+    QList<QQmlJSScope::ConstPtr> conversionOrigins() const
+    {
+        return std::get<ConvertedTypes>(m_content).origins;
+    }
+
     ContentVariant variant() const { return m_variant; }
 
     friend size_t qHash(const QQmlJSRegisterContent &registerContent, size_t seed = 0)
@@ -136,6 +147,8 @@ public:
             return qHash(std::get<QList<QQmlJSMetaMethod>>(registerContent.m_content), seed);
         case ImportNamespace:
             return qHash(std::get<uint>(registerContent.m_content), seed);
+        case Conversion:
+            return qHash(std::get<ConvertedTypes>(registerContent.m_content), seed);
         }
 
         Q_UNREACHABLE();
@@ -164,6 +177,12 @@ public:
                                         uint importNamespaceStringId, ContentVariant variant,
                                         const QQmlJSScope::ConstPtr &scope = {});
 
+    static QQmlJSRegisterContent create(const QQmlJSScope::ConstPtr &storedType,
+                                        const QList<QQmlJSScope::ConstPtr> origins,
+                                        const QQmlJSScope::ConstPtr &conversion,
+                                        ContentVariant variant,
+                                        const QQmlJSScope::ConstPtr &scope = {});
+
     QQmlJSRegisterContent storedIn(const QQmlJSScope::ConstPtr &newStoredType) const
     {
         QQmlJSRegisterContent result = *this;
@@ -172,14 +191,36 @@ public:
     }
 
 private:
-    enum ContentKind { Type, Property, Enum, Method, ImportNamespace };
+    enum ContentKind { Type, Property, Enum, Method, ImportNamespace, Conversion };
+
+    struct ConvertedTypes
+    {
+        QList<QQmlJSScope::ConstPtr> origins;
+        QQmlJSScope::ConstPtr result;
+
+        friend size_t qHash(const ConvertedTypes &types, size_t seed = 0)
+        {
+            return qHashMulti(seed, types.origins, types.result);
+        }
+
+        friend bool operator==(const ConvertedTypes &a, const ConvertedTypes &b)
+        {
+            return a.origins == b.origins && a.result == b.result;
+        }
+
+        friend bool operator!=(const ConvertedTypes &a, const ConvertedTypes &b)
+        {
+            return !(a == b);
+        }
+    };
 
     using Content = std::variant<
         QQmlJSScope::ConstPtr,
         QQmlJSMetaProperty,
         std::pair<QQmlJSMetaEnum, QString>,
         QList<QQmlJSMetaMethod>,
-        uint
+        uint,
+        ConvertedTypes
     >;
 
     QQmlJSRegisterContent(const QQmlJSScope::ConstPtr &storedType,

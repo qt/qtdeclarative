@@ -120,6 +120,26 @@ public:
         return !(a == b);
     }
 
+    friend bool operator<(const QDeferredSharedPointer &a, const QDeferredSharedPointer &b)
+    {
+        return a.m_data < b.m_data;
+    }
+
+    friend bool operator<=(const QDeferredSharedPointer &a, const QDeferredSharedPointer &b)
+    {
+        return a.m_data <= b.m_data;
+    }
+
+    friend bool operator>(const QDeferredSharedPointer &a, const QDeferredSharedPointer &b)
+    {
+        return a.m_data > b.m_data;
+    }
+
+    friend bool operator>=(const QDeferredSharedPointer &a, const QDeferredSharedPointer &b)
+    {
+        return a.m_data >= b.m_data;
+    }
+
     template <typename U>
     friend bool operator==(const QDeferredSharedPointer &a, const QSharedPointer<U> &b)
     {
