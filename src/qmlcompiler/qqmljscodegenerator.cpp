@@ -1904,8 +1904,8 @@ void QQmlJSCodeGenerator::generate_CmpNeInt(int lhsConst)
 {
     INJECT_TRACE_INFO(generate_CmpNeInt);
 
-    m_body += m_state.accumulatorVariableOut + u" = !"_qs + eqIntExpression(lhsConst)
-            + u";\n"_qs;
+    m_body += m_state.accumulatorVariableOut + u" = !("_qs + eqIntExpression(lhsConst)
+            + u");\n"_qs;
 }
 
 void QQmlJSCodeGenerator::generate_CmpEq(int lhs)
