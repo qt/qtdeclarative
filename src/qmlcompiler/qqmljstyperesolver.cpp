@@ -798,6 +798,20 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSScope::ConstPtr
             return true;
         }
 
+        if (std::optional<QQmlJSScope::JavaScriptIdentifier> identifier =
+                    scope->findJSIdentifier(name);
+            identifier.has_value()) {
+            QQmlJSMetaProperty prop;
+            prop.setPropertyName(name);
+            prop.setTypeName(u"QJSValue"_qs);
+            prop.setType(jsValueType());
+            prop.setIsWritable(!identifier->isConst);
+
+            result = QQmlJSRegisterContent::create(jsValueType(), prop,
+                                                   QQmlJSRegisterContent::JavaScriptObject, type);
+            return true;
+        }
+
         return checkEnums(scope, name, &result, mode);
     };
 

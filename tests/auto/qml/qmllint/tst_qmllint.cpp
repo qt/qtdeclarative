@@ -853,6 +853,10 @@ void TestQmllint::dirtyQmlCode_data()
                        "Type MissingQmldirSingleton not declared as singleton in qmldir but using "
                        "pragma Singleton")
             << QString() << QString() << false;
+    QTest::newRow("jsVarDeclarationsWriteConst")
+            << QStringLiteral("jsVarDeclarationsWriteConst.qml")
+            << QStringLiteral("Cannot assign to read-only property constProp") << QString()
+            << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -1016,6 +1020,7 @@ void TestQmllint::cleanQmlCode_data()
             << QStringLiteral("goodCppPropertyChangeHandlers.qml");
     QTest::newRow("unexportedCppBase") << QStringLiteral("unexportedCppBase.qml");
     QTest::newRow("requiredWithRootLevelAlias") << QStringLiteral("RequiredWithRootLevelAlias.qml");
+    QTest::newRow("jsVarDeclarations") << QStringLiteral("jsVarDeclarations.qml");
 }
 
 void TestQmllint::cleanQmlCode()

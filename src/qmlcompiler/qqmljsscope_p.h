@@ -177,6 +177,7 @@ public:
 
         Kind kind = FunctionScoped;
         QQmlJS::SourceLocation location;
+        bool isConst;
     };
 
     static QQmlJSScope::Ptr create(ScopeType type = QQmlJSScope::QMLScope,
