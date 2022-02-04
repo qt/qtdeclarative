@@ -149,7 +149,7 @@ FontDialogImpl {
 
         Label {
             text: qsTr("Writing System")
-            Layout.leftMargin: 20
+            Layout.leftMargin: 16
             Layout.bottomMargin: 16
         }
         ComboBox{
@@ -163,7 +163,7 @@ FontDialogImpl {
             id: buttonBox
             standardButtons: control.standardButtons
             spacing: 12
-            Layout.rightMargin: 20
+            Layout.rightMargin: 16
             Layout.bottomMargin: 16
         }
     }
