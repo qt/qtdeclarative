@@ -67,6 +67,7 @@ class QQuickCanvasContext;
 
 class QQuickCanvasItemPrivate;
 class QQuickPixmap;
+class QQmlV4Function;
 
 class QQuickCanvasPixmap : public QQmlRefCount
 {

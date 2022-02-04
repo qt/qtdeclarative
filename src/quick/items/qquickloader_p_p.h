@@ -62,6 +62,7 @@ QT_BEGIN_NAMESPACE
 
 
 class QQuickLoaderPrivate;
+class QQmlV4Function;
 class QQuickLoaderIncubator : public QQmlIncubator
 {
 public:
