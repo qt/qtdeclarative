@@ -2272,10 +2272,12 @@ function(_qt_internal_qml_type_registration target)
     endif()
     add_dependencies(all_qmltyperegistrations ${target}_qmltyperegistration)
 
+    # Both ${target} (via target_sources) and ${target}_qmltyperegistration (via add_custom_target
+    # DEPENDS option) depend on ${type_registration_cpp_file}.
     # The new Xcode build system requires a common target to drive the generation of files,
     # otherwise project configuration fails.
-    # Make the ${target}_qmltyperegistration the common target, by adding it as a dependency for
-    # ${target} itself.
+    # Make ${target} the common target, by adding it as a dependency for
+    # ${target}_qmltyperegistration.
     # The consequence is that the ${target}_qmllint target will now first build ${target} when using
     # the Xcode generator (mostly only relevant for projects using Qt for iOS).
     # See QTBUG-95763.
