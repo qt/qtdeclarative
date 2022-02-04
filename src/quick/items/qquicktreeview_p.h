@@ -62,6 +62,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTreeView : public QQuickTableView
 {
     Q_OBJECT
     QML_NAMED_ELEMENT(TreeView)
+    QML_ADDED_IN_VERSION(6, 3)
 
 public:
     QQuickTreeView(QQuickItem *parent = nullptr);
