@@ -550,8 +550,6 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
  */
 void QQmlJSImporter::importQmldirs(const QStringList &qmldirFiles)
 {
-    AvailableTypes types(builtinImportHelper().cppNames);
-
     for (const auto &file : qmldirFiles) {
         Import result;
         QString qmldirName;
