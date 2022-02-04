@@ -1810,7 +1810,7 @@ function(qt6_target_qml_sources target)
             # The set of qml files to run qmllint on may be a subset of the
             # full set of files, so record these in a separate property.
             _qt_internal_target_enable_qmllint(${target})
-            set_property(TARGET ${target} APPEND PROPERTY QT_QML_LINT_FILES ${qml_file_src})
+            set_property(TARGET ${target} APPEND PROPERTY QT_QML_LINT_FILES ${file_absolute})
         endif()
 
         # Add qml file's type to qmldir
