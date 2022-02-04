@@ -50,6 +50,8 @@ namespace QQmlPrivate {
     template<class> struct QmlAttachedAccessor;
     template<class, class> struct QmlExtended;
     template<typename, typename> struct QmlInterface;
+    template<class, class>
+    struct QmlExtendedNamespace;
 }
 
 template <typename T> class QList;
