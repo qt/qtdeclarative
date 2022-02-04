@@ -256,21 +256,14 @@ void QSGRhiSupport::applySettings()
 void QSGRhiSupport::adjustToPlatformQuirks()
 {
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
-
-    // ### For now just create a throwaway QRhi instance. This will be replaced
-    // by a more lightweight way, once a helper function is added gui/rhi.
-
     // A macOS VM may not have Metal support at all. We have to decide at this
     // point, it will be too late afterwards, and the only way is to see if
     // MTLCreateSystemDefaultDevice succeeds.
     if (m_rhiBackend == QRhi::Metal) {
         QRhiMetalInitParams rhiParams;
-        QRhi *tempRhi = QRhi::create(m_rhiBackend, &rhiParams, {});
-        if (!tempRhi) {
+        if (!QRhi::probe(m_rhiBackend, &rhiParams)) {
             m_rhiBackend = QRhi::OpenGLES2;
             qCDebug(QSG_LOG_INFO, "Metal does not seem to be supported. Falling back to OpenGL.");
-        } else {
-            delete tempRhi;
         }
     }
 #endif
