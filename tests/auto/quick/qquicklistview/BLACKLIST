@@ -4,12 +4,9 @@ opensuse-leap
 #QTBUG-53863
 [populateTransitions]
 opensuse-42.1
-[contentHeightWithDelayRemove]
-macos
 #QTBUG-75960
 #QTBUG-76652
 [currentIndex]
-macos
 opensuse-leap
 ubuntu-18.04
 ubuntu-20.04
