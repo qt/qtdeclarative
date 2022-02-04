@@ -315,7 +315,7 @@ void CodeGenerator::generate(const Options &options)
     QSet<QString> requiredCppIncludes;
     constructObjects(requiredCppIncludes); // this populates all the codegen objects
     // no point in compiling anything if there are errors
-    if (m_logger->hasErrors() || m_logger->hasWarnings())
+    if (m_logger->hasErrors())
         return;
 
     if (m_objects.isEmpty()) {
@@ -362,7 +362,7 @@ void CodeGenerator::generate(const Options &options)
         }
     }
     // no point in generating anything if there are errors
-    if (m_logger->hasErrors() || m_logger->hasWarnings())
+    if (m_logger->hasErrors())
         return;
 
     QQmlJSProgram program { compiledObjects,      m_urlMethod,        url, hPath, cppPath,

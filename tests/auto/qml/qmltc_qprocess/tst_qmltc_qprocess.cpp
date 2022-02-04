@@ -69,6 +69,7 @@ private slots:
     void noQtQml();
     void inlineComponent();
     void singleton();
+    void warningsAsErrors();
 };
 
 #ifndef TST_QMLTC_QPROCESS_RESOURCES
@@ -206,6 +207,12 @@ void tst_qmltc_qprocess::singleton()
     const auto errors = runQmltc(u"SingletonThing.qml"_qs, false);
     QEXPECT_FAIL("", "qmltc does not support singletons at the moment", Continue);
     QVERIFY(!errors.contains(u"Singleton types are not supported"_qs));
+}
+
+void tst_qmltc_qprocess::warningsAsErrors()
+{
+    const auto errors = runQmltc(u"erroneousFile.qml"_qs, false);
+    QVERIFY2(errors.contains(u"Error:"_qs), qPrintable(errors)); // Note: not a warning!
 }
 
 QTEST_MAIN(tst_qmltc_qprocess)

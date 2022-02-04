@@ -91,7 +91,7 @@ private:
     void compileBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,
                         const QQmlJSScope::ConstPtr &type, const BindingAccessorData &accessor);
 
-    bool hasErrors() const { return m_logger->hasErrors() || m_logger->hasWarnings(); }
+    bool hasErrors() const { return m_logger->hasErrors(); }
     void recordError(const QQmlJS::SourceLocation &location, const QString &message,
                      QQmlJSLoggerCategory category = Log_Compiler)
     {

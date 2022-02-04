@@ -46,8 +46,18 @@
 
 void setupLogger(QQmlJSLogger &logger) // prepare logger to work with compiler
 {
-    logger.setCategoryLevel(Log_Compiler, QtCriticalMsg);
-    logger.setCategoryIgnored(Log_Compiler, false);
+    const QSet<QQmlJSLoggerCategory> exceptions {
+        Log_ControlsSanity, // this category is just weird
+        Log_UnusedImport, // not critical
+    };
+
+    for (int i = 0; i <= static_cast<int>(QQmlJSLoggerCategory_Last); ++i) {
+        const auto c = static_cast<QQmlJSLoggerCategory>(i);
+        if (exceptions.contains(c))
+            continue;
+        logger.setCategoryLevel(c, QtCriticalMsg);
+        logger.setCategoryIgnored(c, false);
+    }
 }
 
 int main(int argc, char **argv)
@@ -192,7 +202,7 @@ int main(int argc, char **argv)
     Qmltc::TypeResolver typeResolver { &importer };
     typeResolver.init(visitor, document.program);
 
-    if (logger.hasWarnings() || logger.hasErrors())
+    if (logger.hasErrors())
         return EXIT_FAILURE;
 
     QList<QQmlJS::DiagnosticMessage> warnings = importer.takeGlobalWarnings();
@@ -207,7 +217,7 @@ int main(int argc, char **argv)
     CodeGenerator generator(url, &logger, &document, &typeResolver);
     generator.generate(options);
 
-    if (logger.hasWarnings() || logger.hasErrors())
+    if (logger.hasErrors())
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;
