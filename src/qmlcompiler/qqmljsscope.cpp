@@ -103,6 +103,15 @@ QQmlJSScope::Ptr QQmlJSScope::create(ScopeType type, const QQmlJSScope::Ptr &par
     return childScope;
 }
 
+QQmlJSScope::Ptr QQmlJSScope::clone(const ConstPtr &origin)
+{
+    if (origin.isNull())
+        return QQmlJSScope::Ptr();
+    QQmlJSScope::Ptr cloned = create(origin->m_scopeType, origin->m_parentScope);
+    *cloned = *origin;
+    return cloned;
+}
+
 void QQmlJSScope::insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier)
 {
     Q_ASSERT(m_scopeType != QQmlJSScope::QMLScope);

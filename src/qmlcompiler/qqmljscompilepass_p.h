@@ -109,11 +109,6 @@ public:
             m_changedRegisterIndex = registerIndex;
         }
 
-        void setAccumulator(QQmlJSRegisterContent content)
-        {
-            setRegister(Accumulator, std::move(content));
-        }
-
         void clearChangedRegister()
         {
             m_changedRegisterIndex = InvalidRegister;

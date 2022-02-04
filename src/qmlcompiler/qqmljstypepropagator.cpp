@@ -60,6 +60,7 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSTypePropagator::run(
     m_returnType = m_typeResolver->globalType(m_function->returnType);
 
     do {
+        m_prevStateAnnotations = m_state.annotations;
         m_state = PassState();
         m_state.State::operator=(initialState(m_function, m_typeResolver));
 
@@ -89,13 +90,12 @@ void QQmlJSTypePropagator::generate_Ret()
     if (m_function->isSignalHandler) {
         // Signal handlers cannot return anything.
     } else if (!m_returnType.isValid() && m_state.accumulatorIn().isValid()
-               && m_typeResolver->containedType(m_state.accumulatorIn())
-                       != m_typeResolver->voidType()) {
+               && !m_typeResolver->registerContains(
+                   m_state.accumulatorIn(), m_typeResolver->voidType())) {
         setError(u"function without type annotation returns %1"_qs
                          .arg(m_state.accumulatorIn().descriptiveName()));
         return;
-    } else if (m_state.accumulatorIn() != m_returnType
-               && !canConvertFromTo(m_state.accumulatorIn(), m_returnType)) {
+    } else if (!canConvertFromTo(m_state.accumulatorIn(), m_returnType)) {
         setError(u"cannot convert from %1 to %2"_qs
                          .arg(m_state.accumulatorIn().descriptiveName(),
                               m_returnType.descriptiveName()));
@@ -118,60 +118,59 @@ void QQmlJSTypePropagator::generate_Debug()
 void QQmlJSTypePropagator::generate_LoadConst(int index)
 {
     auto encodedConst = m_jsUnitGenerator->constant(index);
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->typeForConst(encodedConst)));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->typeForConst(encodedConst)));
 }
 
 void QQmlJSTypePropagator::generate_LoadZero()
 {
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->intType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->intType()));
 }
 
 void QQmlJSTypePropagator::generate_LoadTrue()
 {
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
 }
 
 void QQmlJSTypePropagator::generate_LoadFalse()
 {
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
 }
 
 void QQmlJSTypePropagator::generate_LoadNull()
 {
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->nullType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->nullType()));
 }
 
 void QQmlJSTypePropagator::generate_LoadUndefined()
 {
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->voidType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->voidType()));
 }
 
 void QQmlJSTypePropagator::generate_LoadInt(int)
 {
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->intType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->intType()));
 }
 
 void QQmlJSTypePropagator::generate_MoveConst(int constIndex, int destTemp)
 {
     auto encodedConst = m_jsUnitGenerator->constant(constIndex);
-    m_state.setRegister(
-                destTemp, m_typeResolver->globalType(m_typeResolver->typeForConst(encodedConst)));
+    setRegister(destTemp, m_typeResolver->globalType(m_typeResolver->typeForConst(encodedConst)));
 }
 
 void QQmlJSTypePropagator::generate_LoadReg(int reg)
 {
-    m_state.setAccumulator(checkedInputRegister(reg));
+    setAccumulator(checkedInputRegister(reg));
 }
 
 void QQmlJSTypePropagator::generate_StoreReg(int reg)
 {
-    m_state.setRegister(reg, m_state.accumulatorIn());
+    setRegister(reg, m_state.accumulatorIn());
 }
 
 void QQmlJSTypePropagator::generate_MoveReg(int srcReg, int destReg)
 {
     Q_ASSERT(destReg != InvalidRegister);
-    m_state.setRegister(destReg, m_state.registers[srcReg]);
+    setRegister(destReg, m_state.registers[srcReg]);
 }
 
 void QQmlJSTypePropagator::generate_LoadImport(int index)
@@ -183,7 +182,7 @@ void QQmlJSTypePropagator::generate_LoadImport(int index)
 void QQmlJSTypePropagator::generate_LoadLocal(int index)
 {
     Q_UNUSED(index);
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
 }
 
 void QQmlJSTypePropagator::generate_StoreLocal(int index)
@@ -209,7 +208,7 @@ void QQmlJSTypePropagator::generate_StoreScopedLocal(int scope, int index)
 void QQmlJSTypePropagator::generate_LoadRuntimeString(int stringId)
 {
     Q_UNUSED(stringId)
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->stringType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->stringType()));
     //    m_state.accumulatorOut.m_state.value = m_jsUnitGenerator->stringForIndex(stringId);
 }
 
@@ -229,7 +228,7 @@ void QQmlJSTypePropagator::generate_LoadClosure(int value)
 void QQmlJSTypePropagator::generate_LoadName(int nameIndex)
 {
     const QString name = m_jsUnitGenerator->stringForIndex(nameIndex);
-    m_state.setAccumulator(m_typeResolver->scopedType(m_function->qmlScope, name));
+    setAccumulator(m_typeResolver->scopedType(m_function->qmlScope, name));
     if (!m_state.accumulatorOut().isValid())
         setError(u"Cannot find name "_qs + name);
 }
@@ -444,11 +443,11 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
     const int nameIndex = m_jsUnitGenerator->lookupNameIndex(index);
     const QString name = m_jsUnitGenerator->stringForIndex(nameIndex);
 
-    m_state.setAccumulator(m_typeResolver->scopedType(m_function->qmlScope, name));
+    setAccumulator(m_typeResolver->scopedType(m_function->qmlScope, name));
 
     if (!m_state.accumulatorOut().isValid() && m_typeResolver->isPrefix(name)) {
         const QQmlJSRegisterContent inType = m_typeResolver->globalType(m_function->qmlScope);
-        m_state.setAccumulator(QQmlJSRegisterContent::create(
+        setAccumulator(QQmlJSRegisterContent::create(
                     inType.storedType(), nameIndex, QQmlJSRegisterContent::ScopeModulePrefix,
                     m_typeResolver->containedType(inType)));
         return;
@@ -507,11 +506,11 @@ void QQmlJSTypePropagator::generate_LoadElement(int base)
     const QQmlJSRegisterContent baseRegister = m_state.registers[base];
     if (!m_typeResolver->registerContains(m_state.accumulatorIn(), m_typeResolver->intType())
         || baseRegister.storedType()->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence) {
-        m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
+        setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
         return;
     }
 
-    m_state.setAccumulator(m_typeResolver->valueType(baseRegister));
+    setAccumulator(m_typeResolver->valueType(baseRegister));
 }
 
 void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
@@ -522,7 +521,7 @@ void QQmlJSTypePropagator::generate_StoreElement(int base, int index)
 
 void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
 {
-    m_state.setAccumulator(
+    setAccumulator(
             m_typeResolver->memberType(
                 m_state.accumulatorIn(),
                 m_state.accumulatorIn().isImportNamespace()
@@ -578,7 +577,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
     if (!m_state.accumulatorOut().isValid()) {
         if (m_typeResolver->isPrefix(propertyName)) {
             Q_ASSERT(m_state.accumulatorIn().isValid());
-            m_state.setAccumulator(QQmlJSRegisterContent::create(
+            setAccumulator(QQmlJSRegisterContent::create(
                         m_state.accumulatorIn().storedType(),
                         m_jsUnitGenerator->getStringId(propertyName),
                         QQmlJSRegisterContent::ObjectModulePrefix,
@@ -591,7 +590,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
                && m_state.accumulatorIn().variant() == QQmlJSRegisterContent::ObjectModulePrefix) {
         m_logger->log(u"Cannot load singleton as property of object"_qs, Log_Type,
                       getCurrentSourceLocation());
-        m_state.setAccumulator(QQmlJSRegisterContent());
+        setAccumulator(QQmlJSRegisterContent());
     }
 
     bool isRestricted = checkRestricted(propertyName);
@@ -773,17 +772,16 @@ void QQmlJSTypePropagator::generate_CallWithReceiver(int name, int thisObject, i
 
 void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int argc, int argv)
 {
-    auto callBase = m_state.registers[base];
+    const auto callBase = m_state.registers[base];
     const QString propertyName = m_jsUnitGenerator->stringForIndex(nameIndex);
 
-    const auto member = m_typeResolver->memberType(callBase, propertyName);
-    const auto containedType = m_typeResolver->containedType(callBase);
-    if (containedType == m_typeResolver->jsValueType()
-        || containedType == m_typeResolver->varType()) {
-        m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
+    if (m_typeResolver->registerContains(callBase, m_typeResolver->jsValueType())
+            || m_typeResolver->registerContains(callBase, m_typeResolver->varType())) {
+        setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
         return;
     }
 
+    const auto member = m_typeResolver->memberType(callBase, propertyName);
     if (!member.isMethod()) {
         setError(u"Type %1 does not have a property %2 for calling"_qs
                          .arg(callBase.descriptiveName(), propertyName));
@@ -809,7 +807,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         return;
     }
 
-    checkDeprecated(containedType, propertyName, true);
+    checkDeprecated(m_typeResolver->containedType(callBase), propertyName, true);
 
     propagateCall(member.method(), argc, argv);
 }
@@ -867,6 +865,26 @@ QQmlJSMetaMethod QQmlJSTypePropagator::bestMatchForCall(const QList<QQmlJSMetaMe
     return javascriptFunction;
 }
 
+void QQmlJSTypePropagator::setAccumulator(const QQmlJSRegisterContent &content)
+{
+    setRegister(Accumulator, content);
+}
+
+void QQmlJSTypePropagator::setRegister(int index, const QQmlJSRegisterContent &content)
+{
+    // If we've come to the same conclusion before, let's not track the type again.
+    auto it = m_prevStateAnnotations.constFind(currentInstructionOffset());
+    if (it != m_prevStateAnnotations.constEnd()) {
+        const QQmlJSRegisterContent &lastTry = it->changedRegister;
+        if (m_typeResolver->registerContains(lastTry, m_typeResolver->containedType(content))) {
+            m_state.setRegister(index, lastTry);
+            return;
+        }
+    }
+
+    m_state.setRegister(index, m_typeResolver->tracked(content));
+}
+
 void QQmlJSTypePropagator::propagateCall(const QList<QQmlJSMetaMethod> &methods, int argc, int argv)
 {
     QStringList errors;
@@ -882,7 +900,7 @@ void QQmlJSTypePropagator::propagateCall(const QList<QQmlJSMetaMethod> &methods,
     }
 
     const auto returnType = match.returnType();
-    m_state.setAccumulator(m_typeResolver->globalType(
+    setAccumulator(m_typeResolver->globalType(
             returnType ? QQmlJSScope::ConstPtr(returnType) : m_typeResolver->voidType()));
     if (!m_state.accumulatorOut().isValid())
         setError(u"Cannot store return type of method %1()."_qs.arg(match.methodName()));
@@ -928,7 +946,7 @@ void QQmlJSTypePropagator::propagateScopeLookupCall(const QString &functionName,
     }
 
     setError(u"method %1 cannot be resolved."_qs.arg(functionName));
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
 
     setError(u"Cannot find function '%1'"_qs.arg(functionName));
     handleUnqualifiedAccess(functionName);
@@ -971,7 +989,7 @@ void QQmlJSTypePropagator::generate_Construct(int func, int argc, int argv)
 
     Q_UNUSED(argc)
 
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
 }
 
 void QQmlJSTypePropagator::generate_ConstructWithSpread(int func, int argc, int argv)
@@ -1008,7 +1026,7 @@ void QQmlJSTypePropagator::generate_DeadTemporalZoneCheck(int name)
 
 void QQmlJSTypePropagator::generate_ThrowException()
 {
-    m_state.setAccumulator(QQmlJSRegisterContent());
+    setAccumulator(QQmlJSRegisterContent());
 }
 
 void QQmlJSTypePropagator::generate_GetException()
@@ -1110,12 +1128,12 @@ void QQmlJSTypePropagator::generate_DeleteName(int name)
 void QQmlJSTypePropagator::generate_TypeofName(int name)
 {
     Q_UNUSED(name);
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->stringType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->stringType()));
 }
 
 void QQmlJSTypePropagator::generate_TypeofValue()
 {
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->stringType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->stringType()));
 }
 
 void QQmlJSTypePropagator::generate_DeclareVar(int varName, int isDeletable)
@@ -1128,7 +1146,7 @@ void QQmlJSTypePropagator::generate_DeclareVar(int varName, int isDeletable)
 void QQmlJSTypePropagator::generate_DefineArray(int argc, int args)
 {
     Q_UNUSED(args);
-    m_state.setAccumulator(m_typeResolver->globalType(argc == 0
+    setAccumulator(m_typeResolver->globalType(argc == 0
                                                       ? m_typeResolver->emptyListType()
                                                       : m_typeResolver->jsValueType()));
 }
@@ -1140,7 +1158,7 @@ void QQmlJSTypePropagator::generate_DefineObjectLiteral(int internalClassId, int
     Q_UNUSED(internalClassId)
     Q_UNUSED(argc)
     Q_UNUSED(args)
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
 }
 
 void QQmlJSTypePropagator::generate_CreateClass(int classIndex, int heritage, int computedNames)
@@ -1227,18 +1245,18 @@ void QQmlJSTypePropagator::generate_CheckException()
 
 void QQmlJSTypePropagator::generate_CmpEqNull()
 {
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
 }
 
 void QQmlJSTypePropagator::generate_CmpNeNull()
 {
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
 }
 
 void QQmlJSTypePropagator::generate_CmpEqInt(int lhsConst)
 {
     Q_UNUSED(lhsConst)
-    m_state.setAccumulator(QQmlJSRegisterContent(m_typeResolver->typeForBinaryOperation(
+    setAccumulator(QQmlJSRegisterContent(m_typeResolver->typeForBinaryOperation(
             QSOperator::Op::Equal, m_typeResolver->globalType(m_typeResolver->intType()),
             m_state.accumulatorIn())));
 }
@@ -1246,7 +1264,7 @@ void QQmlJSTypePropagator::generate_CmpEqInt(int lhsConst)
 void QQmlJSTypePropagator::generate_CmpNeInt(int lhsConst)
 {
     Q_UNUSED(lhsConst)
-    m_state.setAccumulator(QQmlJSRegisterContent(m_typeResolver->typeForBinaryOperation(
+    setAccumulator(QQmlJSRegisterContent(m_typeResolver->typeForBinaryOperation(
             QSOperator::Op::NotEqual, m_typeResolver->globalType(m_typeResolver->intType()),
             m_state.accumulatorIn())));
 }
@@ -1323,7 +1341,7 @@ void QQmlJSTypePropagator::generate_As(int lhs)
         setError(u"invalid cast from %1 to %2. You can only cast object types."_qs
                          .arg(input.descriptiveName(), m_state.accumulatorIn().descriptiveName()));
     } else {
-        m_state.setAccumulator(m_typeResolver->globalType(contained));
+        setAccumulator(m_typeResolver->globalType(contained));
     }
 }
 
@@ -1335,18 +1353,18 @@ void QQmlJSTypePropagator::generate_UNot()
                          .arg(m_state.accumulatorIn().descriptiveName()));
         return;
     }
-    m_state.setAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
+    setAccumulator(m_typeResolver->globalType(m_typeResolver->boolType()));
 }
 
 void QQmlJSTypePropagator::generate_UPlus()
 {
-    m_state.setAccumulator(m_typeResolver->typeForUnaryOperation(
+    setAccumulator(m_typeResolver->typeForUnaryOperation(
             QQmlJSTypeResolver::UnaryOperator::Plus, m_state.accumulatorIn()));
 }
 
 void QQmlJSTypePropagator::generate_UMinus()
 {
-    m_state.setAccumulator(m_typeResolver->typeForUnaryOperation(
+    setAccumulator(m_typeResolver->typeForUnaryOperation(
             QQmlJSTypeResolver::UnaryOperator::Minus, m_state.accumulatorIn()));
 }
 
@@ -1357,13 +1375,13 @@ void QQmlJSTypePropagator::generate_UCompl()
 
 void QQmlJSTypePropagator::generate_Increment()
 {
-    m_state.setAccumulator(m_typeResolver->typeForUnaryOperation(
+    setAccumulator(m_typeResolver->typeForUnaryOperation(
             QQmlJSTypeResolver::UnaryOperator::Increment, m_state.accumulatorIn()));
 }
 
 void QQmlJSTypePropagator::generate_Decrement()
 {
-    m_state.setAccumulator(m_typeResolver->typeForUnaryOperation(
+    setAccumulator(m_typeResolver->typeForUnaryOperation(
             QQmlJSTypeResolver::UnaryOperator::Decrement, m_state.accumulatorIn()));
 }
 
@@ -1399,14 +1417,14 @@ void QQmlJSTypePropagator::generate_UShr(int lhs)
 void QQmlJSTypePropagator::generate_Shr(int lhs)
 {
     auto lhsRegister = checkedInputRegister(lhs);
-    m_state.setAccumulator(m_typeResolver->typeForBinaryOperation(
+    setAccumulator(m_typeResolver->typeForBinaryOperation(
             QSOperator::Op::RShift, lhsRegister, m_state.accumulatorIn()));
 }
 
 void QQmlJSTypePropagator::generate_Shl(int lhs)
 {
     auto lhsRegister = checkedInputRegister(lhs);
-    m_state.setAccumulator(m_typeResolver->typeForBinaryOperation(
+    setAccumulator(m_typeResolver->typeForBinaryOperation(
             QSOperator::Op::LShift, lhsRegister, m_state.accumulatorIn()));
 }
 
@@ -1438,7 +1456,7 @@ void QQmlJSTypePropagator::generate_ShrConst(int rhsConst)
 {
     Q_UNUSED(rhsConst)
 
-    m_state.setAccumulator(m_typeResolver->typeForBinaryOperation(
+    setAccumulator(m_typeResolver->typeForBinaryOperation(
             QSOperator::Op::RShift, m_state.accumulatorIn(),
             m_typeResolver->globalType(m_typeResolver->intType())));
 }
@@ -1447,7 +1465,7 @@ void QQmlJSTypePropagator::generate_ShlConst(int rhsConst)
 {
     Q_UNUSED(rhsConst)
 
-    m_state.setAccumulator(m_typeResolver->typeForBinaryOperation(
+    setAccumulator(m_typeResolver->typeForBinaryOperation(
             QSOperator::Op::LShift, m_state.accumulatorIn(),
             m_typeResolver->globalType(m_typeResolver->intType())));
 }
@@ -1612,8 +1630,8 @@ void QQmlJSTypePropagator::propagateBinaryOperation(QSOperator::Op op, int lhs)
     if (!lhsRegister.isValid())
         return;
 
-    m_state.setAccumulator(
-                m_typeResolver->typeForBinaryOperation(op, lhsRegister, m_state.accumulatorIn()));
+    setAccumulator(m_typeResolver->typeForBinaryOperation(
+                       op, lhsRegister, m_state.accumulatorIn()));
 }
 
 void QQmlJSTypePropagator::saveRegisterStateForJump(int offset)

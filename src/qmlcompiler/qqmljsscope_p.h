@@ -59,7 +59,6 @@ class QQmlJSImporter;
 
 class QQmlJSScope
 {
-    Q_DISABLE_COPY(QQmlJSScope)
 public:
     QQmlJSScope(QQmlJSScope &&) = default;
     QQmlJSScope &operator=(QQmlJSScope &&) = default;
@@ -181,7 +180,8 @@ public:
     };
 
     static QQmlJSScope::Ptr create(ScopeType type = QQmlJSScope::QMLScope,
-                                 const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
+                                   const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
+    static QQmlJSScope::Ptr clone(const QQmlJSScope::ConstPtr &origin);
     static QQmlJSScope::ConstPtr findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope);
 
     QQmlJSScope::Ptr parentScope()
@@ -462,6 +462,8 @@ public:
 
 private:
     QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
+    QQmlJSScope(const QQmlJSScope &) = default;
+    QQmlJSScope &operator=(const QQmlJSScope &) = default;
 
     static ImportedScope<QQmlJSScope::ConstPtr> findType(
             const QString &name, const ContextualTypes &contextualTypes,

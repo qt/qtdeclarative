@@ -120,22 +120,27 @@ public:
     QQmlJSRegisterContent memberType(const QQmlJSRegisterContent &type, const QString &name) const;
     QQmlJSRegisterContent valueType(const QQmlJSRegisterContent &listType) const;
 
+    bool registerIsStoredIn(const QQmlJSRegisterContent &reg,
+                            const QQmlJSScope::ConstPtr &type) const;
     bool registerContains(const QQmlJSRegisterContent &reg,
                           const QQmlJSScope::ConstPtr &type) const;
     QQmlJSScope::ConstPtr containedType(const QQmlJSRegisterContent &container) const;
     QString containedTypeName(const QQmlJSRegisterContent &container) const;
+    QQmlJSRegisterContent tracked(const QQmlJSRegisterContent &origin) const;
 
     void setParentMode(ParentMode mode) { m_parentMode = mode; }
     ParentMode parentMode() const { return m_parentMode; }
 
-    QQmlJSScope::ConstPtr
-    storedType(const QQmlJSScope::ConstPtr &type) const;
+    QQmlJSScope::ConstPtr storedType(const QQmlJSScope::ConstPtr &type) const;
+    QQmlJSScope::ConstPtr tracked(const QQmlJSScope::ConstPtr &origin) const;
 
     const QQmlJSScopesById &objectsById() const { return m_objectsById; }
     const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers() const
     {
         return m_signalHandlers;
     }
+
+    bool equals(const QQmlJSScope::ConstPtr &a, const QQmlJSScope::ConstPtr &b) const;
 
 protected:
     QQmlJSScope::ConstPtr merge(const QQmlJSScope::ConstPtr &a,
@@ -149,6 +154,7 @@ protected:
     bool checkEnums(const QQmlJSScope::ConstPtr &scope, const QString &name,
                     QQmlJSRegisterContent *result, BaseOrExtension mode) const;
     QQmlJSRegisterContent lengthProperty(bool isWritable, const QQmlJSScope::ConstPtr &scope) const;
+    void trackListPropertyType(const QQmlJSScope::ConstPtr &trackedListElementType) const;
 
     QQmlJSScope::ConstPtr m_voidType;
     QQmlJSScope::ConstPtr m_emptyListType;
@@ -178,8 +184,19 @@ protected:
     ParentMode m_parentMode = UseParentProperty;
     QQmlJSLogger *m_logger = nullptr;
 
-    // This needs to be mutable as it's a cache. We create the list types on demand.
-    mutable QHash<QQmlJSScope::ConstPtr, QQmlJSScope::Ptr> m_listTypes;
+    struct TrackedType
+    {
+        QQmlJSScope::ConstPtr original;
+        QQmlJSScope::Ptr clone;
+    };
+
+    struct TypeTracker
+    {
+        QHash<QQmlJSScope::ConstPtr, QQmlJSScope::Ptr> listTypes;
+        QHash<QQmlJSScope::ConstPtr, TrackedType> trackedTypes;
+    };
+
+    std::unique_ptr<TypeTracker> m_typeTracker;
 };
 
 QT_END_NAMESPACE

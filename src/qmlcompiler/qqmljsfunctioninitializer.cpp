@@ -92,14 +92,15 @@ void QQmlJSFunctionInitializer::populateSignature(
         for (const QQmlJS::AST::BoundName &argument : qAsConst(arguments)) {
             if (argument.typeAnnotation) {
                 if (const auto type = m_typeResolver->typeFromAST(argument.typeAnnotation->type)) {
-                    function->argumentTypes.append(type);
+                    function->argumentTypes.append(m_typeResolver->tracked(type));
                 } else {
-                    function->argumentTypes.append(m_typeResolver->varType());
+                    function->argumentTypes.append(
+                                m_typeResolver->tracked(m_typeResolver->varType()));
                     signatureError(u"Cannot resolve the argument type %1."_qs
                                    .arg(argument.typeAnnotation->type->toString()));
                 }
             } else {
-                function->argumentTypes.append(m_typeResolver->varType());
+                function->argumentTypes.append(m_typeResolver->tracked(m_typeResolver->varType()));
                 signatureError(u"Functions without type annotations won't be compiled"_qs);
             }
         }
