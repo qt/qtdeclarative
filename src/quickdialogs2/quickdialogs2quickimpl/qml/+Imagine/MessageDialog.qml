@@ -135,7 +135,7 @@ MessageDialogImpl {
                 objectName: "detailedTextButton"
                 text: control.showDetailedText ? qsTr("Hide Details...") : qsTr("Show Details...")
 
-                Layout.leftMargin: 20
+                Layout.leftMargin: 16
             }
 
             DialogButtonBox {
@@ -146,9 +146,11 @@ MessageDialogImpl {
                 verticalPadding: 20
 
                 Layout.fillWidth: true
-                Layout.leftMargin: detailedTextButton.visible ? 12 : 20
-                Layout.rightMargin: 20
+                Layout.leftMargin: detailedTextButton.visible ? 12 : 16
+                Layout.rightMargin: 16
             }
+
+            Layout.bottomMargin: 16
         }
 
         TextArea {
@@ -159,10 +161,12 @@ MessageDialogImpl {
             wrapMode: TextEdit.WordWrap
             readOnly: true
 
+            padding: 12
+
             Layout.fillWidth: true
-            Layout.leftMargin: 20
-            Layout.rightMargin: 20
-            Layout.bottomMargin: 20
+            Layout.leftMargin: 16
+            Layout.rightMargin: 16
+            Layout.bottomMargin: 16
 
             background: Rectangle {
                 color: Qt.rgba(1,1,1,1)
@@ -170,7 +174,6 @@ MessageDialogImpl {
                 border.color: Qt.darker(control.palette.light)
                 border.width: 1
             }
-
         }
     }
 
