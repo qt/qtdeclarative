@@ -116,6 +116,7 @@ private slots:
     void popContextAfterRet();
     void revisions();
     void invisibleBase();
+    void notEqualsInt();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1736,6 +1737,20 @@ void tst_QmlCppCodegen::invisibleBase()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
     QCOMPARE(qvariant_cast<QObject *>(o->property("n")), o.data());
+}
+
+void tst_QmlCppCodegen::notEqualsInt()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/notEqualsInt.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QObject *t = qmlContext(o.data())->objectForName(u"t"_qs);
+    QVERIFY(t);
+    QCOMPARE(t->property("text").toString(), u"Foo"_qs);
+    QMetaObject::invokeMethod(o.data(), "foo");
+    QCOMPARE(t->property("text").toString(), u"Bar"_qs);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

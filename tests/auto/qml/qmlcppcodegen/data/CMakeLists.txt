@@ -86,6 +86,7 @@ set(qml_files
     noQQmlData.qml
     nonNotifyable.qml
     noscope.qml
+    notEqualsInt.qml
     nullAccess.qml
     outOfBounds.qml
     overriddenMember.qml
