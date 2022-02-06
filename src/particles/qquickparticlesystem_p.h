@@ -54,7 +54,9 @@
 #include <QtQuick/QQuickItem>
 #include <QElapsedTimer>
 #include <QVector>
+#include <QVarLengthArray>
 #include <QHash>
+#include <QSet>
 #include <QPointer>
 #include <private/qquicksprite_p.h>
 #include <QAbstractAnimation>
