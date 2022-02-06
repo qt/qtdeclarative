@@ -30,6 +30,7 @@
 #include <QtTest/QSignalSpy>
 #include <QtQml/qqmlengine.h>
 #include <QtQuick/qquickview.h>
+#include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlincubator.h>

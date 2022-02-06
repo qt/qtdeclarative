@@ -34,6 +34,7 @@
 #include <QtGui/qstylehints.h>
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qpa/qwindowsysteminterface.h>
+#include <QtQml/QQmlComponent>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquickflickable_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>

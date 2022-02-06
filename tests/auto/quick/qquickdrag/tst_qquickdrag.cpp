@@ -33,6 +33,7 @@
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlexpression.h>
+#include <QQmlComponent>
 
 template <typename T> static T evaluate(QObject *scope, const QString &expression)
 {

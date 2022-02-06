@@ -42,6 +42,7 @@
 #include <QtQml/private/qqmlirloader_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QQmlComponent>
 
 class tst_QQMLTypeLoader : public QQmlDataTest
 {

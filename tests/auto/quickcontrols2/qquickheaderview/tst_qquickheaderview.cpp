@@ -31,6 +31,7 @@
 
 #include <QAbstractItemModelTester>
 #include <QtQml/QQmlEngine>
+#include <QtQml/QQmlComponent>
 #include <QtQuick/private/qquickwindow_p.h>
 #include <QtQuick/private/qquicktext_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>

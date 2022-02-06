@@ -31,6 +31,7 @@
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <private/qinputmethod_p.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlexpression.h>
 #include <QFile>
 #include <QtQuick/qquickview.h>

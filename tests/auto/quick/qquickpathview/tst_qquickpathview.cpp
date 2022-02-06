@@ -44,6 +44,7 @@
 #include <QtGui/qstandarditemmodel.h>
 #include <QStringListModel>
 #include <QFile>
+#include <QEvent>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>

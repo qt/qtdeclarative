@@ -31,6 +31,7 @@
 #include <QtGui/qstylehints.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
+#include <QtQml/QQmlComponent>
 #include <QtQml/qqmlcontext.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlexpression.h>

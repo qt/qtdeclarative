@@ -28,6 +28,7 @@
 
 #include <qtest.h>
 
+#include <QtQml/QQmlComponent>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
 #include <QtQuick/qquickview.h>

@@ -35,6 +35,7 @@
 #include <private/qqmlimport_p.h>
 #include <private/qqmlengine_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QQmlComponent>
 
 class tst_QQmlImport : public QQmlDataTest
 {

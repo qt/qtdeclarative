@@ -39,6 +39,7 @@
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
+#include <QQmlComponent>
 
 using namespace QQuickViewTestUtils;
 

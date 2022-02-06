@@ -41,6 +41,8 @@
 #include <QtGui/qstylehints.h>
 #include <QtGui/QCursor>
 #include <QtGui/QScreen>
+#include <QEvent>
+#include <QQmlComponent>
 #include <qpa/qwindowsysteminterface.h>
 
 Q_LOGGING_CATEGORY(lcTests, "qt.quick.tests")

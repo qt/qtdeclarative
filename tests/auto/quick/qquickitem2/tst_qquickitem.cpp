@@ -38,6 +38,7 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
+#include <QtQuick/private/qquickanchors_p.h>
 #include <QtGui/qstylehints.h>
 #include <private/qquickitem_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>

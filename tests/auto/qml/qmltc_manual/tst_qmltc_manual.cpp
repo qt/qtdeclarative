@@ -49,6 +49,7 @@
 #include <private/qquickitem_p.h>
 #include <private/qv4qmlcontext_p.h>
 #include <private/qqmlproperty_p.h>
+#include <private/qquickanchors_p.h>
 
 #include <array>
 #include <memory>

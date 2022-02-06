@@ -31,6 +31,8 @@
 #include <QObject>
 #include <QQuickItem>
 #include <qqmlregistration.h>
+#include <QBindable>
+#include <qproperty.h>
 
 class TestBindable : public QQuickItem
 {

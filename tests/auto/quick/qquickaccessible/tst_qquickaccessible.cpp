@@ -48,6 +48,8 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
 
+#include <QQmlComponent>
+
 #define EXPECT(cond) \
     do { \
         if (!errorAt && !(cond)) { \

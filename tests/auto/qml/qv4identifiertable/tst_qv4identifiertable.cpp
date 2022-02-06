@@ -30,6 +30,7 @@
 #include <qtest.h>
 #include <QQmlEngine>
 #include <private/qv4identifiertable_p.h>
+#include <private/qv4engine_p.h>
 
 class tst_qv4identifiertable : public QObject
 {

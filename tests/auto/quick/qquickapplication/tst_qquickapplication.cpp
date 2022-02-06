@@ -37,6 +37,7 @@
 #include <qpa/qplatformintegration.h>
 #include <private/qguiapplication_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QFont>
 
 class tst_qquickapplication : public QQmlDataTest
 {

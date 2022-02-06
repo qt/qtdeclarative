@@ -30,6 +30,7 @@
 
 #include <qtest.h>
 
+#include <QtQml/QQmlComponent>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitemgrabresult.h>

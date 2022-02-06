@@ -28,6 +28,7 @@
 
 #include <qtest.h>
 #include <QDebug>
+#include <QEvent>
 #include <QMimeData>
 #include <QTouchEvent>
 #include <QtQuick/QQuickItem>

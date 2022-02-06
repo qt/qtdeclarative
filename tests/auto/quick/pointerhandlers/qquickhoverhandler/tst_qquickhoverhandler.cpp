@@ -38,6 +38,7 @@
 
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlproperty.h>
+#include <QQmlComponent>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
