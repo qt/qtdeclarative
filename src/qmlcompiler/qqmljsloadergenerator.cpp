@@ -125,6 +125,8 @@ bool qQmlJSGenerateLoader(const QStringList &compiledFiles, const QString &outpu
         stream << "#include <QtQml/qqmlprivate.h>\n";
         stream << "#include <QtCore/qdir.h>\n";
         stream << "#include <QtCore/qurl.h>\n";
+        stream << "#include <QtCore/qhash.h>\n";
+        stream << "#include <QtCore/qstring.h>\n";
         stream << "\n";
 
         stream << "namespace QmlCacheGeneratedCode {\n";
