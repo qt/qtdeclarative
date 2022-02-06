@@ -3676,9 +3676,8 @@ void tst_QQuickItem::childAt()
 
 void tst_QQuickItem::grab()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabToImage not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabToImage not functional on minimal platforms");
 
     QQuickView view;
     view.setSource(testFileUrl("grabToImage.qml"));

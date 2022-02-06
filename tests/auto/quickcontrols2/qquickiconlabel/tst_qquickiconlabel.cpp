@@ -305,9 +305,6 @@ void tst_qquickiconlabel::emptyIconSource()
 
 void tst_qquickiconlabel::colorChanges()
 {
-    if (QGuiApplication::platformName() == QLatin1String("offscreen"))
-        QSKIP("grabToImage() doesn't work on the \"offscreen\" platform plugin (QTBUG-63185)");
-
     QQuickView view(testFileUrl("colorChanges.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();

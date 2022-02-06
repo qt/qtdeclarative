@@ -282,9 +282,8 @@ void tst_QQuickShape::render()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -306,9 +305,8 @@ void tst_QQuickShape::renderWithMultipleSp()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -330,9 +328,8 @@ void tst_QQuickShape::radialGrad()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -354,9 +351,8 @@ void tst_QQuickShape::conicalGrad()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -378,9 +374,8 @@ void tst_QQuickShape::renderPolyline()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -407,9 +402,8 @@ void tst_QQuickShape::renderMultiline()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -473,9 +467,8 @@ void tst_QQuickShape::polylineDataTypes()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -624,9 +617,8 @@ void tst_QQuickShape::multilineDataTypes()
     window->show();
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
 
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
@@ -672,9 +664,8 @@ void tst_QQuickShape::multilineStronglyTyped()
     QVERIFY(QTest::qWaitForWindowExposed(window.data()));
     provider->setPaths(m_lowPolyLogo);
 
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());

@@ -945,9 +945,8 @@ void tst_qquicktextedit::hAlignVisual()
     const int centeredSection3End = centeredSection3 + sectionWidth;
 
     {
-        if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-            || (QGuiApplication::platformName() == QLatin1String("minimal")))
-            QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+        if (QGuiApplication::platformName() == QLatin1String("minimal"))
+            QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
         // Left Align
         QImage image = view.grabWindow();
@@ -3767,8 +3766,7 @@ void tst_qquicktextedit::largeTextObservesViewport()
 {
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to few fonts installed on offscreen/minimal platforms");
-
+        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
     QFETCH(QString, text);
     QFETCH(QQuickTextEdit::TextFormat, textFormat);
     QFETCH(bool, parentIsViewport);
@@ -6125,9 +6123,8 @@ void tst_qquicktextedit::keys_shortcutoverride()
 
 void tst_qquicktextedit::transparentSelectionColor()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabToImage not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QQuickView view;
     view.setSource(testFileUrl("transparentSelectionColor.qml"));

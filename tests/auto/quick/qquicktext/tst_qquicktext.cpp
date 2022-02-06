@@ -1028,9 +1028,6 @@ static inline QByteArray msgNotLessThan(int n1, int n2)
 
 void tst_qquicktext::hAlignImplicitWidth()
 {
-#ifdef Q_OS_MACOS
-    QSKIP("this test currently crashes on MacOS. See QTBUG-68047");
-#endif
     QQuickView view(testFileUrl("hAlignImplicitWidth.qml"));
     view.setFlags(view.flags() | Qt::WindowStaysOnTopHint); // Prevent being obscured by other windows.
     view.show();
@@ -1054,9 +1051,8 @@ void tst_qquicktext::hAlignImplicitWidth()
     const int centeredSection3End = centeredSection3 + sectionWidth;
 
     {
-        if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-            || (QGuiApplication::platformName() == QLatin1String("minimal")))
-            QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+        if (QGuiApplication::platformName() == QLatin1String("minimal"))
+            QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
         // Left Align
         QImage image = view.grabWindow();
@@ -4697,9 +4693,8 @@ void tst_qquicktext::verticallyAlignedImageInTable()
 
 void tst_qquicktext::transparentBackground()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabToImage not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("transparentBackground.qml"));
@@ -4718,9 +4713,8 @@ void tst_qquicktext::transparentBackground()
 
 void tst_qquicktext::displaySuperscriptedTag()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabToImage not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("displaySuperscriptedTag.qml"));

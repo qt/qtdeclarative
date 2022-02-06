@@ -591,9 +591,8 @@ void tst_qquickborderimage::progressAndStatusChanges()
 #if QT_CONFIG(opengl)
 void tst_qquickborderimage::borderImageMesh()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QQuickView *window = new QQuickView;
 
@@ -625,9 +624,8 @@ void tst_qquickborderimage::multiFrame_data()
 
 void tst_qquickborderimage::multiFrame()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QFETCH(QString, qmlfile);
     QFETCH(bool, asynchronous);

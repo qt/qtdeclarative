@@ -1289,9 +1289,8 @@ void tst_QQuickMouseArea::hoverPropagation()
 
 void tst_QQuickMouseArea::hoverVisible()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QQuickView window;
     QVERIFY(QQuickTest::showView(window, testFileUrl("hoverVisible.qml")));
