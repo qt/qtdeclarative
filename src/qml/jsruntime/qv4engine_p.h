@@ -60,6 +60,7 @@
 #include <private/qqmldelayedcallqueue_p.h>
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qmutex.h>
+#include <QtCore/qset.h>
 
 #include "qv4function_p.h"
 #include <private/qv4compileddata_p.h>

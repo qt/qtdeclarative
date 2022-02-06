@@ -56,6 +56,9 @@
 #include <QtCore/QDateTime>
 #include <QtCore/QStack>
 #include <QtCore/QHash>
+#include <QtCore/QMap>
+#include <QtCore/QSet>
+#include <QtCore/QVarLengthArray>
 
 #include <memory>
 

@@ -55,6 +55,7 @@
 #include <private/qv4function_p.h>
 #include <private/qv4instr_moth_p.h>
 #include <private/qv4bytecodehandler_p.h>
+#include <QtCore/qset.h>
 
 #if QT_CONFIG(qml_jit)
 
