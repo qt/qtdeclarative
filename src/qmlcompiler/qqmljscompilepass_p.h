@@ -67,9 +67,16 @@ public:
 
     struct InstructionAnnotation
     {
+        // Registers explicit read as part of the instruction.
+        VirtualRegisters readRegisters;
+
+        // Registers that have to be converted for future instructions after a jump.
         VirtualRegisters typeConversions;
+
         QQmlJSRegisterContent changedRegister;
         int changedRegisterIndex = InvalidRegister;
+        bool hasSideEffects = false;
+        bool isRename = false;
     };
 
     using InstructionAnnotations = QHash<int, InstructionAnnotation>;
@@ -118,9 +125,46 @@ public:
         int changedRegisterIndex() const { return m_changedRegisterIndex; }
         const QQmlJSRegisterContent &changedRegister() const { return m_changedRegister; }
 
+        void addReadRegister(int registerIndex, const QQmlJSRegisterContent &reg)
+        {
+            Q_ASSERT(reg.isConversion());
+            m_readRegisters[registerIndex] = reg;
+        }
+
+        void addReadAccumulator(const QQmlJSRegisterContent &reg)
+        {
+            addReadRegister(Accumulator, reg);
+        }
+
+        VirtualRegisters takeReadRegisters() const { return std::move(m_readRegisters); }
+        void setReadRegisters(VirtualRegisters readReagisters)
+        {
+            m_readRegisters = std::move(readReagisters);
+        }
+
+        QQmlJSRegisterContent readRegister(int registerIndex) const
+        {
+            Q_ASSERT(m_readRegisters.contains(registerIndex));
+            return m_readRegisters[registerIndex];
+        }
+
+        QQmlJSRegisterContent readAccumulator() const
+        {
+            return readRegister(Accumulator);
+        }
+
+        bool hasSideEffects() const { return m_hasSideEffects; }
+        void setHasSideEffects(bool hasSideEffects) { m_hasSideEffects = hasSideEffects; }
+
+        bool isRename() const { return m_isRename; }
+        void setIsRename(bool isRename) { m_isRename = isRename; }
+
     private:
+        VirtualRegisters m_readRegisters;
         QQmlJSRegisterContent m_changedRegister;
         int m_changedRegisterIndex = InvalidRegister;
+        bool m_hasSideEffects = false;
+        bool m_isRename = false;
     };
 
     QQmlJSCompilePass(const QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
@@ -144,6 +188,7 @@ protected:
         for (int i = 0; i < function->argumentTypes.count(); ++i) {
             state.registers[FirstArgument + i]
                     = resolver->globalType(function->argumentTypes.at(i));
+            Q_ASSERT(state.registers[FirstArgument + i].isValid());
         }
         return state;
     }
@@ -154,14 +199,18 @@ protected:
         State newState;
 
         const auto instruction = annotations.constFind(currentInstructionOffset());
-        if (instruction == annotations.constEnd())
-            return newState;
-
         newState.registers = oldState.registers;
 
         // Usually the initial accumulator type is the output of the previous instruction, but ...
         if (oldState.changedRegisterIndex() != InvalidRegister)
             newState.registers[oldState.changedRegisterIndex()] = oldState.changedRegister();
+
+        if (instruction == annotations.constEnd())
+            return newState;
+
+        newState.setHasSideEffects(instruction->hasSideEffects);
+        newState.setReadRegisters(instruction->readRegisters);
+        newState.setIsRename(instruction->isRename);
 
         for (auto it = instruction->typeConversions.begin(),
              end = instruction->typeConversions.end(); it != end; ++it) {

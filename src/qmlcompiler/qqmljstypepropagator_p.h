@@ -216,7 +216,7 @@ private:
     QQmlJS::SourceLocation getCurrentSourceLocation() const;
     QQmlJS::SourceLocation getCurrentBindingSourceLocation() const;
 
-    void propagateBinaryOperation(QSOperator::Op op, int lhs);
+    QQmlJSRegisterContent propagateBinaryOperation(QSOperator::Op op, int lhs);
     void propagateCall(const QList<QQmlJSMetaMethod> &methods, int argc, int argv);
     void propagatePropertyLookup(const QString &name);
     void propagateScopeLookupCall(const QString &functionName, int argc, int argv);
@@ -231,6 +231,18 @@ private:
 
     void setAccumulator(const QQmlJSRegisterContent &content);
     void setRegister(int index, const QQmlJSRegisterContent &content);
+    void mergeRegister(int index, const QQmlJSRegisterContent &a, const QQmlJSRegisterContent &b);
+
+    void addReadRegister(int index, const QQmlJSRegisterContent &convertTo);
+    void addReadAccumulator(const QQmlJSRegisterContent &convertTo)
+    {
+        addReadRegister(Accumulator, convertTo);
+    }
+
+    void recordEqualsNullType();
+    void recordEqualsIntType();
+    void recordEqualsType(int lhs);
+    void recordCompareType(int lhs);
 
     QQmlJSRegisterContent m_returnType;
     QQmlJSTypeInfo *m_typeInfo = nullptr;
