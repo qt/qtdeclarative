@@ -114,15 +114,18 @@ ApplicationWindow {
         id: testModel
     }
 
-    Rectangle {
-        anchors.fill: parent
-        color: "white"
-        z: -1
-    }
-
     Component {
         id: treeViewDelegate
         TreeViewDelegate {
+            TapHandler {
+                acceptedModifiers: Qt.ControlModifier
+                onTapped: {
+                    if (treeView.isExpanded(row))
+                        treeView.collapseRecursively(row)
+                    else
+                        treeView.expandRecursively(row)
+                }
+            }
         }
     }
 

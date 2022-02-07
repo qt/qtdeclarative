@@ -216,6 +216,13 @@ void QQuickTreeViewDelegate::mousePressEvent(QMouseEvent *event)
 {
     QQuickAbstractButton::mousePressEvent(event);
 
+    if (event->buttons() != Qt::LeftButton || event->modifiers() != Qt::NoModifier) {
+        // Allow application to add its own pointer handlers that does something
+        // other than plain expand/collapse if e.g holding down modifier keys.
+        event->ignore();
+        return;
+    }
+
     const auto indicator = QQuickAbstractButton::indicator();
     if (indicator && indicator->isVisible()) {
         const auto posInIndicator = mapToItem(indicator, event->position());
