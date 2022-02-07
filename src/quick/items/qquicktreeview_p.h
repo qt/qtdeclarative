@@ -77,6 +77,7 @@ public:
 
     Q_REVISION(6, 4) Q_INVOKABLE void expandRecursively(int row = -1, int depth = -1);
     Q_REVISION(6, 4) Q_INVOKABLE void collapseRecursively(int row = -1);
+    Q_REVISION(6, 4) Q_INVOKABLE void expandToIndex(const QModelIndex &index);
 
     Q_INVOKABLE QModelIndex modelIndex(int row, int column) const;
     Q_INVOKABLE QModelIndex modelIndex(const QPoint &cell) const;

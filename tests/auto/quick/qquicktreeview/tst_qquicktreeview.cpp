@@ -103,6 +103,7 @@ private slots:
     void collapseRecursivelyRoot();
     void collapseRecursivelyChild();
     void collapseRecursivelyWholeTree();
+    void expandToIndex();
     void requiredPropertiesRoot();
     void requiredPropertiesChildren();
     void emptyModel();
@@ -691,6 +692,45 @@ void tst_qquicktreeview::collapseRecursivelyWholeTree()
 
     QCOMPARE(treeView->rows(), 1); // root
 }
+
+void tst_qquicktreeview::expandToIndex()
+{
+    // Check that expandToIndex(index) expands the tree so
+    // that index becomes visible in the view
+    LOAD_TREEVIEW("normaltreeview.qml");
+    QSignalSpy spy(treeView, SIGNAL(expanded(int, int)));
+
+    const QModelIndex root = model->index(0, 0);
+    const QModelIndex child1 = model->index(3, 0, root);
+    const QModelIndex child2 = model->index(3, 0, child1);
+
+    QVERIFY(model->hasChildren(root));
+    QVERIFY(model->hasChildren(child1));
+    QVERIFY(model->hasChildren(child2));
+
+    QVERIFY(!treeView->isExpanded(treeView->rowAtIndex(root)));
+    QVERIFY(!treeView->isExpanded(treeView->rowAtIndex(child1)));
+    QVERIFY(!treeView->isExpanded(treeView->rowAtIndex(child2)));
+
+    const QModelIndex childToExpand = model->index(1, 0, child2);
+    treeView->expandToIndex(childToExpand);
+
+    QVERIFY(treeView->isExpanded(treeView->rowAtIndex(root)));
+    QVERIFY(treeView->isExpanded(treeView->rowAtIndex(child1)));
+    QVERIFY(treeView->isExpanded(treeView->rowAtIndex(child2)));
+
+    QCOMPARE(spy.count(), 1);
+    auto signalArgs = spy.takeFirst();
+    QVERIFY(signalArgs.at(0).toInt() == 0);
+    QVERIFY(signalArgs.at(1).toInt() == 3);
+
+    WAIT_UNTIL_POLISHED;
+
+    // The view should now have 13 rows:
+    // root + 3 expanded nodes that each have 4 children
+    QCOMPARE(treeView->rows(), 13);
+}
+
 
 QTEST_MAIN(tst_qquicktreeview)
 

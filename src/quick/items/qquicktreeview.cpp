@@ -176,6 +176,24 @@
 */
 
 /*!
+    \qmlmethod QtQuick::TreeView::expandToIndex(QModelIndex index)
+    \since 6.4
+
+    Expands the tree from the given model \a index, and recursively all the way up
+    to the root. The result will be that the delegate item that represents \a index
+    becomes visible in the view (unless it ends up outside the viewport). To
+    ensure that the row ends up visible in the viewport, you can do:
+
+    \code
+        expandToIndex(index)
+        forceLayout()
+        positionViewAtRow(rowAtIndex(index), Qt.AlignVCenter)
+    \endcode
+
+    \sa expand(), expandRecursively()
+*/
+
+/*!
     \qmlmethod QtQuick::TreeView::collapse(row)
 
     Collapses the tree node at the given \a row in the view.
@@ -302,6 +320,8 @@
     \a row and \a depth will be equal to the arguments given to the call
     that caused the expansion to happen (\l expand() or \l expandRecursively()).
     In case of \l expand(), \a depth will always be \c 1.
+    In case of \l expandToIndex(), \a depth will be the depth of the
+    target index.
 
     \note when a row is expanded recursively, the expanded signal will
     only be emitted for that one row, and not for its descendants.
@@ -513,6 +533,55 @@ void QQuickTreeView::expandRecursively(int row, int depth)
             const int rootRow = d->m_treeModelToTableModel.itemIndex(model->index(r, 0));
             if (rootRow != -1)
                 expandRowRecursively(rootRow);
+        }
+    }
+
+    emit expanded(row, depth);
+}
+
+void QQuickTreeView::expandToIndex(const QModelIndex &index)
+{
+    Q_D(QQuickTreeView);
+
+    if (!index.isValid()) {
+        qmlWarning(this) << "index is not valid: " << index;
+        return;
+    }
+
+    if (index.model() != d->m_treeModelToTableModel.model()) {
+        qmlWarning(this) << "index doesn't belong to correct model: " << index;
+        return;
+    }
+
+    if (rowAtIndex(index) != -1) {
+        // index is already visible
+        return;
+    }
+
+    int depth = 1;
+    QModelIndex parent = index.parent();
+    int row = rowAtIndex(parent);
+
+    while (parent.isValid()) {
+        if (row != -1) {
+            // The node is already visible, since it maps to a row in the table!
+            d->m_treeModelToTableModel.expandRow(row);
+
+            // Update the state of the already existing delegate item
+            for (int c = leftColumn(); c <= rightColumn(); ++c) {
+                const QPoint treeNodeCell(c, row);
+                if (const auto item = itemAtCell(treeNodeCell))
+                    d->setRequiredProperty("expanded", true, d->modelIndexAtCell(treeNodeCell), item, false);
+            }
+
+            // When we hit a node that is visible, we know that all other nodes
+            // up to the parent have to be visible as well, so we can stop.
+            break;
+        } else {
+            d->m_treeModelToTableModel.expand(parent);
+            parent = parent.parent();
+            row = rowAtIndex(parent);
+            depth++;
         }
     }
 
