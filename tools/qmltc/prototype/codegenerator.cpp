@@ -391,6 +391,11 @@ void CodeGenerator::compileObject(
         QQmlJSAotObject &compiled, const CodeGenObject &object,
         std::function<void(QQmlJSAotObject &, const CodeGenObject &)> compileElements)
 {
+    if (object.type->isSingleton()) {
+        recordError(object.type->sourceLocation(), u"Singleton types are not supported"_qs);
+        return;
+    }
+
     compiled.cppType = object.type->internalName();
     const QString baseClass = object.type->baseType()->internalName();
 
@@ -684,18 +689,6 @@ void CodeGenerator::compileObject(
 
 void CodeGenerator::compileObjectElements(QQmlJSAotObject &compiled, const CodeGenObject &object)
 {
-    if (object.type->isSingleton()) {
-        if (m_isAnonymous) {
-            recordError(object.type->sourceLocation(),
-                        QStringLiteral(u"This singleton type won't be accessible from the outside. "
-                                       "Consider changing the file name so that it starts with a "
-                                       "capital letter."));
-            return;
-        }
-        compiled.mocCode << u"QML_SINGLETON"_qs;
-        compiled.externalCtor.access = QQmlJSMetaMethod::Private;
-    }
-
     // compile enums
     const auto enums = object.type->ownEnumerations();
     compiled.enums.reserve(enums.size());
@@ -790,12 +783,7 @@ void CodeGenerator::compileObjectElements(QQmlJSAotObject &compiled, const CodeG
 void CodeGenerator::compileQQmlComponentElements(QQmlJSAotObject &compiled,
                                                  const CodeGenObject &object)
 {
-    if (object.type->isSingleton()) {
-        // it is unclear what to do with singletons in general, so just reject
-        recordError(object.type->sourceLocation(),
-                    QStringLiteral(u"Singleton Component-based types are not supported"));
-        return;
-    }
+    Q_UNUSED(object);
 
     // since we create a document root as QQmlComponent, we only need to fake
     // QQmlComponent construction in init:
@@ -1733,13 +1721,6 @@ void CodeGenerator::compileScriptBinding(QQmlJSAotObject &current, const QmlIR::
         Q_ASSERT(!objectClassName_signal.isEmpty());
         Q_ASSERT(!objectClassName_slot.isEmpty());
         const QString slotName = makeGensym(signalName + u"_slot");
-
-        if (objectType->isSingleton()) { // TODO: support
-            recordError(binding.location,
-                        u"Binding on singleton type '" + objectClassName_signal
-                                + u"' is not supported");
-            return;
-        }
 
         // SignalHander specific:
         QQmlJSAotMethod slotMethod {};
