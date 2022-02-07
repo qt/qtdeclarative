@@ -930,11 +930,10 @@ static void qsg_wipeBuffer(Buffer *buffer)
     free(buffer->data);
 }
 
-static void qsg_wipeBatch(Batch *batch, bool separateIndexBuffer)
+static void qsg_wipeBatch(Batch *batch)
 {
     qsg_wipeBuffer(&batch->vbo);
-    if (separateIndexBuffer)
-        qsg_wipeBuffer(&batch->ibo);
+    qsg_wipeBuffer(&batch->ibo);
     delete batch->ubuf;
     batch->stencilClipState.reset();
     delete batch;
@@ -944,13 +943,12 @@ Renderer::~Renderer()
 {
     if (m_rhi) {
         // Clean up batches and buffers
-        const bool separateIndexBuffer = m_context->separateIndexBuffer();
         for (int i = 0; i < m_opaqueBatches.size(); ++i)
-            qsg_wipeBatch(m_opaqueBatches.at(i), separateIndexBuffer);
+            qsg_wipeBatch(m_opaqueBatches.at(i));
         for (int i = 0; i < m_alphaBatches.size(); ++i)
-            qsg_wipeBatch(m_alphaBatches.at(i), separateIndexBuffer);
+            qsg_wipeBatch(m_alphaBatches.at(i));
         for (int i = 0; i < m_batchPool.size(); ++i)
-            qsg_wipeBatch(m_batchPool.at(i), separateIndexBuffer);
+            qsg_wipeBatch(m_batchPool.at(i));
     }
 
     for (Node *n : qAsConst(m_nodes))
@@ -1008,8 +1006,7 @@ void Renderer::map(Buffer *buffer, int byteSize, bool isIndexBuf)
     if (m_visualizer->mode() == Visualizer::VisualizeNothing) {
         // Common case, use a shared memory pool for uploading vertex data to avoid
         // excessive reevaluation
-        QDataBuffer<char> &pool = m_context->separateIndexBuffer() && isIndexBuf
-                ? m_indexUploadPool : m_vertexUploadPool;
+        QDataBuffer<char> &pool = isIndexBuf ? m_indexUploadPool : m_vertexUploadPool;
         if (byteSize > pool.size())
             pool.resize(byteSize);
         buffer->data = pool.data();
@@ -2075,11 +2072,7 @@ void Renderer::uploadBatch(Batch *b)
         ibufferSize = unmergedIndexSize;
     }
 
-    const bool separateIndexBuffer = m_context->separateIndexBuffer();
-    if (separateIndexBuffer)
-        map(&b->ibo, ibufferSize, true);
-    else
-        bufferSize += ibufferSize;
+    map(&b->ibo, ibufferSize, true);
     map(&b->vbo, bufferSize);
 
     if (Q_UNLIKELY(debug_upload())) qDebug() << " - batch" << b << " first:" << b->first << " root:"
@@ -2089,9 +2082,7 @@ void Renderer::uploadBatch(Batch *b)
     if (b->merged) {
         char *vertexData = b->vbo.data;
         char *zData = vertexData + b->vertexCount * g->sizeOfVertex();
-        char *indexData = separateIndexBuffer
-                ? b->ibo.data
-                : zData + (int(useDepthBuffer()) * b->vertexCount * sizeof(float));
+        char *indexData = b->ibo.data;
 
         quint16 iOffset16 = 0;
         quint32 iOffset32 = 0;
@@ -2103,8 +2094,8 @@ void Renderer::uploadBatch(Batch *b)
         const uint verticesInSetLimit = m_uint32IndexForRhi ? 0xfffffffe : 0xfffe;
         int indicesInSet = 0;
         b->drawSets.reset();
-        int drawSetIndices = separateIndexBuffer ? 0 : indexData - vertexData;
-        const char *indexBase = separateIndexBuffer ? b->ibo.data : b->vbo.data;
+        int drawSetIndices = 0;
+        const char *indexBase = b->ibo.data;
         b->drawSets << DrawSet(0, zData - vertexData, drawSetIndices);
         while (e) {
             verticesInSet += e->node->geometry()->vertexCount();
@@ -2138,8 +2129,7 @@ void Renderer::uploadBatch(Batch *b)
         }
     } else {
         char *vboData = b->vbo.data;
-        char *iboData = separateIndexBuffer ? b->ibo.data
-                                            : vboData + b->vertexCount * g->sizeOfVertex();
+        char *iboData = b->ibo.data;
         Element *e = b->first;
         while (e) {
             QSGGeometry *g = e->node->geometry();
@@ -2201,9 +2191,7 @@ void Renderer::uploadBatch(Batch *b)
 
         if (!b->drawSets.isEmpty()) {
             if (m_uint32IndexForRhi) {
-                const quint32 *id = (const quint32 *)(separateIndexBuffer
-                                                      ? b->ibo.data
-                                                      : b->vbo.data + b->drawSets.at(0).indices);
+                const quint32 *id = (const quint32 *) b->ibo.data;
                 {
                     QDebug iDump = qDebug();
                     iDump << "  -- Index Data, count:" << b->indexCount;
@@ -2214,9 +2202,7 @@ void Renderer::uploadBatch(Batch *b)
                     }
                 }
             } else {
-                const quint16 *id = (const quint16 *)(separateIndexBuffer
-                                                      ? b->ibo.data
-                                                      : b->vbo.data + b->drawSets.at(0).indices);
+                const quint16 *id = (const quint16 *) b->ibo.data;
                 {
                     QDebug iDump = qDebug();
                     iDump << "  -- Index Data, count:" << b->indexCount;
@@ -2237,8 +2223,7 @@ void Renderer::uploadBatch(Batch *b)
 #endif // QT_NO_DEBUG_OUTPUT
 
     unmap(&b->vbo);
-    if (separateIndexBuffer)
-        unmap(&b->ibo, true);
+    unmap(&b->ibo, true);
 
     if (Q_UNLIKELY(debug_upload())) qDebug() << "  --- vertex/index buffers unmapped, batch upload completed...";
 
@@ -3695,7 +3680,7 @@ void Renderer::prepareRenderPass(RenderPassContext *ctx)
 
     if (largestVBO * 2 < m_vertexUploadPool.size())
         m_vertexUploadPool.resize(largestVBO * 2);
-    if (m_context->separateIndexBuffer() && largestIBO * 2 < m_indexUploadPool.size())
+    if (largestIBO * 2 < m_indexUploadPool.size())
         m_indexUploadPool.resize(largestIBO * 2);
 
     if (Q_UNLIKELY(debug_render())) {

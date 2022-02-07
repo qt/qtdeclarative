@@ -62,7 +62,6 @@ QSGDefaultRenderContext::QSGDefaultRenderContext(QSGContext *context)
     , m_rhiAtlasManager(nullptr)
     , m_currentFrameCommandBuffer(nullptr)
     , m_currentFrameRenderPass(nullptr)
-    , m_separateIndexBuffer(false)
     , m_useDepthBufferFor2D(true)
     , m_glyphCacheResourceUpdates(nullptr)
 {
@@ -87,8 +86,6 @@ void QSGDefaultRenderContext::initialize(const QSGRenderContext::InitParams *par
     m_maxTextureSize = m_rhi->resourceLimit(QRhi::TextureSizeMax);
     if (!m_rhiAtlasManager)
         m_rhiAtlasManager = new QSGRhiAtlasTexture::Manager(this, m_initParams.initialSurfacePixelSize, m_initParams.maybeSurface);
-    // unlike OpenGL (and like WebGL), QRhi does not guarantee buffer usage types can be mixed
-    m_separateIndexBuffer = true;
 
     m_glyphCacheResourceUpdates = nullptr;
 
