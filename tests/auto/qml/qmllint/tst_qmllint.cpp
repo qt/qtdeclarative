@@ -939,7 +939,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("enumFromQtQml") << QStringLiteral("enumFromQtQml.qml");
     QTest::newRow("anchors1") << QStringLiteral("anchors1.qml");
     QTest::newRow("anchors2") << QStringLiteral("anchors2.qml");
-    QTest::newRow("optionalImport") << QStringLiteral("optionalImport.qml");
+    QTest::newRow("defaultImport") << QStringLiteral("defaultImport.qml");
     QTest::newRow("goodAliasObject") << QStringLiteral("goodAliasObject.qml");
     QTest::newRow("jsmoduleimport") << QStringLiteral("jsmoduleimport.qml");
     QTest::newRow("overridescript") << QStringLiteral("overridescript.qml");

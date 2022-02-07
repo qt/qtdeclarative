@@ -66,6 +66,7 @@ function(qt6_add_qml_module target)
         IMPORTS
         IMPORT_PATH
         OPTIONAL_IMPORTS
+        DEFAULT_IMPORTS
         DEPENDENCIES
         PAST_MAJOR_VERSIONS
     )
@@ -382,7 +383,7 @@ function(qt6_add_qml_module target)
         set(arg_TYPEINFO ${target}.qmltypes)
     endif()
 
-    foreach(import_set IN ITEMS IMPORTS OPTIONAL_IMPORTS)
+    foreach(import_set IN ITEMS IMPORTS OPTIONAL_IMPORTS DEFAULT_IMPORTS)
         foreach(import IN LISTS arg_${import_set})
             string(FIND ${import} "/" slash_position REVERSE)
             if (slash_position EQUAL -1)
@@ -986,6 +987,8 @@ function(_qt_internal_target_generate_qmldir target)
 
     _qt_internal_qmldir_item_list(import QT_QML_MODULE_IMPORTS)
     _qt_internal_qmldir_item_list("optional import" QT_QML_MODULE_OPTIONAL_IMPORTS)
+    _qt_internal_qmldir_item_list("default import" QT_QML_MODULE_DEFAULT_IMPORTS)
+
     _qt_internal_qmldir_item_list(depends QT_QML_MODULE_DEPENDENCIES)
 
     get_target_property(prefix ${target} QT_QML_MODULE_RESOURCE_PREFIX)

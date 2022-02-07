@@ -12,13 +12,14 @@ qt_internal_add_qml_module(QuickControls2
     IMPORTS
         QtQuick.Controls.impl/auto
     OPTIONAL_IMPORTS
-        QtQuick.Controls.Basic/auto
         QtQuick.Controls.Fusion/auto
         QtQuick.Controls.Material/auto
         QtQuick.Controls.Imagine/auto
         QtQuick.Controls.Universal/auto
         QtQuick.Controls.Windows/auto
         QtQuick.Controls.macOS/auto
+    DEFAULT_IMPORTS
+        QtQuick.Controls.Basic/auto
     NO_PLUGIN_OPTIONAL
     NO_GENERATE_PLUGIN_SOURCE
     SOURCES

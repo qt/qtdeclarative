@@ -271,10 +271,28 @@ void QQmlJSImporter::importDependencies(const QQmlJSImporter::Import &import,
     for (auto const &dependency : qAsConst(import.dependencies))
         importHelper(dependency.module, types, QString(), dependency.version, true);
 
+    bool hasOptionalImports = false;
     for (auto const &import : qAsConst(import.imports)) {
+        if (import.flags & QQmlDirParser::Import::Optional) {
+            hasOptionalImports = true;
+            if (!m_useOptionalImports) {
+                continue;
+            }
+
+            if (!(import.flags & QQmlDirParser::Import::OptionalDefault))
+                continue;
+        }
+
         importHelper(import.module, types, isDependency ? QString() : prefix,
                      (import.flags & QQmlDirParser::Import::Auto) ? version : import.version,
                      isDependency);
+    }
+
+    if (hasOptionalImports && !m_useOptionalImports) {
+        m_warnings.append(
+                { u"%1 uses optional imports which are not supported. Some types might not be found."_qs
+                          .arg(import.name),
+                  QtCriticalMsg, QQmlJS::SourceLocation() });
     }
 }
 

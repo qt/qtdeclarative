@@ -241,6 +241,23 @@ bool QQmlDirParser::parse(const QString &source)
                                                           "not %1.").arg(sections[1]));
                 continue;
             }
+        } else if (sections[0] == QLatin1String("default")) {
+            if (sectionCount < 2) {
+                reportError(lineNumber, 0,
+                            QStringLiteral("default directive requires further "
+                                           "arguments, but none were provided."));
+                continue;
+            }
+            if (sections[1] == QLatin1String("import")) {
+                if (!readImport(sections + 1, sectionCount - 1,
+                                Import::Flags({ Import::Optional, Import::OptionalDefault })))
+                    continue;
+            } else {
+                reportError(lineNumber, 0,
+                            QStringLiteral("only optional imports can have a a defaultl, "
+                                           "not %1.")
+                                    .arg(sections[1]));
+            }
         } else if (sections[0] == QLatin1String("classname")) {
             if (sectionCount < 2) {
                 reportError(lineNumber, 0,

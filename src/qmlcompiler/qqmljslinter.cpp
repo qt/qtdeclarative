@@ -69,7 +69,7 @@ private:
 };
 
 QQmlJSLinter::QQmlJSLinter(const QStringList &importPaths, bool useAbsolutePath)
-    : m_useAbsolutePath(useAbsolutePath), m_importer(importPaths, nullptr)
+    : m_useAbsolutePath(useAbsolutePath), m_importer(importPaths, nullptr, true)
 {
 }
 
