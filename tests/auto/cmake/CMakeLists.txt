@@ -16,17 +16,20 @@ test_module_includes(
 
 expect_pass(test_plugins)
 
-add_test(qtquickcompiler ${CMAKE_CTEST_COMMAND}
-    --build-and-test
-    "${CMAKE_CURRENT_SOURCE_DIR}/qtquickcompiler/"
-    "${CMAKE_CURRENT_BINARY_DIR}/qtquickcompiler"
-    --build-config "${CMAKE_BUILD_TYPE}"
-    --build-generator ${CMAKE_GENERATOR}
-    --build-makeprogram ${CMAKE_MAKE_PROGRAM}
-    --build-project qqc_test
-    --build-options "-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}" ${BUILD_OPTIONS_LIST}
-    --test-command qqc_test
-)
+# RCC fails to run, see QTBUG-99362
+if(NOT QT_SKIP_MACOS_ARM_TESTS)
+    add_test(qtquickcompiler ${CMAKE_CTEST_COMMAND}
+        --build-and-test
+        "${CMAKE_CURRENT_SOURCE_DIR}/qtquickcompiler/"
+        "${CMAKE_CURRENT_BINARY_DIR}/qtquickcompiler"
+        --build-config "${CMAKE_BUILD_TYPE}"
+        --build-generator ${CMAKE_GENERATOR}
+        --build-makeprogram ${CMAKE_MAKE_PROGRAM}
+        --build-project qqc_test
+        --build-options "-DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}" ${BUILD_OPTIONS_LIST}
+        --test-command qqc_test
+    )
+endif()
 
 add_test(qmlimportscanner ${CMAKE_CTEST_COMMAND}
     --build-and-test
