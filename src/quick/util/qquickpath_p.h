@@ -62,6 +62,7 @@ QT_REQUIRE_CONFIG(quick_path);
 #include <private/qtquickglobal_p.h>
 
 #include <QtCore/QObject>
+#include <QtCore/QHash>
 #include <QtGui/QPainterPath>
 #include <QtGui/QFont>
 

@@ -43,6 +43,8 @@
 #include "qqmlenginecontrolclient_p.h"
 #include "qqmldebugclient_p_p.h"
 
+#include <QtCore/QHash>
+
 //
 //  W A R N I N G
 //  -------------

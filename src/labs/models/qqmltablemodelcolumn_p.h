@@ -54,6 +54,7 @@
 #include "qqmlmodelsglobal_p.h"
 
 #include <QtCore/QObject>
+#include <QtCore/QHash>
 #include <QtQml/qqml.h>
 #include <QtQmlModels/private/qtqmlmodelsglobal_p.h>
 #include <QtQml/qjsvalue.h>

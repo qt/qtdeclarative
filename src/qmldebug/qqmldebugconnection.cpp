@@ -46,6 +46,7 @@
 
 #include <QtCore/qeventloop.h>
 #include <QtCore/qtimer.h>
+#include <QtCore/QHash>
 #include <QtCore/qdatastream.h>
 #include <QtNetwork/qlocalserver.h>
 #include <QtNetwork/qlocalsocket.h>
