@@ -376,7 +376,15 @@ bool QQuickStateGroupPrivate::updateAutoState()
         QQuickState *state = states.at(ii);
         if (state->isWhenKnown()) {
             if (state->isNamed()) {
-                if (state->when()) {
+                bool whenValue = state->when();
+                const QQmlProperty whenProp(state, u"when"_qs);
+                const auto potentialWhenBinding = QQmlAnyBinding::ofProperty(whenProp);
+                Q_ASSERT(!potentialWhenBinding.isUntypedPropertyBinding());
+                // if there is a binding, the value in when might not be up-to-date at this point
+                // so we manually reevaluate the binding
+                if (auto abstractBinding = dynamic_cast<QQmlBinding *>( potentialWhenBinding.asAbstractBinding()))
+                    whenValue = abstractBinding->evaluate().toBool();
+                if (whenValue) {
                     if (stateChangeDebug())
                         qWarning() << "Setting auto state due to expression";
                     if (currentState != state->name()) {
