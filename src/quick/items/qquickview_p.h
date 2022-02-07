@@ -60,16 +60,11 @@
 #include <QtCore/QWeakPointer>
 
 #include <QtQml/qqmlengine.h>
-#include <private/qv4object_p.h>
 #include "qquickwindow_p.h"
 
 #include "qquickitemchangelistener_p.h"
 
 QT_BEGIN_NAMESPACE
-
-namespace QV4 {
-struct ExecutionEngine;
-}
 
 class QQmlContext;
 class QQmlError;

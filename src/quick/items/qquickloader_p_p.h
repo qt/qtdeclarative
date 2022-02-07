@@ -56,7 +56,8 @@
 #include "qquickitemchangelistener_p.h"
 #include <qqmlincubator.h>
 
-#include <private/qv4value_p.h>
+#include <private/qv4staticvalue_p.h>
+#include <private/qv4persistent_p.h>
 
 QT_BEGIN_NAMESPACE
 
