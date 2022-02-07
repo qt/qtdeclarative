@@ -12,7 +12,11 @@ qt6_add_qml_module(tst_qmltc_qprocess
     QML_FILES
         data/dummy.qml
         data/inlineComponent.qml
+        data/SingletonThing.qml
 )
+# special setup for singleton files:
+set_source_files_properties(SingletonThing.qml PROPERTIES QT_QML_SINGLETON_TYPE true)
+
 add_dependencies(tst_qmltc_qprocess Qt::qmltc)
 
 # fetch --resource arguments manually (mimics the logic of qmltc compilation
