@@ -40,6 +40,7 @@ but not all the files it references.
     set(rcc_files ${_RCC_UNPARSED_ARGUMENTS})
     set(rcc_options ${_RCC_OPTIONS})
     set(filtered_rcc_files)
+    set(output_resources)
     set(compiler_output)
     set(rcc_files_with_compilation_units)
     set(loader_flags)
@@ -52,13 +53,15 @@ but not all the files it references.
         set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${input_resource}")
 
         execute_process(COMMAND ${compiler_path} --filter-resource-file ${input_resource} -o ${new_resource_file} OUTPUT_VARIABLE remaining_files)
-        list(APPEND filtered_rcc_files ${new_resource_file})
-        list(APPEND loader_flags \"--resource-file-mapping=${_resource}=${new_resource_file}\")
 
         set(rcc_file_with_compilation_units)
 
         execute_process(COMMAND ${rcc_path} -list \"${input_resource}\" OUTPUT_VARIABLE rcc_contents)
         if (NOT rcc_contents STREQUAL \"\")
+
+            list(APPEND filtered_rcc_files ${new_resource_file})
+            list(APPEND loader_flags \"--resource-file-mapping=${_resource}=${new_resource_file}\")
+
             string(REGEX REPLACE \"[\r\n]+\" \";\" rcc_contents ${rcc_contents})
             foreach(it ${rcc_contents})
                 get_filename_component(extension ${it} EXT)
@@ -85,6 +88,8 @@ but not all the files it references.
         list(APPEND compiler_output ${loader_source})
     endif()
 
-    qt5_add_resources(output_resources ${filtered_rcc_files} OPTIONS ${rcc_options})
+    if(filtered_rcc_files)
+        qt5_add_resources(output_resources ${filtered_rcc_files} OPTIONS ${rcc_options})
+    endif()
     set(${outfiles} ${output_resources} ${compiler_output} PARENT_SCOPE)
 endfunction()
