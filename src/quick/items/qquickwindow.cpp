@@ -429,9 +429,9 @@ void QQuickWindow::physicalDpiChanged()
 {
     Q_D(QQuickWindow);
     const qreal newPixelRatio = screen()->devicePixelRatio();
-    if (qFuzzyCompare(newPixelRatio, d->devicePixelRatio))
+    if (qFuzzyCompare(newPixelRatio, d->lastReportedItemDevicePixelRatio))
         return;
-    d->devicePixelRatio = newPixelRatio;
+    d->lastReportedItemDevicePixelRatio = newPixelRatio;
     if (d->contentItem)
         updatePixelRatioHelper(d->contentItem, newPixelRatio);
 }
@@ -705,7 +705,7 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
 QQuickWindowPrivate::QQuickWindowPrivate()
     : contentItem(nullptr)
     , dirtyItemList(nullptr)
-    , devicePixelRatio(0)
+    , lastReportedItemDevicePixelRatio(0)
     , context(nullptr)
     , renderer(nullptr)
     , windowManager(nullptr)
@@ -770,7 +770,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
     Q_ASSERT(windowManager || renderControl);
 
     if (QScreen *screen = q->screen()) {
-        devicePixelRatio = screen->devicePixelRatio();
+        lastReportedItemDevicePixelRatio = screen->devicePixelRatio();
         // if the screen changes, then QQuickWindow::handleScreenChanged disconnects
         // and connects to the new screen
         physicalDpiChangedConnection = QObject::connect(screen, &QScreen::physicalDotsPerInchChanged,

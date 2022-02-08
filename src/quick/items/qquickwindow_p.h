@@ -193,7 +193,7 @@ public:
 
     QVector<QQuickItem *> itemsToPolish;
 
-    qreal devicePixelRatio;
+    qreal lastReportedItemDevicePixelRatio;
     QMetaObject::Connection physicalDpiChangedConnection;
 
     void updateDirtyNodes();
