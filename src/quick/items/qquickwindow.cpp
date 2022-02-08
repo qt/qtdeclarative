@@ -428,7 +428,7 @@ static void updatePixelRatioHelper(QQuickItem *item, float pixelRatio)
 void QQuickWindow::physicalDpiChanged()
 {
     Q_D(QQuickWindow);
-    const qreal newPixelRatio = screen()->devicePixelRatio();
+    const qreal newPixelRatio = effectiveDevicePixelRatio();
     if (qFuzzyCompare(newPixelRatio, d->lastReportedItemDevicePixelRatio))
         return;
     d->lastReportedItemDevicePixelRatio = newPixelRatio;
@@ -755,7 +755,7 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
     Q_ASSERT(windowManager || renderControl);
 
     if (QScreen *screen = q->screen()) {
-        lastReportedItemDevicePixelRatio = screen->devicePixelRatio();
+        lastReportedItemDevicePixelRatio = q->effectiveDevicePixelRatio();
         // if the screen changes, then QQuickWindow::handleScreenChanged disconnects
         // and connects to the new screen
         physicalDpiChangedConnection = QObject::connect(screen, &QScreen::physicalDotsPerInchChanged,
