@@ -514,7 +514,6 @@ void QQuickWindowPrivate::ensureCustomRenderTarget()
     redirect.renderTargetDirty = false;
 
     redirect.rt.reset(rhi);
-    redirect.devicePixelRatio = customRenderTarget.devicePixelRatio();
 
     // a default constructed QQuickRenderTarget means no redirection
     if (customRenderTarget.isNull())
@@ -535,11 +534,6 @@ void QQuickWindowPrivate::syncSceneGraph()
 
     ensureCustomRenderTarget();
 
-    // Calculate the dpr the same way renderSceneGraph() will.
-    qreal devicePixelRatio = q->effectiveDevicePixelRatio();
-    if (redirect.rt.renderTarget && !QQuickRenderControl::renderWindowFor(q))
-        devicePixelRatio = redirect.devicePixelRatio;
-
     QRhiCommandBuffer *cb = nullptr;
     if (rhi) {
         if (redirect.commandBuffer)
@@ -547,7 +541,7 @@ void QQuickWindowPrivate::syncSceneGraph()
         else
             cb = swapchain->currentFrameCommandBuffer();
     }
-    context->prepareSync(devicePixelRatio, cb, graphicsConfig);
+    context->prepareSync(q->effectiveDevicePixelRatio(), cb, graphicsConfig);
 
     animationController->beforeNodeSync();
 
@@ -646,23 +640,14 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
     const bool flipY = rhi ? !rhi->isYUpInNDC() : false;
     if (flipY)
         matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
+
     const qreal devicePixelRatio = q->effectiveDevicePixelRatio();
+    QSize pixelSize;
+    QSizeF logicalSize;
     if (redirect.rt.renderTarget) {
-        const QSize pixelSize = redirect.rt.renderTarget->pixelSize();
-        QRect rect(QPoint(0, 0), pixelSize);
-        renderer->setDeviceRect(rect);
-        renderer->setViewportRect(rect);
-        if (QQuickRenderControl::renderWindowFor(q)) {
-            renderer->setProjectionMatrixToRect(QRect(QPoint(0, 0), size), matrixFlags);
-            renderer->setDevicePixelRatio(devicePixelRatio);
-        } else {
-            const QSizeF logicalSize = pixelSize / redirect.devicePixelRatio;
-            renderer->setProjectionMatrixToRect(QRectF(QPointF(0, 0), logicalSize), matrixFlags);
-            renderer->setDevicePixelRatio(redirect.devicePixelRatio);
-        }
+        pixelSize = redirect.rt.renderTarget->pixelSize();
+        logicalSize = pixelSize / devicePixelRatio;
     } else {
-        QSize pixelSize;
-        QSizeF logicalSize;
         if (surfaceSize.isEmpty()) {
             pixelSize = size * devicePixelRatio;
             logicalSize = size;
@@ -670,12 +655,12 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             pixelSize = surfaceSize;
             logicalSize = QSizeF(surfaceSize) / devicePixelRatio;
         }
-        QRect rect(QPoint(0, 0), pixelSize);
-        renderer->setDeviceRect(rect);
-        renderer->setViewportRect(rect);
-        renderer->setProjectionMatrixToRect(QRectF(QPoint(0, 0), logicalSize), matrixFlags);
-        renderer->setDevicePixelRatio(devicePixelRatio);
     }
+
+    renderer->setDevicePixelRatio(devicePixelRatio);
+    renderer->setDeviceRect(QRect(QPoint(0, 0), pixelSize));
+    renderer->setViewportRect(QRect(QPoint(0, 0), pixelSize));
+    renderer->setProjectionMatrixToRect(QRectF(QPointF(0, 0), logicalSize), matrixFlags);
 
     if (rhi) {
         context->renderNextRhiFrame(renderer);
@@ -3736,21 +3721,31 @@ void QQuickWindow::runJobsAfterSwap()
 }
 
 /*!
- * Returns the device pixel ratio for this window.
- *
- * This is different from QWindow::devicePixelRatio() in that it supports
- * redirected rendering via QQuickRenderControl. When using a
- * QQuickRenderControl, the QQuickWindow is often not created, meaning it is
- * never shown and there is no underlying native window created in the
- * windowing system. As a result, querying properties like the device pixel
- * ratio cannot give correct results. Use this function instead.
- *
- * \sa QWindow::devicePixelRatio()
+    Returns the device pixel ratio for this window.
+
+    This is different from QWindow::devicePixelRatio() in that it supports
+    redirected rendering via QQuickRenderControl and QQuickRenderTarget. When
+    using a QQuickRenderControl, the QQuickWindow is often not fully created,
+    meaning it is never shown and there is no underlying native window created
+    in the windowing system. As a result, querying properties like the device
+    pixel ratio cannot give correct results. This function takes into account
+    both QQuickRenderControl::renderWindowFor() and
+    QQuickRenderTarget::devicePixelRatio(). When no redirection is in effect,
+    the result is same as QWindow::devicePixelRatio().
+
+    \sa QQuickRenderControl, QQuickRenderTarget, setRenderTarget(), QWindow::devicePixelRatio()
  */
 qreal QQuickWindow::effectiveDevicePixelRatio() const
 {
+    Q_D(const QQuickWindow);
     QWindow *w = QQuickRenderControl::renderWindowFor(const_cast<QQuickWindow *>(this));
-    return w ? w->devicePixelRatio() : devicePixelRatio();
+    if (w)
+        return w->devicePixelRatio();
+
+    if (!d->customRenderTarget.isNull())
+        return d->customRenderTarget.devicePixelRatio();
+
+    return devicePixelRatio();
 }
 
 /*!

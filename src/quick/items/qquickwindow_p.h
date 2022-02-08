@@ -228,7 +228,6 @@ public:
     struct Redirect {
         QRhiCommandBuffer *commandBuffer = nullptr;
         QQuickWindowRenderTarget rt;
-        qreal devicePixelRatio = 1.0;
         bool renderTargetDirty = false;
     } redirect;
 
