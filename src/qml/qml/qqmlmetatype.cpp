@@ -47,10 +47,6 @@
 #include <private/qqmlvaluetype_p.h>
 #include <private/qv4executablecompilationunit_p.h>
 
-#if QT_CONFIG(qml_itemmodel)
-#include <private/qqmlmodelindexvaluetype_p.h>
-#endif
-
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qloggingcategory.h>
@@ -1597,17 +1593,7 @@ const QMetaObject *QQmlMetaType::metaObjectForValueType(QMetaType metaType)
     case QMetaType::QEasingCurve:
         return &QQmlEasingValueType::staticMetaObject;
 #endif
-#if QT_CONFIG(qml_itemmodel)
-    case QMetaType::QModelIndex:
-        return &QQmlModelIndexValueType::staticMetaObject;
-    case QMetaType::QPersistentModelIndex:
-        return &QQmlPersistentModelIndexValueType::staticMetaObject;
-#endif
     default:
-#if QT_CONFIG(qml_itemmodel)
-        if (metaType == QMetaType::fromType<QItemSelectionRange>())
-            return &QQmlItemSelectionRangeValueType::staticMetaObject;
-#endif
         break;
     }
 
