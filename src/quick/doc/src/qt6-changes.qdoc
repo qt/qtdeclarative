@@ -138,7 +138,7 @@
     OpenGL. It will not be functional when using another graphics API, such as
     Vulkan or Metal. Applications relying on QQuickWidget should force the usage
     of OpenGL by calling
-    \c{QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi)} in their
+    \c{QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL)} in their
     main() function.
 
     \section2 Changes to QQuick* APIs
@@ -206,7 +206,7 @@
     not be functional when using another graphics API, such as Vulkan or Metal.
     Applications relying on QQuickFramebufferObject should force the usage of
     OpenGL by calling
-    \c{QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi)} in their
+    \c{QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL)} in their
     main() function.
 
     \li QQuickRenderControl has a slightly changed API: grab() is now

@@ -205,7 +205,7 @@ void SquircleRenderer::frameStart()
     QSGRendererInterface *rif = m_window->rendererInterface();
 
     // We are not prepared for anything other than running with the RHI and its Metal backend.
-    Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::MetalRhi);
+    Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::Metal);
 
     m_device = (id<MTLDevice>) rif->getResource(m_window, QSGRendererInterface::DeviceResource);
     Q_ASSERT(m_device);
