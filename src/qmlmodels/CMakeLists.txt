@@ -29,6 +29,11 @@ qt_internal_add_qml_module(QmlModels
     GENERATE_PRIVATE_CPP_EXPORTS
 )
 
+qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_itemmodel
+    SOURCES
+        qqmlmodelindexvaluetype.cpp qqmlmodelindexvaluetype_p.h
+)
+
 qt_internal_extend_target(QmlModels CONDITION QT_FEATURE_qml_object_model
     SOURCES
         qqmlinstantiator.cpp qqmlinstantiator_p.h

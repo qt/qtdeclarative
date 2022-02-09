@@ -1026,6 +1026,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("unexportedCppBase") << QStringLiteral("unexportedCppBase.qml");
     QTest::newRow("requiredWithRootLevelAlias") << QStringLiteral("RequiredWithRootLevelAlias.qml");
     QTest::newRow("jsVarDeclarations") << QStringLiteral("jsVarDeclarations.qml");
+    QTest::newRow("qmodelIndex") << QStringLiteral("qmodelIndex.qml");
 }
 
 void TestQmllint::cleanQmlCode()
