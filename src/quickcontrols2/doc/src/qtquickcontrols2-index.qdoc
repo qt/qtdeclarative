@@ -38,7 +38,7 @@
 
     \image qtquickcontrols2-styles.png
 
-    Qt Quick Controls comes with a selection customizable styles.
+    Qt Quick Controls comes with a selection of customizable styles.
     See \l {Styling Qt Quick Controls} for more details.
 
 
@@ -55,9 +55,10 @@
 
     \section2 C++ API
 
-    Using the \l{Qt Quick Controls C++ Classes}{C++ API} requires linking against the module library,
-    either directly or through other dependencies.
-    Several build tools have dedicated support for this, including CMake and qmake.
+    Using the \l{Qt Quick Controls C++ Classes}{C++ API} requires linking
+    against the module library, either directly or through other dependencies.
+    Several build tools have dedicated support for this, including CMake and
+    qmake.
 
     \section3 Building with CMake
     Use the \c find_package() command to locate the needed module components in the Qt6 package:
