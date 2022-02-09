@@ -2350,6 +2350,20 @@ void QQuickTableViewPrivate::processRebuildTable()
             return;
     }
 
+    if (rebuildState == RebuildState::CancelOvershootBottomRight) {
+        cancelOvershootBottomRight();
+        loadAndUnloadVisibleEdges();
+        if (!moveToNextRebuildState())
+            return;
+    }
+
+    if (rebuildState == RebuildState::CancelOvershootTopLeft) {
+        cancelOvershootTopLeft();
+        loadAndUnloadVisibleEdges();
+        if (!moveToNextRebuildState())
+            return;
+    }
+
     const bool preload = (rebuildOptions & RebuildOption::All
                           && reusableFlag == QQmlTableInstanceModel::Reusable);
 
@@ -2682,6 +2696,58 @@ void QQuickTableViewPrivate::adjustViewportYAccordingToAlignment()
     }
 
     syncViewportRect();
+}
+
+void QQuickTableViewPrivate::cancelOvershootBottomRight()
+{
+    // After doing a layout with positioning specified, the table might end up in an
+    // overshooting state (meaning that the table is dragged beyond the bounds
+    // of the viewport, with the result that it will bounce back in once you touch it).
+    // This happens because the layouting might try to e.g position the last row in the
+    // model in the center of the viewport, which will leave a big blank space from the
+    // last row towards the bottom.
+    // This space will be detected by updateExtents(), which will adjust the extents so
+    // that the superfluous blank area ends up as an overshoot. But we shouldn't leave the
+    // table in an overshooting state after a rebuild, so we clamp it here so thatit's
+    // either aligned to the top/left or to the bottom/right of the viewport.
+    // An exception is if we're not rebuilding because of positionViewAtCell(), since
+    // the app is allowed to set contentX and contentY at start-up. A second exception is
+    // if this view is a sync child, since then we can end up with extra space at the end
+    // if our model has fewer rows/columns than the syncView.
+    const qreal blankSpaceRight = viewportRect.right() - loadedTableOuterRect.right();
+    const qreal blankSpaceBottom = viewportRect.bottom() - loadedTableOuterRect.bottom();
+    const bool positionVertically = rebuildOptions.testFlag(RebuildOption::PositionViewAtRow);
+    const bool positionHorizontally = rebuildOptions.testFlag(RebuildOption::PositionViewAtColumn);
+
+    if (positionVertically && !syncVertically && viewportRect.top() > 0 && blankSpaceBottom > 0) {
+        qCDebug(lcTableViewDelegateLifecycle()) << "cancelling overshoot at bottom:" << blankSpaceBottom;
+        setLocalViewportY(viewportRect.y() - blankSpaceBottom);
+        syncViewportRect();
+    }
+
+    if (positionHorizontally && !syncHorizontally && viewportRect.left() > 0 && blankSpaceRight > 0) {
+        qCDebug(lcTableViewDelegateLifecycle()) << "cancelling overshoot at right:" << blankSpaceRight;
+        setLocalViewportX(viewportRect.x() - blankSpaceRight);
+        syncViewportRect();
+    }
+}
+
+void QQuickTableViewPrivate::cancelOvershootTopLeft()
+{
+    const bool positionVertically = rebuildOptions.testFlag(RebuildOption::PositionViewAtRow);
+    const bool positionHorizontally = rebuildOptions.testFlag(RebuildOption::PositionViewAtColumn);
+
+    if (positionVertically && !syncVertically && viewportRect.top() < 0) {
+        qCDebug(lcTableViewDelegateLifecycle()) << "cancelling overshoot at top:" << viewportRect.top();
+        setLocalViewportY(0);
+        syncViewportRect();
+    }
+
+    if (positionHorizontally && !syncHorizontally && viewportRect.left() < 0) {
+        qCDebug(lcTableViewDelegateLifecycle()) << "cancelling overshoot at left:" << viewportRect.left();
+        setLocalViewportX(0);
+        syncViewportRect();
+    }
 }
 
 void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
