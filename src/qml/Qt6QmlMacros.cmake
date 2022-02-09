@@ -2682,6 +2682,22 @@ function(qt6_generate_deploy_qml_app_script)
         message(FATAL_ERROR "FILENAME_VARIABLE must be specified")
     endif()
 
+    # Check that the target was defer-finalized, and not immediately finalized when using
+    # CMake < 3.19. This is important because if it's immediately finalized, Qt::Qml is likely
+    # not in the dependency list, and thus _qt_internal_generate_deploy_qml_imports_script will
+    # not be executed, leading to an error at install time
+    # 'No QML imports information recorded for target X'.
+    # _qt_is_immediately_finalized is set by qt6_add_executable.
+    # TODO: Remove once minimum required CMAKE_VERSION is 3.19+.
+    get_target_property(is_immediately_finalized "${arg_TARGET}" _qt_is_immediately_finalized)
+    if(is_immediately_finalized)
+        message(FATAL_ERROR
+            "QML app deployment requires CMake version 3.19, or later, or manual executable "
+            "finalization. For manual finalization, pass the MANUAL_FINALIZATION option to "
+            "qt_add_executable() and then call qt_finalize_target(${arg_TARGET}) just before
+            calling qt_generate_deploy_qml_app_script().")
+    endif()
+
     # Create a file name that will be unique for this target and the combination
     # of arguments passed to this command. This allows the project to call us
     # multiple times with different arguments for the same target (e.g. to
