@@ -38,26 +38,25 @@ provides a visual canvas and includes types for creating and animating
 visual components, receiving user input, creating data models and views
 and delayed object instantiation.
 
-The Qt Quick module provides both a \l{Qt Quick QML Types}{QML API} which supplies
-QML types for creating user interfaces with the QML language, and a
+The Qt Quick module provides both a \l{Qt Quick QML Types}{QML API}, which
+supplies QML types for creating user interfaces with the QML language, and a
 \l{Qt Quick C++ Classes}{C++ API} for extending QML applications with C++ code.
 
 \note A set of Qt Quick-based UI controls is also available to create user
 interfaces. See \l{Qt Quick Controls} for more information.
 
-For those new to QML and Qt Quick, please see
-\l{QML Applications}
-for an introduction to writing QML applications.
+If you're new to QML and Qt Quick, please see \l{QML Applications} for an
+introduction to writing QML applications.
 
 \section1 Using the Module
 
 \section2 QML API
 
-The QML types in Qt Quick are available through the \c QtQuick import. To use the
-types, add the following import statement to your .qml file:
+The QML types in Qt Quick are available through the \c QtQuick import. To use
+the types, add the following import statement to your .qml file:
 
 \qml
-import QtQml
+import QtQuick
 \endqml
 
 \section2 C++ API
@@ -87,13 +86,13 @@ QT += quick
 
 \section1 Important Concepts in Qt Quick
 
-Qt Quick provides everything needed to create a rich application with a fluid
-and dynamic user interface. It enables user interfaces to be built around the
+Qt Quick provides everything you need to create a rich application with a fluid
+and dynamic user interface. It enables you to build user interfaces around the
 behavior of user interface components and how they connect with one another,
 and it provides a visual canvas with its own coordinate system and rendering
-engine. Animation and transition effects are a first class concept in Qt Quick,
-and visual effects can be supplemented through specialized components for
-particle and shader effects.
+engine. Animation and transition effects are first class concepts in Qt Quick,
+and you can add visual effects through specialized components for particle and
+shader effects.
 
 \list
 \li \l{Important Concepts In Qt Quick - The Visual Canvas}{The Visual Canvas}
@@ -105,7 +104,7 @@ particle and shader effects.
 \li \l{Important Concepts In Qt Quick - Convenience Types}{Convenience Types}
 \endlist
 
-When using the \c QtQuick module, you will need to know how to write QML
+When using the Qt Quick module, you will need to know how to write QML
 applications using the QML language. In particular, QML Basics and QML
 Essentials from the \l{QML Applications} page.
 
