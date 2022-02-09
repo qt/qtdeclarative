@@ -198,7 +198,7 @@ int main(int argc, char **argv)
     QApplication app(argc, argv);
 
     // this example and QQuickWidget are only functional when rendering with OpenGL
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
     QCoreApplication::setApplicationName("Qt QQuickWidget Example");
     QCoreApplication::setOrganizationName("QtProject");

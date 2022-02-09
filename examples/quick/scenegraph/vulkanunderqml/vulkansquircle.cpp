@@ -205,7 +205,7 @@ void SquircleRenderer::frameStart()
     QSGRendererInterface *rif = m_window->rendererInterface();
 
     // We are not prepared for anything other than running with the RHI and its Vulkan backend.
-    Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::VulkanRhi);
+    Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::Vulkan);
 
     if (m_vert.isEmpty())
         prepareShader(VertexStage);
