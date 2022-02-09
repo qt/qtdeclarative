@@ -193,6 +193,10 @@ private slots:
     void positionViewAtRow();
     void positionViewAtColumn_data();
     void positionViewAtColumn();
+    void positionViewAtRowClamped_data();
+    void positionViewAtRowClamped();
+    void positionViewAtColumnClamped_data();
+    void positionViewAtColumnClamped();
     void itemAtCell_data();
     void itemAtCell();
     void leftRightTopBottomProperties_data();
@@ -3139,48 +3143,30 @@ void tst_QQuickTableView::positionViewAtRow_data()
     QTest::newRow("AlignTop 1") << 1 << Qt::AlignTop << 0. << 50.;
     QTest::newRow("AlignTop 50") << 50 << Qt::AlignTop << 0. << -1.;
     QTest::newRow("AlignTop 0") << 0 << Qt::AlignTop << 0. << -1.;
-    QTest::newRow("AlignTop 99") << 99 << Qt::AlignTop << 0. << -1.;
-
-    QTest::newRow("AlignTop 0") << 0 << Qt::AlignTop << -10. << 0.;
     QTest::newRow("AlignTop 1") << 1 << Qt::AlignTop << -10. << 0.;
     QTest::newRow("AlignTop 1") << 1 << Qt::AlignTop << -10. << 50.;
     QTest::newRow("AlignTop 50") << 50 << Qt::AlignTop << -10. << -1.;
-    QTest::newRow("AlignTop 0") << 0 << Qt::AlignTop << -10. << -1.;
-    QTest::newRow("AlignTop 99") << 99 << Qt::AlignTop << -10. << -1.;
 
-    QTest::newRow("AlignBottom 0") << 0 << Qt::AlignBottom << 0. << 0.;
-    QTest::newRow("AlignBottom 1") << 1 << Qt::AlignBottom << 0. << 0.;
-    QTest::newRow("AlignBottom 1") << 1 << Qt::AlignBottom << 0. << 50.;
     QTest::newRow("AlignBottom 50") << 50 << Qt::AlignBottom << 0. << -1.;
-    QTest::newRow("AlignBottom 0") << 0 << Qt::AlignBottom << 0. << -1.;
+    QTest::newRow("AlignBottom 98") << 98 << Qt::AlignBottom << 0. << -1.;
     QTest::newRow("AlignBottom 99") << 99 << Qt::AlignBottom << 0. << -1.;
+    QTest::newRow("AlignBottom 50") << 40 << Qt::AlignBottom << 10. << -1.;
+    QTest::newRow("AlignBottom 40") << 50 << Qt::AlignBottom << -10. << -1.;
+    QTest::newRow("AlignBottom 98") << 98 << Qt::AlignBottom << 10. << -1.;
+    QTest::newRow("AlignBottom 99") << 99 << Qt::AlignBottom << -10. << -1.;
 
-    QTest::newRow("AlignBottom 0") << 0 << Qt::AlignBottom << 10. << 0.;
-    QTest::newRow("AlignBottom 1") << 1 << Qt::AlignBottom << 10. << 0.;
-    QTest::newRow("AlignBottom 1") << 1 << Qt::AlignBottom << 10. << 50.;
-    QTest::newRow("AlignBottom 50") << 50 << Qt::AlignBottom << 10. << -1.;
-    QTest::newRow("AlignBottom 0") << 0 << Qt::AlignBottom << 10. << -1.;
-    QTest::newRow("AlignBottom 99") << 99 << Qt::AlignBottom << 10. << -1.;
-
-    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << 0. << 0.;
-    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << 0. << 0.;
-    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << 0. << 50.;
+    QTest::newRow("AlignCenter 40") << 40 << Qt::AlignCenter << 0. << -1.;
     QTest::newRow("AlignCenter 50") << 50 << Qt::AlignCenter << 0. << -1.;
-    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << 0. << -1.;
-    QTest::newRow("AlignCenter 99") << 99 << Qt::AlignCenter << 0. << -1.;
-
-    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << -10. << 0.;
-    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << -10. << 0.;
-    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << -10. << 50.;
+    QTest::newRow("AlignCenter 40") << 40 << Qt::AlignCenter << 10. << -1.;
     QTest::newRow("AlignCenter 50") << 50 << Qt::AlignCenter << -10. << -1.;
-    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << -10. << -1.;
-    QTest::newRow("AlignCenter 99") << 99 << Qt::AlignCenter << -10. << -1.;
 }
 
 void tst_QQuickTableView::positionViewAtRow()
 {
     // Check that positionViewAtRow actually flicks the view
-    // to the right position so that the row becomes visible
+    // to the right position so that the row becomes visible.
+    // For this test, we only check cells that can be placed exactly
+    // according to the given alignment.
     QFETCH(int, row);
     QFETCH(Qt::AlignmentFlag, alignment);
     QFETCH(qreal, offset);
@@ -3230,48 +3216,27 @@ void tst_QQuickTableView::positionViewAtColumn_data()
     QTest::newRow("AlignLeft 1") << 1 << Qt::AlignLeft << 0. << 50.;
     QTest::newRow("AlignLeft 50") << 50 << Qt::AlignLeft << 0. << -1.;
     QTest::newRow("AlignLeft 0") << 0 << Qt::AlignLeft << 0. << -1.;
-    QTest::newRow("AlignLeft 99") << 99 << Qt::AlignLeft << 0. << -1.;
-
-    QTest::newRow("AlignLeft 0") << 0 << Qt::AlignLeft << -10. << 0.;
     QTest::newRow("AlignLeft 1") << 1 << Qt::AlignLeft << -10. << 0.;
     QTest::newRow("AlignLeft 1") << 1 << Qt::AlignLeft << -10. << 50.;
     QTest::newRow("AlignLeft 50") << 50 << Qt::AlignLeft << -10. << -1.;
-    QTest::newRow("AlignLeft 0") << 0 << Qt::AlignLeft << -10. << -1.;
-    QTest::newRow("AlignLeft 99") << 99 << Qt::AlignLeft << -10. << -1.;
 
-    QTest::newRow("AlignRight 0") << 0 << Qt::AlignRight << 0. << 0.;
-    QTest::newRow("AlignRight 1") << 1 << Qt::AlignRight << 0. << 0.;
-    QTest::newRow("AlignRight 1") << 1 << Qt::AlignRight << 0. << 50.;
     QTest::newRow("AlignRight 50") << 50 << Qt::AlignRight << 0. << -1.;
-    QTest::newRow("AlignRight 0") << 0 << Qt::AlignRight << 0. << -1.;
     QTest::newRow("AlignRight 99") << 99 << Qt::AlignRight << 0. << -1.;
-
-    QTest::newRow("AlignRight 0") << 0 << Qt::AlignRight << 10. << 0.;
-    QTest::newRow("AlignRight 1") << 1 << Qt::AlignRight << 10. << 0.;
-    QTest::newRow("AlignRight 1") << 1 << Qt::AlignRight << 10. << 50.;
     QTest::newRow("AlignRight 50") << 50 << Qt::AlignRight << 10. << -1.;
-    QTest::newRow("AlignRight 0") << 0 << Qt::AlignRight << 10. << -1.;
-    QTest::newRow("AlignRight 99") << 99 << Qt::AlignRight << 10. << -1.;
+    QTest::newRow("AlignRight 99") << 99 << Qt::AlignRight << -10. << -1.;
 
-    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << 0. << 0.;
-    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << 0. << 0.;
-    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << 0. << 50.;
+    QTest::newRow("AlignCenter 40") << 50 << Qt::AlignCenter << 0. << -1.;
     QTest::newRow("AlignCenter 50") << 50 << Qt::AlignCenter << 0. << -1.;
-    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << 0. << -1.;
-    QTest::newRow("AlignCenter 99") << 99 << Qt::AlignCenter << 0. << -1.;
-
-    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << -10. << 0.;
-    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << -10. << 0.;
-    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << -10. << 50.;
+    QTest::newRow("AlignCenter 40") << 50 << Qt::AlignCenter << 10. << -1.;
     QTest::newRow("AlignCenter 50") << 50 << Qt::AlignCenter << -10. << -1.;
-    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << -10. << -1.;
-    QTest::newRow("AlignCenter 99") << 99 << Qt::AlignCenter << -10. << -1.;
 }
 
 void tst_QQuickTableView::positionViewAtColumn()
 {
     // Check that positionViewAtColumn actually flicks the view
-    // to the right position so that the row becomes visible
+    // to the right position so that the row becomes visible.
+    // For this test, we only check cells that can be placed exactly
+    // according to the given alignment.
     QFETCH(int, column);
     QFETCH(Qt::AlignmentFlag, alignment);
     QFETCH(qreal, offset);
@@ -3307,6 +3272,134 @@ void tst_QQuickTableView::positionViewAtColumn()
     default:
         Q_UNREACHABLE();
     }
+}
+
+void tst_QQuickTableView::positionViewAtRowClamped_data()
+{
+    QTest::addColumn<int>("row");
+    QTest::addColumn<Qt::AlignmentFlag>("alignment");
+    QTest::addColumn<qreal>("offset");
+    QTest::addColumn<qreal>("contentYStartPos");
+
+    QTest::newRow("AlignTop 0") << 0 << Qt::AlignTop << -10. << 0.;
+    QTest::newRow("AlignTop 0") << 0 << Qt::AlignTop << -10. << -1.;
+    QTest::newRow("AlignTop 99") << 99 << Qt::AlignTop << 0. << -1.;
+    QTest::newRow("AlignTop 99") << 99 << Qt::AlignTop << -10. << -1.;
+
+    QTest::newRow("AlignBottom 0") << 0 << Qt::AlignBottom << 0. << 0.;
+    QTest::newRow("AlignBottom 1") << 1 << Qt::AlignBottom << 0. << 0.;
+    QTest::newRow("AlignBottom 1") << 1 << Qt::AlignBottom << 0. << 50.;
+    QTest::newRow("AlignBottom 0") << 0 << Qt::AlignBottom << 0. << -1.;
+
+    QTest::newRow("AlignBottom 0") << 0 << Qt::AlignBottom << 10. << 0.;
+    QTest::newRow("AlignBottom 1") << 1 << Qt::AlignBottom << 10. << 0.;
+    QTest::newRow("AlignBottom 1") << 1 << Qt::AlignBottom << 10. << 50.;
+    QTest::newRow("AlignBottom 0") << 0 << Qt::AlignBottom << 10. << -1.;
+    QTest::newRow("AlignBottom 99") << 99 << Qt::AlignBottom << 10. << -1.;
+
+    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << 0. << 0.;
+    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << 0. << 0.;
+    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << 0. << 50.;
+    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << 0. << -1.;
+    QTest::newRow("AlignCenter 99") << 99 << Qt::AlignCenter << 0. << -1.;
+
+    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << -10. << 0.;
+    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << -10. << 0.;
+    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << -10. << 50.;
+    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << -10. << -1.;
+    QTest::newRow("AlignCenter 99") << 99 << Qt::AlignCenter << -10. << -1.;
+}
+
+void tst_QQuickTableView::positionViewAtRowClamped()
+{
+    // Check that positionViewAtRow actually flicks the table to the
+    // right position so that the row becomes visible. For this test, we
+    // only test cells that cannot be placed exactly at the given alignment,
+    // because it would cause the table to overshoot. Instead the
+    // table should be flicked to the edge of the viewport, close to the
+    // requested alignment.
+    QFETCH(int, row);
+    QFETCH(Qt::AlignmentFlag, alignment);
+    QFETCH(qreal, offset);
+    QFETCH(qreal, contentYStartPos);
+
+    LOAD_TABLEVIEW("plaintableview.qml");
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+    if (contentYStartPos >= 0)
+        tableView->setContentY(contentYStartPos);
+
+    WAIT_UNTIL_POLISHED;
+
+    tableView->positionViewAtRow(row, alignment, offset);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->contentY(), row < 50 ? 0 : tableView->contentHeight() - tableView->height());
+}
+
+void tst_QQuickTableView::positionViewAtColumnClamped_data()
+{
+    QTest::addColumn<int>("column");
+    QTest::addColumn<Qt::AlignmentFlag>("alignment");
+    QTest::addColumn<qreal>("offset");
+    QTest::addColumn<qreal>("contentXStartPos");
+
+    QTest::newRow("AlignLeft 0") << 0 << Qt::AlignLeft << -10. << 0.;
+    QTest::newRow("AlignLeft 0") << 0 << Qt::AlignLeft << -10. << -1.;
+    QTest::newRow("AlignLeft 99") << 99 << Qt::AlignLeft << 0. << -1.;
+    QTest::newRow("AlignLeft 99") << 99 << Qt::AlignLeft << -10. << -1.;
+
+    QTest::newRow("AlignRight 0") << 0 << Qt::AlignRight << 0. << 0.;
+    QTest::newRow("AlignRight 1") << 1 << Qt::AlignRight << 0. << 0.;
+    QTest::newRow("AlignRight 1") << 1 << Qt::AlignRight << 0. << 50.;
+    QTest::newRow("AlignRight 0") << 0 << Qt::AlignRight << 0. << -1.;
+
+    QTest::newRow("AlignRight 0") << 0 << Qt::AlignRight << 10. << 0.;
+    QTest::newRow("AlignRight 1") << 1 << Qt::AlignRight << 10. << 0.;
+    QTest::newRow("AlignRight 1") << 1 << Qt::AlignRight << 10. << 50.;
+    QTest::newRow("AlignRight 0") << 0 << Qt::AlignRight << 10. << -1.;
+    QTest::newRow("AlignRight 99") << 99 << Qt::AlignRight << 10. << -1.;
+
+    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << 0. << 0.;
+    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << 0. << 0.;
+    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << 0. << 50.;
+    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << 0. << -1.;
+    QTest::newRow("AlignCenter 99") << 99 << Qt::AlignCenter << 0. << -1.;
+
+    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << -10. << 0.;
+    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << -10. << 0.;
+    QTest::newRow("AlignCenter 1") << 1 << Qt::AlignCenter << -10. << 50.;
+    QTest::newRow("AlignCenter 0") << 0 << Qt::AlignCenter << -10. << -1.;
+    QTest::newRow("AlignCenter 99") << 99 << Qt::AlignCenter << -10. << -1.;
+}
+
+void tst_QQuickTableView::positionViewAtColumnClamped()
+{
+    // Check that positionViewAtColumn actually flicks the table to the
+    // right position so that the column becomes visible. For this test, we
+    // only test cells that cannot be placed exactly at the given alignment,
+    // because it would cause the table to overshoot. Instead the
+    // table should be flicked to the edge of the viewport, close to the
+    // requested alignment.
+    QFETCH(int, column);
+    QFETCH(Qt::AlignmentFlag, alignment);
+    QFETCH(qreal, offset);
+    QFETCH(qreal, contentXStartPos);
+
+    LOAD_TABLEVIEW("plaintableview.qml");
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+    if (contentXStartPos >= 0)
+        tableView->setContentX(contentXStartPos);
+
+    WAIT_UNTIL_POLISHED;
+
+    tableView->positionViewAtColumn(column, alignment, offset);
+
+    WAIT_UNTIL_POLISHED;
+
+    QCOMPARE(tableView->contentX(), column < 50 ? 0 : tableView->contentWidth() - tableView->width());
 }
 
 void tst_QQuickTableView::itemAtCell_data()
