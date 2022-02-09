@@ -42,6 +42,8 @@ project.
 
 \preliminarycmakecommand
 
+\include cmake-qml-qt-finalize-target-warning.cmake
+
 \section1 Synopsis
 
 \badcode
