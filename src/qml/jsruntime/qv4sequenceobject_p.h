@@ -61,8 +61,8 @@
 #include "qv4string_p.h"
 
 #if QT_CONFIG(qml_itemmodel)
-#include <private/qqmlmodelindexvaluetype_p.h>
 #include <QtCore/qabstractitemmodel.h>
+#include <QtCore/qitemselectionmodel.h>
 #endif
 
 QT_REQUIRE_CONFIG(qml_sequence_object);

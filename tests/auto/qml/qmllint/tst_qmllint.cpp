@@ -840,6 +840,7 @@ void TestQmllint::cleanQmlCode_data()
     QTest::newRow("on binding in grouped property") << QStringLiteral("onBindingInGroupedProperty.qml");
     QTest::newRow("multipleGrouped") << QStringLiteral("multiGrouped.qml");
     QTest::newRow("ID overrides property") << QStringLiteral("accessibleId.qml");
+    QTest::newRow("qmodelIndex") << QStringLiteral("qmodelIndex.qml");
 }
 
 void TestQmllint::cleanQmlCode()

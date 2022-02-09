@@ -576,11 +576,6 @@ qt_internal_extend_target(Qml CONDITION hpux-_x_ OR solaris-_x_ OR (QT_FEATURE_c
         rt
 )
 
-qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_itemmodel
-    SOURCES
-        types/qqmlmodelindexvaluetype.cpp types/qqmlmodelindexvaluetype_p.h
-)
-
 qt_internal_extend_target(Qml CONDITION disassembler AND ((TEST_architecture_arch STREQUAL "i386") OR (TEST_architecture_arch STREQUAL "x86_64"))
     DEFINES
         WTF_USE_UDIS86=1
