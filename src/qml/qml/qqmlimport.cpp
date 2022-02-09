@@ -1670,7 +1670,7 @@ void QQmlImports::setDesignerSupportRequired(bool b)
     designerSupportRequired = b;
 }
 
-static QStringList parseEnvImportPath(const QString &envImportPath)
+static QStringList parseEnvPath(const QString &envImportPath)
 {
     if (QDir::listSeparator() == u':') {
         // Double colons are interpreted as separator + resource path.
@@ -1710,7 +1710,7 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 
     auto addEnvImportPath = [this](const char *var) {
         if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty(var))) {
-            const QStringList paths = parseEnvImportPath(qEnvironmentVariable(var));
+            const QStringList paths = parseEnvPath(qEnvironmentVariable(var));
             for (int ii = paths.count() - 1; ii >= 0; --ii)
                 addImportPath(paths.at(ii));
         }
@@ -1722,15 +1722,19 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 
     addImportPath(QStringLiteral("qrc:/qt-project.org/imports"));
     addImportPath(QCoreApplication::applicationDirPath());
+
+    auto addEnvPluginPath = [this](const char *var) {
+        if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty(var))) {
+            const QStringList paths = parseEnvPath(qEnvironmentVariable(var));
+            for (int ii = paths.count() - 1; ii >= 0; --ii)
+                addPluginPath(paths.at(ii));
+        }
+    };
+
+    addEnvPluginPath("QML_PLUGIN_PATH");
 #if defined(Q_OS_ANDROID)
     addImportPath(QStringLiteral("qrc:/android_rcc_bundle/qml"));
-    if (Q_UNLIKELY(!qEnvironmentVariableIsEmpty("QT_BUNDLED_LIBS_PATH"))) {
-        const QString envImportPath = qEnvironmentVariable("QT_BUNDLED_LIBS_PATH");
-        QLatin1Char pathSep(':');
-        QStringList paths = envImportPath.split(pathSep, Qt::SkipEmptyParts);
-        for (int ii = paths.count() - 1; ii >= 0; --ii)
-            addPluginPath(paths.at(ii));
-    }
+    addEnvPluginPath("QT_BUNDLED_LIBS_PATH");
 #elif defined(Q_OS_MACOS)
    // Add the main bundle's Resources/qml directory as an import path, so that QML modules are
    // found successfully when running the app from its build dir.
