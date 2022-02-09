@@ -1663,6 +1663,15 @@ QVariant QQuickComboBox::currentValue() const
     return d->currentValue;
 }
 
+/*!
+    \readonly
+    \since QtQuick.Controls 2.14 (Qt 5.14)
+    \qmlmethod var QtQuick.Controls::ComboBox::valueAt(int index)
+
+    Returns the value at position \a index in the combo box.
+
+    \sa indexOfValue
+*/
 QVariant QQuickComboBox::valueAt(int index) const
 {
     Q_D(const QQuickComboBox);
@@ -1683,7 +1692,7 @@ QVariant QQuickComboBox::valueAt(int index) const
 
     \include qquickcombobox.qdocinc functions-after-component-completion
 
-    \sa find(), currentValue, currentIndex, valueRole
+    \sa find(), currentValue, currentIndex, valueRole, valueAt
 */
 int QQuickComboBox::indexOfValue(const QVariant &value) const
 {
