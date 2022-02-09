@@ -144,7 +144,7 @@ public:
     }
 
     bool qmlMode() const;
-    bool yieldIsKeyWord() const { return _generatorLevel != 0; }
+    bool yieldIsKeyWord() const { return _state.generatorLevel != 0; }
     void setStaticIsKeyword(bool b) { _staticIsKeyword = b; }
 
     QString code() const;
@@ -155,19 +155,19 @@ public:
     bool scanRegExp(RegExpBodyPrefix prefix = NoPrefix);
     bool scanDirectives(Directives *directives, DiagnosticMessage *error);
 
-    int regExpFlags() const { return _patternFlags; }
-    QString regExpPattern() const { return _tokenText; }
+    int regExpFlags() const { return _state.patternFlags; }
+    QString regExpPattern() const { return _state.tokenText; }
 
-    int tokenKind() const { return _tokenKind; }
-    int tokenOffset() const { return _tokenStartPtr - _code.unicode(); }
-    int tokenLength() const { return _tokenLength; }
+    int tokenKind() const { return _state.tokenKind; }
+    int tokenOffset() const { return _state.tokenStartPtr - _code.unicode(); }
+    int tokenLength() const { return _state.tokenLength; }
 
-    int tokenStartLine() const { return _tokenLine; }
-    int tokenStartColumn() const { return _tokenColumn; }
+    int tokenStartLine() const { return _state.tokenLine; }
+    int tokenStartColumn() const { return _state.tokenColumn; }
 
-    inline QStringView tokenSpell() const { return _tokenSpell; }
-    inline QStringView rawString() const { return _rawString; }
-    double tokenValue() const { return _tokenValue; }
+    inline QStringView tokenSpell() const { return _state.tokenSpell; }
+    inline QStringView rawString() const { return _state.rawString; }
+    double tokenValue() const { return _state.tokenValue; }
     QString tokenText() const;
 
     Error errorCode() const;
@@ -183,8 +183,56 @@ public:
         BalancedParentheses
     };
 
-    void enterGeneratorBody() { ++_generatorLevel; }
-    void leaveGeneratorBody() { --_generatorLevel; }
+    void enterGeneratorBody() { ++_state.generatorLevel; }
+    void leaveGeneratorBody() { --_state.generatorLevel; }
+
+    struct State
+    {
+        QString tokenText;
+        QString errorMessage;
+        QStringView tokenSpell;
+        QStringView rawString;
+
+        const QChar *codePtr = nullptr;
+        const QChar *tokenStartPtr = nullptr;
+
+        QChar currentChar = u'\n';
+        Error errorCode = NoError;
+
+        int currentLineNumber = 0;
+        int currentColumnNumber = 0;
+        double tokenValue = 0;
+
+        // parentheses state
+        ParenthesesState parenthesesState = IgnoreParentheses;
+        int parenthesesCount = 0;
+
+        // template string stack
+        QStack<int> outerTemplateBraceCount;
+        int bracesCount = -1;
+
+        int stackToken = -1;
+
+        int patternFlags = 0;
+        int tokenKind = 0;
+        int tokenLength = 0;
+        int tokenLine = 0;
+        int tokenColumn = 0;
+        ImportState importState = ImportState::NoQmlImport;
+
+        bool validTokenText = false;
+        bool prohibitAutomaticSemicolon = false;
+        bool restrictedKeyword = false;
+        bool terminator = false;
+        bool followsClosingBrace = false;
+        bool delimited = true;
+        bool skipLinefeed = false;
+        bool handlingDirectives = false;
+        int generatorLevel = 0;
+    };
+
+    const State &state() const;
+    void setState(const State &state);
 
 protected:
     static int classify(const QChar *s, int n, int parseModeFlags);
@@ -218,50 +266,11 @@ private:
     Engine *_engine;
 
     QString _code;
-    QString _tokenText;
-    QString _errorMessage;
-    QStringView _tokenSpell;
-    QStringView _rawString;
-
-    const QChar *_codePtr;
     const QChar *_endPtr;
-    const QChar *_tokenStartPtr;
-
-    QChar _char;
-    Error _errorCode;
-
-    int _currentLineNumber;
-    int _currentColumnNumber;
-    double _tokenValue;
-
-    // parentheses state
-    ParenthesesState _parenthesesState;
-    int _parenthesesCount;
-
-    // template string stack
-    QStack<int> _outerTemplateBraceCount;
-    int _bracesCount = -1;
-
-    int _stackToken;
-
-    int _patternFlags;
-    int _tokenKind;
-    int _tokenLength;
-    int _tokenLine;
-    int _tokenColumn;
-    ImportState _importState = ImportState::NoQmlImport;
-
-    bool _validTokenText;
-    bool _prohibitAutomaticSemicolon;
-    bool _restrictedKeyword;
-    bool _terminator;
-    bool _followsClosingBrace;
-    bool _delimited;
     bool _qmlMode;
-    bool _skipLinefeed = false;
-    int _generatorLevel = 0;
     bool _staticIsKeyword = false;
-    bool _handlingDirectives = false;
+
+    State _state;
 };
 
 } // end of namespace QQmlJS
