@@ -210,7 +210,7 @@ void SquircleRenderer::frameStart()
     QSGRendererInterface *rif = m_window->rendererInterface();
 
     // We are not prepared for anything other than running with the RHI and its D3D11 backend.
-    Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::Direct3D11Rhi);
+    Q_ASSERT(rif->graphicsApi() == QSGRendererInterface::Direct3D11);
 
     m_device = reinterpret_cast<ID3D11Device *>(rif->getResource(m_window, QSGRendererInterface::DeviceResource));
     Q_ASSERT(m_device);

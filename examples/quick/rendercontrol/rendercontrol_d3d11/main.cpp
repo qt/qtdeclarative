@@ -64,7 +64,7 @@ int main(int argc, char **argv)
     QCoreApplication::setApplicationVersion(QT_VERSION_STR);
 
     // only functional when Qt Quick is also using D3D11
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::Direct3D11Rhi);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Direct3D11);
 
     Engine engine;
     if (!engine.create())
