@@ -34,6 +34,8 @@
 
 \brief Defines a QML module.
 
+\cmakecommandsince 6.2
+
 \section1 Synopsis
 
 \badcode
