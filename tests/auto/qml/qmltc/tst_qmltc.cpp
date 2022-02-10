@@ -82,6 +82,8 @@
 #include "calqlatrbits.h"
 #include "propertychangeandsignalhandlers.h"
 
+#include "testprivateproperty.h"
+
 // Qt:
 #include <QtCore/qstring.h>
 #include <QtCore/qbytearray.h>
@@ -94,6 +96,7 @@
 
 #include <QtTest/qsignalspy.h>
 
+#include <QtCore/private/qobject_p.h>
 #include <QtTest/private/qemulationdetector_p.h>
 
 #ifndef QMLTC_TESTS_DISABLE_CACHE
@@ -1102,11 +1105,9 @@ void tst_qmltc::defaultAlias()
     QSKIP("Not implemented - not supported");
 }
 
-// TODO: this just doesn't work currently
 void tst_qmltc::attachedProperty()
 {
     QQmlEngine e;
-    QSKIP("Broken in many ways.");
     PREPEND_NAMESPACE(attachedProperty) created(&e);
 
     TestTypeAttached *attached = qobject_cast<TestTypeAttached *>(
@@ -1145,8 +1146,6 @@ void tst_qmltc::attachedProperty()
 void tst_qmltc::groupedProperty()
 {
     QQmlEngine e;
-    QSKIP("Property index is wrong due to not picking QtQml dependency when creating group "
-          "property scope");
     PREPEND_NAMESPACE(groupedProperty) created(&e);
 
     TestTypeGrouped *grouped = created.getGroup();
@@ -1708,9 +1707,22 @@ void tst_qmltc::keyEvents()
 
 void tst_qmltc::privateProperties()
 {
-    QSKIP("The same problem with poor QObject qmltypes is encountered here.");
     QQmlEngine e;
     PREPEND_NAMESPACE(privatePropertySubclass) created(&e);
+    QCOMPARE(created.dummy(), u"bar"_qs);
+    QCOMPARE(created.strAlias(), u"foobar"_qs);
+    QCOMPARE(created.smthAlias(), 42);
+
+    auto privateCreated = static_cast<PrivatePropertyTypePrivate *>(QObjectPrivate::get(&created));
+    QVERIFY(privateCreated);
+    QCOMPARE(privateCreated->foo(), u"Smth is: 42"_qs);
+
+    ValueTypeGroup vt = privateCreated->vt();
+    QCOMPARE(vt.count(), 11);
+
+    TestTypeGrouped *group = privateCreated->getGroup();
+    QCOMPARE(group->getCount(), 43);
+    QCOMPARE(group->getStr(), created.strAlias());
 }
 
 void tst_qmltc::calqlatrBits()
