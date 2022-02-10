@@ -3,7 +3,13 @@
 # archive with the tree hash. For unreleased versions, we'll ask git
 # rev-parse. If none of this works, we use CMake to hash all the files
 # in the src/qml/ directory.
+# Skip recreation of the hash when doing a developer build.
 function(qt_declarative_write_tag_header target_name)
+    set(out_file "${CMAKE_CURRENT_BINARY_DIR}/qml_compile_hash_p.h")
+    if(FEATURE_developer_build AND EXISTS "${out_file}")
+        return()
+    endif()
+
     set(tag_file "${CMAKE_CURRENT_SOURCE_DIR}/../../.tag")
     set(tag_contents "")
     if(EXISTS "${tag_file}")
@@ -34,7 +40,7 @@ function(qt_declarative_write_tag_header target_name)
 
     string(LENGTH "${QML_COMPILE_HASH}" QML_COMPILE_HASH_LENGTH)
     if(QML_COMPILE_HASH_LENGTH GREATER 0)
-        configure_file("qml_compile_hash_p.h.in" "${CMAKE_CURRENT_BINARY_DIR}/qml_compile_hash_p.h")
+        configure_file("qml_compile_hash_p.h.in" "${out_file}")
     else()
         message(FATAL_ERROR "QML compile hash is empty! "
                             "You need either a valid git repository or a non-empty .tag file.")
