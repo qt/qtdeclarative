@@ -1389,6 +1389,9 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
             std::for_each(irObject->bindingsBegin(), irObject->bindingsEnd(), compileComponent);
         } else {
             const QString attachingTypeName = propertyName; // acts as an identifier
+            auto attachingType = m_localTypeResolver->typeForName(attachingTypeName);
+            Q_ASSERT(attachingType); // an error somewhere else
+
             QString attachedTypeName = type->attachedTypeName(); // TODO: check if == internalName?
             if (attachedTypeName.isEmpty()) // TODO: shouldn't happen ideally
                 attachedTypeName = type->baseTypeName();
@@ -1401,7 +1404,7 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
                                               u"nullptr"_qs);
                 // Note: getting attached property is fairly expensive
                 const QString getAttachedPropertyLine = u"qobject_cast<" + attachedTypeName
-                        + u" *>(qmlAttachedPropertiesObject<" + attachedTypeName
+                        + u" *>(qmlAttachedPropertiesObject<" + attachingType->internalName()
                         + u">(this, /* create = */ true))";
                 current.endInit.body
                         << attachedMemberName + u" = " + getAttachedPropertyLine + u";";
