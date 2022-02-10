@@ -69,6 +69,8 @@
 #include <QtCore/qcryptographichash.h>
 #include <QtCore/QScopedValueRollback>
 
+static_assert(QV4::CompiledData::QmlCompileHashSpace > QML_COMPILE_HASH_LENGTH);
+
 #if defined(QML_COMPILE_HASH) && defined(QML_COMPILE_HASH_LENGTH) && QML_COMPILE_HASH_LENGTH > 0
 #  ifdef Q_OS_LINUX
 // Place on a separate section on Linux so it's easier to check from outside
