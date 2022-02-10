@@ -343,7 +343,6 @@
     \sa expanded(), expand(), collapse(), toggleExpanded()
 */
 
-static const char* kRequiredProperties = "_qt_treeview_requiredpropertymask";
 // Hard-code the tree column to be 0 for now
 static const int kTreeColumn = 0;
 
@@ -415,32 +414,6 @@ void QQuickTreeViewPrivate::dataChangedCallback(
             const int serializedModelIndex = modelIndexAtCell(QPoint(column, row));
             updateRequiredProperties(serializedModelIndex, item, false);
         }
-    }
-}
-
-void QQuickTreeViewPrivate::setRequiredProperty(const char *property,
-    const QVariant &value, int serializedModelIndex, QObject *object, bool init)
-{
-    // Attaching a property list to the delegate item is just a
-    // work-around until QMetaProperty::isRequired() works!
-    const QString propertyName = QString::fromUtf8(property);
-
-    if (init) {
-        const bool wasRequired = model->setRequiredProperty(serializedModelIndex, propertyName, value);
-        if (wasRequired) {
-            QStringList propertyList = object->property(kRequiredProperties).toStringList();
-            object->setProperty(kRequiredProperties, propertyList << propertyName);
-        }
-    } else {
-        const QStringList propertyList = object->property(kRequiredProperties).toStringList();
-        if (!propertyList.contains(propertyName)) {
-            // We only write to properties that are required
-            return;
-        }
-        const auto metaObject = object->metaObject();
-        const int propertyIndex = metaObject->indexOfProperty(property);
-        const auto metaProperty = metaObject->property(propertyIndex);
-        metaProperty.write(object, value);
     }
 }
 

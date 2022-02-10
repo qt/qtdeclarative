@@ -691,7 +691,8 @@ static const Qt::Edge allTableEdges[] = { Qt::LeftEdge, Qt::RightEdge, Qt::TopEd
 static const int kEdgeIndexNotSet = -2;
 static const int kEdgeIndexAtEnd = -3;
 
-static const char* kRequiredProperty = "_qt_isrequiredpropery_selected";
+static const char* kRequiredProperties = "_qt_tableview_requiredpropertymask";
+static const char* kRequiredProperty_selected = "selected";
 
 const QPoint QQuickTableViewPrivate::kLeft = QPoint(-1, 0);
 const QPoint QQuickTableViewPrivate::kRight = QPoint(1, 0);
@@ -780,6 +781,40 @@ void QQuickTableViewPrivate::dumpTable() const
     const QString path = QDir::current().absoluteFilePath(filename);
     if (q_func()->window() && q_func()->window()->grabWindow().save(path))
         qWarning() << "Window capture saved to:" << path;
+}
+
+void QQuickTableViewPrivate::setRequiredProperty(const char *property,
+    const QVariant &value, int serializedModelIndex, QObject *object, bool init)
+{
+    if (!qobject_cast<QQmlTableInstanceModel *>(model)) {
+        // TableView only supports using required properties when backed by
+        // a QQmlTableInstanceModel. This is almost always the case, except
+        // if you assign it an ObjectModel or a DelegateModel (which are really
+        // not supported by TableView, it expects a QAIM).
+        return;
+    }
+
+    // Attaching a property list to the delegate item is just a
+    // work-around until QMetaProperty::isRequired() works (QTBUG-98846).
+    const QString propertyName = QString::fromUtf8(property);
+
+    if (init) {
+        const bool wasRequired = model->setRequiredProperty(serializedModelIndex, propertyName, value);
+        if (wasRequired) {
+            QStringList propertyList = object->property(kRequiredProperties).toStringList();
+            object->setProperty(kRequiredProperties, propertyList << propertyName);
+        }
+    } else {
+        const QStringList propertyList = object->property(kRequiredProperties).toStringList();
+        if (!propertyList.contains(propertyName)) {
+            // We only write to properties that are required
+            return;
+        }
+        const auto metaObject = object->metaObject();
+        const int propertyIndex = metaObject->indexOfProperty(property);
+        const auto metaProperty = metaObject->property(propertyIndex);
+        metaProperty.write(object, value);
+    }
 }
 
 QQuickItem *QQuickTableViewPrivate::selectionPointerHandlerTarget() const
@@ -3040,7 +3075,7 @@ bool QQuickTableViewPrivate::selectedInSelectionModel(const QPoint &cell) const
     return selectionModel->isSelected(modelIndex);
 }
 
-void QQuickTableViewPrivate::selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected) const
+void QQuickTableViewPrivate::selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected)
 {
     const auto &selectedIndexes = selected.indexes();
     const auto &deselectedIndexes = deselected.indexes();
@@ -3050,40 +3085,25 @@ void QQuickTableViewPrivate::selectionChangedInSelectionModel(const QItemSelecti
         setSelectedOnDelegateItem(deselectedIndexes.at(i), false);
 }
 
-void QQuickTableViewPrivate::updateSelectedOnAllDelegateItems() const
-{
-    for (auto it = loadedItems.keyBegin(), end = loadedItems.keyEnd(); it != end; ++it) {
-        const QPoint cell = cellAtModelIndex(*it);
-        const bool selected = selectedInSelectionModel(cell);
-        setSelectedOnDelegateItem(loadedTableItem(cell)->item, selected);
-    }
-}
-
-void QQuickTableViewPrivate::setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select) const
+void QQuickTableViewPrivate::setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select)
 {
     const int cellIndex = modelIndexToCellIndex(modelIndex);
     if (!loadedItems.contains(cellIndex))
         return;
     const QPoint cell = cellAtModelIndex(cellIndex);
-    setSelectedOnDelegateItem(loadedTableItem(cell)->item, select);
+    QQuickItem *item = loadedTableItem(cell)->item;
+    setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(select), cellIndex, item, false);
 }
 
-void QQuickTableViewPrivate::setSelectedOnDelegateItem(QQuickItem *delegateItem, bool select) const
+void QQuickTableViewPrivate::updateSelectedOnAllDelegateItems()
 {
-    if (!delegateItem->property(kRequiredProperty).toBool()) {
-        // We only assign to "selected" if it's a required property. Otherwise
-        // we assume (for backwards compatibility) that the property is used
-        // by the delegate for something else.
-        // Note: kRequiredProperty is a work-around until QMetaProperty::isRequired() works.
-        return;
+    for (auto it = loadedItems.keyBegin(), end = loadedItems.keyEnd(); it != end; ++it) {
+        const int cellIndex = *it;
+        const QPoint cell = cellAtModelIndex(cellIndex);
+        const bool selected = selectedInSelectionModel(cell);
+        QQuickItem *item = loadedTableItem(cell)->item;
+        setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), cellIndex, item, false);
     }
-
-    // Note that several delegates might be in use (in case of a DelegateChooser), and
-    // the delegate can also change. So we cannot cache the propertyIndex.
-    const auto metaObject = delegateItem->metaObject();
-    const int propertyIndex = metaObject->indexOfProperty("selected");
-    const auto metaProperty = metaObject->property(propertyIndex);
-    metaProperty.write(delegateItem, QVariant::fromValue(select));
 }
 
 void QQuickTableViewPrivate::itemCreatedCallback(int modelIndex, QObject*)
@@ -3114,14 +3134,7 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
 
     const QPoint cell = cellAtModelIndex(modelIndex);
     const bool selected = selectedInSelectionModel(cell);
-
-    if (qobject_cast<QQmlTableInstanceModel *>(model)) {
-        const bool wasRequired = model->setRequiredProperty(modelIndex, QStringLiteral("selected"), selected);
-        if (wasRequired) {
-            // Work-around until QMetaProperty::isRequired() works
-            item->setProperty(kRequiredProperty, true);
-        }
-    }
+    setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, true);
 
     if (auto attached = getAttachedObject(object))
         attached->setView(q);
@@ -3137,10 +3150,9 @@ void QQuickTableViewPrivate::itemPooledCallback(int modelIndex, QObject *object)
 
 void QQuickTableViewPrivate::itemReusedCallback(int modelIndex, QObject *object)
 {
-    auto item = static_cast<QQuickItem*>(object);
     const QPoint cell = cellAtModelIndex(modelIndex);
     const bool selected = selectedInSelectionModel(cell);
-    setSelectedOnDelegateItem(item, selected);
+    setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, false);
 
     if (auto attached = getAttachedObject(object))
         emit attached->reused();

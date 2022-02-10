@@ -478,10 +478,9 @@ public:
     void syncViewportPosRecursive();
 
     bool selectedInSelectionModel(const QPoint &cell) const;
-    void selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected) const;
-    void updateSelectedOnAllDelegateItems() const;
-    void setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select) const;
-    void setSelectedOnDelegateItem(QQuickItem *delegateItem, bool select) const;
+    void selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected);
+    void updateSelectedOnAllDelegateItems();
+    void setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select);
 
     void fetchMoreData();
 
@@ -490,6 +489,11 @@ public:
 
     inline QString tableLayoutToString() const;
     void dumpTable() const;
+
+    void setRequiredProperty(const char *property,
+                             const QVariant &value,
+                             int serializedModelIndex,
+                             QObject *object, bool init);
 
     // QQuickSelectable
     QQuickItem *selectionPointerHandlerTarget() const override;

@@ -77,7 +77,6 @@ public:
                              const QModelIndex &bottomRight,
                              const QVector<int> &roles);
 
-    void setRequiredProperty(const char *property, const QVariant &value, int serializedModelIndex, QObject *object, bool init);
     void updateRequiredProperties(int serializedModelIndex, QObject *object, bool init);
 
 public:
