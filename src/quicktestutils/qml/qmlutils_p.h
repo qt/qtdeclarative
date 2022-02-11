@@ -46,6 +46,7 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QStringList>
 #include <QtTest/QTest>
+#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

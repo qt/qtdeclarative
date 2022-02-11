@@ -54,6 +54,7 @@
 #include <QtCore/qurl.h>
 #include <QtCore/qobjectdefs.h>
 #include <QtCore/qmetaobject.h>
+#include <QtCore/private/qglobal_p.h>
 #include <tuple>
 
 QT_BEGIN_NAMESPACE

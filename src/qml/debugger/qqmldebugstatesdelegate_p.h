@@ -54,6 +54,7 @@
 #include <QtQml/qtqmlglobal.h>
 #include <QtCore/QList>
 #include <QtCore/QPointer>
+#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -41,6 +41,7 @@
 
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
+#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

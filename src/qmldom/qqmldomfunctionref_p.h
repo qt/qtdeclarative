@@ -49,6 +49,8 @@
 // We mean it.
 //
 
+#include <QtCore/private/qglobal_p.h>
+
 #include <functional>
 // function_ref has been proposed for the C++20 standard, see
 //    http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0792r2.html

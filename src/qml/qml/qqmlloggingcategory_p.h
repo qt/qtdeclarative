@@ -57,6 +57,7 @@
 
 #include <QtQml/qqmlparserstatus.h>
 #include <QtQml/qqml.h>
+#include <QtCore/private/qglobal_p.h>
 
 #include <memory>
 

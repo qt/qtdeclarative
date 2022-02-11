@@ -46,6 +46,7 @@
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
+#include <private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -54,6 +54,7 @@
 #include <QtGui/qcolor.h>
 #include <QtQuick/qsgrectanglenode.h>
 #include <QtQuick/qsgvertexcolormaterial.h>
+#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

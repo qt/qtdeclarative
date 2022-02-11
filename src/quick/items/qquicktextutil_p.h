@@ -55,6 +55,7 @@
 #include <QtQml/qqmlincubator.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickwindow.h>
+#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

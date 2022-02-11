@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -40,7 +40,7 @@
 #ifndef QQMLJSSOURCELOCATION_P_H
 #define QQMLJSSOURCELOCATION_P_H
 
-#include <QtCore/qglobal.h>
+#include <QtCore/private/qglobal_p.h>
 #include <QtCore/qhashfunctions.h>
 
 //

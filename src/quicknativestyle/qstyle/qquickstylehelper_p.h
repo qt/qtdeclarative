@@ -42,6 +42,7 @@
 #include <QtGui/qpaintdevice.h>
 #include <QtGui/qpolygon.h>
 #include <QtCore/qstringbuilder.h>
+#include <QtCore/private/qglobal_p.h>
 #if QT_CONFIG(accessibility)
 #include <QtGui/qaccessible.h>
 #endif

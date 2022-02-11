@@ -52,6 +52,7 @@
 //
 
 #include "qquickcommonstyle.h"
+#include "private/qglobal_p.h"
 
 #define QQC2_NAMESPACE QQC2
 

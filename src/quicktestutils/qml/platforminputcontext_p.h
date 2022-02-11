@@ -42,6 +42,7 @@
 
 #include <qpa/qplatforminputcontext.h>
 #include <QtGui/QInputMethod>
+#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

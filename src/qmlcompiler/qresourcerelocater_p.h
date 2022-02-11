@@ -40,6 +40,7 @@
 // We mean it.
 
 #include <QtCore/qstring.h>
+#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

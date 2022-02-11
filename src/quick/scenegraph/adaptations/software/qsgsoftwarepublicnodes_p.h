@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQuick module of the Qt Toolkit.
@@ -44,6 +44,7 @@
 #include <QtQuick/qsgimagenode.h>
 #include <QtQuick/qsgninepatchnode.h>
 #include <QtGui/qpixmap.h>
+#include <QtCore/private/qglobal_p.h>
 
 //
 //  W A R N I N G

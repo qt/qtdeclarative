@@ -39,7 +39,7 @@
 //
 // We mean it.
 
-#include <QtCore/qglobal.h>
+#include <QtCore/private/qglobal_p.h>
 #include <QtCore/qsharedpointer.h>
 
 QT_BEGIN_NAMESPACE
