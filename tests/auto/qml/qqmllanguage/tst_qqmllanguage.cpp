@@ -283,6 +283,7 @@ private slots:
     void lazyDeferredSubObject();
     void deferredProperties();
     void executeDeferredPropertiesOnce();
+    void deferredProperties_extra();
 
     void noChildEvents();
 
@@ -5132,6 +5133,82 @@ void tst_qqmllanguage::executeDeferredPropertiesOnce()
     QCOMPARE(listProperty.at(&listProperty, 0)->property("wasCompleted"), QVariant(true));
     QCOMPARE(listProperty.at(&listProperty, 1)->objectName(), QStringLiteral("outerlist2")); // deferredListProperty.qml
     QCOMPARE(listProperty.at(&listProperty, 1)->property("wasCompleted"), QVariant(true));
+}
+
+class GroupType : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(int foo READ getFoo WRITE setFoo BINDABLE bindableFoo)
+    Q_PROPERTY(int bar READ getBar WRITE setBar BINDABLE bindableBar)
+    Q_CLASSINFO("DeferredPropertyNames", "bar")
+
+    QProperty<int> m_foo { 0 };
+    QProperty<int> m_bar { 0 };
+
+public:
+    int getFoo() const { return m_foo; }
+    void setFoo(int v) { m_foo = v; }
+    QBindable<int> bindableFoo() const { return QBindable<int>(&m_foo); }
+
+    int getBar() const { return m_bar; }
+    void setBar(int v) { m_bar = v; }
+    QBindable<int> bindableBar() const { return QBindable<int>(&m_bar); }
+};
+
+class ExtraDeferredProperties : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(GroupType *group READ getGroup)
+    Q_CLASSINFO("DeferredPropertyNames", "group,MyQmlObject")
+
+    GroupType m_group;
+
+public:
+    ExtraDeferredProperties(QObject *parent = nullptr) : QObject(parent) { }
+
+    GroupType *getGroup() { return &m_group; }
+};
+
+void tst_qqmllanguage::deferredProperties_extra()
+{
+    // Note: because ExtraDeferredProperties defers only a `group` property, the
+    // deferral does not actually work.
+    QTest::ignoreMessage(
+            QtMsgType::QtWarningMsg,
+            "Binding on group is not deferred as requested by the DeferredPropertyNames class info "
+            "because it constitutes a group property.");
+
+    qmlRegisterType<GroupType>("deferred.properties.extra", 1, 0, "GroupType");
+    qmlRegisterType<ExtraDeferredProperties>("deferred.properties.extra", 1, 0,
+                                             "ExtraDeferredProperties");
+    QQmlComponent component(&engine);
+    component.setData(R"(
+        import QtQuick
+        import Test 1.0
+        import deferred.properties.extra 1.0
+
+        ExtraDeferredProperties {
+            group.foo: 4
+            group.bar: 4
+            MyQmlObject.value: 1
+        }
+    )", QUrl());
+
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<ExtraDeferredProperties> object(
+            qobject_cast<ExtraDeferredProperties *>(component.create()));
+    QVERIFY(object);
+
+    QCOMPARE(object->getGroup()->getFoo(), 4); // not deferred (as group itself is not deferred)
+    QCOMPARE(object->getGroup()->getBar(), 0); // deferred, as per group's own deferred names
+    // but attached property is deferred:
+    QVERIFY(!qmlAttachedPropertiesObject<MyQmlObject>(object.get(), false));
+
+    qmlExecuteDeferred(object.get());
+
+    auto attached = qmlAttachedPropertiesObject<MyQmlObject>(object.get(), false);
+    QVERIFY(attached);
+    QCOMPARE(attached->property("value").toInt(), 1);
 }
 
 void tst_qqmllanguage::noChildEvents()
