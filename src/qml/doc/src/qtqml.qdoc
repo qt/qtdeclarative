@@ -69,6 +69,13 @@ Use the \c find_package() command to locate the needed module components in the 
 
 \snippet code/doc_src_qtqml.cmake 0
 
+To provide foreign QML type support for a non-QML library, locate
+the \c QmlIntegration module as follows:
+
+\snippet code/doc_src_qtqml.cmake 1
+
+See \l{qt6_generate_foreign_qml_types} for details.
+
 See also the \l{Build with CMake} overview.
 
 \section3 Building with qmake
