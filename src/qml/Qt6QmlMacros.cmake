@@ -2064,22 +2064,24 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     endfunction()
 endif()
 
-function(qt6_generate_foreign_qml_types lib_target qml_target)
-
-    qt6_extract_metatypes(${lib_target})
-    get_target_property(target_metatypes_json_file ${lib_target} INTERFACE_QT_META_TYPES_BUILD_FILE)
+# This function is currently in Technical Preview.
+# It's signature and behavior might change.
+function(qt6_generate_foreign_qml_types source_target destination_qml_target)
+    qt6_extract_metatypes(${source_target})
+    get_target_property(target_metatypes_json_file ${source_target}
+                        INTERFACE_QT_META_TYPES_BUILD_FILE)
     if (NOT target_metatypes_json_file)
         message(FATAL_ERROR "Need target metatypes.json file")
     endif()
 
-    set(registration_files_base ${lib_target}_${qml_target})
+    set(registration_files_base ${source_target}_${destination_qml_target})
     set(additional_sources ${registration_files_base}.cpp ${registration_files_base}.h)
 
     add_custom_command(
         OUTPUT
             ${additional_sources}
         DEPENDS
-            ${target}
+            ${source_target}
             ${target_metatypes_json_file}
             ${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar
         COMMAND
@@ -2088,13 +2090,12 @@ function(qt6_generate_foreign_qml_types lib_target qml_target)
             "--extract"
             -o ${registration_files_base}
             ${target_metatypes_json_file}
-        COMMENT "Generate QML registration code for target ${target}"
+        COMMENT "Generate QML registration code for target ${source_target}"
     )
 
-    target_sources(${qml_target} PRIVATE ${additional_sources})
-    qt6_wrap_cpp(${additional_sources} TARGET ${qml_target})
+    target_sources(${destination_qml_target} PRIVATE ${additional_sources})
+    qt6_wrap_cpp(${additional_sources} TARGET ${destination_qml_target})
 endfunction()
-
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     if(QT_DEFAULT_MAJOR_VERSION EQUAL 6)
