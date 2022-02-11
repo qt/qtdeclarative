@@ -438,7 +438,7 @@ function(qt6_add_qml_module target)
         QT_QML_MODULE_NO_PLUGIN "${arg_NO_PLUGIN}"
         QT_QML_MODULE_NO_PLUGIN_OPTIONAL "${arg_NO_PLUGIN_OPTIONAL}"
         QT_QML_MODULE_NO_IMPORT_SCAN "${arg_NO_IMPORT_SCAN}"
-        QT_QML_MODULE_FOLLOW_FOREIGN_VERSIONING "${arg_FOLLOW_FOREIGN_VERSIONING}"
+        _qt_qml_module_follow_foreign_versioning "${arg_FOLLOW_FOREIGN_VERSIONING}"
         QT_QML_MODULE_URI "${arg_URI}"
         QT_QML_MODULE_TARGET_PATH "${arg_TARGET_PATH}"
         QT_QML_MODULE_VERSION "${arg_VERSION}"
@@ -2162,7 +2162,8 @@ function(_qt_internal_qml_type_registration target)
 
 
     # Add --follow-foreign-versioning if requested
-    get_target_property(follow_foreign_versioning ${target} QT_QML_MODULE_FOLLOW_FOREIGN_VERSIONING)
+    get_target_property(follow_foreign_versioning ${target}
+                        _qt_qml_module_follow_foreign_versioning)
 
     if (follow_foreign_versioning)
         list(APPEND cmd_args
