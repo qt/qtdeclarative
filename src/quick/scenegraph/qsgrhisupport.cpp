@@ -39,83 +39,21 @@
 
 #include "qsgrhisupport_p.h"
 #include "qsgcontext_p.h"
-#  include "qsgdefaultrendercontext_p.h"
+#include "qsgdefaultrendercontext_p.h"
 
 #include <QtQuick/private/qquickitem_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 
 #include <QtGui/qwindow.h>
+
 #if QT_CONFIG(vulkan)
-#include <QtGui/qvulkaninstance.h>
+#include <QtGui/private/qvulkandefaultinstance_p.h>
 #endif
 
 #include <QOperatingSystemVersion>
 #include <QOffscreenSurface>
 
 QT_BEGIN_NAMESPACE
-
-#if QT_CONFIG(vulkan)
-QVulkanInstance *s_vulkanInstance = nullptr;
-#endif
-
-QVulkanInstance *QSGRhiSupport::defaultVulkanInstance()
-{
-#if QT_CONFIG(vulkan)
-    QSGRhiSupport *inst = QSGRhiSupport::instance();
-    if (!inst->isRhiEnabled() || inst->rhiBackend() != QRhi::Vulkan)
-        return nullptr;
-
-    if (!s_vulkanInstance) {
-        s_vulkanInstance = new QVulkanInstance;
-
-        // With a Vulkan implementation >= 1.1 we can check what
-        // vkEnumerateInstanceVersion() says and request 1.2 or 1.1 based on the
-        // result. To prevent future surprises, be conservative and ignore any > 1.2
-        // versions for now. For 1.0 implementations nothing will be requested, the
-        // default 0 in VkApplicationInfo means 1.0.
-        //
-        // Vulkan 1.0 is actually sufficient for 99% of Qt Quick (3D)'s
-        // functionality. In addition, Vulkan implementations tend to enable 1.1 and 1.2
-        // functionality regardless of the VkInstance API request. However, the
-        // validation layer seems to take this fairly seriously, so we should be
-        // prepared for using 1.1 and 1.2 features in a fully correct manner. This also
-        // helps custom Vulkan code in applications, which is not under out control; it
-        // is ideal if Vulkan 1.1 and 1.2 are usable without requiring such applications
-        // to create their own QVulkanInstance just to be able to make an appropriate
-        // setApiVersion() call on it.
-
-        const QVersionNumber supportedVersion = s_vulkanInstance->supportedApiVersion();
-        if (supportedVersion >= QVersionNumber(1, 2))
-            s_vulkanInstance->setApiVersion(QVersionNumber(1, 2));
-        else if (supportedVersion >= QVersionNumber(1, 1))
-            s_vulkanInstance->setApiVersion(QVersionNumber(1, 2));
-        qCDebug(QSG_LOG_INFO) << "Requesting Vulkan API" << s_vulkanInstance->apiVersion()
-                              << "Instance-level version was reported as" << supportedVersion;
-
-        if (inst->isDebugLayerRequested())
-            s_vulkanInstance->setLayers({ "VK_LAYER_KHRONOS_validation" });
-
-        s_vulkanInstance->setExtensions(QRhiVulkanInitParams::preferredInstanceExtensions());
-
-        if (!s_vulkanInstance->create()) {
-            qWarning("Failed to create Vulkan instance");
-            delete s_vulkanInstance;
-            s_vulkanInstance = nullptr;
-        }
-    }
-    return s_vulkanInstance;
-#else
-    return nullptr;
-#endif
-}
-
-void QSGRhiSupport::cleanupDefaultVulkanInstance()
-{
-#if QT_CONFIG(vulkan)
-    delete s_vulkanInstance;
-    s_vulkanInstance = nullptr;
-#endif
-}
 
 QSGRhiSupport::QSGRhiSupport()
     : m_settingsApplied(false),
@@ -567,8 +505,14 @@ void QSGRhiSupport::prepareWindowForRhi(QQuickWindow *window)
         // always be under the application's control then (since the default
         // instance we could create here would not be configurable by the
         // application in any way, and that is often not acceptable).
-        if (!window->vulkanInstance() && !wd->renderControl)
-            window->setVulkanInstance(QSGRhiSupport::defaultVulkanInstance());
+        if (!window->vulkanInstance() && !wd->renderControl) {
+            QVulkanInstance *vkinst = QVulkanDefaultInstance::instance();
+            if (vkinst)
+                qCDebug(QSG_LOG_INFO) << "Got Vulkan instance from QVulkanDefaultInstance, requested api version was" << vkinst->apiVersion();
+            else
+                qCDebug(QSG_LOG_INFO) << "No Vulkan instance from QVulkanDefaultInstance, expect problems";
+            window->setVulkanInstance(vkinst);
+        }
     }
 #else
     Q_UNUSED(window);
@@ -641,6 +585,8 @@ QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QO
 #endif
 #if QT_CONFIG(vulkan)
     if (backend == QRhi::Vulkan) {
+        if (isDebugLayerRequested())
+            QVulkanDefaultInstance::setFlag(QVulkanDefaultInstance::EnableValidation, true);
         QRhiVulkanInitParams rhiParams;
         prepareWindowForRhi(window); // sets a vulkanInstance if not yet present
         rhiParams.inst = window->vulkanInstance();

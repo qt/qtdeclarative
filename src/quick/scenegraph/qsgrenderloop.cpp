@@ -105,10 +105,6 @@ void QSGRenderLoop::cleanup()
     }
     delete s_instance;
     s_instance = nullptr;
-
-#ifdef ENABLE_DEFAULT_BACKEND
-    QSGRhiSupport::cleanupDefaultVulkanInstance();
-#endif
 }
 
 QSurface::SurfaceType QSGRenderLoop::windowSurfaceType() const
