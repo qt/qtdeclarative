@@ -73,11 +73,11 @@ class QQuickDragGrabber
     class Item : public QQmlGuard<QQuickItem>
     {
     public:
-        Item(QQuickItem *item) : QQmlGuard<QQuickItem>(item) {}
+        Item(QQuickItem *item) : QQmlGuard<QQuickItem>(Item::objectDestroyedImpl, item) {}
 
         QIntrusiveListNode node;
-    protected:
-        void objectDestroyed(QQuickItem *) override { delete this; }
+    private:
+        static void objectDestroyedImpl(QQmlGuardImpl *guard) { delete static_cast<Item *>(guard); }
     };
 
     typedef QIntrusiveList<Item, &Item::node> ItemList;

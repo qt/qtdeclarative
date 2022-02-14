@@ -79,13 +79,14 @@ class QQmlVMEVariantQObjectPtr : public QQmlGuard<QObject>
 {
 public:
     inline QQmlVMEVariantQObjectPtr();
-    inline ~QQmlVMEVariantQObjectPtr() override;
 
-    inline void objectDestroyed(QObject *) override;
     inline void setGuardedValue(QObject *obj, QQmlVMEMetaObject *target, int index);
 
     QQmlVMEMetaObject *m_target;
     int m_index;
+
+private:
+    static void objectDestroyedImpl(QQmlGuardImpl *guard);
 };
 
 

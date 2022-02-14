@@ -170,8 +170,8 @@ public:
     inline bool canFetchMore() const { return accessors->canFetchMore(*this); }
     inline void fetchMore() { return accessors->fetchMore(*this); }
 
-protected:
-    void objectDestroyed(QObject *) override;
+private:
+    static void objectDestroyedImpl(QQmlGuardImpl *);
 };
 
 class QQmlAdaptorModelProxyInterface

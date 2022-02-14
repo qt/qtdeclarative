@@ -90,11 +90,14 @@ public:
 
     struct DataGuard : public QQmlGuard<QObject>
     {
-        DataGuard(QObject *obj, QList<DataGuard> *l) : list(l) { (QQmlGuard<QObject>&)*this = obj; }
+        DataGuard(QObject *obj, QList<DataGuard> *l) : QQmlGuard<QObject>(DataGuard::objectDestroyedImpl, nullptr), list(l) { (QQmlGuard<QObject>&)*this = obj; }
         QList<DataGuard> *list;
-        void objectDestroyed(QObject *) override {
+
+    private:
+        static void objectDestroyedImpl(QQmlGuardImpl *guard) {
+            auto This = static_cast<DataGuard *>(guard);
             // we assume priv will always be destroyed after objectDestroyed calls
-            list->removeOne(*this);
+            This->list->removeOne(*This);
         }
     };
 

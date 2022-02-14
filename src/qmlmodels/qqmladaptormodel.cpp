@@ -953,7 +953,8 @@ QQmlAdaptorModel::Accessors::~Accessors()
 }
 
 QQmlAdaptorModel::QQmlAdaptorModel()
-    : accessors(&qt_vdm_null_accessors)
+    : QQmlGuard<QObject>(QQmlAdaptorModel::objectDestroyedImpl, nullptr)
+    , accessors(&qt_vdm_null_accessors)
 {
 }
 
@@ -1046,9 +1047,10 @@ void QQmlAdaptorModel::useImportVersion(QTypeRevision revision)
     modelItemRevision = revision;
 }
 
-void QQmlAdaptorModel::objectDestroyed(QObject *)
+void QQmlAdaptorModel::objectDestroyedImpl(QQmlGuardImpl *guard)
 {
-    setModel(QVariant());
+    auto This = static_cast<QQmlAdaptorModel *>(guard);
+    This->setModel(QVariant());
 }
 
 QQmlAdaptorModelEngineData::QQmlAdaptorModelEngineData(QV4::ExecutionEngine *v4)

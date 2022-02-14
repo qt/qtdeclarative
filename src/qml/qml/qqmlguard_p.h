@@ -59,6 +59,8 @@ QT_BEGIN_NAMESPACE
 class QQmlGuardImpl
 {
 public:
+    using ObjectDestroyedFn = void(*)(QQmlGuardImpl *);
+
     inline QQmlGuardImpl();
     inline QQmlGuardImpl(QObject *);
     inline QQmlGuardImpl(const QQmlGuardImpl &);
@@ -67,6 +69,7 @@ public:
     QObject *o = nullptr;
     QQmlGuardImpl  *next = nullptr;
     QQmlGuardImpl **prev = nullptr;
+    ObjectDestroyedFn objectDestroyed = nullptr;
 
     inline void addGuard();
     inline void remGuard();
@@ -77,14 +80,14 @@ public:
 
 class QObject;
 template<class T>
-class QQmlGuard : private QQmlGuardImpl
+class QQmlGuard : protected QQmlGuardImpl
 {
     friend class QQmlData;
 public:
     inline QQmlGuard();
+    inline QQmlGuard(ObjectDestroyedFn objectDestroyed, T *);
     inline QQmlGuard(T *);
     inline QQmlGuard(const QQmlGuard<T> &);
-    inline virtual ~QQmlGuard();
 
     inline QQmlGuard<T> &operator=(const QQmlGuard<T> &o);
     inline QQmlGuard<T> &operator=(T *);
@@ -98,24 +101,29 @@ public:
     T &operator*() const { return *object(); }
     operator T *() const noexcept { return object(); }
     T *data() const noexcept { return object(); }
-
-protected:
-    virtual void objectDestroyed(T *) {}
 };
 
 template <typename T>
-class QQmlStrongJSQObjectReference : public QQmlGuard<T>
+class QQmlStrongJSQObjectReference : protected QQmlGuardImpl
 {
 public:
+    T *object() const noexcept { return static_cast<T *>(o); }
+
+    using QQmlGuardImpl::isNull;
+
+    T *operator->() const noexcept { return object(); }
+    T &operator*() const { return *object(); }
+    operator T *() const noexcept { return object(); }
+    T *data() const noexcept { return object(); }
     void setObject(T *obj, QObject *parent) {
-        T *old = this->object();
+        T *old = object();
         if (obj == old)
             return;
 
         if (m_jsOwnership && old && old->parent() == parent)
             QQml_setParent_noEvent(old, nullptr);
 
-        this->QQmlGuard<T>::operator=(obj);
+        QQmlGuardImpl::setObject(obj);
 
         if (obj && !obj->parent() && !QQmlData::keepAliveDuringGarbageCollection(obj)) {
             m_jsOwnership = true;
@@ -126,8 +134,6 @@ public:
     }
 
 private:
-    using QQmlGuard<T>::setObject;
-    using QQmlGuard<T>::operator=;
     bool m_jsOwnership = false;
 };
 
@@ -147,8 +153,15 @@ QQmlGuardImpl::QQmlGuardImpl(QObject *g)
     if (o) addGuard();
 }
 
+/*
+    \internal
+    Copying a QQmlGuardImpl leaves the old one in the intrinsic linked list of guards.
+    The fresh copy does not contain the list pointer of the existing guard; instead
+    only the object and objectDestroyed pointers are copied, and if there is an object
+    we add the new guard to the object's list of guards.
+ */
 QQmlGuardImpl::QQmlGuardImpl(const QQmlGuardImpl &g)
-: o(g.o)
+: o(g.o), objectDestroyed(g.objectDestroyed)
 {
     if (o) addGuard();
 }
@@ -189,6 +202,13 @@ QQmlGuard<T>::QQmlGuard()
 }
 
 template<class T>
+QQmlGuard<T>::QQmlGuard(ObjectDestroyedFn objDestroyed, T *obj)
+    : QQmlGuardImpl(obj)
+{
+    objectDestroyed = objDestroyed;
+}
+
+template<class T>
 QQmlGuard<T>::QQmlGuard(T *g)
 : QQmlGuardImpl(g)
 {
@@ -201,13 +221,9 @@ QQmlGuard<T>::QQmlGuard(const QQmlGuard<T> &g)
 }
 
 template<class T>
-QQmlGuard<T>::~QQmlGuard()
-{
-}
-
-template<class T>
 QQmlGuard<T> &QQmlGuard<T>::operator=(const QQmlGuard<T> &g)
 {
+    objectDestroyed = g.objectDestroyed;
     setObject(g.object());
     return *this;
 }
@@ -215,6 +231,10 @@ QQmlGuard<T> &QQmlGuard<T>::operator=(const QQmlGuard<T> &g)
 template<class T>
 QQmlGuard<T> &QQmlGuard<T>::operator=(T *g)
 {
+    /* this does not touch objectDestroyed, as operator= is only a convenience
+     * for setObject. All logic involving objectDestroyed is (sub-)class specific
+     * and remains unaffected.
+     */
     setObject(g);
     return *this;
 }

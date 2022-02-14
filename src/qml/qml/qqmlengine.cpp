@@ -1323,9 +1323,10 @@ void QQmlData::destroyed(QObject *object)
     ownContext.reset();
 
     while (guards) {
-        QQmlGuard<QObject> *guard = static_cast<QQmlGuard<QObject> *>(guards);
-        *guard = (QObject *)nullptr;
-        guard->objectDestroyed(object);
+        auto *guard = guards;
+        guard->setObject(nullptr);
+        if (guard->objectDestroyed)
+            guard->objectDestroyed(guard);
     }
 
     disconnectNotifiers();
