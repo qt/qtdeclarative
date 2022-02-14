@@ -70,6 +70,9 @@ public:
 
     inline void addGuard();
     inline void remGuard();
+
+    inline void setObject(QObject *g);
+    bool isNull() const noexcept { return !o; }
 };
 
 class QObject;
@@ -86,20 +89,15 @@ public:
     inline QQmlGuard<T> &operator=(const QQmlGuard<T> &o);
     inline QQmlGuard<T> &operator=(T *);
 
-    inline T *object() const;
-    inline void setObject(T *g);
+    T *object() const noexcept { return static_cast<T *>(o); }
+    void setObject(T *g) { QQmlGuardImpl::setObject(g); }
 
-    inline bool isNull() const
-        { return !o; }
+    using QQmlGuardImpl::isNull;
 
-    inline T* operator->() const
-        { return static_cast<T*>(const_cast<QObject*>(o)); }
-    inline T& operator*() const
-        { return *static_cast<T*>(const_cast<QObject*>(o)); }
-    inline operator T*() const
-        { return static_cast<T*>(const_cast<QObject*>(o)); }
-    inline T* data() const
-        { return static_cast<T*>(const_cast<QObject*>(o)); }
+    T *operator->() const noexcept { return object(); }
+    T &operator*() const { return *object(); }
+    operator T *() const noexcept { return object(); }
+    T *data() const noexcept { return object(); }
 
 protected:
     virtual void objectDestroyed(T *) {}
@@ -221,14 +219,7 @@ QQmlGuard<T> &QQmlGuard<T>::operator=(T *g)
     return *this;
 }
 
-template<class T>
-T *QQmlGuard<T>::object() const
-{
-    return static_cast<T *>(o);
-}
-
-template<class T>
-void QQmlGuard<T>::setObject(T *g)
+void QQmlGuardImpl::setObject(QObject *g)
 {
     if (g != o) {
         if (prev) remGuard();
