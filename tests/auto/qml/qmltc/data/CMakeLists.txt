@@ -72,7 +72,7 @@ set(qml_sources
     LocallyImported.qml
     LocalWithOnCompleted.qml
     LocallyImported_context.qml
-    SingletonThing.qml
+    # SingletonThing.qml
 )
 
 set(js_sources

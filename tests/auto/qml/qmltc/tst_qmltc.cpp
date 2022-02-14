@@ -1417,9 +1417,9 @@ void tst_qmltc::behaviorAndAnimationOnAlias()
 void tst_qmltc::singletonUser()
 {
     QQmlEngine e;
+    QSKIP("Singleton types are not supported yet");
     PREPEND_NAMESPACE(singletonUser) created(&e);
 
-    QSKIP("Singleton types are not supported yet");
     QCOMPARE(created.number(), 42);
     QCOMPARE(created.message(), "hello");
 }

@@ -1092,8 +1092,10 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
     Q_ASSERT(!superType.isEmpty());
     if (superType.front().isUpper()) {
         enterEnvironment(QQmlJSScope::QMLScope, superType, definition->firstSourceLocation());
-        if (!m_exportedRootScope)
+        if (!m_exportedRootScope) {
             m_exportedRootScope = m_currentScope;
+            m_exportedRootScope->setIsSingleton(m_rootIsSingleton);
+        }
 
         const QTypeRevision revision = QQmlJSScope::resolveTypes(
                     m_currentScope, m_rootScopeImports, &m_usedTypes);
@@ -1712,6 +1714,14 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
         addImportLocation(key);
 
     processImportWarnings(QStringLiteral("module \"%1\"").arg(path), import->firstSourceLocation());
+    return true;
+}
+
+bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
+{
+    if (pragma->name == u"Singleton")
+        m_rootIsSingleton = true;
+
     return true;
 }
 
