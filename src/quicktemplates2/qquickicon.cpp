@@ -62,6 +62,7 @@ public:
 
     QString name;
     QUrl source;
+    QUrl resolvedSource;
     int width = 0;
     int height = 0;
     QColor color = Qt::transparent;
@@ -107,6 +108,7 @@ bool QQuickIcon::operator==(const QQuickIcon &other) const
 {
     return d == other.d || (d->name == other.d->name
                             && d->source == other.d->source
+                            && d->resolvedSource == other.d->resolvedSource
                             && d->width == other.d->width
                             && d->height == other.d->height
                             && d->color == other.d->color
@@ -157,6 +159,7 @@ void QQuickIcon::setSource(const QUrl &source)
 
     d.detach();
     d->source = source;
+    d->resolvedSource.clear();
     d->resolveMask |= QQuickIconPrivate::SourceResolved;
 }
 
@@ -164,18 +167,27 @@ void QQuickIcon::resetSource()
 {
     d.detach();
     d->source = QString();
+    d->resolvedSource.clear();
     d->resolveMask &= ~QQuickIconPrivate::SourceResolved;
 }
 
 QUrl QQuickIcon::resolvedSource() const
 {
-    if (QObject *owner = d->ownerAndCache.data()) {
-        QQmlData *data = QQmlData::get(owner);
-        if (data && data->outerContext)
-            return data->outerContext->resolvedUrl(d->source);
-    }
+    return d->resolvedSource.isEmpty() ? d->source : d->resolvedSource;
+}
 
-    return d->source;
+// must be called by the property owner (e.g. Button) prior to emitting changed signal.
+void QQuickIcon::ensureRelativeSourceResolved(const QObject *owner)
+{
+    if (d->source.isEmpty())
+        return;
+    if (!d->resolvedSource.isEmpty())
+        return; // already resolved relative to (possibly) different owner
+    const QQmlData *data = QQmlData::get(owner);
+    if (!data || !data->outerContext)
+        return;
+    d.detach();
+    d->resolvedSource = data->outerContext->resolvedUrl(d->source);
 }
 
 int QQuickIcon::width() const
@@ -267,14 +279,6 @@ void QQuickIcon::resetCache()
     d->resolveMask &= ~QQuickIconPrivate::CacheResolved;
 }
 
-void QQuickIcon::setOwner(QObject *owner)
-{
-    if (d->ownerAndCache.data() == owner)
-        return;
-    d.detach();
-    d->ownerAndCache = owner;
-}
-
 QQuickIcon QQuickIcon::resolve(const QQuickIcon &other) const
 {
     QQuickIcon resolved = *this;
@@ -283,8 +287,10 @@ QQuickIcon QQuickIcon::resolve(const QQuickIcon &other) const
     if (!(d->resolveMask & QQuickIconPrivate::NameResolved))
         resolved.d->name = other.d->name;
 
-    if (!(d->resolveMask & QQuickIconPrivate::SourceResolved))
+    if (!(d->resolveMask & QQuickIconPrivate::SourceResolved)) {
         resolved.d->source = other.d->source;
+        resolved.d->resolvedSource = other.d->resolvedSource;
+    }
 
     if (!(d->resolveMask & QQuickIconPrivate::WidthResolved))
         resolved.d->width = other.d->width;
