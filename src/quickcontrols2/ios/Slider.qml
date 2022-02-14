@@ -50,66 +50,57 @@ T.Slider {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              implicitHandleHeight + topPadding + bottomPadding)
 
-    topPadding: background ? background.topPadding : 0
-    leftPadding: background ? background.leftPadding : 0
-    rightPadding: background ? background.rightPadding : 0
-    bottomPadding: background ? background.bottomPadding : 0
-
-    topInset: background ? -background.topInset || 0 : 0
-    leftInset: background ? -background.leftInset || 0 : 0
-    rightInset: background ? -background.rightInset || 0 : 0
-    bottomInset: background ? -background.bottomInset || 0 : 0
-
-    handle: Image {
+    handle: Item {
+        implicitWidth: children[0].implicitWidth - children[0].leftInset - children[0].rightInset
+        implicitHeight: children[0].implicitWidth - children[0].topInset - children[0].bottomInset
         x: Math.round(control.leftPadding + (control.horizontal ? control.visualPosition * (control.availableWidth - width) : (control.availableWidth - width) / 2))
         y: Math.round(control.topPadding + (control.horizontal ? (control.availableHeight - height) / 2 : control.visualPosition * (control.availableHeight - height)))
 
-        source: control.IOS.url + "slider-handle"
-        ImageSelector on source {
-            states: [
-                {"vertical": control.vertical},
-                {"horizontal": control.horizontal},
-                {"light": IOS.theme == IOS.Light},
-                {"dark": IOS.theme == IOS.Dark},
-                {"disabled": !control.enabled},
-            ]
-        }
-    }
-
-    background: NinePatchImage {
-        scale: control.horizontal && control.mirrored ? -1 : 1
-        source: control.IOS.url + "slider-background"
-        NinePatchImageSelector on source {
-            states: [
-                {"vertical": control.vertical},
-                {"horizontal": control.horizontal},
-                {"light": IOS.theme == IOS.Light},
-                {"dark": IOS.theme == IOS.Dark},
-                {"disabled": !control.enabled},
-            ]
-        }
-
         NinePatchImage {
-            x: control.horizontal ? 0 : (parent.width - width) / 2
-            y: control.horizontal
-               ? (parent.height - height) / 2
-               : control.handle.height / 2 + control.visualPosition * (parent.height - control.handle.height)
-            width: control.horizontal
-                ? control.handle.width / 2 + control.position * (parent.width - control.handle.width)
-                : parent.width
-            height: control.vertical
-                ? control.handle.height / 2 + control.position * (parent.height - control.handle.height)
-                : parent.height
-
-            source: control.IOS.url + "slider-progress"
+            x: -leftInset
+            y: -topInset
+            source: control.IOS.url + "slider-handle"
             NinePatchImageSelector on source {
                 states: [
-                    {"vertical": control.vertical},
-                    {"horizontal": control.horizontal},
                     {"light": IOS.theme == IOS.Light},
                     {"dark": IOS.theme == IOS.Dark},
                     {"disabled": !control.enabled},
                 ]
+            }
+        }
+    }
+
+    background: Item {
+        implicitWidth: control.horizontal ? children[0].width : children[0].height
+        implicitHeight: control.horizontal ? children[0].height : children[0].width
+
+        NinePatchImage {
+            source: control.IOS.url + "slider-background"
+            x: (parent.width - width) / 2
+            y: (parent.height - height) / 2
+            rotation: control.horizontal ? 0 : -90
+            // ### Set to container's width
+            width: 114
+            NinePatchImageSelector on source {
+                states: [
+                    {"light": IOS.theme == IOS.Light},
+                    {"dark": IOS.theme == IOS.Dark},
+                    {"disabled": !control.enabled},
+                ]
+            }
+
+            NinePatchImage {
+                width: control.handle.width / 2 + control.position * (parent.width - control.handle.width)
+                height: parent.height
+
+                source: control.IOS.url + "slider-progress"
+                NinePatchImageSelector on source {
+                    states: [
+                        {"light": IOS.theme == IOS.Light},
+                        {"dark": IOS.theme == IOS.Dark},
+                        {"disabled": !control.enabled},
+                    ]
+                }
             }
         }
     }
