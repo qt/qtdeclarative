@@ -58,6 +58,7 @@
 #endif
 
 #include <QtCore/QCoreApplication>
+#include <QtCore/private/qduplicatetracker_p.h>
 
 #include <QtGui/private/qfontdatabase_p.h>
 
@@ -172,13 +173,10 @@ public:
 
     void reset()
     {
-        QVector<QQuickFontObject *> deleted;
-        QHash<QUrl, QQuickFontObject*>::iterator it;
-        for (it = map.begin(); it != map.end(); ++it) {
-            if (!deleted.contains(it.value())) {
-                deleted.append(it.value());
-                delete it.value();
-            }
+        QDuplicateTracker<QQuickFontObject *, 256> deleted(map.size());
+        for (QQuickFontObject *fo : std::as_const(map)) {
+            if (!deleted.hasSeen(fo))
+                delete fo;
         }
         map.clear();
     }
