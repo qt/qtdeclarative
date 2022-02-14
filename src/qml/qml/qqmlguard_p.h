@@ -109,19 +109,19 @@ template <typename T>
 class QQmlStrongJSQObjectReference : public QQmlGuard<T>
 {
 public:
-    void setObject(T *o, QObject *parent) {
+    void setObject(T *obj, QObject *parent) {
         T *old = this->object();
-        if (o == old)
+        if (obj == old)
             return;
 
         if (m_jsOwnership && old && old->parent() == parent)
             QQml_setParent_noEvent(old, nullptr);
 
-        this->QQmlGuard<T>::operator=(o);
+        this->QQmlGuard<T>::operator=(obj);
 
-        if (o && !o->parent() && !QQmlData::keepAliveDuringGarbageCollection(o)) {
+        if (obj && !obj->parent() && !QQmlData::keepAliveDuringGarbageCollection(obj)) {
             m_jsOwnership = true;
-            QQml_setParent_noEvent(o, parent);
+            QQml_setParent_noEvent(obj, parent);
         } else {
             m_jsOwnership = false;
         }
