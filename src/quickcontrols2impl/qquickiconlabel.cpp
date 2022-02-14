@@ -399,7 +399,7 @@ void QQuickIconLabel::setIcon(const QQuickIcon &icon)
         return;
 
     d->icon = icon;
-    d->icon.setOwner(this);
+    d->icon.ensureRelativeSourceResolved(this);
     d->updateOrSyncImage();
 }
 
