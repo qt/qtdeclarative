@@ -103,7 +103,9 @@ public:
         AlignTop = Qt::AlignTop,
         AlignBottom = Qt::AlignBottom,
         AlignVCenter = Qt::AlignVCenter,
-        AlignCenter = AlignVCenter | AlignHCenter
+        AlignCenter = AlignVCenter | AlignHCenter,
+        Visible = 0x01000,
+        Contain = 0x02000
     };
     Q_FLAG(PositionModeFlag)
     Q_DECLARE_FLAGS(PositionMode, PositionModeFlag)

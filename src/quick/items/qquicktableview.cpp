@@ -446,8 +446,9 @@
 
     This property can be set to control if TableView should animate the
     \l contentItem (\l contentX and \l contentY). It is used by
-    \l positionViewAtCell(), \l ensureVisible(), and when navigating
-    the current index around with the keyboard. The default value is \c true.
+    \l positionViewAtCell(), and when navigating
+    \l \{QItemSelectionModel::currentIndex}{the current index}
+    with the keyboard. The default value is \c true.
 
     If set to \c false, any ongoing animation will immediately stop.
 
@@ -456,7 +457,7 @@
     \l {isRowLoaded()}{loaded}. However, if set to \c false, animations will
     always be off.
 
-    \sa positionViewAtCell(), ensureVisible()
+    \sa positionViewAtCell()
 */
 
 /*!
@@ -473,6 +474,10 @@
     \value TableView.AlignVCenter Position the cell at the vertical center of the view.
     \value TableView.AlignBottom Position the cell at the bottom of the view.
     \value TableView.AlignCenter The same as (TableView.AlignHCenter | TableView.AlignVCenter)
+    \value TableView.Visible If any part of the cell is visible then take no action. Otherwise
+           move the content item so that the entire cell becomes visible.
+    \value TableView.Contain If the entire cell is visible then take no action. Otherwise
+           move the content item so that the entire cell becomes visible.
 
     If no vertical alignment is specified, vertical positioning will be ignored.
     The same is true for horizontal alignment.
@@ -501,8 +506,10 @@
     \endcode
 
     \note The second argument to this function used to be Qt.Alignment. For backwards
-    compatibily, that enum can still be used. The change to use PositionMode was done
+    compatibility, that enum can still be used. The change to use PositionMode was done
     in Qt 6.4.
+
+    \sa animate
 */
 
 /*!
@@ -3698,6 +3705,36 @@ bool QQuickTableViewPrivate::scrollToColumn(int column, Qt::Alignment alignment,
     return true;
 }
 
+void QQuickTableViewPrivate::ensureRowVisible(int row, bool contain, qreal offset)
+{
+    if (row < topRow()) {
+        positionViewAtRow(row, Qt::AlignTop, -offset);
+    } else if (row > bottomRow()) {
+        positionViewAtRow(row, Qt::AlignBottom, offset);
+    } else if (contain && row == topRow()) {
+        if (loadedTableOuterRect.y() < viewportRect.y() + offset)
+            positionViewAtRow(row, Qt::AlignTop, -offset);
+    } else if (contain && row == bottomRow()) {
+        if (loadedTableOuterRect.bottom() > viewportRect.bottom() - offset)
+            positionViewAtRow(row, Qt::AlignBottom, offset);
+    }
+}
+
+void QQuickTableViewPrivate::ensureColumnVisible(int column, bool contain, qreal offset)
+{
+    if (column < leftColumn()) {
+        positionViewAtColumn(column, Qt::AlignLeft, -offset);
+    } else if (column > rightColumn()) {
+        positionViewAtColumn(column, Qt::AlignRight, offset);
+    } else if (contain && column == leftColumn()) {
+        if (loadedTableOuterRect.x() < viewportRect.x() + offset)
+            positionViewAtColumn(column, Qt::AlignLeft, -offset);
+    } else if (contain && column == rightColumn()) {
+        if (loadedTableOuterRect.right() > viewportRect.right() - offset)
+            positionViewAtColumn(column, Qt::AlignRight, offset);
+    }
+}
+
 void QQuickTableViewPrivate::scheduleRebuildIfFastFlick()
 {
     Q_Q(QQuickTableView);
@@ -4158,16 +4195,38 @@ int QQuickTableView::bottomRow() const
 
 void QQuickTableView::positionViewAtRow(int row, PositionMode mode, qreal offset)
 {
+    Q_D(QQuickTableView);
     if (row < 0 || row >= rows())
         return;
-    d_func()->positionViewAtRow(row, Qt::Alignment(int(mode)) & Qt::AlignVertical_Mask, offset);
+
+    if (mode & (AlignTop | AlignBottom | AlignVCenter)) {
+        mode &= AlignTop | AlignBottom | AlignVCenter;
+        d->positionViewAtRow(row, Qt::Alignment(int(mode)), offset);
+    } else if (mode == Visible) {
+        d->ensureRowVisible(row, false, offset);
+    } else if (mode == Contain) {
+        d->ensureRowVisible(row, true, offset);
+    } else {
+        qmlWarning(this) << "Unsupported mode:" << int(mode);
+    }
 }
 
 void QQuickTableView::positionViewAtColumn(int column, PositionMode mode, qreal offset)
 {
+    Q_D(QQuickTableView);
     if (column < 0 || column >= columns())
         return;
-    d_func()->positionViewAtColumn(column, Qt::Alignment(int(mode)) & Qt::AlignHorizontal_Mask, offset);
+
+    if (mode & (AlignLeft | AlignRight | AlignHCenter)) {
+        mode &= AlignLeft | AlignRight | AlignHCenter;
+        d->positionViewAtColumn(column, Qt::Alignment(int(mode)), offset);
+    } else if (mode == Visible) {
+        d->ensureColumnVisible(column, false, offset);
+    } else if (mode == Contain) {
+        d->ensureColumnVisible(column, true, offset);
+    } else {
+        qmlWarning(this) << "Unsupported mode:" << int(mode);
+    }
 }
 
 void QQuickTableView::positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset)

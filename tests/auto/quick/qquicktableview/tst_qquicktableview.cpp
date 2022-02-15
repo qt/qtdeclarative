@@ -198,6 +198,8 @@ private slots:
     void positionViewAtColumnClamped_data();
     void positionViewAtColumnClamped();
     void positionViewAtCellWithAnimation();
+    void positionViewAtCell_VisibleAndContain_data();
+    void positionViewAtCell_VisibleAndContain();
     void itemAtCell_data();
     void itemAtCell();
     void leftRightTopBottomProperties_data();
@@ -3501,6 +3503,79 @@ void tst_QQuickTableView::positionViewAtCellWithAnimation()
     expectedPos = tableView->mapToItem(tableView->contentItem(), QPointF(tableView->width(), tableView->height()));
     QCOMPARE(cellGeometry.right(), expectedPos.x());
     QCOMPARE(cellGeometry.bottom(), expectedPos.y());
+}
+
+void tst_QQuickTableView::positionViewAtCell_VisibleAndContain_data()
+{
+    QTest::addColumn<QPoint>("cell");
+    QTest::addColumn<QQuickTableView::PositionModeFlag>("mode");
+    QTest::addColumn<QPointF>("offset");
+
+    QTest::newRow("99, 99, Contain") << QPoint{99, 99} << QQuickTableView::Contain << QPointF{0, 0};
+    QTest::newRow("0, 0, Contain") << QPoint{0, 0} << QQuickTableView::Contain << QPointF{0, 0};
+    QTest::newRow("5, 0, Contain") << QPoint{5, 0} << QQuickTableView::Contain << QPointF{0, 0};
+    QTest::newRow("0, 7, Contain") << QPoint{0, 7} << QQuickTableView::Contain << QPointF{0, 0};
+    QTest::newRow("1, 1, Contain") << QPoint{1, 1} << QQuickTableView::Contain << QPointF{0, 0};
+    QTest::newRow("10, 10, Contain") << QPoint{10, 10} << QQuickTableView::Contain << QPointF{0, 0};
+
+    QTest::newRow("99, 99, Visible") << QPoint{99, 99} << QQuickTableView::Visible << QPointF{0, 0};
+    QTest::newRow("0, 0, Visible") << QPoint{0, 0} << QQuickTableView::Visible << QPointF{0, 0};
+    QTest::newRow("5, 1, Visible") << QPoint{5, 1} << QQuickTableView::Visible << QPointF{0, 0};
+    QTest::newRow("1, 7, Visible") << QPoint{1, 7} << QQuickTableView::Visible << QPointF{0, 0};
+    QTest::newRow("1, 1, Visible") << QPoint{1, 1} << QQuickTableView::Visible << QPointF{0, 0};
+    QTest::newRow("10, 10, Visible") << QPoint{10, 10} << QQuickTableView::Visible << QPointF{0, 0};
+
+    QTest::newRow("99, 99, Contain, margins") << QPoint{99, 99} << QQuickTableView::Contain << QPointF{10, 10};
+    QTest::newRow("0, 0, Contain, margins") << QPoint{0, 0} << QQuickTableView::Contain << QPointF{10, 10};
+    QTest::newRow("5, 0, Contain, margins") << QPoint{5, 1} << QQuickTableView::Contain << QPointF{10, 10};
+    QTest::newRow("1, 7, Contain, margins") << QPoint{1, 7} << QQuickTableView::Contain << QPointF{10, 10};
+    QTest::newRow("1, 1, Contain, margins") << QPoint{1, 1} << QQuickTableView::Contain << QPointF{10, 10};
+    QTest::newRow("10, 10, Contain, margins") << QPoint{10, 10} << QQuickTableView::Contain << QPointF{10, 10};
+}
+
+void tst_QQuickTableView::positionViewAtCell_VisibleAndContain()
+{
+    // Check that the PositionModes "Visible" and "Contain" works according
+    // to the documentation.
+    QFETCH(QPoint, cell);
+    QFETCH(QQuickTableView::PositionModeFlag, mode);
+    QFETCH(QPointF, offset);
+
+    LOAD_TABLEVIEW("plaintableview.qml");
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+    tableView->setAnimate(true);
+
+    WAIT_UNTIL_POLISHED;
+
+    const bool cellIsVisible = tableView->itemAtCell(cell) != nullptr;
+    bool cellIsCompletelyVisible = false;
+    if (cellIsVisible) {
+        const QRectF cellRect = tableViewPrivate->loadedTableItem(cell)->geometry();
+        QRectF viewportRect = tableViewPrivate->viewportRect;
+        viewportRect.adjust(offset.x(), offset.y(), -offset.x(), -offset.y());
+        cellIsCompletelyVisible = viewportRect.contains(cellRect);
+    }
+
+    tableView->positionViewAtCell(cell, mode, offset);
+
+    if (cellIsCompletelyVisible || (cellIsVisible && mode == QQuickTableView::Visible)) {
+        // Nothing to do!
+        QVERIFY(!tableViewPrivate->positionXAnimation.isRunning());
+        QVERIFY(!tableViewPrivate->positionYAnimation.isRunning());
+        QVERIFY(!QQuickTest::qIsPolishScheduled(tableView));
+    } else if (cellIsVisible) {
+        // TableView will scroll towards the cell, unless it'a already at the correct place
+        QTRY_COMPARE(tableViewPrivate->positionXAnimation.isRunning(), false);
+        QTRY_COMPARE(tableViewPrivate->positionYAnimation.isRunning(), false);
+    } else {
+        // TableView will rebuild on top of the cell
+        QVERIFY(!tableViewPrivate->positionXAnimation.isRunning());
+        QVERIFY(!tableViewPrivate->positionYAnimation.isRunning());
+        WAIT_UNTIL_POLISHED;
+    }
+
+    QVERIFY(tableView->itemAtCell(cell));
 }
 
 void tst_QQuickTableView::itemAtCell_data()
