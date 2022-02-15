@@ -268,6 +268,9 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
             return;
     }
 
+    if (isMissingPropertyType(m_function->qmlScope, name))
+        return;
+
     std::optional<FixSuggestion> suggestion;
 
     auto childScopes = m_function->qmlScope->childScopes();
@@ -416,6 +419,30 @@ bool QQmlJSTypePropagator::checkRestricted(const QString &propertyName) const
                              Log_Type, getCurrentSourceLocation());
 
     return !restrictedKind.isEmpty();
+}
+
+// Only to be called once a lookup has already failed
+bool QQmlJSTypePropagator::isMissingPropertyType(QQmlJSScope::ConstPtr scope,
+                                                 const QString &propertyName) const
+{
+    auto property = scope->property(propertyName);
+    if (!property.isValid())
+        return false;
+
+    QString errorType;
+    if (property.type().isNull())
+        errorType = u"found"_qs;
+    else if (!property.type()->isFullyResolved())
+        errorType = u"fully resolved"_qs;
+
+    Q_ASSERT(!errorType.isEmpty());
+
+    m_logger->logWarning(
+            u"Type \"%1\" of property \"%2\" not %3. This is likely due to a missing dependency entry or a type not being exposed declaratively."_qs
+                    .arg(property.typeName(), propertyName, errorType),
+            Log_Type, getCurrentSourceLocation());
+
+    return true;
 }
 
 void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
@@ -603,23 +630,8 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
 
         auto baseType = m_typeResolver->containedType(m_state.accumulatorIn);
         // Warn separately when a property is only not found because of a missing type
-        if (auto property = baseType->property(propertyName); property.isValid()) {
-
-            QString errorType;
-            if (property.type().isNull())
-                errorType = u"found"_qs;
-            else if (!property.type()->isFullyResolved())
-                errorType = u"fully resolved"_qs;
-
-            Q_ASSERT(!errorType.isEmpty());
-
-            m_logger->logWarning(
-                    u"Type \"%1\" of property \"%2\" not %3. This is likely due to a missing dependency entry or a type not being exposed declaratively."_qs
-                            .arg(property.typeName(), propertyName, errorType),
-                    Log_Type, getCurrentSourceLocation());
-
+        if (isMissingPropertyType(baseType, propertyName))
             return;
-        }
 
         m_logger->logWarning(
                 u"Property \"%1\" not found on type \"%2\""_qs.arg(propertyName).arg(typeName),
