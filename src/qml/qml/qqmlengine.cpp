@@ -1959,6 +1959,8 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
     \sa {QQmlEngine::contextForObject()}{contextForObject()}, qmlEngine()
 */
 
+void hasJsOwnershipIndicator(QQmlGuardImpl *) {};
+
 QT_END_NAMESPACE
 
 #include "moc_qqmlengine.cpp"

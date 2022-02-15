@@ -103,6 +103,13 @@ public:
     T *data() const noexcept { return object(); }
 };
 
+/* used in QQmlStrongJSQObjectReference to indicate that the
+ * object has JS ownership
+ * We save it in objectDestroyFn to save space
+ * (implemented in qqmlengine.cpp)
+ */
+void Q_QML_PRIVATE_EXPORT hasJsOwnershipIndicator(QQmlGuardImpl *);
+
 template <typename T>
 class QQmlStrongJSQObjectReference : protected QQmlGuardImpl
 {
@@ -115,26 +122,33 @@ public:
     T &operator*() const { return *object(); }
     operator T *() const noexcept { return object(); }
     T *data() const noexcept { return object(); }
+
     void setObject(T *obj, QObject *parent) {
         T *old = object();
         if (obj == old)
             return;
 
-        if (m_jsOwnership && old && old->parent() == parent)
+        if (hasJsOwnership() && old && old->parent() == parent)
             QQml_setParent_noEvent(old, nullptr);
 
         QQmlGuardImpl::setObject(obj);
 
         if (obj && !obj->parent() && !QQmlData::keepAliveDuringGarbageCollection(obj)) {
-            m_jsOwnership = true;
+            setJsOwnership(true);
             QQml_setParent_noEvent(obj, parent);
         } else {
-            m_jsOwnership = false;
+            setJsOwnership(false);
         }
     }
 
 private:
-    bool m_jsOwnership = false;
+    bool hasJsOwnership() {
+        return objectDestroyed == hasJsOwnershipIndicator;
+    }
+
+    void setJsOwnership(bool itHasOwnership) {
+        objectDestroyed = itHasOwnership ? hasJsOwnershipIndicator : nullptr;
+    }
 };
 
 QT_END_NAMESPACE
