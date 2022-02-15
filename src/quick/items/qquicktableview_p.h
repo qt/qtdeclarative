@@ -90,6 +90,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable, public QQ
     Q_PROPERTY(int bottomRow READ bottomRow NOTIFY bottomRowChanged REVISION(6, 0))
     Q_PROPERTY(QItemSelectionModel *selectionModel READ selectionModel WRITE setSelectionModel NOTIFY selectionModelChanged REVISION(6, 2))
     Q_PROPERTY(bool animate READ animate WRITE setAnimate NOTIFY animateChanged REVISION(6, 4))
+    Q_PROPERTY(bool keyNavigationEnabled READ keyNavigationEnabled WRITE setKeyNavigationEnabled NOTIFY keyNavigationEnabledChanged REVISION(6, 4))
+    Q_PROPERTY(bool pointerNavigationEnabled READ pointerNavigationEnabled WRITE setPointerNavigationEnabled NOTIFY pointerNavigationEnabledChanged REVISION(6, 4))
 
     QML_NAMED_ELEMENT(TableView)
     QML_ADDED_IN_VERSION(2, 12)
@@ -151,6 +153,11 @@ public:
     bool animate() const;
     void setAnimate(bool animate);
 
+    bool keyNavigationEnabled() const;
+    void setKeyNavigationEnabled(bool enabled);
+    bool pointerNavigationEnabled() const;
+    void setPointerNavigationEnabled(bool enabled);
+
     int leftColumn() const;
     int rightColumn() const;
     int topRow() const;
@@ -200,10 +207,13 @@ Q_SIGNALS:
     Q_REVISION(6, 0) void bottomRowChanged();
     Q_REVISION(6, 2) void selectionModelChanged();
     Q_REVISION(6, 4) void animateChanged();
+    Q_REVISION(6, 4) void keyNavigationEnabledChanged();
+    Q_REVISION(6, 4) void pointerNavigationEnabledChanged();
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void viewportMoved(Qt::Orientations orientation) override;
+    void keyPressEvent(QKeyEvent *e) override;
 
 protected:
     QQuickTableView(QQuickTableViewPrivate &dd, QQuickItem *parent);

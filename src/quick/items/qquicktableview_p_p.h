@@ -288,6 +288,8 @@ public:
     bool inSyncViewportPosRecursive = false;
     bool inUpdateContentSize = false;
     bool animate = true;
+    bool keyNavigationEnabled = true;
+    bool pointerNavigationEnabled = true;
 
     // isTransposed is currently only used by HeaderView.
     // Consider making it public.
@@ -497,6 +499,10 @@ public:
     void updateSelectedOnAllDelegateItems();
     void setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select);
 
+    bool currentInSelectionModel(const QPoint &cell) const;
+    void currentChangedInSelectionModel(const QModelIndex &current, const QModelIndex &previous);
+    void setCurrentOnDelegateItem(const QModelIndex &index, bool isCurrent);
+
     void fetchMoreData();
 
     void _q_componentFinalized();
@@ -509,6 +515,9 @@ public:
                              const QVariant &value,
                              int serializedModelIndex,
                              QObject *object, bool init);
+
+    void setCurrentIndexFromTap(const QPointF &pos);
+    void setCurrentIndex(const QPoint &cell);
 
     // QQuickSelectable
     QQuickItem *selectionPointerHandlerTarget() const override;

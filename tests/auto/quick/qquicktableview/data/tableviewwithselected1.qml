@@ -65,7 +65,9 @@ Item {
             implicitWidth: 20
             implicitHeight: 20
             required property bool selected
+            required property bool current
             color: selected ? "lightgray" : "green"
+            border.color: current ? "red" : "transparent"
         }
     }
 

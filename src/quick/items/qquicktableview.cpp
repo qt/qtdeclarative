@@ -193,16 +193,21 @@
 
     You can add selection support to TableView by assigning an ItemSelectionModel to
     the \l selectionModel property. It will then use this model to control which
-    delegate items should be shown as selected. For a delegate item to be shown as
-    selected, it needs to contain the following property:
+    delegate items should be shown as selected, and which item should be shown as
+    current. To find out whether a delegate is selected or current, declare the
+    following properties:
+
     \code
-    required property bool selected
+    delegate: Item {
+        required property bool selected
+        required property bool current
+        // ...
+    }
     \endcode
 
-    \note It's important for the \c selected property to be defined as \c required.
-    This will inform TableView that it should take responsibility for the property's
-    value. If it's not defined as required, it will simply be ignored.
-    See also \l {Required Properties}.
+    \note the \c selected and \c current properties must be defined as \c required.
+    This will inform TableView that it should take responsibility for updating their
+    values. If not, they will simply be ignored. See also \l {Required Properties}.
 
     The following snippet shows how an application can render the delegate differently
     depending on the \c selected property:
@@ -433,11 +438,13 @@
     \since 6.2
 
     This property can be set to control which delegate items should be shown as
-    selected. If the delegate has a \c {required property bool selected}
-    defined, TableView will keep it in sync with the selection state of the
-    corresponding model item in the selection model.
+    selected, and which item should be shown as current. If the delegate has a
+    \c {required property bool selected} defined, TableView will keep it in sync
+    with the selection state of the corresponding model item in the selection model.
+    If the delegate has a \c {required property bool current} defined, TableView will
+    keep it in sync with selectionModel.currentIndex.
 
-    \sa {Selecting items}, SelectionRectangle
+    \sa {Selecting items}, SelectionRectangle, keyNavigationEnabled, pointerNavigationEnabled
 */
 
 /*!
@@ -458,6 +465,28 @@
     always be off.
 
     \sa positionViewAtCell()
+*/
+
+/*!
+    \qmlproperty bool QtQuick::TableView::keyNavigationEnabled
+    \since 6.4
+
+    This property can be set to control if the user should be able
+    to change \l {QItemSelectionModel::currentIndex()}{the current index}
+    using the keyboard. The default value is \c true.
+
+    \sa selectionModel, pointerNavigationEnabled, interactive
+*/
+
+/*!
+    \qmlproperty bool QtQuick::TableView::pointerNavigationEnabled
+    \since 6.4
+
+    This property can be set to control if the user should be able
+    to change \l {QItemSelectionModel::currentIndex()}{the current index}
+    using mouse or touch. The default value is \c true.
+
+    \sa selectionModel, keyNavigationEnabled, interactive
 */
 
 /*!
@@ -782,6 +811,7 @@ static const Qt::Edge allTableEdges[] = { Qt::LeftEdge, Qt::RightEdge, Qt::TopEd
 
 static const char* kRequiredProperties = "_qt_tableview_requiredpropertymask";
 static const char* kRequiredProperty_selected = "selected";
+static const char* kRequiredProperty_current = "current";
 
 const QPoint QQuickTableViewPrivate::kLeft = QPoint(-1, 0);
 const QPoint QQuickTableViewPrivate::kRight = QPoint(1, 0);
@@ -933,6 +963,7 @@ void QQuickTableViewPrivate::setSelectionStartPos(const QPointF &pos)
 
     // Update selection rectangle
     selectionStartCellRect = loadedTableItem(selectionStartCell)->geometry();
+    setCurrentIndex(selectionStartCell);
 
     if (!cellIsValid(selectionEndCell))
         return;
@@ -963,6 +994,7 @@ void QQuickTableViewPrivate::setSelectionEndPos(const QPointF &pos)
 
     // Update selection rectangle
     selectionEndCellRect = loadedTableItem(selectionEndCell)->geometry();
+    setCurrentIndex(selectionEndCell);
 
     if (!cellIsValid(selectionStartCell))
         return;
@@ -3145,8 +3177,26 @@ bool QQuickTableViewPrivate::selectedInSelectionModel(const QPoint &cell) const
     return selectionModel->isSelected(q_func()->modelIndex(cell));
 }
 
+bool QQuickTableViewPrivate::currentInSelectionModel(const QPoint &cell) const
+{
+    if (!selectionModel)
+        return false;
+
+    QAbstractItemModel *model = selectionModel->model();
+    if (!model)
+        return false;
+
+    return selectionModel->currentIndex() == q_func()->modelIndex(cell);
+}
+
 void QQuickTableViewPrivate::selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected)
 {
+    if (!selectionModel->hasSelection()) {
+        // Ensure that we cancel any ongoing key/mouse-based selections
+        // if selectionModel.clearSelection() is called.
+        clearSelection();
+    }
+
     const auto &selectedIndexes = selected.indexes();
     const auto &deselectedIndexes = deselected.indexes();
     for (int i = 0; i < selectedIndexes.count(); ++i)
@@ -3171,9 +3221,28 @@ void QQuickTableViewPrivate::updateSelectedOnAllDelegateItems()
         const int cellIndex = *it;
         const QPoint cell = cellAtModelIndex(cellIndex);
         const bool selected = selectedInSelectionModel(cell);
+        const bool current = currentInSelectionModel(cell);
         QQuickItem *item = loadedTableItem(cell)->item;
         setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), cellIndex, item, false);
+        setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), cellIndex, item, false);
     }
+}
+
+void QQuickTableViewPrivate::currentChangedInSelectionModel(const QModelIndex &current, const QModelIndex &previous)
+{
+    setCurrentOnDelegateItem(previous, false);
+    setCurrentOnDelegateItem(current, true);
+}
+
+void QQuickTableViewPrivate::setCurrentOnDelegateItem(const QModelIndex &index, bool isCurrent)
+{
+    const int cellIndex = modelIndexToCellIndex(index);
+    if (!loadedItems.contains(cellIndex))
+        return;
+
+    const QPoint cell = cellAtModelIndex(cellIndex);
+    QQuickItem *item = loadedTableItem(cell)->item;
+    setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(isCurrent), cellIndex, item, false);
 }
 
 void QQuickTableViewPrivate::itemCreatedCallback(int modelIndex, QObject*)
@@ -3203,7 +3272,9 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
     item->setZ(1);
 
     const QPoint cell = cellAtModelIndex(modelIndex);
+    const bool current = currentInSelectionModel(cell);
     const bool selected = selectedInSelectionModel(cell);
+    setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), modelIndex, object, true);
     setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, true);
 
     if (auto attached = getAttachedObject(object))
@@ -3221,7 +3292,9 @@ void QQuickTableViewPrivate::itemPooledCallback(int modelIndex, QObject *object)
 void QQuickTableViewPrivate::itemReusedCallback(int modelIndex, QObject *object)
 {
     const QPoint cell = cellAtModelIndex(modelIndex);
+    const bool current = currentInSelectionModel(cell);
     const bool selected = selectedInSelectionModel(cell);
+    setRequiredProperty(kRequiredProperty_current, QVariant::fromValue(current), modelIndex, object, false);
     setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, false);
 
     if (auto attached = getAttachedObject(object))
@@ -3811,11 +3884,21 @@ void QQuickTableViewPrivate::init()
 
     auto tapHandler = new QQuickTapHandler(q->contentItem());
 
-    QObject::connect(tapHandler, &QQuickTapHandler::pressedChanged, [this, tapHandler] {
-        if (!tapHandler->isPressed())
+    QObject::connect(tapHandler, &QQuickTapHandler::pressedChanged, [this, q, tapHandler] {
+        if (!pointerNavigationEnabled || !tapHandler->isPressed())
             return;
         positionXAnimation.stop();
         positionYAnimation.stop();
+        q->setFocus(true, Qt::MouseFocusReason);
+        if (!q->isInteractive())
+            setCurrentIndexFromTap(tapHandler->point().pressPosition());
+    });
+
+    QObject::connect(tapHandler, &QQuickTapHandler::tapped, [this, q, tapHandler] {
+        if (!pointerNavigationEnabled)
+            return;
+        if (q->isInteractive())
+            setCurrentIndexFromTap(tapHandler->point().pressPosition());
     });
 }
 
@@ -3845,6 +3928,32 @@ void QQuickTableViewPrivate::syncViewportPosRecursive()
             syncChild_d->syncViewportPosRecursive();
         }
     }
+}
+
+void QQuickTableViewPrivate::setCurrentIndexFromTap(const QPointF &pos)
+{
+    Q_Q(QQuickTableView);
+
+    const QPointF posInView = q->mapFromItem(q->contentItem(), pos);
+    const QPoint cell = q->cellAtPos(posInView);
+    if (!cellIsValid(cell))
+        return;
+    ensureColumnVisible(cell.x(), true, 0);
+    ensureRowVisible(cell.y(), true, 0);
+    setCurrentIndex(cell);
+}
+
+void QQuickTableViewPrivate::setCurrentIndex(const QPoint &cell)
+{
+    if (!selectionModel)
+        return;
+
+    const QAbstractItemModel *qaim = selectionModel->model();
+    if (!qaim)
+        return;
+
+    const auto index = qaim->index(cell.y(), cell.x());
+    selectionModel->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
 }
 
 QQuickTableView::QQuickTableView(QQuickItem *parent)
@@ -4135,6 +4244,8 @@ void QQuickTableView::setSelectionModel(QItemSelectionModel *selectionModel)
     if (d->selectionModel) {
         QQuickTableViewPrivate::disconnect(d->selectionModel, &QItemSelectionModel::selectionChanged,
                                         d, &QQuickTableViewPrivate::selectionChangedInSelectionModel);
+        QQuickTableViewPrivate::disconnect(d->selectionModel, &QItemSelectionModel::currentChanged,
+                                        d, &QQuickTableViewPrivate::currentChangedInSelectionModel);
     }
 
     d->selectionModel = selectionModel;
@@ -4142,6 +4253,8 @@ void QQuickTableView::setSelectionModel(QItemSelectionModel *selectionModel)
     if (d->selectionModel) {
         QQuickTableViewPrivate::connect(d->selectionModel, &QItemSelectionModel::selectionChanged,
                                         d, &QQuickTableViewPrivate::selectionChangedInSelectionModel);
+        QQuickTableViewPrivate::connect(d->selectionModel, &QItemSelectionModel::currentChanged,
+                                        d, &QQuickTableViewPrivate::currentChangedInSelectionModel);
     }
 
     d->updateSelectedOnAllDelegateItems();
@@ -4167,6 +4280,38 @@ void QQuickTableView::setAnimate(bool animate)
     }
 
     emit animateChanged();
+}
+
+bool QQuickTableView::keyNavigationEnabled() const
+{
+    return d_func()->keyNavigationEnabled;
+}
+
+void QQuickTableView::setKeyNavigationEnabled(bool enabled)
+{
+    Q_D(QQuickTableView);
+    if (d->keyNavigationEnabled == enabled)
+        return;
+
+    d->keyNavigationEnabled = enabled;
+
+    emit keyNavigationEnabledChanged();
+}
+
+bool QQuickTableView::pointerNavigationEnabled() const
+{
+    return d_func()->pointerNavigationEnabled;
+}
+
+void QQuickTableView::setPointerNavigationEnabled(bool enabled)
+{
+    Q_D(QQuickTableView);
+    if (d->pointerNavigationEnabled == enabled)
+        return;
+
+    d->pointerNavigationEnabled = enabled;
+
+    emit pointerNavigationEnabledChanged();
 }
 
 int QQuickTableView::leftColumn() const
@@ -4477,6 +4622,136 @@ void QQuickTableView::viewportMoved(Qt::Orientations orientation)
                 rootView->polish();
             }
         }
+    }
+}
+
+void QQuickTableView::keyPressEvent(QKeyEvent *e)
+{
+    Q_D(QQuickTableView);
+
+    if (!d->keyNavigationEnabled || !d->selectionModel || !d->selectionModel->model()) {
+        QQuickFlickable::keyPressEvent(e);
+        return;
+    }
+
+    if (d->tableSize.isEmpty())
+        return;
+
+    const bool select = e->modifiers() & Qt::ShiftModifier;
+    const QModelIndex currentIndex = d->selectionModel->currentIndex();
+    const QPoint currentCell = cellAtIndex(currentIndex);
+
+    auto beginMoveCurrentIndex = [=](){
+        if (!select) {
+            d->clearSelection();
+        } else if (d->selectionRectangle().isEmpty()) {
+            const int serializedStartIndex = d->modelIndexToCellIndex(d->selectionModel->currentIndex());
+            if (d->loadedItems.contains(serializedStartIndex)) {
+                const QRectF startGeometry = d->loadedItems.value(serializedStartIndex)->geometry();
+                d->setSelectionStartPos(startGeometry.center());
+            }
+        }
+    };
+
+    auto endMoveCurrentIndex = [=](const QPoint &cell){
+        if (select) {
+            if (d->polishScheduled)
+                forceLayout();
+            const int serializedEndIndex = d->modelIndexAtCell(cell);
+            if (d->loadedItems.contains(serializedEndIndex)) {
+                const QRectF endGeometry = d->loadedItems.value(serializedEndIndex)->geometry();
+                d->setSelectionEndPos(endGeometry.center());
+            }
+        }
+        d->selectionModel->setCurrentIndex(modelIndex(cell), QItemSelectionModel::NoUpdate);
+    };
+
+    switch (e->key()) {
+    case Qt::Key_Up: {
+        beginMoveCurrentIndex();
+        const int nextRow = d->nextVisibleEdgeIndex(Qt::TopEdge, currentCell.y() - 1);
+        if (nextRow == kEdgeIndexAtEnd)
+            break;
+        const qreal marginY = d->atTableEnd(Qt::TopEdge, nextRow - 1) ? topMargin() : 0;
+        d->ensureRowVisible(nextRow, true, marginY);
+        endMoveCurrentIndex({currentCell.x(), nextRow});
+        break; }
+    case Qt::Key_Down: {
+        beginMoveCurrentIndex();
+        const int nextRow = d->nextVisibleEdgeIndex(Qt::BottomEdge, currentCell.y() + 1);
+        if (nextRow == kEdgeIndexAtEnd)
+            break;
+        const qreal marginY = d->atTableEnd(Qt::TopEdge, nextRow + 1) ? bottomMargin() : 0;
+        d->ensureRowVisible(nextRow, true, marginY);
+        endMoveCurrentIndex({currentCell.x(), nextRow});
+        break; }
+    case Qt::Key_Left: {
+        beginMoveCurrentIndex();
+        const int nextColumn = d->nextVisibleEdgeIndex(Qt::LeftEdge, currentCell.x() - 1);
+        if (nextColumn == kEdgeIndexAtEnd)
+            break;
+        const qreal marginX = d->atTableEnd(Qt::LeftEdge, nextColumn - 1) ? leftMargin() : 0;
+        d->ensureColumnVisible(nextColumn, true, marginX);
+        endMoveCurrentIndex({nextColumn, currentCell.y()});
+        break; }
+    case Qt::Key_Right: {
+        beginMoveCurrentIndex();
+        const int nextColumn = d->nextVisibleEdgeIndex(Qt::RightEdge, currentCell.x() + 1);
+        if (nextColumn == kEdgeIndexAtEnd)
+            break;
+        const qreal marginX = d->atTableEnd(Qt::LeftEdge, nextColumn + 1) ? leftMargin() : 0;
+        d->ensureColumnVisible(nextColumn, true, marginX);
+        endMoveCurrentIndex({nextColumn, currentCell.y()});
+        break; }
+    case Qt::Key_PageDown: {
+        int newBottomRow = -1;
+        beginMoveCurrentIndex();
+        if (currentCell.y() < bottomRow()) {
+            // The first PageDown should just move currentIndex to the bottom
+            newBottomRow = bottomRow();
+            d->positionViewAtRow(newBottomRow, Qt::AlignBottom, 0);
+        } else {
+            d->positionViewAtRow(bottomRow(), Qt::AlignTop, 0);
+            d->positionYAnimation.complete();
+            newBottomRow = topRow() != bottomRow() ? bottomRow() : bottomRow() + 1;
+            const qreal marginY = d->atTableEnd(Qt::BottomEdge, newBottomRow + 1) ? bottomMargin() : 0;
+            positionViewAtRow(newBottomRow, AlignTop | AlignBottom, marginY);
+            d->positionYAnimation.complete();
+        }
+        endMoveCurrentIndex(QPoint(currentCell.x(), newBottomRow));
+        break; }
+    case Qt::Key_PageUp: {
+        int newTopRow = -1;
+        beginMoveCurrentIndex();
+        if (currentCell.y() > topRow()) {
+            // The first PageUp should just move currentIndex to the top
+            newTopRow = topRow();
+            d->positionViewAtRow(newTopRow, Qt::AlignTop, 0);
+        } else {
+            d->positionViewAtRow(topRow(), Qt::AlignBottom, 0);
+            d->positionYAnimation.complete();
+            newTopRow = topRow() != bottomRow() ? topRow() : topRow() - 1;
+            const qreal marginY = d->atTableEnd(Qt::TopEdge, newTopRow - 1) ? -topMargin() : 0;
+            d->positionViewAtRow(newTopRow, Qt::AlignTop, marginY);
+            d->positionYAnimation.complete();
+        }
+        endMoveCurrentIndex(QPoint(currentCell.x(), newTopRow));
+        break; }
+    case Qt::Key_Home: {
+        beginMoveCurrentIndex();
+        const int firstColumn = d->nextVisibleEdgeIndex(Qt::RightEdge, 0);
+        d->positionViewAtColumn(firstColumn, Qt::AlignLeft, -leftMargin());
+        endMoveCurrentIndex(QPoint(firstColumn, currentCell.y()));
+        break; }
+    case Qt::Key_End: {
+        beginMoveCurrentIndex();
+        const int lastColumn = d->nextVisibleEdgeIndex(Qt::LeftEdge, columns() - 1);
+        d->positionViewAtColumn(lastColumn, Qt::AlignRight, rightMargin());
+        endMoveCurrentIndex(QPoint(lastColumn, currentCell.y()));
+        break; }
+    default:
+        QQuickFlickable::keyPressEvent(e);
+        break;
     }
 }
 

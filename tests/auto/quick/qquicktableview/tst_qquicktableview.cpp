@@ -214,6 +214,16 @@ private slots:
     void testSelectableStartPosEndPos();
     void testSelectableStartPosEndPosOutsideView();
     void testSelectableScrollTowardsPos();
+    void setCurrentIndexFromSelectionModel();
+    void moveCurrentIndexUsingArrowKeys();
+    void moveCurrentIndexUsingHomeAndEndKeys();
+    void moveCurrentIndexUsingPageUpDownKeys();
+    void setCurrentIndexFromMouse();
+    void disableKeyNavigation();
+    void disablePointerNavigation();
+    void selectUsingArrowKeys();
+    void selectUsingHomeAndEndKeys();
+    void selectUsingPageUpDownKeys();
     void testDeprecatedApi();
 };
 
@@ -4034,6 +4044,661 @@ void tst_QQuickTableView::testSelectableScrollTowardsPos()
     QCOMPARE(tableView->contentY(), 0);
 }
 
+void tst_QQuickTableView::setCurrentIndexFromSelectionModel()
+{
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(40, 40);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setFocus(true);
+    const char kCurrent[] = "current";
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that all delegates have current set to false upon start
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QVERIFY(!fxItem->item->property(kCurrent).toBool());
+
+    // Start by making cell 0, 0 current
+    const QPoint cell0_0(0, 0);
+    selectionModel.setCurrentIndex(tableView->modelIndex(cell0_0), QItemSelectionModel::NoUpdate);
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+
+    // Move currentIndex to a cell outside the viewport by accessing the selection
+    // model directly, scroll to it, and check current status.
+    const QPoint cellAtEnd(tableView->columns() - 1, tableView->rows() - 1);
+    selectionModel.setCurrentIndex(tableView->modelIndex(cellAtEnd), QItemSelectionModel::NoUpdate);
+    QVERIFY(!tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+
+    tableView->positionViewAtCell(cellAtEnd, QQuickTableView::AlignBottom | QQuickTableView::AlignRight);
+    WAIT_UNTIL_POLISHED;
+    QVERIFY(tableView->itemAtCell(cellAtEnd));
+    QVERIFY(tableView->itemAtCell(cellAtEnd)->property(kCurrent).toBool());
+}
+
+void tst_QQuickTableView::moveCurrentIndexUsingArrowKeys()
+{
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(40, 40);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setFocus(true);
+    QQuickWindow *window = tableView->window();
+    const char kCurrent[] = "current";
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that all delegates have current set to false upon start
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QVERIFY(!fxItem->item->property(kCurrent).toBool());
+
+    // Start by making cell 0, 0 current
+    const QPoint cell0_0(0, 0);
+    selectionModel.setCurrentIndex(tableView->modelIndex(cell0_0), QItemSelectionModel::NoUpdate);
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+
+    // Trying to move the index out of the table with the keys should be a no-op:
+    QTest::keyPress(window, Qt::Key_Left);
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
+    QTest::keyPress(window, Qt::Key_Up);
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+
+    // Move currentIndex right
+    const QPoint cell1_0(1, 0);
+    QTest::keyPress(window, Qt::Key_Right);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell1_0));
+    QVERIFY(!tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QVERIFY(tableView->itemAtCell(cell1_0)->property(kCurrent).toBool());
+
+    // Move currentIndex left
+    QTest::keyPress(window, Qt::Key_Left);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QVERIFY(!tableView->itemAtCell(cell1_0)->property(kCurrent).toBool());
+
+    // Move currentIndex down
+    const QPoint cell0_1(0, 1);
+    QTest::keyPress(window, Qt::Key_Down);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_1));
+    QVERIFY(!tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QVERIFY(tableView->itemAtCell(cell0_1)->property(kCurrent).toBool());
+
+    // Move currentIndex up
+    QTest::keyPress(window, Qt::Key_Up);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QVERIFY(!tableView->itemAtCell(cell0_1)->property(kCurrent).toBool());
+}
+
+void tst_QQuickTableView::moveCurrentIndexUsingHomeAndEndKeys()
+{
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(40, 40);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setFocus(true);
+    QQuickWindow *window = tableView->window();
+    const char kCurrent[] = "current";
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that all delegates have current set to false upon start
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QVERIFY(!fxItem->item->property(kCurrent).toBool());
+
+    const QPoint cell0_0(0, 0);
+    const QPoint cellHorEnd(tableView->columns() - 1, 0);
+
+    // Start by making cell 0, 0 current
+    selectionModel.setCurrentIndex(tableView->modelIndex(cell0_0), QItemSelectionModel::NoUpdate);
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+
+    // Move currentIndex to end
+    QTest::keyPress(window, Qt::Key_End);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cellHorEnd));
+    QTRY_VERIFY(tableView->itemAtCell(cellHorEnd));
+    QVERIFY(tableView->itemAtCell(cellHorEnd)->property(kCurrent).toBool());
+
+    // Move currentIndex to end once more is a no-op
+    QTest::keyPress(window, Qt::Key_End);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cellHorEnd));
+    QVERIFY(tableView->itemAtCell(cellHorEnd)->property(kCurrent).toBool());
+
+    // Move currentIndex to home
+    QTest::keyPress(window, Qt::Key_Home);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
+    QTRY_VERIFY(tableView->itemAtCell(cell0_0));
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+
+    // Move currentIndex to home once more is a no-op
+    QTest::keyPress(window, Qt::Key_Home);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+}
+
+void tst_QQuickTableView::moveCurrentIndexUsingPageUpDownKeys()
+{
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(40, 40);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setFocus(true);
+    QQuickWindow *window = tableView->window();
+    const char kCurrent[] = "current";
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that all delegates have current set to false upon start
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QVERIFY(!fxItem->item->property(kCurrent).toBool());
+
+    // Start by making cell 0, 0 current
+    const QPoint cell0_0(0, 0);
+    selectionModel.setCurrentIndex(tableView->modelIndex(cell0_0), QItemSelectionModel::NoUpdate);
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+
+    // Move currentIndex page down
+    const QPoint bottomCell(0, tableView->bottomRow());
+    QTest::keyPress(window, Qt::Key_PageDown);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(bottomCell));
+    QVERIFY(tableView->itemAtCell(cell0_0));
+    QVERIFY(tableView->itemAtCell(bottomCell));
+    QVERIFY(!tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QVERIFY(tableView->itemAtCell(bottomCell)->property(kCurrent).toBool());
+
+    // Move currentIndex page up
+    QTest::keyPress(window, Qt::Key_PageUp);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
+    QVERIFY(tableView->itemAtCell(cell0_0));
+    QVERIFY(tableView->itemAtCell(bottomCell));
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QVERIFY(!tableView->itemAtCell(bottomCell)->property(kCurrent).toBool());
+
+    // Move currentIndex page down a second. The second time will cause a fast-flick.
+    const QPoint bottomCellPageTwo(0, 38);
+    QTest::keyPress(window, Qt::Key_PageDown);
+    QTest::keyPress(window, Qt::Key_PageDown);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(bottomCellPageTwo));
+    QTRY_VERIFY(tableView->itemAtCell(bottomCellPageTwo));
+    QVERIFY(tableView->itemAtCell(bottomCellPageTwo)->property(kCurrent).toBool());
+
+    // Move currentIndex page down a third time. This will hit the end of the table
+    // before a whole page can be reached.
+    const QPoint cellVerEnd(0, tableView->rows() - 1);
+    QTest::keyPress(window, Qt::Key_PageDown);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cellVerEnd));
+    QTRY_VERIFY(tableView->itemAtCell(cellVerEnd));
+    QVERIFY(tableView->itemAtCell(cellVerEnd)->property(kCurrent).toBool());
+
+    // Move currentIndex page down once more is a no-op
+    QTest::keyPress(window, Qt::Key_PageDown);
+    QVERIFY(tableView->itemAtCell(cellVerEnd)->property(kCurrent).toBool());
+
+    // Move currentIndex page up
+    const QPoint cellTop1(0, tableView->topRow());
+    QTest::keyPress(window, Qt::Key_PageUp);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cellTop1));
+    QVERIFY(tableView->itemAtCell(cellTop1));
+    QVERIFY(tableView->itemAtCell(cellTop1)->property(kCurrent).toBool());
+
+    // Move currentIndex page up a second time. This will cause a fast-flick, which
+    // happens to end up on row 1.
+    const QPoint cell0_1(0, 1);
+    QTest::keyPress(window, Qt::Key_PageUp);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_1));
+    QTRY_VERIFY(tableView->itemAtCell(cell0_1));
+    QVERIFY(tableView->itemAtCell(cell0_1)->property(kCurrent).toBool());
+
+    // Move currentIndex page up a third time. This will bring the table
+    // all the way to the top.
+    QTest::keyPress(window, Qt::Key_PageUp);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
+    QTRY_VERIFY(tableView->itemAtCell(cell0_0));
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+
+    // Move currentIndex page up once more. This will be a no-op.
+    QTest::keyPress(window, Qt::Key_PageUp);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+
+    // Move currentIndex to a cell outside the viewport by accessing the selection
+    // model directly, scroll to it, and check current status.
+    const QPoint cellAtEnd(tableView->columns() - 1, tableView->rows() - 1);
+    selectionModel.setCurrentIndex(tableView->modelIndex(cellAtEnd), QItemSelectionModel::NoUpdate);
+    tableView->positionViewAtCell(cellAtEnd, QQuickTableView::AlignBottom | QQuickTableView::AlignRight);
+    QTRY_VERIFY(tableView->itemAtCell(cellAtEnd));
+    QVERIFY(tableView->itemAtCell(cellAtEnd)->property(kCurrent).toBool());
+}
+
+void tst_QQuickTableView::setCurrentIndexFromMouse()
+{
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(40, 40);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setFocus(true);
+    QQuickWindow *window = tableView->window();
+    QQuickItem *contentItem = window->contentItem();
+    const char kCurrent[] = "current";
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that all delegates have current set to false upon start
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QVERIFY(!fxItem->item->property(kCurrent).toBool());
+
+    // Click on cell 0, 0
+    const QPoint cell0_0(0, 0);
+    const auto item0_0 = tableView->itemAtCell(cell0_0);
+    QVERIFY(item0_0);
+    QPoint pos = contentItem->mapFromItem(item0_0, QPointF(5, 5)).toPoint();
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
+    QVERIFY(item0_0->property(kCurrent).toBool());
+
+    // Click on cell 1, 2
+    const QPoint cell1_2(1, 2);
+    auto item1_2 = tableView->itemAtCell(cell1_2);
+    QVERIFY(item1_2);
+    pos = contentItem->mapFromItem(item1_2, QPointF(5, 5)).toPoint();
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell1_2));
+    QVERIFY(!item0_0->property(kCurrent).toBool());
+    QVERIFY(item1_2->property(kCurrent).toBool());
+
+    // Position the view at the end of the table, and click on the bottom-right cell
+    const QPoint cellAtEnd(tableView->columns() - 1, tableView->rows() - 1);
+    tableView->positionViewAtCell(cellAtEnd, QQuickTableView::AlignBottom | QQuickTableView::AlignRight);
+    WAIT_UNTIL_POLISHED;
+    auto itemAtEnd = tableView->itemAtCell(cellAtEnd);
+    QVERIFY(itemAtEnd);
+    QVERIFY(!itemAtEnd->property(kCurrent).toBool());
+    pos = contentItem->mapFromItem(itemAtEnd, QPointF(5, 5)).toPoint();
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cellAtEnd));
+    QVERIFY(itemAtEnd->property(kCurrent).toBool());
+}
+
+void tst_QQuickTableView::disablePointerNavigation()
+{
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(40, 40);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setFocus(true);
+    tableView->setPointerNavigationEnabled(false);
+    QQuickWindow *window = tableView->window();
+    QQuickItem *contentItem = window->contentItem();
+
+    WAIT_UNTIL_POLISHED;
+
+    QVERIFY(!selectionModel.currentIndex().isValid());
+
+    // Click on cell 0, 0, nothing should happen
+    const QPoint cell0_0(0, 0);
+    const auto item0_0 = tableView->itemAtCell(cell0_0);
+    QVERIFY(item0_0);
+    QPoint pos = contentItem->mapFromItem(item0_0, QPointF(5, 5)).toPoint();
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
+    QVERIFY(!selectionModel.currentIndex().isValid());
+    QVERIFY(!item0_0->property("current").toBool());
+
+    // Enable navigation, and try again
+    tableView->setPointerNavigationEnabled(true);
+    QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(0, 0));
+    QVERIFY(item0_0->property("current").toBool());
+}
+
+void tst_QQuickTableView::disableKeyNavigation()
+{
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(40, 40);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setKeyNavigationEnabled(false);
+    tableView->setFocus(true);
+    QQuickWindow *window = tableView->window();
+    const char kCurrent[] = "current";
+
+    WAIT_UNTIL_POLISHED;
+
+    // Start by making cell 1, 1 current
+    const QPoint cell1_1(1, 1);
+    selectionModel.setCurrentIndex(tableView->modelIndex(cell1_1), QItemSelectionModel::NoUpdate);
+    QCOMPARE(tableView->itemAtCell(cell1_1)->property(kCurrent).toBool(), true);
+
+    // Try to move currentIndex right by pressing Key_Right. Nothing should happen.
+    const QPoint cell2_1(2, 1);
+    QTest::keyPress(window, Qt::Key_Right);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell1_1));
+    QVERIFY(tableView->itemAtCell(cell1_1)->property(kCurrent).toBool());
+    QVERIFY(!tableView->itemAtCell(cell2_1)->property(kCurrent).toBool());
+
+    // Enable navigation, and try again
+    tableView->setKeyNavigationEnabled(true);
+    QTest::keyPress(window, Qt::Key_Right);
+    QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell2_1));
+    QVERIFY(!tableView->itemAtCell(cell1_1)->property(kCurrent).toBool());
+    QVERIFY(tableView->itemAtCell(cell2_1)->property(kCurrent).toBool());
+}
+
+void tst_QQuickTableView::selectUsingArrowKeys()
+{
+    // Select cells in the view using the keyboard
+    // by going in a square around cell 1, 1
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(40, 40);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setFocus(true);
+    QQuickWindow *window = tableView->window();
+    const char kSelected[] = "selected";
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that all delegates have selected set to false upon start
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QCOMPARE(fxItem->item->property(kSelected).toBool(), false);
+
+    // Start by making cell 1, 1 current
+    const QPoint cell1_1(1, 1);
+    selectionModel.setCurrentIndex(tableView->modelIndex(cell1_1), QItemSelectionModel::NoUpdate);
+    QCOMPARE(tableView->itemAtCell(cell1_1)->property(kSelected).toBool(), false);
+
+    // Move currentIndex right while holding down shift to select
+    const QPoint cell2_1(2, 1);
+    QTest::keyPress(window, Qt::Key_Right, Qt::ShiftModifier);
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell1_1)));
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell2_1)));
+    QVERIFY(tableView->itemAtCell(cell1_1)->property(kSelected).toBool());
+    QVERIFY(tableView->itemAtCell(cell2_1)->property(kSelected).toBool());
+
+    // Move currentIndex down while holding down shift to select
+    const QPoint cell2_2(2, 2);
+    const QPoint cell1_2(1, 2);
+    QTest::keyPress(window, Qt::Key_Down, Qt::ShiftModifier);
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell1_1)));
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell2_1)));
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell2_2)));
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell1_2)));
+    QVERIFY(tableView->itemAtCell(cell1_1)->property(kSelected).toBool());
+    QVERIFY(tableView->itemAtCell(cell2_1)->property(kSelected).toBool());
+    QVERIFY(tableView->itemAtCell(cell2_2)->property(kSelected).toBool());
+    QVERIFY(tableView->itemAtCell(cell1_2)->property(kSelected).toBool());
+
+    // Move currentIndex left while holding down shift to select
+    QTest::keyPress(window, Qt::Key_Left, Qt::ShiftModifier);
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell1_1)));
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell1_2)));
+    QVERIFY(!selectionModel.isSelected(tableView->modelIndex(cell2_1)));
+    QVERIFY(!selectionModel.isSelected(tableView->modelIndex(cell2_2)));
+    QVERIFY(tableView->itemAtCell(cell1_1)->property(kSelected).toBool());
+    QVERIFY(tableView->itemAtCell(cell1_2)->property(kSelected).toBool());
+    QVERIFY(!tableView->itemAtCell(cell2_1)->property(kSelected).toBool());
+    QVERIFY(!tableView->itemAtCell(cell2_2)->property(kSelected).toBool());
+
+    // Move currentIndex left while holding down shift to select
+    const QPoint cell0_1(0, 1);
+    const QPoint cell0_2(0, 2);
+    QTest::keyPress(window, Qt::Key_Left, Qt::ShiftModifier);
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell0_1)));
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell0_2)));
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell1_1)));
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell1_2)));
+    QVERIFY(tableView->itemAtCell(cell0_1)->property(kSelected).toBool());
+    QVERIFY(tableView->itemAtCell(cell0_2)->property(kSelected).toBool());
+    QVERIFY(tableView->itemAtCell(cell1_1)->property(kSelected).toBool());
+    QVERIFY(tableView->itemAtCell(cell1_2)->property(kSelected).toBool());
+
+    // Move currentIndex up while holding down shift to select
+    QTest::keyPress(window, Qt::Key_Up, Qt::ShiftModifier);
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell0_1)));
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell1_1)));
+    QVERIFY(!selectionModel.isSelected(tableView->modelIndex(cell0_2)));
+    QVERIFY(!selectionModel.isSelected(tableView->modelIndex(cell1_2)));
+    QVERIFY(tableView->itemAtCell(cell0_1)->property(kSelected).toBool());
+    QVERIFY(tableView->itemAtCell(cell1_1)->property(kSelected).toBool());
+    QVERIFY(!tableView->itemAtCell(cell0_2)->property(kSelected).toBool());
+    QVERIFY(!tableView->itemAtCell(cell1_2)->property(kSelected).toBool());
+
+    // Move currentIndex up while holding down shift to select
+    const QPoint cell0_0(0, 0);
+    const QPoint cell1_0(1, 0);
+    QTest::keyPress(window, Qt::Key_Up, Qt::ShiftModifier);
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell0_0)));
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell0_1)));
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell1_0)));
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell1_1)));
+    QVERIFY(tableView->itemAtCell(cell0_0)->property(kSelected).toBool());
+    QVERIFY(tableView->itemAtCell(cell0_1)->property(kSelected).toBool());
+    QVERIFY(tableView->itemAtCell(cell1_0)->property(kSelected).toBool());
+    QVERIFY(tableView->itemAtCell(cell1_1)->property(kSelected).toBool());
+
+    // Move currentIndex right while holding down shift to select
+    QTest::keyPress(window, Qt::Key_Right, Qt::ShiftModifier);
+    QVERIFY(!selectionModel.isSelected(tableView->modelIndex(cell0_0)));
+    QVERIFY(!selectionModel.isSelected(tableView->modelIndex(cell0_1)));
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell1_0)));
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell1_1)));
+    QVERIFY(!tableView->itemAtCell(cell0_0)->property(kSelected).toBool());
+    QVERIFY(!tableView->itemAtCell(cell0_1)->property(kSelected).toBool());
+    QVERIFY(tableView->itemAtCell(cell1_0)->property(kSelected).toBool());
+    QVERIFY(tableView->itemAtCell(cell1_1)->property(kSelected).toBool());
+
+    // Finally, move currentIndex _without_ shift, which should clear the selection
+    QTest::keyPress(window, Qt::Key_Right);
+    QVERIFY(!selectionModel.isSelected(tableView->modelIndex(cell1_0)));
+    QVERIFY(!selectionModel.isSelected(tableView->modelIndex(cell1_1)));
+    QVERIFY(!tableView->itemAtCell(cell1_0)->property(kSelected).toBool());
+    QVERIFY(!tableView->itemAtCell(cell1_1)->property(kSelected).toBool());
+}
+
+void tst_QQuickTableView::selectUsingHomeAndEndKeys()
+{
+    // Select cells in the view by using the home and end keys
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(4, 40);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setFocus(true);
+    QQuickWindow *window = tableView->window();
+    const char kSelected[] = "selected";
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that all delegates have selected set to false upon start
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QVERIFY(!fxItem->item->property(kSelected).toBool());
+
+    // Start by making cell 0, 0 current
+    const QPoint cell0_0(0, 0);
+    selectionModel.setCurrentIndex(tableView->modelIndex(cell0_0), QItemSelectionModel::NoUpdate);
+    QVERIFY(!tableView->itemAtCell(cell0_0)->property(kSelected).toBool());
+
+    // Move currentIndex to the end while holding down shift to select
+    const QPoint cellAtHorEnd(tableView->columns() - 1, 0);
+    QTest::keyPress(window, Qt::Key_End, Qt::ShiftModifier);
+    QTRY_VERIFY(tableView->itemAtCell(cellAtHorEnd));
+    for (int c = 0; c <= cellAtHorEnd.x(); ++c) {
+        const QPoint cell(c, cellAtHorEnd.y());
+        QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell)));
+        const QQuickItem *item = tableView->itemAtCell(cell);
+        if (item)
+            QVERIFY(item->property(kSelected).toBool());
+    }
+
+    // Move currentIndex to home while holding down shift to select.
+    // This should result in only the first cell being selected.
+    const QPoint cellAtHome(0, 0);
+    QTest::keyPress(window, Qt::Key_Home, Qt::ShiftModifier);
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cellAtHome)));
+    QTRY_VERIFY(tableView->itemAtCell(cellAtHome));
+    QVERIFY(tableView->itemAtCell(cellAtHome)->property(kSelected).toBool());
+    for (int c = 1; c <= cellAtHorEnd.x(); ++c) {
+        const QPoint cell(c, cellAtHorEnd.y());
+        QVERIFY(!selectionModel.isSelected(tableView->modelIndex(cell)));
+        const QQuickItem *item = tableView->itemAtCell(cell);
+        if (item)
+            QVERIFY(!item->property(kSelected).toBool());
+    }
+
+    // Reverse the test, by starting from cellAtHorEnd
+    selectionModel.setCurrentIndex(tableView->modelIndex(cellAtHorEnd), QItemSelectionModel::Clear);
+    tableView->positionViewAtCell(cellAtHorEnd, QQuickTableView::AlignTop | QQuickTableView::AlignRight);
+    WAIT_UNTIL_POLISHED;
+    QQuickItem *itemAtHorEnd = tableView->itemAtCell(cellAtHorEnd);
+    QVERIFY(itemAtHorEnd);
+    QCOMPARE(itemAtHorEnd->property(kSelected).toBool(), false);
+
+    // Move currentIndex home while holding down shift to select
+    QTest::keyPress(window, Qt::Key_Home, Qt::ShiftModifier);
+    QTRY_VERIFY(tableView->itemAtCell(cellAtHome));
+    for (int c = 0; c <= cellAtHorEnd.x(); ++c) {
+        const QPoint cell(c, cellAtHorEnd.y());
+        QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell)));
+        const QQuickItem *item = tableView->itemAtCell(cell);
+        if (item)
+            QVERIFY(item->property(kSelected).toBool());
+    }
+
+    // Move currentIndex to end while holding down shift to select.
+    // This should result in only cellAtHorEnd being selected.
+    QTest::keyPress(window, Qt::Key_End, Qt::ShiftModifier);
+    QVERIFY(selectionModel.isSelected(tableView->modelIndex(cellAtHorEnd)));
+    QTRY_VERIFY(tableView->itemAtCell(cellAtHorEnd));
+    QVERIFY(tableView->itemAtCell(cellAtHorEnd)->property(kSelected).toBool());
+    for (int c = 0; c < cellAtHorEnd.x(); ++c) {
+        const QPoint cell(c, cellAtHorEnd.y());
+        QVERIFY(!selectionModel.isSelected(tableView->modelIndex(cell)));
+        const QQuickItem *item = tableView->itemAtCell(cell);
+        if (item)
+            QVERIFY(!item->property(kSelected).toBool());
+    }
+}
+
+void tst_QQuickTableView::selectUsingPageUpDownKeys()
+{
+    // Select cells in the view by using the page up and down keys
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model(30, 3);
+    QItemSelectionModel selectionModel(&model);
+
+    tableView->setModel(QVariant::fromValue(&model));
+    tableView->setSelectionModel(&selectionModel);
+    tableView->setFocus(true);
+    QQuickWindow *window = tableView->window();
+    const char kSelected[] = "selected";
+
+    WAIT_UNTIL_POLISHED;
+
+    // Check that all delegates have selected set to false upon start
+    for (auto fxItem : tableViewPrivate->loadedItems)
+        QVERIFY(!fxItem->item->property(kSelected).toBool());
+
+    // Start by making cell 0, 0 current
+    const QPoint cell0_0(0, 0);
+    selectionModel.setCurrentIndex(tableView->modelIndex(cell0_0), QItemSelectionModel::NoUpdate);
+    QVERIFY(!tableView->itemAtCell(cell0_0)->property(kSelected).toBool());
+
+    // Move currentIndex page down while holding down shift to select
+    const QPoint cellAtBottom(0, tableView->bottomRow());
+    QTest::keyPress(window, Qt::Key_PageDown, Qt::ShiftModifier);
+    QVERIFY(tableView->itemAtCell(cellAtBottom));
+    for (int r = 0; r <= cellAtBottom.y(); ++r) {
+        const QPoint cell(cellAtBottom.x(), r);
+        QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell)));
+        const QQuickItem *item = tableView->itemAtCell(cell);
+        if (item)
+            QVERIFY(item->property(kSelected).toBool());
+    }
+
+    // Move currentIndex page up while holding down shift to select
+    const QPoint cellAtTop(0, 0);
+    QTest::keyPress(window, Qt::Key_PageUp, Qt::ShiftModifier);
+    QVERIFY(tableView->itemAtCell(cellAtTop));
+    QVERIFY(tableView->itemAtCell(cellAtTop)->property(kSelected).toBool());
+    for (int r = 1; r <= cellAtBottom.y(); ++r) {
+        const QPoint cell(cellAtBottom.x(), r);
+        QVERIFY(!selectionModel.isSelected(tableView->modelIndex(cell)));
+        const QQuickItem *item = tableView->itemAtCell(cell);
+        if (item)
+            QVERIFY(!item->property(kSelected).toBool());
+    }
+
+    // Move currentIndex page down twice while holding down shift to select.
+    // This will select all cells in the first column, even the ones that are initially hidden.
+    const QPoint cellAtVerEnd(0, tableView->rows() - 1);
+    QTest::keyPress(window, Qt::Key_PageDown, Qt::ShiftModifier);
+    QTest::keyPress(window, Qt::Key_PageDown, Qt::ShiftModifier);
+    QTRY_VERIFY(tableView->itemAtCell(cellAtVerEnd));
+    QCOMPARE(tableView->bottomRow(), cellAtVerEnd.y());
+    for (int r = 0; r <= cellAtBottom.y(); ++r) {
+        const QPoint cell(cellAtBottom.x(), r);
+        QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell)));
+        const QQuickItem *item = tableView->itemAtCell(cell);
+        if (item)
+            QVERIFY(item->property(kSelected).toBool());
+    }
+
+    // Reverse the test, by starting from cellAtVerEnd
+    selectionModel.clearSelection();
+    QVERIFY(!tableView->itemAtCell(cellAtVerEnd)->property(kSelected).toBool());
+
+    // Move currentIndex page up while holding down shift to select
+    const QPoint cellAtTopRow(0, tableView->topRow());
+    QTest::keyPress(window, Qt::Key_PageUp, Qt::ShiftModifier);
+    QTRY_VERIFY(tableView->itemAtCell(cellAtTopRow));
+    for (int r = cellAtTopRow.y(); r <= cellAtVerEnd.y(); ++r) {
+        const QPoint cell(cellAtBottom.x(), r);
+        QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell)));
+        const QQuickItem *item = tableView->itemAtCell(cell);
+        if (item)
+            QVERIFY(item->property(kSelected).toBool());
+    }
+
+    // Move currentIndex page up once more while holding down shift to select.
+    // This will bring currentIndex to the top.
+    QTest::keyPress(window, Qt::Key_PageUp, Qt::ShiftModifier);
+    QTRY_VERIFY(tableView->itemAtCell(cellAtTop));
+    for (int r = cellAtTop.y(); r <= cellAtVerEnd.y(); ++r) {
+        const QPoint cell(cellAtBottom.x(), r);
+        QVERIFY(selectionModel.isSelected(tableView->modelIndex(cell)));
+        const QQuickItem *item = tableView->itemAtCell(cell);
+        if (item)
+            QVERIFY(item->property(kSelected).toBool());
+    }
+}
+
 void tst_QQuickTableView::testDeprecatedApi()
 {
     // Check that you can still use Qt.Alignment as second argument
@@ -4055,6 +4720,7 @@ void tst_QQuickTableView::testDeprecatedApi()
     QCOMPARE(tableView->rightColumn(), model.columnCount() - 1);
     QCOMPARE(tableView->bottomRow(), model.rowCount() - 1);
 }
+
 QTEST_MAIN(tst_QQuickTableView)
 
 #include "tst_qquicktableview.moc"
