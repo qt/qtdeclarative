@@ -127,7 +127,7 @@ public:
 
         void addReadRegister(int registerIndex, const QQmlJSRegisterContent &reg)
         {
-            Q_ASSERT(reg.isConversion());
+            Q_ASSERT(isRename() || reg.isConversion());
             m_readRegisters[registerIndex] = reg;
         }
 

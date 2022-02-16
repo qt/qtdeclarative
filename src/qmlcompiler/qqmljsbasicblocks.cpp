@@ -192,6 +192,13 @@ private:
     typename OriginalFlatMap::mapped_container_type values;
 };
 
+struct PendingBlock
+{
+    QList<int> conversions;
+    int start = -1;
+    bool registerActive = false;
+};
+
 void QQmlJSBasicBlocks::populateReaderLocations()
 {
     using NewInstructionAnnotations = NewFlatMap<int, InstructionAnnotation>;
@@ -199,24 +206,36 @@ void QQmlJSBasicBlocks::populateReaderLocations()
     bool erasedReaders = false;
     auto eraseDeadStore = [&](const InstructionAnnotations::iterator &it) {
         auto reader = m_readerLocations.find(it.key());
-        if (reader != m_readerLocations.end() && reader->readers.isEmpty()) {
+        if (reader != m_readerLocations.end()
+                && (reader->typeReaders.isEmpty()
+                    || reader->registerReadersAndConversions.isEmpty())) {
 
-            // void the output, rather than deleting it. We still need its variant.
-            m_typeResolver->adjustTrackedType(
-                        it->second.changedRegister.storedType(),
-                        m_typeResolver->voidType());
-            m_typeResolver->adjustTrackedType(
-                        m_typeResolver->containedType(it->second.changedRegister),
-                        m_typeResolver->voidType());
+            if (it->second.isRename) {
+                // If it's a rename, it doesn't "own" its output type. The type may
+                // still be read elsewhere, even if this register isn't. However, we're
+                // not interested in the variant or any other details of the register.
+                // Therefore just delete it.
+                it->second.changedRegisterIndex = InvalidRegister;
+                it->second.changedRegister = QQmlJSRegisterContent();
+            } else {
+                // void the output, rather than deleting it. We still need its variant.
+                m_typeResolver->adjustTrackedType(
+                            it->second.changedRegister.storedType(),
+                            m_typeResolver->voidType());
+                m_typeResolver->adjustTrackedType(
+                            m_typeResolver->containedType(it->second.changedRegister),
+                            m_typeResolver->voidType());
+            }
             m_readerLocations.erase(reader);
 
             // If it's not a label and has no side effects, we can drop the instruction.
-            if (!it->second.hasSideEffects && m_basicBlocks.find(it.key()) == m_basicBlocks.end()) {
+            if (!it->second.hasSideEffects) {
                 if (!it->second.readRegisters.isEmpty()) {
                     it->second.readRegisters.clear();
                     erasedReaders = true;
                 }
-                return true;
+                if (m_basicBlocks.find(it.key()) == m_basicBlocks.end())
+                    return true;
             }
         }
         return false;
@@ -232,6 +251,7 @@ void QQmlJSBasicBlocks::populateReaderLocations()
         }
 
         RegisterAccess &access = m_readerLocations[writeIt.key()];
+        access.trackedRegister = writtenRegister;
         if (writeIt->second.changedRegister.isConversion()) {
             // If it's a conversion, we have to check for all readers of the conversion origins.
             // This happens at jump targets where different types are merged. A StoreReg or similar
@@ -246,16 +266,20 @@ void QQmlJSBasicBlocks::populateReaderLocations()
         if (blockIt == m_basicBlocks.end() || blockIt->first != writeIt.key())
             --blockIt;
 
-        QList<int> blocks = { blockIt->first };
+        QList<PendingBlock> blocks = { { {}, blockIt->first, true } };
         QList<int> processedBlocks;
         bool isFirstBlock = true;
 
         while (!blocks.isEmpty()) {
-            auto nextBlock = m_basicBlocks.find(blocks.takeLast());
+            const PendingBlock block = blocks.takeLast();
+            auto nextBlock = m_basicBlocks.find(block.start);
             auto currentBlock = nextBlock++;
+            bool registerActive = block.registerActive;
+            QList<int> conversions = block.conversions;
 
             if (isFirstBlock
-                    || containsAny(currentBlock->second.readRegisters, access.trackedTypes)) {
+                    || containsAny(currentBlock->second.readTypes, access.trackedTypes)
+                    || currentBlock->second.readRegisters.contains(writtenRegister)) {
                 const auto blockEnd = (nextBlock == m_basicBlocks.end())
                         ? m_annotations.end()
                         : m_annotations.find(nextBlock->first);
@@ -267,21 +291,36 @@ void QQmlJSBasicBlocks::populateReaderLocations()
                     for (auto readIt = blockInstr->second.readRegisters.constBegin(),
                          end = blockInstr->second.readRegisters.constEnd();
                          readIt != end; ++readIt) {
-                        Q_ASSERT(readIt->second.isConversion());
-                        if (containsAny(readIt->second.conversionOrigins(), access.trackedTypes))
-                            access.readers[blockInstr.key()] = readIt->second.conversionResult();
+                        if (!blockInstr->second.isRename && containsAny(
+                                    readIt->second.conversionOrigins(), access.trackedTypes)) {
+                            Q_ASSERT(readIt->second.isConversion());
+                            access.typeReaders[blockInstr.key()]
+                                    = readIt->second.conversionResult();
+                        }
+                        if (registerActive && readIt->first == writtenRegister)
+                            access.registerReadersAndConversions[blockInstr.key()] = conversions;
+                    }
+
+                    if (registerActive
+                            && blockInstr->second.typeConversions.contains(writtenRegister)) {
+                        conversions.append(blockInstr.key());
+                    }
+
+                    if (blockInstr->second.changedRegisterIndex == writtenRegister) {
+                        conversions.clear();
+                        registerActive = false;
                     }
                 }
             }
 
             if (!currentBlock->second.jumpIsUnconditional && nextBlock != m_basicBlocks.end()
                     && !processedBlocks.contains(nextBlock->first)) {
-                blocks.append(nextBlock->first);
+                blocks.append({conversions, nextBlock->first, registerActive});
             }
 
             const int jumpTarget = currentBlock->second.jumpTarget;
             if (jumpTarget != -1 && !processedBlocks.contains(jumpTarget))
-                blocks.append(jumpTarget);
+                blocks.append({conversions, jumpTarget, registerActive});
 
             // We can re-enter the first block from the beginning.
             // We will then find any reads before the write we're currently examining.
@@ -308,11 +347,20 @@ void QQmlJSBasicBlocks::populateReaderLocations()
 
             auto readers = m_readerLocations.find(it.key());
             if (readers != m_readerLocations.end()) {
-                for (auto it = readers->readers.begin(); it != readers->readers.end();) {
-                    if (m_annotations.contains(it.key()))
-                        ++it;
+                for (auto typeIt = readers->typeReaders.begin();
+                     typeIt != readers->typeReaders.end();) {
+                    if (m_annotations.contains(typeIt.key()))
+                        ++typeIt;
                     else
-                        it = readers->readers.erase(it);
+                        typeIt = readers->typeReaders.erase(typeIt);
+                }
+
+                for (auto registerIt = readers->registerReadersAndConversions.begin();
+                     registerIt != readers->registerReadersAndConversions.end();) {
+                    if (m_annotations.contains(registerIt.key()))
+                        ++registerIt;
+                    else
+                        registerIt = readers->registerReadersAndConversions.erase(registerIt);
                 }
             }
 
@@ -328,13 +376,19 @@ void QQmlJSBasicBlocks::adjustTypes()
 {
     using NewVirtualRegisters = NewFlatMap<int, QQmlJSRegisterContent>;
 
+    QHash<int, QList<int>> liveConversions;
     for (auto it = m_readerLocations.begin(), end = m_readerLocations.end(); it != end; ++it) {
+        for (const QList<int> &conversions : qAsConst(it->registerReadersAndConversions)) {
+            for (int conversion : conversions)
+                liveConversions[conversion].append(it->trackedRegister);
+        }
+
         // There is always one first occurrence of any tracked type. Conversions don't change
         // the type.
         if (it->trackedTypes.length() != 1)
             continue;
 
-        m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->readers.values());
+        m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->typeReaders.values());
     }
 
     const auto transformRegister = [&](QQmlJSRegisterContent &content) {
@@ -347,14 +401,21 @@ void QQmlJSBasicBlocks::adjustTypes()
     for (auto i = m_annotations.begin(), iEnd = m_annotations.end(); i != iEnd; ++i) {
         if (i->second.changedRegisterIndex != InvalidRegister)
             transformRegister(i->second.changedRegister);
-        for (auto content : i->second.typeConversions) {
-            QQmlJSScope::ConstPtr conversionResult = content.second.conversionResult();
-            const auto conversionOrigins = content.second.conversionOrigins();
+
+        for (auto conversion = i->second.typeConversions.begin(),
+             conversionEnd = i->second.typeConversions.end(); conversion != conversionEnd;
+             ++conversion) {
+            if (!liveConversions[i.key()].contains(conversion.key()))
+                continue;
+
+            QQmlJSScope::ConstPtr conversionResult = conversion->second.conversionResult();
+            const auto conversionOrigins = conversion->second.conversionOrigins();
             QQmlJSScope::ConstPtr newResult;
             for (const auto &origin : conversionOrigins)
                 newResult = m_typeResolver->merge(newResult, origin);
             m_typeResolver->adjustTrackedType(conversionResult, newResult);
-            transformRegister(content.second);
+            transformRegister(conversion->second);
+            newRegisters.appendOrdered(conversion);
         }
         i->second.typeConversions = newRegisters.take();
     }
@@ -367,7 +428,8 @@ void QQmlJSBasicBlocks::populateBasicBlocks()
 
         const auto blockIt = blockNext++;
         BasicBlock &block = blockIt->second;
-        QList<QQmlJSScope::ConstPtr> writtenRegisters;
+        QList<QQmlJSScope::ConstPtr> writtenTypes;
+        QList<int> writtenRegisters;
 
         const auto instrEnd = (blockNext == blockEnd)
                 ? m_annotations.end()
@@ -376,20 +438,28 @@ void QQmlJSBasicBlocks::populateBasicBlocks()
             const InstructionAnnotation &instruction = instrIt->second;
             for (auto it = instruction.readRegisters.begin(), end = instruction.readRegisters.end();
                  it != end; ++it) {
-                Q_ASSERT(it->second.isConversion());
-                for (const QQmlJSScope::ConstPtr &origin : it->second.conversionOrigins()) {
-                    if (!writtenRegisters.contains(origin))
-                        block.readRegisters.append(origin);
+                if (!instruction.isRename) {
+                    Q_ASSERT(it->second.isConversion());
+                    for (const QQmlJSScope::ConstPtr &origin : it->second.conversionOrigins()) {
+                        if (!writtenTypes.contains(origin))
+                            block.readTypes.append(origin);
+                    }
                 }
+                if (!writtenRegisters.contains(it->first))
+                    block.readRegisters.append(it->first);
             }
 
             // If it's just a renaming, the type has existed in a different register before.
-            if (instruction.changedRegisterIndex != InvalidRegister && !instruction.isRename) {
-                writtenRegisters.append(m_typeResolver->trackedContainedType(
+            if (instruction.changedRegisterIndex != InvalidRegister) {
+                if (!instruction.isRename) {
+                    writtenTypes.append(m_typeResolver->trackedContainedType(
                                             instruction.changedRegister));
+                }
+                writtenRegisters.append(instruction.changedRegisterIndex);
             }
         }
 
+        deduplicate(block.readTypes);
         deduplicate(block.readRegisters);
     }
 }

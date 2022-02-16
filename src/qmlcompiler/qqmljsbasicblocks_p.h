@@ -50,7 +50,9 @@ class QQmlJSBasicBlocks : public QQmlJSCompilePass
 public:
     struct BasicBlock {
         QList<int> jumpOrigins;
-        QList<QQmlJSScope::ConstPtr> readRegisters;
+        QList<int> readRegisters;
+        QList<int> writtenRegisters;
+        QList<QQmlJSScope::ConstPtr> readTypes;
         int jumpTarget = -1;
         bool jumpIsUnconditional = false;
     };
@@ -69,7 +71,9 @@ private:
     struct RegisterAccess
     {
         QList<QQmlJSScope::ConstPtr> trackedTypes;
-        QHash<int, QQmlJSScope::ConstPtr> readers;
+        QHash<int, QQmlJSScope::ConstPtr> typeReaders;
+        QHash<int, QList<int>> registerReadersAndConversions;
+        int trackedRegister;
     };
 
     QV4::Moth::ByteCodeHandler::Verdict startInstruction(QV4::Moth::Instr::Type type) override;

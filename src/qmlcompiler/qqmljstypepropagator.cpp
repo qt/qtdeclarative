@@ -174,13 +174,16 @@ void QQmlJSTypePropagator::generate_LoadReg(int reg)
 {
     // Do not re-track the register. We're not manipulating it.
     m_state.setIsRename(true);
-    m_state.setRegister(Accumulator, checkedInputRegister(reg));
+    const QQmlJSRegisterContent content = checkedInputRegister(reg);
+    m_state.addReadRegister(reg, content);
+    m_state.setRegister(Accumulator, content);
 }
 
 void QQmlJSTypePropagator::generate_StoreReg(int reg)
 {
     // Do not re-track the register. We're not manipulating it.
     m_state.setIsRename(true);
+    m_state.addReadAccumulator(m_state.accumulatorIn());
     m_state.setRegister(reg, m_state.accumulatorIn());
 }
 
@@ -189,7 +192,9 @@ void QQmlJSTypePropagator::generate_MoveReg(int srcReg, int destReg)
     Q_ASSERT(destReg != InvalidRegister);
     // Do not re-track the register. We're not manipulating it.
     m_state.setIsRename(true);
-    m_state.setRegister(destReg, m_state.registers[srcReg]);
+    const QQmlJSRegisterContent content = checkedInputRegister(srcReg);
+    m_state.addReadRegister(srcReg, content);
+    m_state.setRegister(destReg, content);
 }
 
 void QQmlJSTypePropagator::generate_LoadImport(int index)
