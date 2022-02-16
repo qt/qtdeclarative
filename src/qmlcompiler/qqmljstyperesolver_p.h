@@ -99,8 +99,8 @@ public:
 
     enum class UnaryOperator { Plus, Minus, Increment, Decrement };
 
-    QQmlJSRegisterContent typeForUnaryOperation(UnaryOperator oper,
-                                                const QQmlJSRegisterContent &operand) const;
+    QQmlJSRegisterContent typeForArithmeticUnaryOperation(
+            UnaryOperator oper, const QQmlJSRegisterContent &operand) const;
 
     bool isPrimitive(const QQmlJSRegisterContent &type) const;
     bool isNumeric(const QQmlJSRegisterContent &type) const;
@@ -126,13 +126,26 @@ public:
                           const QQmlJSScope::ConstPtr &type) const;
     QQmlJSScope::ConstPtr containedType(const QQmlJSRegisterContent &container) const;
     QString containedTypeName(const QQmlJSRegisterContent &container) const;
-    QQmlJSRegisterContent tracked(const QQmlJSRegisterContent &origin) const;
+
+    QQmlJSRegisterContent tracked(const QQmlJSRegisterContent &type) const;
+    QQmlJSRegisterContent original(const QQmlJSRegisterContent &type) const;
+
+    QQmlJSScope::ConstPtr trackedContainedType(const QQmlJSRegisterContent &container) const;
+    QQmlJSScope::ConstPtr originalContainedType(const QQmlJSRegisterContent &container) const;
+
+    void adjustTrackedType(const QQmlJSScope::ConstPtr &tracked,
+                           const QQmlJSScope::ConstPtr &conversion) const;
+    void adjustTrackedType(const QQmlJSScope::ConstPtr &tracked,
+                           const QList<QQmlJSScope::ConstPtr> &conversions) const;
+    void generalizeType(const QQmlJSScope::ConstPtr &type) const;
 
     void setParentMode(ParentMode mode) { m_parentMode = mode; }
     ParentMode parentMode() const { return m_parentMode; }
 
     QQmlJSScope::ConstPtr storedType(const QQmlJSScope::ConstPtr &type) const;
-    QQmlJSScope::ConstPtr tracked(const QQmlJSScope::ConstPtr &origin) const;
+    QQmlJSScope::ConstPtr originalType(const QQmlJSScope::ConstPtr &type) const;
+    QQmlJSScope::ConstPtr trackedType(const QQmlJSScope::ConstPtr &type) const;
+    QQmlJSScope::ConstPtr comparableType(const QQmlJSScope::ConstPtr &type) const;
 
     const QQmlJSScopesById &objectsById() const { return m_objectsById; }
     const QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> &signalHandlers() const
@@ -142,9 +155,14 @@ public:
 
     bool equals(const QQmlJSScope::ConstPtr &a, const QQmlJSScope::ConstPtr &b) const;
 
-protected:
+    QQmlJSRegisterContent convert(
+            const QQmlJSRegisterContent &from, const QQmlJSRegisterContent &to) const;
+
     QQmlJSScope::ConstPtr merge(const QQmlJSScope::ConstPtr &a,
                                 const QQmlJSScope::ConstPtr &b) const;
+
+    bool canHoldUndefined(const QQmlJSRegisterContent &content) const;
+protected:
 
     QQmlJSRegisterContent memberType(const QQmlJSScope::ConstPtr &type, const QString &name) const;
     QQmlJSRegisterContent memberEnumType(const QQmlJSScope::ConstPtr &type,
@@ -153,8 +171,13 @@ protected:
     bool isNumeric(const QQmlJSScope::ConstPtr &type) const;
     bool checkEnums(const QQmlJSScope::ConstPtr &scope, const QString &name,
                     QQmlJSRegisterContent *result, BaseOrExtension mode) const;
+    bool canPrimitivelyConvertFromTo(
+            const QQmlJSScope::ConstPtr &from, const QQmlJSScope::ConstPtr &to) const;
     QQmlJSRegisterContent lengthProperty(bool isWritable, const QQmlJSScope::ConstPtr &scope) const;
     void trackListPropertyType(const QQmlJSScope::ConstPtr &trackedListElementType) const;
+    QQmlJSRegisterContent transformed(
+            const QQmlJSRegisterContent &origin,
+            QQmlJSScope::ConstPtr (QQmlJSTypeResolver::*op)(const QQmlJSScope::ConstPtr &) const) const;
 
     QQmlJSScope::ConstPtr m_voidType;
     QQmlJSScope::ConstPtr m_emptyListType;
@@ -186,7 +209,14 @@ protected:
 
     struct TrackedType
     {
+        // The type originally found via type analysis.
         QQmlJSScope::ConstPtr original;
+
+        // Any later replacement used to overwrite the contents of the clone.
+        QQmlJSScope::ConstPtr replacement;
+
+        // A clone of original, used to track the type,
+        // contents possibly overwritten by replacement.
         QQmlJSScope::Ptr clone;
     };
 

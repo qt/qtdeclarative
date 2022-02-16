@@ -602,7 +602,8 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
 
     if (m_typeInfo != nullptr
         && m_state.accumulatorIn().variant() == QQmlJSRegisterContent::ScopeAttached) {
-        QQmlJSScope::ConstPtr attachedType = m_state.accumulatorIn().scopeType();
+        QQmlJSScope::ConstPtr attachedType = m_typeResolver->originalType(
+                    m_state.accumulatorIn().scopeType());
 
         for (QQmlJSScope::ConstPtr scope = m_function->qmlScope->parentScope(); !scope.isNull();
              scope = scope->parentScope()) {
@@ -1419,13 +1420,13 @@ void QQmlJSTypePropagator::generate_UNot()
 
 void QQmlJSTypePropagator::generate_UPlus()
 {
-    setAccumulator(m_typeResolver->typeForUnaryOperation(
+    setAccumulator(m_typeResolver->typeForArithmeticUnaryOperation(
             QQmlJSTypeResolver::UnaryOperator::Plus, m_state.accumulatorIn()));
 }
 
 void QQmlJSTypePropagator::generate_UMinus()
 {
-    setAccumulator(m_typeResolver->typeForUnaryOperation(
+    setAccumulator(m_typeResolver->typeForArithmeticUnaryOperation(
             QQmlJSTypeResolver::UnaryOperator::Minus, m_state.accumulatorIn()));
 }
 
@@ -1436,13 +1437,13 @@ void QQmlJSTypePropagator::generate_UCompl()
 
 void QQmlJSTypePropagator::generate_Increment()
 {
-    setAccumulator(m_typeResolver->typeForUnaryOperation(
+    setAccumulator(m_typeResolver->typeForArithmeticUnaryOperation(
             QQmlJSTypeResolver::UnaryOperator::Increment, m_state.accumulatorIn()));
 }
 
 void QQmlJSTypePropagator::generate_Decrement()
 {
-    setAccumulator(m_typeResolver->typeForUnaryOperation(
+    setAccumulator(m_typeResolver->typeForArithmeticUnaryOperation(
             QQmlJSTypeResolver::UnaryOperator::Decrement, m_state.accumulatorIn()));
 }
 
