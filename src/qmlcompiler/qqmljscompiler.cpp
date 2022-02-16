@@ -29,6 +29,7 @@
 #include "qqmljscompiler_p.h"
 
 #include <private/qqmlirbuilder_p.h>
+#include <private/qqmljsbasicblocks_p.h>
 #include <private/qqmljscodegenerator_p.h>
 #include <private/qqmljsfunctioninitializer_p.h>
 #include <private/qqmljsimportvisitor_p.h>
@@ -767,6 +768,9 @@ QQmlJSAotFunction QQmlJSAotCompiler::doCompile(
     auto typePropagationResult = propagator.run(function, error);
     if (error->isValid())
         return compileError();
+
+    QQmlJSBasicBlocks basicBlocks(m_unitGenerator, &m_typeResolver, m_logger);
+    typePropagationResult = basicBlocks.run(function, typePropagationResult);
 
     QQmlJSShadowCheck shadowCheck(m_unitGenerator, &m_typeResolver, m_logger);
     shadowCheck.run(&typePropagationResult, function, error);

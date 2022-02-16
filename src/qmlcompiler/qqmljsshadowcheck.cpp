@@ -64,12 +64,16 @@ void QQmlJSShadowCheck::run(
 
 void QQmlJSShadowCheck::generate_LoadProperty(int nameIndex)
 {
-    checkShadowing(m_state.accumulatorIn(), m_jsUnitGenerator->stringForIndex(nameIndex));
+    auto accumulatorIn = m_state.registers.find(Accumulator);
+    if (accumulatorIn != m_state.registers.end())
+        checkShadowing(accumulatorIn.value(), m_jsUnitGenerator->stringForIndex(nameIndex));
 }
 
 void QQmlJSShadowCheck::generate_GetLookup(int index)
 {
-    checkShadowing(m_state.accumulatorIn(), m_jsUnitGenerator->lookupName(index));
+    auto accumulatorIn = m_state.registers.find(Accumulator);
+    if (accumulatorIn != m_state.registers.end())
+        checkShadowing(accumulatorIn.value(), m_jsUnitGenerator->lookupName(index));
 }
 
 void QQmlJSShadowCheck::generate_StoreProperty(int nameIndex, int base)

@@ -347,6 +347,7 @@ private:
     void generateInPlaceOperation(const QString &cppOperator);
     void generateMoveOutVar(const QString &outVar);
     void generateTypeLookup(int index);
+    void generateOutputVariantConversion(const QQmlJSScope::ConstPtr &containedType);
 
     QString eqIntExpression(int lhsConst);
     QString argumentsList(int argc, int argv, QString *outVar);

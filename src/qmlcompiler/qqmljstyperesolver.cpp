@@ -587,6 +587,12 @@ QQmlJSRegisterContent QQmlJSTypeResolver::merge(const QQmlJSRegisterContent &a,
 QQmlJSScope::ConstPtr QQmlJSTypeResolver::merge(const QQmlJSScope::ConstPtr &a,
                                                 const QQmlJSScope::ConstPtr &b) const
 {
+    if (a.isNull())
+        return b;
+
+    if (b.isNull())
+        return a;
+
     const auto commonBaseType = [this](
             const QQmlJSScope::ConstPtr &a, const QQmlJSScope::ConstPtr &b) {
         for (QQmlJSScope::ConstPtr aBase = a; aBase; aBase = aBase->baseType()) {

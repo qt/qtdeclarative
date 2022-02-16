@@ -61,38 +61,25 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSStorageGeneralizer::run(
         }
     }
 
-    const auto transformRegister = [&](QQmlJSRegisterContent &content, int offset) {
-        if (QQmlJSScope::ConstPtr specific = content.storedType()) {
-            if (QQmlJSScope::ConstPtr generic = m_typeResolver->genericType(specific)) {
-                content = content.storedIn(generic);
-            } else {
-                setError(QStringLiteral("Cannot store the register type %1.")
-                         .arg(specific->internalName()), offset);
-                return false;
-            }
-        }
-        return true;
+    const auto transformRegister = [&](QQmlJSRegisterContent &content) {
+        if (const QQmlJSScope::ConstPtr &specific = content.storedType())
+            m_typeResolver->generalizeType(specific);
     };
 
     const auto transformRegisters
-            = [&](QFlatMap<int, QQmlJSRegisterContent> &registers, int offset) {
-        for (auto j = registers.begin(), jEnd = registers.end(); j != jEnd; ++j) {
-            if (!transformRegister(j.value(), offset))
-                return false;
-        }
-        return true;
+            = [&](QFlatMap<int, QQmlJSRegisterContent> &registers) {
+        for (auto j = registers.begin(), jEnd = registers.end(); j != jEnd; ++j)
+            transformRegister(j.value());
     };
 
     for (QQmlJSRegisterContent &argument : function->argumentTypes) {
         Q_ASSERT(argument.isValid());
-        transformRegister(argument, 0);
+        transformRegister(argument);
     }
 
     for (auto i = annotations.begin(), iEnd = annotations.end(); i != iEnd; ++i) {
-        if (!transformRegister(i->second.changedRegister, i.key()))
-            return InstructionAnnotations();
-        if (!transformRegisters(i->second.typeConversions, i.key()))
-            return InstructionAnnotations();
+        transformRegister(i->second.changedRegister);
+        transformRegisters(i->second.typeConversions);
     }
 
     return annotations;
