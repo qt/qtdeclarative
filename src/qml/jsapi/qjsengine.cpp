@@ -861,71 +861,85 @@ bool QJSEngine::convertV2(const QJSValue &value, int type, void *ptr)
     return convertV2(value, QMetaType(type), ptr);
 }
 
+static bool convertString(const QString &string, QMetaType metaType, void *ptr)
+{
+    // have a string based value without engine. Do conversion manually
+    if (metaType == QMetaType::fromType<bool>()) {
+        *reinterpret_cast<bool*>(ptr) = string.length() != 0;
+        return true;
+    }
+    if (metaType == QMetaType::fromType<QString>()) {
+        *reinterpret_cast<QString*>(ptr) = string;
+        return true;
+    }
+    if (metaType == QMetaType::fromType<QUrl>()) {
+        *reinterpret_cast<QUrl *>(ptr) = QUrl(string);
+        return true;
+    }
+
+    double d = QV4::RuntimeHelpers::stringToNumber(string);
+    switch (metaType.id()) {
+    case QMetaType::Int:
+        *reinterpret_cast<int*>(ptr) = QV4::Value::toInt32(d);
+        return true;
+    case QMetaType::UInt:
+        *reinterpret_cast<uint*>(ptr) = QV4::Value::toUInt32(d);
+        return true;
+    case QMetaType::LongLong:
+        *reinterpret_cast<qlonglong*>(ptr) = QV4::Value::toInteger(d);
+        return true;
+    case QMetaType::ULongLong:
+        *reinterpret_cast<qulonglong*>(ptr) = QV4::Value::toInteger(d);
+        return true;
+    case QMetaType::Double:
+        *reinterpret_cast<double*>(ptr) = d;
+        return true;
+    case QMetaType::Float:
+        *reinterpret_cast<float*>(ptr) = d;
+        return true;
+    case QMetaType::Short:
+        *reinterpret_cast<short*>(ptr) = QV4::Value::toInt32(d);
+        return true;
+    case QMetaType::UShort:
+        *reinterpret_cast<unsigned short*>(ptr) = QV4::Value::toUInt32(d);
+        return true;
+    case QMetaType::Char:
+        *reinterpret_cast<char*>(ptr) = QV4::Value::toInt32(d);
+        return true;
+    case QMetaType::UChar:
+        *reinterpret_cast<unsigned char*>(ptr) = QV4::Value::toUInt32(d);
+        return true;
+    case QMetaType::QChar:
+        *reinterpret_cast<QChar*>(ptr) = QChar(QV4::Value::toUInt32(d));
+        return true;
+    case QMetaType::Char16:
+        *reinterpret_cast<char16_t *>(ptr) = QV4::Value::toUInt32(d);
+        return true;
+    default:
+        return false;
+    }
+}
+
 /*!
     \internal
     convert \a value to \a type, store the result in \a ptr
 */
 bool QJSEngine::convertV2(const QJSValue &value, QMetaType metaType, void *ptr)
 {
-    if (const QString *string = QJSValuePrivate::asQString(&value)) {
-        // have a string based value without engine. Do conversion manually
-        if (metaType == QMetaType::fromType<bool>()) {
-            *reinterpret_cast<bool*>(ptr) = string->length() != 0;
-            return true;
-        }
-        if (metaType == QMetaType::fromType<QString>()) {
-            *reinterpret_cast<QString*>(ptr) = *string;
-            return true;
-        }
-        if (metaType == QMetaType::fromType<QUrl>()) {
-            *reinterpret_cast<QUrl *>(ptr) = QUrl(*string);
-            return true;
-        }
-
-        double d = QV4::RuntimeHelpers::stringToNumber(*string);
-        switch (metaType.id()) {
-        case QMetaType::Int:
-            *reinterpret_cast<int*>(ptr) = QV4::Value::toInt32(d);
-            return true;
-        case QMetaType::UInt:
-            *reinterpret_cast<uint*>(ptr) = QV4::Value::toUInt32(d);
-            return true;
-        case QMetaType::LongLong:
-            *reinterpret_cast<qlonglong*>(ptr) = QV4::Value::toInteger(d);
-            return true;
-        case QMetaType::ULongLong:
-            *reinterpret_cast<qulonglong*>(ptr) = QV4::Value::toInteger(d);
-            return true;
-        case QMetaType::Double:
-            *reinterpret_cast<double*>(ptr) = d;
-            return true;
-        case QMetaType::Float:
-            *reinterpret_cast<float*>(ptr) = d;
-            return true;
-        case QMetaType::Short:
-            *reinterpret_cast<short*>(ptr) = QV4::Value::toInt32(d);
-            return true;
-        case QMetaType::UShort:
-            *reinterpret_cast<unsigned short*>(ptr) = QV4::Value::toUInt32(d);
-            return true;
-        case QMetaType::Char:
-            *reinterpret_cast<char*>(ptr) = QV4::Value::toInt32(d);
-            return true;
-        case QMetaType::UChar:
-            *reinterpret_cast<unsigned char*>(ptr) = QV4::Value::toUInt32(d);
-            return true;
-        case QMetaType::QChar:
-            *reinterpret_cast<QChar*>(ptr) = QChar(QV4::Value::toUInt32(d));
-            return true;
-        case QMetaType::Char16:
-            *reinterpret_cast<char16_t *>(ptr) = QV4::Value::toUInt32(d);
-            return true;
-        default:
-            return false;
-        }
-    }
+    if (const QString *string = QJSValuePrivate::asQString(&value))
+        return convertString(*string, metaType, ptr);
 
     return QV4::ExecutionEngine::metaTypeFromJS(QJSValuePrivate::asReturnedValue(&value), metaType, ptr);
+}
+
+bool QJSEngine::convertVariant(const QVariant &value, QMetaType metaType, void *ptr)
+{
+    if (value.metaType() == QMetaType::fromType<QString>())
+        return convertString(value.toString(), metaType, ptr);
+
+    // TODO: We could probably avoid creating a QV4::Value in many cases, but we'd have to
+    //       duplicate much of metaTypeFromJS and some methods of QV4::Value itself here.
+    return QV4::ExecutionEngine::metaTypeFromJS(handle()->fromVariant(value), metaType, ptr);
 }
 
 /*! \fn template <typename T> QJSValue QJSEngine::toScriptValue(const T &value)
@@ -942,6 +956,18 @@ bool QJSEngine::convertV2(const QJSValue &value, QMetaType metaType, void *ptr)
     This works with any type \c{T} that has a \c{QMetaType}.
 
     \sa toScriptValue()
+*/
+
+/*! \fn template <typename T> T QJSEngine::fromVariant(const QVariant &value)
+
+    Returns the given \a value converted to the template type \c{T}.
+    This works with any type \c{T} that has a \c{QMetaType}. The
+    conversion is done in JavaScript semantics. Those differ from
+    qvariant_cast's semantics. There are a number of implicit
+    conversions between JavaScript-equivalent types that are not
+    performed by qvariant_cast by default.
+
+    \sa fromScriptValue() qvariant_cast()
 */
 
 /*!

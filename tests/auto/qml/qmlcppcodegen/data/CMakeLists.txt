@@ -91,6 +91,7 @@ set(qml_files
     noscope.qml
     notEqualsInt.qml
     nullAccess.qml
+    objectInVar.qml
     outOfBounds.qml
     overriddenMember.qml
     ownProperty.qml

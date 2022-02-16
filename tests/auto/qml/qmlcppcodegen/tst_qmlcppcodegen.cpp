@@ -120,6 +120,7 @@ private slots:
     void infinities();
     void blockComments();
     void functionLookup();
+    void objectInVar();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1802,6 +1803,24 @@ void tst_QmlCppCodegen::functionLookup()
     const QJSValue result = method.call();
     QVERIFY(result.isString());
     QCOMPARE(result.toString(), QStringLiteral("a99"));
+}
+
+void tst_QmlCppCodegen::objectInVar()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/objectInVar.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(qvariant_cast<QObject*>(o->property("thing")), o.data());
+
+    bool result = false;
+    QVERIFY(QMetaObject::invokeMethod(o.data(), "doThing", Q_RETURN_ARG(bool, result)));
+    QVERIFY(result);
+
+    o->setProperty("thing", QVariant::fromValue<std::nullptr_t>(nullptr));
+    QVERIFY(QMetaObject::invokeMethod(o.data(), "doThing", Q_RETURN_ARG(bool, result)));
+    QVERIFY(!result);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

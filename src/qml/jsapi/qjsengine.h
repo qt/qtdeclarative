@@ -113,6 +113,33 @@ public:
         return qjsvalue_cast<T>(value);
     }
 
+    template <typename T>
+    inline T fromVariant(const QVariant &value)
+    {
+        if constexpr (std::is_same_v<T, QVariant>)
+            return value;
+
+        const QMetaType targetType = QMetaType::fromType<T>();
+        if (value.metaType() == targetType)
+            return *reinterpret_cast<const T *>(value.constData());
+
+        if constexpr (std::is_same_v<T,std::remove_const_t<std::remove_pointer_t<T>> const *>) {
+            using nonConstT = std::remove_const_t<std::remove_pointer_t<T>> *;
+            const QMetaType nonConstTargetType = QMetaType::fromType<nonConstT>();
+            if (value.metaType() == nonConstTargetType)
+                return *reinterpret_cast<const nonConstT *>(value.constData());
+        }
+
+        {
+            T t{};
+            if (convertVariant(value, QMetaType::fromType<T>(), &t))
+                return t;
+
+            QMetaType::convert(value.metaType(), value.constData(), targetType, &t);
+            return t;
+        }
+    }
+
     void collectGarbage();
 
     enum ObjectOwnership { CppOwnership, JavaScriptOwnership };
@@ -157,6 +184,7 @@ private:
     static bool convertManaged(const QJSManagedValue &value, QMetaType type, void *ptr);
     static bool convertV2(const QJSValue &value, int type, void *ptr);
     static bool convertV2(const QJSValue &value, QMetaType metaType, void *ptr);
+    bool convertVariant(const QVariant &value, QMetaType metaType, void *ptr);
 
     template<typename T>
     friend inline T qjsvalue_cast(const QJSValue &);

@@ -2626,7 +2626,8 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
     if (m_typeResolver->equals(from, varType)) {
         if (m_typeResolver->equals(to, m_typeResolver->listPropertyType()))
             return u"QQmlListReference("_qs + variable + u", aotContext->qmlEngine())"_qs;
-        return u"qvariant_cast<"_qs + castTargetName(to) + u">("_qs + variable + u')';
+        return u"aotContext->engine->fromVariant<"_qs + castTargetName(to) + u">("_qs
+                + variable + u')';
     }
 
     if (m_typeResolver->equals(to, varType))
