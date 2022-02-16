@@ -115,9 +115,11 @@ QQmlJSAotFunction QQmlJSCodeGenerator::run(
         }
     };
 
-    for (const InstructionAnnotation &annotation : *m_annotations) {
-        addVariable(annotation.changedRegisterIndex, annotation.changedRegister.storedType());
-        for (auto it = annotation.typeConversions.begin(), end = annotation.typeConversions.end();
+    for (const auto &annotation : *m_annotations) {
+        addVariable(annotation.second.changedRegisterIndex,
+                    annotation.second.changedRegister.storedType());
+        for (auto it = annotation.second.typeConversions.begin(),
+             end = annotation.second.typeConversions.end();
              it != end; ++it) {
             addVariable(it.key(), it.value().storedType());
         }
@@ -2435,9 +2437,9 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(
     m_body += u"{\n"_qs;
     int absoluteOffset =nextInstructionOffset() + relativeOffset;
 
-    const auto annotation = m_annotations->constFind(absoluteOffset);
+    const auto annotation = m_annotations->find(absoluteOffset);
     if (annotation != m_annotations->constEnd()) {
-        const auto &conversions = annotation->typeConversions;
+        const auto &conversions = annotation->second.typeConversions;
 
         for (auto regIt = conversions.constBegin(), regEnd = conversions.constEnd();
              regIt != regEnd; ++regIt) {

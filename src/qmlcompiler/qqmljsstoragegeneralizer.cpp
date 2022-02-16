@@ -96,9 +96,9 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSStorageGeneralizer::run(
     };
 
     for (auto i = annotations.begin(), iEnd = annotations.end(); i != iEnd; ++i) {
-        if (!transformRegister(i->changedRegister, i.key()))
+        if (!transformRegister(i->second.changedRegister, i.key()))
             return InstructionAnnotations();
-        if (!transformRegisters(i->typeConversions, i.key()))
+        if (!transformRegisters(i->second.typeConversions, i.key()))
             return InstructionAnnotations();
     }
 

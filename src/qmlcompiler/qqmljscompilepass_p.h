@@ -79,7 +79,7 @@ public:
         bool isRename = false;
     };
 
-    using InstructionAnnotations = QHash<int, InstructionAnnotation>;
+    using InstructionAnnotations = QFlatMap<int, InstructionAnnotation>;
 
     struct Function
     {
@@ -198,7 +198,7 @@ protected:
     {
         State newState;
 
-        const auto instruction = annotations.constFind(currentInstructionOffset());
+        const auto instruction = annotations.find(currentInstructionOffset());
         newState.registers = oldState.registers;
 
         // Usually the initial accumulator type is the output of the previous instruction, but ...
@@ -208,19 +208,19 @@ protected:
         if (instruction == annotations.constEnd())
             return newState;
 
-        newState.setHasSideEffects(instruction->hasSideEffects);
-        newState.setReadRegisters(instruction->readRegisters);
-        newState.setIsRename(instruction->isRename);
+        newState.setHasSideEffects(instruction->second.hasSideEffects);
+        newState.setReadRegisters(instruction->second.readRegisters);
+        newState.setIsRename(instruction->second.isRename);
 
-        for (auto it = instruction->typeConversions.begin(),
-             end = instruction->typeConversions.end(); it != end; ++it) {
+        for (auto it = instruction->second.typeConversions.begin(),
+             end = instruction->second.typeConversions.end(); it != end; ++it) {
             Q_ASSERT(it.key() != InvalidRegister);
             newState.registers[it.key()] = it.value();
         }
 
-        if (instruction->changedRegisterIndex != InvalidRegister) {
-            newState.setRegister(instruction->changedRegisterIndex,
-                                 instruction->changedRegister);
+        if (instruction->second.changedRegisterIndex != InvalidRegister) {
+            newState.setRegister(instruction->second.changedRegisterIndex,
+                                 instruction->second.changedRegister);
         }
 
         return newState;

@@ -1036,9 +1036,9 @@ void QQmlJSTypePropagator::setAccumulator(const QQmlJSRegisterContent &content)
 void QQmlJSTypePropagator::setRegister(int index, const QQmlJSRegisterContent &content)
 {
     // If we've come to the same conclusion before, let's not track the type again.
-    auto it = m_prevStateAnnotations.constFind(currentInstructionOffset());
-    if (it != m_prevStateAnnotations.constEnd()) {
-        const QQmlJSRegisterContent &lastTry = it->changedRegister;
+    auto it = m_prevStateAnnotations.find(currentInstructionOffset());
+    if (it != m_prevStateAnnotations.end()) {
+        const QQmlJSRegisterContent &lastTry = it->second.changedRegister;
         if (m_typeResolver->registerContains(lastTry, m_typeResolver->containedType(content))) {
             m_state.setRegister(index, lastTry);
             return;
@@ -1061,8 +1061,8 @@ void QQmlJSTypePropagator::mergeRegister(
         if (it == m_prevStateAnnotations.end())
             return false;
 
-        auto conversion = it->typeConversions.find(index);
-        if (conversion == it->typeConversions.end())
+        auto conversion = it->second.typeConversions.find(index);
+        if (conversion == it->second.typeConversions.end())
             return false;
 
         const QQmlJSRegisterContent &lastTry = conversion.value();
