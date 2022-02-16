@@ -154,6 +154,7 @@
 
 /*!
     \qmlmethod QtQuick::TreeView::expandRecursively(row = -1, depth = -1)
+    \since 6.4
 
     Expands the tree node at the given \a row in the view recursively down to
     \a depth. \a depth should be relative to the depth of \a row. If
@@ -189,6 +190,7 @@
 
 /*!
     \qmlmethod QtQuick::TreeView::collapseRecursively(row = -1)
+    \since 6.4
 
     Collapses the tree node at the given \a row in the view recursively down to
     all leaves.
