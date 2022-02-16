@@ -64,7 +64,6 @@ T.Slider {
                 states: [
                     {"light": IOS.theme == IOS.Light},
                     {"dark": IOS.theme == IOS.Dark},
-                    {"disabled": !control.enabled},
                 ]
             }
         }
@@ -73,6 +72,7 @@ T.Slider {
     background: Item {
         implicitWidth: control.horizontal ? children[0].width : children[0].height
         implicitHeight: control.horizontal ? children[0].height : children[0].width
+        opacity: control.enabled ? 1 : 0.5
 
         NinePatchImage {
             source: control.IOS.url + "slider-background"
@@ -85,7 +85,6 @@ T.Slider {
                 states: [
                     {"light": IOS.theme == IOS.Light},
                     {"dark": IOS.theme == IOS.Dark},
-                    {"disabled": !control.enabled},
                 ]
             }
 
@@ -98,7 +97,6 @@ T.Slider {
                     states: [
                         {"light": IOS.theme == IOS.Light},
                         {"dark": IOS.theme == IOS.Dark},
-                        {"disabled": !control.enabled},
                     ]
                 }
             }
