@@ -395,7 +395,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::transformed(
 {
     if (origin.isType()) {
         return QQmlJSRegisterContent::create(
-                    origin.storedType(), (this->*op)(origin.type()),
+                    (this->*op)(origin.storedType()), (this->*op)(origin.type()),
                     origin.variant(), (this->*op)(origin.scopeType()));
     }
 
@@ -405,7 +405,7 @@ QQmlJSRegisterContent QQmlJSTypeResolver::transformed(
         if (prop.isList())
             trackListPropertyType(prop.type());
         return QQmlJSRegisterContent::create(
-                    origin.storedType(), prop,
+                    (this->*op)(origin.storedType()), prop,
                     origin.variant(), (this->*op)(origin.scopeType()));
     }
 
@@ -413,25 +413,25 @@ QQmlJSRegisterContent QQmlJSTypeResolver::transformed(
         QQmlJSMetaEnum enumeration = origin.enumeration();
         enumeration.setType((this->*op)(enumeration.type()));
         return QQmlJSRegisterContent::create(
-                    origin.storedType(), enumeration, origin.enumMember(),
+                    (this->*op)(origin.storedType()), enumeration, origin.enumMember(),
                     origin.variant(), (this->*op)(origin.scopeType()));
     }
 
     if (origin.isMethod()) {
         return QQmlJSRegisterContent::create(
-                    origin.storedType(),  origin.method(), origin.variant(),
+                    (this->*op)(origin.storedType()),  origin.method(), origin.variant(),
                     (this->*op)(origin.scopeType()));
     }
 
     if (origin.isImportNamespace()) {
         return QQmlJSRegisterContent::create(
-                    origin.storedType(), origin.importNamespace(),
+                    (this->*op)(origin.storedType()), origin.importNamespace(),
                     origin.variant(), (this->*op)(origin.scopeType()));
     }
 
     if (origin.isConversion()) {
         return QQmlJSRegisterContent::create(
-                    origin.storedType(), origin.conversionOrigins(),
+                    (this->*op)(origin.storedType()), origin.conversionOrigins(),
                     (this->*op)(origin.conversionResult()),
                     origin.variant(), (this->*op)(origin.scopeType()));
     }

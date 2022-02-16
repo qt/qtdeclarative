@@ -153,6 +153,11 @@ public:
             return readRegister(Accumulator);
         }
 
+        bool readsRegister(int registerIndex) const
+        {
+            return m_readRegisters.contains(registerIndex);
+        }
+
         bool hasSideEffects() const { return m_hasSideEffects; }
         void setHasSideEffects(bool hasSideEffects) { m_hasSideEffects = hasSideEffects; }
 
