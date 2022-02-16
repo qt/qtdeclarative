@@ -641,14 +641,15 @@ TestCase {
     }
 
     function test_keys_space_enter_escape_data() {
+        // Not testing Key_Enter + Key_Enter and Key_Return + Key_Return because
+        // QGnomeTheme uses Key_Enter and Key_Return for pressing buttons/comboboxes
+        // and the CI uses the QGnomeTheme platform theme.
         return [
             { tag: "space-space", key1: Qt.Key_Space, key2: Qt.Key_Space, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
             { tag: "space-enter", key1: Qt.Key_Space, key2: Qt.Key_Enter, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
             { tag: "space-return", key1: Qt.Key_Space, key2: Qt.Key_Return, showPopup: true, showPress: true, hidePopup: true, hidePress: true },
             { tag: "space-escape", key1: Qt.Key_Space, key2: Qt.Key_Escape, showPopup: true, showPress: true, hidePopup: true, hidePress: false },
             { tag: "space-0", key1: Qt.Key_Space, key2: Qt.Key_0, showPopup: true, showPress: true, hidePopup: false, hidePress: false },
-            { tag: "enter-enter", key1: Qt.Key_Enter, key2: Qt.Key_Enter, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
-            { tag: "return-return", key1: Qt.Key_Return, key2: Qt.Key_Return, showPopup: false, showPress: false, hidePopup: true, hidePress: false },
             { tag: "escape-escape", key1: Qt.Key_Escape, key2: Qt.Key_Escape, showPopup: false, showPress: false, hidePopup: true, hidePress: false }
         ]
     }

@@ -49,6 +49,7 @@
 #include <QtCore/qglobal.h>
 #include <QtGui/qinputmethod.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/qjsvalue.h>
 #include <QtQml/qqmlcontext.h>
@@ -1985,16 +1986,22 @@ void QQuickComboBox::keyPressEvent(QKeyEvent *event)
     Q_D(QQuickComboBox);
     QQuickControl::keyPressEvent(event);
 
-    switch (event->key()) {
+    const auto key = event->key();
+    if (!isEditable()) {
+        const auto buttonPressKeys = QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::ButtonPressKeys).value<QList<Qt::Key>>();
+        if (buttonPressKeys.contains(key)) {
+            if (!event->isAutoRepeat())
+                setPressed(true);
+            event->accept();
+            return;
+        }
+    }
+
+    switch (key) {
     case Qt::Key_Escape:
     case Qt::Key_Back:
         if (d->isPopupVisible())
             event->accept();
-        break;
-    case Qt::Key_Space:
-        if (!event->isAutoRepeat())
-            setPressed(true);
-        event->accept();
         break;
     case Qt::Key_Enter:
     case Qt::Key_Return:
@@ -2045,13 +2052,19 @@ void QQuickComboBox::keyReleaseEvent(QKeyEvent *event)
     if (event->isAutoRepeat())
         return;
 
-    switch (event->key()) {
-    case Qt::Key_Space:
-        if (!isEditable())
-            d->togglePopup(true);
-        setPressed(false);
-        event->accept();
-        break;
+    const auto key = event->key();
+    if (!isEditable()) {
+        const auto buttonPressKeys = QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::ButtonPressKeys).value<QList<Qt::Key>>();
+        if (buttonPressKeys.contains(key)) {
+            if (!isEditable())
+                d->togglePopup(true);
+            setPressed(false);
+            event->accept();
+            return;
+        }
+    }
+
+    switch (key) {
     case Qt::Key_Enter:
     case Qt::Key_Return:
         if (!isEditable() || d->isPopupVisible())

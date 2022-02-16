@@ -258,7 +258,9 @@ TestCase {
 
         // no change
         sequenceSpy.expectedSequence = []
-        var keys = [Qt.Key_Enter, Qt.Key_Return, Qt.Key_Escape, Qt.Key_Tab]
+        // Not testing Key_Enter and Key_Return because QGnomeTheme uses them for
+        // pressing buttons and the CI uses the QGnomeTheme platform theme.
+        var keys = [Qt.Key_Escape, Qt.Key_Tab]
         for (var i = 0; i < keys.length; ++i) {
             sequenceSpy.reset()
             keyClick(keys[i])
