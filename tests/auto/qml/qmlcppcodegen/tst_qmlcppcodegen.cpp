@@ -119,6 +119,7 @@ private slots:
     void notEqualsInt();
     void infinities();
     void blockComments();
+    void functionLookup();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1786,6 +1787,22 @@ void tst_QmlCppCodegen::blockComments()
     QScopedPointer<QObject> o(c.create());
     QVERIFY(o);
     QCOMPARE(o->property("implicitHeight").toDouble(), 8.0);
+}
+
+void tst_QmlCppCodegen::functionLookup()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/functionLookup.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    const QVariant foo = o->property("bar");
+    QCOMPARE(foo.metaType(), QMetaType::fromType<QJSValue>());
+    const QJSManagedValue method(engine.toScriptValue(foo), &engine);
+    QVERIFY(method.isFunction());
+    const QJSValue result = method.call();
+    QVERIFY(result.isString());
+    QCOMPARE(result.toString(), QStringLiteral("a99"));
 }
 
 void tst_QmlCppCodegen::runInterpreted()

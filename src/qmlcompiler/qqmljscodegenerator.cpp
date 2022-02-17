@@ -722,7 +722,7 @@ void QQmlJSCodeGenerator::generate_LoadQmlContextPropertyLookup(int index)
     } else if (m_state.accumulatorOut.isType() || m_state.accumulatorOut.isImportNamespace()) {
         generateTypeLookup(index);
     } else {
-        Q_UNREACHABLE();
+        reject(u"lookup of %1"_qs.arg(m_state.accumulatorOut.descriptiveName()));
     }
 }
 
