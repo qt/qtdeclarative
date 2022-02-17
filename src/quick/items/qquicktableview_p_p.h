@@ -423,7 +423,7 @@ public:
     void unloadItem(const QPoint &cell);
     void loadEdge(Qt::Edge edge, QQmlIncubator::IncubationMode incubationMode);
     void unloadEdge(Qt::Edge edge);
-    void loadAndUnloadVisibleEdges();
+    void loadAndUnloadVisibleEdges(QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested);
     void drainReusePoolAfterLoadRequest();
     void processLoadRequest();
 

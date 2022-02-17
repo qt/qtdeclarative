@@ -2829,7 +2829,7 @@ void QQuickTableViewPrivate::loadEdge(Qt::Edge edge, QQmlIncubator::IncubationMo
     processLoadRequest();
 }
 
-void QQuickTableViewPrivate::loadAndUnloadVisibleEdges()
+void QQuickTableViewPrivate::loadAndUnloadVisibleEdges(QQmlIncubator::IncubationMode incubationMode)
 {
     // Unload table edges that have been moved outside the visible part of the
     // table (including buffer area), and load new edges that has been moved inside.
@@ -2866,7 +2866,7 @@ void QQuickTableViewPrivate::loadAndUnloadVisibleEdges()
 
         if (Qt::Edge edge = nextEdgeToLoad(viewportRect)) {
             tableModified = true;
-            loadEdge(edge, QQmlIncubator::AsynchronousIfNested);
+            loadEdge(edge, incubationMode);
             if (loadRequest.isActive())
                 return;
         }
