@@ -75,25 +75,26 @@ MessageDialogImpl {
 
         RowLayout {
             id: rowLayout
+            spacing: 12
+
+            Layout.leftMargin: 20
+            Layout.rightMargin: 20
+            Layout.bottomMargin: 20
 
             Button {
                 id: detailedTextButton
                 objectName: "detailedTextButton"
                 text: control.showDetailedText ? qsTr("Hide Details...") : qsTr("Show Details...")
-
-                Layout.leftMargin: 20
+                padding: 0
             }
 
             DialogButtonBox {
                 id: buttonBox
                 objectName: "buttonBox"
                 spacing: 12
-                horizontalPadding: 0
-                verticalPadding: 20
+                padding: 0
 
                 Layout.fillWidth: true
-                Layout.leftMargin: detailedTextButton.visible ? 12 : 20
-                Layout.rightMargin: 20
             }
         }
 
