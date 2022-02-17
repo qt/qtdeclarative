@@ -413,7 +413,7 @@ void QQmlJSTypePropagator::checkDeprecated(QQmlJSScope::ConstPtr scope, const QS
     m_logger->log(message, Log_Deprecation, getCurrentSourceLocation());
 }
 
-bool QQmlJSTypePropagator::checkRestricted(const QString &propertyName) const
+bool QQmlJSTypePropagator::isRestricted(const QString &propertyName) const
 {
     QString restrictedKind;
 
@@ -620,13 +620,13 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
         setAccumulator(QQmlJSRegisterContent());
     }
 
-    bool isRestricted = checkRestricted(propertyName);
+    const bool isRestrictedProperty = isRestricted(propertyName);
 
     if (!m_state.accumulatorOut().isValid()) {
         setError(u"Cannot load property %1 from %2."_qs
                          .arg(propertyName, m_state.accumulatorIn().descriptiveName()));
 
-        if (isRestricted)
+        if (isRestrictedProperty)
             return;
 
         const QString typeName = m_typeResolver->containedTypeName(m_state.accumulatorIn());
@@ -799,7 +799,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         setError(u"Type %1 does not have a property %2 for calling"_qs
                          .arg(callBase.descriptiveName(), propertyName));
 
-        if (checkRestricted(propertyName))
+        if (isRestricted(propertyName))
             return;
 
         std::optional<FixSuggestion> fixSuggestion;
