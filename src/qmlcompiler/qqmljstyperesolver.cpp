@@ -192,7 +192,8 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::listType(const QQmlJSScope::ConstPtr &
         listType->setValueTypeName(elementType->internalName());
         listType->setInternalName(u"QList<%1>"_qs.arg(elementType->internalName()));
         listType->setFileName(elementType->fileName());
-        QQmlJSScope::resolveTypes(listType, m_imports);
+        const QQmlJSImportedScope element = {elementType, QTypeRevision()};
+        QQmlJSScope::resolveTypes(listType, {{elementType->internalName(), element}});
         Q_ASSERT(equals(listType->valueType(), elementType));
         m_typeTracker->listTypes[elementType] = listType;
         return listType;
