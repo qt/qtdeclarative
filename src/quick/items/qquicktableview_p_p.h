@@ -367,7 +367,9 @@ public:
     qreal getRowLayoutHeight(int row);
     qreal getColumnWidth(int column) const;
     qreal getRowHeight(int row) const;
+    qreal getEffectiveRowY(int row) const;
     qreal getEffectiveRowHeight(int row) const;
+    qreal getEffectiveColumnX(int column) const;
     qreal getEffectiveColumnWidth(int column) const;
 
     int topRow() const { return *loadedRows.cbegin(); }

@@ -1976,11 +1976,25 @@ qreal QQuickTableViewPrivate::getColumnLayoutWidth(int column)
     return columnWidth;
 }
 
+qreal QQuickTableViewPrivate::getEffectiveRowY(int row) const
+{
+    // Return y pos of row after layout
+    Q_TABLEVIEW_ASSERT(loadedRows.contains(row), row);
+    return loadedTableItem(QPoint(leftColumn(), row))->geometry().y();
+}
+
 qreal QQuickTableViewPrivate::getEffectiveRowHeight(int row) const
 {
     // Return row height after layout
     Q_TABLEVIEW_ASSERT(loadedRows.contains(row), row);
     return loadedTableItem(QPoint(leftColumn(), row))->geometry().height();
+}
+
+qreal QQuickTableViewPrivate::getEffectiveColumnX(int column) const
+{
+    // Return x pos of column after layout
+    Q_TABLEVIEW_ASSERT(loadedColumns.contains(column), column);
+    return loadedTableItem(QPoint(column, topRow()))->geometry().x();
 }
 
 qreal QQuickTableViewPrivate::getEffectiveColumnWidth(int column) const
