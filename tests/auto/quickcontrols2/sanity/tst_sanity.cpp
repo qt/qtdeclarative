@@ -107,6 +107,7 @@ void tst_Sanity::initTestCase()
         { "material", "QtQuick/Controls/Material" },
         { "universal", "QtQuick/Controls/Universal" },
         // TODO: add native styles: QTBUG-87108
+        { "ios", "QtQuick/Controls/iOS" }
     };
     for (const auto &stylePathPair : styleRelativePaths) {
         forEachControl(&engine, QQC2_IMPORT_PATH, stylePathPair.first, stylePathPair.second, QStringList(),
