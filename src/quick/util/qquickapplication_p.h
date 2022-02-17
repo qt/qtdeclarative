@@ -58,6 +58,7 @@
 #include <QtQml/private/qqmlglobal_p.h>
 
 #include <QtGui/qfont.h>
+#include <QtGui/qstylehints.h>
 
 #include <QtCore/qobject.h>
 
@@ -73,6 +74,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickApplication : public QQmlApplication
     Q_PROPERTY(QFont font READ font CONSTANT)
     Q_PROPERTY(QString displayName READ displayName WRITE setDisplayName NOTIFY displayNameChanged)
     Q_PROPERTY(QQmlListProperty<QQuickScreenInfo> screens READ screens NOTIFY screensChanged)
+    Q_PROPERTY(QStyleHints *styleHints READ styleHints CONSTANT)
 
     QML_NAMED_ELEMENT(Application)
     QML_SINGLETON
@@ -89,6 +91,7 @@ public:
     QQmlListProperty<QQuickScreenInfo> screens();
     QString displayName() const;
     void setDisplayName(const QString &displayName);
+    QStyleHints *styleHints();
 
 Q_SIGNALS:
     void activeChanged();

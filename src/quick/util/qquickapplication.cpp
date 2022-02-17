@@ -210,6 +210,32 @@ QT_BEGIN_NAMESPACE
  */
 
 /*!
+    \qmlproperty StyleHints Application::styleHints
+
+    The \c styleHints property provides platform-specific style hints and settings.
+    See the \l QStyleHints documentation for further details.
+
+    The following example uses \c styleHints to determine whether an
+    item should gain focus on mouse press or touch release:
+    \code
+    import QtQuick
+
+    MouseArea {
+        id: button
+
+        onPressed: {
+            if (!Application.styleHints.setFocusOnTouchRelease)
+                button.forceActiveFocus()
+        }
+        onReleased: {
+            if (Application.styleHints.setFocusOnTouchRelease)
+                button.forceActiveFocus()
+        }
+    }
+    \endcode
+ */
+
+/*!
     \qmlsignal Application::aboutToQuit()
 
     This signal is emitted when the application is about to quit the main
@@ -271,6 +297,11 @@ QFont QQuickApplication::font() const
 QString QQuickApplication::displayName() const
 {
     return QGuiApplication::applicationDisplayName();
+}
+
+QStyleHints *QQuickApplication::styleHints()
+{
+    return QGuiApplication::styleHints();
 }
 
 void QQuickApplication::setDisplayName(const QString &displayName)

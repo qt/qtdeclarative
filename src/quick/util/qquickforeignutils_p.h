@@ -67,6 +67,14 @@
 
 QT_BEGIN_NAMESPACE
 
+struct QStyleHintsForeign
+{
+    Q_GADGET
+    QML_FOREIGN(QStyleHints)
+    QML_ANONYMOUS
+    QML_ADDED_IN_VERSION(6, 4)
+};
+
 #if QT_CONFIG(validator)
 struct QValidatorForeign
 {
