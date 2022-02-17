@@ -118,6 +118,7 @@ private slots:
     void invisibleBase();
     void notEqualsInt();
     void infinities();
+    void blockComments();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1774,6 +1775,16 @@ void tst_QmlCppCodegen::infinities()
     QVERIFY(std::signbit(negativeZero));
 
     QVERIFY(qIsNaN(o->property("naN").toDouble()));
+}
+
+void tst_QmlCppCodegen::blockComments()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/blockComments.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("implicitHeight").toDouble(), 8.0);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

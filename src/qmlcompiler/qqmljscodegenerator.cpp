@@ -2284,17 +2284,10 @@ QV4::Moth::ByteCodeHandler::Verdict QQmlJSCodeGenerator::startInstruction(
     const int currentLine = currentSourceLocation().startLine;
     if (currentLine != m_lastLineNumberUsed) {
         const int nextLine = nextJSLine(currentLine);
-        if (nextLine == currentLine + 1 || nextLine < 1) {
+        for (auto line = currentLine - 1; line < nextLine - 1; ++line) {
             m_body += u"// "_qs;
-            m_body += m_sourceCodeLines.value(currentLine - 1).trimmed();
+            m_body += m_sourceCodeLines.value(line).trimmed();
             m_body += u'\n';
-        } else {
-            m_body += u"/*\n"_qs;
-            for (auto line = currentLine - 1; line < nextLine - 1; ++line) {
-                m_body += m_sourceCodeLines.at(line).trimmed();
-                m_body += u'\n';
-            }
-            m_body += u"*/\n"_qs;
         }
         m_lastLineNumberUsed = currentLine;
     }
