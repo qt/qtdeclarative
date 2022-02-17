@@ -117,6 +117,7 @@ private slots:
     void revisions();
     void invisibleBase();
     void notEqualsInt();
+    void infinities();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1751,6 +1752,28 @@ void tst_QmlCppCodegen::notEqualsInt()
     QCOMPARE(t->property("text").toString(), u"Foo"_qs);
     QMetaObject::invokeMethod(o.data(), "foo");
     QCOMPARE(t->property("text").toString(), u"Bar"_qs);
+}
+
+void tst_QmlCppCodegen::infinities()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/infinities.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->property("positiveInfinity").toDouble(), std::numeric_limits<double>::infinity());
+    QCOMPARE(o->property("negativeInfinity").toDouble(), -std::numeric_limits<double>::infinity());
+
+    const double positiveZero = o->property("positiveZero").toDouble();
+    QCOMPARE(positiveZero, 0.0);
+    QVERIFY(!std::signbit(positiveZero));
+
+    const double negativeZero = o->property("negativeZero").toDouble();
+    QCOMPARE(negativeZero, -0.0);
+    QVERIFY(std::signbit(negativeZero));
+
+    QVERIFY(qIsNaN(o->property("naN").toDouble()));
 }
 
 void tst_QmlCppCodegen::runInterpreted()
