@@ -35,6 +35,7 @@ set(qml_files
     asCast.qml
     attachedBaseEnum.qml
     bindToValueType.qml
+    blockComments.qml
     callContextPropertyLookupResult.qml
     childobject.qml
     colorAsVariant.qml
