@@ -4,6 +4,7 @@
 
 set(qml_files
     "Slider.qml"
+    "RangeSlider.qml"
 )
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.2;6.0"
