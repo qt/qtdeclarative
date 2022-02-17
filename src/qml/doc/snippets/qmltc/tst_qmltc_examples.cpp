@@ -177,6 +177,9 @@ void readFileContent(QStringList *content, const QString &url, Predicate filter)
 
 void tst_qmltc_examples::helloWorld()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("expected C++ files are not bundled with Android tests.");
+#endif
     QStringList generatedCode;
     readFileContent(&generatedCode,
                     QStringLiteral(QMLTC_TESTS_BINARY_DIR)
