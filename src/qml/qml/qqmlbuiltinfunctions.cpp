@@ -250,6 +250,8 @@ The following functions are also on the Qt object.
     \qmlproperty object Qt::inputMethod
     \since 5.0
 
+    It is the same as the \l InputMethod singleton.
+
     The \c inputMethod object allows access to application's QInputMethod object
     and all its properties and slots. See the QInputMethod documentation for
     further details.

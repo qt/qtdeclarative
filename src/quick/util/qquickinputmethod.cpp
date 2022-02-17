@@ -43,6 +43,17 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+    \qmltype InputMethod
+    \inqmlmodule QtQuick.
+
+    \brief Provides access to \l QInputMethod for QML applications.
+
+    The InputMethod singleton allows access to application's \l QInputMethod object
+    and all its properties and slots. See the \l QInputMethod documentation for
+    further details.
+*/
+
 QQuickInputMethod::QQuickInputMethod(QObject *parent) : QObject(parent)
 {
     QInputMethod *inputMethod = QGuiApplication::inputMethod();
