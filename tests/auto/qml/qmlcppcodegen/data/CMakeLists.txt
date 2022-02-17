@@ -61,6 +61,7 @@ set(qml_files
     extendedTypes.qml
     failures.qml
     fileDialog.qml
+    functionLookup.qml
     funcWithParams.qml
     functionReturningVoid.qml
     globals.qml
