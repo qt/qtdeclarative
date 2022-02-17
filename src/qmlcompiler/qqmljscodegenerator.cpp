@@ -426,6 +426,19 @@ static QString toNumericString(double value)
             return QString::number(i);
     }
 
+    switch (qFpClassify(value)) {
+    case FP_INFINITE: {
+        const QString inf = u"std::numeric_limits<double>::infinity()"_qs;
+        return std::signbit(value) ? (u'-' + inf) : inf;
+    }
+    case FP_NAN:
+        return u"std::numeric_limits<double>::quiet_NaN()"_qs;
+    case FP_ZERO:
+        return std::signbit(value) ? u"-0.0"_qs : u"0"_qs;
+    default:
+        break;
+    }
+
     return QString::number(value, 'f', std::numeric_limits<double>::max_digits10);
 }
 
