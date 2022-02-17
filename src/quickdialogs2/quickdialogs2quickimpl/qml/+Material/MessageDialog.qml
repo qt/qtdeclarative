@@ -54,7 +54,7 @@ MessageDialogImpl {
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding
                              + (implicitHeaderHeight > 0 ? implicitHeaderHeight + spacing : 0)
-                             + (columnLayout.implicitHeight > 0 ? columnLayout.implicitHeight + spacing : 0))
+                             + (implicitFooterHeight > 0 ? implicitFooterHeight + spacing : 0))
 
     leftPadding: 24
     rightPadding: 24

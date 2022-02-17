@@ -58,7 +58,7 @@ MessageDialogImpl {
                              implicitBackgroundHeight + topInset + bottomInset,
                              contentHeight + topPadding + bottomPadding
                              + (implicitHeaderHeight > 0 ? implicitHeaderHeight + spacing : 0)
-                             + (columnLayout.implicitHeight > 0 ? columnLayout.implicitHeight + spacing : 0))
+                             + (implicitFooterHeight > 0 ? implicitFooterHeight + spacing : 0))
 
     topPadding: background ? background.topPadding : 0
     leftPadding: background ? background.leftPadding : 0
