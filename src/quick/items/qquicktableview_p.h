@@ -89,6 +89,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable, public QQ
     Q_PROPERTY(int topRow READ topRow NOTIFY topRowChanged REVISION(6, 0))
     Q_PROPERTY(int bottomRow READ bottomRow NOTIFY bottomRowChanged REVISION(6, 0))
     Q_PROPERTY(QItemSelectionModel *selectionModel READ selectionModel WRITE setSelectionModel NOTIFY selectionModelChanged REVISION(6, 2))
+    Q_PROPERTY(bool animate READ animate WRITE setAnimate NOTIFY animateChanged REVISION(6, 4))
 
     QML_NAMED_ELEMENT(TableView)
     QML_ADDED_IN_VERSION(2, 12)
@@ -132,6 +133,9 @@ public:
 
     QItemSelectionModel *selectionModel() const;
     void setSelectionModel(QItemSelectionModel *selectionModel);
+
+    bool animate() const;
+    void setAnimate(bool animate);
 
     int leftColumn() const;
     int rightColumn() const;
@@ -181,6 +185,7 @@ Q_SIGNALS:
     Q_REVISION(6, 0) void topRowChanged();
     Q_REVISION(6, 0) void bottomRowChanged();
     Q_REVISION(6, 2) void selectionModelChanged();
+    Q_REVISION(6, 4) void animateChanged();
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;

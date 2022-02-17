@@ -197,6 +197,7 @@ private slots:
     void positionViewAtRowClamped();
     void positionViewAtColumnClamped_data();
     void positionViewAtColumnClamped();
+    void positionViewAtCellWithAnimation();
     void itemAtCell_data();
     void itemAtCell();
     void leftRightTopBottomProperties_data();
@@ -3196,7 +3197,8 @@ void tst_QQuickTableView::positionViewAtRow()
 
     tableView->positionViewAtRow(row, alignment, offset);
 
-    WAIT_UNTIL_POLISHED;
+    if (!tableView->isRowLoaded(row))
+        WAIT_UNTIL_POLISHED;
 
     const QPoint cell(0, row);
     const int modelIndex = tableViewPrivate->modelIndexAtCell(cell);
@@ -3266,7 +3268,8 @@ void tst_QQuickTableView::positionViewAtColumn()
 
     tableView->positionViewAtColumn(column, alignment, offset);
 
-    WAIT_UNTIL_POLISHED;
+    if (!tableView->isColumnLoaded(column))
+        WAIT_UNTIL_POLISHED;
 
     const QPoint cell(column, 0);
     const int modelIndex = tableViewPrivate->modelIndexAtCell(cell);
@@ -3343,11 +3346,13 @@ void tst_QQuickTableView::positionViewAtRowClamped()
     if (contentYStartPos >= 0)
         tableView->setContentY(contentYStartPos);
 
-    WAIT_UNTIL_POLISHED;
+    if (!tableView->isRowLoaded(row))
+        WAIT_UNTIL_POLISHED;
 
     tableView->positionViewAtRow(row, alignment, offset);
 
-    WAIT_UNTIL_POLISHED;
+    if (!tableView->isRowLoaded(row))
+        WAIT_UNTIL_POLISHED;
 
     QCOMPARE(tableView->contentY(), row < 50 ? 0 : tableView->contentHeight() - tableView->height());
 }
@@ -3411,9 +3416,90 @@ void tst_QQuickTableView::positionViewAtColumnClamped()
 
     tableView->positionViewAtColumn(column, alignment, offset);
 
-    WAIT_UNTIL_POLISHED;
+    if (!tableView->isColumnLoaded(column))
+        WAIT_UNTIL_POLISHED;
 
     QCOMPARE(tableView->contentX(), column < 50 ? 0 : tableView->contentWidth() - tableView->width());
+}
+
+void tst_QQuickTableView::positionViewAtCellWithAnimation()
+{
+    // Check that when we flick to already loaded cell in the
+    // table, this will start the animation, and the view will
+    // be position correctly after the expected duration.
+
+    LOAD_TABLEVIEW("plaintableview.qml");
+    auto model = TestModelAsVariant(100, 100);
+    tableView->setModel(model);
+    tableView->setAnimate(true);
+
+    WAIT_UNTIL_POLISHED;
+
+    QPoint cell(tableView->rightColumn(), tableView->bottomRow());
+    const QRectF cellGeometry = tableViewPrivate->loadedTableItem(cell)->geometry();
+    const int modelIndex = tableViewPrivate->modelIndexAtCell(cell);
+
+    QVERIFY(tableViewPrivate->loadedItems.contains(modelIndex));
+    QVERIFY(!tableViewPrivate->positionXAnimation.isRunning());
+    QVERIFY(!tableViewPrivate->positionYAnimation.isRunning());
+
+    // Animate the cell to the top left location in the view
+    tableView->positionViewAtCell(cell, Qt::AlignTop | Qt::AlignLeft);
+
+    // Wait for animation to finish
+    QVERIFY(tableViewPrivate->positionXAnimation.isRunning());
+    QVERIFY(tableViewPrivate->positionYAnimation.isRunning());
+    QTRY_COMPARE(tableViewPrivate->positionXAnimation.isRunning(), false);
+    QTRY_COMPARE(tableViewPrivate->positionYAnimation.isRunning(), false);
+
+    // Check that the cell is now placed in the top left corner
+    QVERIFY(tableViewPrivate->loadedItems.contains(modelIndex));
+    QPointF expectedPos = tableView->mapToItem(tableView->contentItem(), QPointF(0, 0));
+    QCOMPARE(cellGeometry.x(), expectedPos.x());
+    QCOMPARE(cellGeometry.y(), expectedPos.y());
+
+    // Animate the cell to the top right location in the view
+    tableView->positionViewAtCell(cell, Qt::AlignTop | Qt::AlignRight);
+
+    // Wait for animation to finish
+    QVERIFY(tableViewPrivate->positionXAnimation.isRunning());
+    QVERIFY(!tableViewPrivate->positionYAnimation.isRunning());
+    QTRY_COMPARE(tableViewPrivate->positionXAnimation.isRunning(), false);
+
+    // Check that the cell is now placed in the top right corner
+    QVERIFY(tableViewPrivate->loadedItems.contains(modelIndex));
+    expectedPos = tableView->mapToItem(tableView->contentItem(), QPointF(tableView->width(), 0));
+    QCOMPARE(cellGeometry.right(), expectedPos.x());
+    QCOMPARE(cellGeometry.y(), expectedPos.y());
+
+    // Animate the cell to the bottom left location in the view
+    tableView->positionViewAtCell(cell, Qt::AlignBottom | Qt::AlignLeft);
+
+    // Wait for animation to finish
+    QVERIFY(tableViewPrivate->positionXAnimation.isRunning());
+    QVERIFY(tableViewPrivate->positionYAnimation.isRunning());
+    QTRY_COMPARE(tableViewPrivate->positionXAnimation.isRunning(), false);
+    QTRY_COMPARE(tableViewPrivate->positionYAnimation.isRunning(), false);
+
+    // Check that the cell is now placed in the bottom left corner
+    QVERIFY(tableViewPrivate->loadedItems.contains(modelIndex));
+    expectedPos = tableView->mapToItem(tableView->contentItem(), QPointF(0, tableView->height()));
+    QCOMPARE(cellGeometry.x(), expectedPos.x());
+    QCOMPARE(cellGeometry.bottom(), expectedPos.y());
+
+    // Animate the cell to the bottom right location in the view
+    tableView->positionViewAtCell(cell, Qt::AlignBottom | Qt::AlignRight);
+
+    // Wait for animation to finish
+    QVERIFY(tableViewPrivate->positionXAnimation.isRunning());
+    QVERIFY(!tableViewPrivate->positionYAnimation.isRunning());
+    QTRY_COMPARE(tableViewPrivate->positionXAnimation.isRunning(), false);
+
+    // Check that the cell is now placed in the bottom right corner
+    QVERIFY(tableViewPrivate->loadedItems.contains(modelIndex));
+    expectedPos = tableView->mapToItem(tableView->contentItem(), QPointF(tableView->width(), tableView->height()));
+    QCOMPARE(cellGeometry.right(), expectedPos.x());
+    QCOMPARE(cellGeometry.bottom(), expectedPos.y());
 }
 
 void tst_QQuickTableView::itemAtCell_data()

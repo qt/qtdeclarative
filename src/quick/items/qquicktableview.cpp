@@ -50,6 +50,7 @@
 
 #include <QtQuick/private/qquickflickable_p_p.h>
 #include <QtQuick/private/qquickitemviewfxitem_p_p.h>
+#include <QtQuick/private/qquicktaphandler_p.h>
 
 /*!
     \qmltype TableView
@@ -437,6 +438,25 @@
     corresponding model item in the selection model.
 
     \sa {Selecting items}, SelectionRectangle
+*/
+
+/*!
+    \qmlproperty bool QtQuick::TableView::animate
+    \since 6.4
+
+    This property can be set to control if TableView should animate the
+    \l contentItem (\l contentX and \l contentY). It is used by
+    \l positionViewAtCell(), \l ensureVisible(), and when navigating
+    the current index around with the keyboard. The default value is \c true.
+
+    If set to \c false, any ongoing animation will immediately stop.
+
+    \note This property is only a hint. TableView might choose to position
+    the content item without an animation if, for example, the target cell is not
+    \l {isRowLoaded()}{loaded}. However, if set to \c false, animations will
+    always be off.
+
+    \sa positionViewAtCell(), ensureVisible()
 */
 
 /*!
@@ -1870,23 +1890,45 @@ bool QQuickTableViewPrivate::canLoadTableEdge(Qt::Edge tableEdge, const QRectF f
 bool QQuickTableViewPrivate::canUnloadTableEdge(Qt::Edge tableEdge, const QRectF fillRect) const
 {
     // Note: if there is only one row or column left, we cannot unload, since
-    // they are needed as anchor point for further layouting.
+    // they are needed as anchor point for further layouting. We also skip
+    // unloading in the direction we're currently scrolling.
+
     switch (tableEdge) {
     case Qt::LeftEdge:
         if (loadedColumns.count() <= 1)
             return false;
+        if (positionXAnimation.isRunning()) {
+            const qreal to = positionXAnimation.to().toFloat();
+            if (to < viewportRect.x())
+                return false;
+        }
         return loadedTableInnerRect.left() <= fillRect.left();
     case Qt::RightEdge:
         if (loadedColumns.count() <= 1)
             return false;
+        if (positionXAnimation.isRunning()) {
+            const qreal to = positionXAnimation.to().toFloat();
+            if (to > viewportRect.x())
+                return false;
+        }
         return loadedTableInnerRect.right() >= fillRect.right();
     case Qt::TopEdge:
         if (loadedRows.count() <= 1)
             return false;
+        if (positionYAnimation.isRunning()) {
+            const qreal to = positionYAnimation.to().toFloat();
+            if (to < viewportRect.y())
+                return false;
+        }
         return loadedTableInnerRect.top() <= fillRect.top();
     case Qt::BottomEdge:
         if (loadedRows.count() <= 1)
             return false;
+        if (positionYAnimation.isRunning()) {
+            const qreal to = positionYAnimation.to().toFloat();
+            if (to > viewportRect.y())
+                return false;
+        }
         return loadedTableInnerRect.bottom() >= fillRect.bottom();
     }
     Q_TABLEVIEW_UNREACHABLE(tableEdge);
@@ -3199,6 +3241,8 @@ void QQuickTableViewPrivate::syncRebuildOptions()
     rebuildState = RebuildState::Begin;
     rebuildOptions = scheduledRebuildOptions;
     scheduledRebuildOptions = RebuildOption::None;
+    positionXAnimation.stop();
+    positionYAnimation.stop();
 
     if (loadedItems.isEmpty())
         rebuildOptions.setFlag(RebuildOption::All);
@@ -3492,6 +3536,123 @@ void QQuickTableViewPrivate::modelResetCallback()
     scheduleRebuildTable(RebuildOption::All);
 }
 
+bool QQuickTableViewPrivate::scrollToCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &margin)
+{
+    Q_Q(QQuickTableView);
+
+    // This function will only scroll to cells that are loaded (since we
+    // don't know the location of unloaded cells). But as an exception, to
+    // allow moving currentIndex out of the viewport, we support scrolling
+    // to a cell that is adjacent to the loaded table. So start by checking
+    // if we should load en extra edge.
+    const Qt::Alignment verticalAlignment = alignment & (Qt::AlignTop | Qt::AlignVCenter | Qt::AlignBottom);
+    const Qt::Alignment horizontalAlignment = alignment & (Qt::AlignLeft | Qt::AlignHCenter | Qt::AlignRight);
+
+    qreal newContentX = q->contentX();
+    qreal newContentY = q->contentY();
+
+    if (horizontalAlignment) {
+        if (cell.x() < leftColumn()) {
+            if (cell.x() != nextVisibleEdgeIndex(Qt::LeftEdge, leftColumn() - 1))
+                return false;
+            loadEdge(Qt::LeftEdge, QQmlIncubator::Synchronous);
+        } else if (cell.x() > rightColumn()) {
+            if (cell.x() != nextVisibleEdgeIndex(Qt::RightEdge, rightColumn() + 1))
+                return false;
+            loadEdge(Qt::RightEdge, QQmlIncubator::Synchronous);
+        } else if (cell.x() < leftColumn() || cell.x() > rightColumn()) {
+            return false;
+        }
+
+        if (!loadedColumns.contains(cell.x()))
+            return false;
+
+        const int columnX = getEffectiveColumnX(cell.x());
+        const int columnWidth = getEffectiveColumnWidth(cell.x());
+
+        if (alignment & Qt::AlignLeft) {
+            newContentX = columnX + margin.x();
+        } else if (alignment & Qt::AlignRight) {
+            newContentX = columnX + columnWidth - viewportRect.width() + margin.x();
+        } else if (alignment & Qt::AlignHCenter) {
+            const qreal centerDistance = (viewportRect.width() - columnWidth) / 2;
+            newContentX = columnX - centerDistance + margin.x();
+        } else {
+            Q_TABLEVIEW_UNREACHABLE("alignment not supported");
+            return false;
+        }
+
+        // Don't overshoot when animating to a cell
+        newContentX = qBound(-q->minXExtent(), newContentX, -q->maxXExtent());
+    }
+
+    if (verticalAlignment) {
+        if (cell.y() < topRow()) {
+            if (cell.y() != nextVisibleEdgeIndex(Qt::TopEdge, topRow() - 1))
+                return false;
+            loadEdge(Qt::TopEdge, QQmlIncubator::Synchronous);
+        } else if (cell.y() > bottomRow()) {
+            if (cell.y() != nextVisibleEdgeIndex(Qt::BottomEdge, bottomRow() + 1))
+                return false;
+            loadEdge(Qt::BottomEdge, QQmlIncubator::Synchronous);
+        } else if (cell.y() < topRow() || cell.y() > bottomRow()) {
+            return false;
+        }
+
+        if (!loadedRows.contains(cell.y()))
+            return false;
+
+        const int rowY = getEffectiveRowY(cell.y());
+        const int rowHeight = getEffectiveRowHeight(cell.y());
+
+        if (alignment & Qt::AlignTop) {
+            newContentY = rowY + margin.y();
+        } else if (alignment & Qt::AlignBottom) {
+            newContentY = rowY + rowHeight - viewportRect.height() + margin.y();
+        } else if (alignment & Qt::AlignVCenter) {
+            const qreal centerDistance = (viewportRect.height() - rowHeight) / 2;
+            newContentY = rowY - centerDistance + margin.y();
+        } else {
+            Q_TABLEVIEW_UNREACHABLE("alignment not supported");
+            return false;
+        }
+
+        // Don't overshoot when animating to a cell
+        newContentY = qBound(-q->minYExtent(), newContentY, -q->maxYExtent());
+    }
+
+    // Calculate the velocity of the animation
+    // based on the distance from start to end.
+    const qreal diffX = qAbs(newContentX - q->contentX());
+    const qreal diffY = qAbs(newContentY - q->contentY());
+    const qreal maxDiff = qMax(diffX, diffY);
+    const qreal duration = qBound(700., maxDiff * 5, 1500.);
+
+    if (!qFuzzyCompare(newContentX, q->contentX())) {
+        if (animate) {
+            positionXAnimation.setTo(newContentX);
+            positionXAnimation.setDuration(duration);
+            positionXAnimation.restart();
+        } else {
+            positionXAnimation.stop();
+            q->setContentX(newContentX);
+        }
+    }
+
+    if (!qFuzzyCompare(newContentY, q->contentY())) {
+        if (animate) {
+            positionYAnimation.setTo(newContentY);
+            positionYAnimation.setDuration(duration);
+            positionYAnimation.restart();
+        } else {
+            positionYAnimation.stop();
+            q->setContentY(newContentY);
+        }
+    }
+
+    return true;
+}
+
 void QQuickTableViewPrivate::scheduleRebuildIfFastFlick()
 {
     Q_Q(QQuickTableView);
@@ -3552,6 +3713,30 @@ void QQuickTableViewPrivate::syncViewportRect()
     qCDebug(lcTableViewDelegateLifecycle) << viewportRect;
 }
 
+void QQuickTableViewPrivate::init()
+{
+    Q_Q(QQuickTableView);
+
+    q->setFlag(QQuickItem::ItemIsFocusScope);
+
+    positionXAnimation.setTargetObject(q);
+    positionXAnimation.setProperty(QStringLiteral("contentX"));
+    positionXAnimation.setEasing(QEasingCurve::OutQuart);
+
+    positionYAnimation.setTargetObject(q);
+    positionYAnimation.setProperty(QStringLiteral("contentY"));
+    positionYAnimation.setEasing(QEasingCurve::OutQuart);
+
+    auto tapHandler = new QQuickTapHandler(q->contentItem());
+
+    QObject::connect(tapHandler, &QQuickTapHandler::pressedChanged, [=] {
+        if (!tapHandler->isPressed())
+            return;
+        positionXAnimation.stop();
+        positionYAnimation.stop();
+    });
+}
+
 void QQuickTableViewPrivate::syncViewportPosRecursive()
 {
     Q_Q(QQuickTableView);
@@ -3583,17 +3768,17 @@ void QQuickTableViewPrivate::syncViewportPosRecursive()
 QQuickTableView::QQuickTableView(QQuickItem *parent)
     : QQuickFlickable(*(new QQuickTableViewPrivate), parent)
 {
-    setFlag(QQuickItem::ItemIsFocusScope);
-}
-
-QQuickTableView::~QQuickTableView()
-{
+    d_func()->init();
 }
 
 QQuickTableView::QQuickTableView(QQuickTableViewPrivate &dd, QQuickItem *parent)
     : QQuickFlickable(dd, parent)
 {
-    setFlag(QQuickItem::ItemIsFocusScope);
+    d_func()->init();
+}
+
+QQuickTableView::~QQuickTableView()
+{
 }
 
 void QQuickTableView::componentFinalized()
@@ -3882,6 +4067,26 @@ void QQuickTableView::setSelectionModel(QItemSelectionModel *selectionModel)
     emit selectionModelChanged();
 }
 
+bool QQuickTableView::animate() const
+{
+   return d_func()->animate;
+}
+
+void QQuickTableView::setAnimate(bool animate)
+{
+    Q_D(QQuickTableView);
+    if (d->animate == animate)
+        return;
+
+    d->animate = animate;
+    if (!animate) {
+        d->positionXAnimation.stop();
+        d->positionYAnimation.stop();
+    }
+
+    emit animateChanged();
+}
+
 int QQuickTableView::leftColumn() const
 {
     Q_D(const QQuickTableView);
@@ -3922,11 +4127,14 @@ void QQuickTableView::positionViewAtCell(const QPoint &cell, Qt::Alignment align
         if (d->syncVertically) {
             d->syncView->positionViewAtCell(QPoint(cell.x(), topRow()), horizontalAlignment, offset);
         } else {
-            d->assignedPositionViewAtColumn = cell.x();
-            d->positionViewAtColumnAlignment = horizontalAlignment;
-            d->positionViewAtColumnOffset = offset.x();
-            d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
-                                    QQuickTableViewPrivate::RebuildOption::PositionViewAtColumn);
+            if (!d->scrollToCell(cell, horizontalAlignment, offset)) {
+                // Could not scroll, so rebuild instead
+                d->assignedPositionViewAtColumn = cell.x();
+                d->positionViewAtColumnAlignment = horizontalAlignment;
+                d->positionViewAtColumnOffset = offset.x();
+                d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
+                                        QQuickTableViewPrivate::RebuildOption::PositionViewAtColumn);
+            }
         }
     }
 
@@ -3934,11 +4142,14 @@ void QQuickTableView::positionViewAtCell(const QPoint &cell, Qt::Alignment align
         if (d->syncHorizontally) {
             d->syncView->positionViewAtCell(QPoint(leftColumn(), cell.y()), verticalAlignment, offset);
         } else {
-            d->assignedPositionViewAtRow = cell.y();
-            d->positionViewAtRowAlignment = verticalAlignment;
-            d->positionViewAtRowOffset = offset.y();
-            d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
-                                    QQuickTableViewPrivate::RebuildOption::PositionViewAtRow);
+            if (!d->scrollToCell(cell, verticalAlignment, offset)) {
+                // Could not scroll, so rebuild instead
+                d->assignedPositionViewAtRow = cell.y();
+                d->positionViewAtRowAlignment = verticalAlignment;
+                d->positionViewAtRowOffset = offset.y();
+                d->scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
+                                        QQuickTableViewPrivate::RebuildOption::PositionViewAtRow);
+            }
         }
     }
 }

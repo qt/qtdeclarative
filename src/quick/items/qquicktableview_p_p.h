@@ -63,6 +63,7 @@
 #include <QtQuick/private/qminimalflatset_p.h>
 #include <QtQuick/private/qquickflickable_p_p.h>
 #include <QtQuick/private/qquickitemviewfxitem_p_p.h>
+#include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquickselectable_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -286,6 +287,7 @@ public:
     bool inSetLocalViewportPos = false;
     bool inSyncViewportPosRecursive = false;
     bool inUpdateContentSize = false;
+    bool animate = true;
 
     // isTransposed is currently only used by HeaderView.
     // Consider making it public.
@@ -332,6 +334,9 @@ public:
     Qt::Alignment positionViewAtRowAlignment = Qt::AlignTop;
     Qt::Alignment positionViewAtColumnAlignment = Qt::AlignLeft;
 
+    QQuickPropertyAnimation positionXAnimation;
+    QQuickPropertyAnimation positionYAnimation;
+
     QPoint selectionStartCell;
     QPoint selectionEndCell;
     QRectF selectionStartCellRect;
@@ -349,6 +354,8 @@ public:
 #endif
 
 public:
+    void init();
+
     QQuickTableViewAttached *getAttachedObject(const QObject *object) const;
 
     int modelIndexAtCell(const QPoint &cell) const;
@@ -472,6 +479,7 @@ public:
     void layoutChangedCallback(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint);
     void modelResetCallback();
 
+    bool scrollToCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &margin);
     void scheduleRebuildIfFastFlick();
     void setLocalViewportX(qreal contentX);
     void setLocalViewportY(qreal contentY);

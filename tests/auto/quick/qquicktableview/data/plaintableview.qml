@@ -37,8 +37,7 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.12
-import QtQuick.Window 2.3
+import QtQuick
 
 Item {
     width: 640
@@ -59,6 +58,7 @@ Item {
         delegate: tableViewDelegate
         columnSpacing: 1
         rowSpacing: 1
+        animate: false
     }
 
     Component {
