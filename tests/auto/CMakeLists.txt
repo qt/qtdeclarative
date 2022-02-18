@@ -1,13 +1,16 @@
 add_subdirectory(cmake)
 
+if(TARGET Qt::Quick)
+    add_subdirectory(qml)
+    add_subdirectory(quick)
+endif()
+
 # Limit set of tests to run for static Qt builds.
 if(QT_BUILD_MINIMAL_STATIC_TESTS)
     return()
 endif()
 
 if(TARGET Qt::Quick)
-    add_subdirectory(qml)
-    add_subdirectory(quick)
     add_subdirectory(quicktest)
 endif()
 if(TARGET Qt::QuickTest)
