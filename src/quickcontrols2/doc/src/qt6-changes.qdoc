@@ -253,36 +253,36 @@
 
     \section1 Controls
 
-    \section2 ApplicationWindow
+    \section2 Changes to ApplicationWindow
 
     The deprecated overlay properties and attached API were removed. Use the
     \l Overlay attached type instead.
 
-    \section2 ComboBox
+    \section2 Changes to ComboBox
 
     The \l {ComboBox::}{pressed} property is now read-only. To modify the
     visual pressed state of a ComboBox, use the \l {ComboBox::}{down} property
     instead.
 
-    \section2 Container
+    \section2 Changes to Container
 
     The deprecated \c removeItem(var) function was removed.
     \l {Container::}{removeItem(Item)} or \l {Container::}{takeItem(int)} can
     be used instead.
 
-    \section2 Dialog
+    \section2 Changes to Dialog
 
     \l {Dialog}'s \l {Dialog::}{accepted()} and \l {Dialog::}{rejected()}
     signals are now emitted before \l {Popup::}{closed()} when calling
     \l {Dialog::}{done()}, \l {Dialog::}{accept()} and \l {Dialog::}{reject()}.
 
-    \section2 Menu
+    \section2 Changes to Menu
 
     The deprecated \c removeItem(var) function was removed.
     \l {Menu::}{removeItem(Item)} or \l {Menu::}{takeItem(int)} can be used
     instead.
 
-    \section2 ToolTip
+    \section2 Changes to ToolTip
 
     \l {ToolTip}'s timeout now begins only after \l {Popup::}{opened()} has
     been emitted. This results in tooltips with enter transitions being visible
@@ -291,13 +291,13 @@
     visually check tooltips in your application and adjust timeouts if
     necessary.
 
-    \section2 StackView
+    \section2 Changes to StackView
 
     The StackView.Transition enum value was deprecated. The operation argument
     can be omitted in order to use the default transition for any given
     operation.
 
-    \section2 Tumbler
+    \section2 Changes to Tumbler
 
     \l {Item::}{implicitWidth} and \l {Item::}{implicitHeight} must now be
     provided for \l {Tumbler}'s \l {Control::}{contentItem}, making it
