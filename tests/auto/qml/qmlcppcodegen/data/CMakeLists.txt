@@ -50,6 +50,7 @@ set(qml_files
     curlygrouped.qml
     cycleHead.qml
     deadShoeSize.qml
+    deadStoreLoop.qml
     dialog.qml
     dynamicscene.qml
     enumInvalid.qml

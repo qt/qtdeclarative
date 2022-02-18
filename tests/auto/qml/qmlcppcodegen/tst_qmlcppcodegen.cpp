@@ -650,6 +650,7 @@ void tst_QmlCppCodegen::interestingFiles_data()
     QTest::addRow("dynamicscene") << u"dynamicscene.qml"_qs << true;
     QTest::addRow("curlygrouped") << u"curlygrouped.qml"_qs << true;
     QTest::addRow("cycleHead") << u"cycleHead.qml"_qs << false;
+    QTest::addRow("deadStoreLoop") << u"deadStoreLoop.qml"_qs << true;
 }
 
 void tst_QmlCppCodegen::interestingFiles()
