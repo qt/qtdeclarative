@@ -184,9 +184,11 @@ QList<QQmlJSCodeGenerator::BasicBlock> QQmlJSCodeGenerator::findBasicBlocks(
         const QQmlJSCodeGenerator::Section &section = sections[i];
         const QString label = section.label();
         if (!label.isEmpty() || currentBlock.jumpMode != JumpMode::None) {
-            currentBlock.endSection = i;
-            basicBlocks.append(currentBlock);
-            currentBlock.beginSection = i;
+            if (currentBlock.beginSection != i) {
+                currentBlock.endSection = i;
+                basicBlocks.append(currentBlock);
+                currentBlock.beginSection = i;
+            }
             currentBlock.label = label;
         }
         currentBlock.jumpMode = section.jumpMode();
@@ -320,6 +322,7 @@ void QQmlJSCodeGenerator::eliminateDeadStores()
                         usedOnce = true;
                     }
                 }
+                requiredRegisters[0][variable] = inUse;
 
                 if (!usedOnce) {
                     registerTypeIt = registerTypes.erase(registerTypeIt);
