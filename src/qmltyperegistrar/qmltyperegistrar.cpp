@@ -192,11 +192,20 @@ int main(int argc, char **argv)
 
     fprintf(output, "\n\n");
 
+    // Keep this in sync with _qt_internal_get_escaped_uri in CMake
     QString moduleAsSymbol = module;
-    moduleAsSymbol.replace(QLatin1Char('.'), QLatin1Char('_'));
+    moduleAsSymbol.replace(QRegularExpression(QStringLiteral("[^A-Za-z0-9]")), QStringLiteral("_"));
+
+    QString underscoredModuleAsSymbol = module;
+    underscoredModuleAsSymbol.replace(QLatin1Char('.'), QLatin1Char('_'));
+
+    if (underscoredModuleAsSymbol != moduleAsSymbol
+            || underscoredModuleAsSymbol.isEmpty()
+            || underscoredModuleAsSymbol.front().isDigit()) {
+        qWarning() << module << "is an invalid QML module URI. You cannot import this.";
+    }
 
     const QString functionName = QStringLiteral("qml_register_types_") + moduleAsSymbol;
-
     fprintf(output,
             "#if !defined(QT_STATIC)\n"
             "#define Q_QMLTYPE_EXPORT Q_DECL_EXPORT\n"

@@ -57,3 +57,13 @@ set_target_properties(tst_qmltyperegistrar PROPERTIES
 # yet, so we have to call it directly to test that code path for now.
 _qt_internal_qml_type_registration(tst_qmltyperegistrar MANUAL_MOC_JSON_FILES ${json_list})
 add_subdirectory(foreign)
+
+qt_add_library(tst-qmltyperegistrar-with-dashes)
+target_link_libraries(tst-qmltyperegistrar-with-dashes PRIVATE Qt::Core Qt::Qml)
+qt_enable_autogen_tool(tst-qmltyperegistrar-with-dashes "moc" ON)
+qt_add_qml_module(tst-qmltyperegistrar-with-dashes
+    URI Module-With-Dashes
+    VERSION 1.0
+    SOURCES
+        foo.cpp foo.h
+)
