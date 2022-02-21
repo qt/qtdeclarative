@@ -812,6 +812,30 @@ void TestQmllint::dirtyQmlCode_data()
             << QStringLiteral("badCppPropertyChangeHandlers4.qml")
             << QStringLiteral("no matching signal found for handler \"onWannabeSignal\"")
             << QString() << QString() << false;
+    QTest::newRow("shadowedSignal")
+            << QStringLiteral("shadowedSignal.qml")
+            << QStringLiteral("Signal \"pressed\" is shadowed by a property.") << QString()
+            << QString() << false;
+    QTest::newRow("shadowedSignalWithId")
+            << QStringLiteral("shadowedSignalWithId.qml")
+            << QStringLiteral("Signal \"pressed\" is shadowed by a property") << QString()
+            << QString() << false;
+    QTest::newRow("shadowedSlot") << QStringLiteral("shadowedSlot.qml")
+                                  << QStringLiteral("Slot \"move\" is shadowed by a property")
+                                  << QString() << QString() << false;
+    QTest::newRow("shadowedMethod") << QStringLiteral("shadowedMethod.qml")
+                                    << QStringLiteral("Method \"foo\" is shadowed by a property.")
+                                    << QString() << QString() << false;
+    QTest::newRow("callVarProp")
+            << QStringLiteral("callVarProp.qml")
+            << QStringLiteral("Property \"foo\" is a variant property. It may or may not be a "
+                              "method. Use a regular function instead.")
+            << QString() << QString() << false;
+    QTest::newRow("callJSValue")
+            << QStringLiteral("callJSValueProp.qml")
+            << QStringLiteral("Property \"callLater\" is a QJSValue property. It may or may not be "
+                              "a method. Use a regular Q_INVOKABLE instead.")
+            << QString() << QString() << false;
 }
 
 void TestQmllint::dirtyQmlCode()
