@@ -58,7 +58,7 @@ void QQmlJSShadowCheck::run(
     m_annotations = annotations;
     m_function = function;
     m_error = error;
-    m_state = initialState(function, m_typeResolver);
+    m_state = initialState(function);
     decode(m_function->code.constData(), static_cast<uint>(m_function->code.length()));
 }
 

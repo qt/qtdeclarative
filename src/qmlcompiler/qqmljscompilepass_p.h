@@ -84,7 +84,7 @@ public:
     struct Function
     {
         QQmlJSScopesById addressableScopes;
-        QList<QQmlJSScope::ConstPtr> argumentTypes;
+        QList<QQmlJSRegisterContent> argumentTypes;
         QQmlJSScope::ConstPtr returnType;
         QQmlJSScope::ConstPtr qmlScope;
         QByteArray code;
@@ -187,12 +187,11 @@ protected:
     const Function *m_function = nullptr;
     QQmlJS::DiagnosticMessage *m_error = nullptr;
 
-    State initialState(const Function *function, const QQmlJSTypeResolver *resolver)
+    State initialState(const Function *function)
     {
         State state;
         for (int i = 0; i < function->argumentTypes.count(); ++i) {
-            state.registers[FirstArgument + i]
-                    = resolver->globalType(function->argumentTypes.at(i));
+            state.registers[FirstArgument + i] = function->argumentTypes.at(i);
             Q_ASSERT(state.registers[FirstArgument + i].isValid());
         }
         return state;

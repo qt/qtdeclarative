@@ -66,7 +66,7 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSTypePropagator::run(
 
         m_prevStateAnnotations = m_state.annotations;
         m_state = PassState();
-        m_state.State::operator=(initialState(m_function, m_typeResolver));
+        m_state.State::operator=(initialState(m_function));
 
         reset();
         decode(m_function->code.constData(), static_cast<uint>(m_function->code.length()));

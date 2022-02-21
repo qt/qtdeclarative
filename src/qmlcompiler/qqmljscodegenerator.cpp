@@ -146,7 +146,7 @@ QT_WARNING_POP
     for (const auto loopLabel : m_context->labelInfo)
         m_labels.insert(loopLabel, u"label_%1"_qs.arg(m_labels.count()));
 
-    m_state.State::operator=(initialState(function, m_typeResolver));
+    m_state.State::operator=(initialState(function));
     const QByteArray byteCode = function->code;
     decode(byteCode.constData(), static_cast<uint>(byteCode.length()));
     eliminateDeadStores();
@@ -179,9 +179,9 @@ QT_WARNING_POP
     for (const Section &section : m_sections)
         result.code += section.code();
 
-    for (const QQmlJSScope::ConstPtr &argType : qAsConst(function->argumentTypes)) {
-        if (argType) {
-            result.argumentTypes.append(argType->augmentedInternalName());
+    for (const QQmlJSRegisterContent &argType : qAsConst(function->argumentTypes)) {
+        if (argType.isValid()) {
+            result.argumentTypes.append(argType.storedType()->augmentedInternalName());
         } else {
             result.argumentTypes.append(u"void"_qs);
         }
@@ -2578,7 +2578,7 @@ QString QQmlJSCodeGenerator::registerVariable(int index) const
     if (index >= QV4::CallData::OffsetCount && index < firstRegisterIndex()) {
         const int argumentIndex = index - QV4::CallData::OffsetCount;
         return u"*static_cast<"_qs
-                + castTargetName(m_function->argumentTypes[argumentIndex])
+                + castTargetName(m_function->argumentTypes[argumentIndex].storedType())
                 + u"*>(argumentsPtr["_qs + QString::number(argumentIndex) + u"])"_qs;
     }
     return m_registerVariables.value(index).value(registerType(index).storedType());
@@ -2592,10 +2592,8 @@ QString QQmlJSCodeGenerator::changedRegisterVariable() const
 
 QQmlJSRegisterContent QQmlJSCodeGenerator::registerType(int index) const
 {
-    if (index >= QV4::CallData::OffsetCount && index < firstRegisterIndex()) {
-        return m_typeResolver->globalType(
-                    m_function->argumentTypes[index - QV4::CallData::OffsetCount]);
-    }
+    if (index >= QV4::CallData::OffsetCount && index < firstRegisterIndex())
+        return m_function->argumentTypes[index - QV4::CallData::OffsetCount];
     return m_state.registers[index];
 }
 
