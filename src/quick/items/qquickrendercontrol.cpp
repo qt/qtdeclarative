@@ -330,6 +330,7 @@ bool QQuickRenderControl::initialize()
         params.initialSurfacePixelSize = d->window->size() * d->window->effectiveDevicePixelRatio();
         params.maybeSurface = d->window;
         renderContext->initialize(&params);
+        d->initialized = true;
     } else {
         qWarning("QRhi is only compatible with default adaptation");
         return false;
