@@ -504,7 +504,8 @@ void tst_QQuickAccessible::hitTest()
     QAccessibleInterface *windowIface = QAccessible::queryAccessibleInterface(window.get());
     QVERIFY(windowIface);
     QAccessibleInterface *rootItem = windowIface->child(0);
-    QRect rootRect = rootItem->rect();
+    // on Android the main window is always shown fullscreen
+    QRect rootRect = QRect(window->x(), window->y(), window->width(), window->height());
 
     // check the root item from app
     QAccessibleInterface *appIface = QAccessible::queryAccessibleInterface(qApp);
