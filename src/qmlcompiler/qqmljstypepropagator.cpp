@@ -260,7 +260,7 @@ QQmlJS::SourceLocation QQmlJSTypePropagator::getCurrentBindingSourceLocation() c
     return combine(entries.constFirst().location, entries.constLast().location);
 }
 
-void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
+void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isMethod) const
 {
     auto location = getCurrentSourceLocation();
 
@@ -271,8 +271,12 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name) const
             return;
     }
 
-    if (isMissingPropertyType(m_function->qmlScope, name))
+    if (isMethod) {
+        if (isCallingProperty(m_function->qmlScope, name))
+            return;
+    } else if (isMissingPropertyType(m_function->qmlScope, name)) {
         return;
+    }
 
     std::optional<FixSuggestion> suggestion;
 
@@ -462,6 +466,46 @@ bool QQmlJSTypePropagator::isMissingPropertyType(QQmlJSScope::ConstPtr scope,
     return true;
 }
 
+bool QQmlJSTypePropagator::isCallingProperty(QQmlJSScope::ConstPtr scope, const QString &name) const
+{
+    auto property = scope->property(name);
+    if (!property.isValid())
+        return false;
+
+    QString propertyType = u"Property"_qs;
+
+    auto methods = scope->methods(name);
+
+    QString errorType;
+    if (!methods.isEmpty()) {
+        errorType = u"shadowed by a property."_qs;
+        switch (methods.first().methodType()) {
+        case QQmlJSMetaMethod::Signal:
+            propertyType = u"Signal"_qs;
+            break;
+        case QQmlJSMetaMethod::Slot:
+            propertyType = u"Slot"_qs;
+            break;
+        case QQmlJSMetaMethod::Method:
+            propertyType = u"Method"_qs;
+            break;
+        }
+    } else if (m_typeResolver->equals(property.type(), m_typeResolver->varType())) {
+        errorType =
+                u"a variant property. It may or may not be a method. Use a regular function instead."_qs;
+    } else if (m_typeResolver->equals(property.type(), m_typeResolver->jsValueType())) {
+        errorType =
+                u"a QJSValue property. It may or may not be a method. Use a regular Q_INVOKABLE instead."_qs;
+    } else {
+        errorType = u"not a method"_qs;
+    }
+
+    m_logger->log(u"%1 \"%2\" is %3"_qs.arg(propertyType, name, errorType), Log_Type,
+                  getCurrentSourceLocation(), true, true, {});
+
+    return true;
+}
+
 void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
 {
     // LoadQmlContextPropertyLookup does not use accumulatorIn. It always refers to the scope.
@@ -484,7 +528,7 @@ void QQmlJSTypePropagator::generate_LoadQmlContextPropertyLookup(int index)
 
     if (!m_state.accumulatorOut().isValid()) {
         setError(u"Cannot access value for name "_qs + name);
-        handleUnqualifiedAccess(name);
+        handleUnqualifiedAccess(name, false);
     } else if (m_typeResolver->genericType(m_state.accumulatorOut().storedType()).isNull()) {
         // It should really be valid.
         // We get the generic type from aotContext->loadQmlContextPropertyIdLookup().
@@ -799,6 +843,9 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         setError(u"Type %1 does not have a property %2 for calling"_qs
                          .arg(callBase.descriptiveName(), propertyName));
 
+        if (callBase.isType() && isCallingProperty(callBase.type(), propertyName))
+            return;
+
         if (isRestricted(propertyName))
             return;
 
@@ -962,7 +1009,8 @@ void QQmlJSTypePropagator::propagateScopeLookupCall(const QString &functionName,
     setAccumulator(m_typeResolver->globalType(m_typeResolver->jsValueType()));
 
     setError(u"Cannot find function '%1'"_qs.arg(functionName));
-    handleUnqualifiedAccess(functionName);
+
+    handleUnqualifiedAccess(functionName, true);
 }
 
 void QQmlJSTypePropagator::generate_CallGlobalLookup(int index, int argc, int argv)

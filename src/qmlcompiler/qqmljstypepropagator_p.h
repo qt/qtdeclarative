@@ -208,9 +208,10 @@ private:
         bool needsMorePasses = false;
     };
 
-    void handleUnqualifiedAccess(const QString &name) const;
+    void handleUnqualifiedAccess(const QString &name, bool isMethod) const;
     void checkDeprecated(QQmlJSScope::ConstPtr scope, const QString &name, bool isMethod) const;
     bool isRestricted(const QString &propertyName) const;
+    bool isCallingProperty(QQmlJSScope::ConstPtr scope, const QString &name) const;
     bool isMissingPropertyType(QQmlJSScope::ConstPtr scope, const QString &type) const;
     QQmlJS::SourceLocation getCurrentSourceLocation() const;
     QQmlJS::SourceLocation getCurrentBindingSourceLocation() const;
