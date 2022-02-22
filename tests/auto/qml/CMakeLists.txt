@@ -32,7 +32,12 @@ add_subdirectory(qtqmlmodules)
 add_subdirectory(qquickfolderlistmodel)
 add_subdirectory(qqmlapplicationengine)
 add_subdirectory(qqmlsettings)
-add_subdirectory(qmldiskcache)
+
+if(NOT INTEGRITY)
+# There's no mounted filesystem on INTEGRITY therefore skipping qmldiskcache
+    add_subdirectory(qmldiskcache)
+endif()
+
 add_subdirectory(qqmlmetatype)
 if(TARGET Qt::Quick)
     add_subdirectory(qmltc_manual)

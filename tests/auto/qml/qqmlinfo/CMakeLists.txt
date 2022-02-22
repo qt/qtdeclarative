@@ -23,6 +23,10 @@ qt_internal_add_test(tst_qqmlinfo
     TESTDATA ${test_data}
 )
 
+if(QT_BUILD_STANDALONE_TESTS)
+    qt_import_qml_plugins(tst_qqmlinfo)
+endif()
+
 #### Keys ignored in scope 1:.:.:qqmlinfo.pro:<TRUE>:
 # QML_IMPORT_MAJOR_VERSION = "1"
 # QML_IMPORT_NAME = "org.qtproject.Test"

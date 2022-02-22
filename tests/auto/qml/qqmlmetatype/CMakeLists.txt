@@ -46,6 +46,9 @@ qt_internal_add_resource(tst_qqmlmetatype "qmake_qmldirresource"
         ${qmake_qmldirresource_resource_files}
 )
 
+if(QT_BUILD_STANDALONE_TESTS)
+    qt_import_qml_plugins(tst_qqmlmetatype)
+endif()
 
 ## Scopes:
 #####################################################################

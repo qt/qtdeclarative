@@ -24,6 +24,10 @@ qt_internal_add_test(tst_qqmlpromise
     TESTDATA ${test_data}
 )
 
+if(QT_BUILD_STANDALONE_TESTS)
+    qt_import_qml_plugins(tst_qqmlpromise)
+endif()
+
 #### Keys ignored in scope 1:.:.:qqmlpromise.pro:<TRUE>:
 # DISTFILES = "data/then-fulfilled-non-callable.qml" "data/then-reject-non-callable.qml" "data/then-resolve-multiple-then.qml" "data/then-resolve-chaining.qml" "data/then-reject-chaining.qml" "data/promise-resolve-with-value.qml" "data/promise-resolve-with-promise.qml" "data/promise-reject-with-value.qml" "data/promise-executor-resolve.qml" "data/promise-get-length.qml" "data/promise-executor-reject.qml" "data/promise-reject-catch.qml" "data/promise-async-resolve-with-value.qml" "data/promise-async-reject-with-value.qml" "data/promise-all-resolve.qml" "data/promise-all-empty-input.qml" "data/promise-resolve-with-array.qml" "data/promise-all-reject-reject-is-last.qml" "data/promise-all-reject-reject-is-mid.qml" "data/promise-race-resolve-1st.qml" "data/promise-race-empty-input.qml" "data/promise-race-resolve-2nd.qml" "data/promise-race-resolve-1st-in-executor-function.qml" "data/promise-resolve-is-a-function.qml" "data/promise-resolve-function-length.qml" "data/promise-all-invoke-then-method.qml" "data/promise-resolve-with-empty.qml" "data/promise-executor-throw-exception.qml" "data/promise-executor-function-extensible.qml" "data/promise-all-noniterable-input.qml"
 # OTHER_FILES = <EMPTY>

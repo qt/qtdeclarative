@@ -35,6 +35,9 @@ qt_internal_add_resource(tst_qqmlapplicationengine "tst_qqmlapplicationengine"
         ${tst_qqmlapplicationengine_resource_files}
 )
 
+if(QT_BUILD_STANDALONE_TESTS)
+    qt_import_qml_plugins(tst_qqmlapplicationengine)
+endif()
 
 #### Keys ignored in scope 2:.:.:tst_qqmlapplicationengine.pro:<TRUE>:
 # TRANSLATIONS = "data/i18n/qml_ja.ts"
