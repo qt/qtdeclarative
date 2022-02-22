@@ -70,8 +70,8 @@ T.Slider {
     }
 
     background: Item {
-        implicitWidth: control.horizontal ? children[0].width : children[0].height
-        implicitHeight: control.horizontal ? children[0].height : children[0].width
+        implicitWidth: control.horizontal ? 114 : children[0].implicitHeight
+        implicitHeight: control.horizontal ? children[0].implicitHeight : 114
         opacity: control.enabled ? 1 : 0.5
 
         NinePatchImage {
@@ -79,8 +79,7 @@ T.Slider {
             x: (parent.width - width) / 2
             y: (parent.height - height) / 2
             rotation: control.horizontal ? 0 : -90
-            // ### Set to container's width
-            width: 114
+            width: control.horizontal ? background.width : background.height
             NinePatchImageSelector on source {
                 states: [
                     {"light": IOS.theme == IOS.Light},
