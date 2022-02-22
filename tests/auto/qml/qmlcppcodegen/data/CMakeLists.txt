@@ -65,6 +65,7 @@ set(qml_files
     functionLookup.qml
     funcWithParams.qml
     functionReturningVoid.qml
+    functionTakingVar.qml
     globals.qml
     idAccess.qml
     immediateQuit.qml
