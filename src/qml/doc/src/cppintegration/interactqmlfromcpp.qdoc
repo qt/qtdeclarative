@@ -271,9 +271,9 @@ Notice the parameter and return type specified after the colon. You can use \l
 {QML Basic Types}{basic types} and \l {QML Object Types}{object types} as type
 names.
 
-If the type is omitted in QML, then you must specify QVariant as type with
-Q_RETURN_ARG() and Q_ARG() when calling QMetaObject::invokeMethod.
-
+If the type is omitted or specified as \c var in QML, then you must pass
+QVariant as type with Q_RETURN_ARG() and Q_ARG() when calling
+QMetaObject::invokeMethod.
 
 \section2 Connecting to QML Signals
 

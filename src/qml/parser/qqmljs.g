@@ -1722,6 +1722,9 @@ Type: UiQualifiedId;
     } break;
 ./
 
+Type: T_VAR;
+/.  case $rule_number: Q_FALLTHROUGH(); ./
+
 Type: T_VOID;
 /.
     case $rule_number: {

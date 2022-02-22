@@ -461,9 +461,17 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
 
         Q_ASSERT(argumentType.sizeOf() > 0);
         Q_ALLOCA_VAR(void, arg, argumentType.sizeOf());
-        argumentType.construct(arg);
-        if (frame->argc() > i)
-            QMetaType::convert(frame->argTypes()[i], frame->argv()[i], argumentType, arg);
+
+        if (argumentType == QMetaType::fromType<QVariant>()) {
+            if (frame->argc() > i)
+                new (arg) QVariant(frame->argTypes()[i], frame->argv()[i]);
+            else
+                new (arg) QVariant();
+        } else {
+            argumentType.construct(arg);
+            if (frame->argc() > i)
+                QMetaType::convert(frame->argTypes()[i], frame->argv()[i], argumentType, arg);
+        }
 
         transformedArguments[i] = arg;
     }
