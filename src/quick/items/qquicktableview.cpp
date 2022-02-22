@@ -643,6 +643,66 @@
 */
 
 /*!
+    \qmlmethod QModelIndex QtQuick::TableView::modelIndex(int row, int column)
+    \since 6.4
+
+    Returns the \l QModelIndex that maps to \a row and \a column in the view.
+
+    \a row and \a column should be the row and column in the view (table row and
+    table column), and not a row and column in the model.
+
+    \sa rowAtIndex(), columnAtIndex()
+*/
+
+/*!
+    \qmlmethod QModelIndex QtQuick::TableView::modelIndex(point cell)
+    \since 6.4
+
+    Convenience function for doing:
+    \code
+    modelIndex(cell.y, cell.x)
+    \endcode
+
+    A cell is simply a \l point that combines row and column into
+    a single type. Note that \c point.x will map to the column, and
+    \c point.y will map to the row.
+*/
+
+/*!
+    \qmlmethod int QtQuick::TableView::rowAtIndex(QModelIndex modelIndex)
+    \since 6.4
+
+    Returns the row in the view that maps to \a modelIndex in the model.
+
+    \sa columnAtIndex(), modelIndex()
+*/
+
+/*!
+    \qmlmethod int QtQuick::TableView::columnAtIndex(QModelIndex modelIndex)
+    \since 6.4
+
+    Returns the column in the view that maps to \a modelIndex in the model.
+
+    \sa rowAtIndex(), modelIndex()
+*/
+
+/*!
+    \qmlmethod point QtQuick::TableView::cellAtIndex(QModelIndex modelIndex)
+    \since 6.4
+
+    Returns the cell in the view that maps to \a modelIndex in the model.
+    Convenience function for doing:
+
+    \code
+    Qt.point(columnAtIndex(modelIndex), rowAtIndex(modelIndex))
+    \endcode
+
+    A cell is simply a \l point that combines row and column into
+    a single type. Note that \c point.x will map to the column, and
+    \c point.y will map to the row.
+*/
+
+/*!
     \qmlattachedproperty TableView QtQuick::TableView::view
 
     This attached property holds the view that manages the delegate instance.
@@ -1116,11 +1176,10 @@ int QQuickTableViewPrivate::modelIndexToCellIndex(const QModelIndex &modelIndex)
 {
     // Convert QModelIndex to cell index. A cell index is just an
     // integer representation of a cell instead of using a QPoint.
-    if (modelIndex.parent().isValid()) {
-        // TableView only uses the root items of the model
+    const QPoint cell = q_func()->cellAtIndex(modelIndex);
+    if (!cellIsValid(cell))
         return -1;
-    }
-    return modelIndexAtCell(QPoint(modelIndex.column(), modelIndex.row()));
+    return modelIndexAtCell(cell);
 }
 
 int QQuickTableViewPrivate::edgeToArrayIndex(Qt::Edge edge) const
@@ -3085,8 +3144,7 @@ bool QQuickTableViewPrivate::selectedInSelectionModel(const QPoint &cell) const
     if (!model)
         return false;
 
-    const QModelIndex modelIndex = model->index(cell.y(), cell.x());
-    return selectionModel->isSelected(modelIndex);
+    return selectionModel->isSelected(q_func()->modelIndex(cell));
 }
 
 void QQuickTableViewPrivate::selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected)
@@ -4090,6 +4148,41 @@ qreal QQuickTableView::implicitRowHeight(int row) const
         return -1;
 
     return d->sizeHintForRow(row);
+}
+
+QModelIndex QQuickTableView::modelIndex(const QPoint &cell) const
+{
+    Q_D(const QQuickTableView);
+    if (cell.x() < 0 || cell.x() >= columns() || cell.y() < 0 || cell.y() >= rows())
+        return {};
+
+    auto const qaim = d->model->abstractItemModel();
+    if (!qaim)
+        return {};
+
+    return qaim->index(cell.y(), cell.x());
+}
+
+QPoint QQuickTableView::cellAtIndex(const QModelIndex &index) const
+{
+    if (!index.isValid() || index.parent().isValid())
+        return {-1, -1};
+    return {index.column(), index.row()};
+}
+
+QModelIndex QQuickTableView::modelIndex(int row, int column) const
+{
+    return modelIndex({column, row});
+}
+
+int QQuickTableView::rowAtIndex(const QModelIndex &index) const
+{
+    return cellAtIndex(index).y();
+}
+
+int QQuickTableView::columnAtIndex(const QModelIndex &index) const
+{
+    return cellAtIndex(index).x();
 }
 
 void QQuickTableView::forceLayout()

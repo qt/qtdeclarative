@@ -156,6 +156,12 @@ public:
     Q_REVISION(6, 2) Q_INVOKABLE qreal implicitColumnWidth(int column) const;
     Q_REVISION(6, 2) Q_INVOKABLE qreal implicitRowHeight(int row) const;
 
+    Q_REVISION(6, 4) Q_INVOKABLE virtual QModelIndex modelIndex(const QPoint &cell) const;
+    Q_REVISION(6, 4) Q_INVOKABLE virtual QPoint cellAtIndex(const QModelIndex &index) const;
+    Q_REVISION(6, 4) Q_INVOKABLE virtual QModelIndex modelIndex(int row, int column) const;
+    Q_REVISION(6, 4) Q_INVOKABLE int rowAtIndex(const QModelIndex &index) const;
+    Q_REVISION(6, 4) Q_INVOKABLE int columnAtIndex(const QModelIndex &index) const;
+
     static QQuickTableViewAttached *qmlAttachedProperties(QObject *);
 
 Q_SIGNALS:

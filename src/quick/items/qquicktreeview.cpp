@@ -243,77 +243,6 @@
 */
 
 /*!
-    \qmlmethod QModelIndex QtQuick::TreeView::modelIndex(row, column)
-
-    Returns the \l QModelIndex that maps to \a row and \a column in the view.
-
-    \a row and \a column should be the row and column in the view (table row and
-    table column), and not a row and column in the model.
-
-    The assigned model, which is a tree model, is converted to a flat table
-    model internally so that it can be shown in a TableView (which TreeView
-    inherits). This function can be used whenever you need to know which
-    index in the tree model maps to the given row and column in the view.
-
-    \sa rowAtIndex(), columnAtIndex()
-*/
-
-/*!
-    \qmlmethod QModelIndex QtQuick::TreeView::modelIndex(point cell)
-
-    Convenience function for doing:
-    \code
-    modelIndex(cell.y, cell.x)
-    \endcode
-
-    A cell is simply a \l point that combines row and column into
-    a single type. Note that \c point.x will map to the column, and
-    \c point.y will map to the row.
-*/
-
-/*!
-    \qmlmethod int QtQuick::TreeView::rowAtIndex(modelIndex)
-
-    Returns the row in the view that maps to \a modelIndex in the model.
-
-    The assigned model, which is a tree model, is converted to a flat table
-    model internally so that it can be shown in a TableView (which TreeView
-    inherits). This function can be used whenever you need to know which
-    row in the view the given model index maps to.
-
-    \note \a modelIndex must be a \l QModelIndex.
-
-    \sa columnAtIndex(), modelIndex()
-*/
-
-/*!
-    \qmlmethod int QtQuick::TreeView::columnAtIndex(modelIndex)
-
-    Returns the column in the view that maps to \a modelIndex in the model.
-
-    The assigned model, which is a tree model, is converted to a flat table
-    model internally so that it can be shown in a TableView (which TreeView
-    inherits). This function can be used whenever you need to know which
-    column in the view the given model index maps to.
-
-    \note \a modelIndex must be a \l QModelIndex.
-
-    \sa rowAtIndex(), modelIndex()
-*/
-
-/*!
-    \qmlmethod point QtQuick::TreeView::cellAtIndex(modelIndex)
-
-    Convenience function for doing:
-
-    \c {Qt.point(columnAtIndex(}\a {modelIndex}\c{), rowAtIndex(}\a {modelIndex}\c{))}
-
-    A cell is simply a \l point that combines row and column into
-    a single type. Note that \c point.x will map to the column, and
-    \c point.y will map to the row.
-*/
-
-/*!
     \qmlsignal QtQuick::TreeView::expanded(row, depth)
 
     This signal is emitted when a \a row is expanded in the view.
@@ -624,32 +553,22 @@ void QQuickTreeView::toggleExpanded(int row)
         expand(row);
 }
 
-QModelIndex QQuickTreeView::modelIndex(int row, int column) const
-{
-    Q_D(const QQuickTreeView);
-    const QModelIndex tableIndex = d->m_treeModelToTableModel.index(row, column);
-    return d->m_treeModelToTableModel.mapToModel(tableIndex);
-}
-
 QModelIndex QQuickTreeView::modelIndex(const QPoint &cell) const
 {
-    return modelIndex(cell.y(), cell.x());
-}
-
-int QQuickTreeView::rowAtIndex(const QModelIndex &index) const
-{
-    return d_func()->m_treeModelToTableModel.mapFromModel(index).row();
-}
-
-int QQuickTreeView::columnAtIndex(const QModelIndex &index) const
-{
-    return d_func()->m_treeModelToTableModel.mapFromModel(index).column();
+    Q_D(const QQuickTreeView);
+    const QModelIndex tableIndex = d->m_treeModelToTableModel.index(cell.y(), cell.x());
+    return d->m_treeModelToTableModel.mapToModel(tableIndex);
 }
 
 QPoint QQuickTreeView::cellAtIndex(const QModelIndex &index) const
 {
     const QModelIndex tableIndex = d_func()->m_treeModelToTableModel.mapFromModel(index);
     return QPoint(tableIndex.column(), tableIndex.row());
+}
+
+QModelIndex QQuickTreeView::modelIndex(int row, int column) const
+{
+    return modelIndex({column, row});
 }
 
 QT_END_NAMESPACE
