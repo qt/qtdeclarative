@@ -129,6 +129,7 @@ private slots:
     void evadingAmbiguity();
     void fromBoolValue();
     void invisibleTypes();
+    void functionTakingVar();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1979,6 +1980,26 @@ void tst_QmlCppCodegen::invisibleTypes()
 //    const QMetaObject *meta = qvariant_cast<const QMetaObject *>(o->property("metaobject"));
 //    QVERIFY(meta != nullptr);
 //    QCOMPARE(meta->className(), "DerivedFromInvisible");
+}
+
+void tst_QmlCppCodegen::functionTakingVar()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/TestTypes/functionTakingVar.qml"_qs);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QVERIFY(!o->property("c").isValid());
+
+    int value = 11;
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(&engine);
+    void *args[] = { nullptr, reinterpret_cast<void *>(std::addressof(value)) };
+    QMetaType types[] = { QMetaType::fromType<void>(), QMetaType::fromType<std::decay_t<int>>() };
+    e->executeRuntimeFunction(document, 0, o.data(), 1, args, types);
+
+    QCOMPARE(o->property("c"), QVariant::fromValue<int>(11));
 }
 
 void tst_QmlCppCodegen::runInterpreted()
