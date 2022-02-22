@@ -27,6 +27,7 @@
 ****************************************************************************/
 
 #include <QtTest/QtTest>
+#include <QtCore/QScopedPointer>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
@@ -188,8 +189,9 @@ void tst_QQmlMetaObject::property()
 
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl(testFile));
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj);
+    QObject *object = obj.get();
 
     const QMetaObject *mo = object->metaObject();
     QVERIFY(mo->superClass() != nullptr);
@@ -263,8 +265,6 @@ void tst_QQmlMetaObject::property()
         QVERIFY(!prop.write(object, prop.read(object)));
         QCOMPARE(changedSpy.count(), 0);
     }
-
-    delete object;
 }
 
 void tst_QQmlMetaObject::method_data()
@@ -359,8 +359,9 @@ void tst_QQmlMetaObject::method()
 
     QQmlEngine engine;
     QQmlComponent component(&engine, testFileUrl(testFile));
-    QObject *object = component.create();
-    QVERIFY(object != nullptr);
+    QScopedPointer<QObject> obj(component.create());
+    QVERIFY(obj);
+    QObject *object = obj.get();
 
     const QMetaObject *mo = object->metaObject();
     QVERIFY(mo->superClass() != nullptr);
@@ -384,8 +385,6 @@ void tst_QQmlMetaObject::method()
 
     QCOMPARE(QString::fromUtf8(method.typeName()), returnTypeName);
     QCOMPARE(method.returnType(), returnType);
-
-    delete object;
 }
 
 QTEST_MAIN(tst_QQmlMetaObject)
