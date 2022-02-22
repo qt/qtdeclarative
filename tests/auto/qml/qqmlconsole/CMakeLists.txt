@@ -21,6 +21,10 @@ qt_internal_add_test(tst_qqmlconsole
     TESTDATA ${test_data}
 )
 
+if(QT_BUILD_STANDALONE_TESTS)
+    qt_import_qml_plugins(tst_qqmlconsole)
+endif()
+
 ## Scopes:
 #####################################################################
 

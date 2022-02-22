@@ -27,7 +27,7 @@ qt_internal_add_test(tst_qjsengine
         Qt::QmlPrivate
     LIBRARIES # special case
         Threads::Threads # special case
-    TESTDATA ${test_data}
+    TESTDATA ${test_data} "dummy_imports.qml"
 )
 
 # Resources:
@@ -60,6 +60,10 @@ qt_internal_add_resource(tst_qjsengine "qmake_immediate"
     FILES
         ${qmake_immediate_resource_files}
 )
+
+if(QT_BUILD_STANDALONE_TESTS)
+    qt_import_qml_plugins(tst_qjsengine)
+endif()
 
 
 ## Scopes:

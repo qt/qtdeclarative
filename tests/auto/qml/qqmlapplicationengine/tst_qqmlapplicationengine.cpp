@@ -101,6 +101,10 @@ void tst_qqmlapplicationengine::basicLoading()
 // will break.
 void tst_qqmlapplicationengine::testNonResolvedPath()
 {
+#if defined(Q_OS_INTEGRITY)
+    QSKIP("INTEGRITY stores QML files in resources, and the path to a resource cannot be relative in this case");
+#endif
+
 #ifdef Q_OS_ANDROID
     QSKIP("Android stores QML files in resources, and the path to a resource cannot be relative in this case");
 #endif

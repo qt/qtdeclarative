@@ -36,6 +36,9 @@ qt_internal_add_resource(tst_qqmlengine "qmake_immediate"
         ${qmake_immediate_resource_files}
 )
 
+if(QT_BUILD_STANDALONE_TESTS)
+    qt_import_qml_plugins(tst_qqmlengine)
+endif()
 
 ## Scopes:
 #####################################################################
