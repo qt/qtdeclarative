@@ -660,6 +660,20 @@ macro(_qt_internal_genex_getoption var target property)
     set(${var} "$<BOOL:$<TARGET_PROPERTY:${target},${property}>>")
 endmacro()
 
+function(_qt_internal_extend_qml_import_paths import_paths_var)
+    set(local_var ${${import_paths_var}})
+
+    # prepend extra import path which is a current module's build dir: we need
+    # this to ensure correct importing of QML modules when having a prefix-build
+    # with QLibraryInfo::path(QLibraryInfo::QmlImportsPath) pointing to the
+    # install location
+    if(QT_BUILDING_QT AND QT_WILL_INSTALL)
+        list(PREPEND local_var -I "${QT_BUILD_DIR}/${INSTALL_QMLDIR}")
+    endif()
+
+    set(${import_paths_var} ${local_var} PARENT_SCOPE)
+endfunction()
+
 function(_qt_internal_target_enable_qmllint target)
     set(lint_target ${target}_qmllint)
     if(TARGET ${lint_target})
@@ -707,6 +721,8 @@ function(_qt_internal_target_enable_qmllint target)
     if(NOT "${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "")
         list(APPEND import_args -I "${QT_QML_OUTPUT_DIRECTORY}")
     endif()
+
+    _qt_internal_extend_qml_import_paths(import_args)
 
     set(cmd
         ${QT_TOOL_COMMAND_WRAPPER_PATH}
@@ -1357,6 +1373,7 @@ function(qt6_target_qml_sources target)
             # The application binary directory is part of the default import path.
             list(APPEND import_paths -I "$<TARGET_PROPERTY:${target},BINARY_DIR>")
         endif()
+        _qt_internal_extend_qml_import_paths(import_paths)
         set(cachegen_args
             ${import_paths}
             "$<${have_types_file}:-i$<SEMICOLON>${types_file}>"
