@@ -1123,7 +1123,7 @@ int QQuickTableViewPrivate::modelIndexToCellIndex(const QModelIndex &modelIndex)
     return modelIndexAtCell(QPoint(modelIndex.column(), modelIndex.row()));
 }
 
-int QQuickTableViewPrivate::edgeToArrayIndex(Qt::Edge edge)
+int QQuickTableViewPrivate::edgeToArrayIndex(Qt::Edge edge) const
 {
     return int(log2(float(edge)));
 }
@@ -1137,7 +1137,7 @@ void QQuickTableViewPrivate::clearEdgeSizeCache()
         cachedNextVisibleEdgeIndex[edgeToArrayIndex(edge)].startIndex = kEdgeIndexNotSet;
 }
 
-int QQuickTableViewPrivate::nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge)
+int QQuickTableViewPrivate::nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge) const
 {
     // Find the next column (or row) around the loaded table that is
     // visible, and should be loaded next if the content item moves.
@@ -1152,7 +1152,7 @@ int QQuickTableViewPrivate::nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge)
     return nextVisibleEdgeIndex(edge, startIndex);
 }
 
-int QQuickTableViewPrivate::nextVisibleEdgeIndex(Qt::Edge edge, int startIndex)
+int QQuickTableViewPrivate::nextVisibleEdgeIndex(Qt::Edge edge, int startIndex) const
 {
     // First check if we have already searched for the first visible index
     // after the given startIndex recently, and if so, return the cached result.
@@ -2024,7 +2024,7 @@ qreal QQuickTableViewPrivate::getRowLayoutHeight(int row)
     return rowHeight;
 }
 
-qreal QQuickTableViewPrivate::getColumnWidth(int column)
+qreal QQuickTableViewPrivate::getColumnWidth(int column) const
 {
     // Return the width of the given column, if explicitly set. Return 0 if the column
     // is hidden, and -1 if the width is not set (which means that the width should
@@ -2065,7 +2065,7 @@ qreal QQuickTableViewPrivate::getColumnWidth(int column)
     return columnWidth;
 }
 
-qreal QQuickTableViewPrivate::getRowHeight(int row)
+qreal QQuickTableViewPrivate::getRowHeight(int row) const
 {
     // Return the height of the given row, if explicitly set. Return 0 if the row
     // is hidden, and -1 if the height is not set (which means that the height should
@@ -2106,14 +2106,14 @@ qreal QQuickTableViewPrivate::getRowHeight(int row)
     return rowHeight;
 }
 
-bool QQuickTableViewPrivate::isColumnHidden(int column)
+bool QQuickTableViewPrivate::isColumnHidden(int column) const
 {
     // A column is hidden if the width is explicit set to zero (either by
     // using a columnWidthProvider, or by overriding getColumnWidth()).
     return qFuzzyIsNull(getColumnWidth(column));
 }
 
-bool QQuickTableViewPrivate::isRowHidden(int row)
+bool QQuickTableViewPrivate::isRowHidden(int row) const
 {
     // A row is hidden if the height is explicit set to zero (either by
     // using a rowHeightProvider, or by overriding getRowHeight()).
@@ -4170,9 +4170,9 @@ void QQuickTableSectionSizeProvider::setSize(int section, qreal size)
 }
 
 // return -1.0 if no valid explicit size retrieved
-qreal QQuickTableSectionSizeProvider::size(int section)
+qreal QQuickTableSectionSizeProvider::size(int section) const
 {
-    Q_D(QQuickTableSectionSizeProvider);
+    Q_D(const QQuickTableSectionSizeProvider);
     auto it = d->hash.find(section);
     if (it != d->hash.end())
         return *it;

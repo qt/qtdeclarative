@@ -81,7 +81,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableSectionSizeProvider : public QObject {
 public:
     QQuickTableSectionSizeProvider(QObject *parent=nullptr);
     void setSize(int section, qreal size);
-    qreal size(int section);
+    qreal size(int section) const;
     bool resetSize(int section);
     void resetAll();
 
@@ -278,7 +278,7 @@ public:
     QQmlTableInstanceModel::ReusableFlag reusableFlag = QQmlTableInstanceModel::Reusable;
 
     bool blockItemCreatedCallback = false;
-    bool layoutWarningIssued = false;
+    mutable bool layoutWarningIssued = false;
     bool polishing = false;
     bool syncVertically = false;
     bool syncHorizontally = false;
@@ -297,9 +297,9 @@ public:
     QQuickTableSectionSizeProvider rowHeights;
     QQuickTableSectionSizeProvider columnWidths;
 
-    EdgeRange cachedNextVisibleEdgeIndex[4];
-    EdgeRange cachedColumnWidth;
-    EdgeRange cachedRowHeight;
+    mutable EdgeRange cachedNextVisibleEdgeIndex[4];
+    mutable EdgeRange cachedColumnWidth;
+    mutable EdgeRange cachedRowHeight;
 
     // TableView uses contentWidth/height to report the size of the table (this
     // will e.g make scrollbars written for Flickable work out of the box). This
@@ -360,13 +360,13 @@ public:
     QSize calculateTableSize();
     void updateTableSize();
 
-    inline bool isColumnHidden(int column);
-    inline bool isRowHidden(int row);
+    inline bool isColumnHidden(int column) const;
+    inline bool isRowHidden(int row) const;
 
     qreal getColumnLayoutWidth(int column);
     qreal getRowLayoutHeight(int row);
-    qreal getColumnWidth(int column);
-    qreal getRowHeight(int row);
+    qreal getColumnWidth(int column) const;
+    qreal getRowHeight(int row) const;
     qreal getEffectiveRowHeight(int row) const;
     qreal getEffectiveColumnWidth(int column) const;
 
@@ -398,11 +398,11 @@ public:
     void syncLoadedTableFromLoadRequest();
     void shiftLoadedTableRect(const QPointF newPosition);
 
-    int nextVisibleEdgeIndex(Qt::Edge edge, int startIndex);
-    int nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge);
+    int nextVisibleEdgeIndex(Qt::Edge edge, int startIndex) const;
+    int nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge) const;
     bool allColumnsLoaded();
     bool allRowsLoaded();
-    inline int edgeToArrayIndex(Qt::Edge edge);
+    inline int edgeToArrayIndex(Qt::Edge edge) const;
     void clearEdgeSizeCache();
 
     bool canLoadTableEdge(Qt::Edge tableEdge, const QRectF fillRect) const;
