@@ -243,20 +243,7 @@ void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
         }
     }
 
-    // Clone Q_PROPERTY
-    for (int ii = mo->propertyOffset(); ii < mo->propertyCount(); ++ii) {
-        QMetaProperty property = mo->property(ii);
-
-        int otherIndex = ignoreEnd->indexOfProperty(property.name());
-        if (otherIndex >= ignoreStart->propertyOffset() + ignoreStart->propertyCount()) {
-            builder.addProperty(QByteArray("__qml_ignore__") + property.name(), QByteArray("void"));
-            // Skip
-        } else {
-            builder.addProperty(property);
-        }
-    }
-
-    // Clone Q_METHODS
+    // Clone Q_METHODS - do this first to avoid duplicating the notify signals.
     for (int ii = mo->methodOffset(); ii < mo->methodCount(); ++ii) {
         QMetaMethod method = mo->method(ii);
 
@@ -278,6 +265,19 @@ void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
         QMetaMethodBuilder m = builder.addMethod(method);
         if (found) // SKIP
             m.setAccess(QMetaMethod::Private);
+    }
+
+    // Clone Q_PROPERTY
+    for (int ii = mo->propertyOffset(); ii < mo->propertyCount(); ++ii) {
+        QMetaProperty property = mo->property(ii);
+
+        int otherIndex = ignoreEnd->indexOfProperty(property.name());
+        if (otherIndex >= ignoreStart->propertyOffset() + ignoreStart->propertyCount()) {
+            builder.addProperty(QByteArray("__qml_ignore__") + property.name(), QByteArray("void"));
+            // Skip
+        } else {
+            builder.addProperty(property);
+        }
     }
 
     // Clone Q_ENUMS

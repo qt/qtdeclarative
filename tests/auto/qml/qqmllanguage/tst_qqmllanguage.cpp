@@ -5520,9 +5520,20 @@ void tst_qqmllanguage::extendedForeignTypes()
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());
 
+    QObject *extended = o->property("extended").value<QObject *>();
+    QVERIFY(extended);
+    QSignalSpy extensionChangedSpy(extended, SIGNAL(extensionChanged()));
+
     QCOMPARE(o->property("extendedBase").toInt(), 43);
     QCOMPARE(o->property("extendedExtension").toInt(), 42);
     QCOMPARE(o->property("foreignExtendedExtension").toInt(), 42);
+
+    QCOMPARE(extensionChangedSpy.count(), 0);
+    extended->setProperty("extension", 44);
+    QCOMPARE(extensionChangedSpy.count(), 1);
+    QCOMPARE(o->property("extendedChangeCount").toInt(), 1);
+    QCOMPARE(o->property("extendedExtension").toInt(), 44);
+
     QCOMPARE(o->property("foreignObjectName").toString(), QLatin1String("foreign"));
     QCOMPARE(o->property("foreignExtendedObjectName").toString(), QLatin1String("foreignExtended"));
     QCOMPARE(o->property("extendedInvokable").toInt(), 123);
