@@ -101,6 +101,19 @@ Q_LOGGING_CATEGORY(lcCalculateWidestTextWidth, "qt.quick.controls.combobox.calcu
 
     \snippet qtquickcontrols2-combobox-accepted.qml combobox
 
+    \section1 ComboBox's Popup
+
+    By default, clicking outside of ComboBox's popup will close it, and the
+    event is propagated to items lower in the stacking order. To prevent the
+    popup from closing, set its \l {Popup::}{closePolicy}:
+
+    \snippet qtquickcontrols2-combobox-popup.qml closePolicy
+
+    To prevent event propagation, set its \l {Popup::}{modal} property to
+    \c true:
+
+    \snippet qtquickcontrols2-combobox-popup.qml modal
+
     \section1 ComboBox Model Roles
 
     ComboBox is able to visualize standard \l {qml-data-models}{data models}
