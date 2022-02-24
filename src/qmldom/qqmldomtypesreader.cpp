@@ -174,7 +174,7 @@ void QmltypesReader::insertComponent(const QQmlJSScope::Ptr &jsScope,
             ++it;
         }
     }
-    comp.setFileName(jsScope->fileName());
+    comp.setFileName(jsScope->filePath());
     comp.setName(jsScope->internalName());
     m_currentPath = m_currentPath.key(comp.name())
                             .index(qmltypesFilePtr()->components().values(comp.name()).length());

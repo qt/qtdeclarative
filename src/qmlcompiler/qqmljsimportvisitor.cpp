@@ -124,6 +124,7 @@ void QQmlJSImportVisitor::enterEnvironment(QQmlJSScope::ScopeType type, const QS
     m_currentScope = QQmlJSScope::create(type, m_currentScope);
     setScopeName(m_currentScope, type, name);
     m_currentScope->setIsComposite(true);
+    m_currentScope->setFilePath(QFileInfo(m_logger->fileName()).absoluteFilePath());
     m_currentScope->setSourceLocation(location);
     m_scopesByIrLocation.insert({ location.startLine, location.startColumn }, m_currentScope);
 }

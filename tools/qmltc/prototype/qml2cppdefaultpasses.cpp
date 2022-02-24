@@ -534,7 +534,7 @@ static void setupQmlCppType(const Qml2CppContext &context, const QQmlJSScope::Pt
         context.recordError(type->sourceLocation(), u"QML type has unknown file path"_qs);
         return;
     }
-    if (!type->fileName().isEmpty()) // consider this one to be already set up
+    if (type->filePath().endsWith(u".h")) // consider this one to be already set up
         return;
     if (!filePath.endsWith(u".qml"_qs)) {
         context.recordError(type->sourceLocation(),
@@ -545,7 +545,7 @@ static void setupQmlCppType(const Qml2CppContext &context, const QQmlJSScope::Pt
     // TODO: this does not cover QT_QMLTC_FILE_BASENAME renaming
     if (filePath != context.documentUrl) {
         // this file name will be discovered during findCppIncludes
-        type->setFileName(QFileInfo(filePath).baseName().toLower() + u".h"_qs);
+        type->setFilePath(QFileInfo(filePath).baseName().toLower() + u".h"_qs);
     }
 
     const auto properties = type->ownProperties();
@@ -786,7 +786,7 @@ static void addFirstCppIncludeFromType(QSet<QString> &cppIncludes,
     auto t = QQmlJSScope::nonCompositeBaseType(type);
     if (!t)
         return;
-    if (QString includeFile = t->fileName(); !includeFile.isEmpty())
+    if (QString includeFile = t->filePath(); includeFile.endsWith(u".h"))
         cppIncludes.insert(includeFile);
 }
 
@@ -816,7 +816,7 @@ static void populateCppIncludes(QSet<QString> &cppIncludes, const QQmlJSScope::C
     for (auto t = type; t; t = t->baseType()) {
         // NB: Composite types might have include files - this is custom qmltc
         // logic for local imports
-        if (QString includeFile = t->fileName(); !includeFile.isEmpty())
+        if (QString includeFile = t->filePath(); includeFile.endsWith(u".h"))
             cppIncludes.insert(includeFile);
 
         // look in property types
@@ -824,8 +824,10 @@ static void populateCppIncludes(QSet<QString> &cppIncludes, const QQmlJSScope::C
         for (const QQmlJSMetaProperty &p : properties) {
             addFirstCppIncludeFromType(cppIncludes, p.type());
 
-            if (p.isPrivate()) {
-                const QString ownersInclude = QQmlJSScope::nonCompositeBaseType(t)->fileName();
+            const auto baseType = QQmlJSScope::nonCompositeBaseType(t);
+
+            if (p.isPrivate() && baseType->filePath().endsWith(u".h")) {
+                const QString ownersInclude = baseType->filePath();
                 QString privateInclude = constructPrivateInclude(ownersInclude);
                 if (!privateInclude.isEmpty())
                     cppIncludes.insert(std::move(privateInclude));

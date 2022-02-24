@@ -224,8 +224,8 @@ public:
     void setAnnotations(const QList<QQmlJSAnnotation> &annotation) { m_annotations = std::move(annotation); }
     const QList<QQmlJSAnnotation> &annotations() const { return m_annotations; }
 
-    QString fileName() const { return m_fileName; }
-    void setFileName(const QString &file) { m_fileName = file; }
+    QString filePath() const { return m_filePath; }
+    void setFilePath(const QString &file) { m_filePath = file; }
 
     // The name the type uses to refer to itself. Either C++ class name or base name of
     // QML file. isComposite tells us if this is a C++ or a QML name.
@@ -486,7 +486,7 @@ private:
     QVector<QQmlJSScope::Ptr> m_childScopes;
     QQmlJSScope::WeakPtr m_parentScope;
 
-    QString m_fileName;
+    QString m_filePath;
     QString m_internalName;
     QString m_baseTypeName;
 

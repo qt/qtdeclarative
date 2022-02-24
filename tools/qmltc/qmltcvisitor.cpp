@@ -71,8 +71,8 @@ void QmltcVisitor::findCppIncludes()
         if (t != type && visitType(t))
             return;
 
-        QString includeFile = t->fileName();
-        if (!includeFile.isEmpty())
+        QString includeFile = t->filePath();
+        if (includeFile.endsWith(u".h"))
             m_cppIncludes.insert(std::move(includeFile));
     };
 
@@ -97,7 +97,7 @@ void QmltcVisitor::findCppIncludes()
             if (visitType(t))
                 break;
             // look in type
-            if (auto includeFile = t->fileName(); !includeFile.isEmpty())
+            if (auto includeFile = t->filePath(); includeFile.endsWith(u".h"))
                 m_cppIncludes.insert(std::move(includeFile));
 
             // look in properties
@@ -105,8 +105,8 @@ void QmltcVisitor::findCppIncludes()
             for (const QQmlJSMetaProperty &p : properties) {
                 populateFromType(p.type());
 
-                if (p.isPrivate()) {
-                    const QString ownersInclude = t->fileName();
+                if (p.isPrivate() && t->filePath().endsWith(u".h")) {
+                    const QString ownersInclude = t->filePath();
                     QString privateInclude = constructPrivateInclude(ownersInclude);
                     if (!privateInclude.isEmpty())
                         m_cppIncludes.insert(std::move(privateInclude));

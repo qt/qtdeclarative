@@ -36,9 +36,9 @@ QString QQmlJSRegisterContent::descriptiveName() const
     QString result = m_storedType->internalName() + u" of "_qs;
     const auto scope = [this]() -> QString {
         return (m_scope->internalName().isEmpty()
-                        ? (m_scope->fileName().isEmpty()
+                        ? (m_scope->filePath().isEmpty()
                                    ? u"??"_qs
-                                   : (u"(component in "_qs + m_scope->fileName() + u")"_qs))
+                                   : (u"(component in "_qs + m_scope->filePath() + u")"_qs))
                         : m_scope->internalName())
                 + u"::"_qs;
     };

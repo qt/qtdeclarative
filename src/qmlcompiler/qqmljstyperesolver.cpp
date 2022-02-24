@@ -88,19 +88,19 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
 
     QQmlJSScope::Ptr jsPrimitiveType = QQmlJSScope::create();
     jsPrimitiveType->setInternalName(u"QJSPrimitiveValue"_qs);
-    jsPrimitiveType->setFileName(u"qjsprimitivevalue.h"_qs);
+    jsPrimitiveType->setFilePath(u"qjsprimitivevalue.h"_qs);
     jsPrimitiveType->setAccessSemantics(QQmlJSScope::AccessSemantics::Value);
     m_jsPrimitiveType = jsPrimitiveType;
 
     QQmlJSScope::Ptr listPropertyType = QQmlJSScope::create();
     listPropertyType->setInternalName(u"QQmlListProperty<QObject>"_qs);
-    listPropertyType->setFileName(u"qqmllist.h"_qs);
+    listPropertyType->setFilePath(u"qqmllist.h"_qs);
     listPropertyType->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
     m_listPropertyType = listPropertyType;
 
     QQmlJSScope::Ptr metaObjectType = QQmlJSScope::create();
     metaObjectType->setInternalName(u"const QMetaObject"_qs);
-    metaObjectType->setFileName(u"qmetaobject.h"_qs);
+    metaObjectType->setFilePath(u"qmetaobject.h"_qs);
     metaObjectType->setAccessSemantics(QQmlJSScope::AccessSemantics::Reference);
     m_metaObjectType = metaObjectType;
 
@@ -191,7 +191,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::listType(const QQmlJSScope::ConstPtr &
         listType->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
         listType->setValueTypeName(elementType->internalName());
         listType->setInternalName(u"QList<%1>"_qs.arg(elementType->internalName()));
-        listType->setFileName(elementType->fileName());
+        listType->setFilePath(elementType->filePath());
         const QQmlJSImportedScope element = {elementType, QTypeRevision()};
         QQmlJSScope::resolveTypes(listType, {{elementType->internalName(), element}});
         Q_ASSERT(equals(listType->valueType(), elementType));
@@ -1258,7 +1258,7 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::storedType(const QQmlJSScope::ConstPtr
         // If we can't find the non-composite base, we really don't know what it is.
         return genericType(type);
     }
-    if (type->fileName().isEmpty())
+    if (type->filePath().isEmpty())
         return genericType(type);
     return type;
 }
