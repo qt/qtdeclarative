@@ -3539,12 +3539,18 @@ void QQuickTableViewPrivate::syncSyncView()
     syncVertically = syncView && assignedSyncDirection & Qt::Vertical;
 
     if (syncHorizontally) {
+        QBoolBlocker fixupGuard(inUpdateContentSize, true);
         q->setColumnSpacing(syncView->columnSpacing());
+        q->setLeftMargin(syncView->leftMargin());
+        q->setRightMargin(syncView->rightMargin());
         updateContentWidth();
     }
 
     if (syncVertically) {
+        QBoolBlocker fixupGuard(inUpdateContentSize, true);
         q->setRowSpacing(syncView->rowSpacing());
+        q->setTopMargin(syncView->topMargin());
+        q->setBottomMargin(syncView->bottomMargin());
         updateContentHeight();
     }
 

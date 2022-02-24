@@ -2595,9 +2595,21 @@ void tst_QQuickTableView::checkThatRevisionedPropertiesCannotBeUsedInOldImports(
 void tst_QQuickTableView::checkSyncView_rootView_data()
 {
     QTest::addColumn<qreal>("flickToPos");
+    QTest::addColumn<qreal>("rowSpacing");
+    QTest::addColumn<qreal>("columnSpacing");
+    QTest::addColumn<qreal>("leftMargin");
+    QTest::addColumn<qreal>("rightMargin");
+    QTest::addColumn<qreal>("topMargin");
+    QTest::addColumn<qreal>("bottomMargin");
 
-    QTest::newRow("pos:110") << 110.;
-    QTest::newRow("pos:2010") << 2010.;
+    QTest::newRow("pos:110") << 110. << 0. << 0. << 0. << 0. << 0. << 0.;
+    QTest::newRow("pos:2010") << 2010. << 0. << 0. << 0. << 0. << 0. << 0.;
+
+    QTest::newRow("pos:110, spacing") << 110. << 10. << 20. << 0. << 0. << 0. << 0.;
+    QTest::newRow("pos:2010, spacing") << 2010. << 10. << 20. << 0. << 0. << 0. << 0.;
+
+    QTest::newRow("pos:110, margins") << 110. << 0. << 0. << 10. << 10. << 20. << 20.;
+    QTest::newRow("pos:2010, margins") << 2010. << 0. << 0. << 10. << 10. << 20. << 20.;
 }
 
 void tst_QQuickTableView::checkSyncView_rootView()
@@ -2606,6 +2618,13 @@ void tst_QQuickTableView::checkSyncView_rootView()
     // no other view as syncView), all the other tableviews will sync
     // their content view position according to their syncDirection flag.
     QFETCH(qreal, flickToPos);
+    QFETCH(qreal, rowSpacing);
+    QFETCH(qreal, columnSpacing);
+    QFETCH(qreal, leftMargin);
+    QFETCH(qreal, rightMargin);
+    QFETCH(qreal, topMargin);
+    QFETCH(qreal, bottomMargin);
+
     LOAD_TABLEVIEW("syncviewsimple.qml");
     GET_QML_TABLEVIEW(tableViewH);
     GET_QML_TABLEVIEW(tableViewV);
@@ -2618,18 +2637,32 @@ void tst_QQuickTableView::checkSyncView_rootView()
     for (auto view : views)
         view->setModel(model);
 
+    tableView->setRowSpacing(rowSpacing);
+    tableView->setColumnSpacing(columnSpacing);
+    tableView->setLeftMargin(leftMargin);
+    tableView->setRightMargin(rightMargin);
+    tableView->setTopMargin(topMargin);
+    tableView->setBottomMargin(bottomMargin);
     tableView->setContentX(flickToPos);
     tableView->setContentY(flickToPos);
 
     WAIT_UNTIL_POLISHED;
 
-    // Check that geometry properties are mirrored
+    // Check that geometry properties are mirrored accoring to sync direction
     QCOMPARE(tableViewH->columnSpacing(), tableView->columnSpacing());
     QCOMPARE(tableViewH->rowSpacing(), 0);
     QCOMPARE(tableViewH->contentWidth(), tableView->contentWidth());
+    QCOMPARE(tableViewH->leftMargin(), tableView->leftMargin());
+    QCOMPARE(tableViewH->rightMargin(), tableView->rightMargin());
+    QCOMPARE(tableViewH->topMargin(), 0);
+    QCOMPARE(tableViewH->bottomMargin(), 0);
     QCOMPARE(tableViewV->columnSpacing(), 0);
     QCOMPARE(tableViewV->rowSpacing(), tableView->rowSpacing());
     QCOMPARE(tableViewV->contentHeight(), tableView->contentHeight());
+    QCOMPARE(tableViewV->topMargin(), tableView->topMargin());
+    QCOMPARE(tableViewV->bottomMargin(), tableView->bottomMargin());
+    QCOMPARE(tableViewV->leftMargin(), 0);
+    QCOMPARE(tableViewV->rightMargin(), 0);
 
     // Check that viewport is in sync after the flick
     QCOMPARE(tableView->contentX(), flickToPos);
