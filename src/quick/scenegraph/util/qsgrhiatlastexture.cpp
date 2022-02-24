@@ -67,8 +67,13 @@ Manager::Manager(QSGDefaultRenderContext *rc, const QSize &surfacePixelSize, QSu
     , m_rhi(rc->rhi())
 {
     const int maxSize = m_rhi->resourceLimit(QRhi::TextureSizeMax);
-    int w = qMin(maxSize, qt_sg_envInt("QSG_ATLAS_WIDTH", qMax(512U, qNextPowerOfTwo(surfacePixelSize.width() - 1))));
-    int h = qMin(maxSize, qt_sg_envInt("QSG_ATLAS_HEIGHT", qMax(512U, qNextPowerOfTwo(surfacePixelSize.height() - 1))));
+    // surfacePixelSize is just a hint that was passed in when initializing the
+    // rendercontext, likely based on the window size, if it was available,
+    // that is. Therefore, it may be anything, incl. zero and negative.
+    const int widthHint = qMax(1, surfacePixelSize.width());
+    const int heightHint = qMax(1, surfacePixelSize.height());
+    int w = qMin(maxSize, qt_sg_envInt("QSG_ATLAS_WIDTH", qMax(512U, qNextPowerOfTwo(widthHint - 1))));
+    int h = qMin(maxSize, qt_sg_envInt("QSG_ATLAS_HEIGHT", qMax(512U, qNextPowerOfTwo(heightHint - 1))));
 
     if (maybeSurface && maybeSurface->surfaceClass() == QSurface::Window) {
         QWindow *window = static_cast<QWindow *>(maybeSurface);
