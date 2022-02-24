@@ -28,6 +28,9 @@
 
 #include "qqmljslogger_p.h"
 
+#include <QtCore/qfile.h>
+#include <QtCore/qfileinfo.h>
+
 QT_BEGIN_NAMESPACE
 
 const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
@@ -133,7 +136,8 @@ static bool isMsgTypeLess(QtMsgType a, QtMsgType b)
 
 void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category,
                        const QQmlJS::SourceLocation &srcLocation, QtMsgType type, bool showContext,
-                       bool showFileName, const std::optional<FixSuggestion> &suggestion)
+                       bool showFileName, const std::optional<FixSuggestion> &suggestion,
+                       const QString overrideFileName)
 {
     if (isCategoryIgnored(category))
         return;
@@ -145,8 +149,9 @@ void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category,
 
     QString prefix;
 
-    if (!m_fileName.isEmpty() && showFileName)
-        prefix = m_fileName + QStringLiteral(":");
+    if ((!overrideFileName.isEmpty() || !m_fileName.isEmpty()) && showFileName)
+        prefix =
+                (!overrideFileName.isEmpty() ? overrideFileName : m_fileName) + QStringLiteral(":");
 
     if (srcLocation.isValid())
         prefix += QStringLiteral("%1:%2:").arg(srcLocation.startLine).arg(srcLocation.startColumn);
@@ -176,7 +181,7 @@ void QQmlJSLogger::log(const QString &message, QQmlJSLoggerCategory category,
     }
 
     if (srcLocation.isValid() && !m_code.isEmpty() && showContext)
-        printContext(srcLocation);
+        printContext(overrideFileName, srcLocation);
 
     if (suggestion.has_value())
         printFix(suggestion.value());
@@ -198,9 +203,19 @@ void QQmlJSLogger::processMessages(const QList<QQmlJS::DiagnosticMessage> &messa
     m_output.write(QStringLiteral("---\n\n"));
 }
 
-void QQmlJSLogger::printContext(const QQmlJS::SourceLocation &location)
+void QQmlJSLogger::printContext(const QString &overrideFileName,
+                                const QQmlJS::SourceLocation &location)
 {
-    IssueLocationWithContext issueLocationWithContext { m_code, location };
+    QString code = m_code;
+
+    if (!overrideFileName.isEmpty() && overrideFileName != QFileInfo(m_fileName).absolutePath()) {
+        QFile file(overrideFileName);
+        const bool success = file.open(QFile::ReadOnly);
+        Q_ASSERT(success);
+        code = QString::fromUtf8(file.readAll());
+    }
+
+    IssueLocationWithContext issueLocationWithContext { code, location };
     if (const QStringView beforeText = issueLocationWithContext.beforeText(); !beforeText.isEmpty())
         m_output.write(beforeText);
 
@@ -224,33 +239,56 @@ void QQmlJSLogger::printContext(const QQmlJS::SourceLocation &location)
 
 void QQmlJSLogger::printFix(const FixSuggestion &fix)
 {
+    const QString currentFileAbsPath = QFileInfo(m_fileName).absolutePath();
+    QString code = m_code;
+    QString currentFile;
     for (const auto &fixItem : fix.fixes) {
         m_output.writePrefixedMessage(fixItem.message, QtInfoMsg);
 
         if (!fixItem.cutLocation.isValid())
             continue;
 
-        IssueLocationWithContext issueLocationWithContext { m_code, fixItem.cutLocation };
+        if (fixItem.fileName == currentFile) {
+            // Nothing to do in this case, we've already read the code
+        } else if (fixItem.fileName.isEmpty() || fixItem.fileName == currentFileAbsPath) {
+            code = m_code;
+        } else {
+            QFile file(fixItem.fileName);
+            const bool success = file.open(QFile::ReadOnly);
+            Q_ASSERT(success);
+            code = QString::fromUtf8(file.readAll());
+            currentFile = fixItem.fileName;
+        }
+
+        IssueLocationWithContext issueLocationWithContext { code, fixItem.cutLocation };
 
         if (const QStringView beforeText = issueLocationWithContext.beforeText();
             !beforeText.isEmpty()) {
             m_output.write(beforeText);
         }
 
-        m_output.write(fixItem.replacementString, QtDebugMsg);
+        // The replacement string can be empty if we're only pointing something out to the user
+        QStringView replacementString = fixItem.replacementString.isEmpty()
+                ? issueLocationWithContext.issueText()
+                : fixItem.replacementString;
+
+        // But if there's nothing to change it has to be a hint
+        if (fixItem.replacementString.isEmpty())
+            Q_ASSERT(fixItem.isHint);
+
+        m_output.write(replacementString, QtDebugMsg);
         m_output.write(issueLocationWithContext.afterText().toString() + u'\n');
 
         int tabCount = issueLocationWithContext.beforeText().count(u'\t');
 
         // Do not draw location indicator for multiline replacement strings
-        if (fixItem.replacementString.contains(u'\n'))
+        if (replacementString.contains(u'\n'))
             continue;
 
         m_output.write(u" "_qs.repeated(
                                issueLocationWithContext.beforeText().length() - tabCount)
                        + u"\t"_qs.repeated(tabCount)
-                       + u"^"_qs.repeated(fixItem.replacementString.length())
-                       + u'\n');
+                       + u"^"_qs.repeated(fixItem.replacementString.length()) + u'\n');
     }
 }
 

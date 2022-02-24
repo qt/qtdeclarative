@@ -221,6 +221,7 @@ bool QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents
                 jsonFix[u"charOffset"_qs] = static_cast<int>(fix.cutLocation.offset);
                 jsonFix[u"length"_qs] = static_cast<int>(fix.cutLocation.length);
                 jsonFix[u"replacement"_qs] = fix.replacementString;
+                jsonFix[u"isHint"] = fix.isHint;
                 suggestions << jsonFix;
             }
         }

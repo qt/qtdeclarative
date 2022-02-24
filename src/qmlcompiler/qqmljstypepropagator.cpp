@@ -340,7 +340,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
                                                   "function instead.\n")
                                       .arg(id.location.startLine)
                                       .arg(id.location.startColumn),
-                    fixLocation, fixString
+                    fixLocation, fixString, QString(), false
                 };
             }
             break;
@@ -360,7 +360,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
                 name + QLatin1String(" is a member of a parent element\n")
                         + QLatin1String("      You can qualify the access with its id "
                                         "to avoid this warning:\n"),
-                fixLocation, (id.isEmpty() ? u"<id>."_qs : (id + u'.'))
+                fixLocation, (id.isEmpty() ? u"<id>."_qs : (id + u'.')), QString(), id.isEmpty()
             };
 
             if (id.isEmpty()) {
@@ -677,11 +677,10 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
                 QQmlJS::SourceLocation fixLocation = getCurrentSourceLocation();
                 fixLocation.length = 0;
 
-                suggestion.fixes << FixSuggestion::Fix {
-                    u"Reference it by id instead:"_qs,
-                    fixLocation,
-                    id.isEmpty() ? u"<id>."_qs : (id + u'.')
-                };
+                suggestion.fixes << FixSuggestion::Fix { u"Reference it by id instead:"_qs,
+                                                         fixLocation,
+                                                         id.isEmpty() ? u"<id>."_qs : (id + u'.'),
+                                                         QString(), id.isEmpty() };
 
                 fixLocation = scope->sourceLocation();
                 fixLocation.length = 0;

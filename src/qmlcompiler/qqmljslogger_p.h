@@ -122,6 +122,10 @@ struct FixSuggestion
         QString message;
         QQmlJS::SourceLocation cutLocation = QQmlJS::SourceLocation();
         QString replacementString = QString();
+        QString fileName = QString();
+        // A Fix is a hint if it can not be automatically applied to fix an issue or only points out
+        // its origin
+        bool isHint = true;
     };
     QList<Fix> fixes;
 };
@@ -233,10 +237,11 @@ public:
     */
     void log(const QString &message, QQmlJSLoggerCategory category,
              const QQmlJS::SourceLocation &srcLocation, bool showContext = true,
-             bool showFileName = true, const std::optional<FixSuggestion> &suggestion = {})
+             bool showFileName = true, const std::optional<FixSuggestion> &suggestion = {},
+             const QString overrideFileName = QString())
     {
         log(message, category, srcLocation, m_categoryLevels[category], showContext, showFileName,
-            suggestion);
+            suggestion, overrideFileName);
     }
 
     void processMessages(const QList<QQmlJS::DiagnosticMessage> &messages,
@@ -257,12 +262,13 @@ public:
     QString fileName() const { return m_fileName; }
 
 private:
-    void printContext(const QQmlJS::SourceLocation &location);
+    void printContext(const QString &overrideFileName, const QQmlJS::SourceLocation &location);
     void printFix(const FixSuggestion &fix);
 
-    void log(const QString &message, QQmlJSLoggerCategory category, const QQmlJS::SourceLocation &,
-             QtMsgType type, bool showContext, bool showFileName,
-             const std::optional<FixSuggestion> &suggestion);
+    void log(const QString &message, QQmlJSLoggerCategory category,
+             const QQmlJS::SourceLocation &srcLocation, QtMsgType type, bool showContext,
+             bool showFileName, const std::optional<FixSuggestion> &suggestion,
+             const QString overrideFileName);
 
     QString m_fileName;
     QString m_code;
