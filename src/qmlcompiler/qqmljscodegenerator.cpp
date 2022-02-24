@@ -1561,15 +1561,37 @@ void QQmlJSCodeGenerator::generate_DeclareVar(int varName, int isDeletable)
 
 void QQmlJSCodeGenerator::generate_DefineArray(int argc, int args)
 {
-    Q_UNUSED(args);
-    if (argc > 0)
-        reject(u"DefineArray"_qs);
+    INJECT_TRACE_INFO(generate_DefineArray);
 
-    m_body += m_state.accumulatorVariableOut + u" = "_qs;
-    m_body += conversion(m_typeResolver->emptyListType(), m_state.accumulatorOut().storedType(),
-                         QString());
-    m_body += u";\n"_qs;
-    generateOutputVariantConversion(m_typeResolver->emptyListType());
+    const QQmlJSScope::ConstPtr stored = m_state.accumulatorOut().storedType();
+
+    if (argc == 0) {
+        m_body += m_state.accumulatorVariableOut + u" = "_qs;
+        m_body += conversion(m_typeResolver->emptyListType(), stored, QString());
+        m_body += u";\n"_qs;
+        generateOutputVariantConversion(m_typeResolver->emptyListType());
+        return;
+    }
+
+    if (stored->accessSemantics() != QQmlJSScope::AccessSemantics::Sequence) {
+        // This rejects any attempt to store the list into a QVariant.
+        // Therefore, we don't have to adjust the contained type below.
+        reject(u"storing an array in a non-sequence type"_qs);
+        return;
+    }
+
+    const QQmlJSScope::ConstPtr value = stored->valueType();
+    Q_ASSERT(value);
+
+    QStringList initializer;
+    for (int i = 0; i < argc; ++i) {
+        initializer += conversion(registerType(args + i).storedType(), value,
+                                  registerVariable(args + i));
+    }
+
+    m_body += m_state.accumulatorVariableOut + u" = "_qs + stored->internalName() + u'{';
+    m_body += initializer.join(u", "_qs);
+    m_body += u"};\n";
 }
 
 void QQmlJSCodeGenerator::generate_DefineObjectLiteral(int internalClassId, int argc, int args)

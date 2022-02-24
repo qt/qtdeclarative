@@ -88,6 +88,8 @@ private:
     void generate_Ret() override;
     void generate_ThrowException() override;
 
+    void generate_DefineArray(int argc, int argv) override;
+
     enum JumpMode { Unconditional, Conditional };
     void processJump(int offset, JumpMode mode);
     void populateBasicBlocks();
@@ -97,6 +99,7 @@ private:
     InstructionAnnotations m_annotations;
     QFlatMap<int, BasicBlock> m_basicBlocks;
     QHash<int, RegisterAccess> m_readerLocations;
+    QList<int> m_arrayDefinitions;
     bool m_skipUntilNextLabel = false;
     bool m_hadBackJumps = false;
 };

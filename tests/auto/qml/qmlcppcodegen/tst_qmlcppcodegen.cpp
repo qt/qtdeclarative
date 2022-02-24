@@ -126,6 +126,7 @@ private slots:
     void functionTakingVar();
     void testIsnan();
     void fallbackLookups();
+    void typedArray();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1902,6 +1903,34 @@ void tst_QmlCppCodegen::fallbackLookups()
     QMetaObject::invokeMethod(o.data(), "withProperty", Q_RETURN_ARG(int, result));
     QCOMPARE(result, 19);
     QCOMPARE(singleton->objectName(), QStringLiteral("dd96"));
+}
+
+void tst_QmlCppCodegen::typedArray()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/TestTypes/typedArray.qml"_qs);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QDateTime date;
+    QVERIFY(qvariant_cast<QList<int>>(o->property("values2")).isEmpty());
+    QCOMPARE(qvariant_cast<QList<int>>(o->property("values3")),
+             QList<int>({1, 2, 3, 4}));
+    QCOMPARE(qvariant_cast<QList<QDateTime>>(o->property("values4")),
+             QList<QDateTime>({date, date, date}));
+    QCOMPARE(qvariant_cast<QList<double>>(o->property("values5")),
+             QList<double>({1, 2, 3.4, 30, 0, 0}));
+    date = QDateTime::currentDateTime();
+    o->setProperty("aDate", date);
+    QCOMPARE(qvariant_cast<QList<QDateTime>>(o->property("values4")),
+             QList<QDateTime>({date, date, date}));
+
+    QQmlListProperty<QObject> values6
+            = qvariant_cast<QQmlListProperty<QObject>>(o->property("values6"));
+    QCOMPARE(values6.count(&values6), 3);
+    for (int i = 0; i < 3; ++i)
+        QCOMPARE(values6.at(&values6, i), o.data());
 }
 
 void tst_QmlCppCodegen::runInterpreted()

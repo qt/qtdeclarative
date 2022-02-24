@@ -1412,10 +1412,15 @@ void QQmlJSTypePropagator::generate_DeclareVar(int varName, int isDeletable)
 
 void QQmlJSTypePropagator::generate_DefineArray(int argc, int args)
 {
-    Q_UNUSED(args);
     setAccumulator(m_typeResolver->globalType(argc == 0
                                                       ? m_typeResolver->emptyListType()
-                                                      : m_typeResolver->jsValueType()));
+                                                      : m_typeResolver->variantListType()));
+
+    // Track all arguments as the same type.
+    const QQmlJSRegisterContent elementType
+            = m_typeResolver->tracked(m_typeResolver->globalType(m_typeResolver->varType()));
+    for (int i = 0; i < argc; ++i)
+        addReadRegister(args + i, elementType);
 }
 
 void QQmlJSTypePropagator::generate_DefineObjectLiteral(int internalClassId, int argc, int args)

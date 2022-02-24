@@ -140,6 +140,14 @@ void QQmlJSBasicBlocks::generate_ThrowException()
     m_skipUntilNextLabel = true;
 }
 
+void QQmlJSBasicBlocks::generate_DefineArray(int argc, int)
+{
+    if (argc == 0)
+        return; // empty array/list, nothing to do
+
+    m_arrayDefinitions.append(currentInstructionOffset());
+}
+
 void QQmlJSBasicBlocks::processJump(int offset, JumpMode mode)
 {
     if (offset < 0)
@@ -377,6 +385,39 @@ void QQmlJSBasicBlocks::adjustTypes()
     using NewVirtualRegisters = NewFlatMap<int, QQmlJSRegisterContent>;
 
     QHash<int, QList<int>> liveConversions;
+
+    // Handle the array definitions first.
+    // Changing the array type changes the expected element types.
+    for (int instructionOffset : m_arrayDefinitions) {
+        auto it = m_readerLocations.find(instructionOffset);
+        if (it == m_readerLocations.end())
+            continue;
+
+        const InstructionAnnotation &annotation = m_annotations[instructionOffset];
+
+        Q_ASSERT(it->trackedTypes.length() == 1);
+        Q_ASSERT(it->trackedTypes[0] == m_typeResolver->containedType(annotation.changedRegister));
+        Q_ASSERT(!annotation.readRegisters.isEmpty());
+
+        m_typeResolver->adjustTrackedType(it->trackedTypes[0], it->typeReaders.values());
+
+        // Now we don't adjust the type we store, but rather the type we expect to read. We
+        // can do this because we've tracked the read type when we defined the array in
+        // QQmlJSTypePropagator.
+        if (QQmlJSScope::ConstPtr valueType = it->trackedTypes[0]->valueType()) {
+            m_typeResolver->adjustTrackedType(
+                    m_typeResolver->containedType(annotation.readRegisters.begin().value()),
+                    valueType);
+        }
+
+        for (const QList<int> &conversions : qAsConst(it->registerReadersAndConversions)) {
+            for (int conversion : conversions)
+                liveConversions[conversion].append(it->trackedRegister);
+        }
+
+        m_readerLocations.erase(it);
+    }
+
     for (auto it = m_readerLocations.begin(), end = m_readerLocations.end(); it != end; ++it) {
         for (const QList<int> &conversions : qAsConst(it->registerReadersAndConversions)) {
             for (int conversion : conversions)

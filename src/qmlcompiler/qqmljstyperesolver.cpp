@@ -96,6 +96,8 @@ QQmlJSTypeResolver::QQmlJSTypeResolver(QQmlJSImporter *importer)
     listPropertyType->setInternalName(u"QQmlListProperty<QObject>"_qs);
     listPropertyType->setFilePath(u"qqmllist.h"_qs);
     listPropertyType->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
+    listPropertyType->setValueTypeName(u"QObject"_qs);
+    QQmlJSScope::resolveTypes(listPropertyType, builtinTypes);
     m_listPropertyType = listPropertyType;
 
     QQmlJSScope::Ptr metaObjectType = QQmlJSScope::create();
@@ -177,7 +179,8 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::scopeForId(
     return m_objectsById.scope(id, referrer);
 }
 
-QQmlJSScope::ConstPtr QQmlJSTypeResolver::listType(const QQmlJSScope::ConstPtr &elementType) const
+QQmlJSScope::ConstPtr QQmlJSTypeResolver::listType(
+        const QQmlJSScope::ConstPtr &elementType, ListMode mode) const
 {
     auto it = m_typeTracker->listTypes.find(elementType);
     if (it != m_typeTracker->listTypes.end())
@@ -185,12 +188,16 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::listType(const QQmlJSScope::ConstPtr &
 
     switch (elementType->accessSemantics()) {
     case QQmlJSScope::AccessSemantics::Reference:
-        return m_listPropertyType;
+        if (mode == UseListReference)
+            return m_listPropertyType;
+        if (elementType->internalName() != u"QObject"_qs)
+            return listType(genericType(elementType), mode);
+        Q_FALLTHROUGH();
     case QQmlJSScope::AccessSemantics::Value: {
         QQmlJSScope::Ptr listType = QQmlJSScope::create();
         listType->setAccessSemantics(QQmlJSScope::AccessSemantics::Sequence);
         listType->setValueTypeName(elementType->internalName());
-        listType->setInternalName(u"QList<%1>"_qs.arg(elementType->internalName()));
+        listType->setInternalName(u"QList<%1>"_qs.arg(elementType->augmentedInternalName()));
         listType->setFilePath(elementType->filePath());
         const QQmlJSImportedScope element = {elementType, QTypeRevision()};
         QQmlJSScope::resolveTypes(listType, {{elementType->internalName(), element}});
@@ -344,7 +351,9 @@ QQmlJSTypeResolver::containedType(const QQmlJSRegisterContent &container) const
         return container.type();
     if (container.isProperty()) {
         const QQmlJSMetaProperty prop = container.property();
-        return prop.isList() ? listType(prop.type()) : QQmlJSScope::ConstPtr(prop.type());
+        return prop.isList()
+                ? listType(prop.type(), UseListReference)
+                : QQmlJSScope::ConstPtr(prop.type());
     }
     if (container.isEnumeration())
         return container.enumeration().type();
@@ -709,7 +718,9 @@ QQmlJSScope::ConstPtr QQmlJSTypeResolver::genericType(const QQmlJSScope::ConstPt
         return m_intType;
 
     if (type->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence) {
-        return listType(genericType(type->valueType()));
+        return equals(type, m_listPropertyType)
+                ? type
+                : listType(genericType(type->valueType()), UseQObjectList);
     }
 
     return m_varType;
@@ -977,7 +988,7 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
     if (equals(to, m_jsPrimitiveType))
         return isPrimitive(from);
 
-    if (equals(from, m_emptyListType))
+    if (equals(from, m_emptyListType) || equals(from, m_variantListType))
         return to->accessSemantics() == QQmlJSScope::AccessSemantics::Sequence;
 
     const bool matchByName = !to->isComposite();
