@@ -531,35 +531,25 @@ void QQmlJSCodeGenerator::generate_MoveConst(int constIndex, int destTemp)
     const auto v4Value = QV4::StaticValue::fromReturnedValue(
                 m_jsUnitGenerator->constant(constIndex));
 
+    const auto changed = m_state.changedRegister().storedType();
+
+    m_body += var + u" = "_qs;
     if (v4Value.isNull()) {
-        const auto changed = m_state.changedRegister();
-        m_body += var + u" = "_qs;
-        if (m_typeResolver->registerIsStoredIn(changed, m_typeResolver->jsPrimitiveType())) {
-            m_body += u"QJSPrimitiveNull()"_qs;
-        } else if (m_typeResolver->registerIsStoredIn(changed, m_typeResolver->jsValueType())) {
-            m_body += u"QJSValue(QJSValue::NullValue)"_qs;
-        } else if (m_typeResolver->registerIsStoredIn(changed, m_typeResolver->varType())) {
-            m_body += u"QVariant::fromValue<std::nullptr_t>(nullptr)"_qs;
-        } else if (changed.storedType()->accessSemantics()
-                   == QQmlJSScope::AccessSemantics::Reference) {
-            m_body += u"nullptr"_qs;
-        } else {
-            setError(u"Cannot load null into %1"_qs.arg(changed.descriptiveName()));
-        }
-
-        m_body += u";\n"_qs;
-        return;
+        m_body += conversion(m_typeResolver->nullType(), changed, QString());
+    } else if (v4Value.isUndefined()) {
+        m_body += conversion(m_typeResolver->voidType(), changed, QString());
+    } else if (v4Value.isBoolean()) {
+        m_body += conversion(m_typeResolver->boolType(), changed,
+                             v4Value.booleanValue() ? u"true"_qs : u"false"_qs);
+    } else if (v4Value.isInteger()) {
+        m_body += conversion(m_typeResolver->intType(), changed,
+                             QString::number(v4Value.int_32()));
+    } else if (v4Value.isDouble()) {
+        m_body += conversion(m_typeResolver->realType(), changed,
+                             toNumericString(v4Value.doubleValue()));
+    } else {
+        reject(u"unknown const type"_qs);
     }
-
-    double value = 0.0f;
-    if (v4Value.isInteger() || v4Value.isBoolean())
-        value = v4Value.int_32();
-    else if (v4Value.isDouble())
-        value = v4Value.doubleValue();
-
-    m_body += var;
-    m_body += u" = "_qs;
-    m_body += toNumericString(value);
     m_body += u";\n"_qs;
 }
 
