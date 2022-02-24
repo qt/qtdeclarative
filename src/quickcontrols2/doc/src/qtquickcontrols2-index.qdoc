@@ -144,6 +144,11 @@
     \endtable
 
     \section1 Module Evolution
+
+    Qt Quick Controls was originally written with touch interfaces as the primary focus.
+    While it is already possible to develop desktop interfaces, work is ongoing to
+    provide a more native look and feel.
+
     \l{Changes to Qt Quick Controls} lists important changes in the
     module API and functionality that were done for the Qt 6 series of Qt.
 
