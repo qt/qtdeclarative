@@ -446,11 +446,11 @@ void QQmlJSScope::resolveNonEnumTypes(
 
 void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &intType)
 {
-    Q_ASSERT(intType); // There always has to be a builtin "int" type
     for (auto it = self->m_enumerations.begin(), end = self->m_enumerations.end(); it != end;
          ++it) {
         if (it->type())
             continue;
+        Q_ASSERT(intType); // We need an "int" type to resolve enums
         auto enumScope = QQmlJSScope::create(EnumScope, self);
         enumScope->m_baseTypeName = QStringLiteral("int");
         enumScope->m_baseType.scope = intType;
