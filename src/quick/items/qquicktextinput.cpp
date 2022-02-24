@@ -31,6 +31,7 @@
 QT_BEGIN_NAMESPACE
 
 DEFINE_BOOL_CONFIG_OPTION(qmlDisableDistanceField, QML_DISABLE_DISTANCEFIELD)
+Q_LOGGING_CATEGORY(lcTextInput, "qt.quick.textInput")
 
 /*!
     \qmltype TextInput
@@ -1533,7 +1534,8 @@ void QQuickTextInput::mouseDoubleClickEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextInput);
 
-    if (d->selectByMouse && event->button() == Qt::LeftButton) {
+    if (d->selectByMouse && event->button() == Qt::LeftButton &&
+            QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(event)) {
 #if QT_CONFIG(im)
         d->commitPreedit();
 #endif
@@ -1560,21 +1562,29 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
     if (d->sendMouseEventToInputContext(event))
         return;
 
-    if (d->selectByMouse) {
+    const bool isMouse = QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(event);
+    if (d->selectByMouse &&
+            (isMouse
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+             || d->selectByTouchDrag
+#endif
+             )) {
         setKeepMouseGrab(false);
         d->selectPressed = true;
         QPointF distanceVector = d->pressPos - d->tripleClickStartPoint;
         if (d->hasPendingTripleClick()
-            && distanceVector.manhattanLength() < QGuiApplication::styleHints()->startDragDistance()) {
+                && distanceVector.manhattanLength() < QGuiApplication::styleHints()->startDragDistance()) {
             event->setAccepted(true);
             selectAll();
             return;
         }
     }
 
-    bool mark = (event->modifiers() & Qt::ShiftModifier) && d->selectByMouse;
-    int cursor = d->positionAt(event->position());
-    d->moveCursor(cursor, mark);
+    if (isMouse) {
+        bool mark = (event->modifiers() & Qt::ShiftModifier) && d->selectByMouse;
+        int cursor = d->positionAt(event->position());
+        d->moveCursor(cursor, mark);
+    }
 
     if (d->focusOnPress && !qGuiApp->styleHints()->setFocusOnTouchRelease())
         ensureActiveFocus(Qt::MouseFocusReason);
@@ -1584,6 +1594,9 @@ void QQuickTextInput::mousePressEvent(QMouseEvent *event)
 
 void QQuickTextInput::mouseMoveEvent(QMouseEvent *event)
 {
+    if (!QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(event))
+        return;
+
     Q_D(QQuickTextInput);
 
     if (d->selectPressed) {
@@ -1617,8 +1630,9 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
         d->selectPressed = false;
         setKeepMouseGrab(false);
     }
+    const bool isMouse = QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(event);
 #if QT_CONFIG(clipboard)
-    if (QGuiApplication::clipboard()->supportsSelection()) {
+    if (isMouse && QGuiApplication::clipboard()->supportsSelection()) {
         if (event->button() == Qt::LeftButton) {
             d->copy(QClipboard::Selection);
         } else if (!d->m_readOnly && event->button() == Qt::MiddleButton) {
@@ -1627,6 +1641,10 @@ void QQuickTextInput::mouseReleaseEvent(QMouseEvent *event)
         }
     }
 #endif
+    // On a touchscreen or with a stylus, set cursor position and focus on release, not on press;
+    // if Flickable steals the grab in the meantime, the cursor won't move.
+    if (!isMouse)
+        d->moveCursor(d->positionAt(event->position()), false);
 
     if (d->focusOnPress && qGuiApp->styleHints()->setFocusOnTouchRelease())
         ensureActiveFocus(Qt::MouseFocusReason);
@@ -2379,12 +2397,20 @@ QString QQuickTextInput::preeditText() const
 /*!
     \qmlproperty bool QtQuick::TextInput::selectByMouse
 
-    Defaults to false.
+    Defaults to \c true.
 
-    If true, the user can use the mouse to select text in some
-    platform-specific way. Note that for some platforms this may
-    not be an appropriate interaction (it may conflict with how
-    the text needs to behave inside a \l Flickable, for example).
+    If true, the user can use the mouse to select text in the usual way.
+
+    \note In versions prior to 6.4, the default was \c false; but if you
+    enabled this property, you could also select text on a touchscreen by
+    dragging your finger across it. This interfered with flicking when
+    TextInput was used inside a Flickable. For consistency with TextField,
+    selectByMouse now really means what it says: if \c true, you can select
+    text by dragging \e only with a mouse. If this change does not suit your
+    application, you can set \c selectByMouse to \c false, or import an older
+    API version (for example \c {import QtQuick 6.3}) to revert to the previous
+    behavior. The option to revert behavior by changing the import version will
+    be removed in a later version of Qt.
 */
 bool QQuickTextInput::selectByMouse() const
 {
@@ -4840,6 +4866,23 @@ void QQuickTextInput::resetBottomPadding()
     Q_D(QQuickTextInput);
     d->setBottomPadding(0, true);
 }
+
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+void QQuickTextInput::setOldSelectionDefault()
+{
+    Q_D(QQuickTextInput);
+    d->selectByMouse = false;
+    d->selectByTouchDrag = true;
+    qCDebug(lcTextInput, "pre-6.4 behavior chosen by import version: selectByMouse defaults false; if enabled, touchscreen acts like a mouse");
+}
+
+// TODO in 6.7.0: remove the note about versions prior to 6.4 in selectByMouse() documentation
+QQuickPre64TextInput::QQuickPre64TextInput(QQuickItem *parent)
+    : QQuickTextInput(parent)
+{
+    setOldSelectionDefault();
+}
+#endif
 
 QT_END_NAMESPACE
 

@@ -142,6 +142,7 @@ public:
     static bool isHoverEvent(const QPointerEvent *ev);
     static bool isTouchEvent(const QPointerEvent *ev);
     static bool isTabletEvent(const QPointerEvent *ev);
+    static bool isEventFromMouseOrTouchpad(const QPointerEvent *ev);
     static QQuickPointingDeviceExtra *deviceExtra(const QInputDevice *device);
 
     // delivery of pointer events:

@@ -4,6 +4,7 @@
 #include <QtTest/QSignalSpy>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
+#include <QtQuickTestUtils/private/viewtestutils_p.h>
 #include <private/qinputmethod_p.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
@@ -13,6 +14,8 @@
 #include <QtGui/qguiapplication.h>
 #include <QtGui/qstylehints.h>
 #include <QtGui/qvalidator.h>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/private/qpointingdevice_p.h>
 #include <QInputMethod>
 #include <private/qquicktextinput_p.h>
 #include <private/qquicktextinput_p_p.h>
@@ -197,15 +200,22 @@ private slots:
     void checkCursorDelegateWhenPaddingChanged();
 
     void focusReason();
+
+    void touchscreenDoesNotSelect_data();
+    void touchscreenDoesNotSelect();
+    void touchscreenSetsFocusAndMovesCursor();
+
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
 #if QT_CONFIG(shortcut)
     void simulateKeys(QWindow *window, const QKeySequence &sequence);
 #endif
+    static bool hasWindowActivation();
 
     QQmlEngine engine;
     QStringList standard;
     QStringList colorStrings;
+    QScopedPointer<QPointingDevice> touchscreen = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
 };
 
 typedef QList<int> IntList;
@@ -224,6 +234,11 @@ void tst_qquicktextinput::simulateKeys(QWindow *window, const QList<Key> &keys)
         else
             QTest::keyClick(window, keys.at(i).keyCombination.key(), modifiers);
     }
+}
+
+bool tst_qquicktextinput::hasWindowActivation()
+{
+    return (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation));
 }
 
 #if QT_CONFIG(shortcut)
@@ -1253,7 +1268,7 @@ void tst_qquicktextinput::moveCursorSelectionSequence()
 
 void tst_qquicktextinput::dragMouseSelection()
 {
-    QString qmlfile = testFile("mouseselection_true.qml");
+    QString qmlfile = testFile("mouseselectionmode_default.qml");
 
     QQuickView window(QUrl::fromLocalFile(qmlfile));
 
@@ -1264,6 +1279,7 @@ void tst_qquicktextinput::dragMouseSelection()
     QVERIFY(window.rootObject() != nullptr);
     QQuickTextInput *textInputObject = qobject_cast<QQuickTextInput *>(window.rootObject());
     QVERIFY(textInputObject != nullptr);
+    textInputObject->setSelectByMouse(true);
 
     // press-and-drag-and-release from x1 to x2
     int x1 = 10;
@@ -2744,7 +2760,7 @@ void tst_qquicktextinput::middleClickPaste()
     if (!PlatformQuirks::isClipboardAvailable())
         QSKIP("This machine doesn't support the clipboard");
 
-    QQuickView window(testFileUrl("mouseselection_true.qml"));
+    QQuickView window(testFileUrl("mouseselectionmode_default.qml"));
 
     window.show();
     window.requestActivate();
@@ -2753,6 +2769,7 @@ void tst_qquicktextinput::middleClickPaste()
     QVERIFY(window.rootObject() != nullptr);
     QQuickTextInput *textInputObject = qobject_cast<QQuickTextInput *>(window.rootObject());
     QVERIFY(textInputObject != nullptr);
+    textInputObject->setSelectByMouse(true);
 
     textInputObject->setFocus(true);
 
@@ -7089,6 +7106,88 @@ void tst_qquicktextinput::focusReason()
     QCOMPARE(qApp->focusObject(), second);
     QCOMPARE(eventFilter.lastFocusReason[second], Qt::TabFocusReason);
     QCOMPARE(eventFilter.lastFocusReason[first], Qt::TabFocusReason);
+}
+
+void tst_qquicktextinput::touchscreenDoesNotSelect_data()
+{
+    QTest::addColumn<QUrl>("src");
+    QTest::addColumn<bool>("expectDefaultSelectByMouse");
+    QTest::addColumn<bool>("overrideSelectByMouseFalse");
+    QTest::newRow("new default")  << testFileUrl("mouseselectionmode_default.qml") << true << false;
+    QTest::newRow("new override") << testFileUrl("mouseselectionmode_default.qml") << true << true;
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+    QTest::newRow("old default")  << testFileUrl("mouseselection_old_default.qml") << false << false;
+#endif
+}
+
+void tst_qquicktextinput::touchscreenDoesNotSelect()
+{
+    QFETCH(QUrl, src);
+    QFETCH(bool, expectDefaultSelectByMouse);
+    QFETCH(bool, overrideSelectByMouseFalse);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, src));
+
+    QQuickTextInput *textInputObject = qobject_cast<QQuickTextInput *>(window.rootObject());
+    QVERIFY(textInputObject);
+    QCOMPARE(textInputObject->selectByMouse(), expectDefaultSelectByMouse);
+    if (overrideSelectByMouseFalse)
+        textInputObject->setSelectByMouse(overrideSelectByMouseFalse);
+
+    // press-drag-and-release from x1 to x2
+    int x1 = 10;
+    int x2 = 70;
+    int y = textInputObject->height() / 2;
+    QTest::touchEvent(&window, touchscreen.data()).press(0, QPoint(x1,y), &window);
+    QTest::touchEvent(&window, touchscreen.data()).move(0, QPoint(x2,y), &window);
+    QTest::touchEvent(&window, touchscreen.data()).release(0, QPoint(x2,y), &window);
+    QQuickTouchUtils::flush(&window);
+    QVERIFY(textInputObject->selectedText().isEmpty());
+}
+
+void tst_qquicktextinput::touchscreenSetsFocusAndMovesCursor()
+{
+    if (!hasWindowActivation())
+        QSKIP("Window activation is not supported");
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("twoInAColumn.qml")));
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    QQuickTextInput *top = window.rootObject()->findChild<QQuickTextInput*>("top");
+    QVERIFY(top);
+    QQuickTextInput *bottom = window.rootObject()->findChild<QQuickTextInput*>("bottom");
+    QVERIFY(bottom);
+
+    // tap the bottom field
+    int x1 = 10;
+    int y = bottom->position().y() + bottom->height() / 2;
+    QTest::touchEvent(&window, touchscreen.data()).press(0, QPoint(x1,y), &window);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(qApp->focusObject(), bottom);
+    // text cursor is at the end by default, on press
+    const auto len = bottom->text().length();
+    QCOMPARE(bottom->cursorPosition(), len);
+    // so typing a character appends it
+    QVERIFY(!bottom->text().endsWith('q'));
+    QTest::keyClick(&window, Qt::Key_Q);
+    QVERIFY(bottom->text().endsWith('q'));
+    QCOMPARE(bottom->text().length(), len + 1);
+    QTest::touchEvent(&window, touchscreen.data()).release(0, QPoint(x1,y), &window);
+    QQuickTouchUtils::flush(&window);
+    // the cursor gets moved on release, as long as TextInput's grab wasn't stolen (e.g. by Flickable)
+    QVERIFY(bottom->cursorPosition() < 5);
+
+    // press-drag-and-release from x1 to x2 on the top field
+    int x2 = 70;
+    y = top->position().y() + top->height() / 2;
+    QTest::touchEvent(&window, touchscreen.data()).press(0, QPoint(x1,y), &window);
+    QTest::touchEvent(&window, touchscreen.data()).move(0, QPoint(x2,y), &window);
+    QTest::touchEvent(&window, touchscreen.data()).release(0, QPoint(x2,y), &window);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(qApp->focusObject(), top);
+    QVERIFY(top->selectedText().isEmpty());
 }
 
 QTEST_MAIN(tst_qquicktextinput)

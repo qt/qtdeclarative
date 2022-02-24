@@ -881,7 +881,9 @@ void QQuickTextField::mouseMoveEvent(QMouseEvent *event)
             QQuickTextInput::mousePressEvent(d->pressHandler.delayedMousePressEvent);
             d->pressHandler.clearDelayedMouseEvent();
         }
-        if (event->buttons() != Qt::RightButton)
+        const auto devType = event->device()->type();
+        if (event->buttons() != Qt::RightButton &&
+                (devType == QInputDevice::DeviceType::Mouse || devType == QInputDevice::DeviceType::TouchPad))
             QQuickTextInput::mouseMoveEvent(event);
     }
 }

@@ -1,7 +1,6 @@
-import QtQuick 2.0
+import QtQuick
 
 TextInput {
     focus: true
     text: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    selectByMouse: true
 }
