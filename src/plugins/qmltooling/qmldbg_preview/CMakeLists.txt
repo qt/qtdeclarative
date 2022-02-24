@@ -34,6 +34,6 @@ qt_internal_extend_target(QQmlPreviewServiceFactoryPlugin CONDITION QT_FEATURE_t
     SOURCES
         proxytranslator.cpp proxytranslator.h
         qqmldebugtranslationservice.cpp qqmldebugtranslationservice.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Gui
 )
