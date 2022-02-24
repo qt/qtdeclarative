@@ -89,7 +89,7 @@ public:
         , updateType(UpdatePaintNode)
         , dirty(false), richText(false), cursorVisible(false), cursorPending(false)
         , focusOnPress(true), persistentSelection(false), requireImplicitWidth(false)
-        , selectByMouse(false), canPaste(false), canPasteValid(false), hAlignImplicit(true)
+        , selectByMouse(true), canPaste(false), canPasteValid(false), hAlignImplicit(true)
         , textCached(true), inLayout(false), selectByKeyboard(false), selectByKeyboardSet(false)
         , hadSelection(false), markdownText(false)
     {

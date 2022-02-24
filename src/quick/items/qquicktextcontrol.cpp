@@ -36,6 +36,7 @@
 #include <qmetaobject.h>
 
 #include <private/qqmlglobal_p.h>
+#include <private/qquickdeliveryagent_p_p.h>
 
 // ### these should come from QStyleHints
 const int textCursorWidth = 1;
@@ -79,6 +80,7 @@ QQuickTextControlPrivate::QQuickTextControlPrivate()
       hasImState(false),
       cursorRectangleChanged(false),
       hoveredMarker(false),
+      selectByTouchDrag(false),
       lastSelectionStart(-1),
       lastSelectionEnd(-1)
 {}
@@ -1004,6 +1006,9 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
             cursor.clearSelection();
         }
     }
+
+    if (!selectByTouchDrag && !QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(e))
+        return;
     if (interactionFlags & Qt::TextEditable)
         blockWithMarkerUnderMousePress = q->blockWithMarkerAt(pos);
     if (e->button() & Qt::MiddleButton) {
@@ -1074,6 +1079,9 @@ void QQuickTextControlPrivate::mousePressEvent(QMouseEvent *e, const QPointF &po
 
 void QQuickTextControlPrivate::mouseMoveEvent(QMouseEvent *e, const QPointF &mousePos)
 {
+    if (!selectByTouchDrag && !QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(e))
+        return;
+
     Q_Q(QQuickTextControl);
 
     if ((e->buttons() & Qt::LeftButton)) {
@@ -1154,6 +1162,7 @@ void QQuickTextControlPrivate::mouseReleaseEvent(QMouseEvent *e, const QPointF &
 
     const QTextCursor oldSelection = cursor;
     const int oldCursorPos = cursor.position();
+    const bool isMouse = QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(e);
 
     if (mousePressed) {
         mousePressed = false;
@@ -1169,6 +1178,8 @@ void QQuickTextControlPrivate::mouseReleaseEvent(QMouseEvent *e, const QPointF &
             q->insertFromMimeData(md);
 #endif
     }
+    if (!isMouse && !selectByTouchDrag && interactionFlags.testFlag(Qt::TextEditable))
+        setCursorPosition(pos);
 
     repaintOldAndNewSelection(oldSelection);
 
@@ -1177,7 +1188,8 @@ void QQuickTextControlPrivate::mouseReleaseEvent(QMouseEvent *e, const QPointF &
         q->updateCursorRectangle(true);
     }
 
-    if ((interactionFlags & Qt::TextEditable) && (e->button() & Qt::LeftButton) && blockWithMarkerUnderMousePress.isValid()) {
+    if ((isMouse || selectByTouchDrag) && interactionFlags.testFlag(Qt::TextEditable) &&
+            (e->button() & Qt::LeftButton) && blockWithMarkerUnderMousePress.isValid()) {
         QTextBlock block = q->blockWithMarkerAt(pos);
         if (block == blockWithMarkerUnderMousePress) {
             auto fmt = block.blockFormat();
@@ -1215,7 +1227,8 @@ void QQuickTextControlPrivate::mouseDoubleClickEvent(QMouseEvent *e, const QPoin
 {
     Q_Q(QQuickTextControl);
 
-    if (e->button() == Qt::LeftButton && (interactionFlags & Qt::TextSelectableByMouse)) {
+    if (e->button() == Qt::LeftButton && (interactionFlags & Qt::TextSelectableByMouse)
+            && (selectByTouchDrag || QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(e))) {
 #if QT_CONFIG(im)
         commitPreedit();
 #endif
@@ -1608,6 +1621,14 @@ void QQuickTextControl::setWordSelectionEnabled(bool enabled)
     Q_D(QQuickTextControl);
     d->wordSelectionEnabled = enabled;
 }
+
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+void QQuickTextControl::setTouchDragSelectionEnabled(bool enabled)
+{
+    Q_D(QQuickTextControl);
+    d->selectByTouchDrag = enabled;
+}
+#endif
 
 QMimeData *QQuickTextControl::createMimeDataFromSelection() const
 {

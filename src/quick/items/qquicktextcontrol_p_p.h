@@ -130,6 +130,7 @@ public:
     bool hasImState : 1;
     bool cursorRectangleChanged : 1;
     bool hoveredMarker: 1;
+    bool selectByTouchDrag: 1;
 
     int lastSelectionStart;
     int lastSelectionEnd;

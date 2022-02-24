@@ -210,10 +210,11 @@ void tst_cursor::textArea()
     QCOMPARE(textArea.cursor().shape(), Qt::IBeamCursor);
 
     textArea.setReadOnly(true);
-    QCOMPARE(textArea.cursor().shape(), Qt::ArrowCursor);
-
-    textArea.setSelectByMouse(true);
+    QVERIFY(textArea.selectByMouse());
     QCOMPARE(textArea.cursor().shape(), Qt::IBeamCursor);
+
+    textArea.setSelectByMouse(false);
+    QCOMPARE(textArea.cursor().shape(), Qt::ArrowCursor);
 }
 
 QTEST_MAIN(tst_cursor)

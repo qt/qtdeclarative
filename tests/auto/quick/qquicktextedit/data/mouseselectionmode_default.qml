@@ -1,7 +1,6 @@
-import QtQuick 2.0
+import QtQuick
 
 TextEdit {
     focus: true
     text: "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    selectByMouse: true
 }
