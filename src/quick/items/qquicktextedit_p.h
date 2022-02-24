@@ -79,7 +79,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem, pub
     Q_PROPERTY(QString preeditText READ preeditText NOTIFY preeditTextChanged REVISION(2, 7))
     Q_PROPERTY(qreal tabStopDistance READ tabStopDistance WRITE setTabStopDistance NOTIFY tabStopDistanceChanged REVISION(2, 10))
     QML_NAMED_ELEMENT(TextEdit)
-    QML_ADDED_IN_VERSION(2, 0)
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+    QML_ADDED_IN_VERSION(6, 4)
+#endif
 
 public:
     QQuickTextEdit(QQuickItem *parent=nullptr);
@@ -358,6 +360,9 @@ private:
 
 protected:
     QQuickTextEdit(QQuickTextEditPrivate &dd, QQuickItem *parent = nullptr);
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+    void setOldSelectionDefault();
+#endif
 
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
@@ -389,6 +394,17 @@ private:
     Q_DISABLE_COPY(QQuickTextEdit)
     Q_DECLARE_PRIVATE(QQuickTextEdit)
 };
+
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+class QQuickPre64TextEdit : public QQuickTextEdit {
+    Q_OBJECT
+    QML_NAMED_ELEMENT(TextEdit)
+    QML_ADDED_IN_VERSION(2, 0)
+    QML_REMOVED_IN_VERSION(6, 4)
+public:
+    QQuickPre64TextEdit(QQuickItem *parent = nullptr);
+};
+#endif
 
 Q_DECLARE_MIXED_ENUM_OPERATORS_SYMMETRIC(int, QQuickTextEdit::HAlignment, QQuickTextEdit::VAlignment)
 

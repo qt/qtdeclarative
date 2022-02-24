@@ -87,6 +87,9 @@ public:
 
     void setCursorIsFocusIndicator(bool b);
     void setWordSelectionEnabled(bool enabled);
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+    void setTouchDragSelectionEnabled(bool enabled);
+#endif
 
     void updateCursorRectangle(bool force);
 

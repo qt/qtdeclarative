@@ -12,6 +12,7 @@
 #include <QtQml/qqmlexpression.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtGui/qguiapplication.h>
+#include <QtGui/private/qguiapplication_p.h>
 #include <private/qquickflickable_p.h>
 #include <private/qquickrectangle_p.h>
 #include <private/qquicktextedit_p.h>
@@ -198,6 +199,10 @@ private slots:
     void pasteHtmlIntoMarkdown();
 #endif
 
+    void touchscreenDoesNotSelect_data();
+    void touchscreenDoesNotSelect();
+    void touchscreenSetsFocusAndMovesCursor();
+
 private:
     void simulateKeys(QWindow *window, const QList<Key> &keys);
 #if QT_CONFIG(shortcut)
@@ -206,6 +211,7 @@ private:
 
     void simulateKey(QWindow *, int key, Qt::KeyboardModifiers modifiers = {});
     bool isMainFontFixed();
+    static bool hasWindowActivation();
 
     QStringList standard;
     QStringList richText;
@@ -2038,7 +2044,7 @@ void tst_qquicktextedit::mouseSelection_data()
     // import installed
     QTest::newRow("on") << testFile("mouseselection_true.qml") << 4 << 9 << "45678" << true << true << 1;
     QTest::newRow("off") << testFile("mouseselection_false.qml") << 4 << 9 << QString() << true << true << 1;
-    QTest::newRow("default") << testFile("mouseselection_default.qml") << 4 << 9 << QString() << true << true << 1;
+    QTest::newRow("default") << testFile("mouseselectionmode_default.qml") << 4 << 9 << "45678" << true << true << 1;
     QTest::newRow("off word selection") << testFile("mouseselection_false_words.qml") << 4 << 9 << QString() << true << true << 1;
     QTest::newRow("on word selection (4,9)") << testFile("mouseselection_true_words.qml") << 4 << 9 << "0123456789" << true << true << 1;
 
@@ -2211,6 +2217,7 @@ void tst_qquicktextedit::mouseSelectionMode()
     QVERIFY(window.rootObject() != nullptr);
     QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
     QVERIFY(textEditObject != nullptr);
+    textEditObject->setSelectByMouse(true);
 
     // press-and-drag-and-release from x1 to x2
     int x1 = 10;
@@ -3327,6 +3334,11 @@ bool tst_qquicktextedit::isMainFontFixed()
                            << QFontDatabase::systemFont(QFontDatabase::GeneralFont);
     }
     return ret;
+}
+
+bool tst_qquicktextedit::hasWindowActivation()
+{
+    return (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::WindowActivation));
 }
 
 void tst_qquicktextedit::textInput()
@@ -6305,6 +6317,84 @@ void tst_qquicktextedit::pasteHtmlIntoMarkdown()
     QVERIFY(md->html().toLatin1().startsWith('<'));
 }
 #endif
+
+void tst_qquicktextedit::touchscreenDoesNotSelect_data()
+{
+    QTest::addColumn<QUrl>("src");
+    QTest::addColumn<bool>("mouseOnly");
+    QTest::newRow("new") << testFileUrl("mouseselectionmode_default.qml") << true;
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+    QTest::newRow("old") << testFileUrl("mouseselection_old_default.qml") << false;
+#endif
+}
+
+void tst_qquicktextedit::touchscreenDoesNotSelect()
+{
+    QFETCH(QUrl, src);
+    QFETCH(bool, mouseOnly);
+
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, src));
+
+    QQuickTextEdit *textEditObject = qobject_cast<QQuickTextEdit *>(window.rootObject());
+    QVERIFY(textEditObject != nullptr);
+    QCOMPARE(textEditObject->selectByMouse(), mouseOnly);
+    textEditObject->setSelectByMouse(true); // enable selection with pre-6.4 import version
+
+    // press-drag-and-release from x1 to x2
+    int x1 = 10;
+    int x2 = 70;
+    int y = QFontMetrics(textEditObject->font()).height() / 2;
+    QTest::touchEvent(&window, touchDevice).press(0, QPoint(x1,y), &window);
+    QTest::touchEvent(&window, touchDevice).move(0, QPoint(x2,y), &window);
+    QTest::touchEvent(&window, touchDevice).release(0, QPoint(x2,y), &window);
+    QQuickTouchUtils::flush(&window);
+    // if the import version is old enough, fall back to old behavior: touch swipe _does_ select text
+    QCOMPARE(textEditObject->selectedText().isEmpty(), mouseOnly);
+}
+
+void tst_qquicktextedit::touchscreenSetsFocusAndMovesCursor()
+{
+    if (!hasWindowActivation())
+        QSKIP("Window activation is not supported");
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("twoInAColumn.qml")));
+    window.requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    QQuickTextEdit *top = window.rootObject()->findChild<QQuickTextEdit*>("top");
+    QVERIFY(top);
+    QQuickTextEdit *bottom = window.rootObject()->findChild<QQuickTextEdit*>("bottom");
+    QVERIFY(bottom);
+    const auto len = bottom->text().length();
+
+    // tap the bottom field
+    QPoint p1 = bottom->mapToScene({6, 6}).toPoint();
+    QTest::touchEvent(&window, touchDevice).press(0, p1, &window);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(qApp->focusObject(), bottom);
+    // text cursor is at 0 by default, on press
+    QCOMPARE(bottom->cursorPosition(), 0);
+    // so typing a character prepends it
+    QVERIFY(!bottom->text().startsWith('q'));
+    QTest::keyClick(&window, Qt::Key_Q);
+    QVERIFY(bottom->text().startsWith('q'));
+    QCOMPARE(bottom->text().length(), len + 1);
+    QTest::touchEvent(&window, touchDevice).release(0, p1, &window);
+    QQuickTouchUtils::flush(&window);
+    // the cursor gets moved on release, as long as TextInput's grab wasn't stolen (e.g. by Flickable)
+    QVERIFY(bottom->cursorPosition() < 5);
+
+    // press-drag-and-release from p1 to p2 on the top field
+    p1 = top->mapToScene({6, 6}).toPoint();
+    QPoint p2 = top->mapToScene({76, 6}).toPoint();
+    QTest::touchEvent(&window, touchDevice).press(0, p1, &window);
+    QTest::touchEvent(&window, touchDevice).move(0, p2, &window);
+    QTest::touchEvent(&window, touchDevice).release(0, p2, &window);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(qApp->focusObject(), top);
+    QVERIFY(top->selectedText().isEmpty());
+}
 
 QTEST_MAIN(tst_qquicktextedit)
 

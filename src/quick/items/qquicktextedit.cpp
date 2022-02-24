@@ -31,6 +31,7 @@
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(lcVP)
+Q_LOGGING_CATEGORY(lcTextEdit, "qt.quick.textedit")
 
 /*!
     \qmltype TextEdit
@@ -68,9 +69,12 @@ TextEdit {
     A particular look and feel might use smooth scrolling (eg. using SmoothedAnimation), might have a visible
     scrollbar, or a scrollbar that fades in to show location, etc.
 
-    Clipboard support is provided by the cut(), copy(), and paste() functions, and the selection can
-    be handled in a traditional "mouse" mechanism by setting selectByMouse, or handled completely
-    from QML by manipulating selectionStart and selectionEnd, or using selectAll() or selectWord().
+    Clipboard support is provided by the cut(), copy(), and paste() functions.
+    Text can be selected by mouse in the usual way, unless \l selectByMouse is
+    set to \c false; and by keyboard with the \c {Shift+arrow} key
+    combinations, unless \l selectByKeyboard is set to \c false. To select text
+    programmatically, you can set the \l selectionStart and \l selectionEnd
+    properties, or use \l selectAll() or \l selectWord().
 
     You can translate between cursor positions (characters from the start of the document) and pixel
     points using positionAt() and positionToRectangle().
@@ -1568,12 +1572,25 @@ void QQuickTextEdit::setSelectByKeyboard(bool on)
 /*!
     \qmlproperty bool QtQuick::TextEdit::selectByMouse
 
-    Defaults to false.
+    Defaults to \c true since Qt 6.4.
 
-    If true, the user can use the mouse to select text in some
-    platform-specific way. Note that for some platforms this may
-    not be an appropriate interaction; it may conflict with how
-    the text needs to behave inside a Flickable, for example.
+    If \c true, the user can use the mouse to select text in the usual way.
+
+    \note In versions prior to 6.4, the default was \c false; but if you
+    enabled this property, you could also select text on a touchscreen by
+    dragging your finger across it. This interfered with flicking when TextEdit
+    was used inside a Flickable. However, Qt has supported text selection
+    handles on mobile platforms, and on embedded platforms using Qt Virtual
+    Keyboard, since version 5.7, via QInputMethod. Most users would be
+    surprised if finger dragging selected text rather than flicking the parent
+    Flickable. Therefore, selectByMouse now really means what it says: if
+    \c true, you can select text by dragging \e only with a mouse, whereas
+    the platform is expected to provide selection handles on touchscreens.
+    If this change does not suit your application, you can set \c selectByMouse
+    to \c false, or import an older API version (for example
+    \c {import QtQuick 6.3}) to revert to the previous behavior. The option to
+    revert behavior by changing the import version will be removed in a later
+    version of Qt.
 */
 bool QQuickTextEdit::selectByMouse() const
 {
@@ -1911,6 +1928,8 @@ Handles the given mouse \a event.
 void QQuickTextEdit::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickTextEdit);
+    const bool isMouse = QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(event);
+    setKeepMouseGrab(d->selectByMouse && isMouse);
     d->control->processEvent(event, QPointF(-d->xoff, -d->yoff));
     if (d->focusOnPress){
         bool hadActiveFocus = hasActiveFocus();
@@ -2425,9 +2444,10 @@ void QQuickTextEditPrivate::init()
     document = new QQuickTextDocumentWithImageResources(q);
 
     control = new QQuickTextControl(document, q);
-    control->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
+    control->setTextInteractionFlags(Qt::LinksAccessibleByMouse | Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard | Qt::TextEditable);
     control->setAcceptRichText(false);
     control->setCursorIsFocusIndicator(true);
+    q->setKeepMouseGrab(true);
 
     qmlobject_connect(control, QQuickTextControl, SIGNAL(updateCursorRequest()), q, QQuickTextEdit, SLOT(updateCursor()));
     qmlobject_connect(control, QQuickTextControl, SIGNAL(selectionChanged()), q, QQuickTextEdit, SIGNAL(selectedTextChanged()));
@@ -3337,6 +3357,26 @@ void QQuickTextEdit::clear()
     d->control->clear();
 }
 
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+void QQuickTextEdit::setOldSelectionDefault()
+{
+    Q_D(QQuickTextEdit);
+    d->selectByMouse = false;
+    setKeepMouseGrab(false);
+    d->control->setTextInteractionFlags(d->control->textInteractionFlags() & ~Qt::TextSelectableByMouse);
+    d->control->setTouchDragSelectionEnabled(true);
+    qCDebug(lcTextEdit, "pre-6.4 behavior chosen by import version: selectByMouse defaults false; if enabled, touchscreen acts like a mouse");
+}
+
+// TODO in 6.7.0: remove the note about versions prior to 6.4 in selectByMouse() documentation
+QQuickPre64TextEdit::QQuickPre64TextEdit(QQuickItem *parent)
+    : QQuickTextEdit(parent)
+{
+    setOldSelectionDefault();
+}
+#endif
+
 QT_END_NAMESPACE
 
 #include "moc_qquicktextedit_p.cpp"
+
