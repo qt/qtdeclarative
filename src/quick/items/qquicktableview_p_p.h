@@ -71,6 +71,8 @@ Q_DECLARE_LOGGING_CATEGORY(lcTableViewDelegateLifecycle)
 
 static const qreal kDefaultRowHeight = 50;
 static const qreal kDefaultColumnWidth = 50;
+static const int kEdgeIndexNotSet = -2;
+static const int kEdgeIndexAtEnd = -3;
 
 class FxTableItem;
 class QQuickTableSectionSizeProviderPrivate;
@@ -402,8 +404,8 @@ public:
 
     int nextVisibleEdgeIndex(Qt::Edge edge, int startIndex) const;
     int nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge) const;
-    bool allColumnsLoaded();
-    bool allRowsLoaded();
+    inline bool atTableEnd(Qt::Edge edge) const { return nextVisibleEdgeIndexAroundLoadedTable(edge) == kEdgeIndexAtEnd; }
+    inline bool atTableEnd(Qt::Edge edge, int startIndex) const { return nextVisibleEdgeIndex(edge, startIndex) == kEdgeIndexAtEnd; }
     inline int edgeToArrayIndex(Qt::Edge edge) const;
     void clearEdgeSizeCache();
 

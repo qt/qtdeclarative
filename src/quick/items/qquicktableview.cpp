@@ -748,8 +748,6 @@ Q_LOGGING_CATEGORY(lcTableViewDelegateLifecycle, "qt.quick.tableview.lifecycle")
 #define Q_TABLEVIEW_ASSERT(cond, output) Q_ASSERT((cond) || [&](){ dumpTable(); qWarning() << "output:" << output; return false;}())
 
 static const Qt::Edge allTableEdges[] = { Qt::LeftEdge, Qt::RightEdge, Qt::TopEdge, Qt::BottomEdge };
-static const int kEdgeIndexNotSet = -2;
-static const int kEdgeIndexAtEnd = -3;
 
 static const char* kRequiredProperties = "_qt_tableview_requiredpropertymask";
 static const char* kRequiredProperty_selected = "selected";
@@ -1088,7 +1086,7 @@ QSizeF QQuickTableViewPrivate::scrollTowardsSelectionPoint(const QPointF &pos, c
     const bool outsideBottom = pos.y() >= viewportRect.bottom() - 1;
 
     if (outsideLeft) {
-        const bool firstColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::LeftEdge) == kEdgeIndexAtEnd;
+        const bool firstColumnLoaded = atTableEnd(Qt::LeftEdge);
         const qreal remainingDist = viewportRect.left() - loadedTableOuterRect.left();
         if (remainingDist > 0 || !firstColumnLoaded) {
             qreal stepX = step.width();
@@ -1098,7 +1096,7 @@ QSizeF QQuickTableViewPrivate::scrollTowardsSelectionPoint(const QPointF &pos, c
             dist.setWidth(pos.x() - viewportRect.left() - 1);
         }
     } else if (outsideRight) {
-        const bool lastColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::RightEdge) == kEdgeIndexAtEnd;
+        const bool lastColumnLoaded = atTableEnd(Qt::RightEdge);
         const qreal remainingDist = loadedTableOuterRect.right() - viewportRect.right();
         if (remainingDist > 0 || !lastColumnLoaded) {
             qreal stepX = step.width();
@@ -1110,7 +1108,7 @@ QSizeF QQuickTableViewPrivate::scrollTowardsSelectionPoint(const QPointF &pos, c
     }
 
     if (outsideTop) {
-        const bool firstRowLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::TopEdge) == kEdgeIndexAtEnd;
+        const bool firstRowLoaded = atTableEnd(Qt::TopEdge);
         const qreal remainingDist = viewportRect.top() - loadedTableOuterRect.top();
         if (remainingDist > 0 || !firstRowLoaded) {
             qreal stepY = step.height();
@@ -1120,7 +1118,7 @@ QSizeF QQuickTableViewPrivate::scrollTowardsSelectionPoint(const QPointF &pos, c
             dist.setHeight(pos.y() - viewportRect.top() - 1);
         }
     } else if (outsideBottom) {
-        const bool lastRowLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::BottomEdge) == kEdgeIndexAtEnd;
+        const bool lastRowLoaded = atTableEnd(Qt::BottomEdge);
         const qreal remainingDist = loadedTableOuterRect.bottom() - viewportRect.bottom();
         if (remainingDist > 0 || !lastRowLoaded) {
             qreal stepY = step.height();
@@ -1292,28 +1290,6 @@ int QQuickTableViewPrivate::nextVisibleEdgeIndex(Qt::Edge edge, int startIndex) 
     cachedResult.startIndex = startIndex;
     cachedResult.endIndex = foundIndex;
     return foundIndex;
-}
-
-bool QQuickTableViewPrivate::allColumnsLoaded()
-{
-    // Returns true if all the columns in the model (that are not
-    // hidden by the columnWidthProvider) are currently loaded and visible.
-    const bool firstColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::LeftEdge) == kEdgeIndexAtEnd;
-    if (!firstColumnLoaded)
-        return false;
-    bool lastColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::RightEdge) == kEdgeIndexAtEnd;
-    return lastColumnLoaded;
-}
-
-bool QQuickTableViewPrivate::allRowsLoaded()
-{
-    // Returns true if all the rows in the model (that are not hidden
-    // by the columnWidthProvider) are currently loaded and visible.
-    const bool firstColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::TopEdge) == kEdgeIndexAtEnd;
-    if (!firstColumnLoaded)
-        return false;
-    bool lastColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::BottomEdge) == kEdgeIndexAtEnd;
-    return lastColumnLoaded;
 }
 
 void QQuickTableViewPrivate::updateContentWidth()
@@ -2462,14 +2438,14 @@ void QQuickTableViewPrivate::processRebuildTable()
                           && reusableFlag == QQmlTableInstanceModel::Reusable);
 
     if (rebuildState == RebuildState::PreloadColumns) {
-        if (preload && nextVisibleEdgeIndexAroundLoadedTable(Qt::RightEdge) != kEdgeIndexAtEnd)
+        if (preload && !atTableEnd(Qt::RightEdge))
             loadEdge(Qt::RightEdge, QQmlIncubator::AsynchronousIfNested);
         if (!moveToNextRebuildState())
             return;
     }
 
     if (rebuildState == RebuildState::PreloadRows) {
-        if (preload && nextVisibleEdgeIndexAroundLoadedTable(Qt::BottomEdge) != kEdgeIndexAtEnd)
+        if (preload && !atTableEnd(Qt::BottomEdge))
             loadEdge(Qt::BottomEdge, QQmlIncubator::AsynchronousIfNested);
         if (!moveToNextRebuildState())
             return;
@@ -2707,12 +2683,14 @@ void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
     relayoutTableItems();
     syncLoadedTableRectFromLoadedTable();
 
-    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentWidth) || allColumnsLoaded()) {
+    const bool allColumnsLoaded = atTableEnd(Qt::LeftEdge) && atTableEnd(Qt::RightEdge);
+    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentWidth) || allColumnsLoaded) {
         updateAverageColumnWidth();
         updateContentWidth();
     }
 
-    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentHeight) || allRowsLoaded()) {
+    const bool allRowsLoaded = atTableEnd(Qt::TopEdge) && atTableEnd(Qt::BottomEdge);
+    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentHeight) || allRowsLoaded) {
         updateAverageRowHeight();
         updateContentHeight();
     }
