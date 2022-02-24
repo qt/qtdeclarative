@@ -83,8 +83,13 @@ QString QQmlJSCodeGenerator::metaTypeFromName(const QQmlJSScope::ConstPtr &type)
 
 QString QQmlJSCodeGenerator::metaObject(const QQmlJSScope::ConstPtr &objectType)
 {
-    if (!objectType->isComposite())
+    if (!objectType->isComposite()) {
+        if (objectType->internalName() == u"QtObject"_qs
+                || objectType->internalName() == u"QQmlComponent"_qs) {
+            return metaTypeFromType(objectType) + u".metaObject()"_qs;
+        }
         return metaTypeFromName(objectType) + u".metaObject()"_qs;
+    }
 
     reject(u"retrieving the metaObject of a composite type without using an instance."_qs);
     return QString();
@@ -376,10 +381,8 @@ void QQmlJSCodeGenerator::eliminateDeadStores()
 
 QString QQmlJSCodeGenerator::errorReturnValue()
 {
-    if (m_function->returnType) {
-        return conversion(m_typeResolver->jsPrimitiveType(), m_function->returnType,
-                          u"QJSPrimitiveValue(QJSPrimitiveUndefined())"_qs);
-    }
+    if (m_function->returnType)
+        return conversion(m_typeResolver->voidType(), m_function->returnType, QString());
     return QString();
 }
 
@@ -2553,12 +2556,6 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
     if (m_typeResolver->equals(from, m_typeResolver->voidType())) {
         if (to->accessSemantics() == QQmlJSScope::AccessSemantics::Reference)
             return u"static_cast<"_qs + to->internalName() + u" *>(nullptr)"_qs;
-        if (m_typeResolver->equals(to, jsValueType))
-            return u"QJSValue()"_qs;
-        if (m_typeResolver->equals(to, jsPrimitiveType))
-            return u"QJSPrimitiveValue()"_qs;
-        if (m_typeResolver->equals(to, varType))
-            return u"QVariant()"_qs;
         const QString zero = zeroBoolOrNumeric(to);
         if (!zero.isEmpty())
             return zero;
@@ -2566,7 +2563,8 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
             return QQmlJSUtils::toLiteral(u"undefined"_qs);
         if (m_typeResolver->equals(from, to))
             return QString();
-        reject(u"Conversion from void to %1"_qs.arg(to->internalName()));
+        // Anything else is just the default constructed type.
+        return to->augmentedInternalName() + u"()"_qs;
     }
 
     if (m_typeResolver->equals(from, m_typeResolver->nullType())) {
@@ -2679,6 +2677,41 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
 
     if (m_typeResolver->equals(to, varType))
         return u"QVariant::fromValue("_qs + variable + u')';
+
+    if (m_typeResolver->equals(from, m_typeResolver->urlType())
+            && m_typeResolver->equals(to, m_typeResolver->stringType())) {
+        return variable + u".toString()"_qs;
+    }
+
+    if (m_typeResolver->equals(from, m_typeResolver->stringType())
+            && m_typeResolver->equals(to, m_typeResolver->urlType())) {
+        return u"QUrl("_qs + variable + u')';
+    }
+
+    const auto retrieveFromPrimitive = [&](const QQmlJSScope::ConstPtr &type)
+    {
+        if (m_typeResolver->equals(type, m_typeResolver->boolType()))
+            return u".toBool()"_qs;
+        if (m_typeResolver->equals(type, m_typeResolver->intType()))
+            return u".toInteger()"_qs;
+        if (m_typeResolver->equals(type, m_typeResolver->realType()))
+            return u".toDouble()"_qs;
+        if (m_typeResolver->equals(type, m_typeResolver->stringType()))
+            return u".toString()"_qs;
+        return QString();
+    };
+
+    const auto fitsIntoPrimitive = [&](const QQmlJSScope::ConstPtr &type)
+    {
+        return !retrieveFromPrimitive(type).isEmpty()
+                || m_typeResolver->equals(type, m_typeResolver->floatType());
+    };
+
+    if (fitsIntoPrimitive(from)) {
+        const QString retrieve = retrieveFromPrimitive(to);
+        if (!retrieve.isEmpty())
+            return u"QJSPrimitiveValue("_qs + variable + u')' + retrieve;
+    }
 
     // TODO: more efficient string conversions, possibly others
 
