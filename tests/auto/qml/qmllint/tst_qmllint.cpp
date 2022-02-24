@@ -1378,8 +1378,10 @@ void TestQmllint::requiredProperty()
         searchWarnings(
                 warnings,
                 QStringLiteral("Component is missing required property required_later_string from "
-                               "Base (marked as required by Derived)"),
+                               "Base"),
                 "requiredPropertyBindingsLater.qml");
+        searchWarnings(warnings, QStringLiteral("Property marked as required in Derived"),
+                       "requiredPropertyBindingsLater.qml");
         searchWarnings(
                 warnings,
                 QStringLiteral("Component is missing required property required_even_later_string "

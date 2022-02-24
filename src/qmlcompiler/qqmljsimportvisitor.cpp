@@ -758,24 +758,45 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                             if (propertyUsedInRootAlias)
                                 continue;
 
-                            const QString propertyScopeName = scopesToSearch.length() > 1
-                                    ? getScopeName(scopesToSearch.at(scopesToSearch.length() - 2),
-                                                   QQmlJSScope::QMLScope)
+                            const QQmlJSScope::ConstPtr propertyScope = scopesToSearch.length() > 1
+                                    ? scopesToSearch.at(scopesToSearch.length() - 2)
+                                    : QQmlJSScope::ConstPtr();
+
+                            const QString propertyScopeName = !propertyScope.isNull()
+                                    ? getScopeName(propertyScope, QQmlJSScope::QMLScope)
                                     : u"here"_qs;
+
                             const QString requiredScopeName = prevRequiredScope
                                     ? getScopeName(prevRequiredScope, QQmlJSScope::QMLScope)
                                     : u"here"_qs;
+
+                            std::optional<FixSuggestion> suggestion;
 
                             QString message =
                                     QStringLiteral(
                                             "Component is missing required property %1 from %2")
                                             .arg(propName)
                                             .arg(propertyScopeName);
-                            if (requiredScope != scope)
-                                message += QStringLiteral(" (marked as required by %3)")
-                                                   .arg(requiredScopeName);
+                            if (requiredScope != scope) {
+                                if (!prevRequiredScope.isNull()) {
+                                    auto sourceScope = prevRequiredScope->baseType();
+                                    suggestion = FixSuggestion {
+                                        { { u"%1:%2:%3: Property marked as required in %4"_qs
+                                                    .arg(sourceScope->filePath())
+                                                    .arg(sourceScope->sourceLocation().startLine)
+                                                    .arg(sourceScope->sourceLocation().startColumn)
+                                                    .arg(requiredScopeName),
+                                            sourceScope->sourceLocation(), QString(),
+                                            sourceScope->filePath() } }
+                                    };
+                                } else {
+                                    message += QStringLiteral(" (marked as required by %1)")
+                                                       .arg(requiredScopeName);
+                                }
+                            }
 
-                            m_logger->log(message, Log_Required, defScope->sourceLocation());
+                            m_logger->log(message, Log_Required, defScope->sourceLocation(), true,
+                                          true, suggestion);
                         }
                     }
                     prevRequiredScope = requiredScope;
