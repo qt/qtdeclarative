@@ -203,7 +203,8 @@ protected:
     void checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope);
 
     QQmlJSLogger *m_logger;
-    bool parseLiteralBinding(const QString name, const QQmlJS::AST::Statement *statement);
+    enum class LiteralOrScriptParseResult { Invalid, Script, Literal };
+    LiteralOrScriptParseResult parseLiteralOrScriptBinding(const QString name, const QQmlJS::AST::Statement *statement);
 
     // Used to temporarily store annotations for functions and generators wrapped in UiSourceElements
     QVector<QQmlJSAnnotation> m_pendingMethodAnnotations;

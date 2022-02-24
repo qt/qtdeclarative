@@ -1261,7 +1261,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         if (publicMember->isRequired())
             m_currentScope->setPropertyLocallyRequired(prop.propertyName(), true);
 
-        parseLiteralBinding(publicMember->name.toString(), publicMember->statement);
+        parseLiteralOrScriptBinding(publicMember->name.toString(), publicMember->statement);
 
         break;
     }
@@ -1385,12 +1385,9 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ClassExpression *)
 
 
 // ### TODO: add warning about suspicious translation binding when returning false?
-static std::optional<QQmlJSMetaPropertyBinding>
-handleTranslationBinding(QStringView base, QQmlJS::AST::ArgumentList *args,
-                         const QQmlJSImporter::ImportedTypes &rootScopeImports,
-                         const QQmlJS::SourceLocation &location)
+void handleTranslationBinding(QQmlJSMetaPropertyBinding &binding, QStringView base,
+                              QQmlJS::AST::ArgumentList *args)
 {
-    std::optional<QQmlJSMetaPropertyBinding> maybeBinding = std::nullopt;
     QStringView mainString;
     auto registerMainString = [&](QStringView string) {
         mainString = string;
@@ -1399,116 +1396,75 @@ handleTranslationBinding(QStringView base, QQmlJS::AST::ArgumentList *args,
     auto discardCommentString = [](QStringView) {return -1;};
     auto finalizeBinding = [&](QV4::CompiledData::Binding::ValueType type,
                                QV4::CompiledData::TranslationData) {
-        QQmlJSMetaPropertyBinding binding(location);
         if (type == QV4::CompiledData::Binding::Type_Translation) {
             binding.setTranslation(mainString);
         } else if (type == QV4::CompiledData::Binding::Type_TranslationById) {
             binding.setTranslationId(mainString);
         } else {
-            binding.setLiteral(
-                        QQmlJSMetaPropertyBinding::StringLiteral, u"string"_qs,
-                        mainString.toString(), rootScopeImports[u"string"_qs].scope);
+            binding.setStringLiteral(mainString);
         }
-        maybeBinding = binding;
     };
     QmlIR::tryGeneratingTranslationBindingBase(base, args, registerMainString, discardCommentString, finalizeBinding);
-    return maybeBinding;
 }
 
-bool QQmlJSImportVisitor::parseLiteralBinding(const QString name,
+QQmlJSImportVisitor::LiteralOrScriptParseResult QQmlJSImportVisitor::parseLiteralOrScriptBinding(const QString name,
                                               const QQmlJS::AST::Statement *statement)
 {
     const auto *exprStatement = cast<const ExpressionStatement *>(statement);
 
     if (exprStatement == nullptr)
-        return false;
-
-    QVariant value;
-    QString literalType;
-    QQmlJSMetaPropertyBinding::BindingType bindingType = QQmlJSMetaPropertyBinding::Invalid;
+        return LiteralOrScriptParseResult::Invalid;
 
     auto expr = exprStatement->expression;
+    QQmlJSMetaPropertyBinding binding(expr->firstSourceLocation(), name);
+
     switch (expr->kind) {
     case Node::Kind_TrueLiteral:
-        value = true;
-        literalType = u"bool"_qs;
-        bindingType = QQmlJSMetaPropertyBinding::BoolLiteral;
+        binding.setBoolLiteral(true);
         break;
     case Node::Kind_FalseLiteral:
-        value = false;
-        literalType = u"bool"_qs;
-        bindingType = QQmlJSMetaPropertyBinding::BoolLiteral;
+        binding.setBoolLiteral(false);
         break;
     case Node::Kind_NullExpression:
-        // Note: because we set value to nullptr, Null binding returns false in
-        // QQmlJSMetaPropertyBinding::hasLiteral()
-        value = QVariant::fromValue(nullptr);
-        Q_ASSERT(value.isNull());
-        literalType = u"$internal$.std::nullptr_t"_qs;
-        bindingType = QQmlJSMetaPropertyBinding::Null;
+        binding.setNullLiteral();
         break;
     case Node::Kind_NumericLiteral:
-        literalType = u"double"_qs;
-        value = cast<NumericLiteral *>(expr)->value;
-        bindingType = QQmlJSMetaPropertyBinding::NumberLiteral;
+        binding.setNumberLiteral(cast<NumericLiteral *>(expr)->value);
         break;
     case Node::Kind_StringLiteral:
-        literalType = u"string"_qs;
-        value = cast<StringLiteral *>(expr)->value.toString();
-        bindingType = QQmlJSMetaPropertyBinding::StringLiteral;
+        binding.setStringLiteral(cast<StringLiteral *>(expr)->value);
         break;
     case Node::Kind_RegExpLiteral:
-        literalType = u"regexp"_qs;
-        value = cast<RegExpLiteral *>(expr)->pattern.toString();
-        bindingType = QQmlJSMetaPropertyBinding::RegExpLiteral;
+        binding.setRegexpLiteral(cast<RegExpLiteral *>(expr)->pattern);
         break;
     case Node::Kind_TemplateLiteral: {
         auto templateLit = QQmlJS::AST::cast<QQmlJS::AST::TemplateLiteral *>(expr);
         Q_ASSERT(templateLit);
-        value = templateLit->value.toString();
         if (templateLit->hasNoSubstitution) {
-            literalType = u"string"_qs;
-            bindingType = QQmlJSMetaPropertyBinding::StringLiteral;
+            binding.setStringLiteral(templateLit->value);
         } else {
-            bindingType = QQmlJSMetaPropertyBinding::Script;
+            binding.setScriptBinding();
         }
         break;
     }
     default:
         if (QQmlJS::AST::UnaryMinusExpression *unaryMinus = QQmlJS::AST::cast<QQmlJS::AST::UnaryMinusExpression *>(expr)) {
-            if (QQmlJS::AST::NumericLiteral *lit = QQmlJS::AST::cast<QQmlJS::AST::NumericLiteral *>(unaryMinus->expression)) {
-                literalType = u"double"_qs;
-                bindingType = QQmlJSMetaPropertyBinding::NumberLiteral;
-                value = -lit->value;
-            }
+            if (QQmlJS::AST::NumericLiteral *lit = QQmlJS::AST::cast<QQmlJS::AST::NumericLiteral *>(unaryMinus->expression))
+                binding.setNumberLiteral(-lit->value);
         } else if (QQmlJS::AST::CallExpression *call = QQmlJS::AST::cast<QQmlJS::AST::CallExpression *>(expr)) {
-            if (QQmlJS::AST::IdentifierExpression *base = QQmlJS::AST::cast<QQmlJS::AST::IdentifierExpression *>(call->base)) {
-                if (auto translationBindingOpt = handleTranslationBinding(
-                            base->name, call->arguments, m_rootScopeImports,
-                            expr->firstSourceLocation())) {
-                    auto translationBinding = translationBindingOpt.value();
-                    translationBinding.setPropertyName(name);
-                    m_currentScope->addOwnPropertyBinding(translationBinding);
-                    if (translationBinding.bindingType() == QQmlJSMetaPropertyBinding::BindingType::StringLiteral)
-                        m_literalScopesToCheck << m_currentScope;
-                    return true;
-                }
-            }
+            if (QQmlJS::AST::IdentifierExpression *base = QQmlJS::AST::cast<QQmlJS::AST::IdentifierExpression *>(call->base))
+                handleTranslationBinding(binding, base->name, call->arguments);
         }
         break;
     }
-
-    if (!QQmlJSMetaPropertyBinding::isLiteralBinding(bindingType))
-        return false;
-    Q_ASSERT(m_rootScopeImports.contains(literalType)); // built-ins must contain support for all literal bindings
-
-    QQmlJSMetaPropertyBinding binding(exprStatement->expression->firstSourceLocation(), name);
-    binding.setLiteral(bindingType, literalType, value, m_rootScopeImports[literalType].scope);
-
-    m_currentScope->addOwnPropertyBinding(binding);
-
+    if (binding.isValid()) // always add the binding to the scope, even if it's not a literal one
+        m_currentScope->addOwnPropertyBinding(binding);
+    else
+        return LiteralOrScriptParseResult::Invalid;
+    if (!QQmlJSMetaPropertyBinding::isLiteralBinding(binding.bindingType()))
+        return LiteralOrScriptParseResult::Script;
     m_literalScopesToCheck << m_currentScope;
-    return true;
+    return LiteralOrScriptParseResult::Literal;
 }
 
 void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scriptBinding)
@@ -1578,11 +1534,7 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
     if (!signal.has_value()) {
         m_propertyBindings[m_currentScope].append(
                 { m_savedBindingOuterScope, group->firstSourceLocation(), name.toString() });
-        if (!parseLiteralBinding(name.toString(), scriptBinding->statement)) {
-            QQmlJSMetaPropertyBinding binding(group->firstSourceLocation(), name.toString());
-            // TODO: Actually store the value
-            m_savedBindingOuterScope->addOwnPropertyBinding(binding);
-        }
+        parseLiteralOrScriptBinding(name.toString(), scriptBinding->statement);
     } else {
         const auto statement = scriptBinding->statement;
         QStringList signalParameters;

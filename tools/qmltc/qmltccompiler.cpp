@@ -440,18 +440,18 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
 
     switch (binding.bindingType()) {
     case QQmlJSMetaPropertyBinding::BoolLiteral: {
-        const bool value = binding.literalValue().toBool();
+        const bool value = binding.boolValue();
         generator.generate_assignToProperty(current, type, p, value ? u"true"_qs : u"false"_qs,
                                             accessor.name);
         break;
     }
     case QQmlJSMetaPropertyBinding::NumberLiteral: {
-        const QString value = QString::number(binding.literalValue().toDouble());
+        const QString value = QString::number(binding.numberValue());
         generator.generate_assignToProperty(current, type, p, value, accessor.name);
         break;
     }
     case QQmlJSMetaPropertyBinding::StringLiteral: {
-        const QString value = binding.literalValue().toString();
+        const QString value = binding.stringValue();
         generator.generate_assignToProperty(current, type, p, QQmlJSUtils::toLiteral(value),
                                             accessor.name);
         break;

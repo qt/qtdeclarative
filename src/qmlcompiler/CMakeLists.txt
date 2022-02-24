@@ -17,7 +17,7 @@ qt_internal_add_module(QmlCompilerPrivate
         qqmljsimportvisitor.cpp qqmljsimportvisitor_p.h
         qqmljsloadergenerator.cpp qqmljsloadergenerator_p.h
         qqmljslogger_p.h qqmljslogger.cpp
-        qqmljsmetatypes_p.h
+        qqmljsmetatypes_p.h qqmljsmetatypes.cpp
         qqmljsregistercontent.cpp qqmljsregistercontent_p.h
         qqmljsresourcefilemapper.cpp qqmljsresourcefilemapper_p.h
         qqmljsscope.cpp qqmljsscope_p.h
