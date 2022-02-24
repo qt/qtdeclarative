@@ -1370,6 +1370,13 @@ bool QQuickDeliveryAgentPrivate::isTabletEvent(const QPointerEvent *ev)
     }
 }
 
+bool QQuickDeliveryAgentPrivate::isEventFromMouseOrTouchpad(const QPointerEvent *ev)
+{
+    const auto devType = ev->device()->type();
+    return devType == QInputDevice::DeviceType::Mouse ||
+           devType == QInputDevice::DeviceType::TouchPad;
+}
+
 QQuickPointingDeviceExtra *QQuickDeliveryAgentPrivate::deviceExtra(const QInputDevice *device)
 {
     QInputDevicePrivate *devPriv = QInputDevicePrivate::get(const_cast<QInputDevice *>(device));

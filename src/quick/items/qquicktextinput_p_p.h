@@ -100,7 +100,7 @@ public:
         , cursorVisible(false)
         , cursorPending(false)
         , autoScroll(true)
-        , selectByMouse(false)
+        , selectByMouse(true)
         , canPaste(false)
         , canPasteValid(false)
         , canUndo(false)
@@ -124,6 +124,9 @@ public:
         , inLayout(false)
         , requireImplicitWidth(false)
         , overwriteMode(false)
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+        , selectByTouchDrag(false)
+#endif
     {
     }
 
@@ -273,6 +276,9 @@ public:
     bool inLayout:1;
     bool requireImplicitWidth:1;
     bool overwriteMode:1;
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+    bool selectByTouchDrag:1;
+#endif
 
     static inline QQuickTextInputPrivate *get(QQuickTextInput *t) {
         return t->d_func();

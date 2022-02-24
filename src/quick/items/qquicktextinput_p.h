@@ -81,6 +81,9 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem, pu
     Q_PROPERTY(qreal bottomPadding READ bottomPadding WRITE setBottomPadding RESET resetBottomPadding NOTIFY bottomPaddingChanged REVISION(2, 6))
     QML_NAMED_ELEMENT(TextInput)
     QML_ADDED_IN_VERSION(2, 0)
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+    QML_ADDED_IN_VERSION(6, 4)
+#endif
 
 public:
     QQuickTextInput(QQuickItem * parent=nullptr);
@@ -334,6 +337,9 @@ private:
 
 protected:
     QQuickTextInput(QQuickTextInputPrivate &dd, QQuickItem *parent = nullptr);
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+    void setOldSelectionDefault();
+#endif
 
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
 
@@ -388,6 +394,17 @@ private:
 
     Q_DECLARE_PRIVATE(QQuickTextInput)
 };
+
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
+class QQuickPre64TextInput : public QQuickTextInput {
+    Q_OBJECT
+    QML_NAMED_ELEMENT(TextInput)
+    QML_ADDED_IN_VERSION(2, 0)
+    QML_REMOVED_IN_VERSION(6, 4)
+public:
+    QQuickPre64TextInput(QQuickItem *parent = nullptr);
+};
+#endif
 
 QT_END_NAMESPACE
 

@@ -394,7 +394,7 @@ TestCase {
     }
 
     function test_multiClick() {
-        var control = createTemporaryObject(textField, testCase, {text: "Qt Quick Controls 2 TextArea", selectByMouse: true})
+        var control = createTemporaryObject(textField, testCase, {text: "Qt Quick Controls 2 TextArea"})
         verify(control)
 
         waitForRendering(control)
@@ -412,7 +412,7 @@ TestCase {
 
     // QTBUG-64048
     function test_rightClick() {
-        var control = createTemporaryObject(textField, testCase, {text: "TextField", selectByMouse: true})
+        var control = createTemporaryObject(textField, testCase, {text: "TextField"})
         verify(control)
 
         control.selectAll()
@@ -423,6 +423,47 @@ TestCase {
 
         mouseClick(control, control.width / 2, control.height / 2, Qt.LeftButton | Qt.RightButton)
         compare(control.selectedText, "")
+    }
+
+    function test_mouseSelect() {
+        var control = createTemporaryObject(textField, testCase, {text: "Text", width: parent.width})
+        verify(control)
+        verify(control.selectByMouse) // true by default since 6.4
+        var pressSpy = signalSpy.createObject(control, {target: control, signalName: "pressed"})
+
+        const y = control.height / 2
+        mousePress(control, 0, y, Qt.LeftButton)
+        tryCompare(pressSpy, "count", 1)
+        mouseMove(control, control.implicitWidth, y, 0, Qt.LeftButton)
+        mouseRelease(control, control.implicitWidth, y, Qt.LeftButton)
+        tryVerify(function() { return control.selectedText.length > 1 }) // ideally the whole 4-letter word
+    }
+
+    function test_noTouchSelect() {
+        var control = createTemporaryObject(textField, testCase, {text: "Text"})
+        verify(control)
+        verify(control.selectByMouse) // true by default since 6.4
+
+        var touch = touchEvent(control)
+        const y = control.height / 2
+        touch.press(0, control, 0, y).commit()
+        touch.move(0, control, control.implicitWidth, 0).commit()
+        touch.release(0, control)
+        compare(control.selectedText, "")
+    }
+
+    function test_aaTouchPressAndHold() {
+        var control = createTemporaryObject(textField, testCase, {text: "Text"})
+        verify(control)
+        verify(control.selectByMouse) // true by default since 6.4
+        var pressSpy = signalSpy.createObject(control, {target: control, signalName: "pressed"})
+        var pressAndHoldSpy = signalSpy.createObject(control, {target: control, signalName: "pressAndHold"})
+
+        var touch = touchEvent(control)
+        touch.press(0, control).commit()
+        tryCompare(pressSpy, "count", 1)
+        tryCompare(pressAndHoldSpy, "count", 1)
+        touch.release(0, control).commit()
     }
 
     // QTBUG-66260
