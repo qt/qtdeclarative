@@ -945,6 +945,14 @@ QQmlJSRegisterContent QQmlJSTypeResolver::valueType(const QQmlJSRegisterContent 
     return QQmlJSRegisterContent::create(stored, property, QQmlJSRegisterContent::ListValue, scope);
 }
 
+QQmlJSRegisterContent QQmlJSTypeResolver::returnType(
+        const QQmlJSScope::ConstPtr &type, QQmlJSRegisterContent::ContentVariant variant) const
+{
+    Q_ASSERT(variant == QQmlJSRegisterContent::MethodReturnValue
+             || variant == QQmlJSRegisterContent::JavaScriptReturnValue);
+    return QQmlJSRegisterContent::create(storedType(type), type, variant);
+}
+
 bool QQmlJSTypeResolver::registerContains(const QQmlJSRegisterContent &reg,
                                           const QQmlJSScope::ConstPtr &type) const
 {

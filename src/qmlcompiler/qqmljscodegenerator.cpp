@@ -1412,6 +1412,9 @@ void QQmlJSCodeGenerator::generate_CallPropertyLookup(int index, int base, int a
 {
     INJECT_TRACE_INFO(generate_CallPropertyLookup);
 
+    if (m_state.accumulatorOut.variant() == QQmlJSRegisterContent::JavaScriptReturnValue)
+        reject(u"call to untyped JavaScript function"_qs);
+
     const QQmlJSRegisterContent baseType = registerType(base);
     if (baseType.storedType()->accessSemantics() != QQmlJSScope::AccessSemantics::Reference) {
         const QString name = m_jsUnitGenerator->stringForIndex(
@@ -1478,6 +1481,9 @@ void QQmlJSCodeGenerator::generate_CallGlobalLookup(int index, int argc, int arg
 void QQmlJSCodeGenerator::generate_CallQmlContextPropertyLookup(int index, int argc, int argv)
 {
     INJECT_TRACE_INFO(generate_CallQmlContextPropertyLookup);
+
+    if (m_state.accumulatorOut.variant() == QQmlJSRegisterContent::JavaScriptReturnValue)
+        reject(u"call to untyped JavaScript function"_qs);
 
     m_body.setHasSideEffects(true);
     const QString indexString = QString::number(index);

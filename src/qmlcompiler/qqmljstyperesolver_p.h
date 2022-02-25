@@ -122,6 +122,8 @@ public:
     QQmlJSRegisterContent scopedType(const QQmlJSScope::ConstPtr &scope, const QString &name) const;
     QQmlJSRegisterContent memberType(const QQmlJSRegisterContent &type, const QString &name) const;
     QQmlJSRegisterContent valueType(const QQmlJSRegisterContent &listType) const;
+    QQmlJSRegisterContent returnType(const QQmlJSScope::ConstPtr &type,
+                                     QQmlJSRegisterContent::ContentVariant variant) const;
 
     bool registerContains(const QQmlJSRegisterContent &reg,
                           const QQmlJSScope::ConstPtr &type) const;
