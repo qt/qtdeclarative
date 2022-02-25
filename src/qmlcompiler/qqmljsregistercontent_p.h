@@ -77,6 +77,9 @@ public:
         ExtensionObjectMethod,
         ExtensionObjectEnum,
 
+        MethodReturnValue,
+        JavaScriptReturnValue,
+
         ListValue,
         Builtin,
         Unknown,

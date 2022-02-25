@@ -1111,8 +1111,10 @@ void QQmlJSTypePropagator::propagateCall(const QList<QQmlJSMetaMethod> &methods,
     const auto returnType = match.isJavaScriptFunction()
             ? m_typeResolver->jsValueType()
             : QQmlJSScope::ConstPtr(match.returnType());
-    setAccumulator(m_typeResolver->globalType(
-            returnType ? QQmlJSScope::ConstPtr(returnType) : m_typeResolver->voidType()));
+    setAccumulator(m_typeResolver->returnType(
+                       returnType ? QQmlJSScope::ConstPtr(returnType) : m_typeResolver->voidType(),
+                       match.isJavaScriptFunction() ? QQmlJSRegisterContent::JavaScriptReturnValue
+                                                    : QQmlJSRegisterContent::MethodReturnValue));
     if (!m_state.accumulatorOut().isValid())
         setError(u"Cannot store return type of method %1()."_qs.arg(match.methodName()));
 
