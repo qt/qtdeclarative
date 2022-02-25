@@ -29,7 +29,7 @@ qt_internal_add_plugin(QSGOpenVGAdaptationPlugin
         qsgopenvgrenderer.cpp qsgopenvgrenderer_p.h
         qsgopenvgrenderloop.cpp qsgopenvgrenderloop_p.h
         qsgopenvgtexture.cpp qsgopenvgtexture.h
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Core
         Qt::CorePrivate
         Qt::Gui
