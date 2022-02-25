@@ -659,9 +659,26 @@ void TestQmllint::dirtyQmlCode_data()
             << QString() << false;
     QTest::newRow("multilineString")
             << QStringLiteral("multilineString.qml")
-            << QStringLiteral("String contains unescaped line terminator which is deprecated. Use "
-                              "a template literal instead.")
+            << QStringLiteral("String contains unescaped line terminator which is deprecated.")
             << QString() << QString() << true;
+    QTest::newRow("multilineStringTortureQuote")
+            << QStringLiteral("multilineStringTortureQuote.qml")
+            << QStringLiteral("String contains unescaped line terminator which is deprecated.")
+            << QString() << QStringLiteral(R"(`
+    quote: " \\" \\\\"
+    ticks: \` \` \\\` \\\`
+    singleTicks: ' \' \\' \\\'
+    expression: \${expr} \${expr} \\\${expr} \\\${expr}
+    `)") << true;
+    QTest::newRow("multilineStringTortureTick")
+            << QStringLiteral("multilineStringTortureTick.qml")
+            << QStringLiteral("String contains unescaped line terminator which is deprecated.")
+            << QString() << QStringLiteral(R"(`
+    quote: " \" \\" \\\"
+    ticks: \` \` \\\` \\\`
+    singleTicks: ' \\' \\\\'
+    expression: \${expr} \${expr} \\\${expr} \\\${expr}
+    `)") << true;
     QTest::newRow("unresolvedType")
             << QStringLiteral("unresolvedType.qml")
             << QStringLiteral("UnresolvedType was not found. Did you add all import paths?")
@@ -1278,10 +1295,17 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
                 contains = true;
                 break;
             }
-            if (searchReplacements == DoReplacementSearch
-                && fix[u"replacement"].toString().contains(substring)) {
-                contains = true;
-                break;
+            if (searchReplacements == DoReplacementSearch) {
+                QString replacement = fix[u"replacement"].toString();
+#ifdef Q_OS_WIN
+                // Replacements can contain native line endings
+                // but we need them to be uniform in order for them to conform to our test data
+                replacement = replacement.replace(u"\r\n"_qs, u"\n"_qs);
+#endif
+                if (replacement.contains(substring)) {
+                    contains = true;
+                    break;
+                }
             }
         }
     }

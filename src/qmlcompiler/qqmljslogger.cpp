@@ -241,6 +241,11 @@ void QQmlJSLogger::printFix(const FixSuggestion &fix)
         m_output.write(issueLocationWithContext.afterText().toString() + u'\n');
 
         int tabCount = issueLocationWithContext.beforeText().count(u'\t');
+
+        // Do not draw location indicator for multiline replacement strings
+        if (fixItem.replacementString.contains(u'\n'))
+            continue;
+
         m_output.write(u" "_qs.repeated(
                                issueLocationWithContext.beforeText().length() - tabCount)
                        + u"\t"_qs.repeated(tabCount)

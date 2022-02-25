@@ -1112,10 +1112,36 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::StringLiteral *sl)
 
     if (s.contains(QLatin1Char('\r')) || s.contains(QLatin1Char('\n')) || s.contains(QChar(0x2028u))
         || s.contains(QChar(0x2029u))) {
+        QString templateString;
+
+        bool escaped = false;
+        const QChar stringQuote = s[0];
+        for (qsizetype i = 1; i < s.length() - 1; i++) {
+            const QChar c = s[i];
+
+            if (c == u'\\') {
+                escaped = !escaped;
+            } else if (escaped) {
+                // If we encounter an escaped quote, unescape it since we use backticks here
+                if (c == stringQuote)
+                    templateString.chop(1);
+
+                escaped = false;
+            } else {
+                if (c == u'`')
+                    templateString += u'\\';
+                if (c == u'$' && i + 1 < s.length() - 1 && s[i + 1] == u'{')
+                    templateString += u'\\';
+            }
+
+            templateString += c;
+        }
+
+        const FixSuggestion suggestion = { { { u"Use a template literal instead"_qs,
+                                               sl->literalToken, u"`" + templateString + u"`" } } };
         m_logger->log(QStringLiteral("String contains unescaped line terminator which is "
-                                     "deprecated. Use a template "
-                                     "literal instead."),
-                      Log_MultilineString, sl->literalToken);
+                                     "deprecated."),
+                      Log_MultilineString, sl->literalToken, true, true, suggestion);
     }
 
     return true;
