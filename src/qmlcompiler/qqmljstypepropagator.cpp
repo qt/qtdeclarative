@@ -323,7 +323,7 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
 
                 const auto handler = m_typeResolver->signalHandlers()[id.location];
 
-                QString fixString = handler.isMultiline ? u" function("_qs : u" ("_qs;
+                QString fixString = handler.isMultiline ? u"function("_qs : u"("_qs;
                 const auto parameters = handler.signalParameters;
                 for (int numParams = parameters.size(); numParams > 0; --numParams) {
                     fixString += parameters.at(parameters.size() - numParams);
