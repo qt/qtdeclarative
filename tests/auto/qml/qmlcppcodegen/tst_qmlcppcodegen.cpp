@@ -23,6 +23,8 @@
 #include <data/cppbaseclass.h>
 #include <data/objectwithmethod.h>
 
+#include <private/qqmlengine_p.h>
+
 #include <QtTest>
 #include <QtQml>
 #include <QtGui/qcolor.h>
@@ -121,6 +123,7 @@ private slots:
     void blockComments();
     void functionLookup();
     void objectInVar();
+    void testIsnan();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1823,6 +1826,24 @@ void tst_QmlCppCodegen::objectInVar()
     o->setProperty("thing", QVariant::fromValue<std::nullptr_t>(nullptr));
     QVERIFY(QMetaObject::invokeMethod(o.data(), "doThing", Q_RETURN_ARG(bool, result)));
     QVERIFY(!result);
+}
+
+void tst_QmlCppCodegen::testIsnan()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/TestTypes/isnan.qml"_qs);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("good").toDouble(), 10.1);
+    QVERIFY(qIsNaN(o->property("bad").toDouble()));
+    const QVariant a = o->property("a");
+    QCOMPARE(a.metaType(), QMetaType::fromType<bool>());
+    QVERIFY(!a.toBool());
+    const QVariant b = o->property("b");
+    QCOMPARE(b.metaType(), QMetaType::fromType<bool>());
+    QVERIFY(b.toBool());
 }
 
 void tst_QmlCppCodegen::runInterpreted()

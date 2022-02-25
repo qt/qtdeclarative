@@ -76,6 +76,7 @@ set(qml_files
     intOverflow.qml
     interactive.qml
     interceptor.qml
+    isnan.qml
     jsMathObject.qml
     jsimport.qml
     jsmoduleimport.qml

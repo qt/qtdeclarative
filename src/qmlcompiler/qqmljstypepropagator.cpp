@@ -906,7 +906,9 @@ void QQmlJSTypePropagator::propagateCall(const QList<QQmlJSMetaMethod> &methods,
         return;
     }
 
-    const auto returnType = match.returnType();
+    const auto returnType = match.isJavaScriptFunction()
+            ? m_typeResolver->jsValueType()
+            : QQmlJSScope::ConstPtr(match.returnType());
     m_state.accumulatorOut = m_typeResolver->globalType(
             returnType ? QQmlJSScope::ConstPtr(returnType) : m_typeResolver->voidType());
     if (!m_state.accumulatorOut.isValid())
