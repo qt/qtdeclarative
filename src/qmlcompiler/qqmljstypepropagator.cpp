@@ -1108,7 +1108,9 @@ void QQmlJSTypePropagator::propagateCall(const QList<QQmlJSMetaMethod> &methods,
         return;
     }
 
-    const auto returnType = match.returnType();
+    const auto returnType = match.isJavaScriptFunction()
+            ? m_typeResolver->jsValueType()
+            : QQmlJSScope::ConstPtr(match.returnType());
     setAccumulator(m_typeResolver->globalType(
             returnType ? QQmlJSScope::ConstPtr(returnType) : m_typeResolver->voidType()));
     if (!m_state.accumulatorOut().isValid())
@@ -1118,7 +1120,9 @@ void QQmlJSTypePropagator::propagateCall(const QList<QQmlJSMetaMethod> &methods,
     const auto types = match.parameterTypes();
     for (int i = 0; i < argc; ++i) {
         if (i < types.length()) {
-            const QQmlJSScope::ConstPtr type = types.at(i);
+            const QQmlJSScope::ConstPtr type = match.isJavaScriptFunction()
+                    ? m_typeResolver->jsValueType()
+                    : QQmlJSScope::ConstPtr(types.at(i));
             if (!type.isNull()) {
                 addReadRegister(argv + i, m_typeResolver->globalType(type));
                 continue;

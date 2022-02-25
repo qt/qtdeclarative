@@ -124,6 +124,7 @@ private slots:
     void functionLookup();
     void objectInVar();
     void functionTakingVar();
+    void isnan();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1845,6 +1846,27 @@ void tst_QmlCppCodegen::functionTakingVar()
     e->executeRuntimeFunction(document, 0, o.data(), 1, args, types);
 
     QCOMPARE(o->property("c"), QVariant::fromValue<int>(11));
+}
+
+void tst_QmlCppCodegen::isnan()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/TestTypes/isnan.qml"_qs);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->property("good").toDouble(), 10.1);
+    QVERIFY(qIsNaN(o->property("bad").toDouble()));
+
+    const QVariant a = o->property("a");
+    QCOMPARE(a.metaType(), QMetaType::fromType<bool>());
+    QVERIFY(!a.toBool());
+
+    const QVariant b = o->property("b");
+    QCOMPARE(b.metaType(), QMetaType::fromType<bool>());
+    QVERIFY(b.toBool());
 }
 
 void tst_QmlCppCodegen::runInterpreted()
