@@ -88,7 +88,7 @@ public:
     void textFieldActiveFocusChanged();
     void handleTextFieldShown();
     void handleTextFieldHidden();
-    void ungrabEditPathShortcuts();
+    void ungrabEditPathShortcut();
 
     QQuickFileDialogImpl *asFileDialog() const;
     QQuickFolderDialogImpl *asFolderDialog() const;
@@ -112,8 +112,6 @@ private:
     QQuickDeferredPointer<QQuickAbstractButton> upButton;
     QQuickDeferredPointer<QQuickTextField> textField;
     int editPathToggleShortcutId = 0;
-    int editPathBackShortcutId = 0;
-    int editPathEscapeShortcutId = 0;
     int goUpShortcutId = 0;
     int upButtonSpacing = 0;
     bool repopulating = false;

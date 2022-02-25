@@ -89,6 +89,7 @@ ApplicationWindow {
         Dialog {
             dim: true
             modal: true
+            focus: true
             closePolicy: Popup.CloseOnEscape
             visible: true
 

@@ -1870,8 +1870,8 @@ TestCase {
             width: 200
             height: 200
 
-            Keys.onPressed: { ++pressedKeys; lastPressedKey = event.key }
-            Keys.onReleased: { ++releasedKeys; lastReleasedKey = event.key }
+            Keys.onPressed: (event) => { ++pressedKeys; lastPressedKey = event.key }
+            Keys.onReleased: (event) => { ++releasedKeys; lastReleasedKey = event.key }
 
             ComboBox {
                 id: comboBox
@@ -1918,11 +1918,6 @@ TestCase {
         compare(container.pressedKeys, pressedKeys)
 
         keyRelease(data.key)
-        // Popup receives the key release event if it has an exit transition, but
-        // not if it has been immediately closed on press, without a transition.
-        // ### TODO: Should Popup somehow always block the key release event?
-        if (!control.popup.exit)
-            ++releasedKeys
         compare(container.releasedKeys, releasedKeys)
 
         tryCompare(control.popup, "visible", false)

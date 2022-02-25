@@ -66,13 +66,9 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickPopupItem : public QQuickPage
 public:
     explicit QQuickPopupItem(QQuickPopup *popup);
 
-    void grabShortcut();
-    void ungrabShortcut();
-
 protected:
     void updatePolish() override;
 
-    bool event(QEvent *event) override;
     bool childMouseEventFilter(QQuickItem *child, QEvent *event) override;
     void focusInEvent(QFocusEvent *event) override;
     void focusOutEvent(QFocusEvent *event) override;

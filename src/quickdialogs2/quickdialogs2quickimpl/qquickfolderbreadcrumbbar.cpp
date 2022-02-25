@@ -367,29 +367,11 @@ void QQuickFolderBreadcrumbBarPrivate::textFieldActiveFocusChanged()
 void QQuickFolderBreadcrumbBarPrivate::handleTextFieldShown()
 {
 #if QT_CONFIG(shortcut)
-    Q_Q(QQuickFolderBreadcrumbBar);
     if (editPathToggleShortcutId == 0)
         return;
 
-    QGuiApplicationPrivate *appPrivate = QGuiApplicationPrivate::instance();
-    qCDebug(lcShortcuts) << "text field was shown; grabbing/ungrabbing relevant shortcuts...";
-
-    // Disable the back/escape shortcuts for QQuickPopup so that the TextField can get them.
-    auto popupItem = qobject_cast<QQuickPopupItem*>(dialog->popupItem());
-    popupItem->ungrabShortcut();
-
-    appPrivate->shortcutMap.removeShortcut(editPathToggleShortcutId, q);
-    editPathToggleShortcutId = 0;
-
-    editPathBackShortcutId = appPrivate->shortcutMap.addShortcut(
-        q, Qt::Key_Back, Qt::WindowShortcut, QQuickShortcutContext::matcher);
-    editPathEscapeShortcutId = appPrivate->shortcutMap.addShortcut(
-        q, Qt::Key_Escape, Qt::WindowShortcut, QQuickShortcutContext::matcher);
-
-    qCDebug(lcShortcuts).nospace() << "... shortcut IDs:"
-        << " editPathToggleShortcutId=" << editPathToggleShortcutId
-        << " editPathBackShortcutId=" << editPathBackShortcutId
-        << " editPathEscapeShortcutId=" << editPathEscapeShortcutId;
+    qCDebug(lcShortcuts) << "text field was shown; ungrabbing edit path shortcut";
+    ungrabEditPathShortcut();
 #endif
 }
 
@@ -405,55 +387,25 @@ void QQuickFolderBreadcrumbBarPrivate::handleTextFieldHidden()
     Q_Q(QQuickFolderBreadcrumbBar);
 
     QGuiApplicationPrivate *appPrivate = QGuiApplicationPrivate::instance();
-    qCDebug(lcShortcuts) << "text field was hidden; grabbing/ungrabbing relevant shortcuts...";
+    qCDebug(lcShortcuts) << "text field was hidden; grabbing edit path shortcut";
 
     if (editPathToggleShortcutId == 0) {
         editPathToggleShortcutId = appPrivate->shortcutMap.addShortcut(
             q, Qt::CTRL | Qt::Key_L, Qt::WindowShortcut, QQuickShortcutContext::matcher);
     }
 
-    // When the bar is first completed, this function is called, since the text field starts off hidden.
-    // If removeShortcut is called with a zero id, all shortcuts for the given object will be removed,
-    // and we don't want that.
-    if (editPathBackShortcutId != 0) {
-        appPrivate->shortcutMap.removeShortcut(editPathBackShortcutId, q);
-        editPathBackShortcutId = 0;
-    }
-    if (editPathEscapeShortcutId != 0) {
-        appPrivate->shortcutMap.removeShortcut(editPathEscapeShortcutId, q);
-        editPathEscapeShortcutId = 0;
-    }
-
-    // Re-enable the back/escape shortcuts for QQuickPopup now that TextField no longer needs them.
-    auto popupItem = qobject_cast<QQuickPopupItem*>(dialog->popupItem());
-    if (popupItem)
-        popupItem->grabShortcut();
-
-    qCDebug(lcShortcuts).nospace() << "... shortcut IDs: "
-        << " editPathToggleShortcutId=" << editPathToggleShortcutId
-        << " editPathBackShortcutId=" << editPathBackShortcutId
-        << " editPathEscapeShortcutId=" << editPathEscapeShortcutId;
+    qCDebug(lcShortcuts).nospace() << "... editPathToggleShortcutId=" << editPathToggleShortcutId;
 #endif
 }
 
-void QQuickFolderBreadcrumbBarPrivate::ungrabEditPathShortcuts()
+void QQuickFolderBreadcrumbBarPrivate::ungrabEditPathShortcut()
 {
 #if QT_CONFIG(shortcut)
     Q_Q(QQuickFolderBreadcrumbBar);
     QGuiApplicationPrivate *appPrivate = QGuiApplicationPrivate::instance();
-    qCDebug(lcShortcuts) << "ungrabbing all edit path shortcuts";
-
     if (editPathToggleShortcutId != 0) {
         appPrivate->shortcutMap.removeShortcut(editPathToggleShortcutId, q);
         editPathToggleShortcutId = 0;
-    }
-    if (editPathBackShortcutId != 0) {
-        appPrivate->shortcutMap.removeShortcut(editPathBackShortcutId, q);
-        editPathBackShortcutId = 0;
-    }
-    if (editPathEscapeShortcutId != 0) {
-        appPrivate->shortcutMap.removeShortcut(editPathEscapeShortcutId, q);
-        editPathEscapeShortcutId = 0;
     }
 #endif
 }
@@ -756,9 +708,7 @@ bool QQuickFolderBreadcrumbBar::event(QEvent *event)
     Q_D(QQuickFolderBreadcrumbBar);
     if (event->type() == QEvent::Shortcut) {
         QShortcutEvent *shortcutEvent = static_cast<QShortcutEvent *>(event);
-        if (shortcutEvent->shortcutId() == d->editPathToggleShortcutId
-                || shortcutEvent->shortcutId() == d->editPathBackShortcutId
-                || shortcutEvent->shortcutId() == d->editPathEscapeShortcutId) {
+        if (shortcutEvent->shortcutId() == d->editPathToggleShortcutId) {
             d->toggleTextFieldVisibility();
             return true;
         } else if (shortcutEvent->shortcutId() == d->goUpShortcutId) {
@@ -767,6 +717,18 @@ bool QQuickFolderBreadcrumbBar::event(QEvent *event)
     }
 #endif
     return QQuickItem::event(event);
+}
+
+void QQuickFolderBreadcrumbBar::keyPressEvent(QKeyEvent *event)
+{
+    Q_D(QQuickFolderBreadcrumbBar);
+
+    if (event->matches(QKeySequence::Cancel) && d->textField->isVisible()) {
+        d->toggleTextFieldVisibility();
+        event->accept();
+    } else {
+        QQuickContainer::keyPressEvent(event);
+    }
 }
 
 void QQuickFolderBreadcrumbBar::componentComplete()
@@ -804,8 +766,8 @@ void QQuickFolderBreadcrumbBar::itemChange(QQuickItem::ItemChange change, const 
             if (d->contentItem)
                 d->contentItem->setVisible(true);
 
-            // We also need to ungrab all shortcuts when we're not visible.
-            d->ungrabEditPathShortcuts();
+            // We also need to ungrab the edit path shortcut when we're not visible.
+            d->ungrabEditPathShortcut();
 
             if (d->goUpShortcutId != 0) {
                 QGuiApplicationPrivate::instance()->shortcutMap.removeShortcut(d->goUpShortcutId, this);

@@ -1,2 +1,4 @@
 # See qtbase/src/testlib/qtestblacklist.cpp for format
 
+[ComboBox::test_keyClose]
+macos arm ci # QTBUG-102817

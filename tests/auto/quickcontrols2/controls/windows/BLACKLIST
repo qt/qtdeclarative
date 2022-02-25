@@ -3,3 +3,6 @@
 # QTBUG-70597
 [Tumbler::test_itemsCorrectlyPositioned]
 *
+
+[ComboBox::test_keyClose]
+macos arm ci # QTBUG-102817

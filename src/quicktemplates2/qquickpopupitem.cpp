@@ -39,17 +39,10 @@
 
 #include "qquickpopupitem_p_p.h"
 #include "qquickapplicationwindow_p.h"
-#include "qquickshortcutcontext_p_p.h"
 #include "qquickpage_p_p.h"
 #include "qquickcontentitem_p.h"
 #include "qquickpopup_p_p.h"
 #include "qquickdeferredexecute_p_p.h"
-
-#include <QtCore/qloggingcategory.h>
-#if QT_CONFIG(shortcut)
-#  include <QtGui/private/qshortcutmap_p.h>
-#endif
-#include <QtGui/private/qguiapplication_p.h>
 
 #if QT_CONFIG(accessibility)
 #include <QtQuick/private/qquickaccessibleattached_p.h>
@@ -156,34 +149,6 @@ QQuickPopupItem::QQuickPopupItem(QQuickPopup *popup)
 #endif
 }
 
-void QQuickPopupItem::grabShortcut()
-{
-#if QT_CONFIG(shortcut)
-    Q_D(QQuickPopupItem);
-    QGuiApplicationPrivate *pApp = QGuiApplicationPrivate::instance();
-    if (!d->backId)
-        d->backId = pApp->shortcutMap.addShortcut(this, Qt::Key_Back, Qt::WindowShortcut, QQuickShortcutContext::matcher);
-    if (!d->escapeId)
-        d->escapeId = pApp->shortcutMap.addShortcut(this, Qt::Key_Escape, Qt::WindowShortcut, QQuickShortcutContext::matcher);
-#endif
-}
-
-void QQuickPopupItem::ungrabShortcut()
-{
-#if QT_CONFIG(shortcut)
-    Q_D(QQuickPopupItem);
-    QGuiApplicationPrivate *pApp = QGuiApplicationPrivate::instance();
-    if (d->backId) {
-        pApp->shortcutMap.removeShortcut(d->backId, this);
-        d->backId = 0;
-    }
-    if (d->escapeId) {
-        pApp->shortcutMap.removeShortcut(d->escapeId, this);
-        d->escapeId = 0;
-    }
-#endif
-}
-
 QQuickPalette *QQuickPopupItemPrivate::palette() const
 {
     return QQuickPopupPrivate::get(popup)->palette();
@@ -218,24 +183,6 @@ void QQuickPopupItem::updatePolish()
 {
     Q_D(QQuickPopupItem);
     return QQuickPopupPrivate::get(d->popup)->reposition();
-}
-
-bool QQuickPopupItem::event(QEvent *event)
-{
-#if QT_CONFIG(shortcut)
-    Q_D(QQuickPopupItem);
-    if (event->type() == QEvent::Shortcut) {
-        QShortcutEvent *se = static_cast<QShortcutEvent *>(event);
-        if (se->shortcutId() == d->escapeId || se->shortcutId() == d->backId) {
-            QQuickPopupPrivate *p = QQuickPopupPrivate::get(d->popup);
-            if (p->interactive) {
-                p->closeOrReject();
-                return true;
-            }
-        }
-    }
-#endif
-    return QQuickItem::event(event);
 }
 
 bool QQuickPopupItem::childMouseEventFilter(QQuickItem *child, QEvent *event)

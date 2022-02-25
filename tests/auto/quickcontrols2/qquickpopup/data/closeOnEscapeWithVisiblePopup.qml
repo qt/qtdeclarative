@@ -11,6 +11,7 @@ Window {
         width: 200
         height: 200
         anchors.centerIn: parent
+        focus: true
         closePolicy: Popup.CloseOnEscape
     }
 }

@@ -64,15 +64,27 @@ ApplicationWindow {
 
     Popup {
         id: popup1
+        objectName: "popup1"
         focus: true
         enter: Transition { PauseAnimation { duration: 200 } }
         exit: Transition { PauseAnimation { duration: 200 } }
+
+        Label {
+            text: popup1.objectName
+            anchors.centerIn: parent
+        }
     }
 
     Popup {
         id: popup2
+        objectName: "popup2"
         focus: true
         enter: Transition { PauseAnimation { duration: 100 } }
         exit: Transition { PauseAnimation { duration: 100 } }
+
+        Label {
+            text: popup2.objectName
+            anchors.centerIn: parent
+        }
     }
 }

@@ -237,15 +237,22 @@ Q_LOGGING_CATEGORY(lcPopup, "qt.quick.controls.popup")
 
     \section1 Back/Escape Event Handling
 
-    By default, a Popup will close if the Escape or Back keys are pressed. This
-    can be problematic for popups which contain items that want to handle those
-    events themselves. There are two solutions to this:
+    By default, a Popup will close if:
+    \list
+    \li It has \l activeFocus,
+    \li Its \l closePolicy is \c {Popup.CloseOnEscape}, and
+    \li The user presses the key sequence for QKeySequence::Cancel (typically
+        the Escape key)
+    \endlist
+
+    To prevent this from happening, either:
 
     \list
-    \li Set Popup's \l closePolicy to a value that does not include
+    \li Don't give the popup \l focus.
+    \li Set the popup's \l closePolicy to a value that does not include
         \c {Popup.CloseOnEscape}.
-    \li Handle \l {Keys}' \l {Keys::}{shortcutOverride} signal and accept the
-        event before Popup can.
+    \li Handle \l {Keys}' \l {Keys::}{escapePressed} signal in a child item of
+        the popup so that it gets the event before the Popup.
     \endlist
 
     \sa {Popup Controls}, {Customizing Popup}, ApplicationWindow
@@ -906,7 +913,6 @@ QQuickPopup::~QQuickPopup()
 {
     Q_D(QQuickPopup);
     setParentItem(nullptr);
-    d->popupItem->ungrabShortcut();
 
     // If the popup is destroyed before the exit transition finishes,
     // the necessary cleanup (removing modal dimmers that block mouse events,
@@ -2066,8 +2072,6 @@ void QQuickPopup::setScale(qreal scale)
     not result in the first closing.
 
     The default value is \c {Popup.CloseOnEscape | Popup.CloseOnPressOutside}.
-    This default value may interfere with existing shortcuts in the application
-    that makes use of the \e Escape key.
 
     \note There is a known limitation that the \c Popup.CloseOnReleaseOutside
         and \c Popup.CloseOnReleaseOutsideParent policies only work with
@@ -2086,12 +2090,6 @@ void QQuickPopup::setClosePolicy(ClosePolicy policy)
     if (d->closePolicy == policy)
         return;
     d->closePolicy = policy;
-    if (isVisible()) {
-        if (policy & QQuickPopup::CloseOnEscape)
-            d->popupItem->grabShortcut();
-        else
-            d->popupItem->ungrabShortcut();
-    }
     emit closePolicyChanged();
 }
 
@@ -2501,13 +2499,6 @@ void QQuickPopup::componentComplete()
 
     d->complete = true;
     d->popupItem->componentComplete();
-
-    if (isVisible()) {
-        if (d->closePolicy & QQuickPopup::CloseOnEscape)
-            d->popupItem->grabShortcut();
-        else
-            d->popupItem->ungrabShortcut();
-    }
 }
 
 bool QQuickPopup::isComponentComplete() const
@@ -2536,10 +2527,22 @@ void QQuickPopup::focusOutEvent(QFocusEvent *event)
 void QQuickPopup::keyPressEvent(QKeyEvent *event)
 {
     Q_D(QQuickPopup);
-    event->accept();
+    if (!hasActiveFocus())
+        return;
 
-    if (hasActiveFocus() && (event->key() == Qt::Key_Tab || event->key() == Qt::Key_Backtab))
+#if QT_CONFIG(shortcut)
+    if (d->closePolicy.testFlag(QQuickPopup::CloseOnEscape) && event->matches(QKeySequence::Cancel)) {
+        event->accept();
+        if (d->interactive)
+            d->closeOrReject();
+        return;
+    }
+#endif
+
+    if (hasActiveFocus() && (event->key() == Qt::Key_Tab || event->key() == Qt::Key_Backtab)) {
+        event->accept();
         QQuickItemPrivate::focusNextPrev(d->popupItem, event->key() == Qt::Key_Tab);
+    }
 }
 
 void QQuickPopup::keyReleaseEvent(QKeyEvent *event)
@@ -2666,24 +2669,14 @@ void QQuickPopup::geometryChange(const QRectF &newGeometry, const QRectF &oldGeo
     }
 }
 
-void QQuickPopup::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &data)
+void QQuickPopup::itemChange(QQuickItem::ItemChange change, const QQuickItem::ItemChangeData &)
 {
-    Q_D(QQuickPopup);
-
     switch (change) {
     case QQuickItem::ItemActiveFocusHasChanged:
         emit activeFocusChanged();
         break;
     case QQuickItem::ItemOpacityHasChanged:
         emit opacityChanged();
-        break;
-    case QQuickItem::ItemVisibleHasChanged:
-        if (isComponentComplete() && d->closePolicy & CloseOnEscape) {
-            if (data.boolValue)
-                d->popupItem->grabShortcut();
-            else
-                d->popupItem->ungrabShortcut();
-        }
         break;
     default:
         break;

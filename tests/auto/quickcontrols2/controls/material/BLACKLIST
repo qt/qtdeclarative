@@ -8,3 +8,6 @@
 [RangeSlider::test_overlappingHandles]
 b2qt
 qnx
+
+[ComboBox::test_keyClose]
+macos arm ci # QTBUG-102817

@@ -104,6 +104,7 @@ Q_SIGNALS:
 
 protected:
     bool event(QEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
     void componentComplete() override;
 

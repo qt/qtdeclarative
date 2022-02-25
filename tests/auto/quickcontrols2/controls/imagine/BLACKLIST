@@ -12,3 +12,6 @@ qnx
 # QTBUG-101704
 [ToolTip::test_attachedSizeBug]
 *
+
+[ComboBox::test_keyClose]
+macos arm ci # QTBUG-102817

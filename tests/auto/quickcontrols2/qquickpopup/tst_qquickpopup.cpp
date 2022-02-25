@@ -39,6 +39,7 @@
 #include <QtQuickTemplates2/private/qquickcombobox_p.h>
 #include <QtQuickTemplates2/private/qquickdialog_p.h>
 #include <QtQuickTemplates2/private/qquickoverlay_p.h>
+#include <QtQuickTemplates2/private/qquickoverlay_p_p.h>
 #include <QtQuickTemplates2/private/qquickpopup_p.h>
 #include <QtQuickTemplates2/private/qquickpopupitem_p_p.h>
 #include <QtQuickTemplates2/private/qquickbutton_p.h>
@@ -79,6 +80,7 @@ private slots:
     void activeFocusOnClosingSeveralPopups();
     void activeFocusAfterExit();
     void activeFocusOnDelayedEnter();
+    void activeFocusDespiteLowerStackingOrder();
     void hover_data();
     void hover();
     void wheel_data();
@@ -861,6 +863,47 @@ void tst_QQuickPopup::activeFocusOnDelayedEnter()
     QTRY_VERIFY(popup2->hasActiveFocus());
 }
 
+// Test that a popup (popup1) with a lower stacking order than another popup (popup2) gets
+// key events due to having active focus.
+void tst_QQuickPopup::activeFocusDespiteLowerStackingOrder()
+{
+    QQuickControlsApplicationHelper helper(this, QStringLiteral("activeFocusOnClose3.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickApplicationWindow *window = helper.appWindow;
+    window->show();
+    window->requestActivate();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    QQuickPopup *popup1 = window->property("popup1").value<QQuickPopup *>();
+    QVERIFY(popup1);
+    popup1->open();
+    QTRY_VERIFY(popup1->isOpened());
+
+    QQuickPopup *popup2 = window->property("popup2").value<QQuickPopup *>();
+    QVERIFY(popup2);
+    popup2->open();
+    QTRY_VERIFY(popup2->isOpened());
+    popup2->setX(popup1->width() / 2);
+    popup2->setY(popup1->height() / 2);
+
+    // Both popups have no explicitly assigned Z value, so they should be the same.
+    // Items (QQuickPopupItem in this case) with identical Z values are rendered according
+    // to their order in the childItems container in the parent QQuickItem (see
+    // paintOrderChildItems(), which is what stackingOrderPopups() uses).
+    QCOMPARE(popup1->z(), popup2->z());
+
+    // Give popup1 active focus. Even though it's stacked under popup2,
+    // it should still receive key events.
+    popup1->forceActiveFocus();
+
+    // Press Escape to close popup1.
+    QTest::keyClick(window, Qt::Key_Escape);
+    QVERIFY(!popup1->isOpened());
+    QVERIFY(popup2->isOpened());
+    QTRY_VERIFY(!popup1->isVisible());
+    QVERIFY(!popup1->hasActiveFocus());
+}
+
 void tst_QQuickPopup::hover_data()
 {
     QTest::addColumn<QString>("source");
@@ -1283,7 +1326,7 @@ void tst_QQuickPopup::closeOnEscapeWithVisiblePopup()
     QVERIFY(popup);
     QTRY_VERIFY(popup->isOpened());
 
-    QTRY_VERIFY(window->activeFocusItem());
+    QTRY_VERIFY(popup->hasActiveFocus());
     QTest::keyClick(window, Qt::Key_Escape);
     QTRY_VERIFY(!popup->isVisible());
 }
