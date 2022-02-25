@@ -95,6 +95,7 @@ TestCase {
         verify(control.header)
         verify(control.footer)
         compare(control.standardButtons, 0)
+        verify(control.focus)
     }
 
     function test_accept() {

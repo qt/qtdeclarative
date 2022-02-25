@@ -61,6 +61,8 @@ QT_BEGIN_NAMESPACE
 
     \image qtquickcontrols2-page-wireframe.png
 
+    By default, Dialogs have \l focus.
+
     \section1 Dialog Title and Buttons
 
     Dialog's \l title is displayed by a style-specific title bar that is assigned
@@ -203,6 +205,10 @@ QQuickDialog::QQuickDialog(QQuickDialogPrivate &dd, QObject *parent)
     : QQuickPopup(dd, parent)
 {
     Q_D(QQuickDialog);
+
+    // Dialogs should get active focus when opened so that e.g. Cancel closes them.
+    setFocus(true);
+
     QObject::connect(d->popupItem, &QQuickPopupItem::titleChanged, this, &QQuickDialog::titleChanged);
     QObject::connect(d->popupItem, &QQuickPopupItem::headerChanged, this, &QQuickDialog::headerChanged);
     QObject::connect(d->popupItem, &QQuickPopupItem::footerChanged, this, &QQuickDialog::footerChanged);

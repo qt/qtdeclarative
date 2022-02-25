@@ -117,6 +117,7 @@ void tst_QQuickMenu::defaults()
 
     QQuickMenu *emptyMenu = helper.appWindow->property("emptyMenu").value<QQuickMenu*>();
     QCOMPARE(emptyMenu->isVisible(), false);
+    QVERIFY(emptyMenu->hasFocus());
     QCOMPARE(emptyMenu->currentIndex(), -1);
     QCOMPARE(emptyMenu->contentItem()->property("currentIndex"), QVariant(-1));
     QCOMPARE(emptyMenu->count(), 0);
@@ -304,10 +305,11 @@ void tst_QQuickMenu::contextMenuKeyboard()
     QVERIFY(firstItem);
     QSignalSpy visibleSpy(menu, SIGNAL(visibleChanged()));
 
-    menu->setFocus(true);
+    QVERIFY(menu->hasFocus());
     menu->open();
     QCOMPARE(visibleSpy.count(), 1);
     QVERIFY(menu->isVisible());
+    QVERIFY(menu->hasActiveFocus());
     QQuickOverlay *overlay = window->property("overlay").value<QQuickOverlay*>();
     QVERIFY(overlay);
     QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));

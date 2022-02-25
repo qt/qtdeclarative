@@ -196,7 +196,7 @@ static const int SUBMENU_DELAY = 225;
     will be \c true. For more information, see
     \l {Keyboard Focus in Qt Quick}.
 
-    The default value is \c false.
+    The default value is \c true.
 
     \sa {Popup::}{activeFocus}
 */
