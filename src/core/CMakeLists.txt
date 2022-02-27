@@ -7,6 +7,8 @@ qt_internal_add_qml_module(QmlCore
     DEPENDENCIES
         QtQml
     SOURCES
+        qqmlsysteminformation_p.h
+        qqmlsysteminformation.cpp
         qqmlstandardpaths_p.h
         qqmlstandardpaths.cpp
         qqmlcoreglobal_p.h
