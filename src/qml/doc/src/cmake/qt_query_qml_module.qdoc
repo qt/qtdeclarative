@@ -162,7 +162,7 @@ absolute. The meaning and usage of \c RESOURCES_DEPLOY_PATHS and
 cmake_minimum_required(VERSION 3.16...3.22)
 project(MyThings)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Qml)
+find_package(Qt6 6.3 REQUIRED COMPONENTS Core Qml)
 
 set(module_name "MyThings")
 qt_add_qml_module(${module_name}
