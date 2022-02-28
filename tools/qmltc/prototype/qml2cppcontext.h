@@ -30,7 +30,7 @@
 #define QML2CPPCONTEXT_H
 
 #include "prototype/qmlcompiler.h"
-#include "prototype/typeresolver.h"
+#include "qmltctyperesolver.h"
 
 #include <private/qqmljsdiagnosticmessage_p.h>
 #include <QtQml/private/qqmlirbuilder_p.h>
@@ -41,10 +41,12 @@
 #include <variant>
 #include <functional>
 
+QT_BEGIN_NAMESPACE
+
 struct Qml2CppContext
 {
     const QmlIR::Document *document = nullptr;
-    const Qmltc::TypeResolver *typeResolver = nullptr;
+    const QmltcTypeResolver *typeResolver = nullptr;
     QString documentUrl;
     QQmlJSLogger *logger = nullptr;
     const QHash<QQmlJSScope::ConstPtr, qsizetype> *typeIndices = nullptr; // TODO: remove this?
@@ -81,7 +83,7 @@ class Qml2CppCompilerPassExecutor
     QList<Qml2CppCompilerPass> m_passes;
 
 public:
-    Qml2CppCompilerPassExecutor(const QmlIR::Document *doc, const Qmltc::TypeResolver *resolver,
+    Qml2CppCompilerPassExecutor(const QmlIR::Document *doc, const QmltcTypeResolver *resolver,
                                 const QString &url, QList<Qml2CppObject> &objects,
                                 const QHash<QQmlJSScope::ConstPtr, qsizetype> &typeIndices)
         : m_context { doc, resolver, url, nullptr, &typeIndices }, m_objects { objects }
@@ -104,5 +106,7 @@ public:
         }
     }
 };
+
+QT_END_NAMESPACE
 
 #endif // QML2CPPCONTEXT_H

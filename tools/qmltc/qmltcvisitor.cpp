@@ -187,16 +187,15 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
     // augment property: set its write/read/etc. methods
     if (publicMember->type == QQmlJS::AST::UiPublicMember::Property) {
         const auto name = publicMember->name.toString();
-        QQmlJSMetaProperty prop = m_currentScope->ownProperty(name);
-        const QString nameWithUppercase = name[0].toUpper() + name.sliced(1);
-        prop.setRead(name);
-        if (prop.isWritable())
-            prop.setWrite(u"set" + nameWithUppercase);
-        prop.setBindable(u"bindable" + nameWithUppercase);
-        prop.setNotify(name + u"Changed");
+
+        // TODO: we should set the composite type property methods here, but as
+        // of now this is done in the pass over the types after the ast
+        // traversal
+
+        const QString notifyName = name + u"Changed"_qs;
         // also check that notify is already a method of m_currentScope
         {
-            const auto methods = m_currentScope->ownMethods(prop.notify());
+            const auto methods = m_currentScope->ownMethods(notifyName);
             if (methods.size() != 1) {
                 const QString errorString =
                         methods.isEmpty() ? u"no signal"_qs : u"too many signals"_qs;
@@ -206,14 +205,24 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
                 return false;
             } else if (methods[0].methodType() != QQmlJSMetaMethod::Signal) {
                 m_logger->log(u"internal error: method %1 of property %2 must be a signal"_qs.arg(
-                                      prop.notify(), name),
+                                      notifyName, name),
                               Log_Compiler, publicMember->identifierToken);
                 return false;
             }
         }
-        m_currentScope->addOwnProperty(prop);
     }
 
+    return true;
+}
+
+bool QmltcVisitor::visit(QQmlJS::AST::UiInlineComponent *component)
+{
+    if (!QQmlJSImportVisitor::visit(component))
+        return false;
+    m_logger->log(u"Inline components are not supported"_qs, Log_Compiler,
+                  component->firstSourceLocation());
+    // despite the failure, return true here so that we do not assert in
+    // QQmlJSImportVisitor::endVisit(UiInlineComponent)
     return true;
 }
 

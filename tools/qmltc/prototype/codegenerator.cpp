@@ -32,6 +32,8 @@
 #include "prototype/codegeneratorutil.h"
 #include "prototype/codegeneratorwriter.h"
 
+#include "qmltccompiler.h"
+
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qhash.h>
 #include <QtCore/qset.h>
@@ -45,12 +47,7 @@
 #include <utility>
 #include <numeric>
 
-static constexpr char newLineLatin1[] =
-#ifdef Q_OS_WIN32
-        "\r\n";
-#else
-        "\n";
-#endif
+QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcCodeGenerator, "qml.qmltc.compiler", QtWarningMsg);
 
@@ -216,13 +213,12 @@ toOrderedSequence(typename QmlIR::PoolList<QmlIR::Binding>::Iterator first,
 Q_LOGGING_CATEGORY(lcCodeGen, "qml.compiler.CodeGenerator", QtWarningMsg);
 
 CodeGenerator::CodeGenerator(const QString &url, QQmlJSLogger *logger, QmlIR::Document *doc,
-                             const Qmltc::TypeResolver *localResolver)
-    : m_url(url),
-      m_logger(logger),
-      m_doc(doc),
-      m_localTypeResolver(localResolver),
-      m_qmlSource(doc->code.split(QLatin1String(newLineLatin1)))
+                             const QmltcTypeResolver *localResolver, const QmltcCompilerInfo *info)
+    : m_url(url), m_logger(logger), m_doc(doc), m_localTypeResolver(localResolver), m_info(info)
 {
+    Q_ASSERT(m_info);
+    Q_ASSERT(!m_info->outputHFile.isEmpty());
+    Q_ASSERT(!m_info->outputCppFile.isEmpty());
 }
 
 void CodeGenerator::constructObjects(QSet<QString> &requiredCppIncludes)
@@ -297,16 +293,13 @@ void CodeGenerator::constructObjects(QSet<QString> &requiredCppIncludes)
     executor.run(m_logger);
 }
 
-void CodeGenerator::generate(const Options &options)
+void CodeGenerator::generate()
 {
-    m_options = options;
     GeneratedCode code;
     const QString rootClassName = QFileInfo(m_url).baseName();
     Q_ASSERT(!rootClassName.isEmpty());
-    Q_ASSERT(!options.outputHFile.isEmpty());
-    Q_ASSERT(!options.outputCppFile.isEmpty());
-    const QString hPath = options.outputHFile;
-    const QString cppPath = options.outputCppFile;
+    const QString hPath = m_info->outputHFile;
+    const QString cppPath = m_info->outputCppFile;
     m_isAnonymous = rootClassName.at(0).isLower();
     const QString url = QFileInfo(m_url).fileName();
 
@@ -366,8 +359,8 @@ void CodeGenerator::generate(const Options &options)
     if (m_logger->hasErrors())
         return;
 
-    QQmlJSProgram program { compiledObjects,      m_urlMethod,        url, hPath, cppPath,
-                            options.outNamespace, requiredCppIncludes };
+    QQmlJSProgram program { compiledObjects,         m_urlMethod,        url, hPath, cppPath,
+                            m_info->outputNamespace, requiredCppIncludes };
 
     // write everything
     GeneratedCodeUtils codeUtils(code);
@@ -1918,7 +1911,7 @@ void CodeGenerator::compileUrlMethod()
     m_urlMethod.returnType = u"const QUrl &"_qs;
     m_urlMethod.name = u"q_qmltc_docUrl"_qs;
     m_urlMethod.body << u"static QUrl docUrl = %1;"_qs.arg(
-            CodeGeneratorUtility::toResourcePath(m_options.resourcePath));
+            CodeGeneratorUtility::toResourcePath(m_info->resourcePath));
     m_urlMethod.body << u"return docUrl;"_qs;
     m_urlMethod.declPreambles << u"static"_qs;
     m_urlMethod.modifiers << u"noexcept"_qs;
@@ -1933,3 +1926,5 @@ void CodeGenerator::recordError(const QV4::CompiledData::Location &location, con
 {
     recordError(QQmlJS::SourceLocation { 0, 0, location.line, location.column }, message);
 }
+
+QT_END_NAMESPACE

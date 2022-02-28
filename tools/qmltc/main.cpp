@@ -28,8 +28,10 @@
 
 #include "qmltccommandlineutils.h"
 #include "prototype/codegenerator.h"
-#include "prototype/visitor.h"
-#include "prototype/typeresolver.h"
+#include "qmltcvisitor.h"
+#include "qmltctyperesolver.h"
+
+#include "qmltccompiler.h"
 
 #include <QtQml/private/qqmlirbuilder_p.h>
 #include <private/qqmljscompiler_p.h>
@@ -185,11 +187,11 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    Options options;
-    options.outputCppFile = parser.value(outputCppOption);
-    options.outputHFile = parser.value(outputHOption);
-    options.resourcePath = paths.first();
-    options.outNamespace = parser.value(namespaceOption);
+    QmltcCompilerInfo info;
+    info.outputCppFile = parser.value(outputCppOption);
+    info.outputHFile = parser.value(outputHOption);
+    info.resourcePath = paths.first();
+    info.outputNamespace = parser.value(namespaceOption);
 
     QQmlJSImporter importer { importPaths, &mapper };
     QQmlJSLogger logger;
@@ -197,9 +199,9 @@ int main(int argc, char **argv)
     logger.setCode(sourceCode);
     setupLogger(logger);
 
-    Qmltc::Visitor visitor(&importer, &logger,
-                           QQmlJSImportVisitor::implicitImportDirectory(url, &mapper), qmldirFiles);
-    Qmltc::TypeResolver typeResolver { &importer };
+    QmltcVisitor visitor(&importer, &logger,
+                         QQmlJSImportVisitor::implicitImportDirectory(url, &mapper), qmldirFiles);
+    QmltcTypeResolver typeResolver { &importer };
     typeResolver.init(visitor, document.program);
 
     if (logger.hasErrors())
@@ -214,8 +216,8 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    CodeGenerator generator(url, &logger, &document, &typeResolver);
-    generator.generate(options);
+    CodeGenerator generator(url, &logger, &document, &typeResolver, &info);
+    generator.generate();
 
     if (logger.hasErrors())
         return EXIT_FAILURE;

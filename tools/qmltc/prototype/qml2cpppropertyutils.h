@@ -31,6 +31,8 @@
 
 #include <private/qqmljsmetatypes_p.h>
 
+QT_BEGIN_NAMESPACE
+
 inline QString getUnderlyingType(const QQmlJSMetaProperty &p)
 {
     QString underlyingType = p.type()->internalName();
@@ -63,5 +65,7 @@ struct Qml2CppPropertyData
     QString bindable;
     QString notify;
 };
+
+QT_END_NAMESPACE
 
 #endif // QML2CPPPROPERTYUTILS_H

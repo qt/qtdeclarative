@@ -39,6 +39,8 @@
 
 #include <utility>
 
+QT_BEGIN_NAMESPACE
+
 struct CodeGeneratorUtility
 {
     // magic variable, necessary for correct handling of object bindings: since
@@ -95,5 +97,7 @@ struct CodeGeneratorUtility
     static QString generate_setIdValue(const QString &context, qsizetype index,
                                        const QString &accessor, const QString &idString);
 };
+
+QT_END_NAMESPACE
 
 #endif // CODEGENERATORUTIL_H

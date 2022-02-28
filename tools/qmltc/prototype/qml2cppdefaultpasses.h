@@ -31,6 +31,8 @@
 
 #include "prototype/qml2cppcontext.h"
 
+QT_BEGIN_NAMESPACE
+
 // verifies that each object, property (and etc.) has valid
 // QQmlJSScope::ConstPtr associated with it
 void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
@@ -87,5 +89,7 @@ QSet<QQmlJSScope::ConstPtr> collectIgnoredTypes(const Qml2CppContext &context,
                                                 QList<Qml2CppObject> &objects);
 
 void setDeferredBindings(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
+
+QT_END_NAMESPACE
 
 #endif // QML2CPPPASSES_H

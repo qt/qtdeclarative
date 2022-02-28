@@ -46,15 +46,7 @@
 #include <private/qqmljscompiler_p.h>
 #include <private/qqmljsmetatypes_p.h>
 
-struct Options
-{
-    QString outputCppFile;
-    QString outputHFile;
-    QString moduleUri;
-    QString resourcePath;
-    QString outNamespace;
-    bool debugGenerateLineDirective = false;
-};
+QT_BEGIN_NAMESPACE
 
 // TODO: rename the classes into Qmltc* pattern
 
@@ -175,5 +167,7 @@ struct QQmlJSProgram
     QString outNamespace;
     QSet<QString> includes;
 };
+
+QT_END_NAMESPACE
 
 #endif // QMLCOMPILER_H

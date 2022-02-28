@@ -33,6 +33,8 @@
 
 #include <tuple>
 
+QT_BEGIN_NAMESPACE
+
 // NB: this variable would behave correctly as long as QML init and QML finalize
 // are non-virtual functions
 const QQmlJSAotVariable CodeGeneratorUtility::childrenOffsetVariable = { u"qsizetype"_qs,
@@ -245,3 +247,5 @@ QString CodeGeneratorUtility::generate_setIdValue(const QString &context, qsizet
     return context + u"->setIdValue(" + QString::number(index) + idComment + u", " + accessor
             + u")";
 }
+
+QT_END_NAMESPACE

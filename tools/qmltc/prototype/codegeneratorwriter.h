@@ -32,6 +32,8 @@
 #include "generatedcodeprimitives.h"
 #include "qmlcompiler.h"
 
+QT_BEGIN_NAMESPACE
+
 // writes compiled code into the GeneratedCode structure
 struct CodeGeneratorWriter
 {
@@ -53,5 +55,7 @@ struct CodeGeneratorWriter
 private:
     static void writeUrl(GeneratedCodeUtils &code, const QQmlJSAotMethod &urlMethod);
 };
+
+QT_END_NAMESPACE
 
 #endif // CODEGENERATORWRITER_H

@@ -29,7 +29,7 @@
 #ifndef CODEGENERATOR_H
 #define CODEGENERATOR_H
 
-#include "prototype/typeresolver.h"
+#include "qmltctyperesolver.h"
 #include "prototype/qmlcompiler.h"
 #include "prototype/generatedcodeprimitives.h"
 #include "prototype/qml2cppcontext.h"
@@ -40,19 +40,21 @@
 
 #include <QtQml/private/qqmlirbuilder_p.h>
 #include <private/qqmljscompiler_p.h>
-#include <private/qqmljstyperesolver_p.h>
 
 #include <variant>
 #include <utility>
 
+QT_BEGIN_NAMESPACE
+
+struct QmltcCompilerInfo;
 class CodeGenerator
 {
 public:
     CodeGenerator(const QString &url, QQmlJSLogger *logger, QmlIR::Document *doc,
-                  const Qmltc::TypeResolver *localResolver);
+                  const QmltcTypeResolver *localResolver, const QmltcCompilerInfo *info);
 
     // main function: given compilation options, generates C++ code (implicitly)
-    void generate(const Options &options);
+    void generate();
 
     // TODO: this should really be just QQmlJSScope::ConstPtr (and maybe C++
     // class name), but bindings are currently not represented in QQmlJSScope,
@@ -63,10 +65,9 @@ private:
     QString m_url; // document url
     QQmlJSLogger *m_logger = nullptr;
     QmlIR::Document *m_doc = nullptr;
-    const Qmltc::TypeResolver *m_localTypeResolver = nullptr;
-    QStringList m_qmlSource; // QML source code split to lines
+    const QmltcTypeResolver *m_localTypeResolver = nullptr;
 
-    Options m_options = {}; // compilation options
+    const QmltcCompilerInfo *m_info = nullptr;
 
     // convenient object abstraction, laid out as QmlIR::Document.objects
     QList<CodeGenObject> m_objects;
@@ -185,5 +186,7 @@ private:
     void recordError(const QQmlJS::SourceLocation &location, const QString &message);
     void recordError(const QV4::CompiledData::Location &location, const QString &message);
 };
+
+QT_END_NAMESPACE
 
 #endif // CODEGENERATOR_H

@@ -34,6 +34,8 @@
 #include <utility>
 #include <functional>
 
+QT_BEGIN_NAMESPACE
+
 static constexpr char16_t newLine[] =
 #ifdef Q_OS_WIN32
         u"\r\n";
@@ -474,3 +476,5 @@ void CodeGeneratorWriter::write(GeneratedCodeUtils &code, const QQmlJSProgram &c
 
     writeGlobalFooter(code, compiled.url, compiled.hPath, compiled.cppPath, compiled.outNamespace);
 }
+
+QT_END_NAMESPACE

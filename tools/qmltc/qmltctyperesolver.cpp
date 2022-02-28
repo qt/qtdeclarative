@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the tools applications of the Qt Toolkit.
@@ -26,8 +26,7 @@
 **
 ****************************************************************************/
 
-#include "prototype/typeresolver.h"
-#include "prototype/visitor.h"
+#include "qmltctyperesolver.h"
 
 #include <private/qqmljsimporter_p.h>
 #include <private/qv4value_p.h>
@@ -37,17 +36,9 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdiriterator.h>
 
-Q_LOGGING_CATEGORY(lcTypeResolver2, "qml.compiler.typeresolver", QtInfoMsg);
+Q_LOGGING_CATEGORY(lcTypeResolver2, "qml.qmltc.typeresolver", QtInfoMsg);
 
-namespace Qmltc {
-
-TypeResolver::TypeResolver(QQmlJSImporter *importer)
-    : QQmlJSTypeResolver(importer), m_importer(importer)
-{
-    Q_ASSERT(m_importer);
-}
-
-void TypeResolver::init(Visitor &visitor, QQmlJS::AST::Node *program)
+void QmltcTypeResolver::init(QmltcVisitor &visitor, QQmlJS::AST::Node *program)
 {
     QQmlJSTypeResolver::init(&visitor, program);
     m_root = visitor.result();
@@ -67,14 +58,16 @@ void TypeResolver::init(Visitor &visitor, QQmlJS::AST::Node *program)
     }
 }
 
-QQmlJSScope::Ptr TypeResolver::scopeForLocation(const QV4::CompiledData::Location &location) const
+QQmlJSScope::Ptr
+QmltcTypeResolver::scopeForLocation(const QV4::CompiledData::Location &location) const
 {
     qCDebug(lcTypeResolver2()).nospace()
             << "looking for object at " << location.line << ':' << location.column;
     return m_objectsByLocationNonConst.value(location);
 }
 
-QPair<QString, QQmlJSScope::Ptr> TypeResolver::importedType(const QQmlJSScope::ConstPtr &type) const
+QPair<QString, QQmlJSScope::Ptr>
+QmltcTypeResolver::importedType(const QQmlJSScope::ConstPtr &type) const
 {
     const auto files = m_importer->importedFiles();
     auto it = std::find_if(files.cbegin(), files.cend(), [&](const QQmlJSScope::Ptr &importedType) {
@@ -83,5 +76,4 @@ QPair<QString, QQmlJSScope::Ptr> TypeResolver::importedType(const QQmlJSScope::C
     if (it == files.cend())
         return {};
     return { it.key(), it.value() };
-}
 }

@@ -35,6 +35,8 @@
 
 #include <algorithm>
 
+QT_BEGIN_NAMESPACE
+
 static QString const cppKeywords[] = {
     u"alignas"_qs,
     u"alignof"_qs,
@@ -1119,3 +1121,5 @@ void setDeferredBindings(const Qml2CppContext &context, QList<Qml2CppObject> &ob
     // here to only work with root object
     setDeferred(context, 0, objects);
 }
+
+QT_END_NAMESPACE

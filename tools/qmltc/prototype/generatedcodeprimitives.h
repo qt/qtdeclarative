@@ -32,6 +32,8 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qstack.h>
 
+QT_BEGIN_NAMESPACE
+
 // holds generated code for header and implementation files
 struct GeneratedCode
 {
@@ -122,5 +124,7 @@ struct GeneratedCodeUtils
                 signatureScope + QString((implIndent + extraIndent) * 4, u' ') + what + newLine;
     }
 };
+
+QT_END_NAMESPACE
 
 #endif // GENERATEDCODEPRIMITIVES_H
