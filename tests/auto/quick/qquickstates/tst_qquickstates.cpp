@@ -38,6 +38,7 @@
 #include <private/qquickitem_p.h>
 #include <private/qqmlproperty_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QtTest/qsignalspy.h>
 
 class MyAttached : public QObject
 {
@@ -1796,33 +1797,125 @@ void tst_qquickstates::bindableProperties()
     }
 }
 
+struct Listener : QQuickItemChangeListener
+{
+    // We want to get notified about all the states.
+    constexpr static const QRectF expectations[] = {
+        QRectF(40, 40, 400, 400),
+        QRectF(40, 0, 400, 400),
+        QRectF(0, 0, 400, 400),
+        QRectF(0, 0, 800, 400),
+        QRectF(0, 0, 800, 200),
+        QRectF(0, 0, 400, 200),
+        QRectF(0, 20, 400, 200),
+        QRectF(40, 20, 400, 200),
+        QRectF(84, 42, 400, 200),
+        QRectF(84, 42, 86, 43),
+        QRectF(40, 40, 86, 43),
+        QRectF(40, 40, 400, 400),
+        QRectF(40, 20, 400, 400),
+        QRectF(40, 20, 400, 200),
+        QRectF(20, 20, 400, 200),
+        QRectF(20, 20, 200, 200),
+        QRectF(20, 20, 200, 300),
+        QRectF(20, 20, 300, 300),
+        QRectF(20, 30, 300, 300),
+        QRectF(30, 30, 300, 300),
+    };
+
+    int position = 0;
+    bool ok = true;
+
+    void itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &rect) override
+    {
+        if (rect != expectations[position]) {
+            qDebug() << position << rect;
+            ok = false;
+        }
+        ++position;
+    }
+};
+
 void tst_qquickstates::parentChangeInvolvingBindings()
 {
    QQmlEngine engine;
    QQmlComponent c(&engine, testFileUrl("parentChangeInvolvingBindings.qml"));
    QScopedPointer<QQuickItem> root { qobject_cast<QQuickItem *>(c.create()) };
    QVERIFY2(root, qPrintable(c.errorString()));
+
+   QObject *child = qmlContext(root.data())->objectForName(QStringLiteral("firstChild"));
+   QVERIFY(child);
+   QQuickItem *childItem = qobject_cast<QQuickItem *>(child);
+   QVERIFY(childItem);
+   Listener listener;
+   QQuickItemPrivate::get(childItem)->addItemChangeListener(&listener, QQuickItemPrivate::Geometry);
+
+
    QCOMPARE(root->property("childWidth").toInt(), 400);
+   QCOMPARE(root->property("childX").toInt(), 40);
    QCOMPARE(root->property("childRotation").toInt(), 100);
    root->setState("reparented");
 
    QCOMPARE(root->property("childWidth").toInt(), 800);
+   QCOMPARE(root->property("childX").toInt(), 0); // x gets zeroed here, from unrelated place.
    QCOMPARE(root->property("childRotation").toInt(), 200);
 
    root->setProperty("myrotation2", 300);
    root->setHeight(200);
+   root->setY(20);
    QCOMPARE(root->property("childRotation").toInt(), 300);
    QCOMPARE(root->property("childWidth").toInt(), 400);
+   QCOMPARE(root->property("childX").toInt(), 40);
+
+   QObject *inner = qmlContext(root.data())->objectForName(QStringLiteral("inner"));
+   QVERIFY(inner);
+   QQuickItem *innerItem = qobject_cast<QQuickItem *>(inner);
+   QVERIFY(innerItem);
+
+   QCOMPARE(innerItem->size(), childItem->size());
+
+   // Does not break bindings and does not survive the state change.
+   // However, since the binding between x and y stays intact, we don't know
+   // whether x is set another time from the new y. We pass a pair of numbers that
+   // matches the binding.
+   childItem->setPosition(QPointF(84, 42));
+   QCOMPARE(root->property("childX").toInt(), 84);
+   QVERIFY(listener.ok);
+   childItem->setSize(QSizeF(86, 43));
+   QCOMPARE(root->property("childWidth").toInt(), 86);
+   QVERIFY(listener.ok);
+
+   QCOMPARE(innerItem->size(), childItem->size());
+
+   QSignalSpy xSpy(childItem, SIGNAL(xChanged()));
+   QSignalSpy widthSpy(childItem, SIGNAL(widthChanged()));
 
    root->setState("");
-   QCOMPARE(root->property("childRotation").toInt(), 100);
-   // QCOMPARE(root->property("childWidth").toInt(), 200);
 
+   QVERIFY(listener.ok);
+   QCOMPARE(root->property("childRotation").toInt(), 100);
+
+   // First change to 40 via reverse(), then to 20 via binding.
+   QCOMPARE(xSpy.count(), 2);
+
+   // First change to 400 via reverse(), then to 200 via binding.
+   QCOMPARE(widthSpy.count(), 2);
+
+   QCOMPARE(root->property("childX").toInt(), 20);
+   QCOMPARE(root->property("childWidth").toInt(), 200);
+
+   QCOMPARE(innerItem->size(), childItem->size());
 
    root->setProperty("myrotation", 50);
    root->setHeight(300);
+   QVERIFY(listener.ok);
+   root->setY(30);
+   QVERIFY(listener.ok);
    QCOMPARE(root->property("childWidth").toInt(), 300);
+   QCOMPARE(root->property("childX").toInt(), 30);
    QCOMPARE(root->property("childRotation").toInt(), 50);
+
+   QCOMPARE(innerItem->size(), childItem->size());
 }
 
 void tst_qquickstates::deferredProperties()

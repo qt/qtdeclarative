@@ -482,12 +482,12 @@ void QQuickParentChangePrivate::reverseRewindHelper(const std::unique_ptr<QQuick
 {
     if (!target || !snapshot)
         return;
-    auto targetPriv = QQuickItemPrivate::get(target);
+
     // leave existing bindings alive; new bindings are applied in applyBindings
-    targetPriv->x.setValueBypassingBindings(snapshot->x);
-    targetPriv->y.setValueBypassingBindings(snapshot->y);
-    targetPriv->width.setValueBypassingBindings(snapshot->width);
-    targetPriv->height.setValueBypassingBindings(snapshot->height);
+    // setPosition and setSize update the geometry without invalidating bindings
+    target->setPosition(QPointF(snapshot->x, snapshot->y));
+    target->setSize(QSizeF(snapshot->width, snapshot->height));
+
     target->setScale(snapshot->scale);
     target->setRotation(snapshot->rotation);
     target->setParentItem(snapshot->parent);
