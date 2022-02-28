@@ -11,6 +11,7 @@ qt_internal_add_test(tst_designer
         Qt::Gui
         Qt::Quick
         Qt::QuickControls2
+        Qt::QuickTemplates2
         Qt::QuickPrivate
 )
 

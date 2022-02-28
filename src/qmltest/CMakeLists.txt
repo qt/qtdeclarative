@@ -33,12 +33,12 @@ qt_internal_add_qml_module(QuickTest
         Qt::CorePrivate
         Qt::Gui
         Qt::QmlPrivate
-        Qt::Quick
         Qt::QuickPrivate
         Qt::TestPrivate
     PUBLIC_LIBRARIES
         Qt::Core
         Qt::Test
+        Qt::Quick
     PRIVATE_MODULE_INTERFACE
         Qt::TestPrivate
 )
