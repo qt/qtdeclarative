@@ -556,8 +556,8 @@
 /*!
     \qmlmethod Point QtQuick::TableView::cellAtPos(point position, bool includeSpacing)
 
-    Returns the cell at the given \a position in the view. If no cell intersects with
-    \a position, the return value will be \c point(-1, -1).
+    Returns the cell at the given \a position in the view. If no \l {isRowLoaded()}{loaded}
+    cell intersects with \a position, the return value will be \c point(-1, -1).
 
     If \a includeSpacing is set to \c true, a cell's bounding box will be considered
     to include half the adjacent \l rowSpacing and \l columnSpacing on each side. The
@@ -4014,27 +4014,29 @@ QPoint QQuickTableView::cellAtPos(const QPointF &position, bool includeSpacing) 
 {
     Q_D(const QQuickTableView);
 
-    if (!boundingRect().contains(position))
+    const QPointF localPos = mapToItem(d->contentItem, position);
+    if (!d->loadedTableOuterRect.contains(localPos))
         return QPoint(-1, -1);
 
     const qreal hSpace = d->cellSpacing.width();
     const qreal vSpace = d->cellSpacing.height();
-    qreal currentColumnEnd = d->loadedTableOuterRect.x() - contentX();
-    qreal currentRowEnd = d->loadedTableOuterRect.y() - contentY();
+    qreal currentColumnEnd = d->loadedTableOuterRect.x();
+    qreal currentRowEnd = d->loadedTableOuterRect.y();
+
     int foundColumn = -1;
     int foundRow = -1;
 
     for (const int column : d->loadedColumns) {
         currentColumnEnd += d->getEffectiveColumnWidth(column);
-        if (position.x() < currentColumnEnd) {
+        if (localPos.x() < currentColumnEnd) {
             foundColumn = column;
             break;
         }
         currentColumnEnd += hSpace;
-        if (!includeSpacing && position.x() < currentColumnEnd) {
+        if (!includeSpacing && localPos.x() < currentColumnEnd) {
             // Hit spacing
             return QPoint(-1, -1);
-        } else if (includeSpacing && position.x() < currentColumnEnd - (hSpace / 2)) {
+        } else if (includeSpacing && localPos.x() < currentColumnEnd - (hSpace / 2)) {
             foundColumn = column;
             break;
         }
@@ -4042,16 +4044,16 @@ QPoint QQuickTableView::cellAtPos(const QPointF &position, bool includeSpacing) 
 
     for (const int row : d->loadedRows) {
         currentRowEnd += d->getEffectiveRowHeight(row);
-        if (position.y() < currentRowEnd) {
+        if (localPos.y() < currentRowEnd) {
             foundRow = row;
             break;
         }
         currentRowEnd += vSpace;
-        if (!includeSpacing && position.y() < currentRowEnd) {
+        if (!includeSpacing && localPos.y() < currentRowEnd) {
             // Hit spacing
             return QPoint(-1, -1);
         }
-        if (includeSpacing && position.y() < currentRowEnd - (vSpace / 2)) {
+        if (includeSpacing && localPos.y() < currentRowEnd - (vSpace / 2)) {
             foundRow = row;
             break;
         }
