@@ -132,7 +132,8 @@ void tst_Sanity::qmllint()
 
     QJsonArray output;
     bool success =
-            m_linter.lintFile(filePath, nullptr, true, &output, m_importPaths, {}, {}, m_options);
+            m_linter.lintFile(filePath, nullptr, true, &output, m_importPaths, {}, {}, m_options)
+            == QQmlJSLinter::LintSuccess;
 
     QVERIFY2(success, qPrintable(QJsonDocument(output).toJson(QJsonDocument::Compact)));
 }

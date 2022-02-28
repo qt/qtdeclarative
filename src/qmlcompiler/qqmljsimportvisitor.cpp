@@ -1159,7 +1159,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::StringLiteral *sl)
         }
 
         const FixSuggestion suggestion = { { { u"Use a template literal instead"_qs,
-                                               sl->literalToken, u"`" + templateString + u"`" } } };
+                                               sl->literalToken, u"`" + templateString + u"`",
+                                               QString(), false } } };
         m_logger->log(QStringLiteral("String contains unescaped line terminator which is "
                                      "deprecated."),
                       Log_MultilineString, sl->literalToken, true, true, suggestion);

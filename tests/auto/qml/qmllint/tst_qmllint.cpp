@@ -49,7 +49,7 @@ public:
 
     struct Result
     {
-        enum Flag { ExitsNormally = 0x1, NoMessages = 0x2 };
+        enum Flag { ExitsNormally = 0x1, NoMessages = 0x2, AutoFixable = 0x4 };
 
         Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -107,7 +107,6 @@ private Q_SLOTS:
     void absolutePath();
 
     void importMultipartUri();
-
 private:
     enum DefaultImportOption { NoDefaultImports, UseDefaultImports };
     enum ContainOption { StringNotContained, StringContained };
@@ -126,7 +125,8 @@ private:
                      QStringList importDirs = {}, QStringList qmltypesFiles = {},
                      QStringList resources = {},
                      DefaultImportOption defaultImports = UseDefaultImports,
-                     QMap<QString, QQmlJSLogger::Option> *options = nullptr);
+                     QMap<QString, QQmlJSLogger::Option> *options = nullptr,
+                     bool autoFixable = false);
 
     void searchWarnings(const QJsonArray &warnings, const QString &string,
                         QtMsgType type = QtWarningMsg, quint32 line = 0, quint32 column = 0,
@@ -712,26 +712,22 @@ void TestQmllint::dirtyQmlCode_data()
                                                    "which is deprecated."),
                                     0, 0, QtInfoMsg } },
                         {},
-                        {},
-                        Result::ExitsNormally };
-    QTest::newRow("multilineStringTortureQuote")
-            << QStringLiteral("multilineStringTortureQuote.qml")
-            << Result { { Message { QStringLiteral("String contains unescaped line terminator which is deprecated."), 0, 0, QtInfoMsg }}, {}, {Message {R"(`
-    quote: " \\" \\\\"
-    ticks: \` \` \\\` \\\`
-    singleTicks: ' \' \\' \\\'
-    expression: \${expr} \${expr} \\\${expr} \\\${expr}
-    `)"}}, Result::ExitsNormally };
-    QTest::newRow("multilineStringTortureTick")
-            << QStringLiteral("multilineStringTortureTick.qml")
-            << Result { { Message { QStringLiteral("String contains unescaped line terminator which is deprecated."), 0, 0, QtInfoMsg } }, {}, {Message {
-               R"(`
-    quote: " \" \\" \\\"
-    ticks: \` \` \\\` \\\`
-    singleTicks: ' \\' \\\\'
-    expression: \${expr} \${expr} \\\${expr} \\\${expr}
-    `)"
-}}, Result::ExitsNormally};
+                        { Message { "`Foo\nmultiline\\`\nstring`", 4, 32 },
+                          Message { "`another\\`\npart\nof it`", 6, 11 },
+                          Message { R"(`
+quote: " \\" \\\\"
+ticks: \` \` \\\` \\\`
+singleTicks: ' \' \\' \\\'
+expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
+                                    10, 28 },
+                          Message {
+                                  R"(`
+quote: " \" \\" \\\"
+ticks: \` \` \\\` \\\`
+singleTicks: ' \\' \\\\'
+expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
+                                  16, 27 } },
+                        { Result::ExitsNormally, Result::AutoFixable } };
     QTest::newRow("unresolvedType")
             << QStringLiteral("unresolvedType.qml")
             << Result { { Message { QStringLiteral(
@@ -990,7 +986,8 @@ void TestQmllint::dirtyQmlCode()
     QEXPECT_FAIL("bad tranlsation binding (qsTr)", "We currently do not check translation binding",
                  Abort);
 
-    callQmllint(filename, result.flags.testFlag(Result::ExitsNormally), &warnings);
+    callQmllint(filename, result.flags.testFlag(Result::ExitsNormally), &warnings, {}, {}, {},
+                UseDefaultImports, nullptr, result.flags.testFlag(Result::Flag::AutoFixable));
 
     checkResult(
             warnings, result,
@@ -1304,16 +1301,19 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
 void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings,
                               QStringList importPaths, QStringList qmldirFiles,
                               QStringList resources, DefaultImportOption defaultImports,
-                              QMap<QString, QQmlJSLogger::Option> *options)
+                              QMap<QString, QQmlJSLogger::Option> *options, bool autoFixable)
 {
     QJsonArray jsonOutput;
 
-    bool success = m_linter.lintFile(
-            QFileInfo(fileToLint).isAbsolute() ? fileToLint : testFile(fileToLint), nullptr, true,
-            warnings ? &jsonOutput : nullptr,
-            defaultImports == UseDefaultImports ? m_defaultImportPaths + importPaths
-                                                : importPaths,
+    const QFileInfo info = QFileInfo(fileToLint);
+    const QString lintedFile = info.isAbsolute() ? fileToLint : testFile(fileToLint);
+
+    QQmlJSLinter::LintResult lintResult = m_linter.lintFile(
+            lintedFile, nullptr, true, warnings ? &jsonOutput : nullptr,
+            defaultImports == UseDefaultImports ? m_defaultImportPaths + importPaths : importPaths,
             qmldirFiles, resources, options != nullptr ? *options : QQmlJSLogger::options());
+
+    bool success = lintResult == QQmlJSLinter::LintSuccess;
     QVERIFY2(success == shouldSucceed, QJsonDocument(jsonOutput).toJson());
 
     if (warnings) {
@@ -1322,6 +1322,46 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
     }
 
     QCOMPARE(success, shouldSucceed);
+
+    if (lintResult == QQmlJSLinter::LintSuccess || lintResult == QQmlJSLinter::HasWarnings) {
+        QString fixedCode;
+        QQmlJSLinter::FixResult fixResult = m_linter.applyFixes(&fixedCode, true);
+
+        if (autoFixable) {
+            QCOMPARE(fixResult, QQmlJSLinter::FixSuccess);
+            // Check that the fixed version of the file actually passes qmllint now
+            QTemporaryDir dir;
+            QVERIFY(dir.isValid());
+            QFile file(dir.filePath("Fixed.qml"));
+            QVERIFY2(file.open(QIODevice::WriteOnly), qPrintable(file.errorString()));
+            file.write(fixedCode.toUtf8());
+            file.flush();
+            file.close();
+
+            callQmllint(QFileInfo(file).absoluteFilePath(), true, nullptr, importPaths, qmldirFiles,
+                        resources, defaultImports, options, false);
+
+            const QString fixedPath = testFile(info.baseName() + u".fixed.qml"_qs);
+
+            if (QFileInfo(fixedPath).exists()) {
+                QFile fixedFile(fixedPath);
+                fixedFile.open(QFile::ReadOnly);
+                QString fixedFileContents = QString::fromUtf8(fixedFile.readAll());
+#ifdef Q_OS_WIN
+                fixedCode = fixedCode.replace(u"\r\n"_qs, u"\n"_qs);
+                fixedFileContents = fixedFileContents.replace(u"\r\n"_qs, u"\n"_qs);
+#endif
+
+                QCOMPARE(fixedCode, fixedFileContents);
+            }
+        } else {
+            if (shouldSucceed)
+                QCOMPARE(fixResult, QQmlJSLinter::NothingToFix);
+            else
+                QVERIFY(fixResult == QQmlJSLinter::FixSuccess
+                        || fixResult == QQmlJSLinter::NothingToFix);
+        }
+    }
 }
 
 void TestQmllint::runTest(const QString &testFile, const Result &result, QStringList importDirs,
@@ -1331,7 +1371,8 @@ void TestQmllint::runTest(const QString &testFile, const Result &result, QString
 {
     QJsonArray warnings;
     callQmllint(testFile, result.flags.testFlag(Result::Flag::ExitsNormally), &warnings, importDirs,
-                qmltypesFiles, resources, defaultImports, options);
+                qmltypesFiles, resources, defaultImports, options,
+                result.flags.testFlag(Result::Flag::AutoFixable));
     checkResult(warnings, result);
 }
 
@@ -1444,7 +1485,6 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
                 .arg(QString::fromUtf8(QJsonDocument(warnings).toJson(QJsonDocument::Compact)),
                      must ? u"must" : u"must NOT", substring);
     };
-
     if (shouldContain == StringContained)
         QVERIFY2(contains, qPrintable(toDescription(warnings, substring)));
     else
@@ -1520,7 +1560,8 @@ void TestQmllint::missingBuiltinsNoCrash()
     QJsonArray warnings;
 
     bool success = linter.lintFile(testFile("missingBuiltinsNoCrash.qml"), nullptr, true,
-                                   &jsonOutput, {}, {}, {}, {});
+                                   &jsonOutput, {}, {}, {}, {})
+            == QQmlJSLinter::LintSuccess;
     QVERIFY2(!success, QJsonDocument(jsonOutput).toJson());
 
     QVERIFY2(jsonOutput.size() == 1, QJsonDocument(jsonOutput).toJson());

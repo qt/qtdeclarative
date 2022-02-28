@@ -148,6 +148,17 @@ All warnings can be set to three levels:
     absolutePath.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(absolutePath);
 
+    QCommandLineOption fixFile(QStringList()
+                               << "f"
+                               << "fix" << QLatin1String("Automatically apply fix suggestions"));
+    parser.addOption(fixFile);
+
+    QCommandLineOption dryRun(QStringList()
+                              << "dry-run"
+                              << QLatin1String("Only print out the contents of the file after fix "
+                                               "suggestions without applying them"));
+    parser.addOption(dryRun);
+
     parser.addPositionalArgument(QLatin1String("files"),
                                  QLatin1String("list of qml or js files to verify"));
 
@@ -264,8 +275,77 @@ All warnings can be set to three levels:
             addAbsolutePaths(qmlImportPaths, settings.value(qmlImportPathsSetting).toStringList());
         }
 
-        success &= linter.lintFile(filename, nullptr, silent, useJson ? &jsonFiles : nullptr,
-                                   qmlImportPaths, qmldirFiles, resourceFiles, options);
+        const bool isFixing = parser.isSet(fixFile);
+
+        QQmlJSLinter::LintResult lintResult = linter.lintFile(
+                filename, nullptr, silent || isFixing, useJson ? &jsonFiles : nullptr,
+                qmlImportPaths, qmldirFiles, resourceFiles, options);
+        success &= (lintResult == QQmlJSLinter::LintSuccess);
+
+        if (isFixing) {
+            if (lintResult != QQmlJSLinter::LintSuccess && lintResult != QQmlJSLinter::HasWarnings)
+                continue;
+
+            QString fixedCode;
+            const QQmlJSLinter::FixResult result = linter.applyFixes(&fixedCode, silent);
+
+            if (result != QQmlJSLinter::NothingToFix && result != QQmlJSLinter::FixSuccess) {
+                success = false;
+                continue;
+            }
+
+            if (parser.isSet(dryRun)) {
+                QTextStream(stdout) << fixedCode;
+            } else {
+                if (result == QQmlJSLinter::NothingToFix) {
+                    if (!silent)
+                        qWarning().nospace() << "Nothing to fix in " << filename;
+                    continue;
+                }
+
+                const QString backupFile = filename + u".bak"_qs;
+                if (QFile::exists(backupFile) && !QFile::remove(backupFile)) {
+                    if (!silent) {
+                        qWarning().nospace() << "Failed to remove old backup file " << backupFile
+                                             << ", aborting";
+                    }
+                    success = false;
+                    continue;
+                }
+                if (!QFile::copy(filename, backupFile)) {
+                    if (!silent) {
+                        qWarning().nospace()
+                                << "Failed to create backup file " << backupFile << ", aborting";
+                    }
+                    success = false;
+                    continue;
+                }
+
+                QFile file(filename);
+                if (!file.open(QIODevice::WriteOnly)) {
+                    if (!silent) {
+                        qWarning().nospace() << "Failed to open " << filename
+                                             << " for writing:" << file.errorString();
+                    }
+                    success = false;
+                    continue;
+                }
+
+                const QByteArray data = fixedCode.toUtf8();
+                if (file.write(data) != data.size()) {
+                    if (!silent) {
+                        qWarning().nospace() << "Failed to write new contents to " << filename
+                                             << ": " << file.errorString();
+                    }
+                    success = false;
+                    continue;
+                }
+                if (!silent) {
+                    qDebug().nospace() << "Applied fixes to " << filename << ". Backup created at "
+                                       << backupFile;
+                }
+            }
+        }
     }
 
     if (useJson) {
