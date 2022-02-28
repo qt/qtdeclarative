@@ -98,6 +98,7 @@ public:
     QV4::ReturnedValue extractInitialPropertyValues(QQmlV4Function *args, QObject *loader, bool *error);
     QQuickLoader::Status computeStatus() const;
     void updateStatus();
+    void createComponent();
 
     qreal getImplicitWidth() const override;
     qreal getImplicitHeight() const override;
