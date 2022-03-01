@@ -591,6 +591,8 @@ void QQmlJSCodeGenerator::generate_MoveReg(int srcReg, int destReg)
 
     const QString destRegName = registerVariable(destReg);
     m_body.setWriteRegister(destRegName);
+    if (destRegName.isEmpty())
+        return; // don't store things we cannot store.
     m_body += destRegName;
     m_body += u" = "_qs;
     m_body += use(registerVariable(srcReg));
