@@ -1,6 +1,7 @@
 set(cpp_sources
     birthdayparty.cpp birthdayparty.h
     cppbaseclass.h
+    dynamicmeta.h
     objectwithmethod.h
     person.cpp person.h
     theme.cpp theme.h
@@ -61,6 +62,7 @@ set(qml_files
     excessiveParameters.qml
     extendedTypes.qml
     failures.qml
+    fallbacklookups.qml
     fileDialog.qml
     functionLookup.qml
     funcWithParams.qml
