@@ -205,8 +205,8 @@ public:
         NinePatchMargins = 0x100,
         SaveImage = 0x200,
     };
-    Q_FLAG(DebugFlag)
     Q_DECLARE_FLAGS(DebugFlags, DebugFlag)
+    Q_FLAG(DebugFlags)
 #endif
 
     explicit QQuickStyleItem(QQuickItem *parent = nullptr);
