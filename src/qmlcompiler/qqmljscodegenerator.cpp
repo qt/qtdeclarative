@@ -120,6 +120,8 @@ QQmlJSAotFunction QQmlJSCodeGenerator::run(
         }
     };
 
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_CLANG("-Wrange-loop-analysis")
     for (const auto &annotation : *m_annotations) {
         addVariable(annotation.second.changedRegisterIndex,
                     annotation.second.changedRegister.storedType());
@@ -129,6 +131,7 @@ QQmlJSAotFunction QQmlJSCodeGenerator::run(
             addVariable(it.key(), it.value().storedType());
         }
     }
+QT_WARNING_POP
 
     // ensure we have m_labels for loops
     for (const auto loopLabel : m_context->labelInfo)
