@@ -655,6 +655,7 @@ void tst_QmlCppCodegen::interestingFiles_data()
     QTest::addRow("curlygrouped") << u"curlygrouped.qml"_qs << true;
     QTest::addRow("cycleHead") << u"cycleHead.qml"_qs << false;
     QTest::addRow("deadStoreLoop") << u"deadStoreLoop.qml"_qs << true;
+    QTest::addRow("moveRegVoid") << u"moveRegVoid.qml"_qs << true;
 }
 
 void tst_QmlCppCodegen::interestingFiles()

@@ -88,6 +88,7 @@ set(qml_files
     math.qml
     methods.qml
     modulePrefix.qml
+    moveRegVoid.qml
     noBindingLoop.qml
     noQQmlData.qml
     nonNotifyable.qml
