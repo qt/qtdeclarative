@@ -124,7 +124,7 @@ private slots:
     void functionLookup();
     void objectInVar();
     void functionTakingVar();
-    void isnan();
+    void testIsnan();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1849,7 +1849,7 @@ void tst_QmlCppCodegen::functionTakingVar()
     QCOMPARE(o->property("c"), QVariant::fromValue<int>(11));
 }
 
-void tst_QmlCppCodegen::isnan()
+void tst_QmlCppCodegen::testIsnan()
 {
     QQmlEngine engine;
     const QUrl document(u"qrc:/TestTypes/isnan.qml"_qs);
