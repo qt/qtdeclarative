@@ -637,6 +637,11 @@ ReturnedValue QQmlContextWrapper::lookupContextObjectProperty(Lookup *l, Executi
     return QObjectWrapper::lookupGetterImpl(l, engine, obj, /*useOriginalProperty*/ true, revertLookup);
 }
 
+ReturnedValue QQmlContextWrapper::lookupScopeFallbackProperty(Lookup *l, ExecutionEngine *engine, Value *base)
+{
+    return resolveQmlContextPropertyLookupGetter(l, engine, base);
+}
+
 ReturnedValue QQmlContextWrapper::lookupInGlobalObject(Lookup *l, ExecutionEngine *engine, Value *base)
 {
     Q_UNUSED(base);
