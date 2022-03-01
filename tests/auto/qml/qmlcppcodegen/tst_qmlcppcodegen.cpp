@@ -124,6 +124,7 @@ private slots:
     void functionLookup();
     void objectInVar();
     void testIsnan();
+    void fallbackLookups();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1844,6 +1845,39 @@ void tst_QmlCppCodegen::testIsnan()
     const QVariant b = o->property("b");
     QCOMPARE(b.metaType(), QMetaType::fromType<bool>());
     QVERIFY(b.toBool());
+}
+
+void tst_QmlCppCodegen::fallbackLookups()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/TestTypes/fallbacklookups.qml"_qs);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->objectName(), QString());
+    int result = 0;
+
+    QMetaObject::invokeMethod(o.data(), "withContext", Q_RETURN_ARG(int, result));
+    QCOMPARE(result, 16);
+    QCOMPARE(o->objectName(), QStringLiteral("aa93"));
+
+    QMetaObject::invokeMethod(o.data(), "withId", Q_RETURN_ARG(int, result));
+    QCOMPARE(result, 17);
+    QCOMPARE(o->objectName(), QStringLiteral("bb94"));
+
+    QObject *singleton = nullptr;
+    QMetaObject::invokeMethod(o.data(), "getSingleton", Q_RETURN_ARG(QObject*, singleton));
+    QVERIFY(singleton);
+
+    QMetaObject::invokeMethod(o.data(), "withSingleton", Q_RETURN_ARG(int, result));
+    QCOMPARE(result, 18);
+    QCOMPARE(singleton->objectName(), QStringLiteral("cc95"));
+
+    QMetaObject::invokeMethod(o.data(), "withProperty", Q_RETURN_ARG(int, result));
+    QCOMPARE(result, 19);
+    QCOMPARE(singleton->objectName(), QStringLiteral("dd96"));
 }
 
 void tst_QmlCppCodegen::runInterpreted()
