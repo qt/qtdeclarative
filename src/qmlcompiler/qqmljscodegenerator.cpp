@@ -84,9 +84,9 @@ QString QQmlJSCodeGenerator::metaTypeFromName(const QQmlJSScope::ConstPtr &type)
 QString QQmlJSCodeGenerator::metaObject(const QQmlJSScope::ConstPtr &objectType)
 {
     if (!objectType->isComposite()) {
-        if (objectType->internalName() == u"QtObject"_qs
+        if (objectType->internalName() == u"QObject"_qs
                 || objectType->internalName() == u"QQmlComponent"_qs) {
-            return metaTypeFromType(objectType) + u".metaObject()"_qs;
+            return u'&' + objectType->internalName() + u"::staticMetaObject"_qs;
         }
         return metaTypeFromName(objectType) + u".metaObject()"_qs;
     }
