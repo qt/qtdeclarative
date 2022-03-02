@@ -36,6 +36,7 @@
 #include <private/qquickmousearea_p.h>
 #include <private/qquicktransition_p.h>
 #include <private/qqmlvaluetype_p.h>
+#include <private/qquicktaphandler_p.h>
 #include <math.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/geometrytestutils_p.h>
@@ -142,6 +143,32 @@ private:
     bool m_active;
 };
 
+class FlickableWithExtents : public QQuickFlickable
+{
+public:
+    qreal extent = 10;
+
+    qreal minXExtent() const override
+    {
+        return QQuickFlickable::minXExtent() + extent;
+    }
+
+    qreal maxXExtent() const override
+    {
+        return QQuickFlickable::maxXExtent() + extent;
+    }
+
+    qreal minYExtent() const override
+    {
+        return QQuickFlickable::minYExtent() + extent;
+    }
+
+    qreal maxYExtent() const override
+    {
+        return QQuickFlickable::maxYExtent() + extent;
+    }
+};
+
 class tst_qquickflickable : public QQmlDataTest
 {
     Q_OBJECT
@@ -208,6 +235,7 @@ private slots:
     void parallelTouch();
     void ignoreNonLeftMouseButtons();
     void ignoreNonLeftMouseButtons_data();
+    void receiveTapOutsideContentItem();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -2714,6 +2742,36 @@ void tst_qquickflickable::ignoreNonLeftMouseButtons_data()
 
     QTest::newRow("right") << Qt::RightButton;
     QTest::newRow("middle") << Qt::MiddleButton;
+}
+
+void tst_qquickflickable::receiveTapOutsideContentItem()
+{
+    // Check that if we add a TapHandler handler to a flickable, we
+    // can tap on the whole flickable area inside it, which includes
+    // the extents in addition to the content item.
+    QQuickView window;
+    window.resize(200, 200);
+    FlickableWithExtents flickable;
+    flickable.setParentItem(window.contentItem());
+    flickable.setWidth(200);
+    flickable.setHeight(200);
+    flickable.setContentWidth(100);
+    flickable.setContentHeight(100);
+
+    window.show();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    QQuickTapHandler tapHandler(&flickable);
+    QSignalSpy clickedSpy(&tapHandler, SIGNAL(tapped(QEventPoint, Qt::MouseButton)));
+
+    // Tap outside the content item in the top-left corner
+    QTest::mouseClick(&window, Qt::LeftButton, {}, QPoint(5, 5));
+    QCOMPARE(clickedSpy.count(), 1);
+
+    // Tap outside the content item in the bottom-right corner
+    const QPoint bottomRight(flickable.contentItem()->width() + 5, flickable.contentItem()->height() + 5);
+    QTest::mouseClick(&window, Qt::LeftButton, {}, bottomRight);
+    QCOMPARE(clickedSpy.count(), 2);
 }
 
 QTEST_MAIN(tst_qquickflickable)
