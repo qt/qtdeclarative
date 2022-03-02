@@ -153,4 +153,44 @@ TestCase {
         // Shouldn't result in a crash.
         afterRenderingSpy.wait(1000)
     }
+
+    Component {
+        id: invalidNinePatchImageProvider
+        Item {
+            width: 200
+            height: 200
+            property alias ninePatchImage: np
+
+            NinePatchImage {
+                id: np
+                source : "qrc:/test-assets/button-background-1.png"
+                cache: false
+                visible: false
+            }
+
+            ShaderEffect {
+                width: 200
+                height: 200
+                property variant source: np
+                property real amplitude: 0.04
+                property real frequency: 20
+                property real time: 0
+                fragmentShader: "qrc:/test-assets/wobble.frag.qsb"
+            }
+        }
+    }
+
+    // QTBUG-100508
+    function test_invalidNinePatchImageProvider() {
+        var container = createTemporaryObject(invalidNinePatchImageProvider, testCase)
+        verify(container);
+        var afterRenderingSpy = signalSpyComponent.createObject(null,
+            { target: testCase.Window.window, signalName: "afterRendering" })
+        verify(afterRenderingSpy.valid)
+
+        afterRenderingSpy.wait(100)
+        container.ninePatchImage.source = ""
+        // Shouldn't result in a crash.
+        afterRenderingSpy.wait(100)
+    }
 }
