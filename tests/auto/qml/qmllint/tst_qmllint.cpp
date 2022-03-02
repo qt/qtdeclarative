@@ -96,10 +96,10 @@ private:
 
     QString runQmllint(const QString &fileToLint, std::function<void(QProcess &)> handleResult,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true,
-                       bool addImportDirs = true);
+                       bool addImportDirs = true, bool absolutePath = true);
     QString runQmllint(const QString &fileToLint, bool shouldSucceed,
                        const QStringList &extraArgs = QStringList(), bool ignoreSettings = true,
-                       bool addImportDirs = true);
+                       bool addImportDirs = true, bool absolutePath = true);
     void callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings = nullptr,
                      QStringList importDirs = {}, QStringList qmltypesFiles = {},
                      QStringList resources = {},
@@ -1161,12 +1161,15 @@ void TestQmllint::controlsSanity()
 QString TestQmllint::runQmllint(const QString &fileToLint,
                                 std::function<void(QProcess &)> handleResult,
                                 const QStringList &extraArgs, bool ignoreSettings,
-                                bool addImportDirs)
+                                bool addImportDirs, bool absolutePath)
 {
     auto qmlImportDir = QLibraryInfo::path(QLibraryInfo::QmlImportsPath);
     QStringList args;
 
-    args << (QFileInfo(fileToLint).isAbsolute() ? fileToLint : testFile(fileToLint));
+    QString absoluteFilePath =
+            QFileInfo(fileToLint).isAbsolute() ? fileToLint : testFile(fileToLint);
+
+    args << QFileInfo(absoluteFilePath).fileName();
 
     if (addImportDirs) {
         args << QStringLiteral("-I") << qmlImportDir
@@ -1174,13 +1177,17 @@ QString TestQmllint::runQmllint(const QString &fileToLint,
     }
 
     if (ignoreSettings)
-        QStringLiteral("--ignore-settings");
+        args << QStringLiteral("--ignore-settings");
+
+    if (absolutePath)
+        args << QStringLiteral("--absolute-path");
 
     args << extraArgs;
     args << QStringLiteral("--silent");
     QString errors;
     auto verify = [&](bool isSilent) {
         QProcess process;
+        process.setWorkingDirectory(QFileInfo(absoluteFilePath).absolutePath());
         process.start(m_qmllintPath, args);
         handleResult(process);
         errors = process.readAllStandardError();
@@ -1222,7 +1229,7 @@ QString TestQmllint::runQmllint(const QString &fileToLint,
 
 QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
                                 const QStringList &extraArgs, bool ignoreSettings,
-                                bool addImportDirs)
+                                bool addImportDirs, bool absolutePath)
 {
     return runQmllint(
             fileToLint,
@@ -1235,7 +1242,7 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
                 else
                     QVERIFY(process.exitCode() != 0);
             },
-            extraArgs, ignoreSettings, addImportDirs);
+            extraArgs, ignoreSettings, addImportDirs, absolutePath);
 }
 
 void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings,
@@ -1453,19 +1460,12 @@ void TestQmllint::missingBuiltinsNoCrash()
 
 void TestQmllint::absolutePath()
 {
-    // We cannot use the normal linter here since we need to set a different parameter in the
-    // constructor
-    QQmlJSLinter linter(m_defaultImportPaths, true);
-
+    QString absPathOutput = runQmllint("memberNotFound.qml", false, {}, true, true, true);
+    QString relPathOutput = runQmllint("memberNotFound.qml", false, {}, true, true, false);
     const QString absolutePath = QFileInfo(testFile("memberNotFound.qml")).absoluteFilePath();
 
-    QJsonArray jsonOutput;
-    bool success = linter.lintFile(absolutePath, nullptr, true, &jsonOutput, {}, {}, {}, {});
-    QVERIFY(!success);
-    QVERIFY2(jsonOutput.size() == 1, QJsonDocument(jsonOutput).toJson());
-    QJsonArray warnings = jsonOutput.at(0)[u"warnings"_qs].toArray();
-
-    searchWarnings(warnings, absolutePath, absolutePath);
+    QVERIFY(absPathOutput.contains(absolutePath));
+    QVERIFY(!relPathOutput.contains(absolutePath));
 }
 
 void TestQmllint::importMultipartUri()
