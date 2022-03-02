@@ -205,6 +205,7 @@ private slots:
     void revertNullObjectBinding();
     void bindableProperties();
     void parentChangeInvolvingBindings();
+    void rewindAnchorChange();
 };
 
 void tst_qquickstates::initTestCase()
@@ -1915,6 +1916,29 @@ void tst_qquickstates::parentChangeInvolvingBindings()
    QCOMPARE(root->property("childRotation").toInt(), 50);
 
    QCOMPARE(innerItem->size(), childItem->size());
+}
+
+void tst_qquickstates::rewindAnchorChange()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("anchorRewind.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> root(c.create());
+    QVERIFY(root);
+
+    QQmlContext *context = qmlContext(root.data());
+    QVERIFY(context);
+
+    QObject *inner = context->objectForName(QStringLiteral("inner"));
+    QVERIFY(inner);
+
+    QQuickItem *innerRect = qobject_cast<QQuickItem *>(inner);
+    QVERIFY(innerRect);
+
+    QTRY_COMPARE(innerRect->x(), 0);
+    QTRY_COMPARE(innerRect->y(), 0);
+    QTRY_COMPARE(innerRect->width(), 200);
+    QTRY_COMPARE(innerRect->height(), 200);
 }
 
 QTEST_MAIN(tst_qquickstates)

@@ -1102,6 +1102,7 @@ void QQuickAnchorChanges::reverse()
     QQuickAnchors::Anchors stateHAnchors = d->anchorSet->d_func()->usedAnchors & QQuickAnchors::Horizontal_Mask;
     QQuickAnchors::Anchors origHAnchors = targetPrivate->anchors()->usedAnchors() & QQuickAnchors::Horizontal_Mask;
 
+    const QRectF oldGeometry(d->target->position(), d->target->size());
     bool stateSetWidth = (stateHAnchors &&
                           stateHAnchors != QQuickAnchors::LeftAnchor &&
                           stateHAnchors != QQuickAnchors::RightAnchor &&
@@ -1110,8 +1111,11 @@ void QQuickAnchorChanges::reverse()
                          origHAnchors != QQuickAnchors::LeftAnchor &&
                          origHAnchors != QQuickAnchors::RightAnchor &&
                          origHAnchors != QQuickAnchors::HCenterAnchor);
-    if (d->origWidth.isValid() && stateSetWidth && !origSetWidth)
-        d->target->setWidth(d->origWidth.value);
+    if (d->origWidth.isValid() && stateSetWidth && !origSetWidth && !qt_is_nan(d->origWidth)) {
+        targetPrivate->widthValidFlag = true;
+        if (targetPrivate->width != d->origWidth)
+            targetPrivate->width.setValueBypassingBindings(d->origWidth);
+    }
 
     bool stateSetHeight = (stateVAnchors &&
                            stateVAnchors != QQuickAnchors::TopAnchor &&
@@ -1123,14 +1127,23 @@ void QQuickAnchorChanges::reverse()
                           origVAnchors != QQuickAnchors::BottomAnchor &&
                           origVAnchors != QQuickAnchors::VCenterAnchor &&
                           origVAnchors != QQuickAnchors::BaselineAnchor);
-    if (d->origHeight.isValid() && stateSetHeight && !origSetHeight)
-        d->target->setHeight(d->origHeight.value);
+    if (d->origHeight.isValid() && stateSetHeight && !origSetHeight && !!qt_is_nan(d->origHeight)) {
+        targetPrivate->heightValidFlag = true;
+        if (targetPrivate->height != d->origHeight)
+            targetPrivate->height.setValueBypassingBindings(d->origHeight);
+    }
 
-    if (stateHAnchors && !origHAnchors)
-        d->target->setX(d->origX);
+    if (stateHAnchors && !origHAnchors && !qt_is_nan(d->origX) && d->origX != targetPrivate->x)
+        targetPrivate->x.setValueBypassingBindings(d->origX);
 
-    if (stateVAnchors && !origVAnchors)
-        d->target->setY(d->origY);
+    if (stateVAnchors && !origVAnchors && !qt_is_nan(d->origY) && d->origY != targetPrivate->y)
+        targetPrivate->y.setValueBypassingBindings(d->origY);
+
+    const QRectF newGeometry(d->target->position(), d->target->size());
+    if (newGeometry != oldGeometry) {
+        targetPrivate->dirty(QQuickItemPrivate::Position);
+        d->target->geometryChange(newGeometry, oldGeometry);
+    }
 }
 
 QQuickStateActionEvent::EventType QQuickAnchorChanges::type() const
@@ -1324,15 +1337,31 @@ void QQuickAnchorChanges::rewind()
         return;
 
     QQuickItemPrivate *targetPrivate = QQuickItemPrivate::get(d->target);
+    const QRectF oldGeometry(d->target->position(), d->target->size());
 
-    //restore previous values (but not previous bindings, i.e. anchors)
-    d->target->setX(d->rewindX);
-    d->target->setY(d->rewindY);
-    if (targetPrivate->widthValid()) {
-        d->target->setWidth(d->rewindWidth);
+    // Restore previous values (but not previous bindings, i.e. anchors).
+    // Also, don't drop any new bindings.
+    if (!qt_is_nan(d->rewindX) && d->rewindX != targetPrivate->x)
+        targetPrivate->x.setValueBypassingBindings(d->rewindX);
+    if (!qt_is_nan(d->rewindY) && d->rewindY != targetPrivate->y)
+        targetPrivate->y.setValueBypassingBindings(d->rewindY);
+
+    if (targetPrivate->widthValid() && !qt_is_nan(d->rewindWidth)) {
+        targetPrivate->widthValidFlag = true;
+        if (d->rewindWidth != targetPrivate->width)
+            targetPrivate->width.setValueBypassingBindings(d->rewindWidth);
     }
-    if (targetPrivate->heightValid()) {
-        d->target->setHeight(d->rewindHeight);
+
+    if (targetPrivate->heightValid() && !qt_is_nan(d->rewindHeight)) {
+        targetPrivate->heightValidFlag = true;
+        if (d->rewindHeight != targetPrivate->height)
+            targetPrivate->height.setValueBypassingBindings(d->rewindHeight);
+    }
+
+    const QRectF newGeometry(d->target->position(), d->target->size());
+    if (newGeometry != oldGeometry) {
+        targetPrivate->dirty(QQuickItemPrivate::Position);
+        d->target->geometryChange(newGeometry, oldGeometry);
     }
 }
 
