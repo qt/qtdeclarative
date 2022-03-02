@@ -439,6 +439,8 @@ QSGNode *QQuickNinePatchImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNode
     QSizeF sz = size();
     QImage image = d->pix.image();
     if (!sz.isValid() || image.isNull()) {
+        if (d->provider)
+            d->provider->updateTexture(nullptr);
         delete oldNode;
         return nullptr;
     }
