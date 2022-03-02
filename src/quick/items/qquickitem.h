@@ -477,6 +477,7 @@ private:
     friend class QSGRenderer;
     friend class QAccessibleQuickItem;
     friend class QQuickAccessibleAttached;
+    friend class QQuickAnchorChanges;
     Q_DISABLE_COPY(QQuickItem)
     Q_DECLARE_PRIVATE(QQuickItem)
 };

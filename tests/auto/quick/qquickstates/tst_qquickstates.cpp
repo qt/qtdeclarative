@@ -206,6 +206,7 @@ private slots:
     void bindableProperties();
     void parentChangeInvolvingBindings();
     void deferredProperties();
+    void rewindAnchorChange();
 };
 
 void tst_qquickstates::initTestCase()
@@ -1952,6 +1953,29 @@ void tst_qquickstates::deferredProperties()
     QCOMPARE(qvariant_cast<QColor>(root->property("extendedColor")), QColor(Qt::cyan));
     QCOMPARE(root->width(), 100.0);
     QCOMPARE(root->height(), 100.0);
+}
+
+void tst_qquickstates::rewindAnchorChange()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("anchorRewind.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> root(c.create());
+    QVERIFY(root);
+
+    QQmlContext *context = qmlContext(root.data());
+    QVERIFY(context);
+
+    QObject *inner = context->objectForName(QStringLiteral("inner"));
+    QVERIFY(inner);
+
+    QQuickItem *innerRect = qobject_cast<QQuickItem *>(inner);
+    QVERIFY(innerRect);
+
+    QTRY_COMPARE(innerRect->x(), 0);
+    QTRY_COMPARE(innerRect->y(), 0);
+    QTRY_COMPARE(innerRect->width(), 200);
+    QTRY_COMPARE(innerRect->height(), 200);
 }
 
 QTEST_MAIN(tst_qquickstates)
