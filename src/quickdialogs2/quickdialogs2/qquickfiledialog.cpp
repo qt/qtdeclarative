@@ -581,6 +581,15 @@ QUrl QQuickFileDialog::addDefaultSuffix(const QUrl &file) const
     return url;
 }
 
+void QQuickFileDialog::accept()
+{
+    if (QPlatformFileDialogHelper *fileDialog = qobject_cast<QPlatformFileDialogHelper *>(handle())) {
+        // Take the currently selected files and make them the final set of files.
+        setSelectedFiles(fileDialog->selectedFiles());
+    }
+    QQuickAbstractDialog::accept();
+}
+
 QList<QUrl> QQuickFileDialog::addDefaultSuffixes(const QList<QUrl> &files) const
 {
     QList<QUrl> urls;
