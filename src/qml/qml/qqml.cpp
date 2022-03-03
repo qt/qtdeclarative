@@ -518,21 +518,23 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         uniqueRevisions(&revisions, type.version, added);
 
         for (QTypeRevision revision : revisions) {
-            if (revision < added)
-                continue;
             if (revision.hasMajorVersion() && revision.majorVersion() > type.version.majorVersion())
                 break;
-            // When removed, we still add revisions, but anonymous ones
-            if (removed.isValid() && !(revision < removed)) {
+
+            assignVersions(&revisionRegistration, revision, type.version);
+
+            // When removed or before added, we still add revisions, but anonymous ones
+            if (revisionRegistration.version < added
+                    || (removed.isValid() && !(revisionRegistration.version < removed))) {
                 revisionRegistration.elementName = nullptr;
                 revisionRegistration.create = nullptr;
+                revisionRegistration.userdata = nullptr;
             } else {
                 revisionRegistration.elementName = elementName;
                 revisionRegistration.create = creatable ? type.create : nullptr;
                 revisionRegistration.userdata = type.userdata;
             }
 
-            assignVersions(&revisionRegistration, revision, type.version);
             revisionRegistration.customParser = type.customParserFactory();
             const int id = qmlregister(TypeRegistration, &revisionRegistration);
             if (type.qmlTypeIds)
@@ -570,13 +572,14 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
         uniqueRevisions(&revisions, type.version, added);
 
         for (QTypeRevision revision : qAsConst(revisions)) {
-            if (revision < added)
-                continue;
             if (revision.hasMajorVersion() && revision.majorVersion() > type.version.majorVersion())
                 break;
 
-            // When removed, we still add revisions, but anonymous ones
-            if (removed.isValid() && !(revision < removed)) {
+            assignVersions(&revisionRegistration, revision, type.version);
+
+            // When removed or before added, we still add revisions, but anonymous ones
+            if (revisionRegistration.version < added
+                    || (removed.isValid() && !(revisionRegistration.version < removed))) {
                 revisionRegistration.typeName = nullptr;
                 revisionRegistration.qObjectApi = nullptr;
             } else {
@@ -584,7 +587,6 @@ int QQmlPrivate::qmlregister(RegistrationType type, void *data)
                 revisionRegistration.qObjectApi = type.qObjectApi;
             }
 
-            assignVersions(&revisionRegistration, revision, type.version);
             const int id = qmlregister(SingletonRegistration, &revisionRegistration);
             if (type.qmlTypeIds)
                 type.qmlTypeIds->append(id);
