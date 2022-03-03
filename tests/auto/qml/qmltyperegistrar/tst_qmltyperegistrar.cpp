@@ -339,6 +339,46 @@ void tst_qmltyperegistrar::methodReturnType()
     QVERIFY(qmltypesData.contains("type: \"QQmlComponent\""));
 }
 
+void tst_qmltyperegistrar::addRemoveVersion_data()
+{
+    QTest::addColumn<QTypeRevision>("importVersion");
+    for (int i = 0; i < 20; ++i)
+        QTest::addRow("v1.%d.qml", i) << QTypeRevision::fromVersion(1, i);
+}
+
+void tst_qmltyperegistrar::addRemoveVersion()
+{
+    QFETCH(QTypeRevision, importVersion);
+
+    const bool creatable
+            = importVersion > QTypeRevision::fromVersion(1, 2)
+            && importVersion < QTypeRevision::fromVersion(1, 18);
+    const bool thingAccessible = importVersion > QTypeRevision::fromVersion(1, 3);
+
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(QStringLiteral("import QmlTypeRegistrarTest %1.%2\n"
+                             "Versioned {\n"
+                             "    property int thing: revisioned\n"
+                             "}")
+              .arg(importVersion.majorVersion()).arg(importVersion.minorVersion()).toUtf8(),
+              QUrl(QTest::currentDataTag()));
+    if (!creatable) {
+        QVERIFY(c.isError());
+        return;
+    }
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    if (!thingAccessible) {
+        QTest::ignoreMessage(
+                    QtWarningMsg,
+                    qPrintable(QStringLiteral("%1:3: ReferenceError: revisioned is not defined")
+                               .arg(QTest::currentDataTag())));
+    }
+    QScopedPointer o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("thing").toInt(), thingAccessible ? 24 : 0);
+}
+
 #ifdef QT_QUICK_LIB
 void tst_qmltyperegistrar::foreignRevisionedProperty()
 {

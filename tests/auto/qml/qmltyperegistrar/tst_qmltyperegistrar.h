@@ -469,6 +469,28 @@ public:
 };
 #endif
 
+class AddedInLateVersion : public QObject
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT(Versioned)
+    QML_ADDED_IN_VERSION(1, 8)
+    Q_PROPERTY(int revisioned READ revisioned CONSTANT REVISION(1, 4))
+    Q_PROPERTY(int insane READ revisioned CONSTANT REVISION 17)
+public:
+    AddedInLateVersion(QObject *parent = nullptr) : QObject(parent) {}
+    int revisioned() const { return 24; }
+};
+
+class RemovedInEarlyVersion : public AddedInLateVersion
+{
+    Q_OBJECT
+    QML_NAMED_ELEMENT(Versioned)
+    QML_ADDED_IN_VERSION(1, 3)
+    QML_REMOVED_IN_VERSION(1, 8)
+public:
+    RemovedInEarlyVersion(QObject *parent = nullptr) : AddedInLateVersion(parent) {}
+};
+
 class tst_qmltyperegistrar : public QObject
 {
     Q_OBJECT
@@ -507,6 +529,9 @@ private slots:
 #ifdef QT_QUICK_LIB
     void foreignRevisionedProperty();
 #endif
+
+    void addRemoveVersion_data();
+    void addRemoveVersion();
 
 private:
     QByteArray qmltypesData;
