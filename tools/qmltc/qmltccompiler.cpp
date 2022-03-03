@@ -115,7 +115,7 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
 
     current.baseClasses = { baseClass };
     if (!documentRoot) {
-        // make document root a friend to allow it to access init and finalize
+        // make document root a friend to allow it to access init and endInit
         current.otherCode << u"friend class %1;"_qs.arg(rootType->internalName());
     } else {
         // make QQmltcObjectCreationBase<DocumentRoot> a friend to allow it to
@@ -147,68 +147,70 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
     };
 
     // add special member functions
-    current.basicCtor.access = QQmlJSMetaMethod::Protected;
+    current.baselineCtor.access = QQmlJSMetaMethod::Protected;
     current.init.access = QQmlJSMetaMethod::Protected;
-    current.finalize.access = QQmlJSMetaMethod::Protected;
-    current.fullCtor.access = QQmlJSMetaMethod::Public;
+    current.endInit.access = QQmlJSMetaMethod::Protected;
+    current.externalCtor.access = QQmlJSMetaMethod::Public;
 
-    current.basicCtor.name = current.cppType;
-    current.fullCtor.name = current.cppType;
+    current.baselineCtor.name = current.cppType;
+    current.externalCtor.name = current.cppType;
     current.init.name = u"qmltc_init"_qs;
     current.init.returnType = u"QQmlRefPointer<QQmlContextData>"_qs;
-    current.finalize.name = u"qmltc_finalize"_qs;
-    current.finalize.returnType = u"void"_qs;
+    current.endInit.name = u"qmltc_finalize"_qs;
+    current.endInit.returnType = u"void"_qs;
 
     QmltcVariable creator(u"QQmltcObjectCreationHelper*"_qs, u"creator"_qs);
     QmltcVariable engine(u"QQmlEngine*"_qs, u"engine"_qs);
     QmltcVariable parent(u"QObject*"_qs, u"parent"_qs, u"nullptr"_qs);
-    current.basicCtor.parameterList = { parent };
+    current.baselineCtor.parameterList = { parent };
     QmltcVariable ctxtdata(u"const QQmlRefPointer<QQmlContextData>&"_qs, u"parentContext"_qs);
     QmltcVariable finalizeFlag(u"bool"_qs, u"canFinalize"_qs);
     if (documentRoot) {
-        current.fullCtor.parameterList = { engine, parent };
+        current.externalCtor.parameterList = { engine, parent };
         current.init.parameterList = { creator, engine, ctxtdata, finalizeFlag };
-        current.finalize.parameterList = { creator, engine, finalizeFlag };
+        current.endInit.parameterList = { creator, engine, finalizeFlag };
     } else {
-        current.fullCtor.parameterList = { creator, engine, parent };
+        current.externalCtor.parameterList = { creator, engine, parent };
         current.init.parameterList = { creator, engine, ctxtdata };
-        current.finalize.parameterList = { creator, engine };
+        current.endInit.parameterList = { creator, engine };
     }
 
-    current.fullCtor.initializerList = { current.basicCtor.name + u"(" + parent.name + u")" };
+    current.externalCtor.initializerList = { current.baselineCtor.name + u"(" + parent.name
+                                             + u")" };
     if (baseTypeIsCompiledQml) {
         // call parent's (QML type's) basic ctor from this. that one will take
         // care about QObject::setParent()
-        current.basicCtor.initializerList = { baseClass + u"(" + parent.name + u")" };
+        current.baselineCtor.initializerList = { baseClass + u"(" + parent.name + u")" };
     } else {
         // default call to ctor is enough, but QQml_setParent_noEvent() is
         // needed (note: faster? version of QObject::setParent())
-        current.basicCtor.body << u"QQml_setParent_noEvent(this, " + parent.name + u");";
+        current.baselineCtor.body << u"QQml_setParent_noEvent(this, " + parent.name + u");";
     }
 
     QmltcCodeGenerator generator { rootType };
 
     // compilation stub:
-    current.fullCtor.body << u"Q_UNUSED(engine);"_qs;
-    current.finalize.body << u"Q_UNUSED(engine);"_qs;
-    current.finalize.body << u"Q_UNUSED(creator);"_qs;
+    current.externalCtor.body << u"Q_UNUSED(engine);"_qs;
+    current.endInit.body << u"Q_UNUSED(engine);"_qs;
+    current.endInit.body << u"Q_UNUSED(creator);"_qs;
     if (documentRoot) {
-        current.fullCtor.body << u"// document root:"_qs;
+        current.externalCtor.body << u"// document root:"_qs;
         // if it's document root, we want to create our QQmltcObjectCreationBase
         // that would store all the created objects
-        current.fullCtor.body << u"QQmltcObjectCreationBase<%1> objectHolder;"_qs.arg(
+        current.externalCtor.body << u"QQmltcObjectCreationBase<%1> objectHolder;"_qs.arg(
                 type->internalName());
-        current.fullCtor.body << u"QQmltcObjectCreationHelper creator = objectHolder.view();"_qs;
+        current.externalCtor.body
+                << u"QQmltcObjectCreationHelper creator = objectHolder.view();"_qs;
         // now call init
-        current.fullCtor.body << current.init.name
+        current.externalCtor.body << current.init.name
                         + u"(&creator, engine, QQmlContextData::get(engine->rootContext()), /* "
-                          u"finalize */ true);";
+                          u"endInit */ true);";
 
-        current.finalize.body << u"Q_UNUSED(canFinalize);"_qs;
+        current.endInit.body << u"Q_UNUSED(canFinalize);"_qs;
     } else {
-        current.fullCtor.body << u"// not document root:"_qs;
+        current.externalCtor.body << u"// not document root:"_qs;
         // just call init, we don't do any setup here otherwise
-        current.fullCtor.body << current.init.name
+        current.externalCtor.body << current.init.name
                         + u"(creator, engine, QQmlData::get(parent)->outerContext);";
     }
 
@@ -353,9 +355,9 @@ void QmltcCompiler::compileProperty(QmltcType &current, const QQmlJSMetaProperty
         const QString storageName = variableName + u"_storage";
         current.variables.emplaceBack(u"QList<" + p.type()->internalName() + u" *>", storageName,
                                       QString());
-        current.basicCtor.initializerList.emplaceBack(variableName + u"(" + underlyingType
-                                                      + u"(this, std::addressof(" + storageName
-                                                      + u")))");
+        current.baselineCtor.initializerList.emplaceBack(variableName + u"(" + underlyingType
+                                                         + u"(this, std::addressof(" + storageName
+                                                         + u")))");
     }
 
     // along with property, also add relevant moc code, so that we can use the

@@ -30,8 +30,7 @@
 #define CODEGENERATOR_H
 
 #include "qmltctyperesolver.h"
-#include "prototype/qmlcompiler.h"
-#include "prototype/generatedcodeprimitives.h"
+#include "qmltcoutputir.h"
 #include "prototype/qml2cppcontext.h"
 
 #include <QtCore/qlist.h>
@@ -80,13 +79,13 @@ private:
     // types ignored by the code generator
     QSet<QQmlJSScope::ConstPtr> m_ignoredTypes;
 
-    QQmlJSAotMethod m_urlMethod;
+    QmltcMethod m_urlMethod;
 
     // helper struct used for unique string generation
     struct UniqueStringId
     {
         QString combined;
-        UniqueStringId(const QQmlJSAotObject &compiled, const QString &value)
+        UniqueStringId(const QmltcType &compiled, const QString &value)
             : combined(compiled.cppType + u"_" + value)
         {
             Q_ASSERT(!compiled.cppType.isEmpty());
@@ -141,19 +140,18 @@ private:
     bool m_isAnonymous = false; // crutch to distinguish QML_ELEMENT from QML_ANONYMOUS
 
     // code compilation functions that produce "compiled" entities
-    void
-    compileObject(QQmlJSAotObject &current, const CodeGenObject &object,
-                  std::function<void(QQmlJSAotObject &, const CodeGenObject &)> compileElements);
-    void compileObjectElements(QQmlJSAotObject &current, const CodeGenObject &object);
-    void compileQQmlComponentElements(QQmlJSAotObject &current, const CodeGenObject &object);
+    void compileObject(QmltcType &current, const CodeGenObject &object,
+                       std::function<void(QmltcType &, const CodeGenObject &)> compileElements);
+    void compileObjectElements(QmltcType &current, const CodeGenObject &object);
+    void compileQQmlComponentElements(QmltcType &current, const CodeGenObject &object);
 
-    void compileEnum(QQmlJSAotObject &current, const QQmlJSMetaEnum &e);
-    void compileProperty(QQmlJSAotObject &current, const QQmlJSMetaProperty &p,
+    void compileEnum(QmltcType &current, const QQmlJSMetaEnum &e);
+    void compileProperty(QmltcType &current, const QQmlJSMetaProperty &p,
                          const QQmlJSScope::ConstPtr &owner);
-    void compileAlias(QQmlJSAotObject &current, const QQmlJSMetaProperty &alias,
+    void compileAlias(QmltcType &current, const QQmlJSMetaProperty &alias,
                       const QQmlJSScope::ConstPtr &owner);
-    void compileMethod(QQmlJSAotObject &current, const QQmlJSMetaMethod &m,
-                       const QmlIR::Function *f, const CodeGenObject &object);
+    void compileMethod(QmltcType &current, const QQmlJSMetaMethod &m, const QmlIR::Function *f,
+                       const CodeGenObject &object);
     void compileUrlMethod(); // special case
 
     // helper structure that holds the information necessary for most bindings,
@@ -167,17 +165,17 @@ private:
         QString propertyName; // usually empty
         bool isValueType = false; // usually false
     };
-    void compileBinding(QQmlJSAotObject &current, const QmlIR::Binding &binding,
+    void compileBinding(QmltcType &current, const QmlIR::Binding &binding,
                         const CodeGenObject &object, const AccessorData &accessor);
     // special case (for simplicity)
-    void compileScriptBinding(QQmlJSAotObject &current, const QmlIR::Binding &binding,
+    void compileScriptBinding(QmltcType &current, const QmlIR::Binding &binding,
                               const QString &bindingSymbolName, const CodeGenObject &object,
                               const QString &propertyName,
                               const QQmlJSScope::ConstPtr &propertyType,
                               const AccessorData &accessor);
 
     // TODO: remove this special case
-    void compileScriptBindingOfComponent(QQmlJSAotObject &current, const QmlIR::Object *object,
+    void compileScriptBindingOfComponent(QmltcType &current, const QmlIR::Object *object,
                                          const QQmlJSScope::ConstPtr objectType,
                                          const QmlIR::Binding &binding,
                                          const QString &propertyName);

@@ -29,7 +29,7 @@
 #ifndef CODEGENERATORUTIL_H
 #define CODEGENERATORUTIL_H
 
-#include "prototype/qmlcompiler.h"
+#include "qmltcoutputir.h"
 
 #include <private/qqmljsscope_p.h>
 #include <private/qqmljsmetatypes_p.h>
@@ -53,10 +53,10 @@ struct CodeGeneratorUtility
     // reference any object in the document by id, which automatically means
     // that all ids have to be set up before we get to finalization (and the
     // only place for it is init)
-    static const QQmlJSAotVariable childrenOffsetVariable;
+    static const QmltcVariable childrenOffsetVariable;
 
     // represents QV4::ExecutableCompilationUnit
-    static const QQmlJSAotVariable compilationUnitVariable;
+    static const QmltcVariable compilationUnitVariable;
 
     // helper functions:
     static QString toResourcePath(const QString &s)
@@ -84,13 +84,13 @@ struct CodeGeneratorUtility
     static QStringList
     generate_callExecuteRuntimeFunction(const QString &url, qsizetype index,
                                         const QString &accessor, const QString &returnType,
-                                        const QList<QQmlJSAotVariable> &parameters = {});
+                                        const QList<QmltcVariable> &parameters = {});
     static QStringList
     generate_createBindingOnProperty(const QString &unitVarName, const QString &scope,
                                      qsizetype functionIndex, const QString &target,
                                      int propertyIndex, const QQmlJSMetaProperty &p,
                                      int valueTypeIndex, const QString &subTarget);
-    static QString generate_qOverload(const QList<QQmlJSAotVariable> &parameters,
+    static QString generate_qOverload(const QList<QmltcVariable> &parameters,
                                       const QString &overloaded);
     static QString generate_addressof(const QString &addressed);
     static QString generate_getPrivateClass(const QString &accessor, const QQmlJSMetaProperty &p);

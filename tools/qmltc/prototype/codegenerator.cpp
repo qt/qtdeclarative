@@ -30,7 +30,7 @@
 #include "prototype/qml2cppdefaultpasses.h"
 #include "prototype/qml2cpppropertyutils.h"
 #include "prototype/codegeneratorutil.h"
-#include "prototype/codegeneratorwriter.h"
+#include "qmltccodewriter.h"
 
 #include "qmltccompiler.h"
 
@@ -88,12 +88,12 @@ static QString figureReturnType(const QQmlJSMetaMethod &m)
     return type;
 }
 
-static QList<QQmlJSAotVariable>
+static QList<QmltcVariable>
 compileMethodParameters(const QStringList &names,
                         const QList<QSharedPointer<const QQmlJSScope>> &types,
                         bool allowUnnamed = false)
 {
-    QList<QQmlJSAotVariable> paramList;
+    QList<QmltcVariable> paramList;
     const auto size = names.size();
     paramList.reserve(size);
     for (qsizetype i = 0; i < size; ++i) {
@@ -102,8 +102,7 @@ compileMethodParameters(const QStringList &names,
         Q_ASSERT(allowUnnamed || !name.isEmpty()); // assume verified
         if (name.isEmpty() && allowUnnamed)
             name = u"unnamed_" + QString::number(i);
-        paramList.emplaceBack(
-                QQmlJSAotVariable { types[i]->augmentedInternalName(), name, QString() });
+        paramList.emplaceBack(QmltcVariable { types[i]->augmentedInternalName(), name, QString() });
     }
     return paramList;
 }
@@ -295,7 +294,6 @@ void CodeGenerator::constructObjects(QSet<QString> &requiredCppIncludes)
 
 void CodeGenerator::generate()
 {
-    GeneratedCode code;
     const QString rootClassName = QFileInfo(m_url).baseName();
     Q_ASSERT(!rootClassName.isEmpty());
     const QString hPath = m_info->outputHFile;
@@ -323,16 +321,16 @@ void CodeGenerator::generate()
     };
     const auto &root = m_objects.at(0).type;
 
-    QList<QQmlJSAotObject> compiledObjects;
+    QList<QmltcType> compiledObjects;
     if (isComponent(root)) {
         compiledObjects.reserve(1);
         compiledObjects.emplaceBack(); // create new object
-        const auto compile = [this](QQmlJSAotObject &current, const CodeGenObject &object) {
+        const auto compile = [this](QmltcType &current, const CodeGenObject &object) {
             this->compileQQmlComponentElements(current, object);
         };
         compileObject(compiledObjects.back(), m_objects.at(0), compile);
     } else {
-        const auto compile = [this](QQmlJSAotObject &current, const CodeGenObject &object) {
+        const auto compile = [this](QmltcType &current, const CodeGenObject &object) {
             this->compileObjectElements(current, object);
         };
 
@@ -359,15 +357,18 @@ void CodeGenerator::generate()
     if (m_logger->hasErrors())
         return;
 
-    QQmlJSProgram program { compiledObjects,         m_urlMethod,        url, hPath, cppPath,
-                            m_info->outputNamespace, requiredCppIncludes };
+    QmltcProgram program {
+        url,         cppPath,        hPath, m_info->outputNamespace, requiredCppIncludes,
+        m_urlMethod, compiledObjects
+    };
 
     // write everything
-    GeneratedCodeUtils codeUtils(code);
-    CodeGeneratorWriter::write(codeUtils, program);
+    QmltcOutput code;
+    QmltcOutputWrapper codeUtils(code);
+    QmltcCodeWriter::write(codeUtils, program);
 
     writeToFile(hPath, code.header.toUtf8());
-    writeToFile(cppPath, code.implementation.toUtf8());
+    writeToFile(cppPath, code.cpp.toUtf8());
 }
 
 QString buildCallSpecialMethodValue(bool documentRoot, const QString &outerFlagName,
@@ -382,8 +383,8 @@ QString buildCallSpecialMethodValue(bool documentRoot, const QString &outerFlagN
 }
 
 void CodeGenerator::compileObject(
-        QQmlJSAotObject &compiled, const CodeGenObject &object,
-        std::function<void(QQmlJSAotObject &, const CodeGenObject &)> compileElements)
+        QmltcType &compiled, const CodeGenObject &object,
+        std::function<void(QmltcType &, const CodeGenObject &)> compileElements)
 {
     if (object.type->isSingleton()) {
         recordError(object.type->sourceLocation(), u"Singleton types are not supported"_qs);
@@ -427,14 +428,14 @@ void CodeGenerator::compileObject(
     compiled.handleOnCompleted.name = u"QML_handleOnCompleted"_qs;
     compiled.handleOnCompleted.returnType = u"void"_qs;
 
-    QQmlJSAotVariable engine(u"QQmlEngine *"_qs, u"engine"_qs, QString());
-    QQmlJSAotVariable parent(u"QObject *"_qs, u"parent"_qs, u"nullptr"_qs);
+    QmltcVariable engine(u"QQmlEngine *"_qs, u"engine"_qs, QString());
+    QmltcVariable parent(u"QObject *"_qs, u"parent"_qs, u"nullptr"_qs);
     compiled.baselineCtor.parameterList = { parent };
     compiled.externalCtor.parameterList = { engine, parent };
-    QQmlJSAotVariable ctxtdata(u"const QQmlRefPointer<QQmlContextData> &"_qs, u"parentContext"_qs,
-                               QString());
-    QQmlJSAotVariable finalizeFlag(u"bool"_qs, u"canFinalize"_qs, QString());
-    QQmlJSAotVariable callSpecialMethodFlag(u"bool"_qs, u"callSpecialMethodNow"_qs, QString());
+    QmltcVariable ctxtdata(u"const QQmlRefPointer<QQmlContextData> &"_qs, u"parentContext"_qs,
+                           QString());
+    QmltcVariable finalizeFlag(u"bool"_qs, u"canFinalize"_qs, QString());
+    QmltcVariable callSpecialMethodFlag(u"bool"_qs, u"callSpecialMethodNow"_qs, QString());
     if (documentRoot) {
         compiled.init.parameterList = { engine, ctxtdata, finalizeFlag, callSpecialMethodFlag };
         compiled.endInit.parameterList = { engine, finalizeFlag };
@@ -692,7 +693,7 @@ void CodeGenerator::compileObject(
     // compiled.endInit.body << u"Qt::endPropertyUpdateGroup();"_qs;
 }
 
-void CodeGenerator::compileObjectElements(QQmlJSAotObject &compiled, const CodeGenObject &object)
+void CodeGenerator::compileObjectElements(QmltcType &compiled, const CodeGenObject &object)
 {
     // compile enums
     const auto enums = object.type->ownEnumerations();
@@ -785,8 +786,7 @@ void CodeGenerator::compileObjectElements(QQmlJSAotObject &compiled, const CodeG
         compileBinding(compiled, **it, object, { object.type, u"this"_qs, u""_qs, false });
 }
 
-void CodeGenerator::compileQQmlComponentElements(QQmlJSAotObject &compiled,
-                                                 const CodeGenObject &object)
+void CodeGenerator::compileQQmlComponentElements(QmltcType &compiled, const CodeGenObject &object)
 {
     Q_UNUSED(object);
 
@@ -820,7 +820,7 @@ void CodeGenerator::compileQQmlComponentElements(QQmlJSAotObject &compiled,
     compiled.init.body << u"}"_qs;
 }
 
-void CodeGenerator::compileEnum(QQmlJSAotObject &current, const QQmlJSMetaEnum &e)
+void CodeGenerator::compileEnum(QmltcType &current, const QQmlJSMetaEnum &e)
 {
     const auto intValues = e.values();
     QStringList values;
@@ -833,7 +833,7 @@ void CodeGenerator::compileEnum(QQmlJSAotObject &current, const QQmlJSMetaEnum &
                               u"Q_ENUM(%1)"_qs.arg(e.name()));
 }
 
-void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaProperty &p,
+void CodeGenerator::compileProperty(QmltcType &current, const QQmlJSMetaProperty &p,
                                     const QQmlJSScope::ConstPtr &owner)
 {
     Q_ASSERT(!p.isAlias()); // will be handled separately
@@ -865,10 +865,10 @@ void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaPr
     // If p.isList(), it's a QQmlListProperty. Then you can write the underlying list through
     // the QQmlListProperty object retrieved with the getter. Setting it would make no sense.
     if (p.isWritable() && !p.isList()) {
-        QQmlJSAotMethod setter {};
+        QmltcMethod setter {};
         setter.returnType = u"void"_qs;
         setter.name = compilationData.write;
-        // QQmlJSAotVariable
+        // QmltcVariable
         setter.parameterList.emplaceBack(QQmlJSUtils::constRefify(underlyingType), name + u"_",
                                          u""_qs);
         setter.body << variableName + u".setValue(" + name + u"_);";
@@ -878,7 +878,7 @@ void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaPr
         mocPieces << u"WRITE"_qs << setter.name;
     }
 
-    QQmlJSAotMethod getter {};
+    QmltcMethod getter {};
     getter.returnType = underlyingType;
     getter.name = compilationData.read;
     getter.body << u"return " + variableName + u".value();";
@@ -888,7 +888,7 @@ void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaPr
 
     // 2. add bindable
     if (!p.isList()) {
-        QQmlJSAotMethod bindable {};
+        QmltcMethod bindable {};
         bindable.returnType = u"QBindable<" + underlyingType + u">";
         bindable.name = compilationData.bindable;
         bindable.body << u"return QBindable<" + underlyingType + u">(std::addressof(" + variableName
@@ -916,7 +916,7 @@ void CodeGenerator::compileProperty(QQmlJSAotObject &current, const QQmlJSMetaPr
                                    compilationData.notify);
 }
 
-void CodeGenerator::compileAlias(QQmlJSAotObject &current, const QQmlJSMetaProperty &alias,
+void CodeGenerator::compileAlias(QmltcType &current, const QQmlJSMetaProperty &alias,
                                  const QQmlJSScope::ConstPtr &owner)
 {
     const QString aliasName = alias.propertyName();
@@ -1040,7 +1040,7 @@ void CodeGenerator::compileAlias(QQmlJSAotObject &current, const QQmlJSMetaPrope
     Qml2CppPropertyData compilationData(aliasName);
     // 1. add setter and getter
     if (!info.readLine.isEmpty()) {
-        QQmlJSAotMethod getter {};
+        QmltcMethod getter {};
         getter.returnType = info.underlyingType;
         getter.name = compilationData.read;
         getter.body += prologue;
@@ -1052,13 +1052,13 @@ void CodeGenerator::compileAlias(QQmlJSAotObject &current, const QQmlJSMetaPrope
     } // else always an error?
 
     if (!info.writeLine.isEmpty()) {
-        QQmlJSAotMethod setter {};
+        QmltcMethod setter {};
         setter.returnType = u"void"_qs;
         setter.name = compilationData.write;
 
         QList<QQmlJSMetaMethod> methods = type->methods(resultingProperty.write());
         if (methods.isEmpty()) {
-            // QQmlJSAotVariable
+            // QmltcVariable
             setter.parameterList.emplaceBack(QQmlJSUtils::constRefify(info.underlyingType),
                                              aliasName + u"_", u""_qs);
         } else {
@@ -1072,7 +1072,7 @@ void CodeGenerator::compileAlias(QQmlJSAotObject &current, const QQmlJSMetaPrope
             parameterNames.reserve(setter.parameterList.size());
             std::transform(setter.parameterList.cbegin(), setter.parameterList.cend(),
                            std::back_inserter(parameterNames),
-                           [](const QQmlJSAotVariable &x) { return x.name; });
+                           [](const QmltcVariable &x) { return x.name; });
             QString commaSeparatedParameterNames = parameterNames.join(u", "_qs);
             setter.body << info.writeLine.arg(commaSeparatedParameterNames) + u";";
         } else {
@@ -1086,7 +1086,7 @@ void CodeGenerator::compileAlias(QQmlJSAotObject &current, const QQmlJSMetaPrope
 
     // 2. add bindable
     if (!info.bindableLine.isEmpty()) {
-        QQmlJSAotMethod bindable {};
+        QmltcMethod bindable {};
         bindable.returnType = u"QBindable<" + info.underlyingType + u">";
         bindable.name = compilationData.bindable;
         bindable.body += prologue;
@@ -1122,7 +1122,7 @@ void CodeGenerator::compileAlias(QQmlJSAotObject &current, const QQmlJSMetaPrope
     }
 }
 
-void CodeGenerator::compileMethod(QQmlJSAotObject &current, const QQmlJSMetaMethod &m,
+void CodeGenerator::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
                                   const QmlIR::Function *f, const CodeGenObject &object)
 {
     Q_UNUSED(object);
@@ -1131,7 +1131,7 @@ void CodeGenerator::compileMethod(QQmlJSAotObject &current, const QQmlJSMetaMeth
     const auto paramNames = m.parameterNames();
     const auto paramTypes = m.parameterTypes();
     Q_ASSERT(paramNames.size() == paramTypes.size());
-    const QList<QQmlJSAotVariable> paramList = compileMethodParameters(paramNames, paramTypes);
+    const QList<QmltcVariable> paramList = compileMethodParameters(paramNames, paramTypes);
 
     const auto methodType = QQmlJSMetaMethod::Type(m.methodType());
 
@@ -1146,7 +1146,7 @@ void CodeGenerator::compileMethod(QQmlJSAotObject &current, const QQmlJSMetaMeth
                 returnType, paramList);
     }
 
-    QQmlJSAotMethod compiled {};
+    QmltcMethod compiled {};
     compiled.returnType = returnType;
     compiled.name = m.methodName();
     compiled.parameterList = std::move(paramList);
@@ -1154,7 +1154,7 @@ void CodeGenerator::compileMethod(QQmlJSAotObject &current, const QQmlJSMetaMeth
     compiled.type = methodType;
     compiled.access = m.access();
     if (methodType != QQmlJSMetaMethod::Signal) {
-        compiled.declPreambles << u"Q_INVOKABLE"_qs; // TODO: do we need this for signals as well?
+        compiled.declarationPrefixes << u"Q_INVOKABLE"_qs;
         compiled.userVisible = m.access() == QQmlJSMetaMethod::Public;
     } else {
         compiled.userVisible = !m.isImplicitQmlPropertyChangeSignal();
@@ -1169,7 +1169,7 @@ static QString getPropertyOrAliasNameFromIr(const QmlIR::Document *doc, Iterator
     return doc->stringAt(first->nameIndex);
 }
 
-void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Binding &binding,
+void CodeGenerator::compileBinding(QmltcType &current, const QmlIR::Binding &binding,
                                    const CodeGenObject &object,
                                    const CodeGenerator::AccessorData &accessor)
 {
@@ -1579,26 +1579,26 @@ QString CodeGenerator::makeGensym(const QString &base)
 }
 
 // returns compiled script binding for "property changed" handler in a form of object type
-static QQmlJSAotObject compileScriptBindingPropertyChangeHandler(
+static QmltcType compileScriptBindingPropertyChangeHandler(
         const QmlIR::Document *doc, const QmlIR::Binding &binding, const QmlIR::Object *irObject,
-        const QQmlJSAotMethod &urlMethod, const QString &functorCppType,
-        const QString &objectCppType, const QList<QQmlJSAotVariable> &slotParameters)
+        const QmltcMethod &urlMethod, const QString &functorCppType, const QString &objectCppType,
+        const QList<QmltcVariable> &slotParameters)
 {
-    QQmlJSAotObject bindingFunctor {};
+    QmltcType bindingFunctor {};
     bindingFunctor.cppType = functorCppType;
     bindingFunctor.ignoreInit = true;
 
     // default member variable and ctor:
     const QString pointerToObject = objectCppType + u" *";
     bindingFunctor.variables.emplaceBack(
-            QQmlJSAotVariable { pointerToObject, u"m_self"_qs, u"nullptr"_qs });
+            QmltcVariable { pointerToObject, u"m_self"_qs, u"nullptr"_qs });
     bindingFunctor.baselineCtor.name = functorCppType;
     bindingFunctor.baselineCtor.parameterList.emplaceBack(
-            QQmlJSAotVariable { pointerToObject, u"self"_qs, QString() });
+            QmltcVariable { pointerToObject, u"self"_qs, QString() });
     bindingFunctor.baselineCtor.initializerList.emplaceBack(u"m_self(self)"_qs);
 
     // call operator:
-    QQmlJSAotMethod callOperator {};
+    QmltcMethod callOperator {};
     callOperator.returnType = u"void"_qs;
     callOperator.name = u"operator()"_qs;
     callOperator.parameterList = slotParameters;
@@ -1628,7 +1628,7 @@ propertyForChangeHandler(const QQmlJSScope::ConstPtr &scope, QString name)
     return {};
 }
 
-void CodeGenerator::compileScriptBinding(QQmlJSAotObject &current, const QmlIR::Binding &binding,
+void CodeGenerator::compileScriptBinding(QmltcType &current, const QmlIR::Binding &binding,
                                          const QString &bindingSymbolName,
                                          const CodeGenObject &object, const QString &propertyName,
                                          const QQmlJSScope::ConstPtr &propertyType,
@@ -1667,7 +1667,7 @@ void CodeGenerator::compileScriptBinding(QQmlJSAotObject &current, const QmlIR::
     };
 
     // these only make sense when binding is on signal handler
-    QList<QQmlJSAotVariable> slotParameters;
+    QList<QmltcVariable> slotParameters;
     QString signalName;
     QString signalReturnType;
 
@@ -1755,7 +1755,7 @@ void CodeGenerator::compileScriptBinding(QQmlJSAotObject &current, const QmlIR::
         const QString slotName = makeGensym(signalName + u"_slot");
 
         // SignalHander specific:
-        QQmlJSAotMethod slotMethod {};
+        QmltcMethod slotMethod {};
         slotMethod.returnType = signalReturnType;
         slotMethod.name = slotName;
         slotMethod.parameterList = slotParameters;
@@ -1832,7 +1832,7 @@ void CodeGenerator::compileScriptBinding(QQmlJSAotObject &current, const QmlIR::
                         + accessor.name + u"))));";
 
         current.variables.emplaceBack(
-                QQmlJSAotVariable { typeOfQmlBinding, bindingSymbolName, QString() });
+                QmltcVariable { typeOfQmlBinding, bindingSymbolName, QString() });
         // current.ctor.initializerList << bindingSymbolName + u"()";
         break;
     }
@@ -1840,7 +1840,7 @@ void CodeGenerator::compileScriptBinding(QQmlJSAotObject &current, const QmlIR::
 }
 
 // TODO: should use "compileScriptBinding" instead of custom code
-void CodeGenerator::compileScriptBindingOfComponent(QQmlJSAotObject &current,
+void CodeGenerator::compileScriptBindingOfComponent(QmltcType &current,
                                                     const QmlIR::Object *irObject,
                                                     const QQmlJSScope::ConstPtr objectType,
                                                     const QmlIR::Binding &binding,
@@ -1880,7 +1880,7 @@ void CodeGenerator::compileScriptBindingOfComponent(QQmlJSAotObject &current,
     const QString slotName = makeGensym(signalName + u"_slot");
 
     // SignalHander specific:
-    QQmlJSAotMethod slotMethod {};
+    QmltcMethod slotMethod {};
     slotMethod.returnType = signalReturnType;
     slotMethod.name = slotName;
 
@@ -1898,7 +1898,8 @@ void CodeGenerator::compileScriptBindingOfComponent(QQmlJSAotObject &current,
         current.handleOnCompleted.body << slotName + u"();";
     } else if (signalName == u"destruction"_qs) {
         if (!current.dtor) {
-            current.dtor = QQmlJSAotSpecialMethod {};
+            // TODO: double-check that this stuff is actually correct now:
+            current.dtor = QmltcDtor {};
             current.dtor->name = u"~" + current.cppType;
         }
         current.dtor->firstLines << slotName + u"();";
@@ -1913,7 +1914,7 @@ void CodeGenerator::compileUrlMethod()
     m_urlMethod.body << u"static QUrl docUrl = %1;"_qs.arg(
             CodeGeneratorUtility::toResourcePath(m_info->resourcePath));
     m_urlMethod.body << u"return docUrl;"_qs;
-    m_urlMethod.declPreambles << u"static"_qs;
+    m_urlMethod.declarationPrefixes << u"static"_qs;
     m_urlMethod.modifiers << u"noexcept"_qs;
 }
 

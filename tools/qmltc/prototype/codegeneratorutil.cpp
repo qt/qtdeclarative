@@ -37,11 +37,10 @@ QT_BEGIN_NAMESPACE
 
 // NB: this variable would behave correctly as long as QML init and QML finalize
 // are non-virtual functions
-const QQmlJSAotVariable CodeGeneratorUtility::childrenOffsetVariable = { u"qsizetype"_qs,
-                                                                         u"QML_choffset"_qs,
-                                                                         QString() };
+const QmltcVariable CodeGeneratorUtility::childrenOffsetVariable { u"qsizetype"_qs,
+                                                                   u"QML_choffset"_qs, QString() };
 
-const QQmlJSAotVariable CodeGeneratorUtility::compilationUnitVariable = {
+const QmltcVariable CodeGeneratorUtility::compilationUnitVariable {
     u"QV4::ExecutableCompilationUnit *"_qs, u"QML_cu"_qs, QString()
 };
 
@@ -143,7 +142,7 @@ QStringList CodeGeneratorUtility::generate_assignToSpecialAlias(
 
 QStringList CodeGeneratorUtility::generate_callExecuteRuntimeFunction(
         const QString &url, qsizetype index, const QString &accessor, const QString &returnType,
-        const QList<QQmlJSAotVariable> &parameters)
+        const QList<QmltcVariable> &parameters)
 {
     QStringList code;
     code.reserve(12); // should always be enough
@@ -165,7 +164,7 @@ QStringList CodeGeneratorUtility::generate_callExecuteRuntimeFunction(
         types << u"QMetaType::fromType<std::decay_t<" + returnType + u">>()";
     }
 
-    for (const QQmlJSAotVariable &p : parameters) {
+    for (const QmltcVariable &p : parameters) {
         args << u"const_cast<void *>(reinterpret_cast<const void *>(std::addressof(" + p.name
                         + u")))";
         types << u"QMetaType::fromType<std::decay_t<" + p.cppType + u">>()";
@@ -214,12 +213,12 @@ QStringList CodeGeneratorUtility::generate_createBindingOnProperty(
     return code;
 }
 
-QString CodeGeneratorUtility::generate_qOverload(const QList<QQmlJSAotVariable> &params,
+QString CodeGeneratorUtility::generate_qOverload(const QList<QmltcVariable> &params,
                                                  const QString &overloaded)
 {
     QStringList types;
     types.reserve(params.size());
-    for (const QQmlJSAotVariable &p : params)
+    for (const QmltcVariable &p : params)
         types.emplaceBack(p.cppType);
     return u"qOverload<" + types.join(u", "_qs) + u">(" + overloaded + u")";
 }

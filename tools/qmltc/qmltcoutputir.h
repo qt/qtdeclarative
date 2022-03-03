@@ -92,6 +92,12 @@ struct QmltcMethodBase
     QStringList body; // C++ function code
     QQmlJSMetaMethod::Access access = QQmlJSMetaMethod::Public; // access specifier
     QStringList declarationPrefixes;
+    QStringList modifiers; // cv-qualifiers, ref-qualifier, noexcept, attributes
+
+    // TODO: these are only needed for Component.onCompleted/onDestruction. this
+    // has to be re-written anyhow later
+    QStringList firstLines; // C++ to run at the very beginning of a function
+    QStringList lastLines; // C++ to run at the very end of a function
 };
 
 // Represents QML -> C++ compiled function
@@ -99,12 +105,20 @@ struct QmltcMethod : QmltcMethodBase
 {
     QString returnType; // C++ return type
     QQmlJSMetaMethod::Type type = QQmlJSMetaMethod::Method; // Qt function type
+
+    // TODO: should be a better way to handle this
+    bool userVisible = false; // tells if a function is prioritized during the output generation
 };
 
 // Represents C++ ctor of a type
 struct QmltcCtor : QmltcMethodBase
 {
     QStringList initializerList; // C++ ctor's initializer list
+};
+
+// Represents C++ dtor of a type
+struct QmltcDtor : QmltcMethodBase
+{
 };
 
 // Represents QML -> C++ compiled type
@@ -120,10 +134,15 @@ struct QmltcType
     QList<QmltcType> children; // these are pretty much always empty
 
     // special member functions:
-    QmltcCtor basicCtor = {}; // does basic contruction
-    QmltcCtor fullCtor = {}; // calls basicCtor, calls init
-    QmltcMethod init = {}; // starts object initialization (context setup), calls finalize
-    QmltcMethod finalize = {}; // finalizes object (bindings, special interface calls, etc.)
+    QmltcCtor baselineCtor {}; // does basic contruction
+    QmltcCtor externalCtor {}; // calls basicCtor, calls init
+    QmltcMethod init {}; // starts object initialization (context setup), calls finalize
+    QmltcMethod endInit {}; // ends object initialization (with binding setup)
+    QmltcMethod completeComponent {}; // calls componentComplete()
+    QmltcMethod finalizeComponent {}; // calls componentFinalized()
+    QmltcMethod handleOnCompleted {}; // calls Component.onCompleted
+
+    std::optional<QmltcDtor> dtor {};
 
     // member functions: methods, signals and slots
     QList<QmltcMethod> functions;
@@ -133,6 +152,9 @@ struct QmltcType
 
     // QML document root specific:
     std::optional<QmltcVariable> typeCount; // the number of QML types defined in a document
+
+    // TODO: only needed for binding callables - should not be needed, generally
+    bool ignoreInit = false; // specifies whether init and externalCtor should be ignored
 };
 
 // Represents whole QML program, compiled to C++

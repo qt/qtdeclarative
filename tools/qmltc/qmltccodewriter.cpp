@@ -74,6 +74,20 @@ static QString getFunctionCategory(const QmltcMethod &method)
     return category;
 }
 
+static QString appendSpace(const QString &s)
+{
+    if (s.isEmpty())
+        return s;
+    return s + u" ";
+}
+
+static QString prependSpace(const QString &s)
+{
+    if (s.isEmpty())
+        return s;
+    return u" " + s;
+}
+
 static std::pair<QString, QString> functionSignatures(const QmltcMethodBase &method)
 {
     const QString name = method.name;
@@ -89,9 +103,16 @@ static std::pair<QString, QString> functionSignatures(const QmltcMethodBase &met
             headerParamList.back() += u" = " + variable.defaultValue;
     }
 
-    const QString headerSignature = name + u"(" + headerParamList.join(u", "_qs) + u")";
-    const QString cppSignature = name + u"(" + cppParamList.join(u", "_qs) + u")";
+    const QString headerSignature = name + u"(" + headerParamList.join(u", "_qs) + u")"
+            + prependSpace(method.modifiers.join(u" "));
+    const QString cppSignature = name + u"(" + cppParamList.join(u", "_qs) + u")"
+            + prependSpace(method.modifiers.join(u" "));
     return { headerSignature, cppSignature };
+}
+
+static QString functionReturnType(const QmltcMethod &m)
+{
+    return appendSpace(m.declarationPrefixes.join(u" "_qs)) + m.returnType;
 }
 
 void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString &sourcePath,
@@ -129,14 +150,18 @@ void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString 
     for (const auto &requiredInclude : requiredCppIncludes)
         code.rawAppendToHeader(u"#include \"" + requiredInclude + u"\"");
     code.rawAppendToHeader(u"// END(custom_cpp_includes)");
-    code.rawAppendToHeader(u"// qmltc support library:");
-    code.rawAppendToHeader(u"#include <private/qqmltcobjectcreationhelper_p.h>");
 
     code.rawAppendToCpp(u"#include \"" + hPath + u"\""); // include own .h file
+    code.rawAppendToCpp(u"// qmltc support library:");
+    code.rawAppendToCpp(u"#include <private/qqmlcppbinding_p.h>"); // QmltcSupportLib
+    code.rawAppendToCpp(u"#include <private/qqmlcpponassignment_p.h>"); // QmltcSupportLib
 
-    code.rawAppendToCpp(u""); // blank line
+    code.rawAppendToCpp(u"#include <private/qqmlobjectcreator_p.h>"); // createComponent()
+    code.rawAppendToCpp(u"#include <private/qqmlcomponent_p.h>"); // QQmlComponentPrivate::get()
+
+    code.rawAppendToCpp(u"");
     code.rawAppendToCpp(u"#include <private/qobject_p.h>"); // NB: for private properties
-    code.rawAppendToCpp(u"#include <private/qqmlglobal_p.h>"); // QQml_setParent_noEvent()
+    code.rawAppendToCpp(u"#include <private/qqmlobjectcreator_p.h>"); // for finalize callbacks
 
     code.rawAppendToCpp(u""); // blank line
     code.rawAppendToCpp(u"QT_USE_NAMESPACE // avoid issues with QT_NAMESPACE");
@@ -187,10 +212,6 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcProgram &progra
 {
     writeGlobalHeader(code, program.url, program.hPath, program.cppPath, program.outNamespace,
                       program.includes);
-    // TODO: keep the "NOT IMPLEMENTED" as long as we don't actually compile
-    // useful code
-    code.rawAppendToHeader(u"/* QMLTC: NOT IMPLEMENTED */");
-    code.rawAppendToCpp(u"/* QMLTC: NOT IMPLEMENTED */");
 
     // url method comes first
     writeUrl(code, program.urlMethod);
@@ -207,12 +228,36 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcProgram &progra
     writeToFile(program.cppPath, code.code().cpp.toUtf8());
 }
 
+template<typename Predicate>
+static void dumpFunctions(QmltcOutputWrapper &code, const QList<QmltcMethod> &functions,
+                          Predicate pred)
+{
+    // functions are _ordered_ by access and kind. ordering is important to
+    // provide consistent output
+    QMap<QString, QList<const QmltcMethod *>> orderedFunctions;
+    for (const auto &function : functions) {
+        if (pred(function))
+            orderedFunctions[getFunctionCategory(function)].append(std::addressof(function));
+    }
+
+    for (auto it = orderedFunctions.cbegin(); it != orderedFunctions.cend(); ++it) {
+        code.rawAppendToHeader(it.key() + u":", -1);
+        for (const QmltcMethod *function : qAsConst(it.value()))
+            QmltcCodeWriter::write(code, *function);
+    }
+}
+
 void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
 {
     const auto constructClassString = [&]() {
         QString str = u"class " + type.cppType;
-        if (!type.baseClasses.isEmpty())
-            str += u" : public " + type.baseClasses.join(u", public "_qs);
+        QStringList nonEmptyBaseClasses;
+        nonEmptyBaseClasses.reserve(type.baseClasses.size());
+        std::copy_if(type.baseClasses.cbegin(), type.baseClasses.cend(),
+                     std::back_inserter(nonEmptyBaseClasses),
+                     [](const QString &entry) { return !entry.isEmpty(); });
+        if (!nonEmptyBaseClasses.isEmpty())
+            str += u" : public " + nonEmptyBaseClasses.join(u", public "_qs);
         return str;
     };
 
@@ -233,41 +278,69 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
         QmltcOutputWrapper::HeaderIndentationScope headerIndent(&code);
         Q_UNUSED(headerIndent);
 
-        // special member functions
-        code.rawAppendToHeader(u"protected:", -1);
-        write(code, type.basicCtor);
-        write(code, type.init);
-        write(code, type.finalize);
-        // NB: externalCtor might not be public when the type is QML singleton
-        code.rawAppendToHeader(getFunctionCategory(type.fullCtor) + u":", -1);
-        write(code, type.fullCtor);
+        // first, write user-visible code, then everything else. someone might
+        // want to look at the generated code, so let's make an effort when
+        // writing it down
+
+        code.rawAppendToHeader(u"/* ----------------- */");
+        code.rawAppendToHeader(u"/* External C++ API */");
+        code.rawAppendToHeader(u"public:", -1);
+
+        // NB: when non-document root, the externalCtor won't be public - but we
+        // really don't care about the output format of such types
+        if (!type.ignoreInit && type.externalCtor.access == QQmlJSMetaMethod::Public) {
+            // TODO: ignoreInit must be eliminated
+
+            QmltcCodeWriter::write(code, type.externalCtor);
+        }
+
+        // dtor
+        if (type.dtor)
+            QmltcCodeWriter::write(code, *type.dtor);
 
         // enums
-        if (!type.enums.isEmpty()) {
-            code.rawAppendToHeader(u""); // blank line
-            code.rawAppendToHeader(u"public:", -1);
-        }
         for (const auto &enumeration : qAsConst(type.enums))
-            write(code, enumeration);
+            QmltcCodeWriter::write(code, enumeration);
 
-        // child types
-        if (!type.children.isEmpty())
-            code.rawAppendToHeader(u""); // blank line
-        for (const auto &child : qAsConst(type.children))
-            write(code, child);
+        // visible functions
+        const auto isUserVisibleFunction = [](const QmltcMethod &function) {
+            return function.userVisible;
+        };
+        dumpFunctions(code, type.functions, isUserVisibleFunction);
 
-        // functions (special case due to functions/signals/slots, etc.)
-        QHash<QString, QList<const QmltcMethod *>> functionsByCategory;
-        for (const auto &function : qAsConst(type.functions))
-            functionsByCategory[getFunctionCategory(function)].append(&function);
+        code.rawAppendToHeader(u"/* ----------------- */");
+        code.rawAppendToHeader(u""); // blank line
+        code.rawAppendToHeader(u"/* Internal functionality (do NOT use it!) */");
 
-        if (!functionsByCategory.isEmpty())
-            code.rawAppendToHeader(u""); // blank line
-        for (auto it = functionsByCategory.cbegin(); it != functionsByCategory.cend(); ++it) {
-            code.rawAppendToHeader(it.key() + u":", -1);
-            for (const QmltcMethod *function : qAsConst(it.value()))
-                write(code, *function);
+        // below are the hidden parts of the type
+
+        // (rest of the) ctors
+        if (type.ignoreInit) { // TODO: this branch should be eliminated
+            Q_ASSERT(type.baselineCtor.access == QQmlJSMetaMethod::Public);
+            code.rawAppendToHeader(u"public:", -1);
+            QmltcCodeWriter::write(code, type.baselineCtor);
+        } else {
+            code.rawAppendToHeader(u"protected:", -1);
+            if (type.externalCtor.access != QQmlJSMetaMethod::Public) {
+                Q_ASSERT(type.externalCtor.access == QQmlJSMetaMethod::Protected);
+                QmltcCodeWriter::write(code, type.externalCtor);
+            }
+            QmltcCodeWriter::write(code, type.baselineCtor);
+            QmltcCodeWriter::write(code, type.init);
+            QmltcCodeWriter::write(code, type.endInit);
+            QmltcCodeWriter::write(code, type.completeComponent);
+            QmltcCodeWriter::write(code, type.finalizeComponent);
+            QmltcCodeWriter::write(code, type.handleOnCompleted);
+
+            // code.rawAppendToHeader(u"public:", -1);
         }
+
+        // children
+        for (const auto &child : qAsConst(type.children))
+            QmltcCodeWriter::write(code, child);
+
+        // (non-visible) functions
+        dumpFunctions(code, type.functions, std::not_fn(isUserVisibleFunction));
 
         // variables and properties
         if (!type.variables.isEmpty() || !type.properties.isEmpty()) {
@@ -314,10 +387,7 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcMethod &method)
 {
     const auto [hSignature, cppSignature] = functionSignatures(method);
     // Note: augment return type with preambles in declaration
-    QString prefix = method.declarationPrefixes.join(u' ');
-    if (!prefix.isEmpty())
-        prefix.append(u' ');
-    code.rawAppendToHeader(prefix + method.returnType + u" " + hSignature + u";");
+    code.rawAppendToHeader(functionReturnType(method) + u" " + hSignature + u";");
 
     // do not generate method implementation if it is a signal
     const auto methodType = method.type;
@@ -329,37 +399,63 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcMethod &method)
         {
             QmltcOutputWrapper::CppIndentationScope cppIndent(&code);
             Q_UNUSED(cppIndent);
+            for (const QString &line : qAsConst(method.firstLines))
+                code.rawAppendToCpp(line);
             for (const QString &line : qAsConst(method.body))
+                code.rawAppendToCpp(line);
+            for (const QString &line : qAsConst(method.lastLines))
                 code.rawAppendToCpp(line);
         }
         code.rawAppendToCpp(u"}");
     }
 }
 
-void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcCtor &ctor)
+template<typename WriteInitialization>
+static void writeSpecialMethod(QmltcOutputWrapper &code, const QmltcMethodBase &specialMethod,
+                               WriteInitialization writeInit)
 {
-    const auto [hSignature, cppSignature] = functionSignatures(ctor);
-    QString prefix = ctor.declarationPrefixes.join(u' ');
-    if (!prefix.isEmpty())
-        prefix.append(u' ');
-    code.rawAppendToHeader(prefix + hSignature + u";");
+    const auto [hSignature, cppSignature] = functionSignatures(specialMethod);
+    code.rawAppendToHeader(hSignature + u";");
 
     code.rawAppendToCpp(u""); // blank line
     code.rawAppendSignatureToCpp(cppSignature);
-    if (!ctor.initializerList.isEmpty()) {
-        code.rawAppendToCpp(u":", 1);
-        // double \n to make separate initializer list lines stand out more
-        code.rawAppendToCpp(
-                ctor.initializerList.join(u",\n\n" + u"    "_qs.repeated(code.cppIndent + 1)), 1);
-    }
+
+    writeInit(specialMethod);
+
     code.rawAppendToCpp(u"{");
     {
         QmltcOutputWrapper::CppIndentationScope cppIndent(&code);
         Q_UNUSED(cppIndent);
-        for (const QString &line : qAsConst(ctor.body))
+        for (const QString &line : qAsConst(specialMethod.firstLines))
+            code.rawAppendToCpp(line);
+        for (const QString &line : qAsConst(specialMethod.body))
+            code.rawAppendToCpp(line);
+        for (const QString &line : qAsConst(specialMethod.lastLines))
             code.rawAppendToCpp(line);
     }
     code.rawAppendToCpp(u"}");
+}
+
+void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcCtor &ctor)
+{
+    const auto writeInitializerList = [&](const QmltcMethodBase &ctorBase) {
+        auto ctor = static_cast<const QmltcCtor &>(ctorBase);
+        if (!ctor.initializerList.isEmpty()) {
+            code.rawAppendToCpp(u":", 1);
+            // double \n to make separate initializer list lines stand out more
+            code.rawAppendToCpp(
+                    ctor.initializerList.join(u",\n\n" + u"    "_qs.repeated(code.cppIndent + 1)),
+                    1);
+        }
+    };
+
+    writeSpecialMethod(code, ctor, writeInitializerList);
+}
+
+void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcDtor &dtor)
+{
+    const auto noop = [](const QmltcMethodBase &) {};
+    writeSpecialMethod(code, dtor, noop);
 }
 
 void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcVariable &var)
@@ -370,7 +466,7 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcVariable &var)
 
 void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcProperty &prop)
 {
-    Q_ASSERT(prop.defaultValue.isEmpty()); // we don't support it yet
+    Q_ASSERT(prop.defaultValue.isEmpty()); // we don't support it yet (or at all?)
     code.rawAppendToHeader(u"Q_OBJECT_BINDABLE_PROPERTY(%1, %2, %3, &%1::%4)"_qs.arg(
             prop.containingClass, prop.cppType, prop.name, prop.signalName));
 }
@@ -382,14 +478,12 @@ void QmltcCodeWriter::writeUrl(QmltcOutputWrapper &code, const QmltcMethod &urlM
     const auto [hSignature, _] = functionSignatures(urlMethod);
     Q_UNUSED(_);
     // Note: augment return type with preambles in declaration
-    QString prefix = urlMethod.declarationPrefixes.join(u' ');
-    if (!prefix.isEmpty())
-        prefix.append(u' ');
-    code.rawAppendToCpp(prefix + urlMethod.returnType + u" " + hSignature);
+    code.rawAppendToCpp(functionReturnType(urlMethod) + hSignature);
     code.rawAppendToCpp(u"{");
     {
         QmltcOutputWrapper::CppIndentationScope cppIndent(&code);
         Q_UNUSED(cppIndent);
+        Q_ASSERT(urlMethod.firstLines.isEmpty() && urlMethod.lastLines.isEmpty());
         for (const QString &line : qAsConst(urlMethod.body))
             code.rawAppendToCpp(line);
     }

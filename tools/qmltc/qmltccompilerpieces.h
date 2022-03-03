@@ -147,7 +147,7 @@ QmltcCodeGenerator::generate_qmlContextSetup(QmltcType &current, const QQmlJSSco
             current.init.body << u"// 4. call finalize in the document root"_qs;
             current.init.body << u"if (canFinalize) {"_qs;
             current.init.body << QStringLiteral("    %1(creator, engine, /* finalize */ true);")
-                                         .arg(current.finalize.name);
+                                         .arg(current.endInit.name);
             current.init.body << u"}"_qs;
         }
         current.init.body << u"return context;"_qs;

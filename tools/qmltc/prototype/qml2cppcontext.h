@@ -29,7 +29,6 @@
 #ifndef QML2CPPCONTEXT_H
 #define QML2CPPCONTEXT_H
 
-#include "prototype/qmlcompiler.h"
 #include "qmltctyperesolver.h"
 
 #include <private/qqmljsdiagnosticmessage_p.h>
