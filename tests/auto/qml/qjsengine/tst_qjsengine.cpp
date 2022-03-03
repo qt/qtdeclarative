@@ -5353,7 +5353,7 @@ void tst_QJSEngine::typedArraySet()
     QJSEngine engine;
     const auto value = engine.evaluate(
         "(function() {"
-        "   var length = 0xffffffe;"
+        "   var length = 0xfffffe0;"
         "   var offset = 0xfffffff0;"
         "   var e1;"
         "   var e2;"
