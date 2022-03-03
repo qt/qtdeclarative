@@ -98,7 +98,7 @@ class QQuickMaterialStyle : public QQuickAttachedObject
     Q_PROPERTY(QColor toolBarColor READ toolBarColor NOTIFY toolBarColorChanged FINAL)
     Q_PROPERTY(QColor toolTextColor READ toolTextColor NOTIFY toolTextColorChanged FINAL)
     Q_PROPERTY(QColor spinBoxDisabledIconColor READ spinBoxDisabledIconColor NOTIFY themeChanged FINAL)
-    Q_PROPERTY(QColor sliderDisabledColor READ sliderDisabledColor NOTIFY themeChanged FINAL REVISION 15)
+    Q_PROPERTY(QColor sliderDisabledColor READ sliderDisabledColor NOTIFY themeChanged FINAL REVISION(2, 15))
 
     Q_PROPERTY(int touchTarget READ touchTarget CONSTANT FINAL)
     Q_PROPERTY(int buttonHeight READ buttonHeight CONSTANT FINAL)
