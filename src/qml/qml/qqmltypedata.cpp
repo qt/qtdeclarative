@@ -252,7 +252,10 @@ void QQmlTypeData::createTypeAndPropertyCaches(
     pendingGroupPropertyBindings.resolveMissingPropertyCaches(engine, &m_compiledData->propertyCaches);
 }
 
-static bool addTypeReferenceChecksumsToHash(const QList<QQmlTypeData::TypeReference> &typeRefs, QCryptographicHash *hash, QQmlEngine *engine)
+static bool addTypeReferenceChecksumsToHash(
+        const QList<QQmlTypeData::TypeReference> &typeRefs,
+        QCryptographicHash *hash, QQmlEngine *engine,
+        QHash<quintptr, QByteArray> *checksums)
 {
     for (const auto &typeRef: typeRefs) {
         if (typeRef.typeData) {
@@ -261,7 +264,7 @@ static bool addTypeReferenceChecksumsToHash(const QList<QQmlTypeData::TypeRefere
         } else if (typeRef.type.isValid()) {
             const auto propertyCache = QQmlEnginePrivate::get(engine)->cache(typeRef.type.metaObject());
             bool ok = false;
-            hash->addData(propertyCache->checksum(&ok));
+            hash->addData(propertyCache->checksum(checksums, &ok));
             if (!ok)
                 return false;
         }
@@ -421,8 +424,9 @@ void QQmlTypeData::done()
 
     const auto dependencyHasher = [engine, &resolvedTypeCache, this]() {
         QCryptographicHash hash(QCryptographicHash::Md5);
-        return (resolvedTypeCache.addToHash(&hash, engine)
-                && ::addTypeReferenceChecksumsToHash(m_compositeSingletons, &hash, engine))
+        return (resolvedTypeCache.addToHash(&hash, engine, typeLoader()->checksumCache())
+                && ::addTypeReferenceChecksumsToHash(m_compositeSingletons, &hash, engine,
+                                                     typeLoader()->checksumCache()))
                 ? hash.result()
                 : QByteArray();
     };

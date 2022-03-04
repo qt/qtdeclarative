@@ -1259,35 +1259,41 @@ bool QQmlPropertyCache::addToHash(QCryptographicHash &hash, const QMetaObject &m
     return true;
 }
 
-QByteArray QQmlPropertyCache::checksum(bool *ok)
+QByteArray QQmlPropertyCache::checksum(QHash<quintptr, QByteArray> *checksums, bool *ok) const
 {
-    if (!_checksum.isEmpty()) {
+    auto it = checksums->constFind(quintptr(this));
+    if (it != checksums->constEnd()) {
         *ok = true;
-        return _checksum;
+        return *it;
     }
 
     // Generate a checksum on the meta-object data only on C++ types.
     if (!_metaObject || _metaObject.isShared()) {
         *ok = false;
-        return _checksum;
+        return QByteArray();
     }
 
     QCryptographicHash hash(QCryptographicHash::Md5);
 
     if (_parent) {
-        hash.addData(_parent->checksum(ok));
+        hash.addData(_parent->checksum(checksums, ok));
         if (!*ok)
             return QByteArray();
     }
 
-    if (!addToHash(hash, *createMetaObject())) {
+    if (!addToHash(hash, *_metaObject)) {
         *ok = false;
         return QByteArray();
     }
 
-    _checksum = hash.result();
-    *ok = !_checksum.isEmpty();
-    return _checksum;
+    const QByteArray result = hash.result();
+    if (result.isEmpty()) {
+        *ok = false;
+    } else {
+        *ok = true;
+        checksums->insert(quintptr(this), result);
+    }
+    return result;
 }
 
 /*! \internal

@@ -1220,6 +1220,7 @@ void QQmlTypeLoader::clearCache()
     m_qmldirCache.clear();
     m_importDirCache.clear();
     m_importQmlDirCache.clear();
+    m_checksumCache.clear();
     QQmlMetaType::freeUnusedTypesAndCaches();
 }
 

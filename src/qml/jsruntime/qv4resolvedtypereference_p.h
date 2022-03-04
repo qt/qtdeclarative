@@ -75,7 +75,8 @@ public:
 
     QQmlRefPointer<QQmlPropertyCache> propertyCache() const;
     QQmlRefPointer<QQmlPropertyCache> createPropertyCache(QQmlEngine *);
-    bool addToHash(QCryptographicHash *hash, QQmlEngine *engine);
+    bool addToHash(QCryptographicHash *hash, QQmlEngine *engine, QHash<quintptr,
+                   QByteArray> *checksums);
 
     void doDynamicTypeCheck();
 
