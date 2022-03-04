@@ -170,8 +170,6 @@ class ReactionHandler;
 struct Q_QML_EXPORT ExecutionEngine : public EngineBase
 {
 private:
-    static qint32 maxCallDepth;
-
     friend struct ExecutionContextSaver;
     friend struct ExecutionContext;
     friend struct Heap::ExecutionContext;
@@ -696,7 +694,7 @@ public:
             return false;
         if (f) {
             return !f->aotFunction && !f->isGenerator()
-                    && f->interpreterCallCount >= jitCallCountThreshold;
+                    && f->interpreterCallCount >= s_jitCallCountThreshold;
         }
         return true;
 #else
@@ -773,13 +771,18 @@ public:
 
 private:
     QV4::ReturnedValue fromData(QMetaType type, const void *ptr, const QVariant *variant = nullptr);
+    static void initializeStaticMembers();
+
+    static int s_maxCallDepth;
+    static int s_jitCallCountThreshold;
+    static int s_maxJSStackSize;
+    static int s_maxGCStackSize;
 
 #if QT_CONFIG(qml_debug)
     QScopedPointer<QV4::Debugging::Debugger> m_debugger;
     QScopedPointer<QV4::Profiling::Profiler> m_profiler;
 #endif
     QSet<QString> m_illegalNames;
-    int jitCallCountThreshold;
 
     // used by generated Promise objects to handle 'then' events
     QScopedPointer<QV4::Promise::ReactionHandler> m_reactionHandler;
@@ -798,9 +801,6 @@ private:
     QHash<QString, quint32> m_consoleCount;
 
     QVector<Deletable *> m_extensionData;
-
-    int m_maxJSStackSize = 4 * 1024 * 1024;
-    int m_maxGCStackSize = 2 * 1024 * 1024;
 };
 
 #define CHECK_STACK_LIMITS(v4) if ((v4)->checkStackLimits()) return Encode::undefined(); \
@@ -816,7 +816,7 @@ struct ExecutionEngineCallDepthRecorder
 
 inline bool ExecutionEngine::checkStackLimits()
 {
-    if (Q_UNLIKELY((jsStackTop > jsStackLimit) || (callDepth >= maxCallDepth))) {
+    if (Q_UNLIKELY((jsStackTop > jsStackLimit) || (callDepth >= s_maxCallDepth))) {
         throwRangeError(QStringLiteral("Maximum call stack size exceeded."));
         return true;
     }
