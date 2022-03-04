@@ -100,11 +100,12 @@ QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::createPropertyCache()
     }
 }
 
-bool ResolvedTypeReference::addToHash(QCryptographicHash *hash)
+bool ResolvedTypeReference::addToHash(
+        QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums)
 {
     if (m_type.isValid() && !m_type.isInlineComponentType()) {
         bool ok = false;
-        hash->addData(createPropertyCache()->checksum(&ok));
+        hash->addData(createPropertyCache()->checksum(checksums, &ok));
         return ok;
     }
     if (!m_compilationUnit)

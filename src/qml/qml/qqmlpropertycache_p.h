@@ -247,7 +247,7 @@ public:
     static bool determineMetaObjectSizes(const QMetaObject &mo, int *fieldCount, int *stringCount);
     static bool addToHash(QCryptographicHash &hash, const QMetaObject &mo);
 
-    QByteArray checksum(bool *ok);
+    QByteArray checksum(QHash<quintptr, QByteArray> *checksums, bool *ok) const;
 
     QTypeRevision allowedRevision(int index) const { return allowedRevisionCache[index]; }
     void setAllowedRevision(int index, QTypeRevision allowed) { allowedRevisionCache[index] = allowed; }
@@ -333,7 +333,6 @@ private:
     QByteArray _listPropertyAssignBehavior;
     QString _defaultPropertyName;
     QQmlPropertyCacheMethodArguments *argumentsCache = nullptr;
-    QByteArray _checksum;
     int methodIndexCacheStart = 0;
     int signalHandlerIndexCacheStart = 0;
     int _jsFactoryMethodIndex = -1;

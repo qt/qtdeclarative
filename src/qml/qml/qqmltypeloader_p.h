@@ -78,6 +78,7 @@ class Q_QML_PRIVATE_EXPORT QQmlTypeLoader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlTypeLoader)
 public:
+    using ChecksumCache = QHash<quintptr, QByteArray>;
     enum Mode { PreferSynchronous, Asynchronous, Synchronous };
 
     class Q_QML_PRIVATE_EXPORT Blob : public QQmlDataBlob
@@ -141,6 +142,8 @@ public:
     ~QQmlTypeLoader();
 
     QQmlImportDatabase *importDatabase() const;
+    ChecksumCache *checksumCache() { return &m_checksumCache; }
+    const ChecksumCache *checksumCache() const { return &m_checksumCache; }
 
     static QUrl normalize(const QUrl &unNormalizedUrl);
 
@@ -247,6 +250,7 @@ private:
     QmldirCache m_qmldirCache;
     ImportDirCache m_importDirCache;
     ImportQmlDirCache m_importQmlDirCache;
+    ChecksumCache m_checksumCache;
 
     template<typename Loader>
     void doLoad(const Loader &loader, QQmlDataBlob *blob, Mode mode);

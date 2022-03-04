@@ -253,7 +253,8 @@ void QQmlTypeData::createTypeAndPropertyCaches(
 }
 
 static bool addTypeReferenceChecksumsToHash(
-        const QList<QQmlTypeData::TypeReference> &typeRefs, QCryptographicHash *hash)
+        const QList<QQmlTypeData::TypeReference> &typeRefs,
+        QHash<quintptr, QByteArray> *checksums, QCryptographicHash *hash)
 {
     for (const auto &typeRef: typeRefs) {
         if (typeRef.typeData) {
@@ -262,7 +263,7 @@ static bool addTypeReferenceChecksumsToHash(
         } else if (typeRef.type.isValid()) {
             const auto propertyCache = QQmlMetaType::propertyCache(typeRef.type.metaObject());
             bool ok = false;
-            hash->addData(propertyCache->checksum(&ok));
+            hash->addData(propertyCache->checksum(checksums, &ok));
             if (!ok)
                 return false;
         }
@@ -420,8 +421,9 @@ void QQmlTypeData::done()
 
     const auto dependencyHasher = [&resolvedTypeCache, this]() {
         QCryptographicHash hash(QCryptographicHash::Md5);
-        return (resolvedTypeCache.addToHash(&hash)
-                && ::addTypeReferenceChecksumsToHash(m_compositeSingletons, &hash))
+        return (resolvedTypeCache.addToHash(&hash, typeLoader()->checksumCache())
+                && ::addTypeReferenceChecksumsToHash(
+                    m_compositeSingletons, typeLoader()->checksumCache(), &hash))
                 ? hash.result()
                 : QByteArray();
     };
