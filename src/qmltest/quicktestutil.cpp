@@ -72,6 +72,8 @@ void QuickTestUtil::populateClipboardText(int lineCount)
     for (int i = lineCount; i > 0; --i)
         lines << fmt.arg(i).arg(i - 1);
     QGuiApplication::clipboard()->setText(lines.join(u'\n'));
+#else
+    Q_UNUSED(lineCount)
 #endif
 }
 
