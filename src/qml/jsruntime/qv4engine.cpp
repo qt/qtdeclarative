@@ -151,14 +151,23 @@ DEFINE_BOOL_CONFIG_OPTION(forceDiskCache, QML_FORCE_DISK_CACHE);
 
 using namespace QV4;
 
+// While engineSerial is odd the statics haven't been initialized. The engine that receives ID 1
+// initializes the statics and sets engineSerial to 2 afterwards.
+// Each engine does engineSerial.fetchAndAddOrdered(2) on creation. Therefore engineSerial stays
+// odd while the statics are being initialized, and stays even afterwards.
+// Any further engines created while the statics are being initialized busy-wait until engineSerial
+// is even.
 static QBasicAtomicInt engineSerial = Q_BASIC_ATOMIC_INITIALIZER(1);
+int ExecutionEngine::s_maxCallDepth = -1;
+int ExecutionEngine::s_jitCallCountThreshold = 3;
+int ExecutionEngine::s_maxJSStackSize = 4 * 1024 * 1024;
+int ExecutionEngine::s_maxGCStackSize = 2 * 1024 * 1024;
 
 ReturnedValue throwTypeError(const FunctionObject *b, const QV4::Value *, const QV4::Value *, int)
 {
     return b->engine()->throwTypeError();
 }
 
-qint32 ExecutionEngine::maxCallDepth = -1;
 
 template <typename ReturnType>
 ReturnType convertJSValueToVariantType(const QJSValue &value)
@@ -328,6 +337,59 @@ static QSequentialIterable jsvalueToSequence (const QJSValue& value) {
     return QSequentialIterable(QMetaSequence(&sequence), &value);
 }
 
+void ExecutionEngine::initializeStaticMembers()
+{
+    bool ok = false;
+
+    const int envMaxJSStackSize = qEnvironmentVariableIntValue("QV4_JS_MAX_STACK_SIZE", &ok);
+    if (ok && envMaxJSStackSize > 0)
+        s_maxJSStackSize = envMaxJSStackSize;
+
+    const int envMaxGCStackSize = qEnvironmentVariableIntValue("QV4_GC_MAX_STACK_SIZE", &ok);
+    if (ok && envMaxGCStackSize > 0)
+        s_maxGCStackSize = envMaxGCStackSize;
+
+    if (qEnvironmentVariableIsSet("QV4_CRASH_ON_STACKOVERFLOW")) {
+        s_maxCallDepth = std::numeric_limits<qint32>::max();
+    } else {
+        ok = false;
+        s_maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);
+        if (!ok || s_maxCallDepth <= 0) {
+#if defined(QT_NO_DEBUG) && !defined(__SANITIZE_ADDRESS__) && !__has_feature(address_sanitizer)
+#ifdef Q_OS_QNX
+            s_maxCallDepth = 640; // QNX's stack is only 512k by default
+#else
+            s_maxCallDepth = 1234;
+#endif
+#else
+            // no (tail call) optimization is done, so there'll be a lot mare stack frames active
+            s_maxCallDepth = 200;
+#endif
+        }
+    }
+
+    Q_ASSERT(s_maxCallDepth > 0);
+
+    ok = false;
+    s_jitCallCountThreshold = qEnvironmentVariableIntValue("QV4_JIT_CALL_THRESHOLD", &ok);
+    if (!ok)
+        s_jitCallCountThreshold = 3;
+    if (qEnvironmentVariableIsSet("QV4_FORCE_INTERPRETER"))
+        s_jitCallCountThreshold = std::numeric_limits<int>::max();
+
+    qMetaTypeId<QJSValue>();
+    qMetaTypeId<QList<int> >();
+
+    if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QVariantMap>())
+        QMetaType::registerConverter<QJSValue, QVariantMap>(convertJSValueToVariantType<QVariantMap>);
+    if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QVariantList>())
+        QMetaType::registerConverter<QJSValue, QVariantList>(convertJSValueToVariantType<QVariantList>);
+    if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QStringList>())
+        QMetaType::registerConverter<QJSValue, QStringList>(convertJSValueToVariantType<QStringList>);
+    if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QSequentialIterable>())
+        QMetaType::registerConverter<QJSValue, QSequentialIterable>(jsvalueToSequence);
+}
+
 ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     : executableAllocator(new QV4::ExecutableAllocator)
     , regExpAllocator(new QV4::ExecutableAllocator)
@@ -336,7 +398,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     , gcStack(new WTF::PageAllocation)
     , globalCode(nullptr)
     , publicEngine(jsEngine)
-    , m_engineId(engineSerial.fetchAndAddOrdered(1))
+    , m_engineId(engineSerial.fetchAndAddOrdered(2))
     , regExpCache(nullptr)
     , m_multiplyWrappedQObjects(nullptr)
 #if QT_CONFIG(qml_jit)
@@ -347,45 +409,23 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 #endif
     , m_qmlEngine(nullptr)
 {
-    bool ok = false;
-    const int envMaxJSStackSize = qEnvironmentVariableIntValue("QV4_JS_MAX_STACK_SIZE", &ok);
-    if (ok && envMaxJSStackSize > 0)
-        m_maxJSStackSize = envMaxJSStackSize;
-
-    const int envMaxGCStackSize = qEnvironmentVariableIntValue("QV4_GC_MAX_STACK_SIZE", &ok);
-    if (ok && envMaxGCStackSize > 0)
-        m_maxGCStackSize = envMaxGCStackSize;
-
-    memoryManager = new QV4::MemoryManager(this);
-
-    if (maxCallDepth == -1) {
-        if (qEnvironmentVariableIsSet("QV4_CRASH_ON_STACKOVERFLOW")) {
-            maxCallDepth = std::numeric_limits<qint32>::max();
-        } else {
-            ok = false;
-            maxCallDepth = qEnvironmentVariableIntValue("QV4_MAX_CALL_DEPTH", &ok);
-            if (!ok || maxCallDepth <= 0) {
-#if defined(QT_NO_DEBUG) && !defined(__SANITIZE_ADDRESS__) && !__has_feature(address_sanitizer)
-#ifdef Q_OS_QNX
-                maxCallDepth = 640; // QNX's stack is only 512k by default
-#else
-                maxCallDepth = 1234;
-#endif
-#else
-                // no (tail call) optimization is done, so there'll be a lot mare stack frames active
-                maxCallDepth = 200;
-#endif
-            }
+    if (m_engineId == 1) {
+        initializeStaticMembers();
+        engineSerial.storeRelease(2); // make it even
+    } else if (Q_UNLIKELY(m_engineId & 1)) {
+        // This should be rare. You usually don't create lots of engines at the same time.
+        while (engineSerial.loadAcquire() & 1) {
+            QThread::yieldCurrentThread();
         }
     }
-    Q_ASSERT(maxCallDepth > 0);
 
+    memoryManager = new QV4::MemoryManager(this);
     // reserve space for the JS stack
     // we allow it to grow to a bit more than m_maxJSStackSize, as we can overshoot due to ScopedValues
     // allocated outside of JIT'ed methods.
-    *jsStack = WTF::PageAllocation::allocate(m_maxJSStackSize + 256*1024, WTF::OSAllocator::JSVMStackPages,
-                                             /* writable */ true, /* executable */ false,
-                                             /* includesGuardPages */ true);
+    *jsStack = WTF::PageAllocation::allocate(
+                s_maxJSStackSize + 256*1024, WTF::OSAllocator::JSVMStackPages,
+                /* writable */ true, /* executable */ false, /* includesGuardPages */ true);
     jsStackBase = (Value *)jsStack->base();
 #ifdef V4_USE_VALGRIND
     VALGRIND_MAKE_MEM_UNDEFINED(jsStackBase, m_maxJSStackSize + 256*1024);
@@ -393,18 +433,9 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
 
     jsStackTop = jsStackBase;
 
-    *gcStack = WTF::PageAllocation::allocate(m_maxGCStackSize, WTF::OSAllocator::JSVMStackPages,
+    *gcStack = WTF::PageAllocation::allocate(s_maxGCStackSize, WTF::OSAllocator::JSVMStackPages,
                                              /* writable */ true, /* executable */ false,
                                              /* includesGuardPages */ true);
-
-    {
-        ok = false;
-        jitCallCountThreshold = qEnvironmentVariableIntValue("QV4_JIT_CALL_THRESHOLD", &ok);
-        if (!ok)
-            jitCallCountThreshold = 3;
-        if (qEnvironmentVariableIsSet("QV4_FORCE_INTERPRETER"))
-            jitCallCountThreshold = std::numeric_limits<int>::max();
-    }
 
     exceptionValue = jsAlloca(1);
     *exceptionValue = Encode::undefined();
@@ -416,7 +447,7 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     jsSymbols = jsAlloca(NJSSymbols);
 
     // set up stack limits
-    jsStackLimit = jsStackBase + m_maxJSStackSize/sizeof(Value);
+    jsStackLimit = jsStackBase + s_maxJSStackSize/sizeof(Value);
 
     identifierTable = new IdentifierTable(this);
 
@@ -862,18 +893,6 @@ ExecutionEngine::ExecutionEngine(QJSEngine *jsEngine)
     pd->set = thrower();
     functionPrototype()->insertMember(id_caller(), pd, Attr_Accessor|Attr_ReadOnly_ButConfigurable);
     functionPrototype()->insertMember(id_arguments(), pd, Attr_Accessor|Attr_ReadOnly_ButConfigurable);
-
-    qMetaTypeId<QJSValue>();
-    qMetaTypeId<QList<int> >();
-
-    if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QVariantMap>())
-        QMetaType::registerConverter<QJSValue, QVariantMap>(convertJSValueToVariantType<QVariantMap>);
-    if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QVariantList>())
-        QMetaType::registerConverter<QJSValue, QVariantList>(convertJSValueToVariantType<QVariantList>);
-    if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QStringList>())
-        QMetaType::registerConverter<QJSValue, QStringList>(convertJSValueToVariantType<QStringList>);
-    if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QSequentialIterable>())
-        QMetaType::registerConverter<QJSValue, QSequentialIterable>(jsvalueToSequence);
 
     QV4::QObjectWrapper::initializeBindings(this);
 
@@ -1994,12 +2013,12 @@ QV4::ReturnedValue ExecutionEngine::metaTypeToJS(QMetaType type, const void *dat
 
 int ExecutionEngine::maxJSStackSize() const
 {
-    return m_maxJSStackSize;
+    return s_maxJSStackSize;
 }
 
 int ExecutionEngine::maxGCStackSize() const
 {
-    return m_maxGCStackSize;
+    return s_maxGCStackSize;
 }
 
 ReturnedValue ExecutionEngine::global()
