@@ -643,19 +643,13 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
 
     const qreal devicePixelRatio = q->effectiveDevicePixelRatio();
     QSize pixelSize;
-    QSizeF logicalSize;
-    if (redirect.rt.renderTarget) {
+    if (redirect.rt.renderTarget)
         pixelSize = redirect.rt.renderTarget->pixelSize();
-        logicalSize = pixelSize / devicePixelRatio;
-    } else {
-        if (surfaceSize.isEmpty()) {
-            pixelSize = size * devicePixelRatio;
-            logicalSize = size;
-        } else {
-            pixelSize = surfaceSize;
-            logicalSize = QSizeF(surfaceSize) / devicePixelRatio;
-        }
-    }
+    else if (surfaceSize.isEmpty())
+        pixelSize = size * devicePixelRatio;
+    else
+        pixelSize = surfaceSize;
+    QSizeF logicalSize = QSizeF(pixelSize) / devicePixelRatio;
 
     renderer->setDevicePixelRatio(devicePixelRatio);
     renderer->setDeviceRect(QRect(QPoint(0, 0), pixelSize));
