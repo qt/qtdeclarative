@@ -23,7 +23,7 @@ class QQuickAbstractPaletteProvider
 public:
     virtual ~QQuickAbstractPaletteProvider() = default;
     virtual QPalette defaultPalette() const = 0;
-    virtual QPalette parentPalette() const = 0;
+    virtual QPalette parentPalette(const QPalette &fallbackPalette) const { return fallbackPalette; }
 };
 
 QT_END_NAMESPACE

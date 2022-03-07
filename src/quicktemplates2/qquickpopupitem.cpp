@@ -138,9 +138,9 @@ bool QQuickPopupItemPrivate::providesPalette() const
     return QQuickPopupPrivate::get(popup)->providesPalette();
 }
 
-QPalette QQuickPopupItemPrivate::parentPalette() const
+QPalette QQuickPopupItemPrivate::parentPalette(const QPalette &fallbackPalette) const
 {
-    return QQuickPopupPrivate::get(popup)->parentPalette();
+    return QQuickPopupPrivate::get(popup)->parentPalette(fallbackPalette);
 }
 
 void QQuickPopupItem::updatePolish()

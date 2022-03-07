@@ -45,11 +45,16 @@ public:
 
     bool reset();
 
-    bool inheritPalette(const QPalette &p);
+    bool inheritPalette(const QPalette &palette);
 
 private:
+    bool doInheritPalette(const QPalette &palette);
+    bool updateInheritedPalette();
+    void ensureRequestedPalette();
+
     QPalette m_resolvedPalette;
     QLazilyAllocated<QPalette> m_requestedPalette;
+    QLazilyAllocated<QPalette> m_lastInheritedPalette;
 
     using Deleter = std::function<void(const QQuickAbstractPaletteProvider*)>;
     using ProviderPtr = std::unique_ptr<const QQuickAbstractPaletteProvider, Deleter>;

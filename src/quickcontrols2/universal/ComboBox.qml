@@ -62,7 +62,6 @@ T.ComboBox {
         validator: control.validator
         selectByMouse: control.selectTextByMouse
 
-        font: control.font
         color: !control.enabled ? control.Universal.chromeDisabledLowColor :
                 control.editable && control.activeFocus ? control.Universal.chromeBlackHighColor : control.Universal.foreground
         selectionColor: control.Universal.accent

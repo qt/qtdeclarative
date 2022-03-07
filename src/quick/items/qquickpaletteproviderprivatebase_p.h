@@ -87,16 +87,16 @@ public:
     /*!
         \internal
 
-        A default palette for this component.
+        The default palette for this component.
     */
     QPalette defaultPalette() const override;
 
     /*!
         \internal
 
-        A parent palette for this component. Can be null.
+        The parent palette for this component. Can be null.
     */
-    QPalette parentPalette() const override;
+    QPalette parentPalette(const QPalette &fallbackPalette) const override;
 
     /*!
         \internal
@@ -214,7 +214,7 @@ void QQuickPaletteProviderPrivateBase<I, Impl>::registerPalette(PalettePtr palet
 
     m_palette = std::move(palette);
     m_palette->setPaletteProvider(this);
-    m_palette->inheritPalette(parentPalette());
+    m_palette->inheritPalette(parentPalette(defaultPalette()));
 
     setCurrentColorGroup();
 
@@ -254,7 +254,7 @@ QQuickPalette *QQuickPaletteProviderPrivateBase<I, Impl>::windowPalette() const
 }
 
 template<class I, class Impl>
-QPalette QQuickPaletteProviderPrivateBase<I, Impl>::parentPalette() const
+QPalette QQuickPaletteProviderPrivateBase<I, Impl>::parentPalette(const QPalette &fallbackPalette) const
 {
     if constexpr (!isRootWindow<I>()) {
         for (auto parentItem = itemWithPalette()->parentItem(); parentItem;
@@ -271,7 +271,7 @@ QPalette QQuickPaletteProviderPrivateBase<I, Impl>::parentPalette() const
         }
     }
 
-    return defaultPalette();
+    return fallbackPalette;
 }
 
 template<class I>
@@ -343,8 +343,8 @@ void QQuickPaletteProviderPrivateBase<I, Impl>::connectItem()
 
     if constexpr (!isRootWindow<I>()) {
         // Item with palette has the same lifetime as its implementation that inherits this class
-        I::connect(itemWithPalette(), &I::parentChanged , [this]() { inheritPalette(parentPalette()); });
-        I::connect(itemWithPalette(), &I::windowChanged , [this]() { inheritPalette(parentPalette()); });
+        I::connect(itemWithPalette(), &I::parentChanged , [this]() { inheritPalette(parentPalette(defaultPalette())); });
+        I::connect(itemWithPalette(), &I::windowChanged , [this]() { inheritPalette(parentPalette(defaultPalette())); });
         I::connect(itemWithPalette(), &I::enabledChanged, [this]() { setCurrentColorGroup(); });
     }
 }

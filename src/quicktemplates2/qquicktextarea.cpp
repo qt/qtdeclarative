@@ -526,7 +526,11 @@ QQuickTextAreaAttached *QQuickTextArea::qmlAttachedProperties(QObject *object)
 
 QFont QQuickTextArea::font() const
 {
-    return QQuickTextEdit::font();
+    Q_D(const QQuickTextArea);
+    QFont font = QQuickTextEdit::font();
+    // The resolve mask should inherit from the requestedFont
+    font.setResolveMask(d->extra.value().requestedFont.resolveMask());
+    return font;
 }
 
 void QQuickTextArea::setFont(const QFont &font)

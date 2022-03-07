@@ -101,7 +101,7 @@ public:
     QPalette defaultPalette() const override;
     bool providesPalette() const override;
 
-    QPalette parentPalette() const override;
+    QPalette parentPalette(const QPalette &fallbackPalette) const override;
 
     int backId = 0;
     int escapeId = 0;

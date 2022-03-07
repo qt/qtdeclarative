@@ -36,6 +36,8 @@ private slots:
 
     void listView_data();
     void listView();
+
+    void resolve();
 };
 
 static QFont testFont()
@@ -329,6 +331,44 @@ void tst_font::listView()
     QVERIFY(control);
 
     QCOMPARE(control->property("font").value<QFont>().pixelSize(), 55);
+}
+
+void tst_font::resolve()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("resolve.qml"));
+
+    QScopedPointer<QObject> window(component.create());
+    QVERIFY2(!window.isNull(), qPrintable(component.errorString()));
+
+    auto control1 = window->property("control1").value<QQuickControl*>();
+    QVERIFY(control1);
+
+    QCOMPARE(window->property("font").value<QFont>().pointSize(),
+             control1->property("font").value<QFont>().pointSize());
+    QCOMPARE(window->property("font").value<QFont>().weight(),
+             control1->property("font").value<QFont>().weight());
+    QMetaObject::invokeMethod(window.get(), "changeFont1", Q_ARG(QVariant, QFont("Helvetica", 12, 12)));
+    QVERIFY(window->property("font").value<QFont>().pointSize()
+             != control1->property("font").value<QFont>().pointSize());
+    QCOMPARE(window->property("font").value<QFont>().weight(),
+             control1->property("font").value<QFont>().weight());
+
+    QMetaObject::invokeMethod(window.get(), "changeFont2", Q_ARG(QVariant, QFont("Helvetica", 20, 20)));
+    auto control2 = window->property("control2").value<QQuickControl*>();
+    auto control2ChildControl = window->property("control2ChildControl").value<QQuickControl*>();
+    auto control4 = window->property("control4").value<QQuickControl*>();
+    QVERIFY(control2);
+    QVERIFY(control2ChildControl);
+    QVERIFY(control4);
+    auto control2Font = control2->property("font").value<QFont>();
+    auto control2ChildControlFont = control2ChildControl->property("font").value<QFont>();
+    auto control4Font = control4->property("font").value<QFont>();
+    QCOMPARE((int)control4Font.resolveMask(), 0);
+    QCOMPARE(control4Font.resolveMask(), control2ChildControlFont.resolveMask());
+    QCOMPARE(control2ChildControlFont, control2Font);
+    QVERIFY(control2ChildControlFont != control4Font);
 }
 
 QTEST_MAIN(tst_font)
