@@ -132,7 +132,7 @@ public:
 
         {
             T t{};
-            if (convertVariant(value, QMetaType::fromType<T>(), &t))
+            if (convertVariant(value, targetType, &t))
                 return t;
 
             QMetaType::convert(value.metaType(), value.constData(), targetType, &t);
