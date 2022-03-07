@@ -50,6 +50,8 @@ private slots:
     void setDynamicallyCreatedPalette();
     void createBindings();
     void updateBindings();
+
+    void resolve();
 };
 
 tst_palette::tst_palette()
@@ -400,6 +402,29 @@ void tst_palette::updateBindings()
     enabledButton->setEnabled(false);
 
     QCOMPARE(QQuickItemPrivate::get(enabledButton)->palette()->button(), QColor("navy"));
+}
+
+void tst_palette::resolve()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadUrl(testFileUrl("resolve.qml"));
+
+    QScopedPointer<QObject> window(component.create());
+    QVERIFY2(!window.isNull(), qPrintable(component.errorString()));
+
+    auto control = window->property("control").value<QQuickControl*>();
+    QVERIFY(control);
+
+    QCOMPARE(window->property("palette").value<QQuickPalette*>()->window(),
+             control->property("palette").value<QQuickPalette*>()->window());
+    QCOMPARE(window->property("palette").value<QQuickPalette*>()->windowText(),
+             control->property("palette").value<QQuickPalette*>()->windowText());
+    QMetaObject::invokeMethod(window.get(), "changeColors", Q_ARG(QVariant, QColor(Qt::red)));
+    QVERIFY(window->property("palette").value<QQuickPalette*>()->window()
+            != control->property("palette").value<QQuickPalette*>()->window());
+    QCOMPARE(window->property("palette").value<QQuickPalette*>()->windowText(),
+             control->property("palette").value<QQuickPalette*>()->windowText());
 }
 
 QTEST_MAIN(tst_palette)

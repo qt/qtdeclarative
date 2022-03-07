@@ -500,7 +500,7 @@ QQuickAccessibleAttached *QQuickControlPrivate::accessibleAttached(const QObject
 /*!
     \internal
 
-    Returns the font that the control w inherits from its ancestors and
+    Returns the font that the control \a item inherits from its ancestors and
     QGuiApplication::font.
 */
 QFont QQuickControlPrivate::parentFont(const QQuickItem *item)
@@ -508,13 +508,13 @@ QFont QQuickControlPrivate::parentFont(const QQuickItem *item)
     QQuickItem *p = item->parentItem();
     while (p) {
         if (QQuickControl *control = qobject_cast<QQuickControl *>(p))
-            return control->font();
+            return QQuickControlPrivate::get(control)->resolvedFont;
         else if (QQuickLabel *label = qobject_cast<QQuickLabel *>(p))
-            return label->font();
+            return label->QQuickText::font();
         else if (QQuickTextField *textField = qobject_cast<QQuickTextField *>(p))
-            return textField->font();
+            return textField->QQuickTextInput::font();
         else if (QQuickTextArea *textArea = qobject_cast<QQuickTextArea *>(p))
-            return textArea->font();
+            return textArea->QQuickTextEdit::font();
 
         p = p->parentItem();
     }
@@ -951,7 +951,10 @@ void QQuickControl::itemChange(QQuickItem::ItemChange change, const QQuickItem::
 QFont QQuickControl::font() const
 {
     Q_D(const QQuickControl);
-    return d->resolvedFont;
+    QFont font = d->resolvedFont;
+    // The resolveMask should inherit from the requestedFont
+    font.setResolveMask(d->extra.value().requestedFont.resolveMask());
+    return font;
 }
 
 void QQuickControl::setFont(const QFont &font)
@@ -1552,7 +1555,6 @@ void QQuickControl::setBackground(QQuickItem *background)
         text: qsTr("Button")
         contentItem: Label {
             text: control.text
-            font: control.font
             verticalAlignment: Text.AlignVCenter
         }
     }

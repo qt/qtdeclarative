@@ -20,7 +20,6 @@ class DefaultPalettesProvider : public QQuickAbstractPaletteProvider
 {
 public:
     QPalette defaultPalette() const override { static QPalette p; return p; }
-    QPalette parentPalette() const override  { return defaultPalette();     }
 };
 
 static std::default_delete<const QQuickAbstractPaletteProvider> defaultDeleter() { return {}; }
@@ -37,10 +36,10 @@ const QColor &QQuickPaletteColorProvider::color(QPalette::ColorGroup group, QPal
 
 bool QQuickPaletteColorProvider::setColor(QPalette::ColorGroup g, QPalette::ColorRole r, QColor c)
 {
-    m_requestedPalette.value() = m_resolvedPalette;
+    ensureRequestedPalette();
     m_requestedPalette->setColor(g, r, c);
 
-    return inheritPalette(paletteProvider()->parentPalette());
+    return updateInheritedPalette();
 }
 
 bool QQuickPaletteColorProvider::resetColor(QPalette::ColorGroup group, QPalette::ColorRole role)
@@ -54,7 +53,7 @@ bool QQuickPaletteColorProvider::resetColor(QPalette::ColorGroup group, QPalette
 bool QQuickPaletteColorProvider::fromQPalette(QPalette p)
 {
     m_requestedPalette.value() = std::move(p);
-    return inheritPalette(paletteProvider()->parentPalette());
+    return updateInheritedPalette();
 }
 
 QPalette QQuickPaletteColorProvider::palette() const
@@ -77,7 +76,7 @@ void QQuickPaletteColorProvider::setPaletteProvider(const QQuickAbstractPaletteP
 bool QQuickPaletteColorProvider::copyColorGroup(QPalette::ColorGroup cg,
                                                 const QQuickPaletteColorProvider &p)
 {
-    m_requestedPalette.value() = m_resolvedPalette;
+    ensureRequestedPalette();
 
     auto srcPalette = p.palette();
     for (int roleIndex = QPalette::WindowText; roleIndex < QPalette::NColorRoles; ++roleIndex) {
@@ -87,7 +86,7 @@ bool QQuickPaletteColorProvider::copyColorGroup(QPalette::ColorGroup cg,
         }
     }
 
-    return inheritPalette(paletteProvider()->parentPalette());
+    return updateInheritedPalette();
 }
 
 bool QQuickPaletteColorProvider::reset()
@@ -95,21 +94,59 @@ bool QQuickPaletteColorProvider::reset()
     return fromQPalette(QPalette());
 }
 
-bool QQuickPaletteColorProvider::inheritPalette(const QPalette &p)
+/*! \internal
+    Merge the given \a palette with the existing requested palette, remember
+    that it is the inherited palette (in case updateInheritedPalette() is
+    called later), and update the stored palette (to be returned from
+    \l palette()) if the result is different. Returns whether the stored
+    palette got changed.
+*/
+bool QQuickPaletteColorProvider::inheritPalette(const QPalette &palette)
 {
-    auto inheritedMask = m_requestedPalette.isAllocated() ? m_requestedPalette->resolveMask() | p.resolveMask() : p.resolveMask();
-    QPalette parentPalette = m_requestedPalette.isAllocated() ? m_requestedPalette->resolve(p) : p;
+    m_lastInheritedPalette.value() = palette;
+    return doInheritPalette(palette);
+}
+
+/*! \internal
+    Merge the given \a palette with the existing requested palette, and update
+    the stored palette (to be returned from \l palette()) if the result is
+    different. Returns whether the stored palette got changed.
+*/
+bool QQuickPaletteColorProvider::doInheritPalette(const QPalette &palette)
+{
+    auto inheritedMask = m_requestedPalette.isAllocated() ? m_requestedPalette->resolveMask() | palette.resolveMask()
+                                                          : palette.resolveMask();
+    QPalette parentPalette = m_requestedPalette.isAllocated() ? m_requestedPalette->resolve(palette) : palette;
     parentPalette.setResolveMask(inheritedMask);
 
     auto tmpResolvedPalette = parentPalette.resolve(paletteProvider()->defaultPalette());
     tmpResolvedPalette.setResolveMask(tmpResolvedPalette.resolveMask() | inheritedMask);
 
     bool changed = notEq(tmpResolvedPalette, m_resolvedPalette);
-    if (changed) {
+    if (changed)
         std::swap(tmpResolvedPalette, m_resolvedPalette);
-    }
 
     return changed;
+}
+
+/*! \internal
+    Update the stored palette (to be returned from \l palette()) from the
+    parent palette. Returns whether the stored palette got changed.
+*/
+bool QQuickPaletteColorProvider::updateInheritedPalette()
+{
+    // Use last inherited palette as parentPalette's fallbackPalette: it's useful when parentPalette doesn't exist.
+    const QPalette &p = m_lastInheritedPalette.isAllocated() ? m_lastInheritedPalette.value()
+                                                             : paletteProvider()->defaultPalette();
+    return doInheritPalette(paletteProvider()->parentPalette(p));
+}
+
+void QQuickPaletteColorProvider::ensureRequestedPalette()
+{
+    if (m_requestedPalette.isAllocated())
+        return;
+
+    m_requestedPalette.value() = QPalette();
 }
 
 QT_END_NAMESPACE

@@ -287,7 +287,11 @@ QQuickLabel::~QQuickLabel()
 
 QFont QQuickLabel::font() const
 {
-    return QQuickText::font();
+    Q_D(const QQuickLabel);
+    QFont font = QQuickText::font();
+    // The resolve mask should inherit from the requestedFont
+    font.setResolveMask(d->extra.value().requestedFont.resolveMask());
+    return font;
 }
 
 void QQuickLabel::setFont(const QFont &font)

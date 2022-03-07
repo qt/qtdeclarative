@@ -66,7 +66,6 @@ T.ComboBox {
         validator: control.validator
         selectByMouse: control.selectTextByMouse
 
-        font: control.font
         color: control.flat ? control.palette.windowText : control.editable ? control.palette.text : control.palette.buttonText
         selectionColor: control.palette.highlight
         selectedTextColor: control.palette.highlightedText

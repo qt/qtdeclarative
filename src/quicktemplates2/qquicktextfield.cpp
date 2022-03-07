@@ -387,7 +387,11 @@ QQuickTextField::~QQuickTextField()
 
 QFont QQuickTextField::font() const
 {
-    return QQuickTextInput::font();
+    Q_D(const QQuickTextField);
+    QFont font = QQuickTextInput::font();
+    // The resolve mask should inherit from the requestedFont
+    font.setResolveMask(d->extra.value().requestedFont.resolveMask());
+    return font;
 }
 
 void QQuickTextField::setFont(const QFont &font)

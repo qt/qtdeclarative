@@ -29,7 +29,6 @@ T.GroupBox {
         bottomPadding: background.bottomPadding
 
         text: control.title
-        font: control.font
         elide: Text.ElideRight
         verticalAlignment: Text.AlignVCenter
 
