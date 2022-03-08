@@ -704,6 +704,7 @@ ReturnedValue QQmlLocaleData::method_get_ ## VARIABLE (const QV4::FunctionObject
 LOCALE_STRING_PROPERTY(name)
 LOCALE_STRING_PROPERTY(nativeLanguageName)
 QT_IGNORE_DEPRECATIONS(LOCALE_STRING_PROPERTY(nativeCountryName))
+LOCALE_STRING_PROPERTY(nativeTerritoryName)
 LOCALE_STRING_PROPERTY(decimalPoint)
 LOCALE_STRING_PROPERTY(groupSeparator)
 LOCALE_STRING_PROPERTY(percent)
@@ -750,6 +751,7 @@ QV4LocaleDataDeletable::QV4LocaleDataDeletable(QV4::ExecutionEngine *engine)
     o->defineAccessorProperty(QStringLiteral("decimalPoint"), QQmlLocaleData::method_get_decimalPoint, nullptr);
     o->defineAccessorProperty(QStringLiteral("nativeLanguageName"), QQmlLocaleData::method_get_nativeLanguageName, nullptr);
     o->defineAccessorProperty(QStringLiteral("nativeCountryName"), QQmlLocaleData::method_get_nativeCountryName, nullptr);
+    o->defineAccessorProperty(QStringLiteral("nativeTerritoryName"), QQmlLocaleData::method_get_nativeTerritoryName, nullptr);
     o->defineAccessorProperty(QStringLiteral("zeroDigit"), QQmlLocaleData::method_get_zeroDigit, nullptr);
     o->defineAccessorProperty(QStringLiteral("amText"), QQmlLocaleData::method_get_amText, nullptr);
     o->defineAccessorProperty(QStringLiteral("measurementSystem"), QQmlLocaleData::method_get_measurementSystem, nullptr);
@@ -1135,8 +1137,18 @@ ReturnedValue QQmlLocale::method_localeCompare(const QV4::FunctionObject *b, con
 
 /*!
     \qmlproperty string QtQml::Locale::nativeCountryName
+    \deprecated [6.4] Use nativeTerritoryName instead.
 
     Holds a native name of the country for the locale. For example
+    "España" for Spanish/Spain locale.
+
+    \sa nativeLanguageName
+*/
+
+/*!
+    \qmlproperty string QtQml::Locale::nativeTerritoryName
+
+    Holds a native name of the territory for the locale. For example
     "España" for Spanish/Spain locale.
 
     \sa nativeLanguageName
