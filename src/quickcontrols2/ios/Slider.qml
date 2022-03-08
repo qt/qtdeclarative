@@ -64,6 +64,7 @@ T.Slider {
                 states: [
                     {"light": control.IOS.theme == IOS.Light},
                     {"dark": control.IOS.theme == IOS.Dark},
+                    {"disabled": !control.enabled}
                 ]
             }
         }
