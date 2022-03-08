@@ -5336,7 +5336,7 @@ QPointF QQuickItemPrivate::adjustedPosForTransform(const QPointF &centroidParent
     mat = mat * startMatrix;
 
     QPointF xformOriginPoint = q->transformOriginPoint();
-    QPointF pos = mat * xformOriginPoint;
+    QPointF pos = mat.map(xformOriginPoint);
     pos -= xformOriginPoint;
 
     return pos;
