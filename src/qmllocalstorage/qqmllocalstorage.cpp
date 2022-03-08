@@ -328,7 +328,8 @@ static ReturnedValue qmlsqldatabase_executeSql(const FunctionObject *b, const Va
             rows->setPrototypeUnchecked(p.getPointer());
             rows->d()->type = Heap::QQmlSqlDatabaseWrapper::Rows;
             *rows->d()->database = db;
-            *rows->d()->sqlQuery = query;
+            *rows->d()->sqlQuery = std::move(query);
+            QSqlQuery *queryPtr = rows->d()->sqlQuery;
 
             ScopedObject resultObject(scope, scope.engine->newObject());
             result = resultObject.asReturnedValue();
@@ -336,9 +337,9 @@ static ReturnedValue qmlsqldatabase_executeSql(const FunctionObject *b, const Va
             ScopedString s(scope);
             ScopedValue v(scope);
             resultObject->put((s = scope.engine->newIdentifier(QLatin1String("rowsAffected"))).getPointer(),
-                              (v = Value::fromInt32(query.numRowsAffected())));
+                              (v = Value::fromInt32(queryPtr->numRowsAffected())));
             resultObject->put((s = scope.engine->newIdentifier(QLatin1String("insertId"))).getPointer(),
-                              (v = scope.engine->newString(query.lastInsertId().toString())));
+                              (v = scope.engine->newString(queryPtr->lastInsertId().toString())));
             resultObject->put((s = scope.engine->newIdentifier(QLatin1String("rows"))).getPointer(),
                               rows);
         } else {
