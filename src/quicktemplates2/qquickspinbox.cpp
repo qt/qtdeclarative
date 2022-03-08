@@ -592,7 +592,8 @@ void QQuickSpinBox::setEditable(bool editable)
     }
     \endcode
 
-    \sa editable, textFromValue, valueFromText, {Control::locale}{locale}
+    \sa editable, textFromValue, valueFromText, {Control::locale}{locale},
+        {Validating Input Text}
 */
 QValidator *QQuickSpinBox::validator() const
 {
