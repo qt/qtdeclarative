@@ -261,7 +261,7 @@ static bool addTypeReferenceChecksumsToHash(
     for (const auto &typeRef: typeRefs) {
         if (typeRef.typeData) {
             const auto unit = typeRef.typeData->compilationUnit()->unitData();
-            hash->addData(unit->md5Checksum, sizeof(unit->md5Checksum));
+            hash->addData({unit->md5Checksum, sizeof(unit->md5Checksum)});
         } else if (typeRef.type.isValid()) {
             const auto propertyCache = QQmlMetaType::propertyCache(typeRef.type.metaObject());
             bool ok = false;

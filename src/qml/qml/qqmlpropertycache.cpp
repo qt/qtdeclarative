@@ -1248,7 +1248,7 @@ bool QQmlPropertyCache::addToHash(QCryptographicHash &hash, const QMetaObject &m
         return false;
     }
 
-    hash.addData(reinterpret_cast<const char *>(mo.d.data), fieldCount * sizeof(uint));
+    hash.addData({reinterpret_cast<const char *>(mo.d.data), qsizetype(fieldCount * sizeof(uint))});
     for (int i = 0; i < stringCount; ++i) {
         hash.addData(stringData(&mo, i));
     }

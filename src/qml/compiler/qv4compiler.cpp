@@ -130,7 +130,7 @@ void QV4::Compiler::JSUnitGenerator::generateUnitChecksum(QV4::CompiledData::Uni
             = offsetof(QV4::CompiledData::Unit, md5Checksum) + sizeof(unit->md5Checksum);
 
     const char *dataPtr = reinterpret_cast<const char *>(unit) + checksummableDataOffset;
-    hash.addData(dataPtr, unit->unitSize - checksummableDataOffset);
+    hash.addData({dataPtr, qsizetype(unit->unitSize - checksummableDataOffset)});
 
     QByteArray checksum = hash.result();
     Q_ASSERT(checksum.size() == sizeof(unit->md5Checksum));
