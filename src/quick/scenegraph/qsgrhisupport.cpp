@@ -53,6 +53,8 @@
 #include <QOperatingSystemVersion>
 #include <QOffscreenSurface>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 QSGRhiSupport::QSGRhiSupport()
@@ -743,8 +745,8 @@ QImage QSGRhiSupport::grabOffscreen(QQuickWindow *window)
         qWarning("Failed to initialize QRhi for offscreen readback");
         return QImage();
     }
-    QScopedPointer<QRhi> rhiOwner(rhiResult.rhi);
-    QRhi *rhi = rhiResult.own ? rhiOwner.data() : rhiOwner.take();
+    std::unique_ptr<QRhi> rhiOwner(rhiResult.rhi);
+    QRhi *rhi = rhiResult.own ? rhiOwner.get() : rhiOwner.release();
 
     const QSize pixelSize = window->size() * window->devicePixelRatio();
     QScopedPointer<QRhiTexture> texture(rhi->newTexture(QRhiTexture::RGBA8, pixelSize, 1,

@@ -346,9 +346,9 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
         QMetaMethod m = QMetaObjectPrivate::signal(object->metaObject(), index);
         QList<QByteArray> parameterTypes = m.parameterTypes();
 
-        QScopedPointer<QMetaCallEvent> ev(new QMetaCallEvent(m.methodIndex(), 0, nullptr,
-                                                             object, index,
-                                                             parameterTypes.count() + 1));
+        auto ev = std::make_unique<QMetaCallEvent>(m.methodIndex(), 0, nullptr,
+                                                   object, index,
+                                                   parameterTypes.count() + 1);
 
         void **args = ev->args();
         QMetaType *types = ev->types();
@@ -373,7 +373,7 @@ void QQmlData::signalEmitted(QAbstractDeclarativeData *, QObject *object, int in
         QQmlThreadNotifierProxyObject *mpo = new QQmlThreadNotifierProxyObject;
         mpo->target = object;
         mpo->moveToThread(objectThreadData->thread.loadAcquire());
-        QCoreApplication::postEvent(mpo, ev.take());
+        QCoreApplication::postEvent(mpo, ev.release());
 
     } else {
         QQmlNotifierEndpoint *ep = ddata->notify(index);

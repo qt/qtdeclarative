@@ -49,6 +49,8 @@
 #include <private/qv4qobjectwrapper_p.h>
 #include <QtCore/qbasictimer.h>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 void QQuickViewPrivate::init(QQmlEngine* e)
@@ -488,9 +490,9 @@ void QQuickView::continueExecute()
         return;
     }
 
-    QScopedPointer<QObject> obj(d->initialProperties.empty()
-                                ? d->component->create()
-                                : d->component->createWithInitialProperties(d->initialProperties));
+    std::unique_ptr<QObject> obj(d->initialProperties.empty()
+                                 ? d->component->create()
+                                 : d->component->createWithInitialProperties(d->initialProperties));
 
     if (d->component->isError()) {
         const QList<QQmlError> errorList = d->component->errors();
@@ -503,7 +505,7 @@ void QQuickView::continueExecute()
     }
 
     if (d->setRootObject(obj.get()))
-        obj.take();
+        Q_UNUSED(obj.release());
     emit statusChanged(status());
 }
 

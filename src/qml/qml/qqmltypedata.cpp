@@ -50,6 +50,8 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qcryptographichash.h>
 
+#include <memory>
+
 Q_DECLARE_LOGGING_CATEGORY(DBG_DISK_CACHE)
 
 QT_BEGIN_NAMESPACE
@@ -902,7 +904,7 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
     m_importCache.populateCache(typeNameCache->data());
 
     for (auto resolvedType = m_resolvedTypes.constBegin(), end = m_resolvedTypes.constEnd(); resolvedType != end; ++resolvedType) {
-        QScopedPointer<QV4::ResolvedTypeReference> ref(new QV4::ResolvedTypeReference);
+        auto ref = std::make_unique<QV4::ResolvedTypeReference>();
         QQmlType qmlType = resolvedType->type;
         if (resolvedType->typeData) {
             if (resolvedType->needsCreation && qmlType.isCompositeSingleton()) {
@@ -957,7 +959,7 @@ QQmlError QQmlTypeData::buildTypeResolutionCaches(
         }
         ref->setVersion(resolvedType->version);
         ref->doDynamicTypeCheck();
-        resolvedTypeCache->insert(resolvedType.key(), ref.take());
+        resolvedTypeCache->insert(resolvedType.key(), ref.release());
     }
     QQmlError noError;
     return noError;

@@ -59,6 +59,8 @@
 #include <private/qpointingdevice_p.h>
 #include <private/qobject_p.h>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 class QQuickDragGrabber;
@@ -109,7 +111,7 @@ public:
     QVector<QQuickItem *> hasFiltered; // during event delivery to a single receiver, the filtering parents for which childMouseEventFilter was already called
     QVector<QQuickItem *> skipDelivery; // during delivery of one event to all receivers, Items to which we know delivery is no longer necessary
 
-    QScopedPointer<QMutableTouchEvent> delayedTouch;
+    std::unique_ptr<QMutableTouchEvent> delayedTouch;
     QList<const QPointingDevice *> knownPointingDevices;
 
     uint currentHoverId = 0;

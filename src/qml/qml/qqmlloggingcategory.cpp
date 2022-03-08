@@ -41,6 +41,8 @@
 
 #include <QtQml/qqmlinfo.h>
 
+#include <memory>
+
 /*!
     \qmltype LoggingCategory
     \ingroup qml-utility-elements
@@ -118,7 +120,7 @@ QQmlLoggingCategory::DefaultLogLevel QQmlLoggingCategory::defaultLogLevel() cons
 
 QLoggingCategory *QQmlLoggingCategory::category() const
 {
-    return m_category.data();
+    return m_category.get();
 }
 
 void QQmlLoggingCategory::classBegin()
@@ -131,7 +133,7 @@ void QQmlLoggingCategory::componentComplete()
     if (m_name.isNull()) {
         qmlWarning(this) << QLatin1String("Declaring the name of a LoggingCategory is mandatory and cannot be changed later");
     } else {
-        QScopedPointer<QLoggingCategory> category(new QLoggingCategory(m_name.constData(), QtMsgType(m_defaultLogLevel)));
+        auto category = std::make_unique<QLoggingCategory>(m_name.constData(), QtMsgType(m_defaultLogLevel));
         m_category.swap(category);
     }
 }

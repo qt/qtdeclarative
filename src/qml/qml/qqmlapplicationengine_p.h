@@ -77,7 +77,7 @@ public:
     QStringList extraFileSelectors;
     QString translationsDirectory;
 #if QT_CONFIG(translation)
-    QScopedPointer<QTranslator> activeTranslator;
+    std::unique_ptr<QTranslator> activeTranslator;
 #endif
     bool isInitialized = false;
 };

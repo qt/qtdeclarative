@@ -53,6 +53,8 @@
 #include <QtQuick/private/qquickrendercontrol_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcTouch, "qt.quick.touch")
@@ -1207,10 +1209,10 @@ void QQuickDeliveryAgentPrivate::deliverDelayedTouchEvent()
     // Deliver and delete delayedTouch.
     // Set delayedTouch to nullptr before delivery to avoid redelivery in case of
     // event loop recursions (e.g if it the touch starts a dnd session).
-    QScopedPointer<QTouchEvent> e(delayedTouch.take());
-    qCDebug(lcTouchCmprs) << "delivering" << e.data();
+    std::unique_ptr<QTouchEvent> e(std::move(delayedTouch));
+    qCDebug(lcTouchCmprs) << "delivering" << e.get();
     compressedTouchCount = 0;
-    deliverPointerEvent(e.data());
+    deliverPointerEvent(e.get());
 }
 
 /*! \internal
@@ -1407,7 +1409,7 @@ bool QQuickDeliveryAgentPrivate::compressTouchEvent(QTouchEvent *event)
             QMutableEventPoint::detach(tp);
         }
         ++compressedTouchCount;
-        qCDebug(lcTouchCmprs) << "delayed" << compressedTouchCount << delayedTouch.data();
+        qCDebug(lcTouchCmprs) << "delayed" << compressedTouchCount << delayedTouch.get();
         if (QQuickWindow *window = rootItem->window())
             window->maybeUpdate();
         return true;
@@ -1446,7 +1448,7 @@ bool QQuickDeliveryAgentPrivate::compressTouchEvent(QTouchEvent *event)
                 QMutableEventPoint::detach(tp);
             }
             ++compressedTouchCount;
-            qCDebug(lcTouchCmprs) << "coalesced" << compressedTouchCount << delayedTouch.data();
+            qCDebug(lcTouchCmprs) << "coalesced" << compressedTouchCount << delayedTouch.get();
             if (QQuickWindow *window = rootItem->window())
                 window->maybeUpdate();
             return true;

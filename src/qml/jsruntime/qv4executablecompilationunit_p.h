@@ -60,6 +60,8 @@
 #include <private/qqmlnullablevalue_p.h>
 #include <private/qqmlmetatype_p.h>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlScriptData;
@@ -185,7 +187,7 @@ public:
 
     QHash<int, InlineComponentData> inlineComponentData;
 
-    QScopedPointer<CompilationUnitMapper> backingFile;
+    std::unique_ptr<CompilationUnitMapper> backingFile;
 
     // --- interface for QQmlPropertyCacheCreator
     using CompiledObject = CompiledData::Object;
