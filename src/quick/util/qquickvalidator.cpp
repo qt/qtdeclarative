@@ -56,6 +56,8 @@ QT_BEGIN_NAMESPACE
     interpret the number and will accept locale specific digits, group separators, and positive
     and negative signs.  In addition, IntValidator is always guaranteed to accept a number
     formatted according to the "C" locale.
+
+    \sa DoubleValidator, RegularExpressionValidator, {Validating Input Text}
 */
 
 QQuickIntValidator::QQuickIntValidator(QObject *parent)
@@ -131,6 +133,8 @@ void QQuickIntValidator::resetLocaleName()
     it is also rejected. If \l notation is DoubleValidator.ScientificNotation,
     and the input is not in the valid range, it is accecpted but invalid. The
     value may yet become valid by changing the exponent.
+
+    \sa IntValidator, RegularExpressionValidator, {Validating Input Text}
 */
 
 QQuickDoubleValidator::QQuickDoubleValidator(QObject *parent)
@@ -210,6 +214,8 @@ void QQuickDoubleValidator::resetLocaleName()
 
     The RegularExpressionValidator type provides a validator, that counts as valid any string which
     matches a specified regular expression.
+
+    \sa IntValidator, DoubleValidator, {Validating Input Text}
 */
 /*!
    \qmlproperty regularExpression QtQuick::RegularExpressionValidator::regularExpression
