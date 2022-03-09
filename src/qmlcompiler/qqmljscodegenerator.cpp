@@ -79,7 +79,8 @@ QString QQmlJSCodeGenerator::metaTypeFromType(const QQmlJSScope::ConstPtr &type)
 
 QString QQmlJSCodeGenerator::metaTypeFromName(const QQmlJSScope::ConstPtr &type) const
 {
-    return u"QMetaType::fromName(\""_qs + type->augmentedInternalName() + u"\")"_qs;
+    return u"[]() { static const auto t = QMetaType::fromName(\""_qs
+            + type->augmentedInternalName() + u"\"); return t; }()"_qs;
 }
 
 QString QQmlJSCodeGenerator::metaObject(const QQmlJSScope::ConstPtr &objectType)
