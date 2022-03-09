@@ -39,12 +39,35 @@
 
     \section1 Using the Module
 
-    The QML types can be imported into your application by adding the following
-    import statement in your \c {.qml} file.
+    \include {module-use.qdocinc} {using the qml api} {QtQuick.Layouts}
 
-    \qml
-    import QtQuick.Layouts
-    \endqml
+    \section1 Layouts
+
+    \annotatedlist layouts
+
+    \section1 Articles and Guides
+
+    \list
+        \li \l {Qt Quick Layouts Overview}
+    \endlist
+
+    \section1 Examples
+
+    \list
+        \li \l {Qt Quick Layouts - Basic Example}
+    \endlist
+
+    \section1 Reference
+
+    \list
+        \li \l {Qt Quick Layouts QML Types} {Qt Quick Layouts QML Types}
+    \endlist
+
+    \section1 Related Modules
+
+    \list
+        \li \l {Qt Quick}
+    \endlist
 
     \section1 Licenses
 
@@ -54,17 +77,4 @@
     \l{GNU Lesser General Public License, version 3}, or
     the \l{GNU General Public License, version 2}.
     See \l{Qt Licensing} for further details.
-
-    \section1 Layouts
-
-    \annotatedlist layouts
-
-    \section1 Related Information
-
-     \list
-      \li \l{Qt Quick}
-      \li \l{Qt Quick Layouts Overview}
-      \li \l{Qt Quick Layouts - Basic Example}
-      \li \l{Qt Quick Layouts QML Types}{Qt Quick Layouts QML Types}
-     \endlist
 */
