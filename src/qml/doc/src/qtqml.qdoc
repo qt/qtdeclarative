@@ -42,32 +42,22 @@ for QML applications, the \l{Qt Quick} module provides many visual components,
 model-view support, an animation framework, and much more for building user
 interfaces.
 
-For those new to QML and Qt Quick, please see
-\l{QML Applications}
-for an introduction to writing QML applications.
+If you're new to QML and Qt Quick, see \l{QML Applications} for an
+introduction to writing QML applications.
 
 \section1 Using the Module
 
 \section2 QML API
 
-The QML types in Qt QML are available through the \c QtQml import. To use the
-types, add the following import statement to your .qml file:
-
-\qml
-import QtQml
-\endqml
+\include {module-use.qdocinc} {using the qml api} {QtQml}
 
 \section2 C++ API
 
-Using the \l{Qt QML C++ Classes}{C++ API} requires linking against the module library,
-either directly or through other dependencies.
-Several build tools have dedicated support for this, including CMake and qmake.
+\include {module-use.qdocinc} {using the c++ api}
 
 \section3 Building with CMake
 
-Use the \c find_package() command to locate the needed module components in the Qt6 package:
-
-\snippet code/doc_src_qtqml.cmake 0
+\include {module-use.qdocinc} {building with cmake} {Qml}
 
 To provide foreign QML type support for a non-QML library, locate
 the \c QmlIntegration module as follows:
@@ -76,15 +66,9 @@ the \c QmlIntegration module as follows:
 
 See \l{qt6_generate_foreign_qml_types} for details.
 
-See also the \l{Build with CMake} overview.
-
 \section3 Building with qmake
 
-To configure the module for building with qmake, add the module as a value of the QT variable in the project's .pro file:
-
-\badcode
-QT += qml
-\endcode
+\include {module-use.qdocinc} {building_with_qmake} {qml}
 
 \section1 QML and QML Types
 
@@ -94,11 +78,11 @@ applications. The constructs of QML are described in the \l{The QML Reference}.
 In addition to the \l{QML Basic Types}, the module comes with
 the following QML object types:
 \list
-\li \l Component
-\li \l QtObject
-\li \l Binding
-\li \l Connections
-\li \l Timer
+    \li \l Component
+    \li \l QtObject
+    \li \l Binding
+    \li \l Connections
+    \li \l Timer
 \endlist
 
 The \l{QtQml::Qt}{Qt} global object provides useful enums and functions
@@ -110,11 +94,11 @@ New in Qt 5.1, the model types are moved to a submodule, \c QtQml.Models. The
 \l{Qt QML Models QML Types}{Qt QML Models} page has more information.
 
 \list
-\li \l DelegateModel
-\li \l DelegateModelGroup
-\li \l ListElement
-\li \l ListModel
-\li \l ObjectModel
+    \li \l DelegateModel
+    \li \l DelegateModelGroup
+    \li \l ListElement
+    \li \l ListModel
+    \li \l ObjectModel
 \endlist
 
 \section1 JavaScript Environment for QML Applications
@@ -123,14 +107,19 @@ JavaScript expressions allow QML code to contain application logic. Qt QML
 provides the framework for running JavaScript expressions in QML and from C++.
 
 These sections are from \l{The QML Reference}.
-    \list
-    \li \l{qtqml-javascript-topic.html}{Integrating QML and JavaScript}
-    \li \l{qtqml-javascript-expressions.html}{Using JavaScript Expressions with QML}
-    \li \l{qtqml-javascript-dynamicobjectcreation.html}{Dynamic QML Object Creation from JavaScript}
-    \li \l{qtqml-javascript-resources.html}{Defining JavaScript Resources In QML}
-    \li \l{qtqml-javascript-imports.html}{Importing JavaScript Resources In QML}
-    \li \l{qtqml-javascript-hostenvironment.html}{JavaScript Host Environment}
-    \endlist
+\list
+    \li \l {qtqml-javascript-topic.html} {Integrating QML and JavaScript}
+    \li \l {qtqml-javascript-expressions.html}
+           {Using JavaScript Expressions with QML}
+    \li \l {qtqml-javascript-dynamicobjectcreation.html}
+           {Dynamic QML Object Creation from JavaScript}
+    \li \l {qtqml-javascript-resources.html}
+           {Defining JavaScript Resources In QML}
+    \li \l {qtqml-javascript-imports.html}
+           {Importing JavaScript Resources In QML}
+    \li \l {qtqml-javascript-hostenvironment.html}
+           {JavaScript Host Environment}
+\endlist
 
 \section1 Integrating QML with C++ Applications
 
@@ -139,8 +128,8 @@ The QML framework allows QML code to contain JavaScript expressions and for
 the QML code to interact with C++ code.
 
 \list
-\li \l{Important C++ Classes Provided By The Qt QML Module}
-\li \l{Integrating QML and C++}
+    \li \l {Important C++ Classes Provided By The Qt QML Module}
+    \li \l {Integrating QML and C++}
 \endlist
 
 \omit
@@ -149,6 +138,35 @@ the QML code to interact with C++ code.
         \li \l{The Declarative State Machine Framework}
     \endlist
 \endomit
+
+\section1 Articles and Guides
+
+Further information for writing QML applications:
+\list
+    \li \l {The QML Reference}
+    \li \l {QML Applications}
+           - essential information for application development with QML and Qt
+           Quick
+    \li \l {Qt Quick}
+           - a module which provides a set of QML types and C++ classes for
+           building user interfaces and applications with QML
+    \li \l {The QML Disk Cache}
+           - how to fine tune if and where the QML engine caches compilation
+           results
+\endlist
+
+\section1 Examples
+
+\list
+    \li \l {Qt QML Examples} {Examples}
+\endlist
+
+\section2 Reference
+
+\list
+    \li \l {Qt QML C++ Classes} {C++ Classes}
+    \li \l {Qt QML QML Types} {QML Types}
+\endlist
 
 \section1 Licenses and Attributions
 
@@ -163,25 +181,4 @@ Furthermore Qt QML in Qt \QtVersion may contain third party
 modules under following permissive licenses:
 
 \generatelist{groupsbymodule attributions-qtqml}
-
-\section1 Guides and Other Information
-
-Further information for writing QML applications:
-\list
-\li \l{The QML Reference}
-\li \l{QML Applications}
-    - essential information for application development with QML and Qt Quick
-\li \l{Qt Quick} - a module which provides a set of QML types and C++ classes
-    for building user interfaces and applications with QML
-\li \l{The QML Disk Cache}
-    - how to fine tune if and where the QML engine caches compilation results.
-\endlist
-
-\section2 Reference
-\list
-\li \l{Qt QML C++ Classes}{C++ Classes}
-\li \l{Qt QML QML Types}{QML Types}
-\li \l{Qt QML Examples}{Examples}
-\endlist
-
 */
