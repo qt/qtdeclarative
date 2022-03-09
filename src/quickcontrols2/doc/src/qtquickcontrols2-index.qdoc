@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -46,34 +46,19 @@
 
     \section2 QML API
 
-    The \l{Qt Quick Controls QML Types}{QML types} can be imported into your
-    application using the following import statement in your \c {.qml} file:
-
-    \qml
-    import QtQuick.Controls
-    \endqml
+    \include {module-use.qdocinc} {using the qml api} {QtQuick.Controls}
 
     \section2 C++ API
 
-    Using the \l{Qt Quick Controls C++ Classes}{C++ API} requires linking
-    against the module library, either directly or through other dependencies.
-    Several build tools have dedicated support for this, including CMake and
-    qmake.
+    \include {module-use.qdocinc} {using the c++ api}
 
     \section3 Building with CMake
-    Use the \c find_package() command to locate the needed module components in the Qt6 package:
 
-    \snippet qtquickcontrols2-overview.cmake 0
-
-    See also the \l{Build with CMake} overview.
+    \include {module-use.qdocinc} {building with cmake} {QuickControls2}
 
     \section3 Building with qmake
-    To configure the module for building with qmake,
-    add the module as a value of the QT variable in the project's .pro file:
 
-    \code
-    QT += quickcontrols2
-    \endcode
+    \include {module-use.qdocinc} {building_with_qmake} {quickcontrols2}
 
     \section2 Building From Source
 
@@ -146,27 +131,15 @@
 
     \section1 Module Evolution
 
-    Qt Quick Controls was originally written with touch interfaces as the primary focus.
-    While it is already possible to develop desktop interfaces, work is ongoing to
-    provide a more native look and feel.
+    Qt Quick Controls was originally written with touch interfaces as the
+    primary focus.
+    While it is already possible to develop desktop interfaces, work is ongoing
+    to provide a more native look and feel.
 
     \l{Changes to Qt Quick Controls} lists important changes in the
     module API and functionality that were done for the Qt 6 series of Qt.
 
-    \section1 License and Attributions
-
-    Qt Quick Controls is available under commercial licenses from \l{The Qt Company}.
-    In addition, it is available under the
-    \l{GNU Lesser General Public License, version 3}, or
-    the \l{GNU General Public License, version 2}.
-    See \l{Qt Licensing} for further details.
-
-    Furthermore Qt Quick Controls potentially contains third party
-    modules under following permissive licenses:
-
-    \generatelist{groupsbymodule attributions-qtquickcontrols}
-
-    \section1 Topics
+    \section1 Articles and Guides
 
     \list
       \li \l{Getting Started with Qt Quick Controls}{Getting Started}
@@ -177,14 +150,8 @@
       \li \l{Using File Selectors with Qt Quick Controls}{Using File Selectors}
       \li \l{Deploying Qt Quick Controls Applications}{Deployment}
       \li \l{Qt Quick Controls Configuration File}{Configuration File}
-      \li \l{Supported Environment Variables in Qt Quick Controls}{Environment Variables}
-    \endlist
-
-    \section1 Reference
-
-    \list
-      \li \l{Qt Quick Controls QML Types}{QML Types}
-      \li \l{Qt Quick Controls C++ Classes}{C++ Classes}
+      \li \l{Supported Environment Variables in Qt Quick Controls}
+            {Environment Variables}
     \endlist
 
     \section1 Examples
@@ -199,6 +166,13 @@
       \li \l{Qt Quick Controls Examples}{All Examples}
     \endlist
 
+    \section1 Reference
+
+    \list
+      \li \l{Qt Quick Controls QML Types}{QML Types}
+      \li \l{Qt Quick Controls C++ Classes}{C++ Classes}
+    \endlist
+
     \section1 Related Modules
 
     \list
@@ -207,4 +181,17 @@
       \li \l{Qt Quick Templates 2}
       \li \l{Qt Labs Platform}
     \endlist
+
+    \section1 License and Attributions
+
+    Qt Quick Controls is available under commercial licenses from \l{The Qt Company}.
+    In addition, it is available under the
+    \l{GNU Lesser General Public License, version 3}, or
+    the \l{GNU General Public License, version 2}.
+    See \l{Qt Licensing} for further details.
+
+    Furthermore, Qt Quick Controls potentially contains third party
+    modules under the following permissive licenses:
+
+    \generatelist{groupsbymodule attributions-qtquickcontrols}
 */
