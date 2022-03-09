@@ -2759,7 +2759,6 @@ qt_deploy_qml_imports(TARGET ${arg_TARGET} PLUGINS_FOUND plugins_found)
 if(NOT DEFINED __QT_DEPLOY_POST_BUILD)
     qt_deploy_runtime_dependencies(
         EXECUTABLE $<TARGET_FILE_NAME:${arg_TARGET}>.app
-        MACOS_BUNDLE
         ADDITIONAL_MODULES \${plugins_found}
     )
 endif()")
