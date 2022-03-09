@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the tools applications of the Qt Toolkit.
@@ -28,9 +28,9 @@
 
 #include "prototype/codegenerator.h"
 #include "prototype/qml2cppdefaultpasses.h"
-#include "prototype/qml2cpppropertyutils.h"
-#include "prototype/codegeneratorutil.h"
+#include "qmltcpropertyutils.h"
 #include "qmltccodewriter.h"
+#include "qmltccompilerpieces.h"
 
 #include "qmltccompiler.h"
 
@@ -208,6 +208,53 @@ toOrderedSequence(typename QmlIR::PoolList<QmlIR::Binding>::Iterator first,
     std::stable_sort(sorted.begin(), sorted.end(), QmlIrBindingCompare {});
     return sorted;
 }
+
+/* code generator helper functions: */
+static QStringList generate_assignToSpecialAlias(const QQmlJSScope::ConstPtr &type,
+                                                 const QString &propertyName,
+                                                 const QQmlJSMetaProperty &p, const QString &value,
+                                                 const QString &accessor, bool constructQVariant)
+{
+    Q_UNUSED(type);
+    Q_UNUSED(propertyName);
+    Q_UNUSED(constructQVariant);
+
+    Q_ASSERT(p.isValid());
+    Q_ASSERT(!p.isList()); // NB: this code does not handle list properties
+    Q_ASSERT(p.isAlias());
+    Q_ASSERT(p.type());
+
+    QStringList code;
+    code.reserve(6); // should always be enough
+    // pretend there's a WRITE function
+    QmltcPropertyData data(p);
+    auto [prologue, wrappedValue, epilogue] =
+            QmltcCodeGenerator::wrap_mismatchingTypeConversion(p, value);
+    code += prologue;
+    code << QmltcCodeGenerator::wrap_privateClass(accessor, p) + u"->" + data.write + u"("
+                    + wrappedValue + u");";
+    code += epilogue;
+    return code;
+}
+
+// magic variable, necessary for correct handling of object bindings: since
+// object creation and binding setup are separated across functions, we
+// fetch a subobject by: QObject::children().at(offset + localIndex)
+//                                              ^
+//                                              childrenOffsetVariable
+// this variable would often be equal to 0, but there's no guarantee. and it
+// is required due to non-trivial aliases dependencies: aliases can
+// reference any object in the document by id, which automatically means
+// that all ids have to be set up before we get to finalization (and the
+// only place for it is init)
+// NB: this variable would behave correctly as long as QML init and QML finalize
+// are non-virtual functions
+static const QmltcVariable childrenOffsetVariable { u"qsizetype"_qs, u"QML_choffset"_qs,
+                                                    QString() };
+
+// represents QV4::ExecutableCompilationUnit
+static const QmltcVariable compilationUnitVariable { u"QV4::ExecutableCompilationUnit *"_qs,
+                                                     u"QML_cu"_qs, QString() };
 
 Q_LOGGING_CATEGORY(lcCodeGen, "qml.compiler.CodeGenerator", QtWarningMsg);
 
@@ -443,7 +490,7 @@ void CodeGenerator::compileObject(
         compiled.finalizeComponent.parameterList = { callSpecialMethodFlag };
     } else {
         compiled.init.parameterList = { engine, ctxtdata };
-        compiled.endInit.parameterList = { engine, CodeGeneratorUtility::compilationUnitVariable };
+        compiled.endInit.parameterList = { engine, compilationUnitVariable };
     }
 
     if (!documentRoot) {
@@ -470,8 +517,8 @@ void CodeGenerator::compileObject(
     compiled.externalCtor.initializerList = { compiled.baselineCtor.name + u"(parent)" };
     if (documentRoot) {
         compiled.externalCtor.body << u"// document root:"_qs;
-        compiled.endInit.body << u"auto " + CodeGeneratorUtility::compilationUnitVariable.name
-                        + u" = " + u"QQmlEnginePrivate::get(engine)->compilationUnitFromUrl("
+        compiled.endInit.body << u"auto " + compilationUnitVariable.name + u" = "
+                        + u"QQmlEnginePrivate::get(engine)->compilationUnitFromUrl("
                         + m_urlMethod.name + u"());";
 
         // call init method of the document root
@@ -570,10 +617,9 @@ void CodeGenerator::compileObject(
     // 3. set id if it's present in the QML document
     if (!m_doc->stringAt(object.irObject->idNameIndex).isEmpty()) {
         compiled.init.body << u"// 3. set id since it exists"_qs;
-        compiled.init.body << CodeGeneratorUtility::generate_setIdValue(
-                                      u"context"_qs, object.irObject->id, u"this"_qs,
-                                      m_doc->stringAt(object.irObject->idNameIndex))
-                        + u";";
+        QmltcCodeGenerator::generate_setIdValue(&compiled.init.body, u"context"_qs,
+                                                object.irObject->id, u"this"_qs,
+                                                m_doc->stringAt(object.irObject->idNameIndex));
     }
 
     // TODO: we might want to optimize storage space when there are no object
@@ -581,9 +627,8 @@ void CodeGenerator::compileObject(
     // bindings and all bindings of attached/grouped properties)
     compiled.init.body << u"// create objects for object bindings in advance:"_qs;
     // TODO: support private and protected variables
-    compiled.variables.emplaceBack(CodeGeneratorUtility::childrenOffsetVariable);
-    compiled.init.body << CodeGeneratorUtility::childrenOffsetVariable.name
-                    + u" = QObject::children().size();";
+    compiled.variables.emplaceBack(childrenOffsetVariable);
+    compiled.init.body << childrenOffsetVariable.name + u" = QObject::children().size();";
 
     // magic step: if the type has a QQmlParserStatus interface, we should call
     // it's method here
@@ -636,8 +681,7 @@ void CodeGenerator::compileObject(
 
     // TODO: is property update group needed?
     compiled.endInit.body << u"Q_UNUSED(engine);"_qs;
-    compiled.endInit.body << u"Q_UNUSED(" + CodeGeneratorUtility::compilationUnitVariable.name
-                    + u")"_qs;
+    compiled.endInit.body << u"Q_UNUSED(" + compilationUnitVariable.name + u")"_qs;
     // compiled.endInit.body << u"Q_UNUSED(" + finalizeFlag.name + u");";
     if (baseTypeIsCompiledQml) {
         compiled.endInit.body << u"{ // call parent's finalize"_qs;
@@ -652,7 +696,7 @@ void CodeGenerator::compileObject(
         compiled.endInit.body << u"auto thisContext = ddata->outerContext;"_qs;
         compiled.endInit.body << u"Q_ASSERT(thisContext);"_qs;
         compiled.endInit.body << u"ddata->deferData(" + QString::number(objectIndex) + u", "
-                        + CodeGeneratorUtility::compilationUnitVariable.name + u", thisContext);";
+                        + compilationUnitVariable.name + u", thisContext);";
         compiled.endInit.body << u"}"_qs;
     }
 
@@ -760,13 +804,13 @@ void CodeGenerator::compileObjectElements(QmltcType &compiled, const CodeGenObje
     // NB: finalize children before creating/setting script bindings for `this`
     for (qsizetype i = 0; i < m_localChildrenToEndInit.size(); ++i) {
         compiled.endInit.body << m_localChildrenToEndInit.at(i) + u"->" + compiled.endInit.name
-                        + u"(engine, " + CodeGeneratorUtility::compilationUnitVariable.name + u");";
+                        + u"(engine, " + compilationUnitVariable.name + u");";
     }
 
     const auto buildChildAtString = [](const QQmlJSScope::ConstPtr &type,
                                        const QString &i) -> QString {
         return u"static_cast<" + type->internalName() + u"* >(QObject::children().at("
-                + CodeGeneratorUtility::childrenOffsetVariable.name + u" + " + i + u"))";
+                + childrenOffsetVariable.name + u" + " + i + u"))";
     };
     // TODO: there's exceptional redundancy (!) in this code generation part
     for (qsizetype i = 0; i < m_localChildrenToFinalize.size(); ++i) {
@@ -859,7 +903,7 @@ void CodeGenerator::compileProperty(QmltcType &current, const QQmlJSMetaProperty
     mocPieces.reserve(10);
     mocPieces << underlyingType << name;
 
-    Qml2CppPropertyData compilationData(p);
+    QmltcPropertyData compilationData(p);
 
     // 1. add setter and getter
     // If p.isList(), it's a QQmlListProperty. Then you can write the underlying list through
@@ -985,8 +1029,7 @@ void CodeGenerator::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
             Q_ASSERT(type);
             QQmlJSMetaProperty p = type->property(bit);
 
-            QString currAccessor =
-                    CodeGeneratorUtility::generate_getPrivateClass(latestAccessor, p);
+            QString currAccessor = QmltcCodeGenerator::wrap_privateClass(latestAccessor, p);
             if (p.type()->accessSemantics() == QQmlJSScope::AccessSemantics::Value) {
                 // we need to read the property to a local variable and then
                 // write the updated value once the actual operation is done
@@ -997,7 +1040,7 @@ void CodeGenerator::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
                         << currAccessor + u"->" + p.write() + u"(" + localVariableName + u");";
                 // NB: since accessor becomes a value type, wrap it into an
                 // addressof operator so that we could access it as a pointer
-                currAccessor = CodeGeneratorUtility::generate_addressof(localVariableName); // reset
+                currAccessor = QmltcCodeGenerator::wrap_addressof(localVariableName); // reset
             } else {
                 currAccessor += u"->" + p.read() + u"()"; // amend
             }
@@ -1008,8 +1051,7 @@ void CodeGenerator::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
 
         resultingProperty = type->property(aliasExprBits.back());
         latestAccessorNonPrivate = latestAccessor;
-        latestAccessor =
-                CodeGeneratorUtility::generate_getPrivateClass(latestAccessor, resultingProperty);
+        latestAccessor = QmltcCodeGenerator::wrap_privateClass(latestAccessor, resultingProperty);
         info.underlyingType = resultingProperty.type()->internalName();
         if (resultingProperty.isList()) {
             info.underlyingType = u"QQmlListProperty<" + info.underlyingType + u">";
@@ -1037,7 +1079,7 @@ void CodeGenerator::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
     mocLines.reserve(10);
     mocLines << info.underlyingType << aliasName;
 
-    Qml2CppPropertyData compilationData(aliasName);
+    QmltcPropertyData compilationData(aliasName);
     // 1. add setter and getter
     if (!info.readLine.isEmpty()) {
         QmltcMethod getter {};
@@ -1140,8 +1182,8 @@ void CodeGenerator::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
     // and there is a corresponding QmlIR::Function
     if (f) {
         Q_ASSERT(methodType != QQmlJSMetaMethod::Signal);
-        code += CodeGeneratorUtility::generate_callExecuteRuntimeFunction(
-                m_urlMethod.name + u"()",
+        QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
+                &code, m_urlMethod.name + u"()",
                 relativeToAbsoluteRuntimeIndex(m_doc, object.irObject, f->index), u"this"_qs,
                 returnType, paramList);
     }
@@ -1217,13 +1259,13 @@ void CodeGenerator::compileBinding(QmltcType &current, const QmlIR::Binding &bin
         if (p.isAlias() && m_qmlCompiledBaseTypes.contains(object.type->baseTypeName())) {
             qCDebug(lcCodeGenerator) << u"Property '" + propertyName + u"' is an alias on type '"
                             + object.type->internalName()
-                            + u"' which is a QML type compiled to C++. The assignment is special "
-                              u"in this case";
-            current.endInit.body += CodeGeneratorUtility::generate_assignToSpecialAlias(
+                            + u"' which is a QML type compiled to C++. The assignment is special"
+                            + u"in this case";
+            current.endInit.body += generate_assignToSpecialAlias(
                     object.type, propertyName, p, value, accessor.name, constructQVariant);
         } else {
-            current.endInit.body += CodeGeneratorUtility::generate_assignToProperty(
-                    object.type, propertyName, p, value, accessor.name, constructQVariant);
+            QmltcCodeGenerator::generate_assignToProperty(&current.endInit.body, object.type, p,
+                value, accessor.name, constructQVariant);
         }
     };
 
@@ -1299,9 +1341,9 @@ void CodeGenerator::compileBinding(QmltcType &current, const QmlIR::Binding &bin
                 // static_cast is fine, because we (must) know the exact type
                 current.endInit.body << u"auto " + onAssignmentName + u" = static_cast<"
                                 + bindingObject.type->internalName()
-                                + u" *>(QObject::children().at("
-                                + CodeGeneratorUtility::childrenOffsetVariable.name + u" + "
-                                + QString::number(m_localChildrenToEndInit.size()) + u"));";
+                                + u" *>(QObject::children().at(" + childrenOffsetVariable.name
+                                + u" + " + QString::number(m_localChildrenToEndInit.size())
+                                + u"));";
 
                 m_localChildrenToEndInit.append(onAssignmentName);
                 m_localChildrenToFinalize.append(bindingObject.type);
@@ -1361,8 +1403,7 @@ void CodeGenerator::compileBinding(QmltcType &current, const QmlIR::Binding &bin
             current.endInit.body << QStringLiteral(
                                             "auto %1 = QQmlObjectCreator::createComponent(engine, "
                                             "%2, %3, %4, thisContext);")
-                                            .arg(objectName,
-                                                 CodeGeneratorUtility::compilationUnitVariable.name,
+                                            .arg(objectName, compilationUnitVariable.name,
                                                  QString::number(index), qobjectParent);
             current.endInit.body << QStringLiteral("thisContext->installContext(QQmlData::get(%1), "
                                                    "QQmlContextData::OrdinaryObject);")
@@ -1373,11 +1414,10 @@ void CodeGenerator::compileBinding(QmltcType &current, const QmlIR::Binding &bin
             };
             if (!m_doc->stringAt(bindingObject.irObject->idNameIndex).isEmpty()
                 && isComponentBased(bindingObject.type)) {
-                current.endInit.body
-                        << CodeGeneratorUtility::generate_setIdValue(
-                                   u"thisContext"_qs, bindingObject.irObject->id, objectName,
-                                   m_doc->stringAt(bindingObject.irObject->idNameIndex))
-                                + u";";
+
+                QmltcCodeGenerator::generate_setIdValue(
+                        &current.endInit.body, u"thisContext"_qs, bindingObject.irObject->id,
+                        objectName, m_doc->stringAt(bindingObject.irObject->idNameIndex));
             }
             setObjectBinding(objectName);
             current.endInit.body << u"}"_qs;
@@ -1392,7 +1432,7 @@ void CodeGenerator::compileBinding(QmltcType &current, const QmlIR::Binding &bin
         // static_cast is fine, because we (must) know the exact type
         current.endInit.body << u"auto " + objectName + u" = static_cast<"
                         + bindingObject.type->internalName() + u" *>(QObject::children().at("
-                        + CodeGeneratorUtility::childrenOffsetVariable.name + u" + "
+                        + childrenOffsetVariable.name + u" + "
                         + QString::number(m_localChildrenToEndInit.size()) + u"));";
         setObjectBinding(objectName);
 
@@ -1470,8 +1510,8 @@ void CodeGenerator::compileBinding(QmltcType &current, const QmlIR::Binding &bin
             return;
         }
 
-        QString groupAccessor = CodeGeneratorUtility::generate_getPrivateClass(accessor.name, p)
-                + u"->" + p.read() + u"()";
+        QString groupAccessor =
+                QmltcCodeGenerator::wrap_privateClass(accessor.name, p) + u"->" + p.read() + u"()";
         // NB: used when isValueType == true
         QString groupPropertyVarName = accessor.name + u"_group_" + propertyName;
 
@@ -1496,7 +1536,7 @@ void CodeGenerator::compileBinding(QmltcType &current, const QmlIR::Binding &bin
             current.endInit.body << u"auto " + groupPropertyVarName + u" = " + groupAccessor + u";";
             // TODO: addressof operator is a crutch to make the binding logic
             // work, which expects that `accessor.name` is a pointer type.
-            groupAccessor = CodeGeneratorUtility::generate_addressof(groupPropertyVarName);
+            groupAccessor = QmltcCodeGenerator::wrap_addressof(groupPropertyVarName);
         }
 
         // compile bindings of the grouped property
@@ -1528,8 +1568,8 @@ void CodeGenerator::compileBinding(QmltcType &current, const QmlIR::Binding &bin
         // installBinding(valueTypeGroupProperty, "subproperty1"); // changes subproperty1 value
         // setCopy(valueTypeGroupProperty); // oops, subproperty1 value changed to old again
         if (generateValueTypeCode) { // write the value type back
-            current.endInit.body << CodeGeneratorUtility::generate_getPrivateClass(accessor.name, p)
-                            + u"->" + p.write() + u"(" + groupPropertyVarName + u");";
+            current.endInit.body << QmltcCodeGenerator::wrap_privateClass(accessor.name, p) + u"->"
+                            + p.write() + u"(" + groupPropertyVarName + u");";
         }
 
         // once the value is written back, process the script bindings
@@ -1603,8 +1643,8 @@ static QmltcType compileScriptBindingPropertyChangeHandler(
     callOperator.name = u"operator()"_qs;
     callOperator.parameterList = slotParameters;
     callOperator.modifiers << u"const"_qs;
-    callOperator.body += CodeGeneratorUtility::generate_callExecuteRuntimeFunction(
-            urlMethod.name + u"()",
+    QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
+            &callOperator.body, urlMethod.name + u"()",
             relativeToAbsoluteRuntimeIndex(doc, irObject, binding.value.compiledScriptIndex),
             u"m_self"_qs, u"void"_qs, slotParameters);
 
@@ -1730,8 +1770,8 @@ void CodeGenerator::compileScriptBinding(QmltcType &current, const QmlIR::Bindin
             absoluteIndex = groupPropertyIndex; // e.g. index of accessor.name
         }
 
-        current.endInit.body += CodeGeneratorUtility::generate_createBindingOnProperty(
-                CodeGeneratorUtility::compilationUnitVariable.name,
+        QmltcCodeGenerator::generate_createBindingOnProperty(
+                &current.endInit.body, compilationUnitVariable.name,
                 u"this"_qs, // NB: always using enclosing object as a scope for the binding
                 relativeToAbsoluteRuntimeIndex(object.irObject, binding.value.compiledScriptIndex),
                 bindingTarget, // binding target
@@ -1760,8 +1800,8 @@ void CodeGenerator::compileScriptBinding(QmltcType &current, const QmlIR::Bindin
         slotMethod.name = slotName;
         slotMethod.parameterList = slotParameters;
 
-        slotMethod.body += CodeGeneratorUtility::generate_callExecuteRuntimeFunction(
-                m_urlMethod.name + u"()",
+        QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
+                &slotMethod.body, m_urlMethod.name + u"()",
                 relativeToAbsoluteRuntimeIndex(m_doc, object.irObject,
                                                binding.value.compiledScriptIndex),
                 u"this"_qs, // Note: because script bindings always use current QML object scope
@@ -1770,9 +1810,9 @@ void CodeGenerator::compileScriptBinding(QmltcType &current, const QmlIR::Bindin
 
         current.functions << std::move(slotMethod);
         current.endInit.body << u"QObject::connect(" + This_signal + u", "
-                        + CodeGeneratorUtility::generate_qOverload(slotParameters,
-                                                                   u"&" + objectClassName_signal
-                                                                           + u"::" + signalName)
+                        + QmltcCodeGenerator::wrap_qOverload(slotParameters,
+                                                             u"&" + objectClassName_signal + u"::"
+                                                                     + signalName)
                         + u", " + This_slot + u", &" + objectClassName_slot + u"::" + slotName
                         + u");";
         break;
@@ -1826,8 +1866,7 @@ void CodeGenerator::compileScriptBinding(QmltcType &current, const QmlIR::Bindin
         // done before currently generated C++ object is constructed
         current.endInit.body << bindingSymbolName + u".reset(new QPropertyChangeHandler<"
                         + bindingFunctorName + u">("
-                        + CodeGeneratorUtility::generate_getPrivateClass(accessor.name,
-                                                                         actualProperty)
+                        + QmltcCodeGenerator::wrap_privateClass(accessor.name, actualProperty)
                         + u"->" + bindableString + u"().onValueChanged(" + bindingFunctorName + u"("
                         + accessor.name + u"))));";
 
@@ -1887,8 +1926,8 @@ void CodeGenerator::compileScriptBindingOfComponent(QmltcType &current,
     // Component is special:
     int runtimeIndex =
             relativeToAbsoluteRuntimeIndex(m_doc, irObject, binding.value.compiledScriptIndex);
-    slotMethod.body += CodeGeneratorUtility::generate_callExecuteRuntimeFunction(
-            m_urlMethod.name + u"()", runtimeIndex, u"this"_qs, signalReturnType);
+    QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
+            &slotMethod.body, m_urlMethod.name + u"()", runtimeIndex, u"this"_qs, signalReturnType);
     slotMethod.type = QQmlJSMetaMethod::Slot;
 
     // TODO: there's actually an attached type, which has completed/destruction
@@ -1911,8 +1950,8 @@ void CodeGenerator::compileUrlMethod()
 {
     m_urlMethod.returnType = u"const QUrl &"_qs;
     m_urlMethod.name = u"q_qmltc_docUrl"_qs;
-    m_urlMethod.body << u"static QUrl docUrl = %1;"_qs.arg(
-            CodeGeneratorUtility::toResourcePath(m_info->resourcePath));
+    m_urlMethod.body << u"static QUrl docUrl(QStringLiteral(\"qrc:%1\"));"_qs.arg(
+            m_info->resourcePath);
     m_urlMethod.body << u"return docUrl;"_qs;
     m_urlMethod.declarationPrefixes << u"static"_qs;
     m_urlMethod.modifiers << u"noexcept"_qs;

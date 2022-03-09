@@ -443,19 +443,19 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
     switch (binding.bindingType()) {
     case QQmlJSMetaPropertyBinding::BoolLiteral: {
         const bool value = binding.boolValue();
-        generator.generate_assignToProperty(current, type, p, value ? u"true"_qs : u"false"_qs,
-                                            accessor.name);
+        generator.generate_assignToProperty(&current.init.body, type, p,
+                                            value ? u"true"_qs : u"false"_qs, accessor.name);
         break;
     }
     case QQmlJSMetaPropertyBinding::NumberLiteral: {
         const QString value = QString::number(binding.numberValue());
-        generator.generate_assignToProperty(current, type, p, value, accessor.name);
+        generator.generate_assignToProperty(&current.init.body, type, p, value, accessor.name);
         break;
     }
     case QQmlJSMetaPropertyBinding::StringLiteral: {
         const QString value = binding.stringValue();
-        generator.generate_assignToProperty(current, type, p, QQmlJSUtils::toLiteral(value),
-                                            accessor.name);
+        generator.generate_assignToProperty(&current.init.body, type, p,
+                                            QQmlJSUtils::toLiteral(value), accessor.name);
         break;
     }
     case QQmlJSMetaPropertyBinding::Null: {
@@ -466,9 +466,10 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
             recordError(binding.sourceLocation(),
                         u"Cannot assign null to incompatible property"_qs);
         } else if (propertyType->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
-            generator.generate_assignToProperty(current, type, p, u"nullptr"_qs, accessor.name);
+            generator.generate_assignToProperty(&current.init.body, type, p, u"nullptr"_qs,
+                                                accessor.name);
         } else {
-            generator.generate_assignToProperty(current, type, p,
+            generator.generate_assignToProperty(&current.init.body, type, p,
                                                 u"QVariant::fromValue(nullptr)"_qs, accessor.name);
         }
         break;

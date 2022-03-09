@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the tools applications of the Qt Toolkit.
@@ -35,6 +35,8 @@
 #include "qmltcoutputir.h"
 #include "qmltcvisitor.h"
 
+#include <tuple>
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -62,9 +64,31 @@ struct QmltcCodeGenerator
     [[nodiscard]] inline decltype(auto) generate_qmlContextSetup(QmltcType &current,
                                                                  const QQmlJSScope::ConstPtr &type);
 
-    inline void generate_assignToProperty(QmltcType &current, const QQmlJSScope::ConstPtr &type,
+    static void generate_assignToProperty(QStringList *block, const QQmlJSScope::ConstPtr &type,
                                           const QQmlJSMetaProperty &p, const QString &value,
-                                          const QString &accessor);
+                                          const QString &accessor, bool constructQVariant = false);
+    static void generate_setIdValue(QStringList *block, const QString &context, qsizetype index,
+                                    const QString &accessor, const QString &idString);
+
+    static void generate_callExecuteRuntimeFunction(QStringList *block, const QString &url,
+                                                    qsizetype index, const QString &accessor,
+                                                    const QString &returnType,
+                                                    const QList<QmltcVariable> &parameters = {});
+
+    // TODO: 3 separate versions: bindable QML, bindable C++, non-bindable C++
+    static void generate_createBindingOnProperty(QStringList *block, const QString &unitVarName,
+                                                 const QString &scope, qsizetype functionIndex,
+                                                 const QString &target, int propertyIndex,
+                                                 const QQmlJSMetaProperty &p, int valueTypeIndex,
+                                                 const QString &subTarget);
+
+    static std::tuple<QStringList, QString, QStringList>
+    wrap_mismatchingTypeConversion(const QQmlJSMetaProperty &p, QString value);
+
+    static QString wrap_privateClass(const QString &accessor, const QQmlJSMetaProperty &p);
+    static QString wrap_qOverload(const QList<QmltcVariable> &parameters,
+                                  const QString &overloaded);
+    static QString wrap_addressof(const QString &addressed);
 };
 
 inline decltype(auto)
@@ -137,7 +161,8 @@ QmltcCodeGenerator::generate_qmlContextSetup(QmltcType &current, const QQmlJSSco
 
     if (int id = type->runtimeId(); id >= 0) {
         current.init.body << u"// 3. set id since it is provided"_qs;
-        current.init.body << u"context->setIdValue(%1, this);"_qs.arg(QString::number(id));
+        QmltcCodeGenerator::generate_setIdValue(&current.init.body, u"context"_qs, id, u"this"_qs,
+                                                u"<unknown>"_qs);
     }
 
     // TODO: add QQmlParserStatus::classBegin() to init
@@ -154,32 +179,6 @@ QmltcCodeGenerator::generate_qmlContextSetup(QmltcType &current, const QQmlJSSco
     };
 
     return QScopeGuard(generateFinalLines);
-}
-
-inline void QmltcCodeGenerator::generate_assignToProperty(QmltcType &current,
-                                                          const QQmlJSScope::ConstPtr &type,
-                                                          const QQmlJSMetaProperty &p,
-                                                          const QString &value,
-                                                          const QString &accessor)
-{
-    Q_ASSERT(p.isValid());
-    Q_ASSERT(!p.isList()); // TODO: check this one
-    Q_ASSERT(!p.isPrivate());
-    Q_UNUSED(type);
-
-    QStringList code;
-    code.reserve(6); // always should be enough
-
-    if (!p.isWritable()) {
-        Q_ASSERT(type->hasOwnProperty(p.propertyName())); // otherwise we cannot set it
-        code << u"%1->m_%2 = %3;"_qs.arg(accessor, p.propertyName(), value);
-    } else {
-        const QString setter = p.write();
-        Q_ASSERT(!setter.isEmpty()); // in practice could be empty, but ignore it for now
-        code << u"%1->%2(%3);"_qs.arg(accessor, setter, value);
-    }
-
-    current.init.body += code;
 }
 
 QT_END_NAMESPACE
