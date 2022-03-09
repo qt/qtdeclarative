@@ -36,20 +36,7 @@
 
     \section1 Using the Module
 
-    The \l{Qt Quick Dialogs QML Types}{QML types} can be imported into your
-    application using the following import statement in your \c {.qml} file:
-
-    \qml
-    import QtQuick.Dialogs
-    \endqml
-
-    \section1 License and Attributions
-
-    Qt Quick Dialogs is available under commercial licenses from \l{The Qt Company}.
-    In addition, it is available under the
-    \l{GNU Lesser General Public License, version 3}, or
-    the \l{GNU General Public License, version 2}.
-    See \l{Qt Licensing} for further details.
+    \include {module-use.qdocinc} {using the qml api} {QtQuick.Dialogs}
 
     \section1 Reference
 
@@ -65,4 +52,12 @@
       \li \l{Qt Quick Templates 2}
       \li \l{Qt Labs Platform}
     \endlist
+
+    \section1 License and Attributions
+
+    Qt Quick Dialogs is available under commercial licenses from \l{The Qt Company}.
+    In addition, it is available under the
+    \l{GNU Lesser General Public License, version 3}, or
+    the \l{GNU General Public License, version 2}.
+    See \l{Qt Licensing} for further details.
 */
