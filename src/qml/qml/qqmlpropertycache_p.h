@@ -72,85 +72,76 @@ class QQmlContextData;
 class QQmlPropertyCacheMethodArguments;
 class QQmlVMEMetaObject;
 
-class RefCountedMetaObject {
+class QQmlMetaObjectPointer
+{
 public:
-    enum OwnershipMode {
-        StaticMetaObject,
-        SharedMetaObject
+    QQmlMetaObjectPointer() = default;
+
+    QQmlMetaObjectPointer(const QMetaObject *staticMetaObject)
+        : d(quintptr(staticMetaObject))
+    {
+        Q_ASSERT((d & Shared) == 0);
+    }
+
+    ~QQmlMetaObjectPointer()
+    {
+        if (d & Shared)
+            reinterpret_cast<SharedHolder *>(d ^ Shared)->release();
+    }
+
+    QQmlMetaObjectPointer(const QQmlMetaObjectPointer &other)
+        : d(other.d.loadRelaxed())
+    {
+        // other has to survive until this ctor is done. So d cannot disappear before.
+        if (d & Shared)
+            reinterpret_cast<SharedHolder *>(d ^ Shared)->addref();
+    }
+
+    QQmlMetaObjectPointer(QQmlMetaObjectPointer &&other) = delete;
+    QQmlMetaObjectPointer &operator=(QQmlMetaObjectPointer &&other) = delete;
+    QQmlMetaObjectPointer &operator=(const QQmlMetaObjectPointer &other) = delete;
+
+    void setSharedOnce(QMetaObject *shared) const
+    {
+        SharedHolder *holder = new SharedHolder(shared);
+        if (!d.testAndSetRelaxed(0, quintptr(holder) | Shared))
+            holder->release();
+    }
+
+    const QMetaObject *metaObject() const
+    {
+        if (d & Shared)
+            return reinterpret_cast<SharedHolder *>(d ^ Shared)->metaObject;
+        return reinterpret_cast<const QMetaObject *>(d.loadRelaxed());
+    }
+
+    bool isShared() const
+    {
+        // This works because static metaobjects need to be set in the ctor and once a shared
+        // metaobject has been set, it cannot be removed anymore.
+        return !d || (d & Shared);
+    }
+
+    bool isNull() const
+    {
+        return d == 0;
+    }
+
+private:
+    enum Tag {
+        Static = 0,
+        Shared = 1
     };
 
-    struct Data {
-        ~Data() {
-            if (mode == SharedMetaObject)
-                ::free(sharedMetaObject);
-        }
-        union {
-            QMetaObject *sharedMetaObject = nullptr;
-            const QMetaObject *staticMetaObject;
-        };
-        int ref = 1;
-        OwnershipMode mode;
-    } *d;
-
-    RefCountedMetaObject()
-        : d(nullptr)
-    {}
-
-    static RefCountedMetaObject createShared(QMetaObject *mo)
+    struct SharedHolder : public QQmlRefCount
     {
-        RefCountedMetaObject result;
-        result.d = new Data();
-        result.d->sharedMetaObject = mo;
-        result.d->mode = SharedMetaObject;
-        return result;
-    }
+        Q_DISABLE_COPY_MOVE(SharedHolder)
+        SharedHolder(QMetaObject *shared) : metaObject(shared) {}
+        ~SharedHolder() { free(metaObject); }
+        QMetaObject *metaObject;
+    };
 
-    static RefCountedMetaObject createStatic(const QMetaObject *mo)
-    {
-        RefCountedMetaObject result;
-        result.d = new Data();
-        result.d->staticMetaObject = mo;
-        result.d->mode = StaticMetaObject;
-        return result;
-    }
-
-    ~RefCountedMetaObject() {
-        if (d && !--d->ref)
-            delete d;
-    }
-    RefCountedMetaObject(const RefCountedMetaObject &other)
-        : d(other.d)
-    {
-        if (d && d->ref > 0)
-            ++d->ref;
-    }
-    RefCountedMetaObject &operator =(const RefCountedMetaObject &other)
-    {
-        if (d == other.d)
-            return *this;
-        if (d && !--d->ref)
-            delete d;
-        d = other.d;
-        if (d && d->ref > 0)
-            ++d->ref;
-        return *this;
-    }
-
-    const QMetaObject *constMetaObject() const
-    {
-        if (!d)
-            return nullptr;
-        return isShared() ? d->sharedMetaObject : d->staticMetaObject;
-    }
-
-    QMetaObject *sharedMetaObject() const
-    {
-        return isShared() ? d->sharedMetaObject : nullptr;
-    }
-
-    operator const QMetaObject *() const { return constMetaObject(); }
-    const QMetaObject * operator ->() const { return constMetaObject(); }
-    bool isShared() const { return d && d->mode == SharedMetaObject; }
+    mutable QBasicAtomicInteger<quintptr> d = 0;
 };
 
 class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount
@@ -184,7 +175,7 @@ public:
     void appendEnum(const QString &, const QVector<QQmlEnumValue> &);
 
     const QMetaObject *metaObject() const;
-    const QMetaObject *createMetaObject();
+    const QMetaObject *createMetaObject() const;
     const QMetaObject *firstCppMetaObject() const;
 
     template<typename K>
@@ -240,7 +231,7 @@ public:
     inline int signalOffset() const;
     inline int qmlEnumCount() const;
 
-    void toMetaObjectBuilder(QMetaObjectBuilder &);
+    void toMetaObjectBuilder(QMetaObjectBuilder &) const;
 
     inline bool callJSFactoryMethod(QObject *object, void **args) const;
 
@@ -260,7 +251,9 @@ private:
     friend class QQmlComponentAndAliasResolver;
     friend class QQmlMetaObject;
 
-    inline QQmlRefPointer<QQmlPropertyCache> copy(int reserve);
+    QQmlPropertyCache(const QQmlMetaObjectPointer &metaObject) : _metaObject(metaObject) {}
+
+    inline QQmlRefPointer<QQmlPropertyCache> copy(const QQmlMetaObjectPointer &mo, int reserve);
 
     void append(const QMetaObject *, QTypeRevision typeVersion,
                 QQmlPropertyData::Flags propertyFlags = QQmlPropertyData::Flags(),
@@ -327,7 +320,7 @@ private:
     AllowedRevisionCache allowedRevisionCache;
     QVector<QQmlEnumData> enumCache;
 
-    RefCountedMetaObject _metaObject;
+    QQmlMetaObjectPointer _metaObject;
     QByteArray _dynamicClassName;
     QByteArray _dynamicStringData;
     QByteArray _listPropertyAssignBehavior;
@@ -342,7 +335,7 @@ private:
 // Returns this property cache's metaObject.  May be null if it hasn't been created yet.
 inline const QMetaObject *QQmlPropertyCache::metaObject() const
 {
-    return _metaObject;
+    return _metaObject.metaObject();
 }
 
 // Returns the first C++ type's QMetaObject - that is, the first QMetaObject not created by
@@ -350,9 +343,9 @@ inline const QMetaObject *QQmlPropertyCache::metaObject() const
 inline const QMetaObject *QQmlPropertyCache::firstCppMetaObject() const
 {
     const QQmlPropertyCache *p = this;
-    while (!p->_metaObject || p->_metaObject.isShared())
+    while (p->_metaObject.isShared())
         p = p->parent().data();
-    return p->_metaObject;
+    return p->_metaObject.metaObject();
 }
 
 inline QQmlPropertyData *QQmlPropertyCache::property(int index) const
@@ -495,8 +488,12 @@ int QQmlPropertyCache::qmlEnumCount() const
 bool QQmlPropertyCache::callJSFactoryMethod(QObject *object, void **args) const
 {
     if (_jsFactoryMethodIndex != -1) {
-        _metaObject->d.static_metacall(object, QMetaObject::InvokeMetaMethod, _jsFactoryMethodIndex, args);
-        return true;
+        if (const QMetaObject *mo = _metaObject.metaObject()) {
+            mo->d.static_metacall(object, QMetaObject::InvokeMetaMethod,
+                                  _jsFactoryMethodIndex, args);
+            return true;
+        }
+        return false;
     }
     if (_parent)
         return _parent->callJSFactoryMethod(object, args);
