@@ -53,37 +53,19 @@ for an introduction to writing QML applications.
 
 \section2 QML API
 
-The QML types in Qt Quick are available through the \c QtQuick import. To use the
-types, add the following import statement to your .qml file:
-
-\qml
-import QtQml
-\endqml
+\include {module-use.qdocinc} {using the qml api} {QtQuick}
 
 \section2 C++ API
 
-Using the \l{Qt Quick C++ Classes}{C++ API} requires linking against the module
-library, either directly or through other dependencies. Several build tools
-have dedicated support for this, including \l{CMake Documentation}{CMake} and
-\l{qmake}.
+\include {module-use.qdocinc} {using the c++ api}
 
 \section3 Building with CMake
 
-Use the \c find_package() command to locate the needed module components in the
-Qt6 package:
-
-\snippet code/doc_src_qtquick.cmake 0
-
-See also the \l{Build with CMake} overview.
+\include {module-use.qdocinc} {building with cmake} {Quick}
 
 \section3 Building with qmake
 
-To configure the module for building with qmake, add the module as a value of
-the QT variable in the project's .pro file:
-
-\badcode
-QT += quick
-\endcode
+\include {module-use.qdocinc} {building_with_qmake} {quick}
 
 \section1 Important Concepts in Qt Quick
 
@@ -96,13 +78,18 @@ and visual effects can be supplemented through specialized components for
 particle and shader effects.
 
 \list
-\li \l{Important Concepts In Qt Quick - The Visual Canvas}{The Visual Canvas}
-\li \l{Important Concepts In Qt Quick - User Input}{User Input}
-\li \l{Important Concepts In Qt Quick - Positioning}{Positioning}
-\li \l{Important Concepts in Qt Quick - States, Transitions and Animations}{States, Transitions And Animations}
-\li \l{Important Concepts In Qt Quick - Data - Models, Views and Data Storage}{Data - Models, Views and Data Storage}
-\li \l{Important Concepts In Qt Quick - Graphical Effects}{Particles And Graphical Effects}
-\li \l{Important Concepts In Qt Quick - Convenience Types}{Convenience Types}
+    \li \l {Important Concepts In Qt Quick - The Visual Canvas}
+           {The Visual Canvas}
+    \li \l {Important Concepts In Qt Quick - User Input} {User Input}
+    \li \l {Important Concepts In Qt Quick - Positioning} {Positioning}
+    \li \l {Important Concepts in Qt Quick - States, Transitions and Animations}
+           {States, Transitions And Animations}
+    \li \l {Important Concepts In Qt Quick - Data - Models, Views and data Storage}
+           {Data - Models, Views and Data Storage}
+    \li \l {Important Concepts In Qt Quick - Graphical Effects}{Particles And
+           Graphical Effects}
+    \li \l {Important Concepts In Qt Quick - Convenience Types}
+           {Convenience Types}
 \endlist
 
 When using the \c QtQuick module, you will need to know how to write QML
@@ -114,11 +101,58 @@ To find out more about using the QML language, see the \l{Qt QML} module documen
 \section1 C++ Extension Points
 
 \list
-    \li \l{C++ Extension Points Provided By Qt Quick}{C++ Extension Points}
+    \li \l {C++ Extension Points Provided By Qt Quick}
+           {C++ Extension Points}
         \list
-        \li \l{user-defined-qquickitem-derived-types}{Creating User-Defined QQuickItem-Derived Types}
-        \li \l{scene-graph-related-classes}{Scene Graph-Related Classes}
-        \li \l{pixmap-and-threaded-image-support}{Pixmap and Threaded Image Support}
+            \li \l {user-defined-qquickitem-derived-types}
+                   {Creating User-Defined QQuickItem-Derived Types}
+            \li \l {scene-graph-related-classes}
+                   {Scene Graph-Related Classes}
+            \li \l {pixmap-and-threaded-image-support}
+                   {Pixmap and Threaded Image Support}
+        \endlist
+\endlist
+
+\section1 Articles and Guides
+
+\list
+    \li \l {Best Practices for QML and Qt Quick} {Qt Quick Guidelines}
+    \li \l {Qt Quick Tools and Utilities}
+
+    Further information for writing QML applications:
+    \list
+        \li \l {QML Applications}
+            - essential information for application development with QML and Qt
+            Quick
+        \li \l {Qt QML}
+            - documentation for the Qt QML module, which provides the QML engine
+            and language infrastructure
+    \endlist
+\endlist
+
+\section1 Examples
+
+\list
+    \li \l {Qt Quick Examples and Tutorials}
+\endlist
+
+\section1 Reference
+
+\list
+    \li \l {Qt Quick C++ Classes}
+           - the C++ API provided by the Qt Quick module
+    \li \l {Qt Quick QML Types}
+           - a list of QML types provided by the \c{QtQuick} import
+        \list
+            \li \l {Qt Quick Local Storage QML Types} {Local Storage}
+                   - a submodule containing a JavaScript interface for an SQLite
+                   database
+            \li \l {Qt Quick Particles QML Types} {Particles}
+                   - provides a particle system for Qt Quick
+            \li \l {Qt Quick Layouts} {Layouts}
+                   - provides layouts for arranging Qt Quick items
+            \li \l {Qt Quick Test QML Types} {Tests}
+                   - contains types for writing unit test for a QML application
         \endlist
 \endlist
 
@@ -130,33 +164,4 @@ these free software licenses are
 \l{GNU Lesser General Public License, version 3}, or
 the \l{GNU General Public License, version 2}.
 See \l{Qt Licensing} for further details.
-
-\section1 Reference Documentation
-
-Additional Qt Quick information:
-\list
-\li \l{Qt Quick C++ Classes} - the C++ API provided by the
-    Qt Quick module
-\li \l{Qt Quick QML Types} - a list of QML types provided by the
-    \c{QtQuick} import
-    \list
-    \li \l{Qt Quick Local Storage QML Types}{Local Storage} - a submodule
-    containing a JavaScript interface for an SQLite database
-    \li \l{Qt Quick Particles QML Types}{Particles} - provides a particle
-    system for Qt Quick
-    \li \l{Qt Quick Layouts}{Layouts} - provides layouts for arranging Qt Quick items
-    \li \l{Qt Quick Test QML Types}{Tests} - contains types for writing unit test for a QML application
-    \endlist
-\li \l{Qt Quick Examples and Tutorials}
-\li \l{Qt Quick Tools and Utilities}
-\li \l{Best Practices for QML and Qt Quick}{Qt Quick Guidelines}
-\endlist
-
-Further information for writing QML applications:
-\list
-\li \l{QML Applications}
-    - essential information for application development with QML and Qt Quick
-\li \l{Qt QML} - documentation for the
-    Qt QML module, which provides the QML engine and language infrastructure
-\endlist
 */
