@@ -1,0 +1,23 @@
+﻿
+set_source_files_properties(Thing.qml
+    PROPERTIES
+        QT_QML_SOURCE_VERSIONS "1.4;2.0;3.0"
+)
+
+set_source_files_properties(OtherThing.qml
+    PROPERTIES
+        QT_QML_SOURCE_VERSIONS "2.2;3.0"
+)
+
+qt_add_qml_module(my_module
+    URI MyModule
+    VERSION 3.2
+    PAST_MAJOR_VERSIONS
+        1 2
+    QML_FILES
+        Thing.qml
+        OtherThing.qml
+        OneMoreThing.qml
+    SOURCES
+        everything.cpp everything.h
+)
