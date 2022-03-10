@@ -1,0 +1,289 @@
+﻿/****************************************************************************
+**
+** Copyright (C) 2020 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+\page qtqml-writing-a-module.html
+\title Writing QML Modules
+\brief How to write a custom QML module.
+
+You can declare a QML module using the \l{qt_add_qml_module}
+{CMake QML Module API} to:
+
+\list
+\li Generate \l {Module Definition qmldir Files}{qmldir} and
+    \l {Type Description Files}{*.qmltypes files}.
+\li Register C++ types annotated with \l QML_ELEMENT.
+\li Invoke \l {Ahead-of-Time-Compilation}{qmlcachegen}.
+\li Provide modules both in the physical and in \l{The Qt Resource System}
+    {resource file system}.
+\li Use the pre-compiled versions of QML files.
+\li Bundle the module's files in the resource file system.
+\li Combine QML files and C++-based types in the same module.
+\li Create a backing library and an optional plugin. Link the backing library
+    into the application to avoid loading the plugin at run time.
+\endlist
+
+All the above actions can also be configured separately.
+For more information, see \l {qt_add_qml_module}{CMake QML Module API}.
+
+\section1 Multiple QML Modules in One Binary
+
+You can add multiple QML modules into the same binary. Define a CMake target for
+each module and then link the targets to the executable.
+If the extra targets are all static libraries, the result will be one binary,
+which contains multiple QML modules. In short you can create an application
+like this:
+
+\badcode
+myProject
+    | - CMakeLists.txt
+    | - main.cpp
+    | - main.qml
+    | - onething.h
+    | - onething.cpp
+    | - ExtraModule
+        | - CMakeLists.txt
+        | - Extra.qml
+        | - extrathing.h
+        | - extrathing.cpp
+\endcode
+
+To begin, let's assume main.qml contains an instantiation of Extra.qml:
+
+    \badcode
+    import ExtraModule
+    Extra { ... }
+    \endcode
+
+The extra module has to be a static library so that you can link it
+into the main program. Therefore, state as much in ExtraModule/CMakeLists.txt:
+
+\quotefromfile qml/CMakeLists.txt
+\printuntil extrathing.h
+\printuntil )
+
+This generates two targets: \c extra_module for the backing library, and
+\c extra_moduleplugin for the plugin. Being a static library too, the plugin cannot
+be loaded at runtime.
+
+In myProject/CMakeLists.txt you need to specify the QML module that main.qml
+and any types declared in onething.h are part of:
+
+\quotefromfile qml/myProject-CMakeLists.txt
+\printuntil onething.h
+\printuntil )
+
+
+From there, you add the subdirectory for the extra module:
+
+\quotefromfile qml/CMakeLists.txt
+\skipto add_subdirectory
+\printuntil )
+
+To ensure that linking the extra module works correctly, you need to:
+
+\list
+\li Define a symbol in the extra module.
+\li Create a reference to the symbol from the main program.
+\endlist
+
+QML plugins contain a symbol you can use for this purpose.
+You can use the \l Q_IMPORT_QML_PLUGIN macro to create a reference to this symbol.
+Add the following code to the main.cpp:
+
+\badcode
+#include <QtQml/qqmlextensionplugin.h>
+Q_IMPORT_QML_PLUGIN(ExtraModulePlugin)
+\endcode
+
+\c ExtraModulePlugin is the name of the generated plugin class. It's composed
+of the module URI with \c Plugin appended to it. Then, in the main program's
+CMakeLists.txt, link the plugin, not the backing library, into the main program:
+
+\quotefromfile qml/myProject-CMakeLists.txt
+\skipto target_link_libraries
+\printuntil )
+
+\section1 Exporting Multiple Major Versions from The Same Module
+
+\l qt_add_qml_module by default considers the major version given in its
+URI argument, even if the individual types declare other versions in their
+added specific version via \l QT_QML_SOURCE_VERSIONS or \l Q_REVISION.
+If a module is available under more than one version, you also need to decide
+what versions the individual QML files are available under. To declare further
+major versions, you can use the \c PAST_MAJOR_VERSIONS option to
+\c qt_add_qml_module as well as the \c {QT_QML_SOURCE_VERSIONS} property on
+individual QML files.
+
+\quotefile qml/MajorProject-CMakeLists.txt
+
+\c MyModule is available in major versions 1, 2, and 3. The maximum version
+available is 3.2. You can import any version 1.x or 2.x with a positive x. For
+Thing.qml and OtherThing.qml we have added explicit version information.
+Thing.qml is available from version 1.4, and OtherThing.qml is available from
+version 2.2. You have to specify the later versions, too, in each
+\c set_source_files_properties() because you may remove QML files
+from a module when bumping the major version. There is no explicit version
+information for OneMoreThing.qml. This means that OneMoreThing.qml is available
+in all major versions, from minor version 0.
+
+With this setup, the generated registration code will register the module
+\c versionsqmlRegisterModule() for each of the major versions. This way, all
+versions can be imported.
+
+
+\section1 Custom Directory Layouts
+
+The easiest way to structure QML modules is to keep them in directories named by
+their URIs. For example, a module My.Extra.Module would live in a directory
+My/Extra/Module relative to the application that uses it. This way, they can
+easily be found at run time and by any tools.
+
+In more complex projects, this convention can be too limiting. You might for
+instance want to group all QML modules in one place to avoid polluting the
+project's root directory. Or you want to reuse a single module in multiple
+applications. For those cases, \c QT_QML_OUTPUT_DIRECTORY in combination with
+\c RESOURCE_PREFIX  and \l IMPORT_PATH can be used.
+
+To collect QML modules into a specific output directory, for example a
+subdirectory "qml" in the build directory \l QT_QML_OUTPUT_DIRECTORY, set the
+following in the top-level CMakeLists.txt:
+
+\badcode
+set(QT_QML_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/qml)
+\endcode
+
+The output directories of QML modules move to the new location.
+Likewise, the \c qmllint and \c qmlcachegen invocations are automatically
+adapted to use the new output directory as an \l {QML Import Path}{import path}.
+Because the new output directory is not part of the default QML import path,
+you have to add it explicitly at run time, so that the QML modules can be found.
+
+
+Now that the physical file system is taken care of, you may still want to move
+the QML modules into a different place in the resource file system. This is what
+the RESOURCE_PREFIX option is for. You have to specify it separately in
+each \l qt_add_qml_module. The QML module will then be placed under the specified
+prefix, with a target path generated from the URI appended. For example,
+consider the following module:
+
+\code
+qt_add_qml_module(
+    URI My.Great.Module
+    VERSION 1.0
+    RESOURCE_PREFIX /example.com/qml
+    QML_FILES
+        A.qml
+        B.qml
+)
+\endcode
+
+This will add a directory \c example.com/qml/My/Great/Module to the resource file
+system and place the QML module defined above in it. You don't strictly need to
+add the resource prefix to the QML import path as the module can still be found
+in the physical file system. However, it generally is a good idea to add the
+resource prefix to the QML import path because loading from the resource file
+system is faster than loading from the physical file system for most modules.
+
+If the QML modules are meant to be used in a larger project with multiple import
+paths, you'll have to do an additional step: Even if you add the import paths at
+run time, tooling like \c qmllint does not have access to it, and might fail to
+find the correct dependencies. Use \c IMPORT_PATH to tell tooling about the
+additional paths it has to consider. For example:
+
+\badcode
+qt_add_qml_module(
+    URI My.Dependent.Module
+    VERSION 1.0
+    QML_FILES
+        C.qml
+    IMPORT_PATH "/some/where/else"
+)
+\endcode
+
+\section1 Eliminating Run Time File System Access
+
+If all QML modules are always loaded from the resource
+file system, you can deploy the application as a single binary. Let's first
+consider the simple case:
+
+\badcode
+QQmlEngine qmlEngine;
+qmlEngine.addImportPath(QStringLiteral(":/"));
+// Use qmlEngine to load the main.qml file.
+\endcode
+
+\note ":/" is used for simplicity here. See \l {Custom Directory Layouts}
+for more complex cases.
+
+If all the modules are linked into the application and if you're following
+the default resource directory structure, do not add any further import paths as
+those might override the one you added.
+
+If you have specified a custom \c RESOURCE_PREFIX, you have to add the custom
+resource prefix to the import path instead. You can also add multiple resource
+prefixes.
+
+The path \c :/qt-project.org/imports/ is part of the default QML import path. If
+you use it, you don't have to specially add it. Qt's own QML modules are placed
+there, though. You have to be careful not to overwrite them. For modules that are
+heavily re-used across different projects \c :/qt-project.org/imports/ is
+acceptable. By using it you can avoid forcing all the users to add custom
+import paths.
+
+\section1 Integrating custom QML plugins
+
+If you bundle an \l {QQuickImageProvider}{image provider} in the QML module, you
+need to implement the \l {QQmlEngineExtensionPlugin::initializeEngine()}
+method. This, in turn, makes it necessary to write the own plugin. To support
+this use case, \l NO_GENERATE_PLUGIN_SOURCE can be used.
+
+Let's consider a module that provides its own plugin source:
+
+\quotefile qml/myimageprovider.txt
+
+You may declare an image provider in myimageprovider.h, like this:
+
+\badcode
+class MyImageProvider : public QQuickImageProvider
+{
+    [...]
+};
+\endcode
+
+In plugin.cpp you can then define the QQmlEngineExtensionPlugin:
+
+\quotefile qml/plugin.cpp.txt
+
+This will make the image provider available. The plugin and the backing library
+both are in the same CMake target imageproviderplugin. This is done so that the
+linker does not drop parts of the module in various scenarios.
+
+As the plugin creates an image provider, it no longer has a trivial
+\c initializeEngine function. Therefore, the plugin is no longer optional.
+
+*/
