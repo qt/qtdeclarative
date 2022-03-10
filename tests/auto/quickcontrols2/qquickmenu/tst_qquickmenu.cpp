@@ -37,6 +37,9 @@
 #include <QtTest/qtest.h>
 #include <QtTest/qsignalspy.h>
 #include <QtGui/qcursor.h>
+#if QT_CONFIG(shortcut)
+#include <QtGui/qkeysequence.h>
+#endif
 #include <QtGui/qstylehints.h>
 #include <QtGui/qpa/qplatformintegration.h>
 #include <QtGui/private/qguiapplication_p.h>
@@ -83,6 +86,9 @@ private slots:
     void order();
     void popup();
     void actions();
+#if QT_CONFIG(shortcut)
+    void actionShortcuts();
+#endif
     void removeTakeItem();
     void subMenuMouse_data();
     void subMenuMouse();
@@ -1046,6 +1052,56 @@ void tst_QQuickMenu::actions()
     QCoreApplication::sendPostedEvents(menuItem1, QEvent::DeferredDelete);
     QVERIFY(menuItem1.isNull());
 }
+
+#if QT_CONFIG(shortcut)
+void tst_QQuickMenu::actionShortcuts()
+{
+    QQuickControlsApplicationHelper helper(this, QLatin1String("actionShortcuts.qml"));
+    QVERIFY2(helper.ready, helper.failureMessage());
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowActive(window));
+
+    // Try the menu's shortcut.
+    QQuickMenu *menu = window->property("menu").value<QQuickMenu *>();
+    QVERIFY(menu);
+    QPointer<QQuickAction> action1 = menu->actionAt(0);
+    QVERIFY(action1);
+    QCOMPARE(action1->shortcut(), QKeySequence(Qt::Key_A));
+
+    QSignalSpy action1TriggeredSpy(action1, SIGNAL(triggered()));
+    QVERIFY(action1TriggeredSpy.isValid());
+
+    QTest::keyClick(window, Qt::Key_A);
+    QCOMPARE(action1TriggeredSpy.count(), 1);
+
+    // Try the sub-menu.
+    QQuickMenu *subMenu = window->property("subMenu").value<QQuickMenu *>();
+    QVERIFY(subMenu);
+    QPointer<QQuickAction> subMenuAction1 = subMenu->actionAt(0);
+    QVERIFY(subMenuAction1);
+    QCOMPARE(subMenuAction1->shortcut(), QKeySequence(Qt::Key_B));
+
+    QSignalSpy subMenuAction1TriggeredSpy(subMenuAction1, SIGNAL(triggered()));
+    QVERIFY(subMenuAction1TriggeredSpy.isValid());
+
+    QTest::keyClick(window, Qt::Key_B);
+    QCOMPARE(subMenuAction1TriggeredSpy.count(), 1);
+
+    // Try the button menu.
+    QQuickMenu *buttonMenu = window->property("buttonMenu").value<QQuickMenu *>();
+    QVERIFY(buttonMenu);
+    QPointer<QQuickAction> buttonMenuAction1 = buttonMenu->actionAt(0);
+    QVERIFY(buttonMenuAction1);
+    QCOMPARE(buttonMenuAction1->shortcut(), QKeySequence(Qt::Key_C));
+
+    QSignalSpy buttonMenuAction1TriggeredSpy(buttonMenuAction1, SIGNAL(triggered()));
+    QVERIFY(buttonMenuAction1TriggeredSpy.isValid());
+
+    QTest::keyClick(window, Qt::Key_C);
+    QCOMPARE(buttonMenuAction1TriggeredSpy.count(), 1);
+}
+#endif
 
 void tst_QQuickMenu::removeTakeItem()
 {
