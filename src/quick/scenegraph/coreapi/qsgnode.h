@@ -40,6 +40,7 @@
 #ifndef QSGNODE_H
 #define QSGNODE_H
 
+#include <QtCore/qlist.h>
 #include <QtQuick/qsggeometry.h>
 #include <QtGui/QMatrix4x4>
 

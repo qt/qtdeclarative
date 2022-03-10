@@ -50,10 +50,12 @@ class QQmlJSImporter
 public:
     using ImportedTypes = QHash<QString, QQmlJSImportedScope>;
 
-    QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper)
-        : m_importPaths(importPaths)
-        , m_builtins({})
-        , m_mapper(mapper)
+    QQmlJSImporter(const QStringList &importPaths, QQmlJSResourceFileMapper *mapper,
+                   bool useOptionalImports = false)
+        : m_importPaths(importPaths),
+          m_builtins({}),
+          m_mapper(mapper),
+          m_useOptionalImports(useOptionalImports)
     {}
 
     QQmlJSResourceFileMapper *resourceFileMapper() { return m_mapper; }
@@ -153,6 +155,7 @@ private:
     QList<QQmlJS::DiagnosticMessage> m_warnings;
     AvailableTypes m_builtins;
     QQmlJSResourceFileMapper *m_mapper = nullptr;
+    bool m_useOptionalImports;
 };
 
 QT_END_NAMESPACE

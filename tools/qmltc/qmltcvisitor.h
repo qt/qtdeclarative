@@ -56,10 +56,10 @@ public:
 
     bool visit(QQmlJS::AST::UiPublicMember *) override;
 
+    bool visit(QQmlJS::AST::UiInlineComponent *) override;
+
     void endVisit(QQmlJS::AST::UiProgram *) override;
 
-    // NB: overwrite result() method to return ConstPtr
-    QQmlJSScope::ConstPtr result() const { return QQmlJSImportVisitor::result(); }
     QList<QQmlJSScope::ConstPtr> qmlScopesWithQmlBases() const { return m_qmlTypesWithQmlBases; }
     QSet<QString> cppIncludeFiles() const { return m_cppIncludes; }
 

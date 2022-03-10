@@ -165,31 +165,28 @@ static void list_removeLast(QQmlListProperty<QObject> *prop)
 }
 
 QQmlVMEVariantQObjectPtr::QQmlVMEVariantQObjectPtr()
-    : QQmlGuard<QObject>(nullptr), m_target(nullptr), m_index(-1)
+    : QQmlGuard<QObject>(QQmlVMEVariantQObjectPtr::objectDestroyedImpl, nullptr), m_target(nullptr), m_index(-1)
 {
 }
 
-QQmlVMEVariantQObjectPtr::~QQmlVMEVariantQObjectPtr()
+void QQmlVMEVariantQObjectPtr::objectDestroyedImpl(QQmlGuardImpl *guard)
 {
-}
-
-void QQmlVMEVariantQObjectPtr::objectDestroyed(QObject *)
-{
-    if (!m_target || QQmlData::wasDeleted(m_target->object))
+    auto This = static_cast<QQmlVMEVariantQObjectPtr *>(guard);
+    if (!This->m_target || QQmlData::wasDeleted(This->m_target->object))
         return;
 
-    if (m_index >= 0) {
-        QV4::ExecutionEngine *v4 = m_target->propertyAndMethodStorage.engine();
+    if (This->m_index >= 0) {
+        QV4::ExecutionEngine *v4 = This->m_target->propertyAndMethodStorage.engine();
         if (v4) {
             QV4::Scope scope(v4);
-            QV4::Scoped<QV4::MemberData> sp(scope, m_target->propertyAndMethodStorage.value());
+            QV4::Scoped<QV4::MemberData> sp(scope, This->m_target->propertyAndMethodStorage.value());
             if (sp) {
-                QV4::PropertyIndex index{ sp->d(), sp->d()->values.values + m_index };
+                QV4::PropertyIndex index{ sp->d(), sp->d()->values.values + This->m_index };
                 index.set(v4, QV4::Value::nullValue());
             }
         }
 
-        m_target->activate(m_target->object, m_target->methodOffset() + m_index, nullptr);
+        This->m_target->activate(This->m_target->object, This->m_target->methodOffset() + This->m_index, nullptr);
     }
 }
 

@@ -69,6 +69,8 @@
 #include <QtCore/qcryptographichash.h>
 #include <QtCore/QScopedValueRollback>
 
+static_assert(QV4::CompiledData::QmlCompileHashSpace > QML_COMPILE_HASH_LENGTH);
+
 #if defined(QML_COMPILE_HASH) && defined(QML_COMPILE_HASH_LENGTH) && QML_COMPILE_HASH_LENGTH > 0
 #  ifdef Q_OS_LINUX
 // Place on a separate section on Linux so it's easier to check from outside
@@ -856,7 +858,8 @@ bool ExecutableCompilationUnit::saveToDisk(const QUrl &unitUrl, QString *errorSt
     This function creates a temporary key vector and sorts it to guarantuee a stable
     hash. This is used to calculate a check-sum on dependent meta-objects.
  */
-bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash) const
+bool ResolvedTypeReferenceMap::addToHash(
+        QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums) const
 {
     std::vector<int> keys (count());
     int i = 0;
@@ -866,7 +869,7 @@ bool ResolvedTypeReferenceMap::addToHash(QCryptographicHash *hash) const
     }
     std::sort(keys.begin(), keys.end());
     for (int key: keys) {
-        if (!this->operator[](key)->addToHash(hash))
+        if (!this->operator[](key)->addToHash(hash, checksums))
             return false;
     }
 

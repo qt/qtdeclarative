@@ -509,6 +509,10 @@ qt_internal_extend_target(Quick CONDITION QT_FEATURE_wheelevent
         handlers/qquickwheelhandler_p_p.h
 )
 
+qt_internal_extend_target(Quick CONDITION QT_FEATURE_im
+    SOURCES
+        util/qquickinputmethod.cpp util/qquickinputmethod_p.h
+)
 
 qt_internal_create_tracepoints(Quick qtquick.tracepoints)
 qt_internal_add_docs(Quick

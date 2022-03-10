@@ -320,9 +320,8 @@ private:
             ObjectWasSet
         };
 
-        inline ContextGuard() : m_context(nullptr) {}
+        inline ContextGuard() : QQmlGuard<QObject>(&ContextGuard::objectDestroyedImpl, nullptr), m_context(nullptr) {}
         inline ContextGuard &operator=(QObject *obj);
-        inline void objectDestroyed(QObject *) override;
 
         inline bool wasSet() const;
 
@@ -333,6 +332,7 @@ private:
         }
 
     private:
+        inline static void objectDestroyedImpl(QQmlGuardImpl *);
         // Not refcounted, as it always belongs to the QQmlContextData.
         QTaggedPointer<QQmlContextData, Tag> m_context;
         QQmlNotifier m_bindings;
@@ -459,11 +459,12 @@ QQmlContextData::ContextGuard &QQmlContextData::ContextGuard::operator=(QObject 
     return *this;
 }
 
-void QQmlContextData::ContextGuard::objectDestroyed(QObject *)
+ void QQmlContextData::ContextGuard::objectDestroyedImpl(QQmlGuardImpl *impl)
 {
-    if (QObject *contextObject = m_context->contextObject()) {
+    auto This = static_cast<QQmlContextData::ContextGuard *>(impl);
+    if (QObject *contextObject = This->m_context->contextObject()) {
         if (!QObjectPrivate::get(contextObject)->wasDeleted)
-            m_bindings.notify();
+            This->m_bindings.notify();
     }
 }
 

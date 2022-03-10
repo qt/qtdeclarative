@@ -50,7 +50,9 @@ function(qt_deploy_qml_imports)
         message(FATAL_ERROR
             "No QML imports information recorded for target ${arg_TARGET}. "
             "The target must be an executable and qt_add_qml_module() must "
-            "have been called with it. Missing file:\n    ${filename}"
+            "have been called with it. If using a CMake version lower than 3.19, ensure "
+            "that the executable is manually finalized with qt_finalize_target(). "
+            "Missing file:\n    ${filename}"
         )
     endif()
     include(${filename})

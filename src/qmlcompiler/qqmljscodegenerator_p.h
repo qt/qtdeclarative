@@ -117,6 +117,22 @@ protected:
         QString accumulatorVariableOut;
     };
 
+    // This is an RAII helper we can use to automatically convert the result of "inflexible"
+    // operations to the desired type. For example GetLookup can only retrieve the type of
+    // the property we're looking up. If we want to store a different type, we need to convert.
+    struct AccumulatorConverter
+    {
+        Q_DISABLE_COPY_MOVE(AccumulatorConverter);
+        AccumulatorConverter(QQmlJSCodeGenerator *generator);
+        ~AccumulatorConverter();
+
+    private:
+        const QQmlJSRegisterContent accumulatorOut;
+        const QString accumulatorVariableIn;
+        const QString accumulatorVariableOut;
+        QQmlJSCodeGenerator *generator = nullptr;
+    };
+
     virtual QString metaObject(const QQmlJSScope::ConstPtr &objectType);
 
     void generate_Ret() override;
@@ -272,16 +288,16 @@ protected:
 
     QString conversion(const QQmlJSRegisterContent &from,
                        const QQmlJSRegisterContent &to,
-                       const QString &variable) const
+                       const QString &variable)
     {
         return conversion(from.storedType(), to.storedType(), variable);
     }
 
     QString conversion(const QQmlJSScope::ConstPtr &from,
                        const QQmlJSScope::ConstPtr &to,
-                       const QString &variable) const;
+                       const QString &variable);
 
-    QString errorReturnValue() const;
+    QString errorReturnValue();
     void reject(const QString &thing);
 
     QString metaTypeFromType(const QQmlJSScope::ConstPtr &type) const;
@@ -299,6 +315,7 @@ protected:
     void generateEnumLookup(int index);
 
     QString registerVariable(int index) const;
+    QString changedRegisterVariable() const;
     QQmlJSRegisterContent registerType(int index) const;
 
     Section m_body;
@@ -326,14 +343,15 @@ private:
     void generateCompareOperation(int lhs, const QString &cppOperator);
     void generateArithmeticOperation(int lhs, const QString &cppOperator);
     void generateJumpCodeWithTypeConversions(int relativeOffset, JumpMode mode);
+    void generateUnaryOperation(const QString &cppOperator);
+    void generateInPlaceOperation(const QString &cppOperator);
     void generateMoveOutVar(const QString &outVar);
     void generateTypeLookup(int index);
+    void generateOutputVariantConversion(const QQmlJSScope::ConstPtr &containedType);
 
     QString eqIntExpression(int lhsConst);
     QString argumentsList(int argc, int argv, QString *outVar);
     QString castTargetName(const QQmlJSScope::ConstPtr &type) const;
-
-    void protectAccumulator();
 
     QList<BasicBlock> findBasicBlocks(const QList<Section> &sections);
     RequiredRegisters dropPreserveCycles(

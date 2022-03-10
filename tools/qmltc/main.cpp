@@ -28,8 +28,10 @@
 
 #include "qmltccommandlineutils.h"
 #include "prototype/codegenerator.h"
-#include "prototype/visitor.h"
-#include "prototype/typeresolver.h"
+#include "qmltcvisitor.h"
+#include "qmltctyperesolver.h"
+
+#include "qmltccompiler.h"
 
 #include <QtQml/private/qqmlirbuilder_p.h>
 #include <private/qqmljscompiler_p.h>
@@ -46,8 +48,18 @@
 
 void setupLogger(QQmlJSLogger &logger) // prepare logger to work with compiler
 {
-    // TODO: support object bindings and change to setCategoryLevel(QtInfoMsg)
-    logger.setCategoryError(Log_Compiler, true);
+    const QSet<QQmlJSLoggerCategory> exceptions {
+        Log_ControlsSanity, // this category is just weird
+        Log_UnusedImport, // not critical
+    };
+
+    for (int i = 0; i <= static_cast<int>(QQmlJSLoggerCategory_Last); ++i) {
+        const auto c = static_cast<QQmlJSLoggerCategory>(i);
+        if (exceptions.contains(c))
+            continue;
+        logger.setCategoryLevel(c, QtCriticalMsg);
+        logger.setCategoryIgnored(c, false);
+    }
 }
 
 int main(int argc, char **argv)
@@ -175,11 +187,11 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    Options options;
-    options.outputCppFile = parser.value(outputCppOption);
-    options.outputHFile = parser.value(outputHOption);
-    options.resourcePath = paths.first();
-    options.outNamespace = parser.value(namespaceOption);
+    QmltcCompilerInfo info;
+    info.outputCppFile = parser.value(outputCppOption);
+    info.outputHFile = parser.value(outputHOption);
+    info.resourcePath = paths.first();
+    info.outputNamespace = parser.value(namespaceOption);
 
     QQmlJSImporter importer { importPaths, &mapper };
     QQmlJSLogger logger;
@@ -187,29 +199,27 @@ int main(int argc, char **argv)
     logger.setCode(sourceCode);
     setupLogger(logger);
 
-    Qmltc::Visitor visitor(&importer, &logger,
-                           QQmlJSImportVisitor::implicitImportDirectory(url, &mapper), qmldirFiles);
-    Qmltc::TypeResolver typeResolver { &importer };
+    QmltcVisitor visitor(&importer, &logger,
+                         QQmlJSImportVisitor::implicitImportDirectory(url, &mapper), qmldirFiles);
+    QmltcTypeResolver typeResolver { &importer };
     typeResolver.init(visitor, document.program);
 
-    if (logger.hasWarnings() || logger.hasErrors())
+    if (logger.hasErrors())
         return EXIT_FAILURE;
 
-    CodeGenerator generator(url, &logger, &document, &typeResolver);
-    generator.generate(options);
-
-#    if 0 // TODO: Currently disabled due to QTBUG-100103, remove this #if guard once the issue has
-          // been addressed
     QList<QQmlJS::DiagnosticMessage> warnings = importer.takeGlobalWarnings();
-
     if (!warnings.isEmpty()) {
-        logger.logWarning(QStringLiteral("Type warnings occurred while compiling file:"),
-                          Log_Import);
-        logger.processMessages(warnings, QtWarningMsg, Log_Import);
+        logger.log(QStringLiteral("Type warnings occurred while compiling file:"), Log_Import,
+                   QQmlJS::SourceLocation());
+        logger.processMessages(warnings, Log_Import);
+        // Log_Import is critical for the compiler
+        return EXIT_FAILURE;
     }
-#    endif
 
-    if (logger.hasWarnings() || logger.hasErrors())
+    CodeGenerator generator(url, &logger, &document, &typeResolver, &info);
+    generator.generate();
+
+    if (logger.hasErrors())
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;

@@ -134,9 +134,11 @@ public:
     struct Import
     {
         enum Flag {
-            Default  = 0x0,
-            Auto     = 0x1, // forward the version of the importing module
-            Optional = 0x2  // is not automatically imported but only a tooling hint
+            Default = 0x0,
+            Auto = 0x1, // forward the version of the importing module
+            Optional = 0x2, // is not automatically imported but only a tooling hint
+            OptionalDefault =
+                    0x4, // tooling hint only, denotes this entry should be imported by tooling
         };
         Q_DECLARE_FLAGS(Flags, Flag)
 

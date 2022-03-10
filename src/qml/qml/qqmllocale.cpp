@@ -703,7 +703,7 @@ ReturnedValue QQmlLocaleData::method_get_ ## VARIABLE (const QV4::FunctionObject
 
 LOCALE_STRING_PROPERTY(name)
 LOCALE_STRING_PROPERTY(nativeLanguageName)
-LOCALE_STRING_PROPERTY(nativeCountryName)
+QT_IGNORE_DEPRECATIONS(LOCALE_STRING_PROPERTY(nativeCountryName))
 LOCALE_STRING_PROPERTY(decimalPoint)
 LOCALE_STRING_PROPERTY(groupSeparator)
 LOCALE_STRING_PROPERTY(percent)

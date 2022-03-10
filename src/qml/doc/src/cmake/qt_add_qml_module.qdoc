@@ -34,6 +34,8 @@
 
 \brief Defines a QML module.
 
+\cmakecommandsince 6.2
+
 \section1 Synopsis
 
 \badcode
@@ -50,6 +52,7 @@ qt_add_qml_module(
     [TYPEINFO typeinfo]
     [IMPORTS ...]
     [OPTIONAL_IMPORTS ...]
+    [DEFAULT_IMPORTS ...]
     [DEPENDENCIES ...]
     [IMPORT_PATH ...]
     [SOURCES ...]
@@ -466,6 +469,15 @@ engine when importing the current module, but rather serve as hints to tools
 like \c qmllint. Versions can be specified in the same way as for \c IMPORTS.
 Each module listed here will be added as an \c{optional import} entry in the
 generated \l{Module Definition qmldir Files}{qmldir} file.
+
+\c DEFAULT_IMPORTS specifies which of the optional imports are the default entries
+that should be loaded by tooling. One entry should be specified for every group of
+\c OPTIONAL_IMPORTS in the module. As optional imports are only resolved at runtime,
+tooling like qmllint cannot in general know which of the optional imports should
+be resolved. To remedy this, you can specify one of the optional imports as the
+default import;  tooling will then pick it. If you have one optional import that
+gets used at runtime without any further configuration, that is an ideal candidate
+for the default import.
 
 \c DEPENDENCIES provides a list of other QML modules that this module depends
 on, but doesn't necessarily import. It would typically be used for dependencies

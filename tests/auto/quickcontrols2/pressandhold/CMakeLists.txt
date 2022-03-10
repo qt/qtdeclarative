@@ -11,6 +11,7 @@ qt_internal_add_test(tst_pressandhold
         Qt::Gui
         Qt::Quick
         Qt::QuickControls2
+        Qt::QuickTemplates2
 )
 
 #### Keys ignored in scope 1:.:.:pressandhold.pro:<TRUE>:

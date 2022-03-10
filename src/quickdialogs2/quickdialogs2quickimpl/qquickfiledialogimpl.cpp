@@ -41,6 +41,8 @@
 #include "qquickfiledialogimpl_p_p.h"
 
 #include <QtCore/qloggingcategory.h>
+#include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQml/qqmlfile.h>
 #include <QtQuickDialogs2Utils/private/qquickfilenamefilter_p.h>
@@ -135,7 +137,15 @@ void QQuickFileDialogImplPrivate::updateSelectedFile(const QString &oldFolderPat
         }
     }
 
-    if (newSelectedFilePath.isEmpty()) {
+    static const bool preselectFirstFile = []() {
+        const QVariant envVar = qEnvironmentVariable("QT_QUICK_DIALOGS_PRESELECT_FIRST_FILE");
+        if (envVar.isValid() && envVar.canConvert<bool>())
+            return envVar.toBool();
+        return QGuiApplicationPrivate::platformTheme()->themeHint(
+            QPlatformTheme::PreselectFirstFileInDirectory).toBool();
+    }();
+
+    if (preselectFirstFile && newSelectedFilePath.isEmpty()) {
         // When entering into a directory that isn't a parent of the old one, the first
         // file delegate should be selected.
         // TODO: is there a cheaper way to do this? QDirIterator doesn't support sorting,

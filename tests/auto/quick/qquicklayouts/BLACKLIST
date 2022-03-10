@@ -1,2 +1,11 @@
 [Tests_GridLayout::test_spacings]
 qnx
+#QTBUG-101327
+[tst_stacklayout::compile]
+qnx
+#QTBUG-101327
+[tst_gridlayout::compile]
+qnx
+#QTBUG-101327
+[tst_rowlayout::compile]
+qnx

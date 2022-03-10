@@ -51,8 +51,8 @@
 // We mean it.
 //
 
-#include "qquickpainteditem.h"
 #include <private/qtquickglobal_p.h>
+#include <QtQuick/qquickitem.h>
 
 QT_BEGIN_NAMESPACE
 

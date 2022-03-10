@@ -44,6 +44,7 @@
 #include <QtGui/qstandarditemmodel.h>
 #include <QStringListModel>
 #include <QFile>
+#include <QEvent>
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
@@ -1539,7 +1540,8 @@ void tst_QQuickPathView::mouseDrag()
     QTest::qWait(100);
 
     {
-        QMouseEvent mv(QEvent::MouseMove, QPoint(50,100), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+        QMouseEvent mv(QEvent::MouseMove, QPoint(50,100), window->mapToGlobal(QPoint(50,100)),
+                       Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
         QGuiApplication::sendEvent(window.data(), &mv);
     }
     // first move beyond threshold does not trigger drag
@@ -1553,7 +1555,8 @@ void tst_QQuickPathView::mouseDrag()
     QCOMPARE(dragEndedSpy.count(), 0);
 
     {
-        QMouseEvent mv(QEvent::MouseMove, QPoint(90,100), Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+        QMouseEvent mv(QEvent::MouseMove, QPoint(90,100), window->mapToGlobal(QPoint(90,100)),
+                       Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
         QGuiApplication::sendEvent(window.data(), &mv);
     }
     // next move beyond threshold does trigger drag
@@ -1933,7 +1936,8 @@ void tst_QQuickPathView::cancelDrag()
     // steal mouse grab - cancels PathView dragging
     auto mouse = QPointingDevice::primaryPointingDevice();
     auto mousePriv = QPointingDevicePrivate::get(const_cast<QPointingDevice *>(mouse));
-    QMouseEvent fakeMouseEv(QEvent::MouseMove, QPoint(130, 100), Qt::NoButton, Qt::LeftButton, Qt::NoModifier, mouse);
+    QMouseEvent fakeMouseEv(QEvent::MouseMove, QPoint(130, 100), QPoint(130, 100),
+                            Qt::NoButton, Qt::LeftButton, Qt::NoModifier, mouse);
     mousePriv->setExclusiveGrabber(&fakeMouseEv, fakeMouseEv.points().first(), nullptr);
 
     // returns to a snap point.

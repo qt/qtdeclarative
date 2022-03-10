@@ -250,6 +250,8 @@ The following functions are also on the Qt object.
     \qmlproperty object Qt::inputMethod
     \since 5.0
 
+    It is the same as the \l InputMethod singleton.
+
     The \c inputMethod object allows access to application's QInputMethod object
     and all its properties and slots. See the QInputMethod documentation for
     further details.
@@ -260,28 +262,12 @@ The following functions are also on the Qt object.
     \since 5.5
 
     The \c styleHints object provides platform-specific style hints and settings.
-    See the QStyleHints documentation for further details.
+    See the \l QStyleHints documentation for further details.
+
+    You should access StyleHints via \l Application::styleHints instead.
+    See \l StyleHints for more details.
 
     \note The \c styleHints object is only available when using the Qt Quick module.
-
-    The following example uses the \c styleHints object to determine whether an
-    item should gain focus on mouse press or touch release:
-    \code
-    import QtQuick 2.4
-
-    MouseArea {
-        id: button
-
-        onPressed: {
-            if (!Qt.styleHints.setFocusOnTouchRelease)
-                button.forceActiveFocus()
-        }
-        onReleased: {
-            if (Qt.styleHints.setFocusOnTouchRelease)
-                button.forceActiveFocus()
-        }
-    }
-    \endcode
 */
 
 /*!

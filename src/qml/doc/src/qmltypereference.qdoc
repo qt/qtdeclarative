@@ -83,7 +83,7 @@ provided:
 */
 
 /*!
-\qmlbasictype date
+\qmlvaluetype date
 \ingroup qtqmlvaluetypes
 \ingroup qtquickvaluetypes
 \brief a date value.
@@ -123,7 +123,7 @@ to a \l{QtQml::Date}{Date} object.
 */
 
 /*!
-\qmlbasictype point
+\qmlvaluetype point
 \ingroup qtqmlvaluetypes
 \ingroup qtquickvaluetypes
 \brief a value with x and y attributes.
@@ -151,7 +151,7 @@ is automatically converted into a QPointF value.
 */
 
 /*!
-\qmlbasictype size
+\qmlvaluetype size
 \ingroup qtqmlvaluetypes
 \ingroup qtquickvaluetypes
 \brief a value with width and height attributes
@@ -189,7 +189,7 @@ is automatically converted into a QSizeF value.
 */
 
 /*!
-\qmlbasictype rect
+\qmlvaluetype rect
 \ingroup qtqmlvaluetypes
 \ingroup qtquickvaluetypes
 \brief a value with x, y, width and height attributes.

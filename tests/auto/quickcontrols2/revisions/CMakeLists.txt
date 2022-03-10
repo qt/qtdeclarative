@@ -11,6 +11,7 @@ qt_internal_add_test(tst_revisions
         Qt::Gui
         Qt::Qml
         Qt::QuickControls2
+        Qt::QuickTemplates2
 )
 
 ## Scopes:

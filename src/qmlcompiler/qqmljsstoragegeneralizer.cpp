@@ -61,39 +61,25 @@ QQmlJSCompilePass::InstructionAnnotations QQmlJSStorageGeneralizer::run(
         }
     }
 
-    for (QQmlJSScope::ConstPtr &argument : function->argumentTypes) {
-        Q_ASSERT(argument);
-        if (QQmlJSScope::ConstPtr stored = m_typeResolver->genericType(
-                    argument, QQmlJSTypeResolver::ComponentIsGeneric::Yes)) {
-            argument = std::move(stored);
-        } else {
-            setError(QStringLiteral("Cannot store the argument type %1.")
-                     .arg(argument->internalName(), 0));
-            return InstructionAnnotations();
-        }
-    }
-
-    const auto transformRegisters = [&](QHash<int, QQmlJSRegisterContent> &registers, int offset) {
-        for (auto j = registers.begin(), jEnd = registers.end(); j != jEnd; ++j) {
-            const QQmlJSRegisterContent &content = *j;
-            if (QQmlJSScope::ConstPtr specific = content.storedType()) {
-                if (QQmlJSScope::ConstPtr generic = m_typeResolver->genericType(specific)) {
-                    *j = content.storedIn(generic);
-                } else {
-                    setError(QStringLiteral("Cannot store the register type %1.")
-                             .arg(specific->internalName()), offset);
-                    return false;
-                }
-            }
-        }
-        return true;
+    const auto transformRegister = [&](QQmlJSRegisterContent &content) {
+        if (const QQmlJSScope::ConstPtr &specific = content.storedType())
+            m_typeResolver->generalizeType(specific);
     };
 
+    const auto transformRegisters
+            = [&](QFlatMap<int, QQmlJSRegisterContent> &registers) {
+        for (auto j = registers.begin(), jEnd = registers.end(); j != jEnd; ++j)
+            transformRegister(j.value());
+    };
+
+    for (QQmlJSRegisterContent &argument : function->argumentTypes) {
+        Q_ASSERT(argument.isValid());
+        transformRegister(argument);
+    }
+
     for (auto i = annotations.begin(), iEnd = annotations.end(); i != iEnd; ++i) {
-        if (!transformRegisters(i->registers, i.key()))
-            return InstructionAnnotations();
-        if (!transformRegisters(i->expectedTargetTypesBeforeJump, i.key()))
-            return InstructionAnnotations();
+        transformRegister(i->second.changedRegister);
+        transformRegisters(i->second.typeConversions);
     }
 
     return annotations;

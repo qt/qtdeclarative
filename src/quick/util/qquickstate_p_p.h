@@ -212,13 +212,19 @@ public:
 
     struct OperationGuard : public QQmlGuard<QQuickStateOperation>
     {
-        OperationGuard(QObject *obj, QList<OperationGuard> *l) : list(l) {
+        OperationGuard(QObject *obj, QList<OperationGuard> *l) : QQmlGuard<QQuickStateOperation>(
+                                                                     OperationGuard::objectDestroyedImpl, nullptr)
+                                                               ,list(l)
+        {
             setObject(static_cast<QQuickStateOperation *>(obj));
         }
         QList<OperationGuard> *list;
-        void objectDestroyed(QQuickStateOperation *) override {
+
+    private:
+        static void objectDestroyedImpl(QQmlGuardImpl *guard) {
+            auto This = static_cast<OperationGuard *>(guard);
             // we assume priv will always be destroyed after objectDestroyed calls
-            list->removeOne(*this);
+            This->list->removeOne(*This);
         }
     };
     QList<OperationGuard> operations;

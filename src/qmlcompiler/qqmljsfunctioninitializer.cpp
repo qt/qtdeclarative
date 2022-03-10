@@ -92,14 +92,20 @@ void QQmlJSFunctionInitializer::populateSignature(
         for (const QQmlJS::AST::BoundName &argument : qAsConst(arguments)) {
             if (argument.typeAnnotation) {
                 if (const auto type = m_typeResolver->typeFromAST(argument.typeAnnotation->type)) {
-                    function->argumentTypes.append(type);
+                    function->argumentTypes.append(
+                                m_typeResolver->tracked(
+                                    m_typeResolver->globalType(type)));
                 } else {
-                    function->argumentTypes.append(m_typeResolver->varType());
+                    function->argumentTypes.append(
+                                m_typeResolver->tracked(
+                                    m_typeResolver->globalType(m_typeResolver->varType())));
                     signatureError(u"Cannot resolve the argument type %1."_qs
                                    .arg(argument.typeAnnotation->type->toString()));
                 }
             } else {
-                function->argumentTypes.append(m_typeResolver->varType());
+                function->argumentTypes.append(
+                            m_typeResolver->tracked(
+                                m_typeResolver->globalType(m_typeResolver->varType())));
                 signatureError(u"Functions without type annotations won't be compiled"_qs);
             }
         }
@@ -181,7 +187,11 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
         }
 
         const auto property = m_objectType->property(propertyName);
-        function.returnType = property.type();
+        function.returnType = property.isList()
+                ? m_typeResolver->listType(property.type())
+                : QQmlJSScope::ConstPtr(property.type());
+
+
         if (!function.returnType) {
             diagnose(u"Cannot resolve property type %1 for binding on %2"_qs.arg(
                          property.typeName(), propertyName),

@@ -42,6 +42,8 @@ project.
 
 \preliminarycmakecommand
 
+\include cmake-qml-qt-finalize-target-warning.cmake
+
 \section1 Synopsis
 
 \badcode
@@ -97,7 +99,7 @@ named by the \c{PLUGINS_FOUND} option, if given. This is often passed as the
 cmake_minimum_required(VERSION 3.16...3.22)
 project(MyThings)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Qml)
+find_package(Qt6 6.3 REQUIRED COMPONENTS Core Qml)
 qt_standard_project_setup()
 
 qt_add_executable(MyApp main.cpp)
@@ -113,7 +115,23 @@ set(deploy_script "${CMAKE_CURRENT_BINARY_DIR}/deploy_MyApp.cmake")
 file(GENERATE OUTPUT ${deploy_script} CONTENTS "
 include(\"${QT_DEPLOY_SUPPORT}\")
 qt_deploy_qml_imports(
-    EXECUTABLE \"\${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:MyApp>\"
+    # Deploy QML modules used by MyApp
+    TARGET MyApp
+
+    # The found QML plugins are stored in the plugins_found variable
+    PLUGINS_FOUND plugins_found
+
+    # The QML modules will be deployed into a custom directory
+    QML_DIR \"myqmldir\"
+
+    # Qt QML modules will be skipped, only project-created QML modules will be deployed
+    NO_QT_IMPORTS
+)
+# Deploy application runtime dependencies and runtime dependencies
+# of the found QML module plugins.
+qt_deploy_runtime_dependencies(
+    EXECUTABLE \${QT_DEPLOY_BIN_DIR}/$<TARGET_FILE_NAME:MyApp>
+    ADDITIONAL_MODULES \${plugins_found}
 )
 ")
 

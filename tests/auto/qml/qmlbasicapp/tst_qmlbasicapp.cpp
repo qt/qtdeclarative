@@ -44,6 +44,9 @@ private slots:
 void tst_basicapp::loadComponent()
 {
     QQmlEngine engine;
+#ifdef Q_OS_ANDROID
+    engine.addImportPath(":/");
+#endif
     QQmlComponent c(&engine, QStringLiteral("qrc:/BasicApp/main.qml"));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer o(c.create());
@@ -83,6 +86,9 @@ void tst_basicapp::resourceFiles()
 
 void tst_basicapp::fileSystemFiles()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("This test is not valid for Android, because the files can exist only as resources.");
+#endif
     const QString basedir = QCoreApplication::applicationDirPath();
     QVERIFY(QFile::exists(basedir + QStringLiteral("/BasicApp/main.qml")));
     QVERIFY(QFile::exists(basedir + QStringLiteral("/BasicApp/qmldir")));
@@ -99,8 +105,13 @@ void tst_basicapp::fileSystemFiles()
 
 void tst_basicapp::qmldirContents()
 {
+#ifdef Q_OS_ANDROID
+    const QString basedir = QStringLiteral(":"); // Use qrc resource path on Android
+#else
+    const QString basedir = QCoreApplication::applicationDirPath();
+#endif
     {
-        QFile qmldir(QCoreApplication::applicationDirPath() + "/BasicApp/qmldir");
+        QFile qmldir(basedir + "/BasicApp/qmldir");
         QVERIFY(qmldir.open(QIODevice::ReadOnly));
         const QByteArray contents = qmldir.readAll();
         QVERIFY(contents.contains("module BasicApp"));
@@ -115,7 +126,7 @@ void tst_basicapp::qmldirContents()
     }
 
     {
-        QFile qmldir(QCoreApplication::applicationDirPath() + "/TimeExample/qmldir");
+        QFile qmldir(basedir + "/TimeExample/qmldir");
         QVERIFY(qmldir.open(QIODevice::ReadOnly));
         const QByteArray contents = qmldir.readAll();
         QVERIFY(contents.contains("module TimeExample"));
@@ -132,7 +143,7 @@ void tst_basicapp::qmldirContents()
     }
 
     {
-        QFile qmldir(QCoreApplication::applicationDirPath() + "/BasicExtension/qmldir");
+        QFile qmldir(basedir + "/BasicExtension/qmldir");
         QVERIFY(qmldir.open(QIODevice::ReadOnly));
         const QByteArray contents = qmldir.readAll();
         QVERIFY(contents.contains("More 1.0 More.ui.qml"));

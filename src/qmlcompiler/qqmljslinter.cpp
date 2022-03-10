@@ -56,7 +56,7 @@ public:
                                         QQmlJS::SourceLocation accessLocation) override
     {
         Q_UNUSED(fileName)
-        m_logger->logWarning(
+        m_logger->log(
                 u"Variable \"%1\" is used here before its declaration. The declaration is at %2:%3."_qs
                         .arg(name)
                         .arg(declarationLocation.startLine)
@@ -69,7 +69,7 @@ private:
 };
 
 QQmlJSLinter::QQmlJSLinter(const QStringList &importPaths, bool useAbsolutePath)
-    : m_useAbsolutePath(useAbsolutePath), m_importer(importPaths, nullptr)
+    : m_useAbsolutePath(useAbsolutePath), m_importer(importPaths, nullptr, true)
 {
 }
 
@@ -101,8 +101,8 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
             if (option != logger->options().constEnd())
                 categories << option->m_category;
             else
-                logger->logWarning(u"qmllint directive on unknown category \"%1\""_qs.arg(category),
-                                   Log_Syntax, loc);
+                logger->log(u"qmllint directive on unknown category \"%1\""_qs.arg(category),
+                            Log_Syntax, loc);
         }
 
         if (categories.isEmpty()) {
@@ -129,8 +129,8 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
         } else if (command == u"enable"_qs) {
             enablesPerLine[loc.startLine + 1] |= categories;
         } else {
-            logger->logWarning(u"Invalid qmllint directive \"%1\" provided"_qs.arg(command),
-                               Log_Syntax, loc);
+            logger->log(u"Invalid qmllint directive \"%1\" provided"_qs.arg(command), Log_Syntax,
+                        loc);
         }
     }
 
@@ -221,6 +221,7 @@ bool QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents
                 jsonFix[u"charOffset"_qs] = static_cast<int>(fix.cutLocation.offset);
                 jsonFix[u"length"_qs] = static_cast<int>(fix.cutLocation.length);
                 jsonFix[u"replacement"_qs] = fix.replacementString;
+                jsonFix[u"isHint"] = fix.isHint;
                 suggestions << jsonFix;
             }
         }
@@ -314,7 +315,7 @@ bool QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents
                 if (!it.value().m_changed)
                     continue;
 
-                m_logger->setCategoryError(it.value().m_category, it.value().m_error);
+                m_logger->setCategoryIgnored(it.value().m_category, it.value().m_ignored);
                 m_logger->setCategoryLevel(it.value().m_category, it.value().m_level);
             }
 
@@ -361,10 +362,9 @@ bool QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents
             QList<QQmlJS::DiagnosticMessage> warnings = m_importer.takeGlobalWarnings();
 
             if (!warnings.isEmpty()) {
-                m_logger->logWarning(
-                        QStringLiteral("Type warnings occurred while evaluating file:"),
-                        Log_Import);
-                m_logger->processMessages(warnings, QtWarningMsg, Log_Import);
+                m_logger->log(QStringLiteral("Type warnings occurred while evaluating file:"),
+                              Log_Import, QQmlJS::SourceLocation());
+                m_logger->processMessages(warnings, Log_Import);
             }
 
             success &= !m_logger->hasWarnings() && !m_logger->hasErrors();

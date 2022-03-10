@@ -107,6 +107,8 @@ enum QQmlJSLoggerCategory {
     Log_UnusedImport,
     Log_MultilineString,
     Log_Syntax,
+    Log_SyntaxIdQuotation,
+    Log_SyntaxDuplicateIds,
     Log_Compiler,
     Log_ControlsSanity,
     Log_AttachedPropertyReuse,
@@ -120,6 +122,10 @@ struct FixSuggestion
         QString message;
         QQmlJS::SourceLocation cutLocation = QQmlJS::SourceLocation();
         QString replacementString = QString();
+        QString fileName = QString();
+        // A Fix is a hint if it can not be automatically applied to fix an issue or only points out
+        // its origin
+        bool isHint = true;
     };
     QList<Fix> fixes;
 };
@@ -137,31 +143,32 @@ public:
     {
         Option() = default;
         Option(QQmlJSLoggerCategory category, QString settingsName, const QString &description,
-               QtMsgType level, bool error = true)
+               QtMsgType level, bool ignored = false)
             : m_category(category),
               m_settingsName(settingsName),
               m_description(description),
               m_level(level),
-              m_error(error)
+              m_ignored(ignored)
         {
         }
         QQmlJSLoggerCategory m_category;
         QString m_settingsName;
         QString m_description;
         QtMsgType m_level;
-        bool m_error;
+        bool m_ignored;
         bool m_changed = false;
 
         QString levelToString() const {
+            // TODO:: this only makes sense to qmllint
+            Q_ASSERT(m_ignored || m_level != QtCriticalMsg);
+            if (m_ignored)
+                return QStringLiteral("disable");
+
             switch (m_level) {
             case QtInfoMsg:
-                return m_error ? QStringLiteral("warning") : QStringLiteral("info");
+                return QStringLiteral("info");
             case QtWarningMsg:
-                // TODO: This case doesn't cleanly map onto any warning level yet
-                // this has to be handled in the option overhaul
-                return m_error ? QStringLiteral("warning") : QStringLiteral("info");
-            case QtCriticalMsg:
-                return QStringLiteral("disable");
+                return QStringLiteral("warning");
             default:
                 Q_UNREACHABLE();
                 break;
@@ -170,14 +177,14 @@ public:
 
         bool setLevel(const QString &level) {
             if (level == QStringLiteral("disable")) {
-                m_level = QtCriticalMsg;
-                m_error = false;
+                m_level = QtCriticalMsg; // TODO: only so for consistency with previous logic
+                m_ignored = true;
             } else if (level == QStringLiteral("info")) {
                 m_level = QtInfoMsg;
-                m_error = false;
+                m_ignored = false;
             } else if (level == QStringLiteral("warning")) {
-                m_level = QtInfoMsg;
-                m_error = true;
+                m_level = QtWarningMsg;
+                m_ignored = false;
             } else {
                 return false;
             }
@@ -206,10 +213,13 @@ public:
         m_categoryChanged[category] = true;
     }
 
-    bool isCategoryError(QQmlJSLoggerCategory category) const { return m_categoryError[category]; }
-    void setCategoryError(QQmlJSLoggerCategory category, bool error)
+    bool isCategoryIgnored(QQmlJSLoggerCategory category) const
     {
-        m_categoryError[category] = error;
+        return m_categoryIgnored[category];
+    }
+    void setCategoryIgnored(QQmlJSLoggerCategory category, bool error)
+    {
+        m_categoryIgnored[category] = error;
         m_categoryChanged[category] = true;
     }
 
@@ -218,31 +228,23 @@ public:
         return m_categoryChanged[category];
     }
 
-    void logInfo(const QString &message, QQmlJSLoggerCategory category,
-                 const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation(),
-                 bool showContext = true, bool showFileName = true,
-                 const std::optional<FixSuggestion> &suggestion = {})
+    /*! \internal
+
+        Logs \a message with severity deduced from \a category. Prefer using
+        this function in most cases.
+
+        \sa setCategoryLevel
+    */
+    void log(const QString &message, QQmlJSLoggerCategory category,
+             const QQmlJS::SourceLocation &srcLocation, bool showContext = true,
+             bool showFileName = true, const std::optional<FixSuggestion> &suggestion = {},
+             const QString overrideFileName = QString())
     {
-        log(message, category, srcLocation, QtInfoMsg, showContext, showFileName, suggestion);
+        log(message, category, srcLocation, m_categoryLevels[category], showContext, showFileName,
+            suggestion, overrideFileName);
     }
 
-    void logWarning(const QString &message, QQmlJSLoggerCategory category,
-                    const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation(),
-                    bool showContext = true, bool showFileName = true,
-                    const std::optional<FixSuggestion> &suggestion = {})
-    {
-        log(message, category, srcLocation, QtWarningMsg, showContext, showFileName, suggestion);
-    }
-
-    void logCritical(const QString &message, QQmlJSLoggerCategory category,
-                     const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation(),
-                     bool showContext = true, bool showFileName = true,
-                     const std::optional<FixSuggestion> &suggestion = {})
-    {
-        log(message, category, srcLocation, QtCriticalMsg, showContext, showFileName, suggestion);
-    }
-
-    void processMessages(const QList<QQmlJS::DiagnosticMessage> &messages, QtMsgType level,
+    void processMessages(const QList<QQmlJS::DiagnosticMessage> &messages,
                          QQmlJSLoggerCategory category);
 
     void ignoreWarnings(uint32_t line, const QSet<QQmlJSLoggerCategory> &categories)
@@ -260,12 +262,13 @@ public:
     QString fileName() const { return m_fileName; }
 
 private:
-    void printContext(const QQmlJS::SourceLocation &location);
+    void printContext(const QString &overrideFileName, const QQmlJS::SourceLocation &location);
     void printFix(const FixSuggestion &fix);
 
-    void log(const QString &message, QQmlJSLoggerCategory category, const QQmlJS::SourceLocation &,
-             QtMsgType type, bool showContext, bool showFileName,
-             const std::optional<FixSuggestion> &suggestion);
+    void log(const QString &message, QQmlJSLoggerCategory category,
+             const QQmlJS::SourceLocation &srcLocation, QtMsgType type, bool showContext,
+             bool showFileName, const std::optional<FixSuggestion> &suggestion,
+             const QString overrideFileName);
 
     QString m_fileName;
     QString m_code;
@@ -273,13 +276,16 @@ private:
     QColorOutput m_output;
 
     QtMsgType m_categoryLevels[QQmlJSLoggerCategory_Last + 1] = {};
-    bool m_categoryError[QQmlJSLoggerCategory_Last + 1] = {};
+    bool m_categoryIgnored[QQmlJSLoggerCategory_Last + 1] = {};
     bool m_categoryChanged[QQmlJSLoggerCategory_Last + 1] = {};
 
     QList<Message> m_infos;
     QList<Message> m_warnings;
     QList<Message> m_errors;
     QHash<uint32_t, QSet<QQmlJSLoggerCategory>> m_ignoredWarnings;
+
+    // the compiler needs private log() function at the moment
+    friend class QQmlJSAotCompiler;
 };
 
 QT_END_NAMESPACE

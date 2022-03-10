@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 {
     QGuiApplication app(argc, argv);
 
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::VulkanRhi);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
 
     QQuickView view;
     view.setResizeMode(QQuickView::SizeRootObjectToView);

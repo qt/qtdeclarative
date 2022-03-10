@@ -152,7 +152,8 @@ void QQuickMenuItemPrivate::executeArrow(bool complete)
 
 bool QQuickMenuItemPrivate::acceptKeyClick(Qt::Key key) const
 {
-    return key == Qt::Key_Space || key == Qt::Key_Return || key == Qt::Key_Enter;
+    return key == Qt::Key_Return || key == Qt::Key_Enter
+            || QQuickAbstractButtonPrivate::acceptKeyClick(key);
 }
 
 QPalette QQuickMenuItemPrivate::defaultPalette() const

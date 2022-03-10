@@ -59,7 +59,6 @@ class QQmlJSImporter;
 
 class QQmlJSScope
 {
-    Q_DISABLE_COPY(QQmlJSScope)
 public:
     QQmlJSScope(QQmlJSScope &&) = default;
     QQmlJSScope &operator=(QQmlJSScope &&) = default;
@@ -181,7 +180,8 @@ public:
     };
 
     static QQmlJSScope::Ptr create(ScopeType type = QQmlJSScope::QMLScope,
-                                 const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
+                                   const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
+    static QQmlJSScope::Ptr clone(const QQmlJSScope::ConstPtr &origin);
     static QQmlJSScope::ConstPtr findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope);
 
     QQmlJSScope::Ptr parentScope()
@@ -224,8 +224,8 @@ public:
     void setAnnotations(const QList<QQmlJSAnnotation> &annotation) { m_annotations = std::move(annotation); }
     const QList<QQmlJSAnnotation> &annotations() const { return m_annotations; }
 
-    QString fileName() const { return m_fileName; }
-    void setFileName(const QString &file) { m_fileName = file; }
+    QString filePath() const { return m_filePath; }
+    void setFilePath(const QString &file) { m_filePath = file; }
 
     // The name the type uses to refer to itself. Either C++ class name or base name of
     // QML file. isComposite tells us if this is a C++ or a QML name.
@@ -462,6 +462,8 @@ public:
 
 private:
     QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
+    QQmlJSScope(const QQmlJSScope &) = default;
+    QQmlJSScope &operator=(const QQmlJSScope &) = default;
 
     static ImportedScope<QQmlJSScope::ConstPtr> findType(
             const QString &name, const ContextualTypes &contextualTypes,
@@ -484,7 +486,7 @@ private:
     QVector<QQmlJSScope::Ptr> m_childScopes;
     QQmlJSScope::WeakPtr m_parentScope;
 
-    QString m_fileName;
+    QString m_filePath;
     QString m_internalName;
     QString m_baseTypeName;
 

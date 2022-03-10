@@ -35,6 +35,8 @@
 
 #include <algorithm>
 
+QT_BEGIN_NAMESPACE
+
 static QString const cppKeywords[] = {
     u"alignas"_qs,
     u"alignof"_qs,
@@ -534,7 +536,7 @@ static void setupQmlCppType(const Qml2CppContext &context, const QQmlJSScope::Pt
         context.recordError(type->sourceLocation(), u"QML type has unknown file path"_qs);
         return;
     }
-    if (!type->fileName().isEmpty()) // consider this one to be already set up
+    if (type->filePath().endsWith(u".h")) // consider this one to be already set up
         return;
     if (!filePath.endsWith(u".qml"_qs)) {
         context.recordError(type->sourceLocation(),
@@ -545,7 +547,7 @@ static void setupQmlCppType(const Qml2CppContext &context, const QQmlJSScope::Pt
     // TODO: this does not cover QT_QMLTC_FILE_BASENAME renaming
     if (filePath != context.documentUrl) {
         // this file name will be discovered during findCppIncludes
-        type->setFileName(QFileInfo(filePath).baseName().toLower() + u".h"_qs);
+        type->setFilePath(QFileInfo(filePath).baseName().toLower() + u".h"_qs);
     }
 
     const auto properties = type->ownProperties();
@@ -786,7 +788,7 @@ static void addFirstCppIncludeFromType(QSet<QString> &cppIncludes,
     auto t = QQmlJSScope::nonCompositeBaseType(type);
     if (!t)
         return;
-    if (QString includeFile = t->fileName(); !includeFile.isEmpty())
+    if (QString includeFile = t->filePath(); includeFile.endsWith(u".h"))
         cppIncludes.insert(includeFile);
 }
 
@@ -816,7 +818,7 @@ static void populateCppIncludes(QSet<QString> &cppIncludes, const QQmlJSScope::C
     for (auto t = type; t; t = t->baseType()) {
         // NB: Composite types might have include files - this is custom qmltc
         // logic for local imports
-        if (QString includeFile = t->fileName(); !includeFile.isEmpty())
+        if (QString includeFile = t->filePath(); includeFile.endsWith(u".h"))
             cppIncludes.insert(includeFile);
 
         // look in property types
@@ -824,8 +826,10 @@ static void populateCppIncludes(QSet<QString> &cppIncludes, const QQmlJSScope::C
         for (const QQmlJSMetaProperty &p : properties) {
             addFirstCppIncludeFromType(cppIncludes, p.type());
 
-            if (p.isPrivate()) {
-                const QString ownersInclude = QQmlJSScope::nonCompositeBaseType(t)->fileName();
+            const auto baseType = QQmlJSScope::nonCompositeBaseType(t);
+
+            if (p.isPrivate() && baseType->filePath().endsWith(u".h")) {
+                const QString ownersInclude = baseType->filePath();
                 QString privateInclude = constructPrivateInclude(ownersInclude);
                 if (!privateInclude.isEmpty())
                     cppIncludes.insert(std::move(privateInclude));
@@ -1079,3 +1083,43 @@ QSet<QQmlJSScope::ConstPtr> collectIgnoredTypes(const Qml2CppContext &context,
 
     return ignored;
 }
+
+static void setDeferred(const Qml2CppContext &context, qsizetype objectIndex,
+                        QList<Qml2CppObject> &objects)
+{
+    Q_UNUSED(objects);
+
+    Qml2CppObject &o = objects[objectIndex];
+
+    // c.f. QQmlDeferredAndCustomParserBindingScanner::scanObject()
+    if (o.irObject->flags & QV4::CompiledData::Object::IsComponent) {
+        // unlike QmlIR compiler, qmltc should not care about anything within a
+        // component (let the QQmlComponent wrapper - at runtime anyway - take
+        // care of this type instead)
+        return;
+    }
+
+    const auto setRecursive = [&](QmlIR::Binding &binding) {
+        if (binding.type >= QmlIR::Binding::Type_Object)
+            setDeferred(context, binding.value.objectIndex, objects); // Note: recursive call here!
+
+        const QString propName = findPropertyName(context, o.type, binding);
+        Q_ASSERT(!propName.isEmpty());
+
+        if (o.type->isNameDeferred(propName)) {
+            binding.flags |= QV4::CompiledData::Binding::IsDeferredBinding;
+            o.irObject->flags |= QV4::CompiledData::Object::HasDeferredBindings;
+        }
+    };
+
+    std::for_each(o.irObject->bindingsBegin(), o.irObject->bindingsEnd(), setRecursive);
+}
+
+void setDeferredBindings(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
+{
+    // as we do not support InlineComponents just yet, we can shortcut the logic
+    // here to only work with root object
+    setDeferred(context, 0, objects);
+}
+
+QT_END_NAMESPACE

@@ -34,6 +34,7 @@
 #include <QWaitCondition>
 #include <QThreadPool>
 #include <private/qqmlengine_p.h>
+#include <QQmlComponent>
 
 Q_DECLARE_METATYPE(QQuickImageProvider*);
 

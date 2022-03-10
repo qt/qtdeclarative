@@ -30,17 +30,17 @@
     \title Qt Quick Layouts
     \brief A module with a set of QML elements that arrange QML items in a user interface.
 
-    Qt Quick Layouts are a set of QML types used to arrange items in a user interface. In contrast
-    to \l{Item Positioners}{positioners}, Qt Quick Layouts can also resize their items. This makes
-    them well suited for resizable user interfaces. Since layouts are items they can consequently
-    be nested.
+    Qt Quick Layouts are a set of QML types used to arrange items in a user
+    interface. In contrast to \l{Item Positioners}{positioners}, Qt Quick
+    Layouts can also resize their child items. This makes them well suited for
+    resizable user interfaces.
 
     Visit the \l{Qt Quick Layouts Overview} page to get started.
 
     \section1 Using the Module
 
-    The QML types can be imported into your application by adding the following
-    import statement in your \c {.qml} file.
+    The \l {Qt Quick Layouts QML Types}{QML types} can be imported into your
+    application by adding the following import statement in your \c {.qml} file.
 
     \qml
     import QtQuick.Layouts

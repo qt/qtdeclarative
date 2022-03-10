@@ -208,13 +208,15 @@ private:
         bool needsMorePasses = false;
     };
 
-    void handleUnqualifiedAccess(const QString &name) const;
+    void handleUnqualifiedAccess(const QString &name, bool isMethod) const;
     void checkDeprecated(QQmlJSScope::ConstPtr scope, const QString &name, bool isMethod) const;
-    bool checkRestricted(const QString &propertyName) const;
+    bool isRestricted(const QString &propertyName) const;
+    bool isCallingProperty(QQmlJSScope::ConstPtr scope, const QString &name) const;
+    bool isMissingPropertyType(QQmlJSScope::ConstPtr scope, const QString &type) const;
     QQmlJS::SourceLocation getCurrentSourceLocation() const;
     QQmlJS::SourceLocation getCurrentBindingSourceLocation() const;
 
-    void propagateBinaryOperation(QSOperator::Op op, int lhs);
+    QQmlJSRegisterContent propagateBinaryOperation(QSOperator::Op op, int lhs);
     void propagateCall(const QList<QQmlJSMetaMethod> &methods, int argc, int argv);
     void propagatePropertyLookup(const QString &name);
     void propagateScopeLookupCall(const QString &functionName, int argc, int argv);
@@ -223,12 +225,24 @@ private:
 
     QString registerName(int registerIndex) const;
 
-    void setRegister(int index, QQmlJSRegisterContent content);
-    void setRegister(int index, const QQmlJSScope::ConstPtr &content);
-
     QQmlJSRegisterContent checkedInputRegister(int reg);
     QQmlJSMetaMethod bestMatchForCall(const QList<QQmlJSMetaMethod> &methods, int argc, int argv,
                                       QStringList *errors);
+
+    void setAccumulator(const QQmlJSRegisterContent &content);
+    void setRegister(int index, const QQmlJSRegisterContent &content);
+    void mergeRegister(int index, const QQmlJSRegisterContent &a, const QQmlJSRegisterContent &b);
+
+    void addReadRegister(int index, const QQmlJSRegisterContent &convertTo);
+    void addReadAccumulator(const QQmlJSRegisterContent &convertTo)
+    {
+        addReadRegister(Accumulator, convertTo);
+    }
+
+    void recordEqualsNullType();
+    void recordEqualsIntType();
+    void recordEqualsType(int lhs);
+    void recordCompareType(int lhs);
 
     QQmlJSRegisterContent m_returnType;
     QQmlJSTypeInfo *m_typeInfo = nullptr;
@@ -236,6 +250,7 @@ private:
     // Not part of the state, as the back jumps are the reason for running multiple passes
     QMultiHash<int, ExpectedRegisterState> m_jumpOriginRegisterStateByTargetInstructionOffset;
 
+    InstructionAnnotations m_prevStateAnnotations;
     PassState m_state;
 };
 

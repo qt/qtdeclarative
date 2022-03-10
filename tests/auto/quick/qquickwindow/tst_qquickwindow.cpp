@@ -28,6 +28,7 @@
 
 #include <qtest.h>
 #include <QDebug>
+#include <QEvent>
 #include <QMimeData>
 #include <QTouchEvent>
 #include <QtQuick/QQuickItem>
@@ -1618,9 +1619,8 @@ public:
 
 void tst_qquickwindow::earlyGrab()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     qmlRegisterType<Grabber>("Test", 1, 0, "Grabber");
     QQmlEngine engine;
@@ -1867,24 +1867,24 @@ void tst_qquickwindow::ignoreUnhandledMouseEvents()
     item->setParentItem(window->contentItem());
 
     {
-        QMouseEvent me(QEvent::MouseButtonPress, QPointF(50, 50), Qt::LeftButton, Qt::LeftButton,
-                       Qt::NoModifier);
+        QMouseEvent me(QEvent::MouseButtonPress, QPointF(50, 50), window->mapToGlobal(QPointF(50, 50)),
+                       Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
         me.setAccepted(true);
         QVERIFY(QCoreApplication::sendEvent(window, &me));
         QVERIFY(!me.isAccepted());
     }
 
     {
-        QMouseEvent me(QEvent::MouseMove, QPointF(51, 51), Qt::LeftButton, Qt::LeftButton,
-                       Qt::NoModifier);
+        QMouseEvent me(QEvent::MouseMove, QPointF(51, 51), window->mapToGlobal(QPointF(51, 51)),
+                       Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
         me.setAccepted(true);
         QVERIFY(QCoreApplication::sendEvent(window, &me));
         QVERIFY(!me.isAccepted());
     }
 
     {
-        QMouseEvent me(QEvent::MouseButtonRelease, QPointF(51, 51), Qt::LeftButton, Qt::LeftButton,
-                       Qt::NoModifier);
+        QMouseEvent me(QEvent::MouseButtonRelease, QPointF(51, 51), window->mapToGlobal(QPointF(51, 51)),
+                       Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
         me.setAccepted(true);
         QVERIFY(QCoreApplication::sendEvent(window, &me));
         QVERIFY(!me.isAccepted());

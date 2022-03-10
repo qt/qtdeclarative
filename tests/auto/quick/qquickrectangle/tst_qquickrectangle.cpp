@@ -72,8 +72,7 @@ void tst_qquickrectangle::color()
 
     QVERIFY(QTest::qWaitForWindowExposed(&view));
 
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
         QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
 
     QImage image = view.grabWindow();

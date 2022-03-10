@@ -185,6 +185,7 @@ force the usage of a given loop. To verify which render loop is in use, enable
 the \c qt.scenegraph.general \l {QLoggingCategory}{logging category}.
 
 \section2 Threaded Render Loop ('threaded')
+\target threaded_render_loop
 
 On many configurations, the scene graph rendering will happen on a
 dedicated render thread. This is done to increase parallelism of

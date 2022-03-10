@@ -1041,9 +1041,15 @@ void QQuickLoaderPrivate::createComponent()
     const QQmlComponent::CompilationMode mode = asynchronous
             ? QQmlComponent::Asynchronous
             : QQmlComponent::PreferSynchronous;
-    QQmlContext *context = qmlContext(q);
-    component.setObject(new QQmlComponent(
-                            context->engine(), context->resolvedUrl(source), mode, q), q);
+    if (QQmlContext *context = qmlContext(q)) {
+        if (QQmlEngine *engine = context->engine()) {
+            component.setObject(new QQmlComponent(
+                                    engine, context->resolvedUrl(source), mode, q), q);
+            return;
+        }
+    }
+
+    qmlWarning(q) << "createComponent: Cannot find a QML engine.";
 }
 
 #include <moc_qquickloader_p.cpp>

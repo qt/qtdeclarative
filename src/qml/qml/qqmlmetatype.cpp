@@ -47,10 +47,6 @@
 #include <private/qqmlvaluetype_p.h>
 #include <private/qv4executablecompilationunit_p.h>
 
-#if QT_CONFIG(qml_itemmodel)
-#include <private/qqmlmodelindexvaluetype_p.h>
-#endif
-
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qmutex.h>
 #include <QtCore/qloggingcategory.h>
@@ -257,20 +253,7 @@ void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
         }
     }
 
-    // Clone Q_PROPERTY
-    for (int ii = mo->propertyOffset(); ii < mo->propertyCount(); ++ii) {
-        QMetaProperty property = mo->property(ii);
-
-        int otherIndex = ignoreEnd->indexOfProperty(property.name());
-        if (otherIndex >= ignoreStart->propertyOffset() + ignoreStart->propertyCount()) {
-            builder.addProperty(QByteArray("__qml_ignore__") + property.name(), QByteArray("void"));
-            // Skip
-        } else {
-            builder.addProperty(property);
-        }
-    }
-
-    // Clone Q_METHODS
+    // Clone Q_METHODS - do this first to avoid duplicating the notify signals.
     for (int ii = mo->methodOffset(); ii < mo->methodCount(); ++ii) {
         QMetaMethod method = mo->method(ii);
 
@@ -292,6 +275,19 @@ void QQmlMetaType::clone(QMetaObjectBuilder &builder, const QMetaObject *mo,
         QMetaMethodBuilder m = builder.addMethod(method);
         if (found) // SKIP
             m.setAccess(QMetaMethod::Private);
+    }
+
+    // Clone Q_PROPERTY
+    for (int ii = mo->propertyOffset(); ii < mo->propertyCount(); ++ii) {
+        QMetaProperty property = mo->property(ii);
+
+        int otherIndex = ignoreEnd->indexOfProperty(property.name());
+        if (otherIndex >= ignoreStart->propertyOffset() + ignoreStart->propertyCount()) {
+            builder.addProperty(QByteArray("__qml_ignore__") + property.name(), QByteArray("void"));
+            // Skip
+        } else {
+            builder.addProperty(property);
+        }
     }
 
     // Clone Q_ENUMS
@@ -1718,17 +1714,7 @@ const QMetaObject *QQmlMetaType::metaObjectForValueType(QMetaType metaType)
     case QMetaType::QEasingCurve:
         return &QQmlEasingValueType::staticMetaObject;
 #endif
-#if QT_CONFIG(qml_itemmodel)
-    case QMetaType::QModelIndex:
-        return &QQmlModelIndexValueType::staticMetaObject;
-    case QMetaType::QPersistentModelIndex:
-        return &QQmlPersistentModelIndexValueType::staticMetaObject;
-#endif
     default:
-#if QT_CONFIG(qml_itemmodel)
-        if (metaType == QMetaType::fromType<QItemSelectionRange>())
-            return &QQmlItemSelectionRangeValueType::staticMetaObject;
-#endif
         break;
     }
 

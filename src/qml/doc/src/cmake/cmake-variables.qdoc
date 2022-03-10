@@ -27,7 +27,6 @@
 
 /*!
 \page cmake-variable-QT_QML_OUTPUT_DIRECTORY.html
-\ingroup cmake-variables
 \ingroup cmake-variables-qtqml
 
 \title QT_QML_OUTPUT_DIRECTORY

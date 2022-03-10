@@ -49,9 +49,11 @@ struct QmltcCodeWriter
     static void write(QmltcOutputWrapper &code, const QmltcEnum &enumeration);
     static void write(QmltcOutputWrapper &code, const QmltcMethod &method);
     static void write(QmltcOutputWrapper &code, const QmltcCtor &ctor);
+    static void write(QmltcOutputWrapper &code, const QmltcDtor &dtor);
     static void write(QmltcOutputWrapper &code, const QmltcVariable &var);
     static void write(QmltcOutputWrapper &code, const QmltcProperty &prop);
 
+private:
     static void writeUrl(QmltcOutputWrapper &code, const QmltcMethod &urlMethod); // special
 };
 

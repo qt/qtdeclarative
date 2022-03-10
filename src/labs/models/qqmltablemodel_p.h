@@ -55,6 +55,7 @@
 #include "qqmltablemodelcolumn_p.h"
 
 #include <QtCore/QObject>
+#include <QtCore/QHash>
 #include <QtCore/QAbstractTableModel>
 #include <QtQml/qqml.h>
 #include <QtQmlModels/private/qtqmlmodelsglobal_p.h>

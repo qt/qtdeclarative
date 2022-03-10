@@ -406,7 +406,7 @@ void QQuickAction::setIcon(const QQuickIcon &icon)
         return;
 
     d->icon = icon;
-    d->icon.setOwner(this);
+    d->icon.ensureRelativeSourceResolved(this);
     emit iconChanged(icon);
 }
 

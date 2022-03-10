@@ -67,7 +67,6 @@ QT_REQUIRE_CONFIG(quick_canvas);
 #include <QtCore/qqueue.h>
 #include <QtCore/QWaitCondition>
 
-#include <private/qv4value_p.h>
 #include <private/qv4persistent_p.h>
 
 //#define QQUICKCONTEXT2D_DEBUG //enable this for just DEBUG purpose!
@@ -77,6 +76,10 @@ QT_REQUIRE_CONFIG(quick_canvas);
 #endif
 
 QT_BEGIN_NAMESPACE
+
+namespace QV4 {
+    struct ExecutionEngine;
+}
 
 class QQuickContext2DCommandBuffer;
 class QQuickContext2DTexture;

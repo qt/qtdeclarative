@@ -53,7 +53,7 @@ MessageDialogImpl {
     implicitHeight: Math.max(control.implicitBackgroundHeight + control.topInset + control.bottomInset,
                              control.contentHeight + control.topPadding + control.bottomPadding
                              + (control.implicitHeaderHeight > 0 ? control.implicitHeaderHeight + control.spacing : 0)
-                             + (columnLayout.implicitHeight > 0 ? columnLayout.implicitHeight + control.spacing : 0))
+                             + (control.implicitFooterHeight > 0 ? control.implicitFooterHeight + control.spacing : 0))
     leftPadding: 20
     rightPadding: 20
 

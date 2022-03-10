@@ -71,14 +71,14 @@ class HelloWorld : public QObject
 public:
     HelloWorld(QQmlEngine * engine, QObject * parent = nullptr);
 
+Q_SIGNALS:
+    void created();
+
 public:
     void setHello(const QString& hello_);
     QString hello();
     QBindable<QString> bindableHello();
     Q_INVOKABLE void printHello(QString prefix, QString suffix);
-
-signals:
-    void created();
 
     // ...
 };

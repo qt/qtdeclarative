@@ -64,7 +64,7 @@ class TestModel : public QAbstractItemModel
 public:
     explicit TestModel(QObject *parent = nullptr);
 
-    void createTreeRecursive(TreeItem *item, int childCount, int currentDepth, int maxDepth);
+    void createTreeRecursive(TreeItem *item, int childCount, int currentDepth);
     TreeItem *treeItem(const QModelIndex &index) const;
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;
     int columnCount(const QModelIndex & = QModelIndex()) const override;
@@ -72,6 +72,7 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
     QModelIndex parent(const QModelIndex &index) const override;
+    int maxDepth() { return 4; }
 
     bool insertRows(int position, int rows, const QModelIndex &parent) override;
 

@@ -3,4 +3,4 @@ Something 1.0 SomethingElse.qml
 typeinfo plugins.qmltypes
 depends QtQuick 2.0
 import QtQml 2.0
-optional import QtQuick.LocalStorage auto
+default import QtQuick.LocalStorage auto

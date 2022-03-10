@@ -34,6 +34,8 @@
 
 \brief Add qml files and resources to an existing QML module target.
 
+\cmakecommandsince 6.2
+
 \section1 Synopsis
 
 \badcode

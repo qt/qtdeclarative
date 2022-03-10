@@ -56,9 +56,13 @@
 QT_REQUIRE_CONFIG(quick_canvas);
 
 #include <QtQuick/qquickitem.h>
-#include <QtQml/private/qv4value_p.h>
+#include <QtQml/private/qv4staticvalue_p.h>
 
 QT_BEGIN_NAMESPACE
+
+namespace QV4 {
+    struct ExecutionEngine;
+}
 
 class QQuickCanvasItem;
 class QSGLayer;

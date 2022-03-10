@@ -213,7 +213,7 @@ void QQmlJSTypeDescriptionReader::readComponent(UiObjectDefinition *ast)
         } else if (script) {
             QString name = toString(script->qualifiedId);
             if (name == QLatin1String("file")) {
-                scope->setFileName(readStringBinding(script));
+                scope->setFilePath(readStringBinding(script));
             } else if (name == QLatin1String("name")) {
                 scope->setInternalName(readStringBinding(script));
             } else if (name == QLatin1String("prototype")) {

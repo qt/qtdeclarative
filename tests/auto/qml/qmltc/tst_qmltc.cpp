@@ -40,6 +40,10 @@
 #include "importnamespace.h"
 #include "componenttype.h"
 #include "componenttypes.h"
+#include "deferredproperties.h"
+#include "deferredproperties_group.h"
+#include "deferredproperties_attached.h"
+#include "deferredproperties_complex.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -82,6 +86,8 @@
 #include "calqlatrbits.h"
 #include "propertychangeandsignalhandlers.h"
 
+#include "testprivateproperty.h"
+
 // Qt:
 #include <QtCore/qstring.h>
 #include <QtCore/qbytearray.h>
@@ -94,6 +100,7 @@
 
 #include <QtTest/qsignalspy.h>
 
+#include <QtCore/private/qobject_p.h>
 #include <QtTest/private/qemulationdetector_p.h>
 
 #ifndef QMLTC_TESTS_DISABLE_CACHE
@@ -128,6 +135,10 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/QmltcTests/ObjectWithId.qml"),
         QUrl("qrc:/QmltcTests/documentWithIds.qml"),
         QUrl("qrc:/QmltcTests/importNamespace.qml"),
+        QUrl("qrc:/QmltcTests/deferredProperties.qml"),
+        QUrl("qrc:/QmltcTests/deferredProperties_group.qml"),
+        QUrl("qrc:/QmltcTests/deferredProperties_attached.qml"),
+        QUrl("qrc:/QmltcTests/deferredProperties_complex.qml"),
 
         QUrl("qrc:/QmltcTests/signalHandlers.qml"),
         QUrl("qrc:/QmltcTests/javaScriptFunctions.qml"),
@@ -578,6 +589,73 @@ void tst_qmltc::componentTypes()
         QQuickTableView *table = qobject_cast<QQuickTableView *>(children.at(3));
         QVERIFY(table);
         QCOMPARE(ctx->objectForName(u"accessibleDelegate"_qs), table->delegate());
+    }
+}
+
+void tst_qmltc::deferredProperties()
+{
+    {
+        QQmlEngine e;
+        PREPEND_NAMESPACE(deferredProperties) created(&e);
+        QVERIFY(created.deferredProperty()
+                == nullptr); // binding is not applied since it is deferred
+
+        qmlExecuteDeferred(&created);
+
+        QQuickRectangle *rect = qobject_cast<QQuickRectangle *>(created.deferredProperty());
+        QVERIFY(rect);
+        QCOMPARE(rect->width(), created.width() * 2);
+        QCOMPARE(rect->implicitHeight(), 4);
+        QCOMPARE(rect->height(), rect->implicitHeight());
+
+        QQmlListReference children(rect, "data");
+        QCOMPARE(children.size(), 1);
+        QQuickRectangle *subRect = qobject_cast<QQuickRectangle *>(children.at(0));
+        QVERIFY(subRect);
+        QCOMPARE(subRect->width(), created.width());
+        QCOMPARE(subRect->height(), rect->height());
+    }
+    {
+        QQmlEngine e;
+        PREPEND_NAMESPACE(deferredProperties_group) created(&e);
+        QCOMPARE(created.getGroup()->getStr(), u"foobar"_qs);
+        QCOMPARE(created.getGroup()->getDeferred(), 0);
+        // Note: we can't easily evaluate a deferred binding for a
+        // `group.deferred` here, so just accept the fact the the value is not
+        // set at all as a successful test
+    }
+    {
+        QQmlEngine e;
+        PREPEND_NAMESPACE(deferredProperties_attached) created(&e);
+        TestTypeAttachedWithDeferred *attached = qobject_cast<TestTypeAttachedWithDeferred *>(
+                qmlAttachedPropertiesObject<DeferredAttached>(&created, false));
+        QVERIFY(attached);
+
+        QCOMPARE(attached->getAttachedFormula(), 43);
+        QCOMPARE(attached->getDeferred(), 0);
+        // Note: we can't easily evaluate a deferred binding for a
+        // `group.deferred` here, so just accept the fact the the value is not
+        // set at all as a successful test
+    }
+    {
+        QQmlEngine e;
+        PREPEND_NAMESPACE(deferredProperties_complex) created(&e);
+
+        // `group` binding is not deferred as per current behavior outside of
+        // PropertyChanges and friends. we defer `group.deferred` binding though
+        QCOMPARE(created.getGroup()->getStr(), u"still immediate"_qs);
+        QCOMPARE(created.getGroup()->getDeferred(), 0);
+
+        QVERIFY(!qmlAttachedPropertiesObject<DeferredAttached>(&created, false));
+
+        qmlExecuteDeferred(&created);
+
+        TestTypeAttachedWithDeferred *attached = qobject_cast<TestTypeAttachedWithDeferred *>(
+                qmlAttachedPropertiesObject<DeferredAttached>(&created, false));
+        QVERIFY(attached);
+
+        QCOMPARE(attached->getAttachedFormula(), 20);
+        QCOMPARE(attached->getDeferred(), 100);
     }
 }
 
@@ -1102,11 +1180,9 @@ void tst_qmltc::defaultAlias()
     QSKIP("Not implemented - not supported");
 }
 
-// TODO: this just doesn't work currently
 void tst_qmltc::attachedProperty()
 {
     QQmlEngine e;
-    QSKIP("Broken in many ways.");
     PREPEND_NAMESPACE(attachedProperty) created(&e);
 
     TestTypeAttached *attached = qobject_cast<TestTypeAttached *>(
@@ -1145,8 +1221,6 @@ void tst_qmltc::attachedProperty()
 void tst_qmltc::groupedProperty()
 {
     QQmlEngine e;
-    QSKIP("Property index is wrong due to not picking QtQml dependency when creating group "
-          "property scope");
     PREPEND_NAMESPACE(groupedProperty) created(&e);
 
     TestTypeGrouped *grouped = created.getGroup();
@@ -1708,9 +1782,22 @@ void tst_qmltc::keyEvents()
 
 void tst_qmltc::privateProperties()
 {
-    QSKIP("The same problem with poor QObject qmltypes is encountered here.");
     QQmlEngine e;
     PREPEND_NAMESPACE(privatePropertySubclass) created(&e);
+    QCOMPARE(created.dummy(), u"bar"_qs);
+    QCOMPARE(created.strAlias(), u"foobar"_qs);
+    QCOMPARE(created.smthAlias(), 42);
+
+    auto privateCreated = static_cast<PrivatePropertyTypePrivate *>(QObjectPrivate::get(&created));
+    QVERIFY(privateCreated);
+    QCOMPARE(privateCreated->foo(), u"Smth is: 42"_qs);
+
+    ValueTypeGroup vt = privateCreated->vt();
+    QCOMPARE(vt.count(), 11);
+
+    TestTypeGrouped *group = privateCreated->getGroup();
+    QCOMPARE(group->getCount(), 43);
+    QCOMPARE(group->getStr(), created.strAlias());
 }
 
 void tst_qmltc::calqlatrBits()

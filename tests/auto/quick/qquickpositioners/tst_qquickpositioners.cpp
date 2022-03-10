@@ -28,6 +28,7 @@
 #include <QtTest/QtTest>
 #include <QtQuick/qquickview.h>
 #include <qqmlengine.h>
+#include <QtQml/qqmlcomponent.h>
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquickpositioners_p.h>
 #include <QtQuick/private/qquicktransition_p.h>

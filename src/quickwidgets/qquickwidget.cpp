@@ -187,6 +187,7 @@ void QQuickWidgetPrivate::initOffscreenWindow()
 {
     Q_Q(QQuickWidget);
     offscreenWindow = new QQuickWidgetOffscreenWindow(*new QQuickWidgetOffscreenWindowPrivate(), renderControl);
+    offscreenWindow->setScreen(q->screen());
     // Do not call create() on offscreenWindow.
 
     QWidget::connect(offscreenWindow, SIGNAL(sceneGraphInitialized()), q, SLOT(createFramebufferObject()));
@@ -558,19 +559,24 @@ QImage QQuickWidgetPrivate::grabFramebuffer()
     size of the view. Alternatively the resizeMode may be set to SizeRootObjectToView which
     will resize the view to the size of the root object.
 
-    \note QQuickWidget is an alternative to using QQuickView and QWidget::createWindowContainer().
+    \section1 Performance Considerations
+
+    QQuickWidget is an alternative to using QQuickView and QWidget::createWindowContainer().
     The restrictions on stacking order do not apply, making QQuickWidget the more flexible
     alternative, behaving more like an ordinary widget.
 
-    \note However, the above mentioned advantages come at the expense of performance.
-    Unlike QQuickWindow and QQuickView, QQuickWidget requires rendering into OpenGL
+    However, the above mentioned advantages come at the expense of performance:
+    \list
+
+    \li Unlike QQuickWindow and QQuickView, QQuickWidget requires rendering into OpenGL
     framebuffer objects, which needs to be enforced by calling
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi) at startup.
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL) at startup.
     This will naturally carry a minor performance hit.
 
-    \note Using QQuickWidget disables the threaded render loop on all platforms. This means that
-    some of the benefits of threaded rendering, for example \l Animator classes and vsync driven
-    animations, will not be available.
+    \li Using QQuickWidget disables the \l{threaded_render_loop}{threaded render loop} on all
+    platforms. This means that some of the benefits of threaded rendering, for example
+    \l Animator classes and vsync driven animations, will not be available.
+    \endlist
 
     \note Avoid calling winId() on a QQuickWidget. This function triggers the creation of
     a native window, resulting in reduced performance and possibly rendering glitches. The
@@ -1035,9 +1041,7 @@ void QQuickWidgetPrivate::createContext()
 
         context = new QOpenGLContext;
         context->setFormat(offscreenWindow->requestedFormat());
-        const QWindow *win = q->window()->windowHandle();
-        if (win && win->screen())
-            context->setScreen(win->screen());
+        context->setScreen(q->screen());
         QOpenGLContext *shareContext = qt_gl_global_share_context();
         if (!shareContext)
             shareContext = QWidgetPrivate::get(q->window())->shareContext();
@@ -1657,19 +1661,16 @@ bool QQuickWidget::event(QEvent *e)
         d->handleWindowChange();
         break;
 
-    case QEvent::ScreenChangeInternal:
-        if (QWindow *window = this->window()->windowHandle()) {
-            QScreen *newScreen = window->screen();
-
-            if (d->offscreenWindow)
-                d->offscreenWindow->setScreen(newScreen);
-            if (d->offscreenSurface)
-                d->offscreenSurface->setScreen(newScreen);
+    case QEvent::ScreenChangeInternal: {
+        QScreen *newScreen = screen();
+        if (d->offscreenWindow)
+            d->offscreenWindow->setScreen(newScreen);
+        if (d->offscreenSurface)
+            d->offscreenSurface->setScreen(newScreen);
 #if QT_CONFIG(opengl)
-            if (d->context)
-                d->context->setScreen(newScreen);
+        if (d->context)
+            d->context->setScreen(newScreen);
 #endif
-        }
 
         if (d->useSoftwareRenderer
 #if QT_CONFIG(opengl)
@@ -1682,7 +1683,7 @@ bool QQuickWidget::event(QEvent *e)
             d->render(true);
         }
         break;
-
+    }
     case QEvent::Show:
     case QEvent::Move:
         d->updatePosition();

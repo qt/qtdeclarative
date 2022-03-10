@@ -20,7 +20,19 @@ qt_internal_add_test(tst_fusion
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::QuickControls2
+        Qt::QuickTemplates2
     TESTDATA ${test_data}
+)
+
+# Make the QML files available to Creator's locator.
+target_sources(tst_fusion
+    PRIVATE
+        ${test_data}
+)
+
+set_source_files_properties(${test_data}
+    PROPERTIES
+        HEADER_FILE_ONLY ON
 )
 
 #### Keys ignored in scope 1:.:.:fusion.pro:<TRUE>:

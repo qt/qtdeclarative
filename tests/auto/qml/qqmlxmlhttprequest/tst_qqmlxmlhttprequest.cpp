@@ -1093,6 +1093,10 @@ static const QString testString = QStringLiteral("Test-String");
 
 void tst_qqmlxmlhttprequest::doFileRequest(std::function<void(QObject *component, QTemporaryFile &writeFile)> verifyFunction)
 {
+#if defined(Q_OS_INTEGRITY)
+    QSKIP("There's no mounted filesystem on INTEGRITY.");
+#endif
+
     // Create test files
     QTemporaryFile writeFile;
     QTemporaryFile readFile;

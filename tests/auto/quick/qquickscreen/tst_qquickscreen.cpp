@@ -29,6 +29,7 @@
 #include <qtest.h>
 #include <QDebug>
 #include <QQmlEngine>
+#include <QQmlComponent>
 #include <QtQuick/QQuickItem>
 #include <QtQuick/QQuickView>
 #include <QtGui/QScreen>

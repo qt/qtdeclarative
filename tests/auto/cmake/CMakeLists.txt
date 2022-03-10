@@ -65,7 +65,9 @@ if(TARGET Qt::Qml)
         _qt_internal_test_expect_pass(test_plugins)
     endif()
     _qt_internal_test_expect_pass(empty_qmldir)
-    _qt_internal_test_expect_pass(qmlquery)
+    If(NOT ANDROID) # QML only project cannot run on Android with C++ enty point
+        _qt_internal_test_expect_pass(qmlquery)
+    endif()
 endif()
 
 if(TARGET Qt::Quick)

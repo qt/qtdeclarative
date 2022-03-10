@@ -53,6 +53,7 @@
 
 #include <QtQuick/qsgnode.h>
 #include <QtQuick/qsgtexture.h>
+#include <QtQuick/qquickpainteditem.h>
 #include <QtCore/qobject.h>
 #include <QtCore/qrect.h>
 #include <QtGui/qbrush.h>

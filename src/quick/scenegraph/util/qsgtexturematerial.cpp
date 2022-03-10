@@ -309,6 +309,8 @@ int QSGOpaqueTextureMaterial::compare(const QSGMaterial *o) const
 {
     Q_ASSERT(o && type() == o->type());
     const QSGOpaqueTextureMaterial *other = static_cast<const QSGOpaqueTextureMaterial *>(o);
+    Q_ASSERT(m_texture);
+    Q_ASSERT(other->texture());
     const qint64 diff = m_texture->comparisonKey() - other->texture()->comparisonKey();
     if (diff != 0)
         return diff < 0 ? -1 : 1;

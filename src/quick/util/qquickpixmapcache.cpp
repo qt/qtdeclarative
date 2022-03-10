@@ -328,6 +328,7 @@ public:
     QQuickImageProviderOptions::AutoTransform appliedTransform;
     QColorSpace targetColorSpace;
 
+    QIODevice *specialDevice = nullptr;
     QQuickTextureFactory *textureFactory;
 
     QIntrusiveList<QQuickPixmap, &QQuickPixmap::dataListNode> declarativePixmaps;
@@ -895,40 +896,54 @@ void QQuickPixmapReader::processJob(QQuickPixmapReply *runningJob, const QUrl &u
             QImage image;
             QQuickPixmapReply::ReadError errorCode = QQuickPixmapReply::NoError;
             QString errorStr;
-            QFile f(existingImageFileForPath(localFile));
             QSize readSize;
-            if (f.open(QIODevice::ReadOnly)) {
-                QSGTextureReader texReader(&f, localFile);
-                if (backendSupport()->hasOpenGL && texReader.isTexture()) {
-                    QQuickTextureFactory *factory = texReader.read();
-                    if (factory) {
-                        readSize = factory->textureSize();
-                    } else {
-                        errorStr = QQuickPixmap::tr("Error decoding: %1").arg(url.toString());
-                        if (f.fileName() != localFile)
-                            errorStr += QString::fromLatin1(" (%1)").arg(f.fileName());
-                        errorCode = QQuickPixmapReply::Decoding;
-                    }
-                    mutex.lock();
-                    if (!cancelled.contains(runningJob))
-                        runningJob->postReply(errorCode, errorStr, readSize, factory);
-                    mutex.unlock();
-                    return;
-                } else {
-                    int frameCount;
-                    int const frame = runningJob->data ? runningJob->data->frame : 0;
-                    if (!readImage(url, &f, &image, &errorStr, &readSize, &frameCount, runningJob->requestRegion, runningJob->requestSize,
-                                   runningJob->providerOptions, nullptr, frame)) {
-                        errorCode = QQuickPixmapReply::Loading;
-                        if (f.fileName() != localFile)
-                            errorStr += QString::fromLatin1(" (%1)").arg(f.fileName());
-                    } else if (runningJob->data) {
-                        runningJob->data->frameCount = frameCount;
-                    }
+
+            if (runningJob->data && runningJob->data->specialDevice) {
+                int frameCount;
+                int const frame = runningJob->data ? runningJob->data->frame : 0;
+                if (!readImage(url, runningJob->data->specialDevice, &image, &errorStr, &readSize, &frameCount,
+                               runningJob->requestRegion, runningJob->requestSize,
+                               runningJob->providerOptions, nullptr, frame)) {
+                    errorCode = QQuickPixmapReply::Loading;
+                } else if (runningJob->data) {
+                    runningJob->data->frameCount = frameCount;
                 }
             } else {
-                errorStr = QQuickPixmap::tr("Cannot open: %1").arg(url.toString());
-                errorCode = QQuickPixmapReply::Loading;
+                QFile f(existingImageFileForPath(localFile));
+                if (f.open(QIODevice::ReadOnly)) {
+                    QSGTextureReader texReader(&f, localFile);
+                    if (backendSupport()->hasOpenGL && texReader.isTexture()) {
+                        QQuickTextureFactory *factory = texReader.read();
+                        if (factory) {
+                            readSize = factory->textureSize();
+                        } else {
+                            errorStr = QQuickPixmap::tr("Error decoding: %1").arg(url.toString());
+                            if (f.fileName() != localFile)
+                                errorStr += QString::fromLatin1(" (%1)").arg(f.fileName());
+                            errorCode = QQuickPixmapReply::Decoding;
+                        }
+                        mutex.lock();
+                        if (!cancelled.contains(runningJob))
+                            runningJob->postReply(errorCode, errorStr, readSize, factory);
+                        mutex.unlock();
+                        return;
+                    } else {
+                        int frameCount;
+                        int const frame = runningJob->data ? runningJob->data->frame : 0;
+                        if (!readImage(url, &f, &image, &errorStr, &readSize, &frameCount,
+                                       runningJob->requestRegion, runningJob->requestSize,
+                                       runningJob->providerOptions, nullptr, frame)) {
+                            errorCode = QQuickPixmapReply::Loading;
+                            if (f.fileName() != localFile)
+                                errorStr += QString::fromLatin1(" (%1)").arg(f.fileName());
+                        } else if (runningJob->data) {
+                            runningJob->data->frameCount = frameCount;
+                        }
+                    }
+                } else {
+                    errorStr = QQuickPixmap::tr("Cannot open: %1").arg(url.toString());
+                    errorCode = QQuickPixmapReply::Loading;
+                }
             }
             mutex.lock();
             if (!cancelled.contains(runningJob))
@@ -1730,6 +1745,47 @@ void QQuickPixmap::load(QQmlEngine *engine, const QUrl &url, const QRect &reques
 
         QQuickPixmapReader::readerMutex.lock();
         d->reply = QQuickPixmapReader::instance(engine)->getImage(d);
+        QQuickPixmapReader::readerMutex.unlock();
+    } else {
+        d = *iter;
+        d->addref();
+        d->declarativePixmaps.insert(this);
+    }
+}
+
+/*! \internal
+    Attempts to load an image from the given \a url via the given \a device.
+    This is for special cases when the QImageIOHandler can benefit from reusing
+    the I/O device, or from something extra that a subclass of QIODevice
+    carries with it. So far, this code doesn't support loading anything other
+    than a QImage, for example compressed textures. It can be added if needed.
+*/
+void QQuickPixmap::loadImageFromDevice(QQmlEngine *engine, QIODevice *device, const QUrl &url,
+                                       const QRect &requestRegion, const QSize &requestSize,
+                                       const QQuickImageProviderOptions &providerOptions, int frame, int frameCount)
+{
+    auto oldD = d;
+    QQuickPixmapKey key = { &url, &requestRegion, &requestSize, frame, providerOptions };
+    QQuickPixmapStore *store = pixmapStore();
+    QHash<QQuickPixmapKey, QQuickPixmapData *>::Iterator iter = store->m_cache.end();
+    iter = store->m_cache.find(key);
+    if (iter == store->m_cache.end()) {
+        if (!engine)
+            return;
+
+        d = new QQuickPixmapData(this, url, requestRegion, requestSize, providerOptions,
+                                 QQuickImageProviderOptions::UsePluginDefaultTransform, frame, frameCount);
+        d->specialDevice = device;
+        d->addToCache();
+
+        QQuickPixmapReader::readerMutex.lock();
+        d->reply = QQuickPixmapReader::instance(engine)->getImage(d);
+        if (oldD) {
+            QObject::connect(d->reply, &QQuickPixmapReply::finished, [oldD, this]() {
+                oldD->declarativePixmaps.remove(this);
+                oldD->release();
+            });
+        }
         QQuickPixmapReader::readerMutex.unlock();
     } else {
         d = *iter;

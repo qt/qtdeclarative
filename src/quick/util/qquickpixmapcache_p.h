@@ -174,6 +174,9 @@ public:
     void load(QQmlEngine *, const QUrl &, const QRect &requestRegion, const QSize &requestSize,
               QQuickPixmap::Options options, const QQuickImageProviderOptions &providerOptions, int frame = 0, int frameCount = 1,
               qreal devicePixelRatio = 1.0);
+    void loadImageFromDevice(QQmlEngine *engine, QIODevice *device, const QUrl &url,
+                             const QRect &requestRegion, const QSize &requestSize,
+                             const QQuickImageProviderOptions &providerOptions, int frame = 0, int frameCount = 1);
 
     void clear();
     void clear(QObject *);

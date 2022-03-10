@@ -1663,7 +1663,8 @@ void tst_qquickflickable::cancelOnMouseGrab()
     QQuickItem *item = window->rootObject()->findChild<QQuickItem*>("row");
     auto mouse = QPointingDevice::primaryPointingDevice();
     auto mousePriv = QPointingDevicePrivate::get(const_cast<QPointingDevice *>(mouse));
-    QMouseEvent fakeMouseEv(QEvent::MouseMove, QPoint(130, 100), Qt::NoButton, Qt::LeftButton, Qt::NoModifier, mouse);
+    QMouseEvent fakeMouseEv(QEvent::MouseMove, QPoint(130, 100), QPoint(130, 100),
+                            Qt::NoButton, Qt::LeftButton, Qt::NoModifier, mouse);
     mousePriv->setExclusiveGrabber(&fakeMouseEv, fakeMouseEv.points().first(), item);
 
     QTRY_COMPARE(flickable->contentX(), 0.);

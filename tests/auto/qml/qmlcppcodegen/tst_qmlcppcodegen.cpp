@@ -23,6 +23,8 @@
 #include <data/cppbaseclass.h>
 #include <data/objectwithmethod.h>
 
+#include <QtQml/private/qqmlengine_p.h>
+
 #include <QtTest>
 #include <QtQml>
 #include <QtGui/qcolor.h>
@@ -117,6 +119,13 @@ private slots:
     void revisions();
     void invisibleBase();
     void notEqualsInt();
+    void infinities();
+    void blockComments();
+    void functionLookup();
+    void objectInVar();
+    void functionTakingVar();
+    void testIsnan();
+    void fallbackLookups();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -646,6 +655,8 @@ void tst_QmlCppCodegen::interestingFiles_data()
     QTest::addRow("dynamicscene") << u"dynamicscene.qml"_qs << true;
     QTest::addRow("curlygrouped") << u"curlygrouped.qml"_qs << true;
     QTest::addRow("cycleHead") << u"cycleHead.qml"_qs << false;
+    QTest::addRow("deadStoreLoop") << u"deadStoreLoop.qml"_qs << true;
+    QTest::addRow("moveRegVoid") << u"moveRegVoid.qml"_qs << true;
 }
 
 void tst_QmlCppCodegen::interestingFiles()
@@ -1751,6 +1762,146 @@ void tst_QmlCppCodegen::notEqualsInt()
     QCOMPARE(t->property("text").toString(), u"Foo"_qs);
     QMetaObject::invokeMethod(o.data(), "foo");
     QCOMPARE(t->property("text").toString(), u"Bar"_qs);
+}
+
+void tst_QmlCppCodegen::infinities()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/infinities.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->property("positiveInfinity").toDouble(), std::numeric_limits<double>::infinity());
+    QCOMPARE(o->property("negativeInfinity").toDouble(), -std::numeric_limits<double>::infinity());
+
+    const double positiveZero = o->property("positiveZero").toDouble();
+    QCOMPARE(positiveZero, 0.0);
+    QVERIFY(!std::signbit(positiveZero));
+
+    const double negativeZero = o->property("negativeZero").toDouble();
+    QCOMPARE(negativeZero, -0.0);
+    QVERIFY(std::signbit(negativeZero));
+
+    QVERIFY(qIsNaN(o->property("naN").toDouble()));
+}
+
+void tst_QmlCppCodegen::blockComments()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/blockComments.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(o->property("implicitHeight").toDouble(), 8.0);
+}
+
+void tst_QmlCppCodegen::functionLookup()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/functionLookup.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    const QVariant foo = o->property("bar");
+    QCOMPARE(foo.metaType(), QMetaType::fromType<QJSValue>());
+    const QJSManagedValue method(engine.toScriptValue(foo), &engine);
+    QVERIFY(method.isFunction());
+    const QJSValue result = method.call();
+    QVERIFY(result.isString());
+    QCOMPARE(result.toString(), QStringLiteral("a99"));
+}
+
+void tst_QmlCppCodegen::objectInVar()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/objectInVar.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+    QCOMPARE(qvariant_cast<QObject*>(o->property("thing")), o.data());
+
+    bool result = false;
+    QVERIFY(QMetaObject::invokeMethod(o.data(), "doThing", Q_RETURN_ARG(bool, result)));
+    QVERIFY(result);
+
+    o->setProperty("thing", QVariant::fromValue<std::nullptr_t>(nullptr));
+    QVERIFY(QMetaObject::invokeMethod(o.data(), "doThing", Q_RETURN_ARG(bool, result)));
+    QVERIFY(!result);
+}
+
+void tst_QmlCppCodegen::functionTakingVar()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/TestTypes/functionTakingVar.qml"_qs);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QVERIFY(!o->property("c").isValid());
+
+    int value = 11;
+    QQmlEnginePrivate *e = QQmlEnginePrivate::get(&engine);
+    void *args[] = { nullptr, reinterpret_cast<void *>(std::addressof(value)) };
+    QMetaType types[] = { QMetaType::fromType<void>(), QMetaType::fromType<std::decay_t<int>>() };
+    e->executeRuntimeFunction(document, 0, o.data(), 1, args, types);
+
+    QCOMPARE(o->property("c"), QVariant::fromValue<int>(11));
+}
+
+void tst_QmlCppCodegen::testIsnan()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/TestTypes/isnan.qml"_qs);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->property("good").toDouble(), 10.1);
+    QVERIFY(qIsNaN(o->property("bad").toDouble()));
+
+    const QVariant a = o->property("a");
+    QCOMPARE(a.metaType(), QMetaType::fromType<bool>());
+    QVERIFY(!a.toBool());
+
+    const QVariant b = o->property("b");
+    QCOMPARE(b.metaType(), QMetaType::fromType<bool>());
+    QVERIFY(b.toBool());
+}
+
+void tst_QmlCppCodegen::fallbackLookups()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/TestTypes/fallbacklookups.qml"_qs);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->objectName(), QString());
+    int result = 0;
+
+    QMetaObject::invokeMethod(o.data(), "withContext", Q_RETURN_ARG(int, result));
+    QCOMPARE(result, 16);
+    QCOMPARE(o->objectName(), QStringLiteral("aa93"));
+
+    QMetaObject::invokeMethod(o.data(), "withId", Q_RETURN_ARG(int, result));
+    QCOMPARE(result, 17);
+    QCOMPARE(o->objectName(), QStringLiteral("bb94"));
+
+    QObject *singleton = nullptr;
+    QMetaObject::invokeMethod(o.data(), "getSingleton", Q_RETURN_ARG(QObject*, singleton));
+    QVERIFY(singleton);
+
+    QMetaObject::invokeMethod(o.data(), "withSingleton", Q_RETURN_ARG(int, result));
+    QCOMPARE(result, 18);
+    QCOMPARE(singleton->objectName(), QStringLiteral("cc95"));
+
+    QMetaObject::invokeMethod(o.data(), "withProperty", Q_RETURN_ARG(int, result));
+    QCOMPARE(result, 19);
+    QCOMPARE(singleton->objectName(), QStringLiteral("dd96"));
 }
 
 void tst_QmlCppCodegen::runInterpreted()

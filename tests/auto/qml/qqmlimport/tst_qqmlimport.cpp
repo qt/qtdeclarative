@@ -35,6 +35,7 @@
 #include <private/qqmlimport_p.h>
 #include <private/qqmlengine_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
+#include <QQmlComponent>
 
 class tst_QQmlImport : public QQmlDataTest
 {
@@ -59,6 +60,8 @@ private slots:
     void cleanup();
     void envResourceImportPath();
     void preferResourcePath();
+    void invalidFileImport_data();
+    void invalidFileImport();
 };
 
 void tst_QQmlImport::cleanup()
@@ -102,6 +105,36 @@ void tst_QQmlImport::preferResourcePath()
     QVERIFY2(component.isReady(), component.errorString().toUtf8());
     QScopedPointer<QObject> o(component.create());
     QCOMPARE(o->objectName(), "right");
+}
+
+void tst_QQmlImport::invalidFileImport_data()
+{
+    QTest::addColumn<QString>("file");
+    QTest::addColumn<QString>("import");
+    QTest::addRow("file absolute")
+            << QStringLiteral("absoluteImport.qml")
+            << QStringLiteral("/foo/bar/baz");
+    QTest::addRow("resource absolute")
+            << QStringLiteral("absoluteResourceImport.qml")
+            << QStringLiteral(":/absolute/resource/path");
+    QTest::addRow("resource relative")
+            << QStringLiteral("relativeResourceImport.qml")
+            << QStringLiteral(":relative/resource/path");
+}
+
+void tst_QQmlImport::invalidFileImport()
+{
+    QFETCH(QString, file);
+    QFETCH(QString, import);
+
+    QQmlEngine engine;
+
+    QQmlComponent component(&engine, testFileUrl(file));
+    QVERIFY(component.isError());
+    QVERIFY(component.errorString().contains(
+                QStringLiteral("\"%1\" is not a valid import URL. "
+                               "You can pass relative paths or URLs with schema, "
+                               "but not absolute paths or resource paths.").arg(import)));
 }
 
 void tst_QQmlImport::testDesignerSupported()

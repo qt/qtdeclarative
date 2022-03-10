@@ -46,13 +46,8 @@ function(_qt_internal_generate_android_qml_deployment_settings out_var target)
         ${target} "_qt_android_native_qml_root_paths")
 
     # Override qmlimportscanner binary path
-    set(qml_importscanner_binary_path "${QT_HOST_PATH}/${QT6_HOST_INFO_LIBEXECDIR}/qmlimportscanner")
-    if (WIN32)
-        string(APPEND qml_importscanner_binary_path ".exe")
-    endif()
-    file(TO_CMAKE_PATH "${qml_importscanner_binary_path}" qml_importscanner_binary_path_native)
-    string(APPEND ${out_var}
-        "   \"qml-importscanner-binary\" : \"${qml_importscanner_binary_path_native}\",\n")
+    _qt_internal_add_tool_to_android_deployment_settings(${out_var} qmlimportscanner
+        "qml-importscanner-binary" ${target})
 
     set(${out_var} "${${out_var}}" PARENT_SCOPE)
 endfunction()

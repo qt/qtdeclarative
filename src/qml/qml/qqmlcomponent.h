@@ -40,6 +40,9 @@
 #ifndef QQMLCOMPONENT_H
 #define QQMLCOMPONENT_H
 
+#include <QtCore/qvariant.h>
+#include <QtCore/qmap.h>
+
 #include <QtQml/qqml.h>
 #include <QtQml/qqmlerror.h>
 

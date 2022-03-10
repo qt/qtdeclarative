@@ -1028,9 +1028,6 @@ static inline QByteArray msgNotLessThan(int n1, int n2)
 
 void tst_qquicktext::hAlignImplicitWidth()
 {
-#ifdef Q_OS_MACOS
-    QSKIP("this test currently crashes on MacOS. See QTBUG-68047");
-#endif
     QQuickView view(testFileUrl("hAlignImplicitWidth.qml"));
     view.setFlags(view.flags() | Qt::WindowStaysOnTopHint); // Prevent being obscured by other windows.
     view.show();
@@ -1054,9 +1051,8 @@ void tst_qquicktext::hAlignImplicitWidth()
     const int centeredSection3End = centeredSection3 + sectionWidth;
 
     {
-        if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-            || (QGuiApplication::platformName() == QLatin1String("minimal")))
-            QSKIP("Skipping due to grabWindow not functional on offscreen/minimal platforms");
+        if (QGuiApplication::platformName() == QLatin1String("minimal"))
+            QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
         // Left Align
         QImage image = view.grabWindow();
@@ -4049,7 +4045,11 @@ static qreal expectedBaselineScaled(QQuickText *item)
 {
     QFont font = item->font();
     QTextLayout layout(item->text().replace(QLatin1Char('\n'), QChar::LineSeparator));
-    do {
+
+    qreal low = 0;
+    qreal high = 10000;
+
+    while (low < high) {
         layout.setFont(font);
         qreal width = 0;
         layout.beginLayout();
@@ -4059,12 +4059,23 @@ static qreal expectedBaselineScaled(QQuickText *item)
         }
         layout.endLayout();
 
-        if (width < item->width()) {
-            QFontMetricsF fm(layout.font());
-            return fm.ascent() + item->topPadding();
+        if (width > item->width()) {
+            high = font.pointSizeF();
+            font.setPointSizeF((high + low) / 2);
+        } else {
+            low = font.pointSizeF();
+
+            // When fontSizeMode != FixedSize, the font size will be scaled to a value
+            // The goal is to find a pointSize that uses as much space as possible while
+            // still fitting inside the available space. 0.01 is chosen as the threshold.
+            if ((high - low) < qreal(0.01)) {
+                QFontMetricsF fm(layout.font());
+                return fm.ascent() + item->topPadding();
+            }
+
+            font.setPointSizeF((high + low) / 2);
         }
-        font.setPointSize(font.pointSize() - 1);
-    } while (font.pointSize() > 0);
+    }
     return item->topPadding();
 }
 
@@ -4682,9 +4693,8 @@ void tst_qquicktext::verticallyAlignedImageInTable()
 
 void tst_qquicktext::transparentBackground()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabToImage not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("transparentBackground.qml"));
@@ -4703,9 +4713,8 @@ void tst_qquicktext::transparentBackground()
 
 void tst_qquicktext::displaySuperscriptedTag()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabToImage not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabWindow not functional on minimal platforms");
 
     QScopedPointer<QQuickView> window(new QQuickView);
     window->setSource(testFileUrl("displaySuperscriptedTag.qml"));

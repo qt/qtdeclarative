@@ -165,10 +165,12 @@ static const QQuickItemPrivate::ChangeTypes verticalChangeTypes = changeTypes | 
 QQuickScrollBarPrivate::VisualArea QQuickScrollBarPrivate::visualArea() const
 {
     qreal visualPos = position;
-    if (minimumSize > size)
+
+    if (minimumSize > size && size != 1.0)
         visualPos = position / (1.0 - size) * (1.0 - minimumSize);
 
-    qreal visualSize = qBound<qreal>(0, qMax(size, minimumSize) + qMin<qreal>(0, visualPos), 1.0 - visualPos);
+    qreal visualSize = qBound<qreal>(0, qMax(size, minimumSize) + qMin<qreal>(0, visualPos),
+                                     qMax(0.0, 1.0 - visualPos));
 
     visualPos = qBound<qreal>(0, visualPos, qMax<qreal>(0, 1.0 - visualSize));
 
@@ -177,7 +179,7 @@ QQuickScrollBarPrivate::VisualArea QQuickScrollBarPrivate::visualArea() const
 
 qreal QQuickScrollBarPrivate::logicalPosition(qreal position) const
 {
-    if (minimumSize > size)
+    if (minimumSize > size && minimumSize != 1.0)
         return position * (1.0 - size) / (1.0 - minimumSize);
     return position;
 }
@@ -433,11 +435,11 @@ qreal QQuickScrollBar::size() const
 void QQuickScrollBar::setSize(qreal size)
 {
     Q_D(QQuickScrollBar);
-    if (qFuzzyCompare(d->size, size))
+    if (!qt_is_finite(size) || qFuzzyCompare(d->size, size))
         return;
 
     auto oldVisualArea = d->visualArea();
-    d->size = size;
+    d->size = qBound(0.0, size, 1.0);
     if (isComponentComplete())
         d->resizeContent();
     emit sizeChanged();
@@ -465,7 +467,7 @@ qreal QQuickScrollBar::position() const
 void QQuickScrollBar::setPosition(qreal position)
 {
     Q_D(QQuickScrollBar);
-    if (qFuzzyCompare(d->position, position))
+    if (!qt_is_finite(position) || qFuzzyCompare(d->position, position))
         return;
 
     auto oldVisualArea = d->visualArea();
@@ -492,7 +494,7 @@ qreal QQuickScrollBar::stepSize() const
 void QQuickScrollBar::setStepSize(qreal step)
 {
     Q_D(QQuickScrollBar);
-    if (qFuzzyCompare(d->stepSize, step))
+    if (!qt_is_finite(step) || qFuzzyCompare(d->stepSize, step))
         return;
 
     d->stepSize = step;
@@ -736,11 +738,11 @@ qreal QQuickScrollBar::minimumSize() const
 void QQuickScrollBar::setMinimumSize(qreal minimumSize)
 {
     Q_D(QQuickScrollBar);
-    if (qFuzzyCompare(d->minimumSize, minimumSize))
+    if (!qt_is_finite(minimumSize) || qFuzzyCompare(d->minimumSize, minimumSize))
         return;
 
     auto oldVisualArea = d->visualArea();
-    d->minimumSize = minimumSize;
+    d->minimumSize = qBound(0.0, minimumSize, 1.0);
     if (isComponentComplete())
         d->resizeContent();
     emit minimumSizeChanged();

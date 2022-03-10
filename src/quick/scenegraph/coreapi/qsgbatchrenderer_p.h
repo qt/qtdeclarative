@@ -640,6 +640,7 @@ struct GraphicsState
     int sampleCount = 1;
     QSGGeometry::DrawingMode drawMode = QSGGeometry::DrawTriangles;
     float lineWidth = 1.0f;
+    QRhiGraphicsPipeline::PolygonMode polygonMode = QRhiGraphicsPipeline::Fill;
 };
 
 bool operator==(const GraphicsState &a, const GraphicsState &b) noexcept;

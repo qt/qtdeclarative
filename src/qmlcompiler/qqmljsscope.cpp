@@ -103,6 +103,15 @@ QQmlJSScope::Ptr QQmlJSScope::create(ScopeType type, const QQmlJSScope::Ptr &par
     return childScope;
 }
 
+QQmlJSScope::Ptr QQmlJSScope::clone(const ConstPtr &origin)
+{
+    if (origin.isNull())
+        return QQmlJSScope::Ptr();
+    QQmlJSScope::Ptr cloned = create(origin->m_scopeType, origin->m_parentScope);
+    *cloned = *origin;
+    return cloned;
+}
+
 void QQmlJSScope::insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier)
 {
     Q_ASSERT(m_scopeType != QQmlJSScope::QMLScope);
@@ -437,11 +446,11 @@ void QQmlJSScope::resolveNonEnumTypes(
 
 void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self, const QQmlJSScope::ConstPtr &intType)
 {
-    Q_ASSERT(intType); // There always has to be a builtin "int" type
     for (auto it = self->m_enumerations.begin(), end = self->m_enumerations.end(); it != end;
          ++it) {
         if (it->type())
             continue;
+        Q_ASSERT(intType); // We need an "int" type to resolve enums
         auto enumScope = QQmlJSScope::create(EnumScope, self);
         enumScope->m_baseTypeName = QStringLiteral("int");
         enumScope->m_baseType.scope = intType;

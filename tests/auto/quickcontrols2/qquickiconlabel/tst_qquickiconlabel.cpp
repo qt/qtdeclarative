@@ -30,6 +30,7 @@
 
 #include <qtest.h>
 
+#include <QtQml/QQmlComponent>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitemgrabresult.h>
@@ -37,6 +38,7 @@
 #include <QtQuick/private/qquickimage_p_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/visualtestutils_p.h>
+#include <QtQuickTemplates2/private/qquickabstractbutton_p.h>
 #include <QtQuickTemplates2/private/qquickicon_p.h>
 #include <QtQuickControls2Impl/private/qquickiconimage_p.h>
 #include <QtQuickControls2Impl/private/qquickiconlabel_p.h>
@@ -303,9 +305,6 @@ void tst_qquickiconlabel::emptyIconSource()
 
 void tst_qquickiconlabel::colorChanges()
 {
-    if (QGuiApplication::platformName() == QLatin1String("offscreen"))
-        QSKIP("grabToImage() doesn't work on the \"offscreen\" platform plugin (QTBUG-63185)");
-
     QQuickView view(testFileUrl("colorChanges.qml"));
     QCOMPARE(view.status(), QQuickView::Ready);
     view.show();
@@ -345,7 +344,13 @@ void tst_qquickiconlabel::iconSourceContext()
     for (QQuickItem *child : root->childItems()) {
         QQuickImage *image = qobject_cast<QQuickImage *>(child);
         if (!image) {
-            if (QQuickIconLabel *label = qobject_cast<QQuickIconLabel *>(child)) {
+            QQuickIconLabel *label = nullptr;
+            if (QQuickAbstractButton *button = qobject_cast<QQuickAbstractButton *>(child)) {
+                label = qobject_cast<QQuickIconLabel *>(button->contentItem());
+            } else {
+                label = qobject_cast<QQuickIconLabel *>(child);
+            }
+            if (label) {
                 QQuickIconLabelPrivate *labelPrivate = static_cast<QQuickIconLabelPrivate *>(
                             QQuickItemPrivate::get(label));
                 image = labelPrivate->image;

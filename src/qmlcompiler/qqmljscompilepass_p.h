@@ -46,6 +46,7 @@
 #include <private/qqmljstyperesolver_p.h>
 #include <private/qv4bytecodehandler_p.h>
 #include <private/qv4compiler_p.h>
+#include <private/qflatmap_p.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -54,6 +55,7 @@ class QQmlJSCompilePass : public QV4::Moth::ByteCodeHandler
     Q_DISABLE_COPY_MOVE(QQmlJSCompilePass)
 public:
     enum RegisterShortcuts {
+        InvalidRegister = -1,
         Accumulator = QV4::CallData::Accumulator,
         FirstArgument = QV4::CallData::OffsetCount
     };
@@ -61,20 +63,28 @@ public:
     using SourceLocationTable = QV4::Compiler::Context::SourceLocationTable;
 
     // map from register index to expected type
-    using VirtualRegisters = QHash<int, QQmlJSRegisterContent>;
+    using VirtualRegisters = QFlatMap<int, QQmlJSRegisterContent>;
 
     struct InstructionAnnotation
     {
-        VirtualRegisters registers;
-        VirtualRegisters expectedTargetTypesBeforeJump;
+        // Registers explicit read as part of the instruction.
+        VirtualRegisters readRegisters;
+
+        // Registers that have to be converted for future instructions after a jump.
+        VirtualRegisters typeConversions;
+
+        QQmlJSRegisterContent changedRegister;
+        int changedRegisterIndex = InvalidRegister;
+        bool hasSideEffects = false;
+        bool isRename = false;
     };
 
-    using InstructionAnnotations = QHash<int, InstructionAnnotation>;
+    using InstructionAnnotations = QFlatMap<int, InstructionAnnotation>;
 
     struct Function
     {
         QQmlJSScopesById addressableScopes;
-        QList<QQmlJSScope::ConstPtr> argumentTypes;
+        QList<QQmlJSRegisterContent> argumentTypes;
         QQmlJSScope::ConstPtr returnType;
         QQmlJSScope::ConstPtr qmlScope;
         QByteArray code;
@@ -86,8 +96,80 @@ public:
     struct State
     {
         VirtualRegisters registers;
-        QQmlJSRegisterContent accumulatorIn;
-        QQmlJSRegisterContent accumulatorOut;
+
+        const QQmlJSRegisterContent &accumulatorIn() const
+        {
+            auto it = registers.find(Accumulator);
+            Q_ASSERT(it != registers.end());
+            return it.value();
+        };
+
+        const QQmlJSRegisterContent &accumulatorOut() const
+        {
+            Q_ASSERT(m_changedRegisterIndex == Accumulator);
+            return m_changedRegister;
+        };
+
+        void setRegister(int registerIndex, QQmlJSRegisterContent content)
+        {
+            m_changedRegister = std::move(content);
+            m_changedRegisterIndex = registerIndex;
+        }
+
+        void clearChangedRegister()
+        {
+            m_changedRegisterIndex = InvalidRegister;
+            m_changedRegister = QQmlJSRegisterContent();
+        }
+
+        int changedRegisterIndex() const { return m_changedRegisterIndex; }
+        const QQmlJSRegisterContent &changedRegister() const { return m_changedRegister; }
+
+        void addReadRegister(int registerIndex, const QQmlJSRegisterContent &reg)
+        {
+            Q_ASSERT(reg.isConversion());
+            m_readRegisters[registerIndex] = reg;
+        }
+
+        void addReadAccumulator(const QQmlJSRegisterContent &reg)
+        {
+            addReadRegister(Accumulator, reg);
+        }
+
+        VirtualRegisters takeReadRegisters() const { return std::move(m_readRegisters); }
+        void setReadRegisters(VirtualRegisters readReagisters)
+        {
+            m_readRegisters = std::move(readReagisters);
+        }
+
+        QQmlJSRegisterContent readRegister(int registerIndex) const
+        {
+            Q_ASSERT(m_readRegisters.contains(registerIndex));
+            return m_readRegisters[registerIndex];
+        }
+
+        QQmlJSRegisterContent readAccumulator() const
+        {
+            return readRegister(Accumulator);
+        }
+
+        bool readsRegister(int registerIndex) const
+        {
+            return m_readRegisters.contains(registerIndex);
+        }
+
+        bool hasSideEffects() const { return m_hasSideEffects; }
+        void setHasSideEffects(bool hasSideEffects) { m_hasSideEffects = hasSideEffects; }
+
+        bool isRename() const { return m_isRename; }
+        void setIsRename(bool isRename) { m_isRename = isRename; }
+
+    private:
+        VirtualRegisters m_readRegisters;
+        QQmlJSRegisterContent m_changedRegister;
+        int m_changedRegisterIndex = InvalidRegister;
+        bool m_hasSideEffects = false;
+        bool m_isRename = false;
     };
 
     QQmlJSCompilePass(const QV4::Compiler::JSUnitGenerator *jsUnitGenerator,
@@ -105,12 +187,12 @@ protected:
     const Function *m_function = nullptr;
     QQmlJS::DiagnosticMessage *m_error = nullptr;
 
-    State initialState(const Function *function, const QQmlJSTypeResolver *resolver)
+    State initialState(const Function *function)
     {
         State state;
         for (int i = 0; i < function->argumentTypes.count(); ++i) {
-            state.registers[FirstArgument + i]
-                    = resolver->globalType(function->argumentTypes.at(i));
+            state.registers[FirstArgument + i] = function->argumentTypes.at(i);
+            Q_ASSERT(state.registers[FirstArgument + i].isValid());
         }
         return state;
     }
@@ -120,23 +202,29 @@ protected:
     {
         State newState;
 
+        const auto instruction = annotations.find(currentInstructionOffset());
+        newState.registers = oldState.registers;
+
         // Usually the initial accumulator type is the output of the previous instruction, but ...
-        newState.accumulatorIn = oldState.accumulatorOut;
+        if (oldState.changedRegisterIndex() != InvalidRegister)
+            newState.registers[oldState.changedRegisterIndex()] = oldState.changedRegister();
 
-        const auto instruction = annotations.constFind(currentInstructionOffset());
-        if (instruction != annotations.constEnd()) {
-            const auto target = instruction->expectedTargetTypesBeforeJump.constFind(Accumulator);
-            if (target != instruction->expectedTargetTypesBeforeJump.constEnd()) {
-                // ... the initial type of the accumulator is given in expectedTargetTypesBeforeJump
-                // if the current instruction can be jumped to.
-                newState.accumulatorIn = *target;
-            }
+        if (instruction == annotations.constEnd())
+            return newState;
 
-            newState.registers = instruction->registers;
-            newState.accumulatorOut = instruction->registers[Accumulator];
-        } else {
-            newState.registers = VirtualRegisters();
-            newState.accumulatorOut = QQmlJSRegisterContent();
+        newState.setHasSideEffects(instruction->second.hasSideEffects);
+        newState.setReadRegisters(instruction->second.readRegisters);
+        newState.setIsRename(instruction->second.isRename);
+
+        for (auto it = instruction->second.typeConversions.begin(),
+             end = instruction->second.typeConversions.end(); it != end; ++it) {
+            Q_ASSERT(it.key() != InvalidRegister);
+            newState.registers[it.key()] = it.value();
+        }
+
+        if (instruction->second.changedRegisterIndex != InvalidRegister) {
+            newState.setRegister(instruction->second.changedRegisterIndex,
+                                 instruction->second.changedRegister);
         }
 
         return newState;

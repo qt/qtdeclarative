@@ -51,6 +51,7 @@
 #  include <QtGui/private/qshortcutmap_p.h>
 #endif
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtGui/qpa/qplatformtheme.h>
 #include <QtQuick/private/qquickevents_p_p.h>
 #include <QtQml/qqmllist.h>
 
@@ -235,7 +236,8 @@ void QQuickAbstractButtonPrivate::handleUngrab()
 
 bool QQuickAbstractButtonPrivate::acceptKeyClick(Qt::Key key) const
 {
-    return key == Qt::Key_Space;
+    const auto buttonPressKeys = QGuiApplicationPrivate::platformTheme()->themeHint(QPlatformTheme::ButtonPressKeys).value<QList<Qt::Key>>();
+    return buttonPressKeys.contains(key);
 }
 
 bool QQuickAbstractButtonPrivate::isPressAndHoldConnected()
@@ -820,7 +822,7 @@ void QQuickAbstractButton::setIcon(const QQuickIcon &icon)
 {
     Q_D(QQuickAbstractButton);
     d->icon = icon;
-    d->icon.setOwner(this);
+    d->icon.ensureRelativeSourceResolved(this);
     d->updateEffectiveIcon();
 }
 

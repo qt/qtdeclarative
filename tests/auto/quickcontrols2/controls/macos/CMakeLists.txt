@@ -17,3 +17,13 @@ qt_internal_add_test(tst_macos
     TESTDATA ${test_data}
 )
 
+# Make the QML files available to Creator's locator.
+target_sources(tst_macos
+    PRIVATE
+        ${test_data}
+)
+
+set_source_files_properties(${test_data}
+    PROPERTIES
+        HEADER_FILE_ONLY ON
+)

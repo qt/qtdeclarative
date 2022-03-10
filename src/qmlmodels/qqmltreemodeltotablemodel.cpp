@@ -517,6 +517,32 @@ void QQmlTreeModelToTableModel::expandRow(int n)
     expandPendingRows();
 }
 
+void QQmlTreeModelToTableModel::expandRecursively(int row, int depth)
+{
+    Q_ASSERT(depth == -1 || depth > 0);
+    const int startDepth = depthAtRow(row);
+
+    auto expandHelp = [=] (const auto expandHelp, const QModelIndex &index) -> void {
+        const int rowToExpand = itemIndex(index);
+        if (!m_expandedItems.contains(index))
+            expandRow(rowToExpand);
+
+        if (depth != -1 && depthAtRow(rowToExpand) == startDepth + depth - 1)
+            return;
+
+        const int childCount = m_model->rowCount(index);
+        for (int childRow = 0; childRow < childCount; ++childRow) {
+            const QModelIndex childIndex = m_model->index(childRow, 0, index);
+            if (m_model->hasChildren(childIndex))
+                expandHelp(expandHelp, childIndex);
+        }
+    };
+
+    const QModelIndex index = m_items[row].index;
+    if (index.isValid())
+        expandHelp(expandHelp, index);
+}
+
 void QQmlTreeModelToTableModel::expandPendingRows(bool doInsertRows)
 {
     while (!m_itemsToExpand.isEmpty()) {
@@ -535,6 +561,30 @@ void QQmlTreeModelToTableModel::expandPendingRows(bool doInsertRows)
         // pair per expansion (same as we do for collapsing).
         showModelChildItems(item, 0, childrenCount - 1, doInsertRows, false);
     }
+}
+
+void QQmlTreeModelToTableModel::collapseRecursively(int row)
+{
+    auto collapseHelp = [=] (const auto collapseHelp, const QModelIndex &index) -> void {
+        if (m_expandedItems.contains(index)) {
+            const int rowToCollapse = itemIndex(index);
+            if (rowToCollapse != -1)
+                collapseRow(rowToCollapse);
+            else
+                m_expandedItems.remove(index);
+        }
+
+        const int childCount = m_model->rowCount(index);
+        for (int childRow = 0; childRow < childCount; ++childRow) {
+            const QModelIndex childIndex = m_model->index(childRow, 0, index);
+            if (m_model->hasChildren(childIndex))
+                collapseHelp(collapseHelp, childIndex);
+        }
+    };
+
+    const QModelIndex index = m_items[row].index;
+    if (index.isValid())
+        collapseHelp(collapseHelp, index);
 }
 
 void QQmlTreeModelToTableModel::collapseRow(int n)
@@ -558,8 +608,13 @@ void QQmlTreeModelToTableModel::collapseRow(int n)
     removeVisibleRows(n + 1, lastIndex);
 }
 
-int QQmlTreeModelToTableModel::lastChildIndex(const QModelIndex &index)
+int QQmlTreeModelToTableModel::lastChildIndex(const QModelIndex &index) const
 {
+    // The purpose of this function is to return the row of the last decendant of a node N.
+    // But note: index should point to the last child of N, and not N itself!
+    // This means that if index is not expanded, the last child will simply be index itself.
+    // Otherwise, since the tree underneath index can be of any depth, it will instead find
+    // the first sibling of N, get its table row, and simply return the row above.
     if (!m_expandedItems.contains(index))
         return itemIndex(index);
 

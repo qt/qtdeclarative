@@ -69,6 +69,8 @@ private slots:
     void newArray_HooliganTask233836();
     void toScriptValueBuiltin_data();
     void toScriptValueBuiltin();
+    void toScriptValueQmlBuiltin_data();
+    void toScriptValueQmlBuiltin();
     void toScriptValueQtQml_data();
     void toScriptValueQtQml();
     void toScriptValuenotroundtripped_data();
@@ -580,6 +582,36 @@ void tst_QJSEngine::toScriptValueBuiltin()
     QCOMPARE(input, output);
 }
 
+void tst_QJSEngine::toScriptValueQmlBuiltin_data()
+{
+    QTest::addColumn<QVariant>("input");
+
+    QTest::newRow("QList<QVariant>") << QVariant(QList<QVariant>{true, 5, 13.2f, 42.24, QString("world"), QUrl("htt://a.com"), QDateTime::currentDateTime(), QRegularExpression("a*b*c"), QByteArray("hello")});
+    QTest::newRow("QList<bool>") << QVariant::fromValue(QList<bool>{true, false, true, false});
+    QTest::newRow("QList<int>") << QVariant::fromValue(QList<int>{1, 2, 3, 4});
+    QTest::newRow("QList<float>") << QVariant::fromValue(QList<float>{1.1f, 2.2f, 3.3f, 4.4f});
+    QTest::newRow("QList<double>") << QVariant::fromValue(QList<double>{1.1, 2.2, 3.3, 4.4});
+    QTest::newRow("QList<QString>") << QVariant::fromValue(QList<QString>{"a", "b", "c", "d"});
+    QTest::newRow("QList<QUrl>") << QVariant::fromValue(QList<QUrl>{QUrl("htt://a.com"), QUrl("file:///tmp/b/"), QUrl("c.foo"), QUrl("/some/d")});
+    QTest::newRow("QList<QDateTime>") << QVariant::fromValue(QList<QDateTime>{QDateTime::currentDateTime(), QDateTime::fromMSecsSinceEpoch(300), QDateTime()});
+    QTest::newRow("QList<QRegularExpression>") << QVariant::fromValue(QList<QRegularExpression>{QRegularExpression("abcd"), QRegularExpression("a[b|c]d$"), QRegularExpression("a*b*d")});
+    QTest::newRow("QList<QByteArray>") << QVariant::fromValue(QList<QByteArray>{QByteArray("aaa"), QByteArray("bbb"), QByteArray("ccc")});
+}
+
+void tst_QJSEngine::toScriptValueQmlBuiltin()
+{
+    QFETCH(QVariant, input);
+
+    // We need the type registrations in QQmlEngine::init() for this.
+    QQmlEngine engine;
+
+    QJSValue outputJS = engine.toScriptValue(input);
+    QVariant output = engine.fromScriptValue<QVariant>(outputJS);
+
+    QVERIFY(output.convert(input.metaType()));
+    QCOMPARE(input, output);
+}
+
 void tst_QJSEngine::toScriptValueQtQml_data()
 {
     QTest::addColumn<QVariant>("input");
@@ -592,10 +624,6 @@ void tst_QJSEngine::toScriptValueQtQml_data()
     QTest::newRow("std::vector<QString>") << QVariant::fromValue(std::vector<QString>{"a", "b", "c", "d"});
     QTest::newRow("std::vector<QUrl>") << QVariant::fromValue(std::vector<QUrl>{QUrl("htt://a.com"), QUrl("file:///tmp/b/"), QUrl("c.foo"), QUrl("/some/d")});
 
-    QTest::newRow("QList<int>") << QVariant::fromValue(QList<int>{1, 2, 3, 4});
-    QTest::newRow("QList<bool>") << QVariant::fromValue(QList<bool>{true, false, true, false});
-    QTest::newRow("QStringList") << QVariant::fromValue(QStringList{"a", "b", "c", "d"});
-    QTest::newRow("QList<QUrl>") << QVariant::fromValue(QList<QUrl>{QUrl("htt://a.com"), QUrl("file:///tmp/b/"), QUrl("c.foo"), QUrl("/some/d")});
     QTest::newRow("QList<QPoint>") << QVariant::fromValue(QList<QPointF>() << QPointF(42.24, 24.42) << QPointF(42.24, 24.42));
 
     static const QStandardItemModel model(4, 4);
@@ -5325,7 +5353,7 @@ void tst_QJSEngine::typedArraySet()
     QJSEngine engine;
     const auto value = engine.evaluate(
         "(function() {"
-        "   var length = 0xffffffe;"
+        "   var length = 0xfffffe0;"
         "   var offset = 0xfffffff0;"
         "   var e1;"
         "   var e2;"

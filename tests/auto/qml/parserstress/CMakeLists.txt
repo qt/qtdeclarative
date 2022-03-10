@@ -18,8 +18,12 @@ qt_internal_add_test(tst_parserstress
         Qt::Gui
         Qt::GuiPrivate
         Qt::QmlPrivate
-    TESTDATA ${test_data}
+    TESTDATA ${test_data} "dummy_imports.qml"
 )
+
+if(QT_BUILD_STANDALONE_TESTS)
+    qt_import_qml_plugins(tst_parserstress)
+endif()
 
 ## Scopes:
 #####################################################################

@@ -36,6 +36,7 @@ macro(qt_internal_get_internal_add_qml_module_keywords
         IMPORTS
         IMPORT_PATH
         OPTIONAL_IMPORTS
+        DEFAULT_IMPORTS
         DEPENDENCIES
         PAST_MAJOR_VERSIONS
     )

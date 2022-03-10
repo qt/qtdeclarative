@@ -14,3 +14,7 @@ qt_internal_add_test(tst_core
         Qt::Qml
     TESTDATA ${test_data}
 )
+
+if(QT_BUILD_STANDALONE_TESTS)
+    qt_import_qml_plugins(tst_core)
+endif()

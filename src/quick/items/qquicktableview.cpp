@@ -556,8 +556,8 @@
 /*!
     \qmlmethod Point QtQuick::TableView::cellAtPos(point position, bool includeSpacing)
 
-    Returns the cell at the given \a position in the view. If no cell intersects with
-    \a position, the return value will be \c point(-1, -1).
+    Returns the cell at the given \a position in the view. If no \l {isRowLoaded()}{loaded}
+    cell intersects with \a position, the return value will be \c point(-1, -1).
 
     If \a includeSpacing is set to \c true, a cell's bounding box will be considered
     to include half the adjacent \l rowSpacing and \l columnSpacing on each side. The
@@ -643,6 +643,66 @@
 */
 
 /*!
+    \qmlmethod QModelIndex QtQuick::TableView::modelIndex(int row, int column)
+    \since 6.4
+
+    Returns the \l QModelIndex that maps to \a row and \a column in the view.
+
+    \a row and \a column should be the row and column in the view (table row and
+    table column), and not a row and column in the model.
+
+    \sa rowAtIndex(), columnAtIndex()
+*/
+
+/*!
+    \qmlmethod QModelIndex QtQuick::TableView::modelIndex(point cell)
+    \since 6.4
+
+    Convenience function for doing:
+    \code
+    modelIndex(cell.y, cell.x)
+    \endcode
+
+    A cell is simply a \l point that combines row and column into
+    a single type. Note that \c point.x will map to the column, and
+    \c point.y will map to the row.
+*/
+
+/*!
+    \qmlmethod int QtQuick::TableView::rowAtIndex(QModelIndex modelIndex)
+    \since 6.4
+
+    Returns the row in the view that maps to \a modelIndex in the model.
+
+    \sa columnAtIndex(), modelIndex()
+*/
+
+/*!
+    \qmlmethod int QtQuick::TableView::columnAtIndex(QModelIndex modelIndex)
+    \since 6.4
+
+    Returns the column in the view that maps to \a modelIndex in the model.
+
+    \sa rowAtIndex(), modelIndex()
+*/
+
+/*!
+    \qmlmethod point QtQuick::TableView::cellAtIndex(QModelIndex modelIndex)
+    \since 6.4
+
+    Returns the cell in the view that maps to \a modelIndex in the model.
+    Convenience function for doing:
+
+    \code
+    Qt.point(columnAtIndex(modelIndex), rowAtIndex(modelIndex))
+    \endcode
+
+    A cell is simply a \l point that combines row and column into
+    a single type. Note that \c point.x will map to the column, and
+    \c point.y will map to the row.
+*/
+
+/*!
     \qmlattachedproperty TableView QtQuick::TableView::view
 
     This attached property holds the view that manages the delegate instance.
@@ -688,10 +748,9 @@ Q_LOGGING_CATEGORY(lcTableViewDelegateLifecycle, "qt.quick.tableview.lifecycle")
 #define Q_TABLEVIEW_ASSERT(cond, output) Q_ASSERT((cond) || [&](){ dumpTable(); qWarning() << "output:" << output; return false;}())
 
 static const Qt::Edge allTableEdges[] = { Qt::LeftEdge, Qt::RightEdge, Qt::TopEdge, Qt::BottomEdge };
-static const int kEdgeIndexNotSet = -2;
-static const int kEdgeIndexAtEnd = -3;
 
-static const char* kRequiredProperty = "_qt_isrequiredpropery_selected";
+static const char* kRequiredProperties = "_qt_tableview_requiredpropertymask";
+static const char* kRequiredProperty_selected = "selected";
 
 const QPoint QQuickTableViewPrivate::kLeft = QPoint(-1, 0);
 const QPoint QQuickTableViewPrivate::kRight = QPoint(1, 0);
@@ -780,6 +839,40 @@ void QQuickTableViewPrivate::dumpTable() const
     const QString path = QDir::current().absoluteFilePath(filename);
     if (q_func()->window() && q_func()->window()->grabWindow().save(path))
         qWarning() << "Window capture saved to:" << path;
+}
+
+void QQuickTableViewPrivate::setRequiredProperty(const char *property,
+    const QVariant &value, int serializedModelIndex, QObject *object, bool init)
+{
+    if (!qobject_cast<QQmlTableInstanceModel *>(model)) {
+        // TableView only supports using required properties when backed by
+        // a QQmlTableInstanceModel. This is almost always the case, except
+        // if you assign it an ObjectModel or a DelegateModel (which are really
+        // not supported by TableView, it expects a QAIM).
+        return;
+    }
+
+    // Attaching a property list to the delegate item is just a
+    // work-around until QMetaProperty::isRequired() works (QTBUG-98846).
+    const QString propertyName = QString::fromUtf8(property);
+
+    if (init) {
+        const bool wasRequired = model->setRequiredProperty(serializedModelIndex, propertyName, value);
+        if (wasRequired) {
+            QStringList propertyList = object->property(kRequiredProperties).toStringList();
+            object->setProperty(kRequiredProperties, propertyList << propertyName);
+        }
+    } else {
+        const QStringList propertyList = object->property(kRequiredProperties).toStringList();
+        if (!propertyList.contains(propertyName)) {
+            // We only write to properties that are required
+            return;
+        }
+        const auto metaObject = object->metaObject();
+        const int propertyIndex = metaObject->indexOfProperty(property);
+        const auto metaProperty = metaObject->property(propertyIndex);
+        metaProperty.write(object, value);
+    }
 }
 
 QQuickItem *QQuickTableViewPrivate::selectionPointerHandlerTarget() const
@@ -993,7 +1086,7 @@ QSizeF QQuickTableViewPrivate::scrollTowardsSelectionPoint(const QPointF &pos, c
     const bool outsideBottom = pos.y() >= viewportRect.bottom() - 1;
 
     if (outsideLeft) {
-        const bool firstColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::LeftEdge) == kEdgeIndexAtEnd;
+        const bool firstColumnLoaded = atTableEnd(Qt::LeftEdge);
         const qreal remainingDist = viewportRect.left() - loadedTableOuterRect.left();
         if (remainingDist > 0 || !firstColumnLoaded) {
             qreal stepX = step.width();
@@ -1003,7 +1096,7 @@ QSizeF QQuickTableViewPrivate::scrollTowardsSelectionPoint(const QPointF &pos, c
             dist.setWidth(pos.x() - viewportRect.left() - 1);
         }
     } else if (outsideRight) {
-        const bool lastColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::RightEdge) == kEdgeIndexAtEnd;
+        const bool lastColumnLoaded = atTableEnd(Qt::RightEdge);
         const qreal remainingDist = loadedTableOuterRect.right() - viewportRect.right();
         if (remainingDist > 0 || !lastColumnLoaded) {
             qreal stepX = step.width();
@@ -1015,7 +1108,7 @@ QSizeF QQuickTableViewPrivate::scrollTowardsSelectionPoint(const QPointF &pos, c
     }
 
     if (outsideTop) {
-        const bool firstRowLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::TopEdge) == kEdgeIndexAtEnd;
+        const bool firstRowLoaded = atTableEnd(Qt::TopEdge);
         const qreal remainingDist = viewportRect.top() - loadedTableOuterRect.top();
         if (remainingDist > 0 || !firstRowLoaded) {
             qreal stepY = step.height();
@@ -1025,7 +1118,7 @@ QSizeF QQuickTableViewPrivate::scrollTowardsSelectionPoint(const QPointF &pos, c
             dist.setHeight(pos.y() - viewportRect.top() - 1);
         }
     } else if (outsideBottom) {
-        const bool lastRowLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::BottomEdge) == kEdgeIndexAtEnd;
+        const bool lastRowLoaded = atTableEnd(Qt::BottomEdge);
         const qreal remainingDist = loadedTableOuterRect.bottom() - viewportRect.bottom();
         if (remainingDist > 0 || !lastRowLoaded) {
             qreal stepY = step.height();
@@ -1081,14 +1174,13 @@ int QQuickTableViewPrivate::modelIndexToCellIndex(const QModelIndex &modelIndex)
 {
     // Convert QModelIndex to cell index. A cell index is just an
     // integer representation of a cell instead of using a QPoint.
-    if (modelIndex.parent().isValid()) {
-        // TableView only uses the root items of the model
+    const QPoint cell = q_func()->cellAtIndex(modelIndex);
+    if (!cellIsValid(cell))
         return -1;
-    }
-    return modelIndexAtCell(QPoint(modelIndex.column(), modelIndex.row()));
+    return modelIndexAtCell(cell);
 }
 
-int QQuickTableViewPrivate::edgeToArrayIndex(Qt::Edge edge)
+int QQuickTableViewPrivate::edgeToArrayIndex(Qt::Edge edge) const
 {
     return int(log2(float(edge)));
 }
@@ -1102,7 +1194,7 @@ void QQuickTableViewPrivate::clearEdgeSizeCache()
         cachedNextVisibleEdgeIndex[edgeToArrayIndex(edge)].startIndex = kEdgeIndexNotSet;
 }
 
-int QQuickTableViewPrivate::nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge)
+int QQuickTableViewPrivate::nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge) const
 {
     // Find the next column (or row) around the loaded table that is
     // visible, and should be loaded next if the content item moves.
@@ -1117,7 +1209,7 @@ int QQuickTableViewPrivate::nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge)
     return nextVisibleEdgeIndex(edge, startIndex);
 }
 
-int QQuickTableViewPrivate::nextVisibleEdgeIndex(Qt::Edge edge, int startIndex)
+int QQuickTableViewPrivate::nextVisibleEdgeIndex(Qt::Edge edge, int startIndex) const
 {
     // First check if we have already searched for the first visible index
     // after the given startIndex recently, and if so, return the cached result.
@@ -1198,28 +1290,6 @@ int QQuickTableViewPrivate::nextVisibleEdgeIndex(Qt::Edge edge, int startIndex)
     cachedResult.startIndex = startIndex;
     cachedResult.endIndex = foundIndex;
     return foundIndex;
-}
-
-bool QQuickTableViewPrivate::allColumnsLoaded()
-{
-    // Returns true if all the columns in the model (that are not
-    // hidden by the columnWidthProvider) are currently loaded and visible.
-    const bool firstColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::LeftEdge) == kEdgeIndexAtEnd;
-    if (!firstColumnLoaded)
-        return false;
-    bool lastColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::RightEdge) == kEdgeIndexAtEnd;
-    return lastColumnLoaded;
-}
-
-bool QQuickTableViewPrivate::allRowsLoaded()
-{
-    // Returns true if all the rows in the model (that are not hidden
-    // by the columnWidthProvider) are currently loaded and visible.
-    const bool firstColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::TopEdge) == kEdgeIndexAtEnd;
-    if (!firstColumnLoaded)
-        return false;
-    bool lastColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::BottomEdge) == kEdgeIndexAtEnd;
-    return lastColumnLoaded;
 }
 
 void QQuickTableViewPrivate::updateContentWidth()
@@ -1941,11 +2011,25 @@ qreal QQuickTableViewPrivate::getColumnLayoutWidth(int column)
     return columnWidth;
 }
 
+qreal QQuickTableViewPrivate::getEffectiveRowY(int row) const
+{
+    // Return y pos of row after layout
+    Q_TABLEVIEW_ASSERT(loadedRows.contains(row), row);
+    return loadedTableItem(QPoint(leftColumn(), row))->geometry().y();
+}
+
 qreal QQuickTableViewPrivate::getEffectiveRowHeight(int row) const
 {
     // Return row height after layout
     Q_TABLEVIEW_ASSERT(loadedRows.contains(row), row);
     return loadedTableItem(QPoint(leftColumn(), row))->geometry().height();
+}
+
+qreal QQuickTableViewPrivate::getEffectiveColumnX(int column) const
+{
+    // Return x pos of column after layout
+    Q_TABLEVIEW_ASSERT(loadedColumns.contains(column), column);
+    return loadedTableItem(QPoint(column, topRow()))->geometry().x();
 }
 
 qreal QQuickTableViewPrivate::getEffectiveColumnWidth(int column) const
@@ -1989,7 +2073,7 @@ qreal QQuickTableViewPrivate::getRowLayoutHeight(int row)
     return rowHeight;
 }
 
-qreal QQuickTableViewPrivate::getColumnWidth(int column)
+qreal QQuickTableViewPrivate::getColumnWidth(int column) const
 {
     // Return the width of the given column, if explicitly set. Return 0 if the column
     // is hidden, and -1 if the width is not set (which means that the width should
@@ -2030,7 +2114,7 @@ qreal QQuickTableViewPrivate::getColumnWidth(int column)
     return columnWidth;
 }
 
-qreal QQuickTableViewPrivate::getRowHeight(int row)
+qreal QQuickTableViewPrivate::getRowHeight(int row) const
 {
     // Return the height of the given row, if explicitly set. Return 0 if the row
     // is hidden, and -1 if the height is not set (which means that the height should
@@ -2071,14 +2155,14 @@ qreal QQuickTableViewPrivate::getRowHeight(int row)
     return rowHeight;
 }
 
-bool QQuickTableViewPrivate::isColumnHidden(int column)
+bool QQuickTableViewPrivate::isColumnHidden(int column) const
 {
     // A column is hidden if the width is explicit set to zero (either by
     // using a columnWidthProvider, or by overriding getColumnWidth()).
     return qFuzzyIsNull(getColumnWidth(column));
 }
 
-bool QQuickTableViewPrivate::isRowHidden(int row)
+bool QQuickTableViewPrivate::isRowHidden(int row) const
 {
     // A row is hidden if the height is explicit set to zero (either by
     // using a rowHeightProvider, or by overriding getRowHeight()).
@@ -2336,18 +2420,25 @@ void QQuickTableViewPrivate::processRebuildTable()
             return;
     }
 
+    if (rebuildState == RebuildState::CancelOvershoot) {
+        cancelOvershootAfterLayout();
+        loadAndUnloadVisibleEdges();
+        if (!moveToNextRebuildState())
+            return;
+    }
+
     const bool preload = (rebuildOptions & RebuildOption::All
                           && reusableFlag == QQmlTableInstanceModel::Reusable);
 
     if (rebuildState == RebuildState::PreloadColumns) {
-        if (preload && nextVisibleEdgeIndexAroundLoadedTable(Qt::RightEdge) != kEdgeIndexAtEnd)
+        if (preload && !atTableEnd(Qt::RightEdge))
             loadEdge(Qt::RightEdge, QQmlIncubator::AsynchronousIfNested);
         if (!moveToNextRebuildState())
             return;
     }
 
     if (rebuildState == RebuildState::PreloadRows) {
-        if (preload && nextVisibleEdgeIndexAroundLoadedTable(Qt::BottomEdge) != kEdgeIndexAtEnd)
+        if (preload && !atTableEnd(Qt::BottomEdge))
             loadEdge(Qt::BottomEdge, QQmlIncubator::AsynchronousIfNested);
         if (!moveToNextRebuildState())
             return;
@@ -2585,12 +2676,14 @@ void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
     relayoutTableItems();
     syncLoadedTableRectFromLoadedTable();
 
-    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentWidth) || allColumnsLoaded()) {
+    const bool allColumnsLoaded = atTableEnd(Qt::LeftEdge) && atTableEnd(Qt::RightEdge);
+    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentWidth) || allColumnsLoaded) {
         updateAverageColumnWidth();
         updateContentWidth();
     }
 
-    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentHeight) || allRowsLoaded()) {
+    const bool allRowsLoaded = atTableEnd(Qt::TopEdge) && atTableEnd(Qt::BottomEdge);
+    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentHeight) || allRowsLoaded) {
         updateAverageRowHeight();
         updateContentHeight();
     }
@@ -2670,6 +2763,32 @@ void QQuickTableViewPrivate::adjustViewportYAccordingToAlignment()
     syncViewportRect();
 }
 
+void QQuickTableViewPrivate::cancelOvershootAfterLayout()
+{
+    Q_Q(QQuickTableView);
+
+    // Note: we only want to cancel overshoot from a rebuild if we're supposed to position
+    // the view on a specific cell. The app is allowed to overshoot by setting contentX and
+    // contentY manually. Also, if this view is a sync child, we should always stay in sync
+    // with the syncView, so then we don't do anything.
+    const bool positionVertically = rebuildOptions.testFlag(RebuildOption::PositionViewAtRow);
+    const bool positionHorizontally = rebuildOptions.testFlag(RebuildOption::PositionViewAtColumn);
+    const bool cancelVertically = positionVertically && !syncVertically;
+    const bool cancelHorizontally = positionHorizontally && !syncHorizontally;
+
+    if (cancelHorizontally && !qFuzzyIsNull(q->horizontalOvershoot())) {
+        qCDebug(lcTableViewDelegateLifecycle()) << "cancelling overshoot horizontally:" << q->horizontalOvershoot();
+        setLocalViewportX(q->horizontalOvershoot() < 0 ? -q->minXExtent() : -q->maxXExtent());
+        syncViewportRect();
+    }
+
+    if (cancelVertically && !qFuzzyIsNull(q->verticalOvershoot())) {
+        qCDebug(lcTableViewDelegateLifecycle()) << "cancelling overshoot vertically:" << q->verticalOvershoot();
+        setLocalViewportY(q->verticalOvershoot() < 0 ? -q->minYExtent() : -q->maxYExtent());
+        syncViewportRect();
+    }
+}
+
 void QQuickTableViewPrivate::unloadEdge(Qt::Edge edge)
 {
     Q_Q(QQuickTableView);
@@ -2728,7 +2847,7 @@ void QQuickTableViewPrivate::loadEdge(Qt::Edge edge, QQmlIncubator::IncubationMo
     processLoadRequest();
 }
 
-void QQuickTableViewPrivate::loadAndUnloadVisibleEdges()
+void QQuickTableViewPrivate::loadAndUnloadVisibleEdges(QQmlIncubator::IncubationMode incubationMode)
 {
     // Unload table edges that have been moved outside the visible part of the
     // table (including buffer area), and load new edges that has been moved inside.
@@ -2765,7 +2884,7 @@ void QQuickTableViewPrivate::loadAndUnloadVisibleEdges()
 
         if (Qt::Edge edge = nextEdgeToLoad(viewportRect)) {
             tableModified = true;
-            loadEdge(edge, QQmlIncubator::AsynchronousIfNested);
+            loadEdge(edge, incubationMode);
             if (loadRequest.isActive())
                 return;
         }
@@ -2970,11 +3089,10 @@ bool QQuickTableViewPrivate::selectedInSelectionModel(const QPoint &cell) const
     if (!model)
         return false;
 
-    const QModelIndex modelIndex = model->index(cell.y(), cell.x());
-    return selectionModel->isSelected(modelIndex);
+    return selectionModel->isSelected(q_func()->modelIndex(cell));
 }
 
-void QQuickTableViewPrivate::selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected) const
+void QQuickTableViewPrivate::selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected)
 {
     const auto &selectedIndexes = selected.indexes();
     const auto &deselectedIndexes = deselected.indexes();
@@ -2984,40 +3102,25 @@ void QQuickTableViewPrivate::selectionChangedInSelectionModel(const QItemSelecti
         setSelectedOnDelegateItem(deselectedIndexes.at(i), false);
 }
 
-void QQuickTableViewPrivate::updateSelectedOnAllDelegateItems() const
-{
-    for (auto it = loadedItems.keyBegin(), end = loadedItems.keyEnd(); it != end; ++it) {
-        const QPoint cell = cellAtModelIndex(*it);
-        const bool selected = selectedInSelectionModel(cell);
-        setSelectedOnDelegateItem(loadedTableItem(cell)->item, selected);
-    }
-}
-
-void QQuickTableViewPrivate::setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select) const
+void QQuickTableViewPrivate::setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select)
 {
     const int cellIndex = modelIndexToCellIndex(modelIndex);
     if (!loadedItems.contains(cellIndex))
         return;
     const QPoint cell = cellAtModelIndex(cellIndex);
-    setSelectedOnDelegateItem(loadedTableItem(cell)->item, select);
+    QQuickItem *item = loadedTableItem(cell)->item;
+    setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(select), cellIndex, item, false);
 }
 
-void QQuickTableViewPrivate::setSelectedOnDelegateItem(QQuickItem *delegateItem, bool select) const
+void QQuickTableViewPrivate::updateSelectedOnAllDelegateItems()
 {
-    if (!delegateItem->property(kRequiredProperty).toBool()) {
-        // We only assign to "selected" if it's a required property. Otherwise
-        // we assume (for backwards compatibility) that the property is used
-        // by the delegate for something else.
-        // Note: kRequiredProperty is a work-around until QMetaProperty::isRequired() works.
-        return;
+    for (auto it = loadedItems.keyBegin(), end = loadedItems.keyEnd(); it != end; ++it) {
+        const int cellIndex = *it;
+        const QPoint cell = cellAtModelIndex(cellIndex);
+        const bool selected = selectedInSelectionModel(cell);
+        QQuickItem *item = loadedTableItem(cell)->item;
+        setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), cellIndex, item, false);
     }
-
-    // Note that several delegates might be in use (in case of a DelegateChooser), and
-    // the delegate can also change. So we cannot cache the propertyIndex.
-    const auto metaObject = delegateItem->metaObject();
-    const int propertyIndex = metaObject->indexOfProperty("selected");
-    const auto metaProperty = metaObject->property(propertyIndex);
-    metaProperty.write(delegateItem, QVariant::fromValue(select));
 }
 
 void QQuickTableViewPrivate::itemCreatedCallback(int modelIndex, QObject*)
@@ -3048,14 +3151,7 @@ void QQuickTableViewPrivate::initItemCallback(int modelIndex, QObject *object)
 
     const QPoint cell = cellAtModelIndex(modelIndex);
     const bool selected = selectedInSelectionModel(cell);
-
-    if (qobject_cast<QQmlTableInstanceModel *>(model)) {
-        const bool wasRequired = model->setRequiredProperty(modelIndex, QStringLiteral("selected"), selected);
-        if (wasRequired) {
-            // Work-around until QMetaProperty::isRequired() works
-            item->setProperty(kRequiredProperty, true);
-        }
-    }
+    setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, true);
 
     if (auto attached = getAttachedObject(object))
         attached->setView(q);
@@ -3071,10 +3167,9 @@ void QQuickTableViewPrivate::itemPooledCallback(int modelIndex, QObject *object)
 
 void QQuickTableViewPrivate::itemReusedCallback(int modelIndex, QObject *object)
 {
-    auto item = static_cast<QQuickItem*>(object);
     const QPoint cell = cellAtModelIndex(modelIndex);
     const bool selected = selectedInSelectionModel(cell);
-    setSelectedOnDelegateItem(item, selected);
+    setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(selected), modelIndex, object, false);
 
     if (auto attached = getAttachedObject(object))
         emit attached->reused();
@@ -3886,27 +3981,29 @@ QPoint QQuickTableView::cellAtPos(const QPointF &position, bool includeSpacing) 
 {
     Q_D(const QQuickTableView);
 
-    if (!boundingRect().contains(position))
+    const QPointF localPos = mapToItem(d->contentItem, position);
+    if (!d->loadedTableOuterRect.contains(localPos))
         return QPoint(-1, -1);
 
     const qreal hSpace = d->cellSpacing.width();
     const qreal vSpace = d->cellSpacing.height();
-    qreal currentColumnEnd = d->loadedTableOuterRect.x() - contentX();
-    qreal currentRowEnd = d->loadedTableOuterRect.y() - contentY();
+    qreal currentColumnEnd = d->loadedTableOuterRect.x();
+    qreal currentRowEnd = d->loadedTableOuterRect.y();
+
     int foundColumn = -1;
     int foundRow = -1;
 
     for (const int column : d->loadedColumns) {
         currentColumnEnd += d->getEffectiveColumnWidth(column);
-        if (position.x() < currentColumnEnd) {
+        if (localPos.x() < currentColumnEnd) {
             foundColumn = column;
             break;
         }
         currentColumnEnd += hSpace;
-        if (!includeSpacing && position.x() < currentColumnEnd) {
+        if (!includeSpacing && localPos.x() < currentColumnEnd) {
             // Hit spacing
             return QPoint(-1, -1);
-        } else if (includeSpacing && position.x() < currentColumnEnd - (hSpace / 2)) {
+        } else if (includeSpacing && localPos.x() < currentColumnEnd - (hSpace / 2)) {
             foundColumn = column;
             break;
         }
@@ -3914,16 +4011,16 @@ QPoint QQuickTableView::cellAtPos(const QPointF &position, bool includeSpacing) 
 
     for (const int row : d->loadedRows) {
         currentRowEnd += d->getEffectiveRowHeight(row);
-        if (position.y() < currentRowEnd) {
+        if (localPos.y() < currentRowEnd) {
             foundRow = row;
             break;
         }
         currentRowEnd += vSpace;
-        if (!includeSpacing && position.y() < currentRowEnd) {
+        if (!includeSpacing && localPos.y() < currentRowEnd) {
             // Hit spacing
             return QPoint(-1, -1);
         }
-        if (includeSpacing && position.y() < currentRowEnd - (vSpace / 2)) {
+        if (includeSpacing && localPos.y() < currentRowEnd - (vSpace / 2)) {
             foundRow = row;
             break;
         }
@@ -3998,6 +4095,41 @@ qreal QQuickTableView::implicitRowHeight(int row) const
         return -1;
 
     return d->sizeHintForRow(row);
+}
+
+QModelIndex QQuickTableView::modelIndex(const QPoint &cell) const
+{
+    Q_D(const QQuickTableView);
+    if (cell.x() < 0 || cell.x() >= columns() || cell.y() < 0 || cell.y() >= rows())
+        return {};
+
+    auto const qaim = d->model->abstractItemModel();
+    if (!qaim)
+        return {};
+
+    return qaim->index(cell.y(), cell.x());
+}
+
+QPoint QQuickTableView::cellAtIndex(const QModelIndex &index) const
+{
+    if (!index.isValid() || index.parent().isValid())
+        return {-1, -1};
+    return {index.column(), index.row()};
+}
+
+QModelIndex QQuickTableView::modelIndex(int row, int column) const
+{
+    return modelIndex({column, row});
+}
+
+int QQuickTableView::rowAtIndex(const QModelIndex &index) const
+{
+    return cellAtIndex(index).y();
+}
+
+int QQuickTableView::columnAtIndex(const QModelIndex &index) const
+{
+    return cellAtIndex(index).x();
 }
 
 void QQuickTableView::forceLayout()
@@ -4092,9 +4224,9 @@ void QQuickTableSectionSizeProvider::setSize(int section, qreal size)
 }
 
 // return -1.0 if no valid explicit size retrieved
-qreal QQuickTableSectionSizeProvider::size(int section)
+qreal QQuickTableSectionSizeProvider::size(int section) const
 {
-    Q_D(QQuickTableSectionSizeProvider);
+    Q_D(const QQuickTableSectionSizeProvider);
     auto it = d->hash.find(section);
     if (it != d->hash.end())
         return *it;

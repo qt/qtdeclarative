@@ -83,14 +83,6 @@ FontDialogImpl {
         border.width: 1 // FlyoutBorderThemeThickness
     }
 
-    Overlay.modal: Rectangle {
-        color: control.Universal.baseLowColor
-    }
-
-    Overlay.modeless: Rectangle {
-        color: control.Universal.baseLowColor
-    }
-
     header: Label {
         text: control.title
         elide: Label.ElideRight
@@ -143,5 +135,13 @@ FontDialogImpl {
 
             Layout.rightMargin: 24
         }
+    }
+
+    Overlay.modal: Rectangle {
+        color: control.Universal.baseLowColor
+    }
+
+    Overlay.modeless: Rectangle {
+        color: control.Universal.baseLowColor
     }
 }

@@ -52,6 +52,7 @@
 //
 
 #include <QObject>
+#include <QSet>
 #include "qquickparticlesystem_p.h"
 #include "qquickparticleextruder_p.h"
 #include "qtquickparticlesglobal_p.h"

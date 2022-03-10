@@ -43,6 +43,7 @@
 #include <QtQml/qtqmlglobal.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qvariant.h>
+#include <QtCore/qhash.h> // QVariantHash
 
 QT_BEGIN_NAMESPACE
 

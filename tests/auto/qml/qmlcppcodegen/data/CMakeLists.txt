@@ -1,6 +1,7 @@
 set(cpp_sources
     birthdayparty.cpp birthdayparty.h
     cppbaseclass.h
+    dynamicmeta.h
     objectwithmethod.h
     person.cpp person.h
     theme.cpp theme.h
@@ -35,6 +36,7 @@ set(qml_files
     asCast.qml
     attachedBaseEnum.qml
     bindToValueType.qml
+    blockComments.qml
     callContextPropertyLookupResult.qml
     childobject.qml
     colorAsVariant.qml
@@ -49,6 +51,7 @@ set(qml_files
     curlygrouped.qml
     cycleHead.qml
     deadShoeSize.qml
+    deadStoreLoop.qml
     dialog.qml
     dynamicscene.qml
     enumInvalid.qml
@@ -59,19 +62,24 @@ set(qml_files
     excessiveParameters.qml
     extendedTypes.qml
     failures.qml
+    fallbacklookups.qml
     fileDialog.qml
+    functionLookup.qml
     funcWithParams.qml
     functionReturningVoid.qml
+    functionTakingVar.qml
     globals.qml
     idAccess.qml
     immediateQuit.qml
     imports/QmlBench/Globals.qml
     importsFromImportPath.qml
+    infinities.qml
     invisibleBase.qml
     intEnumCompare.qml
     intOverflow.qml
     interactive.qml
     interceptor.qml
+    isnan.qml
     jsMathObject.qml
     jsimport.qml
     jsmoduleimport.qml
@@ -82,12 +90,14 @@ set(qml_files
     math.qml
     methods.qml
     modulePrefix.qml
+    moveRegVoid.qml
     noBindingLoop.qml
     noQQmlData.qml
     nonNotifyable.qml
     noscope.qml
     notEqualsInt.qml
     nullAccess.qml
+    objectInVar.qml
     outOfBounds.qml
     overriddenMember.qml
     ownProperty.qml
@@ -110,6 +120,7 @@ set(qml_files
     text.qml
     themerbad.qml
     themergood.qml
+    typedArray.qml
     undefinedResets.qml
     unknownAttached.qml
     unknownParameter.qml

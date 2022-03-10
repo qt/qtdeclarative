@@ -321,6 +321,14 @@
     it's important not to import \c {QtQuick.Controls}. Doing so will
     prevent the QML from being compiled by the QML compiler.
 
+    \section4 Implement types used by other types
+
+    Suppose you were using ScrollViews in your application, and decided that
+    you want to customize their scroll bars. It is tempting to just implement a
+    custom ScrollBar.qml and have ScrollView pick up the customized ScrollBar
+    automatically. However, this will not work. You must implement both
+    ScrollBar.qml \e and ScrollView.qml.
+
     \section3 Attached properties
 
     It is common for a style to have certain properties or attributes that

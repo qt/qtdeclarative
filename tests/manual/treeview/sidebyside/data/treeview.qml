@@ -48,6 +48,7 @@ ApplicationWindow {
     visible: true
 
     property alias treeView: treeView
+    property var selectedIndex: undefined
 
     UICallback { id: callback }
 
@@ -92,6 +93,16 @@ ApplicationWindow {
                     treeView.model.removeRows(index.row, 1, index.parent);
                 }
             }
+            Button {
+                text: "Expand to"
+                enabled: selectedIndex != undefined
+                onClicked: {
+                    treeView.expandToIndex(selectedIndex);
+                    treeView.forceLayout()
+                    let row = treeView.rowAtIndex(selectedIndex)
+                    treeView.positionViewAtRow(row, Qt.AlignVCenter)
+                }
+            }
         }
 
         TreeView {
@@ -114,15 +125,28 @@ ApplicationWindow {
         id: testModel
     }
 
-    Rectangle {
-        anchors.fill: parent
-        color: "white"
-        z: -1
-    }
-
     Component {
         id: treeViewDelegate
         TreeViewDelegate {
+            TapHandler {
+                acceptedModifiers: Qt.ControlModifier
+                onTapped: {
+                    if (treeView.isExpanded(row))
+                        treeView.collapseRecursively(row)
+                    else
+                        treeView.expandRecursively(row)
+                }
+            }
+            TapHandler {
+                acceptedModifiers: Qt.ShiftModifier
+                onTapped: selectedIndex = treeView.modelIndex(row, 0)
+            }
+            Rectangle {
+                anchors.fill: parent
+                border.color: "red"
+                border.width: 1
+                visible: treeView.modelIndex(row, column) === selectedIndex
+            }
         }
     }
 

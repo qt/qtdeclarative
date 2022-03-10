@@ -113,7 +113,7 @@ public:
 
     int itemIndex(const QModelIndex &index) const;
     void expandPendingRows(bool doInsertRows = true);
-    int lastChildIndex(const QModelIndex &index);
+    int lastChildIndex(const QModelIndex &index) const;
     void removeVisibleRows(int startIndex, int endIndex, bool doRemoveRows = true);
 
     void dump() const;
@@ -137,7 +137,9 @@ public slots:
     bool hasSiblings(int row) const;
     int depthAtRow(int row) const;
     void expandRow(int n);
+    void expandRecursively(int row, int depth);
     void collapseRow(int n);
+    void collapseRecursively(int row);
 
 private slots:
     void modelHasBeenDestroyed();

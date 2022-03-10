@@ -149,7 +149,48 @@
     \note this function will not affect the model, only
     the visual representation in the view.
 
-    \sa collapse(), isExpanded()
+    \sa collapse(), isExpanded(), expandRecursively()
+*/
+
+/*!
+    \qmlmethod QtQuick::TreeView::expandRecursively(row = -1, depth = -1)
+    \since 6.4
+
+    Expands the tree node at the given \a row in the view recursively down to
+    \a depth. \a depth should be relative to the depth of \a row. If
+    \a depth is \c -1, the tree will be expanded all the way down to all leaves.
+
+    For a model that has more than one root, you can also call this function
+    with \a row equal to \c -1. This will expand all roots. Hence, calling
+    expandRecursively(-1, -1), or simply expandRecursively(), will expand
+    all nodes in the model.
+
+    \a row should be the row in the view (table row), and not a row in the model.
+
+    \note This function will not try to \l{QAbstractItemModel::fetchMore}{fetch more} data.
+    \note This function will not affect the model, only the visual representation in the view.
+    \warning If the model contains a large number of items, this function will
+    take some time to execute.
+
+    \sa collapseRecursively(), expand(), collapse(), isExpanded(), depth()
+*/
+
+/*!
+    \qmlmethod QtQuick::TreeView::expandToIndex(QModelIndex index)
+    \since 6.4
+
+    Expands the tree from the given model \a index, and recursively all the way up
+    to the root. The result will be that the delegate item that represents \a index
+    becomes visible in the view (unless it ends up outside the viewport). To
+    ensure that the row ends up visible in the viewport, you can do:
+
+    \code
+        expandToIndex(index)
+        forceLayout()
+        positionViewAtRow(rowAtIndex(index), Qt.AlignVCenter)
+    \endcode
+
+    \sa expand(), expandRecursively()
 */
 
 /*!
@@ -163,6 +204,26 @@
     the visual representation in the view.
 
     \sa expand(), isExpanded()
+*/
+
+/*!
+    \qmlmethod QtQuick::TreeView::collapseRecursively(row = -1)
+    \since 6.4
+
+    Collapses the tree node at the given \a row in the view recursively down to
+    all leaves.
+
+    For a model has more than one root, you can also call this function
+    with \a row equal to \c -1. This will collapse all roots. Hence, calling
+    collapseRecursively(-1), or simply collapseRecursively(), will collapse
+    all nodes in the model.
+
+    \a row should be the row in the view (table row), and not a row in the model.
+
+    \note this function will not affect the model, only
+    the visual representation in the view.
+
+    \sa expandRecursively(), expand(), collapse(), isExpanded(), depth()
 */
 
 /*!
@@ -182,93 +243,35 @@
 */
 
 /*!
-    \qmlmethod QModelIndex QtQuick::TreeView::modelIndex(row, column)
-
-    Returns the \l QModelIndex that maps to \a row and \a column in the view.
-
-    \a row and \a column should be the row and column in the view (table row and
-    table column), and not a row and column in the model.
-
-    The assigned model, which is a tree model, is converted to a flat table
-    model internally so that it can be shown in a TableView (which TreeView
-    inherits). This function can be used whenever you need to know which
-    index in the tree model maps to the given row and column in the view.
-
-    \sa rowAtIndex(), columnAtIndex()
-*/
-
-/*!
-    \qmlmethod QModelIndex QtQuick::TreeView::modelIndex(point cell)
-
-    Convenience function for doing:
-    \code
-    modelIndex(cell.y, cell.x)
-    \endcode
-
-    A cell is simply a \l point that combines row and column into
-    a single type. Note that \c point.x will map to the column, and
-    \c point.y will map to the row.
-*/
-
-/*!
-    \qmlmethod int QtQuick::TreeView::rowAtIndex(modelIndex)
-
-    Returns the row in the view that maps to \a modelIndex in the model.
-
-    The assigned model, which is a tree model, is converted to a flat table
-    model internally so that it can be shown in a TableView (which TreeView
-    inherits). This function can be used whenever you need to know which
-    row in the view the given model index maps to.
-
-    \note \a modelIndex must be a \l QModelIndex.
-
-    \sa columnAtIndex(), modelIndex()
-*/
-
-/*!
-    \qmlmethod int QtQuick::TreeView::columnAtIndex(modelIndex)
-
-    Returns the column in the view that maps to \a modelIndex in the model.
-
-    The assigned model, which is a tree model, is converted to a flat table
-    model internally so that it can be shown in a TableView (which TreeView
-    inherits). This function can be used whenever you need to know which
-    column in the view the given model index maps to.
-
-    \note \a modelIndex must be a \l QModelIndex.
-
-    \sa rowAtIndex(), modelIndex()
-*/
-
-/*!
-    \qmlmethod point QtQuick::TreeView::cellAtIndex(modelIndex)
-
-    Convenience function for doing:
-
-    \c {Qt.point(columnAtIndex(}\a {modelIndex}\c{), rowAtIndex(}\a {modelIndex}\c{))}
-
-    A cell is simply a \l point that combines row and column into
-    a single type. Note that \c point.x will map to the column, and
-    \c point.y will map to the row.
-*/
-
-/*!
-    \qmlsignal QtQuick::TreeView::expanded(row)
+    \qmlsignal QtQuick::TreeView::expanded(row, depth)
 
     This signal is emitted when a \a row is expanded in the view.
+    \a row and \a depth will be equal to the arguments given to the call
+    that caused the expansion to happen (\l expand() or \l expandRecursively()).
+    In case of \l expand(), \a depth will always be \c 1.
+    In case of \l expandToIndex(), \a depth will be the depth of the
+    target index.
+
+    \note when a row is expanded recursively, the expanded signal will
+    only be emitted for that one row, and not for its descendants.
 
     \sa collapsed(), expand(), collapse(), toggleExpanded()
 */
 
 /*!
-    \qmlsignal QtQuick::TreeView::collapsed(row)
+    \qmlsignal QtQuick::TreeView::collapsed(row, recursively)
 
     This signal is emitted when a \a row is collapsed in the view.
+    \a row will be equal to the argument given to the call that caused
+    the collapse to happen (\l collapse() or \l collapseRecursively()).
+    If the row was collapsed recursively, \a recursively will be \c true.
+
+    \note when a row is collapsed recursively, the collapsed signal will
+    only be emitted for that one row, and not for its descendants.
 
     \sa expanded(), expand(), collapse(), toggleExpanded()
 */
 
-static const char* kRequiredProperties = "_qt_treeview_requiredpropertymask";
 // Hard-code the tree column to be 0 for now
 static const int kTreeColumn = 0;
 
@@ -343,32 +346,6 @@ void QQuickTreeViewPrivate::dataChangedCallback(
     }
 }
 
-void QQuickTreeViewPrivate::setRequiredProperty(const char *property,
-    const QVariant &value, int serializedModelIndex, QObject *object, bool init)
-{
-    // Attaching a property list to the delegate item is just a
-    // work-around until QMetaProperty::isRequired() works!
-    const QString propertyName = QString::fromUtf8(property);
-
-    if (init) {
-        const bool wasRequired = model->setRequiredProperty(serializedModelIndex, propertyName, value);
-        if (wasRequired) {
-            QStringList propertyList = object->property(kRequiredProperties).toStringList();
-            object->setProperty(kRequiredProperties, propertyList << propertyName);
-        }
-    } else {
-        const QStringList propertyList = object->property(kRequiredProperties).toStringList();
-        if (!propertyList.contains(propertyName)) {
-            // We only write to properties that are required
-            return;
-        }
-        const auto metaObject = object->metaObject();
-        const int propertyIndex = metaObject->indexOfProperty(property);
-        const auto metaProperty = metaObject->property(propertyIndex);
-        metaProperty.write(object, value);
-    }
-}
-
 void QQuickTreeViewPrivate::updateRequiredProperties(int serializedModelIndex, QObject *object, bool init)
 {
     Q_Q(QQuickTreeView);
@@ -420,22 +397,97 @@ bool QQuickTreeView::isExpanded(int row) const
 
 void QQuickTreeView::expand(int row)
 {
+    if (row >= 0)
+        expandRecursively(row, 1);
+}
+
+void QQuickTreeView::expandRecursively(int row, int depth)
+{
     Q_D(QQuickTreeView);
-    if (row < 0 || row >= d->m_treeModelToTableModel.rowCount())
+    if (row >= d->m_treeModelToTableModel.rowCount())
+        return;
+    if (row < 0 && row != -1)
+        return;
+    if (depth == 0 || depth < -1)
         return;
 
-    if (d->m_treeModelToTableModel.isExpanded(row))
-        return;
+    auto expandRowRecursively = [=](int startRow) {
+        d->m_treeModelToTableModel.expandRecursively(startRow, depth);
+        // Update the expanded state of the startRow. The descendant rows that gets
+        // expanded will get the correct state set from initItem/itemReused instead.
+        for (int c = leftColumn(); c <= rightColumn(); ++c) {
+            const QPoint treeNodeCell(c, startRow);
+            if (const auto item = itemAtCell(treeNodeCell))
+                d->setRequiredProperty("expanded", true, d->modelIndexAtCell(treeNodeCell), item, false);
+        }
+    };
 
-    d->m_treeModelToTableModel.expandRow(row);
-
-    for (int c = leftColumn(); c <= rightColumn(); ++c) {
-        const QPoint treeNodeCell(c, row);
-        if (const auto item = itemAtCell(treeNodeCell))
-            d->setRequiredProperty("expanded", true, d->modelIndexAtCell(treeNodeCell), item, false);
+    if (row >= 0) {
+        // Expand only one row recursively
+        const bool isExpanded = d->m_treeModelToTableModel.isExpanded(row);
+        if (isExpanded && depth == 1)
+            return;
+        expandRowRecursively(row);
+    } else {
+        // Expand all root nodes recursively
+        const auto model = d->m_treeModelToTableModel.model();
+        for (int r = 0; r < model->rowCount(); ++r) {
+            const int rootRow = d->m_treeModelToTableModel.itemIndex(model->index(r, 0));
+            if (rootRow != -1)
+                expandRowRecursively(rootRow);
+        }
     }
 
-    emit expanded(row);
+    emit expanded(row, depth);
+}
+
+void QQuickTreeView::expandToIndex(const QModelIndex &index)
+{
+    Q_D(QQuickTreeView);
+
+    if (!index.isValid()) {
+        qmlWarning(this) << "index is not valid: " << index;
+        return;
+    }
+
+    if (index.model() != d->m_treeModelToTableModel.model()) {
+        qmlWarning(this) << "index doesn't belong to correct model: " << index;
+        return;
+    }
+
+    if (rowAtIndex(index) != -1) {
+        // index is already visible
+        return;
+    }
+
+    int depth = 1;
+    QModelIndex parent = index.parent();
+    int row = rowAtIndex(parent);
+
+    while (parent.isValid()) {
+        if (row != -1) {
+            // The node is already visible, since it maps to a row in the table!
+            d->m_treeModelToTableModel.expandRow(row);
+
+            // Update the state of the already existing delegate item
+            for (int c = leftColumn(); c <= rightColumn(); ++c) {
+                const QPoint treeNodeCell(c, row);
+                if (const auto item = itemAtCell(treeNodeCell))
+                    d->setRequiredProperty("expanded", true, d->modelIndexAtCell(treeNodeCell), item, false);
+            }
+
+            // When we hit a node that is visible, we know that all other nodes
+            // up to the parent have to be visible as well, so we can stop.
+            break;
+        } else {
+            d->m_treeModelToTableModel.expand(parent);
+            parent = parent.parent();
+            row = rowAtIndex(parent);
+            depth++;
+        }
+    }
+
+    emit expanded(row, depth);
 }
 
 void QQuickTreeView::collapse(int row)
@@ -455,7 +507,42 @@ void QQuickTreeView::collapse(int row)
             d->setRequiredProperty("expanded", false, d->modelIndexAtCell(treeNodeCell), item, false);
     }
 
-    emit collapsed(row);
+    emit collapsed(row, false);
+}
+
+void QQuickTreeView::collapseRecursively(int row)
+{
+    Q_D(QQuickTreeView);
+    if (row >= d->m_treeModelToTableModel.rowCount())
+        return;
+    if (row < 0 && row != -1)
+        return;
+
+    auto collapseRowRecursive = [=](int startRow) {
+        // Always collapse descendants recursively,
+        // even if the top row itself is already collapsed.
+        d->m_treeModelToTableModel.collapseRecursively(startRow);
+        // Update the expanded state of the (still visible) startRow
+        for (int c = leftColumn(); c <= rightColumn(); ++c) {
+            const QPoint treeNodeCell(c, startRow);
+            if (const auto item = itemAtCell(treeNodeCell))
+                d->setRequiredProperty("expanded", false, d->modelIndexAtCell(treeNodeCell), item, false);
+        }
+    };
+
+    if (row >= 0) {
+        collapseRowRecursive(row);
+    } else {
+        // Collapse all root nodes recursively
+        const auto model = d->m_treeModelToTableModel.model();
+        for (int r = 0; r < model->rowCount(); ++r) {
+            const int rootRow = d->m_treeModelToTableModel.itemIndex(model->index(r, 0));
+            if (rootRow != -1)
+                collapseRowRecursive(rootRow);
+        }
+    }
+
+    emit collapsed(row, true);
 }
 
 void QQuickTreeView::toggleExpanded(int row)
@@ -466,32 +553,22 @@ void QQuickTreeView::toggleExpanded(int row)
         expand(row);
 }
 
-QModelIndex QQuickTreeView::modelIndex(int row, int column) const
-{
-    Q_D(const QQuickTreeView);
-    const QModelIndex tableIndex = d->m_treeModelToTableModel.index(row, column);
-    return d->m_treeModelToTableModel.mapToModel(tableIndex);
-}
-
 QModelIndex QQuickTreeView::modelIndex(const QPoint &cell) const
 {
-    return modelIndex(cell.y(), cell.x());
-}
-
-int QQuickTreeView::rowAtIndex(const QModelIndex &index) const
-{
-    return d_func()->m_treeModelToTableModel.mapFromModel(index).row();
-}
-
-int QQuickTreeView::columnAtIndex(const QModelIndex &index) const
-{
-    return d_func()->m_treeModelToTableModel.mapFromModel(index).column();
+    Q_D(const QQuickTreeView);
+    const QModelIndex tableIndex = d->m_treeModelToTableModel.index(cell.y(), cell.x());
+    return d->m_treeModelToTableModel.mapToModel(tableIndex);
 }
 
 QPoint QQuickTreeView::cellAtIndex(const QModelIndex &index) const
 {
     const QModelIndex tableIndex = d_func()->m_treeModelToTableModel.mapFromModel(index);
     return QPoint(tableIndex.column(), tableIndex.row());
+}
+
+QModelIndex QQuickTreeView::modelIndex(int row, int column) const
+{
+    return modelIndex({column, row});
 }
 
 QT_END_NAMESPACE

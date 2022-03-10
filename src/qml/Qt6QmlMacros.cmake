@@ -66,6 +66,7 @@ function(qt6_add_qml_module target)
         IMPORTS
         IMPORT_PATH
         OPTIONAL_IMPORTS
+        DEFAULT_IMPORTS
         DEPENDENCIES
         PAST_MAJOR_VERSIONS
     )
@@ -382,7 +383,7 @@ function(qt6_add_qml_module target)
         set(arg_TYPEINFO ${target}.qmltypes)
     endif()
 
-    foreach(import_set IN ITEMS IMPORTS OPTIONAL_IMPORTS)
+    foreach(import_set IN ITEMS IMPORTS OPTIONAL_IMPORTS DEFAULT_IMPORTS)
         foreach(import IN LISTS arg_${import_set})
             string(FIND ${import} "/" slash_position REVERSE)
             if (slash_position EQUAL -1)
@@ -448,7 +449,7 @@ function(qt6_add_qml_module target)
         QT_QML_MODULE_NO_PLUGIN "${arg_NO_PLUGIN}"
         QT_QML_MODULE_NO_PLUGIN_OPTIONAL "${arg_NO_PLUGIN_OPTIONAL}"
         QT_QML_MODULE_NO_IMPORT_SCAN "${arg_NO_IMPORT_SCAN}"
-        QT_QML_MODULE_FOLLOW_FOREIGN_VERSIONING "${arg_FOLLOW_FOREIGN_VERSIONING}"
+        _qt_qml_module_follow_foreign_versioning "${arg_FOLLOW_FOREIGN_VERSIONING}"
         QT_QML_MODULE_URI "${arg_URI}"
         QT_QML_MODULE_TARGET_PATH "${arg_TARGET_PATH}"
         QT_QML_MODULE_VERSION "${arg_VERSION}"
@@ -689,6 +690,20 @@ macro(_qt_internal_genex_getoption var target property)
     set(${var} "$<BOOL:$<TARGET_PROPERTY:${target},${property}>>")
 endmacro()
 
+function(_qt_internal_extend_qml_import_paths import_paths_var)
+    set(local_var ${${import_paths_var}})
+
+    # prepend extra import path which is a current module's build dir: we need
+    # this to ensure correct importing of QML modules when having a prefix-build
+    # with QLibraryInfo::path(QLibraryInfo::QmlImportsPath) pointing to the
+    # install location
+    if(QT_BUILDING_QT AND QT_WILL_INSTALL)
+        list(PREPEND local_var -I "${QT_BUILD_DIR}/${INSTALL_QMLDIR}")
+    endif()
+
+    set(${import_paths_var} ${local_var} PARENT_SCOPE)
+endfunction()
+
 function(_qt_internal_target_enable_qmllint target)
     set(lint_target ${target}_qmllint)
     if(TARGET ${lint_target})
@@ -736,6 +751,8 @@ function(_qt_internal_target_enable_qmllint target)
     if(NOT "${QT_QML_OUTPUT_DIRECTORY}" STREQUAL "")
         list(APPEND import_args -I "${QT_QML_OUTPUT_DIRECTORY}")
     endif()
+
+    _qt_internal_extend_qml_import_paths(import_args)
 
     set(cmd
         ${QT_TOOL_COMMAND_WRAPPER_PATH}
@@ -986,6 +1003,8 @@ function(_qt_internal_target_generate_qmldir target)
 
     _qt_internal_qmldir_item_list(import QT_QML_MODULE_IMPORTS)
     _qt_internal_qmldir_item_list("optional import" QT_QML_MODULE_OPTIONAL_IMPORTS)
+    _qt_internal_qmldir_item_list("default import" QT_QML_MODULE_DEFAULT_IMPORTS)
+
     _qt_internal_qmldir_item_list(depends QT_QML_MODULE_DEPENDENCIES)
 
     get_target_property(prefix ${target} QT_QML_MODULE_RESOURCE_PREFIX)
@@ -1108,6 +1127,8 @@ function(qt6_target_compile_qml_to_cpp target)
     foreach(import_path IN LISTS arg_IMPORT_PATHS)
         list(APPEND common_args -I "${import_path}")
     endforeach()
+
+    _qt_internal_extend_qml_import_paths(common_args)
 
     # we explicitly depend on qmldir (due to `-i ${qmldir_file}`) but also
     # implicitly on the generated qmltypes file, which is a part of qmldir
@@ -1587,7 +1608,6 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     endfunction()
 endif()
 
-
 function(qt6_target_qml_sources target)
 
     get_target_property(uri        ${target} QT_QML_MODULE_URI)
@@ -1721,6 +1741,7 @@ function(qt6_target_qml_sources target)
             # The application binary directory is part of the default import path.
             list(APPEND import_paths -I "$<TARGET_PROPERTY:${target},BINARY_DIR>")
         endif()
+        _qt_internal_extend_qml_import_paths(import_paths)
         set(cachegen_args
             ${import_paths}
             -i "${qmldir_file}"
@@ -1841,7 +1862,7 @@ function(qt6_target_qml_sources target)
             # The set of qml files to run qmllint on may be a subset of the
             # full set of files, so record these in a separate property.
             _qt_internal_target_enable_qmllint(${target})
-            set_property(TARGET ${target} APPEND PROPERTY QT_QML_LINT_FILES ${qml_file_src})
+            set_property(TARGET ${target} APPEND PROPERTY QT_QML_LINT_FILES ${file_absolute})
         endif()
 
         # Add qml file's type to qmldir
@@ -2061,22 +2082,24 @@ if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     endfunction()
 endif()
 
-function(qt6_generate_foreign_qml_types lib_target qml_target)
-
-    qt6_extract_metatypes(${lib_target})
-    get_target_property(target_metatypes_json_file ${lib_target} INTERFACE_QT_META_TYPES_BUILD_FILE)
+# This function is currently in Technical Preview.
+# It's signature and behavior might change.
+function(qt6_generate_foreign_qml_types source_target destination_qml_target)
+    qt6_extract_metatypes(${source_target})
+    get_target_property(target_metatypes_json_file ${source_target}
+                        INTERFACE_QT_META_TYPES_BUILD_FILE)
     if (NOT target_metatypes_json_file)
         message(FATAL_ERROR "Need target metatypes.json file")
     endif()
 
-    set(registration_files_base ${lib_target}_${qml_target})
+    set(registration_files_base ${source_target}_${destination_qml_target})
     set(additional_sources ${registration_files_base}.cpp ${registration_files_base}.h)
 
     add_custom_command(
         OUTPUT
             ${additional_sources}
         DEPENDS
-            ${target}
+            ${source_target}
             ${target_metatypes_json_file}
             ${QT_CMAKE_EXPORT_NAMESPACE}::qmltyperegistrar
         COMMAND
@@ -2085,13 +2108,12 @@ function(qt6_generate_foreign_qml_types lib_target qml_target)
             "--extract"
             -o ${registration_files_base}
             ${target_metatypes_json_file}
-        COMMENT "Generate QML registration code for target ${target}"
+        COMMENT "Generate QML registration code for target ${source_target}"
     )
 
-    target_sources(${qml_target} PRIVATE ${additional_sources})
-    qt6_wrap_cpp(${additional_sources} TARGET ${qml_target})
+    target_sources(${destination_qml_target} PRIVATE ${additional_sources})
+    qt6_wrap_cpp(${additional_sources} TARGET ${destination_qml_target})
 endfunction()
-
 
 if(NOT QT_NO_CREATE_VERSIONLESS_FUNCTIONS)
     if(QT_DEFAULT_MAJOR_VERSION EQUAL 6)
@@ -2202,7 +2224,8 @@ function(_qt_internal_qml_type_registration target)
 
 
     # Add --follow-foreign-versioning if requested
-    get_target_property(follow_foreign_versioning ${target} QT_QML_MODULE_FOLLOW_FOREIGN_VERSIONING)
+    get_target_property(follow_foreign_versioning ${target}
+                        _qt_qml_module_follow_foreign_versioning)
 
     if (follow_foreign_versioning)
         list(APPEND cmd_args
@@ -2313,10 +2336,12 @@ function(_qt_internal_qml_type_registration target)
     endif()
     add_dependencies(all_qmltyperegistrations ${target}_qmltyperegistration)
 
+    # Both ${target} (via target_sources) and ${target}_qmltyperegistration (via add_custom_target
+    # DEPENDS option) depend on ${type_registration_cpp_file}.
     # The new Xcode build system requires a common target to drive the generation of files,
     # otherwise project configuration fails.
-    # Make the ${target}_qmltyperegistration the common target, by adding it as a dependency for
-    # ${target} itself.
+    # Make ${target} the common target, by adding it as a dependency for
+    # ${target}_qmltyperegistration.
     # The consequence is that the ${target}_qmllint target will now first build ${target} when using
     # the Xcode generator (mostly only relevant for projects using Qt for iOS).
     # See QTBUG-95763.
@@ -2719,6 +2744,22 @@ function(qt6_generate_deploy_qml_app_script)
     endif()
     if(NOT arg_FILENAME_VARIABLE)
         message(FATAL_ERROR "FILENAME_VARIABLE must be specified")
+    endif()
+
+    # Check that the target was defer-finalized, and not immediately finalized when using
+    # CMake < 3.19. This is important because if it's immediately finalized, Qt::Qml is likely
+    # not in the dependency list, and thus _qt_internal_generate_deploy_qml_imports_script will
+    # not be executed, leading to an error at install time
+    # 'No QML imports information recorded for target X'.
+    # _qt_is_immediately_finalized is set by qt6_add_executable.
+    # TODO: Remove once minimum required CMAKE_VERSION is 3.19+.
+    get_target_property(is_immediately_finalized "${arg_TARGET}" _qt_is_immediately_finalized)
+    if(is_immediately_finalized)
+        message(FATAL_ERROR
+            "QML app deployment requires CMake version 3.19, or later, or manual executable "
+            "finalization. For manual finalization, pass the MANUAL_FINALIZATION option to "
+            "qt_add_executable() and then call qt_finalize_target(${arg_TARGET}) just before
+            calling qt_generate_deploy_qml_app_script().")
     endif()
 
     # Create a file name that will be unique for this target and the combination

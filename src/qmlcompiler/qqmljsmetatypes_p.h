@@ -59,6 +59,7 @@
 
 QT_BEGIN_NAMESPACE
 
+class QQmlJSTypeResolver;
 class QQmlJSScope;
 class QQmlJSMetaEnum
 {
@@ -390,38 +391,98 @@ public:
     };
 
 private:
+
+    // needs to be kept in sync with the BindingType enum
+    struct Content {
+        using Invalid = std::monostate;
+        struct BoolLiteral {
+            bool value;
+            friend bool operator==(BoolLiteral a, BoolLiteral b) { return a.value == b.value; }
+            friend bool operator!=(BoolLiteral a, BoolLiteral b) { return !(a == b); }
+        };
+        struct NumberLiteral {
+            friend bool operator==(NumberLiteral a, NumberLiteral b) { return a.value == b.value; }
+            friend bool operator!=(NumberLiteral a, NumberLiteral b) { return !(a == b); }
+            double value; // ### TODO: int?
+        };
+        struct StringLiteral {
+            friend bool operator==(StringLiteral a, StringLiteral b) { return a.value == b.value; }
+            friend bool operator!=(StringLiteral a, StringLiteral b) { return !(a == b); }
+            QString value;
+        };
+        struct RegexpLiteral {
+            friend bool operator==(RegexpLiteral a, RegexpLiteral b) { return a.value == b.value; }
+            friend bool operator!=(RegexpLiteral a, RegexpLiteral b) { return !(a == b); }
+            QString value;
+        };
+        struct Null {
+            friend bool operator==(Null , Null ) { return true; }
+            friend bool operator!=(Null a, Null b) { return !(a == b); }
+        };
+        struct TranslationString {
+            friend bool operator==(TranslationString a, TranslationString b) { return a.value == b.value; }
+            friend bool operator!=(TranslationString a, TranslationString b) { return !(a == b); }
+            QString value;
+        };
+        struct TranslationById {
+            friend bool operator==(TranslationById a, TranslationById b) { return a.value == b.value; }
+            friend bool operator!=(TranslationById a, TranslationById b) { return !(a == b); }
+            QString value;
+        };
+        struct Script {
+            friend bool operator==(Script , Script ) { return true; }
+            friend bool operator!=(Script a, Script b) { return !(a == b); }
+        };
+        struct Object {
+            friend bool operator==(Object a, Object b) { return a.value == b.value && a.typeName == b.typeName; }
+            friend bool operator!=(Object a, Object b) { return !(a == b); }
+            QString typeName;
+            QWeakPointer<const QQmlJSScope> value;
+        };
+        struct Interceptor {
+            friend bool operator==(Interceptor a, Interceptor b)
+            {
+                return a.interceptor == b.interceptor && a.interceptorTypeName == b.interceptorTypeName;
+            }
+            friend bool operator!=(Interceptor a, Interceptor b) { return !(a == b); }
+            QString interceptorTypeName;
+            QWeakPointer<const QQmlJSScope> interceptor;
+        };
+        struct ValueSource {
+            friend bool operator==(ValueSource a, ValueSource b)
+            {
+                return a.valueSource == b.valueSource && a.valueSourceTypeName == b.valueSourceTypeName;
+            }
+            friend bool operator!=(ValueSource a, ValueSource b) { return !(a == b); }
+            QString valueSourceTypeName;
+            QWeakPointer<const QQmlJSScope> valueSource;
+        };
+        struct AttachedProperty {
+            friend bool operator==(AttachedProperty , AttachedProperty ) { return true; }
+            friend bool operator!=(AttachedProperty a, AttachedProperty b) { return !(a == b); }
+        };
+        struct GroupProperty {
+            friend bool operator==(GroupProperty , GroupProperty ) { return true; }
+            friend bool operator!=(GroupProperty a, GroupProperty b) { return !(a == b); }
+        };
+        using type = std::variant<Invalid, BoolLiteral, NumberLiteral, StringLiteral,
+                                  RegexpLiteral, Null, TranslationString,
+                                  TranslationById, Script, Object, Interceptor,
+                                  ValueSource, AttachedProperty, GroupProperty
+                                 >;
+    };
+    using BindingContent = Content::type;
+
     QQmlJS::SourceLocation m_sourceLocation;
     QString m_propertyName; // TODO: this is a debug-only information
-    BindingType m_bindingType = BindingType::Invalid;
+    BindingContent m_bindingContent;
 
-    // TODO: the below should really be put into a union (of sorts). despite the
-    // data being overlapping for different things (which for now is just
-    // ignored), we would still only have one kind of information stored in a
-    // binding. separating the non-overlapping bits would indicate what we
-    // require for each binding type more clearly
-
-    //union {
-        QString m_translationString;
-        QString m_translationId;
-        QVariant m_literalValue; // constant in literal (or null) expression
-    //};
-
-    QWeakPointer<const QQmlJSScope> m_value; // object type of Object binding *OR* a literal type
-    QString m_valueTypeName;
-
-    QWeakPointer<const QQmlJSScope> m_interceptor; // QQmlPropertyValueInterceptor derived type
-    QString m_interceptorTypeName;
-
-    QWeakPointer<const QQmlJSScope> m_valueSource; // QQmlPropertyValueSource derived type
-    QString m_valueSourceTypeName;
-
-    void setBindingTypeOnce(BindingType type)
+    void ensureSetBindingTypeOnce()
     {
-        Q_ASSERT(m_bindingType == BindingType::Invalid);
-        m_bindingType = type;
+        Q_ASSERT(bindingType() == BindingType::Invalid);
     }
 
-    bool isLiteralBinding() const { return isLiteralBinding(m_bindingType); }
+    bool isLiteralBinding() const { return isLiteralBinding(bindingType()); }
 
 
 public:
@@ -448,90 +509,124 @@ public:
 
     const QQmlJS::SourceLocation &sourceLocation() const { return m_sourceLocation; }
 
-    BindingType bindingType() const { return m_bindingType; }
+    BindingType bindingType() const { return BindingType(m_bindingContent.index()); }
 
-    bool isValid() const { return !m_propertyName.isEmpty(); }
+    bool isValid() const;
 
-    void setLiteral(BindingType kind, const QString &typeName, const QVariant &value,
-                    const QSharedPointer<const QQmlJSScope> &type)
+    void setStringLiteral(QAnyStringView value)
     {
-        Q_ASSERT(isLiteralBinding(kind));
-        setBindingTypeOnce(kind);
-        m_value = type;
-        m_valueTypeName = typeName;
-        m_literalValue = value;
+        ensureSetBindingTypeOnce();
+        m_bindingContent = Content::StringLiteral { value.toString() };
+    }
+
+    void setScriptBinding()
+    {
+        // ### TODO: this does not allow us to do anything interesting with the binding
+        ensureSetBindingTypeOnce();
+        m_bindingContent = Content::Script {};
+    }
+
+    void setBoolLiteral(bool value)
+    {
+        ensureSetBindingTypeOnce();
+        m_bindingContent = Content::BoolLiteral { value };
+    }
+
+    void setNullLiteral()
+    {
+        ensureSetBindingTypeOnce();
+        m_bindingContent = Content::Null {};
+    }
+
+    void setNumberLiteral(double value)
+    {
+        ensureSetBindingTypeOnce();
+        m_bindingContent = Content::NumberLiteral { value };
+    }
+
+    void setRegexpLiteral(QAnyStringView value)
+    {
+        ensureSetBindingTypeOnce();
+        m_bindingContent = Content::RegexpLiteral { value.toString() };
     }
 
     // ### TODO: we might need comment and translation number at some point
     void setTranslation(QStringView translation)
     {
-        setBindingTypeOnce(BindingType::Translation);
-        m_translationString = translation.toString();
+        ensureSetBindingTypeOnce();
+        m_bindingContent = Content::TranslationString { translation.toString() };
     }
 
     void setTranslationId(QStringView id)
     {
-        setBindingTypeOnce(BindingType::TranslationById);
-        m_translationId = id.toString();
+        ensureSetBindingTypeOnce();
+        m_bindingContent = Content::TranslationById { id.toString() };
     }
 
     void setObject(const QString &typeName, const QSharedPointer<const QQmlJSScope> &type)
     {
-        setBindingTypeOnce(BindingType::Object);
-        m_value = type;
-        m_valueTypeName = typeName;
+        ensureSetBindingTypeOnce();
+        m_bindingContent = Content::Object { typeName, type };
     }
 
     void setInterceptor(const QString &typeName, const QSharedPointer<const QQmlJSScope> &type)
     {
-        setBindingTypeOnce(BindingType::Interceptor);
-        m_interceptor = type;
-        m_interceptorTypeName = typeName;
+        ensureSetBindingTypeOnce();
+        m_bindingContent = Content::Interceptor { typeName, type };
     }
 
     void setValueSource(const QString &typeName, const QSharedPointer<const QQmlJSScope> &type)
     {
-        setBindingTypeOnce(BindingType::ValueSource);
-        m_valueSource = type;
-        m_valueSourceTypeName = typeName;
+        ensureSetBindingTypeOnce();
+        m_bindingContent = Content::ValueSource { typeName, type };
     }
 
-    QString literalTypeName() const { return m_valueTypeName; }
-    const QVariant &literalValue() const { return m_literalValue; }
-    QSharedPointer<const QQmlJSScope> literalType() const { return m_value; }
+    QString literalTypeName() const;
 
-    QString objectTypeName() const { return m_valueTypeName; }
-    QSharedPointer<const QQmlJSScope> objectType() const { return m_value; }
+    // ### TODO: here and below: Introduce an allowConversion parameter, if yes, enable conversions e.g. bool -> number?
+    bool boolValue() const;
 
-    QString interceptorTypeName() const { return m_interceptorTypeName; }
-    QSharedPointer<const QQmlJSScope> interceptorType() const { return m_interceptor; }
+    double numberValue() const;
 
-    QString valueSourceTypeName() const { return m_valueSourceTypeName; }
-    QSharedPointer<const QQmlJSScope> valueSourceType() const { return m_valueSource; }
+    QString stringValue() const;
+
+    QSharedPointer<const QQmlJSScope> literalType(const QQmlJSTypeResolver *resolver) const;
+
+    QString objectTypeName() const
+    {
+        if (auto *object = std::get_if<Content::Object>(&m_bindingContent))
+            return object->typeName;
+        // warn
+        return {};
+    }
+    QSharedPointer<const QQmlJSScope> objectType() const
+    {
+        if (auto *object = std::get_if<Content::Object>(&m_bindingContent))
+            return object->value.lock();
+        // warn
+        return {};
+    }
 
     bool hasLiteral() const
     {
-        return isLiteralBinding()
-                && (!m_literalValue.isNull() || m_bindingType == QQmlJSMetaPropertyBinding::Null);
+        // TODO: Assumption: if the type is literal, we must have one
+        return isLiteralBinding();
     }
-    bool hasObject() const { return m_bindingType == BindingType::Object && !m_value.isNull(); }
+    bool hasObject() const { return bindingType() == BindingType::Object; }
     bool hasInterceptor() const
     {
-        return m_bindingType == BindingType::Interceptor && !m_interceptor.isNull();
+        return bindingType() == BindingType::Interceptor;
     }
     bool hasValueSource() const
     {
-        return m_bindingType == BindingType::ValueSource && !m_valueSource.isNull();
+        return bindingType() == BindingType::ValueSource;
     }
 
     friend bool operator==(const QQmlJSMetaPropertyBinding &a, const QQmlJSMetaPropertyBinding &b)
     {
-        return a.m_bindingType == b.m_bindingType && a.m_propertyName == b.m_propertyName
-                && a.m_valueTypeName == b.m_valueTypeName
-                && a.m_interceptorTypeName == b.m_interceptorTypeName
-                && a.m_valueSourceTypeName == b.m_valueSourceTypeName
-                && a.m_literalValue == b.m_literalValue && a.m_value == b.m_value
-                && a.m_interceptor == b.m_interceptor && a.m_sourceLocation == b.m_sourceLocation;
+        return a.m_propertyName == b.m_propertyName
+                &&  a.m_bindingContent == b.m_bindingContent
+                &&  a.m_sourceLocation == b.m_sourceLocation;
     }
 
     friend bool operator!=(const QQmlJSMetaPropertyBinding &a, const QQmlJSMetaPropertyBinding &b)
@@ -541,12 +636,9 @@ public:
 
     friend size_t qHash(const QQmlJSMetaPropertyBinding &binding, size_t seed = 0)
     {
-        return qHashMulti(seed, binding.m_propertyName, binding.m_valueTypeName,
-                          binding.m_interceptorTypeName, binding.m_valueSourceTypeName,
-                          binding.m_literalValue.toString(), binding.m_value.toStrongRef().data(),
-                          binding.m_interceptor.toStrongRef().data(),
-                          binding.m_valueSource.toStrongRef().data(), binding.m_sourceLocation,
-                          binding.m_bindingType);
+        // we don't need to care about the actual binding content when hashing
+        return qHashMulti(seed, binding.m_propertyName, binding.m_sourceLocation,
+                          binding.bindingType());
     }
 };
 

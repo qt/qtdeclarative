@@ -270,19 +270,15 @@ int main(int argc, char **argv)
             QQmlJSLogger logger;
 
             // Always trigger the qFatal() on "pragma Strict" violations.
-            logger.setCategoryError(Log_Compiler, true);
+            logger.setCategoryLevel(Log_Compiler, QtCriticalMsg);
+            logger.setCategoryIgnored(Log_Compiler, false);
 
             // By default, we're completely silent,
             // as the lcAotCompiler category default is QtFatalMsg
-            if (lcAotCompiler().isDebugEnabled())
-                logger.setCategoryLevel(Log_Compiler, QtDebugMsg);
-            else if (lcAotCompiler().isInfoEnabled())
-                logger.setCategoryLevel(Log_Compiler, QtInfoMsg);
-            else if (lcAotCompiler().isWarningEnabled())
-                logger.setCategoryLevel(Log_Compiler, QtWarningMsg);
-            else if (lcAotCompiler().isCriticalEnabled())
-                logger.setCategoryLevel(Log_Compiler, QtCriticalMsg);
-            else
+            const bool loggingEnabled = lcAotCompiler().isDebugEnabled()
+                    || lcAotCompiler().isInfoEnabled() || lcAotCompiler().isWarningEnabled()
+                    || lcAotCompiler().isCriticalEnabled();
+            if (!loggingEnabled)
                 logger.setSilent(true);
 
             QQmlJSAotCompiler cppCodeGen(
@@ -297,9 +293,9 @@ int main(int argc, char **argv)
             QList<QQmlJS::DiagnosticMessage> warnings = importer.takeGlobalWarnings();
 
             if (!warnings.isEmpty()) {
-                logger.logWarning(QStringLiteral("Type warnings occurred while compiling file:"),
-                                  Log_Import);
-                logger.processMessages(warnings, QtWarningMsg, Log_Import);
+                logger.log(QStringLiteral("Type warnings occurred while compiling file:"),
+                           Log_Import, QQmlJS::SourceLocation());
+                logger.processMessages(warnings, Log_Import);
             }
         }
     } else if (inputFile.endsWith(QLatin1String(".js")) || inputFile.endsWith(QLatin1String(".mjs"))) {

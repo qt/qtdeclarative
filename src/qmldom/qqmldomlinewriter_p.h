@@ -55,6 +55,7 @@
 #include <QtQml/private/qqmljssourcelocation_p.h>
 #include <QtCore/QObject>
 #include <QtCore/QAtomicInt>
+#include <QtCore/QMap>
 #include <functional>
 
 QT_BEGIN_NAMESPACE

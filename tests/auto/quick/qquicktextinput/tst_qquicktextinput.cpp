@@ -31,6 +31,7 @@
 #include <QtQuickTestUtils/private/testhttpserver_p.h>
 #include <private/qinputmethod_p.h>
 #include <QtQml/qqmlengine.h>
+#include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlexpression.h>
 #include <QFile>
 #include <QtQuick/qquickview.h>
@@ -2896,7 +2897,8 @@ void tst_qquicktextinput::cursorDelegate()
     const QPoint point2 = textInputObject->positionToRectangle(10).center().toPoint();
     QTest::qWait(400);  //ensure this isn't treated as a double-click
     QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, point1);
-    QMouseEvent mv(QEvent::MouseMove, point2, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
+    QMouseEvent mv(QEvent::MouseMove, point2, textInputObject->mapToGlobal(point2),
+                   Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
     QGuiApplication::sendEvent(&view, &mv);
     QTest::mouseRelease(&view, Qt::LeftButton, Qt::NoModifier, point2);
     QTest::qWait(50);

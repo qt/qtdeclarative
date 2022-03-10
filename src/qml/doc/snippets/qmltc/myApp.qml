@@ -91,6 +91,7 @@ Rectangle {
                 id: rndText
                 font.pixelSize: 25
                 color: textColor
+                text: "0.00"
             }
 
             Rectangle {

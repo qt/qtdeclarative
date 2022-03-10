@@ -38,6 +38,7 @@
 #include <QtQuick/private/qquickrectangle_p.h>
 #include <QtQuick/private/qquicktextinput_p.h>
 #include <QtQuick/private/qquickitemchangelistener_p.h>
+#include <QtQuick/private/qquickanchors_p.h>
 #include <QtGui/qstylehints.h>
 #include <private/qquickitem_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
@@ -3675,9 +3676,8 @@ void tst_QQuickItem::childAt()
 
 void tst_QQuickItem::grab()
 {
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-        QSKIP("Skipping due to grabToImage not functional on offscreen/minimal platforms");
+    if (QGuiApplication::platformName() == QLatin1String("minimal"))
+        QSKIP("Skipping due to grabToImage not functional on minimal platforms");
 
     QQuickView view;
     view.setSource(testFileUrl("grabToImage.qml"));

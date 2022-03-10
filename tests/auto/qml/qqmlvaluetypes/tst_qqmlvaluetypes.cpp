@@ -295,8 +295,9 @@ void tst_qqmlvaluetypes::sizef()
 
 void tst_qqmlvaluetypes::locale()
 {
-    {
-        QQmlComponent component(&engine, testFileUrl("locale_read.qml"));
+    for (const QUrl &testFile :
+         { testFileUrl("locale_read.qml"), testFileUrl("locale_read_singleton.qml") }) {
+        QQmlComponent component(&engine, testFile);
         QScopedPointer<QObject> object(component.create());
         QVERIFY(!object.isNull());
 

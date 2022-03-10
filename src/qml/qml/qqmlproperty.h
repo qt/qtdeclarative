@@ -40,6 +40,8 @@
 #ifndef QQMLPROPERTY_H
 #define QQMLPROPERTY_H
 
+#include <QtCore/qstring.h>
+#include <QtCore/qhashfunctions.h>
 #include <QtQml/qtqmlglobal.h>
 #include <QtCore/qmetaobject.h>
 #include <QtQml/qqmlregistration.h>

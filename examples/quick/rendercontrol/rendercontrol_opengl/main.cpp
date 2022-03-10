@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     QGuiApplication app(argc, argv);
 
     // only functional when Qt Quick is also using OpenGL
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi);
+    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
 
     WindowSingleThreaded window;
     window.resize(1024, 768);

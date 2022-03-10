@@ -71,6 +71,8 @@ Q_DECLARE_LOGGING_CATEGORY(lcTableViewDelegateLifecycle)
 
 static const qreal kDefaultRowHeight = 50;
 static const qreal kDefaultColumnWidth = 50;
+static const int kEdgeIndexNotSet = -2;
+static const int kEdgeIndexAtEnd = -3;
 
 class FxTableItem;
 class QQuickTableSectionSizeProviderPrivate;
@@ -81,7 +83,7 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableSectionSizeProvider : public QObject {
 public:
     QQuickTableSectionSizeProvider(QObject *parent=nullptr);
     void setSize(int section, qreal size);
-    qreal size(int section);
+    qreal size(int section) const;
     bool resetSize(int section);
     void resetAll();
 
@@ -202,6 +204,7 @@ public:
         VerifyTable,
         LayoutTable,
         LoadAndUnloadAfterLayout,
+        CancelOvershoot,
         PreloadColumns,
         PreloadRows,
         MovePreloadedItemsToPool,
@@ -276,7 +279,7 @@ public:
     QQmlTableInstanceModel::ReusableFlag reusableFlag = QQmlTableInstanceModel::Reusable;
 
     bool blockItemCreatedCallback = false;
-    bool layoutWarningIssued = false;
+    mutable bool layoutWarningIssued = false;
     bool polishing = false;
     bool syncVertically = false;
     bool syncHorizontally = false;
@@ -295,9 +298,9 @@ public:
     QQuickTableSectionSizeProvider rowHeights;
     QQuickTableSectionSizeProvider columnWidths;
 
-    EdgeRange cachedNextVisibleEdgeIndex[4];
-    EdgeRange cachedColumnWidth;
-    EdgeRange cachedRowHeight;
+    mutable EdgeRange cachedNextVisibleEdgeIndex[4];
+    mutable EdgeRange cachedColumnWidth;
+    mutable EdgeRange cachedRowHeight;
 
     // TableView uses contentWidth/height to report the size of the table (this
     // will e.g make scrollbars written for Flickable work out of the box). This
@@ -358,14 +361,16 @@ public:
     QSize calculateTableSize();
     void updateTableSize();
 
-    inline bool isColumnHidden(int column);
-    inline bool isRowHidden(int row);
+    inline bool isColumnHidden(int column) const;
+    inline bool isRowHidden(int row) const;
 
     qreal getColumnLayoutWidth(int column);
     qreal getRowLayoutHeight(int row);
-    qreal getColumnWidth(int column);
-    qreal getRowHeight(int row);
+    qreal getColumnWidth(int column) const;
+    qreal getRowHeight(int row) const;
+    qreal getEffectiveRowY(int row) const;
     qreal getEffectiveRowHeight(int row) const;
+    qreal getEffectiveColumnX(int column) const;
     qreal getEffectiveColumnWidth(int column) const;
 
     int topRow() const { return *loadedRows.cbegin(); }
@@ -396,11 +401,11 @@ public:
     void syncLoadedTableFromLoadRequest();
     void shiftLoadedTableRect(const QPointF newPosition);
 
-    int nextVisibleEdgeIndex(Qt::Edge edge, int startIndex);
-    int nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge);
-    bool allColumnsLoaded();
-    bool allRowsLoaded();
-    inline int edgeToArrayIndex(Qt::Edge edge);
+    int nextVisibleEdgeIndex(Qt::Edge edge, int startIndex) const;
+    int nextVisibleEdgeIndexAroundLoadedTable(Qt::Edge edge) const;
+    inline bool atTableEnd(Qt::Edge edge) const { return nextVisibleEdgeIndexAroundLoadedTable(edge) == kEdgeIndexAtEnd; }
+    inline bool atTableEnd(Qt::Edge edge, int startIndex) const { return nextVisibleEdgeIndex(edge, startIndex) == kEdgeIndexAtEnd; }
+    inline int edgeToArrayIndex(Qt::Edge edge) const;
     void clearEdgeSizeCache();
 
     bool canLoadTableEdge(Qt::Edge tableEdge, const QRectF fillRect) const;
@@ -421,7 +426,7 @@ public:
     void unloadItem(const QPoint &cell);
     void loadEdge(Qt::Edge edge, QQmlIncubator::IncubationMode incubationMode);
     void unloadEdge(Qt::Edge edge);
-    void loadAndUnloadVisibleEdges();
+    void loadAndUnloadVisibleEdges(QQmlIncubator::IncubationMode incubationMode = QQmlIncubator::AsynchronousIfNested);
     void drainReusePoolAfterLoadRequest();
     void processLoadRequest();
 
@@ -433,6 +438,7 @@ public:
     void layoutAfterLoadingInitialTable();
     void adjustViewportXAccordingToAlignment();
     void adjustViewportYAccordingToAlignment();
+    void cancelOvershootAfterLayout();
 
     void scheduleRebuildTable(QQuickTableViewPrivate::RebuildOptions options);
 
@@ -473,10 +479,9 @@ public:
     void syncViewportPosRecursive();
 
     bool selectedInSelectionModel(const QPoint &cell) const;
-    void selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected) const;
-    void updateSelectedOnAllDelegateItems() const;
-    void setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select) const;
-    void setSelectedOnDelegateItem(QQuickItem *delegateItem, bool select) const;
+    void selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected);
+    void updateSelectedOnAllDelegateItems();
+    void setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select);
 
     void fetchMoreData();
 
@@ -485,6 +490,11 @@ public:
 
     inline QString tableLayoutToString() const;
     void dumpTable() const;
+
+    void setRequiredProperty(const char *property,
+                             const QVariant &value,
+                             int serializedModelIndex,
+                             QObject *object, bool init);
 
     // QQuickSelectable
     QQuickItem *selectionPointerHandlerTarget() const override;

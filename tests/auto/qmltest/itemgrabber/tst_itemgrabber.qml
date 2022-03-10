@@ -40,8 +40,7 @@ Item {
         when: imageOnDisk.ready && imageOnDiskSmall.ready
 
         function test_endresult_disk() {
-            if ((Qt.platform.pluginName === "offscreen")
-                || (Qt.platform.pluginName === "minimal"))
+            if (Qt.platform.pluginName === "minimal")
                 skip("grabImage does not work on offscreen/minimal platforms");
 
             var image = grabImage(root);
@@ -77,8 +76,7 @@ Item {
         }
 
         function test_endresult_cache(data) {
-            if ((Qt.platform.pluginName === "offscreen")
-                || (Qt.platform.pluginName === "minimal"))
+            if (Qt.platform.pluginName === "minimal")
                 skip("grabImage does not work on offscreen/minimal platforms");
 
             imageInCache.cache = data.cache;

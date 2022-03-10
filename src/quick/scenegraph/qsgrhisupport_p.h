@@ -77,16 +77,12 @@
 QT_BEGIN_NAMESPACE
 
 class QSGDefaultRenderContext;
-class QVulkanInstance;
 class QOffscreenSurface;
 
 // Opting in/out of QRhi and choosing the default/requested backend is managed
 // by this singleton. This is because this information may be needed before
 // creating a render loop. A well-written render loop sets up its QRhi and
 // related machinery using the helper functions in here.
-//
-// cleanup() must be called to perform global (not per thread) cleanup, such
-// as, destroying the QVulkanInstance (if one was created in vulkanInstance()).
 //
 // In addition, the class provides handy conversion and query stuff for the
 // renderloop and the QSGRendererInterface implementations.
@@ -96,8 +92,6 @@ class Q_QUICK_PRIVATE_EXPORT QSGRhiSupport
 public:
     static QSGRhiSupport *instance_internal();
     static QSGRhiSupport *instance();
-    static QVulkanInstance *defaultVulkanInstance();
-    static void cleanupDefaultVulkanInstance();
     static int chooseSampleCountForWindowWithRhi(QWindow *window, QRhi *rhi);
     static QImage grabAndBlockInCurrentFrame(QRhi *rhi, QRhiCommandBuffer *cb, QRhiTexture *src = nullptr);
     static void checkEnvQSgInfo();

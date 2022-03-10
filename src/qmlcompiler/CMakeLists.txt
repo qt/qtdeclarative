@@ -8,7 +8,8 @@ qt_internal_add_module(QmlCompilerPrivate
     SOURCES
         qcoloroutput_p.h qcoloroutput.cpp
         qdeferredpointer_p.h
-        qqmljsannotation_p.h qqmljsannotation.cpp
+        qqmljsannotation.cpp qqmljsannotation_p.h
+        qqmljsbasicblocks.cpp qqmljsbasicblocks_p.h
         qqmljscodegenerator.cpp qqmljscodegenerator_p.h
         qqmljscompilepass_p.h
         qqmljscompiler.cpp qqmljscompiler_p.h
@@ -17,7 +18,7 @@ qt_internal_add_module(QmlCompilerPrivate
         qqmljsimportvisitor.cpp qqmljsimportvisitor_p.h
         qqmljsloadergenerator.cpp qqmljsloadergenerator_p.h
         qqmljslogger_p.h qqmljslogger.cpp
-        qqmljsmetatypes_p.h
+        qqmljsmetatypes_p.h qqmljsmetatypes.cpp
         qqmljsregistercontent.cpp qqmljsregistercontent_p.h
         qqmljsresourcefilemapper.cpp qqmljsresourcefilemapper_p.h
         qqmljsscope.cpp qqmljsscope_p.h

@@ -470,18 +470,31 @@ void QQmlEnginePrivate::init()
         // required for the Compiler.
         qmlRegisterType<QObject>("QML", 1, 0, "QtObject");
         qmlRegisterType<QQmlComponent>("QML", 1, 0, "Component");
+        qmlRegisterAnonymousSequentialContainer<QList<QVariant>>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<bool>>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<int>>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<float>>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<double>>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<QString>>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<QUrl>>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<QDateTime>>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<QRegularExpression>>("QML", 1);
+        qmlRegisterAnonymousSequentialContainer<QList<QByteArray>>("QML", 1);
+
+        // No need to specifically register those.
+        static_assert(std::is_same_v<QStringList, QList<QString>>);
+        static_assert(std::is_same_v<QVariantList, QList<QVariant>>);
+
+        qRegisterMetaType<QVariant>();
+        qRegisterMetaType<QQmlScriptString>();
+        qRegisterMetaType<QJSValue>();
+        qRegisterMetaType<QQmlComponent::Status>();
+        qRegisterMetaType<QList<QObject*> >();
+        qRegisterMetaType<QQmlBinding*>();
 
         QQmlData::init();
         baseModulesUninitialized = false;
     }
-
-    qRegisterMetaType<QVariant>();
-    qRegisterMetaType<QQmlScriptString>();
-    qRegisterMetaType<QJSValue>();
-    qRegisterMetaType<QQmlComponent::Status>();
-    qRegisterMetaType<QList<QObject*> >();
-    qRegisterMetaType<QList<int> >();
-    qRegisterMetaType<QQmlBinding*>();
 
     q->handle()->setQmlEngine(q);
 
@@ -1310,9 +1323,10 @@ void QQmlData::destroyed(QObject *object)
     ownContext.reset();
 
     while (guards) {
-        QQmlGuard<QObject> *guard = static_cast<QQmlGuard<QObject> *>(guards);
-        *guard = (QObject *)nullptr;
-        guard->objectDestroyed(object);
+        auto *guard = guards;
+        guard->setObject(nullptr);
+        if (guard->objectDestroyed)
+            guard->objectDestroyed(guard);
     }
 
     disconnectNotifiers();
@@ -1944,6 +1958,8 @@ bool QQml_isFileCaseCorrect(const QString &fileName, int lengthIn /* = -1 */)
 
     \sa {QQmlEngine::contextForObject()}{contextForObject()}, qmlEngine()
 */
+
+void hasJsOwnershipIndicator(QQmlGuardImpl *) {};
 
 QT_END_NAMESPACE
 
