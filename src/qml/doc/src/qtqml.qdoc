@@ -128,6 +128,7 @@ The QML framework allows QML code to contain JavaScript expressions and for
 the QML code to interact with C++ code.
 
 \list
+    \li \l {Writing QML Modules}
     \li \l {Important C++ Classes Provided By The Qt QML Module}
     \li \l {Integrating QML and C++}
 \endlist
