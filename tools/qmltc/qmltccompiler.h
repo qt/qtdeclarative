@@ -39,6 +39,8 @@
 
 #include <private/qqmljslogger_p.h>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 struct QmltcCompilerInfo
@@ -49,18 +51,22 @@ struct QmltcCompilerInfo
     QString resourcePath;
 };
 
+class CodeGenerator;
 class QmltcCompiler
 {
 public:
     QmltcCompiler(const QString &url, QmltcTypeResolver *resolver, QmltcVisitor *visitor,
                   QQmlJSLogger *logger);
-    void compile(const QmltcCompilerInfo &info);
+    void compile(const QmltcCompilerInfo &info, QmlIR::Document *doc);
+
+    ~QmltcCompiler();
 
 private:
     QString m_url; // QML input file url
     QmltcTypeResolver *m_typeResolver = nullptr;
     QmltcVisitor *m_visitor = nullptr;
     QQmlJSLogger *m_logger = nullptr;
+    std::unique_ptr<CodeGenerator> m_prototypeCodegen;
     QmltcCompilerInfo m_info {}; // miscellaneous input/output information
 
     void compileUrlMethod(QmltcMethod &urlMethod);

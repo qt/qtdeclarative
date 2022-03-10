@@ -32,6 +32,8 @@
 #include "qmltcpropertyutils.h"
 #include "qmltccompilerpieces.h"
 
+#include "prototype/codegenerator.h"
+
 #include <QtCore/qloggingcategory.h>
 #include <private/qqmljsutils_p.h>
 
@@ -52,26 +54,69 @@ QmltcCompiler::QmltcCompiler(const QString &url, QmltcTypeResolver *resolver, Qm
     Q_ASSERT(!hasErrors());
 }
 
-void QmltcCompiler::compile(const QmltcCompilerInfo &info)
+// needed due to std::unique_ptr<CodeGenerator> with CodeGenerator being
+// incomplete type in the header (~std::unique_ptr<> fails with a static_assert)
+QmltcCompiler::~QmltcCompiler() = default;
+
+void QmltcCompiler::compile(const QmltcCompilerInfo &info, QmlIR::Document *doc)
 {
     m_info = info;
     Q_ASSERT(!m_info.outputCppFile.isEmpty());
     Q_ASSERT(!m_info.outputHFile.isEmpty());
     Q_ASSERT(!m_info.resourcePath.isEmpty());
 
-    const QList<QQmlJSScope::ConstPtr> types = m_visitor->qmlScopes();
-    QList<QmltcType> compiledTypes;
-    compiledTypes.reserve(types.size());
+    m_prototypeCodegen =
+            std::make_unique<CodeGenerator>(m_url, m_logger, doc, m_typeResolver, &info);
+
+    QSet<QString> cppIncludesFromPrototype;
+    m_prototypeCodegen->prepare(&cppIncludesFromPrototype);
+    if (hasErrors())
+        return;
+
+    const auto isComponent = [](const QQmlJSScope::ConstPtr &type) {
+        auto base = type->baseType();
+        return base && base->internalName() == u"QQmlComponent"_qs;
+    };
+
+    auto qmlScopes = m_visitor->qmlScopes();
+    const QSet<QQmlJSScope::ConstPtr> types(qmlScopes.begin(), qmlScopes.end());
 
     QmltcMethod urlMethod;
     compileUrlMethod(urlMethod);
+    m_prototypeCodegen->setUrlMethodName(urlMethod.name);
 
-    for (const QQmlJSScope::ConstPtr &type : types) {
-        compiledTypes.emplaceBack(); // creates empty type
-        compileType(compiledTypes.back(), type);
-        if (hasErrors())
-            return;
+    const auto objects = m_prototypeCodegen->objects();
+    QList<CodeGenerator::CodeGenObject> filteredObjects;
+    filteredObjects.reserve(objects.size());
+    std::copy_if(objects.cbegin(), objects.cend(), std::back_inserter(filteredObjects),
+                 [&](const auto &object) { return types.contains(object.type); });
+
+    QList<QmltcType> compiledTypes;
+    QQmlJSScope::ConstPtr root = m_visitor->result();
+    if (isComponent(root)) {
+        compiledTypes.reserve(1);
+        compiledTypes.emplaceBack(); // create empty type
+        const auto compile = [this](QmltcType &type, const CodeGenerator::CodeGenObject &object) {
+            m_prototypeCodegen->compileQQmlComponentElements(type, object);
+        };
+        Q_ASSERT(root == filteredObjects.at(0).type);
+        m_prototypeCodegen->compileObject(compiledTypes.back(), filteredObjects.at(0), compile);
+    } else {
+        const auto compile = [this](QmltcType &type, const CodeGenerator::CodeGenObject &object) {
+            m_prototypeCodegen->compileObjectElements(type, object);
+        };
+
+        compiledTypes.reserve(filteredObjects.size());
+        for (const auto &object : filteredObjects) {
+            Q_ASSERT(object.type->scopeType() == QQmlJSScope::QMLScope);
+            if (m_prototypeCodegen->ignoreObject(object))
+                continue;
+            compiledTypes.emplaceBack(); // create empty type
+            m_prototypeCodegen->compileObject(compiledTypes.back(), object, compile);
+        }
     }
+    if (hasErrors())
+        return;
 
     QmltcProgram program;
     program.url = m_url;
@@ -79,7 +124,7 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info)
     program.hPath = m_info.outputHFile;
     program.outNamespace = m_info.outputNamespace;
     program.compiledTypes = compiledTypes;
-    program.includes = m_visitor->cppIncludeFiles();
+    program.includes = m_visitor->cppIncludeFiles() | cppIncludesFromPrototype;
     program.urlMethod = urlMethod;
 
     QmltcOutput out;
@@ -94,6 +139,7 @@ void QmltcCompiler::compileUrlMethod(QmltcMethod &urlMethod)
     urlMethod.body << u"static QUrl url {QStringLiteral(\"qrc:%1\")};"_qs.arg(m_info.resourcePath);
     urlMethod.body << u"return url;"_qs;
     urlMethod.declarationPrefixes << u"static"_qs;
+    urlMethod.modifiers << u"noexcept"_qs;
 }
 
 void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr &type)

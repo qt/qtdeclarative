@@ -36,6 +36,7 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qqueue.h>
 #include <QtCore/qhash.h>
+#include <QtCore/qset.h>
 
 #include <QtQml/private/qqmlirbuilder_p.h>
 #include <private/qqmljscompiler_p.h>
@@ -52,13 +53,17 @@ public:
     CodeGenerator(const QString &url, QQmlJSLogger *logger, QmlIR::Document *doc,
                   const QmltcTypeResolver *localResolver, const QmltcCompilerInfo *info);
 
-    // main function: given compilation options, generates C++ code (implicitly)
-    void generate();
-
     // TODO: this should really be just QQmlJSScope::ConstPtr (and maybe C++
     // class name), but bindings are currently not represented in QQmlJSScope,
     // so have to keep track of QmlIR::Object and consequently some extra stuff
     using CodeGenObject = Qml2CppObject;
+
+    // initializes code generator
+    void prepare(QSet<QString> *cppIncludes);
+    void setUrlMethodName(const QString &name) { m_urlMethodName = name; }
+
+    const QList<CodeGenObject> &objects() const { return m_objects; }
+    bool ignoreObject(const CodeGenObject &object) const;
 
 private:
     QString m_url; // document url
@@ -79,7 +84,7 @@ private:
     // types ignored by the code generator
     QSet<QQmlJSScope::ConstPtr> m_ignoredTypes;
 
-    QmltcMethod m_urlMethod;
+    QString m_urlMethodName;
 
     // helper struct used for unique string generation
     struct UniqueStringId
@@ -139,12 +144,14 @@ private:
 
     bool m_isAnonymous = false; // crutch to distinguish QML_ELEMENT from QML_ANONYMOUS
 
+public:
     // code compilation functions that produce "compiled" entities
     void compileObject(QmltcType &current, const CodeGenObject &object,
                        std::function<void(QmltcType &, const CodeGenObject &)> compileElements);
     void compileObjectElements(QmltcType &current, const CodeGenObject &object);
     void compileQQmlComponentElements(QmltcType &current, const CodeGenObject &object);
 
+private:
     void compileEnum(QmltcType &current, const QQmlJSMetaEnum &e);
     void compileProperty(QmltcType &current, const QQmlJSMetaProperty &p,
                          const QQmlJSScope::ConstPtr &owner);
@@ -152,7 +159,6 @@ private:
                       const QQmlJSScope::ConstPtr &owner);
     void compileMethod(QmltcType &current, const QQmlJSMetaMethod &m, const QmlIR::Function *f,
                        const CodeGenObject &object);
-    void compileUrlMethod(); // special case
 
     // helper structure that holds the information necessary for most bindings,
     // such as accessor name, which is used to reference the properties like:
