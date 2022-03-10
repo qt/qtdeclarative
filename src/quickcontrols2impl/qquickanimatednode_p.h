@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <QtCore/qobject.h>
 #include <QtQuick/qsgnode.h>
 #include <QtCore/qelapsedtimer.h>
 #include <QtQuickControls2Impl/private/qtquickcontrols2implglobal_p.h>
