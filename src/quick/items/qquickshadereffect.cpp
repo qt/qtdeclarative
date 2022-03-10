@@ -1441,7 +1441,7 @@ void QQuickShaderEffectImpl::updateShaderVars(Shader shaderType)
     // Recreate signal mappers when the shader has changed.
     clearMappers(shaderType);
 
-    QQmlRefPointer<QQmlPropertyCache> propCache = QQmlData::ensurePropertyCache(m_item);
+    QQmlPropertyCache::ConstPtr propCache = QQmlData::ensurePropertyCache(m_item);
 
     if (!m_itemMetaObject)
         m_itemMetaObject = m_item->metaObject();

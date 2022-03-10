@@ -255,7 +255,8 @@ QQmlPropertyData *QObjectWrapper::findProperty(
     return result;
 }
 
-ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property)
+ReturnedValue QObjectWrapper::getProperty(
+        ExecutionEngine *engine, QObject *object, const QQmlPropertyData *property)
 {
     QQmlData::flushPendingBinding(object, property->coreIndex());
 
@@ -487,7 +488,7 @@ void QObjectWrapper::setProperty(
                     const QQmlPropertyIndex originalIndex(property->coreIndex(), -1);
                     auto [targetObject, targetIndex] = QQmlPropertyPrivate::findAliasTarget(object, originalIndex);
                     Q_ASSERT(targetObject);
-                    QQmlPropertyCache *targetCache
+                    const QQmlPropertyCache *targetCache
                             = QQmlData::get(targetObject)->propertyCache.data();
                     Q_ASSERT(targetCache);
                     QQmlPropertyData *targetProperty = targetCache->property(targetIndex.coreIndex());
@@ -756,7 +757,7 @@ bool QObjectWrapper::virtualIsEqualTo(Managed *a, Managed *b)
 
 ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
 {
-    if (QQmlRefPointer<QQmlPropertyCache> cache = QQmlData::ensurePropertyCache(object)) {
+    if (QQmlPropertyCache::ConstPtr cache = QQmlData::ensurePropertyCache(object)) {
         ReturnedValue result = Encode::null();
         void *args[] = { &result, &engine };
         if (cache->callJSFactoryMethod(object, args))
@@ -1131,7 +1132,7 @@ ReturnedValue QObjectWrapper::method_connect(const FunctionObject *b, const Valu
     slot->function.set(scope.engine, f);
 
     if (QQmlData *ddata = QQmlData::get(signalObject)) {
-        if (QQmlPropertyCache *propertyCache = ddata->propertyCache.data()) {
+        if (const QQmlPropertyCache *propertyCache = ddata->propertyCache.data()) {
             QQmlPropertyPrivate::flushSignal(signalObject, propertyCache->methodIndexToSignalIndex(signalIndex));
         }
     }

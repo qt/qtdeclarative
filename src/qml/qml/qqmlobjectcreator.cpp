@@ -1316,7 +1316,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
         return instance;
     }
 
-    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches->at(index);
+    QQmlPropertyCache::ConstPtr cache = propertyCaches->at(index);
     Q_ASSERT(!cache.isNull());
     if (installPropertyCache)
         ddata->propertyCache = cache;
@@ -1505,7 +1505,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     QV4::Scope valueScope(v4);
     QV4::ScopedValue scopeObjectProtector(valueScope);
 
-    QQmlRefPointer<QQmlPropertyCache> cache = propertyCaches->at(_compiledObjectIndex);
+    QQmlPropertyCache::ConstPtr cache = propertyCaches->at(_compiledObjectIndex);
 
     QQmlVMEMetaObject *vmeMetaObject = nullptr;
     if (propertyCaches->needsVMEMetaObject(_compiledObjectIndex)) {

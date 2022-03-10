@@ -189,7 +189,8 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
 
     void destroyObject(bool lastCall);
 
-    static ReturnedValue getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property);
+    static ReturnedValue getProperty(
+            ExecutionEngine *engine, QObject *object, const QQmlPropertyData *property);
 
     static ReturnedValue virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup);
     static ReturnedValue lookupAttached(Lookup *l, ExecutionEngine *engine, const Value &object);
@@ -253,7 +254,7 @@ inline ReturnedValue QObjectWrapper::lookupGetterImpl(Lookup *lookup, ExecutionE
     if (!ddata)
         return revertLookup();
 
-    QQmlPropertyData *property = lookup->qobjectLookup.propertyData;
+    const QQmlPropertyData *property = lookup->qobjectLookup.propertyData;
     if (ddata->propertyCache.data() != lookup->qobjectLookup.propertyCache) {
         if (property->isOverridden() && (!useOriginalProperty || property->isFunction() || property->isSignalHandler()))
             return revertLookup();

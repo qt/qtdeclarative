@@ -72,7 +72,7 @@ void ResolvedTypeReference::doDynamicTypeCheck()
 /*!
 Returns the property cache, if one alread exists.  The cache is not referenced.
 */
-QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::propertyCache() const
+QQmlPropertyCache::ConstPtr ResolvedTypeReference::propertyCache() const
 {
     if (m_type.isValid())
         return m_typePropertyCache;

@@ -224,7 +224,7 @@ public:
 
     QV4::WeakValue jsWrapper;
 
-    QQmlRefPointer<QQmlPropertyCache> propertyCache;
+    QQmlPropertyCache::ConstPtr propertyCache;
 
     QQmlGuardImpl *guards;
 
@@ -281,7 +281,7 @@ public:
     static inline void flushPendingBinding(QObject *object, int coreIndex);
     void flushPendingBinding(int coreIndex);
 
-    static QQmlRefPointer<QQmlPropertyCache> ensurePropertyCache(QObject *object)
+    static QQmlPropertyCache::ConstPtr ensurePropertyCache(QObject *object)
     {
         QQmlData *ddata = QQmlData::get(object, /*create*/true);
         if (Q_LIKELY(ddata->propertyCache))
@@ -297,7 +297,7 @@ private:
     mutable QQmlDataExtended *extendedData;
 
     Q_NEVER_INLINE static QQmlData *createQQmlData(QObjectPrivate *priv);
-    Q_NEVER_INLINE static QQmlRefPointer<QQmlPropertyCache> createPropertyCache(QObject *object);
+    Q_NEVER_INLINE static QQmlPropertyCache::ConstPtr createPropertyCache(QObject *object);
 
     Q_ALWAYS_INLINE bool hasBitSet(int bit) const
     {

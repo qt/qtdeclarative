@@ -102,7 +102,10 @@ private:
     QPointer<QQmlContext> m_context;
     std::unique_ptr<QQmlOpenMetaObject> m_openMetaObject;
     QScopedPointer<MetaPropertyData> m_data;
-    //QAbstractDynamicMetaObject *m_parent;
+
+    // This is non-const. You cannot use threads when using the designer metaobject.
+    // Otherwise it's the same as QQmlVMEMetaObject's "cache" member.
+    QQmlPropertyCache::Ptr m_cache;
 
     friend class QQuickDesignerSupportProperties;
 };

@@ -115,7 +115,7 @@ QQmlBindingInstantiationContext::QQmlBindingInstantiationContext(
         int referencingObjectIndex,
         const QV4::CompiledData::Binding *instantiatingBinding,
         const QString &instantiatingPropertyName,
-        const QQmlRefPointer<QQmlPropertyCache> &referencingObjectPropertyCache)
+        const QQmlPropertyCache::ConstPtr &referencingObjectPropertyCache)
     : referencingObjectIndex(referencingObjectIndex)
     , instantiatingBinding(instantiatingBinding)
     , instantiatingPropertyName(instantiatingPropertyName)

@@ -1374,7 +1374,7 @@ QQmlData *QQmlData::createQQmlData(QObjectPrivate *priv)
     return static_cast<QQmlData *>(priv->declarativeData);
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlData::createPropertyCache(QObject *object)
+QQmlPropertyCache::ConstPtr QQmlData::createPropertyCache(QObject *object)
 {
     QQmlData *ddata = QQmlData::get(object, /*create*/true);
     ddata->propertyCache = QQmlMetaType::propertyCache(object, QTypeRevision {});

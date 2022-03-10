@@ -184,11 +184,10 @@ QQmlPropertyCache::~QQmlPropertyCache()
     stringCache.clear();
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCache::copy(
-        const QQmlMetaObjectPointer &mo, int reserve)
+QQmlPropertyCache::Ptr QQmlPropertyCache::copy(const QQmlMetaObjectPointer &mo, int reserve) const
 {
-    QQmlRefPointer<QQmlPropertyCache> cache = QQmlRefPointer<QQmlPropertyCache>(
-            new QQmlPropertyCache(mo), QQmlRefPointer<QQmlPropertyCache>::Adopt);
+    QQmlPropertyCache::Ptr cache = QQmlPropertyCache::Ptr(
+            new QQmlPropertyCache(mo), QQmlPropertyCache::Ptr::Adopt);
     cache->_parent.reset(this);
     cache->propertyIndexCacheStart = propertyIndexCache.count() + propertyIndexCacheStart;
     cache->methodIndexCacheStart = methodIndexCache.count() + methodIndexCacheStart;
@@ -201,15 +200,15 @@ QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCache::copy(
     return cache;
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCache::copy()
+QQmlPropertyCache::Ptr QQmlPropertyCache::copy() const
 {
     return copy(_metaObject, 0);
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCache::copyAndReserve(
-        int propertyCount, int methodCount, int signalCount, int enumCount)
+QQmlPropertyCache::Ptr QQmlPropertyCache::copyAndReserve(
+        int propertyCount, int methodCount, int signalCount, int enumCount) const
 {
-    QQmlRefPointer<QQmlPropertyCache> rv = copy(
+    QQmlPropertyCache::Ptr rv = copy(
                 QQmlMetaObjectPointer(), propertyCount + methodCount + signalCount);
     rv->propertyIndexCache.reserve(propertyCount);
     rv->methodIndexCache.reserve(methodCount);
@@ -353,25 +352,25 @@ QQmlPropertyData *QQmlPropertyCache::defaultProperty() const
     return property(defaultPropertyName(), nullptr, nullptr);
 }
 
-void QQmlPropertyCache::setParent(QQmlRefPointer<QQmlPropertyCache> newParent)
+void QQmlPropertyCache::setParent(QQmlPropertyCache::ConstPtr newParent)
 {
     if (_parent != newParent)
         _parent = std::move(newParent);
 }
 
-QQmlRefPointer<QQmlPropertyCache>
+QQmlPropertyCache::Ptr
 QQmlPropertyCache::copyAndAppend(const QMetaObject *metaObject,
                                  QTypeRevision typeVersion,
                                  QQmlPropertyData::Flags propertyFlags,
                                  QQmlPropertyData::Flags methodFlags,
-                                 QQmlPropertyData::Flags signalFlags)
+                                 QQmlPropertyData::Flags signalFlags) const
 {
     Q_ASSERT(QMetaObjectPrivate::get(metaObject)->revision >= 4);
 
     // Reserve enough space in the name hash for all the methods (including signals), all the
     // signal handlers and all the properties.  This assumes no name clashes, but this is the
     // common case.
-    QQmlRefPointer<QQmlPropertyCache> rv = copy(
+    QQmlPropertyCache::Ptr rv = copy(
                 metaObject,
                 QMetaObjectPrivate::get(metaObject)->methodCount
                 + QMetaObjectPrivate::get(metaObject)->signalCount
@@ -796,7 +795,7 @@ QString QQmlPropertyCache::signalParameterStringForJS(QV4::ExecutionEngine *engi
     return parameters;
 }
 
-int QQmlPropertyCache::originalClone(int index)
+int QQmlPropertyCache::originalClone(int index) const
 {
     while (signal(index)->isCloned())
         --index;
@@ -807,7 +806,7 @@ int QQmlPropertyCache::originalClone(const QObject *object, int index)
 {
     QQmlData *data = QQmlData::get(object);
     if (data && data->propertyCache) {
-        QQmlPropertyCache *cache = data->propertyCache.data();
+        const QQmlPropertyCache *cache = data->propertyCache.data();
         QQmlPropertyData *sig = cache->signal(index);
         while (sig && sig->isCloned()) {
             --index;
@@ -899,7 +898,7 @@ QQmlPropertyData *
 qQmlPropertyCacheProperty(QObject *obj, T name, const QQmlRefPointer<QQmlContextData> &context,
                           QQmlPropertyData *local)
 {
-    QQmlPropertyCache *cache = nullptr;
+    const QQmlPropertyCache *cache = nullptr;
 
     QQmlData *ddata = QQmlData::get(obj, false);
 

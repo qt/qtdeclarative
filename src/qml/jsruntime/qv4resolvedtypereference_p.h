@@ -73,7 +73,7 @@ public:
             m_compilationUnit->release();
     }
 
-    QQmlRefPointer<QQmlPropertyCache> propertyCache() const;
+    QQmlPropertyCache::ConstPtr propertyCache() const;
     QQmlRefPointer<QQmlPropertyCache> createPropertyCache();
     bool addToHash(QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums);
 
@@ -114,7 +114,7 @@ public:
         }
     }
 
-    QQmlRefPointer<QQmlPropertyCache> typePropertyCache() const { return m_typePropertyCache; }
+    QQmlPropertyCache::ConstPtr typePropertyCache() const { return m_typePropertyCache; }
     void setTypePropertyCache(QQmlRefPointer<QQmlPropertyCache> cache)
     {
         m_typePropertyCache = std::move(cache);

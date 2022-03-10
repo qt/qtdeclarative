@@ -147,6 +147,18 @@ private:
 class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount
 {
 public:
+    using Ptr = QQmlRefPointer<QQmlPropertyCache>;
+
+    struct ConstPtr : public QQmlRefPointer<const QQmlPropertyCache>
+    {
+        using QQmlRefPointer<const QQmlPropertyCache>::QQmlRefPointer;
+
+        ConstPtr(const Ptr &ptr) : ConstPtr(ptr.data(), AddRef) {}
+        ConstPtr(Ptr &&ptr) : ConstPtr(ptr.take(), Adopt) {}
+        ConstPtr &operator=(const Ptr &ptr) { return operator=(ConstPtr(ptr)); }
+        ConstPtr &operator=(Ptr &&ptr) { return operator=(ConstPtr(std::move(ptr))); }
+    };
+
     QQmlPropertyCache() = default;
     QQmlPropertyCache(const QMetaObject *, QTypeRevision metaObjectRevision = QTypeRevision::zero());
     ~QQmlPropertyCache() override;
@@ -154,16 +166,16 @@ public:
     void update(const QMetaObject *);
     void invalidate(const QMetaObject *);
 
-    QQmlRefPointer<QQmlPropertyCache> copy();
+    QQmlPropertyCache::Ptr copy() const;
 
-    QQmlRefPointer<QQmlPropertyCache> copyAndAppend(
+    QQmlPropertyCache::Ptr copyAndAppend(
                 const QMetaObject *, QTypeRevision typeVersion,
                 QQmlPropertyData::Flags propertyFlags = QQmlPropertyData::Flags(),
                 QQmlPropertyData::Flags methodFlags = QQmlPropertyData::Flags(),
-                QQmlPropertyData::Flags signalFlags = QQmlPropertyData::Flags());
+                QQmlPropertyData::Flags signalFlags = QQmlPropertyData::Flags()) const;
 
-    QQmlRefPointer<QQmlPropertyCache> copyAndReserve(
-            int propertyCount, int methodCount, int signalCount, int enumCount);
+    QQmlPropertyCache::Ptr copyAndReserve(
+            int propertyCount, int methodCount, int signalCount, int enumCount) const;
     void appendProperty(const QString &, QQmlPropertyData::Flags flags, int coreIndex,
                         QMetaType propType, QTypeRevision revision, int notifyIndex);
     void appendSignal(const QString &, QQmlPropertyData::Flags, int coreIndex,
@@ -196,10 +208,10 @@ public:
     QQmlPropertyData *defaultProperty() const;
 
     // Return a reference here so that we don't have to addref/release all the time
-    inline const QQmlRefPointer<QQmlPropertyCache> &parent() const;
+    inline const QQmlPropertyCache::ConstPtr &parent() const;
 
     // is used by the Qml Designer
-    void setParent(QQmlRefPointer<QQmlPropertyCache> newParent);
+    void setParent(QQmlPropertyCache::ConstPtr newParent);
 
     inline QQmlPropertyData *overrideData(QQmlPropertyData *) const;
     inline bool isAllowedInRevision(QQmlPropertyData *) const;
@@ -215,7 +227,7 @@ public:
             QQmlPropertyData *);
 
     //see QMetaObjectPrivate::originalClone
-    int originalClone(int index);
+    int originalClone(int index) const;
     static int originalClone(const QObject *, int index);
 
     QList<QByteArray> signalParameterNames(int index) const;
@@ -253,7 +265,7 @@ private:
 
     QQmlPropertyCache(const QQmlMetaObjectPointer &metaObject) : _metaObject(metaObject) {}
 
-    inline QQmlRefPointer<QQmlPropertyCache> copy(const QQmlMetaObjectPointer &mo, int reserve);
+    inline QQmlPropertyCache::Ptr copy(const QQmlMetaObjectPointer &mo, int reserve) const;
 
     void append(const QMetaObject *, QTypeRevision typeVersion,
                 QQmlPropertyData::Flags propertyFlags = QQmlPropertyData::Flags(),
@@ -311,7 +323,7 @@ private:
     }
 
     int propertyIndexCacheStart = 0; // placed here to avoid gap between QQmlRefCount and _parent
-    QQmlRefPointer<QQmlPropertyCache> _parent;
+    QQmlPropertyCache::ConstPtr _parent;
 
     IndexCache propertyIndexCache;
     IndexCache methodIndexCache;
@@ -412,7 +424,7 @@ inline QString QQmlPropertyCache::defaultPropertyName() const
     return _defaultPropertyName;
 }
 
-inline const QQmlRefPointer<QQmlPropertyCache> &QQmlPropertyCache::parent() const
+inline const QQmlPropertyCache::ConstPtr &QQmlPropertyCache::parent() const
 {
     return _parent;
 }

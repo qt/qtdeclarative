@@ -127,8 +127,8 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
         struct {
             Heap::InternalClass *ic;
             Heap::InternalClass *qmlTypeIc; // only used when lookup goes through QQmlTypeWrapper
-            QQmlPropertyCache *propertyCache;
-            QQmlPropertyData *propertyData;
+            const QQmlPropertyCache *propertyCache;
+            const QQmlPropertyData *propertyData;
         } qobjectLookup;
         struct {
             quintptr isConstant; // This is a bool, encoded as 0 or 1. Both values are ignored by gc
@@ -241,7 +241,7 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
                 || setter == setterQObject
                 || qmlContextPropertyGetter == QQmlContextWrapper::lookupScopeObjectProperty
                 || qmlContextPropertyGetter == QQmlContextWrapper::lookupContextObjectProperty) {
-            if (QQmlPropertyCache *pc = qobjectLookup.propertyCache)
+            if (const QQmlPropertyCache *pc = qobjectLookup.propertyCache)
                 pc->release();
         }
     }

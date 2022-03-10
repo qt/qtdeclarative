@@ -185,7 +185,7 @@ QQmlType QQmlTypePrivate::resolveCompositeBaseType(QQmlEnginePrivate *engine) co
     return QQmlMetaType::qmlType(mo);
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlTypePrivate::compositePropertyCache(
+QQmlPropertyCache::ConstPtr QQmlTypePrivate::compositePropertyCache(
         QQmlEnginePrivate *engine) const
 {
     // similar logic to resolveCompositeBaseType
@@ -276,9 +276,9 @@ void QQmlTypePrivate::init() const
 
 void QQmlTypePrivate::initEnums(QQmlEnginePrivate *engine) const
 {
-    QQmlRefPointer<QQmlPropertyCache> cache = (!isEnumFromCacheSetup.loadAcquire() && isComposite())
+    QQmlPropertyCache::ConstPtr cache = (!isEnumFromCacheSetup.loadAcquire() && isComposite())
             ? compositePropertyCache(engine)
-            : QQmlRefPointer<QQmlPropertyCache>();
+            : QQmlPropertyCache::ConstPtr();
 
     // beware: It could be a singleton type without metaobject
     const QMetaObject *metaObject = !isEnumFromBaseSetup.loadAcquire()
@@ -415,11 +415,11 @@ void QQmlTypePrivate::createEnumConflictReport(const QMetaObject *metaObject, co
 }
 
 void QQmlTypePrivate::insertEnumsFromPropertyCache(
-        const QQmlRefPointer<QQmlPropertyCache> &cache) const
+        const QQmlPropertyCache::ConstPtr &cache) const
 {
     const QMetaObject *cppMetaObject = cache->firstCppMetaObject();
 
-    for (QQmlPropertyCache *currentCache = cache.data();
+    for (const QQmlPropertyCache *currentCache = cache.data();
          currentCache && currentCache->metaObject() != cppMetaObject;
          currentCache = currentCache->parent().data()) {
 

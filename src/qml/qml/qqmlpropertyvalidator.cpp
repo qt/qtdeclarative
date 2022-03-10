@@ -114,7 +114,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         return validateObject(componentBinding->value.objectIndex, componentBinding);
     }
 
-    QQmlRefPointer<QQmlPropertyCache> propertyCache = propertyCaches.at(objectIndex);
+    QQmlPropertyCache::ConstPtr propertyCache = propertyCaches.at(objectIndex);
     if (!propertyCache)
         return QVector<QQmlError>();
 
@@ -151,7 +151,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
     QString defaultPropertyName;
     QQmlPropertyData *defaultProperty = nullptr;
     if (obj->indexOfDefaultPropertyOrAlias != -1) {
-        QQmlPropertyCache *cache = propertyCache->parent().data();
+        const QQmlPropertyCache *cache = propertyCache->parent().data();
         defaultPropertyName = cache->defaultPropertyName();
         defaultProperty = cache->defaultProperty();
     } else {
@@ -380,7 +380,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
 }
 
 QQmlError QQmlPropertyValidator::validateLiteralBinding(
-        const QQmlRefPointer<QQmlPropertyCache> &propertyCache, QQmlPropertyData *property,
+        const QQmlPropertyCache::ConstPtr &propertyCache, QQmlPropertyData *property,
         const QV4::CompiledData::Binding *binding) const
 {
     if (property->isQList()) {
@@ -659,9 +659,9 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(
     Returns true if from can be assigned to a (QObject) property of type
     to.
 */
-bool QQmlPropertyValidator::canCoerce(QMetaType to, QQmlRefPointer<QQmlPropertyCache> fromMo) const
+bool QQmlPropertyValidator::canCoerce(QMetaType to, QQmlPropertyCache::ConstPtr fromMo) const
 {
-    QQmlRefPointer<QQmlPropertyCache> toMo = QQmlMetaType::rawPropertyCacheForType(to);
+    QQmlPropertyCache::ConstPtr toMo = QQmlMetaType::rawPropertyCacheForType(to);
 
     if (toMo.isNull()) {
         // if we have an inline component from the current file,
@@ -710,7 +710,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
 
         const QV4::CompiledData::Object *targetObject = compilationUnit->objectAt(binding->value.objectIndex);
         if (auto *typeRef = resolvedType(targetObject->inheritedTypeNameIndex)) {
-            QQmlRefPointer<QQmlPropertyCache> cache = typeRef->createPropertyCache();
+            QQmlPropertyCache::ConstPtr cache = typeRef->createPropertyCache();
             const QMetaObject *mo = cache->firstCppMetaObject();
             QQmlType qmlType;
             while (mo && !qmlType.isValid()) {
@@ -747,7 +747,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
     } else if (property->isQList()) {
         const QMetaType listType = QQmlMetaType::listValueType(property->propType());
         if (!QQmlMetaType::isInterface(listType)) {
-            QQmlRefPointer<QQmlPropertyCache> source = propertyCaches.at(binding->value.objectIndex);
+            QQmlPropertyCache::ConstPtr source = propertyCaches.at(binding->value.objectIndex);
             if (!canCoerce(listType, source)) {
                 return qQmlCompileError(binding->valueLocation, tr("Cannot assign object to list property \"%1\"").arg(propertyName));
             }
@@ -771,7 +771,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
         // actual property type before we applied any extensions that might
         // effect the properties on the type, but don't effect assignability
         // Not passing a version ensures that we get the raw metaObject.
-        QQmlRefPointer<QQmlPropertyCache> propertyMetaObject
+        QQmlPropertyCache::ConstPtr propertyMetaObject
                 = QQmlMetaType::rawPropertyCacheForType(propType);
         if (!propertyMetaObject) {
             // if we have an inline component from the current file,
@@ -790,7 +790,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
             // Will be true if the assigned type inherits propertyMetaObject
             // Determine isAssignable value
             bool isAssignable = false;
-            QQmlRefPointer<QQmlPropertyCache> c = propertyCaches.at(binding->value.objectIndex);
+            QQmlPropertyCache::ConstPtr c = propertyCaches.at(binding->value.objectIndex);
             while (c && !isAssignable) {
                 isAssignable |= c == propertyMetaObject;
                 c = c->parent();

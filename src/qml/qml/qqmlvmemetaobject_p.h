@@ -93,7 +93,7 @@ private:
 class Q_QML_PRIVATE_EXPORT QQmlInterceptorMetaObject : public QDynamicMetaObjectData
 {
 public:
-    QQmlInterceptorMetaObject(QObject *obj, const QQmlRefPointer<QQmlPropertyCache> &cache);
+    QQmlInterceptorMetaObject(QObject *obj, const QQmlPropertyCache::ConstPtr &cache);
     ~QQmlInterceptorMetaObject() override;
 
     void registerInterceptor(QQmlPropertyIndex index, QQmlPropertyValueInterceptor *interceptor);
@@ -103,7 +103,7 @@ public:
     QMetaObject *toDynamicMetaObject(QObject *o) override;
 
     // Used by auto-tests for inspection
-    QQmlRefPointer<QQmlPropertyCache> propertyCache() const { return cache; }
+    QQmlPropertyCache::ConstPtr propertyCache() const { return cache; }
 
     bool intercepts(QQmlPropertyIndex propertyIndex) const
     {
@@ -117,7 +117,7 @@ public:
     }
 
     QObject *object = nullptr;
-    QQmlRefPointer<QQmlPropertyCache> cache;
+    QQmlPropertyCache::ConstPtr cache;
 
 protected:
     int metaCall(QObject *o, QMetaObject::Call c, int id, void **a) override;
@@ -165,7 +165,7 @@ class Q_QML_PRIVATE_EXPORT QQmlVMEMetaObject : public QQmlInterceptorMetaObject
 {
 public:
     QQmlVMEMetaObject(QV4::ExecutionEngine *engine, QObject *obj,
-                      const QQmlRefPointer<QQmlPropertyCache> &cache,
+                      const QQmlPropertyCache::ConstPtr &cache,
                       const QQmlRefPointer<QV4::ExecutableCompilationUnit> &qmlCompilationUnit,
                       int qmlObjectId);
     ~QQmlVMEMetaObject() override;

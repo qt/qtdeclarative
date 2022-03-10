@@ -4871,7 +4871,7 @@ void tst_qqmllanguage::preservePropertyCacheOnGroupObjects()
 
     QQmlData *ddata = QQmlData::get(subObject);
     QVERIFY(ddata);
-    QQmlPropertyCache *subCache = ddata->propertyCache.data();
+    const QQmlPropertyCache *subCache = ddata->propertyCache.data();
     QVERIFY(subCache);
     QQmlPropertyData *pd = subCache->property(QStringLiteral("newProperty"), /*object*/nullptr, /*context*/nullptr);
     QVERIFY(pd);
@@ -4888,7 +4888,7 @@ void tst_qqmllanguage::propertyCacheInSync()
     QVERIFY(anchors);
     QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(anchors);
     QVERIFY(vmemo);
-    QQmlRefPointer<QQmlPropertyCache> vmemoCache = vmemo->propertyCache();
+    QQmlPropertyCache::ConstPtr vmemoCache = vmemo->propertyCache();
     QVERIFY(vmemoCache);
     QQmlData *ddata = QQmlData::get(anchors);
     QVERIFY(ddata);
