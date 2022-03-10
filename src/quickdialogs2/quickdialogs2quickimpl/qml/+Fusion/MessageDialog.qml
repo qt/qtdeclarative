@@ -57,20 +57,15 @@ MessageDialogImpl {
                              + (control.implicitHeaderHeight > 0 ? control.implicitHeaderHeight + control.spacing : 0)
                              + (control.implicitFooterHeight > 0 ? control.implicitFooterHeight + control.spacing : 0))
 
-    leftPadding: 20
-    rightPadding: 20
-    // Ensure that the background's border is visible.
-    leftInset: -1
-    rightInset: -1
-    topInset: -1
-    bottomInset: -1
+    padding: 6
+    horizontalPadding: 12
 
     MessageDialogImpl.buttonBox: buttonBox
     MessageDialogImpl.detailedTextButton: detailedTextButton
 
     background: Rectangle {
         implicitWidth: 320
-        implicitHeight: 160
+        implicitHeight: 120
         color: control.palette.window
         border.color: control.palette.mid
         radius: 2
@@ -100,15 +95,17 @@ MessageDialogImpl {
             id: textLabel
             objectName: "textLabel"
             text: control.text
+            visible: text.length > 0
 
-            Layout.margins: 16
+            Layout.margins: 12
         }
         Label {
             id: informativeTextLabel
             objectName: "informativeTextLabel"
             text: control.informativeText
+            visible: text.length > 0
 
-            Layout.margins: 16
+            Layout.margins: 12
         }
     }
 
@@ -123,19 +120,19 @@ MessageDialogImpl {
                 objectName: "detailedTextButton"
                 text: control.showDetailedText ? qsTr("Hide Details...") : qsTr("Show Details...")
 
-                Layout.leftMargin: 20
+                Layout.leftMargin: 12
             }
 
             DialogButtonBox {
                 id: buttonBox
                 objectName: "buttonBox"
-                spacing: 12
+                spacing: 6
                 horizontalPadding: 0
-                verticalPadding: 20
+                verticalPadding: 12
 
                 Layout.fillWidth: true
-                Layout.leftMargin: detailedTextButton.visible ? 12 : 20
-                Layout.rightMargin: 20
+                Layout.leftMargin: detailedTextButton.visible ? 6 : 12
+                Layout.rightMargin: 12
             }
         }
 
@@ -148,9 +145,9 @@ MessageDialogImpl {
             readOnly: true
 
             Layout.fillWidth: true
-            Layout.leftMargin: 20
-            Layout.rightMargin: 20
-            Layout.bottomMargin: 20
+            Layout.leftMargin: 12
+            Layout.rightMargin: 12
+            Layout.bottomMargin: 12
 
             background: Rectangle {
                 color: Qt.rgba(1,1,1,1)
