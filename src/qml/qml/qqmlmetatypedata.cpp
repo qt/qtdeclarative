@@ -119,16 +119,16 @@ bool QQmlMetaTypeData::registerModuleTypes(const QString &uri)
     return false;
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCacheForVersion(
+QQmlPropertyCache::ConstPtr QQmlMetaTypeData::propertyCacheForVersion(
         int index, QTypeRevision version) const
 {
     return (index < typePropertyCaches.length())
             ? typePropertyCaches.at(index).value(version)
-            : QQmlRefPointer<QQmlPropertyCache>();
+            : QQmlPropertyCache::ConstPtr();
 }
 
 void QQmlMetaTypeData::setPropertyCacheForVersion(int index, QTypeRevision version,
-                                                  const QQmlRefPointer<QQmlPropertyCache> &cache)
+                                                  const QQmlPropertyCache::ConstPtr &cache)
 {
     if (index >= typePropertyCaches.length())
         typePropertyCaches.resize(index + 1);
@@ -141,13 +141,13 @@ void QQmlMetaTypeData::clearPropertyCachesForVersion(int index)
         typePropertyCaches[index].clear();
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(
+QQmlPropertyCache::ConstPtr QQmlMetaTypeData::propertyCache(
         const QMetaObject *metaObject, QTypeRevision version)
 {
-    if (QQmlRefPointer<QQmlPropertyCache> rv = propertyCaches.value(metaObject))
+    if (QQmlPropertyCache::ConstPtr rv = propertyCaches.value(metaObject))
         return rv;
 
-    QQmlRefPointer<QQmlPropertyCache> rv;
+    QQmlPropertyCache::ConstPtr rv;
     if (const QMetaObject *superMeta = metaObject->superClass())
         rv = propertyCache(superMeta, version)->copyAndAppend(metaObject, version);
     else
@@ -160,7 +160,22 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(
     return rv;
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(
+QQmlPropertyCache::Ptr QQmlMetaTypeData::createPropertyCache(const QMetaObject *metaObject)
+{
+    QQmlPropertyCache::Ptr rv;
+    if (const QMetaObject *superMeta = metaObject->superClass())
+        rv = propertyCache(superMeta, QTypeRevision())->copyAndAppend(metaObject, QTypeRevision());
+    else
+        rv.adopt(new QQmlPropertyCache(metaObject));
+
+    const auto *mop = reinterpret_cast<const QMetaObjectPrivate *>(metaObject->d.data);
+    if (!(mop->flags & DynamicMetaObject))
+        propertyCaches.insert(metaObject, rv);
+
+    return rv;
+}
+
+QQmlPropertyCache::ConstPtr QQmlMetaTypeData::propertyCache(
         const QQmlType &type, QTypeRevision version)
 {
     Q_ASSERT(type.isValid());
@@ -200,9 +215,8 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(
         return pc;
     }
 
-    QQmlRefPointer<QQmlPropertyCache> raw = propertyCache(type.metaObject(), combinedVersion);
-
-    bool hasCopied = false;
+    QQmlPropertyCache::ConstPtr raw = propertyCache(type.metaObject(), combinedVersion);
+    QQmlPropertyCache::Ptr copied;
 
     for (int ii = 0; ii < types.count(); ++ii) {
         const QQmlType &currentType = types.at(ii);
@@ -213,14 +227,11 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(
         int moIndex = types.count() - 1 - ii;
 
         if (raw->allowedRevision(moIndex) != rev) {
-            if (!hasCopied) {
-                // TODO: The copy should be mutable, and the original should be const
-                //       Considering this, the setAllowedRevision() below does not violate
-                //       the immutability of already published property caches.
-                raw = raw->copy();
-                hasCopied = true;
+            if (copied.isNull()) {
+                copied = raw->copy();
+                raw = copied;
             }
-            raw->setAllowedRevision(moIndex, rev);
+            copied->setAllowedRevision(moIndex, rev);
         }
     }
 
@@ -275,7 +286,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(
     return raw;
 }
 
-static QQmlRefPointer<QQmlPropertyCache> propertyCacheForPotentialInlineComponentType(
+static QQmlPropertyCache::ConstPtr propertyCacheForPotentialInlineComponentType(
         QMetaType t,
         const QHash<const QtPrivate::QMetaTypeInterface *,
                     QV4::ExecutableCompilationUnit *>::const_iterator &iter) {
@@ -288,12 +299,11 @@ static QQmlRefPointer<QQmlPropertyCache> propertyCacheForPotentialInlineComponen
     return (*iter)->rootPropertyCache();
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::findPropertyCacheInCompositeTypes(
-        QMetaType t) const
+QQmlPropertyCache::ConstPtr QQmlMetaTypeData::findPropertyCacheInCompositeTypes(QMetaType t) const
 {
     auto iter = compositeTypes.constFind(t.iface());
     return (iter == compositeTypes.constEnd())
-            ? QQmlRefPointer<QQmlPropertyCache>()
+            ? QQmlPropertyCache::ConstPtr()
             : propertyCacheForPotentialInlineComponentType(t, iter);
 }
 

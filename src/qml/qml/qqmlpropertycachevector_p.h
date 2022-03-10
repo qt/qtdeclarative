@@ -52,6 +52,7 @@
 //
 
 #include <private/qqmlpropertycache_p.h>
+#include <private/qbipointer_p.h>
 
 #include <QtCore/qtaggedpointer.h>
 
@@ -60,11 +61,6 @@ QT_BEGIN_NAMESPACE
 class QQmlPropertyCacheVector
 {
 public:
-    enum Tag {
-        NoTag,
-        CacheNeedsVMEMetaObject
-    };
-
     QQmlPropertyCacheVector() = default;
     QQmlPropertyCacheVector(QQmlPropertyCacheVector &&) = default;
     QQmlPropertyCacheVector &operator=(QQmlPropertyCacheVector &&) = default;
@@ -80,32 +76,85 @@ public:
     void clear()
     {
         for (int i = 0; i < data.count(); ++i) {
-            if (QQmlPropertyCache *cache = data.at(i).data())
-                cache->release();
+            const auto &cache = data.at(i);
+            if (cache.isT2()) {
+                if (QQmlPropertyCache *data = cache.asT2())
+                    data->release();
+            } else if (const QQmlPropertyCache *data = cache.asT1()) {
+                data->release();
+            }
         }
         data.clear();
     }
 
-    void append(const QQmlRefPointer<QQmlPropertyCache> &cache) {
+    void append(const QQmlPropertyCache::ConstPtr &cache) {
         cache->addref();
-        data.append(QTaggedPointer<QQmlPropertyCache, Tag>(cache.data()));
+        data.append(QBiPointer<const QQmlPropertyCache, QQmlPropertyCache>(cache.data()));
+        Q_ASSERT(data.last().isT1());
     }
-    QQmlRefPointer<QQmlPropertyCache> at(int index) const { return data.at(index).data(); }
-    void set(int index, const QQmlRefPointer<QQmlPropertyCache> &replacement) {
-        if (QQmlPropertyCache *oldCache = data.at(index).data()) {
-            if (replacement.data() == oldCache)
+
+    void appendOwn(const QQmlPropertyCache::Ptr &cache) {
+        cache->addref();
+        data.append(QBiPointer<const QQmlPropertyCache, QQmlPropertyCache>(cache.data()));
+        Q_ASSERT(data.last().isT2());
+    }
+
+    QQmlPropertyCache::ConstPtr at(int index) const
+    {
+        const auto entry = data.at(index);
+        if (entry.isT2())
+            return entry.asT2();
+        return entry.asT1();
+    }
+
+    QQmlPropertyCache::Ptr ownAt(int index) const
+    {
+        const auto entry = data.at(index);
+        if (entry.isT2())
+            return entry.asT2();
+        return QQmlPropertyCache::Ptr();
+    }
+
+    void set(int index, const QQmlPropertyCache::ConstPtr &replacement) {
+        if (QQmlPropertyCache::ConstPtr oldCache = at(index)) {
+            // If it is our own, we keep it our own
+            if (replacement.data() == oldCache.data())
                 return;
             oldCache->release();
         }
         data[index] = replacement.data();
         replacement->addref();
+        Q_ASSERT(data[index].isT1());
     }
 
-    void setNeedsVMEMetaObject(int index) { data[index].setTag(CacheNeedsVMEMetaObject); }
-    bool needsVMEMetaObject(int index) const { return data.at(index).tag() == CacheNeedsVMEMetaObject; }
+    void setOwn(int index, const QQmlPropertyCache::Ptr &replacement) {
+        if (QQmlPropertyCache::ConstPtr oldCache = at(index)) {
+            if (replacement.data() != oldCache.data()) {
+                oldCache->release();
+                replacement->addref();
+            }
+        } else {
+            replacement->addref();
+        }
+        data[index] = replacement.data();
+        Q_ASSERT(data[index].isT2());
+    }
+
+    void setNeedsVMEMetaObject(int index) { data[index].setFlag(); }
+    bool needsVMEMetaObject(int index) const { return data.at(index).flag(); }
+
+    void seal()
+    {
+        for (auto &entry: data) {
+            if (entry.isT2())
+                entry = static_cast<const QQmlPropertyCache *>(entry.asT2());
+            Q_ASSERT(entry.isT1());
+        }
+    }
+
 private:
     Q_DISABLE_COPY(QQmlPropertyCacheVector)
-    QVector<QTaggedPointer<QQmlPropertyCache, Tag>> data;
+    QVector<QBiPointer<const QQmlPropertyCache, QQmlPropertyCache>> data;
 };
 
 QT_END_NAMESPACE

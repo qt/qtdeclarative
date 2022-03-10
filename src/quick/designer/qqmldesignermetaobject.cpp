@@ -118,7 +118,7 @@ void QQmlDesignerMetaObject::init(QObject *object)
     QObjectPrivate *op = QObjectPrivate::get(object);
     op->metaObject = this;
 
-    m_cache = QQmlMetaType::propertyCache(metaObject);
+    m_cache = QQmlMetaType::createPropertyCache(metaObject);
     cache = m_cache;
 
     nodeInstanceMetaObjectList.insert(this, true);

@@ -122,6 +122,8 @@ public:
 class Q_QML_PRIVATE_EXPORT QQmlMetaType
 {
     friend struct CompositeMetaTypeIds;
+    friend class QQmlDesignerMetaObject;
+
     static CompositeMetaTypeIds registerInternalCompositeType(const QByteArray &className);
     static void unregisterInternalCompositeType(const CompositeMetaTypeIds &typeIds);
 
@@ -176,19 +178,34 @@ public:
 
     static QQmlType qmlType(const QUrl &unNormalizedUrl, bool includeNonFileImports = false);
 
-    static QQmlRefPointer<QQmlPropertyCache> propertyCache(
+    static QQmlPropertyCache::ConstPtr propertyCache(
             QObject *object, QTypeRevision version = QTypeRevision());
-    static QQmlRefPointer<QQmlPropertyCache> propertyCache(
+    static QQmlPropertyCache::ConstPtr propertyCache(
             const QMetaObject *metaObject, QTypeRevision version = QTypeRevision());
-    static QQmlRefPointer<QQmlPropertyCache> propertyCache(
+    static QQmlPropertyCache::ConstPtr propertyCache(
             const QQmlType &type, QTypeRevision version);
+
+    // This only works for a new metaObject that doesn't have an associated property cache, yet.
+    // Do not call it more than once for the same metaObject!
+    //
+    //     ------------------------------------------------------------------------------------
+    // --> The caller has to uphold the immutability guarantees for the returned property cache <--
+    //     ------------------------------------------------------------------------------------
+    //
+    // This means: You cannot expose the metaObject, any objects created from it, or the property
+    // cache to _anything_ that allows concurrent access before you are done changing the property
+    // cache!
+    //
+    // In general, don't use this method. It's only for the designer integration. The designer
+    // assumes that there is only one QML engine running in a single thread.
+    static QQmlPropertyCache::Ptr createPropertyCache(const QMetaObject *metaObject);
 
     // These methods may be called from the loader thread
     static QQmlMetaObject rawMetaObjectForType(QMetaType metaType);
     static QQmlMetaObject metaObjectForType(QMetaType metaType);
-    static QQmlRefPointer<QQmlPropertyCache> propertyCacheForType(QMetaType metaType);
-    static QQmlRefPointer<QQmlPropertyCache> rawPropertyCacheForType(QMetaType metaType);
-    static QQmlRefPointer<QQmlPropertyCache> rawPropertyCacheForType(
+    static QQmlPropertyCache::ConstPtr propertyCacheForType(QMetaType metaType);
+    static QQmlPropertyCache::ConstPtr rawPropertyCacheForType(QMetaType metaType);
+    static QQmlPropertyCache::ConstPtr rawPropertyCacheForType(
             QMetaType metaType, QTypeRevision version);
 
     static void freeUnusedTypesAndCaches();
@@ -268,7 +285,7 @@ public:
     static QQmlValueType *valueType(QMetaType metaType);
     static const QMetaObject *metaObjectForValueType(QMetaType type);
 
-    static QQmlRefPointer<QQmlPropertyCache> findPropertyCacheInCompositeTypes(QMetaType t);
+    static QQmlPropertyCache::ConstPtr findPropertyCacheInCompositeTypes(QMetaType t);
     static void registerInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
     static void unregisterInternalCompositeType(QV4::ExecutableCompilationUnit *compilationUnit);
     static QV4::ExecutableCompilationUnit *obtainExecutableCompilationUnit(QMetaType type);

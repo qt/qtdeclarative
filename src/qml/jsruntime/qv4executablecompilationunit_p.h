@@ -149,7 +149,7 @@ public:
 
     // QML specific fields
     QQmlPropertyCacheVector propertyCaches;
-    QQmlRefPointer<QQmlPropertyCache> rootPropertyCache() const { return propertyCaches.at(/*root object*/0); }
+    QQmlPropertyCache::ConstPtr rootPropertyCache() const { return propertyCaches.at(/*root object*/0); }
 
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
 

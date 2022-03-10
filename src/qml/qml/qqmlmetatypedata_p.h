@@ -83,7 +83,7 @@ struct QQmlMetaTypeData
             // a module via QQmlPrivate::RegisterCompositeType
     typedef QMultiHash<const QMetaObject *, QQmlTypePrivate *> MetaObjects;
     MetaObjects metaObjectToType;
-    QVector<QHash<QTypeRevision, QQmlRefPointer<QQmlPropertyCache>>> typePropertyCaches;
+    QVector<QHash<QTypeRevision, QQmlPropertyCache::ConstPtr>> typePropertyCaches;
     QHash<int, QQmlValueType *> metaTypeToValueType;
     QHash<const QtPrivate::QMetaTypeInterface *, QV4::ExecutableCompilationUnit *> compositeTypes;
 
@@ -130,16 +130,18 @@ struct QQmlMetaTypeData
     QList<QQmlPrivate::AutoParentFunction> parentFunctions;
     QVector<QQmlPrivate::QmlUnitCacheLookupFunction> lookupCachedQmlUnit;
 
-    QHash<const QMetaObject *, QQmlRefPointer<QQmlPropertyCache>> propertyCaches;
+    QHash<const QMetaObject *, QQmlPropertyCache::ConstPtr> propertyCaches;
 
-    QQmlRefPointer<QQmlPropertyCache> propertyCacheForVersion(int index, QTypeRevision version) const;
+    QQmlPropertyCache::ConstPtr propertyCacheForVersion(int index, QTypeRevision version) const;
     void setPropertyCacheForVersion(
-            int index, QTypeRevision version, const QQmlRefPointer<QQmlPropertyCache> &cache);
+            int index, QTypeRevision version, const QQmlPropertyCache::ConstPtr &cache);
     void clearPropertyCachesForVersion(int index);
 
-    QQmlRefPointer<QQmlPropertyCache> propertyCache(const QMetaObject *metaObject, QTypeRevision version);
-    QQmlRefPointer<QQmlPropertyCache> propertyCache(const QQmlType &type, QTypeRevision version);
-    QQmlRefPointer<QQmlPropertyCache> findPropertyCacheInCompositeTypes(QMetaType t) const;
+    QQmlPropertyCache::ConstPtr propertyCache(const QMetaObject *metaObject, QTypeRevision version);
+    QQmlPropertyCache::ConstPtr propertyCache(const QQmlType &type, QTypeRevision version);
+    QQmlPropertyCache::ConstPtr findPropertyCacheInCompositeTypes(QMetaType t) const;
+
+    QQmlPropertyCache::Ptr createPropertyCache(const QMetaObject *metaObject);
 
     void setTypeRegistrationFailures(QStringList *failures)
     {

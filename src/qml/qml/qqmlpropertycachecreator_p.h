@@ -81,7 +81,7 @@ struct QQmlBindingInstantiationContext {
             const QQmlPropertyCache::ConstPtr &referencingObjectPropertyCache);
 
     bool resolveInstantiatingProperty();
-    QQmlRefPointer<QQmlPropertyCache> instantiatingPropertyCache() const;
+    QQmlPropertyCache::ConstPtr instantiatingPropertyCache() const;
 
     int referencingObjectIndex = -1;
     const QV4::CompiledData::Binding *instantiatingBinding = nullptr;
@@ -131,6 +131,7 @@ public:
                              QQmlEnginePrivate *enginePrivate,
                              const ObjectContainer *objectContainer, const QQmlImports *imports,
                              const QByteArray &typeClassName);
+    ~QQmlPropertyCacheCreator() { propertyCaches->seal(); }
 
 
     /*!
@@ -164,7 +165,7 @@ public:
     };
 protected:
     QQmlError buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context, VMEMetaObjectIsRequired isVMERequired);
-    QQmlRefPointer<QQmlPropertyCache> propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlError *error) const;
+    QQmlPropertyCache::ConstPtr propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlError *error) const;
     QQmlError createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlPropertyCache::ConstPtr &baseTypeCache);
 
     QMetaType metaTypeForParameter(const QV4::CompiledData::ParameterType &param, QString *customTypeName = nullptr);
@@ -324,7 +325,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
         }
     }
 
-    QQmlRefPointer<QQmlPropertyCache> baseTypeCache;
+    QQmlPropertyCache::ConstPtr baseTypeCache;
     {
         QQmlError error;
         baseTypeCache = propertyCacheForObject(obj, context, &error);
@@ -382,7 +383,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
 }
 
 template <typename ObjectContainer>
-inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContainer>::propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlError *error) const
+inline QQmlPropertyCache::ConstPtr QQmlPropertyCacheCreator<ObjectContainer>::propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlError *error) const
 {
     if (context.instantiatingProperty) {
         return context.instantiatingPropertyCache();
@@ -456,7 +457,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
             obj->signalCount() + obj->propertyCount() + obj->aliasCount(),
             obj->enumCount());
 
-    propertyCaches->set(objectIndex, cache);
+    propertyCaches->setOwn(objectIndex, cache);
     propertyCaches->setNeedsVMEMetaObject(objectIndex);
 
     QByteArray newClassName;
@@ -1030,7 +1031,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesTo
     if (!object.aliasCount())
         return QQmlError();
 
-    QQmlRefPointer<QQmlPropertyCache> propertyCache = propertyCaches->at(objectIndex);
+    QQmlPropertyCache::Ptr propertyCache = propertyCaches->ownAt(objectIndex);
     Q_ASSERT(propertyCache);
 
     int effectiveSignalIndex = propertyCache->signalHandlerIndexCacheStart + propertyCache->propertyIndexCache.count();

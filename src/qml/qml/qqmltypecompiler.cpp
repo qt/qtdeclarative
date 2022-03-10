@@ -855,7 +855,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(
         qmlObjects->append(syntheticComponent);
         const int componentIndex = qmlObjects->count() - 1;
         // Keep property caches symmetric
-        QQmlRefPointer<QQmlPropertyCache> componentCache
+        QQmlPropertyCache::ConstPtr componentCache
                 = QQmlMetaType::propertyCache(&QQmlComponent::staticMetaObject);
         propertyCaches.append(componentCache);
 

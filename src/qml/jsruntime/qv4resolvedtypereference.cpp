@@ -83,7 +83,7 @@ QQmlPropertyCache::ConstPtr ResolvedTypeReference::propertyCache() const
 /*!
 Returns the property cache, creating one if it doesn't already exist.  The cache is not referenced.
 */
-QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::createPropertyCache()
+QQmlPropertyCache::ConstPtr ResolvedTypeReference::createPropertyCache()
 {
     if (m_typePropertyCache) {
         return m_typePropertyCache;
