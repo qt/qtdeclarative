@@ -45,6 +45,7 @@
 #include <QtCore/qdatastream.h>
 #include <QtCore/qstack.h>
 #include <QtCore/qendian.h>
+#include <QtCore/qvarlengtharray.h>
 
 QT_BEGIN_NAMESPACE
 

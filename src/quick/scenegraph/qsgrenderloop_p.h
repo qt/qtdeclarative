@@ -51,10 +51,11 @@
 // We mean it.
 //
 
-#include <QtGui/QImage>
-#include <QtGui/QSurface>
+#include <QtGui/qimage.h>
+#include <QtGui/qsurface.h>
 #include <private/qtquickglobal_p.h>
-#include <QtCore/QSet>
+#include <QtCore/qset.h>
+#include <QtCore/qobject.h>
 
 QT_BEGIN_NAMESPACE
 
