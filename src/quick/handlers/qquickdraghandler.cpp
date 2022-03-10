@@ -127,7 +127,7 @@ void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointingDe
 }
 
 /*!
-    \qmlproperty enumeration QtQuick.DragHandler::snapMode
+    \qmlproperty enumeration QtQuick::DragHandler::snapMode
 
     This property holds the snap mode.
 
