@@ -30,6 +30,9 @@
 
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qstringbuilder.h>
+#include <QtCore/qstring.h>
+#include <QtCore/qmap.h>
+#include <QtCore/qlist.h>
 
 #include <utility>
 
