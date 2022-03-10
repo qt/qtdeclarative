@@ -253,7 +253,7 @@ Q_STATIC_ASSERT(std::is_standard_layout<Lookup>::value);
 Q_STATIC_ASSERT(offsetof(Lookup, getter) == 0);
 
 inline void setupQObjectLookup(
-        Lookup *lookup, const QQmlData *ddata, QQmlPropertyData *propertyData)
+        Lookup *lookup, const QQmlData *ddata, const QQmlPropertyData *propertyData)
 {
     lookup->releasePropertyCache();
     Q_ASSERT(!ddata->propertyCache.isNull());
@@ -263,7 +263,7 @@ inline void setupQObjectLookup(
 }
 
 inline void setupQObjectLookup(
-        Lookup *lookup, const QQmlData *ddata, QQmlPropertyData *propertyData,
+        Lookup *lookup, const QQmlData *ddata, const QQmlPropertyData *propertyData,
         const Object *self)
 {
     lookup->qobjectLookup.ic = self->internalClass();
@@ -272,7 +272,7 @@ inline void setupQObjectLookup(
 
 
 inline void setupQObjectLookup(
-        Lookup *lookup, const QQmlData *ddata, QQmlPropertyData *propertyData,
+        Lookup *lookup, const QQmlData *ddata, const QQmlPropertyData *propertyData,
         const Object *self, const Object *qmlType)
 {
     lookup->qobjectLookup.qmlTypeIc = qmlType->internalClass();

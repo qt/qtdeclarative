@@ -189,7 +189,7 @@ Q_SIGNALS:
     void signalB();
 };
 
-QQmlPropertyData *cacheProperty(const QQmlPropertyCache::ConstPtr &cache, const char *name)
+const QQmlPropertyData *cacheProperty(const QQmlPropertyCache::ConstPtr &cache, const char *name)
 {
     return cache->property(QLatin1String(name), nullptr, nullptr);
 }
@@ -202,7 +202,7 @@ void tst_qqmlpropertycache::properties()
 
     QQmlPropertyCache::ConstPtr cache(new QQmlPropertyCache(metaObject),
                                             QQmlPropertyCache::ConstPtr::Adopt);
-    QQmlPropertyData *data;
+    const QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "propertyA")));
     QCOMPARE(data->coreIndex(), metaObject->indexOfProperty("propertyA"));
@@ -228,7 +228,7 @@ void tst_qqmlpropertycache::propertiesDerived()
                 QQmlPropertyCache::ConstPtr::Adopt);
     QQmlPropertyCache::ConstPtr cache =
             parentCache->copyAndAppend(object.metaObject(), QTypeRevision());
-    QQmlPropertyData *data;
+    const QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "propertyA")));
     QCOMPARE(data->coreIndex(), metaObject->indexOfProperty("propertyA"));
@@ -256,7 +256,7 @@ void tst_qqmlpropertycache::revisionedProperties()
     QQmlPropertyCache::ConstPtr cacheWithVersion(
                 new QQmlPropertyCache(metaObject, QTypeRevision::fromMinorVersion(1)),
                 QQmlPropertyCache::ConstPtr::Adopt);
-    QQmlPropertyData *data;
+    const QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cacheWithoutVersion, "propertyE")));
     QCOMPARE(cacheWithoutVersion->isAllowedInRevision(data), false);
@@ -271,7 +271,7 @@ void tst_qqmlpropertycache::methods()
 
     QQmlPropertyCache::ConstPtr cache(new QQmlPropertyCache(metaObject),
                                             QQmlPropertyCache::ConstPtr::Adopt);
-    QQmlPropertyData *data;
+    const QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "slotA")));
     QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("slotA()"));
@@ -309,7 +309,7 @@ void tst_qqmlpropertycache::methodsDerived()
                 QQmlPropertyCache::ConstPtr::Adopt);
     QQmlPropertyCache::ConstPtr cache
             = parentCache->copyAndAppend(object.metaObject(), QTypeRevision {});
-    QQmlPropertyData *data;
+    const QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "slotA")));
     QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("slotA()"));
@@ -344,7 +344,7 @@ void tst_qqmlpropertycache::signalHandlers()
 
     QQmlPropertyCache::ConstPtr cache(new QQmlPropertyCache(metaObject),
                                             QQmlPropertyCache::ConstPtr::Adopt);
-    QQmlPropertyData *data;
+    const QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "onSignalA")));
     QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("signalA()"));
@@ -376,7 +376,7 @@ void tst_qqmlpropertycache::signalHandlersDerived()
                 QQmlPropertyCache::ConstPtr::Adopt);
     QQmlPropertyCache::ConstPtr cache
             = parentCache->copyAndAppend(object.metaObject(), QTypeRevision{});
-    QQmlPropertyData *data;
+    const QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "onSignalA")));
     QCOMPARE(data->coreIndex(), metaObject->indexOfMethod("signalA()"));

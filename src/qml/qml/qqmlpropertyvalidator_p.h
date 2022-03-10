@@ -73,10 +73,10 @@ private:
             int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding,
             bool populatingValueTypeGroupProperty = false) const;
     QQmlError validateLiteralBinding(
-            const QQmlPropertyCache::ConstPtr &propertyCache, QQmlPropertyData *property,
+            const QQmlPropertyCache::ConstPtr &propertyCache, const QQmlPropertyData *property,
             const QV4::CompiledData::Binding *binding) const;
     QQmlError validateObjectBinding(
-            QQmlPropertyData *property, const QString &propertyName,
+            const QQmlPropertyData *property, const QString &propertyName,
             const QV4::CompiledData::Binding *binding) const;
 
     bool canCoerce(QMetaType to, QQmlPropertyCache::ConstPtr fromMo) const;

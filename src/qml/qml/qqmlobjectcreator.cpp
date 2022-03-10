@@ -647,11 +647,11 @@ void QQmlObjectCreator::setupBindings(BindingSetupFlags mode)
             if (qmlTypeForObject(_bindingTarget).isValid()) {
                 quint32 bindingSkipList = 0;
 
-                QQmlPropertyData *defaultProperty = _compiledObject->indexOfDefaultPropertyOrAlias != -1 ? _propertyCache->parent()->defaultProperty() : _propertyCache->defaultProperty();
+                const QQmlPropertyData *defaultProperty = _compiledObject->indexOfDefaultPropertyOrAlias != -1 ? _propertyCache->parent()->defaultProperty() : _propertyCache->defaultProperty();
 
                 const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
                 for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
-                    QQmlPropertyData *property = binding->propertyNameIndex != 0
+                    const QQmlPropertyData *property = binding->propertyNameIndex != 0
                             ? _propertyCache->property(stringAt(binding->propertyNameIndex),
                                                        _qobject, context)
                             : defaultProperty;
@@ -668,9 +668,9 @@ void QQmlObjectCreator::setupBindings(BindingSetupFlags mode)
 
     const QV4::CompiledData::Binding *binding = _compiledObject->bindingTable();
     for (quint32 i = 0; i < _compiledObject->nBindings; ++i, ++binding) {
-        QQmlPropertyData *const property = propertyData.at(i);
+        const QQmlPropertyData *const property = propertyData.at(i);
         if (property) {
-            QQmlPropertyData* targetProperty = property;
+            const QQmlPropertyData *targetProperty = property;
             if (targetProperty->isAlias()) {
                 // follow alias
                 QQmlPropertyIndex originalIndex(targetProperty->coreIndex(), _valueTypeProperty ? _valueTypeProperty->coreIndex() : -1);
@@ -1128,7 +1128,7 @@ void QQmlObjectCreator::setupFunctions()
         QV4::Function *runtimeFunction = compilationUnit->runtimeFunctions[*functionIdx];
         const QString name = runtimeFunction->name()->toQString();
 
-        QQmlPropertyData *property = _propertyCache->property(name, _qobject, context);
+        const QQmlPropertyData *property = _propertyCache->property(name, _qobject, context);
         if (!property->isVMEFunction())
             continue;
 
@@ -1535,7 +1535,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
 
     for (int propertyIndex = 0; propertyIndex != _compiledObject->propertyCount(); ++propertyIndex) {
         const QV4::CompiledData::Property* property = _compiledObject->propertiesBegin() + propertyIndex;
-        QQmlPropertyData *propertyData = _propertyCache->property(_propertyCache->propertyOffset() + propertyIndex);
+        const QQmlPropertyData *propertyData = _propertyCache->property(_propertyCache->propertyOffset() + propertyIndex);
         // only compute stringAt if there's a chance for the lookup to succeed
         auto postHocIt = postHocRequired.isEmpty() ? postHocRequired.end() : postHocRequired.find(stringAt(property->nameIndex));
         if (!property->isRequired && postHocRequired.end() == postHocIt)
@@ -1584,7 +1584,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     };
     const auto [offset, count] = getPropertyCacheRange();
     for (int i = offset; i < count; ++i) {
-        QQmlPropertyData *propertyData = _propertyCache->maybeUnresolvedProperty(i);
+        const QQmlPropertyData *propertyData = _propertyCache->maybeUnresolvedProperty(i);
         if (!propertyData)
             continue;
         // TODO: the property might be a group property (in which case we need
@@ -1621,7 +1621,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
     if (!postHocRequired.isEmpty()) {
         // NB: go through [0, offset) range as [offset, count) is already done
         for (int i = 0; i < offset; ++i) {
-            QQmlPropertyData *propertyData = _propertyCache->maybeUnresolvedProperty(i);
+            const QQmlPropertyData *propertyData = _propertyCache->maybeUnresolvedProperty(i);
             if (!propertyData)
                 continue;
             QString name = propertyData->name(_qobject);
@@ -1662,7 +1662,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
         if (targetDData == nullptr || targetDData->propertyCache.isNull())
             continue;
         int coreIndex = QQmlPropertyIndex::fromEncoded(alias->encodedMetaPropertyIndex).coreIndex();
-        QQmlPropertyData *const targetProperty = targetDData->propertyCache->property(coreIndex);
+        const QQmlPropertyData *const targetProperty = targetDData->propertyCache->property(coreIndex);
         if (!targetProperty)
             continue;
         auto it = sharedState->requiredProperties.find(targetProperty);

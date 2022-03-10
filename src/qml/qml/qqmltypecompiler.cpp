@@ -369,9 +369,9 @@ bool SignalHandlerResolver::resolveSignalHandlerExpressions(
             qPropertyName = signalName.mid(0, signalName.length() - static_cast<int>(strlen("Changed")));
 
         bool notInRevision = false;
-        QQmlPropertyData * const signal = resolver.signal(signalName, &notInRevision);
-        QQmlPropertyData * const signalPropertyData = resolver.property(signalName, /*notInRevision ptr*/nullptr);
-        QQmlPropertyData * const qPropertyData = !qPropertyName.isEmpty() ? resolver.property(qPropertyName) : nullptr;
+        const QQmlPropertyData * const signal = resolver.signal(signalName, &notInRevision);
+        const QQmlPropertyData * const signalPropertyData = resolver.property(signalName, /*notInRevision ptr*/nullptr);
+        const QQmlPropertyData * const qPropertyData = !qPropertyName.isEmpty() ? resolver.property(qPropertyName) : nullptr;
         QString finalSignalHandlerPropertyName = signalName;
         uint flags = QV4::CompiledData::Binding::IsSignalHandlerExpression;
 
@@ -491,7 +491,7 @@ bool QQmlEnumTypeResolver::resolveEnumBindings()
 
             const QString propertyName = stringAt(binding->propertyNameIndex);
             bool notInRevision = false;
-            QQmlPropertyData *pd = resolver.property(propertyName, &notInRevision);
+            const QQmlPropertyData *pd = resolver.property(propertyName, &notInRevision);
             if (!pd || pd->isQList())
                 continue;
 
@@ -702,13 +702,13 @@ void QQmlAliasAnnotator::annotateBindingsToAliases()
         const QmlIR::Object *obj = qmlObjects.at(i);
 
         QQmlPropertyResolver resolver(propertyCache);
-        QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
+        const QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
 
         for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
             if (!binding->isValueBinding())
                 continue;
             bool notInRevision = false;
-            QQmlPropertyData *pd = binding->propertyNameIndex != quint32(0) ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
+            const QQmlPropertyData *pd = binding->propertyNameIndex != quint32(0) ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
             if (pd && pd->isAlias())
                 binding->flags |= QV4::CompiledData::Binding::IsBindingToAlias;
         }
@@ -734,13 +734,13 @@ void QQmlScriptStringScanner::scan()
         const QmlIR::Object *obj = qmlObjects.at(i);
 
         QQmlPropertyResolver resolver(propertyCache);
-        QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
+        const QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
 
         for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
             if (binding->type != QV4::CompiledData::Binding::Type_Script)
                 continue;
             bool notInRevision = false;
-            QQmlPropertyData *pd = binding->propertyNameIndex != quint32(0) ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
+            const QQmlPropertyData *pd = binding->propertyNameIndex != quint32(0) ? resolver.property(stringAt(binding->propertyNameIndex), &notInRevision) : defaultProperty;
             if (!pd || pd->propType() != scriptStringMetaType)
                 continue;
 
@@ -781,7 +781,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(
 {
     QQmlPropertyResolver propertyResolver(propertyCache);
 
-    QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
+    const QQmlPropertyData *defaultProperty = obj->indexOfDefaultPropertyOrAlias != -1 ? propertyCache->parent()->defaultProperty() : propertyCache->defaultProperty();
 
     for (QmlIR::Binding *binding = obj->firstBinding(); binding; binding = binding->next) {
         if (binding->type != QV4::CompiledData::Binding::Type_Object)
@@ -803,7 +803,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(
             continue;
         // if here, not a QQmlComponent, so needs wrapping
 
-        QQmlPropertyData *pd = nullptr;
+        const QQmlPropertyData *pd = nullptr;
         if (binding->propertyNameIndex != quint32(0)) {
             bool notInRevision = false;
             pd = propertyResolver.property(stringAt(binding->propertyNameIndex), &notInRevision);
@@ -1121,7 +1121,7 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
 
             QQmlPropertyResolver resolver(targetCache);
 
-            QQmlPropertyData *targetProperty = resolver.property(property.toString());
+            const QQmlPropertyData *targetProperty = resolver.property(property.toString());
 
             // If it's an alias that we haven't resolved yet, try again later.
             if (!targetProperty) {
@@ -1169,7 +1169,7 @@ QQmlComponentAndAliasResolver::resolveAliasesInObject(int objectIndex,
                             auto binding = *it;
                             if (compiler->stringAt(binding.propertyNameIndex) == property) {
                                 resolver = QQmlPropertyResolver(propertyCaches.at(binding.value.objectIndex));
-                                QQmlPropertyData *actualProperty = resolver.property(subProperty.toString());
+                                const QQmlPropertyData *actualProperty = resolver.property(subProperty.toString());
                                 if (actualProperty) {
                                     propIdx = QQmlPropertyIndex(propIdx.coreIndex(), actualProperty->coreIndex());
                                     isDeepAlias = true;
@@ -1256,7 +1256,7 @@ bool QQmlDeferredAndCustomParserBindingScanner::scanObject(
         return true;
 
     QString defaultPropertyName;
-    QQmlPropertyData *defaultProperty = nullptr;
+    const QQmlPropertyData *defaultProperty = nullptr;
     if (obj->indexOfDefaultPropertyOrAlias != -1) {
         const QQmlPropertyCache *cache = propertyCache->parent().data();
         defaultPropertyName = cache->defaultPropertyName();

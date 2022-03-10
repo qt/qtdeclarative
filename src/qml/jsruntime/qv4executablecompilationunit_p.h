@@ -89,7 +89,7 @@ struct InlineComponentData {
 namespace QV4 {
 
 // index is per-object binding index
-typedef QVector<QQmlPropertyData*> BindingPropertyData;
+typedef QVector<const QQmlPropertyData *> BindingPropertyData;
 
 class CompilationUnitMapper;
 class ResolvedTypeReference;

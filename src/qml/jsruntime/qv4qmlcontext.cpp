@@ -296,7 +296,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         if (scopeObject) {
             bool hasProp = false;
 
-            QQmlPropertyData *propertyData = nullptr;
+            const QQmlPropertyData *propertyData = nullptr;
             QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(v4, context, scopeObject,
                                                                                name, QV4::QObjectWrapper::CheckRevision, &hasProp, &propertyData));
             if (hasProp) {
@@ -323,7 +323,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         // Search context object
         if (QObject *contextObject = context->contextObject()) {
             bool hasProp = false;
-            QQmlPropertyData *propertyData = nullptr;
+            const QQmlPropertyData *propertyData = nullptr;
             result = QV4::QObjectWrapper::getQmlProperty(v4, context, contextObject,
                                                          name, QV4::QObjectWrapper::CheckRevision,
                                                          &hasProp, &propertyData);

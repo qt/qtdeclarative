@@ -452,7 +452,7 @@ ReturnedValue QQmlTypeWrapper::virtualResolveLookupGetter(const Object *object, 
                     if (!includeEnums || !name->startsWithUpper()) {
                         QQmlData *ddata = QQmlData::get(qobjectSingleton, false);
                         if (ddata && ddata->propertyCache) {
-                            QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobjectSingleton, qmlContext);
+                            const QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobjectSingleton, qmlContext);
                             if (property) {
                                 ScopedValue val(scope, Value::fromReturnedValue(QV4::QObjectWrapper::wrap(engine, qobjectSingleton)));
                                 setupQObjectLookup(lookup, ddata, property,

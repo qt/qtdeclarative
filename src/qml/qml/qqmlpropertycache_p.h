@@ -191,21 +191,21 @@ public:
     const QMetaObject *firstCppMetaObject() const;
 
     template<typename K>
-    QQmlPropertyData *property(const K &key, QObject *object,
+    const QQmlPropertyData *property(const K &key, QObject *object,
                                const QQmlRefPointer<QQmlContextData> &context) const
     {
         return findProperty(stringCache.find(key), object, context);
     }
 
-    QQmlPropertyData *property(int) const;
-    QQmlPropertyData *maybeUnresolvedProperty(int) const;
-    QQmlPropertyData *method(int) const;
-    QQmlPropertyData *signal(int index) const;
+    const QQmlPropertyData *property(int) const;
+    const QQmlPropertyData *maybeUnresolvedProperty(int) const;
+    const QQmlPropertyData *method(int) const;
+    const QQmlPropertyData *signal(int index) const;
     QQmlEnumData *qmlEnum(int) const;
     int methodIndexToSignalIndex(int) const;
 
     QString defaultPropertyName() const;
-    QQmlPropertyData *defaultProperty() const;
+    const QQmlPropertyData *defaultProperty() const;
 
     // Return a reference here so that we don't have to addref/release all the time
     inline const QQmlPropertyCache::ConstPtr &parent() const;
@@ -213,17 +213,15 @@ public:
     // is used by the Qml Designer
     void setParent(QQmlPropertyCache::ConstPtr newParent);
 
-    inline QQmlPropertyData *overrideData(QQmlPropertyData *) const;
-    inline bool isAllowedInRevision(QQmlPropertyData *) const;
+    inline const QQmlPropertyData *overrideData(const QQmlPropertyData *) const;
+    inline bool isAllowedInRevision(const QQmlPropertyData *) const;
 
-    static QQmlPropertyData *property(
+    static const QQmlPropertyData *property(
             QObject *, QStringView, const QQmlRefPointer<QQmlContextData> &,
             QQmlPropertyData *);
-    static QQmlPropertyData *property(
-            QObject *, const QLatin1String &, const QQmlRefPointer<QQmlContextData> &,
+    static const QQmlPropertyData *property(QObject *, const QLatin1String &, const QQmlRefPointer<QQmlContextData> &,
             QQmlPropertyData *);
-    static QQmlPropertyData *property(
-            QObject *, const QV4::String *, const QQmlRefPointer<QQmlContextData> &,
+    static const QQmlPropertyData *property(QObject *, const QV4::String *, const QQmlRefPointer<QQmlContextData> &,
             QQmlPropertyData *);
 
     //see QMetaObjectPrivate::originalClone
@@ -278,9 +276,9 @@ private:
     typedef QLinkedStringMultiHash<QPair<int, QQmlPropertyData *> > StringCache;
     typedef QVector<QTypeRevision> AllowedRevisionCache;
 
-    QQmlPropertyData *findProperty(StringCache::ConstIterator it, QObject *,
+    const QQmlPropertyData *findProperty(StringCache::ConstIterator it, QObject *,
                                    const QQmlRefPointer<QQmlContextData> &) const;
-    QQmlPropertyData *findProperty(StringCache::ConstIterator it, const QQmlVMEMetaObject *,
+    const QQmlPropertyData *findProperty(StringCache::ConstIterator it, const QQmlVMEMetaObject *,
                                    const QQmlRefPointer<QQmlContextData> &) const;
 
     void updateRecur(const QMetaObject *);
@@ -360,7 +358,7 @@ inline const QMetaObject *QQmlPropertyCache::firstCppMetaObject() const
     return p->_metaObject.metaObject();
 }
 
-inline QQmlPropertyData *QQmlPropertyCache::property(int index) const
+inline const QQmlPropertyData *QQmlPropertyCache::property(int index) const
 {
     if (index < 0 || index >= propertyCount())
         return nullptr;
@@ -368,10 +366,10 @@ inline QQmlPropertyData *QQmlPropertyCache::property(int index) const
     if (index < propertyIndexCacheStart)
         return _parent->property(index);
 
-    return const_cast<QQmlPropertyData *>(&propertyIndexCache.at(index - propertyIndexCacheStart));
+    return &propertyIndexCache.at(index - propertyIndexCacheStart);
 }
 
-inline QQmlPropertyData *QQmlPropertyCache::method(int index) const
+inline const QQmlPropertyData *QQmlPropertyCache::method(int index) const
 {
     if (index < 0 || index >= (methodIndexCacheStart + methodIndexCache.count()))
         return nullptr;
@@ -379,14 +377,14 @@ inline QQmlPropertyData *QQmlPropertyCache::method(int index) const
     if (index < methodIndexCacheStart)
         return _parent->method(index);
 
-    return const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - methodIndexCacheStart));
+    return const_cast<const QQmlPropertyData *>(&methodIndexCache.at(index - methodIndexCacheStart));
 }
 
 /*! \internal
     \a index MUST be in the signal index range (see QObjectPrivate::signalIndex()).
     This is different from QMetaMethod::methodIndex().
 */
-inline QQmlPropertyData *QQmlPropertyCache::signal(int index) const
+inline const QQmlPropertyData *QQmlPropertyCache::signal(int index) const
 {
     if (index < 0 || index >= (signalHandlerIndexCacheStart + signalHandlerIndexCache.count()))
         return nullptr;
@@ -394,7 +392,7 @@ inline QQmlPropertyData *QQmlPropertyCache::signal(int index) const
     if (index < signalHandlerIndexCacheStart)
         return _parent->signal(index);
 
-    QQmlPropertyData *rv = const_cast<QQmlPropertyData *>(&methodIndexCache.at(index - signalHandlerIndexCacheStart));
+    const QQmlPropertyData *rv = const_cast<const QQmlPropertyData *>(&methodIndexCache.at(index - signalHandlerIndexCacheStart));
     Q_ASSERT(rv->isSignal() || rv->coreIndex() == -1);
     return rv;
 }
@@ -429,8 +427,8 @@ inline const QQmlPropertyCache::ConstPtr &QQmlPropertyCache::parent() const
     return _parent;
 }
 
-QQmlPropertyData *
-QQmlPropertyCache::overrideData(QQmlPropertyData *data) const
+const QQmlPropertyData *
+QQmlPropertyCache::overrideData(const QQmlPropertyData *data) const
 {
     if (!data->hasOverride())
         return nullptr;
@@ -441,7 +439,7 @@ QQmlPropertyCache::overrideData(QQmlPropertyData *data) const
         return method(data->overrideIndex());
 }
 
-bool QQmlPropertyCache::isAllowedInRevision(QQmlPropertyData *data) const
+bool QQmlPropertyCache::isAllowedInRevision(const QQmlPropertyData *data) const
 {
     const QTypeRevision requested = data->revision();
     const int offset = data->metaObjectOffset();

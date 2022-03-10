@@ -89,7 +89,7 @@ struct RequiredPropertyInfo
     QVector<AliasToRequiredInfo> aliasesToRequired;
 };
 
-class RequiredProperties : public QHash<QQmlPropertyData*, RequiredPropertyInfo> {};
+class RequiredProperties : public QHash<const QQmlPropertyData *, RequiredPropertyInfo> {};
 
 struct DeferredQPropertyBinding {
     QObject *target = nullptr;

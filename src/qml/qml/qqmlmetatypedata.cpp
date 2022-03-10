@@ -246,12 +246,12 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(
          !overloadError && iter != raw->stringCache.end();
          ++iter) {
 
-        QQmlPropertyData *d = *iter;
+        const QQmlPropertyData *d = *iter;
         if (raw->isAllowedInRevision(d))
             continue; // Not excluded - no problems
 
         // check that a regular "name" overload isn't happening
-        QQmlPropertyData *current = d;
+        const QQmlPropertyData *current = d;
         while (!overloadError && current) {
             current = d->overrideData(current);
             if (current && raw->isAllowedInRevision(current))

@@ -330,7 +330,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
             }
 
             QQmlPropertyData local;
-            QQmlPropertyData *property = currentObject
+            const QQmlPropertyData *property = currentObject
                     ? QQmlPropertyCache::property(currentObject, pathName, context, &local)
                     : nullptr;
 
@@ -411,7 +411,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
         const QString changed = QStringLiteral("Changed");
         if (signalName.endsWith(changed)) {
             const QStringView propName = signalName.first(signalName.length() - changed.length());
-            QQmlPropertyData *d = ddata->propertyCache->property(propName, currentObject, context);
+            const QQmlPropertyData *d = ddata->propertyCache->property(propName, currentObject, context);
             while (d && d->isFunction())
                 d = ddata->propertyCache->overrideData(d);
 
@@ -436,7 +436,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
 
         if (ddata && ddata->propertyCache) {
             // Try method
-            QQmlPropertyData *d = ddata->propertyCache->property(
+            const QQmlPropertyData *d = ddata->propertyCache->property(
                         signalName, currentObject, context);
 
             // ### Qt7: This code treats methods as signals. It should use d->isSignal().
@@ -459,7 +459,7 @@ void QQmlPropertyPrivate::initProperty(QObject *obj, const QString &name,
     }
 
     if (ddata && ddata->propertyCache) {
-        QQmlPropertyData *property = ddata->propertyCache->property(
+        const QQmlPropertyData *property = ddata->propertyCache->property(
                     terminal, currentObject, context);
 
         // Technically, we might find an override that is not a function.
@@ -965,7 +965,7 @@ void QQmlPropertyPrivate::findAliasTarget(QObject *object, QQmlPropertyIndex bin
         int coreIndex = bindingIndex.coreIndex();
         int valueTypeIndex = bindingIndex.valueTypeIndex();
 
-        QQmlPropertyData *propertyData =
+        const QQmlPropertyData *propertyData =
             data->propertyCache?data->propertyCache->property(coreIndex):nullptr;
         if (propertyData && propertyData->isAlias()) {
             QQmlVMEMetaObject *vme = QQmlVMEMetaObject::getForProperty(object, coreIndex);
@@ -1013,7 +1013,7 @@ void QQmlPropertyPrivate::setBinding(QQmlAbstractBinding *binding, BindingFlags 
     int coreIndex = index.coreIndex();
     QQmlData *data = QQmlData::get(object, true);
     if (data->propertyCache) {
-        QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
+        const QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
         Q_ASSERT(propertyData);
     }
 #endif
@@ -1856,7 +1856,7 @@ static inline void flush_vme_signal(const QObject *object, int index, bool index
 {
     QQmlData *data = QQmlData::get(object);
     if (data && data->propertyCache) {
-        QQmlPropertyData *property = indexInSignalRange ? data->propertyCache->signal(index)
+        const QQmlPropertyData *property = indexInSignalRange ? data->propertyCache->signal(index)
                                                         : data->propertyCache->method(index);
 
         if (property && property->isVMESignal()) {

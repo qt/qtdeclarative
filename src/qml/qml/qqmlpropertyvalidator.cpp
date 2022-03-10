@@ -149,7 +149,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
     QQmlPropertyResolver propertyResolver(propertyCache);
 
     QString defaultPropertyName;
-    QQmlPropertyData *defaultProperty = nullptr;
+    const QQmlPropertyData *defaultProperty = nullptr;
     if (obj->indexOfDefaultPropertyOrAlias != -1) {
         const QQmlPropertyCache *cache = propertyCache->parent().data();
         defaultPropertyName = cache->defaultPropertyName();
@@ -182,7 +182,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         bool isGroupProperty = instantiatingBinding && instantiatingBinding->type == QV4::CompiledData::Binding::Type_GroupProperty;
 
         bool notInRevision = false;
-        QQmlPropertyData *pd = nullptr;
+        const QQmlPropertyData *pd = nullptr;
         if (!name.isEmpty()) {
             if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
                 || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject) {
@@ -380,7 +380,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
 }
 
 QQmlError QQmlPropertyValidator::validateLiteralBinding(
-        const QQmlPropertyCache::ConstPtr &propertyCache, QQmlPropertyData *property,
+        const QQmlPropertyCache::ConstPtr &propertyCache, const QQmlPropertyData *property,
         const QV4::CompiledData::Binding *binding) const
 {
     if (property->isQList()) {
@@ -698,7 +698,7 @@ QVector<QQmlError> QQmlPropertyValidator::recordError(const QQmlError &error) co
     return errors;
 }
 
-QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const
+QQmlError QQmlPropertyValidator::validateObjectBinding(const QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const
 {
     QQmlError noError;
 

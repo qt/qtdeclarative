@@ -161,7 +161,7 @@ QQmlListReference::QQmlListReference(QObject *object, const char *property)
     if (!object || !property) return;
 
     QQmlPropertyData local;
-    QQmlPropertyData *data =
+    const QQmlPropertyData *data =
         QQmlPropertyCache::property(object, QLatin1String(property), nullptr, &local);
 
     if (!data || !data->isQList()) return;

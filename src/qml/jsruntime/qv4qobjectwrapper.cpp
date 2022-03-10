@@ -233,21 +233,21 @@ void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
     engine->functionPrototype()->defineDefaultProperty(QStringLiteral("disconnect"), method_disconnect);
 }
 
-QQmlPropertyData *QObjectWrapper::findProperty(
+const QQmlPropertyData *QObjectWrapper::findProperty(
         const QQmlRefPointer<QQmlContextData> &qmlContext, String *name,
         RevisionMode revisionMode, QQmlPropertyData *local) const
 {
     return findProperty(d()->object(), qmlContext, name, revisionMode, local);
 }
 
-QQmlPropertyData *QObjectWrapper::findProperty(
+const QQmlPropertyData *QObjectWrapper::findProperty(
         QObject *o, const QQmlRefPointer<QQmlContextData> &qmlContext,
         String *name, RevisionMode revisionMode, QQmlPropertyData *local)
 {
     Q_UNUSED(revisionMode);
 
     QQmlData *ddata = QQmlData::get(o, false);
-    QQmlPropertyData *result = nullptr;
+    const QQmlPropertyData *result = nullptr;
     if (ddata && ddata->propertyCache)
         result = ddata->propertyCache->property(name, o, qmlContext);
     else
@@ -357,7 +357,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(
         return *methodValue;
 
     QQmlPropertyData local;
-    QQmlPropertyData *result = findProperty(qmlContext, name, revisionMode, &local);
+    const QQmlPropertyData *result = findProperty(qmlContext, name, revisionMode, &local);
 
     if (!result) {
         // Check for attached properties
@@ -387,7 +387,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(
 ReturnedValue QObjectWrapper::getQmlProperty(
         ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
         QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty,
-        QQmlPropertyData **property)
+        const QQmlPropertyData **property)
 {
     if (QQmlData::wasDeleted(object)) {
         if (hasProperty)
@@ -400,7 +400,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(
 
     QQmlData *ddata = QQmlData::get(object, false);
     QQmlPropertyData local;
-    QQmlPropertyData *result = findProperty(object, qmlContext, name, revisionMode, &local);
+    const QQmlPropertyData *result = findProperty(object, qmlContext, name, revisionMode, &local);
 
     if (result) {
         if (revisionMode == QObjectWrapper::CheckRevision && result->hasRevision()) {
@@ -455,7 +455,7 @@ bool QObjectWrapper::setQmlProperty(
         return false;
 
     QQmlPropertyData local;
-    QQmlPropertyData *result = QQmlPropertyCache::property(object, name, qmlContext, &local);
+    const QQmlPropertyData *result = QQmlPropertyCache::property(object, name, qmlContext, &local);
     if (!result)
         return false;
 
@@ -491,7 +491,8 @@ void QObjectWrapper::setProperty(
                     const QQmlPropertyCache *targetCache
                             = QQmlData::get(targetObject)->propertyCache.data();
                     Q_ASSERT(targetCache);
-                    QQmlPropertyData *targetProperty = targetCache->property(targetIndex.coreIndex());
+                    const QQmlPropertyData *targetProperty
+                            = targetCache->property(targetIndex.coreIndex());
                     object = targetObject;
                     property = targetProperty;
                     return targetProperty->isVarProperty() || targetProperty->propType() == QMetaType::fromType<QJSValue>();
@@ -737,7 +738,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, int p
         return;
 
     Q_ASSERT(ddata->propertyCache);
-    QQmlPropertyData *property = ddata->propertyCache->property(propertyIndex);
+    const QQmlPropertyData *property = ddata->propertyCache->property(propertyIndex);
     Q_ASSERT(property); // We resolved this property earlier, so it better exist!
     return setProperty(engine, object, property, value);
 }
@@ -940,10 +941,11 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
     QQmlData *ddata = QQmlData::get(qobj, false);
     if (!ddata || !ddata->propertyCache) {
         QQmlPropertyData local;
-        QQmlPropertyData *property = QQmlPropertyCache::property(qobj, name, qmlContext, &local);
+        const QQmlPropertyData *property = QQmlPropertyCache::property(
+                    qobj, name, qmlContext, &local);
         return property ? getProperty(engine, qobj, property) : Encode::undefined();
     }
-    QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobj, qmlContext);
+    const QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobj, qmlContext);
 
     if (!property) {
         // Check for attached properties

@@ -956,7 +956,7 @@ static ObjectLookupResult initObjectLookup(
     if (ddata->isQueuedForDeletion)
         return ObjectLookupResult::Failure;
 
-    QQmlPropertyData *property;
+    const QQmlPropertyData *property;
     if (!ddata->propertyCache) {
         property = QQmlPropertyCache::property(object, name, aotContext->qmlContext, nullptr);
     } else {

@@ -1481,7 +1481,7 @@ void QQuickShaderEffectImpl::updateShaderVars(Shader shaderType)
 
         // Find the property on the ShaderEffect item.
         int propIdx = -1;
-        QQmlPropertyData *pd = nullptr;
+        const QQmlPropertyData *pd = nullptr;
         if (propCache) {
             pd = propCache->property(QLatin1String(v.name), nullptr, nullptr);
             if (pd) {

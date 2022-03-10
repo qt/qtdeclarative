@@ -110,7 +110,7 @@ DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
     void init(QV4::ExecutionContext *scope);
     void destroy()
     {
-        if (methods != reinterpret_cast<QQmlPropertyData *>(&_singleMethod))
+        if (methods != reinterpret_cast<const QQmlPropertyData *>(&_singleMethod))
             delete[] methods;
         qObj.destroy();
         FunctionObject::destroy();
@@ -167,10 +167,9 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
             RevisionMode revisionMode, bool *hasProperty = nullptr,
             bool includeImports = false) const;
     \
-    static ReturnedValue getQmlProperty(
-            ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
+    static ReturnedValue getQmlProperty(ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
             QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = nullptr,
-            QQmlPropertyData **property = nullptr);
+            const QQmlPropertyData **property = nullptr);
 
     static bool setQmlProperty(
             ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
@@ -202,12 +201,10 @@ protected:
     static bool virtualIsEqualTo(Managed *that, Managed *o);
     static ReturnedValue create(ExecutionEngine *engine, QObject *object);
 
-    static QQmlPropertyData *findProperty(
-            QObject *o, const QQmlRefPointer<QQmlContextData> &qmlContext,
+    static const QQmlPropertyData *findProperty(QObject *o, const QQmlRefPointer<QQmlContextData> &qmlContext,
             String *name, RevisionMode revisionMode, QQmlPropertyData *local);
 
-    QQmlPropertyData *findProperty(
-            const QQmlRefPointer<QQmlContextData> &qmlContext,
+    const QQmlPropertyData *findProperty(const QQmlRefPointer<QQmlContextData> &qmlContext,
             String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);

@@ -63,7 +63,7 @@ struct Q_QML_EXPORT QQmlPropertyResolver
         : cache(cache)
     {}
 
-    QQmlPropertyData *property(int index) const
+    const QQmlPropertyData *property(int index) const
     {
         return cache->property(index);
     }
@@ -73,11 +73,11 @@ struct Q_QML_EXPORT QQmlPropertyResolver
         IgnoreRevision
     };
 
-    QQmlPropertyData *property(const QString &name, bool *notInRevision = nullptr,
+    const QQmlPropertyData *property(const QString &name, bool *notInRevision = nullptr,
                                RevisionCheck check = CheckRevision) const;
 
     // This code must match the semantics of QQmlPropertyPrivate::findSignalByName
-    QQmlPropertyData *signal(const QString &name, bool *notInRevision) const;
+    const QQmlPropertyData *signal(const QString &name, bool *notInRevision) const;
 
     QQmlPropertyCache::ConstPtr cache;
 };

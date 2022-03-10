@@ -4873,7 +4873,7 @@ void tst_qqmllanguage::preservePropertyCacheOnGroupObjects()
     QVERIFY(ddata);
     const QQmlPropertyCache *subCache = ddata->propertyCache.data();
     QVERIFY(subCache);
-    QQmlPropertyData *pd = subCache->property(QStringLiteral("newProperty"), /*object*/nullptr, /*context*/nullptr);
+    const QQmlPropertyData *pd = subCache->property(QStringLiteral("newProperty"), /*object*/nullptr, /*context*/nullptr);
     QVERIFY(pd);
     QCOMPARE(pd->propType(), QMetaType::fromType<int>());
 }
