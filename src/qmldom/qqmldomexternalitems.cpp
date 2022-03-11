@@ -342,7 +342,6 @@ bool QmlFile::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     cont = cont && self.dvWrapField(visitor, Fields::pragmas, m_pragmas);
     cont = cont && self.dvWrapField(visitor, Fields::imports, m_imports);
     cont = cont && self.dvWrapField(visitor, Fields::importScope, m_importScope);
-    cont = cont && self.dvWrapField(visitor, Fields::importScope, m_importScope);
     cont = cont && self.dvWrapField(visitor, Fields::fileLocationsTree, m_fileLocationsTree);
     cont = cont && self.dvWrapField(visitor, Fields::comments, m_comments);
     cont = cont && self.dvWrapField(visitor, Fields::astComments, m_astComments);
