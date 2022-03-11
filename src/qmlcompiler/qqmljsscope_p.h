@@ -209,6 +209,7 @@ public:
     bool hasOwnMethod(const QString &name) const { return m_methods.contains(name); }
 
     bool hasMethod(const QString &name) const;
+    QHash<QString, QQmlJSMetaMethod> methods() const;
     QList<QQmlJSMetaMethod> methods(const QString &name) const;
     QList<QQmlJSMetaMethod> methods(const QString &name, QQmlJSMetaMethod::Type type) const;
 
@@ -271,6 +272,7 @@ public:
 
     bool hasProperty(const QString &name) const;
     QQmlJSMetaProperty property(const QString &name) const;
+    QHash<QString, QQmlJSMetaProperty> properties() const;
 
     void setPropertyLocallyRequired(const QString &name, bool isRequired);
     bool isPropertyRequired(const QString &name) const;

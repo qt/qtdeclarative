@@ -148,6 +148,29 @@ bool QQmlJSScope::hasMethod(const QString &name) const
     });
 }
 
+/*!
+    Returns all methods visible from this scope including those of
+    base types and extensions.
+
+    \note Methods that get shadowed are not included and only the
+    version visible from this scope is contained. Additionally method
+    overrides are not included either, only the first visible version
+    of any method is included.
+*/
+QHash<QString, QQmlJSMetaMethod> QQmlJSScope::methods() const
+{
+    QHash<QString, QQmlJSMetaMethod> results;
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        for (auto it = scope->m_methods.constBegin(); it != scope->m_methods.constEnd(); it++) {
+            if (!results.contains(it.key()))
+                results.insert(it.key(), it.value());
+        }
+        return false;
+    });
+
+    return results;
+}
+
 QList<QQmlJSMetaMethod> QQmlJSScope::methods(const QString &name) const
 {
     QList<QQmlJSMetaMethod> results;
@@ -514,6 +537,27 @@ QQmlJSMetaProperty QQmlJSScope::property(const QString &name) const
         return true;
     });
     return prop;
+}
+
+/*!
+    Returns all properties visible from this scope including those of
+    base types and extensions.
+
+    \note Properties that get shadowed are not included and only the
+    version visible from this scope is contained.
+*/
+QHash<QString, QQmlJSMetaProperty> QQmlJSScope::properties() const
+{
+    QHash<QString, QQmlJSMetaProperty> results;
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        for (auto it = scope->m_properties.constBegin(); it != scope->m_properties.constEnd();
+             it++) {
+            if (!results.contains(it.key()))
+                results.insert(it.key(), it.value());
+        }
+        return false;
+    });
+    return results;
 }
 
 QQmlJSScope::ConstPtr QQmlJSScope::ownerOfProperty(const QQmlJSScope::ConstPtr &self,

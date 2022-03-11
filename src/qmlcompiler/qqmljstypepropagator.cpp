@@ -377,15 +377,13 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
     }
 
     if (!suggestion.has_value()) {
-        for (QQmlJSScope::ConstPtr baseScope = m_function->qmlScope; !baseScope.isNull();
-             baseScope = baseScope->baseType()) {
-            if (auto didYouMean = QQmlJSUtils::didYouMean(
-                        name, baseScope->ownProperties().keys() + baseScope->ownMethods().keys(),
-                        location);
-                didYouMean.has_value()) {
-                suggestion = didYouMean;
-                break;
-            }
+        if (auto didYouMean =
+                    QQmlJSUtils::didYouMean(name,
+                                            m_function->qmlScope->properties().keys()
+                                                    + m_function->qmlScope->methods().keys(),
+                                            location);
+            didYouMean.has_value()) {
+            suggestion = didYouMean;
         }
     }
 
@@ -751,15 +749,10 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
 
         std::optional<FixSuggestion> fixSuggestion;
 
-        for (QQmlJSScope::ConstPtr baseScope = baseType; !baseScope.isNull();
-             baseScope = baseScope->baseType()) {
-            if (auto suggestion =
-                        QQmlJSUtils::didYouMean(propertyName, baseScope->ownProperties().keys(),
-                                                getCurrentSourceLocation());
-                suggestion.has_value()) {
-                fixSuggestion = suggestion;
-                break;
-            }
+        if (auto suggestion = QQmlJSUtils::didYouMean(propertyName, baseType->properties().keys(),
+                                                      getCurrentSourceLocation());
+            suggestion.has_value()) {
+            fixSuggestion = suggestion;
         }
 
         if (!fixSuggestion.has_value()
@@ -971,14 +964,12 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
 
         std::optional<FixSuggestion> fixSuggestion;
 
-        for (QQmlJSScope::ConstPtr baseScope = m_typeResolver->containedType(callBase);
-             !baseScope.isNull(); baseScope = baseScope->baseType()) {
-            if (auto suggestion = QQmlJSUtils::didYouMean(
-                        propertyName, baseScope->ownMethods().keys(), getCurrentSourceLocation());
-                suggestion.has_value()) {
-                fixSuggestion = suggestion;
-                break;
-            }
+        const auto baseType = m_typeResolver->containedType(callBase);
+
+        if (auto suggestion = QQmlJSUtils::didYouMean(propertyName, baseType->methods().keys(),
+                                                      getCurrentSourceLocation());
+            suggestion.has_value()) {
+            fixSuggestion = suggestion;
         }
 
         m_logger->log(u"Property \"%1\" not found on type \"%2\""_qs.arg(

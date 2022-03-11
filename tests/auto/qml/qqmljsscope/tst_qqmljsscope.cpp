@@ -77,18 +77,13 @@ class tst_qqmljsscope : public QQmlDataTest
         if (!error.message.isEmpty())
             return QQmlJSScope::ConstPtr();
 
-        const QStringList importPaths = {
-            QLibraryInfo::path(QLibraryInfo::QmlImportsPath),
-            dataDirectory(),
-        };
 
-        QQmlJSImporter importer { importPaths, /* resource file mapper */ nullptr };
         QQmlJSLogger logger;
         logger.setFileName(url);
         logger.setCode(sourceCode);
         logger.setSilent(true);
-        QQmlJSImportVisitor visitor(&importer, &logger, dataDirectory());
-        QQmlJSTypeResolver typeResolver { &importer };
+        QQmlJSImportVisitor visitor(&m_importer, &logger, dataDirectory());
+        QQmlJSTypeResolver typeResolver { &m_importer };
         typeResolver.init(&visitor, document.program);
         return visitor.result();
     }
@@ -99,9 +94,22 @@ private Q_SLOTS:
     void orderedBindings();
     void signalCreationDifferences();
     void allTypesAvailable();
+    void shadowing();
 
 public:
-    tst_qqmljsscope() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
+    tst_qqmljsscope()
+        : QQmlDataTest(QT_QMLTEST_DATADIR),
+          m_importer(
+                  {
+                          QLibraryInfo::path(QLibraryInfo::QmlImportsPath),
+                          dataDirectory(),
+                  },
+                  nullptr)
+    {
+    }
+
+private:
+    QQmlJSImporter m_importer;
 };
 
 void tst_qqmljsscope::initTestCase()
@@ -176,6 +184,30 @@ void tst_qqmljsscope::allTypesAvailable()
         QVERIFY(types.contains(u"$internal$.QObject"_qs));
         QVERIFY(types.contains(u"QtObject"_qs));
         QCOMPARE(types[u"$internal$.QObject"_qs].scope, types[u"QtObject"_qs].scope);
+}
+
+void tst_qqmljsscope::shadowing()
+{
+    QQmlJSScope::ConstPtr root = run(u"shadowing.qml"_qs);
+    QVERIFY(root);
+
+    QVERIFY(root->baseType());
+
+    // Check whether properties are properly shadowed
+    const auto properties = root->properties();
+    QVERIFY(properties.contains(u"property_not_shadowed"_qs));
+    QVERIFY(properties.contains(u"property_shadowed"_qs));
+
+    QCOMPARE(properties[u"property_not_shadowed"_qs].typeName(), u"QString"_qs);
+    QCOMPARE(properties[u"property_shadowed"_qs].typeName(), u"int"_qs);
+
+    // Check whether methods are properly shadowed
+    const auto methods = root->methods();
+    QCOMPARE(methods.count(u"method_not_shadowed"_qs), 1);
+    QCOMPARE(methods.count(u"method_shadowed"_qs), 1);
+
+    QCOMPARE(methods[u"method_not_shadowed"_qs].parameterNames().size(), 1);
+    QCOMPARE(methods[u"method_shadowed"_qs].parameterNames().size(), 0);
 }
 
 QTEST_MAIN(tst_qqmljsscope)
