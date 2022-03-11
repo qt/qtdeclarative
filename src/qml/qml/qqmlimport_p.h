@@ -42,6 +42,7 @@
 
 #include <QtCore/qurl.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/qset.h>
 #include <QtCore/qstringlist.h>
 #include <QtQml/qqmlengine.h>
@@ -72,6 +73,8 @@ class QQmlImportsPrivate;
 class QQmlImportDatabase;
 class QQmlTypeLoader;
 class QQmlTypeLoaderQmldirContent;
+
+const QLoggingCategory &lcQmlImport();
 
 namespace QQmlImport {
     enum RecursionRestriction { PreventRecursion, AllowRecursion };
@@ -320,6 +323,7 @@ QQmlImportDatabase::LocalQmldirResult QQmlImportDatabase::locateLocalQmldir(
     const QStringList qmlDirPaths = QQmlImports::completeQmldirPaths(
                 uri, localImportPaths, version);
 
+    QString qmldirAbsoluteFilePath;
     for (QString qmldirPath : qmlDirPaths) {
         if (hasInterceptors) {
             const QUrl intercepted = engine->interceptUrl(
@@ -333,7 +337,7 @@ QQmlImportDatabase::LocalQmldirResult QQmlImportDatabase::locateLocalQmldir(
             }
         }
 
-        QString qmldirAbsoluteFilePath = absoluteFilePath(qmldirPath);
+        qmldirAbsoluteFilePath = absoluteFilePath(qmldirPath);
         if (!qmldirAbsoluteFilePath.isEmpty()) {
             QString url;
             const QString absolutePath = qmldirAbsoluteFilePath.left(
@@ -380,6 +384,15 @@ QQmlImportDatabase::LocalQmldirResult QQmlImportDatabase::locateLocalQmldir(
             cache->qmldirPathUrl = QStringLiteral("intercepted");
         }
         qmldirCache.insert(uri, cache);
+
+        if (result == QmldirNotFound) {
+            qCDebug(lcQmlImport)
+                    << "locateLocalQmldir:" << qPrintable(uri) << "module's qmldir file not found";
+        }
+    } else {
+        qCDebug(lcQmlImport)
+                << "locateLocalQmldir:" << qPrintable(uri) << "module's qmldir found at"
+                << qmldirAbsoluteFilePath;
     }
 
     return result;
