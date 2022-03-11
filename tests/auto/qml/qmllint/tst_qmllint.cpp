@@ -200,48 +200,64 @@ void TestQmllint::initTestCase()
 void TestQmllint::testUnqualified()
 {
     QFETCH(QString, filename);
-    QFETCH(QString, warningMessage);
-    QFETCH(int, warningLine);
-    QFETCH(int, warningColumn);
+    QFETCH(Result, result);
 
-    const QString output = runQmllint(filename, false);
-    QVERIFY(output.contains(QStringLiteral("%1:%2:%3: Unqualified access").arg(testFile(filename)).arg(warningLine).arg(warningColumn)));
-    QVERIFY(output.contains(warningMessage));
+    runTest(filename, result);
 }
 
 void TestQmllint::testUnqualified_data()
 {
     QTest::addColumn<QString>("filename");
-    QTest::addColumn<QString>("warningMessage");
-    QTest::addColumn<int>("warningLine");
-    QTest::addColumn<int>("warningColumn");
+    QTest::addColumn<Result>("result");
 
     // id from nowhere (as with setContextProperty)
-    QTest::newRow("IdFromOuterSpaceDirect") << QStringLiteral("IdFromOuterSpace.qml") << "alien.x" << 4 << 8;
-    QTest::newRow("IdFromOuterSpaceAccess") << QStringLiteral("IdFromOuterSpace.qml") << "console.log(alien)" << 7 << 21;
+    QTest::newRow("IdFromOuterSpace")
+            << QStringLiteral("IdFromOuterSpace.qml")
+            << Result { { Message { QStringLiteral("Unqualified access"), 4, 8 },
+                          Message { QStringLiteral("Unqualified access"), 7, 21 } } };
     // access property of root object
-    QTest::newRow("FromRootDirect") << QStringLiteral("FromRoot.qml") << QStringLiteral("x: root.unqualified") << 9 << 16; // new property
-    QTest::newRow("FromRootAccess") << QStringLiteral("FromRoot.qml") << QStringLiteral("property int check: root.x") << 13 << 33;  // builtin property
+    QTest::newRow("FromRootDirect")
+            << QStringLiteral("FromRoot.qml")
+            << Result {
+                   {
+                           Message { QStringLiteral("Unqualified access"), 9, 16 }, // new property
+                           Message { QStringLiteral("Unqualified access"), 13,
+                                     33 } // builtin property
+                   },
+                   {},
+                   { { Message { u"root."_qs, 9, 16 } }, { Message { u"root."_qs, 13, 33 } } }
+               };
     // access injected name from signal
-    QTest::newRow("SignalHandler1")
+    QTest::newRow("SignalHandler")
             << QStringLiteral("SignalHandler.qml")
-            << QStringLiteral("onDoubleClicked: function(mouse) {") << 5 << 21;
-    QTest::newRow("SignalHandler2")
-            << QStringLiteral("SignalHandler.qml")
-            << QStringLiteral("onPositionChanged: function(mouse) {") << 10 << 21;
-    QTest::newRow("SignalHandlerShort1") << QStringLiteral("SignalHandler.qml")
-                                         << QStringLiteral("onClicked: (mouse) => ") << 8 << 29;
-    QTest::newRow("SignalHandlerShort2")
-            << QStringLiteral("SignalHandler.qml") << QStringLiteral("onPressAndHold: (mouse) => ")
-            << 12 << 34;
+            << Result { {
+                                Message { QStringLiteral("Unqualified access"), 5, 21 },
+                                Message { QStringLiteral("Unqualified access"), 10, 21 },
+                                Message { QStringLiteral("Unqualified access"), 8, 29 },
+                                Message { QStringLiteral("Unqualified access"), 12, 34 },
+                        },
+                        {},
+                        {
+                                Message { QStringLiteral("function(mouse)"), 4, 22 },
+                                Message { QStringLiteral("function(mouse)"), 9, 24 },
+                                Message { QStringLiteral("(mouse) => "), 8, 16 },
+                                Message { QStringLiteral("(mouse) => "), 12, 21 },
+                        } };
     // access catch identifier outside catch block
-    QTest::newRow("CatchStatement") << QStringLiteral("CatchStatement.qml") << QStringLiteral("err") << 6 << 21;
-
-    QTest::newRow("NonSpuriousParent") << QStringLiteral("nonSpuriousParentWarning.qml") << QStringLiteral("property int x: <id>.parent.x") << 6 << 25;
+    QTest::newRow("CatchStatement")
+            << QStringLiteral("CatchStatement.qml")
+            << Result { { Message { QStringLiteral("Unqualified access"), 6, 21 } } };
+    QTest::newRow("NonSpuriousParent")
+            << QStringLiteral("nonSpuriousParentWarning.qml")
+            << Result { {
+                                Message { QStringLiteral("Unqualified access"), 6, 25 },
+                        },
+                        {},
+                        { { Message { u"<id>."_qs, 6, 25 } } } };
 
     QTest::newRow("crashConnections")
-        << QStringLiteral("crashConnections.qml")
-        << QStringLiteral("target: FirstRunDialog") << 4 << 13;
+            << QStringLiteral("crashConnections.qml")
+            << Result { { Message { QStringLiteral("Unqualified access"), 4, 13 } } };
 }
 
 void TestQmllint::testUnknownCausesFail()
@@ -1491,10 +1507,16 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
                 .arg(QString::fromUtf8(QJsonDocument(warnings).toJson(QJsonDocument::Compact)),
                      must ? u"must" : u"must NOT", substring);
     };
-    if (shouldContain == StringContained)
-        QVERIFY2(contains, qPrintable(toDescription(warnings, substring)));
-    else
-        QVERIFY2(!contains, qPrintable(toDescription(warnings, substring, false)));
+
+    if (shouldContain == StringContained) {
+        if (!contains)
+            qWarning() << toDescription(warnings, substring);
+        QVERIFY(contains);
+    } else {
+        if (contains)
+            qWarning() << toDescription(warnings, substring, false);
+        QVERIFY(!contains);
+    }
 }
 
 void TestQmllint::requiredProperty()
