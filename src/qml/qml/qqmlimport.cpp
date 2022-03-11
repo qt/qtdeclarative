@@ -1637,7 +1637,7 @@ QTypeRevision QQmlImports::addLibraryImport(
 
     qCDebug(lcQmlImport)
             << "addLibraryImport:" << qPrintable(baseUrl().toString())
-            << uri << version << "as" << prefix;
+            << uri << "version '" << version << "'" << "as" << prefix;
 
     return d->addLibraryImport(uri, prefix, version, qmldirIdentifier, qmldirUrl, flags,
                                importDb, errors);
