@@ -485,8 +485,9 @@ QString QQmlPluginImporter::resolvePlugin(const QString &qmldirPluginPath, const
 #endif
     }
 
-    qCDebug(lcQmlImport) << "resolvePlugin" << "Could not resolve plugin"
-                         << baseName << "in" << qmldirPath;
+    qCDebug(lcQmlImport) << "resolvePlugin" << "Could not resolve dynamic plugin with base name"
+                         << baseName << "in" << qmldirPath
+                         << " file does not exist";
 
     return QString();
 }
