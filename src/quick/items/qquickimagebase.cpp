@@ -53,10 +53,8 @@ QT_BEGIN_NAMESPACE
 
 bool isScalableImageFormat(const QUrl &url)
 {
-    if (url.scheme() == QLatin1String("image")) {
-        // Custom image provider; let the provider deal with it.
-        return false;
-    }
+    if (url.scheme() == QLatin1String("image"))
+        return true;
 
     const QString stringUrl = url.path(QUrl::PrettyDecoded);
     return stringUrl.endsWith(QLatin1String("svg"))
