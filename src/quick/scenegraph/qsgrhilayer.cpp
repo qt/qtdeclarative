@@ -159,9 +159,29 @@ void QSGRhiLayer::setSize(const QSize &size)
     markDirtyTexture();
 }
 
-void QSGRhiLayer::setFormat(uint format)
+void QSGRhiLayer::setFormat(Format format)
 {
-    Q_UNUSED(format);
+    QRhiTexture::Format rhiFormat = QRhiTexture::RGBA8;
+    switch (format) {
+    case RGBA16F:
+        rhiFormat = QRhiTexture::RGBA16F;
+        break;
+    case RGBA32F:
+        rhiFormat = QRhiTexture::RGBA32F;
+        break;
+    default:
+        break;
+    }
+
+    if (rhiFormat == m_format)
+        return;
+
+    if (m_rhi->isTextureFormatSupported(rhiFormat)) {
+        m_format = rhiFormat;
+        markDirtyTexture();
+    } else {
+        qWarning("QSGRhiLayer: Attempted to set unsupported texture format %d", int(rhiFormat));
+    }
 }
 
 void QSGRhiLayer::setLive(bool live)
@@ -243,7 +263,7 @@ void QSGRhiLayer::grab()
     if (effectiveSamples <= 1)
         effectiveSamples = m_context->msaaSampleCount();
 
-    const bool needsNewRt = !m_rt || m_rt->pixelSize() != m_size || (m_recursive && !m_secondaryTexture);
+    const bool needsNewRt = !m_rt || m_rt->pixelSize() != m_size || (m_recursive && !m_secondaryTexture) || (m_texture && m_texture->format() != m_format);
     const bool mipmapSettingChanged = m_texture && m_texture->flags().testFlag(QRhiTexture::MipMapped) != m_mipmap;
     const bool msaaSettingChanged = (effectiveSamples > 1 && !m_msaaColorBuffer) || (effectiveSamples <= 1 && m_msaaColorBuffer);
 

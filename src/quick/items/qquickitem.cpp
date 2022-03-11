@@ -9011,7 +9011,7 @@ QQuickItemLayer::QQuickItemLayer(QQuickItem *item)
     , m_smooth(false)
     , m_componentComplete(true)
     , m_wrapMode(QQuickShaderEffectSource::ClampToEdge)
-    , m_format(QQuickShaderEffectSource::RGBA)
+    , m_format(QQuickShaderEffectSource::RGBA8)
     , m_name("source")
     , m_effectComponent(nullptr)
     , m_effect(nullptr)
@@ -9225,20 +9225,18 @@ void QQuickItemLayer::setMipmap(bool mipmap)
 /*!
     \qmlproperty enumeration QtQuick::Item::layer.format
 
-    This property defines the internal format of the texture.
+    This property defines the format of the backing texture.
     Modifying this property makes most sense when the \a layer.effect is also
-    specified. Depending on the OpenGL implementation, this property might
-    allow you to save some texture memory.
+    specified.
 
     \list
-    \li ShaderEffectSource.Alpha - GL_ALPHA;
-    \li ShaderEffectSource.RGB - GL_RGB
-    \li ShaderEffectSource.RGBA - GL_RGBA
+    \li ShaderEffectSource.RGBA8
+    \li ShaderEffectSource.RGBA16F
+    \li ShaderEffectSource.RGBA32F
+    \li ShaderEffectSource.Alpha - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
+    \li ShaderEffectSource.RGB - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
+    \li ShaderEffectSource.RGBA - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
     \endlist
-
-    \note ShaderEffectSource.RGB and ShaderEffectSource.Alpha should
-    be used with caution, as support for these formats in the underlying
-    hardware and driver is often not present.
 
     \sa {Item Layers}
  */

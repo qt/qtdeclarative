@@ -184,7 +184,7 @@ QQuickShaderEffectSource::QQuickShaderEffectSource(QQuickItem *parent)
     , m_wrapMode(ClampToEdge)
     , m_sourceItem(nullptr)
     , m_textureSize(0, 0)
-    , m_format(RGBA)
+    , m_format(RGBA8)
     , m_samples(0)
     , m_live(true)
     , m_hideSource(false)
@@ -414,18 +414,18 @@ void QQuickShaderEffectSource::setTextureSize(const QSize &size)
 /*!
     \qmlproperty enumeration QtQuick::ShaderEffectSource::format
 
-    This property defines the internal OpenGL format of the texture.
+    This property defines the format of the backing texture.
     Modifying this property makes most sense when the item is used as a
-    source texture of a \l ShaderEffect. Depending on the OpenGL
-    implementation, this property might allow you to save some texture memory.
+    source texture of a \l ShaderEffect.
 
     \list
-    \li ShaderEffectSource.Alpha - GL_ALPHA
-    \li ShaderEffectSource.RGB - GL_RGB
-    \li ShaderEffectSource.RGBA - GL_RGBA
+    \li ShaderEffectSource.RGBA8
+    \li ShaderEffectSource.RGBA16F
+    \li ShaderEffectSource.RGBA32F
+    \li ShaderEffectSource.Alpha - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
+    \li ShaderEffectSource.RGB - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
+    \li ShaderEffectSource.RGBA - Starting with Qt 6.0, this value is not in use and has the same effect as RGBA8 in practice.
     \endlist
-
-    \note Some OpenGL implementations do not support the GL_ALPHA format.
 */
 
 QQuickShaderEffectSource::Format QQuickShaderEffectSource::format() const
@@ -676,6 +676,20 @@ public:
     }
 };
 
+static QSGLayer::Format toLayerFormat(QQuickShaderEffectSource::Format format)
+{
+    switch (format) {
+    case QQuickShaderEffectSource::RGBA8:
+        return QSGLayer::RGBA8;
+    case QQuickShaderEffectSource::RGBA16F:
+        return QSGLayer::RGBA16F;
+    case QQuickShaderEffectSource::RGBA32F:
+        return QSGLayer::RGBA32F;
+    default:
+        return QSGLayer::RGBA8;
+    }
+}
+
 QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *)
 {
     if (!m_sourceItem || m_sourceItem->width() <= 0 || m_sourceItem->height() <= 0) {
@@ -714,7 +728,7 @@ QSGNode *QQuickShaderEffectSource::updatePaintNode(QSGNode *oldNode, UpdatePaint
     m_texture->setDevicePixelRatio(d->window->effectiveDevicePixelRatio());
     m_texture->setSize(textureSize);
     m_texture->setRecursive(m_recursive);
-    m_texture->setFormat(m_format);
+    m_texture->setFormat(toLayerFormat(m_format));
     m_texture->setHasMipmaps(m_mipmap);
     m_texture->setMirrorHorizontal(m_textureMirroring & MirrorHorizontally);
     m_texture->setMirrorVertical(m_textureMirroring & MirrorVertically);

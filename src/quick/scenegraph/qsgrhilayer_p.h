@@ -81,7 +81,7 @@ public:
     void setRect(const QRectF &rect) override;
     void setSize(const QSize &size) override;
     void setHasMipmaps(bool mipmap) override;
-    void setFormat(uint format) override;
+    void setFormat(Format format) override;
     void setLive(bool live) override;
     void setRecursive(bool recursive) override;
     void setDevicePixelRatio(qreal ratio) override { m_dpr = ratio; }

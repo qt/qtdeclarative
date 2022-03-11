@@ -202,6 +202,11 @@ class Q_QUICK_EXPORT QSGLayer : public QSGDynamicTexture
 {
     Q_OBJECT
 public:
+    enum Format {
+        RGBA8 = 1,
+        RGBA16F,
+        RGBA32F
+    };
     virtual void setItem(QSGNode *item) = 0;
     virtual void setRect(const QRectF &rect) = 0;
     virtual void setSize(const QSize &size) = 0;
@@ -209,7 +214,7 @@ public:
     virtual QImage toImage() const = 0;
     virtual void setLive(bool live) = 0;
     virtual void setRecursive(bool recursive) = 0;
-    virtual void setFormat(uint format) = 0;
+    virtual void setFormat(Format format) = 0;
     virtual void setHasMipmaps(bool mipmap) = 0;
     virtual void setDevicePixelRatio(qreal ratio) = 0;
     virtual void setMirrorHorizontal(bool mirror) = 0;
