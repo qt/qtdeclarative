@@ -917,6 +917,12 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                                   "Itym was not found. Did you add all import paths?") },
                           {},
                           { Message { QStringLiteral("Item") } } } };
+    QTest::newRow("didYouMean(enum)")
+            << QStringLiteral("didYouMeanEnum.qml")
+            << Result { { Message { QStringLiteral(
+                                  "Property \"Readx\" not found on type \"QQuickImage\"") },
+                          {},
+                          { Message { QStringLiteral("Ready") } } } };
     QTest::newRow("nullBinding")
             << QStringLiteral("nullBinding.qml")
             << Result { { Message { QStringLiteral(

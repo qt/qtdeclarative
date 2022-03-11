@@ -220,6 +220,7 @@ public:
     bool hasEnumeration(const QString &name) const;
     bool hasEnumerationKey(const QString &name) const;
     QQmlJSMetaEnum enumeration(const QString &name) const;
+    QHash<QString, QQmlJSMetaEnum> enumerations() const;
 
     void setAnnotations(const QList<QQmlJSAnnotation> &annotation) { m_annotations = std::move(annotation); }
     const QList<QQmlJSAnnotation> &annotations() const { return m_annotations; }

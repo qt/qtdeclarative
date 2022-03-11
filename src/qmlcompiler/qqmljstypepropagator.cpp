@@ -762,6 +762,20 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
             }
         }
 
+        if (!fixSuggestion.has_value()
+            && m_state.accumulatorIn().variant() == QQmlJSRegisterContent::MetaType) {
+            QStringList enumKeys;
+            for (const QQmlJSMetaEnum &metaEnum :
+                 m_state.accumulatorIn().scopeType()->enumerations())
+                enumKeys << metaEnum.keys();
+
+            if (auto suggestion =
+                        QQmlJSUtils::didYouMean(propertyName, enumKeys, getCurrentSourceLocation());
+                suggestion.has_value()) {
+                fixSuggestion = suggestion;
+            }
+        }
+
         m_logger->log(
                 u"Property \"%1\" not found on type \"%2\""_qs.arg(propertyName).arg(typeName),
                 Log_Type, getCurrentSourceLocation(), true, true, fixSuggestion);

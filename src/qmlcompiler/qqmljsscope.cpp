@@ -207,6 +207,22 @@ QQmlJSMetaEnum QQmlJSScope::enumeration(const QString &name) const
     return result;
 }
 
+QHash<QString, QQmlJSMetaEnum> QQmlJSScope::enumerations() const
+{
+    QHash<QString, QQmlJSMetaEnum> results;
+
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        for (auto it = scope->m_enumerations.constBegin(); it != scope->m_enumerations.constEnd();
+             it++) {
+            if (!results.contains(it.key()))
+                results.insert(it.key(), it.value());
+        }
+        return false;
+    });
+
+    return results;
+}
+
 /*!
     Returns if assigning to a property of this type would cause
     implicit component wrapping for non-Component types.
