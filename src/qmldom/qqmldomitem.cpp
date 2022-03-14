@@ -490,6 +490,11 @@ DomItem DomItem::filterUp(function_ref<bool(DomType k, DomItem &)> filter, Filte
                 DomItem res;
                 k = DomType::Empty;
                 Path pp = pathFromOwner();
+                DomType k2 = el.internalKind();
+                if (filter(k2, el)) {
+                    k = k2;
+                    res = el;
+                }
                 for (Path p : pp.mid(0, pp.length() - 1)) {
                     el = el.path(p);
                     DomType k2 = el.internalKind();

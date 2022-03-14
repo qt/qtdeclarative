@@ -426,7 +426,7 @@ private slots:
         QCOMPARE(obj1_1.environment(), env);
         QCOMPARE(obj1_1.owner(), tOwner);
     }
-    void testLoadDep()
+    void testLoadNoDep()
     {
 #ifdef Q_OS_ANDROID
         QSKIP("Test uncompatible with Android (QTBUG-100171)");
@@ -511,6 +511,61 @@ private slots:
             Q_ASSERT(env.path(p));
             env.ownerAs<DomEnvironment>()->removePath(bPath);
             Q_ASSERT(!env.path(p));
+        }
+    }
+
+    void testLoadDep()
+    {
+#ifdef Q_OS_ANDROID
+        QSKIP("Test uncompatible with Android (QTBUG-100171)");
+#endif
+        auto univPtr = std::shared_ptr<QQmlJS::Dom::DomUniverse>(
+                new QQmlJS::Dom::DomUniverse(QLatin1String("univ1")));
+        auto envPtr = std::shared_ptr<QQmlJS::Dom::DomEnvironment>(new QQmlJS::Dom::DomEnvironment(
+                qmltypeDirs, QQmlJS::Dom::DomEnvironment::Option::SingleThreaded, univPtr));
+        QQmlJS::Dom::DomItem env(envPtr);
+        QVERIFY(env);
+        QString testFile1 = baseDir + QLatin1String("/test1.qml");
+        DomItem tFile;
+        env.loadBuiltins();
+        env.loadFile(
+                testFile1, QString(),
+                [&tFile](Path, const DomItem &, const DomItem &newIt) { tFile = newIt; },
+                LoadOption::DefaultLoad);
+        env.loadFile(baseDir, QString(), {}, LoadOption::DefaultLoad);
+        env.loadPendingDependencies();
+
+        QVERIFY(tFile);
+        tFile = tFile.field(Fields::currentItem);
+        QVERIFY(tFile);
+        DomItem comp1 = tFile.field(Fields::components).key(QString()).index(0);
+        QVERIFY(comp1);
+        DomItem obj1 = comp1.field(Fields::objects).index(0);
+        QVERIFY(obj1);
+
+        {
+            QList<DomItem> rect =
+                    obj1.lookup(u"Rectangle"_qs, LookupType::Type, LookupOption::Normal);
+            QList<DomItem> rect2 =
+                    obj1.lookup(u"Rectangle"_qs, LookupType::Symbol, LookupOption::Normal);
+            QVERIFY(rect.length() == 1);
+            QVERIFY(rect2.length() == 1);
+            QCOMPARE(rect.first().internalKind(), DomType::Export);
+            QCOMPARE(rect.first(), rect2.first());
+            DomItem rect3 = rect.first().proceedToScope();
+            QCOMPARE(rect3.internalKind(), DomType::QmlObject);
+            QList<DomItem> rects;
+            obj1.resolve(
+                    Path::Current(PathCurrent::Lookup).field(Fields::type).key(u"Rectangle"_qs),
+                    [&rects](Path, DomItem &el) {
+                        rects.append(el);
+                        return true;
+                    },
+                    {});
+            QVERIFY(rects.length() == 1);
+            for (DomItem &el : rects) {
+                QCOMPARE(rect.first(), el);
+            }
         }
     }
 

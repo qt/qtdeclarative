@@ -143,7 +143,16 @@ void QmltypesReader::insertComponent(const QQmlJSScope::Ptr &jsScope,
 {
     QmltypesComponent comp;
     QMap<int, QmlObject> objects;
-    objects.insert(0, QmlObject());
+    {
+        bool hasExports = false;
+        for (const QQmlJSScope::Export &jsE : exportsList) {
+            int metaRev = jsE.version().toEncodedVersion<int>();
+            hasExports = true;
+            objects.insert(metaRev, QmlObject());
+        }
+        if (!hasExports)
+            objects.insert(0, QmlObject());
+    }
     bool incrementedPath = false;
     QString prototype;
     QString defaultPropertyName;
@@ -208,26 +217,8 @@ void QmltypesReader::insertComponent(const QQmlJSScope::Ptr &jsScope,
                             .field(Fields::components)
                             .key(comp.name())
                             .index(qmltypesFilePtr()->components().values(comp.name()).length());
+
     // emit & map objs
-
-    // exports:
-    QList<Export> exports;
-    int iExport = 0;
-    for (const QQmlJSScope::Export &jsE : exportsList) {
-        int metaRev = jsE.version().toEncodedVersion<int>();
-        ++iExport;
-        Export e;
-        e.uri = jsE.package();
-        e.typeName = jsE.type();
-        auto v = jsE.version();
-        e.version = Version((v.hasMajorVersion() ? v.majorVersion() : Version::Latest),
-                            (v.hasMinorVersion() ? v.minorVersion() : Version::Latest));
-        e.typePath = revToPath.value(metaRev);
-        objects[metaRev];
-        e.exportSourcePath = exportSourcePath;
-        comp.addExport(e);
-    }
-
     while (it != begin) {
         --it;
         if (it.key() < 0) {
@@ -248,6 +239,26 @@ void QmltypesReader::insertComponent(const QQmlJSScope::Ptr &jsScope,
         metaRevs.append(it.key());
     }
     comp.setMetaRevisions(metaRevs);
+
+    // exports:
+    QList<Export> exports;
+    int iExport = 0;
+    for (const QQmlJSScope::Export &jsE : exportsList) {
+        auto v = jsE.version();
+        int metaRev = v.toEncodedVersion<int>();
+        ++iExport;
+        Export e;
+        e.uri = jsE.package();
+        e.typeName = jsE.type();
+        e.version = Version((v.hasMajorVersion() ? v.majorVersion() : Version::Latest),
+                            (v.hasMinorVersion() ? v.minorVersion() : Version::Latest));
+        e.typePath = revToPath.value(metaRev);
+        if (!e.typePath) {
+            qCWarning(domLog) << "could not find version" << metaRev << "in" << revToPath.keys();
+        }
+        e.exportSourcePath = exportSourcePath;
+        comp.addExport(e);
+    }
 
     if (comp.name().isEmpty()) {
         addError(myParseErrors()
