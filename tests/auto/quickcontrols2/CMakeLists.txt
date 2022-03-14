@@ -13,6 +13,7 @@ endif()
 add_subdirectory(font)
 add_subdirectory(palette)
 add_subdirectory(platform)
+add_subdirectory(pointerhandlers)
 add_subdirectory(pressandhold)
 if(NOT ANDROID) # QTBUG-100176
 add_subdirectory(qquickapplicationwindow)
