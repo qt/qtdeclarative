@@ -756,7 +756,7 @@ void tst_QmlCppCodegen::componentReturnType()
     QScopedPointer<QObject> object(component.create());
 
     QCOMPARE(object->property("count").toInt(), 10);
-    QCOMPARE(QQmlListReference(object.data(), "children", &engine).count(), 11);
+    QCOMPARE(QQmlListReference(object.data(), "children").count(), 11);
 }
 
 void tst_QmlCppCodegen::onAssignment()

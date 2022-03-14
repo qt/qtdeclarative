@@ -870,7 +870,6 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
 
     Q_ASSERT(m_state.accumulatorOut().isProperty());
 
-    const QQmlJSScope::ConstPtr out = m_state.accumulatorOut().storedType();
     if (isReferenceType) {
         const QString lookup = u"aotContext->getObjectLookup("_qs + indexString
                 + u", "_qs + m_state.accumulatorVariableIn + u", "_qs
@@ -882,16 +881,23 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
         const QString preparation = getLookupPreparation(
                     m_state.accumulatorOut(), m_state.accumulatorVariableOut, index);
         generateLookup(lookup, initialization, preparation);
+    } else if (m_typeResolver->registerIsStoredIn(accumulatorIn, m_typeResolver->listPropertyType())
+               && m_jsUnitGenerator->lookupName(index) == u"length"_qs) {
+        m_body += m_state.accumulatorVariableOut + u" = "_qs;
+        m_body += conversion(
+                    m_typeResolver->globalType(m_typeResolver->intType()), m_state.accumulatorOut(),
+                    m_state.accumulatorVariableIn + u".count("_qs + u'&'
+                        + m_state.accumulatorVariableIn + u')');
+        m_body += u";\n"_qs;
     } else if ((m_typeResolver->registerIsStoredIn(accumulatorIn, m_typeResolver->stringType())
                 || accumulatorIn.storedType()->accessSemantics()
                     == QQmlJSScope::AccessSemantics::Sequence)
                && m_jsUnitGenerator->lookupName(index) == u"length"_qs) {
-        // Special-cased the same way as in QQmlJSTypeResolver::memberType()
-        m_body += m_state.accumulatorVariableOut + u" = "_qs + m_state.accumulatorVariableIn
-                + u".count("_qs;
-        if (m_typeResolver->registerIsStoredIn(accumulatorIn, m_typeResolver->listPropertyType()))
-            m_body += u'&' + m_state.accumulatorVariableIn;
-        m_body += u')' + u";\n"_qs;
+        m_body += m_state.accumulatorVariableOut + u" = "_qs
+                + conversion(m_typeResolver->globalType(m_typeResolver->intType()),
+                             m_state.accumulatorOut(),
+                             m_state.accumulatorVariableIn + u".length()"_qs)
+                + u";\n"_qs;
     } else if (m_typeResolver->registerIsStoredIn(accumulatorIn, m_typeResolver->jsValueType())) {
         reject(u"lookup in QJSValue"_qs);
     } else {
