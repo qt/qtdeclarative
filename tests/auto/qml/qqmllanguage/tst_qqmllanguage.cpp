@@ -5657,6 +5657,10 @@ void tst_qqmllanguage::extendedForeignTypes()
     QCOMPARE(o->property("foreignExtendedObjectName").toString(), QLatin1String("foreignExtended"));
     QCOMPARE(o->property("extendedInvokable").toInt(), 123);
     QCOMPARE(o->property("extendedSlot").toInt(), 456);
+
+    QObject *extension = qmlExtendedObject(extended);
+    QVERIFY(extension != nullptr);
+    QVERIFY(qobject_cast<Extension *>(extension) != nullptr);
 }
 
 void tst_qqmllanguage::foreignTypeSingletons() {

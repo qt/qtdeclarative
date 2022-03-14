@@ -65,6 +65,8 @@ QT_BEGIN_NAMESPACE
 class QQmlProxyMetaObject : public QDynamicMetaObjectData
 {
 public:
+    enum { ExtensionObjectId = std::numeric_limits<int>::min() };
+
     struct ProxyData {
         typedef QObject *(*CreateFunc)(QObject *);
         QMetaObject *metaObject;

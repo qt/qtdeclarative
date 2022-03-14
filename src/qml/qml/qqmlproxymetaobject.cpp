@@ -104,39 +104,54 @@ int QQmlProxyMetaObject::metaCall(QObject *o, QMetaObject::Call c, int id, void 
 {
     Q_ASSERT(object == o);
 
-    if ((c == QMetaObject::ReadProperty ||
-        c == QMetaObject::WriteProperty) &&
-            id >= metaObjects->constLast().propertyOffset) {
+    switch (c) {
+    case QMetaObject::ReadProperty:
+    case QMetaObject::WriteProperty: {
+        if (id < metaObjects->constLast().propertyOffset)
+            break;
 
         for (int ii = 0; ii < metaObjects->count(); ++ii) {
             const int globalPropertyOffset = metaObjects->at(ii).propertyOffset;
-            if (id >= globalPropertyOffset) {
-                QObject *proxy = getProxy(ii);
-                const int localProxyOffset = proxy->metaObject()->propertyOffset();
-                const int localProxyId = id - globalPropertyOffset + localProxyOffset;
+            if (id < globalPropertyOffset)
+                continue;
 
-                return proxy->qt_metacall(c, localProxyId, a);
-            }
+            QObject *proxy = getProxy(ii);
+            const int localProxyOffset = proxy->metaObject()->propertyOffset();
+            const int localProxyId = id - globalPropertyOffset + localProxyOffset;
+            return proxy->qt_metacall(c, localProxyId, a);
         }
-    } else if (c == QMetaObject::InvokeMetaMethod &&
-               id >= metaObjects->constLast().methodOffset) {
+        break;
+    }
+    case QMetaObject::InvokeMetaMethod: {
+        if (id < metaObjects->constLast().methodOffset)
+            break;
+
         QMetaMethod m = object->metaObject()->method(id);
         if (m.methodType() == QMetaMethod::Signal) {
             QMetaObject::activate(object, id, a);
             return -1;
-        } else {
-            for (int ii = 0; ii < metaObjects->count(); ++ii) {
-                const int globalMethodOffset = metaObjects->at(ii).methodOffset;
-                if (id >= globalMethodOffset) {
-                    QObject *proxy = getProxy(ii);
-
-                    const int localMethodOffset = proxy->metaObject()->methodOffset();
-                    const int localMethodId = id - globalMethodOffset + localMethodOffset;
-
-                    return proxy->qt_metacall(c, localMethodId, a);
-                }
-            }
         }
+
+        for (int ii = 0; ii < metaObjects->count(); ++ii) {
+            const int globalMethodOffset = metaObjects->at(ii).methodOffset;
+            if (id < globalMethodOffset)
+                continue;
+
+            QObject *proxy = getProxy(ii);
+            const int localMethodOffset = proxy->metaObject()->methodOffset();
+            const int localMethodId = id - globalMethodOffset + localMethodOffset;
+            return proxy->qt_metacall(c, localMethodId, a);
+        }
+
+        break;
+    }
+    case QMetaObject::CustomCall:
+        if (id != ExtensionObjectId)
+            break;
+        a[0] = getProxy(0);
+        return id;
+    default:
+        break;
     }
 
     if (parent)

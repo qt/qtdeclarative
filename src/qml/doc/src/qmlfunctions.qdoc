@@ -992,6 +992,16 @@
 */
 
 /*!
+    \fn QObject *qmlExtendedObject(const QObject *base)
+    \relates QQmlEngine
+
+    This function returns the extension object that belongs to \a base, if there is any.
+    Otherwise it returns \c nullptr.
+
+    \sa QML_EXTENDED
+*/
+
+/*!
    \fn int qmlRegisterSingletonType(const char *uri, int versionMajor, int versionMinor, const char *typeName, QObject *(*callback)(QQmlEngine *, QJSEngine *))
    \relates QQmlEngine
 
