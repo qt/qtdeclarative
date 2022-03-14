@@ -17,6 +17,7 @@ qt_internal_add_tool(${target_name}
         textdocument.cpp textdocument.h
         qmllintsuggestions.h qmllintsuggestions.cpp
         textsynchronization.cpp textsynchronization.h
+        qmlcompletionsupport.h qmlcompletionsupport.cpp
         qqmlcodemodel.h qqmlcodemodel.cpp
         ../shared/qqmltoolingsettings.h
         ../shared/qqmltoolingsettings.cpp

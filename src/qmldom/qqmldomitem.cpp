@@ -1573,48 +1573,82 @@ bool DomItem::visitScopeChain(function_ref<bool(DomItem &)> visitor, LookupOptio
     return true;
 }
 
-QSet<QString> DomItem::localSymbolNames()
+QSet<QString> DomItem::localSymbolNames(LocalSymbolsTypes typeFilter)
 {
     QSet<QString> res;
+    if (typeFilter == LocalSymbolsType::None)
+        return res;
     switch (internalKind()) {
     case DomType::QmlObject:
-        res += propertyDefs().keys();
-        res += bindings().keys();
-        res += methods().keys();
+        if (typeFilter & LocalSymbolsType::Attributes) {
+            res += propertyDefs().keys();
+            res += bindings().keys();
+        }
+        if (typeFilter & LocalSymbolsType::Methods) {
+            if ((typeFilter & LocalSymbolsType::Methods) == LocalSymbolsType::Methods) {
+                res += methods().keys();
+            } else {
+                bool shouldAddSignals = bool(typeFilter & LocalSymbolsType::Signals);
+                if (const QmlObject *objPtr = as<QmlObject>()) {
+                    auto methods = objPtr->methods();
+                    for (auto it = methods.cbegin(); it != methods.cend(); ++it) {
+                        if (bool(it.value().methodType == MethodInfo::MethodType::Signal)
+                            == shouldAddSignals)
+                            res += it.key();
+                    }
+                }
+            }
+        }
         break;
     case DomType::ScriptExpression:
         // to do
         break;
     case DomType::QmlComponent:
-        res += ids().keys();
-        Q_FALLTHROUGH();
+        if (typeFilter & LocalSymbolsType::Ids)
+            res += ids().keys();
+        break;
     case DomType::QmlFile: // subComponents, imported types
-    {
-        DomItem comps = field(Fields::components);
-        for (auto k : comps.keys())
-            if (!k.isEmpty())
+        if (typeFilter & LocalSymbolsType::Components) {
+            DomItem comps = field(Fields::components);
+            for (auto k : comps.keys())
+                if (!k.isEmpty())
+                    res.insert(k);
+        }
+        break;
+    case DomType::ImportScope: {
+        const ImportScope *currentPtr = as<ImportScope>();
+        if (typeFilter & LocalSymbolsType::Types) {
+            if ((typeFilter & LocalSymbolsType::Types) == LocalSymbolsType::Types) {
+                res += currentPtr->importedNames(*this);
+            } else {
+                bool qmlTypes = bool(typeFilter & LocalSymbolsType::QmlTypes);
+                for (const QString &typeName : currentPtr->importedNames(*this)) {
+                    if ((!typeName.isEmpty() && typeName.at(0).isUpper()) == qmlTypes)
+                        res += typeName;
+                }
+            }
+        }
+        if (typeFilter & LocalSymbolsType::Namespaces) {
+            for (const auto &k : currentPtr->subImports().keys())
                 res.insert(k);
+        }
         break;
     }
     case DomType::QmltypesComponent:
     case DomType::JsResource:
     case DomType::GlobalComponent:
-        res += enumerations().keys();
+        if (typeFilter & LocalSymbolsType::Globals)
+            res += enumerations().keys();
         break;
     case DomType::MethodInfo: {
-        DomItem params = field(Fields::parameters);
-        params.visitIndexes([&res](DomItem &p) {
-            const MethodParameter *pPtr = p.as<MethodParameter>();
-            res.insert(pPtr->name);
-            return true;
-        });
-        break;
-    }
-    case DomType::ImportScope: {
-        const ImportScope *currentPtr = as<ImportScope>();
-        res += currentPtr->importedNames(*this);
-        for (auto k : currentPtr->subImports().keys())
-            res.insert(k);
+        if (typeFilter & LocalSymbolsType::MethodParameters) {
+            DomItem params = field(Fields::parameters);
+            params.visitIndexes([&res](DomItem &p) {
+                const MethodParameter *pPtr = p.as<MethodParameter>();
+                res.insert(pPtr->name);
+                return true;
+            });
+        }
         break;
     }
     default:
@@ -1627,6 +1661,21 @@ bool DomItem::visitLookup1(QString symbolName, function_ref<bool(DomItem &)> vis
                            LookupOptions opts, ErrorHandler h, QSet<quintptr> *visited,
                            QList<Path> *visitedRefs)
 {
+    bool typeLookupInQmlFile = symbolName.length() > 1 && symbolName.at(0).isUpper()
+            && fileObject().internalKind() == DomType::QmlFile;
+    if (typeLookupInQmlFile) {
+        // shortcut to lookup types (scope chain would find them too, but after looking
+        // the prototype chain)
+        DomItem importScope = fileObject().field(Fields::importScope);
+        if (const ImportScope *importScopePtr = importScope.as<ImportScope>()) {
+            QList<DomItem> types = importScopePtr->importedItemsWithName(importScope, symbolName);
+            for (DomItem &t : types) {
+                if (!visitor(t))
+                    return false;
+            }
+        }
+        return true;
+    }
     return visitScopeChain(
             [symbolName, visitor](DomItem &obj) {
                 return obj.visitLocalSymbolsNamed(symbolName,

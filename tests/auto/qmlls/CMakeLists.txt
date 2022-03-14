@@ -1,4 +1,5 @@
 if (TARGET Qt::LanguageServerPrivate)
     add_subdirectory(qmlls)
     add_subdirectory(lifecycle)
+    add_subdirectory(completions)
 endif()

@@ -33,6 +33,7 @@
 #include "textsynchronization.h"
 #include "qmllintsuggestions.h"
 #include "workspace.h"
+#include "qmlcompletionsupport.h"
 #include "../shared/qqmltoolingsettings.h"
 
 QT_BEGIN_NAMESPACE
@@ -81,6 +82,7 @@ private:
     TextSynchronization m_textSynchronization;
     QmlLintSuggestions m_lint;
     WorkspaceHandlers m_workspace;
+    QmlCompletionSupport m_completionSupport;
     int m_returnValue = 1;
 };
 

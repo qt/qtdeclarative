@@ -133,6 +133,7 @@ int main(int argv, char *argc[])
     QQmlToolingSettings settings(QLatin1String("qmlls"));
     parser.setApplicationDescription(QLatin1String(R"(QML languageserver)"));
 
+    parser.addHelpOption();
     QCommandLineOption waitOption(QStringList() << "w"
                                                 << "wait",
                                   QLatin1String("Waits the given number of seconds before startup"),

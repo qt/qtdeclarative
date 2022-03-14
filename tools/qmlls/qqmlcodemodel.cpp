@@ -206,6 +206,7 @@ void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
         QFileInfo fInfo(fPath);
         QString cPath = fInfo.canonicalFilePath();
         if (!cPath.isEmpty()) {
+            newCurrent.loadBuiltins();
             newCurrent.loadFile(cPath, fPath, [](Path, DomItem &, DomItem &) {}, {});
             newCurrent.loadPendingDependencies();
             newCurrent.commitToBase(m_validEnv.ownerAs<DomEnvironment>());

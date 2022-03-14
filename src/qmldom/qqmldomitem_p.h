@@ -879,7 +879,7 @@ public:
                          LookupOptions = LookupOption::Normal, ErrorHandler h = nullptr,
                          QSet<quintptr> *visited = nullptr, QList<Path> *visitedRefs = nullptr);
     bool visitLocalSymbolsNamed(QString name, function_ref<bool(DomItem &)> visitor);
-    QSet<QString> localSymbolNames();
+    QSet<QString> localSymbolNames(LocalSymbolsTypes lTypes = LocalSymbolsType::All);
     bool visitLookup1(QString symbolName, function_ref<bool(DomItem &)> visitor,
                       LookupOptions = LookupOption::Normal, ErrorHandler h = nullptr,
                       QSet<quintptr> *visited = nullptr, QList<Path> *visitedRefs = nullptr);

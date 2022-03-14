@@ -351,6 +351,8 @@ public:
         m_pragmas.append(pragma);
         return Path::Field(Fields::pragmas).index(idx);
     }
+    ImportScope &importScope() { return m_importScope; }
+    const ImportScope &importScope() const { return m_importScope; }
 
 private:
     friend class QmlDomAstCreator;
