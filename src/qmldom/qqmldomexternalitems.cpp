@@ -464,7 +464,7 @@ bool QmlDirectory::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
 bool QmlDirectory::addQmlFilePath(QString relativePath)
 {
     QRegularExpression qmlFileRe(QRegularExpression::anchoredPattern(
-            uR"((?<compName>[a-zA-z0-9_]+)\.(?:qml|ui|qmlannotation))"));
+            uR"((?<compName>[a-zA-z0-9_]+)\.(?:qml|qmlannotation))"));
     QRegularExpressionMatch m = qmlFileRe.match(relativePath);
     if (m.hasMatch() && !m_qmlFiles.values(m.captured(u"compName")).contains(relativePath)) {
         m_qmlFiles.insert(m.captured(u"compName"), relativePath);
