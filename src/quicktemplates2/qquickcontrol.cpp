@@ -1954,21 +1954,20 @@ void QQuickControl::hoverEnterEvent(QHoverEvent *event)
 {
     Q_D(QQuickControl);
     setHovered(d->hoverEnabled);
-    event->setAccepted(d->hoverEnabled);
+    event->ignore();
 }
 
 void QQuickControl::hoverMoveEvent(QHoverEvent *event)
 {
     Q_D(QQuickControl);
     setHovered(d->hoverEnabled && contains(event->position()));
-    event->setAccepted(d->hoverEnabled);
+    event->ignore();
 }
 
 void QQuickControl::hoverLeaveEvent(QHoverEvent *event)
 {
-    Q_D(QQuickControl);
     setHovered(false);
-    event->setAccepted(d->hoverEnabled);
+    event->ignore();
 }
 #endif
 
