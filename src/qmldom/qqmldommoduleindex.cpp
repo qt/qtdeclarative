@@ -338,7 +338,7 @@ ModuleScope *ModuleIndex::ensureMinorVersion(int minorVersion)
     }
     ModuleScope *res = nullptr;
     ModuleScope *newScope = new ModuleScope(m_uri, Version(majorVersion(), minorVersion));
-    auto cleanup = qScopeGuard([&newScope] { free(newScope); });
+    auto cleanup = qScopeGuard([&newScope] { delete newScope; });
     {
         QMutexLocker l(mutex());
         auto it = m_moduleScope.find(minorVersion);
