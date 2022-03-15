@@ -569,10 +569,8 @@ void QQmlJSImportVisitor::processDefaultProperties()
             // Assigning any element to a QQmlComponent property implicitly wraps it into a Component
             // Check whether the property can be assigned the scope
             if (propType->canAssign(scope)) {
-                if (propType->causesImplicitComponentWrapping()) {
-                    // mark the scope as implicitly wrapped, unless it is a Component
-                    scope->setIsWrappedInImplicitComponent(!scope->causesImplicitComponentWrapping());
-                }
+                scope->setIsWrappedInImplicitComponent(
+                        QQmlJSScope::causesImplicitComponentWrapping(defaultProp, scope));
                 continue;
             }
 
@@ -679,9 +677,8 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
             continue;
         }
 
-        if (property.type()->causesImplicitComponentWrapping())
-            objectBinding.childScope->setIsWrappedInImplicitComponent(
-                    !objectBinding.childScope->causesImplicitComponentWrapping());
+        objectBinding.childScope->setIsWrappedInImplicitComponent(
+                QQmlJSScope::causesImplicitComponentWrapping(property, childScope));
 
         // unique because it's per-scope and per-property
         const auto uniqueBindingId = qMakePair(objectBinding.scope, objectBinding.name);

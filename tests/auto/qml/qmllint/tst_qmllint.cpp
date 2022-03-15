@@ -990,6 +990,10 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
             << Result { { Message { QStringLiteral(
                        "Property \"callLater\" is a QJSValue property. It may or may not be "
                        "a method. Use a regular Q_INVOKABLE instead.") } } };
+    QTest::newRow("assignNonExistingTypeToVarProp")
+            << QStringLiteral("assignNonExistingTypeToVarProp.qml")
+            << Result { { Message { QStringLiteral(
+                       "NonExistingType was not found. Did you add all import paths?") } } };
 }
 
 void TestQmllint::dirtyQmlCode()

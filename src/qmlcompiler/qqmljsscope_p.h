@@ -249,7 +249,8 @@ public:
         return m_internalName + suffix;
     }
 
-    bool causesImplicitComponentWrapping() const;
+    static bool causesImplicitComponentWrapping(const QQmlJSMetaProperty &property,
+                                                const QQmlJSScope::ConstPtr &assignedType);
     bool isComponentRootElement() const;
 
     void setInterfaceNames(const QStringList& interfaces) { m_interfaceNames = interfaces; }
@@ -358,6 +359,7 @@ public:
     bool hasCustomParser() const { return m_flags & CustomParser; }
     bool isArrayScope() const { return m_flags & Array; }
     bool isInlineComponent() const { return m_flags & InlineComponent; }
+    bool isWrappedInImplicitComponent() const { return m_flags & WrappedInImplicitComponent; }
     void setIsSingleton(bool v) { m_flags.setFlag(Singleton, v); }
     void setIsCreatable(bool v) { m_flags.setFlag(Creatable, v); }
     void setIsComposite(bool v) { m_flags.setFlag(Composite, v); }

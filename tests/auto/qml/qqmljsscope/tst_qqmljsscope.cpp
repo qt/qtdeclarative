@@ -95,6 +95,10 @@ private Q_SLOTS:
     void signalCreationDifferences();
     void allTypesAvailable();
     void shadowing();
+#ifdef LABS_QML_MODELS_PRESENT
+    void componentWrappedObjects();
+#endif
+    void unknownCppBase();
 
 public:
     tst_qqmljsscope()
@@ -208,6 +212,35 @@ void tst_qqmljsscope::shadowing()
 
     QCOMPARE(methods[u"method_not_shadowed"_qs].parameterNames().size(), 1);
     QCOMPARE(methods[u"method_shadowed"_qs].parameterNames().size(), 0);
+}
+
+#ifdef LABS_QML_MODELS_PRESENT
+void tst_qqmljsscope::componentWrappedObjects()
+{
+    QQmlJSScope::ConstPtr root = run(u"componentWrappedObjects.qml"_qs);
+    QVERIFY(root);
+
+    auto children = root->childScopes();
+    QCOMPARE(children.size(), 4);
+
+    const auto isGoodType = [](const QQmlJSScope::ConstPtr &type, const QString &propertyName,
+                               bool isWrapped) {
+        return type->hasOwnProperty(propertyName)
+                && type->isWrappedInImplicitComponent() == isWrapped;
+    };
+
+    QVERIFY(isGoodType(children[0], u"nonWrapped1"_qs, false));
+    QVERIFY(isGoodType(children[1], u"nonWrapped2"_qs, false));
+    QVERIFY(isGoodType(children[2], u"nonWrapped3"_qs, false));
+    QVERIFY(isGoodType(children[3], u"wrapped"_qs, true));
+}
+#endif
+
+void tst_qqmljsscope::unknownCppBase()
+{
+    QQmlJSScope::ConstPtr root = run(u"unknownCppBaseAssigningToVar.qml"_qs);
+    QVERIFY(root);
+    // we should not crash here, then it is a success
 }
 
 QTEST_MAIN(tst_qqmljsscope)

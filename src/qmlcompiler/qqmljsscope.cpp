@@ -247,26 +247,44 @@ QHash<QString, QQmlJSMetaEnum> QQmlJSScope::enumerations() const
 }
 
 /*!
-    Returns if assigning to a property of this type would cause
-    implicit component wrapping for non-Component types.
-
-    \note This method can also be used to check whether a type needs
-    to be implicitly wrapped: A type for which this function returns true
-    doesn't need to be actually wrapped.
+    Returns if assigning \a assignedType to \a property would require an
+    implicit component wrapping.
  */
-bool QQmlJSScope::causesImplicitComponentWrapping() const {
-    if (internalName() == u"QQmlComponent")
-        return true;
-    else if (isComposite()) // composite types are never treated as Component
-        return false;
-    // A class which is derived from component is not treated as a Component
-    // However isUsableComponent considers also QQmlAbstractDelegateComponent
-    // See isUsableComponent in qqmltypecompiler.cpp
+bool QQmlJSScope::causesImplicitComponentWrapping(const QQmlJSMetaProperty &property,
+                                                  const QQmlJSScope::ConstPtr &assignedType)
+{
+    // See QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents()
+    // for the logic in qqmltypecompiler
 
-    for (auto cppBase = nonCompositeBaseType(baseType()); cppBase; cppBase = cppBase->baseType())
-        if (cppBase->internalName() == u"QQmlAbstractDelegateComponent")
-            return true;
-    return false;
+    // Note: unlike findAndRegisterImplicitComponents() we do not check whether
+    // the property type is *derived* from QQmlComponent at some point because
+    // this is actually meaningless (and in the case of QQmlComponent::create()
+    // gets rejected in QQmlPropertyValidator): if the type is not a
+    // QQmlComponent, we have a type mismatch because of assigning a Component
+    // object to a non-Component property
+    const bool propertyVerdict = property.type()->internalName() == u"QQmlComponent";
+
+    const bool assignedTypeVerdict = [&assignedType]() {
+        // Note: nonCompositeBaseType covers the case when assignedType itself
+        // is non-composite
+        auto cppBase = nonCompositeBaseType(assignedType);
+        Q_ASSERT(cppBase); // any QML type has (or must have) a C++ base type
+
+        // See isUsableComponent() in qqmltypecompiler.cpp: along with checking
+        // whether a type has a QQmlComponent static meta object (which we
+        // substitute here with checking the first non-composite base for being
+        // a QQmlComponent), it also excludes QQmlAbstractDelegateComponent
+        // subclasses from implicit wrapping
+        if (cppBase->internalName() == u"QQmlComponent")
+            return false;
+        for (; cppBase; cppBase = cppBase->baseType()) {
+            if (cppBase->internalName() == u"QQmlAbstractDelegateComponent")
+                return false;
+        }
+        return true;
+    }();
+
+    return propertyVerdict && assignedTypeVerdict;
 }
 
 /*!
@@ -879,7 +897,24 @@ bool QQmlJSScope::canAssign(const QQmlJSScope::ConstPtr &derived) const
     if (!derived)
         return false;
 
-    bool isBaseComponent = causesImplicitComponentWrapping();
+    // expect this and derived types to have non-composite bases
+    Q_ASSERT(!isComposite() || nonCompositeBaseType(baseType()));
+    Q_ASSERT(nonCompositeBaseType(derived));
+
+    // the logic with isBaseComponent (as well as the way we set this flag)
+    // feels wrong - QTBUG-101940
+    const bool isBaseComponent = [this]() {
+        if (internalName() == u"QQmlComponent")
+            return true;
+        else if (isComposite())
+            return false;
+        for (auto cppBase = nonCompositeBaseType(baseType()); cppBase;
+             cppBase = cppBase->baseType()) {
+            if (cppBase->internalName() == u"QQmlAbstractDelegateComponent")
+                return true;
+        }
+        return false;
+    }();
 
     QDuplicateTracker<QQmlJSScope::ConstPtr> seen;
     for (auto scope = derived; !scope.isNull() && !seen.hasSeen(scope);
