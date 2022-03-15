@@ -60,7 +60,7 @@ public:
 
     void endVisit(QQmlJS::AST::UiProgram *) override;
 
-    QList<QQmlJSScope::ConstPtr> qmlScopesWithQmlBases() const { return m_qmlTypesWithQmlBases; }
+    QList<QQmlJSScope::ConstPtr> qmlTypesWithQmlBases() const { return m_qmlTypesWithQmlBases; }
     QSet<QString> cppIncludeFiles() const { return m_cppIncludes; }
 
 protected:
