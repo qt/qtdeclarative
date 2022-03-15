@@ -34,6 +34,7 @@ if(QT6_IS_SHARED_LIBS_BUILD AND APPLE)
                     $<TARGET_FILE:chartsplugin> ${bundle_charts_dir}
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
                     ${chars_qmldir_file} ${bundle_charts_dir}
+            VERBATIM
         )
     endif()
 endif()

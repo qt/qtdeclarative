@@ -894,6 +894,7 @@ function(_qt_internal_target_enable_qmlcachegen target output_targets_var qmlcac
             ${qmlcachegen}
             ${qmlcache_loader_list}
             $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
+        VERBATIM
     )
 
     # The current scope sees the file as generated automatically, but the
@@ -1230,6 +1231,7 @@ function(qt6_target_compile_qml_to_cpp target)
                 "${file_absolute}"
                 ${qml_module_files}
                 $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
+            VERBATIM
         )
 
         set_source_files_properties(${compiled_header} ${compiled_cpp}
@@ -1825,6 +1827,7 @@ function(qt6_target_qml_sources target)
                     COMMAND ${CMAKE_COMMAND} -E copy ${file_src} ${file_out}
                     DEPENDS ${file_absolute}
                     WORKING_DIRECTORY $<TARGET_PROPERTY:${target},SOURCE_DIR>
+                    VERBATIM
                 )
                 list(APPEND copied_files ${file_out})
             endif()
@@ -1979,6 +1982,7 @@ function(qt6_target_qml_sources target)
                     $<TARGET_PROPERTY:${target},_qt_generated_qrc_files>
                     "$<$<BOOL:${qmltypes_file}>:${qmltypes_file}>"
                     "${qmldir_file}"
+                VERBATIM
             )
 
             target_sources(${target} PRIVATE ${compiled_file})
@@ -2109,6 +2113,7 @@ function(qt6_generate_foreign_qml_types source_target destination_qml_target)
             -o ${registration_files_base}
             ${target_metatypes_json_file}
         COMMENT "Generate QML registration code for target ${source_target}"
+        VERBATIM
     )
 
     target_sources(${destination_qml_target} PRIVATE ${additional_sources})
@@ -2314,6 +2319,7 @@ function(_qt_internal_qml_type_registration target)
             ${CMAKE_COMMAND} -E touch "${generated_marker_file}"
         ${registration_cpp_file_dep_args}
         COMMENT "Automatic QML type registration for target ${target}"
+        VERBATIM
     )
 
     cmake_policy(POP)
@@ -2512,6 +2518,7 @@ but this file does not exist.  Possible reasons include:
                 ${tool_path}
                 ${qrc_files}
                 $<TARGET_PROPERTY:${target},QT_QML_MODULE_QML_FILES>
+            VERBATIM
         )
         add_custom_target(${target}_qmlimportscan DEPENDS "${imports_file}")
         add_dependencies(${target} ${target}_qmlimportscan)
@@ -2818,6 +2825,7 @@ endif()")
                 -D "__QT_DEPLOY_IMPL_DIR=${deploy_impl_dir}"
                 -D "__QT_DEPLOY_POST_BUILD=TRUE"
                 -P "${file_name}"
+                VERBATIM
             )
         endif()
 

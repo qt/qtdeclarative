@@ -63,6 +63,7 @@ function(qt_declarative_generate_reg_exp_jit_tables consuming_target)
         OUTPUT "${output_file}"
         COMMAND "${QT_INTERNAL_DECLARATIVE_PYTHON}" ${retgen_script_file} ${output_file}
         MAIN_DEPENDENCY ${retgen_script_file}
+        VERBATIM
     )
     target_sources(${consuming_target} PRIVATE ${output_file})
     target_include_directories(${consuming_target} PRIVATE $<BUILD_INTERFACE:${generate_dir}>)
