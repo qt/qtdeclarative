@@ -5639,6 +5639,8 @@ void tst_qqmllanguage::extendedForeignTypes()
     QObject *extended = o->property("extended").value<QObject *>();
     QVERIFY(extended);
     QSignalSpy extensionChangedSpy(extended, SIGNAL(extensionChanged()));
+    QSignalSpy extensionChangedWithValueSpy(extended, SIGNAL(extensionChangedWithValue(int)));
+    QVERIFY(extensionChangedWithValueSpy.isValid());
 
     QCOMPARE(o->property("extendedBase").toInt(), 43);
     QCOMPARE(o->property("extendedExtension").toInt(), 42);
@@ -5647,6 +5649,7 @@ void tst_qqmllanguage::extendedForeignTypes()
     QCOMPARE(extensionChangedSpy.count(), 0);
     extended->setProperty("extension", 44);
     QCOMPARE(extensionChangedSpy.count(), 1);
+    QCOMPARE(extensionChangedWithValueSpy.count(), 1);
     QCOMPARE(o->property("extendedChangeCount").toInt(), 1);
     QCOMPARE(o->property("extendedExtension").toInt(), 44);
 

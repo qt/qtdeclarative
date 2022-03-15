@@ -1470,7 +1470,7 @@ public:
 class Extension : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int extension READ extension WRITE setExtension NOTIFY extensionChanged FINAL)
+    Q_PROPERTY(int extension READ extension WRITE setExtension NOTIFY extensionChangedWithValue FINAL)
 public:
     Extension(QObject *parent = nullptr) : QObject(parent) {}
     int extension() const { return ext; }
@@ -1478,11 +1478,13 @@ public:
         if (e != ext) {
             ext = e;
             emit extensionChanged();
+            emit extensionChangedWithValue(e);
         }
     }
     Q_INVOKABLE int invokable() { return 123; }
 Q_SIGNALS:
     void extensionChanged();
+    void extensionChangedWithValue(int value);
 public slots:
     int slot() { return 456; }
 private:
