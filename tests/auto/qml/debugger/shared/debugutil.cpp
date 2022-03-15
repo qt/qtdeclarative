@@ -31,25 +31,25 @@
 
 #include <private/qqmldebugconnection_p.h>
 
-#include <QtCore/qeventloop.h>
 #include <QtCore/qtimer.h>
+#include <QtTest/qtest.h>
+#include <QtTest/qsignalspy.h>
 
 QQmlDebugTest::QQmlDebugTest(const char *qmlTestDataDir)
     : QQmlDataTest(qmlTestDataDir)
 {
 }
 
-bool QQmlDebugTest::waitForSignal(QObject *receiver, const char *member, int timeout) {
-    QEventLoop loop;
-    QTimer timer;
-    timer.setSingleShot(true);
-    QObject::connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
-    QObject::connect(receiver, member, &loop, SLOT(quit()));
-    timer.start(timeout);
-    loop.exec();
-    if (!timer.isActive())
-        qWarning("waitForSignal %s timed out after %d ms", member, timeout);
-    return timer.isActive();
+bool QQmlDebugTest::waitForSignal(QObject *sender, const char *member, int timeout)
+{
+    QSignalSpy spy(sender, member);
+
+    // Do not use spy.wait(). We want to avoid nested event loops.
+    if (QTest::qWaitFor([&]() { return spy.count() > 0; }, timeout))
+        return true;
+
+    qWarning("waitForSignal %s timed out after %d ms", member, timeout);
+    return false;
 }
 
 QList<QQmlDebugClient *> QQmlDebugTest::createOtherClients(QQmlDebugConnection *connection)
@@ -154,18 +154,11 @@ QQmlDebugTest::ConnectResult QQmlDebugTest::connectTo(
     ClientStateHandler stateHandler(m_clients, createOtherClients(m_connection), services.isEmpty()
                                     ? QQmlDebugClient::Enabled : QQmlDebugClient::Unavailable);
 
-
-    const int port = m_process->debugPort();
-    m_connection->connectToHost(QLatin1String("127.0.0.1"), port);
-
-    QEventLoop loop;
-    QTimer timer;
-    QObject::connect(&stateHandler, &ClientStateHandler::allOk, &loop, &QEventLoop::quit);
-    QObject::connect(m_connection, &QQmlDebugConnection::disconnected, &loop, &QEventLoop::quit);
-    QObject::connect(&timer, &QTimer::timeout, &loop, &QEventLoop::quit);
-
-    timer.start(5000);
-    loop.exec();
+    QSignalSpy okSpy(&stateHandler, &ClientStateHandler::allOk);
+    QSignalSpy disconnectSpy(m_connection, &QQmlDebugConnection::disconnected);
+    m_connection->connectToHost(QLatin1String("127.0.0.1"), m_process->debugPort());
+    if (!QTest::qWaitFor([&](){ return okSpy.count() > 0 || disconnectSpy.count() > 0; }, 5000))
+        return ConnectionTimeout;
 
     if (!stateHandler.allEnabled())
         return EnableFailed;
@@ -266,3 +259,5 @@ QString debugJsServerPath(const QString &selfPath)
     return (position == -1 ? appPath : appPath.replace(position, selfPath.length(), debugserver))
             + "/" + debugserver;
 }
+
+#include "debugutil.moc"
