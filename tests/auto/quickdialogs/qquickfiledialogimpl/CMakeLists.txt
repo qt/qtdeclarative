@@ -21,7 +21,6 @@ qt_internal_add_test(tst_qquickfiledialogimpl
         Qt::QuickDialogs2QuickImplPrivate
         Qt::QuickDialogs2UtilsPrivate
         Qt::QuickPrivate
-        Qt::QuickTemplates2
         Qt::QuickTemplates2Private
         Qt::QuickTest
         Qt::QuickTestUtilsPrivate

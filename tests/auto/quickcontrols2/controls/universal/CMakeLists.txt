@@ -20,7 +20,6 @@ qt_internal_add_test(tst_universal
     PUBLIC_LIBRARIES
         Qt::Gui
         Qt::QuickControls2
-        Qt::QuickTemplates2
     TESTDATA ${test_data}
 )
 

@@ -21,7 +21,6 @@ qt_internal_add_test(tst_snippets
         Qt::Quick
         Qt::QuickControls2
         Qt::QuickControls2Private
-        Qt::QuickTemplates2
     TESTDATA ${test_data}
 )
 
