@@ -33,28 +33,23 @@
 #include <QtCore/qdir.h>
 #include <QtCore/qregularexpression.h>
 
+#include <QtTest/qtest.h>
+
 QQmlDebugProcess::QQmlDebugProcess(const QString &executable, QObject *parent)
     : QObject(parent)
     , m_executable(executable)
-    , m_state(SessionUnknown)
-    , m_port(0)
-    , m_maximumBindErrors(0)
-    , m_receivedBindErrors(0)
 {
     m_process.setProcessChannelMode(QProcess::MergedChannels);
-    m_timer.setInterval(15000);
     connect(&m_process, &QProcess::readyReadStandardOutput,
             this, &QQmlDebugProcess::processAppOutput);
     connect(&m_process, &QProcess::errorOccurred,
             this, &QQmlDebugProcess::processError);
     connect(&m_process, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
             this, [this]() {
-        m_timer.stop();
-        m_eventLoop.quit();
+        if (m_state == SessionUnknown)
+            m_state = SessionFailed;
         emit finished();
     });
-    connect(&m_timer, &QTimer::timeout,
-            this, &QQmlDebugProcess::timeout);
 }
 
 QQmlDebugProcess::~QQmlDebugProcess()
@@ -97,16 +92,13 @@ void QQmlDebugProcess::start(const QStringList &arguments)
         }
     }
 #endif
-    m_mutex.lock();
     m_port = 0;
     m_process.setEnvironment(QProcess::systemEnvironment() + m_environment);
     m_process.start(m_executable, arguments);
     if (!m_process.waitForStarted()) {
         qWarning() << "QML Debug Client: Could not launch app " << m_executable
                    << ": " << m_process.errorString();
-        m_eventLoop.quit();
     }
-    m_mutex.unlock();
 }
 
 void QQmlDebugProcess::stop()
@@ -141,8 +133,11 @@ bool QQmlDebugProcess::waitForSessionStart()
         return false;
     }
 
-    m_timer.start();
-    m_eventLoop.exec();
+    if (!QTest::qWaitFor(
+                [this]() { return m_state == SessionFailed || m_state == SessionStarted; },
+                15000)) {
+        timeout();
+    }
 
     return m_state == SessionStarted;
 }
@@ -179,8 +174,6 @@ QString QQmlDebugProcess::output() const
 
 void QQmlDebugProcess::processAppOutput()
 {
-    m_mutex.lock();
-
     bool outputFromAppItself = false;
 
     QString newOutput = m_process.readAll();
@@ -198,18 +191,14 @@ void QQmlDebugProcess::processAppOutput()
             auto portRx = QRegularExpression("Waiting for connection on port (\\d+)").match(line);
             if (portRx.hasMatch()) {
                 m_port = portRx.captured(1).toInt();
-                m_timer.stop();
                 m_state = SessionStarted;
-                m_eventLoop.quit();
                 continue;
             }
             if (line.contains("Unable to listen")) {
                 if (++m_receivedBindErrors >= m_maximumBindErrors) {
                     if (m_maximumBindErrors == 0)
                         qWarning() << "App was unable to bind to port!";
-                    m_timer.stop();
                     m_state = SessionFailed;
-                    m_eventLoop.quit();
                  }
                  continue;
             }
@@ -218,7 +207,6 @@ void QQmlDebugProcess::processAppOutput()
         // set to true if there is output not coming from the debugger or we don't understand it
         outputFromAppItself = true;
     }
-    m_mutex.unlock();
 
     if (outputFromAppItself)
         emit readyReadStandardOutput();
