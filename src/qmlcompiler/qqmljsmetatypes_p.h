@@ -442,20 +442,20 @@ private:
         struct Interceptor {
             friend bool operator==(Interceptor a, Interceptor b)
             {
-                return a.interceptor == b.interceptor && a.interceptorTypeName == b.interceptorTypeName;
+                return a.value == b.value && a.typeName == b.typeName;
             }
             friend bool operator!=(Interceptor a, Interceptor b) { return !(a == b); }
-            QString interceptorTypeName;
-            QWeakPointer<const QQmlJSScope> interceptor;
+            QString typeName;
+            QWeakPointer<const QQmlJSScope> value;
         };
         struct ValueSource {
             friend bool operator==(ValueSource a, ValueSource b)
             {
-                return a.valueSource == b.valueSource && a.valueSourceTypeName == b.valueSourceTypeName;
+                return a.value == b.value && a.typeName == b.typeName;
             }
             friend bool operator!=(ValueSource a, ValueSource b) { return !(a == b); }
-            QString valueSourceTypeName;
-            QWeakPointer<const QQmlJSScope> valueSource;
+            QString typeName;
+            QWeakPointer<const QQmlJSScope> value;
         };
         struct AttachedProperty {
             friend bool operator==(AttachedProperty , AttachedProperty ) { return true; }
@@ -603,6 +603,36 @@ public:
     {
         if (auto *object = std::get_if<Content::Object>(&m_bindingContent))
             return object->value.lock();
+        // warn
+        return {};
+    }
+
+    QString interceptorTypeName() const
+    {
+        if (auto *interceptor = std::get_if<Content::Interceptor>(&m_bindingContent))
+            return interceptor->typeName;
+        // warn
+        return {};
+    }
+    QSharedPointer<const QQmlJSScope> interceptorType() const
+    {
+        if (auto *interceptor = std::get_if<Content::Interceptor>(&m_bindingContent))
+            return interceptor->value.lock();
+        // warn
+        return {};
+    }
+
+    QString valueSourceTypeName() const
+    {
+        if (auto *valueSource = std::get_if<Content::ValueSource>(&m_bindingContent))
+            return valueSource->typeName;
+        // warn
+        return {};
+    }
+    QSharedPointer<const QQmlJSScope> valueSourceType() const
+    {
+        if (auto *valueSource = std::get_if<Content::ValueSource>(&m_bindingContent))
+            return valueSource->value.lock();
         // warn
         return {};
     }
