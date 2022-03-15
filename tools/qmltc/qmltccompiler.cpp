@@ -59,7 +59,7 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info)
     Q_ASSERT(!m_info.outputHFile.isEmpty());
     Q_ASSERT(!m_info.resourcePath.isEmpty());
 
-    const QList<QQmlJSScope::ConstPtr> types = m_visitor->qmlScopes();
+    const QList<QQmlJSScope::ConstPtr> types = m_visitor->qmlTypes();
     QList<QmltcType> compiledTypes;
     compiledTypes.reserve(types.size());
 
@@ -124,12 +124,12 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
                 rootType->internalName());
 
         current.typeCount = QmltcVariable { u"uint"_qs, u"q_qmltc_typeCount"_qs, QString() };
-        Q_ASSERT(m_visitor->qmlScopes().size() > 0);
-        QList<QQmlJSScope::ConstPtr> typesWithBaseTypeCount = m_visitor->qmlScopesWithQmlBases();
+        Q_ASSERT(m_visitor->qmlTypes().size() > 0);
+        QList<QQmlJSScope::ConstPtr> typesWithBaseTypeCount = m_visitor->qmlTypesWithQmlBases();
         QStringList typeCountComponents;
         typeCountComponents.reserve(1 + typesWithBaseTypeCount.size());
         // add this document's type counts minus document root
-        typeCountComponents << QString::number(m_visitor->qmlScopes().size() - 1);
+        typeCountComponents << QString::number(m_visitor->qmlTypes().size() - 1);
         for (const QQmlJSScope::ConstPtr &t : qAsConst(typesWithBaseTypeCount)) {
             if (t == type) { // t is this document's root
                 typeCountComponents << t->baseTypeName() + u"::" + current.typeCount->name;

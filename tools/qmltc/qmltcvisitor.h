@@ -60,7 +60,7 @@ public:
 
     // NB: overwrite result() method to return ConstPtr
     QQmlJSScope::ConstPtr result() const { return QQmlJSImportVisitor::result(); }
-    QList<QQmlJSScope::ConstPtr> qmlScopesWithQmlBases() const { return m_qmlTypesWithQmlBases; }
+    QList<QQmlJSScope::ConstPtr> qmlTypesWithQmlBases() const { return m_qmlTypesWithQmlBases; }
     QSet<QString> cppIncludeFiles() const { return m_cppIncludes; }
 
 protected:
