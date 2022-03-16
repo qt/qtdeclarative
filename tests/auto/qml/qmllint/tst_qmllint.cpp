@@ -32,6 +32,10 @@
 #include <QString>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQmlCompiler/private/qqmljslinter_p.h>
+#include <QtQmlCompiler/private/qqmlsa_p.h>
+#include <QtCore/qplugin.h>
+
+Q_IMPORT_PLUGIN(LintPlugin)
 
 class TestQmllint: public QQmlDataTest
 {
@@ -107,6 +111,10 @@ private Q_SLOTS:
     void absolutePath();
 
     void importMultipartUri();
+
+#if QT_CONFIG(library)
+    void testPlugin();
+#endif
 private:
     enum DefaultImportOption { NoDefaultImports, UseDefaultImports };
     enum ContainOption { StringNotContained, StringContained };
@@ -1618,6 +1626,25 @@ void TestQmllint::importMultipartUri()
 {
     runTest("here.qml", Result::clean(), {}, { testFile("Elsewhere/qmldir") });
 }
+
+#if QT_CONFIG(library)
+void TestQmllint::testPlugin()
+{
+    bool pluginFound = false;
+    for (const QQmlJSLinter::Plugin &plugin : m_linter.plugins()) {
+        if (plugin.name() == "testPlugin") {
+            pluginFound = true;
+            QCOMPARE(plugin.author(), u"Qt"_qs);
+            QCOMPARE(plugin.description(), u"A test plugin for tst_qmllint"_qs);
+            QCOMPARE(plugin.version(), u"1.0"_qs);
+        }
+    }
+    QVERIFY(pluginFound);
+
+    runTest("elementpass_pluginTest.qml", Result { { Message { u"ElementTest OK"_qs, 4, 5 } } });
+    runTest("propertypass_pluginTest.qml", Result { { Message { u"OK"_qs } } });
+}
+#endif
 
 QTEST_MAIN(TestQmllint)
 #include "tst_qmllint.moc"

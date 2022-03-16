@@ -158,9 +158,25 @@ All warnings can be set to three levels:
                                             "suggestions without applying them"));
     parser.addOption(dryRun);
 
+    QCommandLineOption listPluginsOption(QStringList() << "list-plugins",
+                                         QLatin1String("List all available plugins"));
+    parser.addOption(listPluginsOption);
+
+    QCommandLineOption pluginsDisable(QStringList() << "disable-plugins",
+                                      QLatin1String("Disable all qmllint plugins"));
+    parser.addOption(pluginsDisable);
+    const QString pluginsDisableSettings = QLatin1String("DisablePlugins");
+    settings.addOption(pluginsDisableSettings, false);
+
+    QCommandLineOption pluginPathsOption(
+            QStringList() << "P"
+                          << "plugin-paths",
+            QLatin1String("Look for qmllint plugins in specified directory"),
+            QLatin1String("directory"));
+    parser.addOption(pluginPathsOption);
+
     parser.addPositionalArgument(QLatin1String("files"),
                                  QLatin1String("list of qml or js files to verify"));
-
     parser.process(app);
 
     if (parser.isSet(writeDefaultsOption)) {
@@ -191,11 +207,6 @@ All warnings can be set to three levels:
     };
 
     updateLogLevels();
-
-    const auto positionalArguments = parser.positionalArguments();
-    if (positionalArguments.isEmpty()) {
-        parser.showHelp(-1);
-    }
 
     bool silent = parser.isSet(silentOption);
     bool useAbsolutePath = parser.isSet(absolutePath);
@@ -233,7 +244,32 @@ All warnings can be set to three levels:
     QStringList resourceFiles = defaultResourceFiles;
 
     bool success = true;
-    QQmlJSLinter linter(qmlImportPaths, useAbsolutePath);
+
+    QStringList pluginPaths = { QQmlJSLinter::defaultPluginPath() };
+
+    if (parser.isSet(pluginPathsOption))
+        pluginPaths << parser.values(pluginPathsOption);
+
+    QQmlJSLinter linter(qmlImportPaths, pluginPaths, useAbsolutePath);
+
+    if (parser.isSet(listPluginsOption)) {
+        const std::vector<QQmlJSLinter::Plugin> &plugins = linter.plugins();
+        if (!plugins.empty()) {
+            qInfo().nospace().noquote() << "Plugin\t\t\tVersion\tAuthor\t\tDescription";
+            for (const QQmlJSLinter::Plugin &plugin : plugins) {
+                qInfo().nospace().noquote() << plugin.name() << "\t\t\t" << plugin.version() << "\t"
+                                            << plugin.author() << "\t\t" << plugin.description();
+            }
+        } else {
+            qInfo() << "No plugins installed.";
+        }
+        return 0;
+    }
+
+    const auto positionalArguments = parser.positionalArguments();
+    if (positionalArguments.isEmpty()) {
+        parser.showHelp(-1);
+    }
 
     QJsonArray jsonFiles;
 
@@ -272,6 +308,12 @@ All warnings can be set to three levels:
                 qmlImportPaths << parser.values(qmlImportPathsOption);
 
             addAbsolutePaths(qmlImportPaths, settings.value(qmlImportPathsSetting).toStringList());
+
+            const bool disablePlugins = parser.isSet(pluginsDisable)
+                    || (settings.isSet(pluginsDisableSettings)
+                        && settings.value(pluginsDisableSettings).toBool());
+
+            linter.setPluginsEnabled(!disablePlugins);
         }
 
         const bool isFixing = parser.isSet(fixFile);

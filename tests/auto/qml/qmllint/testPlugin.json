@@ -1,0 +1,6 @@
+{
+    "name": "testPlugin",
+    "author": "Qt",
+    "description": "A test plugin for tst_qmllint",
+    "version": "1.0"
+}

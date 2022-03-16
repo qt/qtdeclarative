@@ -10,6 +10,11 @@ file(GLOB_RECURSE test_data_glob
     data/*)
 list(APPEND test_data ${test_data_glob})
 
+add_library(LintPlugin STATIC lintplugin.h lintplugin.cpp)
+target_link_libraries(LintPlugin PRIVATE Qt::QmlCompilerPrivate)
+qt_autogen_tools_initial_setup(LintPlugin)
+target_compile_definitions(LintPlugin PRIVATE QT_STATICPLUGIN)
+
 qt_internal_add_test(tst_qmllint
     SOURCES
         tst_qmllint.cpp
@@ -17,6 +22,7 @@ qt_internal_add_test(tst_qmllint
         Qt::Gui
         Qt::QuickTestUtilsPrivate
         Qt::QmlCompilerPrivate
+        LintPlugin
     TESTDATA ${test_data}
 )
 

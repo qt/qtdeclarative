@@ -36,6 +36,15 @@
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qpluginloader.h>
+#include <QtCore/qlibraryinfo.h>
+#include <QtCore/qdir.h>
+#include <QtQmlCompiler/private/qqmlsa_p.h>
+
+#if QT_CONFIG(library)
+#    include <QtCore/qdiriterator.h>
+#    include <QtCore/qlibrary.h>
+#endif
 
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
@@ -43,6 +52,7 @@
 #include <QtQml/private/qqmljsastvisitor_p.h>
 #include <QtQml/private/qqmljsast_p.h>
 #include <QtQml/private/qqmljsdiagnosticmessage_p.h>
+
 
 QT_BEGIN_NAMESPACE
 
@@ -68,9 +78,133 @@ private:
     QQmlJSLogger *m_logger;
 };
 
-QQmlJSLinter::QQmlJSLinter(const QStringList &importPaths, bool useAbsolutePath)
-    : m_useAbsolutePath(useAbsolutePath), m_importer(importPaths, nullptr, true)
+QString QQmlJSLinter::defaultPluginPath()
 {
+    return QLibraryInfo::path(QLibraryInfo::PluginsPath) + QDir::separator() + u"qmllint";
+}
+
+QQmlJSLinter::QQmlJSLinter(const QStringList &importPaths, const QStringList &pluginPaths,
+                           bool useAbsolutePath)
+    : m_useAbsolutePath(useAbsolutePath),
+      m_enablePlugins(true),
+      m_importer(importPaths, nullptr, true)
+{
+    m_plugins = loadPlugins(pluginPaths + QStringList { QQmlJSLinter::defaultPluginPath() });
+}
+
+QQmlJSLinter::Plugin::Plugin(QQmlJSLinter::Plugin &&plugin)
+{
+    m_name = plugin.m_name;
+    m_author = plugin.m_author;
+    m_description = plugin.m_description;
+    m_version = plugin.m_version;
+    m_instance = plugin.m_instance;
+    m_loader = plugin.m_loader;
+    m_isValid = plugin.m_isValid;
+    m_isBuiltin = plugin.m_isBuiltin;
+
+    // Mark the old Plugin as invalid and make sure it doesn't delete the loader
+    plugin.m_loader = nullptr;
+    plugin.m_instance = nullptr;
+    plugin.m_isValid = false;
+}
+
+#if QT_CONFIG(library)
+QQmlJSLinter::Plugin::Plugin(QString path)
+{
+    m_loader = new QPluginLoader(path);
+    if (!parseMetaData(m_loader->metaData(), path))
+        return;
+
+    QObject *object = m_loader->instance();
+    if (!object)
+        return;
+
+    m_instance = qobject_cast<QQmlSA::LintPlugin *>(object);
+    if (!m_instance)
+        return;
+
+    m_isValid = true;
+}
+#endif
+
+QQmlJSLinter::Plugin::Plugin(const QStaticPlugin &staticPlugin)
+{
+    if (!parseMetaData(staticPlugin.metaData(), u"built-in"_qs))
+        return;
+
+    m_instance = qobject_cast<QQmlSA::LintPlugin *>(staticPlugin.instance());
+    if (!m_instance)
+        return;
+
+    m_isValid = true;
+}
+
+QQmlJSLinter::Plugin::~Plugin()
+{
+#if QT_CONFIG(library)
+    if (m_loader != nullptr) {
+        m_loader->unload();
+        m_loader->deleteLater();
+    }
+#endif
+}
+
+bool QQmlJSLinter::Plugin::parseMetaData(const QJsonObject &metaData, QString pluginName)
+{
+    const QString pluginIID = QStringLiteral(QmlLintPluginInterface_iid);
+
+    if (metaData[u"IID"].toString() != pluginIID)
+        return false;
+
+    QJsonObject pluginMetaData = metaData[u"MetaData"].toObject();
+
+    for (const QString &requiredKey : { u"name"_qs, u"version"_qs, u"author"_qs }) {
+        if (!pluginMetaData.contains(requiredKey)) {
+            qWarning() << pluginName << "is missing the required " << requiredKey
+                       << "metadata, skipping";
+            return false;
+        }
+    }
+
+    m_name = pluginMetaData[u"name"].toString();
+    m_author = pluginMetaData[u"author"].toString();
+    m_version = pluginMetaData[u"version"].toString();
+    m_description = pluginMetaData[u"description"].toString(u"-/-"_qs);
+
+    return true;
+}
+
+std::vector<QQmlJSLinter::Plugin> QQmlJSLinter::loadPlugins(QStringList paths)
+{
+
+    std::vector<Plugin> plugins;
+
+    for (const QStaticPlugin &staticPlugin : QPluginLoader::staticPlugins()) {
+        Plugin plugin(staticPlugin);
+        if (plugin.isValid())
+            plugins.push_back(std::move(plugin));
+    }
+
+#if QT_CONFIG(library)
+    for (const QString &pluginDir : paths) {
+        QDirIterator it { pluginDir };
+
+        while (it.hasNext()) {
+            auto potentialPlugin = it.next();
+
+            if (!QLibrary::isLibrary(potentialPlugin))
+                continue;
+
+            Plugin plugin(potentialPlugin);
+
+            if (plugin.isValid())
+                plugins.push_back(std::move(plugin));
+        }
+    }
+#endif
+
+    return plugins;
 }
 
 void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
@@ -337,6 +471,11 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
             typeResolver.setParentMode(QQmlJSTypeResolver::UseDocumentParent);
 
             typeResolver.init(&v, parser.rootNode());
+
+            // We need to clone the root scope at this point since the compilation step will clone
+            // scopes and thus modify the original scope tree as generated from the QML file.
+            QQmlJSScope::ConstPtr root = QQmlJSScope::clone(v.result());
+
             success = !m_logger->hasWarnings() && !m_logger->hasErrors();
 
             if (m_logger->hasErrors()) {
@@ -375,6 +514,20 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
                 m_logger->processMessages(warnings, Log_Import);
             }
 
+            if (m_enablePlugins) {
+                QQmlSA::PassManager passMan(&v, &typeResolver);
+
+                for (const Plugin &plugin : m_plugins) {
+                    if (!plugin.isValid())
+                        continue;
+
+                    QQmlSA::LintPlugin *instance = plugin.m_instance;
+                    Q_ASSERT(instance);
+                    instance->registerPasses(&passMan, root);
+                }
+
+                passMan.analyze(root);
+            }
             success &= !m_logger->hasWarnings() && !m_logger->hasErrors();
 
             processMessages();

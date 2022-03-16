@@ -101,7 +101,7 @@ const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
         { QStringLiteral("plugin"),
           QQmlJSLogger::Option(Log_Plugin, QStringLiteral("LintPluginWarnings"),
                                QStringLiteral("Warn if a qmllint plugin finds an issue"),
-                               QtWarningMsg, true) }
+                               QtWarningMsg) }
     };
 
     return optionsMap;

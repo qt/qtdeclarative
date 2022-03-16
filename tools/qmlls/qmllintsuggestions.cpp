@@ -193,7 +193,7 @@ void QmlLintSuggestions::diagnose(const QByteArray &uri)
         QStringList resourceFiles;
         QMap<QString, QQmlJSLogger::Option> options;
 
-        QQmlJSLinter linter(imports, useAbsolutePath);
+        QQmlJSLinter linter(imports, {}, useAbsolutePath);
 
         linter.lintFile(filename, &fileContents, silent, &json, imports, qmltypesFiles,
                         resourceFiles, options);
