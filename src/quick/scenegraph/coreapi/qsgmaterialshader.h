@@ -71,8 +71,8 @@ public:
 
         inline DirtyStates dirtyStates() const { return m_dirty; }
 
-        inline bool isMatrixDirty() const { return m_dirty & QSGMaterialShader::RenderState::DirtyMatrix; }
-        inline bool isOpacityDirty() const { return m_dirty & QSGMaterialShader::RenderState::DirtyOpacity; }
+        inline bool isMatrixDirty() const { return bool(m_dirty & QSGMaterialShader::RenderState::DirtyMatrix); }
+        inline bool isOpacityDirty() const { return bool(m_dirty & QSGMaterialShader::RenderState::DirtyOpacity); }
 
         float opacity() const;
         QMatrix4x4 combinedMatrix() const;
