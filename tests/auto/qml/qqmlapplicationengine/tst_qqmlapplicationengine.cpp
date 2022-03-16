@@ -348,6 +348,7 @@ void tst_qqmlapplicationengine::errorWhileCreating()
     auto url = testFileUrl("requiredViolation.qml");
     QQmlApplicationEngine test;
     QSignalSpy observer(&test, &QQmlApplicationEngine::objectCreated);
+    QSignalSpy failureObserver(&test, &QQmlApplicationEngine::objectCreationFailed);
 
     QTest::ignoreMessage(QtMsgType::QtWarningMsg, "QQmlApplicationEngine failed to create component");
     QTest::ignoreMessage(QtMsgType::QtWarningMsg, qPrintable(QStringLiteral("%1:5:5: Required property foo was not initialized").arg(testFileUrl("Required.qml").toString())));
@@ -355,6 +356,8 @@ void tst_qqmlapplicationengine::errorWhileCreating()
     test.load(url);
 
     QTRY_COMPARE(observer.count(), 1);
+    QCOMPARE(failureObserver.count(), 1);
+    QCOMPARE(failureObserver.first().first(), url);
     QList<QVariant> args = observer.takeFirst();
     QVERIFY(args.at(0).isNull());
     QCOMPARE(args.at(1).toUrl(), url);

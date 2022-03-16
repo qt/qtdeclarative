@@ -152,6 +152,7 @@ void QQmlApplicationEnginePrivate::finishLoad(QQmlComponent *c)
         qWarning() << "QQmlApplicationEngine failed to load component";
         warning(c->errors());
         q->objectCreated(nullptr, c->url());
+        q->objectCreationFailed(c->url());
         break;
     case QQmlComponent::Ready: {
         auto newObj = initialProperties.empty() ? c->create() : c->createWithInitialProperties(initialProperties);
@@ -160,6 +161,7 @@ void QQmlApplicationEnginePrivate::finishLoad(QQmlComponent *c)
            qWarning() << "QQmlApplicationEngine failed to create component";
            warning(c->errors());
            q->objectCreated(nullptr, c->url());
+           q->objectCreationFailed(c->url());
            break;
         }
 
@@ -233,6 +235,33 @@ void QQmlApplicationEnginePrivate::finishLoad(QQmlComponent *c)
 
   \note If the path to the component was provided as a QString containing a
   relative path, the \a url will contain a fully resolved path to the file.
+*/
+
+/*!
+  \fn QQmlApplicationEngine::objectCreationFailed(const QUrl &url)
+  \since 6.4
+
+  This signal is emitted when loading finishes because an error occurred.
+
+  The \a url to the component that failed to load is provided as an argument.
+
+  \code
+    QGuiApplication app(argc, argv);
+    QQmlApplicationEngine engine;
+
+    // quit on error
+    QObject::connect(&app, QQmlApplicationEngine::objectCreationFailed,
+                     QCoreApplication::instance(), QCoreApplication::quit,
+                     Qt::QueuedConnection);
+    engine.load(QUrl());
+    return app.exec();
+  \endcode
+
+  \note If the path to the component was provided as a QString containing a
+  relative path, the \a url will contain a fully resolved path to the file.
+
+  See also \l {QQmlApplicationEngine::objectCreated}, which will be emitted in
+  addition to this signal (even though creation failed).
 */
 
 /*!

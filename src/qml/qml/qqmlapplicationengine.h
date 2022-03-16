@@ -69,6 +69,7 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void objectCreated(QObject *object, const QUrl &url);
+    void objectCreationFailed(const QUrl &url);
 
 private:
     Q_DISABLE_COPY(QQmlApplicationEngine)
