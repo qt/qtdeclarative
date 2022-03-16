@@ -990,6 +990,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
     // list at the end of this function and look for items with an old hoverId,
     // remove them from the list, and update their state accordingly.
     currentHoverId++;
+    hoveredLeafItemFound = false;
 
     const bool itemsWasHovered = !hoverItems.isEmpty();
     deliverHoverEventRecursive(rootItem, scenePos, lastScenePos, modifiers, timestamp);
@@ -1037,6 +1038,11 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
     end up as the only one hovered. Any other HoverHandler that may be a child
     of an item that is stacked underneath, will not. Note that since siblings
     can overlap, there can be more than one leaf item under the mouse.
+
+    For legacy reasons (Qt 6.1), as soon as we find a leaf item that has hover
+    enabled, and therefore receives the event, we stop recursing into the remaining
+    siblings (even if the event was ignored). This means that we only allow hover
+    events to propagate up the direct parent-child hierarchy, and not to siblings.
 */
 bool QQuickDeliveryAgentPrivate::deliverHoverEventRecursive(
         QQuickItem *item, const QPointF &scenePos, const QPointF &lastScenePos,
@@ -1065,6 +1071,10 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventRecursive(
         if (accepted) {
             // Stop propagation / recursion
             return true;
+        }
+        if (hoveredLeafItemFound) {
+            // Don't propagate to siblings, only to ancestors
+            break;
         }
     }
 
@@ -1097,6 +1107,9 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
 
     qCDebug(lcHoverTrace) << "item:" << item << "scene pos:" << scenePos << "localPos:" << localPos
                           << "wasHovering:" << wasHovering << "isHovering:" << isHovering;
+
+    if (isHovering)
+        hoveredLeafItemFound = true;
 
     // Send enter/move/leave event to the item
     bool accepted = false;
