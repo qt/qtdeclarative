@@ -78,7 +78,9 @@ QString QQmlJSCodeGenerator::metaTypeFromType(const QQmlJSScope::ConstPtr &type)
 
 QString QQmlJSCodeGenerator::metaTypeFromName(const QQmlJSScope::ConstPtr &type) const
 {
-    return u"QMetaType::fromName(\""_qs + type->augmentedInternalName() + u"\")"_qs;
+    return u"QMetaType::fromName(\""_qs
+            + QString::fromUtf8(QMetaObject::normalizedType(type->augmentedInternalName().toUtf8()))
+            + u"\")"_qs;
 }
 
 QString QQmlJSCodeGenerator::metaObject(const QQmlJSScope::ConstPtr &objectType)
