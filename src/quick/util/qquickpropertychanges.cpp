@@ -398,7 +398,10 @@ QObject *QQuickPropertyChanges::object() const
 void QQuickPropertyChanges::setObject(QObject *o)
 {
     Q_D(QQuickPropertyChanges);
-    d->object = o;
+    if (o != d->object) {
+        d->object = o;
+        emit objectChanged();
+    }
 }
 
 /*!
@@ -419,7 +422,10 @@ bool QQuickPropertyChanges::restoreEntryValues() const
 void QQuickPropertyChanges::setRestoreEntryValues(bool v)
 {
     Q_D(QQuickPropertyChanges);
-    d->restore = v;
+    if (v != d->restore) {
+        d->restore = v;
+        emit restoreEntryValuesChanged();
+    }
 }
 
 QQmlProperty
@@ -553,7 +559,10 @@ bool QQuickPropertyChanges::isExplicit() const
 void QQuickPropertyChanges::setIsExplicit(bool e)
 {
     Q_D(QQuickPropertyChanges);
-    d->isExplicit = e;
+    if (e != d->isExplicit) {
+        d->isExplicit = e;
+        emit isExplicitChanged();
+    }
 }
 
 bool QQuickPropertyChanges::containsValue(const QString &name) const

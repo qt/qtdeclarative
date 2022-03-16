@@ -61,9 +61,10 @@ class Q_QUICK_PRIVATE_EXPORT QQuickPropertyChanges : public QQuickStateOperation
 {
     Q_OBJECT
     Q_DECLARE_PRIVATE(QQuickPropertyChanges)
-    Q_PROPERTY(QObject *target READ object WRITE setObject)
-    Q_PROPERTY(bool restoreEntryValues READ restoreEntryValues WRITE setRestoreEntryValues)
-    Q_PROPERTY(bool explicit READ isExplicit WRITE setIsExplicit)
+    Q_PROPERTY(QObject *target READ object WRITE setObject NOTIFY objectChanged)
+    Q_PROPERTY(bool restoreEntryValues READ restoreEntryValues WRITE setRestoreEntryValues
+               NOTIFY restoreEntryValuesChanged)
+    Q_PROPERTY(bool explicit READ isExplicit WRITE setIsExplicit NOTIFY isExplicitChanged)
     QML_NAMED_ELEMENT(PropertyChanges)
     QML_ADDED_IN_VERSION(2, 0)
     QML_CUSTOMPARSER
@@ -97,6 +98,11 @@ public:
     void attachToState();
 
     QVariant property(const QString &name) const;
+
+Q_SIGNALS:
+    void objectChanged();
+    void restoreEntryValuesChanged();
+    void isExplicitChanged();
 };
 
 class QQuickPropertyChangesParser : public QQmlCustomParser
