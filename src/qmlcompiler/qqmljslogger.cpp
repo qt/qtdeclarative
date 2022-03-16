@@ -97,7 +97,11 @@ const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
           QQmlJSLogger::Option(
                   Log_AttachedPropertyReuse, QStringLiteral("AttachedPropertyReuse"),
                   QStringLiteral("Warn if attached types from parent components aren't reused"),
-                  QtCriticalMsg, true) }
+                  QtCriticalMsg, true) },
+        { QStringLiteral("plugin"),
+          QQmlJSLogger::Option(Log_Plugin, QStringLiteral("LintPluginWarnings"),
+                               QStringLiteral("Warn if a qmllint plugin finds an issue"),
+                               QtWarningMsg, true) }
     };
 
     return optionsMap;

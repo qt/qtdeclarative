@@ -100,6 +100,60 @@ public:
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
 
+    class ConstPtrWrapperIterator
+    {
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using value_type = ConstPtr;
+        using pointer = value_type *;
+        using reference = value_type &;
+
+        ConstPtrWrapperIterator(QList<QQmlJSScope::Ptr>::const_iterator iterator)
+            : m_iterator(iterator)
+        {
+        }
+
+        friend bool operator==(const ConstPtrWrapperIterator &a, const ConstPtrWrapperIterator &b)
+        {
+            return a.m_iterator == b.m_iterator;
+        }
+        friend bool operator!=(const ConstPtrWrapperIterator &a, const ConstPtrWrapperIterator &b)
+        {
+            return a.m_iterator != b.m_iterator;
+        }
+
+        reference operator*()
+        {
+            if (!m_pointer)
+                m_pointer = *m_iterator;
+            return m_pointer;
+        }
+        pointer operator->()
+        {
+            if (!m_pointer)
+                m_pointer = *m_iterator;
+            return &m_pointer;
+        }
+
+        ConstPtrWrapperIterator &operator++()
+        {
+            m_iterator++;
+            m_pointer = {};
+            return *this;
+        }
+        ConstPtrWrapperIterator operator++(int)
+        {
+            auto before = *this;
+            ++(*this);
+            return before;
+        }
+
+    private:
+        QList<QQmlJSScope::Ptr>::const_iterator m_iterator;
+        QQmlJSScope::ConstPtr m_pointer;
+    };
+
     class Import
     {
     public:
@@ -384,6 +438,9 @@ public:
     bool isIdInjectedFromSignal(const QString &id) const;
 
     std::optional<JavaScriptIdentifier> findJSIdentifier(const QString &id) const;
+
+    ConstPtrWrapperIterator childScopesBegin() const { return m_childScopes.constBegin(); }
+    ConstPtrWrapperIterator childScopesEnd() const { return m_childScopes.constEnd(); }
 
     QVector<QQmlJSScope::Ptr> childScopes()
     {

@@ -47,6 +47,8 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qhash.h>
 
+#include <QtQml/private/qqmljssourcelocation_p.h>
+
 #include "qqmljsannotation_p.h"
 
 // MetaMethod and MetaProperty have both type names and actual QQmlJSScope types.

@@ -86,6 +86,8 @@ public:
     static QString implicitImportDirectory(
             const QString &localFile, QQmlJSResourceFileMapper *mapper);
 
+    QQmlJSImporter *importer() { return m_importer; } // ### should this be restricted?
+
 protected:
     // Linter warnings, we might want to move this at some point
     bool visit(QQmlJS::AST::StringLiteral *) override;

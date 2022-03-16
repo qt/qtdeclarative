@@ -34,6 +34,7 @@ qt_internal_add_module(QmlCompilerPrivate
         qqmljsutils_p.h qqmljsutils.cpp
         qqmljslinter_p.h qqmljslinter.cpp
         qqmljslintercodegen_p.h qqmljslintercodegen.cpp
+        qqmlsa_p.h qqmlsa.cpp
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::QmlPrivate
