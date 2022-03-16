@@ -120,6 +120,7 @@ public:
     bool allowChildEventFiltering = true;
     bool allowDoubleClick = true;
     bool frameSynchronousHoverEnabled = true;
+    bool hoveredLeafItemFound = false;
 
     bool isSubsceneAgent = false;
     static bool subsceneAgentsExist;

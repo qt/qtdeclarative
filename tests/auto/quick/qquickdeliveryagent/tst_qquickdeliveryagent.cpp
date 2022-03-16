@@ -62,6 +62,26 @@ struct ViewportTransformHelper : public QQuickDeliveryAgent::Transform
     }
 };
 
+struct HoverItem : public QQuickItem
+{
+    HoverItem(QQuickItem *parent) : QQuickItem(parent){}
+    void hoverEnterEvent(QHoverEvent *e) override
+    {
+        hoverEnter = true;
+        e->setAccepted(block);
+    }
+
+    void hoverLeaveEvent(QHoverEvent *e) override
+    {
+        hoverLeave = true;
+        e->setAccepted(block);
+    }
+
+    bool hoverEnter = false;
+    bool hoverLeave = false;
+    bool block = false;
+};
+
 // A QQuick3DViewport simulator
 class SubsceneRootItem : public QQuickShaderEffectSource
 {
@@ -135,6 +155,9 @@ private slots:
     void passiveGrabberOrder();
     void tapHandlerDoesntOverrideSubsceneGrabber();
     void touchCompression();
+    void hoverPropagation_nested_data();
+    void hoverPropagation_nested();
+    void hoverPropagation_siblings();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice = QScopedPointer<QPointingDevice>(QTest::createTouchDevice());
@@ -276,6 +299,74 @@ void tst_qquickdeliveryagent::touchCompression()
     QTRY_COMPARE(rootHandler->active(), false);
     QCOMPARE(rootHandler->point().position(), QPointF());
     QCOMPARE(agentPriv->compressedTouchCount, 0);
+}
+
+void tst_qquickdeliveryagent::hoverPropagation_nested_data()
+{
+    QTest::addColumn<bool>("block");
+    QTest::newRow("block=false") << false;
+    QTest::newRow("block=true") << true;
+}
+
+void tst_qquickdeliveryagent::hoverPropagation_nested()
+{
+    QFETCH(bool, block);
+
+    QQuickWindow window;
+    window.resize(200, 200);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    HoverItem child(window.contentItem());
+    child.setAcceptHoverEvents(true);
+    child.setWidth(100);
+    child.setHeight(100);
+
+    HoverItem grandChild(&child);
+    grandChild.setAcceptHoverEvents(true);
+    grandChild.block = block;
+    grandChild.setWidth(100);
+    grandChild.setHeight(100);
+
+    // Start by moving the mouse to the window
+    QTest::mouseMove(&window, QPoint(150, 150));
+    QCOMPARE(child.hoverEnter, false);
+    QCOMPARE(grandChild.hoverEnter, false);
+
+    // Move the mouse inside the items. If block is true, only
+    // the grandchild should be hovered. Otherwise both.
+    QTest::mouseMove(&window, QPoint(50, 50));
+    QCOMPARE(child.hoverEnter, !block);
+    QCOMPARE(grandChild.hoverEnter, true);
+}
+
+void tst_qquickdeliveryagent::hoverPropagation_siblings()
+{
+    QQuickWindow window;
+    window.resize(200, 200);
+    window.show();
+    QVERIFY(QTest::qWaitForWindowActive(&window));
+
+    HoverItem sibling1(window.contentItem());
+    sibling1.setAcceptHoverEvents(true);
+    sibling1.setWidth(100);
+    sibling1.setHeight(100);
+
+    HoverItem sibling2(window.contentItem());
+    sibling2.setAcceptHoverEvents(true);
+    sibling2.setWidth(100);
+    sibling2.setHeight(100);
+
+    // Start by moving the mouse to the window
+    QTest::mouseMove(&window, QPoint(150, 150));
+    QCOMPARE(sibling1.hoverEnter, false);
+    QCOMPARE(sibling2.hoverEnter, false);
+
+    // Move the mouse inside the items. Only the
+    // sibling on the top should receive hover
+    QTest::mouseMove(&window, QPoint(50, 50));
+    QCOMPARE(sibling1.hoverEnter, false);
+    QCOMPARE(sibling2.hoverEnter, true);
 }
 
 QTEST_MAIN(tst_qquickdeliveryagent)
