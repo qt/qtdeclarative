@@ -72,8 +72,6 @@ private slots:
 
         m_view.setSource((testFileUrl(QMLFILE)));
         QTRY_VERIFY2(m_view.status() == QQuickView::Ready, "Failed to load QML file");
-        m_view.show();
-        QVERIFY(QTest::qWaitForWindowActive(&m_view));
         initQtHooks();
         QVERIFY(hooks->qt_qmlDebugEnableService(qPrintable(QQmlDebugTranslationServiceImpl::s_key)));
     }
