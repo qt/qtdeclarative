@@ -93,26 +93,27 @@ public:
 
         struct PendingImport
         {
-            QV4::CompiledData::Import::ImportType type = QV4::CompiledData::Import::ImportType::ImportLibrary;
-
             QString uri;
             QString qualifier;
 
-            QTypeRevision version;
-
+            QV4::CompiledData::Import::ImportType type
+                = QV4::CompiledData::Import::ImportType::ImportLibrary;
             QV4::CompiledData::Location location;
 
+            uint flags = 0;
             int priority = 0;
 
+            QTypeRevision version;
+
             PendingImport() = default;
-            PendingImport(Blob *blob, const QV4::CompiledData::Import *import);
+            PendingImport(Blob *blob, const QV4::CompiledData::Import *import, uint flags);
         };
         using PendingImportPtr = std::shared_ptr<PendingImport>;
 
     protected:
         bool addImport(const QV4::CompiledData::Import *import, uint flags,
                        QList<QQmlError> *errors);
-        bool addImport(PendingImportPtr import, uint flags, QList<QQmlError> *errors);
+        bool addImport(PendingImportPtr import, QList<QQmlError> *errors);
 
         bool fetchQmldir(const QUrl &url, PendingImportPtr import, int priority, QList<QQmlError> *errors);
         bool updateQmldir(const QQmlRefPointer<QQmlQmldirData> &data, PendingImportPtr import, QList<QQmlError> *errors);
@@ -124,9 +125,14 @@ public:
 
         void dependencyComplete(QQmlDataBlob *) override;
 
-        bool loadImportDependencies(PendingImportPtr currentImport, const QString &qmldirUri, QList<QQmlError> *errors);
+        bool loadImportDependencies(
+                PendingImportPtr currentImport, const QString &qmldirUri, uint flags,
+                QList<QQmlError> *errors);
 
     protected:
+        bool loadDependentImports(
+                const QList<QQmlDirParser::Import> &imports, const QString &qualifier,
+                QTypeRevision version, uint flags, QList<QQmlError> *errors);
         virtual QString stringAt(int) const { return QString(); }
 
         bool isDebugging() const;

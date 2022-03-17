@@ -248,7 +248,7 @@ public:
 
     QTypeRevision addFileImport(
             const QString &uri, const QString &prefix, QTypeRevision version, uint flags,
-            QQmlImportDatabase *database, QList<QQmlError> *errors);
+            QQmlImportDatabase *database, QString *localQmldir, QList<QQmlError> *errors);
 
     QTypeRevision updateQmldirContent(const QString &uri, const QString &prefix,
                              const QString &qmldirIdentifier, const QString& qmldirUrl,
@@ -1395,7 +1395,7 @@ QTypeRevision QQmlImportsPrivate::addLibraryImport(
 
 QTypeRevision QQmlImportsPrivate::addFileImport(
         const QString& uri, const QString &prefix, QTypeRevision version, uint flags,
-        QQmlImportDatabase *database, QList<QQmlError> *errors)
+        QQmlImportDatabase *database, QString *localQmldir, QList<QQmlError> *errors)
 {
     if (uri.startsWith(Slash) || uri.startsWith(Colon)) {
         QQmlError error;
@@ -1446,8 +1446,11 @@ QTypeRevision QQmlImportsPrivate::addFileImport(
         if (importUri.endsWith(Slash))
             importUri.chop(1);
 
-        if (!typeLoader->absoluteFilePath(localFileOrQrc).isEmpty())
+        if (!typeLoader->absoluteFilePath(localFileOrQrc).isEmpty()) {
             qmldirIdentifier = localFileOrQrc;
+            if (localQmldir)
+                *localQmldir = qmldirIdentifier;
+        }
 
     } else if (nameSpace->prefix.isEmpty() && !(flags & QQmlImports::ImportIncomplete)) {
 
@@ -1566,7 +1569,8 @@ QTypeRevision QQmlImportsPrivate::updateQmldirContent(const QString &uri, const 
 
   Additionally, this will add the import with lowest instead of highest precedence.
 */
-QTypeRevision QQmlImports::addImplicitImport(QQmlImportDatabase *importDb, QList<QQmlError> *errors)
+QTypeRevision QQmlImports::addImplicitImport(
+        QQmlImportDatabase *importDb, QString *localQmldir, QList<QQmlError> *errors)
 {
     Q_ASSERT(errors);
 
@@ -1574,7 +1578,7 @@ QTypeRevision QQmlImports::addImplicitImport(QQmlImportDatabase *importDb, QList
 
     uint flags = ImportImplicit | (!isLocal(baseUrl()) ? ImportIncomplete : 0);
     return d->addFileImport(QLatin1String("."), QString(), QTypeRevision(), flags,
-                            importDb, errors);
+                            importDb, localQmldir, errors);
 }
 
 /*!
@@ -1624,7 +1628,7 @@ QTypeRevision QQmlImports::addFileImport(
             << "addFileImport:" << qPrintable(baseUrl().toString())
             << uri << version << "as" << prefix;
 
-    return d->addFileImport(uri, prefix, version, flags, importDb, errors);
+    return d->addFileImport(uri, prefix, version, flags, importDb, nullptr, errors);
 }
 
 QTypeRevision QQmlImports::addLibraryImport(

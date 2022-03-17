@@ -162,7 +162,7 @@ public:
                      = QQmlType::AnyRegistrationType) const;
 
     QTypeRevision addImplicitImport(
-            QQmlImportDatabase *importDb, QList<QQmlError> *errors);
+            QQmlImportDatabase *importDb, QString *localQmldir, QList<QQmlError> *errors);
 
     bool addInlineComponentImport(QQmlImportInstance  *const importInstance, const QString &name, const QUrl importUrl, QQmlType containingType);
 

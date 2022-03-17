@@ -46,6 +46,7 @@
 #include <private/qqmlscriptblob_p.h>
 #include <private/qqmlscriptdata_p.h>
 #include <private/qqmltypecompiler_p.h>
+#include <private/qqmltypeloaderqmldircontent_p.h>
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qcryptographichash.h>
@@ -187,7 +188,8 @@ bool QQmlTypeData::tryLoadFromDiskCache()
                     && !import->version.hasMajorVersion()
                     && !import->version.hasMinorVersion()) {
                     QList<QQmlError> errors;
-                    auto pendingImport = std::make_shared<PendingImport>(this, import);
+                    auto pendingImport = std::make_shared<PendingImport>(
+                                this, import, QQmlImports::ImportImplicit);
                     if (!fetchQmldir(qmldirUrl, pendingImport, 1, &errors)) {
                         setError(errors);
                         return false;
@@ -556,7 +558,21 @@ bool QQmlTypeData::loadImplicitImport()
     // This will also trigger the loading of the qmldir and the import of any native
     // types from available plugins.
     QList<QQmlError> implicitImportErrors;
-    m_importCache.addImplicitImport(importDatabase, &implicitImportErrors);
+    QString localQmldir;
+    m_importCache.addImplicitImport(importDatabase, &localQmldir, &implicitImportErrors);
+
+    // When loading with QQmlImports::ImportImplicit, the imports are _appended_ to the namespace
+    // in the order they are loaded. Therefore, the addImplicitImport above gets the highest
+    // precedence. This is in contrast to normal priority imports. Those are _prepended_ in the
+    // order they are loaded.
+    if (!localQmldir.isEmpty()) {
+        const QQmlTypeLoaderQmldirContent qmldir = typeLoader()->qmldirContent(localQmldir);
+        const QList<QQmlDirParser::Import> moduleImports
+                = QQmlMetaType::moduleImports(qmldir.typeNamespace(), QTypeRevision())
+                + qmldir.imports();
+        loadDependentImports(moduleImports, QString(), QTypeRevision(),
+                             QQmlImports::ImportImplicit, &implicitImportErrors);
+    }
 
     if (!implicitImportErrors.isEmpty()) {
         setError(implicitImportErrors);
