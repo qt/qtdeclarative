@@ -890,6 +890,9 @@ QQmlJSRegisterContent QQmlJSTypeResolver::memberType(const QQmlJSRegisterContent
                             storedType(result), result,
                             QQmlJSRegisterContent::Singleton, type.scopeType());
             }
+
+            return QQmlJSRegisterContent::create(metaObjectType(), metaObjectType(),
+                                                 QQmlJSRegisterContent::MetaType, result);
         }
 
         return {};

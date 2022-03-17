@@ -1,3 +1,5 @@
+pragma Strict
+
 import QtQml
 import TestTypes as Test
 
