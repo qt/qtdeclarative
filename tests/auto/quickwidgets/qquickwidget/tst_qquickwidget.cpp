@@ -86,17 +86,18 @@ public:
 class MouseRecordingItem : public QQuickItem
 {
 public:
-    MouseRecordingItem(bool acceptTouch, QQuickItem *parent = nullptr)
+    MouseRecordingItem(bool acceptTouch, bool acceptTouchPress, QQuickItem *parent = nullptr)
         : QQuickItem(parent)
-        , m_acceptTouch(acceptTouch)
+        , m_acceptTouchPress(acceptTouchPress)
     {
         setSize(QSizeF(300, 300));
         setAcceptedMouseButtons(Qt::LeftButton);
+        setAcceptTouchEvents(acceptTouch);
     }
 
 protected:
     void touchEvent(QTouchEvent* event) override {
-        event->setAccepted(m_acceptTouch);
+        event->setAccepted(m_acceptTouchPress);
         m_touchEvents << event->type();
         qCDebug(lcTests) << "accepted?" << event->isAccepted() << event;
     }
@@ -118,7 +119,7 @@ public:
     QList<QEvent::Type> m_touchEvents;
 
 private:
-    bool m_acceptTouch;
+    bool m_acceptTouchPress;
 };
 
 class tst_qquickwidget : public QQmlDataTest
@@ -625,7 +626,7 @@ void tst_qquickwidget::synthMouseFromTouch()
     QWidget window;
     window.setAttribute(Qt::WA_AcceptTouchEvents);
     QScopedPointer<MouseRecordingQQWidget> childView(new MouseRecordingQQWidget(&window));
-    MouseRecordingItem *item = new MouseRecordingItem(acceptTouch, nullptr);
+    MouseRecordingItem *item = new MouseRecordingItem(!synthMouse, acceptTouch, nullptr);
     childView->setContent(QUrl(), nullptr, item);
     window.resize(300, 300);
     childView->resize(300, 300);
@@ -640,8 +641,8 @@ void tst_qquickwidget::synthMouseFromTouch()
     QTest::touchEvent(&window, device).move(0, p2, &window);
     QTest::touchEvent(&window, device).release(0, p2, &window);
 
-    QCOMPARE(item->m_touchEvents.count(), !synthMouse && !acceptTouch ? 1 : 3);
-    QCOMPARE(item->m_mouseEvents.count(), (acceptTouch || !synthMouse) ? 0 : 3);
+    QCOMPARE(item->m_touchEvents.count(), synthMouse ? 0 : (acceptTouch ? 3 : 1));
+    QCOMPARE(item->m_mouseEvents.count(), synthMouse ? 3 : 0);
     QCOMPARE(childView->m_mouseEvents.count(), 0);
     for (const auto &ev : item->m_mouseEvents)
         QCOMPARE(ev, Qt::MouseEventSynthesizedByQt);
