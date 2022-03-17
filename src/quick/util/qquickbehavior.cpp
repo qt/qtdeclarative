@@ -109,8 +109,13 @@ public:
                                                  const QUntypedPropertyBinding &binding)
     {
         auto This = static_cast<UntypedProxyProperty *>(d);
-        if (binding.valueMetaType() != This->type())
+        const QMetaType type = This->type();
+        if (binding.valueMetaType() != type)
             return {};
+
+        // We want to notify in any case here because the target property should be set
+        // even if our proxy binding results in the default value.
+        QPropertyBindingPrivate::get(binding)->scheduleNotify();
         return This->m_bindingData.setBinding(binding,
                                               reinterpret_cast<QUntypedPropertyData *>(
                                                   This->m_storage.data()));
