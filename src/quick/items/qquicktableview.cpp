@@ -3811,7 +3811,7 @@ void QQuickTableViewPrivate::init()
 
     auto tapHandler = new QQuickTapHandler(q->contentItem());
 
-    QObject::connect(tapHandler, &QQuickTapHandler::pressedChanged, [=] {
+    QObject::connect(tapHandler, &QQuickTapHandler::pressedChanged, [this, tapHandler] {
         if (!tapHandler->isPressed())
             return;
         positionXAnimation.stop();
