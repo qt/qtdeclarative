@@ -127,6 +127,7 @@ private slots:
     void testIsnan();
     void fallbackLookups();
     void typedArray();
+    void prefixedMetaType();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1931,6 +1932,18 @@ void tst_QmlCppCodegen::typedArray()
     QCOMPARE(values6.count(&values6), 3);
     for (int i = 0; i < 3; ++i)
         QCOMPARE(values6.at(&values6, i), o.data());
+}
+
+void tst_QmlCppCodegen::prefixedMetaType()
+{
+    QQmlEngine engine;
+    const QUrl document(u"qrc:/TestTypes/prefixedMetaType.qml"_qs);
+    QQmlComponent c(&engine, document);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o);
+
+    QCOMPARE(o->property("state").toInt(), 2);
 }
 
 void tst_QmlCppCodegen::runInterpreted()
