@@ -579,11 +579,13 @@ public:
             return true;
         return false;
     }
-    QString preCode() const
+    static QString preCodeForName(QStringView n)
     {
-        return QStringLiteral(u"QtObject{\n  %1: ").arg(m_name.split(u'.').last());
+        return QStringLiteral(u"QtObject{\n  %1: ").arg(n.split(u'.').last());
     }
-    QString postCode() const { return QStringLiteral(u"\n}\n"); }
+    static QString postCodeForName(QStringView) { return u"\n}\n"_qs; }
+    QString preCode() const { return preCodeForName(m_name); }
+    QString postCode() const { return postCodeForName(m_name); }
 
 private:
     friend class QmlDomAstCreator;

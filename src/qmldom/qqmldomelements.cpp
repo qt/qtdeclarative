@@ -1044,7 +1044,8 @@ Binding::Binding(QString name, std::shared_ptr<ScriptExpression> value, BindingT
 Binding::Binding(QString name, QString scriptCode, BindingType bindingType)
     : Binding(name,
               std::make_unique<BindingValue>(std::shared_ptr<ScriptExpression>(new ScriptExpression(
-                      scriptCode, ScriptExpression::ExpressionType::BindingExpression))),
+                      scriptCode, ScriptExpression::ExpressionType::BindingExpression, 0,
+                      Binding::preCodeForName(name), Binding::postCodeForName(name)))),
               bindingType)
 {
 }
@@ -1641,6 +1642,10 @@ void ScriptExpression::setCode(QString code, QString preCode, QString postCode)
 {
     m_codeStr = code;
     const bool qmlMode = (m_expressionType == ExpressionType::BindingExpression);
+    if (qmlMode && preCode.isEmpty()) {
+        preCode = Binding::preCodeForName(u"binding");
+        postCode = Binding::postCodeForName(u"binding");
+    }
     if (!preCode.isEmpty() || !postCode.isEmpty())
         m_codeStr = preCode + code + postCode;
     m_code = QStringView(m_codeStr).mid(preCode.length(), code.length());

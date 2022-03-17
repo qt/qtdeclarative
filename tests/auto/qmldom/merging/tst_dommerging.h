@@ -115,6 +115,11 @@ private slots:
                                 ScriptExpression::ExpressionType::BindingExpression))),
                 AddOption::Overwrite);
         QVERIFY(binding);
+        QCOMPARE(binding.item().field(Fields::value).field(Fields::errors).length(), 0);
+        std::shared_ptr<ScriptExpression> expr =
+                binding.item().field(Fields::value).ownerAs<ScriptExpression>();
+        QVERIFY(expr && expr->ast());
+        QCOMPARE(expr->ast()->kind, AST::Node::Kind_NumericLiteral);
         MutableDomItem pInfo = myobj.field(Fields::propertyInfos).key(QLatin1String("foo"));
         // dumperToQDebug([pInfo](Sink s){ pInfo.dump(s); });
         QCOMPARE(propertyDef.item(), pInfo.field(Fields::propertyDefs).index(0).item());
