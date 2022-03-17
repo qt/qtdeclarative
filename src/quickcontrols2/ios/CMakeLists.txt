@@ -24,6 +24,7 @@ qt_internal_add_qml_module(qtquickcontrols2iosstyleplugin
     SOURCES
         qtquickcontrols2iosstyleplugin.cpp
         qquickiosstyle.cpp qquickiosstyle_p.h
+        qquickiostheme_p.h qquickiostheme.mm
     QML_FILES
         ${qml_files}
     DEFINES
@@ -37,6 +38,11 @@ qt_internal_add_qml_module(qtquickcontrols2iosstyleplugin
         Qt::QuickPrivate
         Qt::QuickTemplates2Private
         Qt::QuickControls2ImplPrivate
+)
+
+qt_internal_extend_target(Core CONDITION APPLE AND IOS
+    LIBRARIES
+        ${FWUIKit}
 )
 
 file(GLOB resource_glob RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "images/*.png")

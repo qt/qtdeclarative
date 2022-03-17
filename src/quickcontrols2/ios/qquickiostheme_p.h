@@ -37,49 +37,32 @@
 **
 ****************************************************************************/
 
-#include "qquickiosstyle_p.h"
-#include "qquickiostheme_p.h"
+#ifndef QQUICKIOSTHEME_P_H
+#define QQUICKIOSTHEME_P_H
 
-#include <QtCore/qloggingcategory.h>
-#include <QtQml/qqml.h>
-#include <QtQuickControls2/private/qquickstyleplugin_p.h>
-#include <QtQuickTemplates2/private/qquicktheme_p.h>
+//
+//  W A R N I N G
+//  -------------
+//
+// This file is not part of the Qt API.  It exists purely as an
+// implementation detail.  This header file may change from version to
+// version without notice, or even be removed.
+//
+// We mean it.
+//
+
+#include <QtCore/qglobal.h>
 
 QT_BEGIN_NAMESPACE
 
-extern void qml_register_types_QtQuick_Controls_iOS();
-Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick_Controls_iOS);
+class QQuickTheme;
 
-class QtQuickControls2IOSStylePlugin : public QQuickStylePlugin
+class QQuickIOSTheme
 {
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
-
 public:
-    QtQuickControls2IOSStylePlugin(QObject *parent = nullptr);
-
-    QString name() const override;
-    void initializeTheme(QQuickTheme *theme) override;
-
-    QQuickIOSTheme m_theme;
+    static void initialize(QQuickTheme *theme);
 };
-
-QtQuickControls2IOSStylePlugin::QtQuickControls2IOSStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
-{
-    volatile auto registration = &qml_register_types_QtQuick_Controls_iOS;
-    Q_UNUSED(registration);
-}
-
-QString QtQuickControls2IOSStylePlugin::name() const
-{
-    return QStringLiteral("iOS");
-}
-
-void QtQuickControls2IOSStylePlugin::initializeTheme(QQuickTheme *theme)
-{
-    m_theme.initialize(theme);
-}
 
 QT_END_NAMESPACE
 
-#include "qtquickcontrols2iosstyleplugin.moc"
+#endif // QQUICKIOSTHEME_P_H

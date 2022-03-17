@@ -37,49 +37,46 @@
 **
 ****************************************************************************/
 
-#include "qquickiosstyle_p.h"
 #include "qquickiostheme_p.h"
 
-#include <QtCore/qloggingcategory.h>
-#include <QtQml/qqml.h>
-#include <QtQuickControls2/private/qquickstyleplugin_p.h>
+#include <QtGui/private/qcoregraphics_p.h>
+
+#ifdef Q_OS_IOS
+#include <UIKit/UIInterface.h>
+#endif
+
 #include <QtQuickTemplates2/private/qquicktheme_p.h>
 
 QT_BEGIN_NAMESPACE
 
-extern void qml_register_types_QtQuick_Controls_iOS();
-Q_GHS_KEEP_REFERENCE(qml_register_types_QtQuick_Controls_iOS);
-
-class QtQuickControls2IOSStylePlugin : public QQuickStylePlugin
+void QQuickIOSTheme::initialize(QQuickTheme *theme)
 {
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID QQmlExtensionInterface_iid)
+    QPalette systemPalette;
 
-public:
-    QtQuickControls2IOSStylePlugin(QObject *parent = nullptr);
+    QColor blue;
+    QColor white;
+    QColor disabled;
+#ifdef Q_OS_IOS
+    blue = qt_mac_toQColor(UIColor.systemBlueColor.CGColor);
+    disabled = qt_mac_toQColor(UIColor.tertiarySystemFillColor.CGColor);
+    white = qt_mac_toQColor(UIColor.whiteColor.CGColor);
+#else
+    blue = QColor(qRgba(0, 122, 255, 255));
+    white = QColor(qRgba(255, 255, 255, 255));
+    disabled = QColor(qRgba(118, 118, 128, 31));
+#endif
+    systemPalette.setColor(QPalette::Active, QPalette::Button, blue);
+    systemPalette.setColor(QPalette::Disabled, QPalette::Button, disabled);
+    systemPalette.setColor(QPalette::Active, QPalette::ButtonText, white);
 
-    QString name() const override;
-    void initializeTheme(QQuickTheme *theme) override;
+    white.setAlphaF(0.5);
+    systemPalette.setColor(QPalette::Disabled, QPalette::ButtonText, white);
 
-    QQuickIOSTheme m_theme;
-};
+    blue.setAlphaF(0.8);
+    systemPalette.setColor(QPalette::Highlight, blue);
 
-QtQuickControls2IOSStylePlugin::QtQuickControls2IOSStylePlugin(QObject *parent) : QQuickStylePlugin(parent)
-{
-    volatile auto registration = &qml_register_types_QtQuick_Controls_iOS;
-    Q_UNUSED(registration);
-}
-
-QString QtQuickControls2IOSStylePlugin::name() const
-{
-    return QStringLiteral("iOS");
-}
-
-void QtQuickControls2IOSStylePlugin::initializeTheme(QQuickTheme *theme)
-{
-    m_theme.initialize(theme);
+    theme->setPalette(QQuickTheme::System, systemPalette);
 }
 
 QT_END_NAMESPACE
 
-#include "qtquickcontrols2iosstyleplugin.moc"
