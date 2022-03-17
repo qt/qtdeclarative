@@ -317,11 +317,6 @@ public:
     int currentRow = -1;
     int currentColumn = -1;
 
-    const static QPoint kLeft;
-    const static QPoint kRight;
-    const static QPoint kUp;
-    const static QPoint kDown;
-
 #ifdef QT_DEBUG
     QString forcedIncubationMode = qEnvironmentVariable("QT_TABLEVIEW_INCUBATION_MODE");
 #endif

@@ -900,11 +900,6 @@ static const char* kRequiredProperties = "_qt_tableview_requiredpropertymask";
 static const char* kRequiredProperty_selected = "selected";
 static const char* kRequiredProperty_current = "current";
 
-const QPoint QQuickTableViewPrivate::kLeft = QPoint(-1, 0);
-const QPoint QQuickTableViewPrivate::kRight = QPoint(1, 0);
-const QPoint QQuickTableViewPrivate::kUp = QPoint(0, -1);
-const QPoint QQuickTableViewPrivate::kDown = QPoint(0, 1);
-
 QQuickTableViewPrivate::EdgeRange::EdgeRange()
     : startIndex(kEdgeIndexNotSet)
     , endIndex(kEdgeIndexNotSet)
