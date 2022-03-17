@@ -96,6 +96,18 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable, public QQ
     QML_ATTACHED(QQuickTableViewAttached)
 
 public:
+    enum PositionModeFlag {
+        AlignLeft = Qt::AlignLeft,
+        AlignRight = Qt::AlignRight,
+        AlignHCenter = Qt::AlignHCenter,
+        AlignTop = Qt::AlignTop,
+        AlignBottom = Qt::AlignBottom,
+        AlignVCenter = Qt::AlignVCenter,
+        AlignCenter = AlignVCenter | AlignHCenter
+    };
+    Q_FLAG(PositionModeFlag)
+    Q_DECLARE_FLAGS(PositionMode, PositionModeFlag)
+
     QQuickTableView(QQuickItem *parent = nullptr);
     ~QQuickTableView() override;
     int rows() const;
@@ -143,10 +155,10 @@ public:
     int bottomRow() const;
 
     Q_INVOKABLE void forceLayout();
-    Q_INVOKABLE void positionViewAtCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &offset = QPointF());
-    Q_INVOKABLE void positionViewAtCell(int column, int row, Qt::Alignment alignment, const QPointF &offset = QPointF());
-    Q_INVOKABLE void positionViewAtRow(int row, Qt::Alignment alignment, qreal offset = 0);
-    Q_INVOKABLE void positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset = 0);
+    Q_INVOKABLE void positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset = QPointF());
+    Q_INVOKABLE void positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset = QPointF());
+    Q_INVOKABLE void positionViewAtRow(int row, PositionMode mode, qreal offset = 0);
+    Q_INVOKABLE void positionViewAtColumn(int column, PositionMode mode, qreal offset = 0);
     Q_INVOKABLE QQuickItem *itemAtCell(const QPoint &cell) const;
     Q_INVOKABLE QQuickItem *itemAtCell(int column, int row) const;
     Q_INVOKABLE QPoint cellAtPos(const QPointF &position, bool includeSpacing = false) const;
@@ -233,6 +245,8 @@ private:
 
     friend class QQuickTableViewPrivate;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickTableView::PositionMode)
 
 QT_END_NAMESPACE
 

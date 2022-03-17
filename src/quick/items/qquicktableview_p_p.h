@@ -479,6 +479,7 @@ public:
     void layoutChangedCallback(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint);
     void modelResetCallback();
 
+    void positionViewAtCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &offset);
     bool scrollToCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &margin);
     void scheduleRebuildIfFastFlick();
     void setLocalViewportX(qreal contentX);
