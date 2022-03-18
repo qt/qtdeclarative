@@ -822,18 +822,6 @@ inline QDebug operator<<(QDebug debug, const Path &p)
 } // end namespace Dom
 } // end namespace QQmlJS
 
-namespace QTypeTraits {
-// workaround for QTBUG-89456 : supporting an object that contains itself in Qt6 with windows
-// otherwise the compiler complains with errors like
-// type_traits(61): error C2039: 'value': is not a member of 'QTypeTraits::detail::expand_operator_equal_container<T,true>'
-//        with
-//        [
-//            T=QQmlJS::Dom::Path
-//        ]
-template <> struct has_operator_equal<QQmlJS::Dom::Path> : std::true_type { };
-template <> struct has_operator_less_than<QQmlJS::Dom::Path> : std::true_type { };
-}
-
 QT_END_NAMESPACE
 
 #endif // QMLDOM_PATH_H
