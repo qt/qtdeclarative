@@ -339,6 +339,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickText)
 };
 
+Q_DECLARE_MIXED_ENUM_OPERATORS_SYMMETRIC(int, QQuickText::HAlignment, QQuickText::VAlignment)
+
 class QTextLine;
 class QQuickTextLine : public QObject
 {
