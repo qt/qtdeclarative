@@ -480,7 +480,9 @@ public:
     void modelResetCallback();
 
     void positionViewAtCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &offset);
-    bool scrollToCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &margin);
+    bool scrollToRow(int row, Qt::Alignment alignment, qreal offset);
+    bool scrollToColumn(int column, Qt::Alignment alignment, qreal offset);
+
     void scheduleRebuildIfFastFlick();
     void setLocalViewportX(qreal contentX);
     void setLocalViewportY(qreal contentY);

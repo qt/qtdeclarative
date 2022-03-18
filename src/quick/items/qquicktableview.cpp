@@ -3540,118 +3540,121 @@ void QQuickTableViewPrivate::modelResetCallback()
     scheduleRebuildTable(RebuildOption::All);
 }
 
-bool QQuickTableViewPrivate::scrollToCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &margin)
+bool QQuickTableViewPrivate::scrollToRow(int row, Qt::Alignment alignment, qreal offset)
 {
     Q_Q(QQuickTableView);
 
-    // This function will only scroll to cells that are loaded (since we
-    // don't know the location of unloaded cells). But as an exception, to
+    // This function will only scroll to rows that are loaded (since we
+    // don't know the location of unloaded rows). But as an exception, to
     // allow moving currentIndex out of the viewport, we support scrolling
-    // to a cell that is adjacent to the loaded table. So start by checking
-    // if we should load en extra edge.
+    // to a row that is adjacent to the loaded table. So start by checking
+    // if we should load en extra row.
     const Qt::Alignment verticalAlignment = alignment & (Qt::AlignTop | Qt::AlignVCenter | Qt::AlignBottom);
-    const Qt::Alignment horizontalAlignment = alignment & (Qt::AlignLeft | Qt::AlignHCenter | Qt::AlignRight);
+    Q_TABLEVIEW_ASSERT(verticalAlignment, alignment);
 
-    qreal newContentX = q->contentX();
     qreal newContentY = q->contentY();
 
-    if (horizontalAlignment) {
-        if (cell.x() < leftColumn()) {
-            if (cell.x() != nextVisibleEdgeIndex(Qt::LeftEdge, leftColumn() - 1))
-                return false;
-            loadEdge(Qt::LeftEdge, QQmlIncubator::Synchronous);
-        } else if (cell.x() > rightColumn()) {
-            if (cell.x() != nextVisibleEdgeIndex(Qt::RightEdge, rightColumn() + 1))
-                return false;
-            loadEdge(Qt::RightEdge, QQmlIncubator::Synchronous);
-        } else if (cell.x() < leftColumn() || cell.x() > rightColumn()) {
+    if (row < topRow()) {
+        if (row != nextVisibleEdgeIndex(Qt::TopEdge, topRow() - 1))
             return false;
-        }
-
-        if (!loadedColumns.contains(cell.x()))
+        loadEdge(Qt::TopEdge, QQmlIncubator::Synchronous);
+    } else if (row > bottomRow()) {
+        if (row != nextVisibleEdgeIndex(Qt::BottomEdge, bottomRow() + 1))
             return false;
-
-        const int columnX = getEffectiveColumnX(cell.x());
-        const int columnWidth = getEffectiveColumnWidth(cell.x());
-
-        if (alignment & Qt::AlignLeft) {
-            newContentX = columnX + margin.x();
-        } else if (alignment & Qt::AlignRight) {
-            newContentX = columnX + columnWidth - viewportRect.width() + margin.x();
-        } else if (alignment & Qt::AlignHCenter) {
-            const qreal centerDistance = (viewportRect.width() - columnWidth) / 2;
-            newContentX = columnX - centerDistance + margin.x();
-        } else {
-            Q_TABLEVIEW_UNREACHABLE("alignment not supported");
-            return false;
-        }
-
-        // Don't overshoot when animating to a cell
-        newContentX = qBound(-q->minXExtent(), newContentX, -q->maxXExtent());
+        loadEdge(Qt::BottomEdge, QQmlIncubator::Synchronous);
+    } else if (row < topRow() || row > bottomRow()) {
+        return false;
     }
 
-    if (verticalAlignment) {
-        if (cell.y() < topRow()) {
-            if (cell.y() != nextVisibleEdgeIndex(Qt::TopEdge, topRow() - 1))
-                return false;
-            loadEdge(Qt::TopEdge, QQmlIncubator::Synchronous);
-        } else if (cell.y() > bottomRow()) {
-            if (cell.y() != nextVisibleEdgeIndex(Qt::BottomEdge, bottomRow() + 1))
-                return false;
-            loadEdge(Qt::BottomEdge, QQmlIncubator::Synchronous);
-        } else if (cell.y() < topRow() || cell.y() > bottomRow()) {
-            return false;
-        }
+    if (!loadedRows.contains(row))
+        return false;
 
-        if (!loadedRows.contains(cell.y()))
-            return false;
+    const int rowY = getEffectiveRowY(row);
+    const int rowHeight = getEffectiveRowHeight(row);
 
-        const int rowY = getEffectiveRowY(cell.y());
-        const int rowHeight = getEffectiveRowHeight(cell.y());
-
-        if (alignment & Qt::AlignTop) {
-            newContentY = rowY + margin.y();
-        } else if (alignment & Qt::AlignBottom) {
-            newContentY = rowY + rowHeight - viewportRect.height() + margin.y();
-        } else if (alignment & Qt::AlignVCenter) {
-            const qreal centerDistance = (viewportRect.height() - rowHeight) / 2;
-            newContentY = rowY - centerDistance + margin.y();
-        } else {
-            Q_TABLEVIEW_UNREACHABLE("alignment not supported");
-            return false;
-        }
-
-        // Don't overshoot when animating to a cell
-        newContentY = qBound(-q->minYExtent(), newContentY, -q->maxYExtent());
+    if (alignment & Qt::AlignTop) {
+        newContentY = rowY + offset;
+    } else if (alignment & Qt::AlignBottom) {
+        newContentY = rowY + rowHeight - viewportRect.height() + offset;
+    } else if (alignment & Qt::AlignVCenter) {
+        const qreal centerDistance = (viewportRect.height() - rowHeight) / 2;
+        newContentY = rowY - centerDistance + offset;
     }
 
-    // Calculate the velocity of the animation
-    // based on the distance from start to end.
-    const qreal diffX = qAbs(newContentX - q->contentX());
-    const qreal diffY = qAbs(newContentY - q->contentY());
-    const qreal maxDiff = qMax(diffX, diffY);
-    const qreal duration = qBound(700., maxDiff * 5, 1500.);
+    // Don't overshoot when animating to a cell
+    newContentY = qBound(-q->minYExtent(), newContentY, -q->maxYExtent());
+    if (qFuzzyCompare(newContentY, q->contentY()))
+        return true;
 
-    if (!qFuzzyCompare(newContentX, q->contentX())) {
-        if (animate) {
-            positionXAnimation.setTo(newContentX);
-            positionXAnimation.setDuration(duration);
-            positionXAnimation.restart();
-        } else {
-            positionXAnimation.stop();
-            q->setContentX(newContentX);
-        }
+    if (animate) {
+        const qreal diffY = qAbs(newContentY - q->contentY());
+        const qreal duration = qBound(700., diffY * 5, 1500.);
+        positionYAnimation.setTo(newContentY);
+        positionYAnimation.setDuration(duration);
+        positionYAnimation.restart();
+    } else {
+        positionYAnimation.stop();
+        q->setContentY(newContentY);
     }
 
-    if (!qFuzzyCompare(newContentY, q->contentY())) {
-        if (animate) {
-            positionYAnimation.setTo(newContentY);
-            positionYAnimation.setDuration(duration);
-            positionYAnimation.restart();
-        } else {
-            positionYAnimation.stop();
-            q->setContentY(newContentY);
-        }
+    return true;
+}
+
+bool QQuickTableViewPrivate::scrollToColumn(int column, Qt::Alignment alignment, qreal offset)
+{
+    Q_Q(QQuickTableView);
+
+    // This function will only scroll to columns that are loaded (since we
+    // don't know the location of unloaded columns). But as an exception, to
+    // allow moving currentIndex out of the viewport, we support scrolling
+    // to a column that is adjacent to the loaded table. So start by checking
+    // if we should load en extra column.
+    const Qt::Alignment horizontalAlignment = alignment & (Qt::AlignLeft | Qt::AlignHCenter | Qt::AlignRight);
+    Q_TABLEVIEW_ASSERT(horizontalAlignment, alignment);
+
+    qreal newContentX = q->contentX();
+
+    if (column < leftColumn()) {
+        if (column != nextVisibleEdgeIndex(Qt::LeftEdge, leftColumn() - 1))
+            return false;
+        loadEdge(Qt::LeftEdge, QQmlIncubator::Synchronous);
+    } else if (column > rightColumn()) {
+        if (column != nextVisibleEdgeIndex(Qt::RightEdge, rightColumn() + 1))
+            return false;
+        loadEdge(Qt::RightEdge, QQmlIncubator::Synchronous);
+    } else if (column < leftColumn() || column > rightColumn()) {
+        return false;
+    }
+
+    if (!loadedColumns.contains(column))
+        return false;
+
+    const int columnX = getEffectiveColumnX(column);
+    const int columnWidth = getEffectiveColumnWidth(column);
+
+    if (alignment & Qt::AlignLeft) {
+        newContentX = columnX + offset;
+    } else if (alignment & Qt::AlignRight) {
+        newContentX = columnX + columnWidth - viewportRect.width() + offset;
+    } else if (alignment & Qt::AlignHCenter) {
+        const qreal centerDistance = (viewportRect.width() - columnWidth) / 2;
+        newContentX = columnX - centerDistance + offset;
+    }
+
+    // Don't overshoot when animating to a cell
+    newContentX = qBound(-q->minXExtent(), newContentX, -q->maxXExtent());
+    if (qFuzzyCompare(newContentX, q->contentX()))
+        return true;
+
+    if (animate) {
+        const qreal diffX = qAbs(newContentX - q->contentX());
+        const qreal duration = qBound(700., diffX * 5, 1500.);
+        positionXAnimation.setTo(newContentX);
+        positionXAnimation.setDuration(duration);
+        positionXAnimation.restart();
+    } else {
+        positionXAnimation.stop();
+        q->setContentX(newContentX);
     }
 
     return true;
@@ -3667,7 +3670,7 @@ void QQuickTableViewPrivate::positionViewAtCell(const QPoint &cell, Qt::Alignmen
         if (syncVertically) {
             syncView->d_func()->positionViewAtCell(QPoint(cell.x(), topRow()), horizontalAlignment, offset);
         } else {
-            if (!scrollToCell(cell, horizontalAlignment, offset)) {
+            if (!scrollToColumn(cell.x(), horizontalAlignment, offset.x())) {
                 // Could not scroll, so rebuild instead
                 assignedPositionViewAtColumnAfterRebuild = cell.x();
                 positionViewAtColumnAlignment = horizontalAlignment;
@@ -3682,7 +3685,7 @@ void QQuickTableViewPrivate::positionViewAtCell(const QPoint &cell, Qt::Alignmen
         if (syncHorizontally) {
             syncView->d_func()->positionViewAtCell(QPoint(leftColumn(), cell.y()), verticalAlignment, offset);
         } else {
-            if (!scrollToCell(cell, verticalAlignment, offset)) {
+            if (!scrollToRow(cell.y(), verticalAlignment, offset.y())) {
                 // Could not scroll, so rebuild instead
                 assignedPositionViewAtRowAfterRebuild = cell.y();
                 positionViewAtRowAlignment = verticalAlignment;
