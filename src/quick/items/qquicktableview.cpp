@@ -3540,6 +3540,44 @@ void QQuickTableViewPrivate::modelResetCallback()
     scheduleRebuildTable(RebuildOption::All);
 }
 
+void QQuickTableViewPrivate::positionViewAtRow(int row, Qt::Alignment alignment, qreal offset)
+{
+    Qt::Alignment verticalAlignment = alignment & (Qt::AlignTop | Qt::AlignVCenter | Qt::AlignBottom);
+    Q_TABLEVIEW_ASSERT(verticalAlignment, alignment);
+
+    if (syncHorizontally) {
+        syncView->d_func()->positionViewAtRow(row, verticalAlignment, offset);
+    } else {
+        if (!scrollToRow(row, verticalAlignment, offset)) {
+            // Could not scroll, so rebuild instead
+            assignedPositionViewAtRowAfterRebuild = row;
+            positionViewAtRowAlignment = verticalAlignment;
+            positionViewAtRowOffset = offset;
+            scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
+                                 QQuickTableViewPrivate::RebuildOption::PositionViewAtRow);
+        }
+    }
+}
+
+void QQuickTableViewPrivate::positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset)
+{
+    Qt::Alignment horizontalAlignment = alignment & (Qt::AlignLeft | Qt::AlignHCenter | Qt::AlignRight);
+    Q_TABLEVIEW_ASSERT(horizontalAlignment, alignment);
+
+    if (syncVertically) {
+        syncView->d_func()->positionViewAtColumn(column, horizontalAlignment, offset);
+    } else {
+        if (!scrollToColumn(column, horizontalAlignment, offset)) {
+            // Could not scroll, so rebuild instead
+            assignedPositionViewAtColumnAfterRebuild = column;
+            positionViewAtColumnAlignment = horizontalAlignment;
+            positionViewAtColumnOffset = offset;
+            scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
+                                 QQuickTableViewPrivate::RebuildOption::PositionViewAtColumn);
+        }
+    }
+}
+
 bool QQuickTableViewPrivate::scrollToRow(int row, Qt::Alignment alignment, qreal offset)
 {
     Q_Q(QQuickTableView);
@@ -3658,43 +3696,6 @@ bool QQuickTableViewPrivate::scrollToColumn(int column, Qt::Alignment alignment,
     }
 
     return true;
-}
-
-void QQuickTableViewPrivate::positionViewAtCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &offset)
-{
-    Qt::Alignment verticalAlignment = alignment & (Qt::AlignTop | Qt::AlignVCenter | Qt::AlignBottom);
-    Qt::Alignment horizontalAlignment = alignment & (Qt::AlignLeft | Qt::AlignHCenter | Qt::AlignRight);
-    Q_TABLEVIEW_ASSERT(verticalAlignment || horizontalAlignment, alignment);
-
-    if (horizontalAlignment) {
-        if (syncVertically) {
-            syncView->d_func()->positionViewAtCell(QPoint(cell.x(), topRow()), horizontalAlignment, offset);
-        } else {
-            if (!scrollToColumn(cell.x(), horizontalAlignment, offset.x())) {
-                // Could not scroll, so rebuild instead
-                assignedPositionViewAtColumnAfterRebuild = cell.x();
-                positionViewAtColumnAlignment = horizontalAlignment;
-                positionViewAtColumnOffset = offset.x();
-                scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
-                                        QQuickTableViewPrivate::RebuildOption::PositionViewAtColumn);
-            }
-        }
-    }
-
-    if (verticalAlignment) {
-        if (syncHorizontally) {
-            syncView->d_func()->positionViewAtCell(QPoint(leftColumn(), cell.y()), verticalAlignment, offset);
-        } else {
-            if (!scrollToRow(cell.y(), verticalAlignment, offset.y())) {
-                // Could not scroll, so rebuild instead
-                assignedPositionViewAtRowAfterRebuild = cell.y();
-                positionViewAtRowAlignment = verticalAlignment;
-                positionViewAtRowOffset = offset.y();
-                scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
-                                        QQuickTableViewPrivate::RebuildOption::PositionViewAtRow);
-            }
-        }
-    }
 }
 
 void QQuickTableViewPrivate::scheduleRebuildIfFastFlick()
@@ -4155,26 +4156,30 @@ int QQuickTableView::bottomRow() const
     return d->loadedItems.isEmpty() ? -1 : d_func()->bottomRow();
 }
 
-void QQuickTableView::positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset)
-{
-    if (cell.x() < 0 || cell.x() >= columns() || cell.y() < 0 || cell.y() >= rows())
-        return;
-    d_func()->positionViewAtCell(cell, Qt::Alignment(int(mode)), offset);
-}
-
-void QQuickTableView::positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset)
-{
-    positionViewAtCell(QPoint(column, row), mode, offset);
-}
-
 void QQuickTableView::positionViewAtRow(int row, PositionMode mode, qreal offset)
 {
-    positionViewAtCell(QPoint(0, row), PositionMode(mode & Qt::AlignVertical_Mask), QPointF(0, offset));
+    if (row < 0 || row >= rows())
+        return;
+    d_func()->positionViewAtRow(row, Qt::Alignment(int(mode)) & Qt::AlignVertical_Mask, offset);
 }
 
 void QQuickTableView::positionViewAtColumn(int column, PositionMode mode, qreal offset)
 {
-    positionViewAtCell(QPoint(column, 0), PositionMode(mode & Qt::AlignHorizontal_Mask), QPointF(offset, 0));
+    if (column < 0 || column >= columns())
+        return;
+    d_func()->positionViewAtColumn(column, Qt::Alignment(int(mode)) & Qt::AlignHorizontal_Mask, offset);
+}
+
+void QQuickTableView::positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset)
+{
+    positionViewAtRow(cell.y(), mode, offset.y());
+    positionViewAtColumn(cell.x(), mode, offset.x());
+}
+
+void QQuickTableView::positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset)
+{
+    positionViewAtRow(row, mode, offset.y());
+    positionViewAtColumn(column, mode, offset.x());
 }
 
 QQuickItem *QQuickTableView::itemAtCell(const QPoint &cell) const

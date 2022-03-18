@@ -479,7 +479,8 @@ public:
     void layoutChangedCallback(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint);
     void modelResetCallback();
 
-    void positionViewAtCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &offset);
+    void positionViewAtRow(int row, Qt::Alignment alignment, qreal offset);
+    void positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset);
     bool scrollToRow(int row, Qt::Alignment alignment, qreal offset);
     bool scrollToColumn(int column, Qt::Alignment alignment, qreal offset);
 
