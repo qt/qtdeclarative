@@ -422,6 +422,8 @@ private:
     Q_DECLARE_PRIVATE(QQuickTextEdit)
 };
 
+Q_DECLARE_MIXED_ENUM_OPERATORS_SYMMETRIC(int, QQuickTextEdit::HAlignment, QQuickTextEdit::VAlignment)
+
 QT_END_NAMESPACE
 
 QML_DECLARE_TYPE(QQuickTextEdit)
