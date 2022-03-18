@@ -72,6 +72,7 @@ public:
 
     bool useTextureResizeWorkaround() const;
     bool createFullSizeTextures() const;
+    bool isActive() const override;
     int maxTextureSize() const;
 
     void setMaxTextureCount(int max) { m_maxTextureCount = max; }

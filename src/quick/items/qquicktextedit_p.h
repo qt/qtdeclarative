@@ -52,6 +52,7 @@
 //
 
 #include "qquickimplicitsizeitem_p.h"
+#include "qquicktextinterface_p.h"
 
 #include <QtGui/qtextoption.h>
 
@@ -61,9 +62,10 @@ class QQuickTextDocument;
 class QQuickTextEditPrivate;
 class QTextBlock;
 
-class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem
+class Q_QUICK_PRIVATE_EXPORT QQuickTextEdit : public QQuickImplicitSizeItem, public QQuickTextInterface
 {
     Q_OBJECT
+    Q_INTERFACES(QQuickTextInterface)
 
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
@@ -302,6 +304,8 @@ public:
 
     int tabStopDistance() const;
     void setTabStopDistance(qreal distance);
+
+    void invalidate() override;
 
 Q_SIGNALS:
     void textChanged();

@@ -197,7 +197,8 @@ public:
     enum UpdateType {
         UpdateNone,
         UpdateOnlyPreprocess,
-        UpdatePaintNode
+        UpdatePaintNode,
+        UpdateAll
     };
 
     QQuickTextEdit::HAlignment hAlign;

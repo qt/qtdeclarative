@@ -168,6 +168,7 @@ public:
 
     void polishItems();
     void forcePolish();
+    void invalidateFontData(QQuickItem *item);
     void syncSceneGraph();
     void renderSceneGraph(const QSize &size, const QSize &surfaceSize = QSize());
 
@@ -295,6 +296,7 @@ public:
     uint hasActiveSwapchain : 1;
     uint hasRenderableSwapchain : 1;
     uint swapchainJustBecameRenderable : 1;
+    bool pendingFontUpdate = false;
     bool windowEventDispatch = false;
 
 private:

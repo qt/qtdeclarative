@@ -52,6 +52,7 @@
 //
 
 #include "qquickimplicitsizeitem_p.h"
+#include "qquicktextinterface_p.h"
 #include <QtGui/qtextoption.h>
 #include <QtGui/qvalidator.h>
 
@@ -59,9 +60,10 @@ QT_BEGIN_NAMESPACE
 
 class QQuickTextInputPrivate;
 class QValidator;
-class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem
+class Q_QUICK_PRIVATE_EXPORT QQuickTextInput : public QQuickImplicitSizeItem, public QQuickTextInterface
 {
     Q_OBJECT
+    Q_INTERFACES(QQuickTextInterface)
 
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(int length READ length NOTIFY textChanged)
@@ -310,6 +312,8 @@ public:
     qreal bottomPadding() const;
     void setBottomPadding(qreal padding);
     void resetBottomPadding();
+
+    void invalidate() override;
 
 Q_SIGNALS:
     void textChanged();

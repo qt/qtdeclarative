@@ -432,6 +432,10 @@ QSGDistanceFieldGlyphCache *QSGRenderContext::distanceFieldGlyphCache(const QRaw
     return nullptr;
 }
 
+void QSGRenderContext::invalidateGlyphCaches()
+{
+
+}
 
 void QSGRenderContext::registerFontengineForCleanup(QFontEngine *engine)
 {

@@ -435,6 +435,18 @@ void QQuickTextEdit::setText(const QString &text)
     setFlag(QQuickItem::ItemObservesViewport, text.size() > QQuickTextEditPrivate::largeTextSizeThreshold);
 }
 
+void QQuickTextEdit::invalidate()
+{
+    Q_D(QQuickTextEdit);
+    if (isComponentComplete()) {
+        if (d->document != nullptr)
+            d->document->markContentsDirty(0, d->document->characterCount());
+        invalidateFontCaches();
+        d->updateType = QQuickTextEditPrivate::UpdateAll;
+        update();
+    }
+}
+
 /*!
     \qmlproperty string QtQuick::TextEdit::preeditText
     \readonly
@@ -2078,19 +2090,24 @@ QSGNode *QQuickTextEdit::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     Q_UNUSED(updatePaintNodeData);
     Q_D(QQuickTextEdit);
 
-    if (d->updateType != QQuickTextEditPrivate::UpdatePaintNode && oldNode != nullptr) {
+    if (d->updateType != QQuickTextEditPrivate::UpdatePaintNode
+          && d->updateType != QQuickTextEditPrivate::UpdateAll
+          && oldNode != nullptr) {
         // Update done in preprocess() in the nodes
         d->updateType = QQuickTextEditPrivate::UpdateNone;
         return oldNode;
     }
 
-    d->updateType = QQuickTextEditPrivate::UpdateNone;
+    if (!oldNode || d->updateType == QQuickTextEditPrivate::UpdateAll) {
+        delete oldNode;
+        oldNode = nullptr;
 
-    if (!oldNode) {
         // If we had any QQuickTextNode node references, they were deleted along with the root node
         // But here we must delete the Node structures in textNodeMap
         d->textNodeMap.clear();
     }
+
+    d->updateType = QQuickTextEditPrivate::UpdateNone;
 
     RootNode *rootNode = static_cast<RootNode *>(oldNode);
     TextNodeIterator nodeIterator = d->textNodeMap.begin();

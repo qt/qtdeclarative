@@ -53,6 +53,7 @@
 #include <private/qquickrendercontrol_p.h>
 #include <private/qquickanimatorcontroller_p.h>
 #include <private/qquickprofiler_p.h>
+#include <private/qquicktextinterface_p.h>
 
 #include <private/qguiapplication_p.h>
 
@@ -436,6 +437,12 @@ void QQuickWindow::physicalDpiChanged()
         updatePixelRatioHelper(d->contentItem, newPixelRatio);
 }
 
+void QQuickWindow::handleFontDatabaseChanged()
+{
+    Q_D(QQuickWindow);
+    d->pendingFontUpdate = true;
+}
+
 void QQuickWindow::handleScreenChanged(QScreen *screen)
 {
     Q_D(QQuickWindow);
@@ -504,6 +511,17 @@ void QQuickWindowRenderTarget::reset(QRhi *rhi)
     owns = false;
 }
 
+void QQuickWindowPrivate::invalidateFontData(QQuickItem *item)
+{
+    QQuickTextInterface *textItem = qobject_cast<QQuickTextInterface *>(item);
+    if (textItem != nullptr)
+        textItem->invalidate();
+
+    QList<QQuickItem *> children = item->childItems();
+    for (QQuickItem *child : children)
+        invalidateFontData(child);
+}
+
 void QQuickWindowPrivate::ensureCustomRenderTarget()
 {
     // resolve() can be expensive when importing an existing native texture, so
@@ -547,6 +565,12 @@ void QQuickWindowPrivate::syncSceneGraph()
 
     emit q->beforeSynchronizing();
     runAndClearJobs(&beforeSynchronizingJobs);
+
+    if (pendingFontUpdate) {
+        QFont::cleanup();
+        invalidateFontData(contentItem);
+    }
+
     if (!renderer) {
         forceUpdate(contentItem);
 
@@ -572,6 +596,11 @@ void QQuickWindowPrivate::syncSceneGraph()
     renderer->setClearMode(mode);
 
     renderer->setVisualizationMode(visualizationMode);
+
+    if (pendingFontUpdate) {
+        context->invalidateGlyphCaches();
+        pendingFontUpdate = false;
+    }
 
     emit q->afterSynchronizing();
     runAndClearJobs(&afterSynchronizingJobs);
@@ -747,6 +776,11 @@ void QQuickWindowPrivate::init(QQuickWindow *c, QQuickRenderControl *control)
         windowManager = QSGRenderLoop::instance();
 
     Q_ASSERT(windowManager || renderControl);
+
+    QObject::connect(static_cast<QGuiApplication *>(QGuiApplication::instance()),
+                     &QGuiApplication::fontDatabaseChanged,
+                     q,
+                     &QQuickWindow::handleFontDatabaseChanged);
 
     if (QScreen *screen = q->screen()) {
         lastReportedItemDevicePixelRatio = q->effectiveDevicePixelRatio();

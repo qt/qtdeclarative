@@ -147,6 +147,11 @@ void QSGRhiDistanceFieldGlyphCache::requestGlyphs(const QSet<glyph_t> &glyphs)
     markGlyphsToRender(glyphsToRender);
 }
 
+bool QSGRhiDistanceFieldGlyphCache::isActive() const
+{
+    return m_unusedGlyphs.size() != m_glyphsTexture.size();
+}
+
 void QSGRhiDistanceFieldGlyphCache::storeGlyphs(const QList<QDistanceField> &glyphs)
 {
     typedef QHash<TextureInfo *, QVector<glyph_t> > GlyphTextureHash;

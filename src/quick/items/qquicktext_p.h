@@ -52,6 +52,7 @@
 //
 
 #include "qquickimplicitsizeitem_p.h"
+#include "qquicktextinterface_p.h"
 #include <private/qtquickglobal_p.h>
 #include <QtGui/qtextoption.h>
 
@@ -59,9 +60,10 @@ QT_BEGIN_NAMESPACE
 
 class QQuickTextPrivate;
 class QQuickTextLine;
-class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem
+class Q_QUICK_PRIVATE_EXPORT QQuickText : public QQuickImplicitSizeItem, public QQuickTextInterface
 {
     Q_OBJECT
+    Q_INTERFACES(QQuickTextInterface)
 
     Q_PROPERTY(QString text READ text WRITE setText NOTIFY textChanged)
     Q_PROPERTY(QFont font READ font WRITE setFont NOTIFY fontChanged)
@@ -273,6 +275,8 @@ public:
 
     QJSValue fontInfo() const;
     QSizeF advance() const;
+
+    void invalidate() override;
 
 Q_SIGNALS:
     void textChanged(const QString &text);

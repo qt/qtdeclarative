@@ -259,6 +259,7 @@ private Q_SLOTS:
     void setTransientParent_helper(QQuickWindow *window);
     void runJobsAfterSwap();
     void handleApplicationStateChanged(Qt::ApplicationState state);
+    void handleFontDatabaseChanged();
 private:
 #ifndef QT_NO_DEBUG_STREAM
     inline friend QQmlInfo operator<<(QQmlInfo info, const QQuickWindow *window)

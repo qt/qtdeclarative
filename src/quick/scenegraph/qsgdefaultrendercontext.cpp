@@ -94,6 +94,19 @@ void QSGDefaultRenderContext::initialize(const QSGRenderContext::InitParams *par
     emit initialized();
 }
 
+void QSGDefaultRenderContext::invalidateGlyphCaches()
+{
+    auto it = m_glyphCaches.begin();
+    while (it != m_glyphCaches.end()) {
+        if (!(*it)->isActive()) {
+            delete *it;
+            it = m_glyphCaches.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 void QSGDefaultRenderContext::invalidate()
 {
     if (!m_rhi)

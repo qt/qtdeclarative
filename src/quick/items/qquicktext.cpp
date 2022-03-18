@@ -3008,6 +3008,13 @@ void QQuickText::hoverLeaveEvent(QHoverEvent *event)
     d->processHoverEvent(event);
 }
 
+void QQuickText::invalidate()
+{
+    Q_D(QQuickText);
+    d->textHasChanged = true;
+    d->updateLayout();
+}
+
 bool QQuickTextPrivate::transformChanged(QQuickItem *transformedItem)
 {
     // If there's a lot of text, we may need QQuickText::updatePaintNode() to call

@@ -170,6 +170,11 @@ void QSGDistanceFieldGlyphCache::release(const QVector<glyph_t> &glyphs)
     releaseGlyphs(unusedGlyphs);
 }
 
+bool QSGDistanceFieldGlyphCache::isActive() const
+{
+    return true;
+}
+
 void QSGDistanceFieldGlyphCache::update()
 {
     m_populatingGlyphs.clear();

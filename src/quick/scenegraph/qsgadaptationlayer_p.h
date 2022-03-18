@@ -495,6 +495,7 @@ public:
 
     virtual bool eightBitFormatIsAlphaSwizzled() const = 0;
     virtual bool screenSpaceDerivativesSupported() const = 0;
+    virtual bool isActive() const;
 
 protected:
     struct GlyphPosition {

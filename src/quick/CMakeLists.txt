@@ -78,6 +78,7 @@ qt_internal_add_qml_module(Quick
         items/qquickstateoperations.cpp items/qquickstateoperations_p.h
         items/qquicktext.cpp items/qquicktext_p.h
         items/qquicktext_p_p.h
+        items/qquicktextinterface_p.h
         items/qquicktextcontrol.cpp items/qquicktextcontrol_p.h
         items/qquicktextcontrol_p_p.h
         items/qquicktextdocument.cpp items/qquicktextdocument.h items/qquicktextdocument_p.h

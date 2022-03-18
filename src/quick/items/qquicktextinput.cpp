@@ -136,6 +136,13 @@ QString QQuickTextInput::text() const
     return (res.isNull() ? QString::fromLatin1("") : res);
 }
 
+void QQuickTextInput::invalidate()
+{
+    Q_D(QQuickTextInput);
+    d->updateLayout();
+    invalidateFontCaches();
+}
+
 void QQuickTextInput::setText(const QString &s)
 {
     Q_D(QQuickTextInput);
