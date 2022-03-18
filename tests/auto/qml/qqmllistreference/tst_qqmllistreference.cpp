@@ -825,7 +825,7 @@ void tst_qqmllistreference::engineTypes()
     const QMetaProperty prop = m->property(index);
     const QVariant var = prop.read(o);
 
-    QQmlListReference fromVar(var, &engine);
+    QQmlListReference fromVar(var);
     QVERIFY(fromVar.isValid());
     QCOMPARE(fromVar.count(), 2);
     QCOMPARE(fromVar.listElementType(), ref.listElementType());
@@ -881,17 +881,11 @@ void tst_qqmllistreference::compositeListProperty()
     QVERIFY(!i1.isNull());
     QVERIFY(!i2.isNull());
 
-    // Without engine: We know the element type now.
+    // We know the element type now.
     QQmlListReference list1(object.data(), "items");
     QVERIFY(list1.listElementType() != nullptr);
     QVERIFY(list1.append(i1.data()));
     QVERIFY(list1.replace(0, i2.data()));
-
-    // With engine: same
-    QQmlListReference list2(object.data(), "items", &engine);
-    QVERIFY(list2.listElementType() != nullptr);
-    QVERIFY(list2.append(i1.data()));
-    QVERIFY(list2.replace(0, i2.data()));
 }
 
 void tst_qqmllistreference::nullItems()
