@@ -35,6 +35,7 @@
 #include <QtQuick/qquickview.h>
 #include <QtQuick/qquickitem.h>
 #include <QtQuick/private/qquickitem_p.h>
+#include <QtQuick/private/qquickmousearea_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtGui/QWindow>
 #include <QtGui/QScreen>
@@ -148,6 +149,7 @@ private slots:
     void mouseEventWindowPos();
     void synthMouseFromTouch_data();
     void synthMouseFromTouch();
+    void touchTapMouseArea();
     void tabKey();
     void resizeOverlay();
     void controls();
@@ -641,11 +643,39 @@ void tst_qquickwidget::synthMouseFromTouch()
     QTest::touchEvent(&window, device).move(0, p2, &window);
     QTest::touchEvent(&window, device).release(0, p2, &window);
 
+    qCDebug(lcTests) << item->m_touchEvents << item->m_mouseEvents;
     QCOMPARE(item->m_touchEvents.count(), synthMouse ? 0 : (acceptTouch ? 3 : 1));
     QCOMPARE(item->m_mouseEvents.count(), synthMouse ? 3 : 0);
     QCOMPARE(childView->m_mouseEvents.count(), 0);
     for (const auto &ev : item->m_mouseEvents)
         QCOMPARE(ev, Qt::MouseEventSynthesizedByQt);
+}
+
+void tst_qquickwidget::touchTapMouseArea()
+{
+    QWidget window;
+    window.resize(100, 100);
+    window.setObjectName("window widget");
+    window.setAttribute(Qt::WA_AcceptTouchEvents);
+    QVERIFY(QCoreApplication::testAttribute(Qt::AA_SynthesizeMouseForUnhandledTouchEvents));
+    QQuickWidget *quick = new QQuickWidget(&window);
+    quick->setSource(testFileUrl("mouse.qml"));
+    quick->move(50, 50);
+    quick->setObjectName("quick widget");
+    window.show();
+    QVERIFY(QTest::qWaitForWindowExposed(&window));
+    QQuickItem *rootItem = quick->rootObject();
+    QVERIFY(rootItem);
+    QQuickMouseArea *ma = rootItem->findChild<QQuickMouseArea *>();
+    QVERIFY(ma);
+
+    QPoint p1 = QPoint(70, 70);
+    QTest::touchEvent(&window, device).press(0, p1, &window);
+    QTRY_COMPARE(ma->pressed(), true);
+    QTest::touchEvent(&window, device).move(0, p1, &window);
+    QTest::touchEvent(&window, device).release(0, p1, &window);
+    QTRY_COMPARE(ma->pressed(), false);
+    QVERIFY(rootItem->property("wasClicked").toBool());
 }
 
 void tst_qquickwidget::tabKey()
