@@ -677,7 +677,7 @@ void tst_qquicktextinput::selection()
     QCOMPARE(textinputObject->selectionEnd(), 0);
     QVERIFY(textinputObject->selectedText().isNull());
 
-    textinputObject->setCursorPosition(textinputObject->text().count()+1);
+    textinputObject->setCursorPosition(textinputObject->text().length() + 1);
     QCOMPARE(textinputObject->cursorPosition(), 0);
     QCOMPARE(textinputObject->selectionStart(), 0);
     QCOMPARE(textinputObject->selectionEnd(), 0);
@@ -865,24 +865,24 @@ void tst_qquicktextinput::isRightToLeft()
     // first test that the right string is delivered to the QString::isRightToLeft()
     QCOMPARE(textInput.isRightToLeft(0,0), text.mid(0,0).isRightToLeft());
     QCOMPARE(textInput.isRightToLeft(0,1), text.mid(0,1).isRightToLeft());
-    QCOMPARE(textInput.isRightToLeft(text.count()-2, text.count()-1), text.mid(text.count()-2, text.count()-1).isRightToLeft());
-    QCOMPARE(textInput.isRightToLeft(text.count()/2, text.count()/2 + 1), text.mid(text.count()/2, text.count()/2 + 1).isRightToLeft());
-    QCOMPARE(textInput.isRightToLeft(0,text.count()/4), text.mid(0,text.count()/4).isRightToLeft());
-    QCOMPARE(textInput.isRightToLeft(text.count()/4,3*text.count()/4), text.mid(text.count()/4,3*text.count()/4).isRightToLeft());
+    QCOMPARE(textInput.isRightToLeft(text.length()-2, text.length()-1), text.mid(text.length()-2, text.length()-1).isRightToLeft());
+    QCOMPARE(textInput.isRightToLeft(text.length()/2, text.length()/2 + 1), text.mid(text.length()/2, text.length()/2 + 1).isRightToLeft());
+    QCOMPARE(textInput.isRightToLeft(0,text.length()/4), text.mid(0,text.length()/4).isRightToLeft());
+    QCOMPARE(textInput.isRightToLeft(text.length()/4,3*text.length()/4), text.mid(text.length()/4,3*text.length()/4).isRightToLeft());
     if (text.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML TextInput: isRightToLeft(start, end) called with the end property being smaller than the start.");
-    QCOMPARE(textInput.isRightToLeft(3*text.count()/4,text.count()-1), text.mid(3*text.count()/4,text.count()-1).isRightToLeft());
+    QCOMPARE(textInput.isRightToLeft(3*text.length()/4,text.length()-1), text.mid(3*text.length()/4,text.length()-1).isRightToLeft());
 
     // then test that the feature actually works
     QCOMPARE(textInput.isRightToLeft(0,0), emptyString);
     QCOMPARE(textInput.isRightToLeft(0,1), firstCharacter);
-    QCOMPARE(textInput.isRightToLeft(text.count()-2, text.count()-1), lastCharacter);
-    QCOMPARE(textInput.isRightToLeft(text.count()/2, text.count()/2 + 1), middleCharacter);
-    QCOMPARE(textInput.isRightToLeft(0,text.count()/4), startString);
-    QCOMPARE(textInput.isRightToLeft(text.count()/4,3*text.count()/4), midString);
+    QCOMPARE(textInput.isRightToLeft(text.length()-2, text.length()-1), lastCharacter);
+    QCOMPARE(textInput.isRightToLeft(text.length()/2, text.length()/2 + 1), middleCharacter);
+    QCOMPARE(textInput.isRightToLeft(0,text.length()/4), startString);
+    QCOMPARE(textInput.isRightToLeft(text.length()/4,3*text.length()/4), midString);
     if (text.isEmpty())
         QTest::ignoreMessage(QtWarningMsg, "<Unknown File>: QML TextInput: isRightToLeft(start, end) called with the end property being smaller than the start.");
-    QCOMPARE(textInput.isRightToLeft(3*text.count()/4,text.count()-1), endString);
+    QCOMPARE(textInput.isRightToLeft(3*text.length()/4,text.length()-1), endString);
 }
 
 void tst_qquicktextinput::moveCursorSelection_data()
