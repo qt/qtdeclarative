@@ -2319,9 +2319,9 @@ function(_qt_internal_qml_type_registration target)
 
     cmake_policy(PUSH)
 
+    _qt_internal_check_depfile_support(has_depfile_support)
     set(registration_cpp_file_dep_args)
-    if (CMAKE_GENERATOR MATCHES "Ninja" OR
-        (CMAKE_VERSION VERSION_GREATER_EQUAL 3.20 AND CMAKE_GENERATOR MATCHES "Makefiles"))
+    if(has_depfile_support)
         if(POLICY CMP0116)
             # Without explicitly setting this policy to NEW, we get a warning
             # even though we ensure there's actually no problem here.
