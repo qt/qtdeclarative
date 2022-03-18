@@ -583,10 +583,10 @@ bool QQuickStyledTextPrivate::parseFontAttributes(const QChar *&ch, const QStrin
         attr = parseAttribute(ch, textIn);
         if (attr.first == QLatin1String("color")) {
             valid = true;
-            format.setForeground(QColor(attr.second.toString()));
+            format.setForeground(QColor(attr.second));
         } else if (attr.first == QLatin1String("size")) {
             valid = true;
-            int size = attr.second.toString().toInt();
+            int size = attr.second.toInt();
             if (attr.second.at(0) == QLatin1Char('-') || attr.second.at(0) == QLatin1Char('+'))
                 size += 3;
             if (size >= 1 && size <= 7)
