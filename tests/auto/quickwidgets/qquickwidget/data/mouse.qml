@@ -7,8 +7,10 @@ Rectangle {
     property bool wasClicked: false
     property bool wasDoubleClicked: false
     property bool wasMoved: false
+    color: ma.pressed ? "wheat" : "lightsteelblue"
 
     MouseArea {
+        id: ma
         anchors.fill: parent
         hoverEnabled: true
         onClicked: wasClicked = true
