@@ -1574,6 +1574,24 @@ void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scri
         m_scopesById.insert(name, m_currentScope);
 }
 
+inline void createGroupBinding(QQmlJSScope::Ptr &scope, const QString &name,
+                               const QQmlJS::SourceLocation &srcLocation)
+{
+    auto parentScope = scope->parentScope();
+    const auto propertyBindings = parentScope->ownPropertyBindings(name);
+    const bool alreadyHasGroupedBinding = std::any_of(
+            propertyBindings.first, propertyBindings.second,
+            [](const QQmlJSMetaPropertyBinding &binding) {
+                return binding.bindingType() == QQmlJSMetaPropertyBinding::GroupProperty;
+            });
+    if (alreadyHasGroupedBinding)
+        return;
+
+    QQmlJSMetaPropertyBinding groupBinding(srcLocation, name);
+    groupBinding.setGroupBinding(static_cast<QSharedPointer<QQmlJSScope>>(scope));
+    parentScope->addOwnPropertyBinding(std::move(groupBinding));
+}
+
 bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
 {
     m_savedBindingOuterScope = m_currentScope;
@@ -1589,9 +1607,17 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
         if (name.isEmpty())
             break;
 
-        enterEnvironmentNonUnique(name.front().isUpper() ? QQmlJSScope::AttachedPropertyScope
-                                                         : QQmlJSScope::GroupedPropertyScope,
-                                  name, group->firstSourceLocation());
+        const bool isAttachedProperty = name.front().isUpper();
+        if (isAttachedProperty) {
+            // attached property
+            enterEnvironmentNonUnique(QQmlJSScope::AttachedPropertyScope,
+                                      name, group->firstSourceLocation());
+        } else {
+            // grouped property
+            enterEnvironmentNonUnique(QQmlJSScope::GroupedPropertyScope,
+                                      name, group->firstSourceLocation());
+            createGroupBinding(m_currentScope, name, group->firstSourceLocation());
+        }
     }
 
     auto name = group->name;
@@ -1982,7 +2008,12 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
         const auto scopeKind = idName.front().isUpper() ? QQmlJSScope::AttachedPropertyScope
                                                         : QQmlJSScope::GroupedPropertyScope;
+
         bool exists = enterEnvironmentNonUnique(scopeKind, idName, group->firstSourceLocation());
+
+        if (scopeKind == QQmlJSScope::GroupedPropertyScope)
+            createGroupBinding(m_currentScope, idName, group->firstSourceLocation());
+
         ++scopesEnteredCounter;
         needsResolution = needsResolution || !exists;
     }

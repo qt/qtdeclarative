@@ -44,6 +44,8 @@
 #include <private/qqmljslogger_p.h>
 #include <private/qqmljsimportvisitor_p.h>
 #include <private/qqmljstyperesolver_p.h>
+#include <QtQml/private/qqmljslexer_p.h>
+#include <QtQml/private/qqmljsparser_p.h>
 
 class tst_qqmljsscope : public QQmlDataTest
 {
@@ -95,11 +97,13 @@ private Q_SLOTS:
     void signalCreationDifferences();
     void allTypesAvailable();
     void shadowing();
+
 #ifdef LABS_QML_MODELS_PRESENT
     void componentWrappedObjects();
     void labsQmlModelsSanity();
 #endif
     void unknownCppBase();
+    void groupedProperties();
 
 public:
     tst_qqmljsscope()
@@ -260,6 +264,16 @@ void tst_qqmljsscope::unknownCppBase()
     QQmlJSScope::ConstPtr root = run(u"unknownCppBaseAssigningToVar.qml"_qs);
     QVERIFY(root);
     // we should not crash here, then it is a success
+}
+
+void tst_qqmljsscope::groupedProperties()
+{
+    QQmlJSScope::ConstPtr root = run(u"groupProperties.qml"_qs);
+    QVERIFY(root);
+
+    QVERIFY(root->hasProperty(u"anchors"_qs));
+    auto anchorBindings = root->propertyBindings(u"anchors"_qs);
+    QVERIFY(!anchorBindings.isEmpty());
 }
 
 QTEST_MAIN(tst_qqmljsscope)

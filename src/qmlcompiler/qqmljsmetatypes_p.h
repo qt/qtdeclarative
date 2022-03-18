@@ -466,7 +466,23 @@ private:
             friend bool operator!=(AttachedProperty a, AttachedProperty b) { return !(a == b); }
         };
         struct GroupProperty {
-            friend bool operator==(GroupProperty , GroupProperty ) { return true; }
+            /* Given a group property declaration like
+               anchors.left: root.left
+               the QQmlJSMetaPropertyBinding will have name "anchors", and a m_bindingContent
+               of type GroupProperty, with groupScope pointing to the scope introudced by anchors
+               In that scope, there will be another QQmlJSMetaPropertyBinding, with name "left" and
+               m_bindingContent Script (for root.left).
+               There should never be more than one GroupProperty for the same name in the same
+               scope, though: If the scope also contains anchors.top: root.top that should reuse the
+               GroupProperty content (and add a top: root.top binding in it). There might however
+               still be an additional object or script binding ( anchors: {left: foo, right: bar };
+               anchors: root.someFunction() ) or another binding to the property in a "derived"
+               type.
+
+               ### TODO: Obtaining the effective binding result requires some resolving function
+            */
+            QWeakPointer<const QQmlJSScope> groupScope;
+            friend bool operator==(GroupProperty a, GroupProperty b) { return a.groupScope == b.groupScope; }
             friend bool operator!=(GroupProperty a, GroupProperty b) { return !(a == b); }
         };
         using type = std::variant<Invalid, BoolLiteral, NumberLiteral, StringLiteral,
@@ -528,6 +544,12 @@ public:
         // ### TODO: this does not allow us to do anything interesting with the binding
         ensureSetBindingTypeOnce();
         m_bindingContent = Content::Script {};
+    }
+
+    void setGroupBinding(const QSharedPointer<const QQmlJSScope> &groupScope)
+    {
+        ensureSetBindingTypeOnce();
+        m_bindingContent = Content::GroupProperty { groupScope };
     }
 
     void setBoolLiteral(bool value)
