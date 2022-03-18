@@ -2604,7 +2604,7 @@ void QQuickTableViewPrivate::calculateTopLeft(QPoint &topLeftCell, QPointF &topL
             topLeftCell.rx() = qBound(0, newColumn, tableSize.width() - 1);
             topLeftPos.rx() = topLeftCell.x() * (averageEdgeSize.width() + cellSpacing.width());
         } else if (rebuildOptions & RebuildOption::PositionViewAtColumn) {
-            topLeftCell.rx() = qBound(0, positionViewAtColumn, tableSize.width() - 1);
+            topLeftCell.rx() = qBound(0, positionViewAtColumnAfterRebuild, tableSize.width() - 1);
             topLeftPos.rx() = qFloor(topLeftCell.x()) * (averageEdgeSize.width() + cellSpacing.width());
         } else {
             // Keep the current top left, unless it's outside model
@@ -2630,7 +2630,7 @@ void QQuickTableViewPrivate::calculateTopLeft(QPoint &topLeftCell, QPointF &topL
             topLeftCell.ry() = qBound(0, newRow, tableSize.height() - 1);
             topLeftPos.ry() = topLeftCell.y() * (averageEdgeSize.height() + cellSpacing.height());
         } else if (rebuildOptions & RebuildOption::PositionViewAtRow) {
-            topLeftCell.ry() = qBound(0, positionViewAtRow, tableSize.height() - 1);
+            topLeftCell.ry() = qBound(0, positionViewAtRowAfterRebuild, tableSize.height() - 1);
             topLeftPos.ry() = qFloor(topLeftCell.y()) * (averageEdgeSize.height() + cellSpacing.height());
         } else {
             topLeftCell.ry() = qBound(0, topRow(), tableSize.height() - 1);
@@ -2745,10 +2745,10 @@ void QQuickTableViewPrivate::adjustViewportXAccordingToAlignment()
     if (!rebuildOptions.testFlag(RebuildOption::PositionViewAtColumn))
         return;
     // The requested column might have been hidden or is outside model bounds
-    if (positionViewAtColumn != leftColumn())
+    if (positionViewAtColumnAfterRebuild != leftColumn())
         return;
 
-    const float columnWidth = getEffectiveColumnWidth(positionViewAtColumn);
+    const float columnWidth = getEffectiveColumnWidth(positionViewAtColumnAfterRebuild);
 
     switch (positionViewAtColumnAlignment) {
     case Qt::AlignLeft:
@@ -2780,10 +2780,10 @@ void QQuickTableViewPrivate::adjustViewportYAccordingToAlignment()
     if (!rebuildOptions.testFlag(RebuildOption::PositionViewAtRow))
         return;
     // The requested row might have been hidden or is outside model bounds
-    if (positionViewAtRow != topRow())
+    if (positionViewAtRowAfterRebuild != topRow())
         return;
 
-    const float rowHeight = getEffectiveRowHeight(positionViewAtRow);
+    const float rowHeight = getEffectiveRowHeight(positionViewAtRowAfterRebuild);
 
     switch (positionViewAtRowAlignment) {
     case Qt::AlignTop:
@@ -3389,12 +3389,12 @@ void QQuickTableViewPrivate::syncSyncView()
 
 void QQuickTableViewPrivate::syncPositionView()
 {
-    // Only positionViewAtRow/positionViewAtColumn are critical
+    // Only positionViewAtRowAfterRebuild/positionViewAtColumnAfterRebuild are critical
     // to sync before a rebuild to avoid them being overwritten
     // by the setters while building. The other position properties
     // can change without it causing trouble.
-    positionViewAtRow = assignedPositionViewAtRow;
-    positionViewAtColumn = assignedPositionViewAtColumn;
+    positionViewAtRowAfterRebuild = assignedPositionViewAtRowAfterRebuild;
+    positionViewAtColumnAfterRebuild = assignedPositionViewAtColumnAfterRebuild;
 }
 
 void QQuickTableViewPrivate::connectToModel()
@@ -3669,7 +3669,7 @@ void QQuickTableViewPrivate::positionViewAtCell(const QPoint &cell, Qt::Alignmen
         } else {
             if (!scrollToCell(cell, horizontalAlignment, offset)) {
                 // Could not scroll, so rebuild instead
-                assignedPositionViewAtColumn = cell.x();
+                assignedPositionViewAtColumnAfterRebuild = cell.x();
                 positionViewAtColumnAlignment = horizontalAlignment;
                 positionViewAtColumnOffset = offset.x();
                 scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |
@@ -3684,7 +3684,7 @@ void QQuickTableViewPrivate::positionViewAtCell(const QPoint &cell, Qt::Alignmen
         } else {
             if (!scrollToCell(cell, verticalAlignment, offset)) {
                 // Could not scroll, so rebuild instead
-                assignedPositionViewAtRow = cell.y();
+                assignedPositionViewAtRowAfterRebuild = cell.y();
                 positionViewAtRowAlignment = verticalAlignment;
                 positionViewAtRowOffset = offset.y();
                 scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::ViewportOnly |

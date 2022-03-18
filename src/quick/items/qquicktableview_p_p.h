@@ -325,10 +325,10 @@ public:
 
     QPointer<QItemSelectionModel> selectionModel;
 
-    int assignedPositionViewAtRow = 0;
-    int assignedPositionViewAtColumn = 0;
-    int positionViewAtRow = 0;
-    int positionViewAtColumn = 0;
+    int assignedPositionViewAtRowAfterRebuild = 0;
+    int assignedPositionViewAtColumnAfterRebuild = 0;
+    int positionViewAtRowAfterRebuild = 0;
+    int positionViewAtColumnAfterRebuild = 0;
     qreal positionViewAtRowOffset = 0;
     qreal positionViewAtColumnOffset = 0;
     Qt::Alignment positionViewAtRowAlignment = Qt::AlignTop;
