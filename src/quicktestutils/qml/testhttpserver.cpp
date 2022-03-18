@@ -205,7 +205,7 @@ bool TestHTTPServer::wait(const QUrl &expect, const QUrl &reply, const QUrl &bod
     m_replyData.append(QByteArray::number(m_bodyData.length()));
     m_replyData.append("\n\n");
 
-    for (int ii = 0; ii < m_replyData.count(); ++ii) {
+    for (int ii = 0; ii < m_replyData.size(); ++ii) {
         if (m_replyData.at(ii) == '\n' && (!ii || m_replyData.at(ii - 1) != '\r')) {
             m_replyData.insert(ii, '\r');
             ++ii;
@@ -350,7 +350,7 @@ bool TestHTTPServer::reply(QTcpSocket *socket, const QByteArray &fileNameIn)
 
             QByteArray response
                 = "HTTP/1.0 200 OK\r\nContent-type: text/html; charset=UTF-8\r\nContent-length: ";
-            response += QByteArray::number(data.count());
+            response += QByteArray::number(data.size());
             response += "\r\n\r\n";
             response += data;
 

@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 
 QVariant QQuickColorValueType::create(const QJSValue &params)
 {
-    return params.isString() ? QColor(params.toString()) : QVariant();
+    return params.isString() ? QColor::fromString(params.toString()) : QVariant();
 }
 
 QString QQuickColorValueType::toString() const

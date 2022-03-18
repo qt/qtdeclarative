@@ -975,19 +975,19 @@ QString QQmlTypeLoader::absoluteFilePath(const QString &path)
         // qrc resource
         QFileInfo fileInfo(path);
         return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
-    } else if (path.count() > 3 && path.at(3) == QLatin1Char(':') &&
+    } else if (path.size() > 3 && path.at(3) == QLatin1Char(':') &&
                path.startsWith(QLatin1String("qrc"), Qt::CaseInsensitive)) {
         // qrc resource url
         QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path));
         return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
     }
 #if defined(Q_OS_ANDROID)
-    else if (path.count() > 7 && path.at(6) == QLatin1Char(':') && path.at(7) == QLatin1Char('/') &&
+    else if (path.size() > 7 && path.at(6) == QLatin1Char(':') && path.at(7) == QLatin1Char('/') &&
            path.startsWith(QLatin1String("assets"), Qt::CaseInsensitive)) {
         // assets resource url
         QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path));
         return fileInfo.isFile() ? fileInfo.absoluteFilePath() : QString();
-    } else if (path.count() > 8 && path.at(7) == QLatin1Char(':') && path.at(8) == QLatin1Char('/') &&
+    } else if (path.size() > 8 && path.at(7) == QLatin1Char(':') && path.at(8) == QLatin1Char('/') &&
            path.startsWith(QLatin1String("content"), Qt::CaseInsensitive)) {
         // content url
         QFileInfo fileInfo(QQmlFile::urlToLocalFileOrQrc(path));
@@ -1064,20 +1064,20 @@ bool QQmlTypeLoader::fileExists(const QString &path, const QString &file)
         return addToCache(QFileInfo(path + file));
     }
 
-    if (path.count() > 3 && path.at(3) == QLatin1Char(':')
+    if (path.size() > 3 && path.at(3) == QLatin1Char(':')
             && path.startsWith(QLatin1String("qrc"), Qt::CaseInsensitive)) {
         // qrc resource url
         return addToCache(QFileInfo(QQmlFile::urlToLocalFileOrQrc(path + file)));
     }
 
 #if defined(Q_OS_ANDROID)
-    if (path.count() > 7 && path.at(6) == QLatin1Char(':') && path.at(7) == QLatin1Char('/')
+    if (path.size() > 7 && path.at(6) == QLatin1Char(':') && path.at(7) == QLatin1Char('/')
             && path.startsWith(QLatin1String("assets"), Qt::CaseInsensitive)) {
         // assets resource url
         return addToCache(QFileInfo(QQmlFile::urlToLocalFileOrQrc(path + file)));
     }
 
-    if (path.count() > 8 && path.at(7) == QLatin1Char(':') && path.at(8) == QLatin1Char('/')
+    if (path.size() > 8 && path.at(7) == QLatin1Char(':') && path.at(8) == QLatin1Char('/')
             && path.startsWith(QLatin1String("content"), Qt::CaseInsensitive)) {
         // content url
         return addToCache(QFileInfo(QQmlFile::urlToLocalFileOrQrc(path + file)));

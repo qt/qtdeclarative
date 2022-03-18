@@ -197,7 +197,7 @@ void QQuickStyledTextPrivate::parse()
     QStack<QTextCharFormat> formatStack;
 
     QString drawText;
-    drawText.reserve(text.count());
+    drawText.reserve(text.size());
 
     updateImagePositions = !imgTags->isEmpty();
 
