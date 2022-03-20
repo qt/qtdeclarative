@@ -106,9 +106,9 @@ void addToNewProperty(QObject *object, QObject *newParent, const QByteArray &new
     Q_ASSERT(objectToVariant(object).isValid());
 }
 
-static void removeObjectFromList(const QQmlProperty &property, QObject *objectToBeRemoved, QQmlEngine * engine)
+static void removeObjectFromList(const QQmlProperty &property, QObject *objectToBeRemoved)
 {
-    QQmlListReference listReference(property.object(), property.name().toUtf8(), engine);
+    QQmlListReference listReference(property.object(), property.name().toUtf8());
 
     int count = listReference.count();
 
@@ -761,7 +761,7 @@ void  tst_qquickdesignersupport::testItemReparenting()
 
     QCOMPARE(text->parentItem(), rootItem);
     QQmlProperty childrenProperty(rootItem, "children");
-    removeObjectFromList(childrenProperty, text, view->engine());
+    removeObjectFromList(childrenProperty, text);
     addToNewProperty(text, item, "children");
     QCOMPARE(text->parentItem(), item);
 }
