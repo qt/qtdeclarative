@@ -1447,7 +1447,7 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
         Q_UNREACHABLE();
     };
 
-    for (const QJsonValue &warning : warnings) {
+    for (const QJsonValueConstRef warning : warnings) {
         QString warningMessage = warning[u"message"].toString();
         quint32 warningLine = warning[u"line"].toInt();
         quint32 warningColumn = warning[u"column"].toInt();
@@ -1467,7 +1467,7 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
             break;
         }
 
-        for (const QJsonValue &fix : warning[u"suggestions"].toArray()) {
+        for (const QJsonValueConstRef fix : warning[u"suggestions"].toArray()) {
             const QString fixMessage = fix[u"message"].toString();
             if (fixMessage.contains(substring)) {
                 contains = true;
