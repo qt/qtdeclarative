@@ -282,7 +282,7 @@ private:
 
         while (position < reply.size()) {
             const QByteArray startString = qPrintable(QQmlDebugTranslationServiceImpl::s_key + " ");
-            const int messageSizePosition = position + startString.count();
+            const int messageSizePosition = position + startString.size();
             const int sizeValueLength = reply.indexOf(' ', messageSizePosition) - messageSizePosition;
 
             int messageSize = reply.mid(messageSizePosition, sizeValueLength).toInt();
