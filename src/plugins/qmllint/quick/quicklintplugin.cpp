@@ -28,6 +28,8 @@
 
 #include "quicklintplugin.h"
 
+using namespace Qt::StringLiterals;
+
 ForbiddenChildrenPropertyValidatorPass::ForbiddenChildrenPropertyValidatorPass(
         QQmlSA::PassManager *manager)
     : QQmlSA::ElementPass(manager)
@@ -160,7 +162,7 @@ ControlsNativeValidatorPass::ControlsNativeValidatorPass(QQmlSA::PassManager *ma
         ControlElement { "TextField", QStringList { "background" } },
     };
 
-    for (const QString &module : { u"QtQuick.Controls.macOS"_qs, u"QtQuick.Controls.Windows"_qs }) {
+    for (const QString &module : { u"QtQuick.Controls.macOS"_s, u"QtQuick.Controls.Windows"_s }) {
         if (!manager->hasImportedModule(module))
             continue;
 
@@ -228,7 +230,7 @@ AnchorsValidatorPass::AnchorsValidatorPass(QQmlSA::PassManager *manager)
 bool AnchorsValidatorPass::shouldRun(const QQmlSA::Element &element)
 {
     return !m_item.isNull() && element->inherits(m_item)
-            && element->hasOwnPropertyBindings(u"anchors"_qs);
+            && element->hasOwnPropertyBindings(u"anchors"_s);
 }
 
 void AnchorsValidatorPass::run(const QQmlSA::Element &element)
@@ -236,7 +238,7 @@ void AnchorsValidatorPass::run(const QQmlSA::Element &element)
     QQmlJS::SourceLocation left, right, hCenter;
     QQmlJS::SourceLocation top, bottom, vCenter;
     QQmlJS::SourceLocation baseline;
-    auto bindings = element->ownPropertyBindings(u"anchors"_qs);
+    auto bindings = element->ownPropertyBindings(u"anchors"_s);
     for (auto it = bindings.first; it != bindings.second; it++) {
         for (const auto &groupBinding : it->groupType()->ownPropertyBindings()) {
             const QString propertyName = groupBinding.propertyName();
@@ -291,11 +293,11 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
         auto forbiddenChildProperty =
                 std::make_unique<ForbiddenChildrenPropertyValidatorPass>(manager);
 
-        for (const QString &element : { u"Grid"_qs, u"Flow"_qs }) {
-            for (const QString &property : { u"anchors"_qs, u"x"_qs, u"y"_qs }) {
+        for (const QString &element : { u"Grid"_s, u"Flow"_s }) {
+            for (const QString &property : { u"anchors"_s, u"x"_s, u"y"_s }) {
                 forbiddenChildProperty->addWarning(
                         "QtQuick", element, property,
-                        u"Cannot specify %1 for items inside %2. %2 will not function."_qs.arg(
+                        u"Cannot specify %1 for items inside %2. %2 will not function."_s.arg(
                                 property, element));
             }
         }
@@ -359,7 +361,7 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
 
     manager->registerElementPass(std::move(attachedPropertyType));
 
-    if (manager->hasImportedModule(u"QtQuick.Controls.macOS"_qs)
-        || manager->hasImportedModule(u"QtQuick.Controls.Windows"_qs))
+    if (manager->hasImportedModule(u"QtQuick.Controls.macOS"_s)
+        || manager->hasImportedModule(u"QtQuick.Controls.Windows"_s))
         manager->registerElementPass(std::make_unique<ControlsNativeValidatorPass>(manager));
 }

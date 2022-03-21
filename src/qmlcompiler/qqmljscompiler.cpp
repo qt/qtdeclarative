@@ -48,6 +48,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 Q_LOGGING_CATEGORY(lcAotCompiler, "qt.qml.compiler.aot", QtFatalMsg);
 
 static const int FileScopeCodeIndex = -1;
@@ -735,21 +737,21 @@ QQmlJSAotFunction QQmlJSAotCompiler::globalCode() const
 {
     QQmlJSAotFunction global;
     global.includes = {
-        u"QtQml/qjsengine.h"_qs,
-        u"QtQml/qjsprimitivevalue.h"_qs,
-        u"QtQml/qjsvalue.h"_qs,
-        u"QtQml/qqmlcomponent.h"_qs,
-        u"QtQml/qqmlcontext.h"_qs,
-        u"QtQml/qqmlengine.h"_qs,
+        u"QtQml/qjsengine.h"_s,
+        u"QtQml/qjsprimitivevalue.h"_s,
+        u"QtQml/qjsvalue.h"_s,
+        u"QtQml/qqmlcomponent.h"_s,
+        u"QtQml/qqmlcontext.h"_s,
+        u"QtQml/qqmlengine.h"_s,
 
-        u"QtCore/qdatetime.h"_qs,
-        u"QtCore/qobject.h"_qs,
-        u"QtCore/qstring.h"_qs,
-        u"QtCore/qstringlist.h"_qs,
-        u"QtCore/qurl.h"_qs,
-        u"QtCore/qvariant.h"_qs,
+        u"QtCore/qdatetime.h"_s,
+        u"QtCore/qobject.h"_s,
+        u"QtCore/qstring.h"_s,
+        u"QtCore/qstringlist.h"_s,
+        u"QtCore/qurl.h"_s,
+        u"QtCore/qvariant.h"_s,
 
-        u"type_traits"_qs
+        u"type_traits"_s
     };
     return global;
 }

@@ -57,7 +57,8 @@ struct QQmlJSUtils
     */
     static QString escapeString(QString s)
     {
-        return s.replace(u'\\', u"\\\\"_qs).replace(u'"', u"\\\""_qs).replace(u'\n', u"\\n"_qs);
+        using namespace Qt::StringLiterals;
+        return s.replace(u'\\', u"\\\\"_s).replace(u'"', u"\\\""_s).replace(u'\n', u"\\n"_s);
     }
 
     /*! \internal

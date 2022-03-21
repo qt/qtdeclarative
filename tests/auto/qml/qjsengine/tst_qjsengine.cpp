@@ -49,6 +49,8 @@
 #define NO_INLINE __attribute__((noinline))
 #endif
 
+using namespace Qt::StringLiterals;
+
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QObjectList)
 
@@ -5226,11 +5228,11 @@ void tst_QJSEngine::concatAfterUnshift()
             test = test.concat([])
             return test
             })()
-    )"_qs);
+    )"_s);
     QVERIFY2(!value.isError(), qPrintable(value.toString()));
     QVERIFY(value.isArray());
-    QCOMPARE(value.property(0).toString(), u"val1"_qs);
-    QCOMPARE(value.property(1).toString(), u"val2"_qs);
+    QCOMPARE(value.property(0).toString(), u"val1"_s);
+    QCOMPARE(value.property(1).toString(), u"val2"_s);
 }
 
 void tst_QJSEngine::sortSparseArray()

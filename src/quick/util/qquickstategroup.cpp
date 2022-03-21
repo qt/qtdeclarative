@@ -53,6 +53,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 Q_DECLARE_LOGGING_CATEGORY(lcStates)
 
 class QQuickStateGroupPrivate : public QObjectPrivate
@@ -377,7 +379,7 @@ bool QQuickStateGroupPrivate::updateAutoState()
         if (state->isWhenKnown()) {
             if (state->isNamed()) {
                 bool whenValue = state->when();
-                const QQmlProperty whenProp(state, u"when"_qs);
+                const QQmlProperty whenProp(state, u"when"_s);
                 const auto potentialWhenBinding = QQmlAnyBinding::ofProperty(whenProp);
                 Q_ASSERT(!potentialWhenBinding.isUntypedPropertyBinding());
 

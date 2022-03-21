@@ -31,6 +31,8 @@
 #include <QString>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
+using namespace Qt::StringLiterals;
+
 class TestQmlimportscanner: public QQmlDataTest
 {
     Q_OBJECT
@@ -127,9 +129,9 @@ void TestQmlimportscanner::modules()
 void TestQmlimportscanner::qmldirPreference()
 {
     // ###
-    QStringList with  {u"-importPath"_qs, testFile("With")};
-    QStringList withOut {u"-importPath"_qs, testFile("WithOut")};
-    QStringList genericArgs {u"-qmlFiles"_qs, testFile("qmldirpref.qml"), u"-importPath"_qs,
+    QStringList with  {u"-importPath"_s, testFile("With")};
+    QStringList withOut {u"-importPath"_s, testFile("WithOut")};
+    QStringList genericArgs {u"-qmlFiles"_s, testFile("qmldirpref.qml"), u"-importPath"_s,
                              QLibraryInfo::path(QLibraryInfo::QmlImportsPath)};
 
 

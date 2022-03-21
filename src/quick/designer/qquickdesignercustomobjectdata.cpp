@@ -50,6 +50,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 typedef QHash<QObject*, QQuickDesignerCustomObjectData*> CustomObjectDataHash;
 Q_GLOBAL_STATIC(CustomObjectDataHash, s_designerObjectToDataHash)
 
@@ -262,7 +264,7 @@ void QQuickDesignerCustomObjectData::setPropertyBinding(QQmlContext *context,
         return;
 
     if (property.isProperty()) {
-        QString url = u"@designer"_qs;
+        QString url = u"@designer"_s;
         int lineNumber = 0;
         QQmlAnyBinding binding = QQmlAnyBinding::createFromCodeString(property,
                                                                       expression, object(), QQmlContextData::get(context), url, lineNumber);

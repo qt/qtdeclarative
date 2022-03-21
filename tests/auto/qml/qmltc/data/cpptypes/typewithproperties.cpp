@@ -28,6 +28,8 @@
 
 #include "typewithproperties.h"
 
+using namespace Qt::StringLiterals;
+
 double TypeWithProperties::a() const
 {
     return m_a;
@@ -72,7 +74,7 @@ void TypeWithProperties::setD(int d_)
 {
     if (m_d != d_) {
         m_d = d_;
-        Q_EMIT dSignal(u"d changed"_qs, d_);
+        Q_EMIT dSignal(u"d changed"_s, d_);
     }
 }
 void TypeWithProperties::setJsValue(const QJSValue &value)

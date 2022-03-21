@@ -47,7 +47,7 @@ inline QString getUnderlyingType(const QQmlJSMetaProperty &p)
     if (p.isList()) {
         underlyingType = u"QQmlListProperty<" + underlyingType + u">";
     } else if (p.type()->isReferenceType()) {
-        underlyingType += u"*"_qs;
+        underlyingType += u'*';
     }
     return underlyingType;
 }

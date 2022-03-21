@@ -41,6 +41,8 @@
 
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
+using namespace Qt::StringLiterals;
+
 Q_DECLARE_METATYPE(QList<int>)
 Q_DECLARE_METATYPE(QList<QVariantHash>)
 
@@ -1777,7 +1779,7 @@ void tst_qqmllistmodel::objectDestroyed()
     std::unique_ptr<QObject> obj = std::make_unique<QObject>();
     connect(obj.get(), &QObject::destroyed, [&]() { obj.release(); });
 
-    engine.rootContext()->setContextProperty(u"contextObject"_qs, obj.get());
+    engine.rootContext()->setContextProperty(u"contextObject"_s, obj.get());
     engine.setObjectOwnership(obj.get(), QJSEngine::JavaScriptOwnership);
 
     delete component.create();
@@ -1785,7 +1787,7 @@ void tst_qqmllistmodel::objectDestroyed()
     engine.collectGarbage();
     QTest::qSleep(250);
     QVERIFY(obj);
-    engine.evaluate(u"model.clear();"_qs);
+    engine.evaluate(u"model.clear();"_s);
     engine.collectGarbage();
     QTRY_VERIFY(!obj);
 }
@@ -1803,7 +1805,7 @@ void tst_qqmllistmodel::destroyObject()
                 QUrl());
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> element(new QObject);
-    engine.rootContext()->setContextProperty(u"contextObject"_qs, element.data());
+    engine.rootContext()->setContextProperty(u"contextObject"_s, element.data());
 
     QScopedPointer<QObject> o(component.create());
     QVERIFY(!o.isNull());

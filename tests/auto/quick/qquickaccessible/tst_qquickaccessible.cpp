@@ -50,6 +50,8 @@
 
 #include <QQmlComponent>
 
+using namespace Qt::StringLiterals;
+
 #define EXPECT(cond) \
     do { \
         if (!errorAt && !(cond)) { \
@@ -126,7 +128,7 @@ void tst_QQuickAccessible::cleanup()
         for (int i = 0; i < list.count(); ++i) {
             auto object = list.at(i)->object();
             QString objectInfo = object ? QDebug::toString(object)
-                                        : u"[deleted object]"_qs;
+                                        : u"[deleted object]"_s;
             qWarning().noquote() << " " << (i + 1) << objectInfo
                        << "Event: '" << qAccessibleEventString(list.at(i)->type())
                        << "' Child: " << list.at(i)->child();

@@ -41,6 +41,8 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtQuickTestUtils/private/viewtestutils_p.h>
 
+using namespace Qt::StringLiterals;
+
 template <typename T> static T evaluate(QObject *scope, const QString &expression)
 {
     QQmlExpression expr(qmlContext(scope), scope, expression);
@@ -1338,7 +1340,7 @@ void tst_QQuickDropArea::signalOrder()
 
     const QList<QVariant> eventOrder = item->property("eventOrder").toList();
     QCOMPARE(eventOrder,
-             QList<QVariant>({ u"entered1"_qs, u"exited1"_qs, u"entered2"_qs, u"exited2"_qs }));
+             QList<QVariant>({ u"entered1"_s, u"exited1"_s, u"entered2"_s, u"exited2"_s }));
 }
 
 QTEST_MAIN(tst_QQuickDropArea)

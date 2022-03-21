@@ -59,6 +59,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 class CodegenWarningInterface final : public QV4::Compiler::CodegenWarningInterface
 {
 public:
@@ -70,7 +72,7 @@ public:
     {
         Q_UNUSED(fileName)
         m_logger->log(
-                u"Variable \"%1\" is used here before its declaration. The declaration is at %2:%3."_qs
+                u"Variable \"%1\" is used here before its declaration. The declaration is at %2:%3."_s
                         .arg(name)
                         .arg(declarationLocation.startLine)
                         .arg(declarationLocation.startColumn),
@@ -133,7 +135,7 @@ QQmlJSLinter::Plugin::Plugin(QString path)
 
 QQmlJSLinter::Plugin::Plugin(const QStaticPlugin &staticPlugin)
 {
-    if (!parseMetaData(staticPlugin.metaData(), u"built-in"_qs))
+    if (!parseMetaData(staticPlugin.metaData(), u"built-in"_s))
         return;
 
     m_instance = qobject_cast<QQmlSA::LintPlugin *>(staticPlugin.instance());
@@ -162,7 +164,7 @@ bool QQmlJSLinter::Plugin::parseMetaData(const QJsonObject &metaData, QString pl
 
     QJsonObject pluginMetaData = metaData[u"MetaData"].toObject();
 
-    for (const QString &requiredKey : { u"name"_qs, u"version"_qs, u"author"_qs }) {
+    for (const QString &requiredKey : { u"name"_s, u"version"_s, u"author"_s }) {
         if (!pluginMetaData.contains(requiredKey)) {
             qWarning() << pluginName << "is missing the required " << requiredKey
                        << "metadata, skipping";
@@ -173,7 +175,7 @@ bool QQmlJSLinter::Plugin::parseMetaData(const QJsonObject &metaData, QString pl
     m_name = pluginMetaData[u"name"].toString();
     m_author = pluginMetaData[u"author"].toString();
     m_version = pluginMetaData[u"version"].toString();
-    m_description = pluginMetaData[u"description"].toString(u"-/-"_qs);
+    m_description = pluginMetaData[u"description"].toString(u"-/-"_s);
 
     return true;
 }
@@ -258,7 +260,7 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
             if (option != logger->options().constEnd())
                 categories << option->m_category;
             else
-                logger->log(u"qmllint directive on unknown category \"%1\""_qs.arg(category),
+                logger->log(u"qmllint directive on unknown category \"%1\""_s.arg(category),
                             Log_Syntax, loc);
         }
 
@@ -267,7 +269,7 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
                 categories << option.m_category;
         }
 
-        if (command == u"disable"_qs) {
+        if (command == u"disable"_s) {
             const QString line = lines[loc.startLine - 1];
             const QString preComment = line.left(line.indexOf(comment) - 2);
 
@@ -283,10 +285,10 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
                 oneLineDisablesPerLine[loc.startLine] |= categories;
             else
                 disablesPerLine[loc.startLine] |= categories;
-        } else if (command == u"enable"_qs) {
+        } else if (command == u"enable"_s) {
             enablesPerLine[loc.startLine + 1] |= categories;
         } else {
-            logger->log(u"Invalid qmllint directive \"%1\" provided"_qs.arg(command), Log_Syntax,
+            logger->log(u"Invalid qmllint directive \"%1\" provided"_s.arg(command), Log_Syntax,
                         loc);
         }
     }
@@ -326,7 +328,7 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
         if (!json)
             return;
 
-        result[u"filename"_qs] = QFileInfo(filename).absoluteFilePath();
+        result[u"filename"_s] = QFileInfo(filename).absoluteFilePath();
         result[u"warnings"] = warnings;
         result[u"success"] = success;
 
@@ -340,46 +342,46 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
         QString type;
         switch (message.type) {
         case QtDebugMsg:
-            type = u"debug"_qs;
+            type = u"debug"_s;
             break;
         case QtWarningMsg:
-            type = u"warning"_qs;
+            type = u"warning"_s;
             break;
         case QtCriticalMsg:
-            type = u"critical"_qs;
+            type = u"critical"_s;
             break;
         case QtFatalMsg:
-            type = u"fatal"_qs;
+            type = u"fatal"_s;
             break;
         case QtInfoMsg:
-            type = u"info"_qs;
+            type = u"info"_s;
             break;
         default:
-            type = u"unknown"_qs;
+            type = u"unknown"_s;
             break;
         }
 
-        jsonMessage[u"type"_qs] = type;
+        jsonMessage[u"type"_s] = type;
 
         if (message.loc.isValid()) {
-            jsonMessage[u"line"_qs] = static_cast<int>(message.loc.startLine);
-            jsonMessage[u"column"_qs] = static_cast<int>(message.loc.startColumn);
-            jsonMessage[u"charOffset"_qs] = static_cast<int>(message.loc.offset);
-            jsonMessage[u"length"_qs] = static_cast<int>(message.loc.length);
+            jsonMessage[u"line"_s] = static_cast<int>(message.loc.startLine);
+            jsonMessage[u"column"_s] = static_cast<int>(message.loc.startColumn);
+            jsonMessage[u"charOffset"_s] = static_cast<int>(message.loc.offset);
+            jsonMessage[u"length"_s] = static_cast<int>(message.loc.length);
         }
 
-        jsonMessage[u"message"_qs] = message.message;
+        jsonMessage[u"message"_s] = message.message;
 
         QJsonArray suggestions;
         if (suggestion.has_value()) {
             for (const auto &fix : suggestion->fixes) {
                 QJsonObject jsonFix;
                 jsonFix[u"message"] = fix.message;
-                jsonFix[u"line"_qs] = static_cast<int>(fix.cutLocation.startLine);
-                jsonFix[u"column"_qs] = static_cast<int>(fix.cutLocation.startColumn);
-                jsonFix[u"charOffset"_qs] = static_cast<int>(fix.cutLocation.offset);
-                jsonFix[u"length"_qs] = static_cast<int>(fix.cutLocation.length);
-                jsonFix[u"replacement"_qs] = fix.replacementString;
+                jsonFix[u"line"_s] = static_cast<int>(fix.cutLocation.startLine);
+                jsonFix[u"column"_s] = static_cast<int>(fix.cutLocation.startColumn);
+                jsonFix[u"charOffset"_s] = static_cast<int>(fix.cutLocation.offset);
+                jsonFix[u"length"_s] = static_cast<int>(fix.cutLocation.length);
+                jsonFix[u"replacement"_s] = fix.replacementString;
                 jsonFix[u"isHint"] = fix.isHint;
                 if (!fix.fileName.isEmpty())
                     jsonFix[u"fileName"] = fix.fileName;
@@ -537,7 +539,7 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
 
             QQmlJSCompileError error;
 
-            QLoggingCategory::setFilterRules(u"qt.qml.compiler=false"_qs);
+            QLoggingCategory::setFilterRules(u"qt.qml.compiler=false"_s);
 
             CodegenWarningInterface interface(m_logger.get());
             qCompileQmlFile(filename, saveFunction, &codegen, &error, true, &interface,

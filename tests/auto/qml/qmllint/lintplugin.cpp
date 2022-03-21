@@ -28,6 +28,8 @@
 
 #include "lintplugin.h"
 
+using namespace Qt::StringLiterals;
+
 class ElementTest : public QQmlSA::ElementPass
 {
 public:
@@ -43,13 +45,13 @@ public:
 
     void run(const QQmlSA::Element &element) override
     {
-        auto property = element->property(u"radius"_qs);
-        if (!property.isValid() || element->property(u"radius"_qs).typeName() != u"double") {
+        auto property = element->property(u"radius"_s);
+        if (!property.isValid() || element->property(u"radius"_s).typeName() != u"double") {
             emitWarning(u"Failed to verify radius property", element->sourceLocation());
             return;
         }
 
-        auto bindings = element->propertyBindings(u"radius"_qs);
+        auto bindings = element->propertyBindings(u"radius"_s);
         if (bindings.isEmpty() || bindings.constFirst().numberValue() != 5) {
             emitWarning(u"Failed to verify radius property binding", element->sourceLocation());
             return;

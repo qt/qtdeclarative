@@ -37,103 +37,105 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 static QString const cppKeywords[] = {
-    u"alignas"_qs,
-    u"alignof"_qs,
-    u"and"_qs,
-    u"and_eq"_qs,
-    u"asm"_qs,
-    u"atomic_cancel"_qs,
-    u"atomic_commit"_qs,
-    u"atomic_noexcept"_qs,
-    u"auto"_qs,
-    u"bitand"_qs,
-    u"bitor"_qs,
-    u"bool"_qs,
-    u"break"_qs,
-    u"case"_qs,
-    u"catch"_qs,
-    u"char"_qs,
-    u"char8_t"_qs,
-    u"char16_t"_qs,
-    u"char32_t"_qs,
-    u"class"_qs,
-    u"compl"_qs,
-    u"concept"_qs,
-    u"const"_qs,
-    u"consteval"_qs,
-    u"constexpr"_qs,
-    u"const_cast"_qs,
-    u"continue"_qs,
-    u"co_await"_qs,
-    u"co_return"_qs,
-    u"co_yield"_qs,
-    u"decltype"_qs,
-    u"default"_qs,
-    u"delete"_qs,
-    u"do"_qs,
-    u"double"_qs,
-    u"dynamic_cast"_qs,
-    u"else"_qs,
-    u"enum"_qs,
-    u"explicit"_qs,
-    u"export"_qs,
-    u"extern"_qs,
-    u"false"_qs,
-    u"float"_qs,
-    u"for"_qs,
-    u"friend"_qs,
-    u"goto"_qs,
-    u"if"_qs,
-    u"inline"_qs,
-    u"int"_qs,
-    u"long"_qs,
-    u"mutable"_qs,
-    u"namespace"_qs,
-    u"new"_qs,
-    u"noexcept"_qs,
-    u"not"_qs,
-    u"not_eq"_qs,
-    u"nullptr"_qs,
-    u"operator"_qs,
-    u"or"_qs,
-    u"or_eq"_qs,
-    u"private"_qs,
-    u"protected"_qs,
-    u"public"_qs,
-    u"reflexpr"_qs,
-    u"register"_qs,
-    u"reinterpret_cast"_qs,
-    u"requires"_qs,
-    u"return"_qs,
-    u"short"_qs,
-    u"signed"_qs,
-    u"sizeof"_qs,
-    u"static"_qs,
-    u"static_assert"_qs,
-    u"static_cast"_qs,
-    u"struct"_qs,
-    u"switch"_qs,
-    u"synchronized"_qs,
-    u"template"_qs,
-    u"this"_qs,
-    u"thread_local"_qs,
-    u"throw"_qs,
-    u"true"_qs,
-    u"try"_qs,
-    u"typedef"_qs,
-    u"typeid"_qs,
-    u"typename"_qs,
-    u"union"_qs,
-    u"unsigned"_qs,
-    u"using"_qs,
-    u"virtual"_qs,
-    u"void"_qs,
-    u"volatile"_qs,
-    u"wchar_t"_qs,
-    u"while"_qs,
-    u"xor"_qs,
-    u"xor_eq"_qs,
+    u"alignas"_s,
+    u"alignof"_s,
+    u"and"_s,
+    u"and_eq"_s,
+    u"asm"_s,
+    u"atomic_cancel"_s,
+    u"atomic_commit"_s,
+    u"atomic_noexcept"_s,
+    u"auto"_s,
+    u"bitand"_s,
+    u"bitor"_s,
+    u"bool"_s,
+    u"break"_s,
+    u"case"_s,
+    u"catch"_s,
+    u"char"_s,
+    u"char8_t"_s,
+    u"char16_t"_s,
+    u"char32_t"_s,
+    u"class"_s,
+    u"compl"_s,
+    u"concept"_s,
+    u"const"_s,
+    u"consteval"_s,
+    u"constexpr"_s,
+    u"const_cast"_s,
+    u"continue"_s,
+    u"co_await"_s,
+    u"co_return"_s,
+    u"co_yield"_s,
+    u"decltype"_s,
+    u"default"_s,
+    u"delete"_s,
+    u"do"_s,
+    u"double"_s,
+    u"dynamic_cast"_s,
+    u"else"_s,
+    u"enum"_s,
+    u"explicit"_s,
+    u"export"_s,
+    u"extern"_s,
+    u"false"_s,
+    u"float"_s,
+    u"for"_s,
+    u"friend"_s,
+    u"goto"_s,
+    u"if"_s,
+    u"inline"_s,
+    u"int"_s,
+    u"long"_s,
+    u"mutable"_s,
+    u"namespace"_s,
+    u"new"_s,
+    u"noexcept"_s,
+    u"not"_s,
+    u"not_eq"_s,
+    u"nullptr"_s,
+    u"operator"_s,
+    u"or"_s,
+    u"or_eq"_s,
+    u"private"_s,
+    u"protected"_s,
+    u"public"_s,
+    u"reflexpr"_s,
+    u"register"_s,
+    u"reinterpret_cast"_s,
+    u"requires"_s,
+    u"return"_s,
+    u"short"_s,
+    u"signed"_s,
+    u"sizeof"_s,
+    u"static"_s,
+    u"static_assert"_s,
+    u"static_cast"_s,
+    u"struct"_s,
+    u"switch"_s,
+    u"synchronized"_s,
+    u"template"_s,
+    u"this"_s,
+    u"thread_local"_s,
+    u"throw"_s,
+    u"true"_s,
+    u"try"_s,
+    u"typedef"_s,
+    u"typeid"_s,
+    u"typename"_s,
+    u"union"_s,
+    u"unsigned"_s,
+    u"using"_s,
+    u"virtual"_s,
+    u"void"_s,
+    u"volatile"_s,
+    u"wchar_t"_s,
+    u"while"_s,
+    u"xor"_s,
+    u"xor_eq"_s,
 };
 
 static bool isReservedWord(QStringView word)
@@ -169,13 +171,13 @@ Q_LOGGING_CATEGORY(lcDefaultPasses, "qml.qmltc.compilerpasses", QtWarningMsg);
 static bool isComponent(const QQmlJSScope::ConstPtr &type)
 {
     auto base = type->baseType();
-    return base && base->internalName() == u"QQmlComponent"_qs;
+    return base && base->internalName() == u"QQmlComponent"_s;
 }
 
 static bool isComponentBased(const QQmlJSScope::ConstPtr &type)
 {
     auto base = QQmlJSScope::nonCompositeBaseType(type);
-    return base && base->internalName() == u"QQmlComponent"_qs;
+    return base && base->internalName() == u"QQmlComponent"_s;
 }
 
 static QString findPropertyName(const Qml2CppContext &context, const QQmlJSScope::ConstPtr &type,
@@ -199,7 +201,7 @@ void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
         // TODO: this whole verify function is a mess
         Q_ASSERT(!property.isAlias());
         if (property.propertyName().isEmpty())
-            context.recordError(irObject->location, u"Property with unknown name found"_qs);
+            context.recordError(irObject->location, u"Property with unknown name found"_s);
 
         const auto type = property.type();
         if (type)
@@ -222,7 +224,7 @@ void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
                                  const QQmlJSScope::ConstPtr &objectType) {
         Q_ASSERT(alias.isAlias());
         if (alias.propertyName().isEmpty()) {
-            context.recordError(irObject->location, u"Property alias with unknown name found"_qs);
+            context.recordError(irObject->location, u"Property alias with unknown name found"_s);
             return;
         }
 
@@ -230,7 +232,7 @@ void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
                                   irObject->aliasesEnd(), alias.propertyName());
         QStringList aliasExprBits = alias.aliasExpression().split(u'.');
         if (aliasExprBits.isEmpty()) {
-            context.recordError(loc, u"Alias expression is invalid"_qs);
+            context.recordError(loc, u"Alias expression is invalid"_s);
             return;
         }
 
@@ -242,7 +244,7 @@ void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
         aliasExprBits.removeFirst();
         for (const QString &bit : qAsConst(aliasExprBits)) {
             if (bit.isEmpty()) {
-                context.recordError(loc, u"Alias expression contains empty piece"_qs);
+                context.recordError(loc, u"Alias expression contains empty piece"_s);
                 break;
             }
             // TODO: we might need some better location, but this is not
@@ -280,7 +282,7 @@ void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
         // it's an error here
         if (propName.isEmpty()) {
             context.recordError(binding.location,
-                                u"Cannot assign to non-existent default property"_qs);
+                                u"Cannot assign to non-existent default property"_s);
             return;
         }
 
@@ -325,7 +327,7 @@ void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
         const auto [irObject, type] = object;
         Q_ASSERT(irObject && type); // assume verified
         if (!type->baseType()) { // base class exists
-            context.recordError(type->sourceLocation(), u"QML type has undefined base type"_qs);
+            context.recordError(type->sourceLocation(), u"QML type has undefined base type"_s);
             // not critical for type verification, so do not break the iteration
         }
 
@@ -337,7 +339,7 @@ void verifyTypes(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
 
 #if 0
             context.recordError(type->sourceLocation(),
-                                u"QML type of this kind is not supported (QML_CUSTOMPARSER)"_qs);
+                                u"QML type of this kind is not supported (QML_CUSTOMPARSER)"_s);
             continue;
 #else
             // do silent error only because QQmlListModel is affected as well
@@ -410,7 +412,7 @@ static void checkObjectStringsForCollisions(const Qml2CppContext &context,
                                    name);
             return irEnum.location;
         };
-        isValidName(name, getEnumLocation, u"Enumeration"_qs, uniqueSymbols);
+        isValidName(name, getEnumLocation, u"Enumeration"_s, uniqueSymbols);
 
         const auto enumKeys = e.keys();
         for (const auto &key : enumKeys) {
@@ -419,7 +421,7 @@ static void checkObjectStringsForCollisions(const Qml2CppContext &context,
                                       irEnum.enumValuesEnd(), key);
             };
             // no support for enum classes: each key is visible outside of enum
-            isValidName(key, getEnumKeyLocation, u"Enumeration key"_qs, uniqueSymbols);
+            isValidName(key, getEnumKeyLocation, u"Enumeration key"_s, uniqueSymbols);
         }
     }
 
@@ -428,7 +430,7 @@ static void checkObjectStringsForCollisions(const Qml2CppContext &context,
         const QQmlJSMetaProperty &p = it.value();
         QStringView name = p.propertyName();
         const auto getPropertyLocation = [&]() { return p.type()->sourceLocation(); };
-        isValidName(name, getPropertyLocation, u"Property"_qs, uniqueSymbols);
+        isValidName(name, getPropertyLocation, u"Property"_s, uniqueSymbols);
     }
 
     const auto methods = type->ownMethods();
@@ -436,7 +438,7 @@ static void checkObjectStringsForCollisions(const Qml2CppContext &context,
         const QQmlJSMetaMethod &m = it.value();
         QStringView name = m.methodName();
         const auto getMethodLocation = [&]() { return m.returnType()->sourceLocation(); };
-        isValidName(name, getMethodLocation, u"Method"_qs, uniqueSymbols);
+        isValidName(name, getMethodLocation, u"Method"_s, uniqueSymbols);
 
         const auto parameterNames = m.parameterNames();
         QSet<QStringView> uniqueParameters; // parameters can shadow
@@ -446,7 +448,7 @@ static void checkObjectStringsForCollisions(const Qml2CppContext &context,
                 static auto paramTypes = m.parameterTypes();
                 return paramTypes.at(i)->sourceLocation();
             };
-            isValidName(paramName, getParamLocation, u"Parameter"_qs, uniqueParameters);
+            isValidName(paramName, getParamLocation, u"Parameter"_s, uniqueParameters);
         }
     }
 }
@@ -519,7 +521,7 @@ QHash<QString, qsizetype> makeUniqueCppNames(const Qml2CppContext &context,
         return typeCounts;
     }
     if (cppName.isEmpty()) {
-        context.recordError(root->sourceLocation(), u"Root object's name is empty"_qs);
+        context.recordError(root->sourceLocation(), u"Root object's name is empty"_s);
         return typeCounts;
     }
     typeCounts.insert(cppName, 1);
@@ -533,21 +535,21 @@ static void setupQmlCppType(const Qml2CppContext &context, const QQmlJSScope::Pt
 {
     Q_ASSERT(type);
     if (filePath.isEmpty()) {
-        context.recordError(type->sourceLocation(), u"QML type has unknown file path"_qs);
+        context.recordError(type->sourceLocation(), u"QML type has unknown file path"_s);
         return;
     }
     if (type->filePath().endsWith(u".h")) // consider this one to be already set up
         return;
-    if (!filePath.endsWith(u".qml"_qs)) {
+    if (!filePath.endsWith(u".qml"_s)) {
         context.recordError(type->sourceLocation(),
-                            u"QML type has non-QML origin (internal error)"_qs);
+                            u"QML type has non-QML origin (internal error)"_s);
         return;
     }
 
     // TODO: this does not cover QT_QMLTC_FILE_BASENAME renaming
     if (filePath != context.documentUrl) {
         // this file name will be discovered during findCppIncludes
-        type->setFilePath(QFileInfo(filePath).baseName().toLower() + u".h"_qs);
+        type->setFilePath(QFileInfo(filePath).baseName().toLower() + u".h"_s);
     }
 
     const auto properties = type->ownProperties();
@@ -587,7 +589,7 @@ QSet<QString> setupQmlCppTypes(const Qml2CppContext &context, QList<Qml2CppObjec
             auto pair = context.typeResolver->importedType(base);
             if (pair.first.isEmpty()) {
                 context.recordError(object.type->sourceLocation(),
-                                    u"QML base type has unknown origin. Do you miss an import?"_qs);
+                                    u"QML base type has unknown origin. Do you miss an import?"_s);
                 continue;
             }
 
@@ -797,8 +799,8 @@ static void populateCppIncludes(QSet<QString> &cppIncludes, const QQmlJSScope::C
     const auto constructPrivateInclude = [](QStringView publicInclude) -> QString {
         if (publicInclude.isEmpty())
             return QString();
-        Q_ASSERT(publicInclude.endsWith(u".h"_qs) || publicInclude.endsWith(u".hpp"_qs));
-        const qsizetype dotLocation = publicInclude.endsWith(u".h"_qs) ? publicInclude.size() - 2
+        Q_ASSERT(publicInclude.endsWith(u".h"_s) || publicInclude.endsWith(u".hpp"_s));
+        const qsizetype dotLocation = publicInclude.endsWith(u".h"_s) ? publicInclude.size() - 2
                                                                        : publicInclude.size() - 4;
         QStringView extension = publicInclude.sliced(dotLocation);
         QStringView includeWithoutExtension = publicInclude.first(dotLocation);
@@ -905,7 +907,7 @@ static void updateImplicitComponents(const Qml2CppContext &context, Qml2CppObjec
 
         // NB: in case property is a QQmlComponent, we need to handle it
         // specially
-        if (p.type()->internalName() == u"QQmlComponent"_qs) {
+        if (p.type()->internalName() == u"QQmlComponent"_s) {
             // if it's an implicit component, call update function
             Q_ASSERT(binding.value.objectIndex < objects.size());
             update(objects[binding.value.objectIndex], binding.value.objectIndex);
@@ -984,7 +986,7 @@ static void setObjectId(const Qml2CppContext &context, const QList<Qml2CppObject
 
     if (irObject->idNameIndex != 0) {
         if (idToObjectIndex.contains(irObject->idNameIndex)) {
-            context.recordError(irObject->location, u"Object id is not unique"_qs);
+            context.recordError(irObject->location, u"Object id is not unique"_s);
             return;
         }
         irObject->id = int(idToObjectIndex.size());

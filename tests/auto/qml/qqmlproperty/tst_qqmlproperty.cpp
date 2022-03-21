@@ -48,6 +48,8 @@
 #include "qobject.h"
 #include <QtQml/QQmlPropertyMap>
 
+using namespace Qt::StringLiterals;
+
 #include <QDebug>
 class MyQmlObject : public QObject
 {
@@ -2356,18 +2358,18 @@ void tst_qqmlproperty::dontRemoveQPropertyBinding()
     QVERIFY(object.bindableObjectName().hasBinding());
 
     // A write with DontRemoveBinding preserves the binding
-    QQmlPropertyPrivate::write(objectName, u"goodbye"_qs, QQmlPropertyData::DontRemoveBinding);
+    QQmlPropertyPrivate::write(objectName, u"goodbye"_s, QQmlPropertyData::DontRemoveBinding);
     QVERIFY(object.bindableObjectName().hasBinding());
     // but changes the value
-    QCOMPARE(object.objectName(), u"goodbye"_qs);
+    QCOMPARE(object.objectName(), u"goodbye"_s);
     // subsequent binding evaluations change the value again
-    name = u"hello, again"_qs;
+    name = u"hello, again"_s;
     QCOMPARE(object.objectName(), name.value());
 
     // The binding is only preserved by the write which had DontRemoveBinding set
     // any further write will remove the binding
-    QQmlPropertyPrivate::write(objectName, u"goodbye"_qs, QQmlPropertyData::WriteFlags{});
-    QCOMPARE(object.objectName(), u"goodbye"_qs);
+    QQmlPropertyPrivate::write(objectName, u"goodbye"_s, QQmlPropertyData::WriteFlags{});
+    QCOMPARE(object.objectName(), u"goodbye"_s);
     QVERIFY(!object.bindableObjectName().hasBinding());
 }
 
@@ -2401,7 +2403,7 @@ void tst_qqmlproperty::compatResolveUrls()
     QProcess process;
     process.setProgram(QCoreApplication::applicationFilePath());
     process.setEnvironment(QProcess::systemEnvironment()
-                           + QStringList(u"QML_COMPAT_RESOLVE_URLS_ON_ASSIGNMENT=1"_qs));
+                           + QStringList(u"QML_COMPAT_RESOLVE_URLS_ON_ASSIGNMENT=1"_s));
     process.setArguments({QStringLiteral("compatResolveUrls")});
     process.start();
     QVERIFY(process.waitForFinished());

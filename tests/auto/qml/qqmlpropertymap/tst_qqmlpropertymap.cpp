@@ -35,6 +35,8 @@
 #include <QSignalSpy>
 #include <QDebug>
 
+using namespace Qt::StringLiterals;
+
 class tst_QQmlPropertyMap : public QQmlDataTest
 {
     Q_OBJECT
@@ -604,10 +606,10 @@ public:
     Map(QObject *parent = nullptr)
         : QQmlPropertyMap(this, parent)
     {
-        insert( "a", u"yayayaya"_qs );
-        insert( "b", u"yayayayb"_qs);
-        insert( "c", u"yayayayc"_qs);
-        insert( "d", u"yayayayd"_qs);
+        insert( "a", u"yayayaya"_s );
+        insert( "b", u"yayayayb"_s);
+        insert( "c", u"yayayayc"_s);
+        insert( "d", u"yayayayd"_s);
 
         freeze();
     }
@@ -623,18 +625,18 @@ void tst_QQmlPropertyMap::cachedSignals()
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> o(c.create());
     QVERIFY(!o.isNull());
-    QCOMPARE(o->property("text").toString(), u"yayayayc"_qs);
-    foo.setProperty("c", u"something"_qs);
-    QCOMPARE(o->property("text").toString(), u"something"_qs);
-    foo.insert("c", u"other"_qs);
-    QCOMPARE(o->property("text").toString(), u"other"_qs);
+    QCOMPARE(o->property("text").toString(), u"yayayayc"_s);
+    foo.setProperty("c", u"something"_s);
+    QCOMPARE(o->property("text").toString(), u"something"_s);
+    foo.insert("c", u"other"_s);
+    QCOMPARE(o->property("text").toString(), u"other"_s);
     QTest::ignoreMessage(
                 QtWarningMsg,
-                qPrintable(url.toString() + u":4:5: Unable to assign [undefined] to QString"_qs));
+                qPrintable(url.toString() + u":4:5: Unable to assign [undefined] to QString"_s));
     foo.clear("c");
-    QCOMPARE(o->property("text").toString(), u"other"_qs);
-    foo.insert("c", u"final"_qs);
-    QCOMPARE(o->property("text").toString(), u"final"_qs);
+    QCOMPARE(o->property("text").toString(), u"other"_s);
+    foo.insert("c", u"final"_s);
+    QCOMPARE(o->property("text").toString(), u"final"_s);
 }
 
 class NastyMap: public QQmlPropertyMap

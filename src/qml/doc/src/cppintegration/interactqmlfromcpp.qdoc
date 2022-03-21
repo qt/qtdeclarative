@@ -181,7 +181,7 @@ You can then initialize your component in the same way as outlined in \l
 {Loading QML Objects from C++} except using \c {createWithInitialProperties()}:
 
 \code
-    component.createWithInitialProperties(QVariantMap{{u"interface"_qs, QVariant::fromValue<CppInterface *>(new CppInterface)}});
+    component.createWithInitialProperties(QVariantMap{{u"interface"_s, QVariant::fromValue<CppInterface *>(new CppInterface)}});
 \endcode
 
 This method is to be preferred if you know that your interface only needs to be

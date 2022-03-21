@@ -30,6 +30,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 /*!
  * \internal
  * \class QQmlJSShadowCheck
@@ -127,7 +129,7 @@ void QQmlJSShadowCheck::checkShadowing(
             return; // Only properties and methods can be shadowed
         }
 
-        setError(u"Member %1 of %2 can be shadowed"_qs
+        setError(u"Member %1 of %2 can be shadowed"_s
                          .arg(memberName, m_state.accumulatorIn().descriptiveName()));
         return;
     }

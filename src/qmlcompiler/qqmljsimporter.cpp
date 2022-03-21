@@ -37,6 +37,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 static const QLatin1String SlashQmldir             = QLatin1String("/qmldir");
 static const QLatin1String SlashPluginsDotQmltypes = QLatin1String("/plugins.qmltypes");
 
@@ -295,7 +297,7 @@ void QQmlJSImporter::importDependencies(const QQmlJSImporter::Import &import,
 
     if (hasOptionalImports && !m_useOptionalImports) {
         m_warnings.append(
-                { u"%1 uses optional imports which are not supported. Some types might not be found."_qs
+                { u"%1 uses optional imports which are not supported. Some types might not be found."_s
                           .arg(import.name),
                   QtCriticalMsg, QQmlJS::SourceLocation() });
     }
@@ -467,7 +469,7 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
     // only happen when enumerations are involved, thus the strategy is to
     // resolve enumerations (which can potentially create new child scopes)
     // before resolving the type fully
-    const QQmlJSScope::ConstPtr intType = tempTypes.cppNames.value(u"int"_qs).scope;
+    const QQmlJSScope::ConstPtr intType = tempTypes.cppNames.value(u"int"_s).scope;
     for (auto it = import.objects.begin(); it != import.objects.end(); ++it) {
         if (!it->scope.factory())
             QQmlJSScope::resolveEnums(it->scope, intType);
@@ -532,12 +534,12 @@ QQmlJSImporter::AvailableTypes QQmlJSImporter::builtinImportHelper()
     importBuiltins(m_importPaths);
     if (!qmltypesFiles.isEmpty()) {
         const QString pathsString =
-                m_importPaths.isEmpty() ? u"<empty>"_qs : m_importPaths.join(u"\n\t");
+                m_importPaths.isEmpty() ? u"<empty>"_s : m_importPaths.join(u"\n\t");
         m_warnings.append({ QStringLiteral("Failed to find the following builtins: %1 (so will use "
                                            "qrc). Import paths used:\n\t%2")
                                     .arg(qmltypesFiles.join(u", "), pathsString),
                             QtWarningMsg, QQmlJS::SourceLocation() });
-        importBuiltins({ u":/qt-project.org/qml/builtins"_qs }); // use qrc as a "last resort"
+        importBuiltins({ u":/qt-project.org/qml/builtins"_s }); // use qrc as a "last resort"
     }
     Q_ASSERT(qmltypesFiles.isEmpty()); // since qrc must cover it in all the bad cases
 
@@ -654,7 +656,7 @@ bool QQmlJSImporter::importHelper(const QString &module, AvailableTypes *types,
 
     // The QML module only contains builtins and is not registered declaratively, so ignore requests
     // for importing it
-    if (module == u"QML"_qs)
+    if (module == u"QML"_s)
         return true;
 
     if (getTypesFromCache())
@@ -792,7 +794,7 @@ void QQmlJSImporter::setImportPaths(const QStringList &importPaths)
 
 QQmlJSScope::ConstPtr QQmlJSImporter::jsGlobalObject() const
 {
-    return m_builtins.cppNames[u"GlobalObject"_qs].scope;
+    return m_builtins.cppNames[u"GlobalObject"_s].scope;
 }
 
 QT_END_NAMESPACE

@@ -50,6 +50,8 @@
 
 #include <cstdio>
 
+using namespace Qt::StringLiterals;
+
 constexpr int JSON_LOGGING_FORMAT_REVISION = 3;
 
 int main(int argv, char *argc[])
@@ -366,7 +368,7 @@ All warnings can be set to three levels:
                     continue;
                 }
 
-                const QString backupFile = filename + u".bak"_qs;
+                const QString backupFile = filename + u".bak"_s;
                 if (QFile::exists(backupFile) && !QFile::remove(backupFile)) {
                     if (!silent) {
                         qWarning().nospace() << "Failed to remove old backup file " << backupFile
@@ -414,8 +416,8 @@ All warnings can be set to three levels:
     if (useJson) {
         QJsonObject result;
 
-        result[u"revision"_qs] = JSON_LOGGING_FORMAT_REVISION;
-        result[u"files"_qs] = jsonFiles;
+        result[u"revision"_s] = JSON_LOGGING_FORMAT_REVISION;
+        result[u"files"_s] = jsonFiles;
 
         QString fileName = parser.value(jsonOption);
 

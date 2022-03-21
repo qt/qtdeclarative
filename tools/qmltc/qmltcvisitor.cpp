@@ -35,6 +35,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 static QString uniqueNameFromPieces(const QStringList &pieces, QHash<QString, int> &repetitions)
 {
     QString possibleName = pieces.join(u'_');
@@ -99,7 +101,7 @@ void QmltcVisitor::findCppIncludes()
     const auto constructPrivateInclude = [](QStringView publicInclude) -> QString {
         if (publicInclude.isEmpty())
             return QString();
-        Q_ASSERT(publicInclude.endsWith(u".h"_qs) || publicInclude.endsWith(u".hpp"_qs));
+        Q_ASSERT(publicInclude.endsWith(u".h"_s) || publicInclude.endsWith(u".hpp"_s));
         const qsizetype dotLocation = publicInclude.lastIndexOf(u'.');
         QStringView extension = publicInclude.sliced(dotLocation);
         QStringView includeWithoutExtension = publicInclude.first(dotLocation);
@@ -241,20 +243,20 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
         // of now this is done in the pass over the types after the ast
         // traversal
 
-        const QString notifyName = name + u"Changed"_qs;
+        const QString notifyName = name + u"Changed"_s;
         // also check that notify is already a method of the scope
         {
             auto owningScope = m_savedBindingOuterScope ? m_savedBindingOuterScope : m_currentScope;
             const auto methods = owningScope->ownMethods(notifyName);
             if (methods.size() != 1) {
                 const QString errorString =
-                        methods.isEmpty() ? u"no signal"_qs : u"too many signals"_qs;
+                        methods.isEmpty() ? u"no signal"_s : u"too many signals"_s;
                 m_logger->log(
-                        u"internal error: %1 found for property '%2'"_qs.arg(errorString, name),
+                        u"internal error: %1 found for property '%2'"_s.arg(errorString, name),
                         Log_Compiler, publicMember->identifierToken);
                 return false;
             } else if (methods[0].methodType() != QQmlJSMetaMethod::Signal) {
-                m_logger->log(u"internal error: method %1 of property %2 must be a signal"_qs.arg(
+                m_logger->log(u"internal error: method %1 of property %2 must be a signal"_s.arg(
                                       notifyName, name),
                               Log_Compiler, publicMember->identifierToken);
                 return false;
@@ -283,7 +285,7 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiInlineComponent *component)
 {
     if (!QQmlJSImportVisitor::visit(component))
         return false;
-    m_logger->log(u"Inline components are not supported"_qs, Log_Compiler,
+    m_logger->log(u"Inline components are not supported"_s, Log_Compiler,
                   component->firstSourceLocation());
     // despite the failure, return true here so that we do not assert in
     // QQmlJSImportVisitor::endVisit(UiInlineComponent)

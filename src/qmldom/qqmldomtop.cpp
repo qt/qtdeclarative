@@ -67,6 +67,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 namespace QQmlJS {
 namespace Dom {
 
@@ -2245,8 +2247,8 @@ QString DomEnvironment::globalScopeName() const
 
 QList<Import> DomEnvironment::defaultImplicitImports()
 {
-    return QList<Import>({ Import::fromUriString(u"QML"_qs, Version(1, 0)),
-                           Import(QmlUri::fromUriString(u"QtQml"_qs), Version(6, 0)) });
+    return QList<Import>({ Import::fromUriString(u"QML"_s, Version(1, 0)),
+                           Import(QmlUri::fromUriString(u"QtQml"_s), Version(6, 0)) });
 }
 
 QList<Import> DomEnvironment::implicitImports() const

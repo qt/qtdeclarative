@@ -28,10 +28,12 @@
 
 #include "person.h"
 
+using namespace Qt::StringLiterals;
+
 Person::Person(QObject *parent)
-    : QObject(parent), m_name(u"Bart"_qs), m_shoeSize(0)
+    : QObject(parent), m_name(u"Bart"_s), m_shoeSize(0)
 {
-    m_things.append(u"thing"_qs);
+    m_things.append(u"thing"_s);
     m_things.append(30);
 }
 
@@ -50,7 +52,7 @@ void Person::setName(const QString &n)
 
 void Person::resetName()
 {
-    setName(u"Bart"_qs);
+    setName(u"Bart"_s);
 }
 
 int Person::shoeSize() const

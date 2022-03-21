@@ -33,6 +33,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 const QMap<QString, QQmlJSLogger::Option> &QQmlJSLogger::options() {
     static QMap<QString, QQmlJSLogger::Option> optionsMap = {
         { QStringLiteral("required"),
@@ -289,10 +291,10 @@ void QQmlJSLogger::printFix(const FixSuggestion &fix)
         if (replacementString.contains(u'\n'))
             continue;
 
-        m_output.write(u" "_qs.repeated(
+        m_output.write(u" "_s.repeated(
                                issueLocationWithContext.beforeText().length() - tabCount)
-                       + u"\t"_qs.repeated(tabCount)
-                       + u"^"_qs.repeated(fixItem.replacementString.length()) + u'\n');
+                       + u"\t"_s.repeated(tabCount)
+                       + u"^"_s.repeated(fixItem.replacementString.length()) + u'\n');
     }
 }
 

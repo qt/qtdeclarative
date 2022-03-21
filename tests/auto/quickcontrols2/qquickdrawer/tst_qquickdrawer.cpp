@@ -50,6 +50,7 @@
 
 //using namespace QQuickVisualTestUtils;
 using namespace QQuickControlsTestUtils;
+using namespace Qt::StringLiterals;
 
 class tst_QQuickDrawer : public QQmlDataTest
 {
@@ -547,7 +548,7 @@ void tst_QQuickDrawer::header()
 
 void tst_QQuickDrawer::dragHandlerInteraction()
 {
-    QQuickControlsApplicationHelper helper(this, u"dragHandlerInteraction.qml"_qs);
+    QQuickControlsApplicationHelper helper(this, u"dragHandlerInteraction.qml"_s);
     QVERIFY2(helper.ready, helper.failureMessage());
 
     auto window = helper.appWindow;;

@@ -46,6 +46,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 using namespace QQmlJS::AST;
 
 /*!
@@ -102,7 +104,7 @@ QQmlJSImportVisitor::QQmlJSImportVisitor(
     m_globalScope = m_currentScope;
     m_currentScope->setIsComposite(true);
 
-    m_currentScope->setInternalName(u"global"_qs);
+    m_currentScope->setInternalName(u"global"_s);
 
     QLatin1String jsGlobVars[] = { /* Not listed on the MDN page; browser and QML extensions: */
                                    // console/debug api
@@ -369,7 +371,7 @@ void QQmlJSImportVisitor::importBaseModules()
 
     // Pulling in the modules and neighboring qml files of the qmltypes we're trying to lint is not
     // something we need to do.
-    if (!m_logger->fileName().endsWith(u".qmltypes"_qs)) {
+    if (!m_logger->fileName().endsWith(u".qmltypes"_s)) {
         m_rootScopeImports.insert(m_importer->importDirectory(m_implicitImportDirectory));
 
         QQmlJSResourceFileMapper *mapper = m_importer->resourceFileMapper();
@@ -802,11 +804,11 @@ void QQmlJSImportVisitor::checkRequiredProperties()
 
                             const QString propertyScopeName = !propertyScope.isNull()
                                     ? getScopeName(propertyScope, QQmlJSScope::QMLScope)
-                                    : u"here"_qs;
+                                    : u"here"_s;
 
                             const QString requiredScopeName = prevRequiredScope
                                     ? getScopeName(prevRequiredScope, QQmlJSScope::QMLScope)
-                                    : u"here"_qs;
+                                    : u"here"_s;
 
                             std::optional<FixSuggestion> suggestion;
 
@@ -819,7 +821,7 @@ void QQmlJSImportVisitor::checkRequiredProperties()
                                 if (!prevRequiredScope.isNull()) {
                                     auto sourceScope = prevRequiredScope->baseType();
                                     suggestion = FixSuggestion {
-                                        { { u"%1:%2:%3: Property marked as required in %4"_qs
+                                        { { u"%1:%2:%3: Property marked as required in %4"_s
                                                     .arg(sourceScope->filePath())
                                                     .arg(sourceScope->sourceLocation().startLine)
                                                     .arg(sourceScope->sourceLocation().startColumn)
@@ -1285,7 +1287,7 @@ void QQmlJSImportVisitor::populateRuntimeFunctionIndicesForDocument() const
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::ExpressionStatement *ast)
 {
     if (m_pendingSignalHandler.isValid()) {
-        enterEnvironment(QQmlJSScope::JSFunctionScope, u"signalhandler"_qs,
+        enterEnvironment(QQmlJSScope::JSFunctionScope, u"signalhandler"_s,
                          ast->firstSourceLocation());
         flushPendingSignalParameters();
     }
@@ -1295,7 +1297,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::ExpressionStatement *ast)
 void QQmlJSImportVisitor::endVisit(QQmlJS::AST::ExpressionStatement *)
 {
     if (m_currentScope->scopeType() == QQmlJSScope::JSFunctionScope
-        && m_currentScope->baseTypeName() == u"signalhandler"_qs) {
+        && m_currentScope->baseTypeName() == u"signalhandler"_s) {
         leaveEnvironment();
     }
 }
@@ -1331,7 +1333,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::StringLiteral *sl)
             templateString += c;
         }
 
-        const FixSuggestion suggestion = { { { u"Use a template literal instead"_qs,
+        const FixSuggestion suggestion = { { { u"Use a template literal instead"_s,
                                                sl->literalToken, u"`" % templateString % u"`",
                                                QString(), false } } };
         m_logger->log(QStringLiteral("String contains unescaped line terminator which is "
@@ -1393,7 +1395,7 @@ void QQmlJSImportVisitor::endVisit(UiObjectDefinition *)
 bool QQmlJSImportVisitor::visit(UiInlineComponent *component)
 {
     if (!m_inlineComponentName.isNull()) {
-        m_logger->log(u"Nested inline components are not supported"_qs, Log_Syntax,
+        m_logger->log(u"Nested inline components are not supported"_s, Log_Syntax,
                       component->firstSourceLocation());
         return true;
     }
@@ -1427,7 +1429,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
     case UiPublicMember::Property: {
         QString typeName = buildName(publicMember->memberType);
         QString aliasExpr;
-        const bool isAlias = (typeName == u"alias"_qs);
+        const bool isAlias = (typeName == u"alias"_s);
         if (isAlias) {
             typeName.clear(); // type name is useless for alias here, so keep it empty
             const auto expression = cast<ExpressionStatement *>(publicMember->statement);
@@ -1617,7 +1619,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiSourceElement *srcElement)
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::FunctionDeclaration *fdecl)
 {
-    m_logger->log(u"Declared function \"%1\""_qs.arg(fdecl->name), Log_ControlsSanity,
+    m_logger->log(u"Declared function \"%1\""_s.arg(fdecl->name), Log_ControlsSanity,
                   fdecl->firstSourceLocation());
     incrementInnerFunctionCount();
     visitFunctionExpressionHelper(fdecl);
@@ -1760,11 +1762,11 @@ void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scri
         if (const auto *idExpression = cast<IdentifierExpression *>(statement->expression))
             return idExpression->name.toString();
         else if (const auto *idString = cast<StringLiteral *>(statement->expression)) {
-            m_logger->log(u"ids do not need quotation marks"_qs, Log_SyntaxIdQuotation,
+            m_logger->log(u"ids do not need quotation marks"_s, Log_SyntaxIdQuotation,
                           idString->firstSourceLocation());
             return idString->value.toString();
         }
-        m_logger->log(u"Failed to parse id"_qs, Log_Syntax,
+        m_logger->log(u"Failed to parse id"_s, Log_Syntax,
                       statement->expression->firstSourceLocation());
         return QString();
 
@@ -1777,7 +1779,7 @@ void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scri
             auto otherLocation = otherScopeWithID->sourceLocation();
             // critical because subsequent analysis cannot cope with messed up ids
             // and the file is invalid
-            m_logger->log(u"Found a duplicated id. id %1 was first declared at %2:%3"_qs.arg(
+            m_logger->log(u"Found a duplicated id. id %1 was first declared at %2:%3"_s.arg(
                                   name, QString::number(otherLocation.startLine),
                                   QString::number(otherLocation.startColumn)),
                           Log_Syntax, // ??
@@ -1854,7 +1856,7 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
     auto name = group->name;
 
     if (id && id->name.toString() == u"anchors")
-        m_logger->log(u"Using anchors here"_qs, Log_ControlsSanity,
+        m_logger->log(u"Using anchors here"_s, Log_ControlsSanity,
                       scriptBinding->firstSourceLocation());
 
     const auto signal = QQmlJSUtils::signalName(name);
@@ -1875,7 +1877,7 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
             }
         }
 
-        m_logger->log(u"Declared signal handler \"%1\""_qs.arg(name), Log_ControlsSanity,
+        m_logger->log(u"Declared signal handler \"%1\""_s.arg(name), Log_ControlsSanity,
                       scriptBinding->firstSourceLocation());
 
         m_signals[m_currentScope].append({ m_savedBindingOuterScope, group->firstSourceLocation(),
@@ -2080,7 +2082,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiPragma *pragma)
     // If a file uses pragma Strict, it expects to be compiled, so automatically
     // enable compiler warnings unless the level is set explicitly already (e.g.
     // by the user).
-    if (pragma->name == u"Strict"_qs && !m_logger->wasCategoryChanged(Log_Compiler)) {
+    if (pragma->name == u"Strict"_s && !m_logger->wasCategoryChanged(Log_Compiler)) {
         // TODO: the logic here is rather complicated and may be buggy
         m_logger->setCategoryLevel(Log_Compiler, QtWarningMsg);
         m_logger->setCategoryIgnored(Log_Compiler, false);
@@ -2308,7 +2310,7 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 
         if (foundIds) {
             m_logger->log(
-                    u"Cannot defer property assignment to \"%1\". Assigning an id to an object or one of its sub-objects bound to a deferred property will make the assignment immediate."_qs
+                    u"Cannot defer property assignment to \"%1\". Assigning an id to an object or one of its sub-objects bound to a deferred property will make the assignment immediate."_s
                             .arg(propertyName),
                     Log_DeferredPropertyId, uiob->firstSourceLocation());
         }
@@ -2324,10 +2326,10 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 
         QQmlJSMetaPropertyBinding binding(uiob->firstSourceLocation(), propertyName);
         if (uiob->hasOnToken) {
-            if (childScope->hasInterface(u"QQmlPropertyValueInterceptor"_qs)) {
+            if (childScope->hasInterface(u"QQmlPropertyValueInterceptor"_s)) {
                 binding.setInterceptor(getScopeName(childScope, QQmlJSScope::QMLScope),
                                        QQmlJSScope::ConstPtr(childScope));
-            } else { // if (childScope->hasInterface(u"QQmlPropertyValueSource"_qs))
+            } else { // if (childScope->hasInterface(u"QQmlPropertyValueSource"_s))
                 binding.setValueSource(getScopeName(childScope, QQmlJSScope::QMLScope),
                                        QQmlJSScope::ConstPtr(childScope));
             }

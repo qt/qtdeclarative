@@ -70,6 +70,8 @@ namespace QQuickVisualTestUtils
     template<typename T>
     T *findItem(QQuickItem *parent, const QString &objectName, int index = -1)
     {
+        using namespace Qt::StringLiterals;
+
         const QMetaObject &mo = T::staticMetaObject;
         for (int i = 0; i < parent->childItems().count(); ++i) {
             QQuickItem *item = qobject_cast<QQuickItem*>(parent->childItems().at(i));
@@ -77,7 +79,7 @@ namespace QQuickVisualTestUtils
                 continue;
             if (mo.cast(item) && (objectName.isEmpty() || item->objectName() == objectName)) {
                 if (index != -1) {
-                    QQmlExpression e(qmlContext(item), item, u"index"_qs);
+                    QQmlExpression e(qmlContext(item), item, u"index"_s);
                     if (e.evaluate().toInt() == index)
                         return static_cast<T*>(item);
                 } else {

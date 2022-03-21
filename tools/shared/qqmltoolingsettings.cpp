@@ -37,6 +37,8 @@
 #include <QtCore/qsettings.h>
 #include <QtCore/qstandardpaths.h>
 
+using namespace Qt::StringLiterals;
+
 void QQmlToolingSettings::addOption(const QString &name, QVariant defaultValue)
 {
     m_values[name] = defaultValue;
@@ -62,7 +64,7 @@ bool QQmlToolingSettings::read(const QString &settingsFilePath)
 
 bool QQmlToolingSettings::writeDefaults() const
 {
-    const QString path = QFileInfo(u".%1.ini"_qs.arg(m_toolName)).absoluteFilePath();
+    const QString path = QFileInfo(u".%1.ini"_s.arg(m_toolName)).absoluteFilePath();
 
     QSettings settings(path, QSettings::IniFormat);
     for (auto it = m_values.constBegin(); it != m_values.constEnd(); ++it) {
@@ -88,7 +90,7 @@ bool QQmlToolingSettings::search(const QString &path)
 
     QSet<QString> dirs;
 
-    const QString settingsFileName = u".%1.ini"_qs.arg(m_toolName);
+    const QString settingsFileName = u".%1.ini"_s.arg(m_toolName);
 
     while (dir.exists() && dir.isReadable()) {
         const QString dirPath = dir.absolutePath();
@@ -115,7 +117,7 @@ bool QQmlToolingSettings::search(const QString &path)
             break;
     }
 
-    if (const QString iniFile = QStandardPaths::locate(QStandardPaths::GenericConfigLocation, u"%1.ini"_qs.arg(m_toolName)); !iniFile.isEmpty()) {
+    if (const QString iniFile = QStandardPaths::locate(QStandardPaths::GenericConfigLocation, u"%1.ini"_s.arg(m_toolName)); !iniFile.isEmpty()) {
         if (read(iniFile)) {
             for (const QString &dir : qAsConst(dirs))
                 m_seenDirectories[dir] = iniFile;

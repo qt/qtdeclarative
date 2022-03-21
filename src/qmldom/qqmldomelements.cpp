@@ -72,6 +72,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 namespace QQmlJS {
 namespace Dom {
 
@@ -1954,8 +1956,8 @@ QmlUri QmlUri::fromString(const QString &str)
 {
     if (str.startsWith(u'"'))
         return fromDirectoryString(str.mid(1, str.length() - 2)
-                                           .replace(u"\\\""_qs, u"\""_qs)
-                                           .replace(u"\\\\"_qs, u"\\"_qs));
+                                           .replace(u"\\\""_s, u"\""_s)
+                                           .replace(u"\\\\"_s, u"\\"_s));
     else
         return fromUriString(str);
 }
@@ -2083,8 +2085,8 @@ QString QmlUri::toString() const
     case Kind::DirectoryUrl:
     case Kind::RelativePath:
     case Kind::AbsolutePath:
-        return u"\""_qs + directoryString().replace(u'\\', u"\\\\"_qs).replace(u'"', u"\\\""_qs)
-                + u"\""_qs;
+        return u"\""_s + directoryString().replace(u'\\', u"\\\\"_s).replace(u'"', u"\\\""_s)
+                + u"\""_s;
     }
     return QString();
 }

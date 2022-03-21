@@ -47,6 +47,8 @@
 
 #include <algorithm>
 
+using namespace Qt::StringLiterals;
+
 class WithQJSValue : public QObject
 {
     Q_OBJECT
@@ -1096,7 +1098,7 @@ void tst_qqmlcomponent::initJSValueProp()
     QQmlComponent component(&engine);
     component.setData("import ComponentTest\nWithQJSValue {}", QUrl());
     QVERIFY2(component.isReady(), qPrintable(component.errorString()));
-    QScopedPointer<QObject> o(component.createWithInitialProperties({{ u"v"_qs, 5}}));
+    QScopedPointer<QObject> o(component.createWithInitialProperties({{ u"v"_s, 5}}));
     QVERIFY(!o.isNull());
     WithQJSValue *withQJSValue = qobject_cast<WithQJSValue *>(o.data());
     QVERIFY(withQJSValue);
@@ -1141,7 +1143,7 @@ void tst_qqmlcomponent::componentTypes()
         QVERIFY(oComponent);
         QScopedPointer<QObject> enclosed(oComponent->create());
         QVERIFY(!enclosed.isNull());
-        QCOMPARE(enclosed->objectName(), u"enclosed"_qs);
+        QCOMPARE(enclosed->objectName(), u"enclosed"_s);
     }
 
     {
@@ -1153,20 +1155,20 @@ void tst_qqmlcomponent::componentTypes()
 
         QQmlContext *ctx = engine.contextForObject(o.get());
 
-        QObject *normal = ctx->objectForName(u"normal"_qs);
+        QObject *normal = ctx->objectForName(u"normal"_s);
         QVERIFY(normal);
-        QCOMPARE(normal->property("text").toString(), u"indirect component"_qs);
+        QCOMPARE(normal->property("text").toString(), u"indirect component"_s);
 
         // check (and thus "document" in code) various ways of how ids work
-        QVERIFY(ctx->objectForName(u"accessibleNormal"_qs));
-        QVERIFY(!ctx->objectForName(u"inaccessibleNormal"_qs));
-        QVERIFY(ctx->objectForName(u"accessible"_qs));
-        QVERIFY(!ctx->objectForName(u"inaccessible"_qs));
-        QVERIFY(ctx->objectForName(u"accessibleDelegate"_qs));
-        QVERIFY(!ctx->objectForName(u"inaccessibleDelegate"_qs));
+        QVERIFY(ctx->objectForName(u"accessibleNormal"_s));
+        QVERIFY(!ctx->objectForName(u"inaccessibleNormal"_s));
+        QVERIFY(ctx->objectForName(u"accessible"_s));
+        QVERIFY(!ctx->objectForName(u"inaccessible"_s));
+        QVERIFY(ctx->objectForName(u"accessibleDelegate"_s));
+        QVERIFY(!ctx->objectForName(u"inaccessibleDelegate"_s));
 
         QCOMPARE(qvariant_cast<QObject *>(o->property("p2"))->property("text").toString(),
-                 u"foo"_qs);
+                 u"foo"_s);
         auto p3Object = qvariant_cast<QObject *>(o->property("p3"));
         QVERIFY(p3Object);
         QVERIFY(p3Object->property("text").toString().isEmpty());
@@ -1175,7 +1177,7 @@ void tst_qqmlcomponent::componentTypes()
         QVERIFY(normalComponent);
         QScopedPointer<QObject> enclosed(normalComponent->create());
         QVERIFY(enclosed);
-        QCOMPARE(enclosed->objectName(), u"enclosed"_qs);
+        QCOMPARE(enclosed->objectName(), u"enclosed"_s);
     }
 }
 

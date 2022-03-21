@@ -34,6 +34,8 @@
 
 #include "testtypes.h"
 
+using namespace Qt::StringLiterals;
+
 class tst_javascript : public QObject
 {
     Q_OBJECT
@@ -52,7 +54,7 @@ private:
 void tst_javascript::run_data()
 {
     QTest::addColumn<QString>("file");
-    QDirIterator listing(SRCDIR "/data", QStringList{u"*.qml"_qs},
+    QDirIterator listing(SRCDIR "/data", QStringList{u"*.qml"_s},
                          QDir::Files | QDir::NoDotAndDotDot);
     while (listing.hasNext()) {
         auto info = listing.nextFileInfo();

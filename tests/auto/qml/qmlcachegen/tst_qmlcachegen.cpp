@@ -45,6 +45,8 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include "scriptstringprops.h"
 
+using namespace Qt::StringLiterals;
+
 class tst_qmlcachegen: public QQmlDataTest
 {
     Q_OBJECT
@@ -822,7 +824,7 @@ void tst_qmlcachegen::scriptStringCachegenInteraction()
 
     QVERIFY(scripty->m_undef.isUndefinedLiteral());
     QVERIFY(scripty->m_nul.isNullLiteral());
-    QCOMPARE(scripty->m_str.stringLiteral(), u"hello"_qs);
+    QCOMPARE(scripty->m_str.stringLiteral(), u"hello"_s);
     QCOMPARE(scripty->m_num.numberLiteral(&ok), 42);
     ok = false;
     scripty->m_bol.booleanLiteral(&ok);

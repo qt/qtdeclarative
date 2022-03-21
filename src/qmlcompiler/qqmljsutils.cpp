@@ -30,6 +30,8 @@
 
 #include <algorithm>
 
+using namespace Qt::StringLiterals;
+
 std::optional<FixSuggestion> QQmlJSUtils::didYouMean(const QString &userInput,
                                                      QStringList candidates,
                                                      QQmlJS::SourceLocation location)
@@ -79,7 +81,7 @@ std::optional<FixSuggestion> QQmlJSUtils::didYouMean(const QString &userInput,
     if (shortestDistance
         < std::min(std::max(userInput.length() / 2, qsizetype(3)), userInput.length())) {
         return FixSuggestion { { FixSuggestion::Fix {
-                u"Did you mean \"%1\"?"_qs.arg(shortestDistanceWord), location,
+                u"Did you mean \"%1\"?"_s.arg(shortestDistanceWord), location,
                 shortestDistanceWord } } };
     } else {
         return {};

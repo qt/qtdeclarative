@@ -112,6 +112,8 @@
 
 #define PREPEND_NAMESPACE(name) ::QmltcTest::name // silent contract that the namespace is QmltcTest
 
+using namespace Qt::StringLiterals;
+
 tst_qmltc::tst_qmltc()
 {
 #if defined(QMLTC_TESTS_DISABLE_CACHE) && QMLTC_TESTS_DISABLE_CACHE
@@ -187,7 +189,7 @@ void tst_qmltc::initTestCase()
     QQmlComponent component(&e);
     for (const auto &url : urls) {
         component.loadUrl(url);
-        QVERIFY2(!component.isError(), qPrintable(u"Bad QML file. "_qs + component.errorString()));
+        QVERIFY2(!component.isError(), qPrintable(u"Bad QML file. "_s + component.errorString()));
     }
 }
 
@@ -362,16 +364,16 @@ void tst_qmltc::properties()
     QCOMPARE(created.doubleP(), 0.5);
     QCOMPARE(created.intP(), 42);
     QCOMPARE(created.realP(), 2.32);
-    QCOMPARE(created.stringP(), u"hello, world"_qs);
-    QCOMPARE(created.urlP(), u"https://www.qt.io/"_qs);
+    QCOMPARE(created.stringP(), u"hello, world"_s);
+    QCOMPARE(created.urlP(), u"https://www.qt.io/"_s);
     QCOMPARE(created.varP(), 42.42);
 
     QCOMPARE(created.boolP(), true);
     QCOMPARE(created.boolP(), true);
 
-    QCOMPARE(created.colorP(), QColor(u"blue"_qs));
+    QCOMPARE(created.colorP(), QColor(u"blue"_s));
 
-    QCOMPARE(created.readonlyStringP(), u"foobar"_qs);
+    QCOMPARE(created.readonlyStringP(), u"foobar"_s);
 
     // object bindinds:
     const auto objectCtx = e.contextForObject(&created);
@@ -380,12 +382,12 @@ void tst_qmltc::properties()
     {
         QQuickText *child0 = qobject_cast<QQuickText *>(listQtObj.at(0));
         QVERIFY(child0);
-        QCOMPARE(child0->text(), u"child0"_qs);
+        QCOMPARE(child0->text(), u"child0"_s);
         QCOMPARE(objectCtx->objectForName("listQtObjP_child_0"), child0);
 
         QObject *child1 = listQtObj.at(1);
         QVERIFY(child1);
-        QCOMPARE(child1->property("what").toString(), u"child1"_qs);
+        QCOMPARE(child1->property("what").toString(), u"child1"_s);
 
         QQuickItem *child2 = qobject_cast<QQuickItem *>(listQtObj.at(2));
         QVERIFY(child2);
@@ -417,17 +419,17 @@ void tst_qmltc::properties()
         QScopedPointer<QObject> beforeDelegateObject(beforeDelegate->create());
         QVERIFY(beforeDelegateObject);
         QVERIFY(qobject_cast<QQuickText *>(beforeDelegateObject.get()));
-        QCOMPARE(beforeDelegateObject->property("text").toString(), u"beforeDelegate"_qs);
+        QCOMPARE(beforeDelegateObject->property("text").toString(), u"beforeDelegate"_s);
 
         QScopedPointer<QObject> delegateObject(delegate->create());
         QVERIFY(delegateObject);
         QVERIFY(qobject_cast<QQuickText *>(delegateObject.get()));
-        QCOMPARE(delegateObject->property("text").toString(), u"delegate"_qs);
+        QCOMPARE(delegateObject->property("text").toString(), u"delegate"_s);
 
         QScopedPointer<QObject> afterDelegateObject(afterDelegate->create());
         QVERIFY(afterDelegateObject);
         QVERIFY(qobject_cast<QQuickText *>(afterDelegateObject.get()));
-        QCOMPARE(afterDelegateObject->property("text").toString(), u"afterDelegate"_qs);
+        QCOMPARE(afterDelegateObject->property("text").toString(), u"afterDelegate"_s);
     }
 
     QQmlComponent *explicitComp = qobject_cast<QQmlComponent *>(created.explicitCompP());
@@ -435,11 +437,11 @@ void tst_qmltc::properties()
     QScopedPointer<QObject> explicitCompObject(explicitComp->create());
     QVERIFY(explicitCompObject);
     QVERIFY(qobject_cast<QQuickText *>(explicitCompObject.get()));
-    QCOMPARE(explicitCompObject->property("text").toString(), u"not a delegate"_qs);
+    QCOMPARE(explicitCompObject->property("text").toString(), u"not a delegate"_s);
 
     QObject *sentinelForComponent = created.sentinelForComponent();
     QVERIFY(sentinelForComponent);
-    QCOMPARE(sentinelForComponent->property("text").toString(), u"should be correctly created"_qs);
+    QCOMPARE(sentinelForComponent->property("text").toString(), u"should be correctly created"_s);
 }
 
 void tst_qmltc::ids()
@@ -474,15 +476,15 @@ void tst_qmltc::ids()
             return object->objectName();
         };
 
-        QCOMPARE(objectNameById("rectangle"), u"rectangle"_qs);
-        QCOMPARE(objectNameById("row"), u"row"_qs);
-        QCOMPARE(objectNameById("textInRectangle"), u"textInRectangle"_qs);
-        QCOMPARE(objectNameById("itemInList"), u"itemInList"_qs);
-        QCOMPARE(objectNameById("objectInList"), u"objectInList"_qs);
-        QCOMPARE(objectNameById("item"), u"item"_qs);
-        QCOMPARE(objectNameById("gridView"), u"gridView"_qs);
-        QCOMPARE(objectNameById("tableView"), u"tableView"_qs);
-        QCOMPARE(objectNameById("sentinel"), u"sentinel"_qs);
+        QCOMPARE(objectNameById("rectangle"), u"rectangle"_s);
+        QCOMPARE(objectNameById("row"), u"row"_s);
+        QCOMPARE(objectNameById("textInRectangle"), u"textInRectangle"_s);
+        QCOMPARE(objectNameById("itemInList"), u"itemInList"_s);
+        QCOMPARE(objectNameById("objectInList"), u"objectInList"_s);
+        QCOMPARE(objectNameById("item"), u"item"_s);
+        QCOMPARE(objectNameById("gridView"), u"gridView"_s);
+        QCOMPARE(objectNameById("tableView"), u"tableView"_s);
+        QCOMPARE(objectNameById("sentinel"), u"sentinel"_s);
 
         const auto verifyComponent = [&](QQmlComponent *component, const QString &componentId,
                                          const QString &objectId) {
@@ -499,22 +501,22 @@ void tst_qmltc::ids()
         };
 
         auto explicitComponent = qobject_cast<QQmlComponent *>(created.explicitCompProperty());
-        verifyComponent(explicitComponent, u"explicitComponent"_qs, u"explicitText"_qs);
+        verifyComponent(explicitComponent, u"explicitComponent"_s, u"explicitText"_s);
 
         QQmlListReference children(&created, "data");
         QCOMPARE(children.size(), 2);
         QQuickTableView *table = qobject_cast<QQuickTableView *>(children.at(1));
         QVERIFY(table);
-        QCOMPARE(ctx->objectForName(u"tableView"_qs), table);
-        QCOMPARE(table->objectName(), u"tableView"_qs);
+        QCOMPARE(ctx->objectForName(u"tableView"_s), table);
+        QCOMPARE(table->objectName(), u"tableView"_s);
 
         auto before = qvariant_cast<QQmlComponent *>(table->property("before"));
-        verifyComponent(before, u"beforeDelegate"_qs, u"beforeDelegateText"_qs);
+        verifyComponent(before, u"beforeDelegate"_s, u"beforeDelegateText"_s);
         auto after = qvariant_cast<QQmlComponent *>(table->property("after"));
-        verifyComponent(after, u"afterDelegate"_qs, u"afterDelegateText"_qs);
+        verifyComponent(after, u"afterDelegate"_s, u"afterDelegateText"_s);
 
         auto delegate = table->delegate();
-        verifyComponent(delegate, /* implicit component */ QString(), u"delegateRect"_qs);
+        verifyComponent(delegate, /* implicit component */ QString(), u"delegateRect"_s);
 
         // TableView is really special when you add Component to a default
         // property. see QQuickFlickablePrivate::data_append
@@ -527,15 +529,15 @@ void tst_qmltc::ids()
             if (!comp)
                 continue;
             // this is bad, but there doesn't seem to be any better choice
-            if (ctx->objectForName(u"beforeDelegateDefaultProperty"_qs) == comp)
+            if (ctx->objectForName(u"beforeDelegateDefaultProperty"_s) == comp)
                 beforeChild = comp;
-            else if (ctx->objectForName(u"afterDelegateDefaultProperty"_qs) == comp)
+            else if (ctx->objectForName(u"afterDelegateDefaultProperty"_s) == comp)
                 afterChild = comp;
         }
         // we just used ctx->objectForName() to find these components, so
         // there's no point in checking the same condition in verifyComponent()
-        verifyComponent(beforeChild, QString(), u"beforeDelegateDefaultPropertyText"_qs);
-        verifyComponent(afterChild, QString(), u"afterDelegateDefaultPropertyText"_qs);
+        verifyComponent(beforeChild, QString(), u"beforeDelegateDefaultPropertyText"_s);
+        verifyComponent(afterChild, QString(), u"afterDelegateDefaultPropertyText"_s);
     }
 }
 
@@ -543,7 +545,7 @@ void tst_qmltc::importNamespace()
 {
     QQmlEngine e;
     PREPEND_NAMESPACE(importNamespace) created(&e); // compilation of this type shouldn't crash
-    QCOMPARE(created.text(), u"hello, world"_qs);
+    QCOMPARE(created.text(), u"hello, world"_s);
 }
 
 void tst_qmltc::componentTypes()
@@ -556,7 +558,7 @@ void tst_qmltc::componentTypes()
 
         QScopedPointer<QObject> enclosed(created.create());
         QVERIFY(enclosed);
-        QCOMPARE(enclosed->objectName(), u"enclosed"_qs);
+        QCOMPARE(enclosed->objectName(), u"enclosed"_s);
     }
 
     {
@@ -564,18 +566,18 @@ void tst_qmltc::componentTypes()
         PREPEND_NAMESPACE(componentTypes) created(&e);
         QQmlContext *ctx = e.contextForObject(&created);
 
-        QObject *normal = ctx->objectForName(u"normal"_qs);
+        QObject *normal = ctx->objectForName(u"normal"_s);
         QVERIFY(normal);
-        QCOMPARE(normal->property("text").toString(), u"indirect component"_qs);
+        QCOMPARE(normal->property("text").toString(), u"indirect component"_s);
 
-        QVERIFY(ctx->objectForName(u"accessibleNormal"_qs));
-        QVERIFY(!ctx->objectForName(u"inaccessibleNormal"_qs));
-        QVERIFY(ctx->objectForName(u"accessible"_qs));
-        QVERIFY(!ctx->objectForName(u"inaccessible"_qs));
-        QVERIFY(ctx->objectForName(u"accessibleDelegate"_qs));
-        QVERIFY(!ctx->objectForName(u"inaccessibleDelegate"_qs));
+        QVERIFY(ctx->objectForName(u"accessibleNormal"_s));
+        QVERIFY(!ctx->objectForName(u"inaccessibleNormal"_s));
+        QVERIFY(ctx->objectForName(u"accessible"_s));
+        QVERIFY(!ctx->objectForName(u"inaccessible"_s));
+        QVERIFY(ctx->objectForName(u"accessibleDelegate"_s));
+        QVERIFY(!ctx->objectForName(u"inaccessibleDelegate"_s));
 
-        QCOMPARE(created.p2()->property("text").toString(), u"foo"_qs);
+        QCOMPARE(created.p2()->property("text").toString(), u"foo"_s);
         QVERIFY(created.p3()->property("text").toString().isEmpty());
 
         // ComponentType still subclasses QQmlComponent, so create() works:
@@ -583,16 +585,16 @@ void tst_qmltc::componentTypes()
         QVERIFY(normalComponent);
         QScopedPointer<QObject> enclosed(normalComponent->create());
         QVERIFY(enclosed);
-        QCOMPARE(enclosed->objectName(), u"enclosed"_qs);
+        QCOMPARE(enclosed->objectName(), u"enclosed"_s);
 
         QQmlListReference children(&created, "data");
         QCOMPARE(children.size(), 4);
-        QCOMPARE(ctx->objectForName(u"normal"_qs), children.at(0));
-        QCOMPARE(ctx->objectForName(u"accessibleNormal"_qs), children.at(1));
-        QCOMPARE(ctx->objectForName(u"accessible"_qs), created.p2());
+        QCOMPARE(ctx->objectForName(u"normal"_s), children.at(0));
+        QCOMPARE(ctx->objectForName(u"accessibleNormal"_s), children.at(1));
+        QCOMPARE(ctx->objectForName(u"accessible"_s), created.p2());
         QQuickTableView *table = qobject_cast<QQuickTableView *>(children.at(3));
         QVERIFY(table);
-        QCOMPARE(ctx->objectForName(u"accessibleDelegate"_qs), table->delegate());
+        QCOMPARE(ctx->objectForName(u"accessibleDelegate"_s), table->delegate());
     }
 }
 
@@ -622,7 +624,7 @@ void tst_qmltc::deferredProperties()
     {
         QQmlEngine e;
         PREPEND_NAMESPACE(deferredProperties_group) created(&e);
-        QCOMPARE(created.getGroup()->getStr(), u"foobar"_qs);
+        QCOMPARE(created.getGroup()->getStr(), u"foobar"_s);
         QCOMPARE(created.getGroup()->getDeferred(), 0);
         // Note: we can't easily evaluate a deferred binding for a
         // `group.deferred` here, so just accept the fact the the value is not
@@ -647,7 +649,7 @@ void tst_qmltc::deferredProperties()
 
         // `group` binding is not deferred as per current behavior outside of
         // PropertyChanges and friends. we defer `group.deferred` binding though
-        QCOMPARE(created.getGroup()->getStr(), u"still immediate"_qs);
+        QCOMPARE(created.getGroup()->getStr(), u"still immediate"_s);
         QCOMPARE(created.getGroup()->getDeferred(), 0);
 
         QVERIFY(!qmlAttachedPropertiesObject<DeferredAttached>(&created, false));
@@ -1034,11 +1036,11 @@ void tst_qmltc::complexAliases()
     QCOMPARE(created.aliasToPrivatePalette(), QQuickItemPrivate::get(theRect)->palette());
     QSignalSpy paletteChangedSpy(&created, &PREPEND_NAMESPACE(complexAliases)::aliasToPrivatePaletteChanged);
     QQuickPalette *newPalette = new QQuickPalette(&created);
-    newPalette->fromQPalette(QPalette(QColor(u"cyan"_qs)));
-    QCOMPARE(newPalette->button(), QColor(u"cyan"_qs));
+    newPalette->fromQPalette(QPalette(QColor(u"cyan"_s)));
+    QCOMPARE(newPalette->button(), QColor(u"cyan"_s));
     created.setAliasToPrivatePalette(newPalette);
     QCOMPARE(paletteChangedSpy.count(), 1);
-    QCOMPARE(QQuickItemPrivate::get(theRect)->palette()->button(), QColor(u"cyan"_qs));
+    QCOMPARE(QQuickItemPrivate::get(theRect)->palette()->button(), QColor(u"cyan"_s));
     QCOMPARE(created.aliasToPrivatePalette(), QQuickItemPrivate::get(theRect)->palette());
 
     // aliasToAnchors:
@@ -1340,7 +1342,7 @@ void tst_qmltc::groupedProperty_qquicktext()
     QCOMPARE(anchors->bottomMargin(), qreal(42));
 
     QFont font = created.font();
-    QCOMPARE(font.family(), u"Helvetica"_qs);
+    QCOMPARE(font.family(), u"Helvetica"_s);
     QCOMPARE(font.pointSize(), 4);
 
     QQmlListReference ref(&created, "data");
@@ -1850,13 +1852,13 @@ void tst_qmltc::privateProperties()
 {
     QQmlEngine e;
     PREPEND_NAMESPACE(privatePropertySubclass) created(&e);
-    QCOMPARE(created.dummy(), u"bar"_qs);
-    QCOMPARE(created.strAlias(), u"foobar"_qs);
+    QCOMPARE(created.dummy(), u"bar"_s);
+    QCOMPARE(created.strAlias(), u"foobar"_s);
     QCOMPARE(created.smthAlias(), 42);
 
     auto privateCreated = static_cast<PrivatePropertyTypePrivate *>(QObjectPrivate::get(&created));
     QVERIFY(privateCreated);
-    QCOMPARE(privateCreated->foo(), u"Smth is: 42"_qs);
+    QCOMPARE(privateCreated->foo(), u"Smth is: 42"_s);
 
     ValueTypeGroup vt = privateCreated->vt();
     QCOMPARE(vt.count(), 11);
@@ -1890,7 +1892,7 @@ void tst_qmltc::calqlatrBits()
     // sanity
     QVERIFY(anim);
     QCOMPARE(anim->target(), textItem);
-    QCOMPARE(anim->property(), u"scale"_qs);
+    QCOMPARE(anim->property(), u"scale"_s);
     QCOMPARE(anim->duration(), 50);
     QCOMPARE(anim->from(), 1);
     QCOMPARE(anim->to(), 0.5);
@@ -1947,7 +1949,7 @@ void tst_qmltc::trickyPropertyChangeAndSignalHandlers()
     QCOMPARE(created.cChangedCount3(), 42);
     three->setD(10);
     QCOMPARE(created.dChangedCount3(), 10);
-    QCOMPARE(created.dChangedStr3(), u"d changed"_qs);
+    QCOMPARE(created.dChangedStr3(), u"d changed"_s);
     four->setC(1.5);
     QCOMPARE(created.cChangedCount4(), 2); // cChangedCount4 is int, so 0.5 is truncated
     four->setD(84);
@@ -1956,7 +1958,7 @@ void tst_qmltc::trickyPropertyChangeAndSignalHandlers()
     // this test, it would mean that we get proper dChanged*4 values intead of
     // `undefined` junk
     QCOMPARE(created.dChangedCount4(), 42);
-    QCOMPARE(created.dChangedStr4(), u"d changed!"_qs);
+    QCOMPARE(created.dChangedStr4(), u"d changed!"_s);
 
     created.changeProperties1();
     QCOMPARE(created.aChangedCount1(), 2);

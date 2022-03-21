@@ -31,21 +31,23 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 QString QQmlJSRegisterContent::descriptiveName() const
 {
     if (m_storedType.isNull())
-        return u"(invalid type)"_qs;
+        return u"(invalid type)"_s;
 
-    QString result = m_storedType->internalName() + u" of "_qs;
+    QString result = m_storedType->internalName() + u" of "_s;
     const auto scope = [this]() -> QString {
         if (m_scope.isNull())
-            return u"(invalid type)::"_qs;
+            return u"(invalid type)::"_s;
         return (m_scope->internalName().isEmpty()
                         ? (m_scope->filePath().isEmpty()
-                                   ? u"??"_qs
-                                   : (u"(component in "_qs + m_scope->filePath() + u")"_qs))
+                                   ? u"??"_s
+                                   : (u"(component in "_s + m_scope->filePath() + u")"_s))
                         : m_scope->internalName())
-                + u"::"_qs;
+                + u"::"_s;
     };
 
     switch (m_content.index()) {
@@ -53,32 +55,32 @@ QString QQmlJSRegisterContent::descriptiveName() const
         return result + std::get<QQmlJSScope::ConstPtr>(m_content)->internalName();
     case Property: {
         const QQmlJSMetaProperty prop = std::get<QQmlJSMetaProperty>(m_content);
-        return result + scope() + prop.propertyName() + u" with type "_qs + prop.typeName();
+        return result + scope() + prop.propertyName() + u" with type "_s + prop.typeName();
     }
     case Method: {
         const auto methods = std::get<QList<QQmlJSMetaMethod>>(m_content);
         if (methods.isEmpty())
-            return result + scope() + u"(unknown method)"_qs;
+            return result + scope() + u"(unknown method)"_s;
         else
-            return result + scope() + methods[0].methodName() + u"(...)"_qs;
+            return result + scope() + methods[0].methodName() + u"(...)"_s;
     }
     case Enum: {
         const auto e = std::get<std::pair<QQmlJSMetaEnum, QString>>(m_content);
         if (e.second.isEmpty())
             return result + scope() + e.first.name();
         else
-            return result + scope() + e.first.name() + u"::"_qs + e.second;
+            return result + scope() + e.first.name() + u"::"_s + e.second;
     }
     case ImportNamespace: {
-        return u"import namespace %1"_qs.arg(std::get<uint>(m_content));
+        return u"import namespace %1"_s.arg(std::get<uint>(m_content));
     }
     case Conversion: {
-        return u"conversion to %1"_qs.arg(
+        return u"conversion to %1"_s.arg(
                     std::get<ConvertedTypes>(m_content).result->internalName());
     }
     }
     Q_UNREACHABLE();
-    return result + u"wat?"_qs;
+    return result + u"wat?"_s;
 }
 
 bool QQmlJSRegisterContent::isList() const

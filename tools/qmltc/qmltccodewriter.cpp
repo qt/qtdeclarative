@@ -38,6 +38,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 static QString urlToMacro(const QString &url)
 {
     QFileInfo fi(url);
@@ -49,13 +51,13 @@ static QString getFunctionCategory(const QmltcMethodBase &method)
     QString category;
     switch (method.access) {
     case QQmlJSMetaMethod::Private:
-        category = u"private"_qs;
+        category = u"private"_s;
         break;
     case QQmlJSMetaMethod::Protected:
-        category = u"protected"_qs;
+        category = u"protected"_s;
         break;
     case QQmlJSMetaMethod::Public:
-        category = u"public"_qs;
+        category = u"public"_s;
         break;
     }
     return category;
@@ -66,10 +68,10 @@ static QString getFunctionCategory(const QmltcMethod &method)
     QString category = getFunctionCategory(static_cast<const QmltcMethodBase &>(method));
     switch (method.type) {
     case QQmlJSMetaMethod::Signal:
-        category = u"Q_SIGNALS"_qs;
+        category = u"Q_SIGNALS"_s;
         break;
     case QQmlJSMetaMethod::Slot:
-        category += u" Q_SLOTS"_qs;
+        category += u" Q_SLOTS"_s;
         break;
     case QQmlJSMetaMethod::Method:
         break;
@@ -106,16 +108,16 @@ static std::pair<QString, QString> functionSignatures(const QmltcMethodBase &met
             headerParamList.back() += u" = " + variable.defaultValue;
     }
 
-    const QString headerSignature = name + u"(" + headerParamList.join(u", "_qs) + u")"
+    const QString headerSignature = name + u"(" + headerParamList.join(u", "_s) + u")"
             + prependSpace(method.modifiers.join(u" "));
-    const QString cppSignature = name + u"(" + cppParamList.join(u", "_qs) + u")"
+    const QString cppSignature = name + u"(" + cppParamList.join(u", "_s) + u")"
             + prependSpace(method.modifiers.join(u" "));
     return { headerSignature, cppSignature };
 }
 
 static QString functionReturnType(const QmltcMethod &m)
 {
-    return appendSpace(m.declarationPrefixes.join(u" "_qs)) + m.returnType;
+    return appendSpace(m.declarationPrefixes.join(u" "_s)) + m.returnType;
 }
 
 void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString &sourcePath,
@@ -134,8 +136,8 @@ void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString 
             u"//       It may change from version to version and should not be relied upon.");
 
     const QString headerMacro = urlToMacro(sourcePath);
-    code.rawAppendToHeader(u"#ifndef %1_H"_qs.arg(headerMacro));
-    code.rawAppendToHeader(u"#define %1_H"_qs.arg(headerMacro));
+    code.rawAppendToHeader(u"#ifndef %1_H"_s.arg(headerMacro));
+    code.rawAppendToHeader(u"#define %1_H"_s.arg(headerMacro));
 
     code.rawAppendToHeader(u"#include <QtCore/qproperty.h>");
     code.rawAppendToHeader(u"#include <QtCore/qobject.h>");
@@ -171,9 +173,9 @@ void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString 
     code.rawAppendToCpp(u"QT_USE_NAMESPACE // avoid issues with QT_NAMESPACE");
     if (!outNamespace.isEmpty()) {
         code.rawAppendToHeader(u""); // blank line
-        code.rawAppendToHeader(u"namespace %1 {"_qs.arg(outNamespace));
+        code.rawAppendToHeader(u"namespace %1 {"_s.arg(outNamespace));
         code.rawAppendToCpp(u""); // blank line
-        code.rawAppendToCpp(u"namespace %1 {"_qs.arg(outNamespace));
+        code.rawAppendToCpp(u"namespace %1 {"_s.arg(outNamespace));
     }
 }
 
@@ -181,13 +183,13 @@ void QmltcCodeWriter::writeGlobalFooter(QmltcOutputWrapper &code, const QString 
                                         const QString &outNamespace)
 {
     if (!outNamespace.isEmpty()) {
-        code.rawAppendToCpp(u"} // namespace %1"_qs.arg(outNamespace));
+        code.rawAppendToCpp(u"} // namespace %1"_s.arg(outNamespace));
         code.rawAppendToCpp(u""); // blank line
-        code.rawAppendToHeader(u"} // namespace %1"_qs.arg(outNamespace));
+        code.rawAppendToHeader(u"} // namespace %1"_s.arg(outNamespace));
         code.rawAppendToHeader(u""); // blank line
     }
 
-    code.rawAppendToHeader(u"#endif // %1_H"_qs.arg(urlToMacro(sourcePath)));
+    code.rawAppendToHeader(u"#endif // %1_H"_s.arg(urlToMacro(sourcePath)));
     code.rawAppendToHeader(u""); // blank line
 }
 
@@ -234,8 +236,8 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcProgram &progra
         if (!type.typeCount)
             continue;
         code.rawAppendToHeader(u""); // blank line
-        code.rawAppendToHeader(u"constexpr %1 %2::%3()"_qs.arg(type.typeCount->returnType,
-                                                               type.cppType, type.typeCount->name));
+        code.rawAppendToHeader(u"constexpr %1 %2::%3()"_s.arg(type.typeCount->returnType,
+                                                              type.cppType, type.typeCount->name));
         code.rawAppendToHeader(u"{");
         for (const QString &line : qAsConst(type.typeCount->body))
             code.rawAppendToHeader(line, 1);
@@ -277,7 +279,7 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
                      std::back_inserter(nonEmptyBaseClasses),
                      [](const QString &entry) { return !entry.isEmpty(); });
         if (!nonEmptyBaseClasses.isEmpty())
-            str += u" : public " + nonEmptyBaseClasses.join(u", public "_qs);
+            str += u" : public " + nonEmptyBaseClasses.join(u", public "_s);
         return str;
     };
 
@@ -377,8 +379,8 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcType &type)
         // add typeCount declaration, definition is added later
         code.rawAppendToHeader(u""); // blank line
         code.rawAppendToHeader(u"protected:");
-        code.rawAppendToHeader(u"constexpr static %1 %2();"_qs.arg(type.typeCount->returnType,
-                                                                   type.typeCount->name),
+        code.rawAppendToHeader(u"constexpr static %1 %2();"_s.arg(type.typeCount->returnType,
+                                                                  type.typeCount->name),
                                1);
     }
 
@@ -454,7 +456,7 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcCtor &ctor)
             code.rawAppendToCpp(u":", 1);
             // double \n to make separate initializer list lines stand out more
             code.rawAppendToCpp(
-                    ctor.initializerList.join(u",\n\n" + u"    "_qs.repeated(code.cppIndent + 1)),
+                    ctor.initializerList.join(u",\n\n" + u"    "_s.repeated(code.cppIndent + 1)),
                     1);
         }
     };
@@ -470,14 +472,14 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcDtor &dtor)
 
 void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcVariable &var)
 {
-    const QString optionalPart = var.defaultValue.isEmpty() ? u""_qs : u" = " + var.defaultValue;
+    const QString optionalPart = var.defaultValue.isEmpty() ? u""_s : u" = " + var.defaultValue;
     code.rawAppendToHeader(var.cppType + u" " + var.name + optionalPart + u";");
 }
 
 void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcProperty &prop)
 {
     Q_ASSERT(prop.defaultValue.isEmpty()); // we don't support it yet (or at all?)
-    code.rawAppendToHeader(u"Q_OBJECT_BINDABLE_PROPERTY(%1, %2, %3, &%1::%4)"_qs.arg(
+    code.rawAppendToHeader(u"Q_OBJECT_BINDABLE_PROPERTY(%1, %2, %3, &%1::%4)"_s.arg(
             prop.containingClass, prop.cppType, prop.name, prop.signalName));
 }
 

@@ -39,6 +39,7 @@ QT_BEGIN_NAMESPACE
 namespace QmlLsp {
 
 using namespace QLspSpecification;
+using namespace Qt::StringLiterals;
 /*!
 \internal
 \class QmlLsp::QQmlLanguageServer
@@ -95,7 +96,7 @@ void QQmlLanguageServer::setupCapabilities(const QLspSpecification::InitializePa
 
 QString QQmlLanguageServer::name() const
 {
-    return u"QQmlLanguageServer"_qs;
+    return u"QQmlLanguageServer"_s;
 }
 
 void QQmlLanguageServer::errorExit()

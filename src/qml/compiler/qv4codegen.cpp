@@ -68,6 +68,8 @@ static const bool disable_lookups = false;
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 Q_LOGGING_CATEGORY(lcQmlCompiler, "qt.qml.compiler");
 
 using namespace QV4;
@@ -3187,7 +3189,7 @@ bool Codegen::visit(YieldExpression *ast)
     Q_ASSERT(innerMostCurentFunctionContext); // yield outside function would have been rejected by parser
 
     if (!innerMostCurentFunctionContext->isGenerator) {
-        throwSyntaxError(ast->firstSourceLocation(), u"Yield is only valid in generator functions"_qs);
+        throwSyntaxError(ast->firstSourceLocation(), u"Yield is only valid in generator functions"_s);
         return false;
     }
 

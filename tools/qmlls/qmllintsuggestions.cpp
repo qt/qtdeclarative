@@ -35,6 +35,7 @@
 
 using namespace QLspSpecification;
 using namespace QQmlJS::Dom;
+using namespace Qt::StringLiterals;
 
 Q_LOGGING_CATEGORY(lintLog, "qt.languageserver.lint")
 
@@ -94,7 +95,7 @@ static void codeActionHandler(
         edit.documentChanges = edits;
 
         CodeAction action;
-        action.kind = u"refactor.rewrite"_qs.toUtf8();
+        action.kind = u"refactor.rewrite"_s.toUtf8();
         action.edit = edit;
         action.title = message.toUtf8();
 

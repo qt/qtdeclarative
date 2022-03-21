@@ -42,6 +42,7 @@ namespace QmlLsp {
 Q_LOGGING_CATEGORY(codeModelLog, "qt.languageserver.codemodel")
 
 using namespace QQmlJS::Dom;
+using namespace Qt::StringLiterals;
 
 /*!
 \internal
@@ -547,29 +548,29 @@ QDebug OpenDocumentSnapshot::dump(QDebug dbg, DumpOptions options)
 {
     dbg.noquote().nospace() << "{";
     dbg << "  uri:" << QString::fromUtf8(uri) << "\n";
-    dbg << "  docVersion:" << (docVersion ? QString::number(*docVersion) : u"*none*"_qs) << "\n";
+    dbg << "  docVersion:" << (docVersion ? QString::number(*docVersion) : u"*none*"_s) << "\n";
     if (options & DumpOption::LatestCode) {
         dbg << "  doc: ------------\n"
             << doc.field(Fields::code).value().toString() << "\n==========\n";
     } else {
         dbg << u"  doc:"
-            << (doc ? u"%1chars"_qs.arg(doc.field(Fields::code).value().toString().length())
-                    : u"*none*"_qs)
+            << (doc ? u"%1chars"_s.arg(doc.field(Fields::code).value().toString().length())
+                    : u"*none*"_s)
             << "\n";
     }
     dbg << "  validDocVersion:"
-        << (validDocVersion ? QString::number(*validDocVersion) : u"*none*"_qs) << "\n";
+        << (validDocVersion ? QString::number(*validDocVersion) : u"*none*"_s) << "\n";
     if (options & DumpOption::ValidCode) {
         dbg << "  validDoc: ------------\n"
             << validDoc.field(Fields::code).value().toString() << "\n==========\n";
     } else {
         dbg << u"  validDoc:"
-            << (validDoc ? u"%1chars"_qs.arg(
+            << (validDoc ? u"%1chars"_s.arg(
                         validDoc.field(Fields::code).value().toString().length())
-                         : u"*none*"_qs)
+                         : u"*none*"_s)
             << "\n";
     }
-    dbg << "  scopeVersion:" << (scopeVersion ? QString::number(*scopeVersion) : u"*none*"_qs)
+    dbg << "  scopeVersion:" << (scopeVersion ? QString::number(*scopeVersion) : u"*none*"_s)
         << "\n";
     dbg << "  scopeDependenciesLoadTime:" << scopeDependenciesLoadTime << "\n";
     dbg << "  scopeDependenciesChanged" << scopeDependenciesChanged << "\n";

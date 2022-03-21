@@ -236,7 +236,7 @@ void TestQmllint::testUnqualified_data()
                                      33 } // builtin property
                    },
                    {},
-                   { { Message { u"root."_qs, 9, 16 } }, { Message { u"root."_qs, 13, 33 } } }
+                   { { Message { u"root."_s, 9, 16 } }, { Message { u"root."_s, 13, 33 } } }
                };
     // access injected name from signal
     QTest::newRow("SignalHandler")
@@ -264,7 +264,7 @@ void TestQmllint::testUnqualified_data()
                                 Message { QStringLiteral("Unqualified access"), 6, 25 },
                         },
                         {},
-                        { { Message { u"<id>."_qs, 6, 25 } } } };
+                        { { Message { u"<id>."_s, 6, 25 } } } };
 
     QTest::newRow("crashConnections")
             << QStringLiteral("crashConnections.qml")
@@ -1215,7 +1215,7 @@ void TestQmllint::compilerWarnings()
     auto options = QQmlJSLogger::options();
 
     if (enableCompilerWarnings)
-        options[u"compiler"_qs].setLevel(u"warning"_qs);
+        options[u"compiler"_s].setLevel(u"warning"_s);
 
     runTest(filename, result, {}, {}, {}, UseDefaultImports, &options);
 }
@@ -1242,7 +1242,7 @@ void TestQmllint::controlsSanity()
     QJsonArray warnings;
 
     auto options = QQmlJSLogger::options();
-    options[u"controls-sanity"_qs].setLevel(u"warning"_qs);
+    options[u"controls-sanity"_s].setLevel(u"warning"_s);
 
     runTest(filename, result, {}, {}, {}, UseDefaultImports, &options);
 }
@@ -1354,7 +1354,7 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
 
     if (warnings) {
         QVERIFY2(jsonOutput.size() == 1, QJsonDocument(jsonOutput).toJson());
-        *warnings = jsonOutput.at(0)[u"warnings"_qs].toArray();
+        *warnings = jsonOutput.at(0)[u"warnings"_s].toArray();
     }
 
     QCOMPARE(success, shouldSucceed);
@@ -1377,15 +1377,15 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
             callQmllint(QFileInfo(file).absoluteFilePath(), true, nullptr, importPaths, qmldirFiles,
                         resources, defaultImports, options, false);
 
-            const QString fixedPath = testFile(info.baseName() + u".fixed.qml"_qs);
+            const QString fixedPath = testFile(info.baseName() + u".fixed.qml"_s);
 
             if (QFileInfo(fixedPath).exists()) {
                 QFile fixedFile(fixedPath);
                 fixedFile.open(QFile::ReadOnly);
                 QString fixedFileContents = QString::fromUtf8(fixedFile.readAll());
 #ifdef Q_OS_WIN
-                fixedCode = fixedCode.replace(u"\r\n"_qs, u"\n"_qs);
-                fixedFileContents = fixedFileContents.replace(u"\r\n"_qs, u"\n"_qs);
+                fixedCode = fixedCode.replace(u"\r\n"_s, u"\n"_s);
+                fixedFileContents = fixedFileContents.replace(u"\r\n"_s, u"\n"_s);
 #endif
 
                 QCOMPARE(fixedCode, fixedFileContents);
@@ -1493,7 +1493,7 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
 #ifdef Q_OS_WIN
                 // Replacements can contain native line endings
                 // but we need them to be uniform in order for them to conform to our test data
-                replacement = replacement.replace(u"\r\n"_qs, u"\n"_qs);
+                replacement = replacement.replace(u"\r\n"_s, u"\n"_s);
 #endif
 
                 if (replacement.contains(substring)) {
@@ -1582,7 +1582,7 @@ void TestQmllint::attachedPropertyReuse()
 {
 
     auto options = QQmlJSLogger::options();
-    options[u"multiple-attached-objects"_qs].setLevel(u"warning"_qs);
+    options[u"multiple-attached-objects"_s].setLevel(u"warning"_s);
     runTest("attachedPropNotReused.qml",
             Result { { Message { QStringLiteral("Using attached type QQuickKeyNavigationAttached "
                                                 "already initialized in a parent "
@@ -1607,7 +1607,7 @@ void TestQmllint::missingBuiltinsNoCrash()
     QVERIFY2(!success, QJsonDocument(jsonOutput).toJson());
 
     QVERIFY2(jsonOutput.size() == 1, QJsonDocument(jsonOutput).toJson());
-    warnings = jsonOutput.at(0)[u"warnings"_qs].toArray();
+    warnings = jsonOutput.at(0)[u"warnings"_s].toArray();
 
     checkResult(warnings,
                 Result { { Message { QStringLiteral("Failed to find the following builtins: "
@@ -1636,20 +1636,20 @@ void TestQmllint::testPlugin()
     for (const QQmlJSLinter::Plugin &plugin : m_linter.plugins()) {
         if (plugin.name() == "testPlugin") {
             pluginFound = true;
-            QCOMPARE(plugin.author(), u"Qt"_qs);
-            QCOMPARE(plugin.description(), u"A test plugin for tst_qmllint"_qs);
-            QCOMPARE(plugin.version(), u"1.0"_qs);
+            QCOMPARE(plugin.author(), u"Qt"_s);
+            QCOMPARE(plugin.description(), u"A test plugin for tst_qmllint"_s);
+            QCOMPARE(plugin.version(), u"1.0"_s);
             break;
         }
     }
     QVERIFY(pluginFound);
 
-    runTest("elementpass_pluginTest.qml", Result { { Message { u"ElementTest OK"_qs, 4, 5 } } });
-    runTest("propertypass_pluginTest.qml", Result { { Message { u"OK"_qs } } });
+    runTest("elementpass_pluginTest.qml", Result { { Message { u"ElementTest OK"_s, 4, 5 } } });
+    runTest("propertypass_pluginTest.qml", Result { { Message { u"OK"_s } } });
     runTest("controlsWithQuick_pluginTest.qml",
-            Result { { Message { u"QtQuick.Controls, QtQuick and QtQuick.Window present"_qs } } });
+            Result { { Message { u"QtQuick.Controls, QtQuick and QtQuick.Window present"_s } } });
     runTest("controlsWithoutQuick_pluginTest.qml",
-            Result { { Message { u"QtQuick.Controls and NO QtQuick present"_qs } } });
+            Result { { Message { u"QtQuick.Controls and NO QtQuick present"_s } } });
     // Verify that none of the passes do anything when they're not supposed to
     runTest("nothing_pluginTest.qml", Result::clean());
 }
@@ -1667,50 +1667,50 @@ void TestQmllint::quickPlugin()
 
     runTest("pluginQuick_anchors.qml",
             Result{ { Message{
-                              u"Cannot specify left, right, and horizontalCenter anchors at the same time."_qs },
+                              u"Cannot specify left, right, and horizontalCenter anchors at the same time."_s },
                       Message {
-                              u"Cannot specify top, bottom, and verticalCenter anchors at the same time."_qs },
+                              u"Cannot specify top, bottom, and verticalCenter anchors at the same time."_s },
                       Message{
-                              u"Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors."_qs },
+                              u"Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors."_s },
                       Message{ u"Cannot assign binding of type null to QQuickAnchorLine"_s, 5, 35 },
                       Message{ u"Cannot assign binding of type null to QQuickAnchorLine"_s, 8,
                                33 } } });
     runTest("pluginQuick_layoutChildren.qml",
             Result {
                     { Message {
-                              u"Detected anchors on an item that is managed by a layout. This is undefined behavior; use Layout.alignment instead."_qs },
+                              u"Detected anchors on an item that is managed by a layout. This is undefined behavior; use Layout.alignment instead."_s },
                       Message {
-                              u"Detected x on an item that is managed by a layout. This is undefined behavior; use Layout.leftMargin or Layout.rightMargin instead."_qs },
+                              u"Detected x on an item that is managed by a layout. This is undefined behavior; use Layout.leftMargin or Layout.rightMargin instead."_s },
                       Message {
-                              u"Detected y on an item that is managed by a layout. This is undefined behavior; use Layout.topMargin or Layout.bottomMargin instead."_qs },
+                              u"Detected y on an item that is managed by a layout. This is undefined behavior; use Layout.topMargin or Layout.bottomMargin instead."_s },
                       Message {
-                              u"Detected height on an item that is managed by a layout. This is undefined behavior; use implictHeight or Layout.preferredHeight instead."_qs },
+                              u"Detected height on an item that is managed by a layout. This is undefined behavior; use implictHeight or Layout.preferredHeight instead."_s },
                       Message {
-                              u"Detected width on an item that is managed by a layout. This is undefined behavior; use implicitWidth or Layout.preferredWidth instead."_qs },
+                              u"Detected width on an item that is managed by a layout. This is undefined behavior; use implicitWidth or Layout.preferredWidth instead."_s },
                       Message {
-                              u"Cannot specify anchors for items inside Grid. Grid will not function."_qs },
+                              u"Cannot specify anchors for items inside Grid. Grid will not function."_s },
                       Message {
-                              u"Cannot specify x for items inside Grid. Grid will not function."_qs },
+                              u"Cannot specify x for items inside Grid. Grid will not function."_s },
                       Message {
-                              u"Cannot specify y for items inside Grid. Grid will not function."_qs },
+                              u"Cannot specify y for items inside Grid. Grid will not function."_s },
                       Message {
-                              u"Cannot specify anchors for items inside Flow. Flow will not function."_qs },
+                              u"Cannot specify anchors for items inside Flow. Flow will not function."_s },
                       Message {
-                              u"Cannot specify x for items inside Flow. Flow will not function."_qs },
+                              u"Cannot specify x for items inside Flow. Flow will not function."_s },
                       Message {
-                              u"Cannot specify y for items inside Flow. Flow will not function."_qs } } });
+                              u"Cannot specify y for items inside Flow. Flow will not function."_s } } });
     runTest("pluginQuick_attached.qml",
             Result {
-                    { Message { u"ToolTip must be attached to an Item"_qs },
-                      Message { u"SplitView attached property only works with Items"_qs },
-                      Message { u"ScrollIndicator must be attached to a Flickable"_qs },
-                      Message { u"ScrollBar must be attached to a Flickable or ScrollView"_qs },
-                      Message { u"Accessible must be attached to an Item"_qs },
-                      Message { u"EnterKey attached property only works with Items"_qs },
+                    { Message { u"ToolTip must be attached to an Item"_s },
+                      Message { u"SplitView attached property only works with Items"_s },
+                      Message { u"ScrollIndicator must be attached to a Flickable"_s },
+                      Message { u"ScrollBar must be attached to a Flickable or ScrollView"_s },
+                      Message { u"Accessible must be attached to an Item"_s },
+                      Message { u"EnterKey attached property only works with Items"_s },
                       Message {
-                              u"LayoutDirection attached property only works with Items and Windows"_qs },
-                      Message { u"Layout must be attached to Item elements"_qs },
-                      Message { u"StackView attached property only works with Items"_qs } } });
+                              u"LayoutDirection attached property only works with Items and Windows"_s },
+                      Message { u"Layout must be attached to Item elements"_s },
+                      Message { u"StackView attached property only works with Items"_s } } });
 }
 #endif
 

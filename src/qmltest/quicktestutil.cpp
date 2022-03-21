@@ -53,6 +53,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 bool QuickTestUtil::printAvailableFunctions() const
 {
     return QTest::printAvailableFunctions;
@@ -67,7 +69,7 @@ void QuickTestUtil::populateClipboardText(int lineCount)
 {
 #if QT_CONFIG(clipboard)
     QString fmt(u"%1 bottles of beer on the wall, %1 bottles of beer; "
-                "take one down, pass it around, %2 bottles of beer on the wall."_qs);
+                "take one down, pass it around, %2 bottles of beer on the wall."_s);
     QStringList lines;
     for (int i = lineCount; i > 0; --i)
         lines << fmt.arg(i).arg(i - 1);

@@ -36,6 +36,8 @@
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qversionnumber.h>
 
+using namespace Qt::StringLiterals;
+
 static QString enquote(const QString &string)
 {
     QString s = string;
@@ -49,7 +51,7 @@ static QString convertPrivateClassToUsableForm(QString s)
     // ClassName is a non-private class name. we don't need "::d_func()" piece
     // so that could be removed, but we need "Private" so that ClassName becomes
     // ClassNamePrivate (at present, simply consider this correct)
-    s.replace(u"::d_func()"_qs, u"Private"_qs);
+    s.replace(u"::d_func()"_s, u"Private"_s);
     return s;
 }
 

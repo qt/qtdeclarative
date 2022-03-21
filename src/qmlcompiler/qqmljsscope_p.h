@@ -300,9 +300,11 @@ public:
     void setInternalName(const QString &internalName) { m_internalName = internalName; }
     QString augmentedInternalName() const
     {
+        using namespace Qt::StringLiterals;
+
         QString suffix;
         if (m_semantics == AccessSemantics::Reference)
-            suffix = u" *"_qs;
+            suffix = u" *"_s;
         return m_internalName + suffix;
     }
 

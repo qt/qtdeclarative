@@ -49,6 +49,8 @@
 #include <QtQml/private/qqmljslexer_p.h>
 #include <QtQml/private/qqmljsparser_p.h>
 
+using namespace Qt::StringLiterals;
+
 class tst_qqmljsscope : public QQmlDataTest
 {
     Q_OBJECT
@@ -141,7 +143,7 @@ void tst_qqmljsscope::initTestCase()
     QDirIterator it(dataDirectory(), QDirIterator::FollowSymlinks | QDirIterator::Subdirectories);
     while (it.hasNext()) {
         const QString url = it.next();
-        if (!url.endsWith(u".qml"_qs)) // not interesting
+        if (!url.endsWith(u".qml"_s)) // not interesting
             continue;
         const QFileInfo fi(url);
         QVERIFY(fi.exists());
@@ -152,36 +154,36 @@ void tst_qqmljsscope::initTestCase()
 
 void tst_qqmljsscope::orderedBindings()
 {
-    QQmlJSScope::ConstPtr root = run(u"orderedBindings.qml"_qs);
+    QQmlJSScope::ConstPtr root = run(u"orderedBindings.qml"_s);
     QVERIFY(root);
 
-    auto [pBindingsBegin, pBindingsEnd] = root->ownPropertyBindings(u"p"_qs);
+    auto [pBindingsBegin, pBindingsEnd] = root->ownPropertyBindings(u"p"_s);
     QVERIFY(std::distance(pBindingsBegin, pBindingsEnd) == 2);
 
     // check that the bindings are properly ordered
     QCOMPARE(pBindingsBegin->bindingType(), QQmlJSMetaPropertyBinding::Object);
     QCOMPARE(std::next(pBindingsBegin)->bindingType(), QQmlJSMetaPropertyBinding::Interceptor);
 
-    auto [itemsBindingsBegin, itemsBindingsEnd] = root->ownPropertyBindings(u"items"_qs);
+    auto [itemsBindingsBegin, itemsBindingsEnd] = root->ownPropertyBindings(u"items"_s);
     QVERIFY(std::distance(itemsBindingsBegin, itemsBindingsEnd) == 2);
 
     QCOMPARE(itemsBindingsBegin->bindingType(), QQmlJSMetaPropertyBinding::Object);
     QCOMPARE(std::next(itemsBindingsBegin)->bindingType(), QQmlJSMetaPropertyBinding::Object);
 
-    QCOMPARE(itemsBindingsBegin->objectType()->baseTypeName(), u"Item"_qs);
-    QCOMPARE(std::next(itemsBindingsBegin)->objectType()->baseTypeName(), u"Text"_qs);
+    QCOMPARE(itemsBindingsBegin->objectType()->baseTypeName(), u"Item"_s);
+    QCOMPARE(std::next(itemsBindingsBegin)->objectType()->baseTypeName(), u"Text"_s);
 }
 
 void tst_qqmljsscope::signalCreationDifferences()
 {
-    QQmlJSScope::ConstPtr root = run(u"signalCreationDifferences.qml"_qs);
+    QQmlJSScope::ConstPtr root = run(u"signalCreationDifferences.qml"_s);
     QVERIFY(root);
 
-    QVERIFY(root->hasOwnProperty(u"myProperty"_qs));
-    QVERIFY(root->hasOwnProperty(u"conflictingProperty"_qs));
-    QCOMPARE(root->ownMethods(u"mySignal"_qs).size(), 1);
+    QVERIFY(root->hasOwnProperty(u"myProperty"_s));
+    QVERIFY(root->hasOwnProperty(u"conflictingProperty"_s));
+    QCOMPARE(root->ownMethods(u"mySignal"_s).size(), 1);
 
-    const auto conflicting = root->ownMethods(u"conflictingPropertyChanged"_qs);
+    const auto conflicting = root->ownMethods(u"conflictingPropertyChanged"_s);
     QCOMPARE(conflicting.size(), 2);
     QCOMPARE(conflicting[0].methodType(), QQmlJSMetaMethod::Signal);
     QCOMPARE(conflicting[1].methodType(), QQmlJSMetaMethod::Signal);
@@ -191,7 +193,7 @@ void tst_qqmljsscope::signalCreationDifferences()
         explicitMethod = &conflicting[1];
     else
         explicitMethod = &conflicting[0];
-    QCOMPARE(explicitMethod->parameterNames(), QStringList({ u"a"_qs, u"c"_qs }));
+    QCOMPARE(explicitMethod->parameterNames(), QStringList({ u"a"_s, u"c"_s }));
 }
 
 void tst_qqmljsscope::allTypesAvailable()
@@ -202,40 +204,40 @@ void tst_qqmljsscope::allTypesAvailable()
         };
 
         QQmlJSImporter importer { importPaths, /* resource file mapper */ nullptr };
-        const auto types = importer.importModule(u"QtQml"_qs);
-        QVERIFY(types.contains(u"$internal$.QObject"_qs));
-        QVERIFY(types.contains(u"QtObject"_qs));
-        QCOMPARE(types[u"$internal$.QObject"_qs].scope, types[u"QtObject"_qs].scope);
+        const auto types = importer.importModule(u"QtQml"_s);
+        QVERIFY(types.contains(u"$internal$.QObject"_s));
+        QVERIFY(types.contains(u"QtObject"_s));
+        QCOMPARE(types[u"$internal$.QObject"_s].scope, types[u"QtObject"_s].scope);
 }
 
 void tst_qqmljsscope::shadowing()
 {
-    QQmlJSScope::ConstPtr root = run(u"shadowing.qml"_qs);
+    QQmlJSScope::ConstPtr root = run(u"shadowing.qml"_s);
     QVERIFY(root);
 
     QVERIFY(root->baseType());
 
     // Check whether properties are properly shadowed
     const auto properties = root->properties();
-    QVERIFY(properties.contains(u"property_not_shadowed"_qs));
-    QVERIFY(properties.contains(u"property_shadowed"_qs));
+    QVERIFY(properties.contains(u"property_not_shadowed"_s));
+    QVERIFY(properties.contains(u"property_shadowed"_s));
 
-    QCOMPARE(properties[u"property_not_shadowed"_qs].typeName(), u"QString"_qs);
-    QCOMPARE(properties[u"property_shadowed"_qs].typeName(), u"int"_qs);
+    QCOMPARE(properties[u"property_not_shadowed"_s].typeName(), u"QString"_s);
+    QCOMPARE(properties[u"property_shadowed"_s].typeName(), u"int"_s);
 
     // Check whether methods are properly shadowed
     const auto methods = root->methods();
-    QCOMPARE(methods.count(u"method_not_shadowed"_qs), 1);
-    QCOMPARE(methods.count(u"method_shadowed"_qs), 1);
+    QCOMPARE(methods.count(u"method_not_shadowed"_s), 1);
+    QCOMPARE(methods.count(u"method_shadowed"_s), 1);
 
-    QCOMPARE(methods[u"method_not_shadowed"_qs].parameterNames().size(), 1);
-    QCOMPARE(methods[u"method_shadowed"_qs].parameterNames().size(), 0);
+    QCOMPARE(methods[u"method_not_shadowed"_s].parameterNames().size(), 1);
+    QCOMPARE(methods[u"method_shadowed"_s].parameterNames().size(), 0);
 }
 
 #ifdef LABS_QML_MODELS_PRESENT
 void tst_qqmljsscope::componentWrappedObjects()
 {
-    QQmlJSScope::ConstPtr root = run(u"componentWrappedObjects.qml"_qs);
+    QQmlJSScope::ConstPtr root = run(u"componentWrappedObjects.qml"_s);
     QVERIFY(root);
 
     auto children = root->childScopes();
@@ -247,15 +249,15 @@ void tst_qqmljsscope::componentWrappedObjects()
                 && type->isWrappedInImplicitComponent() == isWrapped;
     };
 
-    QVERIFY(isGoodType(children[0], u"nonWrapped1"_qs, false));
-    QVERIFY(isGoodType(children[1], u"nonWrapped2"_qs, false));
-    QVERIFY(isGoodType(children[2], u"nonWrapped3"_qs, false));
-    QVERIFY(isGoodType(children[3], u"wrapped"_qs, true));
+    QVERIFY(isGoodType(children[0], u"nonWrapped1"_s, false));
+    QVERIFY(isGoodType(children[1], u"nonWrapped2"_s, false));
+    QVERIFY(isGoodType(children[2], u"nonWrapped3"_s, false));
+    QVERIFY(isGoodType(children[3], u"wrapped"_s, true));
 }
 
 void tst_qqmljsscope::labsQmlModelsSanity()
 {
-    QQmlJSScope::ConstPtr root = run(u"labsQmlModelsSanity.qml"_qs);
+    QQmlJSScope::ConstPtr root = run(u"labsQmlModelsSanity.qml"_s);
     QVERIFY(root);
     auto children = root->childScopes();
     QCOMPARE(children.size(), 1);
@@ -266,26 +268,26 @@ void tst_qqmljsscope::labsQmlModelsSanity()
     // the QmlModels dependency is lost, we don't "see" that DelegateChooser
     // inherits QQmlComponent - and so has no properties from it, hence, we can
     // test exactly that:
-    QVERIFY(children[0]->hasProperty(u"progress"_qs));
-    QVERIFY(children[0]->hasProperty(u"status"_qs));
-    QVERIFY(children[0]->hasProperty(u"url"_qs));
+    QVERIFY(children[0]->hasProperty(u"progress"_s));
+    QVERIFY(children[0]->hasProperty(u"status"_s));
+    QVERIFY(children[0]->hasProperty(u"url"_s));
 }
 #endif
 
 void tst_qqmljsscope::unknownCppBase()
 {
-    QQmlJSScope::ConstPtr root = run(u"unknownCppBaseAssigningToVar.qml"_qs);
+    QQmlJSScope::ConstPtr root = run(u"unknownCppBaseAssigningToVar.qml"_s);
     QVERIFY(root);
     // we should not crash here, then it is a success
 }
 
 void tst_qqmljsscope::groupedProperties()
 {
-    QQmlJSScope::ConstPtr root = run(u"groupProperties.qml"_qs);
+    QQmlJSScope::ConstPtr root = run(u"groupProperties.qml"_s);
     QVERIFY(root);
 
-    QVERIFY(root->hasProperty(u"anchors"_qs));
-    const auto anchorBindings = root->propertyBindings(u"anchors"_qs);
+    QVERIFY(root->hasProperty(u"anchors"_s));
+    const auto anchorBindings = root->propertyBindings(u"anchors"_s);
     QVERIFY(!anchorBindings.isEmpty());
     QCOMPARE(anchorBindings.size(), 2); // from type itself and from the base type
 
@@ -306,29 +308,29 @@ void tst_qqmljsscope::groupedProperties()
     QMultiHash<QString, QQmlJSMetaPropertyBinding> bindingsOfType;
     getBindingsWithinGroup(&bindingsOfType, 0);
     QCOMPARE(bindingsOfType.size(), 2);
-    QCOMPARE(value(bindingsOfType, u"left"_qs).bindingType(), QQmlJSMetaPropertyBinding::Script);
-    QCOMPARE(value(bindingsOfType, u"leftMargin"_qs).bindingType(),
+    QCOMPARE(value(bindingsOfType, u"left"_s).bindingType(), QQmlJSMetaPropertyBinding::Script);
+    QCOMPARE(value(bindingsOfType, u"leftMargin"_s).bindingType(),
              QQmlJSMetaPropertyBinding::NumberLiteral);
 
     QMultiHash<QString, QQmlJSMetaPropertyBinding> bindingsOfBaseType;
     getBindingsWithinGroup(&bindingsOfBaseType, 1);
     QCOMPARE(bindingsOfBaseType.size(), 1);
-    QCOMPARE(value(bindingsOfBaseType, u"top"_qs).bindingType(), QQmlJSMetaPropertyBinding::Script);
+    QCOMPARE(value(bindingsOfBaseType, u"top"_s).bindingType(), QQmlJSMetaPropertyBinding::Script);
 }
 
 void tst_qqmljsscope::descriptiveNameOfNull()
 {
     QQmlJSRegisterContent nullContent;
-    QCOMPARE(nullContent.descriptiveName(), u"(invalid type)"_qs);
+    QCOMPARE(nullContent.descriptiveName(), u"(invalid type)"_s);
 
     QQmlJSScope::Ptr stored = QQmlJSScope::create();
-    stored->setInternalName(u"bar"_qs);
+    stored->setInternalName(u"bar"_s);
     QQmlJSMetaProperty property;
-    property.setPropertyName(u"foo"_qs);
-    property.setTypeName(u"baz"_qs);
+    property.setPropertyName(u"foo"_s);
+    property.setTypeName(u"baz"_s);
     QQmlJSRegisterContent unscoped = QQmlJSRegisterContent::create(
                 stored, property, QQmlJSRegisterContent::ScopeProperty, QQmlJSScope::ConstPtr());
-    QCOMPARE(unscoped.descriptiveName(), u"bar of (invalid type)::foo with type baz"_qs);
+    QCOMPARE(unscoped.descriptiveName(), u"bar of (invalid type)::foo with type baz"_s);
 }
 
 void tst_qqmljsscope::groupedPropertiesConsistency()
@@ -336,7 +338,7 @@ void tst_qqmljsscope::groupedPropertiesConsistency()
     {
         QQmlEngine engine;
         QQmlComponent component(&engine);
-        component.loadUrl(testFileUrl(u"groupPropertiesConsistency.qml"_qs));
+        component.loadUrl(testFileUrl(u"groupPropertiesConsistency.qml"_s));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> root(component.create());
         QVERIFY2(root, qPrintable(component.errorString()));
@@ -345,10 +347,10 @@ void tst_qqmljsscope::groupedPropertiesConsistency()
     }
 
     {
-        QQmlJSScope::ConstPtr root = run(u"groupPropertiesConsistency.qml"_qs);
+        QQmlJSScope::ConstPtr root = run(u"groupPropertiesConsistency.qml"_s);
         QVERIFY(root);
 
-        const auto fontBindings = root->propertyBindings(u"font"_qs);
+        const auto fontBindings = root->propertyBindings(u"font"_s);
         QCOMPARE(fontBindings.size(), 2);
 
         // The binding order in QQmlJSScope case is "reversed": first come
@@ -360,10 +362,10 @@ void tst_qqmljsscope::groupedPropertiesConsistency()
 
 void tst_qqmljsscope::groupedPropertySyntax()
 {
-    QQmlJSScope::ConstPtr root = run(u"groupPropertySyntax.qml"_qs);
+    QQmlJSScope::ConstPtr root = run(u"groupPropertySyntax.qml"_s);
     QVERIFY(root);
 
-    const auto fontBindings = root->propertyBindings(u"font"_qs);
+    const auto fontBindings = root->propertyBindings(u"font"_s);
     QCOMPARE(fontBindings.size(), 1);
 
     // The binding order in QQmlJSScope case is "reversed": first come
@@ -379,17 +381,17 @@ void tst_qqmljsscope::groupedPropertySyntax()
         return bindings.value(key, QQmlJSMetaPropertyBinding(QQmlJS::SourceLocation {}));
     };
 
-    QCOMPARE(value(subbindings, u"pixelSize"_qs).bindingType(),
+    QCOMPARE(value(subbindings, u"pixelSize"_s).bindingType(),
              QQmlJSMetaPropertyBinding::NumberLiteral);
-    QCOMPARE(value(subbindings, u"bold"_qs).bindingType(), QQmlJSMetaPropertyBinding::BoolLiteral);
+    QCOMPARE(value(subbindings, u"bold"_s).bindingType(), QQmlJSMetaPropertyBinding::BoolLiteral);
 }
 
 void tst_qqmljsscope::attachedProperties()
 {
-    QQmlJSScope::ConstPtr root = run(u"attachedProperties.qml"_qs);
+    QQmlJSScope::ConstPtr root = run(u"attachedProperties.qml"_s);
     QVERIFY(root);
 
-    const auto keysBindings = root->propertyBindings(u"Keys"_qs);
+    const auto keysBindings = root->propertyBindings(u"Keys"_s);
     QVERIFY(!keysBindings.isEmpty());
     QCOMPARE(keysBindings.size(), 2); // from type itself and from the base type
 
@@ -410,15 +412,15 @@ void tst_qqmljsscope::attachedProperties()
     QMultiHash<QString, QQmlJSMetaPropertyBinding> bindingsOfType;
     getBindingsWithinAttached(&bindingsOfType, 0);
     QCOMPARE(bindingsOfType.size(), 2);
-    QCOMPARE(value(bindingsOfType, u"enabled"_qs).bindingType(),
+    QCOMPARE(value(bindingsOfType, u"enabled"_s).bindingType(),
              QQmlJSMetaPropertyBinding::BoolLiteral);
-    QCOMPARE(value(bindingsOfType, u"forwardTo"_qs).bindingType(),
+    QCOMPARE(value(bindingsOfType, u"forwardTo"_s).bindingType(),
              QQmlJSMetaPropertyBinding::Script);
 
     QMultiHash<QString, QQmlJSMetaPropertyBinding> bindingsOfBaseType;
     getBindingsWithinAttached(&bindingsOfBaseType, 1);
     QCOMPARE(bindingsOfBaseType.size(), 1);
-    QCOMPARE(value(bindingsOfBaseType, u"priority"_qs).bindingType(),
+    QCOMPARE(value(bindingsOfBaseType, u"priority"_s).bindingType(),
              QQmlJSMetaPropertyBinding::Script);
 }
 
@@ -436,14 +438,14 @@ void tst_qqmljsscope::scriptIndices()
     {
         QQmlEngine engine;
         QQmlComponent component(&engine);
-        component.loadUrl(testFileUrl(u"functionAndBindingIndices.qml"_qs));
+        component.loadUrl(testFileUrl(u"functionAndBindingIndices.qml"_s));
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
         QScopedPointer<QObject> root(component.create());
         QVERIFY2(root, qPrintable(component.errorString()));
     }
 
     QmlIR::Document document(false); // we need QmlIR information here
-    QQmlJSScope::ConstPtr root = run(u"functionAndBindingIndices.qml"_qs, &document);
+    QQmlJSScope::ConstPtr root = run(u"functionAndBindingIndices.qml"_s, &document);
     QVERIFY(root);
     QVERIFY(document.javaScriptCompilationUnit.unitData());
 

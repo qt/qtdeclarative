@@ -58,6 +58,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 namespace QQmlJS {
 namespace Dom {
 
@@ -464,7 +466,7 @@ bool QmlDirectory::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
                     auto keys = m_qmlFiles.keys();
                     return QSet<QString>(keys.begin(), keys.end());
                 },
-                u"List<Reference>"_qs));
+                u"List<Reference>"_s));
     });
     return cont;
 }

@@ -47,6 +47,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 Q_DECLARE_LOGGING_CATEGORY(lcDialogs)
 Q_LOGGING_CATEGORY(lcFileDialog, "qt.quick.dialogs.filedialog")
 
@@ -579,7 +581,7 @@ QUrl QQuickFileDialog::addDefaultSuffix(const QUrl &file) const
     const QString suffix = m_options->defaultSuffix();
     // Urls with "content" scheme do not require suffixes. Such schemes are
     // used on Android.
-    const bool isContentScheme = url.scheme() == u"content"_qs;
+    const bool isContentScheme = url.scheme() == u"content"_s;
     if (!isContentScheme && !suffix.isEmpty() && !path.endsWith(QLatin1Char('/'))
         && path.lastIndexOf(QLatin1Char('.')) == -1) {
         url.setPath(path + QLatin1Char('.') + suffix);

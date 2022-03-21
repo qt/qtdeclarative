@@ -64,6 +64,8 @@
 #include <unistd.h>
 #endif
 
+using namespace Qt::StringLiterals;
+
 DEFINE_BOOL_CONFIG_OPTION(qmlCheckTypes, QML_CHECK_TYPES)
 
 static inline bool isCaseSensitiveFileSystem(const QString &path) {
@@ -2692,10 +2694,10 @@ void tst_qqmllanguage::defaultPropertyWithInitializer_data()
     QTest::addColumn<QUrl>("file");
     QTest::addColumn<QString>("objectName");
 
-    QTest::newRow("base") << testFileUrl("DefaultPropertyWithInitializer.qml") << u"default"_qs;
-    QTest::newRow("user") << testFileUrl("DefaultPropertyWithInitializerUser.qml") << u"changed"_qs;
-    QTest::newRow("list base") << testFileUrl("DefaultPropertyWithListInitializer.qml") << u"1"_qs;
-    QTest::newRow("list user") << testFileUrl("DefaultPropertyWithListInitializerUser.qml") << u"2"_qs;
+    QTest::newRow("base") << testFileUrl("DefaultPropertyWithInitializer.qml") << u"default"_s;
+    QTest::newRow("user") << testFileUrl("DefaultPropertyWithInitializerUser.qml") << u"changed"_s;
+    QTest::newRow("list base") << testFileUrl("DefaultPropertyWithListInitializer.qml") << u"1"_s;
+    QTest::newRow("list user") << testFileUrl("DefaultPropertyWithListInitializerUser.qml") << u"2"_s;
 }
 
 void tst_qqmllanguage::defaultPropertyWithInitializer()

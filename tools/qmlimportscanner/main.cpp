@@ -54,6 +54,8 @@
 
 QT_USE_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 namespace {
 
 QStringList g_qmlImportPaths;
@@ -288,7 +290,7 @@ QPair<QString, QString> resolveImportPath(const QString &uri, const QString &ver
                 const QDir candidateDir(candidatePath);
                 if (candidateDir.exists()) {
                     const auto newCandidate = qMakePair(candidatePath, relativePath); // import found
-                    if (candidateDir.exists(u"qmldir"_qs)) // if it has a qmldir, we are fine
+                    if (candidateDir.exists(u"qmldir"_s)) // if it has a qmldir, we are fine
                         return newCandidate;
                     else if (candidate.first.isEmpty())
                         candidate = newCandidate;
@@ -304,7 +306,7 @@ QPair<QString, QString> resolveImportPath(const QString &uri, const QString &ver
                     const QDir candidateDir(candidatePath);
                     if (candidateDir.exists()) {
                         const auto newCandidate = qMakePair(candidatePath, relativePath); // import found
-                        if (candidateDir.exists(u"qmldir"_qs))
+                        if (candidateDir.exists(u"qmldir"_s))
                             return newCandidate;
                         else if (candidate.first.isEmpty())
                             candidate = newCandidate;

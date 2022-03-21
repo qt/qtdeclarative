@@ -33,6 +33,7 @@
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qqueue.h>
 
+using namespace Qt::StringLiterals;
 
 bool MetaTypesJsonProcessor::processTypes(const QStringList &files)
 {
@@ -150,9 +151,9 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
             const auto value = entry[u"value"].toString();
             if (name == u"QML.Element") {
                 if (value == u"auto") {
-                    qmlElement = u"QML_NAMED_ELEMENT("_qs + className + u")"_qs;
+                    qmlElement = u"QML_NAMED_ELEMENT("_s + className + u")"_s;
                 } else if (value == u"anonymous") {
-                    qmlElement = u"QML_ANONYMOUS"_qs;
+                    qmlElement = u"QML_ANONYMOUS"_s;
                 } else {
                     qmlElement = u"QML_NAMED_ELEMENT(" + value + u")";
                 }
@@ -161,19 +162,19 @@ QString MetaTypesJsonProcessor::extractRegisteredTypes() const
             } else if (name == u"QML.UncreatableReason") {
                 qmlUncreatable = u"QML_UNCREATABLE(\"" + value + u"\")";
             } else if (name == u"QML.Attached") {
-                qmlAttached = u"QML_ATTACHED("_qs + value + u")";
+                qmlAttached = u"QML_ATTACHED("_s + value + u")";
             } else if (name == u"QML.Singleton") {
                 isSingleton = true;
             }
         }
         if (qmlElement.isEmpty())
             continue; // no relevant entries found
-        const QString spaces = u"    "_qs;
-        registrationHelper += u"\nstruct "_qs + foreignClassName + u"{\n    Q_GADGET\n"_qs;
-        registrationHelper += spaces + u"QML_FOREIGN(" + className + u")\n"_qs;
-        registrationHelper += spaces + qmlElement + u"\n"_qs;
+        const QString spaces = u"    "_s;
+        registrationHelper += u"\nstruct "_s + foreignClassName + u"{\n    Q_GADGET\n"_s;
+        registrationHelper += spaces + u"QML_FOREIGN(" + className + u")\n"_s;
+        registrationHelper += spaces + qmlElement + u"\n"_s;
         if (isSingleton)
-            registrationHelper += spaces + u"QML_SINGLETON\n"_qs;
+            registrationHelper += spaces + u"QML_SINGLETON\n"_s;
         if (isExplicitlyUncreatable) {
             if (qmlUncreatable.isEmpty())
                 registrationHelper += spaces + uR"(QML_UNCREATABLE(""))" + u"n";

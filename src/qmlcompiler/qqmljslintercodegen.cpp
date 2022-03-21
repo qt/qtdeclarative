@@ -38,6 +38,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 QQmlJSLinterCodegen::QQmlJSLinterCodegen(QQmlJSImporter *importer, const QString &fileName,
                                          const QStringList &qmldirFiles, QQmlJSLogger *logger,
                                          QQmlJSTypeInfo *typeInfo)
@@ -71,7 +73,7 @@ QQmlJSLinterCodegen::compileBinding(const QV4::Compiler::Context *context,
     if (!analyzeFunction(context, &function, &analyzeError)) {
         // If it's a signal and the function just returns a closure, it's harmless.
         // Otherwise promote the message to warning level.
-        return diagnose(u"Could not compile binding for %1: %2"_qs.arg(name, analyzeError.message),
+        return diagnose(u"Could not compile binding for %1: %2"_s.arg(name, analyzeError.message),
                         (function.isSignalHandler && analyzeError.type == QtDebugMsg)
                             ? QtDebugMsg
                             : QtWarningMsg,
@@ -95,7 +97,7 @@ QQmlJSLinterCodegen::compileFunction(const QV4::Compiler::Context *context,
 
     QQmlJS::DiagnosticMessage analyzeError;
     if (!analyzeFunction(context, &function, &analyzeError)) {
-        return diagnose(u"Could not compile function %1: %2"_qs.arg(name, analyzeError.message),
+        return diagnose(u"Could not compile function %1: %2"_s.arg(name, analyzeError.message),
                         QtWarningMsg, analyzeError.loc);
     }
 

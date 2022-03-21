@@ -45,6 +45,8 @@
 
 #include <cstdlib> // EXIT_SUCCESS, EXIT_FAILURE
 
+using namespace Qt::StringLiterals;
+
 void setupLogger(QQmlJSLogger &logger) // prepare logger to work with compiler
 {
     const QSet<QQmlJSLoggerCategory> exceptions {
@@ -67,7 +69,7 @@ int main(int argc, char **argv)
     // random seeding.
     qSetGlobalQHashSeed(0);
     QCoreApplication app(argc, argv);
-    QCoreApplication::setApplicationName(u"qmltc"_qs);
+    QCoreApplication::setApplicationName(u"qmltc"_s);
     QCoreApplication::setApplicationVersion(QStringLiteral(QT_VERSION_STR));
 
     // command-line parsing:
@@ -76,34 +78,34 @@ int main(int argc, char **argv)
     parser.addVersionOption();
 
     QCommandLineOption importPathOption {
-        u"I"_qs, QCoreApplication::translate("main", "Look for QML modules in specified directory"),
+        u"I"_s, QCoreApplication::translate("main", "Look for QML modules in specified directory"),
         QCoreApplication::translate("main", "import directory")
     };
     parser.addOption(importPathOption);
     QCommandLineOption qmldirOption {
-        u"i"_qs, QCoreApplication::translate("main", "Include extra qmldir files"),
+        u"i"_s, QCoreApplication::translate("main", "Include extra qmldir files"),
         QCoreApplication::translate("main", "qmldir file")
     };
     parser.addOption(qmldirOption);
     QCommandLineOption outputCppOption {
-        u"impl"_qs, QCoreApplication::translate("main", "Generated C++ source file path"),
+        u"impl"_s, QCoreApplication::translate("main", "Generated C++ source file path"),
         QCoreApplication::translate("main", "cpp path")
     };
     parser.addOption(outputCppOption);
     QCommandLineOption outputHOption {
-        u"header"_qs, QCoreApplication::translate("main", "Generated C++ header file path"),
+        u"header"_s, QCoreApplication::translate("main", "Generated C++ header file path"),
         QCoreApplication::translate("main", "h path")
     };
     parser.addOption(outputHOption);
     QCommandLineOption resourceOption {
-        u"resource"_qs,
+        u"resource"_s,
         QCoreApplication::translate(
                 "main", "Qt resource file that might later contain one of the compiled files"),
         QCoreApplication::translate("main", "resource file name")
     };
     parser.addOption(resourceOption);
     QCommandLineOption namespaceOption {
-        u"namespace"_qs, QCoreApplication::translate("main", "Namespace of the generated C++ code"),
+        u"namespace"_s, QCoreApplication::translate("main", "Namespace of the generated C++ code"),
         QCoreApplication::translate("main", "namespace")
     };
     parser.addOption(namespaceOption);
@@ -116,7 +118,7 @@ int main(int argc, char **argv)
             parser.showHelp();
         } else {
             fprintf(stderr, "%s\n",
-                    qPrintable(u"Too many input files specified: '"_qs + sources.join(u"' '"_qs)
+                    qPrintable(u"Too many input files specified: '"_s + sources.join(u"' '"_s)
                                + u'\''));
         }
         return EXIT_FAILURE;
@@ -145,14 +147,14 @@ int main(int argc, char **argv)
 
     QString outputCppFile;
     if (!parser.isSet(outputCppOption)) {
-        outputCppFile = url.first(url.size() - 3) + u"cpp"_qs;
+        outputCppFile = url.first(url.size() - 3) + u"cpp"_s;
     } else {
         outputCppFile = parser.value(outputCppOption);
     }
 
     QString outputHFile;
     if (!parser.isSet(outputHOption)) {
-        outputHFile = url.first(url.size() - 3) + u"h"_qs;
+        outputHFile = url.first(url.size() - 3) + u"h"_s;
     } else {
         outputHFile = parser.value(outputHOption);
     }
@@ -168,7 +170,7 @@ int main(int argc, char **argv)
     QQmlJSSaveFunction noop([](auto &&...) { return true; });
     QQmlJSCompileError error;
     if (!qCompileQmlFile(document, url, noop, nullptr, &error)) {
-        error.augment(u"Error compiling qml file: "_qs).print();
+        error.augment(u"Error compiling qml file: "_s).print();
         return EXIT_FAILURE;
     }
 

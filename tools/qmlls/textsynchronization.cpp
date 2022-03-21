@@ -31,6 +31,8 @@
 #include "textdocument.h"
 
 using namespace QLspSpecification;
+using namespace Qt::StringLiterals;
+
 QT_BEGIN_NAMESPACE
 
 TextSynchronization::TextSynchronization(QmlLsp::QQmlCodeModel *codeModel, QObject *parent)
@@ -105,7 +107,7 @@ void TextSynchronization::registerHandlers(QLanguageServer *server, QLanguageSer
 
 QString TextSynchronization::name() const
 {
-    return u"TextSynchonization"_qs;
+    return u"TextSynchonization"_s;
 }
 
 void TextSynchronization::setupCapabilities(const QLspSpecification::InitializeParams &,

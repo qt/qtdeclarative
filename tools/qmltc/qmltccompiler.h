@@ -94,7 +94,7 @@ private:
     struct BindingAccessorData
     {
         QQmlJSScope::ConstPtr scope; // usually the current type
-        QString name = u"this"_qs;
+        QString name = QStringLiteral("this");
         QString propertyName = QString();
         bool isValueType = false;
     };

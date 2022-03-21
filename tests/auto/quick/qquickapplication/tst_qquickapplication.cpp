@@ -39,6 +39,8 @@
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QFont>
 
+using namespace Qt::StringLiterals;
+
 class tst_qquickapplication : public QQmlDataTest
 {
     Q_OBJECT
@@ -75,7 +77,7 @@ void tst_qquickapplication::cleanup()
 
 void tst_qquickapplication::active()
 {
-    for (const QString &app : { u"Qt.application"_qs, u"Application"_qs }) {
+    for (const QString &app : { u"Qt.application"_s, u"Application"_s }) {
         QQmlComponent component(&engine);
         component.setData(u"import QtQuick 2.0; "
                           "Item { "
@@ -85,7 +87,7 @@ void tst_qquickapplication::active()
                           "        target: %1; "
                           "        function onActiveChanged(active) { active2 = %1.active; }"
                           "    } "
-                          "}"_qs.arg(app)
+                          "}"_s.arg(app)
                                   .toUtf8(),
                           QUrl::fromLocalFile(""));
         QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
@@ -131,7 +133,7 @@ void tst_qquickapplication::active()
 
 void tst_qquickapplication::state()
 {
-    for (const QString &app : { u"Qt.application"_qs, u"Application"_qs }) {
+    for (const QString &app : { u"Qt.application"_s, u"Application"_s }) {
         QQmlComponent component(&engine);
         component.setData(u"import QtQuick 2.0; "
                           "Item { "
@@ -142,7 +144,7 @@ void tst_qquickapplication::state()
                           "        function onStateChanged(state) { state2 = %1.state; }"
                           "    } "
                           "    Component.onCompleted: state2 = %1.state; "
-                          "}"_qs.arg(app)
+                          "}"_s.arg(app)
                                   .toUtf8(),
                           QUrl::fromLocalFile(""));
         QQuickItem *item = qobject_cast<QQuickItem *>(component.create());
@@ -206,10 +208,10 @@ void tst_qquickapplication::state()
 
 void tst_qquickapplication::layoutDirection()
 {
-    for (const QString &app : { u"Qt.application"_qs, u"Application"_qs }) {
+    for (const QString &app : { u"Qt.application"_s, u"Application"_s }) {
         QQmlComponent component(&engine);
         component.setData(
-                u"import QtQuick 2.0; Item { property bool layoutDirection: %1.layoutDirection }"_qs
+                u"import QtQuick 2.0; Item { property bool layoutDirection: %1.layoutDirection }"_s
                         .arg(app)
                         .toUtf8(),
                 QUrl::fromLocalFile(""));
@@ -233,10 +235,10 @@ void tst_qquickapplication::layoutDirection()
 
 void tst_qquickapplication::font()
 {
-    for (const QString &app : { u"Qt.application"_qs, u"Application"_qs }) {
+    for (const QString &app : { u"Qt.application"_s, u"Application"_s }) {
         QQmlComponent component(&engine);
         component.setData(
-                u"import QtQuick 2.0; Item { property font defaultFont: %1.font }"_qs.arg(app)
+                u"import QtQuick 2.0; Item { property font defaultFont: %1.font }"_s.arg(app)
                         .toUtf8(),
                 QUrl::fromLocalFile(""));
         QQuickItem *item = qobject_cast<QQuickItem *>(component.create());

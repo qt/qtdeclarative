@@ -583,7 +583,7 @@ public:
     {
         return QStringLiteral(u"QtObject{\n  %1: ").arg(n.split(u'.').last());
     }
-    static QString postCodeForName(QStringView) { return u"\n}\n"_qs; }
+    static QString postCodeForName(QStringView) { return QStringLiteral(u"\n}\n"); }
     QString preCode() const { return preCodeForName(m_name); }
     QString postCode() const { return postCodeForName(m_name); }
 

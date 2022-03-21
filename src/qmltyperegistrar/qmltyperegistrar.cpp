@@ -42,6 +42,8 @@
 
 #include <cstdlib>
 
+using namespace Qt::StringLiterals;
+
 struct ScopedPointerFileCloser
 {
     static inline void cleanup(FILE *handle) { if (handle) fclose(handle); }
@@ -94,7 +96,7 @@ static int runExtract(const QString & baseName, const MetaTypesJsonProcessor &pr
             "#include <QtQml/qqmlmoduleregistration.h>\n").arg(baseName.toUpper());
     const QStringList includes = processor.includes();
     for (const QString &include: includes)
-        prefix += u"\n#include <%1>"_qs.arg(include);
+        prefix += u"\n#include <%1>"_s.arg(include);
     headerFile.write((prefix + processor.extractRegisteredTypes()).toUtf8() + "\n#endif");
 
     QFile sourceFile(baseName + u".cpp");
@@ -104,8 +106,8 @@ static int runExtract(const QString & baseName, const MetaTypesJsonProcessor &pr
         return EXIT_FAILURE;
     }
     // the string split is necessaury because cmake's automoc scanner would otherwise pick up the include
-    QString code = u"#include \"%1.h\"\n#include "_qs.arg(baseName);
-    code += uR"("moc_%1.cpp")"_qs.arg(baseName);
+    QString code = u"#include \"%1.h\"\n#include "_s.arg(baseName);
+    code += uR"("moc_%1.cpp")"_s.arg(baseName);
     sourceFile.write(code.toUtf8());
     return EXIT_SUCCESS;
 }
@@ -185,8 +187,8 @@ int main(int argc, char **argv)
                            "want to follow Qt's versioning scheme."));
     parser.addOption(followForeignVersioningOption);
 
-    QCommandLineOption extract(u"extract"_qs);
-    extract.setDescription(u"Extract QML types from a module and use QML_FOREIGN to register them"_qs);
+    QCommandLineOption extract(u"extract"_s);
+    extract.setDescription(u"Extract QML types from a module and use QML_FOREIGN to register them"_s);
     parser.addOption(extract);
 
     parser.addPositionalArgument(QStringLiteral("[MOC generated json file]"),

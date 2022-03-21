@@ -42,6 +42,8 @@
 
 #include <functional>
 
+using namespace Qt::StringLiterals;
+
 class tst_qmltc_qprocess : public QQmlDataTest
 {
     Q_OBJECT
@@ -55,7 +57,7 @@ class tst_qmltc_qprocess : public QQmlDataTest
     QString runQmltc(const QString &inputFile, bool shouldSucceed,
                      const QStringList &extraArgs = {});
 
-    QString modifiedPath(const QString &path) { return path + u".orig"_qs; }
+    QString modifiedPath(const QString &path) { return path + u".orig"_s; }
 
 public:
     tst_qmltc_qprocess() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
@@ -79,20 +81,20 @@ private slots:
 void tst_qmltc_qprocess::initTestCase()
 {
     QQmlDataTest::initTestCase();
-    m_qmltcPath = QLibraryInfo::path(QLibraryInfo::BinariesPath) + u"/qmltc"_qs;
+    m_qmltcPath = QLibraryInfo::path(QLibraryInfo::BinariesPath) + u"/qmltc"_s;
 #ifdef Q_OS_WIN
-    m_qmltcPath += u".exe"_qs;
+    m_qmltcPath += u".exe"_s;
 #endif
     if (!QFileInfo(m_qmltcPath).exists()) {
-        const QString message = u"qmltc executable not found (looked for %0)"_qs.arg(m_qmltcPath);
+        const QString message = u"qmltc executable not found (looked for %0)"_s.arg(m_qmltcPath);
         QFAIL(qPrintable(message));
     }
 
-    m_tmpPath = QDir::tempPath() + u"/tst_qmltc_qprocess_artifacts"_qs;
+    m_tmpPath = QDir::tempPath() + u"/tst_qmltc_qprocess_artifacts"_s;
     QVERIFY(QDir(m_tmpPath).removeRecursively()); // in case it's already there
     QVERIFY(QDir().mkpath(m_tmpPath));
 
-    m_resources = QStringLiteral(TST_QMLTC_QPROCESS_RESOURCES).split(u"_::_"_qs);
+    m_resources = QStringLiteral(TST_QMLTC_QPROCESS_RESOURCES).split(u"_::_"_s);
 }
 
 void tst_qmltc_qprocess::cleanupTestCase()
@@ -108,9 +110,9 @@ QString tst_qmltc_qprocess::runQmltc(const QString &inputFile,
 
     args << (QFileInfo(inputFile).isAbsolute() ? inputFile : testFile(inputFile));
     for (const QString &resource : m_resources)
-        args << u"--resource"_qs << resource;
-    args << u"--header"_qs << (m_tmpPath + u"/"_qs + QFileInfo(inputFile).baseName() + u".h"_qs);
-    args << u"--impl"_qs << (m_tmpPath + u"/"_qs + QFileInfo(inputFile).baseName() + u".cpp"_qs);
+        args << u"--resource"_s << resource;
+    args << u"--header"_s << (m_tmpPath + u"/"_s + QFileInfo(inputFile).baseName() + u".h"_s);
+    args << u"--impl"_s << (m_tmpPath + u"/"_s + QFileInfo(inputFile).baseName() + u".cpp"_s);
 
     args << extraArgs;
     QString errors;
@@ -150,7 +152,7 @@ QString tst_qmltc_qprocess::runQmltc(const QString &inputFile, bool shouldSuccee
 
 void tst_qmltc_qprocess::sanity()
 {
-    const auto output = runQmltc(u"dummy.qml"_qs, true);
+    const auto output = runQmltc(u"dummy.qml"_s, true);
     QVERIFY2(output.isEmpty(), qPrintable(output));
 }
 
@@ -163,8 +165,8 @@ void tst_qmltc_qprocess::noBuiltins()
         QVERIFY(file.rename(original));
     };
 
-    for (QString builtin : { u"builtins.qmltypes"_qs, u"jsroot.qmltypes"_qs }) {
-        const auto path = QLibraryInfo::path(QLibraryInfo::QmlImportsPath) + u"/"_qs + builtin;
+    for (QString builtin : { u"builtins.qmltypes"_s, u"jsroot.qmltypes"_s }) {
+        const auto path = QLibraryInfo::path(QLibraryInfo::QmlImportsPath) + u"/"_s + builtin;
 
         QScopeGuard scope(std::bind(renameBack, path));
         QFile file(path);
@@ -172,8 +174,8 @@ void tst_qmltc_qprocess::noBuiltins()
         QVERIFY(file.rename(modifiedPath(path)));
 
         // test that qmltc exits gracefully
-        const auto errors = runQmltc(u"dummy.qml"_qs, false);
-        QVERIFY(errors.contains(u"Failed to find the following builtins: %1"_qs.arg(builtin)));
+        const auto errors = runQmltc(u"dummy.qml"_s, false);
+        QVERIFY(errors.contains(u"Failed to find the following builtins: %1"_s.arg(builtin)));
     }
 }
 
@@ -185,34 +187,34 @@ void tst_qmltc_qprocess::noQtQml()
         QVERIFY(QDir().rename(current, original));
     };
 
-    const auto modulePath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath) + u"/QtQml"_qs;
+    const auto modulePath = QLibraryInfo::path(QLibraryInfo::QmlImportsPath) + u"/QtQml"_s;
     QScopeGuard scope(std::bind(renameBack, modulePath));
     QVERIFY(QDir(modulePath).exists());
     QVERIFY(QDir().rename(modulePath, modifiedPath(modulePath)));
 
     // test that qmltc exits gracefully
-    const auto errors = runQmltc(u"dummy.qml"_qs, false);
-    QVERIFY(errors.contains(u"Failed to import QtQml. Are your import paths set up properly?"_qs));
+    const auto errors = runQmltc(u"dummy.qml"_s, false);
+    QVERIFY(errors.contains(u"Failed to import QtQml. Are your import paths set up properly?"_s));
 }
 
 void tst_qmltc_qprocess::inlineComponent()
 {
-    const auto errors = runQmltc(u"inlineComponent.qml"_qs, false);
+    const auto errors = runQmltc(u"inlineComponent.qml"_s, false);
     QEXPECT_FAIL("", "qmltc does not support inline components at the moment", Continue);
-    QVERIFY(!errors.contains(u"Inline components are not supported"_qs));
+    QVERIFY(!errors.contains(u"Inline components are not supported"_s));
 }
 
 void tst_qmltc_qprocess::singleton()
 {
-    const auto errors = runQmltc(u"SingletonThing.qml"_qs, false);
+    const auto errors = runQmltc(u"SingletonThing.qml"_s, false);
     QEXPECT_FAIL("", "qmltc does not support singletons at the moment", Continue);
-    QVERIFY(!errors.contains(u"Singleton types are not supported"_qs));
+    QVERIFY(!errors.contains(u"Singleton types are not supported"_s));
 }
 
 void tst_qmltc_qprocess::warningsAsErrors()
 {
-    const auto errors = runQmltc(u"erroneousFile.qml"_qs, false);
-    QVERIFY2(errors.contains(u"Error:"_qs), qPrintable(errors)); // Note: not a warning!
+    const auto errors = runQmltc(u"erroneousFile.qml"_s, false);
+    QVERIFY2(errors.contains(u"Error:"_s), qPrintable(errors)); // Note: not a warning!
 }
 
 QTEST_MAIN(tst_qmltc_qprocess)

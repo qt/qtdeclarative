@@ -68,6 +68,8 @@ QML.  This does not include static QML language issues.
 Static QML language issues are covered in qmllanguage
 */
 
+using namespace Qt::StringLiterals;
+
 class tst_qqmlecmascript : public QQmlDataTest
 {
     Q_OBJECT
@@ -7738,7 +7740,7 @@ void tst_qqmlecmascript::qpropertyBindingReplacement()
     QQmlComponent c(&engine, testFileUrl("qpropertyBindingReplacement.qml"));
     QScopedPointer<QObject> root(c.create());
     QVERIFY(root);
-    QCOMPARE(root->objectName(), u"overwritten"_qs);
+    QCOMPARE(root->objectName(), u"overwritten"_s);
 }
 
 void tst_qqmlecmascript::deleteRootObjectInCreation()

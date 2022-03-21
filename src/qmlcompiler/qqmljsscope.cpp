@@ -132,7 +132,7 @@ void QQmlJSScope::insertJSIdentifier(const QString &name, const JavaScriptIdenti
 void QQmlJSScope::insertPropertyIdentifier(const QQmlJSMetaProperty &property)
 {
     addOwnProperty(property);
-    QQmlJSMetaMethod method(property.propertyName() + u"Changed"_qs, u"void"_qs);
+    QQmlJSMetaMethod method(property.propertyName() + u"Changed"_s, u"void"_s);
     method.setMethodType(QQmlJSMetaMethod::Signal);
     method.setIsImplicitQmlPropertyChangeSignal(true);
     addOwnMethod(method);
@@ -512,7 +512,7 @@ QTypeRevision QQmlJSScope::resolveTypes(
     const auto resolveAll = [](const QQmlJSScope::Ptr &self,
                                const QQmlJSScope::ContextualTypes &contextualTypes,
                                QSet<QString> *usedTypes) {
-        resolveEnums(self, findType(u"int"_qs, contextualTypes, usedTypes).scope);
+        resolveEnums(self, findType(u"int"_s, contextualTypes, usedTypes).scope);
         return resolveType(self, contextualTypes, usedTypes);
     };
     return resolveTypesInternal(resolveAll, updateChildScope, self, contextualTypes, usedTypes);
@@ -919,7 +919,7 @@ void QDeferredFactory<QQmlJSScope>::populate(const QSharedPointer<QQmlJSScope> &
     typeReader(scope);
     m_importer->m_globalWarnings.append(typeReader.errors());
     scope->setInternalName(internalName());
-    QQmlJSScope::resolveEnums(scope, m_importer->builtinInternalNames().value(u"int"_qs).scope);
+    QQmlJSScope::resolveEnums(scope, m_importer->builtinInternalNames().value(u"int"_s).scope);
 
     if (m_isSingleton && !scope->isSingleton()) {
         m_importer->m_globalWarnings.append(
@@ -967,11 +967,11 @@ bool QQmlJSScope::canAssign(const QQmlJSScope::ConstPtr &derived) const
          scope = scope->baseType()) {
         if (isSameType(scope))
             return true;
-        if (isBaseComponent && scope->internalName() == u"QObject"_qs)
+        if (isBaseComponent && scope->internalName() == u"QObject"_s)
             return true;
     }
 
-    return internalName() == u"QVariant"_qs || internalName() == u"QJSValue"_qs;
+    return internalName() == u"QVariant"_s || internalName() == u"QJSValue"_s;
 }
 
 bool QQmlJSScope::isInCustomParserParent() const

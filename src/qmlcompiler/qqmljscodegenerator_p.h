@@ -289,7 +289,8 @@ private:
     bool inlineMathMethod(const QString &name, int argc, int argv);
     QQmlJSScope::ConstPtr mathObject() const
     {
-        return m_typeResolver->jsGlobalObject()->property(u"Math"_qs).type();
+        using namespace Qt::StringLiterals;
+        return m_typeResolver->jsGlobalObject()->property(u"Math"_s).type();
     }
 
     int firstRegisterIndex() const

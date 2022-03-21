@@ -39,6 +39,8 @@
 #include <private/qqmlanybinding_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
+using namespace Qt::StringLiterals;
+
 class tst_qqmlmetatype : public QQmlDataTest
 {
     Q_OBJECT
@@ -380,7 +382,7 @@ void tst_qqmlmetatype::interceptorAPI()
     QVERIFY(interceptor->interceptedWrite);
 
     QQmlProperty objectName(obj.get(), "objectName");
-    QProperty<QString> hello(u"Hello, World!"_qs);
+    QProperty<QString> hello(u"Hello, World!"_s);
     QQmlAnyBinding binding;
     binding = Qt::makePropertyBinding(hello);
     interceptor->interceptedBindable = false;

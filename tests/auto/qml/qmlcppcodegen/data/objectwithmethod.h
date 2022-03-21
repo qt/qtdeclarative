@@ -65,14 +65,14 @@ class OverriddenObjectName : public ObjectWithMethod
 public:
     OverriddenObjectName(QObject *parent = nullptr) : ObjectWithMethod(parent)
     {
-        m_objectName = u"borschtsch"_qs;
+        m_objectName = QStringLiteral("borschtsch");
         nothing = 77;
     }
 
     QString objectName() const { return m_objectName.value(); }
     void setObjectName(const QString &objectName) { m_objectName.setValue(objectName); }
     QBindable<QString> objectNameBindable() { return QBindable<QString>(&m_objectName); }
-    Q_INVOKABLE QString doThing() const { return u"7"_qs; }
+    Q_INVOKABLE QString doThing() const { return QStringLiteral("7"); }
 
     int fff() const { return nothing.value(); }
     QBindable<int> nothingBindable() { return QBindable<int>(&nothing); }

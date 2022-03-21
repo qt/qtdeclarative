@@ -53,6 +53,7 @@
 #include <memory>
 
 QT_BEGIN_NAMESPACE
+
 namespace QQmlJS {
 namespace Dom {
 
@@ -543,10 +544,12 @@ private slots:
         QVERIFY(obj1);
 
         {
+            using namespace Qt::StringLiterals;
+
             QList<DomItem> rect =
-                    obj1.lookup(u"Rectangle"_qs, LookupType::Type, LookupOption::Normal);
+                    obj1.lookup(u"Rectangle"_s, LookupType::Type, LookupOption::Normal);
             QList<DomItem> rect2 =
-                    obj1.lookup(u"Rectangle"_qs, LookupType::Symbol, LookupOption::Normal);
+                    obj1.lookup(u"Rectangle"_s, LookupType::Symbol, LookupOption::Normal);
             QVERIFY(rect.length() == 1);
             QVERIFY(rect2.length() == 1);
             QCOMPARE(rect.first().internalKind(), DomType::Export);
@@ -555,7 +558,7 @@ private slots:
             QCOMPARE(rect3.internalKind(), DomType::QmlObject);
             QList<DomItem> rects;
             obj1.resolve(
-                    Path::Current(PathCurrent::Lookup).field(Fields::type).key(u"Rectangle"_qs),
+                    Path::Current(PathCurrent::Lookup).field(Fields::type).key(u"Rectangle"_s),
                     [&rects](Path, DomItem &el) {
                         rects.append(el);
                         return true;
@@ -580,6 +583,8 @@ private slots:
 #ifdef Q_OS_ANDROID
         QSKIP("Test uncompatible with Android (QTBUG-100171)");
 #endif
+        using namespace Qt::StringLiterals;
+
         QString testFile1 = baseDir + QLatin1String("/TestImports.qml");
         DomItem env = DomEnvironment::create(
                 QStringList(),
@@ -601,22 +606,22 @@ private slots:
                     importedModules.append(importPtr->uri);
             }
         }
-        QCOMPARE(importedModules.at(0).moduleUri(), u"QtQuick"_qs);
-        QCOMPARE(importedModules.at(0).directoryString(), u""_qs);
-        QCOMPARE(importedModules.at(1).directoryString(), u"../.."_qs);
-        QCOMPARE(importedModules.at(1).localPath(), u"../.."_qs);
+        QCOMPARE(importedModules.at(0).moduleUri(), u"QtQuick"_s);
+        QCOMPARE(importedModules.at(0).directoryString(), u""_s);
+        QCOMPARE(importedModules.at(1).directoryString(), u"../.."_s);
+        QCOMPARE(importedModules.at(1).localPath(), u"../.."_s);
         QCOMPARE(importedModules.at(1).absoluteLocalPath(), QString());
-        QCOMPARE(importedModules.at(1).absoluteLocalPath(u"/bla/bla"_qs), u"/bla/bla/../..");
-        QCOMPARE(importedModules.at(2).directoryString(), u"../dommerging"_qs);
-        QCOMPARE(importedModules.at(2).localPath(), u"../dommerging"_qs);
+        QCOMPARE(importedModules.at(1).absoluteLocalPath(u"/bla/bla"_s), u"/bla/bla/../..");
+        QCOMPARE(importedModules.at(2).directoryString(), u"../dommerging"_s);
+        QCOMPARE(importedModules.at(2).localPath(), u"../dommerging"_s);
         QCOMPARE(importedModules.at(2).absoluteLocalPath(), QString());
-        QCOMPARE(importedModules.at(2).absoluteLocalPath(u"/bla/bla"_qs),
+        QCOMPARE(importedModules.at(2).absoluteLocalPath(u"/bla/bla"_s),
                  u"/bla/bla/../dommerging");
-        QCOMPARE(importedModules.at(3).directoryString(), u"C:/some/path"_qs);
-        QCOMPARE(importedModules.at(3).localPath(), u"C:/some/path"_qs);
-        QCOMPARE(importedModules.at(4).directoryString(), u"http://bla.com/"_qs);
-        QCOMPARE(importedModules.at(4).directoryUrl().toString(), u"http://bla.com/"_qs);
-        QCOMPARE(importedModules.at(5).absoluteLocalPath(), u"/absolute/path"_qs);
+        QCOMPARE(importedModules.at(3).directoryString(), u"C:/some/path"_s);
+        QCOMPARE(importedModules.at(3).localPath(), u"C:/some/path"_s);
+        QCOMPARE(importedModules.at(4).directoryString(), u"http://bla.com/"_s);
+        QCOMPARE(importedModules.at(4).directoryUrl().toString(), u"http://bla.com/"_s);
+        QCOMPARE(importedModules.at(5).absoluteLocalPath(), u"/absolute/path"_s);
         QVERIFY(QmlUri::fromDirectoryString("QtQuick") != importedModules.at(0));
         QCOMPARE(QmlUri::fromUriString("QtQuick"), importedModules.at(0));
     }
@@ -674,6 +679,8 @@ private slots:
 
     static void checkAliases(DomItem &qmlObj)
     {
+        using namespace Qt::StringLiterals;
+
         if (const QmlObject *qmlObjPtr = qmlObj.as<QmlObject>()) {
             auto pDefs = qmlObjPtr->propertyDefs();
             auto i = pDefs.constBegin();
@@ -688,34 +695,34 @@ private slots:
                         switch (propName.last(1).at(0).unicode()) {
                         case u'i':
                             QCOMPARE(rAlias.status, LocallyResolvedAlias::Status::ResolvedProperty);
-                            QCOMPARE(rAlias.typeName, u"int"_qs);
+                            QCOMPARE(rAlias.typeName, u"int"_s);
                             QVERIFY(rAlias.accessedPath.isEmpty());
                             QCOMPARE(rAlias.localPropertyDef.internalKind(),
                                      DomType::PropertyDefinition);
                             break;
                         case u'r':
                             QCOMPARE(rAlias.status, LocallyResolvedAlias::Status::ResolvedProperty);
-                            QCOMPARE(rAlias.typeName, u"real"_qs);
+                            QCOMPARE(rAlias.typeName, u"real"_s);
                             QVERIFY(rAlias.accessedPath.isEmpty());
                             QCOMPARE(rAlias.localPropertyDef.internalKind(),
                                      DomType::PropertyDefinition);
                             break;
                         case u'I':
                             QCOMPARE(rAlias.status, LocallyResolvedAlias::Status::ResolvedObject);
-                            QCOMPARE(rAlias.typeName, u"Item"_qs);
-                            QCOMPARE(rAlias.accessedPath, QStringList { u"objectName"_qs });
+                            QCOMPARE(rAlias.typeName, u"Item"_s);
+                            QCOMPARE(rAlias.accessedPath, QStringList { u"objectName"_s });
                             QVERIFY(!rAlias.localPropertyDef);
                             break;
                         case u'q':
                             QCOMPARE(rAlias.status, LocallyResolvedAlias::Status::ResolvedObject);
-                            QCOMPARE(rAlias.typeName, u"QtObject"_qs);
-                            QCOMPARE(rAlias.accessedPath, QStringList { u"objectName"_qs });
+                            QCOMPARE(rAlias.typeName, u"QtObject"_s);
+                            QCOMPARE(rAlias.accessedPath, QStringList { u"objectName"_s });
                             QVERIFY(!rAlias.localPropertyDef);
                             break;
                         case u'Q':
                             QCOMPARE(rAlias.status, LocallyResolvedAlias::Status::ResolvedObject);
-                            QCOMPARE(rAlias.typeName, u"QtObject"_qs);
-                            QCOMPARE(rAlias.accessedPath, QStringList { u"objectName"_qs });
+                            QCOMPARE(rAlias.typeName, u"QtObject"_s);
+                            QCOMPARE(rAlias.accessedPath, QStringList { u"objectName"_s });
                             QVERIFY(rAlias.localPropertyDef);
                             break;
                         default:
@@ -751,8 +758,10 @@ private slots:
     }
     void testAliasResolve()
     {
+        using namespace Qt::StringLiterals;
+
         QFETCH(QString, inFile);
-        QString testFile1 = baseDir + u"/"_qs + inFile;
+        QString testFile1 = baseDir + u"/"_s + inFile;
         DomItem env = DomEnvironment::create(
                 QStringList(),
                 QQmlJS::Dom::DomEnvironment::Option::SingleThreaded

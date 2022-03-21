@@ -54,6 +54,8 @@
 
 QT_USE_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 static const quint32 emptyStringIndex = 0;
 using namespace QmlIR;
 using namespace QQmlJS;
@@ -1177,7 +1179,7 @@ void IRBuilder::setBindingValue(QV4::CompiledData::Binding *binding, QQmlJS::AST
         if (exprStmt)
             nodeForString = exprStmt->expression;
         if (asStringRef(nodeForString) == u"undefined")
-            binding->stringIndex = registerString(u"undefined"_qs);
+            binding->stringIndex = registerString(u"undefined"_s);
         else
             binding->stringIndex = emptyStringIndex;
     }

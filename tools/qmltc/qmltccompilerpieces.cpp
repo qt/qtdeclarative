@@ -34,6 +34,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
                                                    const QQmlJSScope::ConstPtr &type,
                                                    const QQmlJSMetaProperty &p,
@@ -52,7 +54,7 @@ void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
         auto [prologue, wrappedValue, epilogue] =
                 QmltcCodeGenerator::wrap_mismatchingTypeConversion(p, value);
         *block += prologue;
-        *block << u"%1->m_%2 = %3;"_qs.arg(accessor, propertyName, wrappedValue);
+        *block << u"%1->m_%2 = %3;"_s.arg(accessor, propertyName, wrappedValue);
         *block += epilogue;
     } else if (QString propertySetter = p.write(); !propertySetter.isEmpty()) {
         // there's a WRITE function
@@ -64,7 +66,7 @@ void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
         *block += epilogue;
     } else { // TODO: we should remove this branch eventually
         // this property is weird, fallback to `setProperty`
-        *block << u"{ // couldn't find property setter, so using QObject::setProperty()"_qs;
+        *block << u"{ // couldn't find property setter, so using QObject::setProperty()"_s;
         QString val = value;
         if (constructFromQObject) {
             const QString variantName = u"var_" + propertyName;
@@ -74,7 +76,7 @@ void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
         }
         // NB: setProperty() would handle private properties
         *block << accessor + u"->setProperty(\"" + propertyName + u"\", " + val + u");";
-        *block << u"}"_qs;
+        *block << u"}"_s;
     }
 }
 
@@ -83,7 +85,7 @@ void QmltcCodeGenerator::generate_setIdValue(QStringList *block, const QString &
                                              const QString &idString)
 {
     Q_ASSERT(index >= 0);
-    *block << u"%1->setIdValue(%2 /* id: %3 */, %4);"_qs.arg(context, QString::number(index),
+    *block << u"%1->setIdValue(%2 /* id: %3 */, %4);"_s.arg(context, QString::number(index),
                                                              idString, accessor);
 }
 
@@ -95,14 +97,14 @@ void QmltcCodeGenerator::generate_callExecuteRuntimeFunction(QStringList *block,
 {
     *block << u"QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(" + accessor + u"));";
 
-    const QString returnValueName = u"_ret"_qs;
+    const QString returnValueName = u"_ret"_s;
     QStringList args;
     args.reserve(parameters.size() + 1);
     QStringList types;
     types.reserve(parameters.size() + 1);
-    if (returnType == u"void"_qs) {
-        args << u"nullptr"_qs;
-        types << u"QMetaType::fromType<void>()"_qs;
+    if (returnType == u"void"_s) {
+        args << u"nullptr"_s;
+        types << u"QMetaType::fromType<void>()"_s;
     } else {
         *block << returnType + u" " + returnValueName + u"{};"; // TYPE _ret{};
         args << u"const_cast<void *>(reinterpret_cast<const void *>(std::addressof("
@@ -116,11 +118,11 @@ void QmltcCodeGenerator::generate_callExecuteRuntimeFunction(QStringList *block,
         types << u"QMetaType::fromType<std::decay_t<" + p.cppType + u">>()";
     }
 
-    *block << u"void *_a[] = { " + args.join(u", "_qs) + u" };";
-    *block << u"QMetaType _t[] = { " + types.join(u", "_qs) + u" };";
+    *block << u"void *_a[] = { " + args.join(u", "_s) + u" };";
+    *block << u"QMetaType _t[] = { " + types.join(u", "_s) + u" };";
     *block << u"e->executeRuntimeFunction(" + url + u", " + QString::number(index) + u", "
                     + accessor + u", " + QString::number(parameters.size()) + u", _a, _t);";
-    if (returnType != u"void"_qs)
+    if (returnType != u"void"_s)
         *block << u"return " + returnValueName + u";";
 }
 
@@ -165,20 +167,20 @@ QmltcCodeGenerator::wrap_mismatchingTypeConversion(const QQmlJSMetaProperty &p, 
     QStringList prologue;
     QStringList epilogue;
     auto propType = p.type();
-    if (isDerivedFromBuiltin(propType, u"QVariant"_qs)) {
+    if (isDerivedFromBuiltin(propType, u"QVariant"_s)) {
         const QString variantName = u"var_" + p.propertyName();
-        prologue << u"{ // accepts QVariant"_qs;
+        prologue << u"{ // accepts QVariant"_s;
         prologue << u"QVariant " + variantName + u";";
         prologue << variantName + u".setValue(" + value + u");";
-        epilogue << u"}"_qs;
+        epilogue << u"}"_s;
         value = u"std::move(" + variantName + u")";
-    } else if (isDerivedFromBuiltin(propType, u"QJSValue"_qs)) {
+    } else if (isDerivedFromBuiltin(propType, u"QJSValue"_s)) {
         const QString jsvalueName = u"jsvalue_" + p.propertyName();
-        prologue << u"{ // accepts QJSValue"_qs;
+        prologue << u"{ // accepts QJSValue"_s;
         // Note: do not assume we have the engine, acquire it from `this`
-        prologue << u"auto e = qmlEngine(this);"_qs;
+        prologue << u"auto e = qmlEngine(this);"_s;
         prologue << u"QJSValue " + jsvalueName + u" = e->toScriptValue(" + value + u");";
-        epilogue << u"}"_qs;
+        epilogue << u"}"_s;
         value = u"std::move(" + jsvalueName + u")";
     }
     return { prologue, value, epilogue };
@@ -200,7 +202,7 @@ QString QmltcCodeGenerator::wrap_qOverload(const QList<QmltcVariable> &parameter
     types.reserve(parameters.size());
     for (const QmltcVariable &p : parameters)
         types.emplaceBack(p.cppType);
-    return u"qOverload<" + types.join(u", "_qs) + u">(" + overloaded + u")";
+    return u"qOverload<" + types.join(u", "_s) + u">(" + overloaded + u")";
 }
 
 QString QmltcCodeGenerator::wrap_addressof(const QString &addressed)

@@ -37,6 +37,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 namespace QQmlSA {
 
 class GenericPassPrivate {
@@ -129,12 +131,12 @@ bool PassManager::hasImportedModule(QAnyStringView module) const
 
 void DebugElementPass::run(const Element &element) {
     emitWarning(u"Type: " + element->baseTypeName());
-    if (auto bindings = element->propertyBindings(u"objectName"_qs); !bindings.isEmpty()) {
+    if (auto bindings = element->propertyBindings(u"objectName"_s); !bindings.isEmpty()) {
         emitWarning(u"is named: " + bindings.first().stringValue());
     }
     if (auto defPropName = element->defaultPropertyName(); !defPropName.isEmpty()) {
         emitWarning(u"binding " + QString::number(element->propertyBindings(defPropName).size())
-                    + u" elements to property "_qs + defPropName);
+                    + u" elements to property "_s + defPropName);
     }
 }
 

@@ -44,6 +44,7 @@
 
 using namespace QQuickVisualTestUtils;
 using namespace QQuickControlsTestUtils;
+using namespace Qt::StringLiterals;
 
 class tst_Sanity : public QObject
 {
@@ -76,11 +77,11 @@ tst_Sanity::tst_Sanity()
     // Mainly because a lot of false positives are generated because we are linting files from
     // different modules directly without their generated qmldirs.
     for (const QString &key : m_options.keys())
-        m_options[key].setLevel(u"disable"_qs);
+        m_options[key].setLevel(u"disable"_s);
 
-    m_options[u"deferred-property-id"_qs].setLevel(u"warning"_qs);
-    m_options[u"controls-sanity"_qs].setLevel(u"warning"_qs);
-    m_options[u"multiple-attached-objects"_qs].setLevel(u"warning"_qs);
+    m_options[u"deferred-property-id"_s].setLevel(u"warning"_s);
+    m_options[u"controls-sanity"_s].setLevel(u"warning"_s);
+    m_options[u"multiple-attached-objects"_s].setLevel(u"warning"_s);
 }
 
 void tst_Sanity::initTestCase()

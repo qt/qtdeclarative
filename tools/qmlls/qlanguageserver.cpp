@@ -32,6 +32,7 @@
 QT_BEGIN_NAMESPACE
 
 using namespace QLspSpecification;
+using namespace Qt::StringLiterals;
 
 Q_LOGGING_CATEGORY(lspServerLog, "qt.languageserver.server")
 
@@ -196,13 +197,13 @@ void QLanguageServer::registerMethods(QJsonRpc::TypedRpc &typedRpc)
                 if (rState == RunStatus::NotSetup || rState == RunStatus::DidSetup)
                     responder(QJsonRpcProtocol::MessageHandler::error(
                             int(QLspSpecification::ErrorCodes::ServerNotInitialized),
-                            u"Request on non initialized Language Server (runStatus %1): %2"_qs
+                            u"Request on non initialized Language Server (runStatus %1): %2"_s
                                     .arg(int(rState))
                                     .arg(QString::fromUtf8(doc.toJson()))));
                 else
                     responder(QJsonRpcProtocol::MessageHandler::error(
                             int(QLspSpecification::ErrorCodes::InvalidRequest),
-                            u"Method called on stopping Language Server (runStatus %1)"_qs.arg(
+                            u"Method called on stopping Language Server (runStatus %1)"_s.arg(
                                     int(rState))));
                 return QJsonRpcProtocol::Processing::Stop;
             });
@@ -284,12 +285,12 @@ void QLanguageServer::registerHandlers(QLanguageServerProtocol *protocol)
                     if (rStatus == RunStatus::NotSetup || rStatus == RunStatus::SettingUp)
                         response.sendErrorResponse(
                                 int(QLspSpecification::ErrorCodes::InvalidRequest),
-                                u"Initialization request received on non setup language server"_qs
+                                u"Initialization request received on non setup language server"_s
                                         .toUtf8());
                     else
                         response.sendErrorResponse(
                                 int(QLspSpecification::ErrorCodes::InvalidRequest),
-                                u"Received multiple initialization requests"_qs.toUtf8());
+                                u"Received multiple initialization requests"_s.toUtf8());
                     emit lifecycleError();
                     return;
                 }
