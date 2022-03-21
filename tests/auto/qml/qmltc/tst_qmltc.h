@@ -28,13 +28,15 @@
 
 #include <qtest.h>
 
+using namespace Qt::StringLiterals;
+
 class tst_qmltc : public QObject
 {
     Q_OBJECT
 
     bool isCacheDisabled() const
     {
-        static bool isDisabled = []() { return qgetenv("QML_DISABLE_DISK_CACHE") == "1"_qba; }();
+        static bool isDisabled = []() { return qgetenv("QML_DISABLE_DISK_CACHE") == "1"_ba; }();
         return isDisabled;
     }
 
