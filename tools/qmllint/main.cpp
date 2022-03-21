@@ -41,6 +41,7 @@
 #include <QtCore/qjsonarray.h>
 #include <QtCore/qjsondocument.h>
 #include <QtCore/qscopeguard.h>
+#include <QtCore/qplugin.h>
 
 #if QT_CONFIG(commandlineparser)
 #include <QtCore/qcommandlineparser.h>
@@ -51,6 +52,10 @@
 #include <cstdio>
 
 constexpr int JSON_LOGGING_FORMAT_REVISION = 3;
+
+#ifdef PLUGIN_QUICK_AVAILABLE
+Q_IMPORT_PLUGIN(QmlLintPluginQuick)
+#endif
 
 int main(int argv, char *argc[])
 {

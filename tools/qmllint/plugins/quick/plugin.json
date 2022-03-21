@@ -1,0 +1,6 @@
+{
+    "name": "Quick",
+    "author": "Qt",
+    "description": "Warns about QtQuick best practices",
+    "version": "1.0"
+}

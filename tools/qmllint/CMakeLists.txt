@@ -18,6 +18,15 @@ qt_internal_add_tool(${target_name}
 )
 qt_internal_return_unless_building_tools()
 
+add_subdirectory(plugins)
+
+qt_internal_extend_target(${target_name} CONDITION TARGET QmlLintPluginQuick
+    DEFINES
+        PLUGIN_QUICK_AVAILABLE
+    PUBLIC_LIBRARIES
+        QmlLintPluginQuick
+)
+
 #### Keys ignored in scope 1:.:.:qmllint.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "QML" "Syntax" "Verifier"
 # _OPTION = "host_build"
