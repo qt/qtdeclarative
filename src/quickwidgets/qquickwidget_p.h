@@ -104,6 +104,7 @@ public:
     QImage grabFramebuffer() override;
 
     void init(QQmlEngine* e = 0);
+    void ensureBackingScene();
     void initOffscreenWindow();
     void ensureEngine() const;
     void handleWindowChange();

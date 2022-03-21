@@ -179,7 +179,8 @@ QWindow *QQuickWidgetRenderControl::renderWindow(QPoint *offset)
 void QQuickWidgetPrivate::initOffscreenWindow()
 {
     Q_Q(QQuickWidget);
-    offscreenWindow = new QQuickWidgetOffscreenWindow(*new QQuickWidgetOffscreenWindowPrivate(), renderControl);
+
+    ensureBackingScene();
     offscreenWindow->setScreen(q->screen());
     // Do not call create() on offscreenWindow.
 
@@ -192,17 +193,30 @@ void QQuickWidgetPrivate::initOffscreenWindow()
 #endif
 }
 
-void QQuickWidgetPrivate::init(QQmlEngine* e)
+void QQuickWidgetPrivate::ensureBackingScene()
 {
-    Q_Q(QQuickWidget);
+    // This should initialize, if not already done, the absolute minimum set of
+    // mandatory backing resources, meaning the QQuickWindow and its
+    // QQuickRenderControl. This function may be called very early on upon
+    // construction, including before init() even.
 
-    renderControl = new QQuickWidgetRenderControl(q);
-    initOffscreenWindow();
+    Q_Q(QQuickWidget);
+    if (!renderControl)
+        renderControl = new QQuickWidgetRenderControl(q);
+    if (!offscreenWindow)
+        offscreenWindow = new QQuickWidgetOffscreenWindow(*new QQuickWidgetOffscreenWindowPrivate(), renderControl);
 
     // Check if the Software Adaptation is being used
     auto sgRendererInterface = offscreenWindow->rendererInterface();
     if (sgRendererInterface && sgRendererInterface->graphicsApi() == QSGRendererInterface::Software)
         useSoftwareRenderer = true;
+}
+
+void QQuickWidgetPrivate::init(QQmlEngine* e)
+{
+    Q_Q(QQuickWidget);
+
+    initOffscreenWindow();
 
     if (!useSoftwareRenderer) {
         if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::RhiBasedRendering))
@@ -1280,6 +1294,7 @@ void QQuickWidgetPrivate::setRootObject(QObject *obj)
 
 QPlatformBackingStoreRhiConfig QQuickWidgetPrivate::rhiConfig() const
 {
+    const_cast<QQuickWidgetPrivate *>(this)->ensureBackingScene();
     if (useSoftwareRenderer)
         return {};
 

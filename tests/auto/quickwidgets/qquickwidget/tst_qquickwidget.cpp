@@ -127,7 +127,6 @@ public:
     tst_qquickwidget();
 
 private slots:
-    void initTestCase();
     void showHide();
     void reparentAfterShow();
     void changeGeometry();
@@ -163,21 +162,6 @@ private:
 tst_qquickwidget::tst_qquickwidget()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi);
-}
-
-void tst_qquickwidget::initTestCase()
-{
-    QQmlDataTest::initTestCase();
-
-    // ### QTBUG-101884 Skip this test in the QEMU configs in the CI. That runs
-    // with the offscreen plugin and the software backend of Qt Quick. Until
-    // some of the test cases are investigated, skip the whole test.
-    if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
-        || (QGuiApplication::platformName() == QLatin1String("minimal")))
-    {
-        QSKIP("Skipping due to using a an offscreen platform / software rendering");
-    }
 }
 
 void tst_qquickwidget::showHide()

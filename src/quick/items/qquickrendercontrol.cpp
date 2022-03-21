@@ -211,7 +211,12 @@ QQuickRenderControl::~QQuickRenderControl()
 
     delete d->rc;
 
-    d->resetRhi();
+    // Only call rhi related cleanup when we actually got to initialize() and
+    // managed to get a QRhi. The software backend for instance would mean
+    // using the rendercontrol without ever calling initialize() - it is then
+    // important to completely skip calling any QSGRhiSupport functions.
+    if (d->rhi)
+        d->resetRhi();
 }
 
 void QQuickRenderControlPrivate::windowDestroyed()
