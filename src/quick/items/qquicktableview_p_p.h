@@ -486,8 +486,6 @@ public:
     void positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset);
     bool scrollToRow(int row, Qt::Alignment alignment, qreal offset);
     bool scrollToColumn(int column, Qt::Alignment alignment, qreal offset);
-    void ensureRowVisible(int row, bool contain, qreal offset);
-    void ensureColumnVisible(int column, bool contain, qreal offset);
 
     void scheduleRebuildIfFastFlick();
     void setLocalViewportX(qreal contentX);

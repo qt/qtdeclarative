@@ -200,6 +200,8 @@ private slots:
     void positionViewAtCellWithAnimation();
     void positionViewAtCell_VisibleAndContain_data();
     void positionViewAtCell_VisibleAndContain();
+    void positionViewAtCellForLargeCells_data();
+    void positionViewAtCellForLargeCells();
     void itemAtCell_data();
     void itemAtCell();
     void leftRightTopBottomProperties_data();
@@ -3586,6 +3588,51 @@ void tst_QQuickTableView::positionViewAtCell_VisibleAndContain()
     }
 
     QVERIFY(tableView->itemAtCell(cell));
+}
+
+void tst_QQuickTableView::positionViewAtCellForLargeCells_data()
+{
+    QTest::addColumn<qreal>("cellSize");
+
+    QTest::newRow("200") << 200.;
+    QTest::newRow("800") << 800.;
+}
+
+void tst_QQuickTableView::positionViewAtCellForLargeCells()
+{
+    // Position the view on a cell outside the viewport. When the cells are larger
+    // than the viewport, check that TableView.Contain will place the cell top-left.
+    // When the cells are smaller than the viewport, it should be placed bottom-right.
+    QFETCH(qreal, cellSize);
+
+    LOAD_TABLEVIEW("plaintableview.qml");
+
+    auto model = TestModelAsVariant(10, 10);
+    tableView->setModel(model);
+
+    view->rootObject()->setProperty("delegateWidth", cellSize);
+    view->rootObject()->setProperty("delegateHeight", cellSize);
+
+    WAIT_UNTIL_POLISHED;
+
+    const QPoint cell(5, 5);
+    tableView->positionViewAtCell(cell, QQuickTableView::Contain);
+
+    WAIT_UNTIL_POLISHED;
+
+    const QQuickItem *item = tableView->itemAtCell(cell);
+    QVERIFY(item);
+
+    QPointF expectedPos;
+    if (cellSize > tableView->width()) {
+        expectedPos = tableView->mapToItem(tableView->contentItem(), QPointF(0, 0));
+    } else {
+        expectedPos = tableView->mapToItem(tableView->contentItem(), QPointF(tableView->width(), tableView->height()));
+        expectedPos -= QPointF(item->width(), item->height());
+    }
+
+    QCOMPARE(item->x(), expectedPos.x());
+    QCOMPARE(item->y(), expectedPos.y());
 }
 
 void tst_QQuickTableView::itemAtCell_data()
