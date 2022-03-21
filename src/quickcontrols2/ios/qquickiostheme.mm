@@ -56,24 +56,30 @@ void QQuickIOSTheme::initialize(QQuickTheme *theme)
     QColor blue;
     QColor white;
     QColor disabled;
+    QColor grey;
 #ifdef Q_OS_IOS
     blue = qt_mac_toQColor(UIColor.systemBlueColor.CGColor);
     disabled = qt_mac_toQColor(UIColor.tertiarySystemFillColor.CGColor);
     white = qt_mac_toQColor(UIColor.whiteColor.CGColor);
+    grey = qt_mac_toQColor(UIColor.systemGrayColor.CGColor);
 #else
     blue = QColor(qRgba(0, 122, 255, 255));
     white = QColor(qRgba(255, 255, 255, 255));
     disabled = QColor(qRgba(118, 118, 128, 31));
+    grey = QColor(qRgba(142, 142, 147, 255));
 #endif
-    systemPalette.setColor(QPalette::Active, QPalette::Button, blue);
+    systemPalette.setColor(QPalette::Button, blue);
     systemPalette.setColor(QPalette::Disabled, QPalette::Button, disabled);
-    systemPalette.setColor(QPalette::Active, QPalette::ButtonText, white);
+
+    systemPalette.setColor(QPalette::ButtonText, white);
 
     white.setAlphaF(0.5);
     systemPalette.setColor(QPalette::Disabled, QPalette::ButtonText, white);
 
     blue.setAlphaF(0.8);
     systemPalette.setColor(QPalette::Highlight, blue);
+
+    systemPalette.setColor(QPalette::Mid, grey);
 
     theme->setPalette(QQuickTheme::System, systemPalette);
 }

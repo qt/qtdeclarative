@@ -67,7 +67,9 @@ T.Button {
         icon: control.icon
         text: control.text
         font: control.font
-        color: control.palette.buttonText
+        color: control.flat ? (control.enabled ? (control.down ? control.palette.highlight : control.palette.button)
+                                               : control.palette.mid)
+                            : control.palette.buttonText
     }
 
     background: Rectangle {
