@@ -270,7 +270,6 @@ void QQuickGridLayoutBase::setOrientation(Qt::Orientation orientation)
 QSizeF QQuickGridLayoutBase::sizeHint(Qt::SizeHint whichSizeHint) const
 {
     Q_D(const QQuickGridLayoutBase);
-    ensureLayoutItemsUpdated();
     return d->engine.sizeHint(whichSizeHint, QSizeF(), d->styleInfo);
 }
 
@@ -346,7 +345,7 @@ void QQuickGridLayoutBase::componentComplete()
        need to call invalidate() in advance
     */
     invalidate();
-    ensureLayoutItemsUpdated();
+    ensureLayoutItemsUpdated(QQuickLayout::ApplySizeHints);
 
     QQuickItem *par = parentItem();
     if (qobject_cast<QQuickLayout*>(par))
@@ -422,10 +421,6 @@ void QQuickGridLayoutBase::updateLayoutItems()
     Q_D(QQuickGridLayoutBase);
     if (!isReady())
         return;
-    if (d->m_rearranging) {
-        d->m_updateAfterRearrange = true;
-        return;
-    }
 
     qCDebug(lcQuickLayouts) << "QQuickGridLayoutBase::updateLayoutItems ENTERING" << this;
     d->engine.deleteItems();
@@ -436,16 +431,12 @@ void QQuickGridLayoutBase::updateLayoutItems()
 QQuickItem *QQuickGridLayoutBase::itemAt(int index) const
 {
     Q_D(const QQuickGridLayoutBase);
-    qCDebug(lcQuickLayouts).nospace() << "QQuickGridLayoutBase::itemAt(" << index << ")";
-    ensureLayoutItemsUpdated();
-    qCDebug(lcQuickLayouts).nospace() << "QQuickGridLayoutBase::itemAt(" << index << ") LEAVING";
     return static_cast<QQuickGridLayoutItem*>(d->engine.itemAt(index))->layoutItem();
 }
 
 int QQuickGridLayoutBase::itemCount() const
 {
     Q_D(const QQuickGridLayoutBase);
-    ensureLayoutItemsUpdated();
     return d->engine.itemCount();
 }
 
@@ -497,8 +488,6 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
         return;
     }
 
-    ensureLayoutItemsUpdated();
-
     d->m_rearranging = true;
     qCDebug(lcQuickLayouts) << objectName() << "QQuickGridLayoutBase::rearrange()" << size;
     Qt::LayoutDirection visualDir = effectiveLayoutDirection();
@@ -520,11 +509,6 @@ void QQuickGridLayoutBase::rearrange(const QSizeF &size)
     for (QQuickItem *invalid : qAsConst(d->m_invalidateAfterRearrange))
         invalidate(invalid);
     d->m_invalidateAfterRearrange.clear();
-
-    if (d->m_updateAfterRearrange) {
-        ensureLayoutItemsUpdated();
-        d->m_updateAfterRearrange = false;
-    }
 }
 
 /**********************************
@@ -684,15 +668,13 @@ void QQuickGridLayout::insertLayoutItems()
     if (flowBound < 0)
         flowBound = std::numeric_limits<int>::max();
 
-    QSizeF sizeHints[Qt::NSizeHints];
     const auto items = childItems();
     for (QQuickItem *child : items) {
         checkAnchors(child);
-        QQuickLayoutAttached *info = nullptr;
-
         // Will skip all items with effective maximum width/height == 0
-        if (shouldIgnoreItem(child, info, sizeHints))
+        if (shouldIgnoreItem(child))
             continue;
+        QQuickLayoutAttached *info = attachedLayoutObject(child, false);
 
         Qt::Alignment alignment;
         int row = -1;
@@ -785,8 +767,6 @@ void QQuickGridLayout::insertLayoutItems()
         column = nextColumn;
         row = nextRow;
         QQuickGridLayoutItem *layoutItem = new QQuickGridLayoutItem(child, row, column, rowSpan, columnSpan, alignment);
-        layoutItem->setCachedSizeHints(sizeHints);
-
         d->engine.insertItem(layoutItem, -1);
     }
 }
@@ -871,16 +851,15 @@ void QQuickLinearLayout::setSpacing(qreal space)
 void QQuickLinearLayout::insertLayoutItems()
 {
     Q_D(QQuickLinearLayout);
-    QSizeF sizeHints[Qt::NSizeHints];
     const auto items = childItems();
     for (QQuickItem *child : items) {
         Q_ASSERT(child);
         checkAnchors(child);
-        QQuickLayoutAttached *info = nullptr;
 
         // Will skip all items with effective maximum width/height == 0
-        if (shouldIgnoreItem(child, info, sizeHints))
+        if (shouldIgnoreItem(child))
             continue;
+        QQuickLayoutAttached *info = attachedLayoutObject(child, false);
 
         Qt::Alignment alignment;
         if (info)
@@ -894,7 +873,6 @@ void QQuickLinearLayout::insertLayoutItems()
         if (d->orientation == Qt::Vertical)
             qSwap(gridRow, gridColumn);
         QQuickGridLayoutItem *layoutItem = new QQuickGridLayoutItem(child, gridRow, gridColumn, 1, 1, alignment);
-        layoutItem->setCachedSizeHints(sizeHints);
         d->engine.insertItem(layoutItem, index);
     }
 }

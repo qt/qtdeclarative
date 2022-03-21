@@ -184,7 +184,7 @@ void QQuickStackLayout::componentComplete()
 {
     QQuickLayout::componentComplete();    // will call our geometryChange(), (where isComponentComplete() == true)
 
-    ensureLayoutItemsUpdated();
+    ensureLayoutItemsUpdated(ApplySizeHints);
 
     QQuickItem *par = parentItem();
     if (qobject_cast<QQuickLayout*>(par))
@@ -214,7 +214,7 @@ void QQuickStackLayout::itemChange(QQuickItem::ItemChange change, const QQuickIt
 QSizeF QQuickStackLayout::sizeHint(Qt::SizeHint whichSizeHint) const
 {
     Q_D(const QQuickStackLayout);
-    ensureLayoutItemsUpdated();
+    ensureLayoutItemsUpdated(ApplySizeHints);
     QSizeF &askingFor = m_cachedSizeHints[whichSizeHint];
     if (!askingFor.isValid()) {
         QSizeF &minS = m_cachedSizeHints[Qt::MinimumSize];
@@ -347,7 +347,7 @@ void QQuickStackLayout::rearrange(const QSizeF &newSize)
         return;
 
     qCDebug(lcQuickLayouts) << "QQuickStackLayout::rearrange";
-    ensureLayoutItemsUpdated();
+    ensureLayoutItemsUpdated(ApplySizeHints);
 
     if (d->currentIndex == -1 || d->currentIndex >= m_cachedItemSizeHints.count())
         return;

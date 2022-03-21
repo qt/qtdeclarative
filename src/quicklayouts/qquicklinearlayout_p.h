@@ -121,7 +121,6 @@ class QQuickGridLayoutBasePrivate : public QQuickLayoutPrivate
 public:
     QQuickGridLayoutBasePrivate() : m_recurRearrangeCounter(0)
                                     , m_rearranging(false)
-                                    , m_updateAfterRearrange(false)
                                     , m_layoutDirection(Qt::LeftToRight)
                                     {}
 
@@ -135,7 +134,6 @@ public:
     Qt::Orientation orientation;
     unsigned m_recurRearrangeCounter : 2;
     unsigned m_rearranging : 1;
-    unsigned m_updateAfterRearrange : 1;
     QVector<QQuickItem *> m_invalidateAfterRearrange;
     Qt::LayoutDirection m_layoutDirection : 2;
 

@@ -985,8 +985,10 @@ Item {
 
             // reset left|rightMargin. It should then use the generic "margins" property
             c0.Layout.leftMargin = undefined
+            waitForItemPolished(layout)
             compare(layout.implicitWidth, 10 + 20 + 4 + 4 + 20 + 6)
             c0.Layout.bottomMargin = undefined
+            waitForItemPolished(layout)
             compare(layout.implicitHeight, 3 + 20 + 10 + 4 + 20 + 5)
         }
 
