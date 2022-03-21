@@ -656,7 +656,8 @@ void tst_qquickbehaviors::safeToDelete()
 {
     QQmlEngine engine;
     QQmlComponent c(&engine, testFileUrl("delete.qml"));
-    QVERIFY(c.create());
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(o.data());
 }
 
 Q_DECLARE_METATYPE(QQmlProperty)
