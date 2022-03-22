@@ -73,6 +73,64 @@ static DiagnosticSeverity severityFromMsgType(QtMsgType t)
     return DiagnosticSeverity::Error;
 }
 
+static void codeActionHandler(
+        const QByteArray &, const CodeActionParams &params,
+        LSPPartialResponse<std::variant<QList<std::variant<Command, CodeAction>>, std::nullptr_t>,
+                           QList<std::variant<Command, CodeAction>>> &&response)
+{
+    QList<std::variant<Command, CodeAction>> responseData;
+
+    for (const Diagnostic &diagnostic : params.context.diagnostics) {
+        if (!diagnostic.data.has_value())
+            continue;
+
+        QJsonArray suggestions = diagnostic.data.value().toArray();
+
+        QList<TextDocumentEdit> edits;
+        QString message;
+        for (const QJsonValue &suggestion : suggestions) {
+            QString replacement = suggestion[u"replacement"].toString();
+            message += suggestion[u"message"].toString() + u"\n";
+
+            TextEdit textEdit;
+            textEdit.range = { Position { suggestion[u"lspBeginLine"].toInt(),
+                                          suggestion[u"lspBeginCharacter"].toInt() },
+                               Position { suggestion[u"lspEndLine"].toInt(),
+                                          suggestion[u"lspEndCharacter"].toInt() } };
+            textEdit.newText = replacement.toUtf8();
+
+            TextDocumentEdit textDocEdit;
+            textDocEdit.textDocument = { params.textDocument };
+            textDocEdit.edits.append(textEdit);
+
+            edits.append(textDocEdit);
+        }
+        message.chop(1);
+        WorkspaceEdit edit;
+        edit.documentChanges = edits;
+
+        CodeAction action;
+        action.kind = u"refactor.rewrite"_qs.toUtf8();
+        action.edit = edit;
+        action.title = message.toUtf8();
+
+        responseData.append(action);
+    }
+
+    response.sendResponse(responseData);
+}
+
+void QmlLintSuggestions::registerHandlers(QLanguageServer *, QLanguageServerProtocol *protocol)
+{
+    protocol->registerCodeActionRequestHandler(&codeActionHandler);
+}
+
+void QmlLintSuggestions::setupCapabilities(const QLspSpecification::InitializeParams &,
+                                           QLspSpecification::InitializeResult &serverInfo)
+{
+    serverInfo.capabilities.codeActionProvider = true;
+}
+
 QmlLintSuggestions::QmlLintSuggestions(QLanguageServer *server, QmlLsp::QQmlCodeModel *codeModel)
     : m_server(server), m_codeModel(codeModel)
 {
@@ -168,6 +226,29 @@ void QmlLintSuggestions::diagnose(const QByteArray &uri)
             addLength(range.end, message[u"charOffset"].toInt(), message[u"length"].toInt());
             diagnostic.message = message[u"message"].toString().toUtf8();
             diagnostic.source = QByteArray("qmllint");
+
+            auto suggestions = message[u"suggestions"].toArray();
+            if (!suggestions.isEmpty()) {
+                // We need to interject the information about where the fix suggestions end
+                // here since we don't have access to the textDocument to calculate it later.
+                QJsonArray fixedSuggestions;
+                for (const QJsonValue &value : suggestions) {
+                    QJsonObject object = value.toObject();
+                    int line = message[u"line"].toInt(1) - 1;
+                    int column = message[u"column"].toInt(1) - 1;
+                    object[u"lspBeginLine"] = line;
+                    object[u"lspBeginCharacter"] = column;
+
+                    Position end = { line, column };
+
+                    addLength(end, object[u"charOffset"].toInt(), object[u"length"].toInt());
+                    object[u"lspEndLine"] = end.line;
+                    object[u"lspEndCharacter"] = end.character;
+
+                    fixedSuggestions << object;
+                }
+                diagnostic.data = fixedSuggestions;
+            }
             return diagnostic;
         };
         doc.iterateErrors(

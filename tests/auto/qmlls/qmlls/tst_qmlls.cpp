@@ -73,6 +73,17 @@ public:
         return num;
     }
 
+    QList<Diagnostic> diagnostics(const QByteArray &uri) const
+    {
+        QList<Diagnostic> result;
+        for (const auto &params : m_received) {
+            if (params.uri == uri)
+                result << params.diagnostics;
+        }
+
+        return result;
+    }
+
     void clear() { m_received.clear(); }
 
 private:
@@ -159,6 +170,75 @@ void tst_Qmlls::didOpenTextDocument()
 
     QTRY_VERIFY_WITH_TIMEOUT(m_diagnosticsHandler.numDiagnostics(uri) != 0, 10000);
     QVERIFY(m_diagnosticsHandler.contains(uri, 3, 4, 3, 10));
+
+    auto diagnostics = m_diagnosticsHandler.diagnostics(uri);
+
+    CodeActionParams codeActionParams;
+    codeActionParams.textDocument = { textDocument.uri };
+    codeActionParams.context.diagnostics = diagnostics;
+    codeActionParams.range.start = Position { 0, 0 };
+    codeActionParams.range.end =
+            Position { static_cast<int>(textDocument.text.split(u'\n').size()), 0 };
+
+    bool success = false;
+    m_protocol.requestCodeAction(
+            codeActionParams,
+            [&](const std::variant<QList<std::variant<Command, CodeAction>>, std::nullptr_t>
+                        &response) {
+                using ListType = QList<std::variant<Command, CodeAction>>;
+
+                QVERIFY(std::holds_alternative<ListType>(response));
+
+                auto list = std::get<ListType>(response);
+
+                QList<QPair<QString, QString>> expectedData = {
+                    { QLatin1StringView("Did you mean \"width\"?"), QLatin1StringView("width") },
+                    { QLatin1StringView("Did you mean \"z\"?"), QLatin1StringView("z") }
+                };
+                QCOMPARE(list.size(), expectedData.size());
+
+                for (const auto &entry : list) {
+                    QVERIFY(std::holds_alternative<CodeAction>(entry));
+                    CodeAction action = std::get<CodeAction>(entry);
+
+                    QString title = QString::fromUtf8(action.title);
+                    QVERIFY(action.kind.has_value());
+                    QCOMPARE(QString::fromUtf8(action.kind.value()),
+                             QLatin1StringView("refactor.rewrite"));
+                    QVERIFY(action.edit.has_value());
+                    WorkspaceEdit edit = action.edit.value();
+
+                    QVERIFY(edit.documentChanges.has_value());
+                    auto docChangeVariant = edit.documentChanges.value();
+                    QVERIFY(std::holds_alternative<QList<TextDocumentEdit>>(docChangeVariant));
+                    auto documentChanges = std::get<QList<TextDocumentEdit>>(docChangeVariant);
+                    QCOMPARE(documentChanges.size(), 1);
+
+                    TextDocumentEdit textDocEdit = documentChanges.first();
+                    QCOMPARE(textDocEdit.textDocument.uri, textDocument.uri);
+
+                    QCOMPARE(textDocEdit.edits.size(), 1);
+                    auto editVariant = textDocEdit.edits.first();
+                    QVERIFY(std::holds_alternative<TextEdit>(editVariant));
+
+                    TextEdit textEdit = std::get<TextEdit>(editVariant);
+                    QString newText = QString::fromUtf8(textEdit.newText);
+                    QPair<QString, QString> data = { title, newText };
+
+                    qsizetype dataIndex = expectedData.indexOf(data);
+                    QVERIFY2(dataIndex != -1,
+                             qPrintable(QLatin1String("{\"%1\",\"%2\"}").arg(title, newText)));
+                    // Make sure every expected entry only occurs once
+                    expectedData.remove(dataIndex);
+                }
+
+                success = true;
+            },
+            [](const QLspSpecification::ResponseError &error) {
+                qWarning() << "CodeAction Error:" << QString::fromUtf8(error.message);
+            });
+
+    QTRY_VERIFY_WITH_TIMEOUT(success, 10000);
     m_diagnosticsHandler.clear();
 }
 

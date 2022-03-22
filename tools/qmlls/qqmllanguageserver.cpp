@@ -69,6 +69,7 @@ QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> s
 {
     m_server.addServerModule(this);
     m_server.addServerModule(&m_textSynchronization);
+    m_server.addServerModule(&m_lint);
     m_server.finishSetup();
     qCWarning(lspServerLog) << "Did Setup";
 }

@@ -41,13 +41,18 @@ struct LastLintUpdate
     std::optional<QDateTime> invalidUpdatesSince;
 };
 
-class QmlLintSuggestions : public QObject
+class QmlLintSuggestions : public QLanguageServerModule
 {
     Q_OBJECT
 public:
     QmlLintSuggestions(QLanguageServer *server, QmlLsp::QQmlCodeModel *codeModel);
+
+    QString name() const override { return QLatin1StringView("QmlLint Suggestions"); }
 public slots:
     void diagnose(const QByteArray &uri);
+    void registerHandlers(QLanguageServer *server, QLanguageServerProtocol *protocol) override;
+    void setupCapabilities(const QLspSpecification::InitializeParams &clientInfo,
+                           QLspSpecification::InitializeResult &) override;
 
 private:
     QMutex m_mutex;
