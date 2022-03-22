@@ -703,10 +703,10 @@
 */
 
 /*!
-    \qmlmethod QModelIndex QtQuick::TableView::modelIndex(int row, int column)
+    \qmlmethod QModelIndex QtQuick::TableView::modelIndex(int column, int row)
     \since 6.4
 
-    Returns the \l QModelIndex that maps to \a row and \a column in the view.
+    Returns the \l QModelIndex that maps to \a column and \a row in the view.
 
     \a row and \a column should be the row and column in the view (table row and
     table column), and not a row and column in the model.
@@ -4545,7 +4545,7 @@ QPoint QQuickTableView::cellAtIndex(const QModelIndex &index) const
     return {index.column(), index.row()};
 }
 
-QModelIndex QQuickTableView::modelIndex(int row, int column) const
+QModelIndex QQuickTableView::modelIndex(int column, int row) const
 {
     return modelIndex({column, row});
 }

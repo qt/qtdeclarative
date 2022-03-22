@@ -80,8 +80,8 @@ public:
     Q_REVISION(6, 4) Q_INVOKABLE void expandToIndex(const QModelIndex &index);
 
     Q_INVOKABLE QModelIndex modelIndex(const QPoint &cell) const override;
+    Q_INVOKABLE QModelIndex modelIndex(int column, int row) const override;
     Q_INVOKABLE QPoint cellAtIndex(const QModelIndex &index) const override;
-    Q_INVOKABLE QModelIndex modelIndex(int row, int column) const override;
 
 signals:
     void expanded(int row, int depth);

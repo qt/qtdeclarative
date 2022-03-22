@@ -566,7 +566,7 @@ QPoint QQuickTreeView::cellAtIndex(const QModelIndex &index) const
     return QPoint(tableIndex.column(), tableIndex.row());
 }
 
-QModelIndex QQuickTreeView::modelIndex(int row, int column) const
+QModelIndex QQuickTreeView::modelIndex(int column, int row) const
 {
     return modelIndex({column, row});
 }

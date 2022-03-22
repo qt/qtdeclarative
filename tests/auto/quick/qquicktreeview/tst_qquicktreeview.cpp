@@ -483,7 +483,7 @@ void tst_qquicktreeview::expandRecursivelyRoot()
     // Check that all rows after rowToExpand, that are also
     // children of that row, is expanded (down to depth)
     for (int currentRow = rowToExpand + 1; currentRow < treeView->rows(); ++currentRow) {
-        const auto modelIndex = treeView->modelIndex(currentRow, 0);
+        const auto modelIndex = treeView->modelIndex(0, currentRow);
         const int currentDepth = treeView->depth(currentRow);
         const bool isChild = currentDepth > rowToExpandDepth;
         const bool isExpandable = model->rowCount(modelIndex) > 0;
@@ -554,7 +554,7 @@ void tst_qquicktreeview::expandRecursivelyChild()
     for (int currentRow = rowToExpand + 1; currentRow < treeView->rows(); ++currentRow) {
         const int currentDepth = treeView->depth(currentRow);
         const bool isChild = currentDepth > rowToExpandDepth;
-        const auto modelIndex = treeView->modelIndex(currentRow, 0);
+        const auto modelIndex = treeView->modelIndex(0, currentRow);
         const bool isExpandable = model->rowCount(modelIndex) > 0;
         const bool shouldBeExpanded = isChild && isExpandable && currentDepth < effectiveMaxDepth;
         QCOMPARE(treeView->isExpanded(currentRow), shouldBeExpanded);
@@ -577,7 +577,7 @@ void tst_qquicktreeview::expandRecursivelyWholeTree()
 
     // Check that all rows that have children are expanded
     for (int currentRow = 0; currentRow < treeView->rows(); ++currentRow) {
-        const auto modelIndex = treeView->modelIndex(currentRow, 0);
+        const auto modelIndex = treeView->modelIndex(0, currentRow);
         const bool isExpandable = model->rowCount(modelIndex) > 0;
         QCOMPARE(treeView->isExpanded(currentRow), isExpandable);
     }
@@ -615,7 +615,7 @@ void tst_qquicktreeview::collapseRecursivelyRoot()
     // We can do that by simply iterate over the rows in the view as we expand.
     int currentRow = 0;
     while (currentRow < treeView->rows()) {
-        const QModelIndex currentIndex = treeView->modelIndex(currentRow, 0);
+        const QModelIndex currentIndex = treeView->modelIndex(0, currentRow);
         if (model->hasChildren(currentIndex)) {
             QVERIFY(!treeView->isExpanded(currentRow));
             treeView->expand(currentRow);
@@ -644,7 +644,7 @@ void tst_qquicktreeview::collapseRecursivelyChild()
 
     // Collapse the 4th child recursive
     const int rowToCollapse = 4;
-    QCOMPARE(model->data(treeView->modelIndex(rowToCollapse, 0), Qt::DisplayRole), QStringLiteral("3, 0"));
+    QCOMPARE(model->data(treeView->modelIndex(0, rowToCollapse), Qt::DisplayRole), QStringLiteral("3, 0"));
     treeView->collapseRecursively(rowToCollapse);
 
     QCOMPARE(spy.count(), 1);
@@ -662,7 +662,7 @@ void tst_qquicktreeview::collapseRecursivelyChild()
     // We can do that by simply iterate over the rows in the view as we expand.
     int currentRow = 1; // start at first child
     while (currentRow < treeView->rows()) {
-        const QModelIndex currentIndex = treeView->modelIndex(currentRow, 0);
+        const QModelIndex currentIndex = treeView->modelIndex(0, currentRow);
         if (model->hasChildren(currentIndex)) {
             QVERIFY(!treeView->isExpanded(currentRow));
             treeView->expand(currentRow);
