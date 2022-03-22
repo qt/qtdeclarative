@@ -87,7 +87,7 @@ public:
         Blob(const QUrl &url, QQmlDataBlob::Type type, QQmlTypeLoader *loader);
         ~Blob() override;
 
-        const QQmlImports &imports() const { return m_importCache; }
+        const QQmlImports *imports() const { return m_importCache.data(); }
 
         void setCachedUnitStatus(QQmlMetaType::CachedUnitLookupError status) { m_cachedUnitStatus = status; }
 
@@ -100,18 +100,19 @@ public:
                 = QV4::CompiledData::Import::ImportType::ImportLibrary;
             QV4::CompiledData::Location location;
 
-            uint flags = 0;
+            QQmlImports::ImportFlags flags;
             int priority = 0;
 
             QTypeRevision version;
 
             PendingImport() = default;
-            PendingImport(Blob *blob, const QV4::CompiledData::Import *import, uint flags);
+            PendingImport(Blob *blob, const QV4::CompiledData::Import *import,
+                          QQmlImports::ImportFlags flags);
         };
         using PendingImportPtr = std::shared_ptr<PendingImport>;
 
     protected:
-        bool addImport(const QV4::CompiledData::Import *import, uint flags,
+        bool addImport(const QV4::CompiledData::Import *import, QQmlImports::ImportFlags,
                        QList<QQmlError> *errors);
         bool addImport(PendingImportPtr import, QList<QQmlError> *errors);
 
@@ -126,19 +127,19 @@ public:
         void dependencyComplete(QQmlDataBlob *) override;
 
         bool loadImportDependencies(
-                PendingImportPtr currentImport, const QString &qmldirUri, uint flags,
-                QList<QQmlError> *errors);
+                PendingImportPtr currentImport, const QString &qmldirUri,
+                QQmlImports::ImportFlags flags, QList<QQmlError> *errors);
 
     protected:
         bool loadDependentImports(
                 const QList<QQmlDirParser::Import> &imports, const QString &qualifier,
-                QTypeRevision version, uint flags, QList<QQmlError> *errors);
+                QTypeRevision version, QQmlImports::ImportFlags flags, QList<QQmlError> *errors);
         virtual QString stringAt(int) const { return QString(); }
 
         bool isDebugging() const;
         bool diskCacheEnabled() const;
 
-        QQmlImports m_importCache;
+        QQmlRefPointer<QQmlImports> m_importCache;
         QVector<PendingImportPtr> m_unresolvedImports;
         QVector<QQmlRefPointer<QQmlQmldirData>> m_qmldirs;
         QQmlMetaType::CachedUnitLookupError m_cachedUnitStatus = QQmlMetaType::CachedUnitLookupError::NoError;

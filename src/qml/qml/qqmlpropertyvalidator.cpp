@@ -63,7 +63,9 @@ QT_FOR_EACH_STATIC_PRIMITIVE_TYPE(HANDLE_PRIMITIVE);
     }
 }
 
-QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports &imports, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
+QQmlPropertyValidator::QQmlPropertyValidator(
+        QQmlEnginePrivate *enginePrivate, const QQmlImports *imports,
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
     : enginePrivate(enginePrivate)
     , compilationUnit(compilationUnit)
     , imports(imports)
@@ -223,7 +225,8 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         if (name.constData()->isUpper() && !binding->isAttachedProperty()) {
             QQmlType type;
             QQmlImportNamespace *typeNamespace = nullptr;
-            imports.resolveType(stringAt(binding->propertyNameIndex), &type, nullptr, &typeNamespace);
+            imports->resolveType(
+                        stringAt(binding->propertyNameIndex), &type, nullptr, &typeNamespace);
             if (typeNamespace)
                 return recordError(binding->location, tr("Invalid use of namespace"));
             return recordError(binding->location, tr("Invalid attached object assignment"));
@@ -363,7 +366,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         customParser->clearErrors();
         customParser->validator = this;
         customParser->engine = enginePrivate;
-        customParser->imports = &imports;
+        customParser->imports = imports;
         customParser->verifyBindings(compilationUnit, customBindings);
         customParser->validator = nullptr;
         customParser->engine = nullptr;

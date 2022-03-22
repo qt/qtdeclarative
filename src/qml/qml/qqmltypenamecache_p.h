@@ -84,8 +84,8 @@ class QQmlEngine;
 class Q_QML_PRIVATE_EXPORT QQmlTypeNameCache : public QQmlRefCount
 {
 public:
-    QQmlTypeNameCache(const QQmlImports &imports);
-    ~QQmlTypeNameCache() override;
+    QQmlTypeNameCache(const QQmlRefPointer<QQmlImports> &imports) : m_imports(imports) {}
+    ~QQmlTypeNameCache() {}
 
     inline bool isEmpty() const;
 
@@ -176,7 +176,7 @@ private:
             QList<QQmlError> errors;
             QQmlType t;
             bool typeRecursionDetected = false;
-            const bool typeFound = m_imports.resolveType(
+            const bool typeFound = m_imports->resolveType(
                         toHashedStringRef(name), &t, nullptr, &typeNamespace, &errors,
                         QQmlType::AnyRegistrationType,
                         recursionRestriction == QQmlImport::AllowRecursion
@@ -218,7 +218,7 @@ private:
             QQmlImportNamespace *typeNamespace = nullptr;
             QList<QQmlError> errors;
             QQmlType t;
-            bool typeFound = m_imports.resolveType(
+            bool typeFound = m_imports->resolveType(
                         qualifiedTypeName, &t, nullptr, &typeNamespace, &errors);
             if (typeFound)
                 return Result(t);
@@ -272,7 +272,7 @@ private:
     QMap<const QQmlImportRef *, QStringHash<QQmlImportRef> > m_namespacedImports;
     QVector<QQmlTypeModuleVersion> m_anonymousImports;
     QStringHash<QUrl> m_anonymousCompositeSingletons;
-    QQmlImports m_imports;
+    QQmlRefPointer<QQmlImports> m_imports;
 };
 
 QQmlTypeNameCache::Result::Result()

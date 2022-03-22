@@ -226,7 +226,7 @@ const QV4::CompiledData::Unit *QQmlTypeCompiler::qmlUnit() const
 
 const QQmlImports *QQmlTypeCompiler::imports() const
 {
-    return &typeData->imports();
+    return typeData->imports();
 }
 
 QVector<QmlIR::Object *> *QQmlTypeCompiler::qmlObjects() const
