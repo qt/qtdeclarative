@@ -224,6 +224,8 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
                 jsonFix[u"length"_qs] = static_cast<int>(fix.cutLocation.length);
                 jsonFix[u"replacement"_qs] = fix.replacementString;
                 jsonFix[u"isHint"] = fix.isHint;
+                if (!fix.fileName.isEmpty())
+                    jsonFix[u"fileName"] = fix.fileName;
                 suggestions << jsonFix;
             }
         }
