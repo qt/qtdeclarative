@@ -148,15 +148,14 @@ All warnings can be set to three levels:
     absolutePath.setFlags(QCommandLineOption::HiddenFromHelp);
     parser.addOption(absolutePath);
 
-    QCommandLineOption fixFile(QStringList()
-                               << "f"
-                               << "fix" << QLatin1String("Automatically apply fix suggestions"));
+    QCommandLineOption fixFile(QStringList() << "f"
+                                             << "fix",
+                               QLatin1String("Automatically apply fix suggestions"));
     parser.addOption(fixFile);
 
-    QCommandLineOption dryRun(QStringList()
-                              << "dry-run"
-                              << QLatin1String("Only print out the contents of the file after fix "
-                                               "suggestions without applying them"));
+    QCommandLineOption dryRun(QStringList() << "dry-run",
+                              QLatin1String("Only print out the contents of the file after fix "
+                                            "suggestions without applying them"));
     parser.addOption(dryRun);
 
     parser.addPositionalArgument(QLatin1String("files"),
