@@ -42,9 +42,9 @@ QT_BEGIN_NAMESPACE
 /*!
     \internal
 
-    Helper class that generates different code for the output IR. Takes care of
+    Helper class that generates code for the output IR. Takes care of
     complicated, repetitive, nasty logic which is better kept in a single
-    confined place
+    confined place.
 */
 struct QmltcCodeGenerator
 {
@@ -54,14 +54,6 @@ struct QmltcCodeGenerator
 
     QmltcVisitor *visitor = nullptr;
 
-    /*!
-        \internal
-
-        Generates \a current.init 's code which sets up the QQmlContext for \a
-        type. Returns a QScopeGuard with the final instructions of the function
-        that have to be generated at a later point, once everything else is
-        compiled.
-    */
     [[nodiscard]] inline decltype(auto) generate_initCode(QmltcType &current,
                                                           const QQmlJSScope::ConstPtr &type) const;
     static inline void generate_initCodeForTopLevelComponent(QmltcType &current,
@@ -117,6 +109,23 @@ struct QmltcCodeGenerator
     static QString wrap_addressof(const QString &addressed);
 };
 
+/*!
+    \internal
+
+    Generates \a{current.init}'s code. The init method sets up a QQmlContext for
+    the object and (in case \a type is a document root) calls other object
+    creation methods in a well-defined order:
+    1. current.beginClass
+    2. current.endInit
+    3. current.completeComponent
+    4. current.finalizeComponent
+    5. current.handleOnCompleted
+
+    This function returns a QScopeGuard with the final instructions that have to
+    be generated at a later point, once everything else is compiled.
+
+    \sa generate_initCodeForTopLevelComponent
+*/
 inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
                                                             const QQmlJSScope::ConstPtr &type) const
 {
@@ -219,7 +228,7 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
 
     const auto generateFinalLines = [&current, isDocumentRoot]() {
         if (isDocumentRoot) {
-            current.init.body << u"// 4. call finalize in the document root"_qs;
+            current.init.body << u"// 4. finish the document root creation"_qs;
             current.init.body << u"if (canFinalize) {"_qs;
             current.init.body << QStringLiteral("    %1(creator, /* finalize */ true);")
                                          .arg(current.beginClass.name);
@@ -239,6 +248,15 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
     return QScopeGuard(generateFinalLines);
 }
 
+/*!
+    \internal
+
+    Generates \a{current.init}'s code in case when \a type is a top-level
+    Component type. The init method in this case mimics
+    QQmlObjectCreator::createComponent() logic.
+
+    \sa generate_initCode
+*/
 inline void
 QmltcCodeGenerator::generate_initCodeForTopLevelComponent(QmltcType &current,
                                                           const QQmlJSScope::ConstPtr &type)
@@ -247,7 +265,7 @@ QmltcCodeGenerator::generate_initCodeForTopLevelComponent(QmltcType &current,
 
     // since we create a document root as QQmlComponent, we only need to fake
     // QQmlComponent construction in init:
-    current.init.body << u"// populate QQmlComponent bits"_qs;
+    current.init.body << u"// init QQmlComponent: see QQmlObjectCreator::createComponent()"_qs;
     current.init.body << u"{"_qs;
     // we already called QQmlComponent(parent) constructor. now we need:
     // 1. QQmlComponent(engine, parent) logic:
@@ -275,6 +293,14 @@ QmltcCodeGenerator::generate_initCodeForTopLevelComponent(QmltcType &current,
     current.init.body << u"}"_qs;
 }
 
+/*!
+    \internal
+
+    Generates \a{current.endInit}'s code. The endInit method creates bindings,
+    connects signals with slots and generally performs other within-object
+    initialization. Additionally, the QML document root's endInit calls endInit
+    methods of all the necessary QML types within the document.
+*/
 inline decltype(auto)
 QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
                                          const QQmlJSScope::ConstPtr &type) const
@@ -304,6 +330,8 @@ QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
         current.endInit.body << u"}"_qs;
     }
 
+    // TODO: QScopeGuard here is redundant. we should call endInit of children
+    // directly
     const auto generateFinalLines = [&current, isDocumentRoot, this]() {
         if (!isDocumentRoot) // document root does all the work here
             return;
@@ -320,6 +348,13 @@ QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
     return QScopeGuard(generateFinalLines);
 }
 
+/*!
+    \internal
+
+    A generic helper function that generates interface code boilerplate, adding
+    it to a passed \a function. This is a building block used to generate e.g.
+    QQmlParserStatus API calls.
+*/
 inline void QmltcCodeGenerator::generate_interfaceCallCode(QmltcMethod *function,
                                                            const QQmlJSScope::ConstPtr &type,
                                                            const QString &interfaceName,
@@ -376,12 +411,26 @@ inline void QmltcCodeGenerator::generate_interfaceCallCode(QmltcMethod *function
     }
 }
 
+/*!
+    \internal
+
+    Generates \a{current.beginClass}'s code. The beginClass method optionally
+    calls QQmlParserStatus::classBegin() when \a type implements the
+    corresponding interface.
+*/
 inline void QmltcCodeGenerator::generate_beginClassCode(QmltcType &current,
                                                         const QQmlJSScope::ConstPtr &type) const
 {
     generate_interfaceCallCode(&current.beginClass, type, u"QQmlParserStatus"_qs, u"classBegin"_qs);
 }
 
+/*!
+    \internal
+
+    Generates \a{current.completeComponent}'s code. The completeComponent method
+    optionally calls QQmlParserStatus::componentComplete() when \a type
+    implements the corresponding interface.
+*/
 inline void
 QmltcCodeGenerator::generate_completeComponentCode(QmltcType &current,
                                                    const QQmlJSScope::ConstPtr &type) const
@@ -390,6 +439,13 @@ QmltcCodeGenerator::generate_completeComponentCode(QmltcType &current,
                                u"componentComplete"_qs);
 }
 
+/*!
+    \internal
+
+    Generates \a{current.finalizeComponent}'s code. The finalizeComponent method
+    optionally calls QQmlFinalizerHook::componentFinalized() when \a type
+    implements the corresponding interface.
+*/
 inline void
 QmltcCodeGenerator::generate_finalizeComponentCode(QmltcType &current,
                                                    const QQmlJSScope::ConstPtr &type) const
@@ -398,6 +454,13 @@ QmltcCodeGenerator::generate_finalizeComponentCode(QmltcType &current,
                                u"componentFinalized"_qs);
 }
 
+/*!
+    \internal
+
+    Generates \a{current.handleOnCompleted}'s code. The handleOnCompleted method
+    optionally calls a Component.onCompleted handler if that is present in \a
+    type.
+*/
 inline void
 QmltcCodeGenerator::generate_handleOnCompletedCode(QmltcType &current,
                                                    const QQmlJSScope::ConstPtr &type) const
@@ -438,6 +501,60 @@ QmltcCodeGenerator::generate_handleOnCompletedCode(QmltcType &current,
     }
 }
 
+/*!
+    \internal
+
+    Generates a constexpr function consisting of a sum of type counts for a
+    current QML document. Predicate \a p acts as a stop condition to prematurely
+    end the sum generation.
+
+    The high-level idea:
+
+    Each qmltc-compiled document root has a notion of type count. Type count is
+    a number of types the current QML document contains (except for
+    Component-wrapped types) plus the sum of all type counts of all the QML
+    documents used in the current document: if current document has a type with
+    QML base type, this type's type count is added to the type count of the
+    current document.
+
+    To be able to lookup created objects during the creation process, one needs
+    to know an index of each object within the document + an offset of the
+    document. Index comes from QmltcVisitor and is basically a serial number of
+    a type in the document (index < type count of the document root type). The
+    offset is more indirect.
+
+    The current document always starts with an offset of 0, each type that has a
+    QML base type also "has a sub-document". Each sub-document has a non-0
+    offset X, where X is calculated as a sum of the current document's type
+    count and a cumulative type count of all the previous sub-documents that
+    appear before the sub-document of interest:
+
+    \code
+    // A.qml
+    Item {  // offset: 0; number of types == 1 (document root) + 3 (children)
+
+        QmlBase1 { } // offset: 4 (number of types in A.qml itself)
+
+        QmlBase2 { } // offset: 4 + N, where N == typeCount(QmlBase1.qml)
+
+        QmlBase3 { } // offset: (4 + N) + M, where M == typeCount(QmlBase2.qml)
+
+    } // typeCount(A.qml) == 4 + N + M + O, where O == typeCount(QmlBase3.qml)
+    \endcode
+
+    As all objects are put into an array, schematically you can look at it in
+    the following way:
+
+    ```
+    count:       4         N          M     O
+    objects:    aaaa|xxxxxxxxxxxxx|yyyyyyy|zzz
+                ^    ^             ^       ^
+    files:      |    QmlBase1.qml  |       QmlBase3.qml
+                A.qml              QmlBase2.qml
+    ```
+
+    For the object lookup logic itself, see QQmltcObjectCreationHelper
+*/
 template<typename Predicate>
 inline QString QmltcCodeGenerator::generate_typeCount(Predicate p) const
 {

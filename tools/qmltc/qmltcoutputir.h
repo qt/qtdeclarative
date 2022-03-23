@@ -143,6 +143,9 @@ struct QmltcType
     QmltcMethod finalizeComponent {}; // calls QQmlFinalizerHook::componentFinalized()
     QmltcMethod handleOnCompleted {}; // calls Component.onCompleted
 
+    // TODO: add a separate special member function to set script bindings in a
+    // separate step
+
     std::optional<QmltcDtor> dtor {};
 
     // member functions: methods, signals and slots
