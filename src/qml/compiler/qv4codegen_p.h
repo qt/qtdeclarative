@@ -80,7 +80,7 @@ struct ControlFlow;
 struct ControlFlowCatch;
 struct ControlFlowFinally;
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT CodegenWarningInterface
+class Q_QML_COMPILER_PRIVATE_EXPORT CodegenWarningInterface
 {
 public:
     virtual void reportVarUsedBeforeDeclaration(const QString &name, const QString &fileName,
@@ -95,7 +95,7 @@ inline CodegenWarningInterface *defaultCodegenWarningInterface()
     return &iface;
 }
 
-class Q_QMLCOMPILER_PRIVATE_EXPORT Codegen: protected QQmlJS::AST::Visitor
+class Q_QML_COMPILER_PRIVATE_EXPORT Codegen: protected QQmlJS::AST::Visitor
 {
 protected:
     using BytecodeGenerator = QV4::Moth::BytecodeGenerator;
