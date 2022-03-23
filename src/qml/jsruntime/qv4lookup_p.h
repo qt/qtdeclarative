@@ -167,7 +167,7 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             ReturnedValue (*getterTrampoline)(Lookup *l, ExecutionEngine *engine);
         } qmlContextGlobalLookup;
         struct {
-            Heap::Object *qmlTypeWrapper;
+            Heap::Base *qmlTypeWrapper;
             quintptr unused2;
         } qmlTypeLookup;
         struct {

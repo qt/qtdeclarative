@@ -865,6 +865,14 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
         generateLookup(lookup, initialization);
         return;
     }
+    case QQmlJSRegisterContent::MetaType: {
+        const QString lookup = u"aotContext->loadTypeLookup("_qs + indexString
+                + u", &"_qs + m_state.accumulatorVariableOut + u')';
+        const QString initialization = u"aotContext->initLoadTypeLookup("_qs + indexString
+                + u", "_qs + namespaceString + u")"_qs;
+        generateLookup(lookup, initialization);
+        return;
+    }
     default:
         break;
     }
@@ -2483,13 +2491,17 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
 
     if (from->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
         if (to->accessSemantics() == QQmlJSScope::AccessSemantics::Reference) {
+            // Compare internalName here. The same C++ type can be exposed muliple times in
+            // different QML types. However, the C++ names have to be unique. We can always
+            // static_cast to those.
+
             for (QQmlJSScope::ConstPtr base = from; base; base = base->baseType()) {
                 // We still have to cast as other execution paths may result in different types.
-                if (m_typeResolver->equals(base, to))
+                if (base->internalName() == to->internalName())
                     return u"static_cast<"_qs + to->internalName() + u" *>("_qs + variable + u')';
             }
             for (QQmlJSScope::ConstPtr base = to; base; base = base->baseType()) {
-                if (m_typeResolver->equals(base, from))
+                if (base->internalName() == from->internalName())
                     return u"static_cast<"_qs + to->internalName() + u" *>("_qs + variable + u')';
             }
         } else if (m_typeResolver->equals(to, m_typeResolver->boolType())) {

@@ -89,7 +89,9 @@ void QQmlJSShadowCheck::generate_SetLookup(int index, int base)
 QV4::Moth::ByteCodeHandler::Verdict QQmlJSShadowCheck::startInstruction(QV4::Moth::Instr::Type)
 {
     m_state = nextStateFromAnnotations(m_state, *m_annotations);
-    return ProcessInstruction;
+    return (m_state.hasSideEffects() || m_state.changedRegisterIndex() != InvalidRegister)
+            ? ProcessInstruction
+            : SkipInstruction;
 }
 
 void QQmlJSShadowCheck::endInstruction(QV4::Moth::Instr::Type)

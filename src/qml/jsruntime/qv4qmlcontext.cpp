@@ -268,7 +268,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                 result = QQmlTypeWrapper::create(v4, scopeObject, context->imports(), r.importNamespace);
             }
             if (lookup) {
-                lookup->qmlTypeLookup.qmlTypeWrapper = static_cast<Heap::Object*>(result->heapObject());
+                lookup->qmlTypeLookup.qmlTypeWrapper = result->heapObject();
                 lookup->qmlContextPropertyGetter = QQmlContextWrapper::lookupType;
             }
             return result->asReturnedValue();
@@ -718,7 +718,7 @@ ReturnedValue QQmlContextWrapper::lookupType(Lookup *l, ExecutionEngine *engine,
     if (scopeObject && QQmlData::wasDeleted(scopeObject))
         return QV4::Encode::undefined();
 
-    Heap::Object *heapObject = l->qmlTypeLookup.qmlTypeWrapper;
+    Heap::Base *heapObject = l->qmlTypeLookup.qmlTypeWrapper;
     if (static_cast<Heap::QQmlTypeWrapper *>(heapObject)->object != scopeObject) {
         l->qmlTypeLookup.qmlTypeWrapper = nullptr;
         l->qmlContextPropertyGetter = QQmlContextWrapper::resolveQmlContextPropertyLookupGetter;

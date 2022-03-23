@@ -31,6 +31,7 @@ set(qml_files
     SelectionRectangle.qml
     Test.qml
     TestCase.qml
+    WindowDerived.qml
     aliasLookup.qml
     anchorsFill.qml
     array.qml

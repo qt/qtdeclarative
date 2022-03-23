@@ -1937,6 +1937,12 @@ void tst_QmlCppCodegen::typedArray()
 void tst_QmlCppCodegen::prefixedMetaType()
 {
     QQmlEngine engine;
+
+    // We need to add an import path here because we cannot namespace the implicit import.
+    // The implicit import is what we use for all the other tests, even if we explicitly
+    // import TestTypes. That is because the TestTypes module is in a subdirectory "data".
+    engine.addImportPath(u":/"_qs);
+
     const QUrl document(u"qrc:/TestTypes/prefixedMetaType.qml"_qs);
     QQmlComponent c(&engine, document);
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
@@ -1944,6 +1950,13 @@ void tst_QmlCppCodegen::prefixedMetaType()
     QVERIFY(o);
 
     QCOMPARE(o->property("state").toInt(), 2);
+    QVERIFY(qvariant_cast<QObject *>(o->property("a")) != nullptr);
+    QVERIFY(qvariant_cast<QObject *>(o->property("b")) != nullptr);
+    QVERIFY(qvariant_cast<QObject *>(o->property("c")) == nullptr);
+
+    QVERIFY(qvariant_cast<QObject *>(o->property("d")) != nullptr);
+    QVERIFY(qvariant_cast<QObject *>(o->property("e")) != nullptr);
+    QVERIFY(qvariant_cast<QObject *>(o->property("f")) == nullptr);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

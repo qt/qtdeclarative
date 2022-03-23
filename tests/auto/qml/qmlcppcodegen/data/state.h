@@ -16,6 +16,13 @@ enum State {
 };
 Q_ENUM_NS(State)
 }
+
+class WindowInstance : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+};
+
 }
 
 #endif // STATE_H
