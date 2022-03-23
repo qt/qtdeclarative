@@ -86,18 +86,18 @@ ReturnedValue ArrayIteratorPrototype::method_next(const FunctionObject *b, const
         return IteratorPrototype::createIterResultObject(scope.engine, Value::fromInt32(index), false);
     }
 
-    ReturnedValue elementValue = a->get(index);
+    QV4::ScopedValue elementValue(scope, a->get(index));
     CHECK_EXCEPTION();
 
     if (itemKind == ValueIteratorKind) {
-        return IteratorPrototype::createIterResultObject(scope.engine, Value::fromReturnedValue(elementValue), false);
+        return IteratorPrototype::createIterResultObject(scope.engine, elementValue, false);
     } else {
         Q_ASSERT(itemKind == KeyValueIteratorKind);
 
         ScopedArrayObject resultArray(scope, scope.engine->newArrayObject());
         resultArray->arrayReserve(2);
         resultArray->arrayPut(0, Value::fromInt32(index));
-        resultArray->arrayPut(1, Value::fromReturnedValue(elementValue));
+        resultArray->arrayPut(1, elementValue);
         resultArray->setArrayLengthUnchecked(2);
 
         return IteratorPrototype::createIterResultObject(scope.engine, resultArray, false);
