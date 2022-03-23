@@ -45,12 +45,12 @@
 QT_BEGIN_NAMESPACE
 
 #if defined(QT_STATIC)
-#  define Q_QMLCOMPILER_EXPORT
+#  define Q_QML_COMPILER_EXPORT
 #else
 #  if defined(QT_BUILD_QML_LIB)
-#    define Q_QMLCOMPILER_EXPORT Q_DECL_EXPORT
+#    define Q_QML_COMPILER_EXPORT Q_DECL_EXPORT
 #  else
-#    define Q_QMLCOMPILER_EXPORT Q_DECL_IMPORT
+#    define Q_QML_COMPILER_EXPORT Q_DECL_IMPORT
 #  endif
 #endif
 
