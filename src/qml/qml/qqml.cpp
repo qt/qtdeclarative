@@ -1398,6 +1398,8 @@ static void initTypeWrapperLookup(
             l->qmlContextPropertyGetter = qmlContextPropertyGetter;
             if (qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupSingleton)
                 l->qmlContextSingletonLookup.singletonObject = wrapper->heapObject();
+            else if (qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupType)
+                l->qmlTypeLookup.qmlTypeWrapper = wrapper->heapObject();
             return;
         }
         scope.engine->throwTypeError();
