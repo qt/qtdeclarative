@@ -212,6 +212,7 @@ static QTypeRevision resolveModuleVersion(int moduleMajor)
 
 /*!
  * \enum QQmlModuleImportSpecialVersions
+ * \relates QQmlEngine
  *
  * Defines some special values that can be passed to the version arguments of
  * qmlRegisterModuleImport() and qmlUnregisterModuleImport().
@@ -230,25 +231,26 @@ static QTypeRevision resolveModuleVersion(int moduleMajor)
  */
 
 /*!
- * Registers an implicit import for module \a uri of major version \a majorVersion.
+ * \relates QQmlEngine
+ * Registers an implicit import for module \a uri of major version \a moduleMajor.
  *
  * This has the same effect as an \c import statement in a qmldir file: Whenever
  * \a uri of version \a moduleMajor is imported, \a import of version
  * \a importMajor. \a importMinor is automatically imported, too. If
- * \a importMajor is \l QmlModuleImportLatest the latest version
+ * \a importMajor is \l QQmlModuleImportLatest the latest version
  * available of that module is imported, and \a importMinor does not matter. If
- * \a importMinor is \l QmlModuleImportLatest the latest minor version of a
- * \a importMajor is chosen. If \a importMajor is \l QmlModuleImportAuto the
+ * \a importMinor is \l QQmlModuleImportLatest the latest minor version of a
+ * \a importMajor is chosen. If \a importMajor is \l QQmlModuleImportAuto the
  * version of \a import is version of \a uri being imported, and \a importMinor
- * does not matter. If \a moduleMajor is \a QmlModuleImportModuleAny the module
+ * does not matter. If \a moduleMajor is \l QQmlModuleImportModuleAny the module
  * import is applied for any major version of \a uri. For example, you may
  * specify that whenever any version of MyModule is imported, the latest version
  * of MyOtherModule should be imported. Then, the following call would be
  * appropriate:
  *
  * \code
- * qmlRegisterModuleImport("MyModule", QmlModuleImportModuleAny,
- *                         "MyOtherModule", QmlModuleImportLatest);
+ * qmlRegisterModuleImport("MyModule", QQmlModuleImportModuleAny,
+ *                         "MyOtherModule", QQmlModuleImportLatest);
  * \endcode
  *
  * Or, you may specify that whenever major version 5 of "MyModule" is imported,
@@ -262,8 +264,8 @@ static QTypeRevision resolveModuleVersion(int moduleMajor)
  * imported whenever "MyModule" is imported, specify the following:
  *
  * \code
- * qmlRegisterModuleImport("MyModule", QmlModuleImportModuleAny,
- *                         "MyOtherModule", QmlModuleImportAuto);
+ * qmlRegisterModuleImport("MyModule", QQmlModuleImportModuleAny,
+ *                         "MyOtherModule", QQmlModuleImportAuto);
  * \endcode
  *
  * \sa qmlUnregisterModuleImport()
@@ -278,6 +280,7 @@ void qmlRegisterModuleImport(const char *uri, int moduleMajor,
 
 
 /*!
+ * \relates QQmlEngine
  * Removes a module import previously registered with qmlRegisterModuleImport()
  *
  * Calling this function makes sure that \a import of version
