@@ -43,7 +43,7 @@ QT_BEGIN_NAMESPACE
 
 enum ImportVersion { FullyVersioned, PartiallyVersioned, Unversioned };
 
-/*!
+/*
     Forms complete paths to a module, from a list of base paths,
     a module URI and version specification.
 
