@@ -165,8 +165,6 @@ private:
     bool m_isAnonymous = false; // crutch to distinguish QML_ELEMENT from QML_ANONYMOUS
 
 public:
-    void compileQQmlComponentElements(QmltcType &current, const CodeGenObject &object);
-
     void compileAlias(QmltcType &current, const QQmlJSMetaProperty &alias,
                       const QQmlJSScope::ConstPtr &owner);
     void compileMethod(QmltcType &current, const QQmlJSMetaMethod &m, const QmlIR::Function *f,

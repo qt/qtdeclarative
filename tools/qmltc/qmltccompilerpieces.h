@@ -64,6 +64,8 @@ struct QmltcCodeGenerator
     */
     [[nodiscard]] inline decltype(auto) generate_initCode(QmltcType &current,
                                                           const QQmlJSScope::ConstPtr &type) const;
+    static inline void generate_initCodeForTopLevelComponent(QmltcType &current,
+                                                             const QQmlJSScope::ConstPtr &type);
     [[nodiscard]] inline decltype(auto)
     generate_endInitCode(QmltcType &current, const QQmlJSScope::ConstPtr &type) const;
 
@@ -235,6 +237,42 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
     };
 
     return QScopeGuard(generateFinalLines);
+}
+
+inline void
+QmltcCodeGenerator::generate_initCodeForTopLevelComponent(QmltcType &current,
+                                                          const QQmlJSScope::ConstPtr &type)
+{
+    Q_UNUSED(type);
+
+    // since we create a document root as QQmlComponent, we only need to fake
+    // QQmlComponent construction in init:
+    current.init.body << u"// populate QQmlComponent bits"_qs;
+    current.init.body << u"{"_qs;
+    // we already called QQmlComponent(parent) constructor. now we need:
+    // 1. QQmlComponent(engine, parent) logic:
+    current.init.body << u"// QQmlComponent(engine, parent):"_qs;
+    current.init.body << u"auto d = QQmlComponentPrivate::get(this);"_qs;
+    current.init.body << u"Q_ASSERT(d);"_qs;
+    current.init.body << u"d->engine = engine;"_qs;
+    current.init.body << u"QObject::connect(engine, &QObject::destroyed, this, [d]() {"_qs;
+    current.init.body << u"    d->state.creator.reset();"_qs;
+    current.init.body << u"    d->engine = nullptr;"_qs;
+    current.init.body << u"});"_qs;
+    // 2. QQmlComponent(engine, compilationUnit, start, parent) logic:
+    current.init.body << u"// QQmlComponent(engine, compilationUnit, start, parent):"_qs;
+    current.init.body
+            << u"auto compilationUnit = QQmlEnginePrivate::get(engine)->compilationUnitFromUrl("
+                    + QmltcCodeGenerator::urlMethodName + u"());";
+    current.init.body << u"d->compilationUnit = compilationUnit;"_qs;
+    current.init.body << u"d->start = 0;"_qs;
+    current.init.body << u"d->url = compilationUnit->finalUrl();"_qs;
+    current.init.body << u"d->progress = 1.0;"_qs;
+    // 3. QQmlObjectCreator::createComponent() logic which is left:
+    current.init.body << u"// QQmlObjectCreator::createComponent():"_qs;
+    current.init.body << u"d->creationContext = context;"_qs;
+    current.init.body << u"Q_ASSERT(QQmlData::get(this, /*create*/ false));"_qs;
+    current.init.body << u"}"_qs;
 }
 
 inline decltype(auto)

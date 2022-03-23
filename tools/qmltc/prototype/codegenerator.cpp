@@ -364,40 +364,6 @@ static QString generate_callCompilationUnit(const QString &urlMethodName)
     return u"QQmlEnginePrivate::get(engine)->compilationUnitFromUrl(%1())"_qs.arg(urlMethodName);
 }
 
-void CodeGenerator::compileQQmlComponentElements(QmltcType &compiled, const CodeGenObject &object)
-{
-    Q_UNUSED(object);
-
-    // since we create a document root as QQmlComponent, we only need to fake
-    // QQmlComponent construction in init:
-    compiled.init.body << u"// populate QQmlComponent bits"_qs;
-    compiled.init.body << u"{"_qs;
-    // we already called QQmlComponent(parent) constructor. now we need:
-    // 1. QQmlComponent(engine, parent) logic:
-    compiled.init.body << u"// QQmlComponent(engine, parent):"_qs;
-    compiled.init.body << u"auto d = QQmlComponentPrivate::get(this);"_qs;
-    compiled.init.body << u"Q_ASSERT(d);"_qs;
-    compiled.init.body << u"d->engine = engine;"_qs;
-    compiled.init.body << u"QObject::connect(engine, &QObject::destroyed, this, [d]() {"_qs;
-    compiled.init.body << u"    d->state.creator.reset();"_qs;
-    compiled.init.body << u"    d->engine = nullptr;"_qs;
-    compiled.init.body << u"});"_qs;
-    // 2. QQmlComponent(engine, compilationUnit, start, parent) logic:
-    compiled.init.body << u"// QQmlComponent(engine, compilationUnit, start, parent):"_qs;
-    compiled.init.body
-            << u"auto compilationUnit = QQmlEnginePrivate::get(engine)->compilationUnitFromUrl("
-                    + m_urlMethodName + u"());";
-    compiled.init.body << u"d->compilationUnit = compilationUnit;"_qs;
-    compiled.init.body << u"d->start = 0;"_qs;
-    compiled.init.body << u"d->url = compilationUnit->finalUrl();"_qs;
-    compiled.init.body << u"d->progress = 1.0;"_qs;
-    // 3. QQmlObjectCreator::createComponent() logic which is left:
-    compiled.init.body << u"// QQmlObjectCreator::createComponent():"_qs;
-    compiled.init.body << u"d->creationContext = context;"_qs;
-    compiled.init.body << u"Q_ASSERT(QQmlData::get(this, /*create*/ false));"_qs;
-    compiled.init.body << u"}"_qs;
-}
-
 void CodeGenerator::compileAlias(QmltcType &current, const QQmlJSMetaProperty &alias,
                                  const QQmlJSScope::ConstPtr &owner)
 {

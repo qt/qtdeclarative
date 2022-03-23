@@ -99,13 +99,11 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info, QmlIR::Document *doc)
     if (isComponent(root)) {
         compiledTypes.reserve(1);
         compiledTypes.emplaceBack(); // create empty type
-        const auto compile = [this](QmltcType &current, const QQmlJSScope::ConstPtr &type) {
-            const auto &object = m_prototypeCodegen->objectFromType(type);
-            m_prototypeCodegen->compileQQmlComponentElements(current, object);
+        const auto compile = [](QmltcType &current, const QQmlJSScope::ConstPtr &type) {
+            QmltcCodeGenerator::generate_initCodeForTopLevelComponent(current, type);
         };
         Q_ASSERT(root == filteredObjects.at(0).type);
         compileType(compiledTypes.back(), root, compile);
-        // m_prototypeCodegen->compileObject(compiledTypes.back(), filteredObjects.at(0), compile);
     } else {
         const auto compile = [this](QmltcType &current, const QQmlJSScope::ConstPtr &type) {
             compileTypeElements(current, type);
