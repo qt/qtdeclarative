@@ -170,8 +170,14 @@ public:
     Q_INVOKABLE void positionViewAtColumn(int column, PositionMode mode, qreal offset = 0);
     Q_INVOKABLE QQuickItem *itemAtCell(const QPoint &cell) const;
     Q_INVOKABLE QQuickItem *itemAtCell(int column, int row) const;
+
+    Q_REVISION(6, 4) Q_INVOKABLE QPoint cellAtPosition(const QPointF &position, bool includeSpacing = false) const;
+    Q_REVISION(6, 4) Q_INVOKABLE QPoint cellAtPosition(qreal x, qreal y, bool includeSpacing = false) const;
+#if QT_DEPRECATED_SINCE(6, 4)
+    QT_DEPRECATED_VERSION_X_6_4("Use cellAtPosition() instead")
     Q_INVOKABLE QPoint cellAtPos(const QPointF &position, bool includeSpacing = false) const;
     Q_INVOKABLE QPoint cellAtPos(qreal x, qreal y, bool includeSpacing = false) const;
+#endif
 
     Q_REVISION(6, 2) Q_INVOKABLE bool isColumnLoaded(int column) const;
     Q_REVISION(6, 2) Q_INVOKABLE bool isRowLoaded(int row) const;

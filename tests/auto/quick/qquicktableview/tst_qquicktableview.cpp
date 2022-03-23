@@ -3154,8 +3154,7 @@ void tst_QQuickTableView::cellAtPos()
 
     WAIT_UNTIL_POLISHED;
 
-    const QPointF posInView = tableView->mapFromItem(tableView->contentItem(), localPos);
-    QPoint cell = tableView->cellAtPos(posInView, includeSpacing);
+    QPoint cell = tableView->cellAtPosition(localPos, includeSpacing);
     QCOMPARE(cell, expectedCell);
 }
 

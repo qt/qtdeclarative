@@ -615,21 +615,41 @@
 
 /*!
     \qmlmethod Point QtQuick::TableView::cellAtPos(point position, bool includeSpacing)
+    \obsolete
 
-    Returns the cell at the given \a position in the view. If no \l {isRowLoaded()}{loaded}
-    cell intersects with \a position, the return value will be \c point(-1, -1).
+    Use cellAtPosition(point position) instead.
+*/
+
+/*!
+    \qmlmethod Point QtQuick::TableView::cellAtPos(real x, real y, bool includeSpacing)
+    \obsolete
+
+    Use cellAtPosition(real x, real y) instead.
+*/
+
+/*!
+    \qmlmethod Point QtQuick::TableView::cellAtPosition(point position, bool includeSpacing)
+
+    Returns the cell at the given \a position in the table. \a position should be relative
+    to the \l contentItem. If no \l {isRowLoaded()}{loaded} cell intersects with
+    \a position, the return value will be \c point(-1, -1).
 
     If \a includeSpacing is set to \c true, a cell's bounding box will be considered
     to include half the adjacent \l rowSpacing and \l columnSpacing on each side. The
     default value is \c false.
 
+    \note A \l {Qt Quick Input Handlers}{Input Handler} attached to a TableView installs
+    itself on the \l contentItem rather than the view. So the position reported by the
+    handler can be used directly in a call to this function without any
+    \l {QQuickItem::mapFromItem()}{mapping}.
+
     \sa columnSpacing, rowSpacing
 */
 
 /*!
-    \qmlmethod Point QtQuick::TableView::cellAtPos(real x, real y, bool includeSpacing)
+    \qmlmethod Point QtQuick::TableView::cellAtPosition(real x, real y, bool includeSpacing)
 
-    Convenience for calling \c{cellAtPos(Qt.point(x, y), includeSpacing)}.
+    Convenience for calling \c{cellAtPosition(Qt.point(x, y), includeSpacing)}.
 */
 
 /*!
@@ -1008,8 +1028,7 @@ QPoint QQuickTableViewPrivate::clampedCellAtPos(const QPointF &pos) const
     Q_Q(const QQuickTableView);
 
     // Note: pos should be relative to selectionPointerHandlerTarget()
-    const QPointF posInView = q->mapFromItem(selectionPointerHandlerTarget(), pos);
-    QPoint cell = q->cellAtPos(posInView, true);
+    QPoint cell = q->cellAtPosition(pos, true);
     if (cellIsValid(cell))
         return cell;
 
@@ -1020,8 +1039,9 @@ QPoint QQuickTableViewPrivate::clampedCellAtPos(const QPointF &pos) const
     QPointF clampedPosInView = q->mapFromItem(selectionPointerHandlerTarget(), clampedPos);
     clampedPosInView.rx() = qBound(0., clampedPosInView.x(), viewportRect.width());
     clampedPosInView.ry() = qBound(0., clampedPosInView.y(), viewportRect.height());
+    clampedPos = q->mapToItem(selectionPointerHandlerTarget(), clampedPosInView);
 
-    return q->cellAtPos(clampedPosInView, true);
+    return q->cellAtPosition(clampedPos, true);
 }
 
 void QQuickTableViewPrivate::updateSelection(const QRect &oldSelection, const QRect &newSelection)
@@ -3934,10 +3954,10 @@ void QQuickTableViewPrivate::setCurrentIndexFromTap(const QPointF &pos)
 {
     Q_Q(QQuickTableView);
 
-    const QPointF posInView = q->mapFromItem(q->contentItem(), pos);
-    const QPoint cell = q->cellAtPos(posInView);
+    const QPoint cell = q->cellAtPosition(pos);
     if (!cellIsValid(cell))
         return;
+
     ensureColumnVisible(cell.x(), true, 0);
     ensureRowVisible(cell.y(), true, 0);
     setCurrentIndex(cell);
@@ -4400,17 +4420,28 @@ QQuickItem *QQuickTableView::itemAtCell(int column, int row) const
     return itemAtCell(QPoint(column, row));
 }
 
+#if QT_DEPRECATED_SINCE(6, 4)
 QPoint QQuickTableView::cellAtPos(qreal x, qreal y, bool includeSpacing) const
 {
-    return cellAtPos(QPoint(x, y), includeSpacing);
+    return cellAtPosition(mapToItem(contentItem(), {x, y}), includeSpacing);
 }
 
 QPoint QQuickTableView::cellAtPos(const QPointF &position, bool includeSpacing) const
 {
+    return cellAtPosition(mapToItem(contentItem(), position), includeSpacing);
+}
+#endif
+
+QPoint QQuickTableView::cellAtPosition(qreal x, qreal y, bool includeSpacing) const
+{
+    return cellAtPosition(QPoint(x, y), includeSpacing);
+}
+
+QPoint QQuickTableView::cellAtPosition(const QPointF &position, bool includeSpacing) const
+{
     Q_D(const QQuickTableView);
 
-    const QPointF localPos = mapToItem(d->contentItem, position);
-    if (!d->loadedTableOuterRect.contains(localPos))
+    if (!d->loadedTableOuterRect.contains(position))
         return QPoint(-1, -1);
 
     const qreal hSpace = d->cellSpacing.width();
@@ -4423,15 +4454,15 @@ QPoint QQuickTableView::cellAtPos(const QPointF &position, bool includeSpacing) 
 
     for (const int column : d->loadedColumns) {
         currentColumnEnd += d->getEffectiveColumnWidth(column);
-        if (localPos.x() < currentColumnEnd) {
+        if (position.x() < currentColumnEnd) {
             foundColumn = column;
             break;
         }
         currentColumnEnd += hSpace;
-        if (!includeSpacing && localPos.x() < currentColumnEnd) {
+        if (!includeSpacing && position.x() < currentColumnEnd) {
             // Hit spacing
             return QPoint(-1, -1);
-        } else if (includeSpacing && localPos.x() < currentColumnEnd - (hSpace / 2)) {
+        } else if (includeSpacing && position.x() < currentColumnEnd - (hSpace / 2)) {
             foundColumn = column;
             break;
         }
@@ -4439,16 +4470,16 @@ QPoint QQuickTableView::cellAtPos(const QPointF &position, bool includeSpacing) 
 
     for (const int row : d->loadedRows) {
         currentRowEnd += d->getEffectiveRowHeight(row);
-        if (localPos.y() < currentRowEnd) {
+        if (position.y() < currentRowEnd) {
             foundRow = row;
             break;
         }
         currentRowEnd += vSpace;
-        if (!includeSpacing && localPos.y() < currentRowEnd) {
+        if (!includeSpacing && position.y() < currentRowEnd) {
             // Hit spacing
             return QPoint(-1, -1);
         }
-        if (includeSpacing && localPos.y() < currentRowEnd - (vSpace / 2)) {
+        if (includeSpacing && position.y() < currentRowEnd - (vSpace / 2)) {
             foundRow = row;
             break;
         }
