@@ -248,10 +248,28 @@ void QmlLintSuggestions::diagnose(const QByteArray &url)
                 true);
 
         if (const QQmlJSLogger *logger = linter.logger()) {
+            qsizetype nDiagnostics = diagnostics.size();
             for (const auto &messages : { logger->infos(), logger->warnings(), logger->errors() }) {
                 for (const Message &message : messages) {
                     diagnostics.append(messageToDiagnostic(message));
                 }
+            }
+            if (diagnostics.size() != nDiagnostics && imports.size() == 1) {
+                Diagnostic diagnostic;
+                diagnostic.severity = DiagnosticSeverity::Warning;
+                Range &range = diagnostic.range;
+                Position &position = range.start;
+                position.line = 0;
+                position.character = 0;
+                Position &positionEnd = range.end;
+                positionEnd.line = 1;
+                diagnostic.message =
+                        "qmlls could not find a build directory, without a build directory "
+                        "containing a current build there could be spurious warnings, you might "
+                        "want to pass the --build-dir <buildDir> option to qmlls, or set the "
+                        "environment variable QMLLS_BUILD_DIRS.";
+                diagnostic.source = QByteArray("qmllint");
+                diagnostics.append(diagnostic);
             }
         }
     }
