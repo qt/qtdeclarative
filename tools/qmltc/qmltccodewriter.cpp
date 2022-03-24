@@ -417,11 +417,7 @@ void QmltcCodeWriter::write(QmltcOutputWrapper &code, const QmltcMethod &method)
         {
             QmltcOutputWrapper::CppIndentationScope cppIndent(&code);
             Q_UNUSED(cppIndent);
-            for (const QString &line : qAsConst(method.firstLines))
-                code.rawAppendToCpp(line);
             for (const QString &line : qAsConst(method.body))
-                code.rawAppendToCpp(line);
-            for (const QString &line : qAsConst(method.lastLines))
                 code.rawAppendToCpp(line);
         }
         code.rawAppendToCpp(u"}");
@@ -444,11 +440,7 @@ static void writeSpecialMethod(QmltcOutputWrapper &code, const QmltcMethodBase &
     {
         QmltcOutputWrapper::CppIndentationScope cppIndent(&code);
         Q_UNUSED(cppIndent);
-        for (const QString &line : qAsConst(specialMethod.firstLines))
-            code.rawAppendToCpp(line);
         for (const QString &line : qAsConst(specialMethod.body))
-            code.rawAppendToCpp(line);
-        for (const QString &line : qAsConst(specialMethod.lastLines))
             code.rawAppendToCpp(line);
     }
     code.rawAppendToCpp(u"}");
@@ -501,7 +493,6 @@ void QmltcCodeWriter::writeUrl(QmltcOutputWrapper &code, const QmltcMethod &urlM
     {
         QmltcOutputWrapper::CppIndentationScope cppIndent(&code);
         Q_UNUSED(cppIndent);
-        Q_ASSERT(urlMethod.firstLines.isEmpty() && urlMethod.lastLines.isEmpty());
         for (const QString &line : qAsConst(urlMethod.body))
             code.rawAppendToCpp(line);
     }

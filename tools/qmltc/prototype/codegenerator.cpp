@@ -1265,9 +1265,6 @@ void CodeGenerator::compileScriptBinding(QmltcType &current, const QmlIR::Bindin
                 m_doc, binding, object.irObject, m_urlMethodName, bindingFunctorName,
                 objectClassName, slotParameters);
 
-        // TODO: the finalize.lastLines has to be used here -- somehow if property gets a binding,
-        // the change handler is not updated?!
-
         // TODO: this could be dropped if QQmlEngine::setContextForObject() is
         // done before currently generated C++ object is constructed
         current.endInit.body << bindingSymbolName + u".reset(new QPropertyChangeHandler<"
@@ -1278,7 +1275,6 @@ void CodeGenerator::compileScriptBinding(QmltcType &current, const QmlIR::Bindin
 
         current.variables.emplaceBack(
                 QmltcVariable { typeOfQmlBinding, bindingSymbolName, QString() });
-        // current.ctor.initializerList << bindingSymbolName + u"()";
         break;
     }
     }
@@ -1347,7 +1343,7 @@ void CodeGenerator::compileScriptBindingOfComponent(QmltcType &current,
             current.dtor = QmltcDtor {};
             current.dtor->name = u"~" + current.cppType;
         }
-        current.dtor->firstLines << slotName + u"();";
+        current.dtor->body << slotName + u"();";
     }
     current.functions << std::move(slotMethod);
 }

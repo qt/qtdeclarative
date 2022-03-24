@@ -93,11 +93,6 @@ struct QmltcMethodBase
     QQmlJSMetaMethod::Access access = QQmlJSMetaMethod::Public; // access specifier
     QStringList declarationPrefixes;
     QStringList modifiers; // cv-qualifiers, ref-qualifier, noexcept, attributes
-
-    // TODO: these are only needed for Component.onCompleted/onDestruction. this
-    // has to be re-written anyhow later
-    QStringList firstLines; // C++ to run at the very beginning of a function
-    QStringList lastLines; // C++ to run at the very end of a function
 };
 
 // Represents QML -> C++ compiled function
