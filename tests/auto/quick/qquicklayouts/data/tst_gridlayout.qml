@@ -1203,5 +1203,52 @@ Item {
             verify(waitForItemPolished(layout))
             // Shouldn't be any warnings, but no way to verify this currently: QTBUG-70029
         }
+
+        // ------------------
+        Component {
+            id: hfw_Component
+            GridLayout {
+                columns: 2
+
+                Text {
+                    text: "Description:"
+                }
+                TextEdit {
+                    Layout.fillWidth: true
+                    wrapMode: TextEdit.WordWrap
+                    text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                          + " Mauris fermentum a ante et feugiat. Nam tortor velit, sagittis et nunc a, mattis efficitur dui."
+                          + " Quisque nec blandit lacus. Morbi eget mi arcu."
+
+                }
+                Rectangle {
+                    color: "lightgray"
+                    Layout.row: 1
+                    Layout.column: 0
+                    Layout.columnSpan: 2
+                    Layout.fillWidth: true
+                    implicitHeight: 2
+                }
+            }
+        }
+        function test_hfw() {
+            // Test to see how layouts handle height-for-width items
+            // For TextEdit, changing the width will update its implicitHeight to match what's
+            // needed in order to display it's full text
+            // Therefore, reducing the width of the layout should also increase its implicitHeight.
+            var layout = createTemporaryObject(hfw_Component, container)
+            verify(layout)
+            verify(waitForItemPolished(layout))
+            var initialImplicitHeight = layout.implicitHeight
+            var oldImplicitHeight = initialImplicitHeight
+            for (var w = layout.width - 100; w >= 200; w -= 100) {
+                layout.width = w
+                // will trigger a change in implicitHeight, which will trigger a polish event
+                verify(waitForItemPolished(layout))
+                verify(layout.implicitHeight >= oldImplicitHeight)
+                oldImplicitHeight = layout.implicitHeight
+            }
+            verify(layout.implicitHeight > initialImplicitHeight)
+        }
     }
 }
