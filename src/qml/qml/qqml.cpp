@@ -1065,8 +1065,7 @@ bool AOTCompiledContext::captureLookup(uint index, QObject *object) const
         return true;
     }
 
-
-    return true;
+    return false;
 }
 
 bool AOTCompiledContext::captureQmlContextPropertyLookup(uint index) const
