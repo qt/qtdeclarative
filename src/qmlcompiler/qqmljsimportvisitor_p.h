@@ -39,6 +39,8 @@
 //
 // We mean it.
 
+#include <qtqmlcompilerexports.h>
+
 #include "qqmljsannotation_p.h"
 #include "qqmljsimporter_p.h"
 #include "qqmljslogger_p.h"
@@ -56,7 +58,7 @@
 QT_BEGIN_NAMESPACE
 
 struct QQmlJSResourceFileMapper;
-class QQmlJSImportVisitor : public QQmlJS::AST::Visitor
+class Q_QMLCOMPILER_EXPORT QQmlJSImportVisitor : public QQmlJS::AST::Visitor
 {
 public:
     QQmlJSImportVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,

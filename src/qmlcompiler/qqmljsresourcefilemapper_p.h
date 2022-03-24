@@ -38,6 +38,8 @@
 //
 // We mean it.
 
+#include <qtqmlcompilerexports.h>
+
 #include <QStringList>
 #include <QHash>
 #include <QFile>
@@ -45,7 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QQmlJSResourceFileMapper
+struct Q_QMLCOMPILER_EXPORT QQmlJSResourceFileMapper
 {
     struct Entry
     {

@@ -49,10 +49,6 @@
 
 #include <algorithm>
 
-QT_BEGIN_NAMESPACE
-Q_DECLARE_LOGGING_CATEGORY(lcAotCompiler);
-QT_END_NAMESPACE
-
 static bool argumentsFromCommandLineAndFile(QStringList& allArguments, const QStringList &arguments)
 {
     allArguments.reserve(arguments.size());

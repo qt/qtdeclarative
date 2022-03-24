@@ -39,12 +39,14 @@
 //
 // We mean it.
 
+#include <qtqmlcompilerexports.h>
+
 #include <QtCore/qstring.h>
 #include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-int qRelocateResourceFile(const QString &input, const QString &output);
+int Q_QMLCOMPILER_EXPORT qRelocateResourceFile(const QString &input, const QString &output);
 
 QT_END_NAMESPACE
 

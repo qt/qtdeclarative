@@ -39,8 +39,11 @@
 //
 // We mean it.
 
+#include <qtqmlcompilerexports.h>
+
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
+#include <QtCore/qloggingcategory.h>
 
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljscompilepass_p.h>
@@ -54,7 +57,9 @@
 
 QT_BEGIN_NAMESPACE
 
-struct QQmlJSCompileError
+Q_QMLCOMPILER_EXPORT Q_DECLARE_LOGGING_CATEGORY(lcAotCompiler);
+
+struct Q_QMLCOMPILER_EXPORT QQmlJSCompileError
 {
     QString message;
     void print();
@@ -65,7 +70,7 @@ struct QQmlJSCompileError
                           const QQmlJS::DiagnosticMessage &diagnostic);
 };
 
-struct QQmlJSAotFunction
+struct Q_QMLCOMPILER_EXPORT QQmlJSAotFunction
 {
     QStringList includes;
     QStringList argumentTypes;
@@ -73,7 +78,7 @@ struct QQmlJSAotFunction
     QString returnType;
 };
 
-class QQmlJSAotCompiler
+class Q_QMLCOMPILER_EXPORT QQmlJSAotCompiler
 {
 public:
     QQmlJSAotCompiler(QQmlJSImporter *importer, const QString &resourcePath,
@@ -120,26 +125,29 @@ using QQmlJSSaveFunction
     = std::function<bool(const QV4::CompiledData::SaveableUnitPointer &,
                          const QQmlJSAotFunctionMap &, QString *)>;
 
-bool qCompileQmlFile(const QString &inputFileName, QQmlJSSaveFunction saveFunction,
-                     QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error,
-                     bool storeSourceLocation = false,
-                     QV4::Compiler::CodegenWarningInterface *interface =
-                             QV4::Compiler::defaultCodegenWarningInterface(),
-                     const QString *fileContents = nullptr);
-bool qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
-                     QQmlJSSaveFunction saveFunction, QQmlJSAotCompiler *aotCompiler,
-                     QQmlJSCompileError *error, bool storeSourceLocation = false,
-                     QV4::Compiler::CodegenWarningInterface *interface =
-                             QV4::Compiler::defaultCodegenWarningInterface(),
-                     const QString *fileContents = nullptr);
-bool qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl,
-                    QQmlJSSaveFunction saveFunction, QQmlJSCompileError *error);
+bool Q_QMLCOMPILER_EXPORT qCompileQmlFile(const QString &inputFileName,
+                                          QQmlJSSaveFunction saveFunction,
+                                          QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error,
+                                          bool storeSourceLocation = false,
+                                          QV4::Compiler::CodegenWarningInterface *interface =
+                                                  QV4::Compiler::defaultCodegenWarningInterface(),
+                                          const QString *fileContents = nullptr);
+bool Q_QMLCOMPILER_EXPORT qCompileQmlFile(QmlIR::Document &irDocument, const QString &inputFileName,
+                                          QQmlJSSaveFunction saveFunction,
+                                          QQmlJSAotCompiler *aotCompiler, QQmlJSCompileError *error,
+                                          bool storeSourceLocation = false,
+                                          QV4::Compiler::CodegenWarningInterface *interface =
+                                                  QV4::Compiler::defaultCodegenWarningInterface(),
+                                          const QString *fileContents = nullptr);
+bool Q_QMLCOMPILER_EXPORT qCompileJSFile(const QString &inputFileName, const QString &inputFileUrl,
+                                         QQmlJSSaveFunction saveFunction,
+                                         QQmlJSCompileError *error);
 
-
-bool qSaveQmlJSUnitAsCpp(const QString &inputFileName, const QString &outputFileName,
-                         const QV4::CompiledData::SaveableUnitPointer &unit,
-                         const QQmlJSAotFunctionMap &aotFunctions,
-                         QString *errorString);
+bool Q_QMLCOMPILER_EXPORT qSaveQmlJSUnitAsCpp(const QString &inputFileName,
+                                              const QString &outputFileName,
+                                              const QV4::CompiledData::SaveableUnitPointer &unit,
+                                              const QQmlJSAotFunctionMap &aotFunctions,
+                                              QString *errorString);
 
 QT_END_NAMESPACE
 

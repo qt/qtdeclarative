@@ -39,6 +39,8 @@
 //
 // We mean it.
 
+#include <qtqmlcompilerexports.h>
+
 #include <QtCore/private/qglobal_p.h>
 #include <QtCore/qsharedpointer.h>
 
@@ -56,7 +58,7 @@ template<typename T>
 class QDeferredWeakPointer;
 
 template<typename T>
-class QDeferredSharedPointer
+class Q_QMLCOMPILER_EXPORT QDeferredSharedPointer
 {
 public:
     using Factory = QDeferredFactory<std::remove_const_t<T>>;
@@ -186,7 +188,7 @@ private:
 };
 
 template<typename T>
-class QDeferredWeakPointer
+class Q_QMLCOMPILER_EXPORT QDeferredWeakPointer
 {
 public:
     using Factory = QDeferredFactory<std::remove_const_t<T>>;

@@ -3,8 +3,8 @@
 #####################################################################
 
 qt_internal_add_module(QmlCompilerPrivate
-    STATIC
     INTERNAL_MODULE
+    GENERATE_CPP_EXPORTS
     SOURCES
         qcoloroutput_p.h qcoloroutput.cpp
         qdeferredpointer_p.h

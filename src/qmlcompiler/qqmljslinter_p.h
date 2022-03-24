@@ -39,6 +39,8 @@
 //
 // We mean it.
 
+#include <qtqmlcompilerexports.h>
+
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
 #include <QtQmlCompiler/private/qqmljsimporter_p.h>
 
@@ -53,7 +55,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlJSLinter
+class Q_QMLCOMPILER_EXPORT QQmlJSLinter
 {
 public:
     QQmlJSLinter(const QStringList &importPaths, bool useAbsolutePath = false);
