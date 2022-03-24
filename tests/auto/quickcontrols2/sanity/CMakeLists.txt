@@ -42,3 +42,8 @@ qt_internal_extend_target(tst_sanity CONDITION NOT ANDROID AND NOT IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
 )
+
+qt_internal_extend_target(tst_sanity CONDITION WEBOS
+    DEFINES
+        QQC2_IMPORT_PATH=\\\"/usr/lib/qml/QtQuick/Controls\\\"
+)
