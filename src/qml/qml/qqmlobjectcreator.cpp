@@ -631,6 +631,7 @@ void QQmlObjectCreator::setupBindings(BindingSetupFlags mode)
             idBinding.type = QV4::CompiledData::Binding::Type_String;
             idBinding.stringIndex = _compiledObject->idNameIndex;
             idBinding.location = _compiledObject->location; // ###
+            idBinding.value.nullMarker = 0; // zero the value field to make codechecker happy
             setPropertyValue(idProperty, &idBinding);
         }
     }
