@@ -94,7 +94,7 @@ QT_BEGIN_NAMESPACE
     \deprecated [5.2]
 
     Returns  whether the application is active.
-    Use Qt.application.state == Qt.ApplicationActive instead
+    Use Application.state == Qt.ApplicationActive instead
 */
 
 /*!
@@ -112,7 +112,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \qmlproperty Qt::LayoutDiretcion Application::layoutDirection
+    \qmlproperty Qt::LayoutDirection Application::layoutDirection
 
     This read-only property can be used to query the default layout
     direction of the application. On system start-up, the default layout
@@ -216,8 +216,8 @@ QT_BEGIN_NAMESPACE
 
     This signal is emitted when the application is about to quit the main
     event loop. The signal is particularly useful if your application has to
-    do some last-secondcleanup.
-    Note that no user interaction is possible in this state.
+    do some last-second cleanup. User interaction is not possible in this state.
+    For more information, see \l {Window::closing()}{Window.closing}.
 
     \sa QCoreApplication::aboutToQuit
 */
