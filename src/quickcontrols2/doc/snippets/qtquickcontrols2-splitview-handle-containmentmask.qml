@@ -38,13 +38,14 @@ Item {
         anchors.fill: parent
 
         handle: Rectangle {
+            id: handleDelegate
             implicitWidth: 4
             implicitHeight: 4
             color: SplitHandle.pressed ? "#81e889"
                 : (SplitHandle.hovered ? Qt.lighter("#c2f4c6", 1.1) : "#c2f4c6")
 
             containmentMask: Item {
-                x: -width / 2
+                x: (handleDelegate.width - width) / 2
                 width: 64
                 height: splitView.height
             }
