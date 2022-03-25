@@ -147,8 +147,11 @@ QQmlJSImporter::Import QQmlJSImporter::readQmldir(const QString &path)
     Import result;
     auto reader = createQmldirParserForFile(path + SlashQmldir);
     result.name = reader.typeNamespace();
+#if QT_VERSION >= QT_VERSION_CHECK(6, 4, 0)
+    // #if required for standalone DOM build against Qt6.3
     result.isStaticModule = reader.isStaticModule();
     result.isSystemModule = reader.isSystemModule();
+#endif
     result.imports.append(reader.imports());
     result.dependencies.append(reader.dependencies());
 
@@ -278,9 +281,11 @@ void QQmlJSImporter::importDependencies(const QQmlJSImporter::Import &import,
             if (!m_useOptionalImports) {
                 continue;
             }
-
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 4, 0))
+            // #if required for standalone DOM build against Qt6.3
             if (!(import.flags & QQmlDirParser::Import::OptionalDefault))
                 continue;
+#endif
         }
 
         importHelper(import.module, types, isDependency ? QString() : prefix,

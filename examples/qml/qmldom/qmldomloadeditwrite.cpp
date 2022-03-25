@@ -235,7 +235,7 @@ int main()
         for (DomItem import : imports.values()) {
             if (const Import *importPtr = import.as<Import>()) {
                 if (importPtr->implicit)
-                    qDebug() << importPtr->uri << importPtr->version.stringValue();
+                    qDebug() << importPtr->uri.toString() << importPtr->version.stringValue();
             }
         }
 
