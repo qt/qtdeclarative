@@ -189,11 +189,7 @@ void QmltypesReader::insertComponent(const QQmlJSScope::Ptr &jsScope,
                             .index(qmltypesFilePtr()->components().values(comp.name()).length());
     incrementedPath = true;
     prototype = jsScope->baseTypeName();
-#if QT_VERSION <= 0x060200
-    defaultPropertyName = jsScope->defaultPropertyName();
-#else
     defaultPropertyName = jsScope->ownDefaultPropertyName();
-#endif // QT_VERSION <= 0x060200
     comp.setInterfaceNames(jsScope->interfaceNames());
     QString typeName = jsScope->ownAttachedTypeName();
     comp.setAttachedTypeName(typeName);
@@ -276,17 +272,10 @@ bool QmltypesReader::parse()
     QQmlJSTypeDescriptionReader reader(qmltypesFilePtr()->canonicalFilePath(),
                                        qmltypesFilePtr()->code());
     QStringList dependencies;
-#if QT_VERSION < QT_VERSION_CHECK(6, 3, 0)
-    QHash<QString, QQmlJSScope::Ptr> objects;
-    m_isValid = reader(&objects, &dependencies);
-    for (const auto &obj : qAsConst(objects))
-        insertComponent(obj, obj->exports());
-#else
     QHash<QString, QQmlJSExportedScope> objects;
     m_isValid = reader(&objects, &dependencies);
     for (const auto &obj : qAsConst(objects))
         insertComponent(obj.scope, obj.exports);
-#endif
     qmltypesFilePtr()->setIsValid(m_isValid);
     return m_isValid;
 }

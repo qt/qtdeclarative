@@ -196,10 +196,19 @@ public:
                             "typeModifierToken=%11 typeToken=%12 "
                             "identifierToken=%13 colonToken=%14%15")
                       .arg(quotedString(typeStr), quotedString(el->typeModifier),
+#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
                            quotedString(el->name), boolStr(el->isDefaultMember()),
                            boolStr(el->isReadonly()), boolStr(el->isRequired()),
-                           loc(el->defaultToken()), loc(el->readonlyToken()), loc(el->propertyToken()),
-                           loc(el->requiredToken()), loc(el->typeModifierToken), loc(el->typeToken),
+                           loc(el->defaultToken()), loc(el->readonlyToken()),
+                           loc(el->propertyToken()), loc(el->requiredToken()),
+                           loc(el->typeModifierToken), loc(el->typeToken),
+#else
+                           quotedString(el->name), boolStr(el->defaultToken.isValid()),
+                           boolStr(el->readonlyToken.isValid()),
+                           boolStr(el->requiredToken.isValid()), loc(el->defaultToken),
+                           loc(el->readonlyToken), loc(el->propertyToken), loc(el->requiredToken),
+                           loc(el->typeModifierToken), loc(el->typeToken),
+#endif
                            loc(el->identifierToken), loc(el->colonToken),
                            semicolonToken(el->semicolonToken)));
         if (!noAnnotations()) // put annotations inside the node they refer to

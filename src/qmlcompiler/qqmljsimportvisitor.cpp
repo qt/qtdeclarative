@@ -1322,7 +1322,12 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         QQmlJSMetaProperty prop;
         prop.setPropertyName(publicMember->name.toString());
         prop.setIsList(publicMember->typeModifier == QLatin1String("list"));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
+        // #if required for standalone DOM compilation against Qt 6.2
         prop.setIsWritable(!publicMember->isReadonly());
+#else
+        prop.setIsWritable(!publicMember->readonlyToken.isValid());
+#endif
         prop.setAliasExpression(aliasExpr);
         const auto type = isAlias
                 ? QQmlJSScope::ConstPtr()
@@ -1337,11 +1342,21 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
             prop.setTypeName(typeName);
         }
         prop.setAnnotations(parseAnnotations(publicMember->annotations));
+#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
+        // #if required for standalone DOM compilation against Qt 6.2
         if (publicMember->isDefaultMember())
+#else
+        if (publicMember->defaultToken.isValid())
+#endif
             m_currentScope->setOwnDefaultPropertyName(prop.propertyName());
         prop.setIndex(m_currentScope->ownProperties().size());
         m_currentScope->insertPropertyIdentifier(prop);
+#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
+        // #if required for standalone DOM compilation against Qt 6.2
         if (publicMember->isRequired())
+#else
+        if (publicMember->requiredToken.isValid())
+#endif
             m_currentScope->setPropertyLocallyRequired(prop.propertyName(), true);
 
         // if property is an alias, initialization expression is not a binding
@@ -1489,7 +1504,10 @@ void handleTranslationBinding(QQmlJSMetaPropertyBinding &binding, QStringView ba
             binding.setStringLiteral(mainString);
         }
     };
+#if QT_VERSION >= QT_VERSION_CHECK(6, 3, 0)
+    // #if required for standalone DOM compilation against Qt 6.2
     QmlIR::tryGeneratingTranslationBindingBase(base, args, registerMainString, discardCommentString, finalizeBinding);
+#endif
 }
 
 QQmlJSImportVisitor::LiteralOrScriptParseResult QQmlJSImportVisitor::parseLiteralOrScriptBinding(const QString name,
