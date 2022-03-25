@@ -771,12 +771,17 @@ QQmlJSScope::ConstPtr QQmlJSScope::attachedType() const
 
 bool QQmlJSScope::isResolved() const
 {
-    if (m_scopeType == ScopeType::AttachedPropertyScope
-        || m_scopeType == ScopeType::GroupedPropertyScope) {
-        return m_internalName.isEmpty() || !m_baseType.scope.isNull();
-    }
-
-    return m_baseTypeName.isEmpty() || !m_baseType.scope.isNull();
+    const bool nameIsEmpty = (m_scopeType == ScopeType::AttachedPropertyScope
+                              || m_scopeType == ScopeType::GroupedPropertyScope)
+            ? m_internalName.isEmpty()
+            : m_baseTypeName.isEmpty();
+    if (nameIsEmpty)
+        return true;
+    if (m_baseType.scope.isNull())
+        return false;
+    if (isComposite() && !nonCompositeBaseType(baseType()))
+        return false;
+    return true;
 }
 
 QString QQmlJSScope::defaultPropertyName() const

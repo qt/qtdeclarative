@@ -161,6 +161,16 @@ void QQmlJSImportVisitor::leaveEnvironment()
     m_currentScope = m_currentScope->parentScope();
 }
 
+bool QQmlJSImportVisitor::isTypeResolved(const QQmlJSScope::ConstPtr &type)
+{
+    const auto handleUnresolvedType = [this](const QQmlJSScope::ConstPtr &type) {
+        m_logger->log(QStringLiteral("Type %1 is used but it is not resolved")
+                              .arg(getScopeName(type, type->scopeType())),
+                      Log_Type, type->sourceLocation());
+    };
+    return isTypeResolved(type, handleUnresolvedType);
+}
+
 static bool mayBeUnresolvedGeneralizedGroupedProperty(const QQmlJSScope::ConstPtr &scope)
 {
     return scope->scopeType() == QQmlJSScope::GroupedPropertyScope && !scope->baseType();
@@ -536,12 +546,24 @@ void QQmlJSImportVisitor::processDefaultProperties()
         }
 
         auto propType = defaultProp.type();
-        if (propType.isNull() || !propType->isFullyResolved())
-            return;
+        const auto handleUnresolvedDefaultProperty = [&](const QQmlJSScope::ConstPtr &) {
+            // Property type is not fully resolved we cannot tell any more than this
+            m_logger->log(QStringLiteral("Property \"%1\" has incomplete type \"%2\". You may be "
+                                         "missing an import.")
+                                  .arg(defaultPropertyName)
+                                  .arg(defaultProp.typeName()),
+                          Log_Property, it.value().constFirst()->sourceLocation());
+        };
+        if (propType.isNull()) {
+            handleUnresolvedDefaultProperty(propType);
+            continue;
+        }
+        if (!isTypeResolved(propType, handleUnresolvedDefaultProperty))
+            continue;
 
         const auto scopes = *it;
         for (const auto &scope : scopes) {
-            if (!scope->isFullyResolved()) // should be an error somewhere else
+            if (!isTypeResolved(scope))
                 continue;
 
             // Assigning any element to a QQmlComponent property implicitly wraps it into a Component
@@ -616,79 +638,37 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
         const QString propertyName = objectBinding.name;
         QQmlJSScope::ConstPtr childScope = objectBinding.childScope;
 
+        if (!isTypeResolved(objectBinding.scope)) // guarantees property lookup
+            continue;
+
         QQmlJSMetaProperty property = objectBinding.scope->property(propertyName);
 
-        if (property.isValid() && !property.type().isNull()
-            && (objectBinding.onToken || property.type()->canAssign(objectBinding.childScope))) {
-
-
-            if (property.type()->causesImplicitComponentWrapping())
-                objectBinding.childScope->setIsWrappedInImplicitComponent(!objectBinding.childScope->causesImplicitComponentWrapping());
-
-            // unique because it's per-scope and per-property
-            const auto uniqueBindingId = qMakePair(objectBinding.scope, objectBinding.name);
-            const QString typeName = getScopeName(childScope, QQmlJSScope::QMLScope);
-
-            if (objectBinding.onToken) {
-                if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueInterceptor"))) {
-                    if (foundInterceptors.contains(uniqueBindingId)) {
-                        m_logger->log(QStringLiteral("Duplicate interceptor on property \"%1\"")
-                                              .arg(propertyName),
-                                      Log_Property, objectBinding.location);
-                    } else {
-                        foundInterceptors.insert(uniqueBindingId);
-                    }
-                } else if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueSource"))) {
-                    if (foundValueSources.contains(uniqueBindingId)) {
-                        m_logger->log(QStringLiteral("Duplicate value source on property \"%1\"")
-                                              .arg(propertyName),
-                                      Log_Property, objectBinding.location);
-                    } else if (foundObjects.contains(uniqueBindingId)
-                               || foundLiterals.contains(uniqueBindingId)) {
-                        m_logger->log(QStringLiteral("Cannot combine value source and binding on "
-                                                     "property \"%1\"")
-                                              .arg(propertyName),
-                                      Log_Property, objectBinding.location);
-                    } else {
-                        foundValueSources.insert(uniqueBindingId);
-                    }
-                } else {
-                    m_logger->log(
-                            QStringLiteral("On-binding for property \"%1\" has wrong type \"%2\"")
-                                    .arg(propertyName)
-                                    .arg(typeName),
-                            Log_Property, objectBinding.location);
-                }
-            } else {
-                // TODO: Warn here if binding.hasValue() is true
-                if (foundValueSources.contains(uniqueBindingId)) {
-                    m_logger->log(
-                            QStringLiteral(
-                                    "Cannot combine value source and binding on property \"%1\"")
-                                    .arg(propertyName),
-                            Log_Property, objectBinding.location);
-                } else {
-                    foundObjects.insert(uniqueBindingId);
-                }
-            }
-        } else if (!objectBinding.scope->isFullyResolved()) {
-            // If the current scope is not fully resolved we cannot tell whether the property exists
-            // or not (we already warn elsewhere)
-        } else if (!property.isValid()) {
+        if (!property.isValid()) {
             m_logger->log(QStringLiteral("Property \"%1\" is invalid or does not exist")
                                   .arg(propertyName),
                           Log_Property, objectBinding.location);
-        } else if (property.type().isNull() || !property.type()->isFullyResolved()) {
+            continue;
+        }
+        const auto handleUnresolvedProperty = [&](const QQmlJSScope::ConstPtr &) {
             // Property type is not fully resolved we cannot tell any more than this
             m_logger->log(QStringLiteral("Property \"%1\" has incomplete type \"%2\". You may be "
                                          "missing an import.")
                                   .arg(propertyName)
                                   .arg(property.typeName()),
                           Log_Property, objectBinding.location);
-        } else if (!childScope->isFullyResolved()) {
-            // If the childScope type is not fully resolved we cannot tell whether the type is
-            // incompatible (we already warn elsewhere)
-        } else {
+        };
+        if (property.type().isNull()) {
+            handleUnresolvedProperty(property.type());
+            continue;
+        }
+
+        // guarantee that canAssign() can be called
+        if (!isTypeResolved(property.type(), handleUnresolvedProperty)
+            || !isTypeResolved(childScope)) {
+            continue;
+        }
+
+        if (!objectBinding.onToken && !property.type()->canAssign(childScope)) {
             // the type is incompatible
             m_logger->log(QStringLiteral("Property \"%1\" of type \"%2\" is assigned an "
                                          "incompatible type \"%3\"")
@@ -696,6 +676,56 @@ void QQmlJSImportVisitor::processPropertyBindingObjects()
                                   .arg(property.typeName())
                                   .arg(getScopeName(childScope, QQmlJSScope::QMLScope)),
                           Log_Property, objectBinding.location);
+            continue;
+        }
+
+        if (property.type()->causesImplicitComponentWrapping())
+            objectBinding.childScope->setIsWrappedInImplicitComponent(
+                    !objectBinding.childScope->causesImplicitComponentWrapping());
+
+        // unique because it's per-scope and per-property
+        const auto uniqueBindingId = qMakePair(objectBinding.scope, objectBinding.name);
+        const QString typeName = getScopeName(childScope, QQmlJSScope::QMLScope);
+
+        if (objectBinding.onToken) {
+            if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueInterceptor"))) {
+                if (foundInterceptors.contains(uniqueBindingId)) {
+                    m_logger->log(QStringLiteral("Duplicate interceptor on property \"%1\"")
+                                          .arg(propertyName),
+                                  Log_Property, objectBinding.location);
+                } else {
+                    foundInterceptors.insert(uniqueBindingId);
+                }
+            } else if (childScope->hasInterface(QStringLiteral("QQmlPropertyValueSource"))) {
+                if (foundValueSources.contains(uniqueBindingId)) {
+                    m_logger->log(QStringLiteral("Duplicate value source on property \"%1\"")
+                                          .arg(propertyName),
+                                  Log_Property, objectBinding.location);
+                } else if (foundObjects.contains(uniqueBindingId)
+                           || foundLiterals.contains(uniqueBindingId)) {
+                    m_logger->log(QStringLiteral("Cannot combine value source and binding on "
+                                                 "property \"%1\"")
+                                          .arg(propertyName),
+                                  Log_Property, objectBinding.location);
+                } else {
+                    foundValueSources.insert(uniqueBindingId);
+                }
+            } else {
+                m_logger->log(QStringLiteral("On-binding for property \"%1\" has wrong type \"%2\"")
+                                      .arg(propertyName)
+                                      .arg(typeName),
+                              Log_Property, objectBinding.location);
+            }
+        } else {
+            // TODO: Warn here if binding.hasValue() is true
+            if (foundValueSources.contains(uniqueBindingId)) {
+                m_logger->log(
+                        QStringLiteral("Cannot combine value source and binding on property \"%1\"")
+                                .arg(propertyName),
+                        Log_Property, objectBinding.location);
+            } else {
+                foundObjects.insert(uniqueBindingId);
+            }
         }
     }
 }

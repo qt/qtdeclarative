@@ -188,6 +188,27 @@ protected:
                                    const QQmlJS::SourceLocation &location);
     void leaveEnvironment();
 
+    // A set of types that have not been resolved but have been used during the
+    // AST traversal
+    QSet<QQmlJSScope::ConstPtr> m_unresolvedTypes;
+    template<typename ErrorHandler>
+    bool isTypeResolved(const QQmlJSScope::ConstPtr &type, ErrorHandler handle)
+    {
+        if (type->isFullyResolved())
+            return true;
+
+        // Note: ignore duplicates, but only after we are certain that the type
+        // is still unresolved
+        if (m_unresolvedTypes.contains(type))
+            return false;
+
+        m_unresolvedTypes.insert(type);
+
+        handle(type);
+        return false;
+    }
+    bool isTypeResolved(const QQmlJSScope::ConstPtr &type);
+
     QVector<QQmlJSAnnotation> parseAnnotations(QQmlJS::AST::UiAnnotationList *list);
     void addDefaultProperties();
     void processDefaultProperties();
