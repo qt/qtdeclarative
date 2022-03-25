@@ -76,7 +76,6 @@ struct QQmlJSAnnotation
         seed = combine(seed, annotation.name);
 
         for (auto it = annotation.bindings.constBegin(); it != annotation.bindings.constEnd(); ++it) {
-            QtPrivate::QHashCombine combine;
             size_t h = combine(seed, it.key());
             // use + to keep the result independent of the ordering of the keys
 

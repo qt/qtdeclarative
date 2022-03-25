@@ -405,8 +405,13 @@ private:
             friend bool operator!=(BoolLiteral a, BoolLiteral b) { return !(a == b); }
         };
         struct NumberLiteral {
+            QT_WARNING_PUSH
+            QT_WARNING_DISABLE_CLANG("-Wfloat-equal")
+            QT_WARNING_DISABLE_GCC("-Wfloat-equal")
             friend bool operator==(NumberLiteral a, NumberLiteral b) { return a.value == b.value; }
             friend bool operator!=(NumberLiteral a, NumberLiteral b) { return !(a == b); }
+            QT_WARNING_POP
+
             double value; // ### TODO: int?
         };
         struct StringLiteral {
