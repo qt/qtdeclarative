@@ -2211,24 +2211,35 @@ void Heap::QObjectMethod::ensureMethodsCache()
 
 ReturnedValue QObjectMethod::method_toString(ExecutionEngine *engine) const
 {
-    QString result;
+    const auto encode = [engine](const QString &result) {
+        return engine->newString(result)->asReturnedValue();
+    };
+
     if (const QMetaObject *metaObject = d()->metaObject()) {
+        if (QObject *qobject = d()->object()) {
+            const int id = metaObject->indexOfMethod("toString()");
+            if (id >= 0) {
+                const QMetaMethod method = metaObject->method(id);
+                const QMetaType returnType = method.returnMetaType();
+                QVariant result(returnType);
+                method.invoke(qobject, QGenericReturnArgument(returnType.name(), result.data()));
+                return engine->fromVariant(result);
+            }
 
-        result += QString::fromUtf8(metaObject->className()) +
-                QLatin1String("(0x") + QString::number((quintptr)d()->object(),16);
-
-        if (d()->object()) {
-            QString objectName = d()->object()->objectName();
+            QString result;
+            result += QString::fromUtf8(metaObject->className()) +
+                    QLatin1String("(0x") + QString::number(quintptr(qobject), 16);
+            QString objectName = qobject->objectName();
             if (!objectName.isEmpty())
                 result += QLatin1String(", \"") + objectName + QLatin1Char('\"');
+            result += QLatin1Char(')');
+            return encode(result);
+        } else {
+            return encode(QString::fromUtf8(metaObject->className()) + QLatin1String("(0x0)"));
         }
-
-        result += QLatin1Char(')');
-    } else {
-        result = QLatin1String("null");
     }
 
-    return engine->newString(result)->asReturnedValue();
+    return encode(QLatin1String("null"));
 }
 
 ReturnedValue QObjectMethod::method_destroy(ExecutionEngine *engine, const Value *args, int argc) const

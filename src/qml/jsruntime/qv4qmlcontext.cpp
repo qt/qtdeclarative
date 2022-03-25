@@ -150,13 +150,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         return Object::virtualGet(resource, id, receiver, hasProperty);
     }
 
-    bool hasProp = false;
-    ScopedValue result(scope, Object::virtualGet(resource, id, receiver, &hasProp));
-    if (hasProp) {
-        if (hasProperty)
-            *hasProperty = hasProp;
-        return result->asReturnedValue();
-    }
+    ScopedValue result(scope);
 
     // It's possible we could delay the calculation of the "actual" context (in the case
     // of sub contexts) until it is definitely needed.
@@ -358,6 +352,16 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         // As the hierarchy of contexts is not stable, we can't do accelerated lookups beyond
         // the immediate QML context (of the .qml file).
         lookup = nullptr;
+    }
+
+    // Do the generic JS lookup late.
+    // The scope, context, types etc should be able to override it.
+    bool hasProp = false;
+    result = Object::virtualGet(resource, id, receiver, &hasProp);
+    if (hasProp) {
+        if (hasProperty)
+            *hasProperty = hasProp;
+        return result->asReturnedValue();
     }
 
     // Do a lookup in the global object here to avoid expressionContext->unresolvedNames becoming
