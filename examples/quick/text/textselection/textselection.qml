@@ -83,8 +83,8 @@ Rectangle {
             id: flick
 
             anchors.fill: parent
-            contentWidth: edit.paintedWidth
-            contentHeight: edit.paintedHeight
+            contentWidth: edit.contentWidth
+            contentHeight: edit.contentHeight
             interactive: true
             clip: true
 

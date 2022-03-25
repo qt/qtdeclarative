@@ -91,7 +91,7 @@ Rectangle {
             }
             text:
             "LineCount: "+textelement.lineCount+" of "+textelement.maximumLineCount+
-            "\nPaintedHeight/Width: "+textelement.paintedHeight+"/"+textelement.paintedWidth+
+            "\nContentHeight/Width: "+textelement.contentHeight+"/"+textelement.contentWidth+
             "\nPointSize: "+textelement.font.pointSize+
             "\nPixelSize: "+textelement.font.pixelSize+
             "\nTruncated: "+textelement.truncated+
