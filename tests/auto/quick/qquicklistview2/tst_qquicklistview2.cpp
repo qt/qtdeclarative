@@ -53,6 +53,7 @@ private slots:
     void pullbackSparseList();
     void highlightWithBound();
     void sectionIsCompatibleWithBoundComponents();
+    void sectionGeometryChange();
 
 private:
     void flickWithTouch(QQuickWindow *window, const QPoint &from, const QPoint &to);
@@ -958,6 +959,33 @@ void tst_QQuickListView2::sectionIsCompatibleWithBoundComponents()
     QQuickListView *listView = qobject_cast<QQuickListView *>(o.data());
     QVERIFY(listView);
     QTRY_COMPARE(listView->currentSection(), "42");
+}
+
+void tst_QQuickListView2::sectionGeometryChange()
+{
+    QScopedPointer<QQuickView> window(createView());
+    QTRY_VERIFY(window);
+    window->setSource(testFileUrl("sectionGeometryChange.qml"));
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window.data()));
+
+    QQuickListView *listview = findItem<QQuickListView>(window->rootObject(), "list");
+    QTRY_VERIFY(listview);
+
+    QQuickItem *contentItem = listview->contentItem();
+    QTRY_VERIFY(contentItem);
+    QVERIFY(QQuickTest::qWaitForPolish(listview));
+
+    QQuickItem *section1 = findItem<QQuickItem>(contentItem, "Section1");
+    QVERIFY(section1);
+    QQuickItem *element1 = findItem<QQuickItem>(contentItem, "Element1");
+    QVERIFY(element1);
+
+    QCOMPARE(element1->y(), section1->y() + section1->height());
+
+    // Update the height of the section delegate and verify that the next element is not overlapping
+    section1->setHeight(section1->height() + 10);
+    QTRY_COMPARE(element1->y(), section1->y() + section1->height());
 }
 
 QTEST_MAIN(tst_QQuickListView2)
