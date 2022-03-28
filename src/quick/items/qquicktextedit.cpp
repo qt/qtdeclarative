@@ -1204,7 +1204,15 @@ void QQuickTextEdit::setCursorVisible(bool on)
 
 /*!
     \qmlproperty int QtQuick::TextEdit::cursorPosition
-    The position of the cursor in the TextEdit.
+    The position of the cursor in the TextEdit.  The cursor is positioned between
+    characters.
+
+    \note The \e characters in this case refer to the string of \l QChar objects,
+    therefore 16-bit Unicode characters, and the position is considered an index
+    into this string. This does not necessarily correspond to individual graphemes
+    in the writing system, as a single grapheme may be represented by multiple
+    Unicode characters, such as in the case of surrogate pairs, linguistic
+    ligatures or diacritics.
 */
 int QQuickTextEdit::cursorPosition() const
 {
