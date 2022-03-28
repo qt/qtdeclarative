@@ -2339,9 +2339,8 @@ void QQmlJSCodeGenerator::generateLookup(const QString &lookup, const QString &i
 
 void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset)
 {
-    m_body += u"{\n"_qs;
-    int absoluteOffset =nextInstructionOffset() + relativeOffset;
-
+    QString conversionCode;
+    const int absoluteOffset = nextInstructionOffset() + relativeOffset;
     const auto annotation = m_annotations->find(absoluteOffset);
     if (annotation != m_annotations->constEnd()) {
         const auto &conversions = annotation->second.typeConversions;
@@ -2378,10 +2377,10 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset
             if (variable == currentRegisterVariables.end() || *variable == currentVariable)
                 continue;
 
-            m_body += *variable;
-            m_body += u" = "_qs;
-            m_body += conversion(currentType, targetType, currentVariable);
-            m_body += u";\n"_qs;
+            conversionCode += *variable;
+            conversionCode += u" = "_qs;
+            conversionCode += conversion(currentType, targetType, currentVariable);
+            conversionCode += u";\n"_qs;
         }
     }
 
@@ -2389,9 +2388,11 @@ void QQmlJSCodeGenerator::generateJumpCodeWithTypeConversions(int relativeOffset
         auto labelIt = m_labels.find(absoluteOffset);
         if (labelIt == m_labels.end())
             labelIt = m_labels.insert(absoluteOffset, u"label_%1"_qs.arg(m_labels.count()));
-        m_body += u"    goto "_qs + *labelIt + u";\n"_qs;
+        conversionCode += u"    goto "_qs + *labelIt + u";\n"_qs;
     }
-    m_body += u"}\n"_qs;
+
+    if (!conversionCode.isEmpty())
+        m_body += u"{\n"_qs + conversionCode + u"}\n"_qs;
 }
 
 QString QQmlJSCodeGenerator::registerVariable(int index) const
