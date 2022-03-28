@@ -97,6 +97,7 @@ private Q_SLOTS:
     void shadowing();
 #ifdef LABS_QML_MODELS_PRESENT
     void componentWrappedObjects();
+    void labsQmlModelsSanity();
 #endif
     void unknownCppBase();
 
@@ -233,6 +234,24 @@ void tst_qqmljsscope::componentWrappedObjects()
     QVERIFY(isGoodType(children[1], u"nonWrapped2"_qs, false));
     QVERIFY(isGoodType(children[2], u"nonWrapped3"_qs, false));
     QVERIFY(isGoodType(children[3], u"wrapped"_qs, true));
+}
+
+void tst_qqmljsscope::labsQmlModelsSanity()
+{
+    QQmlJSScope::ConstPtr root = run(u"labsQmlModelsSanity.qml"_qs);
+    QVERIFY(root);
+    auto children = root->childScopes();
+    QCOMPARE(children.size(), 1);
+
+    // DelegateChooser: it inherits QQmlAbstractDelegateComponent (from
+    // QmlModels) which inherits QQmlComponent. While
+    // QQmlAbstractDelegateComponent has no properties, QQmlComponent does. If
+    // the QmlModels dependency is lost, we don't "see" that DelegateChooser
+    // inherits QQmlComponent - and so has no properties from it, hence, we can
+    // test exactly that:
+    QVERIFY(children[0]->hasProperty(u"progress"_qs));
+    QVERIFY(children[0]->hasProperty(u"status"_qs));
+    QVERIFY(children[0]->hasProperty(u"url"_qs));
 }
 #endif
 
