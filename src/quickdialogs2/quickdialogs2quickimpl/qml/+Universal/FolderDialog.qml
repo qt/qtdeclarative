@@ -142,6 +142,7 @@ FolderDialogImpl {
         rightPadding: 24
         topPadding: 6
         bottomPadding: 24
+        alignment: Qt.AlignRight
     }
 
     T.Overlay.modal: Rectangle {
