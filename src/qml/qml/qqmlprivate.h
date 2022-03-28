@@ -619,7 +619,10 @@ namespace QQmlPrivate
         QQmlContextData *qmlContext;
         QObject *qmlScopeObject;
         QJSEngine *engine;
-        QV4::ExecutableCompilationUnit *compilationUnit;
+        union {
+            QV4::ExecutableCompilationUnit *compilationUnit;
+            qintptr extraData;
+        };
 
         QQmlEngine *qmlEngine() const;
 
@@ -700,7 +703,7 @@ namespace QQmlPrivate
     };
 
     struct AOTCompiledFunction {
-        int index;
+        qintptr extraData;
         QMetaType returnType;
         QList<QMetaType> argumentTypes;
         void (*functionPtr)(const AOTCompiledContext *context, void *resultPtr, void **arguments);

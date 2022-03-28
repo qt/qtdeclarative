@@ -81,9 +81,10 @@ struct Q_QML_EXPORT FunctionData {
 Q_STATIC_ASSERT(std::is_standard_layout< FunctionData >::value);
 
 struct Q_QML_EXPORT Function : public FunctionData {
-private:
+protected:
     Function(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
              const CompiledData::Function *function, const QQmlPrivate::AOTCompiledFunction *aotFunction);
+    Function(ExecutionEngine *engine, const QQmlPrivate::AOTCompiledFunction *aotFunction);
     ~Function();
 
 public:
@@ -122,7 +123,11 @@ public:
     static Function *create(ExecutionEngine *engine, ExecutableCompilationUnit *unit,
                             const CompiledData::Function *function,
                             const QQmlPrivate::AOTCompiledFunction *aotFunction);
+    static Function *create(ExecutionEngine *engine,
+                            const QQmlPrivate::AOTCompiledFunction *aotFunction);
     void destroy();
+
+    bool isSyntheticAotFunction() const { return codeData == nullptr && aotFunction != nullptr; }
 
     // used when dynamically assigning signal handlers (QQmlConnection)
     void updateInternalClass(ExecutionEngine *engine, const QList<QByteArray> &parameters);
@@ -149,6 +154,18 @@ public:
             return nullptr;
         return executableCompilationUnit()->runtimeFunctions[compiledFunction->nestedFunctionIndex];
     }
+};
+
+struct SyntheticAotFunction : public Function
+{
+    SyntheticAotFunction(ExecutionEngine *engine, QQmlPrivate::AOTCompiledFunction aotFunction)
+        : Function(engine, &m_aotFunction)
+        , m_aotFunction(std::move(aotFunction))
+    {
+    }
+
+private:
+    QQmlPrivate::AOTCompiledFunction m_aotFunction;
 };
 
 }

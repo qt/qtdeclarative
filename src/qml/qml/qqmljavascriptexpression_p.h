@@ -100,6 +100,7 @@ private:
 
 class Q_QML_PRIVATE_EXPORT QQmlJavaScriptExpression
 {
+    Q_DISABLE_COPY_MOVE(QQmlJavaScriptExpression)
 public:
     QQmlJavaScriptExpression();
     virtual ~QQmlJavaScriptExpression();
@@ -137,7 +138,7 @@ public:
         *listHead = this;
     }
 
-    QV4::Function *function() const { return m_v4Function; }
+    QV4::Function *function() const { return m_v4Function.data(); }
 
     virtual void refresh();
 
@@ -210,7 +211,9 @@ private:
 
     QV4::PersistentValue m_qmlScope;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> m_compilationUnit;
-    QV4::Function *m_v4Function;
+
+    enum Ownership { DoesNotOwn, OwnsSyntheticAotFunction };
+    QTaggedPointer<QV4::Function, Ownership> m_v4Function;
 
 protected:
     TriggerList *qpropertyChangeTriggers = nullptr;

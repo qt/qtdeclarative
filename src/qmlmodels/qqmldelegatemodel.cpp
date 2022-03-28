@@ -45,6 +45,7 @@
 #include <private/qquickpackage_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <private/qqmladaptormodel_p.h>
+#include <private/qqmlanybinding_p.h>
 #include <private/qqmlchangeset_p.h>
 #include <private/qqmlengine_p.h>
 #include <private/qqmlcomponent_p.h>
@@ -937,44 +938,22 @@ static bool isDoneIncubating(QQmlIncubator::Status status)
      return status == QQmlIncubator::Ready || status == QQmlIncubator::Error;
 }
 
-PropertyUpdater::PropertyUpdater(QObject *parent) :
-      QObject(parent) {}
-
-void PropertyUpdater::doUpdate()
+static void bindingFunction(
+        const QQmlPrivate::AOTCompiledContext *context, void *resultPtr, void **)
 {
-    auto sender = QObject::sender();
-    auto mo = sender->metaObject();
-    auto signalIndex = QObject::senderSignalIndex();
-    ++updateCount;
-    auto property = mo->property(changeSignalIndexToPropertyIndex[signalIndex]);
-    // we synchronize between required properties and model rolenames by name
-    // that's why the QQmlProperty and the metaobject property must have the same name
-    QQmlProperty qmlProp(parent(), QString::fromLatin1(property.name()));
-    qmlProp.write(property.read(QObject::sender()));
-}
+    // metaCall expects initialized memory, the AOT function passes uninitialized memory.
+    QObject *scopeObject = context->qmlScopeObject;
+    const int propertyIndex = context->extraData;
+    const QMetaObject *metaObject = scopeObject->metaObject();
+    const QMetaProperty property = metaObject->property(propertyIndex);
+    property.metaType().construct(resultPtr);
 
-void PropertyUpdater::breakBinding()
-{
-    auto it = senderToConnection.find(QObject::senderSignalIndex());
-    if (it == senderToConnection.end())
-        return;
-    if (updateCount == 0) {
-        QObject::disconnect(*it);
-        senderToConnection.erase(it);
-        QQmlError warning;
-        if (auto context = qmlContext(QObject::sender()))
-            warning.setUrl(context->baseUrl());
-        else
-            return;
-        auto signalName = QString::fromLatin1(QObject::sender()->metaObject()->method(QObject::senderSignalIndex()).name());
-        signalName.chop(sizeof("changed")-1);
-        QString propName = signalName;
-        propName[0] = propName[0].toLower();
-        warning.setDescription(QString::fromUtf8("Writing to \"%1\" broke the binding to the underlying model").arg(propName));
-        qmlWarning(this, warning);
-    } else {
-        --updateCount;
-    }
+    context->qmlEngine()->captureProperty(scopeObject, property);
+
+    int status = -1;
+    int flags = 0;
+    void *argv[] = { resultPtr, nullptr, &status, &flags };
+    metaObject->metacall(scopeObject, QMetaObject::ReadProperty, propertyIndex, argv);
 }
 
 void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *modelItemToIncubate, QObject *object)
@@ -1022,41 +1001,39 @@ void QQDMIncubationTask::initializeRequiredProperties(QQmlDelegateModelItem *mod
         if (proxiedObject)
             mos.push_back(qMakePair(proxiedObject->metaObject(), proxiedObject));
 
-        auto updater = new PropertyUpdater(object);
+        QQmlEngine *engine = QQmlEnginePrivate::get(incubatorPriv->enginePriv);
+        QV4::ExecutionEngine *v4 = engine->handle();
+        QV4::Scope scope(v4);
+
         for (const auto &metaObjectAndObject : mos) {
             const QMetaObject *mo = metaObjectAndObject.first;
             QObject *itemOrProxy = metaObjectAndObject.second;
+            QV4::Scoped<QV4::QmlContext> qmlContext(scope);
+
             for (int i = mo->propertyOffset(); i < mo->propertyCount() + mo->propertyOffset(); ++i) {
                 auto prop = mo->property(i);
                 if (!prop.name())
                     continue;
-                auto propName = QString::fromUtf8(prop.name());
+                const QString propName = QString::fromUtf8(prop.name());
                 bool wasInRequired = false;
-                QQmlProperty componentProp = QQmlComponentPrivate::removePropertyFromRequired(
+                QQmlProperty targetProp = QQmlComponentPrivate::removePropertyFromRequired(
                             object, propName, requiredProperties,
-                            QQmlEnginePrivate::get(incubatorPriv->enginePriv), &wasInRequired);
-                // only write to property if it was actually requested by the component
-                if (wasInRequired && prop.hasNotifySignal()) {
-                    QMetaMethod changeSignal = prop.notifySignal();
-                    static QMetaMethod updateSlot = PropertyUpdater::staticMetaObject.method(
-                                PropertyUpdater::staticMetaObject.indexOfSlot("doUpdate()"));
+                            engine, &wasInRequired);
+                if (wasInRequired) {
+                    QV4::SyntheticAotFunction *function = new QV4::SyntheticAotFunction(
+                            engine->handle(), QQmlPrivate::AOTCompiledFunction {
+                                i, prop.metaType(), {}, bindingFunction
+                            });
 
-                    QMetaObject::Connection conn = QObject::connect(itemOrProxy, changeSignal,
-                                                                    updater, updateSlot);
-                    updater->changeSignalIndexToPropertyIndex[changeSignal.methodIndex()] = i;
-                    auto propIdx = object->metaObject()->indexOfProperty(propName.toUtf8());
-                    QMetaMethod writeToPropSignal
-                            = object->metaObject()->property(propIdx).notifySignal();
-                    updater->senderToConnection[writeToPropSignal.methodIndex()] = conn;
-                    static QMetaMethod breakBinding = PropertyUpdater::staticMetaObject.method(
-                                PropertyUpdater::staticMetaObject.indexOfSlot("breakBinding()"));
-                    componentProp.write(prop.read(itemOrProxy));
-                    // the connection needs to established after the write,
-                    // else the signal gets triggered by it and breakBinding will remove the connection
-                    QObject::connect(object, writeToPropSignal, updater, breakBinding);
+                    if (!qmlContext) {
+                        qmlContext = QV4::QmlContext::create(
+                                v4->rootContext(), contextData, itemOrProxy);
+                    }
+
+                    QQmlAnyBinding binding = QQmlAnyBinding::createFromFunction(
+                                targetProp, function, itemOrProxy, contextData, qmlContext);
+                    binding.installOn(targetProp);
                 }
-                else if (wasInRequired) // we still have to write, even if there is no change signal
-                    componentProp.write(prop.read(itemOrProxy));
             }
         }
     } else {

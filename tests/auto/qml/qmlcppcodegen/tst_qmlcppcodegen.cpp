@@ -793,7 +793,7 @@ void tst_QmlCppCodegen::failures()
             = QmlCacheGeneratedCode::_0x5f_TestTypes_failures_qml::aotBuiltFunctions[0];
     QVERIFY(aotFailure.argumentTypes.isEmpty());
     QVERIFY(!aotFailure.functionPtr);
-    QCOMPARE(aotFailure.index, 0);
+    QCOMPARE(aotFailure.extraData, 0);
 }
 
 void tst_QmlCppCodegen::enumScope()

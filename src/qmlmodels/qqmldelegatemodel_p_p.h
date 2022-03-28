@@ -468,20 +468,6 @@ private:
     const int indexPropertyOffset;
 };
 
-class PropertyUpdater : public QObject
-{
-    Q_OBJECT
-
-public:
-    PropertyUpdater(QObject *parent);
-    QHash<int, QMetaObject::Connection> senderToConnection;
-    QHash<int, int> changeSignalIndexToPropertyIndex;
-    int updateCount = 0;
-public Q_SLOTS:
-    void doUpdate();
-    void breakBinding();
-};
-
 QT_END_NAMESPACE
 
 #endif

@@ -123,6 +123,9 @@ QQmlJavaScriptExpression::~QQmlJavaScriptExpression()
     clearError();
     if (m_scopeObject.isT2()) // notify DeleteWatcher of our deletion.
         m_scopeObject.asT2()->_s = nullptr;
+
+    if (m_v4Function.tag() == OwnsSyntheticAotFunction)
+        delete static_cast<QV4::SyntheticAotFunction *>(m_v4Function.data());
 }
 
 QString QQmlJavaScriptExpression::expressionIdentifier() const
@@ -536,6 +539,12 @@ void QQmlJavaScriptExpression::setupFunction(QV4::ExecutionContext *qmlContext, 
         return;
     m_qmlScope.set(qmlContext->engine(), *qmlContext);
     m_v4Function = f;
+
+    // Synthetic AOT functions are owned by the QQmlJavaScriptExpressions they are assigned to.
+    // We need to check this here, because non-synthetic functions may be removed before the
+    // QQmlJavaScriptExpressions that use them.
+    m_v4Function.setTag(f->isSyntheticAotFunction() ? OwnsSyntheticAotFunction : DoesNotOwn);
+
     m_compilationUnit.reset(m_v4Function->executableCompilationUnit());
 }
 

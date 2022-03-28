@@ -220,7 +220,7 @@ QV4::Function *ExecutableCompilationUnit::linkToEngine(ExecutionEngine *engine)
     auto advanceAotFunction = [&](int i) -> const QQmlPrivate::AOTCompiledFunction * {
         if (aotFunction) {
             if (aotFunction->functionPtr) {
-                if (aotFunction->index == i)
+                if (aotFunction->extraData == i)
                     return aotFunction++;
             } else {
                 aotFunction = nullptr;

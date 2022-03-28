@@ -494,7 +494,11 @@ void VME::exec(MetaTypesStackFrame *frame, ExecutionEngine *engine)
     }
 
     aotContext.engine = engine->jsEngine();
-    aotContext.compilationUnit = function->executableCompilationUnit();
+    if (function->isSyntheticAotFunction())
+        aotContext.extraData = function->aotFunction->extraData;
+    else
+        aotContext.compilationUnit = function->executableCompilationUnit();
+
     function->aotFunction->functionPtr(
                 &aotContext, transformedResult ? transformedResult : frame->returnValue(),
                 transformedArguments ? transformedArguments : frame->argv());
