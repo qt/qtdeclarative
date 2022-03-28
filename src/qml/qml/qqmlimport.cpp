@@ -1208,26 +1208,31 @@ QQmlImportInstance *QQmlImports::addImportToNamespace(
     import->url = url;
     import->version = version;
     import->isLibrary = (type == QV4::CompiledData::Import::ImportLibrary);
+
     if (flags & QQmlImports::ImportImplicit) {
         import->implicitlyImported = true;
         nameSpace->imports.append(import);
-    } else if (flags & QQmlImports::ImportLowPrecedence) {
-        if (nameSpace->imports.isEmpty()) {
-            nameSpace->imports.append(import);
-        } else {
-            for (auto it = nameSpace->imports.rbegin(), end = nameSpace->imports.rend();
-                 it != end; ++it) {
-
-                if (!(*it)->implicitlyImported) {
-                    nameSpace->imports.insert(it.base(), import);
-                    break;
-                }
-            }
-        }
-    } else {
-        nameSpace->imports.prepend(import);
+        return import;
     }
 
+    if (flags & QQmlImports::ImportLowPrecedence) {
+        for (auto it = nameSpace->imports.rbegin(), end = nameSpace->imports.rend();
+             it != end; ++it) {
+            if (!(*it)->implicitlyImported) {
+                nameSpace->imports.insert(it.base(), import);
+                return import;
+            }
+        }
+    }
+
+    // This is one of 3 cases:
+    //
+    // 1. existing imports are empty
+    // 2. new import is low precedence and all existing ones are implicit
+    // 3. new import is normal precedence
+    //
+    // In those cases the new import overrides all existing ones and has to be prepended.
+    nameSpace->imports.prepend(import);
     return import;
 }
 
