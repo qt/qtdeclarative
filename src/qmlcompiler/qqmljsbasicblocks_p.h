@@ -45,7 +45,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlJSBasicBlocks : public QQmlJSCompilePass
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSBasicBlocks : public QQmlJSCompilePass
 {
 public:
     struct BasicBlock {

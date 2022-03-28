@@ -43,7 +43,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlJSFunctionInitializer
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSFunctionInitializer
 {
     Q_DISABLE_COPY_MOVE(QQmlJSFunctionInitializer)
 public:

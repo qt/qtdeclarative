@@ -39,7 +39,7 @@
 //
 // We mean it.
 
-#include <qtqmlcompilerexports.h>
+#include <private/qtqmlcompilerexports_p.h>
 
 #include "qqmljsscope_p.h"
 #include "qqmljsresourcefilemapper_p.h"
@@ -47,7 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLCOMPILER_EXPORT QQmlJSImporter
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSImporter
 {
 public:
     using ImportedTypes = QHash<QString, QQmlJSImportedScope>;

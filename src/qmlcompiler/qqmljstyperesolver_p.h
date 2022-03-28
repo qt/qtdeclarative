@@ -39,7 +39,7 @@
 //
 // We mean it.
 
-#include <qtqmlcompilerexports.h>
+#include <private/qtqmlcompilerexports_p.h>
 
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsast_p.h>
@@ -52,7 +52,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlJSImportVisitor;
-class Q_QMLCOMPILER_EXPORT QQmlJSTypeResolver
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypeResolver
 {
 public:
     enum BaseOrExtension { Base, Extension };

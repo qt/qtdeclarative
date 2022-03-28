@@ -171,10 +171,4 @@ QQmlJSRegisterContent QQmlJSRegisterContent::create(const QQmlJSScope::ConstPtr 
     return result;
 }
 
-bool operator==(const QQmlJSRegisterContent &a, const QQmlJSRegisterContent &b)
-{
-    return a.m_storedType == b.m_storedType && a.m_variant == b.m_variant && a.m_scope == b.m_scope
-            && a.m_content == b.m_content;
-}
-
 QT_END_NAMESPACE

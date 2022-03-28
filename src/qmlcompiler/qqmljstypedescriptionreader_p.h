@@ -29,7 +29,7 @@
 #ifndef QQMLJSTYPEDESCRIPTIONREADER_P_H
 #define QQMLJSTYPEDESCRIPTIONREADER_P_H
 
-#include <qtqmlcompilerexports.h>
+#include <private/qtqmlcompilerexports_p.h>
 
 //
 //  W A R N I N G
@@ -50,7 +50,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_QMLCOMPILER_EXPORT QQmlJSTypeDescriptionReader
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypeDescriptionReader
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlJSTypeDescriptionReader)
 public:

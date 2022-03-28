@@ -43,7 +43,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlJSStorageGeneralizer : public QQmlJSCompilePass
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSStorageGeneralizer : public QQmlJSCompilePass
 {
 public:
     QQmlJSStorageGeneralizer(const QV4::Compiler::JSUnitGenerator *jsUnitGenerator,

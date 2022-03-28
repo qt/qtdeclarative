@@ -39,7 +39,7 @@
 //
 // We mean it.
 
-#include <qtqmlcompilerexports.h>
+#include <private/qtqmlcompilerexports_p.h>
 
 #include <QtCore/qstring.h>
 #include <QtCore/qstringlist.h>
@@ -65,7 +65,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlJSTypeResolver;
 class QQmlJSScope;
-class Q_QMLCOMPILER_EXPORT QQmlJSMetaEnum
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaEnum
 {
     QStringList m_keys;
     QList<int> m_values; // empty if values unknown.
@@ -123,7 +123,7 @@ public:
     }
 };
 
-class Q_QMLCOMPILER_EXPORT QQmlJSMetaMethod
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaMethod
 {
 public:
     enum Type {
@@ -267,7 +267,7 @@ private:
     bool m_isImplicitQmlPropertyChangeSignal = false;
 };
 
-class Q_QMLCOMPILER_EXPORT QQmlJSMetaProperty
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaProperty
 {
     QString m_propertyName;
     QString m_typeName;
@@ -374,7 +374,7 @@ public:
     create a new binding, you know all the details of it already, so you should
     just set all the data at once.
 */
-class Q_QMLCOMPILER_EXPORT QQmlJSMetaPropertyBinding
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaPropertyBinding
 {
 public:
     enum BindingType : unsigned int {
@@ -676,7 +676,7 @@ public:
     }
 };
 
-struct Q_QMLCOMPILER_EXPORT QQmlJSMetaSignalHandler
+struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaSignalHandler
 {
     QStringList signalParameters;
     bool isMultiline;

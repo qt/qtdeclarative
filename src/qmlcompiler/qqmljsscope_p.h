@@ -39,7 +39,7 @@
 //
 // We mean it.
 
-#include <qtqmlcompilerexports.h>
+#include <private/qtqmlcompilerexports_p.h>
 
 #include "qqmljsmetatypes_p.h"
 #include "qdeferredpointer_p.h"
@@ -59,7 +59,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlJSImporter;
 
-class Q_QMLCOMPILER_EXPORT QQmlJSScope
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSScope
 {
 public:
     QQmlJSScope(QQmlJSScope &&) = default;
@@ -622,7 +622,7 @@ private:
 Q_DECLARE_TYPEINFO(QQmlJSScope::QmlIRCompatibilityBindingData, Q_RELOCATABLE_TYPE);
 
 template<>
-class Q_QMLCOMPILER_EXPORT QDeferredFactory<QQmlJSScope>
+class Q_QMLCOMPILER_PRIVATE_EXPORT QDeferredFactory<QQmlJSScope>
 {
 public:
     QDeferredFactory() = default;
