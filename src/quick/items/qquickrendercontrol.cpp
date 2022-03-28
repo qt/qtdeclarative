@@ -689,8 +689,10 @@ void QQuickRenderControl::endFrame()
 bool QQuickRenderControlPrivate::initRhi()
 {
     // initialize() - invalidate() - initialize() uses the QRhi the first
-    // initialize() created, so if already exists, we are done
-    if (rhi)
+    // initialize() created, so if already exists, we are done. Does not apply
+    // when wrapping an externally created QRhi, because we may be associated
+    // with a new one now.
+    if (rhi && ownRhi)
         return true;
 
     QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
