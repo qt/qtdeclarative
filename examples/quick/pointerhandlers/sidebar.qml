@@ -201,12 +201,12 @@ Rectangle {
             hoverEnabled: true
             cursorShape: Qt.ClosedHandCursor
             anchors.fill: parent
-        }
 
-        Loader {
-            objectName: "bottomSidebarLoader"
-            sourceComponent: buttonsAndStuff
-            anchors.fill: parent
+            Loader {
+                objectName: "bottomSidebarLoader"
+                sourceComponent: buttonsAndStuff
+                anchors.fill: parent
+            }
         }
     }
 
