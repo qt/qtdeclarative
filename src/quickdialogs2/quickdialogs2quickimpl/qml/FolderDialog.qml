@@ -137,6 +137,7 @@ FolderDialogImpl {
         standardButtons: control.standardButtons
         palette.window: control.palette.light
         spacing: 12
+        alignment: Qt.AlignRight
     }
 
     Overlay.modal: Rectangle {
