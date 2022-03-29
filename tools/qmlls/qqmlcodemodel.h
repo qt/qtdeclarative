@@ -104,7 +104,6 @@ public:
 signals:
     void updatedSnapshot(const QByteArray &uri);
 private:
-    QQmlJS::Dom::DomItem validDocForUpdate(QQmlJS::Dom::DomItem &item);
     void indexDirectory(const QString &path, int depthLeft);
     int indexEvalProgress() const; // to be called in the mutex
     void indexStart(); // to be called in the mutex

@@ -1994,11 +1994,11 @@ MutableDomItem DomItem::makeCopy(DomItem::CopyOption option)
     return MutableDomItem(newItem.path(pathFromOwner()));
 }
 
-bool DomItem::commitToBase()
+bool DomItem::commitToBase(std::shared_ptr<DomEnvironment> validEnvPtr)
 {
     DomItem env = environment();
     if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>()) {
-        return envPtr->commitToBase(env);
+        return envPtr->commitToBase(env, validEnvPtr);
     }
     return false;
 }

@@ -2059,7 +2059,7 @@ DomEnvironment::addGlobalScope(std::shared_ptr<GlobalScope> scope, AddOption opt
                                         mutex());
 }
 
-bool DomEnvironment::commitToBase(DomItem &self)
+bool DomEnvironment::commitToBase(DomItem &self, shared_ptr<DomEnvironment> validEnvPtr)
 {
     if (!base())
         return false;
@@ -2108,6 +2108,37 @@ bool DomEnvironment::commitToBase(DomItem &self)
                     ++it2;
                 }
                 ++it;
+            }
+        }
+    }
+    if (validEnvPtr) {
+        QMutexLocker lValid(
+                validEnvPtr->mutex()); // be more careful about makeCopy calls with lock?
+        validEnvPtr->m_globalScopeWithName.insert(my_globalScopeWithName);
+        validEnvPtr->m_qmlDirectoryWithPath.insert(my_qmlDirectoryWithPath);
+        validEnvPtr->m_qmldirFileWithPath.insert(my_qmldirFileWithPath);
+        for (auto it = my_qmlFileWithPath.cbegin(), end = my_qmlFileWithPath.cend(); it != end;
+             ++it) {
+            if (it.value() && it.value()->current && it.value()->current->isValid())
+                validEnvPtr->m_qmlFileWithPath.insert(it.key(), it.value());
+        }
+        for (auto it = my_jsFileWithPath.cbegin(), end = my_jsFileWithPath.cend(); it != end;
+             ++it) {
+            if (it.value() && it.value()->current && it.value()->current->isValid())
+                validEnvPtr->m_jsFileWithPath.insert(it.key(), it.value());
+        }
+        validEnvPtr->m_qmltypesFileWithPath.insert(my_qmltypesFileWithPath);
+        validEnvPtr->m_loadInfos.insert(my_loadInfos);
+        for (auto it = my_moduleIndexWithUri.cbegin(), end = my_moduleIndexWithUri.cend();
+             it != end; ++it) {
+            QMap<int, shared_ptr<ModuleIndex>> &myVersions =
+                    validEnvPtr->m_moduleIndexWithUri[it.key()];
+            for (auto it2 = it.value().cbegin(), end2 = it.value().cend(); it2 != end2; ++it2) {
+                auto oldV = myVersions.value(it2.key());
+                DomItem it2Obj = self.copy(it2.value());
+                auto newV = it2.value()->makeCopy(it2Obj);
+                newV->mergeWith(oldV);
+                myVersions.insert(it2.key(), newV);
             }
         }
     }

@@ -184,18 +184,9 @@ void QQmlCodeModel::indexDirectory(const QString &path, int depthLeft)
         QFileInfo fInfo(fPath);
         QString cPath = fInfo.canonicalFilePath();
         if (!cPath.isEmpty()) {
-            bool isNew = false;
-            newCurrent.loadFile(cPath, fPath,
-                                [&isNew](Path, DomItem &oldValue, DomItem &newValue) {
-                                    if (oldValue != newValue)
-                                        isNew = true;
-                                },
-                                {});
+            newCurrent.loadFile(cPath, fPath, [](Path, DomItem &, DomItem &) {}, {});
             newCurrent.loadPendingDependencies();
-            if (isNew) {
-                newCurrent.commitToBase();
-                m_currentEnv.makeCopy(DomItem::CopyOption::EnvConnected).item();
-            }
+            newCurrent.commitToBase(m_validEnv.ownerAs<DomEnvironment>());
         }
         ++iFile;
         {
@@ -415,28 +406,6 @@ void QQmlCodeModel::openUpdateEnd()
     qCDebug(codeModelLog) << "openUpdateEnd";
 }
 
-DomItem QQmlCodeModel::validDocForUpdate(DomItem &item)
-{
-    if (item.field(Fields::isValid).value().toBool(false)) {
-        if (auto envPtr = m_validEnv.ownerAs<DomEnvironment>()) {
-            switch (item.fileObject().internalKind()) {
-            case DomType::QmlFile:
-                envPtr->addQmlFile(item.fileObject().ownerAs<QmlFile>());
-                break;
-            case DomType::JsFile:
-                envPtr->addJsFile(item.fileObject().ownerAs<JsFile>());
-                break;
-            default:
-                qCWarning(lspServerLog)
-                        << "Unexpected file type " << item.fileObject().internalKindStr();
-                return DomItem();
-            }
-            return m_validEnv.path(item.canonicalPath());
-        }
-    }
-    return DomItem();
-}
-
 void QQmlCodeModel::newDocForOpenFile(const QByteArray &uri, int version, const QString &docText)
 {
     qCDebug(codeModelLog) << "updating doc" << uri << "to version" << version << "("
@@ -450,9 +419,8 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &uri, int version, const 
             {});
     newCurrent.loadPendingDependencies();
     if (p) {
-        newCurrent.commitToBase();
+        newCurrent.commitToBase(m_validEnv.ownerAs<DomEnvironment>());
         DomItem item = m_currentEnv.path(p);
-        DomItem vDoc = validDocForUpdate(item);
         {
             QMutexLocker l(&m_mutex);
             OpenDocument &doc = m_openDocuments[uri];
@@ -476,8 +444,9 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &uri, int version, const 
                 qCWarning(lspServerLog) << "skippig update of current doc to obsolete version"
                                         << version << "of document" << QString::fromUtf8(uri);
             }
-            if (vDoc) {
+            if (item.field(Fields::isValid).value().toBool(false)) {
                 if (!doc.snapshot.validDocVersion || *doc.snapshot.validDocVersion < version) {
+                    DomItem vDoc = m_validEnv.path(p);
                     doc.snapshot.validDocVersion = version;
                     doc.snapshot.validDoc = vDoc;
                 } else {

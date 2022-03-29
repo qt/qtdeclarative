@@ -754,7 +754,7 @@ public:
     std::shared_ptr<ExternalItemInfo<GlobalScope>>
     addGlobalScope(std::shared_ptr<GlobalScope> file, AddOption option = AddOption::KeepExisting);
 
-    bool commitToBase(DomItem &self);
+    bool commitToBase(DomItem &self, std::shared_ptr<DomEnvironment> validEnv = nullptr);
 
     void addLoadInfo(DomItem &self, std::shared_ptr<LoadInfo> loadInfo);
     std::shared_ptr<LoadInfo> loadInfo(Path path) const;

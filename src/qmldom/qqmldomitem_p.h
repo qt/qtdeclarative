@@ -901,7 +901,7 @@ public:
     DomItem fileLocationsTree();
     DomItem fileLocations();
     MutableDomItem makeCopy(CopyOption option = CopyOption::EnvConnected);
-    bool commitToBase();
+    bool commitToBase(std::shared_ptr<DomEnvironment> validPtr = nullptr);
     DomItem refreshed() { return top().path(canonicalPath()); }
     QCborValue value();
 
@@ -1520,7 +1520,10 @@ public:
     {
         return item().makeCopy(option);
     }
-    bool commitToBase() { return item().commitToBase(); }
+    bool commitToBase(std::shared_ptr<DomEnvironment> validEnvPtr = nullptr)
+    {
+        return item().commitToBase(validEnvPtr);
+    }
     QString canonicalFilePath() { return item().canonicalFilePath(); }
 
     MutableDomItem refreshed() { return MutableDomItem(item().refreshed()); }
