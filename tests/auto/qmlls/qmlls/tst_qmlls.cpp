@@ -125,6 +125,9 @@ tst_Qmlls::tst_Qmlls()
 #ifdef Q_OS_WIN
     m_qmllsPath += QLatin1String(".exe");
 #endif
+    // allow overriding of the executable, to be able to use a qmlEcho script (as described in
+    // qmllanguageservertool.cpp)
+    m_qmllsPath = qEnvironmentVariable("QMLLS", m_qmllsPath);
     m_server.setProgram(m_qmllsPath);
     m_protocol.registerPublishDiagnosticsNotificationHandler(
             [this](const QByteArray &, auto params) {
@@ -171,16 +174,16 @@ void tst_Qmlls::didOpenTextDocument()
     QFile file(testFile("default/Yyy.qml"));
     QVERIFY(file.open(QIODevice::ReadOnly));
 
-    DidOpenTextDocumentParams params;
+    DidOpenTextDocumentParams oParams;
     TextDocumentItem textDocument;
     QByteArray uri = testFileUrl("default/Yyy.qml").toString().toUtf8();
     textDocument.uri = uri;
     textDocument.text = file.readAll().replace("width", "wildth");
-    params.textDocument = textDocument;
-    m_protocol.notifyDidOpenTextDocument(params);
+    oParams.textDocument = textDocument;
+    m_protocol.notifyDidOpenTextDocument(oParams);
 
     QTRY_VERIFY_WITH_TIMEOUT(m_diagnosticsHandler.numDiagnostics(uri) != 0, 10000);
-    QVERIFY(m_diagnosticsHandler.contains(uri, 3, 4, 3, 10));
+    QTRY_VERIFY_WITH_TIMEOUT(m_diagnosticsHandler.contains(uri, 3, 4, 3, 10), 10000);
 
     auto diagnostics = m_diagnosticsHandler.diagnostics(uri);
 
@@ -270,6 +273,21 @@ void tst_Qmlls::didOpenTextDocument()
 
     QTRY_VERIFY_WITH_TIMEOUT(success, 10000);
     m_diagnosticsHandler.clear();
+
+    DidChangeTextDocumentParams cParams;
+    cParams.textDocument.uri = uri;
+    cParams.textDocument.version = 2;
+    TextDocumentContentChangeEvent change;
+    change.text = file.readAll().replace("wildth", "wid");
+    cParams.contentChanges.append(change);
+    m_protocol.notifyDidChangeTextDocument(cParams);
+
+    QTRY_VERIFY_WITH_TIMEOUT(m_diagnosticsHandler.numDiagnostics(uri) != 0, 30000);
+    m_diagnosticsHandler.clear();
+
+    DidCloseTextDocumentParams closeP;
+    closeP.textDocument.uri = uri;
+    m_protocol.notifyDidCloseTextDocument(closeP);
 }
 
 void tst_Qmlls::testWorkspace()
