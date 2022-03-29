@@ -144,10 +144,10 @@ void QParallelAnimationGroupJob::updateState(QAbstractAnimationJob::State newSta
                 animation->stop();
                 m_previousLoop = m_direction == Forward ? 0 : m_loopCount - 1;
             }
-            resetUncontrolledAnimationFinishTime(animation);
+            RETURN_IF_DELETED(resetUncontrolledAnimationFinishTime(animation));
             animation->setDirection(m_direction);
             if (shouldAnimationStart(animation, oldState == Stopped))
-                animation->start();
+                RETURN_IF_DELETED(animation->start());
         }
         break;
     }
