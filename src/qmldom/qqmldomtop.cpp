@@ -782,7 +782,7 @@ void LoadInfo::doAddDependencies(DomItem &self)
                 }
             }
         }
-        DomItem currentQmltypesFiles = el.field(Fields::currentItem).field(Fields::qmltypesFiles);
+        DomItem currentQmltypesFiles = currentFile.field(Fields::qmltypesFiles);
         int qEnd = currentQmltypesFiles.indexes();
         for (int i = 0; i < qEnd; ++i) {
             DomItem qmltypesRef = currentQmltypesFiles.index(i);
@@ -794,7 +794,7 @@ void LoadInfo::doAddDependencies(DomItem &self)
                                                DomType::QmltypesFile });
             }
         }
-        DomItem currentQmlFiles = el.field(Fields::currentItem).field(Fields::qmlFiles);
+        DomItem currentQmlFiles = currentFile.field(Fields::qmlFiles);
         currentQmlFiles.visitKeys([this, &self](QString, DomItem &els) {
             return els.visitIndexes([this, &self](DomItem &el) {
                 if (const Reference *ref = el.as<Reference>()) {
