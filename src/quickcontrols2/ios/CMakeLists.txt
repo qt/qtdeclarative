@@ -7,6 +7,8 @@ set(qml_files
     "RangeSlider.qml"
     "Switch.qml"
     "Button.qml"
+    "CheckBox.qml"
+    "RadioButton.qml"
 )
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.2;6.0"
