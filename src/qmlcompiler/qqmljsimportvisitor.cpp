@@ -1333,7 +1333,9 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         if (publicMember->isRequired())
             m_currentScope->setPropertyLocallyRequired(prop.propertyName(), true);
 
-        parseLiteralOrScriptBinding(publicMember->name.toString(), publicMember->statement);
+        // if property is an alias, initialization expression is not a binding
+        if (!isAlias)
+            parseLiteralOrScriptBinding(publicMember->name.toString(), publicMember->statement);
 
         break;
     }
@@ -1529,10 +1531,11 @@ QQmlJSImportVisitor::LiteralOrScriptParseResult QQmlJSImportVisitor::parseLitera
         }
         break;
     }
-    if (binding.isValid()) // always add the binding to the scope, even if it's not a literal one
-        m_currentScope->addOwnPropertyBinding(binding);
-    else
-        return LiteralOrScriptParseResult::Invalid;
+
+    if (!binding.isValid()) // consider this to be a script binding (see IRBuilder::setBindingValue)
+        binding.setScriptBinding();
+    m_currentScope->addOwnPropertyBinding(binding); // always add the binding to the scope
+
     if (!QQmlJSMetaPropertyBinding::isLiteralBinding(binding.bindingType()))
         return LiteralOrScriptParseResult::Script;
     m_literalScopesToCheck << m_currentScope;
