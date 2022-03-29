@@ -81,9 +81,9 @@ void QContinuingAnimationGroupJob::updateState(QAbstractAnimationJob::State newS
             return;
         }
         for (QAbstractAnimationJob *animation  : m_children) {
-            resetUncontrolledAnimationFinishTime(animation);
+            RETURN_IF_DELETED(resetUncontrolledAnimationFinishTime(animation));
             animation->setDirection(m_direction);
-            animation->start();
+            RETURN_IF_DELETED(animation->start());
         }
         break;
     }
