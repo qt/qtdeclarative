@@ -1,16 +1,16 @@
 dependencies:
   ../qtbase:
-    ref: 8c4894f94bd43f47d05d632b48b7ec51fc0bcbd6
+    ref: 60c70e4efffb725f8239a901717a8dd3c4eef259
     required: true
   ../qtimageformats:
-    ref: 2788151d1aa9d05a5cc7c2ec59eb71d23915f9e6
+    ref: cdfa2a9c8cd403f6d66daae7eb70236be883c0f4
     required: false
   ../qtlanguageserver:
-    ref: cdf0ee53fedc799abf7e27ff19d36b5b429ea24a
+    ref: f1c98af33f58fa8f575ae9180fb5fb8d2586ae2b
     required: false
   ../qtshadertools:
-    ref: 0e1df4cea7fe1d95919efff7eadf52be42c634b4
+    ref: 739a499de642fe1b1d3f68864d258942f74cab00
     required: false
   ../qtsvg:
-    ref: 37fcbbf73b833b90a5567042839371e31fef3e7f
+    ref: ffea16a7ca8fb6694b171ae4ce20a8568e42242f
     required: false
