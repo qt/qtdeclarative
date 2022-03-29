@@ -9,6 +9,7 @@ set(qml_files
     "Button.qml"
     "CheckBox.qml"
     "RadioButton.qml"
+    "SpinBox.qml"
 )
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.2;6.0"
