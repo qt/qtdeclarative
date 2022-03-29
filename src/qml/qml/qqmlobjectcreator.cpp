@@ -1189,7 +1189,7 @@ QObject *QQmlObjectCreator::createInstance(int index, QObject *parent, bool isCo
             typeName = type.qmlTypeName();
 
             void *ddataMemory = nullptr;
-            type.create(&instance, &ddataMemory, sizeof(QQmlData));
+            instance = type.create(&ddataMemory, sizeof(QQmlData));
             if (!instance) {
                 recordError(obj->location, tr("Unable to create object of type %1").arg(stringAt(obj->inheritedTypeNameIndex)));
                 return nullptr;
