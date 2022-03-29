@@ -273,8 +273,35 @@ void tst_qqmljsscope::groupedProperties()
     QVERIFY(root);
 
     QVERIFY(root->hasProperty(u"anchors"_qs));
-    auto anchorBindings = root->propertyBindings(u"anchors"_qs);
+    const auto anchorBindings = root->propertyBindings(u"anchors"_qs);
     QVERIFY(!anchorBindings.isEmpty());
+    QCOMPARE(anchorBindings.size(), 2); // from type itself and from the base type
+
+    const auto getBindingsWithinGroup =
+            [&](QMultiHash<QString, QQmlJSMetaPropertyBinding> *bindings, qsizetype index) -> void {
+        const auto &binding = anchorBindings[index];
+        QCOMPARE(binding.bindingType(), QQmlJSMetaPropertyBinding::GroupProperty);
+        auto anchorScope = binding.groupType();
+        QVERIFY(anchorScope);
+        *bindings = anchorScope->ownPropertyBindings();
+    };
+
+    const auto value = [](const QMultiHash<QString, QQmlJSMetaPropertyBinding> &bindings,
+                          const QString &key) {
+        return bindings.value(key, QQmlJSMetaPropertyBinding(QQmlJS::SourceLocation {}));
+    };
+
+    QMultiHash<QString, QQmlJSMetaPropertyBinding> bindingsOfType;
+    getBindingsWithinGroup(&bindingsOfType, 0);
+    QCOMPARE(bindingsOfType.size(), 2);
+    QCOMPARE(value(bindingsOfType, u"left"_qs).bindingType(), QQmlJSMetaPropertyBinding::Script);
+    QCOMPARE(value(bindingsOfType, u"leftMargin"_qs).bindingType(),
+             QQmlJSMetaPropertyBinding::NumberLiteral);
+
+    QMultiHash<QString, QQmlJSMetaPropertyBinding> bindingsOfBaseType;
+    getBindingsWithinGroup(&bindingsOfBaseType, 1);
+    QCOMPARE(bindingsOfBaseType.size(), 1);
+    QCOMPARE(value(bindingsOfBaseType, u"top"_qs).bindingType(), QQmlJSMetaPropertyBinding::Script);
 }
 
 QTEST_MAIN(tst_qqmljsscope)

@@ -668,6 +668,14 @@ public:
         return {};
     }
 
+    QSharedPointer<const QQmlJSScope> groupType() const
+    {
+        if (auto *group = std::get_if<Content::GroupProperty>(&m_bindingContent))
+            return group->groupScope.lock();
+        // warn
+        return {};
+    }
+
     bool hasLiteral() const
     {
         // TODO: Assumption: if the type is literal, we must have one
