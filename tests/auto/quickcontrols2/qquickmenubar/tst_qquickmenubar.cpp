@@ -192,9 +192,10 @@ void tst_qquickmenubar::mouse()
     QQuickMenu *alignmentSubMenu = alignmentSubMenuItem->subMenu();
     QVERIFY(alignmentSubMenu);
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, alignmentSubMenuItem->mapToScene(QPointF(alignmentSubMenuItem->width() / 2, alignmentSubMenuItem->height() / 2)).toPoint());
-#ifndef Q_OS_ANDROID
+#if !defined(Q_OS_ANDROID) and !defined(Q_OS_WEBOS)
     // The screen on Android is too small to fit the whole hierarchy, so the
     // Alignment sub-menu is shown on top of View menu.
+    // WebOS also shows alignment sub-menu on top of View menu.
     QVERIFY(viewMenuBarMenu->isVisible());
 #endif
     QVERIFY(alignmentSubMenu->isVisible());
@@ -206,9 +207,10 @@ void tst_qquickmenubar::mouse()
     QQuickMenu *verticalSubMenu = verticalSubMenuItem->subMenu();
     QVERIFY(verticalSubMenu);
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, verticalSubMenuItem->mapToScene(QPointF(verticalSubMenuItem->width() / 2, verticalSubMenuItem->height() / 2)).toPoint());
-#ifndef Q_OS_ANDROID
+#if !defined(Q_OS_ANDROID) and !defined(Q_OS_WEBOS)
     // The screen on Android is too small to fit the whole hierarchy, so the
     // Vertical sub-menu is shown on top of View menu and Alignment sub-menu.
+    // WebOS also shows vertical sub-menu on top of View menu and Alignment sub-menu.
     QVERIFY(viewMenuBarMenu->isVisible());
     QVERIFY(alignmentSubMenu->isVisible());
 #endif
@@ -296,6 +298,11 @@ void tst_qquickmenubar::keys()
     QVERIFY(editMenuBarItem->isHighlighted());
     QVERIFY(editMenuBarItem->hasActiveFocus());
     QTRY_VERIFY(!editMenuBarMenu->isVisible());
+
+// There seem to be problems in focus handling in webOS QPA, see https://bugreports.qt.io/browse/WEBOSCI-45
+#ifdef Q_OS_WEBOS
+    QEXPECT_FAIL("", "WEBOSCI-45", Abort);
+#endif
     QVERIFY(!cutMenuItem->isHighlighted());
     QVERIFY(!cutMenuItem->hasActiveFocus());
 
@@ -434,8 +441,8 @@ void tst_qquickmenubar::keys()
 
 void tst_qquickmenubar::mnemonics()
 {
-#ifdef Q_OS_MACOS
-    QSKIP("Mnemonics are not used on macOS");
+#if defined(Q_OS_MACOS) or defined(Q_OS_WEBOS)
+    QSKIP("Mnemonics are not used on this platform");
 #endif
 
     QQmlApplicationEngine engine(testFileUrl("menubar.qml"));
