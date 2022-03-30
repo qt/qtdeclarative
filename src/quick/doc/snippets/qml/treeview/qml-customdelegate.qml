@@ -51,7 +51,7 @@ Window {
         // model: yourTreeModel
 
         delegate: Item {
-            id: root
+            id: treeDelegate
 
             implicitWidth: padding + label.x + label.implicitWidth + padding
             implicitHeight: label.implicitHeight * 1.5
@@ -72,15 +72,17 @@ Window {
 
             Text {
                 id: indicator
-                visible: root.isTreeNode && root.hasChildren
-                x: padding + (root.depth * root.indent)
-                text: root.expanded ? "▼" : "▶"
+                visible: treeDelegate.isTreeNode && treeDelegate.hasChildren
+                x: padding + (treeDelegate.depth * treeDelegate.indent)
+                anchors.verticalCenter: label.verticalCenter
+                text: "▸"
+                rotation: treeDelegate.expanded ? 90 : 0
             }
 
             Text {
                 id: label
-                x: padding + (root.isTreeNode ? (root.depth + 1) * root.indent : 0)
-                width: root.width - root.padding - x
+                x: padding + (treeDelegate.isTreeNode ? (treeDelegate.depth + 1) * treeDelegate.indent : 0)
+                width: treeDelegate.width - treeDelegate.padding - x
                 clip: true
                 text: model.display
             }

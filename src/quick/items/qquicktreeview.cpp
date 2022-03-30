@@ -77,7 +77,7 @@
     a set of properties that can be used to position and render each node
     in the tree correctly.
 
-    An example of how a custom delegate could look like is shown below:
+    An example of a custom delegate is shown below:
 
     \snippet qml/treeview/qml-customdelegate.qml 0
 
@@ -114,7 +114,7 @@
 
     See also \l {Required Properties}.
 
-    \note A TreeView only accept models that inherits \l QAbstractItemModel.
+    \note A TreeView only accepts a model that inherits \l QAbstractItemModel.
 */
 
 /*!
@@ -308,7 +308,7 @@ void QQuickTreeViewPrivate::setModelImpl(const QVariant &newModel)
     else if (const auto qaim = qvariant_cast<QAbstractItemModel*>(effectiveModel))
         m_treeModelToTableModel.setModel(qaim);
     else
-        qmlWarning(q) << "treeView only accept models of type QAbstractItemModel";
+        qmlWarning(q) << "TreeView only accepts a model of type QAbstractItemModel";
 
 
     scheduleRebuildTable(QQuickTableViewPrivate::RebuildOption::All);
