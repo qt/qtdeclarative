@@ -767,9 +767,9 @@ void LoadInfo::doAddDependencies(DomItem &self)
                 if (importPtr->uri.isDirectory()) {
                     QString path = importPtr->uri.absoluteLocalPath(currentFilePath);
                     if (!path.isEmpty()) {
-                        addDependency(
-                                self,
-                                Dependency { QString(), importPtr->version, path, DomType::Empty });
+                        addDependency(self,
+                                      Dependency { QString(), importPtr->version, path,
+                                                   DomType::QmlDirectory });
                     } else {
                         self.addError(DomEnvironment::myErrors().error(
                                 tr("Ignoring dependencies for non resolved path import %1")

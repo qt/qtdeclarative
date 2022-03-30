@@ -341,9 +341,7 @@ public:
     DomItem key(DomItem &self, QString name) const override;
 
     template<typename T>
-    static Map fromMultiMapRef(
-            Path pathFromOwner, QMultiMap<QString, T> &mmap,
-            std::function<DomItem(DomItem &, const PathEls::PathComponent &c, T &)> elWrapper);
+    static Map fromMultiMapRef(Path pathFromOwner, QMultiMap<QString, T> &mmap);
     template<typename T>
     static Map
     fromMapRef(Path pathFromOwner, QMap<QString, T> &mmap,
@@ -1193,13 +1191,11 @@ inline bool operator!=(const DomItem &o1, const DomItem &o2)
 }
 
 template<typename T>
-Map Map::fromMultiMapRef(
-        Path pathFromOwner, QMultiMap<QString, T> &mmap,
-        std::function<DomItem(DomItem &, const PathEls::PathComponent &, T &)> elWrapper)
+Map Map::fromMultiMapRef(Path pathFromOwner, QMultiMap<QString, T> &mmap)
 {
     return Map(
             pathFromOwner,
-            [&mmap, elWrapper](DomItem &self, QString key) {
+            [&mmap](DomItem &self, QString key) {
                 auto it = mmap.find(key);
                 auto end = mmap.cend();
                 if (it == end)
@@ -1930,9 +1926,7 @@ DomItem DomItem::wrap(const PathEls::PathComponent &c, T &obj)
     } else if constexpr (IsMultiMap<BaseT>::value) {
         if constexpr (std::is_same_v<typename BaseT::key_type, QString>) {
             return subMapItem(Map::fromMultiMapRef<typename BaseT::mapped_type>(
-                    pathFromOwner().appendComponent(c), obj,
-                    [](DomItem &map, const PathEls::PathComponent &p,
-                       typename BaseT::mapped_type &el) { return map.wrap(p, el); }));
+                    pathFromOwner().appendComponent(c), obj));
         } else {
             Q_ASSERT_X(false, "DomItem::wrap", "non string keys not supported (try .toString()?)");
         }

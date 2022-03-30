@@ -243,8 +243,7 @@ private slots:
         // QCOMPARE(&(*it), &(*it3));
         QCOMPARE(&(*it4), &(*it5));
         // QCOMPARE(&(*it4), &(*it6));
-        DomItem map1 =
-                env.subMapItem(Map::fromMultiMapRef<int>(Path::Field(u"mmap"), mmap, &wrapInt));
+        DomItem map1 = env.subMapItem(Map::fromMultiMapRef<int>(Path::Field(u"mmap"), mmap));
         QCOMPARE(map1[u"b"].index(0).value().toInteger(), 2);
         QVERIFY(!map1[u"b"].index(2));
         QVERIFY(!map1[u"c"]);
@@ -566,6 +565,13 @@ private slots:
             for (DomItem &el : rects) {
                 QCOMPARE(rect.first(), el);
             }
+        }
+        {
+            QString fPath = tFile.canonicalFilePath();
+            QString fPath2 = fPath.mid(0, fPath.lastIndexOf(u'/')) % u"/MySingleton.qml";
+            Path p2 = Paths::qmlFileObjectPath(fPath2);
+            DomItem f2 = env.path(p2);
+            QVERIFY2(f2, "Directory dependencies did not load MySingleton.qml");
         }
     }
 

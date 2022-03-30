@@ -448,15 +448,23 @@ bool QmlDirectory::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     cont = cont && self.dvWrapField(visitor, Fields::exports, m_exports);
     cont = cont && self.dvItemField(visitor, Fields::qmlFiles, [this, &self]() -> DomItem {
         QDir baseDir(canonicalFilePath());
-        return self.subMapItem(Map::fromMultiMapRef<QString>(
-                self.pathFromOwner().field(Fields::qmlFiles), m_qmlFiles,
-                [baseDir](DomItem &map, const PathEls::PathComponent &p,
-                          QString &rPath) -> DomItem {
-                    return map.subReferenceItem(
-                            p,
-                            Paths::qmlFilePath(
-                                    QFileInfo(baseDir.filePath(rPath)).canonicalFilePath()));
-                }));
+        return self.subMapItem(Map(
+                self.pathFromOwner().field(Fields::qmlFiles),
+                [this, baseDir](DomItem &map, QString key) -> DomItem {
+                    QList<Path> res;
+                    auto it = m_qmlFiles.find(key);
+                    while (it != m_qmlFiles.end() && it.key() == key) {
+                        res.append(Paths::qmlFilePath(
+                                QFileInfo(baseDir.filePath(it.value())).canonicalFilePath()));
+                        ++it;
+                    }
+                    return map.subReferencesItem(PathEls::Key(key), res);
+                },
+                [this](DomItem &) {
+                    auto keys = m_qmlFiles.keys();
+                    return QSet<QString>(keys.begin(), keys.end());
+                },
+                u"List<Reference>"_qs));
     });
     return cont;
 }
