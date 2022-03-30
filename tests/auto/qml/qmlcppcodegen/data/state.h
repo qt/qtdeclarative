@@ -19,8 +19,11 @@ Q_ENUM_NS(State)
 
 class WindowInstance : public QObject
 {
+    Q_PROPERTY(int count READ count CONSTANT FINAL)
     Q_OBJECT
     QML_ELEMENT
+public:
+    int count() { return 11; }
 };
 
 }

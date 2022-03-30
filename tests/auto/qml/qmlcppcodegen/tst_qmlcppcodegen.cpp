@@ -127,7 +127,7 @@ private slots:
     void testIsnan();
     void fallbackLookups();
     void typedArray();
-    void prefixedMetaType();
+    void prefixedType();
     void evadingAmbiguity();
     void fromBoolValue();
 };
@@ -1936,7 +1936,7 @@ void tst_QmlCppCodegen::typedArray()
         QCOMPARE(values6.at(&values6, i), o.data());
 }
 
-void tst_QmlCppCodegen::prefixedMetaType()
+void tst_QmlCppCodegen::prefixedType()
 {
     QQmlEngine engine;
 
@@ -1959,6 +1959,12 @@ void tst_QmlCppCodegen::prefixedMetaType()
     QVERIFY(qvariant_cast<QObject *>(o->property("d")) != nullptr);
     QVERIFY(qvariant_cast<QObject *>(o->property("e")) != nullptr);
     QVERIFY(qvariant_cast<QObject *>(o->property("f")) == nullptr);
+
+    QVERIFY(qvariant_cast<QObject *>(o->property("g")) != nullptr);
+    QVERIFY(qvariant_cast<QObject *>(o->property("h")) != nullptr);
+
+    QCOMPARE(o->property("countG").toInt(), 11);
+    QCOMPARE(o->property("countH").toInt(), 11);
 }
 
 void tst_QmlCppCodegen::evadingAmbiguity()

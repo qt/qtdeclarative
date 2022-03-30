@@ -74,6 +74,18 @@ inline QString getScopeName(const QQmlJSScope::ConstPtr &scope, QQmlJSScope::Sco
     return scope->baseTypeName();
 }
 
+template<typename Node>
+QString buildName(const Node *node)
+{
+    QString result;
+    for (const Node *segment = node; segment; segment = segment->next) {
+        if (!result.isEmpty())
+            result += u'.';
+        result += segment->name;
+    }
+    return result;
+}
+
 QQmlJSImportVisitor::QQmlJSImportVisitor(
         const QQmlJSScope::Ptr &target, QQmlJSImporter *importer, QQmlJSLogger *logger,
         const QString &implicitImportDirectory, const QStringList &qmldirFiles)
@@ -466,29 +478,15 @@ QVector<QQmlJSAnnotation> QQmlJSImportVisitor::parseAnnotations(QQmlJS::AST::UiA
     for (UiAnnotationList *item = list; item != nullptr; item = item->next) {
         UiAnnotation *annotation = item->annotation;
 
-        QString name;
-        for (auto id = annotation->qualifiedTypeNameId; id; id = id->next)
-            name += id->name.toString() + QLatin1Char('.');
-
-        name.chop(1);
-
-
-
         QQmlJSAnnotation qqmljsAnnotation;
-
-        qqmljsAnnotation.name = name;
+        qqmljsAnnotation.name = buildName(annotation->qualifiedTypeNameId);
 
         for (UiObjectMemberList *memberItem = annotation->initializer->members; memberItem != nullptr; memberItem = memberItem->next) {
             switch (memberItem->member->kind) {
             case Node::Kind_UiScriptBinding: {
                 auto *scriptBinding = QQmlJS::AST::cast<UiScriptBinding*>(memberItem->member);
-                QString bindingName;
-                for (auto id = scriptBinding->qualifiedId; id; id = id->next)
-                    bindingName += id->name.toString() + QLatin1Char('.');
-
-                bindingName.chop(1);
-
-                qqmljsAnnotation.bindings[bindingName] = bindingToVariant(scriptBinding->statement);
+                qqmljsAnnotation.bindings[buildName(scriptBinding->qualifiedId)]
+                        = bindingToVariant(scriptBinding->statement);
                 break;
             }
             default:
@@ -1216,12 +1214,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::StringLiteral *sl)
 
 bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 {
-    QString superType;
-    for (auto segment = definition->qualifiedTypeNameId; segment; segment = segment->next) {
-        if (!superType.isEmpty())
-            superType.append(u'.');
-        superType.append(segment->name.toString());
-    }
+    const QString superType = buildName(definition->qualifiedTypeNameId);
 
     Q_ASSERT(!superType.isEmpty());
     if (superType.front().isUpper()) {
@@ -1291,16 +1284,14 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
         method.setMethodType(QQmlJSMetaMethod::Signal);
         method.setMethodName(publicMember->name.toString());
         while (param) {
-            method.addParameter(param->name.toString(), param->type->name.toString());
+            method.addParameter(param->name.toString(), buildName(param->type));
             param = param->next;
         }
         m_currentScope->addOwnMethod(method);
         break;
     }
     case UiPublicMember::Property: {
-        QString typeName = publicMember->memberType
-                ? publicMember->memberType->name.toString()
-                : QString();
+        QString typeName = buildName(publicMember->memberType);
         QString aliasExpr;
         const bool isAlias = (typeName == u"alias"_qs);
         if (isAlias) {
@@ -1322,7 +1313,7 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
                               Log_Alias, expression->firstSourceLocation());
             }
         } else {
-            const auto name = publicMember->memberType->name.toString();
+            const QString name = buildName(publicMember->memberType);
             if (m_rootScopeImports.contains(name) && !m_rootScopeImports[name].scope.isNull()) {
                 if (m_importTypeLocationMap.contains(name))
                     m_usedTypes.insert(name);
@@ -1712,13 +1703,8 @@ void QQmlJSImportVisitor::endVisit(UiScriptBinding *)
 
 bool QQmlJSImportVisitor::visit(UiArrayBinding *arrayBinding)
 {
-    QString name;
-    for (auto id = arrayBinding->qualifiedId; id; id = id->next)
-        name += id->name.toString() + QLatin1Char('.');
-
-    name.chop(1);
-
-    enterEnvironment(QQmlJSScope::QMLScope, name, arrayBinding->firstSourceLocation());
+    enterEnvironment(QQmlJSScope::QMLScope, buildName(arrayBinding->qualifiedId),
+                     arrayBinding->firstSourceLocation());
     m_currentScope->setIsArrayScope(true);
 
     // TODO: support group/attached properties
@@ -1830,14 +1816,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiImport *import)
         return true;
     }
 
-    QString path {};
-    auto uri = import->importUri;
-    while (uri) {
-        path.append(uri->name);
-        path.append(u'.');
-        uri = uri->next;
-    }
-    path.chop(1);
+    const QString path = buildName(import->importUri);
 
     QStringList staticModulesProvided;
 
@@ -2015,11 +1994,6 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     // ... __styleData: QtObject {...}
 
     Q_ASSERT(uiob->qualifiedTypeNameId);
-    QString name;
-    for (auto id = uiob->qualifiedTypeNameId; id; id = id->next)
-        name += id->name.toString() + QLatin1Char('.');
-
-    name.chop(1);
 
     bool needsResolution = false;
     int scopesEnteredCounter = 0;
@@ -2049,7 +2023,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     if (needsResolution)
         QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
 
-    enterEnvironment(QQmlJSScope::QMLScope, name,
+    enterEnvironment(QQmlJSScope::QMLScope, buildName(uiob->qualifiedTypeNameId),
                      uiob->qualifiedTypeNameId->identifierToken);
     QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
 
