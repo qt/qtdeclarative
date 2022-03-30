@@ -3923,7 +3923,8 @@ void QQuickTableViewPrivate::init()
             return;
         positionXAnimation.stop();
         positionYAnimation.stop();
-        q->setFocus(true, Qt::MouseFocusReason);
+        if (keyNavigationEnabled)
+            q->forceActiveFocus(Qt::MouseFocusReason);
         if (!q->isInteractive())
             setCurrentIndexFromTap(tapHandler->point().pressPosition());
     });
