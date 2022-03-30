@@ -1,0 +1,185 @@
+﻿/****************************************************************************
+**
+** Copyright (C) 2012 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+/*!
+\page qtqml-integrating-with-js-values-from-cpp.html
+\title Integrating with JavaScript values from C++
+\brief Description of how to load and access JavaScript from C++ code.
+
+The following classes can be used to load and access JavaSript from C++ code:
+
+\list
+
+    \li \l QJSValue, which acts as a container for Qt/JavaScript data types.
+    \li \l QJSManagedValue, which represents a value on the JavaScript heap
+            belonging to a \l QJSEngine.
+    \li \l QJSPrimitiveValue, which operates on primitive types in JavaScript semantics.
+\endlist
+
+Use QJSValue to transfer values to and from the engine, and use QJSManagedValue
+to interact with JavaScript values. Only use QJSPrimitiveValues if you have to
+emulate the semantics of JS primitive values in C++.
+
+\table
+    \header
+        \li QJSValue
+        \li QJSManagedValue
+        \li QJSPrimitiveValue
+    \row
+        \li Persistently store values
+        \li Short lived
+        \li Short lived
+    \row
+        \li Transport values to/from engine
+        \li Access properties
+        \li Only Primitives
+    \row
+        \li
+        \li Call methods
+        \li Basic arithmetic and comparison
+\endtable
+
+\section1 QJSValue as a Container Type
+
+\l QJSValue stores the Qt/JavaScript data types supported in ECMAScript including
+function, array and arbitrary object types as well as anything supported by
+QVariant. As a container, it can be used to pass values to and receive values
+from a QJSEngine.
+
+\snippet qtjavascript/integratingjswithcpp/exampleqjsascontainer.cpp qjs-as-container
+
+In case of a cache miss, \c undefined is returned. Otherwise, the cached value is
+returned. Note that implicit conversions (from QString and QJSValue::SpecialValue respectively)
+occur when the value is returned.
+
+QJSValue also has an API to interact with the contained value, but using
+QJSManagedValue is recommended.
+
+\section1 Primitive and Managed Values
+
+QJSValue and QJSManagedValue store values that can be either managed or primitive.
+In QML’s JS engine, a managed value can be thought of as a pointer to some data
+structure on the heap, whose memory is managed by the engine’s garbage collector.
+The actual content of primitive values is stored directly, using a technique
+called NaN-boxing that enables you to represent a NaN-value in multiple ways, even
+though only two are actually needed; one for signalling and one for quiet NaN-value.
+
+\table
+\header
+    \li Primitive Values
+    \li Managed Values
+\row
+    \li int
+    \li Function
+\row
+    \li double
+    \li Array
+\row
+    \li undefined
+    \li QVariant
+\row
+    \li null
+    \li string object
+\row
+    \li QString
+    \li
+\endtable
+
+A pointer to the engine can be obtained from a managed value, but not from a
+primitive one. When using QJSValue for its JavaScript API, you need access
+to the engine to evaluate JavaScript. For example, to run the \c call(args) function,
+you have to interpret it in the engine. This works, as the function is a managed
+value, and you can obtain the engine from it.
+
+Similarly, where the engine is needed when you call a function or
+access a property on a primitive number or string. Whenever you call a method on
+a primitive, an instance of its corresponding non-primitive objects is created.
+This is referred as boxing. When you write \c (42).constructor, that is equivalent
+to \c (new Number(42)).constructor, and it returns the constructor method of the
+global number object. Accordingly, if you write \c QJSValue(42).property("constructor"),
+you would expect to obtain a QJSValue containing that function. However, what you
+get is instead a QJSValue containing \c undefined.
+
+The QJSValue that you constructed contains only a primitive value, and thus you have
+no way to access the engine. You also can’t simply hardcode the property lookup
+for primitive values in QJSEngine, as in one engine you might set
+\e {Number.prototype.constructor.additionalProperty = "the Spanish Inquisition"}
+whereas in another \e {Number.prototype.constructor.additionalProperty = 42}.
+The end result would then clearly be unexpected.
+
+To ensure that property accesses always work, you would need to always store boxed
+values in QJSValue or store an additional pointer to the engine.
+
+However, this would be incompatible with how QJSValue is currently used, lead to
+pointless JS heap allocations when passing around primitives, and increase the
+size needed to store a QJSValue. Therefore, you should use \l QJSValue only for
+storage and \l QJSManagedValue to obtain the engine.
+
+\section1 QJSManagedValue
+
+QJSManagedValue is similar to QJSValue, with a few differences:
+
+\list
+\li The constructors (except for the default and move constructor2) require
+    passing a QJSEngine pointer.
+\li Methods like \c deleteProperty and \l isSymbol are added.
+\li If QJSManagedValue methods encounter an exception, they leave it intact.
+\endlist
+
+To obtain the engine in code, either you are in a scripting context where you’ve
+already got access to an engine to create new objects with \c QJSEngine::newObject
+and to evaluate expressions with \c QJSEngine::evaluate, or you want to evaluate
+some JavaScript in a QObject that has been registered with the engine. In the
+latter case, you can use \c qjsEngine(this) to obtain the currently active
+QJSEngine.
+
+QJSManagedValue also provides a few methods that have no equivalent in QJSEngine.
+
+In the example below, QJSManagedValue methods encounter an exception, and
+QJSEngine::catchError is used to handle the exception.
+
+\snippet qtjavascript/integratingjswithcpp/exampleqjsengine.cpp qjs-engine-example
+
+However, inside a method of a registered object, you might want to instead let
+the exception bubble up the call stack.
+
+QJSManagedValue should be temporarily created on the stack,
+and discarded once you don’t need to work any longer on the contained value.
+Since QJSValue can store primitive values in a more efficient way, QJSManagedValue
+should also not be used as an interface type which is the return or parameter type of
+functions, and the type of properties, as the engine does not treat it in a
+special way, and will not convert values to it (in contrast to QJSValue).
+
+\section1 QJSPrimitiveValue
+
+\l QJSPrimitiveValue can store any of the primitive types, and supports arithmetic
+operations and comparisons according to the ECMA-262 standard. It allows for
+low-overhead operations on primitives in contrast to QJSManagedValue, which always goes
+through the engine, while still yielding results that are indistinguishable
+from what the engine would return. As QJSPrimitiveValue is comparatively large, it
+is not recommended to store values.
+
+*/

@@ -132,6 +132,11 @@ The QML framework allows QML code to contain JavaScript expressions and for
 the QML code to interact with C++ code.
 
 \list
+    \li \l {Overview - QML and C++ Integration}
+    \li \l {Data Type Conversion Between QML and C++}
+    \li \l {Integrating with JavaScript values from C++}
+    \li \l {Exposing Attributes of C++ Types to QML}
+    \li \l {Defining QML Types from C++}
     \li \l {Writing QML Modules}
     \li \l {Important C++ Classes Provided By The Qt QML Module}
     \li \l {Integrating QML and C++}
