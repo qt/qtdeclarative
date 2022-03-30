@@ -65,6 +65,22 @@ add them via the \c{-I} flag.
 
 To get an overview and explanation of all available command line options, run \c{qmllint --help}.
 
+\section2 Marking components and properties as deprecated.
+
+qmllint allows you to mark both properties and components as deprecated:
+
+\code
+@Deprecated { reason: "Use NewCustomText instead" }
+Text {
+    @Deprecated { reason: "Use newProperty instead" }
+    property int oldProperty
+    property int newProperty
+    Component.onCompleted: console.log(oldProperty);  // Warning: XY.qml:8:40: Property "oldProperty" is deprecated (Reason: Use newProperty instead)
+}
+\endcode
+
+Deprecation warnings for components will be shown every time the component is created.
+
 \section2 Disabling warnings inline
 
 You may at any point disable warnings temporarily in a file using \c{// qmllint
