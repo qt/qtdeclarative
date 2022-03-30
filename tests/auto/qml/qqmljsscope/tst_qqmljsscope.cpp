@@ -109,6 +109,7 @@ private Q_SLOTS:
     void groupedProperties();
     void descriptiveNameOfNull();
     void groupedPropertiesConsistency();
+    void groupedPropertySyntax();
 
 public:
     tst_qqmljsscope()
@@ -348,6 +349,32 @@ void tst_qqmljsscope::groupedPropertiesConsistency()
         QCOMPARE(fontBindings[0].bindingType(), QQmlJSMetaPropertyBinding::GroupProperty);
         QCOMPARE(fontBindings[1].bindingType(), QQmlJSMetaPropertyBinding::Script);
     }
+}
+
+void tst_qqmljsscope::groupedPropertySyntax()
+{
+    QQmlJSScope::ConstPtr root = run(u"groupPropertySyntax.qml"_qs);
+    QVERIFY(root);
+
+    const auto fontBindings = root->propertyBindings(u"font"_qs);
+    QCOMPARE(fontBindings.size(), 1);
+
+    // The binding order in QQmlJSScope case is "reversed": first come
+    // bindings on the leaf type, followed by the bindings on the base type
+    QCOMPARE(fontBindings[0].bindingType(), QQmlJSMetaPropertyBinding::GroupProperty);
+    auto fontScope = fontBindings[0].groupType();
+    QVERIFY(fontScope);
+    auto subbindings = fontScope->ownPropertyBindings();
+    QCOMPARE(subbindings.size(), 2);
+
+    const auto value = [](const QMultiHash<QString, QQmlJSMetaPropertyBinding> &bindings,
+                          const QString &key) {
+        return bindings.value(key, QQmlJSMetaPropertyBinding(QQmlJS::SourceLocation {}));
+    };
+
+    QCOMPARE(value(subbindings, u"pixelSize"_qs).bindingType(),
+             QQmlJSMetaPropertyBinding::NumberLiteral);
+    QCOMPARE(value(subbindings, u"bold"_qs).bindingType(), QQmlJSMetaPropertyBinding::BoolLiteral);
 }
 
 QTEST_MAIN(tst_qqmljsscope)

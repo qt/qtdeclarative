@@ -1212,6 +1212,9 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::StringLiteral *sl)
     return true;
 }
 
+inline void createGroupBinding(QQmlJSScope::Ptr &scope, const QString &name,
+                               const QQmlJS::SourceLocation &srcLocation);
+
 bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 {
     const QString superType = buildName(definition->qualifiedTypeNameId);
@@ -1237,6 +1240,7 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
         enterEnvironmentNonUnique(QQmlJSScope::GroupedPropertyScope, superType,
                                   definition->firstSourceLocation());
         Q_ASSERT(rootScopeIsValid());
+        createGroupBinding(m_currentScope, superType, definition->firstSourceLocation());
         QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
     }
 
