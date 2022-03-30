@@ -71,7 +71,7 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTreeViewDelegate : public QQuickAbs
     Q_PROPERTY(QQuickTreeView *treeView READ treeView WRITE setTreeView NOTIFY treeviewChanged REQUIRED FINAL)
     Q_PROPERTY(bool isTreeNode READ isTreeNode WRITE setIsTreeNode NOTIFY isTreeNodeChanged REQUIRED FINAL)
     Q_PROPERTY(bool hasChildren READ hasChildren WRITE setHasChildren NOTIFY hasChildrenChanged REQUIRED FINAL)
-    Q_PROPERTY(bool expanded READ expanded WRITE setExpanded NOTIFY expandedChanged WRITE setExpanded REQUIRED FINAL)
+    Q_PROPERTY(bool expanded READ expanded WRITE setExpanded NOTIFY expandedChanged REQUIRED FINAL)
     Q_PROPERTY(int depth READ depth WRITE setDepth NOTIFY depthChanged REQUIRED FINAL)
 
     QML_NAMED_ELEMENT(TreeViewDelegate)
