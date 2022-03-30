@@ -129,6 +129,20 @@ void qDrawShadeLine(QPainter *p, int x1, int y1, int x2, int y2,
         qWarning("qDrawShadeLine: Invalid parameters");
         return;
     }
+    PainterStateGuard painterGuard(p);
+    const qreal devicePixelRatio = p->device()->devicePixelRatio();
+    if (!qFuzzyCompare(devicePixelRatio, qreal(1))) {
+        painterGuard.save();
+        const qreal inverseScale = qreal(1) / devicePixelRatio;
+        p->scale(inverseScale, inverseScale);
+        x1 = qRound(devicePixelRatio * x1);
+        y1 = qRound(devicePixelRatio * y1);
+        x2 = qRound(devicePixelRatio * x2);
+        y2 = qRound(devicePixelRatio * y2);
+        lineWidth = qRound(devicePixelRatio * lineWidth);
+        midLineWidth = qRound(devicePixelRatio * midLineWidth);
+        p->translate(0.5, 0.5);
+    }
     int tlw = lineWidth*2 + midLineWidth;        // total line width
     QPen oldPen = p->pen();                        // save pen
     if (sunken)
@@ -258,6 +272,7 @@ void qDrawShadeRect(QPainter *p, int x, int y, int w, int h,
         h = qRound(devicePixelRatio * h);
         lineWidth = qRound(devicePixelRatio * lineWidth);
         midLineWidth = qRound(devicePixelRatio * midLineWidth);
+        p->translate(0.5, 0.5);
     }
 
     QPen oldPen = p->pen();
@@ -362,6 +377,7 @@ void qDrawShadePanel(QPainter *p, int x, int y, int w, int h,
 
     PainterStateGuard painterGuard(p);
     const qreal devicePixelRatio = p->device()->devicePixelRatioF();
+    bool isTranslated = false;
     if (!qFuzzyCompare(devicePixelRatio, qreal(1))) {
         painterGuard.save();
         const qreal inverseScale = qreal(1) / devicePixelRatio;
@@ -371,6 +387,8 @@ void qDrawShadePanel(QPainter *p, int x, int y, int w, int h,
         w = qRound(devicePixelRatio * w);
         h = qRound(devicePixelRatio * h);
         lineWidth = qRound(devicePixelRatio * lineWidth);
+        p->translate(0.5, 0.5);
+        isTranslated = true;
     }
 
     QColor shade = pal.dark().color();
@@ -421,8 +439,11 @@ void qDrawShadePanel(QPainter *p, int x, int y, int w, int h,
         lines << QLineF(x1--, y1++, x2--, y2);
     }
     p->drawLines(lines);
-    if (fill)                                // fill with fill color
+    if (fill) {                                // fill with fill color
+        if (isTranslated)
+            p->translate(-0.5, -0.5);
         p->fillRect(x+lineWidth, y+lineWidth, w-lineWidth*2, h-lineWidth*2, *fill);
+    }
     p->setPen(oldPen);                        // restore pen
 }
 
@@ -453,6 +474,7 @@ static void qDrawWinShades(QPainter *p,
 
     PainterStateGuard painterGuard(p);
     const qreal devicePixelRatio = p->device()->devicePixelRatioF();
+    bool isTranslated = false;
     if (!qFuzzyCompare(devicePixelRatio, qreal(1))) {
         painterGuard.save();
         const qreal inverseScale = qreal(1) / devicePixelRatio;
@@ -461,6 +483,8 @@ static void qDrawWinShades(QPainter *p,
         y = qRound(devicePixelRatio * y);
         w = qRound(devicePixelRatio * w);
         h = qRound(devicePixelRatio * h);
+        p->translate(0.5, 0.5);
+        isTranslated = true;
     }
 
     QPen oldPen = p->pen();
@@ -477,8 +501,11 @@ static void qDrawWinShades(QPainter *p,
         QPoint d[3] = { QPoint(x+1, y+h-2), QPoint(x+w-2, y+h-2), QPoint(x+w-2, y+1) };
         p->setPen(c4);
         p->drawPolyline(d, 3);
-        if (fill)
+        if (fill) {
+            if (isTranslated)
+                p->translate(-0.5, -0.5);
             p->fillRect(QRect(x+2, y+2, w-4, h-4), *fill);
+        }
     }
     p->setPen(oldPen);
 }
@@ -604,6 +631,7 @@ void qDrawPlainRect(QPainter *p, int x, int y, int w, int h, const QColor &c,
         w = qRound(devicePixelRatio * w);
         h = qRound(devicePixelRatio * h);
         lineWidth = qRound(devicePixelRatio * lineWidth);
+        p->translate(0.5, 0.5);
     }
 
     QPen   oldPen   = p->pen();
