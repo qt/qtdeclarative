@@ -1,0 +1,80 @@
+/****************************************************************************
+**
+** Copyright (C) 2022 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
+**
+** This file is part of the documentation of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:FDL$
+** Commercial License Usage
+** Licensees holding valid commercial Qt licenses may use this file in
+** accordance with the commercial license agreement provided with the
+** Software or, alternatively, in accordance with the terms contained in
+** a written agreement between you and The Qt Company. For licensing terms
+** and conditions see https://www.qt.io/terms-conditions. For further
+** information use the contact form at https://www.qt.io/contact-us.
+**
+** GNU Free Documentation License Usage
+** Alternatively, this file may be used under the terms of the GNU Free
+** Documentation License version 1.3 as published by the Free Software
+** Foundation and appearing in the file included in the packaging of
+** this file. Please review the following information to ensure
+** the GNU Free Documentation License version 1.3 requirements
+** will be met: https://www.gnu.org/licenses/fdl-1.3.html.
+** $QT_END_LICENSE$
+**
+****************************************************************************/
+
+/*!
+    \page qtquickwidgets-index.html
+    \title Qt Quick Widgets
+    \brief Provides a C++ widget class for displaying a Qt Quick user interface.
+
+    The Qt Quick Widgets module is a convenience wrapper for QQuickWindow.
+    It will automatically load and display a QML scene when given the URL of
+    the main \c qml file. Alternatively, you can instantiate QML objects using
+    QQmlComponent and place them in a manually set-up QQuickWidget.
+
+    Typical usage:
+
+    \code
+        QQuickWidget *view = new QQuickWidget;
+        view->setSource(QUrl::fromLocalFile("myqmlfile.qml"));
+        view->show();
+    \endcode
+
+    QQuickWidget also manages resizing the view and the root item. By default,
+    the \l {QQuickWidget::} {resizeMode} is set to
+    \l {QQuickWidget::} {SizeViewToRootObject}, which will
+    load the component and resize it to fit the view. Alternatively,
+    you can set \l {QQuickWidget::} {resizeMode} to
+    \l {QQuickWidget::SizeViewToRootObject} {SizeViewToRootObject}, which will
+    resize the view to the root item.
+
+    \section1 Using the Module
+
+    \include {module-use.qdocinc} {using the c++ api}
+
+    \section2 Building with CMake
+
+    \include {module-use.qdocinc} {building with cmake} {QuickWidgets}
+
+    \section2 Building with qmake quickwidgets
+
+    \include {module-use.qdocinc} {building_with_qmake} {quickwidgets}
+
+    \section1 Reference
+
+    \list
+        \li \l {Qt Quick Widgets C++ Classes}
+    \endlist
+
+    \section1 Licenses and Attributions
+
+    Qt Quick Widget is available under commercial licenses from
+    \l{The Qt Company}. In addition, it is available under free software
+    licenses. Since Qt 5.4, these free software licenses are
+    \l{GNU Lesser General Public License, version 3}, or the
+    \l{GNU General Public License, version 2}. See
+    \l{Qt Licensing} for more details.
+*/
