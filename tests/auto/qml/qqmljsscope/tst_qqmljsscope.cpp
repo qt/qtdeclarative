@@ -34,8 +34,10 @@
 #include <QtCore/qdiriterator.h>
 #include <QtCore/qurl.h>
 #include <QtCore/qlibraryinfo.h>
+#include <QtCore/qscopedpointer.h>
 #include <QtQml/qqmlengine.h>
 #include <QtQml/qqmlcomponent.h>
+#include <QtGui/qfont.h>
 
 #include <QtQml/private/qqmlirbuilder_p.h>
 #include <private/qqmljscompiler_p.h>
@@ -106,6 +108,7 @@ private Q_SLOTS:
     void unknownCppBase();
     void groupedProperties();
     void descriptiveNameOfNull();
+    void groupedPropertiesConsistency();
 
 public:
     tst_qqmljsscope()
@@ -318,6 +321,33 @@ void tst_qqmljsscope::descriptiveNameOfNull()
     QQmlJSRegisterContent unscoped = QQmlJSRegisterContent::create(
                 stored, property, QQmlJSRegisterContent::ScopeProperty, QQmlJSScope::ConstPtr());
     QCOMPARE(unscoped.descriptiveName(), u"bar of (invalid type)::foo with type baz"_qs);
+}
+
+void tst_qqmljsscope::groupedPropertiesConsistency()
+{
+    {
+        QQmlEngine engine;
+        QQmlComponent component(&engine);
+        component.loadUrl(testFileUrl(u"groupPropertiesConsistency.qml"_qs));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+        QFont font = qvariant_cast<QFont>(root->property("font"));
+        QCOMPARE(font.pixelSize(), 22);
+    }
+
+    {
+        QQmlJSScope::ConstPtr root = run(u"groupPropertiesConsistency.qml"_qs);
+        QVERIFY(root);
+
+        const auto fontBindings = root->propertyBindings(u"font"_qs);
+        QCOMPARE(fontBindings.size(), 2);
+
+        // The binding order in QQmlJSScope case is "reversed": first come
+        // bindings on the leaf type, followed by the bindings on the base type
+        QCOMPARE(fontBindings[0].bindingType(), QQmlJSMetaPropertyBinding::GroupProperty);
+        QCOMPARE(fontBindings[1].bindingType(), QQmlJSMetaPropertyBinding::Script);
+    }
 }
 
 QTEST_MAIN(tst_qqmljsscope)
