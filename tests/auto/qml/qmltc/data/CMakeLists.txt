@@ -39,7 +39,8 @@ set(qml_sources
     defaultPropertyCorrectSelection.qml
     # defaultAlias.qml
     propertyReturningFunction.qml
-    attachedProperty.qml
+    AttachedProperty.qml
+    attachedPropertyDerived.qml
     groupedProperty.qml
     groupedProperty_qquicktext.qml
     localImport.qml

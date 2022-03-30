@@ -28,7 +28,12 @@
 
 #include "testattachedtype.h"
 
-TestTypeAttached::TestTypeAttached(QObject *parent) : QObject(parent), m_count(0) { }
+TestTypeAttached::TestTypeAttached(QObject *parent) : QObject(parent), m_count(0)
+{
+    ++creationCount;
+}
+
+int TestTypeAttached::creationCount = 0;
 
 int TestTypeAttached::getAttachedCount() const
 {

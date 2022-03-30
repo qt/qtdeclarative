@@ -60,6 +60,7 @@
 #include "defaultproperty.h"
 #include "defaultpropertycorrectselection.h"
 #include "attachedproperty.h"
+#include "attachedpropertyderived.h"
 #include "groupedproperty.h"
 #include "groupedproperty_qquicktext.h"
 #include "localimport.h"
@@ -154,7 +155,8 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/QmltcTests/listPropertySameName.qml"),
         QUrl("qrc:/QmltcTests/defaultProperty.qml"),
         QUrl("qrc:/QmltcTests/defaultPropertyCorrectSelection.qml"),
-        QUrl("qrc:/QmltcTests/attachedProperty.qml"),
+        QUrl("qrc:/QmltcTests/AttachedProperty.qml"),
+        QUrl("qrc:/QmltcTests/attachedPropertyDerived.qml"),
         QUrl("qrc:/QmltcTests/groupedProperty.qml"),
         QUrl("qrc:/QmltcTests/groupedProperty_qquicktext.qml"),
         QUrl("qrc:/QmltcTests/localImport.qml"),
@@ -1182,8 +1184,13 @@ void tst_qmltc::defaultAlias()
 
 void tst_qmltc::attachedProperty()
 {
+    QScopeGuard exitTest([oldCount = TestTypeAttached::creationCount]() {
+        QCOMPARE(TestTypeAttached::creationCount, oldCount + 1);
+    });
+    Q_UNUSED(exitTest);
+
     QQmlEngine e;
-    PREPEND_NAMESPACE(attachedProperty) created(&e);
+    PREPEND_NAMESPACE(AttachedProperty) created(&e);
 
     TestTypeAttached *attached = qobject_cast<TestTypeAttached *>(
             qmlAttachedPropertiesObject<TestType>(&created, false));
@@ -1216,6 +1223,23 @@ void tst_qmltc::attachedProperty()
     QCOMPARE(attached->getAttachedCount(), 45);
     QCOMPARE(created.myCount(), attached->getAttachedCount());
     QCOMPARE(attached->getAttachedFormula(), 42 * 2 * 2 * 2);
+}
+
+void tst_qmltc::attachedPropertyObjectCreatedOnce()
+{
+    QScopeGuard exitTest([oldCount = TestTypeAttached::creationCount]() {
+        QCOMPARE(TestTypeAttached::creationCount, oldCount + 1);
+    });
+    Q_UNUSED(exitTest);
+
+    QQmlEngine e;
+    PREPEND_NAMESPACE(attachedPropertyDerived) created(&e);
+
+    TestTypeAttached *attached = qobject_cast<TestTypeAttached *>(
+            qmlAttachedPropertiesObject<TestType>(&created, false));
+    QVERIFY(attached);
+
+    QCOMPARE(attached->getAttachedCount(), -314);
 }
 
 void tst_qmltc::groupedProperty()

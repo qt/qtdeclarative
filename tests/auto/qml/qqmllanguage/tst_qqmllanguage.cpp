@@ -1854,6 +1854,14 @@ void tst_qqmllanguage::attachedProperties()
     QVERIFY(attached != nullptr);
     QCOMPARE(attached->property("value"), QVariant(10));
     QCOMPARE(attached->property("value2"), QVariant(13));
+
+    {
+        QQmlComponent component(&engine, testFileUrl("attachedPropertyDerived.qml"));
+        VERIFY_ERRORS(0);
+        QScopedPointer<QObject> object(component.create());
+        QVERIFY(object != nullptr);
+        QCOMPARE(MyQmlObjectWithAttachedCounter::attachedCount, 1);
+    }
 }
 
 // Tests non-static object properties

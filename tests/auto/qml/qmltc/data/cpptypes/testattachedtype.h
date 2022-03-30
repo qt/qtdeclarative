@@ -62,6 +62,7 @@ public:
     void setAttachedObject(QObject *v);
     QBindable<QObject *> bindableAttachedObject();
 
+    static int creationCount;
 signals:
     void triggered();
 

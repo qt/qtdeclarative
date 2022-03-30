@@ -1212,8 +1212,8 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::StringLiteral *sl)
     return true;
 }
 
-inline void createGroupBinding(QQmlJSScope::Ptr &scope, const QString &name,
-                               const QQmlJS::SourceLocation &srcLocation);
+inline void createNonUniqueScopeBinding(QQmlJSScope::Ptr &scope, const QString &name,
+                                        const QQmlJS::SourceLocation &srcLocation);
 
 bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 {
@@ -1240,7 +1240,7 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
         enterEnvironmentNonUnique(QQmlJSScope::GroupedPropertyScope, superType,
                                   definition->firstSourceLocation());
         Q_ASSERT(rootScopeIsValid());
-        createGroupBinding(m_currentScope, superType, definition->firstSourceLocation());
+        createNonUniqueScopeBinding(m_currentScope, superType, definition->firstSourceLocation());
         QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
     }
 
@@ -1610,22 +1610,38 @@ void QQmlJSImportVisitor::handleIdDeclaration(QQmlJS::AST::UiScriptBinding *scri
         m_scopesById.insert(name, m_currentScope);
 }
 
-inline void createGroupBinding(QQmlJSScope::Ptr &scope, const QString &name,
-                               const QQmlJS::SourceLocation &srcLocation)
+/*! \internal
+
+    Creates a new binding of either a GroupProperty or an AttachedProperty type.
+    The binding is added to the parentScope() of \a scope, under property name
+    \a name and location \a srcLocation.
+*/
+inline void createNonUniqueScopeBinding(QQmlJSScope::Ptr &scope, const QString &name,
+                                        const QQmlJS::SourceLocation &srcLocation)
 {
+    const QQmlJSScope::ScopeType type = scope->scopeType();
+    Q_ASSERT(type == QQmlJSScope::GroupedPropertyScope
+             || type == QQmlJSScope::AttachedPropertyScope);
+    const QQmlJSMetaPropertyBinding::BindingType bindingType =
+            (type == QQmlJSScope::GroupedPropertyScope)
+            ? QQmlJSMetaPropertyBinding::GroupProperty
+            : QQmlJSMetaPropertyBinding::AttachedProperty;
+
     auto parentScope = scope->parentScope();
     const auto propertyBindings = parentScope->ownPropertyBindings(name);
-    const bool alreadyHasGroupedBinding = std::any_of(
-            propertyBindings.first, propertyBindings.second,
-            [](const QQmlJSMetaPropertyBinding &binding) {
-                return binding.bindingType() == QQmlJSMetaPropertyBinding::GroupProperty;
-            });
-    if (alreadyHasGroupedBinding)
+    const bool alreadyHasBinding = std::any_of(propertyBindings.first, propertyBindings.second,
+                                               [&](const QQmlJSMetaPropertyBinding &binding) {
+                                                   return binding.bindingType() == bindingType;
+                                               });
+    if (alreadyHasBinding)
         return;
 
-    QQmlJSMetaPropertyBinding groupBinding(srcLocation, name);
-    groupBinding.setGroupBinding(static_cast<QSharedPointer<QQmlJSScope>>(scope));
-    parentScope->addOwnPropertyBinding(std::move(groupBinding));
+    QQmlJSMetaPropertyBinding binding(srcLocation, name);
+    if (type == QQmlJSScope::GroupedPropertyScope)
+        binding.setGroupBinding(static_cast<QSharedPointer<QQmlJSScope>>(scope));
+    else
+        binding.setAttachedBinding(static_cast<QSharedPointer<QQmlJSScope>>(scope));
+    parentScope->addOwnPropertyBinding(std::move(binding));
 }
 
 bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
@@ -1650,10 +1666,10 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
                                       name, group->firstSourceLocation());
         } else {
             // grouped property
-            enterEnvironmentNonUnique(QQmlJSScope::GroupedPropertyScope,
-                                      name, group->firstSourceLocation());
-            createGroupBinding(m_currentScope, name, group->firstSourceLocation());
+            enterEnvironmentNonUnique(QQmlJSScope::GroupedPropertyScope, name,
+                                      group->firstSourceLocation());
         }
+        createNonUniqueScopeBinding(m_currentScope, name, group->firstSourceLocation());
     }
 
     auto name = group->name;
@@ -2030,8 +2046,7 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
 
         bool exists = enterEnvironmentNonUnique(scopeKind, idName, group->firstSourceLocation());
 
-        if (scopeKind == QQmlJSScope::GroupedPropertyScope)
-            createGroupBinding(m_currentScope, idName, group->firstSourceLocation());
+        createNonUniqueScopeBinding(m_currentScope, idName, group->firstSourceLocation());
 
         ++scopesEnteredCounter;
         needsResolution = needsResolution || !exists;

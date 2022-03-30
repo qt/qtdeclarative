@@ -467,8 +467,32 @@ private:
             QWeakPointer<const QQmlJSScope> value;
         };
         struct AttachedProperty {
-            friend bool operator==(AttachedProperty , AttachedProperty ) { return true; }
+            /*
+                AttachedProperty binding is a grouping for a series of bindings
+                belonging to the same scope(QQmlJSScope::AttachedPropertyScope).
+                Thus, the attached property binding itself only exposes the
+                attaching type object. Such object is unique per the enclosing
+                scope, so attaching types attached to different QML scopes are
+                different (think of them as objects in C++ terms).
+
+                An attaching type object, being a QQmlJSScope, has bindings
+                itself. For instance:
+                ```
+                Type {
+                    Keys.enabled: true
+                }
+                ```
+                tells us that "Type" has an AttachedProperty binding with
+                property name "Keys". The attaching object of that binding
+                (binding.attachingType()) has type "Keys" and a BoolLiteral
+                binding with property name "enabled".
+            */
+            friend bool operator==(AttachedProperty a, AttachedProperty b)
+            {
+                return a.value == b.value;
+            }
             friend bool operator!=(AttachedProperty a, AttachedProperty b) { return !(a == b); }
+            QWeakPointer<const QQmlJSScope> value;
         };
         struct GroupProperty {
             /* Given a group property declaration like
@@ -555,6 +579,12 @@ public:
     {
         ensureSetBindingTypeOnce();
         m_bindingContent = Content::GroupProperty { groupScope };
+    }
+
+    void setAttachedBinding(const QSharedPointer<const QQmlJSScope> &attachingScope)
+    {
+        ensureSetBindingTypeOnce();
+        m_bindingContent = Content::AttachedProperty { attachingScope };
     }
 
     void setBoolLiteral(bool value)
@@ -672,6 +702,14 @@ public:
     {
         if (auto *group = std::get_if<Content::GroupProperty>(&m_bindingContent))
             return group->groupScope.lock();
+        // warn
+        return {};
+    }
+
+    QSharedPointer<const QQmlJSScope> attachingType() const
+    {
+        if (auto *attached = std::get_if<Content::AttachedProperty>(&m_bindingContent))
+            return attached->value.lock();
         // warn
         return {};
     }

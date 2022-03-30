@@ -192,6 +192,22 @@ private:
 QML_DECLARE_TYPE(MyQmlObject)
 QML_DECLARE_TYPEINFO(MyQmlObject, QML_HAS_ATTACHED_PROPERTIES)
 
+class MyQmlObjectWithAttachedCounter : public QObject
+{
+    Q_OBJECT
+public:
+    MyQmlObjectWithAttachedCounter(QObject *parent = nullptr) : QObject(parent) { }
+    static int attachedCount;
+
+    static MyAttachedObject *qmlAttachedProperties(QObject *other)
+    {
+        ++MyQmlObjectWithAttachedCounter::attachedCount;
+        return new MyAttachedObject(other);
+    }
+};
+QML_DECLARE_TYPE(MyQmlObjectWithAttachedCounter)
+QML_DECLARE_TYPEINFO(MyQmlObjectWithAttachedCounter, QML_HAS_ATTACHED_PROPERTIES)
+
 class MyGroupedObject : public QObject
 {
     Q_OBJECT

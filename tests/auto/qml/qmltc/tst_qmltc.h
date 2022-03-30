@@ -73,6 +73,7 @@ private slots:
     void defaultPropertyCorrectSelection();
     void defaultAlias();
     void attachedProperty();
+    void attachedPropertyObjectCreatedOnce();
     void groupedProperty();
     void groupedProperty_qquicktext();
     void localImport();

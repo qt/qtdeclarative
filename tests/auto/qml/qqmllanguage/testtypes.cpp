@@ -49,6 +49,7 @@ void registerTypes()
 {
     qmlRegisterInterface<MyInterface>("MyInterface", 1);
     qmlRegisterType<MyQmlObject>("Test",1,0,"MyQmlObject");
+    qmlRegisterType<MyQmlObjectWithAttachedCounter>("Test", 1, 0, "MyQmlObjectWithAttachedCounter");
     qmlRegisterType<MyTypeObject>("Test",1,0,"MyTypeObject");
     qmlRegisterType<MyContainer>("Test",1,0,"MyContainer");
     qmlRegisterType<MyPropertyValueSource>("Test",1,0,"MyPropertyValueSource");
@@ -264,6 +265,8 @@ bool MyQmlObject::event(QEvent *event)
         m_childAddedEventCount++;
     return QObject::event(event);
 }
+
+int MyQmlObjectWithAttachedCounter::attachedCount = 0;
 
 UncreatableSingleton *UncreatableSingleton::instance()
 {

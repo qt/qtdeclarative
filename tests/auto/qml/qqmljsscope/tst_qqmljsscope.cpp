@@ -110,6 +110,7 @@ private Q_SLOTS:
     void descriptiveNameOfNull();
     void groupedPropertiesConsistency();
     void groupedPropertySyntax();
+    void attachedProperties();
 
 public:
     tst_qqmljsscope()
@@ -375,6 +376,44 @@ void tst_qqmljsscope::groupedPropertySyntax()
     QCOMPARE(value(subbindings, u"pixelSize"_qs).bindingType(),
              QQmlJSMetaPropertyBinding::NumberLiteral);
     QCOMPARE(value(subbindings, u"bold"_qs).bindingType(), QQmlJSMetaPropertyBinding::BoolLiteral);
+}
+
+void tst_qqmljsscope::attachedProperties()
+{
+    QQmlJSScope::ConstPtr root = run(u"attachedProperties.qml"_qs);
+    QVERIFY(root);
+
+    const auto keysBindings = root->propertyBindings(u"Keys"_qs);
+    QVERIFY(!keysBindings.isEmpty());
+    QCOMPARE(keysBindings.size(), 2); // from type itself and from the base type
+
+    const auto getBindingsWithinAttached =
+            [&](QMultiHash<QString, QQmlJSMetaPropertyBinding> *bindings, qsizetype index) -> void {
+        const auto &binding = keysBindings[index];
+        QCOMPARE(binding.bindingType(), QQmlJSMetaPropertyBinding::AttachedProperty);
+        auto keysScope = binding.attachingType();
+        QVERIFY(keysScope);
+        *bindings = keysScope->ownPropertyBindings();
+    };
+
+    const auto value = [](const QMultiHash<QString, QQmlJSMetaPropertyBinding> &bindings,
+                          const QString &key) {
+        return bindings.value(key, QQmlJSMetaPropertyBinding(QQmlJS::SourceLocation {}));
+    };
+
+    QMultiHash<QString, QQmlJSMetaPropertyBinding> bindingsOfType;
+    getBindingsWithinAttached(&bindingsOfType, 0);
+    QCOMPARE(bindingsOfType.size(), 2);
+    QCOMPARE(value(bindingsOfType, u"enabled"_qs).bindingType(),
+             QQmlJSMetaPropertyBinding::BoolLiteral);
+    QCOMPARE(value(bindingsOfType, u"forwardTo"_qs).bindingType(),
+             QQmlJSMetaPropertyBinding::Script);
+
+    QMultiHash<QString, QQmlJSMetaPropertyBinding> bindingsOfBaseType;
+    getBindingsWithinAttached(&bindingsOfBaseType, 1);
+    QCOMPARE(bindingsOfBaseType.size(), 1);
+    QCOMPARE(value(bindingsOfBaseType, u"priority"_qs).bindingType(),
+             QQmlJSMetaPropertyBinding::Script);
 }
 
 QTEST_MAIN(tst_qqmljsscope)
