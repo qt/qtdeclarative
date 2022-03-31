@@ -1964,11 +1964,11 @@ void tst_qqmlecmascript::componentCreation_data()
         << "null";
     QTest::newRow("invalidSecondArg")
         << "invalidSecondArg"
-        << "" // We cannot catch this case as coercing a string to a number is valid in JavaScript
+        << ":40: TypeError: Invalid arguments; did you swap mode and parent"
         << "";
     QTest::newRow("invalidThirdArg")
         << "invalidThirdArg"
-        << ":45: TypeError: Passing incompatible arguments to C++ functions from JavaScript is not allowed."
+        << ":45: TypeError: Invalid arguments; did you swap mode and parent"
         << "";
     QTest::newRow("invalidMode")
         << "invalidMode"

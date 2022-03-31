@@ -271,6 +271,22 @@ QtObject::QtObject(ExecutionEngine *engine)
 {
 }
 
+QtObject::Contexts QtObject::getContexts() const
+{
+    QQmlEngine *engine = qmlEngine();
+    if (!engine)
+        return {};
+
+    QQmlRefPointer<QQmlContextData> context = v4Engine()->callingQmlContext();
+    if (!context)
+        context = QQmlContextData::get(QQmlEnginePrivate::get(engine)->rootContext);
+
+    Q_ASSERT(context);
+    QQmlRefPointer<QQmlContextData> effectiveContext
+            = context->isPragmaLibraryContext() ? nullptr : context;
+    return {context, effectiveContext};
+}
+
 QtObject *QtObject::create(QQmlEngine *, QJSEngine *jsEngine)
 {
     QV4::ExecutionEngine *v4 = jsEngine->handle();
@@ -1288,6 +1304,32 @@ See \l {Dynamic QML Object Creation from JavaScript} for more information on usi
 To create a QML object from an arbitrary string of QML (instead of a file),
 use \l{QtQml::Qt::createQmlObject()}{Qt.createQmlObject()}.
 */
+
+/*!
+\qmlmethod Component Qt::createComponent(string moduleUri, string typeName, enumeration mode, QtObject parent)
+\overload
+Returns a \l Component object created for the type specified by \a moduleUri and \a typeName.
+\qml
+import QtQuick
+QtObject {
+    id: root
+    property Component myComponent: Qt.createComponent(Rectangle, root)
+}
+\endqml
+This overload mostly behaves as the \c url based version, but can be used
+to instantiate types which do not have an URL (e.g. C++ types registered
+via \l {QML_ELEMENT}).
+\note In some cases, passing \c Component.Asynchronous won't have any
+effect:
+\list
+\li The type is implemented in C++
+\li The type is an inline component.
+\endlist
+If the optional \a parent parameter is given, it should refer to the object
+that will become the parent for the created \l Component object. If no mode
+was passed, this can be the second argument.
+*/
+
 QQmlComponent *QtObject::createComponent(const QUrl &url, QObject *parent) const
 {
     return createComponent(url, QQmlComponent::PreferSynchronous, parent);
@@ -1308,15 +1350,46 @@ QQmlComponent *QtObject::createComponent(const QUrl &url, QQmlComponent::Compila
     if (!engine)
         return nullptr;
 
-    QQmlRefPointer<QQmlContextData> context = v4Engine()->callingQmlContext();
+    auto [context, effectiveContext] = getContexts();
     if (!context)
-        context = QQmlContextData::get(QQmlEnginePrivate::get(engine)->rootContext);
-
-    Q_ASSERT(context);
-    QQmlRefPointer<QQmlContextData> effectiveContext
-            = context->isPragmaLibraryContext() ? nullptr : context;
+        return nullptr;
 
     QQmlComponent *c = new QQmlComponent(engine, context->resolvedUrl(url), mode, parent);
+    QQmlComponentPrivate::get(c)->creationContext = effectiveContext;
+    QQmlData::get(c, true)->explicitIndestructibleSet = false;
+    QQmlData::get(c)->indestructible = false;
+    return c;
+}
+
+QQmlComponent *QtObject::createComponent(const QString &moduleUri, const QString &typeName,
+                                         QObject *parent) const
+{
+    return createComponent(moduleUri, typeName, QQmlComponent::PreferSynchronous, parent);
+}
+
+QQmlComponent *QtObject::createComponent(const QString &moduleUri, const QString &typeName, QQmlComponent::CompilationMode mode, QObject *parent) const
+{
+    if (mode != QQmlComponent::Asynchronous && mode != QQmlComponent::PreferSynchronous) {
+        v4Engine()->throwError(QStringLiteral("Invalid compilation mode %1").arg(mode));
+        return nullptr;
+    }
+
+    QQmlEngine *engine = qmlEngine();
+    if (!engine)
+        return nullptr;
+
+    if (moduleUri.isEmpty() || typeName.isEmpty())
+        return nullptr;
+
+    auto [context, effectiveContext] = getContexts();
+    if (!context)
+        return nullptr;
+
+    QQmlComponent *c = new QQmlComponent(engine, moduleUri, typeName, mode, parent);
+    if (c->isError() && !parent && moduleUri.endsWith(u".qml")) {
+        v4Engine()->throwTypeError(
+                    QStringLiteral("Invalid arguments; did you swap mode and parent"));
+    }
     QQmlComponentPrivate::get(c)->creationContext = effectiveContext;
     QQmlData::get(c, true)->explicitIndestructibleSet = false;
     QQmlData::get(c)->indestructible = false;
