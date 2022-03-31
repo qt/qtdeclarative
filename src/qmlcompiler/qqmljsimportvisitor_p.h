@@ -181,6 +181,12 @@ protected:
     // A set of all types that have been used during type resolution
     QSet<QString> m_usedTypes;
 
+    // stores JS functions and Script bindings per scope (only the name). mimics
+    // the content of QmlIR::Object::functionsAndExpressions
+    QHash<QQmlJSScope::ConstPtr, QList<QString>> m_functionsAndExpressions;
+    QQmlJSMetaMethod::RelativeFunctionIndex
+    addFunctionOrExpression(const QQmlJSScope::ConstPtr &scope, const QString &name);
+
     QQmlJSImporter *m_importer;
 
     void enterEnvironment(QQmlJSScope::ScopeType type, const QString &name,

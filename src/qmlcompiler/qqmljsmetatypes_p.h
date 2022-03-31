@@ -138,6 +138,14 @@ public:
         Public
     };
 
+    /*! \internal
+
+        Represents a relative JavaScript function/expression index within a type
+        in a QML document. Used as a typed alternative to int with an explicit
+        invalid state.
+    */
+    enum class RelativeFunctionIndex : int { Invalid = -1 };
+
     QQmlJSMetaMethod() = default;
     explicit QQmlJSMetaMethod(QString name, QString returnType = QString())
         : m_name(std::move(name))
@@ -208,6 +216,9 @@ public:
     const QVector<QQmlJSAnnotation>& annotations() const { return m_annotations; }
     void setAnnotations(QVector<QQmlJSAnnotation> annotations) { m_annotations = annotations; }
 
+    void setJsFunctionIndex(RelativeFunctionIndex index) { m_jsFunctionIndex = index; }
+    RelativeFunctionIndex jsFunctionIndex() const { return m_jsFunctionIndex; }
+
     friend bool operator==(const QQmlJSMetaMethod &a, const QQmlJSMetaMethod &b)
     {
         return a.m_name == b.m_name
@@ -262,6 +273,7 @@ private:
     Type m_methodType = Signal;
     Access m_methodAccess = Public;
     int m_revision = 0;
+    RelativeFunctionIndex m_jsFunctionIndex = RelativeFunctionIndex::Invalid;
     bool m_isConstructor = false;
     bool m_isJavaScriptFunction = false;
     bool m_isImplicitQmlPropertyChangeSignal = false;
@@ -394,6 +406,13 @@ public:
         GroupProperty,
     };
 
+    enum ScriptBindingKind : unsigned int {
+        Script_Invalid,
+        Script_PropertyBinding, // property int p: 1 + 1
+        Script_SignalHandler, // onSignal: { ... }
+        Script_ChangeHandler, // onXChanged: { ... }
+    };
+
 private:
 
     // needs to be kept in sync with the BindingType enum
@@ -439,8 +458,14 @@ private:
             QString value;
         };
         struct Script {
-            friend bool operator==(Script , Script ) { return true; }
+            friend bool operator==(Script a, Script b)
+            {
+                return a.index == b.index && a.kind == b.kind;
+            }
             friend bool operator!=(Script a, Script b) { return !(a == b); }
+            QQmlJSMetaMethod::RelativeFunctionIndex index =
+                    QQmlJSMetaMethod::RelativeFunctionIndex::Invalid;
+            ScriptBindingKind kind = Script_Invalid;
         };
         struct Object {
             friend bool operator==(Object a, Object b) { return a.value == b.value && a.typeName == b.typeName; }
@@ -568,11 +593,10 @@ public:
         m_bindingContent = Content::StringLiteral { value.toString() };
     }
 
-    void setScriptBinding()
+    void setScriptBinding(QQmlJSMetaMethod::RelativeFunctionIndex value, ScriptBindingKind kind)
     {
-        // ### TODO: this does not allow us to do anything interesting with the binding
         ensureSetBindingTypeOnce();
-        m_bindingContent = Content::Script {};
+        m_bindingContent = Content::Script { value, kind };
     }
 
     void setGroupBinding(const QSharedPointer<const QQmlJSScope> &groupScope)
@@ -652,6 +676,22 @@ public:
     QString stringValue() const;
 
     QSharedPointer<const QQmlJSScope> literalType(const QQmlJSTypeResolver *resolver) const;
+
+    QQmlJSMetaMethod::RelativeFunctionIndex scriptIndex() const
+    {
+        if (auto *script = std::get_if<Content::Script>(&m_bindingContent))
+            return script->index;
+        // warn
+        return QQmlJSMetaMethod::RelativeFunctionIndex::Invalid;
+    }
+
+    ScriptBindingKind scriptKind() const
+    {
+        if (auto *script = std::get_if<Content::Script>(&m_bindingContent))
+            return script->kind;
+        // warn
+        return ScriptBindingKind::Script_Invalid;
+    }
 
     QString objectTypeName() const
     {

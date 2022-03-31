@@ -1152,6 +1152,20 @@ void QQmlJSImportVisitor::flushPendingSignalParameters()
     m_pendingSignalHandler = QQmlJS::SourceLocation();
 }
 
+/*! \internal
+
+    Records a JS function or a Script binding for a given \a scope. Returns an
+    index of a just recorded function-or-expression.
+*/
+QQmlJSMetaMethod::RelativeFunctionIndex
+QQmlJSImportVisitor::addFunctionOrExpression(const QQmlJSScope::ConstPtr &scope,
+                                             const QString &name)
+{
+    auto &array = m_functionsAndExpressions[scope];
+    array.emplaceBack(name);
+    return QQmlJSMetaMethod::RelativeFunctionIndex { int(array.size() - 1) };
+}
+
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::ExpressionStatement *ast)
 {
     if (m_pendingSignalHandler.isValid()) {
@@ -1428,6 +1442,7 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
         else
             method.setReturnTypeName(QStringLiteral("var"));
 
+        method.setJsFunctionIndex(addFunctionOrExpression(m_currentScope, method.methodName()));
         m_currentScope->addOwnMethod(method);
 
         if (m_currentScope->scopeType() != QQmlJSScope::QMLScope) {
@@ -1514,13 +1529,29 @@ void handleTranslationBinding(QQmlJSMetaPropertyBinding &binding, QStringView ba
 #endif
 }
 
-QQmlJSImportVisitor::LiteralOrScriptParseResult QQmlJSImportVisitor::parseLiteralOrScriptBinding(const QString name,
-                                              const QQmlJS::AST::Statement *statement)
+QQmlJSImportVisitor::LiteralOrScriptParseResult
+QQmlJSImportVisitor::parseLiteralOrScriptBinding(const QString name,
+                                                 const QQmlJS::AST::Statement *statement)
 {
     const auto *exprStatement = cast<const ExpressionStatement *>(statement);
 
-    if (exprStatement == nullptr)
+    if (exprStatement == nullptr) {
+        if (const auto *blockStatement = cast<const Block *>(statement)) {
+            // this is a special case of script binding because:
+            // 1. we are trying to parse a binding (this function's logic)
+            // 2. we encounter a block statement
+            Q_ASSERT(blockStatement->statements);
+            auto first = blockStatement->statements->statement;
+            if (first == nullptr)
+                return LiteralOrScriptParseResult::Invalid;
+            QQmlJSMetaPropertyBinding binding(first->firstSourceLocation(), name);
+            binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
+                                     QQmlJSMetaPropertyBinding::Script_PropertyBinding);
+            m_currentScope->addOwnPropertyBinding(binding);
+            return LiteralOrScriptParseResult::Script;
+        }
         return LiteralOrScriptParseResult::Invalid;
+    }
 
     auto expr = exprStatement->expression;
     QQmlJSMetaPropertyBinding binding(expr->firstSourceLocation(), name);
@@ -1550,7 +1581,8 @@ QQmlJSImportVisitor::LiteralOrScriptParseResult QQmlJSImportVisitor::parseLitera
         if (templateLit->hasNoSubstitution) {
             binding.setStringLiteral(templateLit->value);
         } else {
-            binding.setScriptBinding();
+            binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
+                                     QQmlJSMetaPropertyBinding::Script_PropertyBinding);
         }
         break;
     }
@@ -1565,8 +1597,11 @@ QQmlJSImportVisitor::LiteralOrScriptParseResult QQmlJSImportVisitor::parseLitera
         break;
     }
 
-    if (!binding.isValid()) // consider this to be a script binding (see IRBuilder::setBindingValue)
-        binding.setScriptBinding();
+    if (!binding.isValid()) {
+        // consider this to be a script binding (see IRBuilder::setBindingValue)
+        binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
+                                 QQmlJSMetaPropertyBinding::Script_PropertyBinding);
+    }
     m_currentScope->addOwnPropertyBinding(binding); // always add the binding to the scope
 
     if (!QQmlJSMetaPropertyBinding::isLiteralBinding(binding.bindingType()))
@@ -1683,6 +1718,7 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
     if (!signal.has_value()) {
         m_propertyBindings[m_currentScope].append(
                 { m_savedBindingOuterScope, group->firstSourceLocation(), name.toString() });
+        // ### TODO: report Invalid parse status as a warning/error
         parseLiteralOrScriptBinding(name.toString(), scriptBinding->statement);
     } else {
         const auto statement = scriptBinding->statement;
@@ -1712,6 +1748,19 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
         m_pendingSignalHandler = firstSourceLocation;
         m_signalHandlers.insert(firstSourceLocation,
                                 { scopeSignal.parameterNames(), hasMultilineStatementBody });
+
+        // when encountering a signal handler, add it as a script binding
+        QQmlJSMetaPropertyBinding::ScriptBindingKind kind =
+                QQmlJSMetaPropertyBinding::Script_Invalid;
+        if (!methods.isEmpty())
+            kind = QQmlJSMetaPropertyBinding::Script_SignalHandler;
+        else if (propertyForChangeHandler(m_savedBindingOuterScope, *signal).has_value())
+            kind = QQmlJSMetaPropertyBinding::Script_ChangeHandler;
+
+        QString stringName = name.toString();
+        QQmlJSMetaPropertyBinding binding(firstSourceLocation, stringName);
+        binding.setScriptBinding(addFunctionOrExpression(m_currentScope, stringName), kind);
+        m_currentScope->addOwnPropertyBinding(binding);
     }
 
     // TODO: before leaving the scopes, we must create the binding.
