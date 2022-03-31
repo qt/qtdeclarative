@@ -45,15 +45,24 @@
 QT_BEGIN_NAMESPACE
 
 template<typename T>
-class QDeferredFactory
-{
-public:
-    T create() const;
-    bool isValid() const;
-};
+class QDeferredSharedPointer;
 
 template<typename T>
 class QDeferredWeakPointer;
+
+template<typename T>
+class QDeferredFactory
+{
+public:
+    bool isValid() const;
+
+private:
+    friend class QDeferredSharedPointer<const T>;
+    friend class QDeferredWeakPointer<const T>;
+    friend class QDeferredSharedPointer<T>;
+    friend class QDeferredWeakPointer<T>;
+    void populate(const QSharedPointer<T> &) const;
+};
 
 template<typename T>
 class QDeferredSharedPointer
@@ -149,7 +158,7 @@ private:
         if (m_factory && m_factory->isValid()) {
             Factory localFactory;
             std::swap(localFactory, *m_factory); // Swap before executing, to avoid recursion
-            const_cast<std::remove_const_t<T> &>(*m_data) = localFactory.create();
+            localFactory.populate(m_data.template constCast<std::remove_const_t<T>>());
         }
     }
 
@@ -229,8 +238,8 @@ private:
             if (factory->isValid()) {
                 Factory localFactory;
                 std::swap(localFactory, *factory); // Swap before executing, to avoid recursion
-                const_cast<std::remove_const_t<T> &>(*(m_data.toStrongRef()))
-                        = localFactory.create();
+                localFactory.populate(
+                        m_data.toStrongRef().template constCast<std::remove_const_t<T>>());
             }
         }
     }

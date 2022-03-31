@@ -93,15 +93,24 @@ static bool searchBaseAndExtensionTypes(QQmlJSScopePtr type, const Action &check
     return false;
 }
 
-QQmlJSScope::QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope)
-    : m_parentScope(parentScope), m_scopeType(type) {}
-
-QQmlJSScope::Ptr QQmlJSScope::create(ScopeType type, const QQmlJSScope::Ptr &parentScope)
+void QQmlJSScope::reparent(const QQmlJSScope::Ptr &parentScope, const QQmlJSScope::Ptr &childScope)
 {
-    QSharedPointer<QQmlJSScope> childScope(new QQmlJSScope{type, parentScope});
+    if (const QQmlJSScope::Ptr parent = childScope->m_parentScope.toStrongRef())
+        parent->m_childScopes.removeOne(childScope);
     if (parentScope)
-        parentScope->m_childScopes.push_back(childScope);
-    return childScope;
+        parentScope->m_childScopes.append(childScope);
+    childScope->m_parentScope = parentScope;
+}
+
+QQmlJSScope::Ptr QQmlJSScope::clone(const ConstPtr &origin)
+{
+    if (origin.isNull())
+        return QQmlJSScope::Ptr();
+    QQmlJSScope::Ptr cloned = create();
+    *cloned = *origin;
+    if (QQmlJSScope::Ptr parent = cloned->parentScope())
+        parent->m_childScopes.append(cloned);
+    return cloned;
 }
 
 void QQmlJSScope::insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier)
@@ -300,8 +309,9 @@ QTypeRevision QQmlJSScope::resolveType(
         const QQmlJSScope::Ptr &self, const QQmlJSScope::ContextualTypes &context,
         QSet<QString> *usedTypes)
 {
-    const auto baseType = findType(self->m_baseTypeName, context, usedTypes);
-    if (!self->m_baseType.scope && !self->m_baseTypeName.isEmpty())
+    const QString baseTypeName = self->baseTypeName();
+    const auto baseType = findType(baseTypeName, context, usedTypes);
+    if (!self->m_baseType.scope && !baseTypeName.isEmpty())
         self->m_baseType = { baseType.scope, baseType.revision };
 
     if (!self->m_attachedType && !self->m_attachedTypeName.isEmpty())
@@ -365,7 +375,7 @@ void QQmlJSScope::updateChildScope(
             const auto propertyIt = type->m_properties.find(childScope->internalName());
             if (propertyIt != type->m_properties.end()) {
                 childScope->m_baseType.scope = QQmlJSScope::ConstPtr(propertyIt->type());
-                childScope->m_baseTypeName = propertyIt->typeName();
+                childScope->setBaseTypeName(propertyIt->typeName());
                 return true;
             }
             return false;
@@ -375,7 +385,7 @@ void QQmlJSScope::updateChildScope(
         if (const auto attachedBase = findType(
                     childScope->internalName(), contextualTypes, usedTypes).scope) {
             childScope->m_baseType.scope = attachedBase->attachedType();
-            childScope->m_baseTypeName = attachedBase->attachedTypeName();
+            childScope->setBaseTypeName(attachedBase->attachedTypeName());
         }
         break;
     default:
@@ -426,8 +436,10 @@ void QQmlJSScope::resolveEnums(const QQmlJSScope::Ptr &self, const QQmlJSScope::
          ++it) {
         if (it->type())
             continue;
-        auto enumScope = QQmlJSScope::create(EnumScope, self);
-        enumScope->m_baseTypeName = QStringLiteral("int");
+        QQmlJSScope::Ptr enumScope = QQmlJSScope::create();
+        reparent(self, enumScope);
+        enumScope->m_scopeType = EnumScope;
+        enumScope->setBaseTypeName(QStringLiteral("int"));
         enumScope->m_baseType.scope = intType;
         enumScope->m_semantics = AccessSemantics::Value;
         enumScope->m_internalName = self->internalName() + QStringLiteral("::") + it->name();
@@ -539,6 +551,28 @@ bool QQmlJSScope::hasInterface(const QString &name) const
             this, [&](const QQmlJSScope *scope) { return scope->m_interfaceNames.contains(name); });
 }
 
+void QQmlJSScope::setBaseTypeName(const QString &baseTypeName)
+{
+    m_flags.setFlag(HasBaseTypeError, false);
+    m_baseTypeNameOrError = baseTypeName;
+}
+
+QString QQmlJSScope::baseTypeName() const
+{
+    return m_flags.testFlag(HasBaseTypeError) ? QString() : m_baseTypeNameOrError;
+}
+
+void QQmlJSScope::setBaseTypeError(const QString &baseTypeError)
+{
+    m_flags.setFlag(HasBaseTypeError);
+    m_baseTypeNameOrError = baseTypeError;
+}
+
+QString QQmlJSScope::baseTypeError() const
+{
+    return m_flags.testFlag(HasBaseTypeError) ? m_baseTypeNameOrError : QString();
+}
+
 QString QQmlJSScope::attachedTypeName() const
 {
     QString name;
@@ -572,7 +606,7 @@ bool QQmlJSScope::isResolved() const
         return m_internalName.isEmpty() || !m_baseType.scope.isNull();
     }
 
-    return m_baseTypeName.isEmpty() || !m_baseType.scope.isNull();
+    return m_baseTypeNameOrError.isEmpty() || !m_baseType.scope.isNull();
 }
 
 bool QQmlJSScope::isFullyResolved() const
@@ -603,13 +637,12 @@ bool QQmlJSScope::Export::isValid() const
     return m_version.isValid() || !m_package.isEmpty() || !m_type.isEmpty();
 }
 
-QQmlJSScope QDeferredFactory<QQmlJSScope>::create() const
+void QDeferredFactory<QQmlJSScope>::populate(const QSharedPointer<QQmlJSScope> &scope) const
 {
     QQmlJSTypeReader typeReader(m_importer, m_filePath);
-    QQmlJSScope::Ptr result = typeReader();
+    typeReader(scope);
     m_importer->m_warnings.append(typeReader.errors());
-    result->setInternalName(QFileInfo(m_filePath).baseName());
-    return std::move(*result);
+    scope->setInternalName(QFileInfo(m_filePath).baseName());
 }
 
 bool QQmlJSScope::canAssign(const QQmlJSScope::ConstPtr &derived) const

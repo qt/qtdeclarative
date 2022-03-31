@@ -61,7 +61,7 @@ public:
         , m_qmltypesFiles(qmltypesFiles)
     {}
 
-    QQmlJSScope::Ptr operator()();
+    bool operator()(const QSharedPointer<QQmlJSScope> &scope);
     QList<QQmlJS::DiagnosticMessage> errors() const { return m_errors; }
 
 private:

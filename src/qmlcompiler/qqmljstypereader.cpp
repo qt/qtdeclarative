@@ -40,13 +40,13 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlJSScope::Ptr QQmlJSTypeReader::operator()()
+bool QQmlJSTypeReader::operator ()(const QSharedPointer<QQmlJSScope> &scope)
 {
     using namespace QQmlJS::AST;
     const QFileInfo info { m_file };
-    QString baseName = info.baseName();
-    const QString scopeName = baseName.endsWith(QStringLiteral(".ui")) ? baseName.chopped(3)
-                                                                       : baseName;
+    const QString baseName = info.baseName();
+    scope->setInternalName(baseName.endsWith(QStringLiteral(".ui")) ? baseName.chopped(3)
+                                                                    : baseName);
 
     QQmlJS::Engine engine;
     QQmlJS::Lexer lexer(&engine);
@@ -55,16 +55,10 @@ QQmlJSScope::Ptr QQmlJSTypeReader::operator()()
     const bool isESModule = lowerSuffix == QLatin1String("mjs");
     const bool isJavaScript = isESModule || lowerSuffix == QLatin1String("js");
 
-    auto errorResult = [&](){
-        QQmlJSScope::Ptr result = QQmlJSScope::create(
-                    isJavaScript ? QQmlJSScope::JSLexicalScope : QQmlJSScope::QMLScope);
-        result->setInternalName(scopeName);
-        return result;
-    };
 
     QFile file(m_file);
     if (!file.open(QFile::ReadOnly))
-        return errorResult();
+        return false;
 
     QString code = QString::fromUtf8(file.readAll());
     file.close();
@@ -76,22 +70,19 @@ QQmlJSScope::Ptr QQmlJSTypeReader::operator()()
                                                     : parser.parseProgram())
                                       : parser.parse();
     if (!success)
-        return errorResult();
+        return false;
 
     QQmlJS::AST::Node *rootNode = parser.rootNode();
     if (!rootNode)
-        return errorResult();
+        return false;
 
     QQmlJSImportVisitor membersVisitor(
-                m_importer,
+                scope, m_importer,
                 QQmlJSImportVisitor::implicitImportDirectory(
                     m_file, m_importer->resourceFileMapper()),
                 m_qmltypesFiles, m_file, code);
     rootNode->accept(&membersVisitor);
-    auto result = membersVisitor.result();
-    Q_ASSERT(result);
-    result->setInternalName(scopeName);
-    return result;
+    return true;
 }
 
 QT_END_NAMESPACE

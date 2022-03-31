@@ -156,7 +156,7 @@ bool FindWarningVisitor::visit(QQmlJS::AST::IdentifierExpression *idexp)
 FindWarningVisitor::FindWarningVisitor(QQmlJSImporter *importer, QStringList qmltypesFiles,
                                        QString code, QList<QQmlJS::SourceLocation> comments,
                                        QString fileName, bool silent)
-    : QQmlJSImportVisitor(importer,
+    : QQmlJSImportVisitor(QQmlJSScope::create(), importer,
                           implicitImportDirectory(fileName, importer->resourceFileMapper()),
                           qmltypesFiles, fileName, code, silent)
 {
