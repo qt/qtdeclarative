@@ -41,7 +41,7 @@ ListView {
     delegate: SwipeDelegate {
         id: swipeDelegate
         text: sender + " - " + title
-        width: parent.width
+        width: listView.width
 
         required property string sender
         required property string title
