@@ -222,19 +222,13 @@ public:
         return QWeakPointer<T>(*this).toStrongRef();
     }
 
-    bool isNull() const
-    {
-        lazyLoad();
-        return m_data.isNull();
-    }
+    bool isNull() const { return m_data.isNull(); }
 
     explicit operator bool() const noexcept { return !isNull(); }
     bool operator !() const noexcept { return isNull(); }
 
     friend bool operator==(const QDeferredWeakPointer &a, const QDeferredWeakPointer &b)
     {
-        a.lazyLoad();
-        b.lazyLoad();
         return a.m_data == b.m_data;
     }
 
