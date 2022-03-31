@@ -32,9 +32,9 @@
 #include <QtCore/qfileinfo.h>
 
 namespace Qmltc {
-Visitor::Visitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
+Visitor::Visitor(const QQmlJSScope::Ptr &target, QQmlJSImporter *importer, QQmlJSLogger *logger,
                  const QString &implicitImportDirectory, const QStringList &qmltypesFiles)
-    : QQmlJSImportVisitor(importer, logger, implicitImportDirectory, qmltypesFiles)
+    : QQmlJSImportVisitor(target, importer, logger, implicitImportDirectory, qmltypesFiles)
 {
 }
 

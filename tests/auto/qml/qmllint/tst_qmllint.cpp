@@ -436,8 +436,8 @@ void TestQmllint::dirtyQmlCode_data()
                                          << QString("Warning: %1:5:35: Property \"weDontKnowIt\" "
                                                     "not found on type \"CustomPalette\"")
                                          << QString() << QString() << false;
-    QTest::newRow("inheritanceCylce") << QStringLiteral("Cycle1.qml")
-                                      << QString("Warning: %1: Cycle2 is part of an inheritance "
+    QTest::newRow("inheritanceCycle") << QStringLiteral("Cycle1.qml")
+                                      << QString("Warning: %1: Cycle1 is part of an inheritance "
                                                  "cycle: Cycle2 -> Cycle3 -> Cycle1 -> Cycle2")
                                       << QString() << QString() << false;
     QTest::newRow("incompleteQmltypes3")

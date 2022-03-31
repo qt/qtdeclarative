@@ -207,6 +207,7 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
             m_logger->setCode(code);
             m_logger->setSilent(silent || json);
             FindWarningVisitor v {
+                QQmlJSScope::create(),
                 &m_importer,
                 m_logger.get(),
                 qmldirFiles,

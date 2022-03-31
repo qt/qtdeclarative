@@ -59,12 +59,13 @@ struct QQmlJSResourceFileMapper;
 class QQmlJSImportVisitor : public QQmlJS::AST::Visitor
 {
 public:
-    QQmlJSImportVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
+    QQmlJSImportVisitor(const QQmlJSScope::Ptr &target,
+                        QQmlJSImporter *importer, QQmlJSLogger *logger,
                         const QString &implicitImportDirectory,
                         const QStringList &qmldirFiles = QStringList());
     ~QQmlJSImportVisitor();
 
-    QQmlJSScope::Ptr result() const;
+    QQmlJSScope::Ptr result() const { return m_exportedRootScope; }
 
     QQmlJSLogger *logger() { return m_logger; }
 
@@ -157,7 +158,7 @@ protected:
     QStringList m_qmldirFiles;
     QQmlJSScope::Ptr m_currentScope;
     QQmlJSScope::Ptr m_savedBindingOuterScope;
-    QQmlJSScope::Ptr m_exportedRootScope;
+    const QQmlJSScope::Ptr m_exportedRootScope;
     QQmlJSScope::ConstPtr m_globalScope;
     QQmlJSScopesById m_scopesById;
     QQmlJSImporter::ImportedTypes m_rootScopeImports;
@@ -199,6 +200,7 @@ protected:
     void breakInheritanceCycles(const QQmlJSScope::Ptr &scope);
     void checkDeprecation(const QQmlJSScope::ConstPtr &scope);
     void checkGroupedAndAttachedScopes(QQmlJSScope::ConstPtr scope);
+    bool rootScopeIsValid() const { return m_exportedRootScope->sourceLocation().isValid(); }
 
     QQmlJSLogger *m_logger;
     bool parseLiteralBinding(const QString name, const QQmlJS::AST::Statement *statement);
@@ -273,6 +275,10 @@ private:
             const QString &what,
             const QQmlJS::SourceLocation &srcLocation = QQmlJS::SourceLocation());
     void addImportWithLocation(const QString &name, const QQmlJS::SourceLocation &loc);
+    void populateCurrentScope(QQmlJSScope::ScopeType type, const QString &name,
+                              const QQmlJS::SourceLocation &location);
+    void enterRootScope(QQmlJSScope::ScopeType type, const QString &name,
+                           const QQmlJS::SourceLocation &location);
 };
 
 QT_END_NAMESPACE

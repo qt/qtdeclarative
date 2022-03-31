@@ -207,7 +207,8 @@ int main(int argc, char **argv)
     logger.setCode(sourceCode);
     setupLogger(logger);
 
-    Qmltc::Visitor visitor(&importer, &logger,
+    QQmlJSScope::Ptr target = QQmlJSScope::create();
+    Qmltc::Visitor visitor(target, &importer, &logger,
                            QQmlJSImportVisitor::implicitImportDirectory(url, &mapper), qmldirFiles);
     Qmltc::TypeResolver typeResolver { &importer };
     typeResolver.init(visitor, document.program);

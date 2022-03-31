@@ -45,7 +45,8 @@ namespace Qmltc {
 class Visitor : public QQmlJSImportVisitor
 {
 public:
-    Visitor(QQmlJSImporter *importer, QQmlJSLogger *logger, const QString &implicitImportDirectory,
+    Visitor(const QQmlJSScope::Ptr &target, QQmlJSImporter *importer, QQmlJSLogger *logger,
+            const QString &implicitImportDirectory,
             const QStringList &qmltypesFiles = QStringList());
 
     bool visit(QQmlJS::AST::UiInlineComponent *) override;

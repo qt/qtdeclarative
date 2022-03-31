@@ -87,7 +87,8 @@ class tst_qqmljsscope : public QQmlDataTest
         logger.setFileName(url);
         logger.setCode(sourceCode);
         logger.setSilent(true);
-        QQmlJSImportVisitor visitor(&importer, &logger, dataDirectory());
+        QQmlJSScope::Ptr target = QQmlJSScope::create();
+        QQmlJSImportVisitor visitor(target, &importer, &logger, dataDirectory());
         QQmlJSTypeResolver typeResolver { &importer };
         typeResolver.init(&visitor, document.program);
         return visitor.result();
