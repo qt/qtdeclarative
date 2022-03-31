@@ -64,7 +64,8 @@ static bool isOrUnderComponent(QQmlJSScope::ConstPtr type)
 
 QmltcVisitor::QmltcVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
                            const QString &implicitImportDirectory, const QStringList &qmldirFiles)
-    : QQmlJSImportVisitor(importer, logger, implicitImportDirectory, qmldirFiles)
+    : QQmlJSImportVisitor(
+            QQmlJSScope::create(), importer, logger, implicitImportDirectory, qmldirFiles)
 {
     m_qmlTypeNames.append(QFileInfo(logger->fileName()).baseName()); // put document root
 }
@@ -267,7 +268,7 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiInlineComponent *component)
 void QmltcVisitor::endVisit(QQmlJS::AST::UiProgram *program)
 {
     QQmlJSImportVisitor::endVisit(program);
-    if (!m_exportedRootScope) // in case we failed badly
+    if (!rootScopeIsValid()) // in case we failed badly
         return;
 
     QHash<QQmlJSScope::ConstPtr, QList<QQmlJSMetaPropertyBinding>> bindings;

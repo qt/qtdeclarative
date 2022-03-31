@@ -483,7 +483,7 @@ void TestQmllint::dirtyQmlCode_data()
     QTest::newRow("inheritanceCycle")
             << QStringLiteral("Cycle1.qml")
             << Result { { Message {
-                       QStringLiteral("Cycle2 is part of an inheritance cycle: Cycle2 -> Cycle3 "
+                       QStringLiteral("Cycle1 is part of an inheritance cycle: Cycle2 -> Cycle3 "
                                       "-> Cycle1 -> Cycle2"),
                        2, 1 } } };
     QTest::newRow("badQmldirImportAndDepend")

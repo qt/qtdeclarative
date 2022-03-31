@@ -95,7 +95,8 @@ public:
         CustomParser = 0x10,
         Array = 0x20,
         InlineComponent = 0x40,
-        WrappedInImplicitComponent = 0x80
+        WrappedInImplicitComponent = 0x80,
+        HasBaseTypeError = 0x100
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
@@ -241,8 +242,7 @@ public:
         UnnamedPropertyTarget // default property bindings, where property name is unspecified
     };
 
-    static QQmlJSScope::Ptr create(ScopeType type = QQmlJSScope::QMLScope,
-                                   const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
+    static QQmlJSScope::Ptr create() { return QSharedPointer<QQmlJSScope>(new QQmlJSScope); }
     static QQmlJSScope::Ptr clone(const QQmlJSScope::ConstPtr &origin);
     static QQmlJSScope::ConstPtr findCurrentQMLScope(const QQmlJSScope::ConstPtr &scope);
 
@@ -256,6 +256,8 @@ public:
         return QQmlJSScope::WeakConstPtr(m_parentScope).toStrongRef();
     }
 
+    static void reparent(const QQmlJSScope::Ptr &parentScope, const QQmlJSScope::Ptr &childScope);
+
     void insertJSIdentifier(const QString &name, const JavaScriptIdentifier &identifier);
 
     // inserts property as qml identifier as well as the corresponding
@@ -264,6 +266,7 @@ public:
     bool isIdInCurrentScope(const QString &id) const;
 
     ScopeType scopeType() const { return m_scopeType; }
+    void setScopeType(ScopeType type) { m_scopeType = type; }
 
     void addOwnMethod(const QQmlJSMetaMethod &method) { m_methods.insert(method.methodName(), method); }
     QMultiHash<QString, QQmlJSMetaMethod> ownMethods() const { return m_methods; }
@@ -322,11 +325,15 @@ public:
 
     // If isComposite(), this is the QML/JS name of the prototype. Otherwise it's the
     // relevant base class (in the hierarchy starting from QObject) of a C++ type.
-    void setBaseTypeName(const QString &baseTypeName) { m_baseTypeName = baseTypeName; }
-    QString baseTypeName() const { return m_baseTypeName; }
+    void setBaseTypeName(const QString &baseTypeName);
+    QString baseTypeName() const;
+
     QQmlJSScope::ConstPtr baseType() const { return m_baseType.scope; }
     QTypeRevision baseTypeRevision() const { return m_baseType.revision; }
+
     void clearBaseType() { m_baseType = {}; }
+    void setBaseTypeError(const QString &baseTypeError);
+    QString baseTypeError() const;
 
     void addOwnProperty(const QQmlJSMetaProperty &prop) { m_properties.insert(prop.propertyName(), prop); }
     QHash<QString, QQmlJSMetaProperty> ownProperties() const { return m_properties; }
@@ -552,7 +559,7 @@ public:
     };
 
 private:
-    QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
+    QQmlJSScope() = default;
     QQmlJSScope(const QQmlJSScope &) = default;
     QQmlJSScope &operator=(const QQmlJSScope &) = default;
 
@@ -587,7 +594,7 @@ private:
 
     QString m_filePath;
     QString m_internalName;
-    QString m_baseTypeName;
+    QString m_baseTypeNameOrError;
 
     // We only need the revision for the base type as inheritance is
     // the only relation between two types where the revisions matter.
@@ -627,8 +634,6 @@ public:
         m_filePath(filePath), m_importer(importer)
     {}
 
-    QQmlJSScope create() const;
-
     bool isValid() const
     {
         return !m_filePath.isEmpty() && m_importer != nullptr;
@@ -645,6 +650,14 @@ public:
     }
 
 private:
+    friend class QDeferredSharedPointer<QQmlJSScope>;
+    friend class QDeferredSharedPointer<const QQmlJSScope>;
+    friend class QDeferredWeakPointer<QQmlJSScope>;
+    friend class QDeferredWeakPointer<const QQmlJSScope>;
+
+    // Should only be called when lazy-loading the type in a deferred pointer.
+    void populate(const QSharedPointer<QQmlJSScope> &scope) const;
+
     QString m_filePath;
     QQmlJSImporter *m_importer = nullptr;
     bool m_isSingleton = false;

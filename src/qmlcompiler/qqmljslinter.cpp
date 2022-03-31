@@ -311,7 +311,8 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
             m_logger->setFileName(m_useAbsolutePath ? info.absoluteFilePath() : filename);
             m_logger->setCode(code);
             m_logger->setSilent(silent || json);
-            QQmlJSImportVisitor v { &m_importer, m_logger.get(),
+            QQmlJSScope::Ptr target = QQmlJSScope::create();
+            QQmlJSImportVisitor v { target, &m_importer, m_logger.get(),
                                     QQmlJSImportVisitor::implicitImportDirectory(
                                             m_logger->fileName(), m_importer.resourceFileMapper()),
                                     qmldirFiles };

@@ -2,5 +2,6 @@ import Cycle
 import QtQuick
 
 Item {
-    MenuItem {}
+    property MenuItem item: a
+    MenuItem { id: a }
 }

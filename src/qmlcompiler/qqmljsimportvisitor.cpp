@@ -74,15 +74,17 @@ inline QString getScopeName(const QQmlJSScope::ConstPtr &scope, QQmlJSScope::Sco
     return scope->baseTypeName();
 }
 
-QQmlJSImportVisitor::QQmlJSImportVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
-                                         const QString &implicitImportDirectory,
-                                         const QStringList &qmldirFiles)
+QQmlJSImportVisitor::QQmlJSImportVisitor(
+        const QQmlJSScope::Ptr &target, QQmlJSImporter *importer, QQmlJSLogger *logger,
+        const QString &implicitImportDirectory, const QStringList &qmldirFiles)
     : m_implicitImportDirectory(implicitImportDirectory),
       m_qmldirFiles(qmldirFiles),
-      m_currentScope(QQmlJSScope::create(QQmlJSScope::JSFunctionScope)),
+      m_currentScope(QQmlJSScope::create()),
+      m_exportedRootScope(target),
       m_importer(importer),
       m_logger(logger)
 {
+    m_currentScope->setScopeType(QQmlJSScope::JSFunctionScope);
     Q_ASSERT(logger); // must be valid
 
     m_globalScope = m_currentScope;
@@ -116,15 +118,31 @@ QQmlJSImportVisitor::QQmlJSImportVisitor(QQmlJSImporter *importer, QQmlJSLogger 
 
 QQmlJSImportVisitor::~QQmlJSImportVisitor() = default;
 
-void QQmlJSImportVisitor::enterEnvironment(QQmlJSScope::ScopeType type, const QString &name,
-                                           const QQmlJS::SourceLocation &location)
+void QQmlJSImportVisitor::populateCurrentScope(
+        QQmlJSScope::ScopeType type, const QString &name, const QQmlJS::SourceLocation &location)
 {
-    m_currentScope = QQmlJSScope::create(type, m_currentScope);
+    m_currentScope->setScopeType(type);
     setScopeName(m_currentScope, type, name);
     m_currentScope->setIsComposite(true);
     m_currentScope->setFilePath(QFileInfo(m_logger->fileName()).absoluteFilePath());
     m_currentScope->setSourceLocation(location);
     m_scopesByIrLocation.insert({ location.startLine, location.startColumn }, m_currentScope);
+}
+
+void QQmlJSImportVisitor::enterRootScope(QQmlJSScope::ScopeType type, const QString &name, const QQmlJS::SourceLocation &location)
+{
+    QQmlJSScope::reparent(m_currentScope, m_exportedRootScope);
+    m_currentScope = m_exportedRootScope;
+    populateCurrentScope(type, name, location);
+}
+
+void QQmlJSImportVisitor::enterEnvironment(QQmlJSScope::ScopeType type, const QString &name,
+                                           const QQmlJS::SourceLocation &location)
+{
+    QQmlJSScope::Ptr newScope = QQmlJSScope::create();
+    QQmlJSScope::reparent(m_currentScope, newScope);
+    m_currentScope = std::move(newScope);
+    populateCurrentScope(type, name, location);
 }
 
 bool QQmlJSImportVisitor::enterEnvironmentNonUnique(QQmlJSScope::ScopeType type,
@@ -293,11 +311,6 @@ void QQmlJSImportVisitor::resolveAliasesAndIds()
                           Log_Alias, object->sourceLocation());
         }
     }
-}
-
-QQmlJSScope::Ptr QQmlJSImportVisitor::result() const
-{
-    return m_exportedRootScope;
 }
 
 QString QQmlJSImportVisitor::implicitImportDirectory(
@@ -1048,28 +1061,34 @@ void QQmlJSImportVisitor::breakInheritanceCycles(const QQmlJSScope::Ptr &origina
         if (scopes.contains(scope)) {
             QString inheritenceCycle;
             for (const auto &seen : qAsConst(scopes)) {
-                if (!inheritenceCycle.isEmpty())
-                    inheritenceCycle.append(QLatin1String(" -> "));
                 inheritenceCycle.append(seen->baseTypeName());
+                inheritenceCycle.append(QLatin1String(" -> "));
             }
+            inheritenceCycle.append(scopes.first()->baseTypeName());
 
-            m_logger->log(QStringLiteral("%1 is part of an inheritance cycle: %2")
-                                  .arg(scope->internalName())
-                                  .arg(inheritenceCycle),
-                          Log_InheritanceCycle, scope->sourceLocation());
+            const QString message = QStringLiteral("%1 is part of an inheritance cycle: %2")
+                                            .arg(scope->internalName(), inheritenceCycle);
+            m_logger->log(message, Log_InheritanceCycle, scope->sourceLocation());
             originalScope->clearBaseType();
+            originalScope->setBaseTypeError(message);
             break;
         }
 
         scopes.append(scope);
 
         const auto newScope = scope->baseType();
-        if (newScope.isNull() && !scope->baseTypeName().isEmpty()) {
-            m_logger->log(scope->baseTypeName()
-                                  + QStringLiteral(" was not found. Did you add all import paths?"),
-                          Log_Import, scope->sourceLocation(), true, true,
-                          QQmlJSUtils::didYouMean(scope->baseTypeName(), m_rootScopeImports.keys(),
-                                                  scope->sourceLocation()));
+        if (newScope.isNull()) {
+            const QString error = scope->baseTypeError();
+            const QString name = scope->baseTypeName();
+            if (!error.isEmpty()) {
+                m_logger->log(error, Log_Import, scope->sourceLocation(), true, true);
+            } else if (!name.isEmpty()) {
+                m_logger->log(
+                        name + QStringLiteral(" was not found. Did you add all import paths?"),
+                        Log_Import, scope->sourceLocation(), true, true,
+                        QQmlJSUtils::didYouMean(scope->baseTypeName(), m_rootScopeImports.keys(),
+                                                scope->sourceLocation()));
+            }
         }
 
         scope = newScope;
@@ -1206,10 +1225,11 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
 
     Q_ASSERT(!superType.isEmpty());
     if (superType.front().isUpper()) {
-        enterEnvironment(QQmlJSScope::QMLScope, superType, definition->firstSourceLocation());
-        if (!m_exportedRootScope) {
-            m_exportedRootScope = m_currentScope;
-            m_exportedRootScope->setIsSingleton(m_rootIsSingleton);
+        if (rootScopeIsValid()) {
+            enterEnvironment(QQmlJSScope::QMLScope, superType, definition->firstSourceLocation());
+        } else {
+            enterRootScope(QQmlJSScope::QMLScope, superType, definition->firstSourceLocation());
+            m_currentScope->setIsSingleton(m_rootIsSingleton);
         }
 
         const QTypeRevision revision = QQmlJSScope::resolveTypes(
@@ -1223,7 +1243,7 @@ bool QQmlJSImportVisitor::visit(UiObjectDefinition *definition)
     } else {
         enterEnvironmentNonUnique(QQmlJSScope::GroupedPropertyScope, superType,
                                   definition->firstSourceLocation());
-        Q_ASSERT(m_exportedRootScope);
+        Q_ASSERT(rootScopeIsValid());
         QQmlJSScope::resolveTypes(m_currentScope, m_rootScopeImports, &m_usedTypes);
     }
 
@@ -2118,7 +2138,7 @@ void QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiObjectBinding *uiob)
 
 bool QQmlJSImportVisitor::visit(ExportDeclaration *)
 {
-    Q_ASSERT(!m_exportedRootScope.isNull());
+    Q_ASSERT(rootScopeIsValid());
     Q_ASSERT(m_exportedRootScope != m_globalScope);
     Q_ASSERT(m_currentScope == m_globalScope);
     m_currentScope = m_exportedRootScope;
@@ -2127,18 +2147,17 @@ bool QQmlJSImportVisitor::visit(ExportDeclaration *)
 
 void QQmlJSImportVisitor::endVisit(ExportDeclaration *)
 {
-    Q_ASSERT(!m_exportedRootScope.isNull());
+    Q_ASSERT(rootScopeIsValid());
     m_currentScope = m_exportedRootScope->parentScope();
     Q_ASSERT(m_currentScope == m_globalScope);
 }
 
 bool QQmlJSImportVisitor::visit(ESModule *module)
 {
-    enterEnvironment(QQmlJSScope::JSLexicalScope, QStringLiteral("module"),
-                     module->firstSourceLocation());
-    Q_ASSERT(m_exportedRootScope.isNull());
-    m_exportedRootScope = m_currentScope;
-    m_exportedRootScope->setIsScript(true);
+    Q_ASSERT(!rootScopeIsValid());
+    enterRootScope(
+            QQmlJSScope::JSLexicalScope, QStringLiteral("module"), module->firstSourceLocation());
+    m_currentScope->setIsScript(true);
     importBaseModules();
     leaveEnvironment();
     return true;
@@ -2152,9 +2171,10 @@ void QQmlJSImportVisitor::endVisit(ESModule *)
 bool QQmlJSImportVisitor::visit(Program *)
 {
     Q_ASSERT(m_globalScope == m_currentScope);
-    Q_ASSERT(m_exportedRootScope.isNull());
-    m_exportedRootScope = m_currentScope;
+    Q_ASSERT(!rootScopeIsValid());
+    *m_exportedRootScope = std::move(*QQmlJSScope::clone(m_currentScope));
     m_exportedRootScope->setIsScript(true);
+    m_currentScope = m_exportedRootScope;
     importBaseModules();
     return true;
 }
