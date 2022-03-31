@@ -955,10 +955,10 @@ TestCase {
 //        // Cause displacement to be changed. The warning isn't triggered if we don't do this.
 //        tumbler.contentItem.offset += 1;
 
-        ignoreWarning("Tumbler: attached properties must be accessed through a delegate item that has a parent");
+        ignoreWarning(/.*Tumbler: attached properties must be accessed through a delegate item that has a parent/);
         createTemporaryObject(noParentDelegateComponent, null);
 
-        ignoreWarning("Tumbler: attempting to access attached property on item without an \"index\" property");
+        ignoreWarning(/.*Tumbler: attempting to access attached property on item without an \"index\" property/);
         var object = createTemporaryObject(noParentDelegateComponent, testCase);
         verify(object);
     }
