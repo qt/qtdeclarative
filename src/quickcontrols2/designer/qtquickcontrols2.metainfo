@@ -71,6 +71,19 @@ MetaInfo {
     }
 
     Type {
+        name: "QtQuick.Controls.Control"
+        icon: "images/control-icon16.png"
+
+        ItemLibraryEntry {
+            name: "Control"
+            category: "Qt Quick - Controls 2"
+            libraryIcon: "images/control-icon.png"
+            version: "2.0"
+            requiredImport: "QtQuick.Controls"
+        }
+    }
+
+    Type {
         name: "QtQuick.Controls.DelayButton"
         icon: "images/button-icon16.png"
 
