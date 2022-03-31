@@ -45,6 +45,7 @@ ComboBox {
         highlighted: control.highlightedIndex === index
 
         required property int index
+        required property var modelData
     }
 
     indicator: Canvas {

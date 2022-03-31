@@ -59,6 +59,7 @@ Tumbler {
         opacity: 1.0 - Math.abs(Tumbler.displacement) / (control.visibleItemCount / 2)
 
         required property var modelData
+        required property int index
     }
 
     Rectangle {
