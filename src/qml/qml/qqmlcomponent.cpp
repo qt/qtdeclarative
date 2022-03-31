@@ -325,6 +325,7 @@ void QQmlComponentPrivate::clear()
     }
 
     compilationUnit.reset();
+    loadedType = {};
 }
 
 QObject *QQmlComponentPrivate::doBeginCreate(QQmlComponent *q, QQmlContext *context)
@@ -449,7 +450,7 @@ QQmlComponent::Status QQmlComponent::status() const
         return Loading;
     else if (!d->state.errors.isEmpty())
         return Error;
-    else if (d->engine && d->compilationUnit)
+    else if (d->engine && (d->compilationUnit || d->loadedType.isValid()))
         return Ready;
     else
         return Null;
@@ -571,6 +572,35 @@ QQmlComponent::QQmlComponent(QQmlEngine *engine, const QUrl &url, CompilationMod
 {
     Q_D(QQmlComponent);
     d->loadUrl(url, mode);
+}
+
+/*!
+    Create a QQmlComponent from the given \a uri and \a typeName and give it
+    the specified \a parent and \a engine. If possible, the component will
+    be loaded synchronously.
+
+    \sa loadFromModule()
+    \since 6.5
+    \overload
+*/
+QQmlComponent::QQmlComponent(QQmlEngine *engine, QAnyStringView uri, QAnyStringView typeName, QObject *parent)
+    : QQmlComponent(engine, uri, typeName, QQmlComponent::PreferSynchronous, parent)
+{
+
+}
+
+/*!
+    Create a QQmlComponent from the given \a uri and \a typeName and give it
+    the specified \a parent and \a engine. If \a mode is \l Asynchronous,
+    the component will be loaded and compiled asynchronously.
+
+    \sa loadFromModule()
+    \overload
+*/
+QQmlComponent::QQmlComponent(QQmlEngine *engine, QAnyStringView uri, QAnyStringView typeName, CompilationMode mode, QObject *parent)
+    : QQmlComponent(engine, parent)
+{
+    loadFromModule(uri, typeName, mode);
 }
 
 /*!
@@ -886,7 +916,9 @@ QObject *QQmlComponentPrivate::createWithProperties(QObject *parent, const QVari
     q->setInitialProperties(rv, properties);
     q->completeCreate();
 
-    if (!requiredProperties().empty()) {
+    // TODO: remove loadedType check; change requiredProperties to return
+    // something sensible
+    if (!loadedType.isValid() && !requiredProperties().empty()) {
         if (behavior == CreateWarnAboutRequiredProperties) {
             const RequiredProperties &unsetRequiredProperties = requiredProperties();
             for (const auto &unsetRequiredProperty : unsetRequiredProperties) {
@@ -993,13 +1025,18 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
     state.errors.clear();
     state.completePending = true;
 
-    enginePriv->referenceScarceResources();
     QObject *rv = nullptr;
-    state.creator.reset(new QQmlObjectCreator(std::move(context), compilationUnit, creationContext));
-    rv = state.creator->create(start);
-    if (!rv)
-        state.appendErrors(state.creator->errors);
-    enginePriv->dereferenceScarceResources();
+
+    if (!loadedType.isValid()) {
+        enginePriv->referenceScarceResources();
+        state.creator.reset(new QQmlObjectCreator(std::move(context), compilationUnit, creationContext));
+        rv = state.creator->create(start);
+        if (!rv)
+            state.appendErrors(state.creator->errors);
+        enginePriv->dereferenceScarceResources();
+    } else {
+        rv = loadedType.createWithQQmlData();
+    }
 
     if (rv) {
         QQmlData *ddata = QQmlData::get(rv);
@@ -1136,16 +1173,26 @@ void QQmlComponent::completeCreate()
 
 void QQmlComponentPrivate::completeCreate()
 {
-    const RequiredProperties& unsetRequiredProperties = requiredProperties();
-    for (const auto& unsetRequiredProperty: unsetRequiredProperties) {
-        QQmlError error = unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
-        state.errors.push_back(QQmlComponentPrivate::AnnotatedQmlError { error, true });
-    }
-    if (state.completePending) {
-        ++creationDepth;
-        QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
-        complete(ep, &state);
-        --creationDepth;
+    if (!loadedType.isValid()) {
+        const RequiredProperties& unsetRequiredProperties = requiredProperties();
+        for (const auto& unsetRequiredProperty: unsetRequiredProperties) {
+            QQmlError error = unsetRequiredPropertyToQQmlError(unsetRequiredProperty);
+            state.errors.push_back(QQmlComponentPrivate::AnnotatedQmlError { error, true });
+        }
+        if (state.completePending) {
+            ++creationDepth;
+            QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
+            complete(ep, &state);
+            --creationDepth;
+        }
+    } else {
+        /* TODO: we need a way to track required properties
+           We can directly set completePending to false, as finalize is only concerned
+           with setting up pending bindings, but that cannot happen here, as we're
+           dealing with a pure C++ type, which cannot have pending bindings
+        */
+        state.completePending = false;
+        QQmlEnginePrivate::get(engine)->inProgressCreations--;
     }
 }
 
@@ -1184,6 +1231,113 @@ QQmlComponentAttached *QQmlComponent::qmlAttachedProperties(QObject *obj)
     }
 
     return a;
+}
+
+struct LoadHelper final : QQmlTypeLoader::Blob
+{
+    LoadHelper(QQmlTypeLoader *loader, QAnyStringView uri)
+        : QQmlTypeLoader::Blob({}, QQmlDataBlob::QmlFile, loader)
+        , m_uri(uri.toString())
+
+    {
+        auto import = std::make_shared<PendingImport>();
+        import->uri = uri.toString();
+        QList<QQmlError> errorList;
+        Blob::addImport(import, &errorList);
+    }
+
+    struct ResolveTypeResult
+    {
+        enum Status { NoSuchModule, ModuleFound } status;
+        QQmlType type;
+    };
+
+    ResolveTypeResult resolveType(QAnyStringView typeName)
+    {
+        QQmlType type;
+        QQmlTypeModule *module = QQmlMetaType::typeModule(m_uri, QTypeRevision{});
+        if (!module)
+            return {ResolveTypeResult::NoSuchModule, type};
+        type = module->type(typeName.toString(), {});
+        if (type.isValid())
+            return {ResolveTypeResult::ModuleFound, type};
+        QTypeRevision versionReturn;
+        QList<QQmlError> errors;
+        QQmlImportNamespace *ns_return = nullptr;
+        m_importCache->resolveType(typeName.toString(), &type, &versionReturn,
+                                   &ns_return,
+                                   &errors);
+        return {ResolveTypeResult::ModuleFound, type};
+    }
+
+protected:
+    void dataReceived(const SourceCodeData &) override { Q_UNREACHABLE(); }
+    void initializeFromCachedUnit(const QQmlPrivate::CachedQmlUnit *) override { Q_UNREACHABLE(); }
+
+private:
+    QString m_uri;
+};
+
+/*!
+    Load the QQmlComponent for \a typeName in the module \a uri.
+    If the type is implemented via a QML file, \a mode is used to
+    load it. Types backed by C++ are always loaded synchronously.
+
+    \code
+    QQmlEngine engine;
+    QQmlComponent component(&engine);
+    component.loadFromModule("QtQuick", "Item");
+    // once the component is ready
+    std::unique_ptr<QObject> item(component.create());
+    Q_ASSERT(item->metaObject() == &QQuickItem::staticMetaObject);
+    \endcode
+
+    \since 6.5
+    \sa QQmlComponent::load
+ */
+void QQmlComponent::loadFromModule(QAnyStringView uri, QAnyStringView typeName,
+                                   QQmlComponent::CompilationMode mode)
+{
+    Q_D(QQmlComponent);
+
+    auto enginePriv = QQmlEnginePrivate::get(d->engine);
+    // LoadHelper must be on the Heap as it derives from QQmlRefCount
+    auto loadHelper = QQml::makeRefPointer<LoadHelper>(&enginePriv->typeLoader, uri);
+
+    auto [moduleStatus, type] = loadHelper->resolveType(typeName);
+    auto reportError = [&](QString msg) {
+        QQmlError error;
+        error.setDescription(msg);
+        d->state.errors.push_back(std::move(error));
+        emit statusChanged(Error);
+    };
+    if (moduleStatus == LoadHelper::ResolveTypeResult::NoSuchModule) {
+        reportError(QLatin1String(R"(No module named "%1" found)")
+                    .arg(uri.toString()));
+    } else if (!type.isValid()) {
+        reportError(QLatin1String(R"(Module "%1" contains no type named "%2")")
+                    .arg(uri.toString(), typeName.toString()));
+    } else if (type.isCreatable()) {
+        d->clear();
+        // mimic the progressChanged behavior from loadUrl
+        if (d->progress != 0) {
+            d->progress = 0;
+            emit progressChanged(0);
+        }
+        d->loadedType = type;
+        d->progress = 1;
+        emit progressChanged(1);
+        emit statusChanged(status());
+
+    } else if (type.isComposite()) {
+        loadUrl(type.sourceUrl(), mode);
+    } else if (type.isSingleton() || type.isCompositeSingleton()) {
+        reportError(QLatin1String(R"(%1 is a singleton, and cannot be loaded)")
+                    .arg(typeName.toString()));
+    } else {
+        reportError(QLatin1String("Could not load %1, as the type is uncreatable")
+                                 .arg(typeName.toString()));
+    }
 }
 
 /*!

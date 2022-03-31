@@ -52,6 +52,10 @@ public:
     QQmlComponent(QQmlEngine *, const QString &fileName, CompilationMode mode, QObject *parent = nullptr);
     QQmlComponent(QQmlEngine *, const QUrl &url, QObject *parent = nullptr);
     QQmlComponent(QQmlEngine *, const QUrl &url, CompilationMode mode, QObject *parent = nullptr);
+
+    QQmlComponent(QQmlEngine *engine, QAnyStringView uri, QAnyStringView typeName, QObject *parent = nullptr);
+    QQmlComponent(QQmlEngine *engine, QAnyStringView uri, QAnyStringView typeName, CompilationMode mode, QObject *parent = nullptr);
+
     ~QQmlComponent() override;
 
     enum Status { Null, Ready, Loading, Error };
@@ -89,6 +93,8 @@ public:
 public Q_SLOTS:
     void loadUrl(const QUrl &url);
     void loadUrl(const QUrl &url, CompilationMode mode);
+    void loadFromModule(QAnyStringView uri, QAnyStringView typeName,
+                        QQmlComponent::CompilationMode mode = PreferSynchronous);
     void setData(const QByteArray &, const QUrl &baseUrl);
 
 Q_SIGNALS:

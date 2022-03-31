@@ -70,7 +70,9 @@ public:
     int start;
     RequiredProperties& requiredProperties();
     bool hadTopLevelRequiredProperties() const;
+    // TODO: merge compilation unit and type
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
+    QQmlType loadedType;
 
     struct AnnotatedQmlError
     {
