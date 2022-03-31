@@ -48,6 +48,7 @@
 #include <QEasingCurve>
 #include <QTime>
 #include <QtCore/private/qnumeric_p.h>
+#include <QHash>
 
 #include <algorithm>
 

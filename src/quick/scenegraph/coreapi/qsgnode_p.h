@@ -51,7 +51,7 @@
 // We mean it.
 //
 
-#include <qglobal.h>
+#include <private/qglobal_p.h>
 
 #include "qsgnode.h"
 

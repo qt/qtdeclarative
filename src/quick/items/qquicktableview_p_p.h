@@ -63,6 +63,7 @@
 #include <QtQuick/private/qminimalflatset_p.h>
 #include <QtQuick/private/qquickflickable_p_p.h>
 #include <QtQuick/private/qquickitemviewfxitem_p_p.h>
+#include <QtQuick/private/qquickanimation_p.h>
 #include <QtQuick/private/qquickselectable_p.h>
 
 QT_BEGIN_NAMESPACE
@@ -286,6 +287,9 @@ public:
     bool inSetLocalViewportPos = false;
     bool inSyncViewportPosRecursive = false;
     bool inUpdateContentSize = false;
+    bool animate = true;
+    bool keyNavigationEnabled = true;
+    bool pointerNavigationEnabled = true;
 
     // isTransposed is currently only used by HeaderView.
     // Consider making it public.
@@ -323,14 +327,17 @@ public:
 
     QPointer<QItemSelectionModel> selectionModel;
 
-    int assignedPositionViewAtRow = 0;
-    int assignedPositionViewAtColumn = 0;
-    int positionViewAtRow = 0;
-    int positionViewAtColumn = 0;
+    int assignedPositionViewAtRowAfterRebuild = 0;
+    int assignedPositionViewAtColumnAfterRebuild = 0;
+    int positionViewAtRowAfterRebuild = 0;
+    int positionViewAtColumnAfterRebuild = 0;
     qreal positionViewAtRowOffset = 0;
     qreal positionViewAtColumnOffset = 0;
     Qt::Alignment positionViewAtRowAlignment = Qt::AlignTop;
     Qt::Alignment positionViewAtColumnAlignment = Qt::AlignLeft;
+
+    QQuickPropertyAnimation positionXAnimation;
+    QQuickPropertyAnimation positionYAnimation;
 
     QPoint selectionStartCell;
     QPoint selectionEndCell;
@@ -349,6 +356,8 @@ public:
 #endif
 
 public:
+    void init();
+
     QQuickTableViewAttached *getAttachedObject(const QObject *object) const;
 
     int modelIndexAtCell(const QPoint &cell) const;
@@ -472,6 +481,13 @@ public:
     void layoutChangedCallback(const QList<QPersistentModelIndex> &parents, QAbstractItemModel::LayoutChangeHint hint);
     void modelResetCallback();
 
+    void positionViewAtRow(int row, Qt::Alignment alignment, qreal offset);
+    void positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset);
+    bool scrollToRow(int row, Qt::Alignment alignment, qreal offset);
+    bool scrollToColumn(int column, Qt::Alignment alignment, qreal offset);
+    void ensureRowVisible(int row, bool contain, qreal offset);
+    void ensureColumnVisible(int column, bool contain, qreal offset);
+
     void scheduleRebuildIfFastFlick();
     void setLocalViewportX(qreal contentX);
     void setLocalViewportY(qreal contentY);
@@ -482,6 +498,10 @@ public:
     void selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected);
     void updateSelectedOnAllDelegateItems();
     void setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select);
+
+    bool currentInSelectionModel(const QPoint &cell) const;
+    void currentChangedInSelectionModel(const QModelIndex &current, const QModelIndex &previous);
+    void setCurrentOnDelegateItem(const QModelIndex &index, bool isCurrent);
 
     void fetchMoreData();
 
@@ -495,6 +515,9 @@ public:
                              const QVariant &value,
                              int serializedModelIndex,
                              QObject *object, bool init);
+
+    void setCurrentIndexFromTap(const QPointF &pos);
+    void setCurrentIndex(const QPoint &cell);
 
     // QQuickSelectable
     QQuickItem *selectionPointerHandlerTarget() const override;

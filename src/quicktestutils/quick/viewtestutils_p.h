@@ -43,6 +43,7 @@
 #include <QtCore/QAbstractListModel>
 #include <QtQml/QQmlExpression>
 #include <QtQuick/QQuickItem>
+#include <QtCore/private/qglobal_p.h>
 
 QT_FORWARD_DECLARE_CLASS(QQuickView)
 QT_FORWARD_DECLARE_CLASS(QQuickItemViewPrivate)

@@ -140,7 +140,7 @@ Q_QUICK_PRIVATE_EXPORT QColor qt_color_from_string(const QV4::Value &name)
     int len = str.length();
     //rgb/hsl color string has at least 7 characters
     if (!p || len > 255 || len <= 7)
-        return QColor(p);
+        return QColor::fromString(p);
     else {
         bool isRgb(false), isHsl(false), hasAlpha(false);
         Q_UNUSED(isHsl);
@@ -151,7 +151,7 @@ Q_QUICK_PRIVATE_EXPORT QColor qt_color_from_string(const QV4::Value &name)
         else if (strncmp(p, "hsl", 3) == 0)
             isHsl = true;
         else
-            return QColor(p);
+            return QColor::fromString(p);
 
         p+=3; //skip "rgb" or "hsl"
         hasAlpha = (*p == 'a') ? true : false;

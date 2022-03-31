@@ -72,8 +72,6 @@ private slots:
 
         m_view.setSource((testFileUrl(QMLFILE)));
         QTRY_VERIFY2(m_view.status() == QQuickView::Ready, "Failed to load QML file");
-        m_view.show();
-        QVERIFY(QTest::qWaitForWindowActive(&m_view));
         initQtHooks();
         QVERIFY(hooks->qt_qmlDebugEnableService(qPrintable(QQmlDebugTranslationServiceImpl::s_key)));
     }
@@ -284,7 +282,7 @@ private:
 
         while (position < reply.size()) {
             const QByteArray startString = qPrintable(QQmlDebugTranslationServiceImpl::s_key + " ");
-            const int messageSizePosition = position + startString.count();
+            const int messageSizePosition = position + startString.size();
             const int sizeValueLength = reply.indexOf(' ', messageSizePosition) - messageSizePosition;
 
             int messageSize = reply.mid(messageSizePosition, sizeValueLength).toInt();

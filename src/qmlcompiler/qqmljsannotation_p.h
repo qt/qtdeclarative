@@ -39,9 +39,6 @@
 //
 // We mean it.
 
-
-#include <private/qqmljsast_p.h>
-
 #include <QtCore/qglobal.h>
 #include <QtCore/qhash.h>
 

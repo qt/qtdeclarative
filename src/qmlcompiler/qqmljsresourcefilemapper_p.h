@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -38,13 +38,16 @@
 //
 // We mean it.
 
+#include <private/qtqmlcompilerexports_p.h>
+
 #include <QStringList>
 #include <QHash>
 #include <QFile>
+#include <private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-struct QQmlJSResourceFileMapper
+struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSResourceFileMapper
 {
     struct Entry
     {

@@ -342,7 +342,6 @@ bool QmlFile::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
     cont = cont && self.dvWrapField(visitor, Fields::pragmas, m_pragmas);
     cont = cont && self.dvWrapField(visitor, Fields::imports, m_imports);
     cont = cont && self.dvWrapField(visitor, Fields::importScope, m_importScope);
-    cont = cont && self.dvWrapField(visitor, Fields::importScope, m_importScope);
     cont = cont && self.dvWrapField(visitor, Fields::fileLocationsTree, m_fileLocationsTree);
     cont = cont && self.dvWrapField(visitor, Fields::comments, m_comments);
     cont = cont && self.dvWrapField(visitor, Fields::astComments, m_astComments);
@@ -465,7 +464,7 @@ bool QmlDirectory::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
 bool QmlDirectory::addQmlFilePath(QString relativePath)
 {
     QRegularExpression qmlFileRe(QRegularExpression::anchoredPattern(
-            uR"((?<compName>[a-zA-z0-9_]+)\.(?:qml|ui|qmlannotation))"));
+            uR"((?<compName>[a-zA-z0-9_]+)\.(?:qml|qmlannotation))"));
     QRegularExpressionMatch m = qmlFileRe.match(relativePath);
     if (m.hasMatch() && !m_qmlFiles.values(m.captured(u"compName")).contains(relativePath)) {
         m_qmlFiles.insert(m.captured(u"compName"), relativePath);

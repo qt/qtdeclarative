@@ -100,11 +100,16 @@ public:
         Repeat
     };
     Q_ENUM(WrapMode)
-    // Equivalents to GL_ALPHA and similar type constants.
+
     enum Format {
-        Alpha = 0x1906,
-        RGB = 0x1907,
-        RGBA = 0x1908
+        RGBA8 = 1,
+        RGBA16F,
+        RGBA32F,
+
+        // Qt 5 legacy values that were ignored starting from Qt 6.0
+        Alpha = RGBA8,
+        RGB = RGBA8,
+        RGBA = RGBA8
     };
     Q_ENUM(Format)
 

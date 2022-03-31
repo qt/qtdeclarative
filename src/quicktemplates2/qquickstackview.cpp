@@ -188,10 +188,10 @@ QT_BEGIN_NAMESPACE
 
     \e{Deep linking} means launching an application into a particular state. For
     example, a newspaper application could be launched into showing a
-    particular article, bypassing the topmost item. In terms of StackView, deep linking means the ability to modify
-    the state of the stack, so much so that it is possible to push a set of
-    items to the top of the stack, or to completely reset the stack to a given
-    state.
+    particular article, bypassing the topmost item. In terms of StackView, deep
+    linking means the ability to modify the state of the stack, so much so that
+    it is possible to push a set of items to the top of the stack, or to
+    completely reset the stack to a given state.
 
     The API for deep linking in StackView is the same as for basic navigation.
     Pushing an array instead of a single item adds all the items in that array
@@ -242,9 +242,9 @@ QT_BEGIN_NAMESPACE
     For each push or pop operation, different transition animations are applied
     to entering and exiting items. These animations define how the entering item
     should animate in, and the exiting item should animate out. The animations
-    can be customized by assigning different \l{Transition}s for the
-    \l pushEnter, \l pushExit, \l popEnter, \l popExit, \l replaceEnter, and
-    \l replaceExit properties of StackView.
+    can be customized by assigning different \l [QML] {Transition} {Transitions}
+    for the \l pushEnter, \l pushExit, \l popEnter, \l popExit, replaceEnter,
+    and \l replaceExit properties of StackView.
 
     \note The transition animations affect each others' transitional behavior.
     Customizing the animation for one and leaving the other may give unexpected

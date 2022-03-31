@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include <QtGui/qaccessible.h>
+#include <QtCore/private/qglobal_p.h>
 
 #ifndef QACCESSIBLEQUICKWIDGETFACTORY_H
 #define QACCESSIBLEQUICKWIDGETFACTORY_H

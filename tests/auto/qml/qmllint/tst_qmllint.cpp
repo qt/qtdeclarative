@@ -49,7 +49,7 @@ public:
 
     struct Result
     {
-        enum Flag { ExitsNormally = 0x1, NoMessages = 0x2 };
+        enum Flag { ExitsNormally = 0x1, NoMessages = 0x2, AutoFixable = 0x4 };
 
         Q_DECLARE_FLAGS(Flags, Flag)
 
@@ -107,7 +107,6 @@ private Q_SLOTS:
     void absolutePath();
 
     void importMultipartUri();
-
 private:
     enum DefaultImportOption { NoDefaultImports, UseDefaultImports };
     enum ContainOption { StringNotContained, StringContained };
@@ -126,7 +125,8 @@ private:
                      QStringList importDirs = {}, QStringList qmltypesFiles = {},
                      QStringList resources = {},
                      DefaultImportOption defaultImports = UseDefaultImports,
-                     QMap<QString, QQmlJSLogger::Option> *options = nullptr);
+                     QMap<QString, QQmlJSLogger::Option> *options = nullptr,
+                     bool autoFixable = false);
 
     void searchWarnings(const QJsonArray &warnings, const QString &string,
                         QtMsgType type = QtWarningMsg, quint32 line = 0, quint32 column = 0,
@@ -200,48 +200,64 @@ void TestQmllint::initTestCase()
 void TestQmllint::testUnqualified()
 {
     QFETCH(QString, filename);
-    QFETCH(QString, warningMessage);
-    QFETCH(int, warningLine);
-    QFETCH(int, warningColumn);
+    QFETCH(Result, result);
 
-    const QString output = runQmllint(filename, false);
-    QVERIFY(output.contains(QStringLiteral("%1:%2:%3: Unqualified access").arg(testFile(filename)).arg(warningLine).arg(warningColumn)));
-    QVERIFY(output.contains(warningMessage));
+    runTest(filename, result);
 }
 
 void TestQmllint::testUnqualified_data()
 {
     QTest::addColumn<QString>("filename");
-    QTest::addColumn<QString>("warningMessage");
-    QTest::addColumn<int>("warningLine");
-    QTest::addColumn<int>("warningColumn");
+    QTest::addColumn<Result>("result");
 
     // id from nowhere (as with setContextProperty)
-    QTest::newRow("IdFromOuterSpaceDirect") << QStringLiteral("IdFromOuterSpace.qml") << "alien.x" << 4 << 8;
-    QTest::newRow("IdFromOuterSpaceAccess") << QStringLiteral("IdFromOuterSpace.qml") << "console.log(alien)" << 7 << 21;
+    QTest::newRow("IdFromOuterSpace")
+            << QStringLiteral("IdFromOuterSpace.qml")
+            << Result { { Message { QStringLiteral("Unqualified access"), 4, 8 },
+                          Message { QStringLiteral("Unqualified access"), 7, 21 } } };
     // access property of root object
-    QTest::newRow("FromRootDirect") << QStringLiteral("FromRoot.qml") << QStringLiteral("x: root.unqualified") << 9 << 16; // new property
-    QTest::newRow("FromRootAccess") << QStringLiteral("FromRoot.qml") << QStringLiteral("property int check: root.x") << 13 << 33;  // builtin property
+    QTest::newRow("FromRootDirect")
+            << QStringLiteral("FromRoot.qml")
+            << Result {
+                   {
+                           Message { QStringLiteral("Unqualified access"), 9, 16 }, // new property
+                           Message { QStringLiteral("Unqualified access"), 13,
+                                     33 } // builtin property
+                   },
+                   {},
+                   { { Message { u"root."_qs, 9, 16 } }, { Message { u"root."_qs, 13, 33 } } }
+               };
     // access injected name from signal
-    QTest::newRow("SignalHandler1")
+    QTest::newRow("SignalHandler")
             << QStringLiteral("SignalHandler.qml")
-            << QStringLiteral("onDoubleClicked: function(mouse) {") << 5 << 21;
-    QTest::newRow("SignalHandler2")
-            << QStringLiteral("SignalHandler.qml")
-            << QStringLiteral("onPositionChanged: function(mouse) {") << 10 << 21;
-    QTest::newRow("SignalHandlerShort1") << QStringLiteral("SignalHandler.qml")
-                                         << QStringLiteral("onClicked: (mouse) => ") << 8 << 29;
-    QTest::newRow("SignalHandlerShort2")
-            << QStringLiteral("SignalHandler.qml") << QStringLiteral("onPressAndHold: (mouse) => ")
-            << 12 << 34;
+            << Result { {
+                                Message { QStringLiteral("Unqualified access"), 5, 21 },
+                                Message { QStringLiteral("Unqualified access"), 10, 21 },
+                                Message { QStringLiteral("Unqualified access"), 8, 29 },
+                                Message { QStringLiteral("Unqualified access"), 12, 34 },
+                        },
+                        {},
+                        {
+                                Message { QStringLiteral("function(mouse)"), 4, 22 },
+                                Message { QStringLiteral("function(mouse)"), 9, 24 },
+                                Message { QStringLiteral("(mouse) => "), 8, 16 },
+                                Message { QStringLiteral("(mouse) => "), 12, 21 },
+                        } };
     // access catch identifier outside catch block
-    QTest::newRow("CatchStatement") << QStringLiteral("CatchStatement.qml") << QStringLiteral("err") << 6 << 21;
-
-    QTest::newRow("NonSpuriousParent") << QStringLiteral("nonSpuriousParentWarning.qml") << QStringLiteral("property int x: <id>.parent.x") << 6 << 25;
+    QTest::newRow("CatchStatement")
+            << QStringLiteral("CatchStatement.qml")
+            << Result { { Message { QStringLiteral("Unqualified access"), 6, 21 } } };
+    QTest::newRow("NonSpuriousParent")
+            << QStringLiteral("nonSpuriousParentWarning.qml")
+            << Result { {
+                                Message { QStringLiteral("Unqualified access"), 6, 25 },
+                        },
+                        {},
+                        { { Message { u"<id>."_qs, 6, 25 } } } };
 
     QTest::newRow("crashConnections")
-        << QStringLiteral("crashConnections.qml")
-        << QStringLiteral("target: FirstRunDialog") << 4 << 13;
+            << QStringLiteral("crashConnections.qml")
+            << Result { { Message { QStringLiteral("Unqualified access"), 4, 13 } } };
 }
 
 void TestQmllint::testUnknownCausesFail()
@@ -712,26 +728,22 @@ void TestQmllint::dirtyQmlCode_data()
                                                    "which is deprecated."),
                                     0, 0, QtInfoMsg } },
                         {},
-                        {},
-                        Result::ExitsNormally };
-    QTest::newRow("multilineStringTortureQuote")
-            << QStringLiteral("multilineStringTortureQuote.qml")
-            << Result { { Message { QStringLiteral("String contains unescaped line terminator which is deprecated."), 0, 0, QtInfoMsg }}, {}, {Message {R"(`
-    quote: " \\" \\\\"
-    ticks: \` \` \\\` \\\`
-    singleTicks: ' \' \\' \\\'
-    expression: \${expr} \${expr} \\\${expr} \\\${expr}
-    `)"}}, Result::ExitsNormally };
-    QTest::newRow("multilineStringTortureTick")
-            << QStringLiteral("multilineStringTortureTick.qml")
-            << Result { { Message { QStringLiteral("String contains unescaped line terminator which is deprecated."), 0, 0, QtInfoMsg } }, {}, {Message {
-               R"(`
-    quote: " \" \\" \\\"
-    ticks: \` \` \\\` \\\`
-    singleTicks: ' \\' \\\\'
-    expression: \${expr} \${expr} \\\${expr} \\\${expr}
-    `)"
-}}, Result::ExitsNormally};
+                        { Message { "`Foo\nmultiline\\`\nstring`", 4, 32 },
+                          Message { "`another\\`\npart\nof it`", 6, 11 },
+                          Message { R"(`
+quote: " \\" \\\\"
+ticks: \` \` \\\` \\\`
+singleTicks: ' \' \\' \\\'
+expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
+                                    10, 28 },
+                          Message {
+                                  R"(`
+quote: " \" \\" \\\"
+ticks: \` \` \\\` \\\`
+singleTicks: ' \\' \\\\'
+expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
+                                  16, 27 } },
+                        { Result::ExitsNormally, Result::AutoFixable } };
     QTest::newRow("unresolvedType")
             << QStringLiteral("unresolvedType.qml")
             << Result { { Message { QStringLiteral(
@@ -921,6 +933,12 @@ void TestQmllint::dirtyQmlCode_data()
                                   "Itym was not found. Did you add all import paths?") },
                           {},
                           { Message { QStringLiteral("Item") } } } };
+    QTest::newRow("didYouMean(enum)")
+            << QStringLiteral("didYouMeanEnum.qml")
+            << Result { { Message { QStringLiteral(
+                                  "Property \"Readx\" not found on type \"QQuickImage\"") },
+                          {},
+                          { Message { QStringLiteral("Ready") } } } };
     QTest::newRow("nullBinding")
             << QStringLiteral("nullBinding.qml")
             << Result { { Message { QStringLiteral(
@@ -972,6 +990,10 @@ void TestQmllint::dirtyQmlCode_data()
             << Result { { Message { QStringLiteral(
                        "Property \"callLater\" is a QJSValue property. It may or may not be "
                        "a method. Use a regular Q_INVOKABLE instead.") } } };
+    QTest::newRow("assignNonExistingTypeToVarProp")
+            << QStringLiteral("assignNonExistingTypeToVarProp.qml")
+            << Result { { Message { QStringLiteral(
+                       "NonExistingType was not found. Did you add all import paths?") } } };
 }
 
 void TestQmllint::dirtyQmlCode()
@@ -990,7 +1012,8 @@ void TestQmllint::dirtyQmlCode()
     QEXPECT_FAIL("bad tranlsation binding (qsTr)", "We currently do not check translation binding",
                  Abort);
 
-    callQmllint(filename, result.flags.testFlag(Result::ExitsNormally), &warnings);
+    callQmllint(filename, result.flags.testFlag(Result::ExitsNormally), &warnings, {}, {}, {},
+                UseDefaultImports, nullptr, result.flags.testFlag(Result::Flag::AutoFixable));
 
     checkResult(
             warnings, result,
@@ -1304,16 +1327,19 @@ QString TestQmllint::runQmllint(const QString &fileToLint, bool shouldSucceed,
 void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJsonArray *warnings,
                               QStringList importPaths, QStringList qmldirFiles,
                               QStringList resources, DefaultImportOption defaultImports,
-                              QMap<QString, QQmlJSLogger::Option> *options)
+                              QMap<QString, QQmlJSLogger::Option> *options, bool autoFixable)
 {
     QJsonArray jsonOutput;
 
-    bool success = m_linter.lintFile(
-            QFileInfo(fileToLint).isAbsolute() ? fileToLint : testFile(fileToLint), nullptr, true,
-            warnings ? &jsonOutput : nullptr,
-            defaultImports == UseDefaultImports ? m_defaultImportPaths + importPaths
-                                                : importPaths,
+    const QFileInfo info = QFileInfo(fileToLint);
+    const QString lintedFile = info.isAbsolute() ? fileToLint : testFile(fileToLint);
+
+    QQmlJSLinter::LintResult lintResult = m_linter.lintFile(
+            lintedFile, nullptr, true, warnings ? &jsonOutput : nullptr,
+            defaultImports == UseDefaultImports ? m_defaultImportPaths + importPaths : importPaths,
             qmldirFiles, resources, options != nullptr ? *options : QQmlJSLogger::options());
+
+    bool success = lintResult == QQmlJSLinter::LintSuccess;
     QVERIFY2(success == shouldSucceed, QJsonDocument(jsonOutput).toJson());
 
     if (warnings) {
@@ -1322,6 +1348,46 @@ void TestQmllint::callQmllint(const QString &fileToLint, bool shouldSucceed, QJs
     }
 
     QCOMPARE(success, shouldSucceed);
+
+    if (lintResult == QQmlJSLinter::LintSuccess || lintResult == QQmlJSLinter::HasWarnings) {
+        QString fixedCode;
+        QQmlJSLinter::FixResult fixResult = m_linter.applyFixes(&fixedCode, true);
+
+        if (autoFixable) {
+            QCOMPARE(fixResult, QQmlJSLinter::FixSuccess);
+            // Check that the fixed version of the file actually passes qmllint now
+            QTemporaryDir dir;
+            QVERIFY(dir.isValid());
+            QFile file(dir.filePath("Fixed.qml"));
+            QVERIFY2(file.open(QIODevice::WriteOnly), qPrintable(file.errorString()));
+            file.write(fixedCode.toUtf8());
+            file.flush();
+            file.close();
+
+            callQmllint(QFileInfo(file).absoluteFilePath(), true, nullptr, importPaths, qmldirFiles,
+                        resources, defaultImports, options, false);
+
+            const QString fixedPath = testFile(info.baseName() + u".fixed.qml"_qs);
+
+            if (QFileInfo(fixedPath).exists()) {
+                QFile fixedFile(fixedPath);
+                fixedFile.open(QFile::ReadOnly);
+                QString fixedFileContents = QString::fromUtf8(fixedFile.readAll());
+#ifdef Q_OS_WIN
+                fixedCode = fixedCode.replace(u"\r\n"_qs, u"\n"_qs);
+                fixedFileContents = fixedFileContents.replace(u"\r\n"_qs, u"\n"_qs);
+#endif
+
+                QCOMPARE(fixedCode, fixedFileContents);
+            }
+        } else {
+            if (shouldSucceed)
+                QCOMPARE(fixResult, QQmlJSLinter::NothingToFix);
+            else
+                QVERIFY(fixResult == QQmlJSLinter::FixSuccess
+                        || fixResult == QQmlJSLinter::NothingToFix);
+        }
+    }
 }
 
 void TestQmllint::runTest(const QString &testFile, const Result &result, QStringList importDirs,
@@ -1331,7 +1397,8 @@ void TestQmllint::runTest(const QString &testFile, const Result &result, QString
 {
     QJsonArray warnings;
     callQmllint(testFile, result.flags.testFlag(Result::Flag::ExitsNormally), &warnings, importDirs,
-                qmltypesFiles, resources, defaultImports, options);
+                qmltypesFiles, resources, defaultImports, options,
+                result.flags.testFlag(Result::Flag::AutoFixable));
     checkResult(warnings, result);
 }
 
@@ -1384,7 +1451,7 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
         Q_UNREACHABLE();
     };
 
-    for (const QJsonValue &warning : warnings) {
+    for (const QJsonValueConstRef warning : warnings) {
         QString warningMessage = warning[u"message"].toString();
         quint32 warningLine = warning[u"line"].toInt();
         quint32 warningColumn = warning[u"column"].toInt();
@@ -1404,7 +1471,7 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
             break;
         }
 
-        for (const QJsonValue &fix : warning[u"suggestions"].toArray()) {
+        for (const QJsonValueConstRef fix : warning[u"suggestions"].toArray()) {
             const QString fixMessage = fix[u"message"].toString();
             if (fixMessage.contains(substring)) {
                 contains = true;
@@ -1445,10 +1512,15 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
                      must ? u"must" : u"must NOT", substring);
     };
 
-    if (shouldContain == StringContained)
-        QVERIFY2(contains, qPrintable(toDescription(warnings, substring)));
-    else
-        QVERIFY2(!contains, qPrintable(toDescription(warnings, substring, false)));
+    if (shouldContain == StringContained) {
+        if (!contains)
+            qWarning() << toDescription(warnings, substring);
+        QVERIFY(contains);
+    } else {
+        if (contains)
+            qWarning() << toDescription(warnings, substring, false);
+        QVERIFY(!contains);
+    }
 }
 
 void TestQmllint::requiredProperty()
@@ -1520,7 +1592,8 @@ void TestQmllint::missingBuiltinsNoCrash()
     QJsonArray warnings;
 
     bool success = linter.lintFile(testFile("missingBuiltinsNoCrash.qml"), nullptr, true,
-                                   &jsonOutput, {}, {}, {}, {});
+                                   &jsonOutput, {}, {}, {}, {})
+            == QQmlJSLinter::LintSuccess;
     QVERIFY2(!success, QJsonDocument(jsonOutput).toJson());
 
     QVERIFY2(jsonOutput.size() == 1, QJsonDocument(jsonOutput).toJson());

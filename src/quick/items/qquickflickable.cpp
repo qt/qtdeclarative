@@ -254,9 +254,27 @@ QQuickFlickablePrivate::AxisData::~AxisData()
     delete transitionToBounds;
 }
 
+class QQuickFlickableContentItem : public QQuickItem
+{
+    /*!
+        \internal
+        The flickable area inside the viewport can be bigger than the bounds of the
+        content item itself, if the flickable is using non-zero extents (as returned
+        by e.g minXExtent()). Since the default implementation in QQuickItem::contains()
+        only checks if the point is inside the bounds of the item, we need to override it
+        to check the extents as well. The easist way to do this is to simply check if the
+        point is inside the bounds of the flickable rather than the content item.
+    */
+    bool contains(const QPointF &point) const override
+    {
+        const QQuickItem *flickable = parentItem();
+        const QPointF posInFlickable = flickable->mapFromItem(this, point);
+        return flickable->contains(posInFlickable);
+    }
+};
 
 QQuickFlickablePrivate::QQuickFlickablePrivate()
-  : contentItem(new QQuickItem)
+  : contentItem(new QQuickFlickableContentItem)
     , hData(this, &QQuickFlickablePrivate::setViewportX)
     , vData(this, &QQuickFlickablePrivate::setViewportY)
     , hMoved(false), vMoved(false)

@@ -52,6 +52,7 @@
 //
 
 #include "quicktestglobal.h"
+#include "private/qglobal_p.h"
 
 #define Q_QUICK_TEST_PRIVATE_EXPORT Q_QUICK_TEST_EXPORT
 

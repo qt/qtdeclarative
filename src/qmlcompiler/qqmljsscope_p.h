@@ -39,6 +39,8 @@
 //
 // We mean it.
 
+#include <private/qtqmlcompilerexports_p.h>
+
 #include "qqmljsmetatypes_p.h"
 #include "qdeferredpointer_p.h"
 #include "qqmljsannotation_p.h"
@@ -57,7 +59,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlJSImporter;
 
-class QQmlJSScope
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSScope
 {
 public:
     QQmlJSScope(QQmlJSScope &&) = default;
@@ -97,6 +99,60 @@ public:
     };
     Q_DECLARE_FLAGS(Flags, Flag)
     Q_FLAGS(Flags);
+
+    class ConstPtrWrapperIterator
+    {
+    public:
+        using iterator_category = std::forward_iterator_tag;
+        using difference_type = std::ptrdiff_t;
+        using value_type = ConstPtr;
+        using pointer = value_type *;
+        using reference = value_type &;
+
+        ConstPtrWrapperIterator(QList<QQmlJSScope::Ptr>::const_iterator iterator)
+            : m_iterator(iterator)
+        {
+        }
+
+        friend bool operator==(const ConstPtrWrapperIterator &a, const ConstPtrWrapperIterator &b)
+        {
+            return a.m_iterator == b.m_iterator;
+        }
+        friend bool operator!=(const ConstPtrWrapperIterator &a, const ConstPtrWrapperIterator &b)
+        {
+            return a.m_iterator != b.m_iterator;
+        }
+
+        reference operator*()
+        {
+            if (!m_pointer)
+                m_pointer = *m_iterator;
+            return m_pointer;
+        }
+        pointer operator->()
+        {
+            if (!m_pointer)
+                m_pointer = *m_iterator;
+            return &m_pointer;
+        }
+
+        ConstPtrWrapperIterator &operator++()
+        {
+            m_iterator++;
+            m_pointer = {};
+            return *this;
+        }
+        ConstPtrWrapperIterator operator++(int)
+        {
+            auto before = *this;
+            ++(*this);
+            return before;
+        }
+
+    private:
+        QList<QQmlJSScope::Ptr>::const_iterator m_iterator;
+        QQmlJSScope::ConstPtr m_pointer;
+    };
 
     class Import
     {
@@ -179,6 +235,12 @@ public:
         bool isConst;
     };
 
+    enum BindingTargetSpecifier {
+        SimplePropertyTarget, // e.g. `property int p: 42`
+        ListPropertyTarget, // e.g. `property list<Item> pList: [ Text {} ]`
+        UnnamedPropertyTarget // default property bindings, where property name is unspecified
+    };
+
     static QQmlJSScope::Ptr create(ScopeType type = QQmlJSScope::QMLScope,
                                    const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
     static QQmlJSScope::Ptr clone(const QQmlJSScope::ConstPtr &origin);
@@ -209,6 +271,7 @@ public:
     bool hasOwnMethod(const QString &name) const { return m_methods.contains(name); }
 
     bool hasMethod(const QString &name) const;
+    QHash<QString, QQmlJSMetaMethod> methods() const;
     QList<QQmlJSMetaMethod> methods(const QString &name) const;
     QList<QQmlJSMetaMethod> methods(const QString &name, QQmlJSMetaMethod::Type type) const;
 
@@ -220,6 +283,7 @@ public:
     bool hasEnumeration(const QString &name) const;
     bool hasEnumerationKey(const QString &name) const;
     QQmlJSMetaEnum enumeration(const QString &name) const;
+    QHash<QString, QQmlJSMetaEnum> enumerations() const;
 
     void setAnnotations(const QList<QQmlJSAnnotation> &annotation) { m_annotations = std::move(annotation); }
     const QList<QQmlJSAnnotation> &annotations() const { return m_annotations; }
@@ -239,7 +303,8 @@ public:
         return m_internalName + suffix;
     }
 
-    bool causesImplicitComponentWrapping() const;
+    static bool causesImplicitComponentWrapping(const QQmlJSMetaProperty &property,
+                                                const QQmlJSScope::ConstPtr &assignedType);
     bool isComponentRootElement() const;
 
     void setInterfaceNames(const QStringList& interfaces) { m_interfaceNames = interfaces; }
@@ -270,13 +335,17 @@ public:
 
     bool hasProperty(const QString &name) const;
     QQmlJSMetaProperty property(const QString &name) const;
+    QHash<QString, QQmlJSMetaProperty> properties() const;
 
     void setPropertyLocallyRequired(const QString &name, bool isRequired);
     bool isPropertyRequired(const QString &name) const;
     bool isPropertyLocallyRequired(const QString &name) const;
 
-    void addOwnPropertyBinding(const QQmlJSMetaPropertyBinding &binding)
+    void addOwnPropertyBinding(
+            const QQmlJSMetaPropertyBinding &binding,
+            BindingTargetSpecifier specifier = BindingTargetSpecifier::SimplePropertyTarget)
     {
+        Q_ASSERT(binding.sourceLocation().isValid());
         m_propertyBindings.insert(binding.propertyName(), binding);
 
         // NB: insert() prepends \a binding to the list of bindings, but we need
@@ -284,6 +353,10 @@ public:
         using iter = typename QMultiHash<QString, QQmlJSMetaPropertyBinding>::iterator;
         QPair<iter, iter> r = m_propertyBindings.equal_range(binding.propertyName());
         std::rotate(r.first, std::next(r.first), r.second);
+
+        // additionally store bindings in the QmlIR compatible order
+        addOwnPropertyBindingInQmlIROrder(binding, specifier);
+        Q_ASSERT(m_propertyBindings.size() == m_propertyBindingsArray.size());
     }
     QMultiHash<QString, QQmlJSMetaPropertyBinding> ownPropertyBindings() const
     {
@@ -295,6 +368,7 @@ public:
     {
         return m_propertyBindings.equal_range(name);
     }
+    QList<QQmlJSMetaPropertyBinding> ownPropertyBindingsInQmlIROrder() const;
     bool hasOwnPropertyBindings(const QString &name) const
     {
         return m_propertyBindings.contains(name);
@@ -339,6 +413,7 @@ public:
     bool hasCustomParser() const { return m_flags & CustomParser; }
     bool isArrayScope() const { return m_flags & Array; }
     bool isInlineComponent() const { return m_flags & InlineComponent; }
+    bool isWrappedInImplicitComponent() const { return m_flags & WrappedInImplicitComponent; }
     void setIsSingleton(bool v) { m_flags.setFlag(Singleton, v); }
     void setIsCreatable(bool v) { m_flags.setFlag(Creatable, v); }
     void setIsComposite(bool v) { m_flags.setFlag(Composite, v); }
@@ -355,14 +430,14 @@ public:
     AccessSemantics accessSemantics() const { return m_semantics; }
     bool isReferenceType() const { return m_semantics == QQmlJSScope::AccessSemantics::Reference; }
 
-    void setRuntimeId(int id) { m_runtimeId = id; }
-    int runtimeId() const { return m_runtimeId; }
-
     bool isIdInCurrentQmlScopes(const QString &id) const;
     bool isIdInCurrentJSScopes(const QString &id) const;
     bool isIdInjectedFromSignal(const QString &id) const;
 
     std::optional<JavaScriptIdentifier> findJSIdentifier(const QString &id) const;
+
+    ConstPtrWrapperIterator childScopesBegin() const { return m_childScopes.constBegin(); }
+    ConstPtrWrapperIterator childScopesEnd() const { return m_childScopes.constEnd(); }
 
     QVector<QQmlJSScope::Ptr> childScopes()
     {
@@ -460,6 +535,22 @@ public:
     */
     bool isInCustomParserParent() const;
 
+    /*! \internal
+
+        Minimal information about a QQmlJSMetaPropertyBinding that allows it to
+        be manipulated similarly to QmlIR::Binding.
+    */
+    struct QmlIRCompatibilityBindingData
+    {
+        QmlIRCompatibilityBindingData() = default;
+        QmlIRCompatibilityBindingData(const QString &name, quint32 offset)
+            : propertyName(name), sourceLocationOffset(offset)
+        {
+        }
+        QString propertyName; // bound property name
+        quint32 sourceLocationOffset = 0; // binding's source location offset
+    };
+
 private:
     QQmlJSScope(ScopeType type, const QQmlJSScope::Ptr &parentScope = QQmlJSScope::Ptr());
     QQmlJSScope(const QQmlJSScope &) = default;
@@ -475,11 +566,19 @@ private:
             const QQmlJSScope::Ptr &childScope, const QQmlJSScope::Ptr &self,
             const QQmlJSScope::ContextualTypes &contextualTypes, QSet<QString> *usedTypes);
 
+    void addOwnPropertyBindingInQmlIROrder(const QQmlJSMetaPropertyBinding &binding,
+                                           BindingTargetSpecifier specifier);
+
     QHash<QString, JavaScriptIdentifier> m_jsIdentifiers;
 
     QMultiHash<QString, QQmlJSMetaMethod> m_methods;
     QHash<QString, QQmlJSMetaProperty> m_properties;
     QMultiHash<QString, QQmlJSMetaPropertyBinding> m_propertyBindings;
+
+    // a special QmlIR compatibility bindings array, ordered the same way as
+    // bindings in QmlIR::Object
+    QList<QmlIRCompatibilityBindingData> m_propertyBindingsArray;
+
     QHash<QString, QQmlJSMetaEnum> m_enumerations;
 
     QVector<QQmlJSAnnotation> m_annotations;
@@ -515,11 +614,11 @@ private:
     AccessSemantics m_semantics = AccessSemantics::Reference;
 
     QQmlJS::SourceLocation m_sourceLocation;
-    int m_runtimeId = -1; // an index counterpart of "foobar" in `id: foobar`
 };
+Q_DECLARE_TYPEINFO(QQmlJSScope::QmlIRCompatibilityBindingData, Q_RELOCATABLE_TYPE);
 
 template<>
-class QDeferredFactory<QQmlJSScope>
+class Q_QMLCOMPILER_PRIVATE_EXPORT QDeferredFactory<QQmlJSScope>
 {
 public:
     QDeferredFactory() = default;

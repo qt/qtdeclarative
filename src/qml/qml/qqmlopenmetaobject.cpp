@@ -59,7 +59,13 @@ public:
     QHash<QByteArray, int> names;
     QMetaObjectBuilder mob;
     QMetaObject *mem;
-    QQmlRefPointer<QQmlPropertyCache> cache;
+
+    // TODO: We need to make sure that this does not escape into other threads.
+    //       In particular, all its non-const uses are probably wrong. You should
+    //       only set the open metaobject to "cached" once it's not going to be
+    //       modified anymore.
+    QQmlPropertyCache::Ptr cache;
+
     QSet<QQmlOpenMetaObject*> referers;
 };
 

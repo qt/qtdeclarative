@@ -149,6 +149,25 @@ QObject *qmlAttachedPropertiesObject(QObject *object, QQmlAttachedPropertiesFunc
     return resolveAttachedProperties(func, data, object, create);
 }
 
+QObject *qmlExtendedObject(QObject *object)
+{
+    if (!object)
+        return nullptr;
+
+    void *result = nullptr;
+    QObjectPrivate *d = QObjectPrivate::get(object);
+    if (!d->metaObject)
+        return nullptr;
+
+    const int id = d->metaObject->metaCall(
+                object, QMetaObject::CustomCall,
+                QQmlProxyMetaObject::ExtensionObjectId, &result);
+    if (id != QQmlProxyMetaObject::ExtensionObjectId)
+        return nullptr;
+
+    return static_cast<QObject *>(result);
+}
+
 int qmlRegisterUncreatableMetaObject(const QMetaObject &staticMetaObject,
                                      const char *uri, int versionMajor,
                                      int versionMinor, const char *qmlName,
@@ -956,7 +975,7 @@ static ObjectLookupResult initObjectLookup(
     if (ddata->isQueuedForDeletion)
         return ObjectLookupResult::Failure;
 
-    QQmlPropertyData *property;
+    const QQmlPropertyData *property;
     if (!ddata->propertyCache) {
         property = QQmlPropertyCache::property(object, name, aotContext->qmlContext, nullptr);
     } else {
@@ -1046,8 +1065,7 @@ bool AOTCompiledContext::captureLookup(uint index, QObject *object) const
         return true;
     }
 
-
-    return true;
+    return false;
 }
 
 bool AOTCompiledContext::captureQmlContextPropertyLookup(uint index) const
@@ -1405,6 +1423,8 @@ static void initTypeWrapperLookup(
             l->qmlContextPropertyGetter = qmlContextPropertyGetter;
             if (qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupSingleton)
                 l->qmlContextSingletonLookup.singletonObject = wrapper->heapObject();
+            else if (qmlContextPropertyGetter == QV4::QQmlContextWrapper::lookupType)
+                l->qmlTypeLookup.qmlTypeWrapper = wrapper->heapObject();
             return;
         }
         scope.engine->throwTypeError();

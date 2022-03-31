@@ -62,6 +62,7 @@ private slots:
     void preferResourcePath();
     void invalidFileImport_data();
     void invalidFileImport();
+    void implicitWithDependencies();
 };
 
 void tst_QQmlImport::cleanup()
@@ -135,6 +136,16 @@ void tst_QQmlImport::invalidFileImport()
                 QStringLiteral("\"%1\" is not a valid import URL. "
                                "You can pass relative paths or URLs with schema, "
                                "but not absolute paths or resource paths.").arg(import)));
+}
+
+void tst_QQmlImport::implicitWithDependencies()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("implicitWithDependencies/A.qml"));
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->objectName(), QStringLiteral("notARectangle"));
 }
 
 void tst_QQmlImport::testDesignerSupported()

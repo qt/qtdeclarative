@@ -40,6 +40,8 @@
 #include "qquickshortcutcontext_p_p.h"
 #include "qquickoverlay_p_p.h"
 #include "qquicktooltip_p.h"
+#include "qquickmenu_p.h"
+#include "qquickmenu_p_p.h"
 #include "qquickpopup_p.h"
 
 #include <QtGui/qguiapplication.h>
@@ -80,6 +82,18 @@ bool QQuickShortcutContext::matcher(QObject *obj, Qt::ShortcutContext context)
             } else if (QQuickPopup *popup = qobject_cast<QQuickPopup *>(obj)) {
                 obj = popup->window();
                 item = popup->popupItem();
+
+                if (!obj) {
+                    // The popup has no associated window (yet). However, sub-menus,
+                    // unlike top-level menus, will not have an associated window
+                    // until their parent menu is opened. So, check if this is a sub-menu
+                    // so that actions within it can grab shortcuts.
+                    if (auto *menu = qobject_cast<QQuickMenu *>(popup)) {
+                        auto parentMenu = QQuickMenuPrivate::get(menu)->parentMenu;
+                        while (!obj && parentMenu)
+                            obj = parentMenu->window();
+                    }
+                }
                 break;
             }
             obj = obj->parent();

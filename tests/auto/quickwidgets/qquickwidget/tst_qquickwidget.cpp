@@ -162,7 +162,6 @@ private:
 tst_qquickwidget::tst_qquickwidget()
     : QQmlDataTest(QT_QMLTEST_DATADIR)
 {
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGLRhi);
 }
 
 void tst_qquickwidget::showHide()
@@ -380,8 +379,6 @@ void tst_qquickwidget::engine()
 
 void tst_qquickwidget::readback()
 {
-    QWidget window;
-
     QScopedPointer<QQuickWidget> view(new QQuickWidget);
     view->setSource(testFileUrl("rectangle.qml"));
 

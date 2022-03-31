@@ -52,6 +52,28 @@ inline QString getUnderlyingType(const QQmlJSMetaProperty &p)
     return underlyingType;
 }
 
+// simple class that, for a given property, creates information for the
+// Q_PROPERTY macro (READ/WRITE function names, etc.)
+struct QmltcPropertyData
+{
+    QmltcPropertyData(const QQmlJSMetaProperty &p) : QmltcPropertyData(p.propertyName()) { }
+
+    QmltcPropertyData(const QString &propertyName)
+    {
+        const QString nameWithUppercase = propertyName[0].toUpper() + propertyName.sliced(1);
+
+        read = propertyName;
+        write = u"set" + nameWithUppercase;
+        bindable = u"bindable" + nameWithUppercase;
+        notify = propertyName + u"Changed";
+    }
+
+    QString read;
+    QString write;
+    QString bindable;
+    QString notify;
+};
+
 QT_END_NAMESPACE
 
 #endif // QMLTCPROPERTYUTILS_H

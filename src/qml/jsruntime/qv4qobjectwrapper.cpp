@@ -233,21 +233,21 @@ void QObjectWrapper::initializeBindings(ExecutionEngine *engine)
     engine->functionPrototype()->defineDefaultProperty(QStringLiteral("disconnect"), method_disconnect);
 }
 
-QQmlPropertyData *QObjectWrapper::findProperty(
+const QQmlPropertyData *QObjectWrapper::findProperty(
         const QQmlRefPointer<QQmlContextData> &qmlContext, String *name,
         RevisionMode revisionMode, QQmlPropertyData *local) const
 {
     return findProperty(d()->object(), qmlContext, name, revisionMode, local);
 }
 
-QQmlPropertyData *QObjectWrapper::findProperty(
+const QQmlPropertyData *QObjectWrapper::findProperty(
         QObject *o, const QQmlRefPointer<QQmlContextData> &qmlContext,
         String *name, RevisionMode revisionMode, QQmlPropertyData *local)
 {
     Q_UNUSED(revisionMode);
 
     QQmlData *ddata = QQmlData::get(o, false);
-    QQmlPropertyData *result = nullptr;
+    const QQmlPropertyData *result = nullptr;
     if (ddata && ddata->propertyCache)
         result = ddata->propertyCache->property(name, o, qmlContext);
     else
@@ -255,7 +255,8 @@ QQmlPropertyData *QObjectWrapper::findProperty(
     return result;
 }
 
-ReturnedValue QObjectWrapper::getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property)
+ReturnedValue QObjectWrapper::getProperty(
+        ExecutionEngine *engine, QObject *object, const QQmlPropertyData *property)
 {
     QQmlData::flushPendingBinding(object, property->coreIndex());
 
@@ -356,7 +357,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(
         return *methodValue;
 
     QQmlPropertyData local;
-    QQmlPropertyData *result = findProperty(qmlContext, name, revisionMode, &local);
+    const QQmlPropertyData *result = findProperty(qmlContext, name, revisionMode, &local);
 
     if (!result) {
         // Check for attached properties
@@ -386,7 +387,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(
 ReturnedValue QObjectWrapper::getQmlProperty(
         ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
         QObject *object, String *name, QObjectWrapper::RevisionMode revisionMode, bool *hasProperty,
-        QQmlPropertyData **property)
+        const QQmlPropertyData **property)
 {
     if (QQmlData::wasDeleted(object)) {
         if (hasProperty)
@@ -399,7 +400,7 @@ ReturnedValue QObjectWrapper::getQmlProperty(
 
     QQmlData *ddata = QQmlData::get(object, false);
     QQmlPropertyData local;
-    QQmlPropertyData *result = findProperty(object, qmlContext, name, revisionMode, &local);
+    const QQmlPropertyData *result = findProperty(object, qmlContext, name, revisionMode, &local);
 
     if (result) {
         if (revisionMode == QObjectWrapper::CheckRevision && result->hasRevision()) {
@@ -454,7 +455,7 @@ bool QObjectWrapper::setQmlProperty(
         return false;
 
     QQmlPropertyData local;
-    QQmlPropertyData *result = QQmlPropertyCache::property(object, name, qmlContext, &local);
+    const QQmlPropertyData *result = QQmlPropertyCache::property(object, name, qmlContext, &local);
     if (!result)
         return false;
 
@@ -487,10 +488,11 @@ void QObjectWrapper::setProperty(
                     const QQmlPropertyIndex originalIndex(property->coreIndex(), -1);
                     auto [targetObject, targetIndex] = QQmlPropertyPrivate::findAliasTarget(object, originalIndex);
                     Q_ASSERT(targetObject);
-                    QQmlPropertyCache *targetCache
+                    const QQmlPropertyCache *targetCache
                             = QQmlData::get(targetObject)->propertyCache.data();
                     Q_ASSERT(targetCache);
-                    QQmlPropertyData *targetProperty = targetCache->property(targetIndex.coreIndex());
+                    const QQmlPropertyData *targetProperty
+                            = targetCache->property(targetIndex.coreIndex());
                     object = targetObject;
                     property = targetProperty;
                     return targetProperty->isVarProperty() || targetProperty->propType() == QMetaType::fromType<QJSValue>();
@@ -736,7 +738,7 @@ void QObjectWrapper::setProperty(ExecutionEngine *engine, QObject *object, int p
         return;
 
     Q_ASSERT(ddata->propertyCache);
-    QQmlPropertyData *property = ddata->propertyCache->property(propertyIndex);
+    const QQmlPropertyData *property = ddata->propertyCache->property(propertyIndex);
     Q_ASSERT(property); // We resolved this property earlier, so it better exist!
     return setProperty(engine, object, property, value);
 }
@@ -756,7 +758,7 @@ bool QObjectWrapper::virtualIsEqualTo(Managed *a, Managed *b)
 
 ReturnedValue QObjectWrapper::create(ExecutionEngine *engine, QObject *object)
 {
-    if (QQmlRefPointer<QQmlPropertyCache> cache = QQmlData::ensurePropertyCache(object)) {
+    if (QQmlPropertyCache::ConstPtr cache = QQmlData::ensurePropertyCache(object)) {
         ReturnedValue result = Encode::null();
         void *args[] = { &result, &engine };
         if (cache->callJSFactoryMethod(object, args))
@@ -939,10 +941,11 @@ ReturnedValue QObjectWrapper::virtualResolveLookupGetter(const Object *object, E
     QQmlData *ddata = QQmlData::get(qobj, false);
     if (!ddata || !ddata->propertyCache) {
         QQmlPropertyData local;
-        QQmlPropertyData *property = QQmlPropertyCache::property(qobj, name, qmlContext, &local);
+        const QQmlPropertyData *property = QQmlPropertyCache::property(
+                    qobj, name, qmlContext, &local);
         return property ? getProperty(engine, qobj, property) : Encode::undefined();
     }
-    QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobj, qmlContext);
+    const QQmlPropertyData *property = ddata->propertyCache->property(name.getPointer(), qobj, qmlContext);
 
     if (!property) {
         // Check for attached properties
@@ -1131,7 +1134,7 @@ ReturnedValue QObjectWrapper::method_connect(const FunctionObject *b, const Valu
     slot->function.set(scope.engine, f);
 
     if (QQmlData *ddata = QQmlData::get(signalObject)) {
-        if (QQmlPropertyCache *propertyCache = ddata->propertyCache.data()) {
+        if (const QQmlPropertyCache *propertyCache = ddata->propertyCache.data()) {
             QQmlPropertyPrivate::flushSignal(signalObject, propertyCache->methodIndexToSignalIndex(signalIndex));
         }
     }
@@ -2208,24 +2211,35 @@ void Heap::QObjectMethod::ensureMethodsCache()
 
 ReturnedValue QObjectMethod::method_toString(ExecutionEngine *engine) const
 {
-    QString result;
+    const auto encode = [engine](const QString &result) {
+        return engine->newString(result)->asReturnedValue();
+    };
+
     if (const QMetaObject *metaObject = d()->metaObject()) {
+        if (QObject *qobject = d()->object()) {
+            const int id = metaObject->indexOfMethod("toString()");
+            if (id >= 0) {
+                const QMetaMethod method = metaObject->method(id);
+                const QMetaType returnType = method.returnMetaType();
+                QVariant result(returnType);
+                method.invoke(qobject, QGenericReturnArgument(returnType.name(), result.data()));
+                return engine->fromVariant(result);
+            }
 
-        result += QString::fromUtf8(metaObject->className()) +
-                QLatin1String("(0x") + QString::number((quintptr)d()->object(),16);
-
-        if (d()->object()) {
-            QString objectName = d()->object()->objectName();
+            QString result;
+            result += QString::fromUtf8(metaObject->className()) +
+                    QLatin1String("(0x") + QString::number(quintptr(qobject), 16);
+            QString objectName = qobject->objectName();
             if (!objectName.isEmpty())
                 result += QLatin1String(", \"") + objectName + QLatin1Char('\"');
+            result += QLatin1Char(')');
+            return encode(result);
+        } else {
+            return encode(QString::fromUtf8(metaObject->className()) + QLatin1String("(0x0)"));
         }
-
-        result += QLatin1Char(')');
-    } else {
-        result = QLatin1String("null");
     }
 
-    return engine->newString(result)->asReturnedValue();
+    return encode(QLatin1String("null"));
 }
 
 ReturnedValue QObjectMethod::method_destroy(ExecutionEngine *engine, const Value *args, int argc) const

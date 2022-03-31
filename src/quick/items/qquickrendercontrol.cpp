@@ -157,7 +157,8 @@ QQuickRenderControlPrivate::QQuickRenderControlPrivate(QQuickRenderControl *rend
       ownRhi(true),
       cb(nullptr),
       offscreenSurface(nullptr),
-      sampleCount(1)
+      sampleCount(1),
+      frameStatus(NotRecordingFrame)
 {
     if (!sg) {
         qAddPostRoutine(cleanup);
@@ -210,7 +211,12 @@ QQuickRenderControl::~QQuickRenderControl()
 
     delete d->rc;
 
-    d->resetRhi();
+    // Only call rhi related cleanup when we actually got to initialize() and
+    // managed to get a QRhi. The software backend for instance would mean
+    // using the rendercontrol without ever calling initialize() - it is then
+    // important to completely skip calling any QSGRhiSupport functions.
+    if (d->rhi)
+        d->resetRhi();
 }
 
 void QQuickRenderControlPrivate::windowDestroyed()
@@ -428,6 +434,7 @@ void QQuickRenderControl::invalidate()
     // also essential to allow a subsequent initialize() to succeed.
     d->rc->invalidate();
 
+    d->frameStatus = QQuickRenderControlPrivate::NotRecordingFrame;
     d->initialized = false;
 }
 
@@ -635,7 +642,23 @@ void QQuickRenderControl::beginFrame()
 
     emit d->window->beforeFrameBegin();
 
-    d->rhi->beginOffscreenFrame(&d->cb);
+    QRhi::FrameOpResult result = d->rhi->beginOffscreenFrame(&d->cb);
+
+    switch (result) {
+    case QRhi::FrameOpSuccess:
+    case QRhi::FrameOpSwapChainOutOfDate:
+        d->frameStatus = QQuickRenderControlPrivate::RecordingFrame;
+        break;
+    case QRhi::FrameOpError:
+        d->frameStatus = QQuickRenderControlPrivate::ErrorInBeginFrame;
+        break;
+    case QRhi::FrameOpDeviceLost:
+        d->frameStatus = QQuickRenderControlPrivate::DeviceLostInBeginFrame;
+        break;
+    default:
+        d->frameStatus = QQuickRenderControlPrivate::NotRecordingFrame;
+        break;
+    }
 }
 
 /*!
@@ -658,6 +681,7 @@ void QQuickRenderControl::endFrame()
 
     d->rhi->endOffscreenFrame();
     d->cb = nullptr;
+    d->frameStatus = QQuickRenderControlPrivate::NotRecordingFrame;
 
     emit d->window->afterFrameEnd();
 }
@@ -665,8 +689,10 @@ void QQuickRenderControl::endFrame()
 bool QQuickRenderControlPrivate::initRhi()
 {
     // initialize() - invalidate() - initialize() uses the QRhi the first
-    // initialize() created, so if already exists, we are done
-    if (rhi)
+    // initialize() created, so if already exists, we are done. Does not apply
+    // when wrapping an externally created QRhi, because we may be associated
+    // with a new one now.
+    if (rhi && ownRhi)
         return true;
 
     QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();

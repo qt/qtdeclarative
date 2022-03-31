@@ -185,7 +185,7 @@ QQmlType QQmlTypePrivate::resolveCompositeBaseType(QQmlEnginePrivate *engine) co
     return QQmlMetaType::qmlType(mo);
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlTypePrivate::compositePropertyCache(
+QQmlPropertyCache::ConstPtr QQmlTypePrivate::compositePropertyCache(
         QQmlEnginePrivate *engine) const
 {
     // similar logic to resolveCompositeBaseType
@@ -276,9 +276,9 @@ void QQmlTypePrivate::init() const
 
 void QQmlTypePrivate::initEnums(QQmlEnginePrivate *engine) const
 {
-    QQmlRefPointer<QQmlPropertyCache> cache = (!isEnumFromCacheSetup.loadAcquire() && isComposite())
+    QQmlPropertyCache::ConstPtr cache = (!isEnumFromCacheSetup.loadAcquire() && isComposite())
             ? compositePropertyCache(engine)
-            : QQmlRefPointer<QQmlPropertyCache>();
+            : QQmlPropertyCache::ConstPtr();
 
     // beware: It could be a singleton type without metaobject
     const QMetaObject *metaObject = !isEnumFromBaseSetup.loadAcquire()
@@ -415,11 +415,11 @@ void QQmlTypePrivate::createEnumConflictReport(const QMetaObject *metaObject, co
 }
 
 void QQmlTypePrivate::insertEnumsFromPropertyCache(
-        const QQmlRefPointer<QQmlPropertyCache> &cache) const
+        const QQmlPropertyCache::ConstPtr &cache) const
 {
     const QMetaObject *cppMetaObject = cache->firstCppMetaObject();
 
-    for (QQmlPropertyCache *currentCache = cache.data();
+    for (const QQmlPropertyCache *currentCache = cache.data();
          currentCache && currentCache->metaObject() != cppMetaObject;
          currentCache = currentCache->parent().data()) {
 
@@ -480,25 +480,34 @@ QString QQmlType::qmlTypeName() const
     return d->name;
 }
 
+/*!
+   \internal
+   Allocates and initializes an object if the type is creatable.
+   Returns a pointer to the object, or nullptr if the type was
+   not creatable.
+ */
 QObject *QQmlType::create() const
+{
+    void *unused;
+    return create(&unused, 0);
+}
+
+/*!
+   \internal
+   \brief Like create without arguments, but allocates some extra space after the object.
+   \param memory An out-only argument. *memory will point to the start of the additionally
+                 allocated memory.
+   \param additionalMemory The amount of extra memory in bytes that shoudld be allocated.
+
+   \note This function is used to allocate the QQmlData next to the object in the
+   QQmlObjectCreator.
+
+   \overload
+ */
+QObject *QQmlType::create(void **memory, size_t additionalMemory) const
 {
     if (!d || !isCreatable())
         return nullptr;
-
-    d->init();
-
-    QObject *rv = (QObject *)operator new(d->extraData.cd->allocationSize);
-
-    d->extraData.cd->newFunc(rv, d->extraData.cd->userdata);
-
-    createProxy(rv);
-    return rv;
-}
-
-void QQmlType::create(QObject **out, void **memory, size_t additionalMemory) const
-{
-    if (!d || !isCreatable())
-        return;
 
     d->init();
 
@@ -506,8 +515,8 @@ void QQmlType::create(QObject **out, void **memory, size_t additionalMemory) con
     d->extraData.cd->newFunc(rv, d->extraData.cd->userdata);
 
     createProxy(rv);
-    *out = rv;
     *memory = ((char *)rv) + d->extraData.cd->allocationSize;
+    return rv;
 }
 
 QQmlType::SingletonInstanceInfo *QQmlType::singletonInstanceInfo() const

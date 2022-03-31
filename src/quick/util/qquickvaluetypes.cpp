@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 
 QVariant QQuickColorValueType::create(const QJSValue &params)
 {
-    return params.isString() ? QColor(params.toString()) : QVariant();
+    return params.isString() ? QColor::fromString(params.toString()) : QVariant();
 }
 
 QString QQuickColorValueType::toString() const
@@ -384,7 +384,7 @@ qreal QQuickVector3DValueType::dotProduct(const QVector3D &vec) const
 
 QVector3D QQuickVector3DValueType::times(const QMatrix4x4 &m) const
 {
-    return v * m;
+    return (QVector4D(v, 1) * m).toVector3DAffine();
 }
 
 QVector3D QQuickVector3DValueType::times(const QVector3D &vec) const
@@ -750,7 +750,7 @@ QVector4D QQuickMatrix4x4ValueType::times(const QVector4D &vec) const
 
 QVector3D QQuickMatrix4x4ValueType::times(const QVector3D &vec) const
 {
-    return v * vec;
+    return v.map(vec);
 }
 
 QMatrix4x4 QQuickMatrix4x4ValueType::times(qreal factor) const

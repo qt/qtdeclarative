@@ -366,9 +366,9 @@ void tst_qqmlproperty::registeredCompositeTypeProperty()
         QVERIFY(thirdList.isValid());
 
         // check that the value returned by QQmlProperty::read() is equivalent to the list reference.
-        QQmlListReference r1(obj, "fclist", &engine);
-        QQmlListReference r2(obj, "sclistOne", &engine);
-        QQmlListReference r3(obj, "sclistTwo", &engine);
+        QQmlListReference r1(obj, "fclist");
+        QQmlListReference r2(obj, "sclistOne");
+        QQmlListReference r3(obj, "sclistTwo");
         QCOMPARE(compareVariantAndListReference(lp1e.read(), r1), 1);
         QCOMPARE(compareVariantAndListReference(lp2e.read(), r2), 1);
         QCOMPARE(compareVariantAndListReference(lp3e.read(), r3), 1);

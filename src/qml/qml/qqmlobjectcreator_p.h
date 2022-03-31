@@ -89,7 +89,7 @@ struct RequiredPropertyInfo
     QVector<AliasToRequiredInfo> aliasesToRequired;
 };
 
-class RequiredProperties : public QHash<QQmlPropertyData*, RequiredPropertyInfo> {};
+class RequiredProperties : public QHash<const QQmlPropertyData *, RequiredPropertyInfo> {};
 
 struct DeferredQPropertyBinding {
     QObject *target = nullptr;
@@ -228,7 +228,7 @@ private:
     int _compiledObjectIndex;
     const QV4::CompiledData::Object *_compiledObject;
     QQmlData *_ddata;
-    QQmlRefPointer<QQmlPropertyCache> _propertyCache;
+    QQmlPropertyCache::ConstPtr _propertyCache;
     QQmlVMEMetaObject *_vmeMetaObject;
     QQmlListProperty<void> _currentList;
     QV4::QmlContext *_qmlContext;
@@ -244,7 +244,7 @@ private:
         QQmlData *declarativeData = QQmlData::get(instance);
         QObject *bindingTarget = instance;
 
-        QQmlRefPointer<QQmlPropertyCache> cache = declarativeData->propertyCache;
+        QQmlPropertyCache::ConstPtr cache = declarativeData->propertyCache;
         QQmlVMEMetaObject *vmeMetaObject = QQmlVMEMetaObject::get(instance);
 
         QObject *scopeObject = instance;

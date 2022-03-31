@@ -57,6 +57,9 @@
 
 #include <QtQml/qqmlparserstatus.h>
 #include <QtQml/qqml.h>
+#include <QtCore/private/qglobal_p.h>
+
+#include <memory>
 
 QT_BEGIN_NAMESPACE
 
@@ -95,7 +98,7 @@ public:
 
 private:
     QByteArray m_name;
-    QScopedPointer<QLoggingCategory> m_category;
+    std::unique_ptr<QLoggingCategory> m_category;
     DefaultLogLevel m_defaultLogLevel = Debug;
     bool m_initialized;
 };

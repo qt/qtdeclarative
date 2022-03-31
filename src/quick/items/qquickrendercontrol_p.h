@@ -65,6 +65,13 @@ class Q_QUICK_PRIVATE_EXPORT QQuickRenderControlPrivate : public QObjectPrivate
 public:
     Q_DECLARE_PUBLIC(QQuickRenderControl)
 
+    enum FrameStatus {
+        NotRecordingFrame,
+        RecordingFrame,
+        DeviceLostInBeginFrame,
+        ErrorInBeginFrame
+    };
+
     QQuickRenderControlPrivate(QQuickRenderControl *renderControl);
 
     static QQuickRenderControlPrivate *get(QQuickRenderControl *renderControl) {
@@ -96,6 +103,7 @@ public:
     QRhiCommandBuffer *cb;
     QOffscreenSurface *offscreenSurface;
     int sampleCount;
+    FrameStatus frameStatus;
 };
 
 QT_END_NAMESPACE

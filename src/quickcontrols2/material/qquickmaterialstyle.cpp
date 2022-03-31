@@ -1296,7 +1296,7 @@ void QQuickMaterialStyle::initGlobals()
         globalPrimaryCustom = false;
         globalPrimary = primaryEnum;
     } else {
-        QColor color(primaryValue.constData());
+        QColor color = QColor::fromString(primaryValue);
         if (color.isValid()) {
             globalPrimaryCustom = true;
             globalPrimary = color.rgba();
@@ -1311,7 +1311,7 @@ void QQuickMaterialStyle::initGlobals()
         globalAccentCustom = false;
         globalAccent = accentEnum;
     } else if (!accentValue.isEmpty()) {
-        QColor color(accentValue.constData());
+        QColor color = QColor::fromString(accentValue);
         if (color.isValid()) {
             globalAccentCustom = true;
             globalAccent = color.rgba();
@@ -1327,7 +1327,7 @@ void QQuickMaterialStyle::initGlobals()
         globalForeground = foregroundEnum;
         hasGlobalForeground = true;
     } else if (!foregroundValue.isEmpty()) {
-        QColor color(foregroundValue.constData());
+        QColor color = QColor::fromString(foregroundValue);
         if (color.isValid()) {
             globalForegroundCustom = true;
             globalForeground = color.rgba();
@@ -1344,7 +1344,7 @@ void QQuickMaterialStyle::initGlobals()
         globalBackground = backgroundEnum;
         hasGlobalBackground = true;
     } else if (!backgroundValue.isEmpty()) {
-        QColor color(backgroundValue.constData());
+        QColor color = QColor::fromString(backgroundValue);
         if (color.isValid()) {
             globalBackgroundCustom = true;
             globalBackground = color.rgba();
@@ -1383,7 +1383,7 @@ bool QQuickMaterialStyle::variantToRgba(const QVariant &var, const char *name, Q
         if (val != -1) {
             *rgba = val;
         } else {
-            QColor color(var.toString());
+            QColor color = QColor::fromString(var.toString());
             if (!color.isValid()) {
                 qmlWarning(parent()) << "unknown Material." << name << " value: " << var.toString();
                 return false;

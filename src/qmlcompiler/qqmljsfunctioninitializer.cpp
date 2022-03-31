@@ -188,7 +188,7 @@ QQmlJSCompilePass::Function QQmlJSFunctionInitializer::run(
 
         const auto property = m_objectType->property(propertyName);
         function.returnType = property.isList()
-                ? m_typeResolver->listType(property.type())
+                ? m_typeResolver->listType(property.type(), QQmlJSTypeResolver::UseQObjectList)
                 : QQmlJSScope::ConstPtr(property.type());
 
 

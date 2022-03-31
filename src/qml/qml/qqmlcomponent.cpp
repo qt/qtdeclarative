@@ -1077,7 +1077,7 @@ QQmlProperty QQmlComponentPrivate::removePropertyFromRequired(
     auto privProp = QQmlPropertyPrivate::get(prop);
     if (prop.isValid()) {
         // resolve outstanding required properties
-        auto targetProp = &privProp->core;
+        const QQmlPropertyData *targetProp = &privProp->core;
         if (targetProp->isAlias()) {
             auto target = createdComponent;
             QQmlPropertyIndex originalIndex(targetProp->coreIndex());

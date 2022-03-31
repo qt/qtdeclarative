@@ -42,12 +42,12 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlPropertyData *QQmlPropertyResolver::property(const QString &name, bool *notInRevision,
+const QQmlPropertyData *QQmlPropertyResolver::property(const QString &name, bool *notInRevision,
                                                  RevisionCheck check) const
 {
     if (notInRevision) *notInRevision = false;
 
-    QQmlPropertyData *d = cache->property(name, nullptr, nullptr);
+    const QQmlPropertyData *d = cache->property(name, nullptr, nullptr);
 
     // Find the first property
     while (d && d->isFunction())
@@ -62,11 +62,11 @@ QQmlPropertyData *QQmlPropertyResolver::property(const QString &name, bool *notI
 }
 
 
-QQmlPropertyData *QQmlPropertyResolver::signal(const QString &name, bool *notInRevision) const
+const QQmlPropertyData *QQmlPropertyResolver::signal(const QString &name, bool *notInRevision) const
 {
     if (notInRevision) *notInRevision = false;
 
-    QQmlPropertyData *d = cache->property(name, nullptr, nullptr);
+    const QQmlPropertyData *d = cache->property(name, nullptr, nullptr);
     if (notInRevision) *notInRevision = false;
 
     while (d && !(d->isFunction()))

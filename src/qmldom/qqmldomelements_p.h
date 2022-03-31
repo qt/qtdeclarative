@@ -614,6 +614,27 @@ public:
     RegionComments comments;
 };
 
+struct QMLDOM_EXPORT LocallyResolvedAlias
+{
+    enum class Status { Invalid, ResolvedProperty, ResolvedObject, Loop, TooDeep };
+    bool valid()
+    {
+        switch (status) {
+        case Status::ResolvedProperty:
+        case Status::ResolvedObject:
+            return true;
+        default:
+            return false;
+        }
+    }
+    DomItem baseObject;
+    DomItem localPropertyDef;
+    QString typeName;
+    QStringList accessedPath;
+    Status status = Status::Invalid;
+    int nAliases = 0;
+};
+
 class QMLDOM_EXPORT PropertyDefinition : public AttributeInfo
 {
 public:
@@ -624,7 +645,7 @@ public:
         bool cont = AttributeInfo::iterateDirectSubpaths(self, visitor);
         cont = cont && self.dvValueField(visitor, Fields::isPointer, isPointer);
         cont = cont && self.dvValueField(visitor, Fields::isFinal, isFinal);
-        cont = cont && self.dvValueField(visitor, Fields::isAlias, isAlias);
+        cont = cont && self.dvValueField(visitor, Fields::isAlias, isAlias());
         cont = cont && self.dvValueField(visitor, Fields::isDefaultMember, isDefaultMember);
         cont = cont && self.dvValueField(visitor, Fields::isRequired, isRequired);
         cont = cont && self.dvValueField(visitor, Fields::read, read);
@@ -643,6 +664,7 @@ public:
         return res;
     }
 
+    bool isAlias() const { return typeName == u"alias"; }
     bool isParametricType() const;
     void writeOut(DomItem &self, OutWriter &lw) const;
 
@@ -652,7 +674,6 @@ public:
     QString notify;
     bool isFinal = false;
     bool isPointer = false;
-    bool isAlias = false;
     bool isDefaultMember = false;
     bool isRequired = false;
 };
@@ -888,6 +909,10 @@ public:
     }
     void writeOut(DomItem &self, OutWriter &ow, QString onTarget) const;
     void writeOut(DomItem &self, OutWriter &lw) const override { writeOut(self, lw, QString()); }
+
+    LocallyResolvedAlias resolveAlias(DomItem &self,
+                                      std::shared_ptr<ScriptExpression> accessSequence) const;
+    LocallyResolvedAlias resolveAlias(DomItem &self, const QStringList &accessSequence) const;
 
 private:
     friend class QmlDomAstCreator;

@@ -78,7 +78,7 @@ struct Module;
 struct Class;
 struct TemplateObject;
 
-struct Q_QMLCOMPILER_PRIVATE_EXPORT StringTableGenerator {
+struct Q_QML_COMPILER_PRIVATE_EXPORT StringTableGenerator {
     StringTableGenerator();
 
     int registerString(const QString &str);
@@ -105,7 +105,7 @@ private:
     bool frozen = false;
 };
 
-struct Q_QMLCOMPILER_PRIVATE_EXPORT JSUnitGenerator {
+struct Q_QML_COMPILER_PRIVATE_EXPORT JSUnitGenerator {
     static void generateUnitChecksum(CompiledData::Unit *unit);
 
     struct MemberInfo {

@@ -40,6 +40,8 @@
 // We mean it.
 //
 
+#include <private/qtqmlcompilerexports_p.h>
+
 #include "qcoloroutput_p.h"
 
 #include <private/qqmljsdiagnosticmessage_p.h>
@@ -58,7 +60,7 @@ QT_BEGIN_NAMESPACE
     \internal
     Used to print the the line containing the location of a certain error
  */
-class IssueLocationWithContext
+class Q_QMLCOMPILER_PRIVATE_EXPORT IssueLocationWithContext
 {
 public:
     /*!
@@ -112,10 +114,11 @@ enum QQmlJSLoggerCategory {
     Log_Compiler,
     Log_ControlsSanity,
     Log_AttachedPropertyReuse,
-    QQmlJSLoggerCategory_Last = Log_AttachedPropertyReuse
+    Log_Plugin,
+    QQmlJSLoggerCategory_Last = Log_Plugin
 };
 
-struct FixSuggestion
+struct Q_QMLCOMPILER_PRIVATE_EXPORT FixSuggestion
 {
     struct Fix
     {
@@ -135,7 +138,7 @@ struct Message : public QQmlJS::DiagnosticMessage
     std::optional<FixSuggestion> fixSuggestion;
 };
 
-class QQmlJSLogger
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSLogger
 {
     Q_DISABLE_COPY_MOVE(QQmlJSLogger)
 public:

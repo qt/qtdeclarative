@@ -18,7 +18,7 @@ qt_internal_add_test(tst_qmlls
     TESTDATA ${test_data}
 )
 
-qt_internal_extend_target(tst_qmldomitem CONDITION ANDROID OR IOS
+qt_internal_extend_target(tst_qmlls CONDITION ANDROID OR IOS
     DEFINES
         QT_QMLTEST_DATADIR=\\\":/domdata\\\"
 )

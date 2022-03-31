@@ -63,7 +63,9 @@ QT_FOR_EACH_STATIC_PRIMITIVE_TYPE(HANDLE_PRIMITIVE);
     }
 }
 
-QQmlPropertyValidator::QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports &imports, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
+QQmlPropertyValidator::QQmlPropertyValidator(
+        QQmlEnginePrivate *enginePrivate, const QQmlImports *imports,
+        const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit)
     : enginePrivate(enginePrivate)
     , compilationUnit(compilationUnit)
     , imports(imports)
@@ -114,7 +116,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         return validateObject(componentBinding->value.objectIndex, componentBinding);
     }
 
-    QQmlRefPointer<QQmlPropertyCache> propertyCache = propertyCaches.at(objectIndex);
+    QQmlPropertyCache::ConstPtr propertyCache = propertyCaches.at(objectIndex);
     if (!propertyCache)
         return QVector<QQmlError>();
 
@@ -149,9 +151,9 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
     QQmlPropertyResolver propertyResolver(propertyCache);
 
     QString defaultPropertyName;
-    QQmlPropertyData *defaultProperty = nullptr;
+    const QQmlPropertyData *defaultProperty = nullptr;
     if (obj->indexOfDefaultPropertyOrAlias != -1) {
-        QQmlPropertyCache *cache = propertyCache->parent().data();
+        const QQmlPropertyCache *cache = propertyCache->parent().data();
         defaultPropertyName = cache->defaultPropertyName();
         defaultProperty = cache->defaultProperty();
     } else {
@@ -182,7 +184,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         bool isGroupProperty = instantiatingBinding && instantiatingBinding->type == QV4::CompiledData::Binding::Type_GroupProperty;
 
         bool notInRevision = false;
-        QQmlPropertyData *pd = nullptr;
+        const QQmlPropertyData *pd = nullptr;
         if (!name.isEmpty()) {
             if (binding->flags & QV4::CompiledData::Binding::IsSignalHandlerExpression
                 || binding->flags & QV4::CompiledData::Binding::IsSignalHandlerObject) {
@@ -223,7 +225,8 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         if (name.constData()->isUpper() && !binding->isAttachedProperty()) {
             QQmlType type;
             QQmlImportNamespace *typeNamespace = nullptr;
-            imports.resolveType(stringAt(binding->propertyNameIndex), &type, nullptr, &typeNamespace);
+            imports->resolveType(
+                        stringAt(binding->propertyNameIndex), &type, nullptr, &typeNamespace);
             if (typeNamespace)
                 return recordError(binding->location, tr("Invalid use of namespace"));
             return recordError(binding->location, tr("Invalid attached object assignment"));
@@ -363,7 +366,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
         customParser->clearErrors();
         customParser->validator = this;
         customParser->engine = enginePrivate;
-        customParser->imports = &imports;
+        customParser->imports = imports;
         customParser->verifyBindings(compilationUnit, customBindings);
         customParser->validator = nullptr;
         customParser->engine = nullptr;
@@ -380,7 +383,7 @@ QVector<QQmlError> QQmlPropertyValidator::validateObject(
 }
 
 QQmlError QQmlPropertyValidator::validateLiteralBinding(
-        const QQmlRefPointer<QQmlPropertyCache> &propertyCache, QQmlPropertyData *property,
+        const QQmlPropertyCache::ConstPtr &propertyCache, const QQmlPropertyData *property,
         const QV4::CompiledData::Binding *binding) const
 {
     if (property->isQList()) {
@@ -659,9 +662,9 @@ QQmlError QQmlPropertyValidator::validateLiteralBinding(
     Returns true if from can be assigned to a (QObject) property of type
     to.
 */
-bool QQmlPropertyValidator::canCoerce(QMetaType to, QQmlRefPointer<QQmlPropertyCache> fromMo) const
+bool QQmlPropertyValidator::canCoerce(QMetaType to, QQmlPropertyCache::ConstPtr fromMo) const
 {
-    QQmlRefPointer<QQmlPropertyCache> toMo = QQmlMetaType::rawPropertyCacheForType(to);
+    QQmlPropertyCache::ConstPtr toMo = QQmlMetaType::rawPropertyCacheForType(to);
 
     if (toMo.isNull()) {
         // if we have an inline component from the current file,
@@ -698,7 +701,7 @@ QVector<QQmlError> QQmlPropertyValidator::recordError(const QQmlError &error) co
     return errors;
 }
 
-QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const
+QQmlError QQmlPropertyValidator::validateObjectBinding(const QQmlPropertyData *property, const QString &propertyName, const QV4::CompiledData::Binding *binding) const
 {
     QQmlError noError;
 
@@ -710,7 +713,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
 
         const QV4::CompiledData::Object *targetObject = compilationUnit->objectAt(binding->value.objectIndex);
         if (auto *typeRef = resolvedType(targetObject->inheritedTypeNameIndex)) {
-            QQmlRefPointer<QQmlPropertyCache> cache = typeRef->createPropertyCache();
+            QQmlPropertyCache::ConstPtr cache = typeRef->createPropertyCache();
             const QMetaObject *mo = cache->firstCppMetaObject();
             QQmlType qmlType;
             while (mo && !qmlType.isValid()) {
@@ -747,7 +750,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
     } else if (property->isQList()) {
         const QMetaType listType = QQmlMetaType::listValueType(property->propType());
         if (!QQmlMetaType::isInterface(listType)) {
-            QQmlRefPointer<QQmlPropertyCache> source = propertyCaches.at(binding->value.objectIndex);
+            QQmlPropertyCache::ConstPtr source = propertyCaches.at(binding->value.objectIndex);
             if (!canCoerce(listType, source)) {
                 return qQmlCompileError(binding->valueLocation, tr("Cannot assign object to list property \"%1\"").arg(propertyName));
             }
@@ -771,7 +774,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
         // actual property type before we applied any extensions that might
         // effect the properties on the type, but don't effect assignability
         // Not passing a version ensures that we get the raw metaObject.
-        QQmlRefPointer<QQmlPropertyCache> propertyMetaObject
+        QQmlPropertyCache::ConstPtr propertyMetaObject
                 = QQmlMetaType::rawPropertyCacheForType(propType);
         if (!propertyMetaObject) {
             // if we have an inline component from the current file,
@@ -790,7 +793,7 @@ QQmlError QQmlPropertyValidator::validateObjectBinding(QQmlPropertyData *propert
             // Will be true if the assigned type inherits propertyMetaObject
             // Determine isAssignable value
             bool isAssignable = false;
-            QQmlRefPointer<QQmlPropertyCache> c = propertyCaches.at(binding->value.objectIndex);
+            QQmlPropertyCache::ConstPtr c = propertyCaches.at(binding->value.objectIndex);
             while (c && !isAssignable) {
                 isAssignable |= c == propertyMetaObject;
                 c = c->parent();

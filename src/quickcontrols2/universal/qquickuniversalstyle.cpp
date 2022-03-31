@@ -555,7 +555,7 @@ void QQuickUniversalStyle::initGlobals()
     if (ok) {
         GlobalAccent = qquickuniversal_accent_color(accentEnum);
     } else if (!accentValue.isEmpty()) {
-        QColor color(accentValue.constData());
+        QColor color = QColor::fromString(accentValue);
         if (color.isValid())
             GlobalAccent = color.rgba();
         else
@@ -568,7 +568,7 @@ void QQuickUniversalStyle::initGlobals()
         GlobalForeground = qquickuniversal_accent_color(foregroundEnum);
         HasGlobalForeground = true;
     } else if (!foregroundValue.isEmpty()) {
-        QColor color(foregroundValue.constData());
+        QColor color = QColor::fromString(foregroundValue);
         if (color.isValid()) {
             GlobalForeground = color.rgba();
             HasGlobalForeground = true;
@@ -583,7 +583,7 @@ void QQuickUniversalStyle::initGlobals()
         GlobalBackground = qquickuniversal_accent_color(backgroundEnum);
         HasGlobalBackground = true;
     } else if (!backgroundValue.isEmpty()) {
-        QColor color(backgroundValue.constData());
+        QColor color = QColor::fromString(backgroundValue);
         if (color.isValid()) {
             GlobalBackground = color.rgba();
             HasGlobalBackground = true;
@@ -607,7 +607,7 @@ bool QQuickUniversalStyle::variantToRgba(const QVariant &var, const char *name, 
         if (val != -1) {
             *rgba = qquickuniversal_accent_color(static_cast<Color>(val));
         } else {
-            QColor color(var.toString());
+            QColor color = QColor::fromString(var.toString());
             if (!color.isValid()) {
                 qmlWarning(parent()) << "unknown Universal." << name << " value: " << var.toString();
                 return false;

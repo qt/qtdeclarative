@@ -75,7 +75,7 @@ public:
     inline QQmlMetaObject() = default;
     inline QQmlMetaObject(const QObject *);
     inline QQmlMetaObject(const QMetaObject *);
-    inline QQmlMetaObject(const QQmlRefPointer<QQmlPropertyCache> &);
+    inline QQmlMetaObject(const QQmlPropertyCache::ConstPtr &);
     inline QQmlMetaObject(const QQmlMetaObject &);
 
     inline QQmlMetaObject &operator=(const QQmlMetaObject &);
@@ -127,7 +127,7 @@ QQmlMetaObject::QQmlMetaObject(const QMetaObject *m)
 {
 }
 
-QQmlMetaObject::QQmlMetaObject(const QQmlRefPointer<QQmlPropertyCache> &m)
+QQmlMetaObject::QQmlMetaObject(const QQmlPropertyCache::ConstPtr &m)
 {
     if (m)
         _m = m->createMetaObject();

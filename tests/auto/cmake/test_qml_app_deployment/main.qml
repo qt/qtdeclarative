@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the Qt Toolkit.
@@ -47,54 +47,24 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+import QtQuick
+import Shapes.EllipseShape
+import Shapes.FunkyShape
 
-#include "fbitem.h"
-#include <QOpenGLFramebufferObject>
-#include <QOpenGLContext>
-#include <QOpenGLFunctions>
-#include <QtCore/QDebug>
+Item {
+    width: 640; height: 480
+    visible: true
+    Item {
+        anchors.fill: parent
 
-#if QT_CONFIG(opengl)
-class FbRenderer : public QQuickFramebufferObject::Renderer
-{
-public:
-    FbRenderer() { }
-
-    // The lifetime of the FBO and this class depends on how QQuickWidget
-    // manages the scenegraph and context when it comes to showing and hiding
-    // the widget. The actual behavior is proven by the debug prints.
-    ~FbRenderer() override {
-        qDebug("FbRenderer destroyed");
+        EllipseItemCpp {
+            anchors.fill: parent
+        }
+        FunkyItemCpp {
+            anchors.fill: parent
+        }
+        FunkyItemQml {
+            anchors.fill: parent
+        }
     }
-
-    void render() override {
-        QOpenGLFunctions *f = QOpenGLContext::currentContext()->functions();
-        f->glClearColor(c, 0, 0, 1);
-        f->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-        c += 0.01f * dir;
-        if (c >= 1.0f || c <= 0.0f)
-            dir *= -1;
-        update();
-    }
-
-    QOpenGLFramebufferObject *createFramebufferObject(const QSize &size) override {
-        qDebug() << "Creating FBO" << size;
-        QOpenGLFramebufferObjectFormat format;
-        format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-        return new QOpenGLFramebufferObject(size, format);
-    }
-
-private:
-    float c = 0;
-    int dir = 1;
-};
-#endif
-
-QQuickFramebufferObject::Renderer *FbItem::createRenderer() const
-{
-#if QT_CONFIG(opengl)
-    return new FbRenderer;
-#else
-    return nullptr;
-#endif
 }

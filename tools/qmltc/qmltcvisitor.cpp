@@ -29,6 +29,7 @@
 #include "qmltcvisitor.h"
 
 #include <QtCore/qfileinfo.h>
+#include <QtCore/qstack.h>
 
 #include <algorithm>
 
@@ -41,6 +42,24 @@ static QString uniqueNameFromPieces(const QStringList &pieces, QHash<QString, in
     if (count > 0)
         possibleName.append(u"_" + QString::number(count));
     return possibleName;
+}
+
+static bool isOrUnderComponent(QQmlJSScope::ConstPtr type)
+{
+    Q_ASSERT(type->isComposite()); // we're dealing with composite types here
+    for (; type; type = type->parentScope()) {
+        if (type->isWrappedInImplicitComponent())
+            return true;
+        // for a composite type, its internalName() is guaranteed to not be a
+        // QQmlComponent. we need to detect a case with `Component {}` QML type
+        // where the *immediate* base type of the current type will be the
+        // QQmlComponent. note that non-composite base is different: if our type
+        // is not a direct child of QQmlComponent, then it is a good type that
+        // we have to compile
+        if (auto base = type->baseType(); base && base->internalName() == u"QQmlComponent")
+            return true;
+    }
+    return false;
 }
 
 QmltcVisitor::QmltcVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
@@ -90,7 +109,7 @@ void QmltcVisitor::findCppIncludes()
     };
 
     // walk the whole type hierarchy
-    for (const QQmlJSScope::ConstPtr &type : qAsConst(m_qmlTypes)) {
+    for (const QQmlJSScope::ConstPtr &type : qAsConst(m_pureQmlTypes)) {
         // TODO: figure how to NOT walk all the types. theoretically, we can
         // stop at first non-composite type
         for (auto t = type; t; t = t->baseType()) {
@@ -142,15 +161,18 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
     // give C++-relevant internal names to QMLScopes, we can use them later in compiler
     m_currentScope->setInternalName(uniqueNameFromPieces(m_qmlTypeNames, m_qmlTypeNameCounts));
 
-    if (auto base = m_currentScope->baseType(); base && base->isComposite())
+    if (auto base = m_currentScope->baseType();
+        base && base->isComposite() && !isOrUnderComponent(m_currentScope)) {
         m_qmlTypesWithQmlBases.append(m_currentScope);
+    }
 
     return true;
 }
 
 void QmltcVisitor::endVisit(QQmlJS::AST::UiObjectDefinition *object)
 {
-    m_qmlTypeNames.removeLast();
+    if (m_currentScope->scopeType() == QQmlJSScope::QMLScope)
+        m_qmlTypeNames.removeLast();
     QQmlJSImportVisitor::endVisit(object);
 }
 
@@ -167,8 +189,10 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiObjectBinding *uiob)
     // give C++-relevant internal names to QMLScopes, we can use them later in compiler
     m_currentScope->setInternalName(uniqueNameFromPieces(m_qmlTypeNames, m_qmlTypeNameCounts));
 
-    if (auto base = m_currentScope->baseType(); base && base->isComposite())
+    if (auto base = m_currentScope->baseType();
+        base && base->isComposite() && !isOrUnderComponent(m_currentScope)) {
         m_qmlTypesWithQmlBases.append(m_currentScope);
+    }
 
     return true;
 }
@@ -215,6 +239,20 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
     return true;
 }
 
+bool QmltcVisitor::visit(QQmlJS::AST::UiScriptBinding *scriptBinding)
+{
+    if (!QQmlJSImportVisitor::visit(scriptBinding))
+        return false;
+
+    {
+        const auto id = scriptBinding->qualifiedId;
+        if (!id->next && id->name == QLatin1String("id"))
+            m_typesWithId[m_currentScope] = -1; // temporary value
+    }
+
+    return true;
+}
+
 bool QmltcVisitor::visit(QQmlJS::AST::UiInlineComponent *component)
 {
     if (!QQmlJSImportVisitor::visit(component))
@@ -229,8 +267,186 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiInlineComponent *component)
 void QmltcVisitor::endVisit(QQmlJS::AST::UiProgram *program)
 {
     QQmlJSImportVisitor::endVisit(program);
+    if (!m_exportedRootScope) // in case we failed badly
+        return;
 
+    QHash<QQmlJSScope::ConstPtr, QList<QQmlJSMetaPropertyBinding>> bindings;
+    for (const QQmlJSScope::ConstPtr &type : qAsConst(m_qmlTypes)) {
+        if (isOrUnderComponent(type))
+            continue;
+        bindings.insert(type, type->ownPropertyBindingsInQmlIROrder());
+    }
+
+    postVisitResolve(bindings);
     findCppIncludes();
+}
+
+QQmlJSScope::ConstPtr fetchType(const QQmlJSMetaPropertyBinding &binding)
+{
+    switch (binding.bindingType()) {
+    case QQmlJSMetaPropertyBinding::Object:
+        return binding.objectType();
+    case QQmlJSMetaPropertyBinding::Interceptor:
+        return binding.interceptorType();
+    case QQmlJSMetaPropertyBinding::ValueSource:
+        return binding.valueSourceType();
+    // TODO: AttachedProperty and GroupProperty are not supported yet,
+    // but have to also be acknowledged here
+    default:
+        return {};
+    }
+    return {};
+}
+
+template<typename Predicate>
+void iterateTypes(
+        const QQmlJSScope::ConstPtr &root,
+        const QHash<QQmlJSScope::ConstPtr, QList<QQmlJSMetaPropertyBinding>> &qmlIrOrderedBindings,
+        Predicate predicate)
+{
+    // NB: depth-first-search is used here to mimic various QmlIR passes
+    QStack<QQmlJSScope::ConstPtr> types;
+    types.push(root);
+    while (!types.isEmpty()) {
+        auto current = types.pop();
+
+        if (predicate(current))
+            continue;
+
+        if (isOrUnderComponent(current)) // ignore implicit/explicit components
+            continue;
+
+        Q_ASSERT(qmlIrOrderedBindings.contains(current));
+        const auto &bindings = qmlIrOrderedBindings[current];
+        // reverse the binding order here, because stack processes right-most
+        // child first and we need left-most first
+        for (auto it = bindings.rbegin(); it != bindings.rend(); ++it) {
+            const auto &binding = *it;
+            if (auto type = fetchType(binding))
+                types.push(type);
+        }
+    }
+}
+
+template<typename Predicate>
+void iterateBindings(
+        const QQmlJSScope::ConstPtr &root,
+        const QHash<QQmlJSScope::ConstPtr, QList<QQmlJSMetaPropertyBinding>> &qmlIrOrderedBindings,
+        Predicate predicate)
+{
+    // NB: depth-first-search is used here to mimic various QmlIR passes
+    QStack<QQmlJSScope::ConstPtr> types;
+    types.push(root);
+    while (!types.isEmpty()) {
+        auto current = types.pop();
+
+        if (isOrUnderComponent(current)) // ignore implicit/explicit components
+            continue;
+
+        Q_ASSERT(qmlIrOrderedBindings.contains(current));
+        const auto &bindings = qmlIrOrderedBindings[current];
+        // reverse the binding order here, because stack processes right-most
+        // child first and we need left-most first
+        for (auto it = bindings.rbegin(); it != bindings.rend(); ++it) {
+            const auto &binding = *it;
+
+            if (predicate(current, binding))
+                continue;
+
+            if (auto type = fetchType(binding))
+                types.push(type);
+        }
+    }
+}
+
+void QmltcVisitor::postVisitResolve(
+        const QHash<QQmlJSScope::ConstPtr, QList<QQmlJSMetaPropertyBinding>> &qmlIrOrderedBindings)
+{
+    // This is a special function that must be called after
+    // QQmlJSImportVisitor::endVisit(QQmlJS::AST::UiProgram *). It is used to
+    // resolve things that couldn't be resolved during the AST traversal, such
+    // as anything that is dependent on implicit or explicit components
+
+    // 1. find types that are part of the deferred bindings (we care about
+    //    *types* exclusively here)
+    QSet<QQmlJSScope::ConstPtr> deferredTypes;
+    const auto findDeferred = [&deferredTypes](const QQmlJSScope::ConstPtr &type,
+                                               const QQmlJSMetaPropertyBinding &binding) {
+        if (binding.hasObject() || binding.hasInterceptor() || binding.hasValueSource()) {
+            const QString propertyName = binding.propertyName();
+            Q_ASSERT(!propertyName.isEmpty());
+            if (type->isNameDeferred(propertyName)) {
+                deferredTypes.insert(fetchType(binding));
+                return true;
+            }
+        }
+        return false;
+    };
+    iterateBindings(m_exportedRootScope, qmlIrOrderedBindings, findDeferred);
+
+    const auto isOrUnderDeferred = [&deferredTypes](QQmlJSScope::ConstPtr type) {
+        for (; type; type = type->parentScope()) {
+            if (deferredTypes.contains(type))
+                return true;
+        }
+        return false;
+    };
+
+    // 2. find all "pure" QML types
+    m_pureQmlTypes.reserve(m_qmlTypes.size());
+    for (qsizetype i = 0; i < m_qmlTypes.size(); ++i) {
+        const QQmlJSScope::ConstPtr &type = m_qmlTypes.at(i);
+
+        if (isOrUnderComponent(type) || isOrUnderDeferred(type)) {
+            // root is special: we compile Component roots. root is also never
+            // deferred, so in case `isOrUnderDeferred(type)` returns true, we
+            // always continue here
+            if (type != m_exportedRootScope)
+                continue;
+        }
+
+        m_pureTypeIndices[type] = m_pureQmlTypes.size();
+        m_pureQmlTypes.append(type);
+    }
+
+    // filter out deferred types
+    {
+        QList<QQmlJSScope::ConstPtr> filteredQmlTypesWithQmlBases;
+        filteredQmlTypesWithQmlBases.reserve(m_qmlTypesWithQmlBases.size());
+        std::copy_if(m_qmlTypesWithQmlBases.cbegin(), m_qmlTypesWithQmlBases.cend(),
+                     std::back_inserter(filteredQmlTypesWithQmlBases),
+                     [&](const QQmlJSScope::ConstPtr &type) { return !isOrUnderDeferred(type); });
+        qSwap(m_qmlTypesWithQmlBases, filteredQmlTypesWithQmlBases);
+    }
+
+    // 3. figure synthetic indices of QQmlComponent-wrapped types
+    int syntheticCreationIndex = -1;
+    const auto addSyntheticIndex = [&](const QQmlJSScope::ConstPtr &type) mutable {
+        if (type->isComponentRootElement()) {
+            m_syntheticTypeIndices[type] = ++syntheticCreationIndex;
+            return true;
+        }
+        return false;
+    };
+    iterateTypes(m_exportedRootScope, qmlIrOrderedBindings, addSyntheticIndex);
+
+    // 4. figure runtime object ids for non-component wrapped types
+    int currentId = 0;
+    const auto setRuntimeId = [&](const QQmlJSScope::ConstPtr &type) mutable {
+        // fancy way to call type->isComponentRootElement(). any type that is
+        // considered synthetic shouldn't be processed here. even if it has id,
+        // it doesn't need to be set by qmltc
+        if (m_syntheticTypeIndices.contains(type))
+            return true;
+
+        if (m_typesWithId.contains(type))
+            m_typesWithId[type] = currentId++;
+
+        // otherwise we need to `return true` here
+        Q_ASSERT(!type->isInlineComponent());
+        return false;
+    };
+    iterateTypes(m_exportedRootScope, qmlIrOrderedBindings, setRuntimeId);
 }
 
 QT_END_NAMESPACE

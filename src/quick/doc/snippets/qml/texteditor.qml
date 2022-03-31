@@ -54,8 +54,8 @@ Flickable {
      id: flick
 
      width: 300; height: 200;
-     contentWidth: edit.paintedWidth
-     contentHeight: edit.paintedHeight
+     contentWidth: edit.contentWidth
+     contentHeight: edit.contentHeight
      clip: true
 
      function ensureVisible(r)

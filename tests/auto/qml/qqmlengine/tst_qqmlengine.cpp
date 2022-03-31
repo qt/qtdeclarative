@@ -93,6 +93,7 @@ private slots:
     void attachedObjectAsObject();
     void listPropertyAsQJSValue();
     void stringToColor();
+    void qobjectToString();
 
 public slots:
     QObject *createAQObjectForOwnershipTest ()
@@ -1552,6 +1553,43 @@ void tst_qqmlengine::stringToColor()
     QCOMPARE(variant.metaType(), metaType);
 
     QCOMPARE(color, variant);
+}
+
+class WithToString : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    Q_INVOKABLE QString toString() const { return QStringLiteral("things"); }
+};
+
+class WithToNumber : public QObject
+{
+    Q_OBJECT
+    QML_ELEMENT
+public:
+    Q_INVOKABLE int toString() const { return 4; }
+};
+
+void tst_qqmlengine::qobjectToString()
+{
+    qmlRegisterTypesAndRevisions<WithToString>("WithToString", 1);
+    qmlRegisterTypesAndRevisions<WithToNumber>("WithToString", 1);
+    QQmlEngine engine;
+    QQmlComponent c(&engine);
+    c.setData(R"(
+        import WithToString
+        import QtQml
+
+        WithToString {
+            id: self
+            property QtObject weird: WithToNumber {}
+            objectName: toString() + ' ' + self.toString() + ' ' + weird.toString()
+        }
+    )", QUrl());
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->objectName(), QStringLiteral("things things 4"));
 }
 
 QTEST_MAIN(tst_qqmlengine)

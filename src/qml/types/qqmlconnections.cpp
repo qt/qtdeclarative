@@ -302,7 +302,7 @@ void QQmlConnections::connectSignalsToMethods()
          i < end;
          ++i) {
 
-        QQmlPropertyData *handler = ddata->propertyCache->method(i);
+        const QQmlPropertyData *handler = ddata->propertyCache->method(i);
         if (!handler || !handler->isVMEFunction())
             continue;
 

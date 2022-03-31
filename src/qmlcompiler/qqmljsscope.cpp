@@ -148,6 +148,29 @@ bool QQmlJSScope::hasMethod(const QString &name) const
     });
 }
 
+/*!
+    Returns all methods visible from this scope including those of
+    base types and extensions.
+
+    \note Methods that get shadowed are not included and only the
+    version visible from this scope is contained. Additionally method
+    overrides are not included either, only the first visible version
+    of any method is included.
+*/
+QHash<QString, QQmlJSMetaMethod> QQmlJSScope::methods() const
+{
+    QHash<QString, QQmlJSMetaMethod> results;
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        for (auto it = scope->m_methods.constBegin(); it != scope->m_methods.constEnd(); it++) {
+            if (!results.contains(it.key()))
+                results.insert(it.key(), it.value());
+        }
+        return false;
+    });
+
+    return results;
+}
+
 QList<QQmlJSMetaMethod> QQmlJSScope::methods(const QString &name) const
 {
     QList<QQmlJSMetaMethod> results;
@@ -207,27 +230,61 @@ QQmlJSMetaEnum QQmlJSScope::enumeration(const QString &name) const
     return result;
 }
 
-/*!
-    Returns if assigning to a property of this type would cause
-    implicit component wrapping for non-Component types.
+QHash<QString, QQmlJSMetaEnum> QQmlJSScope::enumerations() const
+{
+    QHash<QString, QQmlJSMetaEnum> results;
 
-    \note This method can also be used to check whether a type needs
-    to be implicitly wrapped: A type for which this function returns true
-    doesn't need to be actually wrapped.
- */
-bool QQmlJSScope::causesImplicitComponentWrapping() const {
-    if (internalName() == u"QQmlComponent")
-        return true;
-    else if (isComposite()) // composite types are never treated as Component
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        for (auto it = scope->m_enumerations.constBegin(); it != scope->m_enumerations.constEnd();
+             it++) {
+            if (!results.contains(it.key()))
+                results.insert(it.key(), it.value());
+        }
         return false;
-    // A class which is derived from component is not treated as a Component
-    // However isUsableComponent considers also QQmlAbstractDelegateComponent
-    // See isUsableComponent in qqmltypecompiler.cpp
+    });
 
-    for (auto cppBase = nonCompositeBaseType(baseType()); cppBase; cppBase = cppBase->baseType())
-        if (cppBase->internalName() == u"QQmlAbstractDelegateComponent")
-            return true;
-    return false;
+    return results;
+}
+
+/*!
+    Returns if assigning \a assignedType to \a property would require an
+    implicit component wrapping.
+ */
+bool QQmlJSScope::causesImplicitComponentWrapping(const QQmlJSMetaProperty &property,
+                                                  const QQmlJSScope::ConstPtr &assignedType)
+{
+    // See QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents()
+    // for the logic in qqmltypecompiler
+
+    // Note: unlike findAndRegisterImplicitComponents() we do not check whether
+    // the property type is *derived* from QQmlComponent at some point because
+    // this is actually meaningless (and in the case of QQmlComponent::create()
+    // gets rejected in QQmlPropertyValidator): if the type is not a
+    // QQmlComponent, we have a type mismatch because of assigning a Component
+    // object to a non-Component property
+    const bool propertyVerdict = property.type()->internalName() == u"QQmlComponent";
+
+    const bool assignedTypeVerdict = [&assignedType]() {
+        // Note: nonCompositeBaseType covers the case when assignedType itself
+        // is non-composite
+        auto cppBase = nonCompositeBaseType(assignedType);
+        Q_ASSERT(cppBase); // any QML type has (or must have) a C++ base type
+
+        // See isUsableComponent() in qqmltypecompiler.cpp: along with checking
+        // whether a type has a QQmlComponent static meta object (which we
+        // substitute here with checking the first non-composite base for being
+        // a QQmlComponent), it also excludes QQmlAbstractDelegateComponent
+        // subclasses from implicit wrapping
+        if (cppBase->internalName() == u"QQmlComponent")
+            return false;
+        for (; cppBase; cppBase = cppBase->baseType()) {
+            if (cppBase->internalName() == u"QQmlAbstractDelegateComponent")
+                return false;
+        }
+        return true;
+    }();
+
+    return propertyVerdict && assignedTypeVerdict;
 }
 
 /*!
@@ -500,6 +557,27 @@ QQmlJSMetaProperty QQmlJSScope::property(const QString &name) const
     return prop;
 }
 
+/*!
+    Returns all properties visible from this scope including those of
+    base types and extensions.
+
+    \note Properties that get shadowed are not included and only the
+    version visible from this scope is contained.
+*/
+QHash<QString, QQmlJSMetaProperty> QQmlJSScope::properties() const
+{
+    QHash<QString, QQmlJSMetaProperty> results;
+    searchBaseAndExtensionTypes(this, [&](const QQmlJSScope *scope) {
+        for (auto it = scope->m_properties.constBegin(); it != scope->m_properties.constEnd();
+             it++) {
+            if (!results.contains(it.key()))
+                results.insert(it.key(), it.value());
+        }
+        return false;
+    });
+    return results;
+}
+
 QQmlJSScope::ConstPtr QQmlJSScope::ownerOfProperty(const QQmlJSScope::ConstPtr &self,
                                                    const QString &name)
 {
@@ -542,6 +620,97 @@ bool QQmlJSScope::isPropertyRequired(const QString &name) const
 bool QQmlJSScope::isPropertyLocallyRequired(const QString &name) const
 {
     return m_requiredPropertyNames.contains(name);
+}
+
+static_assert(QTypeInfo<QQmlJSScope::QmlIRCompatibilityBindingData>::isRelocatable,
+              "We really want T to be relocatable as it improves QList<T> performance");
+
+void QQmlJSScope::addOwnPropertyBindingInQmlIROrder(const QQmlJSMetaPropertyBinding &binding,
+                                                    BindingTargetSpecifier specifier)
+{
+    // the order:
+    // * ordinary bindings are prepended to the binding array
+    // * list bindings are properly ordered within each other, so basically
+    //   prepended "in bulk"
+    // * bindings to default properties (which are not explicitly mentioned in
+    //   binding expression) are inserted by source location's offset
+
+    switch (specifier) {
+    case BindingTargetSpecifier::SimplePropertyTarget: {
+        m_propertyBindingsArray.emplaceFront(binding.propertyName(),
+                                             binding.sourceLocation().offset);
+        break;
+    }
+    case BindingTargetSpecifier::ListPropertyTarget: {
+        const auto bindingOnTheSameProperty =
+                [&](const QQmlJSScope::QmlIRCompatibilityBindingData &x) {
+                    return x.propertyName == binding.propertyName();
+                };
+        // fake "prepend in bulk" by appending a list binding to the sequence of
+        // bindings to the same property. there's an implicit QML language
+        // guarantee that such sequence does not contain arbitrary in-between
+        // bindings that do not belong to the same list property
+        auto pos = std::find_if_not(m_propertyBindingsArray.begin(), m_propertyBindingsArray.end(),
+                                    bindingOnTheSameProperty);
+        Q_ASSERT(pos == m_propertyBindingsArray.begin()
+                 || std::prev(pos)->propertyName == binding.propertyName());
+        m_propertyBindingsArray.emplace(pos, binding.propertyName(),
+                                        binding.sourceLocation().offset);
+        break;
+    }
+    case BindingTargetSpecifier::UnnamedPropertyTarget: {
+        // see QmlIR::PoolList<>::findSortedInsertionPoint()
+        const auto findInsertionPoint = [this](const QQmlJSMetaPropertyBinding &x) {
+            qsizetype pos = -1;
+            for (auto it = m_propertyBindingsArray.cbegin(); it != m_propertyBindingsArray.cend();
+                 ++it) {
+                if (!(it->sourceLocationOffset <= x.sourceLocation().offset))
+                    break;
+                ++pos;
+            }
+            return pos;
+        };
+
+        // see QmlIR::PoolList<>::insertAfter()
+        const auto insertAfter = [this](qsizetype pos, const QQmlJSMetaPropertyBinding &x) {
+            if (pos == -1) {
+                m_propertyBindingsArray.emplaceFront(x.propertyName(), x.sourceLocation().offset);
+            } else if (pos == m_propertyBindingsArray.size()) {
+                m_propertyBindingsArray.emplaceBack(x.propertyName(), x.sourceLocation().offset);
+            } else {
+                // since we insert *after*, use (pos + 1) as insertion point
+                m_propertyBindingsArray.emplace(pos + 1, x.propertyName(),
+                                                x.sourceLocation().offset);
+            }
+        };
+
+        const qsizetype insertionPos = findInsertionPoint(binding);
+        insertAfter(insertionPos, binding);
+        break;
+    }
+    default: {
+        Q_UNREACHABLE();
+        break;
+    }
+    }
+}
+
+QList<QQmlJSMetaPropertyBinding> QQmlJSScope::ownPropertyBindingsInQmlIROrder() const
+{
+    QList<QQmlJSMetaPropertyBinding> qmlIrOrdered;
+    qmlIrOrdered.reserve(m_propertyBindingsArray.size());
+
+    for (const auto &data : m_propertyBindingsArray) {
+        const auto [first, last] = m_propertyBindings.equal_range(data.propertyName);
+        Q_ASSERT(first != last);
+        auto binding = std::find_if(first, last, [&](const QQmlJSMetaPropertyBinding &x) {
+            return x.sourceLocation().offset == data.sourceLocationOffset;
+        });
+        Q_ASSERT(binding != last);
+        qmlIrOrdered.append(*binding);
+    }
+
+    return qmlIrOrdered;
 }
 
 bool QQmlJSScope::hasPropertyBindings(const QString &name) const
@@ -620,12 +789,17 @@ QQmlJSScope::ConstPtr QQmlJSScope::attachedType() const
 
 bool QQmlJSScope::isResolved() const
 {
-    if (m_scopeType == ScopeType::AttachedPropertyScope
-        || m_scopeType == ScopeType::GroupedPropertyScope) {
-        return m_internalName.isEmpty() || !m_baseType.scope.isNull();
-    }
-
-    return m_baseTypeName.isEmpty() || !m_baseType.scope.isNull();
+    const bool nameIsEmpty = (m_scopeType == ScopeType::AttachedPropertyScope
+                              || m_scopeType == ScopeType::GroupedPropertyScope)
+            ? m_internalName.isEmpty()
+            : m_baseTypeName.isEmpty();
+    if (nameIsEmpty)
+        return true;
+    if (m_baseType.scope.isNull())
+        return false;
+    if (isComposite() && !nonCompositeBaseType(baseType()))
+        return false;
+    return true;
 }
 
 QString QQmlJSScope::defaultPropertyName() const
@@ -723,7 +897,24 @@ bool QQmlJSScope::canAssign(const QQmlJSScope::ConstPtr &derived) const
     if (!derived)
         return false;
 
-    bool isBaseComponent = causesImplicitComponentWrapping();
+    // expect this and derived types to have non-composite bases
+    Q_ASSERT(!isComposite() || nonCompositeBaseType(baseType()));
+    Q_ASSERT(nonCompositeBaseType(derived));
+
+    // the logic with isBaseComponent (as well as the way we set this flag)
+    // feels wrong - QTBUG-101940
+    const bool isBaseComponent = [this]() {
+        if (internalName() == u"QQmlComponent")
+            return true;
+        else if (isComposite())
+            return false;
+        for (auto cppBase = nonCompositeBaseType(baseType()); cppBase;
+             cppBase = cppBase->baseType()) {
+            if (cppBase->internalName() == u"QQmlAbstractDelegateComponent")
+                return true;
+        }
+        return false;
+    }();
 
     QDuplicateTracker<QQmlJSScope::ConstPtr> seen;
     for (auto scope = derived; !scope.isNull() && !seen.hasSeen(scope);

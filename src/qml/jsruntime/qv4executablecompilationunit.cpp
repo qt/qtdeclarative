@@ -802,7 +802,7 @@ bool ExecutableCompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &s
     }
 
     const QString sourcePath = QQmlFile::urlToLocalFileOrQrc(url);
-    QScopedPointer<CompilationUnitMapper> cacheFile(new CompilationUnitMapper());
+    auto cacheFile = std::make_unique<CompilationUnitMapper>();
 
     const QStringList cachePaths = { sourcePath + QLatin1Char('c'), localCacheFilePath(url) };
     for (const QString &cachePath : cachePaths) {
@@ -827,7 +827,7 @@ bool ExecutableCompilationUnit::loadFromDisk(const QUrl &url, const QDateTime &s
 
         dataPtrRevert.dismiss();
         free(const_cast<CompiledData::Unit*>(oldDataPtr));
-        backingFile.reset(cacheFile.take());
+        backingFile = std::move(cacheFile);
         return true;
     }
 

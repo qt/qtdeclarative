@@ -52,6 +52,7 @@
 //
 
 #include <QtQml/qqml.h>
+#include <QtCore/private/qglobal_p.h>
 
 #include <array>
 
@@ -69,17 +70,15 @@ class QQmltcObjectCreationHelper
     QObject **m_data = nullptr; // QObject* array
     const qsizetype m_size = 0; // size of m_data array, exists for bounds checking
     const qsizetype m_offset = 0; // global offset into m_data array
-    const qsizetype m_nonRoot = 1; // addresses the "+ 1" in QQmltcObjectCreationBase::m_objects
 
-    qsizetype offset() const { return m_offset + m_nonRoot; }
+    qsizetype offset() const { return m_offset; }
 
 public:
     /*!
         Constructs initial "view" from basic data. Supposed to only be called
         once from QQmltcObjectCreationBase.
     */
-    QQmltcObjectCreationHelper(QObject **data, qsizetype size)
-        : m_data(data), m_size(size), m_nonRoot(0 /* root object */)
+    QQmltcObjectCreationHelper(QObject **data, qsizetype size) : m_data(data), m_size(size)
     {
         Q_UNUSED(m_size);
     }
@@ -91,7 +90,6 @@ public:
     QQmltcObjectCreationHelper(const QQmltcObjectCreationHelper *base, qsizetype localOffset)
         : m_data(base->m_data), m_size(base->m_size), m_offset(base->m_offset + localOffset)
     {
-        Q_ASSERT(m_nonRoot == 1); // sanity check - a sub-creator is for non-root object
     }
 
     template<typename T>
@@ -112,6 +110,12 @@ public:
         Q_ASSERT(m_data[i + offset()] == nullptr); // prevent accidental resets
         m_data[i + offset()] = object;
     }
+
+    template<typename T>
+    static constexpr uint typeCount() noexcept
+    {
+        return T::q_qmltc_typeCount();
+    }
 };
 
 /*!
@@ -124,7 +128,7 @@ template<typename QmltcGeneratedType>
 class QQmltcObjectCreationBase
 {
     // Note: +1 for the document root itself
-    std::array<QObject *, QmltcGeneratedType::q_qmltc_typeCount + 1> m_objects = {};
+    std::array<QObject *, QmltcGeneratedType::q_qmltc_typeCount() + 1> m_objects = {};
 
 public:
     QQmltcObjectCreationHelper view()

@@ -121,20 +121,20 @@ private:
 
     QString getNewProcessOutput(int updateTimeOut = 10)
     {
-        int newCurrentOutputLine = 0;
+        qsizetype newCurrentOutputLine = 0;
         int counter = 0;
         do {
             counter++;
-            newCurrentOutputLine = m_process->output().count();
+            newCurrentOutputLine = m_process->output().size();
             if (newCurrentOutputLine > m_currentOutputLine) {
                 // lets wait a little bit more to not cut anything
                 int triggeredCount = 0;
                 int debugCounter = 0;
                 do {
                     debugCounter++;
-                    triggeredCount = m_process->output().count();
+                    triggeredCount = m_process->output().size();
                     QTest::qWait(updateTimeOut);
-                    newCurrentOutputLine = m_process->output().count();
+                    newCurrentOutputLine = m_process->output().size();
                 } while (triggeredCount != newCurrentOutputLine);
                 QString currentOutputString = m_process->output().right(newCurrentOutputLine - m_currentOutputLine);
                 if (m_enableClientOutput)
@@ -159,7 +159,7 @@ private:
 
     QPointer<QQmlDebugTranslationClient> m_debugTranslationClient;
     QPointer<QQmlPreviewClient> m_previewClient;
-    int m_currentOutputLine = 0;
+    qsizetype m_currentOutputLine = 0;
     bool m_enableClientOutput = true;
 };
 

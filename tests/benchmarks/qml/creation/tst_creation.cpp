@@ -261,7 +261,7 @@ void tst_creation::itemtree_data_cpp()
         for (int i = 0; i < 30; ++i) {
             QQuickItem *child = new QQuickItem;
             QQmlGraphics_setParent_noEvent(child,item);
-            QQmlListReference ref(item, "data", &engine);
+            QQmlListReference ref(item, "data");
             ref.append(child);
         }
         delete item;

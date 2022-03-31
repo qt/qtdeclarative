@@ -12,7 +12,6 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/quick/quickwidgets/quickwidget")
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Quick QuickWidgets Widgets)
 
 qt_add_executable(quickwidget
-    fbitem.cpp fbitem.h
     main.cpp
 )
 
@@ -33,9 +32,7 @@ qt_add_qml_module(quickwidget
     URI QuickWidgetExample
     VERSION 1.0
     QML_FILES
-        customgl.qml
         rotatingsquare.qml
-        rotatingsquaretab.qml
     RESOURCE_PREFIX /quickwidget
     NO_RESOURCE_TARGET_PATH
 )

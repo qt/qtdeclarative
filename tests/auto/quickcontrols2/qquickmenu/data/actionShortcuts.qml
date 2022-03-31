@@ -1,9 +1,9 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the test suite of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** Commercial License Usage
@@ -48,29 +48,50 @@
 **
 ****************************************************************************/
 
-import QtQuick 2.0
+import QtQuick
+import QtQuick.Controls
 
-Rectangle {
-    gradient: Gradient {
-        GradientStop { position: 0; color: "steelblue" }
-        GradientStop { position: 1; color: "black" }
+ApplicationWindow {
+    width: 400
+    height: 400
+
+    property alias menu: menu
+    property alias subMenu: subMenu
+    property alias buttonMenu: buttonMenu
+
+    Menu {
+        id: menu
+        objectName: "menu"
+
+        Action {
+            objectName: text
+            text: "action1"
+            shortcut: "A"
+        }
+
+        Menu {
+            id: subMenu
+            objectName: "subMenu"
+
+            Action {
+                objectName: text
+                text: "subAction1"
+                shortcut: "B"
+            }
+        }
     }
 
-    Rectangle {
-        property int d: 100
-        id: square
-        width: d
-        height: d
-        anchors.centerIn: parent
-        color: "green"
-        NumberAnimation on rotation { from: 360; to: 0; duration: 4000; loops: Animation.Infinite; }
-    }
+    Button {
+        text: "Menu button"
 
-    Text {
-        anchors.centerIn: parent
-        text: "Qt Quick running in a tab widget"
-        color: "purple"
-        font.bold: true
-        font.pointSize: 14
+        Menu {
+            id: buttonMenu
+
+            Action {
+                objectName: text
+                text: "buttonMenuAction1"
+                shortcut: "C"
+            }
+        }
     }
 }

@@ -43,15 +43,6 @@
 
 QT_BEGIN_NAMESPACE
 
-QQmlTypeNameCache::QQmlTypeNameCache(const QQmlImports &importCache)
-    : m_imports(importCache)
-{
-}
-
-QQmlTypeNameCache::~QQmlTypeNameCache()
-{
-}
-
 void QQmlTypeNameCache::add(const QHashedString &name, const QUrl &url, const QHashedString &nameSpace)
 {
     if (nameSpace.length() != 0) {

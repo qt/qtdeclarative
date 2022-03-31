@@ -18,6 +18,7 @@ qt_internal_add_manual_test(testbench
         directoryvalidator.cpp directoryvalidator.h
         main.cpp
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
         Qt::Qml
         Qt::Quick

@@ -52,7 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlJSCodeGenerator : public QQmlJSCompilePass
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSCodeGenerator : public QQmlJSCompilePass
 {
 public:
     QQmlJSCodeGenerator(const QV4::Compiler::Context *compilerContext,
@@ -65,52 +65,6 @@ public:
                           QQmlJS::DiagnosticMessage *error);
 
 protected:
-    enum class JumpMode { None, Conditional, Unconditional };
-
-    class Section
-    {
-    public:
-        Section &operator+=(const QString &code) { m_code += code; return *this; }
-        Section &operator+=(const QChar &code) { m_code += code; return *this; }
-
-        bool addReadRegister(const QString &name)
-        {
-            if (m_readRegisters.contains(name))
-                return false;
-            m_readRegisters.append(name);
-            return true;
-        }
-
-        void setWriteRegister(const QString &name) { m_writeRegister = name; }
-        void setHasSideEffects(bool hasSideEffects) { m_hasSideEffects = hasSideEffects; }
-        void setLabel(const QString &label) { m_label = label; }
-        void setJump(const QString &target, JumpMode mode)
-        {
-            m_jumpTarget = target;
-            m_jumpMode = mode;
-        }
-
-        bool readsRegister(const QString &name) const { return m_readRegisters.contains(name); }
-
-        QString code() const { return m_code; }
-        QString writeRegister() const { return m_writeRegister; }
-        QStringList readRegisters() const { return m_readRegisters; }
-        bool hasSideEffects() const { return m_hasSideEffects; }
-
-        QString label() const { return m_label; }
-        JumpMode jumpMode() const { return m_jumpMode; }
-        QString jumpTarget() const { return m_jumpTarget; }
-
-    private:
-        QString m_code;
-        QString m_writeRegister;
-        QString m_label;
-        QStringList m_readRegisters;
-        QString m_jumpTarget;
-        JumpMode m_jumpMode = JumpMode::None;
-        bool m_hasSideEffects = false;
-    };
-
     struct CodegenState : public State
     {
         QString accumulatorVariableIn;
@@ -274,12 +228,6 @@ protected:
     Verdict startInstruction(QV4::Moth::Instr::Type) override;
     void endInstruction(QV4::Moth::Instr::Type) override;
 
-    const QString &use(const QString &variable)
-    {
-        m_body.addReadRegister(variable);
-        return variable;
-    }
-
     void addInclude(const QString &include)
     {
         Q_ASSERT(!include.isEmpty());
@@ -318,31 +266,15 @@ protected:
     QString changedRegisterVariable() const;
     QQmlJSRegisterContent registerType(int index) const;
 
-    Section m_body;
+    QString m_body;
     CodegenState m_state;
 
 private:
-    enum class ReadMode { NoRead, SelfRead, Preserve };
-    using RequiredRegisters = QList<QHash<QString, ReadMode>>;
-
-    struct BasicBlock
-    {
-        int beginSection = -1;
-        int endSection = -1;
-
-        QString label;
-        QString jumpTarget;
-        QQmlJSCodeGenerator::JumpMode jumpMode = QQmlJSCodeGenerator::JumpMode::None;
-
-        QList<int> previousBlocks;
-        int jumpTargetBlock = -1;
-    };
-
     void generateExceptionCheck();
     void generateEqualityOperation(int lhs, const QString &function, bool invert);
     void generateCompareOperation(int lhs, const QString &cppOperator);
     void generateArithmeticOperation(int lhs, const QString &cppOperator);
-    void generateJumpCodeWithTypeConversions(int relativeOffset, JumpMode mode);
+    void generateJumpCodeWithTypeConversions(int relativeOffset);
     void generateUnaryOperation(const QString &cppOperator);
     void generateInPlaceOperation(const QString &cppOperator);
     void generateMoveOutVar(const QString &outVar);
@@ -352,11 +284,6 @@ private:
     QString eqIntExpression(int lhsConst);
     QString argumentsList(int argc, int argv, QString *outVar);
     QString castTargetName(const QQmlJSScope::ConstPtr &type) const;
-
-    QList<BasicBlock> findBasicBlocks(const QList<Section> &sections);
-    RequiredRegisters dropPreserveCycles(
-            const QList<BasicBlock> &basicBlocks, const RequiredRegisters &requiredRegisters);
-    void eliminateDeadStores();
 
     bool inlineMathMethod(const QString &name, int argc, int argv);
     QQmlJSScope::ConstPtr mathObject() const
@@ -370,18 +297,11 @@ private:
     }
 
     int nextJSLine(uint line) const;
-    void nextSection()
-    {
-        if (!m_body.code().isEmpty())
-            m_sections.append(std::move(m_body));
-        m_body = Section();
-    }
 
     QStringList m_sourceCodeLines;
 
     // map from instruction offset to sequential label number
     QHash<int, QString> m_labels;
-    QList<Section> m_sections;
 
     const QV4::Compiler::Context *m_context = nullptr;
     const InstructionAnnotations *m_annotations = nullptr;

@@ -108,7 +108,7 @@ public:
     CreateValueTypeFunc createValueTypeFunction() const;
 
     QObject *create() const;
-    void create(QObject **, void **, size_t) const;
+    QObject *create(void **, size_t) const;
 
     typedef void (*CreateFunc)(void *, void *);
     CreateFunc createFunction() const;

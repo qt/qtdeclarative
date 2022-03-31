@@ -78,21 +78,22 @@ struct QQmlBindingInstantiationContext {
     QQmlBindingInstantiationContext(
             int referencingObjectIndex, const QV4::CompiledData::Binding *instantiatingBinding,
             const QString &instantiatingPropertyName,
-            const QQmlRefPointer<QQmlPropertyCache> &referencingObjectPropertyCache);
+            const QQmlPropertyCache::ConstPtr &referencingObjectPropertyCache);
 
     bool resolveInstantiatingProperty();
-    QQmlRefPointer<QQmlPropertyCache> instantiatingPropertyCache() const;
+    QQmlPropertyCache::ConstPtr instantiatingPropertyCache() const;
 
     int referencingObjectIndex = -1;
     const QV4::CompiledData::Binding *instantiatingBinding = nullptr;
     QString instantiatingPropertyName;
-    QQmlRefPointer<QQmlPropertyCache> referencingObjectPropertyCache;
-    QQmlPropertyData *instantiatingProperty = nullptr;
+    QQmlPropertyCache::ConstPtr referencingObjectPropertyCache;
+    const QQmlPropertyData *instantiatingProperty = nullptr;
 };
 
 struct QQmlPendingGroupPropertyBindings : public QVector<QQmlBindingInstantiationContext>
 {
-    void resolveMissingPropertyCaches(QQmlPropertyCacheVector *propertyCaches) const;
+    void resolveMissingPropertyCaches(
+            QQmlPropertyCacheVector *propertyCaches) const;
 };
 
 struct QQmlPropertyCacheCreatorBase
@@ -130,6 +131,7 @@ public:
                              QQmlEnginePrivate *enginePrivate,
                              const ObjectContainer *objectContainer, const QQmlImports *imports,
                              const QByteArray &typeClassName);
+    ~QQmlPropertyCacheCreator() { propertyCaches->seal(); }
 
 
     /*!
@@ -163,8 +165,8 @@ public:
     };
 protected:
     QQmlError buildMetaObjectRecursively(int objectIndex, const QQmlBindingInstantiationContext &context, VMEMetaObjectIsRequired isVMERequired);
-    QQmlRefPointer<QQmlPropertyCache> propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlError *error) const;
-    QQmlError createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache);
+    QQmlPropertyCache::ConstPtr propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlError *error) const;
+    QQmlError createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlPropertyCache::ConstPtr &baseTypeCache);
 
     QMetaType metaTypeForParameter(const QV4::CompiledData::ParameterType &param, QString *customTypeName = nullptr);
 
@@ -309,7 +311,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
                         const CompiledObject *obj = objectContainer->objectAt(context.referencingObjectIndex);
                         auto *typeRef = objectContainer->resolvedType(obj->inheritedTypeNameIndex);
                         Q_ASSERT(typeRef);
-                        QQmlRefPointer<QQmlPropertyCache> baseTypeCache = typeRef->createPropertyCache();
+                        QQmlPropertyCache::ConstPtr baseTypeCache = typeRef->createPropertyCache();
                         QQmlError error = createMetaObject(context.referencingObjectIndex, obj, baseTypeCache);
                         if (error.isValid())
                             return error;
@@ -323,7 +325,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
         }
     }
 
-    QQmlRefPointer<QQmlPropertyCache> baseTypeCache;
+    QQmlPropertyCache::ConstPtr baseTypeCache;
     {
         QQmlError error;
         baseTypeCache = propertyCacheForObject(obj, context, &error);
@@ -341,7 +343,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
         }
     }
 
-    QQmlRefPointer<QQmlPropertyCache> thisCache = propertyCaches->at(objectIndex);
+    QQmlPropertyCache::ConstPtr thisCache = propertyCaches->at(objectIndex);
     auto binding = obj->bindingsBegin();
     auto end = obj->bindingsEnd();
     for (; binding != end; ++binding) {
@@ -381,7 +383,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::buildMetaObjectRecur
 }
 
 template <typename ObjectContainer>
-inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContainer>::propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlError *error) const
+inline QQmlPropertyCache::ConstPtr QQmlPropertyCacheCreator<ObjectContainer>::propertyCacheForObject(const CompiledObject *obj, const QQmlBindingInstantiationContext &context, QQmlError *error) const
 {
     if (context.instantiatingProperty) {
         return context.instantiatingPropertyCache();
@@ -445,15 +447,17 @@ inline QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCacheCreator<ObjectContaine
 }
 
 template <typename ObjectContainer>
-inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int objectIndex, const CompiledObject *obj, const QQmlRefPointer<QQmlPropertyCache> &baseTypeCache)
+inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(
+        int objectIndex, const CompiledObject *obj,
+        const QQmlPropertyCache::ConstPtr &baseTypeCache)
 {
-    QQmlRefPointer<QQmlPropertyCache> cache = baseTypeCache->copyAndReserve(
+    QQmlPropertyCache::Ptr cache = baseTypeCache->copyAndReserve(
             obj->propertyCount() + obj->aliasCount(),
             obj->functionCount() + obj->propertyCount() + obj->aliasCount() + obj->signalCount(),
             obj->signalCount() + obj->propertyCount() + obj->aliasCount(),
             obj->enumCount());
 
-    propertyCaches->set(objectIndex, cache);
+    propertyCaches->setOwn(objectIndex, cache);
     propertyCaches->setNeedsVMEMetaObject(objectIndex);
 
     QByteArray newClassName;
@@ -487,7 +491,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
     auto pend = obj->propertiesEnd();
     for ( ; p != pend; ++p) {
         bool notInRevision = false;
-        QQmlPropertyData *d = resolver.property(stringAt(p->nameIndex), &notInRevision);
+        const QQmlPropertyData *d = resolver.property(stringAt(p->nameIndex), &notInRevision);
         if (d && d->isFinal())
             return qQmlCompileError(p->location, QQmlPropertyCacheCreatorBase::tr("Cannot override FINAL property"));
     }
@@ -496,7 +500,7 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
     auto aend = obj->aliasesEnd();
     for ( ; a != aend; ++a) {
         bool notInRevision = false;
-        QQmlPropertyData *d = resolver.property(stringAt(a->nameIndex), &notInRevision);
+        const QQmlPropertyData *d = resolver.property(stringAt(a->nameIndex), &notInRevision);
         if (d && d->isFinal())
             return qQmlCompileError(a->location, QQmlPropertyCacheCreatorBase::tr("Cannot override FINAL property"));
     }
@@ -509,12 +513,12 @@ inline QQmlError QQmlPropertyCacheCreator<ObjectContainer>::createMetaObject(int
     // and throw an error if there is a signal/method defined as an override.
     QSet<QString> seenSignals;
     seenSignals << QStringLiteral("destroyed") << QStringLiteral("parentChanged") << QStringLiteral("objectNameChanged");
-    QQmlPropertyCache *parentCache = cache.data();
+    const QQmlPropertyCache *parentCache = cache.data();
     while ((parentCache = parentCache->parent().data())) {
         if (int pSigCount = parentCache->signalCount()) {
             int pSigOffset = parentCache->signalOffset();
             for (int i = pSigOffset; i < pSigCount; ++i) {
-                QQmlPropertyData *currPSig = parentCache->signal(i);
+                const QQmlPropertyData *currPSig = parentCache->signal(i);
                 // XXX TODO: find a better way to get signal name from the property data :-/
                 for (QQmlPropertyCache::StringCache::ConstIterator iter = parentCache->stringCache.begin();
                      iter != parentCache->stringCache.end(); ++iter) {
@@ -842,12 +846,12 @@ inline void QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasPropertie
             if (alias->encodedMetaPropertyIndex == -1)
                 continue;
 
-            const QQmlRefPointer<QQmlPropertyCache> targetCache
+            const QQmlPropertyCache::ConstPtr targetCache
                     = propertyCaches->at(targetObjectIndex);
             Q_ASSERT(targetCache);
 
             int coreIndex = QQmlPropertyIndex::fromEncoded(alias->encodedMetaPropertyIndex).coreIndex();
-            QQmlPropertyData *targetProperty = targetCache->property(coreIndex);
+            const QQmlPropertyData *targetProperty = targetCache->property(coreIndex);
             if (!targetProperty)
                 return false;
        }
@@ -962,19 +966,19 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::propertyDataFor
         int coreIndex = QQmlPropertyIndex::fromEncoded(alias.encodedMetaPropertyIndex).coreIndex();
         int valueTypeIndex = QQmlPropertyIndex::fromEncoded(alias.encodedMetaPropertyIndex).valueTypeIndex();
 
-        QQmlRefPointer<QQmlPropertyCache> targetCache = propertyCaches->at(targetObjectIndex);
+        QQmlPropertyCache::ConstPtr targetCache = propertyCaches->at(targetObjectIndex);
         Q_ASSERT(targetCache);
 
-        QQmlPropertyData *targetProperty = targetCache->property(coreIndex);
+        const QQmlPropertyData *targetProperty = targetCache->property(coreIndex);
         Q_ASSERT(targetProperty);
 
         // for deep aliases, valueTypeIndex is always set
         if (!QQmlMetaType::isValueType(targetProperty->propType()) && valueTypeIndex != -1) {
             // deep alias property
             *type = targetProperty->propType();
-            QQmlRefPointer<QQmlPropertyCache> typeCache = QQmlMetaType::propertyCacheForType(*type);
+            QQmlPropertyCache::ConstPtr typeCache = QQmlMetaType::propertyCacheForType(*type);
             Q_ASSERT(typeCache);
-            QQmlPropertyData *typeProperty = typeCache->property(valueTypeIndex);
+            const QQmlPropertyData *typeProperty = typeCache->property(valueTypeIndex);
 
             if (typeProperty == nullptr) {
                 return qQmlCompileError(alias.referenceLocation,
@@ -1027,7 +1031,7 @@ inline QQmlError QQmlPropertyCacheAliasCreator<ObjectContainer>::appendAliasesTo
     if (!object.aliasCount())
         return QQmlError();
 
-    QQmlRefPointer<QQmlPropertyCache> propertyCache = propertyCaches->at(objectIndex);
+    QQmlPropertyCache::Ptr propertyCache = propertyCaches->ownAt(objectIndex);
     Q_ASSERT(propertyCache);
 
     int effectiveSignalIndex = propertyCache->signalHandlerIndexCacheStart + propertyCache->propertyIndexCache.count();

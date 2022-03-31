@@ -16,6 +16,7 @@ qt_internal_add_test(tst_snippets
     DEFINES
         QQC2_SNIPPETS_PATH=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../../../../src/quickcontrols2/doc/snippets\\\"
     PUBLIC_LIBRARIES
+        Qt::CorePrivate
         Qt::Gui
         Qt::Quick
         Qt::QuickControls2

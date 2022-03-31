@@ -53,6 +53,7 @@
 
 #include <QtCore/QObject>
 #include <QtCore/QMetaObject>
+#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

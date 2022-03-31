@@ -78,7 +78,7 @@ struct MetaPropertyData {
     QVector<QPair<QVariant, bool> > m_data;
 };
 
-static QQmlRefPointer<QQmlPropertyCache> cacheForObject(QObject *object)
+static QQmlPropertyCache::ConstPtr cacheForObject(QObject *object)
 {
     QQmlVMEMetaObject *metaObject = QQmlVMEMetaObject::get(object);
     if (metaObject)
@@ -118,7 +118,8 @@ void QQmlDesignerMetaObject::init(QObject *object)
     QObjectPrivate *op = QObjectPrivate::get(object);
     op->metaObject = this;
 
-    cache = QQmlMetaType::propertyCache(metaObject);
+    m_cache = QQmlMetaType::createPropertyCache(metaObject);
+    cache = m_cache;
 
     nodeInstanceMetaObjectList.insert(this, true);
 }
@@ -133,9 +134,9 @@ QQmlDesignerMetaObject::QQmlDesignerMetaObject(QObject *object, QQmlEngine *engi
     QQmlData *ddata = QQmlData::get(object, false);
     //Assign cache to object
     if (ddata && ddata->propertyCache) {
-        cache->setParent(ddata->propertyCache);
-        cache->invalidate(metaObject);
-        ddata->propertyCache = cache;
+        m_cache->setParent(ddata->propertyCache);
+        m_cache->invalidate(metaObject);
+        ddata->propertyCache = m_cache;
     }
 
 }
@@ -156,7 +157,7 @@ void QQmlDesignerMetaObject::createNewDynamicProperty(const QString &name)
     Q_ASSERT(id >= 0);
 
     //Updating cache
-    cache->invalidate(metaObject);
+    m_cache->invalidate(metaObject);
 
     QQmlProperty property(myObject(), name, m_context);
     Q_ASSERT(property.isValid());

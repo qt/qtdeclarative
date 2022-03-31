@@ -80,6 +80,8 @@ public:
 private slots:
     void initTestCase()
     {
+        baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/domitem");
+        qmltypeDirs = QStringList({ baseDir, QLibraryInfo::path(QLibraryInfo::QmlImportsPath) });
         universePtr =
                 std::shared_ptr<DomUniverse>(new DomUniverse(QStringLiteral(u"dummyUniverse")));
         envPtr = std::shared_ptr<DomEnvironment>(new DomEnvironment(
@@ -429,10 +431,6 @@ private slots:
 #ifdef Q_OS_ANDROID
         QSKIP("Test uncompatible with Android (QTBUG-100171)");
 #endif
-        QString baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/domitem");
-        QStringList qmltypeDirs =
-                QStringList({ baseDir, QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
-
         auto univPtr = std::shared_ptr<QQmlJS::Dom::DomUniverse>(
                 new QQmlJS::Dom::DomUniverse(QLatin1String("univ1")));
         auto envPtr = std::shared_ptr<QQmlJS::Dom::DomEnvironment>(new QQmlJS::Dom::DomEnvironment(
@@ -521,7 +519,6 @@ private slots:
 #ifdef Q_OS_ANDROID
         QSKIP("Test uncompatible with Android (QTBUG-100171)");
 #endif
-        QString baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/domitem");
         QString testFile1 = baseDir + QLatin1String("/TestImports.qml");
         DomItem env = DomEnvironment::create(
                 QStringList(),
@@ -564,9 +561,6 @@ private slots:
     }
     void testDeepCopy()
     {
-        QString baseDir = QLatin1String(QT_QMLTEST_DATADIR) + QLatin1String("/domitem");
-        QStringList qmltypeDirs =
-                QStringList({ baseDir, QLibraryInfo::path(QLibraryInfo::Qml2ImportsPath) });
         QString testFile = baseDir + QLatin1String("/test1.qml");
 
         DomItem env = DomEnvironment::create(
@@ -617,7 +611,106 @@ private slots:
         QCOMPARE(obj.name(), u"MyItem");
     }
 
+    static void checkAliases(DomItem &qmlObj)
+    {
+        if (const QmlObject *qmlObjPtr = qmlObj.as<QmlObject>()) {
+            auto pDefs = qmlObjPtr->propertyDefs();
+            auto i = pDefs.constBegin();
+            while (i != pDefs.constEnd()) {
+                if (i.value().isAlias()) {
+                    QString propName = i.key();
+                    DomItem value = qmlObj.bindings().key(propName).index(0).field(Fields::value);
+                    LocallyResolvedAlias rAlias =
+                            qmlObjPtr->resolveAlias(qmlObj, value.ownerAs<ScriptExpression>());
+                    if (propName.startsWith(u"a")) {
+                        QCOMPARE(rAlias.baseObject.internalKind(), DomType::QmlObject);
+                        switch (propName.last(1).at(0).unicode()) {
+                        case u'i':
+                            QCOMPARE(rAlias.status, LocallyResolvedAlias::Status::ResolvedProperty);
+                            QCOMPARE(rAlias.typeName, u"int"_qs);
+                            QVERIFY(rAlias.accessedPath.isEmpty());
+                            QCOMPARE(rAlias.localPropertyDef.internalKind(),
+                                     DomType::PropertyDefinition);
+                            break;
+                        case u'r':
+                            QCOMPARE(rAlias.status, LocallyResolvedAlias::Status::ResolvedProperty);
+                            QCOMPARE(rAlias.typeName, u"real"_qs);
+                            QVERIFY(rAlias.accessedPath.isEmpty());
+                            QCOMPARE(rAlias.localPropertyDef.internalKind(),
+                                     DomType::PropertyDefinition);
+                            break;
+                        case u'I':
+                            QCOMPARE(rAlias.status, LocallyResolvedAlias::Status::ResolvedObject);
+                            QCOMPARE(rAlias.typeName, u"Item"_qs);
+                            QCOMPARE(rAlias.accessedPath, QStringList { u"objectName"_qs });
+                            QVERIFY(!rAlias.localPropertyDef);
+                            break;
+                        case u'q':
+                            QCOMPARE(rAlias.status, LocallyResolvedAlias::Status::ResolvedObject);
+                            QCOMPARE(rAlias.typeName, u"QtObject"_qs);
+                            QCOMPARE(rAlias.accessedPath, QStringList { u"objectName"_qs });
+                            QVERIFY(!rAlias.localPropertyDef);
+                            break;
+                        case u'Q':
+                            QCOMPARE(rAlias.status, LocallyResolvedAlias::Status::ResolvedObject);
+                            QCOMPARE(rAlias.typeName, u"QtObject"_qs);
+                            QCOMPARE(rAlias.accessedPath, QStringList { u"objectName"_qs });
+                            QVERIFY(rAlias.localPropertyDef);
+                            break;
+                        default:
+                            Q_ASSERT(false);
+                        }
+                    } else if (propName.startsWith(u"loop")) {
+                        QCOMPARE(rAlias.status, LocallyResolvedAlias::Status::Loop);
+                    } else if (propName.startsWith(u"tooDeep")) {
+                        QCOMPARE(rAlias.status, LocallyResolvedAlias::Status::TooDeep);
+                    } else if (propName.startsWith(u"invalid")) {
+                        QCOMPARE(rAlias.status, LocallyResolvedAlias::Status::Invalid);
+                    } else if (propName.startsWith(u"objRef")) {
+                        QCOMPARE(rAlias.status, LocallyResolvedAlias::Status::ResolvedObject);
+                    } else {
+                        Q_ASSERT(false);
+                    }
+                }
+                ++i;
+            }
+            for (DomItem obj : qmlObj.children().values()) {
+                if (const QmlObject *objPtr = obj.as<QmlObject>())
+                    checkAliases(obj);
+            }
+        }
+    }
+
+    void testAliasResolve_data()
+    {
+        QTest::addColumn<QString>("inFile");
+
+        QTest::newRow("aliasProperties") << QStringLiteral(u"aliasProperties.qml");
+        QTest::newRow("invalidAliasProperties") << QStringLiteral(u"invalidAliasProperties.qml");
+    }
+    void testAliasResolve()
+    {
+        QFETCH(QString, inFile);
+        QString testFile1 = baseDir + u"/"_qs + inFile;
+        DomItem env = DomEnvironment::create(
+                QStringList(),
+                QQmlJS::Dom::DomEnvironment::Option::SingleThreaded
+                        | QQmlJS::Dom::DomEnvironment::Option::NoDependencies);
+
+        DomItem tFile;
+        env.loadFile(
+                testFile1, QString(),
+                [&tFile](Path, DomItem &, DomItem &newIt) { tFile = newIt.fileObject(); },
+                LoadOption::DefaultLoad);
+        env.loadPendingDependencies();
+
+        DomItem rootObj = tFile.qmlObject(GoTo::MostLikely);
+        checkAliases(rootObj);
+    }
+
 private:
+    QString baseDir;
+    QStringList qmltypeDirs;
     std::shared_ptr<DomUniverse> universePtr;
     std::shared_ptr<DomEnvironment> envPtr;
     DomItem env;

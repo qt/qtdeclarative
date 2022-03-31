@@ -248,7 +248,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
             const QQmlPropertyData *pd = targetDData->propertyCache->property(coreIndex);
             if (pd && valueTypeIndex != -1 && !QQmlMetaType::valueType(pd->propType())) {
                 // deep alias
-                const QQmlRefPointer<QQmlPropertyCache> newPropertyCache
+                const QQmlPropertyCache::ConstPtr newPropertyCache
                         = QQmlMetaType::propertyCacheForType(pd->propType());
                 void *argv[1] = { &target };
                 QMetaObject::metacall(target, QMetaObject::ReadProperty, coreIndex, argv);
@@ -267,7 +267,7 @@ void QQmlVMEMetaObjectEndpoint::tryConnect()
 }
 
 
-QQmlInterceptorMetaObject::QQmlInterceptorMetaObject(QObject *obj, const QQmlRefPointer<QQmlPropertyCache> &cache)
+QQmlInterceptorMetaObject::QQmlInterceptorMetaObject(QObject *obj, const QQmlPropertyCache::ConstPtr &cache)
     : object(obj),
       cache(cache)
 {
@@ -404,7 +404,7 @@ QMetaObject *QQmlInterceptorMetaObject::toDynamicMetaObject(QObject *o)
 
 QQmlVMEMetaObject::QQmlVMEMetaObject(QV4::ExecutionEngine *engine,
                                      QObject *obj,
-                                     const QQmlRefPointer<QQmlPropertyCache> &cache, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &qmlCompilationUnit, int qmlObjectId)
+                                     const QQmlPropertyCache::ConstPtr &cache, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &qmlCompilationUnit, int qmlObjectId)
     : QQmlInterceptorMetaObject(obj, cache),
       engine(engine),
       ctxt(QQmlData::get(obj, true)->outerContext),

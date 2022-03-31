@@ -140,7 +140,7 @@ protected:
     virtual void doUpdate(const DeleteWatcher &watcher,
                           QQmlPropertyData::WriteFlags flags, QV4::Scope &scope) = 0;
 
-    void getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyData *valueTypeData) const;
+    void getPropertyData(const QQmlPropertyData **propertyData, QQmlPropertyData *valueTypeData) const;
     int getPropertyType() const;
 
     bool slowWrite(const QQmlPropertyData &core, const QQmlPropertyData &valueTypeData,

@@ -80,7 +80,6 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QQmlImageProviderBase::Flags)
 
 class QQmlComponent;
 class QQmlEnginePrivate;
-class QQmlImportsPrivate;
 class QQmlExpression;
 class QQmlContext;
 class QQmlType;

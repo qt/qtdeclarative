@@ -53,6 +53,8 @@
 #include <QtQuick/private/qquickrendercontrol_p.h>
 #include <QtQuick/private/qquickwindow_p.h>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 Q_LOGGING_CATEGORY(lcTouch, "qt.quick.touch")
@@ -990,6 +992,7 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
     // list at the end of this function and look for items with an old hoverId,
     // remove them from the list, and update their state accordingly.
     currentHoverId++;
+    hoveredLeafItemFound = false;
 
     const bool itemsWasHovered = !hoverItems.isEmpty();
     deliverHoverEventRecursive(rootItem, scenePos, lastScenePos, modifiers, timestamp);
@@ -1037,6 +1040,11 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEvent(
     end up as the only one hovered. Any other HoverHandler that may be a child
     of an item that is stacked underneath, will not. Note that since siblings
     can overlap, there can be more than one leaf item under the mouse.
+
+    For legacy reasons (Qt 6.1), as soon as we find a leaf item that has hover
+    enabled, and therefore receives the event, we stop recursing into the remaining
+    siblings (even if the event was ignored). This means that we only allow hover
+    events to propagate up the direct parent-child hierarchy, and not to siblings.
 */
 bool QQuickDeliveryAgentPrivate::deliverHoverEventRecursive(
         QQuickItem *item, const QPointF &scenePos, const QPointF &lastScenePos,
@@ -1065,6 +1073,10 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventRecursive(
         if (accepted) {
             // Stop propagation / recursion
             return true;
+        }
+        if (hoveredLeafItemFound) {
+            // Don't propagate to siblings, only to ancestors
+            break;
         }
     }
 
@@ -1097,6 +1109,9 @@ bool QQuickDeliveryAgentPrivate::deliverHoverEventToItem(
 
     qCDebug(lcHoverTrace) << "item:" << item << "scene pos:" << scenePos << "localPos:" << localPos
                           << "wasHovering:" << wasHovering << "isHovering:" << isHovering;
+
+    if (isHovering)
+        hoveredLeafItemFound = true;
 
     // Send enter/move/leave event to the item
     bool accepted = false;
@@ -1207,10 +1222,10 @@ void QQuickDeliveryAgentPrivate::deliverDelayedTouchEvent()
     // Deliver and delete delayedTouch.
     // Set delayedTouch to nullptr before delivery to avoid redelivery in case of
     // event loop recursions (e.g if it the touch starts a dnd session).
-    QScopedPointer<QTouchEvent> e(delayedTouch.take());
-    qCDebug(lcTouchCmprs) << "delivering" << e.data();
+    std::unique_ptr<QTouchEvent> e(std::move(delayedTouch));
+    qCDebug(lcTouchCmprs) << "delivering" << e.get();
     compressedTouchCount = 0;
-    deliverPointerEvent(e.data());
+    deliverPointerEvent(e.get());
 }
 
 /*! \internal
@@ -1407,7 +1422,7 @@ bool QQuickDeliveryAgentPrivate::compressTouchEvent(QTouchEvent *event)
             QMutableEventPoint::detach(tp);
         }
         ++compressedTouchCount;
-        qCDebug(lcTouchCmprs) << "delayed" << compressedTouchCount << delayedTouch.data();
+        qCDebug(lcTouchCmprs) << "delayed" << compressedTouchCount << delayedTouch.get();
         if (QQuickWindow *window = rootItem->window())
             window->maybeUpdate();
         return true;
@@ -1446,7 +1461,7 @@ bool QQuickDeliveryAgentPrivate::compressTouchEvent(QTouchEvent *event)
                 QMutableEventPoint::detach(tp);
             }
             ++compressedTouchCount;
-            qCDebug(lcTouchCmprs) << "coalesced" << compressedTouchCount << delayedTouch.data();
+            qCDebug(lcTouchCmprs) << "coalesced" << compressedTouchCount << delayedTouch.get();
             if (QQuickWindow *window = rootItem->window())
                 window->maybeUpdate();
             return true;

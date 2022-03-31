@@ -27,7 +27,7 @@
 ****************************************************************************/
 
 #include "qml2cppdefaultpasses.h"
-#include "qml2cpppropertyutils.h"
+#include "qmltcpropertyutils.h"
 
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qqueue.h>
@@ -558,7 +558,7 @@ static void setupQmlCppType(const Qml2CppContext &context, const QQmlJSScope::Pt
         if (p.isAlias()) // we'll process aliases separately
             continue;
 
-        Qml2CppPropertyData compiledData(p);
+        QmltcPropertyData compiledData(p);
         if (p.read().isEmpty())
             p.setRead(compiledData.read);
         if (p.write().isEmpty() && p.isWritable() && !p.isList())
@@ -705,7 +705,7 @@ static void resolveValidateOrSkipAlias(const Qml2CppContext &context,
     // here, `p` is the actually aliased property, `type` is the owner of this
     // property
 
-    Qml2CppPropertyData compiledData(alias);
+    QmltcPropertyData compiledData(alias);
     if (alias.read().isEmpty())
         alias.setRead(compiledData.read);
     // TODO: how to handle redefinition/overload?
@@ -754,7 +754,7 @@ QSet<QQmlJSMetaProperty> deferredResolveValidateAliases(const Qml2CppContext &co
                 Q_ASSERT(context.typeResolver->scopeForId(aliasExprBits.at(0), object.type));
                 // since it points to an object, set only the essential stuff
                 // and continue - it is already resolved after this
-                Qml2CppPropertyData compiledData(p);
+                QmltcPropertyData compiledData(p);
                 if (p.read().isEmpty())
                     p.setRead(compiledData.read);
                 // NB: id-pointing aliases are read-only

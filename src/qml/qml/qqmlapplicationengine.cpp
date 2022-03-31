@@ -45,6 +45,8 @@
 #include "qqmlapplicationengine_p.h"
 #include "qqmlfileselector.h"
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 QQmlApplicationEnginePrivate::QQmlApplicationEnginePrivate(QQmlEngine *e)
@@ -95,13 +97,13 @@ void QQmlApplicationEnginePrivate::_q_loadTranslations()
     if (translationsDirectory.isEmpty())
         return;
 
-    QScopedPointer<QTranslator> translator(new QTranslator);
+    auto translator = std::make_unique<QTranslator>();
     if (!uiLanguage.value().isEmpty()) {
         QLocale locale(uiLanguage);
         if (translator->load(locale, QLatin1String("qml"), QLatin1String("_"), translationsDirectory, QLatin1String(".qm"))) {
             if (activeTranslator)
-                QCoreApplication::removeTranslator(activeTranslator.data());
-            QCoreApplication::installTranslator(translator.data());
+                QCoreApplication::removeTranslator(activeTranslator.get());
+            QCoreApplication::installTranslator(translator.get());
             activeTranslator.swap(translator);
         }
     } else {

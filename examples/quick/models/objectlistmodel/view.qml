@@ -49,18 +49,21 @@
 ****************************************************************************/
 
 import QtQuick
+import QtQuick.Controls
 
 //![0]
 ListView {
-    width: 100; height: 100
+    id: listview
+    width: 200; height: 320
     required model
+    ScrollBar.vertical: ScrollBar { }
 
     delegate: Rectangle {
+        width: listview.width; height: 25
+
         required color
         required property string name
 
-        height: 25
-        width: 100
         Text { text: parent.name }
     }
 }

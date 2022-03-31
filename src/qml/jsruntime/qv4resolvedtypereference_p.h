@@ -73,8 +73,8 @@ public:
             m_compilationUnit->release();
     }
 
-    QQmlRefPointer<QQmlPropertyCache> propertyCache() const;
-    QQmlRefPointer<QQmlPropertyCache> createPropertyCache();
+    QQmlPropertyCache::ConstPtr propertyCache() const;
+    QQmlPropertyCache::ConstPtr createPropertyCache();
     bool addToHash(QCryptographicHash *hash, QHash<quintptr, QByteArray> *checksums);
 
     void doDynamicTypeCheck();
@@ -114,8 +114,8 @@ public:
         }
     }
 
-    QQmlRefPointer<QQmlPropertyCache> typePropertyCache() const { return m_typePropertyCache; }
-    void setTypePropertyCache(QQmlRefPointer<QQmlPropertyCache> cache)
+    QQmlPropertyCache::ConstPtr typePropertyCache() const { return m_typePropertyCache; }
+    void setTypePropertyCache(QQmlPropertyCache::ConstPtr cache)
     {
         m_typePropertyCache = std::move(cache);
     }
@@ -128,7 +128,7 @@ public:
 
 private:
     QQmlType m_type;
-    QQmlRefPointer<QQmlPropertyCache> m_typePropertyCache;
+    QQmlPropertyCache::ConstPtr m_typePropertyCache;
     QV4::ExecutableCompilationUnit *m_compilationUnit = nullptr;
 
     QTypeRevision m_version = QTypeRevision::zero();

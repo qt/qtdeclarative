@@ -77,18 +77,13 @@ class tst_qqmljsscope : public QQmlDataTest
         if (!error.message.isEmpty())
             return QQmlJSScope::ConstPtr();
 
-        const QStringList importPaths = {
-            QLibraryInfo::path(QLibraryInfo::QmlImportsPath),
-            dataDirectory(),
-        };
 
-        QQmlJSImporter importer { importPaths, /* resource file mapper */ nullptr };
         QQmlJSLogger logger;
         logger.setFileName(url);
         logger.setCode(sourceCode);
         logger.setSilent(true);
-        QQmlJSImportVisitor visitor(&importer, &logger, dataDirectory());
-        QQmlJSTypeResolver typeResolver { &importer };
+        QQmlJSImportVisitor visitor(&m_importer, &logger, dataDirectory());
+        QQmlJSTypeResolver typeResolver { &m_importer };
         typeResolver.init(&visitor, document.program);
         return visitor.result();
     }
@@ -99,9 +94,27 @@ private Q_SLOTS:
     void orderedBindings();
     void signalCreationDifferences();
     void allTypesAvailable();
+    void shadowing();
+#ifdef LABS_QML_MODELS_PRESENT
+    void componentWrappedObjects();
+    void labsQmlModelsSanity();
+#endif
+    void unknownCppBase();
 
 public:
-    tst_qqmljsscope() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
+    tst_qqmljsscope()
+        : QQmlDataTest(QT_QMLTEST_DATADIR),
+          m_importer(
+                  {
+                          QLibraryInfo::path(QLibraryInfo::QmlImportsPath),
+                          dataDirectory(),
+                  },
+                  nullptr)
+    {
+    }
+
+private:
+    QQmlJSImporter m_importer;
 };
 
 void tst_qqmljsscope::initTestCase()
@@ -176,6 +189,77 @@ void tst_qqmljsscope::allTypesAvailable()
         QVERIFY(types.contains(u"$internal$.QObject"_qs));
         QVERIFY(types.contains(u"QtObject"_qs));
         QCOMPARE(types[u"$internal$.QObject"_qs].scope, types[u"QtObject"_qs].scope);
+}
+
+void tst_qqmljsscope::shadowing()
+{
+    QQmlJSScope::ConstPtr root = run(u"shadowing.qml"_qs);
+    QVERIFY(root);
+
+    QVERIFY(root->baseType());
+
+    // Check whether properties are properly shadowed
+    const auto properties = root->properties();
+    QVERIFY(properties.contains(u"property_not_shadowed"_qs));
+    QVERIFY(properties.contains(u"property_shadowed"_qs));
+
+    QCOMPARE(properties[u"property_not_shadowed"_qs].typeName(), u"QString"_qs);
+    QCOMPARE(properties[u"property_shadowed"_qs].typeName(), u"int"_qs);
+
+    // Check whether methods are properly shadowed
+    const auto methods = root->methods();
+    QCOMPARE(methods.count(u"method_not_shadowed"_qs), 1);
+    QCOMPARE(methods.count(u"method_shadowed"_qs), 1);
+
+    QCOMPARE(methods[u"method_not_shadowed"_qs].parameterNames().size(), 1);
+    QCOMPARE(methods[u"method_shadowed"_qs].parameterNames().size(), 0);
+}
+
+#ifdef LABS_QML_MODELS_PRESENT
+void tst_qqmljsscope::componentWrappedObjects()
+{
+    QQmlJSScope::ConstPtr root = run(u"componentWrappedObjects.qml"_qs);
+    QVERIFY(root);
+
+    auto children = root->childScopes();
+    QCOMPARE(children.size(), 4);
+
+    const auto isGoodType = [](const QQmlJSScope::ConstPtr &type, const QString &propertyName,
+                               bool isWrapped) {
+        return type->hasOwnProperty(propertyName)
+                && type->isWrappedInImplicitComponent() == isWrapped;
+    };
+
+    QVERIFY(isGoodType(children[0], u"nonWrapped1"_qs, false));
+    QVERIFY(isGoodType(children[1], u"nonWrapped2"_qs, false));
+    QVERIFY(isGoodType(children[2], u"nonWrapped3"_qs, false));
+    QVERIFY(isGoodType(children[3], u"wrapped"_qs, true));
+}
+
+void tst_qqmljsscope::labsQmlModelsSanity()
+{
+    QQmlJSScope::ConstPtr root = run(u"labsQmlModelsSanity.qml"_qs);
+    QVERIFY(root);
+    auto children = root->childScopes();
+    QCOMPARE(children.size(), 1);
+
+    // DelegateChooser: it inherits QQmlAbstractDelegateComponent (from
+    // QmlModels) which inherits QQmlComponent. While
+    // QQmlAbstractDelegateComponent has no properties, QQmlComponent does. If
+    // the QmlModels dependency is lost, we don't "see" that DelegateChooser
+    // inherits QQmlComponent - and so has no properties from it, hence, we can
+    // test exactly that:
+    QVERIFY(children[0]->hasProperty(u"progress"_qs));
+    QVERIFY(children[0]->hasProperty(u"status"_qs));
+    QVERIFY(children[0]->hasProperty(u"url"_qs));
+}
+#endif
+
+void tst_qqmljsscope::unknownCppBase()
+{
+    QQmlJSScope::ConstPtr root = run(u"unknownCppBaseAssigningToVar.qml"_qs);
+    QVERIFY(root);
+    // we should not crash here, then it is a success
 }
 
 QTEST_MAIN(tst_qqmljsscope)

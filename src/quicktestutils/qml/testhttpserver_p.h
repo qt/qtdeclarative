@@ -46,6 +46,11 @@
 #include <QThread>
 #include <QMutex>
 #include <QWaitCondition>
+#include <private/qglobal_p.h>
+#include <QObject>
+#include <QSet>
+#include <QList>
+#include <QString>
 
 QT_BEGIN_NAMESPACE
 

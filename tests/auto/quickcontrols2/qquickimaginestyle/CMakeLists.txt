@@ -26,6 +26,7 @@ set(qmake_immediate_resource_files
     "qtquickcontrols2.conf"
     "test-assets/button-background-1.png"
     "test-assets/button-background-2.png"
+    "test-assets/wobble.frag.qsb"
 )
 
 qt_internal_add_resource(tst_qquickimaginestyle "qmake_immediate"

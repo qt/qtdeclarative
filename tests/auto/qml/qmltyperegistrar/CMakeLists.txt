@@ -64,6 +64,7 @@ _qt_internal_qml_type_registration(tst_qmltyperegistrar MANUAL_MOC_JSON_FILES ${
 add_subdirectory(foreign)
 
 qt_add_library(tst-qmltyperegistrar-with-dashes)
+qt_autogen_tools_initial_setup(tst-qmltyperegistrar-with-dashes)
 target_link_libraries(tst-qmltyperegistrar-with-dashes PRIVATE Qt::Core Qt::Qml)
 qt_enable_autogen_tool(tst-qmltyperegistrar-with-dashes "moc" ON)
 qt_add_qml_module(tst-qmltyperegistrar-with-dashes
@@ -72,3 +73,4 @@ qt_add_qml_module(tst-qmltyperegistrar-with-dashes
     SOURCES
         foo.cpp foo.h
 )
+qt_autogen_tools_initial_setup(tst-qmltyperegistrar-with-dashesplugin)

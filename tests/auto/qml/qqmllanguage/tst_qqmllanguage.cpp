@@ -4871,9 +4871,9 @@ void tst_qqmllanguage::preservePropertyCacheOnGroupObjects()
 
     QQmlData *ddata = QQmlData::get(subObject);
     QVERIFY(ddata);
-    QQmlPropertyCache *subCache = ddata->propertyCache.data();
+    const QQmlPropertyCache *subCache = ddata->propertyCache.data();
     QVERIFY(subCache);
-    QQmlPropertyData *pd = subCache->property(QStringLiteral("newProperty"), /*object*/nullptr, /*context*/nullptr);
+    const QQmlPropertyData *pd = subCache->property(QStringLiteral("newProperty"), /*object*/nullptr, /*context*/nullptr);
     QVERIFY(pd);
     QCOMPARE(pd->propType(), QMetaType::fromType<int>());
 }
@@ -4888,7 +4888,7 @@ void tst_qqmllanguage::propertyCacheInSync()
     QVERIFY(anchors);
     QQmlVMEMetaObject *vmemo = QQmlVMEMetaObject::get(anchors);
     QVERIFY(vmemo);
-    QQmlRefPointer<QQmlPropertyCache> vmemoCache = vmemo->propertyCache();
+    QQmlPropertyCache::ConstPtr vmemoCache = vmemo->propertyCache();
     QVERIFY(vmemoCache);
     QQmlData *ddata = QQmlData::get(anchors);
     QVERIFY(ddata);
@@ -5639,6 +5639,8 @@ void tst_qqmllanguage::extendedForeignTypes()
     QObject *extended = o->property("extended").value<QObject *>();
     QVERIFY(extended);
     QSignalSpy extensionChangedSpy(extended, SIGNAL(extensionChanged()));
+    QSignalSpy extensionChangedWithValueSpy(extended, SIGNAL(extensionChangedWithValue(int)));
+    QVERIFY(extensionChangedWithValueSpy.isValid());
 
     QCOMPARE(o->property("extendedBase").toInt(), 43);
     QCOMPARE(o->property("extendedExtension").toInt(), 42);
@@ -5647,6 +5649,7 @@ void tst_qqmllanguage::extendedForeignTypes()
     QCOMPARE(extensionChangedSpy.count(), 0);
     extended->setProperty("extension", 44);
     QCOMPARE(extensionChangedSpy.count(), 1);
+    QCOMPARE(extensionChangedWithValueSpy.count(), 1);
     QCOMPARE(o->property("extendedChangeCount").toInt(), 1);
     QCOMPARE(o->property("extendedExtension").toInt(), 44);
 
@@ -5654,6 +5657,10 @@ void tst_qqmllanguage::extendedForeignTypes()
     QCOMPARE(o->property("foreignExtendedObjectName").toString(), QLatin1String("foreignExtended"));
     QCOMPARE(o->property("extendedInvokable").toInt(), 123);
     QCOMPARE(o->property("extendedSlot").toInt(), 456);
+
+    QObject *extension = qmlExtendedObject(extended);
+    QVERIFY(extension != nullptr);
+    QVERIFY(qobject_cast<Extension *>(extension) != nullptr);
 }
 
 void tst_qqmllanguage::foreignTypeSingletons() {

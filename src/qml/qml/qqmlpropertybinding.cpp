@@ -225,7 +225,7 @@ static QtPrivate::QPropertyBindingData *bindingDataFromPropertyData(QUntypedProp
 
 void QQmlPropertyBinding::handleUndefinedAssignment(QQmlEnginePrivate *ep, void *dataPtr)
 {
-    QQmlPropertyData *propertyData = nullptr;
+    const QQmlPropertyData *propertyData = nullptr;
     QQmlPropertyData valueTypeData;
     QQmlData *data = QQmlData::get(target(), false);
     Q_ASSERT(data);
@@ -295,7 +295,7 @@ void QQmlPropertyBinding::handleUndefinedAssignment(QQmlEnginePrivate *ep, void 
 
 QString QQmlPropertyBinding::createBindingLoopErrorDescription()
 {
-    QQmlPropertyData *propertyData = nullptr;
+    const QQmlPropertyData *propertyData = nullptr;
     QQmlPropertyData valueTypeData;
     QQmlData *data = QQmlData::get(target(), false);
     Q_ASSERT(data);

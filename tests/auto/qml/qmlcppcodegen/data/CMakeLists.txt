@@ -4,6 +4,7 @@ set(cpp_sources
     dynamicmeta.h
     objectwithmethod.h
     person.cpp person.h
+    state.h
     theme.cpp theme.h
     timelinetheme.cpp timelinetheme.h
 )
@@ -30,6 +31,7 @@ set(qml_files
     SelectionRectangle.qml
     Test.qml
     TestCase.qml
+    WindowDerived.qml
     aliasLookup.qml
     anchorsFill.qml
     array.qml
@@ -104,6 +106,7 @@ set(qml_files
     page.qml
     parentProp.qml
     popContextAfterRet.qml
+    prefixedMetaType.qml
     pressAndHoldButton.qml
     registerelimination.qml
     revisions.qml

@@ -39,6 +39,8 @@
 //
 // We mean it.
 
+#include <private/qtqmlcompilerexports_p.h>
+
 #include <QtQmlCompiler/private/qqmljslogger_p.h>
 #include <QtQmlCompiler/private/qqmljsimporter_p.h>
 
@@ -49,17 +51,24 @@
 #include <QtCore/qmap.h>
 #include <QtCore/qscopedpointer.h>
 
+#include <optional>
+
 QT_BEGIN_NAMESPACE
 
-class QQmlJSLinter
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSLinter
 {
 public:
     QQmlJSLinter(const QStringList &importPaths, bool useAbsolutePath = false);
 
-    bool lintFile(const QString &filename, const QString *fileContents, const bool silent,
-                  QJsonArray *json, const QStringList &qmlImportPaths,
-                  const QStringList &qmldirFiles, const QStringList &resourceFiles,
-                  const QMap<QString, QQmlJSLogger::Option> &options);
+    enum LintResult { FailedToOpen, FailedToParse, HasWarnings, LintSuccess };
+    enum FixResult { NothingToFix, FixError, FixSuccess };
+
+    LintResult lintFile(const QString &filename, const QString *fileContents, const bool silent,
+                        QJsonArray *json, const QStringList &qmlImportPaths,
+                        const QStringList &qmldirFiles, const QStringList &resourceFiles,
+                        const QMap<QString, QQmlJSLogger::Option> &options);
+
+    FixResult applyFixes(QString *fixedCode, bool silent);
 
     const QQmlJSLogger *logger() const { return m_logger.get(); }
 
@@ -69,6 +78,7 @@ private:
     bool m_useAbsolutePath;
     QQmlJSImporter m_importer;
     QScopedPointer<QQmlJSLogger> m_logger;
+    QString m_fileContents;
 };
 
 QT_END_NAMESPACE

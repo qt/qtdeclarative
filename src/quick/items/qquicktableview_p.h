@@ -89,12 +89,29 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable, public QQ
     Q_PROPERTY(int topRow READ topRow NOTIFY topRowChanged REVISION(6, 0))
     Q_PROPERTY(int bottomRow READ bottomRow NOTIFY bottomRowChanged REVISION(6, 0))
     Q_PROPERTY(QItemSelectionModel *selectionModel READ selectionModel WRITE setSelectionModel NOTIFY selectionModelChanged REVISION(6, 2))
+    Q_PROPERTY(bool animate READ animate WRITE setAnimate NOTIFY animateChanged REVISION(6, 4))
+    Q_PROPERTY(bool keyNavigationEnabled READ keyNavigationEnabled WRITE setKeyNavigationEnabled NOTIFY keyNavigationEnabledChanged REVISION(6, 4))
+    Q_PROPERTY(bool pointerNavigationEnabled READ pointerNavigationEnabled WRITE setPointerNavigationEnabled NOTIFY pointerNavigationEnabledChanged REVISION(6, 4))
 
     QML_NAMED_ELEMENT(TableView)
     QML_ADDED_IN_VERSION(2, 12)
     QML_ATTACHED(QQuickTableViewAttached)
 
 public:
+    enum PositionModeFlag {
+        AlignLeft = Qt::AlignLeft,
+        AlignRight = Qt::AlignRight,
+        AlignHCenter = Qt::AlignHCenter,
+        AlignTop = Qt::AlignTop,
+        AlignBottom = Qt::AlignBottom,
+        AlignVCenter = Qt::AlignVCenter,
+        AlignCenter = AlignVCenter | AlignHCenter,
+        Visible = 0x01000,
+        Contain = 0x02000
+    };
+    Q_FLAG(PositionModeFlag)
+    Q_DECLARE_FLAGS(PositionMode, PositionModeFlag)
+
     QQuickTableView(QQuickItem *parent = nullptr);
     ~QQuickTableView() override;
     int rows() const;
@@ -133,16 +150,24 @@ public:
     QItemSelectionModel *selectionModel() const;
     void setSelectionModel(QItemSelectionModel *selectionModel);
 
+    bool animate() const;
+    void setAnimate(bool animate);
+
+    bool keyNavigationEnabled() const;
+    void setKeyNavigationEnabled(bool enabled);
+    bool pointerNavigationEnabled() const;
+    void setPointerNavigationEnabled(bool enabled);
+
     int leftColumn() const;
     int rightColumn() const;
     int topRow() const;
     int bottomRow() const;
 
     Q_INVOKABLE void forceLayout();
-    Q_INVOKABLE void positionViewAtCell(const QPoint &cell, Qt::Alignment alignment, const QPointF &offset = QPointF());
-    Q_INVOKABLE void positionViewAtCell(int column, int row, Qt::Alignment alignment, const QPointF &offset = QPointF());
-    Q_INVOKABLE void positionViewAtRow(int row, Qt::Alignment alignment, qreal offset = 0);
-    Q_INVOKABLE void positionViewAtColumn(int column, Qt::Alignment alignment, qreal offset = 0);
+    Q_INVOKABLE void positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset = QPointF());
+    Q_INVOKABLE void positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset = QPointF());
+    Q_INVOKABLE void positionViewAtRow(int row, PositionMode mode, qreal offset = 0);
+    Q_INVOKABLE void positionViewAtColumn(int column, PositionMode mode, qreal offset = 0);
     Q_INVOKABLE QQuickItem *itemAtCell(const QPoint &cell) const;
     Q_INVOKABLE QQuickItem *itemAtCell(int column, int row) const;
     Q_INVOKABLE QPoint cellAtPos(const QPointF &position, bool includeSpacing = false) const;
@@ -181,10 +206,14 @@ Q_SIGNALS:
     Q_REVISION(6, 0) void topRowChanged();
     Q_REVISION(6, 0) void bottomRowChanged();
     Q_REVISION(6, 2) void selectionModelChanged();
+    Q_REVISION(6, 4) void animateChanged();
+    Q_REVISION(6, 4) void keyNavigationEnabledChanged();
+    Q_REVISION(6, 4) void pointerNavigationEnabledChanged();
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void viewportMoved(Qt::Orientations orientation) override;
+    void keyPressEvent(QKeyEvent *e) override;
 
 protected:
     QQuickTableView(QQuickTableViewPrivate &dd, QQuickItem *parent);
@@ -228,6 +257,8 @@ private:
 
     friend class QQuickTableViewPrivate;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QQuickTableView::PositionMode)
 
 QT_END_NAMESPACE
 

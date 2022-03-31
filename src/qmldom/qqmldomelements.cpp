@@ -582,6 +582,127 @@ bool QmlObject::iterateSubOwners(DomItem &self, function_ref<bool(DomItem &)> vi
     return cont;
 }
 
+static QStringList dotExpressionToList(std::shared_ptr<ScriptExpression> expr)
+{
+    QStringList res;
+    AST::Node *node = (expr ? expr->ast() : nullptr);
+    while (node) {
+        switch (node->kind) {
+        case AST::Node::Kind_IdentifierExpression: {
+            AST::IdentifierExpression *id = AST::cast<AST::IdentifierExpression *>(node);
+            res.prepend(id->name.toString());
+            return res;
+        }
+        case AST::Node::Kind_FieldMemberExpression: {
+            AST::FieldMemberExpression *id = AST::cast<AST::FieldMemberExpression *>(node);
+            res.prepend(id->name.toString());
+            node = id->base;
+            break;
+        }
+        default:
+            qCDebug(writeOutLog).noquote() << "Could not convert dot expression to list for:\n"
+                                           << expr->astRelocatableDump();
+            return QStringList();
+        }
+    }
+    return res;
+}
+
+LocallyResolvedAlias QmlObject::resolveAlias(DomItem &self,
+                                             std::shared_ptr<ScriptExpression> accessSequence) const
+{
+    QStringList accessSequenceList = dotExpressionToList(accessSequence);
+    return resolveAlias(self, accessSequenceList);
+}
+
+LocallyResolvedAlias QmlObject::resolveAlias(DomItem &self, const QStringList &accessSequence) const
+{
+    LocallyResolvedAlias res;
+    QSet<QString> visitedAlias;
+    if (accessSequence.isEmpty()) {
+        return res;
+    } else if (accessSequence.size() > 3) {
+        res.status = LocallyResolvedAlias::Status::TooDeep;
+        return res;
+    }
+    QString idName = accessSequence.first();
+    DomItem idTarget = self.component()
+                               .field(Fields::ids)
+                               .key(idName)
+                               .index(0)
+                               .field(Fields::referredObject)
+                               .get();
+    if (!idTarget)
+        return res;
+    res.baseObject = idTarget;
+    res.accessedPath = accessSequence.mid(1);
+    res.typeName = idTarget.name();
+    res.status = LocallyResolvedAlias::Status::ResolvedObject;
+    // check if it refers to locally defined props/objs
+    while (!res.accessedPath.isEmpty()) {
+        QString pNow = res.accessedPath.first();
+        DomItem defNow = res.baseObject.propertyDefs().key(pNow).index(0);
+        if (const PropertyDefinition *defNowPtr = defNow.as<PropertyDefinition>()) {
+            if (defNowPtr->isAlias()) {
+                res.typeName = QString();
+                ++res.nAliases;
+                QString aliasPath = defNow.canonicalPath().toString();
+                if (visitedAlias.contains(aliasPath)) {
+                    res.status = LocallyResolvedAlias::Status::Loop;
+                    return res;
+                }
+                visitedAlias.insert(aliasPath);
+                DomItem valNow = res.baseObject.bindings().key(pNow).index(0);
+                if (std::shared_ptr<ScriptExpression> exp =
+                            valNow.field(Fields::value).ownerAs<ScriptExpression>()) {
+                    QStringList expList = dotExpressionToList(exp);
+                    if (expList.isEmpty()) {
+                        res.status = LocallyResolvedAlias::Status::Invalid;
+                        return res;
+                    } else if (expList.size() > 3) {
+                        res.status = LocallyResolvedAlias::Status::TooDeep;
+                        return res;
+                    }
+                    idName = expList.first();
+                    idTarget = self.component()
+                                       .field(Fields::ids)
+                                       .key(idName)
+                                       .index(0)
+                                       .field(Fields::referredObject)
+                                       .get();
+                    res.baseObject = idTarget;
+                    res.accessedPath = expList.mid(1) + res.accessedPath.mid(1);
+                    if (!idTarget) {
+                        res.status = LocallyResolvedAlias::Status::Invalid;
+                        return res;
+                    }
+                    res.status = LocallyResolvedAlias::Status::ResolvedObject;
+                    res.typeName = idTarget.name();
+                } else {
+                    res.status = LocallyResolvedAlias::Status::Invalid;
+                    return res;
+                }
+            } else {
+                res.localPropertyDef = defNow;
+                res.typeName = defNowPtr->typeName;
+                res.accessedPath = res.accessedPath.mid(1);
+                DomItem valNow = res.baseObject.bindings().key(pNow).index(0).field(Fields::value);
+                if (valNow.internalKind() == DomType::QmlObject) {
+                    res.baseObject = valNow;
+                    res.typeName = valNow.name();
+                    res.status = LocallyResolvedAlias::Status::ResolvedObject;
+                } else {
+                    res.status = LocallyResolvedAlias::Status::ResolvedProperty;
+                    return res;
+                }
+            }
+        } else {
+            return res;
+        }
+    }
+    return res;
+}
+
 MutableDomItem QmlObject::addPropertyDef(MutableDomItem &self, PropertyDefinition propertyDef,
                                          AddOption option)
 {

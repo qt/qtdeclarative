@@ -64,7 +64,7 @@ class QQmlPropertyValidator
 {
     Q_DECLARE_TR_FUNCTIONS(QQmlPropertyValidator)
 public:
-    QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports &imports, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit);
+    QQmlPropertyValidator(QQmlEnginePrivate *enginePrivate, const QQmlImports *imports, const QQmlRefPointer<QV4::ExecutableCompilationUnit> &compilationUnit);
 
     QVector<QQmlError> validate();
 
@@ -73,13 +73,13 @@ private:
             int objectIndex, const QV4::CompiledData::Binding *instantiatingBinding,
             bool populatingValueTypeGroupProperty = false) const;
     QQmlError validateLiteralBinding(
-            const QQmlRefPointer<QQmlPropertyCache> &propertyCache, QQmlPropertyData *property,
+            const QQmlPropertyCache::ConstPtr &propertyCache, const QQmlPropertyData *property,
             const QV4::CompiledData::Binding *binding) const;
     QQmlError validateObjectBinding(
-            QQmlPropertyData *property, const QString &propertyName,
+            const QQmlPropertyData *property, const QString &propertyName,
             const QV4::CompiledData::Binding *binding) const;
 
-    bool canCoerce(QMetaType to, QQmlRefPointer<QQmlPropertyCache> fromMo) const;
+    bool canCoerce(QMetaType to, QQmlPropertyCache::ConstPtr fromMo) const;
 
     Q_REQUIRED_RESULT QVector<QQmlError> recordError(
             const QV4::CompiledData::Location &location, const QString &description) const;
@@ -92,7 +92,7 @@ private:
 
     QQmlEnginePrivate *enginePrivate;
     QQmlRefPointer<QV4::ExecutableCompilationUnit> compilationUnit;
-    const QQmlImports &imports;
+    const QQmlImports *imports;
     const QV4::CompiledData::Unit *qmlUnit;
     const QQmlPropertyCacheVector &propertyCaches;
 

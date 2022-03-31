@@ -53,6 +53,7 @@
 
 #include <QtQuick/private/qtquickglobal_p.h>
 #include <QtQuick/qsgnode.h>
+#include <QtCore/qobject.h>
 
 #ifndef GLuint
 #define GLuint uint

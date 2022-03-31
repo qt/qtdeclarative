@@ -150,13 +150,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         return Object::virtualGet(resource, id, receiver, hasProperty);
     }
 
-    bool hasProp = false;
-    ScopedValue result(scope, Object::virtualGet(resource, id, receiver, &hasProp));
-    if (hasProp) {
-        if (hasProperty)
-            *hasProperty = hasProp;
-        return result->asReturnedValue();
-    }
+    ScopedValue result(scope);
 
     // It's possible we could delay the calculation of the "actual" context (in the case
     // of sub contexts) until it is definitely needed.
@@ -268,7 +262,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
                 result = QQmlTypeWrapper::create(v4, scopeObject, context->imports(), r.importNamespace);
             }
             if (lookup) {
-                lookup->qmlTypeLookup.qmlTypeWrapper = static_cast<Heap::Object*>(result->heapObject());
+                lookup->qmlTypeLookup.qmlTypeWrapper = result->heapObject();
                 lookup->qmlContextPropertyGetter = QQmlContextWrapper::lookupType;
             }
             return result->asReturnedValue();
@@ -296,7 +290,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         if (scopeObject) {
             bool hasProp = false;
 
-            QQmlPropertyData *propertyData = nullptr;
+            const QQmlPropertyData *propertyData = nullptr;
             QV4::ScopedValue result(scope, QV4::QObjectWrapper::getQmlProperty(v4, context, scopeObject,
                                                                                name, QV4::QObjectWrapper::CheckRevision, &hasProp, &propertyData));
             if (hasProp) {
@@ -323,7 +317,7 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         // Search context object
         if (QObject *contextObject = context->contextObject()) {
             bool hasProp = false;
-            QQmlPropertyData *propertyData = nullptr;
+            const QQmlPropertyData *propertyData = nullptr;
             result = QV4::QObjectWrapper::getQmlProperty(v4, context, contextObject,
                                                          name, QV4::QObjectWrapper::CheckRevision,
                                                          &hasProp, &propertyData);
@@ -358,6 +352,16 @@ ReturnedValue QQmlContextWrapper::getPropertyAndBase(const QQmlContextWrapper *r
         // As the hierarchy of contexts is not stable, we can't do accelerated lookups beyond
         // the immediate QML context (of the .qml file).
         lookup = nullptr;
+    }
+
+    // Do the generic JS lookup late.
+    // The scope, context, types etc should be able to override it.
+    bool hasProp = false;
+    result = Object::virtualGet(resource, id, receiver, &hasProp);
+    if (hasProp) {
+        if (hasProperty)
+            *hasProperty = hasProp;
+        return result->asReturnedValue();
     }
 
     // Do a lookup in the global object here to avoid expressionContext->unresolvedNames becoming
@@ -718,7 +722,7 @@ ReturnedValue QQmlContextWrapper::lookupType(Lookup *l, ExecutionEngine *engine,
     if (scopeObject && QQmlData::wasDeleted(scopeObject))
         return QV4::Encode::undefined();
 
-    Heap::Object *heapObject = l->qmlTypeLookup.qmlTypeWrapper;
+    Heap::Base *heapObject = l->qmlTypeLookup.qmlTypeWrapper;
     if (static_cast<Heap::QQmlTypeWrapper *>(heapObject)->object != scopeObject) {
         l->qmlTypeLookup.qmlTypeWrapper = nullptr;
         l->qmlContextPropertyGetter = QQmlContextWrapper::resolveQmlContextPropertyLookupGetter;

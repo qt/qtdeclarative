@@ -522,7 +522,7 @@ void QQmlTreeModelToTableModel::expandRecursively(int row, int depth)
     Q_ASSERT(depth == -1 || depth > 0);
     const int startDepth = depthAtRow(row);
 
-    auto expandHelp = [=] (const auto expandHelp, const QModelIndex &index) -> void {
+    auto expandHelp = [this, depth, startDepth] (const auto expandHelp, const QModelIndex &index) -> void {
         const int rowToExpand = itemIndex(index);
         if (!m_expandedItems.contains(index))
             expandRow(rowToExpand);
@@ -565,7 +565,7 @@ void QQmlTreeModelToTableModel::expandPendingRows(bool doInsertRows)
 
 void QQmlTreeModelToTableModel::collapseRecursively(int row)
 {
-    auto collapseHelp = [=] (const auto collapseHelp, const QModelIndex &index) -> void {
+    auto collapseHelp = [this] (const auto collapseHelp, const QModelIndex &index) -> void {
         if (m_expandedItems.contains(index)) {
             const int rowToCollapse = itemIndex(index);
             if (rowToCollapse != -1)

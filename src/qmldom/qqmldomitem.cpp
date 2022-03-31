@@ -922,7 +922,6 @@ bool DomItem::resolve(Path path, DomItem::Visitor visitor, ErrorHandler errorHan
                         return false;
                     }
                     QString target = cNow.headName();
-                    QStringList subpath;
                     if (target.isEmpty()) {
                         myResolveErrors()
                                 .warning(tr("Path with empty lookup at component %1 of %2 will "

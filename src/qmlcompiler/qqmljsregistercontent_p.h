@@ -47,7 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlJSRegisterContent
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSRegisterContent
 {
 public:
     enum ContentVariant {
@@ -90,7 +90,12 @@ public:
 
     QString descriptiveName() const;
 
-    friend bool operator==(const QQmlJSRegisterContent &a, const QQmlJSRegisterContent &b);
+    friend bool operator==(const QQmlJSRegisterContent &a, const QQmlJSRegisterContent &b)
+    {
+        return a.m_storedType == b.m_storedType && a.m_variant == b.m_variant
+                && a.m_scope == b.m_scope && a.m_content == b.m_content;
+    }
+
     friend bool operator!=(const QQmlJSRegisterContent &a, const QQmlJSRegisterContent &b)
     {
         return !(a == b);

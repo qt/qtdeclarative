@@ -127,8 +127,8 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
         struct {
             Heap::InternalClass *ic;
             Heap::InternalClass *qmlTypeIc; // only used when lookup goes through QQmlTypeWrapper
-            QQmlPropertyCache *propertyCache;
-            QQmlPropertyData *propertyData;
+            const QQmlPropertyCache *propertyCache;
+            const QQmlPropertyData *propertyData;
         } qobjectLookup;
         struct {
             quintptr isConstant; // This is a bool, encoded as 0 or 1. Both values are ignored by gc
@@ -167,7 +167,7 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
             ReturnedValue (*getterTrampoline)(Lookup *l, ExecutionEngine *engine);
         } qmlContextGlobalLookup;
         struct {
-            Heap::Object *qmlTypeWrapper;
+            Heap::Base *qmlTypeWrapper;
             quintptr unused2;
         } qmlTypeLookup;
         struct {
@@ -241,7 +241,7 @@ struct Q_QML_PRIVATE_EXPORT Lookup {
                 || setter == setterQObject
                 || qmlContextPropertyGetter == QQmlContextWrapper::lookupScopeObjectProperty
                 || qmlContextPropertyGetter == QQmlContextWrapper::lookupContextObjectProperty) {
-            if (QQmlPropertyCache *pc = qobjectLookup.propertyCache)
+            if (const QQmlPropertyCache *pc = qobjectLookup.propertyCache)
                 pc->release();
         }
     }
@@ -253,7 +253,7 @@ Q_STATIC_ASSERT(std::is_standard_layout<Lookup>::value);
 Q_STATIC_ASSERT(offsetof(Lookup, getter) == 0);
 
 inline void setupQObjectLookup(
-        Lookup *lookup, const QQmlData *ddata, QQmlPropertyData *propertyData)
+        Lookup *lookup, const QQmlData *ddata, const QQmlPropertyData *propertyData)
 {
     lookup->releasePropertyCache();
     Q_ASSERT(!ddata->propertyCache.isNull());
@@ -263,7 +263,7 @@ inline void setupQObjectLookup(
 }
 
 inline void setupQObjectLookup(
-        Lookup *lookup, const QQmlData *ddata, QQmlPropertyData *propertyData,
+        Lookup *lookup, const QQmlData *ddata, const QQmlPropertyData *propertyData,
         const Object *self)
 {
     lookup->qobjectLookup.ic = self->internalClass();
@@ -272,7 +272,7 @@ inline void setupQObjectLookup(
 
 
 inline void setupQObjectLookup(
-        Lookup *lookup, const QQmlData *ddata, QQmlPropertyData *propertyData,
+        Lookup *lookup, const QQmlData *ddata, const QQmlPropertyData *propertyData,
         const Object *self, const Object *qmlType)
 {
     lookup->qobjectLookup.qmlTypeIc = qmlType->internalClass();

@@ -60,6 +60,8 @@
 #include <private/qqmlnullablevalue_p.h>
 #include <private/qqmlmetatype_p.h>
 
+#include <memory>
+
 QT_BEGIN_NAMESPACE
 
 class QQmlScriptData;
@@ -87,7 +89,7 @@ struct InlineComponentData {
 namespace QV4 {
 
 // index is per-object binding index
-typedef QVector<QQmlPropertyData*> BindingPropertyData;
+typedef QVector<const QQmlPropertyData *> BindingPropertyData;
 
 class CompilationUnitMapper;
 class ResolvedTypeReference;
@@ -147,7 +149,7 @@ public:
 
     // QML specific fields
     QQmlPropertyCacheVector propertyCaches;
-    QQmlRefPointer<QQmlPropertyCache> rootPropertyCache() const { return propertyCaches.at(/*root object*/0); }
+    QQmlPropertyCache::ConstPtr rootPropertyCache() const { return propertyCaches.at(/*root object*/0); }
 
     QQmlRefPointer<QQmlTypeNameCache> typeNameCache;
 
@@ -185,7 +187,7 @@ public:
 
     QHash<int, InlineComponentData> inlineComponentData;
 
-    QScopedPointer<CompilationUnitMapper> backingFile;
+    std::unique_ptr<CompilationUnitMapper> backingFile;
 
     // --- interface for QQmlPropertyCacheCreator
     using CompiledObject = CompiledData::Object;

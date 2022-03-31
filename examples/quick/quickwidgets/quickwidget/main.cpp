@@ -48,14 +48,18 @@
 **
 ****************************************************************************/
 
+#include <QApplication>
+#include <QCommandLineParser>
 #include <QQuickWidget>
 #include <QQuickItem>
 #include <QQmlError>
-#include <QtWidgets>
-#include "fbitem.h"
-
-static bool optMultipleSample = false;
-static bool optCoreProfile = false;
+#include <QMdiArea>
+#include <QLCDNumber>
+#include <QFileDialog>
+#include <QStatusBar>
+#include <QMainWindow>
+#include <QMenuBar>
+#include <QPushButton>
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -74,14 +78,12 @@ private:
     QQuickWidget *m_quickWidget;
 };
 
+static bool optMultipleSample = false;
+
 MainWindow::MainWindow()
    : m_quickWidget(new QQuickWidget)
 {
     QSurfaceFormat format;
-    if (optCoreProfile) {
-        format.setVersion(4, 4);
-        format.setProfile(QSurfaceFormat::CoreProfile);
-    }
     if (optMultipleSample)
         format.setSamples(4);
     m_quickWidget->setFormat(format);
@@ -120,23 +122,45 @@ MainWindow::MainWindow()
 
 void MainWindow::createQuickWidgetsInTabs(QMdiArea *mdiArea)
 {
+    // A QQuickWidget should work like any other widget when it comes to being
+    // in layouts, in tab widgets, MDI areas, etc. It can also be freely
+    // reparented and made top-level.
+
     QTabWidget *tabWidget = new QTabWidget;
-
     const QSize size(400, 400);
+    const QString msgToTopLevel = QLatin1String("Break out to top-level window");
+    const QString msgFromTopLevel = QLatin1String("Move back under tab widget");
 
-    QQuickWidget *w = new QQuickWidget;
-    w->resize(size);
-    w->setResizeMode(QQuickWidget::SizeRootObjectToView);
-    w->setSource(QUrl("qrc:quickwidget/rotatingsquaretab.qml"));
-
-    tabWidget->addTab(w, tr("Plain Quick content"));
-
-    w = new QQuickWidget;
-    w->resize(size);
-    w->setResizeMode(QQuickWidget::SizeRootObjectToView);
-    w->setSource(QUrl("qrc:quickwidget/customgl.qml"));
-
-    tabWidget->addTab(w, tr("Custom OpenGL drawing"));
+    static const int N = 4;
+    static const QColor colorTab[N] = { Qt::green, Qt::blue, Qt::yellow, Qt::magenta };
+    for (int i = 0; i < N; ++i) {
+        QQuickWidget *widget = new QQuickWidget;
+        widget->resize(size);
+        widget->setResizeMode(QQuickWidget::SizeRootObjectToView);
+        QObject::connect(widget, &QQuickWidget::statusChanged, widget, [widget, i] {
+            if (widget->status() == QQuickWidget::Ready) {
+                if (QQuickItem *rootItem = widget->rootObject()) {
+                    rootItem->setProperty("rectColor", colorTab[i]);
+                }
+            }
+        });
+        widget->setSource(QUrl("qrc:quickwidget/rotatingsquare.qml"));
+        widget->setWindowTitle(QString::asprintf("Tab %d", i + 1));
+        QPushButton *btn = new QPushButton(msgToTopLevel, widget);
+        connect(btn, &QPushButton::clicked, widget, [=] {
+            if (widget->parent()) {
+                widget->setAttribute(Qt::WA_DeleteOnClose, true);
+                widget->setParent(nullptr);
+                widget->show();
+                btn->setText(msgFromTopLevel);
+            } else {
+                widget->setAttribute(Qt::WA_DeleteOnClose, false);
+                tabWidget->addTab(widget, widget->windowTitle());
+                btn->setText(msgToTopLevel);
+            }
+        });
+        tabWidget->addTab(widget, QString::asprintf("Tab %d", i + 1));
+    }
 
     mdiArea->addSubWindow(tabWidget);
     tabWidget->show();
@@ -197,25 +221,20 @@ int main(int argc, char **argv)
 {
     QApplication app(argc, argv);
 
-    // this example and QQuickWidget are only functional when rendering with OpenGL
-    QQuickWindow::setGraphicsApi(QSGRendererInterface::OpenGL);
-
     QCoreApplication::setApplicationName("Qt QQuickWidget Example");
     QCoreApplication::setOrganizationName("QtProject");
     QCoreApplication::setApplicationVersion(QT_VERSION_STR);
+
     QCommandLineParser parser;
     parser.setApplicationDescription(QCoreApplication::applicationName());
     parser.addHelpOption();
     parser.addVersionOption();
     QCommandLineOption multipleSampleOption("multisample", "Multisampling");
     parser.addOption(multipleSampleOption);
-    QCommandLineOption coreProfileOption("coreprofile", "Use core profile");
-    parser.addOption(coreProfileOption);
 
     parser.process(app);
 
     optMultipleSample = parser.isSet(multipleSampleOption);
-    optCoreProfile = parser.isSet(coreProfileOption);
 
     MainWindow mainWindow;
     mainWindow.show();

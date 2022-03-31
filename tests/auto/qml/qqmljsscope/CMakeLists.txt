@@ -9,7 +9,12 @@ qt_internal_add_test(tst_qqmljsscope
         data/orderedBindings.qml
 )
 
-add_dependencies(tst_qqmljsscope Qt::Quick) # we need QtQuick QML module
+# we need the following QML modules implicitly (since we import them):
+add_dependencies(tst_qqmljsscope Qt::Quick)
+if(QT_FEATURE_qml_delegate_model AND TARGET Qt::LabsQmlModels)
+    add_dependencies(tst_qqmljsscope Qt::LabsQmlModels)
+    target_compile_definitions(tst_qqmljsscope PRIVATE LABS_QML_MODELS_PRESENT)
+endif()
 
 qt_internal_extend_target(tst_qqmljsscope CONDITION ANDROID OR IOS
     DEFINES

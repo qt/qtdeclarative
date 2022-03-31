@@ -192,7 +192,7 @@ class QQuickColorProvider : public QQmlColorProvider
 public:
     QVariant colorFromString(const QString &s, bool *ok) override
     {
-        QColor c(s);
+        QColor c = QColor::fromString(s);
         if (c.isValid()) {
             if (ok) *ok = true;
             return QVariant(c);
@@ -204,7 +204,7 @@ public:
 
     unsigned rgbaFromString(const QString &s, bool *ok) override
     {
-        QColor c(s);
+        QColor c = QColor::fromString(s);
         if (c.isValid()) {
             if (ok) *ok = true;
             return c.rgba();

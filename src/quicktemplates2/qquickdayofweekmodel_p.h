@@ -54,6 +54,7 @@
 #include <QtCore/qabstractitemmodel.h>
 #include <QtCore/qlocale.h>
 #include <QtQml/qqml.h>
+#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

@@ -54,6 +54,6 @@
 #include <QtCore/private/qglobal_p.h>
 #include <qtqmlcompilerglobal.h>
 
-#define Q_QMLCOMPILER_PRIVATE_EXPORT Q_QMLCOMPILER_EXPORT
+#define Q_QML_COMPILER_PRIVATE_EXPORT Q_QML_COMPILER_EXPORT
 
 #endif // QTQMLCOMPILERGLOBAL_P_H

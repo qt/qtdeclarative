@@ -39,11 +39,15 @@
 //
 // We mean it.
 
+#include <private/qtqmlcompilerexports_p.h>
+
 #include <QtCore/qstring.h>
 #include <QtCore/qstringlist.h>
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qvariant.h>
 #include <QtCore/qhash.h>
+
+#include <QtQml/private/qqmljssourcelocation_p.h>
 
 #include "qqmljsannotation_p.h"
 
@@ -61,7 +65,7 @@ QT_BEGIN_NAMESPACE
 
 class QQmlJSTypeResolver;
 class QQmlJSScope;
-class QQmlJSMetaEnum
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaEnum
 {
     QStringList m_keys;
     QList<int> m_values; // empty if values unknown.
@@ -119,7 +123,7 @@ public:
     }
 };
 
-class QQmlJSMetaMethod
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaMethod
 {
 public:
     enum Type {
@@ -263,7 +267,7 @@ private:
     bool m_isImplicitQmlPropertyChangeSignal = false;
 };
 
-class QQmlJSMetaProperty
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaProperty
 {
     QString m_propertyName;
     QString m_typeName;
@@ -370,7 +374,7 @@ public:
     create a new binding, you know all the details of it already, so you should
     just set all the data at once.
 */
-class QQmlJSMetaPropertyBinding
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaPropertyBinding
 {
 public:
     enum BindingType : unsigned int {
@@ -442,20 +446,20 @@ private:
         struct Interceptor {
             friend bool operator==(Interceptor a, Interceptor b)
             {
-                return a.interceptor == b.interceptor && a.interceptorTypeName == b.interceptorTypeName;
+                return a.value == b.value && a.typeName == b.typeName;
             }
             friend bool operator!=(Interceptor a, Interceptor b) { return !(a == b); }
-            QString interceptorTypeName;
-            QWeakPointer<const QQmlJSScope> interceptor;
+            QString typeName;
+            QWeakPointer<const QQmlJSScope> value;
         };
         struct ValueSource {
             friend bool operator==(ValueSource a, ValueSource b)
             {
-                return a.valueSource == b.valueSource && a.valueSourceTypeName == b.valueSourceTypeName;
+                return a.value == b.value && a.typeName == b.typeName;
             }
             friend bool operator!=(ValueSource a, ValueSource b) { return !(a == b); }
-            QString valueSourceTypeName;
-            QWeakPointer<const QQmlJSScope> valueSource;
+            QString typeName;
+            QWeakPointer<const QQmlJSScope> value;
         };
         struct AttachedProperty {
             friend bool operator==(AttachedProperty , AttachedProperty ) { return true; }
@@ -607,6 +611,36 @@ public:
         return {};
     }
 
+    QString interceptorTypeName() const
+    {
+        if (auto *interceptor = std::get_if<Content::Interceptor>(&m_bindingContent))
+            return interceptor->typeName;
+        // warn
+        return {};
+    }
+    QSharedPointer<const QQmlJSScope> interceptorType() const
+    {
+        if (auto *interceptor = std::get_if<Content::Interceptor>(&m_bindingContent))
+            return interceptor->value.lock();
+        // warn
+        return {};
+    }
+
+    QString valueSourceTypeName() const
+    {
+        if (auto *valueSource = std::get_if<Content::ValueSource>(&m_bindingContent))
+            return valueSource->typeName;
+        // warn
+        return {};
+    }
+    QSharedPointer<const QQmlJSScope> valueSourceType() const
+    {
+        if (auto *valueSource = std::get_if<Content::ValueSource>(&m_bindingContent))
+            return valueSource->value.lock();
+        // warn
+        return {};
+    }
+
     bool hasLiteral() const
     {
         // TODO: Assumption: if the type is literal, we must have one
@@ -642,7 +676,7 @@ public:
     }
 };
 
-struct QQmlJSMetaSignalHandler
+struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSMetaSignalHandler
 {
     QStringList signalParameters;
     bool isMultiline;

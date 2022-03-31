@@ -12,6 +12,12 @@ add_subdirectory(qjsvalueiterator)
 add_subdirectory(qjsonbinding)
 add_subdirectory(qqmlfile)
 add_subdirectory(qqmlfileselector)
+
+# Limit set of tests to run for static Qt builds.
+if(QT_BUILD_MINIMAL_STATIC_TESTS)
+    return()
+endif()
+
 add_subdirectory(qqmlcomponent)
 add_subdirectory(qqmlconsole)
 add_subdirectory(qqmlengine)

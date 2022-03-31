@@ -62,6 +62,7 @@ public:
         SessionFailed,
         ConnectionFailed,
         ClientsFailed,
+        ConnectionTimeout,
         EnableFailed,
         RestrictFailed
     };

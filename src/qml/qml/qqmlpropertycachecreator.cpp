@@ -115,7 +115,7 @@ QQmlBindingInstantiationContext::QQmlBindingInstantiationContext(
         int referencingObjectIndex,
         const QV4::CompiledData::Binding *instantiatingBinding,
         const QString &instantiatingPropertyName,
-        const QQmlRefPointer<QQmlPropertyCache> &referencingObjectPropertyCache)
+        const QQmlPropertyCache::ConstPtr &referencingObjectPropertyCache)
     : referencingObjectIndex(referencingObjectIndex)
     , instantiatingBinding(instantiatingBinding)
     , instantiatingPropertyName(instantiatingPropertyName)
@@ -139,8 +139,7 @@ bool QQmlBindingInstantiationContext::resolveInstantiatingProperty()
     return instantiatingProperty != nullptr;
 }
 
-QQmlRefPointer<QQmlPropertyCache>
-QQmlBindingInstantiationContext::instantiatingPropertyCache() const
+QQmlPropertyCache::ConstPtr QQmlBindingInstantiationContext::instantiatingPropertyCache() const
 {
     if (instantiatingProperty) {
         if (instantiatingProperty->isQObject()) {
@@ -152,7 +151,7 @@ QQmlBindingInstantiationContext::instantiatingPropertyCache() const
             return QQmlMetaType::propertyCache(vtmo, instantiatingProperty->typeVersion());
         }
     }
-    return QQmlRefPointer<QQmlPropertyCache>();
+    return QQmlPropertyCache::ConstPtr();
 }
 
 void QQmlPendingGroupPropertyBindings::resolveMissingPropertyCaches(

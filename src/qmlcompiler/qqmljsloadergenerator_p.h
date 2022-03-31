@@ -39,14 +39,19 @@
 //
 // We mean it.
 
+#include <private/qtqmlcompilerexports_p.h>
+
 #include <QtCore/qstring.h>
 #include <QtCore/qlist.h>
+#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 
-bool qQmlJSGenerateLoader(const QStringList &compiledFiles, const QString &outputFileName,
-                          const QStringList &resourceFileMappings, QString *errorString);
-QString qQmlJSSymbolNamespaceForPath(const QString &relativePath);
+bool Q_QMLCOMPILER_PRIVATE_EXPORT qQmlJSGenerateLoader(const QStringList &compiledFiles,
+                                               const QString &outputFileName,
+                                               const QStringList &resourceFileMappings,
+                                               QString *errorString);
+QString Q_QMLCOMPILER_PRIVATE_EXPORT qQmlJSSymbolNamespaceForPath(const QString &relativePath);
 
 QT_END_NAMESPACE
 

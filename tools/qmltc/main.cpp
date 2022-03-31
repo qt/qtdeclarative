@@ -27,7 +27,6 @@
 ****************************************************************************/
 
 #include "qmltccommandlineutils.h"
-#include "prototype/codegenerator.h"
 #include "qmltcvisitor.h"
 #include "qmltctyperesolver.h"
 
@@ -216,8 +215,8 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    CodeGenerator generator(url, &logger, &document, &typeResolver, &info);
-    generator.generate();
+    QmltcCompiler compiler(url, &typeResolver, &visitor, &logger);
+    compiler.compile(info, &document);
 
     if (logger.hasErrors())
         return EXIT_FAILURE;

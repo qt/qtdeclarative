@@ -456,4 +456,48 @@ TestCase {
         control.show("Test")
         tryCompare(openedSpy, "count", 1)
     }
+
+    Component {
+        id: buttonDownToolTipComponent
+
+        Button {
+            required property string toolTipText
+
+            ToolTip.text: toolTipText
+            ToolTip.visible: down
+        }
+    }
+
+    function test_attachedSizeBug() {
+        let shortTextButton = createTemporaryObject(buttonDownToolTipComponent, testCase,
+            { toolTipText: "Short text" })
+        verify(shortTextButton)
+
+        let longTextButton = createTemporaryObject(buttonDownToolTipComponent, testCase,
+            { x: shortTextButton.width, toolTipText: "Some reeeeeeaaaaaaallly looooooooooongggggggg text" })
+        verify(longTextButton)
+
+        shortTextButton.ToolTip.toolTip.background.objectName = "ToolTipBackground"
+        shortTextButton.ToolTip.toolTip.contentItem.objectName = "ToolTipText"
+
+        // Show the tooltip with long text.
+        mousePress(longTextButton)
+        tryCompare(longTextButton.ToolTip.toolTip, "opened", true)
+        const longTextToolTipImplicitWidth = longTextButton.ToolTip.toolTip.implicitWidth
+        mouseRelease(longTextButton)
+        tryCompare(longTextButton.ToolTip.toolTip, "visible", false)
+
+        // Show the tooltip with short text.
+        mousePress(shortTextButton)
+        tryCompare(shortTextButton.ToolTip.toolTip, "opened", true)
+        mouseRelease(shortTextButton)
+        tryCompare(shortTextButton.ToolTip.toolTip, "visible", false)
+
+        // Show the tooltip with long text again. It should have its original width.
+        mousePress(longTextButton)
+        tryCompare(longTextButton.ToolTip.toolTip, "opened", true)
+        compare(longTextButton.ToolTip.toolTip.implicitWidth, longTextToolTipImplicitWidth)
+        mouseRelease(longTextButton)
+        tryCompare(longTextButton.ToolTip.toolTip, "visible", false)
+    }
 }

@@ -34,7 +34,7 @@
 \section1 Animation and Transitions Types
 
 \list
-\li \l {Transition} - Animates transitions during state changes
+\li \l [QML] {Transition} - Animates transitions during state changes
 \li \l {SequentialAnimation} - Runs animations sequentially
 \li \l {ParallelAnimation} - Runs animations in parallel
 \li \l {Behavior} - Specifies a default animation for property changes
@@ -145,9 +145,9 @@ values.
 abrupt property changes; animations smooth transitions to produce visually
 appealing state changes.
 
-The \l{Transition} type can contain animation types to interpolate property changes
-caused by state changes. To assign the transition to an object, bind it to the
-\c transitions property.
+The \l [QML] {Transition} type can contain animation types to interpolate
+property changes caused by state changes. To assign the transition to an object,
+bind it to the \c transitions property.
 
 A button might have two states, the \c pressed state when the user clicks on the
 button and a \c released state when the user releases the button. We can assign

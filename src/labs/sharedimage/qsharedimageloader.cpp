@@ -42,6 +42,7 @@
 #include <private/qimage_p.h>
 #include <QSharedMemory>
 
+#include <memory>
 
 QT_BEGIN_NAMESPACE
 
@@ -165,7 +166,7 @@ QImage QSharedImageLoaderPrivate::load(const QString &path, QSharedImageLoader::
     if (path.isEmpty())
         return nil;
 
-    QScopedPointer<QSharedMemory> shm(new QSharedMemory(q->key(path, params)));
+    auto shm = std::make_unique<QSharedMemory>(q->key(path, params));
     bool locked = false;
 
     if (!shm->attach(QSharedMemory::ReadOnly)) {
@@ -213,7 +214,7 @@ QImage QSharedImageLoaderPrivate::load(const QString &path, QSharedImageLoader::
         return nil;
     }
 
-    QSharedMemory *shmp = shm.take();
+    QSharedMemory *shmp = shm.release();
     SharedImageInfo *sii = new SharedImageInfo;
     sii->path = path;
     sii->shmp = shmp;

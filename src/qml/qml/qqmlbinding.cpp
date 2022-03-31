@@ -175,7 +175,7 @@ void QQmlBinding::update(QQmlPropertyData::WriteFlags flags)
 
     // Check for a binding update loop
     if (Q_UNLIKELY(updatingFlag())) {
-        QQmlPropertyData *d = nullptr;
+        const QQmlPropertyData *d = nullptr;
         QQmlPropertyData vtd;
         getPropertyData(&d, &vtd);
         Q_ASSERT(d);
@@ -236,7 +236,7 @@ protected:
                   QQmlPropertyData::WriteFlags flags, QV4::Scope &) override final
     {
         Q_ASSERT(!m_targetIndex.hasValueTypeIndex());
-        QQmlPropertyData *pd = nullptr;
+        const QQmlPropertyData *pd = nullptr;
         getPropertyData(&pd, nullptr);
         QQmlBinding *thisPtr = this;
         pd->writeProperty(m_target.data(), &thisPtr, flags);
@@ -314,7 +314,7 @@ protected:
     Q_ALWAYS_INLINE bool write(void *result, QMetaType type, bool isUndefined,
                                QQmlPropertyData::WriteFlags flags) override final
     {
-        QQmlPropertyData *pd;
+        const QQmlPropertyData *pd;
         QQmlPropertyData vpd;
         getPropertyData(&pd, &vpd);
         Q_ASSERT(pd);
@@ -338,7 +338,7 @@ protected:
     {
         Q_ASSERT(targetObject());
 
-        QQmlPropertyData *pd;
+        const QQmlPropertyData *pd;
         QQmlPropertyData vpd;
         getPropertyData(&pd, &vpd);
         Q_ASSERT(pd);
@@ -425,7 +425,7 @@ public:
 
         Q_ASSERT(targetObject());
 
-        QQmlPropertyData *pd;
+        const QQmlPropertyData *pd;
         QQmlPropertyData vpd;
         getPropertyData(&pd, &vpd);
         Q_ASSERT(pd);
@@ -719,7 +719,7 @@ bool QQmlBinding::setTarget(QObject *object, int coreIndex, bool coreIsAlias, in
             m_targetIndex = QQmlPropertyIndex();
             return false;
         }
-        QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
+        const QQmlPropertyData *propertyData = data->propertyCache->property(coreIndex);
         Q_ASSERT(propertyData);
 
         m_target = object;
@@ -735,7 +735,7 @@ bool QQmlBinding::setTarget(QObject *object, int coreIndex, bool coreIsAlias, in
     return true;
 }
 
-void QQmlBinding::getPropertyData(QQmlPropertyData **propertyData, QQmlPropertyData *valueTypeData) const
+void QQmlBinding::getPropertyData(const QQmlPropertyData **propertyData, QQmlPropertyData *valueTypeData) const
 {
     Q_ASSERT(propertyData);
 
@@ -811,7 +811,7 @@ protected:
     Q_ALWAYS_INLINE bool write(void *result, QMetaType type, bool isUndefined,
                                QQmlPropertyData::WriteFlags flags) override final
     {
-        QQmlPropertyData *pd;
+        const QQmlPropertyData *pd;
         QQmlPropertyData vtpd;
         getPropertyData(&pd, &vtpd);
         if (Q_UNLIKELY(isUndefined || vtpd.isValid()))
@@ -850,7 +850,7 @@ protected:
     Q_ALWAYS_INLINE bool write(const QV4::Value &result, bool isUndefined,
                                QQmlPropertyData::WriteFlags flags) override final
     {
-        QQmlPropertyData *pd;
+        const QQmlPropertyData *pd;
         QQmlPropertyData vtpd;
         getPropertyData(&pd, &vtpd);
         if (Q_UNLIKELY(isUndefined || vtpd.isValid()))
@@ -890,7 +890,7 @@ private:
     using QQmlBinding::slowWrite;
 
     template<typename SlowWrite>
-    bool compareAndSet(const QQmlMetaObject &resultMo, QObject *resultObject, QQmlPropertyData *pd,
+    bool compareAndSet(const QQmlMetaObject &resultMo, QObject *resultObject, const QQmlPropertyData *pd,
                        QQmlPropertyData::WriteFlags flags, const SlowWrite &slowWrite) const
     {
         if (QQmlMetaObject::canConvert(resultMo, targetMetaObject)) {

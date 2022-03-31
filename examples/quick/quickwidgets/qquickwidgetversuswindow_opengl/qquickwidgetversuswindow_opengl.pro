@@ -1,5 +1,5 @@
 TEMPLATE = app
-TARGET = qquickviewcomparison
+TARGET = qquickwidgetversuswindow_opengl
 
 CONFIG += qmltypes
 QML_IMPORT_NAME = fbitem
@@ -16,9 +16,9 @@ HEADERS += mainwindow.h \
            logo.h \
            fbitem.h
 
-RESOURCES += qquickviewcomparison.qrc
+RESOURCES += qquickwidgetversuswindow_opengl.qrc
 
 OTHER_FILES += test.qml
 
-target.path = $$[QT_INSTALL_EXAMPLES]/quick/quickwidgets/qquickviewcomparison
+target.path = $$[QT_INSTALL_EXAMPLES]/quick/quickwidgets/qquickwidgetversuswindow_opengl
 INSTALLS += target

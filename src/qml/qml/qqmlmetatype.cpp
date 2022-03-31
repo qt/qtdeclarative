@@ -1294,21 +1294,28 @@ Returns a QQmlPropertyCache for \a obj if one is available.
 If \a obj is null, being deleted or contains a dynamic meta object,
 nullptr is returned.
 */
-QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::propertyCache(QObject *obj, QTypeRevision version)
+QQmlPropertyCache::ConstPtr QQmlMetaType::propertyCache(QObject *obj, QTypeRevision version)
 {
     if (!obj || QObjectPrivate::get(obj)->metaObject || QObjectPrivate::get(obj)->wasDeleted)
-        return QQmlRefPointer<QQmlPropertyCache>();
+        return QQmlPropertyCache::ConstPtr();
     return QQmlMetaType::propertyCache(obj->metaObject(), version);
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::propertyCache(
+QQmlPropertyCache::ConstPtr QQmlMetaType::propertyCache(
         const QMetaObject *metaObject, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data; // not const: the cache is created on demand
     return data->propertyCache(metaObject, version);
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::propertyCache(
+QQmlPropertyCache::Ptr QQmlMetaType::createPropertyCache(
+        const QMetaObject *metaObject)
+{
+    QQmlMetaTypeDataPtr data; // not const: the cache is created
+    return data->createPropertyCache(metaObject);
+}
+
+QQmlPropertyCache::ConstPtr QQmlMetaType::propertyCache(
         const QQmlType &type, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data; // not const: the cache is created on demand
@@ -1352,7 +1359,7 @@ QQmlMetaObject QQmlMetaType::metaObjectForType(QMetaType metaType)
  *
  * Look up by type's metaObject and version.
  */
-QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::propertyCacheForType(QMetaType metaType)
+QQmlPropertyCache::ConstPtr QQmlMetaType::propertyCacheForType(QMetaType metaType)
 {
     QQmlMetaTypeDataPtr data;
     if (auto composite = data->findPropertyCacheInCompositeTypes(metaType))
@@ -1361,7 +1368,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::propertyCacheForType(QMetaType m
     const QQmlTypePrivate *type = data->idToType.value(metaType.id());
     return (type && type->typeId == metaType)
             ? data->propertyCache(QQmlType(type).metaObject(), type->version)
-            : QQmlRefPointer<QQmlPropertyCache>();
+            : QQmlPropertyCache::ConstPtr();
 }
 
 /*!
@@ -1371,7 +1378,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::propertyCacheForType(QMetaType m
  * TODO: Is this correct? Passing a plain QTypeRevision() rather than QTypeRevision::zero() or
  *       the actual type's version seems strange. The behavior has been in place for a while.
  */
-QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::rawPropertyCacheForType(QMetaType metaType)
+QQmlPropertyCache::ConstPtr QQmlMetaType::rawPropertyCacheForType(QMetaType metaType)
 {
     QQmlMetaTypeDataPtr data;
     if (auto composite = QQmlMetaType::findPropertyCacheInCompositeTypes(metaType))
@@ -1380,7 +1387,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::rawPropertyCacheForType(QMetaTyp
     const QQmlTypePrivate *type = data->idToType.value(metaType.id());
     return (type && type->typeId == metaType)
             ? data->propertyCache(type->baseMetaObject, QTypeRevision())
-            : QQmlRefPointer<QQmlPropertyCache>();
+            : QQmlPropertyCache::ConstPtr();
 }
 
 /*!
@@ -1389,7 +1396,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::rawPropertyCacheForType(QMetaTyp
  * Look up by QQmlType and version. We only fall back to lookup by metaobject if the type
  * has no revisiononed attributes here. Unspecified versions are interpreted as "any".
  */
-QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::rawPropertyCacheForType(
+QQmlPropertyCache::ConstPtr QQmlMetaType::rawPropertyCacheForType(
         QMetaType metaType, QTypeRevision version)
 {
     QQmlMetaTypeDataPtr data;
@@ -1398,7 +1405,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::rawPropertyCacheForType(
 
     const QQmlTypePrivate *typePriv = data->idToType.value(metaType.id());
     if (!typePriv || typePriv->typeId != metaType)
-        return QQmlRefPointer<QQmlPropertyCache>();
+        return QQmlPropertyCache::ConstPtr();
 
     const QQmlType type(typePriv);
     if (type.containsRevisionedAttributes())
@@ -1407,7 +1414,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::rawPropertyCacheForType(
     if (const QMetaObject *metaObject = type.metaObject())
         return data->propertyCache(metaObject, version);
 
-    return QQmlRefPointer<QQmlPropertyCache>();
+    return QQmlPropertyCache::ConstPtr();
 }
 
 void QQmlMetaType::unregisterType(int typeIndex)
@@ -1761,7 +1768,7 @@ QQmlValueType *QQmlMetaType::valueType(QMetaType type)
     return *data->metaTypeToValueType.insert(type.id(), nullptr);
 }
 
-QQmlRefPointer<QQmlPropertyCache> QQmlMetaType::findPropertyCacheInCompositeTypes(QMetaType t)
+QQmlPropertyCache::ConstPtr QQmlMetaType::findPropertyCacheInCompositeTypes(QMetaType t)
 {
     const QQmlMetaTypeDataPtr data;
     return data->findPropertyCacheInCompositeTypes(t);

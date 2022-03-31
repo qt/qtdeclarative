@@ -76,11 +76,13 @@ void tst_events::mousePressRelease()
     QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea *>("mouseArea");
     QCOMPARE(mouseArea->pressed(), false);
 
+    const QPoint localPos(100, 100);
+    const QPoint globalPos = window.mapToGlobal(localPos);
     QBENCHMARK {
-        QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, {});
+        QMouseEvent pressEvent(QEvent::MouseButtonPress, localPos, globalPos, Qt::LeftButton, Qt::LeftButton, {});
         window.handleEvent(&pressEvent);
         QCOMPARE(mouseArea->pressed(), true);
-        QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, {});
+        QMouseEvent releaseEvent(QEvent::MouseButtonRelease, localPos, globalPos, Qt::LeftButton, Qt::LeftButton, {});
         window.handleEvent(&releaseEvent);
     }
     QCOMPARE(mouseArea->pressed(), false);
@@ -89,19 +91,23 @@ void tst_events::mousePressRelease()
 void tst_events::mouseMove()
 {
     QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea *>("mouseArea");
+    const QPoint localPos1(100, 100);
+    const QPoint globalPos1 = window.mapToGlobal(localPos1);
+    const QPoint localPos2(101, 100);
+    const QPoint globalPos2 = window.mapToGlobal(localPos2);
     QCOMPARE(mouseArea->pressed(), false);
 
-    QMouseEvent pressEvent(QEvent::MouseButtonPress, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, {});
+    QMouseEvent pressEvent(QEvent::MouseButtonPress, localPos1, globalPos1, Qt::LeftButton, Qt::LeftButton, {});
     window.handleEvent(&pressEvent);
     QCOMPARE(mouseArea->pressed(), true);
-    QMouseEvent moveEvent1(QEvent::MouseMove, QPoint(101, 100), Qt::LeftButton, Qt::LeftButton, {});
-    QMouseEvent moveEvent2(QEvent::MouseMove, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, {});
+    QMouseEvent moveEvent1(QEvent::MouseMove, localPos2, globalPos2, Qt::LeftButton, Qt::LeftButton, {});
+    QMouseEvent moveEvent2(QEvent::MouseMove, localPos1, globalPos1, Qt::LeftButton, Qt::LeftButton, {});
     QBENCHMARK {
         window.handleEvent(&moveEvent1);
         window.handleEvent(&moveEvent2);
     }
     QCOMPARE(mouseArea->pressed(), true);
-    QMouseEvent releaseEvent(QEvent::MouseButtonRelease, QPoint(100, 100), Qt::LeftButton, Qt::LeftButton, {});
+    QMouseEvent releaseEvent(QEvent::MouseButtonRelease, localPos1, globalPos1, Qt::LeftButton, Qt::LeftButton, {});
     window.handleEvent(&releaseEvent);
     QCOMPARE(mouseArea->pressed(), false);
 }

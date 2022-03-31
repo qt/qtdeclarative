@@ -108,7 +108,7 @@ public:
         virtual void fetchMore(QQmlAdaptorModel &) const {}
 
         QScopedPointer<QMetaObject, QScopedPointerPodDeleter> metaObject;
-        QQmlRefPointer<QQmlPropertyCache> propertyCache;
+        QQmlPropertyCache::ConstPtr propertyCache;
     };
 
     const Accessors *accessors;

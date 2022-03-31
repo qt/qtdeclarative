@@ -197,7 +197,7 @@ void QQmlScriptBlob::done()
             m_scriptData->typeNameCache->add(script.qualifier, scriptIndex, script.nameSpace);
         }
 
-        m_importCache.populateCache(m_scriptData->typeNameCache.data());
+        m_importCache->populateCache(m_scriptData->typeNameCache.data());
     }
     m_scripts.clear();
 }
@@ -226,7 +226,7 @@ void QQmlScriptBlob::initializeFromCompilationUnit(const QQmlRefPointer<QV4::Exe
     m_scriptData->urlString = finalUrlString();
     m_scriptData->m_precompiledScript = unit;
 
-    m_importCache.setBaseUrl(finalUrl(), finalUrlString());
+    m_importCache->setBaseUrl(finalUrl(), finalUrlString());
 
     QQmlRefPointer<QV4::ExecutableCompilationUnit> script = m_scriptData->m_precompiledScript;
 
@@ -237,7 +237,7 @@ void QQmlScriptBlob::initializeFromCompilationUnit(const QQmlRefPointer<QV4::Exe
             if (!addImport(import, {}, &errors)) {
                 Q_ASSERT(errors.size());
                 QQmlError error(errors.takeFirst());
-                error.setUrl(m_importCache.baseUrl());
+                error.setUrl(m_importCache->baseUrl());
                 error.setLine(import->location.line);
                 error.setColumn(import->location.column);
                 errors.prepend(error); // put it back on the list after filling out information.

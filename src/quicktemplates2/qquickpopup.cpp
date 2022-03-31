@@ -2055,6 +2055,11 @@ void QQuickPopup::setScale(qreal scale)
     \value Popup.CloseOnEscape The popup will close when the escape key is pressed while the popup
         has active focus.
 
+    The \c {CloseOnPress*} and \c {CloseOnRelease*} policies only apply for events
+    outside of popups. That is, if there are two popups open and the first has
+    \c Popup.CloseOnPressOutside as its policy, clicking on the second popup will
+    not result in the first closing.
+
     The default value is \c {Popup.CloseOnEscape | Popup.CloseOnPressOutside}.
     This default value may interfere with existing shortcuts in the application
     that makes use of the \e Escape key.

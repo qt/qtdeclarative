@@ -40,7 +40,7 @@
 // We mean it.
 //
 
-#include <qglobal.h>
+#include <private/qglobal_p.h>
 
 #ifdef Q_OS_OSX
 #include <Carbon/Carbon.h>

@@ -53,6 +53,8 @@
 
 #include "qquickwidget.h"
 #include <private/qwidget_p.h>
+#include <private/qrhi_p.h>
+#include <private/qbackingstorerhisupport_p.h>
 
 #include <QtCore/qurl.h>
 #include <QtCore/qelapsedtimer.h>
@@ -71,9 +73,6 @@ class QQmlError;
 class QQuickItem;
 class QQmlComponent;
 class QQuickRenderControl;
-class QOpenGLContext;
-class QOffscreenSurface;
-class QOpenGLFramebufferObject;
 
 class QQuickWidgetPrivate
         : public QWidgetPrivate,
@@ -85,8 +84,8 @@ public:
     static const QQuickWidgetPrivate* get(const QQuickWidget *view) { return view->d_func(); }
 
     QQuickWidgetPrivate();
-    ~QQuickWidgetPrivate();
 
+    void destroy();
     void execute();
     void itemGeometryChanged(QQuickItem *item, QQuickGeometryChange change, const QRectF &oldGeometry) override;
     void initResize();
@@ -96,19 +95,16 @@ public:
     void setRootObject(QObject *);
     void render(bool needsSync);
     void renderSceneGraph();
-    void createContext();
-    void destroyContext();
+    void initializeWithRhi();
     void handleContextCreationFailure(const QSurfaceFormat &format);
 
-#if QT_CONFIG(opengl)
-    GLuint textureId() const override;
+    QPlatformBackingStoreRhiConfig rhiConfig() const override;
+    QRhiTexture *texture() const override;
     QPlatformTextureList::Flags textureListFlags() override;
     QImage grabFramebuffer() override;
-#else
-    QImage grabFramebuffer();
-#endif
 
     void init(QQmlEngine* e = 0);
+    void ensureBackingScene();
     void initOffscreenWindow();
     void ensureEngine() const;
     void handleWindowChange();
@@ -124,14 +120,14 @@ public:
     QQmlComponent *component;
     QBasicTimer resizetimer;
     QQuickWindow *offscreenWindow;
-    QOffscreenSurface *offscreenSurface;
     QQuickRenderControl *renderControl;
 
-#if QT_CONFIG(opengl)
-    QOpenGLFramebufferObject *fbo;
-    QOpenGLFramebufferObject *resolvedFbo;
-    QOpenGLContext *context;
-#endif
+    QRhi *rhi;
+    QRhiTexture *outputTexture;
+    QRhiRenderBuffer *depthStencil;
+    QRhiRenderBuffer *msaaBuffer;
+    QRhiTextureRenderTarget *rt;
+    QRhiRenderPassDescriptor *rtRp;
 
     QQuickWidget::ResizeMode resizeMode;
     QSize initialSize;
@@ -148,6 +144,9 @@ public:
     QImage softwareImage;
     QRegion updateRegion;
     bool forceFullUpdate;
+    bool deviceLost;
+
+    QBackingStoreRhiSupport offscreenRenderer;
 };
 
 class QQuickWidgetOffscreenWindow: public QQuickWindow

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2018 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -41,6 +41,7 @@
 #define QQMLDEBUGCLIENT_P_H
 
 #include <QtCore/qobject.h>
+#include <QtCore/private/qglobal_p.h>
 
 //
 //  W A R N I N G

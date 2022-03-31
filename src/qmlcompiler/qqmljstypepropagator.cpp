@@ -174,13 +174,16 @@ void QQmlJSTypePropagator::generate_LoadReg(int reg)
 {
     // Do not re-track the register. We're not manipulating it.
     m_state.setIsRename(true);
-    m_state.setRegister(Accumulator, checkedInputRegister(reg));
+    const QQmlJSRegisterContent content = checkedInputRegister(reg);
+    m_state.addReadRegister(reg, content);
+    m_state.setRegister(Accumulator, content);
 }
 
 void QQmlJSTypePropagator::generate_StoreReg(int reg)
 {
     // Do not re-track the register. We're not manipulating it.
     m_state.setIsRename(true);
+    m_state.addReadAccumulator(m_state.accumulatorIn());
     m_state.setRegister(reg, m_state.accumulatorIn());
 }
 
@@ -189,7 +192,9 @@ void QQmlJSTypePropagator::generate_MoveReg(int srcReg, int destReg)
     Q_ASSERT(destReg != InvalidRegister);
     // Do not re-track the register. We're not manipulating it.
     m_state.setIsRename(true);
-    m_state.setRegister(destReg, m_state.registers[srcReg]);
+    const QQmlJSRegisterContent content = checkedInputRegister(srcReg);
+    m_state.addReadRegister(srcReg, content);
+    m_state.setRegister(destReg, content);
 }
 
 void QQmlJSTypePropagator::generate_LoadImport(int index)
@@ -372,15 +377,13 @@ void QQmlJSTypePropagator::handleUnqualifiedAccess(const QString &name, bool isM
     }
 
     if (!suggestion.has_value()) {
-        for (QQmlJSScope::ConstPtr baseScope = m_function->qmlScope; !baseScope.isNull();
-             baseScope = baseScope->baseType()) {
-            if (auto didYouMean = QQmlJSUtils::didYouMean(
-                        name, baseScope->ownProperties().keys() + baseScope->ownMethods().keys(),
-                        location);
-                didYouMean.has_value()) {
-                suggestion = didYouMean;
-                break;
-            }
+        if (auto didYouMean =
+                    QQmlJSUtils::didYouMean(name,
+                                            m_function->qmlScope->properties().keys()
+                                                    + m_function->qmlScope->methods().keys(),
+                                            location);
+            didYouMean.has_value()) {
+            suggestion = didYouMean;
         }
     }
 
@@ -746,14 +749,23 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
 
         std::optional<FixSuggestion> fixSuggestion;
 
-        for (QQmlJSScope::ConstPtr baseScope = baseType; !baseScope.isNull();
-             baseScope = baseScope->baseType()) {
+        if (auto suggestion = QQmlJSUtils::didYouMean(propertyName, baseType->properties().keys(),
+                                                      getCurrentSourceLocation());
+            suggestion.has_value()) {
+            fixSuggestion = suggestion;
+        }
+
+        if (!fixSuggestion.has_value()
+            && m_state.accumulatorIn().variant() == QQmlJSRegisterContent::MetaType) {
+            QStringList enumKeys;
+            for (const QQmlJSMetaEnum &metaEnum :
+                 m_state.accumulatorIn().scopeType()->enumerations())
+                enumKeys << metaEnum.keys();
+
             if (auto suggestion =
-                        QQmlJSUtils::didYouMean(propertyName, baseScope->ownProperties().keys(),
-                                                getCurrentSourceLocation());
+                        QQmlJSUtils::didYouMean(propertyName, enumKeys, getCurrentSourceLocation());
                 suggestion.has_value()) {
                 fixSuggestion = suggestion;
-                break;
             }
         }
 
@@ -952,14 +964,12 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
 
         std::optional<FixSuggestion> fixSuggestion;
 
-        for (QQmlJSScope::ConstPtr baseScope = m_typeResolver->containedType(callBase);
-             !baseScope.isNull(); baseScope = baseScope->baseType()) {
-            if (auto suggestion = QQmlJSUtils::didYouMean(
-                        propertyName, baseScope->ownMethods().keys(), getCurrentSourceLocation());
-                suggestion.has_value()) {
-                fixSuggestion = suggestion;
-                break;
-            }
+        const auto baseType = m_typeResolver->containedType(callBase);
+
+        if (auto suggestion = QQmlJSUtils::didYouMean(propertyName, baseType->methods().keys(),
+                                                      getCurrentSourceLocation());
+            suggestion.has_value()) {
+            fixSuggestion = suggestion;
         }
 
         m_logger->log(u"Property \"%1\" not found on type \"%2\""_qs.arg(
@@ -1393,10 +1403,15 @@ void QQmlJSTypePropagator::generate_DeclareVar(int varName, int isDeletable)
 
 void QQmlJSTypePropagator::generate_DefineArray(int argc, int args)
 {
-    Q_UNUSED(args);
     setAccumulator(m_typeResolver->globalType(argc == 0
                                                       ? m_typeResolver->emptyListType()
-                                                      : m_typeResolver->jsValueType()));
+                                                      : m_typeResolver->variantListType()));
+
+    // Track all arguments as the same type.
+    const QQmlJSRegisterContent elementType
+            = m_typeResolver->tracked(m_typeResolver->globalType(m_typeResolver->varType()));
+    for (int i = 0; i < argc; ++i)
+        addReadRegister(args + i, elementType);
 }
 
 void QQmlJSTypePropagator::generate_DefineObjectLiteral(int internalClassId, int argc, int args)

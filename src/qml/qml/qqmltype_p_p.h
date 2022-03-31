@@ -71,7 +71,7 @@ public:
     void init() const;
     void initEnums(QQmlEnginePrivate *engine) const;
     void insertEnums(const QMetaObject *metaObject) const;
-    void insertEnumsFromPropertyCache(const QQmlRefPointer<QQmlPropertyCache> &cache) const;
+    void insertEnumsFromPropertyCache(const QQmlPropertyCache::ConstPtr &cache) const;
     void setContainingType(QQmlType *containingType);
 
     QUrl sourceUrl() const
@@ -106,7 +106,7 @@ public:
     }
 
     QQmlType resolveCompositeBaseType(QQmlEnginePrivate *engine) const;
-    QQmlRefPointer<QQmlPropertyCache> compositePropertyCache(QQmlEnginePrivate *engine) const;
+    QQmlPropertyCache::ConstPtr compositePropertyCache(QQmlEnginePrivate *engine) const;
 
     QQmlType::RegistrationType regType;
 

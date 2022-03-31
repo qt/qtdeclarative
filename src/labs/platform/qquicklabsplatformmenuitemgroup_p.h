@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the Qt Labs Templates module of the Qt Toolkit.
@@ -54,6 +54,7 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qlist.h>
 #include <QtQml/qqml.h>
+#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

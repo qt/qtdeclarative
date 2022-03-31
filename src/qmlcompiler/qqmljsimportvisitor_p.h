@@ -39,6 +39,8 @@
 //
 // We mean it.
 
+#include <private/qtqmlcompilerexports_p.h>
+
 #include "qqmljsannotation_p.h"
 #include "qqmljsimporter_p.h"
 #include "qqmljslogger_p.h"
@@ -56,7 +58,7 @@
 QT_BEGIN_NAMESPACE
 
 struct QQmlJSResourceFileMapper;
-class QQmlJSImportVisitor : public QQmlJS::AST::Visitor
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSImportVisitor : public QQmlJS::AST::Visitor
 {
 public:
     QQmlJSImportVisitor(QQmlJSImporter *importer, QQmlJSLogger *logger,
@@ -75,7 +77,7 @@ public:
         return m_signalHandlers;
     }
     QSet<QQmlJSScope::ConstPtr> literalScopesToCheck() const { return m_literalScopesToCheck; }
-    QList<QQmlJSScope::ConstPtr> qmlScopes() const { return m_qmlTypes; }
+    QList<QQmlJSScope::ConstPtr> qmlTypes() const { return m_qmlTypes; }
     QHash<QV4::CompiledData::Location, QQmlJSScope::ConstPtr> scopesBylocation() const
     {
         return m_scopesByIrLocation;
@@ -83,6 +85,8 @@ public:
 
     static QString implicitImportDirectory(
             const QString &localFile, QQmlJSResourceFileMapper *mapper);
+
+    QQmlJSImporter *importer() { return m_importer; } // ### should this be restricted?
 
 protected:
     // Linter warnings, we might want to move this at some point
@@ -186,6 +190,27 @@ protected:
                                    const QQmlJS::SourceLocation &location);
     void leaveEnvironment();
 
+    // A set of types that have not been resolved but have been used during the
+    // AST traversal
+    QSet<QQmlJSScope::ConstPtr> m_unresolvedTypes;
+    template<typename ErrorHandler>
+    bool isTypeResolved(const QQmlJSScope::ConstPtr &type, ErrorHandler handle)
+    {
+        if (type->isFullyResolved())
+            return true;
+
+        // Note: ignore duplicates, but only after we are certain that the type
+        // is still unresolved
+        if (m_unresolvedTypes.contains(type))
+            return false;
+
+        m_unresolvedTypes.insert(type);
+
+        handle(type);
+        return false;
+    }
+    bool isTypeResolved(const QQmlJSScope::ConstPtr &type);
+
     QVector<QQmlJSAnnotation> parseAnnotations(QQmlJS::AST::UiAnnotationList *list);
     void addDefaultProperties();
     void processDefaultProperties();
@@ -264,8 +289,6 @@ protected:
     QHash<QQmlJS::SourceLocation, QQmlJSMetaSignalHandler> m_signalHandlers;
     QSet<QQmlJSScope::ConstPtr> m_literalScopesToCheck;
     QQmlJS::SourceLocation m_pendingSignalHandler;
-
-    QStack<int> m_runtimeIdCounters;
 
 private:
     void importBaseModules();

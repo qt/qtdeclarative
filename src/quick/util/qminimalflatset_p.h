@@ -54,6 +54,7 @@
 #include <QtQuick/qtquickglobal.h>
 
 #include <QtCore/qcontainerfwd.h>
+#include <QtCore/private/qglobal_p.h>
 
 //#define QMINIMAL_FLAT_SET_DEBUG
 #ifdef QMINIMAL_FLAT_SET_DEBUG

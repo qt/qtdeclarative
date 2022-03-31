@@ -1,0 +1,4 @@
+module Something
+import QtQuick
+A 1.0 A.qml
+Rectangle 1.0 B.qml

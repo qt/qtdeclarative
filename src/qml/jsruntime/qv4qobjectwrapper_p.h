@@ -110,7 +110,7 @@ DECLARE_HEAP_OBJECT(QObjectMethod, FunctionObject) {
     void init(QV4::ExecutionContext *scope);
     void destroy()
     {
-        if (methods != reinterpret_cast<QQmlPropertyData *>(&_singleMethod))
+        if (methods != reinterpret_cast<const QQmlPropertyData *>(&_singleMethod))
             delete[] methods;
         qObj.destroy();
         FunctionObject::destroy();
@@ -167,10 +167,9 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
             RevisionMode revisionMode, bool *hasProperty = nullptr,
             bool includeImports = false) const;
     \
-    static ReturnedValue getQmlProperty(
-            ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
+    static ReturnedValue getQmlProperty(ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
             QObject *object, String *name, RevisionMode revisionMode, bool *hasProperty = nullptr,
-            QQmlPropertyData **property = nullptr);
+            const QQmlPropertyData **property = nullptr);
 
     static bool setQmlProperty(
             ExecutionEngine *engine, const QQmlRefPointer<QQmlContextData> &qmlContext,
@@ -189,7 +188,8 @@ struct Q_QML_EXPORT QObjectWrapper : public Object
 
     void destroyObject(bool lastCall);
 
-    static ReturnedValue getProperty(ExecutionEngine *engine, QObject *object, QQmlPropertyData *property);
+    static ReturnedValue getProperty(
+            ExecutionEngine *engine, QObject *object, const QQmlPropertyData *property);
 
     static ReturnedValue virtualResolveLookupGetter(const Object *object, ExecutionEngine *engine, Lookup *lookup);
     static ReturnedValue lookupAttached(Lookup *l, ExecutionEngine *engine, const Value &object);
@@ -201,12 +201,10 @@ protected:
     static bool virtualIsEqualTo(Managed *that, Managed *o);
     static ReturnedValue create(ExecutionEngine *engine, QObject *object);
 
-    static QQmlPropertyData *findProperty(
-            QObject *o, const QQmlRefPointer<QQmlContextData> &qmlContext,
+    static const QQmlPropertyData *findProperty(QObject *o, const QQmlRefPointer<QQmlContextData> &qmlContext,
             String *name, RevisionMode revisionMode, QQmlPropertyData *local);
 
-    QQmlPropertyData *findProperty(
-            const QQmlRefPointer<QQmlContextData> &qmlContext,
+    const QQmlPropertyData *findProperty(const QQmlRefPointer<QQmlContextData> &qmlContext,
             String *name, RevisionMode revisionMode, QQmlPropertyData *local) const;
 
     static ReturnedValue virtualGet(const Managed *m, PropertyKey id, const Value *receiver, bool *hasProperty);
@@ -253,7 +251,7 @@ inline ReturnedValue QObjectWrapper::lookupGetterImpl(Lookup *lookup, ExecutionE
     if (!ddata)
         return revertLookup();
 
-    QQmlPropertyData *property = lookup->qobjectLookup.propertyData;
+    const QQmlPropertyData *property = lookup->qobjectLookup.propertyData;
     if (ddata->propertyCache.data() != lookup->qobjectLookup.propertyCache) {
         if (property->isOverridden() && (!useOriginalProperty || property->isFunction() || property->isSignalHandler()))
             return revertLookup();

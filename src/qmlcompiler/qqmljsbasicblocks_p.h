@@ -45,12 +45,14 @@
 
 QT_BEGIN_NAMESPACE
 
-class QQmlJSBasicBlocks : public QQmlJSCompilePass
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSBasicBlocks : public QQmlJSCompilePass
 {
 public:
     struct BasicBlock {
         QList<int> jumpOrigins;
-        QList<QQmlJSScope::ConstPtr> readRegisters;
+        QList<int> readRegisters;
+        QList<int> writtenRegisters;
+        QList<QQmlJSScope::ConstPtr> readTypes;
         int jumpTarget = -1;
         bool jumpIsUnconditional = false;
     };
@@ -69,7 +71,9 @@ private:
     struct RegisterAccess
     {
         QList<QQmlJSScope::ConstPtr> trackedTypes;
-        QHash<int, QQmlJSScope::ConstPtr> readers;
+        QHash<int, QQmlJSScope::ConstPtr> typeReaders;
+        QHash<int, QList<int>> registerReadersAndConversions;
+        int trackedRegister;
     };
 
     QV4::Moth::ByteCodeHandler::Verdict startInstruction(QV4::Moth::Instr::Type type) override;
@@ -84,6 +88,8 @@ private:
     void generate_Ret() override;
     void generate_ThrowException() override;
 
+    void generate_DefineArray(int argc, int argv) override;
+
     enum JumpMode { Unconditional, Conditional };
     void processJump(int offset, JumpMode mode);
     void populateBasicBlocks();
@@ -93,6 +99,7 @@ private:
     InstructionAnnotations m_annotations;
     QFlatMap<int, BasicBlock> m_basicBlocks;
     QHash<int, RegisterAccess> m_readerLocations;
+    QList<int> m_arrayDefinitions;
     bool m_skipUntilNextLabel = false;
     bool m_hadBackJumps = false;
 };

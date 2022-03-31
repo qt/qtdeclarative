@@ -150,10 +150,12 @@ void QQmlJSLinter::parseComments(QQmlJSLogger *logger,
     }
 }
 
-bool QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents, const bool silent,
-                            QJsonArray *json, const QStringList &qmlImportPaths,
-                            const QStringList &qmldirFiles, const QStringList &resourceFiles,
-                            const QMap<QString, QQmlJSLogger::Option> &options)
+QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
+                                                const QString *fileContents, const bool silent,
+                                                QJsonArray *json, const QStringList &qmlImportPaths,
+                                                const QStringList &qmldirFiles,
+                                                const QStringList &resourceFiles,
+                                                const QMap<QString, QQmlJSLogger::Option> &options)
 {
     // Make sure that we don't expose an old logger if we return before a new one is created.
     m_logger.reset();
@@ -222,6 +224,8 @@ bool QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents
                 jsonFix[u"length"_qs] = static_cast<int>(fix.cutLocation.length);
                 jsonFix[u"replacement"_qs] = fix.replacementString;
                 jsonFix[u"isHint"] = fix.isHint;
+                if (!fix.fileName.isEmpty())
+                    jsonFix[u"fileName"] = fix.fileName;
                 suggestions << jsonFix;
             }
         }
@@ -244,7 +248,7 @@ bool QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents
             } else if (!silent) {
                 qWarning() << "Failed to open file" << filename << file.error();
             }
-            return false;
+            return FailedToOpen;
         }
 
         code = QString::fromUtf8(file.readAll());
@@ -252,6 +256,8 @@ bool QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents
     } else {
         code = *fileContents;
     }
+
+    m_fileContents = code;
 
     QQmlJS::Engine engine;
     QQmlJS::Lexer lexer(&engine);
@@ -280,6 +286,7 @@ bool QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents
                                                 .arg(m.message);
             }
         }
+        return FailedToParse;
     }
 
     if (success && !isJavaScript) {
@@ -380,7 +387,113 @@ bool QQmlJSLinter::lintFile(const QString &filename, const QString *fileContents
         }
     }
 
-    return success;
+    return success ? LintSuccess : HasWarnings;
+}
+
+QQmlJSLinter::FixResult QQmlJSLinter::applyFixes(QString *fixedCode, bool silent)
+{
+    Q_ASSERT(fixedCode != nullptr);
+
+    // This means that the necessary analysis for applying fixes hasn't run for some reason
+    // (because it was JS file, a syntax error etc.). We can't procede without it and if an error
+    // has occurred that has to be handled by the caller of lintFile(). Just say that there is
+    // nothing to fix.
+    if (m_logger == nullptr)
+        return NothingToFix;
+
+    QString code = m_fileContents;
+
+    QList<FixSuggestion::Fix> fixesToApply;
+
+    QFileInfo info(m_logger->fileName());
+    const QString currentFileAbsolutePath = info.absoluteFilePath();
+
+    const QString lowerSuffix = info.suffix().toLower();
+    const bool isESModule = lowerSuffix == QLatin1String("mjs");
+    const bool isJavaScript = isESModule || lowerSuffix == QLatin1String("js");
+
+    if (isESModule || isJavaScript)
+        return NothingToFix;
+
+    for (const auto &messages : { m_logger->infos(), m_logger->warnings(), m_logger->errors() })
+        for (const Message &msg : messages) {
+            if (!msg.fixSuggestion.has_value())
+                continue;
+
+            for (const auto &fix : msg.fixSuggestion->fixes) {
+                if (fix.isHint)
+                    continue;
+
+                // Ignore fix suggestions for other files
+                if (!fix.fileName.isEmpty()
+                    && QFileInfo(fix.fileName).absoluteFilePath() != currentFileAbsolutePath) {
+                    continue;
+                }
+
+                fixesToApply << fix;
+            }
+        }
+
+    if (fixesToApply.isEmpty())
+        return NothingToFix;
+
+    std::sort(fixesToApply.begin(), fixesToApply.end(),
+              [](FixSuggestion::Fix &a, FixSuggestion::Fix &b) {
+                  return a.cutLocation.offset < b.cutLocation.offset;
+              });
+
+    for (auto it = fixesToApply.begin(); it + 1 != fixesToApply.end(); it++) {
+        QQmlJS::SourceLocation srcLocA = it->cutLocation;
+        QQmlJS::SourceLocation srcLocB = (it + 1)->cutLocation;
+        if (srcLocA.offset + srcLocA.length > srcLocB.offset) {
+            if (!silent)
+                qWarning() << "Fixes for two warnings are overlapping, aborting. Please file a bug "
+                              "report.";
+            return FixError;
+        }
+    }
+
+    int offsetChange = 0;
+
+    for (const auto &fix : fixesToApply) {
+        qsizetype cutLocation = fix.cutLocation.offset + offsetChange;
+        QString before = code.left(cutLocation);
+        QString after = code.mid(cutLocation + fix.cutLocation.length);
+
+        code = before + fix.replacementString + after;
+        offsetChange += fix.replacementString.length() - fix.cutLocation.length;
+    }
+
+    QQmlJS::Engine engine;
+    QQmlJS::Lexer lexer(&engine);
+
+    lexer.setCode(code, /*lineno = */ 1, /*qmlMode=*/!isJavaScript);
+    QQmlJS::Parser parser(&engine);
+
+    bool success = parser.parse();
+
+    if (!success) {
+        const auto diagnosticMessages = parser.diagnosticMessages();
+
+        if (!silent) {
+            qDebug() << "File became unparseable after suggestions were applied. Please file a bug "
+                        "report.";
+        } else {
+            return FixError;
+        }
+
+        for (const QQmlJS::DiagnosticMessage &m : diagnosticMessages) {
+            qWarning().noquote() << QString::fromLatin1("%1:%2:%3: %4")
+                                            .arg(m_logger->fileName())
+                                            .arg(m.loc.startLine)
+                                            .arg(m.loc.startColumn)
+                                            .arg(m.message);
+        }
+        return FixError;
+    }
+
+    *fixedCode = code;
+    return FixSuccess;
 }
 
 QT_END_NAMESPACE

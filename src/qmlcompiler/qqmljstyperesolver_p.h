@@ -39,6 +39,8 @@
 //
 // We mean it.
 
+#include <private/qtqmlcompilerexports_p.h>
+
 #include <private/qqmlirbuilder_p.h>
 #include <private/qqmljsast_p.h>
 #include <private/qqmljsimporter_p.h>
@@ -50,7 +52,7 @@
 QT_BEGIN_NAMESPACE
 
 class QQmlJSImportVisitor;
-class QQmlJSTypeResolver
+class Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSTypeResolver
 {
 public:
     enum BaseOrExtension { Base, Extension };
@@ -89,7 +91,8 @@ public:
         return m_imports.contains(name) && !m_imports[name].scope;
     }
 
-    QQmlJSScope::ConstPtr listType(const QQmlJSScope::ConstPtr &elementType) const;
+    enum ListMode { UseListReference, UseQObjectList };
+    QQmlJSScope::ConstPtr listType(const QQmlJSScope::ConstPtr &elementType, ListMode mode) const;
     QQmlJSScope::ConstPtr typeForName(const QString &name) const { return m_imports[name].scope; }
     QQmlJSScope::ConstPtr typeFromAST(QQmlJS::AST::Type *type) const;
     QQmlJSScope::ConstPtr typeForConst(QV4::ReturnedValue rv) const;

@@ -93,11 +93,6 @@ struct QmltcMethodBase
     QQmlJSMetaMethod::Access access = QQmlJSMetaMethod::Public; // access specifier
     QStringList declarationPrefixes;
     QStringList modifiers; // cv-qualifiers, ref-qualifier, noexcept, attributes
-
-    // TODO: these are only needed for Component.onCompleted/onDestruction. this
-    // has to be re-written anyhow later
-    QStringList firstLines; // C++ to run at the very beginning of a function
-    QStringList lastLines; // C++ to run at the very end of a function
 };
 
 // Represents QML -> C++ compiled function
@@ -137,10 +132,14 @@ struct QmltcType
     QmltcCtor baselineCtor {}; // does basic contruction
     QmltcCtor externalCtor {}; // calls basicCtor, calls init
     QmltcMethod init {}; // starts object initialization (context setup), calls finalize
+    QmltcMethod beginClass {}; // calls QQmlParserStatus::classBegin()
     QmltcMethod endInit {}; // ends object initialization (with binding setup)
-    QmltcMethod completeComponent {}; // calls componentComplete()
-    QmltcMethod finalizeComponent {}; // calls componentFinalized()
+    QmltcMethod completeComponent {}; // calls QQmlParserStatus::componentComplete()
+    QmltcMethod finalizeComponent {}; // calls QQmlFinalizerHook::componentFinalized()
     QmltcMethod handleOnCompleted {}; // calls Component.onCompleted
+
+    // TODO: add a separate special member function to set script bindings in a
+    // separate step
 
     std::optional<QmltcDtor> dtor {};
 
@@ -151,7 +150,7 @@ struct QmltcType
     QList<QmltcProperty> properties;
 
     // QML document root specific:
-    std::optional<QmltcVariable> typeCount; // the number of QML types defined in a document
+    std::optional<QmltcMethod> typeCount; // the number of QML types defined in a document
 
     // TODO: only needed for binding callables - should not be needed, generally
     bool ignoreInit = false; // specifies whether init and externalCtor should be ignored

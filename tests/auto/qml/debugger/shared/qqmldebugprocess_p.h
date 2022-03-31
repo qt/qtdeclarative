@@ -68,12 +68,11 @@ public:
     void stop();
     void setMaximumBindErrors(int numErrors);
 
-signals:
+Q_SIGNALS:
     void readyReadStandardOutput();
     void finished();
 
-private slots:
-    void timeout();
+private Q_SLOTS:
     void processAppOutput();
     void processError(QProcess::ProcessError error);
 
@@ -84,18 +83,17 @@ private:
         SessionFailed
     };
 
+    void timeout();
+
     QString m_executable;
     QProcess m_process;
     QString m_outputBuffer;
     QString m_output;
-    QTimer m_timer;
-    QEventLoop m_eventLoop;
-    QMutex m_mutex;
-    SessionState m_state;
+    SessionState m_state = SessionUnknown;
     QStringList m_environment;
-    int m_port;
-    int m_maximumBindErrors;
-    int m_receivedBindErrors;
+    int m_port = 0;
+    int m_maximumBindErrors = 0;
+    int m_receivedBindErrors = 0;
 };
 
 #endif // QQMLDEBUGPROCESS_P_H

@@ -72,7 +72,7 @@ void ResolvedTypeReference::doDynamicTypeCheck()
 /*!
 Returns the property cache, if one alread exists.  The cache is not referenced.
 */
-QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::propertyCache() const
+QQmlPropertyCache::ConstPtr ResolvedTypeReference::propertyCache() const
 {
     if (m_type.isValid())
         return m_typePropertyCache;
@@ -83,7 +83,7 @@ QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::propertyCache() const
 /*!
 Returns the property cache, creating one if it doesn't already exist.  The cache is not referenced.
 */
-QQmlRefPointer<QQmlPropertyCache> ResolvedTypeReference::createPropertyCache()
+QQmlPropertyCache::ConstPtr ResolvedTypeReference::createPropertyCache()
 {
     if (m_typePropertyCache) {
         return m_typePropertyCache;
@@ -110,8 +110,8 @@ bool ResolvedTypeReference::addToHash(
     }
     if (!m_compilationUnit)
         return false;
-    hash->addData(m_compilationUnit->data->md5Checksum,
-                  sizeof(m_compilationUnit->data->md5Checksum));
+    hash->addData({m_compilationUnit->data->md5Checksum,
+                  sizeof(m_compilationUnit->data->md5Checksum)});
     return true;
 }
 

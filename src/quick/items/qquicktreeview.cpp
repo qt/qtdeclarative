@@ -411,7 +411,7 @@ void QQuickTreeView::expandRecursively(int row, int depth)
     if (depth == 0 || depth < -1)
         return;
 
-    auto expandRowRecursively = [=](int startRow) {
+    auto expandRowRecursively = [this, d, depth](int startRow) {
         d->m_treeModelToTableModel.expandRecursively(startRow, depth);
         // Update the expanded state of the startRow. The descendant rows that gets
         // expanded will get the correct state set from initItem/itemReused instead.
@@ -518,7 +518,7 @@ void QQuickTreeView::collapseRecursively(int row)
     if (row < 0 && row != -1)
         return;
 
-    auto collapseRowRecursive = [=](int startRow) {
+    auto collapseRowRecursive = [this, d](int startRow) {
         // Always collapse descendants recursively,
         // even if the top row itself is already collapsed.
         d->m_treeModelToTableModel.collapseRecursively(startRow);

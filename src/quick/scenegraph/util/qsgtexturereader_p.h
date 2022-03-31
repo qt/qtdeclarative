@@ -53,6 +53,7 @@
 
 #include <QString>
 #include <QFileInfo>
+#include <private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

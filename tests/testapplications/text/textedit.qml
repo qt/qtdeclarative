@@ -74,7 +74,7 @@ Rectangle {
             height: 150; color: "black"; width: 150
             text:
             "LineCount: "+texteditelement.lineCount+
-            "\nPaintedHeight/Width: "+texteditelement.paintedHeight+"/"+texteditelement.paintedWidth+
+            "\nContentHeight/Width: "+texteditelement.contentHeight+"/"+texteditelement.contentWidth+
             "\nPointSize: "+texteditelement.font.pointSize+"\nPixelSize: "+texteditelement.font.pixelSize+
             "\nCan Paste: "+texteditelement.canPaste
         }

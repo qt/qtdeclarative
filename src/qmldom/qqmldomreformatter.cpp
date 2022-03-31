@@ -296,6 +296,7 @@ protected:
         int baseIndent = lw.increaseIndent(1);
         if (ast->elements)
             accept(ast->elements);
+        out(ast->commaToken);
         lw.decreaseIndent(1, baseIndent);
         out(ast->rbracketToken);
         return false;
