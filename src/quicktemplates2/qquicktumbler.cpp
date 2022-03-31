@@ -888,14 +888,15 @@ QFont QQuickTumbler::defaultFont() const
 
 void QQuickTumblerAttachedPrivate::init(QQuickItem *delegateItem)
 {
+    Q_Q(QQuickTumblerAttached);
     if (!delegateItem->parentItem()) {
-        qWarning() << "Tumbler: attached properties must be accessed through a delegate item that has a parent";
+        qmlWarning(q) << "Tumbler: attached properties must be accessed through a delegate item that has a parent";
         return;
     }
 
     QVariant indexContextProperty = qmlContext(delegateItem)->contextProperty(QStringLiteral("index"));
     if (!indexContextProperty.isValid()) {
-        qWarning() << "Tumbler: attempting to access attached property on item without an \"index\" property";
+        qmlWarning(q) << "Tumbler: attempting to access attached property on item without an \"index\" property";
         return;
     }
 
