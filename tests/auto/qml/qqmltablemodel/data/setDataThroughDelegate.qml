@@ -65,21 +65,21 @@ Item {
             Connections {
                 target: root
                 enabled: column === 1
-                onShouldModify: model.display = 18
+                function onShouldModify() { model.display = 18 }
             }
 
             Connections {
                 target: root
                 enabled: column === 0
                 // Invalid: should be "display".
-                onShouldModifyInvalidRole: model.age = 100
+                function onShouldModifyInvalidRole() { model.age = 100 }
             }
 
             Connections {
                 target: root
                 enabled: column === 1
                 // Invalid: should be string.
-                onShouldModifyInvalidType: model.display = "Whoops"
+                function onShouldModifyInvalidType() { model.display = "Whoops" }
             }
         }
     }
