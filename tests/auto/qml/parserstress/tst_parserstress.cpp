@@ -40,24 +40,30 @@ public:
     tst_parserstress() {}
 
 private slots:
+    void init();
     void ecmascript_data();
     void ecmascript();
 
 private:
-    static QStringList findJSFiles(const QDir &);
+    static QFileInfoList findJSFiles(const QDir &);
     QQmlEngine engine;
 };
 
-QStringList tst_parserstress::findJSFiles(const QDir &d)
+void tst_parserstress::init()
 {
-    QStringList rv;
+    QTest::failOnWarning(QRegularExpression(QStringLiteral(".?")));
+}
 
-    QStringList files = d.entryList(QStringList() << QLatin1String("*.js"),
+QFileInfoList tst_parserstress::findJSFiles(const QDir &d)
+{
+    QFileInfoList rv;
+
+    const QFileInfoList files = d.entryInfoList(QStringList() << QLatin1String("*.js"),
                                     QDir::Files);
-    foreach (const QString &file, files) {
-        if (file == "browser.js")
+    for (const QFileInfo &fileInfo : files) {
+        if (fileInfo.fileName() == "browser.js")
             continue;
-        rv << d.absoluteFilePath(file);
+        rv << fileInfo;
     }
 
     QStringList dirs = d.entryList(QDir::Dirs | QDir::NoDotAndDotDot |
@@ -71,24 +77,45 @@ QStringList tst_parserstress::findJSFiles(const QDir &d)
     return rv;
 }
 
+struct IgnoredWarning {
+    QString ignorePattern;
+    int timesToIgnore;
+};
+
 void tst_parserstress::ecmascript_data()
 {
     QString testDataDir = QFileInfo(QFINDTESTDATA("tests/shell.js")).absolutePath();
     QVERIFY2(!testDataDir.isEmpty(), qPrintable("Cannot find testDataDir!"));
 
     QDir dir(testDataDir);
-    QStringList files = findJSFiles(dir);
+    const QFileInfoList files = findJSFiles(dir);
 
-    QTest::addColumn<QString>("file");
-    foreach (const QString &file, files)
-        QTest::newRow(qPrintable(file)) << file;
+    // We only care that the parser can parse, and warnings shouldn't affect that.
+    QHash<QString, IgnoredWarning> warningsToIgnore = {
+        { "15.1.2.2-1.js", { "Variable \"POWER\" is used before its declaration at .*", 48 } },
+        { "15.1.2.4.js", { "Variable \"index\" is used before its declaration at .*", 6 } },
+        { "15.1.2.5-1.js", { "Variable \"index\" is used before its declaration at .*", 6 } },
+        { "15.1.2.5-2.js", { "Variable \"index\" is used before its declaration at .*", 6 } },
+        { "15.1.2.5-3.js", { "Variable \"index\" is used before its declaration at .*", 6 } },
+        { "12.6.3-4.js", { "Variable \"value\" is used before its declaration at .*", 4 } },
+        { "try-006.js", { "Variable \"EXCEPTION_STRING\" is used before its declaration at .*", 2 } },
+        { "try-007.js", { "Variable \"EXCEPTION_STRING\" is used before its declaration at .*", 2 } },
+        { "try-008.js", { "Variable \"INVALID_INTEGER_VALUE\" is used before its declaration at .*", 2 } },
+        { "regress-94506.js", { "Variable \"arguments\" is used before its declaration at .*", 2 } },
+    };
+
+    QTest::addColumn<QFileInfo>("fileInfo");
+    QTest::addColumn<IgnoredWarning>("warningToIgnore");
+    for (const QFileInfo &fileInfo : files)
+        QTest::newRow(qPrintable(fileInfo.absoluteFilePath())) << fileInfo << warningsToIgnore.value(fileInfo.fileName());
 }
 
 void tst_parserstress::ecmascript()
 {
-    QFETCH(QString, file);
+    QFETCH(QFileInfo, fileInfo);
+    QFETCH(IgnoredWarning, warningToIgnore);
 
-    QFile f(file);
+    QFile f(fileInfo.absoluteFilePath());
     QVERIFY(f.open(QIODevice::ReadOnly));
 
     QByteArray data = f.readAll();
@@ -112,13 +139,16 @@ void tst_parserstress::ecmascript()
 
     QByteArray qmlData = qml.toUtf8();
 
+    if (!warningToIgnore.ignorePattern.isEmpty()) {
+        for (int i = 0; i < warningToIgnore.timesToIgnore; ++i)
+            QTest::ignoreMessage(QtWarningMsg, QRegularExpression(warningToIgnore.ignorePattern));
+    }
+
     QQmlComponent component(&engine);
 
     component.setData(qmlData, QUrl());
 
-    QFileInfo info(file);
-
-    if (info.fileName() == QLatin1String("regress-352044-02-n.js")) {
+    if (fileInfo.fileName() == QLatin1String("regress-352044-02-n.js")) {
         QVERIFY(component.isError());
 
         QCOMPARE(component.errors().length(), 2);
