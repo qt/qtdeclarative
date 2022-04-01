@@ -89,10 +89,10 @@ private slots:
     void showTreeView();
     void expandAndCollapsUsingDoubleClick();
     void expandAndCollapseClickOnIndicator();
-    void expandAndCollapsUsingNonSupportedButtonAndModifers_data();
-    void expandAndCollapsUsingNonSupportedButtonAndModifers();
     void checkPropertiesRoot();
     void checkPropertiesChildren();
+    void checkCurrentIndex();
+    void checkClickedSignal();
 };
 
 tst_qquicktreeviewdelegate::tst_qquicktreeviewdelegate()
@@ -165,57 +165,6 @@ void tst_qquicktreeviewdelegate::expandAndCollapseClickOnIndicator()
     QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
 }
 
-void tst_qquicktreeviewdelegate::expandAndCollapsUsingNonSupportedButtonAndModifers_data()
-{
-    QTest::addColumn<Qt::MouseButton>("button");
-    QTest::addColumn<Qt::KeyboardModifiers>("modifiers");
-
-    QTest::newRow("left + Qt::ControlModifier") << Qt::LeftButton << Qt::KeyboardModifiers(Qt::ControlModifier);
-    QTest::newRow("left + Qt::ShiftModifier") << Qt::LeftButton << Qt::KeyboardModifiers(Qt::ShiftModifier);
-    QTest::newRow("left + Qt::AltModifier") << Qt::LeftButton << Qt::KeyboardModifiers(Qt::AltModifier);
-    QTest::newRow("left + Qt::MetaModifier") << Qt::LeftButton << Qt::KeyboardModifiers(Qt::MetaModifier);
-    QTest::newRow("left + Qt::ControlModifier + Qt::ShiftModifier") << Qt::LeftButton << (Qt::ShiftModifier | Qt::ControlModifier);
-
-    QTest::newRow("right + Qt::NoModifier") << Qt::RightButton << Qt::KeyboardModifiers(Qt::ControlModifier);
-    QTest::newRow("right + Qt::ControlModifier") << Qt::RightButton << Qt::KeyboardModifiers(Qt::ShiftModifier);
-}
-
-void tst_qquicktreeviewdelegate::expandAndCollapsUsingNonSupportedButtonAndModifers()
-{
-    QFETCH(Qt::MouseButton, button);
-    QFETCH(Qt::KeyboardModifiers, modifiers);
-    // Ensure that we don't expand or collapse the tree if the user is using the right mouse
-    // button, or holding down modifier keys. This "space" is reserved for application specific actions.
-    LOAD_TREEVIEW("unmodified.qml");
-
-    QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
-    const auto item = treeView->itemAtCell(0, 0);
-    QVERIFY(item);
-    const QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
-    const QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
-    QTest::mouseDClick(item->window(), button, modifiers, pos);
-
-    WAIT_UNTIL_POLISHED;
-
-    QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
-
-    // Expand first row, and ensure we don't collapse it again
-    // if doing a double click together with Qt::CTRL.
-    QTest::mouseDClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
-
-    WAIT_UNTIL_POLISHED;
-
-    // We now expect 5 rows, the root pluss it's 4 children
-    QCOMPARE(treeViewPrivate->loadedRows.count(), 5);
-
-    QTest::mouseDClick(item->window(), button, modifiers, pos);
-
-    WAIT_UNTIL_POLISHED;
-
-    // We still expect 5 rows, the root pluss it's 4 children
-    QCOMPARE(treeViewPrivate->loadedRows.count(), 5);
-}
-
 void tst_qquicktreeviewdelegate::checkPropertiesRoot()
 {
     LOAD_TREEVIEW("unmodified.qml");
@@ -274,9 +223,65 @@ void tst_qquicktreeviewdelegate::checkPropertiesChildren()
         QCOMPARE(childItem->expanded(), row == 4);
         QCOMPARE(childItem->hasChildren(), row == 4 || row == 8);
         QCOMPARE(childItem->depth(), row <= 4 ? 1 : 2);
+        QCOMPARE(childItem->current(), false);
+        QCOMPARE(childItem->selected(), false);
         QCOMPARE(childItem->leftPadding(), childItem->leftMargin() + (childItem->depth() * childItem->indentation()) + childItem->indicator()->width() + childItem->spacing());
         QCOMPARE(childItem->indicator()->x(), childItem->leftMargin() + (childItem->depth() * childItem->indentation()));
     }
+}
+
+void tst_qquicktreeviewdelegate::checkCurrentIndex()
+{
+    // Check that that a cell becomes current when you click on it
+    LOAD_TREEVIEW("unmodified.qml");
+    // Check that the view only has one row loaded so far (the root of the tree)
+    QCOMPARE(treeViewPrivate->loadedRows.count(), 1);
+
+    const QPoint cell(0, 0);
+    const auto item = qobject_cast<QQuickTreeViewDelegate *>(treeView->itemAtCell(cell));
+    QVERIFY(item);
+    QVERIFY(!item->current());
+    QVERIFY(!item->selected());
+    QVERIFY(!treeView->hasActiveFocus());
+
+    // Click on the label
+    QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
+    QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
+    QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
+    QVERIFY(item->current());
+    QVERIFY(!item->selected());
+    QVERIFY(treeView->hasActiveFocus());
+
+    // Select the cell
+    treeView->selectionModel()->setCurrentIndex(treeView->modelIndex(cell), QItemSelectionModel::Select);
+    QVERIFY(item->current());
+    QVERIFY(item->selected());
+}
+
+void tst_qquicktreeviewdelegate::checkClickedSignal()
+{
+   // Check that the delegate emits clicked when clicking on the
+   // label, but not when clicking on the indicator.
+    LOAD_TREEVIEW("unmodified.qml");
+
+    const auto item = treeView->itemAtCell(0, 0);
+    QVERIFY(item);
+
+    QSignalSpy clickedSpy(item, SIGNAL(clicked()));
+
+    // Click on the label
+    QPoint localPos = QPoint(item->width() / 2, item->height() / 2);
+    QPoint pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
+    QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
+    QCOMPARE(clickedSpy.count(), 1);
+
+    // Click on the indicator
+    const auto indicator = item->property("indicator").value<QQuickItem *>();
+    QVERIFY(indicator);
+    localPos = QPoint(indicator->width() / 2, indicator->height() / 2);
+    pos = item->window()->contentItem()->mapFromItem(item, localPos).toPoint();
+    QTest::mouseClick(item->window(), Qt::LeftButton, Qt::NoModifier, pos);
+    QCOMPARE(clickedSpy.count(), 1);
 }
 
 QTEST_MAIN(tst_qquicktreeviewdelegate)

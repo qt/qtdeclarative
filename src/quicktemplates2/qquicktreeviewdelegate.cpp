@@ -144,6 +144,22 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
+    \qmlproperty bool QtQuick.Controls::TreeViewDelegate::current
+
+    This property holds if the delegate represent the
+    \l {QItemSelectionModel::currentIndex()}{current index}
+    in the \l {QQuickTableView::selectionModel()}{selection model}.
+*/
+
+/*!
+    \qmlproperty bool QtQuick.Controls::TreeViewDelegate::selected
+
+    This property holds if the delegate represent a
+    \l {QItemSelectionModel::selection()}{selected index}
+    in the \l {QQuickTableView::selectionModel()}{selection model}.
+*/
+
+/*!
     \qmlproperty real QtQuick.Controls::TreeViewDelegate::indentation
 
     This property holds the space a child is indented horizontally
@@ -177,6 +193,9 @@ public:
 
     void updateIndicatorVisibility();
     QPalette defaultPalette() const override;
+    bool posOnTopOfIndicator(const QPointF &pos);
+    void handleClickOnIndicator(QMouseEvent *event, bool isPress);
+    void setCurrentIndex(const QPointF pos);
 
 public:
     QPointer<QQuickTreeView> m_treeView;
@@ -185,7 +204,10 @@ public:
     qreal m_rightMargin = 0;
     bool m_isTreeNode = false;
     bool m_expanded = false;
-    bool m_hasChildren = 0;
+    bool m_current = false;
+    bool m_selected = false;
+    bool m_hasChildren = false;
+    bool m_pressOnTopOfIndicator = false;
     int m_depth = 0;
 };
 
@@ -197,6 +219,66 @@ void QQuickTreeViewDelegatePrivate::updateIndicatorVisibility()
         const bool insideDelegateBounds = indicator->x() + indicator->width() < q->width();
         indicator->setVisible(m_isTreeNode && m_hasChildren && insideDelegateBounds);
     }
+}
+
+bool QQuickTreeViewDelegatePrivate::posOnTopOfIndicator(const QPointF &pos)
+{
+    Q_Q(QQuickTreeViewDelegate);
+
+    const auto indicator = q->indicator();
+    if (!indicator || !indicator->isVisible())
+        return false;
+
+    const auto posInIndicator = q->mapToItem(indicator, pos);
+    if (!indicator->contains(posInIndicator))
+        return false;
+
+    return true;
+}
+
+void QQuickTreeViewDelegatePrivate::handleClickOnIndicator(QMouseEvent *event, bool isPress)
+{
+    Q_Q(QQuickTreeViewDelegate);
+
+    event->accept();
+
+    // To not interfere with flicking, we only toggle expanded on press
+    // if the flickable is not interactive. Otherwise we do it on release.
+    const bool interactOnRelease = q->treeView()->isInteractive();
+    if (isPress && interactOnRelease)
+        return;
+
+    auto view = q->treeView();
+    if (!view)
+        return;
+
+    const int row = qmlContext(q)->contextProperty(QStringLiteral("row")).toInt();
+    view->toggleExpanded(row);
+}
+
+void QQuickTreeViewDelegatePrivate::setCurrentIndex(const QPointF pos)
+{
+    Q_Q(QQuickTreeViewDelegate);
+
+    auto view = q->treeView();
+    if (!view)
+        return;
+
+    if (!view->pointerNavigationEnabled())
+        return;
+
+    const auto posOnContentItem = q->mapToItem(view->contentItem(), pos);
+    const QPoint cell = view->cellAtPosition(posOnContentItem);
+    if (cell.x() == -1 && cell.y() == -1)
+        return;
+
+    QItemSelectionModel *model = view->selectionModel();
+    if (!model)
+        return;
+
+    model->setCurrentIndex(view->modelIndex(cell), QItemSelectionModel::NoUpdate);
+    view->positionViewAtCell(cell, QQuickTableView::Contain);
+    view->forceActiveFocus();
 }
 
 QQuickTreeViewDelegate::QQuickTreeViewDelegate(QQuickItem *parent)
@@ -214,31 +296,53 @@ void QQuickTreeViewDelegate::geometryChange(const QRectF &newGeometry, const QRe
 
 void QQuickTreeViewDelegate::mousePressEvent(QMouseEvent *event)
 {
-    QQuickAbstractButton::mousePressEvent(event);
+    Q_D(QQuickTreeViewDelegate);
 
-    if (event->buttons() != Qt::LeftButton || event->modifiers() != Qt::NoModifier) {
-        // Allow application to add its own pointer handlers that does something
-        // other than plain expand/collapse if e.g holding down modifier keys.
-        event->ignore();
+    d->m_pressOnTopOfIndicator = d->posOnTopOfIndicator(event->position());
+    if (d->m_pressOnTopOfIndicator) {
+        d->handleClickOnIndicator(event, true);
         return;
     }
 
-    const auto indicator = QQuickAbstractButton::indicator();
-    if (indicator && indicator->isVisible()) {
-        const auto posInIndicator = mapToItem(indicator, event->position());
-        if (indicator->contains(posInIndicator)) {
-            const int row = qmlContext(this)->contextProperty(QStringLiteral("row")).toInt();
-            treeView()->toggleExpanded(row);
-        }
+    const bool interactOnPress = !treeView()->isInteractive();
+    if (interactOnPress && contains(event->position()))
+        d->setCurrentIndex(event->position());
+
+    QQuickAbstractButton::mousePressEvent(event);
+}
+
+void QQuickTreeViewDelegate::mouseReleaseEvent(QMouseEvent *event)
+{
+    Q_D(QQuickTreeViewDelegate);
+
+    if (d->m_pressOnTopOfIndicator) {
+        if (d->posOnTopOfIndicator(event->position()))
+            d->handleClickOnIndicator(event, false);
+        return;
     }
+
+    const bool interactOnRelease = treeView()->isInteractive();
+    if (interactOnRelease && contains(event->position()))
+        d->setCurrentIndex(event->position());
+
+    QQuickAbstractButton::mouseReleaseEvent(event);
 }
 
 void QQuickTreeViewDelegate::mouseDoubleClickEvent(QMouseEvent *event)
 {
-    QQuickAbstractButton::mouseDoubleClickEvent(event);
+    Q_D(QQuickTreeViewDelegate);
 
-    const int row = qmlContext(this)->contextProperty(QStringLiteral("row")).toInt();
-    treeView()->toggleExpanded(row);
+    event->accept();
+
+    if (d->posOnTopOfIndicator(event->position()))
+        return;
+
+    if (auto view = treeView()) {
+        const int row = qmlContext(this)->contextProperty(QStringLiteral("row")).toInt();
+        view->toggleExpanded(row);
+    }
+
+    QQuickAbstractButton::mouseDoubleClickEvent(event);
 }
 
 QPalette QQuickTreeViewDelegatePrivate::defaultPalette() const
@@ -311,6 +415,36 @@ void QQuickTreeViewDelegate::setExpanded(bool expanded)
 
     d->m_expanded = expanded;
     emit expandedChanged();
+}
+
+bool QQuickTreeViewDelegate::current() const
+{
+    return d_func()->m_current;
+}
+
+void QQuickTreeViewDelegate::setCurrent(bool current)
+{
+    Q_D(QQuickTreeViewDelegate);
+    if (d->m_current == current)
+        return;
+
+    d->m_current = current;
+    emit currentChanged();
+}
+
+bool QQuickTreeViewDelegate::selected() const
+{
+    return d_func()->m_selected;
+}
+
+void QQuickTreeViewDelegate::setSelected(bool selected)
+{
+    Q_D(QQuickTreeViewDelegate);
+    if (d->m_selected == selected)
+        return;
+
+    d->m_selected = selected;
+    emit selectedChanged();
 }
 
 int QQuickTreeViewDelegate::depth() const

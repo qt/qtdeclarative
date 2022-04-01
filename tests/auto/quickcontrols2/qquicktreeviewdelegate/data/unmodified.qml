@@ -55,5 +55,6 @@ Item {
         clip: true
 
         delegate: TreeViewDelegate {}
+        selectionModel: ItemSelectionModel { model: treeView.model }
     }
 }

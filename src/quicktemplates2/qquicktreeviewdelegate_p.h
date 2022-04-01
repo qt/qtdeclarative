@@ -73,6 +73,8 @@ class Q_QUICKTEMPLATES2_PRIVATE_EXPORT QQuickTreeViewDelegate : public QQuickAbs
     Q_PROPERTY(bool hasChildren READ hasChildren WRITE setHasChildren NOTIFY hasChildrenChanged REQUIRED FINAL)
     Q_PROPERTY(bool expanded READ expanded WRITE setExpanded NOTIFY expandedChanged REQUIRED FINAL)
     Q_PROPERTY(int depth READ depth WRITE setDepth NOTIFY depthChanged REQUIRED FINAL)
+    Q_PROPERTY(bool current READ current WRITE setCurrent NOTIFY currentChanged REQUIRED FINAL REVISION(6, 4))
+    Q_PROPERTY(bool selected READ selected WRITE setSelected NOTIFY selectedChanged REQUIRED FINAL REVISION(6, 4))
 
     QML_NAMED_ELEMENT(TreeViewDelegate)
     QML_ADDED_IN_VERSION(6, 3)
@@ -91,6 +93,12 @@ public:
 
     bool expanded() const;
     void setExpanded(bool expanded);
+
+    bool current() const;
+    void setCurrent(bool current);
+
+    bool selected() const;
+    void setSelected(bool selected);
 
     int depth() const;
     void setDepth(int depth);
@@ -114,12 +122,15 @@ signals:
     void treeviewChanged();
     void leftMarginChanged();
     void rightMarginChanged();
+    Q_REVISION(6, 4) void currentChanged();
+    Q_REVISION(6, 4) void selectedChanged();
 
 protected:
     QFont defaultFont() const override;
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
     void componentComplete() override;
     void mousePressEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
 
 private:
