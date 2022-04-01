@@ -1,4 +1,5 @@
 set(cpp_sources
+    ambiguous.h
     birthdayparty.cpp birthdayparty.h
     cppbaseclass.h
     dynamicmeta.h
@@ -33,6 +34,8 @@ set(qml_files
     TestCase.qml
     WindowDerived.qml
     aliasLookup.qml
+    ambiguous1/Ambiguous.qml
+    ambiguous2/Ambiguous.qml
     anchorsFill.qml
     array.qml
     asCast.qml

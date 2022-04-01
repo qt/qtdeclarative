@@ -126,6 +126,7 @@ private slots:
     void testIsnan();
     void fallbackLookups();
     void prefixedMetaType();
+    void evadingAmbiguity();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1904,6 +1905,28 @@ void tst_QmlCppCodegen::prefixedMetaType()
     QVERIFY(qvariant_cast<QObject *>(o->property("d")) != nullptr);
     QVERIFY(qvariant_cast<QObject *>(o->property("e")) != nullptr);
     QVERIFY(qvariant_cast<QObject *>(o->property("f")) == nullptr);
+}
+
+void tst_QmlCppCodegen::evadingAmbiguity()
+{
+    QQmlEngine engine;
+
+    // We need to add an import path here because we cannot namespace the implicit import.
+    // The implicit import is what we use for all the other tests, even if we explicitly
+    // import TestTypes. That is because the TestTypes module is in a subdirectory "data".
+    engine.addImportPath(u":/"_qs);
+
+    QQmlComponent c1(&engine, QUrl(u"qrc:/TestTypes/ambiguous1/Ambiguous.qml"_qs));
+    QVERIFY2(c1.isReady(), qPrintable(c1.errorString()));
+    QScopedPointer<QObject> o1(c1.create());
+    QCOMPARE(o1->objectName(), QStringLiteral("Ambiguous"));
+    QCOMPARE(o1->property("i").toString(), QStringLiteral("Ambiguous1"));
+
+    QQmlComponent c2(&engine, QUrl(u"qrc:/TestTypes/ambiguous2/Ambiguous.qml"_qs));
+    QVERIFY2(c2.isReady(), qPrintable(c2.errorString()));
+    QScopedPointer<QObject> o2(c2.create());
+    QCOMPARE(o2->objectName(), QStringLiteral("Ambiguous"));
+    QCOMPARE(o2->property("i").toString(), QStringLiteral("Ambiguous2"));
 }
 
 void tst_QmlCppCodegen::runInterpreted()
