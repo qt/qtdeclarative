@@ -880,7 +880,7 @@ TestCase {
     }
 
     function test_snapMode_mouse(data) {
-        var control = createTemporaryObject(sliderComponent, testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2, live: false})
+        var control = createTemporaryObject(sliderComponent, testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2, live: false, width: testCase.width})
         verify(control)
 
         control.first.value = 0
@@ -909,7 +909,7 @@ TestCase {
     }
 
     function test_snapMode_touch(data) {
-        var control = createTemporaryObject(sliderComponent, testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2, live: false})
+        var control = createTemporaryObject(sliderComponent, testCase, {snapMode: data.snapMode, from: data.from, to: data.to, stepSize: 0.2, live: false, width: testCase.width})
         verify(control)
 
         control.first.value = 0

@@ -431,6 +431,10 @@ QStringList QQuickStylePrivate::builtInStyles()
         QLatin1String("Imagine"),
 #ifdef Q_OS_MACOS
         QLatin1String("macOS"),
+        QLatin1String("iOS"),
+#endif
+#ifdef Q_OS_IOS
+        QLatin1String("iOS"),
 #endif
         QLatin1String("Material"),
         QLatin1String("Universal"),

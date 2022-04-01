@@ -18,6 +18,7 @@ qt_internal_add_qml_module(QuickControls2
         QtQuick.Controls.Universal/auto
         QtQuick.Controls.Windows/auto
         QtQuick.Controls.macOS/auto
+        QtQuick.Controls.iOS/auto
     DEFAULT_IMPORTS
         QtQuick.Controls.Basic/auto
     NO_PLUGIN_OPTIONAL
@@ -64,6 +65,12 @@ add_subdirectory(universal)
 
 if(MACOS)
     add_subdirectory(macos)
+    ### Remove
+    add_subdirectory(ios)
+endif()
+
+if(IOS)
+    add_subdirectory(ios)
 endif()
 
 if(WIN32)
