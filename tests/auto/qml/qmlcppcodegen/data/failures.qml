@@ -18,6 +18,10 @@ QtObject {
         property int b: a + 1
     }
 
+    property Thing2 thing2: Thing2 {
+        property int b: a + 2
+    }
+
     property NotHere here: NotHere {
         property int c: b + 1
     }
