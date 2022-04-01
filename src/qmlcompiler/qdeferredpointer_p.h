@@ -58,7 +58,7 @@ template<typename T>
 class QDeferredWeakPointer;
 
 template<typename T>
-class Q_QMLCOMPILER_PRIVATE_EXPORT QDeferredSharedPointer
+class QDeferredSharedPointer
 {
 public:
     using Factory = QDeferredFactory<std::remove_const_t<T>>;
@@ -188,7 +188,7 @@ private:
 };
 
 template<typename T>
-class Q_QMLCOMPILER_PRIVATE_EXPORT QDeferredWeakPointer
+class QDeferredWeakPointer
 {
 public:
     using Factory = QDeferredFactory<std::remove_const_t<T>>;
