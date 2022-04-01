@@ -240,8 +240,8 @@ void QQmlJSImporter::processImport(const QQmlJSImporter::Import &import,
             if (!bestExport.isValid() || valExport.version() > bestExport.version())
                 bestExport = valExport;
 
-            const auto it = types->qmlNames.constFind(qmlName);
-            if (it != types->qmlNames.constEnd()) {
+            const auto it = types->qmlNames.find(qmlName);
+            if (it != types->qmlNames.end()) {
 
                 // The same set of exports can declare the same name multiple times for different
                 // versions. That's the common thing and we would just continue here when we hit
@@ -254,7 +254,7 @@ void QQmlJSImporter::processImport(const QQmlJSImporter::Import &import,
                 const auto existingExports = seenExports.value(qmlName);
                 enum { LowerVersion, SameVersion, HigherVersion } seenVersion = LowerVersion;
                 for (const QQmlJSScope::Export &entry : existingExports) {
-                    if (entry.type() != qmlName || !isVersionAllowed(entry, version))
+                    if (!isVersionAllowed(entry, version))
                         continue;
 
                     if (valExport.version() < entry.version()) {
@@ -280,8 +280,8 @@ void QQmlJSImporter::processImport(const QQmlJSImporter::Import &import,
                         QQmlJS::SourceLocation()
                     });
 
-                    // Remove the name. We don't know which one to use.
-                    types->qmlNames.remove(qmlName);
+                    // Invalidate the type. We don't know which one to use.
+                    it->scope = QQmlJSScope::ConstPtr();
                     continue;
                 }
                 case HigherVersion:
