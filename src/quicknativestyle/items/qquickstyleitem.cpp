@@ -288,6 +288,14 @@ void QQuickStyleItem::itemChange(QQuickItem::ItemChange change, const QQuickItem
     }
 }
 
+bool QQuickStyleItem::event(QEvent *event)
+{
+    if (event->type() == QEvent::ApplicationPaletteChange)
+        markImageDirty();
+
+    return QQuickItem::event(event);
+}
+
 void QQuickStyleItem::updateGeometry()
 {
     qqc2InfoHeading("GEOMETRY");

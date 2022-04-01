@@ -1537,6 +1537,10 @@ bool QQuickWindow::event(QEvent *event)
         if (d->contentItem)
             QCoreApplication::sendEvent(d->contentItem, event);
         break;
+    case QEvent::ApplicationPaletteChange:
+        d->inheritPalette(QGuiApplication::palette());
+        if (d->contentItem)
+            QCoreApplication::sendEvent(d->contentItem, event);
     default:
         break;
     }

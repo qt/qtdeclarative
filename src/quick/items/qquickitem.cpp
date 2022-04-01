@@ -8697,14 +8697,18 @@ bool QQuickItem::event(QEvent *ev)
 #endif // gestures
     case QEvent::LanguageChange:
     case QEvent::LocaleChange:
-        for (QQuickItem *item : d->childItems)
+        for (QQuickItem *item : qAsConst(d->childItems))
             QCoreApplication::sendEvent(item, ev);
         break;
     case QEvent::WindowActivate:
     case QEvent::WindowDeactivate:
         if (d->providesPalette())
             d->setCurrentColorGroup();
-        for (QQuickItem *item : d->childItems)
+        for (QQuickItem *item : qAsConst(d->childItems))
+            QCoreApplication::sendEvent(item, ev);
+        break;
+    case QEvent::ApplicationPaletteChange:
+        for (QQuickItem *item : qAsConst(d->childItems))
             QCoreApplication::sendEvent(item, ev);
         break;
     default:

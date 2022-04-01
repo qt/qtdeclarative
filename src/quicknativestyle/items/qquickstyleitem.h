@@ -271,6 +271,7 @@ protected:
     OverrideState m_overrideState = None;
 
 private:
+    bool event(QEvent *event) override;
     inline void updateGeometry();
     inline void paintControlToImage();
 
