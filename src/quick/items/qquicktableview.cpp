@@ -584,8 +584,8 @@
     there is no setter function. This getter function is mostly
     useful if the TableView doesn't have a columnWidthProvider set, since
     otherwise you can call that function instead (which will work, even
-    for columns that are not currently visible.
-    If no columnWidthProvider is set, the height of a row will be
+    for columns that are not currently visible).
+    If no columnWidthProvider is set, the width of a column will be
     equal to its \l implicitColumnWidth().
 
     \sa columnWidthProvider, implicitColumnWidth(), isColumnLoaded(), {Row heights and column widths}
@@ -603,7 +603,7 @@
     there is no setter function. This getter function is mostly
     useful if the TableView doesn't have a rowHeightProvider set, since
     otherwise you can call that function instead (which will work, even
-    for rows that are not currently visible.
+    for rows that are not currently visible).
     If no rowHeightProvider is set, the height of a row will be
     equal to its \l implicitRowHeight().
 
