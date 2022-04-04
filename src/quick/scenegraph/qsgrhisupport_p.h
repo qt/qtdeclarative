@@ -120,7 +120,7 @@ public:
         QRhi *rhi;
         bool own;
     };
-    RhiCreateResult createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface);
+    RhiCreateResult createRhi(QQuickWindow *window, QSurface *offscreenSurface);
     void destroyRhi(QRhi *rhi);
     void prepareWindowForRhi(QQuickWindow *window);
 

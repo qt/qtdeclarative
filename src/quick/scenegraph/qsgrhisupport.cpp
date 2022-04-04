@@ -543,7 +543,7 @@ void QSGRhiSupport::preparePipelineCache(QRhi *rhi)
 }
 
 // must be called on the render thread
-QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QOffscreenSurface *offscreenSurface)
+QSGRhiSupport::RhiCreateResult QSGRhiSupport::createRhi(QQuickWindow *window, QSurface *offscreenSurface)
 {
     QRhi *rhi = nullptr;
     QQuickWindowPrivate *wd = QQuickWindowPrivate::get(window);
