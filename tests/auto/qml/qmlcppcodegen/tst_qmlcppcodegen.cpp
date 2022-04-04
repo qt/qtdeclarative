@@ -129,6 +129,7 @@ private slots:
     void typedArray();
     void prefixedMetaType();
     void evadingAmbiguity();
+    void fromBoolValue();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1980,6 +1981,17 @@ void tst_QmlCppCodegen::evadingAmbiguity()
     QScopedPointer<QObject> o2(c2.create());
     QCOMPARE(o2->objectName(), QStringLiteral("Ambiguous"));
     QCOMPARE(o2->property("i").toString(), QStringLiteral("Ambiguous2"));
+}
+
+void tst_QmlCppCodegen::fromBoolValue()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/fromBoolValue.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->property("a").toBool(), true);
+    o->setProperty("x", 100);
+    QCOMPARE(o->property("a").toBool(), false);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

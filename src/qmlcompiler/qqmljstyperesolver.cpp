@@ -949,7 +949,7 @@ bool QQmlJSTypeResolver::canPrimitivelyConvertFromTo(
         return true;
     if (isNumeric(from) && isNumeric(to))
         return true;
-    if (equals(from, m_intType) && equals(to, m_boolType))
+    if (isNumeric(from) && equals(to, m_boolType))
         return true;
     if (from->accessSemantics() == QQmlJSScope::AccessSemantics::Reference
             && equals(to, m_boolType)) {
