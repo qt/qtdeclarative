@@ -126,6 +126,7 @@ private slots:
     void testIsnan();
     void fallbackLookups();
     void prefixedMetaType();
+    void fromBoolValue();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1904,6 +1905,22 @@ void tst_QmlCppCodegen::prefixedMetaType()
     QVERIFY(qvariant_cast<QObject *>(o->property("d")) != nullptr);
     QVERIFY(qvariant_cast<QObject *>(o->property("e")) != nullptr);
     QVERIFY(qvariant_cast<QObject *>(o->property("f")) == nullptr);
+}
+
+void tst_QmlCppCodegen::fromBoolValue()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/fromBoolValue.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->property("height").toInt(), 100);
+
+    QScopedPointer<QObject> parent(c.create());
+    o->setProperty("parent", QVariant::fromValue(parent.data()));
+    QCOMPARE(o->property("height").toInt(), 0);
+
+    parent->setProperty("visible", QVariant::fromValue(false));
+    QCOMPARE(o->property("height").toInt(), 100);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

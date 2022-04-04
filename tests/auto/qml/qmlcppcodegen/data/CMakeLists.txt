@@ -66,6 +66,7 @@ set(qml_files
     failures.qml
     fallbacklookups.qml
     fileDialog.qml
+    fromBoolValue.qml
     functionLookup.qml
     funcWithParams.qml
     functionReturningVoid.qml

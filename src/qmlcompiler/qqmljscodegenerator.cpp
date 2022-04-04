@@ -104,26 +104,35 @@ QQmlJSAotFunction QQmlJSCodeGenerator::run(
     m_error = error;
 
     QSet<QString> registerNames;
+    const auto defineRegisterVariable = [&](
+            int registerIndex, const QQmlJSScope::ConstPtr &seenType) {
+        // Don't generate any variables for registers that are initialized with undefined.
+        if (seenType.isNull() || seenType == m_typeResolver->voidType())
+            return;
+
+        auto &typesForRegisters = m_registerVariables[registerIndex];
+        if (!typesForRegisters.contains(seenType)) {
+            QString variableName = u"r%1"_qs.arg(registerIndex);
+            if (registerNames.contains(variableName))
+                variableName += u'_' + QString::number(typesForRegisters.count());
+            registerNames.insert(variableName);
+            typesForRegisters[seenType] = variableName;
+        }
+    };
+
     for (const InstructionAnnotation &annotation : *m_annotations) {
         for (auto regIt = annotation.registers.constBegin(),
              regEnd = annotation.registers.constEnd();
              regIt != regEnd;
              ++regIt) {
-            int registerIndex = regIt.key();
+            defineRegisterVariable(regIt.key(), regIt.value().storedType());
+        }
 
-            const QQmlJSScope::ConstPtr seenType = regIt.value().storedType();
-            // Don't generate any variables for registers that are initialized with undefined.
-            if (seenType.isNull() || seenType == m_typeResolver->voidType())
-                continue;
-
-            auto &typesForRegisters = m_registerVariables[registerIndex];
-            if (!typesForRegisters.contains(seenType)) {
-                QString variableName = u"r%1"_qs.arg(registerIndex);
-                if (registerNames.contains(variableName))
-                    variableName += u'_' + QString::number(typesForRegisters.count());
-                registerNames.insert(variableName);
-                typesForRegisters[seenType] = variableName;
-            }
+        for (auto regIt = annotation.expectedTargetTypesBeforeJump.constBegin(),
+             regEnd = annotation.expectedTargetTypesBeforeJump.constEnd();
+             regIt != regEnd;
+             ++regIt) {
+            defineRegisterVariable(regIt.key(), regIt.value().storedType());
         }
     }
 
