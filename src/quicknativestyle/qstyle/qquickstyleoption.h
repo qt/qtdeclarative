@@ -151,6 +151,7 @@ protected:
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QStyleOptionFrame::FrameFeatures)
+Q_DECLARE_MIXED_ENUM_OPERATORS_SYMMETRIC(int, QStyleOptionFrame::Shape, QStyleOptionFrame::Shadow)
 
 Q_DECL_DEPRECATED typedef QStyleOptionFrame QStyleOptionFrameV2;
 Q_DECL_DEPRECATED typedef QStyleOptionFrame QStyleOptionFrameV3;
