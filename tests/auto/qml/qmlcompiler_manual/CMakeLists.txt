@@ -12,6 +12,7 @@ qt_internal_add_test(tst_qmlcompiler_manual
         Qt::CorePrivate
         Qt::QmlPrivate
         Qt::QuickTestUtilsPrivate
+    TESTDATA ${test_data}
 )
 
 qt6_add_qml_module(tst_qmlcompiler_manual
