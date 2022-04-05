@@ -4,7 +4,7 @@
 cmake_minimum_required(VERSION 3.16)
 project(rendercontrol_opengl LANGUAGES CXX)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui OpenGL Qml Quick)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui GuiPrivate OpenGL Qml Quick)
 
 qt_standard_project_setup(REQUIRES 6.8)
 
@@ -12,11 +12,13 @@ qt_add_executable(rendercontrol_openglexample WIN32 MACOSX_BUNDLE
     cuberenderer.cpp cuberenderer.h
     main.cpp
     window_singlethreaded.cpp window_singlethreaded.h
+    window_multithreaded.cpp window_multithreaded.h
 )
 
 target_link_libraries(rendercontrol_openglexample PRIVATE
     Qt6::Core
     Qt6::Gui
+    Qt6::GuiPrivate
     Qt6::OpenGL
     Qt6::Qml
     Qt6::Quick
