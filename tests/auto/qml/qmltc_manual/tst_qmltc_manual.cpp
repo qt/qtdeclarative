@@ -314,7 +314,6 @@ void tst_qmltc_manual::propertyReturningFunction()
 
 void tst_qmltc_manual::locallyImported()
 {
-    QSKIP("Test crashes on Android (QTBUG-100018)");
     QQmlEngine e;
     LocallyImported::url = testFileUrl("LocallyImported.qml");
 

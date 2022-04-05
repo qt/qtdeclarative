@@ -13,6 +13,7 @@ qt_internal_add_test(tst_qmltc_manual
         Qt::QmlPrivate
         Qt::Quick
         Qt::QuickTestUtilsPrivate
+    TESTDATA ${test_data}
 )
 
 qt6_add_qml_module(tst_qmltc_manual
