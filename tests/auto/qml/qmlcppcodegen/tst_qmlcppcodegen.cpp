@@ -1931,6 +1931,10 @@ void tst_QmlCppCodegen::evadingAmbiguity()
 
 void tst_QmlCppCodegen::runInterpreted()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("Can't start QProcess to run a custom user binary on Android");
+#endif
+
     if (qEnvironmentVariableIsSet("QV4_FORCE_INTERPRETER"))
         QSKIP("Already running in interpreted mode");
 
