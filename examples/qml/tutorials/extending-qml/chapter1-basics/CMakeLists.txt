@@ -27,14 +27,14 @@ target_link_libraries(chapter1-basics PUBLIC
     Qt::Qml
     Qt::Quick
 )
-
+#![0]
 qt_add_qml_module(chapter1-basics
     URI Charts
     VERSION 1.0
     QML_FILES app.qml
     NO_RESOURCE_TARGET_PATH
 )
-
+#![0]
 install(TARGETS chapter1-basics
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"

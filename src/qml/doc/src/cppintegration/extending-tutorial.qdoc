@@ -72,7 +72,7 @@ a version of 1.0.
 
 We want this \c PieChart type to be usable from QML like this:
 
-\badcode
+\qml
     import Charts 1.0
 
     PieChart {
@@ -80,7 +80,7 @@ We want this \c PieChart type to be usable from QML like this:
         name: "A simple pie chart"
         color: "red"
     }
-\endcode
+\endqml
 
 To do this, we need a C++ class that encapsulates this \c PieChart type and its two
 properties. Since QML makes extensive use of Qt's \l{Meta-Object System}{meta object system},
@@ -91,12 +91,14 @@ this new class must:
 \li Declare its properties using the Q_PROPERTY macro
 \endlist
 
+\section2 Class Declaration
+
 Here is our \c PieChart class, defined in \c piechart.h:
 
 \snippet tutorials/extending-qml/chapter1-basics/piechart.h 0
 
 The class inherits from QQuickPaintedItem because we want to override
-QQuickPaintedItem::paint() in perform drawing operations with the QPainter API.
+QQuickPaintedItem::paint() to perform drawing operations with the QPainter API.
 If the class just represented some data type and was not an item that actually needed
 to be displayed, it could simply inherit from QObject. Or, if we want to extend the
 functionality of an existing QObject-based class, it could inherit from that class instead.
@@ -109,11 +111,22 @@ class is registered using the QML_ELEMENT macro, to allow it to be used from
 QML. If you don't register the class, \c app.qml won't be able to create a
 \c PieChart.
 
+\section2 qmake Setup
+
 For the registration to take effect, the \c qmltypes option is added to
 \c CONFIG in the project file and a \c QML_IMPORT_NAME and
 \c QML_IMPORT_MAJOR_VERSION are given:
 
 \snippet tutorials/extending-qml/chapter1-basics/chapter1-basics.pro 0
+
+\section2 CMake Setup
+
+Similarly, for the registration to take effect when using CMake, use the
+\l{qt6_add_qml_module} {qt_add_qml_module} command:
+
+\snippet tutorials/extending-qml/chapter1-basics/CMakeLists.txt 0
+
+\section2 Class Implementation
 
 The class implementation in \c piechart.cpp simply sets and returns the
 \c m_name and \c m_color values as appropriate, and implements \c paint() to
@@ -124,15 +137,17 @@ flag to enable painting:
 \dots 0
 \snippet tutorials/extending-qml/chapter1-basics/piechart.cpp 1
 
-Now that we have defined the \c PieChart type, we will use it from QML. The \c app.qml
-file creates a \c PieChart item and display the pie chart's details
+\section2 QML Usage
+
+Now that we have defined the \c PieChart type, we will use it from QML. The \c
+app.qml file creates a \c PieChart item and displays the pie chart's details
 using a standard QML \l Text item:
 
 \snippet tutorials/extending-qml/chapter1-basics/app.qml 0
 
 Notice that although the color is specified as a string in QML, it is automatically
 converted to a QColor object for the PieChart \c color property. Automatic conversions are
-provided for various other \l {QML Value Types}{value types}; for example, a string
+provided for various other \l {QML Value Types}{value types}. For example, a string
 like "640x480" can be automatically converted to a QSize value.
 
 We'll also create a C++ application that uses a QQuickView to run and
@@ -142,11 +157,19 @@ Here is the application \c main.cpp:
 
 \snippet tutorials/extending-qml/chapter1-basics/main.cpp 0
 
-We write a \c .pro project file that includes the files and the \c qml library, and
-defines a type namespace called "Charts" with a version of 1.0 for any types exposed
-to QML:
+\section2 Project Build
+
+To build the project we include the files, link against the libraries, and
+define a type namespace called "Charts" with version 1.0 for any types exposed
+to QML.
+
+Using qmake:
 
 \quotefile tutorials/extending-qml/chapter1-basics/chapter1-basics.pro
+
+Using CMake:
+
+\quotefile tutorials/extending-qml/chapter1-basics/CMakeLists.txt
 
 Now we can build and run the application:
 
@@ -237,7 +260,7 @@ is emitted whenever the value changes.
 \dots
 \snippet tutorials/extending-qml/chapter3-bindings/piechart.h 3
 
-Then, we emit this signal in \c setPieSlice():
+Then, we emit this signal in \c setColor():
 
 \snippet tutorials/extending-qml/chapter3-bindings/piechart.cpp 0
 
@@ -323,12 +346,24 @@ item when its contents are drawn:
 \snippet tutorials/extending-qml/chapter4-customPropertyTypes/piechart.cpp 0
 
 Like the \c PieChart type, the \c PieSlice type has to be exposted to QML
-using QML_ELEMENT. As with \c PieChart, we add the "Charts" type namespace,
-version 1.0 to the .pro file:
+using QML_ELEMENT.
 
 \snippet tutorials/extending-qml/chapter4-customPropertyTypes/pieslice.h 0
 \dots
+
+As with \c PieChart, we add the "Charts" type namespace, version 1.0, to our
+build file:
+
+Using qmake:
+
 \quotefile tutorials/extending-qml/chapter4-customPropertyTypes/chapter4-customPropertyTypes.pro
+
+Using CMake:
+
+\dots
+\snippet tutorials/extending-qml/chapter4-customPropertyTypes/CMakeLists.txt 0
+\snippet tutorials/extending-qml/chapter4-customPropertyTypes/CMakeLists.txt 1
+\dots
 
 The source code from the following files are referred to in this chapter:
 \generatelist examplefiles .*chapter4.*
@@ -399,16 +434,22 @@ Here is the \c ChartsPlugin definition in \c chartsplugin.h:
 
 \snippet tutorials/extending-qml/chapter6-plugins/Charts/chartsplugin.h 0
 
-Then, we write a \c .pro project file that defines the project as a plugin library.
+Then, we configure the build file to define the project as a plugin library.
+
+Using qmake:
 
 \quotefile tutorials/extending-qml/chapter6-plugins/Charts/Charts.pro
+
+Using CMake:
+
+\quotefile tutorials/extending-qml/chapter6-plugins/Charts/CMakeLists.txt
 
 When building this example on Windows or Linux, the \c Charts directory will be
 located at the same level as the application that uses our new import module.
 This way, the QML engine will find our module as the default search path for QML
 imports includes the directory of the application executable. On \macos, the
-plugin binary is copied to \c Contents/PlugIns in the the application bundle;
-this path is set in \c {chapter6-plugins/app.pro}:
+plugin binary is copied to \c Contents/PlugIns in the the application bundle.
+With qmake, this path is set in \c {chapter6-plugins/app.pro}:
 
 \quotefromfile tutorials/extending-qml/chapter6-plugins/app.pro
 \skipto macos
