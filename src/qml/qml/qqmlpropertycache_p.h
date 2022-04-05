@@ -85,8 +85,9 @@ public:
 
     ~QQmlMetaObjectPointer()
     {
-        if (d & Shared)
-            reinterpret_cast<SharedHolder *>(d ^ Shared)->release();
+        const auto dd = d.loadAcquire();
+        if (dd & Shared)
+            reinterpret_cast<SharedHolder *>(dd ^ Shared)->release();
     }
 
     QQmlMetaObjectPointer(const QQmlMetaObjectPointer &other)
@@ -111,9 +112,10 @@ public:
 
     const QMetaObject *metaObject() const
     {
-        if (d & Shared)
-            return reinterpret_cast<SharedHolder *>(d ^ Shared)->metaObject;
-        return reinterpret_cast<const QMetaObject *>(d.loadRelaxed());
+        const auto dd = d.loadAcquire();
+        if (dd & Shared)
+            return reinterpret_cast<SharedHolder *>(dd ^ Shared)->metaObject;
+        return reinterpret_cast<const QMetaObject *>(dd);
     }
 
     bool isShared() const
