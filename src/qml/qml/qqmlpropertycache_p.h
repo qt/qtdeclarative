@@ -80,7 +80,7 @@ public:
     QQmlMetaObjectPointer(const QMetaObject *staticMetaObject)
         : d(quintptr(staticMetaObject))
     {
-        Q_ASSERT((d & Shared) == 0);
+        Q_ASSERT((d.loadRelaxed() & Shared) == 0);
     }
 
     ~QQmlMetaObjectPointer()
@@ -93,8 +93,9 @@ public:
         : d(other.d.loadRelaxed())
     {
         // other has to survive until this ctor is done. So d cannot disappear before.
-        if (d & Shared)
-            reinterpret_cast<SharedHolder *>(d ^ Shared)->addref();
+        const auto od = other.d.loadRelaxed();
+        if (od & Shared)
+            reinterpret_cast<SharedHolder *>(od ^ Shared)->addref();
     }
 
     QQmlMetaObjectPointer(QQmlMetaObjectPointer &&other) = delete;
@@ -119,12 +120,13 @@ public:
     {
         // This works because static metaobjects need to be set in the ctor and once a shared
         // metaobject has been set, it cannot be removed anymore.
-        return !d || (d & Shared);
+        const auto dd = d.loadRelaxed();
+        return !dd || (dd & Shared);
     }
 
     bool isNull() const
     {
-        return d == 0;
+        return d.loadRelaxed() == 0;
     }
 
 private:
