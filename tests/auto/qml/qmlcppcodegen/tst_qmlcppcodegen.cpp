@@ -2000,13 +2000,16 @@ void tst_QmlCppCodegen::fromBoolValue()
     QCOMPARE(o->property("a").toBool(), false);
 
     QCOMPARE(o->property("width").toInt(), 100);
+    QCOMPARE(o->property("b").toBool(), false);
 
     QScopedPointer<QObject> parent(c.create());
     o->setProperty("parent", QVariant::fromValue(parent.data()));
     QCOMPARE(o->property("width").toInt(), 100);
+    QCOMPARE(o->property("b").toBool(), false);
 
     o->setProperty("state", QVariant::fromValue(u"foo"_qs));
     QCOMPARE(o->property("width").toInt(), 0);
+    QCOMPARE(o->property("b").toBool(), false);
 }
 
 void tst_QmlCppCodegen::runInterpreted()

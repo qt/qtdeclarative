@@ -296,6 +296,11 @@ void QQmlJSBasicBlocks::populateReaderLocations()
                         ? (writeIt + 1)
                         : m_annotations.find(currentBlock->first);
                 for (; blockInstr != blockEnd; ++blockInstr) {
+                    if (registerActive
+                            && blockInstr->second.typeConversions.contains(writtenRegister)) {
+                        conversions.append(blockInstr.key());
+                    }
+
                     for (auto readIt = blockInstr->second.readRegisters.constBegin(),
                          end = blockInstr->second.readRegisters.constEnd();
                          readIt != end; ++readIt) {
@@ -307,11 +312,6 @@ void QQmlJSBasicBlocks::populateReaderLocations()
                         }
                         if (registerActive && readIt->first == writtenRegister)
                             access.registerReadersAndConversions[blockInstr.key()] = conversions;
-                    }
-
-                    if (registerActive
-                            && blockInstr->second.typeConversions.contains(writtenRegister)) {
-                        conversions.append(blockInstr.key());
                     }
 
                     if (blockInstr->second.changedRegisterIndex == writtenRegister) {
