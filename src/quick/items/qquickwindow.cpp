@@ -2060,9 +2060,6 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
         // desired list is shorter.
         QSGNode *groupNode = itemPriv->childContainerNode();
         QSGNode *currentNode = groupNode->firstChild();
-        int added = 0;
-        int removed = 0;
-        int replaced = 0;
         QSGNode *desiredNode = nullptr;
 
         while (currentNode && (desiredNode = fetchNextNode(itemPriv, ii, fetchedPaintNode))) {
@@ -2075,7 +2072,6 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
                     desiredNode->parent()->removeChildNode(desiredNode);
                 groupNode->insertChildNodeAfter(desiredNode, currentNode);
                 groupNode->removeChildNode(currentNode);
-                replaced++;
 
                 // since we just replaced currentNode, we also need to reset
                 // the pointer.
@@ -2094,7 +2090,6 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
                 if (desiredNode->parent())
                     desiredNode->parent()->removeChildNode(desiredNode);
                 groupNode->appendChildNode(desiredNode);
-                added++;
             }
         } else if (currentNode) {
             // on the other hand, if we processed less than our current node
@@ -2104,7 +2099,6 @@ void QQuickWindowPrivate::updateDirtyNode(QQuickItem *item)
                 QSGNode *node = currentNode->nextSibling();
                 groupNode->removeChildNode(currentNode);
                 currentNode = node;
-                removed++;
             }
         }
     }
