@@ -69,6 +69,7 @@ class QCryptographicHash;
 class QJSEngine;
 class QMetaObjectBuilder;
 class QQmlContextData;
+class QQmlPropertyCache;
 class QQmlPropertyCacheMethodArguments;
 class QQmlVMEMetaObject;
 
@@ -89,6 +90,8 @@ public:
             reinterpret_cast<SharedHolder *>(d ^ Shared)->release();
     }
 
+private:
+    friend class QQmlPropertyCache;
     QQmlMetaObjectPointer(const QQmlMetaObjectPointer &other)
         : d(other.d.loadRelaxed())
     {
@@ -101,6 +104,7 @@ public:
     QQmlMetaObjectPointer &operator=(QQmlMetaObjectPointer &&other) = delete;
     QQmlMetaObjectPointer &operator=(const QQmlMetaObjectPointer &other) = delete;
 
+public:
     void setSharedOnce(QMetaObject *shared) const
     {
         SharedHolder *holder = new SharedHolder(shared);
