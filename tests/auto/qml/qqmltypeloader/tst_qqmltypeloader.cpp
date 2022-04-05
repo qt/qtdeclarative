@@ -570,6 +570,10 @@ void tst_QQMLTypeLoader::implicitComponentModule()
 
 void tst_QQMLTypeLoader::customDiskCachePath()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("Android seems to have problems with QProcess");
+#endif
+
 #if QT_CONFIG(process)
     const char *skipKey = "QT_TST_QQMLTYPELOADER_SKIP_MISMATCH";
     if (qEnvironmentVariableIsSet(skipKey)) {
@@ -733,6 +737,9 @@ void tst_QQMLTypeLoader::signalHandlersAreCompatible()
     // make sure that units really come from different places (the machinery
     // could in theory be smart enough to figure the qmlcachegen cached
     // version), fairly questionable check but better than nothing
+#ifdef Q_OS_ANDROID
+    QSKIP("qrc and file system is the same thing on Android");
+#endif
     QVERIFY(unitFromCachegen->url() != unitFromTypeCompiler->url());
 }
 
