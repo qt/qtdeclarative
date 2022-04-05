@@ -120,6 +120,10 @@ public:
         bool updateQmldir(const QQmlRefPointer<QQmlQmldirData> &data, PendingImportPtr import, QList<QQmlError> *errors);
 
     private:
+        bool addScriptImport(PendingImportPtr import);
+        bool addFileImport(PendingImportPtr import, QList<QQmlError> *errors);
+        bool addLibraryImport(PendingImportPtr import, QList<QQmlError> *errors);
+
         virtual bool qmldirDataAvailable(const QQmlRefPointer<QQmlQmldirData> &, QList<QQmlError> *);
 
         virtual void scriptImported(const QQmlRefPointer<QQmlScriptBlob> &, const QV4::CompiledData::Location &, const QString &, const QString &) {}
