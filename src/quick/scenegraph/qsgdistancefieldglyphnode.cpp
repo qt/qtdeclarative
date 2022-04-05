@@ -317,7 +317,6 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
         ip.append(o + 0);
     }
 
-    int subnodeCount = 0;
     if (m_glyphNodeType == SubGlyphNode) {
         Q_ASSERT(m_glyphsInOtherTextures.isEmpty());
     } else {
@@ -342,7 +341,6 @@ void QSGDistanceFieldGlyphNode::updateGeometry()
                 subNode->update();
                 subNode->updateGeometry(); // we have to explicitly call this now as preprocess won't be called before it's rendered
                 appendChildNode(subNode);
-                ++subnodeCount;
             }
             ++ite;
         }
