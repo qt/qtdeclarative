@@ -68,7 +68,7 @@
 #include <qqmlinfo.h>
 
 namespace {
-    QThreadStorage<int> creationDepth;
+    Q_CONSTINIT thread_local int creationDepth = 0;
 }
 
 Q_LOGGING_CATEGORY(lcQmlComponentGeneral, "qt.qml.qmlcomponent")
@@ -971,7 +971,7 @@ QObject *QQmlComponentPrivate::beginCreate(QQmlRefPointer<QQmlContextData> conte
 
     // Do not create infinite recursion in object creation
     static const int maxCreationDepth = 10;
-    if (creationDepth.localData() >= maxCreationDepth) {
+    if (creationDepth >= maxCreationDepth) {
         qWarning("QQmlComponent: Component creation is recursing - aborting");
         return nullptr;
     }
@@ -1131,10 +1131,10 @@ void QQmlComponentPrivate::completeCreate()
         state.errors.push_back(error);
     }
     if (state.completePending) {
-        ++creationDepth.localData();
+        ++creationDepth;
         QQmlEnginePrivate *ep = QQmlEnginePrivate::get(engine);
         complete(ep, &state);
-        --creationDepth.localData();
+        --creationDepth;
     }
 }
 
