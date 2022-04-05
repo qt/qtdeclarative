@@ -108,7 +108,7 @@ public:
     void setSharedOnce(QMetaObject *shared) const
     {
         SharedHolder *holder = new SharedHolder(shared);
-        if (!d.testAndSetRelaxed(0, quintptr(holder) | Shared))
+        if (!d.testAndSetRelease(0, quintptr(holder) | Shared))
             holder->release();
     }
 
