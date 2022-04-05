@@ -2586,7 +2586,7 @@ QString QQmlJSCodeGenerator::conversion(const QQmlJSScope::ConstPtr &from,
     const auto retrieveFromPrimitive = [&](const QQmlJSScope::ConstPtr &type)
     {
         if (m_typeResolver->equals(type, m_typeResolver->boolType()))
-            return u".toBool()"_qs;
+            return u".toBoolean()"_qs;
         if (m_typeResolver->equals(type, m_typeResolver->intType()))
             return u".toInteger()"_qs;
         if (m_typeResolver->equals(type, m_typeResolver->realType()))

@@ -1998,6 +1998,15 @@ void tst_QmlCppCodegen::fromBoolValue()
     QCOMPARE(o->property("a").toBool(), true);
     o->setProperty("x", 100);
     QCOMPARE(o->property("a").toBool(), false);
+
+    QCOMPARE(o->property("width").toInt(), 100);
+
+    QScopedPointer<QObject> parent(c.create());
+    o->setProperty("parent", QVariant::fromValue(parent.data()));
+    QCOMPARE(o->property("width").toInt(), 100);
+
+    o->setProperty("state", QVariant::fromValue(u"foo"_qs));
+    QCOMPARE(o->property("width").toInt(), 0);
 }
 
 void tst_QmlCppCodegen::runInterpreted()
