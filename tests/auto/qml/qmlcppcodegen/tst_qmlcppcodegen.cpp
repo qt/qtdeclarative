@@ -1936,14 +1936,19 @@ void tst_QmlCppCodegen::fromBoolValue()
     QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/fromBoolValue.qml"_qs));
     QVERIFY2(c.isReady(), qPrintable(c.errorString()));
     QScopedPointer<QObject> o(c.create());
+    QCOMPARE(o->property("width").toInt(), 100);
     QCOMPARE(o->property("height").toInt(), 100);
 
     QScopedPointer<QObject> parent(c.create());
     o->setProperty("parent", QVariant::fromValue(parent.data()));
+    QCOMPARE(o->property("width").toInt(), 100);
     QCOMPARE(o->property("height").toInt(), 0);
 
     parent->setProperty("visible", QVariant::fromValue(false));
     QCOMPARE(o->property("height").toInt(), 100);
+
+    o->setProperty("state", QVariant::fromValue(u"foo"_qs));
+    QCOMPARE(o->property("width").toInt(), 0);
 }
 
 void tst_QmlCppCodegen::runInterpreted()
