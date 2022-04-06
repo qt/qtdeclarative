@@ -413,6 +413,19 @@ public:
     void setValueTypeName(const QString &name) { m_valueTypeName = name; }
     QQmlJSScope::ConstPtr valueType() const { return m_valueType; }
 
+    void addOwnRuntimeFunctionIndex(QQmlJSMetaMethod::AbsoluteFunctionIndex index)
+    {
+        m_runtimeFunctionIndices.emplaceBack(index);
+    }
+    QQmlJSMetaMethod::AbsoluteFunctionIndex
+    ownRuntimeFunctionIndex(QQmlJSMetaMethod::RelativeFunctionIndex index) const
+    {
+        const int i = static_cast<int>(index);
+        Q_ASSERT(i >= 0);
+        Q_ASSERT(i < int(m_runtimeFunctionIndices.size()));
+        return m_runtimeFunctionIndices[i];
+    }
+
     bool isSingleton() const { return m_flags & Singleton; }
     bool isCreatable() const { return m_flags & Creatable; }
     bool isComposite() const { return m_flags & Composite; }
@@ -585,6 +598,9 @@ private:
     // a special QmlIR compatibility bindings array, ordered the same way as
     // bindings in QmlIR::Object
     QList<QmlIRCompatibilityBindingData> m_propertyBindingsArray;
+
+    // same as QmlIR::Object::runtimeFunctionIndices
+    QList<QQmlJSMetaMethod::AbsoluteFunctionIndex> m_runtimeFunctionIndices;
 
     QHash<QString, QQmlJSMetaEnum> m_enumerations;
 

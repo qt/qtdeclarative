@@ -116,7 +116,7 @@ private Q_SLOTS:
     void groupedPropertiesConsistency();
     void groupedPropertySyntax();
     void attachedProperties();
-    void relativeScriptIndices();
+    void scriptIndices();
 
 public:
     tst_qqmljsscope()
@@ -431,7 +431,7 @@ inline QString getScopeName(const QQmlJSScope::ConstPtr &scope)
     return scope->baseTypeName();
 }
 
-void tst_qqmljsscope::relativeScriptIndices()
+void tst_qqmljsscope::scriptIndices()
 {
     {
         QQmlEngine engine;
@@ -445,12 +445,40 @@ void tst_qqmljsscope::relativeScriptIndices()
     QmlIR::Document document(false); // we need QmlIR information here
     QQmlJSScope::ConstPtr root = run(u"functionAndBindingIndices.qml"_qs, &document);
     QVERIFY(root);
+    QVERIFY(document.javaScriptCompilationUnit.unitData());
 
     using IndexedString = std::pair<QString, int>;
-    // compare {property, function}Name and relative function table index
-    // between QQmlJSScope and QmlIR:
-    QList<IndexedString> orderedJSScopeExpressions;
-    QList<IndexedString> orderedQmlIrExpressions;
+    // compare QQmlJSScope and QmlIR:
+
+    // {property, function}Name and relative (per-object) function table index
+    QList<IndexedString> orderedJSScopeExpressionsRelative;
+    QList<IndexedString> orderedQmlIrExpressionsRelative;
+    // {property, function}Name and absolute (per-document) function table index
+    QList<IndexedString> orderedJSScopeExpressionsAbsolute;
+    QList<IndexedString> orderedQmlIrExpressionsAbsolute;
+
+    const auto populateQQmlJSScopeArrays =
+            [&](const QQmlJSScope::ConstPtr &scope, const QString &name,
+                QQmlJSMetaMethod::RelativeFunctionIndex relativeIndex) {
+                orderedJSScopeExpressionsRelative.emplaceBack(name,
+                                                              static_cast<int>(relativeIndex));
+                auto absoluteIndex = scope->ownRuntimeFunctionIndex(relativeIndex);
+                orderedJSScopeExpressionsAbsolute.emplaceBack(name,
+                                                              static_cast<int>(absoluteIndex));
+            };
+
+    const auto populateQmlIRArrays = [&](const QmlIR::Object *irObject, const QString &name,
+                                         int relative) {
+        orderedQmlIrExpressionsRelative.emplaceBack(name, relative);
+        auto absolute = irObject->runtimeFunctionIndices.at(relative);
+        orderedQmlIrExpressionsAbsolute.emplaceBack(name, absolute);
+    };
+
+    const auto suitableScope = [](const QQmlJSScope::ConstPtr &scope) {
+        const auto type = scope->scopeType();
+        return type == QQmlJSScope::QMLScope || type == QQmlJSScope::GroupedPropertyScope
+                || type == QQmlJSScope::AttachedPropertyScope;
+    };
 
     QList<QQmlJSScope::ConstPtr> queue;
     queue.push_back(root);
@@ -458,28 +486,33 @@ void tst_qqmljsscope::relativeScriptIndices()
         auto current = queue.front();
         queue.pop_front();
 
-        const auto methods = current->ownMethods();
-        for (const auto &method : methods) {
-            if (method.methodType() == QQmlJSMetaMethod::Signal)
-                continue;
-            QString name = method.methodName();
-            int index = static_cast<int>(method.jsFunctionIndex());
-            QVERIFY2(index >= 0,
-                     qPrintable(QStringLiteral("Method %1 from %2 has no index")
-                                        .arg(name, getScopeName(current))));
-            orderedJSScopeExpressions.emplaceBack(name, index);
-        }
+        if (suitableScope(current)) {
 
-        const auto bindings = current->ownPropertyBindings();
-        for (const auto &binding : bindings) {
-            if (binding.bindingType() != QQmlJSMetaPropertyBinding::Script)
-                continue;
-            QString name = binding.propertyName();
-            int index = static_cast<int>(binding.scriptIndex());
-            QVERIFY2(index >= 0,
-                     qPrintable(QStringLiteral("Binding on property %1 from %2 has no index")
-                                        .arg(name, getScopeName(current))));
-            orderedJSScopeExpressions.emplaceBack(name, index);
+            const auto methods = current->ownMethods();
+            for (const auto &method : methods) {
+                if (method.methodType() == QQmlJSMetaMethod::Signal)
+                    continue;
+                QString name = method.methodName();
+                auto relativeIndex = method.jsFunctionIndex();
+                QVERIFY2(static_cast<int>(relativeIndex) >= 0,
+                         qPrintable(QStringLiteral("Method %1 from %2 has no index")
+                                            .arg(name, getScopeName(current))));
+
+                populateQQmlJSScopeArrays(current, name, relativeIndex);
+            }
+
+            const auto bindings = current->ownPropertyBindings();
+            for (const auto &binding : bindings) {
+                if (binding.bindingType() != QQmlJSMetaPropertyBinding::Script)
+                    continue;
+                QString name = binding.propertyName();
+                auto relativeIndex = binding.scriptIndex();
+                QVERIFY2(static_cast<int>(relativeIndex) >= 0,
+                         qPrintable(QStringLiteral("Binding on property %1 from %2 has no index")
+                                            .arg(name, getScopeName(current))));
+
+                populateQQmlJSScopeArrays(current, name, relativeIndex);
+            }
         }
 
         const auto children = current->childScopes();
@@ -494,7 +527,7 @@ void tst_qqmljsscope::relativeScriptIndices()
             QVERIFY2(it->index >= 0,
                      qPrintable(QStringLiteral("(qmlir) Method %1 from %2 has no index")
                                         .arg(name, objectName)));
-            orderedQmlIrExpressions.emplaceBack(name, it->index);
+            populateQmlIRArrays(irObject, name, it->index);
         }
         for (auto it = irObject->bindingsBegin(); it != irObject->bindingsEnd(); ++it) {
             if (it->type != QmlIR::Binding::Type_Script)
@@ -505,15 +538,21 @@ void tst_qqmljsscope::relativeScriptIndices()
                     index >= 0,
                     qPrintable(QStringLiteral("(qmlir) Binding on property %1 from %2 has no index")
                                        .arg(name, objectName)));
-            orderedQmlIrExpressions.emplaceBack(name, index);
+            populateQmlIRArrays(irObject, name, index);
         }
     }
 
     auto less = [](const IndexedString &x, const IndexedString &y) { return x.first < y.first; };
-    std::sort(orderedJSScopeExpressions.begin(), orderedJSScopeExpressions.end(), less);
-    std::sort(orderedQmlIrExpressions.begin(), orderedQmlIrExpressions.end(), less);
+    std::sort(orderedJSScopeExpressionsRelative.begin(), orderedJSScopeExpressionsRelative.end(),
+              less);
+    std::sort(orderedQmlIrExpressionsRelative.begin(), orderedQmlIrExpressionsRelative.end(), less);
 
-    QCOMPARE(orderedJSScopeExpressions, orderedQmlIrExpressions);
+    std::sort(orderedJSScopeExpressionsAbsolute.begin(), orderedJSScopeExpressionsAbsolute.end(),
+              less);
+    std::sort(orderedQmlIrExpressionsAbsolute.begin(), orderedQmlIrExpressionsAbsolute.end(), less);
+
+    QCOMPARE(orderedJSScopeExpressionsRelative, orderedQmlIrExpressionsRelative);
+    QCOMPARE(orderedJSScopeExpressionsAbsolute, orderedQmlIrExpressionsAbsolute);
 }
 
 QTEST_MAIN(tst_qqmljsscope)

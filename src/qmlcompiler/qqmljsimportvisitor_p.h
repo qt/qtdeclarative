@@ -185,8 +185,15 @@ protected:
     // stores JS functions and Script bindings per scope (only the name). mimics
     // the content of QmlIR::Object::functionsAndExpressions
     QHash<QQmlJSScope::ConstPtr, QList<QString>> m_functionsAndExpressions;
+    QString m_currentOuterFunction;
+    QHash<QString, int> m_innerFunctions;
     QQmlJSMetaMethod::RelativeFunctionIndex
     addFunctionOrExpression(const QQmlJSScope::ConstPtr &scope, const QString &name);
+    void incrementInnerFunctionCount();
+    void clearCurrentOuterFunction(const QString &name);
+    int synthesizeCompilationUnitRuntimeFunctionIndices(const QQmlJSScope::Ptr &scope,
+                                                        int count) const;
+    void populateRuntimeFunctionIndicesForDocument() const;
 
     QQmlJSImporter *m_importer;
 

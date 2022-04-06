@@ -17,9 +17,18 @@ Text {
         else return "blue";
     }
 
+    property int newProperty: {
+        var callable = () => { return 42; };
+        return callable();
+    }
+
     // group prop script binding (value type and non value type)
     font.pixelSize: (40 + 2) / 2
-    anchors.topMargin: 44 / 4
+    anchors.bottomMargin: 11 + 1
+    anchors.topMargin: {
+        var divideBy4 = function (x) { return x / 4; };
+        return divideBy4(44);
+    }
 
     // attached prop script binding
     Keys.enabled: root.truncated ? true : false
@@ -43,10 +52,12 @@ Text {
     signal mySignal2(bool x)
     onMySignal0: console.log("single line", x);
     onMySignal1: {
-        console.log("mySignal1 emitted:", x);
+        var identity = (x) => { return x; };
+        console.log("mySignal1 emitted:", identity(x));
     }
     onMySignal2: function (x) {
-        console.log("mySignal2 emitted:", x);
+        var returnString = function() { return "mySignal2 emitted:"; };
+        console.log(returnString(), x);
     }
 
     // var property assigned a js function
@@ -72,7 +83,12 @@ Text {
             onDelegateSignal: { root.jsFunc(); }
         }
 
-        property var prop: function(x) { return x * 2; }
+        component InternalInlineType : Rectangle {
+            function jsFuncInsideInline2() { return 43; }
+        }
+
+        property var funcHolder2
+        funcHolder2: function(x) { return x * 2; }
     }
 
     ComponentType {
@@ -84,5 +100,15 @@ Text {
         delegate: ComponentType {
             function jsFuncInsideDelegate(flag: bool) { return flag ? "true" : "false"; }
         }
+    }
+
+    // function with nested one
+    function jsFunctionReturningFunctions() {
+        return [ function() { return 42 }, () => { return "42" } ];
+    }
+
+    // function with Qt.binding()
+    function bindText() {
+        root.text = Qt.binding( function() { return jsFuncTyped("foo") + "bar"; } );
     }
 }

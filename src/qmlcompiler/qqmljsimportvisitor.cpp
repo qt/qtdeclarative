@@ -451,6 +451,8 @@ void QQmlJSImportVisitor::endVisit(UiProgram *)
                               .arg(import.startColumn),
                       Log_UnusedImport, import);
     }
+
+    populateRuntimeFunctionIndicesForDocument();
 }
 
 static QQmlJSAnnotation::Value bindingToVariant(QQmlJS::AST::Statement *statement)
@@ -1156,6 +1158,8 @@ void QQmlJSImportVisitor::flushPendingSignalParameters()
 
     Records a JS function or a Script binding for a given \a scope. Returns an
     index of a just recorded function-or-expression.
+
+    \sa synthesizeCompilationUnitRuntimeFunctionIndices
 */
 QQmlJSMetaMethod::RelativeFunctionIndex
 QQmlJSImportVisitor::addFunctionOrExpression(const QQmlJSScope::ConstPtr &scope,
@@ -1163,7 +1167,119 @@ QQmlJSImportVisitor::addFunctionOrExpression(const QQmlJSScope::ConstPtr &scope,
 {
     auto &array = m_functionsAndExpressions[scope];
     array.emplaceBack(name);
+    if (m_currentOuterFunction.isEmpty())
+        m_currentOuterFunction = name;
     return QQmlJSMetaMethod::RelativeFunctionIndex { int(array.size() - 1) };
+}
+
+/*! \internal
+
+    (Optionally) "records" an inner function by incrementing an inner function
+    counter of the corresponding outer function. When there is no outer
+    function, this procedure does nothing.
+
+    Such recorded inner function would also be stored in the compilation unit in
+    a separate compilation process and thus has to also be acknowledged here.
+
+    \sa addFunctionOrExpression, clearCurrentOuterFunction,
+    synthesizeCompilationUnitRuntimeFunctionIndices
+*/
+void QQmlJSImportVisitor::incrementInnerFunctionCount()
+{
+    // m_currentOuterFunction is set in addFunctionOrExpression()
+    if (!m_currentOuterFunction.isEmpty())
+        m_innerFunctions[m_currentOuterFunction]++;
+}
+
+/*! \internal
+
+    Clears an outer function name (that acts as a flag in some sense) if that
+    name matches \a name.
+
+    \sa addFunctionOrExpression, incrementInnerFunctionCount,
+    synthesizeCompilationUnitRuntimeFunctionIndices
+*/
+void QQmlJSImportVisitor::clearCurrentOuterFunction(const QString &name)
+{
+    if (name == m_currentOuterFunction)
+        m_currentOuterFunction = QString {};
+}
+
+/*! \internal
+
+    Sets absolute runtime function indices for \a scope based on \a count
+    (document-level variable). Returns count incremented by the number of
+    runtime functions that the current \a scope has.
+
+    \note Not all scopes are considered as the function is compatible with the
+    compilation unit output. The runtime functions are only recorded for
+    QmlIR::Object (even if they don't strictly belong to it). Thus, in
+    QQmlJSScope terms, we are only interested in QML scopes, group and attached
+    property scopes.
+*/
+int QQmlJSImportVisitor::synthesizeCompilationUnitRuntimeFunctionIndices(
+        const QQmlJSScope::Ptr &scope, int count) const
+{
+    const auto suitableScope = [](const QQmlJSScope::Ptr &scope) {
+        const auto type = scope->scopeType();
+        return type == QQmlJSScope::QMLScope || type == QQmlJSScope::GroupedPropertyScope
+                || type == QQmlJSScope::AttachedPropertyScope;
+    };
+
+    if (!suitableScope(scope))
+        return count;
+
+    QList<QQmlJSMetaMethod::AbsoluteFunctionIndex> indices;
+    auto it = m_functionsAndExpressions.constFind(scope);
+    if (it == m_functionsAndExpressions.cend()) // scope has no runtime functions
+        return count;
+
+    const auto &functionsAndExpressions = *it;
+    for (const QString &functionOrExpression : functionsAndExpressions) {
+        scope->addOwnRuntimeFunctionIndex(
+                static_cast<QQmlJSMetaMethod::AbsoluteFunctionIndex>(count));
+        ++count;
+
+        // there are special cases: onSignal: function() { doSomethingUsefull }
+        // in which we would register 2 functions in the runtime functions table
+        // for the same expression. even more, we can have named and unnamed
+        // closures inside a function or a script binding e.g.:
+        // ```
+        // function foo() {
+        //  var closure = () => { return 42; }; // this is an inner function
+        //  /* or:
+        //      property = Qt.binding(function() { return anotherProperty; });
+        //   */
+        //  return closure();
+        // }
+        // ```
+        // see Codegen::defineFunction() in qv4codegen.cpp for more details
+        if (m_innerFunctions.contains(functionOrExpression))
+            count += m_innerFunctions[functionOrExpression];
+    }
+
+    return count;
+}
+
+void QQmlJSImportVisitor::populateRuntimeFunctionIndicesForDocument() const
+{
+    int count = 0;
+
+    // We *have* to perform DFS here: QmlIR::Object entries within the
+    // QmlIR::Document are stored in the order they appear during AST traversal
+    // (which does DFS) - QQmlJSScope has to acknowledge this order here,
+    // otherwise we get inconsistent results
+    QList<QQmlJSScope::Ptr> stack;
+    stack.append(m_exportedRootScope);
+
+    while (!stack.isEmpty()) {
+        QQmlJSScope::Ptr current = stack.takeLast();
+
+        count = synthesizeCompilationUnitRuntimeFunctionIndices(current, count);
+
+        const auto &children = current->childScopes();
+        std::copy(children.rbegin(), children.rend(), std::back_inserter(stack));
+    }
 }
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::ExpressionStatement *ast)
@@ -1400,12 +1516,14 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
     return true;
 }
 
-void QQmlJSImportVisitor::endVisit(UiPublicMember *)
+void QQmlJSImportVisitor::endVisit(UiPublicMember *publicMember)
 {
     if (m_savedBindingOuterScope) {
         m_currentScope = m_savedBindingOuterScope;
         m_savedBindingOuterScope = {};
     }
+
+    clearCurrentOuterFunction(publicMember->name.toString());
 }
 
 bool QQmlJSImportVisitor::visit(UiRequired *required)
@@ -1472,6 +1590,7 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
         }
         enterEnvironment(QQmlJSScope::JSFunctionScope, name, fexpr->firstSourceLocation());
     } else {
+        addFunctionOrExpression(m_currentScope, QStringLiteral("<anon>"));
         enterEnvironment(QQmlJSScope::JSFunctionScope, QStringLiteral("<anon>"),
                          fexpr->firstSourceLocation());
     }
@@ -1479,12 +1598,14 @@ void QQmlJSImportVisitor::visitFunctionExpressionHelper(QQmlJS::AST::FunctionExp
 
 bool QQmlJSImportVisitor::visit(QQmlJS::AST::FunctionExpression *fexpr)
 {
+    incrementInnerFunctionCount();
     visitFunctionExpressionHelper(fexpr);
     return true;
 }
 
-void QQmlJSImportVisitor::endVisit(QQmlJS::AST::FunctionExpression *)
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::FunctionExpression *fexpr)
 {
+    clearCurrentOuterFunction(fexpr->name.toString());
     leaveEnvironment();
 }
 
@@ -1498,12 +1619,14 @@ bool QQmlJSImportVisitor::visit(QQmlJS::AST::FunctionDeclaration *fdecl)
 {
     m_logger->log(u"Declared function \"%1\""_qs.arg(fdecl->name), Log_ControlsSanity,
                   fdecl->firstSourceLocation());
+    incrementInnerFunctionCount();
     visitFunctionExpressionHelper(fdecl);
     return true;
 }
 
-void QQmlJSImportVisitor::endVisit(QQmlJS::AST::FunctionDeclaration *)
+void QQmlJSImportVisitor::endVisit(QQmlJS::AST::FunctionDeclaration *fdecl)
 {
+    clearCurrentOuterFunction(fdecl->name.toString());
     leaveEnvironment();
 }
 
@@ -1804,6 +1927,11 @@ void QQmlJSImportVisitor::endVisit(UiScriptBinding *)
         m_currentScope = m_savedBindingOuterScope;
         m_savedBindingOuterScope = {};
     }
+
+    // clearCurrentOuterFunction() but without the name check since script
+    // bindings are special (we cannot have nested script bindings, so we are
+    // guaranteed to always correctly clear the name here)
+    m_currentOuterFunction = QString {};
 }
 
 bool QQmlJSImportVisitor::visit(UiArrayBinding *arrayBinding)

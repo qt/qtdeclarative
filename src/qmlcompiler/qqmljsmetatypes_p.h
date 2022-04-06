@@ -146,6 +146,14 @@ public:
     */
     enum class RelativeFunctionIndex : int { Invalid = -1 };
 
+    /*! \internal
+
+        Represents an absolute JavaScript function/expression index pointing
+        into the QV4::ExecutableCompilationUnit::runtimeFunctions array. Used as
+        a typed alternative to int with an explicit invalid state.
+    */
+    enum class AbsoluteFunctionIndex : int { Invalid = -1 };
+
     QQmlJSMetaMethod() = default;
     explicit QQmlJSMetaMethod(QString name, QString returnType = QString())
         : m_name(std::move(name))
