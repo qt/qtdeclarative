@@ -105,6 +105,7 @@ private Q_SLOTS:
 #endif
     void unknownCppBase();
     void groupedProperties();
+    void descriptiveNameOfNull();
 
 public:
     tst_qqmljsscope()
@@ -302,6 +303,21 @@ void tst_qqmljsscope::groupedProperties()
     getBindingsWithinGroup(&bindingsOfBaseType, 1);
     QCOMPARE(bindingsOfBaseType.size(), 1);
     QCOMPARE(value(bindingsOfBaseType, u"top"_qs).bindingType(), QQmlJSMetaPropertyBinding::Script);
+}
+
+void tst_qqmljsscope::descriptiveNameOfNull()
+{
+    QQmlJSRegisterContent nullContent;
+    QCOMPARE(nullContent.descriptiveName(), u"(invalid type)"_qs);
+
+    QQmlJSScope::Ptr stored = QQmlJSScope::create();
+    stored->setInternalName(u"bar"_qs);
+    QQmlJSMetaProperty property;
+    property.setPropertyName(u"foo"_qs);
+    property.setTypeName(u"baz"_qs);
+    QQmlJSRegisterContent unscoped = QQmlJSRegisterContent::create(
+                stored, property, QQmlJSRegisterContent::ScopeProperty, QQmlJSScope::ConstPtr());
+    QCOMPARE(unscoped.descriptiveName(), u"bar of (invalid type)::foo with type baz"_qs);
 }
 
 QTEST_MAIN(tst_qqmljsscope)

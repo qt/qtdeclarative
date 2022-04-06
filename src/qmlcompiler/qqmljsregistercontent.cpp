@@ -33,8 +33,13 @@ QT_BEGIN_NAMESPACE
 
 QString QQmlJSRegisterContent::descriptiveName() const
 {
+    if (m_storedType.isNull())
+        return u"(invalid type)"_qs;
+
     QString result = m_storedType->internalName() + u" of "_qs;
     const auto scope = [this]() -> QString {
+        if (m_scope.isNull())
+            return u"(invalid type)::"_qs;
         return (m_scope->internalName().isEmpty()
                         ? (m_scope->filePath().isEmpty()
                                    ? u"??"_qs
