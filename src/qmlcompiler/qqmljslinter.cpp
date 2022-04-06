@@ -92,7 +92,7 @@ QQmlJSLinter::QQmlJSLinter(const QStringList &importPaths, const QStringList &pl
     m_plugins = loadPlugins(pluginPaths);
 }
 
-QQmlJSLinter::Plugin::Plugin(QQmlJSLinter::Plugin &&plugin)
+QQmlJSLinter::Plugin::Plugin(QQmlJSLinter::Plugin &&plugin) noexcept
 {
     m_name = plugin.m_name;
     m_author = plugin.m_author;
@@ -515,7 +515,7 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
             }
 
             if (m_enablePlugins) {
-                QQmlSA::PassManager passMan(&v, &typeResolver);
+                QQmlSA::PassManager passMan(&v, codegen.typeResolver());
 
                 for (const Plugin &plugin : m_plugins) {
                     if (!plugin.isValid())

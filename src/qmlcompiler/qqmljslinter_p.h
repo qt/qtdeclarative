@@ -78,7 +78,7 @@ public:
         Q_DISABLE_COPY(Plugin)
     public:
         Plugin() = default;
-        Plugin(Plugin &&plugin);
+        Plugin(Plugin &&plugin) noexcept;
 
 #if QT_CONFIG(library)
         Plugin(QString path);

@@ -75,6 +75,8 @@ public:
         m_typeResolver = std::move(typeResolver);
     }
 
+    QQmlJSTypeResolver *typeResolver() { return &m_typeResolver; }
+
 private:
     QQmlJSTypeInfo *m_typeInfo;
 
