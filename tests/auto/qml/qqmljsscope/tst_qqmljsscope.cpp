@@ -99,6 +99,7 @@ private Q_SLOTS:
 
     void orderedBindings();
     void signalCreationDifferences();
+    void descriptiveNameOfNull();
 
 public:
     tst_qqmljsscope() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
@@ -162,6 +163,21 @@ void tst_qqmljsscope::signalCreationDifferences()
     else
         explicitMethod = &conflicting[0];
     QCOMPARE(explicitMethod->parameterNames(), QStringList({ u"a"_qs, u"c"_qs }));
+}
+
+void tst_qqmljsscope::descriptiveNameOfNull()
+{
+    QQmlJSRegisterContent nullContent;
+    QCOMPARE(nullContent.descriptiveName(), u"(invalid type)"_qs);
+
+    QQmlJSScope::Ptr stored = QQmlJSScope::create();
+    stored->setInternalName(u"bar"_qs);
+    QQmlJSMetaProperty property;
+    property.setPropertyName(u"foo"_qs);
+    property.setTypeName(u"baz"_qs);
+    QQmlJSRegisterContent unscoped = QQmlJSRegisterContent::create(
+                stored, property, QQmlJSRegisterContent::ScopeProperty, QQmlJSScope::ConstPtr());
+    QCOMPARE(unscoped.descriptiveName(), u"bar of (invalid type)::foo with type baz"_qs);
 }
 
 QTEST_MAIN(tst_qqmljsscope)
