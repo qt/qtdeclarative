@@ -89,7 +89,8 @@ All warnings can be set to three levels:
     parser.addOption(silentOption);
 
     QCommandLineOption jsonOption(QStringList() << "json",
-                                  QLatin1String("Output linting errors as JSON"));
+                                  QLatin1String("Write output as JSON to file"),
+                                  QLatin1String("file"), QString());
     parser.addOption(jsonOption);
 
     QCommandLineOption writeDefaultsOption(
@@ -395,8 +396,17 @@ All warnings can be set to three levels:
         result[u"revision"_qs] = JSON_LOGGING_FORMAT_REVISION;
         result[u"files"_qs] = jsonFiles;
 
-        QTextStream(stdout) << QString::fromUtf8(
-                QJsonDocument(result).toJson(QJsonDocument::Compact));
+        QString fileName = parser.value(jsonOption);
+
+        const QByteArray json = QJsonDocument(result).toJson(QJsonDocument::Compact);
+
+        if (fileName == u"-") {
+            QTextStream(stdout) << QString::fromUtf8(json);
+        } else {
+            QFile file(fileName);
+            file.open(QFile::WriteOnly);
+            file.write(json);
+        }
     }
 
     return success ? 0 : -1;

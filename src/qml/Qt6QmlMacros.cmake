@@ -706,7 +706,8 @@ endfunction()
 
 function(_qt_internal_target_enable_qmllint target)
     set(lint_target ${target}_qmllint)
-    if(TARGET ${lint_target})
+    set(lint_target_json ${target}_qmllint_json)
+    if(TARGET ${lint_target} OR TARGET ${target}_qmllint_json)
         return()
     endif()
 
@@ -775,6 +776,18 @@ function(_qt_internal_target_enable_qmllint target)
         WORKING_DIRECTORY "$<TARGET_PROPERTY:${target},SOURCE_DIR>"
     )
 
+    add_custom_target(${lint_target_json}
+        COMMAND "$<${have_qmllint_files}:${cmd}>" --json ${CMAKE_BINARY_DIR}/${lint_target}.json
+        COMMAND_EXPAND_LISTS
+        DEPENDS
+            ${QT_CMAKE_EXPORT_NAMESPACE}::qmllint
+            ${qmllint_files}
+            $<TARGET_NAME_IF_EXISTS:all_qmltyperegistrations>
+        WORKING_DIRECTORY "$<TARGET_PROPERTY:${target},SOURCE_DIR>"
+    )
+
+   set_target_properties(${lint_target_json} PROPERTIES EXCLUDE_FROM_ALL TRUE)
+
     # Make the global linting target depend on the one we add here.
     # Note that the caller is free to change the value of QT_QMLLINT_ALL_TARGET
     # for different QML modules if they wish, which means they can implement
@@ -786,6 +799,14 @@ function(_qt_internal_target_enable_qmllint target)
         add_custom_target(${QT_QMLLINT_ALL_TARGET})
     endif()
     add_dependencies(${QT_QMLLINT_ALL_TARGET} ${lint_target})
+
+    if("${QT_QMLLINT_JSON_ALL_TARGET}" STREQUAL "")
+        set(QT_QMLLINT_JSON_ALL_TARGET all_qmllint_json)
+    endif()
+    if(NOT TARGET ${QT_QMLLINT_JSON_ALL_TARGET})
+        add_custom_target(${QT_QMLLINT_JSON_ALL_TARGET})
+    endif()
+    add_dependencies(${QT_QMLLINT_JSON_ALL_TARGET} ${lint_target_json})
 
 endfunction()
 
