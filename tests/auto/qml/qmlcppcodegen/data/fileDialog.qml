@@ -69,5 +69,6 @@ ApplicationWindow {
     FileDialog {
         id: dialog
         objectName: "FileDialog"
+        options: FileDialog.DontUseNativeDialog
     }
 }
