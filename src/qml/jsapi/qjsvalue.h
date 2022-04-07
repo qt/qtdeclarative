@@ -57,7 +57,6 @@ class QDateTime;
 typedef QList<QJSValue> QJSValueList;
 namespace QV4 {
     struct ExecutionEngine;
-    struct Value;
 }
 
 class Q_QML_EXPORT QJSValue

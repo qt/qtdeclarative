@@ -891,7 +891,7 @@ ReturnedValue QQmlLocale::method_localeCompare(const QV4::FunctionObject *b, con
 */
 
 /*!
-    \qmlproperty enumeration QtQml::Locale::NumberOption
+    \qmlproperty enumeration QtQml::Locale::numberOptions
 
     Holds a set of options for number-to-string and
     string-to-number conversions.

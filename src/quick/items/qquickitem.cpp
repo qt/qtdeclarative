@@ -3071,8 +3071,9 @@ Returns a transform that maps points from item space into window space.
 */
 QTransform QQuickItemPrivate::itemToWindowTransform() const
 {
-    // XXX todo
-    QTransform rv = parentItem?QQuickItemPrivate::get(parentItem)->itemToWindowTransform():QTransform();
+    // item's parent must not be itself, otherwise calling itemToWindowTransform() on it is infinite recursion
+    Q_ASSERT(!parentItem || QQuickItemPrivate::get(parentItem) != this);
+    QTransform rv = parentItem ? QQuickItemPrivate::get(parentItem)->itemToWindowTransform() : QTransform();
     itemToParentTransform(rv);
     return rv;
 }
@@ -7392,6 +7393,12 @@ bool QQuickItem::isUnderMouse() const
     if (!d->window)
         return false;
 
+    // QQuickWindow handles QEvent::Leave to reset the lastMousePosition
+    // FIXME: Using QPointF() as the reset value means an item will not be
+    // under the mouse if the mouse is at 0,0 of the window.
+    if (QQuickWindowPrivate::get(d->window)->lastMousePosition == QPointF())
+        return false;
+
     QPointF cursorPos = QGuiApplicationPrivate::lastCursorPosition;
     return contains(mapFromScene(d->window->mapFromGlobal(cursorPos.toPoint())));
 }
@@ -7806,22 +7813,23 @@ void QQuickItem::setKeepTouchGrab(bool keep)
 }
 
 /*!
-  \qmlmethod bool QtQuick::Item::contains(point point)
+    \qmlmethod bool QtQuick::Item::contains(point point)
 
-  Returns true if this item contains \a point, which is in local coordinates;
-  returns false otherwise.
-  */
+    Returns \c true if this item contains \a point, which is in local coordinates;
+    returns \c false otherwise.  This is the same check that is used for
+    hit-testing a QEventPoint during event delivery, and is affected by
+    containmentMask() if it is set.
+*/
 /*!
-  Returns true if this item contains \a point, which is in local coordinates;
-  returns false otherwise.
+    Returns \c true if this item contains \a point, which is in local coordinates;
+    returns \c false otherwise.
 
-  This function can be overwritten in order to handle point collisions in items
-  with custom shapes. The default implementation checks if the point is inside
-  the item's bounding rect.
+    This function can be overridden in order to handle point collisions in items
+    with custom shapes. The default implementation checks whether the point is inside
+    containmentMask() if it is set, or inside the bounding box otherwise.
 
-  Note that this method is generally used to check whether the item is under the mouse cursor,
-  and for that reason, the implementation of this function should be as light-weight
-  as possible.
+    \note This method is used for hit-testing each QEventPoint during event
+    delivery, so the implementation should be kept as lightweight as possible.
 */
 bool QQuickItem::contains(const QPointF &point) const
 {

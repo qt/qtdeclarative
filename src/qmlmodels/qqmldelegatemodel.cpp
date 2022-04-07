@@ -1609,7 +1609,7 @@ void QQmlDelegateModelPrivate::itemsRemoved(
         removed[i] = 0;
 
     for (const Compositor::Remove &remove : removes) {
-        for (; cacheIndex < remove.cacheIndex; ++cacheIndex)
+        for (; cacheIndex < remove.cacheIndex && cacheIndex < m_cache.size(); ++cacheIndex)
             incrementIndexes(m_cache.at(cacheIndex), m_groupCount, removed);
 
         for (int i = 1; i < m_groupCount; ++i) {

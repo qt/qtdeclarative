@@ -330,7 +330,7 @@ void QQmlIncubatorPrivate::incubate(QQmlInstantiationInterrupt &i)
             ddata->rootObjectInCreation = false;
             if (q) {
                 q->setInitialState(result);
-                if (!creator->requiredProperties().empty()) {
+                if (creator && !creator->requiredProperties().empty()) {
                     const auto& unsetRequiredProperties = creator->requiredProperties();
                     for (const auto& unsetRequiredProperty: unsetRequiredProperties)
                         errors << QQmlComponentPrivate::unsetRequiredPropertyToQQmlError(unsetRequiredProperty);

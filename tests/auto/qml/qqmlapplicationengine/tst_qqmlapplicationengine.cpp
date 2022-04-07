@@ -56,6 +56,7 @@ private slots:
     void translationChange();
     void setInitialProperties();
     void failureToLoadTriggersWarningSignal();
+    void errorWhileCreating();
 
 private:
     QString buildDir;
@@ -331,6 +332,23 @@ void tst_qqmlapplicationengine::failureToLoadTriggersWarningSignal()
     QSignalSpy warningObserver(&test, &QQmlApplicationEngine::warnings);
     test.load(url);
     QTRY_COMPARE(warningObserver.count(), 1);
+}
+
+void tst_qqmlapplicationengine::errorWhileCreating()
+{
+    auto url = testFileUrl("requiredViolation.qml");
+    QQmlApplicationEngine test;
+    QSignalSpy observer(&test, &QQmlApplicationEngine::objectCreated);
+
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "QQmlApplicationEngine failed to create component");
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, qPrintable(QStringLiteral("%1:5:5: Required property foo was not initialized").arg(testFileUrl("Required.qml").toString())));
+
+    test.load(url);
+
+    QTRY_COMPARE(observer.count(), 1);
+    QList<QVariant> args = observer.takeFirst();
+    QVERIFY(args.at(0).isNull());
+    QCOMPARE(args.at(1).toUrl(), url);
 }
 
 QTEST_MAIN(tst_qqmlapplicationengine)

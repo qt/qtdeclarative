@@ -239,6 +239,7 @@ private slots:
     void eval();
     void function();
     void topLevelGeneratorFunction();
+    void generatorCrashNewProperty();
     void qtbug_10696();
     void qtbug_11606();
     void qtbug_11600();
@@ -6487,6 +6488,21 @@ void tst_qqmlecmascript::topLevelGeneratorFunction()
     QMetaObject::invokeMethod(o.get(), "gen", Q_RETURN_ARG(QVariant, returnedValue));
     auto it = returnedValue.value<QJSValue>();
     QCOMPARE(it.property("next").callWithInstance(it).property("value").toInt(), 1);
+}
+
+// QTBUG-91491
+void tst_qqmlecmascript::generatorCrashNewProperty()
+{
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("generatorCrashNewProperty.qml"));
+
+    QScopedPointer<QObject> o(component.create());
+
+    QVERIFY2(o != nullptr, qPrintable(component.errorString()));
+
+    QCOMPARE(o->property("a").toInt(), 42);
+    QCOMPARE(o->property("b").toInt(), 12);
+    QCOMPARE(o->property("c").toInt(), 42);
 }
 
 // Test the "Qt.include" method

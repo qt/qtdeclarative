@@ -254,6 +254,7 @@ ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const V
             }
 
             if (mapfn) {
+                Q_ASSERT(mapArguments); // if mapfn is set, we always setup mapArguments with scope.alloc
                 mapArguments[0] = *nextValue;
                 mapArguments[1] = Value::fromDouble(k);
                 mappedValue = mapfn->call(thisArg, mapArguments, 2);
@@ -297,6 +298,7 @@ ReturnedValue ArrayPrototype::method_from(const FunctionObject *builtin, const V
             CHECK_EXCEPTION();
 
             if (mapfn) {
+                Q_ASSERT(mapArguments); // if mapfn is set, we always setup mapArguments with scope.alloc
                 mapArguments[0] = kValue;
                 mapArguments[1] = Value::fromDouble(k);
                 mappedValue = mapfn->call(thisArg, mapArguments, 2);

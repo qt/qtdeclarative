@@ -110,6 +110,7 @@ public:
         , m_cursor(0)
 #if QT_CONFIG(im)
         , m_preeditCursor(0)
+        , m_undoPreeditState(-1)
 #endif
         , m_blinkEnabled(false)
         , m_blinkTimer(0)
@@ -248,6 +249,7 @@ public:
     int m_cursor;
 #if QT_CONFIG(im)
     int m_preeditCursor;
+    int m_undoPreeditState;
 #endif
     bool m_blinkEnabled;
     int m_blinkTimer;
@@ -335,7 +337,13 @@ public:
 
     bool isUndoAvailable() const { return !m_readOnly && m_undoState; }
     bool isRedoAvailable() const { return !m_readOnly && m_undoState < (int)m_history.size(); }
-    void clearUndo() { m_history.clear(); m_undoState = 0; }
+    void clearUndo() {
+            m_history.clear();
+            m_undoState = 0;
+#if QT_CONFIG(im)
+            m_undoPreeditState = -1;
+#endif
+    }
 
     bool allSelected() const { return !m_text.isEmpty() && m_selstart == 0 && m_selend == (int)m_text.length(); }
     bool hasSelectedText() const { return !m_text.isEmpty() && m_selend > m_selstart; }

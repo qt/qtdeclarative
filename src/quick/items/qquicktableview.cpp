@@ -642,6 +642,28 @@ int QQuickTableViewPrivate::nextVisibleEdgeIndex(Qt::Edge edge, int startIndex)
     return foundIndex;
 }
 
+bool QQuickTableViewPrivate::allColumnsLoaded()
+{
+    // Returns true if all the columns in the model (that are not
+    // hidden by the columnWidthProvider) are currently loaded and visible.
+    const bool firstColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::LeftEdge) == kEdgeIndexAtEnd;
+    if (!firstColumnLoaded)
+        return false;
+    bool lastColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::RightEdge) == kEdgeIndexAtEnd;
+    return lastColumnLoaded;
+}
+
+bool QQuickTableViewPrivate::allRowsLoaded()
+{
+    // Returns true if all the rows in the model (that are not hidden
+    // by the columnWidthProvider) are currently loaded and visible.
+    const bool firstColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::TopEdge) == kEdgeIndexAtEnd;
+    if (!firstColumnLoaded)
+        return false;
+    bool lastColumnLoaded = nextVisibleEdgeIndexAroundLoadedTable(Qt::BottomEdge) == kEdgeIndexAtEnd;
+    return lastColumnLoaded;
+}
+
 void QQuickTableViewPrivate::updateContentWidth()
 {
     // Note that we actually never really know what the content size / size of the full table will
@@ -927,6 +949,15 @@ void QQuickTableViewPrivate::syncLoadedTableRectFromLoadedTable()
 
 QQuickTableViewPrivate::RebuildOptions QQuickTableViewPrivate::checkForVisibilityChanges()
 {
+    // This function will check if there are any visibility changes among
+    // the _already loaded_ rows and columns. Note that there can be rows
+    // and columns to the bottom or right that was not loaded, but should
+    // now become visible (in case there is free space around the table).
+    if (loadedItems.isEmpty()) {
+        // Report no changes
+        return RebuildOption::None;
+    }
+
     // Go through all columns from first to last, find the columns that used
     // to be hidden and not loaded, and check if they should become visible
     // (and vice versa). If there is a change, we need to rebuild.
@@ -971,9 +1002,6 @@ QQuickTableViewPrivate::RebuildOptions QQuickTableViewPrivate::checkForVisibilit
 
 void QQuickTableViewPrivate::forceLayout()
 {
-    if (loadedItems.isEmpty())
-        return;
-
     clearEdgeSizeCache();
     RebuildOptions rebuildOptions = RebuildOption::None;
 
@@ -1923,12 +1951,12 @@ void QQuickTableViewPrivate::layoutAfterLoadingInitialTable()
     relayoutTableItems();
     syncLoadedTableRectFromLoadedTable();
 
-    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentWidth)) {
+    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentWidth) || allColumnsLoaded()) {
         updateAverageColumnWidth();
         updateContentWidth();
     }
 
-    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentHeight)) {
+    if (rebuildOptions.testFlag(RebuildOption::CalculateNewContentHeight) || allRowsLoaded()) {
         updateAverageRowHeight();
         updateContentHeight();
     }

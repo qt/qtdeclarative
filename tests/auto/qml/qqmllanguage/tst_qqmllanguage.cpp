@@ -48,6 +48,7 @@
 #include <private/qqmlscriptstring_p.h>
 #include <private/qqmlvmemetaobject_p.h>
 #include <private/qqmlcomponent_p.h>
+#include <private/qqmltype_p_p.h>
 
 #include "testtypes.h"
 #include "testhttpserver.h"
@@ -331,6 +332,7 @@ private slots:
     void arrayToContainer();
     void qualifiedScopeInCustomParser();
     void accessNullPointerPropertyCache();
+    void bareInlineComponent();
 
 private:
     QQmlEngine engine;
@@ -5811,6 +5813,32 @@ void tst_qqmllanguage::accessNullPointerPropertyCache()
     QVERIFY(c.isReady());
     QScopedPointer<QObject> obj(c.create());
     QVERIFY(!obj.isNull());
+}
+
+void tst_qqmllanguage::bareInlineComponent()
+{
+    QQmlEngine engine;
+
+    QQmlComponent c(&engine, testFileUrl("bareInline.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+
+    QQmlMetaType::freeUnusedTypesAndCaches();
+
+    bool tab1Found = false;
+    const auto types = QQmlMetaType::qmlTypes();
+    for (const QQmlType &type : types) {
+        if (type.elementName() == QStringLiteral("Tab1")) {
+            QVERIFY(type.module().isEmpty());
+            tab1Found = true;
+            const auto ics = type.priv()->objectIdToICType;
+            QVERIFY(ics.size() > 0);
+            for (const QQmlType &ic : ics)
+                QVERIFY(ic.containingType() == type);
+        }
+    }
+    QVERIFY(tab1Found);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

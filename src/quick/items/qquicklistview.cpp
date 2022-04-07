@@ -382,6 +382,83 @@ private:
     }
 };
 
+/*! \internal
+    \brief A helper class for iterating over a model that might change
+
+    When populating the ListView from a model under normal
+    circumstances, we would iterate over the range of model indices
+    correspondning to the visual range, and basically call
+    createItem(index++) in order to create each item.
+
+    This will also emit Component.onCompleted() for each item, which
+    might do some weird things...  For instance, it might remove itself
+    from the model, and this might change model count and the indices
+    of the other subsequent entries in the model.
+
+    This class takes such changes to the model into consideration while
+    iterating, and will adjust the iterator index and keep track of
+    whether the iterator has reached the end of the range.
+
+    It keeps track of changes to the model by connecting to
+    QQmlInstanceModel::modelUpdated() from its constructor.
+    When destroyed, it will automatically disconnect. You can
+    explicitly disconnect earlier by calling \fn disconnect().
+*/
+class MutableModelIterator {
+public:
+    MutableModelIterator(QQmlInstanceModel *model, int iBegin, int iEnd)
+        : removedAtIndex(false)
+        , backwards(iEnd < iBegin)
+    {
+        conn = QObject::connect(model, &QQmlInstanceModel::modelUpdated,
+                [&] (const QQmlChangeSet &changeSet, bool /*reset*/)
+        {
+            for (const QQmlChangeSet::Change &rem : changeSet.removes()) {
+                idxEnd -= rem.count;
+                if (rem.start() <= index) {
+                    index -= rem.count;
+                    if (index < rem.start() + rem.count)
+                        removedAtIndex = true; // model index was removed
+                }
+            }
+            for (const QQmlChangeSet::Change &ins : changeSet.inserts()) {
+                idxEnd += ins.count;
+                if (ins.start() <= index)
+                    index += ins.count;
+            }
+        }
+        );
+        index = iBegin;
+        idxEnd = iEnd;
+    }
+
+    bool hasNext() const {
+        return backwards ? index > idxEnd : index < idxEnd;
+    }
+
+    void next() { index += (backwards ? -1 : +1); }
+
+    ~MutableModelIterator()
+    {
+        disconnect();
+    }
+
+    void disconnect()
+    {
+        if (conn) {
+            QObject::disconnect(conn);
+            conn = QMetaObject::Connection();   // set to nullptr
+        }
+    }
+    int index = 0;
+    int idxEnd;
+    unsigned removedAtIndex : 1;
+    unsigned backwards : 1;
+private:
+    QMetaObject::Connection conn;
+};
+
+
 //----------------------------------------------------------------------------
 
 bool QQuickListViewPrivate::isContentFlowReversed() const
@@ -3570,7 +3647,6 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
     if (insertResult->visiblePos.isValid() && pos < insertResult->visiblePos) {
         // Insert items before the visible item.
         int insertionIdx = index;
-        int i = 0;
         qreal from = tempPos - displayMarginBeginning - buffer;
 
         if (insertionIdx < visibleIndex) {
@@ -3579,15 +3655,18 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
                 insertResult->sizeChangesBeforeVisiblePos += count * (averageSize + spacing);
             }
         } else {
-            for (i = count-1; i >= 0 && pos >= from; --i) {
+            MutableModelIterator it(model, modelIndex + count - 1, modelIndex -1);
+            for (; it.hasNext() && pos >= from; it.next()) {
                 // item is before first visible e.g. in cache buffer
                 FxViewItem *item = nullptr;
-                if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
-                    item->index = modelIndex + i;
+                if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(it.index))))
+                    item->index = it.index;
                 if (!item)
-                    item = createItem(modelIndex + i, QQmlIncubator::Synchronous);
+                    item = createItem(it.index, QQmlIncubator::Synchronous);
                 if (!item)
                     return false;
+                if (it.removedAtIndex)
+                    continue;
 
                 visibleAffected = true;
                 visibleItems.insert(insertionIdx, item);
@@ -3620,16 +3699,20 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
         }
 
     } else {
-        for (int i = 0; i < count && pos <= lastVisiblePos; ++i) {
+        MutableModelIterator it(model, modelIndex, modelIndex + count);
+        for (; it.hasNext() && pos <= lastVisiblePos; it.next()) {
             visibleAffected = true;
             FxViewItem *item = nullptr;
-            if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(modelIndex + i))))
-                item->index = modelIndex + i;
+            if (change.isMove() && (item = currentChanges.removedItems.take(change.moveKey(it.index))))
+                item->index = it.index;
             bool newItem = !item;
+            it.removedAtIndex = false;
             if (!item)
-                item = createItem(modelIndex + i, QQmlIncubator::Synchronous);
+                item = createItem(it.index, QQmlIncubator::Synchronous);
             if (!item)
                 return false;
+            if (it.removedAtIndex)
+                continue;
 
             visibleItems.insert(index, item);
             if (index == 0)
@@ -3650,6 +3733,7 @@ bool QQuickListViewPrivate::applyInsertionChange(const QQmlChangeSet::Change &ch
             pos += item->size() + spacing;
             ++index;
         }
+        it.disconnect();
 
         if (0 < index && index < visibleItems.count()) {
             FxViewItem *prevItem = visibleItems.at(index - 1);

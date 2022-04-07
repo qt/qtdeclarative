@@ -1958,7 +1958,11 @@ void Renderer::prepareAlphaBatches()
 
             if (gni->clipList() == gnj->clipList()
                     && gni->geometry()->drawingMode() == gnj->geometry()->drawingMode()
-                    && (gni->geometry()->drawingMode() != QSGGeometry::DrawLines || gni->geometry()->lineWidth() == gnj->geometry()->lineWidth())
+                    && (gni->geometry()->drawingMode() != QSGGeometry::DrawLines
+                        || (gni->geometry()->lineWidth() == gnj->geometry()->lineWidth()
+                            // Must not do overlap checks when the line width is not 1,
+                            // we have no knowledge how such lines are rasterized.
+                            && gni->geometry()->lineWidth() == 1.0f))
                     && gni->geometry()->attributes() == gnj->geometry()->attributes()
                     && gni->inheritedOpacity() == gnj->inheritedOpacity()
                     && gni->activeMaterial()->type() == gnj->activeMaterial()->type()
@@ -4444,6 +4448,9 @@ void Renderer::renderRenderNode(Batch *batch) // legacy (GL-only)
         opacity = opacity->parent();
     }
 
+    // having DepthAwareRendering leaves depth test on in the alpha pass
+    const bool depthTestWasEnabled = m_useDepthBuffer;
+
     glDisable(GL_STENCIL_TEST);
     glDisable(GL_SCISSOR_TEST);
     glDisable(GL_DEPTH_TEST);
@@ -4478,7 +4485,9 @@ void Renderer::renderRenderNode(Batch *batch) // legacy (GL-only)
         m_currentClipType = ClipState::NoClip;
     }
 
-    if (changes & QSGRenderNode::DepthState)
+    if (depthTestWasEnabled)
+        glEnable(GL_DEPTH_TEST);
+    else if (changes & QSGRenderNode::DepthState)
         glDisable(GL_DEPTH_TEST);
 
     if (changes & QSGRenderNode::ColorState)

@@ -205,6 +205,8 @@ public:
 
     QString name();
 
+    bool isActive() { return freeList.count() > 0; }
+
     void setSize(int newSize);
 
     const ID index;

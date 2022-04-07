@@ -363,7 +363,7 @@ protected:
     void commit(int gIdx, int pIdx) override;
 
     QSGNode *updatePaintNode(QSGNode *, UpdatePaintNodeData *) override;
-    void prepareNextFrame(QSGNode**);
+    bool prepareNextFrame(QSGNode**);
     void buildParticleNodes(QSGNode**);
 
     void sceneGraphInvalidated() override;
@@ -460,6 +460,7 @@ private:
     int m_startedImageLoading;
     QRhi *m_rhi;
     bool m_apiChecked;
+    bool m_previousActive;
 };
 
 QT_END_NAMESPACE
