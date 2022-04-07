@@ -51,6 +51,7 @@ Item {
         anchors.fill:parent
         anchors.margins: 10
         model: TestModel {}
+        selectionModel: ItemSelectionModel {}
         clip: true
 
         delegate: CustomDelegate {}

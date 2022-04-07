@@ -571,6 +571,33 @@ QModelIndex QQuickTreeView::modelIndex(int column, int row) const
     return modelIndex({column, row});
 }
 
+void QQuickTreeView::keyPressEvent(QKeyEvent *event)
+{
+    event->ignore();
+
+    if (!keyNavigationEnabled())
+        return;
+    if (!selectionModel())
+        return;
+
+    const int row = cellAtIndex(selectionModel()->currentIndex()).y();
+    switch (event->key()) {
+    case Qt::Key_Left:
+        collapse(row);
+        event->accept();
+        break;
+    case Qt::Key_Right:
+        expand(row);
+        event->accept();
+        break;
+    default:
+        break;
+    }
+
+    if (!event->isAccepted())
+        QQuickTableView::keyPressEvent(event);
+}
+
 QT_END_NAMESPACE
 
 #include "moc_qquicktreeview_p.cpp"

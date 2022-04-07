@@ -87,6 +87,9 @@ signals:
     void expanded(int row, int depth);
     void collapsed(int row, bool recursively);
 
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
+
 private:
     Q_DISABLE_COPY(QQuickTreeView)
     Q_DECLARE_PRIVATE(QQuickTreeView)

@@ -40,11 +40,12 @@
 import QtQuick
 import TestModel
 
-Item {
+Rectangle {
     id: root
 
     implicitWidth: padding + label.x + label.implicitWidth + padding
     implicitHeight: label.implicitHeight * 1.5
+    color: current ? "lightgreen" : "white"
 
     property alias text: label.text
 
@@ -57,6 +58,7 @@ Item {
     required property bool expanded
     required property int hasChildren
     required property int depth
+    required property bool current
 
     TapHandler {
         onTapped: treeView.toggleExpanded(row)

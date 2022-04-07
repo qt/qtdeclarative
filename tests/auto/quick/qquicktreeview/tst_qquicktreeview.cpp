@@ -109,6 +109,7 @@ private slots:
     void emptyModel();
     void updatedModifiedModel();
     void insertRows();
+    void toggleExpandedUsingArrowKeys();
 };
 
 tst_qquicktreeview::tst_qquicktreeview()
@@ -731,6 +732,68 @@ void tst_qquicktreeview::expandToIndex()
     QCOMPARE(treeView->rows(), 13);
 }
 
+void tst_qquicktreeview::toggleExpandedUsingArrowKeys()
+{
+    // Check that you can use the left and right arrow key to
+    // expand and collapse nodes in the tree.
+    LOAD_TREEVIEW("normaltreeview.qml");
+
+    treeView->setFocus(true);
+    QQuickWindow *window = treeView->window();
+
+    // Start by making cell 0, 0 current
+    treeView->selectionModel()->setCurrentIndex(treeView->modelIndex(0, 0), QItemSelectionModel::NoUpdate);
+
+    // Expand row 0
+    const int row0 = 0;
+    QCOMPARE(treeView->rows(), 1);
+    QVERIFY(!treeView->isExpanded(row0));
+    QTest::keyPress(window, Qt::Key_Right);
+    QVERIFY(treeView->isExpanded(row0));
+
+    // A polish event was scheduled, but since the call to keyPress() processes
+    // events, WAIT_UNTIL_POLISHED will be unreliable. So use QTRY_COMPARE instead.
+    QTRY_COMPARE(treeView->rows(), 5);
+
+    // Hitting Key_Right again should be a no-op
+    QTest::keyPress(window, Qt::Key_Right);
+    QVERIFY(treeView->isExpanded(row0));
+    QCOMPARE(treeView->selectionModel()->currentIndex(), treeView->modelIndex(0, row0));
+
+    // Move down to row 1 and try to expand it. Since Row 1
+    // doesn't have children, expanding it will be a no-op.
+    // And also, it shouldn't move currentIndex to the next
+    // column either, it should stay in the tree column.
+    const int row1 = 1;
+    QVERIFY(!treeView->isExpanded(row1));
+    QTest::keyPress(window, Qt::Key_Down);
+    QTest::keyPress(window, Qt::Key_Right);
+    QVERIFY(!treeView->isExpanded(row1));
+    QCOMPARE(treeView->selectionModel()->currentIndex(), treeView->modelIndex(0, row1));
+
+    // Move down to row 4 and expand it
+    const int row4 = 4;
+    QCOMPARE(treeView->rows(), 5);
+    while (treeView->currentRow() != row4)
+        QTest::keyPress(window, Qt::Key_Down);
+    QVERIFY(!treeView->isExpanded(row4));
+    QTest::keyPress(window, Qt::Key_Right);
+    QVERIFY(treeView->isExpanded(row4));
+    QCOMPARE(treeView->selectionModel()->currentIndex(), treeView->modelIndex(0, row4));
+
+    // Move up again to row 0 and collapse it
+    while (treeView->currentRow() != row0)
+        QTest::keyPress(window, Qt::Key_Up);
+    QVERIFY(treeView->isExpanded(row0));
+    QTest::keyPress(window, Qt::Key_Left);
+    QVERIFY(!treeView->isExpanded(row0));
+    QTRY_COMPARE(treeView->rows(), 1);
+
+    // Hitting Key_Left again should be a no-op
+    QTest::keyPress(window, Qt::Key_Left);
+    QVERIFY(!treeView->isExpanded(row0));
+    QCOMPARE(treeView->selectionModel()->currentIndex(), treeView->modelIndex(0, row0));
+}
 
 QTEST_MAIN(tst_qquicktreeview)
 
