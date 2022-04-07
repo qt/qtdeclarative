@@ -358,12 +358,21 @@ void ExecutionEngine::initializeStaticMembers()
 #if defined(QT_NO_DEBUG) && !defined(__SANITIZE_ADDRESS__) && !__has_feature(address_sanitizer)
 #ifdef Q_OS_QNX
             s_maxCallDepth = 640; // QNX's stack is only 512k by default
+#elif defined(Q_OS_ANDROID)
+            // In experiments, it started crashing at 1059.
+            s_maxCallDepth = 1000;
 #else
             s_maxCallDepth = 1234;
 #endif
 #else
             // no (tail call) optimization is done, so there'll be a lot mare stack frames active
+#ifdef Q_OS_ANDROID
+            // Android's stack seems to be about 1mb.
+            // In experiments, it started crashing at 82.
+            s_maxCallDepth = 80;
+#else
             s_maxCallDepth = 200;
+#endif
 #endif
         }
     }
