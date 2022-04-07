@@ -6,3 +6,5 @@ endif()
 if(TARGET Qt::Quick)
     add_subdirectory(scenegraph)
 endif()
+
+add_subdirectory(qmllint)

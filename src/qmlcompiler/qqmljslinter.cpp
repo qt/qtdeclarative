@@ -89,7 +89,7 @@ QQmlJSLinter::QQmlJSLinter(const QStringList &importPaths, const QStringList &pl
       m_enablePlugins(true),
       m_importer(importPaths, nullptr, true)
 {
-    m_plugins = loadPlugins(pluginPaths + QStringList { QQmlJSLinter::defaultPluginPath() });
+    m_plugins = loadPlugins(pluginPaths);
 }
 
 QQmlJSLinter::Plugin::Plugin(QQmlJSLinter::Plugin &&plugin)

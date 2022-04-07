@@ -69,7 +69,6 @@ add_subdirectory(labs)
 # special case begin
 # These need to be included here since they have dependencies on the modules
 # specified above.
-add_subdirectory(plugins)
 
 if(QT_FEATURE_qml_devtools)
     add_subdirectory(qmlcompiler)
@@ -81,6 +80,7 @@ if(QT_FEATURE_qml_devtools)
     endif()
 endif()
 
+add_subdirectory(plugins)
 add_subdirectory(imports)
 
 if(QT_FEATURE_qml_network)

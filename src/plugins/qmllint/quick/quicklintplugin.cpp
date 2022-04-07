@@ -49,7 +49,7 @@ void LayoutChildrenValidatorPass::run(const QQmlSA::Element &element)
                     element->sourceLocation());
 }
 
-void QmlLintPluginQuick::registerPasses(QQmlSA::PassManager *manager,
+void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
                                         const QQmlSA::Element &rootElement)
 {
     Q_UNUSED(rootElement);

@@ -32,7 +32,7 @@
 #include <QtPlugin>
 #include <QtQmlCompiler/private/qqmlsa_p.h>
 
-class QmlLintPluginQuick : public QObject, public QQmlSA::LintPlugin
+class QmlLintQuickPlugin : public QObject, public QQmlSA::LintPlugin
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID QmlLintPluginInterface_iid FILE "plugin.json")
