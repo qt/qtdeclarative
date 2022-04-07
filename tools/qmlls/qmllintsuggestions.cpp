@@ -41,22 +41,6 @@ Q_LOGGING_CATEGORY(lintLog, "qt.languageserver.lint")
 QT_BEGIN_NAMESPACE
 namespace QmlLsp {
 
-static DiagnosticSeverity severityFromString(const QStringView &str)
-{
-    if (str.compare(u"debug", Qt::CaseInsensitive) == 0)
-        return DiagnosticSeverity::Hint;
-    else if (str.compare(u"warning", Qt::CaseInsensitive) == 0)
-        return DiagnosticSeverity::Warning;
-    else if (str.compare(u"critical", Qt::CaseInsensitive) == 0)
-        return DiagnosticSeverity::Error;
-    else if (str.compare(u"fatal", Qt::CaseInsensitive) == 0)
-        return DiagnosticSeverity::Error;
-    else if (str.compare(u"info", Qt::CaseInsensitive) == 0)
-        return DiagnosticSeverity::Information;
-    else
-        return DiagnosticSeverity::Information;
-}
-
 static DiagnosticSeverity severityFromMsgType(QtMsgType t)
 {
     switch (t) {
@@ -188,14 +172,13 @@ void QmlLintSuggestions::diagnose(const QByteArray &uri)
         bool silent = true;
         QString filename = doc.canonicalFilePath();
         fileContents = doc.field(Fields::code).value().toString();
-        QJsonArray json;
         QStringList qmltypesFiles;
         QStringList resourceFiles;
         QMap<QString, QQmlJSLogger::Option> options;
 
         QQmlJSLinter linter(imports, {}, useAbsolutePath);
 
-        linter.lintFile(filename, &fileContents, silent, &json, imports, qmltypesFiles,
+        linter.lintFile(filename, &fileContents, silent, nullptr, imports, qmltypesFiles,
                         resourceFiles, options);
         auto addLength = [&fileContents](Position &position, int startOffset, int length) {
             int i = startOffset;
@@ -215,35 +198,45 @@ void QmlLintSuggestions::diagnose(const QByteArray &uri)
             }
         };
 
-        auto jsonToDiagnostic = [&addLength](const QJsonValue &message) {
+        auto messageToDiagnostic = [&addLength](const Message &message) {
             Diagnostic diagnostic;
-            diagnostic.severity = severityFromString(message[u"type"].toString());
+            diagnostic.severity = severityFromMsgType(message.type);
             Range &range = diagnostic.range;
             Position &position = range.start;
-            position.line = message[u"line"].toInt(1) - 1;
-            position.character = message[u"column"].toInt(1) - 1;
+
+            QQmlJS::SourceLocation srcLoc = message.loc;
+
+            position.line = srcLoc.isValid() ? srcLoc.startLine - 1 : 0;
+            position.character = srcLoc.isValid() ? srcLoc.startColumn - 1 : 0;
             range.end = position;
-            addLength(range.end, message[u"charOffset"].toInt(), message[u"length"].toInt());
-            diagnostic.message = message[u"message"].toString().toUtf8();
+            addLength(range.end, srcLoc.isValid() ? message.loc.offset : 0, srcLoc.isValid() ? message.loc.length : 0);
+            diagnostic.message = message.message.toUtf8();
             diagnostic.source = QByteArray("qmllint");
 
-            auto suggestions = message[u"suggestions"].toArray();
-            if (!suggestions.isEmpty()) {
+            auto suggestion = message.fixSuggestion;
+            if (suggestion.has_value()) {
                 // We need to interject the information about where the fix suggestions end
                 // here since we don't have access to the textDocument to calculate it later.
                 QJsonArray fixedSuggestions;
-                for (const QJsonValue &value : suggestions) {
-                    QJsonObject object = value.toObject();
-                    int line = message[u"line"].toInt(1) - 1;
-                    int column = message[u"column"].toInt(1) - 1;
+                for (const FixSuggestion::Fix &fix : suggestion->fixes) {
+                    QQmlJS::SourceLocation cut = fix.cutLocation;
+
+                    int line = cut.isValid() ? cut.startLine : 0;
+                    int column = cut.isValid() ? cut.startColumn : 0;
+
+                    QJsonObject object;
                     object[u"lspBeginLine"] = line;
                     object[u"lspBeginCharacter"] = column;
 
                     Position end = { line, column };
 
-                    addLength(end, object[u"charOffset"].toInt(), object[u"length"].toInt());
+                    addLength(end, srcLoc.isValid() ? srcLoc.offset : 0,
+                              srcLoc.isValid() ? srcLoc.length : 0);
                     object[u"lspEndLine"] = end.line;
                     object[u"lspEndCharacter"] = end.character;
+
+                    object[u"message"] = fix.message;
+                    object[u"replacement"] = fix.replacementString;
 
                     fixedSuggestions << object;
                 }
@@ -269,10 +262,12 @@ void QmlLintSuggestions::diagnose(const QByteArray &uri)
                     return true;
                 },
                 true);
-        for (const auto &results : qAsConst(json)) {
-            if (results[u"filename"].toString() == filename) {
-                for (const auto &message : results[u"warnings"].toArray())
-                    diagnostics.append(jsonToDiagnostic(message));
+
+        const QQmlJSLogger *logger = linter.logger();
+
+        for (const auto &messages : {logger->infos(), logger->warnings(), logger->errors()}) {
+            for (const Message &message : messages) {
+               diagnostics.append(messageToDiagnostic(message));
             }
         }
     }
