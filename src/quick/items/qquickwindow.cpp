@@ -2577,7 +2577,7 @@ QImage QQuickWindow::grabWindow()
         if (d->windowManager && (d->windowManager->flags() & QSGRenderLoop::SupportsGrabWithoutExpose))
             return d->windowManager->grab(this);
 
-        if (!isSceneGraphInitialized() && QSGRhiSupport::instance()->isRhiEnabled()) {
+        if (!isSceneGraphInitialized()) {
             // We do not have rendering up and running. Forget the render loop,
             // do a frame completely offscreen and synchronously into a
             // texture. This can be *very* slow due to all the device/context

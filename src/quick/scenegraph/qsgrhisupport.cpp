@@ -59,7 +59,6 @@ QT_BEGIN_NAMESPACE
 
 QSGRhiSupport::QSGRhiSupport()
     : m_settingsApplied(false),
-      m_enableRhi(false),
       m_debugLayer(false),
       m_profile(false),
       m_shaderEffectDebug(false),
@@ -81,7 +80,6 @@ void QSGRhiSupport::applySettings()
 
     if (m_requested.valid) {
         // explicit rhi backend request from C++ (e.g. via QQuickWindow)
-        m_enableRhi = true;
         switch (m_requested.api) {
         case QSGRendererInterface::OpenGLRhi:
             m_rhiBackend = QRhi::OpenGLES2;
@@ -103,10 +101,6 @@ void QSGRhiSupport::applySettings()
             break;
         }
     } else {
-
-        // There is no other way in Qt 6. The direct OpenGL rendering path of Qt 5 has been removed.
-        m_enableRhi = true;
-
         // check env.vars., fall back to platform-specific defaults when backend is not set
         const QByteArray rhiBackend = qgetenv("QSG_RHI_BACKEND");
         if (rhiBackend == QByteArrayLiteral("gl")
@@ -139,12 +133,9 @@ void QSGRhiSupport::applySettings()
 
             // Now that we established our initial choice, we may want to opt
             // for another backend under certain special circumstances.
-            if (m_enableRhi) // guard because this may do actual graphics calls on some platforms
-                adjustToPlatformQuirks();
+            adjustToPlatformQuirks();
         }
     }
-
-    Q_ASSERT(m_enableRhi); // cannot be anything else in Qt 6
 
     // At this point the RHI backend is fixed, it cannot be changed once we
     // return from this function. This is because things like the QWindow
@@ -246,30 +237,24 @@ QSGRhiSupport *QSGRhiSupport::instance()
 
 QString QSGRhiSupport::rhiBackendName() const
 {
-    if (m_enableRhi) {
-        switch (m_rhiBackend) {
-        case QRhi::Null:
-            return QLatin1String("Null");
-        case QRhi::Vulkan:
-            return QLatin1String("Vulkan");
-        case QRhi::OpenGLES2:
-            return QLatin1String("OpenGL");
-        case QRhi::D3D11:
-            return QLatin1String("D3D11");
-        case QRhi::Metal:
-            return QLatin1String("Metal");
-        default:
-            return QLatin1String("Unknown");
-        }
+    switch (m_rhiBackend) {
+    case QRhi::Null:
+        return QLatin1String("Null");
+    case QRhi::Vulkan:
+        return QLatin1String("Vulkan");
+    case QRhi::OpenGLES2:
+        return QLatin1String("OpenGL");
+    case QRhi::D3D11:
+        return QLatin1String("D3D11");
+    case QRhi::Metal:
+        return QLatin1String("Metal");
+    default:
+        return QLatin1String("Unknown");
     }
-    return QLatin1String("Unknown (RHI not enabled)");
 }
 
 QSGRendererInterface::GraphicsApi QSGRhiSupport::graphicsApi() const
 {
-    if (!m_enableRhi)
-        return QSGRendererInterface::OpenGL;
-
     switch (m_rhiBackend) {
     case QRhi::Null:
         return QSGRendererInterface::NullRhi;
@@ -288,9 +273,6 @@ QSGRendererInterface::GraphicsApi QSGRhiSupport::graphicsApi() const
 
 QSurface::SurfaceType QSGRhiSupport::windowSurfaceType() const
 {
-    if (!m_enableRhi)
-        return QSurface::OpenGLSurface;
-
     switch (m_rhiBackend) {
     case QRhi::Vulkan:
         return QSurface::VulkanSurface;

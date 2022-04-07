@@ -267,18 +267,12 @@ QSGSpriteNode *QSGDefaultContext::createSpriteNode()
 
 QSGGuiThreadShaderEffectManager *QSGDefaultContext::createGuiThreadShaderEffectManager()
 {
-    if (QSGRhiSupport::instance()->isRhiEnabled())
-        return new QSGRhiGuiThreadShaderEffectManager;
-
-    return nullptr;
+    return new QSGRhiGuiThreadShaderEffectManager;
 }
 
 QSGShaderEffectNode *QSGDefaultContext::createShaderEffectNode(QSGRenderContext *renderContext)
 {
-    if (QSGRhiSupport::instance()->isRhiEnabled())
-        return new QSGRhiShaderEffectNode(static_cast<QSGDefaultRenderContext *>(renderContext));
-
-    return nullptr;
+    return new QSGRhiShaderEffectNode(static_cast<QSGDefaultRenderContext *>(renderContext));
 }
 
 QSGRendererInterface::GraphicsApi QSGDefaultContext::graphicsApi() const
@@ -310,17 +304,17 @@ void *QSGDefaultContext::getResource(QQuickWindow *window, Resource resource) co
 
 QSGRendererInterface::ShaderType QSGDefaultContext::shaderType() const
 {
-    return QSGRhiSupport::instance()->isRhiEnabled() ? RhiShader : GLSL;
+    return RhiShader;
 }
 
 QSGRendererInterface::ShaderCompilationTypes QSGDefaultContext::shaderCompilationType() const
 {
-    return QSGRhiSupport::instance()->isRhiEnabled() ? OfflineCompilation : RuntimeCompilation;
+    return OfflineCompilation;
 }
 
 QSGRendererInterface::ShaderSourceTypes QSGDefaultContext::shaderSourceType() const
 {
-    return QSGRhiSupport::instance()->isRhiEnabled() ? ShaderSourceFile : (ShaderSourceString | ShaderSourceFile);
+    return ShaderSourceFile;
 }
 
 QT_END_NAMESPACE

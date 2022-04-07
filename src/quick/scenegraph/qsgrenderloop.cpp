@@ -205,7 +205,7 @@ QSGRenderLoop *QSGRenderLoop::instance()
             QSGRhiSupport *rhiSupport = QSGRhiSupport::instance();
 
             QSGRenderLoopType loopType;
-            if (rhiSupport->isRhiEnabled() && rhiSupport->rhiBackend() != QRhi::OpenGLES2) {
+            if (rhiSupport->rhiBackend() != QRhi::OpenGLES2) {
                 loopType = ThreadedRenderLoop;
             } else {
                 if (QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::ThreadedOpenGL))
@@ -214,25 +214,23 @@ QSGRenderLoop *QSGRenderLoop::instance()
                     loopType = BasicRenderLoop;
             }
 
-            if (rhiSupport->isRhiEnabled()) {
-                switch (rhiSupport->rhiBackend()) {
-                case QRhi::Null:
-                    loopType = BasicRenderLoop;
-                    break;
+            switch (rhiSupport->rhiBackend()) {
+            case QRhi::Null:
+                loopType = BasicRenderLoop;
+                break;
 
-                case QRhi::D3D11:
-                    // The threaded loop's model may not be suitable for DXGI
-                    // due to the possibility of having the main thread (with
-                    // the Windows message pump) blocked while issuing a
-                    // Present on the render thread. However, according to the
-                    // docs this can be a problem for fullscreen swapchains
-                    // only. So leave threaded enabled by default for now and
-                    // revisit later if there are problems.
-                    break;
+            case QRhi::D3D11:
+                // The threaded loop's model may not be suitable for DXGI
+                // due to the possibility of having the main thread (with
+                // the Windows message pump) blocked while issuing a
+                // Present on the render thread. However, according to the
+                // docs this can be a problem for fullscreen swapchains
+                // only. So leave threaded enabled by default for now and
+                // revisit later if there are problems.
+                break;
 
-                default:
-                    break;
-                }
+            default:
+                break;
             }
 
             // The environment variables can always override. This is good
