@@ -210,6 +210,7 @@ private slots:
     void checkSelectionModelWithRequiredSelectedProperty();
     void checkSelectionModelWithUnrequiredSelectedProperty();
     void removeAndAddSelectionModel();
+    void warnOnWrongModelInSelectionModel();
     void testSelectableStartPosEndPos_data();
     void testSelectableStartPosEndPos();
     void testSelectableStartPosEndPosOutsideView();
@@ -3848,6 +3849,28 @@ void tst_QQuickTableView::removeAndAddSelectionModel()
     tableView->setSelectionModel(&selectionModel);
     selected = fxItem->item->property("selected").toBool();
     QCOMPARE(selected, true);
+}
+
+void tst_QQuickTableView::warnOnWrongModelInSelectionModel()
+{
+    // The model set on the SelectionModel should always match the model
+    // set on TableView. This is normally handled automatically, but it's
+    // possible to circumvent. This test will check that we warn if that happens.
+    LOAD_TABLEVIEW("tableviewwithselected1.qml");
+
+    TestModel model1(10, 10);
+    TestModel model2(10, 10);
+
+    tableView->setModel(QVariant::fromValue(&model1));
+    QItemSelectionModel selectionModel;
+    tableView->setSelectionModel(&selectionModel);
+
+    // Set a different model
+    selectionModel.setModel(&model2);
+
+    // And change currentIndex. This will produce a warning.
+    QTest::ignoreMessage(QtWarningMsg, QRegularExpression(".*model differs.*"));
+    selectionModel.setCurrentIndex(model2.index(0, 0), QItemSelectionModel::NoUpdate);
 }
 
 void tst_QQuickTableView::testSelectableStartPosEndPos_data()

@@ -56,10 +56,7 @@ Item {
         delegate: tableViewDelegate
         columnSpacing: 1
         rowSpacing: 1
-        selectionModel: ItemSelectionModel {
-            model: tableView.model
-        }
-
+        selectionModel: ItemSelectionModel {}
     }
 
     Component {

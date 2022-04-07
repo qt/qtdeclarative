@@ -3235,6 +3235,14 @@ void QQuickTableViewPrivate::setSelectedOnDelegateItem(const QModelIndex &modelI
     setRequiredProperty(kRequiredProperty_selected, QVariant::fromValue(select), cellIndex, item, false);
 }
 
+QAbstractItemModel *QQuickTableViewPrivate::qaim(QVariant modelAsVariant) const
+{
+    // If modelAsVariant wraps a qaim, return it
+    if (modelAsVariant.userType() == qMetaTypeId<QJSValue>())
+        modelAsVariant = modelAsVariant.value<QJSValue>().toVariant();
+    return qvariant_cast<QAbstractItemModel *>(modelAsVariant);
+}
+
 void QQuickTableViewPrivate::updateSelectedOnAllDelegateItems()
 {
     for (auto it = loadedItems.keyBegin(), end = loadedItems.keyEnd(); it != end; ++it) {
@@ -3250,6 +3258,12 @@ void QQuickTableViewPrivate::updateSelectedOnAllDelegateItems()
 
 void QQuickTableViewPrivate::currentChangedInSelectionModel(const QModelIndex &current, const QModelIndex &previous)
 {
+    // Warn if the source models are not the same
+    const QAbstractItemModel *qaimInSelection = selectionModel ? selectionModel->model() : nullptr;
+    const QAbstractItemModel *qaimInTableView = qaim(modelImpl());
+    if (qaimInSelection && qaimInSelection != qaimInTableView)
+        qmlWarning(q_func()) << "TableView.selectionModel.model differs from TableView.model";
+
     setCurrentOnDelegateItem(previous, false);
     setCurrentOnDelegateItem(current, true);
 }
@@ -3968,10 +3982,6 @@ void QQuickTableViewPrivate::setCurrentIndex(const QPoint &cell)
     if (!selectionModel)
         return;
 
-    const QAbstractItemModel *qaim = selectionModel->model();
-    if (!qaim)
-        return;
-
     const auto index = q_func()->modelIndex(cell);
     selectionModel->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
 }
@@ -4120,7 +4130,11 @@ QVariant QQuickTableView::model() const
 
 void QQuickTableView::setModel(const QVariant &newModel)
 {
-    return d_func()->setModelImpl(newModel);
+    Q_D(QQuickTableView);
+    d->setModelImpl(newModel);
+
+    if (d->selectionModel)
+        d->selectionModel->setModel(d->qaim(newModel));
 }
 
 QQmlComponent *QQuickTableView::delegate() const
@@ -4271,6 +4285,7 @@ void QQuickTableView::setSelectionModel(QItemSelectionModel *selectionModel)
     d->selectionModel = selectionModel;
 
     if (d->selectionModel) {
+        d->selectionModel->setModel(d->qaim(d->modelImpl()));
         QQuickTableViewPrivate::connect(d->selectionModel, &QItemSelectionModel::selectionChanged,
                                         d, &QQuickTableViewPrivate::selectionChangedInSelectionModel);
         QQuickTableViewPrivate::connect(d->selectionModel, &QItemSelectionModel::currentChanged,

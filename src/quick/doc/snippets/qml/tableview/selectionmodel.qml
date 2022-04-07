@@ -73,9 +73,7 @@ Window {
             rows: [ { "name": "Harry" }, { "name": "Hedwig" } ]
         }
 
-        selectionModel: ItemSelectionModel {
-            model: tableView.model
-        }
+        selectionModel: ItemSelectionModel {}
 
         delegate: Rectangle {
             implicitWidth: 100

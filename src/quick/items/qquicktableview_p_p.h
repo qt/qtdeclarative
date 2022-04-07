@@ -453,6 +453,7 @@ public:
 
     QTypeRevision resolveImportVersion();
     void createWrapperModel();
+    QAbstractItemModel *qaim(QVariant modelAsVariant) const;
 
     virtual void initItemCallback(int modelIndex, QObject *item);
     virtual void itemCreatedCallback(int modelIndex, QObject *object);
@@ -498,6 +499,7 @@ public:
     void selectionChangedInSelectionModel(const QItemSelection &selected, const QItemSelection &deselected);
     void updateSelectedOnAllDelegateItems();
     void setSelectedOnDelegateItem(const QModelIndex &modelIndex, bool select);
+    void syncSourceModelInSelectionModel();
 
     bool currentInSelectionModel(const QPoint &cell) const;
     void currentChangedInSelectionModel(const QModelIndex &current, const QModelIndex &previous);

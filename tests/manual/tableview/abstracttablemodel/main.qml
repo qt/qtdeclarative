@@ -211,9 +211,7 @@ ApplicationWindow {
                 columnCount: 60
             }
 
-            selectionModel: ItemSelectionModel {
-                model: tableView.model
-            }
+            selectionModel: ItemSelectionModel {}
         }
 
         SelectionRectangle {
