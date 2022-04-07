@@ -3972,7 +3972,7 @@ void QQuickTableViewPrivate::setCurrentIndex(const QPoint &cell)
     if (!qaim)
         return;
 
-    const auto index = qaim->index(cell.y(), cell.x());
+    const auto index = q_func()->modelIndex(cell);
     selectionModel->setCurrentIndex(index, QItemSelectionModel::NoUpdate);
 }
 
