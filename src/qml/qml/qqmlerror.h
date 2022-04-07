@@ -47,7 +47,7 @@
 
 QT_BEGIN_NAMESPACE
 
-// ### Qt 6: should this be called QQmlMessage, since it can have a message type?
+// ### Qt 7: should this be called QQmlMessage, since it can have a message type?
 class QDebug;
 class QQmlErrorPrivate;
 class Q_QML_EXPORT QQmlError
@@ -55,8 +55,16 @@ class Q_QML_EXPORT QQmlError
 public:
     QQmlError();
     QQmlError(const QQmlError &);
+    QQmlError(QQmlError &&other) noexcept
+        : d(std::exchange(other.d, nullptr))
+    {}
+
     QQmlError &operator=(const QQmlError &);
+    QT_MOVE_ASSIGNMENT_OPERATOR_IMPL_VIA_MOVE_AND_SWAP(QQmlError)
     ~QQmlError();
+
+    void swap(QQmlError &other)
+    { qt_ptr_swap(d, other.d); }
 
     bool isValid() const;
 
