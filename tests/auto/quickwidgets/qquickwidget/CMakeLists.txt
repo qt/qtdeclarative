@@ -23,6 +23,7 @@ qt_internal_add_test(tst_qquickwidget
         Qt::QuickWidgetsPrivate
         Qt::WidgetsPrivate
         Qt::QuickTestUtilsPrivate
+        Qt::TestPrivate
     TESTDATA ${test_data}
 )
 
