@@ -1256,10 +1256,29 @@ void tst_QQuickPopup::orientation_data()
     QTest::addColumn<Qt::ScreenOrientation>("orientation");
     QTest::addColumn<QPointF>("position");
 
-    QTest::newRow("Portrait") << Qt::PortraitOrientation << QPointF(330, 165);
-    QTest::newRow("Landscape") << Qt::LandscapeOrientation << QPointF(165, 270);
-    QTest::newRow("InvertedPortrait") << Qt::InvertedPortraitOrientation << QPointF(270, 135);
-    QTest::newRow("InvertedLandscape") << Qt::InvertedLandscapeOrientation << QPointF(135, 330);
+    // On Android the screen size will usually be smaller than the 600x300
+    // size of a Window in orientation.qml
+    // Because of that we need to calculate proper positions at runtime.
+#ifndef Q_OS_ANDROID
+    QQuickControlsApplicationHelper helper(this, "orientation.qml");
+    const QSize availableSize = helper.window->size();
+#else
+    const QSize availableSize = QGuiApplication::primaryScreen()->availableSize();
+#endif
+    const int width = availableSize.width();
+    const int height = availableSize.height();
+    // Rectangle is (60x30); popup is (30x60).
+    // Rectangle is using "anchors.centerIn: parent", and popup is positioned at
+    // (rectangle.width, rectangle.height) so we need the "/ 2 - x" part to
+    // calculate expected popup's position.
+    QTest::newRow("Portrait")
+            << Qt::PortraitOrientation << QPointF(width / 2 - 30 + 60, height / 2 - 15 + 30);
+    QTest::newRow("Landscape")
+            << Qt::LandscapeOrientation << QPointF(height / 2 - 15 + 30, width / 2 + 30 - 60);
+    QTest::newRow("InvertedPortrait")
+            << Qt::InvertedPortraitOrientation << QPointF(width / 2 + 30 - 60, height / 2 + 15 - 30);
+    QTest::newRow("InvertedLandscape")
+            << Qt::InvertedLandscapeOrientation << QPointF(height / 2 + 15 - 30, width / 2 - 30 + 60);
 }
 
 void tst_QQuickPopup::orientation()
