@@ -381,7 +381,7 @@ void ModuleIndex::mergeWith(std::shared_ptr<ModuleIndex> o)
 
 QList<Path> ModuleIndex::qmldirsToLoad(DomItem &self)
 {
-    Q_ASSERT(m_qmldirPaths.isEmpty() && "ModuleIndex::qmldirsToLoad called twice");
+    // this always checks the filesystem to the qmldir file to load
     DomItem env = self.environment();
     std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>();
     QStringList subPathComponents = uri().split(u'.');
@@ -414,7 +414,7 @@ QList<Path> ModuleIndex::qmldirsToLoad(DomItem &self)
     }
     if (!dirPath.isEmpty()) {
         QMutexLocker l(mutex());
-        m_qmldirPaths.append(Paths::qmldirFilePath(dirPath));
+        m_qmldirPaths = QList<Path>({ Paths::qmldirFilePath(dirPath) });
     } else if (uri() != u"QML") {
         addErrorLocal(myExportErrors()
                               .warning(tr("Failed to find main qmldir file for %1 %2")

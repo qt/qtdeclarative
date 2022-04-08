@@ -818,6 +818,15 @@ void LoadInfo::doAddDependencies(DomItem &self)
                               Dependency { QString(), Version(), canonicalPath.headName(),
                                            DomType::QmldirFile });
         }
+        QString uri = elPtr->uri();
+        addEndCallback(self, [uri, qmldirs](Path, DomItem &, DomItem &newV) {
+            for (const Path &p : qmldirs) {
+                DomItem qmldir = newV.path(p);
+                if (std::shared_ptr<QmldirFile> qmldirFilePtr = qmldir.ownerAs<QmldirFile>()) {
+                    qmldirFilePtr->ensureInModuleIndex(qmldir, uri);
+                }
+            }
+        });
     } else if (!el) {
         self.addError(DomEnvironment::myErrors().error(
                 tr("Ignoring dependencies for empty (invalid) type %1")

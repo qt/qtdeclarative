@@ -204,11 +204,15 @@ public:
 
     QmlUri uri() const { return m_uri; }
 
+    const QSet<int> &majorVersions() const & { return m_majorVersions; }
+
     const QMultiMap<QString, Export> &exports() const & { return m_exports; }
 
     const QList<Import> &imports() const & { return m_imports; }
 
     const QList<Path> &qmltypesFilePaths() const & { return m_qmltypesFilePaths; }
+
+    QMap<QString, QString> qmlFiles() const;
 
     bool designerSupported() const { return m_qmldir.designerSupported(); }
 
@@ -217,11 +221,14 @@ public:
     QList<ModuleAutoExport> autoExports() const;
     void setAutoExports(const QList<ModuleAutoExport> &autoExport);
 
+    void ensureInModuleIndex(DomItem &self, QString uri);
+
 private:
     void parse();
     void setFromQmldir();
 
     QmlUri m_uri;
+    QSet<int> m_majorVersions;
     QQmlDirParser m_qmldir;
     QList<QQmlDirParser::Plugin> m_plugins;
     QList<Import> m_imports;

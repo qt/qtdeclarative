@@ -151,6 +151,8 @@ void QmldirFile::setFromQmldir()
         exp.typePath = Paths::qmlFileObjectPath(canonicalExportFilePath);
         exp.uri = uri().toString();
         m_exports.insert(exp.typeName, exp);
+        if (exp.version.majorVersion > 0)
+            m_majorVersions.insert(exp.version.majorVersion);
     }
     for (auto const &el : m_qmldir.scripts()) {
         QString exportFilePath = baseDir.filePath(el.fileName);
@@ -169,6 +171,8 @@ void QmldirFile::setFromQmldir()
         exp.uri = uri().toString();
         exp.typeName = el.nameSpace;
         m_exports.insert(exp.typeName, exp);
+        if (exp.version.majorVersion > 0)
+            m_majorVersions.insert(exp.version.majorVersion);
     }
     for (QQmlDirParser::Import const &imp : m_qmldir.imports()) {
         QString uri = imp.module;
@@ -240,6 +244,22 @@ void QmldirFile::setAutoExports(const QList<ModuleAutoExport> &autoExport)
     m_autoExports = autoExport;
 }
 
+void QmldirFile::ensureInModuleIndex(DomItem &self, QString uri)
+{
+    // ModuleIndex keeps the various sources of types from a given module uri import
+    // this method ensures that all major versions that are contained in this qmldir
+    // file actually have a ModuleIndex. This is required so that when importing the
+    // latest version the correct "lastest major version" is found, for example for
+    // qml only modules (qmltypes files also register their versions)
+    DomItem env = self.environment();
+    if (std::shared_ptr<DomEnvironment> envPtr = env.ownerAs<DomEnvironment>()) {
+        for (int majorV : m_majorVersions) {
+            auto mIndex = envPtr->moduleIndexWithUri(env, uri, majorV, EnvLookup::Normal,
+                                                     Changeable::Writable);
+        }
+    }
+}
+
 QCborValue pluginData(QQmlDirParser::Plugin &pl, QStringList cNames)
 {
     QCborArray names;
@@ -267,8 +287,40 @@ bool QmldirFile::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
                     return list.subDataItem(p, pluginData(plugin, cNames));
                 }));
     });
+    // add qmlfiles as map because this way they are presented the same way as
+    // the qmlfiles in a directory
+    cont = cont && self.dvItemField(visitor, Fields::qmlFiles, [this, &self]() {
+        const QMap<QString, QString> typeFileMap = qmlFiles();
+        return self.subMapItem(Map(
+                self.pathFromOwner().field(Fields::qmlFiles),
+                [typeFileMap](DomItem &map, QString typeV) {
+                    QString path = typeFileMap.value(typeV);
+                    if (path.isEmpty())
+                        return DomItem();
+                    else
+                        return map.subReferencesItem(
+                                PathEls::Key(typeV),
+                                QList<Path>({ Paths::qmlFileObjectPath(path) }));
+                },
+                [typeFileMap](DomItem &) {
+                    return QSet<QString>(typeFileMap.keyBegin(), typeFileMap.keyEnd());
+                },
+                QStringLiteral(u"QList<Reference>")));
+    });
     cont = cont && self.dvWrapField(visitor, Fields::autoExports, m_autoExports);
     return cont;
+}
+
+QMap<QString, QString> QmldirFile::qmlFiles() const
+{
+    // add qmlfiles as map because this way they are presented the same way as
+    // the qmlfiles in a directory which gives them as fileName->list of references to files
+    // this is done only to ensure that they are loaded as dependencies
+    QMap<QString, QString> res;
+    for (const auto &e : m_exports)
+        res.insert(e.typeName + QStringLiteral(u"-") + e.version.stringValue(),
+                   e.typePath[2].headName());
+    return res;
 }
 
 std::shared_ptr<OwningItem> QmlFile::doCopy(DomItem &) const
