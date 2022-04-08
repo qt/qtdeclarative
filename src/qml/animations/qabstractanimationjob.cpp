@@ -514,8 +514,11 @@ void QAbstractAnimationJob::setCurrentTime(int msecs)
 
     RETURN_IF_DELETED(updateCurrentTime(m_currentTime));
 
-    if (m_currentLoop != oldLoop)
-        currentLoopChanged();
+    if (m_currentLoop != oldLoop) {
+        // CurrentLoop listeners may restart the job if e.g. from has changed. Stopping a job will
+        // destroy it, so account for that here.
+        RETURN_IF_DELETED(currentLoopChanged());
+    }
 
     // All animations are responsible for stopping the animation when their
     // own end state is reached; in this case the animation is time driven,

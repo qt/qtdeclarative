@@ -173,7 +173,8 @@ void QQuickAbstractAnimationPrivate::commence()
     if (animationInstance) {
         if (q->threadingModel() == QQuickAbstractAnimation::RenderThread)
             animationInstance = new QQuickAnimatorProxyJob(animationInstance, q);
-        animationInstance->addAnimationChangeListener(this, QAbstractAnimationJob::Completion);
+        animationInstance->addAnimationChangeListener(this,
+            QAbstractAnimationJob::Completion | QAbstractAnimationJob::CurrentLoop);
         emit q->started();
         animationInstance->start();
     }
@@ -1950,6 +1951,35 @@ QAbstractAnimationJob* QQuickParallelAnimation::transition(QQuickStateActions &a
     return initInstance(ag);
 }
 
+void QQuickPropertyAnimationPrivate::animationCurrentLoopChanged(QAbstractAnimationJob *)
+{
+    Q_Q(QQuickPropertyAnimation);
+    // We listen to current loop changes in order to restart the animation if e.g. from, to, etc.
+    // are modified while the animation is running.
+    // Restarting is a bit drastic but there is a lot of stuff that commence() (and therefore
+    // QQuickPropertyAnimation::transition() and QQuickPropertyAnimation::createTransitionActions())
+    // does, so we want to avoid trying to take a shortcut and just restart the whole thing.
+    if (ourPropertiesDirty) {
+        ourPropertiesDirty = false;
+
+        // We use animationInstance everywhere for simplicity - if we defined the job parameter
+        // it would be deleted as soon as we call stop().
+        Q_ASSERT(animationInstance);
+        const int currentLoop = animationInstance->currentLoop();
+
+        QSignalBlocker signalBlocker(q);
+        q->stop();
+        q->start();
+
+        Q_ASSERT(animationInstance);
+        // We multiply it ourselves here instead of just saving currentTime(), because otherwise
+        // it seems to accumulate, and changing our properties while the animation is running
+        // can result in the animation starting mid-way through a loop, which is not we want;
+        // we want it to start from the beginning.
+        animationInstance->setCurrentTime(currentLoop * animationInstance->duration());
+    }
+}
+
 //convert a variant from string type to another animatable type
 void QQuickPropertyAnimationPrivate::convertVariant(QVariant &variant, QMetaType type)
 {
@@ -2089,6 +2119,12 @@ void QQuickBulkValueAnimator::debugAnimation(QDebug d) const
     Note that PropertyAnimation inherits the abstract \l Animation type.
     This includes additional properties and methods for controlling the animation.
 
+    \section1 Modifying Properties Duration Animations
+
+    Since Qt 6.4, it is possible to set the \l from, \l to, \l duration, and
+    \l easing properties on a top-level animation while it is running. The
+    animation will take the changes into account on the next loop.
+
     \sa {Animation and Transitions in Qt Quick}, {Qt Quick Examples - Animation}
 */
 
@@ -2129,6 +2165,8 @@ void QQuickPropertyAnimation::setDuration(int duration)
     if (d->duration == duration)
         return;
     d->duration = duration;
+    if (d->componentComplete && d->running)
+        d->ourPropertiesDirty = true;
     emit durationChanged(duration);
 }
 
@@ -2156,6 +2194,8 @@ void QQuickPropertyAnimation::setFrom(const QVariant &f)
         return;
     d->from = f;
     d->fromIsDefined = f.isValid();
+    if (d->componentComplete && d->running)
+        d->ourPropertiesDirty = true;
     emit fromChanged();
 }
 
@@ -2183,6 +2223,8 @@ void QQuickPropertyAnimation::setTo(const QVariant &t)
         return;
     d->to = t;
     d->toIsDefined = t.isValid();
+    if (d->componentComplete && d->running)
+        d->ourPropertiesDirty = true;
     emit toChanged();
 }
 
@@ -2413,6 +2455,8 @@ void QQuickPropertyAnimation::setEasing(const QEasingCurve &e)
         return;
 
     d->easing = e;
+    if (d->componentComplete && d->running)
+        d->ourPropertiesDirty = true;
     emit easingChanged(e);
 }
 

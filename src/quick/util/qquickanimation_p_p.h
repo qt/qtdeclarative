@@ -270,8 +270,10 @@ class QQuickPropertyAnimationPrivate : public QQuickAbstractAnimationPrivate
     Q_DECLARE_PUBLIC(QQuickPropertyAnimation)
 public:
     QQuickPropertyAnimationPrivate()
-    : QQuickAbstractAnimationPrivate(), target(nullptr), fromIsDefined(false), toIsDefined(false),
+    : QQuickAbstractAnimationPrivate(), target(nullptr), fromIsDefined(false), toIsDefined(false), ourPropertiesDirty(false),
       defaultToInterpolatorType(0), interpolatorType(0), interpolator(nullptr), duration(250), actions(nullptr) {}
+
+    void animationCurrentLoopChanged(QAbstractAnimationJob *job) override;
 
     QVariant from;
     QVariant to;
@@ -285,6 +287,7 @@ public:
 
     bool fromIsDefined:1;
     bool toIsDefined:1;
+    bool ourPropertiesDirty : 1;
     bool defaultToInterpolatorType:1;
     int interpolatorType;
     QVariantAnimation::Interpolator interpolator;

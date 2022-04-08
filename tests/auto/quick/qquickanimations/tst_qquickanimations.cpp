@@ -117,6 +117,8 @@ private slots:
     void opacityAnimationFromZero();
     void alwaysRunToEndInSequentialAnimationBug();
     void cleanupWhenRenderThreadStops();
+    void changePropertiesDuringAnimation_data();
+    void changePropertiesDuringAnimation();
 };
 
 #define QTIMED_COMPARE(lhs, rhs) do { \
@@ -2009,6 +2011,113 @@ void tst_qquickanimations::cleanupWhenRenderThreadStops()
     view.hide();
     view.show();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
+}
+
+// This will be called each frame and should return true for the test to pass.
+typedef std::function<bool(QQuickItem *, QString &)> PropertyValidatorFunc;
+Q_DECLARE_METATYPE(PropertyValidatorFunc)
+
+void tst_qquickanimations::changePropertiesDuringAnimation_data()
+{
+    QTest::addColumn<int>("loops");
+    QTest::addColumn<QString>("propertyName");
+    QTest::addColumn<qreal>("newValue");
+    QTest::addColumn<PropertyValidatorFunc>("propertyValidatorFunc");
+
+    // Use a value large enough to ensure that the animation is running for the duration of
+    // the test. We test both infinite and non-infinite loop counts.
+    const int largeLoopCount = 100;
+
+    const auto fromValidator = PropertyValidatorFunc([](QQuickItem *rect, QString &failureMessage){
+        if (rect->x() >= 0)
+            return true;
+        QDebug(&failureMessage) << "Expected x of rect to never go below new \"from\" value of 0, but it's" << rect->x();
+        return false;
+    });
+    QTest::newRow("from") << largeLoopCount << "from" << 0.0 << fromValidator;
+    QTest::newRow("from,infinite") << int(QQuickAbstractAnimation::Infinite) << "from" << 0.0 << fromValidator;
+
+    const auto toValidator = PropertyValidatorFunc([](QQuickItem *rect, QString &failureMessage){
+        if (rect->x() <= 100)
+            return true;
+        QDebug(&failureMessage) << "Expected x of rect to never go above new \"to\" value of 100, but it's" << rect->x();
+        return false;
+    });
+    QTest::newRow("to") << largeLoopCount << "to" << 100.0 << toValidator;
+    QTest::newRow("to,infinite") << int(QQuickAbstractAnimation::Infinite) << "to" << 100.0 << toValidator;
+
+    // Duration and easing.type would be difficult/flaky to test in CI so they're left out here.
+}
+
+// Tests that changing a NumberAnimation's properties while it's running will result
+// in those changes being picked up on the next loop. This is new behavior introduced
+// in Qt 6.4.
+void tst_qquickanimations::changePropertiesDuringAnimation()
+{
+    QFETCH(int, loops);
+    QFETCH(QString, propertyName);
+    QFETCH(qreal, newValue);
+    QFETCH(PropertyValidatorFunc, propertyValidatorFunc);
+
+    QQmlEngine engine;
+    QQmlComponent component(&engine, testFileUrl("changePropertiesDuringAnimation.qml"));
+    QScopedPointer<QQuickItem> rootItem(qobject_cast<QQuickItem*>(component.createWithInitialProperties({{ "loops", loops }})));
+    QVERIFY2(!component.isError(), qPrintable(component.errorString()));
+
+    auto numberAnimation = rootItem->property("numberAnimation").value<QQuickNumberAnimation*>();
+    QVERIFY(numberAnimation);
+    QCOMPARE(numberAnimation->from(), -100);
+    QCOMPARE(numberAnimation->to(), rootItem->width());
+
+    // Start the animation.
+    numberAnimation->start();
+    QVERIFY(numberAnimation->isRunning());
+
+    int loopCountBeforeModification = 0;
+    // Ensure that it's past the first loop so that we can check that it resumes
+    // from that loop after "restarting".
+    QTRY_VERIFY(numberAnimation->qtAnimation()->currentLoop() >= 1);
+    loopCountBeforeModification = numberAnimation->qtAnimation()->currentLoop();
+
+    QSignalSpy startedSpy(numberAnimation, SIGNAL(started()));
+    QVERIFY(startedSpy.isValid());
+    QSignalSpy stoppedSpy(numberAnimation, SIGNAL(stopped()));
+    QVERIFY(stoppedSpy.isValid());
+
+    // Modify the property.
+    // QQuickPropertyAnimation has a setProperty function of its own, and we don't want to call it, hence the cast.
+    QVERIFY(static_cast<QObject*>(numberAnimation)->setProperty(propertyName.toLatin1().constData(), QVariant(newValue)));
+
+    // Make sure we've reached the end of the animation.
+    auto rect = rootItem->property("rect").value<QQuickItem*>();
+    QVERIFY(rect);
+    // Ensure that we've passed the loop on which we modified the property, while also checking
+    // that currentLoop never gets reset to 0. We can't just use QTRY_VERIFY
+    // for this, because it could start at 0 and then pass loopCountBeforeModification;
+    // we need to ensure that it never goes below loopCountBeforeModification.
+    while (numberAnimation->qtAnimation()->currentLoop() < loopCountBeforeModification + 1) {
+        QVERIFY2(numberAnimation->qtAnimation()->currentLoop() >= loopCountBeforeModification,
+            qPrintable(QString::fromLatin1("Expected currentLoop to be larger than %1, but it's %2")
+                .arg(loopCountBeforeModification).arg(numberAnimation->qtAnimation()->currentLoop())));
+        QTest::qWait(0);
+    }
+
+    // Now that we know the modification should have been taken into account,
+    // check that the animated property never gets set to a value that we wouldn't expect after the change.
+    const int previousLoop = numberAnimation->qtAnimation()->currentLoop();
+    QString failureMessage;
+    while (numberAnimation->qtAnimation()->currentLoop() < previousLoop + 1) {
+        if (!propertyValidatorFunc(rect, failureMessage))
+            QFAIL(qPrintable(failureMessage));
+        QTest::qWait(0);
+    }
+
+    // The started and stopped signals should not be emitted when adapting to changes
+    // mid-animation.
+    if (loops != QQuickAbstractAnimation::Infinite)
+        QVERIFY(numberAnimation->qtAnimation()->currentLoop() < numberAnimation->loops());
+    QCOMPARE(startedSpy.count(), 0);
+    QCOMPARE(stoppedSpy.count(), 0);
 }
 
 QTEST_MAIN(tst_qquickanimations)
