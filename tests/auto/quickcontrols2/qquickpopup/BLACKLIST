@@ -15,7 +15,3 @@ opensuse-leap
 
 [cursorShape]
 opensuse-leap
-
-# QTBUG-100253
-[orientation]
-android
