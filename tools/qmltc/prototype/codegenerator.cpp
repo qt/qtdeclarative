@@ -86,31 +86,11 @@ compileMethodParameters(const QStringList &names,
     return paramList;
 }
 
-// this version just returns runtimeFunctionIndices[relative]. used in
-// property assignments like `property var p: function() {}`
+// returns an (absolute) index into a QV4::Function array of the compilation
+// unit which is used by QQmlEngine's executeRuntimeFunction() and friends
 static qsizetype relativeToAbsoluteRuntimeIndex(const QmlIR::Object *irObject, qsizetype relative)
 {
-    // TODO: for some reason, this function is necessary. do we really need it?
-    // why does it have to be a special case?
     return irObject->runtimeFunctionIndices.at(relative);
-}
-
-// this version expects that \a relative points to a to-be-executed function.
-// for this, it needs to detect whether a case like `onSignal: function() {}` is
-// present and return nested function index instead of the
-// runtimeFunctionIndices[relative]
-static qsizetype relativeToAbsoluteRuntimeIndex(const QmlIR::Document *doc,
-                                                const QmlIR::Object *irObject, qsizetype relative)
-{
-    int absoluteIndex = irObject->runtimeFunctionIndices.at(relative);
-    Q_ASSERT(absoluteIndex >= 0);
-    Q_ASSERT(doc->javaScriptCompilationUnit.unitData());
-    const QV4::CompiledData::Function *f =
-            doc->javaScriptCompilationUnit.unitData()->functionAt(absoluteIndex);
-    Q_ASSERT(f);
-    if (f->nestedFunctionIndex != std::numeric_limits<uint32_t>::max())
-        return f->nestedFunctionIndex;
-    return absoluteIndex;
 }
 
 // finds property for given scope and returns it together with the absolute
@@ -588,7 +568,7 @@ void CodeGenerator::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
         Q_ASSERT(methodType != QQmlJSMetaMethod::Signal);
         QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
                 &code, m_urlMethodName + u"()",
-                relativeToAbsoluteRuntimeIndex(m_doc, object.irObject, f->index), u"this"_qs,
+                relativeToAbsoluteRuntimeIndex(object.irObject, f->index), u"this"_qs,
                 returnType, paramList);
     }
 
@@ -1026,7 +1006,7 @@ QString CodeGenerator::makeGensym(const QString &base)
 
 // returns compiled script binding for "property changed" handler in a form of object type
 static QmltcType compileScriptBindingPropertyChangeHandler(
-        const QmlIR::Document *doc, const QmlIR::Binding &binding, const QmlIR::Object *irObject,
+        const QmlIR::Binding &binding, const QmlIR::Object *irObject,
         const QString &urlMethodName, const QString &functorCppType, const QString &objectCppType,
         const QList<QmltcVariable> &slotParameters)
 {
@@ -1051,7 +1031,7 @@ static QmltcType compileScriptBindingPropertyChangeHandler(
     callOperator.modifiers << u"const"_qs;
     QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
             &callOperator.body, urlMethodName + u"()",
-            relativeToAbsoluteRuntimeIndex(doc, irObject, binding.value.compiledScriptIndex),
+            relativeToAbsoluteRuntimeIndex(irObject, binding.value.compiledScriptIndex),
             u"m_self"_qs, u"void"_qs, slotParameters);
 
     bindingFunctor.functions.emplaceBack(std::move(callOperator));
@@ -1208,7 +1188,7 @@ void CodeGenerator::compileScriptBinding(QmltcType &current, const QmlIR::Bindin
 
         QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
                 &slotMethod.body, m_urlMethodName + u"()",
-                relativeToAbsoluteRuntimeIndex(m_doc, object.irObject,
+                relativeToAbsoluteRuntimeIndex(object.irObject,
                                                binding.value.compiledScriptIndex),
                 u"this"_qs, // Note: because script bindings always use current QML object scope
                 signalReturnType, slotParameters);
@@ -1262,7 +1242,7 @@ void CodeGenerator::compileScriptBinding(QmltcType &current, const QmlIR::Bindin
                 u"std::unique_ptr<QPropertyChangeHandler<" + bindingFunctorName + u">>";
 
         current.children << compileScriptBindingPropertyChangeHandler(
-                m_doc, binding, object.irObject, m_urlMethodName, bindingFunctorName,
+                binding, object.irObject, m_urlMethodName, bindingFunctorName,
                 objectClassName, slotParameters);
 
         // TODO: this could be dropped if QQmlEngine::setContextForObject() is
@@ -1327,7 +1307,7 @@ void CodeGenerator::compileScriptBindingOfComponent(QmltcType &current,
 
     // Component is special:
     int runtimeIndex =
-            relativeToAbsoluteRuntimeIndex(m_doc, irObject, binding.value.compiledScriptIndex);
+            relativeToAbsoluteRuntimeIndex(irObject, binding.value.compiledScriptIndex);
     QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
             &slotMethod.body, m_urlMethodName + u"()", runtimeIndex, u"this"_qs, signalReturnType);
     slotMethod.type = QQmlJSMetaMethod::Slot;

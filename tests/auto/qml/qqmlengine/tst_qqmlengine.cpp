@@ -1367,7 +1367,9 @@ void tst_qqmlengine::executeRuntimeFunction()
 
     const QUrl url = testFileUrl("runtimeFunctions.qml");
     QQmlComponent component(&engine, url);
+    QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     QScopedPointer<QObject> dummy(component.create());
+    QVERIFY(dummy);
 
     // getConstantValue():
     int constant = 0;
@@ -1396,6 +1398,20 @@ void tst_qqmlengine::executeRuntimeFunction()
                        QMetaType::fromType<QString>() };
     priv->executeRuntimeFunction(url, /* index = */ 2, dummy.get(), /* argc = */ 2, a2, t2);
     QCOMPARE(concatenated, str1 + str2);
+
+    // capture `this`:
+    QCOMPARE(dummy->property("foo").toInt(), 42);
+    QCOMPARE(dummy->property("bar").toInt(), 0);
+    priv->executeRuntimeFunction(url, /* index = */ 4, dummy.get());
+    QCOMPARE(dummy->property("bar").toInt(), 1 + 42 + 1);
+
+    QCOMPARE(dummy->property("baz").toInt(), -100);
+    int y = 1;
+    void *a3[] = { nullptr, const_cast<void *>(reinterpret_cast<const void *>(&y)) };
+    QMetaType t3[] = { QMetaType::fromType<void>(), QMetaType::fromType<int>() };
+    priv->executeRuntimeFunction(url, /* index = */ 6, dummy.get(), 1, a3, t3);
+    QCOMPARE(dummy->property("bar").toInt(), -98);
+    QCOMPARE(dummy->property("baz").toInt(), -100);
 }
 
 class WithQProperty : public QObject

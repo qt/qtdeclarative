@@ -311,33 +311,6 @@ public:
             pChangeHandler;
 };
 
-class ANON_propertyReturningFunction : public QObject, public ContextRegistrator
-{
-    Q_OBJECT
-    QML_ANONYMOUS
-    Q_PROPERTY(int counter READ getCounter WRITE setCounter)
-    Q_PROPERTY(QVariant f READ getF WRITE setF BINDABLE bindableF)
-
-public:
-    // test workaround: the url is resolved by the test base class, so use
-    // member variable to store the resolved url used as argument in engine
-    // evaluation of runtime functions
-    static QUrl url;
-
-    ANON_propertyReturningFunction(QQmlEngine *e, QObject *parent = nullptr);
-
-    int getCounter() { return counter.value(); }
-    QVariant getF() { return f.value(); }
-
-    void setCounter(int counter_) { counter.setValue(counter_); }
-    void setF(QVariant f_) { f.setValue(f_); }
-
-    QBindable<QVariant> bindableF() { return QBindable<QVariant>(&f); }
-
-    QProperty<int> counter;
-    QProperty<QVariant> f;
-};
-
 class LocallyImported : public QObject
 {
     Q_OBJECT

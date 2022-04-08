@@ -69,7 +69,6 @@ private slots:
     void changingBindings();
     void propertyAlias();
     void propertyChangeHandler();
-    void propertyReturningFunction();
     void locallyImported();
     void localImport();
     void neighbors();
@@ -306,21 +305,6 @@ void tst_qmltc_manual::propertyChangeHandler()
     QCOMPARE(created.property("watcher").toInt(), 96);
 }
 
-void tst_qmltc_manual::propertyReturningFunction()
-{
-    QQmlEngine e;
-    ANON_propertyReturningFunction::url = testFileUrl("propertyReturningFunction.qml");
-    ANON_propertyReturningFunction created(&e);
-
-    QCOMPARE(created.getCounter(), 0);
-    QVariant function = created.getF();
-    Q_UNUSED(function); // ignored as it can't be used currently
-    QCOMPARE(created.getCounter(), 0);
-
-    created.property("f");
-    QCOMPARE(created.getCounter(), 0);
-}
-
 void tst_qmltc_manual::locallyImported()
 {
     QQmlEngine e;
@@ -552,8 +536,6 @@ static constexpr int PROPERTY_ALIAS_GET_ALIAS_VALUE = 7;
 
 static constexpr int PROPERTY_CHANGE_HANDLER_P_BINDING = 0;
 static constexpr int PROPERTY_CHANGE_HANDLER_ON_P_CHANGED = 1;
-
-static constexpr int PROPERTY_RETURNING_FUNCTION_F_BINDING = 0;
 
 static constexpr int LOCALLY_IMPORTED_GET_MAGIC_VALUE = 0;
 static constexpr int LOCALLY_IMPORTED_ON_COMPLETED = 1;
@@ -910,27 +892,6 @@ void ANON_propertyChangeHandler::ANON_propertyChangeHandler_p_changeHandler::ope
 }
 
 QUrl ANON_propertyChangeHandler::url = QUrl(); // workaround
-
-ANON_propertyReturningFunction::ANON_propertyReturningFunction(QQmlEngine *e, QObject *parent)
-    : QObject(parent), ContextRegistrator(e, this)
-{
-    QPropertyBinding<QVariant> ANON_propertyReturningFunction_f_binding(
-            [&]() {
-                QQmlEnginePrivate *e = QQmlEnginePrivate::get(qmlEngine(this));
-                const auto index = FunctionIndices::PROPERTY_RETURNING_FUNCTION_F_BINDING;
-                constexpr int argc = 0;
-                QVariant ret {};
-                std::array<void *, argc + 1> a {};
-                std::array<QMetaType, argc + 1> t {};
-                typeEraseArguments(a, t, ret);
-                e->executeRuntimeFunction(url, index, this, argc, a.data(), t.data());
-                return ret;
-            },
-            QT_PROPERTY_DEFAULT_BINDING_LOCATION);
-    bindableF().setBinding(ANON_propertyReturningFunction_f_binding);
-}
-
-QUrl ANON_propertyReturningFunction::url = QUrl(); // workaround
 
 LocallyImported::LocallyImported(QObject *parent) : QObject(parent) { }
 

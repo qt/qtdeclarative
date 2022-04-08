@@ -1807,9 +1807,42 @@ void QQmlEnginePrivate::executeRuntimeFunction(const QV4::ExecutableCompilationU
     QQmlData *ddata = QQmlData::get(thisObject);
     Q_ASSERT(ddata && ddata->outerContext);
 
-    // implicitly sets the return value, if it is present
-    v4engine()->callInContext(unit->runtimeFunctions[functionIndex], thisObject,
-                              ddata->outerContext, argc, args, types);
+    QV4::Function *function = unit->runtimeFunctions[functionIndex];
+    Q_ASSERT(function);
+    Q_ASSERT(function->compiledFunction);
+
+    QV4::ExecutionEngine *v4 = v4engine();
+
+    // NB: always use scriptContext() by default as this method ignores whether
+    // there's already a stack frame (except when dealing with closures). the
+    // method is called from C++ (through QQmlEngine::executeRuntimeFunction())
+    // and thus the caller must ensure correct setup
+    QV4::Scope scope(v4);
+    QV4::ExecutionContext *ctx = v4->scriptContext();
+    QV4::Scoped<QV4::ExecutionContext> callContext(scope,
+        QV4::QmlContext::create(ctx, ddata->outerContext, thisObject));
+
+    if (auto nested = function->nestedFunction()) {
+        // if a nested function is already known, call the closure directly
+        function = nested;
+    } else if (function->isClosureWrapper()) {
+        // if there is a nested function, but we don't know it, we need to call
+        // an outer function first and then the inner function. we fetch the
+        // return value of a function call (that is a closure) by calling a
+        // different version of ExecutionEngine::callInContext() that returns a
+        // QV4::ReturnedValue with no arguments since they are not needed by the
+        // outer function anyhow
+        QV4::ScopedFunctionObject result(scope,
+            v4->callInContext(function, thisObject, callContext, 0, nullptr));
+        Q_ASSERT(result->function());
+        Q_ASSERT(result->function()->compilationUnit == function->compilationUnit);
+
+        // overwrite the function and its context
+        function = result->function();
+        callContext = QV4::Scoped<QV4::ExecutionContext>(scope, result->scope());
+    }
+
+    v4->callInContext(function, thisObject, callContext, argc, args, types);
 }
 
 QV4::ExecutableCompilationUnit *QQmlEnginePrivate::compilationUnitFromUrl(const QUrl &url)

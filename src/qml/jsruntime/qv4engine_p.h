@@ -766,8 +766,10 @@ public:
 
     bool diskCacheEnabled() const;
 
-    void callInContext(Function *function, QObject *self, QQmlRefPointer<QQmlContextData> ctxtdata,
+    void callInContext(QV4::Function *function, QObject *self, QV4::ExecutionContext *ctxt,
                        int argc, void **args, QMetaType *types);
+    QV4::ReturnedValue callInContext(QV4::Function *function, QObject *self,
+                                     QV4::ExecutionContext *ctxt, int argc, const QV4::Value *argv);
 
 private:
     QV4::ReturnedValue fromData(QMetaType type, const void *ptr, const QVariant *variant = nullptr);

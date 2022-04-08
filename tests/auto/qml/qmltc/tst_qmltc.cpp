@@ -1092,12 +1092,18 @@ void tst_qmltc::propertyReturningFunction()
     PREPEND_NAMESPACE(propertyReturningFunction) created(&e);
 
     QCOMPARE(created.counter(), 0);
-    QVariant function = created.f();
-    Q_UNUSED(function); // ignored as it can't be used currently
+    QVariant f = created.f();
     QCOMPARE(created.counter(), 0);
 
     created.property("f");
     QCOMPARE(created.counter(), 0);
+
+    QJSValue function = qvariant_cast<QJSValue>(f);
+    QVERIFY(function.isCallable());
+    function.call();
+    QCOMPARE(created.counter(), 1);
+    function.call();
+    QCOMPARE(created.counter(), 2);
 }
 
 void tst_qmltc::listProperty()

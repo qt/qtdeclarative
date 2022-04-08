@@ -2126,30 +2126,30 @@ bool ExecutionEngine::diskCacheEnabled() const
     return (!disableDiskCache() && !debugger()) || forceDiskCache();
 }
 
-void ExecutionEngine::callInContext(Function *function, QObject *self,
-                                    QQmlRefPointer<QQmlContextData> ctxtdata, int argc, void **args,
+void ExecutionEngine::callInContext(QV4::Function *function, QObject *self,
+                                    QV4::ExecutionContext *context, int argc, void **args,
                                     QMetaType *types)
 {
-    QV4::Scope scope(this);
-    // NB: always use scriptContext() here as this method ignores whether
-    // there's already a stack frame. the method is called from C++ (through
-    // QQmlEngine::executeRuntimeFunction()) and thus the caller must ensure
-    // correct setup
-    QV4::ExecutionContext *ctx = scriptContext();
-    QV4::Scoped<QV4::QmlContext> qmlContext(scope, QV4::QmlContext::create(ctx, ctxtdata, self));
     if (!args) {
         Q_ASSERT(argc == 0);
         void *dummyArgs[] = { nullptr };
         QMetaType dummyTypes[] = { QMetaType::fromType<void>() };
-        function->call(self, dummyArgs, dummyTypes, argc, qmlContext);
+        function->call(self, dummyArgs, dummyTypes, argc, context);
         return;
     }
-
-    if (!types) // both args and types must be present
-        return;
-
+    Q_ASSERT(types); // both args and types must be present
     // implicitly sets the return value, which is args[0]
-    function->call(self, args, types, argc, qmlContext);
+    function->call(self, args, types, argc, context);
+}
+
+QV4::ReturnedValue ExecutionEngine::callInContext(QV4::Function *function, QObject *self,
+                                                  QV4::ExecutionContext *context, int argc,
+                                                  const QV4::Value *argv)
+{
+    QV4::Scope scope(this);
+    QV4::ScopedObject jsSelf(scope, QV4::QObjectWrapper::wrap(this, self));
+    Q_ASSERT(jsSelf);
+    return function->call(jsSelf, argv, argc, context);
 }
 
 void ExecutionEngine::initQmlGlobalObject()
