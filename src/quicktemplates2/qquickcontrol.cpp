@@ -182,12 +182,6 @@ bool QQuickControlPrivate::acceptTouch(const QTouchEvent::TouchPoint &point)
         return true;
     }
 
-    // If the control is on a Flickable that has a pressDelay, then the press is never
-    // sent as a touch event, therefore we need to check for this case.
-    if (touchId == -1 && pressWasTouch && point.state() == QEventPoint::Released &&
-        point.position() == previousPressPos) {
-        return true;
-    }
     return false;
 }
 #endif
@@ -223,8 +217,6 @@ void QQuickControlPrivate::handleRelease(const QPointF &, ulong)
     if ((focusPolicy & Qt::ClickFocus) == Qt::ClickFocus && QGuiApplication::styleHints()->setFocusOnTouchRelease())
         setActiveFocus(q, Qt::MouseFocusReason);
     touchId = -1;
-    pressWasTouch = false;
-    previousPressPos = QPointF();
 }
 
 void QQuickControlPrivate::handleUngrab()
@@ -1978,10 +1970,6 @@ void QQuickControl::mousePressEvent(QMouseEvent *event)
 {
     Q_D(QQuickControl);
     d->handlePress(event->position(), event->timestamp());
-    if (event->source() == Qt::MouseEventSynthesizedByQt) {
-        d->pressWasTouch = true;
-        d->previousPressPos = event->position();
-    }
     event->accept();
 }
 
