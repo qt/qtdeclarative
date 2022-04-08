@@ -464,9 +464,9 @@ In this tutorial, we've shown the basic steps for creating a QML extension:
     \l {Module Definition qmldir Files}{qmldir} file
 \endlist
 
-The \l{Integrating QML and C++} documentation shows
-other useful features that can be added to QML extensions. For example, we
-could use \l{Default Properties}{default properties} to allow
+The \l{Overview - QML and C++ Integration}{QML and C++ Integration overview}
+documentation shows other useful features that can be added to QML extensions.
+For example, we could use \l{Default Properties}{default properties} to allow
 slices to be added without using the \c slices property:
 
 \badcode
@@ -485,5 +485,5 @@ Or randomly add and remove slices from time to time using \l{Property Value Sour
     }
 \endcode
 
-\sa {Integrating QML and C++}
+\sa {Simple QML and C++ Integration Example}
 */

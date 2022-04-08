@@ -48,6 +48,9 @@ and registering the type with the QML engine, as discussed in
 Note that in both cases, the type name must begin with an uppercase letter in
 order to be declared as a QML object type in a QML file.
 
+For more information about C++ and the different QML integration methods,
+see the
+\l {Overview - QML and C++ Integration} {C++ and QML integration overview} page.
 
 \section1 Defining Object Types from QML
 

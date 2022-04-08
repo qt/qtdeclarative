@@ -38,6 +38,10 @@ The QML engine provides built-in support for a large number of Qt C++ data
 types. Additionally, custom C++ types may be registered with the QML type
 system to make them available to the engine.
 
+For more information about C++ and the different QML integration methods,
+see the
+\l {Overview - QML and C++ Integration} {C++ and QML integration overview} page.
+
 This page discusses the data types supported by the QML engine and how
 they are converted between QML and C++.
 
