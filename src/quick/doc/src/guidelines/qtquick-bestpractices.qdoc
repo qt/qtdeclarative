@@ -173,7 +173,8 @@ see \l {Choosing the Correct Integration Method Between C++ and QML}.
 
 \section2 Related Information
 \list
-\li \l{Integrating QML and C++}
+\li \l{Writing QML Extensions with C++}
+      {Writing QML Extensions with C++ Tutorial}
 \li \l{Qt Quick Controls - Chat Tutorial}{Chat application tutorial}
 \endlist
 

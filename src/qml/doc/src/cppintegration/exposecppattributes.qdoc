@@ -61,6 +61,9 @@ class may need to be registered.
 Also note that a number of the important concepts covered in this document are
 demonstrated in the \l{Writing QML Extensions with C++} tutorial.
 
+For more information about C++ and the different QML integration methods,
+see the
+\l {Overview - QML and C++ Integration} {C++ and QML integration overview} page.
 
 \section1 Data Type Handling and Ownership
 

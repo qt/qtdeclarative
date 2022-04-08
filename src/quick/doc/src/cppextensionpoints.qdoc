@@ -32,8 +32,8 @@
 
 All QML applications can be extended from C++ in order to use additional
 functionality implemented in C++ code or to provide a C++ based QML plugin.
-This topic of extending QML from C++ is covered in the \l {Integrating QML and C++}
-documentation.
+This topic of extending QML from C++ is covered in the
+\l {Writing QML Extensions with C++} documentation.
 
 Additionally, the Qt Quick module provides several extension and integration points for C++
 developers, specific to this module. In particular, it allows C++ developers to create and register custom

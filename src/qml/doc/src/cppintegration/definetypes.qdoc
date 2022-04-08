@@ -48,6 +48,10 @@ demonstrated in the \l{Writing QML Extensions with C++} tutorial.)
 
 \b{NOTE:} All headers that declare QML types need to be accessible without any prefix from the project's include path.
 
+For more information about C++ and the different QML integration methods,
+see the
+\l {Overview - QML and C++ Integration} {C++ and QML integration overview} page.
+
 \section1 Registering C++ Types with the QML Type System
 
 A QObject-derived class can be registered with the QML type system to enable the

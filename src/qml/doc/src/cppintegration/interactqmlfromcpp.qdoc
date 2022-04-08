@@ -41,6 +41,9 @@ into a C++ application. Once a QML object is created, it can be inspected from
 C++ in order to read and write to properties, invoke methods and receive signal
 notifications.
 
+For more information about C++ and the different QML integration methods,
+see the
+\l {Overview - QML and C++ Integration} {C++ and QML integration overview} page.
 
 \section1 Loading QML Objects from C++
 

@@ -26,7 +26,7 @@
 ****************************************************************************/
 /*!
 \page qtqml-cppintegration-topic.html
-\title Integrating QML and C++
+\title Simple QML and C++ Integration Example
 \brief Provides instruction to integrate QML and C++
 
 QML applications often need to handle more advanced and performance-intensive
