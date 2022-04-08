@@ -88,9 +88,12 @@ void tst_QQuickControl::flickable()
     QSignalSpy buttonClickedSpy(button, SIGNAL(clicked()));
     QVERIFY(buttonClickedSpy.isValid());
 
-    QTest::touchEvent(window, touchDevice.data()).press(0, QPoint(button->width() / 2, button->height() / 2));
+    QPoint p(button->width() / 2, button->height() / 2);
+    QTest::touchEvent(window, touchDevice.data()).press(0, p);
     QTRY_COMPARE(buttonPressedSpy.count(), 1);
-    QTest::touchEvent(window, touchDevice.data()).release(0, QPoint(button->width() / 2, button->height() / 2));
+    p += QPoint(1, 1); // less than the drag threshold
+    QTest::touchEvent(window, touchDevice.data()).move(0, p);
+    QTest::touchEvent(window, touchDevice.data()).release(0, p);
     QTRY_COMPARE(buttonReleasedSpy.count(), 1);
     QTRY_COMPARE(buttonClickedSpy.count(), 1);
 }
