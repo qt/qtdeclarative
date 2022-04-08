@@ -1,3 +1,6 @@
 # QTBUG-92094
 [tabFocusNavigation]
 *
+
+[goUp]
+* # QTBUG-102415
