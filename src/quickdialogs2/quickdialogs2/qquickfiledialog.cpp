@@ -93,6 +93,7 @@ Q_LOGGING_CATEGORY(lcFileDialog, "qt.quick.dialogs.filedialog")
 
     \list
     \li iOS
+    \li Android
     \li Linux (when running with the GTK+ platform theme)
     \li macOS
     \li Windows
