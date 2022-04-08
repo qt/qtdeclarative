@@ -5,10 +5,3 @@ opensuse-leap
 macos
 [synthMouseFromTouch] # QTBUG-86729
 *
-# QTBUG-100173
-[enterLeave]
-android
-[resizeOverlay]
-android
-[focusOnClickInProxyWidget]
-android

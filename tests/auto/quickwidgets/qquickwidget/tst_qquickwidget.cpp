@@ -29,6 +29,7 @@
 #include <qtest.h>
 #include <qtesttouch.h>
 #include <QtTest/QSignalSpy>
+#include <QtTest/private/qtesthelpers_p.h>
 #include <QtQml/qqmlcomponent.h>
 #include <QtQml/qqmlcontext.h>
 #include <QtQuick/qquickview.h>
@@ -445,6 +446,9 @@ void tst_qquickwidget::grabBeforeShow()
 
 void tst_qquickwidget::reparentToNewWindow()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("This test crashes on Android (see QTBUG-100173)");
+#endif
     QWidget window1;
     QWidget window2;
 
@@ -540,6 +544,9 @@ void tst_qquickwidget::shortcuts()
 
 void tst_qquickwidget::enterLeave()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("Android has no cursor");
+#endif
     QQuickWidget view;
     view.setSource(testFileUrl("enterleave.qml"));
 
@@ -729,7 +736,7 @@ void tst_qquickwidget::resizeOverlay()
     overlay->startListening();
 
     widget.resize(200, 200);
-    widget.show();
+    QTestPrivate::androidCompatibleShow(&widget);
     QCOMPARE(rootItem->width(), 200);
     QCOMPARE(rootItem->height(), 200);
     QCOMPARE(overlay->width(), rootItem->width());
@@ -806,7 +813,7 @@ void tst_qquickwidget::focusOnClickInProxyWidget()
     QGraphicsView view1(&scene);
     view1.setFrameStyle(QFrame::NoFrame);
     view1.resize(400,400);
-    view1.show();
+    QTestPrivate::androidCompatibleShow(&view1);
 
 
 
@@ -842,7 +849,7 @@ void tst_qquickwidget::focusOnClickInProxyWidget()
     // Now create a second view and repeat, in order to verify that we handle one QQuickItem being in multiple windows
     QGraphicsView view2(&scene);
     view2.resize(400,400);
-    view2.show();
+    QTestPrivate::androidCompatibleShow(&view2);
 
     QVERIFY(QTest::qWaitForWindowExposed(&view2));
     QWindow *window2 = view2.windowHandle();
