@@ -66,7 +66,8 @@ QQuickRenderTargetPrivate::QQuickRenderTargetPrivate(const QQuickRenderTargetPri
       pixelSize(other->pixelSize),
       devicePixelRatio(other->devicePixelRatio),
       sampleCount(other->sampleCount),
-      u(other->u)
+      u(other->u),
+      mirrorVertically(other->mirrorVertically)
 {
 }
 
@@ -157,6 +158,41 @@ void QQuickRenderTarget::setDevicePixelRatio(qreal ratio)
 
     detach();
     d->devicePixelRatio = ratio;
+}
+
+/*!
+    \return Returns whether the render target is mirrored vertically.
+
+    The default value is \c {false}.
+
+    \since 6.4
+
+    \sa setMirrorVertically()
+*/
+bool QQuickRenderTarget::mirrorVertically() const
+{
+    return d->mirrorVertically;
+}
+
+
+/*!
+    Sets the size of the render target contents should be mirrored vertically to
+    \a enable when drawing. This allows easy integration of third-party rendering
+    code that does not follow the standard expectations.
+
+    \note This function should not be used when using the \c software backend.
+
+    \since 6.4
+
+    \sa mirrorVertically()
+ */
+void QQuickRenderTarget::setMirrorVertically(bool enable)
+{
+    if (d->mirrorVertically == enable)
+        return;
+
+    detach();
+    d->mirrorVertically = enable;
 }
 
 /*!
@@ -465,7 +501,8 @@ bool QQuickRenderTarget::isEqual(const QQuickRenderTarget &other) const noexcept
     if (d->type != other.d->type
             || d->pixelSize != other.d->pixelSize
             || d->devicePixelRatio != other.d->devicePixelRatio
-            || d->sampleCount != other.d->sampleCount)
+            || d->sampleCount != other.d->sampleCount
+            || d->mirrorVertically != other.d->mirrorVertically)
     {
         return false;
     }

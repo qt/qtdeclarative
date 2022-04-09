@@ -92,6 +92,8 @@ public:
         QRhiRenderTarget *rhiRt;
         QPaintDevice *paintDevice;
     } u;
+
+    bool mirrorVertically = false;
 };
 
 QT_END_NAMESPACE

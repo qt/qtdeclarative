@@ -675,7 +675,9 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
     runAndClearJobs(&beforeRenderingJobs);
 
     QSGAbstractRenderer::MatrixTransformFlags matrixFlags;
-    const bool flipY = rhi ? !rhi->isYUpInNDC() : false;
+    bool flipY = rhi ? !rhi->isYUpInNDC() : false;
+    if (!customRenderTarget.isNull() && customRenderTarget.mirrorVertically())
+        flipY = !flipY;
     if (flipY)
         matrixFlags |= QSGAbstractRenderer::MatrixTransformFlipY;
 
