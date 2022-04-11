@@ -3789,11 +3789,13 @@ void tst_QQuickItem::colorGroup()
     QCOMPARE(palette->currentColorGroup(), QPalette::Inactive);
     QCOMPARE(foreground->property("color").value<QColor>(), palette->inactive()->base());
 
+    activationThief.hide();
     view.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&view));
     QCOMPARE(palette->currentColorGroup(), QPalette::Active);
     QCOMPARE(foreground->property("color").value<QColor>(), palette->active()->base());
 
+    activationThief.show();
     activationThief.requestActivate();
     QVERIFY(QTest::qWaitForWindowActive(&activationThief));
     QCOMPARE(palette->currentColorGroup(), QPalette::Inactive);
