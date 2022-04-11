@@ -259,10 +259,12 @@ All warnings can be set to three levels:
     if (parser.isSet(listPluginsOption)) {
         const std::vector<QQmlJSLinter::Plugin> &plugins = linter.plugins();
         if (!plugins.empty()) {
-            qInfo().nospace().noquote() << "Plugin\t\t\tVersion\tAuthor\t\tDescription";
+            qInfo().nospace().noquote() << "Plugin\t\t\tBuilt-in?\tVersion\tAuthor\t\tDescription";
             for (const QQmlJSLinter::Plugin &plugin : plugins) {
-                qInfo().nospace().noquote() << plugin.name() << "\t\t\t" << plugin.version() << "\t"
-                                            << plugin.author() << "\t\t" << plugin.description();
+                qInfo().nospace().noquote()
+                        << plugin.name() << "\t\t\t" << (plugin.isBuiltin() ? "Yes" : "No")
+                        << "\t\t" << plugin.version() << "\t" << plugin.author() << "\t\t"
+                        << plugin.description();
             }
         } else {
             qInfo() << "No plugins installed.";
