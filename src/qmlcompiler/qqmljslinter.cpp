@@ -39,6 +39,8 @@
 #include <QtCore/qpluginloader.h>
 #include <QtCore/qlibraryinfo.h>
 #include <QtCore/qdir.h>
+#include <QtCore/private/qduplicatetracker_p.h>
+
 #include <QtQmlCompiler/private/qqmlsa_p.h>
 
 #if QT_CONFIG(library)
@@ -180,10 +182,21 @@ std::vector<QQmlJSLinter::Plugin> QQmlJSLinter::loadPlugins(QStringList paths)
 
     std::vector<Plugin> plugins;
 
+    QDuplicateTracker<QString> seenPlugins;
+
     for (const QStaticPlugin &staticPlugin : QPluginLoader::staticPlugins()) {
         Plugin plugin(staticPlugin);
-        if (plugin.isValid())
-            plugins.push_back(std::move(plugin));
+        if (!plugin.isValid())
+            continue;
+
+        if (seenPlugins.hasSeen(plugin.name().toLower())) {
+            qWarning() << "Two plugins named" << plugin.name()
+                       << "present, make sure no plugins are duplicated. The second plugin will "
+                          "not be loaded.";
+            continue;
+        }
+
+        plugins.push_back(std::move(plugin));
     }
 
 #if QT_CONFIG(library)
@@ -198,8 +211,17 @@ std::vector<QQmlJSLinter::Plugin> QQmlJSLinter::loadPlugins(QStringList paths)
 
             Plugin plugin(potentialPlugin);
 
-            if (plugin.isValid())
-                plugins.push_back(std::move(plugin));
+            if (!plugin.isValid())
+                continue;
+
+            if (seenPlugins.hasSeen(plugin.name().toLower())) {
+                qWarning() << "Two plugins named" << plugin.name()
+                           << "present, make sure no plugins are duplicated. The second plugin "
+                              "will not be loaded.";
+                continue;
+            }
+
+            plugins.push_back(std::move(plugin));
         }
     }
 #endif
