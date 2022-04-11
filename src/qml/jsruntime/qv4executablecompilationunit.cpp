@@ -446,7 +446,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
             const QV4::CompiledData::Object *obj = objectAt(i);
             bool leftCurrentInlineComponent =
                        (i != lastICRoot && obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
-                    || !(obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent);
+                    || !(obj->flags & QV4::CompiledData::Object::IsPartOfInlineComponent);
             if (leftCurrentInlineComponent)
                 break;
             inlineComponentData[lastICRoot].totalBindingCount += obj->nBindings;
@@ -476,7 +476,7 @@ void ExecutableCompilationUnit::finalizeCompositeType(QQmlEnginePrivate *qmlEngi
     int objectCount = 0;
     for (quint32 i = 0, count = this->objectCount(); i < count; ++i) {
         const QV4::CompiledData::Object *obj = objectAt(i);
-        if (obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent) {
+        if (obj->flags & QV4::CompiledData::Object::IsPartOfInlineComponent) {
             continue;
         }
         bindingCount += obj->nBindings;

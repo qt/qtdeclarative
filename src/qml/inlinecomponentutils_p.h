@@ -112,7 +112,7 @@ void fillAdjacencyListForInlineComponents(ObjectContainer *objectContainer, Adja
         while (int(referencedInICObjectIndex) < objectContainer->objectCount()) {
             auto potentiallyReferencedInICObject = objectContainer->objectAt(referencedInICObjectIndex);
             bool stillInIC = !(potentiallyReferencedInICObject-> flags & QV4::CompiledData::Object::IsInlineComponentRoot)
-                    && (potentiallyReferencedInICObject-> flags & QV4::CompiledData::Object::InPartOfInlineComponent);
+                    && (potentiallyReferencedInICObject-> flags & QV4::CompiledData::Object::IsPartOfInlineComponent);
             if (!stillInIC)
                 break;
             createEdgeFromTypeRef(objectContainer->resolvedType(potentiallyReferencedInICObject->inheritedTypeNameIndex));

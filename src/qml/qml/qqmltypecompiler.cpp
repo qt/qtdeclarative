@@ -883,16 +883,16 @@ bool QQmlComponentAndAliasResolver::resolve(int root)
     const int startObjectIndex = root == 0 ? root : root+1; // root+1, as ic root is handled at the end
     for (int i = startObjectIndex; i < objCountWithoutSynthesizedComponents; ++i) {
         QmlIR::Object *obj = qmlObjects->at(i);
+        const bool isInlineComponentRoot
+                = obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot;
+        const bool isPartOfInlineComponent
+                = obj->flags & QV4::CompiledData::Object::IsPartOfInlineComponent;
         if (root == 0) {
             // normal component root, skip over anything inline component related
-            if (obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot ||
-                    obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent) {
+            if (isInlineComponentRoot || isPartOfInlineComponent)
                 continue;
-            }
-        } else {
-            if (!(obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent) ||
-                    obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
-                break; // left current inline component (potentially entered a new one)
+        } else if (!isPartOfInlineComponent || isInlineComponentRoot) {
+            break; // left current inline component (potentially entered a new one)
         }
         QQmlPropertyCache::ConstPtr cache = propertyCaches.at(i);
         if (obj->inheritedTypeNameIndex == 0 && !cache)

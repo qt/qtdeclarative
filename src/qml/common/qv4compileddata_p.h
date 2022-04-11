@@ -747,7 +747,7 @@ struct Object
         HasDeferredBindings = 0x2, // any of the bindings are deferred
         HasCustomParserBindings = 0x4,
         IsInlineComponentRoot = 0x8,
-        InPartOfInlineComponent = 0x10
+        IsPartOfInlineComponent = 0x10
     };
 
     // Depending on the use, this may be the type name to instantiate before instantiating this

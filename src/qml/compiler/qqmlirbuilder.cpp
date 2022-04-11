@@ -586,7 +586,7 @@ bool IRBuilder::visit(QQmlJS::AST::UiInlineComponent *ast)
     Q_ASSERT(idx > 0);
     Object* definedObject = _objects.at(idx);
     definedObject->flags |= QV4::CompiledData::Object::IsInlineComponentRoot;
-    definedObject->flags |= QV4::CompiledData::Object::InPartOfInlineComponent;
+    definedObject->flags |= QV4::CompiledData::Object::IsPartOfInlineComponent;
     auto inlineComponent = New<InlineComponent>();
     inlineComponent->nameIndex = registerString(ast->name.toString());
     inlineComponent->objectIndex = idx;
@@ -705,7 +705,7 @@ bool IRBuilder::defineQMLObject(
     _object->init(pool, registerString(asString(qualifiedTypeNameId)), emptyStringIndex, location);
     _object->declarationsOverride = declarationsOverride;
     if (insideInlineComponent) {
-        _object->flags |= QV4::CompiledData::Object::InPartOfInlineComponent;
+        _object->flags |= QV4::CompiledData::Object::IsPartOfInlineComponent;
     }
 
     // A new object is also a boundary for property declarations.
