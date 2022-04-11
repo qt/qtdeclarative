@@ -65,6 +65,7 @@ private slots:
     void lookupsInSubTypes();
     void freeze();
     void cachedSignals();
+    void signalIndices();
 };
 
 class LazyPropertyMap : public QQmlPropertyMap, public QQmlParserStatus
@@ -634,6 +635,47 @@ void tst_QQmlPropertyMap::cachedSignals()
     QCOMPARE(o->property("text").toString(), u"other"_qs);
     foo.insert("c", u"final"_qs);
     QCOMPARE(o->property("text").toString(), u"final"_qs);
+}
+
+class NastyMap: public QQmlPropertyMap
+{
+    Q_OBJECT
+    Q_PROPERTY(int a READ a WRITE setA NOTIFY aChanged)
+    Q_PROPERTY(int b MEMBER m_b CONSTANT)
+
+public:
+
+    int a() const { return m_a; }
+    void setA(int a)
+    {
+        if (a != m_a) {
+            m_a = a;
+            emit aChanged();
+        }
+    }
+
+signals:
+    void aChanged();
+    void extraSignal();
+
+private:
+    int m_a = 0;
+    int m_b = 7;
+};
+
+void tst_QQmlPropertyMap::signalIndices()
+{
+    NastyMap map;
+    map.insert(QLatin1String("key1"), 100);
+    const QMetaObject *mo = map.metaObject();
+    const int propertyIndex = mo->indexOfProperty("key1");
+    const QMetaProperty property = mo->property(propertyIndex);
+    const int signalIndex = property.notifySignalIndex();
+    const QMetaMethod method = mo->method(signalIndex);
+
+    QSignalSpy spy(&map, method);
+    map.insert(QLatin1String("key1"), 200);
+    QCOMPARE(spy.count(), 1);
 }
 
 QTEST_MAIN(tst_QQmlPropertyMap)

@@ -129,13 +129,13 @@ void QQmlOpenMetaObjectType::createProperties(const QVector<QByteArray> &names)
 
 int QQmlOpenMetaObjectType::createProperty(const QByteArray &name)
 {
-    int id = d->mob.propertyCount();
-    d->mob.addSignal("__" + QByteArray::number(id) + "()");
-    QMetaPropertyBuilder build = d->mob.addProperty(name, "QVariant", id);
-    propertyCreated(id, build);
+    const int signalIdx = d->mob.addSignal(
+                "__" + QByteArray::number(d->mob.propertyCount()) + "()").index();
+    QMetaPropertyBuilder build = d->mob.addProperty(name, "QVariant", signalIdx);
+    propertyCreated(build.index(), build);
     free(d->mem);
     d->mem = d->mob.toMetaObject();
-    d->names.insert(name, id);
+    d->names.insert(name, build.index());
     QSet<QQmlOpenMetaObject*>::iterator it = d->referers.begin();
     while (it != d->referers.end()) {
         QQmlOpenMetaObject *omo = *it;
@@ -145,7 +145,7 @@ int QQmlOpenMetaObjectType::createProperty(const QByteArray &name)
         ++it;
     }
 
-    return d->propertyOffset + id;
+    return d->propertyOffset + build.index();
 }
 
 void QQmlOpenMetaObjectType::propertyCreated(int id, QMetaPropertyBuilder &builder)
