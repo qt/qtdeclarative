@@ -30,9 +30,11 @@
 #include "textsynchronization.h"
 
 #include "qlanguageserver.h"
+#include "lspcustomtypes.h"
 #include <QtCore/qdir.h>
 
 #include <iostream>
+#include <algorithm>
 
 QT_BEGIN_NAMESPACE
 
@@ -91,13 +93,30 @@ void QQmlLanguageServer::registerHandlers(QLanguageServer *server,
     QObject::connect(server, &QLanguageServer::runStatusChanged, [](QLanguageServer::RunStatus r) {
         qCDebug(lspServerLog) << "runStatus" << int(r);
     });
+    protocol->typedRpc()->registerNotificationHandler<Notifications::AddBuildDirsParams>(
+            QByteArray(Notifications::AddBuildDirsMethod),
+            [this](const QByteArray &, const Notifications::AddBuildDirsParams &params) {
+                for (const auto &buildDirs : params.buildDirsToSet) {
+                    QStringList dirPaths;
+                    dirPaths.resize(buildDirs.buildDirs.size());
+                    std::transform(buildDirs.buildDirs.begin(), buildDirs.buildDirs.end(),
+                                   dirPaths.begin(), [](const QByteArray &utf8Str) {
+                                       return QString::fromUtf8(utf8Str);
+                                   });
+                    m_codeModel.setBuildPathsForRootUrl(buildDirs.baseUri, dirPaths);
+                }
+            });
 }
 
 void QQmlLanguageServer::setupCapabilities(const QLspSpecification::InitializeParams &clientInfo,
                                            QLspSpecification::InitializeResult &serverInfo)
 {
     Q_UNUSED(clientInfo);
-    Q_UNUSED(serverInfo);
+    QJsonObject expCap;
+    if (serverInfo.capabilities.experimental->isObject())
+        expCap = serverInfo.capabilities.experimental->toObject();
+    expCap.insert(u"addBuildDirs"_s, QJsonObject({ { u"supported"_s, true } }));
+    serverInfo.capabilities.experimental = expCap;
 }
 
 QString QQmlLanguageServer::name() const

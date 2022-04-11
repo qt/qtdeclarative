@@ -1,5 +1,5 @@
 import BuildDir
-
+import QtQuick
 BuildDirType {
     Rectangle {
         color: "green"

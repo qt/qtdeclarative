@@ -35,6 +35,7 @@
 #include <QtCore/qstringlist.h>
 
 #include <QtTest/qtest.h>
+#include "../../../../tools/qmlls/lspcustomtypes.h"
 
 #include <iostream>
 #include <variant>
@@ -48,10 +49,13 @@ class tst_QmllsCompletions : public QQmlDataTest
     Q_OBJECT
 public:
     tst_QmllsCompletions();
+    void checkCompletions(QByteArray uri, int lineNr, int character, QStringList expected,
+                          QStringList notExpected);
 private slots:
     void initTestCase() final;
     void completions_data();
     void completions();
+    void buildDir();
     void cleanupTestCase();
 
 private:
@@ -109,17 +113,20 @@ void tst_QmllsCompletions::initTestCase()
         didInit = true;
     });
     QTRY_COMPARE_WITH_TIMEOUT(didInit, true, 10000);
-    QFile file(testFile("completions/Yyy.qml"));
-    QVERIFY(file.open(QIODevice::ReadOnly));
 
-    DidOpenTextDocumentParams oParams;
-    TextDocumentItem textDocument;
-    QByteArray uri = testFileUrl("completions/Yyy.qml").toString().toUtf8();
-    textDocument.uri = uri;
-    textDocument.text = file.readAll();
-    oParams.textDocument = textDocument;
-    m_protocol.notifyDidOpenTextDocument(oParams);
-    m_uriToClose.append(uri);
+    for (const QString &filePath :
+         QStringList({ u"completions/Yyy.qml"_s, u"completions/fromBuildDir.qml"_s })) {
+        QFile file(testFile(filePath));
+        QVERIFY(file.open(QIODevice::ReadOnly));
+        DidOpenTextDocumentParams oParams;
+        TextDocumentItem textDocument;
+        QByteArray uri = testFileUrl(filePath).toString().toUtf8();
+        textDocument.uri = uri;
+        textDocument.text = file.readAll();
+        oParams.textDocument = textDocument;
+        m_protocol.notifyDidOpenTextDocument(oParams);
+        m_uriToClose.append(uri);
+    }
 }
 
 void tst_QmllsCompletions::completions_data()
@@ -157,14 +164,9 @@ void tst_QmllsCompletions::completions_data()
                               << QStringList({ u"import"_s });
 }
 
-void tst_QmllsCompletions::completions()
+void tst_QmllsCompletions::checkCompletions(QByteArray uri, int lineNr, int character,
+                                            QStringList expected, QStringList notExpected)
 {
-    QFETCH(QByteArray, uri);
-    QFETCH(int, lineNr);
-    QFETCH(int, character);
-    QFETCH(QStringList, expected);
-    QFETCH(QStringList, notExpected);
-
     CompletionParams cParams;
     cParams.position.line = lineNr;
     cParams.position.character = character;
@@ -202,6 +204,43 @@ void tst_QmllsCompletions::completions()
     QTRY_VERIFY_WITH_TIMEOUT(*didFinish, 30000);
 }
 
+void tst_QmllsCompletions::completions()
+{
+    QFETCH(QByteArray, uri);
+    QFETCH(int, lineNr);
+    QFETCH(int, character);
+    QFETCH(QStringList, expected);
+    QFETCH(QStringList, notExpected);
+
+    checkCompletions(uri, lineNr, character, expected, notExpected);
+}
+
+void tst_QmllsCompletions::buildDir()
+{
+    QString filePath = u"completions/fromBuildDir.qml"_s;
+    QByteArray uri = testFileUrl(filePath).toString().toUtf8();
+    checkCompletions(uri, 3, 0, QStringList({ u"property"_s, u"function"_s, u"Rectangle"_s }),
+                     QStringList({ u"BuildDirType"_s, u"QtQuick"_s, u"width"_s, u"vector4d"_s }));
+    Notifications::AddBuildDirsParams bDirs;
+    UriToBuildDirs ub;
+    ub.baseUri = uri;
+    ub.buildDirs.append(testFile("buildDir").toUtf8());
+    bDirs.buildDirsToSet.append(ub);
+    m_protocol.typedRpc()->sendNotification(QByteArray(Notifications::AddBuildDirsMethod), bDirs);
+    DidChangeTextDocumentParams didChange;
+    didChange.textDocument.uri = uri;
+    didChange.textDocument.version = 2;
+    TextDocumentContentChangeEvent change;
+    QFile file(testFile(filePath));
+    QVERIFY(file.open(QIODevice::ReadOnly));
+    change.text = file.readAll();
+    didChange.contentChanges.append(change);
+    m_protocol.notifyDidChangeTextDocument(didChange);
+    checkCompletions(uri, 3, 0,
+                     QStringList({ u"BuildDirType"_s, u"Rectangle"_s, u"property"_s, u"width"_s,
+                                   u"function"_s }),
+                     QStringList({ u"QtQuick"_s, u"vector4d"_s }));
+}
 void tst_QmllsCompletions::cleanupTestCase()
 {
     for (const QByteArray &uri : m_uriToClose) {
