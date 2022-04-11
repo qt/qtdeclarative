@@ -249,6 +249,8 @@ private slots:
 
     void deepProperty();
 
+    void groupAssignmentFailure();
+
     void compositeSingletonProperties();
     void compositeSingletonSameEngine();
     void compositeSingletonDifferentEngine();
@@ -4420,6 +4422,20 @@ void tst_qqmllanguage::deepProperty()
     QVERIFY(o != nullptr);
     QFont font = qvariant_cast<QFont>(qvariant_cast<QObject*>(o->property("someObject"))->property("font"));
     QCOMPARE(font.family(), QStringLiteral("test"));
+}
+
+void tst_qqmllanguage::groupAssignmentFailure()
+{
+    auto ep = std::make_unique<QQmlEngine>();
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "QQmlComponent: Component destroyed while completion pending");
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "This may have been caused by one of the following errors:");
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression(".*Cannot set properties on b as it is null.*"));
+    QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression(".*Invalid property assignment: url expected - Assigning null to incompatible properties in QML is deprecated. This will become a compile error in future versions of Qt..*"));
+    QQmlComponent component(ep.get(), testFileUrl("groupFailure.qml"));
+    QScopedPointer<QObject> o(component.create());
+    QVERIFY(!o);
+    ep.reset();
+    // ~QQmlComponent should not crash here
 }
 
 // Tests that the implicit import has lowest precedence, in the case where
