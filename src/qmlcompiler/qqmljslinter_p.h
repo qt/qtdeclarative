@@ -93,6 +93,15 @@ public:
         bool isBuiltin() const { return m_isBuiltin; }
         bool isValid() const { return m_isValid; }
 
+        bool isEnabled() const
+        {
+            return m_isEnabled;
+        }
+        void setEnabled(bool isEnabled)
+        {
+            m_isEnabled = isEnabled;
+        }
+
     private:
         friend class QQmlJSLinter;
 
@@ -107,6 +116,7 @@ public:
         QPluginLoader *m_loader = nullptr;
         bool m_isBuiltin;
         bool m_isValid = false;
+        bool m_isEnabled = true;
     };
 
     static std::vector<Plugin> loadPlugins(QStringList paths);
@@ -121,7 +131,10 @@ public:
 
     const QQmlJSLogger *logger() const { return m_logger.get(); }
 
-    const std::vector<Plugin> &plugins() const { return m_plugins; }
+    std::vector<Plugin> &plugins()
+    {
+        return m_plugins;
+    }
     void setPlugins(std::vector<Plugin> plugins) { m_plugins = std::move(plugins); }
 
     void setPluginsEnabled(bool enablePlugins) { m_enablePlugins = enablePlugins; }

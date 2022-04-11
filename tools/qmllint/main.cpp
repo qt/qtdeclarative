@@ -163,11 +163,14 @@ All warnings can be set to three levels:
                                          QLatin1String("List all available plugins"));
     parser.addOption(listPluginsOption);
 
-    QCommandLineOption pluginsDisable(QStringList() << "disable-plugins",
-                                      QLatin1String("Disable all qmllint plugins"));
+    QCommandLineOption pluginsDisable(
+            QStringList() << "D"
+                          << "disable-plugins",
+            QLatin1String("List of qmllint plugins to disable (all to disable all plugins)"),
+            QLatin1String("plugins"));
     parser.addOption(pluginsDisable);
-    const QString pluginsDisableSettings = QLatin1String("DisablePlugins");
-    settings.addOption(pluginsDisableSettings, false);
+    const QString pluginsDisableSetting = QLatin1String("DisablePlugins");
+    settings.addOption(pluginsDisableSetting);
 
     QCommandLineOption pluginPathsOption(
             QStringList() << "P"
@@ -310,11 +313,27 @@ All warnings can be set to three levels:
 
             addAbsolutePaths(qmlImportPaths, settings.value(qmlImportPathsSetting).toStringList());
 
-            const bool disablePlugins = parser.isSet(pluginsDisable)
-                    || (settings.isSet(pluginsDisableSettings)
-                        && settings.value(pluginsDisableSettings).toBool());
+            QSet<QString> disabledPlugins;
 
-            linter.setPluginsEnabled(!disablePlugins);
+            if (parser.isSet(pluginsDisable)) {
+                for (const QString &plugin : parser.values(pluginsDisable))
+                    disabledPlugins << plugin.toLower();
+            }
+
+            if (settings.isSet(pluginsDisableSetting)) {
+                for (const QString &plugin : settings.value(pluginsDisableSetting).toStringList())
+                    disabledPlugins << plugin.toLower();
+            }
+
+            linter.setPluginsEnabled(!disabledPlugins.contains("all"));
+
+            if (!linter.pluginsEnabled())
+                continue;
+
+            auto &plugins = linter.plugins();
+
+            for (auto &plugin : plugins)
+                plugin.setEnabled(!disabledPlugins.contains(plugin.name().toLower()));
         }
 
         const bool isFixing = parser.isSet(fixFile);

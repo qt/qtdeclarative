@@ -498,7 +498,7 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
                 QQmlSA::PassManager passMan(&v, &typeResolver);
 
                 for (const Plugin &plugin : m_plugins) {
-                    if (!plugin.isValid())
+                    if (!plugin.isValid() || !plugin.isEnabled())
                         continue;
 
                     QQmlSA::LintPlugin *instance = plugin.m_instance;
