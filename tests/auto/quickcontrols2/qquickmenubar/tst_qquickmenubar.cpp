@@ -106,13 +106,21 @@ void tst_qquickmenubar::mouse()
 
     // highlight a menubar item
     QTest::mouseMove(window.data(), fileMenuBarItem->mapToScene(QPointF(fileMenuBarItem->width() / 2, fileMenuBarItem->height() / 2)).toPoint());
+#ifndef Q_OS_ANDROID
+    // Android theme does not use hover effects, so moving the mouse would not
+    // highlight an item
     QVERIFY(fileMenuBarItem->isHighlighted());
+#endif
     QVERIFY(!fileMenuBarMenu->isVisible());
 
     // highlight another menubar item
     QTest::mouseMove(window.data(), editMenuBarItem->mapToScene(QPointF(editMenuBarItem->width() / 2, editMenuBarItem->height() / 2)).toPoint());
+#ifndef Q_OS_ANDROID
+    // Android theme does not use hover effects, so moving the mouse would not
+    // highlight an item
     QVERIFY(!fileMenuBarItem->isHighlighted());
     QVERIFY(editMenuBarItem->isHighlighted());
+#endif
     QVERIFY(!fileMenuBarMenu->isVisible());
     QVERIFY(!editMenuBarMenu->isVisible());
 
@@ -136,6 +144,13 @@ void tst_qquickmenubar::mouse()
 
     // highlight another menubar item to open another menu
     QTest::mouseMove(window.data(), helpMenuBarItem->mapToScene(QPointF(helpMenuBarItem->width() / 2, helpMenuBarItem->height() / 2)).toPoint());
+#ifdef Q_OS_ANDROID
+    // Android theme does not use hover effects, so moving the mouse would not
+    // highlight an item. Add a mouse click to change menubar item selection.
+    QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier,
+                      helpMenuBarItem->mapToScene(QPointF(helpMenuBarItem->width() / 2,
+                                                  helpMenuBarItem->height() / 2)).toPoint());
+#endif
     QVERIFY(!fileMenuBarItem->isHighlighted());
     QVERIFY(!editMenuBarItem->isHighlighted());
     QVERIFY(!viewMenuBarItem->isHighlighted());
@@ -155,8 +170,12 @@ void tst_qquickmenubar::mouse()
 
     // highlight a menubar item
     QTest::mouseMove(window.data(), editMenuBarItem->mapToScene(QPointF(editMenuBarItem->width() / 2, editMenuBarItem->height() / 2)).toPoint());
+#ifndef Q_OS_ANDROID
+    // Android theme does not use hover effects, so moving the mouse would not
+    // highlight an item
     QVERIFY(editMenuBarItem->isHighlighted());
     QVERIFY(!helpMenuBarItem->isHighlighted());
+#endif
     QVERIFY(!editMenuBarMenu->isVisible());
     QVERIFY(!helpMenuBarMenu->isVisible());
 
@@ -173,7 +192,11 @@ void tst_qquickmenubar::mouse()
     QQuickMenu *alignmentSubMenu = alignmentSubMenuItem->subMenu();
     QVERIFY(alignmentSubMenu);
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, alignmentSubMenuItem->mapToScene(QPointF(alignmentSubMenuItem->width() / 2, alignmentSubMenuItem->height() / 2)).toPoint());
+#ifndef Q_OS_ANDROID
+    // The screen on Android is too small to fit the whole hierarchy, so the
+    // Alignment sub-menu is shown on top of View menu.
     QVERIFY(viewMenuBarMenu->isVisible());
+#endif
     QVERIFY(alignmentSubMenu->isVisible());
     QTRY_VERIFY(alignmentSubMenu->isOpened());
 
@@ -183,8 +206,12 @@ void tst_qquickmenubar::mouse()
     QQuickMenu *verticalSubMenu = verticalSubMenuItem->subMenu();
     QVERIFY(verticalSubMenu);
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, verticalSubMenuItem->mapToScene(QPointF(verticalSubMenuItem->width() / 2, verticalSubMenuItem->height() / 2)).toPoint());
+#ifndef Q_OS_ANDROID
+    // The screen on Android is too small to fit the whole hierarchy, so the
+    // Vertical sub-menu is shown on top of View menu and Alignment sub-menu.
     QVERIFY(viewMenuBarMenu->isVisible());
     QVERIFY(alignmentSubMenu->isVisible());
+#endif
     QVERIFY(verticalSubMenu->isVisible());
     QTRY_VERIFY(verticalSubMenu->isOpened());
 
@@ -198,8 +225,12 @@ void tst_qquickmenubar::mouse()
     QTRY_VERIFY(!verticalSubMenu->isVisible());
 
     // re-highlight the same menubar item
+#ifndef Q_OS_ANDROID
+    // Android theme does not use hover effects, so moving the mouse would not
+    // highlight an item
     QTest::mouseMove(window.data(), viewMenuBarItem->mapToScene(QPointF(viewMenuBarItem->width() / 2, viewMenuBarItem->height() / 2)).toPoint());
     QVERIFY(viewMenuBarItem->isHighlighted());
+#endif
 
     // re-open the chain of menus
     QTest::mouseClick(window.data(), Qt::LeftButton, Qt::NoModifier, viewMenuBarItem->mapToScene(QPointF(viewMenuBarItem->width() / 2, viewMenuBarItem->height() / 2)).toPoint());
@@ -495,7 +526,11 @@ void tst_qquickmenubar::mnemonics()
     QQuickMenu *alignmentSubMenu = alignmentSubMenuItem->subMenu();
     QVERIFY(alignmentSubMenu);
     keySim.click(Qt::Key_A); // "&Alignment"
+#ifndef Q_OS_ANDROID
+    // On Android sub-menus are not cascading, so the Alignment sub-menu is
+    // shown instead of View menu.
     QVERIFY(viewMenuBarMenu->isVisible());
+#endif
     QVERIFY(alignmentSubMenu->isVisible());
     QTRY_VERIFY(alignmentSubMenu->isOpened());
 
@@ -505,8 +540,12 @@ void tst_qquickmenubar::mnemonics()
     QQuickMenu *verticalSubMenu = verticalSubMenuItem->subMenu();
     QVERIFY(verticalSubMenu);
     keySim.click(Qt::Key_V); // "&Vertical"
+#ifndef Q_OS_ANDROID
+    // On Android sub-menus are not cascading, so the Vertical sub-menu is
+    // shown instead of View menu and Alignment sub-menu.
     QVERIFY(viewMenuBarMenu->isVisible());
     QVERIFY(alignmentSubMenu->isVisible());
+#endif
     QVERIFY(verticalSubMenu->isVisible());
     QTRY_VERIFY(verticalSubMenu->isOpened());
 
