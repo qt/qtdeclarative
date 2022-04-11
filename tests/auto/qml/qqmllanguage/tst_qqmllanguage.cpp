@@ -4427,9 +4427,6 @@ void tst_qqmllanguage::deepProperty()
 void tst_qqmllanguage::groupAssignmentFailure()
 {
     auto ep = std::make_unique<QQmlEngine>();
-    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "QQmlComponent: Component destroyed while completion pending");
-    QTest::ignoreMessage(QtMsgType::QtWarningMsg, "This may have been caused by one of the following errors:");
-    QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression(".*Cannot set properties on b as it is null.*"));
     QTest::ignoreMessage(QtMsgType::QtWarningMsg, QRegularExpression(".*Invalid property assignment: url expected - Assigning null to incompatible properties in QML is deprecated. This will become a compile error in future versions of Qt..*"));
     QQmlComponent component(ep.get(), testFileUrl("groupFailure.qml"));
     QScopedPointer<QObject> o(component.create());
