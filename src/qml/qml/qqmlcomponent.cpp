@@ -345,6 +345,7 @@ void QQmlComponentPrivate::fromTypeData(const QQmlRefPointer<QQmlTypeData> &data
 
 RequiredProperties &QQmlComponentPrivate::requiredProperties()
 {
+    Q_ASSERT(state.creator);
     return state.creator->requiredProperties();
 }
 
@@ -418,7 +419,9 @@ QQmlComponent::~QQmlComponent()
                 qWarning().nospace().noquote() << QLatin1String("    ") << error;
         }
 
-        d->completeCreate();
+        // we might not have the creator anymore if the engine is gone
+        if (d->state.creator)
+            d->completeCreate();
     }
 
     if (d->typeData) {
