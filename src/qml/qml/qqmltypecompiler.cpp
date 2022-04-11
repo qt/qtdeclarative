@@ -855,6 +855,10 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
 
         QmlIR::Binding *syntheticBinding = pool->New<QmlIR::Binding>();
         *syntheticBinding = *binding;
+
+        // The synthetic binding inside Component has no name. It's just "Component { Foo {} }".
+        syntheticBinding->propertyNameIndex = 0;
+
         syntheticBinding->type = QV4::CompiledData::Binding::Type_Object;
         QString error = syntheticComponent->appendBinding(syntheticBinding, /*isListBinding*/false);
         Q_ASSERT(error.isEmpty());
