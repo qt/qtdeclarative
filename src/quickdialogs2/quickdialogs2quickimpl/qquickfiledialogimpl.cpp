@@ -164,7 +164,14 @@ void QQuickFileDialogImplPrivate::updateSelectedFile(const QString &oldFolderPat
     qCDebug(lcUpdateSelectedFile) << "updateSelectedFile is setting selectedFile to" << newSelectedFileUrl;
     q->setSelectedFile(newSelectedFileUrl);
     if (!newSelectedFilePath.isEmpty()) {
-        attached->fileDialogListView()->setCurrentIndex(newSelectedFileIndex);
+        {
+            // Set the appropriate currentIndex for the selected file. We block signals from ListView
+            // because we don't want fileDialogListViewCurrentIndexChanged to be called, as the file
+            // it gets from the delegate will not be up-to-date (but most importantly because we already
+            // just set the selected file).
+            QSignalBlocker blocker(attached->fileDialogListView());
+            attached->fileDialogListView()->setCurrentIndex(newSelectedFileIndex);
+        }
         if (QQuickItem *currentItem = attached->fileDialogListView()->currentItem())
             currentItem->forceActiveFocus();
     }

@@ -5,6 +5,3 @@
 # QTBUG-92585
 [fileMode:OpenFiles]
 *
-#QTBUG-101488
-[goUp]
-qnx
