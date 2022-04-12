@@ -315,22 +315,6 @@ void QmltcCompiler::compileTypeElements(QmltcType &current, const QQmlJSScope::C
 {
     const CodeGenerator::CodeGenObject &object = m_prototypeCodegen->objectFromType(type);
 
-    // TODO: make this a part of QmltcCodeGenerator::generate_endInitCode (and
-    // stop relying on QmlIR!)
-    if (object.irObject->flags & QV4::CompiledData::Object::HasDeferredBindings) {
-        current.endInit.body << u"{ // defer bindings"_qs;
-        current.endInit.body << u"auto ddata = QQmlData::get(this);"_qs;
-        current.endInit.body << u"auto thisContext = ddata->outerContext;"_qs;
-        current.endInit.body << u"Q_ASSERT(thisContext);"_qs;
-        current.endInit.body << QStringLiteral("ddata->deferData(%1, "
-                                               "QQmlEnginePrivate::get(engine)->"
-                                               "compilationUnitFromUrl(%2()), thisContext);")
-                                        .arg(QString::number(
-                                                     m_prototypeCodegen->codegenObjectIndex(type)),
-                                             QmltcCodeGenerator::urlMethodName);
-        current.endInit.body << u"}"_qs;
-    }
-
     // compile components of a type:
     // - enums
     // - properties

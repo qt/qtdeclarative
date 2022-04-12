@@ -1084,42 +1084,4 @@ QSet<QQmlJSScope::ConstPtr> collectIgnoredTypes(const Qml2CppContext &context,
     return ignored;
 }
 
-static void setDeferred(const Qml2CppContext &context, qsizetype objectIndex,
-                        QList<Qml2CppObject> &objects)
-{
-    Q_UNUSED(objects);
-
-    Qml2CppObject &o = objects[objectIndex];
-
-    // c.f. QQmlDeferredAndCustomParserBindingScanner::scanObject()
-    if (o.irObject->flags & QV4::CompiledData::Object::IsComponent) {
-        // unlike QmlIR compiler, qmltc should not care about anything within a
-        // component (let the QQmlComponent wrapper - at runtime anyway - take
-        // care of this type instead)
-        return;
-    }
-
-    const auto setRecursive = [&](QmlIR::Binding &binding) {
-        if (binding.type >= QmlIR::Binding::Type_Object)
-            setDeferred(context, binding.value.objectIndex, objects); // Note: recursive call here!
-
-        const QString propName = findPropertyName(context, o.type, binding);
-        Q_ASSERT(!propName.isEmpty());
-
-        if (o.type->isNameDeferred(propName)) {
-            binding.flags |= QV4::CompiledData::Binding::IsDeferredBinding;
-            o.irObject->flags |= QV4::CompiledData::Object::HasDeferredBindings;
-        }
-    };
-
-    std::for_each(o.irObject->bindingsBegin(), o.irObject->bindingsEnd(), setRecursive);
-}
-
-void setDeferredBindings(const Qml2CppContext &context, QList<Qml2CppObject> &objects)
-{
-    // as we do not support InlineComponents just yet, we can shortcut the logic
-    // here to only work with root object
-    setDeferred(context, 0, objects);
-}
-
 QT_END_NAMESPACE

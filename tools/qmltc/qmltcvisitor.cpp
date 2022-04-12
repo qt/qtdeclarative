@@ -146,6 +146,30 @@ void QmltcVisitor::findCppIncludes()
     }
 }
 
+void QmltcVisitor::findTypeIndicesInQmlDocument()
+{
+    qsizetype count = 0;
+
+    // Perform DFS to align with the logic of discovering new QmlIR::Objects
+    // during IR building: we should align with it here to get correct object
+    // indices within the QmlIR::Document.
+    QList<QQmlJSScope::Ptr> stack;
+    stack.append(m_exportedRootScope);
+
+    while (!stack.isEmpty()) {
+        QQmlJSScope::Ptr current = stack.takeLast();
+
+        if (current->scopeType() == QQmlJSScope::QMLScope) {
+            Q_ASSERT(!m_qmlIrObjectIndices.contains(current));
+            m_qmlIrObjectIndices[current] = count;
+            ++count;
+        }
+
+        const auto &children = current->childScopes();
+        std::copy(children.rbegin(), children.rend(), std::back_inserter(stack));
+    }
+}
+
 bool QmltcVisitor::visit(QQmlJS::AST::UiObjectDefinition *object)
 {
     if (!QQmlJSImportVisitor::visit(object))
@@ -281,6 +305,7 @@ void QmltcVisitor::endVisit(QQmlJS::AST::UiProgram *program)
 
     postVisitResolve(bindings);
     findCppIncludes();
+    findTypeIndicesInQmlDocument();
 }
 
 QQmlJSScope::ConstPtr fetchType(const QQmlJSMetaPropertyBinding &binding)
@@ -372,12 +397,14 @@ void QmltcVisitor::postVisitResolve(
     // 1. find types that are part of the deferred bindings (we care about
     //    *types* exclusively here)
     QSet<QQmlJSScope::ConstPtr> deferredTypes;
-    const auto findDeferred = [&deferredTypes](const QQmlJSScope::ConstPtr &type,
-                                               const QQmlJSMetaPropertyBinding &binding) {
-        if (binding.hasObject() || binding.hasInterceptor() || binding.hasValueSource()) {
-            const QString propertyName = binding.propertyName();
-            Q_ASSERT(!propertyName.isEmpty());
-            if (type->isNameDeferred(propertyName)) {
+    const auto findDeferred = [&](const QQmlJSScope::ConstPtr &type,
+                                  const QQmlJSMetaPropertyBinding &binding) {
+        const QString propertyName = binding.propertyName();
+        Q_ASSERT(!propertyName.isEmpty());
+        if (type->isNameDeferred(propertyName)) {
+            m_typesWithDeferredBindings.insert(type);
+
+            if (binding.hasObject() || binding.hasInterceptor() || binding.hasValueSource()) {
                 deferredTypes.insert(fetchType(binding));
                 return true;
             }

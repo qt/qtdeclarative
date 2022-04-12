@@ -330,6 +330,19 @@ QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
         current.endInit.body << u"}"_qs;
     }
 
+    if (visitor->hasDeferredBindings(type)) {
+        current.endInit.body << u"{ // defer bindings"_qs;
+        current.endInit.body << u"auto ddata = QQmlData::get(this);"_qs;
+        current.endInit.body << u"auto thisContext = ddata->outerContext;"_qs;
+        current.endInit.body << u"Q_ASSERT(thisContext);"_qs;
+        current.endInit.body << QStringLiteral("ddata->deferData(%1, "
+                                               "QQmlEnginePrivate::get(engine)->"
+                                               "compilationUnitFromUrl(%2()), thisContext);")
+                                        .arg(QString::number(visitor->qmlIrObjectIndex(type)),
+                                             QmltcCodeGenerator::urlMethodName);
+        current.endInit.body << u"}"_qs;
+    }
+
     // TODO: QScopeGuard here is redundant. we should call endInit of children
     // directly
     const auto generateFinalLines = [&current, isDocumentRoot, this]() {

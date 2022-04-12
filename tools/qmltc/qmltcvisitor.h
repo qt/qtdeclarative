@@ -42,6 +42,7 @@ QT_BEGIN_NAMESPACE
 class QmltcVisitor : public QQmlJSImportVisitor
 {
     void findCppIncludes();
+    void findTypeIndicesInQmlDocument();
     void postVisitResolve(const QHash<QQmlJSScope::ConstPtr, QList<QQmlJSMetaPropertyBinding>>
                                   &qmlIrOrderedBindings);
 
@@ -82,6 +83,13 @@ public:
         return m_syntheticTypeIndices[type] + qmlTypes().size();
     }
 
+    qsizetype qmlIrObjectIndex(const QQmlJSScope::ConstPtr &type) const
+    {
+        Q_ASSERT(m_qmlIrObjectIndices.contains(type));
+        Q_ASSERT(type->scopeType() == QQmlJSScope::QMLScope);
+        return m_qmlIrObjectIndices[type];
+    }
+
     /*! \internal
         Returns a runtime index counterpart of `id: foo` for \a type. Returns -1
         if \a type does not have an id.
@@ -106,6 +114,15 @@ public:
     */
     QList<QQmlJSScope::ConstPtr> pureQmlTypes() const { return m_pureQmlTypes; }
 
+    /*! \internal
+        Returns \c true when \a type has deferred bindings. Returns \c false
+        otherwise.
+    */
+    bool hasDeferredBindings(const QQmlJSScope::ConstPtr &type) const
+    {
+        return m_typesWithDeferredBindings.contains(type);
+    }
+
 protected:
     QStringList m_qmlTypeNames; // names of QML types arranged as a stack
     QHash<QString, int> m_qmlTypeNameCounts;
@@ -115,6 +132,9 @@ protected:
 
     QHash<QQmlJSScope::ConstPtr, qsizetype> m_pureTypeIndices;
     QHash<QQmlJSScope::ConstPtr, qsizetype> m_syntheticTypeIndices;
+    QHash<QQmlJSScope::ConstPtr, qsizetype> m_qmlIrObjectIndices;
+
+    QSet<QQmlJSScope::ConstPtr> m_typesWithDeferredBindings;
 
     // prefer allQmlTypes or pureQmlTypes. this function is misleading in qmltc
     QList<QQmlJSScope::ConstPtr> qmlTypes() const { return QQmlJSImportVisitor::qmlTypes(); }

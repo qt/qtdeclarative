@@ -300,7 +300,6 @@ void CodeGenerator::constructObjects(QSet<QString> &requiredCppIncludes)
         m_ignoredTypes = collectIgnoredTypes(context, objects);
     };
     executor.addPass(setIgnoredTypes);
-    executor.addPass(&setDeferredBindings);
 
     // run all passes:
     executor.run(m_logger);
@@ -599,10 +598,23 @@ void CodeGenerator::compileBinding(QmltcType &current, const QmlIR::Binding &bin
                                    const CodeGenObject &object,
                                    const CodeGenerator::AccessorData &accessor)
 {
+    // TODO: cache property name somehow, so we don't need to look it up again
+    QString propertyName = m_doc->stringAt(binding.propertyNameIndex);
+    if (propertyName.isEmpty()) {
+        // if empty, try default property
+        for (QQmlJSScope::ConstPtr t = object.type->baseType(); t && propertyName.isEmpty();
+             t = t->baseType())
+            propertyName = t->defaultPropertyName();
+    }
+    Q_ASSERT(!propertyName.isEmpty());
+    QQmlJSMetaProperty p = object.type->property(propertyName);
+    QQmlJSScope::ConstPtr propertyType = p.type();
+    // Q_ASSERT(propertyType); // TODO: doesn't work with signals
+
     // Note: unlike QQmlObjectCreator, we don't have to do a complicated
     // deferral logic for bindings: if a binding is deferred, it is not compiled
     // (potentially, with all the bindings inside of it), period.
-    if (binding.flags & QV4::CompiledData::Binding::IsDeferredBinding) {
+    if (object.type->isNameDeferred(propertyName)) {
         if (binding.type == QmlIR::Binding::Type_GroupProperty) {
             // TODO: we should warn about this in QmlCompiler library
             qCWarning(lcCodeGenerator)
@@ -621,19 +633,6 @@ void CodeGenerator::compileBinding(QmltcType &current, const QmlIR::Binding &bin
             return;
         }
     }
-
-    // TODO: cache property name somehow, so we don't need to look it up again
-    QString propertyName = m_doc->stringAt(binding.propertyNameIndex);
-    if (propertyName.isEmpty()) {
-        // if empty, try default property
-        for (QQmlJSScope::ConstPtr t = object.type->baseType(); t && propertyName.isEmpty();
-             t = t->baseType())
-            propertyName = t->defaultPropertyName();
-    }
-    Q_ASSERT(!propertyName.isEmpty());
-    QQmlJSMetaProperty p = object.type->property(propertyName);
-    QQmlJSScope::ConstPtr propertyType = p.type();
-    // Q_ASSERT(propertyType); // TODO: doesn't work with signals
 
     const auto addPropertyLine = [&](const QString &propertyName, const QQmlJSMetaProperty &p,
                                      const QString &value, bool constructQVariant = false) {

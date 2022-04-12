@@ -88,8 +88,6 @@ findImmediateParents(const Qml2CppContext &context, QList<Qml2CppObject> &object
 QSet<QQmlJSScope::ConstPtr> collectIgnoredTypes(const Qml2CppContext &context,
                                                 QList<Qml2CppObject> &objects);
 
-void setDeferredBindings(const Qml2CppContext &context, QList<Qml2CppObject> &objects);
-
 QT_END_NAMESPACE
 
 #endif // QML2CPPPASSES_H
