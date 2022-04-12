@@ -46,7 +46,7 @@ QByteArray qmltemplate("import QtQuick 2.0\n"
 "    }\n"
 "}\n");
 
-int main(int argc, char **argv)
+int actualTest(int argc, char **argv)
 {
     for (int i = 0; i < 3; i++) {
         QGuiApplication app(argc, argv);
@@ -64,3 +64,25 @@ int main(int argc, char **argv)
     }
     return 0;
 }
+
+// we need the QTestLib infrastructure to create a log file
+struct FontLoaderStaticTester : public QObject
+{
+    Q_OBJECT
+
+public:
+    int result = -1;
+private slots:
+    void verify() {  QCOMPARE(result, 0); }
+};
+
+int main(int argc, char **argv)
+{
+    int result = actualTest(argc, argv);
+    QCoreApplication app(argc, argv);
+    FontLoaderStaticTester tester;
+    tester.result = result;
+    QTest::qExec(&tester, argc, argv);
+}
+
+#include "tst_qquickfontloader_static.moc"
