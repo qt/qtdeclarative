@@ -56,6 +56,7 @@ private slots:
     void initTestCase() override;
     void flickable();
     void fractionalFontSize();
+    void resizeBackgroundKeepsBindings();
 
 private:
     QScopedPointer<QPointingDevice> touchDevice;
@@ -119,6 +120,23 @@ void tst_QQuickControl::fractionalFontSize()
     QVERIFY2(qFuzzyCompare(contentItem->contentWidth(),
             QQuickTextPrivate::get(contentItem)->layout.boundingRect().width()),
             "The QQuickText::contentWidth() doesn't match the layout's preferred text width");
+}
+
+void tst_QQuickControl::resizeBackgroundKeepsBindings()
+{
+    QTest::ignoreMessage(
+            QtMsgType::QtInfoMsg,
+            QRegularExpression("Binding on background is not deferred .*"));
+    QQuickApplicationHelper helper(this, QStringLiteral("resizeBackgroundKeepsBindings.qml"));
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+    auto ctxt = qmlContext(window);
+    QVERIFY(ctxt);
+    auto background = qobject_cast<QQuickItem *>(ctxt->objectForName("background"));
+    QVERIFY(background);
+    QCOMPARE(background->height(), 4);
+    QVERIFY(background->bindableHeight().hasBinding());
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickControl)
