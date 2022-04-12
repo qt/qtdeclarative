@@ -384,15 +384,26 @@ void QQuickControlPrivate::resizeBackground()
     resizingBackground = true;
 
     QQuickItemPrivate *p = QQuickItemPrivate::get(background);
+    bool changeWidth = false;
+    bool changeHeight = false;
     if (((!p->widthValid() || !extra.isAllocated() || !extra->hasBackgroundWidth) && qFuzzyIsNull(background->x()))
             || (extra.isAllocated() && (extra->hasLeftInset || extra->hasRightInset))) {
         background->setX(getLeftInset());
-        background->setWidth(width - getLeftInset() - getRightInset());
+        changeWidth = !p->width.hasBinding();
     }
     if (((!p->heightValid() || !extra.isAllocated() || !extra->hasBackgroundHeight) && qFuzzyIsNull(background->y()))
             || (extra.isAllocated() && (extra->hasTopInset || extra->hasBottomInset))) {
         background->setY(getTopInset());
-        background->setHeight(height - getTopInset() - getBottomInset());
+        changeHeight = !p->height.hasBinding();
+    }
+    if (changeHeight || changeWidth) {
+        auto newWidth = changeWidth ?
+            width.valueBypassingBindings() - getLeftInset() - getRightInset() :
+            p->width.valueBypassingBindings();
+        auto newHeight = changeHeight ?
+            height.valueBypassingBindings() - getTopInset() - getBottomInset() :
+            p->height.valueBypassingBindings();
+        background->setSize({newWidth, newHeight});
     }
 
     resizingBackground = false;
