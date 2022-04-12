@@ -29,7 +29,9 @@
 #ifndef QUICKLINTPLUGIN_H
 #define QUICKLINTPLUGIN_H
 
-#include <QtPlugin>
+#include <QtCore/qplugin.h>
+#include <QtCore/qlist.h>
+
 #include <QtQmlCompiler/private/qqmlsa_p.h>
 
 class QmlLintQuickPlugin : public QObject, public QQmlSA::LintPlugin
@@ -52,6 +54,28 @@ public:
 
 private:
     QQmlSA::Element m_layout;
+};
+
+class ControlsNativeValidatorPass : public QQmlSA::ElementPass
+{
+public:
+    ControlsNativeValidatorPass(QQmlSA::PassManager *manager);
+
+    bool shouldRun(const QQmlSA::Element &element) override;
+    void run(const QQmlSA::Element &element) override;
+
+private:
+    struct ControlElement
+    {
+        QString name;
+        QStringList restrictedProperties;
+        bool isInModuleControls = true;
+        bool isControl = false;
+        bool inheritsControl = false;
+        QQmlSA::Element element = {};
+    };
+
+    QList<ControlElement> m_elements;
 };
 
 #endif // QUICKLINTPLUGIN_H
