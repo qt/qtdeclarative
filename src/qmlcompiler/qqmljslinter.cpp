@@ -472,9 +472,20 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
 
             typeResolver.init(&v, parser.rootNode());
 
-            // We need to clone the root scope at this point since the compilation step will clone
-            // scopes and thus modify the original scope tree as generated from the QML file.
-            QQmlJSScope::ConstPtr root = QQmlJSScope::clone(v.result());
+            if (m_enablePlugins) {
+                QQmlSA::PassManager passMan(&v, &typeResolver);
+
+                for (const Plugin &plugin : m_plugins) {
+                    if (!plugin.isValid())
+                        continue;
+
+                    QQmlSA::LintPlugin *instance = plugin.m_instance;
+                    Q_ASSERT(instance);
+                    instance->registerPasses(&passMan, v.result());
+                }
+
+                passMan.analyze(v.result());
+            }
 
             success = !m_logger->hasWarnings() && !m_logger->hasErrors();
 
@@ -514,20 +525,6 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
                 m_logger->processMessages(warnings, Log_Import);
             }
 
-            if (m_enablePlugins) {
-                QQmlSA::PassManager passMan(&v, codegen.typeResolver());
-
-                for (const Plugin &plugin : m_plugins) {
-                    if (!plugin.isValid())
-                        continue;
-
-                    QQmlSA::LintPlugin *instance = plugin.m_instance;
-                    Q_ASSERT(instance);
-                    instance->registerPasses(&passMan, root);
-                }
-
-                passMan.analyze(root);
-            }
             success &= !m_logger->hasWarnings() && !m_logger->hasErrors();
 
             processMessages();
