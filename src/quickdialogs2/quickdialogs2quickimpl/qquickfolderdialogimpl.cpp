@@ -91,7 +91,7 @@ void QQuickFolderDialogImplPrivate::updateSelectedFolder(const QString &oldFolde
         return;
 
     QString newSelectedFolderPath;
-    int newSelectedFileIndex = 0;
+    int newSelectedFolderIndex = 0;
     const QString newFolderPath = QQmlFile::urlToLocalFileOrQrc(currentFolder);
     if (!oldFolderPath.isEmpty() && !newFolderPath.isEmpty()) {
         // If the user went up a directory (or several), we should set
@@ -119,7 +119,7 @@ void QQuickFolderDialogImplPrivate::updateSelectedFolder(const QString &oldFolde
             const QFileInfoList dirs = newFolderDir.entryInfoList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::DirsFirst);
             const QFileInfo newSelectedFileInfo(newSelectedFolderPath);
             // The directory can contain files, but since we put dirs first, that should never affect the indices.
-            newSelectedFileIndex = dirs.indexOf(newSelectedFileInfo);
+            newSelectedFolderIndex = dirs.indexOf(newSelectedFileInfo);
         }
     }
 
@@ -140,7 +140,14 @@ void QQuickFolderDialogImplPrivate::updateSelectedFolder(const QString &oldFolde
 
     const bool folderSelected = !newSelectedFolderPath.isEmpty();
     q->setSelectedFolder(folderSelected ? QUrl::fromLocalFile(newSelectedFolderPath) : QUrl());
-    attached->folderDialogListView()->setCurrentIndex(folderSelected ? newSelectedFileIndex : -1);
+    {
+        // Set the appropriate currentIndex for the selected folder. We block signals from ListView
+        // because we don't want folderDialogListViewCurrentIndexChanged to be called, as the file
+        // it gets from the delegate will not be up-to-date (but most importantly because we already
+        // just set the selected folder).
+        QSignalBlocker blocker(attached->folderDialogListView());
+        attached->folderDialogListView()->setCurrentIndex(folderSelected ? newSelectedFolderIndex : -1);
+    }
     if (folderSelected) {
         if (QQuickItem *currentItem = attached->folderDialogListView()->currentItem())
             currentItem->forceActiveFocus();
