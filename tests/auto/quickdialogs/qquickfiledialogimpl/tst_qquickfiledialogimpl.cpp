@@ -676,7 +676,7 @@ void tst_QQuickFileDialogImpl::goUp()
     QTRY_VERIFY(findViewDelegateItem(fileDialogListView, 0, subDirDelegate));
     QCOMPARE(subDirDelegate->isHighlighted(), true);
 
-    // Go up a directory via the keyboard shortcut next to the breadcrumb bar.
+    // Go up a directory via the keyboard shortcut.
     const auto goUpKeySequence = QKeySequence(Qt::ALT | Qt::Key_Up);
     QTest::keySequence(dialogHelper.window(), goUpKeySequence);
     QDir tempParentDir(tempDir.path());
