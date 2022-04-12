@@ -1257,7 +1257,8 @@ function(qt6_target_compile_qml_to_cpp target)
 
         set_source_files_properties(${compiled_header} ${compiled_cpp}
             PROPERTIES SKIP_AUTOGEN ON
-                       SKIP_UNITY_BUILD_INCLUSION ON)
+                       SKIP_UNITY_BUILD_INCLUSION ON
+                       SKIP_PRECOMPILE_HEADERS ON)
         target_sources(${target} PRIVATE ${compiled_header} ${compiled_cpp})
         target_include_directories(${target} PUBLIC ${out_dir})
         # The current scope automatically sees the file as generated, but the
@@ -1290,7 +1291,8 @@ function(qt6_target_compile_qml_to_cpp target)
     # run MOC manually for the generated files
     qt6_wrap_cpp(compiled_moc_files ${compiled_files} TARGET ${target} OPTIONS ${extra_moc_options})
     set_source_files_properties(${compiled_moc_files} PROPERTIES SKIP_AUTOGEN ON
-                                                                 SKIP_UNITY_BUILD_INCLUSION ON)
+                                                                 SKIP_UNITY_BUILD_INCLUSION ON
+                                                                 SKIP_PRECOMPILE_HEADERS ON)
     target_sources(${target} PRIVATE ${compiled_moc_files})
     if(NOT target_source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
@@ -1298,6 +1300,7 @@ function(qt6_target_compile_qml_to_cpp target)
                 TARGET_DIRECTORY ${target}
                 PROPERTIES
                     SKIP_AUTOGEN TRUE
+                    SKIP_PRECOMPILE_HEADERS ON
                     GENERATED TRUE
             )
         endif()
@@ -2011,6 +2014,7 @@ function(qt6_target_qml_sources target)
             target_sources(${target} PRIVATE ${compiled_file})
             set_source_files_properties(${compiled_file} PROPERTIES
                 SKIP_AUTOGEN ON
+                SKIP_PRECOMPILE_HEADERS ON
             )
             # The current scope automatically sees the file as generated, but the
             # target scope may not if it is different. Force it where we can.
@@ -2025,6 +2029,7 @@ function(qt6_target_qml_sources target)
                         TARGET_DIRECTORY ${target}
                         PROPERTIES
                             SKIP_AUTOGEN TRUE
+                            SKIP_PRECOMPILE_HEADERS TRUE
                             GENERATED TRUE
                     )
                 endif()
@@ -2399,6 +2404,7 @@ function(_qt_internal_qml_type_registration target)
     endif()
     set_source_files_properties(${type_registration_cpp_file} PROPERTIES
         SKIP_AUTOGEN ON
+        SKIP_PRECOMPILE_HEADERS ON
         ${additional_source_files_properties}
     )
     if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
@@ -2407,6 +2413,7 @@ function(_qt_internal_qml_type_registration target)
             TARGET_DIRECTORY ${target}
             PROPERTIES
                 SKIP_AUTOGEN TRUE
+                SKIP_PRECOMPILE_HEADERS ON
                 GENERATED TRUE
                 ${additional_source_files_properties}
         )
