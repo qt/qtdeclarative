@@ -151,22 +151,7 @@ QQmlPropertyCache::ConstPtr QQmlMetaTypeData::propertyCache(
     if (const QMetaObject *superMeta = metaObject->superClass())
         rv = propertyCache(superMeta, version)->copyAndAppend(metaObject, version);
     else
-        rv.adopt(new QQmlPropertyCache(metaObject));
-
-    const auto *mop = reinterpret_cast<const QMetaObjectPrivate *>(metaObject->d.data);
-    if (!(mop->flags & DynamicMetaObject))
-        propertyCaches.insert(metaObject, rv);
-
-    return rv;
-}
-
-QQmlPropertyCache::Ptr QQmlMetaTypeData::createPropertyCache(const QMetaObject *metaObject)
-{
-    QQmlPropertyCache::Ptr rv;
-    if (const QMetaObject *superMeta = metaObject->superClass())
-        rv = propertyCache(superMeta, QTypeRevision())->copyAndAppend(metaObject, QTypeRevision());
-    else
-        rv.adopt(new QQmlPropertyCache(metaObject));
+        rv = QQmlPropertyCache::createStandalone(metaObject);
 
     const auto *mop = reinterpret_cast<const QMetaObjectPrivate *>(metaObject->d.data);
     if (!(mop->flags & DynamicMetaObject))

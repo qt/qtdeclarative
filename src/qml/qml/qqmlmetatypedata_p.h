@@ -141,8 +141,6 @@ struct QQmlMetaTypeData
     QQmlPropertyCache::ConstPtr propertyCache(const QQmlType &type, QTypeRevision version);
     QQmlPropertyCache::ConstPtr findPropertyCacheInCompositeTypes(QMetaType t) const;
 
-    QQmlPropertyCache::Ptr createPropertyCache(const QMetaObject *metaObject);
-
     void setTypeRegistrationFailures(QStringList *failures)
     {
         m_typeRegistrationFailures = failures;

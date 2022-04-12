@@ -1308,13 +1308,6 @@ QQmlPropertyCache::ConstPtr QQmlMetaType::propertyCache(
     return data->propertyCache(metaObject, version);
 }
 
-QQmlPropertyCache::Ptr QQmlMetaType::createPropertyCache(
-        const QMetaObject *metaObject)
-{
-    QQmlMetaTypeDataPtr data; // not const: the cache is created
-    return data->createPropertyCache(metaObject);
-}
-
 QQmlPropertyCache::ConstPtr QQmlMetaType::propertyCache(
         const QQmlType &type, QTypeRevision version)
 {

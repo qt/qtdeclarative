@@ -200,8 +200,7 @@ void tst_qqmlpropertycache::properties()
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlPropertyCache::ConstPtr cache(new QQmlPropertyCache(metaObject),
-                                            QQmlPropertyCache::ConstPtr::Adopt);
+    QQmlPropertyCache::ConstPtr cache = QQmlPropertyCache::createStandalone(metaObject);
     const QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "propertyA")));
@@ -223,11 +222,10 @@ void tst_qqmlpropertycache::propertiesDerived()
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlPropertyCache::ConstPtr parentCache(
-                new QQmlPropertyCache(&BaseObject::staticMetaObject),
-                QQmlPropertyCache::ConstPtr::Adopt);
-    QQmlPropertyCache::ConstPtr cache =
-            parentCache->copyAndAppend(object.metaObject(), QTypeRevision());
+    QQmlPropertyCache::ConstPtr parentCache
+            = QQmlPropertyCache::createStandalone(&BaseObject::staticMetaObject);
+    QQmlPropertyCache::ConstPtr cache
+            = parentCache->copyAndAppend(object.metaObject(), QTypeRevision());
     const QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "propertyA")));
@@ -251,11 +249,11 @@ void tst_qqmlpropertycache::revisionedProperties()
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlPropertyCache::ConstPtr cacheWithoutVersion(new QQmlPropertyCache(metaObject),
-                                                          QQmlPropertyCache::ConstPtr::Adopt);
+    QQmlPropertyCache::ConstPtr cacheWithoutVersion(
+                QQmlPropertyCache::createStandalone(metaObject));
     QQmlPropertyCache::ConstPtr cacheWithVersion(
-                new QQmlPropertyCache(metaObject, QTypeRevision::fromMinorVersion(1)),
-                QQmlPropertyCache::ConstPtr::Adopt);
+                QQmlPropertyCache::createStandalone(
+                    metaObject, QTypeRevision::fromMinorVersion(1)));
     const QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cacheWithoutVersion, "propertyE")));
@@ -269,8 +267,7 @@ void tst_qqmlpropertycache::methods()
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlPropertyCache::ConstPtr cache(new QQmlPropertyCache(metaObject),
-                                            QQmlPropertyCache::ConstPtr::Adopt);
+    QQmlPropertyCache::ConstPtr cache(QQmlPropertyCache::createStandalone(metaObject));
     const QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "slotA")));
@@ -305,8 +302,7 @@ void tst_qqmlpropertycache::methodsDerived()
     const QMetaObject *metaObject = object.metaObject();
 
     QQmlPropertyCache::ConstPtr parentCache(
-                new QQmlPropertyCache(&BaseObject::staticMetaObject),
-                QQmlPropertyCache::ConstPtr::Adopt);
+                QQmlPropertyCache::createStandalone(&BaseObject::staticMetaObject));
     QQmlPropertyCache::ConstPtr cache
             = parentCache->copyAndAppend(object.metaObject(), QTypeRevision {});
     const QQmlPropertyData *data;
@@ -342,8 +338,7 @@ void tst_qqmlpropertycache::signalHandlers()
     DerivedObject object;
     const QMetaObject *metaObject = object.metaObject();
 
-    QQmlPropertyCache::ConstPtr cache(new QQmlPropertyCache(metaObject),
-                                            QQmlPropertyCache::ConstPtr::Adopt);
+    QQmlPropertyCache::ConstPtr cache(QQmlPropertyCache::createStandalone(metaObject));
     const QQmlPropertyData *data;
 
     QVERIFY((data = cacheProperty(cache, "onSignalA")));
@@ -372,8 +367,7 @@ void tst_qqmlpropertycache::signalHandlersDerived()
     const QMetaObject *metaObject = object.metaObject();
 
     QQmlPropertyCache::ConstPtr parentCache(
-                new QQmlPropertyCache(&BaseObject::staticMetaObject),
-                QQmlPropertyCache::ConstPtr::Adopt);
+                QQmlPropertyCache::createStandalone(&BaseObject::staticMetaObject));
     QQmlPropertyCache::ConstPtr cache
             = parentCache->copyAndAppend(object.metaObject(), QTypeRevision{});
     const QQmlPropertyData *data;

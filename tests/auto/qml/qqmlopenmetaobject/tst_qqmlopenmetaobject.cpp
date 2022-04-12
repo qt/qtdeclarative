@@ -52,7 +52,9 @@ void tst_qqmlopenmetaobject::createProperties()
 {
     QQmlEngine engine;
     CustomObject object;
-    const QQmlRefPointer<QQmlOpenMetaObjectType> mot = new QQmlOpenMetaObjectType(object.metaObject());
+    const QQmlRefPointer<QQmlOpenMetaObjectType> mot(
+                new QQmlOpenMetaObjectType(object.metaObject()),
+                QQmlRefPointer<QQmlOpenMetaObjectType>::Adopt);
     QQmlOpenMetaObject *const mo = new QQmlOpenMetaObject(&object, mot.data());
     mo->setCached(true);
     mot->createProperty("customProperty");
