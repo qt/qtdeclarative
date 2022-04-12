@@ -8822,7 +8822,7 @@ QSGTextureProvider *QQuickItem::textureProvider() const
     }
     \endcode
 
-    \sa Window::palette, Popup::palette, ColorGroup, Palette
+    \sa Window::palette, Popup::palette, ColorGroup, Palette, SystemPalette
 */
 
 /*!

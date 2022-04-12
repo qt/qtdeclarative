@@ -85,6 +85,8 @@ QT_BEGIN_NAMESPACE
         }
     }
     \endqml
+
+    \sa SystemPalette
 */
 
 /*!
