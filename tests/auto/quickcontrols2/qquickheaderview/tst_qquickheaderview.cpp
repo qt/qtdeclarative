@@ -1,7 +1,7 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
-** Contact: http://www.qt.io/licensing/
+** Copyright (C) 2022 The Qt Company Ltd.
+** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the test suite of the Qt Toolkit.
 **
@@ -36,6 +36,7 @@
 
 #include <QtTest/qsignalspy.h>
 #include <QtTest/qtest.h>
+#include <QtQuickTest/quicktest.h>
 
 #include <QAbstractItemModelTester>
 #include <QtQml/QQmlEngine>
@@ -309,6 +310,13 @@ void tst_QQuickHeaderView::testOrientation()
 
     QScopedPointer<QObject> root(component.create());
     QVERIFY2(root, qPrintable(component.errorString()));
+    // Make sure that the window is shown at this point, so that the test
+    // behaves similarly on all platforms
+    QVERIFY(QTest::qWaitForWindowActive(qobject_cast<QWindow *>(root.data())));
+
+    // If we want to make use of syncDirection, we need to set syncView as well.
+    // For that we need to create a second dummy table view.
+    QQuickTableView otherView;
 
     auto hhv = root->findChild<QQuickHorizontalHeaderView *>("horizontalHeader");
     QVERIFY(hhv);
@@ -317,13 +325,14 @@ void tst_QQuickHeaderView::testOrientation()
     auto vhv = root->findChild<QQuickVerticalHeaderView *>("verticalHeader");
     QVERIFY(vhv);
 
+    hhv->setSyncView(&otherView);
     hhv->setSyncDirection(Qt::Vertical);
-    hhv->flick(10, 20);
+    QVERIFY(QQuickTest::qWaitForItemPolished(hhv));
 
+    vhv->setSyncView(&otherView);
     vhv->setSyncDirection(Qt::Horizontal);
-    vhv->flick(20, 10);
+    QVERIFY(QQuickTest::qWaitForItemPolished(vhv));
 
-    QVERIFY(QTest::qWaitForWindowActive(qobject_cast<QWindow *>(root.data())));
     // Explicitly setting a different synDirection is ignored
     QCOMPARE(hhv->syncDirection(), Qt::Horizontal);
     QCOMPARE(hhv->flickableDirection(), QQuickFlickable::HorizontalFlick);
