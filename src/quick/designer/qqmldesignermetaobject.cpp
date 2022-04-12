@@ -107,7 +107,7 @@ QQmlDesignerMetaObject* QQmlDesignerMetaObject::getNodeInstanceMetaObject(QObjec
     return mo;
 }
 
-void QQmlDesignerMetaObject::init(QObject *object, QQmlEngine *engine)
+void QQmlDesignerMetaObject::init(QObject *object, QQmlEngine *)
 {
     //Creating QQmlOpenMetaObjectType
     m_openMetaObject = std::make_unique<QQmlOpenMetaObject>(object, metaObjectParent());
@@ -118,7 +118,7 @@ void QQmlDesignerMetaObject::init(QObject *object, QQmlEngine *engine)
     QObjectPrivate *op = QObjectPrivate::get(object);
     op->metaObject = this;
 
-    cache = QQmlEnginePrivate::get(engine)->cache(metaObject);
+    cache = QQmlPropertyCache::createStandalone(metaObject);
 
     nodeInstanceMetaObjectList.insert(this, true);
 }

@@ -147,7 +147,7 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(const QMetaObj
     if (const QMetaObject *superMeta = metaObject->superClass())
         rv = propertyCache(superMeta, version)->copyAndAppend(metaObject, version);
     else
-        rv.adopt(new QQmlPropertyCache(metaObject));
+        rv = QQmlPropertyCache::createStandalone(metaObject);
 
     const auto *mop = reinterpret_cast<const QMetaObjectPrivate *>(metaObject->d.data);
     if (!(mop->flags & DynamicMetaObject))

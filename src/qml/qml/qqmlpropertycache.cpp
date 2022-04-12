@@ -149,14 +149,23 @@ void QQmlPropertyData::load(const QMetaMethod &m)
 }
 
 /*!
-Creates a new QQmlPropertyCache of \a metaObject.
+    Creates a standalone QQmlPropertyCache of \a metaObject. It is separate from the usual
+    QQmlPropertyCache hierarchy. Its parent is not equal to any other QQmlPropertyCache
+    created from QObject::staticMetaObject, for example.
 */
-QQmlPropertyCache::QQmlPropertyCache(const QMetaObject *metaObject, QTypeRevision metaObjectRevision)
-    : _metaObject(metaObject)
+QQmlRefPointer<QQmlPropertyCache> QQmlPropertyCache::createStandalone(
+        const QMetaObject *metaObject, QTypeRevision metaObjectRevision)
 {
     Q_ASSERT(metaObject);
 
-    update(metaObject);
+    QQmlRefPointer<QQmlPropertyCache> result;
+    if (const QMetaObject *super = metaObject->superClass()) {
+        result = createStandalone(
+                    super, metaObjectRevision)->copyAndAppend(metaObject, metaObjectRevision);
+    } else {
+        result.adopt(new QQmlPropertyCache(metaObject));
+        result->update(metaObject);
+    }
 
     if (metaObjectRevision.isValid() && metaObjectRevision != QTypeRevision::zero()) {
         // Set the revision of the meta object that this cache describes to be
@@ -164,9 +173,13 @@ QQmlPropertyCache::QQmlPropertyCache(const QMetaObject *metaObject, QTypeRevisio
         // from a type that was created directly in C++, and not through QML. For such
         // types, the revision for each recorded QMetaObject would normally be zero, which
         // would exclude any revisioned properties.
-        for (int metaObjectOffset = 0; metaObjectOffset < allowedRevisionCache.size(); ++metaObjectOffset)
-            allowedRevisionCache[metaObjectOffset] = metaObjectRevision;
+        for (int metaObjectOffset = 0; metaObjectOffset < result->allowedRevisionCache.size();
+             ++metaObjectOffset) {
+            result->allowedRevisionCache[metaObjectOffset] = metaObjectRevision;
+        }
     }
+
+    return result;
 }
 
 QQmlPropertyCache::~QQmlPropertyCache()
@@ -573,16 +586,6 @@ void QQmlPropertyCache::append(const QMetaObject *metaObject,
     }
 }
 
-void QQmlPropertyCache::updateRecur(const QMetaObject *metaObject)
-{
-    if (!metaObject)
-        return;
-
-    updateRecur(metaObject->superClass());
-
-    append(metaObject, QTypeRevision());
-}
-
 void QQmlPropertyCache::update(const QMetaObject *metaObject)
 {
     Q_ASSERT(metaObject);
@@ -602,7 +605,8 @@ void QQmlPropertyCache::update(const QMetaObject *metaObject)
     // cached in a parent cache.
     stringCache.reserve(pc + mc + sc);
 
-    updateRecur(metaObject);
+    if (metaObject)
+        append(metaObject, QTypeRevision());
 }
 
 /*! \internal

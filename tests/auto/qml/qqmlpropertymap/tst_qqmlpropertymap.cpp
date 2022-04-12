@@ -64,6 +64,7 @@ private slots:
     void QTBUG_48136();
     void lookupsInSubTypes();
     void freeze();
+    void cachedSignals();
 };
 
 class LazyPropertyMap : public QQmlPropertyMap, public QQmlParserStatus
@@ -593,6 +594,46 @@ void tst_QQmlPropertyMap::freeze()
 
     map.insert(QLatin1String("key1"), QStringLiteral("Hello World"));
     QCOMPARE(map.value("key1").toString(), QStringLiteral("Hello World"));
+}
+
+class Map: public QQmlPropertyMap
+{
+    Q_OBJECT
+public:
+    Map(QObject *parent = nullptr)
+        : QQmlPropertyMap(this, parent)
+    {
+        insert( "a", u"yayayaya"_qs );
+        insert( "b", u"yayayayb"_qs);
+        insert( "c", u"yayayayc"_qs);
+        insert( "d", u"yayayayd"_qs);
+
+        freeze();
+    }
+};
+
+void tst_QQmlPropertyMap::cachedSignals()
+{
+    Map foo;
+    QQmlEngine engine;
+    engine.rootContext()->setContextProperty("map", &foo);
+    const QUrl url = testFileUrl("cached.qml");
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QCOMPARE(o->property("text").toString(), u"yayayayc"_qs);
+    foo.setProperty("c", u"something"_qs);
+    QCOMPARE(o->property("text").toString(), u"something"_qs);
+    foo.insert("c", u"other"_qs);
+    QCOMPARE(o->property("text").toString(), u"other"_qs);
+    QTest::ignoreMessage(
+                QtWarningMsg,
+                qPrintable(url.toString() + u":4:5: Unable to assign [undefined] to QString"_qs));
+    foo.clear("c");
+    QCOMPARE(o->property("text").toString(), u"other"_qs);
+    foo.insert("c", u"final"_qs);
+    QCOMPARE(o->property("text").toString(), u"final"_qs);
 }
 
 QTEST_MAIN(tst_QQmlPropertyMap)
