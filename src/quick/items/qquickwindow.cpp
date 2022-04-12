@@ -4186,7 +4186,7 @@ void QQuickWindow::setTextRenderType(QQuickWindow::TextRenderType renderType)
     property on the window's palette, that property propagates to all child controls in the window,
     overriding any system defaults for that property.
 
-    \sa Item::palette, Popup::palette, ColorGroup
+    \sa Item::palette, Popup::palette, ColorGroup, SystemPalette
     //! internal \sa QQuickAbstractPaletteProvider, QQuickPalette
 */
 
