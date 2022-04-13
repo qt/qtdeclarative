@@ -116,6 +116,30 @@ private:
     QQmlSA::Element m_image;
 };
 
+class HasImportedModuleTest : public QQmlSA::ElementPass
+{
+public:
+    HasImportedModuleTest(QQmlSA::PassManager *manager, QString message)
+        : QQmlSA::ElementPass(manager), m_message(message)
+    {
+    }
+
+    bool shouldRun(const QQmlSA::Element &element) override
+    {
+        Q_UNUSED(element)
+        return true;
+    }
+
+    void run(const QQmlSA::Element &element) override
+    {
+        Q_UNUSED(element)
+        emitWarning(m_message);
+    }
+
+private:
+    QString m_message;
+};
+
 void LintPlugin::registerPasses(QQmlSA::PassManager *manager, const QQmlSA::Element &rootElement)
 {
     if (!rootElement->filePath().endsWith(u"_pluginTest.qml"))
@@ -123,4 +147,15 @@ void LintPlugin::registerPasses(QQmlSA::PassManager *manager, const QQmlSA::Elem
 
     manager->registerElementPass(std::make_unique<ElementTest>(manager));
     manager->registerPropertyPass(std::make_unique<PropertyTest>(manager));
+    if (manager->hasImportedModule("QtQuick.Controls")) {
+        if (manager->hasImportedModule("QtQuick")) {
+            if (manager->hasImportedModule("QtQuick.Window")) {
+                manager->registerElementPass(std::make_unique<HasImportedModuleTest>(
+                        manager, "QtQuick.Controls, QtQuick and QtQuick.Window present"));
+            }
+        } else {
+            manager->registerElementPass(std::make_unique<HasImportedModuleTest>(
+                    manager, "QtQuick.Controls and NO QtQuick present"));
+        }
+    }
 }

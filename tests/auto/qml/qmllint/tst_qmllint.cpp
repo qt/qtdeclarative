@@ -1637,12 +1637,19 @@ void TestQmllint::testPlugin()
             QCOMPARE(plugin.author(), u"Qt"_qs);
             QCOMPARE(plugin.description(), u"A test plugin for tst_qmllint"_qs);
             QCOMPARE(plugin.version(), u"1.0"_qs);
+            break;
         }
     }
     QVERIFY(pluginFound);
 
     runTest("elementpass_pluginTest.qml", Result { { Message { u"ElementTest OK"_qs, 4, 5 } } });
     runTest("propertypass_pluginTest.qml", Result { { Message { u"OK"_qs } } });
+    runTest("controlsWithQuick_pluginTest.qml",
+            Result { { Message { u"QtQuick.Controls, QtQuick and QtQuick.Window present"_qs } } });
+    runTest("controlsWithoutQuick_pluginTest.qml",
+            Result { { Message { u"QtQuick.Controls and NO QtQuick present"_qs } } });
+    // Verify that none of the passes do anything when they're not supposed to
+    runTest("nothing_pluginTest.qml", Result::clean());
 }
 #endif
 

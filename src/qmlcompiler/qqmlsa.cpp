@@ -122,6 +122,11 @@ void PassManager::analyze(const Element &root)
     }
 }
 
+bool PassManager::hasImportedModule(QAnyStringView module) const
+{
+    return m_visitor->imports().contains(u"$module$." + module.toString());
+}
+
 void DebugElementPass::run(const Element &element) {
     emitWarning(u"Type: " + element->baseTypeName());
     if (auto bindings = element->propertyBindings(u"objectName"_qs); !bindings.isEmpty()) {

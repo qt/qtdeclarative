@@ -137,6 +137,8 @@ public:
     void registerPropertyPass(std::unique_ptr<PropertyPass> pass);
     void analyze(const Element &root);
 
+    bool hasImportedModule(QAnyStringView name) const;
+
 private:
     std::vector<std::unique_ptr<ElementPass>> m_elementPasses;
     std::vector<std::unique_ptr<PropertyPass>> m_propertyPasses;

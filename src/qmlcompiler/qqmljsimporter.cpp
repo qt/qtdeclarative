@@ -313,6 +313,7 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
     // QML name prefixed with $anonymous$.
     const QString anonPrefix = QStringLiteral("$anonymous$");
     const QString internalPrefix = QStringLiteral("$internal$");
+    const QString modulePrefix = QStringLiteral("$module$");
     QHash<QString, QList<QQmlJSScope::Export>> seenExports;
 
     const auto insertExports = [&](const QQmlJSExportedScope &val, const QString &cppName) {
@@ -395,6 +396,10 @@ void QQmlJSImporter::processImport(const QQmlJSScope::Import &importDescription,
 
     if (!importDescription.prefix().isEmpty())
         types->qmlNames.insert(importDescription.prefix(), {}); // Empty type means "this is the prefix"
+
+    // Add a marker to show that this module has been imported
+    if (!importDescription.isDependency())
+        types->qmlNames.insert(prefixedName(modulePrefix, importDescription.name()), {});
 
     if (!importDescription.isDependency()) {
         if (import.isStaticModule)
