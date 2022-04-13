@@ -84,8 +84,10 @@ class QQmlCodeModel : public QObject
     Q_OBJECT
 public:
     enum class UriLookup { Caching, ForceLookup };
+    enum class State { Running, Stopping };
 
     explicit QQmlCodeModel(QObject *parent = nullptr);
+    ~QQmlCodeModel();
     QQmlJS::Dom::DomItem currentEnv();
     QQmlJS::Dom::DomItem validEnv();
     OpenDocumentSnapshot snapshotByUri(const QByteArray &uri);
@@ -117,6 +119,7 @@ private:
     void openUpdateEnd();
     void openUpdate(const QByteArray &);
     mutable QMutex m_mutex;
+    State m_state = State::Running;
     int m_lastIndexProgress = 0;
     int m_nIndexInProgress = 0;
     QList<ToIndex> m_toIndex;

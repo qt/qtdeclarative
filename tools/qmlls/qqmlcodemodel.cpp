@@ -107,6 +107,22 @@ QQmlCodeModel::QQmlCodeModel(QObject *parent)
 {
 }
 
+QQmlCodeModel::~QQmlCodeModel()
+{
+    while (true) {
+        bool shouldWait;
+        {
+            QMutexLocker l(&m_mutex);
+            m_state = State::Stopping;
+            m_openDocumentsToUpdate.clear();
+            shouldWait = m_nIndexInProgress != 0 || m_nUpdateInProgress != 0;
+        }
+        if (!shouldWait)
+            break;
+        QThread::yieldCurrentThread();
+    }
+}
+
 OpenDocumentSnapshot QQmlCodeModel::snapshotByUri(const QByteArray &uri)
 {
     return openDocumentByUri(uri).snapshot;
@@ -135,7 +151,6 @@ void QQmlCodeModel::indexEnd()
     qCDebug(codeModelLog) << "indexEnd";
     m_lastIndexProgress = 0;
     m_nIndexInProgress = 0;
-    m_nUpdateInProgress = 0;
     m_toIndex.clear();
     m_indexInProgressCost = 0;
     m_indexDoneCost = 0;
@@ -151,6 +166,9 @@ void QQmlCodeModel::indexSendProgress(int progress)
 
 bool QQmlCodeModel::indexCancelled()
 {
+    QMutexLocker l(&m_mutex);
+    if (m_state == State::Stopping)
+        return true;
     return false;
 }
 
@@ -215,9 +233,7 @@ void QQmlCodeModel::addDirectory(const QString &path, int depthLeft)
         return;
     {
         QMutexLocker l(&m_mutex);
-        auto it = m_toIndex.begin();
-        auto end = m_toIndex.end();
-        while (it != end) {
+        for (auto it = m_toIndex.begin(); it != m_toIndex.end();) {
             if (it->path.startsWith(path)) {
                 if (it->path.size() == path.size())
                     return;
@@ -227,6 +243,7 @@ void QQmlCodeModel::addDirectory(const QString &path, int depthLeft)
                 }
             } else if (path.startsWith(it->path) && path.at(it->path.size()) == u'/')
                 return;
+            ++it;
         }
         m_toIndex.append({ path, depthLeft });
     }
@@ -329,17 +346,19 @@ bool QQmlCodeModel::indexSome()
         m_toIndex.removeLast();
     }
     bool hasMore = false;
-    auto guard = qScopeGuard([this, &hasMore]() {
-        QMutexLocker l(&m_mutex);
-        if (m_toIndex.isEmpty()) {
-            if (--m_nIndexInProgress == 0)
-                indexEnd();
-            hasMore = false;
-        } else {
-            hasMore = true;
-        }
-    });
-    indexDirectory(toIndex.path, toIndex.leftDepth);
+    {
+        auto guard = qScopeGuard([this, &hasMore]() {
+            QMutexLocker l(&m_mutex);
+            if (m_toIndex.isEmpty()) {
+                if (--m_nIndexInProgress == 0)
+                    indexEnd();
+                hasMore = false;
+            } else {
+                hasMore = true;
+            }
+        });
+        indexDirectory(toIndex.path, toIndex.leftDepth);
+    }
     return hasMore;
 }
 

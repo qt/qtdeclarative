@@ -263,7 +263,7 @@ void tst_Qmlls::didOpenTextDocument()
 void tst_Qmlls::cleanupTestCase()
 {
     m_server.closeWriteChannel();
-    QTRY_COMPARE(m_server.state(), QProcess::NotRunning);
+    QTRY_COMPARE_WITH_TIMEOUT(m_server.state(), QProcess::NotRunning, 10000);
     QCOMPARE(m_server.exitStatus(), QProcess::NormalExit);
 }
 
