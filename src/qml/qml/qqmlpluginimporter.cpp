@@ -76,6 +76,11 @@ static QVector<QStaticPlugin> makePlugins()
         if (iid == QLatin1String(QQmlEngineExtensionInterface_iid)
                 || iid == QLatin1String(QQmlExtensionInterface_iid)
                 || iid == QLatin1String(QQmlExtensionInterface_iid_old)) {
+            if (Q_UNLIKELY(iid == QLatin1String(QQmlExtensionInterface_iid_old))) {
+                qWarning()
+                        << "Found plugin with old IID, this will be unsupported in upcoming Qt releases:"
+                        << plugin.metaData();
+            }
             plugins.append(plugin);
         }
     }
