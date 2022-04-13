@@ -25,6 +25,7 @@
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 #include <QtTest/QtTest>
 
 #include "qv4datacollector.h"
@@ -289,9 +290,12 @@ public:
     }
 };
 
-class tst_qv4debugger : public QObject
+class tst_qv4debugger : public QQmlDataTest
 {
     Q_OBJECT
+
+public:
+    tst_qv4debugger();
 
 private slots:
     void init();
@@ -507,24 +511,17 @@ void tst_qv4debugger::conditionalBreakPointInQml()
     debuggerAgent->addDebugger(v4Debugger);
     debuggerAgent->moveToThread(debugThread.data());
 
-    QQmlComponent component(&engine);
-    component.setData("import QtQml 2.0\n"
-                      "QtObject {\n"
-                      "    id: root\n"
-                      "    property int foo: 42\n"
-                      "    property bool success: false\n"
-                      "    Component.onCompleted: {\n"
-                      "        success = true;\n" // breakpoint here
-                      "    }\n"
-                      "}\n", QUrl("test.qml"));
+    const QString qmlFileName("conditionalBreakPointInQml.qml");
+    const QString qmlFilePath(testFile(qmlFileName));
+    QQmlComponent component(&engine, qmlFilePath);
 
-    v4Debugger->addBreakPoint("test.qml", 7, "root.foo == 42");
+    v4Debugger->addBreakPoint(qmlFileName, 7, "root.foo == 42");
 
     QScopedPointer<QObject> obj(component.create());
     QCOMPARE(obj->property("success").toBool(), true);
 
     QCOMPARE(debuggerAgent->m_statesWhenPaused.count(), 1);
-    QCOMPARE(debuggerAgent->m_statesWhenPaused.at(0).fileName, QStringLiteral("test.qml"));
+    QCOMPARE(debuggerAgent->m_statesWhenPaused.at(0).fileName, qmlFileName);
     QCOMPARE(debuggerAgent->m_statesWhenPaused.at(0).lineNumber, 7);
 
     debugThread->quit();
@@ -943,6 +940,8 @@ void tst_qv4debugger::signalParameters()
     QCOMPARE(obj->property("resultCallbackInternal").toString(), QLatin1String("something"));
     QCOMPARE(obj->property("resultCallbackExternal").toString(), QLatin1String("unset"));
 }
+
+tst_qv4debugger::tst_qv4debugger() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
 
 QTEST_MAIN(tst_qv4debugger)
 
