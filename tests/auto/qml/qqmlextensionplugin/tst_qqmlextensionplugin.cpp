@@ -76,7 +76,17 @@ private Q_SLOTS:
 void tst_qqmlextensionplugin::iidCheck_data()
 {
     QList<QString> files;
+    // On Android the plugins are located in the APK's libs subdir. They can
+    // be distinguished by the name, which starts from "libqml_" and ends with
+    // "plugin_${ARCH}.so"
+#ifdef Q_OS_ANDROID
+    const QStringList libraryPaths = QCoreApplication::libraryPaths();
+    QVERIFY(!libraryPaths.isEmpty());
+    const QLatin1String nameFilters("libqml_*plugin_" ANDROID_ARCH "*");
+    for (QDirIterator it(libraryPaths.front(), { nameFilters }, QDir::Files); it.hasNext(); ) {
+#else
     for (QDirIterator it(QLibraryInfo::path(QLibraryInfo::QmlImportsPath), QDirIterator::Subdirectories); it.hasNext(); ) {
+#endif
         QString file = it.next();
 #if defined(Q_OS_DARWIN)
         if (file.contains(QLatin1String(".dSYM/")))
