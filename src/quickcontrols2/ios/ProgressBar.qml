@@ -78,9 +78,6 @@ T.ProgressBar {
                 duration: 900
                 easing.type: Easing.Linear
                 loops: Animation.Infinite
-                // TODO: workaround for QTBUG-38932; remove once that is fixed
-                onFromChanged: restart()
-                onToChanged: restart()
             }
         }
     }

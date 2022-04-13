@@ -131,8 +131,6 @@ void tst_Sanity::qmllint()
 {
     QFETCH(QString, control);
     QFETCH(QString, filePath);
-    if (control == "ios/ProgressBar.qml")
-        QEXPECT_FAIL("", "ios/ProgressBar.qml uses JS as workaround for  QTBUG-38932.", Abort);
 
     QJsonArray output;
     bool success =
