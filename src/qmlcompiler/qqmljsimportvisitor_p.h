@@ -103,6 +103,7 @@ protected:
     bool visit(QQmlJS::AST::UiInlineComponent *) override;
     void endVisit(QQmlJS::AST::UiInlineComponent *) override;
     bool visit(QQmlJS::AST::UiPublicMember *) override;
+    void endVisit(QQmlJS::AST::UiPublicMember *) override;
     bool visit(QQmlJS::AST::UiRequired *required) override;
     bool visit(QQmlJS::AST::UiScriptBinding *) override;
     void endVisit(QQmlJS::AST::UiScriptBinding *) override;

@@ -1377,15 +1377,35 @@ bool QQmlJSImportVisitor::visit(UiPublicMember *publicMember)
 #endif
             m_currentScope->setPropertyLocallyRequired(prop.propertyName(), true);
 
+        LiteralOrScriptParseResult parseResult = LiteralOrScriptParseResult::Invalid;
         // if property is an alias, initialization expression is not a binding
-        if (!isAlias)
-            parseLiteralOrScriptBinding(publicMember->name.toString(), publicMember->statement);
+        if (!isAlias) {
+            parseResult = parseLiteralOrScriptBinding(publicMember->name.toString(),
+                                                      publicMember->statement);
+        }
+
+        // however, if we have a property with a script binding assigned to it,
+        // we have to create a new scope
+        if (parseResult == LiteralOrScriptParseResult::Script) {
+            Q_ASSERT(!m_savedBindingOuterScope); // automatically true due to grammar
+            m_savedBindingOuterScope = m_currentScope;
+            enterEnvironment(QQmlJSScope::JSFunctionScope, QStringLiteral("binding"),
+                             publicMember->statement->firstSourceLocation());
+        }
 
         break;
     }
     }
 
     return true;
+}
+
+void QQmlJSImportVisitor::endVisit(UiPublicMember *)
+{
+    if (m_savedBindingOuterScope) {
+        m_currentScope = m_savedBindingOuterScope;
+        m_savedBindingOuterScope = {};
+    }
 }
 
 bool QQmlJSImportVisitor::visit(UiRequired *required)
@@ -1681,6 +1701,7 @@ inline void createNonUniqueScopeBinding(QQmlJSScope::Ptr &scope, const QString &
 
 bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
 {
+    Q_ASSERT(!m_savedBindingOuterScope); // automatically true due to grammar
     m_savedBindingOuterScope = m_currentScope;
     const auto id = scriptBinding->qualifiedId;
     if (!id->next && id->name == QLatin1String("id")) {
@@ -1771,11 +1792,8 @@ bool QQmlJSImportVisitor::visit(UiScriptBinding *scriptBinding)
         leaveEnvironment();
     }
 
-    const auto *statement = cast<ExpressionStatement *>(scriptBinding->statement);
-    if (!statement || !statement->expression->asFunctionDefinition()) {
-        enterEnvironment(QQmlJSScope::JSFunctionScope, QStringLiteral("binding"),
-                         scriptBinding->statement->firstSourceLocation());
-    }
+    enterEnvironment(QQmlJSScope::JSFunctionScope, QStringLiteral("binding"),
+                     scriptBinding->statement->firstSourceLocation());
 
     return true;
 }

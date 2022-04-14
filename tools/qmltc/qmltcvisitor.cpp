@@ -218,9 +218,10 @@ bool QmltcVisitor::visit(QQmlJS::AST::UiPublicMember *publicMember)
         // traversal
 
         const QString notifyName = name + u"Changed"_qs;
-        // also check that notify is already a method of m_currentScope
+        // also check that notify is already a method of the scope
         {
-            const auto methods = m_currentScope->ownMethods(notifyName);
+            auto owningScope = m_savedBindingOuterScope ? m_savedBindingOuterScope : m_currentScope;
+            const auto methods = owningScope->ownMethods(notifyName);
             if (methods.size() != 1) {
                 const QString errorString =
                         methods.isEmpty() ? u"no signal"_qs : u"too many signals"_qs;
