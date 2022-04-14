@@ -1898,7 +1898,7 @@ void tst_qquickanimations::opacityAnimationFromZero()
 
 void tst_qquickanimations::alwaysRunToEndInSequentialAnimationBug()
 {
-    QQuickView view(QUrl::fromLocalFile("data/alwaysRunToEndInSequentialAnimationBug.qml"));
+    QQuickView view(testFileUrl("alwaysRunToEndInSequentialAnimationBug.qml"));
     view.show();
 
     QVERIFY(QTest::qWaitForWindowExposed(&view));
@@ -2000,7 +2000,7 @@ void tst_qquickanimations::alwaysRunToEndInSequentialAnimationBug()
 
 void tst_qquickanimations::cleanupWhenRenderThreadStops()
 {
-    QQuickView view(QUrl::fromLocalFile("data/cleanupWhenRenderThreadStops.qml"));
+    QQuickView view(testFileUrl("cleanupWhenRenderThreadStops.qml"));
     view.show();
     view.setPersistentGraphics(false);
     view.setPersistentSceneGraph(false);
