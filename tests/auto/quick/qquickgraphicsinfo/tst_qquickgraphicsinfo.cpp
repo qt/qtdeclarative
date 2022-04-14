@@ -54,7 +54,7 @@ tst_QQuickGraphicsInfo::tst_QQuickGraphicsInfo()
 void tst_QQuickGraphicsInfo::testProperties()
 {
     QQuickView view;
-    view.setSource(QUrl("data/basic.qml"));
+    view.setSource(testFileUrl("basic.qml"));
 
     view.show();
     QVERIFY(QTest::qWaitForWindowExposed(&view));
