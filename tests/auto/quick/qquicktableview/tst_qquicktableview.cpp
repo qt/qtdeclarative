@@ -73,7 +73,7 @@ Q_DECLARE_METATYPE(QMarginsF);
     view->show(); \
     QVERIFY(QTest::qWaitForWindowActive(view)); \
     auto loader = view->rootObject()->property("loader").value<QQuickLoader *>(); \
-    loader->setSource(QUrl::fromLocalFile("data/" fileName)); \
+    loader->setSource(testFileUrl(fileName)); \
     QTRY_VERIFY(loader->item()); \
     QCOMPARE(loader->status(), QQuickLoader::Status::Ready); \
     GET_QML_TABLEVIEW(tableView)
