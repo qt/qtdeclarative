@@ -260,6 +260,19 @@ void tst_QQuickApplicationWindow::defaultFocus()
     QVERIFY(item->hasActiveFocus());
 }
 
+static QSizeF getExpectedElementSize()
+{
+#ifndef Q_OS_ANDROID
+    // These values are taken from the QML file.
+    return QSizeF(400.0, 400.0);
+#else
+    // On Android we have to query screen parameters at runtime, because on
+    // Android the Quick element will take the whole screen size.
+    const QSize size = QGuiApplication::primaryScreen()->availableSize();
+    return QSizeF(size);
+#endif
+}
+
 void tst_QQuickApplicationWindow::implicitFill()
 {
     QQmlEngine engine;
@@ -278,17 +291,19 @@ void tst_QQuickApplicationWindow::implicitFill()
     window->show();
     QVERIFY(QTest::qWaitForWindowActive(window));
 
+    const QSizeF expectedSize = getExpectedElementSize();
+
     QQuickItem *stackView = window->property("stackView").value<QQuickItem*>();
     QVERIFY(stackView);
-    QCOMPARE(stackView->width(), 400.0);
-    QCOMPARE(stackView->height(), 400.0);
+    QCOMPARE(stackView->width(), expectedSize.width());
+    QCOMPARE(stackView->height(), expectedSize.height());
 
     QQuickItem *nextItem = window->property("nextItem").value<QQuickItem*>();
     QVERIFY(nextItem);
 
     QVERIFY(QMetaObject::invokeMethod(window, "pushNextItem"));
-    QCOMPARE(nextItem->width(), 400.0);
-    QCOMPARE(nextItem->height(), 400.0);
+    QCOMPARE(nextItem->width(), expectedSize.width());
+    QCOMPARE(nextItem->height(), expectedSize.height());
 }
 
 void tst_QQuickApplicationWindow::attachedProperties()
@@ -519,10 +534,12 @@ void tst_QQuickApplicationWindow::font()
 
     QFont font = window->font();
 
+    const QSizeF expectedSize = getExpectedElementSize();
+
     QQuickControl *mainItem = window->property("mainItem").value<QQuickControl*>();
     QVERIFY(mainItem);
-    QCOMPARE(mainItem->width(), 400.0);
-    QCOMPARE(mainItem->height(), 400.0);
+    QCOMPARE(mainItem->width(), expectedSize.width());
+    QCOMPARE(mainItem->height(), expectedSize.height());
     QCOMPARE(mainItem->font(), font);
 
     QQuickControl *item2 = mainItem->property("item_2").value<QQuickControl*>();
@@ -598,10 +615,12 @@ void tst_QQuickApplicationWindow::locale()
 
     QLocale l = window->locale();
 
+    const QSizeF expectedSize = getExpectedElementSize();
+
     QQuickControl *mainItem = window->property("mainItem").value<QQuickControl*>();
     QVERIFY(mainItem);
-    QCOMPARE(mainItem->width(), 400.0);
-    QCOMPARE(mainItem->height(), 400.0);
+    QCOMPARE(mainItem->width(), expectedSize.width());
+    QCOMPARE(mainItem->height(), expectedSize.height());
     QCOMPARE(mainItem->locale(), l);
 
     QQuickControl *item2 = mainItem->property("item_2").value<QQuickControl*>();
@@ -690,6 +709,9 @@ void tst_QQuickApplicationWindow::activeFocusControl()
 
 void tst_QQuickApplicationWindow::focusAfterPopupClosed()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("This test crashes in Android emulator because of GLES issues (QTBUG-100991)");
+#endif
     QQmlEngine engine;
     QQmlComponent component(&engine);
     component.loadUrl(testFileUrl("focusAfterPopupClosed.qml"));
