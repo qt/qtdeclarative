@@ -104,7 +104,7 @@ struct QQmlJSUtils
     }
 
     static std::optional<FixSuggestion> didYouMean(const QString &userInput,
-                                                   const QStringList &candidates,
+                                                   QStringList candidates,
                                                    QQmlJS::SourceLocation location);
 };
 

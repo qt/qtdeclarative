@@ -31,11 +31,22 @@
 #include <algorithm>
 
 std::optional<FixSuggestion> QQmlJSUtils::didYouMean(const QString &userInput,
-                                                     const QStringList &candidates,
+                                                     QStringList candidates,
                                                      QQmlJS::SourceLocation location)
 {
     QString shortestDistanceWord;
     int shortestDistance = userInput.length();
+
+    // Most of the time the candidates are keys() from QHash, which means that
+    // running this function in the seemingly same setup might yield different
+    // best cadidate (e.g. imagine a typo 'thing' with candidates 'thingA' vs
+    // 'thingB'). This is especially flaky in e.g. test environment where the
+    // results may differ (even when the global hash seed is fixed!) when
+    // running one test vs the whole test suite (recall platform-dependent
+    // QSKIPs). There could be user-visible side effects as well, so just sort
+    // the candidates to guarantee consistent results
+    std::sort(candidates.begin(), candidates.end());
+
     for (const QString &candidate : candidates) {
         /*
          * Calculate the distance between the userInput and candidate using Damerau–Levenshtein
