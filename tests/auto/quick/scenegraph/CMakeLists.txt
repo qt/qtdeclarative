@@ -4,11 +4,15 @@
 ## tst_scenegraph Test:
 #####################################################################
 
+# Collect test data
+file(GLOB_RECURSE test_data_glob
+        RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+        data/*)
+list(APPEND test_data ${test_data_glob})
+
 qt_internal_add_test(tst_scenegraph
     SOURCES
         tst_scenegraph.cpp
-    DEFINES
-        QT_QMLTEST_DATADIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/data\\\"
     PUBLIC_LIBRARIES
         Qt::CorePrivate
         Qt::Gui
@@ -16,6 +20,7 @@ qt_internal_add_test(tst_scenegraph
         Qt::QmlPrivate
         Qt::QuickPrivate
         Qt::QuickTestUtilsPrivate
+    TESTDATA ${test_data}
 )
 
 #### Keys ignored in scope 1:.:.:scenegraph.pro:<TRUE>:
