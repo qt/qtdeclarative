@@ -38,7 +38,7 @@ void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
                                                    const QQmlJSScope::ConstPtr &type,
                                                    const QQmlJSMetaProperty &p,
                                                    const QString &value, const QString &accessor,
-                                                   bool constructQVariant)
+                                                   bool constructFromQObject)
 {
     Q_ASSERT(block);
     Q_ASSERT(p.isValid());
@@ -49,7 +49,11 @@ void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
     if (type->hasOwnProperty(p.propertyName())) {
         Q_ASSERT(!p.isPrivate());
         // this object is compiled, so just assignment should work fine
-        *block << u"%1->m_%2 = %3;"_qs.arg(accessor, propertyName, value);
+        auto [prologue, wrappedValue, epilogue] =
+                QmltcCodeGenerator::wrap_mismatchingTypeConversion(p, value);
+        *block += prologue;
+        *block << u"%1->m_%2 = %3;"_qs.arg(accessor, propertyName, wrappedValue);
+        *block += epilogue;
     } else if (QString propertySetter = p.write(); !propertySetter.isEmpty()) {
         // there's a WRITE function
         auto [prologue, wrappedValue, epilogue] =
@@ -62,7 +66,7 @@ void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
         // this property is weird, fallback to `setProperty`
         *block << u"{ // couldn't find property setter, so using QObject::setProperty()"_qs;
         QString val = value;
-        if (constructQVariant) {
+        if (constructFromQObject) {
             const QString variantName = u"var_" + propertyName;
             *block << u"QVariant " + variantName + u";";
             *block << variantName + u".setValue(" + val + u");";
@@ -168,6 +172,14 @@ QmltcCodeGenerator::wrap_mismatchingTypeConversion(const QQmlJSMetaProperty &p, 
         prologue << variantName + u".setValue(" + value + u");";
         epilogue << u"}"_qs;
         value = u"std::move(" + variantName + u")";
+    } else if (isDerivedFromBuiltin(propType, u"QJSValue"_qs)) {
+        const QString jsvalueName = u"jsvalue_" + p.propertyName();
+        prologue << u"{ // accepts QJSValue"_qs;
+        // Note: do not assume we have the engine, acquire it from `this`
+        prologue << u"auto e = qmlEngine(this);"_qs;
+        prologue << u"QJSValue " + jsvalueName + u" = e->toScriptValue(" + value + u");";
+        epilogue << u"}"_qs;
+        value = u"std::move(" + jsvalueName + u")";
     }
     return { prologue, value, epilogue };
 }

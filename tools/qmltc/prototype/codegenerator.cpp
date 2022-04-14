@@ -174,11 +174,10 @@ CodeGenerator::toOrderedSequence(typename QmlIR::PoolList<QmlIR::Binding>::Itera
 static QStringList generate_assignToSpecialAlias(const QQmlJSScope::ConstPtr &type,
                                                  const QString &propertyName,
                                                  const QQmlJSMetaProperty &p, const QString &value,
-                                                 const QString &accessor, bool constructQVariant)
+                                                 const QString &accessor)
 {
     Q_UNUSED(type);
     Q_UNUSED(propertyName);
-    Q_UNUSED(constructQVariant);
 
     Q_ASSERT(p.isValid());
     Q_ASSERT(!p.isList()); // NB: this code does not handle list properties
@@ -595,7 +594,7 @@ void CodeGenerator::compileBinding(QmltcType &current, const QmlIR::Binding &bin
     }
 
     const auto addPropertyLine = [&](const QString &propertyName, const QQmlJSMetaProperty &p,
-                                     const QString &value, bool constructQVariant = false) {
+                                     const QString &value, bool constructFromQObject = false) {
         // TODO: there mustn't be this special case. instead, alias resolution
         // must be done in QQmlJSImportVisitor subclass, that would handle this
         // mess (see resolveValidateOrSkipAlias() in qml2cppdefaultpasses.cpp)
@@ -604,11 +603,12 @@ void CodeGenerator::compileBinding(QmltcType &current, const QmlIR::Binding &bin
                             + object.type->internalName()
                             + u"' which is a QML type compiled to C++. The assignment is special"
                             + u"in this case";
-            current.endInit.body += generate_assignToSpecialAlias(
-                    object.type, propertyName, p, value, accessor.name, constructQVariant);
+            current.endInit.body += generate_assignToSpecialAlias(object.type, propertyName, p,
+                                                                  value, accessor.name);
         } else {
             QmltcCodeGenerator::generate_assignToProperty(&current.endInit.body, object.type, p,
-                value, accessor.name, constructQVariant);
+                                                          value, accessor.name,
+                                                          constructFromQObject);
         }
     };
 
@@ -728,7 +728,7 @@ void CodeGenerator::compileBinding(QmltcType &current, const QmlIR::Binding &bin
                 const QString refName = u"listref_" + propertyName;
                 current.endInit.body << refName + u".append(" + value + u");";
             } else {
-                addPropertyLine(propertyName, p, value, /* through QVariant = */ true);
+                addPropertyLine(propertyName, p, value, /* fromQObject = */ true);
             }
         };
 

@@ -44,6 +44,8 @@
 #include "deferredproperties_group.h"
 #include "deferredproperties_attached.h"
 #include "deferredproperties_complex.h"
+#include "gradients.h"
+#include "qjsvalueassignments.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -659,6 +661,40 @@ void tst_qmltc::deferredProperties()
         QCOMPARE(attached->getAttachedFormula(), 20);
         QCOMPARE(attached->getDeferred(), 100);
     }
+}
+
+// QTBUG-102560
+void tst_qmltc::gradients()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(gradients) created(&e);
+    QQmlListReference children(&created, "data");
+    QCOMPARE(children.size(), 1);
+    QQuickRectangle *rect = qobject_cast<QQuickRectangle *>(children.at(0));
+    QVERIFY(rect);
+    QVERIFY(rect->gradient().isQObject());
+
+    QQuickGradient *gradient = qobject_cast<QQuickGradient *>(rect->gradient().toQObject());
+    QVERIFY(gradient);
+    QQmlListProperty<QQuickGradientStop> stops = gradient->stops();
+    QCOMPARE(stops.count(&stops), 2);
+    QQuickGradientStop *stop0 = stops.at(&stops, 0);
+    QVERIFY(stop0);
+    QQuickGradientStop *stop1 = stops.at(&stops, 1);
+    QVERIFY(stop1);
+
+    QCOMPARE(stop0->position(), 0.0);
+    QCOMPARE(stop1->position(), 1.0);
+    QCOMPARE(stop0->color(), QColor::fromString("black"));
+    QCOMPARE(stop1->color(), QColor::fromString("yellow"));
+}
+
+void tst_qmltc::jsvalueAssignments()
+{
+    QQmlEngine e;
+    PREPEND_NAMESPACE(qjsvalueAssignments) created(&e);
+    QVERIFY(created.jsvalue().isBool());
+    QVERIFY(created.jsvalue().toBool());
 }
 
 void tst_qmltc::signalHandlers()

@@ -24,6 +24,8 @@ set(qml_sources
     importNamespace.qml
     ComponentType.qml
     componentTypes.qml
+    gradients.qml
+    qjsvalueAssignments.qml
 
     signalHandlers.qml
     javaScriptFunctions.qml

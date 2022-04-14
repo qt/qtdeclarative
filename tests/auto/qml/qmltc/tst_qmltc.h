@@ -56,6 +56,8 @@ private slots:
     void importNamespace();
     void componentTypes();
     void deferredProperties();
+    void gradients(); // QTBUG-102560
+    void jsvalueAssignments();
 
     void signalHandlers();
     void jsFunctions();
