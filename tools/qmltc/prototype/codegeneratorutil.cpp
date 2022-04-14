@@ -63,12 +63,15 @@ wrapIfMismatchingType(const QQmlJSMetaProperty &p, QString value)
         prologue << variantName + u".setValue(" + value + u");";
         epilogue << u"}"_qs;
         value = u"std::move(" + variantName + u")";
+    } else if (isDerivedFromBuiltin(propType, u"QJSValue"_qs)) {
+        const QString jsvalueName = u"jsvalue_" + p.propertyName();
+        prologue << u"{ // accepts QJSValue"_qs;
+        // Note: do not assume we have the engine, acquire it from `this`
+        prologue << u"auto e = qmlEngine(this);"_qs;
+        prologue << u"QJSValue " + jsvalueName + u" = e->toScriptValue(" + value + u");";
+        epilogue << u"}"_qs;
+        value = u"std::move(" + jsvalueName + u")";
     }
-    /*else if (isDerivedFromBuiltin(propType, u"QQmlComponent"_qs)) {
-        // assume value can always be converted to "QObject *"
-        prologue << u"// accepts QQmlComponent"_qs;
-        value = u"new QQmlComponent(" + value + u")";
-    }*/
     return { prologue, value, epilogue };
 }
 

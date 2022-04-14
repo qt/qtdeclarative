@@ -34,6 +34,7 @@
 #include <QtCore/qstring.h>
 #include <QtCore/qvariant.h>
 #include <QtQml/qqmlregistration.h>
+#include <QtQml/qjsvalue.h>
 
 class TypeWithProperties : public QObject
 {
@@ -45,10 +46,14 @@ class TypeWithProperties : public QObject
     Q_PROPERTY(QVariant c READ c WRITE setC NOTIFY cWeirdSignal)
     Q_PROPERTY(int d READ d WRITE setD NOTIFY dSignal BINDABLE bindableD)
 
+    // special
+    Q_PROPERTY(QJSValue jsvalue READ jsvalue WRITE setJsValue BINDABLE bindableJsValue)
+
     QProperty<double> m_a { 0.0 };
     QString m_b;
     QProperty<QVariant> m_c;
     QProperty<int> m_d;
+    QProperty<QJSValue> m_jsvalue;
 
 public:
     TypeWithProperties(QObject *parent = nullptr) : QObject(parent) { }
@@ -58,13 +63,18 @@ public:
     QVariant c() const;
     int d() const;
 
+    QJSValue jsvalue() const;
+
     void setA(double);
     void setB(const QString &);
     void setC(const QVariant &);
     void setD(int);
 
+    void setJsValue(const QJSValue &);
+
     QBindable<double> bindableA();
     QBindable<int> bindableD();
+    QBindable<QJSValue> bindableJsValue();
 
 Q_SIGNALS:
     void bChanged();

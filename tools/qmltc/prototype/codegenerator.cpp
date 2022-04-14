@@ -1217,7 +1217,7 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
     // Q_ASSERT(propertyType); // TODO: doesn't work with signals
 
     const auto addPropertyLine = [&](const QString &propertyName, const QQmlJSMetaProperty &p,
-                                     const QString &value, bool constructQVariant = false) {
+                                     const QString &value, bool constructFromQObject = false) {
         // TODO: there mustn't be this special case. instead, alias resolution
         // must be done in QQmlJSImportVisitor subclass, that would handle this
         // mess (see resolveValidateOrSkipAlias() in qml2cppdefaultpasses.cpp)
@@ -1227,10 +1227,10 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
                             + u"' which is a QML type compiled to C++. The assignment is special "
                               u"in this case";
             current.endInit.body += CodeGeneratorUtility::generate_assignToSpecialAlias(
-                    object.type, propertyName, p, value, accessor.name, constructQVariant);
+                    object.type, propertyName, p, value, accessor.name, constructFromQObject);
         } else {
             current.endInit.body += CodeGeneratorUtility::generate_assignToProperty(
-                    object.type, propertyName, p, value, accessor.name, constructQVariant);
+                    object.type, propertyName, p, value, accessor.name, constructFromQObject);
         }
     };
 
@@ -1349,7 +1349,7 @@ void CodeGenerator::compileBinding(QQmlJSAotObject &current, const QmlIR::Bindin
                 const QString refName = u"listref_" + propertyName;
                 current.endInit.body << refName + u".append(" + value + u");";
             } else {
-                addPropertyLine(propertyName, p, value, /* through QVariant = */ true);
+                addPropertyLine(propertyName, p, value, /* fromQObject = */ true);
             }
         };
 

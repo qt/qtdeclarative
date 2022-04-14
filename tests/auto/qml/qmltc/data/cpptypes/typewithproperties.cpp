@@ -45,6 +45,11 @@ int TypeWithProperties::d() const
     return m_d;
 }
 
+QJSValue TypeWithProperties::jsvalue() const
+{
+    return m_jsvalue;
+}
+
 void TypeWithProperties::setA(double a_)
 {
     m_a = a_;
@@ -70,6 +75,10 @@ void TypeWithProperties::setD(int d_)
         Q_EMIT dSignal(u"d changed"_qs, d_);
     }
 }
+void TypeWithProperties::setJsValue(const QJSValue &value)
+{
+    m_jsvalue = value;
+}
 
 QBindable<double> TypeWithProperties::bindableA()
 {
@@ -78,4 +87,8 @@ QBindable<double> TypeWithProperties::bindableA()
 QBindable<int> TypeWithProperties::bindableD()
 {
     return QBindable<int>(&m_d);
+}
+QBindable<QJSValue> TypeWithProperties::bindableJsValue()
+{
+    return QBindable<QJSValue>(&m_jsvalue);
 }
