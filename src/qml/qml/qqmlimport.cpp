@@ -1631,6 +1631,15 @@ QQmlImportDatabase::QQmlImportDatabase(QQmlEngine *e)
 /*!
     \internal
 */
+void QQmlImportDatabase::setPluginPathList(const QStringList &paths)
+{
+    qCDebug(lcQmlImport) << "setPluginPathList:" << paths;
+    filePluginPath = paths;
+}
+
+/*!
+    \internal
+*/
 void QQmlImportDatabase::addPluginPath(const QString& path)
 {
     qCDebug(lcQmlImport) << "addPluginPath:" << path;

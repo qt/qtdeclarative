@@ -325,11 +325,7 @@ public:
     void addImportPath(const QString& dir);
 
     QStringList pluginPathList() const { return filePluginPath; }
-    void setPluginPathList(const QStringList &paths)
-    {
-        qCDebug(lcQmlImport) << "setPluginPathList:" << paths;
-        filePluginPath = paths;
-    }
+    void setPluginPathList(const QStringList &paths);
 
     void addPluginPath(const QString& path);
 
