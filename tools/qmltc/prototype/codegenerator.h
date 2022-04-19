@@ -167,8 +167,6 @@ private:
 public:
     void compileAlias(QmltcType &current, const QQmlJSMetaProperty &alias,
                       const QQmlJSScope::ConstPtr &owner);
-    void compileMethod(QmltcType &current, const QQmlJSMetaMethod &m, const QmlIR::Function *f,
-                       const CodeGenObject &object);
 
     // helper structure that holds the information necessary for most bindings,
     // such as accessor name, which is used to reference the properties like:

@@ -349,18 +349,9 @@ void QmltcCompiler::compileTypeElements(QmltcType &current, const QQmlJSScope::C
         }
     }
 
-    QHash<QString, const QmlIR::Function *> irFunctionsByName;
-    std::for_each(object.irObject->functionsBegin(), object.irObject->functionsEnd(),
-                  [&](const QmlIR::Function &function) {
-                      irFunctionsByName.insert(m_prototypeCodegen->stringAt(function.nameIndex),
-                                               std::addressof(function));
-                  });
     const auto methods = type->ownMethods();
-    current.functions.reserve(methods.size() + properties.size() * 3); // sensible default
-    for (auto it = methods.cbegin(); it != methods.cend(); ++it) {
-        const QmlIR::Function *irFunction = irFunctionsByName.value(it.key(), nullptr);
-        m_prototypeCodegen->compileMethod(current, it.value(), irFunction, object);
-    }
+    for (const QQmlJSMetaMethod &m : methods)
+        compileMethod(current, m, type);
 
     {
         const auto sortedBindings = CodeGenerator::toOrderedSequence(
@@ -415,7 +406,8 @@ compileMethodParameters(const QStringList &names,
     return parameters;
 }
 
-void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m)
+void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
+                                  const QQmlJSScope::ConstPtr &owner)
 {
     const auto figureReturnType = [](const QQmlJSMetaMethod &m) {
         const bool isVoidMethod =
@@ -439,17 +431,13 @@ void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m)
 
     QStringList code;
     if (methodType != QQmlJSMetaMethod::Signal) {
-        // just put "unimplemented" for now
-        for (const QmltcVariable &param : compiledParams)
-            code << u"Q_UNUSED(%1);"_qs.arg(param.name);
-        code << u"Q_UNIMPLEMENTED();"_qs;
-
-        if (returnType != u"void"_qs) {
-            code << u"return %1;"_qs.arg(m.returnType()->accessSemantics()
-                                                         == QQmlJSScope::AccessSemantics::Reference
-                                                 ? u"nullptr"_qs
-                                                 : returnType + u"{}");
-        }
+        const qsizetype index =
+                static_cast<qsizetype>(owner->ownRuntimeFunctionIndex(m.jsFunctionIndex()));
+        Q_ASSERT(index >= 0);
+        QmltcCodeGenerator urlGenerator { m_url, m_visitor };
+        QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
+                &code, urlGenerator.urlMethodName() + u"()", index, u"this"_qs, returnType,
+                compiledParams);
     }
 
     QmltcMethod compiled {};
@@ -459,8 +447,12 @@ void QmltcCompiler::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m)
     compiled.body = std::move(code);
     compiled.type = methodType;
     compiled.access = m.access();
-    if (methodType == QQmlJSMetaMethod::Method)
+    if (methodType != QQmlJSMetaMethod::Signal) {
         compiled.declarationPrefixes << u"Q_INVOKABLE"_qs;
+        compiled.userVisible = m.access() == QQmlJSMetaMethod::Public;
+    } else {
+        compiled.userVisible = !m.isImplicitQmlPropertyChangeSignal();
+    }
     current.functions.emplaceBack(compiled);
 }
 

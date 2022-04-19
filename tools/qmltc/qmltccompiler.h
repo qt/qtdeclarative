@@ -75,7 +75,8 @@ private:
                 std::function<void(QmltcType &, const QQmlJSScope::ConstPtr &)> compileElements);
     void compileTypeElements(QmltcType &current, const QQmlJSScope::ConstPtr &type);
     void compileEnum(QmltcType &current, const QQmlJSMetaEnum &e);
-    void compileMethod(QmltcType &current, const QQmlJSMetaMethod &m);
+    void compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
+                       const QQmlJSScope::ConstPtr &owner);
     void compileProperty(QmltcType &current, const QQmlJSMetaProperty &p,
                          const QQmlJSScope::ConstPtr &owner);
 

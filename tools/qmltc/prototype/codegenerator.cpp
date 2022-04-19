@@ -547,46 +547,6 @@ void CodeGenerator::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
     }
 }
 
-void CodeGenerator::compileMethod(QmltcType &current, const QQmlJSMetaMethod &m,
-                                  const QmlIR::Function *f, const CodeGenObject &object)
-{
-    Q_UNUSED(object);
-    const QString returnType = figureReturnType(m);
-
-    const auto paramNames = m.parameterNames();
-    const auto paramTypes = m.parameterTypes();
-    Q_ASSERT(paramNames.size() == paramTypes.size());
-    const QList<QmltcVariable> paramList = compileMethodParameters(paramNames, paramTypes);
-
-    const auto methodType = QQmlJSMetaMethod::Type(m.methodType());
-
-    QStringList code;
-    // the function body code only makes sense if the method is not a signal -
-    // and there is a corresponding QmlIR::Function
-    if (f) {
-        Q_ASSERT(methodType != QQmlJSMetaMethod::Signal);
-        QmltcCodeGenerator::generate_callExecuteRuntimeFunction(
-                &code, m_urlMethodName + u"()",
-                relativeToAbsoluteRuntimeIndex(object.irObject, f->index), u"this"_qs,
-                returnType, paramList);
-    }
-
-    QmltcMethod compiled {};
-    compiled.returnType = returnType;
-    compiled.name = m.methodName();
-    compiled.parameterList = std::move(paramList);
-    compiled.body = std::move(code);
-    compiled.type = methodType;
-    compiled.access = m.access();
-    if (methodType != QQmlJSMetaMethod::Signal) {
-        compiled.declarationPrefixes << u"Q_INVOKABLE"_qs;
-        compiled.userVisible = m.access() == QQmlJSMetaMethod::Public;
-    } else {
-        compiled.userVisible = !m.isImplicitQmlPropertyChangeSignal();
-    }
-    current.functions.emplaceBack(compiled);
-}
-
 template<typename Iterator>
 static QString getPropertyOrAliasNameFromIr(const QmlIR::Document *doc, Iterator first, int pos)
 {
