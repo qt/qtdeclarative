@@ -329,9 +329,26 @@ class KillerThread : public QThread
     Q_OBJECT
 protected:
     void run() override {
-        sleep(3);
-        qFatal("Either the GUI or the render thread is stuck in an infinite loop.");
+        QMutexLocker lock(&abortMutex);
+        if (!aborted)
+            abortWaitCondition.wait(&abortMutex, 3000);
+
+        if (!aborted)
+            qFatal("Either the GUI or the render thread is stuck in an infinite loop.");
     }
+
+public:
+    void abort()
+    {
+        QMutexLocker lock(&abortMutex);
+        aborted = true;
+        abortWaitCondition.wakeAll();
+    }
+
+private:
+    QMutex abortMutex;
+    QWaitCondition abortWaitCondition;
+    bool aborted = false;
 };
 
 // Regression test for QTBUG-53937
@@ -356,7 +373,7 @@ void tst_qquickanimatedsprite::test_changeSourceToSmallerImgKeepingBigFrameSize(
 
     // If we reach this point it's because we didn't hit QTBUG-53937
 
-    killer->terminate();
+    killer->abort();
     killer->wait();
 }
 
