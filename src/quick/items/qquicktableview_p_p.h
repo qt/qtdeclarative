@@ -346,6 +346,9 @@ public:
 
     QMargins edgesBeforeRebuild;
 
+    int currentRow = -1;
+    int currentColumn = -1;
+
     const static QPoint kLeft;
     const static QPoint kRight;
     const static QPoint kUp;
@@ -502,6 +505,7 @@ public:
     bool currentInSelectionModel(const QPoint &cell) const;
     void currentChangedInSelectionModel(const QModelIndex &current, const QModelIndex &previous);
     void setCurrentOnDelegateItem(const QModelIndex &index, bool isCurrent);
+    void updateCurrentRowAndColumn();
 
     void fetchMoreData();
 

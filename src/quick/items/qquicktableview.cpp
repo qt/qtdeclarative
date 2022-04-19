@@ -214,6 +214,10 @@
 
     \snippet qml/tableview/selectionmodel.qml 0
 
+    The \l currentRow and \l currentColumn properties can also be useful if you need
+    to render a delegate differently depending on if it lies on the same row or column
+    as the current item.
+
     \note \l{Qt Quick Controls} offers a SelectionRectangle that can be used
     to let the user select cells.
 */
@@ -431,6 +435,26 @@
     This property holds the bottom-most row that is currently visible inside the view.
 
     \sa leftColumn, rightColumn, topRow
+*/
+
+/*!
+    \qmlproperty int QtQuick::TableView::currentColumn
+    \readonly
+
+    This read-only property holds the column in the view that contains the
+    item that is current. If no item is current, it will be \c -1.
+
+    \sa currentRow, selectionModel, {Selecting items}
+*/
+
+/*!
+    \qmlproperty int QtQuick::TableView::currentRow
+    \readonly
+
+    This read-only property holds the row in the view that contains the item
+    that is current. If no item is current, it will be \c -1.
+
+    \sa currentColumn, selectionModel, {Selecting items}
 */
 
 /*!
@@ -2567,6 +2591,8 @@ void QQuickTableViewPrivate::processRebuildTable()
         if (edgesBeforeRebuild.bottom() != q->bottomRow())
             emit q->bottomRowChanged();
 
+        updateCurrentRowAndColumn();
+
         qCDebug(lcTableViewDelegateLifecycle()) << "current table:" << tableLayoutToString();
         qCDebug(lcTableViewDelegateLifecycle()) << "rebuild completed!";
         qCDebug(lcTableViewDelegateLifecycle()) << "################################################";
@@ -3262,6 +3288,8 @@ QAbstractItemModel *QQuickTableViewPrivate::qaim(QVariant modelAsVariant) const
 
 void QQuickTableViewPrivate::updateSelectedOnAllDelegateItems()
 {
+    updateCurrentRowAndColumn();
+
     for (auto it = loadedItems.keyBegin(), end = loadedItems.keyEnd(); it != end; ++it) {
         const int cellIndex = *it;
         const QPoint cell = cellAtModelIndex(cellIndex);
@@ -3281,8 +3309,26 @@ void QQuickTableViewPrivate::currentChangedInSelectionModel(const QModelIndex &c
     if (qaimInSelection && qaimInSelection != qaimInTableView)
         qmlWarning(q_func()) << "TableView.selectionModel.model differs from TableView.model";
 
+    updateCurrentRowAndColumn();
     setCurrentOnDelegateItem(previous, false);
     setCurrentOnDelegateItem(current, true);
+}
+
+void QQuickTableViewPrivate::updateCurrentRowAndColumn()
+{
+    Q_Q(QQuickTableView);
+
+    const QModelIndex currentIndex = selectionModel ? selectionModel->currentIndex() : QModelIndex();
+    const QPoint currentCell = q->cellAtIndex(currentIndex);
+    if (currentCell.x() != currentColumn) {
+        currentColumn = currentCell.x();
+        emit q->currentColumnChanged();
+    }
+
+    if (currentCell.y() != currentRow) {
+        currentRow = currentCell.y();
+        emit q->currentRowChanged();
+    }
 }
 
 void QQuickTableViewPrivate::setCurrentOnDelegateItem(const QModelIndex &index, bool isCurrent)
@@ -4370,6 +4416,16 @@ int QQuickTableView::bottomRow() const
 {
     Q_D(const QQuickTableView);
     return d->loadedItems.isEmpty() ? -1 : d_func()->bottomRow();
+}
+
+int QQuickTableView::currentRow() const
+{
+    return d_func()->currentRow;
+}
+
+int QQuickTableView::currentColumn() const
+{
+    return d_func()->currentColumn;
 }
 
 void QQuickTableView::positionViewAtRow(int row, PositionMode mode, qreal offset)

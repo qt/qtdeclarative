@@ -4167,6 +4167,9 @@ void tst_QQuickTableView::moveCurrentIndexUsingArrowKeys()
     for (auto fxItem : tableViewPrivate->loadedItems)
         QVERIFY(!fxItem->item->property(kCurrent).toBool());
 
+    QCOMPARE(tableView->currentColumn(), -1);
+    QCOMPARE(tableView->currentRow(), -1);
+
     // Start by making cell 0, 0 current
     const QPoint cell0_0(0, 0);
     selectionModel.setCurrentIndex(tableView->modelIndex(cell0_0), QItemSelectionModel::NoUpdate);
@@ -4175,9 +4178,13 @@ void tst_QQuickTableView::moveCurrentIndexUsingArrowKeys()
     // Trying to move the index out of the table with the keys should be a no-op:
     QTest::keyPress(window, Qt::Key_Left);
     QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
     QTest::keyPress(window, Qt::Key_Up);
     QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
 
     // Move currentIndex right
     const QPoint cell1_0(1, 0);
@@ -4185,12 +4192,16 @@ void tst_QQuickTableView::moveCurrentIndexUsingArrowKeys()
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell1_0));
     QVERIFY(!tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
     QVERIFY(tableView->itemAtCell(cell1_0)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell1_0.x());
+    QCOMPARE(tableView->currentRow(), cell1_0.y());
 
     // Move currentIndex left
     QTest::keyPress(window, Qt::Key_Left);
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
     QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
     QVERIFY(!tableView->itemAtCell(cell1_0)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
 
     // Move currentIndex down
     const QPoint cell0_1(0, 1);
@@ -4198,12 +4209,16 @@ void tst_QQuickTableView::moveCurrentIndexUsingArrowKeys()
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_1));
     QVERIFY(!tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
     QVERIFY(tableView->itemAtCell(cell0_1)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_1.x());
+    QCOMPARE(tableView->currentRow(), cell0_1.y());
 
     // Move currentIndex up
     QTest::keyPress(window, Qt::Key_Up);
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
     QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
     QVERIFY(!tableView->itemAtCell(cell0_1)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
 }
 
 void tst_QQuickTableView::moveCurrentIndexUsingHomeAndEndKeys()
@@ -4225,34 +4240,47 @@ void tst_QQuickTableView::moveCurrentIndexUsingHomeAndEndKeys()
     for (auto fxItem : tableViewPrivate->loadedItems)
         QVERIFY(!fxItem->item->property(kCurrent).toBool());
 
+    QCOMPARE(tableView->currentColumn(), -1);
+    QCOMPARE(tableView->currentRow(), -1);
+
     const QPoint cell0_0(0, 0);
     const QPoint cellHorEnd(tableView->columns() - 1, 0);
 
     // Start by making cell 0, 0 current
     selectionModel.setCurrentIndex(tableView->modelIndex(cell0_0), QItemSelectionModel::NoUpdate);
     QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
 
     // Move currentIndex to end
     QTest::keyPress(window, Qt::Key_End);
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cellHorEnd));
     QTRY_VERIFY(tableView->itemAtCell(cellHorEnd));
     QVERIFY(tableView->itemAtCell(cellHorEnd)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cellHorEnd.x());
+    QCOMPARE(tableView->currentRow(), cellHorEnd.y());
 
     // Move currentIndex to end once more is a no-op
     QTest::keyPress(window, Qt::Key_End);
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cellHorEnd));
     QVERIFY(tableView->itemAtCell(cellHorEnd)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cellHorEnd.x());
+    QCOMPARE(tableView->currentRow(), cellHorEnd.y());
 
     // Move currentIndex to home
     QTest::keyPress(window, Qt::Key_Home);
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
     QTRY_VERIFY(tableView->itemAtCell(cell0_0));
     QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
 
     // Move currentIndex to home once more is a no-op
     QTest::keyPress(window, Qt::Key_Home);
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
     QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
 }
 
 void tst_QQuickTableView::moveCurrentIndexUsingPageUpDownKeys()
@@ -4274,10 +4302,15 @@ void tst_QQuickTableView::moveCurrentIndexUsingPageUpDownKeys()
     for (auto fxItem : tableViewPrivate->loadedItems)
         QVERIFY(!fxItem->item->property(kCurrent).toBool());
 
+    QCOMPARE(tableView->currentColumn(), -1);
+    QCOMPARE(tableView->currentRow(), -1);
+
     // Start by making cell 0, 0 current
     const QPoint cell0_0(0, 0);
     selectionModel.setCurrentIndex(tableView->modelIndex(cell0_0), QItemSelectionModel::NoUpdate);
     QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
 
     // Move currentIndex page down
     const QPoint bottomCell(0, tableView->bottomRow());
@@ -4287,6 +4320,8 @@ void tst_QQuickTableView::moveCurrentIndexUsingPageUpDownKeys()
     QVERIFY(tableView->itemAtCell(bottomCell));
     QVERIFY(!tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
     QVERIFY(tableView->itemAtCell(bottomCell)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), bottomCell.x());
+    QCOMPARE(tableView->currentRow(), bottomCell.y());
 
     // Move currentIndex page up
     QTest::keyPress(window, Qt::Key_PageUp);
@@ -4295,6 +4330,8 @@ void tst_QQuickTableView::moveCurrentIndexUsingPageUpDownKeys()
     QVERIFY(tableView->itemAtCell(bottomCell));
     QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
     QVERIFY(!tableView->itemAtCell(bottomCell)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
 
     // Move currentIndex page down a second. The second time will cause a fast-flick.
     const QPoint bottomCellPageTwo(0, 38);
@@ -4303,6 +4340,8 @@ void tst_QQuickTableView::moveCurrentIndexUsingPageUpDownKeys()
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(bottomCellPageTwo));
     QTRY_VERIFY(tableView->itemAtCell(bottomCellPageTwo));
     QVERIFY(tableView->itemAtCell(bottomCellPageTwo)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), bottomCellPageTwo.x());
+    QCOMPARE(tableView->currentRow(), bottomCellPageTwo.y());
 
     // Move currentIndex page down a third time. This will hit the end of the table
     // before a whole page can be reached.
@@ -4311,10 +4350,14 @@ void tst_QQuickTableView::moveCurrentIndexUsingPageUpDownKeys()
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cellVerEnd));
     QTRY_VERIFY(tableView->itemAtCell(cellVerEnd));
     QVERIFY(tableView->itemAtCell(cellVerEnd)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cellVerEnd.x());
+    QCOMPARE(tableView->currentRow(), cellVerEnd.y());
 
     // Move currentIndex page down once more is a no-op
     QTest::keyPress(window, Qt::Key_PageDown);
     QVERIFY(tableView->itemAtCell(cellVerEnd)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cellVerEnd.x());
+    QCOMPARE(tableView->currentRow(), cellVerEnd.y());
 
     // Move currentIndex page up
     const QPoint cellTop1(0, tableView->topRow());
@@ -4322,6 +4365,8 @@ void tst_QQuickTableView::moveCurrentIndexUsingPageUpDownKeys()
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cellTop1));
     QVERIFY(tableView->itemAtCell(cellTop1));
     QVERIFY(tableView->itemAtCell(cellTop1)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cellTop1.x());
+    QCOMPARE(tableView->currentRow(), cellTop1.y());
 
     // Move currentIndex page up a second time. This will cause a fast-flick, which
     // happens to end up on row 1.
@@ -4330,6 +4375,8 @@ void tst_QQuickTableView::moveCurrentIndexUsingPageUpDownKeys()
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_1));
     QTRY_VERIFY(tableView->itemAtCell(cell0_1));
     QVERIFY(tableView->itemAtCell(cell0_1)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_1.x());
+    QCOMPARE(tableView->currentRow(), cell0_1.y());
 
     // Move currentIndex page up a third time. This will bring the table
     // all the way to the top.
@@ -4337,11 +4384,15 @@ void tst_QQuickTableView::moveCurrentIndexUsingPageUpDownKeys()
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
     QTRY_VERIFY(tableView->itemAtCell(cell0_0));
     QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
 
     // Move currentIndex page up once more. This will be a no-op.
     QTest::keyPress(window, Qt::Key_PageUp);
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
     QVERIFY(tableView->itemAtCell(cell0_0)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
 
     // Move currentIndex to a cell outside the viewport by accessing the selection
     // model directly, scroll to it, and check current status.
@@ -4350,6 +4401,8 @@ void tst_QQuickTableView::moveCurrentIndexUsingPageUpDownKeys()
     tableView->positionViewAtCell(cellAtEnd, QQuickTableView::AlignBottom | QQuickTableView::AlignRight);
     QTRY_VERIFY(tableView->itemAtCell(cellAtEnd));
     QVERIFY(tableView->itemAtCell(cellAtEnd)->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cellAtEnd.x());
+    QCOMPARE(tableView->currentRow(), cellAtEnd.y());
 }
 
 void tst_QQuickTableView::setCurrentIndexFromMouse()
@@ -4372,6 +4425,9 @@ void tst_QQuickTableView::setCurrentIndexFromMouse()
     for (auto fxItem : tableViewPrivate->loadedItems)
         QVERIFY(!fxItem->item->property(kCurrent).toBool());
 
+    QCOMPARE(tableView->currentColumn(), -1);
+    QCOMPARE(tableView->currentRow(), -1);
+
     // Click on cell 0, 0
     const QPoint cell0_0(0, 0);
     const auto item0_0 = tableView->itemAtCell(cell0_0);
@@ -4380,6 +4436,8 @@ void tst_QQuickTableView::setCurrentIndexFromMouse()
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell0_0));
     QVERIFY(item0_0->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
 
     // Click on cell 1, 2
     const QPoint cell1_2(1, 2);
@@ -4390,6 +4448,8 @@ void tst_QQuickTableView::setCurrentIndexFromMouse()
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cell1_2));
     QVERIFY(!item0_0->property(kCurrent).toBool());
     QVERIFY(item1_2->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cell1_2.x());
+    QCOMPARE(tableView->currentRow(), cell1_2.y());
 
     // Position the view at the end of the table, and click on the bottom-right cell
     const QPoint cellAtEnd(tableView->columns() - 1, tableView->rows() - 1);
@@ -4402,6 +4462,8 @@ void tst_QQuickTableView::setCurrentIndexFromMouse()
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(cellAtEnd));
     QVERIFY(itemAtEnd->property(kCurrent).toBool());
+    QCOMPARE(tableView->currentColumn(), cellAtEnd.x());
+    QCOMPARE(tableView->currentRow(), cellAtEnd.y());
 }
 
 void tst_QQuickTableView::disablePointerNavigation()
@@ -4430,12 +4492,22 @@ void tst_QQuickTableView::disablePointerNavigation()
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
     QVERIFY(!selectionModel.currentIndex().isValid());
     QVERIFY(!item0_0->property("current").toBool());
+    QCOMPARE(tableView->currentColumn(), -1);
+    QCOMPARE(tableView->currentRow(), -1);
 
     // Enable navigation, and try again
     tableView->setPointerNavigationEnabled(true);
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, pos);
     QCOMPARE(selectionModel.currentIndex(), tableView->modelIndex(0, 0));
     QVERIFY(item0_0->property("current").toBool());
+    QCOMPARE(tableView->currentColumn(), cell0_0.x());
+    QCOMPARE(tableView->currentRow(), cell0_0.y());
+
+    // Set an invalid current index in the selection model
+    selectionModel.setCurrentIndex(QModelIndex(), QItemSelectionModel::NoUpdate);
+    QVERIFY(!item0_0->property("current").toBool());
+    QCOMPARE(tableView->currentColumn(), -1);
+    QCOMPARE(tableView->currentRow(), -1);
 }
 
 void tst_QQuickTableView::disableKeyNavigation()

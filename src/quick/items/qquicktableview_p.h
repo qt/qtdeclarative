@@ -92,6 +92,8 @@ class Q_QUICK_PRIVATE_EXPORT QQuickTableView : public QQuickFlickable, public QQ
     Q_PROPERTY(bool animate READ animate WRITE setAnimate NOTIFY animateChanged REVISION(6, 4))
     Q_PROPERTY(bool keyNavigationEnabled READ keyNavigationEnabled WRITE setKeyNavigationEnabled NOTIFY keyNavigationEnabledChanged REVISION(6, 4))
     Q_PROPERTY(bool pointerNavigationEnabled READ pointerNavigationEnabled WRITE setPointerNavigationEnabled NOTIFY pointerNavigationEnabledChanged REVISION(6, 4))
+    Q_PROPERTY(int currentRow READ currentRow NOTIFY currentRowChanged REVISION(6, 4) FINAL)
+    Q_PROPERTY(int currentColumn READ currentColumn NOTIFY currentColumnChanged REVISION(6, 4) FINAL)
 
     QML_NAMED_ELEMENT(TableView)
     QML_ADDED_IN_VERSION(2, 12)
@@ -163,6 +165,9 @@ public:
     int topRow() const;
     int bottomRow() const;
 
+    int currentRow() const;
+    int currentColumn() const;
+
     Q_INVOKABLE void forceLayout();
     Q_INVOKABLE void positionViewAtCell(const QPoint &cell, PositionMode mode, const QPointF &offset = QPointF());
     Q_INVOKABLE void positionViewAtCell(int column, int row, PositionMode mode, const QPointF &offset = QPointF());
@@ -215,6 +220,8 @@ Q_SIGNALS:
     Q_REVISION(6, 4) void animateChanged();
     Q_REVISION(6, 4) void keyNavigationEnabledChanged();
     Q_REVISION(6, 4) void pointerNavigationEnabledChanged();
+    Q_REVISION(6, 4) void currentRowChanged();
+    Q_REVISION(6, 4) void currentColumnChanged();
 
 protected:
     void geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry) override;
