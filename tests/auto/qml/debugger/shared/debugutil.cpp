@@ -260,4 +260,4 @@ QString debugJsServerPath(const QString &selfPath)
             + "/" + debugserver;
 }
 
-#include "debugutil.moc"
+#include <moc_debugutil_p.cpp>
