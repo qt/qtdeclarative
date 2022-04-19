@@ -170,6 +170,13 @@ void QQuickRenderTarget::setDevicePixelRatio(qreal ratio)
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
 
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil buffer, if applicable, is
+    created and used automatically.
+
+    The OpenGL object name \a textureId must be a valid name in the rendering
+    context used by the Qt Quick scenegraph.
+
     \note the resulting QQuickRenderTarget does not own any native resources,
     it merely contains references and the associated metadata of the size and
     sample count. It is the caller's responsibility to ensure that the native
@@ -262,6 +269,10 @@ QQuickRenderTarget QQuickRenderTarget::fromOpenGLRenderBuffer(uint renderbufferI
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
 
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil buffer, if applicable, is
+    created and used automatically.
+
     \note the resulting QQuickRenderTarget does not own any native resources,
     it merely contains references and the associated metadata of the size and
     sample count. It is the caller's responsibility to ensure that the native
@@ -304,6 +315,10 @@ QQuickRenderTarget QQuickRenderTarget::fromD3D11Texture(void *texture, const QSi
     \a sampleCount specific the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
+
+    The texture is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil buffer, if applicable, is
+    created and used automatically.
 
     \note the resulting QQuickRenderTarget does not own any native resources,
     it merely contains references and the associated metadata of the size and
@@ -348,6 +363,10 @@ QQuickRenderTarget QQuickRenderTarget::fromMetalTexture(MTLTexture *texture, con
     \a sampleCount specific the number of samples. 0 or 1 means no
     multisampling, while a value like 4 or 8 states that the native object is a
     multisample texture.
+
+    The image is used as the first color attachment of the render target used
+    by the Qt Quick scenegraph. A depth-stencil buffer, if applicable, is
+    created and used automatically.
 
     \note the resulting QQuickRenderTarget does not own any native resources,
     it merely contains references and the associated metadata of the size and
@@ -406,10 +425,11 @@ QQuickRenderTarget QQuickRenderTarget::fromRhiRenderTarget(QRhiRenderTarget *ren
     \return a new QQuickRenderTarget referencing a paint device object
     specified by \a device.
 
-    \note The QQuickRenderTarget does not take ownship of \a device, it
-    merely contains references the QPaintDevice object pointer. It is the
-    caller's responsibility to ensure that the resource exists as long as
-    necessary.
+    This option of redirecting rendering to a QPaintDevice is available only
+    when running with the \c software backend of Qt Quick.
+
+    \note The QQuickRenderTarget does not take ownship of \a device, it is the
+    caller's responsibility to ensure the object exists as long as necessary.
 
     \sa QQuickWindow::setRenderTarget(), QQuickRenderControl
  */
