@@ -71,10 +71,12 @@ Q_QUICK_PRIVATE_EXPORT void qsg_set_fatal_renderer_error();
 class Q_QUICK_PRIVATE_EXPORT QSGRenderTarget
 {
 public:
-    QSGRenderTarget(QRhiRenderTarget *rt = nullptr);
+    // non-explicit ctor for compatibility with setRenderTarget(QRhiRenderTarget*) calls
+    QSGRenderTarget(QRhiRenderTarget *rt = nullptr) : rt(rt) { }
 
     QRhiRenderTarget *rt = nullptr;
     QRhiRenderPassDescriptor *rpDesc = nullptr;
+    QRhiCommandBuffer *cb = nullptr;
     QPaintDevice *paintDevice = nullptr;
 };
 
@@ -115,13 +117,11 @@ public:
     QRhiResourceUpdateBatch *currentResourceUpdateBatch() const { return m_current_resource_update_batch; }
     QRhi *currentRhi() const { return m_rhi; }
 
-    // It is the caller's responsibility to ensure that the native resource exists as long as necessary.
     void setRenderTarget(const QSGRenderTarget &rt) { m_rt = rt; }
     const QSGRenderTarget &renderTarget() const { return m_rt; }
-    QRhiRenderTarget *rhiRenderTarget() const { return m_rt.rt; }
 
-    void setCommandBuffer(QRhiCommandBuffer *cb) { m_cb = cb; }
-    QRhiCommandBuffer *commandBuffer() const { return m_cb; }
+    void setCommandBuffer(QRhiCommandBuffer *cb) { m_rt.cb = cb; }
+    QRhiCommandBuffer *commandBuffer() const { return m_rt.cb; }
 
     void setRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc) { m_rt.rpDesc = rpDesc; }
     QRhiRenderPassDescriptor *renderPassDescriptor() const { return m_rt.rpDesc; }
@@ -163,7 +163,6 @@ protected:
     QByteArray *m_current_uniform_data;
     QRhiResourceUpdateBatch *m_current_resource_update_batch;
     QRhi *m_rhi;
-    QRhiCommandBuffer *m_cb;
     QSGRenderTarget m_rt;
     struct {
         QSGRenderContext::RenderPassCallback start = nullptr;

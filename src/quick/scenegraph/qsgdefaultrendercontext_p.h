@@ -102,14 +102,6 @@ public:
     void renderNextFrame(QSGRenderer *renderer) override;
     void endNextFrame(QSGRenderer *renderer) override;
 
-    void beginNextRhiFrame(QSGRenderer *renderer, const QSGRenderTarget &renderTarget,
-                           QRhiCommandBuffer *cb,
-                           RenderPassCallback mainPassRecordingStart,
-                           RenderPassCallback mainPassRecordingEnd,
-                           void *callbackUserData) override;
-    void renderNextRhiFrame(QSGRenderer *renderer) override;
-    void endNextRhiFrame(QSGRenderer *renderer) override;
-
     void preprocess() override;
     void invalidateGlyphCaches() override;
     QSGDistanceFieldGlyphCache *distanceFieldGlyphCache(const QRawFont &font, int renderTypeQuality) override;

@@ -188,14 +188,6 @@ public:
     virtual void renderNextFrame(QSGRenderer *renderer) = 0;
     virtual void endNextFrame(QSGRenderer *renderer);
 
-    virtual void beginNextRhiFrame(QSGRenderer *renderer, const QSGRenderTarget &renderTarget,
-                                   QRhiCommandBuffer *cb,
-                                   RenderPassCallback mainPassRecordingStart,
-                                   RenderPassCallback mainPassRecordingEnd,
-                                   void *callbackUserData);
-    virtual void renderNextRhiFrame(QSGRenderer *renderer);
-    virtual void endNextRhiFrame(QSGRenderer *renderer);
-
     virtual void endSync();
 
     virtual void preprocess();

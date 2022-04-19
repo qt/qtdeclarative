@@ -387,29 +387,6 @@ void QSGRenderContext::endNextFrame(QSGRenderer *renderer)
     Q_UNUSED(renderer);
 }
 
-void QSGRenderContext::beginNextRhiFrame(QSGRenderer *renderer, const QSGRenderTarget &renderTarget,
-                                         QRhiCommandBuffer *cb,
-                                         RenderPassCallback mainPassRecordingStart,
-                                         RenderPassCallback mainPassRecordingEnd,
-                                         void *callbackUserData)
-{
-    renderer->setRenderTarget(renderTarget);
-    Q_UNUSED(cb);
-    Q_UNUSED(mainPassRecordingStart);
-    Q_UNUSED(mainPassRecordingEnd);
-    Q_UNUSED(callbackUserData);
-}
-
-void QSGRenderContext::renderNextRhiFrame(QSGRenderer *renderer)
-{
-    Q_UNUSED(renderer);
-}
-
-void QSGRenderContext::endNextRhiFrame(QSGRenderer *renderer)
-{
-    Q_UNUSED(renderer);
-}
-
 void QSGRenderContext::endSync()
 {
     qDeleteAll(m_texturesToDelete);

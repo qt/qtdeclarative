@@ -188,44 +188,17 @@ void QSGDefaultRenderContext::beginNextFrame(QSGRenderer *renderer, const QSGRen
 {
     renderer->setRenderTarget(renderTarget);
     renderer->setRenderPassRecordingCallbacks(mainPassRecordingStart, mainPassRecordingEnd, callbackUserData);
+
+    m_currentFrameCommandBuffer = renderTarget.cb; // usually the same as what was passed to prepareSync() but cannot count on that having been called
+    m_currentFrameRenderPass = renderTarget.rpDesc;
 }
 
 void QSGDefaultRenderContext::renderNextFrame(QSGRenderer *renderer)
 {
-    if (m_serializedRender)
-        qsg_framerender_mutex.lock();
-
     renderer->renderScene();
-
-    if (m_serializedRender)
-        qsg_framerender_mutex.unlock();
 }
 
 void QSGDefaultRenderContext::endNextFrame(QSGRenderer *renderer)
-{
-    Q_UNUSED(renderer);
-}
-
-void QSGDefaultRenderContext::beginNextRhiFrame(QSGRenderer *renderer, const QSGRenderTarget &renderTarget,
-                                                QRhiCommandBuffer *cb,
-                                                RenderPassCallback mainPassRecordingStart,
-                                                RenderPassCallback mainPassRecordingEnd,
-                                                void *callbackUserData)
-{
-    renderer->setRenderTarget(renderTarget);
-    renderer->setCommandBuffer(cb);
-    renderer->setRenderPassRecordingCallbacks(mainPassRecordingStart, mainPassRecordingEnd, callbackUserData);
-
-    m_currentFrameCommandBuffer = cb; // usually the same as what was passed to prepareSync() but cannot count on that having been called
-    m_currentFrameRenderPass = renderTarget.rpDesc;
-}
-
-void QSGDefaultRenderContext::renderNextRhiFrame(QSGRenderer *renderer)
-{
-    renderer->renderScene();
-}
-
-void QSGDefaultRenderContext::endNextRhiFrame(QSGRenderer *renderer)
 {
     Q_UNUSED(renderer);
     m_currentFrameCommandBuffer = nullptr;

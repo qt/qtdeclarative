@@ -428,15 +428,15 @@ void QSGRhiLayer::grab()
 
     // render with our own "sub-renderer" (this will just add a render pass to the command buffer)
     if (m_multisampling) {
-        m_context->renderNextRhiFrame(m_renderer);
+        m_context->renderNextFrame(m_renderer);
     } else {
         if (m_recursive) {
-            m_context->renderNextRhiFrame(m_renderer);
+            m_context->renderNextFrame(m_renderer);
             if (!resourceUpdates)
                 resourceUpdates = m_rhi->nextResourceUpdateBatch();
             resourceUpdates->copyTexture(m_texture, m_secondaryTexture);
         } else {
-            m_context->renderNextRhiFrame(m_renderer);
+            m_context->renderNextFrame(m_renderer);
         }
     }
 

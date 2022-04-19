@@ -59,14 +59,6 @@ int qt_sg_envInt(const char *name, int defaultValue)
     return ok ? value : defaultValue;
 }
 
-// The QSGRenderTarget does not own any native resources, it merely contains references
-// the RHI metadata or QPaintDevice object pointer.
-QSGRenderTarget::QSGRenderTarget(QRhiRenderTarget *rt)
-    : rt(rt)
-{
-
-}
-
 /*!
     \class QSGRenderer
     \brief The renderer class is the abstract baseclass used for rendering the
@@ -103,7 +95,6 @@ QSGRenderer::QSGRenderer(QSGRenderContext *context)
     , m_current_uniform_data(nullptr)
     , m_current_resource_update_batch(nullptr)
     , m_rhi(nullptr)
-    , m_cb(nullptr)
     , m_node_updater(nullptr)
     , m_changed_emitted(false)
     , m_is_rendering(false)

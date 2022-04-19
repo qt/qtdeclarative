@@ -631,6 +631,7 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
 
     ensureCustomRenderTarget();
 
+    QSGRenderTarget sgRenderTarget;
     if (rhi) {
         QRhiRenderTarget *rt;
         QRhiRenderPassDescriptor *rp;
@@ -656,26 +657,18 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
             rp = rpDescForSwapchain;
             cb = swapchain->currentFrameCommandBuffer();
         }
-
-        QSGRenderTarget sgRenderTarget;
         sgRenderTarget.rt = rt;
         sgRenderTarget.rpDesc = rp;
-
-        context->beginNextRhiFrame(renderer, sgRenderTarget, cb,
-                                   emitBeforeRenderPassRecording,
-                                   emitAfterRenderPassRecording,
-                                   q);
+        sgRenderTarget.cb = cb;
     } else {
-        QSGRenderTarget sgRenderTarget;
-        sgRenderTarget.rt = redirect.rt.renderTarget;
-        sgRenderTarget.rpDesc = redirect.rt.rpDesc;
         sgRenderTarget.paintDevice = redirect.rt.paintDevice;
-
-        context->beginNextFrame(renderer, sgRenderTarget,
-                                emitBeforeRenderPassRecording,
-                                emitAfterRenderPassRecording,
-                                q);
     }
+
+    context->beginNextFrame(renderer,
+                            sgRenderTarget,
+                            emitBeforeRenderPassRecording,
+                            emitAfterRenderPassRecording,
+                            q);
 
     animationController->advance();
     emit q->beforeRendering();
@@ -703,22 +696,12 @@ void QQuickWindowPrivate::renderSceneGraph(const QSize &size, const QSize &surfa
     renderer->setViewportRect(QRect(QPoint(0, 0), pixelSize));
     renderer->setProjectionMatrixToRect(QRectF(QPointF(0, 0), logicalSize), matrixFlags);
 
-    if (rhi) {
-        context->renderNextRhiFrame(renderer);
-    } else {
-        // This is the software backend (or some custom scenegraph context
-        // plugin) in practice, because the default implementation always
-        // hits the QRhi-based path in Qt 6.
-        context->renderNextFrame(renderer);
-    }
+    context->renderNextFrame(renderer);
 
     emit q->afterRendering();
     runAndClearJobs(&afterRenderingJobs);
 
-    if (rhi)
-        context->endNextRhiFrame(renderer);
-    else
-        context->endNextFrame(renderer);
+    context->endNextFrame(renderer);
 
     if (renderer && renderer->hasVisualizationModeWithContinuousUpdate()) {
         // For the overdraw visualizer. This update is not urgent so avoid a
