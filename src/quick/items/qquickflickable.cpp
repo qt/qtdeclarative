@@ -1619,7 +1619,7 @@ void QQuickFlickable::wheelEvent(QWheelEvent *event)
         return;
     }
 
-    if (event->source() == Qt::MouseEventNotSynthesized || event->pixelDelta().isNull()) {
+    if (event->source() == Qt::MouseEventNotSynthesized || event->pixelDelta().isNull() || event->phase() == Qt::NoScrollPhase) {
         // no pixel delta (physical mouse wheel, or "dumb" touchpad), so use angleDelta
         int xDelta = event->angleDelta().x();
         int yDelta = event->angleDelta().y();
