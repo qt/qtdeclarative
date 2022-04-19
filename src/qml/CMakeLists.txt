@@ -677,8 +677,11 @@ qt_internal_add_docs(Qml
     doc/qtqml.qdocconf
 )
 
-# include snippet projects for developer builds
-if(QT_FEATURE_private_tests AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.19")
+# include snippet projects for developer shared builds
+# static builds fail with
+#   CMake Error: AUTOMOC for target qt_target_qml_sources_example_resources_3:
+#   The "moc" executable does not exist
+if(QT_FEATURE_private_tests AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.19" AND QT_BUILD_SHARED_LIBS)
     add_subdirectory(doc/snippets/cmake/qt_target_qml_sources)
     qt_autogen_tools(qt_target_qml_sources_example ENABLE_AUTOGEN_TOOLS moc)
     qt_autogen_tools(qt_target_qml_sources_exampleplugin ENABLE_AUTOGEN_TOOLS moc)
