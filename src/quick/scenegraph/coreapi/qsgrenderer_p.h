@@ -126,11 +126,6 @@ public:
     void setRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc) { m_rt.rpDesc = rpDesc; }
     QRhiRenderPassDescriptor *renderPassDescriptor() const { return m_rt.rpDesc; }
 
-    void setExternalRenderPassDescriptor(QRhiRenderPassDescriptor *rpDesc) {
-        // no differentiation needed anymore
-        setRenderPassDescriptor(rpDesc);
-    }
-
     void setRenderPassRecordingCallbacks(QSGRenderContext::RenderPassCallback start,
                                          QSGRenderContext::RenderPassCallback end,
                                          void *userData)
