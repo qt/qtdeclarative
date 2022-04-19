@@ -736,7 +736,7 @@ private slots:
                 ++i;
             }
             for (DomItem obj : qmlObj.children().values()) {
-                if (const QmlObject *objPtr = obj.as<QmlObject>())
+                if (obj.as<QmlObject>())
                     checkAliases(obj);
             }
         }
