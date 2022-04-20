@@ -152,6 +152,9 @@ void tst_QV4Assembler::jitEnabled()
 #if defined(Q_OS_IOS) || defined(Q_OS_TVOS)
     /* JIT should be disabled on iOS and tvOS. */
     QVERIFY(!QT_CONFIG(qml_jit));
+#elif defined(Q_OS_ANDROID) && defined(Q_PROCESSOR_ARM)
+    /* JIT is disabled for Android on ARM/ARM64 before Qt 6.4, see QTBUG-102776. */
+    QVERIFY(!QT_CONFIG(qml_jit));
 #elif defined(Q_OS_WIN) && defined(Q_PROCESSOR_ARM)
     /* JIT should be disabled Windows on ARM/ARM64 for now. */
     QVERIFY(!QT_CONFIG(qml_jit));
