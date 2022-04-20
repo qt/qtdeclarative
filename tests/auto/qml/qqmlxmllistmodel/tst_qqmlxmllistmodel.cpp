@@ -38,6 +38,8 @@
 #include <QtQmlXmlListModel/private/qqmlxmllistmodel_p.h>
 #include <QtQuickTestUtils/private/qmlutils_p.h>
 
+using namespace Qt::StringLiterals;
+
 typedef QList<QVariantList> QQmlXmlModelData;
 
 Q_DECLARE_METATYPE(QQmlXmlModelData)
@@ -380,7 +382,8 @@ void tst_QQmlXmlListModel::source()
     if (model->property("source").toString().isEmpty())
         QCOMPARE(qvariant_cast<QQmlXmlListModel::Status>(model->property("status")),
                  QQmlXmlListModel::Null);
-    QCOMPARE(model->property("progress").toDouble(), qreal(source.isLocalFile() ? 1.0 : 0.0));
+    qreal expectedProgress = (source.isLocalFile() || (source.scheme() == "qrc"_L1)) ? 1.0 : 0.0;
+    QCOMPARE(model->property("progress").toDouble(), expectedProgress);
     QTRY_COMPARE(spy.count(), 1);
     spy.clear();
     QCOMPARE(qvariant_cast<QQmlXmlListModel::Status>(model->property("status")),
