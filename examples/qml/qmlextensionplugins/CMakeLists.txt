@@ -11,6 +11,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/qml/qmlextensionplugins/imports/T
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml)
 
+#![0]
 set(qml_files
     imports/TimeExample/Clock.qml
 )
@@ -21,20 +22,23 @@ set(images
     imports/TimeExample/hour.png
     imports/TimeExample/minute.png
 )
+#![0]
 
 foreach(file IN LISTS qml_files images)
     get_filename_component(filename ${file} NAME)
     set_source_files_properties(${file} PROPERTIES QT_RESOURCE_ALIAS ${filename})
 endforeach()
 
-qt6_add_qml_module(qmlqtimeexample
-    OUTPUT_DIRECTORY TimeExample
+#![1]
+qt_add_qml_module(qmlqtimeexample
+    OUTPUT_DIRECTORY imports/TimeExample
     VERSION 1.0
     URI "TimeExample"
     SOURCES timemodel.cpp timemodel.h
     QML_FILES ${qml_files}
     RESOURCES ${images}
 )
+#![1]
 
 set_target_properties(qmlqtimeexample PROPERTIES
     WIN32_EXECUTABLE TRUE

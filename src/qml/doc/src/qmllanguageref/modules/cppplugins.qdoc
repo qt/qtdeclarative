@@ -34,9 +34,8 @@
 
     The \l{QQmlEngine}{QML engine} loads C++ plugins for QML.
     Such plugins are usually provided in a QML extension module, and can
-    provide types for use by clients in QML documents which import the module.
-    A module requires at least one type registered in order to be considered
-    valid.
+    provide types for use by clients in QML documents that import the module.
+    A module requires at least one registered type to be considered valid.
 
     \include qqmlextensionplugin.qdocinc
 
