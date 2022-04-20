@@ -34,9 +34,34 @@
     \image qml-plugins-example.png
 
     To run this example, use the following commands on the prompt:
-    \code
-     > qmake
-     > make
-     > qml -I imports plugins.qml
-    \endcode
+
+    \if defined(onlinedocs)
+        \tab {build-qt-app}{tab-cmake}{CMake}{checked}
+        \tab {build-qt-app}{tab-qmake}{qmake}{}
+        \tabcontent {tab-cmake}
+    \else
+        \section1 Using CMake
+    \endif
+        \badcode
+            cmake -DCMAKE_PREFIX_PATH=path/to/Qt/6.4.0/your_platform -S <source-dir> -B <build-dir> -G Ninja
+            cd path/to/build/dir
+            ninja
+            qml -I imports plugins.qml
+        \endcode
+        For more information about building on the command line using CMake,
+        see \l {Building projects on the command line}.
+    \if defined(onlinedocs)
+        \endtabcontent
+        \tabcontent {tab-qmake}
+    \else
+        \section1 Using qmake
+    \endif
+        \badcode
+            qmake
+            make
+            qml -I imports plugins.qml
+        \endcode
+    \if defined(onlinedocs)
+        \endtabcontent
+    \endif
 */
