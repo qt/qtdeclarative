@@ -146,7 +146,6 @@ protected:
     InitParams m_initParams;
     QRhi *m_rhi;
     int m_maxTextureSize;
-    bool m_serializedRender;
     QSGRhiAtlasTexture::Manager *m_rhiAtlasManager;
     QRhiCommandBuffer *m_currentFrameCommandBuffer;
     QRhiRenderPassDescriptor *m_currentFrameRenderPass;
