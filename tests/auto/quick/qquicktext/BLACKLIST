@@ -10,3 +10,10 @@ sles
 ci b2qt 32bit
 [baselineOffset]
 ci b2qt 32bit
+# QTBUG-102721
+[hAlignWidthDependsOnImplicitWidth]
+android
+[hAlignImplicitWidth]
+android
+[transparentBackground]
+android
