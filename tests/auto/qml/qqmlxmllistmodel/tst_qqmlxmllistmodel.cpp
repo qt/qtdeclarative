@@ -132,9 +132,9 @@ private:
 class ScopedFile
 {
 public:
-    ScopedFile(const QUrl &url, const QByteArray &data) : m_fileUrl(url)
+    ScopedFile(const QString &fileName, const QByteArray &data) : m_fileName(fileName)
     {
-        m_file.setFileName(url.toLocalFile());
+        m_file.setFileName(fileName);
         m_created = m_file.open(QIODevice::WriteOnly | QIODevice::Truncate);
         if (m_created) {
             const auto written = m_file.write(data);
@@ -145,11 +145,11 @@ public:
     ~ScopedFile() { QFile::remove(m_file.fileName()); }
 
     bool isCreated() const { return m_created; }
-    QUrl fileUrl() const { return m_fileUrl; }
+    QString fileName() const { return m_fileName; }
 
 private:
     QFile m_file;
-    const QUrl m_fileUrl;
+    const QString m_fileName;
     bool m_created = false;
 };
 
@@ -488,6 +488,8 @@ void tst_QQmlXmlListModel::threading()
     QScopedPointer<QAbstractItemModel> m3(qobject_cast<QAbstractItemModel *>(component.create()));
     QVERIFY(m3 != nullptr);
 
+    QTemporaryDir tempDir;
+
     for (int dataCount = 0; dataCount < xmlDataCount; ++dataCount) {
         QString data1, data2, data3;
         for (int i = 0; i < dataCount; ++i) {
@@ -499,14 +501,14 @@ void tst_QQmlXmlListModel::threading()
                     + ",sport=Curling;";
         }
 
-        ScopedFile f1(testFileUrl("file1.xml"), makeItemXmlAndData(data1).toLatin1());
-        ScopedFile f2(testFileUrl("file2.xml"), makeItemXmlAndData(data2).toLatin1());
-        ScopedFile f3(testFileUrl("file3.xml"), makeItemXmlAndData(data3).toLatin1());
+        ScopedFile f1(tempDir.filePath("file1.xml"), makeItemXmlAndData(data1).toLatin1());
+        ScopedFile f2(tempDir.filePath("file2.xml"), makeItemXmlAndData(data2).toLatin1());
+        ScopedFile f3(tempDir.filePath("file3.xml"), makeItemXmlAndData(data3).toLatin1());
         QVERIFY(f1.isCreated() && f2.isCreated() && f3.isCreated());
 
-        m1->setProperty("source", f1.fileUrl());
-        m2->setProperty("source", f2.fileUrl());
-        m3->setProperty("source", f3.fileUrl());
+        m1->setProperty("source", QUrl::fromLocalFile(f1.fileName()));
+        m2->setProperty("source", QUrl::fromLocalFile(f2.fileName()));
+        m3->setProperty("source", QUrl::fromLocalFile(f3.fileName()));
         QCoreApplication::processEvents();
 
         QTRY_VERIFY(m1->rowCount() == dataCount && m2->rowCount() == dataCount
