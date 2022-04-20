@@ -2883,7 +2883,7 @@ void tst_qquicktextinput::cursorDelegate()
     // Test delegate gets moved on mouse press.
     textInputObject->setSelectByMouse(true);
     textInputObject->setCursorPosition(0);
-    const QPoint point1 = textInputObject->positionToRectangle(5).center().toPoint();
+    const QPoint point1 = textInputObject->positionToRectangle(10).center().toPoint();
     QTest::qWait(400);  //ensure this isn't treated as a double-click
     QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier, point1);
     QTest::qWait(50);
@@ -2893,7 +2893,7 @@ void tst_qquicktextinput::cursorDelegate()
 
     // Test delegate gets moved on mouse drag
     textInputObject->setCursorPosition(0);
-    const QPoint point2 = textInputObject->positionToRectangle(10).center().toPoint();
+    const QPoint point2 = textInputObject->positionToRectangle(15).center().toPoint();
     QTest::qWait(400);  //ensure this isn't treated as a double-click
     QTest::mousePress(&view, Qt::LeftButton, Qt::NoModifier, point1);
     QMouseEvent mv(QEvent::MouseMove, point2, Qt::LeftButton, Qt::LeftButton,Qt::NoModifier);
@@ -2906,7 +2906,7 @@ void tst_qquicktextinput::cursorDelegate()
     textInputObject->setReadOnly(true);
     textInputObject->setCursorPosition(0);
     QTest::qWait(400);  //ensure this isn't treated as a double-click
-    QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier, textInputObject->positionToRectangle(5).center().toPoint());
+    QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier, textInputObject->positionToRectangle(10).center().toPoint());
     QTest::qWait(50);
     QTRY_VERIFY(textInputObject->cursorPosition() != 0);
     QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
@@ -2914,7 +2914,7 @@ void tst_qquicktextinput::cursorDelegate()
 
     textInputObject->setCursorPosition(0);
     QTest::qWait(400);  //ensure this isn't treated as a double-click
-    QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier, textInputObject->positionToRectangle(5).center().toPoint());
+    QTest::mouseClick(&view, Qt::LeftButton, Qt::NoModifier, textInputObject->positionToRectangle(10).center().toPoint());
     QTest::qWait(50);
     QTRY_VERIFY(textInputObject->cursorPosition() != 0);
     QCOMPARE(textInputObject->cursorRectangle().x(), delegateObject->x());
