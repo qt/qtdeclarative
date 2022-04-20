@@ -2439,9 +2439,6 @@ bool QQuickWindow::isSceneGraphInitialized() const
     scenegraph is about to render the next frame. Therefore change the target
     only when necessary.
 
-    \note This function should not be used when using the \c software backend.
-    Instead, use grabWindow() to render the content into a QImage.
-
     \note The window does not take ownership of any native objects referenced
     in \a target.
 
