@@ -21,8 +21,6 @@ android
 # QTBUG-103096
 [largeTextObservesViewport]
 android
-[imgTagsAlign]
-android
 [baselineOffset]
 android
 

@@ -3171,12 +3171,12 @@ void tst_qquicktext::imgTagsAlign_data()
     QTest::addColumn<QString>("src");
     QTest::addColumn<int>("imgHeight");
     QTest::addColumn<QString>("align");
-    QTest::newRow("heart-bottom") << "data/images/heart200.png" << 181 <<  "bottom";
-    QTest::newRow("heart-middle") << "data/images/heart200.png" << 181 <<  "middle";
-    QTest::newRow("heart-top") << "data/images/heart200.png" << 181 <<  "top";
-    QTest::newRow("starfish-bottom") << "data/images/starfish_2.png" << 217 <<  "bottom";
-    QTest::newRow("starfish-middle") << "data/images/starfish_2.png" << 217 <<  "middle";
-    QTest::newRow("starfish-top") << "data/images/starfish_2.png" << 217 <<  "top";
+    QTest::newRow("heart-bottom") << "images/heart200.png" << 181 <<  "bottom";
+    QTest::newRow("heart-middle") << "images/heart200.png" << 181 <<  "middle";
+    QTest::newRow("heart-top") << "images/heart200.png" << 181 <<  "top";
+    QTest::newRow("starfish-bottom") << "images/starfish_2.png" << 217 <<  "bottom";
+    QTest::newRow("starfish-middle") << "images/starfish_2.png" << 217 <<  "middle";
+    QTest::newRow("starfish-top") << "images/starfish_2.png" << 217 <<  "top";
 }
 
 void tst_qquicktext::imgTagsAlign()
@@ -3186,7 +3186,7 @@ void tst_qquicktext::imgTagsAlign()
     QFETCH(QString, align);
     QString componentStr = "import QtQuick 2.0\nText { text: \"This is a test <img src=\\\"" + src + "\\\" align=\\\"" + align + "\\\"> of image.\" }";
     QQmlComponent textComponent(&engine);
-    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile("."));
+    textComponent.setData(componentStr.toLatin1(), testFileUrl("."));
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
     QVERIFY(textObject != nullptr);
@@ -3208,10 +3208,10 @@ void tst_qquicktext::imgTagsAlign()
 
 void tst_qquicktext::imgTagsMultipleImages()
 {
-    QString componentStr = "import QtQuick 2.0\nText { text: \"This is a starfish<img src=\\\"data/images/starfish_2.png\\\" width=\\\"60\\\" height=\\\"60\\\" > and another one<img src=\\\"data/images/heart200.png\\\" width=\\\"85\\\" height=\\\"85\\\">.\" }";
+    QString componentStr = "import QtQuick 2.0\nText { text: \"This is a starfish<img src=\\\"images/starfish_2.png\\\" width=\\\"60\\\" height=\\\"60\\\" > and another one<img src=\\\"images/heart200.png\\\" width=\\\"85\\\" height=\\\"85\\\">.\" }";
 
     QQmlComponent textComponent(&engine);
-    textComponent.setData(componentStr.toLatin1(), QUrl::fromLocalFile("."));
+    textComponent.setData(componentStr.toLatin1(), testFileUrl("."));
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
     QVERIFY(textObject != nullptr);
@@ -3267,11 +3267,15 @@ void tst_qquicktext::imgTagsUpdates()
 
 void tst_qquicktext::imgTagsError()
 {
-    QString componentStr = "import QtQuick 2.0\nText { text: \"This is a starfish<img src=\\\"data/images/starfish_2.pn\\\" width=\\\"60\\\" height=\\\"60\\\">.\" }";
+    QString componentStr = "import QtQuick 2.0\nText { text: \"This is a starfish<img src=\\\"images/starfish_2.pn\\\" width=\\\"60\\\" height=\\\"60\\\">.\" }";
 
     QQmlComponent textComponent(&engine);
-    QTest::ignoreMessage(QtWarningMsg, "<Unknown File>:2:1: QML Text: Cannot open: file:data/images/starfish_2.pn");
-    textComponent.setData(componentStr.toLatin1(), QUrl("file:"));
+    const QString expectedMessage(
+            testFileUrl(".").toString()
+            + ":2:1: QML Text: Cannot open: "
+            + testFileUrl("images/starfish_2.pn").toString());
+    QTest::ignoreMessage(QtWarningMsg, expectedMessage.toLatin1());
+    textComponent.setData(componentStr.toLatin1(), testFileUrl("."));
     QQuickText *textObject = qobject_cast<QQuickText*>(textComponent.create());
 
     QVERIFY(textObject != nullptr);
