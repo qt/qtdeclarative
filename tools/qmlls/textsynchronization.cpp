@@ -49,7 +49,8 @@ void TextSynchronization::didOpenTextDocument(const DidOpenTextDocumentParams &p
 {
     const TextDocumentItem &item = params.textDocument;
     const QString fileName = m_codeModel->url2Path(QmlLsp::lspUriToQmlUrl(item.uri));
-    m_codeModel->newOpenFile(QmlLsp::lspUriToQmlUrl(item.uri), item.version, item.text);
+    m_codeModel->newOpenFile(QmlLsp::lspUriToQmlUrl(item.uri), item.version,
+                             QString::fromUtf8(item.text));
 }
 
 void TextSynchronization::didDidChangeTextDocument(const DidChangeTextDocumentParams &params)
@@ -68,7 +69,7 @@ void TextSynchronization::didDidChangeTextDocument(const DidChangeTextDocumentPa
         QMutexLocker l(document->mutex());
         for (const auto &change : changes) {
             if (!change.range) {
-                document->setPlainText(change.text);
+                document->setPlainText(QString::fromUtf8(change.text));
                 continue;
             }
 
@@ -80,10 +81,12 @@ void TextSynchronization::didDidChangeTextDocument(const DidChangeTextDocumentPa
             const int end =
                     document->findBlockByNumber(rangeEnd.line).position() + rangeEnd.character;
 
-            document->setPlainText(
-                    document->toPlainText().replace(start, end - start, change.text));
+            document->setPlainText(document->toPlainText().replace(start, end - start,
+                                                                   QString::fromUtf8(change.text)));
         }
         document->setVersion(params.textDocument.version);
+        qCDebug(lspServerLog).noquote()
+                << "text is\n:----------" << document->toPlainText() << "\n_________";
     }
     m_codeModel->addOpenToUpdate(url);
     m_codeModel->openNeedUpdate();
