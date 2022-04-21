@@ -2487,7 +2487,7 @@ void QQuickPopup::classBegin()
 void QQuickPopup::componentComplete()
 {
     Q_D(QQuickPopup);
-    qCDebug(lcPopup) << "componentComplete";
+    qCDebug(lcPopup) << "componentComplete" << this;
     if (!parentItem())
         resetParentItem();
 
@@ -2635,6 +2635,7 @@ void QQuickPopup::contentItemChange(QQuickItem *newItem, QQuickItem *oldItem)
 
 void QQuickPopup::contentSizeChange(const QSizeF &newSize, const QSizeF &oldSize)
 {
+    qCDebug(lcPopup) << "contentSizeChange called on" << this << "with newSize" << newSize << "oldSize" << oldSize;
     if (!qFuzzyCompare(newSize.width(), oldSize.width()))
         emit contentWidthChanged();
     if (!qFuzzyCompare(newSize.height(), oldSize.height()))
@@ -2651,6 +2652,7 @@ void QQuickPopup::fontChange(const QFont &newFont, const QFont &oldFont)
 void QQuickPopup::geometryChange(const QRectF &newGeometry, const QRectF &oldGeometry)
 {
     Q_D(QQuickPopup);
+    qCDebug(lcPopup) << "geometryChange called on" << this << "with newGeometry" << newGeometry << "oldGeometry" << oldGeometry;
     d->reposition();
     if (!qFuzzyCompare(newGeometry.width(), oldGeometry.width())) {
         emit widthChanged();

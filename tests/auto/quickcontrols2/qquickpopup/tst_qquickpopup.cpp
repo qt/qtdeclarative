@@ -104,6 +104,8 @@ private slots:
     void destroyDuringExitTransition();
     void releaseAfterExitTransition();
     void dimmerContainmentMask();
+    void shrinkPopupThatWasLargerThanWindow_data();
+    void shrinkPopupThatWasLargerThanWindow();
 };
 
 tst_QQuickPopup::tst_QQuickPopup()
@@ -1702,6 +1704,49 @@ void tst_QQuickPopup::dimmerContainmentMask()
     QCOMPARE(window->property("clickCount"), ++expectedClickCount); // no mask left behind
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, QPoint(2, 2));
     QCOMPARE(window->property("clickCount"), ++expectedClickCount); // no mask left behind
+}
+
+void tst_QQuickPopup::shrinkPopupThatWasLargerThanWindow_data()
+{
+    QTest::addColumn<QString>("fileName");
+
+    QTest::newRow("vertical") << "shrinkPopupThatWasLargerThanWindowHeight.qml";
+    QTest::newRow("horizontal") << "shrinkPopupThatWasLargerThanWindowWidth.qml";
+}
+
+void tst_QQuickPopup::shrinkPopupThatWasLargerThanWindow()
+{
+    QFETCH(QString, fileName);
+
+    QQuickApplicationHelper helper(this, fileName);
+    QVERIFY2(helper.ready, helper.failureMessage());
+
+    QQuickWindow *window = helper.window;
+    window->show();
+    QVERIFY(QTest::qWaitForWindowExposed(window));
+
+    QQuickPopup *popup = window->property("popup").value<QQuickPopup*>();
+    QVERIFY(popup);
+
+    popup->open();
+    QTRY_VERIFY(popup->isOpened());
+
+    // Shrink the popup by reducing the model count.
+    QVERIFY(window->setProperty("model", 1));
+
+    QVERIFY2(popup->implicitWidth() < window->width(), qPrintable(QString::fromLatin1(
+        "Expected popup's implicitWidth (%1) to be less than the window's width (%2)")
+            .arg(popup->implicitWidth()).arg(window->width())));
+    QVERIFY2(popup->width() < window->width(), qPrintable(QString::fromLatin1(
+        "Expected popup's width (%1) to be less than the window's width (%2)")
+            .arg(popup->width()).arg(window->width())));
+
+    QVERIFY2(popup->implicitHeight() < window->height(), qPrintable(QString::fromLatin1(
+        "Expected popup's implicitHeight (%1) to be less than the window's height (%2)")
+            .arg(popup->implicitHeight()).arg(window->height())));
+    QVERIFY2(popup->height() < window->height(), qPrintable(QString::fromLatin1(
+        "Expected popup's height (%1) to be less than the window's height (%2)")
+            .arg(popup->height()).arg(window->height())));
 }
 
 QTEST_QUICKCONTROLS_MAIN(tst_QQuickPopup)
