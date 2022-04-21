@@ -138,10 +138,76 @@ void ControlsNativeValidatorPass::run(const QQmlSA::Element &element)
     }
 }
 
+AnchorsValidatorPass::AnchorsValidatorPass(QQmlSA::PassManager *manager)
+    : QQmlSA::ElementPass(manager)
+{
+    m_item = resolveType("QtQuick", "Item");
+}
+
+bool AnchorsValidatorPass::shouldRun(const QQmlSA::Element &element)
+{
+    return !m_item.isNull() && element->inherits(m_item)
+            && element->hasOwnPropertyBindings(u"anchors"_qs);
+}
+
+void AnchorsValidatorPass::run(const QQmlSA::Element &element)
+{
+    QQmlJS::SourceLocation left, right, hCenter;
+    QQmlJS::SourceLocation top, bottom, vCenter;
+    QQmlJS::SourceLocation baseline;
+    auto bindings = element->ownPropertyBindings(u"anchors"_qs);
+    for (auto it = bindings.first; it != bindings.second; it++) {
+        for (const auto &groupBinding : it->groupType()->ownPropertyBindings()) {
+            const QString propertyName = groupBinding.propertyName();
+            const QQmlJS::SourceLocation srcLoc = groupBinding.sourceLocation();
+            if (propertyName == u"horizontalCenter")
+                hCenter = srcLoc;
+            if (propertyName == u"verticalCenter")
+                vCenter = srcLoc;
+            if (propertyName == u"left")
+                left = srcLoc;
+            else if (propertyName == u"right")
+                right = srcLoc;
+            else if (propertyName == u"top")
+                top = srcLoc;
+            else if (propertyName == u"bottom")
+                bottom = srcLoc;
+            else if (propertyName == u"baseline")
+                baseline = srcLoc;
+
+            if (propertyName == u"horizontalCenter" || propertyName == u"verticalCenter") {
+                if (groupBinding.bindingType() == QQmlJSMetaPropertyBinding::Null) {
+                    emitWarning("Cannot anchor to a null item.", srcLoc);
+                }
+            }
+        }
+    }
+
+    if (left.isValid() && right.isValid() && hCenter.isValid()) {
+        emitWarning("Cannot specify left, right, and horizontalCenter anchors at the same time.",
+                    hCenter);
+    }
+
+    if (top.isValid() && bottom.isValid() && vCenter.isValid()) {
+        emitWarning("Cannot specify top, bottom, and verticalCenter anchors at the same time.",
+                    vCenter);
+    }
+
+    if (baseline.isValid() && (top.isValid() || bottom.isValid() || vCenter.isValid())) {
+        emitWarning("Baseline anchor cannot be used in conjunction with top, bottom, or "
+                    "verticalCenter anchors.",
+                    baseline);
+    }
+}
+
 void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
                                         const QQmlSA::Element &rootElement)
 {
     Q_UNUSED(rootElement);
+
+    if (manager->hasImportedModule("QtQuick"))
+        manager->registerElementPass(std::make_unique<AnchorsValidatorPass>(manager));
+
     if (manager->hasImportedModule(u"QtQuick.Layouts"_qs))
         manager->registerElementPass(std::make_unique<LayoutChildrenValidatorPass>(manager));
 

@@ -78,4 +78,16 @@ private:
     QList<ControlElement> m_elements;
 };
 
+class AnchorsValidatorPass : public QQmlSA::ElementPass
+{
+public:
+    AnchorsValidatorPass(QQmlSA::PassManager *manager);
+
+    bool shouldRun(const QQmlSA::Element &element) override;
+    void run(const QQmlSA::Element &element) override;
+
+private:
+    QQmlSA::Element m_item;
+};
+
 #endif // QUICKLINTPLUGIN_H

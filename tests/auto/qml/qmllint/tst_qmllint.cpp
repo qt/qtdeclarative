@@ -114,6 +114,7 @@ private Q_SLOTS:
 
 #if QT_CONFIG(library)
     void testPlugin();
+    void quickPlugin();
 #endif
 private:
     enum DefaultImportOption { NoDefaultImports, UseDefaultImports };
@@ -1650,6 +1651,27 @@ void TestQmllint::testPlugin()
             Result { { Message { u"QtQuick.Controls and NO QtQuick present"_qs } } });
     // Verify that none of the passes do anything when they're not supposed to
     runTest("nothing_pluginTest.qml", Result::clean());
+}
+
+// TODO: Eventually tests for (real) plugins need to be moved into a separate file
+void TestQmllint::quickPlugin()
+{
+    const auto &plugins = m_linter.plugins();
+
+    const bool pluginFound =
+            std::find_if(plugins.cbegin(), plugins.cend(),
+                         [](const auto &plugin) { return plugin.name() == "Quick"; })
+            != plugins.cend();
+    QVERIFY(pluginFound);
+
+    runTest("pluginQuick_anchors.qml",
+            Result {
+                    { Message {
+                              u"Cannot specify left, right, and horizontalCenter anchors at the same time."_qs },
+                      Message {
+                              u"Cannot specify top, bottom, and verticalCenter anchors at the same time."_qs },
+                      Message {
+                              u"Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors."_qs } } });
 }
 #endif
 
