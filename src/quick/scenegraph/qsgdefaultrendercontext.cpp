@@ -178,8 +178,6 @@ void QSGDefaultRenderContext::prepareSync(qreal devicePixelRatio,
     m_currentFrameCommandBuffer = cb;
 }
 
-static QBasicMutex qsg_framerender_mutex;
-
 void QSGDefaultRenderContext::beginNextFrame(QSGRenderer *renderer, const QSGRenderTarget &renderTarget,
                                              RenderPassCallback mainPassRecordingStart,
                                              RenderPassCallback mainPassRecordingEnd,
