@@ -2470,10 +2470,27 @@ but this file does not exist.  Possible reasons include:
 ")
     endif()
 
-    # Find location of qml dir.
-    # TODO: qt.prf implies that there might be more than one qml import path to
-    #       pass to qmlimportscanner.
-    set(qml_path "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_QML}")
+    # Find QML import paths.
+    if("${_qt_additional_packages_prefix_paths}" STREQUAL "")
+        # We have one installation prefix for all Qt modules. Add the "<prefix>/qml" directory.
+        set(qml_import_paths "${QT6_INSTALL_PREFIX}/${QT6_INSTALL_QML}")
+    else()
+        # We have multiple installation prefixes: one per Qt repository (conan). Add those that have
+        # a "qml" subdirectory.
+        set(qml_import_paths)
+        foreach(root IN ITEMS "${QT6_INSTALL_PREFIX};${_qt_additional_packages_prefix_paths}")
+            set(candidate "${root}/${QT6_INSTALL_QML}")
+            if(IS_DIRECTORY "${candidate}")
+                list(APPEND qml_import_paths "${candidate}")
+            endif()
+        endforeach()
+    endif()
+
+    # Construct the -importPath arguments.
+    set(import_path_arguments)
+    foreach(path IN LISTS qml_import_paths)
+        list(APPEND import_path_arguments -importPath ${path})
+    endforeach()
 
     # Run qmlimportscanner to generate the cmake file that records the import entries
     get_target_property(target_source_dir ${target} SOURCE_DIR)
@@ -2487,7 +2504,7 @@ but this file does not exist.  Possible reasons include:
         -rootPath "${target_source_dir}"
         -cmake-output
         -output-file "${imports_file}"
-        -importPath "${qml_path}"
+        ${import_path_arguments}
     )
     get_target_property(qml_import_path ${target} QT_QML_IMPORT_PATH)
 
