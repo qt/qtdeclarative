@@ -62,7 +62,7 @@ ApplicationWindow {
 
     Drawer {
         id: drawer
-        width: window.width / 2
+        width: 200
         height: parent.height
         dragMargin: parent.width
     }

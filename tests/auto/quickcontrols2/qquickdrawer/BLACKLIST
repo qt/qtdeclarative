@@ -6,12 +6,3 @@
 
 [position]
 opensuse-leap
-android # QTBUG-100257
-
-# QTBUG-100257
-[reposition]
-android
-[hover]
-android
-[multiTouch]
-android
