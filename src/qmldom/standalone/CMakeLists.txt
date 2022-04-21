@@ -1,16 +1,15 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(standalone_qmldom LANGUAGES CXX)
+include(../../../.cmake.conf)
+project(standalone_qmldom LANGUAGES CXX VERSION "${QT_REPO_MODULE_VERSION}")
 option(QMLDOM_EXTERNAL_BUILD "If the build is against an external Qt, and not tested inside a build of this Qt" ON)
 
 if (QMLDOM_EXTERNAL_BUILD)
 find_package(Qt6 COMPONENTS Core Qml)
+set(CMAKE_AUTOMOC ON)
 endif()
 
-include(../../../.cmake.conf)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
 
 if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
@@ -60,6 +59,9 @@ add_library(qmldomlib
         ../qqmldomtop.cpp ../qqmldomtop_p.h
         ../qqmldomtypesreader.cpp ../qqmldomtypesreader_p.h
 )
+if(NOT QMLDOM_EXTERNAL_BUILD)
+    qt_autogen_tools_initial_setup(qmldomlib)
+endif()
 
 target_compile_definitions(qmldomlib PUBLIC QMLDOM_STANDALONE)
 
