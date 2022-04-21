@@ -339,7 +339,6 @@ ErrorGroups QmlFile::myParsingErrors()
 bool QmlFile::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
 {
     bool cont = ExternalOwningItem::iterateDirectSubpaths(self, visitor);
-    cont = cont && self.dvValueField(visitor, Fields::isValid, m_isValid);
     cont = cont && self.dvWrapField(visitor, Fields::components, m_components);
     cont = cont && self.dvWrapField(visitor, Fields::pragmas, m_pragmas);
     cont = cont && self.dvWrapField(visitor, Fields::imports, m_imports);
