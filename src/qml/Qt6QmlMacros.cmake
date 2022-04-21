@@ -1202,7 +1202,8 @@ function(qt6_target_compile_qml_to_cpp target)
         )
 
         set_source_files_properties(${compiled_header} ${compiled_cpp}
-            PROPERTIES SKIP_AUTOGEN ON)
+            PROPERTIES SKIP_AUTOGEN ON
+                       SKIP_UNITY_BUILD_INCLUSION ON)
         target_sources(${target} PRIVATE ${compiled_header} ${compiled_cpp})
         target_include_directories(${target} PUBLIC ${out_dir})
         # The current scope automatically sees the file as generated, but the
@@ -1234,7 +1235,8 @@ function(qt6_target_compile_qml_to_cpp target)
 
     # run MOC manually for the generated files
     qt6_wrap_cpp(compiled_moc_files ${compiled_files} TARGET ${target} OPTIONS ${extra_moc_options})
-    set_source_files_properties(${compiled_moc_files} PROPERTIES SKIP_AUTOGEN ON)
+    set_source_files_properties(${compiled_moc_files} PROPERTIES SKIP_AUTOGEN ON
+                                                                 SKIP_UNITY_BUILD_INCLUSION ON)
     target_sources(${target} PRIVATE ${compiled_moc_files})
     if(NOT target_source_dir STREQUAL CMAKE_CURRENT_SOURCE_DIR)
         if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
