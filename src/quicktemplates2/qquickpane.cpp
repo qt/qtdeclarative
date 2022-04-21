@@ -38,7 +38,11 @@
 #include "qquickpane_p_p.h"
 #include "qquickcontentitem_p.h"
 
+#include <QtCore/qloggingcategory.h>
+
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcPane, "qt.quick.controls.pane")
 
 /*!
     \qmltype Pane
@@ -224,6 +228,7 @@ void QQuickPanePrivate::updateContentWidth()
 
     const qreal oldContentWidth = contentWidth;
     contentWidth = implicitContentWidth;
+    qCDebug(lcPane) << "contentWidth of" << q << "changed to" << contentWidth;
     q->contentSizeChange(QSizeF(contentWidth, contentHeight), QSizeF(oldContentWidth, contentHeight));
     emit q->contentWidthChanged();
 }
@@ -236,6 +241,7 @@ void QQuickPanePrivate::updateContentHeight()
 
     const qreal oldContentHeight = contentHeight;
     contentHeight = implicitContentHeight;
+    qCDebug(lcPane) << "contentHeight of" << q << "changed to" << contentHeight;
     q->contentSizeChange(QSizeF(contentWidth, contentHeight), QSizeF(contentWidth, oldContentHeight));
     emit q->contentHeightChanged();
 }

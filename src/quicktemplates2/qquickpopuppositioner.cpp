@@ -40,10 +40,13 @@
 #include "qquickpopupitem_p_p.h"
 #include "qquickpopup_p_p.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtQml/qqmlinfo.h>
 #include <QtQuick/private/qquickitem_p.h>
 
 QT_BEGIN_NAMESPACE
+
+Q_LOGGING_CATEGORY(lcPopupPositioner, "qt.quick.controls.popuppositioner")
 
 static const QQuickItemPrivate::ChangeTypes AncestorChangeTypes = QQuickItemPrivate::Geometry
                                                                   | QQuickItemPrivate::Parent
@@ -110,6 +113,8 @@ void QQuickPopupPositioner::reposition()
         popupItem->polish();
         return;
     }
+
+    qCDebug(lcPopupPositioner) << "reposition called for" << m_popup;
 
     const qreal w = popupItem->width() * m_popupScale;
     const qreal h = popupItem->height() * m_popupScale;
@@ -259,11 +264,21 @@ void QQuickPopupPositioner::reposition()
         emit m_popup->yChanged();
     }
 
-    if (!p->hasWidth && widthAdjusted && rect.width() > 0)
+    if (!p->hasWidth && widthAdjusted && rect.width() > 0) {
         popupItem->setWidth(rect.width() / m_popupScale);
-    if (!p->hasHeight && heightAdjusted && rect.height() > 0)
+        // The popup doesn't have an explicit width, so we should respect that by not
+        // making our call above an explicit assignment. If we don't, the popup won't
+        // resize after being repositioned in some cases.
+        QQuickItemPrivate::get(popupItem)->widthValidFlag = false;
+    }
+    if (!p->hasHeight && heightAdjusted && rect.height() > 0) {
         popupItem->setHeight(rect.height() / m_popupScale);
+        QQuickItemPrivate::get(popupItem)->heightValidFlag = false;
+    }
     m_positioning = false;
+
+    qCDebug(lcPopupPositioner) << "- new popupItem geometry:"
+        << popupItem->x() << popupItem->y() << popupItem->width() << popupItem->height();
 }
 
 void QQuickPopupPositioner::itemGeometryChanged(QQuickItem *, QQuickGeometryChange, const QRectF &)
