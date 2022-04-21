@@ -151,6 +151,12 @@ void tst_RenderControl::renderAndReadBackWithRhi()
         QSKIP("Skipping Vulkan-based QRhi readback test due to failing to create a VkInstance");
 #endif
 
+#ifdef Q_OS_ANDROID
+    // QTBUG-102780
+    if (api == QSGRendererInterface::VulkanRhi)
+        QSKIP("Vulkan-based rendering tests on Android are flaky.");
+#endif
+
     // Changing the graphics api is not possible once a QQuickWindow et al is
     // created, however we do support changing it once all QQuickWindow,
     // QQuickRenderControl, etc. instances are destroyed, before creating new
