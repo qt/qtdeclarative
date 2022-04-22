@@ -34,6 +34,7 @@
 #include <QtQmlCompiler/private/qqmljsscope_p.h>
 #include "qlanguageserver_p.h"
 #include "textdocument.h"
+#include "../shared/qqmltoolingsettings.h"
 
 #include <functional>
 #include <memory>
@@ -52,6 +53,7 @@ public:
         AllCode = LatestCode | ValidCode
     };
     Q_DECLARE_FLAGS(DumpOptions, DumpOption)
+    QStringList searchPath;
     QByteArray url;
     std::optional<int> docVersion;
     QQmlJS::Dom::DomItem doc;
@@ -86,7 +88,7 @@ public:
     enum class UrlLookup { Caching, ForceLookup };
     enum class State { Running, Stopping };
 
-    explicit QQmlCodeModel(QObject *parent = nullptr);
+    explicit QQmlCodeModel(QObject *parent = nullptr, QQmlToolingSettings *settings = nullptr);
     ~QQmlCodeModel();
     QQmlJS::Dom::DomItem currentEnv();
     QQmlJS::Dom::DomItem validEnv();
@@ -103,6 +105,14 @@ public:
     void newOpenFile(const QByteArray &url, int version, const QString &docText);
     void newDocForOpenFile(const QByteArray &url, int version, const QString &docText);
     void closeOpenFile(const QByteArray &url);
+    void setRootUrls(const QList<QByteArray> &urls);
+    QList<QByteArray> rootUrls() const;
+    void addRootUrls(const QList<QByteArray> &urls);
+    QStringList buildPathsForRootUrl(const QByteArray &url);
+    QStringList buildPathsForFileUrl(const QByteArray &url);
+    void setBuildPathsForRootUrl(QByteArray url, const QStringList &paths);
+    void removeRootUrls(const QList<QByteArray> &urls);
+    QQmlToolingSettings *settings();
 signals:
     void updatedSnapshot(const QByteArray &url);
 private:
@@ -130,9 +140,12 @@ private:
     QQmlJS::Dom::DomItem m_validEnv;
     QByteArray m_lastOpenDocumentUpdated;
     QSet<QByteArray> m_openDocumentsToUpdate;
+    QHash<QByteArray, QStringList> m_buildPathsForRootUrl;
+    QList<QByteArray> m_rootUrls;
     QHash<QByteArray, QString> m_url2path;
     QHash<QString, QByteArray> m_path2url;
     QHash<QByteArray, OpenDocument> m_openDocuments;
+    QQmlToolingSettings *m_settings;
 };
 
 } // namespace QmlLsp

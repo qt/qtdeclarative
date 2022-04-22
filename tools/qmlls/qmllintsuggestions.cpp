@@ -166,7 +166,7 @@ void QmlLintSuggestions::diagnose(const QByteArray &url)
     QString fileContents;
     if (doc) {
         qCDebug(lintLog) << "has doc, do real lint";
-        QStringList imports;
+        QStringList imports = m_codeModel->buildPathsForFileUrl(url);
         imports.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
         // add m_server->clientInfo().rootUri & co?
         bool useAbsolutePath = false;

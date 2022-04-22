@@ -778,6 +778,7 @@ public:
     void addAllLoadedCallback(DomItem &self, Callback c);
 
     void clearReferenceCache();
+    void setLoadPaths(const QStringList &v);
 
 private:
     friend class RefCacheEntry;

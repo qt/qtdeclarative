@@ -30,10 +30,12 @@
 #include <QtCore/qfileinfo.h>
 #include <QtCore/qdir.h>
 #include <QtCore/qthreadpool.h>
+#include <QtCore/qlibraryinfo.h>
 #include <QtQmlDom/private/qqmldomtop_p.h>
 #include "textdocument.h"
 
 #include <memory>
+#include <algorithm>
 
 QT_BEGIN_NAMESPACE
 
@@ -99,12 +101,13 @@ indexNeedsUpdate() and openNeedUpdate(), check if there is work to do, and if ye
 worker thread (or more) that work on it exist.
 */
 
-QQmlCodeModel::QQmlCodeModel(QObject *parent)
+QQmlCodeModel::QQmlCodeModel(QObject *parent, QQmlToolingSettings *settings)
     : QObject { parent },
       m_currentEnv(std::make_shared<DomEnvironment>(QStringList(),
                                                     DomEnvironment::Option::SingleThreaded)),
       m_validEnv(std::make_shared<DomEnvironment>(QStringList(),
-                                                  DomEnvironment::Option::SingleThreaded))
+                                                  DomEnvironment::Option::SingleThreaded)),
+      m_settings(settings)
 {
 }
 
@@ -431,6 +434,11 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const 
     qCDebug(codeModelLog) << "updating doc" << url << "to version" << version << "("
                           << docText.length() << "chars)";
     DomItem newCurrent = m_currentEnv.makeCopy(DomItem::CopyOption::EnvConnected).item();
+    QStringList loadPaths = buildPathsForFileUrl(url);
+    loadPaths.append(QLibraryInfo::path(QLibraryInfo::QmlImportsPath));
+    if (std::shared_ptr<DomEnvironment> newCurrentPtr = newCurrent.ownerAs<DomEnvironment>()) {
+        newCurrentPtr->setLoadPaths(loadPaths);
+    }
     QString fPath = url2Path(url, UrlLookup::ForceLookup);
     Path p;
     newCurrent.loadFile(
@@ -493,6 +501,139 @@ void QQmlCodeModel::closeOpenFile(const QByteArray &url)
 {
     QMutexLocker l(&m_mutex);
     m_openDocuments.remove(url);
+}
+
+void QQmlCodeModel::setRootUrls(const QList<QByteArray> &urls)
+{
+    QMutexLocker l(&m_mutex);
+    m_rootUrls = urls;
+}
+
+void QQmlCodeModel::addRootUrls(const QList<QByteArray> &urls)
+{
+    QMutexLocker l(&m_mutex);
+    for (const QByteArray &url : urls) {
+        if (!m_rootUrls.contains(url))
+            m_rootUrls.append(url);
+    }
+}
+
+void QQmlCodeModel::removeRootUrls(const QList<QByteArray> &urls)
+{
+    QMutexLocker l(&m_mutex);
+    for (const QByteArray &url : urls)
+        m_rootUrls.removeOne(url);
+}
+
+QList<QByteArray> QQmlCodeModel::rootUrls() const
+{
+    QMutexLocker l(&m_mutex);
+    return m_rootUrls;
+}
+
+QStringList QQmlCodeModel::buildPathsForRootUrl(const QByteArray &url)
+{
+    QMutexLocker l(&m_mutex);
+    return m_buildPathsForRootUrl.value(url);
+}
+
+static bool isNotSeparator(char c)
+{
+    return c != '/';
+}
+
+QStringList QQmlCodeModel::buildPathsForFileUrl(const QByteArray &url)
+{
+    QList<QByteArray> roots;
+    {
+        QMutexLocker l(&m_mutex);
+        roots = m_buildPathsForRootUrl.keys();
+    }
+    // we want to longest match to be first, as it should override shorter matches
+    std::sort(roots.begin(), roots.end(), [](const QByteArray &el1, const QByteArray &el2) {
+        if (el1.length() > el2.length())
+            return true;
+        if (el1.length() < el2.length())
+            return false;
+        return el1 < el2;
+    });
+    QStringList buildPaths;
+    QStringList defaultValues;
+    if (!roots.isEmpty() && roots.last().isEmpty())
+        roots.removeLast();
+    QByteArray urlSlash(url);
+    if (!urlSlash.isEmpty() && isNotSeparator(urlSlash.at(urlSlash.length() - 1)))
+        urlSlash.append('/');
+    // look if the file has a know prefix path
+    for (const QByteArray &root : roots) {
+        if (urlSlash.startsWith(root)) {
+            buildPaths += buildPathsForRootUrl(root);
+            break;
+        }
+    }
+    QString path = url2Path(url);
+    if (buildPaths.isEmpty() && m_settings) {
+        // look in the settings
+        m_settings->search(path);
+        QString buildDir = QStringLiteral(u"buildDir");
+        if (m_settings->isSet(buildDir))
+            buildPaths += m_settings->value(buildDir).toString().split(',', Qt::SkipEmptyParts);
+    }
+    if (buildPaths.isEmpty()) {
+        // default values
+        buildPaths += buildPathsForRootUrl(QByteArray());
+    }
+    // env variable
+    QStringList envPaths = qEnvironmentVariable("QMLLS_BUILD_DIRS").split(',', Qt::SkipEmptyParts);
+    buildPaths += envPaths;
+    if (buildPaths.isEmpty()) {
+        // heuristic to find build dir
+        QDir d(path);
+        d.setNameFilters(QStringList({ u"build*"_s }));
+        const int maxDirDepth = 8;
+        int iDir = maxDirDepth;
+        QString dirName = d.dirName();
+        QDateTime lastModified;
+        while (d.cdUp() && --iDir > 0) {
+            for (const QFileInfo &fInfo : d.entryInfoList(QDir::Dirs)) {
+                if (fInfo.completeBaseName() == u"build"
+                    || fInfo.completeBaseName().startsWith(u"build-%1"_s.arg(dirName))) {
+                    if (iDir > 1)
+                        iDir = 1;
+                    if (!lastModified.isValid() || lastModified < fInfo.lastModified()) {
+                        buildPaths.clear();
+                        buildPaths.append(fInfo.absoluteFilePath());
+                    }
+                }
+            }
+        }
+    }
+    // add dependent build directories
+    QStringList res;
+    std::reverse(buildPaths.begin(), buildPaths.end());
+    const int maxDeps = 4;
+    while (!buildPaths.isEmpty()) {
+        QString bPath = buildPaths.last();
+        buildPaths.removeLast();
+        res += bPath;
+        if (QFile::exists(bPath + u"/_deps") && bPath.split(u"/_deps/"_s).size() < maxDeps) {
+            QDir d(bPath + u"/_deps");
+            for (const QFileInfo &fInfo : d.entryInfoList(QDir::Dirs))
+                buildPaths.append(fInfo.absoluteFilePath());
+        }
+    }
+    return res;
+}
+
+void QQmlCodeModel::setBuildPathsForRootUrl(QByteArray url, const QStringList &paths)
+{
+    QMutexLocker l(&m_mutex);
+    if (!url.isEmpty() && isNotSeparator(url.at(url.length() - 1)))
+        url.append('/');
+    if (paths.isEmpty())
+        m_buildPathsForRootUrl.remove(url);
+    else
+        m_buildPathsForRootUrl.insert(url, paths);
 }
 
 void QQmlCodeModel::openUpdate(const QByteArray &url)

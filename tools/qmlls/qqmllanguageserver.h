@@ -32,6 +32,7 @@
 #include "qqmlcodemodel.h"
 #include "textsynchronization.h"
 #include "qmllintsuggestions.h"
+#include "../shared/qqmltoolingsettings.h"
 
 QT_BEGIN_NAMESPACE
 namespace QmlLsp {
@@ -53,7 +54,8 @@ class QQmlLanguageServer : public QLanguageServerModule
 {
     Q_OBJECT
 public:
-    QQmlLanguageServer(std::function<void(const QByteArray &)> sendData);
+    QQmlLanguageServer(std::function<void(const QByteArray &)> sendData,
+                       QQmlToolingSettings *settings = nullptr);
 
     QString name() const final;
     void registerHandlers(QLanguageServer *server, QLanguageServerProtocol *protocol) final;

@@ -2234,6 +2234,12 @@ std::shared_ptr<DomEnvironment> DomEnvironment::base() const
     return m_base;
 }
 
+void DomEnvironment::setLoadPaths(const QStringList &v)
+{
+    QMutexLocker l(mutex());
+    m_loadPaths = v;
+}
+
 QStringList DomEnvironment::loadPaths() const
 {
     QMutexLocker l(mutex());

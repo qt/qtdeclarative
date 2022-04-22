@@ -151,7 +151,30 @@ int main(int argv, char *argc[])
                                      QLatin1String("logFile"));
     parser.addOption(logFileOption);
 
+    QString buildDir = QStringLiteral(u"buildDir");
+    QCommandLineOption buildDirOption(
+            QStringList() << "b"
+                          << "build-dir",
+            QLatin1String("Adds a build dir to look up for qml information"), buildDir);
+    parser.addOption(buildDirOption);
+    settings.addOption(buildDir);
+
+    QCommandLineOption writeDefaultsOption(
+            QStringList() << "write-defaults",
+            QLatin1String("Writes defaults settings to .qmlls.ini and exits (Warning: This "
+                          "will overwrite any existing settings and comments!)"));
+    parser.addOption(writeDefaultsOption);
+
+    QCommandLineOption ignoreSettings(QStringList() << "ignore-settings",
+                                      QLatin1String("Ignores all settings files and only takes "
+                                                    "command line options into consideration"));
+    parser.addOption(ignoreSettings);
+
     parser.process(app);
+
+    if (parser.isSet(writeDefaultsOption)) {
+        return settings.writeDefaults() ? 0 : 1;
+    }
     if (parser.isSet(logFileOption)) {
         QString fileName = parser.value(logFileOption);
         qInfo() << "will log to" << fileName;
@@ -178,11 +201,15 @@ int main(int argv, char *argc[])
     }
 #endif
     QMutex writeMutex;
-    QQmlLanguageServer qmlServer([&writeMutex](const QByteArray &data) {
-        QMutexLocker l(&writeMutex);
-        std::cout.write(data.constData(), data.length());
-        std::cout.flush();
-    });
+    QQmlLanguageServer qmlServer(
+            [&writeMutex](const QByteArray &data) {
+                QMutexLocker l(&writeMutex);
+                std::cout.write(data.constData(), data.length());
+                std::cout.flush();
+            },
+            (parser.isSet(ignoreSettings) ? nullptr : &settings));
+    if (parser.isSet(buildDirOption))
+        qmlServer.codeModel()->setBuildPathsForRootUrl(QByteArray(), parser.values(buildDirOption));
     StdinReader *r = new StdinReader;
     QObject::connect(r, &StdinReader::receivedData, qmlServer.server(),
                      &QLanguageServer::receiveData);

@@ -63,8 +63,10 @@ is thread safe. All the methods of the server() obect are also threadsafe.
 
 The code model starts other threads to update its state, see its documentation for more information.
 */
-QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> sendData)
-    : m_server(sendData),
+QQmlLanguageServer::QQmlLanguageServer(std::function<void(const QByteArray &)> sendData,
+                                       QQmlToolingSettings *settings)
+    : m_codeModel(nullptr, settings),
+      m_server(sendData),
       m_textSynchronization(&m_codeModel),
       m_lint(&m_server, &m_codeModel)
 {
@@ -114,6 +116,11 @@ void QQmlLanguageServer::exit()
 int QQmlLanguageServer::returnValue() const
 {
     return m_returnValue;
+}
+
+QQmlCodeModel *QQmlLanguageServer::codeModel()
+{
+    return &m_codeModel;
 }
 
 QLanguageServer *QQmlLanguageServer::server()
