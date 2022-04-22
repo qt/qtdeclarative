@@ -263,11 +263,11 @@ void QmlLintSuggestions::diagnose(const QByteArray &uri)
                 },
                 true);
 
-        const QQmlJSLogger *logger = linter.logger();
-
-        for (const auto &messages : {logger->infos(), logger->warnings(), logger->errors()}) {
-            for (const Message &message : messages) {
-               diagnostics.append(messageToDiagnostic(message));
+        if (const QQmlJSLogger *logger = linter.logger()) {
+            for (const auto &messages : { logger->infos(), logger->warnings(), logger->errors() }) {
+                for (const Message &message : messages) {
+                    diagnostics.append(messageToDiagnostic(message));
+                }
             }
         }
     }
