@@ -819,10 +819,9 @@ void QQuickTextInput::setCursorVisible(bool on)
     Unicode characters, such as in the case of surrogate pairs, linguistic
     ligatures or diacritics.
 
-    \l displayText is different if echoMode is set to \l TextInput.Password: then
-    each passwordMaskCharacter is a "narrow" character
-    (the cursorPosition always moves by 1), even if the text in the TextInput is not.
-
+    \l displayText is different if echoMode is set to \c {TextInput.Password}:
+    then each passwordCharacter is a "narrow" character (the cursorPosition always
+    moves by 1), even if the text in the TextInput is not.
 */
 int QQuickTextInput::cursorPosition() const
 {

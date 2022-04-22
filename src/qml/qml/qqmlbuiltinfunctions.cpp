@@ -229,7 +229,6 @@ The following functions are also on the Qt object.
     See the \l QStyleHints documentation for further details.
 
     You should access StyleHints via \l Application::styleHints instead.
-    See \l StyleHints for more details.
 
     \note The \c styleHints object is only available when using the Qt Quick module.
 */

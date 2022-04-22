@@ -100,7 +100,7 @@ void QQuickDragHandler::onGrabChanged(QQuickPointerHandler *grabber, QPointingDe
     Possible values:
     \value DragHandler.SnapNever Never snap
     \value DragHandler.SnapAuto The \l target snaps if the event point was pressed outside of the \l target
-                                item \e and the \l target is a descendant of \l parentItem (default)
+                                item \e and the \l target is a descendant of \l {PointerHandler::}{parent} item (default)
     \value DragHandler.SnapWhenPressedOutsideTarget The \l target snaps if the event point was pressed outside of the \l target
     \value DragHandler.SnapAlways Always snap
 */
