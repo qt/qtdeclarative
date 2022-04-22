@@ -221,8 +221,8 @@ void QmlLintSuggestions::diagnose(const QByteArray &uri)
                 for (const FixSuggestion::Fix &fix : suggestion->fixes) {
                     QQmlJS::SourceLocation cut = fix.cutLocation;
 
-                    int line = cut.isValid() ? cut.startLine : 0;
-                    int column = cut.isValid() ? cut.startColumn : 0;
+                    int line = cut.isValid() ? cut.startLine - 1 : 0;
+                    int column = cut.isValid() ? cut.startColumn - 1 : 0;
 
                     QJsonObject object;
                     object[u"lspBeginLine"] = line;
@@ -230,8 +230,8 @@ void QmlLintSuggestions::diagnose(const QByteArray &uri)
 
                     Position end = { line, column };
 
-                    addLength(end, srcLoc.isValid() ? srcLoc.offset : 0,
-                              srcLoc.isValid() ? srcLoc.length : 0);
+                    addLength(end, srcLoc.isValid() ? cut.offset : 0,
+                              srcLoc.isValid() ? cut.length : 0);
                     object[u"lspEndLine"] = end.line;
                     object[u"lspEndCharacter"] = end.character;
 

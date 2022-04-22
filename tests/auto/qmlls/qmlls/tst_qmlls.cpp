@@ -191,9 +191,23 @@ void tst_Qmlls::didOpenTextDocument()
 
                 auto list = std::get<ListType>(response);
 
-                QList<QPair<QString, QString>> expectedData = {
-                    { QLatin1StringView("Did you mean \"width\"?"), QLatin1StringView("width") },
-                    { QLatin1StringView("Did you mean \"z\"?"), QLatin1StringView("z") }
+                struct ReplacementData
+                {
+                    QString replacement;
+                    Range range;
+                };
+
+                QHash<QString, ReplacementData> expectedData = {
+                    { QLatin1StringView("Did you mean \"width\"?"),
+                      { QLatin1StringView("width"),
+                        Range { Position { 3, 4 }, Position { 3, 10 } } } },
+                    { QLatin1StringView("Did you mean \"z\"?"),
+                      { QLatin1StringView("z"),
+                        Range { Position {
+                                        3,
+                                        12,
+                                },
+                                Position { 3, 15 } } } }
                 };
                 QCOMPARE(list.size(), expectedData.size());
 
@@ -222,14 +236,18 @@ void tst_Qmlls::didOpenTextDocument()
                     QVERIFY(std::holds_alternative<TextEdit>(editVariant));
 
                     TextEdit textEdit = std::get<TextEdit>(editVariant);
-                    QString newText = QString::fromUtf8(textEdit.newText);
-                    QPair<QString, QString> data = { title, newText };
+                    QString replacement = QString::fromUtf8(textEdit.newText);
+                    const Range &range = textEdit.range;
 
-                    qsizetype dataIndex = expectedData.indexOf(data);
-                    QVERIFY2(dataIndex != -1,
-                             qPrintable(QLatin1String("{\"%1\",\"%2\"}").arg(title, newText)));
+                    QVERIFY2(expectedData.contains(title),
+                             qPrintable(QLatin1String("Unexpected fix \"%1\"").arg(title)));
+                    QCOMPARE(replacement, expectedData[title].replacement);
+                    QCOMPARE(range.start.line, expectedData[title].range.start.line);
+                    QCOMPARE(range.start.character, expectedData[title].range.start.character);
+                    QCOMPARE(range.end.line, expectedData[title].range.end.line);
+                    QCOMPARE(range.end.character, expectedData[title].range.end.character);
                     // Make sure every expected entry only occurs once
-                    expectedData.remove(dataIndex);
+                    expectedData.remove(title);
                 }
 
                 success = true;
