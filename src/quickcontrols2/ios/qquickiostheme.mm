@@ -61,7 +61,7 @@ void QQuickIOSTheme::initialize(QQuickTheme *theme)
     blue = qt_mac_toQColor(UIColor.systemBlueColor.CGColor);
     disabled = qt_mac_toQColor(UIColor.tertiarySystemFillColor.CGColor);
     white = qt_mac_toQColor(UIColor.whiteColor.CGColor);
-    grey = qt_mac_toQColor(UIColor.systemGrayColor.CGColor);
+    grey = qt_mac_toQColor(UIColor.systemFillColor.CGColor);
 #else
     blue = QColor(qRgba(0, 122, 255, 255));
     white = QColor(qRgba(255, 255, 255, 255));
