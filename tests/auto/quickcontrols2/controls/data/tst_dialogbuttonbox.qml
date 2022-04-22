@@ -398,7 +398,7 @@ TestCase {
 
     // QTBUG-72886
     function test_changeCustomButtonText(data) {
-        var control = createTemporaryObject(customButtonBox, testCase, {})
+        var control = createTemporaryObject(data.component, testCase, {})
         verify(control)
 
         var listView = control.contentItem
@@ -407,6 +407,88 @@ TestCase {
         var button = control.okButton
         verify(button)
         button.text = "some longer text";
+
+        // The button should never go outside of the box.
+        tryVerify(function() { return button.mapToItem(control, 0, 0).x >= 0 },
+            1000, "Expected left edge of button to be within left edge of DialogButtonBox (i.e. greater than or equal to 0)" +
+                ", but it's " + button.mapToItem(control, 0, 0).x)
+        tryVerify(function() { return button.mapToItem(control, 0, 0).x + button.width <= control.width },
+            1000, "Expected right edge of button to be within right edge of DialogButtonBox (i.e. less than or equal to " +
+                control.width + "), but it's " + (button.mapToItem(control, 0, 0).x + button.width))
+    }
+
+    Component {
+        id: customButtonBoxInDialog
+
+        Dialog {
+            width: 300
+            visible: true
+
+            footer: DialogButtonBox {
+                objectName: "customButtonBoxInDialog"
+                alignment: Qt.AlignRight
+
+                property alias okButton: okButton
+
+                Button {
+                    id: okButton
+                    text: "OK"
+
+                    DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+                }
+            }
+        }
+    }
+
+    Component {
+        id: customButtonBoxTwoButtonsInDialog
+
+        Dialog {
+            width: 300
+            visible: true
+
+            footer: DialogButtonBox {
+                objectName: "customButtonBoxTwoButtonsInDialog"
+                alignment: Qt.AlignRight
+
+                property alias okButton: okButton
+
+                Button {
+                    id: okButton
+                    text: "OK"
+
+                    DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
+                }
+                Button {
+                    text: "Cancel"
+
+                    DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
+                }
+            }
+        }
+    }
+
+    function test_changeCustomButtonImplicitWidth_data() {
+        return [
+            { tag: "oneButton", component: customButtonBoxInDialog },
+            { tag: "twoButtons", component: customButtonBoxTwoButtonsInDialog },
+        ]
+    }
+
+    // QTBUG-102558
+    function test_changeCustomButtonImplicitWidth(data) {
+        let dialog = createTemporaryObject(data.component, testCase, {})
+        verify(dialog)
+
+        let control = dialog.footer
+        verify(control)
+
+        let listView = control.contentItem
+        waitForRendering(listView)
+
+        let button = control.okButton
+        verify(button)
+        button.implicitWidth *= 1.5
 
         // The button should never go outside of the box.
         tryVerify(function() { return button.mapToItem(control, 0, 0).x >= 0 },
