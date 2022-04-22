@@ -280,6 +280,7 @@ private:
     void generateMoveOutVar(const QString &outVar);
     void generateTypeLookup(int index);
     void generateOutputVariantConversion(const QQmlJSScope::ConstPtr &containedType);
+    void rejectIfNonQObjectOut(const QString &error);
 
     QString eqIntExpression(int lhsConst);
     QString argumentsList(int argc, int argv, QString *outVar);

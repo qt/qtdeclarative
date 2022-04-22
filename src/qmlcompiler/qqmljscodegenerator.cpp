@@ -740,6 +740,7 @@ void QQmlJSCodeGenerator::generateTypeLookup(int index)
 
     switch (m_state.accumulatorOut().variant()) {
     case QQmlJSRegisterContent::Singleton: {
+        rejectIfNonQObjectOut(u"non-QObject singleton type"_qs);
         const QString lookup = u"aotContext->loadSingletonLookup("_qs + indexString
                 + u", &"_qs + m_state.accumulatorVariableOut + u')';
         const QString initialization = u"aotContext->initLoadSingletonLookup("_qs + indexString
@@ -750,6 +751,7 @@ void QQmlJSCodeGenerator::generateTypeLookup(int index)
     case QQmlJSRegisterContent::ScopeModulePrefix:
         break;
     case QQmlJSRegisterContent::ScopeAttached: {
+        rejectIfNonQObjectOut(u"non-QObject attached type"_qs);
         const QString lookup = u"aotContext->loadAttachedLookup("_qs + indexString
                 + u", aotContext->qmlScopeObject, &"_qs + m_state.accumulatorVariableOut + u')';
         const QString initialization = u"aotContext->initLoadAttachedLookup("_qs + indexString
@@ -761,6 +763,12 @@ void QQmlJSCodeGenerator::generateTypeLookup(int index)
         reject(u"script lookup"_qs);
         break;
     case QQmlJSRegisterContent::MetaType: {
+        if (!m_typeResolver->registerIsStoredIn(
+                    m_state.accumulatorOut(), m_typeResolver->metaObjectType())) {
+            // TODO: Can we trigger this somehow?
+            //       It might be impossible, but we better be safe here.
+            reject(u"meta-object stored in different type"_qs);
+        }
         const QString lookup = u"aotContext->loadTypeLookup("_qs + indexString
                 + u", &"_qs + m_state.accumulatorVariableOut + u')';
         const QString initialization = u"aotContext->initLoadTypeLookup("_qs + indexString
@@ -791,6 +799,14 @@ void QQmlJSCodeGenerator::generateOutputVariantConversion(const QQmlJSScope::Con
     // If we could store the type directly, we would not wrap it in a QVariant.
     // Therefore, our best bet here is metaTypeFromName().
     m_body += changedRegisterVariable() + u".convert("_qs + metaTypeFromName(target) + u");\n"_qs;
+}
+
+void QQmlJSCodeGenerator::rejectIfNonQObjectOut(const QString &error)
+{
+    if (m_state.accumulatorOut().storedType()->accessSemantics()
+        != QQmlJSScope::AccessSemantics::Reference) {
+        reject(error);
+    }
 }
 
 void QQmlJSCodeGenerator::generate_GetLookup(int index)
@@ -830,15 +846,6 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
                                   == QQmlJSScope::AccessSemantics::Reference);
 
     switch (m_state.accumulatorOut().variant()) {
-    case QQmlJSRegisterContent::ScopeAttached: {
-        const QString lookup = u"aotContext->loadAttachedLookup("_qs + indexString
-                + u", aotContext->qmlScopeObject, &"_qs + m_state.accumulatorVariableOut + u')';
-        const QString initialization = u"aotContext->initLoadAttachedLookup("_qs
-                + indexString + u", "_qs + namespaceString
-                + u", aotContext->qmlScopeObject)"_qs;
-        generateLookup(lookup, initialization);
-        return;
-    }
     case QQmlJSRegisterContent::ObjectAttached: {
         if (!isReferenceType) {
             // This can happen on incomplete type information. We contextually know that the
@@ -847,6 +854,7 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
             // that would be expensive.
             reject(u"attached object for non-QObject type"_qs);
         }
+        rejectIfNonQObjectOut(u"non-QObject attached type"_qs);
 
         const QString lookup = u"aotContext->loadAttachedLookup("_qs + indexString
                 + u", "_qs + m_state.accumulatorVariableIn
@@ -857,20 +865,10 @@ void QQmlJSCodeGenerator::generate_GetLookup(int index)
         generateLookup(lookup, initialization);
         return;
     }
-    case QQmlJSRegisterContent::Singleton: {
-        const QString lookup = u"aotContext->loadSingletonLookup("_qs + indexString
-                + u", &"_qs + m_state.accumulatorVariableOut + u')';
-        const QString initialization = u"aotContext->initLoadSingletonLookup("_qs
-                + indexString + u", "_qs + namespaceString + u')';
-        generateLookup(lookup, initialization);
-        return;
-    }
+    case QQmlJSRegisterContent::ScopeAttached:
+    case QQmlJSRegisterContent::Singleton:
     case QQmlJSRegisterContent::MetaType: {
-        const QString lookup = u"aotContext->loadTypeLookup("_qs + indexString
-                + u", &"_qs + m_state.accumulatorVariableOut + u')';
-        const QString initialization = u"aotContext->initLoadTypeLookup("_qs + indexString
-                + u", "_qs + namespaceString + u")"_qs;
-        generateLookup(lookup, initialization);
+        generateTypeLookup(index);
         return;
     }
     default:

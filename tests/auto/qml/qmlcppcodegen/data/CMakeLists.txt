@@ -3,6 +3,7 @@ set(cpp_sources
     birthdayparty.cpp birthdayparty.h
     cppbaseclass.h
     dynamicmeta.h
+    invisible.h
     objectwithmethod.h
     person.cpp person.h
     state.h
@@ -81,6 +82,7 @@ set(qml_files
     importsFromImportPath.qml
     infinities.qml
     invisibleBase.qml
+    invisibleTypes.qml
     intEnumCompare.qml
     intOverflow.qml
     interactive.qml
