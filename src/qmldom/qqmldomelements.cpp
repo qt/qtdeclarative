@@ -839,7 +839,11 @@ void QmlObject::writeOut(DomItem &self, OutWriter &ow, QString onTarget) const
             // check for an empty line before the current element, and preserve it
             int preNewlines = 0;
             quint32 start = el.first.offset;
-            if (start != posOfNewElements && code.size() >= start) {
+            // it is always safe to cast from quint32 to qint64.
+            // qsizetype is signed. So as long as it's not larget than qint64,
+            // we can safely cast from qsizetype to qint64.
+            Q_STATIC_ASSERT(sizeof(qsizetype) <= sizeof(qint64));
+            if (start != posOfNewElements && qint64(code.size()) >= qint64(start)) {
                 while (start != 0) {
                     QChar c = code.at(--start);
                     if (c == u'\n') {
