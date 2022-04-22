@@ -430,18 +430,20 @@ TestCase {
     }
 
     function test_orderWithNoRoles() {
-        for (var i = 0; i < 10; ++i) {
-            var control = createTemporaryObject(noRolesDialog, testCase)
+        for (let i = 0; i < 10; ++i) {
+            let control = createTemporaryObject(noRolesDialog, testCase)
             verify(control)
 
             control.open()
             tryCompare(control, "opened", true)
-            var footer = control.footer
+            let footer = control.footer
             verify(footer)
-            waitForRendering(footer)
+            waitForItemPolished(footer.contentItem)
             compare(footer.itemAt(0).text, "A")
             compare(footer.itemAt(1).text, "B")
             compare(footer.itemAt(2).text, "C")
+
+            control.destroy()
         }
     }
 }
