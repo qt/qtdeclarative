@@ -238,11 +238,9 @@ void QmltypesReader::insertComponent(const QQmlJSScope::Ptr &jsScope,
 
     // exports:
     QList<Export> exports;
-    int iExport = 0;
     for (const QQmlJSScope::Export &jsE : exportsList) {
         auto v = jsE.version();
         int metaRev = v.toEncodedVersion<int>();
-        ++iExport;
         Export e;
         e.uri = jsE.package();
         e.typeName = jsE.type();
