@@ -328,6 +328,7 @@ private:
     void generateJumpCodeWithTypeConversions(int relativeOffset, JumpMode mode);
     void generateMoveOutVar(const QString &outVar);
     void generateTypeLookup(int index);
+    void rejectIfNonQObjectOut(const QString &error);
 
     QString eqIntExpression(int lhsConst);
     QString argumentsList(int argc, int argv, QString *outVar);

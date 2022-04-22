@@ -128,6 +128,7 @@ private slots:
     void prefixedMetaType();
     void evadingAmbiguity();
     void fromBoolValue();
+    void invisibleTypes();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -1949,6 +1950,27 @@ void tst_QmlCppCodegen::fromBoolValue()
 
     o->setProperty("state", QVariant::fromValue(u"foo"_qs));
     QCOMPARE(o->property("width").toInt(), 0);
+}
+
+void tst_QmlCppCodegen::invisibleTypes()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/invisibleTypes.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+
+    QObject *singleton = qvariant_cast<QObject *>(o->property("singleton"));
+    QVERIFY(singleton != nullptr);
+    QCOMPARE(singleton->metaObject()->className(), "SingletonModel");
+
+    QObject *attached = qvariant_cast<QObject *>(o->property("attached"));
+    QVERIFY(attached != nullptr);
+    QCOMPARE(attached->metaObject()->className(), "AttachedAttached");
+
+// TODO: This doesn't work in interpreted mode:
+//    const QMetaObject *meta = qvariant_cast<const QMetaObject *>(o->property("metaobject"));
+//    QVERIFY(meta != nullptr);
+//    QCOMPARE(meta->className(), "DerivedFromInvisible");
 }
 
 void tst_QmlCppCodegen::runInterpreted()
