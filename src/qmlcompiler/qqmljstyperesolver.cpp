@@ -28,9 +28,9 @@
 
 #include "qqmljstyperesolver_p.h"
 
-#include <private/qqmljsimporter_p.h>
-#include <private/qqmljsimportvisitor_p.h>
-#include <private/qqmljslogger_p.h>
+#include "qqmljsimporter_p.h"
+#include "qqmljsimportvisitor_p.h"
+#include "qqmljslogger_p.h"
 #include <private/qv4value_p.h>
 
 #include <private/qduplicatetracker_p.h>

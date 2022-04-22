@@ -345,7 +345,7 @@ void QmltcCompiler::compileTypeElements(QmltcType &current, const QQmlJSScope::C
             continue;
         }
         if (p.isAlias()) {
-            m_prototypeCodegen->compileAlias(current, p, type);
+            compileAlias(current, p, type);
         } else {
             compileProperty(current, p, type);
         }
@@ -539,6 +539,230 @@ void QmltcCompiler::compileProperty(QmltcType &current, const QQmlJSMetaProperty
     // structure: (C++ type name, name, C++ class name, C++ signal name)
     current.properties.emplaceBack(underlyingType, variableName, current.cppType,
                                    compilationData.notify);
+}
+
+struct AliasResolutionFrame
+{
+    static QString inVar;
+    QStringList prologue;
+    QStringList epilogueForWrite;
+    QString outVar;
+};
+// special string replaced by outVar of the previous frame
+QString AliasResolutionFrame::inVar = QStringLiteral("__QMLTC_ALIAS_FRAME_INPUT_VAR__");
+
+static void unpackFrames(QStack<AliasResolutionFrame> &frames)
+{
+    if (frames.size() < 2)
+        return;
+
+    // assume first frame is fine
+    auto prev = frames.begin();
+    for (auto it = std::next(prev); it != frames.end(); ++it, ++prev) {
+        for (QString &line : it->prologue)
+            line.replace(AliasResolutionFrame::inVar, prev->outVar);
+        for (QString &line : it->epilogueForWrite)
+            line.replace(AliasResolutionFrame::inVar, prev->outVar);
+        it->outVar.replace(AliasResolutionFrame::inVar, prev->outVar);
+    }
+}
+
+template<typename Projection>
+static QStringList joinFrames(const QStack<AliasResolutionFrame> &frames, Projection project)
+{
+    QStringList joined;
+    for (const AliasResolutionFrame &frame : frames)
+        joined += project(frame);
+    return joined;
+}
+
+void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &alias,
+                                 const QQmlJSScope::ConstPtr &owner)
+{
+    const QString aliasName = alias.propertyName();
+    Q_ASSERT(!aliasName.isEmpty());
+
+    QStringList aliasExprBits = alias.aliasExpression().split(u'.');
+    Q_ASSERT(!aliasExprBits.isEmpty());
+
+    QStack<AliasResolutionFrame> frames;
+
+    QQmlJSUtils::AliasResolutionVisitor aliasVisitor;
+    qsizetype i = 0;
+    aliasVisitor.reset = [&]() {
+        frames.clear();
+        i = 0; // we use it in property processing
+
+        // first frame is a dummy one:
+        frames.push(AliasResolutionFrame { QStringList(), QStringList(), u"this"_s });
+    };
+    aliasVisitor.processResolvedId = [&](const QQmlJSScope::ConstPtr &type) {
+        Q_ASSERT(type);
+        if (owner != type) { // cannot start at `this`, need to fetch object through context
+            const int id = m_visitor->runtimeId(type);
+            Q_ASSERT(id >= 0); // since the type is found by id, it must have an id
+
+            AliasResolutionFrame queryIdFrame {};
+            queryIdFrame.prologue << u"auto context = QQmlData::get(%1)->outerContext;"_s.arg(
+                    AliasResolutionFrame::inVar);
+            // there's a special case: when `this` type has compiled QML type as
+            // a base type and it is not a root, it has a non-root first
+            // context, so we need to step one level up
+            if (QQmlJSUtils::hasCompositeBase(owner) && owner != m_visitor->result()) {
+                Q_ASSERT(!owner->baseTypeName().isEmpty());
+                queryIdFrame.prologue
+                        << u"// `this` is special: not a root and its base type is compiled"_s;
+                queryIdFrame.prologue << u"context = context->parent().data();"_s;
+            }
+
+            // doing the above allows us to lookup id object by index (fast)
+            queryIdFrame.outVar = u"alias_objectById_" + aliasExprBits.front(); // unique enough
+            queryIdFrame.prologue << u"auto " + queryIdFrame.outVar + u" = static_cast<"
+                            + type->internalName() + u"*>(context->idValue(" + QString::number(id)
+                            + u"));";
+            queryIdFrame.prologue << u"Q_ASSERT(" + queryIdFrame.outVar + u");";
+
+            frames.push(queryIdFrame);
+        }
+    };
+    aliasVisitor.processResolvedProperty = [&](const QQmlJSMetaProperty &p,
+                                               const QQmlJSScope::ConstPtr &) {
+        AliasResolutionFrame queryPropertyFrame {};
+
+        QString inVar = QmltcCodeGenerator::wrap_privateClass(AliasResolutionFrame::inVar, p);
+        if (p.type()->accessSemantics() == QQmlJSScope::AccessSemantics::Value) {
+            // we need to read the property to a local variable and then
+            // write the updated value once the actual operation is done
+            const QString aliasVar = u"alias_" + QString::number(i); // should be fairly unique
+            ++i;
+            queryPropertyFrame.prologue
+                    << u"auto " + aliasVar + u" = " + inVar + u"->" + p.read() + u"();";
+            queryPropertyFrame.epilogueForWrite
+                    << inVar + u"->" + p.write() + u"(" + aliasVar + u");";
+            // NB: since accessor becomes a value type, wrap it into an
+            // addressof operator so that we could access it as a pointer
+            inVar = QmltcCodeGenerator::wrap_addressof(aliasVar); // reset
+        } else {
+            inVar += u"->" + p.read() + u"()"; // update
+        }
+        queryPropertyFrame.outVar = inVar;
+
+        frames.push(queryPropertyFrame);
+    };
+
+    QQmlJSUtils::ResolvedAlias result =
+            QQmlJSUtils::resolveAlias(m_typeResolver, alias, owner, aliasVisitor);
+    Q_ASSERT(result.kind != QQmlJSUtils::AliasTarget_Invalid);
+
+    unpackFrames(frames);
+
+    if (result.kind == QQmlJSUtils::AliasTarget_Property) {
+        // we don't need the last frame here
+        frames.pop();
+
+        // instead, add a custom frame
+        AliasResolutionFrame customFinalFrame {};
+        customFinalFrame.outVar =
+                QmltcCodeGenerator::wrap_privateClass(frames.top().outVar, result.property);
+        frames.push(customFinalFrame);
+    }
+
+    const QString latestAccessor = frames.top().outVar;
+    const QStringList prologue =
+            joinFrames(frames, [](const AliasResolutionFrame &frame) { return frame.prologue; });
+    const QString underlyingType = (result.kind == QQmlJSUtils::AliasTarget_Property)
+            ? getUnderlyingType(result.property)
+            : result.owner->internalName() + u" *";
+
+    QStringList mocLines;
+    mocLines.reserve(10);
+    mocLines << underlyingType << aliasName;
+
+    QmltcPropertyData compilationData(aliasName);
+    // 1. add setter and getter
+    QmltcMethod getter {};
+    getter.returnType = underlyingType;
+    getter.name = compilationData.read;
+    getter.body += prologue;
+    if (result.kind == QQmlJSUtils::AliasTarget_Property)
+        getter.body << u"return " + latestAccessor + u"->" + result.property.read() + u"();";
+    else // AliasTarget_Object
+        getter.body << u"return " + latestAccessor + u";";
+    getter.userVisible = true;
+    current.functions.emplaceBack(getter);
+    mocLines << u"READ"_s << getter.name;
+
+    if (QString setName = result.property.write(); !setName.isEmpty()) {
+        Q_ASSERT(result.kind == QQmlJSUtils::AliasTarget_Property); // property is invalid otherwise
+        QmltcMethod setter {};
+        setter.returnType = u"void"_s;
+        setter.name = compilationData.write;
+
+        QList<QQmlJSMetaMethod> methods = result.owner->methods(setName);
+        if (methods.isEmpty()) { // when we are compiling the property as well
+            // QmltcVariable
+            setter.parameterList.emplaceBack(QQmlJSUtils::constRefify(underlyingType),
+                                             aliasName + u"_", u""_s);
+        } else {
+            setter.parameterList = compileMethodParameters(methods.at(0).parameterNames(),
+                                                           methods.at(0).parameterTypes(),
+                                                           /* allow unnamed = */ true);
+        }
+
+        setter.body += prologue;
+        QStringList parameterNames;
+        parameterNames.reserve(setter.parameterList.size());
+        std::transform(setter.parameterList.cbegin(), setter.parameterList.cend(),
+                       std::back_inserter(parameterNames),
+                       [](const QmltcVariable &x) { return x.name; });
+        QString commaSeparatedParameterNames = parameterNames.join(u", "_s);
+        setter.body << latestAccessor + u"->" + setName
+                        + u"(%1)"_s.arg(commaSeparatedParameterNames) + u";";
+        setter.body += joinFrames(
+                frames, [](const AliasResolutionFrame &frame) { return frame.epilogueForWrite; });
+        setter.userVisible = true;
+        current.functions.emplaceBack(setter);
+        mocLines << u"WRITE"_s << setter.name;
+    }
+    // 2. add bindable
+    if (QString bindableName = result.property.bindable(); !bindableName.isEmpty()) {
+        Q_ASSERT(result.kind == QQmlJSUtils::AliasTarget_Property); // property is invalid otherwise
+        QmltcMethod bindable {};
+        bindable.returnType = u"QBindable<" + underlyingType + u">";
+        bindable.name = compilationData.bindable;
+        bindable.body += prologue;
+        bindable.body << u"return " + latestAccessor + u"->" + bindableName + u"()" + u";";
+        bindable.userVisible = true;
+        current.functions.emplaceBack(bindable);
+        mocLines << u"BINDABLE"_s << bindable.name;
+    }
+    // 3. add notify - which is pretty special
+    if (QString notifyName = result.property.notify(); !notifyName.isEmpty()) {
+        Q_ASSERT(result.kind == QQmlJSUtils::AliasTarget_Property); // property is invalid otherwise
+
+        // notify is very special
+        current.endInit.body << u"{ // alias notify connection:"_s;
+        current.endInit.body += prologue;
+        // TODO: use non-private accessor since signals must exist on the public
+        // type, not on the private one -- otherwise, you can't connect to a
+        // private property signal in C++ and so it is useless (hence, use
+        // public type)
+        const QString latestAccessorNonPrivate = frames[frames.size() - 2].outVar;
+        current.endInit.body << u"QObject::connect(" + latestAccessorNonPrivate + u", &"
+                        + result.owner->internalName() + u"::" + notifyName + u", this, &"
+                        + current.cppType + u"::" + compilationData.notify + u");";
+        current.endInit.body << u"}"_s;
+    }
+
+    // 4. add moc entry
+    // Q_PROPERTY(QString text READ text WRITE setText BINDABLE bindableText NOTIFY textChanged)
+    current.mocCode << u"Q_PROPERTY(" + mocLines.join(u" "_s) + u")";
+
+    // 5. add extra moc entry if this alias is default one
+    if (aliasName == owner->defaultPropertyName()) {
+        // Q_CLASSINFO("DefaultProperty", propertyName)
+        current.mocCode << u"Q_CLASSINFO(\"DefaultProperty\", \"%1\")"_s.arg(aliasName);
+    }
 }
 
 void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyBinding &binding,

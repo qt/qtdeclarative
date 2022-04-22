@@ -39,17 +39,23 @@
 //
 // We mean it.
 
+#include <private/qtqmlcompilerexports_p.h>
+
 #include "qqmljslogger_p.h"
+#include "qqmljsscope_p.h"
+#include "qqmljsmetatypes_p.h"
 
 #include <QtCore/qstring.h>
 #include <QtCore/qstringview.h>
 #include <QtCore/qstringbuilder.h>
 
 #include <optional>
+#include <functional>
 
 QT_BEGIN_NAMESPACE
 
-struct QQmlJSUtils
+class QQmlJSTypeResolver;
+struct Q_QMLCOMPILER_PRIVATE_EXPORT QQmlJSUtils
 {
     /*! \internal
         Returns escaped version of \a s. This function is mostly useful for code
@@ -103,6 +109,40 @@ struct QQmlJSUtils
         }
         return {};
     }
+
+    static bool hasCompositeBase(const QQmlJSScope::ConstPtr &scope)
+    {
+        if (!scope)
+            return false;
+        const auto base = scope->baseType();
+        if (!base)
+            return false;
+        return base->isComposite() && base->scopeType() == QQmlJSScope::QMLScope;
+    }
+
+    enum ResolvedAliasTarget {
+        AliasTarget_Invalid,
+        AliasTarget_Property,
+        AliasTarget_Object,
+    };
+    struct ResolvedAlias
+    {
+        QQmlJSMetaProperty property;
+        QQmlJSScope::ConstPtr owner;
+        ResolvedAliasTarget kind = ResolvedAliasTarget::AliasTarget_Invalid;
+    };
+    struct AliasResolutionVisitor
+    {
+        std::function<void()> reset = []() {};
+        std::function<void(const QQmlJSScope::ConstPtr &)> processResolvedId =
+                [](const QQmlJSScope::ConstPtr &) {};
+        std::function<void(const QQmlJSMetaProperty &, const QQmlJSScope::ConstPtr &)>
+                processResolvedProperty =
+                        [](const QQmlJSMetaProperty &, const QQmlJSScope::ConstPtr &) {};
+    };
+    static ResolvedAlias resolveAlias(const QQmlJSTypeResolver *typeResolver,
+                                      QQmlJSMetaProperty property, QQmlJSScope::ConstPtr owner,
+                                      const AliasResolutionVisitor &visitor);
 
     static std::optional<FixSuggestion> didYouMean(const QString &userInput,
                                                    QStringList candidates,

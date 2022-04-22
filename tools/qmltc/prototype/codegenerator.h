@@ -165,9 +165,6 @@ private:
     bool m_isAnonymous = false; // crutch to distinguish QML_ELEMENT from QML_ANONYMOUS
 
 public:
-    void compileAlias(QmltcType &current, const QQmlJSMetaProperty &alias,
-                      const QQmlJSScope::ConstPtr &owner);
-
     // helper structure that holds the information necessary for most bindings,
     // such as accessor name, which is used to reference the properties like:
     // (accessor.name)->(propertyName): this->myProperty. it is also used in

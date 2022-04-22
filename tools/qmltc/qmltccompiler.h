@@ -79,6 +79,8 @@ private:
                        const QQmlJSScope::ConstPtr &owner);
     void compileProperty(QmltcType &current, const QQmlJSMetaProperty &p,
                          const QQmlJSScope::ConstPtr &owner);
+    void compileAlias(QmltcType &current, const QQmlJSMetaProperty &alias,
+                      const QQmlJSScope::ConstPtr &owner);
 
     /*!
         \internal

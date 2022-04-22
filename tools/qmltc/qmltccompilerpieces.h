@@ -33,6 +33,8 @@
 #include <QtCore/qstringbuilder.h>
 #include <QtCore/qfileinfo.h>
 
+#include <private/qqmljsutils_p.h>
+
 #include "qmltcoutputir.h"
 #include "qmltcvisitor.h"
 
@@ -160,17 +162,9 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
             return scope->parentScope();
         return scope;
     };
-    const auto hasQmlBase = [](const QQmlJSScope::ConstPtr &scope) {
-        if (!scope)
-            return false;
-        const auto base = scope->baseType();
-        if (!base)
-            return false;
-        return base->isComposite() && base->scopeType() == QQmlJSScope::QMLScope;
-    };
 
     if (auto parentScope = realQmlScope(type->parentScope());
-        parentScope != visitor->result() && hasQmlBase(parentScope)) {
+        parentScope != visitor->result() && QQmlJSUtils::hasCompositeBase(parentScope)) {
         current.init.body << u"// NB: context->parent() is the context of this document"_s;
         current.init.body << u"context = context->parent();"_s;
     }

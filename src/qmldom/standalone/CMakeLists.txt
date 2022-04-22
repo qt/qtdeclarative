@@ -34,6 +34,8 @@ add_library(qmldomlib
         ../../qmlcompiler/qqmljsutils.cpp ../../qmlcompiler/qqmljsutils_p.h
         ../../qmlcompiler/qqmljstypedescriptionreader.cpp ../../qmlcompiler/qqmljstypedescriptionreader_p.h
         ../../qmlcompiler/qqmljstypereader.cpp ../../qmlcompiler/qqmljstypereader_p.h
+        ../../qmlcompiler/qqmljstyperesolver.cpp ../../qmlcompiler/qqmljstyperesolver_p.h
+        ../../qmlcompiler/qqmljsregistercontent.cpp ../../qmlcompiler/qqmljsregistercontent_p.h
         ../qqmldom_fwd_p.h
         ../qqmldom_global.h
         ../qqmldomastcreator.cpp ../qqmldomastcreator_p.h

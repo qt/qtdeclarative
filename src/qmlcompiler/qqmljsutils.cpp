@@ -27,10 +27,70 @@
 ****************************************************************************/
 
 #include "qqmljsutils_p.h"
+#include "qqmljstyperesolver_p.h"
 
 #include <algorithm>
 
 using namespace Qt::StringLiterals;
+
+/*! \internal
+
+    Fully resolves alias \a property and returns the information about the
+    origin, which is not an alias.
+*/
+QQmlJSUtils::ResolvedAlias
+QQmlJSUtils::resolveAlias(const QQmlJSTypeResolver *typeResolver, QQmlJSMetaProperty property,
+                          QQmlJSScope::ConstPtr owner,
+                          const QQmlJSUtils::AliasResolutionVisitor &visitor)
+{
+    Q_ASSERT(property.isAlias());
+    Q_ASSERT(owner);
+
+    ResolvedAlias result {};
+    result.owner = owner;
+
+    while (property.isAlias()) {
+        {
+            // this is special (seemingly useless) block which is necessary when
+            // we have an alias pointing to an alias. this way we avoid a check
+            // whether a property is an alias at the very end of the loop body
+            owner = result.owner;
+            result = ResolvedAlias {};
+        }
+        visitor.reset();
+
+        auto aliasExprBits = property.aliasExpression().split(u'.');
+        // resolve id first:
+        owner = typeResolver->scopeForId(aliasExprBits[0], owner);
+        if (!owner)
+            return {};
+
+        visitor.processResolvedId(owner);
+
+        aliasExprBits.removeFirst(); // Note: for simplicity, remove the <id>
+        result.owner = owner;
+        result.kind = QQmlJSUtils::AliasTarget_Object;
+        // reset the property to avoid endless loop when aliasExprBits is empty
+        property = QQmlJSMetaProperty {};
+
+        for (qsizetype i = 0; i < aliasExprBits.size(); ++i) {
+            const QString &bit = qAsConst(aliasExprBits)[i];
+            property = owner->property(bit);
+            if (!property.isValid())
+                return {};
+
+            visitor.processResolvedProperty(property, owner);
+
+            result.property = property;
+            result.owner = owner;
+            result.kind = QQmlJSUtils::AliasTarget_Property;
+
+            owner = property.type();
+        }
+    }
+
+    return result;
+}
 
 std::optional<FixSuggestion> QQmlJSUtils::didYouMean(const QString &userInput,
                                                      QStringList candidates,

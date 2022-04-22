@@ -24,6 +24,9 @@ Item {
 
     property alias aliasToPrivatePalette: theRect.palette
     property alias aliasToAnchors: theRect.anchors
+    // Note: cannot alias anchors.<property> - rejected by QQmlComponent
+    // property alias aliasToAnchorsAlignWhenCentered: theRect.anchors.alignWhenCentered
+
     property alias aliasToPrivateData: root.data
 
     Rectangle {
