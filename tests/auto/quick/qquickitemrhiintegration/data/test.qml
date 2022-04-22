@@ -27,7 +27,7 @@
 ****************************************************************************/
 
 import QtQuick
-import Test
+import TestQquickitemrhiintegration
 
 Item {
     width: 640
