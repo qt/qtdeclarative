@@ -480,9 +480,10 @@
     \since 6.4
 
     This property can be set to control if TableView should animate the
-    \l contentItem (\l contentX and \l contentY). It is used by
+    \l {Flickable::}{contentItem} (\l {Flickable::}{contentX} and
+    \l {Flickable::}{contentY}). It is used by
     \l positionViewAtCell(), and when navigating
-    \l \{QItemSelectionModel::currentIndex}{the current index}
+    \l {QItemSelectionModel::currentIndex}{the current index}
     with the keyboard. The default value is \c true.
 
     If set to \c false, any ongoing animation will immediately stop.
@@ -506,7 +507,8 @@
     \note In order for TableView to support keyboard navigation, you
     need to assign an \l ItemSelectionModel to \l selectionModel.
 
-    \sa {Keyboard navigation}, selectionModel, selectionBehavior, pointerNavigationEnabled, interactive
+    \sa {Keyboard navigation}, selectionModel, selectionBehavior
+    \sa pointerNavigationEnabled, {Flickable::}{interactive}
 */
 
 /*!
@@ -517,7 +519,7 @@
     to change \l {QItemSelectionModel::currentIndex()}{the current index}
     using mouse or touch. The default value is \c true.
 
-    \sa selectionModel, keyNavigationEnabled, interactive
+    \sa selectionModel, keyNavigationEnabled, {Flickable::}{interactive}
 */
 
 /*!
@@ -696,16 +698,16 @@
     \qmlmethod Point QtQuick::TableView::cellAtPosition(point position, bool includeSpacing)
 
     Returns the cell at the given \a position in the table. \a position should be relative
-    to the \l contentItem. If no \l {isRowLoaded()}{loaded} cell intersects with
-    \a position, the return value will be \c point(-1, -1).
+    to the \l {Flickable::}{contentItem}. If no \l {isRowLoaded()}{loaded} cell intersects
+    with \a position, the return value will be \c point(-1, -1).
 
     If \a includeSpacing is set to \c true, a cell's bounding box will be considered
     to include half the adjacent \l rowSpacing and \l columnSpacing on each side. The
     default value is \c false.
 
     \note A \l {Qt Quick Input Handlers}{Input Handler} attached to a TableView installs
-    itself on the \l contentItem rather than the view. So the position reported by the
-    handler can be used directly in a call to this function without any
+    itself on the \l {Flickable::}{contentItem} rather than the view. So the position
+    reported by the handler can be used directly in a call to this function without any
     \l {QQuickItem::mapFromItem()}{mapping}.
 
     \sa columnSpacing, rowSpacing

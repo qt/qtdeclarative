@@ -90,7 +90,7 @@
     If \a row is not between \c 0 and \l {TableView::}{rows}, the return value will
     be \c -1.
 
-    \sa modelIndex()
+    \sa {TableView::}{modelIndex()}
 */
 
 /*!

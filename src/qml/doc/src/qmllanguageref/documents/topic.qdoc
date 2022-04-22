@@ -20,9 +20,9 @@ code.
 
 Since Qt 5.4, a document can also have the file extension \c ".ui.qml". The QML
 engine handles these files like standard .qml files and ignores the \c .ui part
-of the extension. Qt Creator handles those files as
-\l{Qt Creator: Qt Quick UI Forms}{UI forms} for the Qt Quick Designer. The files
-can contain only a subset of the QML language that is defined by Qt Creator.
+of the extension. Qt Design Studio handles those files as
+\l{Qt Design Studio: UI Files}{UI files}. The files can contain only a subset
+of the QML language features.
 
 \section1 Structure of a QML Document
 
