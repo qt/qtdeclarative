@@ -49,6 +49,14 @@ void tst_sharedimage::initTestCase()
 #if !QT_CONFIG(systemsemaphore)
     QSKIP("Shared image not supported");
 #endif
+
+#ifdef Q_OS_ANDROID
+    /*
+     * On Android, images are usually in resources, not in
+     * files on the file system.
+     */
+    QSKIP("Shared image not useful on Android, skipping test");
+#endif
 }
 
 void tst_sharedimage::compareToPlainLoad_data()
