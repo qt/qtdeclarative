@@ -660,7 +660,8 @@ inline bool contextHasNoExtensions(const QQmlRefPointer<QQmlContextData> &contex
 {
     // This context has no extension if its parent is the engine's rootContext,
     // which has children but no imports
-    return (!context->parent() || !context->parent()->imports());
+    const QQmlRefPointer<QQmlContextData> parent = context->parent();
+    return (!parent || !parent->imports());
 }
 
 inline int maximumIndexForProperty(QQmlPropertyData *prop, const int methodCount, const int signalCount, const int propertyCount)
