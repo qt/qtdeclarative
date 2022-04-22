@@ -223,6 +223,8 @@ void tst_QQuickMenu::mouse()
     QVERIFY(overlay->childItems().contains(menu->contentItem()->parentItem()));
     QTRY_VERIFY(menu->isOpened());
 
+    // Hover-highlighting does not work on Android
+#ifndef Q_OS_ANDROID
     // Hover-highlight through the menu items one by one
     QQuickItem *prevHoverItem = nullptr;
     QQuickItem *listView = menu->contentItem();
@@ -239,6 +241,7 @@ void tst_QQuickMenu::mouse()
             QVERIFY(!prevHoverItem->property("highlighted").toBool());
         prevHoverItem = hoverItem;
     }
+#endif
 
     // Try pressing within the menu and releasing outside of it; it should close.
     // TODO: won't work until QQuickPopup::releasedOutside() actually gets emitted
@@ -806,7 +809,8 @@ void tst_QQuickMenu::popup()
     QQuickItem *button = window->property("button").value<QQuickItem *>();
     QVERIFY(button);
 
-#if QT_CONFIG(cursor)
+    // Android does not support settings cursor position
+#if QT_CONFIG(cursor) && !defined(Q_OS_ANDROID)
     QPoint oldCursorPos = QCursor::pos();
     QPoint cursorPos = window->mapToGlobal(QPoint(11, 22));
     QCursor::setPos(cursorPos);
@@ -1082,12 +1086,18 @@ void tst_QQuickMenu::subMenuMouse()
 
     QQuickMenu *subMenu1 = window->property("subMenu1").value<QQuickMenu *>();
     QVERIFY(subMenu1);
+    subMenu1->setCascade(cascade);
+    QCOMPARE(subMenu1->cascade(), cascade);
 
     QQuickMenu *subMenu2 = window->property("subMenu2").value<QQuickMenu *>();
     QVERIFY(subMenu2);
+    subMenu2->setCascade(cascade);
+    QCOMPARE(subMenu2->cascade(), cascade);
 
     QQuickMenu *subSubMenu1 = window->property("subSubMenu1").value<QQuickMenu *>();
     QVERIFY(subSubMenu1);
+    subSubMenu1->setCascade(cascade);
+    QCOMPARE(subSubMenu1->cascade(), cascade);
 
     mainMenu->open();
     QVERIFY(mainMenu->isVisible());
@@ -1107,6 +1117,8 @@ void tst_QQuickMenu::subMenuMouse()
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
 
+    // on Android mouse hover will not open and close sub-menus
+#ifndef Q_OS_ANDROID
     // open the cascading sub-sub-menu with mouse hover
     QQuickMenuItem *subSubMenu1Item = qobject_cast<QQuickMenuItem *>(subMenu1->itemAt(2));
     QVERIFY(subSubMenu1Item);
@@ -1151,6 +1163,10 @@ void tst_QQuickMenu::subMenuMouse()
     QTRY_COMPARE(subMenu1->isVisible(), !cascade);
     QVERIFY(!subMenu2->isVisible());
     QVERIFY(!subSubMenu1->isVisible());
+#else
+    QQuickMenuItem *mainMenuItem1 = qobject_cast<QQuickMenuItem *>(mainMenu->itemAt(0));
+    QVERIFY(mainMenuItem1);
+#endif // !Q_OS_ANDROID
 
     // close all menus by click triggering an item
     QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier, mainMenuItem1->mapToScene(QPoint(1, 1)).toPoint());
@@ -1466,7 +1482,15 @@ void tst_QQuickMenu::subMenuPosition()
 
     centerOnScreen(window);
     moveMouseAway(window);
+#ifndef Q_OS_ANDROID
     window->show();
+#else
+    // On Android the desired size does not fit into the screen, so we just
+    // call showNormal. This will make the window larger than the screen, but
+    // all the geometry calculations will be correct. Otherwise we'll get
+    // unpredictable results
+    window->showNormal();
+#endif
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     if (mirrored) {
@@ -1652,7 +1676,11 @@ void tst_QQuickMenu::scrollable()
     QQuickControlsApplicationHelper helper(this, qmlFilePath);
     QVERIFY2(helper.ready, helper.failureMessage());
     QQuickWindow *window = helper.window;
+#ifndef Q_OS_ANDROID
     window->show();
+#else
+    window->showNormal();
+#endif
     QVERIFY(QTest::qWaitForWindowActive(window));
 
     QQuickMenu *menu = window->property("menu").value<QQuickMenu*>();
@@ -1682,9 +1710,6 @@ void tst_QQuickMenu::disableWhenTriggered_data()
 // Tests that the menu is dismissed when a menu item sets "enabled = false" in onTriggered().
 void tst_QQuickMenu::disableWhenTriggered()
 {
-#ifdef Q_OS_ANDROID
-    QSKIP("Crashes on Android (QTBUG-100256)");
-#endif
     if ((QGuiApplication::platformName() == QLatin1String("offscreen"))
         || (QGuiApplication::platformName() == QLatin1String("minimal")))
         QSKIP("Mouse hovering not functional on offscreen/minimal platforms");
@@ -1723,10 +1748,19 @@ void tst_QQuickMenu::disableWhenTriggered()
         QVERIFY(subMenuItem);
 
         // First, open the sub-menu.
+#ifndef Q_OS_ANDROID
         QTest::mouseMove(window, menuItem->mapToScene(QPoint(1, 1)).toPoint());
+#else
+        // On Android mouseHover does not open sub-menu, so just click on it
+        QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
+            menuItem->mapToScene(QPointF(menuItem->width() / 2, menuItem->height() / 2)).toPoint());
+#endif
+
         QTRY_VERIFY(subMenu->isVisible());
+#ifndef Q_OS_ANDROID
         QVERIFY(menuItem->isHovered());
         QTRY_VERIFY(subMenu->contentItem()->property("contentHeight").toReal() > 0.0);
+#endif
 
         // Click the item.
         QTest::mouseClick(window, Qt::LeftButton, Qt::NoModifier,
