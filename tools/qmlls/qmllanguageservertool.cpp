@@ -126,11 +126,11 @@ int main(int argv, char *argc[])
 
     qSetGlobalQHashSeed(0);
     QCoreApplication app(argv, argc);
-    QCoreApplication::setApplicationName("qmllanguageserver");
+    QCoreApplication::setApplicationName("qmlls");
     QCoreApplication::setApplicationVersion(QT_VERSION_STR);
 #if QT_CONFIG(commandlineparser)
     QCommandLineParser parser;
-    QQmlToolingSettings settings(QLatin1String("qmllanguageserver"));
+    QQmlToolingSettings settings(QLatin1String("qmlls"));
     parser.setApplicationDescription(QLatin1String(R"(QML languageserver)"));
 
     QCommandLineOption waitOption(QStringList() << "w"
