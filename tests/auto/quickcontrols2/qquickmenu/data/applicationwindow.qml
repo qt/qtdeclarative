@@ -67,6 +67,7 @@ ApplicationWindow {
 
     Menu {
         id: menu
+        cascade: true
 
         MenuItem {
             objectName: "firstMenuItem"
