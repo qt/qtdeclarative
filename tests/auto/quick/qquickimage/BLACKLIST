@@ -1,3 +1,14 @@
 # QTBUG-98402
 [mirror]
 macos-12 ci
+# QTBUG-102721
+[hugeImages]
+android
+[multiFrame]
+android
+[sourceClipRect]
+android
+[tiling_QTBUG_6716]
+android
+[mirror]
+android
