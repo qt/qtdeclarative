@@ -9036,7 +9036,7 @@ void tst_qqmlecmascript::removeBindingsWithNoDependencies()
         QVERIFY(prop.isValid());
         QQmlAbstractBinding *vtProxyBinding = QQmlPropertyPrivate::binding(object.data(), QQmlPropertyIndex(prop.propertyIndex()));
         QVERIFY(vtProxyBinding);
-        QVERIFY(vtProxyBinding->isValueTypeProxy());
+        QVERIFY(vtProxyBinding->kind() == QQmlAbstractBinding::ValueTypeProxy);
 
         QQmlValueTypeProxyBinding *proxy = static_cast<QQmlValueTypeProxyBinding*>(vtProxyBinding);
         QVERIFY(!proxy->subBindings());

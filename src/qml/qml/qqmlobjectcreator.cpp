@@ -640,7 +640,7 @@ void QQmlObjectCreator::setupBindings(BindingSetupFlags mode)
     if (_valueTypeProperty) {
         QQmlAbstractBinding *binding = QQmlPropertyPrivate::binding(_bindingTarget, QQmlPropertyIndex(_valueTypeProperty->coreIndex()));
 
-        if (binding && !binding->isValueTypeProxy()) {
+        if (binding && binding->kind() != QQmlAbstractBinding::ValueTypeProxy) {
             QQmlPropertyPrivate::removeBinding(_bindingTarget, QQmlPropertyIndex(_valueTypeProperty->coreIndex()));
         } else if (binding) {
             QQmlValueTypeProxyBinding *proxy = static_cast<QQmlValueTypeProxyBinding *>(binding);
@@ -1395,7 +1395,7 @@ bool QQmlObjectCreator::finalize(QQmlInstantiationInterrupt &interrupt)
         data->clearPendingBindingBit(b->targetPropertyIndex().coreIndex());
         b->setEnabled(true, QQmlPropertyData::BypassInterceptor |
                       QQmlPropertyData::DontRemoveBinding);
-        if (!b->isValueTypeProxy()) {
+        if (b->kind() == QQmlAbstractBinding::Binding) {
             QQmlBinding *binding = static_cast<QQmlBinding*>(b.data());
             if (!binding->hasError() && !binding->hasDependencies()
                     && !binding->hasUnresolvedNames()) {

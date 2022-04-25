@@ -67,11 +67,6 @@ void QQmlValueTypeProxyBinding::setEnabled(bool e, QQmlPropertyData::WriteFlags 
     }
 }
 
-bool QQmlValueTypeProxyBinding::isValueTypeProxy() const
-{
-    return true;
-}
-
 QQmlAbstractBinding *QQmlValueTypeProxyBinding::subBindings() const
 {
     return m_bindings.data();

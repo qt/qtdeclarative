@@ -95,6 +95,8 @@ public:
             const QV4::CompiledData::Binding *binding, QObject *obj,
             const QQmlRefPointer<QQmlContextData> &ctxt);
 
+    Kind kind() const final { return QQmlAbstractBinding::Binding; }
+
     ~QQmlBinding() override;
 
     bool mustCaptureBindableProperty() const final {return true;}

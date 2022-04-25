@@ -637,7 +637,7 @@ bool QQmlValueTypeWrapper::virtualPut(Managed *m, PropertyKey id, const Value &v
         } else {
             if (Q_UNLIKELY(lcBindingRemoval().isInfoEnabled())) {
                 if (auto binding = QQmlPropertyPrivate::binding(referenceObject, QQmlPropertyIndex(referencePropertyIndex, pd.coreIndex()))) {
-                    Q_ASSERT(!binding->isValueTypeProxy());
+                    Q_ASSERT(binding->kind() == QQmlAbstractBinding::Binding);
                     const auto qmlBinding = static_cast<const QQmlBinding*>(binding);
                     const auto stackFrame = v4->currentStackFrame;
                     qCInfo(lcBindingRemoval,

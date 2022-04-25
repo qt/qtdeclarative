@@ -65,13 +65,18 @@ class Q_QML_PRIVATE_EXPORT QQmlAbstractBinding
 protected:
     QQmlAbstractBinding();
 public:
+    enum Kind {
+        ValueTypeProxy,
+        Binding,
+    };
+
     virtual ~QQmlAbstractBinding();
 
     typedef QExplicitlySharedDataPointer<QQmlAbstractBinding> Ptr;
 
     virtual QString expression() const;
 
-    virtual bool isValueTypeProxy() const;
+    virtual Kind kind() const = 0;
 
     // Should return the encoded property index for the binding.  Should return this value
     // even if the binding is not enabled or added to an object.

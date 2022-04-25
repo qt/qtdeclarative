@@ -65,7 +65,7 @@ public:
     void removeBindings(quint32 mask);
 
     void setEnabled(bool, QQmlPropertyData::WriteFlags) override;
-    bool isValueTypeProxy() const override;
+    Kind kind() const final { return QQmlAbstractBinding::ValueTypeProxy; }
 
 protected:
     ~QQmlValueTypeProxyBinding();

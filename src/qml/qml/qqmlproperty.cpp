@@ -893,7 +893,7 @@ static void removeOldBinding(QObject *object, QQmlPropertyIndex index, QQmlPrope
     if (!oldBinding)
         return;
 
-    if (valueTypeIndex != -1 && oldBinding->isValueTypeProxy())
+    if (valueTypeIndex != -1 && oldBinding->kind() == QQmlAbstractBinding::ValueTypeProxy)
         oldBinding = static_cast<QQmlValueTypeProxyBinding *>(oldBinding.data())->binding(index);
 
     if (!oldBinding)
@@ -948,9 +948,8 @@ QQmlPropertyPrivate::binding(QObject *object, QQmlPropertyIndex index)
         binding = binding->nextBinding();
 
     if (binding && valueTypeIndex != -1) {
-        if (binding->isValueTypeProxy()) {
+        if (binding->kind() == QQmlAbstractBinding::ValueTypeProxy)
             binding = static_cast<QQmlValueTypeProxyBinding *>(binding)->binding(index);
-        }
     }
 
     return binding;
