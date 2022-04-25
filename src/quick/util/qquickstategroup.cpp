@@ -380,10 +380,14 @@ bool QQuickStateGroupPrivate::updateAutoState()
                 const QQmlProperty whenProp(state, u"when"_qs);
                 const auto potentialWhenBinding = QQmlAnyBinding::ofProperty(whenProp);
                 Q_ASSERT(!potentialWhenBinding.isUntypedPropertyBinding());
+
                 // if there is a binding, the value in when might not be up-to-date at this point
-                // so we manually reevaluate the binding
-                if (auto abstractBinding = dynamic_cast<QQmlBinding *>( potentialWhenBinding.asAbstractBinding()))
-                    whenValue = abstractBinding->evaluate().toBool();
+                // so we manually re-evaluate the binding
+                if (auto binding = dynamic_cast<QQmlBinding *>(potentialWhenBinding.asAbstractBinding())) {
+                    if (binding->hasValidContext())
+                        whenValue = binding->evaluate().toBool();
+                }
+
                 if (whenValue) {
                     if (stateChangeDebug())
                         qWarning() << "Setting auto state due to expression";
