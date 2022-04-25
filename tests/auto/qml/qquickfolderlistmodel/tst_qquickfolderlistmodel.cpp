@@ -98,28 +98,27 @@ void tst_qquickfolderlistmodel::initTestCase()
 
 void tst_qquickfolderlistmodel::basicProperties()
 {
-#ifdef Q_OS_ANDROID
-    QSKIP("[QTBUG-77335] Initial folder of FolderListModel on Android does not work properly,"
-          " and from there on it is unreliable to change the folder");
-#endif
     QQmlComponent component(&engine, testFileUrl("basic.qml"));
     QTRY_VERIFY2(component.isReady(), qPrintable(component.errorString()));
 
     QAbstractListModel *flm = qobject_cast<QAbstractListModel*>(component.create());
     QVERIFY(flm != nullptr);
+    QSignalSpy folderChangedSpy(flm, SIGNAL(folderChanged()));
     QCOMPARE(flm->property("nameFilters").toStringList(), QStringList() << "*.qml"); // from basic.qml
     QCOMPARE(flm->property("folder").toUrl(), QUrl::fromLocalFile(QDir::currentPath()));
+    folderChangedSpy.wait(); // wait for the initial folder to be processed
 
-    // wait for the initial directory listing (it will find at least the "data" dir,
-    // and other dirs on Windows).
-    QTRY_VERIFY(flm->property("count").toInt() > 0);
-
-    QSignalSpy folderChangedSpy(flm, SIGNAL(folderChanged()));
     flm->setProperty("folder", dataDirectoryUrl());
     QVERIFY(folderChangedSpy.wait());
     QCOMPARE(flm->property("count").toInt(), 9);
     QCOMPARE(flm->property("folder").toUrl(), dataDirectoryUrl());
-    QCOMPARE(flm->property("parentFolder").toUrl(), QUrl::fromLocalFile(QDir(directory()).canonicalPath()));
+#ifndef Q_OS_ANDROID
+    // On Android currentDir points to some dir in qrc://, which is not
+    // considered to be local file, so parentFolder is always
+    // default-constructed QUrl.
+    QCOMPARE(flm->property("parentFolder").toUrl(),
+             QUrl::fromLocalFile(QDir(directory()).canonicalPath()));
+#endif
     QCOMPARE(flm->property("sortField").toInt(), int(Name));
     QCOMPARE(flm->property("nameFilters").toStringList(), QStringList() << "*.qml");
     QCOMPARE(flm->property("sortReversed").toBool(), false);
