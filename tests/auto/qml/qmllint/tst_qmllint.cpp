@@ -1672,6 +1672,30 @@ void TestQmllint::quickPlugin()
                               u"Cannot specify top, bottom, and verticalCenter anchors at the same time."_qs },
                       Message {
                               u"Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors."_qs } } });
+    runTest("pluginQuick_layoutChildren.qml",
+            Result {
+                    { Message {
+                              u"Detected anchors on an item that is managed by a layout. This is undefined behavior; use Layout.alignment instead."_qs },
+                      Message {
+                              u"Detected x on an item that is managed by a layout. This is undefined behavior; use Layout.leftMargin or Layout.rightMargin instead."_qs },
+                      Message {
+                              u"Detected y on an item that is managed by a layout. This is undefined behavior; use Layout.topMargin or Layout.bottomMargin instead."_qs },
+                      Message {
+                              u"Detected height on an item that is managed by a layout. This is undefined behavior; use implictHeight or Layout.preferredHeight instead."_qs },
+                      Message {
+                              u"Detected width on an item that is managed by a layout. This is undefined behavior; use implicitWidth or Layout.preferredWidth instead."_qs },
+                      Message {
+                              u"Cannot specify anchors for items inside Grid. Grid will not function."_qs },
+                      Message {
+                              u"Cannot specify x for items inside Grid. Grid will not function."_qs },
+                      Message {
+                              u"Cannot specify y for items inside Grid. Grid will not function."_qs },
+                      Message {
+                              u"Cannot specify anchors for items inside Flow. Flow will not function."_qs },
+                      Message {
+                              u"Cannot specify x for items inside Flow. Flow will not function."_qs },
+                      Message {
+                              u"Cannot specify y for items inside Flow. Flow will not function."_qs } } });
 }
 #endif
 

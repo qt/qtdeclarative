@@ -31,6 +31,8 @@
 
 #include <QtCore/qplugin.h>
 #include <QtCore/qlist.h>
+#include <QtCore/qvarlengtharray.h>
+#include <QtCore/qhash.h>
 
 #include <QtQmlCompiler/private/qqmlsa_p.h>
 
@@ -44,16 +46,24 @@ public:
     void registerPasses(QQmlSA::PassManager *manager, const QQmlSA::Element &rootElement) override;
 };
 
-class LayoutChildrenValidatorPass : public QQmlSA::ElementPass
+class ForbiddenChildrenPropertyValidatorPass : public QQmlSA::ElementPass
 {
 public:
-    LayoutChildrenValidatorPass(QQmlSA::PassManager *manager);
+    ForbiddenChildrenPropertyValidatorPass(QQmlSA::PassManager *manager);
 
+    void addWarning(QAnyStringView moduleName, QAnyStringView typeName, QAnyStringView propertyName,
+                    QAnyStringView warning);
     bool shouldRun(const QQmlSA::Element &element) override;
     void run(const QQmlSA::Element &element) override;
 
 private:
-    QQmlSA::Element m_layout;
+    struct Warning
+    {
+        QString propertyName;
+        QString message;
+    };
+
+    QHash<QQmlSA::Element, QVarLengthArray<Warning, 8>> m_types;
 };
 
 class ControlsNativeValidatorPass : public QQmlSA::ElementPass

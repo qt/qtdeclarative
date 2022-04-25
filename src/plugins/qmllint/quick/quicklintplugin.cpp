@@ -28,25 +28,52 @@
 
 #include "quicklintplugin.h"
 
-LayoutChildrenValidatorPass::LayoutChildrenValidatorPass(QQmlSA::PassManager *manager)
+ForbiddenChildrenPropertyValidatorPass::ForbiddenChildrenPropertyValidatorPass(
+        QQmlSA::PassManager *manager)
     : QQmlSA::ElementPass(manager)
 {
-    m_layout = resolveType("QtQuick.Layouts", "Layout");
 }
 
-bool LayoutChildrenValidatorPass::shouldRun(const QQmlSA::Element &element)
+void ForbiddenChildrenPropertyValidatorPass::addWarning(QAnyStringView moduleName,
+                                                        QAnyStringView typeName,
+                                                        QAnyStringView propertyName,
+                                                        QAnyStringView warning)
 {
-    return !m_layout.isNull() && element->parentScope()
-            && element->parentScope()->inherits(m_layout);
+    auto element = resolveType(moduleName, typeName);
+    if (!element.isNull())
+        m_types[element].append({ propertyName.toString(), warning.toString() });
 }
 
-void LayoutChildrenValidatorPass::run(const QQmlSA::Element &element)
+bool ForbiddenChildrenPropertyValidatorPass::shouldRun(const QQmlSA::Element &element)
 {
-    auto bindings = element->propertyBindings(u"anchors"_qs);
-    if (!bindings.empty())
-        emitWarning(u"Detected anchors on an item that is managed by a layout. This is undefined "
-                    u"behavior; use Layout.alignment instead.",
-                    element->sourceLocation());
+    if (!element->parentScope())
+        return false;
+
+    for (const auto &pair : m_types.asKeyValueRange()) {
+        if (element->parentScope()->inherits(pair.first))
+            return true;
+    }
+
+    return false;
+}
+
+void ForbiddenChildrenPropertyValidatorPass::run(const QQmlSA::Element &element)
+{
+    for (const auto &elementPair : m_types.asKeyValueRange()) {
+        const QQmlSA::Element &type = elementPair.first;
+        if (!element->parentScope()->inherits(type))
+            continue;
+
+        for (const auto &warning : elementPair.second) {
+            if (!element->hasOwnPropertyBindings(warning.propertyName))
+                continue;
+
+            auto bindings = element->ownPropertyBindings(warning.propertyName);
+
+            emitWarning(warning.message, bindings.first->sourceLocation());
+        }
+        break;
+    }
 }
 
 ControlsNativeValidatorPass::ControlsNativeValidatorPass(QQmlSA::PassManager *manager)
@@ -205,11 +232,46 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
 {
     Q_UNUSED(rootElement);
 
-    if (manager->hasImportedModule("QtQuick"))
+    if (manager->hasImportedModule("QtQuick")) {
         manager->registerElementPass(std::make_unique<AnchorsValidatorPass>(manager));
 
-    if (manager->hasImportedModule(u"QtQuick.Layouts"_qs))
-        manager->registerElementPass(std::make_unique<LayoutChildrenValidatorPass>(manager));
+        auto forbiddenChildProperty =
+                std::make_unique<ForbiddenChildrenPropertyValidatorPass>(manager);
+
+        for (const QString &element : { u"Grid"_qs, u"Flow"_qs }) {
+            for (const QString &property : { u"anchors"_qs, u"x"_qs, u"y"_qs }) {
+                forbiddenChildProperty->addWarning(
+                        "QtQuick", element, property,
+                        u"Cannot specify %1 for items inside %2. %2 will not function."_qs.arg(
+                                property, element));
+            }
+        }
+
+        if (manager->hasImportedModule("QtQuick.Layouts")) {
+            forbiddenChildProperty->addWarning(
+                    "QtQuick.Layouts", "Layout", "anchors",
+                    "Detected anchors on an item that is managed by a layout. This is undefined "
+                    u"behavior; use Layout.alignment instead.");
+            forbiddenChildProperty->addWarning(
+                    "QtQuick.Layouts", "Layout", "x",
+                    "Detected x on an item that is managed by a layout. This is undefined "
+                    u"behavior; use Layout.leftMargin or Layout.rightMargin instead.");
+            forbiddenChildProperty->addWarning(
+                    "QtQuick.Layouts", "Layout", "y",
+                    "Detected y on an item that is managed by a layout. This is undefined "
+                    u"behavior; use Layout.topMargin or Layout.bottomMargin instead.");
+            forbiddenChildProperty->addWarning(
+                    "QtQuick.Layouts", "Layout", "width",
+                    "Detected width on an item that is managed by a layout. This is undefined "
+                    u"behavior; use implicitWidth or Layout.preferredWidth instead.");
+            forbiddenChildProperty->addWarning(
+                    "QtQuick.Layouts", "Layout", "height",
+                    "Detected height on an item that is managed by a layout. This is undefined "
+                    u"behavior; use implictHeight or Layout.preferredHeight instead.");
+        }
+
+        manager->registerElementPass(std::move(forbiddenChildProperty));
+    }
 
     if (manager->hasImportedModule(u"QtQuick.Controls.macOS"_qs)
         || manager->hasImportedModule(u"QtQuick.Controls.Windows"_qs))
