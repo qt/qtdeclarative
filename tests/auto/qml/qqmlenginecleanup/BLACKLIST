@@ -1,2 +1,5 @@
 [test_customModuleCleanup]
 windows gcc ci
+# QTBUG-102833
+[test_customModuleCleanup]
+android
