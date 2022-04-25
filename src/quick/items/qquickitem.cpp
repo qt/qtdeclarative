@@ -8601,12 +8601,6 @@ bool QQuickItem::event(QEvent *ev)
     Q_D(QQuickItem);
 
     switch (ev->type()) {
-#if 0
-    case QEvent::PolishRequest:
-        d->polishScheduled = false;
-        updatePolish();
-        break;
-#endif
 #if QT_CONFIG(im)
     case QEvent::InputMethodQuery: {
         QInputMethodQueryEvent *query = static_cast<QInputMethodQueryEvent *>(ev);
