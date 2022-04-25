@@ -1269,18 +1269,33 @@ void tst_QQuickPopup::orientation_data()
 #endif
     const int width = availableSize.width();
     const int height = availableSize.height();
+
+    // The width & height might be odd numbers, so we calculate center in a way
+    // similar to anchors.centerIn.
+    // Also note that when we emulate the screen orientation change (by calling
+    // window->reportContentOrientationChange() in the test), these values need
+    // to be adjusted, because the "logical" (0, 0) of the screen changes.
+    const int widthCenter = (width % 2) ? (width + 1) / 2 : width / 2;
+    const int heightCenter = (height % 2) ? (height + 1) / 2 : height / 2;
+
     // Rectangle is (60x30); popup is (30x60).
     // Rectangle is using "anchors.centerIn: parent", and popup is positioned at
-    // (rectangle.width, rectangle.height) so we need the "/ 2 - x" part to
-    // calculate expected popup's position.
-    QTest::newRow("Portrait")
-            << Qt::PortraitOrientation << QPointF(width / 2 - 30 + 60, height / 2 - 15 + 30);
-    QTest::newRow("Landscape")
-            << Qt::LandscapeOrientation << QPointF(height / 2 - 15 + 30, width / 2 + 30 - 60);
-    QTest::newRow("InvertedPortrait")
-            << Qt::InvertedPortraitOrientation << QPointF(width / 2 + 30 - 60, height / 2 + 15 - 30);
-    QTest::newRow("InvertedLandscape")
-            << Qt::InvertedLandscapeOrientation << QPointF(height / 2 + 15 - 30, width / 2 - 30 + 60);
+    // (rectangle.width, rectangle.height)
+    QTest::newRow("Portrait") << Qt::PortraitOrientation
+            << QPointF(widthCenter - 30 + 60, heightCenter - 15 + 30);
+    // in landscape orientation the top left corner of physical screen
+    // (not rotated) becomes (0, 0), so we need to adjust our widthCenter
+    QTest::newRow("Landscape") << Qt::LandscapeOrientation
+            << QPointF(heightCenter - 15 + 30, (width - widthCenter) + 30 - 60);
+    // In inverted portrait orientation the bottom right corner of physical
+    // screen (not rotated) becomes (0, 0), so we need to adjust both
+    // widthCenter and heightCenter
+    QTest::newRow("InvertedPortrait") << Qt::InvertedPortraitOrientation
+            << QPointF((width - widthCenter) + 30 - 60, (height - heightCenter) + 15 - 30);
+    // In inverted landscape orientation the bottom right corner of physical
+    // screen (not rotated) becomes (0, 0), so we need to adjust heightCenter
+    QTest::newRow("InvertedLandscape") << Qt::InvertedLandscapeOrientation
+            << QPointF((height - heightCenter) + 15 - 30, widthCenter - 30 + 60);
 }
 
 void tst_QQuickPopup::orientation()
