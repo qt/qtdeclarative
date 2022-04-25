@@ -172,7 +172,7 @@ void tst_QQmlImport::testDesignerSupported()
     QVERIFY(window->errors().isEmpty());
 
     QString warningString("%1:30:1: module does not support the designer \"MyPluginUnsupported\" \n     import MyPluginUnsupported 1.0\r \n     ^ ");
-#if !defined(Q_OS_WIN) && !defined(Q_OS_ANDROID)
+#if !defined(Q_OS_WIN)
     warningString.remove('\r');
 #endif
     warningString = warningString.arg(testFileUrl("testfile_unsupported.qml").toString());
@@ -409,10 +409,9 @@ void tst_QQmlImport::removeDynamicPlugin()
     QQmlEngine engine;
     {
         // Load something that adds a dynamic plugin
-        QQmlComponent component(&engine);
+        QQmlComponent component(&engine, testFileUrl("importQtQuickTooling.qml"));
         // Make sure to use something other than QtTest here, since the !plugins.isEmpty()
         // check will fail if we do.
-        component.setData(QByteArray("import QtQuick.tooling; Property{}"), QUrl());
         QVERIFY2(component.isReady(), qPrintable(component.errorString()));
     }
     QQmlImportDatabase *imports = &QQmlEnginePrivate::get(&engine)->importDatabase;
