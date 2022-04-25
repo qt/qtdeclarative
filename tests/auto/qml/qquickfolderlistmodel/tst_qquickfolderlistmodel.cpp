@@ -195,6 +195,14 @@ void tst_qquickfolderlistmodel::nameFilters()
     connect(flm, SIGNAL(rowsRemoved(QModelIndex,int,int)),
             this, SLOT(removed(QModelIndex,int,int)));
 
+#ifdef Q_OS_ANDROID
+    // On Android the default folder is application's "files" dir, which
+    // requires special rights for reading. The test works when started via
+    // androidtestrunner, but fails when launching the APK directly. Set the
+    // initial folder to resources root dir, because it is always readable.
+    flm->setProperty("folder", testFileUrl(""));
+#endif
+
     QTRY_VERIFY(flm->rowCount() > 0);
     // read an invalid directory first...
     flm->setProperty("folder", testFileUrl("nosuchdirectory"));

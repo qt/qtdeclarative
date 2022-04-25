@@ -27,6 +27,13 @@ set(introspect_resource_files
     "data/txtdir/hello.txt"
 )
 
+# On platforms where TESTDATA is embedded into resources (Android, iOS and
+# INTEGRITY), the QT_RESOURCE_ALIAS property was previously set when processing
+# TESTDATA, so we need to reset it. Otherwise the wrong alias will be written
+# to introspect.qrc, and the related test will fail.
+set_source_files_properties(${introspect_resource_files} PROPERTIES
+    QT_RESOURCE_ALIAS "NOTFOUND")
+
 qt_internal_add_resource(tst_qquickfolderlistmodel "introspect"
     PREFIX
         "/myprefix/subdir"
