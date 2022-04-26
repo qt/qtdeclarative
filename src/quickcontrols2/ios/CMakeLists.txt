@@ -12,6 +12,7 @@ set(qml_files
     "SpinBox.qml"
     "ProgressBar.qml"
     "Dial.qml"
+    "PageIndicator.qml"
 )
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.2;6.0"
