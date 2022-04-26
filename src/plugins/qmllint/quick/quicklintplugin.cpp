@@ -76,6 +76,60 @@ void ForbiddenChildrenPropertyValidatorPass::run(const QQmlSA::Element &element)
     }
 }
 
+AttachedPropertyTypeValidatorPass::AttachedPropertyTypeValidatorPass(QQmlSA::PassManager *manager)
+    : QQmlSA::ElementPass(manager)
+{
+}
+
+void AttachedPropertyTypeValidatorPass::addWarning(
+        QAnyStringView attachedTypeName,
+        QList<AttachedPropertyTypeValidatorPass::TypeDescription> allowedTypes,
+        QAnyStringView warning)
+{
+    AttachedPropertyTypeValidatorPass::Warning warningInfo;
+    warningInfo.message = warning.toString();
+
+    for (const TypeDescription &description : allowedTypes) {
+        auto type = resolveType(description.module, description.name);
+
+        if (type.isNull())
+            continue;
+
+        warningInfo.allowedTypes.push_back(type);
+    }
+
+    m_attachedTypes[attachedTypeName.toString()] = warningInfo;
+}
+
+bool AttachedPropertyTypeValidatorPass::shouldRun(const QQmlSA::Element &element)
+{
+    for (const auto &pair : m_attachedTypes.asKeyValueRange()) {
+        if (element->hasOwnPropertyBindings(pair.first))
+            return true;
+    }
+
+    return false;
+}
+
+void AttachedPropertyTypeValidatorPass::run(const QQmlSA::Element &element)
+{
+    for (const auto &pair : m_attachedTypes.asKeyValueRange()) {
+        if (element->hasOwnPropertyBindings(pair.first)) {
+            bool hasAllowedType = false;
+            for (const QQmlSA::Element &type : pair.second.allowedTypes) {
+                if (element->inherits(type)) {
+                    hasAllowedType = true;
+                    break;
+                }
+            }
+            if (!hasAllowedType) {
+                auto binding = *element->ownPropertyBindings(pair.first).first;
+                emitWarning(pair.second.message, binding.sourceLocation());
+            }
+        }
+    }
+}
+
 ControlsNativeValidatorPass::ControlsNativeValidatorPass(QQmlSA::PassManager *manager)
     : QQmlSA::ElementPass(manager)
 {
@@ -230,9 +284,14 @@ void AnchorsValidatorPass::run(const QQmlSA::Element &element)
 void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
                                         const QQmlSA::Element &rootElement)
 {
+    const bool hasQuick = manager->hasImportedModule("QtQuick");
+    const bool hasQuickLayouts = manager->hasImportedModule("QtQuick.Layouts");
+    const bool hasQuickControls = manager->hasImportedModule("QtQuick.Templates")
+            || manager->hasImportedModule("QtQuick.Controls");
+
     Q_UNUSED(rootElement);
 
-    if (manager->hasImportedModule("QtQuick")) {
+    if (hasQuick) {
         manager->registerElementPass(std::make_unique<AnchorsValidatorPass>(manager));
 
         auto forbiddenChildProperty =
@@ -247,7 +306,7 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
             }
         }
 
-        if (manager->hasImportedModule("QtQuick.Layouts")) {
+        if (hasQuickLayouts) {
             forbiddenChildProperty->addWarning(
                     "QtQuick.Layouts", "Layout", "anchors",
                     "Detected anchors on an item that is managed by a layout. This is undefined "
@@ -272,6 +331,39 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
 
         manager->registerElementPass(std::move(forbiddenChildProperty));
     }
+
+    auto attachedPropertyType = std::make_unique<AttachedPropertyTypeValidatorPass>(manager);
+
+    if (hasQuick) {
+        attachedPropertyType->addWarning("Accessible", { { "QtQuick", "Item" } },
+                                         "Accessible must be attached to an Item");
+        attachedPropertyType->addWarning(
+                "LayoutMirroring", { { "QtQuick", "Item" }, { "QtQuick", "Window" } },
+                "LayoutDirection attached property only works with Items and Windows");
+        attachedPropertyType->addWarning("EnterKey", { { "QtQuick", "Item" } },
+                                         "EnterKey attached property only works with Items");
+    }
+
+    if (hasQuickLayouts) {
+        attachedPropertyType->addWarning("Layout", { { "QtQuick", "Item" } },
+                                         "Layout must be attached to Item elements");
+    }
+
+    if (hasQuickControls) {
+        attachedPropertyType->addWarning(
+                "ScrollBar", { { "QtQuick", "Flickable" }, { "QtQuick.Templates", "ScrollView" } },
+                "ScrollBar must be attached to a Flickable or ScrollView");
+        attachedPropertyType->addWarning("ScrollIndicator", { { "QtQuick", "Flickable" } },
+                                         "ScrollIndicator must be attached to a Flickable");
+        attachedPropertyType->addWarning("SplitView", { { "QtQuick", "Item" } },
+                                         "SplitView attached property only works with Items");
+        attachedPropertyType->addWarning("StackView", { { "QtQuick", "Item" } },
+                                         "StackView attached property only works with Items");
+        attachedPropertyType->addWarning("ToolTip", { { "QtQuick", "Item" } },
+                                         "ToolTip must be attached to an Item");
+    }
+
+    manager->registerElementPass(std::move(attachedPropertyType));
 
     if (manager->hasImportedModule(u"QtQuick.Controls.macOS"_qs)
         || manager->hasImportedModule(u"QtQuick.Controls.Windows"_qs))

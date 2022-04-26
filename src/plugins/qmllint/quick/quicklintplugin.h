@@ -66,6 +66,32 @@ private:
     QHash<QQmlSA::Element, QVarLengthArray<Warning, 8>> m_types;
 };
 
+class AttachedPropertyTypeValidatorPass : public QQmlSA::ElementPass
+{
+public:
+    struct TypeDescription
+    {
+        QString module;
+        QString name;
+    };
+
+    AttachedPropertyTypeValidatorPass(QQmlSA::PassManager *manager);
+
+    void addWarning(QAnyStringView attachedTypeName, QList<TypeDescription> allowedTypes,
+                    QAnyStringView warning);
+
+    bool shouldRun(const QQmlSA::Element &element) override;
+    void run(const QQmlSA::Element &element) override;
+
+private:
+    struct Warning
+    {
+        QVarLengthArray<QQmlSA::Element, 4> allowedTypes;
+        QString message;
+    };
+    QHash<QString, Warning> m_attachedTypes;
+};
+
 class ControlsNativeValidatorPass : public QQmlSA::ElementPass
 {
 public:

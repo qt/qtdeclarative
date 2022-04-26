@@ -1696,6 +1696,18 @@ void TestQmllint::quickPlugin()
                               u"Cannot specify x for items inside Flow. Flow will not function."_qs },
                       Message {
                               u"Cannot specify y for items inside Flow. Flow will not function."_qs } } });
+    runTest("pluginQuick_attached.qml",
+            Result {
+                    { Message { u"ToolTip must be attached to an Item"_qs },
+                      Message { u"SplitView attached property only works with Items"_qs },
+                      Message { u"ScrollIndicator must be attached to a Flickable"_qs },
+                      Message { u"ScrollBar must be attached to a Flickable or ScrollView"_qs },
+                      Message { u"Accessible must be attached to an Item"_qs },
+                      Message { u"EnterKey attached property only works with Items"_qs },
+                      Message {
+                              u"LayoutDirection attached property only works with Items and Windows"_qs },
+                      Message { u"Layout must be attached to Item elements"_qs },
+                      Message { u"StackView attached property only works with Items"_qs } } });
 }
 #endif
 
