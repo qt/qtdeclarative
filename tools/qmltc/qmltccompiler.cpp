@@ -42,7 +42,6 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(lcQmltcCompiler, "qml.qmltc.compiler", QtWarningMsg);
 
 const QString QmltcCodeGenerator::privateEngineName = u"ePriv"_qs;
-const QString QmltcCodeGenerator::urlMethodName = u"q_qmltc_docUrl"_qs;
 
 QmltcCompiler::QmltcCompiler(const QString &url, QmltcTypeResolver *resolver, QmltcVisitor *visitor,
                              QQmlJSLogger *logger)
@@ -63,8 +62,10 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info)
     QList<QmltcType> compiledTypes;
     compiledTypes.reserve(types.size());
 
+    QmltcCodeGenerator generator { m_url, QQmlJSScope::ConstPtr() };
+
     QmltcMethod urlMethod;
-    compileUrlMethod(urlMethod);
+    compileUrlMethod(urlMethod, generator.urlMethodName());
 
     for (const QQmlJSScope::ConstPtr &type : types) {
         compiledTypes.emplaceBack(); // creates empty type
@@ -87,9 +88,9 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info)
     QmltcCodeWriter::write(code, program);
 }
 
-void QmltcCompiler::compileUrlMethod(QmltcMethod &urlMethod)
+void QmltcCompiler::compileUrlMethod(QmltcMethod &urlMethod, const QString &urlMethodName)
 {
-    urlMethod.name = QmltcCodeGenerator::urlMethodName;
+    urlMethod.name = urlMethodName;
     urlMethod.returnType = u"const QUrl&"_qs;
     urlMethod.body << u"static QUrl url {QStringLiteral(\"qrc:%1\")};"_qs.arg(m_info.resourcePath);
     urlMethod.body << u"return url;"_qs;
@@ -186,7 +187,7 @@ void QmltcCompiler::compileType(QmltcType &current, const QQmlJSScope::ConstPtr 
         current.basicCtor.body << u"QQml_setParent_noEvent(this, " + parent.name + u");";
     }
 
-    QmltcCodeGenerator generator { rootType };
+    QmltcCodeGenerator generator { m_url, rootType };
 
     // compilation stub:
     current.fullCtor.body << u"Q_UNUSED(engine);"_qs;
@@ -435,8 +436,9 @@ void QmltcCompiler::compileBinding(QmltcType &current, const QQmlJSMetaPropertyB
     // without if-checking every type
 
     QmltcCodeGenerator generator {
-        QQmlJSScope::ConstPtr()
-    }; // NB: we don't need document root here
+        m_url,
+        QQmlJSScope::ConstPtr() // NB: we don't need document root here
+    };
 
     switch (binding.bindingType()) {
     case QQmlJSMetaPropertyBinding::BoolLiteral: {

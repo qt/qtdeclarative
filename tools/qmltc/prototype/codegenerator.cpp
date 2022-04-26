@@ -1915,8 +1915,10 @@ void CodeGenerator::compileScriptBindingOfComponent(QQmlJSAotObject &current,
 
 void CodeGenerator::compileUrlMethod()
 {
+    QFileInfo fi(m_url);
     m_urlMethod.returnType = u"const QUrl &"_qs;
-    m_urlMethod.name = u"q_qmltc_docUrl"_qs;
+    m_urlMethod.name =
+            u"q_qmltc_docUrl_" + fi.fileName().replace(u".qml"_qs, u""_qs).replace(u'.', u'_');
     m_urlMethod.body << u"static QUrl docUrl = %1;"_qs.arg(
             CodeGeneratorUtility::toResourcePath(m_options.resourcePath));
     m_urlMethod.body << u"return docUrl;"_qs;

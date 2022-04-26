@@ -31,6 +31,7 @@
 
 #include <QtCore/qscopeguard.h>
 #include <QtCore/qstringbuilder.h>
+#include <QtCore/qfileinfo.h>
 
 #include "qmltcoutputir.h"
 #include "qmltcvisitor.h"
@@ -47,8 +48,7 @@ QT_BEGIN_NAMESPACE
 struct QmltcCodeGenerator
 {
     static const QString privateEngineName;
-    static const QString urlMethodName;
-
+    QString documentUrl;
     QQmlJSScope::ConstPtr documentRoot;
 
     /*!
@@ -65,6 +65,12 @@ struct QmltcCodeGenerator
     inline void generate_assignToProperty(QmltcType &current, const QQmlJSScope::ConstPtr &type,
                                           const QQmlJSMetaProperty &p, const QString &value,
                                           const QString &accessor);
+
+    QString urlMethodName() const
+    {
+        QFileInfo fi(documentUrl);
+        return u"q_qmltc_docUrl_" + fi.fileName().replace(u".qml"_qs, u""_qs).replace(u'.', u'_');
+    }
 };
 
 inline decltype(auto)
@@ -118,7 +124,7 @@ QmltcCodeGenerator::generate_qmlContextSetup(QmltcType &current, const QQmlJSSco
                 << QStringLiteral(
                            "context = %1->createInternalContext(%1->compilationUnitFromUrl(%2()), "
                            "context, 0, true);")
-                           .arg(privateEngineName, urlMethodName);
+                           .arg(privateEngineName, urlMethodName());
     } else {
         current.init.body << u"// 1. use current context as this object's context"_qs;
         current.init.body << u"// context = context;"_qs;
