@@ -231,6 +231,9 @@ with a lower case letter.
 */
 void tst_examples::sgexamples_data()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("tst_examples::sgexamples_data needs adaptions for Android, QTBUG-102858.");
+#endif
     QTest::addColumn<QString>("file");
 
     const QDir repoSourceDir(QLatin1String(SRCDIR) + "/../../../..");
@@ -278,6 +281,9 @@ void tst_examples::sgexamples()
 
 void tst_examples::sgsnippets_data()
 {
+#ifdef Q_OS_ANDROID
+    QSKIP("tst_examples::sgsnippets_data needs adaptions for Android, QTBUG-102858.");
+#endif
     QTest::addColumn<QString>("file");
 
     // Add QML snippets.
