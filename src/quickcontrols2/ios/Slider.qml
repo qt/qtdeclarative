@@ -62,8 +62,8 @@ T.Slider {
             source: control.IOS.url + "slider-handle"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": control.IOS.theme == IOS.Light},
-                    {"dark": control.IOS.theme == IOS.Dark},
+                    {"light": control.IOS.theme === IOS.Light},
+                    {"dark": control.IOS.theme === IOS.Dark},
                     {"disabled": !control.enabled}
                 ]
             }
@@ -83,8 +83,8 @@ T.Slider {
             width: control.horizontal ? background.width : background.height
             NinePatchImageSelector on source {
                 states: [
-                    {"light": control.IOS.theme == IOS.Light},
-                    {"dark": control.IOS.theme == IOS.Dark},
+                    {"light": control.IOS.theme === IOS.Light},
+                    {"dark": control.IOS.theme === IOS.Dark},
                 ]
             }
 
@@ -95,8 +95,8 @@ T.Slider {
                 source: control.IOS.url + "slider-progress"
                 NinePatchImageSelector on source {
                     states: [
-                        {"light": control.IOS.theme == IOS.Light},
-                        {"dark": control.IOS.theme == IOS.Dark},
+                        {"light": control.IOS.theme === IOS.Light},
+                        {"dark": control.IOS.theme === IOS.Dark},
                     ]
                 }
             }

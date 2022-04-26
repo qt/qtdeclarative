@@ -63,8 +63,8 @@ T.CheckBox {
             states: [
                 {"checked": control.checkState === Qt.Checked},
                 {"partially-checked": control.checkState === Qt.PartiallyChecked},
-                {"light": control.IOS.theme == IOS.Light},
-                {"dark": control.IOS.theme == IOS.Dark}
+                {"light": control.IOS.theme === IOS.Light},
+                {"dark": control.IOS.theme === IOS.Dark}
             ]
         }
     }

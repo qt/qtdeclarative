@@ -66,8 +66,8 @@ T.ProgressBar {
             source: control.IOS.url + "slider-progress"
             NinePatchImageSelector on source {
                 states: [
-                    {"light": control.IOS.theme == IOS.Light},
-                    {"dark": control.IOS.theme == IOS.Dark}
+                    {"light": control.IOS.theme === IOS.Light},
+                    {"dark": control.IOS.theme === IOS.Dark}
                 ]
             }
 
@@ -95,8 +95,8 @@ T.ProgressBar {
             width: control.background.width
             NinePatchImageSelector on source {
                 states: [
-                    {"light": control.IOS.theme == IOS.Light},
-                    {"dark": control.IOS.theme == IOS.Dark}
+                    {"light": control.IOS.theme === IOS.Light},
+                    {"dark": control.IOS.theme === IOS.Dark}
                 ]
             }
         }
