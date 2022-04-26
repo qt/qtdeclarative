@@ -1,2 +1,5 @@
 [listView]
 qnx ci
+# QTBUG-101342
+[listView]
+android
