@@ -6830,11 +6830,16 @@ void tst_qqmllanguage::componentMix()
     QVERIFY(!o.isNull());
     QObject *things = qvariant_cast<QObject *>(o->property("things"));
     QVERIFY(things);
+    QObject *delegated = qvariant_cast<QObject *>(o->property("delegated"));
+    QVERIFY(delegated);
     QObject *view = qvariant_cast<QObject *>(things->property("view"));
     QVERIFY(view);
     QObject *delegate = qvariant_cast<QObject *>(view->property("delegate"));
     QVERIFY(delegate);
     QCOMPARE(delegate->metaObject(), &QQmlComponent::staticMetaObject);
+    QObject *delegate2 = qvariant_cast<QObject *>(delegated->property("delegate"));
+    QVERIFY(delegate2);
+    QCOMPARE(delegate2->metaObject(), &QQmlComponent::staticMetaObject);
 }
 
 QTEST_MAIN(tst_qqmllanguage)

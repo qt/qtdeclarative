@@ -873,7 +873,7 @@ void QQmlComponentAndAliasResolver::findAndRegisterImplicitComponents(const QmlI
     }
 }
 
-// resolve ignores everything relating to inline components
+// Resolve ignores everything relating to inline components, except for implicit components.
 bool QQmlComponentAndAliasResolver::resolve(int root)
 {
     // Detect real Component {} objects as well as implicitly defined components, such as
@@ -884,29 +884,35 @@ bool QQmlComponentAndAliasResolver::resolve(int root)
     const int startObjectIndex = root == 0 ? root : root+1; // root+1, as ic root is handled at the end
     for (int i = startObjectIndex; i < objCountWithoutSynthesizedComponents; ++i) {
         QmlIR::Object *obj = qmlObjects->at(i);
-        if (root == 0) {
-            // normal component root, skip over anything inline component related
-            if (obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot ||
-                    obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent) {
-                continue;
-            }
-        } else {
-            if (!(obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent) ||
-                    obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot)
-                break; // left current inline component (potentially entered a new one)
-        }
+        const bool isInlineComponentRoot
+                = obj->flags & QV4::CompiledData::Object::IsInlineComponentRoot;
+        const bool isPartOfInlineComponent
+                = obj->flags & QV4::CompiledData::Object::InPartOfInlineComponent;
         QQmlPropertyCache *cache = propertyCaches.at(i);
-        if (obj->inheritedTypeNameIndex == 0 && !cache)
-            continue;
 
         bool isExplicitComponent = false;
-
         if (obj->inheritedTypeNameIndex) {
             auto *tref = resolvedType(obj->inheritedTypeNameIndex);
             Q_ASSERT(tref);
             if (tref->type().metaObject() == &QQmlComponent::staticMetaObject)
                 isExplicitComponent = true;
         }
+
+        if (root == 0) {
+            // normal component root, skip over anything inline component related
+            if (isInlineComponentRoot || isPartOfInlineComponent)
+                continue;
+        } else if (!isPartOfInlineComponent || isInlineComponentRoot) {
+            // We've left the current inline component (potentially entered a new one),
+            // but we still need to resolve implicit components which are part of inline components.
+            if (cache && !isExplicitComponent)
+                findAndRegisterImplicitComponents(obj, cache);
+            break;
+        }
+
+        if (obj->inheritedTypeNameIndex == 0 && !cache)
+            continue;
+
         if (!isExplicitComponent) {
             if (cache)
                 findAndRegisterImplicitComponents(obj, cache);
