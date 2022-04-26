@@ -37,58 +37,49 @@
 **
 ****************************************************************************/
 
-#include "qquickiostheme_p.h"
+import QtQuick
+import QtQuick.Templates as T
+import QtQuick.Controls.impl
+import QtQuick.Controls.iOS.impl
 
-#include <QtGui/private/qcoregraphics_p.h>
+T.TextArea {
+    id: control
 
-#ifdef Q_OS_IOS
-#include <UIKit/UIInterface.h>
-#endif
+    implicitWidth: Math.max(contentWidth + leftPadding + rightPadding,
+                            implicitBackgroundWidth + leftInset + rightInset,
+                            placeholder.implicitWidth + leftPadding + rightPadding)
+    implicitHeight: Math.max(contentHeight + topPadding + bottomPadding,
+                             implicitBackgroundHeight + topInset + bottomInset,
+                             placeholder.implicitHeight + topPadding + bottomPadding)
 
-#include <QtQuickTemplates2/private/qquicktheme_p.h>
-#include <QtQuickControls2/private/qquickstyle_p.h>
+    leftPadding: 6
+    rightPadding: 6
 
-QT_BEGIN_NAMESPACE
+    color: control.palette.text
+    selectionColor: control.palette.highlight
+    selectedTextColor: control.palette.highlightedText
+    placeholderTextColor: control.palette.placeholderText
+    cursorDelegate: CursorDelegate {}
 
-void QQuickIOSTheme::initialize(QQuickTheme *theme)
-{
-    QPalette systemPalette;
+    PlaceholderText {
+        id: placeholder
+        x: control.leftPadding
+        y: control.topPadding
+        width: control.width - (control.leftPadding + control.rightPadding)
+        height: control.height - (control.topPadding + control.bottomPadding)
 
-    QColor background;
-    QColor blue;
-    QColor white;
-    QColor disabled;
-    QColor grey;
-#ifdef Q_OS_IOS
-    blue = qt_mac_toQColor(UIColor.systemBlueColor.CGColor);
-    disabled = qt_mac_toQColor(UIColor.tertiarySystemFillColor.CGColor);
-    white = qt_mac_toQColor(UIColor.whiteColor.CGColor);
-    grey = qt_mac_toQColor(UIColor.systemFillColor.CGColor);
-    background = qt_mac_toQColor(UIColor.systemBackgroundColor.CGColor);
-#else
-    background = QQuickStylePrivate::isDarkSystemTheme() ? QColor(Qt::black) : QColor(Qt::white);
-    blue = QColor(qRgba(0, 122, 255, 255));
-    white = QColor(qRgba(255, 255, 255, 255));
-    disabled = QColor(qRgba(118, 118, 128, 31));
-    grey = QColor(qRgba(142, 142, 147, 255));
-#endif
-    systemPalette.setColor(QPalette::Window, background);
-    systemPalette.setColor(QPalette::Base, background);
+        text: control.placeholderText
+        font: control.font
+        color: control.placeholderTextColor
+        verticalAlignment: control.verticalAlignment
+        visible: !control.length && !control.preeditText && (!control.activeFocus || control.horizontalAlignment !== Qt.AlignHCenter)
+        elide: Text.ElideRight
+        renderType: control.renderType
+    }
 
-    systemPalette.setColor(QPalette::Button, blue);
-    systemPalette.setColor(QPalette::Disabled, QPalette::Button, disabled);
-
-    systemPalette.setColor(QPalette::ButtonText, white);
-    white.setAlphaF(0.5);
-    systemPalette.setColor(QPalette::Disabled, QPalette::ButtonText, white);
-
-    blue.setAlphaF(0.8);
-    systemPalette.setColor(QPalette::Highlight, blue);
-
-    systemPalette.setColor(QPalette::Mid, grey);
-
-    theme->setPalette(QQuickTheme::System, systemPalette);
+    background: Rectangle {
+        implicitWidth: 240
+        implicitHeight: 128
+        color: control.palette.base
+    }
 }
-
-QT_END_NAMESPACE
-

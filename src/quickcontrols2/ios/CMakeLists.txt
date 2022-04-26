@@ -13,6 +13,7 @@ set(qml_files
     "ProgressBar.qml"
     "Dial.qml"
     "PageIndicator.qml"
+    "TextArea.qml"
 )
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.2;6.0"
@@ -69,8 +70,10 @@ qt_internal_add_resource(qtquickcontrols2iosstyleplugin "qmake_qtquickcontrols2i
         ${qmake_qtquickcontrols2iosstyleplugin_resource_files}
 )
 
-# _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2iosstyleplugin
-#                                              qtquickcontrols2nativestyleplugin)
+add_subdirectory(impl)
+
+_qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2iosstyleplugin
+                                              qtquickcontrols2iosstyleimplplugin)
 
 # Basic style is the required fallback style.
 # _qt_internal_add_qml_static_plugin_dependency(qtquickcontrols2iosstyleplugin

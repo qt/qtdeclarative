@@ -37,58 +37,79 @@
 **
 ****************************************************************************/
 
-#include "qquickiostheme_p.h"
-
-#include <QtGui/private/qcoregraphics_p.h>
-
-#ifdef Q_OS_IOS
-#include <UIKit/UIInterface.h>
-#endif
-
-#include <QtQuickTemplates2/private/qquicktheme_p.h>
-#include <QtQuickControls2/private/qquickstyle_p.h>
+#include "qquickioscursorflashtimer_p.h"
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
 
 QT_BEGIN_NAMESPACE
 
-void QQuickIOSTheme::initialize(QQuickTheme *theme)
+QQuickIOSCursorFlashTimer::QQuickIOSCursorFlashTimer(QObject *parent)
+    : QObject(parent)
 {
-    QPalette systemPalette;
+}
 
-    QColor background;
-    QColor blue;
-    QColor white;
-    QColor disabled;
-    QColor grey;
-#ifdef Q_OS_IOS
-    blue = qt_mac_toQColor(UIColor.systemBlueColor.CGColor);
-    disabled = qt_mac_toQColor(UIColor.tertiarySystemFillColor.CGColor);
-    white = qt_mac_toQColor(UIColor.whiteColor.CGColor);
-    grey = qt_mac_toQColor(UIColor.systemFillColor.CGColor);
-    background = qt_mac_toQColor(UIColor.systemBackgroundColor.CGColor);
-#else
-    background = QQuickStylePrivate::isDarkSystemTheme() ? QColor(Qt::black) : QColor(Qt::white);
-    blue = QColor(qRgba(0, 122, 255, 255));
-    white = QColor(qRgba(255, 255, 255, 255));
-    disabled = QColor(qRgba(118, 118, 128, 31));
-    grey = QColor(qRgba(142, 142, 147, 255));
-#endif
-    systemPalette.setColor(QPalette::Window, background);
-    systemPalette.setColor(QPalette::Base, background);
+bool QQuickIOSCursorFlashTimer::visible() const
+{
+    return m_visible;
+}
 
-    systemPalette.setColor(QPalette::Button, blue);
-    systemPalette.setColor(QPalette::Disabled, QPalette::Button, disabled);
+void QQuickIOSCursorFlashTimer::setVisible(bool visible)
+{
+    if (m_visible == visible)
+        return;
+    m_visible = visible;
+    emit visibleChanged();
+}
 
-    systemPalette.setColor(QPalette::ButtonText, white);
-    white.setAlphaF(0.5);
-    systemPalette.setColor(QPalette::Disabled, QPalette::ButtonText, white);
+int QQuickIOSCursorFlashTimer::cursorPosition() const
+{
+    return m_cursorPosition;
+}
 
-    blue.setAlphaF(0.8);
-    systemPalette.setColor(QPalette::Highlight, blue);
+void QQuickIOSCursorFlashTimer::setCursorPosition(int cursorPosition)
+{
+    if (m_cursorPosition == cursorPosition)
+        return;
+    m_cursorPosition = cursorPosition;
+    emit cursorPositionChanged();
+    start();
+}
 
-    systemPalette.setColor(QPalette::Mid, grey);
+bool QQuickIOSCursorFlashTimer::running() const
+{
+    return m_running;
+}
 
-    theme->setPalette(QQuickTheme::System, systemPalette);
+void QQuickIOSCursorFlashTimer::setRunning(bool running)
+{
+    if (running == m_running)
+        return;
+    m_running = running;
+    emit runningChanged(m_running);
+    if (!running) {
+        stop();
+        setVisible(false);
+    } else {
+        start();
+    }
+}
+
+void QQuickIOSCursorFlashTimer::start()
+{
+    stop();
+    m_timer = startTimer(QGuiApplication::styleHints()->cursorFlashTime() / 2);
+}
+
+void QQuickIOSCursorFlashTimer::stop()
+{
+    killTimer(m_timer);
+    m_timer = 0;
+}
+
+void QQuickIOSCursorFlashTimer::timerEvent(QTimerEvent *event)
+{
+    if (event->timerId() == m_timer)
+        setVisible(!visible());
 }
 
 QT_END_NAMESPACE
-

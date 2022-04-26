@@ -37,58 +37,22 @@
 **
 ****************************************************************************/
 
-#include "qquickiostheme_p.h"
+import QtQuick
+import QtQuick.Controls.iOS.impl
 
-#include <QtGui/private/qcoregraphics_p.h>
+Rectangle {
+    id: cursor
 
-#ifdef Q_OS_IOS
-#include <UIKit/UIInterface.h>
-#endif
+    color: "#426bf2"
+    width: 2
+    radius: 1
+    visible: parent.activeFocus && !parent.readOnly && parent.selectionStart === parent.selectionEnd
 
-#include <QtQuickTemplates2/private/qquicktheme_p.h>
-#include <QtQuickControls2/private/qquickstyle_p.h>
+    opacity: timer.visible ? 1 : 0
 
-QT_BEGIN_NAMESPACE
-
-void QQuickIOSTheme::initialize(QQuickTheme *theme)
-{
-    QPalette systemPalette;
-
-    QColor background;
-    QColor blue;
-    QColor white;
-    QColor disabled;
-    QColor grey;
-#ifdef Q_OS_IOS
-    blue = qt_mac_toQColor(UIColor.systemBlueColor.CGColor);
-    disabled = qt_mac_toQColor(UIColor.tertiarySystemFillColor.CGColor);
-    white = qt_mac_toQColor(UIColor.whiteColor.CGColor);
-    grey = qt_mac_toQColor(UIColor.systemFillColor.CGColor);
-    background = qt_mac_toQColor(UIColor.systemBackgroundColor.CGColor);
-#else
-    background = QQuickStylePrivate::isDarkSystemTheme() ? QColor(Qt::black) : QColor(Qt::white);
-    blue = QColor(qRgba(0, 122, 255, 255));
-    white = QColor(qRgba(255, 255, 255, 255));
-    disabled = QColor(qRgba(118, 118, 128, 31));
-    grey = QColor(qRgba(142, 142, 147, 255));
-#endif
-    systemPalette.setColor(QPalette::Window, background);
-    systemPalette.setColor(QPalette::Base, background);
-
-    systemPalette.setColor(QPalette::Button, blue);
-    systemPalette.setColor(QPalette::Disabled, QPalette::Button, disabled);
-
-    systemPalette.setColor(QPalette::ButtonText, white);
-    white.setAlphaF(0.5);
-    systemPalette.setColor(QPalette::Disabled, QPalette::ButtonText, white);
-
-    blue.setAlphaF(0.8);
-    systemPalette.setColor(QPalette::Highlight, blue);
-
-    systemPalette.setColor(QPalette::Mid, grey);
-
-    theme->setPalette(QQuickTheme::System, systemPalette);
+    CursorFlashTimer {
+        id: timer
+        cursorPosition: cursor.parent.cursorPosition
+        running: cursor.parent.activeFocus && !cursor.parent.readOnly
+    }
 }
-
-QT_END_NAMESPACE
-
