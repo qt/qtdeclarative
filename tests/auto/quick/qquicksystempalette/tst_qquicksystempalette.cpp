@@ -32,8 +32,9 @@
 #include <QtQml/qqmlcomponent.h>
 #include <QtQuick/private/qquicksystempalette_p.h>
 #include <qpalette.h>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
-class tst_qquicksystempalette : public QObject
+class tst_qquicksystempalette : public QQmlDataTest
 {
     Q_OBJECT
 public:
@@ -51,15 +52,11 @@ private:
     QQmlEngine engine;
 };
 
-tst_qquicksystempalette::tst_qquicksystempalette()
-{
-}
+tst_qquicksystempalette::tst_qquicksystempalette() : QQmlDataTest(QT_QMLTEST_DATADIR) { }
 
 void tst_qquicksystempalette::activePalette()
 {
-    QString componentStr = "import QtQuick 2.0\nSystemPalette { }";
-    QQmlComponent component(&engine);
-    component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QQmlComponent component(&engine, testFileUrl("systemPalette.qml"));
     QQuickSystemPalette *object = qobject_cast<QQuickSystemPalette*>(component.create());
 
     QVERIFY(object != nullptr);
@@ -86,9 +83,7 @@ void tst_qquicksystempalette::activePalette()
 
 void tst_qquicksystempalette::inactivePalette()
 {
-    QString componentStr = "import QtQuick 2.0\nSystemPalette { colorGroup: SystemPalette.Inactive }";
-    QQmlComponent component(&engine);
-    component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QQmlComponent component(&engine, testFileUrl("systemPaletteInactive.qml"));
     QQuickSystemPalette *object = qobject_cast<QQuickSystemPalette*>(component.create());
 
     QVERIFY(object != nullptr);
@@ -116,9 +111,7 @@ void tst_qquicksystempalette::inactivePalette()
 
 void tst_qquicksystempalette::disabledPalette()
 {
-    QString componentStr = "import QtQuick 2.0\nSystemPalette { colorGroup: SystemPalette.Disabled }";
-    QQmlComponent component(&engine);
-    component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QQmlComponent component(&engine, testFileUrl("systemPaletteDisabled.qml"));
     QQuickSystemPalette *object = qobject_cast<QQuickSystemPalette*>(component.create());
 
     QVERIFY(object != nullptr);
@@ -147,9 +140,7 @@ void tst_qquicksystempalette::disabledPalette()
 #ifndef QT_NO_WIDGETS
 void tst_qquicksystempalette::paletteChanged()
 {
-    QString componentStr = "import QtQuick 2.0\nSystemPalette { }";
-    QQmlComponent component(&engine);
-    component.setData(componentStr.toLatin1(), QUrl::fromLocalFile(""));
+    QQmlComponent component(&engine, testFileUrl("systemPalette.qml"));
     QQuickSystemPalette *object = qobject_cast<QQuickSystemPalette*>(component.create());
 
     QVERIFY(object != nullptr);
