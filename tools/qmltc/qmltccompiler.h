@@ -69,7 +69,7 @@ private:
     std::unique_ptr<CodeGenerator> m_prototypeCodegen;
     QmltcCompilerInfo m_info {}; // miscellaneous input/output information
 
-    void compileUrlMethod(QmltcMethod &urlMethod);
+    void compileUrlMethod(QmltcMethod &urlMethod, const QString &urlMethodName);
     void
     compileType(QmltcType &current, const QQmlJSScope::ConstPtr &type,
                 std::function<void(QmltcType &, const QQmlJSScope::ConstPtr &)> compileElements);

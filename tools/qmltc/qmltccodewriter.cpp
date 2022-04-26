@@ -488,7 +488,7 @@ void QmltcCodeWriter::writeUrl(QmltcOutputWrapper &code, const QmltcMethod &urlM
     const auto [hSignature, _] = functionSignatures(urlMethod);
     Q_UNUSED(_);
     // Note: augment return type with preambles in declaration
-    code.rawAppendToCpp(functionReturnType(urlMethod) + hSignature);
+    code.rawAppendToCpp(functionReturnType(urlMethod) + u" " + hSignature);
     code.rawAppendToCpp(u"{");
     {
         QmltcOutputWrapper::CppIndentationScope cppIndent(&code);

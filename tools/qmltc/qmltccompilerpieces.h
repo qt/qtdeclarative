@@ -31,6 +31,7 @@
 
 #include <QtCore/qscopeguard.h>
 #include <QtCore/qstringbuilder.h>
+#include <QtCore/qfileinfo.h>
 
 #include "qmltcoutputir.h"
 #include "qmltcvisitor.h"
@@ -49,15 +50,15 @@ QT_BEGIN_NAMESPACE
 struct QmltcCodeGenerator
 {
     static const QString privateEngineName;
-    static const QString urlMethodName;
     static const QString typeCountName;
 
+    QString documentUrl;
     QmltcVisitor *visitor = nullptr;
 
     [[nodiscard]] inline decltype(auto) generate_initCode(QmltcType &current,
                                                           const QQmlJSScope::ConstPtr &type) const;
-    static inline void generate_initCodeForTopLevelComponent(QmltcType &current,
-                                                             const QQmlJSScope::ConstPtr &type);
+    inline void generate_initCodeForTopLevelComponent(QmltcType &current,
+                                                      const QQmlJSScope::ConstPtr &type);
     [[nodiscard]] inline decltype(auto)
     generate_endInitCode(QmltcType &current, const QQmlJSScope::ConstPtr &type) const;
 
@@ -107,6 +108,12 @@ struct QmltcCodeGenerator
     static QString wrap_qOverload(const QList<QmltcVariable> &parameters,
                                   const QString &overloaded);
     static QString wrap_addressof(const QString &addressed);
+
+    QString urlMethodName() const
+    {
+        QFileInfo fi(documentUrl);
+        return u"q_qmltc_docUrl_" + fi.fileName().replace(u".qml"_qs, u""_qs).replace(u'.', u'_');
+    }
 };
 
 /*!
@@ -203,7 +210,7 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
                 << QStringLiteral(
                            "context = %1->createInternalContext(%1->compilationUnitFromUrl(%2()), "
                            "context, 0, true);")
-                           .arg(privateEngineName, urlMethodName);
+                           .arg(privateEngineName, urlMethodName());
     } else {
         current.init.body << u"// 1. use current context as this object's context"_qs;
         current.init.body << u"// context = context;"_qs;
@@ -281,7 +288,7 @@ QmltcCodeGenerator::generate_initCodeForTopLevelComponent(QmltcType &current,
     current.init.body << u"// QQmlComponent(engine, compilationUnit, start, parent):"_qs;
     current.init.body
             << u"auto compilationUnit = QQmlEnginePrivate::get(engine)->compilationUnitFromUrl("
-                    + QmltcCodeGenerator::urlMethodName + u"());";
+                    + QmltcCodeGenerator::urlMethodName() + u"());";
     current.init.body << u"d->compilationUnit = compilationUnit;"_qs;
     current.init.body << u"d->start = 0;"_qs;
     current.init.body << u"d->url = compilationUnit->finalUrl();"_qs;
@@ -339,7 +346,7 @@ QmltcCodeGenerator::generate_endInitCode(QmltcType &current,
                                                "QQmlEnginePrivate::get(engine)->"
                                                "compilationUnitFromUrl(%2()), thisContext);")
                                         .arg(QString::number(visitor->qmlIrObjectIndex(type)),
-                                             QmltcCodeGenerator::urlMethodName);
+                                             QmltcCodeGenerator::urlMethodName());
         current.endInit.body << u"}"_qs;
     }
 

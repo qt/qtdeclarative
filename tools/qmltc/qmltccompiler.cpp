@@ -44,7 +44,6 @@ QT_BEGIN_NAMESPACE
 Q_LOGGING_CATEGORY(lcQmltcCompiler, "qml.qmltc.compiler", QtWarningMsg);
 
 const QString QmltcCodeGenerator::privateEngineName = u"ePriv"_qs;
-const QString QmltcCodeGenerator::urlMethodName = u"q_qmltc_docUrl"_qs;
 const QString QmltcCodeGenerator::typeCountName = u"q_qmltc_typeCount"_qs;
 
 QmltcCompiler::QmltcCompiler(const QString &url, QmltcTypeResolver *resolver, QmltcVisitor *visitor,
@@ -84,8 +83,10 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info, QmlIR::Document *doc)
     auto pureTypes = m_visitor->pureQmlTypes();
     const QSet<QQmlJSScope::ConstPtr> types(pureTypes.begin(), pureTypes.end());
 
+    QmltcCodeGenerator generator { m_url, m_visitor };
+
     QmltcMethod urlMethod;
-    compileUrlMethod(urlMethod);
+    compileUrlMethod(urlMethod, generator.urlMethodName());
     m_prototypeCodegen->setUrlMethodName(urlMethod.name);
 
     const auto objects = m_prototypeCodegen->objects();
@@ -99,8 +100,8 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info, QmlIR::Document *doc)
     if (isComponent(root)) {
         compiledTypes.reserve(1);
         compiledTypes.emplaceBack(); // create empty type
-        const auto compile = [](QmltcType &current, const QQmlJSScope::ConstPtr &type) {
-            QmltcCodeGenerator::generate_initCodeForTopLevelComponent(current, type);
+        const auto compile = [&](QmltcType &current, const QQmlJSScope::ConstPtr &type) {
+            generator.generate_initCodeForTopLevelComponent(current, type);
         };
         Q_ASSERT(root == filteredObjects.at(0).type);
         compileType(compiledTypes.back(), root, compile);
@@ -135,9 +136,9 @@ void QmltcCompiler::compile(const QmltcCompilerInfo &info, QmlIR::Document *doc)
     QmltcCodeWriter::write(code, program);
 }
 
-void QmltcCompiler::compileUrlMethod(QmltcMethod &urlMethod)
+void QmltcCompiler::compileUrlMethod(QmltcMethod &urlMethod, const QString &urlMethodName)
 {
-    urlMethod.name = QmltcCodeGenerator::urlMethodName;
+    urlMethod.name = urlMethodName;
     urlMethod.returnType = u"const QUrl&"_qs;
     urlMethod.body << u"static QUrl url {QStringLiteral(\"qrc:%1\")};"_qs.arg(m_info.resourcePath);
     urlMethod.body << u"return url;"_qs;
@@ -173,7 +174,7 @@ void QmltcCompiler::compileType(
     };
     const bool baseTypeIsCompiledQml = hasQmlBase(type);
 
-    QmltcCodeGenerator generator { m_visitor };
+    QmltcCodeGenerator generator { m_url, m_visitor };
 
     current.baseClasses = { baseClass };
     if (!documentRoot) {
