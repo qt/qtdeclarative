@@ -129,7 +129,10 @@ class Q_QML_PRIVATE_EXPORT QQmlPropertyCache : public QQmlRefCount
 {
 public:
     QQmlPropertyCache();
-    QQmlPropertyCache(const QMetaObject *, QTypeRevision metaObjectRevision = QTypeRevision::zero());
+
+    static QQmlRefPointer<QQmlPropertyCache> createStandalone(
+            const QMetaObject *, QTypeRevision metaObjectRevision = QTypeRevision::zero());
+
     ~QQmlPropertyCache() override;
 
     void update(const QMetaObject *);
@@ -245,8 +248,6 @@ private:
                                    const QQmlRefPointer<QQmlContextData> &) const;
     QQmlPropertyData *findProperty(StringCache::ConstIterator it, const QQmlVMEMetaObject *,
                                    const QQmlRefPointer<QQmlContextData> &) const;
-
-    void updateRecur(const QMetaObject *);
 
     template<typename K>
     QQmlPropertyData *findNamedProperty(const K &key) const

@@ -145,8 +145,9 @@ QQmlRefPointer<QQmlPropertyCache> QQmlMetaTypeData::propertyCache(const QMetaObj
         return rv;
 
     if (!metaObject->superClass()) {
-        QQmlPropertyCache *rv = new QQmlPropertyCache(metaObject);
-        propertyCaches.insert(metaObject, rv);
+        QQmlRefPointer<QQmlPropertyCache> rv = QQmlPropertyCache::createStandalone(metaObject);
+        rv->addref(); // extra ref for the propertyCaches storage
+        propertyCaches.insert(metaObject, rv.data());
         return rv;
     }
     auto super = propertyCache(metaObject->superClass(), version);

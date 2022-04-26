@@ -40,6 +40,7 @@
 #include "qqmlopenmetaobject_p.h"
 #include <private/qqmlpropertycache_p.h>
 #include <private/qqmldata_p.h>
+#include <private/qqmlmetatype_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include <qdebug.h>
 
@@ -427,8 +428,11 @@ void QQmlOpenMetaObject::setCached(bool c)
 
     QQmlData *qmldata = QQmlData::get(d->object, true);
     if (d->cacheProperties) {
+        // As the propertyCache is not saved in QQmlMetaType (due to it being dynamic)
+        // we cannot leak it to other places before we're done with it. Yes, it's still
+        // terrible.
         if (!d->type->d->cache)
-            d->type->d->cache = new QQmlPropertyCache(this);
+            d->type->d->cache = QQmlPropertyCache::createStandalone(this).take();
         qmldata->propertyCache = d->type->d->cache;
         d->type->d->cache->addref();
     } else {
