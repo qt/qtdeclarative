@@ -144,8 +144,9 @@ void QQmlAbstractBinding::removeFromObject()
 
         // Find the value type binding
         QQmlAbstractBinding *vtbinding = data->bindings;
-        while (vtbinding && (vtbinding->targetPropertyIndex().coreIndex() != coreIndex ||
-                             vtbinding->targetPropertyIndex().hasValueTypeIndex())) {
+        Q_ASSERT(vtbinding);
+        while (vtbinding->targetPropertyIndex().coreIndex() != coreIndex
+               || vtbinding->targetPropertyIndex().hasValueTypeIndex()) {
             vtbinding = vtbinding->nextBinding();
             Q_ASSERT(vtbinding);
         }
