@@ -37,6 +37,8 @@
 
 Q_IMPORT_PLUGIN(LintPlugin)
 
+using namespace Qt::StringLiterals;
+
 class TestQmllint: public QQmlDataTest
 {
     Q_OBJECT
@@ -1664,13 +1666,15 @@ void TestQmllint::quickPlugin()
     QVERIFY(pluginFound);
 
     runTest("pluginQuick_anchors.qml",
-            Result {
-                    { Message {
+            Result{ { Message{
                               u"Cannot specify left, right, and horizontalCenter anchors at the same time."_qs },
                       Message {
                               u"Cannot specify top, bottom, and verticalCenter anchors at the same time."_qs },
-                      Message {
-                              u"Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors."_qs } } });
+                      Message{
+                              u"Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors."_qs },
+                      Message{ u"Cannot assign binding of type null to QQuickAnchorLine"_s, 5, 35 },
+                      Message{ u"Cannot assign binding of type null to QQuickAnchorLine"_s, 8,
+                               33 } } });
     runTest("pluginQuick_layoutChildren.qml",
             Result {
                     { Message {

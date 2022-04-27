@@ -255,12 +255,6 @@ void AnchorsValidatorPass::run(const QQmlSA::Element &element)
                 bottom = srcLoc;
             else if (propertyName == u"baseline")
                 baseline = srcLoc;
-
-            if (propertyName == u"horizontalCenter" || propertyName == u"verticalCenter") {
-                if (groupBinding.bindingType() == QQmlJSMetaPropertyBinding::Null) {
-                    emitWarning("Cannot anchor to a null item.", srcLoc);
-                }
-            }
         }
     }
 
