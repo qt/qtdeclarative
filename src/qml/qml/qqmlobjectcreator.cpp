@@ -758,6 +758,13 @@ bool QQmlObjectCreator::setPropertyBinding(const QQmlPropertyData *bindingProper
         }
         QObject *qmlObject = qmlAttachedPropertiesObject(
                 _qobject, attachedType.attachedPropertiesFunction(QQmlEnginePrivate::get(engine)));
+        if (!qmlObject) {
+            recordError(binding->location,
+                        QStringLiteral("Could not create attached properties object '%1'")
+                        .arg(QString::fromUtf8(attachedType.typeName())));
+            return false;
+        }
+
         if (!populateInstance(binding->value.objectIndex, qmlObject, qmlObject,
                               /*value type property*/ nullptr, binding))
             return false;
@@ -1493,6 +1500,7 @@ bool QQmlObjectCreator::populateInstance(int index, QObject *instance, QObject *
                                          const QQmlPropertyData *valueTypeProperty,
                                          const QV4::CompiledData::Binding *binding)
 {
+    Q_ASSERT(instance);
     QQmlData *declarativeData = QQmlData::get(instance, /*create*/true);
 
     qSwap(_qobject, instance);
