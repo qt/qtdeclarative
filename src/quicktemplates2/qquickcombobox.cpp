@@ -476,6 +476,7 @@ void QQuickComboBoxPrivate::updateEditText()
         const QString completed = tryComplete(text);
         if (completed.length() > text.length()) {
             input->setText(completed);
+            // This will select the text backwards.
             input->select(completed.length(), text.length());
             return;
         }
@@ -547,12 +548,22 @@ void QQuickComboBoxPrivate::acceptInput()
 {
     Q_Q(QQuickComboBox);
     int idx = q->find(extra.value().editText, Qt::MatchFixedString);
-    if (idx > -1)
+    if (idx > -1) {
+        // The item that was accepted already exists, so make it the current item.
         q->setCurrentIndex(idx);
+        // After accepting text that matches an existing entry, the selection should be cleared.
+        QQuickTextInput *input = qobject_cast<QQuickTextInput *>(contentItem);
+        if (input) {
+            const auto text = input->text();
+            input->select(text.size(), text.size());
+        }
+    }
 
     extra.value().accepting = true;
     emit q->accepted();
 
+    // The user might have added the item since it didn't exist, so check again
+    // to see if we can select that new item.
     if (idx == -1)
         q->setCurrentIndex(q->find(extra.value().editText, Qt::MatchFixedString));
     extra.value().accepting = false;
