@@ -380,6 +380,7 @@ private slots:
     void ambiguousContainingType();
     void objectAsBroken();
     void componentMix();
+    void uncreatableAttached();
 
 private:
     QQmlEngine engine;
@@ -6534,6 +6535,20 @@ void tst_qqmllanguage::componentMix()
     QObject *delegate = qvariant_cast<QObject *>(view->property("delegate"));
     QVERIFY(delegate);
     QCOMPARE(delegate->metaObject(), &QQmlComponent::staticMetaObject);
+}
+
+void tst_qqmllanguage::uncreatableAttached()
+{
+    qmlRegisterTypesAndRevisions<ItemAttached>("ABC", 1);
+    QQmlEngine engine;
+    const QUrl url = testFileUrl("uncreatableAttached.qml");
+    QQmlComponent c(&engine, url);
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QTest::ignoreMessage(QtWarningMsg, "Only foo can have ItemAttached!");
+    QScopedPointer o(c.create());
+    QVERIFY(o.isNull());
+    QVERIFY(c.errorString().contains(
+                QLatin1String("Could not create attached properties object 'ItemAttached'")));
 }
 
 QTEST_MAIN(tst_qqmllanguage)

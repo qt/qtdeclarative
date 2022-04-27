@@ -1783,6 +1783,41 @@ private:
     QVariantList mFooProperty;
 };
 
+class ItemAttached : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(QString attachedName READ attachedName WRITE setAttachedName NOTIFY attachedNameChanged)
+    QML_ELEMENT
+    QML_ATTACHED(ItemAttached)
+public:
+    ItemAttached(QObject *parent = nullptr) : QObject(parent) {}
+
+    QString attachedName() const { return m_name; }
+    void setAttachedName(const QString &name)
+    {
+        if (name != m_name) {
+            m_name = name;
+            emit attachedNameChanged();
+        }
+    }
+
+    static ItemAttached *qmlAttachedProperties(QObject *object)
+    {
+        if (object->objectName() != QLatin1String("foo")) {
+            qWarning("Only foo can have ItemAttached!");
+            return nullptr;
+        }
+
+        return new ItemAttached(object);
+    }
+
+signals:
+    void attachedNameChanged();
+
+private:
+    QString m_name;
+};
+
 void registerTypes();
 
 #endif // TESTTYPES_H
