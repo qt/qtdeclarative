@@ -524,9 +524,6 @@ void tst_qqmljsscope::scriptIndices()
         const QString objectName = document.stringAt(irObject->inheritedTypeNameIndex);
         for (auto it = irObject->functionsBegin(); it != irObject->functionsEnd(); ++it) {
             QString name = document.stringAt(it->nameIndex);
-            QVERIFY2(it->index >= 0,
-                     qPrintable(QStringLiteral("(qmlir) Method %1 from %2 has no index")
-                                        .arg(name, objectName)));
             populateQmlIRArrays(irObject, name, it->index);
         }
         for (auto it = irObject->bindingsBegin(); it != irObject->bindingsEnd(); ++it) {
@@ -534,10 +531,6 @@ void tst_qqmljsscope::scriptIndices()
                 continue;
             QString name = document.stringAt(it->propertyNameIndex);
             int index = it->value.compiledScriptIndex;
-            QVERIFY2(
-                    index >= 0,
-                    qPrintable(QStringLiteral("(qmlir) Binding on property %1 from %2 has no index")
-                                       .arg(name, objectName)));
             populateQmlIRArrays(irObject, name, index);
         }
     }
