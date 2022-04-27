@@ -14,6 +14,7 @@ set(qml_files
     "Dial.qml"
     "PageIndicator.qml"
     "TextArea.qml"
+    "TextField.qml"
 )
 set_source_files_properties(Slider.qml PROPERTIES
     QT_QML_SOURCE_VERSIONS "2.2;6.0"
