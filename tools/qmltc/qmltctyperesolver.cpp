@@ -39,14 +39,14 @@
 
 Q_LOGGING_CATEGORY(lcTypeResolver2, "qml.qmltc.typeresolver", QtInfoMsg);
 
-void QmltcTypeResolver::init(QmltcVisitor &visitor, QQmlJS::AST::Node *program)
+void QmltcTypeResolver::init(QmltcVisitor *visitor, QQmlJS::AST::Node *program)
 {
-    QQmlJSTypeResolver::init(&visitor, program);
+    QQmlJSTypeResolver::init(visitor, program);
 
     QQmlJSLiteralBindingCheck literalCheck;
-    literalCheck.run(&visitor, this);
+    literalCheck.run(visitor, this);
 
-    m_root = visitor.result();
+    m_root = visitor->result();
 
     QQueue<QQmlJSScope::Ptr> objects;
     objects.enqueue(m_root);

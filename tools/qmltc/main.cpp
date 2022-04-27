@@ -201,7 +201,7 @@ int main(int argc, char **argv)
     QmltcVisitor visitor(&importer, &logger,
                          QQmlJSImportVisitor::implicitImportDirectory(url, &mapper), qmldirFiles);
     QmltcTypeResolver typeResolver { &importer };
-    typeResolver.init(visitor, document.program);
+    typeResolver.init(&visitor, document.program);
 
     if (logger.hasErrors())
         return EXIT_FAILURE;

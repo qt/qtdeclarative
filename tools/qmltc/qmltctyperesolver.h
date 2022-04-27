@@ -46,7 +46,7 @@ public:
         Q_ASSERT(importer);
     }
 
-    void init(QmltcVisitor &visitor, QQmlJS::AST::Node *program);
+    void init(QmltcVisitor *visitor, QQmlJS::AST::Node *program);
 
     // TODO: this shouldn't be exposed. instead, all the custom passes on
     // QQmlJSScope types must happen inside Visitor
