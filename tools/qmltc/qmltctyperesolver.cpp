@@ -29,6 +29,7 @@
 #include "qmltctyperesolver.h"
 
 #include <private/qqmljsimporter_p.h>
+#include <private/qqmljsliteralbindingcheck_p.h>
 #include <private/qv4value_p.h>
 
 #include <QtCore/qqueue.h>
@@ -41,6 +42,10 @@ Q_LOGGING_CATEGORY(lcTypeResolver2, "qml.qmltc.typeresolver", QtInfoMsg);
 void QmltcTypeResolver::init(QmltcVisitor &visitor, QQmlJS::AST::Node *program)
 {
     QQmlJSTypeResolver::init(&visitor, program);
+
+    QQmlJSLiteralBindingCheck literalCheck;
+    literalCheck.run(&visitor, this);
+
     m_root = visitor.result();
 
     QQueue<QQmlJSScope::Ptr> objects;

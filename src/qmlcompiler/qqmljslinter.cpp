@@ -32,6 +32,7 @@
 
 #include <QtQmlCompiler/private/qqmljsimporter_p.h>
 #include <QtQmlCompiler/private/qqmljsimportvisitor_p.h>
+#include <QtQmlCompiler/private/qqmljsliteralbindingcheck_p.h>
 
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qfileinfo.h>
@@ -493,6 +494,9 @@ QQmlJSLinter::LintResult QQmlJSLinter::lintFile(const QString &filename,
             typeResolver.setParentMode(QQmlJSTypeResolver::UseDocumentParent);
 
             typeResolver.init(&v, parser.rootNode());
+
+            QQmlJSLiteralBindingCheck literalCheck;
+            literalCheck.run(&v, &typeResolver);
 
             if (m_enablePlugins) {
                 QQmlSA::PassManager passMan(&v, &typeResolver);

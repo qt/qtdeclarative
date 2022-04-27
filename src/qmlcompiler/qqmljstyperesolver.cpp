@@ -135,34 +135,6 @@ void QQmlJSTypeResolver::init(QQmlJSImportVisitor *visitor, QQmlJS::AST::Node *p
     m_objectsByLocation = visitor->scopesBylocation();
     m_signalHandlers = visitor->signalHandlers();
     m_imports = visitor->imports();
-
-    for (const auto &scope : visitor->literalScopesToCheck()) {
-        for (const auto &binding : scope->ownPropertyBindings()) {
-            if (!binding.hasLiteral())
-                continue;
-
-            const QQmlJSMetaProperty property = scope->property(binding.propertyName());
-            if (property.isValid()) {
-                // If the property is defined in the same scope where it is set,
-                // we are in fact allowed to set it, even if it's not writable.
-                if (!property.isWritable() && !scope->hasOwnProperty(binding.propertyName())) {
-                    m_logger->log(u"Cannot assign to read-only property %1"_qs.arg(
-                                          binding.propertyName()),
-                                  Log_Type, binding.sourceLocation());
-                    continue;
-                }
-                if (!canConvertFromTo(binding.literalType(this), property.type())) {
-                    m_logger->log(u"Cannot assign binding of type %1 to %2"_qs
-                                  .arg(binding.literalTypeName(), property.typeName()),
-                                  Log_Type, binding.sourceLocation());
-                } else if (equals(property.type(), m_stringType)
-                           && isNumeric(binding.literalType(this))) {
-                    m_logger->log(u"Cannot assign a numeric constant to a string property"_qs,
-                                  Log_Type, binding.sourceLocation());
-                }
-            }
-        }
-    }
 }
 
 QQmlJSScope::ConstPtr

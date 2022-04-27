@@ -167,13 +167,14 @@ public:
                                 const QQmlJSScope::ConstPtr &b) const;
 
     bool canHoldUndefined(const QQmlJSRegisterContent &content) const;
+    bool isNumeric(const QQmlJSScope::ConstPtr &type) const;
+
 protected:
 
     QQmlJSRegisterContent memberType(const QQmlJSScope::ConstPtr &type, const QString &name) const;
     QQmlJSRegisterContent memberEnumType(const QQmlJSScope::ConstPtr &type,
                                          const QString &name) const;
     bool isPrimitive(const QQmlJSScope::ConstPtr &type) const;
-    bool isNumeric(const QQmlJSScope::ConstPtr &type) const;
     bool checkEnums(const QQmlJSScope::ConstPtr &scope, const QString &name,
                     QQmlJSRegisterContent *result, BaseOrExtension mode) const;
     bool canPrimitivelyConvertFromTo(
