@@ -40,6 +40,7 @@
 #include "qqmllistaccessor_p.h"
 
 #include <private/qqmlmetatype_p.h>
+#include <private/qqmltype_p_p.h>
 
 #include <QtCore/qstringlist.h>
 #include <QtCore/qdebug.h>
@@ -111,7 +112,13 @@ void QQmlListAccessor::setList(const QVariant &v)
             d = i;
         }
     } else {
-        m_type = Instance;
+        const QQmlType type = QQmlMetaType::qmlType(v.metaType());
+        if (type.isSequentialContainer()) {
+            m_metaSequence = *type.priv()->extraData.ld;
+            m_type = Sequence;
+        } else {
+            m_type = Instance;
+        }
     }
 }
 
@@ -133,6 +140,9 @@ qsizetype QQmlListAccessor::count() const
     case ListProperty:
         Q_ASSERT(d.metaType() == QMetaType::fromType<QQmlListReference>());
         return reinterpret_cast<const QQmlListReference *>(d.constData())->count();
+    case Sequence:
+        Q_ASSERT(m_metaSequence != QMetaSequence());
+        return m_metaSequence.size(d.constData());
     case Instance:
         return 1;
     case Integer:
@@ -163,6 +173,18 @@ QVariant QQmlListAccessor::at(qsizetype idx) const
     case ListProperty:
         Q_ASSERT(d.metaType() == QMetaType::fromType<QQmlListReference>());
         return QVariant::fromValue(reinterpret_cast<const QQmlListReference *>(d.constData())->at(idx));
+    case Sequence: {
+        Q_ASSERT(m_metaSequence != QMetaSequence());
+        QVariant result;
+        const QMetaType valueMetaType = m_metaSequence.valueMetaType();
+        if (valueMetaType == QMetaType::fromType<QVariant>()) {
+            m_metaSequence.valueAtIndex(d.constData(), idx, &result);
+        } else {
+            result = QVariant(valueMetaType);
+            m_metaSequence.valueAtIndex(d.constData(), idx, result.data());
+        }
+        return result;
+    }
     case Instance:
         return d;
     case Integer:

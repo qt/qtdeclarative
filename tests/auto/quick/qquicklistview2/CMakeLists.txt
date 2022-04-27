@@ -6,6 +6,7 @@ list(APPEND test_data ${test_data_glob})
 
 qt_internal_add_test(tst_qquicklistview2
     SOURCES
+        listviewwithsequences.h
         typerolemodel.h typerolemodel.cpp
         tst_qquicklistview2.cpp
     DEFINES

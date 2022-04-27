@@ -57,6 +57,7 @@ private slots:
     void singletonModelLifetime();
 
     void sectionsNoOverlap();
+    void metaSequenceAsModel();
 };
 
 tst_QQuickListView2::tst_QQuickListView2()
@@ -275,6 +276,18 @@ void tst_QQuickListView2::sectionsNoOverlap()
     }
 }
 
+void tst_QQuickListView2::metaSequenceAsModel()
+{
+    QQmlEngine engine;
+    QQmlComponent c(&engine, testFileUrl("metaSequenceAsModel.qml"));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.create());
+    QVERIFY(!o.isNull());
+    QStringList strings = qvariant_cast<QStringList>(o->property("texts"));
+    QCOMPARE(strings.length(), 2);
+    QCOMPARE(strings[0], QStringLiteral("1/2"));
+    QCOMPARE(strings[1], QStringLiteral("5/6"));
+}
 
 class SingletonModel : public QStringListModel
 {

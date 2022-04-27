@@ -70,11 +70,23 @@ public:
     qsizetype count() const;
     QVariant at(qsizetype) const;
 
-    enum Type { Invalid, StringList, UrlList, VariantList, ObjectList, ListProperty, Instance, Integer };
+    enum Type {
+        Invalid,
+        StringList,
+        UrlList,
+        VariantList,
+        ObjectList,
+        ListProperty,
+        Instance,
+        Integer,
+        Sequence,
+    };
+
     Type type() const { return m_type; }
 
 private:
     Type m_type;
+    QMetaSequence m_metaSequence;
     QVariant d;
 };
 
