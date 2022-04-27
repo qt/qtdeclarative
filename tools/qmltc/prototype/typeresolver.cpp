@@ -30,6 +30,7 @@
 #include "prototype/visitor.h"
 
 #include <private/qqmljsimporter_p.h>
+#include <private/qqmljsliteralbindingcheck_p.h>
 #include <private/qv4value_p.h>
 
 #include <QtCore/qqueue.h>
@@ -50,6 +51,10 @@ TypeResolver::TypeResolver(QQmlJSImporter *importer)
 void TypeResolver::init(Visitor &visitor, QQmlJS::AST::Node *program)
 {
     QQmlJSTypeResolver::init(&visitor, program);
+
+    QQmlJSLiteralBindingCheck literalCheck;
+    literalCheck.run(&visitor, this);
+
     m_root = visitor.result();
 
     QQueue<QQmlJSScope::Ptr> objects;

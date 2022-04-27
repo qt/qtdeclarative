@@ -33,6 +33,7 @@
 #include "findwarnings_p.h"
 
 #include <QtQmlCompiler/private/qqmljsimporter_p.h>
+#include <QtQmlCompiler/private/qqmljsliteralbindingcheck_p.h>
 
 #include <QtCore/qjsonobject.h>
 #include <QtCore/qfileinfo.h>
@@ -229,6 +230,10 @@ bool QQmlLinter::lintFile(const QString &filename, const QString *fileContents, 
             typeResolver.setParentMode(QQmlJSTypeResolver::UseDocumentParent);
 
             typeResolver.init(&v, parser.rootNode());
+
+            QQmlJSLiteralBindingCheck literalCheck;
+            literalCheck.run(&v, &typeResolver);
+
             success = v.check();
 
             if (m_logger->hasErrors()) {

@@ -142,6 +142,8 @@ public:
         return m_signalHandlers;
     }
 
+    bool isNumeric(const QQmlJSScope::ConstPtr &type) const;
+
 protected:
     QQmlJSScope::ConstPtr merge(const QQmlJSScope::ConstPtr &a,
                                 const QQmlJSScope::ConstPtr &b) const;
@@ -150,7 +152,6 @@ protected:
     QQmlJSRegisterContent memberEnumType(const QQmlJSScope::ConstPtr &type,
                                          const QString &name) const;
     bool isPrimitive(const QQmlJSScope::ConstPtr &type) const;
-    bool isNumeric(const QQmlJSScope::ConstPtr &type) const;
     bool checkEnums(const QQmlJSScope::ConstPtr &scope, const QString &name,
                     QQmlJSRegisterContent *result, BaseOrExtension mode) const;
     QQmlJSRegisterContent lengthProperty(bool isWritable, const QQmlJSScope::ConstPtr &scope) const;
