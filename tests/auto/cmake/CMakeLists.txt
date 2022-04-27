@@ -73,6 +73,12 @@ endif()
 if(TARGET Qt::Quick)
     if(NOT CMAKE_CROSSCOMPILING)
         _qt_internal_test_expect_pass(qtquickcompiler BINARY qqc_test)
+        if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.21")
+            _qt_internal_test_expect_pass(test_common_import_path
+                TESTNAME cmake_test_common_import_path
+                BINARY cmake_test
+            )
+        endif()
     endif()
     if(NOT QT6_IS_SHARED_LIBS_BUILD)
         _qt_internal_test_expect_pass(test_import_static_shapes_plugin_resources
