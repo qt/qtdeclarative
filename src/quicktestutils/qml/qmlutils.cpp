@@ -46,7 +46,7 @@ QQmlDataTest::QQmlDataTest(const char *qmlTestDataDir) :
 #endif
 
     m_dataDirectoryUrl(m_dataDirectory.startsWith(QLatin1Char(':'))
-        ? QUrl(QLatin1String("qrc") + m_dataDirectory)
+        ? QUrl(QLatin1String("qrc") + m_dataDirectory + QLatin1Char('/'))
         : QUrl::fromLocalFile(m_dataDirectory + QLatin1Char('/')))
 {
     m_instance = this;
