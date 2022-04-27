@@ -105,8 +105,8 @@ void QQmlJSTypePropagator::generate_Ret()
                               m_returnType.descriptiveName()));
 
         m_logger->log(u"Cannot assign binding of type %1 to %2"_qs.arg(
-                          m_typeResolver->containedTypeName(m_state.accumulatorIn()),
-                          m_typeResolver->containedTypeName(m_returnType)),
+                              m_typeResolver->containedTypeName(m_state.accumulatorIn(), true),
+                              m_typeResolver->containedTypeName(m_returnType, true)),
                       Log_Type, getCurrentBindingSourceLocation());
         return;
     }
@@ -734,7 +734,7 @@ void QQmlJSTypePropagator::propagatePropertyLookup(const QString &propertyName)
         if (isRestrictedProperty)
             return;
 
-        const QString typeName = m_typeResolver->containedTypeName(m_state.accumulatorIn());
+        const QString typeName = m_typeResolver->containedTypeName(m_state.accumulatorIn(), true);
 
         if (typeName == u"QVariant")
             return;
@@ -973,7 +973,7 @@ void QQmlJSTypePropagator::generate_CallProperty(int nameIndex, int base, int ar
         }
 
         m_logger->log(u"Property \"%1\" not found on type \"%2\""_qs.arg(
-                              propertyName, m_typeResolver->containedTypeName(callBase)),
+                              propertyName, m_typeResolver->containedTypeName(callBase, true)),
                       Log_Type, getCurrentSourceLocation(), true, true, fixSuggestion);
         return;
     }

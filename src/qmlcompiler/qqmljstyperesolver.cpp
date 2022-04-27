@@ -481,7 +481,8 @@ void QQmlJSTypeResolver::generalizeType(const QQmlJSScope::ConstPtr &type) const
     it->original = genericType(it->original);
 }
 
-QString QQmlJSTypeResolver::containedTypeName(const QQmlJSRegisterContent &container) const
+QString QQmlJSTypeResolver::containedTypeName(const QQmlJSRegisterContent &container,
+                                              bool useFancyName) const
 {
     QQmlJSScope::ConstPtr type;
 
@@ -496,7 +497,12 @@ QString QQmlJSTypeResolver::containedTypeName(const QQmlJSRegisterContent &conta
         break;
     }
 
-    return type->internalName().isEmpty() ? type->baseTypeName() : type->internalName();
+    QString typeName = type->internalName().isEmpty() ? type->baseTypeName() : type->internalName();
+
+    if (useFancyName)
+        return QQmlJSScope::prettyName(typeName);
+
+    return typeName;
 }
 
 bool QQmlJSTypeResolver::canConvertFromTo(const QQmlJSScope::ConstPtr &from,

@@ -58,8 +58,9 @@ void QQmlJSLiteralBindingCheck::run(QQmlJSImportVisitor *visitor, QQmlJSTypeReso
             }
 
             if (!resolver->canConvertFromTo(binding.literalType(resolver), property.type())) {
-                logger->log(u"Cannot assign binding of type %1 to %2"_qs
-                            .arg(binding.literalTypeName(), property.typeName()),
+                logger->log(u"Cannot assign binding of type %1 to %2"_qs.arg(
+                                    QQmlJSScope::prettyName(binding.literalTypeName()),
+                                    QQmlJSScope::prettyName(property.typeName())),
                             Log_Type, binding.sourceLocation());
                 continue;
             }

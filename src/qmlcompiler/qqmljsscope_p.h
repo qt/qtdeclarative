@@ -306,6 +306,9 @@ public:
         return m_internalName + suffix;
     }
 
+    // This returns a more user readable version of internalName / baseTypeName
+    static QString prettyName(QAnyStringView name);
+
     static bool causesImplicitComponentWrapping(const QQmlJSMetaProperty &property,
                                                 const QQmlJSScope::ConstPtr &assignedType);
     bool isComponentRootElement() const;

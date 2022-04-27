@@ -40,6 +40,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 /*! \internal
 
     Utility method that returns proper value according to the type To. This
@@ -244,6 +246,27 @@ QHash<QString, QQmlJSMetaEnum> QQmlJSScope::enumerations() const
     });
 
     return results;
+}
+
+QString QQmlJSScope::prettyName(QAnyStringView name)
+{
+    const auto internal = "$internal$."_L1;
+    const QString anonymous = "$anonymous$."_L1;
+
+    QString pretty = name.toString();
+
+    if (pretty.startsWith(internal))
+        pretty = pretty.mid(internal.size());
+    else if (pretty.startsWith(anonymous))
+        pretty = pretty.mid(anonymous.size());
+
+    if (pretty == u"std::nullptr_t")
+        return u"null"_s;
+
+    if (pretty == u"void")
+        return u"undefined"_s;
+
+    return pretty;
 }
 
 /*!

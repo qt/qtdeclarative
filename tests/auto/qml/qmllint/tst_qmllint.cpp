@@ -948,14 +948,13 @@ expression: \${expr} \${expr} \\\${expr} \\\${expr}`)",
                                   "Property \"Readx\" not found on type \"QQuickImage\"") },
                           {},
                           { Message { QStringLiteral("Ready") } } } };
-    QTest::newRow("nullBinding")
-            << QStringLiteral("nullBinding.qml")
-            << Result { { Message { QStringLiteral(
-                       "Cannot assign binding of type $internal$.std::nullptr_t to double") } } };
+    QTest::newRow("nullBinding") << QStringLiteral("nullBinding.qml")
+                                 << Result{ { Message{ QStringLiteral(
+                                            "Cannot assign binding of type null to double") } } };
     QTest::newRow("nullBindingFunction")
             << QStringLiteral("nullBindingFunction.qml")
-            << Result { { Message { QStringLiteral(
-                       "Cannot assign binding of type std::nullptr_t to double") } } };
+            << Result{ { Message{
+                       QStringLiteral("Cannot assign binding of type null to double") } } };
     QTest::newRow("missingRequiredAlias")
             << QStringLiteral("missingRequiredAlias.qml")
             << Result { { Message {
