@@ -425,4 +425,6 @@ void QQmlDebugTranslationServiceImpl::foundTranslationBinding(const TranslationB
 
 QT_END_NAMESPACE
 
+#include "moc_qqmldebugtranslationservice.cpp"
+
 #include <qqmldebugtranslationservice.moc>

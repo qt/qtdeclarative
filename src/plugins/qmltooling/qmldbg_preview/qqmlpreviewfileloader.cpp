@@ -195,3 +195,5 @@ void QQmlPreviewFileLoader::clearCache()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlpreviewfileloader.cpp"
