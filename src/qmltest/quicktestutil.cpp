@@ -126,3 +126,5 @@ int QuickTestUtil::callerLine(int frameIndex) const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_quicktestutil_p.cpp"
