@@ -324,3 +324,5 @@ bool QPacketProtocolPrivate::readFromDevice(char *buffer, qint64 size)
  */
 
 QT_END_NAMESPACE
+
+#include "moc_qpacketprotocol_p.cpp"
