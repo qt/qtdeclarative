@@ -340,3 +340,5 @@ QQmlComponent *QQmlDelegateChooser::delegate(QQmlAdaptorModel *adaptorModel, int
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmldelegatecomponent_p.cpp"
