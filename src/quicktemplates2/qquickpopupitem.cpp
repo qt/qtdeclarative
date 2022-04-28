@@ -432,3 +432,5 @@ void QQuickPopupItem::accessibilityActiveChanged(bool active)
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpopupitem_p_p.cpp"
