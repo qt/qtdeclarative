@@ -156,3 +156,5 @@ QString QQuickFileNameFilter::nameFilter(int index) const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickfilenamefilter_p.cpp"
