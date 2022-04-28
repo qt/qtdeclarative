@@ -130,3 +130,5 @@ void QQmlPreviewClient::triggerZoom(float factor)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlpreviewclient_p.cpp"

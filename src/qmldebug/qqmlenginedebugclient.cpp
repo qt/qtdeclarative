@@ -566,3 +566,5 @@ qint32 QQmlEngineDebugClient::getId()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlenginedebugclient_p.cpp"
