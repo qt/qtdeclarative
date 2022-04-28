@@ -249,3 +249,5 @@ QSGNode *QQuickUniversalBusyIndicator::updatePaintNode(QSGNode *oldNode, UpdateP
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickuniversalbusyindicator_p.cpp"

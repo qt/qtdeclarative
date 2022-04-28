@@ -336,3 +336,5 @@ QSGNode *QQuickUniversalProgressBar::updatePaintNode(QSGNode *oldNode, QQuickIte
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickuniversalprogressbar_p.cpp"

@@ -82,3 +82,5 @@ void QQuickUniversalFocusRectangle::paint(QPainter *painter)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickuniversalfocusrectangle_p.cpp"
