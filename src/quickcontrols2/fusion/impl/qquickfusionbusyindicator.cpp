@@ -112,3 +112,5 @@ void QQuickFusionBusyIndicator::itemChange(ItemChange change, const ItemChangeDa
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickfusionbusyindicator_p.cpp"
