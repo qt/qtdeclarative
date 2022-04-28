@@ -574,3 +574,5 @@ QFont QQuickStyleItem::styleFont(QQuickItem *control) const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstyleitem.cpp"
