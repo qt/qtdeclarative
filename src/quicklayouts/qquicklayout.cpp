@@ -1310,3 +1310,5 @@ void QQuickLayout::dumpLayoutTreeRecursive(int level, QString &buf) const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicklayout_p.cpp"
