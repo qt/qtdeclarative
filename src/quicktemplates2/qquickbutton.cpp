@@ -163,3 +163,5 @@ QPalette QQuickButtonPrivate::defaultPalette() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickbutton_p.cpp"

@@ -258,3 +258,5 @@ void QQuickCalendarModel::componentComplete()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcalendarmodel_p.cpp"

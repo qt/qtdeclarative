@@ -380,3 +380,5 @@ void QQuickTreeViewDelegate::setRightMargin(qreal rightMargin)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktreeviewdelegate_p.cpp"

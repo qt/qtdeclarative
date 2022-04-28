@@ -738,3 +738,5 @@ void QQuickOverlayAttached::setModeless(QQmlComponent *modeless)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickoverlay_p.cpp"

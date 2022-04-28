@@ -497,3 +497,5 @@ void QQuickPage::accessibilityActiveChanged(bool active)
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpage_p.cpp"

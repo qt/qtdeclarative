@@ -95,3 +95,5 @@ QAccessible::Role QQuickTabButton::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktabbutton_p.cpp"
