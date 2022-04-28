@@ -439,4 +439,6 @@ void QQuickMaterialRipple::exitWave()
 
 QT_END_NAMESPACE
 
+#include "moc_qquickmaterialripple_p.cpp"
+
 #include "qquickmaterialripple.moc"

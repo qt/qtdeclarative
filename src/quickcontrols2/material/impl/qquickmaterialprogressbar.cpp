@@ -243,3 +243,5 @@ QSGNode *QQuickMaterialProgressBar::updatePaintNode(QSGNode *oldNode, QQuickItem
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmaterialprogressbar_p.cpp"
