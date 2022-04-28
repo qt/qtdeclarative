@@ -2,7 +2,7 @@ TARGET = qmldbg_server
 QT = qml-private packetprotocol-private
 
 SOURCES += \
-    $$PWD/qqmldebugserver.cpp
+    $$PWD/qqmldebugserverfactory.cpp
 
 HEADERS += \
     $$PWD/qqmldebugserverfactory.h

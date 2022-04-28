@@ -15,6 +15,7 @@ qtConfig(qml-debug) {
         $$PWD/qqmldebugservice.cpp \
         $$PWD/qqmlabstractprofileradapter.cpp \
         $$PWD/qqmlprofiler.cpp \
+        $$PWD/qqmldebugserver.cpp \
         $$PWD/qqmldebugserviceinterfaces.cpp
 }
 

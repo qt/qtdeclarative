@@ -764,4 +764,4 @@ QQmlDebugConnector *QQmlDebugServerFactory::create(const QString &key)
 
 QT_END_NAMESPACE
 
-#include "qqmldebugserver.moc"
+#include "qqmldebugserverfactory.moc"

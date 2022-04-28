@@ -65,6 +65,7 @@ QT_BEGIN_NAMESPACE
 
 class Q_QML_PRIVATE_EXPORT QQmlDebugConnector
 {
+    virtual ~QQmlDebugConnector() = default; // don't break 'override' on ~QQmlDebugServer
 public:
     static QQmlDebugConnector *instance() { return nullptr; }
 
