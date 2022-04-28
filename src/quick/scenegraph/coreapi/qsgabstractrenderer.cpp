@@ -377,3 +377,5 @@ void QSGAbstractRenderer::renderSceneInline()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qsgabstractrenderer_p.cpp"

@@ -213,3 +213,5 @@ QString QQuickGridScaledImage::pixmapUrl() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickscalegrid_p_p.cpp"

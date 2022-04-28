@@ -4944,3 +4944,5 @@ QQuickTableSectionSizeProviderPrivate::~QQuickTableSectionSizeProviderPrivate()
 #include "moc_qquicktableview_p.cpp"
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktableview_p_p.cpp"

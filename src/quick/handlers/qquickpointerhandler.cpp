@@ -819,3 +819,5 @@ QVector<QObject *> &QQuickPointerHandlerPrivate::deviceDeliveryTargets(const QIn
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpointerhandler_p.cpp"

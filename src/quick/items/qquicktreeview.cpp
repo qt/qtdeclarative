@@ -572,3 +572,5 @@ QModelIndex QQuickTreeView::modelIndex(int column, int row) const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktreeview_p.cpp"

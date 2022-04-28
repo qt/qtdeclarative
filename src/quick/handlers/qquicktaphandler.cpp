@@ -482,3 +482,5 @@ void QQuickTapHandler::updateTimeHeld()
     from the previous \c tapCount.
 */
 QT_END_NAMESPACE
+
+#include "moc_qquicktaphandler_p.cpp"

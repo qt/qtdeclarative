@@ -157,3 +157,5 @@ QLocale QQuickInputMethod::locale() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickinputmethod_p.cpp"
