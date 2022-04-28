@@ -2366,3 +2366,5 @@ bool RefCacheEntry::addForPath(DomItem &el, Path canonicalPath, const RefCacheEn
 } // end namespace QQmlJS
 
 QT_END_NAMESPACE
+
+#include "moc_qqmldomtop_p.cpp"

@@ -998,3 +998,5 @@ Path Path::fromString(QString s, ErrorHandler errorHandler)
 } // end namespace Dom
 } // end namespace QQmlJS
 QT_END_NAMESPACE
+
+#include "moc_qqmldompath_p.cpp"
