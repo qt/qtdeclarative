@@ -198,3 +198,5 @@ const QHash<int, QString> QQmlTableModelColumn::supportedRoleNames()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmltablemodelcolumn_p.cpp"

@@ -1085,3 +1085,5 @@ bool QQmlTableModel::validateRowIndex(const char *functionName, const char *argu
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmltablemodel_p.cpp"
