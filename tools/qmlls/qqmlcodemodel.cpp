@@ -64,11 +64,11 @@ synchronization here.
 
 \section2 OpenFiles
 \list
-\li snapshotByUri() returns an OpenDocumentSnapshot of an open document. From it you can get the
+\li snapshotByUrl() returns an OpenDocumentSnapshot of an open document. From it you can get the
   document, its latest valid version, scope, all connected to a specific version of the document
   and immutable. The signal updatedSnapshot() is called every time a snapshot changes (also for
   every partial change: document change, validDocument change, scope change).
-\li openDocumentByUri() is a lower level and more intrusive access to OpenDocument objects. These
+\li openDocumentByUrl() is a lower level and more intrusive access to OpenDocument objects. These
   contains the current snapshot, and shared pointer to a Utils::TextDocument. This is *always* the
   current version of the document, and has line by line support.
   Working on it is more delicate and intrusive, because you have to explicitly acquire its mutex()
@@ -124,9 +124,9 @@ QQmlCodeModel::~QQmlCodeModel()
     }
 }
 
-OpenDocumentSnapshot QQmlCodeModel::snapshotByUri(const QByteArray &uri)
+OpenDocumentSnapshot QQmlCodeModel::snapshotByUrl(const QByteArray &url)
 {
-    return openDocumentByUri(uri).snapshot;
+    return openDocumentByUrl(url).snapshot;
 }
 
 int QQmlCodeModel::indexEvalProgress() const
@@ -272,49 +272,49 @@ void QQmlCodeModel::removeDirectory(const QString &path)
         currentEnvPtr->removePath(path);
 }
 
-QString QQmlCodeModel::uri2Path(const QByteArray &uri, UriLookup options)
+QString QQmlCodeModel::url2Path(const QByteArray &url, UrlLookup options)
 {
     QString res;
     {
         QMutexLocker l(&m_mutex);
-        res = m_uri2path.value(uri);
+        res = m_url2path.value(url);
     }
-    if (!res.isEmpty() && options == UriLookup::Caching)
+    if (!res.isEmpty() && options == UrlLookup::Caching)
         return res;
-    QUrl url(QString::fromUtf8(uri));
-    QFileInfo f(url.toLocalFile());
+    QUrl qurl(QString::fromUtf8(url));
+    QFileInfo f(qurl.toLocalFile());
     QString cPath = f.canonicalFilePath();
     if (cPath.isEmpty())
         cPath = f.filePath();
     {
         QMutexLocker l(&m_mutex);
         if (!res.isEmpty() && res != cPath)
-            m_path2uri.remove(res);
-        m_uri2path.insert(uri, cPath);
-        m_path2uri.insert(cPath, uri);
+            m_path2url.remove(res);
+        m_url2path.insert(url, cPath);
+        m_path2url.insert(cPath, url);
     }
     return cPath;
 }
 
-void QQmlCodeModel::newOpenFile(const QByteArray &uri, int version, const QString &docText)
+void QQmlCodeModel::newOpenFile(const QByteArray &url, int version, const QString &docText)
 {
     {
         QMutexLocker l(&m_mutex);
-        auto &openDoc = m_openDocuments[uri];
+        auto &openDoc = m_openDocuments[url];
         if (!openDoc.textDocument)
             openDoc.textDocument = std::make_shared<Utils::TextDocument>();
         QMutexLocker l2(openDoc.textDocument->mutex());
         openDoc.textDocument->setVersion(version);
         openDoc.textDocument->setPlainText(docText);
     }
-    addOpenToUpdate(uri);
+    addOpenToUpdate(url);
     openNeedUpdate();
 }
 
-OpenDocument QQmlCodeModel::openDocumentByUri(const QByteArray &uri)
+OpenDocument QQmlCodeModel::openDocumentByUrl(const QByteArray &url)
 {
     QMutexLocker l(&m_mutex);
-    return m_openDocuments.value(uri);
+    return m_openDocuments.value(url);
 }
 
 void QQmlCodeModel::indexNeedsUpdate()
@@ -426,12 +426,12 @@ void QQmlCodeModel::openUpdateEnd()
     qCDebug(codeModelLog) << "openUpdateEnd";
 }
 
-void QQmlCodeModel::newDocForOpenFile(const QByteArray &uri, int version, const QString &docText)
+void QQmlCodeModel::newDocForOpenFile(const QByteArray &url, int version, const QString &docText)
 {
-    qCDebug(codeModelLog) << "updating doc" << uri << "to version" << version << "("
+    qCDebug(codeModelLog) << "updating doc" << url << "to version" << version << "("
                           << docText.length() << "chars)";
     DomItem newCurrent = m_currentEnv.makeCopy(DomItem::CopyOption::EnvConnected).item();
-    QString fPath = uri2Path(uri, UriLookup::ForceLookup);
+    QString fPath = url2Path(url, UrlLookup::ForceLookup);
     Path p;
     newCurrent.loadFile(
             fPath, fPath, docText, QDateTime::currentDateTimeUtc(),
@@ -443,17 +443,17 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &uri, int version, const 
         DomItem item = m_currentEnv.path(p);
         {
             QMutexLocker l(&m_mutex);
-            OpenDocument &doc = m_openDocuments[uri];
+            OpenDocument &doc = m_openDocuments[url];
             if (!doc.textDocument) {
                 qCWarning(lspServerLog)
-                        << "ignoring update to closed document" << QString::fromUtf8(uri);
+                        << "ignoring update to closed document" << QString::fromUtf8(url);
                 return;
             } else {
                 QMutexLocker l(doc.textDocument->mutex());
                 if (doc.textDocument->version() && *doc.textDocument->version() > version) {
                     qCWarning(lspServerLog)
                             << "docUpdate: version" << version << "of document"
-                            << QString::fromUtf8(uri) << "is not the latest anymore";
+                            << QString::fromUtf8(url) << "is not the latest anymore";
                     return;
                 }
             }
@@ -461,8 +461,8 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &uri, int version, const 
                 doc.snapshot.docVersion = version;
                 doc.snapshot.doc = item;
             } else {
-                qCWarning(lspServerLog) << "skippig update of current doc to obsolete version"
-                                        << version << "of document" << QString::fromUtf8(uri);
+                qCWarning(lspServerLog) << "skipping update of current doc to obsolete version"
+                                        << version << "of document" << QString::fromUtf8(url);
             }
             if (item.field(Fields::isValid).value().toBool(false)) {
                 if (!doc.snapshot.validDocVersion || *doc.snapshot.validDocVersion < version) {
@@ -471,31 +471,31 @@ void QQmlCodeModel::newDocForOpenFile(const QByteArray &uri, int version, const 
                     doc.snapshot.validDoc = vDoc;
                 } else {
                     qCWarning(lspServerLog) << "skippig update of valid doc to obsolete version"
-                                            << version << "of document" << QString::fromUtf8(uri);
+                                            << version << "of document" << QString::fromUtf8(url);
                 }
             } else {
                 qCWarning(lspServerLog)
                         << "avoid update of validDoc to " << version << "of document"
-                        << QString::fromUtf8(uri) << "as it is invalid";
+                        << QString::fromUtf8(url) << "as it is invalid";
             }
         }
     }
     if (codeModelLog().isDebugEnabled()) {
-        qCDebug(codeModelLog) << "finished update doc of " << uri << "to version" << version;
-        snapshotByUri(uri).dump(qDebug() << "postSnapshot",
+        qCDebug(codeModelLog) << "finished update doc of " << url << "to version" << version;
+        snapshotByUrl(url).dump(qDebug() << "postSnapshot",
                                 OpenDocumentSnapshot::DumpOption::AllCode);
     }
-    // we should update the scope in the future thus call addOpen(uri)
-    emit updatedSnapshot(uri);
+    // we should update the scope in the future thus call addOpen(url)
+    emit updatedSnapshot(url);
 }
 
-void QQmlCodeModel::closeOpenFile(const QByteArray &uri)
+void QQmlCodeModel::closeOpenFile(const QByteArray &url)
 {
     QMutexLocker l(&m_mutex);
-    m_openDocuments.remove(uri);
+    m_openDocuments.remove(url);
 }
 
-void QQmlCodeModel::openUpdate(const QByteArray &uri)
+void QQmlCodeModel::openUpdate(const QByteArray &url)
 {
     bool updateDoc = false;
     bool updateScope = false;
@@ -505,7 +505,7 @@ void QQmlCodeModel::openUpdate(const QByteArray &uri)
     std::shared_ptr<Utils::TextDocument> document;
     {
         QMutexLocker l(&m_mutex);
-        OpenDocument &doc = m_openDocuments[uri];
+        OpenDocument &doc = m_openDocuments[url];
         document = doc.textDocument;
         if (!document)
             return;
@@ -531,23 +531,23 @@ void QQmlCodeModel::openUpdate(const QByteArray &uri)
         }
     }
     if (updateDoc) {
-        newDocForOpenFile(uri, *rNow, docText);
+        newDocForOpenFile(url, *rNow, docText);
     }
     if (updateScope) {
         // to do
     }
 }
 
-void QQmlCodeModel::addOpenToUpdate(const QByteArray &uri)
+void QQmlCodeModel::addOpenToUpdate(const QByteArray &url)
 {
     QMutexLocker l(&m_mutex);
-    m_openDocumentsToUpdate.insert(uri);
+    m_openDocumentsToUpdate.insert(url);
 }
 
 QDebug OpenDocumentSnapshot::dump(QDebug dbg, DumpOptions options)
 {
     dbg.noquote().nospace() << "{";
-    dbg << "  uri:" << QString::fromUtf8(uri) << "\n";
+    dbg << "  url:" << QString::fromUtf8(url) << "\n";
     dbg << "  docVersion:" << (docVersion ? QString::number(*docVersion) : u"*none*"_s) << "\n";
     if (options & DumpOption::LatestCode) {
         dbg << "  doc: ------------\n"

@@ -42,26 +42,25 @@ TextSynchronization::TextSynchronization(QmlLsp::QQmlCodeModel *codeModel, QObje
 
 void TextSynchronization::didCloseTextDocument(const DidCloseTextDocumentParams &params)
 {
-    m_codeModel->closeOpenFile(params.textDocument.uri);
+    m_codeModel->closeOpenFile(QmlLsp::lspUriToQmlUrl(params.textDocument.uri));
 }
 
 void TextSynchronization::didOpenTextDocument(const DidOpenTextDocumentParams &params)
 {
     const TextDocumentItem &item = params.textDocument;
-    const QString fileName = m_codeModel->uri2Path(item.uri);
-
-    m_codeModel->newOpenFile(item.uri, item.version, item.text);
+    const QString fileName = m_codeModel->url2Path(QmlLsp::lspUriToQmlUrl(item.uri));
+    m_codeModel->newOpenFile(QmlLsp::lspUriToQmlUrl(item.uri), item.version, item.text);
 }
 
 void TextSynchronization::didDidChangeTextDocument(const DidChangeTextDocumentParams &params)
 {
-    QByteArray uri = params.textDocument.uri;
-    const QString fileName = m_codeModel->uri2Path(uri);
-    auto openDoc = m_codeModel->openDocumentByUri(uri);
+    QByteArray url = QmlLsp::lspUriToQmlUrl(params.textDocument.uri);
+    const QString fileName = m_codeModel->url2Path(url);
+    auto openDoc = m_codeModel->openDocumentByUrl(url);
     std::shared_ptr<Utils::TextDocument> document = openDoc.textDocument;
     if (!document) {
         qCWarning(lspServerLog) << "Ingnoring changes to non open or closed document"
-                                << QString::fromUtf8(uri);
+                                << QString::fromUtf8(url);
         return;
     }
     const auto &changes = params.contentChanges;
@@ -86,7 +85,7 @@ void TextSynchronization::didDidChangeTextDocument(const DidChangeTextDocumentPa
         }
         document->setVersion(params.textDocument.version);
     }
-    m_codeModel->addOpenToUpdate(uri);
+    m_codeModel->addOpenToUpdate(url);
     m_codeModel->openNeedUpdate();
 }
 

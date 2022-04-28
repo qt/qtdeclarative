@@ -123,19 +123,19 @@ QmlLintSuggestions::QmlLintSuggestions(QLanguageServer *server, QmlLsp::QQmlCode
                      &QmlLintSuggestions::diagnose, Qt::DirectConnection);
 }
 
-void QmlLintSuggestions::diagnose(const QByteArray &uri)
+void QmlLintSuggestions::diagnose(const QByteArray &url)
 {
     const int maxInvalidMsec = 4000;
     qCDebug(lintLog) << "diagnose start";
-    QmlLsp::OpenDocumentSnapshot snapshot = m_codeModel->snapshotByUri(uri);
+    QmlLsp::OpenDocumentSnapshot snapshot = m_codeModel->snapshotByUrl(url);
     QList<Diagnostic> diagnostics;
     std::optional<int> version;
     DomItem doc;
     {
         QMutexLocker l(&m_mutex);
-        LastLintUpdate &lastUpdate = m_lastUpdate[uri];
+        LastLintUpdate &lastUpdate = m_lastUpdate[url];
         if (lastUpdate.version && *lastUpdate.version == version) {
-            qCDebug(lspServerLog) << "skipped update of " << uri << "unchanged valid doc";
+            qCDebug(lspServerLog) << "skipped update of " << url << "unchanged valid doc";
             return;
         }
         if (snapshot.validDocVersion
@@ -153,7 +153,7 @@ void QmlLintSuggestions::diagnose(const QByteArray &uri)
             } else if (!lastUpdate.invalidUpdatesSince) {
                 lastUpdate.invalidUpdatesSince = QDateTime::currentDateTime();
                 QTimer::singleShot(maxInvalidMsec, Qt::VeryCoarseTimer, this,
-                                   [this, uri]() { diagnose(uri); });
+                                   [this, url]() { diagnose(url); });
             }
         }
         if (doc) {
@@ -273,12 +273,12 @@ void QmlLintSuggestions::diagnose(const QByteArray &uri)
         }
     }
     PublishDiagnosticsParams diagnosticParams;
-    diagnosticParams.uri = uri;
+    diagnosticParams.uri = url;
     diagnosticParams.diagnostics = diagnostics;
     diagnosticParams.version = version;
 
     m_server->protocol()->notifyPublishDiagnostics(diagnosticParams);
-    qCDebug(lintLog) << "lint" << QString::fromUtf8(uri) << "found"
+    qCDebug(lintLog) << "lint" << QString::fromUtf8(url) << "found"
                      << diagnosticParams.diagnostics.size() << "issues"
                      << QTypedJson::toJsonValue(diagnosticParams);
 }

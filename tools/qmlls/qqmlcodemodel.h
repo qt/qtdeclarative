@@ -52,7 +52,7 @@ public:
         AllCode = LatestCode | ValidCode
     };
     Q_DECLARE_FLAGS(DumpOptions, DumpOption)
-    QByteArray uri;
+    QByteArray url;
     std::optional<int> docVersion;
     QQmlJS::Dom::DomItem doc;
     std::optional<int> validDocVersion;
@@ -83,15 +83,15 @@ class QQmlCodeModel : public QObject
 {
     Q_OBJECT
 public:
-    enum class UriLookup { Caching, ForceLookup };
+    enum class UrlLookup { Caching, ForceLookup };
     enum class State { Running, Stopping };
 
     explicit QQmlCodeModel(QObject *parent = nullptr);
     ~QQmlCodeModel();
     QQmlJS::Dom::DomItem currentEnv();
     QQmlJS::Dom::DomItem validEnv();
-    OpenDocumentSnapshot snapshotByUri(const QByteArray &uri);
-    OpenDocument openDocumentByUri(const QByteArray &uri);
+    OpenDocumentSnapshot snapshotByUrl(const QByteArray &url);
+    OpenDocument openDocumentByUrl(const QByteArray &url);
 
     void openNeedUpdate();
     void indexNeedsUpdate();
@@ -99,12 +99,12 @@ public:
     void addOpenToUpdate(const QByteArray &);
     void removeDirectory(const QString &path);
     // void updateDocument(const OpenDocument &doc);
-    QString uri2Path(const QByteArray &uri, UriLookup options = UriLookup::Caching);
-    void newOpenFile(const QByteArray &uri, int version, const QString &docText);
-    void newDocForOpenFile(const QByteArray &uri, int version, const QString &docText);
-    void closeOpenFile(const QByteArray &uri);
+    QString url2Path(const QByteArray &url, UrlLookup options = UrlLookup::Caching);
+    void newOpenFile(const QByteArray &url, int version, const QString &docText);
+    void newDocForOpenFile(const QByteArray &url, int version, const QString &docText);
+    void closeOpenFile(const QByteArray &url);
 signals:
-    void updatedSnapshot(const QByteArray &uri);
+    void updatedSnapshot(const QByteArray &url);
 private:
     void indexDirectory(const QString &path, int depthLeft);
     int indexEvalProgress() const; // to be called in the mutex
@@ -130,8 +130,8 @@ private:
     QQmlJS::Dom::DomItem m_validEnv;
     QByteArray m_lastOpenDocumentUpdated;
     QSet<QByteArray> m_openDocumentsToUpdate;
-    QHash<QByteArray, QString> m_uri2path;
-    QHash<QString, QByteArray> m_path2uri;
+    QHash<QByteArray, QString> m_url2path;
+    QHash<QString, QByteArray> m_path2url;
     QHash<QByteArray, OpenDocument> m_openDocuments;
 };
 
