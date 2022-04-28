@@ -58,6 +58,7 @@ private slots:
     void deferredProperties();
     void gradients(); // QTBUG-102560
     void jsvalueAssignments();
+    void extensionTypeBindings();
 
     void signalHandlers();
     void jsFunctions();

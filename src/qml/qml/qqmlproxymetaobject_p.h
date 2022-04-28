@@ -51,6 +51,7 @@
 // We mean it.
 //
 
+#include <private/qtqmlglobal_p.h>
 #include <private/qmetaobjectbuilder_p.h>
 #include "qqml.h"
 
@@ -61,8 +62,7 @@
 
 QT_BEGIN_NAMESPACE
 
-
-class QQmlProxyMetaObject : public QDynamicMetaObjectData
+class Q_QML_PRIVATE_EXPORT QQmlProxyMetaObject : public QDynamicMetaObjectData
 {
 public:
     struct ProxyData {

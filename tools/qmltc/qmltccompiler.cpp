@@ -194,6 +194,7 @@ void QmltcCompiler::compileType(
         typeCountMethod.body << u"return " + generator.generate_typeCount() + u";";
         current.typeCount = typeCountMethod;
     }
+
     // make QQmltcObjectCreationHelper a friend of every type since it provides
     // useful helper methods for all types
     current.otherCode << u"friend class QT_PREPEND_NAMESPACE(QQmltcObjectCreationHelper);"_s;
@@ -535,6 +536,7 @@ struct AliasResolutionFrame
 {
     static QString inVar;
     QStringList prologue;
+    QStringList epilogue;
     QStringList epilogueForWrite;
     QString outVar;
 };
@@ -584,7 +586,8 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
         i = 0; // we use it in property processing
 
         // first frame is a dummy one:
-        frames.push(AliasResolutionFrame { QStringList(), QStringList(), u"this"_s });
+        frames.push(
+                AliasResolutionFrame { QStringList(), QStringList(), QStringList(), u"this"_s });
     };
     aliasVisitor.processResolvedId = [&](const QQmlJSScope::ConstPtr &type) {
         Q_ASSERT(type);
@@ -616,10 +619,15 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
         }
     };
     aliasVisitor.processResolvedProperty = [&](const QQmlJSMetaProperty &p,
-                                               const QQmlJSScope::ConstPtr &) {
+                                               const QQmlJSScope::ConstPtr &owner) {
         AliasResolutionFrame queryPropertyFrame {};
 
-        QString inVar = QmltcCodeGenerator::wrap_privateClass(AliasResolutionFrame::inVar, p);
+        auto [extensionPrologue, extensionAccessor, extensionEpilogue] =
+                QmltcCodeGenerator::wrap_extensionType(
+                        owner, p,
+                        QmltcCodeGenerator::wrap_privateClass(AliasResolutionFrame::inVar, p));
+        QString inVar = extensionAccessor;
+        queryPropertyFrame.prologue += extensionPrologue;
         if (p.type()->accessSemantics() == QQmlJSScope::AccessSemantics::Value) {
             // we need to read the property to a local variable and then
             // write the updated value once the actual operation is done
@@ -636,6 +644,7 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
             inVar += u"->" + p.read() + u"()"; // update
         }
         queryPropertyFrame.outVar = inVar;
+        queryPropertyFrame.epilogue += extensionEpilogue;
 
         frames.push(queryPropertyFrame);
     };
@@ -652,14 +661,22 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
 
         // instead, add a custom frame
         AliasResolutionFrame customFinalFrame {};
-        customFinalFrame.outVar =
-                QmltcCodeGenerator::wrap_privateClass(frames.top().outVar, result.property);
+        auto [extensionPrologue, extensionAccessor, extensionEpilogue] =
+                QmltcCodeGenerator::wrap_extensionType(
+                        result.owner, result.property,
+                        QmltcCodeGenerator::wrap_privateClass(frames.top().outVar,
+                                                              result.property));
+        customFinalFrame.prologue = extensionPrologue;
+        customFinalFrame.outVar = extensionAccessor;
+        customFinalFrame.epilogue = extensionEpilogue;
         frames.push(customFinalFrame);
     }
 
     const QString latestAccessor = frames.top().outVar;
     const QStringList prologue =
             joinFrames(frames, [](const AliasResolutionFrame &frame) { return frame.prologue; });
+    const QStringList epilogue =
+            joinFrames(frames, [](const AliasResolutionFrame &frame) { return frame.epilogue; });
     const QString underlyingType = (result.kind == QQmlJSUtils::AliasTarget_Property)
             ? getUnderlyingType(result.property)
             : result.owner->internalName() + u" *";
@@ -678,6 +695,7 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
         getter.body << u"return " + latestAccessor + u"->" + result.property.read() + u"();";
     else // AliasTarget_Object
         getter.body << u"return " + latestAccessor + u";";
+    getter.body += epilogue;
     getter.userVisible = true;
     current.functions.emplaceBack(getter);
     mocLines << u"READ"_s << getter.name;
@@ -710,6 +728,7 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
                         + u"(%1)"_s.arg(commaSeparatedParameterNames) + u";";
         setter.body += joinFrames(
                 frames, [](const AliasResolutionFrame &frame) { return frame.epilogueForWrite; });
+        setter.body += epilogue; // NB: *after* epilogueForWrite - see prologue construction
         setter.userVisible = true;
         current.functions.emplaceBack(setter);
         mocLines << u"WRITE"_s << setter.name;
@@ -722,6 +741,7 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
         bindable.name = compilationData.bindable;
         bindable.body += prologue;
         bindable.body << u"return " + latestAccessor + u"->" + bindableName + u"()" + u";";
+        bindable.body += epilogue;
         bindable.userVisible = true;
         current.functions.emplaceBack(bindable);
         mocLines << u"BINDABLE"_s << bindable.name;
@@ -730,17 +750,26 @@ void QmltcCompiler::compileAlias(QmltcType &current, const QQmlJSMetaProperty &a
     if (QString notifyName = result.property.notify(); !notifyName.isEmpty()) {
         Q_ASSERT(result.kind == QQmlJSUtils::AliasTarget_Property); // property is invalid otherwise
 
+        auto notifyFrames = frames;
+        notifyFrames.pop(); // we don't need the last frame at all in this case
+
+        const QStringList notifyPrologue = joinFrames(
+                frames, [](const AliasResolutionFrame &frame) { return frame.prologue; });
+        const QStringList notifyEpilogue = joinFrames(
+                frames, [](const AliasResolutionFrame &frame) { return frame.epilogue; });
+
         // notify is very special
         current.endInit.body << u"{ // alias notify connection:"_s;
-        current.endInit.body += prologue;
+        current.endInit.body += notifyPrologue;
         // TODO: use non-private accessor since signals must exist on the public
         // type, not on the private one -- otherwise, you can't connect to a
         // private property signal in C++ and so it is useless (hence, use
         // public type)
-        const QString latestAccessorNonPrivate = frames[frames.size() - 2].outVar;
+        const QString latestAccessorNonPrivate = notifyFrames.top().outVar;
         current.endInit.body << u"QObject::connect(" + latestAccessorNonPrivate + u", &"
                         + result.owner->internalName() + u"::" + notifyName + u", this, &"
                         + current.cppType + u"::" + compilationData.notify + u");";
+        current.endInit.body += notifyEpilogue;
         current.endInit.body << u"}"_s;
     }
 

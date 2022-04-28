@@ -10,6 +10,8 @@ set(cpp_sources
     cpptypes/typewithproperties.h cpptypes/typewithproperties.cpp
     # deferred:
     cpptypes/deferredpropertytypes.h cpptypes/deferredpropertytypes.cpp
+    # extension types:
+    cpptypes/extensiontypes.h cpptypes/extensiontypes.cpp
 )
 
 set(qml_sources
@@ -26,6 +28,9 @@ set(qml_sources
     componentTypes.qml
     gradients.qml
     qjsvalueAssignments.qml
+    QmlTypeWithExtension.qml
+    QmlTypeWithBaseTypeExtension.qml
+    extensionTypeBindings.qml
 
     signalHandlers.qml
     javaScriptFunctions.qml

@@ -5,10 +5,7 @@ Item {
     property alias aColor: theText.color // old style property
     property alias aRectObject: theRect
     property alias aTextObject: theText
-    // TODO: letterSpacing is interesting as it needs 2 input arguments in WRITE
-    // but cannot support this because QFont doesn't expose any properties as
-    // properties. example:
-    // > property alias aLetterSpacing: theText.font.letterSpacing
+    property alias aLetterSpacing: theText.font.letterSpacing
     property alias aWordSpacing: theText.font.wordSpacing
 
     property alias aFont: theText.font
@@ -16,7 +13,7 @@ Item {
     property alias aliasToObjectAlias: root.aRectObject
     property alias aliasToPropertyAlias: root.aText
     property alias aliasToValueTypeAlias: root.aFont
-    property alias aliasToPropertyOfValueTypeAlias: root.aFont.pointSize
+    property alias aliasToPropertyOfValueTypeAlias: root.aFont.pixelSize
 
     property alias aliasToImportedMessage: localImport.message
 

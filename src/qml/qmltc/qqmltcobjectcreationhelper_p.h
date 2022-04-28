@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -53,6 +53,9 @@
 
 #include <QtQml/qqml.h>
 #include <QtCore/private/qglobal_p.h>
+#include <QtCore/qversionnumber.h>
+#include <private/qtqmlglobal_p.h>
+#include <private/qqmltype_p.h>
 
 #include <array>
 
@@ -136,6 +139,24 @@ public:
         return QQmltcObjectCreationHelper(m_objects.data(), m_objects.size());
     }
 };
+
+struct QmltcTypeData
+{
+    QQmlType::RegistrationType regType = QQmlType::CppType;
+    int allocationSize = 0;
+    const QMetaObject *metaObject = nullptr;
+
+    template<typename QmltcGeneratedType>
+    QmltcTypeData(QmltcGeneratedType *)
+        : allocationSize(sizeof(QmltcGeneratedType)),
+          metaObject(&QmltcGeneratedType::staticMetaObject)
+    {
+    }
+};
+
+Q_QML_PRIVATE_EXPORT void qmltcCreateDynamicMetaObject(QObject *object,
+                                                       const QMetaObject *staticMetaObject,
+                                                       const QmltcTypeData &data);
 
 QT_END_NAMESPACE
 

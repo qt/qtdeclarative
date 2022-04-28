@@ -46,6 +46,7 @@
 #include "deferredproperties_complex.h"
 #include "gradients.h"
 #include "qjsvalueassignments.h"
+#include "extensiontypebindings.h"
 
 #include "signalhandlers.h"
 #include "javascriptfunctions.h"
@@ -144,6 +145,7 @@ void tst_qmltc::initTestCase()
         QUrl("qrc:/QmltcTests/deferredProperties_group.qml"),
         QUrl("qrc:/QmltcTests/deferredProperties_attached.qml"),
         QUrl("qrc:/QmltcTests/deferredProperties_complex.qml"),
+        QUrl("qrc:/QmltcTests/extensionTypeBindings.qml"),
 
         QUrl("qrc:/QmltcTests/signalHandlers.qml"),
         QUrl("qrc:/QmltcTests/javaScriptFunctions.qml"),
@@ -699,6 +701,142 @@ void tst_qmltc::jsvalueAssignments()
     QVERIFY(created.jsvalue().toBool());
 }
 
+void tst_qmltc::extensionTypeBindings()
+{
+
+    const auto verifyExtensionType = [](QObject *root) {
+        QQmlListReference data(root, "data");
+        QCOMPARE(data.count(), 7);
+
+        // NB: Text object is not at index 0 due to non-QQuickItem-derived types
+        // added along with it. This has something to do with QQuickItem's
+        // internals that we just accept here
+        auto text = qobject_cast<QQuickText *>(data.at(6));
+        QVERIFY(text);
+        auto withExtension = qobject_cast<TypeWithExtension *>(data.at(0));
+        QVERIFY(withExtension);
+        auto withExtensionDerived = qobject_cast<TypeWithExtensionDerived *>(data.at(1));
+        QVERIFY(withExtensionDerived);
+        auto withExtensionNamespace = qobject_cast<TypeWithExtensionNamespace *>(data.at(2));
+        QVERIFY(withExtensionNamespace);
+
+        // extra:
+        auto withBaseTypeExtension = qobject_cast<TypeWithBaseTypeExtension *>(data.at(3));
+        QVERIFY(withBaseTypeExtension);
+
+        // qml:
+        auto qmlWithExtension = qobject_cast<TypeWithExtension *>(data.at(4));
+        QVERIFY(qmlWithExtension);
+        auto qmlWithBaseTypeExtension = qobject_cast<TypeWithBaseTypeExtension *>(data.at(5));
+        QVERIFY(qmlWithBaseTypeExtension);
+
+        QFont font = text->font();
+        QCOMPARE(font.letterSpacing(), 13);
+
+        QCOMPARE(withExtension->getCount(), TypeWithExtension::unsetCount);
+        QCOMPARE(root->property("extCountAlias").toInt(), -10);
+
+        root->setProperty("extCountAlias", 42);
+        QCOMPARE(withExtension->getCount(), TypeWithExtension::unsetCount);
+        QCOMPARE(root->property("extCountAlias").toInt(), 42);
+        QVERIFY(withExtension->property("shouldBeVisible").toBool());
+        QCOMPARE(withExtension->property("foo").toDouble(), 0);
+
+        QCOMPARE(withExtensionDerived->getStr(), TypeWithExtensionDerived::unsetStr);
+        QCOMPARE(withExtensionDerived->getCount(), TypeWithExtension::unsetCount);
+        QCOMPARE(root->property("extDerivedStrAlias").toString(), u"hooray"_s);
+        QCOMPARE(root->property("extDerivedCountAlias").toInt(), -10);
+        // taken from extension
+        QCOMPARE(withExtensionDerived->property("str").toString(), u"hooray"_s);
+        QCOMPARE(withExtensionDerived->property("count").toInt(), -10);
+
+        root->setProperty("extDerivedStrAlias", u"foo"_s);
+        root->setProperty("extDerivedCountAlias", 42);
+        QCOMPARE(withExtensionDerived->getStr(), TypeWithExtensionDerived::unsetStr);
+        QCOMPARE(withExtensionDerived->getCount(), TypeWithExtension::unsetCount);
+        QCOMPARE(root->property("extDerivedStrAlias").toString(), u"foo"_s);
+        QCOMPARE(root->property("extDerivedCountAlias").toInt(), 42);
+        QCOMPARE(withExtensionDerived->property("str").toString(), u"foo"_s);
+        QCOMPARE(withExtensionDerived->property("count").toInt(), 42);
+        QVERIFY(withExtensionDerived->property("shouldBeVisible").toBool());
+
+        // namespace properties are ignored
+        QCOMPARE(withExtensionNamespace->getCount(), -10);
+        QCOMPARE(root->property("extNamespaceCountAlias").toInt(), -10);
+        root->setProperty("extNamespaceCountAlias", 42);
+        QCOMPARE(withExtensionNamespace->getCount(), 42);
+        QCOMPARE(root->property("extNamespaceCountAlias").toInt(), 42);
+        QVERIFY(withExtensionNamespace->property("shouldBeVisible").toBool());
+
+        // extra:
+        QCOMPARE(withBaseTypeExtension->getStr(), TypeWithExtensionDerived::unsetStr);
+        QCOMPARE(withBaseTypeExtension->getCount(), TypeWithExtension::unsetCount);
+        QCOMPARE(withBaseTypeExtension->property("str").toString(), u"hooray"_s);
+        QCOMPARE(withBaseTypeExtension->property("count").toInt(), -10);
+        QVERIFY(withBaseTypeExtension->property("shouldBeVisible").toBool());
+
+        // qml:
+        QCOMPARE(qmlWithExtension->getCount(), TypeWithExtension::unsetCount);
+        QCOMPARE(qmlWithExtension->property("count"), -10);
+        QVERIFY(qmlWithExtension->property("shouldBeVisibleFromBase").toBool());
+        QVERIFY(qmlWithExtension->property("shouldBeVisible").toBool());
+
+        QCOMPARE(qmlWithBaseTypeExtension->getStr(), TypeWithExtensionDerived::unsetStr);
+        QCOMPARE(qmlWithBaseTypeExtension->getCount(), TypeWithExtension::unsetCount);
+        QCOMPARE(qmlWithBaseTypeExtension->property("str").toString(), u"hooray"_s);
+        QCOMPARE(qmlWithBaseTypeExtension->property("count").toInt(), -10);
+        QVERIFY(qmlWithBaseTypeExtension->property("shouldBeVisibleFromBase").toBool());
+        QVERIFY(qmlWithBaseTypeExtension->property("shouldBeVisible").toBool());
+    };
+
+    {
+        QQmlEngine e;
+        QQmlComponent component(&e);
+        component.loadUrl(QUrl("qrc:/QmltcTests/extensionTypeBindings.qml"));
+        QVERIFY2(component.isReady(), qPrintable(component.errorString()));
+        QScopedPointer<QObject> root(component.create());
+        QVERIFY2(root, qPrintable(component.errorString()));
+
+        verifyExtensionType(root.get());
+    }
+
+    if (QTest::currentTestFailed()) {
+        qDebug() << "QQmlComponent test failed";
+        return;
+    }
+
+    {
+        QQmlEngine e;
+        PREPEND_NAMESPACE(extensionTypeBindings) created(&e);
+
+        verifyExtensionType(&created);
+
+        // additionally, check that setting aliases directly works fine
+        QQmlListReference data(&created, "data");
+        auto withExtension = qobject_cast<TypeWithExtension *>(data.at(0));
+        auto withExtensionDerived = qobject_cast<TypeWithExtensionDerived *>(data.at(1));
+        auto withExtensionNamespace = qobject_cast<TypeWithExtensionNamespace *>(data.at(2));
+
+        created.setExtCountAlias(-77);
+        QCOMPARE(withExtension->getCount(), TypeWithExtension::unsetCount);
+        QCOMPARE(withExtension->property("count").toInt(), -77); // via extension
+        QCOMPARE(created.extCountAlias(), -77);
+
+        created.setExtDerivedCountAlias(-77);
+        created.setExtDerivedStrAlias(u"bar"_s);
+        QCOMPARE(withExtensionDerived->getCount(), TypeWithExtension::unsetCount);
+        QCOMPARE(withExtensionDerived->getStr(), TypeWithExtensionDerived::unsetStr);
+        QCOMPARE(withExtensionDerived->property("count").toInt(), -77); // via extension
+        QCOMPARE(withExtensionDerived->property("str").toString(), u"bar"_s); // via extension
+        QCOMPARE(created.extDerivedCountAlias(), -77);
+        QCOMPARE(created.extDerivedStrAlias(), u"bar"_s);
+
+        created.setExtNamespaceCountAlias(-77);
+        QCOMPARE(withExtensionNamespace->getCount(), -77);
+        QCOMPARE(withExtensionNamespace->property("count").toInt(), -77);
+    }
+}
+
 void tst_qmltc::signalHandlers()
 {
     QQmlEngine e;
@@ -929,6 +1067,12 @@ void tst_qmltc::complexAliases()
     QCOMPARE(created.aRectObject(), theRect);
     QCOMPARE(created.aTextObject(), theText);
 
+    // aLetterSpacing:
+    QCOMPARE(created.aLetterSpacing(), theText->property("font").value<QFont>().letterSpacing());
+    created.setALetterSpacing(5);
+    QCOMPARE(created.aLetterSpacing(), 5);
+    QCOMPARE(created.aLetterSpacing(), theText->property("font").value<QFont>().letterSpacing());
+
     // aWordSpacing:
     QCOMPARE(created.aWordSpacing(), theText->property("font").value<QFont>().wordSpacing());
     created.setAWordSpacing(42);
@@ -996,9 +1140,9 @@ void tst_qmltc::complexAliases()
     QCOMPARE(created.aliasToValueTypeAlias(), theText->property("font").value<QFont>());
 
     // aliasToPropertyOfValueTypeAlias:
-    QCOMPARE(created.aliasToPropertyOfValueTypeAlias(), newFont.pointSize());
+    QCOMPARE(created.aliasToPropertyOfValueTypeAlias(), newFont.pixelSize());
     created.setAliasToPropertyOfValueTypeAlias(3);
-    QCOMPARE(created.aliasToPropertyOfValueTypeAlias(), created.aFont().pointSize());
+    QCOMPARE(created.aliasToPropertyOfValueTypeAlias(), created.aFont().pixelSize());
     QCOMPARE(created.aFont(), theText->property("font").value<QFont>());
     QCOMPARE(aFontSpy.count(), 6);
     QCOMPARE(aliasToValueTypeAliasSpy.count(), 3);

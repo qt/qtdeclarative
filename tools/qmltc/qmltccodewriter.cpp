@@ -168,6 +168,7 @@ void QmltcCodeWriter::writeGlobalHeader(QmltcOutputWrapper &code, const QString 
     code.rawAppendToCpp(u"");
     code.rawAppendToCpp(u"#include <private/qobject_p.h>"); // NB: for private properties
     code.rawAppendToCpp(u"#include <private/qqmlobjectcreator_p.h>"); // for finalize callbacks
+    code.rawAppendToCpp(u"#include <QtQml/qqmlprivate.h>"); // QQmlPrivate::qmlExtendedObject()
 
     code.rawAppendToCpp(u""); // blank line
     code.rawAppendToCpp(u"QT_USE_NAMESPACE // avoid issues with QT_NAMESPACE");

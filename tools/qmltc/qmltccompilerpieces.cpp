@@ -36,6 +36,87 @@ QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
 
+static QString scopeName(const QQmlJSScope::ConstPtr &scope)
+{
+    Q_ASSERT(scope->isFullyResolved());
+    const auto scopeType = scope->scopeType();
+    if (scopeType == QQmlJSScope::GroupedPropertyScope
+        || scopeType == QQmlJSScope::AttachedPropertyScope) {
+        return scope->baseType()->internalName();
+    }
+    return scope->internalName();
+}
+
+QmltcCodeGenerator::PreparedValue
+QmltcCodeGenerator::wrap_extensionType(const QQmlJSScope::ConstPtr &type,
+                                       const QQmlJSMetaProperty &p, const QString &accessor)
+{
+    Q_ASSERT(type->isFullyResolved());
+
+    QStringList prologue;
+    QString value = accessor;
+    QStringList epilogue;
+
+    auto [owner, ownerKind] = QQmlJSScope::ownerOfProperty(type, p.propertyName());
+    Q_ASSERT(owner);
+    Q_ASSERT(owner->isFullyResolved());
+
+    // properties are only visible when we use QML_{NAMESPACE_}EXTENDED
+    if (ownerKind == QQmlJSScope::ExtensionType) {
+        // extensions is a C++-only feature:
+        Q_ASSERT(!owner->isComposite());
+
+        // have to wrap the property into an extension, but we need to figure
+        // out whether the type is QObject-based or not
+        bool inheritsQObject = false;
+        for (auto t = QQmlJSScope::nonCompositeBaseType(type); t; t = t->baseType()) {
+            if (t->internalName() == u"QObject"_s) {
+                inheritsQObject = true;
+                break;
+            }
+        }
+
+        prologue << u"{"_s;
+        const QString extensionObjectName = u"extObject"_s;
+        if (inheritsQObject) {
+            // we have a Q_OBJECT. in this case, we call qmlExtendedObject()
+            // function that should return us the extension object. for that we
+            // have to figure out which specific extension we want here
+
+            int extensionIndex = 0;
+            auto cppBase = QQmlJSScope::nonCompositeBaseType(type);
+            for (auto t = cppBase; t; t = t->baseType()) {
+                if (auto [ext, kind] = t->extensionType(); kind != QQmlJSScope::NotExtension) {
+                    if (ext->isSameType(owner))
+                        break;
+                    ++extensionIndex;
+                }
+            }
+
+            prologue << u"static_assert(std::is_base_of<%1, %2>::value);"_s.arg(u"QObject"_s,
+                                                                                scopeName(type));
+            prologue << u"auto %1 = qobject_cast<%2 *>(QQmlPrivate::qmlExtendedObject(%3, %4));"_s
+                                .arg(extensionObjectName, owner->internalName(), accessor,
+                                     QString::number(extensionIndex));
+        } else {
+            // we have a Q_GADGET. the assumption for extension types is that we
+            // can reinterpret_cast a Q_GADGET object into an extension type
+            // object and then interact with the extension object right away
+            prologue << u"static_assert(sizeof(%1) == sizeof(%2));"_s.arg(scopeName(type),
+                                                                          owner->internalName());
+            prologue << u"static_assert(alignof(%1) == alignof(%2));"_s.arg(scopeName(type),
+                                                                            owner->internalName());
+            prologue << u"auto %1 = reinterpret_cast<%2 *>(%3);"_s.arg(
+                    extensionObjectName, owner->internalName(), accessor);
+        }
+        prologue << u"Q_ASSERT(%1);"_s.arg(extensionObjectName);
+        value = extensionObjectName;
+        epilogue << u"}"_s;
+    }
+
+    return { prologue, value, epilogue };
+}
+
 void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
                                                    const QQmlJSScope::ConstPtr &type,
                                                    const QQmlJSMetaProperty &p,
@@ -61,8 +142,14 @@ void QmltcCodeGenerator::generate_assignToProperty(QStringList *block,
         auto [prologue, wrappedValue, epilogue] =
                 QmltcCodeGenerator::wrap_mismatchingTypeConversion(p, value);
         *block += prologue;
-        *block << QmltcCodeGenerator::wrap_privateClass(accessor, p) + u"->" + propertySetter + u"("
-                        + wrappedValue + u");";
+
+        auto [extensionPrologue, extensionAccessor, extensionEpilogue] =
+                QmltcCodeGenerator::wrap_extensionType(
+                        type, p, QmltcCodeGenerator::wrap_privateClass(accessor, p));
+        *block += extensionPrologue;
+        *block << extensionAccessor + u"->" + propertySetter + u"(" + wrappedValue + u");";
+        *block += extensionEpilogue;
+
         *block += epilogue;
     } else { // TODO: we should remove this branch eventually
         // this property is weird, fallback to `setProperty`
@@ -154,7 +241,7 @@ void QmltcCodeGenerator::generate_createBindingOnProperty(
     }
 }
 
-std::tuple<QStringList, QString, QStringList>
+QmltcCodeGenerator::PreparedValue
 QmltcCodeGenerator::wrap_mismatchingTypeConversion(const QQmlJSMetaProperty &p, QString value)
 {
     auto isDerivedFromBuiltin = [](QQmlJSScope::ConstPtr t, const QString &builtin) {

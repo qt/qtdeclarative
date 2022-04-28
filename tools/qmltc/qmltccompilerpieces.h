@@ -38,8 +38,6 @@
 #include "qmltcoutputir.h"
 #include "qmltcvisitor.h"
 
-#include <tuple>
-
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -104,8 +102,16 @@ struct QmltcCodeGenerator
 
     static inline void generate_getCompilationUnitFromUrl();
 
-    static std::tuple<QStringList, QString, QStringList>
-    wrap_mismatchingTypeConversion(const QQmlJSMetaProperty &p, QString value);
+    struct PreparedValue
+    {
+        QStringList prologue;
+        QString value;
+        QStringList epilogue;
+    };
+
+    static PreparedValue wrap_mismatchingTypeConversion(const QQmlJSMetaProperty &p, QString value);
+    static PreparedValue wrap_extensionType(const QQmlJSScope::ConstPtr &type,
+                                            const QQmlJSMetaProperty &p, const QString &accessor);
 
     static QString wrap_privateClass(const QString &accessor, const QQmlJSMetaProperty &p);
     static QString wrap_qOverload(const QList<QmltcVariable> &parameters,
@@ -229,6 +235,28 @@ inline decltype(auto) QmltcCodeGenerator::generate_initCode(QmltcType &current,
         current.init.body << u"// 3. set id since it is provided"_s;
         QmltcCodeGenerator::generate_setIdValue(&current.init.body, u"context"_s, id, u"this"_s,
                                                 u"<unknown>"_s);
+    }
+
+    // if type has an extension, create a dynamic meta object for it
+    bool hasExtension = false;
+    for (auto cppBase = QQmlJSScope::nonCompositeBaseType(type); cppBase;
+         cppBase = cppBase->baseType()) {
+        // QObject is special: we have a pseudo-extension on it due to builtins
+        if (cppBase->internalName() == u"QObject"_s)
+            break;
+        if (cppBase->extensionType().extensionSpecifier != QQmlJSScope::NotExtension) {
+            hasExtension = true;
+            break;
+        }
+    }
+    if (hasExtension) {
+        current.init.body << u"{"_s;
+        current.init.body << u"auto cppData = QmltcTypeData(this);"_s;
+        current.init.body
+                << QStringLiteral(
+                           "qmltcCreateDynamicMetaObject(this, &%1::staticMetaObject, cppData);")
+                           .arg(type->internalName());
+        current.init.body << u"}"_s;
     }
 
     const auto generateFinalLines = [&current, isDocumentRoot]() {
