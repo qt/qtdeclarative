@@ -189,3 +189,5 @@ QQuickItem *QQmlPreviewServiceImpl::currentRootItem()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlpreviewservice.cpp"

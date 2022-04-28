@@ -154,3 +154,5 @@ QString ProxyTranslator::currentUILanguages() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_proxytranslator.cpp"
