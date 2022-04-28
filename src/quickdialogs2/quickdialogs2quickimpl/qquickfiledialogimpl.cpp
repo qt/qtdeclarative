@@ -551,3 +551,5 @@ void QQuickFileDialogImplAttached::setBreadcrumbBar(QQuickFolderBreadcrumbBar *b
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickfiledialogimpl_p.cpp"

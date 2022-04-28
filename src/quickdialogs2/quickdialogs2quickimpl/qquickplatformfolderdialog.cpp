@@ -208,3 +208,5 @@ QQuickFolderDialogImpl *QQuickPlatformFolderDialog::dialog() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformfolderdialog_p.cpp"

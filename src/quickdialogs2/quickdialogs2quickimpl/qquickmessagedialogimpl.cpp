@@ -224,3 +224,5 @@ void QQuickMessageDialogImplAttached::setDetailedTextButton(QQuickButton *detail
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmessagedialogimpl_p.cpp"

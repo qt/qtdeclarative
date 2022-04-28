@@ -143,3 +143,5 @@ QQuickMessageDialogImpl *QQuickPlatformMessageDialog::dialog() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformmessagedialog_p.cpp"
