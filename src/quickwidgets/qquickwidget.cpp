@@ -1908,4 +1908,6 @@ Q_CONSTRUCTOR_FUNCTION(qt_registerDefaultPlatformBackingStoreOpenGLSupport);
 
 QT_END_NAMESPACE
 
+#include "moc_qquickwidget_p.cpp"
+
 #include "moc_qquickwidget.cpp"
