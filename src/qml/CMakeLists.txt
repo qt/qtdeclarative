@@ -510,7 +510,7 @@ qt_internal_extend_target(Qml CONDITION QT_FEATURE_qml_debug
         debugger/qqmldebug.cpp
         debugger/qqmldebugconnector.cpp
         debugger/qqmldebugpluginmanager_p.h
-        debugger/qqmldebugserver_p.h
+        debugger/qqmldebugserver.cpp debugger/qqmldebugserver_p.h
         debugger/qqmldebugserverconnection_p.h
         debugger/qqmldebugservice.cpp debugger/qqmldebugservice_p.h
         debugger/qqmldebugservicefactory_p.h
