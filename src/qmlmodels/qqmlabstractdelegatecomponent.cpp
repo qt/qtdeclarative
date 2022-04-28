@@ -59,3 +59,5 @@ QVariant QQmlAbstractDelegateComponent::value(QQmlAdaptorModel *adaptorModel, in
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlabstractdelegatecomponent_p.cpp"
