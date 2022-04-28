@@ -991,3 +991,5 @@ void QQmlXmlListModelQueryRunnable::readSubTree(const QString &prefix, QXmlStrea
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlxmllistmodel_p.cpp"
