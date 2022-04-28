@@ -281,3 +281,5 @@ QSGNode *QQuickBasicProgressBar::updatePaintNode(QSGNode *oldNode, QQuickItem::U
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickbasicprogressbar_p.cpp"
