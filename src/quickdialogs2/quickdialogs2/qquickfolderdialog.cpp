@@ -295,3 +295,5 @@ void QQuickFolderDialog::onShow(QPlatformDialogHelper *dialog)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickfolderdialog_p.cpp"

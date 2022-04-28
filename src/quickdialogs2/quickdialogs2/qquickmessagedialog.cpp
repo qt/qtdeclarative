@@ -255,3 +255,5 @@ void QQuickMessageDialog::onShow(QPlatformDialogHelper *dialog)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmessagedialog_p.cpp"

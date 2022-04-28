@@ -220,3 +220,5 @@ void QQuickFontDialog::onShow(QPlatformDialogHelper *dialog)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickfontdialog_p.cpp"
