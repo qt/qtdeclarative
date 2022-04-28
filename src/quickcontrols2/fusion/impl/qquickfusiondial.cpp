@@ -137,3 +137,5 @@ void QQuickFusionDial::paint(QPainter *painter)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickfusiondial_p.cpp"
