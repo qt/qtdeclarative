@@ -1433,15 +1433,36 @@ bool DomItem::visitDirectAccessibleScopes(function_ref<bool(DomItem &)> visitor,
                                           VisitPrototypesOptions options, ErrorHandler h,
                                           QSet<quintptr> *visited, QList<Path> *visitedRefs)
 {
-    if (internalKind() == DomType::QmlObject)
+    // these are the scopes one can access with the . operator from the current location
+    // but currently not the attached types, which we should
+    DomType k = internalKind();
+    if (k == DomType::QmlObject)
         return visitPrototypeChain(visitor, options, h, visited, visitedRefs);
     if (visited && id() != 0) {
         if (visited->contains(id()))
             return true;
         visited->insert(id());
     }
-    if (!(options & VisitPrototypesOption::SkipFirst))
-        visitor(*this);
+    if (k == DomType::Id || k == DomType::Reference || k == DomType::Export) {
+        // we go to the scope if it is clearly defined
+        DomItem v = proceedToScope(h, visitedRefs);
+        if (v.internalKind() == DomType::QmlObject)
+            return v.visitPrototypeChain(visitor, options, h, visited, visitedRefs);
+    }
+    if (k == DomType::Binding) {
+        // from a binding we can get to its value if it is a object
+        DomItem v = field(Fields::value);
+        if (v.internalKind() == DomType::QmlObject)
+            return v.visitPrototypeChain(visitor, options, h, visited, visitedRefs);
+    }
+    if (k == DomType::PropertyDefinition) {
+        // from a property definition we go to the type stored in it
+        DomItem t = field(Fields::type).proceedToScope(h, visitedRefs);
+        if (t.internalKind() == DomType::QmlObject)
+            return t.visitPrototypeChain(visitor, options, h, visited, visitedRefs);
+    }
+    if (!(options & VisitPrototypesOption::SkipFirst) && isScope() && !visitor(*this))
+        return false;
     return true;
 }
 
@@ -1897,6 +1918,9 @@ DomItem DomItem::proceedToScope(ErrorHandler h, QList<Path> *visitedRefs)
         }
         case DomType::Export:
             current = current.field(Fields::type);
+            break;
+        case DomType::Id:
+            current = current.field(Fields::referredObject);
             break;
         default:
             return current.scope();

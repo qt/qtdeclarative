@@ -143,8 +143,15 @@ void tst_QmllsCompletions::completions_data()
                                                    u"function"_s })
                                   << QStringList({ u"QtQuick"_s, u"vector4d"_s });
     QTest::newRow("inBindingLabel")
-            << uri << 3 << 7 << QStringList({ u"Rectangle"_s, u"property"_s, u"width"_s })
+            << uri << 4 << 9 << QStringList({ u"Rectangle"_s, u"property"_s, u"width"_s })
             << QStringList({ u"QtQuick"_s, u"vector4d"_s });
+    QTest::newRow("afterBinding") << uri << 4 << 10
+                                  << QStringList({ u"Rectangle"_s, u"width"_s, u"vector4d"_s })
+                                  << QStringList({ u"QtQuick"_s, u"property"_s });
+    QTest::newRow("afterId") // suppress?
+            << uri << 3 << 7 << QStringList({ u"import"_s })
+            << QStringList(
+                       { u"QtQuick"_s, u"property"_s, u"Rectangle"_s, u"width"_s, u"vector4d"_s });
     QTest::newRow("fileStart") << uri << 0 << 0 << QStringList({ u"Rectangle"_s, u"import"_s })
                                << QStringList({ u"QtQuick"_s, u"vector4d"_s, u"width"_s });
     QTest::newRow("importImport") << uri << 0 << 3 << QStringList({ u"Rectangle"_s, u"import"_s })
@@ -159,9 +166,13 @@ void tst_QmllsCompletions::completions_data()
     //                                  << QStringList({u"as"_s, u"Rectangle"_s, u"import"_s,
     //                                  u"vector4d"_s, u"width"_s});
     QTest::newRow("inScript") << uri << 5 << 14
-                              << QStringList(
-                                         { u"Rectangle"_s, u"vector4d"_s, u"lala()"_s, u"width"_s })
+                              << QStringList({ u"Rectangle"_s, u"vector4d"_s, u"lala()"_s,
+                                               u"width"_s })
                               << QStringList({ u"import"_s });
+    QTest::newRow("expandBase1") << uri << 8 << 23 << QStringList({ u"width"_s, u"foo"_s })
+                                 << QStringList({ u"import"_s, u"Rectangle"_s });
+    QTest::newRow("expandBase2") << uri << 9 << 29 << QStringList({ u"width"_s, u"color"_s })
+                                 << QStringList({ u"foo"_s, u"import"_s, u"Rectangle"_s });
 }
 
 void tst_QmllsCompletions::checkCompletions(QByteArray uri, int lineNr, int character,

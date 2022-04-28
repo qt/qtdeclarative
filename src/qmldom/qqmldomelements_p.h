@@ -658,13 +658,7 @@ public:
         return cont;
     }
 
-    Path typePath() const
-    {
-        Path res = Path::Current(PathCurrent::Types);
-        for (QString el : typeName.split(QChar::fromLatin1('.')))
-            res = res.key(el);
-        return res;
-    }
+    Path typePath() const { return Paths::lookupTypePath(typeName); }
 
     bool isAlias() const { return typeName == u"alias"; }
     bool isParametricType() const;

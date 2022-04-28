@@ -460,92 +460,91 @@ static QList<CompletionItem> reachableSymbols(DomItem &context, const Completion
     QSet<QString> symbols;
     QSet<quintptr> visited;
     QList<Path> visitedRefs;
-    auto addReachableSymbols = [&res, &symbols, &visited, &visitedRefs, typeCompletionType,
-                                completeMethodCalls](Path, DomItem &it) -> bool {
-        qCDebug(complLog) << "adding symbols reachable from:" << it.internalKindStr()
-                          << it.canonicalPath();
-        it = it.proceedToScope();
-        it.visitScopeChain(
-                [&res, typeCompletionType, completeMethodCalls, &symbols](DomItem &el) {
-                    switch (typeCompletionType) {
-                    case TypeCompletionsType::None:
-                        return false;
-                    case TypeCompletionsType::Types:
-                        switch (el.internalKind()) {
-                        case DomType::ImportScope:
-                            qCDebug(complLog)
-                                    << "scope lookup, adding local symbols of:"
-                                    << el.internalKindStr() << el.canonicalPath()
-                                    << el.localSymbolNames(LocalSymbolsType::QmlTypes
-                                                           | LocalSymbolsType::Namespaces);
-                            symbols += el.localSymbolNames(LocalSymbolsType::QmlTypes
-                                                           | LocalSymbolsType::Namespaces);
-                            break;
-                        default:
-                            qCDebug(complLog) << "scope lookup, skipping non type"
-                                              << el.internalKindStr() << el.canonicalPath();
-                            break;
-                        }
-                        break;
-                    case TypeCompletionsType::TypesAndAttributes:
-                        auto localSymbols = el.localSymbolNames(LocalSymbolsType::All);
-                        if (const QmlObject *elPtr = el.as<QmlObject>()) {
-                            auto methods = elPtr->methods();
-                            auto it = methods.cbegin();
-                            while (it != methods.cend()) {
-                                localSymbols.remove(it.key());
-                                if (completeMethodCalls == FunctionCompletion::Declaration) {
-                                    CompletionItem comp;
-                                    QString label = it.key() + u"(";
-                                    QString doc = it.key() + u"(";
-                                    bool first = true;
-                                    for (const MethodParameter &pInfo : qAsConst(it->parameters)) {
-                                        if (first)
-                                            first = false;
-                                        else {
-                                            label += u",";
-                                            doc += u",";
-                                        }
-                                        label += pInfo.name;
-                                        if (!pInfo.typeName.isEmpty())
-                                            doc += pInfo.typeName + u" ";
-                                        doc += pInfo.name;
-                                        if (pInfo.defaultValue) {
-                                            doc += u"=";
-                                            doc += pInfo.defaultValue->code();
-                                        }
-                                    }
-                                    comp.detail = label.toUtf8();
-                                    comp.label = (it.key() + u"()").toUtf8();
-                                    comp.documentation = doc.toUtf8();
-                                    res.append(comp);
-                                }
-                                ++it;
+    auto addLocalSymbols = [&res, typeCompletionType, completeMethodCalls, &symbols](DomItem &el) {
+        switch (typeCompletionType) {
+        case TypeCompletionsType::None:
+            return false;
+        case TypeCompletionsType::Types:
+            switch (el.internalKind()) {
+            case DomType::ImportScope:
+                qCDebug(complLog) << "adding local symbols of:" << el.internalKindStr()
+                                  << el.canonicalPath()
+                                  << el.localSymbolNames(LocalSymbolsType::QmlTypes
+                                                         | LocalSymbolsType::Namespaces);
+                symbols += el.localSymbolNames(LocalSymbolsType::QmlTypes
+                                               | LocalSymbolsType::Namespaces);
+                break;
+            default:
+                qCDebug(complLog) << "skipping local symbols for non type" << el.internalKindStr()
+                                  << el.canonicalPath();
+                break;
+            }
+            break;
+        case TypeCompletionsType::TypesAndAttributes:
+            auto localSymbols = el.localSymbolNames(LocalSymbolsType::All);
+            if (const QmlObject *elPtr = el.as<QmlObject>()) {
+                auto methods = elPtr->methods();
+                auto it = methods.cbegin();
+                while (it != methods.cend()) {
+                    localSymbols.remove(it.key());
+                    if (completeMethodCalls == FunctionCompletion::Declaration) {
+                        CompletionItem comp;
+                        QString label = it.key() + u"(";
+                        QString doc = it.key() + u"(";
+                        bool first = true;
+                        for (const MethodParameter &pInfo : qAsConst(it->parameters)) {
+                            if (first)
+                                first = false;
+                            else {
+                                label += u",";
+                                doc += u",";
+                            }
+                            label += pInfo.name;
+                            if (!pInfo.typeName.isEmpty())
+                                doc += pInfo.typeName + u" ";
+                            doc += pInfo.name;
+                            if (pInfo.defaultValue) {
+                                doc += u"=";
+                                doc += pInfo.defaultValue->code();
                             }
                         }
-                        qCDebug(complLog)
-                                << "scope lookup, adding local symbols of:" << el.internalKindStr()
-                                << el.canonicalPath() << localSymbols;
-                        symbols += localSymbols;
-                        break;
+                        comp.detail = label.toUtf8();
+                        comp.label = (it.key() + u"()").toUtf8();
+                        comp.documentation = doc.toUtf8();
+                        res.append(comp);
                     }
-                    return true;
-                },
-                LookupOption::Normal, &defaultErrorHandler, &visited, &visitedRefs);
+                    ++it;
+                }
+            }
+            qCDebug(complLog) << "adding local symbols of:" << el.internalKindStr()
+                              << el.canonicalPath() << localSymbols;
+            symbols += localSymbols;
+            break;
+        }
         return true;
     };
     if (ctx.base().isEmpty()) {
         if (typeCompletionType != TypeCompletionsType::None) {
-            DomItem importScope = context.fileObject().field(Fields::importScope);
-            qCDebug(complLog) << "adding modules and direct accessible types in"
-                              << importScope.internalKindStr() << importScope.canonicalPath();
-            addReachableSymbols(Path(), context);
+            qCDebug(complLog) << "adding symbols reachable from:" << context.internalKindStr()
+                              << context.canonicalPath();
+            DomItem it = context.proceedToScope();
+            it.visitScopeChain(addLocalSymbols, LookupOption::Normal, &defaultErrorHandler,
+                               &visited, &visitedRefs);
         }
     } else {
-        QList<QStringView> baseItems = ctx.base().split(u'.');
+        QList<QStringView> baseItems = ctx.base().split(u'.', Qt::SkipEmptyParts);
         Q_ASSERT(!baseItems.isEmpty());
+        auto addReachableSymbols = [&visited, &visitedRefs, &addLocalSymbols](Path,
+                                                                              DomItem &it) -> bool {
+            qCDebug(complLog) << "adding directly accessible symbols of" << it.internalKindStr()
+                              << it.canonicalPath();
+            it.visitDirectAccessibleScopes(addLocalSymbols, VisitPrototypesOption::Normal,
+                                           &defaultErrorHandler, &visited, &visitedRefs);
+            return true;
+        };
         Path toSearch = Paths::lookupSymbolPath(ctx.base().toString().chopped(1));
         context.resolve(toSearch, addReachableSymbols, &defaultErrorHandler);
+        // add attached types? technically we should...
     }
     for (const QString &s : qAsConst(symbols)) {
         CompletionItem comp;
@@ -592,6 +591,7 @@ QList<CompletionItem> CompletionRequest::completions(QmlLsp::OpenDocumentSnapsho
         currentItem = itemsFound.first().domItem;
     qCDebug(complLog) << "Completion at " << urlAndPos() << " " << completionParams.position.line
                       << ":" << completionParams.position.character << "offset:" << pos
+                      << "base:" << ctx.base() << "filter:" << ctx.filterChars()
                       << "lastVersion:" << (doc.docVersion ? (*doc.docVersion) : -1)
                       << "validVersion:" << (doc.validDocVersion ? (*doc.validDocVersion) : -1)
                       << "in" << currentItem.internalKindStr() << currentItem.canonicalPath();
