@@ -246,3 +246,5 @@ QSGNode *QQuickMaterialBusyIndicator::updatePaintNode(QSGNode *oldNode, UpdatePa
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmaterialbusyindicator_p.cpp"
