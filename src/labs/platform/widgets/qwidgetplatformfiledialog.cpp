@@ -141,3 +141,5 @@ void QWidgetPlatformFileDialog::hide()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qwidgetplatformfiledialog_p.cpp"

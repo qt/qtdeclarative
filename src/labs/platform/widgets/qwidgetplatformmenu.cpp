@@ -184,3 +184,5 @@ QPlatformMenu *QWidgetPlatformMenu::createSubMenu() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qwidgetplatformmenu_p.cpp"

@@ -126,3 +126,5 @@ void QWidgetPlatformMenuItem::setIconSize(int size)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qwidgetplatformmenuitem_p.cpp"
