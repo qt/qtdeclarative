@@ -265,7 +265,7 @@ public:
     QList<QQuickAbstractAnimation *> animations;
 };
 
-class QQuickPropertyAnimationPrivate : public QQuickAbstractAnimationPrivate
+class Q_QUICK_PRIVATE_EXPORT QQuickPropertyAnimationPrivate : public QQuickAbstractAnimationPrivate
 {
     Q_DECLARE_PUBLIC(QQuickPropertyAnimation)
 public:
