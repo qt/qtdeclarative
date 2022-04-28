@@ -456,3 +456,5 @@ void QQmlPreviewHandler::tryCreateObject()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlpreviewhandler.cpp"
