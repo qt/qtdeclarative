@@ -123,3 +123,5 @@ void QQuickBasicDial::paint(QPainter *painter)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickbasicdial_p.cpp"
