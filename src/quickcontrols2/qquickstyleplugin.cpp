@@ -149,3 +149,5 @@ QQuickTheme *QQuickStylePlugin::createTheme(const QString &name)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickstyleplugin_p.cpp"
