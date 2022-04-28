@@ -1393,3 +1393,5 @@ bool QQuickMaterialStyle::variantToRgba(const QVariant &var, const char *name, Q
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmaterialstyle_p.cpp"
