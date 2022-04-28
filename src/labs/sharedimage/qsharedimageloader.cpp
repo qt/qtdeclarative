@@ -264,3 +264,5 @@ QString QSharedImageLoader::key(const QString &path, ImageParameters *params)
 
 
 QT_END_NAMESPACE
+
+#include "moc_qsharedimageloader_p.cpp"
