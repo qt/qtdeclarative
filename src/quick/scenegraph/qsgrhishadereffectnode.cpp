@@ -576,9 +576,9 @@ void QSGRhiShaderEffectMaterial::updateTextureProviders(bool layoutChange)
 }
 
 QSGRhiShaderEffectNode::QSGRhiShaderEffectNode(QSGDefaultRenderContext *rc)
-    : m_rc(rc),
-      m_material(this)
+    : m_material(this)
 {
+    Q_UNUSED(rc);
     setFlag(UsePreprocess, true);
     setMaterial(&m_material);
 }
