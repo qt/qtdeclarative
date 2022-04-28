@@ -26,7 +26,7 @@ qt_internal_add_module(QmlDebugPrivate
         qqmlprofilerclientdefinitions_p.h
         qqmlprofilerevent.cpp qqmlprofilerevent_p.h
         qqmlprofilereventlocation.cpp qqmlprofilereventlocation_p.h
-        qqmlprofilereventreceiver_p.h
+        qqmlprofilereventreceiver.cpp qqmlprofilereventreceiver_p.h
         qqmlprofilereventtype.cpp qqmlprofilereventtype_p.h
         qqmlprofilertypedevent.cpp qqmlprofilertypedevent_p.h
         qv4debugclient.cpp qv4debugclient_p.h
