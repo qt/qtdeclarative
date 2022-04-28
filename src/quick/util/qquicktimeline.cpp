@@ -957,3 +957,5 @@ QQuickTimeLineObject *QQuickTimeLineCallback::callbackObject() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktimeline_p_p.cpp"

@@ -564,4 +564,6 @@ void QQuickSmoothedAnimation::setMaximumEasingTime(int v)
 
 QT_END_NAMESPACE
 
+#include "moc_qquicksmoothedanimation_p_p.cpp"
+
 #include "moc_qquicksmoothedanimation_p.cpp"

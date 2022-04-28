@@ -495,3 +495,5 @@ QPoint QQuickTreeView::cellAtIndex(const QModelIndex &index) const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktreeview_p.cpp"

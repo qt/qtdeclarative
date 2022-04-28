@@ -572,3 +572,5 @@ QMetaProperty &QQuickWheelHandlerPrivate::targetMetaProperty() const
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qquickwheelhandler_p.cpp"
