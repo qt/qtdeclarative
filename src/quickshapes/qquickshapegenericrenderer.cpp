@@ -1077,3 +1077,5 @@ QSGMaterialShader *QQuickShapeConicalGradientMaterial::createShader(QSGRendererI
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickshapegenericrenderer_p.cpp"
