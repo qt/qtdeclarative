@@ -130,3 +130,5 @@ void QQuickMnemonicLabel::updateMnemonic()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmnemoniclabel_p.cpp"

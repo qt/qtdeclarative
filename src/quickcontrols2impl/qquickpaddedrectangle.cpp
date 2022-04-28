@@ -209,3 +209,5 @@ QSGNode *QQuickPaddedRectangle::updatePaintNode(QSGNode *node, UpdatePaintNodeDa
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpaddedrectangle_p.cpp"

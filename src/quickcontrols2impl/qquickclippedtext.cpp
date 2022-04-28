@@ -114,3 +114,5 @@ void QQuickClippedText::markClipDirty()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickclippedtext_p.cpp"
