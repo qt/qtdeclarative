@@ -606,3 +606,5 @@ QList<QUrl> QQuickFileDialog::addDefaultSuffixes(const QList<QUrl> &files) const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickfiledialog_p.cpp"

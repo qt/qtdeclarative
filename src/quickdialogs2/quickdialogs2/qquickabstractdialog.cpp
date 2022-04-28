@@ -501,3 +501,5 @@ QWindow *QQuickAbstractDialog::findParentWindow() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickabstractdialog_p.cpp"
