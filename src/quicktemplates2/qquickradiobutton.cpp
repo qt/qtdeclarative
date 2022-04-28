@@ -119,3 +119,5 @@ QAccessible::Role QQuickRadioButton::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickradiobutton_p.cpp"

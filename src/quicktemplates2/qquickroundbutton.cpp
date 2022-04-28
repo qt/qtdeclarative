@@ -133,3 +133,5 @@ void QQuickRoundButton::geometryChange(const QRectF &newGeometry, const QRectF &
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickroundbutton_p.cpp"

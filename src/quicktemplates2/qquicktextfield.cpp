@@ -950,3 +950,5 @@ void QQuickTextField::timerEvent(QTimerEvent *event)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktextfield_p.cpp"

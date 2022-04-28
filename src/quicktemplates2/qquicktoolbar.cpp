@@ -154,3 +154,5 @@ QAccessible::Role QQuickToolBar::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktoolbar_p.cpp"

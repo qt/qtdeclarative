@@ -1178,3 +1178,5 @@ void QQuickTextAreaAttached::setFlickable(QQuickTextArea *control)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktextarea_p.cpp"

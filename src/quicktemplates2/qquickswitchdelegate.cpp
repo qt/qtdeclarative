@@ -234,3 +234,5 @@ void QQuickSwitchDelegate::buttonChange(ButtonChange change)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickswitchdelegate_p.cpp"

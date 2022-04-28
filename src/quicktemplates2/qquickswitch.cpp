@@ -237,3 +237,5 @@ QFont QQuickSwitch::defaultFont() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickswitch_p.cpp"

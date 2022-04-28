@@ -570,3 +570,5 @@ void QQuickToolTipAttached::hide()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktooltip_p.cpp"

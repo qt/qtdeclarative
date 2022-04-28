@@ -155,3 +155,5 @@ qreal QQuickIndicatorButton::implicitIndicatorHeight() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickindicatorbutton_p.cpp"
