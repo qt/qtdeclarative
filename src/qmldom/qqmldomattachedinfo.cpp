@@ -369,3 +369,5 @@ bool UpdatedScriptExpression::visitTree(Tree base, function_ref<bool(Path, Tree)
 } // namespace Dom
 } // namespace QQmlJS
 QT_END_NAMESPACE
+
+#include "moc_qqmldomattachedinfo_p.cpp"

@@ -560,3 +560,5 @@ ErrorLevel errorLevelFromQtMsgType(QtMsgType msgType)
 } // end namespace QQmlJS
 
 QT_END_NAMESPACE
+
+#include "moc_qqmldomerrormessage_p.cpp"

@@ -1789,3 +1789,5 @@ void EnumItem::writeOut(DomItem &self, OutWriter &ow) const
 } // end namespace QQmlJS
 
 QT_END_NAMESPACE
+
+#include "moc_qqmldomelements_p.cpp"

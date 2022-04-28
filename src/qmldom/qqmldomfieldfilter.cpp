@@ -237,3 +237,5 @@ void FieldFilter::setFiltred()
 } // end namespace QQmlJS
 
 QT_END_NAMESPACE
+
+#include "moc_qqmldomfieldfilter_p.cpp"

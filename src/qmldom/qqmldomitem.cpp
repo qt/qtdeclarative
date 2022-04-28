@@ -3380,3 +3380,5 @@ void ListPBase::writeOut(DomItem &self, OutWriter &ow, bool compact) const
 } // end namespace QQmlJS
 
 QT_END_NAMESPACE
+
+#include "moc_qqmldomitem_p.cpp"
