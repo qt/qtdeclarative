@@ -63,3 +63,5 @@ QQuickLabsPlatformMenuSeparator::QQuickLabsPlatformMenuSeparator(QObject *parent
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicklabsplatformmenuseparator_p.cpp"

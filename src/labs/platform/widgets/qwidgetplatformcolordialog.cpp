@@ -85,3 +85,5 @@ void QWidgetPlatformColorDialog::hide()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qwidgetplatformcolordialog_p.cpp"

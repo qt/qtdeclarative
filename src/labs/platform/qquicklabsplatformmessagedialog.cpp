@@ -380,3 +380,5 @@ void QQuickLabsPlatformMessageDialog::handleClick(QPlatformDialogHelper::Standar
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicklabsplatformmessagedialog_p.cpp"

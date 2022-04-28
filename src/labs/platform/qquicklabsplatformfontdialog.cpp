@@ -206,3 +206,5 @@ void QQuickLabsPlatformFontDialog::accept()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicklabsplatformfontdialog_p.cpp"

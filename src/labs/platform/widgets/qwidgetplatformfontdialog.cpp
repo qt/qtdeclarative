@@ -85,3 +85,5 @@ void QWidgetPlatformFontDialog::hide()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qwidgetplatformfontdialog_p.cpp"

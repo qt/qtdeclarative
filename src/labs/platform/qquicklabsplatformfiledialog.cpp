@@ -665,3 +665,5 @@ QString QQuickLabsPlatformFileNameFilter::nameFilter(int index) const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicklabsplatformfiledialog_p.cpp"

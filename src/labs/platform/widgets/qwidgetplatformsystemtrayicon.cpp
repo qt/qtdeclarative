@@ -116,3 +116,5 @@ QPlatformMenu *QWidgetPlatformSystemTrayIcon::createMenu() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qwidgetplatformsystemtrayicon_p.cpp"

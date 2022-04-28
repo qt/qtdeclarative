@@ -171,3 +171,5 @@ QUrl QQuickLabsPlatformStandardPaths::writableLocation(QStandardPaths::StandardL
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicklabsplatformstandardpaths_p.cpp"
