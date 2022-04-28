@@ -334,3 +334,5 @@ bool QQuickPalette::isValidColorGroup(QPalette::ColorGroup groupTag,
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickpalette_p.cpp"
