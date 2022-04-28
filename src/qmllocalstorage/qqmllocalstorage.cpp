@@ -795,3 +795,5 @@ void QQmlLocalStorage::openDatabaseSync(QQmlV4Function *args)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmllocalstorage_p.cpp"
