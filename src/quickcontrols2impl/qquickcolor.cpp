@@ -70,3 +70,5 @@ QColor QQuickColor::blend(const QColor &a, const QColor &b, qreal factor) const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcolor_p.cpp"
