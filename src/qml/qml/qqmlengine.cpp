@@ -1996,4 +1996,6 @@ void hasJsOwnershipIndicator(QQmlGuardImpl *) {};
 
 QT_END_NAMESPACE
 
+#include "moc_qqmlengine_p.cpp"
+
 #include "moc_qqmlengine.cpp"

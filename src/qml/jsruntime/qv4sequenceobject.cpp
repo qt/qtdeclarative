@@ -738,3 +738,5 @@ QMetaType SequencePrototype::metaTypeForSequence(const QV4::Object *object)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qv4sequenceobject_p.cpp"
