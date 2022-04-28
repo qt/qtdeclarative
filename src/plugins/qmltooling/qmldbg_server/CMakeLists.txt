@@ -9,7 +9,7 @@ qt_internal_add_plugin(QQmlDebugServerFactoryPlugin
     CLASS_NAME QQmlDebugServerFactory
     PLUGIN_TYPE qmltooling
     SOURCES
-        qqmldebugserver.cpp
+        qqmldebugserverfactory.cpp
         qqmldebugserverfactory.h
     LIBRARIES
         Qt::PacketProtocolPrivate

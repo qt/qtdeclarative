@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtQml module of the Qt Toolkit.
@@ -37,35 +37,13 @@
 **
 ****************************************************************************/
 
-#ifndef QQMLDEBUGSERVER_P_H
-#define QQMLDEBUGSERVER_P_H
-
-#include "qqmldebugconnector_p.h"
-
-#include <private/qtqmlglobal_p.h>
-#include <QtCore/QIODevice>
-
-//
-//  W A R N I N G
-//  -------------
-//
-// This file is not part of the Qt API.  It exists purely as an
-// implementation detail.  This header file may change from version to
-// version without notice, or even be removed.
-//
-// We mean it.
-//
+#include "qqmldebugserver_p.h"
 
 QT_BEGIN_NAMESPACE
 
-class Q_QML_PRIVATE_EXPORT QQmlDebugServer : public QQmlDebugConnector
-{
-    Q_OBJECT
-public:
-    ~QQmlDebugServer() override;
-    virtual void setDevice(QIODevice *socket) = 0;
-};
+QQmlDebugServer::~QQmlDebugServer()
+    = default;
 
 QT_END_NAMESPACE
 
-#endif // QQMLDEBUGSERVER_P_H
+#include "moc_qqmldebugserver_p.cpp"
