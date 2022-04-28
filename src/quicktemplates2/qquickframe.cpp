@@ -89,3 +89,5 @@ QAccessible::Role QQuickFrame::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickframe_p.cpp"

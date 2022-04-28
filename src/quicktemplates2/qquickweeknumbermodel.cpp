@@ -181,3 +181,5 @@ QHash<int, QByteArray> QQuickWeekNumberModel::roleNames() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickweeknumbermodel_p.cpp"

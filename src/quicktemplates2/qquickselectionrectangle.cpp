@@ -570,3 +570,5 @@ void QQuickSelectionRectangleAttached::setDragging(bool dragging)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickselectionrectangle_p.cpp"

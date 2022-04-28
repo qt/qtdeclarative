@@ -227,3 +227,5 @@ QHash<int, QByteArray> QQuickMonthModel::roleNames() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmonthmodel_p.cpp"

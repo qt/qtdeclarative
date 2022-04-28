@@ -131,3 +131,5 @@ QAccessible::Role QQuickBusyIndicator::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickbusyindicator_p.cpp"

@@ -243,3 +243,5 @@ void QQuickWeekNumberColumn::paddingChange(const QMarginsF &newPadding, const QM
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickweeknumbercolumn_p.cpp"

@@ -87,3 +87,5 @@ QFont QQuickToolButton::defaultFont() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktoolbutton_p.cpp"

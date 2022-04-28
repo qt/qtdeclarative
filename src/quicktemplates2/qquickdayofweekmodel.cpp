@@ -122,3 +122,5 @@ QHash<int, QByteArray> QQuickDayOfWeekModel::roleNames() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickdayofweekmodel_p.cpp"

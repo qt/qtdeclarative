@@ -593,3 +593,5 @@ void QQuickLabel::insetChange(const QMarginsF &newInset, const QMarginsF &oldIns
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicklabel_p.cpp"

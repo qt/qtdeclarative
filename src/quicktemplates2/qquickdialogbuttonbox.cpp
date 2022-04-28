@@ -868,3 +868,5 @@ void QQuickDialogButtonBoxAttached::setButtonRole(QPlatformDialogHelper::ButtonR
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickdialogbuttonbox_p.cpp"

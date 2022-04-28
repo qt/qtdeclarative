@@ -203,3 +203,5 @@ void QQuickDayOfWeekRow::paddingChange(const QMarginsF &newPadding, const QMargi
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickdayofweekrow_p.cpp"

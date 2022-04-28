@@ -2177,3 +2177,5 @@ bool QQuickControl::setAccessibleProperty(const char *propertyName, const QVaria
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcontrol_p.cpp"

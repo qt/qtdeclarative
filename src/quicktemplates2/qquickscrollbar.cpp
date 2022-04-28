@@ -1262,3 +1262,5 @@ void QQuickScrollBarAttached::setVertical(QQuickScrollBar *vertical)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickscrollbar_p.cpp"

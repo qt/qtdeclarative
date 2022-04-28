@@ -430,3 +430,5 @@ void QQuickMonthGrid::timerEvent(QTimerEvent *event)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmonthgrid_p.cpp"

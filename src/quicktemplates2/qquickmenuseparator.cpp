@@ -95,3 +95,5 @@ QAccessible::Role QQuickMenuSeparator::accessibleRole() const
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmenuseparator_p.cpp"

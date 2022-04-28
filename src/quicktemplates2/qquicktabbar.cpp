@@ -505,3 +505,5 @@ QQuickTabBar::Position QQuickTabBarAttached::position() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicktabbar_p.cpp"

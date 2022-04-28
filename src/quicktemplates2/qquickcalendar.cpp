@@ -61,3 +61,5 @@ QQuickCalendar::QQuickCalendar(QObject *parent) : QObject(parent)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcalendar_p.cpp"
