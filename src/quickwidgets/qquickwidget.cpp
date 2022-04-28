@@ -1915,4 +1915,6 @@ void QQuickWidget::propagateFocusObjectChanged(QObject *focusObject)
 
 QT_END_NAMESPACE
 
+#include "moc_qquickwidget_p.cpp"
+
 #include "moc_qquickwidget.cpp"
