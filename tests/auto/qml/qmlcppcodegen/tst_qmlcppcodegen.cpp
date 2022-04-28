@@ -131,6 +131,7 @@ private slots:
     void evadingAmbiguity();
     void fromBoolValue();
     void invisibleTypes();
+    void invalidPropertyType();
 };
 
 void tst_QmlCppCodegen::simpleBinding()
@@ -2032,6 +2033,60 @@ void tst_QmlCppCodegen::invisibleTypes()
 //    const QMetaObject *meta = qvariant_cast<const QMetaObject *>(o->property("metaobject"));
 //    QVERIFY(meta != nullptr);
 //    QCOMPARE(meta->className(), "DerivedFromInvisible");
+}
+
+
+class MyCppType : public QObject
+{
+    Q_OBJECT
+    Q_PROPERTY(bool useListDelegate
+                       READ useListDelegate
+                       WRITE setUseListDelegate
+                       NOTIFY useListDelegateChanged)
+public:
+    explicit MyCppType(QObject * parent = nullptr) : QObject(parent) {}
+
+    bool useListDelegate() const { return m_useListDelegate; }
+    void setUseListDelegate(bool useListDelegate)
+    {
+        if (useListDelegate != m_useListDelegate) {
+            m_useListDelegate = useListDelegate;
+            emit useListDelegateChanged();
+        }
+    }
+
+signals:
+    void useListDelegateChanged();
+
+private:
+    bool m_useListDelegate = false;
+};
+
+void tst_QmlCppCodegen::invalidPropertyType()
+{
+    // Invisible on purpose
+    qmlRegisterType<MyCppType>("App", 1, 0, "MyCppType");
+
+    QQmlEngine engine;
+    QQmlComponent okComponent(&engine, QUrl(u"qrc:/TestTypes/OkType.qml"_qs));
+    QVERIFY2(okComponent.isReady(), qPrintable(okComponent.errorString()));
+    QScopedPointer<QObject> picker(okComponent.create());
+    QVERIFY2(!picker.isNull(), qPrintable(okComponent.errorString()));
+    QObject *inner = qmlContext(picker.data())->objectForName(u"inner"_qs);
+    QVERIFY(inner);
+    MyCppType *myCppType = qobject_cast<MyCppType *>(inner);
+    QVERIFY(myCppType);
+    QVERIFY(!myCppType->useListDelegate());
+
+    QQmlComponent c(&engine, QUrl(u"qrc:/TestTypes/BadType.qml"_qs));
+    QVERIFY2(c.isReady(), qPrintable(c.errorString()));
+    QScopedPointer<QObject> o(c.createWithInitialProperties(
+            QVariantMap {{u"picker"_qs, QVariant::fromValue(picker.data())}}));
+    QVERIFY2(!o.isNull(), qPrintable(c.errorString()));
+    QVERIFY(!myCppType->useListDelegate());
+
+    o->setProperty("useListDelegate", QVariant::fromValue<bool>(true));
+    QVERIFY(myCppType->useListDelegate());
 }
 
 void tst_QmlCppCodegen::runInterpreted()

@@ -13,6 +13,7 @@ set(cpp_sources
 
 set(qml_files
     AccessModelMethodsFromOutside.qml
+    BadType.qml
     BaseMember.qml
     BindingExpression.qml
     Cycle1.qml
@@ -22,6 +23,7 @@ set(qml_files
     Enums.qml
     Foozle.qml
     Loopy.qml
+    OkType.qml
     Panel.qml
     ProgressBar/Keyframe.qml
     ProgressBar/KeyframeGroup.qml
