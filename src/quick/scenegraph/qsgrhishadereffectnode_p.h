@@ -142,7 +142,6 @@ private Q_SLOTS:
     void handleTextureProviderDestroyed(QObject *object);
 
 private:
-    QSGDefaultRenderContext *m_rc;
     QSGRhiShaderEffectMaterial m_material;
 };
 
