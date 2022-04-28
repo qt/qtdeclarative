@@ -2937,4 +2937,6 @@ void QQuickFlickable::setBoundsMovement(BoundsMovement movement)
 
 QT_END_NAMESPACE
 
+#include "moc_qquickflickable_p_p.cpp"
+
 #include "moc_qquickflickable_p.cpp"

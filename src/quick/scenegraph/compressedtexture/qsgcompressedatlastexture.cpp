@@ -180,3 +180,5 @@ QSGTexture *Texture::removedFromAtlas() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qsgcompressedatlastexture_p.cpp"

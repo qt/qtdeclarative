@@ -76,3 +76,5 @@ void QQuickDragAxis::setEnabled(bool enabled)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickdragaxis_p.cpp"

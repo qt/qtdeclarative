@@ -218,3 +218,5 @@ void QQuickSinglePointHandlerPrivate::reset()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicksinglepointhandler_p.cpp"

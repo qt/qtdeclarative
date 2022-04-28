@@ -294,3 +294,5 @@ void QQuickHoverHandler::setHovered(bool hovered)
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qquickhoverhandler_p.cpp"

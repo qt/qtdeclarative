@@ -436,3 +436,5 @@ QMetaProperty &QQuickMultiPointHandlerPrivate::yMetaProperty() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickmultipointhandler_p.cpp"

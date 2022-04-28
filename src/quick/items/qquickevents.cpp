@@ -2274,3 +2274,5 @@ Q_QUICK_PRIVATE_EXPORT QDebug operator<<(QDebug dbg, const QQuickEventPoint *eve
 #endif
 
 QT_END_NAMESPACE
+
+#include "moc_qquickevents_p_p.cpp"

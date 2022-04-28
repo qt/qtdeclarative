@@ -348,3 +348,5 @@ void QQuickHandlerPoint::reset(const QVector<QQuickHandlerPoint> &points)
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qquickhandlerpoint_p.cpp"

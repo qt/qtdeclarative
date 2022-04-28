@@ -343,3 +343,5 @@ void QQuickDragHandler::setTranslation(const QVector2D &trans)
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qquickdraghandler_p.cpp"
