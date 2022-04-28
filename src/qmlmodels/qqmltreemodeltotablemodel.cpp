@@ -1062,3 +1062,5 @@ void QQmlTreeModelToTableModel::emitQueuedSignals()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmltreemodeltotablemodel_p_p.cpp"
