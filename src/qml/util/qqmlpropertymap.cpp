@@ -370,3 +370,5 @@ QQmlPropertyMap::QQmlPropertyMap(const QMetaObject *staticMetaObject, QObject *p
 */
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlpropertymap.cpp"
