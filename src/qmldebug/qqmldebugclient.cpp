@@ -123,3 +123,5 @@ void QQmlDebugClient::messageReceived(const QByteArray &message)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmldebugclient_p.cpp"
