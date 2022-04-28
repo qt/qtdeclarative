@@ -695,3 +695,5 @@ QVector3D QWavefrontMesh::projectionPlaneW() const
 
 
 QT_END_NAMESPACE
+
+#include "moc_qwavefrontmesh_p.cpp"
