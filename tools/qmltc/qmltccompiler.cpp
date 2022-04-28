@@ -166,16 +166,6 @@ void QmltcCompiler::compileType(
     const bool documentRoot = (type == rootType);
     const bool isAnonymous = !documentRoot || type->internalName().at(0).isLower();
 
-    const auto hasQmlBase = [](const QQmlJSScope::ConstPtr &scope) {
-        if (!scope)
-            return false;
-        const auto base = scope->baseType();
-        if (!base)
-            return false;
-        return base->isComposite() && base->scopeType() == QQmlJSScope::QMLScope;
-    };
-    const bool baseTypeIsCompiledQml = hasQmlBase(type);
-
     QmltcCodeGenerator generator { m_url, m_visitor };
 
     current.baseClasses = { baseClass };
@@ -268,7 +258,7 @@ void QmltcCompiler::compileType(
 
     current.externalCtor.initializerList = { current.baselineCtor.name + u"(" + parent.name
                                              + u")" };
-    if (baseTypeIsCompiledQml) {
+    if (QQmlJSUtils::hasCompositeBase(type)) {
         // call parent's (QML type's) basic ctor from this. that one will take
         // care about QObject::setParent()
         current.baselineCtor.initializerList = { baseClass + u"(" + parent.name + u")" };
