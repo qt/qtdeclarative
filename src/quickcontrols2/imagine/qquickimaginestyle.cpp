@@ -166,3 +166,5 @@ void QQuickImagineStyle::init()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickimaginestyle_p.cpp"
