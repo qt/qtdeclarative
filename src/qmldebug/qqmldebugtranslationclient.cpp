@@ -74,3 +74,5 @@ void QQmlDebugTranslationClient::triggerLanguage(const QUrl &url, const QString 
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmldebugtranslationclient_p.cpp"

@@ -576,3 +576,5 @@ QByteArray QV4DebugClientPrivate::packMessage(const QByteArray &type, const QJso
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qv4debugclient_p.cpp"
