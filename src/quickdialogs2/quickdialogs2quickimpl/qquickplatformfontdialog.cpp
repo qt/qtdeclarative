@@ -174,3 +174,5 @@ QQuickFontDialogImpl *QQuickPlatformFontDialog::dialog() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformfontdialog_p.cpp"
