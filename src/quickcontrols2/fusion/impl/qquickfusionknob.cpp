@@ -89,3 +89,5 @@ void QQuickFusionKnob::paint(QPainter *painter)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickfusionknob_p.cpp"
