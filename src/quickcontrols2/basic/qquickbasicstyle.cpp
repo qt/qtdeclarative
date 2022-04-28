@@ -247,3 +247,5 @@ QColor QQuickBasicStyle::disabledLightColor() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickbasicstyle_p.cpp"
