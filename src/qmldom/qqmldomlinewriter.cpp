@@ -480,3 +480,5 @@ void LineWriter::commitLine(QString eol, TextAddType tType, int untilChar)
 } // namespace Dom
 } // namespace QQmlJS
 QT_END_NAMESPACE
+
+#include "moc_qqmldomlinewriter_p.cpp"

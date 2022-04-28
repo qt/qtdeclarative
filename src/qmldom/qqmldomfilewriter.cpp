@@ -166,3 +166,5 @@ FileWriter::Status FileWriter::write(QString tFile, function_ref<bool(QTextStrea
 } // namespace Dom
 } // namespace QQmlJS
 QT_END_NAMESPACE
+
+#include "moc_qqmldomfilewriter_p.cpp"

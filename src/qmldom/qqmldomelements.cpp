@@ -2098,3 +2098,5 @@ QmlUri::Kind QmlUri::kind() const
 } // end namespace QQmlJS
 
 QT_END_NAMESPACE
+
+#include "moc_qqmldomelements_p.cpp"
