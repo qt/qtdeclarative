@@ -1896,3 +1896,5 @@ void QQmlPropertyPrivate::flushSignal(const QObject *sender, int signal_index)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlproperty.cpp"

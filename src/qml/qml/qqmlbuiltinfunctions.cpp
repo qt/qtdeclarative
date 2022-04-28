@@ -2231,3 +2231,5 @@ ReturnedValue QtObject::method_callLater(const FunctionObject *b, const Value *t
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qqmlbuiltinfunctions_p.cpp"
