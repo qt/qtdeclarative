@@ -473,6 +473,7 @@ private slots:
 
         {
             DomItem width = obj1.field(Fields::bindings).key(QLatin1String("width")).index(0);
+            QCOMPARE(width.field(Fields::value).qmlObject(), obj1);
             DomItem w = obj1.bindings().key(QLatin1String("width"));
             QVERIFY(w.indexes() > 0);
             QCOMPARE(w.indexes(), 1);

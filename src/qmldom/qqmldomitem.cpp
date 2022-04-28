@@ -486,10 +486,10 @@ DomItem DomItem::filterUp(function_ref<bool(DomType k, DomItem &)> filter, Filte
                 return it;
             checkTop = true;
             if (!domTypeIsOwningItem(k)) {
-                DomItem el = owner();
+                DomItem el = it.owner();
                 DomItem res;
                 k = DomType::Empty;
-                Path pp = pathFromOwner();
+                Path pp = it.pathFromOwner();
                 DomType k2 = el.internalKind();
                 if (filter(k2, el)) {
                     k = k2;
