@@ -45,3 +45,5 @@ void QSizeChangeListener::onSizeChanged()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_geometrytestutils_p.cpp"

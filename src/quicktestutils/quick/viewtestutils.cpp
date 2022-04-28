@@ -531,3 +531,5 @@ namespace QQuickTest {
 }
 
 QT_END_NAMESPACE
+
+#include "moc_viewtestutils_p.cpp"

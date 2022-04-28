@@ -464,3 +464,5 @@ void ThreadedTestHTTPServer::start()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_testhttpserver_p.cpp"
