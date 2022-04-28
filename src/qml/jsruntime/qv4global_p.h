@@ -191,6 +191,8 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(PropertyFlags)
 
 struct PropertyAttributes
 {
+    QT_WARNING_PUSH
+    QT_WARNING_DISABLE_MSVC(4201) // nonstandard extension used: nameless struct/union
     union {
         uchar m_all;
         struct {
@@ -208,6 +210,7 @@ struct PropertyAttributes
             uchar configurable_set : 1;
         };
     };
+    QT_WARNING_POP
 
     enum Type {
         Data = 0,

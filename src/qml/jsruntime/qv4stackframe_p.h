@@ -36,6 +36,8 @@ struct Q_QML_PRIVATE_EXPORT CppStackFrameBase
     int originalArgumentsCount;
     int instructionPointer;
 
+    QT_WARNING_PUSH
+    QT_WARNING_DISABLE_MSVC(4201) // nonstandard extension used: nameless struct/union
     union {
         struct {
             Value *savedStackTop;
@@ -58,6 +60,7 @@ struct Q_QML_PRIVATE_EXPORT CppStackFrameBase
             bool returnValueIsUndefined;
         };
     };
+    QT_WARNING_POP
 
     Kind kind;
 };
