@@ -88,3 +88,5 @@ void QWidgetPlatformMessageDialog::hide()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qwidgetplatformmessagedialog_p.cpp"

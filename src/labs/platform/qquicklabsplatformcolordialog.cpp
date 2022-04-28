@@ -207,3 +207,5 @@ void QQuickLabsPlatformColorDialog::accept()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicklabsplatformcolordialog_p.cpp"

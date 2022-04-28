@@ -285,3 +285,5 @@ void QQuickLabsPlatformFolderDialog::accept()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicklabsplatformfolderdialog_p.cpp"

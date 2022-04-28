@@ -82,3 +82,5 @@ bool QQuickLabsPlatformIcon::operator!=(const QQuickLabsPlatformIcon &other) con
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquicklabsplatformicon_p.cpp"
