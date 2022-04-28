@@ -408,4 +408,6 @@ GlobalInspector::~GlobalInspector()
 
 QT_END_NAMESPACE
 
+#include "moc_globalinspector.cpp"
+
 #include <globalinspector.moc>
