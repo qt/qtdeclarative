@@ -482,3 +482,5 @@ QQuickTouchEventSequence *QuickTestEvent::touchEvent(QObject *item)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_quicktestevent_p.cpp"
