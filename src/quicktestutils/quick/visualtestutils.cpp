@@ -223,3 +223,5 @@ void QQuickVisualTestUtils::MnemonicKeySimulator::click(Qt::Key key)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_visualtestutils_p.cpp"

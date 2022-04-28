@@ -125,3 +125,5 @@ QQmlTestMessageHandler::~QQmlTestMessageHandler()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qmlutils_p.cpp"
