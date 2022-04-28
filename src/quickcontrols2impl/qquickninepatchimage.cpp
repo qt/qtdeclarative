@@ -472,3 +472,5 @@ QSGNode *QQuickNinePatchImage::updatePaintNode(QSGNode *oldNode, UpdatePaintNode
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickninepatchimage_p.cpp"

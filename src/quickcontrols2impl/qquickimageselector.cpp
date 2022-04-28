@@ -339,3 +339,5 @@ QStringList QQuickAnimatedImageSelector::fileExtensions() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickimageselector_p.cpp"

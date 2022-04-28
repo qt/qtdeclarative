@@ -71,3 +71,5 @@ QVariant QQuickPlatformTheme::themeHint(QPlatformTheme::ThemeHint themeHint) con
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickplatformtheme_p.cpp"

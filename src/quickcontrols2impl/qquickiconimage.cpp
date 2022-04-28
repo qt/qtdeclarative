@@ -220,3 +220,5 @@ void QQuickIconImage::pixmapChange()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickiconimage_p.cpp"

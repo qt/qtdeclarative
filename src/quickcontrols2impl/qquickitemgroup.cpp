@@ -123,3 +123,5 @@ void QQuickItemGroup::itemImplicitHeightChanged(QQuickItem *)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickitemgroup_p.cpp"

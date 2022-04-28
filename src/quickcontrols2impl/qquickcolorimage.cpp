@@ -104,3 +104,5 @@ void QQuickColorImage::pixmapChange()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickcolorimage_p.cpp"
