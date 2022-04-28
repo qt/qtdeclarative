@@ -616,3 +616,5 @@ bool QQuickUniversalStyle::variantToRgba(const QVariant &var, const char *name, 
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickuniversalstyle_p.cpp"
