@@ -175,3 +175,5 @@ void QQuickProfilerAdapter::receiveData(const QVector<QQuickProfilerData> &new_d
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qquickprofileradapter.cpp"
