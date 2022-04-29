@@ -255,6 +255,8 @@ private slots:
     void implicitUngrab();
     void touchCancelWillCancelMousePress();
 
+    void oneTouchInsideAndOneOutside();
+
 protected:
     bool eventFilter(QObject *, QEvent *event) override
     {
@@ -1585,6 +1587,42 @@ void tst_TouchMouse::touchCancelWillCancelMousePress()
     QCOMPARE(eventItem->eventList.at(3).type, QEvent::MouseButtonPress);
 
     QTest::touchEvent(&window, device).release(0, p1);   // clean up potential state
+}
+
+void tst_TouchMouse::oneTouchInsideAndOneOutside() // QTBUG-102996
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("oneMouseArea.qml")));
+    QQuickItem *root = window.rootObject();
+    QVERIFY(root);
+    QQuickMouseArea *ma = root->findChild<QQuickMouseArea*>();
+    QVERIFY(ma);
+
+    // Press the MouseArea
+    QPoint p1 = ma->mapToScene(ma->boundingRect().center()).toPoint();
+    QTest::touchEvent(&window, device).press(1, p1);
+    QQuickTouchUtils::flush(&window);
+    QVERIFY(ma->pressed());
+
+    // Tap outside the MouseArea with a second finger
+    QPoint p2(100, 100);
+    QTest::touchEvent(&window, device).stationary(1).press(2, p2);
+    QQuickTouchUtils::flush(&window);
+    QTest::touchEvent(&window, device).stationary(1).release(2, p2);
+    QQuickTouchUtils::flush(&window);
+    QVERIFY(ma->pressed());
+
+    // Press again outside the MouseArea with a second finger
+    QTest::touchEvent(&window, device).stationary(1).press(2, p2);
+
+    // Release the first finger: MouseArea should be released
+    QTest::touchEvent(&window, device).release(1, p1).stationary(2);
+    QQuickTouchUtils::flush(&window);
+    QCOMPARE(ma->pressed(), false);
+
+    // Release the second finger
+    QTest::touchEvent(&window, device).release(2, p2);
+    QQuickTouchUtils::flush(&window);
 }
 
 QTEST_MAIN(tst_TouchMouse)
