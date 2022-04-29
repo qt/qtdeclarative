@@ -42,6 +42,7 @@
 
 #include <qtquickglobal_p.h>
 
+#include <QtGui/qstylehints.h>
 #if QT_CONFIG(im)
 #include <QtGui/qinputmethod.h>
 #endif
