@@ -1761,9 +1761,17 @@ void QQuickDeliveryAgentPrivate::deliverPointerEvent(QPointerEvent *event)
     if (event->isEndEvent())
         deliverPressOrReleaseEvent(event, true);
 
-    // failsafe: never allow touch->mouse synthesis to persist after release
-    if (event->isEndEvent() && isTouchEvent(event))
-        cancelTouchMouseSynthesis();
+    // failsafe: never allow touch->mouse synthesis to persist after all touchpoints are released,
+    // or after the touchmouse is released
+    if (isTouchEvent(event) && touchMouseId >= 0) {
+        if (static_cast<QTouchEvent *>(event)->touchPointStates() == QEventPoint::State::Released) {
+            cancelTouchMouseSynthesis();
+        } else {
+            auto touchMousePoint = event->pointById(touchMouseId);
+            if (touchMousePoint && touchMousePoint->state() == QEventPoint::State::Released)
+                cancelTouchMouseSynthesis();
+        }
+    }
 
     eventsInDelivery.pop();
     if (sceneTransform) {
