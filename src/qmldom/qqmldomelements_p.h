@@ -782,7 +782,7 @@ public:
 
     QString name() const { return m_name; }
     void setName(QString name) { m_name = name; }
-    QList<EnumItem> values() const { return m_values; }
+    const QList<EnumItem> &values() const & { return m_values; }
     bool isFlag() const { return m_isFlag; }
     void setIsFlag(bool flag) { m_isFlag = flag; }
     QString alias() const { return m_alias; }
@@ -795,7 +795,7 @@ public:
     }
     void updatePathFromOwner(Path newP) override;
 
-    QList<QmlObject> annotations() const;
+    const QList<QmlObject> &annotations() const & { return m_annotations; }
     void setAnnotations(QList<QmlObject> annotations);
     Path addAnnotation(const QmlObject &child, QmlObject **cPtr = nullptr);
     void writeOut(DomItem &self, OutWriter &lw) const override;
@@ -832,11 +832,11 @@ public:
 
     QString idStr() const { return m_idStr; }
     QString name() const { return m_name; }
-    QList<Path> prototypePaths() const { return m_prototypePaths; }
+    const QList<Path> &prototypePaths() const & { return m_prototypePaths; }
     Path nextScopePath() const { return m_nextScopePath; }
-    QMultiMap<QString, PropertyDefinition> propertyDefs() const { return m_propertyDefs; }
-    QMultiMap<QString, Binding> bindings() const { return m_bindings; }
-    QMultiMap<QString, MethodInfo> methods() const { return m_methods; }
+    const QMultiMap<QString, PropertyDefinition> &propertyDefs() const & { return m_propertyDefs; }
+    const QMultiMap<QString, Binding> &bindings() const & { return m_bindings; }
+    const QMultiMap<QString, MethodInfo> &methods() const & { return m_methods; }
     QList<QmlObject> children() const { return m_children; }
     QList<QmlObject> annotations() const { return m_annotations; }
 
@@ -977,8 +977,8 @@ public:
     DomItem field(DomItem &self, QStringView name);
 
     QString name() const { return m_name; }
-    QMultiMap<QString, EnumDecl> enumerations() const { return m_enumerations; }
-    QList<QmlObject> objects() const { return m_objects; }
+    const QMultiMap<QString, EnumDecl> &enumerations() const & { return m_enumerations; }
+    const QList<QmlObject> &objects() const & { return m_objects; }
     bool isSingleton() const { return m_isSingleton; }
     bool isCreatable() const { return m_isCreatable; }
     bool isComposite() const { return m_isComposite; }
@@ -1039,15 +1039,15 @@ public:
 
     QmltypesComponent(Path pathFromOwner = Path()) : Component(pathFromOwner) { }
     bool iterateDirectSubpaths(DomItem &, DirectVisitor) override;
-    QList<Export> exports() const { return m_exports; }
+    const QList<Export> &exports() const & { return m_exports; }
     QString fileName() const { return m_fileName; }
     void setExports(QList<Export> exports) { m_exports = exports; }
     void addExport(const Export &exportedEntry) { m_exports.append(exportedEntry); }
     void setFileName(QString fileName) { m_fileName = fileName; }
-    QList<int> metaRevisions() const { return m_metaRevisions; }
+    const QList<int> &metaRevisions() const & { return m_metaRevisions; }
     void setMetaRevisions(QList<int> metaRevisions) { m_metaRevisions = metaRevisions; }
     void setInterfaceNames(const QStringList& interfaces) { m_interfaceNames = interfaces; }
-    QStringList interfaceNames() const { return m_interfaceNames; }
+    const QStringList &interfaceNames() const & { return m_interfaceNames; }
     QString extensionTypeName() const { return m_extensionTypeName; }
     void setExtensionTypeName(const QString &name) { m_extensionTypeName =  name; }
     QString valueTypeName() const { return m_valueTypeName; }
@@ -1090,7 +1090,7 @@ public:
 
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor) override;
 
-    QMultiMap<QString, Id> ids() const { return m_ids; }
+    const QMultiMap<QString, Id> &ids() const & { return m_ids; }
     Path nextComponentPath() const { return m_nextComponentPath; }
     void setIds(QMultiMap<QString, Id> ids) { m_ids = ids; }
     void setNextComponentPath(Path p) { m_nextComponentPath = p; }
@@ -1131,9 +1131,9 @@ public:
     ImportScope() = default;
     ~ImportScope() = default;
 
-    QList<Path> importSourcePaths() const { return m_importSourcePaths; }
+    const QList<Path> &importSourcePaths() const & { return m_importSourcePaths; }
 
-    QMap<QString, ImportScope> subImports() const { return m_subImports; }
+    const QMap<QString, ImportScope> &subImports() const & { return m_subImports; }
 
     QList<Path> allSources(DomItem &self) const;
 

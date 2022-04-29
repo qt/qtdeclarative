@@ -1307,11 +1307,6 @@ void EnumDecl::updatePathFromOwner(Path newPath)
     updatePathFromOwnerQList(m_annotations, newPath.field(Fields::annotations));
 }
 
-QList<QmlObject> EnumDecl::annotations() const
-{
-    return m_annotations;
-}
-
 void EnumDecl::setAnnotations(QList<QmlObject> annotations)
 {
     m_annotations = annotations;

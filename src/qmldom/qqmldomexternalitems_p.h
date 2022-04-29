@@ -82,7 +82,7 @@ class QMLDOM_EXPORT ExternalOwningItem: public OwningItem {
 public:
     ExternalOwningItem(QString filePath, QDateTime lastDataUpdateAt, Path pathFromTop,
                        int derivedFrom = 0, QString code = QString());
-    ExternalOwningItem(const ExternalOwningItem &o);
+    ExternalOwningItem(const ExternalOwningItem &o) = default;
     QString canonicalFilePath(DomItem &) const override;
     QString canonicalFilePath() const;
     Path canonicalPath(DomItem &) const override;
@@ -149,10 +149,7 @@ public:
     QmlDirectory(QString filePath = QString(), QStringList dirList = QStringList(),
                  QDateTime lastDataUpdateAt = QDateTime::fromMSecsSinceEpoch(0),
                  int derivedFrom = 0);
-    QmlDirectory(const QmlDirectory &o)
-        : ExternalOwningItem(o), m_exports(o.m_exports), m_qmlFiles(o.m_qmlFiles)
-    {
-    }
+    QmlDirectory(const QmlDirectory &o) = default;
 
     std::shared_ptr<QmlDirectory> makeCopy(DomItem &self) const
     {
@@ -161,9 +158,9 @@ public:
 
     bool iterateDirectSubpaths(DomItem &self, DirectVisitor visitor) override;
 
-    QMultiMap<QString, Export> exports() const { return m_exports; }
+    const QMultiMap<QString, Export> &exports() const & { return m_exports; }
 
-    QMultiMap<QString, QString> qmlFiles() const { return m_qmlFiles; }
+    const QMultiMap<QString, QString> &qmlFiles() const & { return m_qmlFiles; }
 
     bool addQmlFilePath(QString relativePath);
 
@@ -194,7 +191,7 @@ public:
                              derivedFrom, code)
     {
     }
-    QmldirFile(const QmldirFile &o);
+    QmldirFile(const QmldirFile &o) = default;
 
     static std::shared_ptr<QmldirFile> fromPathAndCode(QString path, QString code);
 
@@ -207,11 +204,11 @@ public:
 
     QmlUri uri() const { return m_uri; }
 
-    QMultiMap<QString, Export> exports() const { return m_exports; }
+    const QMultiMap<QString, Export> &exports() const & { return m_exports; }
 
-    QList<Import> imports() const { return m_imports; }
+    const QList<Import> &imports() const & { return m_imports; }
 
-    QList<Path> qmltypesFilePaths() const { return m_qmltypesFilePaths; }
+    const QList<Path> &qmltypesFilePaths() const & { return m_qmltypesFilePaths; }
 
     bool designerSupported() const { return m_qmldir.designerSupported(); }
 
@@ -251,7 +248,7 @@ public:
         : ExternalOwningItem(filePath, lastDataUpdateAt, pathFromTop, derivedFrom)
     {
     }
-    JsFile(const JsFile &o) : ExternalOwningItem(o), m_rootComponent(o.m_rootComponent) { }
+    JsFile(const JsFile &o) = default;
 
     std::shared_ptr<JsFile> makeCopy(DomItem &self) const
     {
@@ -292,7 +289,7 @@ public:
     }
     void addError(DomItem &self, ErrorMessage msg) override;
 
-    QMultiMap<QString, QmlComponent> components() const { return m_components; }
+    const QMultiMap<QString, QmlComponent> &components() const & { return m_components; }
     void setComponents(const QMultiMap<QString, QmlComponent> &components)
     {
         m_components = components;
@@ -312,7 +309,7 @@ public:
     {
         return m_ast; // avoid making it public? would make moving away from it easier
     }
-    QList<Import> imports() const { return m_imports; }
+    const QList<Import> &imports() const & { return m_imports; }
     void setImports(const QList<Import> &imports) { m_imports = imports; }
     Path addImport(const Import &i)
     {
@@ -339,7 +336,7 @@ public:
     void setAstComments(std::shared_ptr<AstComments> comm) { m_astComments = comm; }
     FileLocations::Tree fileLocationsTree() const { return m_fileLocationsTree; }
     void setFileLocationsTree(FileLocations::Tree v) { m_fileLocationsTree = v; }
-    QList<Pragma> pragmas() const { return m_pragmas; }
+    const QList<Pragma> &pragmas() const & { return m_pragmas; }
     void setPragmas(QList<Pragma> pragmas) { m_pragmas = pragmas; }
     Path addPragma(const Pragma &pragma)
     {
@@ -381,7 +378,8 @@ public:
                              derivedFrom, code)
     {
     }
-    QmltypesFile(const QmltypesFile &o);
+
+    QmltypesFile(const QmltypesFile &o) = default;
 
     void ensureInModuleIndex(DomItem &self);
 
@@ -395,8 +393,8 @@ public:
     { // builder only: not threadsafe...
         m_imports.append(i);
     }
-    QList<Import> imports() const { return m_imports; }
-    QMultiMap<QString, QmltypesComponent> components() const { return m_components; }
+    const QList<Import> &imports() const & { return m_imports; }
+    const QMultiMap<QString, QmltypesComponent> &components() const & { return m_components; }
     void setComponents(QMultiMap<QString, QmltypesComponent> c) { m_components = std::move(c); }
     Path addComponent(const QmltypesComponent &comp, AddOption option = AddOption::Overwrite,
                       QmltypesComponent **cPtr = nullptr)
@@ -406,7 +404,7 @@ public:
         return insertUpdatableElementInMultiMap(Path::Field(u"components"), m_components,
                                                 comp.name(), comp, option, cPtr);
     }
-    QMultiMap<QString, Export> exports() const { return m_exports; }
+    const QMultiMap<QString, Export> &exports() const & { return m_exports; }
     void setExports(QMultiMap<QString, Export> e) { m_exports = e; }
     Path addExport(const Export &e)
     {
@@ -416,7 +414,7 @@ public:
         return canonicalPath().field(Fields::exports).index(i);
     }
 
-    QMap<QString, QSet<int>> uris() const { return m_uris; }
+    const QMap<QString, QSet<int>> &uris() const & { return m_uris; }
     void addUri(QString uri, int majorVersion)
     {
         QSet<int> &v = m_uris[uri];

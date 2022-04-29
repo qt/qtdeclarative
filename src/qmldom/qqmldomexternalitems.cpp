@@ -71,14 +71,6 @@ ExternalOwningItem::ExternalOwningItem(QString filePath, QDateTime lastDataUpdat
       m_path(path)
 {}
 
-ExternalOwningItem::ExternalOwningItem(const ExternalOwningItem &o)
-    : OwningItem(o),
-      m_canonicalFilePath(o.m_canonicalFilePath),
-      m_code(o.m_code),
-      m_path(o.m_path),
-      m_isValid(o.m_isValid)
-{}
-
 QString ExternalOwningItem::canonicalFilePath(DomItem &) const
 {
     return m_canonicalFilePath;
@@ -104,17 +96,6 @@ ErrorGroups QmldirFile::myParsingErrors()
     static ErrorGroups res = { { DomItem::domErrorGroup, NewErrorGroup("Qmldir"),
                                  NewErrorGroup("Parsing") } };
     return res;
-}
-
-QmldirFile::QmldirFile(const QmldirFile &o)
-    : ExternalOwningItem(o),
-      m_uri(o.m_uri),
-      m_qmldir(o.m_qmldir),
-      m_plugins(o.m_plugins),
-      m_qmltypesFilePaths(o.m_qmltypesFilePaths)
-{
-    m_imports += o.m_imports;
-    m_exports += o.m_exports;
 }
 
 std::shared_ptr<QmldirFile> QmldirFile::fromPathAndCode(QString path, QString code)
@@ -303,12 +284,11 @@ QmlFile::QmlFile(const QmlFile &o)
       m_astComments(o.m_astComments),
       m_comments(o.m_comments),
       m_fileLocationsTree(o.m_fileLocationsTree),
+      m_components(o.m_components),
+      m_pragmas(o.m_pragmas),
+      m_imports(o.m_imports),
       m_importScope(o.m_importScope)
 {
-    m_pragmas += o.m_pragmas;
-    m_components += o.m_components;
-    m_imports += o.m_imports;
-    Q_ASSERT(m_astComments);
     if (m_astComments)
         m_astComments = std::shared_ptr<AstComments>(new AstComments(*m_astComments));
 }
@@ -385,13 +365,6 @@ bool GlobalScope::iterateDirectSubpaths(DomItem &self, DirectVisitor visitor)
 {
     bool cont = ExternalOwningItem::iterateDirectSubpaths(self, visitor);
     return cont;
-}
-
-QmltypesFile::QmltypesFile(const QmltypesFile &o) : ExternalOwningItem(o), m_uris(o.m_uris)
-{
-    m_imports += o.m_imports;
-    m_components += o.m_components;
-    m_exports += o.m_exports;
 }
 
 void QmltypesFile::ensureInModuleIndex(DomItem &self)
