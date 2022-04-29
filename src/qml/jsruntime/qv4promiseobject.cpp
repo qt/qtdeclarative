@@ -42,6 +42,8 @@
 #include <private/qv4symbol_p.h>
 #include "qv4jscall_p.h"
 
+QT_BEGIN_NAMESPACE
+
 using namespace QV4;
 using namespace QV4::Promise;
 
@@ -81,7 +83,6 @@ void dropException(QV4::ExecutionEngine* e)
 }
 }
 
-QT_BEGIN_NAMESPACE
 namespace QV4 {
 namespace Promise {
 
@@ -114,7 +115,6 @@ struct ResolveThenableEvent : public QEvent
 
 } // namespace Promise
 } // namespace QV4
-QT_END_NAMESPACE
 
 ReactionHandler::ReactionHandler(QObject *parent)
     : QObject(parent)
@@ -1094,3 +1094,5 @@ ReturnedValue RejectWrapper::virtualCall(const FunctionObject *f, const Value *t
 
     return Encode::undefined();
 }
+
+QT_END_NAMESPACE
