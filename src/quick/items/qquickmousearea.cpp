@@ -825,7 +825,8 @@ void QQuickMouseArea::mouseDoubleClickEvent(QMouseEvent *event)
         emit this->doubleClicked(&me);
         if (!me.isAccepted())
             d->propagate(&me, QQuickMouseAreaPrivate::DoubleClick);
-        d->doubleClick = d->isDoubleClickConnected() || me.isAccepted();
+        if (d->pressed)
+            d->doubleClick = d->isDoubleClickConnected() || me.isAccepted();
     }
     QQuickItem::mouseDoubleClickEvent(event);
 }
