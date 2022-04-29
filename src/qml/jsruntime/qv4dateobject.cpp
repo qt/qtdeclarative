@@ -671,14 +671,14 @@ static inline double ParseString(const QString &s, double localTZA)
 /*!
   \internal
 
-  Converts the ECMA Date value \tt (in UTC form) to QDateTime
+  Converts the ECMA Date value \a t (in UTC form) to QDateTime
   according to \a spec.
 */
 static inline QDateTime ToDateTime(double t, Qt::TimeSpec spec)
 {
     if (std::isnan(t))
         return QDateTime();
-    return QDateTime::fromMSecsSinceEpoch(t, Qt::UTC).toTimeSpec(spec);
+    return QDateTime::fromMSecsSinceEpoch(t, spec);
 }
 
 static inline QString ToString(double t, double localTZA)
