@@ -56,6 +56,8 @@ T.TreeViewDelegate {
     topPadding: contentItem ? (height - contentItem.implicitHeight) / 2 : 0
     leftPadding: !mirrored ? leftMargin + __contentIndent : width - leftMargin - __contentIndent - implicitContentWidth
 
+    required property int row
+    required property var model
     readonly property real __contentIndent: !isTreeNode ? 0 : (depth * indentation) + (indicator ? indicator.width + spacing : 0)
 
     indicator: Item {
@@ -74,9 +76,16 @@ T.TreeViewDelegate {
         }
     }
 
+    background: Rectangle {
+        color: control.row === control.treeView.currentRow
+               ? control.palette.highlight
+               : (control.row % 2 === 0 ? control.palette.base : control.palette.alternateBase)
+    }
+
     contentItem: Label {
         clip: false
-        text: model.display
+        text: control.model.display
         elide: Text.ElideRight
+        color: control.row === control.treeView.currentRow ? control.palette.highlightedText : control.palette.buttonText
     }
 }

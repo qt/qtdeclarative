@@ -41,4 +41,19 @@ import QtQuick
 import QtQuick.NativeStyle as NativeStyle
 
 NativeStyle.DefaultTreeViewDelegate {
+    id: control
+
+    palette.highlight: "#2f64e1"
+    palette.highlightedText: "white"
+
+    background: Rectangle {
+        color: control.row === control.treeView.currentRow
+               ? control.palette.highlight
+               : (control.row % 2 === 0 ? control.palette.base : control.palette.alternateBase)
+        // Ideally we want a rounded background for the whole row, also when
+        // there are more than one column. But until Rectangle gains support
+        // for corners with individual radii, we simplify it (QTBUG-48774)
+        radius: control.row === control.treeView.currentRow && control.treeView.columns === 1 ? 5 : 0
+    }
 }
+
