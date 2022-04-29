@@ -1701,6 +1701,8 @@ QQmlJSImportVisitor::parseLiteralOrScriptBinding(const QString name,
     auto expr = exprStatement->expression;
     QQmlJSMetaPropertyBinding binding(expr->firstSourceLocation(), name);
 
+    bool isUndefinedBinding = false;
+
     switch (expr->kind) {
     case Node::Kind_TrueLiteral:
         binding.setBoolLiteral(true);
@@ -1711,6 +1713,12 @@ QQmlJSImportVisitor::parseLiteralOrScriptBinding(const QString name,
     case Node::Kind_NullExpression:
         binding.setNullLiteral();
         break;
+    case Node::Kind_IdentifierExpression: {
+        auto idExpr = QQmlJS::AST::cast<QQmlJS::AST::IdentifierExpression *>(expr);
+        Q_ASSERT(idExpr);
+        isUndefinedBinding = (idExpr->name == u"undefined");
+        break;
+    }
     case Node::Kind_NumericLiteral:
         binding.setNumberLiteral(cast<NumericLiteral *>(expr)->value);
         break;
@@ -1745,7 +1753,10 @@ QQmlJSImportVisitor::parseLiteralOrScriptBinding(const QString name,
     if (!binding.isValid()) {
         // consider this to be a script binding (see IRBuilder::setBindingValue)
         binding.setScriptBinding(addFunctionOrExpression(m_currentScope, name),
-                                 QQmlJSMetaPropertyBinding::Script_PropertyBinding);
+                                 QQmlJSMetaPropertyBinding::Script_PropertyBinding,
+                                 isUndefinedBinding
+                                         ? QQmlJSMetaPropertyBinding::ScriptValue_Undefined
+                                         : QQmlJSMetaPropertyBinding::ScriptValue_Unknown);
     }
     m_currentScope->addOwnPropertyBinding(binding); // always add the binding to the scope
 

@@ -1672,9 +1672,11 @@ void TestQmllint::quickPlugin()
                               u"Cannot specify top, bottom, and verticalCenter anchors at the same time."_s },
                       Message{
                               u"Baseline anchor cannot be used in conjunction with top, bottom, or verticalCenter anchors."_s },
-                      Message{ u"Cannot assign binding of type null to QQuickAnchorLine"_s, 5, 35 },
-                      Message{ u"Cannot assign binding of type null to QQuickAnchorLine"_s, 8,
-                               33 } } });
+                      Message { u"Cannot assign binding of type null to QQuickAnchorLine"_s, 5,
+                                35 },
+                      Message { u"Cannot assign binding of type null to QQuickAnchorLine"_s, 6,
+                                33 } } });
+    runTest("pluginQuick_anchorsUndefined.qml", Result::clean());
     runTest("pluginQuick_layoutChildren.qml",
             Result {
                     { Message {

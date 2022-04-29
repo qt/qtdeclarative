@@ -235,45 +235,83 @@ bool AnchorsValidatorPass::shouldRun(const QQmlSA::Element &element)
 
 void AnchorsValidatorPass::run(const QQmlSA::Element &element)
 {
-    QQmlJS::SourceLocation left, right, hCenter;
-    QQmlJS::SourceLocation top, bottom, vCenter;
-    QQmlJS::SourceLocation baseline;
-    auto bindings = element->ownPropertyBindings(u"anchors"_s);
-    for (auto it = bindings.first; it != bindings.second; it++) {
-        for (const auto &groupBinding : it->groupType()->ownPropertyBindings()) {
-            const QString propertyName = groupBinding.propertyName();
-            const QQmlJS::SourceLocation srcLoc = groupBinding.sourceLocation();
-            if (propertyName == u"horizontalCenter")
-                hCenter = srcLoc;
-            if (propertyName == u"verticalCenter")
-                vCenter = srcLoc;
-            if (propertyName == u"left")
-                left = srcLoc;
-            else if (propertyName == u"right")
-                right = srcLoc;
-            else if (propertyName == u"top")
-                top = srcLoc;
-            else if (propertyName == u"bottom")
-                bottom = srcLoc;
-            else if (propertyName == u"baseline")
-                baseline = srcLoc;
+    enum BindingLocation { Exists = 1, Own = (1 << 1) };
+    QHash<QString, qint8> bindings;
+
+    const QStringList properties = { u"left"_s,    u"right"_s,  u"horizontalCenter"_s,
+                                     u"top"_s,     u"bottom"_s, u"verticalCenter"_s,
+                                     u"baseline"_s };
+
+    QList<QQmlJSMetaPropertyBinding> anchorBindings = element->propertyBindings(u"anchors"_s);
+
+    for (qsizetype i = anchorBindings.size() - 1; i >= 0; i--) {
+        auto groupType = anchorBindings[i].groupType();
+        if (groupType == nullptr)
+            continue;
+
+        for (const QString &name : properties) {
+            auto pair = groupType->ownPropertyBindings(name);
+            if (pair.first == pair.second)
+                continue;
+            bool isUndefined = false;
+            for (auto it = pair.first; it != pair.second; it++) {
+                if (it->bindingType() == QQmlJSMetaPropertyBinding::Script
+                    && it->scriptValueType() == QQmlJSMetaPropertyBinding::ScriptValue_Undefined) {
+                    isUndefined = true;
+                    break;
+                }
+            }
+
+            if (isUndefined)
+                bindings[name] = 0;
+            else
+                bindings[name] |= Exists | ((i == 0) ? Own : 0);
         }
     }
 
-    if (left.isValid() && right.isValid() && hCenter.isValid()) {
-        emitWarning("Cannot specify left, right, and horizontalCenter anchors at the same time.",
-                    hCenter);
+    auto ownSourceLocation = [&](QStringList properties) {
+        QQmlJS::SourceLocation warnLoc;
+        for (const QString &name : properties) {
+            if (bindings[name] & Own) {
+                QQmlSA::Element groupType = anchorBindings[0].groupType();
+                auto bindingRange = groupType->ownPropertyBindings(name);
+                Q_ASSERT(bindingRange.first != bindingRange.second);
+                warnLoc = bindingRange.first->sourceLocation();
+                break;
+            }
+        }
+        return warnLoc;
+    };
+
+    if ((bindings[u"left"_s] & bindings[u"right"_s] & bindings[u"horizontalCenter"_s]) & Exists) {
+        QQmlJS::SourceLocation warnLoc =
+                ownSourceLocation({ u"left"_s, u"right"_s, u"horizontalCenter"_s });
+
+        if (warnLoc.isValid()) {
+            emitWarning(
+                    "Cannot specify left, right, and horizontalCenter anchors at the same time.",
+                    warnLoc);
+        }
     }
 
-    if (top.isValid() && bottom.isValid() && vCenter.isValid()) {
-        emitWarning("Cannot specify top, bottom, and verticalCenter anchors at the same time.",
-                    vCenter);
+    if ((bindings[u"top"_s] & bindings[u"bottom"_s] & bindings[u"verticalCenter"_s]) & Exists) {
+        QQmlJS::SourceLocation warnLoc =
+                ownSourceLocation({ u"top"_s, u"bottom"_s, u"verticalCenter"_s });
+        if (warnLoc.isValid()) {
+            emitWarning("Cannot specify top, bottom, and verticalCenter anchors at the same time.",
+                        warnLoc);
+        }
     }
 
-    if (baseline.isValid() && (top.isValid() || bottom.isValid() || vCenter.isValid())) {
-        emitWarning("Baseline anchor cannot be used in conjunction with top, bottom, or "
-                    "verticalCenter anchors.",
-                    baseline);
+    if ((bindings[u"baseline"_s] & (bindings[u"bottom"_s] | bindings[u"verticalCenter"_s]))
+        & Exists) {
+        QQmlJS::SourceLocation warnLoc =
+                ownSourceLocation({ u"baseline"_s, u"bottom"_s, u"verticalCenter"_s });
+        if (warnLoc.isValid()) {
+            emitWarning("Baseline anchor cannot be used in conjunction with top, bottom, or "
+                        "verticalCenter anchors.",
+                        warnLoc);
+        }
     }
 }
 

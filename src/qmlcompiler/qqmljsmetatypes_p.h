@@ -421,6 +421,11 @@ public:
         Script_ChangeHandler, // onXChanged: { ... }
     };
 
+    enum ScriptBindingValueType : unsigned int {
+        ScriptValue_Unknown,
+        ScriptValue_Undefined // property int p: undefined
+    };
+
 private:
 
     // needs to be kept in sync with the BindingType enum
@@ -474,6 +479,7 @@ private:
             QQmlJSMetaMethod::RelativeFunctionIndex index =
                     QQmlJSMetaMethod::RelativeFunctionIndex::Invalid;
             ScriptBindingKind kind = Script_Invalid;
+            ScriptBindingValueType valueType = ScriptValue_Unknown;
         };
         struct Object {
             friend bool operator==(Object a, Object b) { return a.value == b.value && a.typeName == b.typeName; }
@@ -601,10 +607,11 @@ public:
         m_bindingContent = Content::StringLiteral { value.toString() };
     }
 
-    void setScriptBinding(QQmlJSMetaMethod::RelativeFunctionIndex value, ScriptBindingKind kind)
+    void setScriptBinding(QQmlJSMetaMethod::RelativeFunctionIndex value, ScriptBindingKind kind,
+                          ScriptBindingValueType valueType = ScriptValue_Unknown)
     {
         ensureSetBindingTypeOnce();
-        m_bindingContent = Content::Script { value, kind };
+        m_bindingContent = Content::Script { value, kind, valueType };
     }
 
     void setGroupBinding(const QSharedPointer<const QQmlJSScope> &groupScope)
@@ -699,6 +706,14 @@ public:
             return script->kind;
         // warn
         return ScriptBindingKind::Script_Invalid;
+    }
+
+    ScriptBindingValueType scriptValueType() const
+    {
+        if (auto *script = std::get_if<Content::Script>(&m_bindingContent))
+            return script->valueType;
+        // warn
+        return ScriptBindingValueType::ScriptValue_Unknown;
     }
 
     QString objectTypeName() const
