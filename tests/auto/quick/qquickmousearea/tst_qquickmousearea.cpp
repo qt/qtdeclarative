@@ -156,6 +156,7 @@ private slots:
     void settingHiddenInPressUngrabs();
     void negativeZStackingOrder();
     void containsMouseAndVisibility();
+    void doubleClickToHide();
 
 private:
     int startDragDistance() const {
@@ -2343,6 +2344,29 @@ void tst_QQuickMouseArea::containsMouseAndVisibility()
     mouseArea->setVisible(true);
     QVERIFY(mouseArea->isVisible());
     QVERIFY(!mouseArea->hovered());
+}
+
+// QTBUG-35995 and QTBUG-102158
+void tst_QQuickMouseArea::doubleClickToHide()
+{
+    QQuickView window;
+    QVERIFY(QQuickTest::showView(window, testFileUrl("doubleClickToHide.qml")));
+
+    QQuickMouseArea *mouseArea = window.rootObject()->findChild<QQuickMouseArea *>();
+    QVERIFY(mouseArea);
+
+    QTest::mouseDClick(&window, Qt::LeftButton, Qt::NoModifier, {10, 10});
+
+    QCOMPARE(window.rootObject()->property("clicked").toInt(), 1);
+    QCOMPARE(window.rootObject()->property("doubleClicked").toInt(), 1);
+    QCOMPARE(mouseArea->isVisible(), false);
+    QCOMPARE(mouseArea->pressed(), false);
+    QCOMPARE(mouseArea->pressedButtons(), Qt::NoButton);
+
+    mouseArea->setVisible(true);
+
+    QTest::mouseClick(&window, Qt::LeftButton, Qt::NoModifier, {10, 10});
+    QCOMPARE(window.rootObject()->property("clicked").toInt(), 2);
 }
 
 QTEST_MAIN(tst_QQuickMouseArea)
