@@ -178,6 +178,10 @@ void QQuickLabsPlatformMenuItem::sync()
     m_handle->setText(m_text);
     m_handle->setFont(m_font);
     m_handle->setHasExclusiveGroup(m_group && m_group->isExclusive());
+
+    if (m_iconLoader)
+        m_handle->setIcon(m_iconLoader->toQIcon());
+
     if (m_subMenu) {
         // Sync first as dynamically created menus may need to get the
         // handle recreated
@@ -604,7 +608,7 @@ void QQuickLabsPlatformMenuItem::classBegin()
 
 void QQuickLabsPlatformMenuItem::componentComplete()
 {
-    if (m_handle && m_iconLoader)
+    if (m_iconLoader)
         m_iconLoader->setEnabled(true);
     m_complete = true;
     sync();
@@ -629,10 +633,6 @@ void QQuickLabsPlatformMenuItem::activate()
 
 void QQuickLabsPlatformMenuItem::updateIcon()
 {
-    if (!m_handle || !m_iconLoader)
-        return;
-
-    m_handle->setIcon(m_iconLoader->toQIcon());
     sync();
 }
 
