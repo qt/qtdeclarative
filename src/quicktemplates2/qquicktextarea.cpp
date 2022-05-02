@@ -1016,7 +1016,11 @@ QSGNode *QQuickTextArea::updatePaintNode(QSGNode *oldNode, UpdatePaintNodeData *
     if (d->flickable)
         clipper = d->flickable;
 
-    const QRectF cr = clipper->clipRect().adjusted(leftPadding(), topPadding(), -rightPadding(), -bottomPadding());
+    const QRectF cr = clipper->clipRect().adjusted(
+            leftPadding(), topPadding(),
+            (!d->cursorItem && effectiveHAlign() == HAlignment::AlignRight ? 1 : 0) - rightPadding(),
+            -bottomPadding());
+
     clipNode->setRect(!d->flickable ? cr : cr.translated(d->flickable->contentX(), d->flickable->contentY()));
     clipNode->update();
 
