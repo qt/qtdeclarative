@@ -5,3 +5,7 @@ opensuse-leap
 # QTBUG-95939
 [mouseGesturePolicyDragThreshold]
 opensuse-leap
+
+# QTBUG-103072
+[gesturePolicyDragWithinBounds]
+android
