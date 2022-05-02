@@ -1514,23 +1514,28 @@ void TestQmllint::searchWarnings(const QJsonArray &warnings, const QString &subs
     }
 
     const auto toDescription = [](const QJsonArray &warnings, const QString &substring,
-                                  bool must = true) {
+                                  quint32 line, quint32 column, bool must = true) {
         // Note: this actually produces a very poorly formatted multi-line
         // description, but this is how we also do it in cleanQmlCode test case,
         // so this should suffice. in any case this mainly aids the debugging
         // and CI stays (or should stay) clean.
-        return QStringLiteral("qmllint output '%1' %2 contain '%3'")
-                .arg(QString::fromUtf8(QJsonDocument(warnings).toJson(QJsonDocument::Compact)),
-                     must ? u"must" : u"must NOT", substring);
+        QString msg = QStringLiteral("qmllint output '%1' %2 contain '%3'")
+                              .arg(QString::fromUtf8(
+                                           QJsonDocument(warnings).toJson(QJsonDocument::Compact)),
+                                   must ? u"must" : u"must NOT", substring);
+        if (line != 0 || column != 0)
+            msg += u" (%1:%2)"_s.arg(line).arg(column);
+
+        return msg;
     };
 
     if (shouldContain == StringContained) {
         if (!contains)
-            qWarning() << toDescription(warnings, substring);
+            qWarning() << toDescription(warnings, substring, line, column);
         QVERIFY(contains);
     } else {
         if (contains)
-            qWarning() << toDescription(warnings, substring, false);
+            qWarning() << toDescription(warnings, substring, line, column, false);
         QVERIFY(!contains);
     }
 }
@@ -1715,6 +1720,25 @@ void TestQmllint::quickPlugin()
                               u"LayoutDirection attached property only works with Items and Windows"_s },
                       Message { u"Layout must be attached to Item elements"_s },
                       Message { u"StackView attached property only works with Items"_s } } });
+    runTest("pluginQuick_swipeDelegate.qml",
+            Result { {
+                    Message {
+                            u"SwipeDelegate: Cannot use horizontal anchors with contentItem; unable to layout the item."_s,
+                            6, 43 },
+                    Message {
+                            u"SwipeDelegate: Cannot use horizontal anchors with background; unable to layout the item."_s,
+                            7, 43 },
+                    Message { u"SwipeDelegate: Cannot set both behind and left/right properties"_s,
+                              9, 9 },
+                    Message {
+                            u"SwipeDelegate: Cannot use horizontal anchors with contentItem; unable to layout the item."_s,
+                            13, 47 },
+                    Message {
+                            u"SwipeDelegate: Cannot use horizontal anchors with background; unable to layout the item."_s,
+                            14, 42 },
+                    Message { u"SwipeDelegate: Cannot set both behind and left/right properties"_s,
+                              16, 9 },
+            } });
 }
 #endif
 

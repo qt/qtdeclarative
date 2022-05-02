@@ -317,6 +317,79 @@ void AnchorsValidatorPass::run(const QQmlSA::Element &element)
     }
 }
 
+ControlsSwipeDelegateValidatorPass::ControlsSwipeDelegateValidatorPass(QQmlSA::PassManager *manager)
+    : QQmlSA::ElementPass(manager)
+{
+    m_swipeDelegate = resolveType("QtQuick.Controls", "SwipeDelegate");
+}
+
+bool ControlsSwipeDelegateValidatorPass::shouldRun(const QQmlSA::Element &element)
+{
+    return !m_swipeDelegate.isNull() && element->inherits(m_swipeDelegate);
+}
+
+void ControlsSwipeDelegateValidatorPass::run(const QQmlSA::Element &element)
+{
+    for (const auto &property : { u"background"_s, u"contentItem"_s }) {
+        auto bindings = element->ownPropertyBindings(property);
+        for (auto it = bindings.first; it != bindings.second; it++) {
+            if (!it->hasObject())
+                continue;
+            const QQmlSA::Element element = it->objectType();
+            const auto bindings = element->propertyBindings(u"anchors"_s);
+            if (bindings.isEmpty())
+                continue;
+
+            if (bindings.first().bindingType() != QQmlJSMetaPropertyBinding::GroupProperty)
+                continue;
+
+            auto anchors = bindings.first().groupType();
+            for (const auto &disallowed : { u"fill"_s, u"centerIn"_s, u"left"_s, u"right"_s }) {
+                if (anchors->hasPropertyBindings(disallowed)) {
+                    QQmlJS::SourceLocation location;
+                    auto ownBindings = anchors->ownPropertyBindings(disallowed);
+                    if (ownBindings.first != ownBindings.second) {
+                        location = ownBindings.first->sourceLocation();
+                    }
+
+                    emitWarning(
+                            u"SwipeDelegate: Cannot use horizontal anchors with %1; unable to layout the item."_s
+                                    .arg(property),
+                            location);
+                    break;
+                }
+            }
+            break;
+        }
+    }
+
+    auto swipe = element->ownPropertyBindings(u"swipe"_s);
+    if (swipe.first == swipe.second)
+        return;
+
+    if (swipe.first->bindingType() != QQmlJSMetaPropertyBinding::GroupProperty)
+        return;
+
+    auto group = swipe.first->groupType();
+
+    const auto ownDirBindings = { group->ownPropertyBindings(u"right"_s),
+                                  group->ownPropertyBindings(u"left"_s),
+                                  group->ownPropertyBindings(u"behind"_s) };
+
+    auto ownBindingIterator =
+            std::find_if(ownDirBindings.begin(), ownDirBindings.end(),
+                         [](const auto &pair) { return pair.first != pair.second; });
+
+    if (ownBindingIterator == ownDirBindings.end())
+        return;
+
+    if (group->hasPropertyBindings(u"behind"_s)
+        && (group->hasPropertyBindings(u"right"_s) || group->hasPropertyBindings(u"left"_s))) {
+        emitWarning("SwipeDelegate: Cannot set both behind and left/right properties",
+                    ownBindingIterator->first->sourceLocation());
+    }
+}
+
 void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
                                         const QQmlSA::Element &rootElement)
 {
@@ -397,6 +470,8 @@ void QmlLintQuickPlugin::registerPasses(QQmlSA::PassManager *manager,
                                          "StackView attached property only works with Items");
         attachedPropertyType->addWarning("ToolTip", { { "QtQuick", "Item" } },
                                          "ToolTip must be attached to an Item");
+
+        manager->registerElementPass(std::make_unique<ControlsSwipeDelegateValidatorPass>(manager));
     }
 
     manager->registerElementPass(std::move(attachedPropertyType));
