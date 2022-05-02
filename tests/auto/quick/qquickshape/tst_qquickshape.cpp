@@ -289,7 +289,7 @@ void tst_QQuickShape::render()
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
 
-    QImage refImg(testFileUrl("pathitem3.png").toLocalFile());
+    QImage refImg(testFile("pathitem3.png"));
     QVERIFY(!refImg.isNull());
 
     QString errorMessage;
@@ -313,7 +313,7 @@ void tst_QQuickShape::renderWithMultipleSp()
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
 
-    QImage refImg(testFileUrl("pathitem4.png").toLocalFile());
+    QImage refImg(testFile("pathitem4.png"));
     QVERIFY(!refImg.isNull());
 
     QString errorMessage;
@@ -337,7 +337,7 @@ void tst_QQuickShape::radialGrad()
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
 
-    QImage refImg(testFileUrl("pathitem5.png").toLocalFile());
+    QImage refImg(testFile("pathitem5.png"));
     QVERIFY(!refImg.isNull());
 
     QString errorMessage;
@@ -361,7 +361,7 @@ void tst_QQuickShape::conicalGrad()
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
 
-    QImage refImg(testFileUrl("pathitem6.png").toLocalFile());
+    QImage refImg(testFile("pathitem6.png"));
     QVERIFY(!refImg.isNull());
 
     QString errorMessage;
@@ -385,7 +385,7 @@ void tst_QQuickShape::renderPolyline()
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
 
-    QImage refImg(testFileUrl("pathitem3.png").toLocalFile()); // It's a recreation of pathitem3 using PathPolyline
+    QImage refImg(testFile("pathitem3.png")); // It's a recreation of pathitem3 using PathPolyline
     QVERIFY(!refImg.isNull());
 
     QString errorMessage;
@@ -414,7 +414,7 @@ void tst_QQuickShape::renderMultiline()
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
 
-    QImage refImg(testFileUrl("pathitem8.png").toLocalFile());
+    QImage refImg(testFile("pathitem8.png"));
     QVERIFY(!refImg.isNull());
 
     QString errorMessage;
@@ -480,7 +480,7 @@ void tst_QQuickShape::polylineDataTypes()
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
 
-    QImage refImg(testFileUrl("polyline.png").toLocalFile());
+    QImage refImg(testFile("polyline.png"));
     QVERIFY(!refImg.isNull());
 
     QString errorMessage;
@@ -631,7 +631,7 @@ void tst_QQuickShape::multilineDataTypes()
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
 
-    QImage refImg(testFileUrl("multiline.png").toLocalFile());
+    QImage refImg(testFile("multiline.png"));
     QVERIFY(!refImg.isNull());
 
     QString errorMessage;
@@ -679,7 +679,7 @@ void tst_QQuickShape::multilineStronglyTyped()
     QImage img = window->grabWindow();
     QVERIFY(!img.isNull());
 
-    QImage refImg(testFileUrl("multiline.png").toLocalFile());
+    QImage refImg(testFile("multiline.png"));
     QVERIFY(!refImg.isNull());
 
     QString errorMessage;
