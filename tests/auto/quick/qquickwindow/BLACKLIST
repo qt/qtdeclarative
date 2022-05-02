@@ -1,3 +1,15 @@
 [openglContextCreatedSignal]
 opensuse-42.3
 opensuse-leap
+
+# QTBUG-103078
+[defaultState]
+android
+[grab]
+android
+[requestActivate]
+android
+[contentItemSize]
+android
+[attachedProperty]
+android
