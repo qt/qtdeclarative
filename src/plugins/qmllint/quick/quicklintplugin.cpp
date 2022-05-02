@@ -51,7 +51,7 @@ bool ForbiddenChildrenPropertyValidatorPass::shouldRun(const QQmlSA::Element &el
     if (!element->parentScope())
         return false;
 
-    for (const auto &pair : m_types.asKeyValueRange()) {
+    for (const auto pair : m_types.asKeyValueRange()) {
         if (element->parentScope()->inherits(pair.first))
             return true;
     }
@@ -61,7 +61,7 @@ bool ForbiddenChildrenPropertyValidatorPass::shouldRun(const QQmlSA::Element &el
 
 void ForbiddenChildrenPropertyValidatorPass::run(const QQmlSA::Element &element)
 {
-    for (const auto &elementPair : m_types.asKeyValueRange()) {
+    for (const auto elementPair : m_types.asKeyValueRange()) {
         const QQmlSA::Element &type = elementPair.first;
         if (!element->parentScope()->inherits(type))
             continue;
@@ -105,7 +105,7 @@ void AttachedPropertyTypeValidatorPass::addWarning(
 
 bool AttachedPropertyTypeValidatorPass::shouldRun(const QQmlSA::Element &element)
 {
-    for (const auto &pair : m_attachedTypes.asKeyValueRange()) {
+    for (const auto pair : m_attachedTypes.asKeyValueRange()) {
         if (element->hasOwnPropertyBindings(pair.first))
             return true;
     }
@@ -115,7 +115,7 @@ bool AttachedPropertyTypeValidatorPass::shouldRun(const QQmlSA::Element &element
 
 void AttachedPropertyTypeValidatorPass::run(const QQmlSA::Element &element)
 {
-    for (const auto &pair : m_attachedTypes.asKeyValueRange()) {
+    for (const auto pair : m_attachedTypes.asKeyValueRange()) {
         if (element->hasOwnPropertyBindings(pair.first)) {
             bool hasAllowedType = false;
             for (const QQmlSA::Element &type : pair.second.allowedTypes) {
