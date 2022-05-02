@@ -56,7 +56,13 @@ static constexpr bool is_valid(QPalette::ColorGroup cg) noexcept
     case QPalette::All:
         return false;
     }
+
+    // GCC 8.x does not tread __builtin_unreachable() as constexpr
+#if defined(Q_CC_INTEL) || defined(Q_CC_CLANG) || (defined(Q_CC_GNU) && Q_CC_GNU >= 900)
     Q_UNREACHABLE();
+#endif
+
+    return false;
 }
 
 /*!
