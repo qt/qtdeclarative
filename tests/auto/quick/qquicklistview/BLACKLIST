@@ -9,3 +9,8 @@ opensuse-42.1
 [currentIndex]
 opensuse-leap
 ubuntu-18.04
+
+# QTBUG-103089
+[QTBUG_48044_currentItemNotVisibleAfterTransition]
+android
+
