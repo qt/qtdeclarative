@@ -35,14 +35,15 @@
 #include <QThreadPool>
 #include <private/qqmlengine_p.h>
 #include <QQmlComponent>
+#include <QtQuickTestUtils/private/qmlutils_p.h>
 
 Q_DECLARE_METATYPE(QQuickImageProvider*);
 
-class tst_qquickimageprovider : public QObject
+class tst_qquickimageprovider : public QQmlDataTest
 {
     Q_OBJECT
 public:
-    tst_qquickimageprovider()
+    tst_qquickimageprovider() : QQmlDataTest(QT_QMLTEST_DATADIR)
     {
     }
 
