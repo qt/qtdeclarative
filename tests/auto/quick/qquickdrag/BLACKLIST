@@ -1,0 +1,25 @@
+# QTBUG-103082
+[active]
+android
+[setActive]
+android
+[drop]
+android
+[move]
+android
+[parentChange]
+android
+[hotSpot]
+android
+[supportedActions]
+android
+[proposedAction]
+android
+[keys]
+android
+[source]
+android
+[recursion]
+android
+[noCrashWithImageProvider]
+android
