@@ -24,3 +24,13 @@ opensuse-leap
 [selectionOnFocusOut]
 android
 
+# QTBUG-103098
+[hAlignVisual]
+android
+[linkHover]
+android
+[cursorVisible]
+android
+[transparentSelectionColor]
+android
+
